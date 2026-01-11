@@ -348,12 +348,16 @@ i18n\:pull:
 # Push translation updates to public repo (uses force push to handle diverged histories)
 i18n\:push:
 	@echo "Pushing i18n translations to public repo..."
+	@echo "  Splitting static subtree (this may take a moment)..."
 	@STATIC_SHA=$$(git subtree split --prefix=src/i18n/static/txt); \
 	if [ -n "$$STATIC_SHA" ]; then \
+		echo "  Pushing static branch..."; \
 		git push anqr-i18n "$$STATIC_SHA":static 2>/dev/null || git push anqr-i18n "$$STATIC_SHA":static --force; \
 	fi
+	@echo "  Splitting locales subtree (this may take a moment)..."
 	@LOCALES_SHA=$$(git subtree split --prefix=src/i18n/locales/txt); \
 	if [ -n "$$LOCALES_SHA" ]; then \
+		echo "  Pushing locales branch..."; \
 		git push anqr-i18n "$$LOCALES_SHA":locales 2>/dev/null || git push anqr-i18n "$$LOCALES_SHA":locales --force; \
 	fi
 	@echo "i18n push complete."
