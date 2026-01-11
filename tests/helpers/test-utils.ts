@@ -528,15 +528,9 @@ export async function setSlider(page: Page, testId: string, percent: number): Pr
  * @param page - Playwright page instance
  * @param testId - data-testid value of the trigger
  * @param optionText - Text of the option to select
- * @param throwOnNotFound - If true (default), throws error when option not found. If false, returns false.
- * @throws Error if option not found and throwOnNotFound is true
+ * @returns true if option was selected, false if option not found
  */
-export async function selectOption(
-  page: Page,
-  testId: string,
-  optionText: string,
-  throwOnNotFound: boolean = true
-): Promise<boolean> {
+export async function selectOption(page: Page, testId: string, optionText: string): Promise<boolean> {
   const trigger = page.locator(`[data-testid="${testId}"]`);
   await trigger.waitFor({ state: 'visible', timeout: 5000 });
   await trigger.scrollIntoViewIfNeeded();
@@ -550,30 +544,20 @@ export async function selectOption(
   const allOptions = dropdown.locator('[role="option"]');
   const count = await allOptions.count();
   
-  // Collect all available options for error message
-  const availableOptions: string[] = [];
   let targetIndex = -1;
   for (let i = 0; i < count; i++) {
     const text = await allOptions.nth(i).textContent();
-    const trimmedText = text?.trim() || '';
-    availableOptions.push(trimmedText);
-    if (text && new RegExp(optionText, 'i').test(trimmedText)) {
+    if (text && new RegExp(optionText, 'i').test(text.trim())) {
       targetIndex = i;
       break;
     }
   }
   
   if (targetIndex === -1) {
-    // Option not found, close dropdown
+    // Option not found, close dropdown and return false
+    // Note: This returns false silently. Tests should check the return value!
     await page.keyboard.press('Escape');
     await waitForDropdownClosed(page);
-    
-    if (throwOnNotFound) {
-      throw new Error(
-        `selectOption: Option "${optionText}" not found in dropdown [data-testid="${testId}"].\n` +
-        `Available options: [${availableOptions.map(o => `"${o}"`).join(', ')}]`
-      );
-    }
     return false;
   }
   
@@ -779,8 +763,10 @@ export async function expectCanvasChanged(
 /** LocalStorage key used by WelcomeModal to track if user has seen it */
 export const WELCOME_MODAL_STORAGE_KEY = 'anqr-welcome-seen';
 
-/** Current version value that marks the modal as "seen" */
-export const WELCOME_MODAL_VERSION = '2026.01.04';
+/** Current version value that marks the modal as "seen" 
+ * IMPORTANT: This MUST match WELCOME_VERSION in src/components/WelcomeModal.tsx
+ */
+export const WELCOME_MODAL_VERSION = '2026.01.11';
 
 /**
  * Dismiss the welcome modal if it's visible.

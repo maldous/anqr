@@ -1013,7 +1013,9 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
         targetElement.closest?.('[role="menu"]') ||
         targetElement.closest?.('[role="dialog"]') ||
         targetElement.closest?.('[role="tablist"]') ||
-        targetElement.closest?.('header')
+        targetElement.closest?.('header') ||
+        // Don't close when clicking on the welcome modal
+        targetElement.closest?.('dialog')
       ) {
         return;
       }

@@ -767,7 +767,8 @@ export async function setupTest(
 export const WELCOME_MODAL_STORAGE_KEY = 'anqr-welcome-seen';
 
 /** Current version value that marks the modal as "seen" */
-export const WELCOME_MODAL_VERSION = '2026.01.04';
+/** IMPORTANT: This MUST match WELCOME_VERSION in src/components/WelcomeModal.tsx */
+export const WELCOME_MODAL_VERSION = '2026.01.11';
 
 /**
  * Set localStorage to mark welcome modal as seen BEFORE navigation.
