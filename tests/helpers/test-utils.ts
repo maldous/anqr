@@ -528,8 +528,15 @@ export async function setSlider(page: Page, testId: string, percent: number): Pr
  * @param page - Playwright page instance
  * @param testId - data-testid value of the trigger
  * @param optionText - Text of the option to select
+ * @param throwOnNotFound - If true (default), throws error when option not found. If false, returns false.
+ * @throws Error if option not found and throwOnNotFound is true
  */
-export async function selectOption(page: Page, testId: string, optionText: string): Promise<boolean> {
+export async function selectOption(
+  page: Page,
+  testId: string,
+  optionText: string,
+  throwOnNotFound: boolean = true
+): Promise<boolean> {
   const trigger = page.locator(`[data-testid="${testId}"]`);
   await trigger.waitFor({ state: 'visible', timeout: 5000 });
   await trigger.scrollIntoViewIfNeeded();
@@ -543,10 +550,14 @@ export async function selectOption(page: Page, testId: string, optionText: strin
   const allOptions = dropdown.locator('[role="option"]');
   const count = await allOptions.count();
   
+  // Collect all available options for error message
+  const availableOptions: string[] = [];
   let targetIndex = -1;
   for (let i = 0; i < count; i++) {
     const text = await allOptions.nth(i).textContent();
-    if (text && new RegExp(optionText, 'i').test(text.trim())) {
+    const trimmedText = text?.trim() || '';
+    availableOptions.push(trimmedText);
+    if (text && new RegExp(optionText, 'i').test(trimmedText)) {
       targetIndex = i;
       break;
     }
@@ -556,6 +567,13 @@ export async function selectOption(page: Page, testId: string, optionText: strin
     // Option not found, close dropdown
     await page.keyboard.press('Escape');
     await waitForDropdownClosed(page);
+    
+    if (throwOnNotFound) {
+      throw new Error(
+        `selectOption: Option "${optionText}" not found in dropdown [data-testid="${testId}"].\n` +
+        `Available options: [${availableOptions.map(o => `"${o}"`).join(', ')}]`
+      );
+    }
     return false;
   }
   

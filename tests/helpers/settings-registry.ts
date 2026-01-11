@@ -87,7 +87,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Security',
     expectsQRChange: true,
-    testValues: ['WPA', 'WEP', 'nopass'],
+    testValues: ['WPA', 'WPA2', 'WPA3', 'WEP', 'nopass'],
     conditional: 'payload.kind === wifi'
   },
   'payload.wifi.hidden': {
@@ -122,7 +122,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: true,
     conditional: 'payload.kind === email'
   },
-  'payload.sms.phone': {
+  'payload.sms.number': {
     section: 'Payload',
     tier: 'basic',
     type: 'input',
@@ -130,7 +130,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: true,
     conditional: 'payload.kind === sms'
   },
-  'payload.sms.message': {
+  'payload.sms.body': {
     section: 'Payload',
     tier: 'basic',
     type: 'textarea',
@@ -180,7 +180,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Mode',
     expectsQRChange: true,
-    testValues: ['blend', 'dither', 'halftone', 'subpixel', 'duotone'],
+    testValues: ['center', 'blend', 'halftone', 'mosaic', 'gapfill', 'brightness', 'duotone', 'subpixel', 'dithered', 'blue-noise'],
     conditional: 'overlay.enabled && image loaded'
   },
   'overlay.intensity': {
@@ -198,7 +198,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Color Mode',
     expectsQRChange: true,
-    testValues: ['color', 'grayscale', 'sepia', 'invert'],
+    testValues: ['color', 'grayscale', 'bw'],
     conditional: 'overlay.enabled && image loaded'
   },
   'overlay.preserveFinders': {
@@ -215,7 +215,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Fit Mode',
     expectsQRChange: true,
-    testValues: ['cover', 'contain', 'fill', 'none'],
+    testValues: ['cover', 'contain', 'stretch'],
     conditional: 'overlay.enabled && image loaded'
   },
   'overlay.rotateDeg': {
@@ -380,7 +380,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Dither Algorithm',
     expectsQRChange: true,
-    testValues: ['error_diffusion', 'ordered', 'blue_noise', 'white_noise'],
+    testValues: ['error_diffusion', 'ordered_bayer', 'blue_noise', 'white_noise'],
     conditional: 'overlay.enabled && image loaded'
   },
   'overlay.diffusionKernel': {
@@ -441,7 +441,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Color Dither',
     expectsQRChange: true,
-    testValues: ['none', 'palette', 'adaptive'],
+    testValues: ['none', 'per_channel', 'perceptual'],
     conditional: 'overlay.enabled && image loaded'
   },
   // Subpixel options
@@ -460,7 +460,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Center Rule',
     expectsQRChange: true,
-    testValues: ['strict', 'relaxed', 'adaptive'],
+    testValues: ['strict', 'halftone_center'],
     conditional: 'overlay.enabled && mode === subpixel'
   },
   'overlay.subpixelNeutralColor': {
@@ -477,7 +477,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Finder Override',
     expectsQRChange: true,
-    testValues: ['solid', 'grid', 'none'],
+    testValues: ['solid', 'stylized'],
     conditional: 'overlay.enabled && mode === subpixel'
   },
   // Halftone options
@@ -487,7 +487,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Cell Mode',
     expectsQRChange: true,
-    testValues: ['per_module', 'per_pixel'],
+    testValues: ['per_module', 'n×n'],
     conditional: 'overlay.enabled && mode === halftone'
   },
   'overlay.halftoneDotShape': {
@@ -496,7 +496,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Dot Shape',
     expectsQRChange: true,
-    testValues: ['circle', 'square', 'diamond', 'line'],
+    testValues: ['circle', 'square', 'line'],
     conditional: 'overlay.enabled && mode === halftone'
   },
   'overlay.brightnessCurve': {
@@ -505,26 +505,11 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Brightness Curve',
     expectsQRChange: true,
-    testValues: ['linear', 'gamma', 'sigmoid'],
+    testValues: ['linear', 's-curve', 'gamma'],
     conditional: 'overlay.enabled && mode === halftone'
   },
-  // Duotone options
-  'overlay.duotoneColor1': {
-    section: 'Overlay',
-    tier: 'professional',
-    type: 'color',
-    label: 'Duotone Color 1',
-    expectsQRChange: true,
-    conditional: 'overlay.enabled && mode === duotone'
-  },
-  'overlay.duotoneColor2': {
-    section: 'Overlay',
-    tier: 'professional',
-    type: 'color',
-    label: 'Duotone Color 2',
-    expectsQRChange: true,
-    conditional: 'overlay.enabled && mode === duotone'
-  },
+  // Duotone options - store uses duotoneColors: [string, string] array
+  // Individual color controls are handled via UI that sets array elements
 
   // ==========================================
   // QR ENCODING SECTION (Advanced tier)
@@ -556,14 +541,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     testValues: ['auto', 'numeric', 'alphanumeric', 'byte', 'kanji'],
     notes: 'Auto usually picks optimal'
   },
-  'qr.maskPattern': {
-    section: 'QR Encoding',
-    tier: 'advanced',
-    type: 'select',
-    label: 'Mask Pattern',
-    expectsQRChange: true,
-    testValues: ['auto', '0', '1', '2', '3', '4', '5', '6', '7']
-  },
+  // Note: maskPattern is not exposed in UI - QR library auto-selects optimal mask
   'qr.quietZoneModules': {
     section: 'QR Encoding',
     tier: 'advanced',
@@ -606,7 +584,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Module Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'circle', 'diamond', 'star']
+    testValues: ['square', 'rounded', 'dots', 'diamond', 'connected']
   },
   'render.finderStyle': {
     section: 'Render',
@@ -614,7 +592,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Finder Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'circle', 'diamond']
+    testValues: ['square', 'rounded', 'circle']
   },
   'render.alignmentStyle': {
     section: 'Render',
@@ -622,7 +600,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Alignment Style',
     expectsQRChange: true,
-    testValues: ['match_finder', 'square', 'rounded', 'circle', 'diamond']
+    testValues: ['match_finder', 'square', 'rounded', 'circle']
   },
   'render.timingStyle': {
     section: 'Render',
@@ -630,7 +608,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Timing Style',
     expectsQRChange: true,
-    testValues: ['match_module', 'square', 'rounded', 'dotted', 'dashed']
+    testValues: ['match_module', 'solid', 'dashed']
   },
   'render.eyeOuterStyle': {
     section: 'Render',
@@ -638,7 +616,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Eye Outer Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'circle', 'leaf']
+    testValues: ['square', 'rounded', 'circle']
   },
   'render.eyeInnerStyle': {
     section: 'Render',
@@ -646,7 +624,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Eye Inner Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'circle', 'diamond']
+    testValues: ['square', 'rounded', 'circle']
   },
   'render.eyeScale': {
     section: 'Render',
@@ -670,7 +648,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Gap Mode',
     expectsQRChange: true,
-    testValues: ['none', 'uniform', 'random']
+    testValues: ['none', 'inset', 'stroke', 'negative_space']
   },
   'render.cornerRadius': {
     section: 'Render',
@@ -719,22 +697,14 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: true,
     testValues: ['none', 'linear', 'radial', 'conic']
   },
-  'render.gradient.angle': {
-    section: 'Render',
-    tier: 'advanced',
-    type: 'slider',
-    label: 'Gradient Angle',
-    expectsQRChange: true,
-    testValues: [0, 45, 90, 180],
-    conditional: 'gradient.type !== none'
-  },
+  // Note: gradient.angle is not a separate field - gradient config uses stops array
   'render.perModuleColorMode': {
     section: 'Render',
     tier: 'advanced',
     type: 'select',
     label: 'Per-Module Color',
     expectsQRChange: true,
-    testValues: ['solid', 'random', 'position', 'checkered']
+    testValues: ['solid', 'by_brightness', 'by_position', 'by_overlay', 'by_cluster']
   },
   'render.frameStyle': {
     section: 'Render',
@@ -742,7 +712,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Frame Style',
     expectsQRChange: true,
-    testValues: ['none', 'simple', 'rounded', 'fancy']
+    testValues: ['none', 'rounded_frame', 'sticker', 'tag']
   },
   'render.frameText': {
     section: 'Render',
