@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { languages } from '@/i18n';
 
 // Increment this version whenever you want to show the modal again to all users
-const WELCOME_VERSION = '2026.01.04';
+const WELCOME_VERSION = '2026.01.11';
 const STORAGE_KEY = 'anqr-welcome-seen';
 
 interface WelcomeModalProps {
@@ -86,11 +86,26 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
     { icon: Share2, title: t('welcome.feature6Title'), desc: t('welcome.feature6Desc') },
   ];
 
-  const updates = [
-    t('welcome.update1'),
-    t('welcome.update2'),
-    t('welcome.update3'),
-    t('welcome.update4'),
+  // Grouped updates by date - newest first
+  const updateGroups = [
+    {
+      date: t('welcome.updateDate2'),
+      items: [
+        t('welcome.update5'),
+        t('welcome.update6'),
+        t('welcome.update7'),
+        t('welcome.update8'),
+      ],
+    },
+    {
+      date: t('welcome.updateDate1'),
+      items: [
+        t('welcome.update1'),
+        t('welcome.update2'),
+        t('welcome.update3'),
+        t('welcome.update4'),
+      ],
+    },
   ];
 
   return (
@@ -171,17 +186,24 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                 <Zap className="h-4 w-4 text-primary" />
                 {t('welcome.whatsNewTitle')}
               </h2>
-              <ul className="space-y-2">
-                {updates.map((update) => (
-                  <li
-                    key={`update-${update}`}
-                    className="flex items-start gap-2 text-sm text-muted-foreground"
-                  >
-                    <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>{update}</span>
-                  </li>
+              <div className="space-y-4">
+                {updateGroups.map((group) => (
+                  <div key={`group-${group.date}`}>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{group.date}</p>
+                    <ul className="space-y-2">
+                      {group.items.map((update) => (
+                        <li
+                          key={`update-${update}`}
+                          className="flex items-start gap-2 text-sm text-muted-foreground"
+                        >
+                          <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span>{update}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </section>
 
             {/* Languages */}
