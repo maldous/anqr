@@ -1078,7 +1078,10 @@ export const useQRStore = create<QRState>((set, get) => ({
     set((s) => ({ render: { ...s.render, moduleGapPercent } })),
   setRenderGapMode: (gapMode) => set((s) => ({ render: { ...s.render, gapMode } })),
   setRenderModuleStyle: (moduleStyle) => set((s) => ({ render: { ...s.render, moduleStyle } })),
-  setRenderFinderStyle: (finderStyle) => set((s) => ({ render: { ...s.render, finderStyle } })),
+  setRenderFinderStyle: (finderStyle) =>
+    set((s) => ({
+      render: { ...s.render, finderStyle, eyeOuterStyle: finderStyle, eyeInnerStyle: finderStyle },
+    })),
   setRenderAlignmentStyle: (alignmentStyle) =>
     set((s) => ({ render: { ...s.render, alignmentStyle } })),
   setRenderTimingStyle: (timingStyle) => set((s) => ({ render: { ...s.render, timingStyle } })),

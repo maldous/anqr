@@ -569,6 +569,9 @@ export class QRGenerator {
       ctx.fillRect(0, 0, size, size);
     }
 
+    // Draw frame background (sticker) BEFORE QR modules so it appears behind
+    this.drawFrameBackground(ctx, size, effectiveModuleSize, marginModules, config);
+
     // UNIFIED: Create gradient fill if configured
     const gradientFill = this.createGradientFill(ctx, config, size);
     const useGradient = config.gradient && config.gradient.type !== 'none';
@@ -957,6 +960,9 @@ export class QRGenerator {
       ctx.fillStyle = config.bgColor;
       ctx.fillRect(0, 0, size, size);
     }
+
+    // Draw frame background (sticker) BEFORE QR modules so it appears behind
+    this.drawFrameBackground(ctx, size, moduleSize, margin, config);
 
     // NOTE: Overlay data is now prepared in prepareUnifiedOverlayData above
     // effectiveIntensity, ditherPattern, overlayColors, and overlayData are already available
@@ -1914,7 +1920,44 @@ export class QRGenerator {
   }
 
   /**
+   * Draw frame background (sticker) BEFORE QR modules
+   * This must be called before drawing QR content so the background is behind
+   */
+  drawFrameBackground(ctx, size, moduleSize, margin, config) {
+    const frameStyle = config.frameStyle;
+    if (frameStyle !== 'sticker') return;
+
+    const frameText = config.frameText || '';
+    const qrSize = size - margin * 2 * moduleSize - (frameText ? moduleSize * 4 : 0);
+    const qrStart = margin * moduleSize;
+
+    ctx.save();
+
+    // Draw sticker-style background with shadow
+    ctx.shadowColor = 'rgba(0,0,0,0.2)';
+    ctx.shadowBlur = moduleSize * 2;
+    ctx.shadowOffsetX = moduleSize * 0.5;
+    ctx.shadowOffsetY = moduleSize * 0.5;
+
+    ctx.fillStyle = config.bgColor;
+    const stickerPadding = moduleSize * 1.5;
+    this.roundRect(
+      ctx,
+      qrStart - stickerPadding,
+      qrStart - stickerPadding,
+      qrSize + stickerPadding * 2,
+      qrSize + stickerPadding * 2 + (frameText ? moduleSize * 4 : 0),
+      moduleSize * 3
+    );
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+
+    ctx.restore();
+  }
+
+  /**
    * Draw a decorative frame around the QR code
+   * For sticker style, only draws the text (background is drawn by drawFrameBackground)
    */
   drawFrame(ctx, size, moduleSize, margin, config) {
     const frameStyle = config.frameStyle;
@@ -1945,24 +1988,8 @@ export class QRGenerator {
       }
 
       case 'sticker': {
-        // Draw sticker-style background with shadow
-        ctx.shadowColor = 'rgba(0,0,0,0.2)';
-        ctx.shadowBlur = moduleSize * 2;
-        ctx.shadowOffsetX = moduleSize * 0.5;
-        ctx.shadowOffsetY = moduleSize * 0.5;
-
-        ctx.fillStyle = config.bgColor;
-        const stickerPadding = moduleSize * 1.5;
-        this.roundRect(
-          ctx,
-          qrStart - stickerPadding,
-          qrStart - stickerPadding,
-          qrSize + stickerPadding * 2,
-          qrSize + stickerPadding * 2 + (frameText ? moduleSize * 4 : 0),
-          moduleSize * 3
-        );
-        ctx.fill();
-        ctx.shadowColor = 'transparent';
+        // Background is already drawn by drawFrameBackground
+        // Only text is drawn here (after QR modules)
         break;
       }
 
