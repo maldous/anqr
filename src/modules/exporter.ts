@@ -8,6 +8,12 @@
 import { Capacitor } from '@capacitor/core';
 import { applyPalette, GIFEncoder, quantize } from 'gifenc';
 import { saveBase64ToDocuments } from './media-store-writer';
+import {
+  getAlignmentPatternCenters,
+  isAlignmentPattern,
+  isFinderPattern,
+  isTimingPattern,
+} from './qr-core';
 
 // ============================================
 // TYPES
@@ -693,103 +699,13 @@ export interface VectorSvgConfig {
 }
 
 /**
- * Helper: Check if a position is part of a finder pattern
- */
-function isFinderPattern(row: number, col: number, moduleCount: number): boolean {
-  if (row < 7 && col < 7) return true;
-  if (row < 7 && col >= moduleCount - 7) return true;
-  if (row >= moduleCount - 7 && col < 7) return true;
-  return false;
-}
-
-/**
- * Helper: Check if a position is part of a timing pattern
- */
-function isTimingPattern(row: number, col: number, moduleCount: number): boolean {
-  // Horizontal timing pattern (row 6, between finders)
-  if (row === 6 && col >= 8 && col < moduleCount - 8) return true;
-  // Vertical timing pattern (col 6, between finders)
-  if (col === 6 && row >= 8 && row < moduleCount - 8) return true;
-  return false;
-}
-
-/**
- * Helper: Get alignment pattern positions for a given QR version
+ * Helper: Get alignment pattern positions for a given moduleCount
+ * Wrapper around qr-core's getAlignmentPatternCenters
  */
 function getAlignmentPositions(moduleCount: number): Array<{ row: number; col: number }> {
   // Version is derived from moduleCount: version = (moduleCount - 17) / 4
   const version = Math.round((moduleCount - 17) / 4);
-  if (version < 2) return [];
-
-  const table: Record<number, number[]> = {
-    2: [6, 18],
-    3: [6, 22],
-    4: [6, 26],
-    5: [6, 30],
-    6: [6, 34],
-    7: [6, 22, 38],
-    8: [6, 24, 42],
-    9: [6, 26, 46],
-    10: [6, 28, 50],
-    11: [6, 30, 54],
-    12: [6, 32, 58],
-    13: [6, 34, 62],
-    14: [6, 26, 46, 66],
-    15: [6, 26, 48, 70],
-    16: [6, 26, 50, 74],
-    17: [6, 30, 54, 78],
-    18: [6, 30, 56, 82],
-    19: [6, 30, 58, 86],
-    20: [6, 34, 62, 90],
-    21: [6, 28, 50, 72, 94],
-    22: [6, 26, 50, 74, 98],
-    23: [6, 30, 54, 78, 102],
-    24: [6, 28, 54, 80, 106],
-    25: [6, 32, 58, 84, 110],
-    26: [6, 30, 58, 86, 114],
-    27: [6, 34, 62, 90, 118],
-    28: [6, 26, 50, 74, 98, 122],
-    29: [6, 30, 54, 78, 102, 126],
-    30: [6, 26, 52, 78, 104, 130],
-    31: [6, 30, 56, 82, 108, 134],
-    32: [6, 34, 60, 86, 112, 138],
-    33: [6, 30, 58, 86, 114, 142],
-    34: [6, 34, 62, 90, 118, 146],
-    35: [6, 30, 54, 78, 102, 126, 150],
-    36: [6, 24, 50, 76, 102, 128, 154],
-    37: [6, 28, 54, 80, 106, 132, 158],
-    38: [6, 32, 58, 84, 110, 136, 162],
-    39: [6, 26, 54, 82, 110, 138, 166],
-    40: [6, 30, 58, 86, 114, 142, 170],
-  };
-
-  const coords = table[version] || [6];
-  const positions: Array<{ row: number; col: number }> = [];
-
-  for (const r of coords) {
-    for (const c of coords) {
-      // Skip positions that overlap with finder patterns
-      if (r < 8 && c < 8) continue;
-      if (r < 8 && c > moduleCount - 9) continue;
-      if (r > moduleCount - 9 && c < 8) continue;
-      positions.push({ row: r, col: c });
-    }
-  }
-
-  return positions;
-}
-
-/**
- * Helper: Check if a position is part of an alignment pattern
- */
-function isAlignmentPattern(row: number, col: number, moduleCount: number): boolean {
-  const positions = getAlignmentPositions(moduleCount);
-  for (const pos of positions) {
-    if (Math.abs(row - pos.row) <= 2 && Math.abs(col - pos.col) <= 2) {
-      return true;
-    }
-  }
-  return false;
+  return getAlignmentPatternCenters(version, moduleCount);
 }
 
 /**

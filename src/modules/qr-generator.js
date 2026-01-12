@@ -1,7 +1,17 @@
 import { generateBlueNoiseDithered } from './blue-noise-dither.ts';
 import { blendColors, parseColor } from './color-utils.ts';
 import { applyDither } from './dither-algorithms.ts';
-import { generateQR, isData, isLocked } from './qr-core.ts';
+import {
+  calculateOptimalVersion,
+  detectOptimalMode,
+  generateQR,
+  getAlignmentPatternCenters,
+  isData,
+  isFinderPattern,
+  isLocked,
+  isStructuralModule,
+  isTimingPattern,
+} from './qr-core.ts';
 import qrcode from './qrcode.mjs';
 
 // ============================================
@@ -48,7 +58,6 @@ class MemoCache {
 }
 
 // Global caches for expensive operations
-const versionCache = new MemoCache(50); // For calculateOptimalVersion
 const alignmentCache = new MemoCache(50); // For getAlignmentPositions
 const overlayDataCache = new MemoCache(20); // For overlay data
 const qrMatrixCache = new MemoCache(30); // For QR matrix (content+ecc+version+encodingMode)
@@ -61,7 +70,6 @@ const canvasHashCache = new WeakMap();
  * Useful for testing or memory management
  */
 export function clearQRCaches() {
-  versionCache.clear();
   alignmentCache.clear();
   overlayDataCache.clear();
   qrMatrixCache.clear();
@@ -693,7 +701,7 @@ export class QRGenerator {
     for (let moduleRow = 0; moduleRow < moduleCount; moduleRow++) {
       for (let moduleCol = 0; moduleCol < moduleCount; moduleCol++) {
         const isDark = qr.isDark(moduleRow, moduleCol);
-        const isFinder = this.isFinderPattern(moduleRow, moduleCol, moduleCount);
+        const isFinder = isFinderPattern(moduleRow, moduleCol, moduleCount);
 
         for (let subRow = 0; subRow < scale; subRow++) {
           for (let subCol = 0; subCol < scale; subCol++) {
@@ -798,10 +806,20 @@ export class QRGenerator {
       await this.loadLibrary();
     }
 
+    // Get encoding mode early (needed for version calculation)
+    // CRITICAL: If 'auto', detect the optimal mode NOW and use it consistently
+    // for both version calculation AND the library call. Otherwise we may calculate
+    // version based on numeric capacity but the library encodes as byte mode.
+    let encodingMode = config.encodingMode || 'auto';
+    if (encodingMode === 'auto') {
+      // Use the shared detectOptimalMode function from qr-core.ts
+      encodingMode = detectOptimalMode(config.content || '');
+    }
+
     // Auto-detect best version if set to 0
     let typeNumber = config.typeNumber;
     if (typeNumber === 0) {
-      typeNumber = this.calculateOptimalVersion(config.content, config.errorCorrection);
+      typeNumber = calculateOptimalVersion(config.content, config.errorCorrection, encodingMode);
     }
 
     // NOTE: Preprocessing is now done at moduleCount resolution inside _getOverlayData
@@ -821,7 +839,6 @@ export class QRGenerator {
     // These are handled by the getScaleFactor() and generateScaledQR() methods below
 
     // Build cache key for QR matrix reuse (avoids expensive qr.make() on every frame)
-    const encodingMode = config.encodingMode || 'auto';
     const qrCacheKey = `${config.content}:${config.errorCorrection}:${typeNumber}:${encodingMode}`;
 
     // Check cache for existing QR matrix
@@ -978,8 +995,8 @@ export class QRGenerator {
         const x = (col + margin) * moduleSize;
         const y = (row + margin) * moduleSize;
 
-        const isFinder = this.isFinderPattern(row, col, moduleCount);
-        const isTiming = this.isTimingPattern(row, col, moduleCount);
+        const isFinder = isFinderPattern(row, col, moduleCount);
+        const isTiming = isTimingPattern(row, col, moduleCount);
         const isFormatInfo = this.isFormatInfo(row, col, moduleCount);
         const isVersionInfo = this.isVersionInfo(row, col, moduleCount, version);
         // Note: alignment pattern modules are already skipped via drawnAlignmentPatterns set
@@ -1321,87 +1338,6 @@ export class QRGenerator {
     return canvas;
   }
 
-  calculateOptimalVersion(content, errorCorrection) {
-    // Check cache first (memoization for repeated calls)
-    // Use UTF-8 byte length for correct sizing of multibyte content
-    const byteLength = new TextEncoder().encode(content).length;
-    const cacheKey = `${byteLength}:${errorCorrection}`;
-    const cached = versionCache.get(cacheKey);
-    if (cached !== undefined) {
-      return cached;
-    }
-
-    const capacities = {
-      L: [
-        17, 32, 53, 78, 106, 134, 154, 192, 230, 271, 321, 367, 425, 458, 520, 586, 644, 718, 792,
-        858, 929, 1003, 1091, 1171, 1273, 1367, 1465, 1528, 1628, 1732, 1840, 1952, 2068, 2188,
-        2303, 2431, 2563, 2699, 2809, 2953,
-      ],
-      M: [
-        14, 26, 42, 62, 84, 106, 122, 152, 180, 213, 251, 287, 331, 362, 412, 450, 504, 560, 624,
-        666, 711, 779, 857, 911, 997, 1059, 1125, 1190, 1264, 1370, 1452, 1538, 1628, 1722, 1809,
-        1911, 1989, 2099, 2213, 2331,
-      ],
-      Q: [
-        11, 20, 32, 46, 60, 74, 86, 108, 130, 151, 177, 203, 241, 258, 292, 322, 364, 394, 442, 482,
-        509, 565, 611, 661, 715, 751, 805, 868, 908, 982, 1030, 1112, 1168, 1228, 1283, 1351, 1423,
-        1499, 1579, 1663,
-      ],
-      H: [
-        7, 14, 24, 34, 44, 58, 64, 84, 98, 119, 137, 155, 177, 194, 220, 250, 280, 310, 338, 382,
-        403, 439, 461, 511, 535, 593, 625, 658, 698, 742, 790, 842, 898, 958, 983, 1051, 1093, 1139,
-        1219, 1273,
-      ],
-    };
-
-    const caps = capacities[errorCorrection] || capacities.Q;
-    const len = content.length;
-
-    let result = 40;
-    for (let v = 0; v < caps.length; v++) {
-      if (caps[v] >= len) {
-        result = v + 1;
-        break;
-      }
-    }
-
-    // Cache the result
-    versionCache.set(cacheKey, result);
-    return result;
-  }
-
-  isFinderPattern(row, col, moduleCount) {
-    if (row < 7 && col < 7) return true;
-    if (row < 7 && col >= moduleCount - 7) return true;
-    if (row >= moduleCount - 7 && col < 7) return true;
-    return false;
-  }
-
-  /**
-   * Check if a module is part of a timing pattern
-   */
-  isTimingPattern(row, col, moduleCount) {
-    // Horizontal timing pattern (row 6, between finders)
-    if (row === 6 && col >= 8 && col < moduleCount - 8) return true;
-    // Vertical timing pattern (col 6, between finders)
-    if (col === 6 && row >= 8 && row < moduleCount - 8) return true;
-    return false;
-  }
-
-  /**
-   * Check if a module is part of an alignment pattern
-   */
-  isAlignmentPattern(row, col, moduleCount, version) {
-    if (version < 2) return false;
-    const positions = this.getAlignmentPositions(version, moduleCount);
-    for (const pos of positions) {
-      if (Math.abs(row - pos.row) <= 2 && Math.abs(col - pos.col) <= 2) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
    * Check if a module is part of format information area
    */
@@ -1442,37 +1378,9 @@ export class QRGenerator {
   }
 
   /**
-   * Check if a module is a structural element that cannot be modified
+   * Get alignment pattern positions with caching
+   * Uses qr-core's getAlignmentPatternCenters but adds caching layer
    */
-  isStructuralModule(row, col, moduleCount, version) {
-    // Finder patterns + separators
-    if (row < 8 && col < 8) return true;
-    if (row < 8 && col >= moduleCount - 8) return true;
-    if (row >= moduleCount - 8 && col < 8) return true;
-    // Timing patterns
-    if (row === 6 || col === 6) return true;
-    // Format information
-    if (row === 8 && col < 9) return true;
-    if (col === 8 && row < 9) return true;
-    if (row === 8 && col >= moduleCount - 8) return true;
-    if (col === 8 && row >= moduleCount - 8) return true;
-    // Dark module
-    if (row === moduleCount - 8 && col === 8) return true;
-    // Version info (version 7+)
-    if (version >= 7) {
-      if (row >= moduleCount - 11 && row < moduleCount - 8 && col < 6) return true;
-      if (col >= moduleCount - 11 && col < moduleCount - 8 && row < 6) return true;
-    }
-    // Alignment patterns (version 2+)
-    if (version >= 2) {
-      const positions = this.getAlignmentPositions(version, moduleCount);
-      for (const pos of positions) {
-        if (Math.abs(row - pos.row) <= 2 && Math.abs(col - pos.col) <= 2) return true;
-      }
-    }
-    return false;
-  }
-
   getAlignmentPositions(version, moduleCount) {
     if (version < 2) return [];
 
@@ -1483,57 +1391,8 @@ export class QRGenerator {
       return cached;
     }
 
-    const table = {
-      2: [6, 18],
-      3: [6, 22],
-      4: [6, 26],
-      5: [6, 30],
-      6: [6, 34],
-      7: [6, 22, 38],
-      8: [6, 24, 42],
-      9: [6, 26, 46],
-      10: [6, 28, 50],
-      11: [6, 30, 54],
-      12: [6, 32, 58],
-      13: [6, 34, 62],
-      14: [6, 26, 46, 66],
-      15: [6, 26, 48, 70],
-      16: [6, 26, 50, 74],
-      17: [6, 30, 54, 78],
-      18: [6, 30, 56, 82],
-      19: [6, 30, 58, 86],
-      20: [6, 34, 62, 90],
-      21: [6, 28, 50, 72, 94],
-      22: [6, 26, 50, 74, 98],
-      23: [6, 30, 54, 78, 102],
-      24: [6, 28, 54, 80, 106],
-      25: [6, 32, 58, 84, 110],
-      26: [6, 30, 58, 86, 114],
-      27: [6, 34, 62, 90, 118],
-      28: [6, 26, 50, 74, 98, 122],
-      29: [6, 30, 54, 78, 102, 126],
-      30: [6, 26, 52, 78, 104, 130],
-      31: [6, 30, 56, 82, 108, 134],
-      32: [6, 34, 60, 86, 112, 138],
-      33: [6, 30, 58, 86, 114, 142],
-      34: [6, 34, 62, 90, 118, 146],
-      35: [6, 30, 54, 78, 102, 126, 150],
-      36: [6, 24, 50, 76, 102, 128, 154],
-      37: [6, 28, 54, 80, 106, 132, 158],
-      38: [6, 32, 58, 84, 110, 136, 162],
-      39: [6, 26, 54, 82, 110, 138, 166],
-      40: [6, 30, 58, 86, 114, 142, 170],
-    };
-    const coords = table[version] || [6];
-    const positions = [];
-    for (const r of coords) {
-      for (const c of coords) {
-        if (r < 8 && c < 8) continue;
-        if (r < 8 && c > moduleCount - 9) continue;
-        if (r > moduleCount - 9 && c < 8) continue;
-        positions.push({ row: r, col: c });
-      }
-    }
+    // Get positions from qr-core
+    const positions = getAlignmentPatternCenters(version, moduleCount);
 
     // Cache the result
     alignmentCache.set(cacheKey, positions);
@@ -1567,7 +1426,7 @@ export class QRGenerator {
     let totalDataModules = 0;
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
-        if (!this.isStructuralModule(row, col, moduleCount, version)) {
+        if (!isStructuralModule(row, col, moduleCount, version)) {
           totalDataModules++;
         }
       }
@@ -1580,7 +1439,7 @@ export class QRGenerator {
       for (let row = 0; row < moduleCount; row++) {
         for (let col = 0; col < moduleCount; col++) {
           // Only protect finder patterns (corners)
-          if (this.isFinderPattern(row, col, moduleCount)) continue;
+          if (isFinderPattern(row, col, moduleCount)) continue;
 
           const brightness = overlayData[row]?.[col] ?? 0.5;
           const intensity = config.overlayIntensity / 100;
@@ -1623,7 +1482,7 @@ export class QRGenerator {
 
       for (let row = 0; row < moduleCount; row++) {
         for (let col = 0; col < moduleCount; col++) {
-          if (this.isStructuralModule(row, col, moduleCount, version)) continue;
+          if (isStructuralModule(row, col, moduleCount, version)) continue;
           totalDataModules++;
 
           const currentState = qr.isDark(row, col);
