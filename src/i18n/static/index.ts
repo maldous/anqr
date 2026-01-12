@@ -24,10 +24,14 @@ contentCache.set('en-GB', enGB);
 
 // Use import.meta.glob for Vite to properly analyze and code-split
 // Each language folder gets its own chunk
-const staticModules = import.meta.glob<Record<StaticPageType, PageDefinition>>('./**/index.ts', {
-  import: '*',
-  eager: false,
-});
+// Exclude txt/ folder (build tools) and use single-level glob to avoid matching root index.ts
+const staticModules = import.meta.glob<Record<StaticPageType, PageDefinition>>(
+  ['./*/index.ts', '!./txt/index.ts'],
+  {
+    import: '*',
+    eager: false,
+  }
+);
 
 // Map common browser codes to our Google Play codes
 const browserToGooglePlay: Record<string, string> = {
