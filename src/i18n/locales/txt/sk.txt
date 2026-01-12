@@ -1518,3 +1518,6 @@
 1518	"Vzor 6 – ((riadok*stĺpec) mod 2 + (riadok*stĺpec) mod 3) mod 2 = 0"
 1519	"Vzor 7 – ((riadok+stĺpec) mod 2 + (riadok*stĺpec) mod 3) mod 2 = 0"
 1520	"Výber vzoru masky na ovládanie distribúcie modulov (ovplyvňuje vizuálny vzhľad)"
+1521	"Výber vzoru masky pre presnú reprodukciu QR kódu"
+1522	"Možnosti kódovania znakov (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Plná podpora Shift-JIS pre japonský text (hiragana, katakana, kanji)"

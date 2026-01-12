@@ -95,6 +95,8 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
         t('welcome.update6'),
         t('welcome.update7'),
         t('welcome.update8'),
+        t('welcome.update9'),
+        t('welcome.update10'),
       ],
     },
     {

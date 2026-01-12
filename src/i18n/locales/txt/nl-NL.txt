@@ -1518,3 +1518,6 @@
 1518	"Patroon 6 - ((rij*col) mod 2 + (rij*col) mod 3) mod 2 = 0"
 1519	"Patroon 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Selecteer maskerpatroon om moduledistributie te regelen (komt voor in het zicht)"
+1521	"Masker patroon selectie voor exacte QR code reproductie"
+1522	"Karaktercoderingsopties (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Volledige Shift-JIS ondersteuning voor Japanse tekst (hiragana, katakana, kanji)"

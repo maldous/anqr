@@ -1518,3 +1518,6 @@
 1518	"Modèle 6 - ((ligne*col) mod 2 + (ligne*col) mod 3) mod 2 = 0"
 1519	"Modèle 7 - ((ligne + colonne) mod 2 + (ligne * colonne) mod 3) mod 2 = 0"
 1520	"Sélectionnez le masque pour contrôler la distribution du module (touche l'apparence visuelle)"
+1521	"Sélection du motif du masque pour la reproduction exacte du code QR"
+1522	"Options d'encodage de caractères (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Soutien complet du JIS-Shift pour le texte japonais (hiragana, katakana, kanji)"

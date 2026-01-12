@@ -1518,3 +1518,6 @@
 1518	"Wzór 6 - ((wiersz * col) mod 2 + (rząd * col) mod 3) mod 2 = 0"
 1519	"Wzór 7 - ((wiersz + col) mod 2 + (wiersz * col) mod 3) mod 2 = 0"
 1520	"Wybierz wzór maski do sterowania dystrybucją modułów (wpływa na wygląd wizualny)"
+1521	"Wybór wzorca maski do dokładnego odtworzenia kodu QR"
+1522	"Opcje kodowania znaków (ISO- 8859-1, UTF- 8, Shift- JIS)"
+1523	"Pełna obsługa Shift- JIS dla japońskiego tekstu (hiragana, katakana, kanji)"

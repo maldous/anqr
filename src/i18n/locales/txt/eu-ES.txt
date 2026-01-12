@@ -1518,3 +1518,6 @@
 1518	"6. eredua - ((row*col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1519	"7. eredua - ((row+col) mod 2 + (row*col 3) mod 2 = 0"
 1520	"Hautatu maskara-eredua moduluaren banaketa kontrolatzeko (itxura bisualak eragiten du)"
+1521	"Maskara-ereduaren hautapena QR kodearen erreprodukzio zehatza egiteko"
+1522	"Karaktere-kodeketaren aukerak (ISO-8859-1, UTF-8, Maius-JIS)"
+1523	"Shift-JIS testu japoniarraren euskarria (hiragana, katakana, kanji)"

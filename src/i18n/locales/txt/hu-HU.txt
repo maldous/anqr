@@ -1518,3 +1518,6 @@
 1518	"Minta - ((sor * col) mod 2 + (sor * col) mod 3) mod 2 = 0"
 1519	"7. minta - ((sor + col) mod 2 + (sor * col) mod 3) mod 2 = 0"
 1520	"Válassza ki a maszkmintát a modul elosztásához (befolyásolja a vizuális megjelenést)"
+1521	"Maszk minta kiválasztása pontos QR kód reprodukció"
+1522	"Karakter kódolási opciók (ISO- 8859- 1, UTF- 8, Shift- JIS)"
+1523	"Teljes Shift- JIS támogatás a japán szöveghez (hiragana, katakana, kanji)"

@@ -1518,3 +1518,6 @@
 1518	"6 - ((eilutė * col) mod 2 + (eilutė * col) mod 3) mod 2 = 0"
 1519	"7 modelis - ((eilutė + col) mod 2 + (eilutė * col) mod 3) mod 2 = 0"
 1520	"Pasirinkite šabloną, kuris valdys modulio platinimą (paveikia regimąją išvaizdą)"
+1521	"Kaukės modelio pasirinkimas tiksliam QR kodo atkūrimui"
+1522	"Ženklų kodavimo parinktys (ISO- 8859-1, UTF- 8, Shift- JIS)"
+1523	"Full Shift- JIS palaikymas japonų tekstui (hiragana, katakana, kanji)"

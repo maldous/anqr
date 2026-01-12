@@ -1518,3 +1518,6 @@
 1518	"Nümunə 6 - ((sətir*kol) mod 2 + (sətir*kol) mod 3) mod 2 = 0"
 1519	"Nümunə 7 - ((sətir+sütun) mod 2 + (sətir*sütun) mod 3) mod 2 = 0"
 1520	"Modul paylanmasına nəzarət etmək üçün maska modelini seçin (görünüşə təsir edir)"
+1521	"QR kodunun dəqiq reproduksiyası üçün maska nümunəsi seçimi"
+1522	"Simvol kodlaşdırma seçimləri (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Yapon mətni üçün tam Shift-JIS dəstəyi (hiragana, katakana, kanci)"

@@ -1518,3 +1518,6 @@
 1518	"Patroon 6 - ((ry*kol) mod 2 + (ry*kol) mod 3) mod 2 = 0"
 1519	"Patroon 7 - ((ry+kol) mod 2 + (ry*kol) mod 3) mod 2 = 0"
 1520	"Kies maskerpatroon om moduleverspreiding te beheer (beïnvloed visuele voorkoms)"
+1521	"Maskerpatroonkeuse vir presiese QR-kode-reproduksie"
+1522	"Karakterkoderingsopsies (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Volle Shift-JIS-ondersteuning vir Japannese teks (hiragana, katakana, kanji)"

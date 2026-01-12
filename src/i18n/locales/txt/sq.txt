@@ -1518,3 +1518,6 @@
 1518	"Modeli 6 - ((rresht*col) mod 2 + (rresht*kol) mod 3) mod 2 = 0"
 1519	"Modeli 7 - ((rresht+kol) mod 2 + (rresht*kol) mod 3) mod 2 = 0"
 1520	"Zgjidh modelin e maskës për të kontrolluar shpërndarjen e modulit (ndikon pamjen vizuale)"
+1521	"Zgjedhja e modelit të maskës për riprodhimin e saktë të kodit QR"
+1522	"Opsionet e kodimit të karaktereve (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Mbështetje e plotë Shift-JIS për tekstin japonez (hiragana, katakana, kanji)"

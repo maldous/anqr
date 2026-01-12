@@ -1518,3 +1518,6 @@
 1518	"Kuvio 6 - ((rivi*col) mod 2 + (rivi*col) mod 3) mod 2 = 0"
 1519	"Kuvio 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Valitse maskikuvio ohjaamaan moduulin jakautumista (näköä)"
+1521	"Maskikuvion valinta tarkka QR-koodin kopiointi"
+1522	"Merkkikoodausvaihtoehdot (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Täysi Shift-JIS-tuki japanilaiselle tekstille (hiragana, katakana, kanji)"

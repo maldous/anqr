@@ -1518,3 +1518,6 @@
 1518	"Muster 6 - ((row*col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1519	"Muster 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Wählen Sie Maskenmuster zur Steuerung der Modulverteilung (beeinflusst visuelles Aussehen)"
+1521	"Maskenmusterauswahl für genaue QR-Codewiedergabe"
+1522	"Zeichencodierungsoptionen (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Vollständige Shift-JIS-Unterstützung für Japanischen Text (hiragana, katakana, kanji)"

@@ -1518,3 +1518,6 @@
 1518	"Uzorak 6 - ((red*kol) mod 2 + (red*kol) mod 3) mod 2 = 0"
 1519	"Uzorak 7 - ((red+kol) mod 2 + (red*kol) mod 3) mod 2 = 0"
 1520	"Odaberite uzorak maske za kontrolu distribucije modula (utječe na vizualni izgled)"
+1521	"Odabir uzorka maske za točnu reprodukciju QR koda"
+1522	"Opcije kodiranja znakova (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Potpuna Shift-JIS podrška za japanski tekst (hiragana, katakana, kanji)"

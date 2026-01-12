@@ -1518,3 +1518,6 @@
 1518	"Mönster 6 - ((rad*kol) mod 2 + (rad*kol) mod 3) mod 2 = 0"
 1519	"Mönster 7 - ((rad+kol) mod 2 + (rad*kol) mod 3) mod 2 = 0"
 1520	"Välj maskmönster för att styra modulens distribution (påverkar visuellt utseende)"
+1521	"Maskmönsterval för exakt QR-kodreproduktion"
+1522	"Alternativ för teckenkodning (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Fullständigt Shift-JIS-stöd för japansk text (hiragana, katakana, kanji)"

@@ -1518,3 +1518,6 @@
 1518	"Model 6 - ((row*col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1519	"Model 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Selectaţi modelul masca pentru a controla distribuţia modulului (afectează aspectul vizual)"
+1521	"Selectare model mască pentru reproducere cod QR exact"
+1522	"Opțiuni de codare a caracterelor (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Suport complet Shift-JIS pentru textul japonez (hiragana, katakana, kanji)"

@@ -1518,3 +1518,6 @@
 1518	"Iphethini 6 - ((irowu*col) mod 2 + (irowu*col) mod 3) mod 2 = 0"
 1519	"Iphethini 7 - ((irowu+col) mod 2 + (irowu*col) mod 3) mod 2 = 0"
 1520	"Khetha iphethini yemaski ukuze ulawule ukusatshalaliswa kwemojuli (kuthinta ukubukeka okubonakalayo)"
+1521	"Ukukhetha iphethini yemaski yokukhiqiza kabusha ikhodi ye-QR"
+1522	"Izinketho zokufaka ikhodi yezinhlamvu (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Usekelo olugcwele lwe-Shift-JIS lombhalo wesi-Japanese (hiragana, katakana, kanji)"
