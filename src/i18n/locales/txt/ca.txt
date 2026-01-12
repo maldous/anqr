@@ -1518,3 +1518,6 @@
 1518	"Patró 6 - ((row *col) mòdul 2 + (row*col) mòdul 3) 2 = 0"
 1519	"Patró 7 - ((row+col) mòdul 2 + (row*col) mòdul 3) 2 = 0"
 1520	"Seleccioneu el patró de màscara per a controlar la distribució del mòdul ( aparença visual flefectes)"
+1521	"Selecció del patró de màscara per la reproducció exacta del codi QR"
+1522	"Opcions de codificació de caràcters (ISO- 8859- 1, UTF- 8, Maj-JIS)"
+1523	"Implementació complet de Maj-JIS per al text japonès (hi Angana, katakana, kanji)"

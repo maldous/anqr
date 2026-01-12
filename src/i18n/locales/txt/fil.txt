@@ -1518,3 +1518,6 @@
 1518	"Halimbawa 6 - ((row*col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1519	"Halimbawa 7 -(row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Pumili ng disenyo ng maskara upang makontrol ang pamamahagi ng module (may larawan ang hitsura)"
+1521	"Mask pattern selection para sa eksaktong pag - aanak ng QR code"
+1522	"Mga opsyon sa pagbasa ng karakter (ISO-8859-1, UTF-8, WIV-JIS)"
+1523	"Buong supranasyonal na suporta-JIS para sa tekstong Hapones (hiragana, katakana, kanji)"

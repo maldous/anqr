@@ -1518,3 +1518,6 @@
 1518	"Mẫu 6 - ((row*col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1519	"Mẫu 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Chọn mẫu mặt nạ để kiểm soát phân phối mô-đun (ảnh hưởng đến hình thức trực quan)"
+1521	"Lựa chọn mẫu mặt nạ để tái tạo mã QR chính xác"
+1522	"Tùy chọn mã hóa ký tự (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Hỗ trợ đầy đủ Shift-JIS cho văn bản tiếng Nhật (hiragana, katakana, kanji)"

@@ -1518,3 +1518,6 @@
 1518	"Vzor 6 - ((řádek * col) mod 2 + (řádek * col) mod 3) mod 2 = 0"
 1519	"Vzor 7 - ((řádek + col) mod 2 + (řádek * col) mod 3) mod 2 = 0"
 1520	"Vyberte vzor masky pro ovládání distribuce modulu (ovlivňuje vizuální vzhled)"
+1521	"Výběr modelu masky pro přesnou reprodukci QR kódu"
+1522	"Možnosti kódování znaků (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Full Shift- JIS podpora japonského textu (hiragana, katakana, kanji)"

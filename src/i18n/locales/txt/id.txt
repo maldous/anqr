@@ -1518,3 +1518,6 @@
 1518	"Pola 6 - (row * col) mod 2 + (row * col) mod 3) mod 2 = 0"
 1519	"Pola 7 - (row + col) mod 2 + (row * col) mod 3) mod 2 = 0"
 1520	"Pilih pola topeng untuk mengontrol distribusi modul (mempengaruhi tampilan visual)"
+1521	"Pemilihan pola topeng untuk reproduksi kode QR yang tepat"
+1522	"Opsi pengkodean karakter (ISOO-859-1, UTF-8, Shift- JIS)"
+1523	"Full Shift- JIS support untuk teks Jepang (hiragana, katakana, kanji)"

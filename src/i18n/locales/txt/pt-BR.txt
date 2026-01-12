@@ -1518,3 +1518,6 @@
 1518	"Padrão 6 - Mod 2 + Mod 3 = 0"
 1519	"Padrão 7, mod 2 + mod 3) mod 2 = 0"
 1520	"Selecione o padrão da máscara para controlar a distribuição do módulo (afeta a aparência visual)"
+1521	"Seleção de padrões de máscaras para reprodução exata de código QR"
+1522	"Opções de codificação de caracteres (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Suporte completo do Shift-JIS para texto japonês (hiragana, katakana, kanji)"

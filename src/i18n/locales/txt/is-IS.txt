@@ -1518,3 +1518,6 @@
 1518	"Mynstur 6 - ((röð* lit) mod 2 + (röð* lit) mod 3) mod 2 = 0"
 1519	"Mynstur 7 - ((röð+lit) mod 2 + (röð*col) mod 3) mod 2 = 0"
 1520	"Veldu grímumynstur til að stjórna dreifingu eininga (hefur áhrif á sjónrænt útlit)"
+1521	"Val á grímumynstri fyrir nákvæma endurgerð QR kóða"
+1522	"Valkostir fyrir stafakóðun (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Fullur Shift-JIS stuðningur fyrir japanskan texta (hiragana, katakana, kanji)"

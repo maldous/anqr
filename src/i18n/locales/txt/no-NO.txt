@@ -1518,3 +1518,6 @@
 1518	"Mønster 6 - ((row * col) mod 2 + (row * col) mod 3) mod 2 = 0"
 1519	"Mønster 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Velg maskemønster for å styre modulfordeling (påvirke visuelt utseende)"
+1521	"Maskemønstervalg for nøyaktig QR-kode reproduksjon"
+1522	"Tegnkodealternativer (ISO-8859- 1, UTF-8, Shift-JIS)"
+1523	"Full Shift-JIS støtte for japansk tekst (hiragana, katakana, kanji)"

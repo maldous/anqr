@@ -1518,3 +1518,6 @@
 1518	"Desen 6 - ((satır*sütun) mod 2 + (satır*sütun) mod 3) mod 2 = 0"
 1519	"Desen 7 - ((satır+sütun) mod 2 + (satır*sütun) mod 3) mod 2 = 0"
 1520	"Modül dağıtımını kontrol etmek için maske desenini seçin (görsel görünümü etkiler)"
+1521	"Tam QR kodu üretimi için maske deseni seçimi"
+1522	"Karakter kodlama seçenekleri (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Japonca metinler (hiragana, katakana, kanji) için Tam Shift-JIS desteği"

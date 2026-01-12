@@ -1518,3 +1518,6 @@
 1518	"Corak 6 - ((baris*kol) mod 2 + (baris*kol) mod 3) mod 2 = 0"
 1519	"Pola 7 - ((baris+kol) mod 2 + (baris*kol) mod 3) mod 2 = 0"
 1520	"Pilih pola topeng untuk mengontrol distribusi modul (menghilangkan penampilan visual)"
+1521	"Pemilihan pola topeng untuk reproduksi kode QR tepat"
+1522	"Pilihan pengkodean karakter (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Dukungan full Shift-JIS untuk teks Jepang (hiragana, katanaka, kanji)"

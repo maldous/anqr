@@ -1518,3 +1518,6 @@
 1518	"패턴 6 - ((row*col) 모드 2 + (row*col) 모드 3) 모드 2 = 0"
 1519	"패턴 7 - ((row+col) 모드 2 + (row*col) 모드 3) 모드 2 = 0"
 1520	"모듈 배포를 제어하는 마스크 패턴을 선택합니다 (시각 외관)"
+1521	"정확한 QR 부호 reproduction를 위한 가면 본 선택"
+1522	"문자 인코딩 옵션 (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"일본어 텍스트 (hiragana, katakana, kanji)에 대한 전체 Shift-JIS 지원"

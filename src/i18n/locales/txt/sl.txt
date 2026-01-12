@@ -1518,3 +1518,6 @@
 1518	"Vzorec 6 - ((vrstica*stolpec) mod 2 + (vrstica*stolpec) mod 3) mod 2 = 0"
 1519	"Vzorec 7 - ((vrstica+stolpec) mod 2 + (vrstica*stolpec) mod 3) mod 2 = 0"
 1520	"Izberite vzorec maske za nadzor porazdelitve modula (vpliva na vizualni videz)"
+1521	"Izbira vzorca maske za natančno reprodukcijo kode QR"
+1522	"Možnosti kodiranja znakov (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Popolna podpora Shift-JIS za japonsko besedilo (hiragana, katakana, kanji)"

@@ -1518,3 +1518,6 @@
 1518	"Patrón 6 - ((row*col) mod 2 + (row*col) mod 3 = 0"
 1519	"Patrón 7 - ((row+col) mod 2 + (row*col) mod 3 = 0"
 1520	"Seleccione un patrón de máscara para controlar a distribución dos módulos (aparencia visual)"
+1521	"Selección do patrón de máscara para a reprodución exacta do código QR"
+1522	"Opcións de codificación de caracteres (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Soporte para texto xaponés (hiragana, katakana, kanji)"

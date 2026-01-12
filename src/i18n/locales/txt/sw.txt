@@ -1518,3 +1518,6 @@
 1518	"Muundo wa 6 - ((safu*col) mod 2 + (safu*col) mod 3) mod 2 = 0"
 1519	"Muundo wa 7 - ((safu+safu) mod 2 + (safu*col) mod 3) mod 2 = 0"
 1520	"Chagua muundo wa barakoa ili kudhibiti usambazaji wa moduli (huathiri mwonekano wa kuona)"
+1521	"Uteuzi wa muundo wa barakoa kwa utoaji kamili wa msimbo wa QR"
+1522	"Chaguo za usimbaji wa herufi (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Usaidizi kamili wa Shift-JIS kwa maandishi ya Kijapani (hiragana, katakana, kanji)"

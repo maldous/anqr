@@ -1518,3 +1518,6 @@
 1518	"Patrón 6 - ((row*col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1519	"Patrón 7 - ((row+col) mod 2 + (row*col) mod 3) mod 2 = 0"
 1520	"Select mask pattern to control module distribution (affects visual appearance)"
+1521	"Selección de patrones de máscara para la reproducción de código QR exacta"
+1522	"Opciones de codificación de caracteres (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Full Shift-JIS support for Japanese text (hiragana, katakana, kanji)"

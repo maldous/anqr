@@ -1518,3 +1518,6 @@
 1518	"Modelis 6 – ((rinda*kolā) mod 2 + (rinda*kolā) mod 3) mod 2 = 0"
 1519	"Paraugs 7 – ((rindas+kolai) mod 2 + (rindas*kolai) mod 3) mod 2 = 0"
 1520	"Izvēlieties masku modeli moduļa izplatīšanas kontrolei (ietekmē vizuālo izskatu)"
+1521	"Maskas raksta izvēle precīzai QR koda reproducēšanai"
+1522	"Rakstzīmju kodēšanas opcijas (ISO-8859-1, UTF-8, Shift-JIS)"
+1523	"Pilns Shift-JIS atbalsts japāņu tekstam (hiragana, katakana, kanji)"
