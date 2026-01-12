@@ -51,8 +51,8 @@ export function QREncodingSection() {
   const minRequiredVersion = useMemo(() => {
     const content = getPayloadText();
     if (!content) return 1;
-    return calculateOptimalVersion(content, qr.ecc);
-  }, [getPayloadText, qr.ecc]);
+    return calculateOptimalVersion(content, qr.ecc, qr.encodingMode);
+  }, [getPayloadText, qr.ecc, qr.encodingMode]);
 
   // Handle version change with debounce - immediate visual feedback, delayed computation
   const handleVersionChange = (value: number) => {
