@@ -1214,3 +1214,5 @@
 1214	"Reddit Community"
 1215	"Csatlakozzon a Reddit közösségünkhöz az r/ANQR címen, hogy megossza QR-alkotásait, kérdéseket tegyen fel, segítséget kérjen, és kapcsolatba léphessen más ANQR-felhasználókkal."
 1216	"Join r/ANQR"
+1217	"Maszk minta: Auto (optimális), vagy kézzel válassza ki a mintákat 0-7 a vezérlő modul eloszlás. A különböző minták különböző vizuális megjelenéseket eredményeznek, miközben ugyanazokat az adatokat kódolják."
+1218	"Karakter kódolás: ISO- 8859-1 (latin- alapértelmezés), UTF- 8 (teljes Unicode, emoji is) vagy Shift- JIS (japán). Válasszon a tartalom karakterigénye alapján."

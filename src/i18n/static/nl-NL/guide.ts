@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Coderingsmodus: automatisch, numeriek, alfanumeriek, byte/UTF-8 of Kanji.',
         'Enforce Min Quiet Zone: Zorg voor minimaal 4 module marge.',
+        'Maskerpatroon: Automatisch (optimaal), of selecteer handmatig patronen 0-7 om de moduledistributie te regelen. Verschillende patronen creëren verschillende visuele verschijningen terwijl dezelfde gegevens worden gecodeerd.',
+        'Tekencodering: ISO-8859-1 (standaard Latin-1), UTF-8 (volledige Unicode inclusief emoji) of Shift-JIS (Japans). Kies op basis van de karaktervereisten van uw inhoud.',
       ],
     },
     {

@@ -225,7 +225,7 @@ export const guide: PageDefinition = {
     {
       heading: '255',
       paragraphs: ['256'],
-      bullets: ['257', '258'],
+      bullets: ['257', '258', '1217', '1218'],
     },
     {
       heading: '259',

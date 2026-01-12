@@ -387,7 +387,7 @@ export const qrcode = (typeNumber, errorCorrectionLevel) => {
 
   _this.getModuleCount = () => _moduleCount;
 
-  _this.make = () => {
+  _this.make = (maskPattern) => {
     if (_typeNumber < 1) {
       let typeNumber = 1;
 
@@ -415,7 +415,12 @@ export const qrcode = (typeNumber, errorCorrectionLevel) => {
       _typeNumber = typeNumber;
     }
 
-    makeImpl(false, getBestMaskPattern());
+    // Use specified mask pattern (0-7) or auto-select best one
+    const finalMaskPattern =
+      typeof maskPattern === 'number' && maskPattern >= 0 && maskPattern <= 7
+        ? maskPattern
+        : getBestMaskPattern();
+    makeImpl(false, finalMaskPattern);
   };
 
   _this.createTableTag = (cellSize, margin) => {

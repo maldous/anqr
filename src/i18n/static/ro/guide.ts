@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Mod de codare: Automat, Numeric, Alfanumeric, Byte/UTF-8 sau Kanji.',
         'Impunere zonă minimă de liniște: Asigurați o margine de cel puțin 4 module.',
+        'Masca model: Auto (optimală), sau selectați manual modele 0-7 pentru a controla distribuția modulului. Modele diferite creează diferite apariții vizuale în timp ce codează aceleași date.',
+        'Codarea caracterelor: ISO-8859-1 (latin-1 implicit), UTF-8 (unicode complet, inclusiv emoji) sau Shift-JIS (japoneză). Alege pe baza cerințelor de caracter ale conținutului.',
       ],
     },
     {

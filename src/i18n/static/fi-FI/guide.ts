@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Koodaustila: Automaattinen, Numeerinen, Aakkosnumeerinen, Byte/UTF-8 tai Kanji.',
         'Enforce Min hiljainen alue: Varmista vähintään 4 moduulin marginaali.',
+        'Mask Kuvio: Auto (optimaalinen), tai manuaalisesti valitse kuvioita 0-7 ohjata moduulin jakelua. Eri kuviot luovat erilaisia visuaalisia ulkoasuja koodatessaan samaa dataa.',
+        'Merkkikoodaus: ISO-8859-1 (Latin-1 oletus), UTF-8 (täydellinen Unicode mukaan lukien emoji), tai Shift-JIS (Japani). Valitse sisältösi luonteen perusteella.',
       ],
     },
     {

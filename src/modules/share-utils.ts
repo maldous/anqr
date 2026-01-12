@@ -31,6 +31,8 @@ export interface ShareConfig {
   size?: number;
   margin?: number;
   encodingMode?: string;
+  maskPattern?: string | number; // 'auto' or 0-7
+  characterEncoding?: string; // 'default', 'utf8', 'iso-8859-1', 'shift-jis'
   borderModulesExtra?: number;
   quietZoneMinEnforce?: boolean;
 
@@ -265,6 +267,12 @@ export function parseUrlParams(): Partial<ShareConfig> {
     size: parseIntParam(params.get('size')),
     margin: parseIntParam(params.get('margin')),
     encodingMode: params.get('enc') || undefined,
+    maskPattern: params.has('mask')
+      ? params.get('mask') === 'auto'
+        ? 'auto'
+        : parseIntParam(params.get('mask'))
+      : undefined,
+    characterEncoding: params.get('charset') || undefined,
     borderModulesExtra: parseIntParam(params.get('border')),
     quietZoneMinEnforce: params.has('qzEnforce') ? params.get('qzEnforce') === '1' : undefined,
     // Colors
@@ -497,6 +505,12 @@ export function buildUrlParams(config: Partial<ShareConfig>): string {
   }
   if (config.encodingMode && config.encodingMode !== 'auto') {
     params.set('enc', config.encodingMode);
+  }
+  if (config.maskPattern !== undefined && config.maskPattern !== 'auto') {
+    params.set('mask', String(config.maskPattern));
+  }
+  if (config.characterEncoding && config.characterEncoding !== 'default') {
+    params.set('charset', config.characterEncoding);
   }
   if (config.borderModulesExtra && config.borderModulesExtra !== 0) {
     params.set('border', config.borderModulesExtra.toString());

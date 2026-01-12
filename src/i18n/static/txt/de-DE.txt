@@ -1214,3 +1214,5 @@
 1214	"Reddit-Community"
 1215	"Treten Sie unserer Reddit-Community unter r/ANQR bei, um Ihre QR-Kreationen zu teilen, Fragen zu stellen, Hilfe zu erhalten und mit anderen ANQR-Benutzern in Kontakt zu treten."
 1216	"Treten Sie r/ANQR bei"
+1217	"Mask Pattern: Auto (optimal), oder manuell wählen Sie Muster 0-7, um die Modulverteilung zu steuern. Verschiedene Muster schaffen unterschiedliche visuelle Erscheinungen während der Kodierung der gleichen Daten."
+1218	"Zeichencodierung: ISO-8859-1 (Standardeinstellung), UTF-8 (Voll-Unicode einschließlich Emoji), oder Shift-JIS (Japanisch). Wählen Sie basierend auf den Charakteranforderungen Ihrer Inhalte."

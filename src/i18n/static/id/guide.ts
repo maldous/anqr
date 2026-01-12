@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Mode Pengkodean: Otomatis, Numerik, Alfanumerik, Byte / UTF-8, atau Kanji.',
         'Paksa Min Quiet Zone: Pastikan setidaknya 4 modul marjin.',
+        'Pola Topeng: Otomatis (optimal), atau pilih pola secara manual 0-7 untuk mengontrol distribusi modul. Pola yang berbeda membuat penampilan visual yang berbeda ketika mengkodean data yang sama.',
+        'Pengkodean Karakter: ISO-859-1 (Baku Latin- 1), UTF-8 (Unicode penuh termasuk emoji), atau Shift- JIS (Jepang). Pilih berdasarkan persyaratan karakter konten Anda.',
       ],
     },
     {

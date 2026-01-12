@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodēšanas režīms: automātisks, ciparu, burtciparu, baitu/UTF-8 vai kanji.',
         'Ieviest minimālo kluso zonu: nodrošiniet vismaz 4 moduļu rezervi.',
+        'Maskas modelis: automātiski (optimāls) vai manuāli atlasiet modeļus 0-7, lai kontrolētu moduļa sadalījumu. Dažādi modeļi rada atšķirīgu vizuālo izskatu, vienlaikus kodējot vienus un tos pašus datus.',
+        'Rakstzīmju kodējums: ISO-8859-1 (noklusējums latīņu 1), UTF-8 (pilns Unicode, ieskaitot emocijzīmes) vai Shift-JIS (japāņu valodā). Izvēlieties, pamatojoties uz satura rakstura prasībām.',
       ],
     },
     {

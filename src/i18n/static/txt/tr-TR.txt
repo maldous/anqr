@@ -1214,3 +1214,5 @@
 1214	"Reddit Topluluğu"
 1215	"QR kreasyonlarınızı paylaşmak, sorular sormak, yardım almak ve diğer ANQR kullanıcılarıyla bağlantı kurmak için r/ANQR adresindeki Reddit topluluğumuza katılın."
 1216	"r/ANQR'a katılın"
+1217	"Maske Deseni: Modül dağıtımını kontrol etmek için otomatik (optimum) veya 0-7 arasındaki desenleri manuel olarak seçin. Farklı desenler aynı veriyi kodlarken farklı görsel görünümler oluşturur."
+1218	"Karakter Kodlaması: ISO-8859-1 (varsayılan Latin-1), UTF-8 (emoji dahil tam Unicode) veya Shift-JIS (Japonca). İçeriğinizin karakter gereksinimlerine göre seçim yapın."

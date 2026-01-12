@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodningsläge: Auto, Numeriskt, Alfanumeriskt, Byte/UTF-8 eller Kanji.',
         'Framtvinga min tysta zon: Se till att minst 4 modulers marginal är.',
+        'Maskmönster: Auto (optimal), eller manuellt välja mönster 0-7 för att styra moduldistribution. Olika mönster skapar olika visuella utseende samtidigt som man kodar samma data.',
+        'Karaktärskodning: ISO-8859-1 (latin-1 standard), UTF-8 (full Unicode inklusive emoji), eller Shift-JIS (japansk). Välj baserat på ditt innehålls karaktärskrav.',
       ],
     },
     {

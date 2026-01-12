@@ -89,6 +89,20 @@ export type PayloadKind =
 // QR encoding
 export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 export type EncodingMode = 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji';
+export type MaskPattern = 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+// Character encoding (ECI - Extended Channel Interpretation)
+// Common ECI assignment numbers:
+// - 'default' = ISO-8859-1 (Latin-1) - QR default, no ECI header
+// - 'utf8' = UTF-8 (ECI 26) - Full Unicode support
+// - 'iso-8859-1' = ISO-8859-1 (ECI 1) - Western European
+// - 'shift-jis' = Shift-JIS (ECI 20) - Japanese
+// Common ECI assignment numbers:
+// - 'default' = ISO-8859-1 (Latin-1) - QR default, no ECI header
+// - 'utf8' = UTF-8 (ECI 26) - Full Unicode support
+// - 'iso-8859-1' = ISO-8859-1 (ECI 1) - Western European
+// - 'shift-jis' = Shift-JIS (ECI 20) - Japanese
+export type CharacterEncoding = 'default' | 'utf8' | 'iso-8859-1' | 'shift-jis';
 
 // Rendering
 export type ModuleStyle = 'square' | 'rounded' | 'dots' | 'diamond' | 'connected';
@@ -554,6 +568,8 @@ export interface QRState {
     version: number; // 0 = auto, 1-40
     ecc: ECCLevel;
     encodingMode: EncodingMode;
+    maskPattern: MaskPattern; // 'auto' or 0-7
+    characterEncoding: CharacterEncoding; // Character set for byte mode
     quietZoneModules: number;
     quietZoneMinEnforce: boolean;
     borderModulesExtra: number;
@@ -561,6 +577,8 @@ export interface QRState {
   setQrVersion: (version: number) => void;
   setQrEcc: (ecc: ECCLevel) => void;
   setQrEncodingMode: (mode: EncodingMode) => void;
+  setQrMaskPattern: (mask: MaskPattern) => void;
+  setQrCharacterEncoding: (encoding: CharacterEncoding) => void;
   setQrQuietZone: (modules: number) => void;
   setQrQuietZoneMinEnforce: (enforce: boolean) => void;
 
@@ -1010,6 +1028,8 @@ export const useQRStore = create<QRState>((set, get) => ({
     version: 0,
     ecc: 'H',
     encodingMode: 'auto',
+    maskPattern: 'auto',
+    characterEncoding: 'default',
     quietZoneModules: 4,
     quietZoneMinEnforce: true,
     borderModulesExtra: 0,
@@ -1017,6 +1037,9 @@ export const useQRStore = create<QRState>((set, get) => ({
   setQrVersion: (version) => set((s) => ({ qr: { ...s.qr, version } })),
   setQrEcc: (ecc) => set((s) => ({ qr: { ...s.qr, ecc } })),
   setQrEncodingMode: (encodingMode) => set((s) => ({ qr: { ...s.qr, encodingMode } })),
+  setQrMaskPattern: (maskPattern) => set((s) => ({ qr: { ...s.qr, maskPattern } })),
+  setQrCharacterEncoding: (characterEncoding) =>
+    set((s) => ({ qr: { ...s.qr, characterEncoding } })),
   setQrQuietZone: (quietZoneModules) => set((s) => ({ qr: { ...s.qr, quietZoneModules } })),
   setQrQuietZoneMinEnforce: (quietZoneMinEnforce) =>
     set((s) => ({ qr: { ...s.qr, quietZoneMinEnforce } })),

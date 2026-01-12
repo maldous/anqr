@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kódolási mód: Auto, Numerikus, Alfanumerikus, Byte / UTF- 8 vagy Kanji.',
         'Enforce Min Csendes Zóna: Biztosítani legalább 4 modulárrés.',
+        'Maszk minta: Auto (optimális), vagy kézzel válassza ki a mintákat 0-7 a vezérlő modul eloszlás. A különböző minták különböző vizuális megjelenéseket eredményeznek, miközben ugyanazokat az adatokat kódolják.',
+        'Karakter kódolás: ISO- 8859-1 (latin- alapértelmezés), UTF- 8 (teljes Unicode, emoji is) vagy Shift- JIS (japán). Válasszon a tartalom karakterigénye alapján.',
       ],
     },
     {

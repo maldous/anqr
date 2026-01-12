@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Encoding Mode: Auto, Numeric, Alphanumeric, Byte/UTF-8, or Kanji.',
         'Enforce Min Quiet Zone: Ensure at least 4 module margin.',
+        'Mask Pattern: Auto (optimal), or manually select patterns 0-7 to control module distribution. Different patterns create different visual appearances while encoding the same data.',
+        "Character Encoding: ISO-8859-1 (Latin-1 default), UTF-8 (full Unicode including emoji), or Shift-JIS (full Japanese text support including hiragana, katakana, kanji, and Japanese punctuation). Choose based on your content's character requirements.",
       ],
     },
     {

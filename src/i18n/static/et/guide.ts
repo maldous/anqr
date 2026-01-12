@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodeerimisrežiim: automaatne, numbriline, tähtnumbriline, bait/UTF-8 või kanji.',
         'Jõusta minimaalne vaikne tsoon: tagage vähemalt 4 mooduli varu.',
+        'Mask Muster: Automaatne (optimaalne) või käsitsi valida mustrid 0-7, et juhtida mooduli jaotust. Erinevad mustrid loovad samu andmeid kodeerides erinevaid visuaalseid välimusi.',
+        'Märgi kodeering: ISO-8859-1 (ladina-1 vaikeväärtus), UTF-8 (täis Unicode, sh emotikon) või Shift-JIS (jaapani kood). Valige vastavalt oma sisu iseloomu nõuetele.',
       ],
     },
     {

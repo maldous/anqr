@@ -1214,3 +1214,5 @@
 1214	"Komuniti Reddit"
 1215	"Sertai komuniti Reddit kami di r/ANQR untuk berkongsi ciptaan QR anda, bertanya soalan, mendapatkan bantuan dan berhubung dengan pengguna ANQR yang lain."
 1216	"Sertai r/ANQR"
+1217	"Corak Topeng: Auto (optimum), atau pilih corak 0-7 secara manual untuk mengawal pengedaran modul. Corak yang berbeza mencipta penampilan visual yang berbeza sambil mengekod data yang sama."
+1218	"Pengekodan Aksara: ISO-8859-1 (Latin-1 lalai), UTF-8 (Unikod penuh termasuk emoji), atau Shift-JIS (Bahasa Jepun). Pilih berdasarkan keperluan aksara kandungan anda."

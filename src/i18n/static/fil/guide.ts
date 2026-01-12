@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Encoding Mode: Auto, Numeric, Alphanumeric, Byte/UTF-8, o Kanji.',
         'Enforce Min Tahimik Zone: Tiyakin ang hindi kukulanging 4 module mardyin.',
+        "Disenyo ng Maskara: Auto (optimal), o manu - manong pumili ng disenyo 0-7 upang kontrolin ang pamamahagi ng module. Ang iba't ibang disenyo ay lumilikha ng iba't ibang hitsura samantalang ini - scan ang iisang impormasyon.",
+        'Character Encoding: ISO-8859-1 (Latin-1 default), UTF-8 (full Unicode kabilang ang emoji), o Oberde-JIS (Japanese). Pumili batay sa mga kahilingan ng iyong nilalaman.',
       ],
     },
     {

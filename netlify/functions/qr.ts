@@ -1089,6 +1089,20 @@ async function handler(request: Request) {
   const transparent = params.get('transparent') === '1';
   const encodingMode = params.get('enc') || 'auto';
   const version = params.get('v') ? Number.parseInt(params.get('v')!, 10) : 0;
+
+  // Mask pattern: 'auto' or 0-7
+  const maskPatternParam = params.get('mask');
+  const parsedMask = maskPatternParam ? Number.parseInt(maskPatternParam, 10) : NaN;
+  const maskPattern: 'auto' | number =
+    maskPatternParam === 'auto' || !maskPatternParam || Number.isNaN(parsedMask)
+      ? 'auto'
+      : Math.min(7, Math.max(0, parsedMask));
+
+  // Character encoding: 'default', 'utf8', or 'shift-jis'
+  const charsetParam = params.get('charset') || 'default';
+  const characterEncoding = ['default', 'utf8', 'shift-jis'].includes(charsetParam)
+    ? charsetParam
+    : 'default';
   const borderModulesExtra = Math.min(
     10,
     Math.max(0, Number.parseInt(params.get('border') || '0', 10))
@@ -1329,6 +1343,8 @@ async function handler(request: Request) {
       typeNumber: version, // 0 = auto-detect
       errorCorrection: ec,
       encodingMode,
+      maskPattern,
+      characterEncoding,
       moduleSize,
       margin: margin + borderModulesExtra,
       crispEdges,

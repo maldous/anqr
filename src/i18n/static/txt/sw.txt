@@ -1214,3 +1214,5 @@
 1214	"Jumuiya ya Reddit"
 1215	"Jiunge na jumuiya yetu ya Reddit katika r/ANQR ili kushiriki kazi zako za QR, kuuliza maswali, kupata usaidizi na kuungana na watumiaji wengine wa ANQR."
 1216	"Jiunge na r/ANQR"
+1217	"Mchoro wa Mask: Otomatiki (bora zaidi), au chagua mwenyewe ruwaza 0-7 ili kudhibiti usambazaji wa moduli. Miundo tofauti huunda mwonekano tofauti huku ikisimba data sawa."
+1218	"Usimbaji wa Herufi: ISO-8859-1 (chaguo-msingi ya Kilatini-1), UTF-8 (Aunicode kamili ikijumuisha emoji), au Shift-JIS (Kijapani). Chagua kulingana na mahitaji ya tabia ya maudhui yako."

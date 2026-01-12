@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Chế độ mã hóa: Tự động, Số, Chữ và số, Byte/UTF-8 hoặc Kanji.',
         'Thực thi Vùng yên tĩnh tối thiểu: Đảm bảo có ít nhất 4 lề mô-đun.',
+        'Mẫu mặt nạ: Tự động (tối ưu) hoặc chọn thủ công các mẫu 0-7 để điều khiển phân phối mô-đun. Các mẫu khác nhau tạo ra hình thức trực quan khác nhau trong khi mã hóa cùng một dữ liệu.',
+        'Mã hóa ký tự: ISO-8859-1 (mặc định tiếng Latin-1), UTF-8 (Unicode đầy đủ bao gồm biểu tượng cảm xúc) hoặc Shift-JIS (tiếng Nhật). Chọn dựa trên yêu cầu về nhân vật trong nội dung của bạn.',
       ],
     },
     {

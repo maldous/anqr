@@ -1214,3 +1214,5 @@
 1214	"Comunità di Reddit"
 1215	"Unisciti alla nostra community Reddit su r/ANQR per condividere le tue creazioni QR, porre domande, ottenere aiuto e connetterti con altri utenti ANQR."
 1216	"Unisciti a r/ANQR"
+1217	"Modello di maschera: Auto (ottimo), o selezionare manualmente i modelli 0-7 per controllare la distribuzione del modulo. Diversi modelli creano diverse apparizioni visive mentre codifica gli stessi dati."
+1218	"Codifica del carattere: ISO-8859-1 (predefinito latino-1), UTF-8 (compreso Unicode incluso emoji), o Shift-JIS (giapponese). Scegli in base ai requisiti di carattere del tuo contenuto."

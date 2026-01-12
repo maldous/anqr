@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Hali ya Usimbaji: Otomatiki, Nambari, Alphanumeric, Byte/UTF-8, au Kanji.',
         'Tekeleza eneo la Min Quiet: Hakikisha angalau ukingo wa moduli 4.',
+        'Mchoro wa Mask: Otomatiki (bora zaidi), au chagua mwenyewe ruwaza 0-7 ili kudhibiti usambazaji wa moduli. Miundo tofauti huunda mwonekano tofauti huku ikisimba data sawa.',
+        'Usimbaji wa Herufi: ISO-8859-1 (chaguo-msingi ya Kilatini-1), UTF-8 (Aunicode kamili ikijumuisha emoji), au Shift-JIS (Kijapani). Chagua kulingana na mahitaji ya tabia ya maudhui yako.',
       ],
     },
     {

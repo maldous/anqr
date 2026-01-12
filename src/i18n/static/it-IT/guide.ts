@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Modalità di codifica: Auto, Numerico, Alfanumerico, Byte/UTF-8, o Kanji.',
         'Enforce Min Quiet Zone: Assicurare almeno 4 margini di modulo.',
+        'Modello di maschera: Auto (ottimo), o selezionare manualmente i modelli 0-7 per controllare la distribuzione del modulo. Diversi modelli creano diverse apparizioni visive mentre codifica gli stessi dati.',
+        'Codifica del carattere: ISO-8859-1 (predefinito latino-1), UTF-8 (compreso Unicode incluso emoji), o Shift-JIS (giapponese). Scegli in base ai requisiti di carattere del tuo contenuto.',
       ],
     },
     {

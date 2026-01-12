@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Režim kódování: Auto, Numeric, Alfanumeric, Byte / UTF-8 nebo Kanji.',
         'Enforce Min Tiché Zone: Zajistit alespoň 4 rozsahy modulu.',
+        'Maska vzor: Auto (optimální), nebo ručně vybrat vzory 0-7 pro ovládání distribuce modulu. Různé vzory vytvářejí různé vizuální zdání při kódování stejných dat.',
+        'Kódování znaků: ISO-8859-1 (výchozí hodnota latin-1), UTF-8 (plná Unicode včetně emocji), nebo Shift-JIS (japonský). Vyberte si podle požadavků vašeho obsahu.',
       ],
     },
     {

@@ -1214,3 +1214,5 @@
 1214	"Komuniteti Reddit"
 1215	"Bashkohuni me komunitetin tonë Reddit në r/ANQR për të ndarë krijimet tuaja QR, për të bërë pyetje, për të marrë ndihmë dhe për t'u lidhur me përdoruesit e tjerë të ANQR."
 1216	"Bashkohuni me r/ANQR"
+1217	"Modeli i maskës: Auto (optimale), ose zgjidhni manualisht modelet 0-7 për të kontrolluar shpërndarjen e modulit. Modele të ndryshme krijojnë pamje të ndryshme vizuale ndërsa kodojnë të njëjtat të dhëna."
+1218	"Kodimi i karaktereve: ISO-8859-1 (Latin-1 parazgjedhje), UTF-8 (Unikod i plotë duke përfshirë emoji) ose Shift-JIS (japonisht). Zgjidhni bazuar në kërkesat e karakterit të përmbajtjes suaj."

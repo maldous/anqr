@@ -1214,3 +1214,5 @@
 1214	"Reddit-yhteisö"
 1215	"Liity Reddit-yhteisöömme osoitteessa r/ANQR jakaaksesi QR-luomuksesi, kysyäksesi kysymyksiä, saadaksesi apua ja ollaksesi yhteydessä muihin ANQR-käyttäjiin."
 1216	"Liity r/ANQR:iin"
+1217	"Mask Kuvio: Auto (optimaalinen), tai manuaalisesti valitse kuvioita 0-7 ohjata moduulin jakelua. Eri kuviot luovat erilaisia visuaalisia ulkoasuja koodatessaan samaa dataa."
+1218	"Merkkikoodaus: ISO-8859-1 (Latin-1 oletus), UTF-8 (täydellinen Unicode mukaan lukien emoji), tai Shift-JIS (Japani). Valitse sisältösi luonteen perusteella."

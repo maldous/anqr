@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Mënyra e kodimit: Auto, Numerike, Alfanumerike, Byte/UTF-8 ose Kanji.',
         'Zbatoni Zonën Minimale të Qetë: Siguroni të paktën 4 diferencë të modulit.',
+        'Modeli i maskës: Auto (optimale), ose zgjidhni manualisht modelet 0-7 për të kontrolluar shpërndarjen e modulit. Modele të ndryshme krijojnë pamje të ndryshme vizuale ndërsa kodojnë të njëjtat të dhëna.',
+        'Kodimi i karaktereve: ISO-8859-1 (Latin-1 parazgjedhje), UTF-8 (Unikod i plotë duke përfshirë emoji) ose Shift-JIS (japonisht). Zgjidhni bazuar në kërkesat e karakterit të përmbajtjes suaj.',
       ],
     },
     {

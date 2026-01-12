@@ -1214,3 +1214,5 @@
 1214	"komunita Reddit"
 1215	"Připojte se k naší komunitě Reddit na r/ANQR a sdílejte své QR výtvory, ptejte se, získejte pomoc a spojte se s ostatními uživateli ANQR."
 1216	"Připojte se k r/ANQR"
+1217	"Maska vzor: Auto (optimální), nebo ručně vybrat vzory 0-7 pro ovládání distribuce modulu. Různé vzory vytvářejí různé vizuální zdání při kódování stejných dat."
+1218	"Kódování znaků: ISO-8859-1 (výchozí hodnota latin-1), UTF-8 (plná Unicode včetně emocji), nebo Shift-JIS (japonský). Vyberte si podle požadavků vašeho obsahu."

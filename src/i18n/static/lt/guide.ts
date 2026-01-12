@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodavimo režimas: automatinis, skaitmeninis, raidinis ir skaitmeninis, baitas / UTF-8 arba Kanji.',
         'Įgyvendinti minimalią tyliąją zoną: Užtikrinkite bent 4 modulių paraštę.',
+        'Kaukės modelis: automatinis (optimalus) arba rankiniu būdu pasirinkite modelius 0–7, kad valdytumėte modulio paskirstymą. Skirtingi modeliai sukuria skirtingą vizualinį vaizdą, tuo pačiu užkoduodami tuos pačius duomenis.',
+        'Simbolių kodavimas: ISO-8859-1 (numatytasis lotyniškas 1), UTF-8 (visas unikodas, įskaitant jaustukus) arba Shift-JIS (japonų k.). Pasirinkite pagal savo turinio charakterio reikalavimus.',
       ],
     },
     {

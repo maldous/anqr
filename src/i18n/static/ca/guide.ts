@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Mode de codificació: Auto, numèric, Alfanumèric, bytes/UTF- 8, o Kanji.',
         'Força la zona mínima de silenci: Assegureu- vos almenys 4 mòdul.',
+        'Patró de màscara: Auto (optmal), o seleccioneu manualment patrons 0- 7 per a controlar la distribució del mòdul. Diferents patrons creen aparences visuals diferents en codificar les mateixes dades.',
+        'Codificació dels caràcters: ISO- 8859- 1 (per omissió de Latin- 1), UTF- 8 (amplada Unicode incloent emoji), o Maj-JIS (Jap). Escolliu basat en els requeriments de caràcters del contingut.',
       ],
     },
     {

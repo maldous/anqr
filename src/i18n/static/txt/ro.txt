@@ -1214,3 +1214,5 @@
 1214	"Comunitatea Reddit"
 1215	"Alăturați-vă comunității noastre Reddit la r/ANQR pentru a vă împărtăși creațiile QR, a pune întrebări, a obține ajutor și a intra în legătură cu alți utilizatori ANQR."
 1216	"Alăturați-vă r/ANQR"
+1217	"Masca model: Auto (optimală), sau selectați manual modele 0-7 pentru a controla distribuția modulului. Modele diferite creează diferite apariții vizuale în timp ce codează aceleași date."
+1218	"Codarea caracterelor: ISO-8859-1 (latin-1 implicit), UTF-8 (unicode complet, inclusiv emoji) sau Shift-JIS (japoneză). Alege pe baza cerințelor de caracter ale conținutului."

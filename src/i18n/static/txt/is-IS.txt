@@ -1214,3 +1214,5 @@
 1214	"Reddit samfélag"
 1215	"Vertu með í Reddit samfélaginu okkar á r/ANQR til að deila QR sköpun þinni, spyrja spurninga, fá hjálp og tengjast öðrum ANQR notendum."
 1216	"Skráðu þig í r/ANQR"
+1217	"Grímamynstur: Sjálfvirkt (ákjósanlegt), eða valið mynstur 0-7 handvirkt til að stjórna dreifingu eininga. Mismunandi mynstur skapa mismunandi sjónrænt útlit á meðan sömu gögn eru umrituð."
+1218	"Stafakóðun: ISO-8859-1 (Latin-1 sjálfgefið), UTF-8 (fullur Unicode þar á meðal emoji) eða Shift-JIS (japanska). Veldu byggt á eðliskröfum efnisins þíns."

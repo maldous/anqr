@@ -1214,3 +1214,5 @@
 1214	"Komunitas Reddit"
 1215	"Bergabunglah dengan komunitas Reddit kami di r/ANQR untuk membagikan kreasi QR Anda, mengajukan pertanyaan, mendapatkan bantuan, dan terhubung dengan pengguna ANQR lainnya."
 1216	"Bergabunglah dengan r/ANQR"
+1217	"Pola Topeng: Otomatis (optimal), atau pilih pola secara manual 0-7 untuk mengontrol distribusi modul. Pola yang berbeda membuat penampilan visual yang berbeda ketika mengkodean data yang sama."
+1218	"Pengkodean Karakter: ISO-859-1 (Baku Latin- 1), UTF-8 (Unicode penuh termasuk emoji), atau Shift- JIS (Jepang). Pilih berdasarkan persyaratan karakter konten Anda."
