@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Mod Pengekodan: Auto, Angka, Alphanumeric, Byte/UTF-8 atau Kanji.',
         'Kuatkuasakan Zon Senyap Min: Pastikan sekurang-kurangnya 4 margin modul.',
+        'Corak Topeng: Auto (optimum), atau pilih corak 0-7 secara manual untuk mengawal pengedaran modul. Corak yang berbeza mencipta penampilan visual yang berbeza sambil mengekod data yang sama.',
+        'Pengekodan Aksara: ISO-8859-1 (Latin-1 lalai), UTF-8 (Unikod penuh termasuk emoji), atau Shift-JIS (Bahasa Jepun). Pilih berdasarkan keperluan aksara kandungan anda.',
       ],
     },
     {

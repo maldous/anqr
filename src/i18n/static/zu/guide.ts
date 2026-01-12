@@ -471,6 +471,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Imodi Yokufaka ikhodi: Okuzenzakalelayo, Izinombolo, I-Alphanumeric, I-Byte/UTF-8, noma i-Kanji.',
         'Gcina Indawo Ethule Encane: Qinisekisa okungenani imajini yemojula engu-4.',
+        'Iphethini Yemaski: Okuzenzakalelayo (okulungile), noma khetha ngokwakho amaphethini 0-7 ukuze ulawule ukusatshalaliswa kwemojuli. Amaphethini ahlukene adala ukubonakala okuhlukile okubonakalayo ngenkathi ebhala ngekhodi idatha efanayo.',
+        'Ukubhala Izinhlamvu Zezinhlamvu: ISO-8859-1 (okuzenzakalelayo kwe-Latin-1), UTF-8 (i-Unicode egcwele efaka i-emoji), noma i-Shift-JIS (isi-Japanese). Khetha ngokusekelwe ezimfuneko zezinhlamvu zokuqukethwe kwakho.',
       ],
     },
     {

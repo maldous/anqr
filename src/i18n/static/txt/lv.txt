@@ -1214,3 +1214,5 @@
 1214	"Reddit kopiena"
 1215	"Pievienojieties mūsu Reddit kopienai vietnē r/ANQR, lai kopīgotu savus QR darbus, uzdotu jautājumus, saņemtu palīdzību un sazinātos ar citiem ANQR lietotājiem."
 1216	"Pievienojieties r/ANQR"
+1217	"Maskas modelis: automātiski (optimāls) vai manuāli atlasiet modeļus 0-7, lai kontrolētu moduļa sadalījumu. Dažādi modeļi rada atšķirīgu vizuālo izskatu, vienlaikus kodējot vienus un tos pašus datus."
+1218	"Rakstzīmju kodējums: ISO-8859-1 (noklusējums latīņu 1), UTF-8 (pilns Unicode, ieskaitot emocijzīmes) vai Shift-JIS (japāņu valodā). Izvēlieties, pamatojoties uz satura rakstura prasībām."

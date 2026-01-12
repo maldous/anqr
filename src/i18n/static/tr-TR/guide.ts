@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodlama Modu: Otomatik, Sayısal, Alfanümerik, Bayt/UTF-8 veya Kanji.',
         'Minimum Sessiz Bölgeyi Zorunlu Kıl: En az 4 modül kenar boşluğu sağlayın.',
+        'Maske Deseni: Modül dağıtımını kontrol etmek için otomatik (optimum) veya 0-7 arasındaki desenleri manuel olarak seçin. Farklı desenler aynı veriyi kodlarken farklı görsel görünümler oluşturur.',
+        'Karakter Kodlaması: ISO-8859-1 (varsayılan Latin-1), UTF-8 (emoji dahil tam Unicode) veya Shift-JIS (Japonca). İçeriğinizin karakter gereksinimlerine göre seçim yapın.',
       ],
     },
     {

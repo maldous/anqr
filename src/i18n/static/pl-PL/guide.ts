@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Tryb kodowania: Auto, Numeryczne, Alfanumeryczne, Byte / UTF- 8 lub Kanji.',
         'Enforce Min Quiet Zone: Upewnij się co najmniej 4 marża modułu.',
+        'Wzór maski: Automatyczny (optymalny) lub ręcznie wybierz wzory 0–7, aby kontrolować dystrybucję modułu. Różne wzorce tworzą różne wyglądy wizualne podczas kodowania tych samych danych.',
+        'Kodowanie znaków: ISO-8859-1 (domyślnie Latin-1), UTF-8 (pełny Unicode, w tym emoji) lub Shift-JIS (japoński). Wybierz na podstawie wymagań dotyczących znaków w treści.',
       ],
     },
     {

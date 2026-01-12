@@ -368,6 +368,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
       typeNumber: qr.version,
       errorCorrection: safetyAdjustedConfig.ecc,
       encodingMode: qr.encodingMode,
+      maskPattern: qr.maskPattern,
+      characterEncoding: qr.characterEncoding,
 
       // === RENDER OPTIONS (with safety adjustments) ===
       moduleSize: safetyAdjustedConfig.modulePx,
@@ -484,6 +486,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // QR encoding
     qr.version,
     qr.encodingMode,
+    qr.maskPattern,
+    qr.characterEncoding,
     qr.borderModulesExtra,
     qr.quietZoneMinEnforce,
     render.moduleGapPercent,

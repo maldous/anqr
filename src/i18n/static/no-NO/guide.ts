@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodingsmodus: Auto, Numeric, Alfanumeric, Byte/UTF-8 eller Kanji.',
         'Enforce Min Stille Zone: sikre minst 4 modulmargin.',
+        'Maskemønster: Auto (optimalt), eller manuelt velg mønstre 0-7 for å kontrollere moduldistribusjonen. Ulike mønstre skaper forskjellige visuelle utseende mens de koder for de samme dataene.',
+        'Tegnkoding: ISO-8859-1 (Latin-1 standard), UTF-8 (full Unicode inkludert emoji) eller Shift-JIS (japansk). Velg basert på innholdets karakterkrav.',
       ],
     },
     {

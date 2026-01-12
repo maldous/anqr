@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kóðunarhamur: Sjálfvirkt, Tölulegt, Alfatölulegt, Bæti/UTF-8 eða Kanji.',
         'Framfylgja Min Quiet Zone: Gakktu úr skugga um að minnsta kosti 4 eininga framlegð.',
+        'Grímamynstur: Sjálfvirkt (ákjósanlegt), eða valið mynstur 0-7 handvirkt til að stjórna dreifingu eininga. Mismunandi mynstur skapa mismunandi sjónrænt útlit á meðan sömu gögn eru umrituð.',
+        'Stafakóðun: ISO-8859-1 (Latin-1 sjálfgefið), UTF-8 (fullur Unicode þar á meðal emoji) eða Shift-JIS (japanska). Veldu byggt á eðliskröfum efnisins þíns.',
       ],
     },
     {

@@ -396,11 +396,11 @@ i18n\:xlate\:static:
 	if [ -n "$(LANGS)" ]; then \
 		for lang in $(LANGS); do \
 			if [ "$$lang" != "en-GB" ]; then \
-				python3 xlate.py --workers 8 "$$lang.txt"; \
+				python3 xlate.py --workers 4 "$$lang.txt"; \
 			fi \
 		done; \
 	else \
-		python3 xlate.py --workers 8; \
+		python3 xlate.py --workers 4; \
 	fi
 
 # Translate locales (UI strings) - all languages or LANGS
@@ -410,11 +410,11 @@ i18n\:xlate\:locales:
 	if [ -n "$(LANGS)" ]; then \
 		for lang in $(LANGS); do \
 			if [ "$$lang" != "en-GB" ]; then \
-				python3 xlate.py --workers 8 "$$lang.txt"; \
+				python3 xlate.py --workers 4 "$$lang.txt"; \
 			fi \
 		done; \
 	else \
-		python3 xlate.py --workers 8; \
+		python3 xlate.py --workers 4; \
 	fi
 
 # Translate both static and locales

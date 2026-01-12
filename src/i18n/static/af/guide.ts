@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Enkoderingsmodus: Outo, Numeries, Alfanumeries, Byte/UTF-8 of Kanji.',
         'Dwing Min Stilte Sone af: Verseker ten minste 4 module-marge.',
+        'Maskerpatroon: Outo (optimaal), of kies handmatig patrone 0-7 om moduleverspreiding te beheer. Verskillende patrone skep verskillende visuele voorkoms terwyl hulle dieselfde data enkodeer.',
+        'Karakterkodering: ISO-8859-1 (Latyn-1 verstek), UTF-8 (volledige Unicode insluitend emoji), of Shift-JIS (Japannees). Kies op grond van jou inhoud se karaktervereistes.',
       ],
     },
     {

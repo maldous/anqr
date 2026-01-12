@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Encoding Mode: Auto, Numeric, Alphanumeric, Byte/UTF-8, və ya Kanji.',
         'Enforce Min Sessiz Zone: ən azı 4 modul marjını təmin edin.',
+        'Mask Pattern: Avtomobil (optimal), və ya eləcə klassik nümunələri 0-7 modul paylamaq üçün. Müxtəlif nümunələr eyni məlumatları yaradır.',
+        'Oyuncaq: ISO-8859-1 (Latin-1 default), UTF-8 ( emoji da tam Unicode), və ya Shift-JIS (Japon).  content s . . . .',
       ],
     },
     {

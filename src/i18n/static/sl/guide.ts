@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Način kodiranja: samodejni, številski, alfanumerični, bajt/UTF-8 ali kanji.',
         'Uveljavi minimalno tiho območje: Zagotovite vsaj 4 modulne rezerve.',
+        'Vzorec maske: Samodejno (optimalno) ali ročno izberite vzorce 0-7 za nadzor porazdelitve modula. Različni vzorci med kodiranjem istih podatkov ustvarjajo različne vizualne videze.',
+        'Kodiranje znakov: ISO-8859-1 (privzeta latinica-1), UTF-8 (poln Unicode, vključno z emoji) ali Shift-JIS (japonščina). Izberite glede na zahteve glede značaja vaše vsebine.',
       ],
     },
     {

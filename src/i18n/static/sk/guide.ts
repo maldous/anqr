@@ -465,6 +465,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Režim kódovania: Auto, Numerický, Alfanumerický, Byte/UTF-8 alebo Kanji.',
         'Vynútiť minimálnu tichú zónu: Zabezpečte aspoň 4 okraj modulu.',
+        'Mask Pattern: Auto (optimálne) alebo manuálne vyberte vzory 0-7 na ovládanie distribúcie modulu. Rôzne vzory vytvárajú rôzne vizuálne vzhľady pri kódovaní rovnakých údajov.',
+        'Kódovanie znakov: ISO-8859-1 (predvolená latinka-1), UTF-8 (úplné Unicode vrátane emoji) alebo Shift-JIS (japončina). Vyberte si na základe požiadaviek na charakter vášho obsahu.',
       ],
     },
     {

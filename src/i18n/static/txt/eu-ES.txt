@@ -1214,3 +1214,5 @@
 1214	"Reddit komunitatea"
 1215	"Sartu gure Reddit komunitatean r/ANQR-n zure QR sorkuntzak partekatzeko, galderak egiteko, laguntza lortzeko eta ANQR-eko beste erabiltzaile batzuekin konektatzeko."
 1216	"Sartu r/ANQR"
+1217	"Maskara eredua: Auto (optimoa), edo eskuz hautatu 0-7 ereduak moduluaren banaketa kontrolatzeko. Eredu ezberdinek itxura bisual desberdinak sortzen dituzte datu berak kodetzen dituzten bitartean."
+1218	"Karaktere-kodeketa: ISO-8859-1 (Latin-1 lehenetsia), UTF-8 (Unicode osoa emoji barne), edo Maius-JIS (Japoniarra). Aukeratu zure edukiaren ezaugarrien arabera."

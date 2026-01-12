@@ -1214,3 +1214,5 @@
 1214	"Reddit zajednica"
 1215	"Pridružite se našoj Reddit zajednici na r/ANQR kako biste podijelili svoje QR kreacije, postavljali pitanja, dobili pomoć i povezali se s drugim korisnicima ANQR-a."
 1216	"Pridružite se r/ANQR"
+1217	"Uzorak maske: Automatski (optimalno) ili ručno odaberite uzorke 0-7 za kontrolu distribucije modula. Različiti obrasci stvaraju različite vizualne izglede tijekom kodiranja istih podataka."
+1218	"Kodiranje znakova: ISO-8859-1 (Latin-1 zadano), UTF-8 (puni Unicode uključujući emoji) ili Shift-JIS (japanski). Odaberite na temelju zahtjeva karaktera vašeg sadržaja."

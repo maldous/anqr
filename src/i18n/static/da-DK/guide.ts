@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Indkodningstilstand: Auto, Numerisk, Alfanumerisk, Byte / UTF-8 eller Kanji.',
         'Håndhæv Min Quiet Zone: Sørg for mindst 4 modulers margen.',
+        'Mask Mønster: Auto (optimal), eller manuelt vælge mønstre 0-7 til kontrol modul distribution. Forskellige mønstre skaber forskellige visuelle fremtoninger, mens indkodning af de samme data.',
+        'Tegnsæt: ISO- 8859-1 (Latin1- standard), UTF- 8 (fuld Unicode inklusive emoji) eller Shift- JIS (japansk). Vælg baseret på dit indholds karakterkrav.',
       ],
     },
     {

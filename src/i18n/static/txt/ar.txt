@@ -1214,3 +1214,5 @@
 1214	"مجتمع رديت"
 1215	"انضم إلى مجتمع Reddit الخاص بنا على r/ANQR لمشاركة إبداعات QR الخاصة بك وطرح الأسئلة والحصول على المساعدة والتواصل مع مستخدمي ANQR الآخرين."
 1216	"انضم إلى r/ANQR"
+1217	"Mask Pattern: Auto (optimal), or manually select patterns 0-7 to control module distribution. الأنماط المختلفة تخلق مظهراً مرئياً مختلفاً بينما تزين نفس البيانات."
+1218	"Character Encoding: ISO-8859-1 (Latin-1 default), UTF-8 (full Unicode including emoji), or Shift-JIS (Japanese). اختر بناءاً على متطلبات شخصية مضمونك."

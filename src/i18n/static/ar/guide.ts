@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'وضع التشفير: تلقائي، رقمي، أبجدي رقمي، بايت/UTF-8، أو كانجي.',
         'منطقة هدوء مين: كفالة ما لا يقل عن 4 هامش نموذجي.',
+        'Mask Pattern: Auto (optimal), or manually select patterns 0-7 to control module distribution. الأنماط المختلفة تخلق مظهراً مرئياً مختلفاً بينما تزين نفس البيانات.',
+        'Character Encoding: ISO-8859-1 (Latin-1 default), UTF-8 (full Unicode including emoji), or Shift-JIS (Japanese). اختر بناءاً على متطلبات شخصية مضمونك.',
       ],
     },
     {

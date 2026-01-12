@@ -467,6 +467,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodetze modua: automatikoa, zenbakizkoa, alfanumerikoa, byte/UTF-8 edo kanji.',
         'Ezar ezazu Gutxieneko Zona Isila: Ziurtatu gutxienez 4 moduluko marjina.',
+        'Maskara eredua: Auto (optimoa), edo eskuz hautatu 0-7 ereduak moduluaren banaketa kontrolatzeko. Eredu ezberdinek itxura bisual desberdinak sortzen dituzte datu berak kodetzen dituzten bitartean.',
+        'Karaktere-kodeketa: ISO-8859-1 (Latin-1 lehenetsia), UTF-8 (Unicode osoa emoji barne), edo Maius-JIS (Japoniarra). Aukeratu zure edukiaren ezaugarrien arabera.',
       ],
     },
     {

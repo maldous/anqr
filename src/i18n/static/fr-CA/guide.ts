@@ -471,6 +471,8 @@ export const guide: PageDefinition = {
       bullets: [
         "Mode d'encodage : Automatique, Numérique, Alphanumérique, Octet/UTF-8 ou Kanji.",
         "Appliquer une zone de silence minimale : garantir une marge d'au moins 4 modules.",
+        'Motif de masque : Auto (optimal), ou sélectionnez manuellement les motifs 0-7 pour contrôler la distribution des modules. Différents modèles créent des apparences visuelles différentes tout en codant les mêmes données.',
+        'Encodage des caractères : ISO-8859-1 (par défaut Latin-1), UTF-8 (Unicode complet incluant emoji) ou Shift-JIS (Japonais). Choisissez en fonction des exigences de caractère de votre contenu.',
       ],
     },
     {

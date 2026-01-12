@@ -1214,3 +1214,5 @@
 1214	"Reddit bendruomenė"
 1215	"Prisijunkite prie mūsų „Reddit“ bendruomenės r/ANQR, kad galėtumėte bendrinti savo QR kūrinius, užduoti klausimus, gauti pagalbos ir susisiekti su kitais ANQR vartotojais."
 1216	"Prisijunkite prie r/ANQR"
+1217	"Kaukės modelis: automatinis (optimalus) arba rankiniu būdu pasirinkite modelius 0–7, kad valdytumėte modulio paskirstymą. Skirtingi modeliai sukuria skirtingą vizualinį vaizdą, tuo pačiu užkoduodami tuos pačius duomenis."
+1218	"Simbolių kodavimas: ISO-8859-1 (numatytasis lotyniškas 1), UTF-8 (visas unikodas, įskaitant jaustukus) arba Shift-JIS (japonų k.). Pasirinkite pagal savo turinio charakterio reikalavimus."

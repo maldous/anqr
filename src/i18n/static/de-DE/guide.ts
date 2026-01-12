@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Kodierungsmodus: Auto, Numerisch, Alphanumerisch, Byte/UTF-8 oder Kanji.',
         'Min Quiet Zone: Mindestens 4 Modul Marge sichern.',
+        'Mask Pattern: Auto (optimal), oder manuell wählen Sie Muster 0-7, um die Modulverteilung zu steuern. Verschiedene Muster schaffen unterschiedliche visuelle Erscheinungen während der Kodierung der gleichen Daten.',
+        'Zeichencodierung: ISO-8859-1 (Standardeinstellung), UTF-8 (Voll-Unicode einschließlich Emoji), oder Shift-JIS (Japanisch). Wählen Sie basierend auf den Charakteranforderungen Ihrer Inhalte.',
       ],
     },
     {

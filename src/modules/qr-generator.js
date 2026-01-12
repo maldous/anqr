@@ -3,9 +3,9 @@ import { blendColors, parseColor } from './color-utils.ts';
 import { applyDither } from './dither-algorithms.ts';
 import {
   calculateOptimalVersion,
-  detectOptimalMode,
   generateQR,
   getAlignmentPatternCenters,
+  getCompatibleMode,
   isData,
   isFinderPattern,
   isLocked,
@@ -13,6 +13,17 @@ import {
   isTimingPattern,
 } from './qr-core.ts';
 import qrcode from './qrcode.mjs';
+import { createShiftJISEncoder } from './shift-jis-encoder.ts';
+
+// Store default stringToBytes function for restoration after UTF-8 encoding
+const defaultStringToBytes = (s) => {
+  const bytes = [];
+  for (let i = 0; i < s.length; i += 1) {
+    const c = s.charCodeAt(i);
+    bytes.push(c & 0xff);
+  }
+  return bytes;
+};
 
 // ============================================
 // MEMOIZATION CACHES
@@ -807,14 +818,15 @@ export class QRGenerator {
     }
 
     // Get encoding mode early (needed for version calculation)
-    // CRITICAL: If 'auto', detect the optimal mode NOW and use it consistently
-    // for both version calculation AND the library call. Otherwise we may calculate
-    // version based on numeric capacity but the library encodes as byte mode.
+    // CRITICAL: Validate that content is compatible with the selected mode.
+    // If user selected 'numeric' but content has letters, we must fall back
+    // to a compatible mode to avoid "illegal char" errors from the library.
     let encodingMode = config.encodingMode || 'auto';
-    if (encodingMode === 'auto') {
-      // Use the shared detectOptimalMode function from qr-core.ts
-      encodingMode = detectOptimalMode(config.content || '');
-    }
+    const content = config.content || '';
+
+    // Use getCompatibleMode which handles both auto-detection AND validation
+    // This prevents crashes when user selects numeric/alphanumeric with incompatible content
+    encodingMode = getCompatibleMode(content, encodingMode);
 
     // Auto-detect best version if set to 0
     let typeNumber = config.typeNumber;
@@ -839,7 +851,10 @@ export class QRGenerator {
     // These are handled by the getScaleFactor() and generateScaledQR() methods below
 
     // Build cache key for QR matrix reuse (avoids expensive qr.make() on every frame)
-    const qrCacheKey = `${config.content}:${config.errorCorrection}:${typeNumber}:${encodingMode}`;
+    // Get mask pattern and character encoding for cache key and generation
+    const maskPatternConfig = config.maskPattern;
+    const characterEncodingConfig = config.characterEncoding || 'default';
+    const qrCacheKey = `${config.content}:${config.errorCorrection}:${typeNumber}:${encodingMode}:${maskPatternConfig}:${characterEncodingConfig}`;
 
     // Check cache for existing QR matrix
     let qr;
@@ -854,6 +869,24 @@ export class QRGenerator {
       // Build new QR matrix
       qr = this.qrcode(typeNumber, config.errorCorrection);
 
+      // Handle character encoding (ECI - Extended Channel Interpretation)
+      // Set the stringToBytes function based on characterEncoding config
+      // NOTE: We restore stringToBytes to default after generation to avoid affecting other QR codes
+      if (characterEncodingConfig === 'utf8') {
+        // UTF-8 encoding - handles full Unicode
+        qrcode.stringToBytes = (s) => {
+          const encoder = new TextEncoder(); // UTF-8 by default
+          return Array.from(encoder.encode(s));
+        };
+      } else if (characterEncodingConfig === 'shift-jis') {
+        // Full Shift-JIS encoding for Japanese text
+        // Supports hiragana, katakana, kanji, punctuation, and full-width characters
+        qrcode.stringToBytes = createShiftJISEncoder();
+      } else {
+        // Default: ISO-8859-1 (Latin-1) - QR code default encoding
+        qrcode.stringToBytes = defaultStringToBytes;
+      }
+
       // Map encoding mode to qrcode-generator mode parameter
       const modeMap = {
         numeric: 'Numeric',
@@ -865,8 +898,19 @@ export class QRGenerator {
       const libraryMode = modeMap[encodingMode] || undefined;
 
       qr.addData(config.content, libraryMode);
-      qr.make();
+
+      // Get mask pattern from config ('auto' or 0-7)
+      // If 'auto' or undefined, pass undefined to let library auto-select best pattern
+      const maskPattern =
+        typeof maskPatternConfig === 'number' && maskPatternConfig >= 0 && maskPatternConfig <= 7
+          ? maskPatternConfig
+          : undefined; // Let library auto-select
+
+      qr.make(maskPattern);
       moduleCount = qr.getModuleCount();
+
+      // Restore stringToBytes to default after generation to avoid affecting other QR codes
+      qrcode.stringToBytes = defaultStringToBytes;
 
       // Cache the result
       qrMatrixCache.set(qrCacheKey, { qr, moduleCount });

@@ -1214,3 +1214,5 @@
 1214	"Reddit İcması"
 1215	"QR yaradıcılığınızı bölüşmək, suallar vermək, kömək almaq və digər ANQR istifadəçiləri ilə əlaqə yaratmaq üçün r/ANQR-də Reddit icmamıza qoşulun."
 1216	"r/ANQR-ə qoşulun"
+1217	"Mask Pattern: Avtomobil (optimal), və ya eləcə klassik nümunələri 0-7 modul paylamaq üçün. Müxtəlif nümunələr eyni məlumatları yaradır."
+1218	"Oyuncaq: ISO-8859-1 (Latin-1 default), UTF-8 ( emoji da tam Unicode), və ya Shift-JIS (Japon).  content s . . . ."

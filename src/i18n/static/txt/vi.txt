@@ -1214,3 +1214,5 @@
 1214	"Cộng đồng Reddit"
 1215	"Tham gia cộng đồng Reddit của chúng tôi tại r/ANQR để chia sẻ các sáng tạo QR của bạn, đặt câu hỏi, nhận trợ giúp và kết nối với những người dùng ANQR khác."
 1216	"Tham gia r/ANQR"
+1217	"Mẫu mặt nạ: Tự động (tối ưu) hoặc chọn thủ công các mẫu 0-7 để điều khiển phân phối mô-đun. Các mẫu khác nhau tạo ra hình thức trực quan khác nhau trong khi mã hóa cùng một dữ liệu."
+1218	"Mã hóa ký tự: ISO-8859-1 (mặc định tiếng Latin-1), UTF-8 (Unicode đầy đủ bao gồm biểu tượng cảm xúc) hoặc Shift-JIS (tiếng Nhật). Chọn dựa trên yêu cầu về nhân vật trong nội dung của bạn."

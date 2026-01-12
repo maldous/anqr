@@ -1214,3 +1214,5 @@
 1214	"Comunidade Reddit"
 1215	"Únete á nosa comunidade de Reddit en r/ANQR para compartir as túas creacións de QR, facer preguntas, obter axuda e conectar con outros usuarios de ANQR."
 1216	"Únete a r/ANQR"
+1217	"Patrón de máscaras: Auto (optimal), ou selecciona manualmente patróns 0-7 para controlar a distribución dos módulos. Diferentes patróns crean diferentes aparencias visuais ao codificar os mesmos datos."
+1218	"Código de caracteres: ISO-8859-1 (por defecto latino), UTF-8 (completo Unicode incluíndo emoji), ou Shift-JIS (xaponés). Escolla en función das características do seu contido."

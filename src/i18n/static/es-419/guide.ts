@@ -469,6 +469,8 @@ export const guide: PageDefinition = {
       bullets: [
         'Modo de codificación: Auto, Numeric, Alphanumeric, Byte/UTF-8, o Kanji.',
         'Enforce Min Quiet Zone: Asegurar al menos 4 márgenes de módulo.',
+        'Patrón de máscaras: Auto (optimal), o selecciona manualmente patrones 0-7 para controlar la distribución del módulo. Diferentes patrones crean diferentes apariencias visuales mientras se encogen los mismos datos.',
+        'Codificación de caracteres: ISO-8859-1 (por defecto de latín-1), UTF-8 (un código completo incluyendo emoji), o Shift-JIS (japonés). Elija basado en los requisitos de carácter de su contenido.',
       ],
     },
     {

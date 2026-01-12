@@ -11,7 +11,7 @@ import qrcode from './qrcode.mjs';
 
 export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 export type MaskPattern = 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-export type EncodingMode = 'auto' | 'Numeric' | 'Alphanumeric' | 'Byte' | 'Kanji';
+export type EncodingMode = 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji';
 
 export interface QROptions {
   text: string;
@@ -236,6 +236,68 @@ function getUtf8ByteLength(str: string): number {
     } else bytes += 3;
   }
   return bytes;
+}
+
+/**
+ * Check if content is valid for a specific encoding mode
+ * Returns true if the content can be encoded with the given mode
+ */
+export function isValidForMode(
+  content: string,
+  mode: 'numeric' | 'alphanumeric' | 'byte' | 'kanji'
+): boolean {
+  switch (mode) {
+    case 'numeric':
+      return /^[0-9]*$/.test(content);
+    case 'alphanumeric':
+      return /^[0-9A-Z $%*+\-./:]*$/.test(content);
+    case 'byte':
+      return true; // Byte mode can encode anything
+    case 'kanji':
+      // Kanji mode requires Shift-JIS compatible characters
+      // For simplicity, we allow it to try (library will validate)
+      return true;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Get a compatible encoding mode for the given content
+ * If the requested mode can't encode the content, returns a fallback mode
+ */
+export function getCompatibleMode(
+  content: string,
+  requestedMode: 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji'
+): 'numeric' | 'alphanumeric' | 'byte' | 'kanji' {
+  if (requestedMode === 'auto') {
+    return detectOptimalMode(content);
+  }
+
+  // Check if requested mode is compatible
+  if (isValidForMode(content, requestedMode)) {
+    return requestedMode;
+  }
+
+  // Fall back to a compatible mode
+  // Try alphanumeric first (if content matches), otherwise byte
+  if (requestedMode === 'numeric') {
+    if (isValidForMode(content, 'alphanumeric')) {
+      return 'alphanumeric';
+    }
+    return 'byte';
+  }
+
+  if (requestedMode === 'alphanumeric') {
+    return 'byte';
+  }
+
+  // Kanji fallback to byte
+  if (requestedMode === 'kanji') {
+    return 'byte';
+  }
+
+  return 'byte';
 }
 
 /**
@@ -547,8 +609,10 @@ export const QRCore = {
   getVersionFromModuleCount,
   getModuleCountForVersion,
 
-  // Mode detection
+  // Mode detection & validation
   detectOptimalMode,
+  isValidForMode,
+  getCompatibleMode,
 
   // Structural detection
   getAlignmentPositions,

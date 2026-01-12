@@ -13,7 +13,13 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { HighlightedLabel } from '@/lib/search-context';
 import { calculateOptimalVersion } from '@/modules/qr-core';
-import { type ECCLevel, type EncodingMode, useQRStore } from '@/store/qr-store';
+import {
+  type CharacterEncoding,
+  type ECCLevel,
+  type EncodingMode,
+  type MaskPattern,
+  useQRStore,
+} from '@/store/qr-store';
 
 // Short debounce for version slider to batch rapid changes while sliding
 // The main useQRGenerator debounce (300ms) handles the expensive computation
@@ -26,6 +32,8 @@ export function QREncodingSection() {
     setQrVersion,
     setQrEcc,
     setQrEncodingMode,
+    setQrMaskPattern,
+    setQrCharacterEncoding,
     setQrQuietZone,
     setQrQuietZoneMinEnforce,
     getPayloadText,
@@ -197,6 +205,66 @@ export function QREncodingSection() {
                 <SelectItem value="kanji">{t('qr.kanji')}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Character Encoding */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1">
+              <Label>
+                <HighlightedLabel>{t('qr.characterEncoding')}</HighlightedLabel>
+              </Label>
+              <HelpLink anchor="section-6" />
+            </div>
+            <Select
+              value={qr.characterEncoding}
+              onValueChange={(v) => setQrCharacterEncoding(v as CharacterEncoding)}
+            >
+              <SelectTrigger
+                data-testid="qr-character-encoding-select"
+                title={t('hints.characterEncoding')}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">{t('qr.latin1Default')}</SelectItem>
+                <SelectItem value="utf8">{t('qr.utf8Unicode')}</SelectItem>
+                <SelectItem value="iso-8859-1">{t('qr.iso88591')}</SelectItem>
+                <SelectItem value="shift-jis">{t('qr.shiftJis')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t('hints.characterEncodingNote')}</p>
+          </div>
+
+          {/* Mask Pattern */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-1">
+              <Label>
+                <HighlightedLabel>{t('qr.mask')}</HighlightedLabel>
+              </Label>
+              <HelpLink anchor="section-6" />
+            </div>
+            <Select
+              value={String(qr.maskPattern)}
+              onValueChange={(v) =>
+                setQrMaskPattern(v === 'auto' ? 'auto' : (Number.parseInt(v, 10) as MaskPattern))
+              }
+            >
+              <SelectTrigger data-testid="qr-mask-pattern-select" title={t('hints.maskPattern')}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">{t('qr.autoOptimal')}</SelectItem>
+                <SelectItem value="0">{t('qr.maskPattern0')}</SelectItem>
+                <SelectItem value="1">{t('qr.maskPattern1')}</SelectItem>
+                <SelectItem value="2">{t('qr.maskPattern2')}</SelectItem>
+                <SelectItem value="3">{t('qr.maskPattern3')}</SelectItem>
+                <SelectItem value="4">{t('qr.maskPattern4')}</SelectItem>
+                <SelectItem value="5">{t('qr.maskPattern5')}</SelectItem>
+                <SelectItem value="6">{t('qr.maskPattern6')}</SelectItem>
+                <SelectItem value="7">{t('qr.maskPattern7')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t('hints.maskPatternNote')}</p>
           </div>
 
           {/* Min Quiet Zone Enforce */}

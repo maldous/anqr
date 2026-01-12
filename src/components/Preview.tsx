@@ -262,7 +262,7 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
 
   return (
     <main
-      className={`flex-1 flex flex-col lg:flex-row bg-background overflow-auto transition-all duration-300 ${sidebarOpen ? 'lg:ms-96' : ''}`}
+      className={`flex-1 flex flex-col lg:flex-row bg-background overflow-auto scrollbar-hide transition-all duration-300 ${sidebarOpen ? 'lg:ms-96' : ''}`}
     >
       {/* Desktop Left Column Ad - Skyscraper 160x600, always visible */}
       {/* Fixed height based on viewport to prevent layout shift from AdSense */}

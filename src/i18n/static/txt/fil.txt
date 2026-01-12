@@ -1214,3 +1214,5 @@
 1214	"Reddit Community"
 1215	"Sumali sa aming komunidad ng Reddit sa r/ANQR upang ibahagi ang iyong mga nilikhang QR, magtanong, humingi ng tulong, at kumonekta sa iba pang mga user ng ANQR."
 1216	"Sumali sa r/ANQR"
+1217	"Disenyo ng Maskara: Auto (optimal), o manu - manong pumili ng disenyo 0-7 upang kontrolin ang pamamahagi ng module. Ang iba't ibang disenyo ay lumilikha ng iba't ibang hitsura samantalang ini - scan ang iisang impormasyon."
+1218	"Character Encoding: ISO-8859-1 (Latin-1 default), UTF-8 (full Unicode kabilang ang emoji), o Oberde-JIS (Japanese). Pumili batay sa mga kahilingan ng iyong nilalaman."
