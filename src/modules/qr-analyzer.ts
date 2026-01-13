@@ -2852,8 +2852,8 @@ export function analyzeQRCode(
   
   // Calculate confidence
   const confidence = calculateConfidence(
-    !!eccLevel,
-    !!maskPattern,
+    eccLevel !== null,
+    maskPattern !== null,
     hasValidMatrix,
     quietZone?.adequate ?? false
   );
@@ -3684,11 +3684,13 @@ function readFormatInfoFromSecondary(matrix: boolean[][]): number | null {
  */
 function decodeFormatInfo(bits: number): FormatInfo | null {
   // XOR with format info mask
-  const decoded = bits ^ FORMAT_INFO_MASK;
-  
-  // Extract mask pattern (bits 0-2) and ECC level (bits 3-4)
-  const maskPattern = decoded & 0x07;
-  const eccCode = (decoded >> 3) & 0x03;
+  const decoded = (bits ^ FORMAT_INFO_MASK) & 0x7FFF; // 15 bits
+
+  // Format info = 5 data bits (ECL+mask) + 10 BCH bits.
+  // With this bit assembly, the 5 data bits are the TOP 5 bits.
+  const formatData = decoded >> 10; // 5 bits
+  const maskPattern = formatData & 0x07;
+  const eccCode = (formatData >> 3) & 0x03;
   
   // Validate mask pattern (0-7)
   if (maskPattern < 0 || maskPattern > 7) {
