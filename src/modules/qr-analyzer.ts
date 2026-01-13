@@ -1974,6 +1974,54 @@ function verifyFinderPattern(
 }
 
 /**
+ * Merge/cluster nearby finder pattern candidates to reduce duplicates.
+ * Sorts by proximity and merges candidates within 0.75*moduleSize distance.
+ */
+function mergeCandidates(
+  cands: Array<{ x: number; y: number; moduleSize: number }>
+): Array<{ x: number; y: number; moduleSize: number }> {
+  if (cands.length === 0) return [];
+  
+  // Sort by x then y for deterministic processing
+  const sorted = [...cands].sort((a, b) => {
+    if (Math.abs(a.x - b.x) > 0.1) return a.x - b.x;
+    return a.y - b.y;
+  });
+  
+  const merged: Array<{ x: number; y: number; moduleSize: number; weight: number }> = [];
+  
+  for (const c of sorted) {
+    // Find if there's an existing merged candidate close enough
+    const threshold = Math.max(c.moduleSize, 1) * 0.75;
+    let foundMatch = false;
+    
+    for (const m of merged) {
+      const dist = Math.hypot(m.x - c.x, m.y - c.y);
+      const sizeRatio = Math.abs(m.moduleSize - c.moduleSize) / Math.max(m.moduleSize, c.moduleSize, 1);
+      
+      // Merge if within distance threshold AND moduleSize within 50%
+      if (dist <= threshold && sizeRatio <= 0.5) {
+        // Weighted average of positions
+        const totalWeight = m.weight + 1;
+        m.x = (m.x * m.weight + c.x) / totalWeight;
+        m.y = (m.y * m.weight + c.y) / totalWeight;
+        m.moduleSize = (m.moduleSize * m.weight + c.moduleSize) / totalWeight;
+        m.weight = totalWeight;
+        foundMatch = true;
+        break;
+      }
+    }
+    
+    if (!foundMatch) {
+      merged.push({ x: c.x, y: c.y, moduleSize: c.moduleSize, weight: 1 });
+    }
+  }
+  
+  // Return without the weight field
+  return merged.map(m => ({ x: m.x, y: m.y, moduleSize: m.moduleSize }));
+}
+
+/**
  * Find finder patterns using a binary image
  */
 function findFinderPatternsWithBinary(
@@ -1981,8 +2029,8 @@ function findFinderPatternsWithBinary(
   width: number,
   height: number
 ): FinderPattern[] {
-  const horizontalCandidates: Array<{ x: number; y: number; moduleSize: number }> = [];
-  const verticalCandidates: Array<{ x: number; y: number; moduleSize: number }> = [];
+  let horizontalCandidates: Array<{ x: number; y: number; moduleSize: number }> = [];
+  let verticalCandidates: Array<{ x: number; y: number; moduleSize: number }> = [];
   
   // Scan every row and column for thorough detection
   // FIX: Cap step at 2 maximum to avoid missing small QR codes
@@ -2006,7 +2054,16 @@ function findFinderPatternsWithBinary(
     }
   }
   
-  debugLog(`findFinderPatternsWithBinary: H candidates=${horizontalCandidates.length}, V candidates=${verticalCandidates.length}`);
+  // Log raw candidate counts before merging
+  const rawHCount = horizontalCandidates.length;
+  const rawVCount = verticalCandidates.length;
+  
+  // Merge/cluster candidates to reduce duplicates
+  horizontalCandidates = mergeCandidates(horizontalCandidates);
+  verticalCandidates = mergeCandidates(verticalCandidates);
+  
+  console.log(`[QR-DEBUG] findFinderPatternsWithBinary: H candidates ${rawHCount} -> ${horizontalCandidates.length} (merged), V candidates ${rawVCount} -> ${verticalCandidates.length} (merged)`);
+  debugLog(`findFinderPatternsWithBinary: H candidates=${rawHCount}->${horizontalCandidates.length}, V candidates=${rawVCount}->${verticalCandidates.length}`);
   
   // Match horizontal and vertical candidates
   const patterns: FinderPattern[] = [];
@@ -2740,15 +2797,18 @@ function decodePayload(
         // Sanity check: numeric mode can hold more characters than byte mode
         // but charCount should still be reasonable (< 7000 for largest QR)
         if (charCount > 7100) {
+          console.log(`[QR-DEBUG] decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
           debugLog(`decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
           return null;
         }
         
         // Numeric mode: 3 digits = 10 bits, 2 digits = 7 bits, 1 digit = 4 bits
+        const numericStart = result.length;
         let remaining = charCount;
         while (remaining >= 3) {
           const val = readBits(10);
           if (val > 999) {
+            console.log(`[QR-DEBUG] decodePayload: REJECTED - invalid numeric triplet ${val}`);
             debugLog(`decodePayload: REJECTED - invalid numeric triplet ${val}`);
             return null;
           }
@@ -2760,6 +2820,7 @@ function decodePayload(
         if (remaining === 2) {
           const val = readBits(7);
           if (val > 99) {
+            console.log(`[QR-DEBUG] decodePayload: REJECTED - invalid numeric pair ${val}`);
             debugLog(`decodePayload: REJECTED - invalid numeric pair ${val}`);
             return null;
           }
@@ -2768,11 +2829,22 @@ function decodePayload(
         } else if (remaining === 1) {
           const val = readBits(4);
           if (val > 9) {
+            console.log(`[QR-DEBUG] decodePayload: REJECTED - invalid numeric digit ${val}`);
             debugLog(`decodePayload: REJECTED - invalid numeric digit ${val}`);
             return null;
           }
           result += String(val);
         }
+        
+        // STRICT VALIDATION: Numeric mode MUST produce only digits 0-9
+        // If result contains non-digits, this is a garbage decode from wrong mask/alignment
+        const numericSegment = result.substring(numericStart);
+        if (numericSegment.length > 0 && !/^[0-9]+$/.test(numericSegment)) {
+          console.log(`[QR-DEBUG] decodePayload: REJECTED - numeric mode produced non-digit chars: "${numericSegment.substring(0, 30)}..."`);
+          debugLog(`decodePayload: REJECTED - numeric mode produced non-digit chars`);
+          return null;
+        }
+        console.log(`[QR-DEBUG] decodePayload: NUMERIC segment OK, ${numericSegment.length} digits`);
         break;
       }
 
