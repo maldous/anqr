@@ -4036,74 +4036,103 @@ function extractModuleMatrix(
 function calculatePerspectiveTransform(
   location: QRLocation,
   moduleCount: number
-): ((col: number, row: number) => { x: number; y: number }) | null {
-  // FIX: The finder pattern center is at module (3,3), not (3.5, 3.5)
-  // The finder is 7x7, and its center cell is the 4th module (index 3).
-  // When we add 0.5 below for the module center, module (3,3) becomes (3.5, 3.5)
-  // which correctly maps to u=0, v=0 at the detected finder center.
-  // Using 3.5 here was causing sampling to be offset by 0.5 modules!
-  const finderOffset = 3.0;
-  
-  // Distance between finder centers in modules
-  const moduleSpan = moduleCount - 7; // e.g., for version 3 (29 modules): 29 - 7 = 22
-  
-  if (moduleSpan <= 0) {
-    return null;
-  }
-  
-  // Use finder centers directly as source quad points (don't extend!)
-  // These are the most accurately detected positions
-  const srcPoints = [
-    location.topLeft,      // corresponds to module (3.5, 3.5) -> u=0, v=0
-    location.topRight,     // corresponds to module (moduleCount-3.5, 3.5) -> u=1, v=0
-    location.bottomRight,  // corresponds to module (moduleCount-3.5, moduleCount-3.5) -> u=1, v=1
-    location.bottomLeft,   // corresponds to module (3.5, moduleCount-3.5) -> u=0, v=1
+): (col: number, row: number) => { x: number; y: number } {
+  // Projective transform (homography) from QR module space to image space.
+  // More stable than bilinear interpolation under perspective skew.
+  const finderOffset = 3.5;
+
+  type P = { x: number; y: number };
+
+  const srcPts: [P, P, P, P] = [
+    { x: finderOffset, y: finderOffset },
+    { x: moduleCount - finderOffset, y: finderOffset },
+    { x: finderOffset, y: moduleCount - finderOffset },
+    { x: moduleCount - finderOffset, y: moduleCount - finderOffset }
   ];
-  
-  return (col: number, row: number) => {
-    // Map module coordinates to u,v relative to finder centers
-    // For module center at (col, row), we sample at (col + 0.5, row + 0.5)
-    // u = 0 at module 3.5, u = 1 at module (moduleCount - 3.5)
-    const u = (col + 0.5 - finderOffset) / moduleSpan;
-    const v = (row + 0.5 - finderOffset) / moduleSpan;
-    
-    // DO NOT CLAMP u,v - extrapolation is necessary and correct for edge modules
-    // Module (0, 0) will have u ≈ -0.136, v ≈ -0.136 for version 3
-    // Bilinear interpolation naturally handles this
-    
-    // Bilinear interpolation (works for both interpolation and extrapolation)
-    // srcPoints[0] = topLeft (u=0, v=0)
-    // srcPoints[1] = topRight (u=1, v=0)
-    // srcPoints[2] = bottomRight (u=1, v=1)
-    // srcPoints[3] = bottomLeft (u=0, v=1)
-    const x =
-      (1 - u) * (1 - v) * srcPoints[0].x +
-      u * (1 - v) * srcPoints[1].x +
-      u * v * srcPoints[2].x +
-      (1 - u) * v * srcPoints[3].x;
-    
-    const y =
-      (1 - u) * (1 - v) * srcPoints[0].y +
-      u * (1 - v) * srcPoints[1].y +
-      u * v * srcPoints[2].y +
-      (1 - u) * v * srcPoints[3].y;
-    
-    return { x, y };
+
+  const dstPts: [P, P, P, P] = [
+    location.topLeft,
+    location.topRight,
+    location.bottomLeft,
+    location.bottomRight
+  ];
+
+  const H = solveHomography(srcPts, dstPts);
+
+  return (col: number, row: number): P => {
+    const u = col + 0.5;
+    const v = row + 0.5;
+    const denom = H[6] * u + H[7] * v + 1.0;
+    return {
+      x: (H[0] * u + H[1] * v + H[2]) / denom,
+      y: (H[3] * u + H[4] * v + H[5]) / denom
+    };
   };
 }
 
-// ============================================
-// FORMAT INFO DECODING
-// ============================================
+function solveHomography(
+  src: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }, { x: number; y: number }],
+  dst: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }, { x: number; y: number }]
+): [number, number, number, number, number, number, number, number] {
+  const A: number[][] = [];
+  const b: number[] = [];
 
-interface FormatInfo {
-  eccLevel: ECCLevel;
-  maskPattern: MaskPattern;
+  for (let i = 0; i < 4; i++) {
+    const x = src[i].x;
+    const y = src[i].y;
+    const X = dst[i].x;
+    const Y = dst[i].y;
+
+    A.push([x, y, 1, 0, 0, 0, -x * X, -y * X]);
+    b.push(X);
+
+    A.push([0, 0, 0, x, y, 1, -x * Y, -y * Y]);
+    b.push(Y);
+  }
+
+  const h = solveLinearSystem8(A, b);
+  return [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7]];
 }
 
-/**
- * Read and decode format information from the module matrix
- */
+function solveLinearSystem8(Ain: number[][], bin: number[]): number[] {
+  const A = Ain.map(r => r.slice());
+  const b = bin.slice();
+  const n = 8;
+
+  for (let col = 0; col < n; col++) {
+    let pivotRow = col;
+    let pivotVal = Math.abs(A[col][col]);
+    for (let r = col + 1; r < n; r++) {
+      const v = Math.abs(A[r][col]);
+      if (v > pivotVal) {
+        pivotVal = v;
+        pivotRow = r;
+      }
+    }
+    if (pivotVal < 1e-12) throw new Error('Homography solve failed: singular matrix');
+
+    if (pivotRow !== col) {
+      const tmp = A[col]; A[col] = A[pivotRow]; A[pivotRow] = tmp;
+      const tb = b[col]; b[col] = b[pivotRow]; b[pivotRow] = tb;
+    }
+
+    const pivot = A[col][col];
+    for (let c = col; c < n; c++) A[col][c] /= pivot;
+    b[col] /= pivot;
+
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue;
+      const factor = A[r][col];
+      if (Math.abs(factor) < 1e-12) continue;
+      for (let c = col; c < n; c++) A[r][c] -= factor * A[col][c];
+      b[r] -= factor * b[col];
+    }
+  }
+
+  return b;
+}
+
+
 function readFormatInfo(matrix: boolean[][]): FormatInfo | null {
   const moduleCount = matrix.length;
   console.log(`[QR-DEBUG] readFormatInfo: moduleCount=${moduleCount}`);
@@ -4115,7 +4144,7 @@ function readFormatInfo(matrix: boolean[][]): FormatInfo | null {
   // Try reading format info from two locations and use the better one
   const format1 = readFormatInfoFromTopLeft(matrix);
   const format2 = readFormatInfoFromSecondary(matrix);
-  console.log(`[QR-DEBUG] readFormatInfo: format1 bits=${format1?.toString(2).padStart(15, '0')}, format2 bits=${format2?.toString(2).padStart(15, '0')}`);
+  console.log(`[QR-DEBUG] readFormatInfo: format1 bits=${format1.toString(2).padStart(15, '0')}, format2 bits=${format2.toString(2).padStart(15, '0')}`);
   
   // Try to decode both
   const decoded1 = format1 !== null ? decodeFormatInfo(format1) : null;
