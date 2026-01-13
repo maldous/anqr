@@ -1066,7 +1066,7 @@ export function extractDominantColors(
   // Sample pixels at module centers
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
-      const { x, y } = transform(col + 0.5, row + 0.5);
+      const { x, y } = transform(col, row);
       const px = Math.round(x);
       const py = Math.round(y);
 
@@ -3464,7 +3464,7 @@ function calculateRegionOtsuThreshold(
 
   for (let row = 0; row < moduleCount; row += step) {
     for (let col = 0; col < moduleCount; col += step) {
-      const pt = transform(col + 0.5, row + 0.5);
+      const pt = transform(col, row);
       const px = Math.round(pt.x);
       const py = Math.round(pt.y);
 
@@ -3982,7 +3982,7 @@ function extractModuleCandidates(
     console.log(`[QR-DEBUG] extractModuleCandidates: TOP 5 candidates:`);
     for (let i = 0; i < Math.min(5, candidates.length); i++) {
       const c = candidates[i];
-      console.log(`[QR-DEBUG]   #${i+1}: score=${c.score.toFixed(1)}, threshold=${c.threshold}, offset=(${c.dx},${c.dy}), inverted=${c.inverted}`);
+      console.log(`[QR-DEBUG]   #${i+1}: score=${c.score.toFixed(2)}, threshold=${c.threshold}, offset=(${c.dx},${c.dy}), inverted=${c.inverted}`);
     }
     debugLog(`extractModuleCandidates: best score=${candidates[0].score.toFixed(1)} (threshold=${candidates[0].threshold}, offset=(${candidates[0].dx},${candidates[0].dy}), inverted=${candidates[0].inverted})`);
   }
