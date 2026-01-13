@@ -5,6 +5,8 @@ import {
   BookOpen,
   Camera as CameraIcon,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Download,
   FileText,
   Globe,
@@ -18,12 +20,13 @@ import {
   PanelLeft,
   Play,
   QrCode,
+  ScanLine,
   Share2,
   Shield,
   Sparkles,
   Sun,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StaticPageType } from '@/components/StaticPage';
 import { Button } from '@/components/ui/button';
@@ -50,24 +53,26 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
   return Icon ? <Icon className={className} /> : null;
 }
 
-type HeaderPage = 'editor' | 'gallery' | StaticPageType;
+type HeaderPage = 'editor' | 'gallery' | 'analyze' | StaticPageType;
 
 const NAV_LINKS: Array<{
   href: string;
   labelKey: string;
+  defaultLabel: string;
   page: HeaderPage;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { href: '/', labelKey: 'nav.generator', page: 'editor', icon: QrCode },
-  { href: '/gallery', labelKey: 'nav.gallery', page: 'gallery', icon: Images },
-  { href: '/guide', labelKey: 'nav.guide', page: 'guide', icon: BookOpen },
-  { href: '/learn', labelKey: 'nav.learn', page: 'learn', icon: Lightbulb },
-  { href: '/examples', labelKey: 'nav.examples', page: 'examples', icon: Sparkles },
-  { href: '/about', labelKey: 'nav.about', page: 'about', icon: Info },
-  { href: '/privacy', labelKey: 'nav.privacy', page: 'privacy', icon: Shield },
-  { href: '/terms', labelKey: 'nav.terms', page: 'terms', icon: FileText },
-  { href: '/translate', labelKey: 'nav.translate', page: 'translate', icon: Globe },
-  { href: '/contact', labelKey: 'nav.contact', page: 'contact', icon: Mail },
+  { href: '/', labelKey: 'nav.generator', defaultLabel: 'Generator', page: 'editor', icon: QrCode },
+  { href: '/analyze', labelKey: 'nav.analyze', defaultLabel: 'Analyze', page: 'analyze', icon: ScanLine },
+  { href: '/gallery', labelKey: 'nav.gallery', defaultLabel: 'Gallery', page: 'gallery', icon: Images },
+  { href: '/guide', labelKey: 'nav.guide', defaultLabel: 'Guide', page: 'guide', icon: BookOpen },
+  { href: '/learn', labelKey: 'nav.learn', defaultLabel: 'Learn', page: 'learn', icon: Lightbulb },
+  { href: '/examples', labelKey: 'nav.examples', defaultLabel: 'Examples', page: 'examples', icon: Sparkles },
+  { href: '/about', labelKey: 'nav.about', defaultLabel: 'About', page: 'about', icon: Info },
+  { href: '/privacy', labelKey: 'nav.privacy', defaultLabel: 'Privacy', page: 'privacy', icon: Shield },
+  { href: '/terms', labelKey: 'nav.terms', defaultLabel: 'Terms', page: 'terms', icon: FileText },
+  { href: '/translate', labelKey: 'nav.translate', defaultLabel: 'Translate', page: 'translate', icon: Globe },
+  { href: '/contact', labelKey: 'nav.contact', defaultLabel: 'Contact', page: 'contact', icon: Mail },
 ];
 
 type HeaderProps = Readonly<{
@@ -122,8 +127,53 @@ export function Header({
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [isLangMenuClosing, setIsLangMenuClosing] = useState(false);
   const [isMobileMenuClosing, setIsMobileMenuClosing] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const bannerHeight = useBannerHeight();
   const langButtonRef = useRef<HTMLDivElement>(null);
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+
+  // Check scroll state and update indicators
+  const updateScrollIndicators = useCallback(() => {
+    const el = headerScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    // Small threshold to account for rounding
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+  }, []);
+
+  // Scroll the header by a fixed amount
+  const scrollHeader = useCallback((direction: 'left' | 'right') => {
+    const el = headerScrollRef.current;
+    if (!el) return;
+    const scrollAmount = 150;
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  // Set up scroll and resize observers
+  useEffect(() => {
+    const el = headerScrollRef.current;
+    if (!el) return;
+
+    // Initial check
+    updateScrollIndicators();
+
+    // Listen for scroll events
+    el.addEventListener('scroll', updateScrollIndicators, { passive: true });
+
+    // Listen for resize events
+    const resizeObserver = new ResizeObserver(updateScrollIndicators);
+    resizeObserver.observe(el);
+
+    return () => {
+      el.removeEventListener('scroll', updateScrollIndicators);
+      resizeObserver.disconnect();
+    };
+  }, [updateScrollIndicators]);
 
   const currentLang = languages.find((l) => l.code === i18n.language) || languages[0];
 
@@ -543,8 +593,44 @@ export function Header({
         className={`border-b bg-card shadow-md fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${sidebarOpen && isEditor ? 'lg:ms-96' : ''}`}
         style={{ paddingTop: 'max(var(--sat, 0px), env(safe-area-inset-top, 0px))' }}
       >
-        <div className="px-2 sm:px-4 flex items-center justify-between h-[52px] overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
+        <div className="relative flex items-center h-[52px]">
+          {/* Left scroll indicator (start side in RTL) */}
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scrollHeader('left')}
+              className={`absolute z-10 flex items-center justify-center w-8 h-full cursor-pointer transition-colors ${
+                isRtlLanguage(i18n.language)
+                  ? 'right-0 bg-gradient-to-l from-card to-transparent hover:from-muted'
+                  : 'left-0 bg-gradient-to-r from-card to-transparent hover:from-muted'
+              }`}
+              title={t('accessibility.scrollLeft')}
+            >
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            </button>
+          )}
+          
+          {/* Right scroll indicator (end side in RTL) */}
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => scrollHeader('right')}
+              className={`absolute z-10 flex items-center justify-center w-8 h-full cursor-pointer transition-colors ${
+                isRtlLanguage(i18n.language)
+                  ? 'left-0 bg-gradient-to-r from-card to-transparent hover:from-muted'
+                  : 'right-0 bg-gradient-to-l from-card to-transparent hover:from-muted'
+              }`}
+              title={t('accessibility.scrollRight')}
+            >
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
+          )}
+          
+          <div
+            ref={headerScrollRef}
+            className="px-2 sm:px-4 flex items-center justify-between w-full h-full overflow-x-auto scrollbar-hide"
+          >
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
             {/* Settings toggle - only in editor mode, placeholder space on other pages */}
             {isEditor ? (
               <button
@@ -605,16 +691,16 @@ export function Header({
                       e.preventDefault();
                       onNavigate(link.page);
                     }}
-                    title={`Go to ${t(link.labelKey)}`}
+                    title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
                   >
-                    {t(link.labelKey)}
+                    {t(link.labelKey, link.defaultLabel)}
                   </a>
                 );
               })}
             </nav>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
             {/* Gallery Filter - icon buttons right-justified next to dark mode toggle */}
             {isGallery && (
               <div className="hidden lg:flex items-center gap-1">
@@ -855,23 +941,24 @@ export function Header({
               {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
 
-            {/* Mobile Menu Button - always on far right for easy thumb access */}
+            {/* Mobile Menu Button - shows when desktop nav is hidden (below lg breakpoint) */}
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden h-9 w-9"
+              className="lg:hidden h-9 w-9"
               onClick={() => (mobileMenuOpen ? closeMobileMenu() : setMobileMenuOpen(true))}
               title={t('accessibility.openNavMenu')}
             >
               <Menu className="h-5 w-5" />
             </Button>
           </div>
+          </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - shows when desktop nav is hidden (below lg breakpoint) */}
         {(mobileMenuOpen || isMobileMenuClosing) && (
           <div
-            className={`md:hidden border-t bg-card p-3 overflow-hidden origin-top ${
+            className={`lg:hidden border-t bg-card p-3 overflow-hidden origin-top ${
               isMobileMenuClosing
                 ? 'animate-[slide-up_0.2s_ease-in_forwards]'
                 : 'animate-[slide-down_0.2s_ease-out_forwards]'
@@ -903,10 +990,12 @@ export function Header({
                       }
                       closeMobileMenu();
                     }}
-                    title={`Go to ${t(generatorLink.labelKey)}`}
+                    title={`Go to ${t(generatorLink.labelKey, generatorLink.defaultLabel)}`}
                   >
                     <IconComponent className="w-5 h-5" />
-                    <span className="text-sm">{t(generatorLink.labelKey)}</span>
+                    <span className="text-sm">
+                      {t(generatorLink.labelKey, generatorLink.defaultLabel)}
+                    </span>
                   </a>
                 );
               })()}
@@ -932,11 +1021,11 @@ export function Header({
                         }
                         closeMobileMenu();
                       }}
-                      title={`Go to ${t(link.labelKey)}`}
+                      title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
                     >
                       <IconComponent className="w-5 h-5" />
                       <span className="text-[11px] leading-tight text-center">
-                        {t(link.labelKey)}
+                        {t(link.labelKey, link.defaultLabel)}
                       </span>
                     </a>
                   );

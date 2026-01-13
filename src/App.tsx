@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BusyOverlay } from '@/components/BusyOverlay';
+import { Analyze } from '@/components/Analyze';
 import { Gallery } from '@/components/Gallery';
 import { Header } from '@/components/Header';
 import { MobileDivider } from '@/components/MobileDivider';
@@ -23,7 +24,7 @@ import {
   useQRStore,
 } from '@/store/qr-store';
 
-type PageView = 'editor' | 'gallery' | StaticPageType;
+type PageView = 'editor' | 'gallery' | 'analyze' | StaticPageType;
 type ModuleStyleOption = 'square' | 'rounded' | 'dots' | 'diamond' | 'connected';
 
 /** Type alias for gradient update configuration */
@@ -39,6 +40,7 @@ function getPageFromLocation(): PageView {
   const hash = globalThis.location.hash.replace(/^#/, '');
 
   // Prefer clean paths when present.
+  if (path === '/analyze') return 'analyze';
   if (path === '/gallery') return 'gallery';
   if (path === '/guide') return 'guide';
   if (path === '/learn') return 'learn';
@@ -163,6 +165,7 @@ function App() {
 
   // Convenience booleans for view states
   const showGallery = currentPage === 'gallery';
+  const showAnalyze = currentPage === 'analyze';
   const showStaticPage = [
     'about',
     'privacy',
@@ -867,6 +870,7 @@ function App() {
             }}
           >
             {showEditor && <Preview sidebarOpen={sidebarOpen} />}
+            {showAnalyze && <Analyze onNavigate={navigateTo} />}
             {showGallery && <Gallery filter={galleryFilter} />}
             {showStaticPage && <StaticPage page={currentPage as StaticPageType} />}
           </div>
