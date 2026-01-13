@@ -667,8 +667,98 @@ function applyRSCorrection(
   return { data: correctedData, errorsCorrected: totalErrors };
 }
 
-// QR Code data capacity table (characters for byte mode)
+// QR Code data capacity tables
 // Format: [version][eccLevel] = capacity
+
+// Numeric mode capacity (digits)
+const DATA_CAPACITY_NUMERIC: Record<number, Record<ECCLevel, number>> = {
+  1: { L: 41, M: 34, Q: 27, H: 17 },
+  2: { L: 77, M: 63, Q: 48, H: 34 },
+  3: { L: 127, M: 101, Q: 77, H: 58 },
+  4: { L: 187, M: 149, Q: 111, H: 82 },
+  5: { L: 255, M: 202, Q: 144, H: 106 },
+  6: { L: 322, M: 255, Q: 178, H: 139 },
+  7: { L: 370, M: 293, Q: 207, H: 154 },
+  8: { L: 461, M: 365, Q: 259, H: 202 },
+  9: { L: 552, M: 432, Q: 312, H: 235 },
+  10: { L: 652, M: 513, Q: 364, H: 288 },
+  11: { L: 772, M: 604, Q: 427, H: 331 },
+  12: { L: 883, M: 691, Q: 489, H: 374 },
+  13: { L: 1022, M: 796, Q: 580, H: 427 },
+  14: { L: 1101, M: 871, Q: 621, H: 468 },
+  15: { L: 1250, M: 991, Q: 703, H: 530 },
+  16: { L: 1408, M: 1082, Q: 775, H: 602 },
+  17: { L: 1548, M: 1212, Q: 876, H: 674 },
+  18: { L: 1725, M: 1346, Q: 948, H: 746 },
+  19: { L: 1903, M: 1500, Q: 1063, H: 813 },
+  20: { L: 2061, M: 1600, Q: 1159, H: 919 },
+  21: { L: 2232, M: 1708, Q: 1224, H: 969 },
+  22: { L: 2409, M: 1872, Q: 1358, H: 1056 },
+  23: { L: 2620, M: 2059, Q: 1468, H: 1108 },
+  24: { L: 2812, M: 2188, Q: 1588, H: 1228 },
+  25: { L: 3057, M: 2395, Q: 1718, H: 1286 },
+  26: { L: 3283, M: 2544, Q: 1804, H: 1425 },
+  27: { L: 3517, M: 2701, Q: 1933, H: 1501 },
+  28: { L: 3669, M: 2857, Q: 2085, H: 1581 },
+  29: { L: 3909, M: 3035, Q: 2181, H: 1677 },
+  30: { L: 4158, M: 3289, Q: 2358, H: 1782 },
+  31: { L: 4417, M: 3486, Q: 2473, H: 1897 },
+  32: { L: 4686, M: 3693, Q: 2670, H: 2022 },
+  33: { L: 4965, M: 3909, Q: 2805, H: 2157 },
+  34: { L: 5253, M: 4134, Q: 2949, H: 2301 },
+  35: { L: 5529, M: 4343, Q: 3081, H: 2361 },
+  36: { L: 5836, M: 4588, Q: 3244, H: 2524 },
+  37: { L: 6153, M: 4775, Q: 3417, H: 2625 },
+  38: { L: 6479, M: 5039, Q: 3599, H: 2735 },
+  39: { L: 6743, M: 5313, Q: 3791, H: 2927 },
+  40: { L: 7089, M: 5596, Q: 3993, H: 3057 },
+};
+
+// Alphanumeric mode capacity (characters)
+const DATA_CAPACITY_ALPHANUMERIC: Record<number, Record<ECCLevel, number>> = {
+  1: { L: 25, M: 20, Q: 16, H: 10 },
+  2: { L: 47, M: 38, Q: 29, H: 20 },
+  3: { L: 77, M: 61, Q: 47, H: 35 },
+  4: { L: 114, M: 90, Q: 67, H: 50 },
+  5: { L: 154, M: 122, Q: 87, H: 64 },
+  6: { L: 195, M: 154, Q: 108, H: 84 },
+  7: { L: 224, M: 178, Q: 125, H: 93 },
+  8: { L: 279, M: 221, Q: 157, H: 122 },
+  9: { L: 335, M: 262, Q: 189, H: 143 },
+  10: { L: 395, M: 311, Q: 221, H: 174 },
+  11: { L: 468, M: 366, Q: 259, H: 200 },
+  12: { L: 535, M: 419, Q: 296, H: 227 },
+  13: { L: 619, M: 483, Q: 352, H: 259 },
+  14: { L: 667, M: 528, Q: 376, H: 283 },
+  15: { L: 758, M: 600, Q: 426, H: 321 },
+  16: { L: 854, M: 656, Q: 470, H: 365 },
+  17: { L: 938, M: 734, Q: 531, H: 408 },
+  18: { L: 1046, M: 816, Q: 574, H: 452 },
+  19: { L: 1153, M: 909, Q: 644, H: 493 },
+  20: { L: 1249, M: 970, Q: 702, H: 557 },
+  21: { L: 1352, M: 1035, Q: 742, H: 587 },
+  22: { L: 1460, M: 1134, Q: 823, H: 640 },
+  23: { L: 1588, M: 1248, Q: 890, H: 672 },
+  24: { L: 1704, M: 1326, Q: 963, H: 744 },
+  25: { L: 1853, M: 1451, Q: 1041, H: 779 },
+  26: { L: 1990, M: 1542, Q: 1094, H: 864 },
+  27: { L: 2132, M: 1637, Q: 1172, H: 910 },
+  28: { L: 2223, M: 1732, Q: 1263, H: 958 },
+  29: { L: 2369, M: 1839, Q: 1322, H: 1016 },
+  30: { L: 2520, M: 1994, Q: 1429, H: 1080 },
+  31: { L: 2677, M: 2113, Q: 1499, H: 1150 },
+  32: { L: 2840, M: 2238, Q: 1618, H: 1226 },
+  33: { L: 3009, M: 2369, Q: 1700, H: 1307 },
+  34: { L: 3183, M: 2506, Q: 1787, H: 1394 },
+  35: { L: 3351, M: 2632, Q: 1867, H: 1431 },
+  36: { L: 3537, M: 2780, Q: 1966, H: 1530 },
+  37: { L: 3729, M: 2894, Q: 2071, H: 1591 },
+  38: { L: 3927, M: 3054, Q: 2181, H: 1658 },
+  39: { L: 4087, M: 3220, Q: 2298, H: 1774 },
+  40: { L: 4296, M: 3391, Q: 2420, H: 1852 },
+};
+
+// Byte mode capacity (characters/bytes)
 const DATA_CAPACITY_BYTE: Record<number, Record<ECCLevel, number>> = {
   1: { L: 17, M: 14, Q: 11, H: 7 },
   2: { L: 32, M: 26, Q: 20, H: 14 },
@@ -2728,7 +2818,8 @@ function decodePayload(
   }
 
   // Apply Reed-Solomon error correction if ECC level is known
-  let correctedBytes = bytes;
+  // FIX: Hard-fail when RS correction fails - don't parse garbage bytes
+  let correctedBytes: number[];
   let errorsCorrected: number | null = null;
   
   if (eccLevel) {
@@ -2739,10 +2830,14 @@ function decodePayload(
       errorsCorrected = rsResult.errorsCorrected;
       console.log(`[QR-DEBUG] decodePayload: RS correction SUCCESS, errors corrected=${errorsCorrected}, data bytes=${correctedBytes.length}`);
     } else {
-      console.log(`[QR-DEBUG] decodePayload: RS correction FAILED`);
+      // FIX: RS correction failed - the codewords are corrupt, don't try to parse them
+      console.log(`[QR-DEBUG] decodePayload: RS correction FAILED - returning null (corrupt codewords)`);
+      return null;
     }
   } else {
-    console.log(`[QR-DEBUG] decodePayload: no ECC level, skipping RS correction`);
+    // No ECC level means we can't verify the data - still try to parse but this is risky
+    console.log(`[QR-DEBUG] decodePayload: no ECC level, using raw bytes (unverified)`);
+    correctedBytes = bytes;
   }
 
   // Convert corrected bytes back to bits for segment parsing
@@ -2794,9 +2889,17 @@ function decodePayload(
 
     switch (mode) {
       case QR_MODE.NUMERIC: {
-        // Sanity check: numeric mode can hold more characters than byte mode
-        // but charCount should still be reasonable (< 7000 for largest QR)
-        if (charCount > 7100) {
+        // STRICT CAPACITY CHECK: charCount must not exceed version/ECC capacity
+        if (eccLevel) {
+          const maxCapacity = DATA_CAPACITY_NUMERIC[version]?.[eccLevel] ?? 0;
+          console.log(`[QR-DEBUG] decodePayload: NUMERIC mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
+          if (charCount > maxCapacity) {
+            console.log(`[QR-DEBUG] decodePayload: REJECTED - numeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            debugLog(`decodePayload: REJECTED - numeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            return null;
+          }
+        } else if (charCount > 7100) {
+          // Fallback check if no ECC level (largest QR can hold ~7089 numeric)
           console.log(`[QR-DEBUG] decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
           debugLog(`decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
           return null;
@@ -2849,8 +2952,17 @@ function decodePayload(
       }
 
       case QR_MODE.ALPHANUMERIC: {
-        // Sanity check: alphanumeric mode can hold ~4300 chars max
-        if (charCount > 4300) {
+        // STRICT CAPACITY CHECK: charCount must not exceed version/ECC capacity
+        if (eccLevel) {
+          const maxCapacity = DATA_CAPACITY_ALPHANUMERIC[version]?.[eccLevel] ?? 0;
+          console.log(`[QR-DEBUG] decodePayload: ALPHANUMERIC mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
+          if (charCount > maxCapacity) {
+            console.log(`[QR-DEBUG] decodePayload: REJECTED - alphanumeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            debugLog(`decodePayload: REJECTED - alphanumeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            return null;
+          }
+        } else if (charCount > 4300) {
+          // Fallback check if no ECC level
           debugLog(`decodePayload: REJECTED - alphanumeric mode charCount ${charCount} is unreasonably large`);
           return null;
         }
@@ -2978,9 +3090,11 @@ function decodePayload(
       }
 
       default: {
-        // Unsupported or unknown mode (ECI, FNC1, etc.) – stop decoding further segments
-        bitIndex = correctedBits.length;
-        break;
+        // FIX: Unknown mode indicator means the bitstream is corrupt
+        // Mode must be 0 (terminator), 1 (numeric), 2 (alphanumeric), 4 (byte), or 8 (kanji)
+        // Anything else (like 11, 14, etc.) indicates wrong mask/alignment
+        console.log(`[QR-DEBUG] decodePayload: REJECTED - unknown mode ${mode} (invalid mode indicator)`);
+        return null;
       }
     }
   }
@@ -3703,9 +3817,10 @@ function validateExtractedMatrix(matrix: boolean[][], moduleCount: number): bool
   }
   const timingRatio = timingTotal > 0 ? timingCorrect / timingTotal : 0;
   debugLog(`validateExtractedMatrix: timing pattern ${timingCorrect}/${timingTotal} = ${(timingRatio * 100).toFixed(1)}%`);
-  // Timing should be at least 80% correct (stricter than before)
-  if (timingTotal > 0 && timingRatio < 0.80) {
-    debugLog(`validateExtractedMatrix: FAILED - timing pattern (need 80%+, got ${(timingRatio * 100).toFixed(1)}%)`);
+  // FIX: Timing must be at least 85% correct (like ZXing)
+  // 60-80% timing means the grid is misaligned and traversal will fail
+  if (timingTotal > 0 && timingRatio < 0.85) {
+    debugLog(`validateExtractedMatrix: FAILED - timing pattern (need 85%+, got ${(timingRatio * 100).toFixed(1)}%)`);
     return false;
   }
   
@@ -3922,8 +4037,12 @@ function calculatePerspectiveTransform(
   location: QRLocation,
   moduleCount: number
 ): ((col: number, row: number) => { x: number; y: number }) | null {
-  // The finder pattern centers are at module coordinate 3.5 from each edge
-  const finderOffset = 3.5;
+  // FIX: The finder pattern center is at module (3,3), not (3.5, 3.5)
+  // The finder is 7x7, and its center cell is the 4th module (index 3).
+  // When we add 0.5 below for the module center, module (3,3) becomes (3.5, 3.5)
+  // which correctly maps to u=0, v=0 at the detected finder center.
+  // Using 3.5 here was causing sampling to be offset by 0.5 modules!
+  const finderOffset = 3.0;
   
   // Distance between finder centers in modules
   const moduleSpan = moduleCount - 7; // e.g., for version 3 (29 modules): 29 - 7 = 22
