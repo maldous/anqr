@@ -1287,6 +1287,8 @@
   },
   "accessibility": {
     "toggleSettings": "Toggle settings panel",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
     "allCategories": "All Categories",
     "copyShareLink": "Copy shareable link to clipboard",
     "exportQrCode": "Export QR code to file",

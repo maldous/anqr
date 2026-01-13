@@ -329,7 +329,12 @@ android: build android\:bump android\:release
 
 zip:
 	@rm -f anqr.zip
-	@git archive --format=zip --prefix=anqr/ HEAD -o anqr.zip
+	@git archive \
+		--format=zip \
+		--prefix=anqr/ \
+		HEAD \
+		:\(exclude\)public/sitemap.xml \
+		-o anqr.zip
 
 # ============================================
 # i18n Public Repo Sync (anqr-i18n)
