@@ -11,6 +11,8 @@
 let DEBUG_LOG: string[] = [];
 
 function debugLog(msg: string): void {
+  const logMsg = `[QR-DEBUG] ${msg}`;
+  console.log(logMsg);
   DEBUG_LOG.push(`[${Date.now() % 100000}] ${msg}`);
 }
 
@@ -622,8 +624,13 @@ function applyRSCorrection(
   version: number,
   eccLevel: ECCLevel
 ): { data: number[]; errorsCorrected: number } | null {
+  console.log(`[QR-DEBUG] applyRSCorrection: START version=${version}, ECC=${eccLevel}, codewords=${codewords.length}`);
   const rsBlocks = getRSBlocks(version, eccLevel);
-  if (rsBlocks.length === 0) return null;
+  if (rsBlocks.length === 0) {
+    console.log(`[QR-DEBUG] applyRSCorrection: FAILED - no RS blocks for version ${version}`);
+    return null;
+  }
+  console.log(`[QR-DEBUG] applyRSCorrection: ${rsBlocks.length} RS blocks`);
   
   const blocks = deinterleaveBlocks(codewords, rsBlocks);
   const correctedBlocks: number[][] = [];
@@ -636,12 +643,14 @@ function applyRSCorrection(
     
     const result = rsCorrectErrors(codeword, nsym);
     if (!result) {
+      console.log(`[QR-DEBUG] applyRSCorrection: FAILED - block ${i} uncorrectable`);
       return null; // Uncorrectable errors
     }
     
     correctedBlocks.push(result.corrected);
     totalErrors += result.errorCount;
   }
+  console.log(`[QR-DEBUG] applyRSCorrection: all ${blocks.length} blocks corrected, totalErrors=${totalErrors}`);
   
   // Re-interleave corrected data
   const correctedData: number[] = [];
@@ -1102,19 +1111,6 @@ function calculateContrastRatio(
 // ============================================
 
 /**
- * Calculate Euclidean distance between two points.
- * Always returns a positive value.
- */
-function pointDistance(
-  p1: { x: number; y: number },
-  p2: { x: number; y: number }
-): number {
-  const dx = p2.x - p1.x;
-  const dy = p2.y - p1.y;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-/**
  * Calculate image properties for analysis display
  */
 function calculateImageProperties(
@@ -1128,8 +1124,14 @@ function calculateImageProperties(
   // Estimate QR code size in pixels
   let estimatedQrSizePx = 0;
   if (location && moduleCount) {
-    const topWidth = pointDistance(location.topLeft, location.topRight);
-    const leftHeight = pointDistance(location.topLeft, location.bottomLeft);
+    const topWidth = Math.sqrt(
+      Math.pow(location.topRight.x - location.topLeft.x, 2) +
+      Math.pow(location.topRight.y - location.topLeft.y, 2)
+    );
+    const leftHeight = Math.sqrt(
+      Math.pow(location.bottomLeft.x - location.topLeft.x, 2) +
+      Math.pow(location.bottomLeft.y - location.topLeft.y, 2)
+    );
     estimatedQrSizePx = Math.round((topWidth + leftHeight) / 2);
   }
   
@@ -1142,17 +1144,26 @@ function calculateImageProperties(
 }
 
 /**
- * Estimate the pixel size of each module in the QR code.
- * Uses pointDistance to ensure always-positive values.
+ * Estimate the pixel size of each module in the QR code
  */
 export function estimateModulePx(location: QRLocation, moduleCount: number): number {
-  if (moduleCount <= 0) return 0;
-  
-  // Calculate the width and height of the QR code in pixels using pointDistance
-  const topWidth = pointDistance(location.topLeft, location.topRight);
-  const bottomWidth = pointDistance(location.bottomLeft, location.bottomRight);
-  const leftHeight = pointDistance(location.topLeft, location.bottomLeft);
-  const rightHeight = pointDistance(location.topRight, location.bottomRight);
+  // Calculate the width and height of the QR code in pixels
+  const topWidth = Math.sqrt(
+    Math.pow(location.topRight.x - location.topLeft.x, 2) +
+    Math.pow(location.topRight.y - location.topLeft.y, 2)
+  );
+  const bottomWidth = Math.sqrt(
+    Math.pow(location.bottomRight.x - location.bottomLeft.x, 2) +
+    Math.pow(location.bottomRight.y - location.bottomLeft.y, 2)
+  );
+  const leftHeight = Math.sqrt(
+    Math.pow(location.bottomLeft.x - location.topLeft.x, 2) +
+    Math.pow(location.bottomLeft.y - location.topLeft.y, 2)
+  );
+  const rightHeight = Math.sqrt(
+    Math.pow(location.bottomRight.x - location.topRight.x, 2) +
+    Math.pow(location.bottomRight.y - location.topRight.y, 2)
+  );
 
   const avgWidth = (topWidth + bottomWidth) / 2;
   const avgHeight = (leftHeight + rightHeight) / 2;
@@ -1443,14 +1454,18 @@ function quantileFromHistogramReverse(hist: number[], total: number, q: number):
  * - Averages all thresholds that achieve the maximum variance (important for
  *   perfectly bimodal distributions).
  * - Adds low-contrast + edge-case fallbacks that are common in QR imagery.
- * - IMPORTANT: Only considers pixels within the trimmed range for variance calculation.
  */
 function otsuThresholdFromHistogram(hist: number[], total: number): number {
-  if (total <= 0) return 128;
+  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: total=${total}`);
+  if (total <= 0) {
+    console.log(`[QR-DEBUG] otsuThresholdFromHistogram: total<=0, returning 128`);
+    return 128;
+  }
 
   // Robust bounds to ignore tiny tails (e.g., compression artifacts)
   const minGray = quantileFromHistogram(hist, total, 0.005);
   const maxGray = quantileFromHistogramReverse(hist, total, 0.005);
+  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: minGray=${minGray}, maxGray=${maxGray}, dynamicRange=${maxGray - minGray}`);
 
   if (maxGray <= minGray) return 128;
 
@@ -1460,16 +1475,8 @@ function otsuThresholdFromHistogram(hist: number[], total: number): number {
     return Math.round((minGray + maxGray) / 2);
   }
 
-  // Compute sum and count ONLY within the trimmed range
   let sumAll = 0;
-  let totalInRange = 0;
-  for (let i = minGray; i <= maxGray; i++) {
-    sumAll += i * hist[i];
-    totalInRange += hist[i];
-  }
-
-  // If no pixels in range, fall back
-  if (totalInRange <= 0) return Math.round((minGray + maxGray) / 2);
+  for (let i = minGray; i <= maxGray; i++) sumAll += i * hist[i];
 
   let sumB = 0;
   let wB = 0;
@@ -1485,16 +1492,14 @@ function otsuThresholdFromHistogram(hist: number[], total: number): number {
     wB += h;
     sumB += t * h;
 
-    // Use totalInRange (not total) for foreground weight
-    const wF = totalInRange - wB;
+    const wF = total - wB;
     if (wB === 0 || wF === 0) continue;
 
     const mB = sumB / wB;
     const mF = (sumAll - sumB) / wF;
 
-    // Use totalInRange for probability calculation
-    const pB = wB / totalInRange;
-    const pF = wF / totalInRange;
+    const pB = wB / total;
+    const pF = wF / total;
 
     const between = pB * pF * (mB - mF) * (mB - mF);
 
@@ -1508,9 +1513,11 @@ function otsuThresholdFromHistogram(hist: number[], total: number): number {
   }
 
   let threshold = Math.round((threshold1 + threshold2) / 2);
+  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: initial threshold=${threshold} (from range ${threshold1}-${threshold2})`);
 
   // If Otsu lands on an edge, fall back to a valley or midpoint.
   if (threshold <= minGray + 1 || threshold >= maxGray - 1) {
+    console.log(`[QR-DEBUG] otsuThresholdFromHistogram: threshold on edge, trying valley fallback`);
     const mid = Math.floor((minGray + maxGray) / 2);
 
     // Find dominant peaks on each side, then pick the lowest bin between them.
@@ -1519,16 +1526,26 @@ function otsuThresholdFromHistogram(hist: number[], total: number): number {
     for (let i = minGray; i <= mid; i++) if (hist[i] > hist[leftPeak]) leftPeak = i;
     for (let i = mid + 1; i <= maxGray; i++) if (hist[i] > hist[rightPeak]) rightPeak = i;
 
-    if (leftPeak < rightPeak) {
-      let valley = leftPeak;
-      for (let i = leftPeak; i <= rightPeak; i++) if (hist[i] < hist[valley]) valley = i;
+    if (leftPeak + 1 < rightPeak) {
+      // FIX: Search for valley BETWEEN the peaks, not including them.
+      // Initialize to midpoint between peaks, then find the true minimum.
+      let valley = Math.floor((leftPeak + rightPeak) / 2);
+      let minCount = hist[valley];
+      for (let i = leftPeak + 1; i < rightPeak; i++) {
+        if (hist[i] < minCount) {
+          minCount = hist[i];
+          valley = i;
+        }
+      }
       threshold = valley;
     } else {
       threshold = Math.round((minGray + maxGray) / 2);
     }
   }
 
-  return Math.max(0, Math.min(255, threshold));
+  const finalThreshold = Math.max(0, Math.min(255, threshold));
+  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: FINAL threshold=${finalThreshold}`);
+  return finalThreshold;
 }
 
 function otsuThresholdFromLuma(luma: Uint8Array): number {
@@ -1781,6 +1798,133 @@ function scanLineForFinderPatterns(
 }
 
 /**
+ * Score a finder pattern candidate by checking the actual 7x7 structure
+ * Returns a numerical score 0-100 based on how well the pattern matches
+ * 
+ * A finder pattern is 7x7 modules:
+ * XXXXXXX (dark)
+ * X.....X
+ * X.XXX.X
+ * X.XXX.X
+ * X.XXX.X
+ * X.....X
+ * XXXXXXX
+ * Where X=dark, .=light
+ */
+function scoreFinderPatternAt(
+  binary: boolean[],
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  moduleSize: number
+): number {
+  const check = (mx: number, my: number): boolean | null => {
+    const px = Math.round(centerX + mx * moduleSize);
+    const py = Math.round(centerY + my * moduleSize);
+    if (px < 0 || px >= width || py < 0 || py >= height) return null;
+    return binary[py * width + px];
+  };
+  
+  let score = 0;
+  
+  // Score the 3x3 center core (should be all dark) - 27 points max
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const val = check(dx, dy);
+      if (val === true) score += 3; // Dark is correct
+    }
+  }
+  
+  // Score the inner ring at distance 2 (should be light) - 12 points max
+  const innerPositions = [
+    { dx: 0, dy: -2 }, { dx: 0, dy: 2 }, { dx: -2, dy: 0 }, { dx: 2, dy: 0 },
+    { dx: -1, dy: -2 }, { dx: 1, dy: -2 }, { dx: -1, dy: 2 }, { dx: 1, dy: 2 },
+    { dx: -2, dy: -1 }, { dx: -2, dy: 1 }, { dx: 2, dy: -1 }, { dx: 2, dy: 1 },
+  ];
+  for (const pos of innerPositions) {
+    const val = check(pos.dx, pos.dy);
+    if (val === false) score += 1; // Light is correct
+  }
+  
+  // Score the outer ring at distance 3 (should be dark) - 20 points max
+  const outerPositions = [
+    { dx: 0, dy: -3 }, { dx: 0, dy: 3 }, { dx: -3, dy: 0 }, { dx: 3, dy: 0 },
+    { dx: -1, dy: -3 }, { dx: 1, dy: -3 }, { dx: -1, dy: 3 }, { dx: 1, dy: 3 },
+    { dx: -3, dy: -1 }, { dx: -3, dy: 1 }, { dx: 3, dy: -1 }, { dx: 3, dy: 1 },
+    { dx: -2, dy: -3 }, { dx: 2, dy: -3 }, { dx: -2, dy: 3 }, { dx: 2, dy: 3 },
+    { dx: -3, dy: -2 }, { dx: -3, dy: 2 }, { dx: 3, dy: -2 }, { dx: 3, dy: 2 },
+  ];
+  for (const pos of outerPositions) {
+    const val = check(pos.dx, pos.dy);
+    if (val === true) score += 1; // Dark is correct
+  }
+  
+  // Score the corners (should be dark) - 16 points max
+  const corners = [
+    { dx: -3, dy: -3 }, { dx: 3, dy: -3 }, { dx: -3, dy: 3 }, { dx: 3, dy: 3 },
+  ];
+  for (const pos of corners) {
+    const val = check(pos.dx, pos.dy);
+    if (val === true) score += 4; // Corners are important
+  }
+  
+  // Score inner corners of the light ring (should be light) - 16 points max
+  const innerCorners = [
+    { dx: -2, dy: -2 }, { dx: 2, dy: -2 }, { dx: -2, dy: 2 }, { dx: 2, dy: 2 },
+  ];
+  for (const pos of innerCorners) {
+    const val = check(pos.dx, pos.dy);
+    if (val === false) score += 4; // Light is correct
+  }
+  
+  // Penalty for incorrect center
+  const centerVal = check(0, 0);
+  if (centerVal !== true) score -= 20; // Heavy penalty for wrong center
+  
+  // Max theoretical score: 27 + 12 + 20 + 16 + 16 = 91
+  // Normalize to 0-100
+  return Math.max(0, Math.min(100, Math.round(score * 100 / 91)));
+}
+
+/**
+ * Find the optimal center position for a finder pattern within a search region
+ * Searches a grid of positions around the initial estimate and returns the best one
+ */
+function findOptimalFinderCenter(
+  binary: boolean[],
+  width: number,
+  height: number,
+  initialX: number,
+  initialY: number,
+  moduleSize: number
+): { x: number; y: number; score: number } {
+  let bestX = initialX;
+  let bestY = initialY;
+  let bestScore = scoreFinderPatternAt(binary, width, height, initialX, initialY, moduleSize);
+  
+  // Search radius: half a module size in each direction
+  const searchRadius = moduleSize * 0.6;
+  const step = moduleSize * 0.15; // Fine-grained search
+  
+  for (let dy = -searchRadius; dy <= searchRadius; dy += step) {
+    for (let dx = -searchRadius; dx <= searchRadius; dx += step) {
+      const testX = initialX + dx;
+      const testY = initialY + dy;
+      const testScore = scoreFinderPatternAt(binary, width, height, testX, testY, moduleSize);
+      
+      if (testScore > bestScore) {
+        bestScore = testScore;
+        bestX = testX;
+        bestY = testY;
+      }
+    }
+  }
+  
+  return { x: bestX, y: bestY, score: bestScore };
+}
+
+/**
  * Verify a finder pattern candidate by checking the actual 7x7 structure
  * Uses binary image for consistent checking
  * 
@@ -1802,59 +1946,17 @@ function verifyFinderPatternAt(
   centerY: number,
   moduleSize: number
 ): boolean {
-  const check = (mx: number, my: number, shouldBeDark: boolean): boolean => {
-    const px = Math.round(centerX + mx * moduleSize);
-    const py = Math.round(centerY + my * moduleSize);
-    if (px < 0 || px >= width || py < 0 || py >= height) return false;
-    const isDark = binary[py * width + px];
-    return isDark === shouldBeDark;
-  };
+  // Use scoring function with a minimum threshold
+  const score = scoreFinderPatternAt(binary, width, height, centerX, centerY, moduleSize);
+  const passed = score >= 50; // Require at least 50% match
   
-  // Check center (should be dark) - this is critical
-  if (!check(0, 0, true)) {
-    debugLog(`verifyFinderPattern: FAILED center check at (${centerX.toFixed(1)}, ${centerY.toFixed(1)})`);
-    return false;
+  if (!passed) {
+    debugLog(`verifyFinderPattern: FAILED at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) score=${score}`);
+  } else {
+    debugLog(`verifyFinderPattern: PASSED at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) score=${score}`);
   }
   
-  // Check the 3x3 center core (all dark)
-  // FIX: Reduce tolerance from 7/9 to 5/9 for blurry/compressed images
-  let coreMatches = 0;
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
-      if (check(dx, dy, true)) coreMatches++;
-    }
-  }
-  if (coreMatches < 5) {
-    debugLog(`verifyFinderPattern: FAILED core check at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) coreMatches=${coreMatches}/9`);
-    return false;
-  }
-  
-  // Check 4 cardinal points at distance 2 (should be light - inner ring)
-  // FIX: Reduce tolerance from 3/4 to 2/4 for more leniency
-  let innerRingMatches = 0;
-  if (check(0, -2, false)) innerRingMatches++;
-  if (check(0, 2, false)) innerRingMatches++;
-  if (check(-2, 0, false)) innerRingMatches++;
-  if (check(2, 0, false)) innerRingMatches++;
-  if (innerRingMatches < 2) {
-    debugLog(`verifyFinderPattern: FAILED inner ring at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) innerRing=${innerRingMatches}/4`);
-    return false;
-  }
-  
-  // Check 4 cardinal points at distance 3 (should be dark - outer ring)
-  // FIX: Reduce tolerance from 3/4 to 2/4
-  let outerRingMatches = 0;
-  if (check(0, -3, true)) outerRingMatches++;
-  if (check(0, 3, true)) outerRingMatches++;
-  if (check(-3, 0, true)) outerRingMatches++;
-  if (check(3, 0, true)) outerRingMatches++;
-  if (outerRingMatches < 2) {
-    debugLog(`verifyFinderPattern: FAILED outer ring at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) outerRing=${outerRingMatches}/4`);
-    return false;
-  }
-  
-  debugLog(`verifyFinderPattern: PASSED at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) core=${coreMatches}/9 inner=${innerRingMatches}/4 outer=${outerRingMatches}/4`);
-  return true;
+  return passed;
 }
 
 /**
@@ -1926,14 +2028,21 @@ function findFinderPatternsWithBinary(
       const clusterThreshold = avgModuleSize * 6;
       
       if (dx < clusterThreshold && dy < clusterThreshold) {
-        const centerX = (h.x + v.x) / 2;
-        const centerY = (h.y + v.y) / 2;
+        const initialCenterX = (h.x + v.x) / 2;
+        const initialCenterY = (h.y + v.y) / 2;
         
-        // Verify this is actually a finder pattern
-        if (verifyFinderPatternAt(binary, width, height, centerX, centerY, avgModuleSize)) {
+        // Find the optimal center position within this cluster
+        const optimal = findOptimalFinderCenter(
+          binary, width, height, initialCenterX, initialCenterY, avgModuleSize
+        );
+        
+        // Only accept if score is good enough
+        if (optimal.score >= 50) {
+          console.log(`[QR-DEBUG] findFinderPatterns: refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${optimal.x.toFixed(1)},${optimal.y.toFixed(1)}) score=${optimal.score}`);
+          debugLog(`findFinderPatterns: refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${optimal.x.toFixed(1)},${optimal.y.toFixed(1)}) score=${optimal.score}`);
           patterns.push({
-            centerX,
-            centerY,
+            centerX: optimal.x,
+            centerY: optimal.y,
             moduleSize: avgModuleSize,
           });
           usedH.add(hi);
@@ -1944,7 +2053,7 @@ function findFinderPatternsWithBinary(
     }
   }
   
-  // If strict verification didn't find enough, try without verification
+  // If strict verification didn't find enough, use looser matching with scoring-based refinement
   if (patterns.length < 3) {
     const usedH2 = new Set<number>();
     const usedV2 = new Set<number>();
@@ -1964,25 +2073,39 @@ function findFinderPatternsWithBinary(
         const clusterThreshold = avgModuleSize * 7;
         
         if (dx < clusterThreshold && dy < clusterThreshold) {
-          const centerX = (h.x + v.x) / 2;
-          const centerY = (h.y + v.y) / 2;
+          const initialCenterX = (h.x + v.x) / 2;
+          const initialCenterY = (h.y + v.y) / 2;
           
-          // Check if this pattern is already found
-          const isDup = patterns.some(p => {
-            const dist = Math.sqrt((p.centerX - centerX) ** 2 + (p.centerY - centerY) ** 2);
-            return dist < avgModuleSize * 5;
-          });
+          // Refine center using pattern scoring (same as strict path)
+          const optimal = findOptimalFinderCenter(
+            binary, width, height, initialCenterX, initialCenterY, avgModuleSize
+          );
           
-          if (!isDup) {
-            patterns.push({
-              centerX,
-              centerY,
-              moduleSize: avgModuleSize,
+          // Require a minimum score to accept this pattern
+          if (optimal.score >= 50) {
+            const centerX = optimal.x;
+            const centerY = optimal.y;
+            
+            console.log(`[QR-DEBUG] findFinderPatterns (fallback): refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${centerX.toFixed(1)},${centerY.toFixed(1)}) score=${optimal.score}`);
+            debugLog(`findFinderPatterns (fallback): refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${centerX.toFixed(1)},${centerY.toFixed(1)}) score=${optimal.score}`);
+            
+            // Check if this pattern is already found
+            const isDup = patterns.some(p => {
+              const dist = Math.sqrt((p.centerX - centerX) ** 2 + (p.centerY - centerY) ** 2);
+              return dist < avgModuleSize * 5;
             });
+            
+            if (!isDup) {
+              patterns.push({
+                centerX,
+                centerY,
+                moduleSize: avgModuleSize,
+              });
+            }
+            usedH2.add(hi);
+            usedV2.add(vi);
+            break;
           }
-          usedH2.add(hi);
-          usedV2.add(vi);
-          break;
         }
       }
     }
@@ -2261,10 +2384,6 @@ function findFinderPatterns(imageData: ImageData): FinderPattern[] {
  */
 function locateQRCode(patterns: FinderPattern[]): { location: QRLocation; patterns: FinderPatternGroup } | null {
   debugLog(`locateQRCode: input ${patterns.length} patterns`);
-  console.log(`[QR-DEBUG] locateQRCode: input ${patterns.length} patterns`);
-  for (const p of patterns) {
-    console.log(`[QR-DEBUG]   Pattern: center=(${p.centerX.toFixed(1)}, ${p.centerY.toFixed(1)}) moduleSize=${p.moduleSize.toFixed(2)}`);
-  }
   if (patterns.length < 3) {
     debugLog(`locateQRCode: FAILED - need at least 3 patterns`);
     return null;
@@ -2341,18 +2460,12 @@ function locateQRCode(patterns: FinderPattern[]): { location: QRLocation; patter
   debugLog(`locateQRCode: topRight=(${bestGroup.topRight.centerX.toFixed(1)}, ${bestGroup.topRight.centerY.toFixed(1)})`);
   debugLog(`locateQRCode: bottomLeft=(${bestGroup.bottomLeft.centerX.toFixed(1)}, ${bestGroup.bottomLeft.centerY.toFixed(1)})`);
   
-  console.log(`[QR-DEBUG] locateQRCode: bestScore=${bestScore.toFixed(4)}`);
-  console.log(`[QR-DEBUG]   topLeft: center=(${bestGroup.topLeft.centerX.toFixed(1)}, ${bestGroup.topLeft.centerY.toFixed(1)}) moduleSize=${bestGroup.topLeft.moduleSize.toFixed(2)}`);
-  console.log(`[QR-DEBUG]   topRight: center=(${bestGroup.topRight.centerX.toFixed(1)}, ${bestGroup.topRight.centerY.toFixed(1)}) moduleSize=${bestGroup.topRight.moduleSize.toFixed(2)}`);
-  console.log(`[QR-DEBUG]   bottomLeft: center=(${bestGroup.bottomLeft.centerX.toFixed(1)}, ${bestGroup.bottomLeft.centerY.toFixed(1)}) moduleSize=${bestGroup.bottomLeft.moduleSize.toFixed(2)}`);
-  
   // Calculate bottom-right corner position
   // bottomRight = topRight + bottomLeft - topLeft
   const bottomRightX = bestGroup.topRight.centerX + bestGroup.bottomLeft.centerX - bestGroup.topLeft.centerX;
   const bottomRightY = bestGroup.topRight.centerY + bestGroup.bottomLeft.centerY - bestGroup.topLeft.centerY;
   
   debugLog(`locateQRCode: bottomRight=(${bottomRightX.toFixed(1)}, ${bottomRightY.toFixed(1)}) [calculated]`);
-  console.log(`[QR-DEBUG]   bottomRight: (${bottomRightX.toFixed(1)}, ${bottomRightY.toFixed(1)}) [calculated]`);
   
   const location: QRLocation = {
     topLeft: { x: bestGroup.topLeft.centerX, y: bestGroup.topLeft.centerY },
@@ -2368,30 +2481,21 @@ function locateQRCode(patterns: FinderPattern[]): { location: QRLocation; patter
  * Calculate version from finder pattern distances
  */
 function calculateVersionFromPatterns(patterns: FinderPatternGroup): { version: number; moduleCount: number } {
-  console.log(`[QR-DEBUG] calculateVersionFromPatterns: START`);
   // Distance between finder pattern centers = moduleCount - 7 modules
   // (since finder patterns are 7x7 and centers are 3.5 modules from edge)
-  const distTopLeftToTopRight = pointDistance(
-    { x: patterns.topLeft.centerX, y: patterns.topLeft.centerY },
-    { x: patterns.topRight.centerX, y: patterns.topRight.centerY }
-  );
+  const dx = patterns.topRight.centerX - patterns.topLeft.centerX;
+  const dy = patterns.topRight.centerY - patterns.topLeft.centerY;
+  const distTopLeftToTopRight = Math.sqrt(dx * dx + dy * dy);
   
-  const distTopLeftToBottomLeft = pointDistance(
-    { x: patterns.topLeft.centerX, y: patterns.topLeft.centerY },
-    { x: patterns.bottomLeft.centerX, y: patterns.bottomLeft.centerY }
-  );
+  const dx2 = patterns.bottomLeft.centerX - patterns.topLeft.centerX;
+  const dy2 = patterns.bottomLeft.centerY - patterns.topLeft.centerY;
+  const distTopLeftToBottomLeft = Math.sqrt(dx2 * dx2 + dy2 * dy2);
   
   const avgDistance = (distTopLeftToTopRight + distTopLeftToBottomLeft) / 2;
   const avgModuleSize = (patterns.topLeft.moduleSize + patterns.topRight.moduleSize + patterns.bottomLeft.moduleSize) / 3;
   
-  console.log(`[QR-DEBUG]   distTopLeftToTopRight=${distTopLeftToTopRight.toFixed(2)}`);
-  console.log(`[QR-DEBUG]   distTopLeftToBottomLeft=${distTopLeftToBottomLeft.toFixed(2)}`);
-  console.log(`[QR-DEBUG]   avgDistance=${avgDistance.toFixed(2)}`);
-  console.log(`[QR-DEBUG]   avgModuleSize=${avgModuleSize.toFixed(2)}`);
-  
   // Distance between centers is (moduleCount - 7) modules
   const moduleCountEstimate = (avgDistance / avgModuleSize) + 7;
-  console.log(`[QR-DEBUG]   moduleCountEstimate=${moduleCountEstimate.toFixed(2)}`);
   
   // Find closest valid module count (4*v + 17 for v = 1-40)
   let bestVersion = 1;
@@ -2406,12 +2510,10 @@ function calculateVersionFromPatterns(patterns: FinderPatternGroup): { version: 
     }
   }
   
-  const result = {
+  return {
     version: bestVersion,
     moduleCount: 4 * bestVersion + 17,
   };
-  console.log(`[QR-DEBUG]   RESULT: version=${result.version}, moduleCount=${result.moduleCount}`);
-  return result;
 }
 
 // ============================================
@@ -2513,6 +2615,7 @@ function decodePayload(
   version: number,
   eccLevel: ECCLevel | null
 ): { payload: string; payloadBytes: Uint8Array; errorsCorrected: number | null } | null {
+  console.log(`[QR-DEBUG] decodePayload: START moduleCount=${moduleCount}, maskPattern=${maskPattern}, version=${version}, eccLevel=${eccLevel}`);
   const maskFunc = getMaskFunction(maskPattern);
 
   // Read data bits in zigzag pattern (reverse of mapData in qrcode.mjs)
@@ -2559,19 +2662,30 @@ function decodePayload(
     bytes.push(byte);
   }
 
-  if (bytes.length === 0) return null;
+  console.log(`[QR-DEBUG] decodePayload: extracted ${dataBits.length} data bits -> ${bytes.length} bytes`);
+  console.log(`[QR-DEBUG] decodePayload: first 20 bytes: [${bytes.slice(0, 20).join(', ')}]`);
+
+  if (bytes.length === 0) {
+    console.log(`[QR-DEBUG] decodePayload: FAILED - no bytes extracted`);
+    return null;
+  }
 
   // Apply Reed-Solomon error correction if ECC level is known
   let correctedBytes = bytes;
   let errorsCorrected: number | null = null;
   
   if (eccLevel) {
+    console.log(`[QR-DEBUG] decodePayload: applying RS correction for ECC=${eccLevel}`);
     const rsResult = applyRSCorrection(bytes, version, eccLevel);
     if (rsResult) {
       correctedBytes = rsResult.data;
       errorsCorrected = rsResult.errorsCorrected;
+      console.log(`[QR-DEBUG] decodePayload: RS correction SUCCESS, errors corrected=${errorsCorrected}, data bytes=${correctedBytes.length}`);
+    } else {
+      console.log(`[QR-DEBUG] decodePayload: RS correction FAILED`);
     }
-    // If RS correction fails or cannot be applied, we keep errorsCorrected as null
+  } else {
+    console.log(`[QR-DEBUG] decodePayload: no ECC level, skipping RS correction`);
   }
 
   // Convert corrected bytes back to bits for segment parsing
@@ -2599,26 +2713,45 @@ function decodePayload(
   };
 
   // Process data segments
+  let segmentIndex = 0;
+  console.log(`[QR-DEBUG] decodePayload: starting segment parsing, correctedBits.length=${correctedBits.length}`);
+  
   while (bitIndex + 4 <= correctedBits.length) {
     const mode = readBits(4);
+    console.log(`[QR-DEBUG] decodePayload: segment ${segmentIndex}, mode=${mode} (${mode === 1 ? 'NUMERIC' : mode === 2 ? 'ALPHANUMERIC' : mode === 4 ? 'BYTE' : mode === 8 ? 'KANJI' : mode === 0 ? 'TERMINATOR' : 'UNKNOWN'}), bitIndex=${bitIndex}`);
 
     if (mode === QR_MODE.TERMINATOR) {
+      console.log(`[QR-DEBUG] decodePayload: hit TERMINATOR, stopping`);
       break;
     }
 
     const charCountBits = getCharCountBits(mode, version);
     if (bitIndex + charCountBits > correctedBits.length) {
+      console.log(`[QR-DEBUG] decodePayload: not enough bits for charCount (need ${charCountBits}, have ${correctedBits.length - bitIndex})`);
       break;
     }
 
     const charCount = readBits(charCountBits);
+    console.log(`[QR-DEBUG] decodePayload: charCount=${charCount} (${charCountBits} bits)`);
+    segmentIndex++;
 
     switch (mode) {
       case QR_MODE.NUMERIC: {
+        // Sanity check: numeric mode can hold more characters than byte mode
+        // but charCount should still be reasonable (< 7000 for largest QR)
+        if (charCount > 7100) {
+          debugLog(`decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
+          return null;
+        }
+        
         // Numeric mode: 3 digits = 10 bits, 2 digits = 7 bits, 1 digit = 4 bits
         let remaining = charCount;
         while (remaining >= 3) {
           const val = readBits(10);
+          if (val > 999) {
+            debugLog(`decodePayload: REJECTED - invalid numeric triplet ${val}`);
+            return null;
+          }
           result += String(Math.floor(val / 100));
           result += String(Math.floor((val % 100) / 10));
           result += String(val % 10);
@@ -2626,32 +2759,84 @@ function decodePayload(
         }
         if (remaining === 2) {
           const val = readBits(7);
+          if (val > 99) {
+            debugLog(`decodePayload: REJECTED - invalid numeric pair ${val}`);
+            return null;
+          }
           result += String(Math.floor(val / 10));
           result += String(val % 10);
         } else if (remaining === 1) {
           const val = readBits(4);
+          if (val > 9) {
+            debugLog(`decodePayload: REJECTED - invalid numeric digit ${val}`);
+            return null;
+          }
           result += String(val);
         }
         break;
       }
 
       case QR_MODE.ALPHANUMERIC: {
+        // Sanity check: alphanumeric mode can hold ~4300 chars max
+        if (charCount > 4300) {
+          debugLog(`decodePayload: REJECTED - alphanumeric mode charCount ${charCount} is unreasonably large`);
+          return null;
+        }
+        
         // Alphanumeric: 2 chars = 11 bits, 1 char = 6 bits
         let remaining = charCount;
         while (remaining >= 2) {
           const val = readBits(11);
-          result += ALPHANUMERIC_CHARS[Math.floor(val / 45)] ?? '';
-          result += ALPHANUMERIC_CHARS[val % 45] ?? '';
+          if (val >= 45 * 45) {
+            debugLog(`decodePayload: REJECTED - invalid alphanumeric pair ${val}`);
+            return null;
+          }
+          const char1 = ALPHANUMERIC_CHARS[Math.floor(val / 45)];
+          const char2 = ALPHANUMERIC_CHARS[val % 45];
+          if (!char1 || !char2) {
+            debugLog(`decodePayload: REJECTED - alphanumeric char out of range`);
+            return null;
+          }
+          result += char1;
+          result += char2;
           remaining -= 2;
         }
         if (remaining === 1) {
           const val = readBits(6);
-          result += ALPHANUMERIC_CHARS[val] ?? '';
+          if (val >= 45) {
+            debugLog(`decodePayload: REJECTED - invalid alphanumeric single ${val}`);
+            return null;
+          }
+          const char = ALPHANUMERIC_CHARS[val];
+          if (!char) {
+            debugLog(`decodePayload: REJECTED - alphanumeric char out of range`);
+            return null;
+          }
+          result += char;
         }
         break;
       }
 
       case QR_MODE.BYTE: {
+        // SANITY CHECK: charCount must not exceed version/ECC capacity
+        // If it does, this is a garbage decode from a misaligned matrix
+        if (eccLevel) {
+          const maxCapacity = DATA_CAPACITY_BYTE[version]?.[eccLevel] ?? 0;
+          console.log(`[QR-DEBUG] decodePayload: BYTE mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
+          if (charCount > maxCapacity) {
+            console.log(`[QR-DEBUG] decodePayload: REJECTED - byte mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            debugLog(`decodePayload: REJECTED - byte mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            return null;
+          }
+        }
+        
+        // Additional sanity: charCount should not exceed remaining bits / 8
+        const remainingBits = correctedBits.length - bitIndex;
+        if (charCount * 8 > remainingBits + 8) { // +8 for some tolerance
+          debugLog(`decodePayload: REJECTED - byte mode charCount ${charCount} exceeds available bits`);
+          return null;
+        }
+        
         // Byte mode: 8 bits per byte; decode this segment as UTF-8 (or Latin-1 fallback)
         const segment: number[] = [];
         for (let i = 0; i < charCount; i++) {
@@ -2660,21 +2845,45 @@ function decodePayload(
         }
         payloadBytes.push(...segment);
 
+        let decodedSegment = '';
         try {
           const decoder = typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8') : null;
           if (decoder) {
-            result += decoder.decode(new Uint8Array(segment));
+            decodedSegment = decoder.decode(new Uint8Array(segment));
           } else {
             for (const byte of segment) {
-              result += String.fromCharCode(byte);
+              decodedSegment += String.fromCharCode(byte);
             }
           }
         } catch {
           // Fallback to Latin-1 if UTF-8 decoding fails
           for (const byte of segment) {
-            result += String.fromCharCode(byte);
+            decodedSegment += String.fromCharCode(byte);
           }
         }
+        
+        // SANITY CHECK: Reject garbage binary data that doesn't look like text
+        // Count printable characters (ASCII 32-126, plus common whitespace 9-13)
+        let printableCount = 0;
+        for (let i = 0; i < decodedSegment.length; i++) {
+          const code = decodedSegment.charCodeAt(i);
+          // Printable ASCII (space to tilde) or common whitespace (tab, newline, etc.)
+          if ((code >= 32 && code <= 126) || (code >= 9 && code <= 13)) {
+            printableCount++;
+          }
+        }
+        const printableRatio = decodedSegment.length > 0 ? printableCount / decodedSegment.length : 0;
+        console.log(`[QR-DEBUG] decodePayload: BYTE segment decoded, length=${decodedSegment.length}, printableRatio=${(printableRatio * 100).toFixed(1)}%`);
+        console.log(`[QR-DEBUG] decodePayload: BYTE segment preview: "${decodedSegment.substring(0, 50)}${decodedSegment.length > 50 ? '...' : ''}"`);
+        
+        // If less than 30% printable, this is likely garbage from a misaligned matrix
+        if (decodedSegment.length > 5 && printableRatio < 0.3) {
+          console.log(`[QR-DEBUG] decodePayload: REJECTED - byte mode segment has only ${(printableRatio * 100).toFixed(1)}% printable chars (threshold 30%)`);
+          debugLog(`decodePayload: REJECTED - byte mode segment has only ${(printableRatio * 100).toFixed(1)}% printable chars (threshold 30%)`);
+          return null;
+        }
+        
+        result += decodedSegment;
         break;
       }
 
@@ -2706,6 +2915,7 @@ function decodePayload(
 
   const finalBytes = payloadBytes.length > 0 ? payloadBytes : bytes;
 
+  console.log(`[QR-DEBUG] decodePayload: SUCCESS payload="${result.substring(0, 100)}${result.length > 100 ? '...' : ''}" (${result.length} chars)`);
   return {
     payload: result,
     payloadBytes: new Uint8Array(finalBytes),
@@ -2726,9 +2936,6 @@ export function analyzeQRCode(
   // Clear debug log at start of analysis
   clearDebugLog();
   debugLog(`analyzeQRCode: START`);
-  console.log(`[QR-DEBUG] ============================================`);
-  console.log(`[QR-DEBUG] analyzeQRCode: START`);
-  console.log(`[QR-DEBUG] ============================================`);
   
   const warnings: string[] = [];
   
@@ -2750,11 +2957,9 @@ export function analyzeQRCode(
   
   // Find finder patterns using custom detection
   debugLog(`analyzeQRCode: Finding finder patterns...`);
-  console.log(`[QR-DEBUG] analyzeQRCode: Finding finder patterns...`);
   const finderPatterns = findFinderPatterns(imageData);
   
   debugLog(`analyzeQRCode: Found ${finderPatterns.length} finder patterns`);
-  console.log(`[QR-DEBUG] analyzeQRCode: Found ${finderPatterns.length} finder patterns`);
   
   if (finderPatterns.length < 3) {
     debugLog(`analyzeQRCode: FAILED - not enough finder patterns`);
@@ -2779,56 +2984,127 @@ export function analyzeQRCode(
   // Calculate version from finder pattern distances
   const { version, moduleCount } = calculateVersionFromPatterns(patterns);
   debugLog(`analyzeQRCode: Calculated version=${version}, moduleCount=${moduleCount}`);
-  console.log(`[QR-DEBUG] analyzeQRCode: Calculated version=${version}, moduleCount=${moduleCount}`);
   
   if (!moduleCount || !version) {
     warnings.push('Could not determine QR version from image');
   }
   
-  // Extract module matrix
-  debugLog(`analyzeQRCode: Extracting module matrix...`);
-  console.log(`[QR-DEBUG] analyzeQRCode: Extracting module matrix...`);
-  const moduleMatrix = extractModuleMatrix(imageData, location, moduleCount);
-  debugLog(`analyzeQRCode: Module matrix extracted: ${moduleMatrix ? 'success' : 'failed'}`);
-  console.log(`[QR-DEBUG] analyzeQRCode: Module matrix extracted: ${moduleMatrix ? 'SUCCESS' : 'FAILED'}`);
+  // Extract module matrix candidates (sorted by score)
+  debugLog(`analyzeQRCode: Extracting module matrix candidates...`);
+  const candidates = extractModuleCandidates(imageData, location, moduleCount);
+  debugLog(`analyzeQRCode: Generated ${candidates.length} candidates`);
   
-  // Read format info
-  let eccLevel: ECCLevel | null = null;
-  let maskPattern: MaskPattern | null = null;
-  
-  if (moduleMatrix) {
-    debugLog(`analyzeQRCode: Reading format info...`);
-    const formatInfo = readFormatInfo(moduleMatrix);
-    if (formatInfo) {
-      eccLevel = formatInfo.eccLevel;
-      maskPattern = formatInfo.maskPattern;
-      debugLog(`analyzeQRCode: Format info: ECC=${eccLevel}, mask=${maskPattern}`);
-    } else {
-      debugLog(`analyzeQRCode: Could not decode format info`);
-      warnings.push('Could not decode format information');
-    }
+  if (candidates.length === 0) {
+    debugLog(`analyzeQRCode: FAILED - no matrix candidates`);
+    const result = createErrorResult('no_qr_detected', 'Could not extract valid QR code matrix. The finder patterns may not be aligned correctly.');
+    result.debugLog = getDebugLog();
+    return result;
   }
   
-  // Decode payload using custom decoder
+  // Try candidates in order of score until we find one that decodes successfully
+  let moduleMatrix: boolean[][] | null = null;
+  let eccLevel: ECCLevel | null = null;
+  let maskPattern: MaskPattern | null = null;
   let payload: string | null = null;
   let payloadBytes: Uint8Array | null = null;
   let errorsCorrected: number | null = null;
+  let successfulCandidate: MatrixCandidate | null = null;
   
-  if (moduleMatrix && maskPattern !== null) {
-    debugLog(`analyzeQRCode: Decoding payload...`);
-    const decoded = decodePayload(moduleMatrix, moduleCount, maskPattern, version, eccLevel);
-    if (decoded) {
-      payload = decoded.payload;
-      payloadBytes = decoded.payloadBytes;
-      errorsCorrected = decoded.errorsCorrected;
-      debugLog(`analyzeQRCode: Payload decoded: ${payload?.substring(0, 50)}${(payload?.length ?? 0) > 50 ? '...' : ''}`);
-      debugLog(`analyzeQRCode: Errors corrected: ${errorsCorrected}`);
+  // All possible masks and ECC levels to try
+  const ALL_MASKS: MaskPattern[] = [0, 1, 2, 3, 4, 5, 6, 7];
+  const ALL_ECC_LEVELS: ECCLevel[] = ['L', 'M', 'Q', 'H'];
+  
+  // Limit how many candidates we try for performance (top 15 should be enough)
+  const candidatesToTry = candidates.slice(0, 15);
+  console.log(`[QR-DEBUG] analyzeQRCode: Trying top ${candidatesToTry.length} candidates with exhaustive mask/ECC search...`);
+  debugLog(`analyzeQRCode: Trying top ${candidatesToTry.length} candidates with exhaustive mask/ECC search...`);
+  
+  // Track total attempts for logging
+  let totalAttempts = 0;
+  
+  candidateLoop:
+  for (let i = 0; i < candidatesToTry.length; i++) {
+    const candidate = candidatesToTry[i];
+    console.log(`[QR-DEBUG] analyzeQRCode: trying candidate #${i + 1} (score=${candidate.score.toFixed(1)}, threshold=${candidate.threshold}, offset=(${candidate.dx},${candidate.dy}), inverted=${candidate.inverted})`);
+    
+    // Try to read format info from this candidate (to prioritize its mask/ECC)
+    const formatInfo = readFormatInfo(candidate.matrix);
+    
+    // Build ordered list of masks to try: format info mask first (if available), then others
+    let masksToTry: MaskPattern[];
+    if (formatInfo) {
+      masksToTry = [formatInfo.maskPattern, ...ALL_MASKS.filter(m => m !== formatInfo.maskPattern)];
+      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format info suggests mask=${formatInfo.maskPattern}, ECC=${formatInfo.eccLevel}`);
     } else {
-      debugLog(`analyzeQRCode: Could not decode payload`);
-      warnings.push('Could not decode QR payload');
+      masksToTry = [...ALL_MASKS];
+      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format info failed, trying all masks`);
     }
-  } else {
-    debugLog(`analyzeQRCode: Cannot decode - matrix=${!!moduleMatrix}, mask=${maskPattern}`);
+    
+    // Build ordered list of ECC levels: format info ECC first (if available), then others
+    let eccLevelsToTry: ECCLevel[];
+    if (formatInfo) {
+      eccLevelsToTry = [formatInfo.eccLevel, ...ALL_ECC_LEVELS.filter(e => e !== formatInfo.eccLevel)];
+    } else {
+      eccLevelsToTry = [...ALL_ECC_LEVELS];
+    }
+    
+    // Try all mask × ECC combinations
+    for (const tryMask of masksToTry) {
+      for (const tryEcc of eccLevelsToTry) {
+        totalAttempts++;
+        
+        // Try to decode payload with this mask and ECC
+        const decoded = decodePayload(
+          candidate.matrix,
+          moduleCount,
+          tryMask,
+          version,
+          tryEcc
+        );
+        
+        // Check if decode succeeded AND produced non-empty payload
+        if (decoded && decoded.payload && decoded.payload.length > 0) {
+          console.log(`[QR-DEBUG] analyzeQRCode: SUCCESS! candidate #${i + 1}, mask=${tryMask}, ECC=${tryEcc}`);
+          console.log(`[QR-DEBUG] analyzeQRCode: payload="${decoded.payload.substring(0, 80)}${decoded.payload.length > 80 ? '...' : ''}"`);
+          debugLog(`analyzeQRCode: SUCCESS with candidate #${i + 1} mask=${tryMask} ECC=${tryEcc} (score=${candidate.score.toFixed(1)}, threshold=${candidate.threshold}, offset=(${candidate.dx},${candidate.dy}), inverted=${candidate.inverted})`);
+          moduleMatrix = candidate.matrix;
+          eccLevel = tryEcc;
+          maskPattern = tryMask;
+          payload = decoded.payload;
+          payloadBytes = decoded.payloadBytes;
+          errorsCorrected = decoded.errorsCorrected;
+          successfulCandidate = candidate;
+          break candidateLoop;
+        }
+      }
+    }
+    
+    console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} FAILED all ${masksToTry.length * eccLevelsToTry.length} mask/ECC combinations`);
+  }
+  
+  console.log(`[QR-DEBUG] analyzeQRCode: tried ${totalAttempts} total decode attempts`);
+  
+  // If no candidate decoded successfully, use the best-scored one for partial results
+  if (!successfulCandidate) {
+    console.log(`[QR-DEBUG] analyzeQRCode: NO candidate decoded successfully after trying ${candidatesToTry.length} candidates`);
+    debugLog(`analyzeQRCode: No candidate decoded successfully, using best-scored candidate`);
+    const bestCandidate = candidates[0];
+    moduleMatrix = bestCandidate.matrix;
+    
+    // Try to at least get format info from best candidate
+    const formatInfo = readFormatInfo(bestCandidate.matrix);
+    if (formatInfo) {
+      eccLevel = formatInfo.eccLevel;
+      maskPattern = formatInfo.maskPattern;
+      console.log(`[QR-DEBUG] analyzeQRCode: Format info from best candidate: ECC=${eccLevel}, mask=${maskPattern}`);
+      debugLog(`analyzeQRCode: Format info from best candidate: ECC=${eccLevel}, mask=${maskPattern}`);
+    } else {
+      console.log(`[QR-DEBUG] analyzeQRCode: Could not decode format info from best candidate either`);
+      debugLog(`analyzeQRCode: Could not decode format info from best candidate`);
+      warnings.push('Could not decode format information');
+    }
+    
+    warnings.push('Could not decode QR payload - matrix extraction may be misaligned');
   }
   
   // Detect encoding mode from payload
@@ -2845,47 +3121,31 @@ export function analyzeQRCode(
   const structuralAnalysis = analyzeStructure(moduleMatrix, version);
   const imageProperties = calculateImageProperties(imageData, location, moduleCount);
   
-  // Determine success: need valid matrix AND non-empty payload
-  const hasValidMatrix = moduleMatrix !== null && validateExtractedMatrix(moduleMatrix, moduleCount);
-  const hasValidPayload = payload !== null && payload.length > 0;
-  const isSuccess = hasValidMatrix && hasValidPayload;
-  
   // Calculate confidence
   const confidence = calculateConfidence(
-    eccLevel !== null,
-    maskPattern !== null,
-    hasValidMatrix,
+    !!eccLevel,
+    !!maskPattern,
+    !!moduleMatrix,
     quietZone?.adequate ?? false
   );
   
-  // Build error message if not successful
-  let errorMessage: string | undefined;
-  if (!isSuccess) {
-    if (!hasValidMatrix) {
-      errorMessage = 'Could not extract valid QR code matrix. The finder patterns may not be aligned correctly.';
-      warnings.push('Matrix validation failed');
-    } else if (!hasValidPayload) {
-      errorMessage = 'Could not decode QR code payload. The data may be corrupted or use an unsupported encoding.';
-      warnings.push('Payload decode failed or empty');
-    } else {
-      errorMessage = 'Could not decode QR code payload';
-    }
-  }
-  
-  debugLog(`analyzeQRCode: COMPLETE success=${isSuccess} hasValidMatrix=${hasValidMatrix} hasValidPayload=${hasValidPayload} confidence=${confidence}`);
-  console.log(`[QR-DEBUG] ============================================`);
-  console.log(`[QR-DEBUG] analyzeQRCode: COMPLETE`);
-  console.log(`[QR-DEBUG]   success=${isSuccess}`);
-  console.log(`[QR-DEBUG]   hasValidMatrix=${hasValidMatrix}`);
-  console.log(`[QR-DEBUG]   hasValidPayload=${hasValidPayload}`);
-  console.log(`[QR-DEBUG]   confidence=${confidence}`);
-  console.log(`[QR-DEBUG] ============================================`);
+  // Final summary
+  const hasValidMatrix = moduleMatrix !== null;
+  const hasValidPayload = payload !== null && payload.length > 0;
+  debugLog(`analyzeQRCode: ============================================`);
+  debugLog(`analyzeQRCode: COMPLETE`);
+  debugLog(`analyzeQRCode:   success=${hasValidPayload}`);
+  debugLog(`analyzeQRCode:   hasValidMatrix=${hasValidMatrix}`);
+  debugLog(`analyzeQRCode:   hasValidPayload=${hasValidPayload}`);
+  debugLog(`analyzeQRCode:   payload=${payload ? `"${payload.substring(0, 50)}${payload.length > 50 ? '...' : ''}"` : 'null'}`);
+  debugLog(`analyzeQRCode:   confidence=${confidence}`);
+  debugLog(`analyzeQRCode: ============================================`);
   
   const debugLogStr = getDebugLog();
   
   return {
-    success: isSuccess,
-    error: errorMessage,
+    success: hasValidPayload,
+    error: !hasValidPayload ? 'Could not decode QR code payload' : undefined,
     payload,
     payloadBytes,
     version,
@@ -3008,45 +3268,28 @@ function calculateRegionOtsuThreshold(
   moduleCount: number
 ): number {
   const { width, height, data } = imageData;
-  console.log(`[QR-DEBUG] calculateRegionOtsuThreshold: START moduleCount=${moduleCount} image=${width}x${height}`);
 
   // Sample points within the QR region to build a histogram.
   // This avoids the global background dominating the threshold.
   const hist = new Array(256).fill(0);
   let sampleCount = 0;
-  const sampledGrays: number[] = [];
 
   const step = Math.max(1, Math.floor(moduleCount / 10));
-  console.log(`[QR-DEBUG]   sampling step=${step}`);
 
   for (let row = 0; row < moduleCount; row += step) {
     for (let col = 0; col < moduleCount; col += step) {
-      // Pass integer module indices - transform adds +0.5 internally to sample at center
-      const pt = transform(col, row);
+      const pt = transform(col + 0.5, row + 0.5);
       const px = Math.round(pt.x);
       const py = Math.round(pt.y);
 
-      if (px < 0 || px >= width || py < 0 || py >= height) {
-        if (sampleCount < 5) {
-          console.log(`[QR-DEBUG]   sample(${col},${row}): pt=(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}) -> OUT OF BOUNDS`);
-        }
-        continue;
-      }
+      if (px < 0 || px >= width || py < 0 || py >= height) continue;
 
       const idx = (py * width + px) * 4;
       const gray = lumaAt(data, idx);
       hist[gray]++;
       sampleCount++;
-      
-      // Log first few samples
-      if (sampledGrays.length < 20) {
-        sampledGrays.push(gray);
-        console.log(`[QR-DEBUG]   sample(${col},${row}): pt=(${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}) px=(${px},${py}) -> gray=${gray}`);
-      }
     }
   }
-  
-  console.log(`[QR-DEBUG]   total samples=${sampleCount}, first 20 grays: [${sampledGrays.join(', ')}]`);
 
   // If sampling failed (tiny/invalid transform), fall back to global.
   if (sampleCount < 16) {
@@ -3056,12 +3299,6 @@ function calculateRegionOtsuThreshold(
 
   const threshold = otsuThresholdFromHistogram(hist, sampleCount);
   debugLog(`calculateRegionOtsuThreshold: threshold=${threshold} (samples=${sampleCount})`);
-  console.log(`[QR-DEBUG] calculateRegionOtsuThreshold: RESULT threshold=${threshold} (samples=${sampleCount})`);
-  
-  // Log histogram summary
-  const minGray = hist.findIndex(h => h > 0);
-  const maxGray = hist.length - 1 - [...hist].reverse().findIndex(h => h > 0);
-  console.log(`[QR-DEBUG]   histogram range: minGray=${minGray}, maxGray=${maxGray}`);
 
   return threshold;
 }
@@ -3106,14 +3343,11 @@ function samplePixelGray(
  * Sample multiple points within a module and use majority voting
  * Returns true if module is dark, false if light
  * 
- * Uses a 3x3 grid of sample points within the module for robust sampling.
- * The transform function expects module indices and adds 0.5 internally.
- * Offsets like ±0.25 sample at ~25% and ~75% of the module width/height.
+ * Note: The transform function expects integer module indices and internally
+ * adds 0.5 to sample at module centers. To sample at offset positions within
+ * a module, we pass fractional offsets (e.g., col-0.3 samples at the left side
+ * of the module, col+0.3 samples at the right side).
  */
-// Track which modules we've logged for debugging
-let sampleModuleDebugCount = 0;
-const maxSampleModuleDebug = 20;
-
 function sampleModuleWithVoting(
   data: Uint8ClampedArray,
   width: number,
@@ -3123,34 +3357,38 @@ function sampleModuleWithVoting(
   row: number,
   threshold: number
 ): boolean {
-  // Sample 9 points in a 3x3 pattern within the module:
-  // Offsets of -0.25, 0, +0.25 give us ~25%, 50%, 75% of module
-  const offsets = [-0.25, 0, 0.25];
+  // Sample 5 points within the module:
+  // - Center (col, row) - transform adds 0.5 internally
+  // - 4 corners offset by ±0.3 (within the module bounds)
+  // The offset of 0.3 means we sample at ~20% and ~80% of the module
+  const offsets = [
+    { dc: 0, dr: 0 },       // center
+    { dc: -0.3, dr: -0.3 }, // top-left region
+    { dc: 0.3, dr: -0.3 },  // top-right region
+    { dc: -0.3, dr: 0.3 },  // bottom-left region
+    { dc: 0.3, dr: 0.3 },   // bottom-right region
+  ];
   
   let darkCount = 0;
   let lightCount = 0;
-  const grayValues: number[] = [];
   
-  for (const dr of offsets) {
-    for (const dc of offsets) {
-      // Pass col+dc and row+dr to transform
-      // Transform will add 0.5 to get the pixel position
-      const pt = transform(col + dc, row + dr);
-      
-      // Ensure the point coordinates are valid numbers
-      if (!Number.isFinite(pt.x) || !Number.isFinite(pt.y)) {
-        continue;
-      }
-      
-      const gray = samplePixelGray(data, width, height, pt.x, pt.y);
-      
-      if (gray !== null) {
-        grayValues.push(gray);
-        if (gray < threshold) {
-          darkCount++;
-        } else {
-          lightCount++;
-        }
+  for (const { dc, dr } of offsets) {
+    // Pass col+dc and row+dr to transform
+    // Transform will add 0.5 to get: (col + dc + 0.5) / moduleCount
+    const pt = transform(col + dc, row + dr);
+    
+    // Ensure the point coordinates are valid numbers
+    if (!Number.isFinite(pt.x) || !Number.isFinite(pt.y)) {
+      continue;
+    }
+    
+    const gray = samplePixelGray(data, width, height, pt.x, pt.y);
+    
+    if (gray !== null) {
+      if (gray < threshold) {
+        darkCount++;
+      } else {
+        lightCount++;
       }
     }
   }
@@ -3158,37 +3396,151 @@ function sampleModuleWithVoting(
   // If no valid samples, default to light
   if (darkCount + lightCount === 0) return false;
   
-  // Majority voting: bias slightly toward dark; ties count as dark
-  const isDark = darkCount >= lightCount;
+  // Majority voting: dark wins if strictly more dark samples
+  return darkCount > lightCount;
+}
+
+// ============================================
+// MATRIX CANDIDATE TYPES AND SCORING
+// ============================================
+
+/**
+ * Represents a candidate matrix extraction with metadata for scoring
+ */
+interface MatrixCandidate {
+  matrix: boolean[][];
+  score: number;
+  threshold: number;
+  dx: number;  // grid offset X in modules
+  dy: number;  // grid offset Y in modules
+  inverted: boolean;
+}
+
+/**
+ * Expected finder pattern: 7x7 with dark border, light ring, dark center
+ * Returns the expected value (true=dark, false=light) for each position
+ */
+function getFinderPatternExpected(localRow: number, localCol: number): boolean {
+  // Finder pattern:
+  // Row 0: DDDDDDD (all dark)
+  // Row 1: DLLLLD (dark-light-light-light-light-light-dark)
+  // Row 2: DLDDDLD
+  // Row 3: DLDDDLD
+  // Row 4: DLDDDLD
+  // Row 5: DLLLLD
+  // Row 6: DDDDDDD
   
-  // Debug log for key modules in finder pattern area
-  const isKeyModule = (col < 7 && row < 7) || // TL finder
-                      (col === 0 && row === 0) || // corner
-                      (col === 3 && row === 3);   // center
-  if (isKeyModule && sampleModuleDebugCount < maxSampleModuleDebug) {
-    const avgGray = grayValues.length > 0 ? (grayValues.reduce((a, b) => a + b, 0) / grayValues.length).toFixed(1) : 'N/A';
-    console.log(`[QR-DEBUG] sampleModule(${col},${row}): grays=[${grayValues.map(g => g.toFixed(0)).join(',')}] avg=${avgGray} thresh=${threshold} => dark=${darkCount} light=${lightCount} => ${isDark ? 'DARK' : 'LIGHT'}`);
-    sampleModuleDebugCount++;
+  // Outer ring is always dark
+  if (localRow === 0 || localRow === 6 || localCol === 0 || localCol === 6) {
+    return true;
+  }
+  // Inner ring (1 away from edge) is light
+  if (localRow === 1 || localRow === 5 || localCol === 1 || localCol === 5) {
+    return false;
+  }
+  // Center 3x3 is dark
+  return true;
+}
+
+/**
+ * Score how well a 7x7 region matches the expected finder pattern
+ * Returns a value 0-49 (number of matching modules)
+ */
+function scoreFinderPattern(
+  matrix: boolean[][],
+  startRow: number,
+  startCol: number
+): number {
+  let matches = 0;
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 7; c++) {
+      const expected = getFinderPatternExpected(r, c);
+      const actual = matrix[startRow + r]?.[startCol + c] ?? false;
+      if (actual === expected) matches++;
+    }
+  }
+  return matches;
+}
+
+/**
+ * Score timing pattern alternation (row 6 and column 6)
+ * Returns ratio 0.0-1.0 of correctly alternating modules
+ */
+function scoreTimingPattern(matrix: boolean[][], moduleCount: number): number {
+  let correct = 0;
+  let total = 0;
+  
+  // Horizontal timing (row 6, cols 8 to moduleCount-9)
+  for (let c = 8; c < moduleCount - 8; c++) {
+    const expected = (c % 2) === 0;
+    if ((matrix[6]?.[c] ?? false) === expected) correct++;
+    total++;
   }
   
-  return isDark;
+  // Vertical timing (col 6, rows 8 to moduleCount-9)
+  for (let r = 8; r < moduleCount - 8; r++) {
+    const expected = (r % 2) === 0;
+    if ((matrix[r]?.[6] ?? false) === expected) correct++;
+    total++;
+  }
+  
+  return total > 0 ? correct / total : 0;
+}
+
+/**
+ * Comprehensive scoring function for matrix candidates
+ * Higher score = better candidate
+ * 
+ * Components:
+ * - Full finder pattern match (3 patterns × 49 modules = 147 max)
+ * - Timing pattern ratio (scaled to 0-50)
+ * - Format info decodability bonus (0 or 50)
+ */
+function scoreMatrixCandidate(matrix: boolean[][], moduleCount: number): number {
+  if (!matrix || matrix.length !== moduleCount) return 0;
+  
+  // Score all three finder patterns (max 49 each = 147 total)
+  const tlScore = scoreFinderPattern(matrix, 0, 0);
+  const trScore = scoreFinderPattern(matrix, 0, moduleCount - 7);
+  const blScore = scoreFinderPattern(matrix, moduleCount - 7, 0);
+  const finderScore = tlScore + trScore + blScore;
+  
+  // Score timing pattern (scale to 0-50)
+  const timingRatio = scoreTimingPattern(matrix, moduleCount);
+  const timingScore = timingRatio * 50;
+  
+  // Format info decodability bonus (readFormatInfo is hoisted)
+  let formatBonus = 0;
+  try {
+    const formatInfo = readFormatInfo(matrix);
+    formatBonus = formatInfo ? 50 : 0;
+  } catch {
+    // readFormatInfo may fail on malformed matrices
+    formatBonus = 0;
+  }
+  
+  const totalScore = finderScore + timingScore + formatBonus;
+  
+  // Log scoring details (but not for every single candidate - too noisy)
+  // This will be logged selectively by the caller
+  
+  return totalScore;
 }
 
 /**
  * Validate that extracted matrix has proper finder patterns
  * Returns true if the matrix looks like a valid QR code
+ * 
+ * STRICT VALIDATION: Requires 4/4 finder corners and 80%+ timing
  */
 function validateExtractedMatrix(matrix: boolean[][], moduleCount: number): boolean {
   debugLog(`validateExtractedMatrix: moduleCount=${moduleCount}`);
-  console.log(`[QR-DEBUG] validateExtractedMatrix: START moduleCount=${moduleCount}`);
   if (!matrix || matrix.length !== moduleCount) {
     debugLog(`validateExtractedMatrix: FAILED - matrix length mismatch`);
-    console.log(`[QR-DEBUG] validateExtractedMatrix: FAILED - matrix length mismatch (${matrix?.length} vs ${moduleCount})`);
     return false;
   }
   if (moduleCount < 21) {
     debugLog(`validateExtractedMatrix: FAILED - moduleCount < 21`);
-    console.log(`[QR-DEBUG] validateExtractedMatrix: FAILED - moduleCount < 21`);
     return false;
   }
   
@@ -3198,55 +3550,43 @@ function validateExtractedMatrix(matrix: boolean[][], moduleCount: number): bool
   };
   
   // Check top-left finder pattern (7x7)
-  // Outer ring corners should be dark
-  const tl00 = getModule(0, 0);
-  const tl06 = getModule(0, 6);
-  const tl60 = getModule(6, 0);
-  const tl66 = getModule(6, 6);
-  const tlOuterDark = (tl00 ? 1 : 0) + (tl06 ? 1 : 0) + (tl60 ? 1 : 0) + (tl66 ? 1 : 0);
-  
-  console.log(`[QR-DEBUG] TL finder outer corners: (0,0)=${tl00}, (0,6)=${tl06}, (6,0)=${tl60}, (6,6)=${tl66}`);
+  // Outer ring corners MUST ALL be dark (4/4 required)
+  const tlOuterDark = (
+    (getModule(0, 0) ? 1 : 0) +
+    (getModule(0, 6) ? 1 : 0) +
+    (getModule(6, 0) ? 1 : 0) +
+    (getModule(6, 6) ? 1 : 0)
+  );
   debugLog(`validateExtractedMatrix: TL outer corners dark=${tlOuterDark}/4`);
-  console.log(`[QR-DEBUG] validateExtractedMatrix: TL outer corners dark=${tlOuterDark}/4`);
-  if (tlOuterDark < 3) {
-    debugLog(`validateExtractedMatrix: FAILED - TL outer corners`);
-    console.log(`[QR-DEBUG] validateExtractedMatrix: FAILED - TL outer corners (need 3+, got ${tlOuterDark})`);
+  if (tlOuterDark < 4) {
+    debugLog(`validateExtractedMatrix: FAILED - TL outer corners (need 4, got ${tlOuterDark})`);
     return false;
   }
   
-  // Center 3x3 should be mostly dark
+  // Center 3x3 should be mostly dark (at least 7/9)
   let tlCenterDark = 0;
-  const tlCenterValues: boolean[] = [];
   for (let r = 2; r <= 4; r++) {
     for (let c = 2; c <= 4; c++) {
-      const val = getModule(r, c);
-      tlCenterValues.push(val);
-      if (val) tlCenterDark++;
+      if (getModule(r, c)) tlCenterDark++;
     }
   }
   debugLog(`validateExtractedMatrix: TL center dark=${tlCenterDark}/9`);
-  console.log(`[QR-DEBUG] TL center 3x3: ${tlCenterValues.map(v => v ? '█' : '░').join('')} = ${tlCenterDark}/9 dark`);
-  if (tlCenterDark < 5) {
-    debugLog(`validateExtractedMatrix: FAILED - TL center`);
-    console.log(`[QR-DEBUG] validateExtractedMatrix: FAILED - TL center (need 5+, got ${tlCenterDark})`);
+  if (tlCenterDark < 7) {
+    debugLog(`validateExtractedMatrix: FAILED - TL center (need 7+, got ${tlCenterDark})`);
     return false;
   }
   
   // Check top-right finder pattern
   const trCol = moduleCount - 7;
-  console.log(`[QR-DEBUG] TR finder at col=${trCol}`);
-  const tr00 = getModule(0, trCol);
-  const tr06 = getModule(0, trCol + 6);
-  const tr60 = getModule(6, trCol);
-  const tr66 = getModule(6, trCol + 6);
-  const trOuterDark = (tr00 ? 1 : 0) + (tr06 ? 1 : 0) + (tr60 ? 1 : 0) + (tr66 ? 1 : 0);
-  
-  console.log(`[QR-DEBUG] TR finder outer corners: (0,${trCol})=${tr00}, (0,${trCol+6})=${tr06}, (6,${trCol})=${tr60}, (6,${trCol+6})=${tr66}`);
+  const trOuterDark = (
+    (getModule(0, trCol) ? 1 : 0) +
+    (getModule(0, trCol + 6) ? 1 : 0) +
+    (getModule(6, trCol) ? 1 : 0) +
+    (getModule(6, trCol + 6) ? 1 : 0)
+  );
   debugLog(`validateExtractedMatrix: TR outer corners dark=${trOuterDark}/4`);
-  console.log(`[QR-DEBUG] validateExtractedMatrix: TR outer corners dark=${trOuterDark}/4`);
-  if (trOuterDark < 3) {
-    debugLog(`validateExtractedMatrix: FAILED - TR outer corners`);
-    console.log(`[QR-DEBUG] validateExtractedMatrix: FAILED - TR outer corners (need 3+, got ${trOuterDark})`);
+  if (trOuterDark < 4) {
+    debugLog(`validateExtractedMatrix: FAILED - TR outer corners (need 4, got ${trOuterDark})`);
     return false;
   }
   
@@ -3260,19 +3600,15 @@ function validateExtractedMatrix(matrix: boolean[][], moduleCount: number): bool
   
   // Check bottom-left finder pattern
   const blRow = moduleCount - 7;
-  console.log(`[QR-DEBUG] BL finder at row=${blRow}`);
-  const bl00 = getModule(blRow, 0);
-  const bl06 = getModule(blRow, 6);
-  const bl60 = getModule(blRow + 6, 0);
-  const bl66 = getModule(blRow + 6, 6);
-  const blOuterDark = (bl00 ? 1 : 0) + (bl06 ? 1 : 0) + (bl60 ? 1 : 0) + (bl66 ? 1 : 0);
-  
-  console.log(`[QR-DEBUG] BL finder outer corners: (${blRow},0)=${bl00}, (${blRow},6)=${bl06}, (${blRow+6},0)=${bl60}, (${blRow+6},6)=${bl66}`);
+  const blOuterDark = (
+    (getModule(blRow, 0) ? 1 : 0) +
+    (getModule(blRow, 6) ? 1 : 0) +
+    (getModule(blRow + 6, 0) ? 1 : 0) +
+    (getModule(blRow + 6, 6) ? 1 : 0)
+  );
   debugLog(`validateExtractedMatrix: BL outer corners dark=${blOuterDark}/4`);
-  console.log(`[QR-DEBUG] validateExtractedMatrix: BL outer corners dark=${blOuterDark}/4`);
-  if (blOuterDark < 3) {
-    debugLog(`validateExtractedMatrix: FAILED - BL outer corners`);
-    console.log(`[QR-DEBUG] validateExtractedMatrix: FAILED - BL outer corners (need 3+, got ${blOuterDark})`);
+  if (blOuterDark < 4) {
+    debugLog(`validateExtractedMatrix: FAILED - BL outer corners (need 4, got ${blOuterDark})`);
     return false;
   }
   
@@ -3288,219 +3624,212 @@ function validateExtractedMatrix(matrix: boolean[][], moduleCount: number): bool
   // Check horizontal timing (row 6, between finders)
   let timingCorrect = 0;
   let timingTotal = 0;
-  const timingValues: string[] = [];
   for (let c = 8; c < moduleCount - 8; c++) {
     const expected = (c % 2) === 0; // Even columns should be dark
-    const actual = getModule(6, c);
-    if (actual === expected) timingCorrect++;
+    if (getModule(6, c) === expected) timingCorrect++;
     timingTotal++;
-    timingValues.push(actual ? '█' : '░');
   }
   const timingRatio = timingTotal > 0 ? timingCorrect / timingTotal : 0;
   debugLog(`validateExtractedMatrix: timing pattern ${timingCorrect}/${timingTotal} = ${(timingRatio * 100).toFixed(1)}%`);
-  console.log(`[QR-DEBUG] Timing row 6: [${timingValues.join('')}]`);
-  console.log(`[QR-DEBUG] validateExtractedMatrix: timing pattern ${timingCorrect}/${timingTotal} = ${(timingRatio * 100).toFixed(1)}%`);
-  // Timing should be at least 60% correct
-  if (timingTotal > 0 && timingRatio < 0.6) {
-    debugLog(`validateExtractedMatrix: FAILED - timing pattern`);
-    console.log(`[QR-DEBUG] validateExtractedMatrix: FAILED - timing pattern (need 60%+, got ${(timingRatio * 100).toFixed(1)}%)`);
+  // Timing should be at least 80% correct (stricter than before)
+  if (timingTotal > 0 && timingRatio < 0.80) {
+    debugLog(`validateExtractedMatrix: FAILED - timing pattern (need 80%+, got ${(timingRatio * 100).toFixed(1)}%)`);
     return false;
   }
   
   debugLog(`validateExtractedMatrix: PASSED`);
-  console.log(`[QR-DEBUG] validateExtractedMatrix: PASSED all checks`);
   return true;
 }
 
 /**
- * Invert all boolean values in a matrix (flip dark/light)
- */
-function invertMatrix(matrix: boolean[][]): boolean[][] {
-  return matrix.map(row => row.map(cell => !cell));
-}
-
-/**
- * Extract the boolean module matrix from the image
- * Uses adaptive thresholding, multi-point sampling, grid alignment search, and both polarities for robustness.
- * Returns null if no valid matrix can be extracted (validation fails for all attempts).
- */
-function extractModuleMatrix(
-  imageData: ImageData,
-  location: QRLocation,
-  moduleCount: number
-): boolean[][] | null {
-  const { width, height, data } = imageData;
-  
-  debugLog(`extractModuleMatrix: moduleCount=${moduleCount}`);
-  console.log(`[QR-DEBUG] extractModuleMatrix: START moduleCount=${moduleCount}, image=${width}x${height}`);
-  
-  // Reset debug counters for this extraction attempt
-  sampleModuleDebugCount = 0;
-  
-  // Calculate base perspective transform
-  const baseTransform = calculatePerspectiveTransform(location, moduleCount);
-  if (!baseTransform) {
-    debugLog(`extractModuleMatrix: FAILED - could not create transform`);
-    console.log(`[QR-DEBUG] extractModuleMatrix: FAILED - could not create transform`);
-    return null;
-  }
-  
-  // Calculate optimal threshold for this QR region using Otsu's method
-  const otsuThresh = calculateRegionOtsuThreshold(imageData, location, baseTransform, moduleCount);
-  debugLog(`extractModuleMatrix: region Otsu threshold=${otsuThresh}`);
-  console.log(`[QR-DEBUG] extractModuleMatrix: region Otsu threshold=${otsuThresh}`);
-  
-  // Grid alignment offsets to try (in modules)
-  // The finder detection can be off by ~0.25-0.5 modules, so we search for the correct alignment
-  // Positive dy shifts sampling DOWN (to higher y coordinates / further into the QR)
-  // The most common issue is sampling the quiet zone instead of row 0, so try positive dy first
-  // Order: center first, then positive offsets (shift into QR), then negative offsets, then diagonals
-  const gridOffsets: Array<{ dx: number; dy: number }> = [
-    { dx: 0, dy: 0 },       // No offset (original)
-    { dx: 0, dy: 0.5 },     // Shift sampling down (most common fix for quiet zone sampling)
-    { dx: 0.5, dy: 0 },     // Shift sampling right
-    { dx: 0, dy: 0.25 },    // Smaller shift down
-    { dx: 0.25, dy: 0 },    // Smaller shift right
-    { dx: 0.5, dy: 0.5 },   // Diagonal shift down-right
-    { dx: 0.25, dy: 0.25 }, // Smaller diagonal
-    { dx: 0, dy: -0.5 },    // Shift sampling up (less common)
-    { dx: -0.5, dy: 0 },    // Shift sampling left
-    { dx: 0, dy: -0.25 },   // Smaller shift up
-    { dx: -0.25, dy: 0 },   // Smaller shift left
-    { dx: -0.5, dy: -0.5 }, // Other diagonal combinations
-    { dx: 0.5, dy: -0.5 },
-    { dx: -0.5, dy: 0.5 },
-  ];
-  
-  // Try multiple thresholds including variations around Otsu
-  const thresholdsToTry = [
-    otsuThresh,
-    128,
-    Math.round(otsuThresh - 20),
-    Math.round(otsuThresh + 20),
-    Math.round(otsuThresh * 0.8),
-    Math.round(otsuThresh * 1.2),
-  ].map(t => Math.max(0, Math.min(255, t)));
-  
-  // Remove duplicates
-  const uniqueThresholds = [...new Set(thresholdsToTry)];
-  debugLog(`extractModuleMatrix: trying ${gridOffsets.length} grid offsets x ${uniqueThresholds.length} thresholds`);
-  console.log(`[QR-DEBUG] extractModuleMatrix: trying ${gridOffsets.length} grid offsets x ${uniqueThresholds.length} thresholds`);
-  
-  // Try each grid offset
-  for (const offset of gridOffsets) {
-    const { dx, dy } = offset;
-    
-    // Create offset transform that shifts the sampling grid
-    const transform = createOffsetTransform(baseTransform, dx, dy);
-    
-    // Only log non-zero offsets or first attempt
-    const isFirstAttempt = dx === 0 && dy === 0;
-    if (!isFirstAttempt) {
-      console.log(`[QR-DEBUG] extractModuleMatrix: trying grid offset (${dx}, ${dy})`);
-    }
-    
-    for (const threshold of uniqueThresholds) {
-      if (isFirstAttempt) {
-        debugLog(`extractModuleMatrix: trying threshold=${threshold}`);
-        console.log(`[QR-DEBUG] extractModuleMatrix: trying threshold=${threshold}`);
-      }
-      
-      const matrix: boolean[][] = [];
-      
-      for (let row = 0; row < moduleCount; row++) {
-        matrix[row] = [];
-        for (let col = 0; col < moduleCount; col++) {
-          // Use multi-point sampling with majority voting
-          matrix[row][col] = sampleModuleWithVoting(
-            data, width, height, transform, col, row, threshold
-          );
-        }
-      }
-      
-      // Log the first 7 rows/cols for debugging finder pattern area (only for first offset)
-      if (isFirstAttempt) {
-        console.log(`[QR-DEBUG] First 7x7 of matrix (TL finder area):`);
-        for (let r = 0; r < 7 && r < moduleCount; r++) {
-          const rowStr = matrix[r].slice(0, 7).map(v => v ? '█' : '░').join('');
-          console.log(`[QR-DEBUG]   row ${r}: ${rowStr}`);
-        }
-      }
-      
-      // Try normal polarity first
-      if (isFirstAttempt) {
-        console.log(`[QR-DEBUG] Validating normal polarity...`);
-      }
-      const isValid = validateExtractedMatrix(matrix, moduleCount);
-      
-      if (isFirstAttempt) {
-        debugLog(`extractModuleMatrix: threshold=${threshold} normal polarity validation=${isValid ? 'PASSED' : 'FAILED'}`);
-        console.log(`[QR-DEBUG] extractModuleMatrix: threshold=${threshold} normal polarity validation=${isValid ? 'PASSED' : 'FAILED'}`);
-      }
-      
-      if (isValid) {
-        debugLog(`extractModuleMatrix: SUCCESS with offset=(${dx},${dy}) threshold=${threshold} (normal polarity)`);
-        console.log(`[QR-DEBUG] extractModuleMatrix: SUCCESS with offset=(${dx},${dy}) threshold=${threshold}`);
-        return matrix;
-      }
-      
-      // Try inverted polarity (for negative/inverse QR codes)
-      if (isFirstAttempt) {
-        console.log(`[QR-DEBUG] Validating inverted polarity...`);
-      }
-      const invertedMatrix = invertMatrix(matrix);
-      const isInvertedValid = validateExtractedMatrix(invertedMatrix, moduleCount);
-      
-      if (isFirstAttempt) {
-        debugLog(`extractModuleMatrix: threshold=${threshold} inverted polarity validation=${isInvertedValid ? 'PASSED' : 'FAILED'}`);
-        console.log(`[QR-DEBUG] extractModuleMatrix: threshold=${threshold} inverted polarity validation=${isInvertedValid ? 'PASSED' : 'FAILED'}`);
-      }
-      
-      if (isInvertedValid) {
-        debugLog(`extractModuleMatrix: SUCCESS with offset=(${dx},${dy}) threshold=${threshold} (inverted polarity)`);
-        console.log(`[QR-DEBUG] extractModuleMatrix: SUCCESS with offset=(${dx},${dy}) threshold=${threshold} (inverted)`);
-        return invertedMatrix;
-      }
-    }
-  }
-  
-  debugLog(`extractModuleMatrix: FAILED - no valid matrix found after trying all offsets and thresholds`);
-  console.log(`[QR-DEBUG] extractModuleMatrix: FAILED - no valid matrix could be extracted after trying all offsets and thresholds`);
-  // Return null if no valid matrix found (don't return invalid matrix)
-  return null;
-}
-
-/**
- * Create an offset transform that shifts the sampling grid by (dx, dy) modules.
- * This is used to search for the correct grid alignment when finder detection has small errors.
+ * Create an offset transform that shifts the sampling grid by (dx, dy) modules
  */
 function createOffsetTransform(
   baseTransform: (col: number, row: number) => { x: number; y: number },
   dx: number,
   dy: number
 ): (col: number, row: number) => { x: number; y: number } {
-  if (dx === 0 && dy === 0) {
-    return baseTransform;
+  return (col: number, row: number) => baseTransform(col + dx, row + dy);
+}
+
+/**
+ * Invert a boolean matrix (swap true/false)
+ */
+function invertMatrix(matrix: boolean[][]): boolean[][] {
+  return matrix.map(row => row.map(v => !v));
+}
+
+/**
+ * Build a matrix from image data using given transform and threshold
+ */
+function buildMatrixFromTransform(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  transform: (col: number, row: number) => { x: number; y: number },
+  moduleCount: number,
+  threshold: number
+): boolean[][] {
+  const matrix: boolean[][] = [];
+  for (let row = 0; row < moduleCount; row++) {
+    matrix[row] = [];
+    for (let col = 0; col < moduleCount; col++) {
+      matrix[row][col] = sampleModuleWithVoting(
+        data, width, height, transform, col, row, threshold
+      );
+    }
+  }
+  return matrix;
+}
+
+/**
+ * Extract module matrix candidates from the image
+ * Returns an array of candidates sorted by score (best first)
+ * 
+ * This replaces the old "return first valid" approach with a comprehensive
+ * candidate search that tries multiple thresholds and grid offsets.
+ */
+function extractModuleCandidates(
+  imageData: ImageData,
+  location: QRLocation,
+  moduleCount: number
+): MatrixCandidate[] {
+  const { width, height, data } = imageData;
+  
+  console.log(`[QR-DEBUG] extractModuleCandidates: START moduleCount=${moduleCount}, image=${width}x${height}`);
+  debugLog(`extractModuleCandidates: START moduleCount=${moduleCount}`);
+  
+  // Calculate base perspective transform
+  const baseTransform = calculatePerspectiveTransform(location, moduleCount);
+  if (!baseTransform) {
+    console.log(`[QR-DEBUG] extractModuleCandidates: FAILED - could not create transform`);
+    debugLog(`extractModuleCandidates: FAILED - could not create transform`);
+    return [];
   }
   
-  return (col: number, row: number) => {
-    // Apply the offset to shift the entire sampling grid
-    return baseTransform(col + dx, row + dy);
-  };
+  // Test the transform at key points
+  const testPt00 = baseTransform(0, 0);
+  const testPt33 = baseTransform(3, 3);
+  const testPtEnd = baseTransform(moduleCount - 1, moduleCount - 1);
+  console.log(`[QR-DEBUG] extractModuleCandidates: transform test - (0,0)->(${testPt00.x.toFixed(1)},${testPt00.y.toFixed(1)}), (3,3)->(${testPt33.x.toFixed(1)},${testPt33.y.toFixed(1)}), (${moduleCount-1},${moduleCount-1})->(${testPtEnd.x.toFixed(1)},${testPtEnd.y.toFixed(1)})`);
+  
+  // Calculate optimal threshold for this QR region
+  const otsuThresh = calculateRegionOtsuThreshold(imageData, location, baseTransform, moduleCount);
+  console.log(`[QR-DEBUG] extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
+  debugLog(`extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
+  
+  // Thresholds to try
+  const thresholdsToTry = [
+    otsuThresh,
+    128,
+    Math.round(otsuThresh * 0.85),
+    Math.round(otsuThresh * 1.15),
+    Math.round(otsuThresh * 0.7),
+    Math.round(otsuThresh * 1.3),
+  ].filter(t => t >= 20 && t <= 235);
+  const uniqueThresholds = [...new Set(thresholdsToTry)];
+  
+  // Grid offsets to try (in modules)
+  // These compensate for finder pattern detection imprecision
+  const gridOffsets = [
+    { dx: 0, dy: 0 },
+    { dx: 0, dy: 0.25 },
+    { dx: 0, dy: -0.25 },
+    { dx: 0.25, dy: 0 },
+    { dx: -0.25, dy: 0 },
+    { dx: 0, dy: 0.5 },
+    { dx: 0, dy: -0.5 },
+    { dx: 0.5, dy: 0 },
+    { dx: -0.5, dy: 0 },
+    { dx: 0.25, dy: 0.25 },
+    { dx: -0.25, dy: -0.25 },
+    { dx: 0.25, dy: -0.25 },
+    { dx: -0.25, dy: 0.25 },
+  ];
+  
+  const candidates: MatrixCandidate[] = [];
+  
+  console.log(`[QR-DEBUG] extractModuleCandidates: trying ${uniqueThresholds.length} thresholds x ${gridOffsets.length} offsets x 2 polarities = ${uniqueThresholds.length * gridOffsets.length * 2} combinations`);
+  console.log(`[QR-DEBUG] extractModuleCandidates: thresholds=[${uniqueThresholds.join(',')}]`);
+  debugLog(`extractModuleCandidates: trying ${uniqueThresholds.length} thresholds x ${gridOffsets.length} offsets x 2 polarities = ${uniqueThresholds.length * gridOffsets.length * 2} combinations`);
+  
+  for (const offset of gridOffsets) {
+    const transform = createOffsetTransform(baseTransform, offset.dx, offset.dy);
+    
+    for (const threshold of uniqueThresholds) {
+      // Build normal polarity matrix
+      const matrix = buildMatrixFromTransform(data, width, height, transform, moduleCount, threshold);
+      const score = scoreMatrixCandidate(matrix, moduleCount);
+      
+      candidates.push({
+        matrix,
+        score,
+        threshold,
+        dx: offset.dx,
+        dy: offset.dy,
+        inverted: false,
+      });
+      
+      // Build inverted polarity matrix
+      const invertedMatrix = invertMatrix(matrix);
+      const invertedScore = scoreMatrixCandidate(invertedMatrix, moduleCount);
+      
+      candidates.push({
+        matrix: invertedMatrix,
+        score: invertedScore,
+        threshold,
+        dx: offset.dx,
+        dy: offset.dy,
+        inverted: true,
+      });
+    }
+  }
+  
+  // Sort by score descending (best first)
+  candidates.sort((a, b) => b.score - a.score);
+  
+  console.log(`[QR-DEBUG] extractModuleCandidates: generated ${candidates.length} candidates`);
+  debugLog(`extractModuleCandidates: generated ${candidates.length} candidates`);
+  if (candidates.length > 0) {
+    // Log top 5 candidates
+    console.log(`[QR-DEBUG] extractModuleCandidates: TOP 5 candidates:`);
+    for (let i = 0; i < Math.min(5, candidates.length); i++) {
+      const c = candidates[i];
+      console.log(`[QR-DEBUG]   #${i+1}: score=${c.score.toFixed(1)}, threshold=${c.threshold}, offset=(${c.dx},${c.dy}), inverted=${c.inverted}`);
+    }
+    debugLog(`extractModuleCandidates: best score=${candidates[0].score.toFixed(1)} (threshold=${candidates[0].threshold}, offset=(${candidates[0].dx},${candidates[0].dy}), inverted=${candidates[0].inverted})`);
+  }
+  
+  return candidates;
+}
+
+/**
+ * Extract the boolean module matrix from the image
+ * Uses adaptive thresholding and multi-point sampling for robustness
+ * 
+ * This is now a wrapper that returns the best candidate's matrix.
+ * The main analyzeQRCode function uses extractModuleCandidates directly
+ * to try multiple candidates with actual payload decoding.
+ */
+function extractModuleMatrix(
+  imageData: ImageData,
+  location: QRLocation,
+  moduleCount: number
+): boolean[][] | null {
+  const candidates = extractModuleCandidates(imageData, location, moduleCount);
+  
+  if (candidates.length === 0) {
+    debugLog(`extractModuleMatrix: no candidates generated`);
+    return null;
+  }
+  
+  // Return the best-scored candidate
+  debugLog(`extractModuleMatrix: returning best candidate with score=${candidates[0].score.toFixed(1)}`);
+  return candidates[0].matrix;
 }
 
 /**
  * Calculate perspective transform from QR quadrilateral to module coordinates
- * 
- * IMPORTANT: This transform expects INTEGER module indices (0, 1, 2, ...) as input.
- * It internally adds +0.5 to convert to module centers for pixel sampling.
- * 
- * Example: transform(0, 0) samples at the CENTER of module (0,0), i.e., pixel coords
- *          corresponding to module center (0.5, 0.5) in module-space.
- * 
- * For sub-module sampling (e.g., for multi-point voting), pass fractional offsets:
- *   transform(col - 0.25, row) samples at 25% of the module width
- *   transform(col + 0.25, row) samples at 75% of the module width
  * 
  * Our finder pattern detection returns centers of finder patterns.
  * The finder centers are at module coordinates (3.5, 3.5), (moduleCount-3.5, 3.5), etc.
@@ -3521,21 +3850,13 @@ function calculatePerspectiveTransform(
   location: QRLocation,
   moduleCount: number
 ): ((col: number, row: number) => { x: number; y: number }) | null {
-  console.log(`[QR-DEBUG] calculatePerspectiveTransform: START moduleCount=${moduleCount}`);
-  console.log(`[QR-DEBUG]   location.topLeft=(${location.topLeft.x.toFixed(1)}, ${location.topLeft.y.toFixed(1)})`);
-  console.log(`[QR-DEBUG]   location.topRight=(${location.topRight.x.toFixed(1)}, ${location.topRight.y.toFixed(1)})`);
-  console.log(`[QR-DEBUG]   location.bottomLeft=(${location.bottomLeft.x.toFixed(1)}, ${location.bottomLeft.y.toFixed(1)})`);
-  console.log(`[QR-DEBUG]   location.bottomRight=(${location.bottomRight.x.toFixed(1)}, ${location.bottomRight.y.toFixed(1)})`);
-  
   // The finder pattern centers are at module coordinate 3.5 from each edge
   const finderOffset = 3.5;
   
   // Distance between finder centers in modules
   const moduleSpan = moduleCount - 7; // e.g., for version 3 (29 modules): 29 - 7 = 22
-  console.log(`[QR-DEBUG]   finderOffset=${finderOffset}, moduleSpan=${moduleSpan}`);
   
   if (moduleSpan <= 0) {
-    console.log(`[QR-DEBUG]   FAILED: moduleSpan <= 0`);
     return null;
   }
   
@@ -3547,10 +3868,6 @@ function calculatePerspectiveTransform(
     location.bottomRight,  // corresponds to module (moduleCount-3.5, moduleCount-3.5) -> u=1, v=1
     location.bottomLeft,   // corresponds to module (3.5, moduleCount-3.5) -> u=0, v=1
   ];
-  
-  // Create a debug flag to only log first few samples
-  let debugSampleCount = 0;
-  const maxDebugSamples = 20;
   
   return (col: number, row: number) => {
     // Map module coordinates to u,v relative to finder centers
@@ -3580,16 +3897,6 @@ function calculatePerspectiveTransform(
       u * v * srcPoints[2].y +
       (1 - u) * v * srcPoints[3].y;
     
-    // Debug log for key modules
-    if (debugSampleCount < maxDebugSamples) {
-      const isKeyModule = (col === 0 && row === 0) || (col === 3 && row === 3) || 
-                          (col === 6 && row === 6) || (col === moduleCount - 1 && row === 0);
-      if (isKeyModule || debugSampleCount < 5) {
-        console.log(`[QR-DEBUG] transform(${col}, ${row}): u=${u.toFixed(4)}, v=${v.toFixed(4)} -> pixel=(${x.toFixed(1)}, ${y.toFixed(1)})`);
-        debugSampleCount++;
-      }
-    }
-    
     return { x, y };
   };
 }
@@ -3608,18 +3915,26 @@ interface FormatInfo {
  */
 function readFormatInfo(matrix: boolean[][]): FormatInfo | null {
   const moduleCount = matrix.length;
-  if (moduleCount < 21) return null;
+  console.log(`[QR-DEBUG] readFormatInfo: moduleCount=${moduleCount}`);
+  if (moduleCount < 21) {
+    console.log(`[QR-DEBUG] readFormatInfo: FAILED - moduleCount < 21`);
+    return null;
+  }
   
   // Try reading format info from two locations and use the better one
   const format1 = readFormatInfoFromTopLeft(matrix);
   const format2 = readFormatInfoFromSecondary(matrix);
+  console.log(`[QR-DEBUG] readFormatInfo: format1 bits=${format1?.toString(2).padStart(15, '0')}, format2 bits=${format2?.toString(2).padStart(15, '0')}`);
   
   // Try to decode both
   const decoded1 = format1 !== null ? decodeFormatInfo(format1) : null;
   const decoded2 = format2 !== null ? decodeFormatInfo(format2) : null;
+  console.log(`[QR-DEBUG] readFormatInfo: decoded1=${decoded1 ? `ECC=${decoded1.eccLevel},mask=${decoded1.maskPattern}` : 'null'}, decoded2=${decoded2 ? `ECC=${decoded2.eccLevel},mask=${decoded2.maskPattern}` : 'null'}`);
   
   // Return whichever decoded successfully, preferring the first
-  return decoded1 || decoded2;
+  const result = decoded1 || decoded2;
+  console.log(`[QR-DEBUG] readFormatInfo: RESULT=${result ? `ECC=${result.eccLevel},mask=${result.maskPattern}` : 'null'}`);
+  return result;
 }
 
 /**
@@ -3684,13 +3999,11 @@ function readFormatInfoFromSecondary(matrix: boolean[][]): number | null {
  */
 function decodeFormatInfo(bits: number): FormatInfo | null {
   // XOR with format info mask
-  const decoded = (bits ^ FORMAT_INFO_MASK) & 0x7FFF; // 15 bits
-
-  // Format info = 5 data bits (ECL+mask) + 10 BCH bits.
-  // With this bit assembly, the 5 data bits are the TOP 5 bits.
-  const formatData = decoded >> 10; // 5 bits
-  const maskPattern = formatData & 0x07;
-  const eccCode = (formatData >> 3) & 0x03;
+  const decoded = bits ^ FORMAT_INFO_MASK;
+  
+  // Extract mask pattern (bits 0-2) and ECC level (bits 3-4)
+  const maskPattern = decoded & 0x07;
+  const eccCode = (decoded >> 3) & 0x03;
   
   // Validate mask pattern (0-7)
   if (maskPattern < 0 || maskPattern > 7) {
@@ -3767,10 +4080,13 @@ function estimateQuietZone(
   left: number;
   adequate: boolean;
 } | null {
-  if (moduleCount <= 0) return null;
+  const { width, height, data } = imageData;
   
-  // Estimate module size using pointDistance for always-positive values
-  const qrWidth = pointDistance(location.topLeft, location.topRight);
+  // Estimate module size
+  const qrWidth = Math.sqrt(
+    Math.pow(location.topRight.x - location.topLeft.x, 2) +
+    Math.pow(location.topRight.y - location.topLeft.y, 2)
+  );
   const moduleSize = qrWidth / moduleCount;
   
   if (moduleSize <= 0) return null;
