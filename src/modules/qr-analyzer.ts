@@ -3801,6 +3801,214 @@ function calculateAlignmentCorrection(
 }
 
 /**
+ * Estimate average module size in pixels from finder pattern centers.
+ * Used for search window sizing when refining with alignment patterns.
+ */
+function estimateModuleSizePx(location: QRLocation, moduleCount: number): number {
+  const denom = Math.max(1, moduleCount - 7); // distance in modules between finder centers
+  const top = Math.hypot(location.topRight.x - location.topLeft.x, location.topRight.y - location.topLeft.y) / denom;
+  const left = Math.hypot(location.bottomLeft.x - location.topLeft.x, location.bottomLeft.y - location.topLeft.y) / denom;
+  const m = (top + left) / 2;
+  return Number.isFinite(m) ? m : 0;
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+/**
+ * Estimate a threshold from the three finder patterns, which tends to be more reliable than a global threshold
+ * on gradients / shadows. Returns null if insufficient samples.
+ */
+function estimateThresholdFromFinderPatterns(
+  imageData: ImageData,
+  transform: (col: number, row: number) => Point,
+  moduleCount: number
+): number | null {
+  const finderOrigins = [
+    { r0: 0, c0: 0 }, // top-left
+    { r0: 0, c0: moduleCount - 7 }, // top-right
+    { r0: moduleCount - 7, c0: 0 }, // bottom-left
+  ];
+
+  const dark: number[] = [];
+  const light: number[] = [];
+
+  for (const { r0, c0 } of finderOrigins) {
+    for (let lr = 0; lr < 7; lr++) {
+      for (let lc = 0; lc < 7; lc++) {
+        const expectedDark = getFinderPatternExpected(lr, lc);
+        const pt = transform(c0 + lc, r0 + lr);
+        const g = samplePixelGray(imageData, pt.x, pt.y);
+        if (expectedDark) dark.push(g);
+        else light.push(g);
+      }
+    }
+  }
+
+  if (dark.length < 30 || light.length < 30) return null;
+
+  const md = median(dark);
+  const ml = median(light);
+  const t = Math.round((md + ml) / 2);
+
+  // Clamp away from extremes
+  if (!Number.isFinite(t) || t < 10 || t > 245) return null;
+  return t;
+}
+
+/**
+ * Scores an alignment pattern centered at (cx, cy) in image space using an approximate moduleSizePx.
+ * Returns best score across both polarities (normal/inverted).
+ */
+function scoreAlignmentPatternAtPixel(
+  imageData: ImageData,
+  cx: number,
+  cy: number,
+  moduleSizePx: number
+): number {
+  // Sample expected dark/light points to form a local threshold
+  const expectedDarkVals: number[] = [];
+  const expectedLightVals: number[] = [];
+  const samples: { expDark: boolean; g: number }[] = [];
+
+  for (let r = -2; r <= 2; r++) {
+    for (let c = -2; c <= 2; c++) {
+      const localRow = r + 2;
+      const localCol = c + 2;
+      const expDark = getAlignmentPatternExpected(localRow, localCol);
+      const x = cx + c * moduleSizePx;
+      const y = cy + r * moduleSizePx;
+      const g = samplePixelGray(imageData, x, y);
+      samples.push({ expDark, g });
+      if (expDark) expectedDarkVals.push(g);
+      else expectedLightVals.push(g);
+    }
+  }
+
+  if (expectedDarkVals.length === 0 || expectedLightVals.length === 0) return 0;
+
+  const md = median(expectedDarkVals);
+  const ml = median(expectedLightVals);
+  const thr = (md + ml) / 2;
+
+  // Score both polarities (dark < thr) and (dark > thr), take best
+  let scoreNormal = 0;
+  let scoreInverted = 0;
+
+  for (const s of samples) {
+    const isDarkNormal = s.g < thr;
+    const isDarkInv = s.g > thr;
+    if (isDarkNormal === s.expDark) scoreNormal++;
+    if (isDarkInv === s.expDark) scoreInverted++;
+  }
+
+  return Math.max(scoreNormal, scoreInverted);
+}
+
+/**
+ * Try to find the bottom-right-most alignment pattern in image space, then recompute the homography
+ * using TL/TR/BL finder centers plus the found alignment center. This avoids relying on a synthetic bottomRight.
+ */
+function tryRefineTransformWithAlignment(
+  imageData: ImageData,
+  location: QRLocation,
+  moduleCount: number,
+  version: number,
+  provisionalTransform: (col: number, row: number) => Point,
+  moduleSizePx: number
+): ((col: number, row: number) => Point) | null {
+  if (version < 2) return null;
+
+  const positions = getAlignmentPatternPositions(version);
+  if (!positions || positions.length === 0) return null;
+
+  // Pick the bottom-right-most valid alignment (largest row+col) that doesn't overlap finder patterns.
+  let bestExpected: { row: number; col: number } | null = null;
+  const moduleCountMinus9 = moduleCount - 9;
+
+  for (const expectedRow of positions) {
+    for (const expectedCol of positions) {
+      // Skip overlaps with finder patterns
+      if (expectedRow < 8 && expectedCol < 8) continue;
+      if (expectedRow < 8 && expectedCol > moduleCountMinus9) continue;
+      if (expectedRow > moduleCountMinus9 && expectedCol < 8) continue;
+
+      const candidate = { row: expectedRow, col: expectedCol };
+      if (!bestExpected || candidate.row + candidate.col > bestExpected.row + bestExpected.col) {
+        bestExpected = candidate;
+      }
+    }
+  }
+
+  if (!bestExpected) return null;
+
+  const approx = provisionalTransform(bestExpected.col, bestExpected.row);
+
+  // Search window: around expected alignment location
+  const radiusPx = Math.max(8, moduleSizePx * 6);
+  const stepPx = moduleSizePx > 8 ? 2 : 1;
+
+  let bestScore = -1;
+  let bestPt: Point | null = null;
+
+  const minX = Math.max(0, Math.floor(approx.x - radiusPx));
+  const maxX = Math.min(imageData.width - 1, Math.ceil(approx.x + radiusPx));
+  const minY = Math.max(0, Math.floor(approx.y - radiusPx));
+  const maxY = Math.min(imageData.height - 1, Math.ceil(approx.y + radiusPx));
+
+  for (let y = minY; y <= maxY; y += stepPx) {
+    for (let x = minX; x <= maxX; x += stepPx) {
+      const score = scoreAlignmentPatternAtPixel(imageData, x, y, moduleSizePx);
+      if (score > bestScore) {
+        bestScore = score;
+        bestPt = { x, y };
+      }
+    }
+  }
+
+  // Require a strong match: 25 samples total, alignment is fairly distinctive
+  if (!bestPt || bestScore < 20) {
+    return null;
+  }
+
+  console.log(
+    `[QR-DEBUG] refineTransform: alignment found near (${bestPt.x.toFixed(1)}, ${bestPt.y.toFixed(1)}) score=${bestScore}/25, expected module=(${bestExpected.col},${bestExpected.row})`
+  );
+  debugLog(`refineTransform: alignment found score=${bestScore}/25`);
+
+  // Recompute homography using TL/TR/BL finder centers + alignment center
+  const srcPts: Point[] = [
+    { x: 3.5, y: 3.5 },
+    { x: moduleCount - 3.5, y: 3.5 },
+    { x: 3.5, y: moduleCount - 3.5 },
+    { x: bestExpected.col, y: bestExpected.row },
+  ];
+
+  const dstPts: Point[] = [location.topLeft, location.topRight, location.bottomLeft, bestPt];
+
+  const H = solveHomography(srcPts, dstPts);
+  if (!H) return null;
+
+  return (col: number, row: number): Point => {
+    // Sample at module centers
+    const u = col + 0.5;
+    const v = row + 0.5;
+
+    const denom = H[2][0] * u + H[2][1] * v + H[2][2];
+    if (Math.abs(denom) < 1e-9) return { x: 0, y: 0 };
+
+    const x = (H[0][0] * u + H[0][1] * v + H[0][2]) / denom;
+    const y = (H[1][0] * u + H[1][1] * v + H[1][2]) / denom;
+
+    return { x, y };
+  };
+}
+
+/**
  * Score timing pattern alternation (row 6 and column 6)
  * Returns ratio 0.0-1.0 of correctly alternating modules
  */
@@ -4038,12 +4246,28 @@ function extractModuleCandidates(
   debugLog(`extractModuleCandidates: START moduleCount=${moduleCount}`);
   
   // Calculate base perspective transform
-  const baseTransform = calculatePerspectiveTransform(location, moduleCount);
+  let baseTransform = calculatePerspectiveTransform(location, moduleCount);
   if (!baseTransform) {
     console.log(`[QR-DEBUG] extractModuleCandidates: FAILED - could not create transform`);
     debugLog(`extractModuleCandidates: FAILED - could not create transform`);
     return [];
   }
+
+  // Calculate version once (moduleCount must be 21 + 4*(version-1))
+  const version = (moduleCount - 17) / 4;
+
+  // For version 2+, try to refine the transform using an image-space alignment search.
+  // This avoids relying on a synthetic bottom-right point which can be wrong under perspective.
+  if (version >= 2) {
+    const moduleSizePx = estimateModuleSizePx(location, moduleCount);
+    if (moduleSizePx > 0) {
+      const refined = tryRefineTransformWithAlignment(imageData, location, moduleCount, version, baseTransform, moduleSizePx);
+      if (refined) {
+        baseTransform = refined;
+      }
+    }
+  }
+
   
   // Test the transform at key points
   const testPt00 = baseTransform(0, 0);
@@ -4057,14 +4281,26 @@ function extractModuleCandidates(
   debugLog(`extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
   
   // Thresholds to try
-  const thresholdsToTry = [
+  let thresholdsToTry = [
     otsuThresh,
     128,
     Math.round(otsuThresh * 0.85),
     Math.round(otsuThresh * 1.15),
     Math.round(otsuThresh * 0.7),
     Math.round(otsuThresh * 1.3),
-  ].filter(t => t >= 20 && t <= 235);
+].filter(t => t >= 20 && t <= 235);
+
+  const calibratedThresh = estimateThresholdFromFinderPatterns(imageData, baseTransform, moduleCount);
+  if (calibratedThresh !== null) {
+    console.log(`[QR-DEBUG] extractModuleCandidates: calibrated threshold from finders=${calibratedThresh}`);
+    debugLog(`extractModuleCandidates: calibrated threshold from finders=${calibratedThresh}`);
+    thresholdsToTry = thresholdsToTry.concat([
+      calibratedThresh,
+      Math.round(calibratedThresh * 0.9),
+      Math.round(calibratedThresh * 1.1),
+    ]).filter(t => t >= 20 && t <= 235);
+  }
+
   const uniqueThresholds = [...new Set(thresholdsToTry)];
   
   // Grid offsets to try (in modules)
@@ -4178,10 +4414,6 @@ function extractModuleCandidates(
   
   console.log(`[QR-DEBUG] extractModuleCandidates: generated ${candidates.length} initial candidates`);
   debugLog(`extractModuleCandidates: generated ${candidates.length} initial candidates`);
-  
-  // Calculate version for alignment pattern detection
-  const version = (moduleCount - 17) / 4;
-  
   // For version 2+, try to refine top candidates using alignment pattern detection
   // This creates additional refined candidates that may decode better
   if (version >= 2) {
