@@ -1135,8 +1135,9 @@ function createColorSampleTransform(
   const effectiveModuleSpan = moduleCount - 2 * finderOffset;
   
   return (col: number, row: number) => {
-    const u = (col - finderOffset) / effectiveModuleSpan;
-    const v = (row - finderOffset) / effectiveModuleSpan;
+    // Add 0.5 to sample at module centers instead of corners
+    const u = (col + 0.5 - finderOffset) / effectiveModuleSpan;
+    const v = (row + 0.5 - finderOffset) / effectiveModuleSpan;
 
     const x =
       (1 - u) * (1 - v) * location.topLeft.x +
