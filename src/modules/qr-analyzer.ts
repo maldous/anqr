@@ -3517,27 +3517,49 @@ function calculateRegionOtsuThreshold(
   imageData: ImageData,
   location: QRLocation,
   transform: (col: number, row: number) => { x: number; y: number },
-  moduleCount: number
+  moduleCount: number,
+  luma?: Uint8Array
 ): number {
   const { width, height, data } = imageData;
 
   // Sample points within the QR region to build a histogram.
   // This avoids the global background dominating the threshold.
-  const hist = new Array(256).fill(0);
+  const hist = new Uint32Array(256);
   let sampleCount = 0;
+
+  const l = luma ?? buildLumaBuffer(imageData);
 
   const step = Math.max(1, Math.floor(moduleCount / 10));
 
+  const tAny: any = transform as any;
+  const H: [number, number, number, number, number, number, number, number] | undefined = tAny && tAny._H;
+  const baseDx = H ? (typeof tAny._dx === "number" ? tAny._dx : 0.0) : 0.0;
+  const baseDy = H ? (typeof tAny._dy === "number" ? tAny._dy : 0.0) : 0.0;
+
   for (let row = 0; row < moduleCount; row += step) {
     for (let col = 0; col < moduleCount; col += step) {
-      const pt = transform(col, row);
-      const px = Math.round(pt.x);
-      const py = Math.round(pt.y);
+      let x: number;
+      let y: number;
+
+      if (H) {
+        const u = col + baseDx + 0.5;
+        const v = row + baseDy + 0.5;
+        const denom = H[6] * u + H[7] * v + 1.0;
+        if (!Number.isFinite(denom) || denom === 0) continue;
+        x = (H[0] * u + H[1] * v + H[2]) / denom;
+        y = (H[3] * u + H[4] * v + H[5]) / denom;
+      } else {
+        const pt = transform(col, row);
+        x = pt.x;
+        y = pt.y;
+      }
+
+      const px = Math.round(x);
+      const py = Math.round(y);
 
       if (px < 0 || px >= width || py < 0 || py >= height) continue;
 
-      const idx = (py * width + px) * 4;
-      const gray = lumaAt(data, idx);
+      const gray = l[py * width + px];
       hist[gray]++;
       sampleCount++;
     }
@@ -3549,15 +3571,56 @@ function calculateRegionOtsuThreshold(
     return otsuThreshold(imageData);
   }
 
-  const threshold = otsuThresholdFromHistogram(hist, sampleCount);
+  // otsuThresholdFromHistogram expects a number[], so convert minimally.
+  // (Histogram size is fixed 256; conversion cost is tiny compared to image scanning.)
+  const histArray: number[] = Array.from(hist);
+  const threshold = otsuThresholdFromHistogram(histArray, sampleCount);
   debugLog(`calculateRegionOtsuThreshold: threshold=${threshold} (samples=${sampleCount})`);
 
   return threshold;
 }
 
+
 /**
  * Sample a single pixel and return grayscale value
  */
+/**
+ * Bilinear sampling from a precomputed luma buffer.
+ * Avoids repeated RGBA->luma work in hot loops.
+ */
+function sampleLumaBilinear(
+  luma: Uint8Array,
+  width: number,
+  height: number,
+  x: number,
+  y: number
+): number | null {
+  if (x < 0 || x > width - 1 || y < 0 || y > height - 1) return null;
+
+  // x,y are non-negative here, so bitwise-or is a fast floor.
+  const x0 = x | 0;
+  const y0 = y | 0;
+  const x1 = x0 + 1 < width ? x0 + 1 : x0;
+  const y1 = y0 + 1 < height ? y0 + 1 : y0;
+
+  const dx = x - x0;
+  const dy = y - y0;
+
+  const i00 = y0 * width + x0;
+  const i10 = y0 * width + x1;
+  const i01 = y1 * width + x0;
+  const i11 = y1 * width + x1;
+
+  const g00 = luma[i00];
+  const g10 = luma[i10];
+  const g01 = luma[i01];
+  const g11 = luma[i11];
+
+  const gx0 = g00 + (g10 - g00) * dx;
+  const gx1 = g01 + (g11 - g01) * dx;
+  return gx0 + (gx1 - gx0) * dy;
+}
+
 function samplePixelGray(
   data: Uint8ClampedArray,
   width: number,
@@ -3598,31 +3661,50 @@ function samplePixelGray(
 function upscaleImageDataNearest(src: ImageData, scale: number): ImageData {
   if (scale <= 1) return src;
 
-  const sw = src.width;
-  const sh = src.height;
-  const dw = sw * scale;
-  const dh = sh * scale;
+  const sw = src.width | 0;
+  const sh = src.height | 0;
+  const dw = (sw * scale) | 0;
+  const dh = (sh * scale) | 0;
 
   const dstData = new Uint8ClampedArray(dw * dh * 4);
   const s = src.data;
 
-  for (let y = 0; y < dh; y++) {
-    const sy = Math.floor(y / scale);
-    for (let x = 0; x < dw; x++) {
-      const sx = Math.floor(x / scale);
+  // Replication-based nearest neighbor (no per-pixel division/floor).
+  // Deterministic across platforms; avoids blur.
+  for (let sy = 0; sy < sh; sy++) {
+    const srcRowBase = (sy * sw) * 4;
+    const dstRowStart = (sy * scale) | 0;
 
-      const si = (sy * sw + sx) * 4;
-      const di = (y * dw + x) * 4;
+    for (let ry = 0; ry < scale; ry++) {
+      const dy = (dstRowStart + ry) | 0;
+      const dstRowBase = (dy * dw) * 4;
 
-      dstData[di] = s[si];
-      dstData[di + 1] = s[si + 1];
-      dstData[di + 2] = s[si + 2];
-      dstData[di + 3] = s[si + 3];
+      for (let sx = 0; sx < sw; sx++) {
+        const si = srcRowBase + sx * 4;
+
+        const r = s[si];
+        const g = s[si + 1];
+        const b = s[si + 2];
+        const a = s[si + 3];
+
+        const dstColStart = (sx * scale) | 0;
+        let di = dstRowBase + dstColStart * 4;
+
+        // Write replicated pixels in-place
+        for (let rx = 0; rx < scale; rx++) {
+          dstData[di] = r;
+          dstData[di + 1] = g;
+          dstData[di + 2] = b;
+          dstData[di + 3] = a;
+          di += 4;
+        }
+      }
     }
   }
 
   return new ImageData(dstData, dw, dh);
 }
+
 
 /**
  * Decide whether to upscale the input prior to detection/sampling.
@@ -3652,8 +3734,13 @@ function maybeUpscaleForQR(imageData: ImageData): { imageData: ImageData; scale:
  * a module, we pass fractional offsets (e.g., col-0.3 samples at the left side
  * of the module, col+0.3 samples at the right side).
  */
+// Offsets used for per-module majority voting. Kept at module scope to avoid allocations in hot loops.
+const MODULE_VOTE_OFFSETS_DC = [0.0, -0.3, 0.3, -0.3, 0.3];
+const MODULE_VOTE_OFFSETS_DR = [0.0, -0.3, -0.3, 0.3, 0.3];
+
 function sampleModuleWithVoting(
   data: Uint8ClampedArray,
+  luma: Uint8Array | null,
   width: number,
   height: number,
   transform: (col: number, row: number) => { x: number; y: number },
@@ -3662,47 +3749,57 @@ function sampleModuleWithVoting(
   threshold: number
 ): boolean {
   // Sample 5 points within the module:
-  // - Center (col, row) - transform adds 0.5 internally
-  // - 4 corners offset by ±0.3 (within the module bounds)
-  // The offset of 0.3 means we sample at ~20% and ~80% of the module
-  const offsets = [
-    { dc: 0, dr: 0 },       // center
-    { dc: -0.3, dr: -0.3 }, // top-left region
-    { dc: 0.3, dr: -0.3 },  // top-right region
-    { dc: -0.3, dr: 0.3 },  // bottom-left region
-    { dc: 0.3, dr: 0.3 },   // bottom-right region
-  ];
-  
+  // - Center
+  // - 4 offsets at ~20%/80% (±0.3)
+  // Avoid per-call allocations inside hot loops.
+  const OFF_DC = MODULE_VOTE_OFFSETS_DC;
+  const OFF_DR = MODULE_VOTE_OFFSETS_DR;
+
   let darkCount = 0;
   let lightCount = 0;
-  
-  for (const { dc, dr } of offsets) {
-    // Pass col+dc and row+dr to transform
-    // Transform will add 0.5 to get: (col + dc + 0.5) / moduleCount
-    const pt = transform(col + dc, row + dr);
-    
-    // Ensure the point coordinates are valid numbers
-    if (!Number.isFinite(pt.x) || !Number.isFinite(pt.y)) {
-      continue;
+
+  const tAny: any = transform as any;
+  const H: [number, number, number, number, number, number, number, number] | undefined = tAny && tAny._H;
+  const baseDx = H ? (typeof tAny._dx === "number" ? tAny._dx : 0.0) : 0.0;
+  const baseDy = H ? (typeof tAny._dy === "number" ? tAny._dy : 0.0) : 0.0;
+
+  for (let i = 0; i < 5; i++) {
+    let x: number;
+    let y: number;
+
+    if (H) {
+      const u = col + baseDx + OFF_DC[i] + 0.5;
+      const v = row + baseDy + OFF_DR[i] + 0.5;
+      const denom = H[6] * u + H[7] * v + 1.0;
+      if (!Number.isFinite(denom) || denom === 0) continue;
+
+      x = (H[0] * u + H[1] * v + H[2]) / denom;
+      y = (H[3] * u + H[4] * v + H[5]) / denom;
+    } else {
+      const pt = transform(col + OFF_DC[i], row + OFF_DR[i]);
+      x = pt.x;
+      y = pt.y;
     }
-    
-    const gray = samplePixelGray(data, width, height, pt.x, pt.y);
-    
-    if (gray !== null) {
-      if (gray < threshold) {
-        darkCount++;
-      } else {
-        lightCount++;
-      }
-    }
+
+    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+
+    const gray = luma
+      ? sampleLumaBilinear(luma, width, height, x, y)
+      : samplePixelGray(data, width, height, x, y);
+
+    if (gray === null) continue;
+
+    if (gray < threshold) darkCount++;
+    else lightCount++;
   }
-  
+
   // If no valid samples, default to light
   if (darkCount + lightCount === 0) return false;
-  
+
   // Majority voting: dark wins if strictly more dark samples
   return darkCount > lightCount;
 }
+
 
 // ============================================
 // MATRIX CANDIDATE TYPES AND SCORING
@@ -4317,8 +4414,37 @@ function createOffsetTransform(
   dx: number,
   dy: number
 ): (col: number, row: number) => { x: number; y: number } {
+  const bt: any = baseTransform as any;
+
+  // If the base transform carries homography coefficients, preserve them and just update offsets.
+  if (bt && bt._H) {
+    const H: [number, number, number, number, number, number, number, number] = bt._H;
+    const baseDx = (typeof bt._dx === "number" ? bt._dx : 0.0);
+    const baseDy = (typeof bt._dy === "number" ? bt._dy : 0.0);
+    const ndx = baseDx + dx;
+    const ndy = baseDy + dy;
+
+    const transform = (col: number, row: number) => {
+      const u = col + ndx + 0.5;
+      const v = row + ndy + 0.5;
+      const denom = H[6] * u + H[7] * v + 1.0;
+      return {
+        x: (H[0] * u + H[1] * v + H[2]) / denom,
+        y: (H[3] * u + H[4] * v + H[5]) / denom
+      };
+    };
+
+    (transform as any)._H = H;
+    (transform as any)._dx = ndx;
+    (transform as any)._dy = ndy;
+
+    return transform;
+  }
+
+  // Fallback for non-homography transforms.
   return (col: number, row: number) => baseTransform(col + dx, row + dy);
 }
+
 
 /**
  * Invert a boolean matrix (swap true/false)
@@ -4332,23 +4458,26 @@ function invertMatrix(matrix: boolean[][]): boolean[][] {
  */
 function buildMatrixFromTransform(
   data: Uint8ClampedArray,
+  luma: Uint8Array | null,
   width: number,
   height: number,
   transform: (col: number, row: number) => { x: number; y: number },
   moduleCount: number,
   threshold: number
 ): boolean[][] {
-  const matrix: boolean[][] = [];
+  const matrix: boolean[][] = new Array(moduleCount);
   for (let row = 0; row < moduleCount; row++) {
-    matrix[row] = [];
+    const rowArr = new Array<boolean>(moduleCount);
     for (let col = 0; col < moduleCount; col++) {
-      matrix[row][col] = sampleModuleWithVoting(
-        data, width, height, transform, col, row, threshold
+      rowArr[col] = sampleModuleWithVoting(
+        data, luma, width, height, transform, col, row, threshold
       );
     }
+    matrix[row] = rowArr;
   }
   return matrix;
 }
+
 
 /**
  * Extract module matrix candidates from the image
@@ -4363,6 +4492,8 @@ function extractModuleCandidates(
   moduleCount: number
 ): MatrixCandidate[] {
   const { width, height, data } = imageData;
+  const luma = buildLumaBuffer(imageData);
+
   
   console.log(`[QR-DEBUG] extractModuleCandidates: START moduleCount=${moduleCount}, image=${width}x${height}`);
   debugLog(`extractModuleCandidates: START moduleCount=${moduleCount}`);
@@ -4398,7 +4529,7 @@ function extractModuleCandidates(
   console.log(`[QR-DEBUG] extractModuleCandidates: transform test - (0,0)->(${testPt00.x.toFixed(1)},${testPt00.y.toFixed(1)}), (3,3)->(${testPt33.x.toFixed(1)},${testPt33.y.toFixed(1)}), (${moduleCount-1},${moduleCount-1})->(${testPtEnd.x.toFixed(1)},${testPtEnd.y.toFixed(1)})`);
   
   // Calculate optimal threshold for this QR region
-  const otsuThresh = calculateRegionOtsuThreshold(imageData, location, baseTransform, moduleCount);
+  const otsuThresh = calculateRegionOtsuThreshold(imageData, location, baseTransform, moduleCount, luma);
   console.log(`[QR-DEBUG] extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
   debugLog(`extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
   
@@ -4504,7 +4635,7 @@ function extractModuleCandidates(
     
     for (const threshold of uniqueThresholds) {
       // Build normal polarity matrix
-      const matrix = buildMatrixFromTransform(data, width, height, transform, moduleCount, threshold);
+      const matrix = buildMatrixFromTransform(data, luma, width, height, transform, moduleCount, threshold);
       const score = scoreMatrixCandidate(matrix, moduleCount);
       
       candidates.push({
@@ -4566,7 +4697,7 @@ function extractModuleCandidates(
           
           // Build refined matrix with same threshold
           const refinedMatrix = buildMatrixFromTransform(
-            data, width, height, refinedTransform, moduleCount, candidate.threshold
+            data, luma, width, height, refinedTransform, moduleCount, candidate.threshold
           );
           
           // Handle inversion if original was inverted
@@ -4659,7 +4790,7 @@ function calculatePerspectiveTransform(
 
   const H = solveHomography(srcPts, dstPts);
 
-  return (col: number, row: number): P => {
+  const transform = (col: number, row: number): P => {
     const u = col + 0.5;
     const v = row + 0.5;
     const denom = H[6] * u + H[7] * v + 1.0;
@@ -4668,7 +4799,15 @@ function calculatePerspectiveTransform(
       y: (H[3] * u + H[4] * v + H[5]) / denom
     };
   };
+
+  // Attach coefficients for allocation-free fast paths in hot loops.
+  (transform as any)._H = H;
+  (transform as any)._dx = 0.0;
+  (transform as any)._dy = 0.0;
+
+  return transform;
 }
+
 
 function solveHomography(
   src: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }, { x: number; y: number }],
