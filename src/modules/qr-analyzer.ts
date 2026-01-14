@@ -4805,7 +4805,85 @@ function extractModuleCandidates(
     }
   }
   
-  console.log(`[QR-DEBUG] extractModuleCandidates: FINAL ${candidates.length} candidates`);
+  
+  // ------------------------------------------------------------
+  // Change Set #4 (robustness): format-guided sub-module refinement
+  //
+  // If sampling is "almost right" (common at low px/module), the two format reads
+  // tend to disagree and RS fails hard. We run a tiny local (dx,dy) search around
+  // the best candidates using only the 30 format modules (cheap), then rebuild
+  // the full matrix once for the best offset.
+  // ------------------------------------------------------------
+  const estimatedModuleSizePx2 = estimateModuleSizePx(location, moduleCount);
+  const maxFormatRefineRadius =
+    estimatedModuleSizePx2 > 0 && estimatedModuleSizePx2 < 5 ? 0.3 :
+    (estimatedModuleSizePx2 > 0 && estimatedModuleSizePx2 < 8 ? 0.2 : 0.0);
+
+  if (maxFormatRefineRadius > 0 && candidates.length > 0) {
+    const fmtRefined: MatrixCandidate[] = [];
+    const topN = Math.min(8, candidates.length);
+
+    for (let i = 0; i < topN; i++) {
+      const candidate = candidates[i];
+
+      const candidateTransform = createOffsetTransform(baseTransform, candidate.dx, candidate.dy);
+      const baseFmt = scoreTransformByFormatInfo(
+        data, luma, width, height,
+        candidateTransform, moduleCount, candidate.threshold, candidate.inverted
+      );
+
+      // Skip if already very good.
+      if (baseFmt.best && baseFmt.agree && baseFmt.score <= 1) continue;
+
+      const refined = refineTransformByFormatInfo(
+        data, luma, width, height,
+        candidateTransform, moduleCount, candidate.threshold, candidate.inverted,
+        maxFormatRefineRadius
+      );
+
+      // Only keep if it improves the format signal meaningfully.
+      const improved =
+        refined.fmt.score < baseFmt.score ||
+        (refined.fmt.agree && !baseFmt.agree);
+
+      if (!improved) continue;
+
+      const refinedMatrix = buildMatrixFromTransform(
+        data, luma, width, height, refined.transform, moduleCount, candidate.threshold
+      );
+      const finalMatrix = candidate.inverted ? invertMatrix(refinedMatrix) : refinedMatrix;
+      const refinedScore = scoreMatrixCandidate(finalMatrix, moduleCount);
+
+      const rt: any = refined.transform as any;
+      const refinedDx = (typeof rt._dx === "number" ? rt._dx : candidate.dx);
+      const refinedDy = (typeof rt._dy === "number" ? rt._dy : candidate.dy);
+
+      fmtRefined.push({
+        matrix: finalMatrix,
+        score: refinedScore,
+        threshold: candidate.threshold,
+        dx: refinedDx,
+        dy: refinedDy,
+        inverted: candidate.inverted,
+      });
+
+      console.log(
+        `[QR-DEBUG] extractModuleCandidates: format-refine #${i + 1}: fmtScore ${baseFmt.score} -> ${refined.fmt.score} (agree ${baseFmt.agree} -> ${refined.fmt.agree}), dxdy=(${candidate.dx.toFixed(3)},${candidate.dy.toFixed(3)}) -> (${refinedDx.toFixed(3)},${refinedDy.toFixed(3)})`
+      );
+      debugLog(
+        `extractModuleCandidates: format-refine #${i + 1}: fmtScore ${baseFmt.score} -> ${refined.fmt.score} (agree ${baseFmt.agree} -> ${refined.fmt.agree}), dxdy=(${candidate.dx.toFixed(3)},${candidate.dy.toFixed(3)}) -> (${refinedDx.toFixed(3)},${refinedDy.toFixed(3)})`
+      );
+    }
+
+    if (fmtRefined.length > 0) {
+      console.log(`[QR-DEBUG] extractModuleCandidates: added ${fmtRefined.length} format-refined candidates (radius=${maxFormatRefineRadius})`);
+      debugLog(`extractModuleCandidates: added ${fmtRefined.length} format-refined candidates (radius=${maxFormatRefineRadius})`);
+      candidates.push(...fmtRefined);
+      candidates.sort((a, b) => b.score - a.score);
+    }
+  }
+
+console.log(`[QR-DEBUG] extractModuleCandidates: FINAL ${candidates.length} candidates`);
   debugLog(`extractModuleCandidates: FINAL ${candidates.length} candidates`);
   if (candidates.length > 0) {
     // Log top 5 candidates
@@ -5149,6 +5227,195 @@ function readFormatInfoFromSecondary(matrix: boolean[][]): number | null {
   
   return bits;
 }
+
+/**
+ * Read 15-bit format info directly from the *image* using the current transform.
+ * This is used for sub-module refinement without building a full matrix.
+ * If `inverted` is true, sampled dark/light is flipped (handles polarity inversions).
+ */
+function readFormatInfoFromTopLeftImage(
+  data: Uint8ClampedArray,
+  luma: Uint8Array | null,
+  width: number,
+  height: number,
+  transform: (col: number, row: number) => { x: number; y: number },
+  threshold: number,
+  inverted: boolean
+): number {
+  let bits = 0;
+
+  const sampleBit = (col: number, row: number): boolean => {
+    const dark = sampleModuleWithVoting(data, luma, width, height, transform, col, row, threshold);
+    return inverted ? !dark : dark;
+  };
+
+  // Read from column 8, rows 0-5 (bits 0-5)
+  for (let i = 0; i < 6; i++) {
+    if (sampleBit(8, i)) bits |= (1 << i);
+  }
+
+  // Skip row 6 (timing pattern), read rows 7-8 (bits 6-7)
+  if (sampleBit(8, 7)) bits |= (1 << 6);
+  if (sampleBit(8, 8)) bits |= (1 << 7);
+
+  // Bit 8 at row 8, col 7
+  if (sampleBit(7, 8)) bits |= (1 << 8);
+
+  // Bits 9-14 at row 8, cols 5..0
+  for (let i = 0; i < 6; i++) {
+    if (sampleBit(5 - i, 8)) bits |= (1 << (9 + i));
+  }
+
+  return bits;
+}
+
+/**
+ * Read 15-bit format info from the secondary location directly from the image.
+ */
+function readFormatInfoFromSecondaryImage(
+  data: Uint8ClampedArray,
+  luma: Uint8Array | null,
+  width: number,
+  height: number,
+  transform: (col: number, row: number) => { x: number; y: number },
+  moduleCount: number,
+  threshold: number,
+  inverted: boolean
+): number {
+  let bits = 0;
+
+  const sampleBit = (col: number, row: number): boolean => {
+    const dark = sampleModuleWithVoting(data, luma, width, height, transform, col, row, threshold);
+    return inverted ? !dark : dark;
+  };
+
+  // Bits 0-7 from row 8, columns (moduleCount-1) down to (moduleCount-8)
+  for (let i = 0; i < 8; i++) {
+    const col = moduleCount - 1 - i;
+    if (sampleBit(col, 8)) bits |= (1 << i);
+  }
+
+  // Bits 8-14 from column 8, rows (moduleCount-7) up to (moduleCount-1)
+  for (let i = 0; i < 7; i++) {
+    const row = moduleCount - 7 + i;
+    if (sampleBit(8, row)) bits |= (1 << (8 + i));
+  }
+
+  return bits;
+}
+
+type FormatScore = {
+  score: number; // lower is better
+  agree: boolean;
+  decoded1: DecodedFormatInfo | null;
+  decoded2: DecodedFormatInfo | null;
+  best: DecodedFormatInfo | null;
+};
+
+function scoreTransformByFormatInfo(
+  data: Uint8ClampedArray,
+  luma: Uint8Array | null,
+  width: number,
+  height: number,
+  transform: (col: number, row: number) => { x: number; y: number },
+  moduleCount: number,
+  threshold: number,
+  inverted: boolean
+): FormatScore {
+  const bits1 = readFormatInfoFromTopLeftImage(data, luma, width, height, transform, threshold, inverted);
+  const bits2 = readFormatInfoFromSecondaryImage(data, luma, width, height, transform, moduleCount, threshold, inverted);
+
+  const decoded1 = decodeFormatInfoBCH(bits1);
+  const decoded2 = decodeFormatInfoBCH(bits2);
+
+  const agree =
+    !!decoded1 &&
+    !!decoded2 &&
+    decoded1.eccLevel === decoded2.eccLevel &&
+    decoded1.maskPattern === decoded2.maskPattern;
+
+  let best: DecodedFormatInfo | null = null;
+  if (decoded1 && decoded2) best = decoded1.dist <= decoded2.dist ? decoded1 : decoded2;
+  else best = decoded1 || decoded2 || null;
+
+  // Score favors:
+  // - both decodable
+  // - agreement between the two reads (strong signal of correct sampling)
+  // - low BCH distance (0 is perfect, <=3 is spec-correctable)
+  let score = 0;
+  if (decoded1) score += decoded1.dist; else score += 50;
+  if (decoded2) score += decoded2.dist; else score += 50;
+  if (!decoded1 && !decoded2) score = 999;
+
+  if (decoded1 && decoded2 && !agree) score += 4;
+
+  return { score, agree, decoded1, decoded2, best };
+}
+
+// Deterministic, near-to-far search offsets for sub-module refinement.
+// Values are in *module units* (e.g., 0.1 ≈ 10% of a module).
+const FORMAT_REFINE_OFFSETS: ReadonlyArray<{ dx: number; dy: number }> = [
+  { dx: 0.0, dy: 0.0 },
+
+  { dx: 0.1, dy: 0.0 }, { dx: -0.1, dy: 0.0 }, { dx: 0.0, dy: 0.1 }, { dx: 0.0, dy: -0.1 },
+  { dx: 0.1, dy: 0.1 }, { dx: 0.1, dy: -0.1 }, { dx: -0.1, dy: 0.1 }, { dx: -0.1, dy: -0.1 },
+
+  { dx: 0.2, dy: 0.0 }, { dx: -0.2, dy: 0.0 }, { dx: 0.0, dy: 0.2 }, { dx: 0.0, dy: -0.2 },
+  { dx: 0.2, dy: 0.1 }, { dx: 0.2, dy: -0.1 }, { dx: -0.2, dy: 0.1 }, { dx: -0.2, dy: -0.1 },
+  { dx: 0.1, dy: 0.2 }, { dx: 0.1, dy: -0.2 }, { dx: -0.1, dy: 0.2 }, { dx: -0.1, dy: -0.2 },
+  { dx: 0.2, dy: 0.2 }, { dx: 0.2, dy: -0.2 }, { dx: -0.2, dy: 0.2 }, { dx: -0.2, dy: -0.2 },
+
+  { dx: 0.3, dy: 0.0 }, { dx: -0.3, dy: 0.0 }, { dx: 0.0, dy: 0.3 }, { dx: 0.0, dy: -0.3 },
+  { dx: 0.3, dy: 0.1 }, { dx: 0.3, dy: -0.1 }, { dx: -0.3, dy: 0.1 }, { dx: -0.3, dy: -0.1 },
+  { dx: 0.1, dy: 0.3 }, { dx: 0.1, dy: -0.3 }, { dx: -0.1, dy: 0.3 }, { dx: -0.1, dy: -0.3 },
+];
+
+/**
+ * Refine a transform by locally searching for the (dx,dy) offset that minimizes BCH distance
+ * and maximizes agreement between the two format info reads.
+ *
+ * This is cheap (≈30 module reads per test) and tends to fix "almost correct" sampling where
+ * RS fails due to systematic bit flips at low px/module.
+ */
+function refineTransformByFormatInfo(
+  data: Uint8ClampedArray,
+  luma: Uint8Array | null,
+  width: number,
+  height: number,
+  baseTransform: (col: number, row: number) => { x: number; y: number },
+  moduleCount: number,
+  threshold: number,
+  inverted: boolean,
+  maxRadius: number
+): { transform: (col: number, row: number) => { x: number; y: number }; fmt: FormatScore } {
+  let bestTransform = baseTransform;
+  let bestFmt = scoreTransformByFormatInfo(data, luma, width, height, baseTransform, moduleCount, threshold, inverted);
+
+  // Fast exit if already perfect.
+  if (bestFmt.agree && bestFmt.score === 0) return { transform: bestTransform, fmt: bestFmt };
+
+  for (let i = 0; i < FORMAT_REFINE_OFFSETS.length; i++) {
+    const off = FORMAT_REFINE_OFFSETS[i];
+    if (Math.abs(off.dx) > maxRadius || Math.abs(off.dy) > maxRadius) continue;
+
+    if (off.dx === 0 && off.dy === 0) continue;
+
+    const t = createOffsetTransform(baseTransform, off.dx, off.dy);
+    const fmt = scoreTransformByFormatInfo(data, luma, width, height, t, moduleCount, threshold, inverted);
+
+    if (fmt.score < bestFmt.score || (fmt.score === bestFmt.score && fmt.agree && !bestFmt.agree)) {
+      bestFmt = fmt;
+      bestTransform = t;
+
+      // If we hit a perfect decode + agreement, stop early.
+      if (bestFmt.agree && bestFmt.score === 0) break;
+    }
+  }
+
+  return { transform: bestTransform, fmt: bestFmt };
+}
+
+
 
 /**
  * Decode format info bits to extract ECC level and mask pattern
