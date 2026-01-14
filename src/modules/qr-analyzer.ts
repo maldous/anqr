@@ -1851,27 +1851,50 @@ function createBinaryImage(imageData: ImageData, threshold: number): boolean[] {
  * Check if a run ratio matches the 1:1:3:1:1 finder pattern ratio
  * Allows some tolerance for image distortion
  */
-function checkFinderPatternRatio(runs: number[]): { valid: boolean; moduleSize: number } {
-  if (runs.length !== 5) return { valid: false, moduleSize: 0 };
-  
-  const totalSize = runs[0] + runs[1] + runs[2] + runs[3] + runs[4];
+function checkFinderPatternRatioRuns(
+  r0: number,
+  r1: number,
+  r2: number,
+  r3: number,
+  r4: number
+): { valid: boolean; moduleSize: number } {
+  const totalSize = r0 + r1 + r2 + r3 + r4;
   if (totalSize < 7) return { valid: false, moduleSize: 0 };
-  
+
   const moduleSize = totalSize / 7;
-  const tolerance = moduleSize * 0.7; // 70% tolerance for more leniency
-  
-  // Check ratios: 1:1:3:1:1
-  const valid = 
-    Math.abs(runs[0] - moduleSize) < tolerance &&
-    Math.abs(runs[1] - moduleSize) < tolerance &&
-    Math.abs(runs[2] - moduleSize * 3) < tolerance &&
-    Math.abs(runs[3] - moduleSize) < tolerance &&
-    Math.abs(runs[4] - moduleSize) < tolerance;
-  
+
+  // Chi-square goodness-of-fit to 1:1:3:1:1 (dark:light:dark:light:dark).
+  // More stable than per-run tolerances when moduleSize is small or quantized.
+  const e0 = moduleSize;
+  const e1 = moduleSize;
+  const e2 = moduleSize * 3;
+  const e3 = moduleSize;
+  const e4 = moduleSize;
+
+  const eps = 1e-6;
+  const d0 = r0 - e0;
+  const d1 = r1 - e1;
+  const d2 = r2 - e2;
+  const d3 = r3 - e3;
+  const d4 = r4 - e4;
+
+  const chi2 =
+    (d0 * d0) / (e0 + eps) +
+    (d1 * d1) / (e1 + eps) +
+    (d2 * d2) / (e2 + eps) +
+    (d3 * d3) / (e3 + eps) +
+    (d4 * d4) / (e4 + eps);
+
+  // Slightly looser at very small module sizes.
+  const chi2Max = moduleSize < 2.5 ? 16.0 : 12.0;
+  const valid = chi2 <= chi2Max;
+
   if (valid) {
-    debugLog(`checkFinderPatternRatio: VALID runs=[${runs.join(',')}] total=${totalSize} moduleSize=${moduleSize.toFixed(2)}`);
+    debugLog(
+      `checkFinderPatternRatio: VALID runs=[${r0},${r1},${r2},${r3},${r4}] total=${totalSize} moduleSize=${moduleSize.toFixed(2)} chi2=${chi2.toFixed(2)}`
+    );
   }
-  
+
   return { valid, moduleSize: valid ? moduleSize : 0 };
 }
 
@@ -1889,69 +1912,71 @@ function scanLineForFinderPatternsBinary(
   length: number
 ): Array<{ center: number; moduleSize: number }> {
   const candidates: Array<{ center: number; moduleSize: number }> = [];
+
+  // Store completed run lengths and colors; we only need the last few, but keeping arrays is fine.
   const runs: number[] = [];
-  // Track whether each run is dark (true) or light (false)
-  // runColors[i] corresponds to runs[i]
   const runColors: boolean[] = [];
+
   let currentRunLength = 1;
-  
+
   const getPixel = (pos: number): boolean => {
-    const idx = isHorizontal 
-      ? lineIndex * width + pos 
-      : pos * width + lineIndex;
+    const idx = isHorizontal ? lineIndex * width + pos : pos * width + lineIndex;
     return binary[idx] ?? false;
   };
-  
+
   let currentRunIsDark = getPixel(0);
-  
-  // Helper to check pattern when we have enough runs
+
+  // Helper to check the last 5 runs without allocating slices.
   const checkPattern = (endPos: number) => {
-    if (runs.length < 5) return;
-    
-    const window = runs.slice(-5);
-    const windowColors = runColors.slice(-5);
-    const { valid, moduleSize } = checkFinderPatternRatio(window);
-    
-    if (valid && moduleSize > 0) {
-      // Finder pattern must be: dark(1) - light(1) - dark(3) - light(1) - dark(1)
-      // So first run of window must be dark
-      const firstOfFiveIsDark = windowColors[0];
-      
-      if (firstOfFiveIsDark) {
-        const total = window[0] + window[1] + window[2] + window[3] + window[4];
-        const center = endPos - total / 2;
-        candidates.push({ center, moduleSize });
-        debugLog(`scanLine: Candidate at ${isHorizontal ? 'H' : 'V'} line=${lineIndex} center=${center.toFixed(1)} moduleSize=${moduleSize.toFixed(2)}`);
-      } else {
-        debugLog(`scanLine: Valid ratio but firstOfFive is LIGHT at ${isHorizontal ? 'H' : 'V'} line=${lineIndex} endPos=${endPos}`);
-      }
+    const n = runs.length;
+    if (n < 5) return;
+
+    const r0 = runs[n - 5], r1 = runs[n - 4], r2 = runs[n - 3], r3 = runs[n - 2], r4 = runs[n - 1];
+    const c0 = runColors[n - 5]; // first-of-five color (must be dark)
+
+    const { valid, moduleSize } = checkFinderPatternRatioRuns(r0, r1, r2, r3, r4);
+    if (!valid || moduleSize <= 0) return;
+
+    // Finder pattern must be: dark(1) - light(1) - dark(3) - light(1) - dark(1)
+    if (!c0) {
+      debugLog(`scanLine: Valid ratio but firstOfFive is LIGHT at ${isHorizontal ? 'H' : 'V'} line=${lineIndex} endPos=${endPos}`);
+      return;
     }
+
+    const total = r0 + r1 + r2 + r3 + r4;
+    const center = endPos - total / 2;
+    candidates.push({ center, moduleSize });
+
+    debugLog(`scanLine: Candidate at ${isHorizontal ? 'H' : 'V'} line=${lineIndex} center=${center.toFixed(1)} moduleSize=${moduleSize.toFixed(2)}`);
   };
-  
+
   for (let pos = 1; pos < length; pos++) {
     const isDark = getPixel(pos);
-    
+
     if (isDark === currentRunIsDark) {
       currentRunLength++;
     } else {
-      // Transition: save completed run
       runs.push(currentRunLength);
       runColors.push(currentRunIsDark);
-      
-      // Check for finder pattern
+
       checkPattern(pos);
-      
-      currentRunLength = 1;
+
+      // Shift window occasionally to bound memory on long lines (keeps last ~20 runs, enough for detection)
+      if (runs.length > 32) {
+        runs.splice(0, runs.length - 20);
+        runColors.splice(0, runColors.length - 20);
+      }
+
       currentRunIsDark = isDark;
+      currentRunLength = 1;
     }
   }
-  
-  // FIX: Handle final run at end of scan line
-  // This catches finder patterns that end at the image boundary
+
+  // Handle final run at end of scan line
   runs.push(currentRunLength);
   runColors.push(currentRunIsDark);
   checkPattern(length);
-  
+
   return candidates;
 }
 
@@ -1977,72 +2002,54 @@ function scoreFinderPatternAt(
   centerY: number,
   moduleSize: number
 ): number {
-  const check = (mx: number, my: number): boolean | null => {
+  // Score by sampling the full 7x7 finder template (49 modules) in image space.
+  // This reduces false positives versus sparse-point scoring, and is still cheap.
+  //
+  // We use weighted matches to emphasize the most discriminative cells:
+  // - corners + outer border (high importance)
+  // - inner light ring (high importance)
+  // - center 3x3 (high importance)
+  const sample = (mx: number, my: number): boolean | null => {
     const px = Math.round(centerX + mx * moduleSize);
     const py = Math.round(centerY + my * moduleSize);
     if (px < 0 || px >= width || py < 0 || py >= height) return null;
     return binary[py * width + px];
   };
-  
-  let score = 0;
-  
-  // Score the 3x3 center core (should be all dark) - 27 points max
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
-      const val = check(dx, dy);
-      if (val === true) score += 3; // Dark is correct
+
+  // Early reject if center is not dark (very strong constraint)
+  const centerVal = sample(0, 0);
+  if (centerVal !== true) return 0;
+
+  let matchW = 0;
+  let totalW = 0;
+
+  for (let r = -3; r <= 3; r++) {
+    const localRow = r + 3;
+    for (let c = -3; c <= 3; c++) {
+      const localCol = c + 3;
+      const expected = getFinderPatternExpected(localRow, localCol);
+      const actual = sample(c, r);
+      if (actual === null) return 0;
+
+      // Weighting
+      let w = 1;
+      const isCorner = (Math.abs(r) === 3 && Math.abs(c) === 3);
+      const isOuterBorder = (Math.abs(r) === 3 || Math.abs(c) === 3);
+      const isInnerRing = (Math.abs(r) === 2 || Math.abs(c) === 2) && !isOuterBorder;
+      const isCenter3 = (Math.abs(r) <= 1 && Math.abs(c) <= 1);
+
+      if (isCorner) w = 4;
+      else if (isOuterBorder) w = 2;
+      else if (isInnerRing) w = 2;
+      else if (isCenter3) w = 3;
+
+      totalW += w;
+      if (actual === expected) matchW += w;
     }
   }
-  
-  // Score the inner ring at distance 2 (should be light) - 12 points max
-  const innerPositions = [
-    { dx: 0, dy: -2 }, { dx: 0, dy: 2 }, { dx: -2, dy: 0 }, { dx: 2, dy: 0 },
-    { dx: -1, dy: -2 }, { dx: 1, dy: -2 }, { dx: -1, dy: 2 }, { dx: 1, dy: 2 },
-    { dx: -2, dy: -1 }, { dx: -2, dy: 1 }, { dx: 2, dy: -1 }, { dx: 2, dy: 1 },
-  ];
-  for (const pos of innerPositions) {
-    const val = check(pos.dx, pos.dy);
-    if (val === false) score += 1; // Light is correct
-  }
-  
-  // Score the outer ring at distance 3 (should be dark) - 20 points max
-  const outerPositions = [
-    { dx: 0, dy: -3 }, { dx: 0, dy: 3 }, { dx: -3, dy: 0 }, { dx: 3, dy: 0 },
-    { dx: -1, dy: -3 }, { dx: 1, dy: -3 }, { dx: -1, dy: 3 }, { dx: 1, dy: 3 },
-    { dx: -3, dy: -1 }, { dx: -3, dy: 1 }, { dx: 3, dy: -1 }, { dx: 3, dy: 1 },
-    { dx: -2, dy: -3 }, { dx: 2, dy: -3 }, { dx: -2, dy: 3 }, { dx: 2, dy: 3 },
-    { dx: -3, dy: -2 }, { dx: -3, dy: 2 }, { dx: 3, dy: -2 }, { dx: 3, dy: 2 },
-  ];
-  for (const pos of outerPositions) {
-    const val = check(pos.dx, pos.dy);
-    if (val === true) score += 1; // Dark is correct
-  }
-  
-  // Score the corners (should be dark) - 16 points max
-  const corners = [
-    { dx: -3, dy: -3 }, { dx: 3, dy: -3 }, { dx: -3, dy: 3 }, { dx: 3, dy: 3 },
-  ];
-  for (const pos of corners) {
-    const val = check(pos.dx, pos.dy);
-    if (val === true) score += 4; // Corners are important
-  }
-  
-  // Score inner corners of the light ring (should be light) - 16 points max
-  const innerCorners = [
-    { dx: -2, dy: -2 }, { dx: 2, dy: -2 }, { dx: -2, dy: 2 }, { dx: 2, dy: 2 },
-  ];
-  for (const pos of innerCorners) {
-    const val = check(pos.dx, pos.dy);
-    if (val === false) score += 4; // Light is correct
-  }
-  
-  // Penalty for incorrect center
-  const centerVal = check(0, 0);
-  if (centerVal !== true) score -= 20; // Heavy penalty for wrong center
-  
-  // Max theoretical score: 27 + 12 + 20 + 16 + 16 = 91
-  // Normalize to 0-100
-  return Math.max(0, Math.min(100, Math.round(score * 100 / 91)));
+
+  const score = Math.round((matchW * 100) / Math.max(1, totalW));
+  return Math.max(0, Math.min(100, score));
 }
 
 /**
@@ -4122,43 +4129,68 @@ function scoreAlignmentPatternAtPixel(
   cy: number,
   moduleSizePx: number
 ): number {
-  // Sample expected dark/light points to form a local threshold
-  const expectedDarkVals: number[] = [];
-  const expectedLightVals: number[] = [];
-  const samples: { expDark: boolean; g: number }[] = [];
+  // Sample the 5x5 alignment pattern template and compute a local threshold from the
+  // expected-dark / expected-light samples. Avoid per-sample object allocations.
+  const gVals: number[] = new Array(25);
+  let expMask = 0; // bit i = expectedDark for sample i
 
+  let darkSum = 0;
+  let lightSum = 0;
+  let darkN = 0;
+  let lightN = 0;
+
+  let idx = 0;
   for (let r = -2; r <= 2; r++) {
     for (let c = -2; c <= 2; c++) {
       const localRow = r + 2;
       const localCol = c + 2;
       const expDark = getAlignmentPatternExpected(localRow, localCol);
-      const x = cx + c * moduleSizePx;
-      const y = cy + r * moduleSizePx;
-      const g = samplePixelGray(imageData, x, y);
-      samples.push({ expDark, g });
-      if (expDark) expectedDarkVals.push(g);
-      else expectedLightVals.push(g);
+
+      const px = cx + c * moduleSizePx;
+      const py = cy + r * moduleSizePx;
+      const g = samplePixelGray(imageData, px, py);
+
+      gVals[idx] = g;
+      if (expDark) {
+        expMask |= (1 << idx);
+        darkSum += g;
+        darkN++;
+      } else {
+        lightSum += g;
+        lightN++;
+      }
+      idx++;
     }
   }
 
-  if (expectedDarkVals.length === 0 || expectedLightVals.length === 0) return 0;
+  if (darkN === 0 || lightN === 0) return 0;
 
-  const md = median(expectedDarkVals);
-  const ml = median(expectedLightVals);
-  const thr = (md + ml) / 2;
+  const darkMean = darkSum / darkN;
+  const lightMean = lightSum / lightN;
+  const thr = (darkMean + lightMean) * 0.5;
 
-  // Score both polarities (dark < thr) and (dark > thr), take best
+  const contrast = Math.abs(lightMean - darkMean);
+  const minContrast = moduleSizePx < 3 ? 8 : 14;
+
   let scoreNormal = 0;
   let scoreInverted = 0;
 
-  for (const s of samples) {
-    const isDarkNormal = s.g < thr;
-    const isDarkInv = s.g > thr;
-    if (isDarkNormal === s.expDark) scoreNormal++;
-    if (isDarkInv === s.expDark) scoreInverted++;
+  for (let i = 0; i < 25; i++) {
+    const expDark = ((expMask >>> i) & 1) !== 0;
+    const isDark = gVals[i] < thr;
+
+    if (isDark === expDark) scoreNormal++;
+    if (!isDark === expDark) scoreInverted++;
   }
 
-  return Math.max(scoreNormal, scoreInverted);
+  let best = Math.max(scoreNormal, scoreInverted);
+
+  // Suppress false positives in low-contrast regions
+  if (contrast < minContrast) {
+    best = Math.round(best * (contrast / Math.max(1e-6, minContrast)));
+  }
+
+  return best;
 }
 
 /**
@@ -4261,24 +4293,30 @@ function tryRefineTransformWithAlignment(
  * Returns ratio 0.0-1.0 of correctly alternating modules
  */
 function scoreTimingPattern(matrix: boolean[][], moduleCount: number): number {
-  let correct = 0;
+  let correctPhase0 = 0;
+  let correctPhase1 = 0;
   let total = 0;
-  
+
   // Horizontal timing (row 6, cols 8 to moduleCount-9)
   for (let c = 8; c < moduleCount - 8; c++) {
-    const expected = (c % 2) === 0;
-    if ((matrix[6]?.[c] ?? false) === expected) correct++;
+    const v = matrix[6]?.[c] ?? false;
+    const exp0 = (c % 2) === 0;
+    if (v === exp0) correctPhase0++;
+    if (v !== exp0) correctPhase1++; // inverted phase
     total++;
   }
-  
+
   // Vertical timing (col 6, rows 8 to moduleCount-9)
   for (let r = 8; r < moduleCount - 8; r++) {
-    const expected = (r % 2) === 0;
-    if ((matrix[r]?.[6] ?? false) === expected) correct++;
+    const v = matrix[r]?.[6] ?? false;
+    const exp0 = (r % 2) === 0;
+    if (v === exp0) correctPhase0++;
+    if (v !== exp0) correctPhase1++;
     total++;
   }
-  
-  return total > 0 ? correct / total : 0;
+
+  if (total <= 0) return 0;
+  return Math.max(correctPhase0, correctPhase1) / total;
 }
 
 /**
