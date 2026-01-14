@@ -206,6 +206,33 @@ const FORMAT_INFO_MASK = 0x5412;
 // BCH(15,5) generator polynomial for format information
 const FORMAT_INFO_GEN = 0x537;
 
+// Popcount LUT for 16-bit values (fast, deterministic across platforms).
+const POPCNT16 = (() => {
+  const t = new Uint8Array(1 << 16);
+  for (let i = 0; i < t.length; i++) {
+    // SWAR popcount for 16-bit
+    let x = i;
+    x = x - ((x >>> 1) & 0x5555);
+    x = (x & 0x3333) + ((x >>> 2) & 0x3333);
+    x = (x + (x >>> 4)) & 0x0F0F;
+    t[i] = (x * 0x0101) >>> 8;
+  }
+  return t;
+})();
+
+// Precompute the 32 valid masked format codewords (BCH(15,5)) for fast decode.
+const FORMAT_CODEWORDS_MASKED = new Uint16Array(32);
+const FORMAT_DATA_ECC = new Uint8Array(32);
+const FORMAT_DATA_MASK = new Uint8Array(32);
+
+(() => {
+  for (let data5 = 0; data5 < 32; data5++) {
+    FORMAT_CODEWORDS_MASKED[data5] = (bchEncodeFormat(data5) ^ FORMAT_INFO_MASK) & 0x7fff;
+    FORMAT_DATA_ECC[data5] = (data5 >>> 3) & 0x3;
+    FORMAT_DATA_MASK[data5] = data5 & 0x7;
+  }
+})();
+
 
 // QR Mode indicators (4 bits)
 const QR_MODE = {
@@ -1277,36 +1304,45 @@ function calculateImageProperties(
  * Estimate the pixel size of each module in the QR code
  */
 export function estimateModulePx(location: QRLocation, moduleCount: number): number {
-  // Calculate the width and height of the QR code in pixels
-  const topWidth = Math.sqrt(
-    Math.pow(location.topRight.x - location.topLeft.x, 2) +
-    Math.pow(location.topRight.y - location.topLeft.y, 2)
-  );
-  const bottomWidth = Math.sqrt(
-    Math.pow(location.bottomRight.x - location.bottomLeft.x, 2) +
-    Math.pow(location.bottomRight.y - location.bottomLeft.y, 2)
-  );
-  const leftHeight = Math.sqrt(
-    Math.pow(location.bottomLeft.x - location.topLeft.x, 2) +
-    Math.pow(location.bottomLeft.y - location.topLeft.y, 2)
-  );
-  const rightHeight = Math.sqrt(
-    Math.pow(location.bottomRight.x - location.topRight.x, 2) +
-    Math.pow(location.bottomRight.y - location.topRight.y, 2)
-  );
-
-  const avgWidth = (topWidth + bottomWidth) / 2;
-  const avgHeight = (leftHeight + rightHeight) / 2;
-  const avgSize = (avgWidth + avgHeight) / 2;
-
-  // The distance between finder pattern CENTERS is (moduleCount - 7) modules
-  // because each finder center is 3.5 modules from the edge (3.5 * 2 = 7)
-  const moduleSpan = moduleCount - 7;
+  // Robust (median) module px estimate from multiple edges.
+  // Helps stabilise upscaling decisions and alignment search windows on skewed/noisy images.
+  const moduleSpan = moduleCount - 7; // finder-center span in modules
   if (moduleSpan <= 0) {
-    return avgSize / moduleCount; // Fallback for invalid input
+    // Fallback for unexpected inputs
+    const dx = location.topRight.x - location.topLeft.x;
+    const dy = location.topRight.y - location.topLeft.y;
+    const w = Math.sqrt(dx * dx + dy * dy);
+    return w / Math.max(1, moduleCount);
   }
-  return Math.round((avgSize / moduleSpan) * 100) / 100;
+
+  const topDx = location.topRight.x - location.topLeft.x;
+  const topDy = location.topRight.y - location.topLeft.y;
+  const bottomDx = location.bottomRight.x - location.bottomLeft.x;
+  const bottomDy = location.bottomRight.y - location.bottomLeft.y;
+  const leftDx = location.bottomLeft.x - location.topLeft.x;
+  const leftDy = location.bottomLeft.y - location.topLeft.y;
+  const rightDx = location.bottomRight.x - location.topRight.x;
+  const rightDy = location.bottomRight.y - location.topRight.y;
+
+  const top = Math.sqrt(topDx * topDx + topDy * topDy) / moduleSpan;
+  const bottom = Math.sqrt(bottomDx * bottomDx + bottomDy * bottomDy) / moduleSpan;
+  const left = Math.sqrt(leftDx * leftDx + leftDy * leftDy) / moduleSpan;
+  const right = Math.sqrt(rightDx * rightDx + rightDy * rightDy) / moduleSpan;
+
+  const sizes: number[] = [];
+  if (Number.isFinite(top) && top > 0) sizes.push(top);
+  if (Number.isFinite(bottom) && bottom > 0) sizes.push(bottom);
+  if (Number.isFinite(left) && left > 0) sizes.push(left);
+  if (Number.isFinite(right) && right > 0) sizes.push(right);
+
+  if (sizes.length === 0) return 0;
+
+  // Median (small list; sort is fine and deterministic)
+  sizes.sort((a, b) => a - b);
+  const mid = (sizes.length / 2) | 0;
+  return sizes.length % 2 === 0 ? (sizes[mid - 1] + sizes[mid]) * 0.5 : sizes[mid];
 }
+
 
 // ============================================
 // STRUCTURAL ANALYSIS
@@ -4813,14 +4849,77 @@ function solveHomography(
   src: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }, { x: number; y: number }],
   dst: [{ x: number; y: number }, { x: number; y: number }, { x: number; y: number }, { x: number; y: number }]
 ): [number, number, number, number, number, number, number, number] {
+  // Normalized DLT (Hartley normalization) on 4 point correspondences.
+  // Greatly improves conditioning when points are small/near-collinear or when working at low px/module.
+  type P = { x: number; y: number };
+
+  const normalize4 = (pts: [P, P, P, P]) => {
+    let cx = 0, cy = 0;
+    for (let i = 0; i < 4; i++) { cx += pts[i].x; cy += pts[i].y; }
+    cx *= 0.25; cy *= 0.25;
+
+    let meanDist = 0;
+    for (let i = 0; i < 4; i++) {
+      const dx = pts[i].x - cx;
+      const dy = pts[i].y - cy;
+      meanDist += Math.sqrt(dx * dx + dy * dy);
+    }
+    meanDist *= 0.25;
+
+    const s = meanDist > 1e-9 ? (Math.SQRT2 / meanDist) : 1.0;
+
+    const npts: [P, P, P, P] = [
+      { x: s * (pts[0].x - cx), y: s * (pts[0].y - cy) },
+      { x: s * (pts[1].x - cx), y: s * (pts[1].y - cy) },
+      { x: s * (pts[2].x - cx), y: s * (pts[2].y - cy) },
+      { x: s * (pts[3].x - cx), y: s * (pts[3].y - cy) },
+    ];
+
+    // Row-major 3x3
+    const T = [
+      s, 0, -s * cx,
+      0, s, -s * cy,
+      0, 0, 1
+    ];
+
+    const invS = s !== 0 ? (1 / s) : 1.0;
+    const invT = [
+      invS, 0, cx,
+      0, invS, cy,
+      0, 0, 1
+    ];
+
+    return { npts, T, invT };
+  };
+
+  const mul3x3 = (A: number[], B: number[]): number[] => {
+    // Row-major multiplication C = A * B
+    return [
+      A[0] * B[0] + A[1] * B[3] + A[2] * B[6],
+      A[0] * B[1] + A[1] * B[4] + A[2] * B[7],
+      A[0] * B[2] + A[1] * B[5] + A[2] * B[8],
+
+      A[3] * B[0] + A[4] * B[3] + A[5] * B[6],
+      A[3] * B[1] + A[4] * B[4] + A[5] * B[7],
+      A[3] * B[2] + A[4] * B[5] + A[5] * B[8],
+
+      A[6] * B[0] + A[7] * B[3] + A[8] * B[6],
+      A[6] * B[1] + A[7] * B[4] + A[8] * B[7],
+      A[6] * B[2] + A[7] * B[5] + A[8] * B[8],
+    ];
+  };
+
+  const ns = normalize4(src);
+  const nd = normalize4(dst);
+
   const A: number[][] = [];
   const b: number[] = [];
 
   for (let i = 0; i < 4; i++) {
-    const x = src[i].x;
-    const y = src[i].y;
-    const X = dst[i].x;
-    const Y = dst[i].y;
+    const x = ns.npts[i].x;
+    const y = ns.npts[i].y;
+    const X = nd.npts[i].x;
+    const Y = nd.npts[i].y;
 
     A.push([x, y, 1, 0, 0, 0, -x * X, -y * X]);
     b.push(X);
@@ -4829,8 +4928,27 @@ function solveHomography(
     b.push(Y);
   }
 
-  const h = solveLinearSystem8(A, b);
-  return [h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7]];
+  const p = solveLinearSystem8(A, b);
+
+  // Normalized homography matrix (Hn)
+  const Hn = [
+    p[0], p[1], p[2],
+    p[3], p[4], p[5],
+    p[6], p[7], 1
+  ];
+
+  // Denormalize: H = inv(Tdst) * Hn * Tsrc
+  const tmp = mul3x3(Hn, ns.T);
+  const H = mul3x3(nd.invT, tmp);
+
+  const h22 = H[8];
+  const sH = Math.abs(h22) > 1e-12 ? (1 / h22) : 1.0;
+
+  return [
+    H[0] * sH, H[1] * sH, H[2] * sH,
+    H[3] * sH, H[4] * sH, H[5] * sH,
+    H[6] * sH, H[7] * sH
+  ];
 }
 
 function solveLinearSystem8(Ain: number[][], bin: number[]): number[] {
@@ -5001,14 +5119,10 @@ function readFormatInfoFromSecondary(matrix: boolean[][]): number | null {
  * Popcount for 32-bit integers (used for BCH distance)
  */
 function popcnt(x: number): number {
-  x >>>= 0;
-  let c = 0;
-  while (x) {
-    x &= x - 1;
-    c++;
-  }
-  return c;
+  // Most callers here use <= 15 bits, but keep generic 32-bit support.
+  return POPCNT16[x & 0xffff] + POPCNT16[(x >>> 16) & 0xffff];
 }
+
 
 /**
  * Encode 5-bit format data using BCH(15,5).
@@ -5027,35 +5141,35 @@ function bchEncodeFormat(data5: number): number {
  * Returns null if distance > 3 (uncorrectable per spec).
  */
 function decodeFormatInfoBCH(maskedBits15: number): DecodedFormatInfo | null {
-  let bestData = -1;
-  let bestDist = 1e9;
+  const bits = maskedBits15 & 0x7fff;
 
-  for (let data5 = 0; data5 < 32; data5++) {
-    const maskedCandidate = bchEncodeFormat(data5) ^ FORMAT_INFO_MASK;
-    const dist = popcnt(maskedCandidate ^ maskedBits15);
+  let bestIdx = -1;
+  let bestDist = 4; // >3 means undecodable per QR spec
+
+  for (let i = 0; i < 32; i++) {
+    const dist = POPCNT16[(FORMAT_CODEWORDS_MASKED[i] ^ bits) & 0x7fff];
     if (dist < bestDist) {
       bestDist = dist;
-      bestData = data5;
-      if (bestDist === 0) break;
+      bestIdx = i;
+      if (dist === 0) break;
     }
   }
 
-  if (bestData < 0 || bestDist > 3) return null;
+  if (bestIdx < 0 || bestDist > 3) return null;
 
-  const eccCode = bestData >>> 3; // 2 bits
-  const maskPattern = (bestData & 0x7) as MaskPattern;
-
-  const eccLevel = ECC_LEVEL_MAP[eccCode];
-  if (!eccLevel) return null;
+  const eccCode = FORMAT_DATA_ECC[bestIdx];
+  const eccLevel = ECC_LEVEL_MAP[eccCode] ?? 'M';
+  const maskPattern = (FORMAT_DATA_MASK[bestIdx] as MaskPattern);
 
   return {
     eccLevel,
     maskPattern,
     dist: bestDist,
     eccCode,
-    rawBits: maskedBits15,
+    rawBits: bits,
   };
 }
+
 
 /**
  * Decode format info bits to extract ECC level and mask pattern.
