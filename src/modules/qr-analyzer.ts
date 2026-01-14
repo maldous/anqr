@@ -1095,8 +1095,21 @@ export function extractDominantColors(
   }
 
   // Calculate average colors
-  const foregroundRgb = averageColor(darkPixels);
-  const backgroundRgb = averageColor(lightPixels);
+  let foregroundRgb = averageColor(darkPixels);
+  let backgroundRgb = averageColor(lightPixels);
+
+  // Check if colors are inverted (foreground lighter than background)
+  // This can happen when the matrix was inverted during extraction
+  // Calculate relative luminance for comparison
+  const fgLuminance = 0.299 * foregroundRgb.r + 0.587 * foregroundRgb.g + 0.114 * foregroundRgb.b;
+  const bgLuminance = 0.299 * backgroundRgb.r + 0.587 * backgroundRgb.g + 0.114 * backgroundRgb.b;
+  
+  // If foreground is lighter than background, swap them
+  if (fgLuminance > bgLuminance) {
+    const temp = foregroundRgb;
+    foregroundRgb = backgroundRgb;
+    backgroundRgb = temp;
+  }
 
   // Calculate contrast ratio
   const contrastRatio = calculateContrastRatio(foregroundRgb, backgroundRgb);
@@ -1262,7 +1275,13 @@ export function estimateModulePx(location: QRLocation, moduleCount: number): num
   const avgHeight = (leftHeight + rightHeight) / 2;
   const avgSize = (avgWidth + avgHeight) / 2;
 
-  return Math.round((avgSize / moduleCount) * 100) / 100;
+  // The distance between finder pattern CENTERS is (moduleCount - 7) modules
+  // because each finder center is 3.5 modules from the edge (3.5 * 2 = 7)
+  const moduleSpan = moduleCount - 7;
+  if (moduleSpan <= 0) {
+    return avgSize / moduleCount; // Fallback for invalid input
+  }
+  return Math.round((avgSize / moduleSpan) * 100) / 100;
 }
 
 // ============================================

@@ -276,19 +276,36 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const modulePx = 6;
+    // Calculate module size to match the original QR code's scale
+    // Priority: use estimated module size from original, or calculate from QR size, or fallback to 6
+    let modulePx = 6; // default fallback
+    
+    if (result.estimatedModulePx && result.estimatedModulePx > 0) {
+      // Use the detected module size from the original image
+      modulePx = result.estimatedModulePx;
+    } else if (result.imageProperties?.estimatedQrSizePx && result.imageProperties.estimatedQrSizePx > 0) {
+      // Calculate from the QR code's size in the original image
+      modulePx = result.imageProperties.estimatedQrSizePx / moduleCount;
+    }
+    
+    // Clamp to reasonable bounds (min 3px for visibility, max 15px to avoid huge output)
+    modulePx = Math.max(3, Math.min(15, Math.round(modulePx)));
+    
     const quietZoneModules = 4;
     const size = (moduleCount + quietZoneModules * 2) * modulePx;
 
     canvas.width = size;
     canvas.height = size;
 
+    // Use detected colors from the original QR code
     const fg = result.detectedColors?.foreground || '#000000';
     const bg = result.detectedColors?.background || '#ffffff';
 
+    // Draw background
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, size, size);
 
+    // Draw modules with detected foreground color
     ctx.fillStyle = fg;
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
