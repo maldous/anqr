@@ -177,12 +177,35 @@ interface FormatInfo {
   maskPattern: MaskPattern;
 }
 
+interface DecodedFormatInfo extends FormatInfo {
+  // BCH correction distance (0..3). Lower is better.
+  dist: number;
+  // Raw ECC code (0..3) as encoded in format info
+  eccCode: number;
+  // Raw 15-bit masked format bits as read from matrix
+  rawBits: number;
+}
+
+interface FormatInfoDetailed {
+  format1Bits: number | null;
+  format2Bits: number | null;
+  decoded1: DecodedFormatInfo | null;
+  decoded2: DecodedFormatInfo | null;
+  best: DecodedFormatInfo | null;
+  agree: boolean;
+  bestDist: number;
+  totalDist: number;
+}
+
 // ============================================
 // CONSTANTS
 // ============================================
 
 // Format info mask per QR spec
 const FORMAT_INFO_MASK = 0x5412;
+// BCH(15,5) generator polynomial for format information
+const FORMAT_INFO_GEN = 0x537;
+
 
 // QR Mode indicators (4 bits)
 const QR_MODE = {
@@ -3101,6 +3124,14 @@ export function analyzeQRCode(
     debugLog(`analyzeQRCode: Using provided ImageData ${imageData.width}x${imageData.height}`);
   }
   
+  // Heuristic: for small inputs, nearest-neighbor upscale improves module sampling stability.
+  const upscale = maybeUpscaleForQR(imageData);
+  if (upscale.scale > 1) {
+    debugLog(`analyzeQRCode: Upscaling input ${imageData.width}x${imageData.height} -> ${upscale.imageData.width}x${upscale.imageData.height} (x${upscale.scale})`);
+    warnings.push(`input_upscaled_x${upscale.scale}`);
+    imageData = upscale.imageData;
+  }
+
   // Find finder patterns using custom detection
   debugLog(`analyzeQRCode: Finding finder patterns...`);
   const finderPatterns = findFinderPatterns(imageData);
@@ -3171,40 +3202,76 @@ export function analyzeQRCode(
     errorsCorrected: number | null;
   }
   const successfulDecodes: SuccessfulDecode[] = [];
-  
-  // Limit how many candidates we try for performance (top 15 should be enough)
-  const candidatesToTry = candidates.slice(0, 15);
-  console.log(`[QR-DEBUG] analyzeQRCode: Trying top ${candidatesToTry.length} candidates with exhaustive mask/ECC search...`);
-  debugLog(`analyzeQRCode: Trying top ${candidatesToTry.length} candidates with exhaustive mask/ECC search...`);
-  
+  // Rank candidates using BCH format consistency (strong signal for correct sampling).
+  // Try more candidates when the QR is low-res (few pixels per module).
+  const estimatedModuleSizePx = estimateModuleSizePx(location, moduleCount);
+  const isLowRes = estimatedModuleSizePx > 0 && estimatedModuleSizePx < 6;
+
+  const formatDetailsByCandidate = new WeakMap<MatrixCandidate, FormatInfoDetailed>();
+
+  const ranked = candidates.map((candidate, idx) => {
+    const fmt = readFormatInfoDetailed(candidate.matrix);
+    formatDetailsByCandidate.set(candidate, fmt);
+    return { candidate, idx, fmt };
+  });
+
+  const formatGood = ranked.filter(r => r.fmt.best !== null);
+
+  const rankList = (formatGood.length > 0 ? formatGood : ranked).sort((a, b) => {
+    // Prefer agreement first
+    if (a.fmt.agree !== b.fmt.agree) return a.fmt.agree ? -1 : 1;
+
+    // Then prefer lower BCH distance (both reads when available)
+    if (a.fmt.totalDist !== b.fmt.totalDist) return a.fmt.totalDist - b.fmt.totalDist;
+    if (a.fmt.bestDist !== b.fmt.bestDist) return a.fmt.bestDist - b.fmt.bestDist;
+
+    // Then prefer structural score
+    return b.candidate.score - a.candidate.score;
+  });
+
+  const maxCandidatesToTry = Math.min(candidates.length, isLowRes ? 120 : 40);
+  const candidatesToTry = rankList.slice(0, maxCandidatesToTry).map(r => r.candidate);
+
+  console.log(
+    `[QR-DEBUG] analyzeQRCode: candidate filter=${formatGood.length}/${candidates.length} have BCH-decodable format; trying ${candidatesToTry.length} candidates (moduleSize≈${estimatedModuleSizePx.toFixed(2)}px, lowRes=${isLowRes})`
+  );
+  debugLog(
+    `analyzeQRCode: candidate filter=${formatGood.length}/${candidates.length} have BCH-decodable format; trying ${candidatesToTry.length} candidates (moduleSize≈${estimatedModuleSizePx.toFixed(2)}px, lowRes=${isLowRes})`
+  );
+
   // Track total attempts for logging
   let totalAttempts = 0;
   
   for (let i = 0; i < candidatesToTry.length; i++) {
     const candidate = candidatesToTry[i];
     console.log(`[QR-DEBUG] analyzeQRCode: trying candidate #${i + 1} (score=${candidate.score.toFixed(1)}, threshold=${candidate.threshold}, offset=(${candidate.dx},${candidate.dy}), inverted=${candidate.inverted})`);
-    
-    // Try to read format info from this candidate (to prioritize its mask/ECC)
-    const formatInfo = readFormatInfo(candidate.matrix);
-    
-    // Build ordered list of masks to try: format info mask first (if available), then others
+    // Use BCH-corrected format info to prioritize masks/ECC. This is also a strong indicator of sampling quality.
+    const fmt = formatDetailsByCandidate.get(candidate) ?? readFormatInfoDetailed(candidate.matrix);
+    formatDetailsByCandidate.set(candidate, fmt);
+
+    const formatInfo: FormatInfo | null = fmt.best ? { eccLevel: fmt.best.eccLevel, maskPattern: fmt.best.maskPattern } : null;
+    const formatReliable = !!fmt.best && fmt.agree && fmt.totalDist <= 1;
+
+    // Build ordered list of masks to try: decoded mask first (if available), then others
     let masksToTry: MaskPattern[];
     if (formatInfo) {
       masksToTry = [formatInfo.maskPattern, ...ALL_MASKS.filter(m => m !== formatInfo.maskPattern)];
-      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format info suggests mask=${formatInfo.maskPattern}, ECC=${formatInfo.eccLevel}`);
+      console.log(
+        `[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format(BCH) mask=${formatInfo.maskPattern}, ECC=${formatInfo.eccLevel}, agree=${fmt.agree}, bestDist=${fmt.bestDist}, totalDist=${fmt.totalDist}, reliable=${formatReliable}`
+      );
     } else {
       masksToTry = [...ALL_MASKS];
-      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format info failed, trying all masks`);
+      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format(BCH) decode failed, trying all masks`);
     }
-    
-    // Build ordered list of ECC levels: format info ECC first (if available), then others
+
+    // Build ordered list of ECC levels: decoded ECC first (if available), then others
     let eccLevelsToTry: ECCLevel[];
     if (formatInfo) {
       eccLevelsToTry = [formatInfo.eccLevel, ...ALL_ECC_LEVELS.filter(e => e !== formatInfo.eccLevel)];
     } else {
       eccLevelsToTry = [...ALL_ECC_LEVELS];
     }
-    
+
     // Try all mask × ECC combinations
     for (const tryMask of masksToTry) {
       for (const tryEcc of eccLevelsToTry) {
@@ -3523,6 +3590,58 @@ function samplePixelGray(
   const gx1 = g01 * (1 - dx) + g11 * dx;
   return gx0 * (1 - dy) + gx1 * dy;
 }
+
+/**
+ * Nearest-neighbor upscale for small QR inputs.
+ * This improves effective module resolution without introducing blur.
+ */
+function upscaleImageDataNearest(src: ImageData, scale: number): ImageData {
+  if (scale <= 1) return src;
+
+  const sw = src.width;
+  const sh = src.height;
+  const dw = sw * scale;
+  const dh = sh * scale;
+
+  const dstData = new Uint8ClampedArray(dw * dh * 4);
+  const s = src.data;
+
+  for (let y = 0; y < dh; y++) {
+    const sy = Math.floor(y / scale);
+    for (let x = 0; x < dw; x++) {
+      const sx = Math.floor(x / scale);
+
+      const si = (sy * sw + sx) * 4;
+      const di = (y * dw + x) * 4;
+
+      dstData[di] = s[si];
+      dstData[di + 1] = s[si + 1];
+      dstData[di + 2] = s[si + 2];
+      dstData[di + 3] = s[si + 3];
+    }
+  }
+
+  return new ImageData(dstData, dw, dh);
+}
+
+/**
+ * Decide whether to upscale the input prior to detection/sampling.
+ * Upscaling is applied only for small inputs to keep performance sane.
+ */
+function maybeUpscaleForQR(imageData: ImageData): { imageData: ImageData; scale: number } {
+  const minSide = Math.min(imageData.width, imageData.height);
+
+  // Heuristic: below ~400px on the short edge, many QR images end up <~6 px/module.
+  // Upscale to make the short edge at least ~512px.
+  if (minSide >= 400) return { imageData, scale: 1 };
+
+  const targetMinSide = 512;
+  const scale = Math.max(1, Math.ceil(targetMinSide / minSide));
+
+  if (scale <= 1) return { imageData, scale: 1 };
+  return { imageData: upscaleImageDataNearest(imageData, scale), scale };
+}
+
 
 /**
  * Sample multiple points within a module and use majority voting
@@ -3930,79 +4049,75 @@ function tryRefineTransformWithAlignment(
   let bestExpected: { row: number; col: number } | null = null;
   const moduleCountMinus9 = moduleCount - 9;
 
-  for (const expectedRow of positions) {
-    for (const expectedCol of positions) {
-      // Skip overlaps with finder patterns
-      if (expectedRow < 8 && expectedCol < 8) continue;
-      if (expectedRow < 8 && expectedCol > moduleCountMinus9) continue;
-      if (expectedRow > moduleCountMinus9 && expectedCol < 8) continue;
+  for (let i = positions.length - 1; i >= 0; i--) {
+    for (let j = positions.length - 1; j >= 0; j--) {
+      const row = positions[i];
+      const col = positions[j];
 
-      const candidate = { row: expectedRow, col: expectedCol };
-      if (!bestExpected || candidate.row + candidate.col > bestExpected.row + bestExpected.col) {
-        bestExpected = candidate;
-      }
+      // Skip those near finder patterns
+      const nearTL = row <= 8 && col <= 8;
+      const nearTR = row <= 8 && col >= moduleCountMinus9;
+      const nearBL = row >= moduleCountMinus9 && col <= 8;
+      if (nearTL || nearTR || nearBL) continue;
+
+      bestExpected = { row, col };
+      break;
     }
+    if (bestExpected) break;
   }
 
   if (!bestExpected) return null;
 
+  // Search around the expected alignment center in image space for the best 5x5 alignment pattern.
   const approx = provisionalTransform(bestExpected.col, bestExpected.row);
-
-  // Search window: around expected alignment location
-  const radiusPx = Math.max(8, moduleSizePx * 6);
-  const stepPx = moduleSizePx > 8 ? 2 : 1;
+  const searchRadius = Math.max(2, Math.round(moduleSizePx * 2.0));
+  const step = Math.max(1, Math.round(moduleSizePx * 0.4));
 
   let bestScore = -1;
   let bestPt: Point | null = null;
 
-  const minX = Math.max(0, Math.floor(approx.x - radiusPx));
-  const maxX = Math.min(imageData.width - 1, Math.ceil(approx.x + radiusPx));
-  const minY = Math.max(0, Math.floor(approx.y - radiusPx));
-  const maxY = Math.min(imageData.height - 1, Math.ceil(approx.y + radiusPx));
-
-  for (let y = minY; y <= maxY; y += stepPx) {
-    for (let x = minX; x <= maxX; x += stepPx) {
-      const score = scoreAlignmentPatternAtPixel(imageData, x, y, moduleSizePx);
-      if (score > bestScore) {
-        bestScore = score;
-        bestPt = { x, y };
+  for (let dy = -searchRadius; dy <= searchRadius; dy += step) {
+    for (let dx = -searchRadius; dx <= searchRadius; dx += step) {
+      const cx = approx.x + dx;
+      const cy = approx.y + dy;
+      const s = scoreAlignmentPatternAt(imageData, cx, cy, moduleSizePx);
+      if (s > bestScore) {
+        bestScore = s;
+        bestPt = { x: cx, y: cy };
       }
     }
   }
 
-  // Require a strong match: 25 samples total, alignment is fairly distinctive
-  if (!bestPt || bestScore < 20) {
+  // Require a decent match (alignment is 5x5 with a dark border + dark center => 25 modules total)
+  if (!bestPt || bestScore < 16) {
+    debugLog(`refineTransform: alignment NOT found (bestScore=${bestScore}/25)`);
     return null;
   }
 
-  console.log(
-    `[QR-DEBUG] refineTransform: alignment found near (${bestPt.x.toFixed(1)}, ${bestPt.y.toFixed(1)}) score=${bestScore}/25, expected module=(${bestExpected.col},${bestExpected.row})`
-  );
   debugLog(`refineTransform: alignment found score=${bestScore}/25`);
 
-  // Recompute homography using TL/TR/BL finder centers + alignment center
+  // Recompute homography using TL/TR/BL finder centers + alignment center.
+  // Note: homography coordinates are in "module-center space" (i.e., u=col+0.5, v=row+0.5).
   const srcPts: Point[] = [
     { x: 3.5, y: 3.5 },
     { x: moduleCount - 3.5, y: 3.5 },
     { x: 3.5, y: moduleCount - 3.5 },
-    { x: bestExpected.col, y: bestExpected.row },
+    { x: bestExpected.col + 0.5, y: bestExpected.row + 0.5 },
   ];
 
   const dstPts: Point[] = [location.topLeft, location.topRight, location.bottomLeft, bestPt];
 
-  const H = solveHomography(srcPts, dstPts);
-  if (!H) return null;
+  const h = solveHomography(srcPts, dstPts);
 
   return (col: number, row: number): Point => {
-    // Sample at module centers
     const u = col + 0.5;
     const v = row + 0.5;
 
-    const denom = H[2][0] * u + H[2][1] * v + H[2][2];
+    const denom = h[6] * u + h[7] * v + 1.0;
     if (Math.abs(denom) < 1e-9) return { x: 0, y: 0 };
 
-    const x = (H[0][0] * u + H[0][1] * v + H[0][2]) / denom;
-    const y = (H[1][0] * u + H[1][1] * v + H[1][2]) / denom;
+    const x = (h[0] * u + h[1] * v + h[2]) / denom;
+    const y = (h[3] * u + h[4] * v + h[5]) / denom;
 
     return { x, y };
   };
@@ -4044,33 +4159,40 @@ function scoreTimingPattern(matrix: boolean[][], moduleCount: number): number {
  */
 function scoreMatrixCandidate(matrix: boolean[][], moduleCount: number): number {
   if (!matrix || matrix.length !== moduleCount) return 0;
-  
+
   // Score all three finder patterns (max 49 each = 147 total)
   const tlScore = scoreFinderPattern(matrix, 0, 0);
   const trScore = scoreFinderPattern(matrix, 0, moduleCount - 7);
   const blScore = scoreFinderPattern(matrix, moduleCount - 7, 0);
   const finderScore = tlScore + trScore + blScore;
-  
+
   // Score timing pattern (scale to 0-50)
   const timingRatio = scoreTimingPattern(matrix, moduleCount);
   const timingScore = timingRatio * 50;
-  
-  // Format info decodability bonus (readFormatInfo is hoisted)
+
+  // Format info BCH decodability + agreement bonus (strong signal for correct sampling)
   let formatBonus = 0;
   try {
-    const formatInfo = readFormatInfo(matrix);
-    formatBonus = formatInfo ? 50 : 0;
+    const f = readFormatInfoDetailed(matrix);
+
+    if (f.best) {
+      if (f.agree) {
+        // Strong bonus when both format reads correct to the same ECC/mask.
+        // Prefer low total distance (0 is ideal).
+        formatBonus = Math.max(0, 90 - 12 * f.totalDist);
+      } else {
+        // We can still be correct, but sampling is suspicious.
+        // Prefer lower bestDist.
+        formatBonus = Math.max(0, 40 - 8 * f.bestDist);
+      }
+    } else {
+      formatBonus = 0;
+    }
   } catch {
-    // readFormatInfo may fail on malformed matrices
     formatBonus = 0;
   }
-  
-  const totalScore = finderScore + timingScore + formatBonus;
-  
-  // Log scoring details (but not for every single candidate - too noisy)
-  // This will be logged selectively by the caller
-  
-  return totalScore;
+
+  return finderScore + timingScore + formatBonus;
 }
 
 /**
@@ -4611,27 +4733,68 @@ function solveLinearSystem8(Ain: number[][], bin: number[]): number[] {
 }
 
 
+function readFormatInfoDetailed(matrix: boolean[][]): FormatInfoDetailed {
+  const moduleCount = matrix.length;
+
+  const format1Bits = moduleCount >= 21 ? readFormatInfoFromTopLeft(matrix) : null;
+  const format2Bits = moduleCount >= 21 ? readFormatInfoFromSecondary(matrix) : null;
+
+  const decoded1 = format1Bits !== null ? decodeFormatInfoBCH(format1Bits) : null;
+  const decoded2 = format2Bits !== null ? decodeFormatInfoBCH(format2Bits) : null;
+
+  const agree =
+    !!decoded1 &&
+    !!decoded2 &&
+    decoded1.eccLevel === decoded2.eccLevel &&
+    decoded1.maskPattern === decoded2.maskPattern;
+
+  let best: DecodedFormatInfo | null = null;
+  if (decoded1 && decoded2) {
+    best = decoded1.dist <= decoded2.dist ? decoded1 : decoded2;
+  } else {
+    best = decoded1 || decoded2 || null;
+  }
+
+  const bestDist = best ? best.dist : 999;
+  const totalDist = (decoded1 ? decoded1.dist : 99) + (decoded2 ? decoded2.dist : 99);
+
+  return {
+    format1Bits,
+    format2Bits,
+    decoded1,
+    decoded2,
+    best,
+    agree,
+    bestDist,
+    totalDist,
+  };
+}
+
 function readFormatInfo(matrix: boolean[][]): FormatInfo | null {
   const moduleCount = matrix.length;
   console.log(`[QR-DEBUG] readFormatInfo: moduleCount=${moduleCount}`);
+
   if (moduleCount < 21) {
     console.log(`[QR-DEBUG] readFormatInfo: FAILED - moduleCount < 21`);
     return null;
   }
-  
-  // Try reading format info from two locations and use the better one
-  const format1 = readFormatInfoFromTopLeft(matrix);
-  const format2 = readFormatInfoFromSecondary(matrix);
-  console.log(`[QR-DEBUG] readFormatInfo: format1 bits=${format1.toString(2).padStart(15, '0')}, format2 bits=${format2.toString(2).padStart(15, '0')}`);
-  
-  // Try to decode both
-  const decoded1 = format1 !== null ? decodeFormatInfo(format1) : null;
-  const decoded2 = format2 !== null ? decodeFormatInfo(format2) : null;
-  console.log(`[QR-DEBUG] readFormatInfo: decoded1=${decoded1 ? `ECC=${decoded1.eccLevel},mask=${decoded1.maskPattern}` : 'null'}, decoded2=${decoded2 ? `ECC=${decoded2.eccLevel},mask=${decoded2.maskPattern}` : 'null'}`);
-  
-  // Return whichever decoded successfully, preferring the first
-  const result = decoded1 || decoded2;
+
+  const d = readFormatInfoDetailed(matrix);
+
+  if (d.format1Bits !== null && d.format2Bits !== null) {
+    console.log(
+      `[QR-DEBUG] readFormatInfo: format1 bits=${d.format1Bits.toString(2).padStart(15, '0')}, format2 bits=${d.format2Bits.toString(2).padStart(15, '0')}`
+    );
+  }
+
+  const logDecoded = (x: DecodedFormatInfo | null) =>
+    x ? `ECC=${x.eccLevel},mask=${x.maskPattern},dist=${x.dist}` : 'null';
+
+  console.log(`[QR-DEBUG] readFormatInfo: decoded1=${logDecoded(d.decoded1)}, decoded2=${logDecoded(d.decoded2)}, agree=${d.agree}`);
+
+  const result = d.best ? { eccLevel: d.best.eccLevel, maskPattern: d.best.maskPattern } : null;
   console.log(`[QR-DEBUG] readFormatInfo: RESULT=${result ? `ECC=${result.eccLevel},mask=${result.maskPattern}` : 'null'}`);
+
   return result;
 }
 
@@ -4695,29 +4858,74 @@ function readFormatInfoFromSecondary(matrix: boolean[][]): number | null {
 /**
  * Decode format info bits to extract ECC level and mask pattern
  */
-function decodeFormatInfo(bits: number): FormatInfo | null {
-  // XOR with format info mask
-  const decoded = bits ^ FORMAT_INFO_MASK;
-  
-  // Extract mask pattern (bits 0-2) and ECC level (bits 3-4)
-  const maskPattern = decoded & 0x07;
-  const eccCode = (decoded >> 3) & 0x03;
-  
-  // Validate mask pattern (0-7)
-  if (maskPattern < 0 || maskPattern > 7) {
-    return null;
+/**
+ * Popcount for 32-bit integers (used for BCH distance)
+ */
+function popcnt(x: number): number {
+  x >>>= 0;
+  let c = 0;
+  while (x) {
+    x &= x - 1;
+    c++;
   }
-  
-  // Map ECC code to level
+  return c;
+}
+
+/**
+ * Encode 5-bit format data using BCH(15,5).
+ * Returns 15-bit code (unmasked).
+ */
+function bchEncodeFormat(data5: number): number {
+  let d = data5 << 10;
+  for (let i = 14; i >= 10; i--) {
+    if ((d >>> i) & 1) d ^= FORMAT_INFO_GEN << (i - 10);
+  }
+  return (data5 << 10) | (d & 0x3ff);
+}
+
+/**
+ * BCH-correct and decode the 15-bit *masked* format info.
+ * Returns null if distance > 3 (uncorrectable per spec).
+ */
+function decodeFormatInfoBCH(maskedBits15: number): DecodedFormatInfo | null {
+  let bestData = -1;
+  let bestDist = 1e9;
+
+  for (let data5 = 0; data5 < 32; data5++) {
+    const maskedCandidate = bchEncodeFormat(data5) ^ FORMAT_INFO_MASK;
+    const dist = popcnt(maskedCandidate ^ maskedBits15);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestData = data5;
+      if (bestDist === 0) break;
+    }
+  }
+
+  if (bestData < 0 || bestDist > 3) return null;
+
+  const eccCode = bestData >>> 3; // 2 bits
+  const maskPattern = (bestData & 0x7) as MaskPattern;
+
   const eccLevel = ECC_LEVEL_MAP[eccCode];
-  if (!eccLevel) {
-    return null;
-  }
-  
+  if (!eccLevel) return null;
+
   return {
     eccLevel,
-    maskPattern: maskPattern as MaskPattern,
+    maskPattern,
+    dist: bestDist,
+    eccCode,
+    rawBits: maskedBits15,
   };
+}
+
+/**
+ * Decode format info bits to extract ECC level and mask pattern.
+ * This returns the decoded values (without distance metadata).
+ */
+function decodeFormatInfo(bits: number): FormatInfo | null {
+  const d = decodeFormatInfoBCH(bits);
+  if (!d) return null;
+  return { eccLevel: d.eccLevel, maskPattern: d.maskPattern };
 }
 
 // ============================================
