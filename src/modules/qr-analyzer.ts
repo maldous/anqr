@@ -172,6 +172,11 @@ interface FinderPatternGroup {
   bottomLeft: FinderPattern;
 }
 
+interface FormatInfo {
+  eccLevel: ECCLevel;
+  maskPattern: MaskPattern;
+}
+
 // ============================================
 // CONSTANTS
 // ============================================
@@ -652,17 +657,15 @@ function applyRSCorrection(
   }
   console.log(`[QR-DEBUG] applyRSCorrection: all ${blocks.length} blocks corrected, totalErrors=${totalErrors}`);
   
-  // Re-interleave corrected data
+  // CONCATENATE corrected data blocks (NOT re-interleave!)
+  // The encoder interleaves for physical distribution, but the logical data
+  // is simply block0_data + block1_data + ... concatenated sequentially.
   const correctedData: number[] = [];
-  const maxDataCount = Math.max(...rsBlocks.map(b => b.dataCount));
-  
-  for (let i = 0; i < maxDataCount; i++) {
-    for (let b = 0; b < correctedBlocks.length; b++) {
-      if (i < correctedBlocks[b].length) {
-        correctedData.push(correctedBlocks[b][i]);
-      }
-    }
+  for (const block of correctedBlocks) {
+    correctedData.push(...block);
   }
+  
+  console.log(`[QR-DEBUG] applyRSCorrection: concatenated ${correctedBlocks.length} blocks -> ${correctedData.length} data bytes`);
   
   return { data: correctedData, errorsCorrected: totalErrors };
 }
@@ -1874,20 +1877,6 @@ function scanLineForFinderPatternsBinary(
 }
 
 /**
- * Legacy scan function for backward compatibility
- */
-function scanLineForFinderPatterns(
-  imageData: ImageData,
-  lineIndex: number,
-  isHorizontal: boolean,
-  threshold: number
-): Array<{ center: number; moduleSize: number }> {
-  const binary = createBinaryImage(imageData, threshold);
-  const length = isHorizontal ? imageData.width : imageData.height;
-  return scanLineForFinderPatternsBinary(binary, imageData.width, lineIndex, isHorizontal, length);
-}
-
-/**
  * Score a finder pattern candidate by checking the actual 7x7 structure
  * Returns a numerical score 0-100 based on how well the pattern matches
  * 
@@ -2012,55 +2001,6 @@ function findOptimalFinderCenter(
   }
   
   return { x: bestX, y: bestY, score: bestScore };
-}
-
-/**
- * Verify a finder pattern candidate by checking the actual 7x7 structure
- * Uses binary image for consistent checking
- * 
- * A finder pattern is 7x7 modules:
- * XXXXXXX (dark)
- * X.....X
- * X.XXX.X
- * X.XXX.X
- * X.XXX.X
- * X.....X
- * XXXXXXX
- * Where X=dark, .=light
- */
-function verifyFinderPatternAt(
-  binary: boolean[],
-  width: number,
-  height: number,
-  centerX: number,
-  centerY: number,
-  moduleSize: number
-): boolean {
-  // Use scoring function with a minimum threshold
-  const score = scoreFinderPatternAt(binary, width, height, centerX, centerY, moduleSize);
-  const passed = score >= 50; // Require at least 50% match
-  
-  if (!passed) {
-    debugLog(`verifyFinderPattern: FAILED at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) score=${score}`);
-  } else {
-    debugLog(`verifyFinderPattern: PASSED at (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) score=${score}`);
-  }
-  
-  return passed;
-}
-
-/**
- * Legacy verify function for backward compatibility
- */
-function verifyFinderPattern(
-  imageData: ImageData,
-  centerX: number,
-  centerY: number,
-  moduleSize: number,
-  threshold: number
-): boolean {
-  const binary = createBinaryImage(imageData, threshold);
-  return verifyFinderPatternAt(binary, imageData.width, imageData.height, centerX, centerY, moduleSize);
 }
 
 /**
@@ -3187,7 +3127,7 @@ export function analyzeQRCode(
     return result;
   }
   
-  // Try candidates in order of score until we find one that decodes successfully
+  // Try candidates and collect all successful decodes, then pick the best one
   let moduleMatrix: boolean[][] | null = null;
   let eccLevel: ECCLevel | null = null;
   let maskPattern: MaskPattern | null = null;
@@ -3200,6 +3140,18 @@ export function analyzeQRCode(
   const ALL_MASKS: MaskPattern[] = [0, 1, 2, 3, 4, 5, 6, 7];
   const ALL_ECC_LEVELS: ECCLevel[] = ['L', 'M', 'Q', 'H'];
   
+  // Structure to track successful decodes
+  interface SuccessfulDecode {
+    candidate: MatrixCandidate;
+    candidateIndex: number;
+    mask: MaskPattern;
+    ecc: ECCLevel;
+    payload: string;
+    payloadBytes: Uint8Array;
+    errorsCorrected: number | null;
+  }
+  const successfulDecodes: SuccessfulDecode[] = [];
+  
   // Limit how many candidates we try for performance (top 15 should be enough)
   const candidatesToTry = candidates.slice(0, 15);
   console.log(`[QR-DEBUG] analyzeQRCode: Trying top ${candidatesToTry.length} candidates with exhaustive mask/ECC search...`);
@@ -3208,7 +3160,6 @@ export function analyzeQRCode(
   // Track total attempts for logging
   let totalAttempts = 0;
   
-  candidateLoop:
   for (let i = 0; i < candidatesToTry.length; i++) {
     const candidate = candidatesToTry[i];
     console.log(`[QR-DEBUG] analyzeQRCode: trying candidate #${i + 1} (score=${candidate.score.toFixed(1)}, threshold=${candidate.threshold}, offset=(${candidate.dx},${candidate.dy}), inverted=${candidate.inverted})`);
@@ -3250,25 +3201,53 @@ export function analyzeQRCode(
         
         // Check if decode succeeded AND produced non-empty payload
         if (decoded && decoded.payload && decoded.payload.length > 0) {
-          console.log(`[QR-DEBUG] analyzeQRCode: SUCCESS! candidate #${i + 1}, mask=${tryMask}, ECC=${tryEcc}`);
+          console.log(`[QR-DEBUG] analyzeQRCode: DECODE SUCCESS candidate #${i + 1}, mask=${tryMask}, ECC=${tryEcc}, errors=${decoded.errorsCorrected ?? 'unknown'}`);
           console.log(`[QR-DEBUG] analyzeQRCode: payload="${decoded.payload.substring(0, 80)}${decoded.payload.length > 80 ? '...' : ''}"`);
-          debugLog(`analyzeQRCode: SUCCESS with candidate #${i + 1} mask=${tryMask} ECC=${tryEcc} (score=${candidate.score.toFixed(1)}, threshold=${candidate.threshold}, offset=(${candidate.dx},${candidate.dy}), inverted=${candidate.inverted})`);
-          moduleMatrix = candidate.matrix;
-          eccLevel = tryEcc;
-          maskPattern = tryMask;
-          payload = decoded.payload;
-          payloadBytes = decoded.payloadBytes;
-          errorsCorrected = decoded.errorsCorrected;
-          successfulCandidate = candidate;
-          break candidateLoop;
+          debugLog(`analyzeQRCode: DECODE SUCCESS candidate #${i + 1} mask=${tryMask} ECC=${tryEcc} errors=${decoded.errorsCorrected ?? 'unknown'}`);
+          
+          successfulDecodes.push({
+            candidate,
+            candidateIndex: i + 1,
+            mask: tryMask,
+            ecc: tryEcc,
+            payload: decoded.payload,
+            payloadBytes: decoded.payloadBytes,
+            errorsCorrected: decoded.errorsCorrected,
+          });
         }
       }
     }
     
-    console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} FAILED all ${masksToTry.length * eccLevelsToTry.length} mask/ECC combinations`);
+    if (successfulDecodes.length === 0) {
+      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} FAILED all ${masksToTry.length * eccLevelsToTry.length} mask/ECC combinations`);
+    }
   }
   
-  console.log(`[QR-DEBUG] analyzeQRCode: tried ${totalAttempts} total decode attempts`);
+  console.log(`[QR-DEBUG] analyzeQRCode: tried ${totalAttempts} total decode attempts, found ${successfulDecodes.length} successful decodes`);
+  
+  // Pick the best decode: sort by errorsCorrected ascending (fewest corrections = best)
+  // Decodes with null errorsCorrected go last (we prefer verified RS correction)
+  if (successfulDecodes.length > 0) {
+    successfulDecodes.sort((a, b) => {
+      // Prefer decodes with known error counts
+      if (a.errorsCorrected === null && b.errorsCorrected === null) return 0;
+      if (a.errorsCorrected === null) return 1; // a goes after b
+      if (b.errorsCorrected === null) return -1; // b goes after a
+      return a.errorsCorrected - b.errorsCorrected; // ascending (fewer errors = better)
+    });
+    
+    const best = successfulDecodes[0];
+    console.log(`[QR-DEBUG] analyzeQRCode: BEST DECODE: candidate #${best.candidateIndex}, mask=${best.mask}, ECC=${best.ecc}, errors=${best.errorsCorrected ?? 'unknown'}`);
+    debugLog(`analyzeQRCode: BEST DECODE: candidate #${best.candidateIndex} mask=${best.mask} ECC=${best.ecc} errors=${best.errorsCorrected ?? 'unknown'}`);
+    
+    moduleMatrix = best.candidate.matrix;
+    eccLevel = best.ecc;
+    maskPattern = best.mask;
+    payload = best.payload;
+    payloadBytes = best.payloadBytes;
+    errorsCorrected = best.errorsCorrected;
+    successfulCandidate = best.candidate;
+  }
   
   // If no candidate decoded successfully, use the best-scored one for partial results
   if (!successfulCandidate) {
@@ -3649,6 +3628,159 @@ function scoreFinderPattern(
 }
 
 /**
+ * Expected alignment pattern: 5x5 with dark border, light ring, dark center
+ * Returns the expected value (true=dark, false=light) for each position
+ */
+function getAlignmentPatternExpected(localRow: number, localCol: number): boolean {
+  // Alignment pattern:
+  // Row 0: DDDDD (all dark)
+  // Row 1: DLLLD
+  // Row 2: DLDLD
+  // Row 3: DLLLD
+  // Row 4: DDDDD
+  
+  // Outer ring is always dark
+  if (localRow === 0 || localRow === 4 || localCol === 0 || localCol === 4) {
+    return true;
+  }
+  // Inner ring (1 away from edge) is light
+  if (localRow === 1 || localRow === 3 || localCol === 1 || localCol === 3) {
+    return false;
+  }
+  // Center is dark
+  return true;
+}
+
+/**
+ * Score how well a 5x5 region matches the expected alignment pattern
+ * Returns a value 0-25 (number of matching modules)
+ */
+function scoreAlignmentPatternAt(
+  matrix: boolean[][],
+  centerRow: number,
+  centerCol: number
+): number {
+  let matches = 0;
+  for (let r = -2; r <= 2; r++) {
+    for (let c = -2; c <= 2; c++) {
+      const expected = getAlignmentPatternExpected(r + 2, c + 2);
+      const actual = matrix[centerRow + r]?.[centerCol + c] ?? false;
+      if (actual === expected) matches++;
+    }
+  }
+  return matches;
+}
+
+/**
+ * Detect alignment patterns in a candidate matrix
+ * Returns array of detected alignment pattern centers with their scores
+ * and offset from expected position
+ */
+interface DetectedAlignmentPattern {
+  expectedRow: number;
+  expectedCol: number;
+  actualRow: number;
+  actualCol: number;
+  offsetRow: number;
+  offsetCol: number;
+  score: number;
+}
+
+function detectAlignmentPatterns(
+  matrix: boolean[][],
+  version: number
+): DetectedAlignmentPattern[] {
+  if (version < 2) return [];
+  
+  const moduleCount = matrix.length;
+  const positions = getAlignmentPatternPositions(version);
+  const detected: DetectedAlignmentPattern[] = [];
+  
+  for (const expectedRow of positions) {
+    for (const expectedCol of positions) {
+      // Skip positions that overlap with finder patterns
+      if (expectedRow < 8 && expectedCol < 8) continue; // top-left
+      if (expectedRow < 8 && expectedCol > moduleCount - 9) continue; // top-right
+      if (expectedRow > moduleCount - 9 && expectedCol < 8) continue; // bottom-left
+      
+      // Search for alignment pattern in a small region around expected position
+      // This accounts for perspective/transform errors
+      let bestScore = 0;
+      let bestRow = expectedRow;
+      let bestCol = expectedCol;
+      
+      const searchRadius = 3; // Search ±3 modules around expected position
+      
+      for (let dr = -searchRadius; dr <= searchRadius; dr++) {
+        for (let dc = -searchRadius; dc <= searchRadius; dc++) {
+          const testRow = expectedRow + dr;
+          const testCol = expectedCol + dc;
+          
+          // Bounds check (need 2 modules on each side for 5x5 pattern)
+          if (testRow < 2 || testRow >= moduleCount - 2) continue;
+          if (testCol < 2 || testCol >= moduleCount - 2) continue;
+          
+          const score = scoreAlignmentPatternAt(matrix, testRow, testCol);
+          
+          if (score > bestScore) {
+            bestScore = score;
+            bestRow = testRow;
+            bestCol = testCol;
+          }
+        }
+      }
+      
+      // Only record if we found a reasonably good match (at least 18/25 = 72%)
+      if (bestScore >= 18) {
+        detected.push({
+          expectedRow,
+          expectedCol,
+          actualRow: bestRow,
+          actualCol: bestCol,
+          offsetRow: bestRow - expectedRow,
+          offsetCol: bestCol - expectedCol,
+          score: bestScore,
+        });
+      }
+    }
+  }
+  
+  return detected;
+}
+
+/**
+ * Calculate a grid offset correction based on detected alignment patterns
+ * Returns the average offset that should be applied to better align the grid
+ */
+function calculateAlignmentCorrection(
+  alignments: DetectedAlignmentPattern[]
+): { dx: number; dy: number } | null {
+  if (alignments.length === 0) return null;
+  
+  // Weight by score (higher score = more reliable)
+  let totalWeight = 0;
+  let weightedDx = 0;
+  let weightedDy = 0;
+  
+  for (const align of alignments) {
+    const weight = align.score;
+    weightedDx += align.offsetCol * weight;
+    weightedDy += align.offsetRow * weight;
+    totalWeight += weight;
+  }
+  
+  if (totalWeight === 0) return null;
+  
+  const dx = weightedDx / totalWeight;
+  const dy = weightedDy / totalWeight;
+  
+  // Only return if the offset is non-trivial
+  if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) return null;
+  
+  return { dx, dy };
+}
+
+/**
  * Score timing pattern alternation (row 6 and column 6)
  * Returns ratio 0.0-1.0 of correctly alternating modules
  */
@@ -3719,7 +3851,7 @@ function scoreMatrixCandidate(matrix: boolean[][], moduleCount: number): number 
  * 
  * STRICT VALIDATION: Requires 4/4 finder corners and 80%+ timing
  */
-function validateExtractedMatrix(matrix: boolean[][], moduleCount: number): boolean {
+function validateExtractedMatrix(matrix: boolean[][], moduleCount: number, timingThreshold: number = 0.60): boolean {
   debugLog(`validateExtractedMatrix: moduleCount=${moduleCount}`);
   if (!matrix || matrix.length !== moduleCount) {
     debugLog(`validateExtractedMatrix: FAILED - matrix length mismatch`);
@@ -3817,10 +3949,9 @@ function validateExtractedMatrix(matrix: boolean[][], moduleCount: number): bool
   }
   const timingRatio = timingTotal > 0 ? timingCorrect / timingTotal : 0;
   debugLog(`validateExtractedMatrix: timing pattern ${timingCorrect}/${timingTotal} = ${(timingRatio * 100).toFixed(1)}%`);
-  // FIX: Timing must be at least 85% correct (like ZXing)
-  // 60-80% timing means the grid is misaligned and traversal will fail
-  if (timingTotal > 0 && timingRatio < 0.85) {
-    debugLog(`validateExtractedMatrix: FAILED - timing pattern (need 85%+, got ${(timingRatio * 100).toFixed(1)}%)`);
+  // Timing must meet threshold (default 60% is permissive, can be set stricter)
+  if (timingTotal > 0 && timingRatio < timingThreshold) {
+    debugLog(`validateExtractedMatrix: FAILED - timing pattern (need ${(timingThreshold * 100).toFixed(0)}%+, got ${(timingRatio * 100).toFixed(1)}%)`);
     return false;
   }
   
@@ -3918,20 +4049,70 @@ function extractModuleCandidates(
   
   // Grid offsets to try (in modules)
   // These compensate for finder pattern detection imprecision
+  // Expanded range to catch more severely misaligned QR codes
   const gridOffsets = [
+    // Center (no offset)
     { dx: 0, dy: 0 },
+    
+    // Fine offsets (±0.1, ±0.15) for precision tuning
+    { dx: 0, dy: 0.1 },
+    { dx: 0, dy: -0.1 },
+    { dx: 0.1, dy: 0 },
+    { dx: -0.1, dy: 0 },
+    { dx: 0.15, dy: 0.15 },
+    { dx: -0.15, dy: -0.15 },
+    { dx: 0.15, dy: -0.15 },
+    { dx: -0.15, dy: 0.15 },
+    
+    // Small offsets (±0.25)
     { dx: 0, dy: 0.25 },
     { dx: 0, dy: -0.25 },
     { dx: 0.25, dy: 0 },
     { dx: -0.25, dy: 0 },
-    { dx: 0, dy: 0.5 },
-    { dx: 0, dy: -0.5 },
-    { dx: 0.5, dy: 0 },
-    { dx: -0.5, dy: 0 },
     { dx: 0.25, dy: 0.25 },
     { dx: -0.25, dy: -0.25 },
     { dx: 0.25, dy: -0.25 },
     { dx: -0.25, dy: 0.25 },
+    
+    // Medium offsets (±0.5)
+    { dx: 0, dy: 0.5 },
+    { dx: 0, dy: -0.5 },
+    { dx: 0.5, dy: 0 },
+    { dx: -0.5, dy: 0 },
+    { dx: 0.5, dy: 0.5 },
+    { dx: -0.5, dy: -0.5 },
+    { dx: 0.5, dy: -0.5 },
+    { dx: -0.5, dy: 0.5 },
+    
+    // Larger offsets (±0.75) for more significant misalignment
+    { dx: 0, dy: 0.75 },
+    { dx: 0, dy: -0.75 },
+    { dx: 0.75, dy: 0 },
+    { dx: -0.75, dy: 0 },
+    { dx: 0.75, dy: 0.75 },
+    { dx: -0.75, dy: -0.75 },
+    { dx: 0.75, dy: -0.75 },
+    { dx: -0.75, dy: 0.75 },
+    
+    // Maximum offsets (±1.0) for severely misaligned QR codes
+    { dx: 0, dy: 1.0 },
+    { dx: 0, dy: -1.0 },
+    { dx: 1.0, dy: 0 },
+    { dx: -1.0, dy: 0 },
+    { dx: 1.0, dy: 1.0 },
+    { dx: -1.0, dy: -1.0 },
+    { dx: 1.0, dy: -1.0 },
+    { dx: -1.0, dy: 1.0 },
+    
+    // Mixed diagonal combinations
+    { dx: 0.5, dy: 0.25 },
+    { dx: 0.25, dy: 0.5 },
+    { dx: -0.5, dy: 0.25 },
+    { dx: -0.25, dy: 0.5 },
+    { dx: 0.5, dy: -0.25 },
+    { dx: 0.25, dy: -0.5 },
+    { dx: -0.5, dy: -0.25 },
+    { dx: -0.25, dy: -0.5 },
   ];
   
   const candidates: MatrixCandidate[] = [];
@@ -3975,44 +4156,89 @@ function extractModuleCandidates(
   // Sort by score descending (best first)
   candidates.sort((a, b) => b.score - a.score);
   
-  console.log(`[QR-DEBUG] extractModuleCandidates: generated ${candidates.length} candidates`);
-  debugLog(`extractModuleCandidates: generated ${candidates.length} candidates`);
+  console.log(`[QR-DEBUG] extractModuleCandidates: generated ${candidates.length} initial candidates`);
+  debugLog(`extractModuleCandidates: generated ${candidates.length} initial candidates`);
+  
+  // Calculate version for alignment pattern detection
+  const version = (moduleCount - 17) / 4;
+  
+  // For version 2+, try to refine top candidates using alignment pattern detection
+  // This creates additional refined candidates that may decode better
+  if (version >= 2) {
+    const refinedCandidates: MatrixCandidate[] = [];
+    const topCandidatesToRefine = Math.min(10, candidates.length); // Refine top 10
+    
+    for (let i = 0; i < topCandidatesToRefine; i++) {
+      const candidate = candidates[i];
+      
+      // Detect alignment patterns in this candidate
+      const alignments = detectAlignmentPatterns(candidate.matrix, version);
+      
+      if (alignments.length > 0) {
+        // Calculate correction offset based on alignment pattern positions
+        const correction = calculateAlignmentCorrection(alignments);
+        
+        if (correction) {
+          console.log(`[QR-DEBUG] extractModuleCandidates: candidate #${i+1} has ${alignments.length} alignments, correction=(${correction.dx.toFixed(3)}, ${correction.dy.toFixed(3)})`);
+          debugLog(`extractModuleCandidates: candidate #${i+1} alignments=${alignments.length}, correction=(${correction.dx.toFixed(3)},${correction.dy.toFixed(3)})`);
+          
+          // Create a refined transform with the correction applied
+          // The correction is SUBTRACTED because if alignment is found at offset +X,
+          // we need to shift our sampling by -X to align properly
+          const refinedDx = candidate.dx - correction.dx;
+          const refinedDy = candidate.dy - correction.dy;
+          
+          const refinedTransform = createOffsetTransform(baseTransform, refinedDx, refinedDy);
+          
+          // Build refined matrix with same threshold
+          const refinedMatrix = buildMatrixFromTransform(
+            data, width, height, refinedTransform, moduleCount, candidate.threshold
+          );
+          
+          // Handle inversion if original was inverted
+          const finalMatrix = candidate.inverted ? invertMatrix(refinedMatrix) : refinedMatrix;
+          const refinedScore = scoreMatrixCandidate(finalMatrix, moduleCount);
+          
+          // Only add if the refined version has a better or equal score
+          if (refinedScore >= candidate.score) {
+            refinedCandidates.push({
+              matrix: finalMatrix,
+              score: refinedScore,
+              threshold: candidate.threshold,
+              dx: refinedDx,
+              dy: refinedDy,
+              inverted: candidate.inverted,
+            });
+            console.log(`[QR-DEBUG] extractModuleCandidates: added refined candidate, score ${refinedScore.toFixed(2)} (was ${candidate.score.toFixed(2)})`);
+          }
+        }
+      }
+    }
+    
+    // Add refined candidates to the list
+    if (refinedCandidates.length > 0) {
+      console.log(`[QR-DEBUG] extractModuleCandidates: added ${refinedCandidates.length} alignment-refined candidates`);
+      debugLog(`extractModuleCandidates: added ${refinedCandidates.length} alignment-refined candidates`);
+      candidates.push(...refinedCandidates);
+      
+      // Re-sort after adding refined candidates
+      candidates.sort((a, b) => b.score - a.score);
+    }
+  }
+  
+  console.log(`[QR-DEBUG] extractModuleCandidates: FINAL ${candidates.length} candidates`);
+  debugLog(`extractModuleCandidates: FINAL ${candidates.length} candidates`);
   if (candidates.length > 0) {
     // Log top 5 candidates
     console.log(`[QR-DEBUG] extractModuleCandidates: TOP 5 candidates:`);
     for (let i = 0; i < Math.min(5, candidates.length); i++) {
       const c = candidates[i];
-      console.log(`[QR-DEBUG]   #${i+1}: score=${c.score.toFixed(2)}, threshold=${c.threshold}, offset=(${c.dx},${c.dy}), inverted=${c.inverted}`);
+      console.log(`[QR-DEBUG]   #${i+1}: score=${c.score.toFixed(2)}, threshold=${c.threshold}, offset=(${c.dx.toFixed(3)},${c.dy.toFixed(3)}), inverted=${c.inverted}`);
     }
-    debugLog(`extractModuleCandidates: best score=${candidates[0].score.toFixed(1)} (threshold=${candidates[0].threshold}, offset=(${candidates[0].dx},${candidates[0].dy}), inverted=${candidates[0].inverted})`);
+    debugLog(`extractModuleCandidates: best score=${candidates[0].score.toFixed(1)} (threshold=${candidates[0].threshold}, offset=(${candidates[0].dx.toFixed(3)},${candidates[0].dy.toFixed(3)}), inverted=${candidates[0].inverted})`);
   }
   
   return candidates;
-}
-
-/**
- * Extract the boolean module matrix from the image
- * Uses adaptive thresholding and multi-point sampling for robustness
- * 
- * This is now a wrapper that returns the best candidate's matrix.
- * The main analyzeQRCode function uses extractModuleCandidates directly
- * to try multiple candidates with actual payload decoding.
- */
-function extractModuleMatrix(
-  imageData: ImageData,
-  location: QRLocation,
-  moduleCount: number
-): boolean[][] | null {
-  const candidates = extractModuleCandidates(imageData, location, moduleCount);
-  
-  if (candidates.length === 0) {
-    debugLog(`extractModuleMatrix: no candidates generated`);
-    return null;
-  }
-  
-  // Return the best-scored candidate
-  debugLog(`extractModuleMatrix: returning best candidate with score=${candidates[0].score.toFixed(1)}`);
-  return candidates[0].matrix;
 }
 
 /**
