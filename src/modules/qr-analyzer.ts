@@ -80,7 +80,7 @@ function estimateImageContrast(imageData: ImageData): {
   return { contrast, mean, std, p10, p90 };
 }
 
-/*
+/**
  * QR Analyzer Module
  * Extracts metadata from QR code images: version, ECC level, mask pattern, encoding mode, quiet zone
  * Uses custom finder pattern detection and payload decoding (no external dependencies)
@@ -376,7 +376,17 @@ function emitSummaryLine(args: {
   if (_qrLogLevelRank(QR_LOG_LEVEL) >= _qrLogLevelRank('event')) {
     const top = args.stats.getTopK('candidates.top');
     if (top.length > 0) {
-      qrLogLazy('event', () => `top_candidates=${top.map((t) => t.score.toFixed(3)).join(',')}`);
+      qrLogLazy('event', () => {
+        const fmt = (t: TopKEntry): string => {
+          const m = (t.meta ?? {}) as any;
+          const thr = typeof m.threshold === 'number' ? Math.round(m.threshold) : 'na';
+          const dx = typeof m.dx === 'number' ? m.dx.toFixed(3) : 'na';
+          const dy = typeof m.dy === 'number' ? m.dy.toFixed(3) : 'na';
+          const inv = m.inverted ? 1 : 0;
+          return `${t.score.toFixed(3)}@thr=${thr},dx=${dx},dy=${dy},inv=${inv}`;
+        };
+        return `top_candidates=${top.map(fmt).join(' | ')}`;
+      });
     }
   }
 }
@@ -3948,6 +3958,11 @@ debugLog(
   // Final summary
   const hasValidMatrix = moduleMatrix !== null;
   const hasValidPayload = payload !== null && payload.length > 0;
+
+  // If we made it this far but still have no payload, classify the failure explicitly.
+  if (!hasValidPayload && !__qrFailReason) {
+    __fail('payload_decode', hasValidMatrix ? 'payload_decode_failed' : 'no_matrix_candidates');
+  }
   debugLog(`analyzeQRCode: ============================================`);
   debugLog(`analyzeQRCode: COMPLETE`);
   debugLog(`analyzeQRCode:   success=${hasValidPayload}`);
@@ -6232,6 +6247,3 @@ export const QRAnalyzer = {
 };
 
 export default QRAnalyzer;
-
-setQRLogLevel('event'); // 'silent' | 'summary' | 'event' | 'debug'
-
