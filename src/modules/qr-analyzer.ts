@@ -604,8 +604,95 @@ const RS_BLOCK_TABLE: number[][] = [
 ];
 
 /** Get RS blocks for a given version and ECC level */
+
+// Cached RS block expansions to avoid re-parsing RS_BLOCK_TABLE for every decode attempt.
+// Key: (version<<2) | eccIndex
+const RS_BLOCKS_CACHE: Map<number, RSBlock[]> = new Map();
+
+// Cached structural-module mask (function patterns) per (version,moduleCount).
+// Key: (version<<8) | moduleCount
+const STRUCTURAL_MASK_CACHE: Map<number, Uint8Array> = new Map();
+
+function getStructuralMask(version: number, moduleCount: number): Uint8Array {
+  const key = (version << 8) | (moduleCount & 0xff);
+  const cached = STRUCTURAL_MASK_CACHE.get(key);
+  if (cached) return cached;
+
+  const mask = new Uint8Array(moduleCount * moduleCount);
+
+  // Finder patterns + separators (as per isStructuralModule() legacy rules)
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      mask[r * moduleCount + c] = 1; // top-left
+      mask[r * moduleCount + (moduleCount - 8 + c)] = 1; // top-right
+      mask[(moduleCount - 8 + r) * moduleCount + c] = 1; // bottom-left
+    }
+  }
+
+  // Timing patterns
+  for (let i = 0; i < moduleCount; i++) {
+    mask[6 * moduleCount + i] = 1;
+    mask[i * moduleCount + 6] = 1;
+  }
+
+  // Format information
+  for (let c = 0; c < 9; c++) mask[8 * moduleCount + c] = 1;
+  for (let r = 0; r < 9; r++) mask[r * moduleCount + 8] = 1;
+  for (let c = moduleCount - 8; c < moduleCount; c++) mask[8 * moduleCount + c] = 1;
+  for (let r = moduleCount - 8; r < moduleCount; r++) mask[r * moduleCount + 8] = 1;
+
+  // Dark module
+  const dmRow = 4 * version + 9;
+  if (dmRow >= 0 && dmRow < moduleCount) mask[dmRow * moduleCount + 8] = 1;
+
+  // Version information (>= 7)
+  if (version >= 7) {
+    for (let r = 0; r < 6; r++) {
+      for (let c = moduleCount - 11; c < moduleCount - 8; c++) {
+        if (c >= 0 && c < moduleCount) mask[r * moduleCount + c] = 1;
+      }
+    }
+    for (let r = moduleCount - 11; r < moduleCount - 8; r++) {
+      if (r < 0 || r >= moduleCount) continue;
+      for (let c = 0; c < 6; c++) mask[r * moduleCount + c] = 1;
+    }
+  }
+
+  // Alignment patterns (version >= 2)
+  if (version >= 2) {
+    const positions = getAlignmentPatternPositions(version);
+    const n = positions.length;
+    for (let yi = 0; yi < n; yi++) {
+      const py = positions[yi];
+      for (let xi = 0; xi < n; xi++) {
+        const px = positions[xi];
+
+        // Skip alignment patterns that overlap with finder patterns (legacy rules)
+        if (px < 8 && py < 8) continue;
+        if (px < 8 && py > moduleCount - 9) continue;
+        if (px > moduleCount - 9 && py < 8) continue;
+
+        // Mark a 5x5 square around (px,py)
+        const r0 = Math.max(0, py - 2), r1 = Math.min(moduleCount - 1, py + 2);
+        const c0 = Math.max(0, px - 2), c1 = Math.min(moduleCount - 1, px + 2);
+        for (let r = r0; r <= r1; r++) {
+          let base = r * moduleCount;
+          for (let c = c0; c <= c1; c++) mask[base + c] = 1;
+        }
+      }
+    }
+  }
+
+  STRUCTURAL_MASK_CACHE.set(key, mask);
+  return mask;
+}
+
 function getRSBlocks(version: number, eccLevel: ECCLevel): RSBlock[] {
   const eccIndex = { L: 0, M: 1, Q: 2, H: 3 }[eccLevel];
+  const cacheKey = (version << 2) | (eccIndex & 3);
+  const cached = RS_BLOCKS_CACHE.get(cacheKey);
+  if (cached) return cached;
+
   const tableIndex = (version - 1) * 4 + eccIndex;
   const rsBlock = RS_BLOCK_TABLE[tableIndex];
   
@@ -624,6 +711,7 @@ function getRSBlocks(version: number, eccLevel: ECCLevel): RSBlock[] {
     }
   }
   
+  RS_BLOCKS_CACHE.set(cacheKey, blocks);
   return blocks;
 }
 
@@ -632,44 +720,52 @@ function deinterleaveBlocks(
   codewords: number[],
   rsBlocks: RSBlock[]
 ): Array<{ data: number[]; ec: number[] }> {
-  const blocks: Array<{ data: number[]; ec: number[] }> = [];
-  
-  // Initialize blocks
-  for (const block of rsBlocks) {
-    blocks.push({
-      data: [],
-      ec: [],
-    });
-  }
-  
-  // Calculate max data and EC counts
+  const blockCount = rsBlocks.length;
+
+  // Precompute per-block sizes and allocate fixed-length arrays (avoids push + resizes).
+  const dataCounts = new Array<number>(blockCount);
+  const ecCounts = new Array<number>(blockCount);
+
   let maxDataCount = 0;
   let maxEcCount = 0;
-  for (const block of rsBlocks) {
-    maxDataCount = Math.max(maxDataCount, block.dataCount);
-    maxEcCount = Math.max(maxEcCount, block.totalCount - block.dataCount);
+
+  const blocks: Array<{ data: number[]; ec: number[] }> = new Array(blockCount);
+  for (let b = 0; b < blockCount; b++) {
+    const dc = rsBlocks[b].dataCount | 0;
+    const ec = (rsBlocks[b].totalCount - rsBlocks[b].dataCount) | 0;
+
+    dataCounts[b] = dc;
+    ecCounts[b] = ec;
+
+    if (dc > maxDataCount) maxDataCount = dc;
+    if (ec > maxEcCount) maxEcCount = ec;
+
+    blocks[b] = {
+      data: new Array(dc),
+      ec: new Array(ec),
+    };
   }
-  
-  // De-interleave data codewords
+
   let idx = 0;
+
+  // De-interleave data codewords
   for (let i = 0; i < maxDataCount; i++) {
-    for (let b = 0; b < rsBlocks.length; b++) {
-      if (i < rsBlocks[b].dataCount) {
-        blocks[b].data.push(codewords[idx++] ?? 0);
+    for (let b = 0; b < blockCount; b++) {
+      if (i < dataCounts[b]) {
+        blocks[b].data[i] = codewords[idx++] ?? 0;
       }
     }
   }
-  
+
   // De-interleave EC codewords
   for (let i = 0; i < maxEcCount; i++) {
-    for (let b = 0; b < rsBlocks.length; b++) {
-      const ecCount = rsBlocks[b].totalCount - rsBlocks[b].dataCount;
-      if (i < ecCount) {
-        blocks[b].ec.push(codewords[idx++] ?? 0);
+    for (let b = 0; b < blockCount; b++) {
+      if (i < ecCounts[b]) {
+        blocks[b].ec[i] = codewords[idx++] ?? 0;
       }
     }
   }
-  
+
   return blocks;
 }
 
@@ -693,7 +789,10 @@ function applyRSCorrection(
   
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    const codeword = [...block.data, ...block.ec];
+    const codeword = new Array(block.data.length + block.ec.length);
+    let cwk = 0;
+    for (let j = 0; j < block.data.length; j++) codeword[cwk++] = block.data[j];
+    for (let j = 0; j < block.ec.length; j++) codeword[cwk++] = block.ec[j];
     const nsym = rsBlocks[i].totalCount - rsBlocks[i].dataCount;
     
     const result = rsCorrectErrors(codeword, nsym);
@@ -710,9 +809,13 @@ function applyRSCorrection(
   // CONCATENATE corrected data blocks (NOT re-interleave!)
   // The encoder interleaves for physical distribution, but the logical data
   // is simply block0_data + block1_data + ... concatenated sequentially.
-  const correctedData: number[] = [];
-  for (const block of correctedBlocks) {
-    correctedData.push(...block);
+  let totalDataCount = 0;
+  for (let i = 0; i < rsBlocks.length; i++) totalDataCount += rsBlocks[i].dataCount;
+  const correctedData: number[] = new Array(totalDataCount);
+  let w = 0;
+  for (let i = 0; i < correctedBlocks.length; i++) {
+    const block = correctedBlocks[i];
+    for (let j = 0; j < block.length; j++) correctedData[w++] = block[j];
   }
   
   console.log(`[QR-DEBUG] applyRSCorrection: concatenated ${correctedBlocks.length} blocks -> ${correctedData.length} data bytes`);
@@ -2702,6 +2805,15 @@ function calculateVersionFromPatterns(patterns: FinderPatternGroup): { version: 
  * mapData() writes them into.
  */
 function isStructuralModule(row: number, col: number, moduleCount: number, version: number): boolean {
+  // Fast-path: use cached structural mask for this (version,moduleCount).
+  // This removes an O(A^2) alignment-position loop from the hot data-bit scan.
+  const mask = getStructuralMask(version, moduleCount);
+  const idx = row * moduleCount + col;
+  if (idx >= 0 && idx < mask.length) {
+    return mask[idx] !== 0;
+  }
+
+
   // Finder patterns + separators (7x7 finder + 1 module separator around)
   if (row < 8 && col < 8) return true; // top-left
   if (row < 8 && col >= moduleCount - 8) return true; // top-right
@@ -2741,6 +2853,7 @@ function isStructuralModule(row: number, col: number, moduleCount: number, versi
   }
 
   return false;
+
 }
 
 /**
@@ -2792,7 +2905,10 @@ function decodePayload(
   const maskFunc = getMaskFunction(maskPattern);
 
   // Read data bits in zigzag pattern (reverse of mapData in qrcode.mjs)
-  const dataBits: boolean[] = [];
+  const bytes: number[] = [];
+  let bitLen = 0;
+  let curByte = 0;
+  let curBitCount = 0;
   let col = moduleCount - 1;
   let upward = true;
 
@@ -2814,7 +2930,14 @@ function decodePayload(
           if (maskFunc(actualRow, actualCol)) {
             bit = !bit;
           }
-          dataBits.push(bit);
+          curByte = (curByte << 1) | (bit ? 1 : 0);
+          curBitCount++;
+          bitLen++;
+          if (curBitCount === 8) {
+            bytes.push(curByte);
+            curByte = 0;
+            curBitCount = 0;
+          }
         }
       }
     }
@@ -2823,19 +2946,8 @@ function decodePayload(
     upward = !upward;
   }
 
-  // Convert bits to bytes (raw stream, used as a fallback for payloadBytes)
-  const bytes: number[] = [];
-  for (let i = 0; i + 7 < dataBits.length; i += 8) {
-    let byte = 0;
-    for (let b = 0; b < 8; b++) {
-      if (dataBits[i + b]) {
-        byte |= 1 << (7 - b);
-      }
-    }
-    bytes.push(byte);
-  }
-
-  console.log(`[QR-DEBUG] decodePayload: extracted ${dataBits.length} data bits -> ${bytes.length} bytes`);
+  
+  console.log(`[QR-DEBUG] decodePayload: extracted ${bitLen} data bits -> ${bytes.length} bytes`);
   console.log(`[QR-DEBUG] decodePayload: first 20 bytes: [${bytes.slice(0, 20).join(', ')}]`);
 
   if (bytes.length === 0) {
