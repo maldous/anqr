@@ -1,19 +1,154 @@
+/*
 /**
+ * Estimate global image contrast using a sampled luminance histogram.
+ * Returns a stable, low-cost metric that works before binarization.
+ *
+ * contrast = (p90 - p10) / 255
+ */
+const __qrLumaHist = new Uint32Array(256);
+
+function estimateImageContrast(imageData: ImageData): {
+  contrast: number;
+  mean: number;
+  std: number;
+  p10: number;
+  p90: number;
+} {
+  // Reset histogram (fixed cost, deterministic)
+  for (let i = 0; i < 256; i++) __qrLumaHist[i] = 0;
+
+  const d = imageData.data;
+  const nBytes = d.length;
+
+  // Sample up to ~50k pixels to bound cost on large images.
+  // Stride is in bytes, must be multiple of 4.
+  const targetSamples = 50000;
+  const totalPixels = nBytes >> 2;
+  const stepPixels = totalPixels > targetSamples ? Math.floor(totalPixels / targetSamples) : 1;
+  const step = stepPixels << 2;
+
+  // Welford running mean/std on luminance
+  let count = 0;
+  let mean = 0;
+  let m2 = 0;
+
+  for (let i = 0; i < nBytes; i += step) {
+    const r = d[i];
+    const g = d[i + 1];
+    const b = d[i + 2];
+
+    // Fast integer luma approximation, 0..255
+    const l = (0.299 * r + 0.587 * g + 0.114 * b) | 0;
+
+    __qrLumaHist[l]++;
+
+    count++;
+    const delta = l - mean;
+    mean += delta / count;
+    const delta2 = l - mean;
+    m2 += delta * delta2;
+  }
+
+  const variance = count > 1 ? m2 / (count - 1) : 0;
+  const std = Math.sqrt(variance);
+
+  // Percentiles from histogram (deterministic, coarse)
+  const p10Target = Math.max(1, Math.floor(count * 0.10));
+  const p90Target = Math.max(1, Math.floor(count * 0.90));
+
+  let cum = 0;
+  let p10 = 0;
+  let p90 = 255;
+  let gotP10 = false;
+
+  for (let l = 0; l < 256; l++) {
+    const c = __qrLumaHist[l];
+    if (!c) continue;
+    cum += c;
+    if (!gotP10 && cum >= p10Target) {
+      p10 = l;
+      gotP10 = true;
+    }
+    if (cum >= p90Target) {
+      p90 = l;
+      break;
+    }
+  }
+
+  const contrast = (p90 - p10) / 255;
+
+  return { contrast, mean, std, p10, p90 };
+}
+
+/*
  * QR Analyzer Module
  * Extracts metadata from QR code images: version, ECC level, mask pattern, encoding mode, quiet zone
  * Uses custom finder pattern detection and payload decoding (no external dependencies)
  */
 
 // ============================================
-// DEBUG LOGGING
+// LOGGING + INSTRUMENTATION
 // ============================================
+
+export type QRLogLevel = 'silent' | 'summary' | 'event' | 'debug';
+
+function _qrLogLevelRank(level: QRLogLevel): number {
+  switch (level) {
+    case 'silent': return 0;
+    case 'summary': return 1;
+    case 'event': return 2;
+    case 'debug': return 3;
+    default: return 1;
+  }
+}
+
+let QR_LOG_LEVEL: QRLogLevel =
+  (typeof globalThis !== 'undefined' && (globalThis as any).__QR_ANALYZER_LOG_LEVEL)
+    ? (globalThis as any).__QR_ANALYZER_LOG_LEVEL
+    : 'summary';
+
+export function setQRLogLevel(level: QRLogLevel): void {
+  QR_LOG_LEVEL = level;
+  if (typeof globalThis !== 'undefined') (globalThis as any).__QR_ANALYZER_LOG_LEVEL = level;
+}
+
+export type QRStage =
+  | 'input_preprocess'
+  | 'binarization_threshold'
+  | 'finder_scan_merge'
+  | 'timing_validation'
+  | 'alignment_detection'
+  | 'transform_sampling'
+  | 'format_version_decode'
+  | 'payload_decode';
+
+export type QRFailureReason =
+  | 'canvas_context_unavailable'
+  | 'image_data_unavailable'
+  | 'not_enough_finders'
+  | 'unable_to_locate'
+  | 'no_matrix_candidates'
+  | 'no_successful_decode'
+  | 'format_decode_failed'
+  | 'version_decode_failed'
+  | 'ecc_decode_failed'
+  | 'payload_decode_failed'
+  | 'unknown';
 
 let DEBUG_LOG: string[] = [];
 
+function qrLogLazy(level: QRLogLevel, msgFactory: () => string): void {
+  if (_qrLogLevelRank(QR_LOG_LEVEL) < _qrLogLevelRank(level)) return;
+  const msg = msgFactory();
+  const prefix = level === 'debug' ? '[QR-DEBUG]' : (level === 'event' ? '[QR-EVENT]' : '[QR]');
+  const line = `${prefix} ${msg}`;
+  if (level !== 'silent') console.log(line);
+  if (level === 'debug') DEBUG_LOG.push(`[${Date.now() % 100000}] ${msg}`);
+}
+
 function debugLog(msg: string): void {
-  const logMsg = `[QR-DEBUG] ${msg}`;
-  console.log(logMsg);
-  DEBUG_LOG.push(`[${Date.now() % 100000}] ${msg}`);
+  // Backwards-compatible hook. Default log level suppresses this.
+  qrLogLazy('debug', () => msg);
 }
 
 export function getDebugLog(): string {
@@ -24,7 +159,230 @@ export function clearDebugLog(): void {
   DEBUG_LOG = [];
 }
 
+function nowMs(): number {
+  return Date.now();
+}
+
+class RunningStats {
+  n = 0;
+  mean = 0;
+  m2 = 0;
+  min = Number.POSITIVE_INFINITY;
+  max = Number.NEGATIVE_INFINITY;
+
+  push(x: number): void {
+    this.n++;
+    const delta = x - this.mean;
+    this.mean += delta / this.n;
+    const delta2 = x - this.mean;
+    this.m2 += delta * delta2;
+    if (x < this.min) this.min = x;
+    if (x > this.max) this.max = x;
+  }
+
+  variance(): number {
+    return this.n > 1 ? (this.m2 / (this.n - 1)) : 0;
+  }
+
+  stddev(): number {
+    return Math.sqrt(this.variance());
+  }
+}
+
+class FixedHistogram {
+  edges: number[];
+  bins: Uint32Array;
+  under = 0;
+  over = 0;
+  count = 0;
+
+  constructor(edges: number[]) {
+    this.edges = edges.slice();
+    this.bins = new Uint32Array(edges.length + 1);
+  }
+
+  push(x: number): void {
+    this.count++;
+    if (x < this.edges[0]) {
+      this.under++;
+      return;
+    }
+    for (let i = 0; i < this.edges.length; i++) {
+      if (x <= this.edges[i]) {
+        this.bins[i]++;
+        return;
+      }
+    }
+    this.over++;
+    this.bins[this.bins.length - 1]++;
+  }
+
+  percentile(p: number): number | null {
+    if (this.count === 0) return null;
+    const target = Math.max(1, Math.floor(this.count * p));
+    let acc = this.under;
+    if (acc >= target) return this.edges[0];
+    for (let i = 0; i < this.bins.length; i++) {
+      acc += this.bins[i];
+      if (acc >= target) {
+        if (i < this.edges.length) return this.edges[i];
+        return this.edges[this.edges.length - 1];
+      }
+    }
+    return this.edges[this.edges.length - 1];
+  }
+}
+
+type TopKEntry = { score: number; meta: any };
+
+class TopK {
+  k: number;
+  entries: TopKEntry[] = [];
+
+  constructor(k: number) {
+    this.k = Math.max(1, k);
+  }
+
+  minScore(): number {
+    if (this.entries.length < this.k) return Number.NEGATIVE_INFINITY;
+    let m = this.entries[0].score;
+    for (let i = 1; i < this.entries.length; i++) if (this.entries[i].score < m) m = this.entries[i].score;
+    return m;
+  }
+
+  offer(score: number, metaFactory: () => any): void {
+    if (this.entries.length >= this.k && score <= this.minScore()) return;
+    const meta = metaFactory();
+    this.entries.push({ score, meta });
+    this.entries.sort((a, b) => b.score - a.score);
+    if (this.entries.length > this.k) this.entries.length = this.k;
+  }
+}
+
+class StatsCollector {
+  counters = new Map<string, number>();
+  gauges = new Map<string, any>();
+  stats = new Map<string, RunningStats>();
+  hists = new Map<string, FixedHistogram>();
+  topks = new Map<string, TopK>();
+
+  inc(name: string, delta = 1): void {
+    this.counters.set(name, (this.counters.get(name) ?? 0) + delta);
+  }
+
+  gauge(name: string, value: any): void {
+    this.gauges.set(name, value);
+  }
+
+  observe(name: string, value: number): void {
+    let s = this.stats.get(name);
+    if (!s) {
+      s = new RunningStats();
+      this.stats.set(name, s);
+    }
+    s.push(value);
+  }
+
+  histogram(name: string, value: number, edges: number[]): void {
+    let h = this.hists.get(name);
+    if (!h) {
+      h = new FixedHistogram(edges);
+      this.hists.set(name, h);
+    }
+    h.push(value);
+  }
+
+  topkOffer(name: string, score: number, metaFactory: () => any, k = 3): void {
+    let t = this.topks.get(name);
+    if (!t) {
+      t = new TopK(k);
+      this.topks.set(name, t);
+    }
+    t.offer(score, metaFactory);
+  }
+
+  getCounter(name: string): number | null {
+    const v = this.counters.get(name);
+    return typeof v === 'number' ? v : null;
+  }
+
+  getGaugeNumber(name: string): number | null {
+    const v = this.gauges.get(name);
+    return typeof v === 'number' ? v : null;
+  }
+
+  getGaugeAny(name: string): any {
+    return this.gauges.get(name);
+  }
+
+  getTopK(name: string): TopKEntry[] {
+    const t = this.topks.get(name);
+    return t ? t.entries.slice() : [];
+  }
+}
+
+let ACTIVE_STATS: StatsCollector | null = null;
+
+function estimateForegroundRatio(binary: boolean[], stride = 64): number {
+  let on = 0;
+  let total = 0;
+  for (let i = 0; i < binary.length; i += stride) {
+    if (binary[i]) on++;
+    total++;
+  }
+  return total > 0 ? (on / total) : 0;
+}
+
+function emitSummaryLine(args: {
+  ok: boolean;
+  stage: QRStage;
+  reason?: QRFailureReason | null;
+  startedMs: number;
+  width: number;
+  height: number;
+  scale: number;
+  stats: StatsCollector;
+}): void {
+  if (_qrLogLevelRank(QR_LOG_LEVEL) < _qrLogLevelRank('summary')) return;
+
+  const ms = Math.max(0, nowMs() - args.startedMs);
+  const threshSel = args.stats.getGaugeNumber('threshold.selected');
+  const threshN = args.stats.getCounter('thresholds.tried');
+  const fg = args.stats.getGaugeNumber('binarization.fgRatio');
+  const contrast = args.stats.getGaugeNumber('input.contrast');
+  const finders = args.stats.getGaugeNumber('finders.count');
+  const cand = args.stats.getGaugeNumber('candidates.count');
+  const best = args.stats.getGaugeNumber('candidates.bestScore');
+
+  const parts: string[] = [];
+  parts.push(`ok=${args.ok ? 1 : 0}`);
+  parts.push(`stage=${args.stage}`);
+  if (!args.ok) parts.push(`reason=${args.reason ?? 'unknown'}`);
+  parts.push(`ms=${ms}`);
+  parts.push(`w=${args.width}`);
+  parts.push(`h=${args.height}`);
+  parts.push(`scale=${args.scale}`);
+
+  if (typeof threshSel === 'number') parts.push(`thresh_sel=${Math.round(threshSel)}`);
+  if (typeof threshN === 'number') parts.push(`thresh_n=${threshN}`);
+  if (typeof fg === 'number') parts.push(`fg=${fg.toFixed(3)}`);
+  if (typeof contrast === 'number') parts.push(`contrast=${contrast.toFixed(2)}`);
+  if (typeof finders === 'number') parts.push(`finders=${Math.round(finders)}`);
+  if (typeof cand === 'number') parts.push(`cand=${Math.round(cand)}`);
+  if (typeof best === 'number') parts.push(`best=${best.toFixed(3)}`);
+
+  qrLogLazy('summary', () => parts.join(' '));
+
+  if (_qrLogLevelRank(QR_LOG_LEVEL) >= _qrLogLevelRank('event')) {
+    const top = args.stats.getTopK('candidates.top');
+    if (top.length > 0) {
+      qrLogLazy('event', () => `top_candidates=${top.map((t) => t.score.toFixed(3)).join(',')}`);
+    }
+  }
+}
+
 // ============================================
+// TYPES// ============================================
 // TYPES
 // ============================================
 
@@ -775,13 +1133,13 @@ function applyRSCorrection(
   version: number,
   eccLevel: ECCLevel
 ): { data: number[]; errorsCorrected: number } | null {
-  console.log(`[QR-DEBUG] applyRSCorrection: START version=${version}, ECC=${eccLevel}, codewords=${codewords.length}`);
+  qrLogLazy('debug', () => `applyRSCorrection: START version=${version}, ECC=${eccLevel}, codewords=${codewords.length}`);
   const rsBlocks = getRSBlocks(version, eccLevel);
   if (rsBlocks.length === 0) {
-    console.log(`[QR-DEBUG] applyRSCorrection: FAILED - no RS blocks for version ${version}`);
+    qrLogLazy('debug', () => `applyRSCorrection: FAILED - no RS blocks for version ${version}`);
     return null;
   }
-  console.log(`[QR-DEBUG] applyRSCorrection: ${rsBlocks.length} RS blocks`);
+  qrLogLazy('debug', () => `applyRSCorrection: ${rsBlocks.length} RS blocks`);
   
   const blocks = deinterleaveBlocks(codewords, rsBlocks);
   const correctedBlocks: number[][] = [];
@@ -797,14 +1155,14 @@ function applyRSCorrection(
     
     const result = rsCorrectErrors(codeword, nsym);
     if (!result) {
-      console.log(`[QR-DEBUG] applyRSCorrection: FAILED - block ${i} uncorrectable`);
+      qrLogLazy('debug', () => `applyRSCorrection: FAILED - block ${i} uncorrectable`);
       return null; // Uncorrectable errors
     }
     
     correctedBlocks.push(result.corrected);
     totalErrors += result.errorCount;
   }
-  console.log(`[QR-DEBUG] applyRSCorrection: all ${blocks.length} blocks corrected, totalErrors=${totalErrors}`);
+  qrLogLazy('debug', () => `applyRSCorrection: all ${blocks.length} blocks corrected, totalErrors=${totalErrors}`);
   
   // CONCATENATE corrected data blocks (NOT re-interleave!)
   // The encoder interleaves for physical distribution, but the logical data
@@ -818,7 +1176,7 @@ function applyRSCorrection(
     for (let j = 0; j < block.length; j++) correctedData[w++] = block[j];
   }
   
-  console.log(`[QR-DEBUG] applyRSCorrection: concatenated ${correctedBlocks.length} blocks -> ${correctedData.length} data bytes`);
+  qrLogLazy('debug', () => `applyRSCorrection: concatenated ${correctedBlocks.length} blocks -> ${correctedData.length} data bytes`);
   
   return { data: correctedData, errorsCorrected: totalErrors };
 }
@@ -1731,16 +2089,16 @@ function quantileFromHistogramReverse(hist: number[], total: number, q: number):
  * - Adds low-contrast + edge-case fallbacks that are common in QR imagery.
  */
 function otsuThresholdFromHistogram(hist: number[], total: number): number {
-  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: total=${total}`);
+  qrLogLazy('debug', () => `otsuThresholdFromHistogram: total=${total}`);
   if (total <= 0) {
-    console.log(`[QR-DEBUG] otsuThresholdFromHistogram: total<=0, returning 128`);
+    qrLogLazy('debug', () => `otsuThresholdFromHistogram: total<=0, returning 128`);
     return 128;
   }
 
   // Robust bounds to ignore tiny tails (e.g., compression artifacts)
   const minGray = quantileFromHistogram(hist, total, 0.005);
   const maxGray = quantileFromHistogramReverse(hist, total, 0.005);
-  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: minGray=${minGray}, maxGray=${maxGray}, dynamicRange=${maxGray - minGray}`);
+  qrLogLazy('debug', () => `otsuThresholdFromHistogram: minGray=${minGray}, maxGray=${maxGray}, dynamicRange=${maxGray - minGray}`);
 
   if (maxGray <= minGray) return 128;
 
@@ -1788,11 +2146,11 @@ function otsuThresholdFromHistogram(hist: number[], total: number): number {
   }
 
   let threshold = Math.round((threshold1 + threshold2) / 2);
-  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: initial threshold=${threshold} (from range ${threshold1}-${threshold2})`);
+  qrLogLazy('debug', () => `otsuThresholdFromHistogram: initial threshold=${threshold} (from range ${threshold1}-${threshold2})`);
 
   // If Otsu lands on an edge, fall back to a valley or midpoint.
   if (threshold <= minGray + 1 || threshold >= maxGray - 1) {
-    console.log(`[QR-DEBUG] otsuThresholdFromHistogram: threshold on edge, trying valley fallback`);
+    qrLogLazy('debug', () => `otsuThresholdFromHistogram: threshold on edge, trying valley fallback`);
     const mid = Math.floor((minGray + maxGray) / 2);
 
     // Find dominant peaks on each side, then pick the lowest bin between them.
@@ -1819,7 +2177,7 @@ function otsuThresholdFromHistogram(hist: number[], total: number): number {
   }
 
   const finalThreshold = Math.max(0, Math.min(255, threshold));
-  console.log(`[QR-DEBUG] otsuThresholdFromHistogram: FINAL threshold=${finalThreshold}`);
+  qrLogLazy('debug', () => `otsuThresholdFromHistogram: FINAL threshold=${finalThreshold}`);
   return finalThreshold;
 }
 
@@ -2281,7 +2639,7 @@ function findFinderPatternsWithBinary(
   horizontalCandidates = mergeCandidates(horizontalCandidates);
   verticalCandidates = mergeCandidates(verticalCandidates);
   
-  console.log(`[QR-DEBUG] findFinderPatternsWithBinary: H candidates ${rawHCount} -> ${horizontalCandidates.length} (merged), V candidates ${rawVCount} -> ${verticalCandidates.length} (merged)`);
+  qrLogLazy('debug', () => `findFinderPatternsWithBinary: H candidates ${rawHCount} -> ${horizontalCandidates.length} (merged), V candidates ${rawVCount} -> ${verticalCandidates.length} (merged)`);
   debugLog(`findFinderPatternsWithBinary: H candidates=${rawHCount}->${horizontalCandidates.length}, V candidates=${rawVCount}->${verticalCandidates.length}`);
   
   // Match horizontal and vertical candidates
@@ -2314,7 +2672,7 @@ function findFinderPatternsWithBinary(
         
         // Only accept if score is good enough
         if (optimal.score >= 50) {
-          console.log(`[QR-DEBUG] findFinderPatterns: refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${optimal.x.toFixed(1)},${optimal.y.toFixed(1)}) score=${optimal.score}`);
+          qrLogLazy('debug', () => `findFinderPatterns: refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${optimal.x.toFixed(1)},${optimal.y.toFixed(1)}) score=${optimal.score}`);
           debugLog(`findFinderPatterns: refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${optimal.x.toFixed(1)},${optimal.y.toFixed(1)}) score=${optimal.score}`);
           patterns.push({
             centerX: optimal.x,
@@ -2362,7 +2720,7 @@ function findFinderPatternsWithBinary(
             const centerX = optimal.x;
             const centerY = optimal.y;
             
-            console.log(`[QR-DEBUG] findFinderPatterns (fallback): refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${centerX.toFixed(1)},${centerY.toFixed(1)}) score=${optimal.score}`);
+            qrLogLazy('debug', () => `findFinderPatterns (fallback): refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${centerX.toFixed(1)},${centerY.toFixed(1)}) score=${optimal.score}`);
             debugLog(`findFinderPatterns (fallback): refined center (${initialCenterX.toFixed(1)},${initialCenterY.toFixed(1)}) -> (${centerX.toFixed(1)},${centerY.toFixed(1)}) score=${optimal.score}`);
             
             // Check if this pattern is already found
@@ -2583,12 +2941,18 @@ function findFinderPatterns(imageData: ImageData): FinderPattern[] {
     new Set(thresholds.map((t) => Math.round(Math.max(0, Math.min(255, t)))))
   );
 
+  const s = ACTIVE_STATS;
+  s?.gauge('thresholds.count', uniqueThresholds.length);
+  s?.gauge('binarization.otsu', otsu);
+  s?.gauge('binarization.avgBrightness', avgBrightness);
+
   debugLog(`findFinderPatterns: trying thresholds=[${uniqueThresholds.join(',')}]`);
 
   let bestPatterns: FinderPattern[] = [];
 
   // Try binary run-length based detection
   for (const threshold of uniqueThresholds) {
+    s?.inc('thresholds.tried', 1);
     debugLog(`findFinderPatterns: trying threshold=${threshold}`);
 
     const binary = createBinaryFromLuma(luma, threshold);
@@ -2597,6 +2961,9 @@ function findFinderPatterns(imageData: ImageData): FinderPattern[] {
     debugLog(`findFinderPatterns: threshold=${threshold} found ${patterns.length} patterns`);
 
     if (patterns.length >= 3) {
+      s?.gauge('threshold.selected', threshold);
+      s?.gauge('finders.count', patterns.length);
+      s?.gauge('binarization.fgRatio', estimateForegroundRatio(binary));
       debugLog(`findFinderPatterns: SUCCESS threshold=${threshold}`);
       return patterns;
     }
@@ -2618,6 +2985,9 @@ function findFinderPatterns(imageData: ImageData): FinderPattern[] {
       debugLog(`findFinderPatterns: template found ${templatePatterns.length} patterns`);
 
       if (templatePatterns.length >= 3) {
+        s?.gauge('threshold.selected', threshold);
+        s?.gauge('finders.count', templatePatterns.length);
+        s?.gauge('binarization.fgRatio', estimateForegroundRatio(createBinaryFromLuma(luma, threshold)));
         debugLog(`findFinderPatterns: SUCCESS with template threshold=${threshold}`);
         return templatePatterns;
       }
@@ -2901,7 +3271,7 @@ function decodePayload(
   version: number,
   eccLevel: ECCLevel | null
 ): { payload: string; payloadBytes: Uint8Array; errorsCorrected: number | null } | null {
-  console.log(`[QR-DEBUG] decodePayload: START moduleCount=${moduleCount}, maskPattern=${maskPattern}, version=${version}, eccLevel=${eccLevel}`);
+  qrLogLazy('debug', () => `decodePayload: START moduleCount=${moduleCount}, maskPattern=${maskPattern}, version=${version}, eccLevel=${eccLevel}`);
   const maskFunc = getMaskFunction(maskPattern);
 
   // Read data bits in zigzag pattern (reverse of mapData in qrcode.mjs)
@@ -2947,11 +3317,11 @@ function decodePayload(
   }
 
   
-  console.log(`[QR-DEBUG] decodePayload: extracted ${bitLen} data bits -> ${bytes.length} bytes`);
-  console.log(`[QR-DEBUG] decodePayload: first 20 bytes: [${bytes.slice(0, 20).join(', ')}]`);
+  qrLogLazy('debug', () => `decodePayload: extracted ${bitLen} data bits -> ${bytes.length} bytes`);
+  qrLogLazy('debug', () => `decodePayload: first 20 bytes: [${bytes.slice(0, 20).join(', ')}]`);
 
   if (bytes.length === 0) {
-    console.log(`[QR-DEBUG] decodePayload: FAILED - no bytes extracted`);
+    qrLogLazy('debug', () => `decodePayload: FAILED - no bytes extracted`);
     return null;
   }
 
@@ -2961,20 +3331,20 @@ function decodePayload(
   let errorsCorrected: number | null = null;
   
   if (eccLevel) {
-    console.log(`[QR-DEBUG] decodePayload: applying RS correction for ECC=${eccLevel}`);
+    qrLogLazy('debug', () => `decodePayload: applying RS correction for ECC=${eccLevel}`);
     const rsResult = applyRSCorrection(bytes, version, eccLevel);
     if (rsResult) {
       correctedBytes = rsResult.data;
       errorsCorrected = rsResult.errorsCorrected;
-      console.log(`[QR-DEBUG] decodePayload: RS correction SUCCESS, errors corrected=${errorsCorrected}, data bytes=${correctedBytes.length}`);
+      qrLogLazy('debug', () => `decodePayload: RS correction SUCCESS, errors corrected=${errorsCorrected}, data bytes=${correctedBytes.length}`);
     } else {
       // FIX: RS correction failed - the codewords are corrupt, don't try to parse them
-      console.log(`[QR-DEBUG] decodePayload: RS correction FAILED - returning null (corrupt codewords)`);
+      qrLogLazy('debug', () => `decodePayload: RS correction FAILED - returning null (corrupt codewords)`);
       return null;
     }
   } else {
     // No ECC level means we can't verify the data - still try to parse but this is risky
-    console.log(`[QR-DEBUG] decodePayload: no ECC level, using raw bytes (unverified)`);
+    qrLogLazy('debug', () => `decodePayload: no ECC level, using raw bytes (unverified)`);
     correctedBytes = bytes;
   }
 
@@ -3004,25 +3374,25 @@ function decodePayload(
 
   // Process data segments
   let segmentIndex = 0;
-  console.log(`[QR-DEBUG] decodePayload: starting segment parsing, correctedBits.length=${correctedBits.length}`);
+  qrLogLazy('debug', () => `decodePayload: starting segment parsing, correctedBits.length=${correctedBits.length}`);
   
   while (bitIndex + 4 <= correctedBits.length) {
     const mode = readBits(4);
-    console.log(`[QR-DEBUG] decodePayload: segment ${segmentIndex}, mode=${mode} (${mode === 1 ? 'NUMERIC' : mode === 2 ? 'ALPHANUMERIC' : mode === 4 ? 'BYTE' : mode === 8 ? 'KANJI' : mode === 0 ? 'TERMINATOR' : 'UNKNOWN'}), bitIndex=${bitIndex}`);
+    qrLogLazy('debug', () => `decodePayload: segment ${segmentIndex}, mode=${mode} (${mode === 1 ? 'NUMERIC' : mode === 2 ? 'ALPHANUMERIC' : mode === 4 ? 'BYTE' : mode === 8 ? 'KANJI' : mode === 0 ? 'TERMINATOR' : 'UNKNOWN'}), bitIndex=${bitIndex}`);
 
     if (mode === QR_MODE.TERMINATOR) {
-      console.log(`[QR-DEBUG] decodePayload: hit TERMINATOR, stopping`);
+      qrLogLazy('debug', () => `decodePayload: hit TERMINATOR, stopping`);
       break;
     }
 
     const charCountBits = getCharCountBits(mode, version);
     if (bitIndex + charCountBits > correctedBits.length) {
-      console.log(`[QR-DEBUG] decodePayload: not enough bits for charCount (need ${charCountBits}, have ${correctedBits.length - bitIndex})`);
+      qrLogLazy('debug', () => `decodePayload: not enough bits for charCount (need ${charCountBits}, have ${correctedBits.length - bitIndex})`);
       break;
     }
 
     const charCount = readBits(charCountBits);
-    console.log(`[QR-DEBUG] decodePayload: charCount=${charCount} (${charCountBits} bits)`);
+    qrLogLazy('debug', () => `decodePayload: charCount=${charCount} (${charCountBits} bits)`);
     segmentIndex++;
 
     switch (mode) {
@@ -3030,15 +3400,15 @@ function decodePayload(
         // STRICT CAPACITY CHECK: charCount must not exceed version/ECC capacity
         if (eccLevel) {
           const maxCapacity = DATA_CAPACITY_NUMERIC[version]?.[eccLevel] ?? 0;
-          console.log(`[QR-DEBUG] decodePayload: NUMERIC mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
+          qrLogLazy('debug', () => `decodePayload: NUMERIC mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
           if (charCount > maxCapacity) {
-            console.log(`[QR-DEBUG] decodePayload: REJECTED - numeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            qrLogLazy('debug', () => `decodePayload: REJECTED - numeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
             debugLog(`decodePayload: REJECTED - numeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
             return null;
           }
         } else if (charCount > 7100) {
           // Fallback check if no ECC level (largest QR can hold ~7089 numeric)
-          console.log(`[QR-DEBUG] decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
+          qrLogLazy('debug', () => `decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
           debugLog(`decodePayload: REJECTED - numeric mode charCount ${charCount} is unreasonably large`);
           return null;
         }
@@ -3049,7 +3419,7 @@ function decodePayload(
         while (remaining >= 3) {
           const val = readBits(10);
           if (val > 999) {
-            console.log(`[QR-DEBUG] decodePayload: REJECTED - invalid numeric triplet ${val}`);
+            qrLogLazy('debug', () => `decodePayload: REJECTED - invalid numeric triplet ${val}`);
             debugLog(`decodePayload: REJECTED - invalid numeric triplet ${val}`);
             return null;
           }
@@ -3061,7 +3431,7 @@ function decodePayload(
         if (remaining === 2) {
           const val = readBits(7);
           if (val > 99) {
-            console.log(`[QR-DEBUG] decodePayload: REJECTED - invalid numeric pair ${val}`);
+            qrLogLazy('debug', () => `decodePayload: REJECTED - invalid numeric pair ${val}`);
             debugLog(`decodePayload: REJECTED - invalid numeric pair ${val}`);
             return null;
           }
@@ -3070,7 +3440,7 @@ function decodePayload(
         } else if (remaining === 1) {
           const val = readBits(4);
           if (val > 9) {
-            console.log(`[QR-DEBUG] decodePayload: REJECTED - invalid numeric digit ${val}`);
+            qrLogLazy('debug', () => `decodePayload: REJECTED - invalid numeric digit ${val}`);
             debugLog(`decodePayload: REJECTED - invalid numeric digit ${val}`);
             return null;
           }
@@ -3081,11 +3451,11 @@ function decodePayload(
         // If result contains non-digits, this is a garbage decode from wrong mask/alignment
         const numericSegment = result.substring(numericStart);
         if (numericSegment.length > 0 && !/^[0-9]+$/.test(numericSegment)) {
-          console.log(`[QR-DEBUG] decodePayload: REJECTED - numeric mode produced non-digit chars: "${numericSegment.substring(0, 30)}..."`);
+          qrLogLazy('debug', () => `decodePayload: REJECTED - numeric mode produced non-digit chars: "${numericSegment.substring(0, 30)}..."`);
           debugLog(`decodePayload: REJECTED - numeric mode produced non-digit chars`);
           return null;
         }
-        console.log(`[QR-DEBUG] decodePayload: NUMERIC segment OK, ${numericSegment.length} digits`);
+        qrLogLazy('debug', () => `decodePayload: NUMERIC segment OK, ${numericSegment.length} digits`);
         break;
       }
 
@@ -3093,9 +3463,9 @@ function decodePayload(
         // STRICT CAPACITY CHECK: charCount must not exceed version/ECC capacity
         if (eccLevel) {
           const maxCapacity = DATA_CAPACITY_ALPHANUMERIC[version]?.[eccLevel] ?? 0;
-          console.log(`[QR-DEBUG] decodePayload: ALPHANUMERIC mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
+          qrLogLazy('debug', () => `decodePayload: ALPHANUMERIC mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
           if (charCount > maxCapacity) {
-            console.log(`[QR-DEBUG] decodePayload: REJECTED - alphanumeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            qrLogLazy('debug', () => `decodePayload: REJECTED - alphanumeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
             debugLog(`decodePayload: REJECTED - alphanumeric mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
             return null;
           }
@@ -3144,9 +3514,9 @@ function decodePayload(
         // If it does, this is a garbage decode from a misaligned matrix
         if (eccLevel) {
           const maxCapacity = DATA_CAPACITY_BYTE[version]?.[eccLevel] ?? 0;
-          console.log(`[QR-DEBUG] decodePayload: BYTE mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
+          qrLogLazy('debug', () => `decodePayload: BYTE mode charCount=${charCount}, maxCapacity=${maxCapacity}`);
           if (charCount > maxCapacity) {
-            console.log(`[QR-DEBUG] decodePayload: REJECTED - byte mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
+            qrLogLazy('debug', () => `decodePayload: REJECTED - byte mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
             debugLog(`decodePayload: REJECTED - byte mode charCount ${charCount} exceeds capacity ${maxCapacity}`);
             return null;
           }
@@ -3195,12 +3565,12 @@ function decodePayload(
           }
         }
         const printableRatio = decodedSegment.length > 0 ? printableCount / decodedSegment.length : 0;
-        console.log(`[QR-DEBUG] decodePayload: BYTE segment decoded, length=${decodedSegment.length}, printableRatio=${(printableRatio * 100).toFixed(1)}%`);
-        console.log(`[QR-DEBUG] decodePayload: BYTE segment preview: "${decodedSegment.substring(0, 50)}${decodedSegment.length > 50 ? '...' : ''}"`);
+        qrLogLazy('debug', () => `decodePayload: BYTE segment decoded, length=${decodedSegment.length}, printableRatio=${(printableRatio * 100).toFixed(1)}%`);
+        qrLogLazy('debug', () => `decodePayload: BYTE segment preview: "${decodedSegment.substring(0, 50)}${decodedSegment.length > 50 ? '...' : ''}"`);
         
         // If less than 30% printable, this is likely garbage from a misaligned matrix
         if (decodedSegment.length > 5 && printableRatio < 0.3) {
-          console.log(`[QR-DEBUG] decodePayload: REJECTED - byte mode segment has only ${(printableRatio * 100).toFixed(1)}% printable chars (threshold 30%)`);
+          qrLogLazy('debug', () => `decodePayload: REJECTED - byte mode segment has only ${(printableRatio * 100).toFixed(1)}% printable chars (threshold 30%)`);
           debugLog(`decodePayload: REJECTED - byte mode segment has only ${(printableRatio * 100).toFixed(1)}% printable chars (threshold 30%)`);
           return null;
         }
@@ -3231,7 +3601,7 @@ function decodePayload(
         // FIX: Unknown mode indicator means the bitstream is corrupt
         // Mode must be 0 (terminator), 1 (numeric), 2 (alphanumeric), 4 (byte), or 8 (kanji)
         // Anything else (like 11, 14, etc.) indicates wrong mask/alignment
-        console.log(`[QR-DEBUG] decodePayload: REJECTED - unknown mode ${mode} (invalid mode indicator)`);
+        qrLogLazy('debug', () => `decodePayload: REJECTED - unknown mode ${mode} (invalid mode indicator)`);
         return null;
       }
     }
@@ -3239,7 +3609,7 @@ function decodePayload(
 
   const finalBytes = payloadBytes.length > 0 ? payloadBytes : bytes;
 
-  console.log(`[QR-DEBUG] decodePayload: SUCCESS payload="${result.substring(0, 100)}${result.length > 100 ? '...' : ''}" (${result.length} chars)`);
+  qrLogLazy('debug', () => `decodePayload: SUCCESS payload="${result.substring(0, 100)}${result.length > 100 ? '...' : ''}" (${result.length} chars)`);
   return {
     payload: result,
     payloadBytes: new Uint8Array(finalBytes),
@@ -3257,9 +3627,37 @@ function decodePayload(
 export function analyzeQRCode(
   source: HTMLCanvasElement | ImageData | { width: number; height: number; data: Uint8ClampedArray }
 ): QRAnalysisResult {
+  const __qrStartedMs = nowMs();
+  const __qrStats = new StatsCollector();
+  ACTIVE_STATS = __qrStats;
+  let __qrStage: QRStage = 'input_preprocess';
+  let __qrFailReason: QRFailureReason | null = null;
+  let __qrScale = 1;
+  const __setStage = (s: QRStage): void => { __qrStage = s; __qrStats.gauge('stage.current', s); };
+  const __fail = (stage: QRStage, reason: QRFailureReason): void => { __qrStage = stage; __qrFailReason = reason; };
+  const __finish = (result: QRAnalysisResult, ok: boolean): QRAnalysisResult => {
+    if (_qrLogLevelRank(QR_LOG_LEVEL) >= _qrLogLevelRank('debug')) {
+      result.debugLog = getDebugLog();
+    } else {
+      result.debugLog = null;
+    }
+    emitSummaryLine({
+      ok,
+      stage: ok ? 'payload_decode' : __qrStage,
+      reason: ok ? null : (__qrFailReason ?? 'unknown'),
+      startedMs: __qrStartedMs,
+      width: __qrStats.getGaugeNumber('input.width') ?? (result.imageAnalysis?.width ?? 0),
+      height: __qrStats.getGaugeNumber('input.height') ?? (result.imageAnalysis?.height ?? 0),
+      scale: __qrScale,
+      stats: __qrStats,
+    });
+    ACTIVE_STATS = null;
+    return result;
+  };
+
   // Clear debug log at start of analysis
   clearDebugLog();
-  debugLog(`analyzeQRCode: START`);
+  __setStage('input_preprocess');
   
   const warnings: string[] = [];
   
@@ -3269,8 +3667,8 @@ export function analyzeQRCode(
     const ctx = source.getContext('2d');
     if (!ctx) {
       const result = createErrorResult('canvas_error', 'Could not get canvas context');
-      result.debugLog = getDebugLog();
-      return result;
+      __fail('input_preprocess', 'canvas_context_unavailable');
+      return __finish(result, false);
     }
     imageData = ctx.getImageData(0, 0, source.width, source.height);
     debugLog(`analyzeQRCode: Got ImageData from canvas ${source.width}x${source.height}`);
@@ -3284,31 +3682,43 @@ export function analyzeQRCode(
   if (upscale.scale > 1) {
     debugLog(`analyzeQRCode: Upscaling input ${imageData.width}x${imageData.height} -> ${upscale.imageData.width}x${upscale.imageData.height} (x${upscale.scale})`);
     warnings.push(`input_upscaled_x${upscale.scale}`);
+    __qrScale = upscale.scale;
     imageData = upscale.imageData;
   }
+
+  __qrStats.gauge('input.width', imageData.width);
+  __qrStats.gauge('input.height', imageData.height);
+  const __imgContrast = estimateImageContrast(imageData);
+  __qrStats.gauge('input.contrast', __imgContrast.contrast);
+  __qrStats.gauge('input.luma.mean', __imgContrast.mean);
+  __qrStats.gauge('input.luma.std', __imgContrast.std);
+  __qrStats.gauge('input.luma.p10', __imgContrast.p10);
+  __qrStats.gauge('input.luma.p90', __imgContrast.p90);
 
   // Find finder patterns using custom detection
   debugLog(`analyzeQRCode: Finding finder patterns...`);
   const finderPatterns = findFinderPatterns(imageData);
   
   debugLog(`analyzeQRCode: Found ${finderPatterns.length} finder patterns`);
+  __qrStats.gauge('finders.count', finderPatterns.length);
   
   if (finderPatterns.length < 3) {
     debugLog(`analyzeQRCode: FAILED - not enough finder patterns`);
-    const result = createErrorResult('no_qr_detected', 'No QR code detected in this image. Could not find the required finder patterns. Make sure the image contains a clear, well-lit QR code.');
-    result.debugLog = getDebugLog();
-    return result;
+    const result = createErrorResult('no_qr_detected', 'No QR code detected. Could not find enough finder patterns. Make sure the image contains a clear, well-lit QR code.');
+    __fail('finder_scan_merge', 'not_enough_finders');
+    return __finish(result, false);
   }
   
   // Locate the QR code from finder patterns
+  __setStage('finder_scan_merge');
   debugLog(`analyzeQRCode: Locating QR code...`);
   const qrLocation = locateQRCode(finderPatterns);
   
   if (!qrLocation) {
     debugLog(`analyzeQRCode: FAILED - could not locate QR code`);
-    const result = createErrorResult('no_qr_detected', 'Could not locate QR code structure. The finder patterns do not form a valid QR code configuration.');
-    result.debugLog = getDebugLog();
-    return result;
+    const result = createErrorResult('no_qr_detected', 'Could not locate QR code. The finder patterns do not form a valid QR code configuration.');
+    __fail('finder_scan_merge', 'unable_to_locate');
+    return __finish(result, false);
   }
   
   const { location, patterns } = qrLocation;
@@ -3322,15 +3732,18 @@ export function analyzeQRCode(
   }
   
   // Extract module matrix candidates (sorted by score)
+  __setStage('transform_sampling');
   debugLog(`analyzeQRCode: Extracting module matrix candidates...`);
   const candidates = extractModuleCandidates(imageData, location, moduleCount);
+  __qrStats.gauge('candidates.count', candidates.length);
+  if (candidates.length > 0) __qrStats.gauge('candidates.bestScore', candidates[0].score);
   debugLog(`analyzeQRCode: Generated ${candidates.length} candidates`);
   
   if (candidates.length === 0) {
     debugLog(`analyzeQRCode: FAILED - no matrix candidates`);
-    const result = createErrorResult('no_qr_detected', 'Could not extract valid QR code matrix. The finder patterns may not be aligned correctly.');
-    result.debugLog = getDebugLog();
-    return result;
+    const result = createErrorResult('no_qr_detected', 'Could not extract a QR code matrix. The finder patterns may not be aligned correctly.');
+    __fail('transform_sampling', 'no_matrix_candidates');
+    return __finish(result, false);
   }
   
   // Try candidates and collect all successful decodes, then pick the best one
@@ -3387,10 +3800,8 @@ export function analyzeQRCode(
   const maxCandidatesToTry = Math.min(candidates.length, isLowRes ? 120 : 40);
   const candidatesToTry = rankList.slice(0, maxCandidatesToTry).map(r => r.candidate);
 
-  console.log(
-    `[QR-DEBUG] analyzeQRCode: candidate filter=${formatGood.length}/${candidates.length} have BCH-decodable format; trying ${candidatesToTry.length} candidates (moduleSize≈${estimatedModuleSizePx.toFixed(2)}px, lowRes=${isLowRes})`
-  );
-  debugLog(
+  qrLogLazy('debug', () => `[QR-DEBUG] analyzeQRCode: candidate filter=${formatGood.length}/${candidates.length} have BCH-decodable format; trying ${candidatesToTry.length} candidates (moduleSize≈${estimatedModuleSizePx.toFixed(2)}px, lowRes=${isLowRes})`);
+debugLog(
     `analyzeQRCode: candidate filter=${formatGood.length}/${candidates.length} have BCH-decodable format; trying ${candidatesToTry.length} candidates (moduleSize≈${estimatedModuleSizePx.toFixed(2)}px, lowRes=${isLowRes})`
   );
 
@@ -3399,7 +3810,7 @@ export function analyzeQRCode(
   
   for (let i = 0; i < candidatesToTry.length; i++) {
     const candidate = candidatesToTry[i];
-    console.log(`[QR-DEBUG] analyzeQRCode: trying candidate #${i + 1} (score=${candidate.score.toFixed(1)}, threshold=${candidate.threshold}, offset=(${candidate.dx},${candidate.dy}), inverted=${candidate.inverted})`);
+    qrLogLazy('debug', () => `analyzeQRCode: trying candidate #${i + 1} (score=${candidate.score.toFixed(1)}, threshold=${candidate.threshold}, offset=(${candidate.dx},${candidate.dy}), inverted=${candidate.inverted})`);
     // Use BCH-corrected format info to prioritize masks/ECC. This is also a strong indicator of sampling quality.
     const fmt = formatDetailsByCandidate.get(candidate) ?? readFormatInfoDetailed(candidate.matrix);
     formatDetailsByCandidate.set(candidate, fmt);
@@ -3411,12 +3822,10 @@ export function analyzeQRCode(
     let masksToTry: MaskPattern[];
     if (formatInfo) {
       masksToTry = [formatInfo.maskPattern, ...ALL_MASKS.filter(m => m !== formatInfo.maskPattern)];
-      console.log(
-        `[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format(BCH) mask=${formatInfo.maskPattern}, ECC=${formatInfo.eccLevel}, agree=${fmt.agree}, bestDist=${fmt.bestDist}, totalDist=${fmt.totalDist}, reliable=${formatReliable}`
-      );
-    } else {
+      qrLogLazy('debug', () => `[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format(BCH) mask=${formatInfo.maskPattern}, ECC=${formatInfo.eccLevel}, agree=${fmt.agree}, bestDist=${fmt.bestDist}, totalDist=${fmt.totalDist}, reliable=${formatReliable}`);
+} else {
       masksToTry = [...ALL_MASKS];
-      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} format(BCH) decode failed, trying all masks`);
+      qrLogLazy('debug', () => `analyzeQRCode: candidate #${i + 1} format(BCH) decode failed, trying all masks`);
     }
 
     // Build ordered list of ECC levels: decoded ECC first (if available), then others
@@ -3443,8 +3852,8 @@ export function analyzeQRCode(
         
         // Check if decode succeeded AND produced non-empty payload
         if (decoded && decoded.payload && decoded.payload.length > 0) {
-          console.log(`[QR-DEBUG] analyzeQRCode: DECODE SUCCESS candidate #${i + 1}, mask=${tryMask}, ECC=${tryEcc}, errors=${decoded.errorsCorrected ?? 'unknown'}`);
-          console.log(`[QR-DEBUG] analyzeQRCode: payload="${decoded.payload.substring(0, 80)}${decoded.payload.length > 80 ? '...' : ''}"`);
+          qrLogLazy('debug', () => `analyzeQRCode: DECODE SUCCESS candidate #${i + 1}, mask=${tryMask}, ECC=${tryEcc}, errors=${decoded.errorsCorrected ?? 'unknown'}`);
+          qrLogLazy('debug', () => `analyzeQRCode: payload="${decoded.payload.substring(0, 80)}${decoded.payload.length > 80 ? '...' : ''}"`);
           debugLog(`analyzeQRCode: DECODE SUCCESS candidate #${i + 1} mask=${tryMask} ECC=${tryEcc} errors=${decoded.errorsCorrected ?? 'unknown'}`);
           
           successfulDecodes.push({
@@ -3461,11 +3870,11 @@ export function analyzeQRCode(
     }
     
     if (successfulDecodes.length === 0) {
-      console.log(`[QR-DEBUG] analyzeQRCode: candidate #${i + 1} FAILED all ${masksToTry.length * eccLevelsToTry.length} mask/ECC combinations`);
+      qrLogLazy('debug', () => `analyzeQRCode: candidate #${i + 1} FAILED all ${masksToTry.length * eccLevelsToTry.length} mask/ECC combinations`);
     }
   }
   
-  console.log(`[QR-DEBUG] analyzeQRCode: tried ${totalAttempts} total decode attempts, found ${successfulDecodes.length} successful decodes`);
+  qrLogLazy('debug', () => `analyzeQRCode: tried ${totalAttempts} total decode attempts, found ${successfulDecodes.length} successful decodes`);
   
   // Pick the best decode: sort by errorsCorrected ascending (fewest corrections = best)
   // Decodes with null errorsCorrected go last (we prefer verified RS correction)
@@ -3479,7 +3888,7 @@ export function analyzeQRCode(
     });
     
     const best = successfulDecodes[0];
-    console.log(`[QR-DEBUG] analyzeQRCode: BEST DECODE: candidate #${best.candidateIndex}, mask=${best.mask}, ECC=${best.ecc}, errors=${best.errorsCorrected ?? 'unknown'}`);
+    qrLogLazy('debug', () => `analyzeQRCode: BEST DECODE: candidate #${best.candidateIndex}, mask=${best.mask}, ECC=${best.ecc}, errors=${best.errorsCorrected ?? 'unknown'}`);
     debugLog(`analyzeQRCode: BEST DECODE: candidate #${best.candidateIndex} mask=${best.mask} ECC=${best.ecc} errors=${best.errorsCorrected ?? 'unknown'}`);
     
     moduleMatrix = best.candidate.matrix;
@@ -3493,7 +3902,7 @@ export function analyzeQRCode(
   
   // If no candidate decoded successfully, use the best-scored one for partial results
   if (!successfulCandidate) {
-    console.log(`[QR-DEBUG] analyzeQRCode: NO candidate decoded successfully after trying ${candidatesToTry.length} candidates`);
+    qrLogLazy('debug', () => `analyzeQRCode: NO candidate decoded successfully after trying ${candidatesToTry.length} candidates`);
     debugLog(`analyzeQRCode: No candidate decoded successfully, using best-scored candidate`);
     const bestCandidate = candidates[0];
     moduleMatrix = bestCandidate.matrix;
@@ -3503,10 +3912,10 @@ export function analyzeQRCode(
     if (formatInfo) {
       eccLevel = formatInfo.eccLevel;
       maskPattern = formatInfo.maskPattern;
-      console.log(`[QR-DEBUG] analyzeQRCode: Format info from best candidate: ECC=${eccLevel}, mask=${maskPattern}`);
+      qrLogLazy('debug', () => `analyzeQRCode: Format info from best candidate: ECC=${eccLevel}, mask=${maskPattern}`);
       debugLog(`analyzeQRCode: Format info from best candidate: ECC=${eccLevel}, mask=${maskPattern}`);
     } else {
-      console.log(`[QR-DEBUG] analyzeQRCode: Could not decode format info from best candidate either`);
+      qrLogLazy('debug', () => `analyzeQRCode: Could not decode format info from best candidate either`);
       debugLog(`analyzeQRCode: Could not decode format info from best candidate`);
       warnings.push('Could not decode format information');
     }
@@ -3550,7 +3959,7 @@ export function analyzeQRCode(
   
   const debugLogStr = getDebugLog();
   
-  return {
+  const __result: QRAnalysisResult = {
     success: hasValidPayload,
     error: !hasValidPayload ? 'Could not decode QR code payload' : undefined,
     payload,
@@ -3575,7 +3984,10 @@ export function analyzeQRCode(
     imageProperties,
     debugLog: debugLogStr,
   };
+
+  return __finish(__result, __result.success);
 }
+
 
 /**
  * Analyze QR from a File
@@ -4679,15 +5091,15 @@ function extractModuleCandidates(
 ): MatrixCandidate[] {
   const { width, height, data } = imageData;
   const luma = buildLumaBuffer(imageData);
+  const s = ACTIVE_STATS;
 
-  
-  console.log(`[QR-DEBUG] extractModuleCandidates: START moduleCount=${moduleCount}, image=${width}x${height}`);
+  qrLogLazy('debug', () => `extractModuleCandidates: START moduleCount=${moduleCount}, image=${width}x${height}`);
   debugLog(`extractModuleCandidates: START moduleCount=${moduleCount}`);
   
   // Calculate base perspective transform
   let baseTransform = calculatePerspectiveTransform(location, moduleCount);
   if (!baseTransform) {
-    console.log(`[QR-DEBUG] extractModuleCandidates: FAILED - could not create transform`);
+    qrLogLazy('debug', () => `extractModuleCandidates: FAILED - could not create transform`);
     debugLog(`extractModuleCandidates: FAILED - could not create transform`);
     return [];
   }
@@ -4712,11 +5124,11 @@ function extractModuleCandidates(
   const testPt00 = baseTransform(0, 0);
   const testPt33 = baseTransform(3, 3);
   const testPtEnd = baseTransform(moduleCount - 1, moduleCount - 1);
-  console.log(`[QR-DEBUG] extractModuleCandidates: transform test - (0,0)->(${testPt00.x.toFixed(1)},${testPt00.y.toFixed(1)}), (3,3)->(${testPt33.x.toFixed(1)},${testPt33.y.toFixed(1)}), (${moduleCount-1},${moduleCount-1})->(${testPtEnd.x.toFixed(1)},${testPtEnd.y.toFixed(1)})`);
+  qrLogLazy('debug', () => `extractModuleCandidates: transform test - (0,0)->(${testPt00.x.toFixed(1)},${testPt00.y.toFixed(1)}), (3,3)->(${testPt33.x.toFixed(1)},${testPt33.y.toFixed(1)}), (${moduleCount-1},${moduleCount-1})->(${testPtEnd.x.toFixed(1)},${testPtEnd.y.toFixed(1)})`);
   
   // Calculate optimal threshold for this QR region
   const otsuThresh = calculateRegionOtsuThreshold(imageData, location, baseTransform, moduleCount, luma);
-  console.log(`[QR-DEBUG] extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
+  qrLogLazy('debug', () => `extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
   debugLog(`extractModuleCandidates: region Otsu threshold=${otsuThresh}`);
   
   // Thresholds to try
@@ -4731,7 +5143,7 @@ function extractModuleCandidates(
 
   const calibratedThresh = estimateThresholdFromFinderPatterns(imageData, baseTransform, moduleCount);
   if (calibratedThresh !== null) {
-    console.log(`[QR-DEBUG] extractModuleCandidates: calibrated threshold from finders=${calibratedThresh}`);
+    qrLogLazy('debug', () => `extractModuleCandidates: calibrated threshold from finders=${calibratedThresh}`);
     debugLog(`extractModuleCandidates: calibrated threshold from finders=${calibratedThresh}`);
     thresholdsToTry = thresholdsToTry.concat([
       calibratedThresh,
@@ -4812,8 +5224,8 @@ function extractModuleCandidates(
   
   const candidates: MatrixCandidate[] = [];
   
-  console.log(`[QR-DEBUG] extractModuleCandidates: trying ${uniqueThresholds.length} thresholds x ${gridOffsets.length} offsets x 2 polarities = ${uniqueThresholds.length * gridOffsets.length * 2} combinations`);
-  console.log(`[QR-DEBUG] extractModuleCandidates: thresholds=[${uniqueThresholds.join(',')}]`);
+  qrLogLazy('debug', () => `extractModuleCandidates: trying ${uniqueThresholds.length} thresholds x ${gridOffsets.length} offsets x 2 polarities = ${uniqueThresholds.length * gridOffsets.length * 2} combinations`);
+  qrLogLazy('debug', () => `extractModuleCandidates: thresholds=[${uniqueThresholds.join(',')}]`);
   debugLog(`extractModuleCandidates: trying ${uniqueThresholds.length} thresholds x ${gridOffsets.length} offsets x 2 polarities = ${uniqueThresholds.length * gridOffsets.length * 2} combinations`);
   
   for (const offset of gridOffsets) {
@@ -4823,6 +5235,8 @@ function extractModuleCandidates(
       // Build normal polarity matrix
       const matrix = buildMatrixFromTransform(data, luma, width, height, transform, moduleCount, threshold);
       const score = scoreMatrixCandidate(matrix, moduleCount);
+      s?.observe('candidates.score', score);
+      s?.topkOffer('candidates.top', score, () => ({ threshold, dx: offset.dx, dy: offset.dy, inverted: false }));
       
       candidates.push({
         matrix,
@@ -4836,6 +5250,8 @@ function extractModuleCandidates(
       // Build inverted polarity matrix
       const invertedMatrix = invertMatrix(matrix);
       const invertedScore = scoreMatrixCandidate(invertedMatrix, moduleCount);
+      s?.observe('candidates.score', invertedScore);
+      s?.topkOffer('candidates.top', invertedScore, () => ({ threshold, dx: offset.dx, dy: offset.dy, inverted: true }));
       
       candidates.push({
         matrix: invertedMatrix,
@@ -4851,7 +5267,9 @@ function extractModuleCandidates(
   // Sort by score descending (best first)
   candidates.sort((a, b) => b.score - a.score);
   
-  console.log(`[QR-DEBUG] extractModuleCandidates: generated ${candidates.length} initial candidates`);
+  s?.gauge('candidates.count', candidates.length);
+  if (candidates.length > 0) s?.gauge('candidates.bestScore', candidates[0].score);
+  qrLogLazy('debug', () => `extractModuleCandidates: generated ${candidates.length} initial candidates`);
   debugLog(`extractModuleCandidates: generated ${candidates.length} initial candidates`);
   // For version 2+, try to refine top candidates using alignment pattern detection
   // This creates additional refined candidates that may decode better
@@ -4870,7 +5288,7 @@ function extractModuleCandidates(
         const correction = calculateAlignmentCorrection(alignments);
         
         if (correction) {
-          console.log(`[QR-DEBUG] extractModuleCandidates: candidate #${i+1} has ${alignments.length} alignments, correction=(${correction.dx.toFixed(3)}, ${correction.dy.toFixed(3)})`);
+          qrLogLazy('debug', () => `extractModuleCandidates: candidate #${i+1} has ${alignments.length} alignments, correction=(${correction.dx.toFixed(3)}, ${correction.dy.toFixed(3)})`);
           debugLog(`extractModuleCandidates: candidate #${i+1} alignments=${alignments.length}, correction=(${correction.dx.toFixed(3)},${correction.dy.toFixed(3)})`);
           
           // Create a refined transform with the correction applied
@@ -4900,7 +5318,7 @@ function extractModuleCandidates(
               dy: refinedDy,
               inverted: candidate.inverted,
             });
-            console.log(`[QR-DEBUG] extractModuleCandidates: added refined candidate, score ${refinedScore.toFixed(2)} (was ${candidate.score.toFixed(2)})`);
+            qrLogLazy('debug', () => `extractModuleCandidates: added refined candidate, score ${refinedScore.toFixed(2)} (was ${candidate.score.toFixed(2)})`);
           }
         }
       }
@@ -4908,7 +5326,7 @@ function extractModuleCandidates(
     
     // Add refined candidates to the list
     if (refinedCandidates.length > 0) {
-      console.log(`[QR-DEBUG] extractModuleCandidates: added ${refinedCandidates.length} alignment-refined candidates`);
+      qrLogLazy('debug', () => `extractModuleCandidates: added ${refinedCandidates.length} alignment-refined candidates`);
       debugLog(`extractModuleCandidates: added ${refinedCandidates.length} alignment-refined candidates`);
       candidates.push(...refinedCandidates);
       
@@ -4979,30 +5397,28 @@ function extractModuleCandidates(
         inverted: candidate.inverted,
       });
 
-      console.log(
-        `[QR-DEBUG] extractModuleCandidates: format-refine #${i + 1}: fmtScore ${baseFmt.score} -> ${refined.fmt.score} (agree ${baseFmt.agree} -> ${refined.fmt.agree}), dxdy=(${candidate.dx.toFixed(3)},${candidate.dy.toFixed(3)}) -> (${refinedDx.toFixed(3)},${refinedDy.toFixed(3)})`
-      );
-      debugLog(
+      qrLogLazy('debug', () => `[QR-DEBUG] extractModuleCandidates: format-refine #${i + 1}: fmtScore ${baseFmt.score} -> ${refined.fmt.score} (agree ${baseFmt.agree} -> ${refined.fmt.agree}), dxdy=(${candidate.dx.toFixed(3)},${candidate.dy.toFixed(3)}) -> (${refinedDx.toFixed(3)},${refinedDy.toFixed(3)})`);
+debugLog(
         `extractModuleCandidates: format-refine #${i + 1}: fmtScore ${baseFmt.score} -> ${refined.fmt.score} (agree ${baseFmt.agree} -> ${refined.fmt.agree}), dxdy=(${candidate.dx.toFixed(3)},${candidate.dy.toFixed(3)}) -> (${refinedDx.toFixed(3)},${refinedDy.toFixed(3)})`
       );
     }
 
     if (fmtRefined.length > 0) {
-      console.log(`[QR-DEBUG] extractModuleCandidates: added ${fmtRefined.length} format-refined candidates (radius=${maxFormatRefineRadius})`);
+      qrLogLazy('debug', () => `extractModuleCandidates: added ${fmtRefined.length} format-refined candidates (radius=${maxFormatRefineRadius})`);
       debugLog(`extractModuleCandidates: added ${fmtRefined.length} format-refined candidates (radius=${maxFormatRefineRadius})`);
       candidates.push(...fmtRefined);
       candidates.sort((a, b) => b.score - a.score);
     }
   }
 
-console.log(`[QR-DEBUG] extractModuleCandidates: FINAL ${candidates.length} candidates`);
+qrLogLazy('debug', () => `extractModuleCandidates: FINAL ${candidates.length} candidates`);
   debugLog(`extractModuleCandidates: FINAL ${candidates.length} candidates`);
   if (candidates.length > 0) {
     // Log top 5 candidates
-    console.log(`[QR-DEBUG] extractModuleCandidates: TOP 5 candidates:`);
+    qrLogLazy('debug', () => `extractModuleCandidates: TOP 5 candidates:`);
     for (let i = 0; i < Math.min(5, candidates.length); i++) {
       const c = candidates[i];
-      console.log(`[QR-DEBUG]   #${i+1}: score=${c.score.toFixed(2)}, threshold=${c.threshold}, offset=(${c.dx.toFixed(3)},${c.dy.toFixed(3)}), inverted=${c.inverted}`);
+      qrLogLazy('debug', () => `#${i+1}: score=${c.score.toFixed(2)}, threshold=${c.threshold}, offset=(${c.dx.toFixed(3)},${c.dy.toFixed(3)}), inverted=${c.inverted}`);
     }
     debugLog(`extractModuleCandidates: best score=${candidates[0].score.toFixed(1)} (threshold=${candidates[0].threshold}, offset=(${candidates[0].dx.toFixed(3)},${candidates[0].dy.toFixed(3)}), inverted=${candidates[0].inverted})`);
   }
@@ -5257,28 +5673,26 @@ function readFormatInfoDetailed(matrix: boolean[][]): FormatInfoDetailed {
 
 function readFormatInfo(matrix: boolean[][]): FormatInfo | null {
   const moduleCount = matrix.length;
-  console.log(`[QR-DEBUG] readFormatInfo: moduleCount=${moduleCount}`);
+  qrLogLazy('debug', () => `readFormatInfo: moduleCount=${moduleCount}`);
 
   if (moduleCount < 21) {
-    console.log(`[QR-DEBUG] readFormatInfo: FAILED - moduleCount < 21`);
+    qrLogLazy('debug', () => `readFormatInfo: FAILED - moduleCount < 21`);
     return null;
   }
 
   const d = readFormatInfoDetailed(matrix);
 
   if (d.format1Bits !== null && d.format2Bits !== null) {
-    console.log(
-      `[QR-DEBUG] readFormatInfo: format1 bits=${d.format1Bits.toString(2).padStart(15, '0')}, format2 bits=${d.format2Bits.toString(2).padStart(15, '0')}`
-    );
-  }
+    qrLogLazy('debug', () => `[QR-DEBUG] readFormatInfo: format1 bits=${d.format1Bits.toString(2).padStart(15, '0')}, format2 bits=${d.format2Bits.toString(2).padStart(15, '0')}`);
+}
 
   const logDecoded = (x: DecodedFormatInfo | null) =>
     x ? `ECC=${x.eccLevel},mask=${x.maskPattern},dist=${x.dist}` : 'null';
 
-  console.log(`[QR-DEBUG] readFormatInfo: decoded1=${logDecoded(d.decoded1)}, decoded2=${logDecoded(d.decoded2)}, agree=${d.agree}`);
+  qrLogLazy('debug', () => `readFormatInfo: decoded1=${logDecoded(d.decoded1)}, decoded2=${logDecoded(d.decoded2)}, agree=${d.agree}`);
 
   const result = d.best ? { eccLevel: d.best.eccLevel, maskPattern: d.best.maskPattern } : null;
-  console.log(`[QR-DEBUG] readFormatInfo: RESULT=${result ? `ECC=${result.eccLevel},mask=${result.maskPattern}` : 'null'}`);
+  qrLogLazy('debug', () => `[QR-DEBUG] readFormatInfo: RESULT=${result ? `ECC=${result.eccLevel},mask=${result.maskPattern}` : 'null'}`);
 
   return result;
 }
@@ -5818,3 +6232,6 @@ export const QRAnalyzer = {
 };
 
 export default QRAnalyzer;
+
+setQRLogLevel('event'); // 'silent' | 'summary' | 'event' | 'debug'
+
