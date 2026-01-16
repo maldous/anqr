@@ -252,6 +252,13 @@ export function findFinderPatterns(
   return patterns;
 }
 
+interface ScoredTriplet {
+  ordered: [FinderPattern, FinderPattern, FinderPattern];
+  score: number;
+  squareness: number;
+  moduleSizeVariance: number;
+}
+
 /**
  * Select the 3 finder patterns that form the QR code corners
  * Returns [topLeft, topRight, bottomLeft] or null if not found
@@ -264,7 +271,9 @@ export function selectFinderPatterns(
     return null;
   }
 
-  // Try combinations of 3 patterns
+  const candidates: ScoredTriplet[] = [];
+
+  // Try combinations of 3 patterns and score them
   for (let i = 0; i < Math.min(patterns.length, 10); i++) {
     for (let j = i + 1; j < Math.min(patterns.length, 10); j++) {
       for (let k = j + 1; k < Math.min(patterns.length, 10); k++) {
@@ -274,31 +283,99 @@ export function selectFinderPatterns(
 
         // Check module sizes are similar
         const avgSize = (p1.moduleSize + p2.moduleSize + p3.moduleSize) / 3;
-        if (
-          Math.abs(p1.moduleSize - avgSize) > avgSize * 0.3 ||
-          Math.abs(p2.moduleSize - avgSize) > avgSize * 0.3 ||
-          Math.abs(p3.moduleSize - avgSize) > avgSize * 0.3
-        ) {
+        const sizeVariance = (
+          Math.abs(p1.moduleSize - avgSize) +
+          Math.abs(p2.moduleSize - avgSize) +
+          Math.abs(p3.moduleSize - avgSize)
+        ) / avgSize;
+        
+        if (sizeVariance > 0.3) {
           continue;
         }
 
         // Find the pattern that forms the right angle (top-left corner)
         const ordered = orderFinderPatterns(p1, p2, p3);
-        if (ordered) {
-          log('select', 'Selected finder patterns', {
-            topLeft: { x: ordered[0].center.x.toFixed(1), y: ordered[0].center.y.toFixed(1) },
-            topRight: { x: ordered[1].center.x.toFixed(1), y: ordered[1].center.y.toFixed(1) },
-            bottomLeft: { x: ordered[2].center.x.toFixed(1), y: ordered[2].center.y.toFixed(1) },
-            avgModuleSize: avgSize.toFixed(2)
-          });
-          return ordered;
+        if (!ordered) continue;
+
+        const [topLeft, topRight, bottomLeft] = ordered;
+        
+        // Calculate squareness: the two sides from topLeft should be equal
+        const topDist = distance(topLeft.center, topRight.center);
+        const leftDist = distance(topLeft.center, bottomLeft.center);
+        const avgDist = (topDist + leftDist) / 2;
+        const squareness = Math.abs(topDist - leftDist) / avgDist;
+
+        // Calculate angle at topLeft - should be close to 90 degrees
+        const vecRight = {
+          x: topRight.center.x - topLeft.center.x,
+          y: topRight.center.y - topLeft.center.y
+        };
+        const vecDown = {
+          x: bottomLeft.center.x - topLeft.center.x,
+          y: bottomLeft.center.y - topLeft.center.y
+        };
+        const dotProduct = vecRight.x * vecDown.x + vecRight.y * vecDown.y;
+        const magRight = Math.sqrt(vecRight.x ** 2 + vecRight.y ** 2);
+        const magDown = Math.sqrt(vecDown.x ** 2 + vecDown.y ** 2);
+        const cosAngle = dotProduct / (magRight * magDown);
+        const angleDev = Math.abs(cosAngle); // Should be 0 for 90 degrees
+
+        // Score: lower is better
+        // Heavily penalize non-square triplets and non-right angles
+        const score = squareness * 10 + angleDev * 5 + sizeVariance;
+
+        log('select', 'Evaluating triplet', {
+          topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
+          topRight: { x: topRight.center.x.toFixed(1), y: topRight.center.y.toFixed(1) },
+          bottomLeft: { x: bottomLeft.center.x.toFixed(1), y: bottomLeft.center.y.toFixed(1) },
+          topDist: topDist.toFixed(1),
+          leftDist: leftDist.toFixed(1),
+          squareness: squareness.toFixed(3),
+          angleDev: angleDev.toFixed(3),
+          score: score.toFixed(3)
+        });
+
+        // Only accept triplets that are reasonably square (< 10% difference)
+        if (squareness > 0.1) {
+          log('select', 'Rejecting: not square enough', { squareness: squareness.toFixed(3) });
+          continue;
         }
+
+        // Only accept triplets with angles close to 90 degrees (< 15 degrees off)
+        if (angleDev > 0.26) { // cos(75°) ≈ 0.26
+          log('select', 'Rejecting: angle not close to 90°', { angleDev: angleDev.toFixed(3) });
+          continue;
+        }
+
+        candidates.push({
+          ordered,
+          score,
+          squareness,
+          moduleSizeVariance: sizeVariance
+        });
       }
     }
   }
 
-  log('select', 'Could not find valid pattern triplet');
-  return null;
+  if (candidates.length === 0) {
+    log('select', 'Could not find valid pattern triplet');
+    return null;
+  }
+
+  // Sort by score and pick the best
+  candidates.sort((a, b) => a.score - b.score);
+  const best = candidates[0];
+
+  log('select', 'Selected finder patterns', {
+    topLeft: { x: best.ordered[0].center.x.toFixed(1), y: best.ordered[0].center.y.toFixed(1) },
+    topRight: { x: best.ordered[1].center.x.toFixed(1), y: best.ordered[1].center.y.toFixed(1) },
+    bottomLeft: { x: best.ordered[2].center.x.toFixed(1), y: best.ordered[2].center.y.toFixed(1) },
+    score: best.score.toFixed(3),
+    squareness: best.squareness.toFixed(3),
+    candidatesEvaluated: candidates.length
+  });
+
+  return best.ordered;
 }
 
 /**

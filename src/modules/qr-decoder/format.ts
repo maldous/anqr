@@ -85,11 +85,11 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
 
   // Read format info from around top-right and bottom-left finder patterns
   let bits2 = 0;
-  // Bits 0-7: col moduleCount-1 to moduleCount-8, row 8
+  // Bits 0-7: row 8, columns moduleCount-8 to moduleCount-1 (left to right)
   for (let i = 0; i < 8; i++) {
-    if (matrix[8]?.[moduleCount - 1 - i]) bits2 |= 1 << i;
+    if (matrix[8]?.[moduleCount - 8 + i]) bits2 |= 1 << i;
   }
-  // Bits 8-14: row moduleCount-7 to moduleCount-1, col 8
+  // Bits 8-14: column 8, rows moduleCount-7 to moduleCount-1 (top to bottom)
   for (let i = 0; i < 7; i++) {
     if (matrix[moduleCount - 7 + i]?.[8]) bits2 |= 1 << (8 + i);
   }
