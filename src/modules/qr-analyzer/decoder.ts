@@ -6,6 +6,13 @@ import jsQR from 'jsqr';
 import type { ECCLevel, QRAnalysisResult } from './types';
 import { detectContentType } from './content-detection';
 
+interface QRLocation {
+  topLeftCorner: { x: number; y: number };
+  topRightCorner: { x: number; y: number };
+  bottomLeftCorner: { x: number; y: number };
+  bottomRightCorner: { x: number; y: number };
+}
+
 /**
  * Decode a QR code from canvas and extract all metadata
  */
@@ -54,11 +61,11 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     const qrHeight = Math.abs(location.bottomLeftCorner.y - location.topLeftCorner.y);
     const qrSize = Math.max(qrWidth, qrHeight);
 
-    // Estimate version and module count from detected size
-    // This is approximate since we don't have direct access to the matrix
-    const moduleCount = estimateModuleCount(code.data);
+    // Detect actual module count and size from finder patterns
+    const detected = detectModuleCountFromFinder(imageData, location, qrSize);
+    const moduleCount = detected.moduleCount;
+    const estimatedModulePx = detected.modulePx;
     const version = moduleCount > 0 ? Math.floor((moduleCount - 17) / 4) : null;
-    const estimatedModulePx = moduleCount > 0 ? Math.round(qrSize / moduleCount) : null;
 
     // Detect content type
     const contentType = detectContentType(code.data);
@@ -118,24 +125,152 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 }
 
 /**
- * Estimate module count from payload length
+ * Detect actual module count by analyzing finder patterns
+ * Finder patterns are always 7 modules wide with a 1:1:3:1:1 ratio
  */
-function estimateModuleCount(payload: string): number {
-  const len = payload.length;
-  // Rough estimation based on data capacity
-  // Version 1: 21x21, Version 2: 25x25, etc.
-  // This is approximate
-  if (len <= 25) return 21;
-  if (len <= 47) return 25;
-  if (len <= 77) return 29;
-  if (len <= 114) return 33;
-  if (len <= 154) return 37;
-  if (len <= 195) return 41;
-  if (len <= 224) return 45;
-  if (len <= 279) return 49;
-  if (len <= 335) return 53;
-  if (len <= 395) return 57;
-  return 61; // Approximate for larger payloads
+function detectModuleCountFromFinder(
+  imageData: ImageData,
+  location: QRLocation,
+  qrSize: number
+): { moduleCount: number; modulePx: number } {
+  
+  // The jsQR location corners are at the CENTERS of the finder patterns
+  // Finder patterns are 7 modules, so the corner is at the center (3.5 modules in)
+  // The actual QR size includes the full finder patterns on both sides
+  
+  // Calculate the distance between finder pattern centers
+  // This distance spans from center of top-left finder to center of top-right finder
+  // Which is (moduleCount - 7) modules (since each center is 3.5 modules from edge)
+  const topWidth = Math.abs(location.topRightCorner.x - location.topLeftCorner.x);
+  const leftHeight = Math.abs(location.bottomLeftCorner.y - location.topLeftCorner.y);
+  const finderCenterDistance = Math.max(topWidth, leftHeight);
+  
+  // Try to detect module size by scanning through the finder pattern
+  const modulePxFromScan = detectModuleSizeFromScan(imageData, location);
+  
+  if (modulePxFromScan > 0) {
+    // Calculate module count: the distance between centers is (moduleCount - 7) modules
+    // So: finderCenterDistance = (moduleCount - 7) * modulePx
+    // Therefore: moduleCount = (finderCenterDistance / modulePx) + 7
+    const calculatedCount = Math.round(finderCenterDistance / modulePxFromScan) + 7;
+    // QR versions: 21, 25, 29, 33... (21 + 4*n)
+    const version = Math.round((calculatedCount - 21) / 4);
+    const normalizedCount = 21 + Math.max(0, version) * 4;
+    // Recalculate module size based on normalized count
+    const adjustedModulePx = finderCenterDistance / (normalizedCount - 7);
+    return { moduleCount: normalizedCount, modulePx: adjustedModulePx };
+  }
+  
+  // Fallback: estimate from overall QR size
+  // Try different versions and see which gives the closest module size
+  // QR versions go 21, 25, 29, 33... modules
+  let bestVersion = 1;
+  let bestModulePx = qrSize / 21;
+  let bestScore = Number.MAX_VALUE;
+  
+  for (let v = 1; v <= 40; v++) {
+    const count = 17 + v * 4;
+    const modulePx = finderCenterDistance / (count - 7);
+    // Module pixels should be a reasonable integer-ish value
+    const roundedPx = Math.round(modulePx);
+    const error = Math.abs(modulePx - roundedPx);
+    if (error < bestScore && roundedPx >= 1 && roundedPx <= 50) {
+      bestScore = error;
+      bestVersion = v;
+      bestModulePx = modulePx;
+    }
+  }
+  
+  const moduleCount = 17 + bestVersion * 4;
+  return { moduleCount, modulePx: bestModulePx };
+}
+
+/**
+ * Detect module size by scanning through the top-left finder pattern
+ * The finder pattern has a 1:1:3:1:1 ratio, so we can detect transitions
+ */
+function detectModuleSizeFromScan(
+  imageData: ImageData,
+  location: QRLocation
+): number {
+  const { data, width } = imageData;
+  
+  // Start from top-left corner (center of finder pattern) and scan left
+  // to find the edge of the finder pattern, then measure its width
+  const startX = Math.round(location.topLeftCorner.x);
+  const startY = Math.round(location.topLeftCorner.y);
+  
+  // Scan horizontally to the left to find pattern edge, then to the right
+  // The finder pattern is black-white-black-white-black (7 modules total)
+  // From center, going left: 1.5 modules black, 1 module white, 1 module black to edge
+  
+  // Find the leftmost black pixel of the finder (scan left from center)
+  let leftEdge = startX;
+  for (let x = startX; x >= 0; x--) {
+    const idx = (startY * width + x) * 4;
+    const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+    if (gray > 180) { // Found white
+      leftEdge = x + 1;
+      break;
+    }
+    leftEdge = x;
+  }
+  
+  // Find the rightmost black pixel of the finder (scan right from center)
+  let rightEdge = startX;
+  for (let x = startX; x < imageData.width; x++) {
+    const idx = (startY * width + x) * 4;
+    const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+    if (gray > 180) { // Found white
+      rightEdge = x - 1;
+      break;
+    }
+    rightEdge = x;
+  }
+  
+  // The center black square of finder is 3 modules wide
+  const centerBlackWidth = rightEdge - leftEdge + 1;
+  if (centerBlackWidth > 6) {
+    // Each module is approximately centerBlackWidth / 3
+    return centerBlackWidth / 3;
+  }
+  
+  // Alternative: scan outward and count transitions
+  // From center going right: should hit white (1 mod), black (1 mod), white (quiet zone)
+  const transitions: number[] = [];
+  let lastGray = 0;
+  let transitionStart = startX;
+  
+  for (let x = startX; x < Math.min(startX + 100, imageData.width); x++) {
+    const idx = (startY * width + x) * 4;
+    const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+    const isDark = gray < 128;
+    const wasDark = lastGray < 128;
+    
+    if (x === startX) {
+      lastGray = gray;
+      continue;
+    }
+    
+    if (isDark !== wasDark) {
+      transitions.push(x - transitionStart);
+      transitionStart = x;
+    }
+    lastGray = gray;
+  }
+  
+  // The first few transitions from center should be: ~1.5 modules (to white), 1 module (white), 1 module (black), ...
+  // Average the transition distances to estimate module size
+  if (transitions.length >= 3) {
+    // Skip first transition (partial module), use next transitions
+    const moduleEstimates = transitions.slice(1, 4);
+    const avgModulePx = moduleEstimates.reduce((a, b) => a + b, 0) / moduleEstimates.length;
+    if (avgModulePx >= 1 && avgModulePx <= 50) {
+      return avgModulePx;
+    }
+  }
+  
+  return 0; // Could not detect
 }
 
 /**
@@ -209,7 +344,7 @@ function analyzeColors(
  */
 function analyzeQuietZone(
   imageData: ImageData,
-  location: { topLeftCorner: { x: number; y: number }; bottomRightCorner: { x: number; y: number }; bottomLeftCorner: { x: number; y: number }; topRightCorner: { x: number; y: number } },
+  location: QRLocation,
   modulePx: number
 ): { top: number; right: number; bottom: number; left: number; adequate: boolean } {
   // Measure white space around the QR code in module units
@@ -226,28 +361,57 @@ function analyzeQuietZone(
 
 /**
  * Build module matrix from image
+ * Uses the finder pattern centers to calculate the actual QR grid
  */
 function buildModuleMatrix(
   imageData: ImageData,
-  location: { topLeftCorner: { x: number; y: number }; bottomRightCorner: { x: number; y: number } },
+  location: QRLocation,
   moduleCount: number
 ): boolean[][] | undefined {
   if (moduleCount <= 0) return undefined;
 
   const { data, width } = imageData;
-  const qrWidth = location.bottomRightCorner.x - location.topLeftCorner.x;
-  const qrHeight = location.bottomRightCorner.y - location.topLeftCorner.y;
-  const modulePxX = qrWidth / moduleCount;
-  const modulePxY = qrHeight / moduleCount;
+  
+  // The jsQR location corners are at the CENTERS of the finder patterns
+  // Top-left finder center = module position (3.5, 3.5) in the QR grid
+  // Top-right finder center = module position (moduleCount - 3.5, 3.5)
+  // Bottom-left finder center = module position (3.5, moduleCount - 3.5)
+  
+  // Calculate the transformation from module coordinates to pixel coordinates
+  // Using the three finder pattern centers as reference points
+  const tlX = location.topLeftCorner.x;
+  const tlY = location.topLeftCorner.y;
+  const trX = location.topRightCorner.x;
+  const trY = location.topRightCorner.y;
+  const blX = location.bottomLeftCorner.x;
+  const blY = location.bottomLeftCorner.y;
+  
+  // The distance from top-left to top-right center spans (moduleCount - 7) modules
+  // (from 3.5 to moduleCount - 3.5)
+  const moduleSpan = moduleCount - 7;
+  
+  // Guard against division by zero (shouldn't happen with valid QR codes)
+  if (moduleSpan <= 0) return undefined;
+  
+  // Calculate module size in each direction
+  const dxRight = (trX - tlX) / moduleSpan;
+  const dyRight = (trY - tlY) / moduleSpan;
+  const dxDown = (blX - tlX) / moduleSpan;
+  const dyDown = (blY - tlY) / moduleSpan;
+  
+  // The top-left finder center is at module position (3.5, 3.5)
+  // So the top-left corner of the QR (module 0,0) is at:
+  const originX = tlX - 3.5 * dxRight - 3.5 * dxDown;
+  const originY = tlY - 3.5 * dyRight - 3.5 * dyDown;
 
   const matrix: boolean[][] = [];
 
   for (let row = 0; row < moduleCount; row++) {
     const matrixRow: boolean[] = [];
     for (let col = 0; col < moduleCount; col++) {
-      // Sample center of module
-      const x = Math.round(location.topLeftCorner.x + (col + 0.5) * modulePxX);
-      const y = Math.round(location.topLeftCorner.y + (row + 0.5) * modulePxY);
+      // Calculate pixel position for center of this module
+      const x = Math.round(originX + (col + 0.5) * dxRight + (row + 0.5) * dxDown);
+      const y = Math.round(originY + (col + 0.5) * dyRight + (row + 0.5) * dyDown);
       
       if (x >= 0 && x < imageData.width && y >= 0 && y < imageData.height) {
         const idx = (y * width + x) * 4;
