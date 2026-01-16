@@ -485,8 +485,8 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
     if (result.version !== null && result.version >= 1 && result.version <= 40) {
       setQrVersion(result.version);
     }
-    if (result.maskPattern !== null) {
-      setQrMaskPattern(result.maskPattern);
+    if (result.maskPattern !== null && result.maskPattern >= 0 && result.maskPattern <= 7) {
+      setQrMaskPattern(result.maskPattern as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7);
     }
     if (
       result.encodingMode &&
