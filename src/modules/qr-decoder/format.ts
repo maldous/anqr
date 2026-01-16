@@ -6,6 +6,16 @@
 import type { FormatInfo, ECCLevelChar } from './types';
 import { ECC_LEVEL_MAP } from './types';
 
+// Logging helper
+function log(category: string, message: string, data?: Record<string, unknown>): void {
+  const prefix = `[QR-Decoder:${category}]`;
+  if (data) {
+    console.log(prefix, message, data);
+  } else {
+    console.log(prefix, message);
+  }
+}
+
 // Pre-computed valid format info patterns (15 bits after BCH encoding, XORed with mask 0x5412)
 // Format: (ECC level << 3) | mask pattern, then BCH encoded, then XORed with 0x5412
 const FORMAT_INFO_DECODE_TABLE: Map<number, FormatInfo> = new Map();
@@ -84,6 +94,11 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
     if (matrix[moduleCount - 7 + i]?.[8]) bits2 |= 1 << (8 + i);
   }
 
+  log('format', 'Read format bits', {
+    bits1: bits1.toString(2).padStart(15, '0'),
+    bits2: bits2.toString(2).padStart(15, '0')
+  });
+
   // Try to find a match with error correction
   let bestMatch: FormatInfo | null = null;
   let bestDistance = 4; // Maximum correctable errors for BCH(15,5) is 3
@@ -97,6 +112,18 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
       bestDistance = minD;
       bestMatch = info;
     }
+  }
+
+  if (bestMatch) {
+    const eccChar = ECC_LEVEL_MAP[bestMatch.eccLevel];
+    log('format', 'Decoded format info', {
+      eccLevel: bestMatch.eccLevel,
+      eccChar,
+      maskPattern: bestMatch.maskPattern,
+      hammingDistance: bestDistance
+    });
+  } else {
+    log('format', 'Failed to decode format info');
   }
 
   return bestMatch;

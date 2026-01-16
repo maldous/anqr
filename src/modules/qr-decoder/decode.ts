@@ -12,6 +12,16 @@ import {
   ALPHANUMERIC_CHARS,
 } from './types';
 
+// Logging helper
+function log(category: string, message: string, data?: Record<string, unknown>): void {
+  const prefix = `[QR-Decoder:${category}]`;
+  if (data) {
+    console.log(prefix, message, data);
+  } else {
+    console.log(prefix, message);
+  }
+}
+
 // RS block configuration per version and ECC level
 // Format: [[numBlocks, totalCodewords, dataCodewords], ...]
 const RS_BLOCKS: Record<string, number[][][]> = {
@@ -84,6 +94,8 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   let currentByte = 0;
   let bitsRead = 0;
 
+  log('codewords', 'Starting codeword extraction', { moduleCount, matrixRows: matrix.length });
+
   // Start from bottom-right, move up in two-column pairs
   let up = true;
   for (let col = moduleCount - 1; col >= 1; col -= 2) {
@@ -107,6 +119,11 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
     }
     up = !up;
   }
+
+  log('codewords', 'Extracted codewords', { 
+    count: codewords.length, 
+    first10: codewords.slice(0, 10).map(c => c.toString(16).padStart(2, '0')).join(' ') 
+  });
 
   return codewords;
 }
@@ -180,7 +197,10 @@ export function separateCodewords(
   const eccLevelChar = ['M', 'L', 'H', 'Q'][eccLevel] as keyof typeof RS_BLOCKS;
   const rsBlocks = RS_BLOCKS[eccLevelChar]?.[version - 1];
 
+  log('separate', 'Separating codewords', { version, eccLevel, eccLevelChar, hasRsBlocks: !!rsBlocks });
+
   if (!rsBlocks) {
+    log('separate', 'WARNING: No RS blocks found for version/ECC, returning all as data');
     return { dataCodewords: codewords, ecCodewords: [] };
   }
 
@@ -191,6 +211,12 @@ export function separateCodewords(
     const dataCodewords = blockGroup[2];
     totalDataCodewords += numBlocks * dataCodewords;
   }
+
+  log('separate', 'Separated codewords', { 
+    totalCodewords: codewords.length, 
+    dataCodewords: totalDataCodewords, 
+    ecCodewords: codewords.length - totalDataCodewords 
+  });
 
   return {
     dataCodewords: codewords.slice(0, totalDataCodewords),
@@ -204,36 +230,60 @@ export function separateCodewords(
 export function decodeDataCodewords(dataCodewords: number[], version: number): string {
   const bits = new BitStream(dataCodewords);
   let result = '';
+  let segmentCount = 0;
+
+  log('decode', 'Starting data decode', { dataCodewords: dataCodewords.length, version });
 
   while (bits.available() >= 4) {
     const mode = bits.read(4);
+    segmentCount++;
 
-    if (mode === MODE_TERMINATOR) break;
+    if (mode === MODE_TERMINATOR) {
+      log('decode', 'Found terminator', { segmentCount });
+      break;
+    }
 
     const charCountBits = getCharCountBits(mode, version);
-    if (bits.available() < charCountBits) break;
+    if (bits.available() < charCountBits) {
+      log('decode', 'Not enough bits for char count', { mode, charCountBits, available: bits.available() });
+      break;
+    }
 
     const charCount = bits.read(charCountBits);
+    const modeName = ['TERMINATOR', 'NUMERIC', 'ALPHANUMERIC', '', 'BYTE', '', '', '', 'KANJI'][mode] || `UNKNOWN(${mode})`;
 
+    log('decode', `Segment ${segmentCount}`, { mode: modeName, charCount, bitsRemaining: bits.available() });
+
+    // Sanity check: if charCount is unreasonably large, something is wrong
+    if (charCount > 7000) {
+      log('decode', 'ERROR: Unreasonable char count, aborting', { charCount });
+      break;
+    }
+
+    let decoded = '';
     switch (mode) {
       case MODE_NUMERIC:
-        result += decodeNumeric(bits, charCount);
+        decoded = decodeNumeric(bits, charCount);
         break;
       case MODE_ALPHANUMERIC:
-        result += decodeAlphanumeric(bits, charCount);
+        decoded = decodeAlphanumeric(bits, charCount);
         break;
       case MODE_BYTE:
-        result += decodeByte(bits, charCount);
+        decoded = decodeByte(bits, charCount);
         break;
       case MODE_KANJI:
-        result += decodeKanji(bits, charCount);
+        decoded = decodeKanji(bits, charCount);
         break;
       default:
-        // Unknown mode, try to continue
+        log('decode', 'Unknown mode, skipping', { mode });
         break;
     }
+
+    log('decode', `Decoded segment ${segmentCount}`, { length: decoded.length, preview: decoded.slice(0, 50) });
+    result += decoded;
   }
 
+  log('decode', 'Final result', { length: result.length, preview: result.slice(0, 100) });
   return result;
 }
 
@@ -277,19 +327,35 @@ function decodeNumeric(bits: BitStream, count: number): string {
   while (remaining >= 3) {
     if (bits.available() < 10) break;
     const value = bits.read(10);
-    result += value.toString().padStart(3, '0');
+    // Validate numeric value (should be 0-999)
+    if (value > 999) {
+      log('numeric', 'Invalid 3-digit value', { value });
+      result += '???';
+    } else {
+      result += value.toString().padStart(3, '0');
+    }
     remaining -= 3;
   }
 
   // Read remaining 2 digits (7 bits)
   if (remaining === 2 && bits.available() >= 7) {
     const value = bits.read(7);
-    result += value.toString().padStart(2, '0');
+    if (value > 99) {
+      log('numeric', 'Invalid 2-digit value', { value });
+      result += '??';
+    } else {
+      result += value.toString().padStart(2, '0');
+    }
   }
   // Read remaining 1 digit (4 bits)
   else if (remaining === 1 && bits.available() >= 4) {
     const value = bits.read(4);
-    result += value.toString();
+    if (value > 9) {
+      log('numeric', 'Invalid 1-digit value', { value });
+      result += '?';
+    } else {
+      result += value.toString();
+    }
   }
 
   return result;
@@ -308,14 +374,26 @@ function decodeAlphanumeric(bits: BitStream, count: number): string {
     const value = bits.read(11);
     const c1 = Math.floor(value / 45);
     const c2 = value % 45;
-    result += ALPHANUMERIC_CHARS[c1] + ALPHANUMERIC_CHARS[c2];
+    
+    // Bounds checking to prevent 'undefined' in output
+    if (c1 >= 0 && c1 < ALPHANUMERIC_CHARS.length && c2 >= 0 && c2 < ALPHANUMERIC_CHARS.length) {
+      result += ALPHANUMERIC_CHARS[c1] + ALPHANUMERIC_CHARS[c2];
+    } else {
+      log('alphanumeric', 'Invalid character index', { value, c1, c2 });
+      result += '??'; // Placeholder for invalid characters
+    }
     remaining -= 2;
   }
 
   // Read remaining character (6 bits)
   if (remaining === 1 && bits.available() >= 6) {
     const value = bits.read(6);
-    result += ALPHANUMERIC_CHARS[value];
+    if (value >= 0 && value < ALPHANUMERIC_CHARS.length) {
+      result += ALPHANUMERIC_CHARS[value];
+    } else {
+      log('alphanumeric', 'Invalid single character index', { value });
+      result += '?';
+    }
   }
 
   return result;
