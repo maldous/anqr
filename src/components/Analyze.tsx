@@ -274,14 +274,16 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
     if (!ctx) return;
 
     try {
-      // Generate a fresh, clean QR code using the extracted payload and settings
+      // Generate a fresh, clean QR code using the extracted payload
+      // Use auto version (0) for clean reproduction - the detected version from artistic QRs
+      // is often inaccurate since it's based on pixel measurements of stylized finder patterns
       const ecc: QRCoreECCLevel = (result.eccLevel as QRCoreECCLevel) || 'M';
-      const version = (result.version && result.version >= 1 && result.version <= 40) 
-        ? result.version 
-        : 0; // 0 = auto-detect
       
-      const qr = createQRInstance(result.payload, ecc, version);
+      // Always use auto-detect (0) for clean reproduction
+      // The detected version from image analysis is unreliable for artistic QRs
+      const qr = createQRInstance(result.payload, ecc, 0);
       const moduleCount = qr.getModuleCount();
+      const actualVersion = (moduleCount - 17) / 4;
 
       // Calculate module size for crisp rendering
       // Aim for a reasonable size that looks good (target ~300px total)
@@ -317,11 +319,12 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
       console.log('[QR-Analyzer:reproduced] Generated clean QR code', {
         payload: result.payload.substring(0, 50) + (result.payload.length > 50 ? '...' : ''),
         ecc,
-        version: version || 'auto',
-        actualVersion: (moduleCount - 17) / 4,
+        detectedVersion: result.version,
+        actualVersion,
         moduleCount,
         modulePx,
         canvasSize: size,
+        note: 'Using auto version for clean reproduction (detected version from artistic QR is unreliable)',
       });
     } catch (err) {
       console.error('[QR-Analyzer:reproduced] Failed to generate QR code:', err);
