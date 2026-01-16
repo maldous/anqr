@@ -64,6 +64,7 @@ import {
   analyzeQRFromFile,
   analyzeQRFromUrl,
 } from '@/modules/qr-analyzer';
+import { createQRInstance, type ECCLevel as QRCoreECCLevel } from '@/modules/qr-core';
 import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {
@@ -264,56 +265,75 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
   const setRenderFgColor = useQRStore((s) => s.setRenderFgColor);
   const setRenderBgColor = useQRStore((s) => s.setRenderBgColor);
 
-  // Render reproduced QR from analyzed module matrix when result changes
+  // Render reproduced QR by generating a fresh, clean QR code from extracted settings
   useEffect(() => {
-    if (!result?.success || !result.moduleMatrix || !reproducedCanvasRef.current) return;
-
-    const matrix = result.moduleMatrix;
-    const moduleCount = matrix.length;
-    if (!moduleCount) return;
+    if (!result?.success || !result.payload || !reproducedCanvasRef.current) return;
 
     const canvas = reproducedCanvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Calculate module size to match the original QR code's scale
-    // Priority: use estimated module size from original, or calculate from QR size, or fallback to 6
-    let modulePx = 6; // default fallback
-    
-    if (result.estimatedModulePx && result.estimatedModulePx > 0) {
-      // Use the detected module size from the original image
-      modulePx = result.estimatedModulePx;
-    } else if (result.imageProperties?.estimatedQrSizePx && result.imageProperties.estimatedQrSizePx > 0) {
-      // Calculate from the QR code's size in the original image
-      modulePx = result.imageProperties.estimatedQrSizePx / moduleCount;
-    }
-    
-    // Clamp to reasonable bounds (min 3px for visibility, max 15px to avoid huge output)
-    modulePx = Math.max(3, Math.min(15, Math.round(modulePx)));
-    
-    const quietZoneModules = 4;
-    const size = (moduleCount + quietZoneModules * 2) * modulePx;
+    try {
+      // Generate a fresh, clean QR code using the extracted payload and settings
+      const ecc: QRCoreECCLevel = (result.eccLevel as QRCoreECCLevel) || 'M';
+      const version = (result.version && result.version >= 1 && result.version <= 40) 
+        ? result.version 
+        : 0; // 0 = auto-detect
+      
+      const qr = createQRInstance(result.payload, ecc, version);
+      const moduleCount = qr.getModuleCount();
 
-    canvas.width = size;
-    canvas.height = size;
+      // Calculate module size for crisp rendering
+      // Aim for a reasonable size that looks good (target ~300px total)
+      const targetSize = 300;
+      const quietZoneModules = 4;
+      const totalModules = moduleCount + quietZoneModules * 2;
+      const modulePx = Math.max(3, Math.floor(targetSize / totalModules));
+      
+      const size = totalModules * modulePx;
 
-    // Use detected colors from the original QR code
-    const fg = result.detectedColors?.foreground || '#000000';
-    const bg = result.detectedColors?.background || '#ffffff';
+      canvas.width = size;
+      canvas.height = size;
 
-    // Draw background
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, size, size);
+      // Use detected colors from the original QR code for visual consistency
+      const fg = result.detectedColors?.foreground || '#000000';
+      const bg = result.detectedColors?.background || '#ffffff';
 
-    // Draw modules with detected foreground color
-    ctx.fillStyle = fg;
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        if (!matrix[row]?.[col]) continue;
-        const x = (quietZoneModules + col) * modulePx;
-        const y = (quietZoneModules + row) * modulePx;
-        ctx.fillRect(x, y, modulePx, modulePx);
+      // Draw background
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, size, size);
+
+      // Draw modules with detected foreground color - fresh and clean!
+      ctx.fillStyle = fg;
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          if (!qr.isDark(row, col)) continue;
+          const x = (quietZoneModules + col) * modulePx;
+          const y = (quietZoneModules + row) * modulePx;
+          ctx.fillRect(x, y, modulePx, modulePx);
+        }
       }
+
+      console.log('[QR-Analyzer:reproduced] Generated clean QR code', {
+        payload: result.payload.substring(0, 50) + (result.payload.length > 50 ? '...' : ''),
+        ecc,
+        version: version || 'auto',
+        actualVersion: (moduleCount - 17) / 4,
+        moduleCount,
+        modulePx,
+        canvasSize: size,
+      });
+    } catch (err) {
+      console.error('[QR-Analyzer:reproduced] Failed to generate QR code:', err);
+      // Clear canvas and show error state
+      canvas.width = 200;
+      canvas.height = 200;
+      ctx.fillStyle = '#f5f5f5';
+      ctx.fillRect(0, 0, 200, 200);
+      ctx.fillStyle = '#999';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Generation failed', 100, 100);
     }
   }, [result]);
 
