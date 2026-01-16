@@ -321,8 +321,33 @@ export function selectFinderPatterns(
         const angleDev = Math.abs(cosAngle); // Should be 0 for 90 degrees
 
         // Score: lower is better
-        // Heavily penalize non-square triplets and non-right angles
-        const score = squareness * 10 + angleDev * 5 + sizeVariance;
+        // Weight factors:
+        // - squareness: how square the triplet is (lower = better)
+        // - angleDev: how close to 90° the angle is (lower = better)
+        // - sizeVariance: how consistent module sizes are (lower = better)
+        // - hitCount: higher hit count = more confident detection
+        // - span: larger spans indicate patterns at actual corners (better)
+        
+        // Use MINIMUM hit count - the weakest link matters most
+        const minHits = Math.min(p1.count, p2.count, p3.count);
+        const totalHits = p1.count + p2.count + p3.count;
+        
+        // Penalty for low minimum hit count
+        const hitCountPenalty = Math.max(0, (8 - minHits) / 8);
+        
+        // IMPORTANT: Prefer larger spans - real finder patterns are at the CORNERS
+        // of the QR code, not inside it. False positives tend to be inside,
+        // resulting in smaller spans.
+        // Normalize by module size: avgDist / moduleSize gives us the span in modules
+        const spanInModules = avgDist / avgSize;
+        
+        // Direct bonus for larger spans (larger span = lower score = better)
+        // Normalize to reasonable range: span of 22 modules = spanBonus of 0
+        // span of 20 modules = spanBonus of 0.09 (small penalty)
+        const referenceSpan = 22;
+        const spanBonus = (referenceSpan - spanInModules) / referenceSpan;
+        
+        const score = squareness * 5 + angleDev * 5 + sizeVariance + hitCountPenalty * 2 + spanBonus * 2;
 
         log('select', 'Evaluating triplet', {
           topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
@@ -332,6 +357,8 @@ export function selectFinderPatterns(
           leftDist: leftDist.toFixed(1),
           squareness: squareness.toFixed(3),
           angleDev: angleDev.toFixed(3),
+          spanInModules: spanInModules.toFixed(1),
+          hitCounts: `${p1.count}/${p2.count}/${p3.count}`,
           score: score.toFixed(3)
         });
 
