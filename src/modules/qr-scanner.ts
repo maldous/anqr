@@ -1,9 +1,9 @@
 /**
  * QR Scanner/Validator Module
- * Uses jsQR to decode and validate generated QR codes
+ * Uses our own QR decoder to decode and validate generated QR codes
  */
 
-import jsQR from 'jsqr';
+import { decodeQR } from './qr-decoder';
 
 // ============================================
 // TYPES
@@ -76,21 +76,14 @@ export function scanCanvas(canvas: HTMLCanvasElement): ScanResult {
  */
 export function scanImageData(imageData: ImageData, startTime = performance.now()): ScanResult {
   try {
-    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: 'attemptBoth',
-    });
+    const result = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
 
-    if (code) {
+    if (result && result.success && result.data) {
       return {
         success: true,
-        data: code.data,
+        data: result.data,
         error: null,
-        location: {
-          topLeftCorner: code.location.topLeftCorner,
-          topRightCorner: code.location.topRightCorner,
-          bottomLeftCorner: code.location.bottomLeftCorner,
-          bottomRightCorner: code.location.bottomRightCorner,
-        },
+        location: result.location,
         scanTimeMs: performance.now() - startTime,
       };
     } else {

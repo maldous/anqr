@@ -1,12 +1,12 @@
 /**
- * QR Decoder - wrapper around jsQR for decoding
+ * QR Decoder - uses our own decoder (no external dependencies)
  */
 
-import jsQR from 'jsqr';
+import { decodeQR } from '../qr-decoder';
 import type { ECCLevel, QRAnalysisResult } from './types';
 import { detectContentType } from './content-detection';
 
-interface QRLocation {
+interface QRLocationCorners {
   topLeftCorner: { x: number; y: number };
   topRightCorner: { x: number; y: number };
   bottomLeftCorner: { x: number; y: number };
@@ -49,12 +49,10 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   
   try {
-    const code = jsQR(imageData.data, canvas.width, canvas.height, {
-      inversionAttempts: 'attemptBoth',
-    });
+    const code = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
 
-    if (!code) {
-      log('decode', 'ERROR: No QR code detected by jsQR');
+    if (!code || !code.success || !code.data) {
+      log('decode', 'ERROR: No QR code detected by our decoder');
       return {
         success: false,
         error: 'No QR code detected in image',
@@ -69,12 +67,12 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       };
     }
 
-    // Extract location info from jsQR
-    // NOTE: jsQR location corners are the CENTERS of the 3 finder patterns
+    // Extract location info from our decoder
+    // NOTE: location corners are the CENTERS of the 3 finder patterns
     // plus an extrapolated 4th corner (bottom-right)
-    const { location } = code;
+    const location = code.location!;
     
-    log('location', 'jsQR finder pattern centers', {
+    log('location', 'Finder pattern centers', {
       topLeft: location.topLeftCorner,
       topRight: location.topRightCorner,
       bottomLeft: location.bottomLeftCorner,
@@ -112,7 +110,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     });
 
     // Detect content type
-    const contentType = detectContentType(code.data);
+    const contentType = detectContentType(code.data!);
 
     // Analyze colors from the QR region
     const detectedColors = analyzeColors(imageData, location);
@@ -133,13 +131,13 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     return {
       success: true,
-      payload: code.data,
-      payloadBytes: new TextEncoder().encode(code.data),
+      payload: code.data!,
+      payloadBytes: new TextEncoder().encode(code.data!),
       version,
       moduleCount,
-      eccLevel: null, // jsQR doesn't expose this directly
-      maskPattern: null, // jsQR doesn't expose this directly
-      encodingMode: detectEncodingMode(code.data),
+      eccLevel: code.eccLevel || null,
+      maskPattern: code.maskPattern ?? null,
+      encodingMode: detectEncodingMode(code.data!),
       errorsCorrected: null,
       contentType,
       detectedColors,
@@ -312,7 +310,7 @@ function analyzeColors(
  */
 function analyzeQuietZone(
   imageData: ImageData,
-  location: QRLocation,
+  location: QRLocationCorners,
   modulePx: number
 ): { top: number; right: number; bottom: number; left: number; adequate: boolean } {
   // Measure white space around the QR code in module units
@@ -333,7 +331,7 @@ function analyzeQuietZone(
  */
 function buildModuleMatrix(
   imageData: ImageData,
-  location: QRLocation,
+  location: QRLocationCorners,
   moduleCount: number,
   modulePx: number
 ): boolean[][] | undefined {
