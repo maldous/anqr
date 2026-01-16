@@ -138,7 +138,6 @@ export type { ExportConfig, ExportResult, OutputFormat } from './exporter';
 // ============================================
 export {
   canvasToBlob as exporterCanvasToBlob,
-  default as ExporterDefault,
   downloadGif,
   downloadImage,
   downloadSvg,
@@ -150,6 +149,7 @@ export {
   exportSvg,
   exportVectorSvg,
 } from './exporter';
+export { Exporter as ExporterDefault } from './exporter';
 export type { FilterOptions } from './image-filters';
 export {
   applyColorMode,
@@ -292,7 +292,6 @@ export {
   canvasToDataUrl,
   copyImageToClipboard,
   copyToClipboard,
-  default as ShareUtilsDefault,
   downloadBlob,
   estimateQRSize,
   generateBBCodeEmbed,
@@ -305,6 +304,7 @@ export {
   ShareUtils,
   updateBrowserUrl,
 } from './share-utils';
+export { ShareUtils as ShareUtilsDefault } from './share-utils';
 export type {
   WatermarkBlend,
   WatermarkKind,
