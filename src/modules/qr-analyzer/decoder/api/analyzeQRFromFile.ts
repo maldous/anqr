@@ -1,1 +1,2 @@
-export { analyzeQRFromFile } from './analyzeQRFromFile.fn';
+// Re-export from shared implementation module.
+export { analyzeQRFromFile } from '../shared';
