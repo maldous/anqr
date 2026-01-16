@@ -197,6 +197,56 @@ export function extractModuleMatrix(
     darkRatio: ((totalDarkModules / (totalDarkModules + totalLightModules)) * 100).toFixed(1) + '%'
   });
 
+  // Validate matrix by checking finder pattern at top-left
+  // Expected pattern (1=dark, 0=light):
+  // 1111111
+  // 1000001
+  // 1011101
+  // 1011101
+  // 1011101
+  // 1000001
+  // 1111111
+  const expectedFinder = [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+  ];
+
+  let finderMatches = 0;
+  let finderMismatches = 0;
+  const finderErrors: string[] = [];
+
+  for (let row = 0; row < 7; row++) {
+    for (let col = 0; col < 7; col++) {
+      const expected = expectedFinder[row][col] === 1;
+      const actual = matrix[row]?.[col] ?? false;
+      if (expected === actual) {
+        finderMatches++;
+      } else {
+        finderMismatches++;
+        if (finderErrors.length < 5) {
+          finderErrors.push(`(${row},${col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`);
+        }
+      }
+    }
+  }
+
+  log('extract', 'Top-left finder pattern validation', {
+    matches: finderMatches,
+    mismatches: finderMismatches,
+    accuracy: ((finderMatches / 49) * 100).toFixed(1) + '%',
+    errors: finderErrors.length > 0 ? finderErrors : 'none'
+  });
+
+  // If finder pattern accuracy is very low, the matrix might be transposed
+  if (finderMismatches > 20) {
+    log('extract', 'WARNING: Finder pattern accuracy very low - matrix may be mis-oriented');
+  }
+
   return matrix;
 }
 
