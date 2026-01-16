@@ -5,6 +5,16 @@
 
 import type { Point, FinderPattern } from './types';
 
+// Logging helper
+function log(category: string, message: string, data?: Record<string, unknown>): void {
+  const prefix = `[QR-Decoder:${category}]`;
+  if (data) {
+    console.log(prefix, message, data);
+  } else {
+    console.log(prefix, message);
+  }
+}
+
 interface ScanResult {
   center: number;
   moduleSize: number;
@@ -176,6 +186,8 @@ export function findFinderPatterns(
 ): FinderPattern[] {
   const { data: pixels, width, height } = imageData;
 
+  log('locate', 'Finding finder patterns', { width, height });
+
   // Calculate threshold using Otsu's method (simplified)
   let sum = 0;
   let count = 0;
@@ -184,6 +196,8 @@ export function findFinderPatterns(
     count++;
   }
   const threshold = sum / count;
+
+  log('locate', 'Calculated threshold', { threshold: threshold.toFixed(1) });
 
   const candidates: Map<string, FinderPattern> = new Map();
 
@@ -221,9 +235,21 @@ export function findFinderPatterns(
   }
 
   // Convert to array and filter by count
-  return Array.from(candidates.values())
+  const patterns = Array.from(candidates.values())
     .filter(p => p.count >= 1)
     .sort((a, b) => b.count - a.count);
+
+  log('locate', 'Found finder pattern candidates', { 
+    count: patterns.length,
+    patterns: patterns.slice(0, 5).map(p => ({
+      x: p.center.x.toFixed(1),
+      y: p.center.y.toFixed(1),
+      moduleSize: p.moduleSize.toFixed(2),
+      hitCount: p.count
+    }))
+  });
+
+  return patterns;
 }
 
 /**
@@ -233,7 +259,10 @@ export function findFinderPatterns(
 export function selectFinderPatterns(
   patterns: FinderPattern[]
 ): [FinderPattern, FinderPattern, FinderPattern] | null {
-  if (patterns.length < 3) return null;
+  if (patterns.length < 3) {
+    log('select', 'Not enough patterns found', { count: patterns.length });
+    return null;
+  }
 
   // Try combinations of 3 patterns
   for (let i = 0; i < Math.min(patterns.length, 10); i++) {
@@ -255,11 +284,20 @@ export function selectFinderPatterns(
 
         // Find the pattern that forms the right angle (top-left corner)
         const ordered = orderFinderPatterns(p1, p2, p3);
-        if (ordered) return ordered;
+        if (ordered) {
+          log('select', 'Selected finder patterns', {
+            topLeft: { x: ordered[0].center.x.toFixed(1), y: ordered[0].center.y.toFixed(1) },
+            topRight: { x: ordered[1].center.x.toFixed(1), y: ordered[1].center.y.toFixed(1) },
+            bottomLeft: { x: ordered[2].center.x.toFixed(1), y: ordered[2].center.y.toFixed(1) },
+            avgModuleSize: avgSize.toFixed(2)
+          });
+          return ordered;
+        }
       }
     }
   }
 
+  log('select', 'Could not find valid pattern triplet');
   return null;
 }
 
