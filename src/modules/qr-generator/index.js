@@ -70,5 +70,20 @@ export {
 // ECC awareness
 export { getEccWeight, isEccSafeToModify } from './ecc.js';
 
+// Pattern helpers
+export { getAlignmentPositions, isFormatInfo, isVersionInfo } from './pattern-helpers.js';
+
+// Pixel matrix generation
+export { generatePixelDecisionMatrix, getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix.js';
+
+// Overlay mode rendering
+export { applyOverlayMode } from './render-modes.js';
+
+// Module render loop
+export { renderModules } from './render-loop.js';
+
+// Scaled QR rendering
+export { generateScaledQR } from './scaled-render.js';
+
 // Main QRGenerator class
 export { QRGenerator } from './QRGenerator.js';
