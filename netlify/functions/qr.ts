@@ -5,6 +5,15 @@
  * Uses the same QRGenerator as the main app with a Node.js canvas factory.
  * Supports PNG, WebP, GIF output with watermarks and metadata embedding.
  *
+ * Module Dependencies:
+ * - @/modules/animation: Animation patterns and easing functions
+ * - @/modules/qr-generator: QRGenerator class for QR code rendering
+ *
+ * Type Alignment:
+ * - ECCLevel, DitherKind, OutputFormat: align with @/modules/qr-spec, @/modules/overlay, @/modules/exporter
+ * - AnimationPattern, AnimationEasing: imported from @/modules/animation
+ * - Watermark types: local implementation (server-side only)
+ *
  * Usage: GET /api/qr?data=https://example.com&size=200&fg=000000&bg=ffffff
  *
  * Parameters:
@@ -118,6 +127,7 @@ import { decompressFrames, parseGIF } from 'gifuct-js';
 // Import animation utilities
 import {
   type AnimationEasing,
+  type AnimationPattern,
   applyColorCyclePattern,
   applyDriftPattern,
   applyEasing,
@@ -662,7 +672,8 @@ function encodeAnimatedGif(
   // Use minimum of 2 centiseconds (20ms) - browsers interpret <2cs as 10cs anyway
   const delayCentiseconds = Math.max(2, Math.round(frameDelayMs / 10));
 
-  for (const frame of frames) {
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
     const ctx = frame.getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
     const { data } = imageData;
@@ -842,7 +853,8 @@ function encodeAnimatedGifWithDelays(frames: ServerAnimationFrame[], colors: num
   const gif = GIFEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
 
-  for (const frame of frames) {
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
     const ctx = frame.canvas.getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
     const { data } = imageData;
