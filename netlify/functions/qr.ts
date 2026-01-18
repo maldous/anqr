@@ -28,148 +28,202 @@
  * Usage: GET /api/qr?data=https://example.com&size=200&fg=000000&bg=ffffff
  *
  * Parameters:
- * - data: The content to encode (required)
- * - size: Output image size in pixels (default: 400, max: 1024) - final rendered dimension
- * - modulePx: Module pixel size (default: auto-calculated from size) - size of each QR module
- *            When provided, this takes precedence for module sizing, matching client behavior
- * - w: Output width in pixels (max: 1024, overrides size)
- * - h: Output height in pixels (max: 1024, overrides size)
- * - format: Output format - png/webp/gif (default: png)
- * - quality: Output quality 0-1 for webp (default: 0.9)
- * - fg: Foreground color hex without # (default: 000000)
- * - bg: Background color hex without # (default: ffffff)
- * - ec: Error correction level L/M/Q/H (default: H)
- * - v: QR version 1-40 (default: 0 = auto)
- * - enc: Encoding mode - auto/numeric/alphanumeric/byte/kanji (default: auto)
- * - margin: Quiet zone modules (default: 4)
- * - border: Extra border modules (default: 0)
- * - crisp: Crisp edges 0/1 (default: 1)
- * - snap: Pixel snap - floor/round/ceil (default: floor)
- * - style: Module style - square/rounded/dots/diamond/connected (default: square)
- * - finder: Finder style - square/rounded/circle (default: square)
- * - align: Alignment pattern style - match_finder/square/rounded/circle (default: match_finder)
- * - timing: Timing pattern style - match_module/solid/dashed (default: match_module)
- * - eyeOuter: Eye outer style - square/rounded/circle
- * - eyeInner: Eye inner style - square/rounded/circle
- * - eyeScale: Eye scale percentage (default: 100)
- * - radius: Corner radius percentage 0-100 (default: 0)
- * - gap: Module gap percentage (default: 0)
- * - gapMode: Gap mode - none/inset/stroke/negative_space
- * - frame: Frame style - none/rounded_frame/sticker/tag
- * - frameText: Text to show in frame
- * - grad: Gradient type - none/linear/radial/conic
- * - gradAngle: Gradient angle for linear (default: 0)
- * - gradStops: Gradient stops as color1,pos1,color2,pos2,... (e.g. ff0000,0,0000ff,1)
- * - modColor: Per-module color mode - solid/by_brightness/by_position/by_overlay/by_cluster
- * - cGuard: Contrast guard 0/1 (default: 0)
- * - minContrast: Minimum contrast ratio (default: 4.5)
- * - img: URL to overlay image (fetched server-side)
- * - mode: Overlay mode - center/halftone/blend/brightness/mosaic/dithered/blue-noise/subpixel (default: dithered when img is provided)
- * - intensity: Overlay intensity 0-100 (default: 100)
- * - colorMode: Overlay color mode - color/grayscale/bw
- * - transparent: Set to 1 for transparent background
- * - keepFinders: Preserve finder patterns (default: 1)
- * - keepTiming: Preserve timing patterns (default: 0)
- * - keepAlign: Preserve alignment patterns (default: 0)
- * - protectFmt: Protect format info (default: 0)
- * - protectVer: Protect version info (default: 0)
- * - eccAware: ECC-aware mode (default: 0)
- * - eccRisk: ECC risk budget 0-100 (default: 50)
- * - eccMap: ECC weight map - distance_to_finders/block_heatmap/empirical_scan_heatmap
- * - brightness: Overlay brightness adjustment -100 to 100 (default: 0)
- * - contrast: Overlay contrast adjustment -100 to 100 (default: 0)
- * - gamma: Overlay gamma 0.1 to 3 (default: 1)
- * - saturation: Overlay saturation -100 to 100 (default: 0)
- * - hue: Overlay hue rotation in degrees (default: 0)
- * - invert: Invert overlay colors (default: 0)
- * - blur: Overlay blur in pixels (default: 0)
- * - sharpen: Overlay sharpen 0-100 (default: 0)
- * - posterize: Overlay posterize levels (default: 0)
- * - threshold: Overlay threshold 0-255 (default: 128)
- * - edge: Edge detection - off/sobel/canny (default: off)
- * - fit: Overlay fit mode - cover/contain/stretch (default: cover)
- * - rot: Overlay rotation in degrees (default: 0)
- * - flipX: Flip overlay horizontally (default: 0)
- * - flipY: Flip overlay vertically (default: 0)
- * - ditherKind: Dither algorithm (default: ordered_bayer for performance)
- * - diffusionKernel: Diffusion kernel - floyd_steinberg/jarvis_judice_ninke/stucki/etc
- * - ditherStrength: Dither strength 0-100 (default: 50)
- * - serpentine: Serpentine dithering 0/1 (default: 0)
- * - matrix: Ordered dither matrix - bayer2/bayer4/bayer8/etc
- * - bnTile: Blue noise tile size (default: 64)
- * - bnSeed: Blue noise seed (default: 0)
- * - colorDither: Color dither - none/per_channel/perceptual
- * - spGrid: Subpixel grid size - 2x2/3x3/4x4
- * - spCenter: Subpixel center rule - strict/halftone_center
- * - spNeutral: Subpixel neutral color hex (default: 808080)
- * - spFinder: Subpixel finder override - solid/stylized
- * - htCell: Halftone cell - per_module/n×n
- * - htDot: Halftone dot shape - circle/square/line
- * - htCurve: Brightness curve - linear/s-curve/gamma
- * - duo1: Duotone color 1 hex (default: 000000)
- * - duo2: Duotone color 2 hex (default: ffffff)
- * - wmEn: Watermark enabled 0/1 (default: 0)
- * - wmKind: Watermark kind - text/image/pattern (default: text)
- * - wmText: Watermark text (URL encoded)
- * - wmPos: Watermark position - center/corners/edges/behind/quiet_zone (default: center)
- * - wmOpacity: Watermark opacity 0-100 (default: 50)
- * - wmBlend: Watermark blend - normal/multiply/screen/overlay (default: normal)
- * - wmImg: URL to watermark image (for image/pattern watermark types)
- * - animPattern: Animation pattern for GIF - none/pulse/wave/scanline/shimmer/drift/color_cycle
- * - animFrames: Number of animation frames 1-60 (default: 24)
- * - animSpeed: Animation frame delay in ms 10-1000 (default: 100)
- * - animSeed: Animation random seed (default: 0)
- * - easing: Animation easing function - linear/ease_in/ease_out/ease_in_out/bounce (default: linear)
- * - loop: Animation loop 0/1 (default: 1)
- * - bounce: Animation bounce 0/1 (default: 0)
- * - reverse: Animation reverse 0/1 (default: 0)
- * - colorCycle: Color cycle animation 0/1 (default: 0)
- * - interp: Animation interpolation - none/crossfade/morph (default: none)
- * - tempDither: Temporal dithering - off/blue_noise/flicker_safe (default: off)
- * - startF: Animation start frame (default: 0)
- * - maxF: Animation max frames (default: 0 = auto)
- * - stepF: Animation frame step (default: 1)
- * - jitter: [CLIENT-ONLY] Module jitter in pixels - requires per-frame QR regeneration
- * - webpQ: WebP quality 0-100 (default: 90)
- * - gifColors: GIF palette size 2-256 (default: 256)
- * - metaTitle: PNG metadata title
- * - metaAuthor: PNG metadata author
- * - metaCopy: PNG metadata copyright
- * - metaDesc: PNG metadata description
- * - metaLic: PNG metadata license
- * - metaTime: Include creation time in metadata 0/1 (default: 0)
- * - metaKv: Custom metadata key-value pairs
- * - dpi: Output DPI for PNG (default: 72)
+ *
+ * === CORE QR SETTINGS ===
+ * - data: [FULL] The content to encode (required)
+ * - size: [FULL] Output image size in pixels (default: 400, max: 1024)
+ * - modulePx: [FULL] Module pixel size (default: auto-calculated from size)
+ * - w: [FULL] Output width in pixels (max: 1024, overrides size)
+ * - h: [FULL] Output height in pixels (max: 1024, overrides size)
+ * - ec: [FULL] Error correction level L/M/Q/H (default: H)
+ * - v: [FULL] QR version 1-40 (default: 0 = auto)
+ * - enc: [FULL] Encoding mode - auto/numeric/alphanumeric/byte/kanji (default: auto)
+ * - mask: [FULL] Mask pattern - auto/0-7 (default: auto)
+ * - charset: [FULL] Character encoding - default/utf8/shift-jis (default: default)
+ * - margin: [FULL] Quiet zone modules (default: 4)
+ * - border: [FULL] Extra border modules (default: 0)
+ *
+ * === OUTPUT FORMAT ===
+ * - format: [FULL] Output format - png/webp/gif (default: gif)
+ * - quality: [FULL] Output quality 0-1 for webp (default: 0.9)
+ * - webpQ: [FULL] WebP quality 0-100 (default: 90)
+ * - gifColors: [FULL] GIF palette size 2-256 (default: 256)
+ * - dpi: [FULL] Output DPI for PNG (default: 72)
+ * - fname: [FULL] Output filename (default: anqr-qrcode)
+ * - inclQz: [FULL] Include quiet zone in output 0/1 (default: 1)
+ * - bgOver: [FULL] Background color override hex (without #)
+ * - fmtExtra: [PARTIAL] Extra format output - none/eps/animated_webp (default: none) - eps not implemented
+ * - svgPrec: [PARTIAL] SVG shape precision - pixel/precise - SVG output limited server-side
+ * - svgEmbed: [PARTIAL] Embed raster overlay in SVG 0/1 - SVG output limited server-side
+ *
+ * === COLORS ===
+ * - fg: [FULL] Foreground color hex without # (default: 000000)
+ * - bg: [FULL] Background color hex without # (default: ffffff)
+ * - transparent: [FULL] Set to 1 for transparent background
+ *
+ * === MODULE STYLING ===
+ * - style: [FULL] Module style - square/rounded/dots/diamond/connected (default: square)
+ * - finder: [FULL] Finder style - square/rounded/circle (default: square)
+ * - align: [FULL] Alignment pattern style - match_finder/square/rounded/circle (default: match_finder)
+ * - timing: [FULL] Timing pattern style - match_module/solid/dashed (default: match_module)
+ * - eyeOuter: [FULL] Eye outer style - square/rounded/circle
+ * - eyeInner: [FULL] Eye inner style - square/rounded/circle
+ * - eyeScale: [FULL] Eye scale percentage (default: 100)
+ * - radius: [FULL] Corner radius percentage 0-100 (default: 0)
+ * - gap: [FULL] Module gap percentage (default: 0)
+ * - gapMode: [FULL] Gap mode - none/inset/stroke/negative_space
+ * - crisp: [FULL] Crisp edges 0/1 (default: 1)
+ * - snap: [FULL] Pixel snap - floor/round/ceil (default: floor)
+ * - dotRot: [FULL] Dot rotation degrees (default: 0)
+ *
+ * === FRAME ===
+ * - frame: [FULL] Frame style - none/rounded_frame/sticker/tag
+ * - frameText: [FULL] Text to show in frame
+ *
+ * === GRADIENT ===
+ * - grad: [FULL] Gradient type - none/linear/radial/conic
+ * - gradAngle: [FULL] Gradient angle for linear (default: 0)
+ * - gradStops: [FULL] Gradient stops as color1,pos1,color2,pos2,...
+ *
+ * === PER-MODULE COLOR ===
+ * - modColor: [FULL] Per-module color mode - solid/by_brightness/by_position/by_overlay/by_cluster
+ * - cGuard: [FULL] Contrast guard 0/1 (default: 0)
+ * - minContrast: [FULL] Minimum contrast ratio (default: 4.5)
+ * - palette: [FULL] Color palette as comma-separated hex values
+ * - paletteMode: [FULL] Palette color mode - position/brightness/diagonal/radial/random/row/column
+ *
+ * === OVERLAY IMAGE ===
+ * - img: [FULL] URL to overlay image (fetched server-side)
+ * - mode: [FULL] Overlay mode - center/halftone/blend/brightness/mosaic/dithered/blue-noise/subpixel
+ * - intensity: [FULL] Overlay intensity 0-100 (default: 100)
+ * - colorMode: [FULL] Overlay color mode - color/grayscale/bw
+ * - logoSize: [FULL] Logo size percentage for center mode (default: 25)
+ * - fit: [FULL] Overlay fit mode - cover/contain/stretch (default: cover)
+ * - rot: [FULL] Overlay rotation in degrees (default: 0)
+ * - flipX: [FULL] Flip overlay horizontally (default: 0)
+ * - flipY: [FULL] Flip overlay vertically (default: 0)
+ *
+ * === OVERLAY FILTERS ===
+ * - brightness: [FULL] Overlay brightness adjustment -100 to 100 (default: 0)
+ * - contrast: [FULL] Overlay contrast adjustment -100 to 100 (default: 0)
+ * - gamma: [FULL] Overlay gamma 0.1 to 3 (default: 1)
+ * - saturation: [FULL] Overlay saturation -100 to 100 (default: 0)
+ * - hue: [FULL] Overlay hue rotation in degrees (default: 0)
+ * - invert: [FULL] Invert overlay colors (default: 0)
+ * - blur: [PARTIAL] Overlay blur in pixels - limited implementation server-side
+ * - sharpen: [PARTIAL] Overlay sharpen 0-100 - passed to generator, limited support
+ * - posterize: [PARTIAL] Overlay posterize levels - passed to generator, limited support
+ * - threshold: [PARTIAL] Overlay threshold 0-255 - passed to generator, limited support
+ * - edge: [PARTIAL] Edge detection - off/sobel/canny - passed to generator, limited support
+ *
+ * === OVERLAY CROP ===
  * - cropEn: [FULL] Enable overlay cropping 0/1 (default: 0)
  * - cropX: [FULL] Crop center X 0-1 (default: 0.5)
  * - cropY: [FULL] Crop center Y 0-1 (default: 0.5)
  * - cropSize: [FULL] Crop size 0-1 (default: 1)
- * - ovType: Overlay type - static/gif/apng/webp_anim/video (default: static)
- * - ovFramePick: Overlay frame picking - all/every_n/max_frames/duration_limit (default: all)
- * - gifDelays: Use original GIF frame delays 0/1 (default: 1)
- * - gifDispH: GIF disposal handling - respect/simplify (default: respect)
- * - lockF: Lock finder patterns 0/1 (default: 1)
- * - lockT: Lock timing patterns 0/1 (default: 1)
- * - lockA: Lock alignment patterns 0/1 (default: 1)
- * - lockFmt: Lock format info 0/1 (default: 1)
- * - lockV: Lock version info 0/1 (default: 1)
- * - safeMode: Safety mode - off/balanced/strict (default: off)
- * - safeMinPx: Minimum module size in pixels (default: 2)
- * - safeMinQz: Minimum quiet zone modules (default: 4)
- * - autoVer: [FULL] Auto-pick QR version 0/1 (default: 1) - passed to QRGenerator
+ *
+ * === OVERLAY TYPE ===
+ * - ovType: [FULL] Overlay type - static/gif/apng/webp_anim/video (default: static)
+ * - ovFramePick: [FULL] Overlay frame picking - all/every_n/max_frames/duration_limit (default: all)
+ * - gifDelays: [FULL] Use original GIF frame delays 0/1 (default: 1)
+ * - gifDispH: [FULL] GIF disposal handling - respect/simplify (default: respect)
+ *
+ * === PATTERN PRESERVATION ===
+ * - keepFinders: [FULL] Preserve finder patterns (default: 1)
+ * - keepTiming: [FULL] Preserve timing patterns (default: 0)
+ * - keepAlign: [FULL] Preserve alignment patterns (default: 0)
+ * - protectFmt: [FULL] Protect format info (default: 0)
+ * - protectVer: [FULL] Protect version info (default: 0)
+ *
+ * === ECC-AWARE MODE ===
+ * - eccAware: [FULL] ECC-aware mode (default: 0)
+ * - eccRisk: [FULL] ECC risk budget 0-100 (default: 50)
+ * - eccMap: [FULL] ECC weight map - distance_to_finders/block_heatmap/empirical_scan_heatmap
+ *
+ * === DITHERING ===
+ * - ditherKind: [FULL] Dither algorithm (default: ordered_bayer for performance)
+ * - diffusionKernel: [FULL] Diffusion kernel - floyd_steinberg/jarvis_judice_ninke/stucki/etc
+ * - ditherStrength: [FULL] Dither strength 0-100 (default: 50)
+ * - serpentine: [FULL] Serpentine dithering 0/1 (default: 0)
+ * - matrix: [FULL] Ordered dither matrix - bayer2/bayer4/bayer8/etc
+ * - bnTile: [FULL] Blue noise tile size (default: 64)
+ * - bnSeed: [FULL] Blue noise seed (default: 0)
+ * - colorDither: [FULL] Color dither - none/per_channel/perceptual
+ *
+ * === SUBPIXEL ===
+ * - spGrid: [FULL] Subpixel grid size - 2x2/3x3/4x4
+ * - spCenter: [FULL] Subpixel center rule - strict/halftone_center
+ * - spNeutral: [FULL] Subpixel neutral color hex (default: 808080)
+ * - spFinder: [FULL] Subpixel finder override - solid/stylized
+ *
+ * === HALFTONE ===
+ * - htCell: [FULL] Halftone cell - per_module/n×n
+ * - htDot: [FULL] Halftone dot shape - circle/square/line
+ * - htCurve: [FULL] Brightness curve - linear/s-curve/gamma
+ * - duo1: [FULL] Duotone color 1 hex (default: 000000)
+ * - duo2: [FULL] Duotone color 2 hex (default: ffffff)
+ *
+ * === WATERMARK ===
+ * - wmEn: [FULL] Watermark enabled 0/1 (default: 0)
+ * - wmKind: [FULL] Watermark kind - text/image/pattern (default: text)
+ * - wmText: [FULL] Watermark text (URL encoded)
+ * - wmPos: [FULL] Watermark position - center/corners/edges/behind/quiet_zone (default: center)
+ * - wmOpacity: [FULL] Watermark opacity 0-100 (default: 50)
+ * - wmBlend: [FULL] Watermark blend - normal/multiply/screen/overlay (default: normal)
+ * - wmImg: [FULL] URL to watermark image (for image/pattern watermark types)
+ *
+ * === ANIMATION ===
+ * - animPattern: [FULL] Animation pattern for GIF - none/pulse/wave/scanline/shimmer/drift/color_cycle
+ * - animFrames: [FULL] Number of animation frames 1-60 (default: 24)
+ * - animSpeed: [FULL] Animation frame delay in ms 10-1000 (default: 100)
+ * - animSeed: [FULL] Animation random seed (default: 0)
+ * - easing: [FULL] Animation easing function - linear/ease_in/ease_out/ease_in_out/bounce
+ * - loop: [FULL] Animation loop 0/1 (default: 1)
+ * - bounce: [FULL] Animation bounce 0/1 (default: 0)
+ * - reverse: [FULL] Animation reverse 0/1 (default: 0)
+ * - colorCycle: [FULL] Color cycle animation 0/1 (default: 0)
+ * - interp: [FULL] Animation interpolation - none/crossfade/morph (default: none)
+ * - tempDither: [FULL] Temporal dithering - off/blue_noise/flicker_safe (default: off)
+ * - startF: [FULL] Animation start frame (default: 0)
+ * - maxF: [FULL] Animation max frames (default: 0 = auto)
+ * - stepF: [FULL] Animation frame step (default: 1)
+ * - jitter: [CLIENT-ONLY] Module jitter in pixels - requires per-frame QR regeneration
+ *
+ * === METADATA ===
+ * - metaTitle: [FULL] PNG metadata title
+ * - metaAuthor: [FULL] PNG metadata author
+ * - metaCopy: [FULL] PNG metadata copyright
+ * - metaDesc: [FULL] PNG metadata description
+ * - metaLic: [FULL] PNG metadata license
+ * - metaTime: [FULL] Include creation time in metadata 0/1 (default: 0)
+ * - metaKv: [FULL] Custom metadata key-value pairs
+ *
+ * === SAFETY LOCKS ===
+ * - lockF: [FULL] Lock finder patterns 0/1 (default: 1)
+ * - lockT: [FULL] Lock timing patterns 0/1 (default: 1)
+ * - lockA: [FULL] Lock alignment patterns 0/1 (default: 1)
+ * - lockFmt: [FULL] Lock format info 0/1 (default: 1)
+ * - lockV: [FULL] Lock version info 0/1 (default: 1)
+ * - safeMode: [FULL] Safety mode - off/balanced/strict (default: off)
+ * - safeMinPx: [FULL] Minimum module size in pixels (default: 2)
+ * - safeMinQz: [FULL] Minimum quiet zone modules (default: 4)
+ *
+ * === AUTO-TUNING ===
+ * - autoVer: [FULL] Auto-pick QR version 0/1 (default: 1)
  * - autoEcc: [PARTIAL] Auto-pick ECC level 0/1 (default: 0) - hint only, no iterative testing
- * - autoReduce: [CLIENT-ONLY] Auto-reduce intensity until scannable 0/1 - requires scan validation loop
+ * - autoReduce: [CLIENT-ONLY] Auto-reduce intensity until scannable - requires scan validation loop
+ *
+ * === QA SIMULATION (CLIENT-ONLY) ===
  * - qaContrast: [CLIENT-ONLY] Enable contrast check 0/1 - requires interactive validation
  * - qaBlur: [CLIENT-ONLY] Simulate blur in pixels - for interactive testing only
  * - qaNoise: [CLIENT-ONLY] Simulate noise level - for interactive testing only
  * - qaHeatmap: [CLIENT-ONLY] Show readability heatmap 0/1 - requires canvas overlay UI
- * - bgOver: Background color override hex (without #)
- * - fmtExtra: Extra format output - none/eps/animated_webp (default: none)
- * - fname: Output filename (default: anqr-qrcode)
- * - inclQz: Include quiet zone in output 0/1 (default: 1)
- * - svgPrec: SVG shape precision - pixel/precise (default: pixel)
- * - svgEmbed: Embed raster overlay in SVG 0/1 (default: 1)
- * - paletteMode: Palette color mode - position/brightness/diagonal/radial/random/row/column (default: position)
+ *
+ * === PER-ECC INTENSITY LIMITS ===
+ * - maxIntL: [FULL] Max overlay intensity for ECC L (default: 100)
+ * - maxIntM: [FULL] Max overlay intensity for ECC M (default: 100)
+ * - maxIntQ: [FULL] Max overlay intensity for ECC Q (default: 100)
+ * - maxIntH: [FULL] Max overlay intensity for ECC H (default: 100)
  */
 
 import { type Canvas, createCanvas, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
@@ -242,8 +296,6 @@ const MAX_GIF_DURATION_MS = 10000;
 
 // Fetch timeout in milliseconds
 const FETCH_TIMEOUT_MS = 10000;
-
-
 
 // Default dither algorithm for server-side when none specified (fast)
 const DEFAULT_SERVER_DITHER: DitherKind = 'ordered_bayer';
@@ -874,7 +926,7 @@ function applyOverlayFiltersServer(
   const result = createCanvas(source.width, source.height);
   const resultCtx = result.getContext('2d');
   resultCtx.drawImage(source, 0, 0);
-  
+
   const imageData = resultCtx.getImageData(0, 0, result.width, result.height);
   const data = imageData.data;
 
