@@ -44,6 +44,14 @@ export {
 // Import from color-utils for color cycling (used in patterns)
 import { hslToRgb } from '../color-utils';
 
+// Re-export animation patterns from internal module
+export {
+  generatePatternFrames,
+  interpolateFrames as interpolatePatternFrames,
+  type AnimationPattern as PatternType,
+  type InterpolationMode,
+} from './internal/patterns';
+
 // Re-export types for convenience
 import type { AnimationFrame, AnimationOptions, AnimationPattern, AnimationState, GifCompositor } from './types';
 import { createGifCompositor } from './gif-compositor';

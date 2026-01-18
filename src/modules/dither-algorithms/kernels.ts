@@ -70,6 +70,14 @@ export const DIFFUSION_KERNELS: Record<DiffusionKernel, DiffusionKernelDef> = {
     divisor: 4,
     offset: 1,
   },
+  two_row_sierra: {
+    matrix: [
+      [0, 0, 0, 4, 3],
+      [1, 2, 3, 2, 1],
+    ],
+    divisor: 16,
+    offset: 2,
+  },
   atkinson: {
     matrix: [
       [0, 0, 1, 1],

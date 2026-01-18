@@ -2,26 +2,66 @@
  * Dithering Types
  */
 
-import type { ColorMode, DiffusionKernel, DitherKind, OrderedMatrix } from '../../store/qr-store';
-
-export type { ColorMode, DiffusionKernel, DitherKind, OrderedMatrix };
-
 export interface RGB {
   r: number;
   g: number;
   b: number;
 }
 
+export type ColorMode = 'bw' | 'grayscale' | 'color';
+
+export type DitherKind =
+  | 'none'
+  | 'error_diffusion'
+  | 'floyd_steinberg'
+  | 'atkinson'
+  | 'sierra'
+  | 'stucki'
+  | 'burkes'
+  | 'ordered_bayer'
+  | 'ordered_clustered'
+  | 'ordered_void_cluster'
+  | 'blue_noise'
+  | 'blue_noise_threshold'
+  | 'blue_noise_error_diffusion'
+  | 'screened_blue_noise'
+  | 'white_noise'
+  | 'gaussian_noise'
+  | 'triangular_noise'
+  | 'perceptual'
+  | 'edge_aware'
+  | 'adaptive_threshold'
+  | 'temporal_blue_noise'
+  | 'true_dither';
+
+export type DiffusionKernel =
+  | 'floyd_steinberg'
+  | 'atkinson'
+  | 'jarvis_judice_ninke'
+  | 'stucki'
+  | 'burkes'
+  | 'sierra'
+  | 'sierra_2'
+  | 'sierra_lite'
+  | 'two_row_sierra';
+
+export type OrderedMatrix =
+  | 'bayer2'
+  | 'bayer4'
+  | 'bayer8'
+  | 'clustered_dot'
+  | 'void_cluster';
+
 export interface DitherOptions {
   kind: DitherKind;
-  strength: number; // 0-100
-  serpentine: boolean;
-  diffusionKernel: DiffusionKernel;
-  orderedMatrix: OrderedMatrix;
+  strength: number;
   colorMode: ColorMode;
-  levels: number; // Output color levels (2 for B&W, more for grayscale)
-  blueNoiseSeed: number;
-  blueNoiseTileSize: number;
+  levels?: number;
+  diffusionKernel?: DiffusionKernel;
+  serpentine?: boolean;
+  blueNoiseTileSize?: number;
+  blueNoiseSeed?: number;
+  orderedMatrix?: OrderedMatrix;
 }
 
 export interface DitherResult {
