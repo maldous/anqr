@@ -24,7 +24,7 @@ import {
   hasGeometricTransforms,
 } from './overlay';
 import type { QRGeneratorConfig, QRMatrixResult } from './types';
-import type { QRCodeInstance } from '../qr-encoder/types';
+import type { QRCodeInstance } from '../qr-encoder';
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
