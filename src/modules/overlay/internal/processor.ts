@@ -8,7 +8,7 @@
  */
 
 import { applyDither } from '../../dither-algorithms';
-import type { DitherKind, DiffusionKernel, OrderedMatrix, ColorMode } from '../../dither-algorithms/types';
+import type { DitherKind, DiffusionKernel, OrderedMatrix, ColorMode } from '../../dither-algorithms';
 import { applyFilters, type FilterOptions } from './filters';
 
 // Re-export types from dither-algorithms
@@ -529,34 +529,4 @@ export async function processOverlay(
   };
 }
 
-// ============================================
-// EXPORT
-// ============================================
 
-export const OverlayProcessor = {
-  // Loading
-  loadImageFromFile,
-  loadImageFromUrl,
-  loadImageFromDataUrl,
-
-  // Transformations
-  cropImage,
-  fitImage,
-  rotateCanvas,
-  flipCanvas,
-
-  // Dithering
-  ditherOverlay,
-  ditherOverlayForQR,
-  getEffectiveDitherKind,
-
-  // Data extraction
-  getOverlayData,
-  getOverlayRGBData,
-
-  // Processing
-  processOverlay,
-  applyOverlayMode,
-};
-
-export default OverlayProcessor;
