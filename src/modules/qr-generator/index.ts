@@ -78,6 +78,7 @@ export { generatePixelDecisionMatrix, getScaleFactor, prepareUnifiedOverlayData 
 
 // Overlay mode rendering
 export { applyOverlayMode } from './render-modes';
+export type { OverlayModeResult } from './render-modes';
 
 // Module render loop
 export { renderModules } from './render-loop';
@@ -87,6 +88,27 @@ export { generateScaledQR } from './scaled-render';
 
 // Main QRGenerator class
 export { QRGenerator } from './QRGenerator';
+
+// Types from local types.ts
+export type {
+  QRCodeInstance,
+  QRMatrixResult,
+  RGB,
+  OverlayData,
+  PixelDecisionResult,
+  QRGeneratorConfig,
+  RGBWithMeta,
+  PixelDecisionMatrix,
+  OverlayModeResult as OverlayModeResultType,
+  DiffusionKernel,
+  CreateCanvasFn,
+} from './types';
+
+// Re-export CanvasFactory from canvas-factory
+export type { CanvasFactory } from './canvas-factory';
+
+// Re-export GradientConfig from color-utils
+export type { GradientConfig } from '../color-utils';
 
 // Blue noise dithering for QR codes
 export { generateBlueNoiseDithered, defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from './internal/blue-noise';
