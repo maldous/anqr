@@ -265,23 +265,4 @@ export function getTriadic(color: string): [string, string] {
   ];
 }
 
-// ============================================
-// NAMESPACE EXPORT (for backwards compatibility)
-// ============================================
 
-export const ColorUtils = {
-  parseColor: _parseColor,
-  hslToRgb: _hslToRgb,
-  rgbToHsl: _rgbToHsl,
-  getContrastRatio: _getContrastRatio,
-  meetsContrastAA,
-  meetsContrastAAA,
-  adjustForContrast,
-  getGradientColor,
-  getGradientColorAt,
-  createCssGradient,
-  getComplementary,
-  getAnalogous,
-  getTriadic,
-  seededRandom: _createSeededRandom,
-};

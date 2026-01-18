@@ -200,24 +200,4 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
   }
 }
 
-// Legacy namespace export (deprecated - use named imports instead)
-// TODO: Remove in next major version
-export const DitherAlgorithms = {
-  orderedDither,
-  bayerDither,
-  errorDiffusion,
-  blueNoiseDither,
-  temporalBlueNoiseDither,
-  blueNoiseErrorDiffusion,
-  screenedBlueNoiseDither,
-  perceptualDither,
-  edgeAwareDither,
-  adaptiveThresholdDither,
-  whiteNoiseDither,
-  gaussianNoiseDither,
-  triangularNoiseDither,
-  applyDither,
-  imageDataToFloat,
-};
-
 
