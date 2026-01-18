@@ -5,11 +5,6 @@
 
 // Re-export GradientConfig from core
 export type { GradientConfig } from '../core';
-// Blue noise dithering for QR codes
-export {
-  defaultBrowserCanvasFactory as blueNoiseCanvasFactory,
-  generateBlueNoiseDithered,
-} from './blue-noise-qr';
 // Cache utilities
 export {
   alignmentCache,
@@ -39,6 +34,11 @@ export {
   distributeError,
   getDiffusionKernel,
 } from './dithering';
+// Blue noise dithering for QR codes
+export {
+  defaultBrowserCanvasFactory as blueNoiseCanvasFactory,
+  generateBlueNoiseDithered,
+} from './dithering-blue';
 // Drawing functions
 export {
   createGradientFill,
