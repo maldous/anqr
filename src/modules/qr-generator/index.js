@@ -87,3 +87,6 @@ export { generateScaledQR } from './scaled-render.js';
 
 // Main QRGenerator class
 export { QRGenerator } from './QRGenerator.js';
+
+// Blue noise dithering for QR codes
+export { generateBlueNoiseDithered, defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from './internal/blue-noise.js';

@@ -39,7 +39,14 @@ export {
 } from './advanced';
 
 // Temporal dithering
-export { temporalBlueNoiseDither } from './temporal';
+export {
+  temporalBlueNoiseDither,
+  calculateTemporalOffset,
+  applyTemporalNoiseToCanvas,
+  generateTemporalSequence,
+  isTemporalDitherActive,
+  type TemporalDitherMode,
+} from './temporal';
 
 // Import all for applyDither
 import type { DitherOptions, DitherResult } from './types';
