@@ -23,8 +23,9 @@ import { downloadUrl, escapeXml } from './utils';
 
 /**
  * Helper: Get alignment pattern positions for a given moduleCount
+ * Uses getAlignmentPatternCenters from qr-encoder
  */
-function getAlignmentPositions(moduleCount: number): Array<{ row: number; col: number }> {
+function getAlignmentPositionsForModuleCount(moduleCount: number): Array<{ row: number; col: number }> {
   const version = Math.round((moduleCount - 17) / 4);
   return getAlignmentPatternCenters(version);
 }
@@ -280,7 +281,7 @@ export function exportVectorSvg(matrix: boolean[][], config: VectorSvgConfig = {
   }
 
   let alignmentPaths = '';
-  const alignmentPositions = getAlignmentPositions(moduleCount);
+  const alignmentPositions = getAlignmentPositionsForModuleCount(moduleCount);
   for (const pos of alignmentPositions) {
     const centerX = marginPx + pos.col * moduleSize + moduleSize / 2;
     const centerY = marginPx + pos.row * moduleSize + moduleSize / 2;

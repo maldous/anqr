@@ -200,12 +200,13 @@ export function parseUrlDetails(url: string): UrlDetails | null {
   }
 }
 
+// Import rgbToHex from core - this wrapper adapts the object signature
+import { rgbToHex as coreRgbToHex } from '../../core';
+
 /**
  * Convert RGB to hex string
+ * Wrapper that accepts object format for backwards compatibility
  */
 export function rgbToHex(rgb: { r: number; g: number; b: number }): string {
-  const r = Math.max(0, Math.min(255, Math.round(rgb.r)));
-  const g = Math.max(0, Math.min(255, Math.round(rgb.g)));
-  const b = Math.max(0, Math.min(255, Math.round(rgb.b)));
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  return coreRgbToHex(rgb.r, rgb.g, rgb.b);
 }
