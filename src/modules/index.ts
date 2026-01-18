@@ -69,8 +69,6 @@ export {
   getComplementary,
   getAnalogous,
   getTriadic,
-  // Namespace
-  ColorUtils,
 } from './core';
 
 // ============================================
@@ -296,7 +294,6 @@ export * from './animation';
 // DITHERING (selective to avoid RGB conflict)
 // ============================================
 export {
-  DitherAlgorithms,
   applyDither,
   bayerDither,
   orderedDither,

@@ -33,7 +33,6 @@ export {
   getBrightnessMap,
   getRGBMap,
   applyColorMode,
-  ImageFilters,
   type RGB,
   type RGBA,
   type HSL,

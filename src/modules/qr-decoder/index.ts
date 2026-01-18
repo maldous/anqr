@@ -159,8 +159,3 @@ export function decodeFromCanvas(canvas: HTMLCanvasElement): DecodeResult | null
   return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
 }
 
-// Namespace export
-export const QRDecoder = {
-  decodeQR,
-  decodeFromCanvas,
-};

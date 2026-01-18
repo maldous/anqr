@@ -1,6 +1,7 @@
 + Directory-only modules root
 - src/modules/ contains only module directories plus optional src/modules/index.ts.
 - No functional *.ts/*.js files at src/modules/ root.
+- index.ts must only contain exports
 
 + One public entrypoint per module
 - The only public surface of a module is src/modules/<module>/index.ts.

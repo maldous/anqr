@@ -554,49 +554,4 @@ export function applyFilters(
   return result;
 }
 
-// ============================================
-// EXPORT
-// ============================================
-
-// Legacy namespace export (deprecated - use named imports instead)
-// TODO: Remove in next major version
-export const ImageFilters = {
-  // Basic
-  brightness,
-  contrast,
-  saturation,
-  hueRotate,
-  gamma,
-  invert,
-  grayscale,
-  threshold,
-  posterize,
-  duotone,
-
-  // Convolution
-  sharpen,
-  blur,
-  gaussianBlur,
-  emboss,
-  convolve,
-
-  // Edge detection
-  sobelEdge,
-  cannyEdge,
-
-  // Utilities
-  rgbToGray,
-  hslToRgb,
-  rgbToHsl,
-  clamp,
-  clamp01,
-  copyImageData,
-  getBrightnessMap,
-  getRGBMap,
-  applyColorMode,
-
-  // Main
-  applyFilters,
-};
-
 
