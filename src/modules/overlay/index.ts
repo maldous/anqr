@@ -74,7 +74,7 @@ export {
   getOverlayDitherKind,
   extractOverlayBrightnessData,
   extractOverlayRGBData,
-  applyOverlayMode,
+  applyCanvasBlendMode,
   DEFAULT_MOBILE_DITHER,
   STORE_DEFAULT_DITHER,
   type OverlayOptions,

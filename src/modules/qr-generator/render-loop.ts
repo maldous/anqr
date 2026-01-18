@@ -16,7 +16,7 @@ import {
   drawTimingModule,
 } from './drawing';
 import { isFormatInfo, isVersionInfo } from './pattern-helpers';
-import { applyOverlayMode } from './render-modes';
+import { applyQROverlayMode } from './render-modes';
 import type { QRGeneratorConfig, QRCodeInstance, OverlayData } from './types';
 
 type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
@@ -91,7 +91,7 @@ export function renderModules(
 
       if (applyOverlay) {
         const brightness = (overlayData as number[][])[row][col];
-        const modeResult = applyOverlayMode(
+        const modeResult = applyQROverlayMode(
           config.overlayMode,
           isDark,
           brightness,

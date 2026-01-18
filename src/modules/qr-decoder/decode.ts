@@ -102,6 +102,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   log('codewords', 'Starting codeword extraction', { moduleCount, matrixRows: matrix.length });
 
   // Start from bottom-right, move up in two-column pairs
+  const version = getVersionFromModuleCount(moduleCount);
   let up = true;
   for (let col = moduleCount - 1; col >= 1; col -= 2) {
     // Skip the timing pattern column
@@ -110,7 +111,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
     for (let row = up ? moduleCount - 1 : 0; up ? row >= 0 : row < moduleCount; row += up ? -1 : 1) {
       for (let c = 0; c < 2; c++) {
         const currentCol = col - c;
-        if (!isFunctionModule(row, currentCol, moduleCount)) {
+        if (!isStructuralModule(row, currentCol, moduleCount, version)) {
           currentByte = (currentByte << 1) | (matrix[row]?.[currentCol] ? 1 : 0);
           bitsRead++;
 
@@ -131,15 +132,6 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   });
 
   return codewords;
-}
-
-/**
- * Check if a module is a function pattern
- * Uses canonical isStructuralModule from qr-spec
- */
-function isFunctionModule(row: number, col: number, moduleCount: number): boolean {
-  const version = getVersionFromModuleCount(moduleCount);
-  return isStructuralModule(row, col, moduleCount, version);
 }
 
 // ALIGNMENT_POSITIONS and getAlignmentPositions imported from qr-spec

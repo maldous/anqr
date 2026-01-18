@@ -4,6 +4,7 @@
  */
 
 import type { Point, FinderPattern } from './types';
+import { pointDistance } from './utils';
 
 // Logging helper
 function log(category: string, message: string, data?: Record<string, unknown>): void {
@@ -447,12 +448,6 @@ function orderFinderPatterns(
   }
 
   return [topLeft, topRight, bottomLeft];
-}
-
-/** Calculate Euclidean distance between two points (local helper) */
-// Local geometry helper (intentionally not shared - simple inline function)
-function pointDistance(a: Point, b: Point): number {
-  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 
 /**

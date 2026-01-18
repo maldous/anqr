@@ -78,7 +78,7 @@ export { getAlignmentPositionsCached, isFormatInfo, isVersionInfo } from './patt
 export { generatePixelDecisionMatrix, getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 
 // Overlay mode rendering
-export { applyOverlayMode } from './render-modes';
+export { applyQROverlayMode } from './render-modes';
 export type { OverlayModeResult } from './render-modes';
 
 // Module render loop

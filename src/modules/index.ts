@@ -260,7 +260,7 @@ export {
   getScaleFactor,
   prepareUnifiedOverlayData,
   // Render
-  applyOverlayMode as applyQROverlayMode,
+  applyQROverlayMode,
   renderModules,
   generateScaledQR,
   // Blue noise
