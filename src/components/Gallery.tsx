@@ -31,7 +31,7 @@ import {
   gallerySections,
   getGalleryImagePath,
 } from '@/data/gallery-items';
-import { showInterstitial } from '@/modules/admob-service';
+import { showInterstitial } from '@/modules/platform';
 
 // Icon registry for gallery sections - only import icons actually used in gallery-items.ts
 const iconRegistry: Record<string, LucideIcon> = {

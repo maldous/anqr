@@ -41,8 +41,8 @@ export {
   advanceAnimation,
 } from './state';
 
-// Import from color-utils for color cycling (used in patterns)
-import { hslToRgb } from '../color-utils';
+// Import from core for color cycling (used in patterns)
+import { hslToRgb } from '../core';
 
 // Re-export animation patterns from internal module
 export {
@@ -438,4 +438,4 @@ export const Animation = {
   applyColorCyclePattern,
 };
 
-export default Animation;
+

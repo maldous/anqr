@@ -3,7 +3,7 @@
  * TypeScript type definitions for the QR generator module
  */
 
-import type { GradientConfig } from '../color-utils';
+import type { GradientConfig } from '../core';
 
 export interface QRGeneratorConfig {
   content: string;

@@ -9,7 +9,7 @@ import {
   isAlignmentPattern,
   isFinderPattern,
   isTimingPattern,
-} from '../qr-core';
+} from '../qr-encoder';
 import type {
   ExportResult,
   VectorAlignmentStyle,

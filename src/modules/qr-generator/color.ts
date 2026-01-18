@@ -3,7 +3,7 @@
  * Color manipulation and per-module color effects
  */
 
-import { blendColors, parseColor } from '../color-utils';
+import { blendColors, parseColor } from '../core';
 import { getContrastRatio } from './utils';
 import type { QRGeneratorConfig } from './types';
 import type { OverlayDataMatrix } from './cache';

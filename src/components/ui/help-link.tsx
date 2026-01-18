@@ -9,7 +9,7 @@ import { Capacitor } from '@capacitor/core';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { prepareRewardedAd, showRewardedAd } from '@/modules/admob-service';
+import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { type Tier, useQRStore } from '@/store/qr-store';
 
 interface HelpLinkProps {

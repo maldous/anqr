@@ -219,4 +219,4 @@ export const DitherAlgorithms = {
   imageDataToFloat,
 };
 
-export default DitherAlgorithms;
+

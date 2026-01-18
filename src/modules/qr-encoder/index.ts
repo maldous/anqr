@@ -6,7 +6,6 @@
 // Main encoder
 import { qrcode } from './encoder';
 export { qrcode };
-export default qrcode;
 
 // Types
 export {

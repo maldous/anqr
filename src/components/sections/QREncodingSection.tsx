@@ -12,7 +12,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { HighlightedLabel } from '@/lib/search-context';
-import { calculateOptimalVersion } from '@/modules/qr-core';
+import { calculateOptimalVersion } from '@/modules/qr-encoder';
 import {
   type CharacterEncoding,
   type ECCLevel,

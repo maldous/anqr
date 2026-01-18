@@ -3,7 +3,7 @@
  * Format info, version info, and alignment pattern position detection
  */
 
-import { getAlignmentPatternCenters } from '../qr-core';
+import { getAlignmentPatternCenters } from '../qr-encoder/';
 import { alignmentCache } from './cache';
 
 /**

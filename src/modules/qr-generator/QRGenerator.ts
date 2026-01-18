@@ -3,8 +3,7 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
-import { calculateOptimalVersion } from '../qr-core';
-import qrcode, { setStringToBytes, resetStringToBytes, getCompatibleMode, createShiftJISEncoder } from '../qr-encoder/index';
+import { calculateOptimalVersion, qrcode, setStringToBytes, resetStringToBytes, getCompatibleMode, createShiftJISEncoder } from '../qr-encoder';
 
 import { qrMatrixCache } from './cache';
 import { defaultBrowserCanvasFactory, CanvasFactory } from './canvas-factory';

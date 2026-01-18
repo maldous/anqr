@@ -63,4 +63,4 @@ export const Exporter = {
 // Also export as ExporterModule for backward compatibility
 export const ExporterModule = Exporter;
 
-export default Exporter;
+

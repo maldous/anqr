@@ -73,4 +73,4 @@ export const ShareUtils = {
   estimateQRSize,
 };
 
-export default ShareUtils;
+

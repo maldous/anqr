@@ -56,7 +56,8 @@ export {
 } from './internal/watermark';
 
 // Crop Handler
-export { CropHandler, type CropRegion as CropHandlerRegion, type CropHandlerOptions } from './internal/crop-handler';
+export { CropHandler, type CropHandlerOptions } from './internal/crop-handler';
+export type { CropRegion as CropHandlerRegion } from './internal/crop-handler';
 
 // Processor
 export {
