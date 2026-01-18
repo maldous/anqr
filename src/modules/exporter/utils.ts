@@ -54,12 +54,12 @@ export async function saveFileNative(filename: string, blob: Blob): Promise<bool
     const mimeType = blob.type || 'application/octet-stream';
 
     // Write to Documents directory via MediaStore
-    const result = await saveBase64ToDocuments({
+    const result = await saveBase64ToDocuments(
       filename,
-      base64: base64DataUrl,
+      base64DataUrl,
       mimeType,
-      subdir: 'ANQR',
-    });
+      'ANQR'
+    );
 
     console.log('File saved:', result);
 

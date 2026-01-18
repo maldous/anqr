@@ -292,7 +292,7 @@ export function convolve(
 
   const kSize = kernel.length;
   const kHalf = Math.floor(kSize / 2);
-  const div = divisor ?? kernel.flat().reduce((a, b) => a + b, 0) || 1;
+  const div = divisor ?? (kernel.flat().reduce((a, b) => a + b, 0) || 1);
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -531,8 +531,8 @@ export function applyFilters(
     result = threshold(result, options.threshold);
   }
 
-  if ((options.posterize ?? 0) > 0) {
-    result = posterize(result, options.posterize!);
+  if (options.posterize !== undefined && options.posterize > 0) {
+    result = posterize(result, options.posterize);
   }
 
   if (options.sharpen !== undefined && options.sharpen > 0) {

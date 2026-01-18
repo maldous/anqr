@@ -6,7 +6,7 @@
  * Works with Canvas ImageData for real-time processing
  */
 
-export {
+import {
   applyFilters,
   brightness,
   contrast,
@@ -41,5 +41,42 @@ export {
   type FilterOptions,
   type ColorMode,
 } from './overlay/internal/filters';
+
+// Re-export everything
+export {
+  applyFilters,
+  brightness,
+  contrast,
+  saturation,
+  hueRotate,
+  gamma,
+  invert,
+  grayscale,
+  threshold,
+  posterize,
+  duotone,
+  sharpen,
+  blur,
+  gaussianBlur,
+  emboss,
+  sobelEdge,
+  cannyEdge,
+  convolve,
+  rgbToGray,
+  hslToRgb,
+  rgbToHsl,
+  clamp,
+  clamp01,
+  copyImageData,
+  getBrightnessMap,
+  getRGBMap,
+  applyColorMode,
+  ImageFilters,
+  type RGB,
+  type RGBA,
+  type HSL,
+  type FilterOptions,
+  type ColorMode,
+};
 
 export default ImageFilters;

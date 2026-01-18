@@ -15,7 +15,41 @@ import {
   generateSwissQRBill,
   generateTWQR,
   generateVietQR,
+  // Import canonical types from payload-generators module
+  type UrlHelper,
+  type TelHelper,
+  type EmailHelper,
+  type SmsHelper,
+  type GeoHelper,
+  type WifiHelper,
+  type WifiAuth,
+  type VCardHelper,
+  type VCardVersion,
+  type MeCardHelper,
+  type EventHelper,
+  type CryptoHelper,
 } from '@/modules/payload-generators';
+
+// Import gradient types from color-utils (canonical source)
+import type { GradientStop, GradientType } from '@/modules/color-utils';
+
+// Re-export types for backward compatibility
+export type {
+  UrlHelper,
+  TelHelper,
+  EmailHelper,
+  SmsHelper,
+  GeoHelper,
+  WifiHelper,
+  WifiAuth,
+  VCardHelper,
+  VCardVersion,
+  MeCardHelper,
+  EventHelper,
+  CryptoHelper,
+  GradientStop,
+  GradientType,
+};
 
 // Tier levels
 export type Tier = 'basic' | 'advanced' | 'professional';
@@ -110,7 +144,7 @@ export type FinderStyle = 'square' | 'rounded' | 'circle';
 export type AlignmentStyle = 'match_finder' | 'square' | 'rounded' | 'circle';
 export type TimingStyle = 'match_module' | 'solid' | 'dashed';
 export type GapMode = 'none' | 'inset' | 'stroke' | 'negative_space';
-export type GradientType = 'none' | 'linear' | 'radial' | 'conic';
+// GradientType is imported from @/modules/color-utils and re-exported above
 export type FrameStyle = 'none' | 'rounded_frame' | 'sticker' | 'tag';
 
 // Overlay
@@ -178,17 +212,10 @@ export type GifDither = 'off' | 'floyd' | 'ordered';
 // Safety
 export type SafetyMode = 'off' | 'balanced' | 'strict';
 
-// WiFi auth types
-export type WifiAuth = 'WPA' | 'WPA2' | 'WPA3' | 'WEP' | 'nopass';
+// WiFi auth types - imported from payload-generators and re-exported above
+// VCard version - imported from payload-generators and re-exported above
 
-// VCard version
-export type VCardVersion = '2.1' | '3.0' | '4.0';
-
-// Gradient stop
-export interface GradientStop {
-  pos: number;
-  color: string;
-}
+// Gradient types are now imported from @/modules/color-utils and re-exported above.
 
 // Crop region
 export interface CropRegion {
@@ -197,104 +224,8 @@ export interface CropRegion {
   size: number;
 }
 
-// URL helper
-export interface UrlHelper {
-  href: string;
-  forceHttps: boolean;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-  utmTerm?: string;
-  utmContent?: string;
-}
-
-// Tel helper
-export interface TelHelper {
-  number: string;
-}
-
-// Email helper
-export interface EmailHelper {
-  to: string;
-  subject?: string;
-  body?: string;
-}
-
-// SMS helper
-export interface SmsHelper {
-  number: string;
-  body?: string;
-}
-
-// Geo helper
-export interface GeoHelper {
-  lat: number;
-  lon: number;
-  query?: string;
-}
-
-// WiFi helper
-export interface WifiHelper {
-  ssid: string;
-  auth: WifiAuth;
-  password?: string;
-  hidden: boolean;
-  eapIdentity?: string;
-  eapAnonymous?: string;
-  eapPhase2?: string;
-  eapCaCert?: string;
-}
-
-// VCard helper
-export interface VCardHelper {
-  version: VCardVersion;
-  fn?: string;
-  n?: string;
-  org?: string;
-  title?: string;
-  tel?: string[];
-  email?: string[];
-  url?: string;
-  adr?: string[];
-  note?: string;
-  photo?: string;
-  bday?: string;
-  role?: string;
-  impp?: string;
-  uid?: string;
-}
-
-// MeCard helper
-export interface MeCardHelper {
-  n?: string;
-  tel?: string;
-  email?: string;
-  adr?: string;
-  org?: string;
-  url?: string;
-  note?: string;
-  bday?: string;
-  nickname?: string;
-}
-
-// Event helper
-export interface EventHelper {
-  summary?: string;
-  location?: string;
-  description?: string;
-  start?: string;
-  end?: string;
-  tz?: string;
-  rrule?: string;
-}
-
-// Crypto payment helper
-export interface CryptoHelper {
-  type: string;
-  address: string;
-  amount?: number;
-  label?: string;
-}
+// Helper types are now imported from @/modules/payload-generators and re-exported above.
+// This eliminates circular dependencies and establishes payload-generators as the canonical source.
 
 // OTP Auth helper
 export interface OtpAuthHelper {

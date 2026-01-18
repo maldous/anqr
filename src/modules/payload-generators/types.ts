@@ -1,33 +1,118 @@
 /**
  * Payload Generators Types and Constants
+ * 
+ * These types are defined locally to avoid coupling to the app store.
+ * The store imports from here, not the other way around.
  */
 
-import type {
-  CryptoHelper,
-  EmailHelper,
-  EventHelper,
-  GeoHelper,
-  MeCardHelper,
-  SmsHelper,
-  TelHelper,
-  UrlHelper,
-  VCardHelper,
-  WifiHelper,
-} from '../../store/qr-store';
+// ============================================
+// HELPER TYPES (local definitions - no store dependency)
+// ============================================
 
-// Re-export store types
-export type {
-  CryptoHelper,
-  EmailHelper,
-  EventHelper,
-  GeoHelper,
-  MeCardHelper,
-  SmsHelper,
-  TelHelper,
-  UrlHelper,
-  VCardHelper,
-  WifiHelper,
-};
+/** URL helper for constructing URLs with UTM parameters */
+export interface UrlHelper {
+  href: string;
+  forceHttps: boolean;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+}
+
+/** Telephone number helper */
+export interface TelHelper {
+  number: string;
+}
+
+/** Email helper for mailto: links */
+export interface EmailHelper {
+  to: string;
+  subject?: string;
+  body?: string;
+}
+
+/** SMS helper for sms: links */
+export interface SmsHelper {
+  number: string;
+  body?: string;
+}
+
+/** Geographic coordinates helper */
+export interface GeoHelper {
+  lat: number;
+  lon: number;
+  query?: string;
+}
+
+/** WiFi authentication types */
+export type WifiAuth = 'WPA' | 'WPA2' | 'WPA3' | 'WEP' | 'nopass';
+
+/** WiFi network configuration helper */
+export interface WifiHelper {
+  ssid: string;
+  auth: WifiAuth;
+  password?: string;
+  hidden: boolean;
+  eapIdentity?: string;
+  eapAnonymous?: string;
+  eapPhase2?: string;
+  eapCaCert?: string;
+}
+
+/** vCard version */
+export type VCardVersion = '2.1' | '3.0' | '4.0';
+
+/** vCard contact helper */
+export interface VCardHelper {
+  version: VCardVersion;
+  fn?: string;
+  n?: string;
+  org?: string;
+  title?: string;
+  tel?: string[];
+  email?: string[];
+  url?: string;
+  adr?: string[];
+  note?: string;
+  photo?: string;
+  bday?: string;
+  role?: string;
+  impp?: string;
+  uid?: string;
+}
+
+/** MeCard contact helper (simpler than vCard) */
+export interface MeCardHelper {
+  n?: string;
+  tel?: string;
+  email?: string;
+  adr?: string;
+  org?: string;
+  url?: string;
+  note?: string;
+  bday?: string;
+  nickname?: string;
+}
+
+/** Calendar event helper */
+export interface EventHelper {
+  summary?: string;
+  location?: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  tz?: string;
+  rrule?: string;
+}
+
+/** Cryptocurrency payment helper */
+export interface CryptoHelper {
+  type: string;
+  address: string;
+  amount?: number;
+  label?: string;
+}
 
 // ============================================
 // EMV QR CODE CONSTANTS
