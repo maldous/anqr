@@ -305,7 +305,7 @@ export function applyWatermarkCenterLogo(
   return result;
 }
 
-// Namespace export for backwards compatibility
+// Namespace export
 export const Watermark = {
   applyWatermark,
   applyWatermarkCenterLogo,
