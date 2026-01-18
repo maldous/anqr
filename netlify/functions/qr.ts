@@ -110,11 +110,11 @@
  * - saturation: [FULL] Overlay saturation -100 to 100 (default: 0)
  * - hue: [FULL] Overlay hue rotation in degrees (default: 0)
  * - invert: [FULL] Invert overlay colors (default: 0)
- * - blur: [PARTIAL] Overlay blur in pixels - limited implementation server-side
- * - sharpen: [PARTIAL] Overlay sharpen 0-100 - passed to generator, limited support
- * - posterize: [PARTIAL] Overlay posterize levels - passed to generator, limited support
- * - threshold: [PARTIAL] Overlay threshold 0-255 - passed to generator, limited support
- * - edge: [PARTIAL] Edge detection - off/sobel/canny - passed to generator, limited support
+ * - blur: [FULL] Overlay blur radius in pixels (box blur via convolution)
+ * - sharpen: [FULL] Overlay sharpen amount 0-100 (convolution kernel)
+ * - posterize: [FULL] Overlay posterize levels 2-256 (color reduction)
+ * - threshold: [FULL] Overlay threshold 0-255 (binary threshold)
+ * - edge: [FULL] Edge detection - off/sobel/canny (Sobel/Canny edge detection)
  *
  * === OVERLAY CROP ===
  * - cropEn: [FULL] Enable overlay cropping 0/1 (default: 0)
@@ -908,7 +908,201 @@ function cropOverlayServer(
 }
 
 /**
- * Apply brightness/contrast/gamma filters to overlay (matches client filters)
+ * Helper: Convert RGB to grayscale using luminance formula
+ */
+function rgbToGrayServer(r: number, g: number, b: number): number {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+/**
+ * Apply convolution filter to image data
+ */
+function convolveServer(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  kernel: number[][],
+  divisor?: number
+): Uint8ClampedArray {
+  const result = new Uint8ClampedArray(data);
+  const kSize = kernel.length;
+  const kHalf = Math.floor(kSize / 2);
+  const div = divisor ?? (kernel.flat().reduce((a, b) => a + b, 0) || 1);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let r = 0,
+        g = 0,
+        b = 0;
+
+      for (let ky = 0; ky < kSize; ky++) {
+        for (let kx = 0; kx < kSize; kx++) {
+          const px = Math.max(0, Math.min(width - 1, x + kx - kHalf));
+          const py = Math.max(0, Math.min(height - 1, y + ky - kHalf));
+          const idx = (py * width + px) * 4;
+          const weight = kernel[ky][kx];
+
+          r += data[idx] * weight;
+          g += data[idx + 1] * weight;
+          b += data[idx + 2] * weight;
+        }
+      }
+
+      const idx = (y * width + x) * 4;
+      result[idx] = Math.max(0, Math.min(255, Math.round(r / div)));
+      result[idx + 1] = Math.max(0, Math.min(255, Math.round(g / div)));
+      result[idx + 2] = Math.max(0, Math.min(255, Math.round(b / div)));
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Apply box blur to image data
+ */
+function blurServer(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  radius: number
+): Uint8ClampedArray {
+  if (radius <= 0) return data;
+  const size = 2 * Math.min(radius, 10) + 1; // Cap radius at 10 for performance
+  const kernel = Array(size)
+    .fill(null)
+    .map(() => Array(size).fill(1));
+  return convolveServer(data, width, height, kernel);
+}
+
+/**
+ * Apply sharpening to image data
+ */
+function sharpenServer(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  amount: number
+): Uint8ClampedArray {
+  if (amount <= 0) return data;
+  const strength = amount / 100; // Normalize 0-100 to 0-1
+  const kernel = [
+    [0, -strength, 0],
+    [-strength, 1 + 4 * strength, -strength],
+    [0, -strength, 0],
+  ];
+  return convolveServer(data, width, height, kernel, 1);
+}
+
+/**
+ * Apply posterize (color reduction) to image data
+ */
+function posterizeServer(data: Uint8ClampedArray, levels: number): Uint8ClampedArray {
+  if (levels <= 1) return data;
+  const result = new Uint8ClampedArray(data);
+  const step = 255 / (levels - 1);
+
+  for (let i = 0; i < result.length; i += 4) {
+    result[i] = Math.round(Math.round(result[i] / step) * step);
+    result[i + 1] = Math.round(Math.round(result[i + 1] / step) * step);
+    result[i + 2] = Math.round(Math.round(result[i + 2] / step) * step);
+  }
+
+  return result;
+}
+
+/**
+ * Apply threshold (binary) to image data
+ */
+function thresholdServer(data: Uint8ClampedArray, level: number): Uint8ClampedArray {
+  const result = new Uint8ClampedArray(data);
+
+  for (let i = 0; i < result.length; i += 4) {
+    const gray = rgbToGrayServer(result[i], result[i + 1], result[i + 2]);
+    const value = gray > level ? 255 : 0;
+    result[i] = value;
+    result[i + 1] = value;
+    result[i + 2] = value;
+  }
+
+  return result;
+}
+
+/**
+ * Apply Sobel edge detection to image data
+ */
+function sobelEdgeServer(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number
+): Uint8ClampedArray {
+  const result = new Uint8ClampedArray(data.length);
+
+  const sobelX = [
+    [-1, 0, 1],
+    [-2, 0, 2],
+    [-1, 0, 1],
+  ];
+  const sobelY = [
+    [-1, -2, -1],
+    [0, 0, 0],
+    [1, 2, 1],
+  ];
+
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      let gx = 0,
+        gy = 0;
+
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          const idx = ((y + ky) * width + (x + kx)) * 4;
+          const gray = rgbToGrayServer(data[idx], data[idx + 1], data[idx + 2]);
+          gx += gray * sobelX[ky + 1][kx + 1];
+          gy += gray * sobelY[ky + 1][kx + 1];
+        }
+      }
+
+      const magnitude = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+      const idx = (y * width + x) * 4;
+      result[idx] = magnitude;
+      result[idx + 1] = magnitude;
+      result[idx + 2] = magnitude;
+      result[idx + 3] = data[idx + 3];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Apply Canny edge detection to image data (simplified: Sobel + hysteresis threshold)
+ */
+function cannyEdgeServer(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  lowThreshold: number = 50,
+  highThreshold: number = 150
+): Uint8ClampedArray {
+  // First apply Sobel
+  const sobelResult = sobelEdgeServer(data, width, height);
+  const result = new Uint8ClampedArray(sobelResult);
+
+  // Apply hysteresis thresholding
+  for (let i = 0; i < result.length; i += 4) {
+    const magnitude = result[i];
+    const value = magnitude > highThreshold ? 255 : magnitude > lowThreshold ? 128 : 0;
+    result[i] = value;
+    result[i + 1] = value;
+    result[i + 2] = value;
+  }
+
+  return result;
+}
+
+/**
+ * Apply all overlay filters server-side (matches client filters)
  * Creates a new canvas to avoid mutating the source.
  */
 function applyOverlayFiltersServer(
@@ -920,7 +1114,11 @@ function applyOverlayFiltersServer(
     saturation?: number; // -100 to 100
     hue?: number; // degrees
     invert?: boolean;
-    blur?: number; // pixels (limited server-side)
+    blur?: number; // pixels
+    sharpen?: number; // 0-100
+    posterize?: number; // levels 2-256
+    threshold?: number; // 0-255
+    edge?: 'off' | 'sobel' | 'canny'; // edge detection mode
   }
 ): Canvas {
   const result = createCanvas(source.width, source.height);
@@ -936,6 +1134,11 @@ function applyOverlayFiltersServer(
   const saturation = (options.saturation ?? 0) / 100;
   const hue = (options.hue ?? 0) * (Math.PI / 180);
   const invert = options.invert ?? false;
+  const blurRadius = options.blur ?? 0;
+  const sharpenAmount = options.sharpen ?? 0;
+  const posterizeLevels = options.posterize ?? 0;
+  const thresholdLevel = options.threshold;
+  const edgeMode = options.edge ?? 'off';
 
   // Pre-calculate contrast factor
   const contrastFactor = (1 + contrast) / (1 - contrast * 0.5);
@@ -1027,6 +1230,38 @@ function applyOverlayFiltersServer(
     data[i] = Math.round(Math.max(0, Math.min(1, r)) * 255);
     data[i + 1] = Math.round(Math.max(0, Math.min(1, g)) * 255);
     data[i + 2] = Math.round(Math.max(0, Math.min(1, b)) * 255);
+  }
+
+  // Apply convolution-based filters (blur, sharpen, edge detection)
+  if (blurRadius > 0) {
+    const blurred = blurServer(data, result.width, result.height, blurRadius);
+    data.set(blurred);
+  }
+
+  if (sharpenAmount > 0) {
+    const sharpened = sharpenServer(data, result.width, result.height, sharpenAmount);
+    data.set(sharpened);
+  }
+
+  // Apply posterize
+  if (posterizeLevels > 1) {
+    const posterized = posterizeServer(data, posterizeLevels);
+    data.set(posterized);
+  }
+
+  // Apply threshold (binary) - only if explicitly specified
+  if (thresholdLevel !== undefined) {
+    const thresholded = thresholdServer(data, thresholdLevel);
+    data.set(thresholded);
+  }
+
+  // Apply edge detection
+  if (edgeMode === 'sobel') {
+    const edges = sobelEdgeServer(data, result.width, result.height);
+    data.set(edges);
+  } else if (edgeMode === 'canny') {
+    const edges = cannyEdgeServer(data, result.width, result.height);
+    data.set(edges);
   }
 
   resultCtx.putImageData(imageData, 0, 0);
@@ -1527,10 +1762,10 @@ async function handler(request: Request) {
   const overlayBlur = Math.max(0, Number.parseInt(params.get('blur') || '0', 10));
   const overlaySharpen = Math.max(0, Number.parseInt(params.get('sharpen') || '0', 10));
   const overlayPosterize = Math.max(0, Number.parseInt(params.get('posterize') || '0', 10));
-  const overlayThreshold = Math.min(
-    255,
-    Math.max(0, Number.parseInt(params.get('threshold') || '128', 10))
-  );
+  const overlayThresholdParam = params.get('threshold');
+  const overlayThreshold = overlayThresholdParam
+    ? Math.min(255, Math.max(0, Number.parseInt(overlayThresholdParam, 10)))
+    : undefined; // Only apply if explicitly specified
   const overlayEdgeDetect = params.get('edge') || 'off';
   const overlayFit = params.get('fit') || 'cover';
   const overlayRotate = Number.parseInt(params.get('rot') || '0', 10);
@@ -1906,7 +2141,11 @@ async function handler(request: Request) {
           overlayGamma !== 1 ||
           overlaySaturation !== 0 ||
           overlayHueRotate !== 0 ||
-          overlayInvert;
+          overlayInvert ||
+          overlayBlur > 0 ||
+          overlaySharpen > 0 ||
+          overlayPosterize > 1 ||
+          overlayEdgeDetect !== 'off';
 
         const filterOptions = {
           brightness: overlayBrightness,
@@ -1915,6 +2154,11 @@ async function handler(request: Request) {
           saturation: overlaySaturation,
           hue: overlayHueRotate,
           invert: overlayInvert,
+          blur: overlayBlur,
+          sharpen: overlaySharpen,
+          posterize: overlayPosterize,
+          threshold: overlayThreshold, // Only applied if explicitly specified via URL param
+          edge: overlayEdgeDetect as 'off' | 'sobel' | 'canny',
         };
 
         // Helper to apply all preprocessing to a canvas
