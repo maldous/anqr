@@ -16,10 +16,7 @@ export function generateEvent(params: EventHelper): string {
   ];
 
   const uid = `${Date.now()}-${crypto.randomUUID().slice(0, 9)}@anqr`;
-  lines.push(
-    `UID:${uid}`,
-    `DTSTAMP:${formatICalDate(new Date().toISOString())}`
-  );
+  lines.push(`UID:${uid}`, `DTSTAMP:${formatICalDate(new Date().toISOString())}`);
 
   if (params.start) {
     const startStr = formatICalDate(params.start);

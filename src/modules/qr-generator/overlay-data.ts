@@ -3,8 +3,8 @@
  * Overlay data extraction and processing
  */
 
-import type { QRGeneratorConfig, OverlayData, CreateCanvasFn } from './types';
 import { overlayDataCache } from './cache';
+import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 import { hashCanvasContent } from './utils';
 
 /**
@@ -31,7 +31,10 @@ export async function getOverlayData(
 
   // Scale overlay to module count
   const scaledCanvas = await createCanvasFn(moduleCount, moduleCount);
-  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
+  const ctx = scaledCanvas.getContext('2d') as
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D
+    | null;
   if (!ctx) {
     return {} as OverlayData;
   }
@@ -84,9 +87,7 @@ export async function getOverlayData(
 /**
  * Load image data as RGB array
  */
-export function loadImageDataRGB(
-  imageData: ImageData
-): { r: number; g: number; b: number }[][] {
+export function loadImageDataRGB(imageData: ImageData): { r: number; g: number; b: number }[][] {
   const { width, height, data } = imageData;
   const result: { r: number; g: number; b: number }[][] = [];
 

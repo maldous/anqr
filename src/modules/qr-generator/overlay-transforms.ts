@@ -3,7 +3,7 @@
  * Geometric transformations for overlay images
  */
 
-import type { QRGeneratorConfig, CreateCanvasFn } from './types';
+import type { CreateCanvasFn, QRGeneratorConfig } from './types';
 
 /**
  * Check if overlay has preprocessing options that need to be applied
@@ -27,7 +27,7 @@ export function hasPreprocessingOptions(config: QRGeneratorConfig): boolean {
 /**
  * Check if overlay has geometric transforms that need to be applied
  */
-export function hasGeometricTransforms(config: QRGeneratorConfig): boolean {
+export function hasGeometricTransforms(_config: QRGeneratorConfig): boolean {
   // This function checks for rotation, flip, scale, etc.
   // Currently we handle these through the overlay processor
   return false;

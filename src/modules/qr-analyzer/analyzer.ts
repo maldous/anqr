@@ -86,7 +86,7 @@ export async function analyzeQRFromUrl(url: string): Promise<QRAnalysisResult> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
@@ -111,7 +111,7 @@ export async function analyzeQRFromUrl(url: string): Promise<QRAnalysisResult> {
         });
       }
     };
-    
+
     img.onerror = () => {
       // Check if it's likely a CORS error
       resolve({
@@ -127,7 +127,7 @@ export async function analyzeQRFromUrl(url: string): Promise<QRAnalysisResult> {
         estimatedModulePx: null,
       });
     };
-    
+
     img.src = url;
   });
 }

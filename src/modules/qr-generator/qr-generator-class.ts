@@ -3,10 +3,17 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
-import { calculateOptimalVersion, qrcode, setStringToBytes, resetStringToBytes, getCompatibleMode, createShiftJISEncoder } from '../qr-encoder';
-
+import type { QRCodeInstance } from '../qr-encoder';
+import {
+  calculateOptimalVersion,
+  createShiftJISEncoder,
+  getCompatibleMode,
+  qrcode,
+  resetStringToBytes,
+  setStringToBytes,
+} from '../qr-encoder';
 import { qrMatrixCache } from './cache';
-import { defaultBrowserCanvasFactory, CanvasFactory } from './canvas-factory';
+import { type CanvasFactory, defaultBrowserCanvasFactory } from './canvas-factory';
 import {
   createGradientFill,
   drawAlignmentPattern,
@@ -15,16 +22,12 @@ import {
   drawFrame,
   drawFrameBackground,
 } from './drawing';
+import { applyGeometricTransforms, hasGeometricTransforms } from './overlay';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 import { renderModules } from './render-loop';
 import { generateScaledQR } from './scaled-render';
-import {
-  applyGeometricTransforms,
-  hasGeometricTransforms,
-} from './overlay';
 import type { QRGeneratorConfig, QRMatrixResult } from './types';
-import type { QRCodeInstance } from '../qr-encoder';
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
@@ -194,7 +197,14 @@ export class QRGenerator {
       for (const pos of alignPositions) {
         const centerX = (pos.col + margin) * moduleSize + moduleSize / 2;
         const centerY = (pos.row + margin) * moduleSize + moduleSize / 2;
-        drawAlignmentPattern(ctx as CanvasRenderingContext2D, centerX, centerY, moduleSize, alignmentStyle, config);
+        drawAlignmentPattern(
+          ctx as CanvasRenderingContext2D,
+          centerX,
+          centerY,
+          moduleSize,
+          alignmentStyle,
+          config
+        );
 
         // Mark all modules in this alignment pattern as drawn
         for (let r = pos.row - 2; r <= pos.row + 2; r++) {
@@ -226,7 +236,10 @@ export class QRGenerator {
     // Auto-detect best version if set to 0
     let typeNumber = config.typeNumber;
     if (typeNumber === 0) {
-      typeNumber = calculateOptimalVersion(config.content, config.errorCorrection as 'L' | 'M' | 'Q' | 'H');
+      typeNumber = calculateOptimalVersion(
+        config.content,
+        config.errorCorrection as 'L' | 'M' | 'Q' | 'H'
+      );
     }
 
     // Apply geometric transforms if needed
@@ -242,7 +255,8 @@ export class QRGenerator {
     // =======================================================================
     // STAGE 1: QR MATRIX GENERATION
     // =======================================================================
-    const maskPatternConfig = typeof config.maskPattern === 'number' ? config.maskPattern : undefined;
+    const maskPatternConfig =
+      typeof config.maskPattern === 'number' ? config.maskPattern : undefined;
     const characterEncodingConfig = config.characterEncoding || 'default';
 
     const { qr, moduleCount } = this.buildQRMatrix(

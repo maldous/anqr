@@ -41,8 +41,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type GalleryCategory, gallerySections } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { isRtlLanguage, languages, loadLocale } from '@/i18n';
-import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { copyToClipboard } from '@/modules/browser-clipboard';
+import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { getShareableUrl } from '@/modules/share-links';
 import { type Tier, useQRStore } from '@/store/qr-store';
 
@@ -64,16 +64,52 @@ const NAV_LINKS: Array<{
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   { href: '/', labelKey: 'nav.generator', defaultLabel: 'Generator', page: 'editor', icon: QrCode },
-  { href: '/analyze', labelKey: 'nav.analyze', defaultLabel: 'Analyze', page: 'analyze', icon: ScanLine },
-  { href: '/gallery', labelKey: 'nav.gallery', defaultLabel: 'Gallery', page: 'gallery', icon: Images },
+  {
+    href: '/analyze',
+    labelKey: 'nav.analyze',
+    defaultLabel: 'Analyze',
+    page: 'analyze',
+    icon: ScanLine,
+  },
+  {
+    href: '/gallery',
+    labelKey: 'nav.gallery',
+    defaultLabel: 'Gallery',
+    page: 'gallery',
+    icon: Images,
+  },
   { href: '/guide', labelKey: 'nav.guide', defaultLabel: 'Guide', page: 'guide', icon: BookOpen },
   { href: '/learn', labelKey: 'nav.learn', defaultLabel: 'Learn', page: 'learn', icon: Lightbulb },
-  { href: '/examples', labelKey: 'nav.examples', defaultLabel: 'Examples', page: 'examples', icon: Sparkles },
+  {
+    href: '/examples',
+    labelKey: 'nav.examples',
+    defaultLabel: 'Examples',
+    page: 'examples',
+    icon: Sparkles,
+  },
   { href: '/about', labelKey: 'nav.about', defaultLabel: 'About', page: 'about', icon: Info },
-  { href: '/privacy', labelKey: 'nav.privacy', defaultLabel: 'Privacy', page: 'privacy', icon: Shield },
+  {
+    href: '/privacy',
+    labelKey: 'nav.privacy',
+    defaultLabel: 'Privacy',
+    page: 'privacy',
+    icon: Shield,
+  },
   { href: '/terms', labelKey: 'nav.terms', defaultLabel: 'Terms', page: 'terms', icon: FileText },
-  { href: '/translate', labelKey: 'nav.translate', defaultLabel: 'Translate', page: 'translate', icon: Globe },
-  { href: '/contact', labelKey: 'nav.contact', defaultLabel: 'Contact', page: 'contact', icon: Mail },
+  {
+    href: '/translate',
+    labelKey: 'nav.translate',
+    defaultLabel: 'Translate',
+    page: 'translate',
+    icon: Globe,
+  },
+  {
+    href: '/contact',
+    labelKey: 'nav.contact',
+    defaultLabel: 'Contact',
+    page: 'contact',
+    icon: Mail,
+  },
 ];
 
 type HeaderProps = Readonly<{
@@ -610,7 +646,7 @@ export function Header({
               <ChevronLeft className="h-5 w-5 text-muted-foreground" />
             </button>
           )}
-          
+
           {/* Right scroll indicator (end side in RTL) */}
           {canScrollRight && (
             <button
@@ -626,333 +662,335 @@ export function Header({
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </button>
           )}
-          
+
           <div
             ref={headerScrollRef}
             className="px-2 sm:px-4 flex items-center justify-between w-full h-full overflow-x-auto scrollbar-hide"
           >
-          <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
-            {/* Settings toggle - only in editor mode, placeholder space on other pages */}
-            {isEditor ? (
-              <button
-                type="button"
-                onClick={onToggleSidebar}
-                className="flex items-center justify-center w-8 h-8 hover:opacity-80 cursor-pointer"
-                title={t('accessibility.toggleSettings')}
-              >
-                <PanelLeft className="h-6 w-6 text-muted-foreground" />
-              </button>
-            ) : (
-              /* Placeholder space to keep layout consistent with Generator */
-              <div className="hidden lg:block w-8 h-8" />
-            )}
-
-            {/* ANQR logo/title - always navigates to generator */}
-            <button
-              type="button"
-              onClick={() => {
-                closeMobileMenu();
-                onNavigate?.('editor');
-              }}
-              className="flex items-center gap-2 transition-opacity hover:opacity-80 cursor-pointer"
-              title={`${t('app.name')} - ${t('app.tagline')}`}
-            >
-              <span className="text-xl font-bold leading-6">ANQR</span>
-            </button>
-
-            {/* Camera button for quick overlay demo (Android only, editor only) */}
-            {isEditor && Capacitor.isNativePlatform() && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleCameraCapture}
-                className="h-9 w-9"
-                title={t('header.captureOverlay')}
-                disabled={cameraLoading}
-              >
-                <CameraIcon className="h-5 w-5" />
-              </Button>
-            )}
-
-            {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {NAV_LINKS.map((link) => {
-                const isActive = link.page === resolvedPage;
-                return (
-                  <a
-                    key={link.labelKey}
-                    href={link.href}
-                    className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                      isActive
-                        ? 'text-foreground bg-muted font-medium'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                    onClick={(e) => {
-                      if (!onNavigate) return;
-                      e.preventDefault();
-                      onNavigate(link.page);
-                    }}
-                    title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
-                  >
-                    {t(link.labelKey, link.defaultLabel)}
-                  </a>
-                );
-              })}
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
-            {/* Gallery Filter - icon buttons right-justified next to dark mode toggle */}
-            {isGallery && (
-              <div className="hidden lg:flex items-center gap-1">
+            <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
+              {/* Settings toggle - only in editor mode, placeholder space on other pages */}
+              {isEditor ? (
                 <button
                   type="button"
-                  onClick={() => onGalleryFilterChange?.('all')}
-                  className={`p-2 rounded-md transition-colors ${
-                    galleryFilter === 'all'
-                      ? 'text-foreground bg-muted'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`}
-                  title={t('accessibility.allCategories')}
+                  onClick={onToggleSidebar}
+                  className="flex items-center justify-center w-8 h-8 hover:opacity-80 cursor-pointer"
+                  title={t('accessibility.toggleSettings')}
                 >
-                  <Grid3x3 className="w-4 h-4" />
+                  <PanelLeft className="h-6 w-6 text-muted-foreground" />
                 </button>
-                {gallerySections.map((section) => (
+              ) : (
+                /* Placeholder space to keep layout consistent with Generator */
+                <div className="hidden lg:block w-8 h-8" />
+              )}
+
+              {/* ANQR logo/title - always navigates to generator */}
+              <button
+                type="button"
+                onClick={() => {
+                  closeMobileMenu();
+                  onNavigate?.('editor');
+                }}
+                className="flex items-center gap-2 transition-opacity hover:opacity-80 cursor-pointer"
+                title={`${t('app.name')} - ${t('app.tagline')}`}
+              >
+                <span className="text-xl font-bold leading-6">ANQR</span>
+              </button>
+
+              {/* Camera button for quick overlay demo (Android only, editor only) */}
+              {isEditor && Capacitor.isNativePlatform() && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCameraCapture}
+                  className="h-9 w-9"
+                  title={t('header.captureOverlay')}
+                  disabled={cameraLoading}
+                >
+                  <CameraIcon className="h-5 w-5" />
+                </Button>
+              )}
+
+              {/* Desktop Nav */}
+              <nav className="hidden lg:flex items-center gap-1">
+                {NAV_LINKS.map((link) => {
+                  const isActive = link.page === resolvedPage;
+                  return (
+                    <a
+                      key={link.labelKey}
+                      href={link.href}
+                      className={`px-3 py-2 text-sm rounded-md transition-colors ${
+                        isActive
+                          ? 'text-foreground bg-muted font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                      onClick={(e) => {
+                        if (!onNavigate) return;
+                        e.preventDefault();
+                        onNavigate(link.page);
+                      }}
+                      title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                    >
+                      {t(link.labelKey, link.defaultLabel)}
+                    </a>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
+              {/* Gallery Filter - icon buttons right-justified next to dark mode toggle */}
+              {isGallery && (
+                <div className="hidden lg:flex items-center gap-1">
                   <button
                     type="button"
-                    key={section.id}
-                    onClick={() => onGalleryFilterChange?.(section.id)}
+                    onClick={() => onGalleryFilterChange?.('all')}
                     className={`p-2 rounded-md transition-colors ${
-                      galleryFilter === section.id
+                      galleryFilter === 'all'
                         ? 'text-foreground bg-muted'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
-                    title={section.title}
+                    title={t('accessibility.allCategories')}
                   >
-                    <DynamicIcon name={section.icon} className="w-4 h-4" />
+                    <Grid3x3 className="w-4 h-4" />
                   </button>
-                ))}
-              </div>
-            )}
-
-            {/* Tier Toggle */}
-            {isEditor && (
-              <>
-                <div className="hidden sm:block">
-                  <Tabs
-                    value={tier}
-                    onValueChange={(v) => handleTierChange(v as Tier)}
-                    data-testid="tier-tabs"
-                  >
-                    <TabsList className="shadow-sm">
-                      <TabsTrigger
-                        value="basic"
-                        className="text-xs px-3"
-                        title={t('tiers.basic')}
-                        disabled={loadingAd}
-                        data-testid="tier-tab-basic"
-                      >
-                        {t('tiers.basic')}
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="advanced"
-                        className="text-xs px-3"
-                        title={t('tiers.advanced')}
-                        disabled={loadingAd}
-                        data-testid="tier-tab-advanced"
-                      >
-                        {t('tiers.advanced')}
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="professional"
-                        className="text-xs px-3 gap-1"
-                        title={
-                          Capacitor.isNativePlatform() && !checkPremiumAccess()
-                            ? t('tiers.watchAdForPro')
-                            : t('tiers.professional')
-                        }
-                        disabled={loadingAd}
-                        data-testid="tier-tab-professional"
-                      >
-                        {Capacitor.isNativePlatform() && !checkPremiumAccess() && (
-                          <Play className="w-3 h-3" />
-                        )}
-                        {t('tiers.professional')}
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
+                  {gallerySections.map((section) => (
+                    <button
+                      type="button"
+                      key={section.id}
+                      onClick={() => onGalleryFilterChange?.(section.id)}
+                      className={`p-2 rounded-md transition-colors ${
+                        galleryFilter === section.id
+                          ? 'text-foreground bg-muted'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                      title={section.title}
+                    >
+                      <DynamicIcon name={section.icon} className="w-4 h-4" />
+                    </button>
+                  ))}
                 </div>
-                <div className="sm:hidden">
-                  <Select
-                    value={tier}
-                    onValueChange={(v) => handleTierChange(v as Tier)}
-                    disabled={loadingAd}
-                  >
-                    <SelectTrigger className="w-[72px] h-9 text-xs" data-testid="tier-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="basic" data-testid="tier-option-basic">
-                        {t('tiers.basic')}
-                      </SelectItem>
-                      <SelectItem value="advanced" data-testid="tier-option-advanced">
-                        {t('tiers.advanced')}
-                      </SelectItem>
-                      <SelectItem value="professional" data-testid="tier-option-professional">
-                        <span className="flex items-center gap-1">
+              )}
+
+              {/* Tier Toggle */}
+              {isEditor && (
+                <>
+                  <div className="hidden sm:block">
+                    <Tabs
+                      value={tier}
+                      onValueChange={(v) => handleTierChange(v as Tier)}
+                      data-testid="tier-tabs"
+                    >
+                      <TabsList className="shadow-sm">
+                        <TabsTrigger
+                          value="basic"
+                          className="text-xs px-3"
+                          title={t('tiers.basic')}
+                          disabled={loadingAd}
+                          data-testid="tier-tab-basic"
+                        >
+                          {t('tiers.basic')}
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="advanced"
+                          className="text-xs px-3"
+                          title={t('tiers.advanced')}
+                          disabled={loadingAd}
+                          data-testid="tier-tab-advanced"
+                        >
+                          {t('tiers.advanced')}
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="professional"
+                          className="text-xs px-3 gap-1"
+                          title={
+                            Capacitor.isNativePlatform() && !checkPremiumAccess()
+                              ? t('tiers.watchAdForPro')
+                              : t('tiers.professional')
+                          }
+                          disabled={loadingAd}
+                          data-testid="tier-tab-professional"
+                        >
                           {Capacitor.isNativePlatform() && !checkPremiumAccess() && (
                             <Play className="w-3 h-3" />
                           )}
                           {t('tiers.professional')}
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            )}
-
-            {/* Actions */}
-            {isEditor && (
-              <div className="hidden sm:flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shadow-sm"
-                  onClick={handleShare}
-                  title={t('accessibility.copyShareLink')}
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Share2 className="h-4 w-4 mr-2" />
-                  )}
-                  {copied ? t('share.copied') : t('header.share')}
-                </Button>
-                <Button
-                  size="sm"
-                  className="shadow-sm"
-                  onClick={onExport}
-                  title={t('accessibility.exportQrCode')}
-                  data-testid="export-button"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  {t('header.export')}
-                </Button>
-              </div>
-            )}
-
-            {/* Language Selector */}
-            <div className="relative" ref={langButtonRef}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
-                className="h-9 w-9"
-                title={t('language.select')}
-              >
-                <span className="text-base">{currentLang.flag}</span>
-              </Button>
-              {(langMenuOpen || isLangMenuClosing) && (
-                <>
-                  <button
-                    type="button"
-                    className="fixed inset-0 z-[60] cursor-default bg-transparent border-none"
-                    onClick={closeLangMenu}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') closeLangMenu();
-                    }}
-                    aria-label="Close menu"
-                    tabIndex={-1}
-                  />
-                  <div
-                    className={`fixed w-72 bg-card border rounded-lg shadow-lg z-[70] py-1 max-h-[50vh] overflow-y-auto origin-top ${
-                      isLangMenuClosing
-                        ? 'animate-[dropdown-close_0.15s_ease-in_forwards]'
-                        : 'animate-[dropdown_0.2s_ease-out]'
-                    }`}
-                    style={{
-                      top: langButtonRef.current
-                        ? langButtonRef.current.getBoundingClientRect().bottom + 4
-                        : 0,
-                      // Position flush against the appropriate edge based on text direction
-                      ...(isRtlLanguage(i18n.language)
-                        ? { left: 8 } // RTL: flush against left edge
-                        : { right: 8 }), // LTR: flush against right edge
-                    }}
-                    onAnimationEnd={() => {
-                      if (isLangMenuClosing) {
-                        setIsLangMenuClosing(false);
-                      }
-                    }}
-                  >
-                    {/* Sort languages: current language first, then alphabetically by translated name */}
-                    {[...languages]
-                      .sort((a, b) => {
-                        const currentCode = i18n.language.split('-')[0];
-                        const aIsCurrent = a.code === currentCode || a.code === i18n.language;
-                        const bIsCurrent = b.code === currentCode || b.code === i18n.language;
-                        // Current language always first
-                        if (aIsCurrent && !bIsCurrent) return -1;
-                        if (bIsCurrent && !aIsCurrent) return 1;
-                        // Sort by translated name in current language
-                        const aName = t(`languages.${a.code}`);
-                        const bName = t(`languages.${b.code}`);
-                        return aName.localeCompare(bName, i18n.language);
-                      })
-                      .map((lang) => (
-                        <button
-                          type="button"
-                          key={lang.code}
-                          onClick={() => changeLanguage(lang.code)}
-                          className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 ${i18n.language === lang.code || i18n.language.startsWith(lang.code) ? 'bg-muted' : ''}`}
-                          title={`${lang.nativeName} - ${t(`languages.${lang.code}`)}`}
-                        >
-                          <span>{lang.flag}</span>
-                          <span>
-                            {lang.nativeName}
-                            {/* Show English name for current language if not English, otherwise show translated name for other languages */}
-                            {(() => {
-                              const isCurrentLang =
-                                lang.code === i18n.language || i18n.language.startsWith(lang.code);
-                              if (isCurrentLang) {
-                                return lang.code === 'en-GB' ? '' : ` (${lang.name})`;
-                              }
-                              return ` (${t(`languages.${lang.code}`)})`;
-                            })()}
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                  <div className="sm:hidden">
+                    <Select
+                      value={tier}
+                      onValueChange={(v) => handleTierChange(v as Tier)}
+                      disabled={loadingAd}
+                    >
+                      <SelectTrigger className="w-[72px] h-9 text-xs" data-testid="tier-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="basic" data-testid="tier-option-basic">
+                          {t('tiers.basic')}
+                        </SelectItem>
+                        <SelectItem value="advanced" data-testid="tier-option-advanced">
+                          {t('tiers.advanced')}
+                        </SelectItem>
+                        <SelectItem value="professional" data-testid="tier-option-professional">
+                          <span className="flex items-center gap-1">
+                            {Capacitor.isNativePlatform() && !checkPremiumAccess() && (
+                              <Play className="w-3 h-3" />
+                            )}
+                            {t('tiers.professional')}
                           </span>
-                          {(i18n.language === lang.code || i18n.language.startsWith(lang.code)) && (
-                            <Check className="h-4 w-4 ml-auto" />
-                          )}
-                        </button>
-                      ))}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               )}
+
+              {/* Actions */}
+              {isEditor && (
+                <div className="hidden sm:flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shadow-sm"
+                    onClick={handleShare}
+                    title={t('accessibility.copyShareLink')}
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Share2 className="h-4 w-4 mr-2" />
+                    )}
+                    {copied ? t('share.copied') : t('header.share')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="shadow-sm"
+                    onClick={onExport}
+                    title={t('accessibility.exportQrCode')}
+                    data-testid="export-button"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {t('header.export')}
+                  </Button>
+                </div>
+              )}
+
+              {/* Language Selector */}
+              <div className="relative" ref={langButtonRef}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
+                  className="h-9 w-9"
+                  title={t('language.select')}
+                >
+                  <span className="text-base">{currentLang.flag}</span>
+                </Button>
+                {(langMenuOpen || isLangMenuClosing) && (
+                  <>
+                    <button
+                      type="button"
+                      className="fixed inset-0 z-[60] cursor-default bg-transparent border-none"
+                      onClick={closeLangMenu}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') closeLangMenu();
+                      }}
+                      aria-label="Close menu"
+                      tabIndex={-1}
+                    />
+                    <div
+                      className={`fixed w-72 bg-card border rounded-lg shadow-lg z-[70] py-1 max-h-[50vh] overflow-y-auto origin-top ${
+                        isLangMenuClosing
+                          ? 'animate-[dropdown-close_0.15s_ease-in_forwards]'
+                          : 'animate-[dropdown_0.2s_ease-out]'
+                      }`}
+                      style={{
+                        top: langButtonRef.current
+                          ? langButtonRef.current.getBoundingClientRect().bottom + 4
+                          : 0,
+                        // Position flush against the appropriate edge based on text direction
+                        ...(isRtlLanguage(i18n.language)
+                          ? { left: 8 } // RTL: flush against left edge
+                          : { right: 8 }), // LTR: flush against right edge
+                      }}
+                      onAnimationEnd={() => {
+                        if (isLangMenuClosing) {
+                          setIsLangMenuClosing(false);
+                        }
+                      }}
+                    >
+                      {/* Sort languages: current language first, then alphabetically by translated name */}
+                      {[...languages]
+                        .sort((a, b) => {
+                          const currentCode = i18n.language.split('-')[0];
+                          const aIsCurrent = a.code === currentCode || a.code === i18n.language;
+                          const bIsCurrent = b.code === currentCode || b.code === i18n.language;
+                          // Current language always first
+                          if (aIsCurrent && !bIsCurrent) return -1;
+                          if (bIsCurrent && !aIsCurrent) return 1;
+                          // Sort by translated name in current language
+                          const aName = t(`languages.${a.code}`);
+                          const bName = t(`languages.${b.code}`);
+                          return aName.localeCompare(bName, i18n.language);
+                        })
+                        .map((lang) => (
+                          <button
+                            type="button"
+                            key={lang.code}
+                            onClick={() => changeLanguage(lang.code)}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 ${i18n.language === lang.code || i18n.language.startsWith(lang.code) ? 'bg-muted' : ''}`}
+                            title={`${lang.nativeName} - ${t(`languages.${lang.code}`)}`}
+                          >
+                            <span>{lang.flag}</span>
+                            <span>
+                              {lang.nativeName}
+                              {/* Show English name for current language if not English, otherwise show translated name for other languages */}
+                              {(() => {
+                                const isCurrentLang =
+                                  lang.code === i18n.language ||
+                                  i18n.language.startsWith(lang.code);
+                                if (isCurrentLang) {
+                                  return lang.code === 'en-GB' ? '' : ` (${lang.name})`;
+                                }
+                                return ` (${t(`languages.${lang.code}`)})`;
+                              })()}
+                            </span>
+                            {(i18n.language === lang.code ||
+                              i18n.language.startsWith(lang.code)) && (
+                              <Check className="h-4 w-4 ml-auto" />
+                            )}
+                          </button>
+                        ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Dark Mode Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleDarkMode}
+                className="h-9 w-9"
+                title={darkMode ? t('header.lightMode') : t('header.darkMode')}
+              >
+                {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+
+              {/* Mobile Menu Button - shows when desktop nav is hidden (below lg breakpoint) */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-9 w-9"
+                onClick={() => (mobileMenuOpen ? closeMobileMenu() : setMobileMenuOpen(true))}
+                title={t('accessibility.openNavMenu')}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
             </div>
-
-            {/* Dark Mode Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleDarkMode}
-              className="h-9 w-9"
-              title={darkMode ? t('header.lightMode') : t('header.darkMode')}
-            >
-              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-
-            {/* Mobile Menu Button - shows when desktop nav is hidden (below lg breakpoint) */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden h-9 w-9"
-              onClick={() => (mobileMenuOpen ? closeMobileMenu() : setMobileMenuOpen(true))}
-              title={t('accessibility.openNavMenu')}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
           </div>
         </div>
 

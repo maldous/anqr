@@ -3,14 +3,13 @@
  * Main QR code decoding logic
  */
 
-import type { DecodeResult } from './types';
-import { findFinderPatterns, selectFinderPatterns } from './locate';
-import { calculateLocation, extractModuleMatrix } from './extract';
-import { readFormatInfo, unmaskMatrix, getECCLevelChar } from './format';
-import { readCodewords, separateCodewords, decodeDataCodewords } from './decode';
-
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import { decodeDataCodewords, readCodewords, separateCodewords } from './decode';
+import { calculateLocation, extractModuleMatrix } from './extract';
+import { getECCLevelChar, readFormatInfo, unmaskMatrix } from './format';
+import { findFinderPatterns, selectFinderPatterns } from './locate';
+import type { DecodeResult } from './types';
 
 /**
  * Decode a QR code from ImageData
@@ -94,11 +93,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       return null;
     }
 
-    log('main', 'Decode SUCCESS', { 
-      version, 
+    log('main', 'Decode SUCCESS', {
+      version,
       eccLevel: getECCLevelChar(formatInfo.eccLevel),
       dataLength: data.length,
-      dataPreview: data.slice(0, 50)
+      dataPreview: data.slice(0, 50),
     });
 
     return {

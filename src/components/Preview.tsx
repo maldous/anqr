@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { BusyOverlay } from '@/components/BusyOverlay';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
-import { parseColor, meetsContrastAA, meetsContrastAAA, getContrastRatio } from '@/modules/core';
+import { getContrastRatio, meetsContrastAA, meetsContrastAAA, parseColor } from '@/modules/core';
 import { useQRStore } from '@/store/qr-store';
 
 interface PreviewProps {
@@ -95,11 +95,11 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
     if (safety.mode === 'off') return null;
     const fgRgb = parseColor(render.fgColor);
     const bgRgb = parseColor(render.bgColor);
-    if (!fgRgb || !bgRgb) return null;
-    
+    if (!(fgRgb && bgRgb)) return null;
+
     // Calculate contrast ratio
     const ratio = getContrastRatio(render.fgColor, render.bgColor);
-    
+
     return {
       ratio,
       meetsAA: meetsContrastAA(render.fgColor, render.bgColor),

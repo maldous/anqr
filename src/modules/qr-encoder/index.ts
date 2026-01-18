@@ -7,82 +7,77 @@
 import { qrcode } from './encoder';
 export { qrcode };
 
-// Types
+// Pattern functions - re-exported from qr-spec (canonical source)
 export {
-  QRMode,
-  QRErrorCorrectionLevel,
-  QRMaskPattern,
-} from './types';
-export type {
-  QRModeType,
-  QRErrorCorrectionLevelType,
-  QRErrorCorrectionLevelChar,
-  QRMaskPatternType,
-  QRCodeInstance,
-  QRDataSegment,
-  QRBitBuffer,
-  RSBlock,
-  QRPolynomial,
-} from './types';
-
-// String encoding
-export {
-  stringToBytes,
-  stringToBytesFn,
-  setStringToBytes,
-  resetStringToBytes,
-  createStringToBytes,
-} from './string-bytes';
-
+  getAlignmentPatternCenters,
+  getAlignmentPositions,
+  getModuleCountForVersion,
+  getVersionFromModuleCount,
+  isAlignmentPattern,
+  isData,
+  isFinderPattern,
+  isLocked,
+  isStructuralModule,
+  isTimingPattern,
+} from '../qr-spec';
 // Low-level APIs (for advanced use)
 export { qrBitBuffer } from './bit-buffer';
-export { qrNumber, qrAlphaNum, qr8BitByte, qrKanji } from './data-modes';
-export { QRMath, qrPolynomial, glog, gexp } from './math';
-export { QRRSBlock, getRSBlocks } from './rs-blocks';
+export { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from './data-modes';
+export { gexp, glog, QRMath, qrPolynomial } from './math';
 export {
-  QRUtil,
+  base64EncodeOutputStream,
+  byteArrayOutputStream,
+  createDataURL,
+  gifImage,
+} from './output';
+// QR encoder functions
+export {
+  calculateOptimalVersion,
+  createQRInstance,
+  type ECCLevel,
+  type EncodingMode,
+  generateQR,
+  getCompatibleMode,
+  type MaskPattern,
+  type QRInstance,
+  type QRMatrix,
+  type QROptions,
+} from './qr-encoder-utils';
+export { getRSBlocks, QRRSBlock } from './rs-blocks';
+// Shift-JIS encoding
+export { canEncodeAsShiftJIS, createShiftJISEncoder } from './shift-jis';
+// String encoding
+export {
+  createStringToBytes,
+  resetStringToBytes,
+  setStringToBytes,
+  stringToBytes,
+  stringToBytesFn,
+} from './string-bytes';
+export type {
+  QRBitBuffer,
+  QRCodeInstance,
+  QRDataSegment,
+  QRErrorCorrectionLevelChar,
+  QRErrorCorrectionLevelType,
+  QRMaskPatternType,
+  QRModeType,
+  QRPolynomial,
+  RSBlock,
+} from './types';
+// Types
+export {
+  QRErrorCorrectionLevel,
+  QRMaskPattern,
+  QRMode,
+} from './types';
+export {
   getBCHTypeInfo,
   getBCHTypeNumber,
-  getPatternPosition,
-  getMaskFunction,
   getErrorCorrectPolynomial,
   getLengthInBits,
   getLostPoint,
+  getMaskFunction,
+  getPatternPosition,
+  QRUtil,
 } from './utils';
-export {
-  byteArrayOutputStream,
-  base64EncodeOutputStream,
-  gifImage,
-  createDataURL,
-} from './output';
-
-// Shift-JIS encoding
-export { createShiftJISEncoder, canEncodeAsShiftJIS } from './shift-jis';
-
-// QR encoder functions
-export {
-  createQRInstance,
-  generateQR,
-  calculateOptimalVersion,
-  getCompatibleMode,
-  type ECCLevel,
-  type EncodingMode,
-  type MaskPattern,
-  type QROptions,
-  type QRMatrix,
-  type QRInstance,
-} from './qr-encoder-utils';
-
-// Pattern functions - re-exported from qr-spec (canonical source)
-export {
-  getModuleCountForVersion,
-  getVersionFromModuleCount,
-  getAlignmentPositions,
-  getAlignmentPatternCenters,
-  isFinderPattern,
-  isTimingPattern,
-  isAlignmentPattern,
-  isStructuralModule,
-  isData,
-  isLocked,
-} from '../qr-spec';

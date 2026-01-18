@@ -58,8 +58,8 @@ export interface ScanSimulationResult {
 export function analyzeContrast(fgColor: string, bgColor: string): ContrastReport {
   const fg = parseColor(fgColor);
   const bg = parseColor(bgColor);
-  
-  if (!fg || !bg) {
+
+  if (!(fg && bg)) {
     return {
       ratio: 1,
       meetsAA: false,
@@ -68,7 +68,7 @@ export function analyzeContrast(fgColor: string, bgColor: string): ContrastRepor
       bgLuminance: 0,
     };
   }
-  
+
   // Calculate luminance using WCAG formula
   const calcLum = (c: { r: number; g: number; b: number }) => {
     const rsRGB = c.r / 255;
@@ -79,11 +79,11 @@ export function analyzeContrast(fgColor: string, bgColor: string): ContrastRepor
     const b = bsRGB <= 0.03928 ? bsRGB / 12.92 : ((bsRGB + 0.055) / 1.055) ** 2.4;
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
-  
+
   const fgLuminance = calcLum(fg);
   const bgLuminance = calcLum(bg);
   const ratio = getContrastRatio(fg, bg);
-  
+
   return {
     ratio,
     meetsAA: ratio >= 4.5,
@@ -97,7 +97,7 @@ export function analyzeContrast(fgColor: string, bgColor: string): ContrastRepor
  * Analyze contrast from a QR matrix
  */
 export function analyzeMatrixContrast(
-  matrix: boolean[][],
+  _matrix: boolean[][],
   fgColor: string,
   bgColor: string
 ): ContrastReport {
@@ -134,18 +134,18 @@ export function applyNoiseSimulation(
   result.height = canvas.height;
   const ctx = result.getContext('2d');
   if (!ctx) return canvas;
-  
+
   ctx.drawImage(canvas, 0, 0);
   const imageData = ctx.getImageData(0, 0, result.width, result.height);
   const data = imageData.data;
-  
+
   for (let i = 0; i < data.length; i += 4) {
     const noise = (Math.random() - 0.5) * noiseLevel * 255;
     data[i] = Math.max(0, Math.min(255, data[i] + noise));
     data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
     data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
   }
-  
+
   ctx.putImageData(imageData, 0, 0);
   return result;
 }
@@ -215,37 +215,35 @@ export function validateOverlayIntensity(
 /**
  * Generate a readability heatmap
  */
-export function generateReadabilityHeatmap(
-  canvas: HTMLCanvasElement
-): HTMLCanvasElement {
+export function generateReadabilityHeatmap(canvas: HTMLCanvasElement): HTMLCanvasElement {
   const result = document.createElement('canvas');
   result.width = canvas.width;
   result.height = canvas.height;
   const ctx = result.getContext('2d');
   if (!ctx) return canvas;
-  
+
   // Simple implementation - darker areas are more readable
   const sourceCtx = canvas.getContext('2d');
   if (!sourceCtx) return canvas;
-  
+
   const imageData = sourceCtx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  
+
   for (let i = 0; i < data.length; i += 4) {
     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
     // Green = readable (high contrast), Red = problematic
     if (brightness < 128) {
-      data[i] = 0;     // R
+      data[i] = 0; // R
       data[i + 1] = 255; // G
-      data[i + 2] = 0;   // B
+      data[i + 2] = 0; // B
     } else {
-      data[i] = 255;   // R
-      data[i + 1] = 0;   // G
-      data[i + 2] = 0;   // B
+      data[i] = 255; // R
+      data[i + 1] = 0; // G
+      data[i + 2] = 0; // B
     }
     data[i + 3] = 128; // Semi-transparent
   }
-  
+
   ctx.putImageData(imageData, 0, 0);
   return result;
 }
@@ -259,7 +257,7 @@ export function simulateScan(
   conditions: 'ideal' | 'blur' | 'noise' | 'low_light' = 'ideal'
 ): ScanSimulationResult {
   let testCanvas = canvas;
-  
+
   switch (conditions) {
     case 'blur':
       testCanvas = applyBlurSimulation(canvas, 2);
@@ -271,9 +269,9 @@ export function simulateScan(
       testCanvas = applyNoiseSimulation(applyBlurSimulation(canvas, 1), 0.05);
       break;
   }
-  
+
   const result = scanCanvas(testCanvas);
-  
+
   return {
     success: result?.data === expectedContent,
     data: result?.data ?? null,
@@ -285,17 +283,14 @@ export function simulateScan(
 /**
  * Comprehensive QR analysis
  */
-export function analyzeQR(
-  canvas: HTMLCanvasElement,
-  expectedContent?: string
-): AnalysisResult {
+export function analyzeQR(canvas: HTMLCanvasElement, expectedContent?: string): AnalysisResult {
   const warnings: AnalysisWarning[] = [];
   const issues: AnalysisIssue[] = [];
-  
+
   // Try to scan
   const scanResult = scanCanvas(canvas);
   const scannable = !!scanResult;
-  
+
   if (!scannable) {
     issues.push({
       type: 'scan_failed',
@@ -307,7 +302,7 @@ export function analyzeQR(
       message: `Scanned content does not match expected: got "${scanResult.data}"`,
     });
   }
-  
+
   return {
     valid: scannable && (!expectedContent || scanResult?.data === expectedContent),
     scannable,

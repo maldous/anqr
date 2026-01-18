@@ -3,15 +3,42 @@
  * Re-exports from split module files
  */
 
+// Re-export GradientConfig from core
+export type { GradientConfig } from '../core';
+// Blue noise dithering for QR codes
+export {
+  defaultBrowserCanvasFactory as blueNoiseCanvasFactory,
+  generateBlueNoiseDithered,
+} from './blue-noise-qr';
 // Cache utilities
-export { MemoCache, alignmentCache, canvasHashCache, clearQRCaches, overlayDataCache, qrMatrixCache } from './cache';
-
+export {
+  alignmentCache,
+  canvasHashCache,
+  clearQRCaches,
+  MemoCache,
+  overlayDataCache,
+  qrMatrixCache,
+} from './cache';
+// Re-export CanvasFactory from canvas-factory
+export type { CanvasFactory } from './canvas-factory';
 // Canvas factory
 export { defaultBrowserCanvasFactory } from './canvas-factory';
-
-// Utility functions
-export { createSeededRandom, getContrastRatio, hashCanvasContent, hashString } from './utils';
-
+// Color utilities
+export {
+  applyPaletteColor,
+  applyPerModuleColor,
+  darkenColor,
+  ensureContrast,
+  lightenColor,
+} from './color';
+// Dithering
+export {
+  applyAdvancedDither,
+  applyDitherToMatrix,
+  applyTrueDither,
+  distributeError,
+  getDiffusionKernel,
+} from './dithering';
 // Drawing functions
 export {
   createGradientFill,
@@ -26,36 +53,20 @@ export {
   drawTimingModule,
   roundRect,
 } from './drawing';
-
+// ECC awareness
+export { getEccWeight, isEccSafeToModify } from './ecc';
 // Image filters (re-exported from overlay module)
 export {
   applyBoxBlur,
+  applyCannyEdge,
   applySharpen,
   applySobelEdge,
-  applyCannyEdge,
 } from './filters';
-
 // QR-specific preprocessing
-export { preprocessImageData, preprocessImageData as applyFiltersManual } from './filters-preprocess';
-
-// Color utilities
 export {
-  applyPaletteColor,
-  applyPerModuleColor,
-  darkenColor,
-  ensureContrast,
-  lightenColor,
-} from './color';
-
-// Dithering
-export {
-  applyAdvancedDither,
-  applyDitherToMatrix,
-  applyTrueDither,
-  distributeError,
-  getDiffusionKernel,
-} from './dithering';
-
+  preprocessImageData,
+  preprocessImageData as applyFiltersManual,
+} from './filters-preprocess';
 // Overlay processing
 export {
   applyGeometricTransforms,
@@ -67,51 +78,38 @@ export {
   loadImageDataRGB,
   preprocessOverlay,
 } from './overlay';
-
-// ECC awareness
-export { getEccWeight, isEccSafeToModify } from './ecc';
-
 // Pattern helpers
 export { getAlignmentPositionsCached, isFormatInfo, isVersionInfo } from './pattern-helpers';
-
 // Pixel matrix generation
-export { generatePixelDecisionMatrix, getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
-
-// Overlay mode rendering
-export { applyQROverlayMode } from './render-modes';
-export type { OverlayModeResult } from './render-modes';
-
-// Module render loop
-export { renderModules } from './render-loop';
-
-// Scaled QR rendering
-export { generateScaledQR } from './scaled-render';
-
+export {
+  generatePixelDecisionMatrix,
+  getScaleFactor,
+  prepareUnifiedOverlayData,
+} from './pixel-matrix';
 // Main QRGenerator class
 export { QRGenerator } from './qr-generator-class';
-
+// Module render loop
+export { renderModules } from './render-loop';
+export type { OverlayModeResult } from './render-modes';
+// Overlay mode rendering
+export { applyQROverlayMode } from './render-modes';
+// Scaled QR rendering
+export { generateScaledQR } from './scaled-render';
 // Types from local types.ts
 export type {
+  Canvas2DContext,
+  CanvasElement,
+  CreateCanvasFn,
+  DiffusionKernel,
+  OverlayData,
+  OverlayModeResult as OverlayModeResultType,
+  PixelDecisionMatrix,
+  PixelDecisionResult,
   QRCodeInstance,
+  QRGeneratorConfig,
   QRMatrixResult,
   RGB,
-  OverlayData,
-  PixelDecisionResult,
-  QRGeneratorConfig,
   RGBWithMeta,
-  PixelDecisionMatrix,
-  OverlayModeResult as OverlayModeResultType,
-  DiffusionKernel,
-  CreateCanvasFn,
-  CanvasElement,
-  Canvas2DContext,
 } from './types';
-
-// Re-export CanvasFactory from canvas-factory
-export type { CanvasFactory } from './canvas-factory';
-
-// Re-export GradientConfig from core
-export type { GradientConfig } from '../core';
-
-// Blue noise dithering for QR codes
-export { generateBlueNoiseDithered, defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from './blue-noise-qr';
+// Utility functions
+export { createSeededRandom, getContrastRatio, hashCanvasContent, hashString } from './utils';

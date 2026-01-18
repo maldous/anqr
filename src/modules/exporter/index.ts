@@ -3,44 +3,36 @@
  * File export functionality for PNG, GIF, SVG, and vector SVG
  */
 
-// Types
-export type {
-  OutputFormat,
-  ExportConfig,
-  ExportResult,
-  PngMetadata,
-  VectorModuleStyle,
-  VectorFinderStyle,
-  VectorAlignmentStyle,
-  VectorTimingStyle,
-  VectorGradient,
-  VectorSvgConfig,
-} from './types';
-export { getDefaultExportConfig } from './types';
-
-// Utilities (re-exported from browser-io)
-export { canvasToBlob, saveFileNative, downloadUrl } from './utils';
-export { escapeXml } from './utils';
-
+// GIF export
+export { downloadGif, exportGif } from './gif-export';
+// Image export (PNG, WebP, JPEG)
+export { downloadImage, exportImage } from './image-export';
 // PNG metadata
 export {
   calculateCrc32,
   createPngPhysChunk,
-  embedPngDpi,
   createPngTextChunk,
+  embedPngDpi,
   embedPngMetadata,
 } from './png-metadata';
-
-// Image export (PNG, WebP, JPEG)
-export { exportImage, downloadImage } from './image-export';
-
-// GIF export
-export { exportGif, downloadGif } from './gif-export';
-
 // SVG export (raster embedded)
-export { exportSvg, downloadSvg } from './svg-export';
+export { downloadSvg, exportSvg } from './svg-export';
+// Types
+export type {
+  ExportConfig,
+  ExportResult,
+  OutputFormat,
+  PngMetadata,
+  VectorAlignmentStyle,
+  VectorFinderStyle,
+  VectorGradient,
+  VectorModuleStyle,
+  VectorSvgConfig,
+  VectorTimingStyle,
+} from './types';
+export { getDefaultExportConfig } from './types';
+// Utilities (re-exported from browser-io)
+export { canvasToBlob, downloadUrl, escapeXml, saveFileNative } from './utils';
 
 // Vector SVG export (true vector)
-export { exportVectorSvg, downloadVectorSvg } from './vector-svg';
-
-
+export { downloadVectorSvg, exportVectorSvg } from './vector-svg';

@@ -3,8 +3,6 @@
  * Generates animated QR code effects from static images
  */
 
-import { rgbToGray } from '../core';
-
 // ============================================
 // TYPES
 // ============================================
@@ -63,11 +61,7 @@ export function generateAnimationPatternFrames(
     const ctx = canvas.getContext('2d')!;
 
     // Copy source data
-    const frameData = new ImageData(
-      new Uint8ClampedArray(sourceData.data),
-      width,
-      height
-    );
+    const frameData = new ImageData(new Uint8ClampedArray(sourceData.data), width, height);
 
     // Apply pattern effect based on frame number
     const progress = f / frameCount;
@@ -142,14 +136,13 @@ export function interpolateAnimationFramesWithEasing(
 function applyEasing(t: number, mode: InterpolationMode): number {
   switch (mode) {
     case 'ease':
-      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
     case 'ease-in':
       return t * t;
     case 'ease-out':
       return 1 - (1 - t) * (1 - t);
     case 'ease-in-out':
-      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    case 'linear':
+      return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
     default:
       return t;
   }
@@ -199,7 +192,10 @@ function applyPatternToImageData(
           // Subtle color drift
           const driftX = Math.sin(time + seed) * 0.1;
           const driftY = Math.cos(time + seed) * 0.1;
-          factor = 0.9 + 0.1 * Math.sin((x / width + driftX) * Math.PI * 2 + (y / height + driftY) * Math.PI * 2);
+          factor =
+            0.9 +
+            0.1 *
+              Math.sin((x / width + driftX) * Math.PI * 2 + (y / height + driftY) * Math.PI * 2);
           break;
         }
         case 'color_cycle': {
@@ -208,12 +204,12 @@ function applyPatternToImageData(
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
-          
+
           // Simple RGB rotation
           const angle = hueShift * Math.PI * 2;
           const cos = Math.cos(angle);
           const sin = Math.sin(angle);
-          
+
           data[i] = Math.max(0, Math.min(255, r * cos + g * sin));
           data[i + 1] = Math.max(0, Math.min(255, g * cos + b * sin));
           data[i + 2] = Math.max(0, Math.min(255, b * cos + r * sin));

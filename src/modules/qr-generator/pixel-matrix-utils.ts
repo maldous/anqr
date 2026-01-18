@@ -3,8 +3,8 @@
  * Helper functions for pixel matrix generation
  */
 
-import type { QRGeneratorConfig, RGBWithMeta } from './types';
 import type { QRCodeObject } from './cache';
+import type { QRGeneratorConfig, RGBWithMeta } from './types';
 
 /**
  * Get scale factor based on overlay mode
@@ -57,7 +57,7 @@ export function generateBaseMatrix(
   scaledSize: number,
   scale: number
 ): { matrix: boolean[][]; colors: (RGBWithMeta | null)[][] } {
-  const moduleCount = scaledSize / scale;
+  const _moduleCount = scaledSize / scale;
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
 

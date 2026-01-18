@@ -3,21 +3,21 @@
  * Main entry point for applying dithering based on kind
  */
 
-import type { DitherOptions, DitherResult } from './types';
-import { CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
-import { imageDataToFloat } from './utils';
-import { bayerDither, orderedDither } from './ordered';
-import { errorDiffusion } from './error-diffusion';
-import { whiteNoiseDither, gaussianNoiseDither, triangularNoiseDither } from './noise';
 import {
+  adaptiveThresholdDither,
   blueNoiseDither,
   blueNoiseErrorDiffusion,
-  screenedBlueNoiseDither,
-  perceptualDither,
   edgeAwareDither,
-  adaptiveThresholdDither,
+  perceptualDither,
+  screenedBlueNoiseDither,
 } from './advanced';
+import { errorDiffusion } from './error-diffusion';
+import { CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
+import { gaussianNoiseDither, triangularNoiseDither, whiteNoiseDither } from './noise';
+import { bayerDither, orderedDither } from './ordered';
 import { temporalBlueNoiseDither } from './temporal';
+import type { DitherOptions, DitherResult } from './types';
+import { imageDataToFloat } from './utils';
 
 /** Apply dithering based on kind */
 export function applyDither(imageData: ImageData, options: DitherOptions): DitherResult {

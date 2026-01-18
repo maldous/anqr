@@ -64,7 +64,9 @@ export interface ContentAnalysis {
  */
 export function averageColor(imageData: ImageData): { r: number; g: number; b: number } {
   const data = imageData.data;
-  let r = 0, g = 0, b = 0;
+  let r = 0,
+    g = 0,
+    b = 0;
   const pixelCount = data.length / 4;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -90,7 +92,7 @@ export function calculateContrastRatio(
   const getLuminance = (rgb: { r: number; g: number; b: number }) => {
     const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((v) => {
       const s = v / 255;
-      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
     });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
@@ -137,7 +139,8 @@ export function detectContentType(payload: string): ContentType {
   if (lower.startsWith('bcd')) return 'epc_sepa';
   if (lower.startsWith('upi://')) return 'upi';
   if (lower.startsWith('spc')) return 'swiss_qr_bill';
-  if (lower.startsWith('begin:vcalendar') || lower.startsWith('begin:vevent')) return 'calendar_event';
+  if (lower.startsWith('begin:vcalendar') || lower.startsWith('begin:vevent'))
+    return 'calendar_event';
   if (lower.startsWith('otpauth://')) return 'otp_auth';
   if (/^0002\d{2}/.test(trimmed) && /6304[A-F0-9]{4}$/i.test(trimmed)) return 'emv_qr';
 
@@ -188,7 +191,8 @@ export function parseUrlDetails(url: string): UrlDetails | null {
       protocol: parsed.protocol.replace(':', ''),
       host: parsed.host,
       pathname: parsed.pathname,
-      hasUtmParams: parsed.searchParams.has('utm_source') ||
+      hasUtmParams:
+        parsed.searchParams.has('utm_source') ||
         parsed.searchParams.has('utm_medium') ||
         parsed.searchParams.has('utm_campaign'),
       utmSource: parsed.searchParams.get('utm_source') ?? undefined,

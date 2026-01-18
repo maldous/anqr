@@ -5,23 +5,24 @@
 
 // Mode indicators (4-bit)
 export const QRMode = {
-  MODE_NUMBER: 1 << 0,      // 0001
-  MODE_ALPHA_NUM: 1 << 1,   // 0010
-  MODE_8BIT_BYTE: 1 << 2,   // 0100
-  MODE_KANJI: 1 << 3,       // 1000
+  MODE_NUMBER: 1 << 0, // 0001
+  MODE_ALPHA_NUM: 1 << 1, // 0010
+  MODE_8BIT_BYTE: 1 << 2, // 0100
+  MODE_KANJI: 1 << 3, // 1000
 } as const;
 
 export type QRModeType = (typeof QRMode)[keyof typeof QRMode];
 
 // Error correction levels (internal numeric representation)
 export const QRErrorCorrectionLevel = {
-  L: 1,  // ~7% recovery
-  M: 0,  // ~15% recovery
-  Q: 3,  // ~25% recovery
-  H: 2,  // ~30% recovery
+  L: 1, // ~7% recovery
+  M: 0, // ~15% recovery
+  Q: 3, // ~25% recovery
+  H: 2, // ~30% recovery
 } as const;
 
-export type QRErrorCorrectionLevelType = (typeof QRErrorCorrectionLevel)[keyof typeof QRErrorCorrectionLevel];
+export type QRErrorCorrectionLevelType =
+  (typeof QRErrorCorrectionLevel)[keyof typeof QRErrorCorrectionLevel];
 export type QRErrorCorrectionLevelChar = 'L' | 'M' | 'Q' | 'H';
 
 // Mask patterns (0-7)

@@ -3,17 +3,16 @@
  * Reads format bits to get ECC level and mask pattern
  */
 
-import type { FormatInfo, ECCLevelChar } from './types';
-import { ECC_LEVEL_MAP } from './types';
-import {
-  getMaskFunction as getMaskFunctionFromSpec,
-  getAlignmentPositions as getAlignmentPositionsFromSpec,
-  isStructuralModule,
-  getVersionFromModuleCount,
-} from '../qr-spec';
-
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import {
+  getAlignmentPositions as getAlignmentPositionsFromSpec,
+  getMaskFunction as getMaskFunctionFromSpec,
+  getVersionFromModuleCount,
+  isStructuralModule,
+} from '../qr-spec';
+import type { ECCLevelChar, FormatInfo } from './types';
+import { ECC_LEVEL_MAP } from './types';
 
 // Pre-computed valid format info patterns (15 bits after BCH encoding, XORed with mask 0x5412)
 // Format: (ECC level << 3) | mask pattern, then BCH encoded, then XORed with 0x5412
@@ -95,7 +94,7 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
 
   log('format', 'Read format bits', {
     bits1: bits1.toString(2).padStart(15, '0'),
-    bits2: bits2.toString(2).padStart(15, '0')
+    bits2: bits2.toString(2).padStart(15, '0'),
   });
 
   // Try to find a match with error correction
@@ -119,7 +118,7 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
       eccLevel: bestMatch.eccLevel,
       eccChar,
       maskPattern: bestMatch.maskPattern,
-      hammingDistance: bestDistance
+      hammingDistance: bestDistance,
     });
   } else {
     log('format', 'Failed to decode format info');
@@ -219,4 +218,4 @@ export function unmaskMatrix(
 }
 
 // Use canonical source directly
-const getAlignmentPositions = getAlignmentPositionsFromSpec;
+const _getAlignmentPositions = getAlignmentPositionsFromSpec;

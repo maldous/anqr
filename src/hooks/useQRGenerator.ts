@@ -5,30 +5,33 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import {
   type AnimationFrame,
-  type GifCompositor,
   type PatternType as AnimationPattern,
   applyColorCycle,
   createGifCompositor,
   decimateCompositorFrames,
+  type GifCompositor,
   generateAnimationPatternFrames,
   interpolateFrames,
   parseAnimatedImage,
 } from '@/modules/animation';
-import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
-import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay';
-// @ts-ignore -- Legacy code, may have type issues - JS module
-import { QRGenerator } from '@/modules/qr-generator';
-import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
 import {
   applyTemporalNoiseToCanvas,
   calculateTemporalOffset,
   isTemporalDitherActive,
   type TemporalDitherMode,
 } from '@/modules/dither-algorithms';
-import { applyWatermark, type WatermarkPosition } from '@/modules/overlay';
+import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
+import {
+  applyWatermark,
+  getOverlayDitherKind,
+  STORE_DEFAULT_DITHER,
+  type WatermarkPosition,
+} from '@/modules/overlay';
+import { prepareInterstitial, showInterstitial } from '@/modules/platform';
+import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
+import { QRGenerator } from '@/modules/qr-generator';
 import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance
@@ -183,7 +186,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [isRendering, setIsRendering] = useState(false); // Active rendering state
   const [isPending, setIsPending] = useState(false); // Config changed, waiting for debounce
   const [error, setError] = useState<string | null>(null);
-  const [overlayCanvas, setOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
+  const [overlayCanvas, setOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(
+    null
+  );
 
   // Animation state
   const [gifFrames, setGifFrames] = useState<AnimationFrame[]>([]);
@@ -197,7 +202,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [gifCompositor, setGifCompositor] = useState<GifCompositor | null>(null);
 
   // Store raw overlay canvas before preprocessing
-  const [rawOverlayCanvas, setRawOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
+  const [rawOverlayCanvas, setRawOverlayCanvas] = useState<
+    HTMLCanvasElement | OffscreenCanvas | null
+  >(null);
 
   // Track when we're loading/parsing an overlay file (prevents busy overlay flickering)
   const [isLoadingOverlay, setIsLoadingOverlay] = useState(false);
@@ -210,7 +217,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [qrMatrix, setQrMatrix] = useState<boolean[][] | null>(null);
 
   // Store generated frames for GIF export and playback cache
-  const [animationFrames, setAnimationFrames] = useState<(HTMLCanvasElement | OffscreenCanvas)[]>([]);
+  const [animationFrames, setAnimationFrames] = useState<(HTMLCanvasElement | OffscreenCanvas)[]>(
+    []
+  );
   const [isAnimationCacheReady, setIsAnimationCacheReady] = useState(false);
 
   // Get all relevant state from store

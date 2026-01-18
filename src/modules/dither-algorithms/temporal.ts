@@ -9,8 +9,8 @@
  * 2. Temporal offset utilities for animation frames (calculateTemporalOffset, etc.)
  */
 
-import type { ColorMode, DitherResult } from './types';
 import { generateBlueNoiseTile } from './blue-noise';
+import type { ColorMode, DitherResult } from './types';
 import { rgbToGray } from './utils';
 
 // ============================================================================

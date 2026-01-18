@@ -21,7 +21,7 @@ import { MetadataSection } from '@/components/sections/MetadataSection';
 import { OutputSection } from '@/components/sections/OutputSection';
 import { OverlaySection } from '@/components/sections/OverlaySection';
 import { PayloadSection } from '@/components/sections/PayloadSection';
-import { QREncodingSection } from '@/components/sections/QREncodingSection';
+import { QREncodingSection } from '@/components/sections/qr-encoding-section';
 import { RenderSection } from '@/components/sections/RenderSection';
 import { SafetySection } from '@/components/sections/SafetySection';
 import { ShareSection } from '@/components/sections/ShareSection';

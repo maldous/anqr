@@ -3,7 +3,7 @@
  * Functions to identify structural elements in QR codes
  */
 
-import { ALIGNMENT_POSITIONS, getModuleCountForVersion } from './constants';
+import { ALIGNMENT_POSITIONS } from './constants';
 
 /**
  * Check if position is within a finder pattern
@@ -34,7 +34,10 @@ export function isTimingPattern(row: number, col: number, moduleCount: number): 
 /**
  * Get alignment pattern center positions for a given version
  */
-export function getAlignmentPatternCenters(version: number, moduleCount: number): { row: number; col: number }[] {
+export function getAlignmentPatternCenters(
+  version: number,
+  moduleCount: number
+): { row: number; col: number }[] {
   if (version < 2) return [];
 
   const positions = ALIGNMENT_POSITIONS[version] || [];
@@ -66,7 +69,12 @@ export function getAlignmentPatternCenters(version: number, moduleCount: number)
  * Check if position is within an alignment pattern
  * Alignment patterns are 5x5 centered at specific positions
  */
-export function isAlignmentPattern(row: number, col: number, moduleCount: number, version: number): boolean {
+export function isAlignmentPattern(
+  row: number,
+  col: number,
+  moduleCount: number,
+  version: number
+): boolean {
   if (version < 2) return false;
 
   const centers = getAlignmentPatternCenters(version, moduleCount);
@@ -99,7 +107,12 @@ export function isFormatInfo(row: number, col: number, moduleCount: number): boo
  * Check if position is in version information area
  * Version info exists for version >= 7
  */
-export function isVersionInfo(row: number, col: number, moduleCount: number, version: number): boolean {
+export function isVersionInfo(
+  row: number,
+  col: number,
+  moduleCount: number,
+  version: number
+): boolean {
   if (version < 7) return false;
 
   // Bottom-left of top-right finder (3x6 area)
@@ -152,6 +165,11 @@ export function isData(row: number, col: number, moduleCount: number, version: n
  * Check if a module is a structural element
  * Alias for isLocked for semantic clarity in different contexts
  */
-export function isStructuralModule(row: number, col: number, moduleCount: number, version: number): boolean {
+export function isStructuralModule(
+  row: number,
+  col: number,
+  moduleCount: number,
+  version: number
+): boolean {
   return isLocked(row, col, moduleCount, version);
 }

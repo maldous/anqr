@@ -3,14 +3,7 @@
  * URL, tel, email, SMS, geo, WiFi
  */
 
-import type {
-  EmailHelper,
-  GeoHelper,
-  SmsHelper,
-  TelHelper,
-  UrlHelper,
-  WifiHelper,
-} from './types';
+import type { EmailHelper, GeoHelper, SmsHelper, TelHelper, UrlHelper, WifiHelper } from './types';
 
 /** Generate URL payload with optional UTM parameters */
 export function generateUrl(params: UrlHelper): string {

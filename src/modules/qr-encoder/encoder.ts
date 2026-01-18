@@ -3,22 +3,27 @@
  * Main factory function for creating QR codes
  */
 
-import { QRErrorCorrectionLevel } from './types';
-import type { QRCodeInstance, QRDataSegment, QRErrorCorrectionLevelChar, QRBitBuffer as QRBitBufferType } from './types';
 import { qrBitBuffer } from './bit-buffer';
-import { qrNumber, qrAlphaNum, qr8BitByte, qrKanji } from './data-modes';
+import { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from './data-modes';
 import { qrPolynomial } from './math';
+import { createDataURL } from './output';
 import { getRSBlocks } from './rs-blocks';
+import type {
+  QRBitBuffer as QRBitBufferType,
+  QRCodeInstance,
+  QRDataSegment,
+  QRErrorCorrectionLevelChar,
+} from './types';
+import { QRErrorCorrectionLevel } from './types';
 import {
   getBCHTypeInfo,
   getBCHTypeNumber,
-  getPatternPosition,
-  getMaskFunction,
   getErrorCorrectPolynomial,
   getLengthInBits,
   getLostPoint,
+  getMaskFunction,
+  getPatternPosition,
 } from './utils';
-import { createDataURL } from './output';
 
 const PAD0 = 0xec;
 const PAD1 = 0x11;
@@ -360,11 +365,21 @@ export function qrcode(
     for (let i = 0; i < s.length; i += 1) {
       const c = s.charAt(i);
       switch (c) {
-        case '<': escaped += '&lt;'; break;
-        case '>': escaped += '&gt;'; break;
-        case '&': escaped += '&amp;'; break;
-        case '"': escaped += '&quot;'; break;
-        default: escaped += c; break;
+        case '<':
+          escaped += '&lt;';
+          break;
+        case '>':
+          escaped += '&gt;';
+          break;
+        case '&':
+          escaped += '&amp;';
+          break;
+        case '"':
+          escaped += '&quot;';
+          break;
+        default:
+          escaped += c;
+          break;
       }
     }
     return escaped;
@@ -400,16 +415,20 @@ export function qrcode(
         let p = '█';
 
         if (
-          min <= x && x < max &&
-          min <= y && y < max &&
+          min <= x &&
+          x < max &&
+          min <= y &&
+          y < max &&
           _this.isDark(r1, Math.floor((x - min) / cellSize))
         ) {
           p = ' ';
         }
 
         if (
-          min <= x && x < max &&
-          min <= y + 1 && y + 1 < max &&
+          min <= x &&
+          x < max &&
+          min <= y + 1 &&
+          y + 1 < max &&
           _this.isDark(r2, Math.floor((x - min) / cellSize))
         ) {
           p += ' ';
@@ -540,13 +559,27 @@ export function qrcode(
       return qrHtml;
     },
 
-    createSvgTag: function (
-      cellSize?: number | { cellSize?: number; margin?: number; alt?: unknown; title?: unknown; scalable?: boolean },
+    createSvgTag: (
+      cellSize?:
+        | number
+        | {
+            cellSize?: number;
+            margin?: number;
+            alt?: unknown;
+            title?: unknown;
+            scalable?: boolean;
+          },
       margin?: number,
       alt?: unknown,
       title?: unknown
-    ): string {
-      let opts: { cellSize?: number; margin?: number; alt?: unknown; title?: unknown; scalable?: boolean } = {};
+    ): string => {
+      let opts: {
+        cellSize?: number;
+        margin?: number;
+        alt?: unknown;
+        title?: unknown;
+        scalable?: boolean;
+      } = {};
       if (typeof cellSize === 'object') {
         opts = cellSize;
         cellSize = opts.cellSize;
@@ -687,8 +720,10 @@ export function qrcode(
           let p = 1;
 
           if (
-            min <= x && x < max &&
-            min <= y && y < max &&
+            min <= x &&
+            x < max &&
+            min <= y &&
+            y < max &&
             _this.isDark(r, Math.floor((x - min) / cs))
           ) {
             p = 0;

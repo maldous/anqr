@@ -3,11 +3,11 @@
  * Unified overlay data preparation
  */
 
-import type { QRGeneratorConfig, OverlayData, CreateCanvasFn } from './types';
 import type { QRCodeObject } from './cache';
-import { getOverlayData } from './overlay-data';
 import { applyDitherToMatrix } from './dithering-matrix';
+import { getOverlayData } from './overlay-data';
 import { getEffectiveIntensity } from './pixel-matrix-utils';
+import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 
 /**
  * Prepare unified overlay data for rendering
@@ -34,7 +34,12 @@ export async function prepareUnifiedOverlayData(
   const { effectiveIntensity, effectiveConfig } = getEffectiveIntensity(config);
 
   // Get overlay data
-  const overlayData = await getOverlayData(overlayCanvas, moduleCount, effectiveConfig, createCanvasFn);
+  const overlayData = await getOverlayData(
+    overlayCanvas,
+    moduleCount,
+    effectiveConfig,
+    createCanvasFn
+  );
 
   // Apply dithering if needed
   let ditherPattern: boolean[][] | null = null;

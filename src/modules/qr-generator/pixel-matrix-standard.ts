@@ -3,17 +3,17 @@
  * Standard overlay mode pixel matrix generation
  */
 
-import type { QRGeneratorConfig, PixelDecisionMatrix, RGBWithMeta, CreateCanvasFn } from './types';
 import type { QRCodeObject } from './cache';
 import { getOverlayData } from './overlay-data';
 import { normalizeColors } from './pixel-matrix-dither';
+import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig } from './types';
 
 /**
  * Generate standard mode pixel matrix
  */
 export async function generateStandardMatrix(
   qr: QRCodeObject,
-  config: QRGeneratorConfig,
+  _config: QRGeneratorConfig,
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   effectiveIntensity: number,
@@ -21,7 +21,12 @@ export async function generateStandardMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   // Get overlay data
-  const overlayData = await getOverlayData(overlayCanvas, moduleCount, effectiveConfig, createCanvasFn);
+  const overlayData = await getOverlayData(
+    overlayCanvas,
+    moduleCount,
+    effectiveConfig,
+    createCanvasFn
+  );
 
   // Generate matrix from QR data
   const matrix: boolean[][] = [];

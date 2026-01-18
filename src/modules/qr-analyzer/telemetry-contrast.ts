@@ -19,7 +19,7 @@ export function calculateContrastStats(
   const getLuminance = (rgb: { r: number; g: number; b: number }) => {
     const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((v) => {
       const s = v / 255;
-      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
     });
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
@@ -43,9 +43,10 @@ export function calculateContrastStats(
   };
 }
 
-export function checkContrastCompliance(
-  ratio: number
-): { level: 'AAA' | 'AA' | 'AA-Large' | 'Fail'; passes: boolean } {
+export function checkContrastCompliance(ratio: number): {
+  level: 'AAA' | 'AA' | 'AA-Large' | 'Fail';
+  passes: boolean;
+} {
   if (ratio >= 7) return { level: 'AAA', passes: true };
   if (ratio >= 4.5) return { level: 'AA', passes: true };
   if (ratio >= 3) return { level: 'AA-Large', passes: true };

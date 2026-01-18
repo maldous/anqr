@@ -60,7 +60,7 @@ export function QREncodingSection() {
     const content = getPayloadText();
     if (!content) return 1;
     return calculateOptimalVersion(content, qr.ecc);
-  }, [getPayloadText, qr.ecc, qr.encodingMode]);
+  }, [getPayloadText, qr.ecc]);
 
   // Handle version change with debounce - immediate visual feedback, delayed computation
   const handleVersionChange = (value: number) => {

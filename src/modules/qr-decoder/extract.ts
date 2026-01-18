@@ -3,11 +3,10 @@
  * Extracts the module matrix from an image using perspective transformation
  */
 
-import type { Point, FinderPattern, QRLocation } from './types';
-import { pointDistance } from './utils';
-
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import type { FinderPattern, Point, QRLocation } from './types';
+import { pointDistance } from './utils';
 
 /**
  * Calculate the QR code location from finder patterns
@@ -29,7 +28,7 @@ export function calculateLocation(
   // Finder centers are at positions 3.5 from each edge
   const moduleSpan = avgDist / moduleSize;
   const rawModuleCount = moduleSpan + 7;
-  
+
   // Module count must be 21 + 4*k where k is 0-39 (versions 1-40)
   // Valid module counts: 21, 25, 29, 33, 37, 41, ..., 177
   const version = Math.round((rawModuleCount - 17) / 4);
@@ -44,7 +43,7 @@ export function calculateLocation(
     moduleSpan: moduleSpan.toFixed(1),
     rawModuleCount: rawModuleCount.toFixed(1),
     version: clampedVersion,
-    moduleCount
+    moduleCount,
   });
 
   // Estimate bottom-right corner by extrapolating
@@ -88,10 +87,7 @@ function samplePixel(
  * Extract the module matrix from the image
  * Uses the finder pattern centers to build a perspective-corrected grid
  */
-export function extractModuleMatrix(
-  imageData: ImageData,
-  location: QRLocation
-): boolean[][] {
+export function extractModuleMatrix(imageData: ImageData, location: QRLocation): boolean[][] {
   const { data: pixels, width, height } = imageData;
   const { moduleCount } = location;
 
@@ -184,7 +180,7 @@ export function extractModuleMatrix(
     threshold: threshold.toFixed(1),
     darkModules: totalDarkModules,
     lightModules: totalLightModules,
-    darkRatio: ((totalDarkModules / (totalDarkModules + totalLightModules)) * 100).toFixed(1) + '%'
+    darkRatio: `${((totalDarkModules / (totalDarkModules + totalLightModules)) * 100).toFixed(1)}%`,
   });
 
   // Validate matrix by checking finder patterns
@@ -220,7 +216,9 @@ export function extractModuleMatrix(
       } else {
         tlMismatches++;
         if (tlErrors.length < 5) {
-          tlErrors.push(`(${row},${col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`);
+          tlErrors.push(
+            `(${row},${col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
+          );
         }
       }
     }
@@ -229,8 +227,8 @@ export function extractModuleMatrix(
   log('extract', 'Top-left finder pattern validation', {
     matches: tlMatches,
     mismatches: tlMismatches,
-    accuracy: ((tlMatches / 49) * 100).toFixed(1) + '%',
-    errors: tlErrors.length > 0 ? tlErrors : 'none'
+    accuracy: `${((tlMatches / 49) * 100).toFixed(1)}%`,
+    errors: tlErrors.length > 0 ? tlErrors : 'none',
   });
 
   // Validate top-right finder pattern (at columns moduleCount-7 to moduleCount-1)
@@ -248,7 +246,9 @@ export function extractModuleMatrix(
       } else {
         trMismatches++;
         if (trErrors.length < 5) {
-          trErrors.push(`(${row},${trColOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`);
+          trErrors.push(
+            `(${row},${trColOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
+          );
         }
       }
     }
@@ -257,8 +257,8 @@ export function extractModuleMatrix(
   log('extract', 'Top-right finder pattern validation', {
     matches: trMatches,
     mismatches: trMismatches,
-    accuracy: ((trMatches / 49) * 100).toFixed(1) + '%',
-    errors: trErrors.length > 0 ? trErrors : 'none'
+    accuracy: `${((trMatches / 49) * 100).toFixed(1)}%`,
+    errors: trErrors.length > 0 ? trErrors : 'none',
   });
 
   // Check for potential 180° rotation: if top-right is very wrong but top-left is ok,
@@ -268,8 +268,8 @@ export function extractModuleMatrix(
 
   if (tlMismatches > 20 || trMismatches > 20) {
     log('extract', 'WARNING: Finder pattern accuracy very low - matrix may be mis-oriented', {
-      topLeftAccuracy: (tlAccuracy * 100).toFixed(1) + '%',
-      topRightAccuracy: (trAccuracy * 100).toFixed(1) + '%'
+      topLeftAccuracy: `${(tlAccuracy * 100).toFixed(1)}%`,
+      topRightAccuracy: `${(trAccuracy * 100).toFixed(1)}%`,
     });
   }
 
@@ -284,4 +284,7 @@ export function extractModuleMatrix(
 }
 
 // Re-export from canonical source
-export { getVersionFromModuleCount, getModuleCountForVersion as getModuleCountFromVersion } from '../qr-spec';
+export {
+  getModuleCountForVersion as getModuleCountFromVersion,
+  getVersionFromModuleCount,
+} from '../qr-spec';

@@ -3,8 +3,8 @@
  * Create and manage animation loop handlers
  */
 
+import { advanceAnimation, createAnimationState } from './state';
 import type { AnimationFrame, AnimationOptions, AnimationState } from './types';
-import { createAnimationState, advanceAnimation } from './state';
 
 /**
  * Create an animation loop handler

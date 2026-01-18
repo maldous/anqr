@@ -3,9 +3,8 @@
  * Subpixel rendering for high-quality overlay integration
  */
 
-import type { QRGeneratorConfig, CreateCanvasFn, RGBWithMeta, PixelDecisionMatrix } from './types';
 import type { QRCodeObject } from './cache';
-import { getOverlayData } from './overlay-data';
+import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
 
 /**
  * Generate subpixel matrix for overlay modes
@@ -14,7 +13,7 @@ export async function getSubpixelOverlayData(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   scale: number,
-  config: QRGeneratorConfig,
+  _config: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
 ): Promise<{ brightness: number[][]; colors: { r: number; g: number; b: number }[][] }> {
   const scaledSize = moduleCount * scale;

@@ -1,84 +1,78 @@
 /**
  * Core Module
  * Pure utilities with no dependencies - the foundation layer
- * 
+ *
  * This module provides:
  * - Color parsing, conversion, and manipulation
  * - Math utilities (clamp, random, interpolation)
  * - Basic types (RGB, RGBA, HSL)
  * - Gradient utilities
  * - Color harmony functions
- * 
+ *
  * Rules:
  * - NO dependencies on other modules
  * - NO DOM, canvas, or pixel manipulation
  * - Pure functions only
  */
 
-// Types
-export type { RGB, RGBA, HSL, HSLA, GradientStop, GradientConfig, GradientType } from './types';
-
-// Math utilities
-export {
-  clamp,
-  clamp01,
-  createSeededRandom,
-  createRNG,
-  lerp,
-} from './math';
-
-// Alias for backwards compatibility
-export { createSeededRandom as seededRandom } from './math';
-
 // Color utilities
 export {
+  alphaBlend,
+  blendColors,
+  // Blending
+  blendRgb,
+  getContrastRatio,
+  // Contrast
+  getRelativeLuminance,
+  getTextColor,
+  hslToRgb,
+  hslToRgbTuple,
+  isDark,
+  multiplyBlend,
+  overlayBlend,
+  parseColor,
   // Parsing
   parseHex,
   parseHexAlpha,
-  parseRgbString,
   parseHslString,
-  parseColor,
-  // Conversion
-  rgbToHex,
+  parseRgbString,
   rgbaToHex,
-  rgbToString,
   rgbaToString,
   rgbToGray,
+  // Conversion
+  rgbToHex,
   rgbToHsl,
-  hslToRgb,
-  hslToRgbTuple,
   rgbToHslTuple,
-  // Blending
-  blendRgb,
-  blendColors,
-  alphaBlend,
-  multiplyBlend,
+  rgbToString,
   screenBlend,
-  overlayBlend,
-  // Contrast
-  getRelativeLuminance,
-  getContrastRatio,
-  isDark,
-  getTextColor,
 } from './color';
-
 // Contrast utilities
 export {
+  adjustForContrast,
   meetsContrastAA,
   meetsContrastAAA,
-  adjustForContrast,
 } from './contrast';
-
 // Gradient utilities
 export {
+  createCssGradient,
   getGradientColor,
   getGradientColorAt,
-  createCssGradient,
 } from './gradient';
-
 // Color harmony utilities
 export {
-  getComplementary,
   getAnalogous,
+  getComplementary,
   getTriadic,
 } from './harmony';
+// Math utilities
+// Alias for backwards compatibility
+export {
+  clamp,
+  clamp01,
+  createRNG,
+  createSeededRandom,
+  createSeededRandom as seededRandom,
+  lerp,
+} from './math';
+// Types
+export type { GradientConfig, GradientStop, GradientType, HSL, HSLA, RGB, RGBA } from './types';

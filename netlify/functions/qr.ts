@@ -115,8 +115,6 @@ import gifenc from 'gifenc';
 const { GIFEncoder, quantize, applyPalette } = gifenc;
 
 import { decompressFrames, parseGIF } from 'gifuct-js';
-// @ts-expect-error - JS module
-import { QRGenerator } from '../../src/modules/qr-generator/index.js';
 // Import animation utilities
 import {
   type AnimationEasing,
@@ -128,6 +126,8 @@ import {
   applyShimmerPattern,
   applyWavePattern,
 } from '../../src/modules/animation';
+// @ts-expect-error - JS module
+import { QRGenerator } from '../../src/modules/qr-generator';
 
 type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 type OutputFormat = 'png' | 'webp' | 'gif';

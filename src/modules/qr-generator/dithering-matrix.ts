@@ -3,10 +3,10 @@
  * Matrix-based dithering for QR modules
  */
 
-import { getDiffusionKernel } from './dithering-kernels';
-import { distributeError } from './dithering-error';
-import type { QRGeneratorConfig, OverlayData } from './types';
 import type { QRCodeObject } from './cache';
+import { distributeError } from './dithering-error';
+import { getDiffusionKernel } from './dithering-kernels';
+import type { OverlayData, QRGeneratorConfig } from './types';
 
 /**
  * Apply dithering to create a modified QR matrix
@@ -44,7 +44,8 @@ export function applyDitherToMatrix(
       const error = errors[row][col] || 0;
 
       // Calculate desired value based on overlay brightness
-      const targetValue = originalValue * (1 - intensity * strength) + brightness * intensity * strength;
+      const targetValue =
+        originalValue * (1 - intensity * strength) + brightness * intensity * strength;
       const adjustedValue = targetValue + error;
 
       // Quantize to black or white

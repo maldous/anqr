@@ -2,15 +2,14 @@
  * Dithering Utility Functions
  */
 
-import type { OrderedMatrix } from './types';
-import { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
-
 // Import core utilities from canonical source
 import {
   clamp01 as clamp01FromCore,
-  rgbToGray as rgbToGrayFromCore,
   createRNG as createRNGFromCore,
+  rgbToGray as rgbToGrayFromCore,
 } from '../core';
+import { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
+import type { OrderedMatrix } from './types';
 
 // Re-export from core for backward compatibility within dither-algorithms
 export const clamp01 = clamp01FromCore;

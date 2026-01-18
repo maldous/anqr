@@ -3,8 +3,8 @@
  * Helper functions for hashing, random generation, and contrast calculation
  */
 
+import { createRNG, getContrastRatio as getContrastRatioFromCore } from '../core';
 import { canvasHashCache } from './cache';
-import { getContrastRatio as getContrastRatioFromCore, createRNG } from '../core';
 
 /**
  * Calculate contrast ratio between two colors (WCAG formula)

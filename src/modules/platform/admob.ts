@@ -34,7 +34,12 @@ const AD_UNIT_IDS = {
 
 // Types for interstitial and rewarded ads
 // These are flexible string types to allow for different ad contexts
-export type InterstitialType = 'interstitial' | 'rewardedInterstitial' | 'gallery' | 'export' | string;
+export type InterstitialType =
+  | 'interstitial'
+  | 'rewardedInterstitial'
+  | 'gallery'
+  | 'export'
+  | string;
 export type RewardedType = 'rewarded' | 'rewardedInterstitial' | 'premium' | string;
 
 /**
@@ -64,7 +69,9 @@ export async function initializeAdMob(): Promise<boolean> {
     // Listen for banner size changes
     AdMob.addListener(BannerAdPluginEvents.SizeChanged, (info: { height: number }) => {
       currentBannerHeight = info.height;
-      bannerHeightCallbacks.forEach((cb) => cb(info.height));
+      for (const cb of bannerHeightCallbacks) {
+        cb(info.height);
+      }
     });
 
     adMobAvailable = true;
@@ -72,7 +79,7 @@ export async function initializeAdMob(): Promise<boolean> {
     // biome-ignore lint/suspicious/noConsole: AdMob initialization logging
     console.log('[AdMob] Initialized successfully');
     return true;
-  } catch (err) {
+  } catch (_err) {
     // biome-ignore lint/suspicious/noConsole: AdMob availability logging
     console.log('[AdMob] Not available (web environment or plugin not installed)');
     adMobAvailable = false;
@@ -121,7 +128,7 @@ export function onBannerHeightChange(callback: (height: number) => void): () => 
  * Show a banner ad
  */
 export async function showBannerAd(position: 'top' | 'bottom' = 'bottom'): Promise<boolean> {
-  if (!adMobAvailable || !AdMob) return false;
+  if (!(adMobAvailable && AdMob)) return false;
 
   try {
     const bannerOptions = {
@@ -161,13 +168,15 @@ export async function showBottomBanner(): Promise<boolean> {
  * Hide the banner ad
  */
 export async function hideBannerAd(): Promise<void> {
-  if (!adMobAvailable || !AdMob) return;
+  if (!(adMobAvailable && AdMob)) return;
 
   try {
     await AdMob.hideBanner();
     currentBannerHeight = 0;
     currentBannerPosition = null;
-    bannerHeightCallbacks.forEach((cb) => cb(0));
+    for (const cb of bannerHeightCallbacks) {
+      cb(0);
+    }
     // biome-ignore lint/suspicious/noConsole: AdMob banner logging
     console.log('[AdMob] Banner hidden');
   } catch (err) {
@@ -180,13 +189,15 @@ export async function hideBannerAd(): Promise<void> {
  * Remove the banner ad completely
  */
 export async function removeBannerAd(): Promise<void> {
-  if (!adMobAvailable || !AdMob) return;
+  if (!(adMobAvailable && AdMob)) return;
 
   try {
     await AdMob.removeBanner();
     currentBannerHeight = 0;
     currentBannerPosition = null;
-    bannerHeightCallbacks.forEach((cb) => cb(0));
+    for (const cb of bannerHeightCallbacks) {
+      cb(0);
+    }
     // biome-ignore lint/suspicious/noConsole: AdMob banner logging
     console.log('[AdMob] Banner removed');
   } catch (err) {
@@ -201,7 +212,7 @@ export async function removeBannerAd(): Promise<void> {
 export async function prepareInterstitial(
   type: InterstitialType = 'interstitial'
 ): Promise<boolean> {
-  if (!adMobAvailable || !AdMob) return false;
+  if (!(adMobAvailable && AdMob)) return false;
 
   try {
     const adId =
@@ -225,10 +236,8 @@ export async function prepareInterstitial(
 /**
  * Show an interstitial ad
  */
-export async function showInterstitial(
-  type: InterstitialType = 'interstitial'
-): Promise<boolean> {
-  if (!adMobAvailable || !AdMob) return false;
+export async function showInterstitial(type: InterstitialType = 'interstitial'): Promise<boolean> {
+  if (!(adMobAvailable && AdMob)) return false;
 
   try {
     if (type === 'rewardedInterstitial') {
@@ -252,7 +261,7 @@ export async function showInterstitial(
  * Prepare a rewarded ad for later showing
  */
 export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promise<boolean> {
-  if (!adMobAvailable || !AdMob) return false;
+  if (!(adMobAvailable && AdMob)) return false;
 
   try {
     const adId =
@@ -287,7 +296,7 @@ export function isRewardedAdReady(): boolean {
 export async function showRewardedAd(
   type: RewardedType = 'rewarded'
 ): Promise<{ rewarded: boolean; amount?: number; type?: string }> {
-  if (!adMobAvailable || !AdMob) return { rewarded: false };
+  if (!(adMobAvailable && AdMob)) return { rewarded: false };
 
   try {
     let result: any;

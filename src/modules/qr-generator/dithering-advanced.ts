@@ -3,9 +3,9 @@
  * Advanced dithering algorithms with blue noise support
  */
 
-import type { QRGeneratorConfig, OverlayData, CreateCanvasFn } from './types';
-import type { QRCodeObject } from './cache';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
+import type { QRCodeObject } from './cache';
+import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 
 /**
  * Apply advanced dithering with blue noise
@@ -15,7 +15,7 @@ export async function applyAdvancedDither(
   moduleCount: number,
   overlayData: OverlayData,
   config: QRGeneratorConfig,
-  createCanvasFn: CreateCanvasFn
+  _createCanvasFn: CreateCanvasFn
 ): Promise<boolean[][]> {
   const seed = config.blueNoiseSeed ?? 42;
   const tileSize = config.blueNoiseTileSize ?? 64;
@@ -38,7 +38,7 @@ export async function applyAdvancedDither(
 
       // Calculate threshold with blue noise
       const threshold = 0.5 + (noiseValue - 0.5) * strength;
-      const targetValue = originalValue ? (1 - brightness * intensity) : (brightness * intensity);
+      const targetValue = originalValue ? 1 - brightness * intensity : brightness * intensity;
 
       result[row][col] = targetValue > threshold;
     }

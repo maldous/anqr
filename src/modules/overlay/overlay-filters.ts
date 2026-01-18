@@ -46,23 +46,13 @@ export interface FilterOptions {
 // UTILITY FUNCTIONS - Re-exported from core
 // ============================================
 
-import {
-  rgbToGray,
-  hslToRgb,
-  rgbToHsl,
-  clamp,
-  clamp01,
-} from '../core';
+import { clamp, clamp01, hslToRgb, rgbToGray, rgbToHsl } from '../core';
 
 // Re-export core functions for backwards compatibility
 export { clamp, clamp01, rgbToGray, hslToRgb, rgbToHsl };
 
 export function copyImageData(imageData: ImageData): ImageData {
-  return new ImageData(
-    new Uint8ClampedArray(imageData.data),
-    imageData.width,
-    imageData.height
-  );
+  return new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
 }
 
 // ============================================
@@ -130,9 +120,9 @@ export function gamma(imageData: ImageData, value: number): ImageData {
   const invGamma = 1 / value;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.round(255 * Math.pow(data[i] / 255, invGamma));
-    data[i + 1] = Math.round(255 * Math.pow(data[i + 1] / 255, invGamma));
-    data[i + 2] = Math.round(255 * Math.pow(data[i + 2] / 255, invGamma));
+    data[i] = Math.round(255 * (data[i] / 255) ** invGamma);
+    data[i + 1] = Math.round(255 * (data[i + 1] / 255) ** invGamma);
+    data[i + 2] = Math.round(255 * (data[i + 2] / 255) ** invGamma);
   }
 
   return imageData;
@@ -190,11 +180,7 @@ export function posterize(imageData: ImageData, levels: number): ImageData {
   return imageData;
 }
 
-export function duotone(
-  imageData: ImageData,
-  lightColor: RGB,
-  darkColor: RGB
-): ImageData {
+export function duotone(imageData: ImageData, lightColor: RGB, darkColor: RGB): ImageData {
   const data = imageData.data;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -211,11 +197,7 @@ export function duotone(
 // CONVOLUTION FILTERS
 // ============================================
 
-export function convolve(
-  imageData: ImageData,
-  kernel: number[][],
-  divisor?: number
-): ImageData {
+export function convolve(imageData: ImageData, kernel: number[][], divisor?: number): ImageData {
   const data = imageData.data;
   const width = imageData.width;
   const height = imageData.height;
@@ -227,7 +209,9 @@ export function convolve(
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      let r = 0, g = 0, b = 0;
+      let r = 0,
+        g = 0,
+        b = 0;
 
       for (let ky = 0; ky < kSize; ky++) {
         for (let kx = 0; kx < kSize; kx++) {
@@ -264,14 +248,13 @@ export function sharpen(imageData: ImageData, amount: number = 1): ImageData {
 
 export function blur(imageData: ImageData, radius: number = 1): ImageData {
   const size = 2 * radius + 1;
-  const kernel = Array(size).fill(null).map(() => Array(size).fill(1));
+  const kernel = Array(size)
+    .fill(null)
+    .map(() => Array(size).fill(1));
   return convolve(imageData, kernel);
 }
 
-export function gaussianBlur(
-  imageData: ImageData,
-  radius: number = 1
-): ImageData {
+export function gaussianBlur(imageData: ImageData, radius: number = 1): ImageData {
   // Simple 3x3 Gaussian
   const kernel = [
     [1, 2, 1],
@@ -304,12 +287,21 @@ export function sobelEdge(imageData: ImageData): ImageData {
   const height = imageData.height;
   const result = new Uint8ClampedArray(data.length);
 
-  const sobelX = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
-  const sobelY = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+  const sobelX = [
+    [-1, 0, 1],
+    [-2, 0, 2],
+    [-1, 0, 1],
+  ];
+  const sobelY = [
+    [-1, -2, -1],
+    [0, 0, 0],
+    [1, 2, 1],
+  ];
 
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
-      let gx = 0, gy = 0;
+      let gx = 0,
+        gy = 0;
 
       for (let ky = -1; ky <= 1; ky++) {
         for (let kx = -1; kx <= 1; kx++) {
@@ -394,10 +386,7 @@ export function getRGBMap(imageData: ImageData): {
 // COLOR MODE
 // ============================================
 
-export function applyColorMode(
-  imageData: ImageData,
-  mode: ColorMode
-): ImageData {
+export function applyColorMode(imageData: ImageData, mode: ColorMode): ImageData {
   if (mode === 'color') return imageData;
 
   const data = imageData.data;
@@ -424,10 +413,7 @@ export function applyColorMode(
 // MAIN APPLY FUNCTION
 // ============================================
 
-export function applyFilters(
-  imageData: ImageData,
-  options: FilterOptions
-): ImageData {
+export function applyFilters(imageData: ImageData, options: FilterOptions): ImageData {
   let result = copyImageData(imageData);
 
   if (options.brightness !== undefined && options.brightness !== 0) {

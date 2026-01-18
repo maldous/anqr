@@ -45,12 +45,7 @@ export type DiffusionKernel =
   | 'sierra_lite'
   | 'two_row_sierra';
 
-export type OrderedMatrix =
-  | 'bayer2'
-  | 'bayer4'
-  | 'bayer8'
-  | 'clustered_dot'
-  | 'void_cluster';
+export type OrderedMatrix = 'bayer2' | 'bayer4' | 'bayer8' | 'clustered_dot' | 'void_cluster';
 
 export interface DitherOptions {
   kind: DitherKind;

@@ -49,10 +49,7 @@ export function createQRInstance(
 /**
  * Generate QR code matrix
  */
-export function generateQR(
-  data: string,
-  options: QROptions = {}
-): QRMatrix {
+export function generateQR(data: string, options: QROptions = {}): QRMatrix {
   const ecc = options.errorCorrectionLevel ?? 'M';
   const version = options.version ?? 0;
   const instance = createQRInstance(data, ecc, version);
@@ -84,17 +81,17 @@ export function getCompatibleMode(content: string, requestedMode: string): strin
   if (requestedMode === 'auto') {
     // Auto-detect the best mode
     if (/^[0-9]+$/.test(content)) return 'numeric';
-    if (/^[0-9A-Z $%*+\-.\/:']+$/.test(content)) return 'alphanumeric';
+    if (/^[0-9A-Z $%*+\-./:']+$/.test(content)) return 'alphanumeric';
     return 'byte';
   }
-  
+
   // Validate that requested mode can encode the content
   switch (requestedMode) {
     case 'numeric':
       if (/^[0-9]+$/.test(content)) return 'numeric';
       break;
     case 'alphanumeric':
-      if (/^[0-9A-Z $%*+\-.\/:']+$/.test(content)) return 'alphanumeric';
+      if (/^[0-9A-Z $%*+\-./:']+$/.test(content)) return 'alphanumeric';
       break;
     case 'kanji':
       // For kanji, fall through to byte if content has non-kanji chars
@@ -102,7 +99,7 @@ export function getCompatibleMode(content: string, requestedMode: string): strin
     case 'byte':
       return 'byte';
   }
-  
+
   // Fall back to byte mode if requested mode can't encode content
   return 'byte';
 }

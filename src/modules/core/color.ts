@@ -3,7 +3,7 @@
  * Pure color math functions - NO DOM, canvas, or pixel dependencies
  */
 
-import type { RGB, RGBA, HSL, HSLA } from './types';
+import type { HSL, HSLA, RGB, RGBA } from './types';
 
 // Re-export types for convenience
 export type { RGB, RGBA, HSL, HSLA };
