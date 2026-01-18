@@ -13,12 +13,12 @@ import {
   applyColorCycle,
   createGifCompositor,
   decimateCompositorFrames,
-  generatePatternFrames,
+  generateAnimationPatternFrames,
   interpolateFrames,
   parseAnimatedImage,
 } from '@/modules/animation';
 import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
-import { getEffectiveDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay';
+import { getOverlayDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay';
 // @ts-ignore -- Legacy code, may have type issues - JS module
 import { QRGenerator } from '@/modules/qr-generator';
 import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
@@ -427,10 +427,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // overlayRotate, overlayFlipX, overlayFlipY, overlayCrop, overlayFit are omitted.
 
       // Dither options - on mobile, use cheap default unless user explicitly changed it
-      ditherKind: getEffectiveDitherKind(
-        overlay.ditherKind,
-        overlay.ditherKind === STORE_DEFAULT_DITHER.kind
-      ),
+      ditherKind: getOverlayDitherKind({
+        enabled: true,
+        kind: overlay.ditherKind === STORE_DEFAULT_DITHER.kind ? undefined : overlay.ditherKind,
+      }),
       ditherStrength: overlay.ditherStrength,
       ditherSerpentine: overlay.ditherSerpentine,
       diffusionKernel: overlay.diffusionKernel,
@@ -885,7 +885,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           watermarkImage = await loadFileAsCanvas(watermark.image);
         }
 
-        const watermarked = await applyWatermark(result, {
+        const watermarked = await applyWatermark(result as HTMLCanvasElement, {
           kind: watermark.kind,
           text: watermark.text,
           image: watermarkImage,
@@ -1529,7 +1529,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           const baseQR = await qrGenerator.generate(debouncedConfig, null);
           if (!baseQR || isCancelled) return;
 
-          const patternFrames = generatePatternFrames(
+          const patternFrames = generateAnimationPatternFrames(
             baseQR,
             animation.pattern as AnimationPattern,
             frameCount,
@@ -1546,7 +1546,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           const baseQR = await qrGenerator.generate(debouncedConfig, null);
           if (!baseQR || isCancelled) return;
 
-          const _basePatternFrames = generatePatternFrames(
+          const _basePatternFrames = generateAnimationPatternFrames(
             baseQR,
             animation.pattern as AnimationPattern,
             frameCount,
@@ -1570,7 +1570,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
             // Apply the same pattern effect that would be at this frame index
             // by generating pattern frames for this specific jittered QR
-            const patternForFrame = generatePatternFrames(
+            const patternForFrame = generateAnimationPatternFrames(
               jitteredQR,
               animation.pattern as AnimationPattern,
               frameCount,
@@ -1624,7 +1624,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         // Generate 24 frames of pattern animation from single frame
         const patternFrameCount = 24;
         const baseCanvas = applyGeometricTransforms(effectiveFrames[0].canvas);
-        const patternFrames = generatePatternFrames(
+        const patternFrames = generateAnimationPatternFrames(
           baseCanvas,
           animation.pattern as AnimationPattern,
           patternFrameCount,
@@ -1778,7 +1778,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
             // Apply watermark if enabled
             if (watermark.enabled) {
-              const watermarked = await applyWatermark(finalResult, {
+              const watermarked = await applyWatermark(finalResult as HTMLCanvasElement, {
                 kind: watermark.kind,
                 text: watermark.text,
                 image: watermarkImage,

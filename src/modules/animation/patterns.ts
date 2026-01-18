@@ -217,7 +217,7 @@ function applyInterpolationEasing(t: number, mode: InterpolationMode): number {
 /**
  * Interpolate between two frames with easing
  */
-export function interpolateFramesWithEasing(
+export function interpolateAnimationFramesWithEasing(
   frame1: HTMLCanvasElement | OffscreenCanvas,
   frame2: HTMLCanvasElement | OffscreenCanvas,
   t: number,
@@ -246,5 +246,5 @@ export function interpolateFramesWithEasing(
 
 export default {
   generateAnimationPatternFrames,
-  interpolateFramesWithEasing,
+  interpolateAnimationFramesWithEasing,
 };

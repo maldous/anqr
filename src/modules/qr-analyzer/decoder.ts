@@ -4,7 +4,7 @@
 
 import { decodeQR } from '../qr-decoder';
 import type { ECCLevel, QRAnalysisResult } from './types';
-import { detectContentType } from './content-detection';
+import { detectContentTypeWrapper } from './content-detection';
 
 interface QRLocationCorners {
   topLeftCorner: { x: number; y: number };
@@ -112,7 +112,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     });
 
     // Detect content type
-    const contentType = detectContentType(code.data!);
+    const contentType = detectContentTypeWrapper(code.data!);
 
     // Analyze colors from the QR region
     const detectedColors = analyzeColors(imageData, location);

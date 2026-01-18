@@ -35,7 +35,7 @@ import { downloadUrl, escapeXml } from './utils';
  */
 function getAlignmentPositionsFromModuleCount(moduleCount: number): Array<{ row: number; col: number }> {
   const version = Math.round((moduleCount - 17) / 4);
-  return getAlignmentPatternCenters(version);
+  return getAlignmentPatternCenters(version, moduleCount);
 }
 
 /**
@@ -289,7 +289,7 @@ export function exportVectorSvg(matrix: boolean[][], config: VectorSvgConfig = {
   }
 
   let alignmentPaths = '';
-  const alignmentPositions = getAlignmentPositionsForModuleCount(moduleCount);
+  const alignmentPositions = getAlignmentPositionsFromModuleCount(moduleCount);
   for (const pos of alignmentPositions) {
     const centerX = marginPx + pos.col * moduleSize + moduleSize / 2;
     const centerY = marginPx + pos.row * moduleSize + moduleSize / 2;

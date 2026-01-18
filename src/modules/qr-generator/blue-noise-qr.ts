@@ -97,8 +97,9 @@ const sampleBlueNoiseAt = (x: number, y: number): number =>
 function isPixelInStructuralModule(moduleCount: number, x: number, y: number, scale: number): boolean {
   const moduleX = Math.floor(x / scale);
   const moduleY = Math.floor(y / scale);
-  const version = getVersionFromModuleCount(moduleCount / scale);
-  return isStructuralModule(moduleY, moduleX, version);
+  const scaledModuleCount = Math.floor(moduleCount / scale);
+  const version = getVersionFromModuleCount(scaledModuleCount);
+  return isStructuralModule(moduleY, moduleX, scaledModuleCount, version);
 }
 
 /**
