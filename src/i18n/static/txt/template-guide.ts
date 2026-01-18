@@ -491,7 +491,7 @@ export const guide: PageDefinition = {
       paragraphs: ['1304'],
       bullets: ['1305', '1306', '1307', '1308'],
     },
-    // Parameter Support Levels
+    // Client-Only Parameters
     {
       heading: '1309',
       paragraphs: ['1310'],
