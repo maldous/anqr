@@ -3,7 +3,7 @@
  */
 
 export interface AnimationFrame {
-  canvas: HTMLCanvasElement;
+  canvas: HTMLCanvasElement | OffscreenCanvas;
   delay: number; // milliseconds
   disposalType: number;
 }
@@ -35,7 +35,7 @@ export interface AnimationState {
 
 export interface GifCompositor {
   /** The single reusable canvas - always reflects the current composed frame */
-  canvas: HTMLCanvasElement;
+  canvas: HTMLCanvasElement | OffscreenCanvas;
   /** Total number of frames */
   frameCount: number;
   /** Width of the GIF */

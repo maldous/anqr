@@ -48,7 +48,7 @@ export function normalizeColors(
 export async function generateDitherModeMatrix(
   qr: QRCodeObject,
   config: QRGeneratorConfig,
-  overlayCanvas: HTMLCanvasElement,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   effectiveIntensity: number,
   effectiveConfig: QRGeneratorConfig,

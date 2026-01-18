@@ -82,12 +82,12 @@ export function calculateTemporalOffset(
  * This provides temporal dithering for modes that don't support native offset passing
  */
 export function applyTemporalNoiseToCanvas(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   offset: number,
   strength: number = 0.02
 ): HTMLCanvasElement {
   if (offset === 0 || strength === 0) {
-    return canvas;
+    return canvas as HTMLCanvasElement;
   }
 
   const result = document.createElement('canvas');
@@ -95,7 +95,7 @@ export function applyTemporalNoiseToCanvas(
   result.height = canvas.height;
   const ctx = result.getContext('2d');
   if (!ctx) {
-    return canvas;
+    return canvas as HTMLCanvasElement;
   }
 
   // Draw original

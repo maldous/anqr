@@ -11,7 +11,7 @@ import { getOverlayData } from './overlay-data';
  * Generate subpixel matrix for overlay modes
  */
 export async function getSubpixelOverlayData(
-  overlayCanvas: HTMLCanvasElement,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   scale: number,
   config: QRGeneratorConfig,
@@ -60,7 +60,7 @@ export async function getSubpixelOverlayData(
 export async function generateSubpixelMatrix(
   qr: QRCodeObject,
   config: QRGeneratorConfig,
-  overlayCanvas: HTMLCanvasElement,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   scale: number,
   useHalftoneCenter: boolean,

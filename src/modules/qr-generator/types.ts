@@ -71,7 +71,7 @@ export interface QRGeneratorConfig {
   
   // Encoding
   encodingMode?: string;
-  maskPattern?: number | 'auto';
+  maskPattern?: number | 'auto' | undefined;
   characterEncoding?: string;
   
   // Advanced
@@ -85,6 +85,10 @@ export interface QRGeneratorConfig {
   htDot?: number;
   htCurve?: number;
   htCell?: number;
+  halftoneCell?: number | string;
+  halftoneDotShape?: string;
+  brightnessCurve?: number | string;
+  duotoneColors?: string[];
   
   // Subpixel settings
   subpixelGrid?: number;
@@ -157,6 +161,17 @@ export interface DiffusionKernel {
 }
 
 export type CreateCanvasFn = (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>;
+
+/**
+ * Union type for canvas elements (browser or offscreen)
+ * Used throughout the QR generator for canvas compatibility
+ */
+export type CanvasElement = HTMLCanvasElement | OffscreenCanvas;
+
+/**
+ * Union type for 2D rendering contexts
+ */
+export type Canvas2DContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 // QR code instance interface
 export interface QRCodeInstance {

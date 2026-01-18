@@ -102,6 +102,8 @@ export type {
   OverlayModeResult as OverlayModeResultType,
   DiffusionKernel,
   CreateCanvasFn,
+  CanvasElement,
+  Canvas2DContext,
 } from './types';
 
 // Re-export CanvasFactory from canvas-factory

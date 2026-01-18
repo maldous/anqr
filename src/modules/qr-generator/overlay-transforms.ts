@@ -37,10 +37,10 @@ export function hasGeometricTransforms(config: QRGeneratorConfig): boolean {
  * Apply geometric transforms to overlay canvas
  */
 export async function applyGeometricTransforms(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   config: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
-): Promise<HTMLCanvasElement> {
+): Promise<HTMLCanvasElement | OffscreenCanvas> {
   // Return canvas as-is if no transforms needed
   if (!hasGeometricTransforms(config)) {
     return canvas;
@@ -51,7 +51,7 @@ export async function applyGeometricTransforms(
   const ctx = result.getContext('2d');
   if (!ctx) return canvas;
 
-  ctx.drawImage(canvas, 0, 0);
+  ctx.drawImage(canvas as CanvasImageSource, 0, 0);
   return result;
 }
 
@@ -59,16 +59,16 @@ export async function applyGeometricTransforms(
  * Preprocess overlay with filters
  */
 export async function preprocessOverlay(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   config: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
-): Promise<HTMLCanvasElement> {
+): Promise<HTMLCanvasElement | OffscreenCanvas> {
   if (!hasPreprocessingOptions(config)) {
     return canvas;
   }
 
   // Get image data
-  const ctx = canvas.getContext('2d');
+  const ctx = (canvas as HTMLCanvasElement).getContext('2d');
   if (!ctx) return canvas;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -83,5 +83,5 @@ export async function preprocessOverlay(
   if (!resultCtx) return canvas;
 
   resultCtx.putImageData(processed, 0, 0);
-  return result;
+  return result as HTMLCanvasElement | OffscreenCanvas;
 }

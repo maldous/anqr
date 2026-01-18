@@ -80,19 +80,19 @@ import { createAnimationState, getNextFrame, advanceAnimation } from './state';
  * Apply animation pattern to a frame
  */
 export function applyAnimationPattern(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   frameIndex: number,
   totalFrames: number,
   pattern: AnimationPattern,
   options: Partial<AnimationOptions> = {}
 ): HTMLCanvasElement {
-  if (pattern === 'none') return canvas;
+  if (pattern === 'none') return canvas as HTMLCanvasElement;
 
   const result = document.createElement('canvas');
   result.width = canvas.width;
   result.height = canvas.height;
   const ctx = result.getContext('2d');
-  if (!ctx) return canvas;
+  if (!ctx) return canvas as HTMLCanvasElement;
 
   const progress = frameIndex / Math.max(1, totalFrames - 1);
   const seed = options.seed ?? 0;
@@ -101,12 +101,12 @@ export function applyAnimationPattern(
     case 'pulse': {
       const scale = 1 + Math.sin(progress * Math.PI * 2) * 0.05;
       const offset = ((1 - scale) * canvas.width) / 2;
-      ctx.drawImage(canvas, offset, offset, canvas.width * scale, canvas.height * scale);
+      ctx.drawImage(canvas as CanvasImageSource, offset, offset, canvas.width * scale, canvas.height * scale);
       break;
     }
 
     case 'wave': {
-      ctx.drawImage(canvas, 0, 0);
+      ctx.drawImage(canvas as CanvasImageSource, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
@@ -128,7 +128,7 @@ export function applyAnimationPattern(
     }
 
     case 'scanline': {
-      ctx.drawImage(canvas, 0, 0);
+      ctx.drawImage(canvas as CanvasImageSource, 0, 0);
       const scanY = Math.floor(progress * canvas.height);
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.fillRect(0, scanY - 2, canvas.width, 4);
@@ -136,7 +136,7 @@ export function applyAnimationPattern(
     }
 
     case 'shimmer': {
-      ctx.drawImage(canvas, 0, 0);
+      ctx.drawImage(canvas as CanvasImageSource, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
 
@@ -154,12 +154,12 @@ export function applyAnimationPattern(
     case 'drift': {
       const driftX = Math.sin(progress * Math.PI * 2) * 3;
       const driftY = Math.cos(progress * Math.PI * 2) * 3;
-      ctx.drawImage(canvas, driftX, driftY);
+      ctx.drawImage(canvas as CanvasImageSource, driftX, driftY);
       break;
     }
 
     default:
-      ctx.drawImage(canvas, 0, 0);
+      ctx.drawImage(canvas as CanvasImageSource, 0, 0);
   }
 
   return result;
@@ -173,20 +173,20 @@ export function applyAnimationPattern(
  * Apply temporal dithering for animation frames
  */
 export function applyTemporalDither(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   frameIndex: number,
   mode: 'off' | 'blue_noise' | 'flicker_safe',
   seed: number = 0
 ): HTMLCanvasElement {
-  if (mode === 'off') return canvas;
+  if (mode === 'off') return canvas as HTMLCanvasElement;
 
   const result = document.createElement('canvas');
   result.width = canvas.width;
   result.height = canvas.height;
   const ctx = result.getContext('2d');
-  if (!ctx) return canvas;
+  if (!ctx) return canvas as HTMLCanvasElement;
 
-  ctx.drawImage(canvas, 0, 0);
+  ctx.drawImage(canvas as CanvasImageSource, 0, 0);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -226,35 +226,35 @@ export function applyTemporalDither(
  * Interpolate between two frames
  */
 export function interpolateFrames(
-  frame1: HTMLCanvasElement,
-  frame2: HTMLCanvasElement,
+  frame1: HTMLCanvasElement | OffscreenCanvas,
+  frame2: HTMLCanvasElement | OffscreenCanvas,
   t: number,
   mode: 'none' | 'crossfade' | 'morph'
 ): HTMLCanvasElement {
-  if (mode === 'none' || t === 0) return frame1;
-  if (t === 1) return frame2;
+  if (mode === 'none' || t === 0) return frame1 as HTMLCanvasElement;
+  if (t === 1) return frame2 as HTMLCanvasElement;
 
   const result = document.createElement('canvas');
   result.width = frame1.width;
   result.height = frame1.height;
   const ctx = result.getContext('2d');
-  if (!ctx) return frame1;
+  if (!ctx) return frame1 as HTMLCanvasElement;
 
   switch (mode) {
     case 'crossfade': {
       ctx.globalAlpha = 1 - t;
-      ctx.drawImage(frame1, 0, 0);
+      ctx.drawImage(frame1 as CanvasImageSource, 0, 0);
       ctx.globalAlpha = t;
-      ctx.drawImage(frame2, 0, 0);
+      ctx.drawImage(frame2 as CanvasImageSource, 0, 0);
       ctx.globalAlpha = 1;
       break;
     }
 
     case 'morph': {
-      const ctx1 = frame1.getContext('2d');
-      const ctx2 = frame2.getContext('2d');
+      const ctx1 = (frame1 as HTMLCanvasElement).getContext('2d');
+      const ctx2 = (frame2 as HTMLCanvasElement).getContext('2d');
       if (!(ctx1 && ctx2)) {
-        ctx.drawImage(frame1, 0, 0);
+        ctx.drawImage(frame1 as HTMLCanvasElement, 0, 0);
         break;
       }
       const data1 = ctx1.getImageData(0, 0, frame1.width, frame1.height);
@@ -270,7 +270,7 @@ export function interpolateFrames(
     }
 
     default:
-      ctx.drawImage(frame1, 0, 0);
+      ctx.drawImage(frame1 as CanvasImageSource, 0, 0);
   }
 
   return result;
@@ -284,7 +284,7 @@ export function interpolateFrames(
  * Apply color cycling effect to a frame
  */
 export function applyColorCycle(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   frameIndex: number,
   totalFrames: number
 ): HTMLCanvasElement {
@@ -292,9 +292,9 @@ export function applyColorCycle(
   result.width = canvas.width;
   result.height = canvas.height;
   const ctx = result.getContext('2d');
-  if (!ctx) return canvas;
+  if (!ctx) return canvas as HTMLCanvasElement;
 
-  ctx.drawImage(canvas, 0, 0);
+  ctx.drawImage(canvas as CanvasImageSource, 0, 0);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
 
@@ -337,7 +337,7 @@ export function applyColorCycle(
  * Create an animation loop handler
  */
 export function createAnimationLoop(
-  onFrame: (frameIndex: number, canvas: HTMLCanvasElement) => void,
+  onFrame: (frameIndex: number, canvas: HTMLCanvasElement | OffscreenCanvas) => void,
   options: AnimationOptions
 ): { start: () => void; stop: () => void; setFrames: (frames: AnimationFrame[]) => void } {
   let state: AnimationState | null = null;

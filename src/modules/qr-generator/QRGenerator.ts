@@ -99,7 +99,7 @@ export class QRGenerator {
     // Check cache for existing QR matrix
     const cachedQr = qrMatrixCache.get(qrCacheKey);
     if (cachedQr) {
-      return { qr: cachedQr.qr, moduleCount: cachedQr.moduleCount };
+      return { qr: cachedQr.qr as QRCodeInstance, moduleCount: cachedQr.moduleCount };
     }
 
     // Build new QR matrix
@@ -144,7 +144,7 @@ export class QRGenerator {
     // Cache the result
     qrMatrixCache.set(qrCacheKey, { qr, moduleCount });
 
-    return { qr, moduleCount };
+    return { qr: qr as QRCodeInstance, moduleCount };
   }
 
   /**
@@ -175,7 +175,7 @@ export class QRGenerator {
       for (const pos of finderPositions) {
         const x = (pos.col + margin) * moduleSize;
         const y = (pos.row + margin) * moduleSize;
-        drawFinderPatternComplete(ctx, x, y, moduleSize, config);
+        drawFinderPatternComplete(ctx as CanvasRenderingContext2D, x, y, moduleSize, config);
 
         // Mark all modules in this finder pattern as drawn
         for (let r = pos.row; r < pos.row + 7; r++) {
@@ -195,7 +195,7 @@ export class QRGenerator {
       for (const pos of alignPositions) {
         const centerX = (pos.col + margin) * moduleSize + moduleSize / 2;
         const centerY = (pos.row + margin) * moduleSize + moduleSize / 2;
-        drawAlignmentPattern(ctx, centerX, centerY, moduleSize, alignmentStyle, config);
+        drawAlignmentPattern(ctx as CanvasRenderingContext2D, centerX, centerY, moduleSize, alignmentStyle, config);
 
         // Mark all modules in this alignment pattern as drawn
         for (let r = pos.row - 2; r <= pos.row + 2; r++) {
@@ -243,7 +243,7 @@ export class QRGenerator {
     // =======================================================================
     // STAGE 1: QR MATRIX GENERATION
     // =======================================================================
-    const maskPatternConfig = config.maskPattern;
+    const maskPatternConfig = typeof config.maskPattern === 'number' ? config.maskPattern : undefined;
     const characterEncodingConfig = config.characterEncoding || 'default';
 
     const { qr, moduleCount } = this.buildQRMatrix(
