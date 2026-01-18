@@ -8,8 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { BusyOverlay } from '@/components/BusyOverlay';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
-import { getContrastRatio, parseColor } from '@/modules/color-utils';
-import { analyzeContrast } from '@/modules/qr-analyzer';
+import { parseColor, meetsContrastAA, meetsContrastAAA, getContrastRatio } from '@/modules/color-utils';
 import { useQRStore } from '@/store/qr-store';
 
 interface PreviewProps {
@@ -94,11 +93,17 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
   // Calculate contrast ratio between foreground and background colors
   const contrastAnalysis = useMemo(() => {
     if (safety.mode === 'off') return null;
-    const report = analyzeContrast(render.fgColor, render.bgColor);
+    const fgRgb = parseColor(render.fgColor);
+    const bgRgb = parseColor(render.bgColor);
+    if (!fgRgb || !bgRgb) return null;
+    
+    // Calculate contrast ratio
+    const ratio = getContrastRatio(render.fgColor, render.bgColor);
+    
     return {
-      ratio: report.overallRatio,
-      meetsAA: report.meetsWCAG_AA,
-      meetsAAA: report.meetsWCAG_AAA,
+      ratio,
+      meetsAA: meetsContrastAA(render.fgColor, render.bgColor),
+      meetsAAA: meetsContrastAAA(render.fgColor, render.bgColor),
     };
   }, [render.fgColor, render.bgColor, safety.mode]);
 
@@ -148,7 +153,7 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
         const pixelColor = { r: data[i], g: data[i + 1], b: data[i + 2] };
 
         // Calculate contrast ratio with background
-        const ratio = getContrastRatio(pixelColor, bg);
+        const ratio = bg ? getContrastRatio(pixelColor, bg) : 1;
 
         // Map contrast ratio to heatmap color
         // 7:1 = AAA (green), 4.5:1 = AA (yellow-green), 3:1 = AA-L (yellow), <3 = poor (red)

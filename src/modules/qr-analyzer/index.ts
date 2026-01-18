@@ -17,20 +17,23 @@ export type {
   StructuralAnalysis,
 } from './types';
 
-// Content detection
-export { detectContentType } from './content-detection';
+// Content detection (from content-detection.ts)
+export { detectContentType as detectContentTypeDetails } from './content-detection';
 
-// Content analysis utilities
+// Content analysis utilities (from content/content.ts)
 export {
   averageColor,
   calculateContrastRatio,
   calculateImageProperties,
+  detectContentType,
   extractDominantColors,
   parseUrlDetails,
   rgbToHex,
   type ColorInfo,
   type ContentAnalysis,
+  type ContentType as ContentTypeSimple,
   type DominantColor,
+  type ImageProperties as ContentImageProperties,
   type UrlDetails,
 } from './content/content';
 
@@ -83,6 +86,7 @@ export {
 export {
   type ScanStats,
   type LogEntry,
+  type ScanLogger,
   createScanLogger,
 } from './telemetry/logging';
 

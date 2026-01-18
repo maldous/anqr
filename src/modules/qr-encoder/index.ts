@@ -59,3 +59,27 @@ export {
 
 // Shift-JIS encoding
 export { createShiftJISEncoder, canEncodeAsShiftJIS } from './internal/shift-jis';
+
+// QR Core compatibility layer
+export {
+  createQRInstance,
+  generateQR,
+  calculateOptimalVersion,
+  getModuleCountForVersion,
+  getVersionFromModuleCount,
+  getAlignmentPositions,
+  getAlignmentPatternCenters,
+  isFinderPattern,
+  isTimingPattern,
+  isAlignmentPattern,
+  isStructuralModule,
+  isData,
+  isLocked,
+  QRCore,
+  type ECCLevel,
+  type EncodingMode,
+  type MaskPattern,
+  type QROptions,
+  type QRMatrix,
+  type QRInstance,
+} from './qr-core-compat';

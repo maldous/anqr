@@ -1,9 +1,9 @@
 /**
- * QR Scanner/Validator Module
- * Uses jsQR to decode and validate generated QR codes
+ * QR Scanner Module
+ * Uses our own QR decoder for scanning
  */
 
-import jsQR from 'jsqr';
+import { decodeQR } from '../../qr-decoder';
 
 export interface QRLocation {
   topLeftCorner: { x: number; y: number };
@@ -13,53 +13,55 @@ export interface QRLocation {
 }
 
 export interface ScanResult {
-  data: string;
-  location: QRLocation;
-  binaryData?: Uint8ClampedArray;
+  data: string | null;
+  location: QRLocation | null;
+  binaryData?: Uint8Array;
 }
 
 export interface ValidationResult {
   valid: boolean;
-  scanned: boolean;
-  data: string | null;
-  expected: string | null;
-  match: boolean;
+  data?: string;
   error?: string;
-  attempts?: number;
+  confidence: 'high' | 'medium' | 'low';
 }
 
 /**
- * Scan a canvas for QR codes
+ * Scan a canvas for QR code
  */
-export function scanCanvas(canvas: HTMLCanvasElement): ScanResult | null {
+export function scanCanvas(canvas: HTMLCanvasElement): ScanResult {
   const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  
+  if (!ctx) {
+    return { data: null, location: null };
+  }
+
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   return scanImageData(imageData);
 }
 
 /**
- * Scan ImageData for QR codes
+ * Scan image data for QR code
  */
-export function scanImageData(imageData: ImageData): ScanResult | null {
-  const result = jsQR(imageData.data, imageData.width, imageData.height, {
-    inversionAttempts: 'attemptBoth',
-  });
-  
-  if (!result) return null;
-  
-  return {
-    data: result.data,
-    location: result.location,
-    binaryData: result.binaryData,
-  };
+export function scanImageData(imageData: ImageData): ScanResult {
+  try {
+    const result = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
+
+    if (result && result.success && result.data) {
+      return {
+        data: result.data,
+        location: result.location ?? null,
+      };
+    }
+
+    return { data: null, location: null };
+  } catch {
+    return { data: null, location: null };
+  }
 }
 
 /**
- * Scan a File for QR codes
+ * Scan a file for QR code
  */
-export async function scanFile(file: File): Promise<ScanResult | null> {
+export async function scanFile(file: File): Promise<ScanResult> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -73,116 +75,97 @@ export async function scanFile(file: File): Promise<ScanResult | null> {
           ctx.drawImage(img, 0, 0);
           resolve(scanCanvas(canvas));
         } else {
-          resolve(null);
+          resolve({ data: null, location: null });
         }
       };
-      img.onerror = () => resolve(null);
+      img.onerror = () => resolve({ data: null, location: null });
       img.src = e.target?.result as string;
     };
-    reader.onerror = () => resolve(null);
+    reader.onerror = () => resolve({ data: null, location: null });
     reader.readAsDataURL(file);
   });
 }
 
 /**
- * Validate a QR code against expected content
+ * Validate QR code by scanning and comparing to expected content
  */
 export function validateQRCode(
   canvas: HTMLCanvasElement,
-  expectedContent: string
+  expectedContent?: string
 ): ValidationResult {
   const result = scanCanvas(canvas);
-  
-  if (!result) {
+
+  if (!result.data) {
     return {
       valid: false,
-      scanned: false,
-      data: null,
-      expected: expectedContent,
-      match: false,
-      error: 'Could not scan QR code',
+      error: 'No QR code detected',
+      confidence: 'low',
     };
   }
-  
-  const match = result.data === expectedContent;
-  
+
+  if (expectedContent && result.data !== expectedContent) {
+    return {
+      valid: false,
+      data: result.data,
+      error: 'Content does not match expected',
+      confidence: 'medium',
+    };
+  }
+
   return {
-    valid: match,
-    scanned: true,
+    valid: true,
     data: result.data,
-    expected: expectedContent,
-    match,
+    confidence: 'high',
   };
 }
 
 /**
- * Validate QR code with multiple attempts at different scales
+ * Validate QR code with multiple scan attempts
  */
 export function validateQRCodeRobust(
   canvas: HTMLCanvasElement,
-  expectedContent: string,
-  maxAttempts = 3
+  expectedContent?: string,
+  attempts: number = 3
 ): ValidationResult {
-  // First try at original size
-  let result = validateQRCode(canvas, expectedContent);
-  if (result.valid) {
-    return { ...result, attempts: 1 };
+  for (let i = 0; i < attempts; i++) {
+    const result = validateQRCode(canvas, expectedContent);
+    if (result.valid) return result;
   }
-  
-  // Try with scaled versions
-  const scales = [2, 0.5, 1.5];
-  for (let i = 0; i < Math.min(maxAttempts - 1, scales.length); i++) {
-    const scale = scales[i];
-    const scaledCanvas = document.createElement('canvas');
-    scaledCanvas.width = Math.round(canvas.width * scale);
-    scaledCanvas.height = Math.round(canvas.height * scale);
-    const ctx = scaledCanvas.getContext('2d');
-    if (ctx) {
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-      result = validateQRCode(scaledCanvas, expectedContent);
-      if (result.valid) {
-        return { ...result, attempts: i + 2 };
-      }
-    }
-  }
-  
-  return { ...result, attempts: maxAttempts };
-}
 
-/**
- * Validate multiple animation frames
- */
-export function validateFrames(
-  frames: HTMLCanvasElement[],
-  expectedContent: string,
-  sampleSize = 5
-): { valid: boolean; successRate: number; results: ValidationResult[] } {
-  const step = Math.max(1, Math.floor(frames.length / sampleSize));
-  const results: ValidationResult[] = [];
-  
-  for (let i = 0; i < frames.length; i += step) {
-    const result = validateQRCodeRobust(frames[i], expectedContent);
-    results.push(result);
-  }
-  
-  const successCount = results.filter(r => r.valid).length;
-  const successRate = successCount / results.length;
-  
   return {
-    valid: successRate >= 0.8, // 80% success rate required
-    successRate,
-    results,
+    valid: false,
+    error: 'Failed to validate after multiple attempts',
+    confidence: 'low',
   };
 }
 
 /**
- * QR Scanner class for object-oriented usage
+ * Validate multiple frames (for animated QR codes)
+ */
+export function validateFrames(
+  frames: HTMLCanvasElement[],
+  expectedContent?: string
+): { valid: boolean; validCount: number; totalCount: number } {
+  let validCount = 0;
+  for (const frame of frames) {
+    const result = validateQRCode(frame, expectedContent);
+    if (result.valid) validCount++;
+  }
+
+  return {
+    valid: validCount === frames.length,
+    validCount,
+    totalCount: frames.length,
+  };
+}
+
+/**
+ * QRScanner class for backwards compatibility
  */
 export const QRScanner = {
   scanCanvas,
-  scanImageData,
   scanFile,
+  scanImageData,
   validateQRCode,
   validateQRCodeRobust,
   validateFrames,
