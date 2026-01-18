@@ -65,6 +65,7 @@ export {
   createQRInstance,
   generateQR,
   calculateOptimalVersion,
+  getCompatibleMode,
   getModuleCountForVersion,
   getVersionFromModuleCount,
   getAlignmentPositions,
