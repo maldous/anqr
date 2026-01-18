@@ -1,6 +1,5 @@
 /**
- * RGB to Hex conversion
- * Re-exports from content.ts for backwards compatibility
+ * @deprecated Import from './content' or '../../qr-analyzer' instead.
+ * This file exists only for backwards compatibility.
  */
-
 export { rgbToHex } from './content';

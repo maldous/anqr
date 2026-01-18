@@ -34,7 +34,7 @@ export interface PatternOptions {
 /**
  * Generate frames for an animation pattern from a source canvas
  */
-export function generatePatternFrames(
+export function generateAnimationPatternFrames(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   pattern: AnimationPattern,
   frameCount: number = 30,
@@ -49,7 +49,7 @@ export function generatePatternFrames(
 
   for (let i = 0; i < frameCount; i++) {
     const progress = i / frameCount;
-    const frame = applyPatternToFrame(sourceCanvas, pattern, progress, seed, intensity);
+    const frame = applyAnimationPatternToFrame(sourceCanvas, pattern, progress, seed, intensity);
     frames.push(frame);
   }
 
@@ -59,7 +59,7 @@ export function generatePatternFrames(
 /**
  * Apply a pattern effect to a single frame
  */
-function applyPatternToFrame(
+function applyAnimationPatternToFrame(
   source: HTMLCanvasElement | OffscreenCanvas,
   pattern: AnimationPattern,
   progress: number,
@@ -245,6 +245,6 @@ export function interpolateFramesWithEasing(
 }
 
 export default {
-  generatePatternFrames,
+  generateAnimationPatternFrames,
   interpolateFramesWithEasing,
 };

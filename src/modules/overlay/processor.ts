@@ -132,7 +132,7 @@ export function loadImageFromDataUrl(dataUrl: string): Promise<HTMLCanvasElement
 // IMAGE TRANSFORMATION
 // ============================================
 
-export function cropImage(
+export function cropOverlayImage(
   source: HTMLCanvasElement,
   region: CropRegion
 ): HTMLCanvasElement {
@@ -157,7 +157,7 @@ export function cropImage(
   return canvas;
 }
 
-export function fitImage(
+export function fitOverlayImage(
   source: HTMLCanvasElement,
   targetWidth: number,
   targetHeight: number,
@@ -212,7 +212,7 @@ export function fitImage(
   return canvas;
 }
 
-export function rotateCanvas(
+export function rotateOverlayCanvas(
   source: HTMLCanvasElement,
   degrees: number
 ): HTMLCanvasElement {
@@ -236,7 +236,7 @@ export function rotateCanvas(
   return canvas;
 }
 
-export function flipCanvas(
+export function flipOverlayCanvas(
   source: HTMLCanvasElement,
   horizontal: boolean,
   vertical: boolean
@@ -261,12 +261,12 @@ export function flipCanvas(
 // DITHERING
 // ============================================
 
-export function getEffectiveDitherKind(options?: OverlayDitherOptions): DitherKind {
+export function getOverlayDitherKind(options?: OverlayDitherOptions): DitherKind {
   if (!options?.enabled) return 'none';
   return options.kind ?? 'floyd_steinberg';
 }
 
-export function ditherOverlay(
+export function applyOverlayDither(
   imageData: ImageData,
   options: OverlayDitherOptions
 ): ImageData {
@@ -310,7 +310,7 @@ export function ditherOverlay(
   return new ImageData(outputData, width, height);
 }
 
-export function ditherOverlayForQR(
+export function applyOverlayDitherForQR(
   source: HTMLCanvasElement,
   options: OverlayDitherOptions
 ): HTMLCanvasElement {
@@ -322,7 +322,7 @@ export function ditherOverlayForQR(
   if (!ctx) return source;
 
   const imageData = ctx.getImageData(0, 0, source.width, source.height);
-  const dithered = ditherOverlay(imageData, options);
+  const dithered = applyOverlayDither(imageData, options);
 
   const result = document.createElement('canvas');
   result.width = source.width;
@@ -338,12 +338,12 @@ export function ditherOverlayForQR(
 // OVERLAY DATA EXTRACTION
 // ============================================
 
-export function getOverlayData(
+export function extractOverlayBrightnessData(
   canvas: HTMLCanvasElement,
   targetSize: number
 ): Float32Array {
   // Resize to target size for module-level data
-  const resized = fitImage(canvas, targetSize, targetSize, 'cover');
+  const resized = fitOverlayImage(canvas, targetSize, targetSize, 'cover');
   const ctx = resized.getContext('2d');
   if (!ctx) throw new Error('Could not get 2D context');
 
@@ -360,11 +360,11 @@ export function getOverlayData(
   return brightness;
 }
 
-export function getOverlayRGBData(
+export function extractOverlayRGBData(
   canvas: HTMLCanvasElement,
   targetSize: number
 ): { r: Float32Array; g: Float32Array; b: Float32Array } {
-  const resized = fitImage(canvas, targetSize, targetSize, 'cover');
+  const resized = fitOverlayImage(canvas, targetSize, targetSize, 'cover');
   const ctx = resized.getContext('2d');
   if (!ctx) throw new Error('Could not get 2D context');
 

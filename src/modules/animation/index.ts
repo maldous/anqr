@@ -41,9 +41,9 @@ export {
   advanceAnimation,
 } from './state';
 
-// Animation patterns from internal module
+// Animation patterns
 export {
-  generatePatternFrames,
+  generateAnimationPatternFrames,
   interpolateFramesWithEasing,
   type AnimationPattern as PatternType,
   type InterpolationMode,
@@ -52,13 +52,13 @@ export {
 // Shared pixel-level pattern functions (used by client and server)
 export type { AnimationEasing } from './shared-patterns';
 export {
-  applyEasing,
-  applyPulsePattern,
-  applyWavePattern,
-  applyScanlinePattern,
-  applyShimmerPattern,
-  applyDriftPattern,
-  applyColorCyclePattern,
+  applyAnimationEasing,
+  applyAnimationPulse,
+  applyAnimationWave,
+  applyAnimationScanline,
+  applyAnimationShimmer,
+  applyAnimationDrift,
+  applyAnimationColorCycle,
 } from './shared-patterns';
 
 // Animation pattern application

@@ -20,7 +20,7 @@ export type AnimationEasing = 'linear' | 'ease_in' | 'ease_out' | 'ease_in_out' 
 /**
  * Apply easing function to progress value (0-1)
  */
-export function applyEasing(progress: number, easing: AnimationEasing): number {
+export function applyAnimationEasing(progress: number, easing: AnimationEasing): number {
   switch (easing) {
     case 'ease_in':
       return progress * progress;
@@ -47,7 +47,7 @@ export function applyEasing(progress: number, easing: AnimationEasing): number {
  * Apply pulse pattern effect to image data
  * Tints dark pixels with a pulsing color based on progress
  */
-export function applyPulsePattern(data: Uint8ClampedArray, progress: number, seed: number): void {
+export function applyAnimationPulse(data: Uint8ClampedArray, progress: number, seed: number): void {
   const pulsePhase = Math.sin(progress * Math.PI * 2);
   const intensity = 0.3 + 0.2 * Math.abs(pulsePhase);
   const hue = (seed * 31) % 360;
@@ -78,7 +78,7 @@ export function applyPulsePattern(data: Uint8ClampedArray, progress: number, see
  * Apply wave pattern effect to image data
  * Creates horizontal color waves across the image
  */
-export function applyWavePattern(
+export function applyAnimationWave(
   data: Uint8ClampedArray,
   progress: number,
   width: number,
@@ -121,7 +121,7 @@ export function applyWavePattern(
  * Apply scanline pattern effect to image data
  * Creates a moving scan line across the image
  */
-export function applyScanlinePattern(
+export function applyAnimationScanline(
   data: Uint8ClampedArray,
   progress: number,
   width: number,
@@ -168,7 +168,7 @@ export function applyScanlinePattern(
  * Apply shimmer pattern effect to image data
  * Creates random sparkle effects
  */
-export function applyShimmerPattern(
+export function applyAnimationShimmer(
   data: Uint8ClampedArray,
   progress: number,
   width: number,
@@ -210,7 +210,7 @@ export function applyShimmerPattern(
  * Apply drift pattern effect to image data
  * Creates flowing color gradients
  */
-export function applyDriftPattern(
+export function applyAnimationDrift(
   data: Uint8ClampedArray,
   progress: number,
   width: number,
@@ -254,7 +254,7 @@ export function applyDriftPattern(
  * Apply color cycle pattern effect to image data
  * Cycles hue across the animation
  */
-export function applyColorCyclePattern(
+export function applyAnimationColorCycle(
   data: Uint8ClampedArray,
   progress: number,
   seed: number

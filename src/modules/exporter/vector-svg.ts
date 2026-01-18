@@ -9,7 +9,9 @@ import {
   isAlignmentPattern,
   isFinderPattern,
   isTimingPattern,
-} from '../qr-encoder';
+  getVersionFromModuleCount,
+  getAlignmentPositions,
+} from '../qr-spec';
 import type {
   ExportResult,
   VectorAlignmentStyle,
@@ -25,7 +27,13 @@ import { downloadUrl, escapeXml } from './utils';
  * Helper: Get alignment pattern positions for a given moduleCount
  * Uses getAlignmentPatternCenters from qr-encoder
  */
-function getAlignmentPositionsForModuleCount(moduleCount: number): Array<{ row: number; col: number }> {
+
+
+/**
+ * Get alignment positions as {row, col} objects for a given module count
+ * Wrapper that uses qr-spec's getAlignmentPositions internally
+ */
+function getAlignmentPositionsFromModuleCount(moduleCount: number): Array<{ row: number; col: number }> {
   const version = Math.round((moduleCount - 17) / 4);
   return getAlignmentPatternCenters(version);
 }

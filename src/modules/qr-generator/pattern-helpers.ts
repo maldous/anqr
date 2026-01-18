@@ -22,6 +22,13 @@ export const isVersionInfo = isVersionInfoSpec;
  * Note: Returns {row, col}[] objects (different from qr-spec's getAlignmentPositions which returns number[])
  * This is a cached wrapper around getAlignmentPatternCenters, not a duplicate of getAlignmentPositions
  */
+// Import getAlignmentPositions from qr-spec and cache results
+import { getAlignmentPositions } from '../qr-spec';
+
+/**
+ * Cached version of getAlignmentPositions that returns {row, col} objects
+ * Note: This has a different return type than qr-spec's getAlignmentPositions
+ */
 export function getAlignmentPositionsCached(
   version: number,
   moduleCount: number

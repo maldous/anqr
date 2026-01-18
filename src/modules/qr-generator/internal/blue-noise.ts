@@ -336,3 +336,9 @@ export async function generateBlueNoiseDithered(
 
 // Export types for external use
 export type { BlueNoiseOptions as GenerateOptions };
+
+/**
+ * @deprecated Import from '../blue-noise-qr' or '../../qr-generator' instead.
+ * This file exists only for backwards compatibility.
+ */
+export * from '../blue-noise-qr';
