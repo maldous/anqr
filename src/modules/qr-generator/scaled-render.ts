@@ -10,7 +10,7 @@ import {
   drawFrame,
   drawFrameBackground,
 } from './drawing';
-import { getAlignmentPositions } from './pattern-helpers';
+import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
 import type { CanvasFactory } from './canvas-factory';
 import type { QRGeneratorConfig, QRCodeInstance, RGB } from './types';
@@ -142,7 +142,7 @@ export async function generateScaledQR(
   // Note: moduleCount is the base QR module count (not scaled)
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
   if (version >= 2) {
-    const alignPositions = getAlignmentPositions(version, moduleCount);
+    const alignPositions = getAlignmentPositionsCached(version, moduleCount);
     const alignmentStyle = config.alignmentStyle || 'match_finder';
     for (const pos of alignPositions) {
       // pos.row/col is the CENTER module of the alignment pattern

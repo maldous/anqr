@@ -5,6 +5,7 @@
 
 import type { QRGeneratorConfig, PixelDecisionMatrix, RGBWithMeta, CreateCanvasFn } from './types';
 import type { CanvasFactory } from './canvas-factory';
+import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
 
 /**
  * Generate dithered pixel matrix
@@ -106,10 +107,10 @@ export async function generateBlueNoiseMatrix(
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
 
-  // Generate blue noise pattern
+  // Generate blue noise pattern using canonical source from dither-algorithms
   const seed = config.blueNoiseSeed ?? 42;
   const tileSize = config.blueNoiseTileSize ?? 64;
-  const blueNoise = generateBlueNoiseTile(tileSize, seed);
+  const blueNoiseTile = generateBlueNoiseTile(tileSize, seed);
 
   for (let y = 0; y < scaledSize; y++) {
     matrix[y] = [];
@@ -123,10 +124,8 @@ export async function generateBlueNoiseMatrix(
 
       const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
 
-      // Sample blue noise
-      const noiseX = x % tileSize;
-      const noiseY = y % tileSize;
-      const threshold = blueNoise[noiseY][noiseX];
+      // Sample blue noise using canonical sampleBlueNoise from dither-algorithms
+      const threshold = sampleBlueNoise(x, y, blueNoiseTile, tileSize);
 
       const isDark = brightness < threshold;
       matrix[y][x] = isDark;
@@ -159,20 +158,4 @@ function createEmptyMatrix(
   return { matrix, colors, scale, overlayData: null, effectiveIntensity };
 }
 
-function generateBlueNoiseTile(size: number, seed: number): number[][] {
-  let s = seed;
-  const random = () => {
-    s = (s * 1103515245 + 12345) & 0x7fffffff;
-    return s / 0x7fffffff;
-  };
-
-  const tile: number[][] = [];
-  for (let y = 0; y < size; y++) {
-    tile[y] = [];
-    for (let x = 0; x < size; x++) {
-      tile[y][x] = random();
-    }
-  }
-
-  return tile;
-}
+// generateBlueNoiseTile removed - using canonical source from dither-algorithms

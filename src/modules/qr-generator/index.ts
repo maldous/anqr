@@ -72,7 +72,7 @@ export {
 export { getEccWeight, isEccSafeToModify } from './ecc';
 
 // Pattern helpers
-export { getAlignmentPositions, isFormatInfo, isVersionInfo } from './pattern-helpers';
+export { getAlignmentPositionsCached, isFormatInfo, isVersionInfo } from './pattern-helpers';
 
 // Pixel matrix generation
 export { generatePixelDecisionMatrix, getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';

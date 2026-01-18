@@ -15,7 +15,7 @@ import {
   drawFrame,
   drawFrameBackground,
 } from './drawing';
-import { getAlignmentPositions } from './pattern-helpers';
+import { getAlignmentPositionsCached } from './pattern-helpers';
 import { getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 import { renderModules } from './render-loop';
 import { generateScaledQR } from './scaled-render';
@@ -190,7 +190,7 @@ export class QRGenerator {
     const alignmentStyle = config.alignmentStyle || 'match_finder';
 
     if (version >= 2 && shouldDrawAlignmentFirst) {
-      const alignPositions = getAlignmentPositions(version, moduleCount);
+      const alignPositions = getAlignmentPositionsCached(version, moduleCount);
       for (const pos of alignPositions) {
         const centerX = (pos.col + margin) * moduleSize + moduleSize / 2;
         const centerY = (pos.row + margin) * moduleSize + moduleSize / 2;
