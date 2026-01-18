@@ -42,7 +42,8 @@ import { type GalleryCategory, gallerySections } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { isRtlLanguage, languages, loadLocale } from '@/i18n';
 import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
-import { copyToClipboard, getShareableUrl } from '@/modules/share-utils';
+import { copyToClipboard } from '@/modules/browser-clipboard';
+import { getShareableUrl } from '@/modules/share-links';
 import { type Tier, useQRStore } from '@/store/qr-store';
 
 // Dynamic icon component for gallery filters

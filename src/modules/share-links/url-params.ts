@@ -1,9 +1,9 @@
 /**
- * Share Utilities - URL Parameters
+ * Share Links Module - URL Parameters
  * Handles URL parameter encoding/decoding for QR code sharing
  */
 
-import type { ShareConfig } from './types';
+import { MAX_SHARE_URL_LENGTH, type ShareConfig } from './types';
 
 // Helper functions to reduce code duplication
 function parseIntParam(value: string | null): number | undefined {
@@ -823,4 +823,19 @@ export function getShareableUrl(config: Partial<ShareConfig>, baseUrl?: string):
 
   const params = buildUrlParams(config);
   return params ? `${base}?${params}` : base;
+}
+
+/**
+ * Check if a share URL exceeds recommended length limits.
+ * Returns warning message if too long, null otherwise.
+ */
+export function checkShareUrlLength(url: string): string | null {
+  if (url.length > MAX_SHARE_URL_LENGTH) {
+    return (
+      `Share URL is ${url.length} characters (recommended max: ${MAX_SHARE_URL_LENGTH}). ` +
+      'Very long URLs may fail in SMS, some social apps, and QR scanners. ' +
+      'Consider using fewer custom settings or a URL shortener.'
+    );
+  }
+  return null;
 }

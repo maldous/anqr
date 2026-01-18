@@ -74,6 +74,25 @@ export {
 } from './core';
 
 // ============================================
+// BROWSER I/O (canonical source for canvas/download)
+// ============================================
+export {
+  canvasToBlob,
+  canvasToDataUrl,
+  downloadBlob,
+  downloadUrl,
+  saveFileNative,
+} from './browser-io';
+
+// ============================================
+// BROWSER CLIPBOARD (canonical source for clipboard)
+// ============================================
+export {
+  copyToClipboard,
+  copyImageToClipboard,
+} from './browser-clipboard';
+
+// ============================================
 // QR ENCODER (canonical source for QR encoding)
 // ============================================
 export {
@@ -150,6 +169,29 @@ export {
 } from './qr-encoder';
 
 // ============================================
+// QR SPEC (canonical source for QR domain knowledge)
+// ============================================
+// Selective exports to avoid conflicts with qr-encoder
+// Note: getBCHTypeInfo, getBCHTypeNumber, getMaskFunction are exported from qr-encoder
+export {
+  // Constants
+  ALIGNMENT_POSITIONS,
+  getAlignmentPositions as getAlignmentPositionsSpec,
+  ECC_CAPACITIES_BYTE,
+  ECC_CAPACITIES_NUMERIC,
+  ECC_CAPACITIES_ALPHANUMERIC,
+  // Pattern detection (unique to qr-spec)
+  isFormatInfo,
+  isVersionInfo,
+  // Mode constants
+  MODE_NUMERIC,
+  MODE_ALPHANUMERIC,
+  MODE_BYTE,
+  MODE_KANJI,
+  MODE_TERMINATOR,
+} from './qr-spec';
+
+// ============================================
 // QR DECODER
 // ============================================
 export * from './qr-decoder';
@@ -215,9 +257,6 @@ export {
   // ECC
   getEccWeight,
   isEccSafeToModify,
-  // Patterns
-  isFormatInfo,
-  isVersionInfo,
   // Pixel matrix
   generatePixelDecisionMatrix,
   getScaleFactor,
@@ -237,7 +276,6 @@ export {
   type RGBWithMeta,
   type PixelDecisionMatrix,
   type OverlayModeResult,
-  type DiffusionKernel,
   type CreateCanvasFn,
   type CanvasElement,
   type Canvas2DContext,
@@ -262,6 +300,13 @@ export {
   applyDither,
   bayerDither,
   orderedDither,
+  // Temporal dithering (canonical source)
+  calculateTemporalOffset,
+  applyTemporalNoiseToCanvas,
+  generateTemporalSequence,
+  isTemporalDitherActive,
+  temporalBlueNoiseDither,
+  type TemporalDitherMode,
 } from './dither-algorithms';
 
 // ============================================
@@ -270,7 +315,7 @@ export {
 export * from './overlay';
 
 // ============================================
-// EXPORTER (selective to avoid canvasToBlob conflict with share-utils)
+// EXPORTER
 // ============================================
 export {
   // Types
@@ -287,8 +332,6 @@ export {
   getDefaultExportConfig,
   // Utils
   escapeXml,
-  saveFileNative,
-  downloadUrl,
   // PNG
   calculateCrc32,
   createPngPhysChunk,
@@ -307,9 +350,6 @@ export {
   // Vector SVG
   exportVectorSvg,
   downloadVectorSvg,
-  // Namespace
-  Exporter,
-  ExporterModule,
 } from './exporter';
 
 // ============================================
@@ -318,9 +358,24 @@ export {
 export * from './payload-generators';
 
 // ============================================
-// SHARE UTILS
+// SHARE LINKS (canonical source for URL sharing)
 // ============================================
-export * from './share-utils';
+export {
+  MAX_SHARE_URL_LENGTH,
+  type ShareConfig,
+  type EmbedOptions,
+  parseUrlParams,
+  buildUrlParams,
+  updateBrowserUrl,
+  getShareableUrl,
+  checkShareUrlLength,
+  convertToImageApiUrl,
+  generateImageEmbed,
+  generateIframeEmbed,
+  generateMarkdownEmbed,
+  generateBBCodeEmbed,
+  getSocialShareUrls,
+} from './share-links';
 
 // ============================================
 // PLATFORM

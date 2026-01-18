@@ -1,6 +1,6 @@
 /**
  * Exporter Module
- * Re-exports from split module files
+ * File export functionality for PNG, GIF, SVG, and vector SVG
  */
 
 // Types
@@ -18,8 +18,9 @@ export type {
 } from './types';
 export { getDefaultExportConfig } from './types';
 
-// Utilities
-export { canvasToBlob, escapeXml, saveFileNative, downloadUrl } from './utils';
+// Utilities (re-exported from browser-io)
+export { canvasToBlob, saveFileNative, downloadUrl } from './utils';
+export { escapeXml } from './utils';
 
 // PNG metadata
 export {
@@ -41,26 +42,5 @@ export { exportSvg, downloadSvg } from './svg-export';
 
 // Vector SVG export (true vector)
 export { exportVectorSvg, downloadVectorSvg } from './vector-svg';
-
-// Import functions for the Exporter object
-import { exportImage, downloadImage } from './image-export';
-import { exportGif, downloadGif } from './gif-export';
-import { exportSvg, downloadSvg } from './svg-export';
-import { exportVectorSvg, downloadVectorSvg } from './vector-svg';
-
-// Default export object for backwards compatibility
-export const Exporter = {
-  exportImage,
-  downloadImage,
-  exportGif,
-  downloadGif,
-  exportSvg,
-  downloadSvg,
-  exportVectorSvg,
-  downloadVectorSvg,
-};
-
-// Also export as ExporterModule for backward compatibility
-export const ExporterModule = Exporter;
 
 

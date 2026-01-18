@@ -6,13 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { HighlightedLabel } from '@/lib/search-context';
+import { copyToClipboard } from '@/modules/browser-clipboard';
 import {
-  copyToClipboard,
   generateImageEmbed,
   generateMarkdownEmbed,
   getShareableUrl,
   getSocialShareUrls,
-} from '@/modules/share-utils';
+} from '@/modules/share-links';
 import { useQRStore } from '@/store/qr-store';
 
 export function ShareSection() {

@@ -166,11 +166,18 @@ export function applyAnimationPattern(
 }
 
 // ============================================
-// TEMPORAL DITHERING
+// TEMPORAL DITHERING (from dither-algorithms)
 // ============================================
+
+import {
+  calculateTemporalOffset,
+  applyTemporalNoiseToCanvas,
+  type TemporalDitherMode,
+} from '../dither-algorithms';
 
 /**
  * Apply temporal dithering for animation frames
+ * Delegates to dither-algorithms module (canonical source)
  */
 export function applyTemporalDither(
   canvas: HTMLCanvasElement | OffscreenCanvas,
@@ -180,42 +187,8 @@ export function applyTemporalDither(
 ): HTMLCanvasElement {
   if (mode === 'off') return canvas as HTMLCanvasElement;
 
-  const result = document.createElement('canvas');
-  result.width = canvas.width;
-  result.height = canvas.height;
-  const ctx = result.getContext('2d');
-  if (!ctx) return canvas as HTMLCanvasElement;
-
-  ctx.drawImage(canvas as CanvasImageSource, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-
-  const phi = 1.618033988749895;
-
-  for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-      const i = (y * canvas.width + x) * 4;
-
-      let noiseValue: number;
-
-      if (mode === 'blue_noise') {
-        const ign = (52.9829189 * ((0.06711056 * x + 0.00583715 * y) % 1)) % 1;
-        const offset = (x * phi + y * phi * phi + frameIndex * 0.1 + seed) % 1;
-        noiseValue = (ign + offset * 0.5) % 1;
-      } else {
-        noiseValue = (x * phi + y * phi * phi + frameIndex * 0.02 + seed) % 1;
-      }
-
-      const threshold = (noiseValue - 0.5) * 10;
-
-      data[i] = Math.min(255, Math.max(0, data[i] + threshold));
-      data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + threshold));
-      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + threshold));
-    }
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-  return result;
+  const offset = calculateTemporalOffset(frameIndex, mode as TemporalDitherMode, seed);
+  return applyTemporalNoiseToCanvas(canvas, offset, 0.02) as HTMLCanvasElement;
 }
 
 // ============================================

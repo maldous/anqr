@@ -15,7 +15,7 @@ import type { GalleryCategory } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 import i18n, { isRtlLanguage, languages, loadLocale } from '@/i18n';
-import { parseUrlParams } from '@/modules/share-utils';
+import { parseUrlParams } from '@/modules/share-links';
 import {
   type AlignmentStyle,
   type FinderStyle,
