@@ -10,9 +10,10 @@ import { applyDitherToMatrix } from './dithering-matrix';
 
 /**
  * Normalize colors to RGB format
+ * Colors are now stored as {r, g, b} objects directly in OverlayData
  */
 export function normalizeColors(
-  colors: Record<number, Record<number, string>> | undefined,
+  colors: Record<number, Record<number, { r: number; g: number; b: number }>> | undefined,
   moduleCount: number
 ): (RGBWithMeta | null)[][] {
   const result: (RGBWithMeta | null)[][] = [];
@@ -20,19 +21,14 @@ export function normalizeColors(
   for (let row = 0; row < moduleCount; row++) {
     result[row] = [];
     for (let col = 0; col < moduleCount; col++) {
-      const colorStr = colors?.[row]?.[col];
-      if (colorStr) {
-        // Parse rgb(r,g,b) format
-        const match = /rgb\((\d+),(\d+),(\d+)\)/.exec(colorStr);
-        if (match) {
-          result[row][col] = {
-            r: parseInt(match[1], 10),
-            g: parseInt(match[2], 10),
-            b: parseInt(match[3], 10),
-          };
-        } else {
-          result[row][col] = null;
-        }
+      const color = colors?.[row]?.[col];
+      if (color) {
+        // Color is already {r, g, b} object
+        result[row][col] = {
+          r: color.r,
+          g: color.g,
+          b: color.b,
+        };
       } else {
         result[row][col] = null;
       }

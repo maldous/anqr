@@ -46,7 +46,8 @@ export function applyOverlayMode(
   };
 
   // Type guard for overlayData with colors
-  const overlayWithColors = overlayData as { colors?: { r: number; g: number; b: number }[][] };
+  // OverlayData.colors uses object indexing: colors[row][col] = { r, g, b }
+  const overlayWithColors = overlayData as { colors?: { [row: number]: { [col: number]: { r: number; g: number; b: number } } } };
 
   switch (overlayMode) {
     case 'halftone':
@@ -74,8 +75,7 @@ export function applyOverlayMode(
         const blendColor = overlayWithColors.colors?.[row]?.[col];
         if (blendColor) {
           const blendAmount = effectiveIntensity / 100;
-          const colorStr = `rgb(${blendColor.r},${blendColor.g},${blendColor.b})`;
-          result.moduleColor = blendColors(config.fgColor, colorStr, blendAmount);
+          result.moduleColor = blendColors(config.fgColor, `rgb(${blendColor.r},${blendColor.g},${blendColor.b})`, blendAmount);
         }
       }
       break;

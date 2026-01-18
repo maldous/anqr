@@ -231,7 +231,7 @@ export class QRGenerator {
     }
 
     // Apply geometric transforms if needed
-    let processedOverlayCanvas = overlayCanvas;
+    let processedOverlayCanvas: HTMLCanvasElement | OffscreenCanvas | null = overlayCanvas;
     if (overlayCanvas && hasGeometricTransforms(config)) {
       processedOverlayCanvas = await applyGeometricTransforms(
         overlayCanvas,
@@ -262,7 +262,7 @@ export class QRGenerator {
       return await generateScaledQR(
         qr,
         config,
-        processedOverlayCanvas,
+        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
         moduleCount,
         scale,
         this.createCanvas.bind(this),
@@ -277,7 +277,7 @@ export class QRGenerator {
     const { ditherPattern, overlayData, effectiveIntensity } = await prepareUnifiedOverlayData(
       qr,
       { ...config, typeNumber },
-      processedOverlayCanvas,
+      processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas | null,
       moduleCount,
       this.createCanvas.bind(this)
     );

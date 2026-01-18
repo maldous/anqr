@@ -85,9 +85,9 @@ export function applyTemporalNoiseToCanvas(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   offset: number,
   strength: number = 0.02
-): HTMLCanvasElement {
+): HTMLCanvasElement | OffscreenCanvas {
   if (offset === 0 || strength === 0) {
-    return canvas as HTMLCanvasElement;
+    return canvas;
   }
 
   const result = document.createElement('canvas');
