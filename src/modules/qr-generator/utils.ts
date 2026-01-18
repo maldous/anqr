@@ -93,7 +93,6 @@ export async function hashCanvasContent(
     return hashStr;
   } catch (error) {
     // Fallback to dimensions-only if getImageData fails
-    // biome-ignore lint/suspicious/noConsole: Non-critical warning for canvas hashing
     console.warn('Canvas hashing failed:', error);
     return `${canvas.width}x${canvas.height}`;
   }

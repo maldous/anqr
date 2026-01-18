@@ -170,7 +170,6 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
   for (const [i, sigByte] of pngSignature.entries()) {
     if (data[i] !== sigByte) {
-      // biome-ignore lint/suspicious/noConsole: PNG validation warning
       console.warn('Invalid PNG signature, returning original');
       return pngBlob;
     }
@@ -213,7 +212,6 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   }
 
   if (iendPos === -1) {
-    // biome-ignore lint/suspicious/noConsole: PNG validation warning
     console.warn('Could not find IEND chunk, returning original');
     return pngBlob;
   }

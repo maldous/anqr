@@ -164,7 +164,6 @@ export function ensureContrast(moduleColor: string, bgColor: string, minRatio: n
     // If still not enough contrast, return black
     return '#000000';
   } catch (error) {
-    // biome-ignore lint/suspicious/noConsole: Non-critical warning for contrast check
     console.warn('Contrast check failed:', error);
     return moduleColor;
   }

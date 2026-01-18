@@ -20,10 +20,8 @@ export function createLogger(modulePrefix: string): Logger {
 
     const prefix = `[${modulePrefix}:${category}]`;
     if (data) {
-      // biome-ignore lint/suspicious/noConsole: Debug logging for QR modules
       console.log(prefix, message, data);
     } else {
-      // biome-ignore lint/suspicious/noConsole: Debug logging for QR modules
       console.log(prefix, message);
     }
   };
