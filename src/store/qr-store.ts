@@ -1,6 +1,21 @@
+/**
+ * QR Store - Central state management for ANQR
+ *
+ * Type Alignment with Modules:
+ * - Gradient types (GradientStop, GradientType): from @/modules/core
+ * - Payload types (UrlHelper, VCardHelper, etc.): from @/modules/payload-generators
+ * - QR encoding types (ECCLevel, EncodingMode): align with @/modules/qr-spec (with UI extensions)
+ * - Overlay types (OverlayMode, ColorMode, FitMode): align with @/modules/overlay
+ * - Dither types (DitherKind, DiffusionKernel): align with @/modules/dither-algorithms
+ * - Output types (OutputFormat, GifQuantizer): align with @/modules/exporter
+ *
+ * Note: Some types are defined locally with UI-specific extensions (e.g., 'auto' for MaskPattern)
+ * that are not part of the core module types.
+ */
 import { create } from 'zustand';
-// Import gradient types from color-utils (canonical source)
+// Import gradient types from core module (canonical source)
 import type { GradientStop, GradientType } from '@/modules/core';
+// Import payload generator types and functions from payload-generators module
 import {
   type CryptoHelper,
   type EmailHelper,
@@ -24,7 +39,6 @@ import {
   type MeCardHelper,
   type SmsHelper,
   type TelHelper,
-  // Import canonical types from payload-generators module
   type UrlHelper,
   type VCardHelper,
   type VCardVersion,
@@ -119,7 +133,8 @@ export type PayloadKind =
   // Custom
   | 'custom';
 
-// QR encoding
+// QR encoding types
+// Note: These align with @/modules/qr-spec types but include UI-specific extensions (e.g., 'auto')
 export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 export type EncodingMode = 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji';
 export type MaskPattern = 'auto' | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -143,10 +158,11 @@ export type FinderStyle = 'square' | 'rounded' | 'circle';
 export type AlignmentStyle = 'match_finder' | 'square' | 'rounded' | 'circle';
 export type TimingStyle = 'match_module' | 'solid' | 'dashed';
 export type GapMode = 'none' | 'inset' | 'stroke' | 'negative_space';
-// GradientType is imported from @/modules/color-utils and re-exported above
+// GradientType is imported from @/modules/core and re-exported above
 export type FrameStyle = 'none' | 'rounded_frame' | 'sticker' | 'tag';
 
-// Overlay
+// Overlay types
+// Note: These align with @/modules/overlay types
 export type OverlayMode =
   | 'center'
   | 'blend'
@@ -168,7 +184,8 @@ export type ColorMode = 'color' | 'grayscale' | 'bw';
 export type FitMode = 'cover' | 'contain' | 'stretch';
 export type OverlayType = 'static' | 'gif' | 'apng' | 'webp_anim' | 'video';
 
-// Dither - comprehensive algorithms
+// Dither types
+// Note: These align with @/modules/dither-algorithms types
 export type DitherKind =
   // Error diffusion
   | 'error_diffusion'
@@ -203,7 +220,8 @@ export type DiffusionKernel =
 
 export type OrderedMatrix = 'bayer2' | 'bayer4' | 'bayer8' | 'clustered_dot' | 'void_cluster';
 
-// Output
+// Output types
+// Note: These align with @/modules/exporter types
 export type OutputFormat = 'png' | 'webp' | 'gif' | 'svg';
 export type GifQuantizer = 'median_cut' | 'neuquant' | 'octree';
 export type GifDither = 'off' | 'floyd' | 'ordered';
