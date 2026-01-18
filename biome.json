@@ -27,7 +27,7 @@
       },
       "suspicious": {
         "noExplicitAny": "off",
-        "noConsole": "off",
+        "noConsole": "error",
         "noArrayIndexKey": "off",
         "noTemplateCurlyInString": "off",
         "noAssignInExpressions": "off"

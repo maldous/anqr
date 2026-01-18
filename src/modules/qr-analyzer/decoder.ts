@@ -17,8 +17,10 @@ interface QRLocationCorners {
 function log(category: string, message: string, data?: Record<string, unknown>) {
   const prefix = `[QR-Analyzer:${category}]`;
   if (data) {
+    // biome-ignore lint/suspicious/noConsole: Debug logging for QR analyzer
     console.log(prefix, message, data);
   } else {
+    // biome-ignore lint/suspicious/noConsole: Debug logging for QR analyzer
     console.log(prefix, message);
   }
 }
