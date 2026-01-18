@@ -12,11 +12,11 @@ import { qrcode } from '../qr-encoder';
 
 // Import from canonical sources
 import { rgbToGray } from '../core';
+import { type ECCLevel } from '../qr-encoder';
 import {
   isStructuralModule,
   getVersionFromModuleCount,
-  type ECCLevel,
-} from '../qr-encoder';
+} from '../qr-spec';
 
 // Error correction level mapping
 const ECC_MAP: Record<string, ECCLevel> = {
@@ -84,19 +84,17 @@ export interface BlueNoiseResult {
   colors: RGB[][];
 }
 
-/**
- * Sample the blue noise tile at position (x, y)
- * Uses the canonical implementation from dither-algorithms
- */
-function sampleBlueNoise(x: number, y: number): number {
-  return sampleNoise(x, y, BLUE_NOISE_64, BLUE_NOISE_TILE_SIZE);
-}
+// Use sampleNoise from dither-algorithms with pre-computed tile
+// Note: This is NOT a duplicate - it's a partial application of sampleNoise with specific tile data
+const sampleBlueNoiseAt = (x: number, y: number): number =>
+  sampleNoise(x, y, BLUE_NOISE_64, BLUE_NOISE_TILE_SIZE);
 
 /**
  * Check if a pixel position is locked (structural module)
- * Pixel-level wrapper that converts to module coordinates and delegates to qr-encoder's isStructuralModule
+ * Pixel-level adapter that converts pixel coordinates to module coordinates
+ * and delegates to isStructuralModule from qr-spec
  */
-function isLockedPixel(moduleCount: number, x: number, y: number, scale: number): boolean {
+function isPixelInStructuralModule(moduleCount: number, x: number, y: number, scale: number): boolean {
   const moduleX = Math.floor(x / scale);
   const moduleY = Math.floor(y / scale);
   const version = getVersionFromModuleCount(moduleCount / scale);
@@ -105,9 +103,9 @@ function isLockedPixel(moduleCount: number, x: number, y: number, scale: number)
 
 /**
  * Check if a pixel position is a data point (center of module)
- * Pixel-level helper for determining if a pixel should preserve QR data values
+ * Returns true if this pixel is at the center of a module (data sample point)
  */
-function isDataPixel(x: number, y: number, scale: number): boolean {
+function isPixelAtModuleCenter(x: number, y: number, scale: number): boolean {
   // Data points are at the center of each module
   const centerOffset = Math.floor(scale / 2);
   return (x % scale) === centerOffset && (y % scale) === centerOffset;
@@ -147,9 +145,11 @@ async function loadImageDataRGB(
 }
 
 /**
- * Convert RGB image data to grayscale
+ * Convert RGB image data to grayscale (in-place)
+ * Note: This operates on 2D array of {r,g,b} with 0-1 range values,
+ * different from ImageData format used elsewhere.
  */
-function convertToGrayscale(imageData: { r: number; g: number; b: number }[][]): void {
+function convertRgbArrayToGrayscale(imageData: { r: number; g: number; b: number }[][]): void {
   for (const row of imageData) {
     for (let x = 0; x < row.length; x++) {
       const { r, g, b } = row[x];
@@ -160,10 +160,11 @@ function convertToGrayscale(imageData: { r: number; g: number; b: number }[][]):
 }
 
 /**
- * Apply blue noise dithering to free points
+ * Apply blue noise dithering to free points in QR code
  * Uses blue noise threshold instead of Floyd-Steinberg error diffusion
+ * Note: This is QR-specific logic, not a general dither function
  */
-function blueNoiseDitherFreePoints(
+function applyBlueNoiseToQrFreePoints(
   imageData: { r: number; g: number; b: number }[][],
   moduleCount: number,
   scale: number,
@@ -174,11 +175,11 @@ function blueNoiseDitherFreePoints(
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       // Only process free points (not locked, not data)
-      if (isLockedPixel(moduleCount, x, y, scale)) continue;
-      if (isDataPixel(x, y, scale)) continue;
+      if (isPixelInStructuralModule(moduleCount, x, y, scale)) continue;
+      if (isPixelAtModuleCenter(x, y, scale)) continue;
 
       const pixel = imageData[y][x];
-      const threshold = sampleBlueNoise(x, y);
+      const threshold = sampleBlueNoiseAt(x, y);
 
       if (colorMode === 'bw') {
         // Black & white: quantize to 0 or 1 using blue noise threshold
@@ -283,26 +284,26 @@ export async function generateBlueNoiseDithered(
 
   // Convert to grayscale first if needed
   if (colorMode === 'grayscale' || colorMode === 'bw') {
-    convertToGrayscale(imageData);
+    convertRgbArrayToGrayscale(imageData);
   }
 
   // Apply blue noise dithering to free points
-  blueNoiseDitherFreePoints(imageData, scaledSize, scale, colorMode);
+  applyBlueNoiseToQrFreePoints(imageData, scaledSize, scale, colorMode);
 
   // Merge image data with QR matrix for free points
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
       // Skip locked areas (finder patterns, timing, alignment)
-      if (isLockedPixel(scaledSize, x, y, scale)) continue;
+      if (isPixelInStructuralModule(scaledSize, x, y, scale)) continue;
 
       // Skip data points (must preserve QR data)
-      if (isDataPixel(x, y, scale)) continue;
+      if (isPixelAtModuleCenter(x, y, scale)) continue;
 
       // Free point: use dithered image data based on intensity
       const pixel = imageData[y][x];
       const brightness = rgbToGray(pixel.r, pixel.g, pixel.b);
       // Use blue noise for intensity blending decision
-      const useImage = sampleBlueNoise(x + 17, y + 31) < intensity;
+      const useImage = sampleBlueNoiseAt(x + 17, y + 31) < intensity;
 
       if (useImage) {
         // For the boolean matrix: dark if brightness < 0.5

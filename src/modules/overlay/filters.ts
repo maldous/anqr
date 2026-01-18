@@ -47,25 +47,15 @@ export interface FilterOptions {
 // ============================================
 
 import {
-  rgbToGray as coreRgbToGray,
-  hslToRgb as coreHslToRgb,
-  rgbToHsl as coreRgbToHsl,
-  clamp as coreClamp,
-  clamp01 as coreClamp01,
+  rgbToGray,
+  hslToRgb,
+  rgbToHsl,
+  clamp,
+  clamp01,
 } from '../core';
 
 // Re-export core functions for backwards compatibility
-export { coreClamp01 as clamp01 };
-export { coreRgbToGray as rgbToGray };
-export { coreHslToRgb as hslToRgb };
-export { coreRgbToHsl as rgbToHsl };
-
-// Clamp with optional min/max (extends core clamp)
-export function clamp(value: number, min = 0, max = 255): number {
-  if (min === 0 && max === 255) return coreClamp(value);
-  if (min === 0 && max === 1) return coreClamp01(value);
-  return Math.max(min, Math.min(max, value));
-}
+export { clamp, clamp01, rgbToGray, hslToRgb, rgbToHsl };
 
 export function copyImageData(imageData: ImageData): ImageData {
   return new ImageData(
@@ -84,9 +74,9 @@ export function brightness(imageData: ImageData, amount: number): ImageData {
   const factor = amount / 100;
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = clamp(data[i] + 255 * factor);
-    data[i + 1] = clamp(data[i + 1] + 255 * factor);
-    data[i + 2] = clamp(data[i + 2] + 255 * factor);
+    data[i] = Math.max(0, Math.min(255, Math.round(data[i] + 255 * factor)));
+    data[i + 1] = Math.max(0, Math.min(255, Math.round(data[i + 1] + 255 * factor)));
+    data[i + 2] = Math.max(0, Math.min(255, Math.round(data[i + 2] + 255 * factor)));
   }
 
   return imageData;
@@ -97,9 +87,9 @@ export function contrast(imageData: ImageData, amount: number): ImageData {
   const factor = (259 * (amount + 255)) / (255 * (259 - amount));
 
   for (let i = 0; i < data.length; i += 4) {
-    data[i] = clamp(factor * (data[i] - 128) + 128);
-    data[i + 1] = clamp(factor * (data[i + 1] - 128) + 128);
-    data[i + 2] = clamp(factor * (data[i + 2] - 128) + 128);
+    data[i] = Math.max(0, Math.min(255, Math.round(factor * (data[i] - 128) + 128)));
+    data[i + 1] = Math.max(0, Math.min(255, Math.round(factor * (data[i + 1] - 128) + 128)));
+    data[i + 2] = Math.max(0, Math.min(255, Math.round(factor * (data[i + 2] - 128) + 128)));
   }
 
   return imageData;
@@ -110,10 +100,10 @@ export function saturation(imageData: ImageData, amount: number): ImageData {
   const factor = amount / 100;
 
   for (let i = 0; i < data.length; i += 4) {
-    const gray = coreRgbToGray(data[i], data[i + 1], data[i + 2]);
-    data[i] = clamp(gray + factor * (data[i] - gray));
-    data[i + 1] = clamp(gray + factor * (data[i + 1] - gray));
-    data[i + 2] = clamp(gray + factor * (data[i + 2] - gray));
+    const gray = rgbToGray(data[i], data[i + 1], data[i + 2]);
+    data[i] = Math.max(0, Math.min(255, Math.round(gray + factor * (data[i] - gray))));
+    data[i + 1] = Math.max(0, Math.min(255, Math.round(gray + factor * (data[i + 1] - gray))));
+    data[i + 2] = Math.max(0, Math.min(255, Math.round(gray + factor * (data[i + 2] - gray))));
   }
 
   return imageData;
@@ -123,10 +113,10 @@ export function hueRotate(imageData: ImageData, degrees: number): ImageData {
   const data = imageData.data;
 
   for (let i = 0; i < data.length; i += 4) {
-    const hsl = coreRgbToHsl(data[i], data[i + 1], data[i + 2]);
+    const hsl = rgbToHsl(data[i], data[i + 1], data[i + 2]);
     hsl.h = (hsl.h + degrees) % 360;
     if (hsl.h < 0) hsl.h += 360;
-    const rgb = coreHslToRgb(hsl.h, hsl.s, hsl.l);
+    const rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
     data[i] = rgb.r;
     data[i + 1] = rgb.g;
     data[i + 2] = rgb.b;
@@ -164,7 +154,7 @@ export function grayscale(imageData: ImageData): ImageData {
   const data = imageData.data;
 
   for (let i = 0; i < data.length; i += 4) {
-    const gray = Math.round(coreRgbToGray(data[i], data[i + 1], data[i + 2]));
+    const gray = Math.round(rgbToGray(data[i], data[i + 1], data[i + 2]));
     data[i] = gray;
     data[i + 1] = gray;
     data[i + 2] = gray;
@@ -177,7 +167,7 @@ export function threshold(imageData: ImageData, level: number): ImageData {
   const data = imageData.data;
 
   for (let i = 0; i < data.length; i += 4) {
-    const gray = coreRgbToGray(data[i], data[i + 1], data[i + 2]);
+    const gray = rgbToGray(data[i], data[i + 1], data[i + 2]);
     const value = gray > level ? 255 : 0;
     data[i] = value;
     data[i + 1] = value;
@@ -208,7 +198,7 @@ export function duotone(
   const data = imageData.data;
 
   for (let i = 0; i < data.length; i += 4) {
-    const gray = coreRgbToGray(data[i], data[i + 1], data[i + 2]) / 255;
+    const gray = rgbToGray(data[i], data[i + 1], data[i + 2]) / 255;
     data[i] = Math.round(darkColor.r * (1 - gray) + lightColor.r * gray);
     data[i + 1] = Math.round(darkColor.g * (1 - gray) + lightColor.g * gray);
     data[i + 2] = Math.round(darkColor.b * (1 - gray) + lightColor.b * gray);
@@ -241,8 +231,8 @@ export function convolve(
 
       for (let ky = 0; ky < kSize; ky++) {
         for (let kx = 0; kx < kSize; kx++) {
-          const px = clamp(x + kx - kHalf, 0, width - 1);
-          const py = clamp(y + ky - kHalf, 0, height - 1);
+          const px = Math.max(0, Math.min(width - 1, x + kx - kHalf));
+          const py = Math.max(0, Math.min(height - 1, y + ky - kHalf));
           const idx = (py * width + px) * 4;
           const weight = kernel[ky][kx];
 
@@ -253,9 +243,9 @@ export function convolve(
       }
 
       const idx = (y * width + x) * 4;
-      result[idx] = clamp(r / div);
-      result[idx + 1] = clamp(g / div);
-      result[idx + 2] = clamp(b / div);
+      result[idx] = Math.max(0, Math.min(255, Math.round(r / div)));
+      result[idx + 1] = Math.max(0, Math.min(255, Math.round(g / div)));
+      result[idx + 2] = Math.max(0, Math.min(255, Math.round(b / div)));
     }
   }
 
@@ -324,7 +314,7 @@ export function sobelEdge(imageData: ImageData): ImageData {
       for (let ky = -1; ky <= 1; ky++) {
         for (let kx = -1; kx <= 1; kx++) {
           const idx = ((y + ky) * width + (x + kx)) * 4;
-          const gray = coreRgbToGray(data[idx], data[idx + 1], data[idx + 2]);
+          const gray = rgbToGray(data[idx], data[idx + 1], data[idx + 2]);
           gx += gray * sobelX[ky + 1][kx + 1];
           gy += gray * sobelY[ky + 1][kx + 1];
         }
@@ -373,7 +363,7 @@ export function getBrightnessMap(imageData: ImageData): Float32Array {
   const map = new Float32Array(data.length / 4);
 
   for (let i = 0; i < data.length; i += 4) {
-    map[i / 4] = coreRgbToGray(data[i], data[i + 1], data[i + 2]) / 255;
+    map[i / 4] = rgbToGray(data[i], data[i + 1], data[i + 2]) / 255;
   }
 
   return map;
@@ -413,7 +403,7 @@ export function applyColorMode(
   const data = imageData.data;
 
   for (let i = 0; i < data.length; i += 4) {
-    const gray = Math.round(coreRgbToGray(data[i], data[i + 1], data[i + 2]));
+    const gray = Math.round(rgbToGray(data[i], data[i + 1], data[i + 2]));
 
     if (mode === 'bw') {
       const value = gray > 128 ? 255 : 0;

@@ -29,8 +29,8 @@ export function calculateLocation(
   const moduleSize = (topLeft.moduleSize + topRight.moduleSize + bottomLeft.moduleSize) / 3;
 
   // Distance between finder pattern centers (spans moduleCount - 7 modules)
-  const topDist = distance(topLeft.center, topRight.center);
-  const leftDist = distance(topLeft.center, bottomLeft.center);
+  const topDist = pointDistance(topLeft.center, topRight.center);
+  const leftDist = pointDistance(topLeft.center, bottomLeft.center);
   const avgDist = (topDist + leftDist) / 2;
 
   // Calculate module count: distance spans (moduleCount - 7) modules
@@ -72,7 +72,8 @@ export function calculateLocation(
 }
 
 /** Calculate Euclidean distance between two points (local helper) */
-function distance(a: Point, b: Point): number {
+// Local geometry helper (intentionally not shared - simple inline function)
+function pointDistance(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 

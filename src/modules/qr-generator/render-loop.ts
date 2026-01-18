@@ -3,7 +3,7 @@
  * Renders all QR modules with styling and overlay effects
  */
 
-import { isFinderPattern, isTimingPattern } from '../qr-encoder';
+import { isFinderPattern, isTimingPattern } from '../qr-spec';
 
 import {
   applyPerModuleColor,

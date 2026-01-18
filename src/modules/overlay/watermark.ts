@@ -44,7 +44,7 @@ export interface WatermarkResult {
 // BLEND MODES
 // ============================================
 
-export function applyBlendMode(
+export function applyWatermarkBlendMode(
   ctx: CanvasRenderingContext2D,
   blend: WatermarkBlend
 ): void {
@@ -70,7 +70,7 @@ export function applyBlendMode(
 // POSITION CALCULATION
 // ============================================
 
-export function getWatermarkPositions(
+export function calculateWatermarkPositions(
   canvasWidth: number,
   canvasHeight: number,
   watermarkWidth: number,
@@ -121,7 +121,7 @@ export function getWatermarkPositions(
 // WATERMARK CREATION
 // ============================================
 
-export function createTextWatermark(
+export function renderTextWatermark(
   text: string,
   font: string = '16px Arial',
   color: string = 'rgba(0, 0, 0, 0.3)'
@@ -145,7 +145,7 @@ export function createTextWatermark(
   return canvas;
 }
 
-export function createPatternWatermark(
+export function renderPatternWatermark(
   text: string,
   font: string = '12px Arial',
   color: string = 'rgba(0, 0, 0, 0.1)',
@@ -217,16 +217,16 @@ export function applyWatermark(
 
   // Set up blending
   ctx.globalAlpha = opacity;
-  applyBlendMode(ctx, blend);
+  applyWatermarkBlendMode(ctx, blend);
 
   let watermark: HTMLCanvasElement | HTMLImageElement | null = null;
 
   switch (kind) {
     case 'text':
-      watermark = createTextWatermark(text, font, color);
+      watermark = renderTextWatermark(text, font, color);
       break;
     case 'pattern':
-      watermark = createPatternWatermark(text, font, color);
+      watermark = renderPatternWatermark(text, font, color);
       break;
     case 'image':
       watermark = image || null;
@@ -249,7 +249,7 @@ export function applyWatermark(
     }
   } else {
     // Position the watermark
-    const pos = getWatermarkPositions(
+    const pos = calculateWatermarkPositions(
       result.width,
       result.height,
       wmWidth,
@@ -267,7 +267,7 @@ export function applyWatermark(
   return { canvas: result, width: result.width, height: result.height };
 }
 
-export function applyCenterLogo(
+export function applyWatermarkCenterLogo(
   sourceCanvas: HTMLCanvasElement,
   logoCanvas: HTMLCanvasElement,
   maxSizePercent: number = 20,
@@ -308,9 +308,9 @@ export function applyCenterLogo(
 // Namespace export for backwards compatibility
 export const Watermark = {
   applyWatermark,
-  applyCenterLogo,
-  createTextWatermark,
-  createPatternWatermark,
-  getWatermarkPositions,
-  applyBlendMode,
+  applyWatermarkCenterLogo,
+  renderTextWatermark,
+  renderPatternWatermark,
+  calculateWatermarkPositions,
+  applyWatermarkBlendMode,
 };

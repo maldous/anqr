@@ -27,6 +27,10 @@ interface ScanResult {
  * Note: This is different from qr-spec's isFinderPattern which checks coordinates.
  * This function validates the pixel ratio pattern during scanning.
  */
+/**
+ * Check if edge counts match finder pattern ratio (1:1:3:1:1)
+ * Note: This is different from qr-spec's isFinderPattern which checks position
+ */
 function isFinderPatternRatio(counts: number[]): boolean {
   const total = counts.reduce((a, b) => a + b, 0);
   if (total < 7) return false;
@@ -304,8 +308,8 @@ export function selectFinderPatterns(
         const [topLeft, topRight, bottomLeft] = ordered;
         
         // Calculate squareness: the two sides from topLeft should be equal
-        const topDist = distance(topLeft.center, topRight.center);
-        const leftDist = distance(topLeft.center, bottomLeft.center);
+        const topDist = pointDistance(topLeft.center, topRight.center);
+        const leftDist = pointDistance(topLeft.center, bottomLeft.center);
         const avgDist = (topDist + leftDist) / 2;
         const squareness = Math.abs(topDist - leftDist) / avgDist;
 
@@ -419,9 +423,9 @@ function orderFinderPatterns(
   p3: FinderPattern
 ): [FinderPattern, FinderPattern, FinderPattern] | null {
   // Calculate distances
-  const d12 = distance(p1.center, p2.center);
-  const d13 = distance(p1.center, p3.center);
-  const d23 = distance(p2.center, p3.center);
+  const d12 = pointDistance(p1.center, p2.center);
+  const d13 = pointDistance(p1.center, p3.center);
+  const d23 = pointDistance(p2.center, p3.center);
 
   let topLeft: FinderPattern;
   let topRight: FinderPattern;
@@ -446,7 +450,8 @@ function orderFinderPatterns(
 }
 
 /** Calculate Euclidean distance between two points (local helper) */
-function distance(a: Point, b: Point): number {
+// Local geometry helper (intentionally not shared - simple inline function)
+function pointDistance(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 

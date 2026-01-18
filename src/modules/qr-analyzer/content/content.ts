@@ -200,13 +200,5 @@ export function parseUrlDetails(url: string): UrlDetails | null {
   }
 }
 
-// Import rgbToHex from core - this wrapper adapts the object signature
-import { rgbToHex as coreRgbToHex } from '../../core';
-
-/**
- * Convert RGB to hex string
- * Wrapper that accepts object format for backwards compatibility
- */
-export function rgbToHex(rgb: { r: number; g: number; b: number }): string {
-  return coreRgbToHex(rgb.r, rgb.g, rgb.b);
-}
+// Re-export rgbToHex from core
+export { rgbToHex } from '../../core';

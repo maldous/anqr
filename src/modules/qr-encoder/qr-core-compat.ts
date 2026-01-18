@@ -1,22 +1,13 @@
 /**
  * QR Core Compatibility Layer
- * Provides wrapper functions and types for qr-core.ts
+ * Provides QR encoding functions that wrap the encoder module.
  * 
- * Pattern detection functions delegate to qr-spec (canonical source)
+ * Pattern detection functions are re-exported from qr-spec (canonical source).
+ * Callers should prefer importing directly from qr-spec for pattern functions.
  */
 
 import { qrcode } from './encoder';
-import { QRErrorCorrectionLevel, type QRCodeInstance, type QRErrorCorrectionLevelChar } from './types';
-import {
-  isFinderPattern as qrSpecIsFinderPattern,
-  isTimingPattern as qrSpecIsTimingPattern,
-  isAlignmentPattern as qrSpecIsAlignmentPattern,
-  isStructuralModule as qrSpecIsStructuralModule,
-  getAlignmentPositions as qrSpecGetAlignmentPositions,
-  getAlignmentPatternCenters as qrSpecGetAlignmentPatternCenters,
-  getModuleCountForVersion as qrSpecGetModuleCountForVersion,
-  getVersionFromModuleCount as qrSpecGetVersionFromModuleCount,
-} from '../qr-spec';
+import type { QRErrorCorrectionLevelChar } from './types';
 
 // Type aliases for qr-core compatibility
 export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
@@ -140,100 +131,37 @@ export function calculateOptimalVersion(
   return 40; // Max version
 }
 
-/**
- * Get module count for a version
- * Delegates to qr-spec (canonical source)
- */
-export function getModuleCountForVersion(version: number): number {
-  return qrSpecGetModuleCountForVersion(version);
-}
-
-/**
- * Get version from module count
- * Delegates to qr-spec (canonical source)
- */
-export function getVersionFromModuleCount(moduleCount: number): number {
-  return qrSpecGetVersionFromModuleCount(moduleCount);
-}
-
-/**
- * Get alignment pattern positions for a version
- * Delegates to qr-spec (canonical source)
- */
-export function getAlignmentPositions(version: number): number[] {
-  return qrSpecGetAlignmentPositions(version);
-}
-
-/**
- * Check if position is a finder pattern
- * Delegates to qr-spec (canonical source)
- */
-export function isFinderPattern(row: number, col: number, size: number): boolean {
-  return qrSpecIsFinderPattern(row, col, size);
-}
-
-/**
- * Check if position is a timing pattern
- * Delegates to qr-spec (canonical source)
- */
-export function isTimingPattern(row: number, col: number, size: number): boolean {
-  return qrSpecIsTimingPattern(row, col, size);
-}
-
-/**
- * Check if position is an alignment pattern
- * Delegates to qr-spec (canonical source)
- */
-export function isAlignmentPattern(
-  row: number,
-  col: number,
-  version: number
-): boolean {
-  const moduleCount = getModuleCountForVersion(version);
-  return qrSpecIsAlignmentPattern(row, col, moduleCount);
-}
-
-/**
- * Check if position is a structural module (finder, timing, alignment, format, version)
- * Delegates to qr-spec (canonical source)
- */
-export function isStructuralModule(
-  row: number,
-  col: number,
-  version: number
-): boolean {
-  const moduleCount = getModuleCountForVersion(version);
-  return qrSpecIsStructuralModule(row, col, moduleCount, version);
-}
-
-/**
- * Check if position is data (not structural)
- * Wrapper that uses isStructuralModule
- */
-export function isData(row: number, col: number, version: number): boolean {
-  return !isStructuralModule(row, col, version);
-}
-
-/**
- * Check if module is locked (structural or format info)
- * Wrapper that uses isStructuralModule
- */
-export function isLocked(row: number, col: number, version: number): boolean {
-  return isStructuralModule(row, col, version);
-}
-
-/**
- * Get alignment pattern centers for a version
- * Delegates to qr-spec (canonical source)
- */
-export function getAlignmentPatternCenters(version: number): Array<{row: number, col: number}> {
-  const moduleCount = getModuleCountForVersion(version);
-  return qrSpecGetAlignmentPatternCenters(version, moduleCount);
-}
+// Re-export pattern functions from qr-spec (canonical source)
+// Callers should prefer importing from qr-spec directly
+export {
+  getModuleCountForVersion,
+  getVersionFromModuleCount,
+  getAlignmentPositions,
+  getAlignmentPatternCenters,
+  isFinderPattern,
+  isTimingPattern,
+  isAlignmentPattern,
+  isStructuralModule,
+  isData,
+  isLocked,
+} from '../qr-spec';
 
 /**
  * QRCore namespace object for backwards compatibility
  */
+import {
+  getModuleCountForVersion,
+  getVersionFromModuleCount,
+  getAlignmentPositions,
+  getAlignmentPatternCenters,
+  isFinderPattern,
+  isTimingPattern,
+  isAlignmentPattern,
+  isStructuralModule,
+  isData,
+  isLocked,
+} from '../qr-spec';
+
 export const QRCore = {
   createQRInstance,
   generateQR,
