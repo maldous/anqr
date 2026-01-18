@@ -453,21 +453,21 @@ export function processOverlay(
 
   // Apply crop first
   if (options.crop) {
-    canvas = cropImage(canvas, options.crop);
+    canvas = cropOverlayImage(canvas, options.crop);
   }
 
   // Apply rotation
   if (options.rotation && options.rotation !== 0) {
-    canvas = rotateCanvas(canvas, options.rotation);
+    canvas = rotateOverlayCanvas(canvas, options.rotation);
   }
 
   // Apply flip
   if (options.flipX || options.flipY) {
-    canvas = flipCanvas(canvas, !!options.flipX, !!options.flipY);
+    canvas = flipOverlayCanvas(canvas, !!options.flipX, !!options.flipY);
   }
 
   // Fit to target size
-  canvas = fitImage(canvas, targetWidth, targetHeight, options.fitMode ?? 'cover');
+  canvas = fitOverlayImage(canvas, targetWidth, targetHeight, options.fitMode ?? 'cover');
 
   // Apply filters
   if (options.filters) {
@@ -481,7 +481,7 @@ export function processOverlay(
 
   // Apply dithering
   if (options.dither?.enabled) {
-    canvas = ditherOverlayForQR(canvas, options.dither);
+    canvas = applyOverlayDitherForQR(canvas, options.dither);
   }
 
   return {

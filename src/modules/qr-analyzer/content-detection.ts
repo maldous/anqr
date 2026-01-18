@@ -4,13 +4,10 @@
 
 import type { ContentType, ContentTypeDetails } from './types';
 
-/**
- * Detect the content type from QR payload
- */
-// Import canonical implementation from content module
-import { detectContentType as _detectContentType } from './content/content';
+// Re-export canonical implementation from content module
+export { detectContentType } from './content/content';
 
-/** @deprecated Import from './content/content' instead */
+/** @deprecated Use detectContentType from './content/content' instead */
 export function detectContentTypeWrapper(payload: string): ContentTypeDetails {
   const trimmed = payload.trim();
   const lower = trimmed.toLowerCase();

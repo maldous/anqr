@@ -44,7 +44,7 @@ export {
 // Animation patterns
 export {
   generateAnimationPatternFrames,
-  interpolateFramesWithEasing,
+  interpolateAnimationFramesWithEasing,
   type AnimationPattern as PatternType,
   type InterpolationMode,
 } from './patterns';
