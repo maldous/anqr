@@ -22,7 +22,7 @@ export interface OverlayModeResult {
  * Apply overlay mode effects to a module
  * Returns modified rendering parameters based on overlay mode and brightness
  */
-export function applyOverlayMode(
+export function applyQROverlayMode(
   overlayMode: string | undefined,
   isDark: boolean,
   brightness: number,

@@ -390,7 +390,7 @@ export function extractOverlayRGBData(
 // OVERLAY MODE APPLICATION
 // ============================================
 
-export function applyOverlayMode(
+export function applyCanvasBlendMode(
   baseCanvas: HTMLCanvasElement,
   overlayCanvas: HTMLCanvasElement,
   mode: OverlayMode,

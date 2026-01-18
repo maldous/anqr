@@ -205,6 +205,7 @@ export function unmaskMatrix(
 ): boolean[][] {
   const maskFunc = getMaskFunction(maskPattern);
   const unmasked: boolean[][] = [];
+  const version = getVersionFromModuleCount(moduleCount);
 
   for (let row = 0; row < moduleCount; row++) {
     const unmaskedRow: boolean[] = [];
@@ -212,7 +213,7 @@ export function unmaskMatrix(
       let value = matrix[row]?.[col] ?? false;
 
       // Only unmask data modules (not function patterns)
-      if (!isFunctionModule(row, col, moduleCount)) {
+      if (!isStructuralModule(row, col, moduleCount, version)) {
         if (maskFunc(row, col)) {
           value = !value;
         }
@@ -224,15 +225,6 @@ export function unmaskMatrix(
   }
 
   return unmasked;
-}
-
-/**
- * Check if a module is a function pattern (finder, timing, alignment, format, version)
- * Uses canonical isStructuralModule from qr-spec
- */
-function isFunctionModule(row: number, col: number, moduleCount: number): boolean {
-  const version = getVersionFromModuleCount(moduleCount);
-  return isStructuralModule(row, col, moduleCount, version);
 }
 
 // Use canonical source directly
