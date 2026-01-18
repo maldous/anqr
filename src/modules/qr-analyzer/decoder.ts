@@ -4,10 +4,10 @@
 
 import { decodeQR } from '../qr-decoder';
 import type { ECCLevel, QRAnalysisResult } from './types';
-import { detectContentType } from './content';
+import { detectContentType } from './analyzer-content';
 
 // Shared logger
-import { qrAnalyzerLog as log } from '../shared';
+import { qrAnalyzerLog as log } from './logger';
 import type { ContentType } from './types';
 
 /**

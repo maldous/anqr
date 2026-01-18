@@ -7,7 +7,7 @@ import type { Point, FinderPattern } from './types';
 import { pointDistance } from './utils';
 
 // Shared logger
-import { qrDecoderLog as log } from '../shared';
+import { qrDecoderLog as log } from '../qr-analyzer/logger';
 
 interface ScanResult {
   center: number;

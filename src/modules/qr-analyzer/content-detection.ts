@@ -3,5 +3,5 @@
  * Re-exports from the canonical content module
  */
 
-export { detectContentType } from './content';
+export { detectContentType } from './analyzer-content';
 export type { ContentType, ContentTypeDetails } from './types';

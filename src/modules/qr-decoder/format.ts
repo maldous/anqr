@@ -13,7 +13,7 @@ import {
 } from '../qr-spec';
 
 // Shared logger
-import { qrDecoderLog as log } from '../shared';
+import { qrDecoderLog as log } from '../qr-analyzer/logger';
 
 // Pre-computed valid format info patterns (15 bits after BCH encoding, XORed with mask 0x5412)
 // Format: (ECC level << 3) | mask pattern, then BCH encoded, then XORed with 0x5412

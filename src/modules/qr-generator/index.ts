@@ -88,7 +88,7 @@ export { renderModules } from './render-loop';
 export { generateScaledQR } from './scaled-render';
 
 // Main QRGenerator class
-export { QRGenerator } from './QRGenerator';
+export { QRGenerator } from './qr-generator-class';
 
 // Types from local types.ts
 export type {

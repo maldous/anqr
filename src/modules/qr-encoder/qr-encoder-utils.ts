@@ -1,15 +1,12 @@
 /**
- * QR Core Compatibility Layer
- * Provides QR encoding functions that wrap the encoder module.
- * 
- * Pattern detection functions are re-exported from qr-spec (canonical source).
- * Callers should prefer importing directly from qr-spec for pattern functions.
+ * QR Encoder Utilities
+ * Provides QR encoding helper functions
  */
 
 import { qrcode } from './encoder';
 import type { QRErrorCorrectionLevelChar } from './types';
 
-// Type aliases for qr-core compatibility
+// Type aliases for QR encoding
 export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 export type EncodingMode = 'auto' | 'numeric' | 'alphanumeric' | 'byte' | 'kanji';
 export type MaskPattern = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | -1;
@@ -130,52 +127,3 @@ export function calculateOptimalVersion(
   }
   return 40; // Max version
 }
-
-// Re-export pattern functions from qr-spec (canonical source)
-// Callers should prefer importing from qr-spec directly
-export {
-  getModuleCountForVersion,
-  getVersionFromModuleCount,
-  getAlignmentPositions,
-  getAlignmentPatternCenters,
-  isFinderPattern,
-  isTimingPattern,
-  isAlignmentPattern,
-  isStructuralModule,
-  isData,
-  isLocked,
-} from '../qr-spec';
-
-/**
- * QRCore namespace object for backwards compatibility
- */
-import {
-  getModuleCountForVersion,
-  getVersionFromModuleCount,
-  getAlignmentPositions,
-  getAlignmentPatternCenters,
-  isFinderPattern,
-  isTimingPattern,
-  isAlignmentPattern,
-  isStructuralModule,
-  isData,
-  isLocked,
-} from '../qr-spec';
-
-export const QRCore = {
-  createQRInstance,
-  generateQR,
-  calculateOptimalVersion,
-  getModuleCountForVersion,
-  getVersionFromModuleCount,
-  getAlignmentPositions,
-  getAlignmentPatternCenters,
-  isFinderPattern,
-  isTimingPattern,
-  isAlignmentPattern,
-  isStructuralModule,
-  isData,
-  isLocked,
-};
-
-export default QRCore;

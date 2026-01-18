@@ -1,5 +1,5 @@
 /**
- * Content Analysis Module
+ * QR Analyzer Content Module
  * Provides utilities for analyzing QR code content
  */
 

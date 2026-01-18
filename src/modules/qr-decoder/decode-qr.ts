@@ -10,7 +10,7 @@ import { readFormatInfo, unmaskMatrix, getECCLevelChar } from './format';
 import { readCodewords, separateCodewords, decodeDataCodewords } from './decode';
 
 // Shared logger
-import { qrDecoderLog as log } from '../shared';
+import { qrDecoderLog as log } from '../qr-analyzer/logger';
 
 /**
  * Decode a QR code from ImageData

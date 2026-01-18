@@ -16,7 +16,7 @@ import {
 import { getAlignmentPositions, isStructuralModule, getVersionFromModuleCount } from '../qr-spec';
 
 // Shared logger
-import { qrDecoderLog as log } from '../shared';
+import { qrDecoderLog as log } from '../qr-analyzer/logger';
 
 // RS block configuration per version and ECC level
 // Format: [[numBlocks, totalCodewords, dataCodewords], ...]

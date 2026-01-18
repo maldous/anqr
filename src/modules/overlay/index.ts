@@ -4,7 +4,7 @@
  * Canonical source for image filters used by overlay and qr-generator modules
  */
 
-// Filters (canonical source - qr-generator imports from here)
+// Overlay filters (canonical source - qr-generator imports from here)
 export {
   applyFilters,
   brightness,
@@ -37,7 +37,7 @@ export {
   type RGBA,
   type HSL,
   type FilterOptions,
-} from './filters';
+} from './overlay-filters';
 
 // Watermark
 export {

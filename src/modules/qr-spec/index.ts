@@ -59,7 +59,7 @@ export {
   isFormatInfo,
   isVersionInfo,
   getAlignmentPatternCenters,
-} from './patterns';
+} from './qr-patterns';
 
 // Mask functions
 export { getMaskFunction } from './masks';

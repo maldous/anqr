@@ -3,6 +3,15 @@
  * Provides QR code analysis, scanning, validation, and safety checking
  */
 
+// Logger utilities
+export {
+  createLogger,
+  qrDecoderLog,
+  qrAnalyzerLog,
+  type Logger,
+  type LogData,
+} from './logger';
+
 // Types (canonical source)
 export type {
   ContentType,
@@ -20,7 +29,7 @@ export type {
 // Content detection (from content-detection.ts)
 export { detectContentType as detectContentTypeDetails } from './content-detection';
 
-// Content analysis utilities (from content.ts)
+// Content analysis utilities (from analyzer-content.ts)
 export {
   averageColor,
   calculateContrastRatio,
@@ -35,7 +44,7 @@ export {
   type DominantColor,
   type ImageProperties as ContentImageProperties,
   type UrlDetails,
-} from './content';
+} from './analyzer-content';
 
 // Main decoder
 export { decodeQRFromCanvas } from './decoder';
