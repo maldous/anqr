@@ -61,7 +61,7 @@
 
 + Symbol naming conventions
 - Public APIs use named exports as the default.
-- No public default exports.
+- Default exports are allowed for module main classes and React components.
 - No legacy or compat export names.
 
 + index.ts uniformity
