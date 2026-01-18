@@ -64,7 +64,7 @@ export function drawFrame(
  */
 export function drawCenterLogo(
   ctx: CanvasRenderingContext2D,
-  logoCanvas: HTMLCanvasElement,
+  logoCanvas: HTMLCanvasElement | OffscreenCanvas,
   canvasSize: number,
   logoSizePercent: number = 20
 ): void {
@@ -72,5 +72,6 @@ export function drawCenterLogo(
   const logoX = (canvasSize - logoSize) / 2;
   const logoY = (canvasSize - logoSize) / 2;
 
-  ctx.drawImage(logoCanvas, logoX, logoY, logoSize, logoSize);
+  // Cast to CanvasImageSource for compatibility with both HTMLCanvasElement and OffscreenCanvas
+  ctx.drawImage(logoCanvas as CanvasImageSource, logoX, logoY, logoSize, logoSize);
 }

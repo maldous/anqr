@@ -36,11 +36,12 @@ export function hashString(str: string): number {
  * Results are cached in a WeakMap to avoid re-hashing the same canvas
  */
 export async function hashCanvasContent(
-  canvas: HTMLCanvasElement,
-  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement>
+  canvas: HTMLCanvasElement | OffscreenCanvas,
+  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
 ): Promise<string> {
   // Check WeakMap cache first (avoids re-hashing same canvas instance)
-  const cachedHash = canvasHashCache.get(canvas);
+  // Only HTMLCanvasElement can be cached in WeakMap (OffscreenCanvas not supported)
+  const cachedHash = canvas instanceof HTMLCanvasElement ? canvasHashCache.get(canvas) : undefined;
   if (cachedHash !== undefined) {
     return cachedHash;
   }
@@ -64,7 +65,8 @@ export async function hashCanvasContent(
     }
 
     // Draw downscaled version
-    hashCtx.drawImage(canvas, 0, 0, hashSize, hashSize);
+    // Cast to CanvasImageSource for compatibility with both HTMLCanvasElement and OffscreenCanvas
+    hashCtx.drawImage(canvas as CanvasImageSource, 0, 0, hashSize, hashSize);
 
     // Get pixel data from the small canvas
     const imageData = hashCtx.getImageData(0, 0, hashSize, hashSize);
@@ -83,7 +85,10 @@ export async function hashCanvasContent(
     const hashStr = hash.toString(16);
 
     // Cache the result in WeakMap (auto-cleanup when canvas is GC'd)
-    canvasHashCache.set(canvas, hashStr);
+    // Only cache HTMLCanvasElement (OffscreenCanvas not supported in WeakMap)
+    if (canvas instanceof HTMLCanvasElement) {
+      canvasHashCache.set(canvas, hashStr);
+    }
 
     return hashStr;
   } catch (error) {

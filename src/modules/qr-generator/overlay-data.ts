@@ -11,11 +11,14 @@ import { hashCanvasContent } from './utils';
  * Get overlay data (brightness and colors) from canvas
  */
 export async function getOverlayData(
-  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
   moduleCount: number,
   config: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
 ): Promise<OverlayData> {
+  if (!overlayCanvas) {
+    return {} as OverlayData;
+  }
   // Generate cache key
   const canvasHash = await hashCanvasContent(overlayCanvas, createCanvasFn);
   const cacheKey = `${canvasHash}:${moduleCount}:${config.overlayIntensity}:${config.colorMode}`;
@@ -28,14 +31,15 @@ export async function getOverlayData(
 
   // Scale overlay to module count
   const scaledCanvas = await createCanvasFn(moduleCount, moduleCount);
-  const ctx = scaledCanvas.getContext('2d');
+  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
   if (!ctx) {
     return {} as OverlayData;
   }
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(overlayCanvas, 0, 0, moduleCount, moduleCount);
+  // Cast to CanvasImageSource for drawImage compatibility with both HTMLCanvasElement and OffscreenCanvas
+  ctx.drawImage(overlayCanvas as CanvasImageSource, 0, 0, moduleCount, moduleCount);
 
   const imageData = ctx.getImageData(0, 0, moduleCount, moduleCount);
   const data = imageData.data;
@@ -49,7 +53,8 @@ export async function getOverlayData(
 
   for (let row = 0; row < moduleCount; row++) {
     result[row] = {};
-    if (includeColors && result.colors) {
+    if (includeColors) {
+      if (!result.colors) result.colors = {};
       result.colors[row] = {};
     }
 
@@ -65,7 +70,7 @@ export async function getOverlayData(
 
       // Store color if needed
       if (includeColors && result.colors) {
-        result.colors[row][col] = `rgb(${r},${g},${b})`;
+        result.colors[row][col] = { r, g, b };
       }
     }
   }

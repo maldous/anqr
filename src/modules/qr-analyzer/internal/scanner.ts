@@ -28,7 +28,7 @@ export interface ValidationResult {
 /**
  * Scan a canvas for QR code
  */
-export function scanCanvas(canvas: HTMLCanvasElement): ScanResult {
+export function scanCanvas(canvas: HTMLCanvasElement | OffscreenCanvas): ScanResult {
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     return { data: null, location: null };
@@ -90,7 +90,7 @@ export async function scanFile(file: File): Promise<ScanResult> {
  * Validate QR code by scanning and comparing to expected content
  */
 export function validateQRCode(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   expectedContent?: string
 ): ValidationResult {
   const result = scanCanvas(canvas);
@@ -123,7 +123,7 @@ export function validateQRCode(
  * Validate QR code with multiple scan attempts
  */
 export function validateQRCodeRobust(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
   expectedContent?: string,
   attempts: number = 3
 ): ValidationResult {

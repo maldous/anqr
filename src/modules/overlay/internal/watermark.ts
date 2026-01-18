@@ -276,11 +276,11 @@ export function applyCenterLogo(
 
 /** Apply watermark to a canvas */
 export async function applyWatermark(
-  targetCanvas: HTMLCanvasElement,
+  targetCanvas: HTMLCanvasElement | OffscreenCanvas,
   options: WatermarkOptions
 ): Promise<WatermarkResult> {
   if (options.kind === 'none') {
-    return { canvas: targetCanvas, applied: false };
+    return { canvas: targetCanvas as HTMLCanvasElement, applied: false };
   }
 
   const result = document.createElement('canvas');
@@ -288,11 +288,11 @@ export async function applyWatermark(
   result.height = targetCanvas.height;
   const ctx = result.getContext('2d');
   if (!ctx) {
-    return { canvas: targetCanvas, applied: false };
+    return { canvas: targetCanvas as HTMLCanvasElement, applied: false };
   }
 
-  // Draw original
-  ctx.drawImage(targetCanvas, 0, 0);
+  // Draw original - cast to CanvasImageSource for compatibility
+  ctx.drawImage(targetCanvas as CanvasImageSource, 0, 0);
 
   let watermarkCanvas: HTMLCanvasElement | null = null;
 
@@ -340,7 +340,7 @@ export async function applyWatermark(
   }
 
   if (!watermarkCanvas) {
-    return { canvas: targetCanvas, applied: false };
+    return { canvas: targetCanvas as HTMLCanvasElement, applied: false };
   }
 
   // Apply scale if specified

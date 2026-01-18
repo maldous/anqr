@@ -1717,6 +1717,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
                 temporalMode,
                 animation.seed
               );
+              // applyTemporalNoiseToCanvas accepts union type and returns union type
               overlayToUse = applyTemporalNoiseToCanvas(processedOverlay, temporalOffset, 0.008);
             }
 
@@ -1746,11 +1747,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
                 temporalMode,
                 animation.seed
               );
+              // applyTemporalNoiseToCanvas accepts union type and returns union type
               processedOverlay = applyTemporalNoiseToCanvas(
                 processedOverlay,
                 temporalOffset,
                 0.008
-              ) as HTMLCanvasElement;
+              );
             }
 
             // Pass frame index for temporal dithering (also used in qr-generator for dither pattern offset)

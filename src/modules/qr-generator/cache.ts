@@ -68,7 +68,7 @@ export interface OverlayDataMatrix {
   };
   colors?: {
     [row: number]: {
-      [col: number]: string;
+      [col: number]: { r: number; g: number; b: number };
     };
   };
 }

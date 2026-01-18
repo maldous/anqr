@@ -15,7 +15,7 @@ import { getEffectiveIntensity } from './pixel-matrix-utils';
 export async function prepareUnifiedOverlayData(
   qr: QRCodeObject,
   config: QRGeneratorConfig,
-  overlayCanvas: HTMLCanvasElement | null,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
   moduleCount: number,
   createCanvasFn: CreateCanvasFn
 ): Promise<{

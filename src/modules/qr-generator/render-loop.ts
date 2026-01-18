@@ -226,12 +226,13 @@ export function renderModules(
           );
         } else if (useHalftoneRendering && isDark) {
           // Use advanced halftone rendering with htDot/htCurve params
-          drawHalftoneModule(ctx, drawX, drawY, adjustedSize, halftoneBrightness, config);
+          // Cast to CanvasRenderingContext2D for drawing functions (safe because we only use common 2D methods)
+          drawHalftoneModule(ctx as CanvasRenderingContext2D, drawX, drawY, adjustedSize, halftoneBrightness, config);
         } else if (isTiming) {
           // Draw timing pattern module with timing style
-          drawTimingModule(ctx, drawX, drawY, adjustedSize, timingStyle, config);
+          drawTimingModule(ctx as CanvasRenderingContext2D, drawX, drawY, adjustedSize, timingStyle, config);
         } else {
-          drawModule(ctx, drawX, drawY, adjustedSize, config.moduleStyle, {
+          drawModule(ctx as CanvasRenderingContext2D, drawX, drawY, adjustedSize, config.moduleStyle, {
             cornerRadius,
             rotation: dotRotation,
           });

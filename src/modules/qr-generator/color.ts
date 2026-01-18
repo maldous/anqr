@@ -76,7 +76,9 @@ export function applyPerModuleColor(
     case 'by_overlay': {
       // Use overlay image color directly
       if (overlayColor) {
-        return blendColors(baseColor, overlayColor, intensity);
+        // overlayColor is now {r, g, b} object, convert to rgb string for blending
+        const colorStr = `rgb(${overlayColor.r},${overlayColor.g},${overlayColor.b})`;
+        return blendColors(baseColor, colorStr, intensity);
       }
       return baseColor;
     }
