@@ -12,17 +12,8 @@ import {
   getVersionFromModuleCount,
 } from '../qr-spec';
 
-// Logging helper
-function log(category: string, message: string, data?: Record<string, unknown>): void {
-  const prefix = `[QR-Decoder:${category}]`;
-  if (data) {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
-    console.log(prefix, message, data);
-  } else {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
-    console.log(prefix, message);
-  }
-}
+// Shared logger
+import { qrDecoderLog as log } from '../shared';
 
 // Pre-computed valid format info patterns (15 bits after BCH encoding, XORed with mask 0x5412)
 // Format: (ECC level << 3) | mask pattern, then BCH encoded, then XORed with 0x5412

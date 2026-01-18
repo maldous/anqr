@@ -1,0 +1,177 @@
+src/modules
+├── src/modules/animation
+│   ├── src/modules/animation/animation-loop.ts
+│   ├── src/modules/animation/apply-animation-pattern.ts
+│   ├── src/modules/animation/color-cycle.ts
+│   ├── src/modules/animation/decimation.ts
+│   ├── src/modules/animation/format-detection.ts
+│   ├── src/modules/animation/gif-compositor.ts
+│   ├── src/modules/animation/index.ts
+│   ├── src/modules/animation/interpolate-frames.ts
+│   ├── src/modules/animation/parsing.ts
+│   ├── src/modules/animation/patterns.ts
+│   ├── src/modules/animation/shared-patterns.ts
+│   ├── src/modules/animation/state.ts
+│   ├── src/modules/animation/temporal-dither.ts
+│   └── src/modules/animation/types.ts
+├── src/modules/browser-clipboard
+│   ├── src/modules/browser-clipboard/copy-image.ts
+│   ├── src/modules/browser-clipboard/copy-text.ts
+│   └── src/modules/browser-clipboard/index.ts
+├── src/modules/browser-io
+│   ├── src/modules/browser-io/canvas-utils.ts
+│   ├── src/modules/browser-io/download.ts
+│   ├── src/modules/browser-io/index.ts
+│   └── src/modules/browser-io/native-save.ts
+├── src/modules/core
+│   ├── src/modules/core/color.ts
+│   ├── src/modules/core/contrast.ts
+│   ├── src/modules/core/gradient.ts
+│   ├── src/modules/core/harmony.ts
+│   ├── src/modules/core/index.ts
+│   ├── src/modules/core/math.ts
+│   └── src/modules/core/types.ts
+├── src/modules/dither-algorithms
+│   ├── src/modules/dither-algorithms/advanced.ts
+│   ├── src/modules/dither-algorithms/apply-dither.ts
+│   ├── src/modules/dither-algorithms/blue-noise.ts
+│   ├── src/modules/dither-algorithms/error-diffusion.ts
+│   ├── src/modules/dither-algorithms/index.ts
+│   ├── src/modules/dither-algorithms/kernels.ts
+│   ├── src/modules/dither-algorithms/matrices.ts
+│   ├── src/modules/dither-algorithms/noise.ts
+│   ├── src/modules/dither-algorithms/ordered.ts
+│   ├── src/modules/dither-algorithms/temporal.ts
+│   ├── src/modules/dither-algorithms/types.ts
+│   └── src/modules/dither-algorithms/utils.ts
+├── src/modules/exporter
+│   ├── src/modules/exporter/gif-export.ts
+│   ├── src/modules/exporter/image-export.ts
+│   ├── src/modules/exporter/index.ts
+│   ├── src/modules/exporter/png-metadata.ts
+│   ├── src/modules/exporter/svg-export.ts
+│   ├── src/modules/exporter/types.ts
+│   ├── src/modules/exporter/utils.ts
+│   └── src/modules/exporter/vector-svg.ts
+├── src/modules/index.ts
+├── src/modules/overlay
+│   ├── src/modules/overlay/crop-handler.ts
+│   ├── src/modules/overlay/filters.ts
+│   ├── src/modules/overlay/index.ts
+│   ├── src/modules/overlay/processor.ts
+│   └── src/modules/overlay/watermark.ts
+├── src/modules/payload-generators
+│   ├── src/modules/payload-generators/calendar.ts
+│   ├── src/modules/payload-generators/contacts.ts
+│   ├── src/modules/payload-generators/core.ts
+│   ├── src/modules/payload-generators/emv.ts
+│   ├── src/modules/payload-generators/enterprise.ts
+│   ├── src/modules/payload-generators/index.ts
+│   ├── src/modules/payload-generators/payments.ts
+│   ├── src/modules/payload-generators/social.ts
+│   ├── src/modules/payload-generators/types.ts
+│   └── src/modules/payload-generators/utils.ts
+├── src/modules/platform
+│   ├── src/modules/platform/admob.ts
+│   ├── src/modules/platform/index.ts
+│   └── src/modules/platform/media-store.ts
+├── src/modules/qr-analyzer
+│   ├── src/modules/qr-analyzer/analyzer.ts
+│   ├── src/modules/qr-analyzer/content
+│   │   └── src/modules/qr-analyzer/content/content.ts
+│   ├── src/modules/qr-analyzer/content-detection.ts
+│   ├── src/modules/qr-analyzer/decoder.ts
+│   ├── src/modules/qr-analyzer/index.ts
+│   ├── src/modules/qr-analyzer/internal
+│   │   ├── src/modules/qr-analyzer/internal/safety.ts
+│   │   └── src/modules/qr-analyzer/internal/scanner.ts
+│   ├── src/modules/qr-analyzer/telemetry
+│   │   ├── src/modules/qr-analyzer/telemetry/contrast.ts
+│   │   ├── src/modules/qr-analyzer/telemetry/logging.ts
+│   │   └── src/modules/qr-analyzer/telemetry/stats.ts
+│   └── src/modules/qr-analyzer/types.ts
+├── src/modules/qr-decoder
+│   ├── src/modules/qr-decoder/decode-canvas.ts
+│   ├── src/modules/qr-decoder/decode-qr.ts
+│   ├── src/modules/qr-decoder/decode.ts
+│   ├── src/modules/qr-decoder/extract.ts
+│   ├── src/modules/qr-decoder/format.ts
+│   ├── src/modules/qr-decoder/index.ts
+│   ├── src/modules/qr-decoder/internal
+│   ├── src/modules/qr-decoder/locate.ts
+│   ├── src/modules/qr-decoder/types.ts
+│   └── src/modules/qr-decoder/utils.ts
+├── src/modules/qr-encoder
+│   ├── src/modules/qr-encoder/bit-buffer.ts
+│   ├── src/modules/qr-encoder/data-modes.ts
+│   ├── src/modules/qr-encoder/encoder.ts
+│   ├── src/modules/qr-encoder/index.ts
+│   ├── src/modules/qr-encoder/internal
+│   │   └── src/modules/qr-encoder/internal/shift-jis.ts
+│   ├── src/modules/qr-encoder/math.ts
+│   ├── src/modules/qr-encoder/output.ts
+│   ├── src/modules/qr-encoder/qr-core-compat.ts
+│   ├── src/modules/qr-encoder/rs-blocks.ts
+│   ├── src/modules/qr-encoder/string-bytes.ts
+│   ├── src/modules/qr-encoder/types.ts
+│   └── src/modules/qr-encoder/utils.ts
+├── src/modules/qr-generator
+│   ├── src/modules/qr-generator/blue-noise-qr.ts
+│   ├── src/modules/qr-generator/cache.ts
+│   ├── src/modules/qr-generator/canvas-factory.ts
+│   ├── src/modules/qr-generator/color.ts
+│   ├── src/modules/qr-generator/dithering-advanced.ts
+│   ├── src/modules/qr-generator/dithering-error.ts
+│   ├── src/modules/qr-generator/dithering-kernels.ts
+│   ├── src/modules/qr-generator/dithering-matrix.ts
+│   ├── src/modules/qr-generator/dithering-true.ts
+│   ├── src/modules/qr-generator/dithering.ts
+│   ├── src/modules/qr-generator/drawing-frames.ts
+│   ├── src/modules/qr-generator/drawing-gradients.ts
+│   ├── src/modules/qr-generator/drawing-halftone.ts
+│   ├── src/modules/qr-generator/drawing-patterns.ts
+│   ├── src/modules/qr-generator/drawing-primitives.ts
+│   ├── src/modules/qr-generator/drawing.ts
+│   ├── src/modules/qr-generator/ecc.ts
+│   ├── src/modules/qr-generator/filters-blur.ts
+│   ├── src/modules/qr-generator/filters-edge.ts
+│   ├── src/modules/qr-generator/filters-preprocess.ts
+│   ├── src/modules/qr-generator/filters-sharpen.ts
+│   ├── src/modules/qr-generator/filters.ts
+│   ├── src/modules/qr-generator/index.ts
+│   ├── src/modules/qr-generator/overlay-data.ts
+│   ├── src/modules/qr-generator/overlay-subpixel.ts
+│   ├── src/modules/qr-generator/overlay-transforms.ts
+│   ├── src/modules/qr-generator/overlay.ts
+│   ├── src/modules/qr-generator/pattern-helpers.ts
+│   ├── src/modules/qr-generator/pixel-matrix-dithered.ts
+│   ├── src/modules/qr-generator/pixel-matrix-dither.ts
+│   ├── src/modules/qr-generator/pixel-matrix-overlay.ts
+│   ├── src/modules/qr-generator/pixel-matrix-standard.ts
+│   ├── src/modules/qr-generator/pixel-matrix.ts
+│   ├── src/modules/qr-generator/pixel-matrix-utils.ts
+│   ├── src/modules/qr-generator/QRGenerator.ts
+│   ├── src/modules/qr-generator/render-loop.ts
+│   ├── src/modules/qr-generator/render-modes.ts
+│   ├── src/modules/qr-generator/scaled-render.ts
+│   ├── src/modules/qr-generator/types.ts
+│   └── src/modules/qr-generator/utils.ts
+├── src/modules/qr-spec
+│   ├── src/modules/qr-spec/index.ts
+│   └── src/modules/qr-spec/internal
+│       ├── src/modules/qr-spec/internal/bch.ts
+│       ├── src/modules/qr-spec/internal/constants.ts
+│       ├── src/modules/qr-spec/internal/masks.ts
+│       ├── src/modules/qr-spec/internal/patterns.ts
+│       └── src/modules/qr-spec/internal/types.ts
+├── src/modules/shared
+│   ├── src/modules/shared/index.ts
+│   └── src/modules/shared/logger.ts
+└── src/modules/share-links
+    ├── src/modules/share-links/embed.ts
+    ├── src/modules/share-links/index.ts
+    ├── src/modules/share-links/social.ts
+    ├── src/modules/share-links/types.ts
+    └── src/modules/share-links/url-params.ts
+
+23 directories, 152 files
