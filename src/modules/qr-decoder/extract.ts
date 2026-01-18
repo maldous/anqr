@@ -197,7 +197,7 @@ export function extractModuleMatrix(
     darkRatio: ((totalDarkModules / (totalDarkModules + totalLightModules)) * 100).toFixed(1) + '%'
   });
 
-  // Validate matrix by checking finder pattern at top-left
+  // Validate matrix by checking finder patterns
   // Expected pattern (1=dark, 0=light):
   // 1111111
   // 1000001
@@ -216,35 +216,78 @@ export function extractModuleMatrix(
     [1, 1, 1, 1, 1, 1, 1],
   ];
 
-  let finderMatches = 0;
-  let finderMismatches = 0;
-  const finderErrors: string[] = [];
+  // Validate top-left finder pattern
+  let tlMatches = 0;
+  let tlMismatches = 0;
+  const tlErrors: string[] = [];
 
   for (let row = 0; row < 7; row++) {
     for (let col = 0; col < 7; col++) {
       const expected = expectedFinder[row][col] === 1;
       const actual = matrix[row]?.[col] ?? false;
       if (expected === actual) {
-        finderMatches++;
+        tlMatches++;
       } else {
-        finderMismatches++;
-        if (finderErrors.length < 5) {
-          finderErrors.push(`(${row},${col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`);
+        tlMismatches++;
+        if (tlErrors.length < 5) {
+          tlErrors.push(`(${row},${col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`);
         }
       }
     }
   }
 
   log('extract', 'Top-left finder pattern validation', {
-    matches: finderMatches,
-    mismatches: finderMismatches,
-    accuracy: ((finderMatches / 49) * 100).toFixed(1) + '%',
-    errors: finderErrors.length > 0 ? finderErrors : 'none'
+    matches: tlMatches,
+    mismatches: tlMismatches,
+    accuracy: ((tlMatches / 49) * 100).toFixed(1) + '%',
+    errors: tlErrors.length > 0 ? tlErrors : 'none'
   });
 
-  // If finder pattern accuracy is very low, the matrix might be transposed
-  if (finderMismatches > 20) {
-    log('extract', 'WARNING: Finder pattern accuracy very low - matrix may be mis-oriented');
+  // Validate top-right finder pattern (at columns moduleCount-7 to moduleCount-1)
+  let trMatches = 0;
+  let trMismatches = 0;
+  const trErrors: string[] = [];
+  const trColOffset = moduleCount - 7;
+
+  for (let row = 0; row < 7; row++) {
+    for (let col = 0; col < 7; col++) {
+      const expected = expectedFinder[row][col] === 1;
+      const actual = matrix[row]?.[trColOffset + col] ?? false;
+      if (expected === actual) {
+        trMatches++;
+      } else {
+        trMismatches++;
+        if (trErrors.length < 5) {
+          trErrors.push(`(${row},${trColOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`);
+        }
+      }
+    }
+  }
+
+  log('extract', 'Top-right finder pattern validation', {
+    matches: trMatches,
+    mismatches: trMismatches,
+    accuracy: ((trMatches / 49) * 100).toFixed(1) + '%',
+    errors: trErrors.length > 0 ? trErrors : 'none'
+  });
+
+  // Check for potential 180° rotation: if top-right is very wrong but top-left is ok,
+  // or if both are wrong in complementary ways
+  const tlAccuracy = tlMatches / 49;
+  const trAccuracy = trMatches / 49;
+
+  if (tlMismatches > 20 || trMismatches > 20) {
+    log('extract', 'WARNING: Finder pattern accuracy very low - matrix may be mis-oriented', {
+      topLeftAccuracy: (tlAccuracy * 100).toFixed(1) + '%',
+      topRightAccuracy: (trAccuracy * 100).toFixed(1) + '%'
+    });
+  }
+
+  // Detect 180° rotation: top-left looks good but top-right is garbage (or vice versa)
+  if (tlAccuracy > 0.8 && trAccuracy < 0.5) {
+    log('extract', 'WARNING: Possible 180° rotation detected - top-left OK but top-right wrong');
+  } else if (trAccuracy > 0.8 && tlAccuracy < 0.5) {
+    log('extract', 'WARNING: Possible 180° rotation detected - top-right OK but top-left wrong');
   }
 
   return matrix;
