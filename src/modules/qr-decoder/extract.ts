@@ -71,6 +71,7 @@ export function calculateLocation(
   };
 }
 
+/** Calculate Euclidean distance between two points (local helper) */
 function distance(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
@@ -295,16 +296,5 @@ export function extractModuleMatrix(
   return matrix;
 }
 
-/**
- * Get version from module count
- */
-export function getVersionFromModuleCount(moduleCount: number): number {
-  return (moduleCount - 17) / 4;
-}
-
-/**
- * Get module count from version
- */
-export function getModuleCountFromVersion(version: number): number {
-  return version * 4 + 17;
-}
+// Re-export from canonical source
+export { getVersionFromModuleCount, getModuleCountForVersion as getModuleCountFromVersion } from '../qr-spec';

@@ -24,8 +24,10 @@ interface ScanResult {
 
 /**
  * Check if the state counts represent a valid finder pattern (1:1:3:1:1 ratio)
+ * Note: This is different from qr-spec's isFinderPattern which checks coordinates.
+ * This function validates the pixel ratio pattern during scanning.
  */
-function isFinderPattern(counts: number[]): boolean {
+function isFinderPatternRatio(counts: number[]): boolean {
   const total = counts.reduce((a, b) => a + b, 0);
   if (total < 7) return false;
 
@@ -72,7 +74,7 @@ function scanRow(
         // Was in dark, transition to next light
         if (state === 4) {
           // Check if we have a valid pattern
-          if (isFinderPattern(counts)) {
+          if (isFinderPatternRatio(counts)) {
             const total = counts.reduce((a, b) => a + b, 0);
             const center = x - total / 2;
             results.push({
@@ -98,7 +100,7 @@ function scanRow(
   }
 
   // Check final state
-  if (state === 4 && isFinderPattern(counts)) {
+  if (state === 4 && isFinderPatternRatio(counts)) {
     const total = counts.reduce((a, b) => a + b, 0);
     const center = width - total / 2;
     results.push({
@@ -163,7 +165,7 @@ function verifyVertical(
     }
   }
 
-  if (!isFinderPattern(counts)) {
+  if (!isFinderPatternRatio(counts)) {
     return { valid: false, center: y, moduleSize: expectedModuleSize };
   }
 
@@ -443,6 +445,7 @@ function orderFinderPatterns(
   return [topLeft, topRight, bottomLeft];
 }
 
+/** Calculate Euclidean distance between two points (local helper) */
 function distance(a: Point, b: Point): number {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }

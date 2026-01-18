@@ -13,7 +13,7 @@ import {
 } from './types';
 
 // Import from canonical source (qr-spec)
-import { getAlignmentPositions } from '../qr-spec';
+import { getAlignmentPositions, isStructuralModule, getVersionFromModuleCount } from '../qr-spec';
 
 // Logging helper
 function log(category: string, message: string, data?: Record<string, unknown>): void {
@@ -135,41 +135,11 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
 
 /**
  * Check if a module is a function pattern
+ * Uses canonical isStructuralModule from qr-spec
  */
 function isFunctionModule(row: number, col: number, moduleCount: number): boolean {
-  const version = (moduleCount - 17) / 4;
-
-  // Finder patterns + separators + format info
-  if (row < 9 && col < 9) return true;
-  if (row < 9 && col >= moduleCount - 8) return true;
-  if (row >= moduleCount - 8 && col < 9) return true;
-
-  // Timing patterns
-  if (row === 6 || col === 6) return true;
-
-  // Dark module
-  if (row === moduleCount - 8 && col === 8) return true;
-
-  // Version info (version 7+)
-  if (version >= 7) {
-    if (row < 6 && col >= moduleCount - 11 && col < moduleCount - 8) return true;
-    if (col < 6 && row >= moduleCount - 11 && row < moduleCount - 8) return true;
-  }
-
-  // Alignment patterns
-  if (version >= 2) {
-    const positions = getAlignmentPositions(version);
-    for (const py of positions) {
-      for (const px of positions) {
-        if (py < 9 && px < 9) continue;
-        if (py < 9 && px >= moduleCount - 9) continue;
-        if (py >= moduleCount - 9 && px < 9) continue;
-        if (Math.abs(row - py) <= 2 && Math.abs(col - px) <= 2) return true;
-      }
-    }
-  }
-
-  return false;
+  const version = getVersionFromModuleCount(moduleCount);
+  return isStructuralModule(row, col, moduleCount, version);
 }
 
 // ALIGNMENT_POSITIONS and getAlignmentPositions imported from qr-spec
