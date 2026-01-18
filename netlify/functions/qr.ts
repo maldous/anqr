@@ -109,13 +109,56 @@
  * - animSpeed: Animation frame delay in ms 10-1000 (default: 100)
  * - animSeed: Animation random seed (default: 0)
  * - easing: Animation easing function - linear/ease_in/ease_out/ease_in_out/bounce (default: linear)
+ * - loop: Animation loop 0/1 (default: 1)
+ * - bounce: Animation bounce 0/1 (default: 0)
+ * - reverse: Animation reverse 0/1 (default: 0)
+ * - colorCycle: Color cycle animation 0/1 (default: 0)
+ * - interp: Animation interpolation - none/crossfade/morph (default: none)
+ * - tempDither: Temporal dithering - off/blue_noise/flicker_safe (default: off)
+ * - startF: Animation start frame (default: 0)
+ * - maxF: Animation max frames (default: 0 = auto)
+ * - stepF: Animation frame step (default: 1)
+ * - jitter: Module jitter in pixels (default: 0)
  * - webpQ: WebP quality 0-100 (default: 90)
  * - gifColors: GIF palette size 2-256 (default: 256)
  * - metaTitle: PNG metadata title
  * - metaAuthor: PNG metadata author
  * - metaCopy: PNG metadata copyright
  * - metaDesc: PNG metadata description
+ * - metaLic: PNG metadata license
+ * - metaTime: Include creation time in metadata 0/1 (default: 0)
+ * - metaKv: Custom metadata key-value pairs
  * - dpi: Output DPI for PNG (default: 72)
+ * - cropEn: Enable overlay cropping 0/1 (default: 0)
+ * - cropX: Crop center X 0-1 (default: 0.5)
+ * - cropY: Crop center Y 0-1 (default: 0.5)
+ * - cropSize: Crop size 0-1 (default: 1)
+ * - ovType: Overlay type - static/gif/apng/webp_anim/video (default: static)
+ * - ovFramePick: Overlay frame picking - all/every_n/max_frames/duration_limit (default: all)
+ * - gifDelays: Use original GIF frame delays 0/1 (default: 1)
+ * - gifDispH: GIF disposal handling - respect/simplify (default: respect)
+ * - lockF: Lock finder patterns 0/1 (default: 1)
+ * - lockT: Lock timing patterns 0/1 (default: 1)
+ * - lockA: Lock alignment patterns 0/1 (default: 1)
+ * - lockFmt: Lock format info 0/1 (default: 1)
+ * - lockV: Lock version info 0/1 (default: 1)
+ * - safeMode: Safety mode - off/balanced/strict (default: off)
+ * - safeMinPx: Minimum module size in pixels (default: 2)
+ * - safeMinQz: Minimum quiet zone modules (default: 4)
+ * - autoVer: Auto-pick QR version 0/1 (default: 1)
+ * - autoEcc: Auto-pick ECC level 0/1 (default: 0)
+ * - autoReduce: Auto-reduce intensity until scannable 0/1 (default: 0)
+ * - qaContrast: Enable contrast check 0/1 (default: 0)
+ * - qaBlur: Simulate blur in pixels (default: 0)
+ * - qaNoise: Simulate noise level (default: 0)
+ * - qaHeatmap: Show readability heatmap 0/1 (default: 0)
+ * - bgOver: Background color override hex (without #)
+ * - fmtExtra: Extra format output - none/eps/animated_webp (default: none)
+ * - fname: Output filename (default: anqr-qrcode)
+ * - inclQz: Include quiet zone in output 0/1 (default: 1)
+ * - svgPrec: SVG shape precision - pixel/precise (default: pixel)
+ * - svgEmbed: Embed raster overlay in SVG 0/1 (default: 1)
+ * - paletteMode: Palette color mode - position/brightness/diagonal/radial/random/row/column (default: position)
  */
 
 import { type Canvas, createCanvas, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
@@ -138,6 +181,10 @@ import {
 } from '../../src/modules/animation';
 // @ts-expect-error - JS module
 import { QRGenerator } from '../../src/modules/qr-generator';
+
+// Type alignment: This function's URL parameters align with ShareConfig from
+// src/modules/share-links/types.ts - see that file for the complete type definition.
+// The parseUrlParamsFromSearchParams() function can be used for shared parsing.
 
 type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 type OutputFormat = 'png' | 'webp' | 'gif';
@@ -1239,7 +1286,7 @@ async function handler(request: Request) {
   const palette = paletteParam
     ? paletteParam.split(',').map((c) => (c.startsWith('#') ? c : `#${c}`))
     : undefined;
-  const paletteMode = params.get('paletteMode') || 'position';
+  const _paletteMode = params.get('paletteMode') || 'position';
 
   // Safety per-ECC limits (support both short and long param names)
   const maxOverlayIntensityL = Number.parseInt(
@@ -1281,9 +1328,18 @@ async function handler(request: Request) {
   const watermarkBlend = (params.get('wmBlend') || 'normal') as WatermarkBlend;
 
   // Animation (for animated GIF output)
-  // NOTE: Animation params are parsed but only pattern/frames/speed/seed are currently used server-side
-  // colorCycle, temporalDither, interpolate, moduleJitter require full client-side rendering
+  // NOTE: Some animation params are client-only (moduleJitter requires per-frame QR generation)
   const animationPattern = (params.get('animPattern') || 'none') as AnimationPattern;
+  const animationLoop = params.get('loop') !== '0';
+  const animationBounce = params.get('bounce') === '1';
+  const animationReverse = params.get('reverse') === '1';
+  const animationColorCycle = params.get('colorCycle') === '1';
+  const animationInterpolate = params.get('interp') || 'none';
+  const animationTemporalDither = params.get('tempDither') || 'off';
+  const animationStartFrame = Number.parseInt(params.get('startF') || '0', 10);
+  const animationMaxFrames = Number.parseInt(params.get('maxF') || '0', 10);
+  const animationFrameStep = Number.parseInt(params.get('stepF') || '1', 10);
+  const animationModuleJitter = Number.parseFloat(params.get('jitter') || '0');
   // Ensure frame count is at least 1 to prevent empty animation loops
   const animationFramesRaw = Number.parseInt(params.get('animFrames') || '24', 10);
   const animationFrames = Math.min(
@@ -1311,6 +1367,55 @@ async function handler(request: Request) {
   const metaAuthor = params.get('metaAuthor') || undefined;
   const metaCopyright = params.get('metaCopy') || undefined;
   const metaDescription = params.get('metaDesc') || undefined;
+  const metaLicense = params.get('metaLic') || undefined;
+  const metaCreationTime = params.get('metaTime') === '1';
+  const _metaCustomKv = params.get('metaKv') || undefined;
+
+  // Crop parameters (missing from server previously)
+  const cropEnabled = params.get('cropEn') === '1';
+  const cropX = Number.parseFloat(params.get('cropX') || '0.5');
+  const cropY = Number.parseFloat(params.get('cropY') || '0.5');
+  const cropSize = Number.parseFloat(params.get('cropSize') || '1');
+
+  // Overlay type and frame picking (missing from server previously)
+  const overlayType = params.get('ovType') || 'static';
+  const overlayFramePick = params.get('ovFramePick') || 'all';
+
+  // GIF-specific overlay parameters
+  const gifUseFrameDelays = params.get('gifDelays') !== '0';
+  const gifDisposalHandling = params.get('gifDispH') || 'respect';
+
+  // Safety locks (missing from server previously)
+  const lockFinders = params.get('lockF') !== '0';
+  const lockTiming = params.get('lockT') !== '0';
+  const lockAlign = params.get('lockA') !== '0';
+  const lockFormat = params.get('lockFmt') !== '0';
+  const lockVersion = params.get('lockV') !== '0';
+  const safetyMode = params.get('safeMode') || 'off';
+  const safetyMinModulePx = Number.parseInt(params.get('safeMinPx') || '2', 10);
+  const safetyMinQuietZone = Number.parseInt(params.get('safeMinQz') || '4', 10);
+
+  // Auto-tuning (missing from server previously - these are hints)
+  const autoPickVersion = params.get('autoVer') !== '0';
+  const autoPickEcc = params.get('autoEcc') === '1';
+  const autoReduceIntensity = params.get('autoReduce') === '1';
+
+  // QA parameters (client-only simulation, but parse for completeness)
+  const _qaContrastCheck = params.get('qaContrast') === '1';
+  const _qaSimulateBlur = Number.parseFloat(params.get('qaBlur') || '0');
+  const _qaSimulateNoise = Number.parseInt(params.get('qaNoise') || '0', 10);
+  const _qaShowHeatmap = params.get('qaHeatmap') === '1';
+
+  // Output extras (missing from server previously)
+  const bgOverride = params.get('bgOver') ? `#${params.get('bgOver')}` : undefined;
+  const formatExtra = params.get('fmtExtra') || 'none';
+  const filename = params.get('fname') || 'anqr-qrcode';
+  const includeQuietZone = params.get('inclQz') !== '0';
+  const svgShapePrecision = params.get('svgPrec') || 'pixel';
+  const svgEmbedRasterOverlay = params.get('svgEmbed') !== '0';
+
+  // Render palette (missing from server previously)
+  const paletteMode = params.get('paletteMode') || 'position';
 
   // Validate ECC level
   if (!['L', 'M', 'Q', 'H'].includes(ec)) {
@@ -1428,7 +1533,6 @@ async function handler(request: Request) {
       duotoneColors: [duotoneColor1, duotoneColor2],
       // Palette
       palette,
-      paletteMode,
       gradient:
         gradientType === 'none'
           ? undefined
@@ -1445,13 +1549,53 @@ async function handler(request: Request) {
         H: maxOverlayIntensityH,
       },
       // Animation settings (pattern-based animation is supported server-side)
-      // Note: colorCycle, temporalDither, interpolate, moduleJitter are client-only
       animationPattern,
       animationFrames,
       animationSpeed,
       animationSeed,
-      moduleJitterPx: 0, // Not supported server-side (requires per-frame QR generation)
-      colorCycle: false, // Not supported server-side (requires post-processing)
+      animationLoop,
+      animationBounce,
+      animationReverse,
+      animationInterpolate,
+      animationTemporalDither,
+      animationStartFrame,
+      animationMaxFrames,
+      animationFrameStep,
+      moduleJitterPx: animationModuleJitter, // Limited server-side support
+      colorCycle: animationColorCycle, // Supported via color cycle pattern
+      // Crop settings
+      cropEnabled,
+      cropX,
+      cropY,
+      cropSize,
+      // Overlay type
+      overlayType,
+      overlayFramePick,
+      // GIF overlay
+      gifUseFrameDelays,
+      gifDisposalHandling,
+      // Safety locks
+      lockFinders,
+      lockTiming,
+      lockAlign,
+      lockFormat,
+      lockVersion,
+      safetyMode,
+      safetyMinModulePx,
+      safetyMinQuietZone,
+      // Auto-tuning hints
+      autoPickVersion,
+      autoPickEcc,
+      autoReduceIntensity,
+      // Output extras
+      bgOverride,
+      formatExtra,
+      filename,
+      includeQuietZone,
+      svgShapePrecision,
+      svgEmbedRasterOverlay,
+      // Palette
+      paletteMode,
     };
 
     // Load overlay image if URL provided
@@ -1510,13 +1654,13 @@ async function handler(request: Request) {
 
     // Build metadata object
     const metadata: PngMetadata | undefined =
-      metaTitle || metaAuthor || metaCopyright || metaDescription
+      metaTitle || metaAuthor || metaCopyright || metaDescription || metaLicense || metaCreationTime
         ? {
             title: metaTitle,
             author: metaAuthor,
             copyright: metaCopyright,
             description: metaDescription,
-            creationTime: new Date().toISOString(),
+            creationTime: metaCreationTime ? new Date().toISOString() : undefined,
             software: 'ANQR - anqr.link',
           }
         : undefined;

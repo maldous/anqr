@@ -31,5 +31,6 @@ export {
   checkShareUrlLength,
   getShareableUrl,
   parseUrlParams,
+  parseUrlParamsFromSearchParams,
   updateBrowserUrl,
 } from './url-params';
