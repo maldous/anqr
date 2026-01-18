@@ -12,12 +12,12 @@ import {
   createGifCompositor,
   decimateCompositorFrames,
   type GifCompositor,
+  interpolateFrames,
   parseAnimatedImage,
 } from '@/modules/animation';
 import {
   type AnimationPattern,
   generatePatternFrames,
-  interpolateFrames,
 } from '@/modules/animation-patterns';
 import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
 import { getEffectiveDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay-processor';
@@ -1531,7 +1531,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             baseQR,
             animation.pattern as AnimationPattern,
             frameCount,
-            animation.seed
+            { seed: animation.seed }
           );
           framesToProcess = patternFrames.map((canvas) => ({
             canvas,
@@ -1548,7 +1548,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             baseQR,
             animation.pattern as AnimationPattern,
             frameCount,
-            animation.seed
+            { seed: animation.seed }
           );
 
           // Now generate jittered QR frames and combine with pattern effects
@@ -1572,7 +1572,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
               jitteredQR,
               animation.pattern as AnimationPattern,
               frameCount,
-              animation.seed
+              { seed: animation.seed }
             );
             // Pick the frame at index i to match the animation progression
             combinedFrames.push(patternForFrame[i] || jitteredQR);
@@ -1626,7 +1626,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           baseCanvas,
           animation.pattern as AnimationPattern,
           patternFrameCount,
-          animation.seed
+          { seed: animation.seed }
         );
         // Convert to AnimationFrame format
         framesToProcess = patternFrames.map((canvas) => ({
@@ -1793,8 +1793,27 @@ export function useQRGenerator(): UseQRGeneratorResult {
       }
 
       // Apply interpolation - ONLY if actually enabled
+      // Note: interpolateFrames works on pairs of frames, so we interpolate between consecutive frames
       if (hasInterpolation && frames.length > 1) {
-        frames = interpolateFrames(frames, animation.interpolate, 2);
+        const interpolatedFrames: HTMLCanvasElement[] = [];
+        const interpolationSteps = 2; // Number of intermediate frames to generate
+        for (let i = 0; i < frames.length - 1; i++) {
+          interpolatedFrames.push(frames[i]);
+          // Generate intermediate frames between frames[i] and frames[i+1]
+          for (let step = 1; step <= interpolationSteps; step++) {
+            const t = step / (interpolationSteps + 1);
+            const interpolated = interpolateFrames(
+              frames[i],
+              frames[i + 1],
+              t,
+              animation.interpolate as 'none' | 'crossfade' | 'morph'
+            );
+            interpolatedFrames.push(interpolated);
+          }
+        }
+        // Add the last frame
+        interpolatedFrames.push(frames[frames.length - 1]);
+        frames = interpolatedFrames;
       }
 
       // Only update state if not cancelled

@@ -3,7 +3,7 @@
  * Re-exports from split module files
  */
 
-// Types and constants
+// Types and constants (canonical source - store imports from here)
 export * from './types';
 export { utf8ByteLength, crc16CCITT, escapeValue, formatICalDate } from './utils';
 

@@ -4,10 +4,21 @@
  * 
  * NOTE: Core color utilities have been moved to ./core/internal/color.ts
  * This module re-exports from core and adds QR-specific color utilities
- * that depend on the store (e.g., gradient helpers).
+ * like gradient helpers.
  */
 
-import type { GradientStop, GradientType } from '../store/qr-store';
+// ============================================
+// GRADIENT TYPES (local definitions - no store dependency)
+// ============================================
+
+/** Gradient stop position and color */
+export interface GradientStop {
+  pos: number;
+  color: string;
+}
+
+/** Gradient type */
+export type GradientType = 'none' | 'linear' | 'radial' | 'conic';
 
 // ============================================
 // TYPES

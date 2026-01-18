@@ -5,7 +5,7 @@
  * Handles text and image watermarks with positioning and blending
  */
 
-export {
+import {
   applyWatermark,
   applyCenterLogo,
   createTextWatermark,
@@ -19,5 +19,21 @@ export {
   type WatermarkOptions,
   type WatermarkResult,
 } from './overlay/internal/watermark';
+
+// Re-export everything
+export {
+  applyWatermark,
+  applyCenterLogo,
+  createTextWatermark,
+  createPatternWatermark,
+  getWatermarkPositions,
+  applyBlendMode,
+  Watermark,
+  type WatermarkKind,
+  type WatermarkPosition,
+  type WatermarkBlend,
+  type WatermarkOptions,
+  type WatermarkResult,
+};
 
 export default Watermark;
