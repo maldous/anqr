@@ -57,7 +57,7 @@ export {
 } from './output';
 
 // Shift-JIS encoding
-export { createShiftJISEncoder, canEncodeAsShiftJIS } from './internal/shift-jis';
+export { createShiftJISEncoder, canEncodeAsShiftJIS } from './shift-jis';
 
 // QR Core compatibility layer - encoder-specific functions
 export {

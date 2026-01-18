@@ -201,4 +201,4 @@ export function parseUrlDetails(url: string): UrlDetails | null {
 }
 
 // Re-export rgbToHex from core
-export { rgbToHex } from '../../core';
+export { rgbToHex } from '../core';

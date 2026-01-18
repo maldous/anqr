@@ -23,7 +23,7 @@ export type {
   QRMaskPatternType,
   MaskPattern,
   EncodingMode,
-} from './internal/types';
+} from './types';
 
 export {
   QRErrorCorrectionLevel,
@@ -35,7 +35,7 @@ export {
   MODE_BYTE,
   MODE_KANJI,
   MODE_TERMINATOR,
-} from './internal/types';
+} from './types';
 
 // Constants
 export {
@@ -46,7 +46,7 @@ export {
   ECC_CAPACITIES_ALPHANUMERIC,
   getVersionFromModuleCount,
   getModuleCountForVersion,
-} from './internal/constants';
+} from './constants';
 
 // Pattern detection
 export {
@@ -59,10 +59,10 @@ export {
   isFormatInfo,
   isVersionInfo,
   getAlignmentPatternCenters,
-} from './internal/patterns';
+} from './patterns';
 
 // Mask functions
-export { getMaskFunction } from './internal/masks';
+export { getMaskFunction } from './masks';
 
 // BCH encoding
-export { getBCHTypeInfo, getBCHTypeNumber } from './internal/bch';
+export { getBCHTypeInfo, getBCHTypeNumber } from './bch';

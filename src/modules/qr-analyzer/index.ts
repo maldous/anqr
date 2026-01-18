@@ -20,7 +20,7 @@ export type {
 // Content detection (from content-detection.ts)
 export { detectContentType as detectContentTypeDetails } from './content-detection';
 
-// Content analysis utilities (from content/content.ts)
+// Content analysis utilities (from content.ts)
 export {
   averageColor,
   calculateContrastRatio,
@@ -35,12 +35,12 @@ export {
   type DominantColor,
   type ImageProperties as ContentImageProperties,
   type UrlDetails,
-} from './content/content';
+} from './content';
 
 // Main decoder
 export { decodeQRFromCanvas } from './decoder';
 
-// Scanner (from internal module)
+// Scanner
 export {
   scanCanvas,
   scanFile,
@@ -52,9 +52,9 @@ export {
   type QRLocation,
   type ScanResult,
   type ValidationResult,
-} from './internal/scanner';
+} from './scanner';
 
-// Safety analyzer (from internal module)
+// Safety analyzer
 export {
   analyzeContrast,
   analyzeMatrixContrast,
@@ -74,27 +74,27 @@ export {
   type SafetyMode,
   type SafetyOptions,
   type ScanSimulationResult,
-} from './internal/safety';
+} from './safety';
 
 // Telemetry and statistics
 export {
   type ContrastReport,
   calculateContrastStats,
   checkContrastCompliance,
-} from './telemetry/contrast';
+} from './telemetry-contrast';
 
 export {
   type ScanStats,
   type LogEntry,
   type ScanLogger,
   createScanLogger,
-} from './telemetry/logging';
+} from './telemetry-logging';
 
 export {
   type AnalysisStats,
   calculateAnalysisStats,
   aggregateStats,
-} from './telemetry/stats';
+} from './telemetry-stats';
 
 // High-level analysis functions
 export {
