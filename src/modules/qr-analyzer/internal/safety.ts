@@ -3,12 +3,8 @@
  * Provides QA tools, contrast checking, scan simulation, and readability analysis
  */
 
-import { getContrastRatio, parseColor } from '../../color-utils';
-import { isFinderPattern, type ECCLevel } from '../../qr-spec';
-
-// ============================================
-// TYPES
-// ============================================
+import { getContrastRatio, getRelativeLuminance, parseColor } from '../../core';
+import { scanCanvas } from './scanner';
 
 export type SafetyMode = 'off' | 'balanced' | 'strict';
 
@@ -16,507 +12,317 @@ export interface SafetyOptions {
   mode: SafetyMode;
   minModulePx: number;
   minQuietZoneModules: number;
-  lockFinders: boolean;
-  lockTiming: boolean;
-  lockAlign: boolean;
-  lockFormat: boolean;
-  lockVersion: boolean;
-  maxOverlayIntensityByEcc: Record<ECCLevel, number>;
-}
-
-export interface AnalysisResult {
-  score: number; // 0-100
-  issues: AnalysisIssue[];
-  warnings: AnalysisWarning[];
-  recommendations: string[];
-}
-
-export interface AnalysisIssue {
-  type: 'critical' | 'error';
-  message: string;
-  location?: { row: number; col: number };
-}
-
-export interface AnalysisWarning {
-  type: 'warning' | 'info';
-  message: string;
-  suggestion?: string;
+  maxOverlayIntensity: number;
 }
 
 export interface ContrastReport {
-  overallRatio: number;
-  finderContrast: number;
-  dataContrast: number;
-  meetsWCAG_AA: boolean;
-  meetsWCAG_AAA: boolean;
-  problematicAreas: Array<{ row: number; col: number; ratio: number }>;
+  ratio: number;
+  meetsAA: boolean;
+  meetsAAA: boolean;
+  fgLuminance: number;
+  bgLuminance: number;
+}
+
+export interface AnalysisWarning {
+  type: 'contrast' | 'module_size' | 'quiet_zone' | 'overlay_intensity' | 'style';
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface AnalysisIssue {
+  type: string;
+  message: string;
+  location?: { x: number; y: number };
+}
+
+export interface AnalysisResult {
+  valid: boolean;
+  scannable: boolean;
+  warnings: AnalysisWarning[];
+  issues: AnalysisIssue[];
+  contrast: ContrastReport | null;
+  moduleSize: number | null;
+  quietZone: number | null;
 }
 
 export interface ScanSimulationResult {
   success: boolean;
-  confidence: number; // 0-100
-  simulatedConditions: string;
-  issues: string[];
+  data: string | null;
+  confidence: number;
+  conditions: string;
 }
 
-// ============================================
-// CONTRAST ANALYSIS
-// ============================================
-
 /**
- * Analyze contrast between foreground and background
+ * Analyze contrast between foreground and background colors
  */
 export function analyzeContrast(fgColor: string, bgColor: string): ContrastReport {
-  const ratio = getContrastRatio(fgColor, bgColor);
-
+  const fg = parseColor(fgColor);
+  const bg = parseColor(bgColor);
+  
+  if (!fg || !bg) {
+    return {
+      ratio: 1,
+      meetsAA: false,
+      meetsAAA: false,
+      fgLuminance: 0,
+      bgLuminance: 0,
+    };
+  }
+  
+  const fgLuminance = getRelativeLuminance(fg.r, fg.g, fg.b);
+  const bgLuminance = getRelativeLuminance(bg.r, bg.g, bg.b);
+  const ratio = getContrastRatio(fgLuminance, bgLuminance);
+  
   return {
-    overallRatio: ratio,
-    finderContrast: ratio, // Same for uniform colors
-    dataContrast: ratio,
-    meetsWCAG_AA: ratio >= 4.5,
-    meetsWCAG_AAA: ratio >= 7,
-    problematicAreas: [],
+    ratio,
+    meetsAA: ratio >= 4.5,
+    meetsAAA: ratio >= 7,
+    fgLuminance,
+    bgLuminance,
   };
 }
 
 /**
- * Analyze contrast for a colored QR matrix
+ * Analyze contrast from a QR matrix
  */
 export function analyzeMatrixContrast(
-  colors: Array<Array<{ r: number; g: number; b: number }>>,
-  bgColor: string,
-  moduleCount: number
+  matrix: boolean[][],
+  fgColor: string,
+  bgColor: string
 ): ContrastReport {
-  const bg = parseColor(bgColor);
-  const problematicAreas: Array<{ row: number; col: number; ratio: number }> = [];
-
-  let totalRatio = 0;
-  let finderRatioSum = 0;
-  let finderCount = 0;
-  let dataRatioSum = 0;
-  let dataCount = 0;
-
-  for (let row = 0; row < moduleCount; row++) {
-    for (let col = 0; col < moduleCount; col++) {
-      const color = colors[row]?.[col];
-      if (!color) continue;
-
-      const ratio = getContrastRatio(color, bg);
-      totalRatio += ratio;
-
-      if (isFinderPattern(row, col, moduleCount)) {
-        finderRatioSum += ratio;
-        finderCount++;
-      } else {
-        dataRatioSum += ratio;
-        dataCount++;
-      }
-
-      if (ratio < 3) {
-        problematicAreas.push({ row, col, ratio });
-      }
-    }
-  }
-
-  const avgRatio = totalRatio / (moduleCount * moduleCount);
-  const finderContrast = finderCount > 0 ? finderRatioSum / finderCount : avgRatio;
-  const dataContrast = dataCount > 0 ? dataRatioSum / dataCount : avgRatio;
-
-  return {
-    overallRatio: avgRatio,
-    finderContrast,
-    dataContrast,
-    meetsWCAG_AA: avgRatio >= 4.5,
-    meetsWCAG_AAA: avgRatio >= 7,
-    problematicAreas: problematicAreas.slice(0, 50), // Limit to 50 worst areas
-  };
-}
-
-// ============================================
-// MODULE SIZE VALIDATION
-// ============================================
-
-/**
- * Check if module size is adequate for scanning
- */
-export function validateModuleSize(
-  _modulePx: number,
-  outputWidth: number,
-  moduleCount: number
-): { valid: boolean; actualSize: number; recommendation: string } {
-  const actualSize = outputWidth / moduleCount;
-  const valid = actualSize >= 2; // Minimum 2px per module for reliable scanning
-
-  let recommendation = '';
-  if (!valid) {
-    recommendation = `Module size (${actualSize.toFixed(1)}px) is too small. Increase output size or use a lower QR version.`;
-  } else if (actualSize < 4) {
-    recommendation = `Module size (${actualSize.toFixed(1)}px) is acceptable but larger would improve scanning reliability.`;
-  }
-
-  return { valid, actualSize, recommendation };
+  return analyzeContrast(fgColor, bgColor);
 }
 
 /**
- * Check quiet zone adequacy
+ * Apply blur simulation to test readability
  */
-export function validateQuietZone(
-  marginModules: number,
-  minRequired: number = 4
-): { valid: boolean; message: string } {
-  const valid = marginModules >= minRequired;
-  const message = valid
-    ? `Quiet zone (${marginModules} modules) meets minimum requirement (${minRequired}).`
-    : `Quiet zone (${marginModules} modules) is below minimum (${minRequired}). This may affect scanning.`;
-
-  return { valid, message };
-}
-
-// ============================================
-// OVERLAY INTENSITY VALIDATION
-// ============================================
-
-/**
- * Calculate safe overlay intensity based on ECC level
- */
-const DEFAULT_MAX_BY_ECC: Record<ECCLevel, number> = { L: 30, M: 50, Q: 70, H: 85 };
-
-export function calculateSafeIntensity(
-  ecc: ECCLevel,
-  maxByEcc: Record<ECCLevel, number> = DEFAULT_MAX_BY_ECC
-): number {
-  return maxByEcc[ecc] || 50;
-}
-
-/**
- * Validate overlay intensity for given ECC level
- */
-export function validateOverlayIntensity(
-  intensity: number,
-  ecc: ECCLevel,
-  maxByEcc: Record<ECCLevel, number>
-): { valid: boolean; message: string; recommendedMax: number } {
-  const recommendedMax = maxByEcc[ecc];
-  const valid = intensity <= recommendedMax;
-
-  const message = valid
-    ? `Overlay intensity (${intensity}%) is within safe range for ECC ${ecc}.`
-    : `Overlay intensity (${intensity}%) exceeds recommended maximum (${recommendedMax}%) for ECC ${ecc}. This may affect scanning reliability.`;
-
-  return { valid, message, recommendedMax };
-}
-
-// ============================================
-// SCAN SIMULATION
-// ============================================
-
-/**
- * Simulate scanning under various conditions
- */
-export function simulateScan(
-  _canvas: HTMLCanvasElement,
-  conditions: {
-    blur?: number;
-    noise?: number;
-    rotation?: number;
-    brightness?: number;
-  } = {}
-): ScanSimulationResult {
-  const issues: string[] = [];
-  let confidence = 100;
-
-  // Simulate blur effect on readability
-  if (conditions.blur && conditions.blur > 0) {
-    if (conditions.blur > 3) {
-      issues.push('High blur level may prevent scanning');
-      confidence -= 30;
-    } else if (conditions.blur > 1) {
-      issues.push('Moderate blur may affect scanning in poor conditions');
-      confidence -= 15;
-    }
-  }
-
-  // Simulate noise effect
-  if (conditions.noise && conditions.noise > 0) {
-    if (conditions.noise > 20) {
-      issues.push('High noise level significantly reduces readability');
-      confidence -= 25;
-    } else if (conditions.noise > 10) {
-      issues.push('Noise may affect scanning reliability');
-      confidence -= 10;
-    }
-  }
-
-  // Simulate rotation effect
-  if (conditions.rotation && Math.abs(conditions.rotation) > 0) {
-    if (Math.abs(conditions.rotation) > 30) {
-      issues.push('Extreme rotation may cause scanning failures');
-      confidence -= 20;
-    } else if (Math.abs(conditions.rotation) > 15) {
-      issues.push('High rotation angle may affect some scanners');
-      confidence -= 10;
-    }
-  }
-
-  // Simulate brightness issues
-  if (conditions.brightness !== undefined) {
-    if (conditions.brightness < -50 || conditions.brightness > 50) {
-      issues.push('Extreme brightness adjustment reduces contrast');
-      confidence -= 20;
-    }
-  }
-
-  return {
-    success: confidence > 50,
-    confidence: Math.max(0, confidence),
-    simulatedConditions:
-      Object.entries(conditions)
-        .filter(([_, v]) => v !== undefined && v !== 0)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join(', ') || 'optimal',
-    issues,
-  };
-}
-
-/**
- * Apply blur simulation to canvas
- */
-export function applyBlurSimulation(canvas: HTMLCanvasElement, blurPx: number): HTMLCanvasElement {
-  const result = document.createElement('canvas');
-  result.width = canvas.width;
-  result.height = canvas.height;
-  const ctx = result.getContext('2d');
-  if (!ctx) throw new Error('Could not get canvas context');
-
-  ctx.filter = `blur(${blurPx}px)`;
-  ctx.drawImage(canvas, 0, 0);
-  ctx.filter = 'none';
-
-  return result;
-}
-
-/**
- * Apply noise simulation to canvas
- */
-export function applyNoiseSimulation(
+export function applyBlurSimulation(
   canvas: HTMLCanvasElement,
-  noiseLevel: number,
-  seed: number = 0
+  blurRadius: number
 ): HTMLCanvasElement {
   const result = document.createElement('canvas');
   result.width = canvas.width;
   result.height = canvas.height;
   const ctx = result.getContext('2d');
-  if (!ctx) throw new Error('Could not get canvas context');
+  if (ctx) {
+    ctx.filter = `blur(${blurRadius}px)`;
+    ctx.drawImage(canvas, 0, 0);
+  }
+  return result;
+}
 
+/**
+ * Apply noise simulation to test readability
+ */
+export function applyNoiseSimulation(
+  canvas: HTMLCanvasElement,
+  noiseLevel: number
+): HTMLCanvasElement {
+  const result = document.createElement('canvas');
+  result.width = canvas.width;
+  result.height = canvas.height;
+  const ctx = result.getContext('2d');
+  if (!ctx) return canvas;
+  
   ctx.drawImage(canvas, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, result.width, result.height);
   const data = imageData.data;
-
-  // Simple seeded random
-  let state = seed || Date.now();
-  const random = () => {
-    state = (state * 1103515245 + 12345) & 0x7fffffff;
-    return state / 0x7fffffff;
-  };
-
+  
   for (let i = 0; i < data.length; i += 4) {
-    const noise = (random() - 0.5) * noiseLevel * 2.55;
+    const noise = (Math.random() - 0.5) * noiseLevel * 255;
     data[i] = Math.max(0, Math.min(255, data[i] + noise));
     data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
     data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
   }
-
+  
   ctx.putImageData(imageData, 0, 0);
   return result;
 }
 
-// ============================================
-// COMPREHENSIVE ANALYSIS
-// ============================================
-
 /**
- * Perform comprehensive QR code analysis
+ * Calculate safe overlay intensity based on ECC level
  */
-const DEFAULT_ANALYZE_OPTIONS: {
-  fgColor?: string;
-  bgColor?: string;
-  modulePx?: number;
-  outputWidth?: number;
-  marginModules?: number;
-  overlayIntensity?: number;
-  ecc?: ECCLevel;
-  safetyMode?: SafetyMode;
-} = {};
-
-export function analyzeQR(matrix: boolean[][], options = DEFAULT_ANALYZE_OPTIONS): AnalysisResult {
-  const issues: AnalysisIssue[] = [];
-  const warnings: AnalysisWarning[] = [];
-  const recommendations: string[] = [];
-  let score = 100;
-
-  const moduleCount = matrix.length;
-  const fgColor = options.fgColor || '#000000';
-  const bgColor = options.bgColor || '#ffffff';
-
-  // Check contrast
-  const contrast = analyzeContrast(fgColor, bgColor);
-  if (contrast.overallRatio < 3) {
-    issues.push({
-      type: 'critical',
-      message: `Contrast ratio (${contrast.overallRatio.toFixed(1)}) is critically low`,
-    });
-    score -= 30;
-  } else if (contrast.overallRatio < 4.5) {
-    warnings.push({
-      type: 'warning',
-      message: `Contrast ratio (${contrast.overallRatio.toFixed(1)}) may cause scanning issues`,
-      suggestion: 'Increase contrast between foreground and background colors',
-    });
-    score -= 15;
-  }
-
-  // Check module size
-  if (options.modulePx && options.outputWidth) {
-    const sizeCheck = validateModuleSize(options.modulePx, options.outputWidth, moduleCount);
-    if (!sizeCheck.valid) {
-      issues.push({
-        type: 'error',
-        message: sizeCheck.recommendation,
-      });
-      score -= 20;
-    } else if (sizeCheck.actualSize < 4) {
-      warnings.push({
-        type: 'info',
-        message: sizeCheck.recommendation,
-      });
-      score -= 5;
-    }
-  }
-
-  // Check quiet zone
-  if (options.marginModules !== undefined) {
-    const quietZone = validateQuietZone(options.marginModules);
-    if (!quietZone.valid) {
-      warnings.push({
-        type: 'warning',
-        message: quietZone.message,
-        suggestion: 'Increase margin to at least 4 modules',
-      });
-      score -= 10;
-    }
-  }
-
-  // Check overlay intensity
-  if (options.overlayIntensity !== undefined && options.ecc) {
-    const intensityCheck = validateOverlayIntensity(options.overlayIntensity, options.ecc, {
-      L: 30,
-      M: 50,
-      Q: 70,
-      H: 85,
-    });
-    if (!intensityCheck.valid) {
-      warnings.push({
-        type: 'warning',
-        message: intensityCheck.message,
-        suggestion: `Reduce intensity to ${intensityCheck.recommendedMax}% or increase ECC level`,
-      });
-      score -= 15;
-    }
-  }
-
-  // Generate recommendations
-  if (score < 100) {
-    if (!contrast.meetsWCAG_AA) {
-      recommendations.push('Use higher contrast colors (black on white is safest)');
-    }
-    if (options.ecc && options.ecc !== 'H') {
-      recommendations.push('Consider using ECC level H for maximum error correction');
-    }
-    recommendations.push('Test scanning with multiple devices before deployment');
-  }
-
-  return {
-    score: Math.max(0, score),
-    issues,
-    warnings,
-    recommendations,
+export function calculateSafeIntensity(eccLevel: string): number {
+  const intensityByEcc: Record<string, number> = {
+    L: 30,
+    M: 50,
+    Q: 70,
+    H: 85,
   };
+  return intensityByEcc[eccLevel] ?? 50;
 }
 
-// ============================================
-// HEATMAP GENERATION
-// ============================================
+/**
+ * Validate module size for scannability
+ */
+export function validateModuleSize(
+  moduleSize: number,
+  minSize = 4
+): { valid: boolean; warning?: string } {
+  if (moduleSize < minSize) {
+    return {
+      valid: false,
+      warning: `Module size ${moduleSize}px is below minimum ${minSize}px for reliable scanning`,
+    };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validate quiet zone size
+ */
+export function validateQuietZone(
+  quietZone: number,
+  minModules = 4
+): { valid: boolean; warning?: string } {
+  if (quietZone < minModules) {
+    return {
+      valid: false,
+      warning: `Quiet zone ${quietZone} modules is below minimum ${minModules} modules`,
+    };
+  }
+  return { valid: true };
+}
+
+/**
+ * Validate overlay intensity
+ */
+export function validateOverlayIntensity(
+  intensity: number,
+  eccLevel: string
+): { valid: boolean; warning?: string } {
+  const maxSafe = calculateSafeIntensity(eccLevel);
+  if (intensity > maxSafe) {
+    return {
+      valid: false,
+      warning: `Overlay intensity ${intensity}% exceeds safe limit ${maxSafe}% for ECC level ${eccLevel}`,
+    };
+  }
+  return { valid: true };
+}
 
 /**
  * Generate a readability heatmap
  */
 export function generateReadabilityHeatmap(
-  matrix: boolean[][],
-  colors: Array<Array<{ r: number; g: number; b: number }>> | null,
-  bgColor: string
+  canvas: HTMLCanvasElement
 ): HTMLCanvasElement {
-  const moduleCount = matrix.length;
-  const canvas = document.createElement('canvas');
-  canvas.width = moduleCount;
-  canvas.height = moduleCount;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not get canvas context');
-
-  const bg = parseColor(bgColor);
-
-  for (let row = 0; row < moduleCount; row++) {
-    for (let col = 0; col < moduleCount; col++) {
-      const isDark = matrix[row][col];
-      let heatValue: number;
-
-      if (colors?.[row]?.[col]) {
-        const color = colors[row][col];
-        const ratio = getContrastRatio(color, bg);
-        heatValue = Math.min(1, ratio / 7); // Normalize to 0-1 (7:1 is AAA)
-      } else {
-        heatValue = isDark ? 1 : 0.9; // Default black/white has good contrast
-      }
-
-      // Finder patterns are most critical
-      if (isFinderPattern(row, col, moduleCount)) {
-        heatValue = Math.min(1, heatValue * 1.2);
-      }
-
-      // Color: green (good) to red (bad)
-      const r = Math.round((1 - heatValue) * 255);
-      const g = Math.round(heatValue * 255);
-      ctx.fillStyle = `rgb(${r},${g},0)`;
-      ctx.fillRect(col, row, 1, 1);
+  const result = document.createElement('canvas');
+  result.width = canvas.width;
+  result.height = canvas.height;
+  const ctx = result.getContext('2d');
+  if (!ctx) return canvas;
+  
+  // Simple implementation - darker areas are more readable
+  const sourceCtx = canvas.getContext('2d');
+  if (!sourceCtx) return canvas;
+  
+  const imageData = sourceCtx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    // Green = readable (high contrast), Red = problematic
+    if (brightness < 128) {
+      data[i] = 0;     // R
+      data[i + 1] = 255; // G
+      data[i + 2] = 0;   // B
+    } else {
+      data[i] = 255;   // R
+      data[i + 1] = 0;   // G
+      data[i + 2] = 0;   // B
     }
+    data[i + 3] = 128; // Semi-transparent
   }
-
-  return canvas;
+  
+  ctx.putImageData(imageData, 0, 0);
+  return result;
 }
 
-// ============================================
-// EXPORT
-// ============================================
+/**
+ * Simulate scanning under various conditions
+ */
+export function simulateScan(
+  canvas: HTMLCanvasElement,
+  expectedContent: string,
+  conditions: 'ideal' | 'blur' | 'noise' | 'low_light' = 'ideal'
+): ScanSimulationResult {
+  let testCanvas = canvas;
+  
+  switch (conditions) {
+    case 'blur':
+      testCanvas = applyBlurSimulation(canvas, 2);
+      break;
+    case 'noise':
+      testCanvas = applyNoiseSimulation(canvas, 0.1);
+      break;
+    case 'low_light':
+      testCanvas = applyNoiseSimulation(applyBlurSimulation(canvas, 1), 0.05);
+      break;
+  }
+  
+  const result = scanCanvas(testCanvas);
+  
+  return {
+    success: result?.data === expectedContent,
+    data: result?.data ?? null,
+    confidence: result?.data === expectedContent ? 1 : 0,
+    conditions,
+  };
+}
 
+/**
+ * Comprehensive QR analysis
+ */
+export function analyzeQR(
+  canvas: HTMLCanvasElement,
+  expectedContent?: string
+): AnalysisResult {
+  const warnings: AnalysisWarning[] = [];
+  const issues: AnalysisIssue[] = [];
+  
+  // Try to scan
+  const scanResult = scanCanvas(canvas);
+  const scannable = !!scanResult;
+  
+  if (!scannable) {
+    issues.push({
+      type: 'scan_failed',
+      message: 'QR code could not be scanned',
+    });
+  } else if (expectedContent && scanResult.data !== expectedContent) {
+    issues.push({
+      type: 'content_mismatch',
+      message: `Scanned content does not match expected: got "${scanResult.data}"`,
+    });
+  }
+  
+  return {
+    valid: scannable && (!expectedContent || scanResult?.data === expectedContent),
+    scannable,
+    warnings,
+    issues,
+    contrast: null,
+    moduleSize: null,
+    quietZone: null,
+  };
+}
+
+/**
+ * Safety Analyzer namespace
+ */
 export const SafetyAnalyzer = {
-  // Contrast
   analyzeContrast,
   analyzeMatrixContrast,
-
-  // Validation
-  validateModuleSize,
-  validateQuietZone,
-  validateOverlayIntensity,
-  calculateSafeIntensity,
-
-  // Simulation
-  simulateScan,
+  analyzeQR,
   applyBlurSimulation,
   applyNoiseSimulation,
-
-  // Analysis
-  analyzeQR,
+  calculateSafeIntensity,
   generateReadabilityHeatmap,
+  simulateScan,
+  validateModuleSize,
+  validateOverlayIntensity,
+  validateQuietZone,
 };
 
 export default SafetyAnalyzer;

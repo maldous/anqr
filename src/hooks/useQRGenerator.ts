@@ -18,18 +18,17 @@ import {
   parseAnimatedImage,
 } from '@/modules/animation';
 import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
-import { getEffectiveDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay-processor';
-import { QRGenerator } from '@/modules/qr-generator';
-// Note: applyFilters is no longer used here - color adjustments are done at moduleCount
-// resolution inside qr-generator.js for 10-50x speedup
-import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-scanner';
+import { getEffectiveDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay';
+// @ts-expect-error - JS module
+import { QRGenerator } from '@/modules/qr-generator/index.js';
+import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
 import {
   applyTemporalNoiseToCanvas,
   calculateTemporalOffset,
   isTemporalDitherActive,
   type TemporalDitherMode,
-} from '@/modules/temporal-dither';
-import { applyWatermark, type WatermarkPosition } from '@/modules/watermark';
+} from '@/modules/dither-algorithms';
+import { applyWatermark, type WatermarkPosition } from '@/modules/overlay';
 import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance

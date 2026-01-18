@@ -1,10 +1,40 @@
 /**
  * Payload Generators Module
- * Generates properly formatted strings for all QR payload types
- * Implements EMVCo QR Code Specification for Merchant-Presented Mode
- * Supports EPC/SEPA, UPI, Swiss QR-bill, and cryptocurrency URIs
+ * Re-exports payload generation functionality from payload-generators/ subdirectory
  */
 
-// Re-export everything from the module directory
-export * from './payload-generators/index';
-export { default } from './payload-generators/index';
+export {
+  generateUrl,
+  generateEmail,
+  generateTel,
+  generateSms,
+  generateWifi,
+  generateVCard,
+  generateMeCard,
+  generateGeo,
+  generateEvent,
+  generateCrypto,
+  generateBizCard,
+  generateCalendarSubscription,
+  generateEPCSepa,
+  generateGS1DigitalLink,
+  generateMessagingLink,
+  generateOTPAuth,
+  generatePayNow,
+  generatePIX,
+  generatePromptPay,
+  generateUPI,
+  generateSocialProfile,
+  generateAppDeepLink,
+  PayloadGenerators,
+  type BizCardParams,
+  type EPCSepaParams,
+  type GS1DigitalLinkParams,
+  type OTPAuthParams,
+  type PayNowParams,
+  type PIXParams,
+  type PromptPayParams,
+  type UPIParams,
+} from './payload-generators/';
+
+export default PayloadGenerators;

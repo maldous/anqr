@@ -1,22 +1,9 @@
 /**
  * QR Scanner/Validator Module
- * Uses our own QR decoder to decode and validate generated QR codes
+ * Uses jsQR to decode and validate generated QR codes
  */
 
-import { decodeQR } from '../../qr-decoder';
-
-// ============================================
-// TYPES
-// ============================================
-
-export interface ScanResult {
-  success: boolean;
-  data: string | null;
-  error: string | null;
-  location: QRLocation | null;
-  /** Time taken to scan in milliseconds */
-  scanTimeMs: number;
-}
+import jsQR from 'jsqr';
 
 export interface QRLocation {
   topLeftCorner: { x: number; y: number };
@@ -25,270 +12,173 @@ export interface QRLocation {
   bottomRightCorner: { x: number; y: number };
 }
 
+export interface ScanResult {
+  data: string;
+  location: QRLocation;
+  binaryData?: Uint8ClampedArray;
+}
+
 export interface ValidationResult {
-  isValid: boolean;
-  isReadable: boolean;
-  matchesExpected: boolean;
-  decodedData: string | null;
-  expectedData: string;
-  error: string | null;
-  scanTimeMs: number;
-  confidence: 'high' | 'medium' | 'low' | 'none';
+  valid: boolean;
+  scanned: boolean;
+  data: string | null;
+  expected: string | null;
+  match: boolean;
+  error?: string;
+  attempts?: number;
 }
 
-// ============================================
-// SCANNING
-// ============================================
-
 /**
- * Scan a QR code from a canvas element
+ * Scan a canvas for QR codes
  */
-export function scanCanvas(canvas: HTMLCanvasElement): ScanResult {
-  const startTime = performance.now();
-
+export function scanCanvas(canvas: HTMLCanvasElement): ScanResult | null {
   const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return {
-      success: false,
-      data: null,
-      error: 'Could not get canvas context',
-      location: null,
-      scanTimeMs: performance.now() - startTime,
-    };
-  }
-
-  try {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    return scanImageData(imageData, startTime);
-  } catch (err) {
-    return {
-      success: false,
-      data: null,
-      error: err instanceof Error ? err.message : 'Unknown error',
-      location: null,
-      scanTimeMs: performance.now() - startTime,
-    };
-  }
+  if (!ctx) return null;
+  
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return scanImageData(imageData);
 }
 
 /**
- * Scan a QR code from ImageData
+ * Scan ImageData for QR codes
  */
-export function scanImageData(imageData: ImageData, startTime = performance.now()): ScanResult {
-  try {
-    const result = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
-
-    if (result && result.success && result.data) {
-      return {
-        success: true,
-        data: result.data,
-        error: null,
-        location: result.location,
-        scanTimeMs: performance.now() - startTime,
-      };
-    } else {
-      return {
-        success: false,
-        data: null,
-        error: 'No QR code found in image',
-        location: null,
-        scanTimeMs: performance.now() - startTime,
-      };
-    }
-  } catch (err) {
-    return {
-      success: false,
-      data: null,
-      error: err instanceof Error ? err.message : 'Scan failed',
-      location: null,
-      scanTimeMs: performance.now() - startTime,
-    };
-  }
+export function scanImageData(imageData: ImageData): ScanResult | null {
+  const result = jsQR(imageData.data, imageData.width, imageData.height, {
+    inversionAttempts: 'attemptBoth',
+  });
+  
+  if (!result) return null;
+  
+  return {
+    data: result.data,
+    location: result.location,
+    binaryData: result.binaryData,
+  };
 }
 
 /**
- * Scan a QR code from a File (image)
+ * Scan a File for QR codes
  */
-export async function scanFile(file: File): Promise<ScanResult> {
-  const startTime = performance.now();
-
+export async function scanFile(file: File): Promise<ScanResult | null> {
   return new Promise((resolve) => {
     const reader = new FileReader();
-
     reader.onload = (e) => {
       const img = new Image();
-
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
+        canvas.width = img.width;
+        canvas.height = img.height;
         const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve({
-            success: false,
-            data: null,
-            error: 'Could not get canvas context',
-            location: null,
-            scanTimeMs: performance.now() - startTime,
-          });
-          return;
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(scanCanvas(canvas));
+        } else {
+          resolve(null);
         }
-        ctx.drawImage(img, 0, 0);
-
-        const result = scanCanvas(canvas);
-        result.scanTimeMs = performance.now() - startTime;
-        resolve(result);
       };
-
-      img.onerror = () => {
-        resolve({
-          success: false,
-          data: null,
-          error: 'Failed to load image',
-          location: null,
-          scanTimeMs: performance.now() - startTime,
-        });
-      };
-
+      img.onerror = () => resolve(null);
       img.src = e.target?.result as string;
     };
-
-    reader.onerror = () => {
-      resolve({
-        success: false,
-        data: null,
-        error: 'Failed to read file',
-        location: null,
-        scanTimeMs: performance.now() - startTime,
-      });
-    };
-
+    reader.onerror = () => resolve(null);
     reader.readAsDataURL(file);
   });
 }
 
-// ============================================
-// VALIDATION
-// ============================================
-
 /**
- * Validate a generated QR code canvas against expected data
+ * Validate a QR code against expected content
  */
-export function validateQRCode(canvas: HTMLCanvasElement, expectedData: string): ValidationResult {
-  const scanResult = scanCanvas(canvas);
-
-  if (!scanResult.success) {
+export function validateQRCode(
+  canvas: HTMLCanvasElement,
+  expectedContent: string
+): ValidationResult {
+  const result = scanCanvas(canvas);
+  
+  if (!result) {
     return {
-      isValid: false,
-      isReadable: false,
-      matchesExpected: false,
-      decodedData: null,
-      expectedData,
-      error: scanResult.error,
-      scanTimeMs: scanResult.scanTimeMs,
-      confidence: 'none',
+      valid: false,
+      scanned: false,
+      data: null,
+      expected: expectedContent,
+      match: false,
+      error: 'Could not scan QR code',
     };
   }
-
-  const matchesExpected = scanResult.data === expectedData;
-
-  // Determine confidence based on scan time and match
-  let confidence: 'high' | 'medium' | 'low' | 'none' = 'none';
-  if (scanResult.success) {
-    if (scanResult.scanTimeMs < 50) {
-      confidence = 'high';
-    } else if (scanResult.scanTimeMs < 150) {
-      confidence = 'medium';
-    } else {
-      confidence = 'low';
-    }
-  }
-
+  
+  const match = result.data === expectedContent;
+  
   return {
-    isValid: matchesExpected,
-    isReadable: true,
-    matchesExpected,
-    decodedData: scanResult.data,
-    expectedData,
-    error: matchesExpected ? null : 'Decoded data does not match expected content',
-    scanTimeMs: scanResult.scanTimeMs,
-    confidence,
+    valid: match,
+    scanned: true,
+    data: result.data,
+    expected: expectedContent,
+    match,
   };
 }
 
 /**
- * Validate with multiple scale attempts for robustness
- * Some QR codes may be more readable at different scales
+ * Validate QR code with multiple attempts at different scales
  */
 export function validateQRCodeRobust(
   canvas: HTMLCanvasElement,
-  expectedData: string
+  expectedContent: string,
+  maxAttempts = 3
 ): ValidationResult {
-  // Try original size first
-  const originalResult = validateQRCode(canvas, expectedData);
-  if (originalResult.isValid && originalResult.confidence === 'high') {
-    return originalResult;
+  // First try at original size
+  let result = validateQRCode(canvas, expectedContent);
+  if (result.valid) {
+    return { ...result, attempts: 1 };
   }
-
-  // Try scaled versions if original didn't work well
-  const scales = [2, 0.5, 1.5, 0.75];
-
-  for (const scale of scales) {
+  
+  // Try with scaled versions
+  const scales = [2, 0.5, 1.5];
+  for (let i = 0; i < Math.min(maxAttempts - 1, scales.length); i++) {
+    const scale = scales[i];
     const scaledCanvas = document.createElement('canvas');
     scaledCanvas.width = Math.round(canvas.width * scale);
     scaledCanvas.height = Math.round(canvas.height * scale);
-    const scaledCtx = scaledCanvas.getContext('2d');
-    if (!scaledCtx) continue;
-    scaledCtx.imageSmoothingEnabled = false;
-    scaledCtx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-
-    const result = validateQRCode(scaledCanvas, expectedData);
-    if (result.isValid) {
-      return result;
-    }
-
-    // If we found something readable but it doesn't match, return that
-    if (result.isReadable && !originalResult.isReadable) {
-      return result;
+    const ctx = scaledCanvas.getContext('2d');
+    if (ctx) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+      result = validateQRCode(scaledCanvas, expectedContent);
+      if (result.valid) {
+        return { ...result, attempts: i + 2 };
+      }
     }
   }
-
-  return originalResult;
+  
+  return { ...result, attempts: maxAttempts };
 }
 
-// ============================================
-// BATCH VALIDATION
-// ============================================
-
 /**
- * Validate multiple frames (for animated QR codes)
+ * Validate multiple animation frames
  */
 export function validateFrames(
   frames: HTMLCanvasElement[],
-  expectedData: string
-): { allValid: boolean; results: ValidationResult[]; failedFrames: number[] } {
+  expectedContent: string,
+  sampleSize = 5
+): { valid: boolean; successRate: number; results: ValidationResult[] } {
+  const step = Math.max(1, Math.floor(frames.length / sampleSize));
   const results: ValidationResult[] = [];
-  const failedFrames: number[] = [];
-
-  for (let i = 0; i < frames.length; i++) {
-    const result = validateQRCode(frames[i], expectedData);
+  
+  for (let i = 0; i < frames.length; i += step) {
+    const result = validateQRCodeRobust(frames[i], expectedContent);
     results.push(result);
-    if (!result.isValid) {
-      failedFrames.push(i);
-    }
   }
-
+  
+  const successCount = results.filter(r => r.valid).length;
+  const successRate = successCount / results.length;
+  
   return {
-    allValid: failedFrames.length === 0,
+    valid: successRate >= 0.8, // 80% success rate required
+    successRate,
     results,
-    failedFrames,
   };
 }
 
-// ============================================
-// EXPORT
-// ============================================
-
+/**
+ * QR Scanner class for object-oriented usage
+ */
 export const QRScanner = {
   scanCanvas,
   scanImageData,

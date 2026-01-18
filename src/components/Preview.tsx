@@ -9,7 +9,7 @@ import { AdUnit } from '@/components/AdUnit';
 import { BusyOverlay } from '@/components/BusyOverlay';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 import { getContrastRatio, parseColor } from '@/modules/color-utils';
-import { analyzeContrast } from '@/modules/safety-analyzer';
+import { analyzeContrast } from '@/modules/qr-analyzer';
 import { useQRStore } from '@/store/qr-store';
 
 interface PreviewProps {

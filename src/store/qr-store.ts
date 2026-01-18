@@ -31,7 +31,7 @@ import {
 } from '@/modules/payload-generators';
 
 // Import gradient types from color-utils (canonical source)
-import type { GradientStop, GradientType } from '@/modules/color-utils';
+import { type GradientStop, type GradientType } from '@/modules/color-utils';
 
 // Re-export types for backward compatibility
 export type {

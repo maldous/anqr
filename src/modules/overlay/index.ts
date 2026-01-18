@@ -56,7 +56,7 @@ export {
 } from './internal/watermark';
 
 // Crop Handler
-export { CropHandler } from './internal/crop-handler.js';
+export { CropHandler, type CropRegion as CropHandlerRegion, type CropHandlerOptions } from './internal/crop-handler';
 
 // Processor
 export {
@@ -83,7 +83,6 @@ export {
   type DitherKind,
   type DiffusionKernel,
   type OrderedMatrix,
-  type CropRegion,
   type FitMode,
   type OverlayMode,
   type OverlayType,
