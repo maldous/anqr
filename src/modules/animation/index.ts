@@ -47,10 +47,10 @@ export {
   interpolateFramesWithEasing,
   type AnimationPattern as PatternType,
   type InterpolationMode,
-} from './internal/patterns';
+} from './patterns';
 
 // Shared pixel-level pattern functions (used by client and server)
-export type { AnimationEasing } from './internal/shared-patterns';
+export type { AnimationEasing } from './shared-patterns';
 export {
   applyEasing,
   applyPulsePattern,
@@ -59,7 +59,7 @@ export {
   applyShimmerPattern,
   applyDriftPattern,
   applyColorCyclePattern,
-} from './internal/shared-patterns';
+} from './shared-patterns';
 
 // Animation pattern application
 export { applyAnimationPattern } from './apply-animation-pattern';

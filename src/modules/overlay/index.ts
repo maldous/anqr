@@ -37,7 +37,7 @@ export {
   type RGBA,
   type HSL,
   type FilterOptions,
-} from './internal/filters';
+} from './filters';
 
 // Watermark
 export {
@@ -53,11 +53,11 @@ export {
   type WatermarkBlend,
   type WatermarkOptions,
   type WatermarkResult,
-} from './internal/watermark';
+} from './watermark';
 
 // Crop Handler
-export { CropHandler, type CropHandlerOptions } from './internal/crop-handler';
-export type { CropRegion as CropHandlerRegion } from './internal/crop-handler';
+export { CropHandler, type CropHandlerOptions } from './crop-handler';
+export type { CropRegion as CropHandlerRegion } from './crop-handler';
 
 // Processor
 export {
@@ -87,4 +87,4 @@ export {
   type FitMode,
   type OverlayMode,
   type OverlayType,
-} from './internal/processor';
+} from './processor';
