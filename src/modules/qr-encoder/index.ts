@@ -56,3 +56,6 @@ export {
   gifImage,
   createDataURL,
 } from './output';
+
+// Shift-JIS encoding
+export { createShiftJISEncoder, canEncodeAsShiftJIS } from './internal/shift-jis';
