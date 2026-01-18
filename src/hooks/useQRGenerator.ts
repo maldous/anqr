@@ -20,7 +20,7 @@ import {
 import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
 import { getEffectiveDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay';
 // @ts-ignore -- Legacy code, may have type issues - JS module
-import { QRGenerator } from '@/modules/qr-generator/index.js';
+import { QRGenerator } from '@/modules/qr-generator';
 import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
 import {
   applyTemporalNoiseToCanvas,
