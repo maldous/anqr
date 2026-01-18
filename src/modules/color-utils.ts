@@ -1,6 +1,10 @@
 /**
  * Color Utilities Module
  * Provides color parsing, blending, gradients, and contrast checking
+ * 
+ * NOTE: Core color utilities have been moved to ./core/internal/color.ts
+ * This module re-exports from core and adds QR-specific color utilities
+ * that depend on the store (e.g., gradient helpers).
  */
 
 import type { GradientStop, GradientType } from '../store/qr-store';

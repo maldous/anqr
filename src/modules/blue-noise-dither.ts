@@ -10,8 +10,18 @@
 
 import qrcode from './qr-encoder';
 
+// Import from canonical sources
+import { rgbToGray } from './core';
+import {
+  isLocked as isLockedFromSpec,
+  isData as isDataFromSpec,
+  getAlignmentPositions,
+  getVersionFromModuleCount,
+  type ECCLevel,
+} from './qr-spec';
+
 // Error correction level mapping
-const ECC_MAP: Record<string, 'L' | 'M' | 'Q' | 'H'> = {
+const ECC_MAP: Record<string, ECCLevel> = {
   L: 'L',
   M: 'M',
   Q: 'Q',
@@ -21,51 +31,6 @@ const ECC_MAP: Record<string, 'L' | 'M' | 'Q' | 'H'> = {
   quartile: 'Q',
   high: 'H',
 };
-
-// Alignment pattern positions by version
-const ALIGNMENT_POSITIONS: (number[] | null)[] = [
-  null,
-  [],
-  [6, 18],
-  [6, 22],
-  [6, 26],
-  [6, 30],
-  [6, 34],
-  [6, 22, 38],
-  [6, 24, 42],
-  [6, 26, 46],
-  [6, 28, 50],
-  [6, 30, 54],
-  [6, 32, 58],
-  [6, 34, 62],
-  [6, 26, 46, 66],
-  [6, 26, 48, 70],
-  [6, 26, 50, 74],
-  [6, 30, 54, 78],
-  [6, 30, 56, 82],
-  [6, 30, 58, 86],
-  [6, 34, 62, 90],
-  [6, 28, 50, 72, 94],
-  [6, 26, 50, 74, 98],
-  [6, 30, 54, 78, 102],
-  [6, 28, 54, 80, 106],
-  [6, 32, 58, 84, 110],
-  [6, 30, 58, 86, 114],
-  [6, 34, 62, 90, 118],
-  [6, 26, 50, 74, 98, 122],
-  [6, 30, 54, 78, 102, 126],
-  [6, 26, 52, 78, 104, 130],
-  [6, 30, 56, 82, 108, 134],
-  [6, 34, 60, 86, 112, 138],
-  [6, 30, 58, 86, 114, 142],
-  [6, 34, 62, 90, 118, 146],
-  [6, 30, 54, 78, 102, 126, 150],
-  [6, 24, 50, 76, 102, 128, 154],
-  [6, 28, 54, 80, 106, 132, 158],
-  [6, 32, 58, 84, 110, 136, 162],
-  [6, 26, 54, 82, 110, 138, 166],
-  [6, 30, 58, 86, 114, 142, 170],
-];
 
 // Pre-computed 64x64 blue noise tile (normalized 0-1)
 // Generated using interleaved gradient noise for good spectral properties
@@ -149,66 +114,9 @@ function sampleBlueNoise(x: number, y: number): number {
   return BLUE_NOISE_64[ty * size + tx];
 }
 
-/**
- * Check if a position is a locked structural element (finder patterns, timing, alignment)
- * Copied from generate.ts to ensure identical behavior
- */
-function isLocked(moduleCount: number, x: number, y: number, scale: number): boolean {
-  const l = moduleCount / scale;
-  const sx = Math.floor(x / scale);
-  const sy = Math.floor(y / scale);
-
-  // Out of bounds
-  if (sx < 0 || sy < 0 || sx >= l || sy >= l) return true;
-
-  // Finder patterns (top-left, top-right, bottom-left)
-  if (sx < 7 && sy < 7) return true;
-  if (sx < 7 && sy > l - 8) return true;
-  if (sx > l - 8 && sy < 7) return true;
-
-  // Timing patterns
-  if (sx === 6 || sy === 6) return true;
-
-  // Alignment patterns
-  const version = (l - 17) / 4;
-  const positions = ALIGNMENT_POSITIONS[version];
-  if (positions && positions.length > 0) {
-    for (const px of positions) {
-      for (const py of positions) {
-        // Skip alignment patterns that overlap with finder patterns
-        if (px < 8 && py < 8) continue;
-        if (px < 8 && py > l - 9) continue;
-        if (px > l - 9 && py < 8) continue;
-
-        if (Math.abs(sx - px) <= 2 && Math.abs(sy - py) <= 2) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
-/**
- * Check if a position is a data point (center of scaled module)
- * Copied from generate.ts to ensure identical behavior
- */
-function isData(x: number, y: number, scale: number): boolean {
-  const m = Math.floor(scale / 2);
-  const xs = x % scale;
-  const ys = y % scale;
-
-  if (xs === m && ys === m) return true;
-  if (scale % 2 === 1) return false;
-
-  // For even scales, data occupies 2x2 center
-  if (xs === m && ys === m - 1) return true;
-  if (xs === m - 1 && ys === m) return true;
-  if (xs === m - 1 && ys === m - 1) return true;
-
-  return false;
-}
+// Use canonical implementations from qr-spec
+const isLocked = isLockedFromSpec;
+const isData = isDataFromSpec;
 
 /**
  * Load image data from canvas as RGB values (0-1 range)
@@ -243,12 +151,7 @@ async function loadImageDataRGB(
   return output;
 }
 
-/**
- * Convert RGB to grayscale using luminance formula
- */
-function rgbToGray(r: number, g: number, b: number): number {
-  return r * 0.299 + g * 0.587 + b * 0.114;
-}
+// rgbToGray imported from core
 
 /**
  * Convert RGB image data to grayscale

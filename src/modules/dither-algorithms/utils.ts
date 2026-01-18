@@ -5,24 +5,17 @@
 import type { OrderedMatrix } from './types';
 import { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
 
-/** Clamp value to 0-1 range */
-export function clamp01(value: number): number {
-  return Math.max(0, Math.min(1, value));
-}
+// Import core utilities from canonical source
+import {
+  clamp01 as clamp01FromCore,
+  rgbToGray as rgbToGrayFromCore,
+  createRNG as createRNGFromCore,
+} from '../core';
 
-/** Convert RGB to grayscale (0-1) */
-export function rgbToGray(r: number, g: number, b: number): number {
-  return r * 0.299 + g * 0.587 + b * 0.114;
-}
-
-/** Create seeded random number generator - uses linear congruential for better distribution */
-export function createRNG(seed: number): () => number {
-  let state = seed || Date.now();
-  return () => {
-    state = (state * 1103515245 + 12345) & 0x7fffffff;
-    return state / 0x7fffffff;
-  };
-}
+// Re-export from core for backward compatibility within dither-algorithms
+export const clamp01 = clamp01FromCore;
+export const rgbToGray = rgbToGrayFromCore;
+export const createRNG = createRNGFromCore;
 
 /** Get ordered dithering matrix by name */
 export function getOrderedMatrix(name: OrderedMatrix): number[][] {

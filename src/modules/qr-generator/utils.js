@@ -3,45 +3,25 @@
  * Helper functions for hashing, random generation, and contrast calculation
  */
 
-import { parseColor } from '../color-utils.ts';
 import { canvasHashCache } from './cache.js';
+
+// Import from canonical core module
+import {
+  getContrastRatio as getContrastRatioFromCore,
+  createRNG,
+} from '../core/index.ts';
 
 /**
  * Calculate contrast ratio between two colors (WCAG formula)
- * @param {string} color1 - First color (hex or rgb)
- * @param {string} color2 - Second color (hex or rgb)
- * @returns {number} Contrast ratio (1 to 21)
+ * Re-exported from core for backward compatibility
  */
-export function getContrastRatio(color1, color2) {
-  const getLuminance = (color) => {
-    const parsed = parseColor(color);
-    const [r, g, b] = [parsed.r, parsed.g, parsed.b].map((c) => {
-      c = c / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    });
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  };
-  const l1 = getLuminance(color1);
-  const l2 = getLuminance(color2);
-  const lighter = Math.max(l1, l2);
-  const darker = Math.min(l1, l2);
-  return (lighter + 0.05) / (darker + 0.05);
-}
+export const getContrastRatio = getContrastRatioFromCore;
 
 /**
  * Create a simple seeded PRNG (mulberry32)
- * Returns a function that generates deterministic pseudo-random numbers [0, 1)
+ * Re-exported from core for backward compatibility
  */
-export function createSeededRandom(seed) {
-  let state = seed >>> 0; // Ensure unsigned 32-bit integer
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+export const createSeededRandom = createRNG;
 
 /**
  * Simple string hash function (djb2)
