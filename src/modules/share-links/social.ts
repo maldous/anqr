@@ -1,5 +1,5 @@
 /**
- * Share Utilities - Social Sharing
+ * Share Links Module - Social Sharing
  * Generates social media share URLs
  */
 

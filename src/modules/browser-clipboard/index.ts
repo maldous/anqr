@@ -1,6 +1,14 @@
 /**
- * Share Utilities - Clipboard
+ * Browser Clipboard Module
  * Clipboard operations for text and images
+ * 
+ * This module provides:
+ * - Copy text to clipboard
+ * - Copy image to clipboard
+ * 
+ * Rules:
+ * - Browser-only APIs (clipboard, document)
+ * - No dependencies on other modules
  */
 
 /**

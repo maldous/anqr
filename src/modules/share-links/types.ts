@@ -1,20 +1,19 @@
 /**
- * Share Utilities - Types
- * Type definitions for URL parameter encoding/decoding and sharing
+ * Share Links Module - Types
+ * Types for URL sharing and embed generation
  */
 
 /**
- * Maximum recommended share URL length.
- * URLs longer than this may fail in SMS, some social apps, and QR scanners.
- * Browser limits are typically 2048-8192 chars, but many channels are stricter.
+ * Maximum recommended URL length for reliable sharing
  */
-export const MAX_SHARE_URL_LENGTH = 2000;
+export const MAX_SHARE_URL_LENGTH = 2048;
 
+/**
+ * Share configuration object containing all QR settings
+ */
 export interface ShareConfig {
-  // Content
-  data: string;
-
-  // Language
+  // Required
+  data?: string;
   lang?: string;
 
   // QR settings
@@ -23,8 +22,8 @@ export interface ShareConfig {
   size?: number;
   margin?: number;
   encodingMode?: string;
-  maskPattern?: string | number; // 'auto' or 0-7
-  characterEncoding?: string; // 'default', 'utf8', 'iso-8859-1', 'shift-jis'
+  maskPattern?: number | 'auto';
+  characterEncoding?: string;
   borderModulesExtra?: number;
   quietZoneMinEnforce?: boolean;
 
@@ -44,10 +43,8 @@ export interface ShareConfig {
   gapMode?: string;
   cornerRadius?: number;
   gradientType?: string;
-  gradientAngle?: number;
   gradientStops?: Array<{ color: string; pos: number }>;
-  subpixelMode?: boolean;
-  subpixelGrid?: number;
+  gradientAngle?: number;
   eyeOuterStyle?: string;
   eyeInnerStyle?: string;
   eyeScale?: number;
@@ -64,20 +61,20 @@ export interface ShareConfig {
   mode?: string;
   intensity?: number;
   logoSize?: number;
-  overlayUrl?: string; // URL source for overlay image
-  overlayType?: string; // static, gif, apng, webp_anim, video
-  overlayFramePick?: string; // all, every_n, max_frames, duration_limit
+  overlayUrl?: string;
+  overlayType?: string;
+  overlayFramePick?: string;
   cropEnabled?: boolean;
   cropX?: number;
   cropY?: number;
   cropSize?: number;
+  gifUseFrameDelays?: boolean;
+  gifMaxFps?: number;
+  gifDisposalHandling?: string;
   fit?: string;
   rotate?: number;
   flipX?: boolean;
   flipY?: boolean;
-  gifUseFrameDelays?: boolean;
-  gifMaxFps?: number;
-  gifDisposalHandling?: string;
   preserveFinders?: boolean;
   preserveTiming?: boolean;
   preserveAlignment?: boolean;
@@ -93,13 +90,17 @@ export interface ShareConfig {
   contrast?: number;
   gamma?: number;
   saturation?: number;
-  hue?: number;
   blur?: number;
   sharpen?: number;
   posterize?: number;
   threshold?: number;
   edge?: string;
   invert?: boolean;
+  hue?: number;
+
+  // Subpixel rendering
+  subpixelMode?: boolean;
+  subpixelGrid?: number;
 
   // Dithering
   ditherKind?: string;
@@ -129,7 +130,6 @@ export interface ShareConfig {
   loop?: boolean;
   reverse?: boolean;
   bounce?: boolean;
-  easing?: string;
   startFrame?: number;
   maxFrames?: number;
   frameStep?: number;
@@ -139,6 +139,7 @@ export interface ShareConfig {
   moduleJitter?: number;
   colorCycle?: boolean;
   seed?: number;
+  easing?: string;
 
   // Output
   width?: number;
@@ -188,26 +189,16 @@ export interface ShareConfig {
   watermarkEnabled?: boolean;
   watermarkKind?: string;
   watermarkText?: string;
-  watermarkImageUrl?: string; // URL for image/pattern watermark
   watermarkPosition?: string;
   watermarkOpacity?: number;
   watermarkBlend?: string;
+  watermarkImageUrl?: string;
 
-  // Animation (for animated GIF via server)
-  animationPattern?: string; // none/pulse/wave/scanline/shimmer/drift/color_cycle
+  // Animation
+  animationPattern?: string;
   animationFrames?: number;
   animationSpeed?: number;
   animationSeed?: number;
-
-  // Render palette
-  palette?: string; // JSON encoded or comma-separated hex colors
-  paletteMode?: string; // position, brightness, diagonal, radial, random, row, column
-
-  // Safety per-ECC limits
-  maxOverlayIntensityL?: number;
-  maxOverlayIntensityM?: number;
-  maxOverlayIntensityQ?: number;
-  maxOverlayIntensityH?: number;
 
   // Metadata
   metaTitle?: string;
@@ -216,13 +207,26 @@ export interface ShareConfig {
   metaLicense?: string;
   metaDescription?: string;
   metaCreationTime?: boolean;
-  metaCustomKv?: string; // JSON encoded
+  metaCustomKv?: string;
+
+  // Render palette
+  palette?: string;
+  paletteMode?: string;
+
+  // Safety per-ECC limits
+  maxOverlayIntensityL?: number;
+  maxOverlayIntensityM?: number;
+  maxOverlayIntensityQ?: number;
+  maxOverlayIntensityH?: number;
 }
 
+/**
+ * Options for embed code generation
+ */
 export interface EmbedOptions {
-  width: number;
-  height: number;
-  responsive: boolean;
-  showBorder: boolean;
-  includeLink: boolean;
+  width?: number;
+  height?: number;
+  responsive?: boolean;
+  showBorder?: boolean;
+  includeLink?: boolean;
 }

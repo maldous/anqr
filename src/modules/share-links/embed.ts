@@ -1,5 +1,5 @@
 /**
- * Share Utilities - Embed Code Generation
+ * Share Links Module - Embed Code Generation
  * Generates HTML, iframe, markdown, and BBCode embed snippets
  */
 
