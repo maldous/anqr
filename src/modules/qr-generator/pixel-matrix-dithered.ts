@@ -11,7 +11,7 @@ import type { CanvasFactory } from './canvas-factory';
  */
 export async function generateDitheredMatrix(
   config: QRGeneratorConfig,
-  overlayCanvas: HTMLCanvasElement,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   scale: number,
   effectiveIntensity: number,
   effectiveConfig: QRGeneratorConfig,
@@ -83,7 +83,7 @@ export async function generateDitheredMatrix(
  */
 export async function generateBlueNoiseMatrix(
   config: QRGeneratorConfig,
-  overlayCanvas: HTMLCanvasElement,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   scale: number,
   effectiveIntensity: number,
   canvasFactory: CanvasFactory,

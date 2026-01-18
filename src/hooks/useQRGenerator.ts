@@ -86,7 +86,7 @@ class YieldController {
 
 interface UseQRGeneratorResult {
   canvasRef: React.RefObject<HTMLCanvasElement>;
-  canvas: HTMLCanvasElement | null;
+  canvas: HTMLCanvasElement | OffscreenCanvas | null;
   isLoading: boolean;
   isExporting: boolean;
   isRendering: boolean; // True when actively rendering (after debounce, during generation)
@@ -106,7 +106,7 @@ interface UseQRGeneratorResult {
   validation: ValidationResult | null;
   isValidating: boolean;
   // Animation frames for GIF export
-  animationFrames: HTMLCanvasElement[];
+  animationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
 }
 
 /**
@@ -168,7 +168,7 @@ declare global {
         isAnimationReady: boolean;
         animationFrameCount: number;
         currentFrame: number;
-        animationFrames: HTMLCanvasElement[];
+        animationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
         animationSpeedMs: number;
         frameDelays: number[]; // Original frame delays from source GIF in ms
       }
@@ -177,13 +177,13 @@ declare global {
 
 export function useQRGenerator(): UseQRGeneratorResult {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isRendering, setIsRendering] = useState(false); // Active rendering state
   const [isPending, setIsPending] = useState(false); // Config changed, waiting for debounce
   const [error, setError] = useState<string | null>(null);
-  const [overlayCanvas, setOverlayCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [overlayCanvas, setOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
 
   // Animation state
   const [gifFrames, setGifFrames] = useState<AnimationFrame[]>([]);
@@ -197,7 +197,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [gifCompositor, setGifCompositor] = useState<GifCompositor | null>(null);
 
   // Store raw overlay canvas before preprocessing
-  const [rawOverlayCanvas, setRawOverlayCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [rawOverlayCanvas, setRawOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
 
   // Track when we're loading/parsing an overlay file (prevents busy overlay flickering)
   const [isLoadingOverlay, setIsLoadingOverlay] = useState(false);
@@ -210,7 +210,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [qrMatrix, setQrMatrix] = useState<boolean[][] | null>(null);
 
   // Store generated frames for GIF export and playback cache
-  const [animationFrames, setAnimationFrames] = useState<HTMLCanvasElement[]>([]);
+  const [animationFrames, setAnimationFrames] = useState<(HTMLCanvasElement | OffscreenCanvas)[]>([]);
   const [isAnimationCacheReady, setIsAnimationCacheReady] = useState(false);
 
   // Get all relevant state from store
@@ -594,7 +594,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
    * the generator will NOT double-apply transforms.
    */
   const applyGeometricTransforms = useCallback(
-    (sourceCanvas: HTMLCanvasElement): HTMLCanvasElement => {
+    (sourceCanvas: HTMLCanvasElement | OffscreenCanvas): HTMLCanvasElement => {
+      // Cast to HTMLCanvasElement for DOM operations - this is safe because
+      // the hook only works in browser context where we always have HTMLCanvasElement
+      const source = sourceCanvas as HTMLCanvasElement;
       // Check if any geometric transforms are needed
       const needsTransform =
         overlay.rotateDeg !== 0 ||
@@ -604,16 +607,16 @@ export function useQRGenerator(): UseQRGeneratorResult {
         !!overlay.fit;
 
       if (!needsTransform) {
-        return sourceCanvas;
+        return source as HTMLCanvasElement;
       }
 
       // First apply crop if enabled
-      let workingCanvas = sourceCanvas;
+      let workingCanvas: HTMLCanvasElement = source;
       if (overlay.cropEnabled && overlay.cropRegion) {
         const { x, y, size } = overlay.cropRegion;
         const cropCanvas = document.createElement('canvas');
         const cropCtx = cropCanvas.getContext('2d');
-        if (!cropCtx) return sourceCanvas;
+        if (!cropCtx) return sourceCanvas as HTMLCanvasElement;
 
         const srcWidth = sourceCanvas.width;
         const srcHeight = sourceCanvas.height;
@@ -868,7 +871,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     try {
       // Generate QR code
-      let result = await qrGenerator.generate(
+      let result: HTMLCanvasElement | OffscreenCanvas | null = await qrGenerator.generate(
         debouncedConfig,
         overlay.enabled ? overlayCanvas : null
       );
@@ -1232,7 +1235,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
       await showInterstitial('export');
 
       // Scale canvas to output dimensions if different
-      let exportCanvas = canvas;
+      // Cast to HTMLCanvasElement for export - safe because we're in browser context
+      let exportCanvas: HTMLCanvasElement = canvas as HTMLCanvasElement;
       if (output.widthPx !== canvas.width || output.heightPx !== canvas.height) {
         exportCanvas = document.createElement('canvas');
         exportCanvas.width = output.widthPx;
@@ -1347,8 +1351,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
         // Scale animation frames to output dimensions
         // Use canvas pool for temporary scaled frames to reduce GC pressure
         const scaledFrames = animationFrames.map((frame) => {
-          if (frame.width === output.widthPx && frame.height === output.heightPx) {
-            return frame;
+          const frameCanvas = frame as HTMLCanvasElement;
+          if (frameCanvas.width === output.widthPx && frameCanvas.height === output.heightPx) {
+            return frameCanvas;
           }
           const scaledCanvas = document.createElement('canvas');
           scaledCanvas.width = output.widthPx;
@@ -1357,7 +1362,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           if (scaledCtx) {
             scaledCtx.imageSmoothingEnabled = !render.crispEdges;
             scaledCtx.imageSmoothingQuality = 'high';
-            scaledCtx.drawImage(frame, 0, 0, output.widthPx, output.heightPx);
+            scaledCtx.drawImage(frameCanvas, 0, 0, output.widthPx, output.heightPx);
           }
           return scaledCanvas;
         });
@@ -1483,7 +1488,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     // Generate QR for each frame (batch generation)
     const generateAllFrames = async () => {
-      let frames: HTMLCanvasElement[] = [];
+      let frames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
 
       // Create yield controller for time-based yielding
       const yieldCtrl = new YieldController();
@@ -1549,7 +1554,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           );
 
           // Now generate jittered QR frames and combine with pattern effects
-          const combinedFrames: HTMLCanvasElement[] = [];
+          const combinedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
           for (let i = 0; i < frameCount; i++) {
             if (isCancelled) return;
 
@@ -1582,7 +1587,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           }));
         } else if (hasJitter) {
           // Just moduleJitter without pattern - generate frames with jitter
-          const jitteredFrames: HTMLCanvasElement[] = [];
+          const jitteredFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
           for (let i = 0; i < frameCount; i++) {
             if (isCancelled) return;
 
@@ -1663,7 +1668,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         }
 
         try {
-          let result: HTMLCanvasElement | null = null;
+          let result: HTMLCanvasElement | OffscreenCanvas | null = null;
 
           if (shouldGenerateBaseAnimation) {
             // For base QR animation, the frame.canvas is either:
@@ -1705,7 +1710,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             const processedOverlay = applyGeometricTransforms(gifCompositor.canvas);
 
             // Apply temporal dithering if enabled (reduced strength for preview)
-            let overlayToUse = processedOverlay;
+            let overlayToUse: HTMLCanvasElement | OffscreenCanvas = processedOverlay;
             if (useTemporalDither) {
               const temporalOffset = calculateTemporalOffset(
                 frameIdx,
@@ -1745,7 +1750,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
                 processedOverlay,
                 temporalOffset,
                 0.008
-              );
+              ) as HTMLCanvasElement;
             }
 
             // Pass frame index for temporal dithering (also used in qr-generator for dither pattern offset)
@@ -1762,7 +1767,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           if (isCancelled) return;
 
           if (result) {
-            let finalResult = result;
+            let finalResult: HTMLCanvasElement | OffscreenCanvas = result;
 
             // Apply color cycle as post-processing - ONLY if actually enabled
             if (hasColorCycle) {
@@ -1792,7 +1797,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // Apply interpolation - ONLY if actually enabled
       // Note: interpolateFrames works on pairs of frames, so we interpolate between consecutive frames
       if (hasInterpolation && frames.length > 1) {
-        const interpolatedFrames: HTMLCanvasElement[] = [];
+        const interpolatedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
         const interpolationSteps = 2; // Number of intermediate frames to generate
         for (let i = 0; i < frames.length - 1; i++) {
           interpolatedFrames.push(frames[i]);

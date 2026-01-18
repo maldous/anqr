@@ -35,11 +35,11 @@ export interface PatternOptions {
  * Generate frames for an animation pattern from a source canvas
  */
 export function generatePatternFrames(
-  sourceCanvas: HTMLCanvasElement,
+  sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   pattern: AnimationPattern,
   frameCount: number = 30,
   options: PatternOptions = {}
-): HTMLCanvasElement[] {
+): (HTMLCanvasElement | OffscreenCanvas)[] {
   if (pattern === 'none') {
     return [sourceCanvas];
   }
@@ -60,7 +60,7 @@ export function generatePatternFrames(
  * Apply a pattern effect to a single frame
  */
 function applyPatternToFrame(
-  source: HTMLCanvasElement,
+  source: HTMLCanvasElement | OffscreenCanvas,
   pattern: AnimationPattern,
   progress: number,
   seed: number,
@@ -70,7 +70,7 @@ function applyPatternToFrame(
   canvas.width = source.width;
   canvas.height = source.height;
   const ctx = canvas.getContext('2d');
-  if (!ctx) return source;
+  if (!ctx) return source as HTMLCanvasElement;
 
   switch (pattern) {
     case 'pulse': {
@@ -218,13 +218,13 @@ function applyEasing(t: number, mode: InterpolationMode): number {
  * Interpolate between two frames
  */
 export function interpolateFrames(
-  frame1: HTMLCanvasElement,
-  frame2: HTMLCanvasElement,
+  frame1: HTMLCanvasElement | OffscreenCanvas,
+  frame2: HTMLCanvasElement | OffscreenCanvas,
   t: number,
   mode: InterpolationMode = 'linear'
 ): HTMLCanvasElement {
-  if (mode === 'none' || t === 0) return frame1;
-  if (t >= 1) return frame2;
+  if (mode === 'none' || t === 0) return frame1 as HTMLCanvasElement;
+  if (t >= 1) return frame2 as HTMLCanvasElement;
 
   const easedT = applyEasing(t, mode);
 
@@ -232,7 +232,7 @@ export function interpolateFrames(
   result.width = frame1.width;
   result.height = frame1.height;
   const ctx = result.getContext('2d');
-  if (!ctx) return frame1;
+  if (!ctx) return frame1 as HTMLCanvasElement;
 
   // Crossfade blend
   ctx.globalAlpha = 1 - easedT;

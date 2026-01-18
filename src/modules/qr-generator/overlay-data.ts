@@ -11,7 +11,7 @@ import { hashCanvasContent } from './utils';
  * Get overlay data (brightness and colors) from canvas
  */
 export async function getOverlayData(
-  overlayCanvas: HTMLCanvasElement,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   config: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn

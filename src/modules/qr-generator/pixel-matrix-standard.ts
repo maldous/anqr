@@ -14,7 +14,7 @@ import { normalizeColors } from './pixel-matrix-dither';
 export async function generateStandardMatrix(
   qr: QRCodeObject,
   config: QRGeneratorConfig,
-  overlayCanvas: HTMLCanvasElement,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   effectiveIntensity: number,
   effectiveConfig: QRGeneratorConfig,
