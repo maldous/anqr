@@ -192,9 +192,10 @@ function applyPatternToFrame(
 // ============================================
 
 /**
- * Apply easing function to a value
+ * Apply interpolation easing function to a value
+ * Note: This is distinct from applyEasing in shared-patterns.ts which uses AnimationEasing type
  */
-function applyEasing(t: number, mode: InterpolationMode): number {
+function applyInterpolationEasing(t: number, mode: InterpolationMode): number {
   switch (mode) {
     case 'ease':
       return t < 0.5
@@ -215,9 +216,10 @@ function applyEasing(t: number, mode: InterpolationMode): number {
 }
 
 /**
- * Interpolate between two frames
+ * Interpolate between two frames with easing
+ * Note: This is distinct from interpolateFrames in interpolate-frames.ts which uses blend modes
  */
-export function interpolateFrames(
+export function interpolateFramesWithEasing(
   frame1: HTMLCanvasElement | OffscreenCanvas,
   frame2: HTMLCanvasElement | OffscreenCanvas,
   t: number,
@@ -226,7 +228,7 @@ export function interpolateFrames(
   if (mode === 'none' || t === 0) return frame1 as HTMLCanvasElement;
   if (t >= 1) return frame2 as HTMLCanvasElement;
 
-  const easedT = applyEasing(t, mode);
+  const easedT = applyInterpolationEasing(t, mode);
 
   const result = document.createElement('canvas');
   result.width = frame1.width;
@@ -246,5 +248,5 @@ export function interpolateFrames(
 
 export default {
   generatePatternFrames,
-  interpolateFrames,
+  interpolateFramesWithEasing,
 };

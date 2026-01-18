@@ -44,7 +44,7 @@ export {
 // Animation patterns from internal module
 export {
   generatePatternFrames,
-  interpolateFrames as interpolatePatternFrames,
+  interpolateFramesWithEasing,
   type AnimationPattern as PatternType,
   type InterpolationMode,
 } from './internal/patterns';

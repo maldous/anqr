@@ -30,10 +30,15 @@ const ECC_MAP: Record<string, ECCLevel> = {
   high: 'H',
 };
 
+// Import blue noise from canonical source
+import {
+  generateBlueNoiseTile as generateTile,
+  sampleBlueNoise as sampleNoise,
+} from '../../dither-algorithms';
+
 // Pre-computed 64x64 blue noise tile (normalized 0-1)
-// Generated using interleaved gradient noise for good spectral properties
 const BLUE_NOISE_TILE_SIZE = 64;
-const BLUE_NOISE_64: number[] = generateBlueNoiseTile();
+const BLUE_NOISE_64: number[] = generateTile(BLUE_NOISE_TILE_SIZE, 0);
 
 export type ColorMode = 'color' | 'grayscale' | 'bw';
 
@@ -80,36 +85,11 @@ export interface BlueNoiseResult {
 }
 
 /**
- * Generate a pseudo-blue-noise tile using interleaved gradient noise
- */
-function generateBlueNoiseTile(): number[] {
-  const size = BLUE_NOISE_TILE_SIZE;
-  const tile: number[] = new Array(size * size);
-
-  const phi = 1.618033988749895; // Golden ratio
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      // Interleaved gradient noise formula
-      const ign = (52.9829189 * ((0.06711056 * x + 0.00583715 * y) % 1)) % 1;
-      // Add golden ratio based offset for better distribution
-      const offset = (x * phi + y * phi * phi) % 1;
-      // Combine and normalize
-      tile[y * size + x] = (ign + offset * 0.5) % 1;
-    }
-  }
-
-  return tile;
-}
-
-/**
  * Sample the blue noise tile at position (x, y)
+ * Uses the canonical implementation from dither-algorithms
  */
 function sampleBlueNoise(x: number, y: number): number {
-  const size = BLUE_NOISE_TILE_SIZE;
-  const tx = ((x % size) + size) % size;
-  const ty = ((y % size) + size) % size;
-  return BLUE_NOISE_64[ty * size + tx];
+  return sampleNoise(x, y, BLUE_NOISE_64, BLUE_NOISE_TILE_SIZE);
 }
 
 /**
