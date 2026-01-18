@@ -1,6 +1,6 @@
 /**
  * Payload Generators Types and Constants
- * 
+ *
  * These types are defined locally to avoid coupling to the app store.
  * The store imports from here, not the other way around.
  */

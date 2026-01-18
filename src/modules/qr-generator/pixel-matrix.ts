@@ -4,25 +4,20 @@
  * Re-exports from split module files
  */
 
-import { generateSubpixelMatrix } from './overlay';
-import { generateDitheredMatrix, generateBlueNoiseMatrix } from './pixel-matrix-dithered';
-import { generateDitherModeMatrix, normalizeColors } from './pixel-matrix-dither';
-import { prepareUnifiedOverlayData } from './pixel-matrix-overlay';
-import { generateStandardMatrix } from './pixel-matrix-standard';
-import {
-  generateBaseMatrix,
-  getEffectiveIntensity,
-  getScaleFactor,
-} from './pixel-matrix-utils';
 import type { CanvasFactory } from './canvas-factory';
-import type { QRGeneratorConfig, QRCodeInstance, RGB, PixelDecisionResult } from './types';
+import { generateSubpixelMatrix } from './overlay';
+import { generateDitherModeMatrix } from './pixel-matrix-dither';
+import { generateBlueNoiseMatrix, generateDitheredMatrix } from './pixel-matrix-dithered';
+import { generateStandardMatrix } from './pixel-matrix-standard';
+import { generateBaseMatrix, getEffectiveIntensity, getScaleFactor } from './pixel-matrix-utils';
+import type { PixelDecisionResult, QRCodeInstance, QRGeneratorConfig } from './types';
 
-// Re-export utilities
-export { getScaleFactor, getEffectiveIntensity, generateBaseMatrix } from './pixel-matrix-utils';
-export { generateDitheredMatrix, generateBlueNoiseMatrix } from './pixel-matrix-dithered';
 export { generateDitherModeMatrix, normalizeColors } from './pixel-matrix-dither';
-export { generateStandardMatrix } from './pixel-matrix-standard';
+export { generateBlueNoiseMatrix, generateDitheredMatrix } from './pixel-matrix-dithered';
 export { prepareUnifiedOverlayData } from './pixel-matrix-overlay';
+export { generateStandardMatrix } from './pixel-matrix-standard';
+// Re-export utilities
+export { generateBaseMatrix, getEffectiveIntensity, getScaleFactor } from './pixel-matrix-utils';
 
 /**
  * UNIFIED PIXEL DECISION MATRIX

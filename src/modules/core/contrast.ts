@@ -3,7 +3,7 @@
  * WCAG contrast checking and adjustment
  */
 
-import { parseColor, hslToRgb, rgbToHsl, getContrastRatio } from './color';
+import { getContrastRatio, hslToRgb, parseColor, rgbToHsl } from './color';
 
 /**
  * Check if foreground/background meet WCAG AA contrast (4.5:1)
@@ -11,7 +11,7 @@ import { parseColor, hslToRgb, rgbToHsl, getContrastRatio } from './color';
 export function meetsContrastAA(fg: string, bg: string): boolean {
   const fgRgb = parseColor(fg);
   const bgRgb = parseColor(bg);
-  if (!fgRgb || !bgRgb) return false;
+  if (!(fgRgb && bgRgb)) return false;
   const ratio = getContrastRatio(fgRgb, bgRgb);
   return ratio >= 4.5;
 }
@@ -22,7 +22,7 @@ export function meetsContrastAA(fg: string, bg: string): boolean {
 export function meetsContrastAAA(fg: string, bg: string): boolean {
   const fgRgb = parseColor(fg);
   const bgRgb = parseColor(bg);
-  if (!fgRgb || !bgRgb) return false;
+  if (!(fgRgb && bgRgb)) return false;
   const ratio = getContrastRatio(fgRgb, bgRgb);
   return ratio >= 7;
 }
@@ -30,27 +30,23 @@ export function meetsContrastAAA(fg: string, bg: string): boolean {
 /**
  * Adjust foreground color to meet minimum contrast ratio
  */
-export function adjustForContrast(
-  fg: string,
-  bg: string,
-  minRatio = 4.5
-): string {
+export function adjustForContrast(fg: string, bg: string, minRatio = 4.5): string {
   const fgRgb = parseColor(fg);
   const bgRgb = parseColor(bg);
-  if (!fgRgb || !bgRgb) return fg;
-  
+  if (!(fgRgb && bgRgb)) return fg;
+
   const currentRatio = getContrastRatio(fgRgb, bgRgb);
   if (currentRatio >= minRatio) return fg;
-  
+
   // Darken or lighten foreground to meet contrast
   const fgHsl = rgbToHsl(fgRgb.r, fgRgb.g, fgRgb.b);
   const bgHsl = rgbToHsl(bgRgb.r, bgRgb.g, bgRgb.b);
   const bgIsDark = bgHsl.l < 50;
-  
+
   // Adjust lightness
   let newL = fgHsl.l;
   const step = bgIsDark ? 5 : -5;
-  
+
   for (let i = 0; i < 20; i++) {
     newL = Math.max(0, Math.min(100, newL + step));
     const newRgb = hslToRgb(fgHsl.h, fgHsl.s, newL);
@@ -59,6 +55,6 @@ export function adjustForContrast(
       return `hsl(${fgHsl.h}, ${fgHsl.s}%, ${newL}%)`;
     }
   }
-  
+
   return fg;
 }

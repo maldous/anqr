@@ -3,52 +3,50 @@
  * Re-exports from split module files
  */
 
-// Types and constants (canonical source - store imports from here)
-export * from './types';
-export { utf8ByteLength, crc16CCITT, escapeValue, formatICalDate } from './utils';
-
+// Calendar generators
+export { generateCalendarSubscription, generateEvent } from './calendar';
+// Contact generators
+export { generateBizCard, generateMeCard, generateVCard } from './contacts';
+// Core generators
+export {
+  generateEmail,
+  generateGeo,
+  generateSms,
+  generateTel,
+  generateUrl,
+  generateWifi,
+} from './core';
 // EMV QR Builder
 export { EMVQRBuilder, parseEMVQR, validateEMVQRCRC } from './emv';
-export { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from './types';
-
-// Core generators
-export { generateUrl, generateTel, generateEmail, generateSms, generateGeo, generateWifi } from './core';
-
-// Contact generators
-export { generateVCard, generateMeCard, generateBizCard } from './contacts';
-
-// Calendar generators
-export { generateEvent, generateCalendarSubscription } from './calendar';
-
-// Payment generators
-export {
-  generateEPCSepa,
-  generateUPI,
-  generatePayNow,
-  generatePromptPay,
-  generatePIX,
-  generateSwissQRBill,
-  generateLightning,
-  generateEthereumEIP681,
-  generateCrypto,
-  generatePayPalMe,
-  generateCashApp,
-  generateQRIS,
-  generateDuitNow,
-  generateBharatQR,
-  generateVietQR,
-  generateQRPh,
-  generateTWQR,
-  generateHKQR,
-  generateJPQR,
-  generateAusPayNet,
-  generateEMVMPM,
-} from './payments';
-
 // Enterprise generators
 export { generateGS1DigitalLink, generateOTPAuth } from './enterprise';
-
+// Payment generators
+export {
+  generateAusPayNet,
+  generateBharatQR,
+  generateCashApp,
+  generateCrypto,
+  generateDuitNow,
+  generateEMVMPM,
+  generateEPCSepa,
+  generateEthereumEIP681,
+  generateHKQR,
+  generateJPQR,
+  generateLightning,
+  generatePayNow,
+  generatePayPalMe,
+  generatePIX,
+  generatePromptPay,
+  generateQRIS,
+  generateQRPh,
+  generateSwissQRBill,
+  generateTWQR,
+  generateUPI,
+  generateVietQR,
+} from './payments';
 // Social/Messaging generators
-export { generateSocialProfile, generateMessagingLink, generateAppDeepLink } from './social';
-
-
+export { generateAppDeepLink, generateMessagingLink, generateSocialProfile } from './social';
+// Types and constants (canonical source - store imports from here)
+export * from './types';
+export { ISO_CURRENCY, PAYMENT_SCHEME_GUI } from './types';
+export { crc16CCITT, escapeValue, formatICalDate, utf8ByteLength } from './utils';

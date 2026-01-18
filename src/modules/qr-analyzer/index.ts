@@ -3,15 +3,96 @@
  * Provides QR code analysis, scanning, validation, and safety checking
  */
 
+// High-level analysis functions
+export {
+  analyzeQRCode,
+  analyzeQRFromCanvas,
+  analyzeQRFromFile,
+  analyzeQRFromUrl,
+} from './analyzer';
+// Content analysis utilities (from analyzer-content.ts)
+export {
+  averageColor,
+  type ColorInfo,
+  type ContentAnalysis,
+  type ContentType as ContentTypeSimple,
+  calculateContrastRatio,
+  calculateImageProperties,
+  type DominantColor,
+  detectContentType,
+  extractDominantColors,
+  type ImageProperties as ContentImageProperties,
+  parseUrlDetails,
+  rgbToHex,
+  type UrlDetails,
+} from './analyzer-content';
+
+// Content detection (from content-detection.ts)
+export { detectContentType as detectContentTypeDetails } from './content-detection';
+// Main decoder
+export { decodeQRFromCanvas } from './decoder';
 // Logger utilities
 export {
   createLogger,
-  qrDecoderLog,
-  qrAnalyzerLog,
-  type Logger,
   type LogData,
+  type Logger,
+  qrAnalyzerLog,
+  qrDecoderLog,
 } from './logger';
+// Safety analyzer
+export {
+  type AnalysisIssue,
+  type AnalysisResult,
+  type AnalysisWarning,
+  analyzeContrast,
+  analyzeMatrixContrast,
+  analyzeQR,
+  applyBlurSimulation,
+  applyNoiseSimulation,
+  calculateSafeIntensity,
+  generateReadabilityHeatmap,
+  SafetyAnalyzer,
+  type SafetyMode,
+  type SafetyOptions,
+  type ScanSimulationResult,
+  simulateScan,
+  validateModuleSize,
+  validateOverlayIntensity,
+  validateQuietZone,
+} from './safety';
+// Scanner
+export {
+  type QRLocation,
+  QRScanner,
+  type ScanResult,
+  scanCanvas,
+  scanFile,
+  scanImageData,
+  type ValidationResult,
+  validateFrames,
+  validateQRCode,
+  validateQRCodeRobust,
+} from './scanner';
 
+// Telemetry and statistics
+export {
+  type ContrastReport,
+  calculateContrastStats,
+  checkContrastCompliance,
+} from './telemetry-contrast';
+
+export {
+  createScanLogger,
+  type LogEntry,
+  type ScanLogger,
+  type ScanStats,
+} from './telemetry-logging';
+
+export {
+  type AnalysisStats,
+  aggregateStats,
+  calculateAnalysisStats,
+} from './telemetry-stats';
 // Types (canonical source)
 export type {
   ContentType,
@@ -25,90 +106,3 @@ export type {
   QuietZoneInfo,
   StructuralAnalysis,
 } from './types';
-
-// Content detection (from content-detection.ts)
-export { detectContentType as detectContentTypeDetails } from './content-detection';
-
-// Content analysis utilities (from analyzer-content.ts)
-export {
-  averageColor,
-  calculateContrastRatio,
-  calculateImageProperties,
-  detectContentType,
-  extractDominantColors,
-  parseUrlDetails,
-  rgbToHex,
-  type ColorInfo,
-  type ContentAnalysis,
-  type ContentType as ContentTypeSimple,
-  type DominantColor,
-  type ImageProperties as ContentImageProperties,
-  type UrlDetails,
-} from './analyzer-content';
-
-// Main decoder
-export { decodeQRFromCanvas } from './decoder';
-
-// Scanner
-export {
-  scanCanvas,
-  scanFile,
-  scanImageData,
-  validateQRCode,
-  validateQRCodeRobust,
-  validateFrames,
-  QRScanner,
-  type QRLocation,
-  type ScanResult,
-  type ValidationResult,
-} from './scanner';
-
-// Safety analyzer
-export {
-  analyzeContrast,
-  analyzeMatrixContrast,
-  analyzeQR,
-  applyBlurSimulation,
-  applyNoiseSimulation,
-  calculateSafeIntensity,
-  generateReadabilityHeatmap,
-  SafetyAnalyzer,
-  simulateScan,
-  validateModuleSize,
-  validateOverlayIntensity,
-  validateQuietZone,
-  type AnalysisIssue,
-  type AnalysisResult,
-  type AnalysisWarning,
-  type SafetyMode,
-  type SafetyOptions,
-  type ScanSimulationResult,
-} from './safety';
-
-// Telemetry and statistics
-export {
-  type ContrastReport,
-  calculateContrastStats,
-  checkContrastCompliance,
-} from './telemetry-contrast';
-
-export {
-  type ScanStats,
-  type LogEntry,
-  type ScanLogger,
-  createScanLogger,
-} from './telemetry-logging';
-
-export {
-  type AnalysisStats,
-  calculateAnalysisStats,
-  aggregateStats,
-} from './telemetry-stats';
-
-// High-level analysis functions
-export {
-  analyzeQRCode,
-  analyzeQRFromCanvas,
-  analyzeQRFromFile,
-  analyzeQRFromUrl,
-} from './analyzer';

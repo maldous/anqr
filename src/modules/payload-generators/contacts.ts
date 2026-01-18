@@ -3,7 +3,7 @@
  * vCard, MeCard, BizCard
  */
 
-import type { MeCardHelper, VCardHelper, BizCardParams } from './types';
+import type { BizCardParams, MeCardHelper, VCardHelper } from './types';
 import { escapeValue } from './utils';
 
 /** Generate vCard string (2.1, 3.0, or 4.0) */

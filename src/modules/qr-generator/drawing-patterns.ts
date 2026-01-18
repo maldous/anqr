@@ -3,8 +3,8 @@
  * Finder and alignment pattern drawing functions
  */
 
+import { drawModule, roundRect } from './drawing-primitives';
 import type { QRGeneratorConfig } from './types';
-import { roundRect, drawModule } from './drawing-primitives';
 
 /**
  * Draw a complete finder pattern at the specified position
@@ -31,8 +31,8 @@ export function drawFinderPatternComplete(
   const scaledInnerSize = innerSize * eyeScale;
 
   const outerOffset = (outerSize - scaledOuterSize) / 2;
-  const middleOffset = moduleSize + (outerSize - scaledOuterSize) / 2;
-  const innerOffset = 2 * moduleSize + (outerSize - scaledOuterSize) / 2;
+  const _middleOffset = moduleSize + (outerSize - scaledOuterSize) / 2;
+  const _innerOffset = 2 * moduleSize + (outerSize - scaledOuterSize) / 2;
 
   // Draw outer ring (dark)
   ctx.fillStyle = fgColor;
@@ -42,13 +42,25 @@ export function drawFinderPatternComplete(
   ctx.fillStyle = bgColor;
   const middleRingSize = scaledMiddleSize;
   const middleRingOffset = (scaledOuterSize - middleRingSize) / 2;
-  drawFinderRing(ctx, x + outerOffset + middleRingOffset, y + outerOffset + middleRingOffset, middleRingSize, outerStyle);
+  drawFinderRing(
+    ctx,
+    x + outerOffset + middleRingOffset,
+    y + outerOffset + middleRingOffset,
+    middleRingSize,
+    outerStyle
+  );
 
   // Draw inner dot (dark)
   ctx.fillStyle = fgColor;
   const innerDotSize = scaledInnerSize;
   const innerDotOffset = (scaledOuterSize - innerDotSize) / 2;
-  drawFinderRing(ctx, x + outerOffset + innerDotOffset, y + outerOffset + innerDotOffset, innerDotSize, innerStyle);
+  drawFinderRing(
+    ctx,
+    x + outerOffset + innerDotOffset,
+    y + outerOffset + innerDotOffset,
+    innerDotSize,
+    innerStyle
+  );
 }
 
 /**
@@ -73,7 +85,6 @@ function drawFinderRing(
       ctx.fill();
       break;
     }
-    case 'square':
     default:
       ctx.fillRect(x, y, size, size);
       break;
@@ -99,19 +110,37 @@ export function drawAlignmentPattern(
   const middleSize = 3 * moduleSize;
   const innerSize = 1 * moduleSize;
 
-  const effectiveStyle = style === 'match_finder' ? (config.finderStyle || 'square') : style;
+  const effectiveStyle = style === 'match_finder' ? config.finderStyle || 'square' : style;
 
   // Outer ring (dark)
   ctx.fillStyle = fgColor;
-  drawAlignmentRing(ctx, centerX - outerSize / 2, centerY - outerSize / 2, outerSize, effectiveStyle);
+  drawAlignmentRing(
+    ctx,
+    centerX - outerSize / 2,
+    centerY - outerSize / 2,
+    outerSize,
+    effectiveStyle
+  );
 
   // Middle ring (light)
   ctx.fillStyle = bgColor;
-  drawAlignmentRing(ctx, centerX - middleSize / 2, centerY - middleSize / 2, middleSize, effectiveStyle);
+  drawAlignmentRing(
+    ctx,
+    centerX - middleSize / 2,
+    centerY - middleSize / 2,
+    middleSize,
+    effectiveStyle
+  );
 
   // Inner dot (dark)
   ctx.fillStyle = fgColor;
-  drawAlignmentRing(ctx, centerX - innerSize / 2, centerY - innerSize / 2, innerSize, effectiveStyle);
+  drawAlignmentRing(
+    ctx,
+    centerX - innerSize / 2,
+    centerY - innerSize / 2,
+    innerSize,
+    effectiveStyle
+  );
 }
 
 /**
@@ -136,7 +165,6 @@ function drawAlignmentRing(
       ctx.fill();
       break;
     }
-    case 'square':
     default:
       ctx.fillRect(x, y, size, size);
       break;

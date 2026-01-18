@@ -3,9 +3,13 @@
  * Handles image loading, cropping, filter application, and overlay modes
  */
 
-import type { DitherKind as DitherAlgKind, DiffusionKernel, OrderedMatrix } from '../dither-algorithms';
+import type {
+  DiffusionKernel,
+  DitherKind as DitherAlgKind,
+  OrderedMatrix,
+} from '../dither-algorithms';
 import { applyDither } from '../dither-algorithms';
-import { applyFilters, copyImageData, type FilterOptions } from './overlay-filters';
+import { applyFilters, type FilterOptions } from './overlay-filters';
 
 // Re-export types from dither-algorithms for convenience
 export type DitherKind = DitherAlgKind;
@@ -16,7 +20,13 @@ export type { DiffusionKernel, OrderedMatrix };
 // ============================================
 
 export type FitMode = 'contain' | 'cover' | 'fill' | 'none';
-export type OverlayMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'soft-light' | 'hard-light';
+export type OverlayMode =
+  | 'normal'
+  | 'multiply'
+  | 'screen'
+  | 'overlay'
+  | 'soft-light'
+  | 'hard-light';
 export type OverlayType = 'static' | 'animated';
 
 export interface CropRegion {
@@ -132,10 +142,7 @@ export function loadImageFromDataUrl(dataUrl: string): Promise<HTMLCanvasElement
 // IMAGE TRANSFORMATION
 // ============================================
 
-export function cropOverlayImage(
-  source: HTMLCanvasElement,
-  region: CropRegion
-): HTMLCanvasElement {
+export function cropOverlayImage(source: HTMLCanvasElement, region: CropRegion): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = region.width;
   canvas.height = region.height;
@@ -212,10 +219,7 @@ export function fitOverlayImage(
   return canvas;
 }
 
-export function rotateOverlayCanvas(
-  source: HTMLCanvasElement,
-  degrees: number
-): HTMLCanvasElement {
+export function rotateOverlayCanvas(source: HTMLCanvasElement, degrees: number): HTMLCanvasElement {
   const radians = (degrees * Math.PI) / 180;
   const sin = Math.abs(Math.sin(radians));
   const cos = Math.abs(Math.cos(radians));
@@ -247,10 +251,7 @@ export function flipOverlayCanvas(
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get 2D context');
 
-  ctx.translate(
-    horizontal ? source.width : 0,
-    vertical ? source.height : 0
-  );
+  ctx.translate(horizontal ? source.width : 0, vertical ? source.height : 0);
   ctx.scale(horizontal ? -1 : 1, vertical ? -1 : 1);
   ctx.drawImage(source, 0, 0);
 
@@ -266,10 +267,7 @@ export function getOverlayDitherKind(options?: OverlayDitherOptions): DitherKind
   return options.kind ?? 'floyd_steinberg';
 }
 
-export function applyOverlayDither(
-  imageData: ImageData,
-  options: OverlayDitherOptions
-): ImageData {
+export function applyOverlayDither(imageData: ImageData, options: OverlayDitherOptions): ImageData {
   if (!options.enabled || options.kind === 'none') {
     return imageData;
   }
@@ -287,7 +285,7 @@ export function applyOverlayDither(
   // Convert DitherResult back to ImageData
   const { width, height } = imageData;
   const outputData = new Uint8ClampedArray(width * height * 4);
-  
+
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
@@ -353,8 +351,7 @@ export function extractOverlayBrightnessData(
 
   for (let i = 0; i < data.length; i += 4) {
     // Convert to grayscale brightness (0-1)
-    brightness[i / 4] =
-      (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
+    brightness[i / 4] = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
   }
 
   return brightness;

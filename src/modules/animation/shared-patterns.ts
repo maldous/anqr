@@ -1,11 +1,11 @@
 /**
  * Shared Animation Patterns
- * 
+ *
  * Pixel-level animation pattern functions that operate on Uint8ClampedArray.
  * These are used by both client (useQRGenerator) and server (netlify function).
  */
 
-import { hslToRgbTuple, createSeededRandom } from '../core';
+import { createSeededRandom, hslToRgbTuple } from '../core';
 
 // ============================================
 // TYPES

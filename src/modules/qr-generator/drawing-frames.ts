@@ -3,8 +3,8 @@
  * Frame background and border drawing functions
  */
 
-import type { QRGeneratorConfig } from './types';
 import { roundRect } from './drawing-primitives';
+import type { QRGeneratorConfig } from './types';
 
 /**
  * Draw frame background (sticker style)
@@ -12,8 +12,8 @@ import { roundRect } from './drawing-primitives';
 export function drawFrameBackground(
   ctx: CanvasRenderingContext2D,
   size: number,
-  moduleSize: number,
-  margin: number,
+  _moduleSize: number,
+  _margin: number,
   config: QRGeneratorConfig
 ): void {
   if (!config.frameStyle || config.frameStyle === 'none') return;
@@ -38,7 +38,7 @@ export function drawFrame(
   ctx: CanvasRenderingContext2D,
   size: number,
   moduleSize: number,
-  margin: number,
+  _margin: number,
   config: QRGeneratorConfig
 ): void {
   if (!config.frameStyle || config.frameStyle === 'none') return;

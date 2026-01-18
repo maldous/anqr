@@ -3,17 +3,16 @@
  * Pattern positions, BCH encoding, mask functions, and lost point calculation
  */
 
-import { QRMode } from './types';
-import type { QRPolynomial, QRCodeInstance } from './types';
-import { qrPolynomial, gexp } from './math';
-
 // Import from canonical sources in qr-spec
 import {
-  getAlignmentPositions as getPatternPositionFromSpec,
   getBCHTypeInfo as getBCHTypeInfoFromSpec,
   getBCHTypeNumber as getBCHTypeNumberFromSpec,
   getMaskFunction as getMaskFunctionFromSpec,
+  getAlignmentPositions as getPatternPositionFromSpec,
 } from '../qr-spec';
+import { gexp, qrPolynomial } from './math';
+import type { QRCodeInstance, QRPolynomial } from './types';
+import { QRMode } from './types';
 
 // Re-export from qr-spec for backward compatibility
 export const getBCHTypeInfo = getBCHTypeInfoFromSpec;
@@ -46,29 +45,44 @@ export function getLengthInBits(mode: number, type: number): number {
   if (1 <= type && type < 10) {
     // Version 1-9
     switch (mode) {
-      case QRMode.MODE_NUMBER: return 10;
-      case QRMode.MODE_ALPHA_NUM: return 9;
-      case QRMode.MODE_8BIT_BYTE: return 8;
-      case QRMode.MODE_KANJI: return 8;
-      default: throw new Error(`mode:${mode}`);
+      case QRMode.MODE_NUMBER:
+        return 10;
+      case QRMode.MODE_ALPHA_NUM:
+        return 9;
+      case QRMode.MODE_8BIT_BYTE:
+        return 8;
+      case QRMode.MODE_KANJI:
+        return 8;
+      default:
+        throw new Error(`mode:${mode}`);
     }
   } else if (type < 27) {
     // Version 10-26
     switch (mode) {
-      case QRMode.MODE_NUMBER: return 12;
-      case QRMode.MODE_ALPHA_NUM: return 11;
-      case QRMode.MODE_8BIT_BYTE: return 16;
-      case QRMode.MODE_KANJI: return 10;
-      default: throw new Error(`mode:${mode}`);
+      case QRMode.MODE_NUMBER:
+        return 12;
+      case QRMode.MODE_ALPHA_NUM:
+        return 11;
+      case QRMode.MODE_8BIT_BYTE:
+        return 16;
+      case QRMode.MODE_KANJI:
+        return 10;
+      default:
+        throw new Error(`mode:${mode}`);
     }
   } else if (type < 41) {
     // Version 27-40
     switch (mode) {
-      case QRMode.MODE_NUMBER: return 14;
-      case QRMode.MODE_ALPHA_NUM: return 13;
-      case QRMode.MODE_8BIT_BYTE: return 16;
-      case QRMode.MODE_KANJI: return 12;
-      default: throw new Error(`mode:${mode}`);
+      case QRMode.MODE_NUMBER:
+        return 14;
+      case QRMode.MODE_ALPHA_NUM:
+        return 13;
+      case QRMode.MODE_8BIT_BYTE:
+        return 16;
+      case QRMode.MODE_KANJI:
+        return 12;
+      default:
+        throw new Error(`mode:${mode}`);
     }
   } else {
     throw new Error(`type:${type}`);

@@ -21,7 +21,7 @@ export function drawHalftoneModule(
   const htCell = config.htCell ?? 1;
 
   // Apply curve to brightness for non-linear dot size mapping
-  const adjustedBrightness = Math.pow(1 - brightness, htCurve);
+  const adjustedBrightness = (1 - brightness) ** htCurve;
 
   // Calculate dot size based on brightness
   const minSize = size * 0.1;
@@ -30,7 +30,7 @@ export function drawHalftoneModule(
 
   // Cell multiplier affects spacing
   const cellSize = size * htCell;
-  const offset = (cellSize - size) / 2;
+  const _offset = (cellSize - size) / 2;
 
   // Center the dot in the cell
   const cx = x + size / 2;

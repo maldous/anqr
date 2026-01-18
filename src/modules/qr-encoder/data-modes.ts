@@ -3,10 +3,10 @@
  * Encoders for different QR data modes: Numeric, Alphanumeric, Byte, Kanji
  */
 
-import { QRMode } from './types';
-import type { QRBitBuffer, QRDataSegment } from './types';
 // Note: We import the function getter to allow runtime changes to stringToBytes
 import { stringToBytesFn } from './string-bytes';
+import type { QRBitBuffer, QRDataSegment } from './types';
+import { QRMode } from './types';
 
 /**
  * Numeric mode encoder (0-9 only)
@@ -66,16 +66,26 @@ export function qrAlphaNum(data: string): QRDataSegment {
       return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
     } else {
       switch (c) {
-        case '\u0020': return 36;
-        case '$': return 37;
-        case '%': return 38;
-        case '*': return 39;
-        case '+': return 40;
-        case '-': return 41;
-        case '.': return 42;
-        case '/': return 43;
-        case ':': return 44;
-        default: throw new Error(`illegal char :${c}`);
+        case '\u0020':
+          return 36;
+        case '$':
+          return 37;
+        case '%':
+          return 38;
+        case '*':
+          return 39;
+        case '+':
+          return 40;
+        case '-':
+          return 41;
+        case '.':
+          return 42;
+        case '/':
+          return 43;
+        case ':':
+          return 44;
+        default:
+          throw new Error(`illegal char :${c}`);
       }
     }
   };

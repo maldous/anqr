@@ -165,10 +165,7 @@ export class CropHandler {
     const cropSize = this.region.size * this.scale;
 
     return (
-      pos.x >= cropX &&
-      pos.x <= cropX + cropSize &&
-      pos.y >= cropY &&
-      pos.y <= cropY + cropSize
+      pos.x >= cropX && pos.x <= cropX + cropSize && pos.y >= cropY && pos.y <= cropY + cropSize
     );
   }
 
@@ -211,7 +208,7 @@ export class CropHandler {
       this.canvas.style.cursor = 'crosshair';
     }
 
-    if (!this.isDragging && !this.isResizing) return;
+    if (!(this.isDragging || this.isResizing)) return;
     if (!this.image) return;
 
     const dx = (pos.x - this.dragStart.x) / this.scale;
@@ -221,10 +218,7 @@ export class CropHandler {
       // Resize the crop region (maintain square)
       const delta = Math.max(dx, dy);
       const newSize = Math.max(this.minSize, this.regionStart.size + delta);
-      const maxSize = Math.min(
-        this.image.width - this.region.x,
-        this.image.height - this.region.y
-      );
+      const maxSize = Math.min(this.image.width - this.region.x, this.image.height - this.region.y);
       this.region.size = Math.min(newSize, maxSize);
     } else if (this.isDragging) {
       // Move the crop region

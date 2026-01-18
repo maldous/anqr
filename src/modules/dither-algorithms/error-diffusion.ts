@@ -2,8 +2,8 @@
  * Error Diffusion Dithering
  */
 
-import type { ColorMode, DiffusionKernel, DitherResult, RGB } from './types';
 import { DIFFUSION_KERNELS, type DiffusionKernelDef } from './kernels';
+import type { ColorMode, DiffusionKernel, DitherResult, RGB } from './types';
 import { clamp01, rgbToGray } from './utils';
 
 /** Options for error diffusion dithering */

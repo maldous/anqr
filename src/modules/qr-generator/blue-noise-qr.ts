@@ -8,15 +8,10 @@
  * - Blue noise provides better visual quality than ordered dithering
  */
 
-import { qrcode } from '../qr-encoder';
-
 // Import from canonical sources
 import { rgbToGray } from '../core';
-import { type ECCLevel } from '../qr-encoder';
-import {
-  isStructuralModule,
-  getVersionFromModuleCount,
-} from '../qr-spec';
+import { type ECCLevel, qrcode } from '../qr-encoder';
+import { getVersionFromModuleCount, isStructuralModule } from '../qr-spec';
 
 // Error correction level mapping
 const ECC_MAP: Record<string, ECCLevel> = {
@@ -94,7 +89,12 @@ const sampleBlueNoiseAt = (x: number, y: number): number =>
  * Pixel-level adapter that converts pixel coordinates to module coordinates
  * and delegates to isStructuralModule from qr-spec
  */
-function isPixelInStructuralModule(moduleCount: number, x: number, y: number, scale: number): boolean {
+function isPixelInStructuralModule(
+  moduleCount: number,
+  x: number,
+  y: number,
+  scale: number
+): boolean {
   const moduleX = Math.floor(x / scale);
   const moduleY = Math.floor(y / scale);
   const scaledModuleCount = Math.floor(moduleCount / scale);
@@ -109,7 +109,7 @@ function isPixelInStructuralModule(moduleCount: number, x: number, y: number, sc
 function isPixelAtModuleCenter(x: number, y: number, scale: number): boolean {
   // Data points are at the center of each module
   const centerOffset = Math.floor(scale / 2);
-  return (x % scale) === centerOffset && (y % scale) === centerOffset;
+  return x % scale === centerOffset && y % scale === centerOffset;
 }
 
 /**

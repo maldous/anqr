@@ -3,4 +3,4 @@
  * Re-exports from overlay module (canonical source)
  */
 
-export { sobelEdge as applySobelEdge, cannyEdge as applyCannyEdge } from '../overlay';
+export { cannyEdge as applyCannyEdge, sobelEdge as applySobelEdge } from '../overlay';

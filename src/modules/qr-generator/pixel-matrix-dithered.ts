@@ -3,9 +3,9 @@
  * Dithered and blue-noise pixel matrix generation
  */
 
-import type { QRGeneratorConfig, PixelDecisionMatrix, RGBWithMeta, CreateCanvasFn } from './types';
-import type { CanvasFactory } from './canvas-factory';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
+import type { CanvasFactory } from './canvas-factory';
+import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
 
 /**
  * Generate dithered pixel matrix
@@ -15,7 +15,7 @@ export async function generateDitheredMatrix(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   scale: number,
   effectiveIntensity: number,
-  effectiveConfig: QRGeneratorConfig,
+  _effectiveConfig: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   // Implementation for dithered mode
@@ -61,11 +61,11 @@ export async function generateDitheredMatrix(
 
       // Distribute error (Floyd-Steinberg)
       const error = adjusted - (isDark ? 0 : 1);
-      if (x + 1 < scaledSize) errors[y][x + 1] += error * 7 / 16;
+      if (x + 1 < scaledSize) errors[y][x + 1] += (error * 7) / 16;
       if (y + 1 < scaledSize) {
-        if (x > 0) errors[y + 1][x - 1] += error * 3 / 16;
-        errors[y + 1][x] += error * 5 / 16;
-        if (x + 1 < scaledSize) errors[y + 1][x + 1] += error * 1 / 16;
+        if (x > 0) errors[y + 1][x - 1] += (error * 3) / 16;
+        errors[y + 1][x] += (error * 5) / 16;
+        if (x + 1 < scaledSize) errors[y + 1][x + 1] += (error * 1) / 16;
       }
     }
   }
@@ -87,7 +87,7 @@ export async function generateBlueNoiseMatrix(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   scale: number,
   effectiveIntensity: number,
-  canvasFactory: CanvasFactory,
+  _canvasFactory: CanvasFactory,
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const moduleCount = Math.floor(overlayCanvas.width / scale) || 21;

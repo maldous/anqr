@@ -87,11 +87,11 @@ export interface QRAnalysisResult {
   errorType?: ErrorType;
   warnings?: string[];
   confidence?: 'low' | 'medium' | 'high';
-  
+
   // Payload
   payload?: string;
   payloadBytes?: Uint8Array;
-  
+
   // QR Structure
   version: number | null;
   moduleCount: number;
@@ -99,27 +99,27 @@ export interface QRAnalysisResult {
   maskPattern: number | null;
   encodingMode: 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'mixed' | 'unknown' | null;
   errorsCorrected: number | null;
-  
+
   // Content Analysis
   contentType?: ContentTypeDetails;
-  
+
   // Visual Analysis
   detectedColors?: DetectedColors;
   estimatedModulePx: number | null;
   quietZone?: QuietZoneInfo;
-  
+
   // Capacity
   dataCapacity?: DataCapacity;
-  
+
   // Structure
   structuralAnalysis?: StructuralAnalysis;
-  
+
   // Image
   imageProperties?: ImageProperties;
-  
+
   // Matrix for reproduction
   moduleMatrix?: boolean[][];
-  
+
   // Debug
   debugLog?: string;
 }

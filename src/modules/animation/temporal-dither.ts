@@ -5,8 +5,8 @@
  */
 
 import {
-  calculateTemporalOffset,
   applyTemporalNoiseToCanvas,
+  calculateTemporalOffset,
   type TemporalDitherMode,
 } from '../dither-algorithms';
 

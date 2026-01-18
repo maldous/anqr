@@ -3,8 +3,8 @@
  * Defines the RS block structure for each QR version and ECC level
  */
 
-import { QRErrorCorrectionLevel } from './types';
 import type { RSBlock } from './types';
+import { QRErrorCorrectionLevel } from './types';
 
 // RS Block table: [count, totalCount, dataCount, ...]
 // For each version (1-40) and each ECC level (L, M, Q, H)
@@ -281,7 +281,9 @@ export function getRSBlocks(typeNumber: number, errorCorrectionLevel: number): R
   const rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
 
   if (typeof rsBlock === 'undefined') {
-    throw new Error(`bad rs block @ typeNumber:${typeNumber}/errorCorrectionLevel:${errorCorrectionLevel}`);
+    throw new Error(
+      `bad rs block @ typeNumber:${typeNumber}/errorCorrectionLevel:${errorCorrectionLevel}`
+    );
   }
 
   const length = rsBlock.length / 3;

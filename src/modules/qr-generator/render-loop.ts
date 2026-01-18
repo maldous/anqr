@@ -5,19 +5,11 @@
 
 import { isFinderPattern, isTimingPattern } from '../qr-spec';
 
-import {
-  applyPerModuleColor,
-  applyPaletteColor,
-  ensureContrast,
-} from './color';
-import {
-  drawHalftoneModule,
-  drawModule,
-  drawTimingModule,
-} from './drawing';
+import { applyPaletteColor, applyPerModuleColor, ensureContrast } from './color';
+import { drawHalftoneModule, drawModule, drawTimingModule } from './drawing';
 import { isFormatInfo, isVersionInfo } from './pattern-helpers';
 import { applyQROverlayMode } from './render-modes';
-import type { QRGeneratorConfig, QRCodeInstance, OverlayData } from './types';
+import type { OverlayData, QRCodeInstance, QRGeneratorConfig } from './types';
 
 type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -227,15 +219,36 @@ export function renderModules(
         } else if (useHalftoneRendering && isDark) {
           // Use advanced halftone rendering with htDot/htCurve params
           // Cast to CanvasRenderingContext2D for drawing functions (safe because we only use common 2D methods)
-          drawHalftoneModule(ctx as CanvasRenderingContext2D, drawX, drawY, adjustedSize, halftoneBrightness, config);
+          drawHalftoneModule(
+            ctx as CanvasRenderingContext2D,
+            drawX,
+            drawY,
+            adjustedSize,
+            halftoneBrightness,
+            config
+          );
         } else if (isTiming) {
           // Draw timing pattern module with timing style
-          drawTimingModule(ctx as CanvasRenderingContext2D, drawX, drawY, adjustedSize, timingStyle, config);
+          drawTimingModule(
+            ctx as CanvasRenderingContext2D,
+            drawX,
+            drawY,
+            adjustedSize,
+            timingStyle,
+            config
+          );
         } else {
-          drawModule(ctx as CanvasRenderingContext2D, drawX, drawY, adjustedSize, config.moduleStyle, {
-            cornerRadius,
-            rotation: dotRotation,
-          });
+          drawModule(
+            ctx as CanvasRenderingContext2D,
+            drawX,
+            drawY,
+            adjustedSize,
+            config.moduleStyle,
+            {
+              cornerRadius,
+              rotation: dotRotation,
+            }
+          );
         }
 
         ctx.restore();

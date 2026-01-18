@@ -3,17 +3,17 @@
  * Re-exports from split module files
  */
 
-// Primitives
-export { roundRect, drawModule, drawFinderModule } from './drawing-primitives';
-
-// Patterns
-export { drawFinderPatternComplete, drawAlignmentPattern, drawTimingModule } from './drawing-patterns';
-
 // Frames
-export { drawFrameBackground, drawFrame, drawCenterLogo } from './drawing-frames';
-
-// Halftone
-export { drawHalftoneModule } from './drawing-halftone';
-
+export { drawCenterLogo, drawFrame, drawFrameBackground } from './drawing-frames';
 // Gradients
 export { createGradientFill } from './drawing-gradients';
+// Halftone
+export { drawHalftoneModule } from './drawing-halftone';
+// Patterns
+export {
+  drawAlignmentPattern,
+  drawFinderPatternComplete,
+  drawTimingModule,
+} from './drawing-patterns';
+// Primitives
+export { drawFinderModule, drawModule, roundRect } from './drawing-primitives';

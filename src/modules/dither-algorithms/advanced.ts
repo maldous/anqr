@@ -2,10 +2,10 @@
  * Advanced Dithering Algorithms
  */
 
-import type { ColorMode, DiffusionKernel, DitherResult, RGB } from './types';
-import { DIFFUSION_KERNELS } from './kernels';
 import { generateBlueNoiseTile, sampleBlueNoise } from './blue-noise';
 import { distributeErrorWithKernel } from './error-diffusion';
+import { DIFFUSION_KERNELS } from './kernels';
+import type { ColorMode, DiffusionKernel, DitherResult, RGB } from './types';
 import { clamp01, rgbToGray } from './utils';
 
 /** Options for blue noise dithering */

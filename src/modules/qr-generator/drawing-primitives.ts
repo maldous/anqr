@@ -3,8 +3,6 @@
  * Basic shape drawing functions for QR modules
  */
 
-import type { QRGeneratorConfig } from './types';
-
 export interface DrawModuleOptions {
   cornerRadius?: number;
   rotation?: number;
@@ -123,8 +121,6 @@ export function drawModule(
       ctx.fill();
       break;
     }
-
-    case 'square':
     default:
       ctx.fillRect(x, y, size, size);
       break;

@@ -8,9 +8,7 @@ const DEBUG = true;
 
 export type LogData = Record<string, unknown>;
 
-export interface Logger {
-  (category: string, message: string, data?: LogData): void;
-}
+export type Logger = (category: string, message: string, data?: LogData) => void;
 
 /**
  * Create a logger with a specific module prefix

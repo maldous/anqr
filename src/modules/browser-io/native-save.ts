@@ -24,12 +24,7 @@ export async function saveFileNative(filename: string, blob: Blob): Promise<bool
     const mimeType = blob.type || 'application/octet-stream';
 
     // Write to Documents directory via MediaStore
-    const result = await saveBase64ToDocuments(
-      filename,
-      base64DataUrl,
-      mimeType,
-      'ANQR'
-    );
+    const result = await saveBase64ToDocuments(filename, base64DataUrl, mimeType, 'ANQR');
 
     // Show a simple alert to confirm save
     alert(`Saved to Documents/ANQR: ${filename}`);

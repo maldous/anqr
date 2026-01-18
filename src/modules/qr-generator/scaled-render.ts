@@ -3,6 +3,7 @@
  * Handles all scaled overlay modes (dithered, blue-noise, subpixel)
  */
 
+import type { CanvasFactory } from './canvas-factory';
 import {
   createGradientFill,
   drawAlignmentPattern,
@@ -12,8 +13,7 @@ import {
 } from './drawing';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
-import type { CanvasFactory } from './canvas-factory';
-import type { QRGeneratorConfig, QRCodeInstance, RGB } from './types';
+import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
 
 interface PixelColor extends RGB {
   halftone?: boolean;
@@ -149,14 +149,7 @@ export async function generateScaledQR(
       // Convert to pixel center position
       const centerX = marginPx + (pos.col + 0.5) * effectiveModuleSize;
       const centerY = marginPx + (pos.row + 0.5) * effectiveModuleSize;
-      drawAlignmentPattern(
-        ctx,
-        centerX,
-        centerY,
-        effectiveModuleSize,
-        alignmentStyle,
-        config
-      );
+      drawAlignmentPattern(ctx, centerX, centerY, effectiveModuleSize, alignmentStyle, config);
     }
   }
 

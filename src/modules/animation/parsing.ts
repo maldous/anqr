@@ -5,9 +5,9 @@
 /// <reference path="../../types/image-decoder.d.ts" />
 
 import { decompressFrames, parseGIF } from 'gifuct-js';
-import type { AnimationFrame } from './types';
 import { detectImageFormat, isAnimatedWebP } from './format-detection';
 import { createGifCompositor } from './gif-compositor';
+import type { AnimationFrame } from './types';
 
 /**
  * Parse animated WebP using ImageDecoder API

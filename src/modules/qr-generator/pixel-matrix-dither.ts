@@ -3,10 +3,10 @@
  * Dither and extreme mode pixel matrix generation
  */
 
-import type { QRGeneratorConfig, PixelDecisionMatrix, RGBWithMeta, CreateCanvasFn } from './types';
 import type { QRCodeObject } from './cache';
-import { getOverlayData } from './overlay-data';
 import { applyDitherToMatrix } from './dithering-matrix';
+import { getOverlayData } from './overlay-data';
+import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
 
 /**
  * Normalize colors to RGB format
@@ -43,16 +43,21 @@ export function normalizeColors(
  */
 export async function generateDitherModeMatrix(
   qr: QRCodeObject,
-  config: QRGeneratorConfig,
+  _config: QRGeneratorConfig,
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
   effectiveIntensity: number,
   effectiveConfig: QRGeneratorConfig,
-  overlayMode: string,
+  _overlayMode: string,
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   // Get overlay data
-  const overlayData = await getOverlayData(overlayCanvas, moduleCount, effectiveConfig, createCanvasFn);
+  const overlayData = await getOverlayData(
+    overlayCanvas,
+    moduleCount,
+    effectiveConfig,
+    createCanvasFn
+  );
 
   // Apply dithering to create modified QR matrix
   const matrix = applyDitherToMatrix(qr, moduleCount, overlayData, effectiveConfig);

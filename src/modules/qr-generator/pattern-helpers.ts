@@ -5,25 +5,15 @@
  */
 
 import {
+  getAlignmentPatternCenters,
   isFormatInfo as isFormatInfoSpec,
   isVersionInfo as isVersionInfoSpec,
-  getAlignmentPatternCenters,
 } from '../qr-spec';
 import { alignmentCache } from './cache';
 
 // Re-export from qr-spec (canonical source)
 export const isFormatInfo = isFormatInfoSpec;
 export const isVersionInfo = isVersionInfoSpec;
-
-/**
- * Get alignment pattern positions with caching
- * Uses qr-spec's getAlignmentPatternCenters but adds caching layer for performance
- * 
- * Note: Returns {row, col}[] objects (different from qr-spec's getAlignmentPositions which returns number[])
- * This is a cached wrapper around getAlignmentPatternCenters, not a duplicate of getAlignmentPositions
- */
-// Import getAlignmentPositions from qr-spec and cache results
-import { getAlignmentPositions } from '../qr-spec';
 
 /**
  * Cached version of getAlignmentPositions that returns {row, col} objects

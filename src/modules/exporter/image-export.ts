@@ -4,8 +4,8 @@
  */
 
 import { Capacitor } from '@capacitor/core';
-import type { ExportConfig, ExportResult, PngMetadata } from './types';
 import { embedPngDpi, embedPngMetadata } from './png-metadata';
+import type { ExportConfig, ExportResult, PngMetadata } from './types';
 import { downloadUrl } from './utils';
 
 /**

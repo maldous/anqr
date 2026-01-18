@@ -1,5 +1,12 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
+
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+
   "assist": {
     "actions": {
       "source": {
@@ -7,45 +14,99 @@
       }
     }
   },
+
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
+
       "complexity": {
         "noUselessFragments": "warn",
         "useSimplifiedLogicExpression": "warn"
       },
+
       "correctness": {
         "noUnusedImports": "warn",
         "noUnusedVariables": "warn",
         "useExhaustiveDependencies": "warn"
       },
+
       "style": {
-        "noNonNullAssertion": "off",
         "useConst": "error",
-        "useImportType": "warn"
+        "useImportType": "warn",
+
+        "noNonNullAssertion": "off",
+
+        "noCommonJs": "error",
+        "noDefaultExport": "error",
+
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "requireAscii": true,
+            "strictCase": true,
+            "filenameCases": ["kebab-case", "PascalCase"]
+          }
+        },
+
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["./**/", "../**/", "@/**/", "~/**/"],
+                "message": "No trailing-slash imports. Import the directory, not './x/'."
+              },
+              {
+                "group": ["**/index", "**/index.ts", "**/index.js", "**/index.tsx", "**/index.jsx"],
+                "message": "No explicit index imports. Use the directory specifier."
+              },
+              {
+                "group": ["**/internal/**", "**/internal"],
+                "message": "Never import internal paths across modules. Import the module entrypoint."
+              },
+
+              {
+                "group": [
+                  "@modules/*/*",
+                  "src/modules/*/*",
+                  "@/modules/*/*",
+                  "~/modules/*/*"
+                ],
+                "message": "No sub-APIs. Import only the module entrypoint (one segment)."
+              }
+            ]
+          }
+        }
       },
+
       "suspicious": {
         "noExplicitAny": "off",
-        "noConsole": "error",
         "noArrayIndexKey": "off",
         "noTemplateCurlyInString": "off",
         "noAssignInExpressions": "off"
       },
+
       "a11y": {
         "useKeyWithClickEvents": "warn",
         "useKeyWithMouseEvents": "warn",
         "useSemanticElements": "off",
         "noStaticElementInteractions": "off"
+      },
+
+      "nursery": {
+        "noImportCycles": "error"
       }
     }
   },
+
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100
   },
+
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
@@ -56,11 +117,13 @@
       "jsxQuoteStyle": "double"
     }
   },
+
   "json": {
     "formatter": {
       "trailingCommas": "none"
     }
   },
+
   "files": {
     "includes": [
       "src/**/*.ts",
@@ -71,5 +134,69 @@
       "netlify/**/*.ts"
     ],
     "ignoreUnknown": true
-  }
+  },
+
+  "overrides": [
+    {
+      "includes": ["src/modules/**/index.ts", "src/modules/index.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/i18n/static/**/*.ts", "src/i18n/index.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/App.tsx", "src/components/**/*.tsx", "src/hooks/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/hooks/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["netlify/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/modules/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    }
+  ]
 }
+

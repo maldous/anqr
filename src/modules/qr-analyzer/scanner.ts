@@ -45,7 +45,7 @@ export function scanImageData(imageData: ImageData): ScanResult {
   try {
     const result = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
 
-    if (result && result.success && result.data) {
+    if (result?.success && result.data) {
       return {
         data: result.data,
         location: result.location ?? null,

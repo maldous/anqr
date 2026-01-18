@@ -4,7 +4,7 @@
  */
 
 import { blendColors, parseColor } from '../core';
-import type { QRGeneratorConfig, OverlayData } from './types';
+import type { OverlayData, QRGeneratorConfig } from './types';
 
 export interface OverlayModeResult {
   moduleColor: string;
@@ -47,7 +47,9 @@ export function applyQROverlayMode(
 
   // Type guard for overlayData with colors
   // OverlayData.colors uses object indexing: colors[row][col] = { r, g, b }
-  const overlayWithColors = overlayData as { colors?: { [row: number]: { [col: number]: { r: number; g: number; b: number } } } };
+  const overlayWithColors = overlayData as {
+    colors?: { [row: number]: { [col: number]: { r: number; g: number; b: number } } };
+  };
 
   switch (overlayMode) {
     case 'halftone':
@@ -75,7 +77,11 @@ export function applyQROverlayMode(
         const blendColor = overlayWithColors.colors?.[row]?.[col];
         if (blendColor) {
           const blendAmount = effectiveIntensity / 100;
-          result.moduleColor = blendColors(config.fgColor, `rgb(${blendColor.r},${blendColor.g},${blendColor.b})`, blendAmount);
+          result.moduleColor = blendColors(
+            config.fgColor,
+            `rgb(${blendColor.r},${blendColor.g},${blendColor.b})`,
+            blendAmount
+          );
         }
       }
       break;

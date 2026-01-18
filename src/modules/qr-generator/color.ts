@@ -4,9 +4,9 @@
  */
 
 import { blendColors, parseColor } from '../core';
-import { getContrastRatio } from './utils';
-import type { QRGeneratorConfig } from './types';
 import type { OverlayDataMatrix } from './cache';
+import type { QRGeneratorConfig } from './types';
+import { getContrastRatio } from './utils';
 
 /**
  * Darken a color by a factor (0-1)

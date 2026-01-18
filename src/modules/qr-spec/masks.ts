@@ -1,7 +1,7 @@
 /**
  * QR Mask Functions
  * THE canonical implementation of QR code mask patterns
- * 
+ *
  * Both encoder and decoder should import from here
  */
 
@@ -18,7 +18,7 @@ import { QRMaskPattern } from './types';
  *   5: (i*j) mod 2 + (i*j) mod 3 == 0
  *   6: ((i*j) mod 2 + (i*j) mod 3) mod 2 == 0
  *   7: ((i*j) mod 3 + (i+j) mod 2) mod 2 == 0
- * 
+ *
  * @param maskPattern Mask pattern number (0-7)
  * @returns Function that returns true if the module at (i, j) should be flipped
  */

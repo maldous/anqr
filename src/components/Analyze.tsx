@@ -56,13 +56,13 @@ import { AdUnit } from '@/components/AdUnit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  analyzeQRCode,
+  analyzeQRFromFile,
+  analyzeQRFromUrl,
   type ContentType,
   type ContentTypeDetails,
   type ECCLevel,
   type QRAnalysisResult,
-  analyzeQRCode,
-  analyzeQRFromFile,
-  analyzeQRFromUrl,
 } from '@/modules/qr-analyzer';
 import { createQRInstance } from '@/modules/qr-encoder';
 import { useQRStore } from '@/store/qr-store';
@@ -123,7 +123,13 @@ interface CollapsibleSectionProps {
   badge?: React.ReactNode;
 }
 
-function CollapsibleSection({ title, icon, defaultOpen = true, children, badge }: CollapsibleSectionProps) {
+function CollapsibleSection({
+  title,
+  icon,
+  defaultOpen = true,
+  children,
+  badge,
+}: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -134,9 +140,7 @@ function CollapsibleSection({ title, icon, defaultOpen = true, children, badge }
         className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-            {icon}
-          </div>
+          <div className="p-1.5 rounded-md bg-primary/10 text-primary">{icon}</div>
           <span className="font-medium text-sm">{title}</span>
           {badge}
         </div>
@@ -202,7 +206,8 @@ interface ProgressBarProps {
 
 function ProgressBar({ value, max, label }: ProgressBarProps) {
   const percentage = Math.min((value / max) * 100, 100);
-  const colorClass = percentage > 90 ? 'bg-red-500' : percentage > 70 ? 'bg-amber-500' : 'bg-green-500';
+  const colorClass =
+    percentage > 90 ? 'bg-red-500' : percentage > 70 ? 'bg-amber-500' : 'bg-green-500';
 
   return (
     <div className="space-y-1">
@@ -267,7 +272,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
 
   // Render reproduced QR by generating a fresh, clean QR code from extracted settings
   useEffect(() => {
-    if (!result?.success || !result.payload || !reproducedCanvasRef.current) return;
+    if (!(result?.success && result.payload && reproducedCanvasRef.current)) return;
 
     const canvas = reproducedCanvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -278,7 +283,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
       // Use auto version (0) for clean reproduction - the detected version from artistic QRs
       // is often inaccurate since it's based on pixel measurements of stylized finder patterns
       const ecc: ECCLevel = result.eccLevel || 'M';
-      
+
       // Always use auto-detect (0) for clean reproduction
       // The detected version from image analysis is unreliable for artistic QRs
       const qr = createQRInstance(result.payload, ecc, 0);
@@ -291,7 +296,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
       const quietZoneModules = 4;
       const totalModules = moduleCount + quietZoneModules * 2;
       const modulePx = Math.max(3, Math.floor(targetSize / totalModules));
-      
+
       const size = totalModules * modulePx;
 
       canvas.width = size;
@@ -360,10 +365,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
         const analysisResult = await analyzeQRFromFile(file);
         setResult(analysisResult);
         if (!analysisResult.success) {
-          setError(
-            analysisResult.error ||
-              t('analyze.genericError', 'Failed to analyze QR code')
-          );
+          setError(analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code'));
         }
       } catch (err) {
         setError(
@@ -398,16 +400,11 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
       const analysisResult = await analyzeQRFromUrl(urlInput.trim());
       setResult(analysisResult);
       if (!analysisResult.success) {
-        setError(
-          analysisResult.error ||
-            t('analyze.genericError', 'Failed to analyze QR code')
-        );
+        setError(analysisResult.error || t('analyze.genericError', 'Failed to analyze QR code'));
       }
     } catch (err) {
       const message =
-        err instanceof Error
-          ? err.message
-          : t('analyze.loadFailed', 'Failed to load image');
+        err instanceof Error ? err.message : t('analyze.loadFailed', 'Failed to load image');
       setError(message);
     } finally {
       setIsLoading(false);
@@ -460,10 +457,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
           const analysisResult = analyzeQRCode(canvas);
           setResult(analysisResult);
           if (!analysisResult.success) {
-            setError(
-              analysisResult.error ||
-                t('analyze.noCodeDetected', 'No QR code detected')
-            );
+            setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
           }
           setIsLoading(false);
           setLoadingSource(null);
@@ -477,10 +471,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      if (
-        !errorMessage.includes('cancelled') &&
-        !errorMessage.includes('User cancelled')
-      ) {
+      if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
         setError(t('analyze.cameraFailed', 'Camera capture failed'));
       }
       setIsLoading(false);
@@ -490,7 +481,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
 
   // Import to Generator
   const handleImportToGenerator = useCallback(() => {
-    if (!result?.success || !result.payload) return;
+    if (!(result?.success && result.payload)) return;
 
     // Set payload
     if (result.payload.startsWith('http://') || result.payload.startsWith('https://')) {
@@ -572,7 +563,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
     setError(null);
     setUrlInput('');
     setImported(false);
-    if (originalImageUrl && originalImageUrl.startsWith('blob:')) {
+    if (originalImageUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(originalImageUrl);
     }
     setOriginalImageUrl(null);
@@ -589,15 +580,20 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
     if (contentType.contactName) details.push({ label: 'Name', value: contentType.contactName });
     if (contentType.phoneNumber) details.push({ label: 'Phone', value: contentType.phoneNumber });
     if (contentType.emailAddress) details.push({ label: 'Email', value: contentType.emailAddress });
-    if (contentType.cryptoCurrency) details.push({ label: 'Currency', value: contentType.cryptoCurrency });
-    if (contentType.cryptoAddress) details.push({ label: 'Address', value: contentType.cryptoAddress });
+    if (contentType.cryptoCurrency)
+      details.push({ label: 'Currency', value: contentType.cryptoCurrency });
+    if (contentType.cryptoAddress)
+      details.push({ label: 'Address', value: contentType.cryptoAddress });
     if (contentType.amount) details.push({ label: 'Amount', value: contentType.amount });
 
     // UTM parameters
     if (contentType.hasUtmParams) {
-      if (contentType.utmSource) details.push({ label: 'UTM Source', value: contentType.utmSource });
-      if (contentType.utmMedium) details.push({ label: 'UTM Medium', value: contentType.utmMedium });
-      if (contentType.utmCampaign) details.push({ label: 'UTM Campaign', value: contentType.utmCampaign });
+      if (contentType.utmSource)
+        details.push({ label: 'UTM Source', value: contentType.utmSource });
+      if (contentType.utmMedium)
+        details.push({ label: 'UTM Medium', value: contentType.utmMedium });
+      if (contentType.utmCampaign)
+        details.push({ label: 'UTM Campaign', value: contentType.utmCampaign });
     }
 
     return details;
@@ -637,7 +633,10 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
               {t('analyze.title', 'QR Code Analyzer')}
             </h1>
             <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-              {t('analyze.description', 'Upload or capture a QR code to extract its complete technical specification and import settings to recreate or modify it.')}
+              {t(
+                'analyze.description',
+                'Upload or capture a QR code to extract its complete technical specification and import settings to recreate or modify it.'
+              )}
             </p>
           </div>
 
@@ -653,11 +652,13 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                   className="hidden"
                   disabled={isLoading}
                 />
-                <div className={`flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed transition-all ${
-                  isLoading && loadingSource === 'file'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary hover:bg-primary/5'
-                }`}>
+                <div
+                  className={`flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed transition-all ${
+                    isLoading && loadingSource === 'file'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary hover:bg-primary/5'
+                  }`}
+                >
                   {isLoading && loadingSource === 'file' ? (
                     <Loader2 className="w-10 h-10 text-primary animate-spin" />
                   ) : (
@@ -673,11 +674,13 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
               </label>
 
               {/* URL Input Card */}
-              <div className={`flex flex-col gap-3 p-6 rounded-xl border-2 transition-all ${
-                isLoading && loadingSource === 'url'
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border'
-              }`}>
+              <div
+                className={`flex flex-col gap-3 p-6 rounded-xl border-2 transition-all ${
+                  isLoading && loadingSource === 'url'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border'
+                }`}
+              >
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Link className="w-5 h-5" />
                   <span className="font-medium">{t('analyze.fromUrl', 'From URL')}</span>
@@ -737,7 +740,9 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                 <div className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-border opacity-50">
                   <CameraIcon className="w-10 h-10 text-muted-foreground" />
                   <div className="text-center">
-                    <p className="font-medium text-muted-foreground">{t('analyze.captureCamera', 'Take Photo')}</p>
+                    <p className="font-medium text-muted-foreground">
+                      {t('analyze.captureCamera', 'Take Photo')}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {t('analyze.cameraWebHint', 'Available on mobile app')}
                     </p>
@@ -774,7 +779,8 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                     </p>
                     {result.confidence && (
                       <p className="text-xs opacity-80">
-                        Confidence: <span className="font-medium capitalize">{result.confidence}</span>
+                        Confidence:{' '}
+                        <span className="font-medium capitalize">{result.confidence}</span>
                       </p>
                     )}
                   </div>
@@ -803,7 +809,10 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                       </div>
                       <div className="p-4 space-y-3">
                         <p className="text-sm text-muted-foreground">
-                          {t('analyze.corsExplanation', 'The server hosting this image prevents other websites from accessing it directly (CORS policy). This is a security feature, not an error.')}
+                          {t(
+                            'analyze.corsExplanation',
+                            'The server hosting this image prevents other websites from accessing it directly (CORS policy). This is a security feature, not an error.'
+                          )}
                         </p>
                         <div className="rounded-md bg-muted/50 p-3 space-y-2">
                           <p className="text-sm font-medium flex items-center gap-2">
@@ -811,9 +820,18 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                             {t('analyze.howToFix', 'How to fix this:')}
                           </p>
                           <ol className="text-sm text-muted-foreground space-y-1 ml-6 list-decimal">
-                            <li>{t('analyze.corsStep1', 'Go to the website with the QR code image')}</li>
-                            <li>{t('analyze.corsStep2', 'Right-click the image and select "Save image as..."')}</li>
-                            <li>{t('analyze.corsStep3', 'Come back here and upload the saved file')}</li>
+                            <li>
+                              {t('analyze.corsStep1', 'Go to the website with the QR code image')}
+                            </li>
+                            <li>
+                              {t(
+                                'analyze.corsStep2',
+                                'Right-click the image and select "Save image as..."'
+                              )}
+                            </li>
+                            <li>
+                              {t('analyze.corsStep3', 'Come back here and upload the saved file')}
+                            </li>
                           </ol>
                         </div>
                         <label className="inline-flex items-center gap-2 cursor-pointer">
@@ -926,7 +944,11 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                     {result.contentType && (
                       <CollapsibleSection
                         title="Content Analysis"
-                        icon={CONTENT_TYPE_ICONS[result.contentType.type] || <QrCode className="w-4 h-4" />}
+                        icon={
+                          CONTENT_TYPE_ICONS[result.contentType.type] || (
+                            <QrCode className="w-4 h-4" />
+                          )
+                        }
                         badge={
                           <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
                             {result.contentType.label}
@@ -955,10 +977,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                     )}
 
                     {/* QR Structure */}
-                    <CollapsibleSection
-                      title="QR Structure"
-                      icon={<Grid3x3 className="w-4 h-4" />}
-                    >
+                    <CollapsibleSection title="QR Structure" icon={<Grid3x3 className="w-4 h-4" />}>
                       <div className="space-y-2">
                         <DetailRow
                           label="Version"
@@ -979,7 +998,9 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                                   {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
                                 </div>
                               </div>
-                            ) : '—'
+                            ) : (
+                              '—'
+                            )
                           }
                           icon={<Shield className="w-3.5 h-3.5" />}
                         />
@@ -993,7 +1014,9 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                                   {MASK_DESCRIPTIONS[result.maskPattern]}
                                 </div>
                               </div>
-                            ) : '—'
+                            ) : (
+                              '—'
+                            )
                           }
                           icon={<Layers className="w-3.5 h-3.5" />}
                         />
@@ -1008,7 +1031,8 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                         result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
                           <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
                             <Shield className="w-3 h-3" />
-                            {result.errorsCorrected} error{result.errorsCorrected !== 1 ? 's' : ''} corrected
+                            {result.errorsCorrected} error{result.errorsCorrected !== 1 ? 's' : ''}{' '}
+                            corrected
                           </span>
                         ) : null
                       }
@@ -1017,9 +1041,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                         <DetailRow
                           label="Mode"
                           value={
-                            <span className="capitalize">
-                              {result.encodingMode || 'Unknown'}
-                            </span>
+                            <span className="capitalize">{result.encodingMode || 'Unknown'}</span>
                           }
                           icon={<Type className="w-3.5 h-3.5" />}
                         />
@@ -1034,12 +1056,11 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                           label="RS Error Correction"
                           value={
                             result.errorsCorrected === null ? (
-                              <span className="text-muted-foreground">
-                                Not available
-                              </span>
+                              <span className="text-muted-foreground">Not available</span>
                             ) : result.errorsCorrected > 0 ? (
                               <span className="text-amber-600 dark:text-amber-400 font-medium">
-                                {result.errorsCorrected} error{result.errorsCorrected !== 1 ? 's' : ''} recovered
+                                {result.errorsCorrected} error
+                                {result.errorsCorrected !== 1 ? 's' : ''} recovered
                               </span>
                             ) : (
                               <span className="text-green-600 dark:text-green-400">
@@ -1058,8 +1079,11 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                         title="Colors"
                         icon={<Palette className="w-4 h-4" />}
                         badge={
-                          <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${getContrastBadgeColor(result.detectedColors.contrastRatio)}`}>
-                            {result.detectedColors.contrastRatio.toFixed(1)}:1 ({getContrastLabel(result.detectedColors.contrastRatio)})
+                          <span
+                            className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${getContrastBadgeColor(result.detectedColors.contrastRatio)}`}
+                          >
+                            {result.detectedColors.contrastRatio.toFixed(1)}:1 (
+                            {getContrastLabel(result.detectedColors.contrastRatio)})
                           </span>
                         }
                       >
@@ -1144,13 +1168,15 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                               Detection mismatch
                             </span>
                           ) : (
-                            <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
-                              result.dataCapacity.percentage > 90
-                                ? 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                : result.dataCapacity.percentage > 70
-                                  ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                                  : 'bg-green-500/10 text-green-700 dark:text-green-400'
-                            }`}>
+                            <span
+                              className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+                                result.dataCapacity.percentage > 90
+                                  ? 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                  : result.dataCapacity.percentage > 70
+                                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                                    : 'bg-green-500/10 text-green-700 dark:text-green-400'
+                              }`}
+                            >
                               {result.dataCapacity.percentage}% used
                             </span>
                           )
@@ -1160,7 +1186,11 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                           <div className="space-y-2">
                             <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
                               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                              <span>Payload ({result.dataCapacity.used} bytes) exceeds detected capacity ({result.dataCapacity.total} bytes). Version or ECC detection may be inaccurate.</span>
+                              <span>
+                                Payload ({result.dataCapacity.used} bytes) exceeds detected capacity
+                                ({result.dataCapacity.total} bytes). Version or ECC detection may be
+                                inaccurate.
+                              </span>
                             </div>
                             <DetailRow
                               label="Payload Size"
@@ -1254,13 +1284,14 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                               icon={<QrCode className="w-3.5 h-3.5" />}
                             />
                           )}
-                          {result.imageProperties.estimatedQrSizePx > 0 && result.imageProperties.width > 0 && (
-                            <DetailRow
-                              label="QR Coverage"
-                              value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
-                              icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                            />
-                          )}
+                          {result.imageProperties.estimatedQrSizePx > 0 &&
+                            result.imageProperties.width > 0 && (
+                              <DetailRow
+                                label="QR Coverage"
+                                value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
+                                icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                              />
+                            )}
                         </div>
                       </CollapsibleSection>
                     )}
@@ -1345,11 +1376,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                           </>
                         )}
                       </Button>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        onClick={handleReset}
-                      >
+                      <Button size="lg" variant="outline" onClick={handleReset}>
                         {t('analyze.analyzeAnother', 'Analyze Another')}
                       </Button>
                     </div>
@@ -1360,11 +1387,14 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
           )}
 
           {/* Empty State */}
-          {!result && !error && !isLoading && (
+          {!(result || error || isLoading) && (
             <div className="text-center py-8">
               <QrCode className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">
-                {t('analyze.emptyHint', 'Upload an image, enter a URL, or take a photo to analyze a QR code')}
+                {t(
+                  'analyze.emptyHint',
+                  'Upload an image, enter a URL, or take a photo to analyze a QR code'
+                )}
               </p>
             </div>
           )}

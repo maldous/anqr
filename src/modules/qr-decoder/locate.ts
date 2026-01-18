@@ -3,11 +3,10 @@
  * Detects the 3 finder patterns in a QR code image
  */
 
-import type { Point, FinderPattern } from './types';
-import { pointDistance } from './utils';
-
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import type { FinderPattern } from './types';
+import { pointDistance } from './utils';
 
 interface ScanResult {
   center: number;
@@ -131,10 +130,16 @@ function verifyVertical(
 
     if (state === 2) {
       if (isDark) counts[2]++;
-      else { state = 1; counts[1]++; }
+      else {
+        state = 1;
+        counts[1]++;
+      }
     } else if (state === 1) {
       if (!isDark) counts[1]++;
-      else { state = 0; counts[0]++; }
+      else {
+        state = 0;
+        counts[0]++;
+      }
     } else if (state === 0) {
       if (isDark) counts[0]++;
       else break;
@@ -151,10 +156,16 @@ function verifyVertical(
 
     if (state === 2) {
       if (isDark) counts[2]++;
-      else { state = 3; counts[3]++; }
+      else {
+        state = 3;
+        counts[3]++;
+      }
     } else if (state === 3) {
       if (!isDark) counts[3]++;
-      else { state = 4; counts[4]++; }
+      else {
+        state = 4;
+        counts[4]++;
+      }
     } else if (state === 4) {
       if (isDark) counts[4]++;
       else break;
@@ -181,9 +192,7 @@ function verifyVertical(
 /**
  * Find all finder patterns in the image
  */
-export function findFinderPatterns(
-  imageData: ImageData
-): FinderPattern[] {
+export function findFinderPatterns(imageData: ImageData): FinderPattern[] {
   const { data: pixels, width, height } = imageData;
 
   log('locate', 'Finding finder patterns', { width, height });
@@ -210,9 +219,13 @@ export function findFinderPatterns(
     for (const result of rowResults) {
       // Verify vertically
       const vertical = verifyVertical(
-        pixels, width, height,
-        result.center, y,
-        result.moduleSize, threshold
+        pixels,
+        width,
+        height,
+        result.center,
+        y,
+        result.moduleSize,
+        threshold
       );
 
       if (vertical.valid) {
@@ -236,17 +249,17 @@ export function findFinderPatterns(
 
   // Convert to array and filter by count
   const patterns = Array.from(candidates.values())
-    .filter(p => p.count >= 1)
+    .filter((p) => p.count >= 1)
     .sort((a, b) => b.count - a.count);
 
-  log('locate', 'Found finder pattern candidates', { 
+  log('locate', 'Found finder pattern candidates', {
     count: patterns.length,
-    patterns: patterns.slice(0, 5).map(p => ({
+    patterns: patterns.slice(0, 5).map((p) => ({
       x: p.center.x.toFixed(1),
       y: p.center.y.toFixed(1),
       moduleSize: p.moduleSize.toFixed(2),
-      hitCount: p.count
-    }))
+      hitCount: p.count,
+    })),
   });
 
   return patterns;
@@ -283,12 +296,12 @@ export function selectFinderPatterns(
 
         // Check module sizes are similar
         const avgSize = (p1.moduleSize + p2.moduleSize + p3.moduleSize) / 3;
-        const sizeVariance = (
-          Math.abs(p1.moduleSize - avgSize) +
-          Math.abs(p2.moduleSize - avgSize) +
-          Math.abs(p3.moduleSize - avgSize)
-        ) / avgSize;
-        
+        const sizeVariance =
+          (Math.abs(p1.moduleSize - avgSize) +
+            Math.abs(p2.moduleSize - avgSize) +
+            Math.abs(p3.moduleSize - avgSize)) /
+          avgSize;
+
         if (sizeVariance > 0.3) {
           continue;
         }
@@ -298,7 +311,7 @@ export function selectFinderPatterns(
         if (!ordered) continue;
 
         const [topLeft, topRight, bottomLeft] = ordered;
-        
+
         // Calculate squareness: the two sides from topLeft should be equal
         const topDist = pointDistance(topLeft.center, topRight.center);
         const leftDist = pointDistance(topLeft.center, bottomLeft.center);
@@ -308,11 +321,11 @@ export function selectFinderPatterns(
         // Calculate angle at topLeft - should be close to 90 degrees
         const vecRight = {
           x: topRight.center.x - topLeft.center.x,
-          y: topRight.center.y - topLeft.center.y
+          y: topRight.center.y - topLeft.center.y,
         };
         const vecDown = {
           x: bottomLeft.center.x - topLeft.center.x,
-          y: bottomLeft.center.y - topLeft.center.y
+          y: bottomLeft.center.y - topLeft.center.y,
         };
         const dotProduct = vecRight.x * vecDown.x + vecRight.y * vecDown.y;
         const magRight = Math.sqrt(vecRight.x ** 2 + vecRight.y ** 2);
@@ -327,27 +340,28 @@ export function selectFinderPatterns(
         // - sizeVariance: how consistent module sizes are (lower = better)
         // - hitCount: higher hit count = more confident detection
         // - span: larger spans indicate patterns at actual corners (better)
-        
+
         // Use MINIMUM hit count - the weakest link matters most
         const minHits = Math.min(p1.count, p2.count, p3.count);
-        const totalHits = p1.count + p2.count + p3.count;
-        
+        const _totalHits = p1.count + p2.count + p3.count;
+
         // Penalty for low minimum hit count
         const hitCountPenalty = Math.max(0, (8 - minHits) / 8);
-        
+
         // IMPORTANT: Prefer larger spans - real finder patterns are at the CORNERS
         // of the QR code, not inside it. False positives tend to be inside,
         // resulting in smaller spans.
         // Normalize by module size: avgDist / moduleSize gives us the span in modules
         const spanInModules = avgDist / avgSize;
-        
+
         // Direct bonus for larger spans (larger span = lower score = better)
         // Normalize to reasonable range: span of 22 modules = spanBonus of 0
         // span of 20 modules = spanBonus of 0.09 (small penalty)
         const referenceSpan = 22;
         const spanBonus = (referenceSpan - spanInModules) / referenceSpan;
-        
-        const score = squareness * 5 + angleDev * 5 + sizeVariance + hitCountPenalty * 2 + spanBonus * 2;
+
+        const score =
+          squareness * 5 + angleDev * 5 + sizeVariance + hitCountPenalty * 2 + spanBonus * 2;
 
         log('select', 'Evaluating triplet', {
           topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
@@ -359,7 +373,7 @@ export function selectFinderPatterns(
           angleDev: angleDev.toFixed(3),
           spanInModules: spanInModules.toFixed(1),
           hitCounts: `${p1.count}/${p2.count}/${p3.count}`,
-          score: score.toFixed(3)
+          score: score.toFixed(3),
         });
 
         // Only accept triplets that are reasonably square (< 10% difference)
@@ -369,7 +383,8 @@ export function selectFinderPatterns(
         }
 
         // Only accept triplets with angles close to 90 degrees (< 15 degrees off)
-        if (angleDev > 0.26) { // cos(75°) ≈ 0.26
+        if (angleDev > 0.26) {
+          // cos(75°) ≈ 0.26
           log('select', 'Rejecting: angle not close to 90°', { angleDev: angleDev.toFixed(3) });
           continue;
         }
@@ -378,7 +393,7 @@ export function selectFinderPatterns(
           ordered,
           score,
           squareness,
-          moduleSizeVariance: sizeVariance
+          moduleSizeVariance: sizeVariance,
         });
       }
     }
@@ -399,7 +414,7 @@ export function selectFinderPatterns(
     bottomLeft: { x: best.ordered[2].center.x.toFixed(1), y: best.ordered[2].center.y.toFixed(1) },
     score: best.score.toFixed(3),
     squareness: best.squareness.toFixed(3),
-    candidatesEvaluated: candidates.length
+    candidatesEvaluated: candidates.length,
   });
 
   return best.ordered;
@@ -444,7 +459,7 @@ function orderFinderPatterns(
 /**
  * Given top-left and two other patterns, determine which is top-right vs bottom-left
  * based on cross product (right-hand rule)
- * 
+ *
  * In image coordinates (y increases downward):
  * - If cross product is positive, rotation from a to b (around topLeft) is counterclockwise
  *   meaning a is to the right and b is below → a is top-right, b is bottom-left
@@ -466,7 +481,7 @@ function orderByAngle(
     a: { x: a.center.x.toFixed(1), y: a.center.y.toFixed(1) },
     b: { x: b.center.x.toFixed(1), y: b.center.y.toFixed(1) },
     cross: cross.toFixed(1),
-    aIsTopRight: cross > 0
+    aIsTopRight: cross > 0,
   });
 
   if (cross > 0) {

@@ -2,12 +2,8 @@
  * EMV QR Code Builder
  */
 
-import {
-  EMV_TAGS,
-  MAI_SUBTAGS,
-  POI_METHOD,
-} from './types';
-import { utf8ByteLength, crc16CCITT } from './utils';
+import { EMV_TAGS, MAI_SUBTAGS, POI_METHOD } from './types';
+import { crc16CCITT, utf8ByteLength } from './utils';
 
 /**
  * EMV QR Code Builder class for Merchant-Presented Mode
@@ -77,9 +73,7 @@ export class EMVQRBuilder {
 
   setTransactionAmount(amount: number, currencyCode?: string): this {
     if (amount > 0) {
-      const zeroDecimalCurrencies = new Set([
-        '392', '410', '704', '348', '352', '901', '360',
-      ]);
+      const zeroDecimalCurrencies = new Set(['392', '410', '704', '348', '352', '901', '360']);
       const formattedAmount = zeroDecimalCurrencies.has(currencyCode || '')
         ? Math.round(amount).toString()
         : amount.toFixed(2);
@@ -132,15 +126,24 @@ export class EMVQRBuilder {
     additionalConsumerData?: string;
   }): this {
     const templateFields: Array<{ tag: string; value: string }> = [];
-    if (data.billNumber) templateFields.push({ tag: '01', value: data.billNumber.substring(0, 25) });
-    if (data.mobileNumber) templateFields.push({ tag: '02', value: data.mobileNumber.substring(0, 25) });
-    if (data.storeLabel) templateFields.push({ tag: '03', value: data.storeLabel.substring(0, 25) });
-    if (data.loyaltyNumber) templateFields.push({ tag: '04', value: data.loyaltyNumber.substring(0, 25) });
-    if (data.referenceLabel) templateFields.push({ tag: '05', value: data.referenceLabel.substring(0, 25) });
-    if (data.customerLabel) templateFields.push({ tag: '06', value: data.customerLabel.substring(0, 25) });
-    if (data.terminalLabel) templateFields.push({ tag: '07', value: data.terminalLabel.substring(0, 25) });
-    if (data.purposeOfTransaction) templateFields.push({ tag: '08', value: data.purposeOfTransaction.substring(0, 25) });
-    if (data.additionalConsumerData) templateFields.push({ tag: '09', value: data.additionalConsumerData.substring(0, 3) });
+    if (data.billNumber)
+      templateFields.push({ tag: '01', value: data.billNumber.substring(0, 25) });
+    if (data.mobileNumber)
+      templateFields.push({ tag: '02', value: data.mobileNumber.substring(0, 25) });
+    if (data.storeLabel)
+      templateFields.push({ tag: '03', value: data.storeLabel.substring(0, 25) });
+    if (data.loyaltyNumber)
+      templateFields.push({ tag: '04', value: data.loyaltyNumber.substring(0, 25) });
+    if (data.referenceLabel)
+      templateFields.push({ tag: '05', value: data.referenceLabel.substring(0, 25) });
+    if (data.customerLabel)
+      templateFields.push({ tag: '06', value: data.customerLabel.substring(0, 25) });
+    if (data.terminalLabel)
+      templateFields.push({ tag: '07', value: data.terminalLabel.substring(0, 25) });
+    if (data.purposeOfTransaction)
+      templateFields.push({ tag: '08', value: data.purposeOfTransaction.substring(0, 25) });
+    if (data.additionalConsumerData)
+      templateFields.push({ tag: '09', value: data.additionalConsumerData.substring(0, 3) });
 
     if (templateFields.length > 0) {
       const templateValue = EMVQRBuilder.buildTemplate(templateFields);

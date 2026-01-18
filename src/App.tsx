@@ -1,8 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BusyOverlay } from '@/components/BusyOverlay';
 import { Analyze } from '@/components/Analyze';
+import { BusyOverlay } from '@/components/BusyOverlay';
 import { Gallery } from '@/components/Gallery';
 import { Header } from '@/components/Header';
 import { MobileDivider } from '@/components/MobileDivider';

@@ -3,17 +3,14 @@
  * QR-specific image preprocessing that uses overlay module filters
  */
 
-import type { QRGeneratorConfig } from './types';
 import { applyFilters, copyImageData, type FilterOptions } from '../overlay';
+import type { QRGeneratorConfig } from './types';
 
 /**
  * Preprocess image data with configured filters
  * Uses overlay module's applyFilters (canonical source) with QR config mapping
  */
-export function preprocessImageData(
-  imageData: ImageData,
-  config: QRGeneratorConfig
-): ImageData {
+export function preprocessImageData(imageData: ImageData, config: QRGeneratorConfig): ImageData {
   // Map QR config to FilterOptions
   const filterOptions: FilterOptions = {};
 

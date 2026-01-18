@@ -14,14 +14,14 @@ export interface QRGeneratorConfig {
   fgColor: string;
   bgColor: string;
   transparentBg?: boolean;
-  
+
   // Module styling
   moduleStyle?: 'square' | 'rounded' | 'dots' | 'diamond' | 'star' | 'heart' | 'connected';
   cornerRadius?: number;
   dotRotationDeg?: number;
   moduleGap?: number;
   gapMode?: 'none' | 'inset' | 'stroke' | 'negative_space';
-  
+
   // Finder/alignment patterns
   finderStyle?: string;
   eyeOuterStyle?: string;
@@ -32,7 +32,7 @@ export interface QRGeneratorConfig {
   preserveFinders?: boolean;
   preserveTiming?: boolean;
   preserveAlignment?: boolean;
-  
+
   // Overlay settings
   overlayMode?: string;
   overlayIntensity?: number;
@@ -41,7 +41,7 @@ export interface QRGeneratorConfig {
   ditherStrength?: number;
   blueNoiseSeed?: number;
   blueNoiseTileSize?: number;
-  
+
   // Color settings
   gradient?: GradientConfig;
   perModuleColorMode?: string;
@@ -49,38 +49,38 @@ export interface QRGeneratorConfig {
   paletteMode?: string;
   contrastGuard?: boolean;
   minContrastRatio?: number;
-  
+
   // Frame settings
   frameStyle?: string;
   frameText?: string;
   frameColor?: string;
   frameTextColor?: string;
   frameBorderRadius?: number;
-  
+
   // ECC awareness
   eccAwareEnabled?: boolean;
   eccAwareRiskBudget?: number;
   eccAwareWeightMap?: string;
-  
+
   // Format/version protection
   protectFormatInfo?: boolean;
   protectVersionInfo?: boolean;
-  
+
   // Quiet zone
   quietZoneMinEnforce?: boolean;
-  
+
   // Encoding
   encodingMode?: string;
   maskPattern?: number | 'auto' | undefined;
   characterEncoding?: string;
-  
+
   // Advanced
   logoSize?: number;
   seed?: number;
   moduleJitterPx?: number;
   pixelSnap?: 'none' | 'floor' | 'round' | 'ceil';
   frameIndex?: number;
-  
+
   // Halftone settings
   htDot?: number;
   htCurve?: number;
@@ -89,12 +89,12 @@ export interface QRGeneratorConfig {
   halftoneDotShape?: string;
   brightnessCurve?: number | string;
   duotoneColors?: string[];
-  
+
   // Subpixel settings
   subpixelGrid?: number;
   subpixelCenter?: string;
   subpixelNeutral?: boolean;
-  
+
   // Filter settings
   filterBrightness?: number;
   filterContrast?: number;
@@ -160,7 +160,10 @@ export interface DiffusionKernel {
   divisor: number;
 }
 
-export type CreateCanvasFn = (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>;
+export type CreateCanvasFn = (
+  width: number,
+  height: number
+) => Promise<HTMLCanvasElement | OffscreenCanvas>;
 
 /**
  * Union type for canvas elements (browser or offscreen)

@@ -3,7 +3,7 @@
  * True pixel-level dithering for high-quality overlay integration
  */
 
-import type { QRGeneratorConfig, OverlayData, RGB, RGBWithMeta } from './types';
+import type { QRGeneratorConfig, RGBWithMeta } from './types';
 
 /**
  * Apply true dithering at pixel level
@@ -14,7 +14,7 @@ export function applyTrueDither(
   height: number,
   config: QRGeneratorConfig
 ): { matrix: boolean[][]; colors: (RGBWithMeta | null)[][] } {
-  const strength = (config.ditherStrength ?? 50) / 100;
+  const _strength = (config.ditherStrength ?? 50) / 100;
   const colorMode = config.colorMode || 'bw';
 
   const matrix: boolean[][] = [];

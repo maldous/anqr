@@ -30,7 +30,13 @@ export function applyAnimationPattern(
     case 'pulse': {
       const scale = 1 + Math.sin(progress * Math.PI * 2) * 0.05;
       const offset = ((1 - scale) * canvas.width) / 2;
-      ctx.drawImage(canvas as CanvasImageSource, offset, offset, canvas.width * scale, canvas.height * scale);
+      ctx.drawImage(
+        canvas as CanvasImageSource,
+        offset,
+        offset,
+        canvas.width * scale,
+        canvas.height * scale
+      );
       break;
     }
 
