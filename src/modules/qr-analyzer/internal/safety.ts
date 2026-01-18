@@ -3,7 +3,7 @@
  * Provides QA tools, contrast checking, scan simulation, and readability analysis
  */
 
-import { getContrastRatio, getRelativeLuminance, parseColor } from '../../core';
+import { getContrastRatio, parseColor } from '../../core';
 import { scanCanvas } from './scanner';
 
 export type SafetyMode = 'off' | 'balanced' | 'strict';
@@ -69,9 +69,20 @@ export function analyzeContrast(fgColor: string, bgColor: string): ContrastRepor
     };
   }
   
-  const fgLuminance = getRelativeLuminance(fg.r, fg.g, fg.b);
-  const bgLuminance = getRelativeLuminance(bg.r, bg.g, bg.b);
-  const ratio = getContrastRatio(fgLuminance, bgLuminance);
+  // Calculate luminance using WCAG formula
+  const calcLum = (c: { r: number; g: number; b: number }) => {
+    const rsRGB = c.r / 255;
+    const gsRGB = c.g / 255;
+    const bsRGB = c.b / 255;
+    const r = rsRGB <= 0.03928 ? rsRGB / 12.92 : ((rsRGB + 0.055) / 1.055) ** 2.4;
+    const g = gsRGB <= 0.03928 ? gsRGB / 12.92 : ((gsRGB + 0.055) / 1.055) ** 2.4;
+    const b = bsRGB <= 0.03928 ? bsRGB / 12.92 : ((bsRGB + 0.055) / 1.055) ** 2.4;
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  
+  const fgLuminance = calcLum(fg);
+  const bgLuminance = calcLum(bg);
+  const ratio = getContrastRatio(fg, bg);
   
   return {
     ratio,

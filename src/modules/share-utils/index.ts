@@ -38,31 +38,39 @@ export {
   estimateQRSize,
 } from './data-url';
 
+// Import for default export
+import { parseUrlParams, buildUrlParams, updateBrowserUrl, getShareableUrl } from './url-params';
+import { generateImageEmbed, generateIframeEmbed, generateMarkdownEmbed, generateBBCodeEmbed, convertToImageApiUrl } from './embed';
+import { getSocialShareUrls } from './social';
+import { copyToClipboard, copyImageToClipboard } from './clipboard';
+import { checkShareUrlLength, canvasToDataUrl, canvasToBlob, downloadBlob, estimateQRSize } from './data-url';
+
 // Default export object for backwards compatibility
 export const ShareUtils = {
   // URL params
-  parseUrlParams: async () => (await import('./url-params')).parseUrlParams,
-  buildUrlParams: async () => (await import('./url-params')).buildUrlParams,
-  updateBrowserUrl: async () => (await import('./url-params')).updateBrowserUrl,
-  getShareableUrl: async () => (await import('./url-params')).getShareableUrl,
-  checkShareUrlLength: async () => (await import('./data-url')).checkShareUrlLength,
+  parseUrlParams,
+  buildUrlParams,
+  updateBrowserUrl,
+  getShareableUrl,
+  checkShareUrlLength,
+  convertToImageApiUrl,
 
   // Embed codes
-  generateImageEmbed: async () => (await import('./embed')).generateImageEmbed,
-  generateIframeEmbed: async () => (await import('./embed')).generateIframeEmbed,
-  generateMarkdownEmbed: async () => (await import('./embed')).generateMarkdownEmbed,
-  generateBBCodeEmbed: async () => (await import('./embed')).generateBBCodeEmbed,
+  generateImageEmbed,
+  generateIframeEmbed,
+  generateMarkdownEmbed,
+  generateBBCodeEmbed,
 
   // Social
-  getSocialShareUrls: async () => (await import('./social')).getSocialShareUrls,
-  copyToClipboard: async () => (await import('./clipboard')).copyToClipboard,
-  copyImageToClipboard: async () => (await import('./clipboard')).copyImageToClipboard,
+  getSocialShareUrls,
+  copyToClipboard,
+  copyImageToClipboard,
 
   // Data
-  canvasToDataUrl: async () => (await import('./data-url')).canvasToDataUrl,
-  canvasToBlob: async () => (await import('./data-url')).canvasToBlob,
-  downloadBlob: async () => (await import('./data-url')).downloadBlob,
-  estimateQRSize: async () => (await import('./data-url')).estimateQRSize,
+  canvasToDataUrl,
+  canvasToBlob,
+  downloadBlob,
+  estimateQRSize,
 };
 
 export default ShareUtils;

@@ -32,7 +32,6 @@ export {
   multiplyBlend,
   screenBlend,
   overlayBlend,
-  getRelativeLuminance,
   getContrastRatio,
   isDark,
   getTextColor,
@@ -48,9 +47,36 @@ import {
   hslToRgb,
   rgbToHsl,
   getContrastRatio as coreGetContrastRatio,
-  getRelativeLuminance,
   createSeededRandom as coreCreateSeededRandom,
 } from './core';
+
+/**
+ * Calculate relative luminance from RGB values (WCAG 2.0 formula)
+ */
+export function getRelativeLuminance(rgb: RGB): number {
+  const rsRGB = rgb.r / 255;
+  const gsRGB = rgb.g / 255;
+  const bsRGB = rgb.b / 255;
+  
+  const r = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+  const g = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+  const b = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
+  
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// Internal helper (same as getRelativeLuminance)
+function calcRelativeLuminance(rgb: RGB): number {
+  const rsRGB = rgb.r / 255;
+  const gsRGB = rgb.g / 255;
+  const bsRGB = rgb.b / 255;
+  
+  const r = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+  const g = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+  const b = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
+  
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
 
 // ============================================
 // GRADIENT TYPES (canonical source)
@@ -83,10 +109,7 @@ export function meetsContrastAA(fg: string, bg: string): boolean {
   const fgRgb = parseColor(fg);
   const bgRgb = parseColor(bg);
   if (!fgRgb || !bgRgb) return false;
-  const ratio = coreGetContrastRatio(
-    getRelativeLuminance(fgRgb.r, fgRgb.g, fgRgb.b),
-    getRelativeLuminance(bgRgb.r, bgRgb.g, bgRgb.b)
-  );
+  const ratio = coreGetContrastRatio(fgRgb, bgRgb);
   return ratio >= 4.5;
 }
 
@@ -94,10 +117,7 @@ export function meetsContrastAAA(fg: string, bg: string): boolean {
   const fgRgb = parseColor(fg);
   const bgRgb = parseColor(bg);
   if (!fgRgb || !bgRgb) return false;
-  const ratio = coreGetContrastRatio(
-    getRelativeLuminance(fgRgb.r, fgRgb.g, fgRgb.b),
-    getRelativeLuminance(bgRgb.r, bgRgb.g, bgRgb.b)
-  );
+  const ratio = coreGetContrastRatio(fgRgb, bgRgb);
   return ratio >= 7;
 }
 
@@ -110,9 +130,8 @@ export function adjustForContrast(
   const bgRgb = parseColor(bg);
   if (!fgRgb || !bgRgb) return fg;
   
-  const fgLum = getRelativeLuminance(fgRgb.r, fgRgb.g, fgRgb.b);
-  const bgLum = getRelativeLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
-  const currentRatio = coreGetContrastRatio(fgLum, bgLum);
+  const bgLum = calcRelativeLuminance(bgRgb);
+  const currentRatio = coreGetContrastRatio(fgRgb, bgRgb);
   
   if (currentRatio >= minRatio) return fg;
   
@@ -127,8 +146,7 @@ export function adjustForContrast(
   for (let i = 0; i < 20; i++) {
     newL = Math.max(0, Math.min(100, newL + step));
     const newRgb = hslToRgb(fgHsl.h, fgHsl.s, newL);
-    const newLum = getRelativeLuminance(newRgb.r, newRgb.g, newRgb.b);
-    const newRatio = coreGetContrastRatio(newLum, bgLum);
+    const newRatio = coreGetContrastRatio(newRgb, bgRgb);
     if (newRatio >= minRatio) {
       return `hsl(${fgHsl.h}, ${fgHsl.s}%, ${newL}%)`;
     }

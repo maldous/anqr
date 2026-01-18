@@ -3,7 +3,7 @@
  * Re-exports safety analysis functionality from qr-analyzer module
  */
 
-export {
+import {
   analyzeContrast,
   analyzeMatrixContrast,
   analyzeQR,
@@ -24,5 +24,32 @@ export {
   type SafetyOptions,
   type ScanSimulationResult,
 } from './qr-analyzer';
+
+// Re-export types
+export type {
+  AnalysisIssue,
+  AnalysisResult,
+  AnalysisWarning,
+  ContrastReport,
+  SafetyMode,
+  SafetyOptions,
+  ScanSimulationResult,
+};
+
+// Re-export functions and namespace
+export {
+  analyzeContrast,
+  analyzeMatrixContrast,
+  analyzeQR,
+  applyBlurSimulation,
+  applyNoiseSimulation,
+  calculateSafeIntensity,
+  generateReadabilityHeatmap,
+  SafetyAnalyzer,
+  simulateScan,
+  validateModuleSize,
+  validateOverlayIntensity,
+  validateQuietZone,
+};
 
 export default SafetyAnalyzer;

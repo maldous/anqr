@@ -83,6 +83,7 @@ export {
   type DitherKind,
   type DiffusionKernel,
   type OrderedMatrix,
+  type CropRegion,
   type FitMode,
   type OverlayMode,
   type OverlayType,

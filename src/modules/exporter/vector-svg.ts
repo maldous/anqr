@@ -26,7 +26,7 @@ import { downloadUrl, escapeXml } from './utils';
  */
 function getAlignmentPositions(moduleCount: number): Array<{ row: number; col: number }> {
   const version = Math.round((moduleCount - 17) / 4);
-  return getAlignmentPatternCenters(version, moduleCount);
+  return getAlignmentPatternCenters(version);
 }
 
 /**

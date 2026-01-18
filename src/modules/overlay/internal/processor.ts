@@ -7,11 +7,12 @@
  * - Mobile detection for automatic performance tuning
  */
 
-import { applyDither, type DitherKind, type DiffusionKernel, type OrderedMatrix, type ColorMode } from '../../dither-algorithms';
+import { applyDither } from '../../dither-algorithms';
+import type { DitherKind, DiffusionKernel, OrderedMatrix, ColorMode } from '../../dither-algorithms/types';
 import { applyFilters, type FilterOptions } from './filters';
 
 // Re-export types from dither-algorithms
-export type { DitherKind, DiffusionKernel, OrderedMatrix };
+export type { DitherKind, DiffusionKernel, OrderedMatrix, ColorMode };
 
 // Local types
 export type CropRegion = { x: number; y: number; size: number };
