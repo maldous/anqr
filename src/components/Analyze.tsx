@@ -64,7 +64,7 @@ import {
   analyzeQRFromFile,
   analyzeQRFromUrl,
 } from '@/modules/qr-analyzer';
-import { createQRInstance, type ECCLevel as QRCoreECCLevel } from '@/modules/qr-core';
+import { createQRInstance } from '@/modules/qr-core';
 import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {
@@ -277,7 +277,7 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
       // Generate a fresh, clean QR code using the extracted payload
       // Use auto version (0) for clean reproduction - the detected version from artistic QRs
       // is often inaccurate since it's based on pixel measurements of stylized finder patterns
-      const ecc: QRCoreECCLevel = (result.eccLevel as QRCoreECCLevel) || 'M';
+      const ecc: ECCLevel = result.eccLevel || 'M';
       
       // Always use auto-detect (0) for clean reproduction
       // The detected version from image analysis is unreliable for artistic QRs

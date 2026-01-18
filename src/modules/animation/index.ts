@@ -53,8 +53,8 @@ export {
 } from './internal/patterns';
 
 // Re-export shared pixel-level pattern functions (used by client and server)
+export type { AnimationEasing } from './internal/shared-patterns';
 export {
-  type AnimationEasing,
   applyEasing,
   applyPulsePattern,
   applyWavePattern,

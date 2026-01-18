@@ -1,8 +1,7 @@
 /**
- * @deprecated This file is deprecated. Import from './qr-encoder' instead.
- * This stub will be removed in a future version.
+ * @deprecated Import from './qr-encoder' instead
  */
+import { qrcode, stringToBytes, stringToBytesFuncs } from './qr-encoder/qrcode.ts';
 
-import qrcode, { stringToBytes } from './qr-encoder/index.ts';
-export { qrcode, stringToBytes };
+export { qrcode, stringToBytes, stringToBytesFuncs };
 export default qrcode;

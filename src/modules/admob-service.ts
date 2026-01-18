@@ -1,32 +1,28 @@
 /**
- * AdMob Service
- * @deprecated Import from './platform' instead
- *
- * Handles AdMob ads for native Android/iOS apps via Capacitor.
- * Supports: Banner ads, Interstitial ads, Rewarded interstitial ads
- * This service is only used when running in a native app context.
+ * AdMob Service Module
+ * Re-exports AdMob functionality from platform module
  */
 
 export {
   initializeAdMob,
   isAdMobAvailable,
+  showBannerAd,
+  hideBannerAd,
+  removeBannerAd,
+  showTopBanner,
+  showBottomBanner,
   getBannerHeight,
   getCurrentBannerPosition,
   onBannerHeightChange,
-  showBannerAd,
-  showTopBanner,
-  showBottomBanner,
-  hideBannerAd,
-  removeBannerAd,
   prepareInterstitial,
   showInterstitial,
   prepareRewardedAd,
-  isRewardedAdReady,
   showRewardedAd,
+  isRewardedAdReady,
   prepareAllAds,
   getGenerationCount,
   resetGenerationCount,
   trackGenerationAndShowAd,
   type InterstitialType,
   type RewardedType,
-} from './platform/admob';
+} from './platform/';

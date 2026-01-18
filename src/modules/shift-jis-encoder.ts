@@ -1,11 +1,3 @@
-/**
- * Shift-JIS Encoder Module
- *
- * @deprecated Import from './qr-encoder' instead:
- *   import { createShiftJISEncoder, canEncodeAsShiftJIS } from './qr-encoder';
- */
-
-export { createShiftJISEncoder, canEncodeAsShiftJIS } from './qr-encoder';
-
-import { createShiftJISEncoder, canEncodeAsShiftJIS } from './qr-encoder';
-export default { createShiftJISEncoder, canEncodeAsShiftJIS };
+// DEPRECATED: This file should be deleted.
+// Import from './qr-encoder' instead.
+throw new Error('shift-jis-encoder.ts is deprecated. Import from "./qr-encoder" instead.');

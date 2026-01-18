@@ -1,35 +1,22 @@
 /**
- * QR Scanner/Validator Module
- * @deprecated Import from './qr-analyzer' instead
- *
- * Uses jsQR to decode and validate generated QR codes
+ * QR Scanner Module
+ * Re-exports scanner functionality from qr-analyzer module
  */
 
-import {
-  scanCanvas,
-  scanImageData,
-  scanFile,
-  validateQRCode,
-  validateQRCodeRobust,
-  validateFrames,
-  QRScanner,
-  type ScanResult,
-  type QRLocation,
-  type ValidationResult,
-} from './qr-analyzer/internal/scanner';
-
-// Re-export everything
 export {
   scanCanvas,
-  scanImageData,
   scanFile,
+  scanImageData,
   validateQRCode,
   validateQRCodeRobust,
   validateFrames,
   QRScanner,
-  type ScanResult,
   type QRLocation,
+  type ScanResult,
   type ValidationResult,
-};
+} from './qr-analyzer';
 
-export default QRScanner;
+export default {
+  scanCanvas: (...args: Parameters<typeof import('./qr-analyzer').scanCanvas>) => 
+    import('./qr-analyzer').then(m => m.scanCanvas(...args)),
+};

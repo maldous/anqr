@@ -74,8 +74,8 @@ export type {
   BlueNoiseOptions,
   BlueNoiseResult,
   ColorMode as BlueNoiseColorMode,
-} from './blue-noise-dither';
-export { generateBlueNoiseDithered } from './blue-noise-dither';
+} from './qr-generator/internal/blue-noise';
+export { generateBlueNoiseDithered } from './qr-generator/';
 export type { GradientConfig, HSL, HSLA, RGB, RGBA } from './color-utils';
 // Color utilities (canonical source for color types)
 export {
@@ -116,14 +116,13 @@ export {
 // ============================================
 // UI HELPERS
 // ============================================
-export { CropHandler } from './crop-handler';
-export type { DitherOptions, DitherResult } from './dither-algorithms';
+export { CropHandler } from './overlay';
+export type { DitherOptions, DitherResult } from './dither-algorithms/';
 export {
   applyDither,
   bayerDither,
   blueNoiseDither,
   DitherAlgorithms,
-  default as DitherAlgorithmsDefault,
   errorDiffusion,
   gaussianNoiseDither,
   imageDataToFloat,
@@ -131,8 +130,9 @@ export {
   temporalBlueNoiseDither,
   triangularNoiseDither,
   whiteNoiseDither,
-} from './dither-algorithms';
-export type { ExportConfig, ExportResult, OutputFormat } from './exporter';
+} from './dither-algorithms/';
+export { DitherAlgorithms as DitherAlgorithmsDefault } from './dither-algorithms/';
+export type { ExportConfig, ExportResult, OutputFormat } from './exporter/';
 // ============================================
 // OUTPUT & EXPORT (OutputSection)
 // ============================================
@@ -148,9 +148,9 @@ export {
   exportImage,
   exportSvg,
   exportVectorSvg,
-} from './exporter';
-export { Exporter as ExporterDefault } from './exporter';
-export type { FilterOptions } from './image-filters';
+} from './exporter/';
+export { Exporter as ExporterDefault } from './exporter/';
+export type { FilterOptions } from './overlay';
 export {
   applyColorMode,
   applyFilters,
@@ -162,7 +162,6 @@ export {
   contrast,
   convolve,
   copyImageData,
-  default as ImageFiltersDefault,
   duotone,
   emboss,
   gamma,
@@ -178,15 +177,15 @@ export {
   sharpen,
   sobelEdge,
   threshold,
-} from './image-filters';
-export type { OverlayOptions, ProcessedOverlay } from './overlay-processor';
+} from './overlay';
+export { ImageFilters as ImageFiltersDefault } from './overlay';
+export type { OverlayOptions, ProcessedOverlay } from './overlay';
 // ============================================
 // OVERLAY & DITHERING (OverlaySection)
 // ============================================
 export {
   applyOverlayMode,
   cropImage,
-  default as OverlayProcessorDefault,
   fitImage,
   flipCanvas,
   getOverlayData,
@@ -197,7 +196,8 @@ export {
   OverlayProcessor,
   processOverlay,
   rotateCanvas,
-} from './overlay-processor';
+} from './overlay';
+export { OverlayProcessor as OverlayProcessorDefault } from './overlay';
 export type {
   BizCardParams,
   EPCSepaParams,
@@ -207,12 +207,11 @@ export type {
   PIXParams,
   PromptPayParams,
   UPIParams,
-} from './payload-generators';
+} from './payload-generators/';
 // ============================================
 // PAYLOAD GENERATION (PayloadSection)
 // ============================================
 export {
-  default as PayloadGeneratorsDefault,
   generateAppDeepLink,
   generateBizCard,
   generateCalendarSubscription,
@@ -236,17 +235,17 @@ export {
   generateVCard,
   generateWifi,
   PayloadGenerators,
-} from './payload-generators';
+} from './payload-generators/';
+export { PayloadGenerators as PayloadGeneratorsDefault } from './payload-generators/';
 // ============================================
 // MAIN QR GENERATOR (Orchestrator)
 // ============================================
-export { QRGenerator } from './qr-generator';
-export type { QRLocation, ScanResult, ValidationResult } from './qr-scanner';
+export { QRGenerator } from './qr-generator/';
+export type { QRLocation, ScanResult, ValidationResult } from './qr-analyzer';
 // ============================================
 // QR SCANNER / VALIDATOR
 // ============================================
 export {
-  default as QRScannerDefault,
   QRScanner,
   scanCanvas,
   scanFile,
@@ -254,7 +253,8 @@ export {
   validateFrames,
   validateQRCode,
   validateQRCodeRobust,
-} from './qr-scanner';
+} from './qr-analyzer';
+export { QRScanner as QRScannerDefault } from './qr-analyzer';
 export type {
   AnalysisIssue,
   AnalysisResult,
@@ -263,7 +263,7 @@ export type {
   SafetyMode,
   SafetyOptions,
   ScanSimulationResult,
-} from './safety-analyzer';
+} from './qr-analyzer';
 // ============================================
 // SAFETY & QA (SafetySection)
 // ============================================
@@ -274,15 +274,15 @@ export {
   applyBlurSimulation,
   applyNoiseSimulation,
   calculateSafeIntensity,
-  default as SafetyAnalyzerDefault,
   generateReadabilityHeatmap,
   SafetyAnalyzer,
   simulateScan,
   validateModuleSize,
   validateOverlayIntensity,
   validateQuietZone,
-} from './safety-analyzer';
-export type { EmbedOptions, ShareConfig } from './share-utils';
+} from './qr-analyzer';
+export { SafetyAnalyzer as SafetyAnalyzerDefault } from './qr-analyzer';
+export type { EmbedOptions, ShareConfig } from './share-utils/';
 // ============================================
 // SHARE & EMBED (ShareSection)
 // ============================================
@@ -303,15 +303,15 @@ export {
   parseUrlParams,
   ShareUtils,
   updateBrowserUrl,
-} from './share-utils';
-export { ShareUtils as ShareUtilsDefault } from './share-utils';
+} from './share-utils/';
+export { ShareUtils as ShareUtilsDefault } from './share-utils/';
 export type {
   WatermarkBlend,
   WatermarkKind,
   WatermarkOptions,
   WatermarkPosition,
   WatermarkResult,
-} from './watermark';
+} from './overlay';
 // ============================================
 // WATERMARK (WatermarkSection)
 // ============================================
@@ -321,7 +321,7 @@ export {
   applyWatermark,
   createPatternWatermark,
   createTextWatermark,
-  default as WatermarkDefault,
   getWatermarkPositions,
   Watermark,
-} from './watermark';
+} from './overlay';
+export { Watermark as WatermarkDefault } from './overlay';

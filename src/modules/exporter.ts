@@ -1,11 +1,30 @@
 /**
  * Exporter Module
- * Re-exports from split module files
- *
- * Handles PNG, WebP, GIF, and SVG export with full color support
- * Uses gifenc npm package for high-quality GIF encoding
- * Supports native file saving on Android/iOS via Capacitor
+ * Re-exports export functionality from exporter/ subdirectory
  */
 
-export * from './exporter/index';
-export { default as ExporterModule } from './exporter/index';
+export {
+  downloadImage,
+  downloadSvg,
+  downloadVectorSvg,
+  downloadGif,
+  downloadUrl,
+  exportImage,
+  exportSvg,
+  exportVectorSvg,
+  exportGif,
+  canvasToBlob,
+  Exporter,
+  ExporterModule,
+  type ExportConfig,
+  type ExportResult,
+  type OutputFormat,
+  type PngMetadata,
+  type VectorModuleStyle,
+  type VectorFinderStyle,
+  type VectorAlignmentStyle,
+  type VectorTimingStyle,
+  type VectorSvgConfig,
+} from './exporter/';
+
+export default Exporter;

@@ -1,12 +1,10 @@
 /**
- * Media Store Writer
- * @deprecated Import from './platform' instead
- *
- * Writes files to Android MediaStore via Capacitor plugin
+ * Media Store Writer Module
+ * Re-exports MediaStore functionality from platform module
  */
 
 export {
-  MediaStoreWriter,
   saveBase64ToDocuments,
+  MediaStoreWriter,
   type MediaStoreWriterPlugin,
-} from './platform/media-store';
+} from './platform/';

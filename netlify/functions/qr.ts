@@ -116,7 +116,7 @@ const { GIFEncoder, quantize, applyPalette } = gifenc;
 
 import { decompressFrames, parseGIF } from 'gifuct-js';
 // @ts-expect-error - JS module
-import { QRGenerator } from '../../src/modules/qr-generator.js';
+import { QRGenerator } from '../../src/modules/qr-generator/index.js';
 // Import animation utilities
 import {
   type AnimationEasing,

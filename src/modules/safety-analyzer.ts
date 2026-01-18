@@ -1,53 +1,28 @@
 /**
  * Safety Analyzer Module
- * @deprecated Import from './qr-analyzer' instead
- *
- * Provides QA tools, contrast checking, scan simulation, and readability analysis
+ * Re-exports safety analysis functionality from qr-analyzer module
  */
 
-import {
-  analyzeContrast,
-  analyzeMatrixContrast,
-  validateModuleSize,
-  validateQuietZone,
-  validateOverlayIntensity,
-  calculateSafeIntensity,
-  simulateScan,
-  applyBlurSimulation,
-  applyNoiseSimulation,
-  analyzeQR,
-  generateReadabilityHeatmap,
-  SafetyAnalyzer,
-  type SafetyMode,
-  type SafetyOptions,
-  type AnalysisResult,
-  type AnalysisIssue,
-  type AnalysisWarning,
-  type ContrastReport,
-  type ScanSimulationResult,
-} from './qr-analyzer/internal/safety';
-
-// Re-export everything
 export {
   analyzeContrast,
   analyzeMatrixContrast,
-  validateModuleSize,
-  validateQuietZone,
-  validateOverlayIntensity,
-  calculateSafeIntensity,
-  simulateScan,
+  analyzeQR,
   applyBlurSimulation,
   applyNoiseSimulation,
-  analyzeQR,
+  calculateSafeIntensity,
   generateReadabilityHeatmap,
   SafetyAnalyzer,
-  type SafetyMode,
-  type SafetyOptions,
-  type AnalysisResult,
+  simulateScan,
+  validateModuleSize,
+  validateOverlayIntensity,
+  validateQuietZone,
   type AnalysisIssue,
+  type AnalysisResult,
   type AnalysisWarning,
   type ContrastReport,
+  type SafetyMode,
+  type SafetyOptions,
   type ScanSimulationResult,
-};
+} from './qr-analyzer';
 
 export default SafetyAnalyzer;

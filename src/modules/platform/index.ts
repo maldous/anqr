@@ -1,25 +1,25 @@
 /**
  * Platform Module
- * Capacitor plugin APIs for native Android/iOS functionality
+ * Platform-specific adapters for Capacitor plugins (AdMob, MediaStore)
  */
 
-// AdMob
+// AdMob Service
 export {
   initializeAdMob,
   isAdMobAvailable,
+  showBannerAd,
+  hideBannerAd,
+  removeBannerAd,
+  showTopBanner,
+  showBottomBanner,
   getBannerHeight,
   getCurrentBannerPosition,
   onBannerHeightChange,
-  showBannerAd,
-  showTopBanner,
-  showBottomBanner,
-  hideBannerAd,
-  removeBannerAd,
   prepareInterstitial,
   showInterstitial,
   prepareRewardedAd,
-  isRewardedAdReady,
   showRewardedAd,
+  isRewardedAdReady,
   prepareAllAds,
   getGenerationCount,
   resetGenerationCount,
@@ -28,9 +28,9 @@ export {
   type RewardedType,
 } from './admob';
 
-// Media Store
+// Media Store Writer
 export {
-  MediaStoreWriter,
   saveBase64ToDocuments,
+  MediaStoreWriter,
   type MediaStoreWriterPlugin,
 } from './media-store';
