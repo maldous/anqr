@@ -27,15 +27,16 @@ export {
   roundRect,
 } from './drawing';
 
-// Image filters
+// Image filters (re-exported from overlay module)
 export {
   applyBoxBlur,
-  applyCannyEdge,
-  applyFiltersManual,
   applySharpen,
   applySobelEdge,
-  preprocessImageData,
+  applyCannyEdge,
 } from './filters';
+
+// QR-specific preprocessing
+export { preprocessImageData, preprocessImageData as applyFiltersManual } from './filters-preprocess';
 
 // Color utilities
 export {

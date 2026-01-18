@@ -166,18 +166,29 @@ export function applyAnimationPattern(
 }
 
 // ============================================
-// TEMPORAL DITHERING (from dither-algorithms)
+// TEMPORAL DITHERING
+// Canonical source: dither-algorithms module
+// Re-exported here for consumers that expect temporal functions from animation
 // ============================================
-
-import {
+export {
   calculateTemporalOffset,
   applyTemporalNoiseToCanvas,
+  generateTemporalSequence,
+  isTemporalDitherActive,
+  temporalBlueNoiseDither,
   type TemporalDitherMode,
+} from '../dither-algorithms';
+
+// Import for use in applyTemporalDither wrapper
+import {
+  calculateTemporalOffset as calcOffset,
+  applyTemporalNoiseToCanvas as applyNoise,
+  type TemporalDitherMode as TDMode,
 } from '../dither-algorithms';
 
 /**
  * Apply temporal dithering for animation frames
- * Delegates to dither-algorithms module (canonical source)
+ * @deprecated Use calculateTemporalOffset and applyTemporalNoiseToCanvas directly from dither-algorithms
  */
 export function applyTemporalDither(
   canvas: HTMLCanvasElement | OffscreenCanvas,
@@ -187,8 +198,8 @@ export function applyTemporalDither(
 ): HTMLCanvasElement {
   if (mode === 'off') return canvas as HTMLCanvasElement;
 
-  const offset = calculateTemporalOffset(frameIndex, mode as TemporalDitherMode, seed);
-  return applyTemporalNoiseToCanvas(canvas, offset, 0.02) as HTMLCanvasElement;
+  const offset = calcOffset(frameIndex, mode as TDMode, seed);
+  return applyNoise(canvas, offset, 0.02) as HTMLCanvasElement;
 }
 
 // ============================================
@@ -368,6 +379,16 @@ import {
   applyColorCyclePattern,
 } from './internal/shared-patterns';
 
+// Import temporal dithering for namespace (from dither-algorithms)
+import {
+  calculateTemporalOffset,
+  applyTemporalNoiseToCanvas,
+  generateTemporalSequence,
+  isTemporalDitherActive,
+} from '../dither-algorithms';
+
+// Legacy namespace export (deprecated - use named imports instead)
+// TODO: Remove in next major version
 export const Animation = {
   // Image parsing
   parseAnimatedImage,
@@ -384,7 +405,15 @@ export const Animation = {
 
   // Patterns
   applyAnimationPattern,
+
+  // Temporal dithering (deprecated - use dither-algorithms directly)
   applyTemporalDither,
+
+  // Temporal dithering utilities (delegated to dither-algorithms)
+  calculateTemporalOffset,
+  applyTemporalNoiseToCanvas,
+  generateTemporalSequence,
+  isTemporalDitherActive,
 
   // Interpolation
   interpolateFrames,

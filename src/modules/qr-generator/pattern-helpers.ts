@@ -1,6 +1,7 @@
 /**
  * Pattern Helper Functions
- * Re-exports from qr-spec (canonical source) with QR-generator specific caching
+ * Delegates to qr-spec module (canonical source for QR domain knowledge)
+ * Adds QR-generator specific caching layer for performance
  */
 
 import {

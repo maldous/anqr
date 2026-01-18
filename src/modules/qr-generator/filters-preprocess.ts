@@ -1,120 +1,61 @@
 /**
  * QR Generator Filter Preprocessing
- * Image preprocessing filters for overlay optimization
+ * QR-specific image preprocessing that uses overlay module filters
  */
 
 import type { QRGeneratorConfig } from './types';
+import { applyFilters, copyImageData, type FilterOptions } from '../overlay';
 
 /**
  * Preprocess image data with configured filters
+ * Uses overlay module's applyFilters (canonical source) with QR config mapping
  */
 export function preprocessImageData(
   imageData: ImageData,
   config: QRGeneratorConfig
 ): ImageData {
-  const data = new Uint8ClampedArray(imageData.data);
-  const width = imageData.width;
-  const height = imageData.height;
+  // Map QR config to FilterOptions
+  const filterOptions: FilterOptions = {};
 
-  // Apply brightness
+  // Brightness: QR config uses -1 to 1, overlay uses -100 to 100
   if (config.filterBrightness !== undefined && config.filterBrightness !== 0) {
-    applyBrightness(data, config.filterBrightness);
+    filterOptions.brightness = config.filterBrightness * 100;
   }
 
-  // Apply contrast
+  // Contrast: QR config uses -1 to 1, overlay uses raw value
   if (config.filterContrast !== undefined && config.filterContrast !== 0) {
-    applyContrast(data, config.filterContrast);
+    filterOptions.contrast = config.filterContrast * 255;
   }
 
-  // Apply saturation
+  // Saturation: QR config uses -1 to 1, overlay uses -100 to 100
   if (config.filterSaturation !== undefined && config.filterSaturation !== 0) {
-    applySaturation(data, config.filterSaturation);
+    filterOptions.saturation = config.filterSaturation * 100 + 100;
   }
 
-  // Apply gamma
+  // Gamma: Direct pass-through
   if (config.filterGamma !== undefined && config.filterGamma !== 1) {
-    applyGamma(data, config.filterGamma);
+    filterOptions.gamma = config.filterGamma;
   }
 
-  // Apply invert
+  // Invert: Direct pass-through
   if (config.filterInvert) {
-    applyInvert(data);
+    filterOptions.invert = true;
   }
 
-  // Apply grayscale
+  // Grayscale: Direct pass-through
   if (config.filterGrayscale) {
-    applyGrayscale(data);
+    filterOptions.grayscale = true;
   }
 
-  // Apply threshold
+  // Threshold: QR config uses 0-1, overlay uses 0-255
   if (config.filterThreshold !== undefined && config.filterThreshold > 0) {
-    applyThreshold(data, config.filterThreshold);
+    filterOptions.threshold = config.filterThreshold * 255;
   }
 
-  return new ImageData(data, width, height);
-}
-
-function applyBrightness(data: Uint8ClampedArray, amount: number): void {
-  const factor = amount * 255;
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.max(0, Math.min(255, data[i] + factor));
-    data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + factor));
-    data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + factor));
+  // If no filters to apply, return copy of original
+  if (Object.keys(filterOptions).length === 0) {
+    return copyImageData(imageData);
   }
-}
 
-function applyContrast(data: Uint8ClampedArray, amount: number): void {
-  const factor = (259 * (amount * 255 + 255)) / (255 * (259 - amount * 255));
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.max(0, Math.min(255, factor * (data[i] - 128) + 128));
-    data[i + 1] = Math.max(0, Math.min(255, factor * (data[i + 1] - 128) + 128));
-    data[i + 2] = Math.max(0, Math.min(255, factor * (data[i + 2] - 128) + 128));
-  }
-}
-
-function applySaturation(data: Uint8ClampedArray, amount: number): void {
-  const factor = 1 + amount;
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-    data[i] = Math.max(0, Math.min(255, gray + factor * (data[i] - gray)));
-    data[i + 1] = Math.max(0, Math.min(255, gray + factor * (data[i + 1] - gray)));
-    data[i + 2] = Math.max(0, Math.min(255, gray + factor * (data[i + 2] - gray)));
-  }
-}
-
-function applyGamma(data: Uint8ClampedArray, gamma: number): void {
-  const invGamma = 1 / gamma;
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.pow(data[i] / 255, invGamma) * 255;
-    data[i + 1] = Math.pow(data[i + 1] / 255, invGamma) * 255;
-    data[i + 2] = Math.pow(data[i + 2] / 255, invGamma) * 255;
-  }
-}
-
-function applyInvert(data: Uint8ClampedArray): void {
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = 255 - data[i];
-    data[i + 1] = 255 - data[i + 1];
-    data[i + 2] = 255 - data[i + 2];
-  }
-}
-
-function applyGrayscale(data: Uint8ClampedArray): void {
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-    data[i] = gray;
-    data[i + 1] = gray;
-    data[i + 2] = gray;
-  }
-}
-
-function applyThreshold(data: Uint8ClampedArray, threshold: number): void {
-  const t = threshold * 255;
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-    const value = gray > t ? 255 : 0;
-    data[i] = value;
-    data[i + 1] = value;
-    data[i + 2] = value;
-  }
+  return applyFilters(imageData, filterOptions);
 }
