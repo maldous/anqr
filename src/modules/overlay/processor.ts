@@ -5,7 +5,7 @@
 
 import type { DitherKind as DitherAlgKind, DiffusionKernel, OrderedMatrix } from '../dither-algorithms';
 import { applyDither } from '../dither-algorithms';
-import { applyFilters, copyImageData, type FilterOptions } from './filters';
+import { applyFilters, copyImageData, type FilterOptions } from './overlay-filters';
 
 // Re-export types from dither-algorithms for convenience
 export type DitherKind = DitherAlgKind;

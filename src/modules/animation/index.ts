@@ -47,7 +47,7 @@ export {
   interpolateAnimationFramesWithEasing,
   type AnimationPattern as PatternType,
   type InterpolationMode,
-} from './patterns';
+} from './animation-patterns';
 
 // Shared pixel-level pattern functions (used by client and server)
 export type { AnimationEasing } from './shared-patterns';

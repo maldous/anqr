@@ -1,5 +1,5 @@
 /**
- * Image Filters Module
+ * Overlay Image Filters Module
  * Provides all image processing filters for overlay preprocessing
  * Works with Canvas ImageData for real-time processing
  */

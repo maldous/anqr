@@ -1,5 +1,5 @@
 /**
- * Shared Logger Utility
+ * QR Analyzer Logger Utility
  * Provides consistent logging across QR decoder and analyzer modules
  */
 

@@ -142,7 +142,7 @@ export {
   // Shift-JIS
   createShiftJISEncoder,
   canEncodeAsShiftJIS,
-  // QR Core compat
+  // QR encoder utilities
   createQRInstance,
   generateQR,
   calculateOptimalVersion,
@@ -157,7 +157,6 @@ export {
   isStructuralModule,
   isData,
   isLocked,
-  QRCore,
   type ECCLevel,
   type EncodingMode,
   type MaskPattern,
