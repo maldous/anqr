@@ -4,7 +4,7 @@
  */
 
 import { calculateOptimalVersion, getCompatibleMode } from '../qr-core.ts';
-import qrcode from '../qrcode.mjs';
+import qrcode, { setStringToBytes, resetStringToBytes } from '../qr-encoder/index.ts';
 import { createShiftJISEncoder } from '../shift-jis-encoder.ts';
 
 import { qrMatrixCache } from './cache.js';
@@ -26,15 +26,7 @@ import {
   hasGeometricTransforms,
 } from './overlay.js';
 
-// Store default stringToBytes function for restoration after UTF-8 encoding
-const defaultStringToBytes = (s) => {
-  const bytes = [];
-  for (let i = 0; i < s.length; i += 1) {
-    const c = s.charCodeAt(i);
-    bytes.push(c & 0xff);
-  }
-  return bytes;
-};
+// Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
 export class QRGenerator {
   /**
@@ -114,14 +106,14 @@ export class QRGenerator {
 
     // Handle character encoding (ECI - Extended Channel Interpretation)
     if (characterEncodingConfig === 'utf8') {
-      qrcode.stringToBytes = (s) => {
+      setStringToBytes((s) => {
         const encoder = new TextEncoder();
         return Array.from(encoder.encode(s));
-      };
+      });
     } else if (characterEncodingConfig === 'shift-jis') {
-      qrcode.stringToBytes = createShiftJISEncoder();
+      setStringToBytes(createShiftJISEncoder());
     } else {
-      qrcode.stringToBytes = defaultStringToBytes;
+      resetStringToBytes();
     }
 
     // Map encoding mode to qrcode-generator mode parameter
@@ -146,7 +138,7 @@ export class QRGenerator {
     const moduleCount = qr.getModuleCount();
 
     // Restore stringToBytes to default
-    qrcode.stringToBytes = defaultStringToBytes;
+    resetStringToBytes();
 
     // Cache the result
     qrMatrixCache.set(qrCacheKey, { qr, moduleCount });
