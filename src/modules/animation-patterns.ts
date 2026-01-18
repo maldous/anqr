@@ -3,7 +3,8 @@
  * Generates animated QR code effects from static images
  */
 
-import { seededRandom, hslToRgb as sharedHslToRgb } from './color-utils';
+// Import from canonical core module
+import { createSeededRandom, hslToRgbTuple } from './core';
 
 export type AnimationPattern =
   | 'none'
@@ -16,11 +17,11 @@ export type AnimationPattern =
   | 'color_cycle';
 export type InterpolationMode = 'none' | 'crossfade' | 'morph';
 
-// Use shared color conversion - wrapper to return tuple format for internal use
-function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-  const rgb = sharedHslToRgb(h, s, l);
-  return [rgb.r, rgb.g, rgb.b];
-}
+// Use tuple format from core
+const hslToRgb = hslToRgbTuple;
+
+// Wrapper for seededRandom to maintain same interface
+const seededRandom = createSeededRandom;
 
 /**
  * Generate animation frames using a pattern effect on a static image

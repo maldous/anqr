@@ -1,19 +1,29 @@
 /**
  * Shared Utilities Module
- *
- * Pure functions that can be used by both client (browser) and server (Netlify functions).
- * These have NO DOM dependencies and work with raw data arrays.
- *
- * This eliminates code duplication between:
- * - src/modules/color-utils.ts (client)
- * - src/modules/animation-patterns.ts (client)
- * - netlify/functions/qr.ts (server)
+ * 
+ * DEPRECATED: This module re-exports from core/ for backward compatibility.
+ * New code should import directly from '../core' instead.
+ * 
+ * The pure utility functions (color conversion, math) have been moved to core/.
+ * The animation pattern functions remain here because they operate on pixels
+ * (Uint8ClampedArray) which is considered "platform" code, not pure utilities.
+ * 
+ * Migration guide:
+ * - For color/math utilities: import from '../core'
+ * - For animation patterns: keep importing from here (or move to animation/)
  */
 
-// ============================================
-// TYPES
-// ============================================
+// Re-export pure utilities from core for backward compatibility
+import {
+  hslToRgbTuple,
+  rgbToHslTuple,
+  rgbToGray,
+  createSeededRandom,
+} from '../core';
 
+export { hslToRgbTuple, rgbToHslTuple, rgbToGray, createSeededRandom };
+
+// Types for animation patterns (these are domain-specific, not pure utilities)
 export type AnimationPattern =
   | 'none'
   | 'pulse'
@@ -23,112 +33,6 @@ export type AnimationPattern =
   | 'drift'
   | 'color_cycle';
 export type AnimationEasing = 'linear' | 'ease_in' | 'ease_out' | 'ease_in_out' | 'bounce';
-
-// ============================================
-// COLOR CONVERSION (Tuple format for patterns)
-// ============================================
-
-/**
- * Convert HSL to RGB - returns tuple [r, g, b] (0-255)
- * This is the canonical implementation used by both client and server.
- */
-export function hslToRgbTuple(h: number, s: number, l: number): [number, number, number] {
-  const sNorm = s / 100;
-  const lNorm = l / 100;
-
-  const c = (1 - Math.abs(2 * lNorm - 1)) * sNorm;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = lNorm - c / 2;
-
-  let r: number;
-  let g: number;
-  let b: number;
-
-  if (h < 60) {
-    r = c;
-    g = x;
-    b = 0;
-  } else if (h < 120) {
-    r = x;
-    g = c;
-    b = 0;
-  } else if (h < 180) {
-    r = 0;
-    g = c;
-    b = x;
-  } else if (h < 240) {
-    r = 0;
-    g = x;
-    b = c;
-  } else if (h < 300) {
-    r = x;
-    g = 0;
-    b = c;
-  } else {
-    r = c;
-    g = 0;
-    b = x;
-  }
-
-  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
-}
-
-/**
- * Convert RGB to HSL - returns tuple [h, s, l] (h: 0-360, s: 0-100, l: 0-100)
- */
-export function rgbToHslTuple(r: number, g: number, b: number): [number, number, number] {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  let h = 0;
-  let s = 0;
-  const l = (max + min) / 2;
-
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-    switch (max) {
-      case r:
-        h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
-        break;
-      case g:
-        h = ((b - r) / d + 2) * 60;
-        break;
-      case b:
-        h = ((r - g) / d + 4) * 60;
-        break;
-    }
-  }
-
-  return [h, s * 100, l * 100];
-}
-
-/**
- * Convert RGB to grayscale using luminance formula
- */
-export function rgbToGray(r: number, g: number, b: number): number {
-  return r * 0.299 + g * 0.587 + b * 0.114;
-}
-
-// ============================================
-// RANDOM NUMBER GENERATION
-// ============================================
-
-/**
- * Create a seeded pseudo-random number generator
- * Returns a function that produces deterministic random values 0-1
- */
-export function createSeededRandom(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = Math.sin(s * 9999) * 10000;
-    return s - Math.floor(s);
-  };
-}
 
 // ============================================
 // ANIMATION EASING
@@ -158,7 +62,8 @@ export function applyEasing(progress: number, easing: AnimationEasing): number {
 
 // ============================================
 // ANIMATION PATTERN FUNCTIONS
-// These operate on raw Uint8ClampedArray data
+// These operate on raw Uint8ClampedArray data (pixel operations)
+// Note: These stay in shared/ because they touch pixels - not suitable for core/
 // ============================================
 
 /**
