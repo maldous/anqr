@@ -1,20 +1,18 @@
 /**
- * Animation Patterns Module
- * @deprecated Import from './animation' instead
- *
- * Generates animated QR code effects from static images
+ * @deprecated This file is deprecated. Import from './animation' instead.
+ * This stub will be removed in a future version.
  */
 
 export {
   generatePatternFrames,
-  interpolateFrames,
-  type AnimationPattern,
+  interpolatePatternFrames as interpolateFrames,
+  type PatternType as AnimationPattern,
   type InterpolationMode,
-} from './animation/internal/patterns';
+} from './animation';
+
+import { generatePatternFrames, interpolatePatternFrames as interpolateFrames } from './animation';
 
 export default {
   generatePatternFrames,
   interpolateFrames,
 };
-
-import { generatePatternFrames, interpolateFrames } from './animation/internal/patterns';
