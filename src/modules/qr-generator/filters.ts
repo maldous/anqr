@@ -1,12 +1,16 @@
 /**
  * QR Generator Filters Module
- * Re-exports from split module files
+ * Re-exports filters from overlay module (canonical source) and provides QR-specific preprocessing
  */
 
-export { preprocessImageData } from './filters-preprocess';
-export { applyBoxBlur } from './filters-blur';
-export { applySharpen } from './filters-sharpen';
-export { applySobelEdge, applyCannyEdge } from './filters-edge';
+// Re-export filter functions from overlay module (canonical source)
+// qr-generator delegates all generic image filtering to overlay module
+export {
+  blur as applyBoxBlur,
+  sharpen as applySharpen,
+  sobelEdge as applySobelEdge,
+  cannyEdge as applyCannyEdge,
+} from '../overlay';
 
-// Re-export with legacy names for compatibility
-export { preprocessImageData as applyFiltersManual } from './filters-preprocess';
+// QR-specific preprocessing (kept in qr-generator)
+export { preprocessImageData, preprocessImageData as applyFiltersManual } from './filters-preprocess';

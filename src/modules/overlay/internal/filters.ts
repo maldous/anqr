@@ -558,6 +558,8 @@ export function applyFilters(
 // EXPORT
 // ============================================
 
+// Legacy namespace export (deprecated - use named imports instead)
+// TODO: Remove in next major version
 export const ImageFilters = {
   // Basic
   brightness,
@@ -597,4 +599,4 @@ export const ImageFilters = {
   applyFilters,
 };
 
-export default ImageFilters;
+

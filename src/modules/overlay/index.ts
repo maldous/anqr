@@ -1,9 +1,10 @@
 /**
  * Overlay Module
  * Image processing for QR code overlays
+ * Canonical source for image filters used by overlay and qr-generator modules
  */
 
-// Filters
+// Filters (canonical source - qr-generator imports from here)
 export {
   applyFilters,
   brightness,

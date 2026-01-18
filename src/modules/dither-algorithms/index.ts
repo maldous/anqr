@@ -200,7 +200,8 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
   }
 }
 
-// Export object for backwards compatibility
+// Legacy namespace export (deprecated - use named imports instead)
+// TODO: Remove in next major version
 export const DitherAlgorithms = {
   orderedDither,
   bayerDither,
