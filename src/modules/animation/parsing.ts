@@ -51,6 +51,7 @@ export async function parseWebPFrames(source: ArrayBuffer): Promise<AnimationFra
     decoder.close();
     return frames;
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: Fallback warning for ImageDecoder
     console.warn('ImageDecoder failed, falling back to single frame:', err);
     return parseWebPAsSingleFrame(source);
   }

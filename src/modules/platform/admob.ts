@@ -69,9 +69,11 @@ export async function initializeAdMob(): Promise<boolean> {
 
     adMobAvailable = true;
     adMobInitialized = true;
+    // biome-ignore lint/suspicious/noConsole: AdMob initialization logging
     console.log('[AdMob] Initialized successfully');
     return true;
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob availability logging
     console.log('[AdMob] Not available (web environment or plugin not installed)');
     adMobAvailable = false;
     adMobInitialized = true;
@@ -131,9 +133,11 @@ export async function showBannerAd(position: 'top' | 'bottom' = 'bottom'): Promi
 
     await AdMob.showBanner(bannerOptions);
     currentBannerPosition = position;
+    // biome-ignore lint/suspicious/noConsole: AdMob banner logging
     console.log(`[AdMob] Banner shown at ${position}`);
     return true;
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob error logging
     console.error('[AdMob] Failed to show banner:', err);
     return false;
   }
@@ -164,8 +168,10 @@ export async function hideBannerAd(): Promise<void> {
     currentBannerHeight = 0;
     currentBannerPosition = null;
     bannerHeightCallbacks.forEach((cb) => cb(0));
+    // biome-ignore lint/suspicious/noConsole: AdMob banner logging
     console.log('[AdMob] Banner hidden');
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob error logging
     console.error('[AdMob] Failed to hide banner:', err);
   }
 }
@@ -181,8 +187,10 @@ export async function removeBannerAd(): Promise<void> {
     currentBannerHeight = 0;
     currentBannerPosition = null;
     bannerHeightCallbacks.forEach((cb) => cb(0));
+    // biome-ignore lint/suspicious/noConsole: AdMob banner logging
     console.log('[AdMob] Banner removed');
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob error logging
     console.error('[AdMob] Failed to remove banner:', err);
   }
 }
@@ -204,9 +212,11 @@ export async function prepareInterstitial(
     } else {
       await AdMob.prepareInterstitial({ adId });
     }
+    // biome-ignore lint/suspicious/noConsole: AdMob interstitial logging
     console.log(`[AdMob] ${type} prepared`);
     return true;
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob error logging
     console.error(`[AdMob] Failed to prepare ${type}:`, err);
     return false;
   }
@@ -223,13 +233,16 @@ export async function showInterstitial(
   try {
     if (type === 'rewardedInterstitial') {
       const result = await AdMob.showRewardedInterstitialAd();
+      // biome-ignore lint/suspicious/noConsole: AdMob reward logging
       console.log('[AdMob] Rewarded interstitial shown, reward:', result);
     } else {
       await AdMob.showInterstitial();
+      // biome-ignore lint/suspicious/noConsole: AdMob interstitial logging
       console.log('[AdMob] Interstitial shown');
     }
     return true;
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob error logging
     console.error(`[AdMob] Failed to show ${type}:`, err);
     return false;
   }
@@ -250,9 +263,11 @@ export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promis
     } else {
       await AdMob.prepareRewardedAd({ adId });
     }
+    // biome-ignore lint/suspicious/noConsole: AdMob ad logging
     console.log(`[AdMob] ${type} ad prepared`);
     return true;
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob error logging
     console.error(`[AdMob] Failed to prepare ${type} ad:`, err);
     return false;
   }
@@ -281,6 +296,7 @@ export async function showRewardedAd(
     } else {
       result = await AdMob.showRewardedAd();
     }
+    // biome-ignore lint/suspicious/noConsole: AdMob reward logging
     console.log(`[AdMob] ${type} ad shown, reward:`, result);
     return {
       rewarded: true,
@@ -288,6 +304,7 @@ export async function showRewardedAd(
       type: result?.type,
     };
   } catch (err) {
+    // biome-ignore lint/suspicious/noConsole: AdMob error logging
     console.error(`[AdMob] Failed to show ${type} ad:`, err);
     return { rewarded: false };
   }

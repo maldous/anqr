@@ -19,8 +19,10 @@ import { getAlignmentPositions } from '../qr-spec';
 function log(category: string, message: string, data?: Record<string, unknown>): void {
   const prefix = `[QR-Decoder:${category}]`;
   if (data) {
+    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
     console.log(prefix, message, data);
   } else {
+    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
     console.log(prefix, message);
   }
 }
