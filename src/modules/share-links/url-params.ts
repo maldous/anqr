@@ -1,6 +1,11 @@
 /**
  * Share Links Module - URL Parameters
  * Handles URL parameter encoding/decoding for QR code sharing
+ *
+ * This module provides:
+ * - Server-safe URL parameter parsing (works in Node.js and browser)
+ * - URL parameter serialization for sharing
+ * - Browser URL updates
  */
 
 import { MAX_SHARE_URL_LENGTH, type ShareConfig } from './types';
@@ -19,11 +24,11 @@ function prefixHash(value: string | null): string | undefined {
 }
 
 /**
- * Parse URL parameters into a config object
+ * Server-safe URL parameter parsing
+ * Takes a URLSearchParams object and returns a ShareConfig
+ * This can be used in both browser and Node.js environments
  */
-export function parseUrlParams(): Partial<ShareConfig> {
-  const params = new URLSearchParams(globalThis.location.search);
-
+export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial<ShareConfig> {
   return {
     data: params.get('data') || undefined,
     lang: params.get('lang') || undefined,
@@ -237,7 +242,18 @@ export function parseUrlParams(): Partial<ShareConfig> {
     maxOverlayIntensityM: parseIntParam(params.get('maxIntM')),
     maxOverlayIntensityQ: parseIntParam(params.get('maxIntQ')),
     maxOverlayIntensityH: parseIntParam(params.get('maxIntH')),
+
+    // Module pixel size (for server-side generation)
+    modulePx: parseIntParam(params.get('modulePx')),
   };
+}
+
+/**
+ * Parse URL parameters into a config object (browser-only)
+ * Wraps parseUrlParamsFromSearchParams for browser convenience
+ */
+export function parseUrlParams(): Partial<ShareConfig> {
+  return parseUrlParamsFromSearchParams(new URLSearchParams(globalThis.location.search));
 }
 
 /**

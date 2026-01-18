@@ -218,6 +218,9 @@ export interface ShareConfig {
   maxOverlayIntensityM?: number;
   maxOverlayIntensityQ?: number;
   maxOverlayIntensityH?: number;
+
+  // Module size (for server-side generation)
+  modulePx?: number;
 }
 
 /**
