@@ -3,7 +3,7 @@
  * Provides QR code generation, encoding, and structural element detection
  */
 
-import qrcode from './qrcode.mjs';
+import qrcode from './qr-encoder';
 
 // ============================================
 // TYPES

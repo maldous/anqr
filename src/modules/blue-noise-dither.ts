@@ -8,7 +8,7 @@
  * - Blue noise provides better visual quality than ordered dithering
  */
 
-import qrcode from './qrcode.mjs';
+import qrcode from './qr-encoder';
 
 // Error correction level mapping
 const ECC_MAP: Record<string, 'L' | 'M' | 'Q' | 'H'> = {
