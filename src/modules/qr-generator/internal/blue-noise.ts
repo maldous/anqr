@@ -94,9 +94,10 @@ function sampleBlueNoise(x: number, y: number): number {
 
 /**
  * Check if a pixel position is locked (structural module)
- * Adapts from pixel coordinates to module coordinates
+ * Pixel-level wrapper that converts to module coordinates and delegates to qr-encoder's isStructuralModule
+ * Note: This is NOT a duplicate of qr-spec's isLocked - it has a different signature for pixel operations
  */
-function isLocked(moduleCount: number, x: number, y: number, scale: number): boolean {
+function isLockedPixel(moduleCount: number, x: number, y: number, scale: number): boolean {
   const moduleX = Math.floor(x / scale);
   const moduleY = Math.floor(y / scale);
   const version = getVersionFromModuleCount(moduleCount / scale);
@@ -105,8 +106,10 @@ function isLocked(moduleCount: number, x: number, y: number, scale: number): boo
 
 /**
  * Check if a pixel position is a data point (center of module)
+ * Pixel-level helper for determining if a pixel should preserve QR data values
+ * Note: This is NOT a duplicate of qr-spec's isData - it has a different signature for pixel operations
  */
-function isData(x: number, y: number, scale: number): boolean {
+function isDataPixel(x: number, y: number, scale: number): boolean {
   // Data points are at the center of each module
   const centerOffset = Math.floor(scale / 2);
   return (x % scale) === centerOffset && (y % scale) === centerOffset;
@@ -177,8 +180,8 @@ function blueNoiseDitherFreePoints(
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       // Only process free points (not locked, not data)
-      if (isLocked(moduleCount, x, y, scale)) continue;
-      if (isData(x, y, scale)) continue;
+      if (isLockedPixel(moduleCount, x, y, scale)) continue;
+      if (isDataPixel(x, y, scale)) continue;
 
       const pixel = imageData[y][x];
       const threshold = sampleBlueNoise(x, y);
@@ -303,10 +306,10 @@ export async function generateBlueNoiseDithered(
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
       // Skip locked areas (finder patterns, timing, alignment)
-      if (isLocked(scaledSize, x, y, scale)) continue;
+      if (isLockedPixel(scaledSize, x, y, scale)) continue;
 
       // Skip data points (must preserve QR data)
-      if (isData(x, y, scale)) continue;
+      if (isDataPixel(x, y, scale)) continue;
 
       // Free point: use dithered image data based on intensity
       const pixel = imageData[y][x];
