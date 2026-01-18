@@ -14,6 +14,17 @@
  * - AnimationPattern, AnimationEasing: imported from @/modules/animation
  * - Watermark types: local implementation (server-side only)
  *
+ * Parameter Support Levels:
+ * - [FULL] - Fully implemented server-side, identical to client behavior
+ * - [PARTIAL] - Implemented with limitations (noted in description)
+ * - [CLIENT-ONLY] - Parsed for URL compatibility but not applied server-side
+ * - (unlabeled) - Assume [FULL] support
+ *
+ * Client-Only Parameters (require interactive features):
+ * - QA simulation: qaContrast, qaBlur, qaNoise, qaHeatmap (require scan validation)
+ * - Auto-reduce: autoReduce (requires iterative scan testing)
+ * - Module jitter: jitter (requires per-frame QR regeneration with randomness)
+ *
  * Usage: GET /api/qr?data=https://example.com&size=200&fg=000000&bg=ffffff
  *
  * Parameters:
@@ -118,7 +129,7 @@
  * - startF: Animation start frame (default: 0)
  * - maxF: Animation max frames (default: 0 = auto)
  * - stepF: Animation frame step (default: 1)
- * - jitter: Module jitter in pixels (default: 0)
+ * - jitter: [CLIENT-ONLY] Module jitter in pixels - requires per-frame QR regeneration
  * - webpQ: WebP quality 0-100 (default: 90)
  * - gifColors: GIF palette size 2-256 (default: 256)
  * - metaTitle: PNG metadata title
@@ -129,10 +140,10 @@
  * - metaTime: Include creation time in metadata 0/1 (default: 0)
  * - metaKv: Custom metadata key-value pairs
  * - dpi: Output DPI for PNG (default: 72)
- * - cropEn: Enable overlay cropping 0/1 (default: 0)
- * - cropX: Crop center X 0-1 (default: 0.5)
- * - cropY: Crop center Y 0-1 (default: 0.5)
- * - cropSize: Crop size 0-1 (default: 1)
+ * - cropEn: [FULL] Enable overlay cropping 0/1 (default: 0)
+ * - cropX: [FULL] Crop center X 0-1 (default: 0.5)
+ * - cropY: [FULL] Crop center Y 0-1 (default: 0.5)
+ * - cropSize: [FULL] Crop size 0-1 (default: 1)
  * - ovType: Overlay type - static/gif/apng/webp_anim/video (default: static)
  * - ovFramePick: Overlay frame picking - all/every_n/max_frames/duration_limit (default: all)
  * - gifDelays: Use original GIF frame delays 0/1 (default: 1)
@@ -145,13 +156,13 @@
  * - safeMode: Safety mode - off/balanced/strict (default: off)
  * - safeMinPx: Minimum module size in pixels (default: 2)
  * - safeMinQz: Minimum quiet zone modules (default: 4)
- * - autoVer: Auto-pick QR version 0/1 (default: 1)
- * - autoEcc: Auto-pick ECC level 0/1 (default: 0)
- * - autoReduce: Auto-reduce intensity until scannable 0/1 (default: 0)
- * - qaContrast: Enable contrast check 0/1 (default: 0)
- * - qaBlur: Simulate blur in pixels (default: 0)
- * - qaNoise: Simulate noise level (default: 0)
- * - qaHeatmap: Show readability heatmap 0/1 (default: 0)
+ * - autoVer: [FULL] Auto-pick QR version 0/1 (default: 1) - passed to QRGenerator
+ * - autoEcc: [PARTIAL] Auto-pick ECC level 0/1 (default: 0) - hint only, no iterative testing
+ * - autoReduce: [CLIENT-ONLY] Auto-reduce intensity until scannable 0/1 - requires scan validation loop
+ * - qaContrast: [CLIENT-ONLY] Enable contrast check 0/1 - requires interactive validation
+ * - qaBlur: [CLIENT-ONLY] Simulate blur in pixels - for interactive testing only
+ * - qaNoise: [CLIENT-ONLY] Simulate noise level - for interactive testing only
+ * - qaHeatmap: [CLIENT-ONLY] Show readability heatmap 0/1 - requires canvas overlay UI
  * - bgOver: Background color override hex (without #)
  * - fmtExtra: Extra format output - none/eps/animated_webp (default: none)
  * - fname: Output filename (default: anqr-qrcode)
@@ -223,17 +234,16 @@ const MAX_DATA_LENGTH = 4096;
 const MAX_OVERLAY_BYTES = 5 * 1024 * 1024;
 
 // Maximum decoded overlay pixel count (10 megapixels)
-const _MAX_OVERLAY_PIXELS = 10 * 1024 * 1024;
+const MAX_OVERLAY_PIXELS = 10 * 1024 * 1024;
 
 // Maximum GIF frames and duration
-const _MAX_GIF_FRAMES = 60;
-const _MAX_GIF_DURATION_MS = 10000;
+const MAX_GIF_FRAMES = 60;
+const MAX_GIF_DURATION_MS = 10000;
 
 // Fetch timeout in milliseconds
 const FETCH_TIMEOUT_MS = 10000;
 
-// Maximum redirects for image fetch
-const _MAX_REDIRECTS = 3;
+
 
 // Default dither algorithm for server-side when none specified (fast)
 const DEFAULT_SERVER_DITHER: DitherKind = 'ordered_bayer';
@@ -811,6 +821,206 @@ function generatePatternFramesServer(
 // All pattern functions, color conversion, and seeded random are now imported from shared module
 
 // ============================================
+// OVERLAY PREPROCESSING (server-side)
+// ============================================
+
+/**
+ * Crop overlay image using center-based coordinates (matches client behavior)
+ * @param source Source canvas
+ * @param centerX Crop center X as fraction 0-1
+ * @param centerY Crop center Y as fraction 0-1
+ * @param sizeFraction Crop size as fraction of min(width, height) 0-1
+ */
+function cropOverlayServer(
+  source: Canvas,
+  centerX: number,
+  centerY: number,
+  sizeFraction: number
+): Canvas {
+  const minDim = Math.min(source.width, source.height);
+  const cropSize = Math.round(minDim * Math.max(0.1, Math.min(1, sizeFraction)));
+
+  // Calculate crop region centered at (centerX, centerY)
+  let cropX = Math.round(source.width * centerX - cropSize / 2);
+  let cropY = Math.round(source.height * centerY - cropSize / 2);
+
+  // Clamp to image bounds
+  cropX = Math.max(0, Math.min(source.width - cropSize, cropX));
+  cropY = Math.max(0, Math.min(source.height - cropSize, cropY));
+
+  const result = createCanvas(cropSize, cropSize);
+  const ctx = result.getContext('2d');
+  ctx.drawImage(source, cropX, cropY, cropSize, cropSize, 0, 0, cropSize, cropSize);
+
+  return result;
+}
+
+/**
+ * Apply brightness/contrast/gamma filters to overlay (matches client filters)
+ * Creates a new canvas to avoid mutating the source.
+ */
+function applyOverlayFiltersServer(
+  source: Canvas,
+  options: {
+    brightness?: number; // -100 to 100
+    contrast?: number; // -100 to 100
+    gamma?: number; // 0.1 to 3
+    saturation?: number; // -100 to 100
+    hue?: number; // degrees
+    invert?: boolean;
+    blur?: number; // pixels (limited server-side)
+  }
+): Canvas {
+  const result = createCanvas(source.width, source.height);
+  const resultCtx = result.getContext('2d');
+  resultCtx.drawImage(source, 0, 0);
+  
+  const imageData = resultCtx.getImageData(0, 0, result.width, result.height);
+  const data = imageData.data;
+
+  const brightness = (options.brightness ?? 0) / 100;
+  const contrast = (options.contrast ?? 0) / 100;
+  const gamma = options.gamma ?? 1;
+  const saturation = (options.saturation ?? 0) / 100;
+  const hue = (options.hue ?? 0) * (Math.PI / 180);
+  const invert = options.invert ?? false;
+
+  // Pre-calculate contrast factor
+  const contrastFactor = (1 + contrast) / (1 - contrast * 0.5);
+
+  for (let i = 0; i < data.length; i += 4) {
+    let r = data[i] / 255;
+    let g = data[i + 1] / 255;
+    let b = data[i + 2] / 255;
+
+    // Invert
+    if (invert) {
+      r = 1 - r;
+      g = 1 - g;
+      b = 1 - b;
+    }
+
+    // Brightness
+    r += brightness;
+    g += brightness;
+    b += brightness;
+
+    // Contrast
+    r = (r - 0.5) * contrastFactor + 0.5;
+    g = (g - 0.5) * contrastFactor + 0.5;
+    b = (b - 0.5) * contrastFactor + 0.5;
+
+    // Gamma
+    if (gamma !== 1) {
+      r = Math.max(0, r) ** (1 / gamma);
+      g = Math.max(0, g) ** (1 / gamma);
+      b = Math.max(0, b) ** (1 / gamma);
+    }
+
+    // Saturation and hue (convert to HSL, adjust, convert back)
+    if (saturation !== 0 || hue !== 0) {
+      // RGB to HSL
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      let s = 0;
+      const l = (max + min) / 2;
+
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+        switch (max) {
+          case r:
+            h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            break;
+          case g:
+            h = ((b - r) / d + 2) / 6;
+            break;
+          case b:
+            h = ((r - g) / d + 4) / 6;
+            break;
+        }
+      }
+
+      // Apply hue rotation
+      h += hue / (2 * Math.PI);
+      if (h > 1) h -= 1;
+      if (h < 0) h += 1;
+
+      // Apply saturation
+      s = Math.max(0, Math.min(1, s * (1 + saturation)));
+
+      // HSL to RGB
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1 / 6) return p + (q - p) * 6 * t;
+          if (t < 1 / 2) return q;
+          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+      }
+    }
+
+    // Clamp and write back
+    data[i] = Math.round(Math.max(0, Math.min(1, r)) * 255);
+    data[i + 1] = Math.round(Math.max(0, Math.min(1, g)) * 255);
+    data[i + 2] = Math.round(Math.max(0, Math.min(1, b)) * 255);
+  }
+
+  resultCtx.putImageData(imageData, 0, 0);
+  return result;
+}
+
+/**
+ * Flip overlay canvas horizontally and/or vertically
+ */
+function flipOverlayServer(source: Canvas, horizontal: boolean, vertical: boolean): Canvas {
+  if (!(horizontal || vertical)) return source;
+
+  const result = createCanvas(source.width, source.height);
+  const ctx = result.getContext('2d');
+
+  ctx.translate(horizontal ? source.width : 0, vertical ? source.height : 0);
+  ctx.scale(horizontal ? -1 : 1, vertical ? -1 : 1);
+  ctx.drawImage(source, 0, 0);
+
+  return result;
+}
+
+/**
+ * Rotate overlay canvas by degrees
+ */
+function rotateOverlayServer(source: Canvas, degrees: number): Canvas {
+  if (degrees === 0) return source;
+
+  const radians = (degrees * Math.PI) / 180;
+  const sin = Math.abs(Math.sin(radians));
+  const cos = Math.abs(Math.cos(radians));
+
+  const newWidth = Math.round(source.width * cos + source.height * sin);
+  const newHeight = Math.round(source.width * sin + source.height * cos);
+
+  const result = createCanvas(newWidth, newHeight);
+  const ctx = result.getContext('2d');
+
+  ctx.translate(newWidth / 2, newHeight / 2);
+  ctx.rotate(radians);
+  ctx.drawImage(source, -source.width / 2, -source.height / 2);
+
+  return result;
+}
+
+// ============================================
 // GIF FRAME PARSING (server-side)
 // ============================================
 
@@ -842,6 +1052,20 @@ function parseGifFramesServer(arrayBuffer: ArrayBuffer): ServerAnimationFrame[] 
     throw new Error('No frames found in GIF');
   }
 
+  // Limit frame count to prevent excessive processing
+  const framesToProcess = frames.slice(0, MAX_GIF_FRAMES);
+  if (frames.length > MAX_GIF_FRAMES) {
+    console.warn(`GIF has ${frames.length} frames, limiting to ${MAX_GIF_FRAMES}`);
+  }
+
+  // Calculate total duration and warn if excessive
+  const totalDuration = framesToProcess.reduce((sum, f) => sum + f.delay * 10, 0);
+  if (totalDuration > MAX_GIF_DURATION_MS) {
+    console.warn(
+      `GIF duration ${totalDuration}ms exceeds recommended max ${MAX_GIF_DURATION_MS}ms`
+    );
+  }
+
   const { width, height } = gif.lsd;
 
   // Create a persistent canvas for compositing frames
@@ -850,7 +1074,7 @@ function parseGifFramesServer(arrayBuffer: ArrayBuffer): ServerAnimationFrame[] 
 
   const animationFrames: ServerAnimationFrame[] = [];
 
-  for (const frame of frames) {
+  for (const frame of framesToProcess) {
     const { dims, patch, disposalType, delay } = frame;
 
     // Create ImageData from patch
@@ -993,7 +1217,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
         'User-Agent': 'ANQR-QR-Generator/1.0',
       },
       signal: controller.signal,
-      redirect: 'follow',
+      redirect: 'follow', // Follows up to 20 redirects by default; MAX_REDIRECTS is for documentation
     });
 
     clearTimeout(timeoutId);
@@ -1080,6 +1304,13 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     // Validate image dimensions
     if (!(img.width && img.height) || img.width <= 0 || img.height <= 0) {
       console.error(`Invalid image dimensions: ${img.width}x${img.height}`);
+      return null;
+    }
+
+    // Validate pixel count to prevent memory issues
+    const pixelCount = img.width * img.height;
+    if (pixelCount > MAX_OVERLAY_PIXELS) {
+      console.error(`Overlay image too large: ${pixelCount} pixels (max: ${MAX_OVERLAY_PIXELS})`);
       return null;
     }
 
@@ -1286,7 +1517,7 @@ async function handler(request: Request) {
   const palette = paletteParam
     ? paletteParam.split(',').map((c) => (c.startsWith('#') ? c : `#${c}`))
     : undefined;
-  const _paletteMode = params.get('paletteMode') || 'position';
+  // paletteMode is parsed below in the "Render palette" section
 
   // Safety per-ECC limits (support both short and long param names)
   const maxOverlayIntensityL = Number.parseInt(
@@ -1309,10 +1540,7 @@ async function handler(request: Request) {
   // Output format (may be overridden if overlay is animated GIF)
   // Default to GIF to align with client default (was PNG, causing embed/share mismatch)
   let outputFormat = (params.get('format') || DEFAULT_OUTPUT_FORMAT) as OutputFormat;
-  const _outputQuality = Math.max(
-    0,
-    Math.min(1, Number.parseFloat(params.get('quality') || '0.9'))
-  );
+  const outputQuality = Math.max(0, Math.min(1, Number.parseFloat(params.get('quality') || '0.9')));
   const outputDpi = Math.max(1, Math.min(1200, Number.parseInt(params.get('dpi') || '72', 10)));
 
   // Watermark
@@ -1369,7 +1597,7 @@ async function handler(request: Request) {
   const metaDescription = params.get('metaDesc') || undefined;
   const metaLicense = params.get('metaLic') || undefined;
   const metaCreationTime = params.get('metaTime') === '1';
-  const _metaCustomKv = params.get('metaKv') || undefined;
+  const metaCustomKv = params.get('metaKv') || undefined;
 
   // Crop parameters (missing from server previously)
   const cropEnabled = params.get('cropEn') === '1';
@@ -1400,11 +1628,24 @@ async function handler(request: Request) {
   const autoPickEcc = params.get('autoEcc') === '1';
   const autoReduceIntensity = params.get('autoReduce') === '1';
 
-  // QA parameters (client-only simulation, but parse for completeness)
-  const _qaContrastCheck = params.get('qaContrast') === '1';
-  const _qaSimulateBlur = Number.parseFloat(params.get('qaBlur') || '0');
-  const _qaSimulateNoise = Number.parseInt(params.get('qaNoise') || '0', 10);
-  const _qaShowHeatmap = params.get('qaHeatmap') === '1';
+  // QA parameters - CLIENT-ONLY: These require interactive canvas manipulation
+  // and scan validation loops that aren't feasible server-side.
+  // Parsed for URL compatibility but not applied.
+  const qaContrastCheckClientOnly = params.get('qaContrast') === '1';
+  const qaSimulateBlurClientOnly = Number.parseFloat(params.get('qaBlur') || '0');
+  const qaSimulateNoiseClientOnly = Number.parseInt(params.get('qaNoise') || '0', 10);
+  const qaShowHeatmapClientOnly = params.get('qaHeatmap') === '1';
+  // Log if QA params are requested but can't be applied
+  if (
+    qaContrastCheckClientOnly ||
+    qaSimulateBlurClientOnly ||
+    qaSimulateNoiseClientOnly ||
+    qaShowHeatmapClientOnly
+  ) {
+    console.info(
+      'QA simulation params requested but are client-only (qaContrast, qaBlur, qaNoise, qaHeatmap)'
+    );
+  }
 
   // Output extras (missing from server previously)
   const bgOverride = params.get('bgOver') ? `#${params.get('bgOver')}` : undefined;
@@ -1606,13 +1847,57 @@ async function handler(request: Request) {
     if (overlayUrl && overlayMode) {
       const fetchedImage = await fetchImageWithBuffer(overlayUrl);
       if (fetchedImage) {
-        overlayCanvas = fetchedImage.canvas;
+        // Pre-calculate filter flags once
+        const hasFilters =
+          overlayBrightness !== 0 ||
+          overlayContrast !== 0 ||
+          overlayGamma !== 1 ||
+          overlaySaturation !== 0 ||
+          overlayHueRotate !== 0 ||
+          overlayInvert;
+
+        const filterOptions = {
+          brightness: overlayBrightness,
+          contrast: overlayContrast,
+          gamma: overlayGamma,
+          saturation: overlaySaturation,
+          hue: overlayHueRotate,
+          invert: overlayInvert,
+        };
+
+        // Helper to apply all preprocessing to a canvas
+        const preprocessCanvas = (canvas: Canvas): Canvas => {
+          let processed = canvas;
+          if (cropEnabled && cropSize < 1) {
+            processed = cropOverlayServer(processed, cropX, cropY, cropSize);
+          }
+          if (overlayRotate !== 0) {
+            processed = rotateOverlayServer(processed, overlayRotate);
+          }
+          if (overlayFlipX || overlayFlipY) {
+            processed = flipOverlayServer(processed, overlayFlipX, overlayFlipY);
+          }
+          if (hasFilters) {
+            processed = applyOverlayFiltersServer(processed, filterOptions);
+          }
+          return processed;
+        };
 
         // Auto-detect animated GIF overlay and switch output format to GIF
         if (fetchedImage.isAnimatedGif) {
           outputFormat = 'gif';
           hasAnimatedOverlay = true;
-          overlayFrames = parseGifFramesServer(fetchedImage.arrayBuffer);
+          // Parse frames and apply preprocessing to each
+          const rawFrames = parseGifFramesServer(fetchedImage.arrayBuffer);
+          overlayFrames = rawFrames.map((frame) => ({
+            ...frame,
+            canvas: preprocessCanvas(frame.canvas),
+          }));
+          // For animated GIFs, use the first preprocessed frame as the static overlay
+          overlayCanvas = overlayFrames[0]?.canvas ?? preprocessCanvas(fetchedImage.canvas);
+        } else {
+          // Static overlay - preprocess once
+          overlayCanvas = preprocessCanvas(fetchedImage.canvas);
         }
       }
     }
@@ -1654,7 +1939,13 @@ async function handler(request: Request) {
 
     // Build metadata object
     const metadata: PngMetadata | undefined =
-      metaTitle || metaAuthor || metaCopyright || metaDescription || metaLicense || metaCreationTime
+      metaTitle ||
+      metaAuthor ||
+      metaCopyright ||
+      metaDescription ||
+      metaLicense ||
+      metaCreationTime ||
+      metaCustomKv
         ? {
             title: metaTitle,
             author: metaAuthor,
@@ -1662,6 +1953,9 @@ async function handler(request: Request) {
             description: metaDescription,
             creationTime: metaCreationTime ? new Date().toISOString() : undefined,
             software: 'ANQR - anqr.link',
+            // Custom key-value pairs are stored in description if provided
+            // Format: key1=value1;key2=value2
+            ...(metaCustomKv && !metaDescription ? { description: metaCustomKv } : {}),
           }
         : undefined;
 
@@ -1734,10 +2028,13 @@ async function handler(request: Request) {
         contentType = 'image/gif';
         break;
 
-      case 'webp':
-        outputBuffer = outputCanvas.toBuffer('image/webp', webpQuality);
+      case 'webp': {
+        // Use webpQuality (0-100) or outputQuality (0-1) if specified
+        const finalWebpQuality = webpQuality !== 90 ? webpQuality : Math.round(outputQuality * 100);
+        outputBuffer = outputCanvas.toBuffer('image/webp', finalWebpQuality);
         contentType = 'image/webp';
         break;
+      }
       default:
         outputBuffer = outputCanvas.toBuffer('image/png');
         // Embed metadata and DPI into PNG
