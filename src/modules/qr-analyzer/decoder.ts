@@ -4,10 +4,39 @@
 
 import { decodeQR } from '../qr-decoder';
 import type { ECCLevel, QRAnalysisResult } from './types';
-import { detectContentTypeWrapper } from './content-detection';
+import { detectContentType } from './content';
 
 // Shared logger
 import { qrAnalyzerLog as log } from '../shared';
+import type { ContentType } from './types';
+
+/**
+ * Format content type as human-readable label
+ */
+function formatContentTypeLabel(type: ContentType): string {
+  const labels: Record<ContentType, string> = {
+    url: 'URL',
+    wifi: 'WiFi Network',
+    vcard: 'vCard Contact',
+    mecard: 'MeCard Contact',
+    email: 'Email',
+    tel: 'Phone Number',
+    sms: 'SMS',
+    geo: 'Geographic Location',
+    crypto_bitcoin: 'Bitcoin Payment',
+    crypto_ethereum: 'Ethereum Payment',
+    crypto_other: 'Cryptocurrency',
+    epc_sepa: 'SEPA Payment',
+    upi: 'UPI Payment',
+    emv_qr: 'EMV Payment QR',
+    swiss_qr_bill: 'Swiss QR Bill',
+    calendar_event: 'Calendar Event',
+    otp_auth: '2FA/OTP Setup',
+    plain_text: 'Plain Text',
+    unknown: 'Unknown',
+  };
+  return labels[type] || 'Unknown';
+}
 
 interface QRLocationCorners {
   topLeftCorner: { x: number; y: number };
@@ -103,7 +132,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     });
 
     // Detect content type
-    const contentType = detectContentTypeWrapper(code.data!);
+    const type = detectContentType(code.data!);
+    const contentType = { type, label: formatContentTypeLabel(type) };
 
     // Analyze colors from the QR region
     const detectedColors = analyzeColors(imageData, location);
