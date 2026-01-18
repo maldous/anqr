@@ -28,6 +28,7 @@ import { getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 import { renderModules } from './render-loop';
 import { generateScaledQR } from './scaled-render';
 import type { QRGeneratorConfig, QRMatrixResult } from './types';
+import { validateColor } from './utils';
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
@@ -309,9 +310,12 @@ export class QRGenerator {
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     ctx.imageSmoothingEnabled = false;
 
+    // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
+    const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
+
     // Draw background
     if (!config.transparentBg) {
-      ctx.fillStyle = config.bgColor;
+      ctx.fillStyle = effectiveBgColor;
       ctx.fillRect(0, 0, size, size);
     }
 

@@ -14,6 +14,7 @@ import {
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
+import { validateColor } from './utils';
 
 interface PixelColor extends RGB {
   halftone?: boolean;
@@ -67,9 +68,15 @@ export async function generateScaledQR(
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
   ctx.imageSmoothingEnabled = false;
 
+  // IMPORTANT: Ensure bgColor has a fallback - undefined fillStyle becomes black
+  // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
+  const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
+  const effectiveFgColor = validateColor(config.fgColor, '#000000');
+  const needsExplicitLightModules = config.transparentBg === true;
+
   // Draw background
   if (!config.transparentBg) {
-    ctx.fillStyle = config.bgColor;
+    ctx.fillStyle = effectiveBgColor;
     ctx.fillRect(0, 0, size, size);
   }
 
@@ -89,8 +96,9 @@ export async function generateScaledQR(
       const isDark = matrix[y]?.[x];
       const color = colors[y]?.[x] as PixelColor | undefined;
 
-      // Skip light pixels unless doing color rendering
-      if (!(isDark || useColorRendering)) continue;
+      // Skip light pixels unless doing color rendering or transparent background
+      // (transparent bg requires explicit light module drawing)
+      if (!(isDark || useColorRendering || needsExplicitLightModules)) continue;
 
       const dx = marginPx + x * subPixelSize;
       const dy = marginPx + y * subPixelSize;
@@ -99,9 +107,9 @@ export async function generateScaledQR(
         // Check for halftone rendering flag
         if (color.halftone && isDark) {
           // Draw halftone dot
-          ctx.fillStyle = config.bgColor;
+          ctx.fillStyle = effectiveBgColor;
           ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-          ctx.fillStyle = useGradient && gradientFill ? gradientFill : config.fgColor;
+          ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
           const dotSize = subPixelSize * (color.sizeRatio || 1);
           const offset = (subPixelSize - dotSize) / 2;
           ctx.fillRect(dx + offset, dy + offset, dotSize, dotSize);
@@ -112,7 +120,14 @@ export async function generateScaledQR(
         }
       } else if (isDark) {
         // B&W mode: use foreground color (with optional gradient)
-        ctx.fillStyle = useGradient && gradientFill ? gradientFill : config.fgColor;
+        ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+        ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+      } else {
+        // Light module: draw with background color
+        // This is needed when useColorRendering is true but no color data exists,
+        // or when transparentBg is true (background fill was skipped)
+        // IMPORTANT: Must explicitly draw to make QR visible on dark backgrounds
+        ctx.fillStyle = effectiveBgColor;
         ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
       }
     }
@@ -139,9 +154,11 @@ export async function generateScaledQR(
   }
 
   // UNIFIED: Draw styled alignment patterns (for version 2+)
-  // Note: moduleCount is the base QR module count (not scaled)
+  // Only draw alignment patterns separately if preserveAlignment is true OR there's no overlay
+  // When preserveAlignment=false with overlay, alignment modules were already rendered with overlay effects
+  const shouldDrawAlignmentFirst = config.preserveAlignment !== false || !overlayCanvas;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
-  if (version >= 2) {
+  if (version >= 2 && shouldDrawAlignmentFirst) {
     const alignPositions = getAlignmentPositionsCached(version, moduleCount);
     const alignmentStyle = config.alignmentStyle || 'match_finder';
     for (const pos of alignPositions) {

@@ -5,6 +5,7 @@
 
 import { drawModule, roundRect } from './drawing-primitives';
 import type { QRGeneratorConfig } from './types';
+import { validateColor } from './utils';
 
 /**
  * Draw a complete finder pattern at the specified position
@@ -18,9 +19,11 @@ export function drawFinderPatternComplete(
 ): void {
   const outerStyle = config.eyeOuterStyle || config.finderStyle || 'square';
   const innerStyle = config.eyeInnerStyle || config.finderStyle || 'square';
-  const eyeScale = config.eyeScale ?? 1;
-  const fgColor = config.fgColor;
-  const bgColor = config.bgColor;
+  // eyeScale is stored as percentage (100 = 100%) in the store, convert to decimal multiplier
+  const eyeScale = (config.eyeScale ?? 100) / 100;
+  // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
+  const fgColor = validateColor(config.fgColor, '#000000');
+  const bgColor = validateColor(config.bgColor, '#ffffff');
 
   const outerSize = 7 * moduleSize;
   const middleSize = 5 * moduleSize;
@@ -102,8 +105,9 @@ export function drawAlignmentPattern(
   style: string,
   config: QRGeneratorConfig
 ): void {
-  const fgColor = config.fgColor;
-  const bgColor = config.bgColor;
+  // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
+  const fgColor = validateColor(config.fgColor, '#000000');
+  const bgColor = validateColor(config.bgColor, '#ffffff');
 
   // Alignment pattern is 5x5 modules
   const outerSize = 5 * moduleSize;

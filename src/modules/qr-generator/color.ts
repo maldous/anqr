@@ -3,7 +3,7 @@
  * Color manipulation and per-module color effects
  */
 
-import { blendColors, parseColor } from '../core';
+import { blendColors, getRelativeLuminance, parseColor } from '../core';
 import type { OverlayDataMatrix } from './cache';
 import type { QRGeneratorConfig } from './types';
 import { getContrastRatio } from './utils';
@@ -133,6 +133,7 @@ export function applyPerModuleColor(
 
 /**
  * Ensure module color has sufficient contrast with background
+ * Lightens on dark backgrounds, darkens on light backgrounds
  */
 export function ensureContrast(moduleColor: string, bgColor: string, minRatio: number): string {
   try {
@@ -141,28 +142,50 @@ export function ensureContrast(moduleColor: string, bgColor: string, minRatio: n
       return moduleColor;
     }
 
-    // Darken the module color to improve contrast
     const parsed = parseColor(moduleColor);
     if (!parsed) return moduleColor;
-    let factor = 0.9;
+
+    // Determine if background is dark (luminance < 0.179 threshold from WCAG)
+    const bgLuminance = getRelativeLuminance(bgColor);
+    const bgIsDark = bgLuminance < 0.179;
+
     let newColor = moduleColor;
 
-    // Iteratively darken until we meet contrast ratio
-    for (let i = 0; i < 10; i++) {
-      const r = Math.round(parsed.r * factor);
-      const g = Math.round(parsed.g * factor);
-      const b = Math.round(parsed.b * factor);
-      newColor = `rgb(${r},${g},${b})`;
+    if (bgIsDark) {
+      // Background is dark: lighten the foreground to increase contrast
+      let factor = 0.1; // Start with 10% lightening
+      for (let i = 0; i < 10; i++) {
+        const r = Math.round(parsed.r + (255 - parsed.r) * factor);
+        const g = Math.round(parsed.g + (255 - parsed.g) * factor);
+        const b = Math.round(parsed.b + (255 - parsed.b) * factor);
+        newColor = `rgb(${r},${g},${b})`;
 
-      const newRatio = getContrastRatio(newColor, bgColor);
-      if (newRatio >= minRatio) {
-        return newColor;
+        const newRatio = getContrastRatio(newColor, bgColor);
+        if (newRatio >= minRatio) {
+          return newColor;
+        }
+        factor = Math.min(1, factor + 0.1); // Increase lightening
       }
-      factor *= 0.85;
-    }
+      // Fallback to white for dark backgrounds
+      return '#ffffff';
+    } else {
+      // Background is light: darken the foreground to increase contrast
+      let factor = 0.9;
+      for (let i = 0; i < 10; i++) {
+        const r = Math.round(parsed.r * factor);
+        const g = Math.round(parsed.g * factor);
+        const b = Math.round(parsed.b * factor);
+        newColor = `rgb(${r},${g},${b})`;
 
-    // If still not enough contrast, return black
-    return '#000000';
+        const newRatio = getContrastRatio(newColor, bgColor);
+        if (newRatio >= minRatio) {
+          return newColor;
+        }
+        factor *= 0.85;
+      }
+      // Fallback to black for light backgrounds
+      return '#000000';
+    }
   } catch (error) {
     console.warn('Contrast check failed:', error);
     return moduleColor;

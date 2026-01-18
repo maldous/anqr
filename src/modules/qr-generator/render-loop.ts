@@ -10,6 +10,7 @@ import { drawHalftoneModule, drawModule, drawTimingModule } from './drawing';
 import { isFormatInfo, isVersionInfo } from './pattern-helpers';
 import { applyQROverlayMode } from './render-modes';
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig } from './types';
+import { validateColor } from './utils';
 
 type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -71,7 +72,14 @@ export function renderModules(
         !(protectVersion && isVersion);
 
       // Default rendering parameters
-      let moduleColor = isDark ? config.fgColor : config.bgColor;
+      // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
+      const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
+      const effectiveFgColor = validateColor(config.fgColor, '#000000');
+      let moduleColor = isDark ? effectiveFgColor : effectiveBgColor;
+      
+      // Use explicit boolean check to handle truthy/falsy edge cases
+      // Computed here for clarity, value is constant for all modules
+      const needsExplicitLightModules = config.transparentBg === true;
       let moduleSizeModifier = 1;
       let moduleOpacity = 1;
       let waveOffsetX = 0;
@@ -79,7 +87,9 @@ export function renderModules(
       let drawOutlineOnly = false;
       let useHalftoneRendering = false;
       let halftoneBrightness = 0.5;
-      let shouldDrawCell = isDark;
+      // Draw dark modules always; draw light modules only when background is transparent
+      // (otherwise light modules are provided by the background fill)
+      let shouldDrawCell = isDark || needsExplicitLightModules;
 
       if (applyOverlay) {
         const brightness = (overlayData as number[][])[row][col];
@@ -103,7 +113,8 @@ export function renderModules(
         drawOutlineOnly = modeResult.drawOutlineOnly;
         useHalftoneRendering = modeResult.useHalftoneRendering;
         halftoneBrightness = modeResult.halftoneBrightness;
-        shouldDrawCell = modeResult.shouldDrawCell;
+        // Preserve transparentBg requirement: if background is transparent, light modules must be drawn
+        shouldDrawCell = modeResult.shouldDrawCell || needsExplicitLightModules;
       }
 
       if (shouldDrawCell && moduleOpacity > 0) {
