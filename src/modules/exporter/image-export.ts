@@ -73,7 +73,6 @@ export async function exportImage(
     try {
       blob = await embedPngMetadata(blob, pngMetadata);
     } catch (err) {
-      // biome-ignore lint/suspicious/noConsole: Non-critical warning for metadata embedding
       console.warn('Failed to embed PNG metadata:', err);
     }
   }
@@ -83,7 +82,6 @@ export async function exportImage(
     try {
       blob = await embedPngDpi(blob, dpi);
     } catch (err) {
-      // biome-ignore lint/suspicious/noConsole: Non-critical warning for DPI embedding
       console.warn('Failed to embed PNG DPI:', err);
     }
   }
