@@ -114,4 +114,4 @@ export type { CanvasFactory } from './canvas-factory';
 export type { GradientConfig } from '../core';
 
 // Blue noise dithering for QR codes
-export { generateBlueNoiseDithered, defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from './internal/blue-noise';
+export { generateBlueNoiseDithered, defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from './blue-noise-qr';

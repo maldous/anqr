@@ -16,7 +16,7 @@
  */
 
 // Types
-export type { RGB, RGBA, HSL, HSLA } from './internal/types';
+export type { RGB, RGBA, HSL, HSLA, GradientStop, GradientConfig, GradientType } from './types';
 
 // Math utilities
 export {
@@ -25,10 +25,10 @@ export {
   createSeededRandom,
   createRNG,
   lerp,
-} from './internal/math';
+} from './math';
 
 // Alias for backwards compatibility
-export { createSeededRandom as seededRandom } from './internal/math';
+export { createSeededRandom as seededRandom } from './math';
 
 // Color utilities
 export {
@@ -60,31 +60,25 @@ export {
   getContrastRatio,
   isDark,
   getTextColor,
-} from './internal/color';
+} from './color';
 
 // Contrast utilities
 export {
   meetsContrastAA,
   meetsContrastAAA,
   adjustForContrast,
-} from './internal/contrast';
+} from './contrast';
 
-// Gradient types and utilities
-export type {
-  GradientStop,
-  GradientType,
-  GradientConfig,
-} from './internal/gradient';
-
+// Gradient utilities
 export {
   getGradientColor,
   getGradientColorAt,
   createCssGradient,
-} from './internal/gradient';
+} from './gradient';
 
 // Color harmony utilities
 export {
   getComplementary,
   getAnalogous,
   getTriadic,
-} from './internal/harmony';
+} from './harmony';
