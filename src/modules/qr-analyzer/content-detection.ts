@@ -5,7 +5,7 @@
 import type { ContentType, ContentTypeDetails } from './types';
 
 // Re-export canonical implementation from content module
-export { detectContentType } from './content/content';
+export { detectContentType } from './content';
 
 /** @deprecated Use detectContentType from './content/content' instead */
 export function detectContentTypeWrapper(payload: string): ContentTypeDetails {
