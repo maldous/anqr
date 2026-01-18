@@ -52,6 +52,18 @@ export {
   type InterpolationMode,
 } from './internal/patterns';
 
+// Re-export shared pixel-level pattern functions (used by client and server)
+export {
+  type AnimationEasing,
+  applyEasing,
+  applyPulsePattern,
+  applyWavePattern,
+  applyScanlinePattern,
+  applyShimmerPattern,
+  applyDriftPattern,
+  applyColorCyclePattern,
+} from './internal/shared-patterns';
+
 // Re-export types for convenience
 import type { AnimationFrame, AnimationOptions, AnimationPattern, AnimationState, GifCompositor } from './types';
 import { createGifCompositor } from './gif-compositor';
@@ -372,6 +384,17 @@ export function createAnimationLoop(
 // EXPORT
 // ============================================
 
+// Import shared pattern functions for the namespace export
+import {
+  applyEasing,
+  applyPulsePattern,
+  applyWavePattern,
+  applyScanlinePattern,
+  applyShimmerPattern,
+  applyDriftPattern,
+  applyColorCyclePattern,
+} from './internal/shared-patterns';
+
 export const Animation = {
   // Image parsing
   parseAnimatedImage,
@@ -404,6 +427,15 @@ export const Animation = {
   // Legacy utilities (kept for backward compatibility)
   calculateSourceFps,
   decimateFramesToFps,
+
+  // Shared pixel-level pattern functions (for server-side use)
+  applyEasing,
+  applyPulsePattern,
+  applyWavePattern,
+  applyScanlinePattern,
+  applyShimmerPattern,
+  applyDriftPattern,
+  applyColorCyclePattern,
 };
 
 export default Animation;

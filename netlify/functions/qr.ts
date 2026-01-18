@@ -117,7 +117,7 @@ const { GIFEncoder, quantize, applyPalette } = gifenc;
 import { decompressFrames, parseGIF } from 'gifuct-js';
 // @ts-expect-error - JS module
 import { QRGenerator } from '../../src/modules/qr-generator.js';
-// Import shared utilities for server/client code reuse
+// Import animation utilities
 import {
   type AnimationEasing,
   applyColorCyclePattern,
@@ -127,7 +127,7 @@ import {
   applyScanlinePattern,
   applyShimmerPattern,
   applyWavePattern,
-} from '../../src/modules/shared/index';
+} from '../../src/modules/animation';
 
 type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 type OutputFormat = 'png' | 'webp' | 'gif';

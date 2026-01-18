@@ -8,17 +8,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { prepareInterstitial, showInterstitial } from '@/modules/admob-service';
 import {
   type AnimationFrame,
+  type GifCompositor,
+  type PatternType as AnimationPattern,
   applyColorCycle,
   createGifCompositor,
   decimateCompositorFrames,
-  type GifCompositor,
+  generatePatternFrames,
   interpolateFrames,
   parseAnimatedImage,
 } from '@/modules/animation';
-import {
-  type AnimationPattern,
-  generatePatternFrames,
-} from '@/modules/animation-patterns';
 import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
 import { getEffectiveDitherKind, STORE_DEFAULT_DITHER } from '@/modules/overlay-processor';
 import { QRGenerator } from '@/modules/qr-generator';
