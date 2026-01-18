@@ -14,10 +14,6 @@
   - deep re-exports that expose non-canonical paths, even if they only re-export other files
 - After enforcement, the only legal cross-module import target is ../<module>.
 
-+ Internal encapsulation
-- Modules use src/modules/<module>/internal/** for private implementation.
-- internal/** must never be imported from outside the owning module.
-
 + Import style uniformity
 - Intra-repo imports use directory specifiers only.
 - No trailing slashes in import paths.
@@ -32,7 +28,6 @@
 - Resolution is always one of:
   - centralize in the existing owner module
   - promote into a new root module
-  - keep internal and remove cross-module usage
 
 + Promotion
 - If a cohesive surface is used by multiple modules, it becomes a new root module:
@@ -40,7 +35,6 @@
 - The new module follows all rules above:
   - single entrypoint
   - no sub-APIs
-  - internal/** private
   - no compat or legacy exports or alternate names
 - All consumers rewrite imports to ../<new-module>.
 
@@ -51,7 +45,6 @@
 + Enforced boundaries
 - Lint or build fails on:
   - cross-module deep imports (../<module>/<path>)
-  - imports into */internal/*
   - trailing-slash import specifiers
   - explicit index file imports
   - deep re-exports that create alternate public surfaces
@@ -79,7 +72,6 @@
 + Module internal structure uniformity
 - Consistent pattern within each module:
   - index.ts (public API)
-  - internal/** (private)
   - types.ts and constants.ts as needed
   - tests follow one consistent convention repo-wide
 
@@ -103,7 +95,6 @@
 - Each module documents:
   - responsibility
   - allowed dependencies
-  - what is internal vs public
 - Documentation is descriptive. Tooling is authoritative.
 
 + Public API manifest
@@ -111,16 +102,12 @@
 - CI checks api manifest drift against index.ts exports.
 
 + Import layering rules
-- internal code imports internal by relative path only within the module.
 - public code imports internal through internal facades only, no cross-folder reach.
 
 + Strict type boundaries
-- Public exports must not leak internal-only types.
 - Exported types must be stable, documented, and versioned as contracts.
 
 + Runtime boundary rules
-- Node-only code stays in a dedicated node module or node-only internal folder.
-- Browser-only code stays in a dedicated web module or web-only internal folder.
 - Cross-runtime code avoids direct global usage and uses adapters owned by the module.
 
 + Side effects policy
@@ -204,7 +191,7 @@
 - Each module has a short README with purpose, public API summary, and examples.
 
 + Tooling enforcement list
-- Boundary lint rule set for deep imports and internal imports.
+- Boundary lint rule set for deep imports.
 - Cycle detection for module graph.
 - API surface diff check for index.ts exports.
 - Naming checks for folders, files, symbols.

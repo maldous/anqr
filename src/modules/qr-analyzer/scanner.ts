@@ -3,7 +3,7 @@
  * Uses our own QR decoder for scanning
  */
 
-import { decodeQR } from '../../qr-decoder';
+import { decodeQR } from '../qr-decoder';
 
 export interface QRLocation {
   topLeftCorner: { x: number; y: number };

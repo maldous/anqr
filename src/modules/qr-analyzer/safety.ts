@@ -3,7 +3,7 @@
  * Provides QA tools, contrast checking, scan simulation, and readability analysis
  */
 
-import { getContrastRatio, parseColor } from '../../core';
+import { getContrastRatio, parseColor } from '../core';
 import { scanCanvas } from './scanner';
 
 export type SafetyMode = 'off' | 'balanced' | 'strict';
