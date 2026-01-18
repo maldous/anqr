@@ -4,7 +4,7 @@
  */
 
 import { Capacitor } from '@capacitor/core';
-import { saveBase64ToDocuments } from '../media-store-writer';
+import { saveBase64ToDocuments } from '../platform';
 
 /**
  * Convert canvas to blob

@@ -3,7 +3,7 @@
  * Applies overlay effects based on the selected mode
  */
 
-import { blendColors, parseColor } from '../color-utils';
+import { blendColors, parseColor } from '../core';
 import type { QRGeneratorConfig, OverlayData } from './types';
 
 export interface OverlayModeResult {

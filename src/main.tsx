@@ -4,7 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import './i18n'; // Initialize i18n
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { initializeAdMob, showBannerAd } from './modules/admob-service';
+import { initializeAdMob, showBannerAd } from './modules/platform';
 
 // Initialize AdMob for native apps after a short delay to ensure Capacitor bridge is ready
 // This is more reliable than calling at module load time

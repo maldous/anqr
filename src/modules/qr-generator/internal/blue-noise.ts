@@ -8,15 +8,15 @@
  * - Blue noise provides better visual quality than ordered dithering
  */
 
-import qrcode from '../../qr-encoder';
+import { qrcode } from '../../qr-encoder';
 
 // Import from canonical sources
 import { rgbToGray } from '../../core';
 import {
-  isLocked as isLockedFromSpec,
-  isData as isDataFromSpec,
+  isStructuralModule,
+  getVersionFromModuleCount,
   type ECCLevel,
-} from '../../qr-spec';
+} from '../../qr-encoder';
 
 // Error correction level mapping
 const ECC_MAP: Record<string, ECCLevel> = {
@@ -112,9 +112,25 @@ function sampleBlueNoise(x: number, y: number): number {
   return BLUE_NOISE_64[ty * size + tx];
 }
 
-// Use canonical implementations from qr-spec
-const isLocked = isLockedFromSpec;
-const isData = isDataFromSpec;
+/**
+ * Check if a pixel position is locked (structural module)
+ * Adapts from pixel coordinates to module coordinates
+ */
+function isLocked(moduleCount: number, x: number, y: number, scale: number): boolean {
+  const moduleX = Math.floor(x / scale);
+  const moduleY = Math.floor(y / scale);
+  const version = getVersionFromModuleCount(moduleCount / scale);
+  return isStructuralModule(moduleY, moduleX, version);
+}
+
+/**
+ * Check if a pixel position is a data point (center of module)
+ */
+function isData(x: number, y: number, scale: number): boolean {
+  // Data points are at the center of each module
+  const centerOffset = Math.floor(scale / 2);
+  return (x % scale) === centerOffset && (y % scale) === centerOffset;
+}
 
 /**
  * Load image data from canvas as RGB values (0-1 range)

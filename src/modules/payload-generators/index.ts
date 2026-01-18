@@ -141,4 +141,4 @@ export const PayloadGenerators = {
   appDeepLink: generateAppDeepLink,
 };
 
-export default PayloadGenerators;
+

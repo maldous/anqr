@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { prepareInterstitial, showInterstitial } from '@/modules/admob-service';
+import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import {
   type AnimationFrame,
   type GifCompositor,

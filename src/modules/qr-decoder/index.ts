@@ -159,10 +159,8 @@ export function decodeFromCanvas(canvas: HTMLCanvasElement): DecodeResult | null
   return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
 }
 
-// Default export for compatibility
-const QRDecoder = {
+// Namespace export
+export const QRDecoder = {
   decodeQR,
   decodeFromCanvas,
 };
-
-export default QRDecoder;

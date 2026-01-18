@@ -1,327 +1,328 @@
 /**
  * ANQR Modules Index
  *
- * Consolidated exports for all QR code generation functionality
- * organized by feature section from anqr-features.txt
+ * Root barrel file that re-exports all module entrypoints.
+ * Per RULES.txt: Only re-exports module entrypoints, never deep paths.
+ * 
+ * NOTE: This file exists for convenience but consumers should prefer
+ * importing directly from specific modules to avoid name collisions.
+ * 
+ * Due to symbol conflicts between modules, we use selective exports.
+ * For full access to any module's API, import from that module directly.
  */
 
-export type {
-  ECCLevel,
-  EncodingMode,
-  MaskPattern,
-  QRInstance,
-  QRMatrix,
-  QROptions,
-} from './qr-core';
 // ============================================
-// QR ENCODING (QREncodingSection)
+// CORE (canonical source for color utilities)
 // ============================================
 export {
-  calculateOptimalVersion,
-  createQRInstance,
-  default as QRCoreDefault,
-  generateQR,
-  getAlignmentPositions,
-  getModuleCountForVersion,
-  getVersionFromModuleCount,
-  isAlignmentPattern,
-  isData,
-  isFinderPattern,
-  isLocked,
-  isStructuralModule,
-  isTimingPattern,
-  QRCore,
-} from './qr-core';
-
-// ============================================
-// RENDERING (RenderSection)
-// ============================================
-// NOTE: renderer.ts was removed as dead code - QRGenerator in qr-generator.js handles all rendering
-// For QR rendering, use: import { QRGenerator } from './qr-generator'
-
-export type {
-  AnimationFrame,
-  AnimationOptions,
-  AnimationPattern,
-  AnimationState,
-  GifCompositor,
-} from './animation';
-// ============================================
-// ANIMATION (AnimationSection)
-// ============================================
-export {
-  Animation,
-  advanceAnimation,
-  applyAnimationPattern,
-  applyColorCycle,
-  applyTemporalDither,
-  calculateCompositorFps,
-  // Legacy utilities
-  calculateSourceFps,
-  createAnimationLoop,
-  createAnimationState,
-  // GIF compositor (optimal patch-only decode)
-  createGifCompositor,
-  decimateCompositorFrames,
-  decimateFramesToFps,
-  default as AnimationDefault,
-  getGifDelays,
-  getNextFrame,
-  interpolateFrames,
-  parseGifFrames,
-} from './animation';
-export type {
-  BlueNoiseOptions,
-  BlueNoiseResult,
-  ColorMode as BlueNoiseColorMode,
-} from './qr-generator/internal/blue-noise';
-export { generateBlueNoiseDithered } from './qr-generator/';
-export type { GradientConfig, HSL, HSLA, RGB, RGBA } from './color-utils';
-// Color utilities (canonical source for color types)
-export {
-  adjustForContrast,
-  alphaBlend,
-  blendColors,
-  blendRgb,
-  ColorUtils,
-  createCssGradient,
-  default as ColorUtilsDefault,
-  getAnalogous,
-  getComplementary,
-  getContrastRatio,
-  getGradientColor,
-  getGradientColorAt,
-  getRelativeLuminance,
-  getTextColor,
-  getTriadic,
-  hslToRgb,
-  isDark,
-  meetsContrastAA,
-  meetsContrastAAA,
-  multiplyBlend,
-  overlayBlend,
-  parseColor,
-  parseHex,
-  parseHexAlpha,
-  parseHslString,
-  parseRgbString,
-  rgbaToHex,
-  rgbaToString,
-  rgbToGray,
-  rgbToHex,
-  rgbToHsl,
-  rgbToString,
-  screenBlend,
-} from './color-utils';
-// ============================================
-// UI HELPERS
-// ============================================
-export { CropHandler } from './overlay';
-export type { DitherOptions, DitherResult } from './dither-algorithms/';
-export {
-  applyDither,
-  bayerDither,
-  blueNoiseDither,
-  DitherAlgorithms,
-  errorDiffusion,
-  gaussianNoiseDither,
-  imageDataToFloat,
-  orderedDither,
-  temporalBlueNoiseDither,
-  triangularNoiseDither,
-  whiteNoiseDither,
-} from './dither-algorithms/';
-export { DitherAlgorithms as DitherAlgorithmsDefault } from './dither-algorithms/';
-export type { ExportConfig, ExportResult, OutputFormat } from './exporter/';
-// ============================================
-// OUTPUT & EXPORT (OutputSection)
-// ============================================
-export {
-  canvasToBlob as exporterCanvasToBlob,
-  downloadGif,
-  downloadImage,
-  downloadSvg,
-  downloadUrl,
-  Exporter,
-  ExporterModule,
-  exportGif,
-  exportImage,
-  exportSvg,
-  exportVectorSvg,
-} from './exporter/';
-export { Exporter as ExporterDefault } from './exporter/';
-export type { FilterOptions } from './overlay';
-export {
-  applyColorMode,
-  applyFilters,
-  blur,
-  brightness,
-  cannyEdge,
+  // Types
+  type RGB,
+  type RGBA,
+  type HSL,
+  type HSLA,
+  type GradientStop,
+  type GradientType,
+  type GradientConfig,
+  // Math
   clamp,
   clamp01,
-  contrast,
-  convolve,
-  copyImageData,
-  duotone,
-  emboss,
-  gamma,
-  gaussianBlur,
-  getBrightnessMap,
-  getRGBMap,
-  grayscale,
-  hueRotate,
-  ImageFilters,
-  invert,
-  posterize,
-  saturation,
-  sharpen,
-  sobelEdge,
-  threshold,
-} from './overlay';
-export { ImageFilters as ImageFiltersDefault } from './overlay';
-export type { OverlayOptions, ProcessedOverlay } from './overlay';
+  createSeededRandom,
+  createRNG,
+  lerp,
+  seededRandom,
+  // Color parsing
+  parseHex,
+  parseHexAlpha,
+  parseRgbString,
+  parseHslString,
+  parseColor,
+  // Color conversion
+  rgbToHex,
+  rgbaToHex,
+  rgbToString,
+  rgbaToString,
+  rgbToGray,
+  rgbToHsl,
+  hslToRgb,
+  hslToRgbTuple,
+  rgbToHslTuple,
+  // Blending
+  blendRgb,
+  blendColors,
+  alphaBlend,
+  multiplyBlend,
+  screenBlend,
+  overlayBlend,
+  // Contrast
+  getRelativeLuminance,
+  getContrastRatio,
+  isDark,
+  getTextColor,
+  meetsContrastAA,
+  meetsContrastAAA,
+  adjustForContrast,
+  // Gradients
+  getGradientColor,
+  getGradientColorAt,
+  createCssGradient,
+  // Color harmony
+  getComplementary,
+  getAnalogous,
+  getTriadic,
+  // Namespace
+  ColorUtils,
+} from './core';
+
 // ============================================
-// OVERLAY & DITHERING (OverlaySection)
+// QR ENCODER (canonical source for QR encoding)
 // ============================================
 export {
-  applyOverlayMode,
-  cropImage,
-  fitImage,
-  flipCanvas,
+  // Main encoder
+  qrcode,
+  // Types
+  QRMode,
+  QRErrorCorrectionLevel,
+  QRMaskPattern,
+  type QRModeType,
+  type QRErrorCorrectionLevelType,
+  type QRErrorCorrectionLevelChar,
+  type QRMaskPatternType,
+  type QRCodeInstance,
+  type QRDataSegment,
+  type QRBitBuffer,
+  type RSBlock,
+  type QRPolynomial,
+  // String encoding
+  stringToBytes,
+  stringToBytesFn,
+  setStringToBytes,
+  resetStringToBytes,
+  createStringToBytes,
+  // Low-level APIs
+  qrBitBuffer,
+  qrNumber,
+  qrAlphaNum,
+  qr8BitByte,
+  qrKanji,
+  QRMath,
+  qrPolynomial,
+  glog,
+  gexp,
+  QRRSBlock,
+  getRSBlocks,
+  QRUtil,
+  getBCHTypeInfo,
+  getBCHTypeNumber,
+  getPatternPosition,
+  getMaskFunction,
+  getErrorCorrectPolynomial,
+  getLengthInBits,
+  getLostPoint,
+  byteArrayOutputStream,
+  base64EncodeOutputStream,
+  gifImage,
+  createDataURL,
+  // Shift-JIS
+  createShiftJISEncoder,
+  canEncodeAsShiftJIS,
+  // QR Core compat
+  createQRInstance,
+  generateQR,
+  calculateOptimalVersion,
+  getCompatibleMode,
+  getModuleCountForVersion,
+  getVersionFromModuleCount,
+  getAlignmentPositions,
+  getAlignmentPatternCenters,
+  isFinderPattern,
+  isTimingPattern,
+  isAlignmentPattern,
+  isStructuralModule,
+  isData,
+  isLocked,
+  QRCore,
+  type ECCLevel,
+  type EncodingMode,
+  type MaskPattern,
+  type QROptions,
+  type QRMatrix,
+  type QRInstance,
+} from './qr-encoder';
+
+// ============================================
+// QR DECODER
+// ============================================
+export * from './qr-decoder';
+
+// ============================================
+// QR GENERATOR
+// ============================================
+export {
+  // Main class
+  QRGenerator,
+  // Cache
+  MemoCache,
+  alignmentCache,
+  canvasHashCache,
+  clearQRCaches,
+  overlayDataCache,
+  qrMatrixCache,
+  // Canvas factory
+  defaultBrowserCanvasFactory,
+  // Utils (exclude getContrastRatio - use from core)
+  hashCanvasContent,
+  hashString,
+  // Drawing
+  createGradientFill,
+  drawAlignmentPattern,
+  drawCenterLogo,
+  drawFinderModule,
+  drawFinderPatternComplete,
+  drawFrame,
+  drawFrameBackground,
+  drawHalftoneModule,
+  drawModule,
+  drawTimingModule,
+  roundRect,
+  // Filters
+  applyBoxBlur,
+  applyCannyEdge,
+  applyFiltersManual,
+  applySharpen,
+  applySobelEdge,
+  preprocessImageData,
+  // Color
+  applyPaletteColor,
+  applyPerModuleColor,
+  darkenColor,
+  ensureContrast,
+  lightenColor,
+  // Dithering
+  applyAdvancedDither,
+  applyDitherToMatrix,
+  applyTrueDither,
+  distributeError,
+  getDiffusionKernel,
+  // Overlay
+  applyGeometricTransforms,
+  generateSubpixelMatrix,
   getOverlayData,
-  getOverlayRGBData,
-  loadImageFromDataUrl,
-  loadImageFromFile,
-  loadImageFromUrl,
-  OverlayProcessor,
-  processOverlay,
-  rotateCanvas,
-} from './overlay';
-export { OverlayProcessor as OverlayProcessorDefault } from './overlay';
-export type {
-  BizCardParams,
-  EPCSepaParams,
-  GS1DigitalLinkParams,
-  OTPAuthParams,
-  PayNowParams,
-  PIXParams,
-  PromptPayParams,
-  UPIParams,
-} from './payload-generators/';
+  getSubpixelOverlayData,
+  hasGeometricTransforms,
+  hasPreprocessingOptions,
+  loadImageDataRGB,
+  preprocessOverlay,
+  // ECC
+  getEccWeight,
+  isEccSafeToModify,
+  // Patterns
+  isFormatInfo,
+  isVersionInfo,
+  // Pixel matrix
+  generatePixelDecisionMatrix,
+  getScaleFactor,
+  prepareUnifiedOverlayData,
+  // Render
+  applyOverlayMode,
+  renderModules,
+  generateScaledQR,
+  // Blue noise
+  generateBlueNoiseDithered,
+  blueNoiseCanvasFactory,
+  // Types
+  type QRMatrixResult,
+  type OverlayData,
+  type PixelDecisionResult,
+  type QRGeneratorConfig,
+  type RGBWithMeta,
+  type PixelDecisionMatrix,
+  type OverlayModeResult,
+  type DiffusionKernel,
+  type CreateCanvasFn,
+  type CanvasElement,
+  type Canvas2DContext,
+  type CanvasFactory,
+} from './qr-generator';
+
 // ============================================
-// PAYLOAD GENERATION (PayloadSection)
+// QR ANALYZER
 // ============================================
-export {
-  generateAppDeepLink,
-  generateBizCard,
-  generateCalendarSubscription,
-  generateCrypto,
-  generateEmail,
-  generateEPCSepa,
-  generateEvent,
-  generateGeo,
-  generateGS1DigitalLink,
-  generateMeCard,
-  generateMessagingLink,
-  generateOTPAuth,
-  generatePayNow,
-  generatePIX,
-  generatePromptPay,
-  generateSms,
-  generateSocialProfile,
-  generateTel,
-  generateUPI,
-  generateUrl,
-  generateVCard,
-  generateWifi,
-  PayloadGenerators,
-} from './payload-generators/';
-export { PayloadGenerators as PayloadGeneratorsDefault } from './payload-generators/';
+export * from './qr-analyzer';
+
 // ============================================
-// MAIN QR GENERATOR (Orchestrator)
+// ANIMATION
 // ============================================
-export { QRGenerator } from './qr-generator/';
-export type { QRLocation, ScanResult, ValidationResult } from './qr-analyzer';
+export * from './animation';
+
 // ============================================
-// QR SCANNER / VALIDATOR
+// DITHERING (selective to avoid RGB conflict)
 // ============================================
 export {
-  QRScanner,
-  scanCanvas,
-  scanFile,
-  scanImageData,
-  validateFrames,
-  validateQRCode,
-  validateQRCodeRobust,
-} from './qr-analyzer';
-export { QRScanner as QRScannerDefault } from './qr-analyzer';
-export type {
-  AnalysisIssue,
-  AnalysisResult,
-  AnalysisWarning,
-  ContrastReport,
-  SafetyMode,
-  SafetyOptions,
-  ScanSimulationResult,
-} from './qr-analyzer';
+  DitherAlgorithms,
+  applyDither,
+  bayerDither,
+  orderedDither,
+} from './dither-algorithms';
+
 // ============================================
-// SAFETY & QA (SafetySection)
+// OVERLAY
+// ============================================
+export * from './overlay';
+
+// ============================================
+// EXPORTER (selective to avoid canvasToBlob conflict with share-utils)
 // ============================================
 export {
-  analyzeContrast,
-  analyzeMatrixContrast,
-  analyzeQR,
-  applyBlurSimulation,
-  applyNoiseSimulation,
-  calculateSafeIntensity,
-  generateReadabilityHeatmap,
-  SafetyAnalyzer,
-  simulateScan,
-  validateModuleSize,
-  validateOverlayIntensity,
-  validateQuietZone,
-} from './qr-analyzer';
-export { SafetyAnalyzer as SafetyAnalyzerDefault } from './qr-analyzer';
-export type { EmbedOptions, ShareConfig } from './share-utils/';
+  // Types
+  type OutputFormat,
+  type ExportConfig,
+  type ExportResult,
+  type PngMetadata,
+  type VectorModuleStyle,
+  type VectorFinderStyle,
+  type VectorAlignmentStyle,
+  type VectorTimingStyle,
+  type VectorGradient,
+  type VectorSvgConfig,
+  getDefaultExportConfig,
+  // Utils
+  escapeXml,
+  saveFileNative,
+  downloadUrl,
+  // PNG
+  calculateCrc32,
+  createPngPhysChunk,
+  embedPngDpi,
+  createPngTextChunk,
+  embedPngMetadata,
+  // Image export
+  exportImage,
+  downloadImage,
+  // GIF
+  exportGif,
+  downloadGif,
+  // SVG
+  exportSvg,
+  downloadSvg,
+  // Vector SVG
+  exportVectorSvg,
+  downloadVectorSvg,
+  // Namespace
+  Exporter,
+  ExporterModule,
+} from './exporter';
+
 // ============================================
-// SHARE & EMBED (ShareSection)
+// PAYLOAD GENERATORS
 // ============================================
-export {
-  buildUrlParams,
-  canvasToBlob,
-  canvasToDataUrl,
-  copyImageToClipboard,
-  copyToClipboard,
-  downloadBlob,
-  estimateQRSize,
-  generateBBCodeEmbed,
-  generateIframeEmbed,
-  generateImageEmbed,
-  generateMarkdownEmbed,
-  getShareableUrl,
-  getSocialShareUrls,
-  parseUrlParams,
-  ShareUtils,
-  updateBrowserUrl,
-} from './share-utils/';
-export { ShareUtils as ShareUtilsDefault } from './share-utils/';
-export type {
-  WatermarkBlend,
-  WatermarkKind,
-  WatermarkOptions,
-  WatermarkPosition,
-  WatermarkResult,
-} from './overlay';
+export * from './payload-generators';
+
 // ============================================
-// WATERMARK (WatermarkSection)
+// SHARE UTILS
 // ============================================
-export {
-  applyBlendMode,
-  applyCenterLogo,
-  applyWatermark,
-  createPatternWatermark,
-  createTextWatermark,
-  getWatermarkPositions,
-  Watermark,
-} from './overlay';
-export { Watermark as WatermarkDefault } from './overlay';
+export * from './share-utils';
+
+// ============================================
+// PLATFORM
+// ============================================
+export * from './platform';

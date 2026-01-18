@@ -64,7 +64,7 @@ import {
   analyzeQRFromFile,
   analyzeQRFromUrl,
 } from '@/modules/qr-analyzer';
-import { createQRInstance } from '@/modules/qr-core';
+import { createQRInstance } from '@/modules/qr-encoder';
 import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {

@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { BusyOverlay } from '@/components/BusyOverlay';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
-import { parseColor, meetsContrastAA, meetsContrastAAA, getContrastRatio } from '@/modules/color-utils';
+import { parseColor, meetsContrastAA, meetsContrastAAA, getContrastRatio } from '@/modules/core';
 import { useQRStore } from '@/store/qr-store';
 
 interface PreviewProps {
