@@ -8,7 +8,9 @@ import { findFinderPatterns, selectFinderPatterns } from './locate';
 import { calculateLocation, extractModuleMatrix } from './extract';
 import { readFormatInfo, unmaskMatrix, getECCLevelChar } from './format';
 import { readCodewords, separateCodewords, decodeDataCodewords } from './decode';
-import { log } from './internal/logger';
+
+// Shared logger
+import { qrDecoderLog as log } from '../shared';
 
 /**
  * Decode a QR code from ImageData

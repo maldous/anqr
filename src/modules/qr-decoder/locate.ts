@@ -6,17 +6,8 @@
 import type { Point, FinderPattern } from './types';
 import { pointDistance } from './utils';
 
-// Logging helper
-function log(category: string, message: string, data?: Record<string, unknown>): void {
-  const prefix = `[QR-Decoder:${category}]`;
-  if (data) {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
-    console.log(prefix, message, data);
-  } else {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
-    console.log(prefix, message);
-  }
-}
+// Shared logger
+import { qrDecoderLog as log } from '../shared';
 
 interface ScanResult {
   center: number;

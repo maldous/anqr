@@ -6,23 +6,14 @@ import { decodeQR } from '../qr-decoder';
 import type { ECCLevel, QRAnalysisResult } from './types';
 import { detectContentTypeWrapper } from './content-detection';
 
+// Shared logger
+import { qrAnalyzerLog as log } from '../shared';
+
 interface QRLocationCorners {
   topLeftCorner: { x: number; y: number };
   topRightCorner: { x: number; y: number };
   bottomLeftCorner: { x: number; y: number };
   bottomRightCorner: { x: number; y: number };
-}
-
-// Telemetry/logging helper
-function log(category: string, message: string, data?: Record<string, unknown>) {
-  const prefix = `[QR-Analyzer:${category}]`;
-  if (data) {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR analyzer
-    console.log(prefix, message, data);
-  } else {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR analyzer
-    console.log(prefix, message);
-  }
 }
 
 /**

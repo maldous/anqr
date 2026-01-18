@@ -15,17 +15,8 @@ import {
 // Import from canonical source (qr-spec)
 import { getAlignmentPositions, isStructuralModule, getVersionFromModuleCount } from '../qr-spec';
 
-// Logging helper
-function log(category: string, message: string, data?: Record<string, unknown>): void {
-  const prefix = `[QR-Decoder:${category}]`;
-  if (data) {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
-    console.log(prefix, message, data);
-  } else {
-    // biome-ignore lint/suspicious/noConsole: Debug logging for QR decoder
-    console.log(prefix, message);
-  }
-}
+// Shared logger
+import { qrDecoderLog as log } from '../shared';
 
 // RS block configuration per version and ECC level
 // Format: [[numBlocks, totalCodewords, dataCodewords], ...]
