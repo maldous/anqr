@@ -1533,7 +1533,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
             baseQR,
             animation.pattern as AnimationPattern,
             frameCount,
-            { seed: animation.seed }
+            1.0,
+            animation.seed
           );
           framesToProcess = patternFrames.map((canvas) => ({
             canvas,
@@ -1550,7 +1551,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
             baseQR,
             animation.pattern as AnimationPattern,
             frameCount,
-            { seed: animation.seed }
+            1.0,
+            animation.seed
           );
 
           // Now generate jittered QR frames and combine with pattern effects
@@ -1574,7 +1576,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
               jitteredQR,
               animation.pattern as AnimationPattern,
               frameCount,
-              { seed: animation.seed }
+              1.0,
+              animation.seed
             );
             // Pick the frame at index i to match the animation progression
             combinedFrames.push(patternForFrame[i] || jitteredQR);
@@ -1628,7 +1631,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
           baseCanvas,
           animation.pattern as AnimationPattern,
           patternFrameCount,
-          { seed: animation.seed }
+          1.0,
+          animation.seed
         );
         // Convert to AnimationFrame format
         framesToProcess = patternFrames.map((canvas) => ({

@@ -320,10 +320,11 @@ export function exportVectorSvg(matrix: boolean[][], config: VectorSvgConfig = {
   }
 
   let dataPathData = '';
+  const version = getVersionFromModuleCount(moduleCount);
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
       if (isFinderPattern(row, col, moduleCount)) continue;
-      if (isAlignmentPattern(row, col, moduleCount)) continue;
+      if (isAlignmentPattern(row, col, moduleCount, version)) continue;
       if (isTimingPattern(row, col, moduleCount)) continue;
 
       if (matrix[row][col]) {
