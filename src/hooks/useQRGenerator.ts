@@ -31,7 +31,7 @@ import {
   isTemporalDitherActive,
   type TemporalDitherMode,
 } from '@/modules/temporal-dither';
-import { applyWatermark } from '@/modules/watermark';
+import { applyWatermark, type WatermarkPosition } from '@/modules/watermark';
 import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance
@@ -432,7 +432,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // Dither options - on mobile, use cheap default unless user explicitly changed it
       ditherKind: getEffectiveDitherKind(
         overlay.ditherKind,
-        overlay.ditherKind === STORE_DEFAULT_DITHER
+        overlay.ditherKind === STORE_DEFAULT_DITHER.kind
       ),
       ditherStrength: overlay.ditherStrength,
       ditherSerpentine: overlay.ditherSerpentine,
@@ -885,12 +885,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
           watermarkImage = await loadFileAsCanvas(watermark.image);
         }
 
-        const watermarked = applyWatermark(result, {
-          enabled: watermark.enabled,
+        const watermarked = await applyWatermark(result, {
           kind: watermark.kind,
           text: watermark.text,
           image: watermarkImage,
-          position: watermark.position,
+          position: watermark.position as WatermarkPosition,
           opacity: watermark.opacity,
           blend: watermark.blend,
         });
@@ -1775,12 +1774,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
             // Apply watermark if enabled
             if (watermark.enabled) {
-              const watermarked = applyWatermark(finalResult, {
-                enabled: watermark.enabled,
+              const watermarked = await applyWatermark(finalResult, {
                 kind: watermark.kind,
                 text: watermark.text,
                 image: watermarkImage,
-                position: watermark.position,
+                position: watermark.position as WatermarkPosition,
                 opacity: watermark.opacity,
                 blend: watermark.blend,
               });

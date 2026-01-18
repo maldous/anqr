@@ -7,6 +7,43 @@ export * from './types';
 export { detectContentType } from './content-detection';
 export { decodeQRFromCanvas } from './decoder';
 
+// Scanner (validation)
+export {
+  scanCanvas,
+  scanImageData,
+  scanFile,
+  validateQRCode,
+  validateQRCodeRobust,
+  validateFrames,
+  QRScanner,
+  type ScanResult,
+  type QRLocation,
+  type ValidationResult,
+} from './internal/scanner';
+
+// Safety analyzer
+export {
+  analyzeContrast,
+  analyzeMatrixContrast,
+  validateModuleSize,
+  validateQuietZone,
+  validateOverlayIntensity,
+  calculateSafeIntensity,
+  simulateScan,
+  applyBlurSimulation,
+  applyNoiseSimulation,
+  analyzeQR,
+  generateReadabilityHeatmap,
+  SafetyAnalyzer,
+  type SafetyMode,
+  type SafetyOptions,
+  type AnalysisResult,
+  type AnalysisIssue,
+  type AnalysisWarning,
+  type ContrastReport,
+  type ScanSimulationResult,
+} from './internal/safety';
+
 import type { QRAnalysisResult } from './types';
 import { decodeQRFromCanvas } from './decoder';
 
