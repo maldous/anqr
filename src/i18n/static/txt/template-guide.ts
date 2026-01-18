@@ -413,6 +413,102 @@ export const guide: PageDefinition = {
       paragraphs: ['574'],
       bullets: ['575', '576', '577', '578', '579'],
     },
+    // Crop Parameters
+    {
+      heading: '1219',
+      paragraphs: ['1220'],
+      bullets: ['1221', '1222', '1223', '1224'],
+    },
+    // Safety Lock Parameters
+    {
+      heading: '1225',
+      paragraphs: ['1226'],
+      bullets: ['1227', '1228', '1229', '1230', '1231', '1232', '1233', '1234'],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: '1235',
+      paragraphs: ['1236'],
+      bullets: ['1237', '1238', '1239'],
+    },
+    // Additional Animation Parameters
+    {
+      heading: '1240',
+      paragraphs: ['1241'],
+      bullets: ['1242', '1243', '1244', '1245', '1246', '1247', '1248', '1249', '1250', '1251'],
+    },
+    // Dithering Parameters
+    {
+      heading: '1252',
+      paragraphs: ['1253'],
+      bullets: ['1254', '1255', '1256', '1257', '1258', '1259', '1260', '1261'],
+    },
+    // Subpixel Parameters
+    {
+      heading: '1262',
+      paragraphs: ['1263'],
+      bullets: ['1264', '1265', '1266', '1267'],
+    },
+    // Halftone Parameters
+    {
+      heading: '1268',
+      paragraphs: ['1269'],
+      bullets: ['1270', '1271', '1272', '1273', '1274'],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: '1275',
+      paragraphs: ['1276'],
+      bullets: ['1277', '1278', '1279'],
+    },
+    // Frame Parameters
+    {
+      heading: '1280',
+      paragraphs: ['1281'],
+      bullets: ['1282', '1283'],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: '1284',
+      paragraphs: ['1285'],
+      bullets: ['1286', '1287', '1288', '1289', '1290'],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: '1291',
+      paragraphs: ['1292'],
+      bullets: ['1293', '1294', '1295', '1296'],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: '1297',
+      paragraphs: ['1298'],
+      bullets: ['1299', '1300', '1301', '1302'],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: '1303',
+      paragraphs: ['1304'],
+      bullets: ['1305', '1306', '1307', '1308'],
+    },
+    // Parameter Support Levels
+    {
+      heading: '1309',
+      paragraphs: ['1310'],
+      bullets: ['1311', '1312', '1313'],
+    },
+    // Additional Output Parameters
+    {
+      heading: '1314',
+      paragraphs: ['1315'],
+      bullets: ['1316', '1317', '1318', '1319', '1320', '1321', '1322', '1323', '1324', '1325'],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: '1326',
+      paragraphs: ['1327'],
+      bullets: ['1328', '1329', '1330', '1331', '1332'],
+    },
     {
       heading: '580',
       paragraphs: ['581', '582', '583', '584', '585', '586', '587', '588'],
