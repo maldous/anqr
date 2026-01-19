@@ -22,7 +22,12 @@ import {
   drawFrame,
   drawFrameBackground,
 } from './drawing';
-import { applyGeometricTransforms, hasGeometricTransforms } from './overlay';
+import {
+  applyGeometricTransforms,
+  hasGeometricTransforms,
+  hasPreprocessingOptions,
+  preprocessOverlay,
+} from './overlay';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 import { renderModules } from './render-loop';
@@ -248,6 +253,16 @@ export class QRGenerator {
     if (overlayCanvas && hasGeometricTransforms(config)) {
       processedOverlayCanvas = await applyGeometricTransforms(
         overlayCanvas,
+        config,
+        this.createCanvas.bind(this)
+      );
+    }
+
+    // Apply overlay preprocessing (brightness/contrast/gamma/etc) after geometry.
+    // This must run BEFORE we sample overlay pixels for scaled/dithered/subpixel modes.
+    if (processedOverlayCanvas && hasPreprocessingOptions(config)) {
+      processedOverlayCanvas = await preprocessOverlay(
+        processedOverlayCanvas,
         config,
         this.createCanvas.bind(this)
       );

@@ -420,17 +420,23 @@ export function useQRGenerator(): UseQRGeneratorResult {
       protectVersionInfo: overlay.protectVersionInfo || safety.lockVersion,
       logoSize: 25, // For center mode
 
-      // Overlay preprocessing
-      overlayBrightness: overlay.brightness,
-      overlayContrast: overlay.contrast,
-      overlayGamma: overlay.gamma,
-      overlaySaturation: overlay.saturation,
-      overlayHueRotate: overlay.hueRotateDeg,
-      overlayBlur: overlay.blurPx,
-      overlaySharpen: overlay.sharpen,
-      overlayPosterize: overlay.posterizeLevels,
-      overlayThreshold: overlay.threshold,
-      overlayEdgeDetect: overlay.edgeDetect,
+      // Overlay preprocessing (wired to qr-generator filter* fields)
+      // Note: store values are already in UI units (brightness/contrast/saturation: -100..100,
+      // gamma: ~0.2..3, hueRotateDeg: degrees, blurPx: px, sharpen: 0..100, posterizeLevels: 0..16, threshold: 0..255)
+      filterInvert: overlay.invert,
+      filterBrightness: overlay.brightness,
+      filterContrast: overlay.contrast,
+      filterGamma: overlay.gamma,
+      filterSaturation: overlay.saturation,
+      filterHue: overlay.hueRotateDeg,
+      filterBlur: overlay.blurPx,
+      filterSharpen: overlay.sharpen,
+      filterPosterize: overlay.posterizeLevels,
+      filterThreshold: overlay.threshold,
+      filterEdgeDetect: overlay.edgeDetect !== 'off',
+      filterEdgeMode: overlay.edgeDetect,
+      filterDuotone1: overlay.duotoneColors?.[0],
+      filterDuotone2: overlay.duotoneColors?.[1],
       // NOTE: Geometric transforms (rotate, flip, crop, fit) are applied in
       // applyGeometricTransforms() BEFORE passing to qr-generator.
       // We intentionally do NOT pass these values to avoid double-application.

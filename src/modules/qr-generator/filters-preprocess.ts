@@ -3,7 +3,9 @@
  * QR-specific image preprocessing that uses overlay module filters
  */
 
+import { parseColor } from '../core';
 import { applyFilters, copyImageData, type FilterOptions } from '../overlay';
+import { applyCannyEdge, applySobelEdge } from './filters-edge';
 import type { QRGeneratorConfig } from './types';
 
 /**
@@ -14,19 +16,32 @@ export function preprocessImageData(imageData: ImageData, config: QRGeneratorCon
   // Map QR config to FilterOptions
   const filterOptions: FilterOptions = {};
 
-  // Brightness: QR config uses -1 to 1, overlay uses -100 to 100
+  // NOTE: UI/store values for overlay preprocessing use overlay module ranges.
+  // We keep QRGeneratorConfig.filter* in those same ranges to avoid double scaling.
+  // - brightness: -100..100
+  // - contrast:   -100..100 (overlay supports broader range, but -100..100 is fine)
+  // - saturation: -100..100 (overlay expects 0..200, where 100 is neutral)
+  // - hue:        0..360 degrees
+  // - blur:       px radius (0..)
+  // - sharpen:    0..100
+  // - posterize:  0..16 levels
+  // - threshold:  0..255, where 0 means disabled
+
   if (config.filterBrightness !== undefined && config.filterBrightness !== 0) {
-    filterOptions.brightness = config.filterBrightness * 100;
+    filterOptions.brightness = config.filterBrightness;
   }
 
-  // Contrast: QR config uses -1 to 1, overlay uses raw value
   if (config.filterContrast !== undefined && config.filterContrast !== 0) {
-    filterOptions.contrast = config.filterContrast * 255;
+    // overlay contrast function accepts a broader range, but the UI uses -100..100.
+    filterOptions.contrast = config.filterContrast;
   }
 
-  // Saturation: QR config uses -1 to 1, overlay uses -100 to 100
   if (config.filterSaturation !== undefined && config.filterSaturation !== 0) {
-    filterOptions.saturation = config.filterSaturation * 100 + 100;
+    filterOptions.saturation = config.filterSaturation + 100;
+  }
+
+  if (config.filterHue !== undefined && config.filterHue !== 0) {
+    filterOptions.hue = config.filterHue;
   }
 
   // Gamma: Direct pass-through
@@ -44,9 +59,28 @@ export function preprocessImageData(imageData: ImageData, config: QRGeneratorCon
     filterOptions.grayscale = true;
   }
 
-  // Threshold: QR config uses 0-1, overlay uses 0-255
+  // Threshold: 0..255, where 0 means disabled
   if (config.filterThreshold !== undefined && config.filterThreshold > 0) {
-    filterOptions.threshold = config.filterThreshold * 255;
+    filterOptions.threshold = config.filterThreshold;
+  }
+
+  if (config.filterBlur !== undefined && config.filterBlur > 0) {
+    filterOptions.blur = config.filterBlur;
+  }
+
+  if (config.filterSharpen !== undefined && config.filterSharpen > 0) {
+    filterOptions.sharpen = config.filterSharpen;
+  }
+
+  if (config.filterPosterize !== undefined && config.filterPosterize > 0) {
+    filterOptions.posterize = config.filterPosterize;
+  }
+
+  if (config.filterDuotone1 && config.filterDuotone2) {
+    // Parse hex color strings into RGB objects for duotone filter
+    const lightRgb = parseColor(config.filterDuotone1);
+    const darkRgb = parseColor(config.filterDuotone2);
+    filterOptions.duotone = { light: lightRgb, dark: darkRgb };
   }
 
   // If no filters to apply, return copy of original
@@ -54,5 +88,14 @@ export function preprocessImageData(imageData: ImageData, config: QRGeneratorCon
     return copyImageData(imageData);
   }
 
-  return applyFilters(imageData, filterOptions);
+  // Apply basic color filters first.
+  let out = applyFilters(imageData, filterOptions);
+
+  // Optional edge-detect post-pass.
+  if (config.filterEdgeDetect) {
+    const mode = (config.filterEdgeMode || 'sobel').toLowerCase();
+    out = mode === 'canny' ? applyCannyEdge(out) : applySobelEdge(out);
+  }
+
+  return out;
 }
