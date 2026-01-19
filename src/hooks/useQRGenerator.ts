@@ -864,14 +864,16 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Generate QR code
   const generate = useCallback(async () => {
-    // TRACE: Debug overlay state at time of generate
-    console.log('[useQRGenerator] TRACE: generate() called', {
-      'overlay.enabled': overlay.enabled,
-      'overlay.mode': overlay.mode,
-      'overlay.file': overlay.file ? overlay.file.name : null,
-      'overlayCanvas': overlayCanvas ? `${overlayCanvas.width}x${overlayCanvas.height}` : null,
-      'rawOverlayCanvas': rawOverlayCanvas ? 'exists' : null,
-    });
+    // Targeted debug for overlay dithering only.
+    if (debouncedConfig.debugOverlayDither) {
+      console.log('[OverlayDither] useQRGenerator.generate', {
+        'overlay.enabled': overlay.enabled,
+        'overlay.mode': overlay.mode,
+        'overlay.file': overlay.file ? overlay.file.name : null,
+        'overlayCanvas': overlayCanvas ? `${overlayCanvas.width}x${overlayCanvas.height}` : null,
+        'rawOverlayCanvas': rawOverlayCanvas ? 'exists' : null,
+      });
+    }
     
     setIsLoading(true);
     setError(null);
