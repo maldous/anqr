@@ -9,18 +9,20 @@ import type { CreateCanvasFn, QRGeneratorConfig } from './types';
  * Check if overlay has preprocessing options that need to be applied
  */
 export function hasPreprocessingOptions(config: QRGeneratorConfig): boolean {
-  return !!(
-    config.filterBrightness ||
-    config.filterContrast ||
-    config.filterSaturation ||
-    config.filterHue ||
-    config.filterGamma ||
-    config.filterInvert ||
-    config.filterGrayscale ||
-    config.filterThreshold ||
-    config.filterBlur ||
-    config.filterSharpen ||
-    config.filterEdgeDetect
+  return (
+    (config.filterBrightness !== undefined && config.filterBrightness !== 0) ||
+    (config.filterContrast !== undefined && config.filterContrast !== 0) ||
+    (config.filterSaturation !== undefined && config.filterSaturation !== 0) ||
+    (config.filterHue !== undefined && config.filterHue !== 0) ||
+    (config.filterGamma !== undefined && config.filterGamma !== 1) ||
+    !!config.filterInvert ||
+    !!config.filterGrayscale ||
+    (config.filterThreshold !== undefined && config.filterThreshold > 0) ||
+    (config.filterBlur !== undefined && config.filterBlur > 0) ||
+    (config.filterSharpen !== undefined && config.filterSharpen > 0) ||
+    (config.filterPosterize !== undefined && config.filterPosterize > 0) ||
+    (!!config.filterDuotone1 && !!config.filterDuotone2) ||
+    !!config.filterEdgeDetect
   );
 }
 
@@ -68,7 +70,9 @@ export async function preprocessOverlay(
   }
 
   // Get image data
-  const ctx = (canvas as HTMLCanvasElement).getContext('2d');
+  const ctx = (canvas as unknown as { getContext: Function }).getContext('2d', {
+    willReadFrequently: true,
+  }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
   if (!ctx) return canvas;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

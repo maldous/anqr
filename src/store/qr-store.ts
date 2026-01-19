@@ -1066,7 +1066,8 @@ export const useQRStore = create<QRState>((set, get) => ({
     blurPx: 0,
     sharpen: 0,
     posterizeLevels: 0,
-    threshold: 128,
+      // 0 disables hard thresholding. Any positive value applies a binary threshold.
+      threshold: 0,
     edgeDetect: 'off',
     mode: 'dithered',
     intensity: 100,
