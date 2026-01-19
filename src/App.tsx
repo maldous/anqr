@@ -80,7 +80,7 @@ function App() {
   const [mobileSplitPercent, setMobileSplitPercent] = useState(DEFAULT_MOBILE_SPLIT);
   const containerRef = useRef<HTMLDivElement>(null);
   const bannerHeight = useBannerHeight();
-  const { download, isExporting } = useQRGenerator();
+  const { download, isExporting, canvas: generatedCanvas } = useQRGenerator();
 
   // Handle mobile divider drag
   const handleMobileDividerDrag = useCallback((deltaY: number) => {
@@ -870,7 +870,7 @@ function App() {
             }}
           >
             {showEditor && <Preview sidebarOpen={sidebarOpen} />}
-            {showAnalyze && <Analyze onNavigate={navigateTo} />}
+            {showAnalyze && <Analyze onNavigate={navigateTo} generatedCanvas={generatedCanvas} />}
             {showGallery && <Gallery filter={galleryFilter} />}
             {showStaticPage && <StaticPage page={currentPage as StaticPageType} />}
           </div>

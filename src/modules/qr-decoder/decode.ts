@@ -670,14 +670,38 @@ export function separateCodewords(
 }
 
 /**
- * Decode the data codewords into a string
+ * Decode the data codewords into text plus raw bytes.
+ *
+ * Why:
+ * - QR byte segments are just bytes. Without ECI, the spec default is ISO-8859-1.
+ * - Our generator can also emit raw byte payloads (low-byte stringToBytes).
+ * - For analyzer reproduction, we must preserve the exact bytes, not a re-encoded UTF-8 string.
  */
-export function decodeDataCodewords(dataCodewords: number[], version: number): string {
+export type DecodedEncodingMode =
+  | 'numeric'
+  | 'alphanumeric'
+  | 'byte'
+  | 'kanji'
+  | 'mixed'
+  | 'unknown';
+
+export interface DecodedDataResult {
+  text: string;
+  bytes: Uint8Array;
+  encodingMode: DecodedEncodingMode;
+}
+
+export function decodeDataCodewordsDetailed(
+  dataCodewords: number[],
+  version: number
+): DecodedDataResult {
   const bits = new BitStream(dataCodewords);
-  let result = '';
+  let text = '';
+  const outBytes: number[] = [];
+  const modesSeen = new Set<DecodedEncodingMode>();
   let segmentCount = 0;
 
-  log('decode', 'Starting data decode', { dataCodewords: dataCodewords.length, version });
+  log('decode', 'Starting data decode (detailed)', { dataCodewords: dataCodewords.length, version });
 
   while (bits.available() >= 4) {
     const mode = bits.read(4);
@@ -699,15 +723,6 @@ export function decodeDataCodewords(dataCodewords: number[], version: number): s
     }
 
     const charCount = bits.read(charCountBits);
-    const modeName =
-      ['TERMINATOR', 'NUMERIC', 'ALPHANUMERIC', '', 'BYTE', '', '', '', 'KANJI'][mode] ||
-      `UNKNOWN(${mode})`;
-
-    log('decode', `Segment ${segmentCount}`, {
-      mode: modeName,
-      charCount,
-      bitsRemaining: bits.available(),
-    });
 
     // Sanity check: if charCount is unreasonably large, something is wrong
     if (charCount > 7000) {
@@ -715,34 +730,81 @@ export function decodeDataCodewords(dataCodewords: number[], version: number): s
       break;
     }
 
-    let decoded = '';
+    let decodedText = '';
+    let decodedBytes: number[] = [];
+    let modeTag: DecodedEncodingMode = 'unknown';
+
     switch (mode) {
-      case MODE_NUMERIC:
-        decoded = decodeNumeric(bits, charCount);
+      case MODE_NUMERIC: {
+        decodedText = decodeNumeric(bits, charCount);
+        modeTag = 'numeric';
+        // Numeric mode is ASCII digits
+        for (let i = 0; i < decodedText.length; i++) outBytes.push(decodedText.charCodeAt(i) & 0xff);
         break;
-      case MODE_ALPHANUMERIC:
-        decoded = decodeAlphanumeric(bits, charCount);
+      }
+      case MODE_ALPHANUMERIC: {
+        decodedText = decodeAlphanumeric(bits, charCount);
+        modeTag = 'alphanumeric';
+        // Alphanumeric mode is ASCII subset
+        for (let i = 0; i < decodedText.length; i++) outBytes.push(decodedText.charCodeAt(i) & 0xff);
         break;
-      case MODE_BYTE:
-        decoded = decodeByte(bits, charCount);
+      }
+      case MODE_BYTE: {
+        const r = decodeByteDetailed(bits, charCount);
+        decodedText = r.text;
+        decodedBytes = r.bytes;
+        modeTag = 'byte';
+        for (const b of decodedBytes) outBytes.push(b);
         break;
-      case MODE_KANJI:
-        decoded = decodeKanji(bits, charCount);
+      }
+      case MODE_KANJI: {
+        const r = decodeKanjiDetailed(bits, charCount);
+        decodedText = r.text;
+        decodedBytes = r.bytes;
+        modeTag = 'kanji';
+        for (const b of decodedBytes) outBytes.push(b);
         break;
-      default:
+      }
+      default: {
         log('decode', 'Unknown mode, skipping', { mode });
+        modeTag = 'unknown';
         break;
+      }
     }
 
+    if (modeTag !== 'unknown') modesSeen.add(modeTag);
+    text += decodedText;
+
     log('decode', `Decoded segment ${segmentCount}`, {
-      length: decoded.length,
-      preview: decoded.slice(0, 50),
+      mode: modeTag,
+      charCount,
+      textLen: decodedText.length,
+      bytesLen: decodedBytes.length,
+      preview: decodedText.slice(0, 50),
     });
-    result += decoded;
   }
 
-  log('decode', 'Final result', { length: result.length, preview: result.slice(0, 100) });
-  return result;
+  const encodingMode: DecodedEncodingMode = (() => {
+    if (modesSeen.size === 1) {
+      // Get the only element
+      for (const m of modesSeen) return m;
+    }
+    if (modesSeen.size > 1) return 'mixed';
+    return 'unknown';
+  })();
+
+  return {
+    text,
+    bytes: new Uint8Array(outBytes),
+    encodingMode,
+  };
+}
+
+/**
+ * Decode the data codewords into a string
+ */
+export function decodeDataCodewords(dataCodewords: number[], version: number): string {
+  return decodeDataCodewordsDetailed(dataCodewords, version).text;
 }
 
 /**
@@ -867,6 +929,77 @@ function decodeAlphanumeric(bits: BitStream, count: number): string {
   }
 
   return result;
+}
+
+/**
+ * Decode byte mode and preserve raw bytes.
+ *
+ * Text decoding strategy:
+ * - Try UTF-8.
+ * - If decoding yields replacement characters (�), fall back to ISO-8859-1 (latin1).
+ * This matches how many QR generators treat byte mode when no ECI is present.
+ */
+function decodeByteDetailed(bits: BitStream, count: number): { text: string; bytes: number[] } {
+  const bytes: number[] = [];
+
+  for (let i = 0; i < count; i++) {
+    if (bits.available() < 8) break;
+    bytes.push(bits.read(8));
+  }
+
+  // UTF-8 best effort
+  let utf8Text = '';
+  try {
+    utf8Text = new TextDecoder('utf-8').decode(new Uint8Array(bytes));
+  } catch {
+    utf8Text = '';
+  }
+
+  // If decoder had to replace invalid sequences, prefer a raw latin1 view.
+  if (utf8Text.includes('�')) {
+    const latin1 = String.fromCharCode(...bytes);
+    return { text: latin1, bytes };
+  }
+
+  if (utf8Text.length > 0) return { text: utf8Text, bytes };
+
+  // Fall back to ISO-8859-1
+  return { text: String.fromCharCode(...bytes), bytes };
+}
+
+/**
+ * Decode Kanji mode and preserve raw bytes (Shift-JIS).
+ */
+function decodeKanjiDetailed(bits: BitStream, count: number): { text: string; bytes: number[] } {
+  const bytes: number[] = [];
+
+  for (let i = 0; i < count; i++) {
+    if (bits.available() < 13) break;
+    let value = bits.read(13);
+
+    // Convert to Shift-JIS
+    const byte1 = Math.floor(value / 0xc0);
+    const byte2 = value % 0xc0;
+    value = (byte1 << 8) | byte2;
+
+    if (value < 0x01f00) {
+      value += 0x8140;
+    } else {
+      value += 0xc140;
+    }
+
+    bytes.push((value >> 8) & 0xff);
+    bytes.push(value & 0xff);
+  }
+
+  let text = '';
+  try {
+    text = new TextDecoder('shift-jis').decode(new Uint8Array(bytes));
+  } catch {
+    text = '';
+  }
+
+  return { text, bytes };
 }
 
 /**

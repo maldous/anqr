@@ -93,13 +93,23 @@ export function isAlignmentPattern(
  * Format info is around finder patterns
  */
 export function isFormatInfo(row: number, col: number, moduleCount: number): boolean {
-  // Around top-left finder (row 8, cols 0-8 and col 8, rows 0-8)
-  if (row === 8 && col <= 8) return true;
-  if (col === 8 && row <= 8) return true;
-  // Around top-right finder (row 8, cols size-8 to size-1)
-  if (row === 8 && col >= moduleCount - 8) return true;
-  // Around bottom-left finder (col 8, rows size-7 to size-1)
-  if (col === 8 && row >= moduleCount - 7) return true;
+  // Format information modules (15 bits, duplicated).
+  // Important: exclude timing modules at (8,6) and (6,8).
+  // Top-left group (around top-left finder)
+  // - row 8, col 0..5 and 7..8
+  // - col 8, row 0..5 and 7..8
+  if (row === 8) {
+    if (col <= 5) return true;
+    if (col === 7 || col === 8) return true;
+    // Top-right group
+    if (col >= moduleCount - 8) return true;
+  }
+  if (col === 8) {
+    if (row <= 5) return true;
+    if (row === 7 || row === 8) return true;
+    // Bottom-left group
+    if (row >= moduleCount - 7) return true;
+  }
   return false;
 }
 
@@ -142,6 +152,10 @@ export function isLocked(row: number, col: number, moduleCount: number, version:
 
   // Version information
   if (isVersionInfo(row, col, moduleCount, version)) return true;
+
+  // Fixed dark module (scan critical)
+  // ISO/IEC 18004: module at (4 * version + 9, 8) which equals (moduleCount - 8, 8)
+  if (row === moduleCount - 8 && col === 8) return true;
 
   // Quiet zone separators (1-module border around finders)
   // Top-left separator

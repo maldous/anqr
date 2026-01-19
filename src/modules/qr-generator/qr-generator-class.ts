@@ -12,6 +12,7 @@ import {
   resetStringToBytes,
   setStringToBytes,
 } from '../qr-encoder';
+import { verifyQRStructure } from '../qr-spec';
 import { qrMatrixCache } from './cache';
 import { type CanvasFactory, defaultBrowserCanvasFactory } from './canvas-factory';
 import {
@@ -283,18 +284,29 @@ export class QRGenerator {
       characterEncodingConfig
     );
 
+    // Lightweight structural verification (debug-only)
+    if (config.debugOverlayDither === true) {
+      const vr = verifyQRStructure(qr, typeNumber || undefined);
+      if (!vr.ok) {
+        console.warn('[QRVerify] structural check failed', {
+          moduleCount,
+          version: vr.version,
+          issues: vr.issues,
+        });
+      }
+    }
+
     // =======================================================================
     // FIX: Ensure overlayMode has a default when overlay canvas is provided but mode is undefined
     // This can happen due to debounce timing - overlay canvas is passed before config updates
     // Default to 'dithered' to match the store default in qr-store.ts
     // IMPORTANT: This must happen BEFORE the scale factor check!
     // =======================================================================
-    const effectiveOverlayMode = processedOverlayCanvas && !config.overlayMode 
-      ? 'dithered' 
-      : config.overlayMode;
-    
-    const effectiveConfig = { 
-      ...config, 
+    const effectiveOverlayMode =
+      processedOverlayCanvas && !config.overlayMode ? 'dithered' : config.overlayMode;
+
+    const effectiveConfig = {
+      ...config,
       typeNumber,
       overlayMode: effectiveOverlayMode,
     };
@@ -303,23 +315,23 @@ export class QRGenerator {
     // UNIFIED SCALED RENDERING (dithered, blue-noise, subpixel modes)
     // =======================================================================
     const scale = getScaleFactor(effectiveOverlayMode, effectiveConfig);
-    
+
     // Targeted debug for overlay dithering only.
     if (effectiveConfig.debugOverlayDither) {
       console.log('[OverlayDither] qr-generator', {
-      hasOverlay: !!processedOverlayCanvas,
-      configOverlayMode: config.overlayMode,
-      effectiveOverlayMode,
-      scale,
-      willUseScaledPath: scale > 1 && !!processedOverlayCanvas,
-      colorMode: config.colorMode,
-      overlayIntensity: config.overlayIntensity,
+        hasOverlay: !!processedOverlayCanvas,
+        configOverlayMode: config.overlayMode,
+        effectiveOverlayMode,
+        scale,
+        willUseScaledPath: scale > 1 && !!processedOverlayCanvas,
+        colorMode: config.colorMode,
+        overlayIntensity: config.overlayIntensity,
       });
     }
     if (scale > 1 && processedOverlayCanvas) {
       return await generateScaledQR(
         qr,
-        effectiveConfig,  // Use effectiveConfig with corrected overlayMode
+        effectiveConfig, // Use effectiveConfig with corrected overlayMode
         processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
         moduleCount,
         scale,
@@ -332,7 +344,7 @@ export class QRGenerator {
     // =======================================================================
     // STAGE 2: OVERLAY PROCESSING (for non-scaled modes like blend, center, etc.)
     // =======================================================================
-    
+
     const { ditherPattern, overlayData, effectiveIntensity } = await prepareUnifiedOverlayData(
       qr,
       effectiveConfig,
@@ -340,7 +352,7 @@ export class QRGenerator {
       moduleCount,
       this.createCanvas.bind(this)
     );
-    
+
     // =======================================================================
     // STAGE 3: CANVAS SETUP
     // =======================================================================
@@ -377,7 +389,7 @@ export class QRGenerator {
     // =======================================================================
     // STAGE 4: DRAW STRUCTURAL PATTERNS
     // =======================================================================
-    
+
     const { drawnFinderPatterns, drawnAlignmentPatterns } = this.drawStructuralPatterns(
       ctx,
       config,
@@ -394,7 +406,7 @@ export class QRGenerator {
     renderModules(
       ctx,
       qr,
-      effectiveConfig,  // Use effectiveConfig with corrected overlayMode
+      effectiveConfig, // Use effectiveConfig with corrected overlayMode
       moduleCount,
       moduleSize,
       margin,

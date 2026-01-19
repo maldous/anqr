@@ -3,6 +3,7 @@
  * Handles all scaled overlay modes (dithered, blue-noise, subpixel)
  */
 
+import { isFormatInfo as isFormatInfoSpec, isVersionInfo as isVersionInfoSpec } from '../qr-spec';
 import type { CanvasFactory } from './canvas-factory';
 import {
   createGradientFill,
@@ -16,12 +17,8 @@ import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
 import { validateColor } from './utils';
-import {
-  isFormatInfo as isFormatInfoSpec,
-  isVersionInfo as isVersionInfoSpec,
-} from '../qr-spec';
 
-function isDarkModule(row: number, col: number, moduleCount: number): boolean {
+function _isDarkModule(row: number, col: number, moduleCount: number): boolean {
   // Fixed dark module (always dark) per ISO/IEC 18004.
   // For any version, this is at (moduleCount - 8, 8).
   return row === moduleCount - 8 && col === 8;
@@ -100,7 +97,7 @@ export async function generateScaledQR(
 
   // Determine color rendering mode
   const useColorRendering = overlayCanvas && config.colorMode !== 'bw';
-  
+
   // For overlay modes that display the image through colors (dithered, blue-noise, subpixel),
   // BOTH dark and light modules need to show overlay colors.
   // The image emerges from the COLOR CONTRAST in the overlay itself.
@@ -110,7 +107,8 @@ export async function generateScaledQR(
     config.overlayMode === 'dithered' ||
     config.overlayMode === 'blue_noise' ||
     config.overlayMode === 'blue-noise';
-  const isSubpixelMode = config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
+  const isSubpixelMode =
+    config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
   const needsBothDarkAndLightColors = isDitheredMode || isSubpixelMode;
 
   const debug = config.debugOverlayDither === true;
@@ -128,7 +126,7 @@ export async function generateScaledQR(
       preserveFinders: config.preserveFinders,
       preserveTiming: config.preserveTiming,
       preserveAlignment: config.preserveAlignment,
-      hasColors: !!(colors && colors.length && colors[0]?.length),
+      hasColors: !!(colors?.length && colors[0]?.length),
       sampleColor: colors?.[5]?.[5],
     });
   }
@@ -142,9 +140,14 @@ export async function generateScaledQR(
       // Skip light pixels unless:
       // - Transparent background requires explicit drawing
       // - Dithered/subpixel modes need to draw light pixels with overlay colors
-      const shouldDrawLightPixel = needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering);
-      
-      if (debug && y === Math.floor(scaledSize / 2) && (x === Math.floor(scaledSize / 2) || x === Math.floor(scaledSize / 2) + 4)) {
+      const shouldDrawLightPixel =
+        needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering);
+
+      if (
+        debug &&
+        y === Math.floor(scaledSize / 2) &&
+        (x === Math.floor(scaledSize / 2) || x === Math.floor(scaledSize / 2) + 4)
+      ) {
         console.log('[OverlayDither][ScaledRender] samplePixel', {
           y,
           x,
@@ -152,8 +155,8 @@ export async function generateScaledQR(
           color,
         });
       }
-      
-      if (!isDark && !shouldDrawLightPixel) continue;
+
+      if (!(isDark || shouldDrawLightPixel)) continue;
 
       const dx = marginPx + x * subPixelSize;
       const dy = marginPx + y * subPixelSize;
@@ -300,7 +303,7 @@ export async function generateScaledQR(
       for (let col = 0; col < moduleCount; col++) {
         const isFormat = protectFormat && isFormatInfoSpec(row, col, moduleCount);
         const isVersion = protectVersion && isVersionInfoSpec(row, col, moduleCount, version);
-        if (!isFormat && !isVersion) continue;
+        if (!(isFormat || isVersion)) continue;
 
         const isDark = qr.isDark(row, col);
         const x = marginPx + col * effectiveModuleSize;
@@ -325,7 +328,7 @@ export async function generateScaledQR(
     if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
       const x = marginPx + dmCol * effectiveModuleSize;
       const y = marginPx + dmRow * effectiveModuleSize;
-      ctx.fillStyle = (useGradient && gradientFill) ? gradientFill : effectiveFgColor;
+      ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
       ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
     }
 
@@ -344,17 +347,10 @@ export async function generateScaledQR(
   drawFrame(ctx, size, effectiveModuleSize, marginModules, config);
 
   // Store the QR matrix for vector SVG export
-  const syntheticQr: QRCodeInstance = {
-    isDark: (row: number, col: number): boolean => {
-      const subRow = row * scale + Math.floor(scale / 2);
-      const subCol = col * scale + Math.floor(scale / 2);
-      return matrix[subRow]?.[subCol] ?? false;
-    },
-    getModuleCount: () => moduleCount,
-    addData: () => {},
-    make: () => {},
-  };
-  storeMatrixFn(syntheticQr, moduleCount);
+  // Export should reflect the canonical QR modules, not the scaled pixel decision matrix.
+  // The pixel matrix is used for rendering effects (dither/subpixel) and can introduce
+  // ambiguity when collapsed back to module resolution.
+  storeMatrixFn(qr, moduleCount);
 
   return canvas;
 }

@@ -22,7 +22,13 @@ import {
   isVersionInfo,
 } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
-import type { CreateCanvasFn, PixelDecisionMatrix, QRCodeInstance, QRGeneratorConfig, RGBWithMeta } from './types';
+import type {
+  CreateCanvasFn,
+  PixelDecisionMatrix,
+  QRCodeInstance,
+  QRGeneratorConfig,
+  RGBWithMeta,
+} from './types';
 
 type RGBi = { r: number; g: number; b: number };
 
@@ -59,7 +65,10 @@ function shouldLockModule(
   if (config.protectVersionInfo && isVersionInfo(row, col, moduleCount, version)) return true;
 
   // Finder + separators (scan critical). Respect toggle.
-  if (config.preserveFinders && (isFinderPattern(row, col, moduleCount) || isFinderSeparator(row, col, moduleCount))) {
+  if (
+    config.preserveFinders &&
+    (isFinderPattern(row, col, moduleCount) || isFinderSeparator(row, col, moduleCount))
+  ) {
     return true;
   }
 
@@ -84,7 +93,11 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function createEmptyMatrix(size: number, scale: number, effectiveIntensity: number): PixelDecisionMatrix {
+function createEmptyMatrix(
+  size: number,
+  scale: number,
+  effectiveIntensity: number
+): PixelDecisionMatrix {
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
   for (let y = 0; y < size; y++) {

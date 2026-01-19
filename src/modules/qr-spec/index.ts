@@ -62,3 +62,5 @@ export {
   QRMaskPattern,
   QRMode,
 } from './types';
+// Lightweight verification
+export { verifyQRStructure } from './verify';

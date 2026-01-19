@@ -27,7 +27,22 @@ export interface QRMatrix {
 export interface QRInstance {
   getModuleCount(): number;
   isDark(row: number, col: number): boolean;
-  make(): void;
+  make(maskPattern?: number): void;
+  addData(data: string, mode?: string): void;
+}
+
+function toEncoderModeToken(mode: EncodingMode, content: string): string | undefined {
+  const compatible = getCompatibleMode(content, mode);
+  switch (compatible) {
+    case 'numeric':
+      return 'Numeric';
+    case 'alphanumeric':
+      return 'Alphanumeric';
+    case 'kanji':
+      return 'Kanji';
+    default:
+      return 'Byte';
+  }
 }
 
 /**
@@ -36,14 +51,23 @@ export interface QRInstance {
 export function createQRInstance(
   data: string,
   errorCorrectionLevel: ECCLevel = 'M',
-  version: number = 0
+  version: number = 0,
+  options: Pick<QROptions, 'mode' | 'maskPattern'> = {}
 ): QRInstance {
-  const typeNumber = version === 0 ? undefined : version;
-  const qr = qrcode(typeNumber ?? 0, errorCorrectionLevel as QRErrorCorrectionLevelChar);
-  qr.addData(data);
-  qr.make();
+  const typeNumber = version === 0 ? 0 : version;
+  const qr = qrcode(
+    typeNumber,
+    errorCorrectionLevel as QRErrorCorrectionLevelChar
+  ) as unknown as QRInstance;
 
-  return qr as QRInstance;
+  const modeToken = options.mode ? toEncoderModeToken(options.mode, data) : undefined;
+  qr.addData(data, modeToken);
+
+  const mask = options.maskPattern;
+  const maskPattern = typeof mask === 'number' && mask >= 0 && mask <= 7 ? mask : undefined;
+  qr.make(maskPattern);
+
+  return qr;
 }
 
 /**
@@ -52,7 +76,10 @@ export function createQRInstance(
 export function generateQR(data: string, options: QROptions = {}): QRMatrix {
   const ecc = options.errorCorrectionLevel ?? 'M';
   const version = options.version ?? 0;
-  const instance = createQRInstance(data, ecc, version);
+  const instance = createQRInstance(data, ecc, version, {
+    mode: options.mode,
+    maskPattern: options.maskPattern,
+  });
   const size = instance.getModuleCount();
 
   const modules: boolean[][] = [];
@@ -64,7 +91,7 @@ export function generateQR(data: string, options: QROptions = {}): QRMatrix {
     modules.push(rowData);
   }
 
-  const actualVersion = (size - 17) / 4;
+  const actualVersion = Math.floor((size - 17) / 4);
 
   return {
     modules,
@@ -114,9 +141,7 @@ export function calculateOptimalVersion(
   // Try each version until one fits
   for (let v = 1; v <= 40; v++) {
     try {
-      const qr = qrcode(v, errorCorrectionLevel as QRErrorCorrectionLevelChar);
-      qr.addData(data);
-      qr.make();
+      createQRInstance(data, errorCorrectionLevel, v, { mode: 'auto' });
       return v;
     } catch {
       // Version too small, try next

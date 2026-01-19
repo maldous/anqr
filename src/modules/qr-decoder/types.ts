@@ -31,6 +31,8 @@ export interface FormatInfo {
 export interface DecodeResult {
   success: boolean;
   data: string | null;
+  /** Raw payload bytes, concatenated across segments (best-effort). */
+  dataBytes?: Uint8Array | null;
   error: string | null;
   location: {
     topLeftCorner: Point;
@@ -41,6 +43,8 @@ export interface DecodeResult {
   version: number | null;
   eccLevel: 'L' | 'M' | 'Q' | 'H' | null;
   maskPattern: number | null;
+  /** Detected encoding mode from segments. */
+  encodingMode?: 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'mixed' | 'unknown' | null;
 }
 
 export type ECCLevelChar = 'L' | 'M' | 'Q' | 'H';
