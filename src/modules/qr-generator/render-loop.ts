@@ -76,7 +76,7 @@ export function renderModules(
       const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
       const effectiveFgColor = validateColor(config.fgColor, '#000000');
       let moduleColor = isDark ? effectiveFgColor : effectiveBgColor;
-      
+
       // Use explicit boolean check to handle truthy/falsy edge cases
       // Computed here for clarity, value is constant for all modules
       const needsExplicitLightModules = config.transparentBg === true;

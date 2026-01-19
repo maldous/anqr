@@ -70,9 +70,16 @@ export async function preprocessOverlay(
   }
 
   // Get image data
-  const ctx = (canvas as unknown as { getContext: Function }).getContext('2d', {
+  const ctx = (
+    canvas as unknown as {
+      getContext(
+        contextId: '2d',
+        options?: CanvasRenderingContext2DSettings
+      ): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
+    }
+  ).getContext('2d', {
     willReadFrequently: true,
-  }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
+  });
   if (!ctx) return canvas;
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

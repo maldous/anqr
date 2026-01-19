@@ -69,6 +69,7 @@ import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {
   onNavigate?: (page: 'editor' | 'gallery' | 'analyze') => void;
+  generatedCanvas?: HTMLCanvasElement | null;
 }
 
 // Content type icons mapping
@@ -248,10 +249,13 @@ function StatusBadge({ status, trueLabel, falseLabel }: StatusBadgeProps) {
   );
 }
 
-export function Analyze({ onNavigate }: AnalyzeProps) {
+export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingSource, setLoadingSource] = useState<'file' | 'url' | 'camera' | null>(null);
+  const [loadingSource, setLoadingSource] = useState<
+    'file' | 'url' | 'camera' | 'generator' | null
+  >(null);
+  const [hasAutoAnalyzed, setHasAutoAnalyzed] = useState(false);
   const [result, setResult] = useState<QRAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState('');
@@ -569,6 +573,51 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
     setOriginalImageUrl(null);
   }, [originalImageUrl]);
 
+  // Handle analyzing the current generator canvas
+  const handleAnalyzeGenerator = useCallback(async () => {
+    if (!generatedCanvas) return;
+
+    setIsLoading(true);
+    setLoadingSource('generator');
+    setError(null);
+    setResult(null);
+    setImported(false);
+
+    try {
+      // Create a data URL from the canvas for original image display
+      const canvas = generatedCanvas as HTMLCanvasElement;
+      const dataUrl = canvas.toDataURL('image/png');
+      setOriginalImageUrl(dataUrl);
+
+      // Analyze the canvas directly
+      const analysisResult = analyzeQRCode(canvas);
+      setResult(analysisResult);
+      if (!analysisResult.success) {
+        setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t('analyze.genericError', 'Failed to analyze QR code')
+      );
+    } finally {
+      setIsLoading(false);
+      setLoadingSource(null);
+    }
+  }, [generatedCanvas, t]);
+
+  // Reset hasAutoAnalyzed when generatedCanvas changes so re-navigating triggers auto-analysis
+  useEffect(() => {
+    setHasAutoAnalyzed(false);
+  }, []);
+
+  // Auto-analyze the generator canvas on first load if available
+  useEffect(() => {
+    if (generatedCanvas && !hasAutoAnalyzed && !result && !isLoading) {
+      setHasAutoAnalyzed(true);
+      handleAnalyzeGenerator();
+    }
+  }, [generatedCanvas, hasAutoAnalyzed, result, isLoading, handleAnalyzeGenerator]);
+
   // Render content type details
   const renderContentTypeDetails = (contentType: ContentTypeDetails) => {
     const details: Array<{ label: string; value: string }> = [];
@@ -640,117 +689,153 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
             </p>
           </div>
 
-          {/* Input Section */}
-          {!result && (
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* File Upload Card */}
-              <label className="relative group cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={isLoading}
-                />
-                <div
-                  className={`flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed transition-all ${
-                    isLoading && loadingSource === 'file'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary hover:bg-primary/5'
-                  }`}
-                >
-                  {isLoading && loadingSource === 'file' ? (
-                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                  ) : (
-                    <Upload className="w-10 h-10 text-muted-foreground group-hover:text-primary transition-colors" />
-                  )}
-                  <div className="text-center">
-                    <p className="font-medium">{t('analyze.uploadFile', 'Upload Image')}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t('analyze.uploadHint', 'Click or drag & drop')}
-                    </p>
-                  </div>
-                </div>
-              </label>
-
-              {/* URL Input Card */}
-              <div
-                className={`flex flex-col gap-3 p-6 rounded-xl border-2 transition-all ${
-                  isLoading && loadingSource === 'url'
+          {/* Input Section - Always visible, compact cards */}
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+            {/* Use Current QR Card - only shown when generator canvas is available */}
+            {generatedCanvas ? (
+              <button
+                type="button"
+                onClick={handleAnalyzeGenerator}
+                disabled={isLoading}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full ${
+                  isLoading && loadingSource === 'generator'
                     ? 'border-primary bg-primary/5'
-                    : 'border-border'
+                    : 'border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10'
                 }`}
               >
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Link className="w-5 h-5" />
-                  <span className="font-medium">{t('analyze.fromUrl', 'From URL')}</span>
+                {isLoading && loadingSource === 'generator' ? (
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                ) : (
+                  <QrCode className="w-6 h-6 text-primary" />
+                )}
+                <div className="text-center">
+                  <p className="text-sm font-medium text-primary">
+                    {t('analyze.useCurrentQr', 'Current QR')}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {t('analyze.fromGenerator', 'From Generator')}
+                  </p>
                 </div>
-                <div className="flex gap-2">
-                  <Input
-                    type="url"
-                    placeholder="https://..."
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-                    disabled={isLoading}
-                    className="flex-1"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={handleUrlSubmit}
-                    disabled={isLoading || !urlInput.trim()}
-                  >
-                    {isLoading && loadingSource === 'url' ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </Button>
+              </button>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full">
+                <QrCode className="w-6 h-6 text-muted-foreground" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('analyze.useCurrentQr', 'Current QR')}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {t('analyze.noQrGenerated', 'Generate one first')}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t('analyze.urlHint', 'Enter URL to a QR code image')}
-                </p>
               </div>
+            )}
 
-              {/* Camera Card */}
-              {Capacitor.isNativePlatform() ? (
-                <button
-                  type="button"
-                  onClick={handleCameraCapture}
-                  disabled={isLoading}
-                  className={`flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 transition-all ${
-                    isLoading && loadingSource === 'camera'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary hover:bg-primary/5'
-                  }`}
-                >
-                  {isLoading && loadingSource === 'camera' ? (
-                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                  ) : (
-                    <CameraIcon className="w-10 h-10 text-muted-foreground" />
-                  )}
-                  <div className="text-center">
-                    <p className="font-medium">{t('analyze.captureCamera', 'Take Photo')}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t('analyze.cameraHint', 'Use device camera')}
-                    </p>
-                  </div>
-                </button>
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 border-dashed border-border opacity-50">
-                  <CameraIcon className="w-10 h-10 text-muted-foreground" />
-                  <div className="text-center">
-                    <p className="font-medium text-muted-foreground">
-                      {t('analyze.captureCamera', 'Take Photo')}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {t('analyze.cameraWebHint', 'Available on mobile app')}
-                    </p>
-                  </div>
+            {/* File Upload Card */}
+            <label className="relative group cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={isLoading}
+              />
+              <div
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed transition-all h-full ${
+                  isLoading && loadingSource === 'file'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary hover:bg-primary/5'
+                }`}
+              >
+                {isLoading && loadingSource === 'file' ? (
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                ) : (
+                  <Upload className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                )}
+                <div className="text-center">
+                  <p className="text-sm font-medium">{t('analyze.uploadFile', 'Upload')}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {t('analyze.uploadHint', 'Click or drop')}
+                  </p>
                 </div>
-              )}
+              </div>
+            </label>
+
+            {/* URL Input Card */}
+            <div
+              className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full ${
+                isLoading && loadingSource === 'url'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Link className="w-4 h-4" />
+                <span className="text-sm font-medium">{t('analyze.fromUrl', 'From URL')}</span>
+              </div>
+              <div className="flex gap-1.5">
+                <Input
+                  type="url"
+                  placeholder="https://..."
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                  disabled={isLoading}
+                  className="flex-1 h-8 text-xs"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleUrlSubmit}
+                  disabled={isLoading || !urlInput.trim()}
+                  className="h-8 w-8 p-0"
+                >
+                  {isLoading && loadingSource === 'url' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  )}
+                </Button>
+              </div>
             </div>
-          )}
+
+            {/* Camera Card */}
+            {Capacitor.isNativePlatform() ? (
+              <button
+                type="button"
+                onClick={handleCameraCapture}
+                disabled={isLoading}
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full ${
+                  isLoading && loadingSource === 'camera'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary hover:bg-primary/5'
+                }`}
+              >
+                {isLoading && loadingSource === 'camera' ? (
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                ) : (
+                  <CameraIcon className="w-6 h-6 text-muted-foreground" />
+                )}
+                <div className="text-center">
+                  <p className="text-sm font-medium">{t('analyze.captureCamera', 'Photo')}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {t('analyze.cameraHint', 'Camera')}
+                  </p>
+                </div>
+              </button>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full">
+                <CameraIcon className="w-6 h-6 text-muted-foreground" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('analyze.captureCamera', 'Photo')}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {t('analyze.cameraWebHint', 'App only')}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Error State */}
           {error && !result && (
@@ -784,9 +869,6 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                       </p>
                     )}
                   </div>
-                  <Button variant="ghost" size="sm" onClick={handleReset}>
-                    {t('analyze.analyzeAnother', 'Analyze Another')}
-                  </Button>
                 </div>
               )}
 
@@ -803,9 +885,6 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                             {t('analyze.corsBlocked', 'Image Access Blocked')}
                           </p>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={handleReset}>
-                          {t('analyze.tryAgain', 'Try Again')}
-                        </Button>
                       </div>
                       <div className="p-4 space-y-3">
                         <p className="text-sm text-muted-foreground">
@@ -863,9 +942,6 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                         </p>
                         <p className="text-sm opacity-90 whitespace-pre-wrap">{result.error}</p>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleReset}>
-                        {t('analyze.tryAgain', 'Try Again')}
-                      </Button>
                     </div>
                   )}
                 </div>
@@ -1357,45 +1433,27 @@ export function Analyze({ onNavigate }: AnalyzeProps) {
                       </ul>
                     </div>
 
-                    <div className="flex gap-3">
-                      <Button
-                        size="lg"
-                        className="flex-1 gap-2"
-                        onClick={handleImportToGenerator}
-                        disabled={imported}
-                      >
-                        {imported ? (
-                          <>
-                            <Check className="w-5 h-5" />
-                            {t('analyze.imported', 'Imported!')}
-                          </>
-                        ) : (
-                          <>
-                            <ArrowRight className="w-5 h-5" />
-                            {t('analyze.importToGenerator', 'Import to Generator')}
-                          </>
-                        )}
-                      </Button>
-                      <Button size="lg" variant="outline" onClick={handleReset}>
-                        {t('analyze.analyzeAnother', 'Analyze Another')}
-                      </Button>
-                    </div>
+                    <Button
+                      size="lg"
+                      className="w-full gap-2"
+                      onClick={handleImportToGenerator}
+                      disabled={imported}
+                    >
+                      {imported ? (
+                        <>
+                          <Check className="w-5 h-5" />
+                          {t('analyze.imported', 'Imported!')}
+                        </>
+                      ) : (
+                        <>
+                          <ArrowRight className="w-5 h-5" />
+                          {t('analyze.importToGenerator', 'Import to Generator')}
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </>
               )}
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!(result || error || isLoading) && (
-            <div className="text-center py-8">
-              <QrCode className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  'analyze.emptyHint',
-                  'Upload an image, enter a URL, or take a photo to analyze a QR code'
-                )}
-              </p>
             </div>
           )}
         </div>

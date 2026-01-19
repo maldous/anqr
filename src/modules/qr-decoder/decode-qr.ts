@@ -5,7 +5,7 @@
 
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
-import { decodeDataCodewords, readCodewords, separateCodewords } from './decode';
+import { decodeDataCodewordsDetailed, readCodewords, separateCodewords } from './decode';
 import { calculateLocation, extractModuleMatrix } from './extract';
 import { getECCLevelChar, readFormatInfo, unmaskMatrix } from './format';
 import { findFinderPatterns, selectFinderPatterns } from './locate';
@@ -83,10 +83,15 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     log('main', 'Read codewords', { count: codewords.length });
 
     // Step 8: Separate data and error correction codewords
-    const { dataCodewords } = separateCodewords(codewords, version, formatInfo.eccLevel);
+    const { dataCodewords } = separateCodewords(codewords, Math.round(version), formatInfo.eccLevel);
 
     // Step 9: Decode data
-    const data = decodeDataCodewords(dataCodewords, version);
+    // Use rounded version to avoid fractional char-count tables on jittery inputs
+    const decoded = decodeDataCodewordsDetailed(dataCodewords, Math.round(version));
+    const data = decoded.text;
+    const dataBytes = decoded.bytes;
+    const encodingMode = decoded.encodingMode;
+
 
     if (!data) {
       log('main', 'Failed: could not decode data');
@@ -94,7 +99,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     }
 
     log('main', 'Decode SUCCESS', {
-      version,
+      version: Math.round(version),
       eccLevel: getECCLevelChar(formatInfo.eccLevel),
       dataLength: data.length,
       dataPreview: data.slice(0, 50),
@@ -103,6 +108,8 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     return {
       success: true,
       data,
+      dataBytes,
+      encodingMode,
       error: null,
       location: {
         topLeftCorner: topLeft.center,
@@ -110,7 +117,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
         bottomLeftCorner: bottomLeft.center,
         bottomRightCorner: location.bottomRight,
       },
-      version,
+      version: Math.round(version),
       eccLevel: getECCLevelChar(formatInfo.eccLevel),
       maskPattern: formatInfo.maskPattern,
     };
