@@ -4,7 +4,7 @@
  */
 
 // Debug logging - can be disabled in production
-const DEBUG = true;
+const DEBUG = false;
 
 export type LogData = Record<string, unknown>;
 

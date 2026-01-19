@@ -269,13 +269,40 @@ export class QRGenerator {
     );
 
     // =======================================================================
+    // FIX: Ensure overlayMode has a default when overlay canvas is provided but mode is undefined
+    // This can happen due to debounce timing - overlay canvas is passed before config updates
+    // Default to 'dithered' to match the store default in qr-store.ts
+    // IMPORTANT: This must happen BEFORE the scale factor check!
+    // =======================================================================
+    const effectiveOverlayMode = processedOverlayCanvas && !config.overlayMode 
+      ? 'dithered' 
+      : config.overlayMode;
+    
+    const effectiveConfig = { 
+      ...config, 
+      typeNumber,
+      overlayMode: effectiveOverlayMode,
+    };
+
+    // =======================================================================
     // UNIFIED SCALED RENDERING (dithered, blue-noise, subpixel modes)
     // =======================================================================
-    const scale = getScaleFactor(config.overlayMode, config);
+    const scale = getScaleFactor(effectiveOverlayMode, effectiveConfig);
+    
+    // TRACE: Log overlay rendering path
+    console.log('[QRGenerator] TRACE:', {
+      hasOverlay: !!processedOverlayCanvas,
+      configOverlayMode: config.overlayMode,
+      effectiveOverlayMode,
+      scale,
+      willUseScaledPath: scale > 1 && !!processedOverlayCanvas,
+      colorMode: config.colorMode,
+      overlayIntensity: config.overlayIntensity,
+    });
     if (scale > 1 && processedOverlayCanvas) {
       return await generateScaledQR(
         qr,
-        config,
+        effectiveConfig,  // Use effectiveConfig with corrected overlayMode
         processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
         moduleCount,
         scale,
@@ -286,16 +313,17 @@ export class QRGenerator {
     }
 
     // =======================================================================
-    // STAGE 2: OVERLAY PROCESSING
+    // STAGE 2: OVERLAY PROCESSING (for non-scaled modes like blend, center, etc.)
     // =======================================================================
+    
     const { ditherPattern, overlayData, effectiveIntensity } = await prepareUnifiedOverlayData(
       qr,
-      { ...config, typeNumber },
+      effectiveConfig,
       processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas | null,
       moduleCount,
       this.createCanvas.bind(this)
     );
-
+    
     // =======================================================================
     // STAGE 3: CANVAS SETUP
     // =======================================================================
@@ -332,6 +360,7 @@ export class QRGenerator {
     // =======================================================================
     // STAGE 4: DRAW STRUCTURAL PATTERNS
     // =======================================================================
+    
     const { drawnFinderPatterns, drawnAlignmentPatterns } = this.drawStructuralPatterns(
       ctx,
       config,
@@ -348,7 +377,7 @@ export class QRGenerator {
     renderModules(
       ctx,
       qr,
-      config,
+      effectiveConfig,  // Use effectiveConfig with corrected overlayMode
       moduleCount,
       moduleSize,
       margin,
