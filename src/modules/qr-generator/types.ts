@@ -113,7 +113,7 @@ export interface QRGeneratorConfig {
   filterDuotone2?: string;
 
   // Debug
-  // When true, emit a small, targeted set of logs for overlay dithering only.
+  // When enabled, logs only the overlay/dither wiring and preservation decisions.
   debugOverlayDither?: boolean;
 }
 

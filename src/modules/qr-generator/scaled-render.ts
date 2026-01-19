@@ -10,54 +10,26 @@ import {
   drawFinderPatternComplete,
   drawFrame,
   drawFrameBackground,
+  drawTimingModule,
 } from './drawing';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
-import { parseColor } from '../core';
 import { validateColor } from './utils';
+import {
+  isFormatInfo as isFormatInfoSpec,
+  isVersionInfo as isVersionInfoSpec,
+} from '../qr-spec';
+
+function isDarkModule(row: number, col: number, moduleCount: number): boolean {
+  // Fixed dark module (always dark) per ISO/IEC 18004.
+  // For any version, this is at (moduleCount - 8, 8).
+  return row === moduleCount - 8 && col === 8;
+}
 
 interface PixelColor extends RGB {
   halftone?: boolean;
   sizeRatio?: number;
-}
-
-function clamp255(n: number): number {
-  return n < 0 ? 0 : n > 255 ? 255 : n;
-}
-
-function luma255(r: number, g: number, b: number): number {
-  return r * 0.299 + g * 0.587 + b * 0.114;
-}
-
-function blendRgb(a: RGB, b: RGB, t: number): RGB {
-  const tt = t < 0 ? 0 : t > 1 ? 1 : t;
-  return {
-    r: Math.round(a.r + (b.r - a.r) * tt),
-    g: Math.round(a.g + (b.g - a.g) * tt),
-    b: Math.round(a.b + (b.b - a.b) * tt),
-  };
-}
-
-function rgbStr(rgb: RGB): string {
-  return `rgb(${rgb.r},${rgb.g},${rgb.b})`;
-}
-
-function clampLuminance(rgb: RGB, isDark: boolean): RGB {
-  // Keep a strong, scan-friendly contrast while still preserving hue.
-  const darkMax = 100;
-  const lightMin = 200;
-
-  const y = luma255(rgb.r, rgb.g, rgb.b);
-  if (isDark) {
-    if (y <= darkMax) return rgb;
-    const f = darkMax / (y || 1);
-    return { r: Math.round(rgb.r * f), g: Math.round(rgb.g * f), b: Math.round(rgb.b * f) };
-  }
-  if (y >= lightMin) return rgb;
-  if (y <= 0.0001) return { r: lightMin, g: lightMin, b: lightMin };
-  const f = lightMin / y;
-  return { r: clamp255(rgb.r * f), g: clamp255(rgb.g * f), b: clamp255(rgb.b * f) };
 }
 
 /**
@@ -111,18 +83,7 @@ export async function generateScaledQR(
   // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
   const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
   const effectiveFgColor = validateColor(config.fgColor, '#000000');
-  const bgRgb = (() => {
-    const c = parseColor(effectiveBgColor);
-    return { r: Math.round(c.r), g: Math.round(c.g), b: Math.round(c.b) };
-  })();
-  const fgRgb = (() => {
-    const c = parseColor(effectiveFgColor);
-    return { r: Math.round(c.r), g: Math.round(c.g), b: Math.round(c.b) };
-  })();
   const needsExplicitLightModules = config.transparentBg === true;
-
-  const overlayIntensity01 = Math.max(0, Math.min(1, (config.overlayIntensity ?? 100) / 100));
-  const overlayAnchorMix = 0.25 + 0.25 * overlayIntensity01;
 
   // Draw background
   if (!config.transparentBg) {
@@ -138,7 +99,7 @@ export async function generateScaledQR(
   const useGradient = config.gradient && config.gradient.type !== 'none';
 
   // Determine color rendering mode
-  const useColorRendering = !!overlayCanvas && config.colorMode !== 'bw';
+  const useColorRendering = overlayCanvas && config.colorMode !== 'bw';
   
   // For overlay modes that display the image through colors (dithered, blue-noise, subpixel),
   // BOTH dark and light modules need to show overlay colors.
@@ -147,18 +108,28 @@ export async function generateScaledQR(
   // - Light modules show lighter overlay colors (light parts of the image)
   const isDitheredMode =
     config.overlayMode === 'dithered' ||
-    config.overlayMode === 'blue-noise' ||
-    config.overlayMode === 'blue_noise';
+    config.overlayMode === 'blue_noise' ||
+    config.overlayMode === 'blue-noise';
   const isSubpixelMode = config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
   const needsBothDarkAndLightColors = isDitheredMode || isSubpixelMode;
 
-  // Targeted debug for overlay dithering only.
-  if (config.debugOverlayDither) {
-    console.log('[OverlayDither] scaled-render', {
+  const debug = config.debugOverlayDither === true;
+  if (debug) {
+    console.log('[OverlayDither][ScaledRender] start', {
+      moduleCount,
+      scale,
       scaledSize,
       overlayMode: config.overlayMode,
+      colorMode: config.colorMode,
       useColorRendering,
       needsBothDarkAndLightColors,
+      protectFormatInfo: config.protectFormatInfo,
+      protectVersionInfo: config.protectVersionInfo,
+      preserveFinders: config.preserveFinders,
+      preserveTiming: config.preserveTiming,
+      preserveAlignment: config.preserveAlignment,
+      hasColors: !!(colors && colors.length && colors[0]?.length),
+      sampleColor: colors?.[5]?.[5],
     });
   }
 
@@ -172,6 +143,15 @@ export async function generateScaledQR(
       // - Transparent background requires explicit drawing
       // - Dithered/subpixel modes need to draw light pixels with overlay colors
       const shouldDrawLightPixel = needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering);
+      
+      if (debug && y === Math.floor(scaledSize / 2) && (x === Math.floor(scaledSize / 2) || x === Math.floor(scaledSize / 2) + 4)) {
+        console.log('[OverlayDither][ScaledRender] samplePixel', {
+          y,
+          x,
+          isDark,
+          color,
+        });
+      }
       
       if (!isDark && !shouldDrawLightPixel) continue;
 
@@ -191,10 +171,13 @@ export async function generateScaledQR(
             const offset = (subPixelSize - dotSize) / 2;
             ctx.fillRect(dx + offset, dy + offset, dotSize, dotSize);
           } else if (isDitheredMode) {
-            // Dithered/blue-noise: preserve hue while forcing scan-friendly contrast.
-            const base = { r: color.r, g: color.g, b: color.b };
-            const mixed = clampLuminance(blendRgb(base, fgRgb, overlayAnchorMix), true);
-            ctx.fillStyle = rgbStr(mixed);
+            // For dithered/blue-noise modes: DARKEN the overlay color for dark modules
+            // This creates visual contrast between dark and light modules while preserving image colors
+            // Dark modules use strongly darkened overlay color (multiply by ~0.15 for high contrast)
+            const darkR = Math.round(color.r * 0.15);
+            const darkG = Math.round(color.g * 0.15);
+            const darkB = Math.round(color.b * 0.15);
+            ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {
             // For subpixel modes: use raw overlay color
@@ -210,10 +193,13 @@ export async function generateScaledQR(
         // Light module: draw with background color or overlay color
         if (needsBothDarkAndLightColors && useColorRendering && color) {
           if (isDitheredMode) {
-            // Dithered/blue-noise: preserve hue while forcing scan-friendly contrast.
-            const base = { r: color.r, g: color.g, b: color.b };
-            const mixed = clampLuminance(blendRgb(base, bgRgb, overlayAnchorMix), false);
-            ctx.fillStyle = rgbStr(mixed);
+            // For dithered/blue-noise modes: LIGHTEN the overlay color for light modules
+            // This creates visual contrast between dark and light modules while preserving image colors
+            // Light modules use strongly lightened overlay color (blend toward white by ~85% for high contrast)
+            const lightR = Math.round(color.r + (255 - color.r) * 0.85);
+            const lightG = Math.round(color.g + (255 - color.g) * 0.85);
+            const lightB = Math.round(color.b + (255 - color.b) * 0.85);
+            ctx.fillStyle = `rgb(${lightR},${lightG},${lightB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {
             // For subpixel modes: use raw overlay color
@@ -263,6 +249,94 @@ export async function generateScaledQR(
       const centerX = marginPx + (pos.col + 0.5) * effectiveModuleSize;
       const centerY = marginPx + (pos.row + 0.5) * effectiveModuleSize;
       drawAlignmentPattern(ctx, centerX, centerY, effectiveModuleSize, alignmentStyle, config);
+    }
+  }
+
+  // Preserve timing pattern modules on top (scan critical)
+  // When preserveTiming is false, we intentionally leave timing modules subject to the overlay.
+  const shouldPreserveTiming = config.preserveTiming === true;
+  if (shouldPreserveTiming) {
+    const timingStyle = config.timingStyle || 'match_module';
+    // Horizontal timing (row 6, between finders)
+    const timingRow = 6;
+    for (let col = 8; col < moduleCount - 8; col++) {
+      const isDark = qr.isDark(timingRow, col);
+      const x = marginPx + col * effectiveModuleSize;
+      const y = marginPx + timingRow * effectiveModuleSize;
+      if (isDark) {
+        ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+        drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
+      } else {
+        // Override any overlay color for light timing modules
+        ctx.fillStyle = effectiveBgColor;
+        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+      }
+    }
+    // Vertical timing (col 6, between finders)
+    const timingCol = 6;
+    for (let row = 8; row < moduleCount - 8; row++) {
+      const isDark = qr.isDark(row, timingCol);
+      const x = marginPx + timingCol * effectiveModuleSize;
+      const y = marginPx + row * effectiveModuleSize;
+      if (isDark) {
+        ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+        drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
+      } else {
+        ctx.fillStyle = effectiveBgColor;
+        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+      }
+    }
+  }
+
+  // Preserve format + version info modules on top (scan critical)
+  // These are small fixed areas, and should be kept clean when protection is enabled.
+  const protectFormat = config.protectFormatInfo === true;
+  const protectVersion = config.protectVersionInfo === true;
+
+  if (protectFormat || protectVersion) {
+    let formatCount = 0;
+    let versionCount = 0;
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        const isFormat = protectFormat && isFormatInfoSpec(row, col, moduleCount);
+        const isVersion = protectVersion && isVersionInfoSpec(row, col, moduleCount, version);
+        if (!isFormat && !isVersion) continue;
+
+        const isDark = qr.isDark(row, col);
+        const x = marginPx + col * effectiveModuleSize;
+        const y = marginPx + row * effectiveModuleSize;
+
+        if (isDark) {
+          ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+        } else {
+          ctx.fillStyle = effectiveBgColor;
+        }
+        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+
+        if (isFormat) formatCount++;
+        if (isVersion) versionCount++;
+      }
+    }
+
+    // Also preserve the fixed dark module (scan critical)
+    // Spec location: (moduleCount - 8, 8)
+    const dmRow = moduleCount - 8;
+    const dmCol = 8;
+    if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
+      const x = marginPx + dmCol * effectiveModuleSize;
+      const y = marginPx + dmRow * effectiveModuleSize;
+      ctx.fillStyle = (useGradient && gradientFill) ? gradientFill : effectiveFgColor;
+      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+    }
+
+    if (debug) {
+      console.log('[OverlayDither][ScaledRender] preserved', {
+        protectFormat,
+        protectVersion,
+        formatCount,
+        versionCount,
+        preservedTiming: shouldPreserveTiming,
+      });
     }
   }
 
