@@ -40,7 +40,7 @@ export function getAlignmentPatternCenters(
 ): { row: number; col: number }[] {
   if (version < 2) return [];
 
-  const positions = ALIGNMENT_POSITIONS[version] || [];
+  const positions = ALIGNMENT_POSITIONS[version - 1] || [];
   const centers: { row: number; col: number }[] = [];
 
   for (const row of positions) {

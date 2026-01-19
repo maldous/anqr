@@ -39,6 +39,16 @@ export async function generatePixelDecisionMatrix(
   // Apply per-ECC intensity limits
   const { effectiveIntensity, effectiveConfig } = getEffectiveIntensity(config);
 
+  // TRACE: Log pixel matrix generation
+  console.log('[PixelMatrix] TRACE:', {
+    overlayMode,
+    scale,
+    scaledSize,
+    hasOverlay: !!overlayCanvas,
+    effectiveIntensity,
+    colorMode: config.colorMode,
+  });
+
   // No overlay - return base QR matrix at requested scale
   if (overlayCanvas === null || overlayCanvas === undefined) {
     const { matrix, colors } = generateBaseMatrix(qr, scaledSize, scale);
@@ -49,8 +59,10 @@ export async function generatePixelDecisionMatrix(
   switch (overlayMode) {
     case 'dithered':
       return generateDitheredMatrix(
+        qr,
         config,
         overlayCanvas,
+        moduleCount,
         scale,
         effectiveIntensity,
         effectiveConfig,
@@ -59,8 +71,10 @@ export async function generatePixelDecisionMatrix(
 
     case 'blue-noise':
       return generateBlueNoiseMatrix(
+        qr,
         config,
         overlayCanvas,
+        moduleCount,
         scale,
         effectiveIntensity,
         canvasFactory,

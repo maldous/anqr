@@ -151,6 +151,7 @@ export function OverlaySection() {
     if (file) {
       setOverlayUrl(''); // Clear URL when file is selected
       setOverlayFile(file);
+      setOverlayEnabled(true); // Auto-enable overlay when file is uploaded
     }
     // Reset input value so the same file can be selected again
     // This is necessary because browsers don't fire onChange if the value hasn't changed

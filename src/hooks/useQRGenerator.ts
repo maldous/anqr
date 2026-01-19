@@ -229,6 +229,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const qr = useQRStore((s) => s.qr);
   const render = useQRStore((s) => s.render);
   const overlay = useQRStore((s) => s.overlay);
+  
   const watermark = useQRStore((s) => s.watermark);
   const output = useQRStore((s) => s.output);
   const animation = useQRStore((s) => s.animation);
@@ -863,6 +864,15 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Generate QR code
   const generate = useCallback(async () => {
+    // TRACE: Debug overlay state at time of generate
+    console.log('[useQRGenerator] TRACE: generate() called', {
+      'overlay.enabled': overlay.enabled,
+      'overlay.mode': overlay.mode,
+      'overlay.file': overlay.file ? overlay.file.name : null,
+      'overlayCanvas': overlayCanvas ? `${overlayCanvas.width}x${overlayCanvas.height}` : null,
+      'rawOverlayCanvas': rawOverlayCanvas ? 'exists' : null,
+    });
+    
     setIsLoading(true);
     setError(null);
 

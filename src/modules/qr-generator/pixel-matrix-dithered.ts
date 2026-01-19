@@ -4,23 +4,42 @@
  */
 
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
+import { isLocked } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
-import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
+import type { CreateCanvasFn, PixelDecisionMatrix, QRCodeInstance, QRGeneratorConfig, RGBWithMeta } from './types';
 
 /**
  * Generate dithered pixel matrix
+ * Combines QR code data with overlay image using error diffusion dithering
+ * IMPORTANT: Constrains dithering to preserve QR scannability:
+ * - Dark modules stay dark (value 0-0.35)
+ * - Light modules stay light (value 0.65-1)
+ * - Structural patterns (finder, timing, alignment) are protected completely
  */
 export async function generateDitheredMatrix(
+  qr: QRCodeInstance,
   config: QRGeneratorConfig,
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  moduleCount: number,
   scale: number,
   effectiveIntensity: number,
   _effectiveConfig: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
-  // Implementation for dithered mode
-  const moduleCount = Math.floor(overlayCanvas.width / scale) || 21;
   const scaledSize = moduleCount * scale;
+  // effectiveIntensity is already in 0-1 range from getEffectiveIntensity()
+  const intensity = effectiveIntensity;
+  const ditherStrength = (config.ditherStrength ?? 50) / 100;
+  const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
+
+  // TRACE: Log dithered matrix generation
+  console.log('[DitheredMatrix] TRACE: Generating dithered matrix', {
+    scaledSize,
+    intensity,
+    ditherStrength,
+    colorMode: config.colorMode,
+    overlayCanvasSize: `${overlayCanvas.width}x${overlayCanvas.height}`,
+  });
 
   // Scale overlay
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
@@ -36,11 +55,14 @@ export async function generateDitheredMatrix(
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
 
-  // Apply error diffusion dithering
+  // Apply error diffusion dithering with QR code integration
   const errors: number[][] = [];
   for (let y = 0; y < scaledSize; y++) {
     errors[y] = new Array(scaledSize).fill(0);
   }
+
+  // Maximum range for dithering within a module (0.35 means dark can go up to 0.35, light down to 0.65)
+  const maxDitherRange = 0.35;
 
   for (let y = 0; y < scaledSize; y++) {
     matrix[y] = [];
@@ -52,12 +74,58 @@ export async function generateDitheredMatrix(
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
-      const adjusted = brightness + (errors[y][x] || 0);
+      // Get overlay brightness (0 = black, 1 = white)
+      const overlayBrightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
 
-      const isDark = adjusted < 0.5;
+      // Get the QR module this sub-pixel belongs to
+      const moduleRow = Math.floor(y / scale);
+      const moduleCol = Math.floor(x / scale);
+      const qrIsDark = qr.isDark(moduleRow, moduleCol);
+
+      // Check if this is a structural module (finder, timing, alignment, etc.)
+      const isStructural = isLocked(moduleRow, moduleCol, moduleCount, version);
+
+      let targetValue: number;
+      let isDark: boolean;
+
+      if (isStructural) {
+        // Structural patterns: use pure QR value, no blending
+        isDark = qrIsDark;
+        matrix[y][x] = isDark;
+        colors[y][x] = config.colorMode !== 'bw' ? { r, g, b } : null;
+        continue; // Skip error diffusion for structural modules
+      }
+
+      // Data modules: constrain dithering within QR module's dark/light range
+      const blendFactor = intensity * ditherStrength;
+      const effectiveRange = maxDitherRange * blendFactor;
+
+      if (qrIsDark) {
+        // Dark module: target value ranges from 0 to effectiveRange (stays dark, < 0.5)
+        targetValue = overlayBrightness * effectiveRange;
+      } else {
+        // Light module: target value ranges from (1-effectiveRange) to 1 (stays light, >= 0.5)
+        targetValue = (1 - effectiveRange) + overlayBrightness * effectiveRange;
+      }
+
+      // Add accumulated error
+      const adjusted = targetValue + (errors[y][x] || 0);
+
+      // CRITICAL: Clamp adjusted value to preserve QR module integrity
+      // Dark modules MUST stay dark (< 0.5), light modules MUST stay light (>= 0.5)
+      const clampedAdjusted = qrIsDark
+        ? Math.min(adjusted, 0.499) // Force dark modules to stay dark
+        : Math.max(adjusted, 0.501); // Force light modules to stay light
+
+      // Quantize to black or white
+      isDark = clampedAdjusted < 0.5;
       matrix[y][x] = isDark;
       colors[y][x] = config.colorMode !== 'bw' ? { r, g, b } : null;
+
+      // TRACE: Log first few color assignments
+      if (y === 5 && x < 3) {
+        console.log(`[DitheredMatrix] TRACE: colors[${y}][${x}] =`, colors[y][x], 'isDark:', isDark);
+      }
 
       // Distribute error (Floyd-Steinberg)
       const error = adjusted - (isDark ? 0 : 1);
@@ -81,19 +149,26 @@ export async function generateDitheredMatrix(
 
 /**
  * Generate blue noise pixel matrix
+ * Combines QR code data with overlay image using blue noise thresholding
+ * IMPORTANT: Constrains dithering to preserve QR scannability:
+ * - Dark modules stay dark
+ * - Light modules stay light
+ * - Structural patterns (finder, timing, alignment) are protected completely
  */
 export async function generateBlueNoiseMatrix(
+  qr: QRCodeInstance,
   config: QRGeneratorConfig,
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  moduleCount: number,
   scale: number,
   effectiveIntensity: number,
   _canvasFactory: CanvasFactory,
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
-  const moduleCount = Math.floor(overlayCanvas.width / scale) || 21;
   const scaledSize = moduleCount * scale;
+  const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  // Scale overlay
+  // Scale overlay to get color data for texture
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d');
   if (!ctx) {
@@ -107,11 +182,8 @@ export async function generateBlueNoiseMatrix(
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
 
-  // Generate blue noise pattern using canonical source from dither-algorithms
-  const seed = config.blueNoiseSeed ?? 42;
-  const tileSize = config.blueNoiseTileSize ?? 64;
-  const blueNoiseTile = generateBlueNoiseTile(tileSize, seed);
-
+  // Blue noise mode: QR pattern is preserved exactly for scannability
+  // Visual texture comes from the overlay colors stored in the colors array
   for (let y = 0; y < scaledSize; y++) {
     matrix[y] = [];
     colors[y] = [];
@@ -122,13 +194,15 @@ export async function generateBlueNoiseMatrix(
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+      // Get the QR module this sub-pixel belongs to
+      const moduleRow = Math.floor(y / scale);
+      const moduleCol = Math.floor(x / scale);
+      const qrIsDark = qr.isDark(moduleRow, moduleCol);
 
-      // Sample blue noise using canonical sampleBlueNoise from dither-algorithms
-      const threshold = sampleBlueNoise(x, y, blueNoiseTile, tileSize);
-
-      const isDark = brightness < threshold;
-      matrix[y][x] = isDark;
+      // CRITICAL: QR module integrity MUST be preserved for scannability
+      // Dark modules ALWAYS stay dark, light modules ALWAYS stay light
+      // Visual texture comes from the overlay colors, not binary matrix changes
+      matrix[y][x] = qrIsDark;
       colors[y][x] = config.colorMode !== 'bw' ? { r, g, b } : null;
     }
   }
