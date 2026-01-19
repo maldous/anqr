@@ -111,6 +111,10 @@ export interface QRGeneratorConfig {
   filterPosterize?: number;
   filterDuotone1?: string;
   filterDuotone2?: string;
+
+  // Debug
+  // When true, emit a small, targeted set of logs for overlay dithering only.
+  debugOverlayDither?: boolean;
 }
 
 export interface RGB {

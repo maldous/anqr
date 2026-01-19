@@ -289,8 +289,9 @@ export class QRGenerator {
     // =======================================================================
     const scale = getScaleFactor(effectiveOverlayMode, effectiveConfig);
     
-    // TRACE: Log overlay rendering path
-    console.log('[QRGenerator] TRACE:', {
+    // Targeted debug for overlay dithering only.
+    if (effectiveConfig.debugOverlayDither) {
+      console.log('[OverlayDither] qr-generator', {
       hasOverlay: !!processedOverlayCanvas,
       configOverlayMode: config.overlayMode,
       effectiveOverlayMode,
@@ -298,7 +299,8 @@ export class QRGenerator {
       willUseScaledPath: scale > 1 && !!processedOverlayCanvas,
       colorMode: config.colorMode,
       overlayIntensity: config.overlayIntensity,
-    });
+      });
+    }
     if (scale > 1 && processedOverlayCanvas) {
       return await generateScaledQR(
         qr,

@@ -14,6 +14,7 @@ export function getScaleFactor(overlayMode: string | undefined, config: QRGenera
     case 'dithered':
       return 4;
     case 'blue-noise':
+    case 'blue_noise':
       return 4;
     case 'subpixel':
     case 'subpixel-size':

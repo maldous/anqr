@@ -1,6 +1,16 @@
 /**
  * QR Generator Dithered Pixel Matrix
- * Dithered and blue-noise pixel matrix generation
+ * Dithered and blue-noise pixel matrix generation.
+ *
+ * Goals
+ * - Make the overlay image part of the QR (not just behind it).
+ * - Support full-color overlays.
+ * - Keep the QR scannable.
+ *
+ * Scannability constraints
+ * - Structural modules are fully locked using qr-spec pattern locking.
+ * - The CENTER sub-pixel of every non-structural module is forced to the true QR bit.
+ * - Per-module dark-pixel ratio is bounded (data modules only).
  */
 
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
@@ -8,13 +18,143 @@ import { isLocked } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
 import type { CreateCanvasFn, PixelDecisionMatrix, QRCodeInstance, QRGeneratorConfig, RGBWithMeta } from './types';
 
+type RGBi = { r: number; g: number; b: number };
+
+function luma01(r: number, g: number, b: number): number {
+  return (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+}
+
+function clamp01(x: number): number {
+  return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function createEmptyMatrix(size: number, scale: number, effectiveIntensity: number): PixelDecisionMatrix {
+  const matrix: boolean[][] = [];
+  const colors: (RGBWithMeta | null)[][] = [];
+  for (let y = 0; y < size; y++) {
+    matrix[y] = [];
+    colors[y] = [];
+    for (let x = 0; x < size; x++) {
+      matrix[y][x] = false;
+      colors[y][x] = null;
+    }
+  }
+  return { matrix, colors, scale, overlayData: null, effectiveIntensity };
+}
+
+function enforceModuleConstraints(
+  qr: QRCodeInstance,
+  matrix: boolean[][],
+  desire: number[][],
+  moduleCount: number,
+  scale: number,
+  version: number
+): void {
+  // Bounds chosen to preserve sampling robustness (center pixel correct) while still allowing texture.
+  const DARK_MIN = 0.65; // dark modules keep majority dark
+  const DARK_MAX = 0.97;
+  const LIGHT_MAX = 0.35; // light modules keep majority light
+
+  const half = Math.floor(scale / 2);
+
+  for (let mr = 0; mr < moduleCount; mr++) {
+    for (let mc = 0; mc < moduleCount; mc++) {
+      if (isLocked(mr, mc, moduleCount, version)) continue;
+
+      const qrIsDark = qr.isDark(mr, mc);
+      const y0 = mr * scale;
+      const x0 = mc * scale;
+
+      // Force center sub-pixel to the true module value.
+      const cy = y0 + half;
+      const cx = x0 + half;
+      if (matrix[cy] && typeof matrix[cy][cx] === 'boolean') {
+        matrix[cy][cx] = qrIsDark;
+      }
+
+      // Count dark pixels in this module block.
+      let darkCount = 0;
+      const total = scale * scale;
+      for (let y = 0; y < scale; y++) {
+        for (let x = 0; x < scale; x++) {
+          if (matrix[y0 + y][x0 + x]) darkCount++;
+        }
+      }
+
+      const ratio = darkCount / total;
+
+      if (qrIsDark) {
+        // If too light, flip some light pixels with highest "desire" to dark.
+        if (ratio < DARK_MIN) {
+          const need = Math.ceil(DARK_MIN * total - darkCount);
+          if (need > 0) {
+            const candidates: { y: number; x: number; score: number }[] = [];
+            for (let y = 0; y < scale; y++) {
+              for (let x = 0; x < scale; x++) {
+                const yy = y0 + y;
+                const xx = x0 + x;
+                if (!matrix[yy][xx]) candidates.push({ y: yy, x: xx, score: desire[yy][xx] });
+              }
+            }
+            candidates.sort((a, b) => b.score - a.score);
+            for (let i = 0; i < need && i < candidates.length; i++) {
+              matrix[candidates[i].y][candidates[i].x] = true;
+            }
+          }
+        }
+
+        // If too dark, flip some dark pixels with lowest desire to light.
+        if (ratio > DARK_MAX) {
+          const excess = Math.ceil(darkCount - DARK_MAX * total);
+          if (excess > 0) {
+            const candidates: { y: number; x: number; score: number }[] = [];
+            for (let y = 0; y < scale; y++) {
+              for (let x = 0; x < scale; x++) {
+                const yy = y0 + y;
+                const xx = x0 + x;
+                if (matrix[yy][xx]) candidates.push({ y: yy, x: xx, score: desire[yy][xx] });
+              }
+            }
+            candidates.sort((a, b) => a.score - b.score);
+            for (let i = 0; i < excess && i < candidates.length; i++) {
+              // Don't flip the center pixel we just forced.
+              if (candidates[i].y === cy && candidates[i].x === cx) continue;
+              matrix[candidates[i].y][candidates[i].x] = false;
+            }
+          }
+        }
+      } else {
+        // Light modules: if too dark, flip some dark pixels with lowest desire to light.
+        if (ratio > LIGHT_MAX) {
+          const excess = Math.ceil(darkCount - LIGHT_MAX * total);
+          if (excess > 0) {
+            const candidates: { y: number; x: number; score: number }[] = [];
+            for (let y = 0; y < scale; y++) {
+              for (let x = 0; x < scale; x++) {
+                const yy = y0 + y;
+                const xx = x0 + x;
+                if (matrix[yy][xx]) candidates.push({ y: yy, x: xx, score: desire[yy][xx] });
+              }
+            }
+            candidates.sort((a, b) => a.score - b.score);
+            for (let i = 0; i < excess && i < candidates.length; i++) {
+              if (candidates[i].y === cy && candidates[i].x === cx) continue;
+              matrix[candidates[i].y][candidates[i].x] = false;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 /**
  * Generate dithered pixel matrix
- * Combines QR code data with overlay image using error diffusion dithering
- * IMPORTANT: Constrains dithering to preserve QR scannability:
- * - Dark modules stay dark (value 0-0.35)
- * - Light modules stay light (value 0.65-1)
- * - Structural patterns (finder, timing, alignment) are protected completely
+ * Uses error-diffusion over a "desired darkness" field.
  */
 export async function generateDitheredMatrix(
   qr: QRCodeInstance,
@@ -27,26 +167,13 @@ export async function generateDitheredMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
-  // effectiveIntensity is already in 0-1 range from getEffectiveIntensity()
-  const intensity = effectiveIntensity;
+  const intensity = effectiveIntensity; // already 0..1
   const ditherStrength = (config.ditherStrength ?? 50) / 100;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  // TRACE: Log dithered matrix generation
-  console.log('[DitheredMatrix] TRACE: Generating dithered matrix', {
-    scaledSize,
-    intensity,
-    ditherStrength,
-    colorMode: config.colorMode,
-    overlayCanvasSize: `${overlayCanvas.width}x${overlayCanvas.height}`,
-  });
-
-  // Scale overlay
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d');
-  if (!ctx) {
-    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
-  }
+  if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
   const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
@@ -54,106 +181,96 @@ export async function generateDitheredMatrix(
 
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
-
-  // Apply error diffusion dithering with QR code integration
   const errors: number[][] = [];
-  for (let y = 0; y < scaledSize; y++) {
-    errors[y] = new Array(scaledSize).fill(0);
-  }
-
-  // Maximum range for dithering within a module (0.35 means dark can go up to 0.35, light down to 0.65)
-  const maxDitherRange = 0.35;
+  const desire: number[][] = [];
 
   for (let y = 0; y < scaledSize; y++) {
     matrix[y] = [];
     colors[y] = [];
+    errors[y] = new Array(scaledSize).fill(0);
+    desire[y] = new Array(scaledSize).fill(0.5);
+  }
 
+  const mix = clamp01(intensity * ditherStrength);
+
+  for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
       const idx = (y * scaledSize + x) * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      // Get overlay brightness (0 = black, 1 = white)
-      const overlayBrightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
-
-      // Get the QR module this sub-pixel belongs to
       const moduleRow = Math.floor(y / scale);
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
 
-      // Check if this is a structural module (finder, timing, alignment, etc.)
-      const isStructural = isLocked(moduleRow, moduleCol, moduleCount, version);
-
-      let targetValue: number;
-      let isDark: boolean;
-
-      if (isStructural) {
-        // Structural patterns: use pure QR value, no blending
-        isDark = qrIsDark;
-        matrix[y][x] = isDark;
-        colors[y][x] = config.colorMode !== 'bw' ? { r, g, b } : null;
-        continue; // Skip error diffusion for structural modules
+      // Structural modules are exact.
+      if (isLocked(moduleRow, moduleCol, moduleCount, version)) {
+        matrix[y][x] = qrIsDark;
+        colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
+        desire[y][x] = qrIsDark ? 1 : 0;
+        continue;
       }
 
-      // Data modules: constrain dithering within QR module's dark/light range
-      const blendFactor = intensity * ditherStrength;
-      const effectiveRange = maxDitherRange * blendFactor;
+      // Desired darkness from overlay (dark parts => higher), blended toward QR bit.
+      const overlayDark = 1 - luma01(r, g, b);
+      let d = lerp(qrIsDark ? 1 : 0, overlayDark, mix);
 
+      // Soft clamp keeps values within a sane range, while still allowing crossing.
+      // The center pixel and per-module ratio enforcement will guarantee scannability.
       if (qrIsDark) {
-        // Dark module: target value ranges from 0 to effectiveRange (stays dark, < 0.5)
-        targetValue = overlayBrightness * effectiveRange;
+        d = clamp01(lerp(0.15, 0.95, d));
       } else {
-        // Light module: target value ranges from (1-effectiveRange) to 1 (stays light, >= 0.5)
-        targetValue = (1 - effectiveRange) + overlayBrightness * effectiveRange;
+        d = clamp01(lerp(0.05, 0.85, d));
       }
 
-      // Add accumulated error
-      const adjusted = targetValue + (errors[y][x] || 0);
+      desire[y][x] = d;
 
-      // CRITICAL: Clamp adjusted value to preserve QR module integrity
-      // Dark modules MUST stay dark (< 0.5), light modules MUST stay light (>= 0.5)
-      const clampedAdjusted = qrIsDark
-        ? Math.min(adjusted, 0.499) // Force dark modules to stay dark
-        : Math.max(adjusted, 0.501); // Force light modules to stay light
-
-      // Quantize to black or white
-      isDark = clampedAdjusted < 0.5;
+      // Error diffusion over desired darkness.
+      const adjusted = d + errors[y][x];
+      const isDark = adjusted >= 0.5;
       matrix[y][x] = isDark;
-      colors[y][x] = config.colorMode !== 'bw' ? { r, g, b } : null;
+      colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
 
-      // TRACE: Log first few color assignments
-      if (y === 5 && x < 3) {
-        console.log(`[DitheredMatrix] TRACE: colors[${y}][${x}] =`, colors[y][x], 'isDark:', isDark);
-      }
-
-      // Distribute error (Floyd-Steinberg)
-      const error = adjusted - (isDark ? 0 : 1);
-      if (x + 1 < scaledSize) errors[y][x + 1] += (error * 7) / 16;
+      const err = adjusted - (isDark ? 1 : 0);
+      // Floyd-Steinberg
+      if (x + 1 < scaledSize) errors[y][x + 1] += (err * 7) / 16;
       if (y + 1 < scaledSize) {
-        if (x > 0) errors[y + 1][x - 1] += (error * 3) / 16;
-        errors[y + 1][x] += (error * 5) / 16;
-        if (x + 1 < scaledSize) errors[y + 1][x + 1] += (error * 1) / 16;
+        if (x > 0) errors[y + 1][x - 1] += (err * 3) / 16;
+        errors[y + 1][x] += (err * 5) / 16;
+        if (x + 1 < scaledSize) errors[y + 1][x + 1] += (err * 1) / 16;
       }
     }
   }
 
-  return {
-    matrix,
-    colors,
-    scale,
-    overlayData: null,
-    effectiveIntensity,
-  };
+  // Post-pass: enforce per-module constraints (center pixel correctness + ratio bounds)
+  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version);
+
+  if (config.debugOverlayDither) {
+    // One small log with key stats.
+    const center = Math.floor(scale / 2);
+    const sampleMr = Math.min(10, moduleCount - 1);
+    const sampleMc = Math.min(10, moduleCount - 1);
+    const sy = sampleMr * scale + center;
+    const sx = sampleMc * scale + center;
+    console.log('[OverlayDither] dithered-matrix', {
+      scaledSize,
+      moduleCount,
+      scale,
+      mix,
+      sample: {
+        module: { row: sampleMr, col: sampleMc, qrIsDark: qr.isDark(sampleMr, sampleMc) },
+        centerPixel: { y: sy, x: sx, isDark: matrix[sy]?.[sx], desire: desire[sy]?.[sx] },
+      },
+    });
+  }
+
+  return { matrix, colors, scale, overlayData: null, effectiveIntensity };
 }
 
 /**
  * Generate blue noise pixel matrix
- * Combines QR code data with overlay image using blue noise thresholding
- * IMPORTANT: Constrains dithering to preserve QR scannability:
- * - Dark modules stay dark
- * - Light modules stay light
- * - Structural patterns (finder, timing, alignment) are protected completely
+ * Uses a blue noise threshold field over the same desired-darkness model.
  */
 export async function generateBlueNoiseMatrix(
   qr: QRCodeInstance,
@@ -166,14 +283,12 @@ export async function generateBlueNoiseMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
+  const intensity = effectiveIntensity; // 0..1
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  // Scale overlay to get color data for texture
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d');
-  if (!ctx) {
-    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
-  }
+  if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
   const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
@@ -181,55 +296,64 @@ export async function generateBlueNoiseMatrix(
 
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
+  const desire: number[][] = [];
 
-  // Blue noise mode: QR pattern is preserved exactly for scannability
-  // Visual texture comes from the overlay colors stored in the colors array
   for (let y = 0; y < scaledSize; y++) {
     matrix[y] = [];
     colors[y] = [];
+    desire[y] = new Array(scaledSize).fill(0.5);
+  }
 
+  const seed = config.blueNoiseSeed ?? 1337;
+  const tileSize = config.blueNoiseTileSize ?? 64;
+  const tile = generateBlueNoiseTile(tileSize, seed);
+
+  for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
       const idx = (y * scaledSize + x) * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      // Get the QR module this sub-pixel belongs to
       const moduleRow = Math.floor(y / scale);
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
 
-      // CRITICAL: QR module integrity MUST be preserved for scannability
-      // Dark modules ALWAYS stay dark, light modules ALWAYS stay light
-      // Visual texture comes from the overlay colors, not binary matrix changes
-      matrix[y][x] = qrIsDark;
-      colors[y][x] = config.colorMode !== 'bw' ? { r, g, b } : null;
+      if (isLocked(moduleRow, moduleCol, moduleCount, version)) {
+        matrix[y][x] = qrIsDark;
+        colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
+        desire[y][x] = qrIsDark ? 1 : 0;
+        continue;
+      }
+
+      const overlayDark = 1 - luma01(r, g, b);
+      let d = lerp(qrIsDark ? 1 : 0, overlayDark, intensity);
+      if (qrIsDark) {
+        d = clamp01(lerp(0.15, 0.95, d));
+      } else {
+        d = clamp01(lerp(0.05, 0.85, d));
+      }
+      desire[y][x] = d;
+
+      const n = sampleBlueNoise(x, y, tile, tileSize);
+      const isDark = n < d;
+
+      matrix[y][x] = isDark;
+      colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
     }
   }
 
-  return {
-    matrix,
-    colors,
-    scale,
-    overlayData: null,
-    effectiveIntensity,
-  };
-}
+  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version);
 
-function createEmptyMatrix(
-  size: number,
-  scale: number,
-  effectiveIntensity: number
-): PixelDecisionMatrix {
-  const matrix: boolean[][] = [];
-  const colors: (RGBWithMeta | null)[][] = [];
-
-  for (let y = 0; y < size; y++) {
-    matrix[y] = new Array(size).fill(false);
-    colors[y] = new Array(size).fill(null);
+  if (config.debugOverlayDither) {
+    console.log('[OverlayDither] blue-noise-matrix', {
+      scaledSize,
+      moduleCount,
+      scale,
+      tileSize,
+      seed,
+    });
   }
 
   return { matrix, colors, scale, overlayData: null, effectiveIntensity };
 }
-
-// generateBlueNoiseTile removed - using canonical source from dither-algorithms
