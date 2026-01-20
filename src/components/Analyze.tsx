@@ -255,6 +255,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const [loadingSource, setLoadingSource] = useState<
     'file' | 'url' | 'camera' | 'generator' | null
   >(null);
+  const [analysisSource, setAnalysisSource] = useState<
+    'file' | 'url' | 'camera' | 'generator' | null
+  >(null);
   const [hasAutoAnalyzed, setHasAutoAnalyzed] = useState(false);
   const [result, setResult] = useState<QRAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -262,6 +265,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const [imported, setImported] = useState(false);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const reproducedCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Store getters (for exact reproduction of the self-generated QR)
+  const qrState = useQRStore((s) => s.qr);
+  const renderState = useQRStore((s) => s.render);
 
   // Store setters
   const setPayloadText = useQRStore((s) => s.setPayloadText);
@@ -283,57 +290,111 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     if (!ctx) return;
 
     try {
-      // Generate a fresh, clean QR code using the extracted payload
-      // Use auto version (0) for clean reproduction - the detected version from artistic QRs
-      // is often inaccurate since it's based on pixel measurements of stylized finder patterns
       const ecc: ECCLevel = result.eccLevel || 'M';
 
-      // Always use auto-detect (0) for clean reproduction
-      // The detected version from image analysis is unreliable for artistic QRs
-      const qr = createQRInstance(result.payload, ecc, 0);
+      // Strategy:
+      // - For self-generated QRs (Analyze -> Current QR), reproduce EXACTLY using the live generator settings.
+      //   This must be pixel-identical for the default generated QR.
+      // - For external images, prefer exact (version/mask/mode) if detected, else fall back to auto.
+      const isGeneratorSource = analysisSource === 'generator' && !!generatedCanvas;
+
+      const versionToUse = isGeneratorSource
+        ? qrState.version
+        : result.version ?? 0;
+
+      // Prefer detected mask when available (even for generator), because it is the actual chosen mask.
+      const maskToUse =
+        typeof result.maskPattern === 'number' && result.maskPattern >= 0 && result.maskPattern <= 7
+          ? result.maskPattern
+          : typeof qrState.maskPattern === 'number'
+            ? qrState.maskPattern
+            : undefined;
+
+      // Prefer detected encoding mode when available (it is a property of the encoded data), else use generator mode.
+      // Note: analyzer returns 'mixed'/'unknown' sometimes, those are not valid encoder modes, so only pass valid.
+      const modeToUse = (() => {
+        const m = isGeneratorSource ? qrState.encodingMode : result.encodingMode;
+        if (m === 'numeric' || m === 'alphanumeric' || m === 'byte' || m === 'kanji' || m === 'auto') return m;
+        return undefined;
+      })();
+
+      const qr = createQRInstance(result.payload, ecc, versionToUse || 0, {
+        ...(modeToUse ? { mode: modeToUse } : {}),
+        ...(typeof maskToUse === 'number' ? { maskPattern: maskToUse } : {}),
+      });
       const moduleCount = qr.getModuleCount();
       const actualVersion = (moduleCount - 17) / 4;
 
-      // Calculate module size for crisp rendering
-      // Aim for a reasonable size that looks good (target ~300px total)
-      const targetSize = 300;
-      const quietZoneModules = 4;
-      const totalModules = moduleCount + quietZoneModules * 2;
-      const modulePx = Math.max(3, Math.floor(targetSize / totalModules));
+      // Margin handling
+      // For the self-generated QR, infer the exact margin from the actual generator canvas.
+      // This avoids off-by-one errors (quiet zone vs border modules) and matches safety-adjusted quiet zones.
+      const marginModules = (() => {
+        if (isGeneratorSource && generatedCanvas) {
+          const modulePx = Math.max(1, Math.floor(renderState.modulePx || 1));
+          const totalModules = Math.round(generatedCanvas.width / modulePx);
+          const inferred = Math.max(0, Math.floor((totalModules - moduleCount) / 2));
+          return inferred;
+        }
+        return Math.max(4, result.quietZone?.top ?? 4);
+      })();
 
-      const size = totalModules * modulePx;
+      // Canvas sizing
+      // - Generator: match the exact canvas size (pixel-identical display)
+      // - External: render at a readable size (~300px)
+      let modulePx: number;
+      let size: number;
+      if (isGeneratorSource && generatedCanvas) {
+        // Pixel-identical to the generator output
+        modulePx = Math.max(1, Math.floor(renderState.modulePx || 1));
+        size = generatedCanvas.width;
+      } else {
+        const targetSize = 300;
+        const totalModules = moduleCount + marginModules * 2;
+        modulePx = Math.max(3, Math.floor(targetSize / totalModules));
+        size = totalModules * modulePx;
+      }
 
       canvas.width = size;
       canvas.height = size;
 
-      // Use detected colors from the original QR code for visual consistency
-      const fg = result.detectedColors?.foreground || '#000000';
-      const bg = result.detectedColors?.background || '#ffffff';
+      // Colors
+      // Generator: use live render colors.
+      // External: use detected colors, fall back to black/white.
+      const fg = isGeneratorSource ? renderState.fgColor : (result.detectedColors?.foreground || '#000000');
+      const bg = isGeneratorSource
+        ? (renderState.bgTransparent ? '#ffffff' : renderState.bgColor)
+        : (result.detectedColors?.background || '#ffffff');
 
       // Draw background
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, size, size);
 
-      // Draw modules with detected foreground color - fresh and clean!
+      // Draw modules
       ctx.fillStyle = fg;
       for (let row = 0; row < moduleCount; row++) {
         for (let col = 0; col < moduleCount; col++) {
           if (!qr.isDark(row, col)) continue;
-          const x = (quietZoneModules + col) * modulePx;
-          const y = (quietZoneModules + row) * modulePx;
+          const x = (marginModules + col) * modulePx;
+          const y = (marginModules + row) * modulePx;
           ctx.fillRect(x, y, modulePx, modulePx);
         }
       }
 
       console.log('[QR-Analyzer:reproduced] Generated clean QR code', {
+        strategy: isGeneratorSource ? 'exact' : 'auto_fallback',
         payload: result.payload.substring(0, 50) + (result.payload.length > 50 ? '...' : ''),
         ecc,
         detectedVersion: result.version,
+        usedVersion: versionToUse,
+        detectedMaskPattern: result.maskPattern,
+        usedMaskPattern: typeof maskToUse === 'number' ? maskToUse : null,
+        usedMode: modeToUse ?? null,
         actualVersion,
         moduleCount,
+        marginModules,
+        borderModulesExtra: isGeneratorSource ? (qrState.borderModulesExtra || 0) : null,
         modulePx,
         canvasSize: size,
-        note: 'Using auto version for clean reproduction (detected version from artistic QR is unreliable)',
       });
     } catch (err) {
       console.error('[QR-Analyzer:reproduced] Failed to generate QR code:', err);
@@ -347,7 +408,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       ctx.textAlign = 'center';
       ctx.fillText('Generation failed', 100, 100);
     }
-  }, [result]);
+  }, [result, analysisSource, generatedCanvas, qrState, renderState]);
 
   // Handle file upload
   const handleFileUpload = useCallback(
@@ -357,6 +418,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       setIsLoading(true);
       setLoadingSource('file');
+      setAnalysisSource('file');
       setError(null);
       setResult(null);
       setImported(false);
@@ -395,6 +457,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
     setIsLoading(true);
     setLoadingSource('url');
+    setAnalysisSource('url');
     setError(null);
     setResult(null);
     setImported(false);
@@ -420,6 +483,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const handleCameraCapture = useCallback(async () => {
     setIsLoading(true);
     setLoadingSource('camera');
+    setAnalysisSource('camera');
     setError(null);
     setResult(null);
     setImported(false);
@@ -460,6 +524,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
           const analysisResult = analyzeQRCode(canvas);
           setResult(analysisResult);
+          setAnalysisSource('camera');
           if (!analysisResult.success) {
             setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
           }
@@ -567,6 +632,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setError(null);
     setUrlInput('');
     setImported(false);
+    setAnalysisSource(null);
     if (originalImageUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(originalImageUrl);
     }
@@ -592,6 +658,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       // Analyze the canvas directly
       const analysisResult = analyzeQRCode(canvas);
       setResult(analysisResult);
+      setAnalysisSource('generator');
       if (!analysisResult.success) {
         setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
       }
