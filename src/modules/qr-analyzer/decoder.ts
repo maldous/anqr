@@ -116,17 +116,23 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       average: avgFinderDist.toFixed(2),
     });
 
-    // Detect module count by trying each QR version
+    // Prefer the decoder's derived version/moduleCount. Only fall back to geometric
+    // inference if version is missing.
+    const decodedVersion = typeof code.version === 'number' && isFinite(code.version) ? Math.round(code.version) : null;
+
+    const detected = decodedVersion ? null : detectModuleCountFromDistance(avgFinderDist);
+    const version = decodedVersion ?? (detected ? Math.floor((detected.moduleCount - 17) / 4) : null);
+    const moduleCount = version !== null ? 17 + version * 4 : detected ? detected.moduleCount : 0;
+
     // Distance between finder centers spans (moduleCount - 7) modules
-    const detected = detectModuleCountFromDistance(avgFinderDist);
-    const moduleCount = detected.moduleCount;
-    const estimatedModulePx = detected.modulePx;
-    const version = moduleCount > 0 ? Math.floor((moduleCount - 17) / 4) : null;
+    const estimatedModulePx =
+      moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : detected ? detected.modulePx : 0;
 
     log('detection', 'Module count detection result', {
       moduleCount,
       version,
-      estimatedModulePx: estimatedModulePx.toFixed(3),
+      estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : '0',
+      source: decodedVersion ? 'decoder' : 'inferred',
     });
 
     // Detect content type
@@ -150,15 +156,18 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     const qrSize = avgFinderDist + 7 * estimatedModulePx; // Approximate full QR size
 
+    const encodingMode = detectEncodingMode(code.data!);
+    const payloadBytes = encodingMode === 'byte' ? stringToLatin1Bytes(code.data!) : new TextEncoder().encode(code.data!);
+
     return {
       success: true,
       payload: code.data!,
-      payloadBytes: code.dataBytes ? new Uint8Array(code.dataBytes) : new TextEncoder().encode(code.data!),
+      payloadBytes,
       version,
       moduleCount,
       eccLevel: code.eccLevel || null,
       maskPattern: code.maskPattern ?? null,
-      encodingMode: code.encodingMode || detectEncodingMode(code.data!),
+      encodingMode,
       errorsCorrected: null,
       contentType,
       detectedColors,
@@ -264,6 +273,15 @@ function detectModuleCountFromDistance(finderCenterDistance: number): {
   });
 
   return { moduleCount, modulePx: bestModulePx };
+}
+
+
+function stringToLatin1Bytes(s: string): Uint8Array {
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) {
+    out[i] = s.charCodeAt(i) & 0xff;
+  }
+  return out;
 }
 
 /**
