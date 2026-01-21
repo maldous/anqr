@@ -82,14 +82,19 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
   }
 
   // Read format info from around top-right and bottom-left finder patterns
+  // Per ISO 18004, the second copy stores:
+  //   - Top-right (row 8, cols N-8 to N-1): bits 7-14
+  //   - Bottom-left (col 8, rows N-7 to N-1): bits 6-0 (descending)
   let bits2 = 0;
-  // Bits 0-7: row 8, columns moduleCount-8 to moduleCount-1 (left to right)
+  // Bits 7-14: row 8, columns moduleCount-8 to moduleCount-1
+  // col N-8 → bit 7, col N-7 → bit 8, ..., col N-1 → bit 14
   for (let i = 0; i < 8; i++) {
-    if (matrix[8]?.[moduleCount - 8 + i]) bits2 |= 1 << i;
+    if (matrix[8]?.[moduleCount - 8 + i]) bits2 |= 1 << (7 + i);
   }
-  // Bits 8-14: column 8, rows moduleCount-7 to moduleCount-1 (top to bottom)
+  // Bits 6-0: column 8, rows moduleCount-7 to moduleCount-1
+  // row N-7 → bit 6, row N-6 → bit 5, ..., row N-1 → bit 0
   for (let i = 0; i < 7; i++) {
-    if (matrix[moduleCount - 7 + i]?.[8]) bits2 |= 1 << (8 + i);
+    if (matrix[moduleCount - 7 + i]?.[8]) bits2 |= 1 << (6 - i);
   }
 
   log('format', 'Read format bits', {
