@@ -116,30 +116,23 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       average: avgFinderDist.toFixed(2),
     });
 
-    // Prefer the decoder's version when available.
-    // It is derived from QR structure and format info, and is the ground-truth for clean in-app QRs.
-    // Only fall back to pixel-distance heuristics when the decoder cannot provide a version.
-    let version = code.version ?? null;
-    let moduleCount = 0;
-    let estimatedModulePx = 0;
+    // Prefer the decoder's derived version/moduleCount. Only fall back to geometric
+    // inference if version is missing.
+    const decodedVersion = typeof code.version === 'number' && isFinite(code.version) ? Math.round(code.version) : null;
 
-    if (version !== null && version >= 1) {
-      moduleCount = 17 + version * 4;
-      // Distance between finder centers spans (moduleCount - 7) modules.
-      estimatedModulePx = avgFinderDist / (moduleCount - 7);
-    } else {
-      // Fallback when the decoder cannot provide a version.
-      const detected = detectModuleCountFromDistance(avgFinderDist);
-      moduleCount = detected.moduleCount;
-      estimatedModulePx = detected.modulePx;
-      version = moduleCount > 0 ? Math.floor((moduleCount - 17) / 4) : null;
-    }
+    const detected = decodedVersion ? null : detectModuleCountFromDistance(avgFinderDist);
+    const version = decodedVersion ?? (detected ? Math.floor((detected.moduleCount - 17) / 4) : null);
+    const moduleCount = version !== null ? 17 + version * 4 : detected ? detected.moduleCount : 0;
 
-    log('detection', 'Module count / module size result', {
-      decoderVersion: code.version,
-      selectedVersion: version,
+    // Distance between finder centers spans (moduleCount - 7) modules
+    const estimatedModulePx =
+      moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : detected ? detected.modulePx : 0;
+
+    log('detection', 'Module count detection result', {
       moduleCount,
-      estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : null,
+      version,
+      estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : '0',
+      source: decodedVersion ? 'decoder' : 'inferred',
     });
 
     // Detect content type
@@ -163,15 +156,29 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     const qrSize = avgFinderDist + 7 * estimatedModulePx; // Approximate full QR size
 
+    // Prefer raw bytes returned by the decoder. This is the only reliable way to reproduce
+    // byte-mode payloads when an ECI/character set was used (eg UTF-8), because `code.data`
+    // is already decoded to a JS string.
+    const encodingMode = (code.encodingMode ?? detectEncodingMode(code.data!)) as ReturnType<
+      typeof detectEncodingMode
+    >;
+
+    const payloadBytes = (() => {
+      if (code.dataBytes && code.dataBytes.length) return code.dataBytes;
+      // Fallbacks for older decoder outputs.
+      if (encodingMode === 'byte') return stringToLatin1Bytes(code.data!);
+      return new TextEncoder().encode(code.data!);
+    })();
+
     return {
       success: true,
       payload: code.data!,
-      payloadBytes: code.dataBytes ? new Uint8Array(code.dataBytes) : new TextEncoder().encode(code.data!),
+      payloadBytes,
       version,
       moduleCount,
       eccLevel: code.eccLevel || null,
       maskPattern: code.maskPattern ?? null,
-      encodingMode: code.encodingMode || detectEncodingMode(code.data!),
+      encodingMode,
       errorsCorrected: null,
       contentType,
       detectedColors,
@@ -279,6 +286,15 @@ function detectModuleCountFromDistance(finderCenterDistance: number): {
   return { moduleCount, modulePx: bestModulePx };
 }
 
+
+function stringToLatin1Bytes(s: string): Uint8Array {
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) {
+    out[i] = s.charCodeAt(i) & 0xff;
+  }
+  return out;
+}
+
 /**
  * Detect encoding mode from payload content
  */
@@ -362,18 +378,13 @@ function analyzeQuietZone(
   modulePx: number
 ): { top: number; right: number; bottom: number; left: number; adequate: boolean } {
   // Measure white space around the QR code in module units
-  // NOTE: location corners are finder CENTERS. The QR grid edge is 3.5 modules away from a finder center.
-  const finderHalfSpan = 3.5 * modulePx;
-  const top = Math.max(0, Math.floor((location.topLeftCorner.y - finderHalfSpan) / modulePx));
-  const left = Math.max(0, Math.floor((location.topLeftCorner.x - finderHalfSpan) / modulePx));
+  const top = Math.max(0, Math.floor(location.topLeftCorner.y / modulePx));
+  const left = Math.max(0, Math.floor(location.topLeftCorner.x / modulePx));
   const bottom = Math.max(
     0,
-    Math.floor((imageData.height - (location.bottomLeftCorner.y + finderHalfSpan)) / modulePx)
+    Math.floor((imageData.height - location.bottomLeftCorner.y) / modulePx)
   );
-  const right = Math.max(
-    0,
-    Math.floor((imageData.width - (location.topRightCorner.x + finderHalfSpan)) / modulePx)
-  );
+  const right = Math.max(0, Math.floor((imageData.width - location.topRightCorner.x) / modulePx));
 
   // QR spec requires 4 modules of quiet zone
   const adequate = top >= 4 && right >= 4 && bottom >= 4 && left >= 4;
