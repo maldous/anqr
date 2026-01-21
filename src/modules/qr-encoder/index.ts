@@ -49,6 +49,7 @@ export { canEncodeAsShiftJIS, createShiftJISEncoder } from './shift-jis';
 // String encoding
 export {
   createStringToBytes,
+  getStringToBytes,
   resetStringToBytes,
   setStringToBytes,
   stringToBytes,

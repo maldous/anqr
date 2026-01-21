@@ -156,19 +156,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     const qrSize = avgFinderDist + 7 * estimatedModulePx; // Approximate full QR size
 
-    // Prefer raw bytes returned by the decoder. This is the only reliable way to reproduce
-    // byte-mode payloads when an ECI/character set was used (eg UTF-8), because `code.data`
-    // is already decoded to a JS string.
-    const encodingMode = (code.encodingMode ?? detectEncodingMode(code.data!)) as ReturnType<
-      typeof detectEncodingMode
-    >;
-
-    const payloadBytes = (() => {
-      if (code.dataBytes && code.dataBytes.length) return code.dataBytes;
-      // Fallbacks for older decoder outputs.
-      if (encodingMode === 'byte') return stringToLatin1Bytes(code.data!);
-      return new TextEncoder().encode(code.data!);
-    })();
+    const encodingMode = detectEncodingMode(code.data!);
+    const payloadBytes = encodingMode === 'byte' ? stringToLatin1Bytes(code.data!) : new TextEncoder().encode(code.data!);
 
     return {
       success: true,
