@@ -351,10 +351,16 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         });
       }
 
+      // CRITICAL: When encoderInput is raw bytes, we MUST force byte mode.
+      // If we pass 'auto', the encoder's getCompatibleMode() may incorrectly choose
+      // numeric/alphanumeric if the binary data happens to match those patterns,
+      // causing a completely different QR matrix structure.
+      const effectiveMode = encoderInput.kind === 'bytes' ? 'byte' : modeToUse;
+
       let qr: ReturnType<typeof createQRInstance>;
       try {
         qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
-          ...(modeToUse ? { mode: modeToUse } : {}),
+          ...(effectiveMode ? { mode: effectiveMode } : {}),
           ...(typeof maskToUse === 'number' ? { maskPattern: maskToUse } : {}),
         });
       } finally {
@@ -522,7 +528,7 @@ const moduleCount = qr.getModuleCount();
         usedVersion: versionToUseFinal,
         detectedMaskPattern: result.maskPattern,
         usedMaskPattern: typeof maskToUse === 'number' ? maskToUse : null,
-        usedMode: modeToUse ?? null,
+        usedMode: effectiveMode ?? null,
         actualVersion,
         moduleCount,
         marginModules,
@@ -540,7 +546,7 @@ const moduleCount = qr.getModuleCount();
           ecc,
           version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
           mask: { detected: result.maskPattern, used: typeof maskToUse === 'number' ? maskToUse : null },
-          mode: modeToUse ?? null,
+          mode: { requested: modeToUse ?? null, effective: effectiveMode ?? null },
           encoderInputKind: encoderInput.kind,
           payloadBytesLen: result.payloadBytes?.length ?? null,
           payloadBytesHead,
