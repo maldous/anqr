@@ -60,51 +60,113 @@ function hammingDistance(a: number, b: number): number {
 /**
  * Read format info from the matrix
  * Format info is stored in two locations for redundancy
+ *
+ * The encoder writes format bits as follows (from setupTypeInfo in encoder.ts):
+ *
+ * Copy 1 (around top-left finder):
+ *   - Vertical (column 8): bits 0-5 at rows 0-5, bits 6-7 at rows 7-8
+ *   - Horizontal (row 8): bit 8 at col 7, bits 9-14 at cols 5-0
+ *
+ * Copy 2 (around top-right and bottom-left finders):
+ *   - Horizontal (row 8): bits 0-7 at cols N-1 to N-8
+ *   - Vertical (column 8): bits 8-14 at rows N-7 to N-1
  */
 export function readFormatInfo(matrix: boolean[][], moduleCount: number): FormatInfo | null {
   initFormatTable();
 
-  // Read format info from around top-left finder pattern
+  // Collect per-bit trace for debugging
+  const trace1: Array<{ bit: number; row: number; col: number; value: boolean }> = [];
+  const trace2: Array<{ bit: number; row: number; col: number; value: boolean }> = [];
+
+  // ========================================
+  // Copy 1: Around top-left finder pattern
+  // ========================================
   let bits1 = 0;
-  // Bits 0-5: row 8, cols 0-5
-  for (let col = 0; col <= 5; col++) {
-    if (matrix[8]?.[col]) bits1 |= 1 << col;
-  }
-  // Bit 6: row 8, col 7
-  if (matrix[8]?.[7]) bits1 |= 1 << 6;
-  // Bit 7: row 8, col 8
-  if (matrix[8]?.[8]) bits1 |= 1 << 7;
-  // Bit 8: row 7, col 8
-  if (matrix[7]?.[8]) bits1 |= 1 << 8;
-  // Bits 9-14: rows 5-0, col 8
-  for (let row = 5; row >= 0; row--) {
-    if (matrix[row]?.[8]) bits1 |= 1 << (14 - row);
+
+  // Bits 0-5: column 8, rows 0-5
+  for (let i = 0; i <= 5; i++) {
+    const row = i;
+    const col = 8;
+    const value = matrix[row]?.[col] ?? false;
+    if (value) bits1 |= 1 << i;
+    trace1.push({ bit: i, row, col, value });
   }
 
-  // Read format info from around top-right and bottom-left finder patterns
-  // Per ISO 18004, the second copy stores:
-  //   - Top-right (row 8, cols N-8 to N-1): bits 7-14
-  //   - Bottom-left (col 8, rows N-7 to N-1): bits 6-0 (descending)
+  // Bit 6: column 8, row 7 (row 6 is timing pattern)
+  {
+    const row = 7;
+    const col = 8;
+    const value = matrix[row]?.[col] ?? false;
+    if (value) bits1 |= 1 << 6;
+    trace1.push({ bit: 6, row, col, value });
+  }
+
+  // Bit 7: column 8, row 8
+  {
+    const row = 8;
+    const col = 8;
+    const value = matrix[row]?.[col] ?? false;
+    if (value) bits1 |= 1 << 7;
+    trace1.push({ bit: 7, row, col, value });
+  }
+
+  // Bit 8: row 8, column 7
+  {
+    const row = 8;
+    const col = 7;
+    const value = matrix[row]?.[col] ?? false;
+    if (value) bits1 |= 1 << 8;
+    trace1.push({ bit: 8, row, col, value });
+  }
+
+  // Bits 9-14: row 8, columns 5-0
+  for (let i = 9; i <= 14; i++) {
+    const row = 8;
+    const col = 14 - i; // i=9 → col 5, i=10 → col 4, ..., i=14 → col 0
+    const value = matrix[row]?.[col] ?? false;
+    if (value) bits1 |= 1 << i;
+    trace1.push({ bit: i, row, col, value });
+  }
+
+  // ========================================
+  // Copy 2: Around top-right and bottom-left
+  // ========================================
   let bits2 = 0;
-  // Bits 7-14: row 8, columns moduleCount-8 to moduleCount-1
-  // col N-8 → bit 7, col N-7 → bit 8, ..., col N-1 → bit 14
-  for (let i = 0; i < 8; i++) {
-    if (matrix[8]?.[moduleCount - 8 + i]) bits2 |= 1 << (7 + i);
-  }
-  // Bits 6-0: column 8, rows moduleCount-7 to moduleCount-1
-  // row N-7 → bit 6, row N-6 → bit 5, ..., row N-1 → bit 0
-  for (let i = 0; i < 7; i++) {
-    if (matrix[moduleCount - 7 + i]?.[8]) bits2 |= 1 << (6 - i);
+
+  // Bits 0-7: row 8, columns N-1 to N-8
+  for (let i = 0; i <= 7; i++) {
+    const row = 8;
+    const col = moduleCount - 1 - i; // i=0 → col N-1, i=7 → col N-8
+    const value = matrix[row]?.[col] ?? false;
+    if (value) bits2 |= 1 << i;
+    trace2.push({ bit: i, row, col, value });
   }
 
-  log('format', 'Read format bits', {
+  // Bits 8-14: column 8, rows N-7 to N-1
+  for (let i = 8; i <= 14; i++) {
+    const row = moduleCount - 15 + i; // i=8 → row N-7, i=14 → row N-1
+    const col = 8;
+    const value = matrix[row]?.[col] ?? false;
+    if (value) bits2 |= 1 << i;
+    trace2.push({ bit: i, row, col, value });
+  }
+
+  log('format', 'Read format bits with trace', {
     bits1: bits1.toString(2).padStart(15, '0'),
     bits2: bits2.toString(2).padStart(15, '0'),
+    bits1Hex: '0x' + bits1.toString(16).padStart(4, '0'),
+    bits2Hex: '0x' + bits2.toString(16).padStart(4, '0'),
+    moduleCount,
+    trace1: trace1.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
+    trace2: trace2.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
   });
 
   // Try to find a match with error correction
   let bestMatch: FormatInfo | null = null;
   let bestDistance = 4; // Maximum correctable errors for BCH(15,5) is 3
+  let bestDistCopy1 = 15;
+  let bestDistCopy2 = 15;
+  let bestFromCopy = 0;
 
   for (const [pattern, info] of FORMAT_INFO_DECODE_TABLE) {
     const d1 = hammingDistance(bits1, pattern);
@@ -113,6 +175,9 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
 
     if (minD < bestDistance) {
       bestDistance = minD;
+      bestDistCopy1 = d1;
+      bestDistCopy2 = d2;
+      bestFromCopy = d1 <= d2 ? 1 : 2;
       bestMatch = info;
     }
   }
@@ -124,9 +189,17 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
       eccChar,
       maskPattern: bestMatch.maskPattern,
       hammingDistance: bestDistance,
+      hammingDistCopy1: bestDistCopy1,
+      hammingDistCopy2: bestDistCopy2,
+      usedCopy: bestFromCopy,
     });
   } else {
-    log('format', 'Failed to decode format info');
+    log('format', 'Failed to decode format info', {
+      bits1: bits1.toString(2).padStart(15, '0'),
+      bits2: bits2.toString(2).padStart(15, '0'),
+      bits1Hex: '0x' + bits1.toString(16).padStart(4, '0'),
+      bits2Hex: '0x' + bits2.toString(16).padStart(4, '0'),
+    });
   }
 
   return bestMatch;
