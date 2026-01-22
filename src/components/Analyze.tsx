@@ -69,7 +69,7 @@ import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {
   onNavigate?: (page: 'editor' | 'gallery' | 'analyze') => void;
-  generatedCanvas?: HTMLCanvasElement | null;
+  generatedCanvas?: HTMLCanvasElement | OffscreenCanvas | null;
 }
 
 // Content type icons mapping
@@ -298,9 +298,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       // - For external images, prefer exact (version/mask/mode) if detected, else fall back to auto.
       const isGeneratorSource = analysisSource === 'generator' && !!generatedCanvas;
 
-      const versionToUse = isGeneratorSource
-        ? qrState.version
-        : result.version ?? 0;
+      const versionToUse = isGeneratorSource ? qrState.version : (result.version ?? 0);
 
       // Prefer detected mask when available (even for generator), because it is the actual chosen mask.
       const maskToUse =
@@ -314,7 +312,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       // Note: analyzer returns 'mixed'/'unknown' sometimes, those are not valid encoder modes, so only pass valid.
       const modeToUse = (() => {
         const m = isGeneratorSource ? qrState.encodingMode : result.encodingMode;
-        if (m === 'numeric' || m === 'alphanumeric' || m === 'byte' || m === 'kanji' || m === 'auto') return m;
+        if (
+          m === 'numeric' ||
+          m === 'alphanumeric' ||
+          m === 'byte' ||
+          m === 'kanji' ||
+          m === 'auto'
+        )
+          return m;
         return undefined;
       })();
 
@@ -322,7 +327,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         // Prefer raw payload bytes when available for byte mode. This is required for exact reproduction.
         const bytes = result.payloadBytes;
         const wantsByte = modeToUse === 'byte' || result.encodingMode === 'byte';
-        if (bytes && bytes.length && wantsByte) {
+        if (bytes?.length && wantsByte) {
           // Build a binary string where each charCode is one byte 0..255.
           let s = '';
           const chunk = 0x8000;
@@ -337,7 +342,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       // Always prefer the decoder's detected version for reproduction when available.
       const versionToUseFinal =
-        typeof result.version === 'number' && result.version > 0 ? result.version : (versionToUse || 0);
+        typeof result.version === 'number' && result.version > 0
+          ? result.version
+          : versionToUse || 0;
 
       // If the app globally changed stringToBytes (UTF-8, Shift-JIS, etc.), force identity mapping for binary strings.
       const prevStringToBytes = getStringToBytes();
@@ -361,12 +368,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       try {
         qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
           ...(effectiveMode ? { mode: effectiveMode } : {}),
-          ...(typeof maskToUse === 'number' ? { maskPattern: maskToUse } : {}),
+          ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
+            ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
+            : {}),
         });
       } finally {
         if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
       }
-const moduleCount = qr.getModuleCount();
+      const moduleCount = qr.getModuleCount();
       const actualVersion = (moduleCount - 17) / 4;
 
       // Margin handling
@@ -404,10 +413,14 @@ const moduleCount = qr.getModuleCount();
       // Colors
       // Generator: use live render colors.
       // External: use detected colors, fall back to black/white.
-      const fg = isGeneratorSource ? renderState.fgColor : (result.detectedColors?.foreground || '#000000');
+      const fg = isGeneratorSource
+        ? renderState.fgColor
+        : result.detectedColors?.foreground || '#000000';
       const bg = isGeneratorSource
-        ? (renderState.bgTransparent ? '#ffffff' : renderState.bgColor)
-        : (result.detectedColors?.background || '#ffffff');
+        ? renderState.bgTransparent
+          ? '#ffffff'
+          : renderState.bgColor
+        : result.detectedColors?.background || '#ffffff';
 
       // Draw background
       ctx.fillStyle = bg;
@@ -424,7 +437,6 @@ const moduleCount = qr.getModuleCount();
         }
       }
 
-      
       // --- Debug: matrix comparisons to pinpoint mismatch source ---
       const buildRegenMatrix = (): boolean[][] => {
         const m: boolean[][] = new Array(moduleCount);
@@ -453,7 +465,9 @@ const moduleCount = qr.getModuleCount();
       };
 
       const regenMatrix = buildRegenMatrix();
-      const regenVsDecoded = result.moduleMatrix ? diffMatrices(result.moduleMatrix, regenMatrix) : null;
+      const regenVsDecoded = result.moduleMatrix
+        ? diffMatrices(result.moduleMatrix, regenMatrix)
+        : null;
 
       const sampleOriginalMatrix = (): boolean[][] | null => {
         if (!(isGeneratorSource && generatedCanvas)) return null;
@@ -503,12 +517,15 @@ const moduleCount = qr.getModuleCount();
             if (diffCount < best.diffCount) best = { dr, dc, diffCount };
           }
         }
-        return { ...best, diffPct: (moduleCount * moduleCount) ? best.diffCount / (moduleCount * moduleCount) : 0 };
+        return {
+          ...best,
+          diffPct: moduleCount * moduleCount ? best.diffCount / (moduleCount * moduleCount) : 0,
+        };
       })();
 
       const payloadBytesHead = (() => {
         const bytes = result.payloadBytes;
-        if (!bytes || !bytes.length) return null;
+        if (!bytes?.length) return null;
         return Array.from(bytes.slice(0, 16))
           .map((b) => b.toString(16).padStart(2, '0'))
           .join(' ');
@@ -532,7 +549,7 @@ const moduleCount = qr.getModuleCount();
         actualVersion,
         moduleCount,
         marginModules,
-        borderModulesExtra: isGeneratorSource ? (qrState.borderModulesExtra || 0) : null,
+        borderModulesExtra: isGeneratorSource ? qrState.borderModulesExtra || 0 : null,
         modulePx,
         canvasSize: size,
         matrix: {
@@ -545,7 +562,10 @@ const moduleCount = qr.getModuleCount();
         console.warn('[QR-Analyzer:reproduced] Matrix mismatch (original vs regenerated)', {
           ecc,
           version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
-          mask: { detected: result.maskPattern, used: typeof maskToUse === 'number' ? maskToUse : null },
+          mask: {
+            detected: result.maskPattern,
+            used: typeof maskToUse === 'number' ? maskToUse : null,
+          },
           mode: { requested: modeToUse ?? null, effective: effectiveMode ?? null },
           encoderInputKind: encoderInput.kind,
           payloadBytesLen: result.payloadBytes?.length ?? null,
@@ -555,7 +575,6 @@ const moduleCount = qr.getModuleCount();
           bestShift,
         });
       }
-
     } catch (err) {
       console.error('[QR-Analyzer:reproduced] Failed to generate QR code:', err);
       // Clear canvas and show error state

@@ -5,12 +5,33 @@
 
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
-import type { FinderPattern } from './types';
+import type { FinderPattern, FinderPatternResult } from './types';
 import { pointDistance } from './utils';
 
 interface ScanResult {
   center: number;
   moduleSize: number;
+}
+
+/**
+ * Convert RGBA pixel to grayscale, composited over white.
+ *
+ * Canvas pixels may be transparent (e.g. background set to 'transparent'
+ * or left unpainted). In ImageData those appear as transparent black
+ * (0,0,0,0), but visually they render over the page background.
+ * For QR detection, treat transparency as light modules by compositing
+ * over white.
+ */
+function grayAt(pixels: Uint8ClampedArray, idx: number): number {
+  const a = pixels[idx + 3] / 255;
+  if (a <= 0) return 255;
+  if (a >= 1) return (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+
+  const inv = 1 - a;
+  const r = pixels[idx] * a + 255 * inv;
+  const g = pixels[idx + 1] * a + 255 * inv;
+  const b = pixels[idx + 2] * a + 255 * inv;
+  return (r + g + b) / 3;
 }
 
 /**
@@ -53,7 +74,7 @@ function scanRow(
 
   for (let x = 0; x < width; x++) {
     const idx = (y * width + x) * 4;
-    const gray = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+    const gray = grayAt(pixels, idx);
     const isDark = gray < threshold;
 
     if (isDark) {
@@ -125,7 +146,7 @@ function verifyVertical(
   // Scan up from center
   for (let row = Math.floor(y); row >= 0; row--) {
     const idx = (row * width + Math.floor(x)) * 4;
-    const gray = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+    const gray = grayAt(pixels, idx);
     const isDark = gray < threshold;
 
     if (state === 2) {
@@ -151,7 +172,7 @@ function verifyVertical(
   // Scan down from center
   for (let row = Math.floor(y) + 1; row < height; row++) {
     const idx = (row * width + Math.floor(x)) * 4;
-    const gray = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+    const gray = grayAt(pixels, idx);
     const isDark = gray < threshold;
 
     if (state === 2) {
@@ -191,17 +212,19 @@ function verifyVertical(
 
 /**
  * Find all finder patterns in the image
+ * Returns both the patterns and the threshold used for detection
  */
-export function findFinderPatterns(imageData: ImageData): FinderPattern[] {
+export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
   const { data: pixels, width, height } = imageData;
 
   log('locate', 'Finding finder patterns', { width, height });
 
-  // Calculate threshold using Otsu's method (simplified)
+  // Calculate threshold (simple mean). We composite transparency over white
+  // so a transparent background is treated as light modules.
   let sum = 0;
   let count = 0;
   for (let i = 0; i < pixels.length; i += 4) {
-    sum += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+    sum += grayAt(pixels, i);
     count++;
   }
   const threshold = sum / count;
@@ -229,16 +252,27 @@ export function findFinderPatterns(imageData: ImageData): FinderPattern[] {
       );
 
       if (vertical.valid) {
+        // Refine the center position by sampling the expected finder pattern structure
+        const refined = refineFinderPatternCenter(
+          pixels,
+          width,
+          height,
+          result.center,
+          vertical.center,
+          vertical.moduleSize,
+          threshold
+        );
+        
         // Use grid key to deduplicate nearby patterns
         const gridSize = vertical.moduleSize * 5;
-        const gridX = Math.round(result.center / gridSize);
-        const gridY = Math.round(vertical.center / gridSize);
+        const gridX = Math.round(refined.x / gridSize);
+        const gridY = Math.round(refined.y / gridSize);
         const key = `${gridX},${gridY}`;
 
         const existing = candidates.get(key);
         if (!existing || existing.count < 10) {
           candidates.set(key, {
-            center: { x: result.center, y: vertical.center },
+            center: { x: refined.x, y: refined.y },
             moduleSize: vertical.moduleSize,
             count: (existing?.count || 0) + 1,
           });
@@ -262,7 +296,241 @@ export function findFinderPatterns(imageData: ImageData): FinderPattern[] {
     })),
   });
 
-  return patterns;
+  return { patterns, threshold };
+}
+
+// Module positions (col, row) in the 7x7 finder pattern
+// Dark 3x3 core: modules (2,2) through (4,4)
+const DARK_CORE_MODULES: ReadonlyArray<[number, number]> = [
+  [2, 2], [3, 2], [4, 2],
+  [2, 3], [3, 3], [4, 3],
+  [2, 4], [3, 4], [4, 4],
+];
+
+// White ring: modules surrounding the dark core (row 1 and row 5 middle, col 1 and col 5 middle)
+const WHITE_RING_MODULES: ReadonlyArray<[number, number]> = [
+  [1, 2], [1, 3], [1, 4],  // left column of white ring
+  [5, 2], [5, 3], [5, 4],  // right column of white ring
+  [2, 1], [3, 1], [4, 1],  // top row of white ring
+  [2, 5], [3, 5], [4, 5],  // bottom row of white ring
+];
+
+/**
+ * Compute the average dark and light values at a candidate finder center.
+ * Used for diagnostic logging to verify sampling is hitting module centers.
+ */
+function computeFinderContrast(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  testX: number,
+  testY: number,
+  moduleSize: number
+): { avgDark: number; avgLight: number; contrast: number } {
+  // Calculate finder pattern origin (top-left corner of module 0,0)
+  const finderOriginX = testX - 3.5 * moduleSize;
+  const finderOriginY = testY - 3.5 * moduleSize;
+
+  // Sample dark core modules
+  let darkSum = 0;
+  let darkCount = 0;
+  for (const [col, row] of DARK_CORE_MODULES) {
+    const px = Math.round(finderOriginX + (col + 0.5) * moduleSize);
+    const py = Math.round(finderOriginY + (row + 0.5) * moduleSize);
+    if (px >= 0 && px < width && py >= 0 && py < height) {
+      const idx = (py * width + px) * 4;
+      darkSum += grayAt(pixels, idx);
+      darkCount++;
+    }
+  }
+
+  // Sample white ring modules
+  let lightSum = 0;
+  let lightCount = 0;
+  for (const [col, row] of WHITE_RING_MODULES) {
+    const px = Math.round(finderOriginX + (col + 0.5) * moduleSize);
+    const py = Math.round(finderOriginY + (row + 0.5) * moduleSize);
+    if (px >= 0 && px < width && py >= 0 && py < height) {
+      const idx = (py * width + px) * 4;
+      lightSum += grayAt(pixels, idx);
+      lightCount++;
+    }
+  }
+
+  const avgDark = darkCount > 0 ? darkSum / darkCount : 127;
+  const avgLight = lightCount > 0 ? lightSum / lightCount : 127;
+  const contrast = avgLight - avgDark;
+
+  return { avgDark, avgLight, contrast };
+}
+
+/**
+ * Score a candidate finder pattern center position by measuring contrast
+ * between expected dark (center 3x3) and light (surrounding ring) areas.
+ * 
+ * The candidate center (testX, testY) is assumed to be at module position (3.5, 3.5)
+ * within the finder pattern. We calculate the finder origin and sample at explicit
+ * module center positions to avoid landing on module boundaries.
+ */
+function scoreFinderCenter(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  testX: number,
+  testY: number,
+  moduleSize: number,
+  threshold: number
+): number {
+  // Calculate finder pattern origin (top-left corner of module 0,0)
+  // The center is at module position (3.5, 3.5), so origin is 3.5 modules back
+  const finderOriginX = testX - 3.5 * moduleSize;
+  const finderOriginY = testY - 3.5 * moduleSize;
+
+  // Sample dark core modules (should be black, gray value ~0)
+  // Sample at the CENTER of each module (+0.5 offset)
+  let darkSum = 0;
+  let darkCount = 0;
+  for (const [col, row] of DARK_CORE_MODULES) {
+    const px = Math.round(finderOriginX + (col + 0.5) * moduleSize);
+    const py = Math.round(finderOriginY + (row + 0.5) * moduleSize);
+    if (px >= 0 && px < width && py >= 0 && py < height) {
+      const idx = (py * width + px) * 4;
+      darkSum += grayAt(pixels, idx);
+      darkCount++;
+    }
+  }
+
+  // Sample white ring modules (should be white, gray value ~255)
+  // Sample at the CENTER of each module (+0.5 offset)
+  let lightSum = 0;
+  let lightCount = 0;
+  for (const [col, row] of WHITE_RING_MODULES) {
+    const px = Math.round(finderOriginX + (col + 0.5) * moduleSize);
+    const py = Math.round(finderOriginY + (row + 0.5) * moduleSize);
+    if (px >= 0 && px < width && py >= 0 && py < height) {
+      const idx = (py * width + px) * 4;
+      lightSum += grayAt(pixels, idx);
+      lightCount++;
+    }
+  }
+
+  // Need sufficient samples for reliable scoring
+  if (darkCount < 5 || lightCount < 5) return -Infinity;
+
+  const avgDark = darkSum / darkCount;
+  const avgLight = lightSum / lightCount;
+
+  // Score is the contrast between light and dark
+  // Higher score = better finder pattern match
+  const contrast = avgLight - avgDark;
+
+  // Also penalize if dark isn't dark enough or light isn't light enough
+  const darkPenalty = avgDark > threshold ? (avgDark - threshold) / 255 : 0;
+  const lightPenalty = avgLight < threshold ? (threshold - avgLight) / 255 : 0;
+
+  return contrast - darkPenalty * 100 - lightPenalty * 100;
+}
+
+/**
+ * Refine a finder pattern center by sampling the expected finder pattern structure
+ * and finding the offset that maximizes correlation.
+ * 
+ * The finder pattern is 7x7 modules with structure:
+ *   1111111  (row 0)
+ *   1000001  (row 1)
+ *   1011101  (row 2)
+ *   1011101  (row 3)
+ *   1011101  (row 4)
+ *   1000001  (row 5)
+ *   1111111  (row 6)
+ * 
+ * We sample the center 3x3 (should be dark) and surrounding ring (should be light)
+ * and find the offset that maximizes the contrast between them.
+ */
+function refineFinderPatternCenter(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  moduleSize: number,
+  threshold: number
+): { x: number; y: number; score: number } {
+  // Search radius in pixels (about 2.5 modules to correct for potential larger offsets)
+  const searchRadius = Math.ceil(moduleSize * 2.5);
+  const step = Math.max(1, Math.floor(moduleSize / 4));
+  
+  let bestX = centerX;
+  let bestY = centerY;
+  const initialScore = scoreFinderCenter(pixels, width, height, centerX, centerY, moduleSize, threshold);
+  let bestScore = initialScore;
+  
+  // Coarse pass: search the area around the detected center
+  for (let dy = -searchRadius; dy <= searchRadius; dy += step) {
+    for (let dx = -searchRadius; dx <= searchRadius; dx += step) {
+      const testX = centerX + dx;
+      const testY = centerY + dy;
+      const score = scoreFinderCenter(pixels, width, height, testX, testY, moduleSize, threshold);
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestX = testX;
+        bestY = testY;
+      }
+    }
+  }
+  
+  // Fine pass: refine with smaller steps around best position (skip if step is already 1)
+  if (step > 1) {
+    const fineStep = Math.max(1, Math.floor(step / 2));
+    const fineRadius = step * 2;
+    
+    for (let dy = -fineRadius; dy <= fineRadius; dy += fineStep) {
+      for (let dx = -fineRadius; dx <= fineRadius; dx += fineStep) {
+        const testX = bestX + dx;
+        const testY = bestY + dy;
+        const score = scoreFinderCenter(pixels, width, height, testX, testY, moduleSize, threshold);
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestX = testX;
+          bestY = testY;
+        }
+      }
+    }
+  }
+  
+  // Log refinement result with diagnostic avgDark/avgLight values
+  const deltaX = bestX - centerX;
+  const deltaY = bestY - centerY;
+  const refined = bestScore > initialScore;
+  
+  // Compute contrast values at the best position for diagnostic purposes
+  const bestContrast = computeFinderContrast(pixels, width, height, bestX, bestY, moduleSize);
+  const originalContrast = computeFinderContrast(pixels, width, height, centerX, centerY, moduleSize);
+  
+  log('locate', 'Finder center refinement', {
+    original: `(${centerX.toFixed(1)}, ${centerY.toFixed(1)})`,
+    refined: `(${bestX.toFixed(1)}, ${bestY.toFixed(1)})`,
+    delta: `(${deltaX.toFixed(1)}, ${deltaY.toFixed(1)})`,
+    moduleSize: moduleSize.toFixed(1),
+    searchRadius,
+    step,
+    initialScore: initialScore.toFixed(1),
+    bestScore: bestScore.toFixed(1),
+    scoreImprovement: (bestScore - initialScore).toFixed(1),
+    refinementHelped: refined,
+    originalAvgDark: originalContrast.avgDark.toFixed(1),
+    originalAvgLight: originalContrast.avgLight.toFixed(1),
+    bestAvgDark: bestContrast.avgDark.toFixed(1),
+    bestAvgLight: bestContrast.avgLight.toFixed(1),
+    bestContrast: bestContrast.contrast.toFixed(1),
+    note: bestContrast.avgDark > 80 || bestContrast.avgLight < 180 
+      ? 'WARNING: Poor contrast suggests finder center still not accurate'
+      : 'OK - good contrast detected',
+  });
+  
+  return { x: bestX, y: bestY, score: bestScore };
 }
 
 interface ScoredTriplet {

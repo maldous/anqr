@@ -20,7 +20,6 @@ export function stringToBytesFn(s: string): number[] {
   return _stringToBytes(s);
 }
 
-
 /**
  * Get the current stringToBytes implementation function.
  * Useful for temporarily overriding encoding and then restoring it safely.

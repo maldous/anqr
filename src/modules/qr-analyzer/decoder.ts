@@ -5,7 +5,7 @@
 import { decodeQR } from '../qr-decoder';
 import { detectContentType } from './analyzer-content';
 // Shared logger
-import { qrAnalyzerLog as log } from './logger';
+import { disableLogBuffer, enableLogBuffer, flushLogBuffer, qrAnalyzerLog as log } from './logger';
 import type { ContentType, QRAnalysisResult } from './types';
 
 /**
@@ -47,11 +47,16 @@ interface QRLocationCorners {
  * Decode a QR code from canvas and extract all metadata
  */
 export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult {
+  // Enable log buffering to capture debug info for failed detections
+  enableLogBuffer();
+
   log('decode', 'Starting QR decode', { canvasWidth: canvas.width, canvasHeight: canvas.height });
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     log('decode', 'ERROR: Could not get canvas context');
+    const debugLog = flushLogBuffer();
+    disableLogBuffer();
     return {
       success: false,
       error: 'Could not get canvas context',
@@ -63,6 +68,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       encodingMode: null,
       errorsCorrected: null,
       estimatedModulePx: null,
+      debugLog,
     };
   }
 
@@ -73,6 +79,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     if (!(code?.success && code.data)) {
       log('decode', 'ERROR: No QR code detected by our decoder');
+      const debugLog = flushLogBuffer();
+      disableLogBuffer();
       return {
         success: false,
         error: 'No QR code detected in image',
@@ -84,6 +92,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
         encodingMode: null,
         errorsCorrected: null,
         estimatedModulePx: null,
+        debugLog,
       };
     }
 
@@ -118,10 +127,14 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     // Prefer the decoder's derived version/moduleCount. Only fall back to geometric
     // inference if version is missing.
-    const decodedVersion = typeof code.version === 'number' && isFinite(code.version) ? Math.round(code.version) : null;
+    const decodedVersion =
+      typeof code.version === 'number' && Number.isFinite(code.version)
+        ? Math.round(code.version)
+        : null;
 
     const detected = decodedVersion ? null : detectModuleCountFromDistance(avgFinderDist);
-    const version = decodedVersion ?? (detected ? Math.floor((detected.moduleCount - 17) / 4) : null);
+    const version =
+      decodedVersion ?? (detected ? Math.floor((detected.moduleCount - 17) / 4) : null);
     const moduleCount = version !== null ? 17 + version * 4 : detected ? detected.moduleCount : 0;
 
     // Distance between finder centers spans (moduleCount - 7) modules
@@ -157,7 +170,14 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     const qrSize = avgFinderDist + 7 * estimatedModulePx; // Approximate full QR size
 
     const encodingMode = detectEncodingMode(code.data!);
-    const payloadBytes = encodingMode === 'byte' ? stringToLatin1Bytes(code.data!) : new TextEncoder().encode(code.data!);
+    const payloadBytes =
+      encodingMode === 'byte'
+        ? stringToLatin1Bytes(code.data!)
+        : new TextEncoder().encode(code.data!);
+
+    // Success - flush and disable buffer (don't include debug log on success)
+    flushLogBuffer();
+    disableLogBuffer();
 
     return {
       success: true,
@@ -190,6 +210,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     };
   } catch (err) {
     log('decode', 'ERROR: Exception during decode', { error: String(err) });
+    const debugLog = flushLogBuffer();
+    disableLogBuffer();
     return {
       success: false,
       error: err instanceof Error ? err.message : 'Failed to decode QR code',
@@ -201,6 +223,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       encodingMode: null,
       errorsCorrected: null,
       estimatedModulePx: null,
+      debugLog,
     };
   }
 }
@@ -275,7 +298,6 @@ function detectModuleCountFromDistance(finderCenterDistance: number): {
   return { moduleCount, modulePx: bestModulePx };
 }
 
-
 function stringToLatin1Bytes(s: string): Uint8Array {
   const out = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) {
@@ -309,6 +331,23 @@ function getAlignmentPatternCount(version: number): number {
 }
 
 /**
+ * Convert RGBA pixel to grayscale, composited over white.
+ * Transparent pixels are treated as light (white background).
+ * This ensures transparent QR backgrounds are correctly detected.
+ */
+function grayAt(data: Uint8ClampedArray, idx: number): number {
+  const a = data[idx + 3] / 255;
+  if (a <= 0) return 255;
+  if (a >= 1) return (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+
+  const inv = 1 - a;
+  const r = data[idx] * a + 255 * inv;
+  const g = data[idx + 1] * a + 255 * inv;
+  const b = data[idx + 2] * a + 255 * inv;
+  return (r + g + b) / 3;
+}
+
+/**
  * Analyze colors in the QR code region
  */
 function analyzeColors(
@@ -327,7 +366,7 @@ function analyzeColors(
   for (let y = minY; y <= maxY; y++) {
     for (let x = minX; x <= maxX; x++) {
       const idx = (y * width + x) * 4;
-      const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+      const gray = grayAt(data, idx);
       if (gray < 128) {
         darkPixels.push(gray);
       } else {
@@ -474,7 +513,7 @@ function buildModuleMatrix(
 
       if (x >= 0 && x < imageData.width && y >= 0 && y < imageData.height) {
         const idx = (y * width + x) * 4;
-        const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+        const gray = grayAt(data, idx);
         const isDark = gray < 128;
         matrixRow.push(isDark);
         if (isDark) darkCount++;

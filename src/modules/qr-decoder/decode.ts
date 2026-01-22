@@ -627,6 +627,67 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
 // ALIGNMENT_POSITIONS and getAlignmentPositions imported from qr-spec
 
 /**
+ * De-interleave data codewords from multi-block QR codes.
+ *
+ * QR codes with multiple RS blocks interleave codewords for transmission:
+ * For blocks B1, B2, ..., Bn with data [D1], [D2], ..., [Dn], the transmitted order is:
+ * D1[0], D2[0], ..., Dn[0], D1[1], D2[1], ..., Dn[1], ...
+ *
+ * Blocks may have different sizes (some have 1 more byte than others).
+ * This function reverses the interleaving to get sequential block data.
+ */
+function deinterleaveDataCodewords(
+  codewords: number[],
+  rsBlocks: number[][]
+): number[] {
+  // Build list of blocks with their data sizes
+  const blockSizes: number[] = [];
+  for (const blockGroup of rsBlocks) {
+    const numBlocks = blockGroup[0];
+    const dataCodewords = blockGroup[2];
+    for (let i = 0; i < numBlocks; i++) {
+      blockSizes.push(dataCodewords);
+    }
+  }
+
+  const numBlocks = blockSizes.length;
+
+  // If only 1 block, no de-interleaving needed
+  if (numBlocks <= 1) {
+    return codewords;
+  }
+
+  // Find max data size (for iteration)
+  const maxDataSize = Math.max(...blockSizes);
+
+  // De-interleave: the transmitted stream has bytes interleaved round-robin
+  // For each codeword position, one byte from each block (if that block has that position)
+  const blockData: number[][] = blockSizes.map(() => []);
+  let idx = 0;
+
+  for (let pos = 0; pos < maxDataSize; pos++) {
+    for (let b = 0; b < numBlocks; b++) {
+      // Only read if this block has a byte at this position
+      if (pos < blockSizes[b] && idx < codewords.length) {
+        blockData[b].push(codewords[idx++]);
+      }
+    }
+  }
+
+  // Concatenate blocks to get sequential data
+  const result = blockData.flat();
+
+  log('deinterleave', 'De-interleaved data codewords', {
+    numBlocks,
+    blockSizes: blockSizes.join(','),
+    inputLength: codewords.length,
+    outputLength: result.length,
+  });
+
+  return result;
+}
+
+/**
  * Separate data and error correction codewords
  */
 export function separateCodewords(
@@ -657,6 +718,12 @@ export function separateCodewords(
     totalDataCodewords += numBlocks * dataCodewords;
   }
 
+  // Extract interleaved data codewords
+  const interleavedData = codewords.slice(0, totalDataCodewords);
+
+  // De-interleave for multi-block QR codes
+  const dataCodewords = deinterleaveDataCodewords(interleavedData, rsBlocks);
+
   log('separate', 'Separated codewords', {
     totalCodewords: codewords.length,
     dataCodewords: totalDataCodewords,
@@ -664,7 +731,7 @@ export function separateCodewords(
   });
 
   return {
-    dataCodewords: codewords.slice(0, totalDataCodewords),
+    dataCodewords,
     ecCodewords: codewords.slice(totalDataCodewords),
   };
 }
@@ -689,6 +756,8 @@ export interface DecodedDataResult {
   text: string;
   bytes: Uint8Array;
   encodingMode: DecodedEncodingMode;
+  /** Whether the decode completed successfully without truncation */
+  valid: boolean;
 }
 
 export function decodeDataCodewordsDetailed(
@@ -700,8 +769,12 @@ export function decodeDataCodewordsDetailed(
   const outBytes: number[] = [];
   const modesSeen = new Set<DecodedEncodingMode>();
   let segmentCount = 0;
+  let valid = true; // Track whether decode completed without errors
 
-  log('decode', 'Starting data decode (detailed)', { dataCodewords: dataCodewords.length, version });
+  log('decode', 'Starting data decode (detailed)', {
+    dataCodewords: dataCodewords.length,
+    version,
+  });
 
   while (bits.available() >= 4) {
     const mode = bits.read(4);
@@ -714,11 +787,12 @@ export function decodeDataCodewordsDetailed(
 
     const charCountBits = getCharCountBits(mode, version);
     if (bits.available() < charCountBits) {
-      log('decode', 'Not enough bits for char count', {
+      log('decode', 'ERROR: Not enough bits for char count - decode invalid', {
         mode,
         charCountBits,
         available: bits.available(),
       });
+      valid = false;
       break;
     }
 
@@ -726,27 +800,47 @@ export function decodeDataCodewordsDetailed(
 
     // Sanity check: if charCount is unreasonably large, something is wrong
     if (charCount > 7000) {
-      log('decode', 'ERROR: Unreasonable char count, aborting', { charCount });
+      log('decode', 'ERROR: Unreasonable char count, aborting - decode invalid', { charCount });
+      valid = false;
       break;
     }
 
     let decodedText = '';
     let decodedBytes: number[] = [];
     let modeTag: DecodedEncodingMode = 'unknown';
+    let segmentValid = true;
 
     switch (mode) {
       case MODE_NUMERIC: {
         decodedText = decodeNumeric(bits, charCount);
         modeTag = 'numeric';
         // Numeric mode is ASCII digits
-        for (let i = 0; i < decodedText.length; i++) outBytes.push(decodedText.charCodeAt(i) & 0xff);
+        for (let i = 0; i < decodedText.length; i++)
+          outBytes.push(decodedText.charCodeAt(i) & 0xff);
+        // Validate: decoded length should match charCount
+        if (decodedText.length !== charCount) {
+          log('decode', 'ERROR: Numeric segment truncated - decode invalid', {
+            expected: charCount,
+            got: decodedText.length,
+          });
+          segmentValid = false;
+        }
         break;
       }
       case MODE_ALPHANUMERIC: {
         decodedText = decodeAlphanumeric(bits, charCount);
         modeTag = 'alphanumeric';
         // Alphanumeric mode is ASCII subset
-        for (let i = 0; i < decodedText.length; i++) outBytes.push(decodedText.charCodeAt(i) & 0xff);
+        for (let i = 0; i < decodedText.length; i++)
+          outBytes.push(decodedText.charCodeAt(i) & 0xff);
+        // Validate: decoded length should match charCount
+        if (decodedText.length !== charCount) {
+          log('decode', 'ERROR: Alphanumeric segment truncated - decode invalid', {
+            expected: charCount,
+            got: decodedText.length,
+          });
+          segmentValid = false;
+        }
         break;
       }
       case MODE_BYTE: {
@@ -755,6 +849,14 @@ export function decodeDataCodewordsDetailed(
         decodedBytes = r.bytes;
         modeTag = 'byte';
         for (const b of decodedBytes) outBytes.push(b);
+        // Validate: byte count should match charCount
+        if (decodedBytes.length !== charCount) {
+          log('decode', 'ERROR: Byte segment truncated - decode invalid', {
+            expected: charCount,
+            got: decodedBytes.length,
+          });
+          segmentValid = false;
+        }
         break;
       }
       case MODE_KANJI: {
@@ -763,13 +865,26 @@ export function decodeDataCodewordsDetailed(
         decodedBytes = r.bytes;
         modeTag = 'kanji';
         for (const b of decodedBytes) outBytes.push(b);
+        // Validate: kanji char count (each kanji = 2 bytes in Shift-JIS)
+        if (decodedBytes.length !== charCount * 2) {
+          log('decode', 'ERROR: Kanji segment truncated - decode invalid', {
+            expected: charCount * 2,
+            got: decodedBytes.length,
+          });
+          segmentValid = false;
+        }
         break;
       }
       default: {
-        log('decode', 'Unknown mode, skipping', { mode });
+        log('decode', 'ERROR: Unknown mode indicator - decode invalid', { mode });
         modeTag = 'unknown';
+        segmentValid = false;
         break;
       }
+    }
+
+    if (!segmentValid) {
+      valid = false;
     }
 
     if (modeTag !== 'unknown') modesSeen.add(modeTag);
@@ -780,8 +895,14 @@ export function decodeDataCodewordsDetailed(
       charCount,
       textLen: decodedText.length,
       bytesLen: decodedBytes.length,
+      segmentValid,
       preview: decodedText.slice(0, 50),
     });
+
+    // If segment was invalid, don't continue parsing (data is corrupt)
+    if (!segmentValid) {
+      break;
+    }
   }
 
   const encodingMode: DecodedEncodingMode = (() => {
@@ -793,10 +914,18 @@ export function decodeDataCodewordsDetailed(
     return 'unknown';
   })();
 
+  log('decode', 'Data decode complete', {
+    valid,
+    textLength: text.length,
+    bytesLength: outBytes.length,
+    encodingMode,
+  });
+
   return {
     text,
     bytes: new Uint8Array(outBytes),
     encodingMode,
+    valid,
   };
 }
 
@@ -1005,7 +1134,7 @@ function decodeKanjiDetailed(bits: BitStream, count: number): { text: string; by
 /**
  * Decode byte mode data
  */
-function decodeByte(bits: BitStream, count: number): string {
+function _decodeByte(bits: BitStream, count: number): string {
   const bytes: number[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -1025,7 +1154,7 @@ function decodeByte(bits: BitStream, count: number): string {
 /**
  * Decode Kanji mode data
  */
-function decodeKanji(bits: BitStream, count: number): string {
+function _decodeKanji(bits: BitStream, count: number): string {
   const bytes: number[] = [];
 
   for (let i = 0; i < count; i++) {
