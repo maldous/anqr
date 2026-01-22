@@ -8,5 +8,5 @@ export { decodeFromCanvas } from './decode-canvas';
 // Main decoder function
 export { decodeQR } from './decode-qr';
 // Types
-export type { DecodeResult, Point } from './types';
+export type { DecodeResult, FinderPatternResult, Point } from './types';
 export { ECC_LEVEL_MAP } from './types';

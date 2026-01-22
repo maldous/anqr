@@ -14,6 +14,11 @@ export interface FinderPattern {
   count: number;
 }
 
+export interface FinderPatternResult {
+  patterns: FinderPattern[];
+  threshold: number;
+}
+
 export interface QRLocation {
   topLeft: Point;
   topRight: Point;

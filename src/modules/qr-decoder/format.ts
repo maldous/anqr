@@ -154,8 +154,8 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
   log('format', 'Read format bits with trace', {
     bits1: bits1.toString(2).padStart(15, '0'),
     bits2: bits2.toString(2).padStart(15, '0'),
-    bits1Hex: '0x' + bits1.toString(16).padStart(4, '0'),
-    bits2Hex: '0x' + bits2.toString(16).padStart(4, '0'),
+    bits1Hex: `0x${bits1.toString(16).padStart(4, '0')}`,
+    bits2Hex: `0x${bits2.toString(16).padStart(4, '0')}`,
     moduleCount,
     trace1: trace1.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
     trace2: trace2.map((t) => `bit${t.bit}:(${t.row},${t.col})=${t.value ? 1 : 0}`).join(' '),
@@ -197,8 +197,8 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
     log('format', 'Failed to decode format info', {
       bits1: bits1.toString(2).padStart(15, '0'),
       bits2: bits2.toString(2).padStart(15, '0'),
-      bits1Hex: '0x' + bits1.toString(16).padStart(4, '0'),
-      bits2Hex: '0x' + bits2.toString(16).padStart(4, '0'),
+      bits1Hex: `0x${bits1.toString(16).padStart(4, '0')}`,
+      bits2Hex: `0x${bits2.toString(16).padStart(4, '0')}`,
     });
   }
 

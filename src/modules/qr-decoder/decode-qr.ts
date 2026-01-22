@@ -44,8 +44,8 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
   try {
     log('main', 'Starting decode attempt', { width: imageData.width, height: imageData.height });
 
-    // Step 1: Find finder patterns
-    const patterns = findFinderPatterns(imageData);
+    // Step 1: Find finder patterns (returns patterns and the threshold used for detection)
+    const { patterns, threshold } = findFinderPatterns(imageData);
     if (patterns.length < 3) {
       log('main', 'Failed: not enough finder patterns', { found: patterns.length });
       return null;
@@ -65,8 +65,8 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     const version = (location.moduleCount - 17) / 4;
     log('main', 'Calculated version', { version, moduleCount: location.moduleCount });
 
-    // Step 4: Extract module matrix from image
-    const rawMatrix = extractModuleMatrix(imageData, location);
+    // Step 4: Extract module matrix from image using the threshold from finder detection
+    const rawMatrix = extractModuleMatrix(imageData, location, threshold);
 
     // Step 5: Read format info (ECC level and mask pattern)
     const formatInfo = readFormatInfo(rawMatrix, location.moduleCount);
@@ -83,7 +83,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     log('main', 'Read codewords', { count: codewords.length });
 
     // Step 8: Separate data and error correction codewords
-    const { dataCodewords } = separateCodewords(codewords, Math.round(version), formatInfo.eccLevel);
+    const { dataCodewords } = separateCodewords(
+      codewords,
+      Math.round(version),
+      formatInfo.eccLevel
+    );
 
     // Step 9: Decode data
     // Use rounded version to avoid fractional char-count tables on jittery inputs
@@ -92,6 +96,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     const dataBytes = decoded.bytes;
     const encodingMode = decoded.encodingMode;
 
+    // Check if decode was valid (no truncation or corrupt segments)
+    if (!decoded.valid) {
+      log('main', 'Failed: decode reported invalid (truncation or corrupt data)');
+      return null;
+    }
 
     if (!data) {
       log('main', 'Failed: could not decode data');
