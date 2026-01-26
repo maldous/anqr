@@ -7,7 +7,15 @@
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
 
 // Import from canonical source (qr-spec)
-import { getVersionFromModuleCount, isStructuralModule } from '../qr-spec';
+import {
+  getVersionFromModuleCount,
+  isStructuralModule,
+  isFinderPattern,
+  isTimingPattern,
+  isFormatInfo,
+  isVersionInfo,
+  isAlignmentPattern,
+} from '../qr-spec';
 import {
   ALPHANUMERIC_CHARS,
   MODE_ALPHANUMERIC,
@@ -19,7 +27,7 @@ import {
 
 // RS block configuration per version and ECC level
 // Format: [[numBlocks, totalCodewords, dataCodewords], ...]
-const RS_BLOCKS: Record<string, number[][][]> = {
+export const RS_BLOCKS: Record<string, number[][][]> = {
   L: [
     [[1, 26, 19]],
     [[1, 44, 34]],
@@ -582,10 +590,34 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   let currentByte = 0;
   let bitsRead = 0;
 
+  // Diagnostics: verify function-module skipping is correct.
+  // If this is wrong, the bitstream shifts and RS will never succeed.
+  const version = getVersionFromModuleCount(moduleCount);
+  const skipCounts = {
+    finder: 0,
+    separator: 0,
+    timing: 0,
+    format: 0,
+    version: 0,
+    alignment: 0,
+    darkModule: 0,
+    other: 0,
+  };
+  let visitedModules = 0;
+  let skippedAsFunction = 0;
+
+  const isSeparator = (row: number, col: number): boolean => {
+    // 1-module white border around the 7x7 finder blocks
+    if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) return true;
+    if ((row === 7 && col >= moduleCount - 8) || (col === moduleCount - 8 && row <= 7)) return true;
+    if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) return true;
+    return false;
+  };
+  const isDarkModule = (row: number, col: number): boolean => row === moduleCount - 8 && col === 8;
+
   log('codewords', 'Starting codeword extraction', { moduleCount, matrixRows: matrix.length });
 
   // Start from bottom-right, move up in two-column pairs
-  const version = getVersionFromModuleCount(moduleCount);
   let up = true;
   for (let col = moduleCount - 1; col >= 1; col -= 2) {
     // Skip the timing pattern column
@@ -598,6 +630,8 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
     ) {
       for (let c = 0; c < 2; c++) {
         const currentCol = col - c;
+        visitedModules++;
+
         if (!isStructuralModule(row, currentCol, moduleCount, version)) {
           currentByte = (currentByte << 1) | (matrix[row]?.[currentCol] ? 1 : 0);
           bitsRead++;
@@ -607,6 +641,18 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
             currentByte = 0;
             bitsRead = 0;
           }
+        } else {
+          skippedAsFunction++;
+          // Best-effort categorization
+          // (These functions are pure coordinate checks from qr-spec.)
+          if (isFinderPattern(row, currentCol, moduleCount)) skipCounts.finder++;
+          else if (isSeparator(row, currentCol)) skipCounts.separator++;
+          else if (isTimingPattern(row, currentCol, moduleCount)) skipCounts.timing++;
+          else if (isFormatInfo(row, currentCol, moduleCount)) skipCounts.format++;
+          else if (isVersionInfo(row, currentCol, moduleCount, version)) skipCounts.version++;
+          else if (isAlignmentPattern(row, currentCol, moduleCount, version)) skipCounts.alignment++;
+          else if (isDarkModule(row, currentCol)) skipCounts.darkModule++;
+          else skipCounts.other++;
         }
       }
     }
@@ -619,6 +665,11 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
       .slice(0, 10)
       .map((c) => c.toString(16).padStart(2, '0'))
       .join(' '),
+    traversal: {
+      visitedModules,
+      skippedAsFunction,
+      skipCounts,
+    },
   });
 
   return codewords;

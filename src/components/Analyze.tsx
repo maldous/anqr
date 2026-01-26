@@ -358,13 +358,23 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         });
       }
 
-      // CRITICAL: When encoderInput is raw bytes, we MUST force byte mode.
-      // If we pass 'auto', the encoder's getCompatibleMode() may incorrectly choose
-      // numeric/alphanumeric if the binary data happens to match those patterns,
-      // causing a completely different QR matrix structure.
-      const effectiveMode = encoderInput.kind === 'bytes' ? 'byte' : modeToUse;
+      // For reproduction:
+      // - If we have raw bytes AND the original was pure byte mode, force byte mode
+      // - If the original was 'mixed' (e.g., byte + numeric), use 'auto' to let encoder optimize
+      // - Otherwise use the detected mode
+      const effectiveMode = (() => {
+        if (encoderInput.kind === 'bytes') {
+          // Only force byte mode if original was pure byte mode
+          // For 'mixed' mode, let encoder auto-optimize (it may use byte+numeric segments)
+          if (result.encodingMode === 'byte') return 'byte';
+          // For mixed or unknown, use auto to let encoder choose optimal encoding
+          return undefined;
+        }
+        return modeToUse;
+      })();
 
       let qr: ReturnType<typeof createQRInstance>;
+      let actualVersionUsed = versionToUseFinal;
       try {
         qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
           ...(effectiveMode ? { mode: effectiveMode } : {}),
@@ -372,6 +382,26 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
             : {}),
         });
+      } catch (encoderError) {
+        // If the error is "code length overflow", the payload doesn't fit in the detected version.
+        // Fall back to auto version selection (version 0) which will pick the smallest version that fits.
+        const errorMessage = encoderError instanceof Error ? encoderError.message : String(encoderError);
+        if (errorMessage.includes('code length overflow') || errorMessage.includes('overflow')) {
+          console.warn('[QR-Analyzer:reproduced] Payload too long for detected version, falling back to auto', {
+            detectedVersion: versionToUseFinal,
+            ecc,
+            payloadLength: encoderInput.data.length,
+          });
+          // Retry with version 0 (auto) - let the encoder pick the right version
+          qr = createQRInstance(encoderInput.data, ecc, 0, {
+            ...(effectiveMode ? { mode: effectiveMode } : {}),
+            // Don't force mask pattern when using auto version - let encoder optimize
+          });
+          actualVersionUsed = 0; // Mark as auto
+        } else {
+          // Re-throw other errors
+          throw encoderError;
+        }
       } finally {
         if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
       }
@@ -531,8 +561,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           .join(' ');
       })();
 
+      // Track if reproduction matches original
+      const reproductionMismatch = actualVersion !== (result.version ?? actualVersion);
+      
       console.log('[QR-Analyzer:reproduced] Generated QR code', {
-        strategy: isGeneratorSource ? 'exact' : 'auto_fallback',
+        strategy: isGeneratorSource ? 'exact' : (actualVersionUsed === 0 ? 'auto_fallback' : 'detected'),
+        reproductionMismatch,
         encoderInputKind: encoderInput.kind,
         payloadPreview:
           encoderInput.kind === 'bytes'
