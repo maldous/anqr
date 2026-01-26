@@ -65,7 +65,7 @@ import {
   type QRAnalysisResult,
   type ZXingMetadata,
 } from '@/modules/qr-analyzer';
-import { createQRInstance, getStringToBytes, setStringToBytes } from '@/modules/qr-encoder';
+import { createQRInstance, getStringToBytes, optimizeSegments, setStringToBytes } from '@/modules/qr-encoder';
 import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {
@@ -265,6 +265,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const [urlInput, setUrlInput] = useState('');
   const [imported, setImported] = useState(false);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [actualUsedVersion, setActualUsedVersion] = useState<number | null>(null);
   const reproducedCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Store getters (for exact reproduction of the self-generated QR)
@@ -437,8 +438,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       };
       console.log('[QR-Analyzer:trace] STEP 3 - createQRInstance params:', createQRParams);
 
-      let qr: ReturnType<typeof createQRInstance>;
-      const actualVersionUsed = versionToUseFinal;
+      let qr: ReturnType<typeof createQRInstance> | null = null;
+      let actualVersionUsed = versionToUseFinal;
       try {
         // NEVER use auto version (0) - always use the detected version from ZXing
         qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
@@ -449,9 +450,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         });
         console.log('[QR-Analyzer:trace] STEP 3b - createQRInstance SUCCESS');
       } catch (encoderError) {
-        // Do NOT fall back to auto version - reproduction must use exact ZXing-derived parameters
         const errorMessage = encoderError instanceof Error ? encoderError.message : String(encoderError);
-        console.error('[QR-Analyzer:trace] STEP 3b - createQRInstance FAILED (NO FALLBACK):', {
+        console.error('[QR-Analyzer:trace] STEP 3b - createQRInstance FAILED:', {
           error: errorMessage,
           requestedVersion: versionToUseFinal,
           ecc,
@@ -459,10 +459,91 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           mode: effectiveMode,
           maskPattern: maskToUse,
         });
-        throw encoderError; // Re-throw - no auto fallback allowed
+        
+        // For overflow errors, try mixed mode encoding first, then higher versions
+        if (errorMessage.includes('overflow')) {
+          // First, try mixed mode encoding at the original version
+          // This is crucial for QArt codes that use numeric URL fragments
+          const segments = optimizeSegments(encoderInput.data);
+          const hasMixedModeOptimization = segments.length > 1 || 
+            (segments.length === 1 && segments[0].mode !== 'byte');
+          
+          if (hasMixedModeOptimization) {
+            console.log('[QR-Analyzer:trace] STEP 3c - Trying MIXED MODE encoding at original version', {
+              segments: segments.map(s => ({ mode: s.mode, len: s.data.length })),
+              originalVersion: versionToUseFinal,
+            });
+            
+            try {
+              qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
+                mode: 'mixed',
+                ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
+                  ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
+                  : {}),
+              });
+              console.log('[QR-Analyzer:trace] STEP 3c - MIXED MODE SUCCESS at original version!', {
+                version: versionToUseFinal,
+                segments: segments.map(s => ({ mode: s.mode, len: s.data.length })),
+              });
+              // Successfully encoded with mixed mode at original version
+            } catch (mixedModeError) {
+              console.log('[QR-Analyzer:trace] STEP 3c - Mixed mode failed, trying higher versions...', {
+                error: mixedModeError instanceof Error ? mixedModeError.message : String(mixedModeError),
+              });
+              qr = null; // Reset to try higher versions
+            }
+          }
+          
+          // If mixed mode didn't work (or wasn't applicable), try higher versions
+          if (!qr) {
+            console.log('[QR-Analyzer:trace] STEP 3c - Trying higher versions due to overflow...');
+            let foundVersion: number | null = null;
+            
+            for (let tryVersion = versionToUseFinal + 1; tryVersion <= 40; tryVersion++) {
+              try {
+                // Try with mixed mode first at higher version
+                qr = createQRInstance(encoderInput.data, ecc, tryVersion, {
+                  mode: 'mixed',
+                  ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
+                    ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
+                    : {}),
+                });
+                foundVersion = tryVersion;
+                console.log('[QR-Analyzer:trace] STEP 3c - VERSION UPGRADE: Successfully encoded at version', {
+                  originalVersion: versionToUseFinal,
+                  newVersion: tryVersion,
+                  versionIncrease: tryVersion - versionToUseFinal,
+                  ecc,
+                  maskPattern: maskToUse,
+                  usedMixedMode: true,
+                });
+                break;
+              } catch {
+                // Try next version
+              }
+            }
+            
+            if (foundVersion !== null) {
+              actualVersionUsed = foundVersion;
+            } else {
+              throw new Error(`Data too large: cannot fit in any QR version (1-40) with ECC ${ecc}`);
+            }
+          }
+        } else {
+          throw encoderError; // Re-throw for other errors
+        }
       } finally {
         if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
       }
+      
+      // At this point qr must be non-null
+      if (!qr) {
+        throw new Error('QR instance is null - this should not happen');
+      }
+      
+      // Store the actual version used for import to generator
+      setActualUsedVersion(actualVersionUsed);
+      
       const moduleCount = qr.getModuleCount();
       const actualVersion = (moduleCount - 17) / 4;
 
@@ -923,8 +1004,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     if (result.eccLevel) {
       setQrEcc(result.eccLevel as 'L' | 'M' | 'Q' | 'H');
     }
-    if (result.version !== null && result.version >= 1 && result.version <= 40) {
-      setQrVersion(result.version);
+    // Use actualUsedVersion if available (may be upgraded from detected version due to data overflow)
+    const versionToImport = actualUsedVersion ?? result.version;
+    if (versionToImport !== null && versionToImport >= 1 && versionToImport <= 40) {
+      setQrVersion(versionToImport);
     }
     if (result.maskPattern !== null && result.maskPattern >= 0 && result.maskPattern <= 7) {
       setQrMaskPattern(result.maskPattern as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7);
@@ -972,6 +1055,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     }, 500);
   }, [
     result,
+    actualUsedVersion,
     setPayloadText,
     setPayloadKind,
     setPayloadUrl,
@@ -991,6 +1075,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setUrlInput('');
     setImported(false);
     setAnalysisSource(null);
+    setActualUsedVersion(null);
     if (originalImageUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(originalImageUrl);
     }
@@ -1927,10 +2012,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <Check className="w-3 h-3 text-green-500" />
                           Payload content
                         </li>
-                        {result.version !== null && (
+                        {(actualUsedVersion ?? result.version) !== null && (
                           <li className="flex items-center gap-1">
                             <Check className="w-3 h-3 text-green-500" />
-                            Version {result.version}
+                            Version {actualUsedVersion ?? result.version}
+                            {actualUsedVersion !== null && actualUsedVersion !== result.version && (
+                              <span className="text-amber-500 text-[10px] ml-1">
+                                (upgraded from {result.version})
+                              </span>
+                            )}
                           </li>
                         )}
                         {result.eccLevel && (
