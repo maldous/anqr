@@ -3,7 +3,7 @@
  * Decode QR code from canvas element
  */
 
-import { decodeQR } from './decode-qr';
+import { decodeQR } from './index';
 import type { DecodeResult } from './types';
 
 /**

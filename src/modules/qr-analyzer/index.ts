@@ -105,4 +105,5 @@ export type {
   QRAnalysisResult,
   QuietZoneInfo,
   StructuralAnalysis,
+  ZXingMetadata,
 } from './types';

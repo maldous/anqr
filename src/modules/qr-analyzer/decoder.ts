@@ -6,7 +6,7 @@ import { decodeQR } from '../qr-decoder';
 import { detectContentType } from './analyzer-content';
 // Shared logger
 import { disableLogBuffer, enableLogBuffer, flushLogBuffer, qrAnalyzerLog as log } from './logger';
-import type { ContentType, QRAnalysisResult } from './types';
+import type { ContentType, QRAnalysisResult, ZXingMetadata } from './types';
 
 /**
  * Format content type as human-readable label
@@ -125,28 +125,32 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       average: avgFinderDist.toFixed(2),
     });
 
-    // Prefer the decoder's derived version/moduleCount. Only fall back to geometric
-    // inference if version is missing.
-    const decodedVersion =
-      typeof code.version === 'number' && Number.isFinite(code.version)
-        ? Math.round(code.version)
+    // Version MUST come from ZXing decoder - NEVER estimate or guess
+    // If ZXing couldn't determine the version, it will be null
+    const version =
+      typeof code.version === 'number' && code.version >= 1 && code.version <= 40
+        ? code.version
         : null;
 
-    const detected = decodedVersion ? null : detectModuleCountFromDistance(avgFinderDist);
-    const version =
-      decodedVersion ?? (detected ? Math.floor((detected.moduleCount - 17) / 4) : null);
-    const moduleCount = version !== null ? 17 + version * 4 : detected ? detected.moduleCount : 0;
+    // Module count derived from version (if available)
+    const moduleCount = version !== null ? 17 + version * 4 : 0;
 
-    // Distance between finder centers spans (moduleCount - 7) modules
+    // Estimate module pixel size from finder pattern distance (for visual analysis only)
+    // This does NOT affect version - version ONLY comes from ZXing
     const estimatedModulePx =
-      moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : detected ? detected.modulePx : 0;
+      moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : null;
 
-    log('detection', 'Module count detection result', {
+    log('detection', 'Module count from ZXing (authoritative)', {
       moduleCount,
       version,
-      estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : '0',
-      source: decodedVersion ? 'decoder' : 'inferred',
+      estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : 'null',
+      source: version !== null ? 'ZXing decoder (authoritative)' : 'NOT DETECTED - will fail reproduction',
     });
+
+    // Warn if version not detected - reproduction will fail
+    if (version === null) {
+      log('detection', 'WARNING: ZXing did not provide version - reproduction will not work correctly');
+    }
 
     // Detect content type
     const type = detectContentType(code.data!);
@@ -179,6 +183,35 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     flushLogBuffer();
     disableLogBuffer();
 
+    // Build comprehensive ZXing metadata for debugging
+    const zxingMetadata: ZXingMetadata = {
+      version: code.version ?? null,
+      maskPattern: code.maskPattern ?? null,
+      eccLevel: code.eccLevel ?? null,
+      errorsCorrected: code.errorsCorrected ?? null,
+      erasures: code.erasures ?? null,
+      numBits: code.numBits ?? null,
+      orientation: code.orientation ?? null,
+      structuredAppendSequence: code.structuredAppendSequence ?? null,
+      structuredAppendParity: code.structuredAppendParity ?? null,
+      hasStructuredAppend: (code.structuredAppendSequence ?? -1) >= 0,
+      byteSegmentCount: code.dataBytes ? 1 : 0,
+      totalByteLength: code.dataBytes?.length ?? 0,
+    };
+
+    log('zxing', 'Complete ZXing metadata (authoritative)', {
+      version: zxingMetadata.version,
+      maskPattern: zxingMetadata.maskPattern,
+      eccLevel: zxingMetadata.eccLevel,
+      errorsCorrected: zxingMetadata.errorsCorrected,
+      erasures: zxingMetadata.erasures,
+      numBits: zxingMetadata.numBits,
+      orientation: zxingMetadata.orientation,
+      hasStructuredAppend: zxingMetadata.hasStructuredAppend,
+      byteSegmentCount: zxingMetadata.byteSegmentCount,
+      totalByteLength: zxingMetadata.totalByteLength,
+    });
+
     return {
       success: true,
       payload: code.data!,
@@ -188,7 +221,12 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       eccLevel: code.eccLevel || null,
       maskPattern: code.maskPattern ?? null,
       encodingMode,
-      errorsCorrected: null,
+      errorsCorrected: code.errorsCorrected ?? null,
+      erasures: code.erasures ?? null,
+      orientation: code.orientation ?? null,
+      numBits: code.numBits ?? null,
+      structuredAppendSequence: code.structuredAppendSequence ?? null,
+      structuredAppendParity: code.structuredAppendParity ?? null,
       contentType,
       detectedColors,
       estimatedModulePx,
@@ -207,6 +245,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       },
       moduleMatrix,
       confidence: 'high',
+      zxingMetadata, // Include raw ZXing metadata for debugging
     };
   } catch (err) {
     log('decode', 'ERROR: Exception during decode', { error: String(err) });
@@ -226,76 +265,6 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       debugLog,
     };
   }
-}
-
-/**
- * Detect module count from the distance between finder pattern centers.
- * Distance spans (moduleCount - 7) modules.
- * Try each QR version and pick the one with the cleanest module size.
- */
-function detectModuleCountFromDistance(finderCenterDistance: number): {
-  moduleCount: number;
-  modulePx: number;
-} {
-  log('detection', 'Detecting module count from finder distance', {
-    finderCenterDistance: finderCenterDistance.toFixed(2),
-  });
-
-  // Try each QR version (1-40) and score by how close modulePx is to an integer
-  let bestVersion = 1;
-  let bestModulePx = finderCenterDistance / 14; // Version 1: 21 modules, span = 14
-  let bestScore = Number.MAX_VALUE;
-
-  const candidates: Array<{
-    version: number;
-    moduleCount: number;
-    modulePx: number;
-    score: number;
-  }> = [];
-
-  for (let v = 1; v <= 40; v++) {
-    const moduleCount = 17 + v * 4; // 21, 25, 29, ...
-    const span = moduleCount - 7; // Distance between finder centers in modules
-    const modulePx = finderCenterDistance / span;
-
-    // Score: prefer module sizes close to integers, and reasonable sizes (2-20px)
-    const roundedPx = Math.round(modulePx);
-    const fractionalError = Math.abs(modulePx - roundedPx);
-
-    // Penalize unreasonable module sizes
-    let score = fractionalError;
-    if (modulePx < 2 || modulePx > 30) {
-      score += 10; // Heavy penalty
-    }
-
-    candidates.push({ version: v, moduleCount, modulePx, score });
-
-    if (score < bestScore && modulePx >= 1.5 && modulePx <= 40) {
-      bestScore = score;
-      bestVersion = v;
-      bestModulePx = modulePx;
-    }
-  }
-
-  // Log top 5 candidates
-  candidates.sort((a, b) => a.score - b.score);
-  log('detection', 'Top 5 version candidates', {
-    candidates: candidates.slice(0, 5).map((c) => ({
-      version: c.version,
-      modules: c.moduleCount,
-      modulePx: c.modulePx.toFixed(3),
-      score: c.score.toFixed(4),
-    })),
-  });
-
-  const moduleCount = 17 + bestVersion * 4;
-  log('detection', 'Selected version', {
-    version: bestVersion,
-    moduleCount,
-    modulePx: bestModulePx.toFixed(3),
-  });
-
-  return { moduleCount, modulePx: bestModulePx };
 }
 
 function stringToLatin1Bytes(s: string): Uint8Array {
