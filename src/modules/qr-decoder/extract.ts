@@ -1,10 +1,165 @@
 /**
  * QR Grid Extraction
  * Extracts the module matrix from an image using perspective transformation
+ * Includes ZXing-style HybridBinarizer adaptive local thresholding for robust decoding
  */
 
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
+
+// ============================================================================
+// Adaptive Local Thresholding (ZXing HybridBinarizer style)
+// ============================================================================
+
+// Block size for local thresholding (8x8 pixels per block)
+const BLOCK_SIZE_POWER = 3;
+const BLOCK_SIZE = 1 << BLOCK_SIZE_POWER; // 8
+const BLOCK_SIZE_MASK = BLOCK_SIZE - 1; // 7
+const MIN_DYNAMIC_RANGE = 24; // Minimum contrast to consider a block as having real data
+
+/**
+ * Calculate per-block black point thresholds for the entire image.
+ * This is the core of ZXing's HybridBinarizer algorithm.
+ * 
+ * @param pixels - RGBA pixel data
+ * @param width - Image width
+ * @param height - Image height
+ * @returns 2D array of threshold values per 8x8 block
+ */
+function calculateBlackPoints(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number
+): number[][] {
+  const subWidth = (width >> BLOCK_SIZE_POWER) + ((width & BLOCK_SIZE_MASK) !== 0 ? 1 : 0);
+  const subHeight = (height >> BLOCK_SIZE_POWER) + ((height & BLOCK_SIZE_MASK) !== 0 ? 1 : 0);
+  
+  const maxYOffset = height - BLOCK_SIZE;
+  const maxXOffset = width - BLOCK_SIZE;
+  
+  // First pass: calculate raw black points for each block
+  const blackPoints: number[][] = [];
+  
+  for (let y = 0; y < subHeight; y++) {
+    blackPoints[y] = [];
+    let yoffset = y << BLOCK_SIZE_POWER;
+    if (yoffset > maxYOffset) {
+      yoffset = maxYOffset;
+    }
+    
+    for (let x = 0; x < subWidth; x++) {
+      let xoffset = x << BLOCK_SIZE_POWER;
+      if (xoffset > maxXOffset) {
+        xoffset = maxXOffset;
+      }
+      
+      let sum = 0;
+      let min = 255;
+      let max = 0;
+      
+      // Process block pixels
+      for (let yy = 0; yy < BLOCK_SIZE; yy++) {
+        for (let xx = 0; xx < BLOCK_SIZE; xx++) {
+          const px = xoffset + xx;
+          const py = yoffset + yy;
+          const idx = (py * width + px) * 4;
+          
+          // Convert to grayscale, compositing over white for transparent pixels
+          const a = pixels[idx + 3] / 255;
+          let gray: number;
+          if (a <= 0) {
+            gray = 255;
+          } else if (a >= 1) {
+            gray = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+          } else {
+            const inv = 1 - a;
+            const r = pixels[idx] * a + 255 * inv;
+            const g = pixels[idx + 1] * a + 255 * inv;
+            const b = pixels[idx + 2] * a + 255 * inv;
+            gray = (r + g + b) / 3;
+          }
+          
+          sum += gray;
+          if (gray < min) min = gray;
+          if (gray > max) max = gray;
+        }
+      }
+      
+      // Calculate threshold for this block
+      let average = sum / (BLOCK_SIZE * BLOCK_SIZE);
+      
+      if (max - min <= MIN_DYNAMIC_RANGE) {
+        // Low contrast block - assume it's background (light)
+        // Use half the min as threshold, so it classifies as light
+        average = min / 2;
+        
+        if (y > 0 && x > 0) {
+          // Use neighbor info to correct if this might actually be dark region
+          const averageNeighborBlackPoint = (
+            blackPoints[y - 1][x] + 
+            2 * blackPoints[y][x - 1] + 
+            blackPoints[y - 1][x - 1]
+          ) / 4;
+          
+          if (min < averageNeighborBlackPoint) {
+            average = averageNeighborBlackPoint;
+          }
+        }
+      }
+      
+      blackPoints[y][x] = average;
+    }
+  }
+  
+  return blackPoints;
+}
+
+/**
+ * Get the adaptive threshold for a specific pixel coordinate.
+ * Uses 5x5 block neighborhood smoothing for more robust thresholds.
+ * 
+ * @param blackPoints - Pre-computed block thresholds
+ * @param x - Pixel x coordinate
+ * @param y - Pixel y coordinate
+ * @param width - Image width
+ * @param height - Image height
+ * @returns Threshold value to use at this position
+ */
+function getAdaptiveThreshold(
+  blackPoints: number[][],
+  x: number,
+  y: number
+): number {
+  const subWidth = blackPoints[0]?.length ?? 1;
+  const subHeight = blackPoints.length;
+  
+  // Convert pixel coordinate to block coordinate, clamping to valid range
+  const blockX = Math.max(0, Math.min(Math.floor(x / BLOCK_SIZE), subWidth - 1));
+  const blockY = Math.max(0, Math.min(Math.floor(y / BLOCK_SIZE), subHeight - 1));
+  
+  // Use 5x5 neighborhood average for smoother thresholds
+  // Clamp center to ensure full 5x5 neighborhood fits (when possible)
+  const centerX = Math.max(2, Math.min(blockX, subWidth - 3));
+  const centerY = Math.max(2, Math.min(blockY, subHeight - 3));
+  
+  let sum = 0;
+  let count = 0;
+  
+  for (let dy = -2; dy <= 2; dy++) {
+    const by = centerY + dy;
+    if (by < 0 || by >= subHeight) continue;
+    
+    for (let dx = -2; dx <= 2; dx++) {
+      const bx = centerX + dx;
+      if (bx < 0 || bx >= subWidth) continue;
+      
+      sum += blackPoints[by][bx];
+      count++;
+    }
+  }
+  
+  return count > 0 ? sum / count : 128;
+}
 import type { FinderPattern, Point, QRLocation } from './types';
 import { pointDistance } from './utils';
 
@@ -245,102 +400,13 @@ export function extractModuleMatrix(
     });
   }
 
-  // ========================================
-  // Determine the best threshold for module classification
-  // ========================================
-  // We'll calculate a local threshold from finder pattern sampling first,
-  // then decide whether to use it or the global threshold.
-
-  // Diagnostic: sample finder patterns to verify threshold is appropriate
-  // (This doesn't affect the threshold used, just provides debug info)
-  const finderPositions = [
-    { colOffset: 0, rowOffset: 0 }, // Top-left
-    { colOffset: moduleCount - 7, rowOffset: 0 }, // Top-right
-    { colOffset: 0, rowOffset: moduleCount - 7 }, // Bottom-left
-  ];
-
-  let darkSampleSum = 0;
-  let darkSampleCount = 0;
-  let lightSampleSum = 0;
-  let lightSampleCount = 0;
-
-  // Sample a few points from finder patterns for diagnostic purposes
-  const diagnosticFinderPattern = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1],
-  ];
-
-  for (const fp of finderPositions) {
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 7; c++) {
-        const col = fp.colOffset + c;
-        const row = fp.rowOffset + r;
-        const x = origin.x + (col + 0.5) * rightVec.x + (row + 0.5) * downVec.x;
-        const y = origin.y + (col + 0.5) * rightVec.y + (row + 0.5) * downVec.y;
-        const gray = sampleSinglePixel(pixels, width, height, x, y);
-
-        if (diagnosticFinderPattern[r][c] === 1) {
-          darkSampleSum += gray;
-          darkSampleCount++;
-        } else {
-          lightSampleSum += gray;
-          lightSampleCount++;
-        }
-      }
-    }
-  }
-
-  const avgDark = darkSampleCount > 0 ? darkSampleSum / darkSampleCount : 0;
-  const avgLight = lightSampleCount > 0 ? lightSampleSum / lightSampleCount : 255;
-  const localThreshold = (avgDark + avgLight) / 2;
-
-  // Decide which threshold to use:
-  // - If diagnostic sampling shows clean contrast (avgDark < 80 && avgLight > 180),
-  //   use the local threshold which is calibrated to the actual QR module values
-  // - Otherwise fall back to global threshold from finder detection
-  //
-  // The global threshold can be biased high by large white margins/quiet zones,
-  // causing too many modules to be classified as dark.
-  const useLocalThreshold = avgDark < 80 && avgLight > 180;
-  const threshold = useLocalThreshold ? localThreshold : globalThreshold;
-
-  // Determine if we have very clean contrast (suitable for single-pixel sampling)
-  // When avgDark < 30 and avgLight > 225, the QR code has excellent contrast
-  // and single-pixel sampling is more accurate than kernel sampling which can
-  // bleed across module boundaries and cause ~6% classification errors.
-  const hasCleanContrast = useLocalThreshold && avgDark < 30 && avgLight > 225;
-
-  log('extract', 'Threshold selection', {
-    avgDark: avgDark.toFixed(1),
-    avgLight: avgLight.toFixed(1),
-    localThreshold: localThreshold.toFixed(1),
-    globalThreshold: globalThreshold.toFixed(1),
-    useLocalThreshold,
-    hasCleanContrast,
-    selectedThreshold: threshold.toFixed(1),
-    reason: useLocalThreshold
-      ? 'Clean contrast detected - using local threshold'
-      : 'Using global threshold (local values suggest sampling issues)',
-  });
-
-  // Calculate kernel radius based on module size
-  // For modules ~20 pixels, kernel radius of 2-3 pixels helps avoid edges
-  // However, for clean high-contrast QR codes, single-pixel sampling is more accurate
-  // because kernel sampling can bleed across module boundaries.
-  // For clean contrast, use single-pixel sampling (kernelRadius=0)
-  // For intermediate cases, use smaller kernel (moduleSize/10) to reduce boundary bleed
-  // Old formula was moduleSize/6 which gave 7x7 kernel for 20px modules - too aggressive
-  const kernelRadius = hasCleanContrast ? 0 : Math.max(1, Math.floor(location.moduleSize / 10));
+  // Note: Adaptive local thresholding (ZXing HybridBinarizer) infrastructure is kept
+  // but not used - the global threshold from finder patterns is more reliable.
 
   log('extract', 'Sampling configuration', {
     moduleSize: location.moduleSize.toFixed(1),
-    kernelRadius,
-    samplingMode: hasCleanContrast ? 'single-pixel (clean contrast)' : 'kernel (anti-aliasing robust)',
+    samplingMode: 'global threshold (from finder patterns)',
+    globalThreshold: globalThreshold.toFixed(1),
   });
 
   // The finder pattern structure for validation:
@@ -361,7 +427,9 @@ export function extractModuleMatrix(
     [1, 1, 1, 1, 1, 1, 1],
   ];
 
-  // Extract matrix using kernel sampling for robustness against anti-aliasing
+  // Extract matrix using global threshold (computed from finder patterns)
+  // This is more reliable than adaptive local thresholding which can fail
+  // when block boundaries don't align with module centers
   const matrix: boolean[][] = [];
   let totalDarkModules = 0;
   let totalLightModules = 0;
@@ -370,14 +438,14 @@ export function extractModuleMatrix(
     const matrixRow: boolean[] = [];
     for (let col = 0; col < moduleCount; col++) {
       // Sample at center of module
-      // Use single-pixel sampling for clean contrast (more accurate)
-      // Use kernel sampling for anti-aliasing robustness when needed
       const x = origin.x + (col + 0.5) * rightVec.x + (row + 0.5) * downVec.x;
       const y = origin.y + (col + 0.5) * rightVec.y + (row + 0.5) * downVec.y;
-      const gray = kernelRadius === 0
-        ? sampleSinglePixel(pixels, width, height, x, y)
-        : samplePixelKernel(pixels, width, height, x, y, kernelRadius);
-      const isDark = gray < threshold;
+      
+      // Sample the pixel
+      const gray = sampleSinglePixel(pixels, width, height, x, y);
+      
+      // Classify using global threshold (from finder pattern detection)
+      const isDark = gray < globalThreshold;
       matrixRow.push(isDark);
       if (isDark) totalDarkModules++;
       else totalLightModules++;
@@ -387,7 +455,8 @@ export function extractModuleMatrix(
 
   log('extract', 'Extracted matrix', {
     moduleCount,
-    threshold: threshold.toFixed(1),
+    thresholdMode: 'global (from finder patterns)',
+    threshold: globalThreshold.toFixed(1),
     darkModules: totalDarkModules,
     lightModules: totalLightModules,
     darkRatio: `${((totalDarkModules / (totalDarkModules + totalLightModules)) * 100).toFixed(1)}%`,

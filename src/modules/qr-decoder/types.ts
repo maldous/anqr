@@ -50,6 +50,8 @@ export interface DecodeResult {
   maskPattern: number | null;
   /** Detected encoding mode from segments. */
   encodingMode?: 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'mixed' | 'unknown' | null;
+  /** Number of byte errors corrected by Reed-Solomon decoder. */
+  errorsCorrected?: number;
 }
 
 export type ECCLevelChar = 'L' | 'M' | 'Q' | 'H';
