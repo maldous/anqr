@@ -81,6 +81,12 @@ export interface ImageProperties {
 
 export type ErrorType = 'no_qr_detected' | 'cors_blocked' | 'decode_error' | 'unknown';
 
+// Import ZXingMetadata from qr-decoder to avoid duplicate type definition
+import type { ZXingMetadata as DecoderZXingMetadata } from '../qr-decoder/types';
+
+// Re-export under the same name for backward compatibility
+export type ZXingMetadata = DecoderZXingMetadata;
+
 export interface QRAnalysisResult {
   success: boolean;
   error?: string;
@@ -92,13 +98,23 @@ export interface QRAnalysisResult {
   payload?: string;
   payloadBytes?: Uint8Array;
 
-  // QR Structure
+  // QR Structure - ALL values MUST come from ZXing, never estimated
   version: number | null;
   moduleCount: number;
   eccLevel: ECCLevel | null;
   maskPattern: number | null;
   encodingMode: 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'mixed' | 'unknown' | null;
   errorsCorrected: number | null;
+  /** Number of erasures corrected */
+  erasures?: number | null;
+  /** Orientation in degrees (0-360) */
+  orientation?: number | null;
+  /** Total number of bits in raw data */
+  numBits?: number | null;
+  /** Structured append sequence number */
+  structuredAppendSequence?: number | null;
+  /** Structured append parity */
+  structuredAppendParity?: number | null;
 
   // Content Analysis
   contentType?: ContentTypeDetails;
@@ -122,4 +138,7 @@ export interface QRAnalysisResult {
 
   // Debug
   debugLog?: string;
+  
+  /** Complete ZXing metadata for debugging - authoritative source of truth */
+  zxingMetadata?: ZXingMetadata;
 }

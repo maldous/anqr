@@ -63,6 +63,7 @@ import {
   type ContentTypeDetails,
   type ECCLevel,
   type QRAnalysisResult,
+  type ZXingMetadata,
 } from '@/modules/qr-analyzer';
 import { createQRInstance, getStringToBytes, setStringToBytes } from '@/modules/qr-encoder';
 import { useQRStore } from '@/store/qr-store';
@@ -298,7 +299,26 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       // - For external images, prefer exact (version/mask/mode) if detected, else fall back to auto.
       const isGeneratorSource = analysisSource === 'generator' && !!generatedCanvas;
 
-      const versionToUse = isGeneratorSource ? qrState.version : (result.version ?? 0);
+      // STEP 1: Log detected params
+      console.log('[QR-Analyzer:trace] STEP 1 - Detected params:', {
+        detectedVersion: result.version,
+        detectedMaskPattern: result.maskPattern,
+        detectedEcc: result.eccLevel,
+        detectedEncodingMode: result.encodingMode,
+        payloadLength: result.payload?.length ?? 0,
+        payloadBytesLength: result.payloadBytes?.length ?? 0,
+        payloadPreview: result.payload?.slice(0, 50),
+        isGeneratorSource,
+        storeVersion: qrState.version,
+        storeMaskPattern: qrState.maskPattern,
+        storeEncodingMode: qrState.encodingMode,
+      });
+
+      // Version MUST come from ZXing - NEVER use auto/fallback for reproduction
+      // For generator source, prefer detected version, fall back to store version only if detected is valid
+      const versionToUse = isGeneratorSource 
+        ? (result.version ?? qrState.version) 
+        : result.version;
 
       // Prefer detected mask when available (even for generator), because it is the actual chosen mask.
       const maskToUse =
@@ -340,11 +360,44 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         return { kind: 'string' as const, data: result.payload };
       })();
 
-      // Always prefer the decoder's detected version for reproduction when available.
+      // STEP 2: Log encoder input construction
+      const encoderInputPreview = encoderInput.kind === 'bytes'
+        ? `[bytes] len=${encoderInput.data.length}, first32codes=[${encoderInput.data.slice(0, 32).split('').map(c => c.charCodeAt(0)).join(',')}]`
+        : `[string] len=${encoderInput.data.length}, first32="${encoderInput.data.slice(0, 32)}"`;
+      console.log('[QR-Analyzer:trace] STEP 2 - Encoder input:', {
+        kind: encoderInput.kind,
+        dataLength: encoderInput.data.length,
+        preview: encoderInputPreview,
+        modeToUse,
+        wantsByte: modeToUse === 'byte' || result.encodingMode === 'byte',
+        hasPayloadBytes: !!result.payloadBytes?.length,
+      });
+
+      // Version MUST come from ZXing metadata - NEVER fall back to auto (0)
+      // If ZXing didn't detect the version, reproduction cannot be accurate
       const versionToUseFinal =
-        typeof result.version === 'number' && result.version > 0
+        typeof result.version === 'number' && result.version >= 1 && result.version <= 40
           ? result.version
-          : versionToUse || 0;
+          : typeof versionToUse === 'number' && versionToUse >= 1 && versionToUse <= 40
+            ? versionToUse
+            : null;
+
+      // If version is not available from ZXing, we cannot reproduce accurately
+      if (versionToUseFinal === null) {
+        console.error('[QR-Analyzer:trace] CANNOT REPRODUCE: Version not detected by ZXing decoder');
+        // Clear canvas and show error
+        canvas.width = 200;
+        canvas.height = 200;
+        ctx.fillStyle = '#fff3cd';
+        ctx.fillRect(0, 0, 200, 200);
+        ctx.fillStyle = '#856404';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Cannot reproduce:', 100, 80);
+        ctx.fillText('Version not detected', 100, 100);
+        ctx.fillText('by ZXing decoder', 100, 120);
+        return;
+      }
 
       // If the app globally changed stringToBytes (UTF-8, Shift-JIS, etc.), force identity mapping for binary strings.
       const prevStringToBytes = getStringToBytes();
@@ -373,52 +426,98 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         return modeToUse;
       })();
 
+      // STEP 3: Log createQRInstance call params
+      const createQRParams = {
+        dataLength: encoderInput.data.length,
+        ecc,
+        version: versionToUseFinal,
+        mode: effectiveMode ?? 'auto (undefined)',
+        maskPattern: typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7 ? maskToUse : 'auto (undefined)',
+        needsIdentityBytes,
+      };
+      console.log('[QR-Analyzer:trace] STEP 3 - createQRInstance params:', createQRParams);
+
       let qr: ReturnType<typeof createQRInstance>;
-      let actualVersionUsed = versionToUseFinal;
+      const actualVersionUsed = versionToUseFinal;
       try {
+        // NEVER use auto version (0) - always use the detected version from ZXing
         qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
           ...(effectiveMode ? { mode: effectiveMode } : {}),
           ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
             ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
             : {}),
         });
+        console.log('[QR-Analyzer:trace] STEP 3b - createQRInstance SUCCESS');
       } catch (encoderError) {
-        // If the error is "code length overflow", the payload doesn't fit in the detected version.
-        // Fall back to auto version selection (version 0) which will pick the smallest version that fits.
+        // Do NOT fall back to auto version - reproduction must use exact ZXing-derived parameters
         const errorMessage = encoderError instanceof Error ? encoderError.message : String(encoderError);
-        if (errorMessage.includes('code length overflow') || errorMessage.includes('overflow')) {
-          console.warn('[QR-Analyzer:reproduced] Payload too long for detected version, falling back to auto', {
-            detectedVersion: versionToUseFinal,
-            ecc,
-            payloadLength: encoderInput.data.length,
-          });
-          // Retry with version 0 (auto) - let the encoder pick the right version
-          qr = createQRInstance(encoderInput.data, ecc, 0, {
-            ...(effectiveMode ? { mode: effectiveMode } : {}),
-            // Don't force mask pattern when using auto version - let encoder optimize
-          });
-          actualVersionUsed = 0; // Mark as auto
-        } else {
-          // Re-throw other errors
-          throw encoderError;
-        }
+        console.error('[QR-Analyzer:trace] STEP 3b - createQRInstance FAILED (NO FALLBACK):', {
+          error: errorMessage,
+          requestedVersion: versionToUseFinal,
+          ecc,
+          dataLength: encoderInput.data.length,
+          mode: effectiveMode,
+          maskPattern: maskToUse,
+        });
+        throw encoderError; // Re-throw - no auto fallback allowed
       } finally {
         if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
       }
       const moduleCount = qr.getModuleCount();
       const actualVersion = (moduleCount - 17) / 4;
 
+      // STEP 4: Log QR instance result
+      console.log('[QR-Analyzer:trace] STEP 4 - QR instance result:', {
+        moduleCount,
+        actualVersion,
+        requestedVersion: versionToUseFinal,
+        actualVersionUsed,
+        versionMatch: actualVersion === (result.version ?? actualVersion),
+      });
+
+      // STEP 4b: Warn if version mismatch
+      if (result.version && actualVersion !== result.version) {
+        console.warn('[QR-Analyzer:trace] VERSION MISMATCH!', {
+          detectedVersion: result.version,
+          detectedModuleCount: result.moduleCount,
+          producedVersion: actualVersion,
+          producedModuleCount: moduleCount,
+          expectedModuleCount: result.version * 4 + 17,
+          diff: actualVersion - result.version,
+        });
+      }
+
       // Margin handling
       // For the self-generated QR, infer the exact margin from the actual generator canvas.
       // This avoids off-by-one errors (quiet zone vs border modules) and matches safety-adjusted quiet zones.
       const marginModules = (() => {
         if (isGeneratorSource && generatedCanvas) {
-          const modulePx = Math.max(1, Math.floor(renderState.modulePx || 1));
-          const totalModules = Math.round(generatedCanvas.width / modulePx);
+          const modulePxFromStore = Math.max(1, Math.floor(renderState.modulePx || 1));
+          const totalModules = Math.round(generatedCanvas.width / modulePxFromStore);
           const inferred = Math.max(0, Math.floor((totalModules - moduleCount) / 2));
+          
+          // STEP 5: Log margin calculation (generator source)
+          console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (generator):', {
+            renderStateModulePx: renderState.modulePx,
+            modulePxFromStore,
+            canvasWidth: generatedCanvas.width,
+            totalModulesInferred: totalModules,
+            qrModuleCount: moduleCount,
+            inferredMargin: inferred,
+            calculation: `floor((${totalModules} - ${moduleCount}) / 2) = ${inferred}`,
+          });
+          
           return inferred;
         }
-        return Math.max(4, result.quietZone?.top ?? 4);
+        
+        // STEP 5: Log margin calculation (external source)
+        const margin = Math.max(4, result.quietZone?.top ?? 4);
+        console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (external):', {
+          quietZoneTop: result.quietZone?.top,
+          margin,
+        });
+        
+        return margin;
       })();
 
       // Canvas sizing
@@ -427,18 +526,64 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       let modulePx: number;
       let size: number;
       if (isGeneratorSource && generatedCanvas) {
-        // Pixel-identical to the generator output
-        modulePx = Math.max(1, Math.floor(renderState.modulePx || 1));
+        // Calculate modulePx that actually fits the QR in the canvas
+        // (renderState.modulePx is the configured setting, but the actual rendered
+        // module size may differ due to canvas sizing / quiet zone adjustments)
         size = generatedCanvas.width;
+        const totalModulesWithMargin = moduleCount + marginModules * 2;
+        modulePx = Math.max(1, Math.floor(size / totalModulesWithMargin));
+        
+        // STEP 6: Log canvas sizing (generator)
+        console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (generator):', {
+          canvasSize: size,
+          moduleCount,
+          marginModules,
+          totalModulesWithMargin,
+          calculatedModulePx: modulePx,
+          renderStateModulePx: renderState.modulePx,
+          totalPixelsNeeded: totalModulesWithMargin * modulePx,
+          willFit: totalModulesWithMargin * modulePx <= size,
+        });
       } else {
         const targetSize = 300;
         const totalModules = moduleCount + marginModules * 2;
         modulePx = Math.max(3, Math.floor(targetSize / totalModules));
         size = totalModules * modulePx;
+        
+        // STEP 6: Log canvas sizing (external)
+        console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (external):', {
+          targetSize,
+          moduleCount,
+          marginModules,
+          totalModules,
+          calculatedModulePx: modulePx,
+          calculatedSize: size,
+        });
       }
 
       canvas.width = size;
       canvas.height = size;
+
+      // STEP 7: Final summary before drawing
+      console.log('[QR-Analyzer:trace] STEP 7 - Final render summary:', {
+        canvasSize: `${size}x${size}`,
+        modulePx,
+        moduleCount,
+        actualVersion,
+        detectedVersion: result.version,
+        versionMismatch: result.version && actualVersion !== result.version,
+        marginModules,
+        totalPixelsUsed: (moduleCount + marginModules * 2) * modulePx,
+        isGeneratorSource,
+      });
+
+      if (result.version && actualVersion !== result.version) {
+        console.warn('[QR-Analyzer:trace] FINAL WARNING: Version mismatch will cause visual discrepancy!', {
+          expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
+          produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
+          sizeDiff: moduleCount - (result.version * 4 + 17),
+        });
+      }
 
       // Colors
       // Generator: use live render colors.
@@ -561,11 +706,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           .join(' ');
       })();
 
-      // Track if reproduction matches original
-      const reproductionMismatch = actualVersion !== (result.version ?? actualVersion);
+      // Track if reproduction matches original - should always match now since we don't allow fallbacks
+      const reproductionMismatch = actualVersion !== result.version;
       
       console.log('[QR-Analyzer:reproduced] Generated QR code', {
-        strategy: isGeneratorSource ? 'exact' : (actualVersionUsed === 0 ? 'auto_fallback' : 'detected'),
+        strategy: isGeneratorSource ? 'exact' : 'detected_only',
         reproductionMismatch,
         encoderInputKind: encoderInput.kind,
         payloadPreview:
@@ -1648,6 +1793,108 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                 icon={<Grid3x3 className="w-3.5 h-3.5" />}
                               />
                             )}
+                        </div>
+                      </CollapsibleSection>
+                    )}
+
+                    {/* ZXing Raw Metadata - Authoritative source of truth */}
+                    {result.zxingMetadata && (
+                      <CollapsibleSection
+                        title="ZXing Raw Data"
+                        icon={<Database className="w-4 h-4" />}
+                        defaultOpen={false}
+                        badge={
+                          <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                            Authoritative
+                          </span>
+                        }
+                      >
+                        <div className="space-y-2">
+                          <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
+                            This data comes directly from the ZXing decoder and is the authoritative source for reproduction.
+                            Values shown as "—" were not detected by ZXing.
+                          </div>
+                          <DetailRow
+                            label="Version"
+                            value={
+                              result.zxingMetadata.version !== null
+                                ? `${result.zxingMetadata.version} (${result.zxingMetadata.version * 4 + 17}×${result.zxingMetadata.version * 4 + 17})`
+                                : <span className="text-red-500">— (not detected)</span>
+                            }
+                            icon={<Hash className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Mask Pattern"
+                            value={
+                              result.zxingMetadata.maskPattern !== null
+                                ? `${result.zxingMetadata.maskPattern}`
+                                : <span className="text-amber-500">— (not detected)</span>
+                            }
+                            icon={<Layers className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="ECC Level"
+                            value={
+                              result.zxingMetadata.eccLevel !== null
+                                ? result.zxingMetadata.eccLevel
+                                : <span className="text-amber-500">— (not detected)</span>
+                            }
+                            icon={<Shield className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Errors Corrected"
+                            value={
+                              result.zxingMetadata.errorsCorrected !== null
+                                ? result.zxingMetadata.errorsCorrected
+                                : '—'
+                            }
+                            icon={<Shield className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Erasures"
+                            value={
+                              result.zxingMetadata.erasures !== null
+                                ? result.zxingMetadata.erasures
+                                : '—'
+                            }
+                            icon={<Shield className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Raw Bits"
+                            value={
+                              result.zxingMetadata.numBits !== null
+                                ? `${result.zxingMetadata.numBits} bits`
+                                : '—'
+                            }
+                            icon={<Binary className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Orientation"
+                            value={
+                              result.zxingMetadata.orientation !== null
+                                ? `${result.zxingMetadata.orientation}°`
+                                : '—'
+                            }
+                            icon={<Settings className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Structured Append"
+                            value={
+                              result.zxingMetadata.hasStructuredAppend
+                                ? `Seq ${result.zxingMetadata.structuredAppendSequence}, Parity ${result.zxingMetadata.structuredAppendParity}`
+                                : 'No'
+                            }
+                            icon={<Layers className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Byte Segments"
+                            value={
+                              result.zxingMetadata.byteSegmentCount > 0
+                                ? `${result.zxingMetadata.byteSegmentCount} segment(s), ${result.zxingMetadata.totalByteLength} bytes`
+                                : 'None'
+                            }
+                            icon={<Database className="w-3.5 h-3.5" />}
+                          />
                         </div>
                       </CollapsibleSection>
                     )}
