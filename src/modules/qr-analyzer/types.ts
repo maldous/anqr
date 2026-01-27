@@ -81,11 +81,9 @@ export interface ImageProperties {
 
 export type ErrorType = 'no_qr_detected' | 'cors_blocked' | 'decode_error' | 'unknown';
 
-// Import ZXingMetadata from qr-decoder to avoid duplicate type definition
-import type { ZXingMetadata as DecoderZXingMetadata } from '../qr-decoder/types';
-
-// Re-export under the same name for backward compatibility
-export type ZXingMetadata = DecoderZXingMetadata;
+// Import and re-export DecoderMetadata from qr-decoder to avoid duplicate type definition
+import type { DecoderMetadata } from '../qr-decoder/types';
+export type { DecoderMetadata };
 
 export interface QRAnalysisResult {
   success: boolean;
@@ -98,7 +96,7 @@ export interface QRAnalysisResult {
   payload?: string;
   payloadBytes?: Uint8Array;
 
-  // QR Structure - ALL values MUST come from ZXing, never estimated
+  // QR Structure - ALL values MUST come from decoder, never estimated
   version: number | null;
   moduleCount: number;
   eccLevel: ECCLevel | null;
@@ -139,6 +137,6 @@ export interface QRAnalysisResult {
   // Debug
   debugLog?: string;
   
-  /** Complete ZXing metadata for debugging - authoritative source of truth */
-  zxingMetadata?: ZXingMetadata;
+  /** Complete decoder metadata for debugging - authoritative source of truth */
+  decoderMetadata?: DecoderMetadata;
 }

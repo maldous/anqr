@@ -34,10 +34,10 @@ export interface FormatInfo {
 }
 
 /**
- * Raw ZXing metadata for debugging - contains everything ZXing decoded.
+ * Raw decoder metadata for debugging - contains everything decoded.
  * This is the authoritative source of truth for all QR code parameters.
  */
-export interface ZXingMetadata {
+export interface DecoderMetadata {
   /** QR Code version (1-40) from format/version info, or null if not detected */
   version: number | null;
   /** Mask pattern (0-7) from format info, or null if not detected */
@@ -76,10 +76,10 @@ export interface DecodeResult {
     bottomLeftCorner: Point;
     bottomRightCorner: Point;
   } | null;
-  /** QR Code version (1-40) - MUST come from ZXing metadata, never estimated */
+  /** QR Code version (1-40) - from decoder metadata, not estimated */
   version: number | null;
   eccLevel: 'L' | 'M' | 'Q' | 'H' | null;
-  /** Mask pattern (0-7) - MUST come from ZXing metadata, never estimated */
+  /** Mask pattern (0-7) - from decoder metadata, not estimated */
   maskPattern: number | null;
   /** Detected encoding mode from segments. */
   encodingMode?: 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'mixed' | 'unknown' | null;
@@ -95,8 +95,8 @@ export interface DecodeResult {
   structuredAppendSequence?: number | null;
   /** Structured append parity */
   structuredAppendParity?: number | null;
-  /** Complete ZXing metadata for debugging - authoritative source of truth */
-  zxingMetadata?: ZXingMetadata;
+  /** Complete decoder metadata for debugging - authoritative source of truth */
+  decoderMetadata?: DecoderMetadata;
 }
 
 export type ECCLevelChar = 'L' | 'M' | 'Q' | 'H';

@@ -98,6 +98,7 @@ export type {
   ContentType,
   ContentTypeDetails,
   DataCapacity,
+  DecoderMetadata,
   DetectedColors,
   ECCLevel,
   ErrorType,
@@ -105,5 +106,4 @@ export type {
   QRAnalysisResult,
   QuietZoneInfo,
   StructuralAnalysis,
-  ZXingMetadata,
 } from './types';

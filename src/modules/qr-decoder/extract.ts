@@ -1,14 +1,14 @@
 /**
  * QR Grid Extraction
  * Extracts the module matrix from an image using perspective transformation
- * Includes ZXing-style HybridBinarizer adaptive local thresholding for robust decoding
+ * Includes HybridBinarizer-style adaptive local thresholding for robust decoding
  */
 
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
 
 // ============================================================================
-// Adaptive Local Thresholding (ZXing HybridBinarizer style)
+// Adaptive Local Thresholding (HybridBinarizer style)
 // ============================================================================
 
 // Block size for local thresholding (8x8 pixels per block)
@@ -19,7 +19,7 @@ const MIN_DYNAMIC_RANGE = 24; // Minimum contrast to consider a block as having 
 
 /**
  * Calculate per-block black point thresholds for the entire image.
- * This is the core of ZXing's HybridBinarizer algorithm.
+ * This is the core of the HybridBinarizer algorithm.
  * 
  * @param pixels - RGBA pixel data
  * @param width - Image width
@@ -400,7 +400,7 @@ export function extractModuleMatrix(
     });
   }
 
-  // Note: Adaptive local thresholding (ZXing HybridBinarizer) infrastructure is kept
+  // Note: Adaptive local thresholding (HybridBinarizer) infrastructure is kept
   // but not used - the global threshold from finder patterns is more reliable.
 
   log('extract', 'Sampling configuration', {

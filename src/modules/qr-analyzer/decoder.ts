@@ -6,7 +6,7 @@ import { decodeQR } from '../qr-decoder';
 import { detectContentType } from './analyzer-content';
 // Shared logger
 import { disableLogBuffer, enableLogBuffer, flushLogBuffer, qrAnalyzerLog as log } from './logger';
-import type { ContentType, QRAnalysisResult, ZXingMetadata } from './types';
+import type { ContentType, QRAnalysisResult, DecoderMetadata } from './types';
 
 /**
  * Format content type as human-readable label
@@ -125,8 +125,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       average: avgFinderDist.toFixed(2),
     });
 
-    // Version MUST come from ZXing decoder - NEVER estimate or guess
-    // If ZXing couldn't determine the version, it will be null
+    // Version must come from decoder - not estimated
+    // If decoder couldn't determine the version, it will be null
     const version =
       typeof code.version === 'number' && code.version >= 1 && code.version <= 40
         ? code.version
@@ -136,20 +136,20 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     const moduleCount = version !== null ? 17 + version * 4 : 0;
 
     // Estimate module pixel size from finder pattern distance (for visual analysis only)
-    // This does NOT affect version - version ONLY comes from ZXing
+    // This does NOT affect version - version ONLY comes from decoder
     const estimatedModulePx =
       moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : null;
 
-    log('detection', 'Module count from ZXing (authoritative)', {
+    log('detection', 'Module count from decoder (authoritative)', {
       moduleCount,
       version,
       estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : 'null',
-      source: version !== null ? 'ZXing decoder (authoritative)' : 'NOT DETECTED - will fail reproduction',
+      source: version !== null ? 'Decoder (authoritative)' : 'NOT DETECTED - will fail reproduction',
     });
 
     // Warn if version not detected - reproduction will fail
     if (version === null) {
-      log('detection', 'WARNING: ZXing did not provide version - reproduction will not work correctly');
+      log('detection', 'WARNING: Decoder did not provide version - reproduction will not work correctly');
     }
 
     // Detect content type
@@ -183,8 +183,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     flushLogBuffer();
     disableLogBuffer();
 
-    // Build comprehensive ZXing metadata for debugging
-    const zxingMetadata: ZXingMetadata = {
+    // Build comprehensive decoder metadata for debugging
+    const decoderMetadata: DecoderMetadata = {
       version: code.version ?? null,
       maskPattern: code.maskPattern ?? null,
       eccLevel: code.eccLevel ?? null,
@@ -199,17 +199,17 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       totalByteLength: code.dataBytes?.length ?? 0,
     };
 
-    log('zxing', 'Complete ZXing metadata (authoritative)', {
-      version: zxingMetadata.version,
-      maskPattern: zxingMetadata.maskPattern,
-      eccLevel: zxingMetadata.eccLevel,
-      errorsCorrected: zxingMetadata.errorsCorrected,
-      erasures: zxingMetadata.erasures,
-      numBits: zxingMetadata.numBits,
-      orientation: zxingMetadata.orientation,
-      hasStructuredAppend: zxingMetadata.hasStructuredAppend,
-      byteSegmentCount: zxingMetadata.byteSegmentCount,
-      totalByteLength: zxingMetadata.totalByteLength,
+    log('decoder', 'Complete decoder metadata (authoritative)', {
+      version: decoderMetadata.version,
+      maskPattern: decoderMetadata.maskPattern,
+      eccLevel: decoderMetadata.eccLevel,
+      errorsCorrected: decoderMetadata.errorsCorrected,
+      erasures: decoderMetadata.erasures,
+      numBits: decoderMetadata.numBits,
+      orientation: decoderMetadata.orientation,
+      hasStructuredAppend: decoderMetadata.hasStructuredAppend,
+      byteSegmentCount: decoderMetadata.byteSegmentCount,
+      totalByteLength: decoderMetadata.totalByteLength,
     });
 
     return {
@@ -245,7 +245,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       },
       moduleMatrix,
       confidence: 'high',
-      zxingMetadata, // Include raw ZXing metadata for debugging
+      decoderMetadata, // Include decoder metadata for debugging
     };
   } catch (err) {
     log('decode', 'ERROR: Exception during decode', { error: String(err) });
