@@ -1,10 +1,10 @@
 /**
- * QR Decoder - Uses the proven ZXing library implementation
- * Our custom RS decoder had issues, so we switched to ZXing's battle-tested decoder
+ * QR Decoder - Consolidated decoder implementation
+ * High-quality QR code decoding with multiple fallback strategies
  */
 
-// Main decoder function - now using ZXing library
-export { decodeQRWithZXing as decodeQR } from './zxing-adapter';
+// Main decoder function
+export { decodeQR } from './decoder-adapter';
 
 // Canvas decoder
 export { decodeFromCanvas } from './decode-canvas';

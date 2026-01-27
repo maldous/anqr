@@ -63,7 +63,7 @@ import {
   type ContentTypeDetails,
   type ECCLevel,
   type QRAnalysisResult,
-  type ZXingMetadata,
+  type DecoderMetadata,
 } from '@/modules/qr-analyzer';
 import { createQRInstance, getStringToBytes, optimizeSegments, setStringToBytes } from '@/modules/qr-encoder';
 import { useQRStore } from '@/store/qr-store';
@@ -315,7 +315,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         storeEncodingMode: qrState.encodingMode,
       });
 
-      // Version MUST come from ZXing - NEVER use auto/fallback for reproduction
+      // Version must come from decoder - not estimated
       // For generator source, prefer detected version, fall back to store version only if detected is valid
       const versionToUse = isGeneratorSource 
         ? (result.version ?? qrState.version) 
@@ -374,8 +374,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         hasPayloadBytes: !!result.payloadBytes?.length,
       });
 
-      // Version MUST come from ZXing metadata - NEVER fall back to auto (0)
-      // If ZXing didn't detect the version, reproduction cannot be accurate
+      // Version must come from decoder metadata - not auto (0)
+      // If decoder didn't detect the version, reproduction cannot be accurate
       const versionToUseFinal =
         typeof result.version === 'number' && result.version >= 1 && result.version <= 40
           ? result.version
@@ -383,9 +383,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             ? versionToUse
             : null;
 
-      // If version is not available from ZXing, we cannot reproduce accurately
+      // If version is not available from decoder, we cannot reproduce accurately
       if (versionToUseFinal === null) {
-        console.error('[QR-Analyzer:trace] CANNOT REPRODUCE: Version not detected by ZXing decoder');
+        console.error('[QR-Analyzer:trace] CANNOT REPRODUCE: Version not detected by decoder');
         // Clear canvas and show error
         canvas.width = 200;
         canvas.height = 200;
@@ -396,7 +396,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         ctx.textAlign = 'center';
         ctx.fillText('Cannot reproduce:', 100, 80);
         ctx.fillText('Version not detected', 100, 100);
-        ctx.fillText('by ZXing decoder', 100, 120);
+        ctx.fillText('by decoder', 100, 120);
         return;
       }
 
@@ -441,7 +441,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       let qr: ReturnType<typeof createQRInstance> | null = null;
       let actualVersionUsed = versionToUseFinal;
       try {
-        // NEVER use auto version (0) - always use the detected version from ZXing
+        // NEVER use auto version (0) - always use the detected version from decoder
         qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
           ...(effectiveMode ? { mode: effectiveMode } : {}),
           ...(typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
@@ -1882,10 +1882,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       </CollapsibleSection>
                     )}
 
-                    {/* ZXing Raw Metadata - Authoritative source of truth */}
-                    {result.zxingMetadata && (
+                    {/* Decoder Raw Metadata - Authoritative source of truth */}
+                    {result.decoderMetadata && (
                       <CollapsibleSection
-                        title="ZXing Raw Data"
+                        title="Decoder Raw Data"
                         icon={<Database className="w-4 h-4" />}
                         defaultOpen={false}
                         badge={
@@ -1896,14 +1896,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       >
                         <div className="space-y-2">
                           <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
-                            This data comes directly from the ZXing decoder and is the authoritative source for reproduction.
-                            Values shown as "—" were not detected by ZXing.
+                            This data comes directly from the decoder and is the authoritative source for reproduction.
+                            Values shown as "—" were not detected by the decoder.
                           </div>
                           <DetailRow
                             label="Version"
                             value={
-                              result.zxingMetadata.version !== null
-                                ? `${result.zxingMetadata.version} (${result.zxingMetadata.version * 4 + 17}×${result.zxingMetadata.version * 4 + 17})`
+                              result.decoderMetadata.version !== null
+                                ? `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
                                 : <span className="text-red-500">— (not detected)</span>
                             }
                             icon={<Hash className="w-3.5 h-3.5" />}
@@ -1911,8 +1911,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Mask Pattern"
                             value={
-                              result.zxingMetadata.maskPattern !== null
-                                ? `${result.zxingMetadata.maskPattern}`
+                              result.decoderMetadata.maskPattern !== null
+                                ? `${result.decoderMetadata.maskPattern}`
                                 : <span className="text-amber-500">— (not detected)</span>
                             }
                             icon={<Layers className="w-3.5 h-3.5" />}
@@ -1920,8 +1920,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="ECC Level"
                             value={
-                              result.zxingMetadata.eccLevel !== null
-                                ? result.zxingMetadata.eccLevel
+                              result.decoderMetadata.eccLevel !== null
+                                ? result.decoderMetadata.eccLevel
                                 : <span className="text-amber-500">— (not detected)</span>
                             }
                             icon={<Shield className="w-3.5 h-3.5" />}
@@ -1929,8 +1929,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Errors Corrected"
                             value={
-                              result.zxingMetadata.errorsCorrected !== null
-                                ? result.zxingMetadata.errorsCorrected
+                              result.decoderMetadata.errorsCorrected !== null
+                                ? result.decoderMetadata.errorsCorrected
                                 : '—'
                             }
                             icon={<Shield className="w-3.5 h-3.5" />}
@@ -1938,8 +1938,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Erasures"
                             value={
-                              result.zxingMetadata.erasures !== null
-                                ? result.zxingMetadata.erasures
+                              result.decoderMetadata.erasures !== null
+                                ? result.decoderMetadata.erasures
                                 : '—'
                             }
                             icon={<Shield className="w-3.5 h-3.5" />}
@@ -1947,8 +1947,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Raw Bits"
                             value={
-                              result.zxingMetadata.numBits !== null
-                                ? `${result.zxingMetadata.numBits} bits`
+                              result.decoderMetadata.numBits !== null
+                                ? `${result.decoderMetadata.numBits} bits`
                                 : '—'
                             }
                             icon={<Binary className="w-3.5 h-3.5" />}
@@ -1956,8 +1956,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Orientation"
                             value={
-                              result.zxingMetadata.orientation !== null
-                                ? `${result.zxingMetadata.orientation}°`
+                              result.decoderMetadata.orientation !== null
+                                ? `${result.decoderMetadata.orientation}°`
                                 : '—'
                             }
                             icon={<Settings className="w-3.5 h-3.5" />}
@@ -1965,8 +1965,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Structured Append"
                             value={
-                              result.zxingMetadata.hasStructuredAppend
-                                ? `Seq ${result.zxingMetadata.structuredAppendSequence}, Parity ${result.zxingMetadata.structuredAppendParity}`
+                              result.decoderMetadata.hasStructuredAppend
+                                ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
                                 : 'No'
                             }
                             icon={<Layers className="w-3.5 h-3.5" />}
@@ -1974,8 +1974,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Byte Segments"
                             value={
-                              result.zxingMetadata.byteSegmentCount > 0
-                                ? `${result.zxingMetadata.byteSegmentCount} segment(s), ${result.zxingMetadata.totalByteLength} bytes`
+                              result.decoderMetadata.byteSegmentCount > 0
+                                ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
                                 : 'None'
                             }
                             icon={<Database className="w-3.5 h-3.5" />}

@@ -87,7 +87,7 @@ function gfInv(a: number): number {
 
 // ============================================
 // Polynomial Operations in GF(256)
-// Using HIGH-TO-LOW convention like ZXing GenericGFPoly:
+// Using HIGH-TO-LOW convention (GenericGFPoly style):
 // - coefficients[0] = coefficient of highest degree term
 // - coefficients[length-1] = constant term (x^0)
 // ============================================
@@ -239,7 +239,7 @@ const POLY_ONE: number[] = [1];
  * For QR codes, the generator polynomial has roots α^0, α^1, ..., α^(numEcc-1)
  * So we calculate S_j = r(α^j) for j = 0 to numEcc-1
  *
- * Following ZXing exactly:
+ * Syndrome calculation:
  * 1. Treat codeword as a polynomial with codeword[0] as highest degree coefficient
  * 2. Evaluate at α^(i + generatorBase) for i = 0 to numEcc-1
  * 3. Store syndromes in REVERSED order (S_0 at last index)
@@ -266,7 +266,7 @@ function calculateSyndromePolynomial(codeword: number[], numEcc: number): number
       evalResult = gfAdd(gfMul(evalResult, x), codeword[j]);
     }
 
-    // ZXing stores syndromes in reversed order: S_0 at last index
+    // Syndromes stored in reversed order: S_0 at last index
     syndromeCoeffs[numEcc - 1 - i] = evalResult;
     if (evalResult !== 0) {
       noError = false;
@@ -288,12 +288,12 @@ function isSyndromeZero(syndromePoly: number[]): boolean {
 }
 
 // ============================================
-// Euclidean Algorithm (ZXing-style)
+// Euclidean Algorithm
 // ============================================
 
 /**
  * Find error locator (sigma) and error evaluator (omega) polynomials
- * using the Euclidean algorithm, following ZXing's implementation exactly.
+ * using the Euclidean algorithm.
  *
  * This is more robust than Berlekamp-Massey as it naturally handles
  * the case of too many errors.
@@ -386,13 +386,13 @@ function runEuclideanAlgorithm(
 }
 
 // ============================================
-// Chien Search (ZXing-style)
+// Chien Search
 // ============================================
 
 /**
  * Find error locations using Chien search
  *
- * Following ZXing's findErrorLocations exactly:
+ * Algorithm:
  * 1. Get number of errors from sigma's degree
  * 2. Evaluate sigma at all non-zero field elements (1, 2, ..., 255)
  * 3. When sigma(i) = 0, store inverse(i) as error locator
@@ -414,7 +414,7 @@ function findErrorLocations(sigma: number[], n: number): number[] | null {
 
   const result: number[] = [];
 
-  log('rs-decoder', 'Chien search starting (ZXing-style)', {
+  log('rs-decoder', 'Chien search starting', {
     numErrors,
     n,
     sigmaCoeffs: sigma.map((s) => s.toString(16).padStart(2, '0')).join(' '),
@@ -449,13 +449,12 @@ function findErrorLocations(sigma: number[], n: number): number[] | null {
 }
 
 // ============================================
-// Forney Algorithm (ZXing-style)
+// Forney Algorithm
 // ============================================
 
 /**
  * Calculate error magnitudes using Forney algorithm
  *
- * Following ZXing's findErrorMagnitudes EXACTLY:
  * Uses direct product formula instead of polynomial derivative.
  *
  * For each error i with locator X_i:
@@ -473,7 +472,7 @@ function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[]
   const numErrors = errorLocators.length;
   const result: number[] = new Array(numErrors);
 
-  log('rs-decoder', 'Forney: calculating magnitudes (ZXing direct product)', {
+  log('rs-decoder', 'Forney: calculating magnitudes (direct product)', {
     numErrors,
     errorLocators: errorLocators.map((e) => e.toString(16).padStart(2, '0')).join(' '),
     omegaCoeffs: omega.map((o) => o.toString(16).padStart(2, '0')).join(' '),
@@ -488,7 +487,7 @@ function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[]
         // term = X_j * X_i^{-1}
         const term = gfMul(errorLocators[j], xiInverse);
         // termPlus1 = 1 + term (in GF(2^m), this is XOR with 1)
-        // ZXing uses workaround for JVM bug: (term & 0x1) === 0 ? term | 1 : term & ~1
+        // Use workaround: (term & 0x1) === 0 ? term | 1 : term & ~1
         const termPlus1 = (term & 0x1) === 0 ? term | 1 : term & ~1;
         denominator = gfMul(denominator, termPlus1);
       }
@@ -501,7 +500,7 @@ function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[]
     result[i] = gfMul(omegaVal, gfInv(denominator));
 
     // For QR codes with generatorBase = 0, NO additional xiInverse multiplication
-    // (ZXing only multiplies by xiInverse when generatorBase != 0)
+    // (Only multiply by xiInverse when generatorBase != 0)
 
     log('rs-decoder', `Forney: magnitude for error ${i}`, {
       errorLocator: errorLocators[i].toString(16).padStart(2, '0'),
@@ -520,7 +519,7 @@ function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[]
 // ============================================
 
 /**
- * Correct errors in a single RS block (ZXing-style using Euclidean algorithm)
+ * Correct errors in a single RS block using Euclidean algorithm
  *
  * @param codeword The received codeword bytes (data followed by ECC)
  * @param dataCount Number of data codewords
@@ -549,7 +548,7 @@ export function correctRSBlock(
     maxCorrectableErrors: Math.floor(eccCount / 2),
   });
 
-  // Step 1: Calculate syndrome polynomial (ZXing convention)
+  // Step 1: Calculate syndrome polynomial
   const syndromePoly = calculateSyndromePolynomial(codeword, eccCount);
 
   log('rs-decoder', 'Syndromes calculated', {
