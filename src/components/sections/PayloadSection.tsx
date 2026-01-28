@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/components/ui/help-link';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,36 @@ import {
   generatePIX,
   generatePromptPay,
   generateUPI,
+  generateMessagingLink,
+  generateSocialProfile,
 } from '@/modules/payload-generators';
+import {
+  isValidCashtag,
+  isValidCryptoAddress,
+  isValidEmail,
+  isValidEthereumAddress,
+  isValidGTIN,
+  isValidIBAN,
+  isValidLatitude,
+  isValidLightningInvoice,
+  isValidLongitude,
+  isValidPayPalUsername,
+  isValidPhone,
+  isValidSSID,
+  isValidUpiVpa,
+  isValidUrl,
+  isValidUrlWithScheme,
+  isValidAccountNumber,
+  isValidBankBin,
+  isValidABN,
+  isValidBSB,
+  isValidFpsId,
+  isValidMerchantId,
+  isValidProxyValue,
+  isValidStoreId,
+  isNonEmpty,
+} from '@/modules/payload-generators/utils';
+import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec/constants';
 import { type PayloadKind, useQRStore } from '@/store/qr-store';
 
 // Global payment methods available to ALL languages in advanced tier
@@ -284,14 +314,8 @@ const PAYLOAD_CATEGORY_KEYS = [
       { value: 'calendar_subscription' as PayloadKind, labelKey: 'payload.calendarSubscription' },
     ],
   },
-  {
-    groupKey: 'payload.documentsMedia',
-    tier: 'advanced' as const,
-    items: [
-      { value: 'file_url' as PayloadKind, labelKey: 'payload.fileUrl' },
-      { value: 'cloud_link' as PayloadKind, labelKey: 'payload.cloudLink' },
-    ],
-  },
+  // Documents & Media category removed - file_url and cloud_link are just URLs
+  // Users should use the URL payload type for document/cloud links
   {
     groupKey: 'payload.socialMessaging',
     tier: 'advanced' as const,
@@ -491,10 +515,36 @@ interface EMVGenericForm {
   terminalLabel: string;
 }
 
+// Short link form state
+interface ShortLinkForm {
+  longUrl: string;
+  shortUrl: string;
+  isLoading: boolean;
+  error: string;
+}
+
+// What3Words suggestion
+interface W3WSuggestion {
+  words: string;
+  country: string;
+  nearestPlace: string;
+  coordinates: { lat: number; lng: number };
+}
+
+// What3Words state
+interface W3WState {
+  input: string;
+  suggestions: W3WSuggestion[];
+  isLoading: boolean;
+  error: string;
+}
+
 export function PayloadSection() {
   const {
     tier,
     payload,
+    qr,
+    getPayloadText,
     setPayloadKind,
     setPayloadText,
     setPayloadUrl,
@@ -509,6 +559,14 @@ export function PayloadSection() {
     setPayloadCrypto,
     setPayloadOtpAuth,
     setPayloadValidation,
+    setPayloadBizCard,
+    setPayloadMessaging,
+    setPayloadSocialProfile,
+    setPayloadAppLink,
+    setPayloadGS1,
+    setPayloadCloudLink,
+    setPayloadCalendarSub,
+    setPayloadEventRsvp,
     setPayloadSwissQRBill,
     setPayloadLightning,
     setPayloadEthereum,
@@ -671,6 +729,22 @@ export function PayloadSection() {
     reference: '',
     storeLabel: '',
     terminalLabel: '',
+  });
+
+  // Short link form state
+  const [shortLinkForm, setShortLinkForm] = useState<ShortLinkForm>({
+    longUrl: '',
+    shortUrl: '',
+    isLoading: false,
+    error: '',
+  });
+
+  // What3Words state
+  const [w3wState, setW3WState] = useState<W3WState>({
+    input: '',
+    suggestions: [],
+    isLoading: false,
+    error: '',
   });
 
   // Show startup highlight only once on initial mount
@@ -1017,48 +1091,35 @@ export function PayloadSection() {
               placeholder="https://anqr.link"
               title={t('hints.enterUrlContent')}
               data-testid="payload-url-input"
+              className={
+                payload.validate && payload.url.href && !isValidUrl(payload.url.href)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.url.href && !isValidUrl(payload.url.href) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+              </p>
+            )}
           </div>
           {(tier === 'advanced' || tier === 'professional') && (
-            <>
-              <div className="flex items-center justify-between">
-                <Label>
-                  <HighlightedLabel>{t('payload.forceHttps')}</HighlightedLabel>
-                </Label>
-                <Switch
-                  checked={payload.url.forceHttps}
-                  onCheckedChange={(checked) => setPayloadUrl({ forceHttps: checked })}
-                  title={t('hints.forceHttps')}
-                  data-testid="payload-url-force-https-switch"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground text-xs">
-                  <HighlightedLabel>{t('payload.marketingTags')}</HighlightedLabel>
-                </Label>
-                <Input
-                  placeholder="utm_source"
-                  value={payload.url.utmSource || ''}
-                  onChange={(e) => setPayloadUrl({ utmSource: e.target.value })}
-                  title={t('hints.utmSource')}
-                  data-testid="payload-url-utm-source-input"
-                />
-                <Input
-                  placeholder="utm_medium"
-                  value={payload.url.utmMedium || ''}
-                  onChange={(e) => setPayloadUrl({ utmMedium: e.target.value })}
-                  title={t('hints.utmMedium')}
-                  data-testid="payload-url-utm-medium-input"
-                />
-                <Input
-                  placeholder="utm_campaign"
-                  value={payload.url.utmCampaign || ''}
-                  onChange={(e) => setPayloadUrl({ utmCampaign: e.target.value })}
-                  title={t('hints.utmCampaign')}
-                  data-testid="payload-url-utm-campaign-input"
-                />
-              </div>
-            </>
+            <div className="flex items-center justify-between">
+              <Label>
+                <HighlightedLabel>{t('payload.forceHttps')}</HighlightedLabel>
+              </Label>
+              <Switch
+                checked={payload.url.forceHttps}
+                onCheckedChange={(checked) => setPayloadUrl({ forceHttps: checked })}
+                title={t('hints.forceHttps')}
+                data-testid="payload-url-force-https-switch"
+              />
+            </div>
+          )}
+          {tier === 'professional' && (
+            <p className="text-xs text-muted-foreground">
+              {t('hints.utmNote', 'For marketing tracking (UTM parameters), use UTM Campaign Link.')}
+            </p>
           )}
         </div>
       )}
@@ -1075,7 +1136,17 @@ export function PayloadSection() {
             onChange={(e) => setPayloadTel({ number: e.target.value })}
             placeholder="+1234567890"
             data-testid="payload-tel-input"
+            className={
+              payload.validate && payload.tel.number && !isValidPhone(payload.tel.number)
+                ? 'border-destructive focus-visible:ring-destructive'
+                : ''
+            }
           />
+          {payload.validate && payload.tel.number && !isValidPhone(payload.tel.number) && (
+            <p className="text-xs text-destructive">
+              {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+            </p>
+          )}
         </div>
       )}
 
@@ -1092,7 +1163,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadEmail({ to: e.target.value })}
               placeholder="name@anqr.link"
               data-testid="payload-email-to-input"
+              className={
+                payload.validate && payload.email.to && !isValidEmail(payload.email.to)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.email.to && !isValidEmail(payload.email.to) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidEmail', 'Enter a valid email address (must contain @)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1133,7 +1214,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadSms({ number: e.target.value })}
               placeholder="+1234567890"
               data-testid="payload-sms-number-input"
+              className={
+                payload.validate && payload.sms.number && !isValidPhone(payload.sms.number)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.sms.number && !isValidPhone(payload.sms.number) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1153,6 +1244,174 @@ export function PayloadSection() {
       {/* Geo Location */}
       {payload.kind === 'geo' && (
         <div className="space-y-4">
+          {/* Address Lookup (Nominatim) */}
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('payload.addressLookup', 'Address Lookup')}</HighlightedLabel>
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                value={payload.geo.query || ''}
+                onChange={(e) => setPayloadGeo({ query: e.target.value })}
+                placeholder={t('placeholders.placeNameOrAddress', 'Enter address or place name')}
+                data-testid="payload-geo-query-input"
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && payload.geo.query) {
+                    e.preventDefault();
+                    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(payload.geo.query)}&format=json&limit=1`)
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data && data[0]) {
+                          setPayloadGeo({ 
+                            lat: Number.parseFloat(data[0].lat), 
+                            lon: Number.parseFloat(data[0].lon) 
+                          });
+                        }
+                      })
+                      .catch(() => {});
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+                disabled={!payload.geo.query}
+                onClick={() => {
+                  if (payload.geo.query) {
+                    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(payload.geo.query)}&format=json&limit=1`)
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data && data[0]) {
+                          setPayloadGeo({ 
+                            lat: Number.parseFloat(data[0].lat), 
+                            lon: Number.parseFloat(data[0].lon) 
+                          });
+                        }
+                      })
+                      .catch(() => {});
+                  }
+                }}
+              >
+                {t('actions.lookup', 'Lookup')}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t('hints.geoLookup', 'Enter an address and click Lookup to find coordinates.')}
+            </p>
+          </div>
+
+          {/* What3Words Lookup */}
+          <div className="space-y-2 pt-2 border-t">
+            <Label>
+              <HighlightedLabel>{t('payload.what3words', 'what3words')}</HighlightedLabel>
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                value={w3wState.input}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setW3WState(prev => ({ ...prev, input: val, error: '' }));
+                  // Auto-suggest with debounce (300ms delay to avoid rate limiting)
+                  // Free tier autosuggest - no radius/clip parameters (those require paid plan)
+                  if (val.length >= 3) {
+                    // Clear previous timeout if exists
+                    const timeoutId = setTimeout(() => {
+                      const W3W_API_KEY = 'P7REO4AP';
+                      // Free tier: only input and optional focus (no clip-to-circle)
+                      const focusParam = payload.geo.lat !== 0 || payload.geo.lon !== 0 
+                        ? `&focus=${payload.geo.lat},${payload.geo.lon}` 
+                        : '';
+                      fetch(`https://api.what3words.com/v3/autosuggest?input=${encodeURIComponent(val)}&key=${W3W_API_KEY}${focusParam}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          if (data.suggestions) {
+                            setW3WState(prev => ({ 
+                              ...prev, 
+                              suggestions: data.suggestions.map((s: { words: string; country: string; nearestPlace: string }) => ({
+                                words: s.words,
+                                country: s.country,
+                                nearestPlace: s.nearestPlace,
+                                coordinates: { lat: 0, lng: 0 } // Will be fetched on selection
+                              }))
+                            }));
+                          }
+                        })
+                        .catch(() => {});
+                    }, 300);
+                    return () => clearTimeout(timeoutId);
+                  } else {
+                    setW3WState(prev => ({ ...prev, suggestions: [] }));
+                  }
+                }}
+                placeholder="filled.count.soap"
+                className="flex-1"
+              />
+              <button
+                type="button"
+                className="px-3 py-2 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 disabled:opacity-50"
+                disabled={w3wState.isLoading || (payload.geo.lat === 0 && payload.geo.lon === 0)}
+                onClick={() => {
+                  // Convert current lat/lon to what3words
+                  setW3WState(prev => ({ ...prev, isLoading: true, error: '' }));
+                  const W3W_API_KEY = 'P7REO4AP';
+                  fetch(`https://api.what3words.com/v3/convert-to-3wa?coordinates=${payload.geo.lat},${payload.geo.lon}&key=${W3W_API_KEY}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.words) {
+                        setW3WState(prev => ({ ...prev, input: data.words, isLoading: false }));
+                      } else {
+                        setW3WState(prev => ({ ...prev, isLoading: false, error: data.error?.message || 'Lookup failed' }));
+                      }
+                    })
+                    .catch(() => {
+                      setW3WState(prev => ({ ...prev, isLoading: false, error: 'Network error' }));
+                    });
+                }}
+              >
+                {w3wState.isLoading ? '...' : t('actions.getWords', 'Get w3w')}
+              </button>
+            </div>
+            {/* Suggestions list */}
+            {w3wState.suggestions.length > 0 && (
+              <div className="border rounded-md divide-y max-h-40 overflow-y-auto">
+                {w3wState.suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.words}
+                    type="button"
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                    onClick={() => {
+                      // When a suggestion is selected, fetch its coordinates
+                      const W3W_API_KEY = 'P7REO4AP';
+                      fetch(`https://api.what3words.com/v3/convert-to-coordinates?words=${encodeURIComponent(suggestion.words)}&key=${W3W_API_KEY}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          if (data.coordinates) {
+                            setPayloadGeo({ 
+                              lat: data.coordinates.lat, 
+                              lon: data.coordinates.lng 
+                            });
+                            setW3WState(prev => ({ ...prev, input: suggestion.words, suggestions: [] }));
+                          }
+                        })
+                        .catch(() => {});
+                    }}
+                  >
+                    <div className="font-medium">///{suggestion.words}</div>
+                    <div className="text-xs text-muted-foreground">{suggestion.nearestPlace}, {suggestion.country}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {w3wState.error && (
+              <p className="text-xs text-destructive">{w3wState.error}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {t('hints.w3wLookup', 'Enter a what3words address (e.g., filled.count.soap) to look up coordinates.')}
+            </p>
+          </div>
+
+          {/* Coordinates */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
               <Label>
@@ -1165,7 +1424,17 @@ export function PayloadSection() {
                 onChange={(e) => setPayloadGeo({ lat: Number.parseFloat(e.target.value) || 0 })}
                 placeholder="0.0"
                 data-testid="payload-geo-lat-input"
+                className={
+                  payload.validate && !isValidLatitude(payload.geo.lat)
+                    ? 'border-destructive focus-visible:ring-destructive'
+                    : ''
+                }
               />
+              {payload.validate && !isValidLatitude(payload.geo.lat) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidLatitude', 'Latitude must be between -90 and 90')}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>
@@ -1178,20 +1447,22 @@ export function PayloadSection() {
                 onChange={(e) => setPayloadGeo({ lon: Number.parseFloat(e.target.value) || 0 })}
                 placeholder="0.0"
                 data-testid="payload-geo-lon-input"
+                className={
+                  payload.validate && !isValidLongitude(payload.geo.lon)
+                    ? 'border-destructive focus-visible:ring-destructive'
+                    : ''
+                }
               />
+              {payload.validate && !isValidLongitude(payload.geo.lon) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidLongitude', 'Longitude must be between -180 and 180')}
+                </p>
+              )}
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('payload.searchQuery')}</HighlightedLabel>
-            </Label>
-            <Input
-              value={payload.geo.query || ''}
-              onChange={(e) => setPayloadGeo({ query: e.target.value })}
-              placeholder={t('placeholders.placeNameOrAddress')}
-              data-testid="payload-geo-query-input"
-            />
-          </div>
+          <p className="text-xs text-muted-foreground">
+            {t('hints.geoNote', 'The QR code will contain: geo:{lat},{lon}')}
+          </p>
         </div>
       )}
 
@@ -1207,7 +1478,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadWifi({ ssid: e.target.value })}
               placeholder="MyWiFiNetwork"
               data-testid="payload-wifi-ssid-input"
+              className={
+                payload.validate && payload.wifi.ssid && !isValidSSID(payload.wifi.ssid)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.wifi.ssid && !isValidSSID(payload.wifi.ssid) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidSSID', 'SSID must be 1-32 characters')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1302,7 +1583,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadVCard({ tel: [e.target.value] })}
               placeholder="+1234567890"
               data-testid="payload-vcard-tel-input"
+              className={
+                payload.validate && payload.vcard.tel?.[0] && !isValidPhone(payload.vcard.tel[0])
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.vcard.tel?.[0] && !isValidPhone(payload.vcard.tel[0]) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1314,7 +1605,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadVCard({ email: [e.target.value] })}
               placeholder="name@anqr.link"
               data-testid="payload-vcard-email-input"
+              className={
+                payload.validate && payload.vcard.email?.[0] && !isValidEmail(payload.vcard.email[0])
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.vcard.email?.[0] && !isValidEmail(payload.vcard.email[0]) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidEmail', 'Enter a valid email address (must contain @)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1326,7 +1627,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadVCard({ url: e.target.value })}
               placeholder="https://anqr.link"
               data-testid="payload-vcard-url-input"
+              className={
+                payload.validate && payload.vcard.url && !isValidUrl(payload.vcard.url)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.vcard.url && !isValidUrl(payload.vcard.url) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -1366,7 +1677,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadMeCard({ tel: e.target.value })}
               placeholder="+1234567890"
               data-testid="payload-mecard-tel-input"
+              className={
+                payload.validate && payload.mecard.tel && !isValidPhone(payload.mecard.tel)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.mecard.tel && !isValidPhone(payload.mecard.tel) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1378,7 +1699,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadMeCard({ email: e.target.value })}
               placeholder="name@anqr.link"
               data-testid="payload-mecard-email-input"
+              className={
+                payload.validate && payload.mecard.email && !isValidEmail(payload.mecard.email)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.mecard.email && !isValidEmail(payload.mecard.email) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidEmail', 'Enter a valid email address (must contain @)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1424,28 +1755,79 @@ export function PayloadSection() {
               <HighlightedLabel>{t('payload.firstName')}</HighlightedLabel>
             </Label>
             <Input
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
+              value={payload.bizcard.firstName || ''}
+              onChange={(e) => setPayloadBizCard({ firstName: e.target.value })}
               placeholder="John"
+              data-testid="payload-bizcard-firstname-input"
             />
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.lastName')}</HighlightedLabel>
             </Label>
-            <Input placeholder="Doe" />
+            <Input
+              value={payload.bizcard.lastName || ''}
+              onChange={(e) => setPayloadBizCard({ lastName: e.target.value })}
+              placeholder="Doe"
+              data-testid="payload-bizcard-lastname-input"
+            />
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.company')}</HighlightedLabel>
             </Label>
-            <Input placeholder="Company Inc." />
+            <Input
+              value={payload.bizcard.company || ''}
+              onChange={(e) => setPayloadBizCard({ company: e.target.value })}
+              placeholder="Company Inc."
+              data-testid="payload-bizcard-company-input"
+            />
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.title')}</HighlightedLabel>
             </Label>
-            <Input placeholder="Manager" />
+            <Input
+              value={payload.bizcard.title || ''}
+              onChange={(e) => setPayloadBizCard({ title: e.target.value })}
+              placeholder="Manager"
+              data-testid="payload-bizcard-title-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('payload.phone')}</HighlightedLabel>
+            </Label>
+            <Input
+              type="tel"
+              value={payload.bizcard.phone || ''}
+              onChange={(e) => setPayloadBizCard({ phone: e.target.value })}
+              placeholder="+1234567890"
+              data-testid="payload-bizcard-phone-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('payload.email')}</HighlightedLabel>
+            </Label>
+            <Input
+              type="email"
+              value={payload.bizcard.email || ''}
+              onChange={(e) => setPayloadBizCard({ email: e.target.value })}
+              placeholder="name@example.com"
+              data-testid="payload-bizcard-email-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('payload.address')}</HighlightedLabel>
+            </Label>
+            <Input
+              value={payload.bizcard.address || ''}
+              onChange={(e) => setPayloadBizCard({ address: e.target.value })}
+              placeholder="123 Main St, City"
+              data-testid="payload-bizcard-address-input"
+            />
           </div>
           <p className="text-xs text-muted-foreground">{t('hints.bizcardLegacy')}</p>
         </div>
@@ -1516,10 +1898,10 @@ export function PayloadSection() {
               <Label>
                 <HighlightedLabel>{t('payload.start')}</HighlightedLabel>
               </Label>
-              <Input
-                type="datetime-local"
+              <DateTimePicker
                 value={payload.event.start || ''}
-                onChange={(e) => setPayloadEvent({ start: e.target.value })}
+                onChange={(value) => setPayloadEvent({ start: value })}
+                placeholder={t('placeholders.selectDateTime', 'Select date & time')}
                 data-testid="payload-event-start-input"
               />
             </div>
@@ -1527,10 +1909,10 @@ export function PayloadSection() {
               <Label>
                 <HighlightedLabel>{t('payload.end')}</HighlightedLabel>
               </Label>
-              <Input
-                type="datetime-local"
+              <DateTimePicker
                 value={payload.event.end || ''}
-                onChange={(e) => setPayloadEvent({ end: e.target.value })}
+                onChange={(value) => setPayloadEvent({ end: value })}
+                placeholder={t('placeholders.selectDateTime', 'Select date & time')}
                 data-testid="payload-event-end-input"
               />
             </div>
@@ -1543,20 +1925,83 @@ export function PayloadSection() {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>
-              <HighlightedLabel>{t('payload.rsvpUrl')}</HighlightedLabel>
+              <HighlightedLabel>{t('payload.summary')}</HighlightedLabel>
             </Label>
             <Input
-              type="url"
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
-              placeholder="https://anqr.link/rsvp/event123"
+              value={payload.eventRsvp.summary || ''}
+              onChange={(e) => setPayloadEventRsvp({ summary: e.target.value })}
+              placeholder="Annual Conference 2024"
+              data-testid="payload-rsvp-summary-input"
             />
           </div>
           <div className="space-y-2">
             <Label>
-              <HighlightedLabel>{t('payload.eventName')}</HighlightedLabel>
+              <HighlightedLabel>{t('payload.location')}</HighlightedLabel>
             </Label>
-            <Input placeholder="Annual Conference 2024" />
+            <Input
+              value={payload.eventRsvp.location || ''}
+              onChange={(e) => setPayloadEventRsvp({ location: e.target.value })}
+              placeholder="Conference Center"
+              data-testid="payload-rsvp-location-input"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('payload.description')}</HighlightedLabel>
+            </Label>
+            <Textarea
+              value={payload.eventRsvp.description || ''}
+              onChange={(e) => setPayloadEventRsvp({ description: e.target.value })}
+              placeholder={t('placeholders.eventDetails')}
+              rows={2}
+              data-testid="payload-rsvp-description-textarea"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label>
+                <HighlightedLabel>{t('payload.start')}</HighlightedLabel>
+              </Label>
+              <DateTimePicker
+                value={payload.eventRsvp.start || ''}
+                onChange={(value) => setPayloadEventRsvp({ start: value })}
+                placeholder={t('placeholders.selectDateTime', 'Select date & time')}
+                data-testid="payload-rsvp-start-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                <HighlightedLabel>{t('payload.end')}</HighlightedLabel>
+              </Label>
+              <DateTimePicker
+                value={payload.eventRsvp.end || ''}
+                onChange={(value) => setPayloadEventRsvp({ end: value })}
+                placeholder={t('placeholders.selectDateTime', 'Select date & time')}
+                data-testid="payload-rsvp-end-input"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('payload.rsvpUrl')}</HighlightedLabel>
+            </Label>
+            <Input
+              type="url"
+              value={payload.eventRsvp.rsvpUrl || ''}
+              onChange={(e) => setPayloadEventRsvp({ rsvpUrl: e.target.value })}
+              placeholder="https://anqr.link/rsvp/event123"
+              data-testid="payload-rsvp-url-input"
+              className={
+                payload.validate && payload.eventRsvp.rsvpUrl && !isValidUrl(payload.eventRsvp.rsvpUrl)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
+            />
+            {payload.validate && payload.eventRsvp.rsvpUrl && !isValidUrl(payload.eventRsvp.rsvpUrl) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+              </p>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">{t('hints.rsvpNote')}</p>
         </div>
@@ -1571,90 +2016,40 @@ export function PayloadSection() {
             </Label>
             <Input
               type="url"
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
+              value={payload.calendarSub.url || ''}
+              onChange={(e) => setPayloadCalendarSub({ url: e.target.value })}
               placeholder="webcal://anqr.link/calendar.ics"
+              data-testid="payload-calsub-url-input"
+              className={
+                payload.validate && payload.calendarSub.url && !isValidUrlWithScheme(payload.calendarSub.url)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.calendarSub.url && !isValidUrlWithScheme(payload.calendarSub.url) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidCalendarUrl', 'Enter a valid calendar URL (webcal:// or https://)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.calendarName')}</HighlightedLabel>
             </Label>
-            <Input placeholder="Team Schedule" />
+            <Input
+              value={payload.calendarSub.calendarName || ''}
+              onChange={(e) => setPayloadCalendarSub({ calendarName: e.target.value })}
+              placeholder="Team Schedule"
+              data-testid="payload-calsub-name-input"
+            />
           </div>
           <p className="text-xs text-muted-foreground">{t('hints.calendarNote')}</p>
         </div>
       )}
 
-      {/* File/Document URL */}
-      {payload.kind === 'file_url' && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('payload.url')}</HighlightedLabel>
-            </Label>
-            <Input
-              type="url"
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
-              placeholder="https://anqr.link/document.pdf"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('payload.fileType')}</HighlightedLabel>
-            </Label>
-            <Select defaultValue="pdf">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pdf">PDF Document</SelectItem>
-                <SelectItem value="doc">{t('payload.wordDocument')}</SelectItem>
-                <SelectItem value="image">{t('payload.image')}</SelectItem>
-                <SelectItem value="video">{t('payload.video')}</SelectItem>
-                <SelectItem value="audio">{t('payload.audio')}</SelectItem>
-                <SelectItem value="other">{t('payload.other')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
+      {/* File/Document URL - Removed (use URL payload type instead) */}
 
-      {/* Cloud Storage Link */}
-      {payload.kind === 'cloud_link' && (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('payload.url')}</HighlightedLabel>
-            </Label>
-            <Input
-              type="url"
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
-              placeholder="https://drive.google.com/file/..."
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('payload.service')}</HighlightedLabel>
-            </Label>
-            <Select defaultValue="gdrive">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gdrive">{t('payload.googleDrive')}</SelectItem>
-                <SelectItem value="dropbox">{t('payload.dropbox')}</SelectItem>
-                <SelectItem value="onedrive">{t('payload.oneDrive')}</SelectItem>
-                <SelectItem value="icloud">iCloud</SelectItem>
-                <SelectItem value="box">{t('payload.box')}</SelectItem>
-                <SelectItem value="other">{t('payload.other')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
+      {/* Cloud Storage Link - Removed (use URL payload type instead) */}
 
       {/* Social Profile */}
       {payload.kind === 'social_profile' && (
@@ -1663,8 +2058,11 @@ export function PayloadSection() {
             <Label>
               <HighlightedLabel>{t('payload.platform')}</HighlightedLabel>
             </Label>
-            <Select defaultValue="linkedin">
-              <SelectTrigger>
+            <Select
+              value={payload.socialProfile.platform}
+              onValueChange={(v) => setPayloadSocialProfile({ platform: v as typeof payload.socialProfile.platform })}
+            >
+              <SelectTrigger data-testid="payload-social-platform-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1681,14 +2079,27 @@ export function PayloadSection() {
           </div>
           <div className="space-y-2">
             <Label>
-              <HighlightedLabel>{t('payload.profileUrl')}</HighlightedLabel>
+              <HighlightedLabel>{t('payload.username')}</HighlightedLabel>
             </Label>
             <Input
-              type="url"
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
-              placeholder="https://linkedin.com/in/username"
+              value={payload.socialProfile.username || ''}
+              onChange={(e) => setPayloadSocialProfile({ username: e.target.value })}
+              placeholder={{
+                linkedin: 'johndoe',
+                twitter: 'johndoe',
+                instagram: 'johndoe',
+                facebook: 'johndoe',
+                tiktok: 'johndoe',
+                youtube: 'johndoe',
+                github: 'johndoe',
+                other: 'username',
+              }[payload.socialProfile.platform] || 'username'}
+              data-testid="payload-social-username-input"
             />
+            <p className="text-xs text-muted-foreground">
+              {t('hints.socialProfileGenerated', 'URL will be generated: ')}
+              {payload.socialProfile.username ? generateSocialProfile(payload.socialProfile.platform, payload.socialProfile.username) : `https://${payload.socialProfile.platform}.com/...`}
+            </p>
           </div>
         </div>
       )}
@@ -1700,8 +2111,11 @@ export function PayloadSection() {
             <Label>
               <HighlightedLabel>{t('payload.platform')}</HighlightedLabel>
             </Label>
-            <Select defaultValue="whatsapp">
-              <SelectTrigger>
+            <Select
+              value={payload.messaging.platform}
+              onValueChange={(v) => setPayloadMessaging({ platform: v as typeof payload.messaging.platform })}
+            >
+              <SelectTrigger data-testid="payload-messaging-platform-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1709,7 +2123,6 @@ export function PayloadSection() {
                 <SelectItem value="telegram">{t('payload.telegram')}</SelectItem>
                 <SelectItem value="signal">{t('payload.signal')}</SelectItem>
                 <SelectItem value="messenger">{t('payload.messenger')}</SelectItem>
-
                 <SelectItem value="line">LINE</SelectItem>
                 <SelectItem value="viber">{t('payload.viber')}</SelectItem>
               </SelectContent>
@@ -1720,17 +2133,51 @@ export function PayloadSection() {
               <HighlightedLabel>{t('payload.phoneUsername')}</HighlightedLabel>
             </Label>
             <Input
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
-              placeholder="+1234567890 or @username"
+              value={payload.messaging.identifier || ''}
+              onChange={(e) => setPayloadMessaging({ identifier: e.target.value })}
+              placeholder={{
+                whatsapp: '+1234567890',
+                telegram: '@username',
+                signal: '+1234567890',
+                viber: '+1234567890',
+                line: '@username',
+                messenger: 'username',
+              }[payload.messaging.platform] || '+1234567890'}
+              data-testid="payload-messaging-identifier-input"
+              className={
+                payload.validate && payload.messaging.identifier && 
+                  !isValidPhone(payload.messaging.identifier) && 
+                  !payload.messaging.identifier.startsWith('@')
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.messaging.identifier && 
+              !isValidPhone(payload.messaging.identifier) && 
+              !payload.messaging.identifier.startsWith('@') && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPhoneOrUsername', 'Enter a valid phone number or @username')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.prefilledMessage')}</HighlightedLabel>
             </Label>
-            <Textarea placeholder="Hello! I scanned your QR code..." rows={2} />
+            <Textarea
+              value={payload.messaging.message || ''}
+              onChange={(e) => setPayloadMessaging({ message: e.target.value })}
+              placeholder="Hello! I scanned your QR code..."
+              rows={2}
+              data-testid="payload-messaging-message-textarea"
+            />
           </div>
+          <p className="text-xs text-muted-foreground">
+            {t('hints.messagingLinkGenerated', 'Link: ')}
+            {payload.messaging.identifier 
+              ? generateMessagingLink(payload.messaging.platform, payload.messaging.identifier, payload.messaging.message)
+              : '...'}
+          </p>
         </div>
       )}
 
@@ -1764,7 +2211,17 @@ export function PayloadSection() {
               onChange={(e) => setPayloadCrypto({ address: e.target.value })}
               placeholder="Wallet address"
               data-testid="payload-crypto-address-input"
+              className={
+                payload.validate && payload.crypto.address && !isValidCryptoAddress(payload.crypto.address, payload.crypto.type)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.crypto.address && !isValidCryptoAddress(payload.crypto.address, payload.crypto.type) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidWalletAddress', 'Enter a valid wallet address')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1818,7 +2275,17 @@ export function PayloadSection() {
               onChange={(e) => setEpcSepaForm((prev) => ({ ...prev, iban: e.target.value }))}
               placeholder="DE89370400440532013000"
               data-testid="payload-epc-iban-input"
+              className={
+                payload.validate && epcSepaForm.iban && !isValidIBAN(epcSepaForm.iban)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && epcSepaForm.iban && !isValidIBAN(epcSepaForm.iban) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidIBAN', 'Enter a valid IBAN')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1871,7 +2338,17 @@ export function PayloadSection() {
               onChange={(e) => setUpiForm((prev) => ({ ...prev, vpa: e.target.value }))}
               placeholder="name@upi"
               data-testid="payload-upi-vpa-input"
+              className={
+                payload.validate && upiForm.vpa && !isValidUpiVpa(upiForm.vpa)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && upiForm.vpa && !isValidUpiVpa(upiForm.vpa) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidUpiVpa', 'Enter a valid UPI ID (e.g., name@upi)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1943,7 +2420,17 @@ export function PayloadSection() {
               onChange={(e) => setPayNowForm((prev) => ({ ...prev, value: e.target.value }))}
               placeholder="201234567X or +65..."
               data-testid="payload-paynow-value-input"
+              className={
+                payload.validate && payNowForm.value && payNowForm.type === 'mobile' && !isValidPhone(payNowForm.value)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payNowForm.value && payNowForm.type === 'mobile' && !isValidPhone(payNowForm.value) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2005,7 +2492,17 @@ export function PayloadSection() {
               onChange={(e) => setPromptPayForm((prev) => ({ ...prev, value: e.target.value }))}
               placeholder="0812345678"
               data-testid="payload-promptpay-value-input"
+              className={
+                payload.validate && promptPayForm.value && promptPayForm.type === 'mobile' && !isValidPhone(promptPayForm.value)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && promptPayForm.value && promptPayForm.type === 'mobile' && !isValidPhone(promptPayForm.value) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2036,7 +2533,17 @@ export function PayloadSection() {
               onChange={(e) => setPixForm((prev) => ({ ...prev, key: e.target.value }))}
               placeholder="CPF, CNPJ, Email, Phone, or Random Key"
               data-testid="payload-pix-key-input"
+              className={
+                payload.validate && pixForm.key && pixForm.key.length < 3
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && pixForm.key && pixForm.key.length < 3 && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPixKey', 'Enter a valid PIX key (at least 3 characters)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2088,7 +2595,17 @@ export function PayloadSection() {
               onChange={(e) =>
                 setSwissQrBillForm({ ...swissQrBillForm, creditorIBAN: e.target.value })
               }
+              className={
+                payload.validate && swissQrBillForm.creditorIBAN && !isValidIBAN(swissQrBillForm.creditorIBAN)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && swissQrBillForm.creditorIBAN && !isValidIBAN(swissQrBillForm.creditorIBAN) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidIBAN', 'Enter a valid IBAN')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.beneficiaryName')}</Label>
@@ -2204,10 +2721,19 @@ export function PayloadSection() {
             <Label>{t('placeholders.bolt11Invoice')}</Label>
             <Textarea
               placeholder={t('placeholders.lnbcPlaceholder')}
-              className="font-mono text-xs h-24"
+              className={`font-mono text-xs h-24 ${
+                payload.validate && lightningForm.invoice && !isValidLightningInvoice(lightningForm.invoice)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }`}
               value={lightningForm.invoice}
               onChange={(e) => setLightningForm({ invoice: e.target.value })}
             />
+            {payload.validate && lightningForm.invoice && !isValidLightningInvoice(lightningForm.invoice) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidLightningInvoice', 'Enter a valid Lightning invoice (starts with lnbc)')}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">{t('placeholders.bolt11Hint')}</p>
           </div>
         </div>
@@ -2220,10 +2746,19 @@ export function PayloadSection() {
             <Label>{t('payload.walletAddress')}</Label>
             <Input
               placeholder={t('placeholders.ethAddressPlaceholder')}
-              className="font-mono"
+              className={`font-mono ${
+                payload.validate && ethereumForm.targetAddress && !isValidEthereumAddress(ethereumForm.targetAddress)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }`}
               value={ethereumForm.targetAddress}
               onChange={(e) => setEthereumForm({ ...ethereumForm, targetAddress: e.target.value })}
             />
+            {payload.validate && ethereumForm.targetAddress && !isValidEthereumAddress(ethereumForm.targetAddress) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidEthereumAddress', 'Enter a valid Ethereum address (0x...)')}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
@@ -2280,7 +2815,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.qrisMerchantIdPlaceholder')}
               value={qrisForm.merchantId}
               onChange={(e) => setQrisForm({ ...qrisForm, merchantId: e.target.value })}
+              className={
+                payload.validate && qrisForm.merchantId && !isValidMerchantId(qrisForm.merchantId)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && qrisForm.merchantId && !isValidMerchantId(qrisForm.merchantId) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidMerchantId', 'Enter a valid merchant ID')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.merchantName')}</Label>
@@ -2288,7 +2833,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.tokoPlaceholder')}
               value={qrisForm.merchantName}
               onChange={(e) => setQrisForm({ ...qrisForm, merchantName: e.target.value })}
+              className={
+                payload.validate && !isNonEmpty(qrisForm.merchantName)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && !isNonEmpty(qrisForm.merchantName) && (
+              <p className="text-xs text-destructive">
+                {t('validation.requiredField', 'This field is required')}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
@@ -2347,7 +2902,25 @@ export function PayloadSection() {
               placeholder={t('placeholders.myPhonePlaceholder')}
               value={duitnowForm.proxyValue}
               onChange={(e) => setDuitnowForm({ ...duitnowForm, proxyValue: e.target.value })}
+              className={
+                payload.validate &&
+                duitnowForm.proxyValue &&
+                !isValidProxyValue(duitnowForm.proxyValue, duitnowForm.proxyType)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate &&
+              duitnowForm.proxyValue &&
+              !isValidProxyValue(duitnowForm.proxyValue, duitnowForm.proxyType) && (
+                <p className="text-xs text-destructive">
+                  {duitnowForm.proxyType === 'MOBILE'
+                    ? t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')
+                    : duitnowForm.proxyType === 'NRIC'
+                      ? t('validation.invalidNric', 'Enter a valid NRIC (12 digits)')
+                      : t('validation.invalidProxyValue', 'Enter a valid proxy value')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.merchantName')}</Label>
@@ -2355,7 +2928,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.fullName')}
               value={duitnowForm.merchantName}
               onChange={(e) => setDuitnowForm({ ...duitnowForm, merchantName: e.target.value })}
+              className={
+                payload.validate && !isNonEmpty(duitnowForm.merchantName)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && !isNonEmpty(duitnowForm.merchantName) && (
+              <p className="text-xs text-destructive">
+                {t('validation.requiredField', 'This field is required')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2383,7 +2966,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.upiId')}
               value={bharatqrForm.merchantVPA}
               onChange={(e) => setBharatqrForm({ ...bharatqrForm, merchantVPA: e.target.value })}
+              className={
+                payload.validate && bharatqrForm.merchantVPA && !isValidUpiVpa(bharatqrForm.merchantVPA)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && bharatqrForm.merchantVPA && !isValidUpiVpa(bharatqrForm.merchantVPA) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidUpiVpa', 'Enter a valid UPI ID (e.g., name@upi)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.merchantName')}</Label>
@@ -2418,7 +3011,7 @@ export function PayloadSection() {
         </div>
       )}
 
-      {/* VietQR */}
+      {/* VietQR - Validation Added */}
       {payload.kind === 'vietqr' && (
         <div className="space-y-4">
           <div className="space-y-2">
@@ -2427,7 +3020,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.bankBinPlaceholder')}
               value={vietqrForm.bankBin}
               onChange={(e) => setVietqrForm({ ...vietqrForm, bankBin: e.target.value })}
+              className={
+                payload.validate && vietqrForm.bankBin && !isValidBankBin(vietqrForm.bankBin)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && vietqrForm.bankBin && !isValidBankBin(vietqrForm.bankBin) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidBankBin', 'Enter a valid bank BIN (6-8 digits)')}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">{t('placeholders.napasHint')}</p>
           </div>
           <div className="space-y-2">
@@ -2436,7 +3039,21 @@ export function PayloadSection() {
               placeholder={t('placeholders.accountNumberPlaceholder')}
               value={vietqrForm.accountNumber}
               onChange={(e) => setVietqrForm({ ...vietqrForm, accountNumber: e.target.value })}
+              className={
+                payload.validate &&
+                vietqrForm.accountNumber &&
+                !isValidAccountNumber(vietqrForm.accountNumber)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate &&
+              vietqrForm.accountNumber &&
+              !isValidAccountNumber(vietqrForm.accountNumber) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidAccountNumber', 'Enter a valid account number (at least 4 digits)')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2471,7 +3088,21 @@ export function PayloadSection() {
               placeholder={t('placeholders.accountNumberPlaceholder')}
               value={qrphForm.accountNumber}
               onChange={(e) => setQrphForm({ ...qrphForm, accountNumber: e.target.value })}
+              className={
+                payload.validate &&
+                qrphForm.accountNumber &&
+                !isValidAccountNumber(qrphForm.accountNumber)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate &&
+              qrphForm.accountNumber &&
+              !isValidAccountNumber(qrphForm.accountNumber) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidAccountNumber', 'Enter a valid account number (at least 4 digits)')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.merchantName')}</Label>
@@ -2479,7 +3110,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.filipinoName')}
               value={qrphForm.merchantName}
               onChange={(e) => setQrphForm({ ...qrphForm, merchantName: e.target.value })}
+              className={
+                payload.validate && !isNonEmpty(qrphForm.merchantName)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && !isNonEmpty(qrphForm.merchantName) && (
+              <p className="text-xs text-destructive">
+                {t('validation.requiredField', 'This field is required')}
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
@@ -2517,7 +3158,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.twMerchantIdPlaceholder')}
               value={twqrForm.merchantId}
               onChange={(e) => setTwqrForm({ ...twqrForm, merchantId: e.target.value })}
+              className={
+                payload.validate && twqrForm.merchantId && !isValidMerchantId(twqrForm.merchantId)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && twqrForm.merchantId && !isValidMerchantId(twqrForm.merchantId) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidMerchantId', 'Enter a valid merchant ID')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.merchantName')}</Label>
@@ -2525,7 +3176,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.twMerchantNamePlaceholder')}
               value={twqrForm.merchantName}
               onChange={(e) => setTwqrForm({ ...twqrForm, merchantName: e.target.value })}
+              className={
+                payload.validate && !isNonEmpty(twqrForm.merchantName)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && !isNonEmpty(twqrForm.merchantName) && (
+              <p className="text-xs text-destructive">
+                {t('validation.requiredField', 'This field is required')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2553,7 +3214,17 @@ export function PayloadSection() {
               placeholder="1234567890"
               value={hkqrForm.fpsId}
               onChange={(e) => setHkqrForm({ ...hkqrForm, fpsId: e.target.value })}
+              className={
+                payload.validate && hkqrForm.fpsId && !isValidFpsId(hkqrForm.fpsId)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && hkqrForm.fpsId && !isValidFpsId(hkqrForm.fpsId) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidFpsId', 'Enter a valid FPS ID (7-9 digits)')}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">{t('placeholders.fpsHint')}</p>
           </div>
           <div className="space-y-2">
@@ -2564,7 +3235,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.fullName')}
               value={hkqrForm.merchantName}
               onChange={(e) => setHkqrForm({ ...hkqrForm, merchantName: e.target.value })}
+              className={
+                payload.validate && hkqrForm.merchantName && !isNonEmpty(hkqrForm.merchantName)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && hkqrForm.merchantName && !isNonEmpty(hkqrForm.merchantName) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidMerchantName', 'Enter a valid merchant name')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2577,6 +3258,7 @@ export function PayloadSection() {
               onChange={(e) => setHkqrForm({ ...hkqrForm, amount: e.target.value })}
             />
           </div>
+          <p className="text-xs text-muted-foreground">{t('placeholders.hkqrHint', 'Hong Kong FPS (Faster Payment System) QR code.')}</p>
         </div>
       )}
 
@@ -2589,7 +3271,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.jpStoreIdPlaceholder')}
               value={jpqrForm.storeId}
               onChange={(e) => setJpqrForm({ ...jpqrForm, storeId: e.target.value })}
+              className={
+                payload.validate && jpqrForm.storeId && !isValidStoreId(jpqrForm.storeId)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && jpqrForm.storeId && !isValidStoreId(jpqrForm.storeId) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidStoreId', 'Enter a valid store ID')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.merchantName')}</Label>
@@ -2597,7 +3289,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.jpMerchantNamePlaceholder')}
               value={jpqrForm.merchantName}
               onChange={(e) => setJpqrForm({ ...jpqrForm, merchantName: e.target.value })}
+              className={
+                payload.validate && !isNonEmpty(jpqrForm.merchantName)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && !isNonEmpty(jpqrForm.merchantName) && (
+              <p className="text-xs text-destructive">
+                {t('validation.requiredField', 'This field is required')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2646,7 +3348,29 @@ export function PayloadSection() {
               })()}
               value={auspaynetForm.payId}
               onChange={(e) => setAuspaynetForm({ ...auspaynetForm, payId: e.target.value })}
+              className={
+                payload.validate &&
+                auspaynetForm.payId &&
+                ((auspaynetForm.payIdType === 'EMAIL' && !isValidEmail(auspaynetForm.payId)) ||
+                  (auspaynetForm.payIdType === 'MOBILE' && !isValidPhone(auspaynetForm.payId)) ||
+                  (auspaynetForm.payIdType === 'ABN' && !isValidABN(auspaynetForm.payId)))
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate &&
+              auspaynetForm.payId &&
+              ((auspaynetForm.payIdType === 'EMAIL' && !isValidEmail(auspaynetForm.payId)) ||
+                (auspaynetForm.payIdType === 'MOBILE' && !isValidPhone(auspaynetForm.payId)) ||
+                (auspaynetForm.payIdType === 'ABN' && !isValidABN(auspaynetForm.payId))) && (
+                <p className="text-xs text-destructive">
+                  {auspaynetForm.payIdType === 'EMAIL'
+                    ? t('validation.invalidEmail', 'Enter a valid email address (must contain @)')
+                    : auspaynetForm.payIdType === 'ABN'
+                      ? t('validation.invalidABN', 'Enter a valid ABN (11 digits)')
+                      : t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2682,7 +3406,17 @@ export function PayloadSection() {
               placeholder={t('placeholders.yourname')}
               value={paypalMeForm.username}
               onChange={(e) => setPaypalMeForm({ ...paypalMeForm, username: e.target.value })}
+              className={
+                payload.validate && paypalMeForm.username && !isValidPayPalUsername(paypalMeForm.username)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && paypalMeForm.username && !isValidPayPalUsername(paypalMeForm.username) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidPayPalUsername', 'Enter a valid PayPal.Me username (4-20 alphanumeric characters)')}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">{t('placeholders.paypalMeHint')}</p>
           </div>
           <div className="space-y-2">
@@ -2710,12 +3444,21 @@ export function PayloadSection() {
               </span>
               <Input
                 placeholder={t('placeholders.yourname')}
-                className="pl-7"
+                className={`pl-7 ${
+                  payload.validate && cashappForm.cashtag && !isValidCashtag(cashappForm.cashtag)
+                    ? 'border-destructive focus-visible:ring-destructive'
+                    : ''
+                }`}
                 value={cashappForm.cashtag}
                 onChange={(e) =>
                   setCashappForm({ ...cashappForm, cashtag: e.target.value.replace(/^\$/, '') })
                 }
               />
+              {payload.validate && cashappForm.cashtag && !isValidCashtag(cashappForm.cashtag) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidCashtag', 'Enter a valid $cashtag (starts with letter, alphanumeric)')}
+                </p>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">{t('placeholders.cashappHint')}</p>
           </div>
@@ -2982,18 +3725,92 @@ export function PayloadSection() {
       {/* Short Link */}
       {payload.kind === 'short_link' && (
         <div className="space-y-4">
+          {/* Long URL to shorten */}
           <div className="space-y-2">
             <Label>
-              <HighlightedLabel>{t('payload.shortUrl')}</HighlightedLabel>
+              <HighlightedLabel>{t('payload.longUrl', 'Long URL')}</HighlightedLabel>
+            </Label>
+            <Input
+              type="url"
+              value={shortLinkForm.longUrl}
+              onChange={(e) => setShortLinkForm(prev => ({ ...prev, longUrl: e.target.value, error: '' }))}
+              placeholder="https://example.com/very/long/url/that/needs/shortening"
+              data-testid="payload-shortlink-long-input"
+            />
+          </div>
+
+          {/* Using TinyURL - the most reliable free URL shortener with browser support */}
+
+          {/* Shorten button */}
+          <button
+            type="button"
+            className="w-full px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+            disabled={!shortLinkForm.longUrl || shortLinkForm.isLoading || !isValidUrl(shortLinkForm.longUrl)}
+            onClick={async () => {
+              if (!shortLinkForm.longUrl) return;
+              setShortLinkForm(prev => ({ ...prev, isLoading: true, error: '' }));
+              
+              try {
+                let shortUrl = '';
+                const encodedUrl = encodeURIComponent(shortLinkForm.longUrl);
+                
+                // TinyURL - the most reliable free URL shortener with browser CORS support
+                const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodedUrl}`);
+                if (!response.ok) throw new Error('TinyURL service unavailable');
+                shortUrl = await response.text();
+                
+                if (shortUrl.startsWith('http')) {
+                  setShortLinkForm(prev => ({ ...prev, shortUrl, isLoading: false }));
+                  setPayloadText(shortUrl.trim());
+                } else {
+                  throw new Error('Invalid response from shortener');
+                }
+              } catch (err) {
+                setShortLinkForm(prev => ({ 
+                  ...prev, 
+                  isLoading: false, 
+                  error: err instanceof Error ? err.message : 'Failed to shorten URL'
+                }));
+              }
+            }}
+          >
+            {shortLinkForm.isLoading 
+              ? t('actions.shortening', 'Shortening...') 
+              : t('actions.shortenUrl', 'Shorten URL')}
+          </button>
+
+          {shortLinkForm.error && (
+            <p className="text-xs text-destructive">{shortLinkForm.error}</p>
+          )}
+
+          {/* Result */}
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('payload.shortUrl', 'Short URL')}</HighlightedLabel>
             </Label>
             <Input
               type="url"
               value={payload.text}
               onChange={(e) => setPayloadText(e.target.value)}
-              placeholder="https://bit.ly/xxxxx"
+              placeholder={t('placeholders.generatedShortUrl', 'Generated short URL will appear here')}
+              data-testid="payload-shortlink-input"
+              className={
+                payload.validate && payload.text && !isValidUrl(payload.text)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
+              readOnly={shortLinkForm.shortUrl !== ''}
             />
+            {payload.validate && payload.text && !isValidUrl(payload.text) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+              </p>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">{t('hints.shortLinkNote')}</p>
+
+          <p className="text-xs text-muted-foreground">
+            {t('hints.shortLinkAuto', 'Enter a long URL above and click "Shorten URL" to generate a short link.')}
+          </p>
         </div>
       )}
 
@@ -3009,7 +3826,17 @@ export function PayloadSection() {
               value={payload.url.href}
               onChange={(e) => setPayloadUrl({ href: e.target.value })}
               placeholder="https://anqr.link/landing"
+              className={
+                payload.validate && payload.url.href && !isValidUrl(payload.url.href)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.url.href && !isValidUrl(payload.url.href) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -3071,8 +3898,11 @@ export function PayloadSection() {
             <Label>
               <HighlightedLabel>{t('payload.platform')}</HighlightedLabel>
             </Label>
-            <Select defaultValue="universal">
-              <SelectTrigger>
+            <Select
+              value={payload.appLink.platform}
+              onValueChange={(v) => setPayloadAppLink({ platform: v as typeof payload.appLink.platform })}
+            >
+              <SelectTrigger data-testid="payload-applink-platform-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -3083,22 +3913,93 @@ export function PayloadSection() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('payload.deepLinkUrl')}</HighlightedLabel>
-            </Label>
-            <Input
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
-              placeholder="myapp://path/to/content"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>
-              <HighlightedLabel>{t('payload.fallbackUrl')}</HighlightedLabel>
-            </Label>
-            <Input type="url" placeholder="https://anqr.link/app" />
-          </div>
+          {payload.appLink.platform === 'universal' && (
+            <div className="space-y-2">
+              <Label>
+                <HighlightedLabel>{t('payload.deepLinkUrl')}</HighlightedLabel>
+              </Label>
+              <Input
+                value={payload.text}
+                onChange={(e) => setPayloadText(e.target.value)}
+                placeholder="https://myapp.com/path/to/content"
+                data-testid="payload-applink-url-input"
+                className={
+                  payload.validate && payload.text && !isValidUrl(payload.text)
+                    ? 'border-destructive focus-visible:ring-destructive'
+                    : ''
+                }
+              />
+              {payload.validate && payload.text && !isValidUrl(payload.text) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+                </p>
+              )}
+            </div>
+          )}
+          {payload.appLink.platform !== 'universal' && (
+            <>
+              <div className="space-y-2">
+                <Label>
+                  <HighlightedLabel>{t('payload.scheme')}</HighlightedLabel>
+                </Label>
+                <Input
+                  value={payload.appLink.scheme || ''}
+                  onChange={(e) => setPayloadAppLink({ scheme: e.target.value })}
+                  placeholder={payload.appLink.platform === 'android' ? 'https' : 'myapp'}
+                  data-testid="payload-applink-scheme-input"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label>
+                    <HighlightedLabel>{t('payload.host')}</HighlightedLabel>
+                  </Label>
+                  <Input
+                    value={payload.appLink.host || ''}
+                    onChange={(e) => setPayloadAppLink({ host: e.target.value })}
+                    placeholder="myapp.com"
+                    data-testid="payload-applink-host-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>
+                    <HighlightedLabel>{t('payload.path')}</HighlightedLabel>
+                  </Label>
+                  <Input
+                    value={payload.appLink.path || ''}
+                    onChange={(e) => setPayloadAppLink({ path: e.target.value })}
+                    placeholder="/page/content"
+                    data-testid="payload-applink-path-input"
+                  />
+                </div>
+              </div>
+              {payload.appLink.platform === 'android' && (
+                <div className="space-y-2">
+                  <Label>
+                    <HighlightedLabel>{t('payload.packageName')}</HighlightedLabel>
+                  </Label>
+                  <Input
+                    value={payload.appLink.package || ''}
+                    onChange={(e) => setPayloadAppLink({ package: e.target.value })}
+                    placeholder="com.example.myapp"
+                    data-testid="payload-applink-package-input"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>
+                  <HighlightedLabel>{t('payload.fallbackUrl')}</HighlightedLabel>
+                </Label>
+                <Input
+                  type="url"
+                  value={payload.appLink.fallbackUrl || ''}
+                  onChange={(e) => setPayloadAppLink({ fallbackUrl: e.target.value })}
+                  placeholder="https://anqr.link/app"
+                  data-testid="payload-applink-fallback-input"
+                />
+              </div>
+            </>
+          )}
           <p className="text-xs text-muted-foreground">{t('hints.appLinkNote')}</p>
         </div>
       )}
@@ -3111,34 +4012,65 @@ export function PayloadSection() {
               <HighlightedLabel>{t('payload.gtin')}</HighlightedLabel>
             </Label>
             <Input
-              value={payload.text}
-              onChange={(e) => setPayloadText(e.target.value)}
+              value={payload.gs1.gtin || ''}
+              onChange={(e) => setPayloadGS1({ gtin: e.target.value })}
               placeholder="01234567890128"
+              data-testid="payload-gs1-gtin-input"
+              className={
+                payload.validate && payload.gs1.gtin && !isValidGTIN(payload.gs1.gtin)
+                  ? 'border-destructive focus-visible:ring-destructive'
+                  : ''
+              }
             />
+            {payload.validate && payload.gs1.gtin && !isValidGTIN(payload.gs1.gtin) && (
+              <p className="text-xs text-destructive">
+                {t('validation.invalidGTIN', 'Enter a valid GTIN (8, 12, 13, or 14 digits)')}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.serialNumber')}</HighlightedLabel>
             </Label>
-            <Input placeholder="ABC123" />
+            <Input
+              value={payload.gs1.serial || ''}
+              onChange={(e) => setPayloadGS1({ serial: e.target.value })}
+              placeholder="ABC123"
+              data-testid="payload-gs1-serial-input"
+            />
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.batchLot')}</HighlightedLabel>
             </Label>
-            <Input placeholder="LOT123" />
+            <Input
+              value={payload.gs1.batch || ''}
+              onChange={(e) => setPayloadGS1({ batch: e.target.value })}
+              placeholder="LOT123"
+              data-testid="payload-gs1-batch-input"
+            />
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.expiryDate')}</HighlightedLabel>
             </Label>
-            <Input type="date" />
+            <Input
+              type="date"
+              value={payload.gs1.expiry || ''}
+              onChange={(e) => setPayloadGS1({ expiry: e.target.value })}
+              data-testid="payload-gs1-expiry-input"
+            />
           </div>
           <div className="space-y-2">
             <Label>
               <HighlightedLabel>{t('payload.resolverDomain')}</HighlightedLabel>
             </Label>
-            <Input placeholder="id.gs1.org" defaultValue="id.gs1.org" />
+            <Input
+              value={payload.gs1.resolver || 'id.gs1.org'}
+              onChange={(e) => setPayloadGS1({ resolver: e.target.value })}
+              placeholder="id.gs1.org"
+              data-testid="payload-gs1-resolver-input"
+            />
           </div>
           <p className="text-xs text-muted-foreground">{t('hints.gs1Note')}</p>
         </div>
@@ -3325,6 +4257,58 @@ export function PayloadSection() {
               data-testid="payload-max-len-guard-switch"
             />
           </div>
+          {/* Max Length Guard Indicator */}
+          {payload.maxLenGuard && (() => {
+            const payloadText = getPayloadText();
+            const byteLength = new TextEncoder().encode(payloadText).length;
+            // Use version from settings, or max (40) if auto (0)
+            const effectiveVersion = qr.version > 0 ? qr.version : 40;
+            const maxCapacity = ECC_CAPACITIES_BYTE[qr.ecc]?.[effectiveVersion - 1] || 2953;
+            const percentage = Math.round((byteLength / maxCapacity) * 100);
+            const isWarning = percentage > 70 && percentage <= 90;
+            const isDanger = percentage > 90;
+
+            return (
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {t('payload.contentSize', 'Content size')}
+                  </span>
+                  <span
+                    className={
+                      isDanger
+                        ? 'text-destructive font-medium'
+                        : isWarning
+                          ? 'text-amber-600 dark:text-amber-400 font-medium'
+                          : 'text-muted-foreground'
+                    }
+                  >
+                    {byteLength} / {maxCapacity} {t('common.bytes', 'bytes')} ({percentage}%)
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      isDanger
+                        ? 'bg-destructive'
+                        : isWarning
+                          ? 'bg-amber-500'
+                          : 'bg-primary'
+                    }`}
+                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                  />
+                </div>
+                {isDanger && (
+                  <p className="text-xs text-destructive">
+                    {t(
+                      'validation.contentTooLong',
+                      'Content may exceed QR capacity. Consider reducing content or lowering ECC level.'
+                    )}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

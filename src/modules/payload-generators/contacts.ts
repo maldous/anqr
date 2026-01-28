@@ -4,7 +4,7 @@
  */
 
 import type { BizCardParams, MeCardHelper, VCardHelper } from './types';
-import { escapeValue } from './utils';
+import { escapeValue, isValidEmail, isValidPhone, isValidUrl } from './utils';
 
 /** Generate vCard string (2.1, 3.0, or 4.0) */
 export function generateVCard(params: VCardHelper): string {
@@ -12,10 +12,8 @@ export function generateVCard(params: VCardHelper): string {
 
   lines.push('BEGIN:VCARD', `VERSION:${params.version}`);
 
-  if (params.fn) {
-    lines.push(`FN:${escapeValue(params.fn)}`);
-  }
-
+  // N: must come BEFORE FN: for better parser compatibility
+  // Many real-world parsers are order-dependent and ignore N if FN comes first
   if (params.n) {
     lines.push(`N:${escapeValue(params.n)}`);
   } else if (params.fn) {
@@ -25,8 +23,14 @@ export function generateVCard(params: VCardHelper): string {
       const firstName = parts.join(' ');
       lines.push(`N:${escapeValue(lastName)};${escapeValue(firstName)};;;`);
     } else {
-      lines.push(`N:${escapeValue(params.fn)};;;;`);
+      // Single name goes in Given Name position (2nd field), not Family Name
+      // N structure: Family;Given;Additional;Prefix;Suffix
+      lines.push(`N:;${escapeValue(params.fn)};;;`);
     }
+  }
+
+  if (params.fn) {
+    lines.push(`FN:${escapeValue(params.fn)}`);
   }
 
   if (params.org) {
@@ -41,27 +45,40 @@ export function generateVCard(params: VCardHelper): string {
     lines.push(`ROLE:${escapeValue(params.role)}`);
   }
 
+  // Only output TEL if it looks like a valid phone number (Android compatibility)
   if (params.tel) {
     for (const tel of params.tel) {
-      if (params.version === '4.0') {
-        lines.push(`TEL;TYPE=voice:${tel}`);
-      } else {
-        lines.push(`TEL:${tel}`);
+      if (isValidPhone(tel)) {
+        if (params.version === '4.0') {
+          lines.push(`TEL;TYPE=voice:${tel}`);
+        } else if (params.version === '2.1') {
+          // vCard 2.1: use CELL for mobile compatibility
+          lines.push(`TEL;CELL:${tel}`);
+        } else {
+          lines.push(`TEL:${tel}`);
+        }
       }
     }
   }
 
+  // Only output EMAIL if it contains @ (Android compatibility)
   if (params.email) {
     for (const email of params.email) {
-      if (params.version === '4.0') {
-        lines.push(`EMAIL:${email}`);
-      } else {
-        lines.push(`EMAIL;TYPE=INTERNET:${email}`);
+      if (isValidEmail(email)) {
+        if (params.version === '4.0') {
+          lines.push(`EMAIL:${email}`);
+        } else if (params.version === '2.1') {
+          // vCard 2.1: use INTERNET without TYPE=
+          lines.push(`EMAIL;INTERNET:${email}`);
+        } else {
+          lines.push(`EMAIL;TYPE=INTERNET:${email}`);
+        }
       }
     }
   }
 
-  if (params.url) {
+  // Only output URL if it's a valid http(s):// URL (Android compatibility)
+  if (params.url && isValidUrl(params.url)) {
     lines.push(`URL:${params.url}`);
   }
 
@@ -97,7 +114,9 @@ export function generateVCard(params: VCardHelper): string {
 
   lines.push('END:VCARD');
 
-  return lines.join('\n');
+  // Use CRLF line endings for Android compatibility
+  // Also add trailing CRLF as required by some parsers
+  return lines.join('\r\n') + '\r\n';
 }
 
 /** Generate MeCard string (Japanese format, more compact than vCard) */

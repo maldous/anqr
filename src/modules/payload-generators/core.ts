@@ -57,13 +57,11 @@ export function generateSms(params: SmsHelper): string {
   return sms;
 }
 
-/** Generate Geo URI */
+/** Generate Geo URI (RFC 5870 compliant - only lat,lon without search query) */
 export function generateGeo(params: GeoHelper): string {
-  let geo = `geo:${params.lat},${params.lon}`;
-  if (params.query) {
-    geo += `?q=${encodeURIComponent(params.query)}`;
-  }
-  return geo;
+  // RFC 5870 geo URI format: geo:lat,lon
+  // Note: The ?q= parameter is NOT part of the standard and causes issues with many apps
+  return `geo:${params.lat},${params.lon}`;
 }
 
 /** Generate WiFi configuration string */

@@ -21,20 +21,28 @@ import {
   type EmailHelper,
   type EventHelper,
   type GeoHelper,
+  generateAppDeepLink,
   generateAusPayNet,
   generateBharatQR,
+  generateBizCard,
   generateCashApp,
   generateDuitNow,
   generateEMVMPM,
   generateEthereumEIP681,
+  generateEvent,
+  generateGS1DigitalLink,
   generateHKQR,
   generateJPQR,
   generateLightning,
+  generateMeCard,
+  generateMessagingLink,
   generatePayPalMe,
   generateQRIS,
   generateQRPh,
+  generateSocialProfile,
   generateSwissQRBill,
   generateTWQR,
+  generateVCard,
   generateVietQR,
   type MeCardHelper,
   type SmsHelper,
@@ -256,6 +264,72 @@ export interface OtpAuthHelper {
   type?: 'totp' | 'hotp';
 }
 
+// BizCard helper
+export interface BizCardHelper {
+  firstName?: string;
+  lastName?: string;
+  title?: string;
+  company?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+}
+
+// Messaging link helper
+export interface MessagingHelper {
+  platform: 'whatsapp' | 'telegram' | 'signal' | 'viber' | 'line' | 'messenger';
+  identifier: string;
+  message?: string;
+}
+
+// Social profile helper
+export interface SocialProfileHelper {
+  platform: 'linkedin' | 'twitter' | 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'github' | 'other';
+  username: string;
+}
+
+// App deep link helper
+export interface AppLinkHelper {
+  platform: 'universal' | 'android' | 'ios' | 'custom';
+  scheme?: string;
+  host?: string;
+  path?: string;
+  package?: string;
+  fallbackUrl?: string;
+}
+
+// GS1 Digital Link helper
+export interface GS1Helper {
+  gtin: string;
+  serial?: string;
+  batch?: string;
+  expiry?: string;
+  resolver: string;
+}
+
+// Cloud storage link helper
+export interface CloudLinkHelper {
+  service: 'gdrive' | 'dropbox' | 'onedrive' | 'icloud' | 'box' | 'other';
+  url: string;
+}
+
+// Calendar subscription helper
+export interface CalendarSubHelper {
+  url: string;
+  calendarName?: string;
+}
+
+// Event RSVP helper
+export interface EventRsvpHelper {
+  summary?: string;
+  location?: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  organizerEmail?: string;
+  rsvpUrl?: string;
+}
+
 // Swiss QR-bill helper (SIX payment standard)
 export interface SwissQRBillHelper {
   creditorIBAN: string;
@@ -361,11 +435,10 @@ export interface TWQRHelper {
 
 // HKQR (Hong Kong) helper
 export interface HKQRHelper {
-  fpsId: string;
+  fpsId?: string;
   merchantName: string;
-  merchantCity: string;
+  merchantCity?: string;
   amount?: number;
-  reference?: string;
 }
 
 // JPQR (Japan) helper
@@ -453,6 +526,15 @@ export interface QRState {
     event: EventHelper;
     crypto: CryptoHelper;
     otpauth: OtpAuthHelper;
+    // Additional content type helpers
+    bizcard: BizCardHelper;
+    messaging: MessagingHelper;
+    socialProfile: SocialProfileHelper;
+    appLink: AppLinkHelper;
+    gs1: GS1Helper;
+    cloudLink: CloudLinkHelper;
+    calendarSub: CalendarSubHelper;
+    eventRsvp: EventRsvpHelper;
     // Payment helpers
     swissQRBill: SwissQRBillHelper;
     lightning: LightningHelper;
@@ -488,6 +570,15 @@ export interface QRState {
   setPayloadEvent: (event: Partial<EventHelper>) => void;
   setPayloadCrypto: (crypto: Partial<CryptoHelper>) => void;
   setPayloadOtpAuth: (otpauth: Partial<OtpAuthHelper>) => void;
+  // Additional content type setters
+  setPayloadBizCard: (bizcard: Partial<BizCardHelper>) => void;
+  setPayloadMessaging: (messaging: Partial<MessagingHelper>) => void;
+  setPayloadSocialProfile: (socialProfile: Partial<SocialProfileHelper>) => void;
+  setPayloadAppLink: (appLink: Partial<AppLinkHelper>) => void;
+  setPayloadGS1: (gs1: Partial<GS1Helper>) => void;
+  setPayloadCloudLink: (cloudLink: Partial<CloudLinkHelper>) => void;
+  setPayloadCalendarSub: (calendarSub: Partial<CalendarSubHelper>) => void;
+  setPayloadEventRsvp: (eventRsvp: Partial<EventRsvpHelper>) => void;
   // Payment setters
   setPayloadSwissQRBill: (swissQRBill: Partial<SwissQRBillHelper>) => void;
   setPayloadLightning: (lightning: Partial<LightningHelper>) => void;
@@ -867,11 +958,20 @@ export const useQRStore = create<QRState>((set, get) => ({
     sms: { number: '' },
     geo: { lat: 0, lon: 0 },
     wifi: { ssid: '', auth: 'WPA2', hidden: false },
-    vcard: { version: '3.0' },
+    vcard: { version: '2.1' },
     mecard: {},
     event: {},
     crypto: { type: 'bitcoin', address: '' },
     otpauth: { type: 'totp' },
+    // Additional content type defaults
+    bizcard: {},
+    messaging: { platform: 'whatsapp', identifier: '' },
+    socialProfile: { platform: 'linkedin', username: '' },
+    appLink: { platform: 'universal' },
+    gs1: { gtin: '', resolver: 'id.gs1.org' },
+    cloudLink: { service: 'gdrive', url: '' },
+    calendarSub: { url: '' },
+    eventRsvp: {},
     // Payment helpers defaults
     swissQRBill: {
       creditorIBAN: '',
@@ -889,7 +989,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     vietqr: { bankBin: '', accountNumber: '' },
     qrph: { accountNumber: '', merchantName: '', merchantCity: '' },
     twqr: { merchantId: '', merchantName: '', merchantCity: '' },
-    hkqr: { fpsId: '', merchantName: '', merchantCity: '' },
+    hkqr: { fpsId: '', merchantName: '' },
     jpqr: { storeId: '', merchantName: '' },
     auspaynet: { merchantName: '' },
     paypalMe: { username: '' },
@@ -930,6 +1030,23 @@ export const useQRStore = create<QRState>((set, get) => ({
     set((s) => ({ payload: { ...s.payload, crypto: { ...s.payload.crypto, ...crypto } } })),
   setPayloadOtpAuth: (otpauth) =>
     set((s) => ({ payload: { ...s.payload, otpauth: { ...s.payload.otpauth, ...otpauth } } })),
+  // Additional content type setters
+  setPayloadBizCard: (bizcard) =>
+    set((s) => ({ payload: { ...s.payload, bizcard: { ...s.payload.bizcard, ...bizcard } } })),
+  setPayloadMessaging: (messaging) =>
+    set((s) => ({ payload: { ...s.payload, messaging: { ...s.payload.messaging, ...messaging } } })),
+  setPayloadSocialProfile: (socialProfile) =>
+    set((s) => ({ payload: { ...s.payload, socialProfile: { ...s.payload.socialProfile, ...socialProfile } } })),
+  setPayloadAppLink: (appLink) =>
+    set((s) => ({ payload: { ...s.payload, appLink: { ...s.payload.appLink, ...appLink } } })),
+  setPayloadGS1: (gs1) =>
+    set((s) => ({ payload: { ...s.payload, gs1: { ...s.payload.gs1, ...gs1 } } })),
+  setPayloadCloudLink: (cloudLink) =>
+    set((s) => ({ payload: { ...s.payload, cloudLink: { ...s.payload.cloudLink, ...cloudLink } } })),
+  setPayloadCalendarSub: (calendarSub) =>
+    set((s) => ({ payload: { ...s.payload, calendarSub: { ...s.payload.calendarSub, ...calendarSub } } })),
+  setPayloadEventRsvp: (eventRsvp) =>
+    set((s) => ({ payload: { ...s.payload, eventRsvp: { ...s.payload.eventRsvp, ...eventRsvp } } })),
   // Payment setters
   setPayloadSwissQRBill: (swissQRBill) =>
     set((s) => ({
@@ -1345,9 +1462,8 @@ export const useQRStore = create<QRState>((set, get) => ({
       }
 
       case 'geo': {
-        let geo = `geo:${payload.geo.lat},${payload.geo.lon}`;
-        if (payload.geo.query) geo += `?q=${encodeURIComponent(payload.geo.query)}`;
-        return geo;
+        // RFC 5870 geo URI format: geo:lat,lon (no query parameter)
+        return `geo:${payload.geo.lat},${payload.geo.lon}`;
       }
 
       case 'wifi': {
@@ -1361,60 +1477,19 @@ export const useQRStore = create<QRState>((set, get) => ({
 
       case 'vcard': {
         const v = payload.vcard;
-        let vcard = `BEGIN:VCARD\nVERSION:${v.version}\n`;
-        if (v.fn) vcard += `FN:${v.fn}\n`;
-        if (v.n) vcard += `N:${v.n}\n`;
-        if (v.org) vcard += `ORG:${v.org}\n`;
-        if (v.title) vcard += `TITLE:${v.title}\n`;
-        if (v.tel) {
-          for (const t of v.tel) {
-            vcard += `TEL:${t}\n`;
-          }
-        }
-        if (v.email) {
-          for (const e of v.email) {
-            vcard += `EMAIL:${e}\n`;
-          }
-        }
-        if (v.url) vcard += `URL:${v.url}\n`;
-        if (v.adr) {
-          for (const a of v.adr) {
-            vcard += `ADR:${a}\n`;
-          }
-        }
-        if (v.note) vcard += `NOTE:${v.note}\n`;
-        if (v.bday) vcard += `BDAY:${v.bday}\n`;
-        vcard += 'END:VCARD';
-        return vcard;
+        // Use generateVCard which properly handles N: field auto-generation from FN:
+        return generateVCard(v);
       }
 
       case 'mecard': {
         const m = payload.mecard;
-        let mecard = 'MECARD:';
-        if (m.n) mecard += `N:${m.n};`;
-        if (m.tel) mecard += `TEL:${m.tel};`;
-        if (m.email) mecard += `EMAIL:${m.email};`;
-        if (m.adr) mecard += `ADR:${m.adr};`;
-        if (m.org) mecard += `ORG:${m.org};`;
-        if (m.url) mecard += `URL:${m.url};`;
-        if (m.note) mecard += `NOTE:${m.note};`;
-        if (m.bday) mecard += `BDAY:${m.bday};`;
-        if (m.nickname) mecard += `NICKNAME:${m.nickname};`;
-        mecard += ';';
-        return mecard;
+        // Use generateMeCard for proper escaping and formatting
+        return generateMeCard(m);
       }
 
       case 'event': {
-        const e = payload.event;
-        let event = 'BEGIN:VEVENT\n';
-        if (e.summary) event += `SUMMARY:${e.summary}\n`;
-        if (e.location) event += `LOCATION:${e.location}\n`;
-        if (e.description) event += `DESCRIPTION:${e.description}\n`;
-        if (e.start) event += `DTSTART:${e.start}\n`;
-        if (e.end) event += `DTEND:${e.end}\n`;
-        if (e.rrule) event += `RRULE:${e.rrule}\n`;
-        event += 'END:VEVENT';
-        return event;
+        // Use generateEvent for proper RFC 5545 compliance
+        return generateEvent(payload.event);
       }
 
       case 'crypto': {
@@ -1428,115 +1503,127 @@ export const useQRStore = create<QRState>((set, get) => ({
       }
 
       case 'bizcard': {
-        // BizCard format (simplified vCard variant)
-        let bc = 'BIZCARD:';
-        const v = payload.vcard;
-        if (v.fn) bc += `N:${v.fn};`;
-        if (v.title) bc += `T:${v.title};`;
-        if (v.org) bc += `C:${v.org};`;
-        if (v.tel?.[0]) bc += `B:${v.tel[0]};`;
-        if (v.email?.[0]) bc += `E:${v.email[0]};`;
-        if (v.adr?.[0]) bc += `A:${v.adr[0]};`;
-        bc += ';';
-        return bc;
+        // Use generateBizCard for proper formatting
+        return generateBizCard(payload.bizcard);
       }
 
       case 'calendar_subscription': {
         // Convert URL to webcal:// protocol
-        let url = payload.text;
+        const calSub = payload.calendarSub;
+        let url = calSub.url || payload.text;
         if (url.startsWith('https://')) {
           url = url.replace('https://', 'webcal://');
         } else if (url.startsWith('http://')) {
           url = url.replace('http://', 'webcal://');
-        } else if (!url.startsWith('webcal://')) {
+        } else if (url && !url.startsWith('webcal://')) {
           url = `webcal://${url}`;
+        }
+        // Calendar name can be appended as a fragment or query param for some apps
+        if (calSub.calendarName && url) {
+          url += url.includes('?') ? '&' : '?';
+          url += `name=${encodeURIComponent(calSub.calendarName)}`;
         }
         return url;
       }
 
       case 'event_rsvp': {
-        // RSVP is typically just a URL, but could add mailto: fallback
-        const url = payload.text;
+        // Generate proper iCalendar event with RSVP URL
+        const rsvp = payload.eventRsvp;
+        if (rsvp.summary || rsvp.start) {
+          // Generate an iCalendar event that includes the RSVP URL
+          return generateEvent({
+            summary: rsvp.summary,
+            location: rsvp.location,
+            description: rsvp.description
+              ? (rsvp.rsvpUrl ? `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}` : rsvp.description)
+              : (rsvp.rsvpUrl ? `RSVP: ${rsvp.rsvpUrl}` : undefined),
+            start: rsvp.start,
+            end: rsvp.end,
+          });
+        }
+        // Fallback to simple URL or mailto
+        const url = rsvp.rsvpUrl || payload.text;
         if (url.includes('@') && !url.startsWith('mailto:') && !url.startsWith('http')) {
           return `mailto:${url}?subject=RSVP`;
         }
         return url;
       }
 
-      case 'file_url': {
-        // File URL - just ensure proper URL format
-        let url = payload.text;
-        if (
-          !(url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://'))
-        ) {
-          url = `https://${url}`;
-        }
-        return url;
-      }
-
+      // file_url and cloud_link removed - use URL payload type instead
+      case 'file_url':
       case 'cloud_link': {
-        // Cloud link - just ensure proper URL format
-        let url = payload.text;
-        if (!(url.startsWith('http://') || url.startsWith('https://'))) {
+        // Fallback for any persisted data - treat as plain URL
+        let url = payload.text || payload.cloudLink?.url || '';
+        if (url && !(url.startsWith('http://') || url.startsWith('https://'))) {
           url = `https://${url}`;
         }
         return url;
       }
 
-      // social_profile uses identical logic to url - fall through
-      case 'social_profile':
+      case 'social_profile': {
+        // Use generateSocialProfile for proper URL generation
+        const social = payload.socialProfile;
+        if (social.username) {
+          return generateSocialProfile(social.platform, social.username);
+        }
+        // Fallback to payload.text if no username set
+        return payload.text;
+      }
 
       case 'messaging_link': {
-        // Messaging links - detect platform and format appropriately
-        const text = payload.text;
-        // If it's a phone number, format as sms:
-        if (/^\+?[\d\s-]+$/.test(text)) {
-          return `sms:${text.replaceAll(/[\s-]/g, '')}`;
+        // Use generateMessagingLink for proper deep link generation
+        const msg = payload.messaging;
+        if (msg.identifier) {
+          return generateMessagingLink(msg.platform, msg.identifier, msg.message);
         }
-        // If it looks like a WhatsApp link
-        if (text.includes('wa.me') || text.includes('whatsapp')) {
-          return text.startsWith('http') ? text : `https://${text}`;
-        }
-        // If it's a Telegram username
-        if (text.startsWith('@') || text.includes('t.me')) {
-          if (text.startsWith('@')) {
-            return `https://t.me/${text.slice(1)}`;
-          }
-          return text.startsWith('http') ? text : `https://${text}`;
-        }
-        return text;
+        // Fallback to payload.text if no identifier set
+        return payload.text;
       }
 
       case 'gs1_digital_link': {
-        // GS1 Digital Link format
-        // Format: https://id.gs1.org/01/{GTIN}
-        const text = payload.text;
-        // If already a URL, return as-is
-        if (text.startsWith('http')) return text;
-        // If it's just a GTIN number, format it
-        const gtin = text.replaceAll(/[^\d]/g, '');
-        if (gtin.length >= 8) {
-          return `https://id.gs1.org/01/${gtin.padStart(14, '0')}`;
+        // Use generateGS1DigitalLink for proper formatting
+        const gs1 = payload.gs1;
+        const gtin = gs1.gtin || payload.text;
+        if (gtin) {
+          return generateGS1DigitalLink({
+            gtin: gtin.replaceAll(/[^\d]/g, ''),
+            baseUrl: gs1.resolver ? `https://${gs1.resolver}` : undefined,
+            ser: gs1.serial || undefined,
+            lot: gs1.batch || undefined,
+            expiry: gs1.expiry?.replaceAll('-', '') || undefined,
+          });
         }
-        return text;
+        return '';
       }
 
       case 'app_link': {
-        // App deep link - detect platform and format
-        const text = payload.text;
-        // Android intent
-        if (text.startsWith('intent://') || text.startsWith('android-app://')) {
-          return text;
+        // Use generateAppDeepLink for proper formatting
+        const app = payload.appLink;
+        if (app.platform === 'universal') {
+          // Universal link - just use the URL directly
+          let url = app.scheme && app.host 
+            ? `${app.scheme}://${app.host}${app.path || ''}` 
+            : payload.text;
+          if (url && !(url.includes('://'))) {
+            url = `https://${url}`;
+          }
+          return url || '';
         }
-        // iOS universal link or custom scheme
-        if (text.includes('://')) {
-          return text;
+        // For custom scheme, build the URL directly
+        if (app.platform === 'custom') {
+          if (app.scheme && app.host) {
+            return `${app.scheme}://${app.host}${app.path || ''}`;
+          }
+          return payload.text;
         }
-        // If it's a package name, format as market link
-        if (text.includes('.') && !text.includes('/')) {
-          return `market://details?id=${text}`;
-        }
-        return text;
+        // Use generateAppDeepLink for android/ios
+        return generateAppDeepLink(app.platform, {
+          scheme: app.scheme,
+          host: app.host,
+          path: app.path,
+          package: app.package,
+          fallbackUrl: app.fallbackUrl,
+        });
       }
 
       case 'utm_link': {
@@ -1605,8 +1692,8 @@ export const useQRStore = create<QRState>((set, get) => ({
 
       case 'qris': {
         const q = payload.qris;
-        // EMV spec requires merchantName (tag 59), merchantId for QRIS
-        // Allow generation for preview - generator provides defaults
+        // EMV spec requires merchantName (tag 59) for QRIS
+        if (!q.merchantName) return '';
         return generateQRIS({
           merchantID: q.merchantId,
           nmid: q.nmid,
@@ -1623,9 +1710,8 @@ export const useQRStore = create<QRState>((set, get) => ({
 
       case 'duitnow': {
         const d = payload.duitnow;
-        // ProxyValue is the payment identifier (required for routing)
-        // MerchantName is required by EMV spec (tag 59)
-        // Allow generation for preview
+        // ProxyValue (routing) and merchantName (EMV tag 59) are required
+        if (!(d.proxyValue && d.merchantName)) return '';
         return generateDuitNow({
           proxyType: d.proxyType,
           proxyValue: d.proxyValue,
@@ -1639,8 +1725,7 @@ export const useQRStore = create<QRState>((set, get) => ({
       case 'bharatqr': {
         const b = payload.bharatqr;
         // MerchantName is required by EMV spec (tag 59)
-        // VPA is optional (can use other payment networks)
-        // Allow generation for preview
+        if (!b.merchantName) return '';
         return generateBharatQR({
           merchantVPA: b.merchantVPA,
           merchantPAN: b.merchantPAN,
@@ -1659,7 +1744,7 @@ export const useQRStore = create<QRState>((set, get) => ({
       case 'vietqr': {
         const v = payload.vietqr;
         // BankBin and accountNumber are required for VietQR routing
-        // Allow generation for preview
+        if (!(v.bankBin && v.accountNumber)) return '';
         return generateVietQR({
           bankBin: v.bankBin,
           accountNumber: v.accountNumber,
@@ -1684,8 +1769,8 @@ export const useQRStore = create<QRState>((set, get) => ({
 
       case 'twqr': {
         const t = payload.twqr;
-        // MerchantId and merchantName required by TWQR spec
-        // Allow generation for preview
+        // MerchantName is required by TWQR spec
+        if (!t.merchantName) return '';
         return generateTWQR({
           merchantId: t.merchantId,
           merchantName: t.merchantName,
@@ -1697,20 +1782,21 @@ export const useQRStore = create<QRState>((set, get) => ({
 
       case 'hkqr': {
         const h = payload.hkqr;
-        if (!(h.fpsId && h.merchantName)) return '';
+        // HKQR can work with just fpsId OR just merchantName
+        if (!(h.fpsId || h.merchantName)) return '';
         return generateHKQR({
-          fpsId: h.fpsId,
+          fpsId: h.fpsId || undefined,
           merchantName: h.merchantName,
-          merchantCity: h.merchantCity,
+          merchantCity: h.merchantCity || undefined,
           amount: h.amount,
-          reference: h.reference,
+          reference: undefined,
         });
       }
 
       case 'jpqr': {
         const j = payload.jpqr;
-        // StoreId and merchantName required by JPQR spec
-        // Allow generation for preview
+        // MerchantName is required by JPQR spec
+        if (!j.merchantName) return '';
         return generateJPQR({
           storeId: j.storeId,
           merchantName: j.merchantName,
@@ -1722,8 +1808,7 @@ export const useQRStore = create<QRState>((set, get) => ({
       case 'auspaynet': {
         const a = payload.auspaynet;
         // NPP PayID spec: Need either PayID OR BSB+AccountNumber for routing
-        // MerchantName is OPTIONAL - payer sees registered name from NPP lookup
-        // Amount is OPTIONAL - can be entered by payer
+        if (!(a.payId || (a.bsb && a.accountNumber))) return '';
         return generateAusPayNet({
           payId: a.payId,
           payIdType: a.payIdType,
