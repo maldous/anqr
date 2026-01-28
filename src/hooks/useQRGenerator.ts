@@ -184,7 +184,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isRendering, setIsRendering] = useState(false); // Active rendering state
-  const [isPending, setIsPending] = useState(false); // Config changed, waiting for debounce
+  const [pendingVisible, setPendingVisible] = useState(false); // Delayed pending state to avoid immediate blur while typing
   const [error, setError] = useState<string | null>(null);
   const [overlayCanvas, setOverlayCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(
     null
@@ -360,14 +360,23 @@ export function useQRGenerator(): UseQRGeneratorResult {
     autoPickedEcc,
   ]);
 
-  // Build comprehensive config object for QRGenerator
-  // CRITICAL: We must depend on `payload` to trigger re-renders when payload changes
-  // getPayloadText is a stable function reference - it doesn't change when payload changes
-  const config = useMemo(() => {
-    // Force dependency on payload by accessing it (even if getPayloadText reads it internally)
+  // Get content and debounce it separately with longer delay for typing
+  // This allows users to type without immediate QR rendering
+  const rawContent = useMemo(() => {
+    // Force dependency on payload by accessing it
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const _payloadDep = payload;
-    const content = getPayloadText();
+    return getPayloadText();
+  }, [getPayloadText, payload]);
+  
+  // Longer debounce for content (700ms) to allow typing without blur
+  const debouncedContent = useDebounce(rawContent, 700);
+
+  // Build comprehensive config object for QRGenerator
+  // Content is pre-debounced, so config only changes after typing settles
+  const config = useMemo(() => {
+    // Use debounced content to avoid frequent re-renders while typing
+    const content = debouncedContent;
 
     return {
       content,
@@ -493,8 +502,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       safetyMinQuietZone: safety.minQuietZoneModules,
     };
   }, [
-    getPayloadText,
-    payload, // CRITICAL: Must depend on payload to trigger updates when content changes
+    debouncedContent, // Use debounced content instead of raw payload
     safetyAdjustedConfig,
     // QR encoding
     qr.version,
@@ -583,8 +591,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
   ]);
 
   // Debounce config changes to prevent excessive regeneration
-  // 300ms is a good balance for slow phones while remaining responsive
-  const debouncedConfig = useDebounce(config, 300);
+  // Short debounce (150ms) for style changes since content is already pre-debounced at 700ms
+  const debouncedConfig = useDebounce(config, 150);
 
   // Create stable content hashes for change detection
   // This avoids false triggers from object reference changes on remount
@@ -592,11 +600,30 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const debouncedConfigHash = useMemo(() => JSON.stringify(debouncedConfig), [debouncedConfig]);
 
   // Track when config changes but debounce hasn't settled yet
-  // Uses content hashing instead of object reference comparison
-  // isPending is true when config has changed but debounce hasn't caught up yet
+  // NOTE: We intentionally do NOT track content pending here - the 700ms content debounce
+  // already prevents QR generation during typing, so we don't need to show a blur.
+  // Only show pending blur for style/config changes (which use the fast 150ms debounce).
+  const isConfigPending = configHash !== debouncedConfigHash;
+
+  // Show pending state for style changes only (not for content typing)
+  // Use a short delay to avoid flickering on rapid style changes
   useEffect(() => {
-    setIsPending(configHash !== debouncedConfigHash);
-  }, [configHash, debouncedConfigHash]);
+    if (isConfigPending) {
+      const timeout = setTimeout(() => setPendingVisible(true), 100);
+      return () => clearTimeout(timeout);
+    } else {
+      setPendingVisible(false);
+    }
+  }, [isConfigPending]);
+
+  // Clear error when content or relevant settings change to allow retry after user edits
+  // This lets users see their changes are being acknowledged and retry generation
+  useEffect(() => {
+    if (error) {
+      setError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only clear error on config change, not when error state itself changes
+  }, [debouncedContent, qr.version, qr.ecc]);
 
   /**
    * Apply only geometric transforms (crop, fit, rotate, flip) to a canvas.
@@ -886,11 +913,77 @@ export function useQRGenerator(): UseQRGeneratorResult {
     setIsRendering(true);
 
     try {
-      // Generate QR code
-      let result: HTMLCanvasElement | OffscreenCanvas | null = await qrGenerator.generate(
-        debouncedConfig,
-        overlay.enabled ? overlayCanvas : null
-      );
+      // Generate QR code with automatic overflow handling
+      let result: HTMLCanvasElement | OffscreenCanvas | null = null;
+      let usedFallback = false;
+      
+      try {
+        result = await qrGenerator.generate(
+          debouncedConfig,
+          overlay.enabled ? overlayCanvas : null
+        );
+      } catch (initialErr) {
+        // If overflow error, try progressively more forgiving settings
+        const msg = initialErr instanceof Error ? initialErr.message : '';
+        if (msg.includes('code length overflow')) {
+          // First try: auto-version with current ECC
+          const autoVersionConfig = {
+            ...debouncedConfig,
+            typeNumber: 0, // Auto-select version (will pick smallest that fits)
+          };
+          try {
+            result = await qrGenerator.generate(
+              autoVersionConfig,
+              overlay.enabled ? overlayCanvas : null
+            );
+            usedFallback = true;
+            console.info('QR generated with auto-version (ECC unchanged)');
+          } catch (autoVersionErr) {
+            // Second try: auto-version with lower ECC levels
+            const eccLevels = ['Q', 'M', 'L'] as const;
+            let succeeded = false;
+            
+            for (const ecc of eccLevels) {
+              if (succeeded) break;
+              const fallbackConfig = {
+                ...debouncedConfig,
+                typeNumber: 0, // Auto-select version
+                errorCorrection: ecc,
+              };
+              try {
+                result = await qrGenerator.generate(
+                  fallbackConfig,
+                  overlay.enabled ? overlayCanvas : null
+                );
+                usedFallback = true;
+                succeeded = true;
+                console.info(`QR generated with fallback settings (auto version, ECC ${ecc})`);
+              } catch {
+                // Try next ECC level
+                continue;
+              }
+            }
+            
+            if (!succeeded) {
+              // All attempts failed - content is too long even for max capacity
+              throw new Error(
+                'Content exceeds maximum QR code capacity. ' +
+                'Please reduce the content length significantly.'
+              );
+            }
+          }
+        } else {
+          // Not an overflow error, re-throw
+          throw initialErr;
+        }
+      }
+      
+      // Log if we used fallback settings (for debugging)
+      if (usedFallback) {
+        console.debug('QR generated using fallback settings due to content length');  
+      }
+
+
 
       // Apply watermark if enabled
       if (watermark.enabled && result) {
@@ -952,8 +1045,16 @@ export function useQRGenerator(): UseQRGeneratorResult {
       }
     } catch (err) {
       console.error('QR generation error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate QR code';
+      const rawMessage = err instanceof Error ? err.message : 'Failed to generate QR code';
+      
+      // Provide user-friendly error messages for common issues
+      let errorMessage = rawMessage;
+      if (rawMessage.includes('code length overflow') || rawMessage.includes('maximum QR code capacity')) {
+        errorMessage = 'Content too long for QR code. Please shorten your content or use a URL shortener.';
+      }
+      
       setError(errorMessage);
+      // Don't clear the canvas - keep showing the last valid QR code
       // Dispatch render-complete event with error
       document.dispatchEvent(
         new CustomEvent('anqr:render-complete', {
@@ -1919,7 +2020,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     isLoading,
     isExporting,
     isRendering,
-    isPending,
+    isPending: pendingVisible, // Use delayed version to avoid immediate blur while typing
     error,
     regenerate: generate,
     download,

@@ -6,46 +6,58 @@
 import type { EventHelper } from './types';
 import { escapeValue, formatICalDate } from './utils';
 
-/** Generate iCalendar VEVENT string */
+/** Generate iCalendar VEVENT string per RFC 5545
+ * Optimized for QR code size - uses minimal required fields
+ */
 export function generateEvent(params: EventHelper): string {
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//ANQR//QR Code Generator//EN',
+    'PRODID:-//ANQR//EN', // Shortened PRODID to save space
     'BEGIN:VEVENT',
   ];
 
-  const uid = `${Date.now()}-${crypto.randomUUID().slice(0, 9)}@anqr`;
-  lines.push(`UID:${uid}`, `DTSTAMP:${formatICalDate(new Date().toISOString())}`);
+  // Use a shorter UID format to save bytes
+  const uid = `${Date.now().toString(36)}@anqr`;
+  // DTSTAMP - use shorter format without full timestamp
+  const now = new Date();
+  const dtstamp = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, '0')}${String(now.getUTCDate()).padStart(2, '0')}T${String(now.getUTCHours()).padStart(2, '0')}${String(now.getUTCMinutes()).padStart(2, '0')}00Z`;
+  lines.push(`UID:${uid}`, `DTSTAMP:${dtstamp}`);
 
   if (params.start) {
-    const startStr = formatICalDate(params.start);
-    if (params.tz) {
-      lines.push(`DTSTART;TZID=${params.tz}:${startStr}`);
-    } else {
-      lines.push(`DTSTART:${startStr}`);
-    }
+    // Always use UTC with Z suffix for compactness (no TZID needed)
+    const startStr = formatICalDate(params.start, true, true);
+    lines.push(`DTSTART:${startStr}`);
   }
 
   if (params.end) {
-    const endStr = formatICalDate(params.end);
-    if (params.tz) {
-      lines.push(`DTEND;TZID=${params.tz}:${endStr}`);
-    } else {
-      lines.push(`DTEND:${endStr}`);
-    }
+    const endStr = formatICalDate(params.end, true, true);
+    lines.push(`DTEND:${endStr}`);
   }
 
-  if (params.summary) {
-    lines.push(`SUMMARY:${escapeValue(params.summary)}`);
+  // Only include non-empty fields
+  if (params.summary?.trim()) {
+    // Truncate summary if too long to avoid overflow
+    const summary = params.summary.length > 50 
+      ? params.summary.slice(0, 47) + '...' 
+      : params.summary;
+    lines.push(`SUMMARY:${escapeValue(summary)}`);
   }
 
-  if (params.description) {
-    lines.push(`DESCRIPTION:${escapeValue(params.description)}`);
+  if (params.description?.trim()) {
+    // Truncate description if too long
+    const desc = params.description.length > 100 
+      ? params.description.slice(0, 97) + '...' 
+      : params.description;
+    lines.push(`DESCRIPTION:${escapeValue(desc)}`);
   }
 
-  if (params.location) {
-    lines.push(`LOCATION:${escapeValue(params.location)}`);
+  if (params.location?.trim()) {
+    // Truncate location if too long
+    const loc = params.location.length > 50 
+      ? params.location.slice(0, 47) + '...' 
+      : params.location;
+    lines.push(`LOCATION:${escapeValue(loc)}`);
   }
 
   if (params.rrule) {
@@ -54,7 +66,8 @@ export function generateEvent(params: EventHelper): string {
 
   lines.push('END:VEVENT', 'END:VCALENDAR');
 
-  return lines.join('\n');
+  // Use CRLF line endings per RFC 5545
+  return lines.join('\r\n');
 }
 
 /** Generate calendar subscription URL (webcal://) */
