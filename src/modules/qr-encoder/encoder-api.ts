@@ -57,13 +57,13 @@ function isAlphanumeric(char: string): boolean {
 /**
  * Optimize a string into segments using the most efficient encoding modes.
  * This is crucial for QArt codes which use numeric fragments in URLs.
- * 
+ *
  * Algorithm:
  * - Scan through the string detecting runs of numeric, alphanumeric, or byte characters
  * - Use numeric mode for runs of digits (3.33 bits/char)
  * - Use alphanumeric mode for runs of alphanumeric chars (5.5 bits/char)
  * - Use byte mode for everything else (8 bits/char)
- * 
+ *
  * Minimum run lengths for mode switching (approximate thresholds):
  * - Numeric: 4+ digits to be worth switching
  * - Alphanumeric: 6+ chars to be worth switching from byte
@@ -195,13 +195,16 @@ export function calculateSegmentBits(segments: DataSegment[], version: number): 
   return bits;
 }
 
-function toEncoderModeToken(mode: EncodingMode | 'numeric' | 'alphanumeric' | 'byte' | 'kanji', content: string): string | undefined {
+function toEncoderModeToken(
+  mode: EncodingMode | 'numeric' | 'alphanumeric' | 'byte' | 'kanji',
+  content: string
+): string | undefined {
   // For explicit segment modes, use directly
   if (mode === 'numeric') return 'Numeric';
   if (mode === 'alphanumeric') return 'Alphanumeric';
   if (mode === 'kanji') return 'Kanji';
   if (mode === 'byte') return 'Byte';
-  
+
   const compatible = getCompatibleMode(content, mode);
   switch (compatible) {
     case 'numeric':
@@ -270,7 +273,8 @@ export function createQRInstance(
     errorCorrectionLevel as QRErrorCorrectionLevelChar
   ) as unknown as QRInstance;
 
-  const modeToken = options.mode && options.mode !== 'mixed' ? toEncoderModeToken(options.mode, data) : undefined;
+  const modeToken =
+    options.mode && options.mode !== 'mixed' ? toEncoderModeToken(options.mode, data) : undefined;
   qr.addData(data, modeToken);
 
   const mask = options.maskPattern;
@@ -343,7 +347,7 @@ export function getCompatibleMode(content: string, requestedMode: string): strin
 
 /**
  * Calculate optimal version for data
- * 
+ *
  * IMPORTANT: Do NOT pass mode: 'auto' here! The qr-generator-class.ts uses
  * undefined mode which defaults to byte encoding. If we use 'auto' here,
  * it triggers optimizeSegments() for mixed-mode encoding which is more

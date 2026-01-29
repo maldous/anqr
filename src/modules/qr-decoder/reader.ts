@@ -4,12 +4,18 @@
  */
 
 import { BitMatrix } from './bit-matrix';
-import { BinaryBitmap, RGBALuminanceSource } from './luminance';
-import { HybridBinarizer, GlobalHistogramBinarizer } from './binarizer';
-import { Detector, DetectorResult } from './qr-detector';
+import { NotFoundException } from './exceptions';
+import type { BinaryBitmap } from './luminance';
 import { QRDecoder } from './qr-data-decoder';
-import { Result, ResultPoint, BarcodeFormat, DecodeHintType, DecoderResult, ResultMetadataType } from './result-types';
-import { NotFoundException, FormatException, ChecksumException } from './exceptions';
+import { Detector } from './qr-detector';
+import {
+  BarcodeFormat,
+  DecodeHintType,
+  type DecoderResult,
+  Result,
+  ResultMetadataType,
+  type ResultPoint,
+} from './result-types';
 
 /**
  * QR Code Reader - main decoder class
@@ -69,7 +75,10 @@ export class Reader {
       );
     }
 
-    result.putMetadata(ResultMetadataType.SYMBOLOGY_IDENTIFIER, decoderResult.getSymbologyModifier());
+    result.putMetadata(
+      ResultMetadataType.SYMBOLOGY_IDENTIFIER,
+      decoderResult.getSymbologyModifier()
+    );
 
     const version = decoderResult.getVersion();
     if (version !== null) {
@@ -98,14 +107,14 @@ export class Reader {
     const leftTopBlack = image.getTopLeftOnBit();
     const rightBottomBlack = image.getBottomRightOnBit();
 
-    if (!leftTopBlack || !rightBottomBlack) {
+    if (!(leftTopBlack && rightBottomBlack)) {
       throw NotFoundException.getNotFoundInstance();
     }
 
     const moduleSize = this.moduleSize(leftTopBlack, image);
 
     let top = leftTopBlack[1];
-    let bottom = rightBottomBlack[1];
+    const bottom = rightBottomBlack[1];
     let left = leftTopBlack[0];
     let right = rightBottomBlack[0];
 
@@ -192,7 +201,7 @@ export class QRCodeDecoderMetaData {
   }
 
   applyMirroredCorrection(points: ResultPoint[]): void {
-    if (!this.mirrored || !points || points.length < 3) {
+    if (!(this.mirrored && points) || points.length < 3) {
       return;
     }
     // Swap bottom-left and top-right points
@@ -201,5 +210,3 @@ export class QRCodeDecoderMetaData {
     points[2] = temp;
   }
 }
-
-

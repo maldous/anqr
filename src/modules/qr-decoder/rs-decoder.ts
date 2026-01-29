@@ -59,7 +59,7 @@ function gfMul(a: number, b: number): number {
 /**
  * GF(256) division using log/exp tables
  */
-function gfDiv(a: number, b: number): number {
+function _gfDiv(a: number, b: number): number {
   if (b === 0) throw new Error('Division by zero in GF(256)');
   if (a === 0) return 0;
   return GF_EXP[(GF_LOG[a] - GF_LOG[b] + 255) % 255];
@@ -69,7 +69,7 @@ function gfDiv(a: number, b: number): number {
  * GF(256) power: a^n
  * Handles negative exponents and large positive exponents
  */
-function gfPow(a: number, n: number): number {
+function _gfPow(a: number, n: number): number {
   if (a === 0) return n === 0 ? 1 : 0;
   // Normalize exponent to positive range
   let exp = (GF_LOG[a] * n) % 255;
@@ -148,8 +148,8 @@ function polyAddOrSubtract(p1: number[], p2: number[]): number[] {
   if (polyIsZero(p2)) return [...p1];
 
   // Smaller degree goes first
-  let smaller = p1.length < p2.length ? p1 : p2;
-  let larger = p1.length < p2.length ? p2 : p1;
+  const smaller = p1.length < p2.length ? p1 : p2;
+  const larger = p1.length < p2.length ? p2 : p1;
 
   const result = [...larger];
   const offset = larger.length - smaller.length;

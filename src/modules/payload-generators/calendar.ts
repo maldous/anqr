@@ -38,25 +38,24 @@ export function generateEvent(params: EventHelper): string {
   // Only include non-empty fields
   if (params.summary?.trim()) {
     // Truncate summary if too long to avoid overflow
-    const summary = params.summary.length > 50 
-      ? params.summary.slice(0, 47) + '...' 
-      : params.summary;
+    const summary =
+      params.summary.length > 50 ? `${params.summary.slice(0, 47)}...` : params.summary;
     lines.push(`SUMMARY:${escapeValue(summary)}`);
   }
 
   if (params.description?.trim()) {
     // Truncate description if too long
-    const desc = params.description.length > 100 
-      ? params.description.slice(0, 97) + '...' 
-      : params.description;
+    const desc =
+      params.description.length > 100
+        ? `${params.description.slice(0, 97)}...`
+        : params.description;
     lines.push(`DESCRIPTION:${escapeValue(desc)}`);
   }
 
   if (params.location?.trim()) {
     // Truncate location if too long
-    const loc = params.location.length > 50 
-      ? params.location.slice(0, 47) + '...' 
-      : params.location;
+    const loc =
+      params.location.length > 50 ? `${params.location.slice(0, 47)}...` : params.location;
     lines.push(`LOCATION:${escapeValue(loc)}`);
   }
 

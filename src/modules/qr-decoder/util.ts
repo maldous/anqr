@@ -6,6 +6,7 @@
 /**
  * Array utility functions
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class Arrays {
   /**
    * Fill array with a value
@@ -54,8 +55,8 @@ export class Arrays {
    * Check array equality
    */
   static equals(first: any, second: any): boolean {
-    if (!first || !second) return false;
-    if (!first.length || !second.length) return false;
+    if (!(first && second)) return false;
+    if (!(first.length && second.length)) return false;
     if (first.length !== second.length) return false;
     for (let i = 0; i < first.length; i++) {
       if (first[i] !== second[i]) return false;
@@ -116,7 +117,11 @@ export class Arrays {
   /**
    * Binary search in sorted array
    */
-  static binarySearch(ar: Int32Array, el: number, comparator?: (a: number, b: number) => number): number {
+  static binarySearch(
+    ar: Int32Array,
+    el: number,
+    comparator?: (a: number, b: number) => number
+  ): number {
     if (comparator === undefined) {
       comparator = (a, b) => a - b;
     }
@@ -140,7 +145,13 @@ export class Arrays {
 /**
  * Copy array elements (like System.arraycopy in Java)
  */
-export function arraycopy(src: any, srcPos: number, dest: any, destPos: number, length: number): void {
+export function arraycopy(
+  src: any,
+  srcPos: number,
+  dest: any,
+  destPos: number,
+  length: number
+): void {
   if (src === dest && srcPos < destPos) {
     // Copy backwards to avoid overwriting
     destPos += length - 1;
@@ -158,6 +169,7 @@ export function arraycopy(src: any, srcPos: number, dest: any, destPos: number, 
 /**
  * Integer utility functions
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class Integer {
   static MIN_VALUE_32_BITS = -2147483648;
   static MAX_VALUE = Number.MAX_SAFE_INTEGER;
@@ -169,13 +181,25 @@ export class Integer {
     if (i === 0) return 32;
     let n = 31;
     let y = i << 16;
-    if (y !== 0) { n -= 16; i = y; }
+    if (y !== 0) {
+      n -= 16;
+      i = y;
+    }
     y = i << 8;
-    if (y !== 0) { n -= 8; i = y; }
+    if (y !== 0) {
+      n -= 8;
+      i = y;
+    }
     y = i << 4;
-    if (y !== 0) { n -= 4; i = y; }
+    if (y !== 0) {
+      n -= 4;
+      i = y;
+    }
     y = i << 2;
-    if (y !== 0) { n -= 2; i = y; }
+    if (y !== 0) {
+      n -= 2;
+      i = y;
+    }
     return n - ((i << 1) >>> 31);
   }
 
@@ -185,10 +209,22 @@ export class Integer {
   static numberOfLeadingZeros(i: number): number {
     if (i === 0) return 32;
     let n = 1;
-    if (i >>> 16 === 0) { n += 16; i <<= 16; }
-    if (i >>> 24 === 0) { n += 8; i <<= 8; }
-    if (i >>> 28 === 0) { n += 4; i <<= 4; }
-    if (i >>> 30 === 0) { n += 2; i <<= 2; }
+    if (i >>> 16 === 0) {
+      n += 16;
+      i <<= 16;
+    }
+    if (i >>> 24 === 0) {
+      n += 8;
+      i <<= 8;
+    }
+    if (i >>> 28 === 0) {
+      n += 4;
+      i <<= 4;
+    }
+    if (i >>> 30 === 0) {
+      n += 2;
+      i <<= 2;
+    }
     n -= i >>> 31;
     return n;
   }
@@ -230,6 +266,7 @@ export class Integer {
 /**
  * Float utility functions
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class Float {
   static MAX_VALUE = Number.MAX_SAFE_INTEGER;
 
@@ -241,6 +278,7 @@ export class Float {
 /**
  * Long utility functions
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class Long {
   static parseLong(num: string, radix?: number): number {
     return parseInt(num, radix);
@@ -342,7 +380,12 @@ export class CharacterSetECI {
   static readonly Cp1251 = new CharacterSetECI([22], 'Cp1251', 'windows-1251');
   static readonly Cp1252 = new CharacterSetECI([23], 'Cp1252', 'windows-1252');
   static readonly Cp1256 = new CharacterSetECI([24], 'Cp1256', 'windows-1256');
-  static readonly UnicodeBigUnmarked = new CharacterSetECI([25], 'UnicodeBigUnmarked', 'UTF-16BE', 'UnicodeBig');
+  static readonly UnicodeBigUnmarked = new CharacterSetECI(
+    [25],
+    'UnicodeBigUnmarked',
+    'UTF-16BE',
+    'UnicodeBig'
+  );
   static readonly UTF8 = new CharacterSetECI([26], 'UTF-8', 'UTF8');
   static readonly ASCII = new CharacterSetECI([27, 170], 'ASCII', 'US-ASCII');
   static readonly Big5 = new CharacterSetECI([28], 'Big5');
@@ -389,37 +432,38 @@ export class CharacterSetECI {
 /**
  * String encoding/decoding utilities
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class StringEncoding {
   static customDecoder: ((bytes: Uint8Array, encodingName: string) => string) | null = null;
   static customEncoder: ((s: string, encodingName: string) => Uint8Array) | null = null;
 
   static decode(bytes: Uint8Array, encoding: string | CharacterSetECI): string {
-    const encodingName = this.encodingName(encoding);
+    const encodingName = StringEncoding.encodingName(encoding);
 
-    if (this.customDecoder) {
-      return this.customDecoder(bytes, encodingName);
+    if (StringEncoding.customDecoder) {
+      return StringEncoding.customDecoder(bytes, encodingName);
     }
 
-    if (typeof TextDecoder === 'undefined' || this.shouldDecodeOnFallback(encodingName)) {
-      return this.decodeFallback(bytes, encodingName);
+    if (typeof TextDecoder === 'undefined' || StringEncoding.shouldDecodeOnFallback(encodingName)) {
+      return StringEncoding.decodeFallback(bytes, encodingName);
     }
 
     return new TextDecoder(encodingName).decode(bytes);
   }
 
   private static shouldDecodeOnFallback(encodingName: string): boolean {
-    return !this.isBrowser() && encodingName === 'ISO-8859-1';
+    return !StringEncoding.isBrowser() && encodingName === 'ISO-8859-1';
   }
 
   static encode(s: string, encoding: string | CharacterSetECI): Uint8Array {
-    const encodingName = this.encodingName(encoding);
+    const encodingName = StringEncoding.encodingName(encoding);
 
-    if (this.customEncoder) {
-      return this.customEncoder(s, encodingName);
+    if (StringEncoding.customEncoder) {
+      return StringEncoding.customEncoder(s, encodingName);
     }
 
     if (typeof TextEncoder === 'undefined') {
-      return this.encodeFallback(s);
+      return StringEncoding.encodeFallback(s);
     }
 
     return new TextEncoder().encode(s);
@@ -441,29 +485,31 @@ export class StringEncoding {
   }
 
   private static decodeFallback(bytes: Uint8Array, encoding: string | CharacterSetECI): string {
-    const characterSet = this.encodingCharacterSet(encoding);
+    const characterSet = StringEncoding.encodingCharacterSet(encoding);
 
-    if (characterSet && this.isDecodeFallbackSupported(characterSet)) {
+    if (characterSet && StringEncoding.isDecodeFallbackSupported(characterSet)) {
       let s = '';
       for (let i = 0; i < bytes.length; i++) {
         let h = bytes[i].toString(16);
-        if (h.length < 2) h = '0' + h;
-        s += '%' + h;
+        if (h.length < 2) h = `0${h}`;
+        s += `%${h}`;
       }
       return decodeURIComponent(s);
     }
 
-    if (characterSet && characterSet.equals(CharacterSetECI.UnicodeBigUnmarked)) {
+    if (characterSet?.equals(CharacterSetECI.UnicodeBigUnmarked)) {
       return String.fromCharCode.apply(null, Array.from(new Uint16Array(bytes.buffer)));
     }
 
-    throw new Error(`Encoding ${this.encodingName(encoding)} not supported by fallback.`);
+    throw new Error(`Encoding ${StringEncoding.encodingName(encoding)} not supported by fallback.`);
   }
 
   private static isDecodeFallbackSupported(characterSet: CharacterSetECI): boolean {
-    return characterSet.equals(CharacterSetECI.UTF8) ||
+    return (
+      characterSet.equals(CharacterSetECI.UTF8) ||
       characterSet.equals(CharacterSetECI.ISO8859_1) ||
-      characterSet.equals(CharacterSetECI.ASCII);
+      characterSet.equals(CharacterSetECI.ASCII)
+    );
   }
 
   private static encodeFallback(s: string): Uint8Array {
@@ -480,26 +526,24 @@ export class StringEncoding {
 /**
  * String utilities
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class StringUtils {
   static readonly SHIFT_JIS = 'SJIS';
   static readonly GB2312 = 'GB2312';
   static readonly ISO88591 = CharacterSetECI.ISO8859_1;
-  private static readonly EUC_JP = 'EUC_JP';
   private static readonly UTF8 = CharacterSetECI.UTF8;
-  private static readonly PLATFORM_DEFAULT_ENCODING = CharacterSetECI.UTF8;
-  private static readonly ASSUME_SHIFT_JIS = false;
 
   static castAsNonUtf8Char(code: number, encoding: CharacterSetECI): string {
     const bytes = new Uint8Array([code]);
     return StringEncoding.decode(bytes, encoding);
   }
 
-  static guessEncoding(bytes: Uint8Array, hints?: Map<number, any>): string {
+  static guessEncoding(bytes: Uint8Array, _hints?: Map<number, any>): string {
     // Check for BOM
-    if (bytes.length > 2 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+    if (bytes.length > 2 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
       return CharacterSetECI.UTF8.getName();
     }
-    
+
     // Simple heuristic: check for high bytes which would indicate non-ASCII
     let hasHighBytes = false;
     for (let i = 0; i < bytes.length; i++) {
@@ -508,11 +552,11 @@ export class StringUtils {
         break;
       }
     }
-    
+
     if (!hasHighBytes) {
       return CharacterSetECI.ISO8859_1.getName();
     }
-    
+
     // Default to UTF-8
     return CharacterSetECI.UTF8.getName();
   }

@@ -9,8 +9,8 @@
  * the failure is upstream (format/mask selection, traversal, or function-module skipping).
  */
 
-import type { ECCLevelChar } from './types';
 import { RS_BLOCKS } from './decode';
+import type { ECCLevelChar } from './types';
 
 // GF(256) for QR (primitive polynomial 0x11D)
 const GF_EXP = new Uint8Array(512);

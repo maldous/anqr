@@ -9,12 +9,12 @@ import { qrDecoderLog as log } from '../qr-analyzer/logger';
 // Import from canonical source (qr-spec)
 import {
   getVersionFromModuleCount,
-  isStructuralModule,
-  isFinderPattern,
-  isTimingPattern,
-  isFormatInfo,
-  isVersionInfo,
   isAlignmentPattern,
+  isFinderPattern,
+  isFormatInfo,
+  isStructuralModule,
+  isTimingPattern,
+  isVersionInfo,
 } from '../qr-spec';
 import {
   ALPHANUMERIC_CHARS,
@@ -650,7 +650,8 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
           else if (isTimingPattern(row, currentCol, moduleCount)) skipCounts.timing++;
           else if (isFormatInfo(row, currentCol, moduleCount)) skipCounts.format++;
           else if (isVersionInfo(row, currentCol, moduleCount, version)) skipCounts.version++;
-          else if (isAlignmentPattern(row, currentCol, moduleCount, version)) skipCounts.alignment++;
+          else if (isAlignmentPattern(row, currentCol, moduleCount, version))
+            skipCounts.alignment++;
           else if (isDarkModule(row, currentCol)) skipCounts.darkModule++;
           else skipCounts.other++;
         }
@@ -687,10 +688,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
  * Blocks may have different sizes (some have 1 more byte than others).
  * This function reverses the interleaving to get sequential block data.
  */
-function deinterleaveDataCodewords(
-  codewords: number[],
-  rsBlocks: number[][]
-): number[] {
+function deinterleaveDataCodewords(codewords: number[], rsBlocks: number[][]): number[] {
   // Build list of blocks with their data sizes
   const blockSizes: number[] = [];
   for (const blockGroup of rsBlocks) {

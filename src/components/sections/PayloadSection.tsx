@@ -1,7 +1,7 @@
-import { useEffect, useState, useMemo } from 'react';
 import { OpenLocationCode } from 'open-location-code';
-import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { HelpLink } from '@/components/ui/help-link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,42 +18,40 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import i18n from '@/i18n';
 import { HighlightedLabel } from '@/lib/search-context';
+
 import {
   generateEPCSepa,
+  generateMessagingLink,
   generatePayNow,
   generatePIX,
   generatePromptPay,
-  generateUPI,
-  generateMessagingLink,
   generateSocialProfile,
-} from '@/modules/payload-generators';
-import {
+  generateUPI,
+  isNonEmpty,
+  isValidABN,
+  isValidAccountNumber,
+  isValidBankBin,
   isValidCashtag,
   isValidCryptoAddress,
   isValidEmail,
   isValidEthereumAddress,
+  isValidFpsId,
   isValidGTIN,
   isValidIBAN,
   isValidLatitude,
   isValidLightningInvoice,
   isValidLongitude,
+  isValidMerchantId,
   isValidPayPalUsername,
   isValidPhone,
+  isValidProxyValue,
   isValidSSID,
+  isValidStoreId,
   isValidUpiVpa,
   isValidUrl,
   isValidUrlWithScheme,
-  isValidAccountNumber,
-  isValidBankBin,
-  isValidABN,
-  isValidBSB,
-  isValidFpsId,
-  isValidMerchantId,
-  isValidProxyValue,
-  isValidStoreId,
-  isNonEmpty,
-} from '@/modules/payload-generators/utils';
-import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec/constants';
+} from '@/modules/payload-generators';
+import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec';
 import { type PayloadKind, useQRStore } from '@/store/qr-store';
 
 // Global payment methods available to ALL languages in advanced tier
@@ -527,7 +525,15 @@ interface ShortLinkForm {
 // Plus Code Display component - uses proper import and useMemo
 // Always renders with fallback to raw coordinates if Plus Code generation fails
 // Generates SHORT Plus Codes that can be searched in Google Maps with a locality
-function PlusCodeDisplay({ lat, lon, t }: { lat: number; lon: number; t: ReturnType<typeof useTranslation>['t'] }) {
+function PlusCodeDisplay({
+  lat,
+  lon,
+  t,
+}: {
+  lat: number;
+  lon: number;
+  t: ReturnType<typeof useTranslation>['t'];
+}) {
   const { plusCode, shortCode, error } = useMemo(() => {
     try {
       // OpenLocationCode is a class that needs to be instantiated
@@ -535,26 +541,30 @@ function PlusCodeDisplay({ lat, lon, t }: { lat: number; lon: number; t: ReturnT
       // Generate full Plus Code (10 character precision)
       // Full format: "4RJ65XP7+87" = area(4) + local(4) + "+" + suffix(2)
       const fullCode = olc.encode(lat, lon, 10);
-      
+
       // Generate SHORT Plus Code by finding the + sign and taking 4 chars before it
       // Short format: "5XP7+87" = local(4) + "+" + suffix(2)
       // This can be searched in Google Maps with a locality (e.g., "5XP7+87 Melbourne")
       const plusIndex = fullCode.indexOf('+');
       // Take 4 characters before the + sign, plus everything after (including +)
       const shortened = plusIndex >= 4 ? fullCode.substring(plusIndex - 4) : fullCode;
-      
+
       // Debug logging to help diagnose issues
       console.debug('Plus Code debug:', { lat, lon, fullCode, plusIndex, shortCode: shortened });
-      
+
       return { plusCode: fullCode, shortCode: shortened, error: null };
     } catch (e) {
       console.error('Plus Code generation error:', e);
-      return { plusCode: null, shortCode: null, error: e instanceof Error ? e.message : 'Failed to generate Plus Code' };
+      return {
+        plusCode: null,
+        shortCode: null,
+        error: e instanceof Error ? e.message : 'Failed to generate Plus Code',
+      };
     }
   }, [lat, lon]);
 
   // Always generate a Google Maps URL - use full Plus Code for accuracy, otherwise coordinates
-  const googleMapsUrl = plusCode 
+  const googleMapsUrl = plusCode
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`
     : `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
 
@@ -565,7 +575,9 @@ function PlusCodeDisplay({ lat, lon, t }: { lat: number; lon: number; t: ReturnT
   return (
     <div className="space-y-2 pt-2 border-t">
       <Label>
-        <HighlightedLabel>{plusCode ? t('payload.plusCode', 'Plus Code') : t('payload.coordinates', 'Coordinates')}</HighlightedLabel>
+        <HighlightedLabel>
+          {plusCode ? t('payload.plusCode', 'Plus Code') : t('payload.coordinates', 'Coordinates')}
+        </HighlightedLabel>
       </Label>
       <div className="flex items-center gap-2">
         <code className="flex-1 px-3 py-2 bg-muted rounded-md text-sm font-mono overflow-hidden text-ellipsis">
@@ -586,13 +598,15 @@ function PlusCodeDisplay({ lat, lon, t }: { lat: number; lon: number; t: ReturnT
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">
-          {t('hints.plusCodeShort', 'Short Plus Code - search in Google Maps with a city name (e.g., "' + displayText + ' Melbourne").')}
+          {t(
+            'hints.plusCodeShort',
+            `Short Plus Code - search in Google Maps with a city name (e.g., "${displayText} Melbourne").`
+          )}
         </p>
       )}
     </div>
   );
 }
-
 
 export function PayloadSection() {
   const {
@@ -619,7 +633,6 @@ export function PayloadSection() {
     setPayloadSocialProfile,
     setPayloadAppLink,
     setPayloadGS1,
-    setPayloadCloudLink,
     setPayloadCalendarSub,
     setPayloadEventRsvp,
     setPayloadSwissQRBill,
@@ -793,7 +806,6 @@ export function PayloadSection() {
     isLoading: false,
     error: '',
   });
-
 
   // Show startup highlight only once on initial mount
   useEffect(() => {
@@ -1147,7 +1159,10 @@ export function PayloadSection() {
             />
             {payload.validate && payload.url.href && !isValidUrl(payload.url.href) && (
               <p className="text-xs text-destructive">
-                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+                {t(
+                  'validation.invalidUrl',
+                  'Enter a valid URL (must start with http:// or https://)'
+                )}
               </p>
             )}
           </div>
@@ -1166,7 +1181,10 @@ export function PayloadSection() {
           )}
           {tier === 'professional' && (
             <p className="text-xs text-muted-foreground">
-              {t('hints.utmNote', 'For marketing tracking (UTM parameters), use UTM Campaign Link.')}
+              {t(
+                'hints.utmNote',
+                'For marketing tracking (UTM parameters), use UTM Campaign Link.'
+              )}
             </p>
           )}
         </div>
@@ -1307,13 +1325,15 @@ export function PayloadSection() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && payload.geo.query) {
                     e.preventDefault();
-                    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(payload.geo.query)}&format=json&limit=1`)
-                      .then(res => res.json())
-                      .then(data => {
-                        if (data && data[0]) {
-                          setPayloadGeo({ 
-                            lat: Number.parseFloat(data[0].lat), 
-                            lon: Number.parseFloat(data[0].lon) 
+                    fetch(
+                      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(payload.geo.query)}&format=json&limit=1`
+                    )
+                      .then((res) => res.json())
+                      .then((data) => {
+                        if (data?.[0]) {
+                          setPayloadGeo({
+                            lat: Number.parseFloat(data[0].lat),
+                            lon: Number.parseFloat(data[0].lon),
                           });
                         }
                       })
@@ -1327,13 +1347,15 @@ export function PayloadSection() {
                 disabled={!payload.geo.query}
                 onClick={() => {
                   if (payload.geo.query) {
-                    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(payload.geo.query)}&format=json&limit=1`)
-                      .then(res => res.json())
-                      .then(data => {
-                        if (data && data[0]) {
-                          setPayloadGeo({ 
-                            lat: Number.parseFloat(data[0].lat), 
-                            lon: Number.parseFloat(data[0].lon) 
+                    fetch(
+                      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(payload.geo.query)}&format=json&limit=1`
+                    )
+                      .then((res) => res.json())
+                      .then((data) => {
+                        if (data?.[0]) {
+                          setPayloadGeo({
+                            lat: Number.parseFloat(data[0].lat),
+                            lon: Number.parseFloat(data[0].lon),
                           });
                         }
                       })
@@ -1547,16 +1569,20 @@ export function PayloadSection() {
               placeholder="name@anqr.link"
               data-testid="payload-vcard-email-input"
               className={
-                payload.validate && payload.vcard.email?.[0] && !isValidEmail(payload.vcard.email[0])
+                payload.validate &&
+                payload.vcard.email?.[0] &&
+                !isValidEmail(payload.vcard.email[0])
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && payload.vcard.email?.[0] && !isValidEmail(payload.vcard.email[0]) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidEmail', 'Enter a valid email address (must contain @)')}
-              </p>
-            )}
+            {payload.validate &&
+              payload.vcard.email?.[0] &&
+              !isValidEmail(payload.vcard.email[0]) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidEmail', 'Enter a valid email address (must contain @)')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -1576,7 +1602,10 @@ export function PayloadSection() {
             />
             {payload.validate && payload.vcard.url && !isValidUrl(payload.vcard.url) && (
               <p className="text-xs text-destructive">
-                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+                {t(
+                  'validation.invalidUrl',
+                  'Enter a valid URL (must start with http:// or https://)'
+                )}
               </p>
             )}
           </div>
@@ -1933,16 +1962,23 @@ export function PayloadSection() {
               placeholder="https://anqr.link/rsvp/event123"
               data-testid="payload-rsvp-url-input"
               className={
-                payload.validate && payload.eventRsvp.rsvpUrl && !isValidUrl(payload.eventRsvp.rsvpUrl)
+                payload.validate &&
+                payload.eventRsvp.rsvpUrl &&
+                !isValidUrl(payload.eventRsvp.rsvpUrl)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && payload.eventRsvp.rsvpUrl && !isValidUrl(payload.eventRsvp.rsvpUrl) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
-              </p>
-            )}
+            {payload.validate &&
+              payload.eventRsvp.rsvpUrl &&
+              !isValidUrl(payload.eventRsvp.rsvpUrl) && (
+                <p className="text-xs text-destructive">
+                  {t(
+                    'validation.invalidUrl',
+                    'Enter a valid URL (must start with http:// or https://)'
+                  )}
+                </p>
+              )}
           </div>
           <p className="text-xs text-muted-foreground">{t('hints.rsvpNote')}</p>
         </div>
@@ -1962,16 +1998,23 @@ export function PayloadSection() {
               placeholder="webcal://anqr.link/calendar.ics"
               data-testid="payload-calsub-url-input"
               className={
-                payload.validate && payload.calendarSub.url && !isValidUrlWithScheme(payload.calendarSub.url)
+                payload.validate &&
+                payload.calendarSub.url &&
+                !isValidUrlWithScheme(payload.calendarSub.url)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && payload.calendarSub.url && !isValidUrlWithScheme(payload.calendarSub.url) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidCalendarUrl', 'Enter a valid calendar URL (webcal:// or https://)')}
-              </p>
-            )}
+            {payload.validate &&
+              payload.calendarSub.url &&
+              !isValidUrlWithScheme(payload.calendarSub.url) && (
+                <p className="text-xs text-destructive">
+                  {t(
+                    'validation.invalidCalendarUrl',
+                    'Enter a valid calendar URL (webcal:// or https://)'
+                  )}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2001,7 +2044,9 @@ export function PayloadSection() {
             </Label>
             <Select
               value={payload.socialProfile.platform}
-              onValueChange={(v) => setPayloadSocialProfile({ platform: v as typeof payload.socialProfile.platform })}
+              onValueChange={(v) =>
+                setPayloadSocialProfile({ platform: v as typeof payload.socialProfile.platform })
+              }
             >
               <SelectTrigger data-testid="payload-social-platform-select">
                 <SelectValue />
@@ -2025,21 +2070,28 @@ export function PayloadSection() {
             <Input
               value={payload.socialProfile.username || ''}
               onChange={(e) => setPayloadSocialProfile({ username: e.target.value })}
-              placeholder={{
-                linkedin: 'johndoe',
-                twitter: 'johndoe',
-                instagram: 'johndoe',
-                facebook: 'johndoe',
-                tiktok: 'johndoe',
-                youtube: 'johndoe',
-                github: 'johndoe',
-                other: 'username',
-              }[payload.socialProfile.platform] || 'username'}
+              placeholder={
+                {
+                  linkedin: 'johndoe',
+                  twitter: 'johndoe',
+                  instagram: 'johndoe',
+                  facebook: 'johndoe',
+                  tiktok: 'johndoe',
+                  youtube: 'johndoe',
+                  github: 'johndoe',
+                  other: 'username',
+                }[payload.socialProfile.platform] || 'username'
+              }
               data-testid="payload-social-username-input"
             />
             <p className="text-xs text-muted-foreground">
               {t('hints.socialProfileGenerated', 'URL will be generated: ')}
-              {payload.socialProfile.username ? generateSocialProfile(payload.socialProfile.platform, payload.socialProfile.username) : `https://${payload.socialProfile.platform}.com/...`}
+              {payload.socialProfile.username
+                ? generateSocialProfile(
+                    payload.socialProfile.platform,
+                    payload.socialProfile.username
+                  )
+                : `https://${payload.socialProfile.platform}.com/...`}
             </p>
           </div>
         </div>
@@ -2054,7 +2106,9 @@ export function PayloadSection() {
             </Label>
             <Select
               value={payload.messaging.platform}
-              onValueChange={(v) => setPayloadMessaging({ platform: v as typeof payload.messaging.platform })}
+              onValueChange={(v) =>
+                setPayloadMessaging({ platform: v as typeof payload.messaging.platform })
+              }
             >
               <SelectTrigger data-testid="payload-messaging-platform-select">
                 <SelectValue />
@@ -2076,30 +2130,37 @@ export function PayloadSection() {
             <Input
               value={payload.messaging.identifier || ''}
               onChange={(e) => setPayloadMessaging({ identifier: e.target.value })}
-              placeholder={{
-                whatsapp: '+1234567890',
-                telegram: '@username',
-                signal: '+1234567890',
-                viber: '+1234567890',
-                line: '@username',
-                messenger: 'username',
-              }[payload.messaging.platform] || '+1234567890'}
+              placeholder={
+                {
+                  whatsapp: '+1234567890',
+                  telegram: '@username',
+                  signal: '+1234567890',
+                  viber: '+1234567890',
+                  line: '@username',
+                  messenger: 'username',
+                }[payload.messaging.platform] || '+1234567890'
+              }
               data-testid="payload-messaging-identifier-input"
               className={
-                payload.validate && payload.messaging.identifier && 
-                  !isValidPhone(payload.messaging.identifier) && 
-                  !payload.messaging.identifier.startsWith('@')
+                payload.validate &&
+                payload.messaging.identifier &&
+                !isValidPhone(payload.messaging.identifier) &&
+                !payload.messaging.identifier.startsWith('@')
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && payload.messaging.identifier && 
-              !isValidPhone(payload.messaging.identifier) && 
+            {payload.validate &&
+              payload.messaging.identifier &&
+              !isValidPhone(payload.messaging.identifier) &&
               !payload.messaging.identifier.startsWith('@') && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidPhoneOrUsername', 'Enter a valid phone number or @username')}
-              </p>
-            )}
+                <p className="text-xs text-destructive">
+                  {t(
+                    'validation.invalidPhoneOrUsername',
+                    'Enter a valid phone number or @username'
+                  )}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2115,8 +2176,12 @@ export function PayloadSection() {
           </div>
           <p className="text-xs text-muted-foreground">
             {t('hints.messagingLinkGenerated', 'Link: ')}
-            {payload.messaging.identifier 
-              ? generateMessagingLink(payload.messaging.platform, payload.messaging.identifier, payload.messaging.message)
+            {payload.messaging.identifier
+              ? generateMessagingLink(
+                  payload.messaging.platform,
+                  payload.messaging.identifier,
+                  payload.messaging.message
+                )
               : '...'}
           </p>
         </div>
@@ -2153,16 +2218,20 @@ export function PayloadSection() {
               placeholder="Wallet address"
               data-testid="payload-crypto-address-input"
               className={
-                payload.validate && payload.crypto.address && !isValidCryptoAddress(payload.crypto.address, payload.crypto.type)
+                payload.validate &&
+                payload.crypto.address &&
+                !isValidCryptoAddress(payload.crypto.address, payload.crypto.type)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && payload.crypto.address && !isValidCryptoAddress(payload.crypto.address, payload.crypto.type) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidWalletAddress', 'Enter a valid wallet address')}
-              </p>
-            )}
+            {payload.validate &&
+              payload.crypto.address &&
+              !isValidCryptoAddress(payload.crypto.address, payload.crypto.type) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidWalletAddress', 'Enter a valid wallet address')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2362,16 +2431,22 @@ export function PayloadSection() {
               placeholder="201234567X or +65..."
               data-testid="payload-paynow-value-input"
               className={
-                payload.validate && payNowForm.value && payNowForm.type === 'mobile' && !isValidPhone(payNowForm.value)
+                payload.validate &&
+                payNowForm.value &&
+                payNowForm.type === 'mobile' &&
+                !isValidPhone(payNowForm.value)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && payNowForm.value && payNowForm.type === 'mobile' && !isValidPhone(payNowForm.value) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
-              </p>
-            )}
+            {payload.validate &&
+              payNowForm.value &&
+              payNowForm.type === 'mobile' &&
+              !isValidPhone(payNowForm.value) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2434,16 +2509,22 @@ export function PayloadSection() {
               placeholder="0812345678"
               data-testid="payload-promptpay-value-input"
               className={
-                payload.validate && promptPayForm.value && promptPayForm.type === 'mobile' && !isValidPhone(promptPayForm.value)
+                payload.validate &&
+                promptPayForm.value &&
+                promptPayForm.type === 'mobile' &&
+                !isValidPhone(promptPayForm.value)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && promptPayForm.value && promptPayForm.type === 'mobile' && !isValidPhone(promptPayForm.value) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
-              </p>
-            )}
+            {payload.validate &&
+              promptPayForm.value &&
+              promptPayForm.type === 'mobile' &&
+              !isValidPhone(promptPayForm.value) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>
@@ -2537,16 +2618,20 @@ export function PayloadSection() {
                 setSwissQrBillForm({ ...swissQrBillForm, creditorIBAN: e.target.value })
               }
               className={
-                payload.validate && swissQrBillForm.creditorIBAN && !isValidIBAN(swissQrBillForm.creditorIBAN)
+                payload.validate &&
+                swissQrBillForm.creditorIBAN &&
+                !isValidIBAN(swissQrBillForm.creditorIBAN)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && swissQrBillForm.creditorIBAN && !isValidIBAN(swissQrBillForm.creditorIBAN) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidIBAN', 'Enter a valid IBAN')}
-              </p>
-            )}
+            {payload.validate &&
+              swissQrBillForm.creditorIBAN &&
+              !isValidIBAN(swissQrBillForm.creditorIBAN) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidIBAN', 'Enter a valid IBAN')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.beneficiaryName')}</Label>
@@ -2663,18 +2748,25 @@ export function PayloadSection() {
             <Textarea
               placeholder={t('placeholders.lnbcPlaceholder')}
               className={`font-mono text-xs h-24 ${
-                payload.validate && lightningForm.invoice && !isValidLightningInvoice(lightningForm.invoice)
+                payload.validate &&
+                lightningForm.invoice &&
+                !isValidLightningInvoice(lightningForm.invoice)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }`}
               value={lightningForm.invoice}
               onChange={(e) => setLightningForm({ invoice: e.target.value })}
             />
-            {payload.validate && lightningForm.invoice && !isValidLightningInvoice(lightningForm.invoice) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidLightningInvoice', 'Enter a valid Lightning invoice (starts with lnbc)')}
-              </p>
-            )}
+            {payload.validate &&
+              lightningForm.invoice &&
+              !isValidLightningInvoice(lightningForm.invoice) && (
+                <p className="text-xs text-destructive">
+                  {t(
+                    'validation.invalidLightningInvoice',
+                    'Enter a valid Lightning invoice (starts with lnbc)'
+                  )}
+                </p>
+              )}
             <p className="text-xs text-muted-foreground">{t('placeholders.bolt11Hint')}</p>
           </div>
         </div>
@@ -2688,18 +2780,22 @@ export function PayloadSection() {
             <Input
               placeholder={t('placeholders.ethAddressPlaceholder')}
               className={`font-mono ${
-                payload.validate && ethereumForm.targetAddress && !isValidEthereumAddress(ethereumForm.targetAddress)
+                payload.validate &&
+                ethereumForm.targetAddress &&
+                !isValidEthereumAddress(ethereumForm.targetAddress)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }`}
               value={ethereumForm.targetAddress}
               onChange={(e) => setEthereumForm({ ...ethereumForm, targetAddress: e.target.value })}
             />
-            {payload.validate && ethereumForm.targetAddress && !isValidEthereumAddress(ethereumForm.targetAddress) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidEthereumAddress', 'Enter a valid Ethereum address (0x...)')}
-              </p>
-            )}
+            {payload.validate &&
+              ethereumForm.targetAddress &&
+              !isValidEthereumAddress(ethereumForm.targetAddress) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidEthereumAddress', 'Enter a valid Ethereum address (0x...)')}
+                </p>
+              )}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-2">
@@ -2908,16 +3004,20 @@ export function PayloadSection() {
               value={bharatqrForm.merchantVPA}
               onChange={(e) => setBharatqrForm({ ...bharatqrForm, merchantVPA: e.target.value })}
               className={
-                payload.validate && bharatqrForm.merchantVPA && !isValidUpiVpa(bharatqrForm.merchantVPA)
+                payload.validate &&
+                bharatqrForm.merchantVPA &&
+                !isValidUpiVpa(bharatqrForm.merchantVPA)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && bharatqrForm.merchantVPA && !isValidUpiVpa(bharatqrForm.merchantVPA) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidUpiVpa', 'Enter a valid UPI ID (e.g., name@upi)')}
-              </p>
-            )}
+            {payload.validate &&
+              bharatqrForm.merchantVPA &&
+              !isValidUpiVpa(bharatqrForm.merchantVPA) && (
+                <p className="text-xs text-destructive">
+                  {t('validation.invalidUpiVpa', 'Enter a valid UPI ID (e.g., name@upi)')}
+                </p>
+              )}
           </div>
           <div className="space-y-2">
             <Label>{t('payload.merchantName')}</Label>
@@ -2992,7 +3092,10 @@ export function PayloadSection() {
               vietqrForm.accountNumber &&
               !isValidAccountNumber(vietqrForm.accountNumber) && (
                 <p className="text-xs text-destructive">
-                  {t('validation.invalidAccountNumber', 'Enter a valid account number (at least 4 digits)')}
+                  {t(
+                    'validation.invalidAccountNumber',
+                    'Enter a valid account number (at least 4 digits)'
+                  )}
                 </p>
               )}
           </div>
@@ -3041,7 +3144,10 @@ export function PayloadSection() {
               qrphForm.accountNumber &&
               !isValidAccountNumber(qrphForm.accountNumber) && (
                 <p className="text-xs text-destructive">
-                  {t('validation.invalidAccountNumber', 'Enter a valid account number (at least 4 digits)')}
+                  {t(
+                    'validation.invalidAccountNumber',
+                    'Enter a valid account number (at least 4 digits)'
+                  )}
                 </p>
               )}
           </div>
@@ -3199,7 +3305,9 @@ export function PayloadSection() {
               onChange={(e) => setHkqrForm({ ...hkqrForm, amount: e.target.value })}
             />
           </div>
-          <p className="text-xs text-muted-foreground">{t('placeholders.hkqrHint', 'Hong Kong FPS (Faster Payment System) QR code.')}</p>
+          <p className="text-xs text-muted-foreground">
+            {t('placeholders.hkqrHint', 'Hong Kong FPS (Faster Payment System) QR code.')}
+          </p>
         </div>
       )}
 
@@ -3309,7 +3417,10 @@ export function PayloadSection() {
                     ? t('validation.invalidEmail', 'Enter a valid email address (must contain @)')
                     : auspaynetForm.payIdType === 'ABN'
                       ? t('validation.invalidABN', 'Enter a valid ABN (11 digits)')
-                      : t('validation.invalidPhone', 'Enter a valid phone number (at least 3 digits)')}
+                      : t(
+                          'validation.invalidPhone',
+                          'Enter a valid phone number (at least 3 digits)'
+                        )}
                 </p>
               )}
           </div>
@@ -3348,16 +3459,23 @@ export function PayloadSection() {
               value={paypalMeForm.username}
               onChange={(e) => setPaypalMeForm({ ...paypalMeForm, username: e.target.value })}
               className={
-                payload.validate && paypalMeForm.username && !isValidPayPalUsername(paypalMeForm.username)
+                payload.validate &&
+                paypalMeForm.username &&
+                !isValidPayPalUsername(paypalMeForm.username)
                   ? 'border-destructive focus-visible:ring-destructive'
                   : ''
               }
             />
-            {payload.validate && paypalMeForm.username && !isValidPayPalUsername(paypalMeForm.username) && (
-              <p className="text-xs text-destructive">
-                {t('validation.invalidPayPalUsername', 'Enter a valid PayPal.Me username (4-20 alphanumeric characters)')}
-              </p>
-            )}
+            {payload.validate &&
+              paypalMeForm.username &&
+              !isValidPayPalUsername(paypalMeForm.username) && (
+                <p className="text-xs text-destructive">
+                  {t(
+                    'validation.invalidPayPalUsername',
+                    'Enter a valid PayPal.Me username (4-20 alphanumeric characters)'
+                  )}
+                </p>
+              )}
             <p className="text-xs text-muted-foreground">{t('placeholders.paypalMeHint')}</p>
           </div>
           <div className="space-y-2">
@@ -3397,7 +3515,10 @@ export function PayloadSection() {
               />
               {payload.validate && cashappForm.cashtag && !isValidCashtag(cashappForm.cashtag) && (
                 <p className="text-xs text-destructive">
-                  {t('validation.invalidCashtag', 'Enter a valid $cashtag (starts with letter, alphanumeric)')}
+                  {t(
+                    'validation.invalidCashtag',
+                    'Enter a valid $cashtag (starts with letter, alphanumeric)'
+                  )}
                 </p>
               )}
             </div>
@@ -3674,7 +3795,9 @@ export function PayloadSection() {
             <Input
               type="url"
               value={shortLinkForm.longUrl}
-              onChange={(e) => setShortLinkForm(prev => ({ ...prev, longUrl: e.target.value, error: '' }))}
+              onChange={(e) =>
+                setShortLinkForm((prev) => ({ ...prev, longUrl: e.target.value, error: '' }))
+              }
               placeholder="https://example.com/very/long/url/that/needs/shortening"
               data-testid="payload-shortlink-long-input"
             />
@@ -3686,43 +3809,47 @@ export function PayloadSection() {
           <button
             type="button"
             className="w-full px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
-            disabled={!shortLinkForm.longUrl || shortLinkForm.isLoading || !isValidUrl(shortLinkForm.longUrl)}
+            disabled={
+              !shortLinkForm.longUrl ||
+              shortLinkForm.isLoading ||
+              !isValidUrl(shortLinkForm.longUrl)
+            }
             onClick={async () => {
               if (!shortLinkForm.longUrl) return;
-              setShortLinkForm(prev => ({ ...prev, isLoading: true, error: '' }));
-              
+              setShortLinkForm((prev) => ({ ...prev, isLoading: true, error: '' }));
+
               try {
                 let shortUrl = '';
                 const encodedUrl = encodeURIComponent(shortLinkForm.longUrl);
-                
+
                 // TinyURL - the most reliable free URL shortener with browser CORS support
-                const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodedUrl}`);
+                const response = await fetch(
+                  `https://tinyurl.com/api-create.php?url=${encodedUrl}`
+                );
                 if (!response.ok) throw new Error('TinyURL service unavailable');
                 shortUrl = await response.text();
-                
+
                 if (shortUrl.startsWith('http')) {
-                  setShortLinkForm(prev => ({ ...prev, shortUrl, isLoading: false }));
+                  setShortLinkForm((prev) => ({ ...prev, shortUrl, isLoading: false }));
                   setPayloadText(shortUrl.trim());
                 } else {
                   throw new Error('Invalid response from shortener');
                 }
               } catch (err) {
-                setShortLinkForm(prev => ({ 
-                  ...prev, 
-                  isLoading: false, 
-                  error: err instanceof Error ? err.message : 'Failed to shorten URL'
+                setShortLinkForm((prev) => ({
+                  ...prev,
+                  isLoading: false,
+                  error: err instanceof Error ? err.message : 'Failed to shorten URL',
                 }));
               }
             }}
           >
-            {shortLinkForm.isLoading 
-              ? t('actions.shortening', 'Shortening...') 
+            {shortLinkForm.isLoading
+              ? t('actions.shortening', 'Shortening...')
               : t('actions.shortenUrl', 'Shorten URL')}
           </button>
 
-          {shortLinkForm.error && (
-            <p className="text-xs text-destructive">{shortLinkForm.error}</p>
-          )}
+          {shortLinkForm.error && <p className="text-xs text-destructive">{shortLinkForm.error}</p>}
 
           {/* Result */}
           <div className="space-y-2">
@@ -3733,7 +3860,10 @@ export function PayloadSection() {
               type="url"
               value={payload.text}
               onChange={(e) => setPayloadText(e.target.value)}
-              placeholder={t('placeholders.generatedShortUrl', 'Generated short URL will appear here')}
+              placeholder={t(
+                'placeholders.generatedShortUrl',
+                'Generated short URL will appear here'
+              )}
               data-testid="payload-shortlink-input"
               className={
                 payload.validate && payload.text && !isValidUrl(payload.text)
@@ -3744,13 +3874,19 @@ export function PayloadSection() {
             />
             {payload.validate && payload.text && !isValidUrl(payload.text) && (
               <p className="text-xs text-destructive">
-                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+                {t(
+                  'validation.invalidUrl',
+                  'Enter a valid URL (must start with http:// or https://)'
+                )}
               </p>
             )}
           </div>
 
           <p className="text-xs text-muted-foreground">
-            {t('hints.shortLinkAuto', 'Enter a long URL above and click "Shorten URL" to generate a short link.')}
+            {t(
+              'hints.shortLinkAuto',
+              'Enter a long URL above and click "Shorten URL" to generate a short link.'
+            )}
           </p>
         </div>
       )}
@@ -3775,7 +3911,10 @@ export function PayloadSection() {
             />
             {payload.validate && payload.url.href && !isValidUrl(payload.url.href) && (
               <p className="text-xs text-destructive">
-                {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+                {t(
+                  'validation.invalidUrl',
+                  'Enter a valid URL (must start with http:// or https://)'
+                )}
               </p>
             )}
           </div>
@@ -3841,7 +3980,9 @@ export function PayloadSection() {
             </Label>
             <Select
               value={payload.appLink.platform}
-              onValueChange={(v) => setPayloadAppLink({ platform: v as typeof payload.appLink.platform })}
+              onValueChange={(v) =>
+                setPayloadAppLink({ platform: v as typeof payload.appLink.platform })
+              }
             >
               <SelectTrigger data-testid="payload-applink-platform-select">
                 <SelectValue />
@@ -3872,7 +4013,10 @@ export function PayloadSection() {
               />
               {payload.validate && payload.text && !isValidUrl(payload.text) && (
                 <p className="text-xs text-destructive">
-                  {t('validation.invalidUrl', 'Enter a valid URL (must start with http:// or https://)')}
+                  {t(
+                    'validation.invalidUrl',
+                    'Enter a valid URL (must start with http:// or https://)'
+                  )}
                 </p>
               )}
             </div>
@@ -4199,57 +4343,54 @@ export function PayloadSection() {
             />
           </div>
           {/* Max Length Guard Indicator */}
-          {payload.maxLenGuard && (() => {
-            const payloadText = getPayloadText();
-            const byteLength = new TextEncoder().encode(payloadText).length;
-            // Use version from settings, or max (40) if auto (0)
-            const effectiveVersion = qr.version > 0 ? qr.version : 40;
-            const maxCapacity = ECC_CAPACITIES_BYTE[qr.ecc]?.[effectiveVersion - 1] || 2953;
-            const percentage = Math.round((byteLength / maxCapacity) * 100);
-            const isWarning = percentage > 70 && percentage <= 90;
-            const isDanger = percentage > 90;
+          {payload.maxLenGuard &&
+            (() => {
+              const payloadText = getPayloadText();
+              const byteLength = new TextEncoder().encode(payloadText).length;
+              // Use version from settings, or max (40) if auto (0)
+              const effectiveVersion = qr.version > 0 ? qr.version : 40;
+              const maxCapacity = ECC_CAPACITIES_BYTE[qr.ecc]?.[effectiveVersion - 1] || 2953;
+              const percentage = Math.round((byteLength / maxCapacity) * 100);
+              const isWarning = percentage > 70 && percentage <= 90;
+              const isDanger = percentage > 90;
 
-            return (
-              <div className="mt-2 space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    {t('payload.contentSize', 'Content size')}
-                  </span>
-                  <span
-                    className={
-                      isDanger
-                        ? 'text-destructive font-medium'
-                        : isWarning
-                          ? 'text-amber-600 dark:text-amber-400 font-medium'
-                          : 'text-muted-foreground'
-                    }
-                  >
-                    {byteLength} / {maxCapacity} {t('common.bytes', 'bytes')} ({percentage}%)
-                  </span>
+              return (
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {t('payload.contentSize', 'Content size')}
+                    </span>
+                    <span
+                      className={
+                        isDanger
+                          ? 'text-destructive font-medium'
+                          : isWarning
+                            ? 'text-amber-600 dark:text-amber-400 font-medium'
+                            : 'text-muted-foreground'
+                      }
+                    >
+                      {byteLength} / {maxCapacity} {t('common.bytes', 'bytes')} ({percentage}%)
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        isDanger ? 'bg-destructive' : isWarning ? 'bg-amber-500' : 'bg-primary'
+                      }`}
+                      style={{ width: `${Math.min(percentage, 100)}%` }}
+                    />
+                  </div>
+                  {isDanger && (
+                    <p className="text-xs text-destructive">
+                      {t(
+                        'validation.contentTooLong',
+                        'Content may exceed QR capacity. Consider reducing content or lowering ECC level.'
+                      )}
+                    </p>
+                  )}
                 </div>
-                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      isDanger
-                        ? 'bg-destructive'
-                        : isWarning
-                          ? 'bg-amber-500'
-                          : 'bg-primary'
-                    }`}
-                    style={{ width: `${Math.min(percentage, 100)}%` }}
-                  />
-                </div>
-                {isDanger && (
-                  <p className="text-xs text-destructive">
-                    {t(
-                      'validation.contentTooLong',
-                      'Content may exceed QR capacity. Consider reducing content or lowering ECC level.'
-                    )}
-                  </p>
-                )}
-              </div>
-            );
-          })()}
+              );
+            })()}
         </div>
       )}
     </div>

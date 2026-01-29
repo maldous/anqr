@@ -5,14 +5,14 @@
 
 // Shared logger
 import { qrDecoderLog as log } from '../qr-analyzer/logger';
-import { decodeDataCodewordsDetailed, readCodewords, RS_BLOCKS } from './decode';
-import { correctRSCodewords } from './rs-decoder';
+import { getAlignmentPatternCenters } from '../qr-spec';
+import { decodeDataCodewordsDetailed, RS_BLOCKS, readCodewords } from './decode';
 import { calculateLocation, extractModuleMatrix } from './extract';
 import { getECCLevelChar, readFormatInfo, unmaskMatrix } from './format';
 import { findFinderPatterns, selectFinderPatterns } from './locate';
-import type { DecodeResult } from './types';
-import { getAlignmentPatternCenters } from '../qr-spec';
+import { correctRSCodewords } from './rs-decoder';
 import { rsRootabilityFor } from './rs-rootability';
+import type { DecodeResult } from './types';
 
 /**
  * Decode a QR code from ImageData
@@ -123,10 +123,10 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
         for (let dx = -2; dx <= 2; dx++) {
           const r = cy + dy;
           const c = cx + dx;
-            const got = rawMatrix[r]?.[c] ? 1 : 0;
-            const exp = Math.max(Math.abs(dx), Math.abs(dy)) === 2 || (dx === 0 && dy === 0) ? 1 : 0;
-            total++;
-            if (got === exp) good++;
+          const got = rawMatrix[r]?.[c] ? 1 : 0;
+          const exp = Math.max(Math.abs(dx), Math.abs(dy)) === 2 || (dx === 0 && dy === 0) ? 1 : 0;
+          total++;
+          if (got === exp) good++;
           else if (mism.length < 6) mism.push(`(${r},${c}) exp=${exp} got=${got}`);
         }
       }
@@ -137,9 +137,15 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       });
     }
     if (alignmentScores.length) {
-      log('diag', 'Alignment pattern score(s)', { version: versionRounded, scores: alignmentScores });
+      log('diag', 'Alignment pattern score(s)', {
+        version: versionRounded,
+        scores: alignmentScores,
+      });
     } else {
-      log('diag', 'Alignment pattern score(s)', { version: versionRounded, scores: 'none (v1 or finder-overlap only)' });
+      log('diag', 'Alignment pattern score(s)', {
+        version: versionRounded,
+        scores: 'none (v1 or finder-overlap only)',
+      });
     }
 
     // 1) RS rootability across masks 0..7 (without changing anything else).
@@ -162,7 +168,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
         })),
       });
     }
-    log('diag', 'RS rootability sweep (masks 0..7)', { version: versionRounded, ecc: diagEccChar, maskSweep });
+    log('diag', 'RS rootability sweep (masks 0..7)', {
+      version: versionRounded,
+      ecc: diagEccChar,
+      maskSweep,
+    });
     // --------------------------------------------------------------------
 
     // Step 6: Unmask the matrix
@@ -176,11 +186,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     // Get RS block configuration for this version/ECC
     const eccChar = getECCLevelChar(formatInfo.eccLevel) as keyof typeof RS_BLOCKS;
     const rsBlocks = RS_BLOCKS[eccChar]?.[Math.round(version) - 1];
-    
+
     if (!rsBlocks) {
-      log('main', 'Failed: No RS block configuration found', { 
-        version: Math.round(version), 
-        eccLevel: eccChar 
+      log('main', 'Failed: No RS block configuration found', {
+        version: Math.round(version),
+        eccLevel: eccChar,
       });
       return null;
     }
@@ -188,38 +198,38 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     log('main', 'Starting RS error correction', {
       version: Math.round(version),
       eccLevel: eccChar,
-      rsBlocks: rsBlocks.map(b => `${b[0]}x(${b[2]}d+${b[1]-b[2]}e)`).join(', '),
+      rsBlocks: rsBlocks.map((b) => `${b[0]}x(${b[2]}d+${b[1] - b[2]}e)`).join(', '),
       totalCodewords: codewords.length,
     });
 
     // De-interleave and correct each RS block
     let rsResult = correctRSCodewords(codewords, rsBlocks);
     let usedMask = formatInfo.maskPattern;
-    
+
     if (rsResult === null) {
       log('main', 'RS error correction failed with detected mask, trying fallback');
-      
+
       // Use the rootability sweep to find a mask that produces rootable blocks
       // This helps when format info is ambiguous (copies disagreed)
       for (let testMask = 0; testMask < 8; testMask++) {
         if (testMask === formatInfo.maskPattern) continue; // Already tried
-        
+
         const testMatrix = unmaskMatrix(rawMatrix, testMask, location.moduleCount);
         const testCodewords = readCodewords(testMatrix, location.moduleCount);
         const testRsResult = correctRSCodewords(testCodewords, rsBlocks);
-        
+
         if (testRsResult !== null) {
-          log('main', 'Mask fallback SUCCESS', { 
-            originalMask: formatInfo.maskPattern, 
+          log('main', 'Mask fallback SUCCESS', {
+            originalMask: formatInfo.maskPattern,
             workingMask: testMask,
-            corrections: testRsResult.correctionsMade 
+            corrections: testRsResult.correctionsMade,
           });
           rsResult = testRsResult;
           usedMask = testMask;
           break;
         }
       }
-      
+
       if (rsResult === null) {
         log('main', 'Failed: RS error correction failed (too many errors, all masks tried)');
         return null;
@@ -227,11 +237,14 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     }
 
     const { dataCodewords, correctionsMade } = rsResult;
-    
+
     log('main', 'RS correction completed', {
       dataCodewords: dataCodewords.length,
       correctionsMade,
-      first10: dataCodewords.slice(0, 10).map(c => c.toString(16).padStart(2, '0')).join(' '),
+      first10: dataCodewords
+        .slice(0, 10)
+        .map((c) => c.toString(16).padStart(2, '0'))
+        .join(' '),
     });
 
     // Step 9: Decode data

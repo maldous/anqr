@@ -627,7 +627,7 @@ export function Header({
         </div>
       )}
       <header
-        className={`border-b bg-card shadow-md fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${sidebarOpen && isEditor ? 'lg:ms-96' : ''}`}
+        className={`border-b bg-card shadow-lg fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${sidebarOpen && isEditor ? 'lg:ms-96' : ''}`}
         style={{ paddingTop: 'max(var(--sat, 0px), env(safe-area-inset-top, 0px))' }}
       >
         <div className="relative flex items-center h-[52px]">
@@ -667,7 +667,7 @@ export function Header({
             ref={headerScrollRef}
             className="px-2 sm:px-4 flex items-center justify-between w-full h-full overflow-x-auto scrollbar-hide"
           >
-            <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-3 lg:gap-6 shrink-0">
               {/* Settings toggle - only in editor mode, placeholder space on other pages */}
               {isEditor ? (
                 <button
@@ -737,7 +737,7 @@ export function Header({
               </nav>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 shrink-0">
               {/* Gallery Filter - icon buttons right-justified next to dark mode toggle */}
               {isGallery && (
                 <div className="hidden lg:flex items-center gap-1">
@@ -997,7 +997,7 @@ export function Header({
         {/* Mobile Menu - shows when desktop nav is hidden (below lg breakpoint) */}
         {(mobileMenuOpen || isMobileMenuClosing) && (
           <div
-            className={`lg:hidden border-t bg-card p-3 overflow-hidden origin-top ${
+            className={`lg:hidden border-t bg-card shadow-lg p-3 overflow-hidden origin-top ${
               isMobileMenuClosing
                 ? 'animate-[slide-up_0.2s_ease-in_forwards]'
                 : 'animate-[slide-down_0.2s_ease-out_forwards]'
@@ -1009,46 +1009,48 @@ export function Header({
             }}
           >
             <nav className="flex flex-col gap-2">
-              {/* Generator - Full width emphasized */}
-              {(() => {
-                const generatorLink = NAV_LINKS[0];
-                const isActive = generatorLink.page === resolvedPage;
-                const IconComponent = generatorLink.icon;
-                return (
-                  <a
-                    href={generatorLink.href}
-                    className={`w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors ${
-                      isActive
-                        ? 'bg-primary text-primary-foreground font-medium'
-                        : 'bg-muted hover:bg-primary/10 text-foreground font-medium'
-                    }`}
-                    onClick={(e) => {
-                      if (onNavigate) {
-                        e.preventDefault();
-                        onNavigate(generatorLink.page);
-                      }
-                      closeMobileMenu();
-                    }}
-                    title={`Go to ${t(generatorLink.labelKey, generatorLink.defaultLabel)}`}
-                  >
-                    <IconComponent className="w-5 h-5" />
-                    <span className="text-sm">
-                      {t(generatorLink.labelKey, generatorLink.defaultLabel)}
-                    </span>
-                  </a>
-                );
-              })()}
-
-              {/* Remaining items in 3x3 grid */}
-              <div className="grid grid-cols-3 gap-1.5">
-                {NAV_LINKS.slice(1).map((link) => {
+              {/* Generator and Analyze - Half width each */}
+              <div className="grid grid-cols-2 gap-1.5">
+                {NAV_LINKS.slice(0, 2).map((link) => {
                   const isActive = link.page === resolvedPage;
                   const IconComponent = link.icon;
                   return (
                     <a
                       key={link.labelKey}
                       href={link.href}
-                      className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors ${
+                      className={`px-3 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground font-medium'
+                          : 'bg-muted hover:bg-primary/10 text-foreground font-medium'
+                      }`}
+                      onClick={(e) => {
+                        if (onNavigate) {
+                          e.preventDefault();
+                          onNavigate(link.page);
+                        }
+                        closeMobileMenu();
+                      }}
+                      title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                    >
+                      <IconComponent className="w-5 h-5" />
+                      <span className="text-sm">
+                        {t(link.labelKey, link.defaultLabel)}
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+
+              {/* Remaining items in 3x3 grid */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {NAV_LINKS.slice(2).map((link) => {
+                  const isActive = link.page === resolvedPage;
+                  const IconComponent = link.icon;
+                  return (
+                    <a
+                      key={link.labelKey}
+                      href={link.href}
+                      className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm ${
                         isActive
                           ? 'text-foreground bg-muted font-medium'
                           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -1079,7 +1081,7 @@ export function Header({
       {/* On native platforms: position above footer (40px) + AdMob banner (dynamic height) */}
       {isEditor && (
         <div
-          className="md:hidden fixed left-0 right-0 z-50 border-t bg-card p-2"
+          className="md:hidden fixed left-0 right-0 z-50 border-t bg-card p-2 shadow-lg"
           style={{
             bottom: Capacitor.isNativePlatform() ? `${bannerHeight + 40}px` : '48px',
             paddingBottom: Capacitor.isNativePlatform()
@@ -1091,7 +1093,7 @@ export function Header({
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="flex-1 shadow-sm"
               onClick={handleShare}
               title={t('accessibility.copyShareLink')}
             >
@@ -1100,7 +1102,7 @@ export function Header({
             </Button>
             <Button
               size="sm"
-              className="flex-1"
+              className="flex-1 shadow-sm"
               onClick={onExport}
               title={t('accessibility.exportQrCode')}
             >

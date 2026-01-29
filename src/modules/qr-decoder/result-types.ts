@@ -3,9 +3,8 @@
  * Result, ResultPoint, and related types for decode results
  */
 
-import { currentTimeMillis, Float } from './util';
-import { arraycopy } from './util';
 import { MathUtils } from './perspective';
+import { arraycopy, currentTimeMillis, Float } from './util';
 
 /**
  * Barcode format enum
@@ -26,7 +25,7 @@ export enum BarcodeFormat {
   RSS_14 = 'RSS_14',
   RSS_EXPANDED = 'RSS_EXPANDED',
   CODABAR = 'CODABAR',
-  MAXICODE = 'MAXICODE'
+  MAXICODE = 'MAXICODE',
 }
 
 /**
@@ -48,7 +47,7 @@ export enum ResultMetadataType {
   QR_MASK_PATTERN = 12,
   QR_VERSION = 13,
   QR_ERRORS_CORRECTED = 14,
-  QR_ERASURES = 15
+  QR_ERASURES = 15,
 }
 
 /**
@@ -65,14 +64,17 @@ export enum DecodeHintType {
   ASSUME_GS1 = 7,
   RETURN_CODABAR_START_END = 8,
   NEED_RESULT_POINT_CALLBACK = 9,
-  ALLOWED_EAN_EXTENSIONS = 10
+  ALLOWED_EAN_EXTENSIONS = 10,
 }
 
 /**
  * Represents a point of interest in an image
  */
 export class ResultPoint {
-  constructor(private x: number, private y: number) {}
+  constructor(
+    private x: number,
+    private y: number
+  ) {}
 
   getX(): number {
     return this.x;
@@ -94,13 +96,13 @@ export class ResultPoint {
   }
 
   toString(): string {
-    return '(' + this.x + ',' + this.y + ')';
+    return `(${this.x},${this.y})`;
   }
 
   static orderBestPatterns(patterns: ResultPoint[]): void {
-    const zeroOneDistance = this.distance(patterns[0], patterns[1]);
-    const oneTwoDistance = this.distance(patterns[1], patterns[2]);
-    const zeroTwoDistance = this.distance(patterns[0], patterns[2]);
+    const zeroOneDistance = ResultPoint.distance(patterns[0], patterns[1]);
+    const oneTwoDistance = ResultPoint.distance(patterns[1], patterns[2]);
+    const zeroTwoDistance = ResultPoint.distance(patterns[0], patterns[2]);
 
     let pointA: ResultPoint;
     let pointB: ResultPoint;
@@ -120,7 +122,7 @@ export class ResultPoint {
       pointC = patterns[1];
     }
 
-    if (this.crossProductZ(pointA, pointB, pointC) < 0.0) {
+    if (ResultPoint.crossProductZ(pointA, pointB, pointC) < 0.0) {
       const temp = pointA;
       pointA = pointC;
       pointC = temp;
@@ -135,10 +137,14 @@ export class ResultPoint {
     return MathUtils.distance(pattern1.x, pattern1.y, pattern2.x, pattern2.y);
   }
 
-  private static crossProductZ(pointA: ResultPoint, pointB: ResultPoint, pointC: ResultPoint): number {
+  private static crossProductZ(
+    pointA: ResultPoint,
+    pointB: ResultPoint,
+    pointC: ResultPoint
+  ): number {
     const bX = pointB.x;
     const bY = pointB.y;
-    return ((pointC.x - bX) * (pointA.y - bY)) - ((pointC.y - bY) * (pointA.x - bX));
+    return (pointC.x - bX) * (pointA.y - bY) - (pointC.y - bY) * (pointA.x - bX);
   }
 }
 
@@ -157,7 +163,7 @@ export class Result {
     private timestamp: number = currentTimeMillis()
   ) {
     if (numBits === undefined || numBits === null) {
-      this.numBits = (rawBytes === null || rawBytes === undefined) ? 0 : 8 * rawBytes.length;
+      this.numBits = rawBytes === null || rawBytes === undefined ? 0 : 8 * rawBytes.length;
     }
     if (timestamp === undefined || timestamp === null) {
       this.timestamp = currentTimeMillis();

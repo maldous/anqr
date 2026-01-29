@@ -116,7 +116,7 @@ export function generateVCard(params: VCardHelper): string {
 
   // Use CRLF line endings for Android compatibility
   // Also add trailing CRLF as required by some parsers
-  return lines.join('\r\n') + '\r\n';
+  return `${lines.join('\r\n')}\r\n`;
 }
 
 /** Generate MeCard string (Japanese format, more compact than vCard) */

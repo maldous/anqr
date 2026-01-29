@@ -3,8 +3,8 @@
  * BitMatrix and BitArray classes for QR code data representation
  */
 
-import { Arrays, arraycopy, Integer, StringBuilder } from './util';
 import { IllegalArgumentException } from './exceptions';
+import { Arrays, arraycopy, Integer, StringBuilder } from './util';
 
 /**
  * A simple, fast array of bits, represented compactly by an array of ints internally.
@@ -40,15 +40,15 @@ export class BitArray {
   }
 
   get(i: number): boolean {
-    return (this.bits[Math.floor(i / 32)] & (1 << (i & 0x1F))) !== 0;
+    return (this.bits[Math.floor(i / 32)] & (1 << (i & 0x1f))) !== 0;
   }
 
   set(i: number): void {
-    this.bits[Math.floor(i / 32)] |= 1 << (i & 0x1F);
+    this.bits[Math.floor(i / 32)] |= 1 << (i & 0x1f);
   }
 
   flip(i: number): void {
-    this.bits[Math.floor(i / 32)] ^= 1 << (i & 0x1F);
+    this.bits[Math.floor(i / 32)] ^= 1 << (i & 0x1f);
   }
 
   getNextSet(from: number): number {
@@ -57,13 +57,13 @@ export class BitArray {
     const bits = this.bits;
     let bitsOffset = Math.floor(from / 32);
     let currentBits = bits[bitsOffset];
-    currentBits &= ~((1 << (from & 0x1F)) - 1);
+    currentBits &= ~((1 << (from & 0x1f)) - 1);
     const length = bits.length;
     while (currentBits === 0) {
       if (++bitsOffset === length) return size;
       currentBits = bits[bitsOffset];
     }
-    const result = (bitsOffset * 32) + Integer.numberOfTrailingZeros(currentBits);
+    const result = bitsOffset * 32 + Integer.numberOfTrailingZeros(currentBits);
     return result > size ? size : result;
   }
 
@@ -73,13 +73,13 @@ export class BitArray {
     const bits = this.bits;
     let bitsOffset = Math.floor(from / 32);
     let currentBits = ~bits[bitsOffset];
-    currentBits &= ~((1 << (from & 0x1F)) - 1);
+    currentBits &= ~((1 << (from & 0x1f)) - 1);
     const length = bits.length;
     while (currentBits === 0) {
       if (++bitsOffset === length) return size;
       currentBits = ~bits[bitsOffset];
     }
-    const result = (bitsOffset * 32) + Integer.numberOfTrailingZeros(currentBits);
+    const result = bitsOffset * 32 + Integer.numberOfTrailingZeros(currentBits);
     return result > size ? size : result;
   }
 
@@ -97,8 +97,8 @@ export class BitArray {
     const lastInt = Math.floor(end / 32);
     const bits = this.bits;
     for (let i = firstInt; i <= lastInt; i++) {
-      const firstBit = i > firstInt ? 0 : start & 0x1F;
-      const lastBit = i < lastInt ? 31 : end & 0x1F;
+      const firstBit = i > firstInt ? 0 : start & 0x1f;
+      const lastBit = i < lastInt ? 31 : end & 0x1f;
       const mask = (2 << lastBit) - (1 << firstBit);
       bits[i] |= mask;
     }
@@ -121,9 +121,9 @@ export class BitArray {
     const lastInt = Math.floor(end / 32);
     const bits = this.bits;
     for (let i = firstInt; i <= lastInt; i++) {
-      const firstBit = i > firstInt ? 0 : start & 0x1F;
-      const lastBit = i < lastInt ? 31 : end & 0x1F;
-      const mask = (2 << lastBit) - (1 << firstBit) & 0xFFFFFFFF;
+      const firstBit = i > firstInt ? 0 : start & 0x1f;
+      const lastBit = i < lastInt ? 31 : end & 0x1f;
+      const mask = ((2 << lastBit) - (1 << firstBit)) & 0xffffffff;
       if ((bits[i] & mask) !== (value ? mask : 0)) return false;
     }
     return true;
@@ -132,7 +132,7 @@ export class BitArray {
   appendBit(bit: boolean): void {
     this.ensureCapacity(this.size + 1);
     if (bit) {
-      this.bits[Math.floor(this.size / 32)] |= 1 << (this.size & 0x1F);
+      this.bits[Math.floor(this.size / 32)] |= 1 << (this.size & 0x1f);
     }
     this.size++;
   }
@@ -157,7 +157,7 @@ export class BitArray {
 
   xor(other: BitArray): void {
     if (this.size !== other.size) {
-      throw new IllegalArgumentException('Sizes don\'t match');
+      throw new IllegalArgumentException("Sizes don't match");
     }
     const bits = this.bits;
     for (let i = 0; i < bits.length; i++) {
@@ -277,7 +277,11 @@ export class BitMatrix {
     return bits;
   }
 
-  static parseFromString(stringRepresentation: string, setString: string, unsetString: string): BitMatrix {
+  static parseFromString(
+    stringRepresentation: string,
+    setString: string,
+    unsetString: string
+  ): BitMatrix {
     if (stringRepresentation === null) {
       throw new IllegalArgumentException('stringRepresentation cannot be null');
     }
@@ -308,7 +312,9 @@ export class BitMatrix {
         bits[bitsPos] = false;
         bitsPos++;
       } else {
-        throw new IllegalArgumentException('illegal character encountered: ' + stringRepresentation.substring(pos));
+        throw new IllegalArgumentException(
+          `illegal character encountered: ${stringRepresentation.substring(pos)}`
+        );
       }
     }
     if (bitsPos > rowStartPos) {
@@ -333,21 +339,25 @@ export class BitMatrix {
 
   set(x: number, y: number): void {
     const offset = y * this.rowSize + Math.floor(x / 32);
-    this.bits[offset] |= (1 << (x & 0x1f)) & 0xFFFFFFFF;
+    this.bits[offset] |= (1 << (x & 0x1f)) & 0xffffffff;
   }
 
   unset(x: number, y: number): void {
     const offset = y * this.rowSize + Math.floor(x / 32);
-    this.bits[offset] &= ~((1 << (x & 0x1f)) & 0xFFFFFFFF);
+    this.bits[offset] &= ~((1 << (x & 0x1f)) & 0xffffffff);
   }
 
   flip(x: number, y: number): void {
     const offset = y * this.rowSize + Math.floor(x / 32);
-    this.bits[offset] ^= ((1 << (x & 0x1f)) & 0xFFFFFFFF);
+    this.bits[offset] ^= (1 << (x & 0x1f)) & 0xffffffff;
   }
 
   xor(mask: BitMatrix): void {
-    if (this.width !== mask.getWidth() || this.height !== mask.getHeight() || this.rowSize !== mask.getRowSize()) {
+    if (
+      this.width !== mask.getWidth() ||
+      this.height !== mask.getHeight() ||
+      this.rowSize !== mask.getRowSize()
+    ) {
       throw new IllegalArgumentException('input matrix dimensions do not match');
     }
     const rowArray = new BitArray(Math.floor(this.width / 32) + 1);
@@ -381,7 +391,7 @@ export class BitMatrix {
     for (let y = top; y < bottom; y++) {
       const offset = y * this.rowSize;
       for (let x = left; x < right; x++) {
-        this.bits[offset + Math.floor(x / 32)] |= ((1 << (x & 0x1f)) & 0xFFFFFFFF);
+        this.bits[offset + Math.floor(x / 32)] |= (1 << (x & 0x1f)) & 0xffffffff;
       }
     }
   }
@@ -431,13 +441,13 @@ export class BitMatrix {
           if (y > bottom) bottom = y;
           if (x32 * 32 < left) {
             let bit = 0;
-            while (((theBits << (31 - bit)) & 0xFFFFFFFF) === 0) bit++;
-            if ((x32 * 32 + bit) < left) left = x32 * 32 + bit;
+            while (((theBits << (31 - bit)) & 0xffffffff) === 0) bit++;
+            if (x32 * 32 + bit < left) left = x32 * 32 + bit;
           }
           if (x32 * 32 + 31 > right) {
             let bit = 31;
-            while ((theBits >>> bit) === 0) bit--;
-            if ((x32 * 32 + bit) > right) right = x32 * 32 + bit;
+            while (theBits >>> bit === 0) bit--;
+            if (x32 * 32 + bit > right) right = x32 * 32 + bit;
           }
         }
       }
@@ -454,7 +464,7 @@ export class BitMatrix {
     let x = (bitsOffset % this.rowSize) * 32;
     const theBits = this.bits[bitsOffset];
     let bit = 0;
-    while (((theBits << (31 - bit)) & 0xFFFFFFFF) === 0) bit++;
+    while (((theBits << (31 - bit)) & 0xffffffff) === 0) bit++;
     x += bit;
     return Int32Array.from([x, y]);
   }
@@ -467,7 +477,7 @@ export class BitMatrix {
     let x = Math.floor(bitsOffset % this.rowSize) * 32;
     const theBits = this.bits[bitsOffset];
     let bit = 31;
-    while ((theBits >>> bit) === 0) bit--;
+    while (theBits >>> bit === 0) bit--;
     x += bit;
     return Int32Array.from([x, y]);
   }
@@ -486,7 +496,12 @@ export class BitMatrix {
 
   equals(o: any): boolean {
     if (!(o instanceof BitMatrix)) return false;
-    return this.width === o.width && this.height === o.height && this.rowSize === o.rowSize && Arrays.equals(this.bits, o.bits);
+    return (
+      this.width === o.width &&
+      this.height === o.height &&
+      this.rowSize === o.rowSize &&
+      Arrays.equals(this.bits, o.bits)
+    );
   }
 
   hashCode(): number {
@@ -498,7 +513,11 @@ export class BitMatrix {
     return hash;
   }
 
-  toString(setString: string = 'X ', unsetString: string = '  ', lineSeparator: string = '\n'): string {
+  toString(
+    setString: string = 'X ',
+    unsetString: string = '  ',
+    lineSeparator: string = '\n'
+  ): string {
     const result = new StringBuilder();
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
