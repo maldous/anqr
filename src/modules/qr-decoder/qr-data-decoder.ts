@@ -3,12 +3,18 @@
  * Decodes QR code data from bit matrix
  */
 
-import { BitMatrix } from './bit-matrix';
-import { DecoderResult } from './result-types';
-import { FormatException, ChecksumException } from './exceptions';
-import { Version, ErrorCorrectionLevel, FormatInformation, Mode, DataMask } from './qr-version';
+import type { BitMatrix } from './bit-matrix';
+import { ChecksumException, FormatException } from './exceptions';
+import {
+  DataMask,
+  type ErrorCorrectionLevel,
+  FormatInformation,
+  Mode,
+  Version,
+} from './qr-version';
 import { GenericGF, ReedSolomonDecoder } from './reed-solomon';
-import { StringBuilder, CharacterSetECI, StringEncoding, StringUtils } from './util';
+import { DecoderResult } from './result-types';
+import { StringBuilder, StringEncoding, StringUtils } from './util';
 
 /**
  * Parses the QR code bit matrix into format and version info
@@ -49,7 +55,10 @@ export class BitMatrixParser {
       formatInfoBits2 = this.copyBit(i, 8, formatInfoBits2);
     }
 
-    this.parsedFormatInfo = FormatInformation.decodeFormatInformation(formatInfoBits1, formatInfoBits2);
+    this.parsedFormatInfo = FormatInformation.decodeFormatInformation(
+      formatInfoBits1,
+      formatInfoBits2
+    );
     if (this.parsedFormatInfo !== null) return this.parsedFormatInfo;
     throw new FormatException();
   }
@@ -140,7 +149,11 @@ export class BitMatrixParser {
 
   remask(): void {
     if (this.parsedFormatInfo === null) return;
-    DataMask.unmaskBitMatrix(this.bitMatrix, this.bitMatrix.getHeight(), this.parsedFormatInfo.getDataMask());
+    DataMask.unmaskBitMatrix(
+      this.bitMatrix,
+      this.bitMatrix.getHeight(),
+      this.parsedFormatInfo.getDataMask()
+    );
   }
 
   setMirror(mirror: boolean): void {
@@ -230,7 +243,11 @@ export class QRDecoder {
     return result;
   }
 
-  private getDataBlocks(rawCodewords: Uint8Array, version: Version, ecLevel: ErrorCorrectionLevel): { codewords: Int32Array; numDataCodewords: number }[] {
+  private getDataBlocks(
+    rawCodewords: Uint8Array,
+    version: Version,
+    ecLevel: ErrorCorrectionLevel
+  ): { codewords: Int32Array; numDataCodewords: number }[] {
     const ecBlocks = version.getECBlocksForLevel(ecLevel);
     let totalBlocks = 0;
     const ecBlockArray = ecBlocks.getECBlocks();
@@ -246,7 +263,7 @@ export class QRDecoder {
         const numBlockCodewords = ecBlocks.getECCodewordsPerBlock() + numDataCodewords;
         result[numResultBlocks++] = {
           codewords: new Int32Array(numBlockCodewords),
-          numDataCodewords
+          numDataCodewords,
         };
       }
     }
@@ -260,7 +277,8 @@ export class QRDecoder {
     }
     longerBlocksStartAt++;
 
-    const shorterBlocksNumDataCodewords = shorterBlocksTotalCodewords - ecBlocks.getECCodewordsPerBlock();
+    const shorterBlocksNumDataCodewords =
+      shorterBlocksTotalCodewords - ecBlocks.getECCodewordsPerBlock();
     let rawCodewordsOffset = 0;
     for (let i = 0; i < shorterBlocksNumDataCodewords; i++) {
       for (let j = 0; j < numResultBlocks; j++) {
@@ -284,11 +302,11 @@ export class QRDecoder {
     const numCodewords = codewordBytes.length;
     const codewordsInts = new Int32Array(numCodewords);
     for (let i = 0; i < numCodewords; i++) {
-      codewordsInts[i] = codewordBytes[i] & 0xFF;
+      codewordsInts[i] = codewordBytes[i] & 0xff;
     }
     try {
       this.rsDecoder.decode(codewordsInts, codewordBytes.length - numDataCodewords);
-    } catch (rse) {
+    } catch (_rse) {
       throw new ChecksumException();
     }
     for (let i = 0; i < numDataCodewords; i++) {
@@ -296,7 +314,12 @@ export class QRDecoder {
     }
   }
 
-  private decodeData(bytes: Uint8Array, version: Version, ecLevel: ErrorCorrectionLevel, hints?: Map<number, any>): DecoderResult {
+  private decodeData(
+    bytes: Uint8Array,
+    version: Version,
+    ecLevel: ErrorCorrectionLevel,
+    hints?: Map<number, any>
+  ): DecoderResult {
     const bits = new BitSource(bytes);
     const result = new StringBuilder();
     const byteSegments: Uint8Array[] = [];
@@ -321,17 +344,19 @@ export class QRDecoder {
           if (bits.available() < 16) throw new FormatException();
           bits.readBits(16);
           break;
-        case Mode.ECI:
-          const value = this.parseECIValue(bits);
+        case Mode.ECI: {
+          const _value = this.parseECIValue(bits);
           break;
-        case Mode.HANZI:
+        }
+        case Mode.HANZI: {
           const subset = bits.readBits(4);
           const countHanzi = bits.readBits(mode.getCharacterCountBits(version));
           if (subset === 1) {
             this.decodeHanziSegment(bits, result, countHanzi);
           }
           break;
-        default:
+        }
+        default: {
           const count = bits.readBits(mode.getCharacterCountBits(version));
           switch (mode) {
             case Mode.NUMERIC:
@@ -349,22 +374,28 @@ export class QRDecoder {
             default:
               throw new FormatException();
           }
+        }
       }
     } while (mode !== Mode.TERMINATOR);
 
-    return new DecoderResult(bytes, result.toString(), byteSegments.length === 0 ? null : byteSegments, ecLevel.toString());
+    return new DecoderResult(
+      bytes,
+      result.toString(),
+      byteSegments.length === 0 ? null : byteSegments,
+      ecLevel.toString()
+    );
   }
 
   private parseECIValue(bits: BitSource): number {
     const firstByte = bits.readBits(8);
-    if ((firstByte & 0x80) === 0) return firstByte & 0x7F;
-    if ((firstByte & 0xC0) === 0x80) {
+    if ((firstByte & 0x80) === 0) return firstByte & 0x7f;
+    if ((firstByte & 0xc0) === 0x80) {
       const secondByte = bits.readBits(8);
-      return ((firstByte & 0x3F) << 8) | secondByte;
+      return ((firstByte & 0x3f) << 8) | secondByte;
     }
-    if ((firstByte & 0xE0) === 0xC0) {
+    if ((firstByte & 0xe0) === 0xc0) {
       const secondThirdBytes = bits.readBits(16);
-      return ((firstByte & 0x1F) << 16) | secondThirdBytes;
+      return ((firstByte & 0x1f) << 16) | secondThirdBytes;
     }
     throw new FormatException();
   }
@@ -395,7 +426,12 @@ export class QRDecoder {
 
   private static ALPHANUMERIC_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:'.split('');
 
-  private decodeAlphanumericSegment(bits: BitSource, result: StringBuilder, count: number, fc1InEffect: boolean): void {
+  private decodeAlphanumericSegment(
+    bits: BitSource,
+    result: StringBuilder,
+    count: number,
+    fc1InEffect: boolean
+  ): void {
     const start = result.length();
     while (count > 1) {
       if (bits.available() < 11) throw new FormatException();
@@ -414,21 +450,28 @@ export class QRDecoder {
           if (i < result.length() - 1 && result.charAt(i + 1) === '%') {
             result.deleteCharAt(i + 1);
           } else {
-            result.setCharAt(i, String.fromCharCode(0x1D));
+            result.setCharAt(i, String.fromCharCode(0x1d));
           }
         }
       }
     }
   }
 
-  private decodeByteSegment(bits: BitSource, result: StringBuilder, count: number, byteSegments: Uint8Array[], hints?: Map<number, any>): void {
+  private decodeByteSegment(
+    bits: BitSource,
+    result: StringBuilder,
+    count: number,
+    byteSegments: Uint8Array[],
+    hints?: Map<number, any>
+  ): void {
     if (8 * count > bits.available()) throw new FormatException();
     const readBytes = new Uint8Array(count);
     for (let i = 0; i < count; i++) {
       readBytes[i] = bits.readBits(8);
     }
     let encoding: string;
-    if (hints?.has(4)) { // CHARACTER_SET hint
+    if (hints?.has(4)) {
+      // CHARACTER_SET hint
       encoding = hints.get(4);
     } else {
       encoding = StringUtils.guessEncoding(readBytes, hints);
@@ -442,14 +485,14 @@ export class QRDecoder {
     const buffer: number[] = [];
     for (let i = 0; i < count; i++) {
       const twoBytes = bits.readBits(13);
-      let assembledTwoBytes = ((twoBytes / 0xC0) | 0) << 8 | (twoBytes % 0xC0);
-      if (assembledTwoBytes < 0x1F00) {
+      let assembledTwoBytes = (((twoBytes / 0xc0) | 0) << 8) | (twoBytes % 0xc0);
+      if (assembledTwoBytes < 0x1f00) {
         assembledTwoBytes += 0x8140;
       } else {
-        assembledTwoBytes += 0xC140;
+        assembledTwoBytes += 0xc140;
       }
-      buffer.push((assembledTwoBytes >> 8) & 0xFF);
-      buffer.push(assembledTwoBytes & 0xFF);
+      buffer.push((assembledTwoBytes >> 8) & 0xff);
+      buffer.push(assembledTwoBytes & 0xff);
     }
     result.append(StringEncoding.decode(new Uint8Array(buffer), 'SJIS'));
   }
@@ -460,13 +503,13 @@ export class QRDecoder {
     for (let i = 0; i < count; i++) {
       const twoBytes = bits.readBits(13);
       let assembledTwoBytes = (((twoBytes / 0x060) | 0) << 8) | (twoBytes % 0x060);
-      if (assembledTwoBytes < 0x00A00) {
-        assembledTwoBytes += 0x0A1A1;
+      if (assembledTwoBytes < 0x00a00) {
+        assembledTwoBytes += 0x0a1a1;
       } else {
-        assembledTwoBytes += 0x0A6A1;
+        assembledTwoBytes += 0x0a6a1;
       }
-      buffer.push((assembledTwoBytes >> 8) & 0xFF);
-      buffer.push(assembledTwoBytes & 0xFF);
+      buffer.push((assembledTwoBytes >> 8) & 0xff);
+      buffer.push(assembledTwoBytes & 0xff);
     }
     result.append(StringEncoding.decode(new Uint8Array(buffer), 'GB2312'));
   }
@@ -495,7 +538,7 @@ class BitSource {
       const bitsLeft = 8 - this.bitOffset;
       const toRead = Math.min(numBits, bitsLeft);
       const bitsToNotRead = bitsLeft - toRead;
-      const mask = (0xFF >> (8 - toRead)) << bitsToNotRead;
+      const mask = (0xff >> (8 - toRead)) << bitsToNotRead;
       result = (this.bytes[this.byteOffset] & mask) >> bitsToNotRead;
       numBits -= toRead;
       this.bitOffset += toRead;
@@ -507,14 +550,14 @@ class BitSource {
 
     if (numBits > 0) {
       while (numBits >= 8) {
-        result = (result << 8) | (this.bytes[this.byteOffset] & 0xFF);
+        result = (result << 8) | (this.bytes[this.byteOffset] & 0xff);
         this.byteOffset++;
         numBits -= 8;
       }
 
       if (numBits > 0) {
         const bitsToNotRead = 8 - numBits;
-        const mask = (0xFF >> bitsToNotRead) << bitsToNotRead;
+        const mask = (0xff >> bitsToNotRead) << bitsToNotRead;
         result = (result << numBits) | ((this.bytes[this.byteOffset] & mask) >> bitsToNotRead);
         this.bitOffset += numBits;
       }

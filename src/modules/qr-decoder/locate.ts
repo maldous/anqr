@@ -262,7 +262,7 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
           vertical.moduleSize,
           threshold
         );
-        
+
         // Use grid key to deduplicate nearby patterns
         const gridSize = vertical.moduleSize * 5;
         const gridX = Math.round(refined.x / gridSize);
@@ -302,17 +302,31 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
 // Module positions (col, row) in the 7x7 finder pattern
 // Dark 3x3 core: modules (2,2) through (4,4)
 const DARK_CORE_MODULES: ReadonlyArray<[number, number]> = [
-  [2, 2], [3, 2], [4, 2],
-  [2, 3], [3, 3], [4, 3],
-  [2, 4], [3, 4], [4, 4],
+  [2, 2],
+  [3, 2],
+  [4, 2],
+  [2, 3],
+  [3, 3],
+  [4, 3],
+  [2, 4],
+  [3, 4],
+  [4, 4],
 ];
 
 // White ring: modules surrounding the dark core (row 1 and row 5 middle, col 1 and col 5 middle)
 const WHITE_RING_MODULES: ReadonlyArray<[number, number]> = [
-  [1, 2], [1, 3], [1, 4],  // left column of white ring
-  [5, 2], [5, 3], [5, 4],  // right column of white ring
-  [2, 1], [3, 1], [4, 1],  // top row of white ring
-  [2, 5], [3, 5], [4, 5],  // bottom row of white ring
+  [1, 2],
+  [1, 3],
+  [1, 4], // left column of white ring
+  [5, 2],
+  [5, 3],
+  [5, 4], // right column of white ring
+  [2, 1],
+  [3, 1],
+  [4, 1], // top row of white ring
+  [2, 5],
+  [3, 5],
+  [4, 5], // bottom row of white ring
 ];
 
 /**
@@ -367,7 +381,7 @@ function computeFinderContrast(
 /**
  * Score a candidate finder pattern center position by measuring contrast
  * between expected dark (center 3x3) and light (surrounding ring) areas.
- * 
+ *
  * The candidate center (testX, testY) is assumed to be at module position (3.5, 3.5)
  * within the finder pattern. We calculate the finder origin and sample at explicit
  * module center positions to avoid landing on module boundaries.
@@ -434,7 +448,7 @@ function scoreFinderCenter(
 /**
  * Refine a finder pattern center by sampling the expected finder pattern structure
  * and finding the offset that maximizes correlation.
- * 
+ *
  * The finder pattern is 7x7 modules with structure:
  *   1111111  (row 0)
  *   1000001  (row 1)
@@ -443,7 +457,7 @@ function scoreFinderCenter(
  *   1011101  (row 4)
  *   1000001  (row 5)
  *   1111111  (row 6)
- * 
+ *
  * We sample the center 3x3 (should be dark) and surrounding ring (should be light)
  * and find the offset that maximizes the contrast between them.
  */
@@ -459,19 +473,27 @@ function refineFinderPatternCenter(
   // Search radius in pixels (about 2.5 modules to correct for potential larger offsets)
   const searchRadius = Math.ceil(moduleSize * 2.5);
   const step = Math.max(1, Math.floor(moduleSize / 4));
-  
+
   let bestX = centerX;
   let bestY = centerY;
-  const initialScore = scoreFinderCenter(pixels, width, height, centerX, centerY, moduleSize, threshold);
+  const initialScore = scoreFinderCenter(
+    pixels,
+    width,
+    height,
+    centerX,
+    centerY,
+    moduleSize,
+    threshold
+  );
   let bestScore = initialScore;
-  
+
   // Coarse pass: search the area around the detected center
   for (let dy = -searchRadius; dy <= searchRadius; dy += step) {
     for (let dx = -searchRadius; dx <= searchRadius; dx += step) {
       const testX = centerX + dx;
       const testY = centerY + dy;
       const score = scoreFinderCenter(pixels, width, height, testX, testY, moduleSize, threshold);
-      
+
       if (score > bestScore) {
         bestScore = score;
         bestX = testX;
@@ -479,18 +501,18 @@ function refineFinderPatternCenter(
       }
     }
   }
-  
+
   // Fine pass: refine with smaller steps around best position (skip if step is already 1)
   if (step > 1) {
     const fineStep = Math.max(1, Math.floor(step / 2));
     const fineRadius = step * 2;
-    
+
     for (let dy = -fineRadius; dy <= fineRadius; dy += fineStep) {
       for (let dx = -fineRadius; dx <= fineRadius; dx += fineStep) {
         const testX = bestX + dx;
         const testY = bestY + dy;
         const score = scoreFinderCenter(pixels, width, height, testX, testY, moduleSize, threshold);
-        
+
         if (score > bestScore) {
           bestScore = score;
           bestX = testX;
@@ -499,16 +521,23 @@ function refineFinderPatternCenter(
       }
     }
   }
-  
+
   // Log refinement result with diagnostic avgDark/avgLight values
   const deltaX = bestX - centerX;
   const deltaY = bestY - centerY;
   const refined = bestScore > initialScore;
-  
+
   // Compute contrast values at the best position for diagnostic purposes
   const bestContrast = computeFinderContrast(pixels, width, height, bestX, bestY, moduleSize);
-  const originalContrast = computeFinderContrast(pixels, width, height, centerX, centerY, moduleSize);
-  
+  const originalContrast = computeFinderContrast(
+    pixels,
+    width,
+    height,
+    centerX,
+    centerY,
+    moduleSize
+  );
+
   log('locate', 'Finder center refinement', {
     original: `(${centerX.toFixed(1)}, ${centerY.toFixed(1)})`,
     refined: `(${bestX.toFixed(1)}, ${bestY.toFixed(1)})`,
@@ -525,11 +554,12 @@ function refineFinderPatternCenter(
     bestAvgDark: bestContrast.avgDark.toFixed(1),
     bestAvgLight: bestContrast.avgLight.toFixed(1),
     bestContrast: bestContrast.contrast.toFixed(1),
-    note: bestContrast.avgDark > 80 || bestContrast.avgLight < 180 
-      ? 'WARNING: Poor contrast suggests finder center still not accurate'
-      : 'OK - good contrast detected',
+    note:
+      bestContrast.avgDark > 80 || bestContrast.avgLight < 180
+        ? 'WARNING: Poor contrast suggests finder center still not accurate'
+        : 'OK - good contrast detected',
   });
-  
+
   return { x: bestX, y: bestY, score: bestScore };
 }
 

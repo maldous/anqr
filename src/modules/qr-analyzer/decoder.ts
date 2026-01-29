@@ -6,7 +6,7 @@ import { decodeQR } from '../qr-decoder';
 import { detectContentType } from './analyzer-content';
 // Shared logger
 import { disableLogBuffer, enableLogBuffer, flushLogBuffer, qrAnalyzerLog as log } from './logger';
-import type { ContentType, QRAnalysisResult, DecoderMetadata } from './types';
+import type { ContentType, DecoderMetadata, QRAnalysisResult } from './types';
 
 /**
  * Format content type as human-readable label
@@ -137,19 +137,22 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     // Estimate module pixel size from finder pattern distance (for visual analysis only)
     // This does NOT affect version - version ONLY comes from decoder
-    const estimatedModulePx =
-      moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : null;
+    const estimatedModulePx = moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : null;
 
     log('detection', 'Module count from decoder (authoritative)', {
       moduleCount,
       version,
       estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : 'null',
-      source: version !== null ? 'Decoder (authoritative)' : 'NOT DETECTED - will fail reproduction',
+      source:
+        version !== null ? 'Decoder (authoritative)' : 'NOT DETECTED - will fail reproduction',
     });
 
     // Warn if version not detected - reproduction will fail
     if (version === null) {
-      log('detection', 'WARNING: Decoder did not provide version - reproduction will not work correctly');
+      log(
+        'detection',
+        'WARNING: Decoder did not provide version - reproduction will not work correctly'
+      );
     }
 
     // Detect content type

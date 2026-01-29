@@ -8,12 +8,12 @@
  */
 export class DecoderException extends Error {
   static readonly kind: string = 'DecoderException';
-  
+
   constructor(message?: string) {
     super(message);
     this.name = this.constructor.name;
   }
-  
+
   getKind(): string {
     return (this.constructor as typeof DecoderException).kind;
   }
@@ -24,7 +24,7 @@ export class DecoderException extends Error {
  */
 export class NotFoundException extends DecoderException {
   static readonly kind: string = 'NotFoundException';
-  
+
   static getNotFoundInstance(): NotFoundException {
     return new NotFoundException();
   }
@@ -35,7 +35,7 @@ export class NotFoundException extends DecoderException {
  */
 export class FormatException extends DecoderException {
   static readonly kind: string = 'FormatException';
-  
+
   static getFormatInstance(): FormatException {
     return new FormatException();
   }
@@ -46,7 +46,7 @@ export class FormatException extends DecoderException {
  */
 export class ChecksumException extends DecoderException {
   static readonly kind: string = 'ChecksumException';
-  
+
   static getChecksumInstance(): ChecksumException {
     return new ChecksumException();
   }
@@ -92,7 +92,7 @@ export class UnsupportedOperationException extends DecoderException {
  */
 export class ArrayIndexOutOfBoundsException extends DecoderException {
   static readonly kind: string = 'ArrayIndexOutOfBoundsException';
-  
+
   constructor(index?: number | string) {
     super(typeof index === 'number' ? `Index: ${index}` : index);
   }

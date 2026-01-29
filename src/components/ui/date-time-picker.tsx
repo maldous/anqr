@@ -1,13 +1,12 @@
 'use client';
 
-import * as React from 'react';
-import { format, parse } from 'date-fns';
-import { CalendarIcon, Clock } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
-
-import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { CalendarIcon, Clock } from 'lucide-react';
+import * as React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 export interface DateTimePickerProps {
   value: string; // datetime-local format: YYYY-MM-DDTHH:mm
@@ -52,18 +51,18 @@ export function DateTimePicker({
   // Handle date selection from calendar
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
-    
+
     // Preserve the existing time or use current time
     const [hours, minutes] = timeValue.split(':').map(Number);
     date.setHours(hours, minutes, 0, 0);
-    
+
     // Format as datetime-local value
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hour = String(date.getHours()).padStart(2, '0');
     const minute = String(date.getMinutes()).padStart(2, '0');
-    
+
     onChange(`${year}-${month}-${day}T${hour}:${minute}`);
   };
 
@@ -71,21 +70,20 @@ export function DateTimePicker({
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = e.target.value;
     if (!newTime) return;
-    
+
     // Use existing date or today
-    const date = parsedDate && !Number.isNaN(parsedDate.getTime()) 
-      ? new Date(parsedDate) 
-      : new Date();
-    
+    const date =
+      parsedDate && !Number.isNaN(parsedDate.getTime()) ? new Date(parsedDate) : new Date();
+
     const [hours, minutes] = newTime.split(':').map(Number);
     date.setHours(hours, minutes, 0, 0);
-    
+
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hour = String(date.getHours()).padStart(2, '0');
     const minute = String(date.getMinutes()).padStart(2, '0');
-    
+
     onChange(`${year}-${month}-${day}T${hour}:${minute}`);
   };
 
@@ -114,9 +112,7 @@ export function DateTimePicker({
             className
           )}
         >
-          <span className="truncate">
-            {displayValue || placeholder}
-          </span>
+          <span className="truncate">{displayValue || placeholder}</span>
           <CalendarIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </button>
       </Popover.Trigger>
@@ -132,12 +128,7 @@ export function DateTimePicker({
           align="start"
           sideOffset={4}
         >
-          <Calendar
-            mode="single"
-            selected={parsedDate}
-            onSelect={handleDateSelect}
-            initialFocus
-          />
+          <Calendar mode="single" selected={parsedDate} onSelect={handleDateSelect} initialFocus />
           <div className="border-t p-3">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />

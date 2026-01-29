@@ -3,8 +3,13 @@
  * Galois Field arithmetic and Reed-Solomon error correction decoding
  */
 
+import {
+  ArithmeticException,
+  IllegalArgumentException,
+  IllegalStateException,
+  ReedSolomonException,
+} from './exceptions';
 import { arraycopy, Integer } from './util';
-import { IllegalArgumentException, ArithmeticException, ReedSolomonException, IllegalStateException } from './exceptions';
 
 /**
  * Abstract base class for Galois Field operations
@@ -114,7 +119,10 @@ export class GenericGFPoly {
     const lengthDiff = largerCoefficients.length - smallerCoefficients.length;
     arraycopy(largerCoefficients, 0, sumDiff, 0, lengthDiff);
     for (let i = lengthDiff; i < largerCoefficients.length; i++) {
-      sumDiff[i] = AbstractGenericGF.addOrSubtract(smallerCoefficients[i - lengthDiff], largerCoefficients[i]);
+      sumDiff[i] = AbstractGenericGF.addOrSubtract(
+        smallerCoefficients[i - lengthDiff],
+        largerCoefficients[i]
+      );
     }
     return new GenericGFPoly(this.field, sumDiff);
   }
@@ -132,7 +140,10 @@ export class GenericGFPoly {
     for (let i = 0; i < aLength; i++) {
       const aCoeff = aCoefficients[i];
       for (let j = 0; j < bLength; j++) {
-        product[i + j] = AbstractGenericGF.addOrSubtract(product[i + j], this.field.multiply(aCoeff, bCoefficients[j]));
+        product[i + j] = AbstractGenericGF.addOrSubtract(
+          product[i + j],
+          this.field.multiply(aCoeff, bCoefficients[j])
+        );
       }
     }
     return new GenericGFPoly(this.field, product);
@@ -173,7 +184,10 @@ export class GenericGFPoly {
 
     while (remainder.getDegree() >= other.getDegree() && !remainder.isZero()) {
       const degreeDifference = remainder.getDegree() - other.getDegree();
-      const scale = this.field.multiply(remainder.getCoefficient(remainder.getDegree()), inverseDenominatorLeadingTerm);
+      const scale = this.field.multiply(
+        remainder.getCoefficient(remainder.getDegree()),
+        inverseDenominatorLeadingTerm
+      );
       const term = other.multiplyByMonomial(degreeDifference, scale);
       const iterationQuotient = this.field.buildMonomial(degreeDifference, scale);
       quotient = quotient.addOrSubtract(iterationQuotient);
@@ -200,14 +214,14 @@ export class GenericGFPoly {
           } else if (alphaPower === 1) {
             result += 'a';
           } else {
-            result += 'a^' + alphaPower;
+            result += `a^${alphaPower}`;
           }
         }
         if (degree !== 0) {
           if (degree === 1) {
             result += 'x';
           } else {
-            result += 'x^' + degree;
+            result += `x^${degree}`;
           }
         }
       }
@@ -295,7 +309,7 @@ export class GenericGF extends AbstractGenericGF {
   }
 
   toString(): string {
-    return 'GF(0x' + Integer.toHexString(this.primitive) + ',' + this.size + ')';
+    return `GF(0x${Integer.toHexString(this.primitive)},${this.size})`;
   }
 
   equals(o: any): boolean {
@@ -321,7 +335,11 @@ export class ReedSolomonDecoder {
     if (noError) return;
 
     const syndrome = new GenericGFPoly(this.field, syndromeCoefficients);
-    const sigmaOmega = this.runEuclideanAlgorithm(this.field.buildMonomial(twoS, 1), syndrome, twoS);
+    const sigmaOmega = this.runEuclideanAlgorithm(
+      this.field.buildMonomial(twoS, 1),
+      syndrome,
+      twoS
+    );
     const sigma = sigmaOmega[0];
     const omega = sigmaOmega[1];
     const errorLocations = this.findErrorLocations(sigma);
@@ -345,7 +363,7 @@ export class ReedSolomonDecoder {
     let tLast = this.field.getZero();
     let t = this.field.getOne();
 
-    while (r.getDegree() >= (R / 2 | 0)) {
+    while (r.getDegree() >= ((R / 2) | 0)) {
       const rLastLast = rLast;
       const tLastLast = tLast;
       rLast = r;
@@ -394,7 +412,10 @@ export class ReedSolomonDecoder {
     return result;
   }
 
-  private findErrorMagnitudes(errorEvaluator: GenericGFPoly, errorLocations: Int32Array): Int32Array {
+  private findErrorMagnitudes(
+    errorEvaluator: GenericGFPoly,
+    errorLocations: Int32Array
+  ): Int32Array {
     const s = errorLocations.length;
     const result = new Int32Array(s);
     for (let i = 0; i < s; i++) {
@@ -407,7 +428,10 @@ export class ReedSolomonDecoder {
           denominator = this.field.multiply(denominator, termPlus1);
         }
       }
-      result[i] = this.field.multiply(errorEvaluator.evaluateAt(xiInverse), this.field.inverse(denominator));
+      result[i] = this.field.multiply(
+        errorEvaluator.evaluateAt(xiInverse),
+        this.field.inverse(denominator)
+      );
       if (this.field.getGeneratorBase() !== 0) {
         result[i] = this.field.multiply(result[i], xiInverse);
       }

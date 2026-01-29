@@ -3,12 +3,17 @@
  * Main QR code detector using finder patterns
  */
 
-import { BitMatrix } from './bit-matrix';
-import { ResultPoint } from './result-types';
+import type { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
-import { PerspectiveTransform, DefaultGridSampler, MathUtils } from './perspective';
+import {
+  type AlignmentPattern,
+  AlignmentPatternFinder,
+  FinderPatternFinder,
+  type FinderPatternInfo,
+} from './pattern-finder';
+import { DefaultGridSampler, MathUtils, PerspectiveTransform } from './perspective';
 import { Version } from './qr-version';
-import { FinderPattern, FinderPatternFinder, FinderPatternInfo, AlignmentPattern, AlignmentPatternFinder } from './pattern-finder';
+import { ResultPoint } from './result-types';
 
 /**
  * Detector result containing bit matrix and detected points
@@ -63,20 +68,35 @@ export class Detector {
       const bottomRightX = topRight.getX() - topLeft.getX() + bottomLeft.getX();
       const bottomRightY = topRight.getY() - topLeft.getY() + bottomLeft.getY();
       const correctionToTopLeft = 1.0 - 3.0 / modulesBetweenFPCenters;
-      const estAlignmentX = Math.floor(topLeft.getX() + correctionToTopLeft * (bottomRightX - topLeft.getX()));
-      const estAlignmentY = Math.floor(topLeft.getY() + correctionToTopLeft * (bottomRightY - topLeft.getY()));
+      const estAlignmentX = Math.floor(
+        topLeft.getX() + correctionToTopLeft * (bottomRightX - topLeft.getX())
+      );
+      const estAlignmentY = Math.floor(
+        topLeft.getY() + correctionToTopLeft * (bottomRightY - topLeft.getY())
+      );
 
       for (let i = 4; i <= 16; i <<= 1) {
         try {
-          alignmentPattern = this.findAlignmentInRegion(moduleSize, estAlignmentX, estAlignmentY, i);
+          alignmentPattern = this.findAlignmentInRegion(
+            moduleSize,
+            estAlignmentX,
+            estAlignmentY,
+            i
+          );
           break;
-        } catch (re) {
+        } catch (_re) {
           // try next
         }
       }
     }
 
-    const transform = Detector.createTransform(topLeft, topRight, bottomLeft, alignmentPattern, dimension);
+    const transform = Detector.createTransform(
+      topLeft,
+      topRight,
+      bottomLeft,
+      alignmentPattern,
+      dimension
+    );
     const bits = Detector.sampleGrid(this.image, transform, dimension);
 
     let points: ResultPoint[];
@@ -106,25 +126,37 @@ export class Detector {
       sourceBottomRightX = dimMinusThree - 3.0;
       sourceBottomRightY = sourceBottomRightX;
     } else {
-      bottomRightX = (topRight.getX() - topLeft.getX()) + bottomLeft.getX();
-      bottomRightY = (topRight.getY() - topLeft.getY()) + bottomLeft.getY();
+      bottomRightX = topRight.getX() - topLeft.getX() + bottomLeft.getX();
+      bottomRightY = topRight.getY() - topLeft.getY() + bottomLeft.getY();
       sourceBottomRightX = dimMinusThree;
       sourceBottomRightY = dimMinusThree;
     }
 
     return PerspectiveTransform.quadrilateralToQuadrilateral(
-      3.5, 3.5,
-      dimMinusThree, 3.5,
-      sourceBottomRightX, sourceBottomRightY,
-      3.5, dimMinusThree,
-      topLeft.getX(), topLeft.getY(),
-      topRight.getX(), topRight.getY(),
-      bottomRightX, bottomRightY,
-      bottomLeft.getX(), bottomLeft.getY()
+      3.5,
+      3.5,
+      dimMinusThree,
+      3.5,
+      sourceBottomRightX,
+      sourceBottomRightY,
+      3.5,
+      dimMinusThree,
+      topLeft.getX(),
+      topLeft.getY(),
+      topRight.getX(),
+      topRight.getY(),
+      bottomRightX,
+      bottomRightY,
+      bottomLeft.getX(),
+      bottomLeft.getY()
     );
   }
 
-  private static sampleGrid(image: BitMatrix, transform: PerspectiveTransform, dimension: number): BitMatrix {
+  private static sampleGrid(
+    image: BitMatrix,
+    transform: PerspectiveTransform,
+    dimension: number
+  ): BitMatrix {
     const sampler = new DefaultGridSampler();
     return sampler.sampleGridWithTransform(image, dimension, dimension, transform);
   }
@@ -135,8 +167,12 @@ export class Detector {
     bottomLeft: ResultPoint,
     moduleSize: number
   ): number {
-    const tltrCentersDimension = MathUtils.round(ResultPoint.distance(topLeft, topRight) / moduleSize);
-    const tlblCentersDimension = MathUtils.round(ResultPoint.distance(topLeft, bottomLeft) / moduleSize);
+    const tltrCentersDimension = MathUtils.round(
+      ResultPoint.distance(topLeft, topRight) / moduleSize
+    );
+    const tlblCentersDimension = MathUtils.round(
+      ResultPoint.distance(topLeft, bottomLeft) / moduleSize
+    );
     let dimension = Math.floor((tltrCentersDimension + tlblCentersDimension) / 2) + 7;
     switch (dimension & 0x03) {
       case 0:
@@ -151,8 +187,16 @@ export class Detector {
     return dimension;
   }
 
-  protected calculateModuleSize(topLeft: ResultPoint, topRight: ResultPoint, bottomLeft: ResultPoint): number {
-    return (this.calculateModuleSizeOneWay(topLeft, topRight) + this.calculateModuleSizeOneWay(topLeft, bottomLeft)) / 2.0;
+  protected calculateModuleSize(
+    topLeft: ResultPoint,
+    topRight: ResultPoint,
+    bottomLeft: ResultPoint
+  ): number {
+    return (
+      (this.calculateModuleSizeOneWay(topLeft, topRight) +
+        this.calculateModuleSizeOneWay(topLeft, bottomLeft)) /
+      2.0
+    );
   }
 
   private calculateModuleSizeOneWay(pattern: ResultPoint, otherPattern: ResultPoint): number {
@@ -168,12 +212,17 @@ export class Detector {
       Math.floor(pattern.getX()),
       Math.floor(pattern.getY())
     );
-    if (isNaN(moduleSizeEst1)) return moduleSizeEst2 / 7.0;
-    if (isNaN(moduleSizeEst2)) return moduleSizeEst1 / 7.0;
+    if (Number.isNaN(moduleSizeEst1)) return moduleSizeEst2 / 7.0;
+    if (Number.isNaN(moduleSizeEst2)) return moduleSizeEst1 / 7.0;
     return (moduleSizeEst1 + moduleSizeEst2) / 14.0;
   }
 
-  private sizeOfBlackWhiteBlackRunBothWays(fromX: number, fromY: number, toX: number, toY: number): number {
+  private sizeOfBlackWhiteBlackRunBothWays(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number
+  ): number {
     let result = this.sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
     let scale = 1.0;
     let otherToX = fromX - (toX - fromX);

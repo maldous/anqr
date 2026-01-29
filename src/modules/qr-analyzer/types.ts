@@ -136,7 +136,7 @@ export interface QRAnalysisResult {
 
   // Debug
   debugLog?: string;
-  
+
   /** Complete decoder metadata for debugging - authoritative source of truth */
   decoderMetadata?: DecoderMetadata;
 }

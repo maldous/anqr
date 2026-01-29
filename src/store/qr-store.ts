@@ -284,7 +284,15 @@ export interface MessagingHelper {
 
 // Social profile helper
 export interface SocialProfileHelper {
-  platform: 'linkedin' | 'twitter' | 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'github' | 'other';
+  platform:
+    | 'linkedin'
+    | 'twitter'
+    | 'instagram'
+    | 'facebook'
+    | 'tiktok'
+    | 'youtube'
+    | 'github'
+    | 'other';
   username: string;
 }
 
@@ -1034,19 +1042,29 @@ export const useQRStore = create<QRState>((set, get) => ({
   setPayloadBizCard: (bizcard) =>
     set((s) => ({ payload: { ...s.payload, bizcard: { ...s.payload.bizcard, ...bizcard } } })),
   setPayloadMessaging: (messaging) =>
-    set((s) => ({ payload: { ...s.payload, messaging: { ...s.payload.messaging, ...messaging } } })),
+    set((s) => ({
+      payload: { ...s.payload, messaging: { ...s.payload.messaging, ...messaging } },
+    })),
   setPayloadSocialProfile: (socialProfile) =>
-    set((s) => ({ payload: { ...s.payload, socialProfile: { ...s.payload.socialProfile, ...socialProfile } } })),
+    set((s) => ({
+      payload: { ...s.payload, socialProfile: { ...s.payload.socialProfile, ...socialProfile } },
+    })),
   setPayloadAppLink: (appLink) =>
     set((s) => ({ payload: { ...s.payload, appLink: { ...s.payload.appLink, ...appLink } } })),
   setPayloadGS1: (gs1) =>
     set((s) => ({ payload: { ...s.payload, gs1: { ...s.payload.gs1, ...gs1 } } })),
   setPayloadCloudLink: (cloudLink) =>
-    set((s) => ({ payload: { ...s.payload, cloudLink: { ...s.payload.cloudLink, ...cloudLink } } })),
+    set((s) => ({
+      payload: { ...s.payload, cloudLink: { ...s.payload.cloudLink, ...cloudLink } },
+    })),
   setPayloadCalendarSub: (calendarSub) =>
-    set((s) => ({ payload: { ...s.payload, calendarSub: { ...s.payload.calendarSub, ...calendarSub } } })),
+    set((s) => ({
+      payload: { ...s.payload, calendarSub: { ...s.payload.calendarSub, ...calendarSub } },
+    })),
   setPayloadEventRsvp: (eventRsvp) =>
-    set((s) => ({ payload: { ...s.payload, eventRsvp: { ...s.payload.eventRsvp, ...eventRsvp } } })),
+    set((s) => ({
+      payload: { ...s.payload, eventRsvp: { ...s.payload.eventRsvp, ...eventRsvp } },
+    })),
   // Payment setters
   setPayloadSwissQRBill: (swissQRBill) =>
     set((s) => ({
@@ -1535,8 +1553,12 @@ export const useQRStore = create<QRState>((set, get) => ({
             summary: rsvp.summary,
             location: rsvp.location,
             description: rsvp.description
-              ? (rsvp.rsvpUrl ? `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}` : rsvp.description)
-              : (rsvp.rsvpUrl ? `RSVP: ${rsvp.rsvpUrl}` : undefined),
+              ? rsvp.rsvpUrl
+                ? `${rsvp.description}\n\nRSVP: ${rsvp.rsvpUrl}`
+                : rsvp.description
+              : rsvp.rsvpUrl
+                ? `RSVP: ${rsvp.rsvpUrl}`
+                : undefined,
             start: rsvp.start,
             end: rsvp.end,
           });
@@ -1597,10 +1619,9 @@ export const useQRStore = create<QRState>((set, get) => ({
         const app = payload.appLink;
         if (app.platform === 'universal') {
           // Universal link - just use the URL directly
-          let url = app.scheme && app.host 
-            ? `${app.scheme}://${app.host}${app.path || ''}` 
-            : payload.text;
-          if (url && !(url.includes('://'))) {
+          let url =
+            app.scheme && app.host ? `${app.scheme}://${app.host}${app.path || ''}` : payload.text;
+          if (url && !url.includes('://')) {
             url = `https://${url}`;
           }
           return url || '';

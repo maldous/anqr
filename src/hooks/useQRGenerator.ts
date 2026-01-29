@@ -197,15 +197,15 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const animationDirection = useRef<1 | -1>(1);
   const lastFrameTime = useRef(0);
   const animationRef = useRef<number | null>(null);
-  
+
   // Track content that caused overflow to prevent infinite retry loop
   // Using a ref because state updates are async and may not prevent immediate re-calls
   const lastOverflowContentRef = useRef<string | null>(null);
-  
+
   // Additional flag to block generate() - using ref for synchronous checking
   // This is more reliable than state for preventing loops
   const isOverflowBlockedRef = useRef(false);
-  
+
   // State to block generate() calls when we're in an overflow error state
   // This prevents the blur loop by stopping the useEffect from calling generate()
   const [hasOverflowError, setHasOverflowError] = useState(false);
@@ -381,7 +381,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     const _payloadDep = payload;
     return getPayloadText();
   }, [getPayloadText, payload]);
-  
+
   // Longer debounce for content (700ms) to allow typing without blur
   const debouncedContent = useDebounce(rawContent, 700);
 
@@ -390,40 +390,40 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // without manually changing the encoding setting
   const detectedCharacterEncoding = useMemo(() => {
     if (!rawContent) return 'default';
-    
+
     // Helper functions to categorize characters
     // Uniquely Japanese: only found in Japanese text (hiragana, katakana)
     const isUniquelyJapanese = (charCode: number): boolean => {
       // Hiragana: U+3040 - U+309F
-      if (charCode >= 0x3040 && charCode <= 0x309F) return true;
+      if (charCode >= 0x3040 && charCode <= 0x309f) return true;
       // Katakana: U+30A0 - U+30FF
-      if (charCode >= 0x30A0 && charCode <= 0x30FF) return true;
+      if (charCode >= 0x30a0 && charCode <= 0x30ff) return true;
       // Half-width Katakana: U+FF65 - U+FF9F
-      if (charCode >= 0xFF65 && charCode <= 0xFF9F) return true;
+      if (charCode >= 0xff65 && charCode <= 0xff9f) return true;
       return false;
     };
-    
+
     // Shared CJK: characters used in Chinese, Japanese, and Korean
     // Shift-JIS can encode these, but presence alone doesn't indicate Japanese
     const isSharedCJK = (charCode: number): boolean => {
       // CJK Unified Ideographs (Kanji/Hanzi): U+4E00 - U+9FFF
-      if (charCode >= 0x4E00 && charCode <= 0x9FFF) return true;
+      if (charCode >= 0x4e00 && charCode <= 0x9fff) return true;
       // CJK Symbols and Punctuation: U+3000 - U+303F
-      if (charCode >= 0x3000 && charCode <= 0x303F) return true;
+      if (charCode >= 0x3000 && charCode <= 0x303f) return true;
       return false;
     };
-    
+
     let hasUniquelyJapanese = false; // Hiragana, Katakana - definitively Japanese
-    let hasSharedCJK = false;        // Kanji - could be Chinese or Japanese
-    let hasOtherNonLatin1 = false;   // Emojis, Korean, etc.
-    
+    let hasSharedCJK = false; // Kanji - could be Chinese or Japanese
+    let hasOtherNonLatin1 = false; // Emojis, Korean, etc.
+
     // Check each character in the content
     for (let i = 0; i < rawContent.length; i++) {
       const charCode = rawContent.charCodeAt(i);
-      
+
       // Skip characters within Latin-1 range (0-255)
       if (charCode <= 255) continue;
-      
+
       // Categorize the character
       if (isUniquelyJapanese(charCode)) {
         hasUniquelyJapanese = true;
@@ -434,24 +434,24 @@ export function useQRGenerator(): UseQRGeneratorResult {
         hasOtherNonLatin1 = true;
       }
     }
-    
+
     // Priority 1: If content has non-CJK Unicode (emojis, Korean, etc.), use UTF-8
     if (hasOtherNonLatin1) {
       return 'utf8';
     }
-    
+
     // Priority 2: If content has uniquely Japanese chars (hiragana/katakana),
     // use Shift-JIS for efficiency (it's a native QR code encoding mode)
     if (hasUniquelyJapanese) {
       return 'shift-jis';
     }
-    
+
     // Priority 3: If content has only shared CJK (kanji without hiragana/katakana),
     // it's likely Chinese text - use UTF-8 as Shift-JIS may not encode all Chinese chars
     if (hasSharedCJK) {
       return 'utf8';
     }
-    
+
     // Content fits within Latin-1 range, default encoding works
     return 'default';
   }, [rawContent]);
@@ -465,7 +465,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // Only auto-update when character encoding is 'default' (allows auto-detection)
     // If user explicitly set a specific encoding, don't override their choice
     if (qr.characterEncoding !== 'default') return;
-    
+
     // If content requires UTF-8 or Shift-JIS, update the encoding
     if (detectedCharacterEncoding === 'utf8') {
       setQrCharacterEncoding('utf8');
@@ -747,7 +747,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     setHasOverflowError(false);
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only react to rawContent changes, not state changes
-  }, [rawContent]);
+  }, [rawContent, hasOverflowError]);
 
   // Clear error and overflow tracking when debounced content, version, or ECC changes
   // This is a secondary safety net - the rawContent effect above handles the critical path
@@ -756,13 +756,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // Always clear overflow tracking when these deps change - user is trying something different
     lastOverflowContentRef.current = null;
     isOverflowBlockedRef.current = false;
-    
+
     if (error || hasOverflowError) {
       setError(null);
       setHasOverflowError(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only clear error on config change, not when error/hasOverflowError state itself changes
-  }, [debouncedContent, qr.version, qr.ecc]);
+  }, [error, hasOverflowError]);
 
   /**
    * Apply only geometric transforms (crop, fit, rotate, flip) to a canvas.
@@ -1046,12 +1046,14 @@ export function useQRGenerator(): UseQRGeneratorResult {
       typeNumber: debouncedConfig.typeNumber,
       errorCorrection: debouncedConfig.errorCorrection,
     });
-    
+
     // CRITICAL: Check if content has changed from last failed content FIRST
     // This allows retry when user modifies the form (e.g., calendar date changes)
     // Must run before the blocking checks to ensure content changes reset the block
-    if (lastOverflowContentRef.current !== null && 
-        lastOverflowContentRef.current !== debouncedConfig.content) {
+    if (
+      lastOverflowContentRef.current !== null &&
+      lastOverflowContentRef.current !== debouncedConfig.content
+    ) {
       // Content changed - clear overflow blocking to allow retry with new content
       console.warn('[QR DEBUG] Content changed from failed content, clearing block');
       lastOverflowContentRef.current = null;
@@ -1059,13 +1061,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
       setHasOverflowError(false);
       setError(null);
     }
-    
+
     // Now check if we're still blocked (same content that previously failed)
     if (isOverflowBlockedRef.current) {
       console.warn('[QR DEBUG] generate BLOCKED by overflow ref - same content already failed');
       return;
     }
-    
+
     // Check for empty content - don't generate QR if there's nothing to encode
     // This prevents displaying a non-scannable QR code
     // Just show a blank white screen without any text message
@@ -1084,7 +1086,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       }
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -1104,7 +1106,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // Generate QR code with automatic overflow handling
       let result: HTMLCanvasElement | OffscreenCanvas | null = null;
       let usedFallback = false;
-      
+
       try {
         console.warn('[QR DEBUG] Attempting initial QR generation', {
           contentLength: debouncedConfig.content?.length,
@@ -1128,22 +1130,23 @@ export function useQRGenerator(): UseQRGeneratorResult {
           // Order: progressively lower ECC levels for more data capacity
           const currentEcc = debouncedConfig.errorCorrection || 'H';
           const allEccLevels = ['H', 'Q', 'M', 'L'] as const;
-          const eccIndex = allEccLevels.indexOf(currentEcc as typeof allEccLevels[number]);
+          const eccIndex = allEccLevels.indexOf(currentEcc as (typeof allEccLevels)[number]);
           // If original call used auto-version (typeNumber: 0), skip the current ECC level
           // since we already tried it. Otherwise, include current ECC with auto-version.
-          const startIndex = debouncedConfig.typeNumber === 0 
-            ? Math.max(0, eccIndex + 1)  // Skip current ECC, start with next lower
-            : Math.max(0, eccIndex);     // Include current ECC (wasn't tried with auto-version)
+          const startIndex =
+            debouncedConfig.typeNumber === 0
+              ? Math.max(0, eccIndex + 1) // Skip current ECC, start with next lower
+              : Math.max(0, eccIndex); // Include current ECC (wasn't tried with auto-version)
           const eccToTry = allEccLevels.slice(startIndex);
-          
+
           // Safety: ensure we have at least one ECC level to try
           // If startIndex pushed us past all levels, try 'L' as last resort
           if (eccToTry.length === 0) {
             eccToTry.push('L');
           }
-          
+
           let succeeded = false;
-          
+
           console.warn('[QR DEBUG] Trying ECC fallback sequence', { eccToTry, currentEcc });
           for (const ecc of eccToTry) {
             if (succeeded) break;
@@ -1167,12 +1170,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
                 console.info('QR generated with auto-version retry');
               }
             } catch (eccErr) {
-              console.warn(`[QR DEBUG] ECC ${ecc} FAILED`, eccErr instanceof Error ? eccErr.message : eccErr);
-              // Try next ECC level
-              continue;
+              console.warn(
+                `[QR DEBUG] ECC ${ecc} FAILED`,
+                eccErr instanceof Error ? eccErr.message : eccErr
+              );
             }
           }
-          
+
           if (!succeeded) {
             // All attempts failed - content is too long even for max capacity
             console.warn('[QR DEBUG] ALL ECC LEVELS FAILED - setting overflow block', {
@@ -1185,10 +1189,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
             lastOverflowContentRef.current = debouncedConfig.content;
             isOverflowBlockedRef.current = true;
             setHasOverflowError(true);
-            
+
             // Don't throw - just set error and return to avoid triggering catch handlers
             // that might cause additional state changes leading to re-renders
-            setError('Content too long for QR code. Please shorten your content or use a URL shortener.');
+            setError(
+              'Content too long for QR code. Please shorten your content or use a URL shortener.'
+            );
             setIsRendering(false);
             setIsLoading(false);
             return;
@@ -1198,13 +1204,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
           throw initialErr;
         }
       }
-      
+
       // Log if we used fallback settings (for debugging)
       if (usedFallback) {
-        console.debug('QR generated using fallback settings due to content length');  
+        console.debug('QR generated using fallback settings due to content length');
       }
-
-
 
       // Apply watermark if enabled
       if (watermark.enabled && result) {
@@ -1267,13 +1271,17 @@ export function useQRGenerator(): UseQRGeneratorResult {
     } catch (err) {
       console.error('QR generation error:', err);
       const rawMessage = err instanceof Error ? err.message : 'Failed to generate QR code';
-      
+
       // Provide user-friendly error messages for common issues
       let errorMessage = rawMessage;
-      if (rawMessage.includes('code length overflow') || rawMessage.includes('maximum QR code capacity')) {
-        errorMessage = 'Content too long for QR code. Please shorten your content or use a URL shortener.';
+      if (
+        rawMessage.includes('code length overflow') ||
+        rawMessage.includes('maximum QR code capacity')
+      ) {
+        errorMessage =
+          'Content too long for QR code. Please shorten your content or use a URL shortener.';
       }
-      
+
       setError(errorMessage);
       // Don't clear the canvas - keep showing the last valid QR code
       // Dispatch render-complete event with error
@@ -1307,9 +1315,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
     watermark.blend,
     animation.playing,
     animationFrames.length,
-    overlay.file,
-    overlay.mode,
-    rawOverlayCanvas,
+    error,
+    hasOverflowError,
   ]);
 
   // Regenerate when config changes
@@ -1323,7 +1330,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       animationFramesLength: animationFrames.length,
       animationPlaying: animation.playing,
     });
-    
+
     // CRITICAL: Only check the REF, not the state!
     // The rawContent useEffect clears isOverflowBlockedRef synchronously,
     // but setHasOverflowError(false) is async (React batches state updates).
@@ -1345,7 +1352,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // the ref is synchronously updated by the rawContent useEffect, while the
     // state update (setHasOverflowError) is async and may not be flushed yet.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [generate, isAnimationCacheReady, animationFrames.length, animation.playing]);
+  }, [
+    generate,
+    isAnimationCacheReady,
+    animationFrames.length,
+    animation.playing,
+    hasOverflowError,
+  ]);
 
   // Calculate effective frame indices based on startFrame, maxFrames, frameStep, and FPS decimation
   // Works with both GIF compositor and legacy AnimationFrame array

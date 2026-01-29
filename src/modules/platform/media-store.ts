@@ -14,7 +14,23 @@ export interface MediaStoreWriterPlugin {
   }): Promise<{ uri: string; path: string }>;
 }
 
-export const MediaStoreWriter = registerPlugin<MediaStoreWriterPlugin>('MediaStoreWriter');
+// Lazy-loaded plugin instance to avoid circular dependency initialization issues
+// The plugin is only registered when first used, not at module load time
+let _mediaStoreWriter: MediaStoreWriterPlugin | null = null;
+
+function getMediaStoreWriter(): MediaStoreWriterPlugin {
+  if (!_mediaStoreWriter) {
+    _mediaStoreWriter = registerPlugin<MediaStoreWriterPlugin>('MediaStoreWriter');
+  }
+  return _mediaStoreWriter;
+}
+
+/**
+ * @deprecated Use saveBase64ToDocuments instead. This export is kept for backward compatibility.
+ */
+export const MediaStoreWriter: MediaStoreWriterPlugin = {
+  saveBase64ToDocuments: (options) => getMediaStoreWriter().saveBase64ToDocuments(options),
+};
 
 /**
  * Save a base64-encoded file to the Documents folder
@@ -30,7 +46,7 @@ export async function saveBase64ToDocuments(
   mimeType: string,
   subfolder?: string
 ): Promise<{ uri: string; path: string }> {
-  return MediaStoreWriter.saveBase64ToDocuments({
+  return getMediaStoreWriter().saveBase64ToDocuments({
     filename,
     base64Data,
     mimeType,

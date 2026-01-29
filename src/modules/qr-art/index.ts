@@ -1,17 +1,17 @@
 /**
  * QArt Module - Artistic QR Code Generation
- * 
+ *
  * Based on the QArt algorithm by Russ Cox (https://research.swtch.com/qart)
  * Repository: https://github.com/rsc/qr/tree/master/qart
- * 
+ *
  * The QArt technique creates QR codes with embedded images by exploiting
  * Reed-Solomon error correction properties:
- * 
+ *
  * 1. Reed-Solomon codes are systematic and linear over a finite field
  * 2. Valid RS blocks are closed under XOR: b1 ⊕ b2 is valid if both b1, b2 are valid
  * 3. By constructing a basis of RS blocks, we can control individual pixels
  * 4. Gauss-Jordan elimination trades control between data and ECC pixels
- * 
+ *
  * This module provides:
  * - Types for QArt configuration
  * - Pixel mapping between QR modules and image pixels
@@ -108,7 +108,7 @@ export interface QArtResult {
 // CONSTANTS
 // ============================================
 
-/** 
+/**
  * Galois Field GF(2^8) with primitive polynomial x^8 + x^4 + x^3 + x^2 + 1 (0x11D)
  * Used for Reed-Solomon encoding
  */
@@ -199,7 +199,10 @@ export function isAlignmentPattern(
   for (const r of alignmentPositions) {
     for (const c of alignmentPositions) {
       // Skip if overlaps with finder patterns
-      if ((r < 9 && c < 9) || (r < 9 && c > alignmentPositions[alignmentPositions.length - 1] - 9)) {
+      if (
+        (r < 9 && c < 9) ||
+        (r < 9 && c > alignmentPositions[alignmentPositions.length - 1] - 9)
+      ) {
         continue;
       }
       if (row >= r - 2 && row <= r + 2 && col >= c - 2 && col <= c + 2) {
@@ -220,31 +223,31 @@ export function mapImageToTargets(
 ): { targets: boolean[][]; importance: number[][] } {
   const targets: boolean[][] = [];
   const importance: number[][] = [];
-  
+
   const scaleX = image.width / moduleCount;
   const scaleY = image.height / moduleCount;
-  
+
   for (let row = 0; row < moduleCount; row++) {
     targets[row] = [];
     importance[row] = [];
-    
+
     for (let col = 0; col < moduleCount; col++) {
       // Sample the center of each module
       const imgX = Math.floor((col + 0.5) * scaleX);
       const imgY = Math.floor((row + 0.5) * scaleY);
       const idx = (imgY * image.width + imgX) * 4;
-      
+
       // Convert to grayscale
       const gray = (image.data[idx] + image.data[idx + 1] + image.data[idx + 2]) / 3;
-      
+
       // Target is dark if gray is below threshold
       targets[row][col] = gray < threshold;
-      
+
       // Importance based on how far from threshold (higher contrast = more important)
       importance[row][col] = Math.abs(gray - threshold) / 128;
     }
   }
-  
+
   return { targets, importance };
 }
 
@@ -255,7 +258,7 @@ export function mapImageToTargets(
 /**
  * Generate a QArt-compatible URL with numeric fragment
  * The numeric fragment can be manipulated to control pixel patterns
- * 
+ *
  * @param baseUrl The base URL (e.g., "http://example.com/page")
  * @param numericLength Length of the numeric fragment to generate
  * @param seed Optional seed for deterministic generation
@@ -271,20 +274,20 @@ export function generateQArtUrl(
     rng = (rng * 1103515245 + 12345) & 0x7fffffff;
     return rng / 0x7fffffff;
   };
-  
+
   // Generate random numeric string
   let numeric = '';
   for (let i = 0; i < numericLength; i++) {
     numeric += Math.floor(random() * 10).toString();
   }
-  
+
   return `${baseUrl}#${numeric}`;
 }
 
 /**
  * Calculate the bit efficiency of using a numeric fragment
  * vs byte mode for the entire URL
- * 
+ *
  * @param url The URL to analyze
  */
 export function analyzeUrlEfficiency(url: string): {
@@ -297,29 +300,28 @@ export function analyzeUrlEfficiency(url: string): {
   const hashIndex = url.indexOf('#');
   const numericFragment = hashIndex >= 0 ? url.slice(hashIndex + 1) : '';
   const isAllNumeric = /^\d+$/.test(numericFragment);
-  
+
   // Byte mode: 8 bits per character
   const byteModeBits = url.length * 8 + 4 + 16; // +4 mode, +16 length (v10+)
-  
+
   // Mixed mode
   let mixedModeBits = 0;
   if (hashIndex >= 0 && isAllNumeric && numericFragment.length >= 4) {
     // Byte segment for URL prefix
     const prefixLen = hashIndex + 1; // Include the #
     mixedModeBits += 4 + 16 + prefixLen * 8; // mode + length + data
-    
+
     // Numeric segment for fragment
     const numLen = numericFragment.length;
-    const numBits = Math.floor(numLen / 3) * 10 + 
-      (numLen % 3 === 2 ? 7 : numLen % 3 === 1 ? 4 : 0);
+    const numBits = Math.floor(numLen / 3) * 10 + (numLen % 3 === 2 ? 7 : numLen % 3 === 1 ? 4 : 0);
     mixedModeBits += 4 + 14 + numBits; // mode + length + data
   } else {
     mixedModeBits = byteModeBits;
   }
-  
+
   const savings = byteModeBits - mixedModeBits;
   const savingsPercent = (savings / byteModeBits) * 100;
-  
+
   return { byteModeBits, mixedModeBits, savings, savingsPercent };
 }
 
@@ -329,16 +331,13 @@ export function analyzeUrlEfficiency(url: string): {
 
 /**
  * Build Reed-Solomon basis blocks for a given version and ECC level
- * 
+ *
  * TODO: Implement full RS basis generation
  * - For each data bit position, create a block with that bit set to 1
  * - Compute the corresponding ECC bytes
  * - Store the complete block for later XOR operations
  */
-export function buildRSBasis(
-  _version: number,
-  _ecc: ECCLevel
-): RSBasisBlock[] {
+export function buildRSBasis(_version: number, _ecc: ECCLevel): RSBasisBlock[] {
   // Placeholder - full implementation requires:
   // 1. Get RS block structure for version/ECC
   // 2. For each data bit, create basis block
@@ -349,7 +348,7 @@ export function buildRSBasis(
 
 /**
  * Apply Gauss-Jordan elimination to trade pixel control
- * 
+ *
  * TODO: Implement Gauss-Jordan elimination
  * - Build matrix where rows are basis blocks, columns are pixels
  * - Prioritize pixels by importance (from image)
@@ -370,14 +369,15 @@ export function gaussJordanEliminate(
 
 /**
  * Generate a QArt code from configuration
- * 
+ *
  * TODO: Implement full QArt generation
  */
 export function generateQArt(_config: QArtConfig): QArtResult {
   console.warn('[QArt] Full QArt generation not yet implemented');
   return {
     success: false,
-    error: 'QArt generation not yet implemented. Use mixed mode encoding for basic QArt URL support.',
+    error:
+      'QArt generation not yet implemented. Use mixed mode encoding for basic QArt URL support.',
     matchingPixels: 0,
     totalControllable: 0,
     matchPercentage: 0,
@@ -390,23 +390,23 @@ export function generateQArt(_config: QArtConfig): QArtResult {
 
 export default {
   // Types are exported above
-  
+
   // Galois field operations
   gfMul,
   gfAdd,
   gfInv,
-  
+
   // Pixel mapping
   getModuleCount,
   isFinderPattern,
   isTimingPattern,
   isAlignmentPattern,
   mapImageToTargets,
-  
+
   // URL utilities
   generateQArtUrl,
   analyzeUrlEfficiency,
-  
+
   // Future full implementation
   buildRSBasis,
   gaussJordanEliminate,

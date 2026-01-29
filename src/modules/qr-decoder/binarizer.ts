@@ -4,8 +4,8 @@
  */
 
 import { BitArray, BitMatrix } from './bit-matrix';
-import { Binarizer, LuminanceSource } from './luminance';
 import { NotFoundException } from './exceptions';
+import { Binarizer, type LuminanceSource } from './luminance';
 
 /**
  * Global histogram binarizer using image-wide threshold
@@ -53,7 +53,7 @@ export class GlobalHistogramBinarizer extends Binarizer {
       let center = localLuminances[1] & 0xff;
       for (let x = 1; x < width - 1; x++) {
         const right = localLuminances[x + 1] & 0xff;
-        if (((center * 4) - left - right) / 2 < blackPoint) {
+        if ((center * 4 - left - right) / 2 < blackPoint) {
           row.set(x);
         }
         left = center;
@@ -171,10 +171,6 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
 
   private matrix: BitMatrix | null = null;
 
-  constructor(source: LuminanceSource) {
-    super(source);
-  }
-
   getBlackMatrix(): BitMatrix {
     if (this.matrix !== null) {
       return this.matrix;
@@ -188,10 +184,24 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
       if ((width & HybridBinarizer.BLOCK_SIZE_MASK) !== 0) subWidth++;
       let subHeight = height >> HybridBinarizer.BLOCK_SIZE_POWER;
       if ((height & HybridBinarizer.BLOCK_SIZE_MASK) !== 0) subHeight++;
-      const blackPoints = HybridBinarizer.calculateBlackPoints(luminances, subWidth, subHeight, width, height);
+      const blackPoints = HybridBinarizer.calculateBlackPoints(
+        luminances,
+        subWidth,
+        subHeight,
+        width,
+        height
+      );
 
       const newMatrix = new BitMatrix(width, height);
-      HybridBinarizer.calculateThresholdForBlock(luminances, subWidth, subHeight, width, height, blackPoints, newMatrix);
+      HybridBinarizer.calculateThresholdForBlock(
+        luminances,
+        subWidth,
+        subHeight,
+        width,
+        height,
+        blackPoints,
+        newMatrix
+      );
       this.matrix = newMatrix;
     } else {
       this.matrix = super.getBlackMatrix();
@@ -225,7 +235,12 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
         let sum = 0;
         for (let z = -2; z <= 2; z++) {
           const blackRow = blackPoints[top + z];
-          sum += blackRow[left - 2] + blackRow[left - 1] + blackRow[left] + blackRow[left + 1] + blackRow[left + 2];
+          sum +=
+            blackRow[left - 2] +
+            blackRow[left - 1] +
+            blackRow[left] +
+            blackRow[left + 1] +
+            blackRow[left + 2];
         }
         const average = sum / 25;
         HybridBinarizer.thresholdBlock(luminances, xoffset, yoffset, average, width, matrix);
@@ -245,9 +260,13 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     stride: number,
     matrix: BitMatrix
   ): void {
-    for (let y = 0, offset = yoffset * stride + xoffset; y < HybridBinarizer.BLOCK_SIZE; y++, offset += stride) {
+    for (
+      let y = 0, offset = yoffset * stride + xoffset;
+      y < HybridBinarizer.BLOCK_SIZE;
+      y++, offset += stride
+    ) {
       for (let x = 0; x < HybridBinarizer.BLOCK_SIZE; x++) {
-        if ((luminances[offset + x] & 0xFF) <= threshold) {
+        if ((luminances[offset + x] & 0xff) <= threshold) {
           matrix.set(xoffset + x, yoffset + y);
         }
       }
@@ -273,11 +292,15 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
         let xoffset = x << HybridBinarizer.BLOCK_SIZE_POWER;
         if (xoffset > maxXOffset) xoffset = maxXOffset;
         let sum = 0;
-        let min = 0xFF;
+        let min = 0xff;
         let max = 0;
-        for (let yy = 0, offset = yoffset * width + xoffset; yy < HybridBinarizer.BLOCK_SIZE; yy++, offset += width) {
+        for (
+          let yy = 0, offset = yoffset * width + xoffset;
+          yy < HybridBinarizer.BLOCK_SIZE;
+          yy++, offset += width
+        ) {
           for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
-            const pixel = luminances[offset + xx] & 0xFF;
+            const pixel = luminances[offset + xx] & 0xff;
             sum += pixel;
             if (pixel < min) min = pixel;
             if (pixel > max) max = pixel;
@@ -285,7 +308,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
           if (max - min > HybridBinarizer.MIN_DYNAMIC_RANGE) {
             for (yy++, offset += width; yy < HybridBinarizer.BLOCK_SIZE; yy++, offset += width) {
               for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
-                sum += luminances[offset + xx] & 0xFF;
+                sum += luminances[offset + xx] & 0xff;
               }
             }
           }
@@ -296,7 +319,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
           average = min / 2;
           if (y > 0 && x > 0) {
             const averageNeighborBlackPoint =
-              (blackPoints[y - 1][x] + (2 * blackPoints[y][x - 1]) + blackPoints[y - 1][x - 1]) / 4;
+              (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
             if (min < averageNeighborBlackPoint) {
               average = averageNeighborBlackPoint;
             }

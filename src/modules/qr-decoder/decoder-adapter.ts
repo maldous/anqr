@@ -3,14 +3,14 @@
  * Provides DecodeResult interface using consolidated decoder modules.
  */
 
-import { BinaryBitmap, LuminanceSource, RGBALuminanceSource } from './luminance';
-import { HybridBinarizer, GlobalHistogramBinarizer } from './binarizer';
-import { Reader } from './reader';
-import { Result, ResultMetadataType, DecodeHintType } from './result-types';
-import { NotFoundException, FormatException, ChecksumException } from './exceptions';
 import { qrAnalyzerLog as log } from '../qr-analyzer/logger';
+import { GlobalHistogramBinarizer, HybridBinarizer } from './binarizer';
 import { decodeQR as customDecodeQR } from './decode-qr';
-import type { DecodeResult, ECCLevelChar, DecoderMetadata } from './types';
+import { ChecksumException, FormatException, NotFoundException } from './exceptions';
+import { BinaryBitmap, type LuminanceSource, RGBALuminanceSource } from './luminance';
+import { Reader } from './reader';
+import { DecodeHintType, type Result, ResultMetadataType } from './result-types';
+import type { DecodeResult, DecoderMetadata, ECCLevelChar } from './types';
 
 /**
  * Create luminance source from ImageData with transparency handling
@@ -18,12 +18,12 @@ import type { DecodeResult, ECCLevelChar, DecoderMetadata } from './types';
 function createLuminanceSource(imageData: ImageData): LuminanceSource {
   const { data, width, height } = imageData;
   const luminances = new Uint8ClampedArray(width * height);
-  
+
   // Convert RGBA to grayscale, compositing over white for transparency
   for (let i = 0; i < width * height; i++) {
     const idx = i * 4;
     const a = data[idx + 3] / 255;
-    
+
     if (a <= 0) {
       // Fully transparent = white
       luminances[i] = 255;
@@ -43,7 +43,7 @@ function createLuminanceSource(imageData: ImageData): LuminanceSource {
       luminances[i] = Math.round((r + 2 * g + b) / 4);
     }
   }
-  
+
   return new RGBALuminanceSource(luminances, width, height);
 }
 
@@ -142,13 +142,17 @@ function tryDecodeWithGlobalBinarizer(
 function extractDecodeResult(result: Result, imageData: ImageData): DecodeResult {
   const text = result.getText();
   const metadata = result.getResultMetadata();
-  
-  const eccLevel = (metadata?.get(ResultMetadataType.ERROR_CORRECTION_LEVEL) as ECCLevelChar) || null;
-  const maskPattern = metadata?.get(ResultMetadataType.QR_MASK_PATTERN) as number | undefined ?? null;
+
+  const eccLevel =
+    (metadata?.get(ResultMetadataType.ERROR_CORRECTION_LEVEL) as ECCLevelChar) || null;
+  const maskPattern =
+    (metadata?.get(ResultMetadataType.QR_MASK_PATTERN) as number | undefined) ?? null;
   const versionFromMetadata = metadata?.get(ResultMetadataType.QR_VERSION) as number | undefined;
-  const orientation = metadata?.get(ResultMetadataType.ORIENTATION) as number | undefined ?? null;
-  const structuredAppendSequence = metadata?.get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE) as number | undefined ?? null;
-  const structuredAppendParity = metadata?.get(ResultMetadataType.STRUCTURED_APPEND_PARITY) as number | undefined ?? null;
+  const orientation = (metadata?.get(ResultMetadataType.ORIENTATION) as number | undefined) ?? null;
+  const structuredAppendSequence =
+    (metadata?.get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE) as number | undefined) ?? null;
+  const structuredAppendParity =
+    (metadata?.get(ResultMetadataType.STRUCTURED_APPEND_PARITY) as number | undefined) ?? null;
 
   const byteSegments = metadata?.get(ResultMetadataType.BYTE_SEGMENTS) as Uint8Array[] | undefined;
   let dataBytes: Uint8Array | null = null;
@@ -175,34 +179,62 @@ function extractDecodeResult(result: Result, imageData: ImageData): DecodeResult
       bottomLeftCorner: { x: points[0].getX(), y: points[0].getY() },
       topLeftCorner: { x: points[1].getX(), y: points[1].getY() },
       topRightCorner: { x: points[2].getX(), y: points[2].getY() },
-      bottomRightCorner: points.length >= 4 
-        ? { x: points[3].getX(), y: points[3].getY() }
-        : { x: points[2].getX() - points[1].getX() + points[0].getX(), 
-            y: points[2].getY() - points[1].getY() + points[0].getY() },
+      bottomRightCorner:
+        points.length >= 4
+          ? { x: points[3].getX(), y: points[3].getY() }
+          : {
+              x: points[2].getX() - points[1].getX() + points[0].getX(),
+              y: points[2].getY() - points[1].getY() + points[0].getY(),
+            },
     };
   }
 
-  const version = typeof versionFromMetadata === 'number' && versionFromMetadata >= 1 && versionFromMetadata <= 40
-    ? versionFromMetadata : null;
+  const version =
+    typeof versionFromMetadata === 'number' && versionFromMetadata >= 1 && versionFromMetadata <= 40
+      ? versionFromMetadata
+      : null;
   const numBits = result.getNumBits() || null;
-  const errorsCorrectedFromMeta = metadata?.get(ResultMetadataType.QR_ERRORS_CORRECTED) as number | undefined;
+  const errorsCorrectedFromMeta = metadata?.get(ResultMetadataType.QR_ERRORS_CORRECTED) as
+    | number
+    | undefined;
   const erasuresFromMeta = metadata?.get(ResultMetadataType.QR_ERASURES) as number | undefined;
-  const errorsCorrected: number | null = typeof errorsCorrectedFromMeta === 'number' ? errorsCorrectedFromMeta : null;
+  const errorsCorrected: number | null =
+    typeof errorsCorrectedFromMeta === 'number' ? errorsCorrectedFromMeta : null;
   const erasures: number | null = typeof erasuresFromMeta === 'number' ? erasuresFromMeta : null;
   const encodingMode = detectEncodingMode(text);
 
   const decoderMetadata: DecoderMetadata = {
-    version, maskPattern, eccLevel, errorsCorrected, erasures, numBits, orientation,
-    structuredAppendSequence, structuredAppendParity,
+    version,
+    maskPattern,
+    eccLevel,
+    errorsCorrected,
+    erasures,
+    numBits,
+    orientation,
+    structuredAppendSequence,
+    structuredAppendParity,
     hasStructuredAppend: structuredAppendSequence !== null && structuredAppendSequence >= 0,
     byteSegmentCount: byteSegments?.length ?? 0,
     totalByteLength: dataBytes?.length ?? 0,
   };
 
   return {
-    success: true, data: text, dataBytes, error: null, location, version, eccLevel, maskPattern,
-    encodingMode, errorsCorrected, erasures, orientation, numBits,
-    structuredAppendSequence, structuredAppendParity, decoderMetadata,
+    success: true,
+    data: text,
+    dataBytes,
+    error: null,
+    location,
+    version,
+    eccLevel,
+    maskPattern,
+    encodingMode,
+    errorsCorrected,
+    erasures,
+    orientation,
+    numBits,
+    structuredAppendSequence,
+    structuredAppendParity,
+    decoderMetadata,
   };
 }
 
@@ -215,7 +247,11 @@ function tryDecode(
   invert: boolean,
   hints?: Map<DecodeHintType, any>
 ): DecodeResult | null {
-  const hintDesc = hints ? Array.from(hints.keys()).map(k => DecodeHintType[k]).join('+') : 'none';
+  const hintDesc = hints
+    ? Array.from(hints.keys())
+        .map((k) => DecodeHintType[k])
+        .join('+')
+    : 'none';
   log('decoder', 'Starting decode attempt', {
     width: imageData.width,
     height: imageData.height,
@@ -241,25 +277,32 @@ function tryDecode(
 
     // Extract ALL metadata from Result - this is the authoritative source of truth
     const metadata = result.getResultMetadata();
-    
+
     // ECC level from format info (authoritative)
-    const eccLevel = (metadata?.get(ResultMetadataType.ERROR_CORRECTION_LEVEL) as ECCLevelChar) || null;
+    const eccLevel =
+      (metadata?.get(ResultMetadataType.ERROR_CORRECTION_LEVEL) as ECCLevelChar) || null;
 
     // Mask pattern from format info (authoritative)
-    const maskPattern = metadata?.get(ResultMetadataType.QR_MASK_PATTERN) as number | undefined ?? null;
+    const maskPattern =
+      (metadata?.get(ResultMetadataType.QR_MASK_PATTERN) as number | undefined) ?? null;
 
     // Version from format/version info (authoritative)
     const versionFromMetadata = metadata?.get(ResultMetadataType.QR_VERSION) as number | undefined;
-    
+
     // Orientation in degrees (if detected)
-    const orientation = metadata?.get(ResultMetadataType.ORIENTATION) as number | undefined ?? null;
-    
+    const orientation =
+      (metadata?.get(ResultMetadataType.ORIENTATION) as number | undefined) ?? null;
+
     // Structured append info
-    const structuredAppendSequence = metadata?.get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE) as number | undefined ?? null;
-    const structuredAppendParity = metadata?.get(ResultMetadataType.STRUCTURED_APPEND_PARITY) as number | undefined ?? null;
+    const structuredAppendSequence =
+      (metadata?.get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE) as number | undefined) ?? null;
+    const structuredAppendParity =
+      (metadata?.get(ResultMetadataType.STRUCTURED_APPEND_PARITY) as number | undefined) ?? null;
 
     // Byte segments from metadata
-    const byteSegments = metadata?.get(ResultMetadataType.BYTE_SEGMENTS) as Uint8Array[] | undefined;
+    const byteSegments = metadata?.get(ResultMetadataType.BYTE_SEGMENTS) as
+      | Uint8Array[]
+      | undefined;
     let dataBytes: Uint8Array | null = null;
     if (byteSegments && byteSegments.length > 0) {
       // Concatenate all byte segments
@@ -283,33 +326,42 @@ function tryDecode(
       bottomLeftCorner: { x: 0, y: imageData.height },
       bottomRightCorner: { x: imageData.width, y: imageData.height },
     };
-    
+
     if (points && points.length >= 3) {
       // Points are in order: bottomLeft, topLeft, topRight, [alignmentPattern]
       location = {
         bottomLeftCorner: { x: points[0].getX(), y: points[0].getY() },
         topLeftCorner: { x: points[1].getX(), y: points[1].getY() },
         topRightCorner: { x: points[2].getX(), y: points[2].getY() },
-        bottomRightCorner: points.length >= 4 
-          ? { x: points[3].getX(), y: points[3].getY() }
-          : { x: points[2].getX() - points[1].getX() + points[0].getX(), 
-              y: points[2].getY() - points[1].getY() + points[0].getY() },
+        bottomRightCorner:
+          points.length >= 4
+            ? { x: points[3].getX(), y: points[3].getY() }
+            : {
+                x: points[2].getX() - points[1].getX() + points[0].getX(),
+                y: points[2].getY() - points[1].getY() + points[0].getY(),
+              },
       };
     }
 
     // Version must come from metadata - not estimated
     // If decoder couldn't determine the version from format/version info, return null
-    const version = typeof versionFromMetadata === 'number' && versionFromMetadata >= 1 && versionFromMetadata <= 40
-      ? versionFromMetadata
-      : null;
-    
+    const version =
+      typeof versionFromMetadata === 'number' &&
+      versionFromMetadata >= 1 &&
+      versionFromMetadata <= 40
+        ? versionFromMetadata
+        : null;
+
     // Get raw bytes info from result
     const numBits = result.getNumBits() || null;
-    
+
     // Get errors corrected and erasures from metadata (if propagated)
-    const errorsCorrectedFromMeta = metadata?.get(ResultMetadataType.QR_ERRORS_CORRECTED) as number | undefined;
+    const errorsCorrectedFromMeta = metadata?.get(ResultMetadataType.QR_ERRORS_CORRECTED) as
+      | number
+      | undefined;
     const erasuresFromMeta = metadata?.get(ResultMetadataType.QR_ERASURES) as number | undefined;
-    const errorsCorrected: number | null = typeof errorsCorrectedFromMeta === 'number' ? errorsCorrectedFromMeta : null;
+    const errorsCorrected: number | null =
+      typeof errorsCorrectedFromMeta === 'number' ? errorsCorrectedFromMeta : null;
     const erasures: number | null = typeof erasuresFromMeta === 'number' ? erasuresFromMeta : null;
 
     // Detect encoding mode from text content

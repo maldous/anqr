@@ -24,7 +24,6 @@ import {
   Download,
   Eye,
   FileImage,
-  FileJson,
   FileText,
   Fingerprint,
   Globe,
@@ -62,7 +61,6 @@ import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   analyzeQRCode,
   analyzeQRFromFile,
@@ -71,14 +69,18 @@ import {
   type ContentTypeDetails,
   type ECCLevel,
   type QRAnalysisResult,
-  type DecoderMetadata,
 } from '@/modules/qr-analyzer';
-import { createQRInstance, getStringToBytes, optimizeSegments, setStringToBytes } from '@/modules/qr-encoder';
 import {
+  createQRInstance,
+  getStringToBytes,
+  optimizeSegments,
+  setStringToBytes,
+} from '@/modules/qr-encoder';
+import {
+  ECC_CAPACITIES_ALPHANUMERIC,
   ECC_CAPACITIES_BYTE,
   ECC_CAPACITIES_NUMERIC,
-  ECC_CAPACITIES_ALPHANUMERIC,
-} from '@/modules/qr-spec/constants';
+} from '@/modules/qr-spec';
 import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {
@@ -148,24 +150,20 @@ function CollapsibleSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="border rounded-lg bg-card overflow-hidden">
+    <div className="rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+        className="w-full flex items-center justify-between py-3 px-3 bg-muted/50 rounded-md shadow-sm hover:bg-muted transition-colors"
       >
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-md bg-primary/10 text-primary">{icon}</div>
           <span className="font-medium text-sm">{title}</span>
           {badge}
         </div>
-        {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        )}
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`} />
       </button>
-      {isOpen && <div className="px-3 pb-3 pt-1">{children}</div>}
+      {isOpen && <div className="px-3 pb-3 pt-3 mt-1 bg-card rounded-md shadow-sm border">{children}</div>}
     </div>
   );
 }
@@ -200,7 +198,7 @@ function ColorSwatch({ color, label }: ColorSwatchProps) {
   return (
     <div className="flex items-center gap-2">
       <div
-        className="w-6 h-6 rounded border shadow-sm"
+        className="w-6 h-6 rounded border shadow-md"
         style={{ backgroundColor: color }}
         title={color}
       />
@@ -273,13 +271,13 @@ function WCAGBadge({ ratio, size = 'md' }: WCAGBadgeProps) {
   const meetsAAA = ratio >= 7;
   const meetsAA = ratio >= 4.5;
   const meetsAALarge = ratio >= 3;
-  
+
   const sizeClasses = {
     sm: 'text-[10px] px-1.5 py-0.5',
     md: 'text-xs px-2 py-1',
     lg: 'text-sm px-3 py-1.5',
   };
-  
+
   return (
     <div className="flex items-center gap-1.5">
       <span
@@ -311,7 +309,7 @@ interface CopyButtonProps {
 
 function CopyButton({ text, label, className = '' }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
-  
+
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(text);
@@ -329,7 +327,7 @@ function CopyButton({ text, label, className = '' }: CopyButtonProps) {
       setTimeout(() => setCopied(false), 2000);
     }
   }, [text]);
-  
+
   return (
     <Button
       variant="ghost"
@@ -360,14 +358,21 @@ interface HexDumpViewProps {
 
 function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
   const [expanded, setExpanded] = useState(false);
-  const bytesPerRow = 16;
-  const totalRows = Math.ceil(bytes.length / bytesPerRow);
-  const displayRows = expanded ? totalRows : Math.min(maxRows, totalRows);
+  // Use 16 bytes per row on desktop, 8 on mobile
+  const bytesPerRowDesktop = 16;
+  const bytesPerRowMobile = 8;
   
-  const hexDump = useMemo(() => {
+  // Calculate rows for mobile (used for display)
+  const totalRowsMobile = Math.ceil(bytes.length / bytesPerRowMobile);
+  const displayRowsMobile = expanded ? totalRowsMobile : Math.min(maxRows, totalRowsMobile);
+  
+  const totalRowsDesktop = Math.ceil(bytes.length / bytesPerRowDesktop);
+  const displayRowsDesktop = expanded ? totalRowsDesktop : Math.min(maxRows, totalRowsDesktop);
+
+  const hexDumpMobile = useMemo(() => {
     const rows: Array<{ offset: string; hex: string; ascii: string }> = [];
-    for (let i = 0; i < displayRows * bytesPerRow && i < bytes.length; i += bytesPerRow) {
-      const slice = bytes.slice(i, Math.min(i + bytesPerRow, bytes.length));
+    for (let i = 0; i < displayRowsMobile * bytesPerRowMobile && i < bytes.length; i += bytesPerRowMobile) {
+      const slice = bytes.slice(i, Math.min(i + bytesPerRowMobile, bytes.length));
       const hex = Array.from(slice)
         .map((b) => b.toString(16).padStart(2, '0'))
         .join(' ');
@@ -375,14 +380,33 @@ function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
         .map((b) => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.'))
         .join('');
       rows.push({
-        offset: i.toString(16).padStart(8, '0'),
-        hex: hex.padEnd(bytesPerRow * 3 - 1, ' '),
-        ascii,
+        offset: i.toString(16).padStart(4, '0'),
+        hex: hex.padEnd(bytesPerRowMobile * 3 - 1, ' '),
+        ascii: ascii.padEnd(bytesPerRowMobile, ' '),
       });
     }
     return rows;
-  }, [bytes, displayRows]);
-  
+  }, [bytes, displayRowsMobile]);
+
+  const hexDumpDesktop = useMemo(() => {
+    const rows: Array<{ offset: string; hex: string; ascii: string }> = [];
+    for (let i = 0; i < displayRowsDesktop * bytesPerRowDesktop && i < bytes.length; i += bytesPerRowDesktop) {
+      const slice = bytes.slice(i, Math.min(i + bytesPerRowDesktop, bytes.length));
+      const hex = Array.from(slice)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join(' ');
+      const ascii = Array.from(slice)
+        .map((b) => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.'))
+        .join('');
+      rows.push({
+        offset: i.toString(16).padStart(4, '0'),
+        hex: hex.padEnd(bytesPerRowDesktop * 3 - 1, ' '),
+        ascii: ascii.padEnd(bytesPerRowDesktop, ' '),
+      });
+    }
+    return rows;
+  }, [bytes, displayRowsDesktop]);
+
   const fullHex = useMemo(
     () =>
       Array.from(bytes)
@@ -390,41 +414,59 @@ function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
         .join(' '),
     [bytes]
   );
-  
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
-          {bytes.length} bytes
-        </span>
+        <span className="text-xs text-muted-foreground">{bytes.length} bytes</span>
         <CopyButton text={fullHex} label="Copy Hex" />
       </div>
-      <div className="bg-muted/50 rounded-lg p-3 overflow-x-auto">
-        <pre className="font-mono text-[10px] sm:text-xs leading-relaxed">
-          <span className="text-muted-foreground">Offset    </span>
-          <span className="text-muted-foreground">Hex{' '.repeat(bytesPerRow * 3 - 3)}</span>
-          <span className="text-muted-foreground">ASCII</span>
-          {'\n'}
-          {hexDump.map((row, i) => (
-            <span key={i}>
+      {/* Mobile layout (8 bytes per row) */}
+      <div className="bg-muted/50 rounded-lg shadow-inner p-2 md:hidden">
+        <div className="font-mono text-[9px] leading-relaxed">
+          {/* Header */}
+          <div className="grid grid-cols-[4ch_1fr_1fr] gap-2 text-muted-foreground mb-1 border-b border-muted pb-1">
+            <span>Addr</span>
+            <span>Hex</span>
+            <span>ASCII</span>
+          </div>
+          {/* Data rows */}
+          {hexDumpMobile.map((row, i) => (
+            <div key={i} className="grid grid-cols-[4ch_1fr_1fr] gap-2">
               <span className="text-blue-500 dark:text-blue-400">{row.offset}</span>
-              {'  '}
               <span className="text-foreground">{row.hex}</span>
-              {'  '}
               <span className="text-green-600 dark:text-green-400">{row.ascii}</span>
-              {'\n'}
-            </span>
+            </div>
           ))}
-        </pre>
+        </div>
       </div>
-      {totalRows > maxRows && (
+      {/* Desktop layout (16 bytes per row) */}
+      <div className="bg-muted/50 rounded-lg shadow-inner p-3 hidden md:block">
+        <div className="font-mono text-[10px] leading-relaxed">
+          {/* Header */}
+          <div className="grid grid-cols-[4ch_1fr_1fr] gap-3 text-muted-foreground mb-1 border-b border-muted pb-1">
+            <span>Addr</span>
+            <span>Hex</span>
+            <span>ASCII</span>
+          </div>
+          {/* Data rows */}
+          {hexDumpDesktop.map((row, i) => (
+            <div key={i} className="grid grid-cols-[4ch_1fr_1fr] gap-3">
+              <span className="text-blue-500 dark:text-blue-400">{row.offset}</span>
+              <span className="text-foreground">{row.hex}</span>
+              <span className="text-green-600 dark:text-green-400">{row.ascii}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {totalRowsMobile > maxRows && (
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setExpanded(!expanded)}
-          className="w-full text-xs"
+          className="w-full text-xs shadow-sm"
         >
-          {expanded ? 'Show Less' : `Show All (${totalRows} rows)`}
+          {expanded ? 'Show Less' : `Show All (${totalRowsMobile} rows)`}
         </Button>
       )}
     </div>
@@ -439,24 +481,74 @@ interface ModuleMatrixViewProps {
   bgColor?: string;
 }
 
-function ModuleMatrixView({ matrix, version, fgColor = '#000000', bgColor = '#ffffff' }: ModuleMatrixViewProps) {
+function ModuleMatrixView({
+  matrix,
+  version,
+  fgColor = '#000000',
+  bgColor = '#ffffff',
+}: ModuleMatrixViewProps) {
   const [zoom, setZoom] = useState(1);
+  const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const moduleCount = matrix.length;
-  
+
   // Calculate module size based on container and zoom
   const baseModuleSize = Math.max(2, Math.min(8, Math.floor(280 / moduleCount)));
   const moduleSize = baseModuleSize * zoom;
   const gridSize = moduleCount * moduleSize;
-  
+
+  // Generate ASCII art representation
+  const generateAsciiArt = useCallback(() => {
+    return matrix.map(row => 
+      row.map(isDark => isDark ? '██' : '░░').join('')
+    ).join('\n');
+  }, [matrix]);
+
+  const handleCopyAsText = useCallback(async () => {
+    const asciiArt = generateAsciiArt();
+    try {
+      await navigator.clipboard.writeText(asciiArt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback
+      const textarea = document.createElement('textarea');
+      textarea.value = asciiArt;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [generateAsciiArt]);
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <span className="text-xs text-muted-foreground">
           {moduleCount} × {moduleCount} modules
           {version && ` (Version ${version})`}
         </span>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyAsText}
+            className="h-7 gap-1.5 text-xs"
+          >
+            {copied ? (
+              <>
+                <Check className="w-3 h-3 text-green-500" />
+                <span className="text-green-500">Copied!</span>
+              </>
+            ) : (
+              <>
+                <ClipboardCopy className="w-3 h-3" />
+                <span>Copy as Text</span>
+              </>
+            )}
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -482,7 +574,7 @@ function ModuleMatrixView({ matrix, version, fgColor = '#000000', bgColor = '#ff
       </div>
       <div
         ref={containerRef}
-        className="overflow-auto max-h-[400px] rounded-lg border bg-white dark:bg-gray-900 p-2"
+        className="overflow-auto max-h-[400px] rounded-lg border bg-white dark:bg-gray-900 p-2 shadow-inner flex justify-center"
       >
         <div
           style={{
@@ -521,7 +613,7 @@ interface CapacityByModeProps {
 
 function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByModeProps) {
   const versionIndex = version - 1;
-  
+
   const capacities = [
     {
       mode: 'Numeric',
@@ -549,7 +641,7 @@ function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByMode
       unit: 'chars',
     },
   ];
-  
+
   return (
     <div className="space-y-2">
       <div className="text-xs text-muted-foreground mb-2">
@@ -569,9 +661,7 @@ function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByMode
             </div>
             <div className="text-lg font-bold">
               {cap.capacity.toLocaleString()}
-              <span className="text-xs font-normal text-muted-foreground ml-1">
-                {cap.unit}
-              </span>
+              <span className="text-xs font-normal text-muted-foreground ml-1">{cap.unit}</span>
             </div>
             {cap.current !== undefined && (
               <div className="mt-1">
@@ -580,7 +670,7 @@ function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByMode
                     className={`h-full transition-all ${
                       (cap.current / cap.capacity) > 0.9
                         ? 'bg-red-500'
-                        : (cap.current / cap.capacity) > 0.7
+                        : cap.current / cap.capacity > 0.7
                           ? 'bg-amber-500'
                           : 'bg-green-500'
                     }`}
@@ -606,52 +696,95 @@ interface SummaryBarProps {
 
 function SummaryBar({ result }: SummaryBarProps) {
   if (!result.success) return null;
-  
+
+  // Common badge styling for consistent width
+  const badgeBase = "inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md font-medium text-center flex-1 min-w-[65px] shadow-sm";
+
   return (
-    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b py-2 px-4 -mx-4 mb-4 animate-in slide-in-from-top duration-300">
-      <div className="flex flex-wrap items-center gap-2 text-xs">
+    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border rounded-lg shadow-sm py-2 px-3 mb-4 animate-in slide-in-from-top duration-300">
+      <div className="flex flex-wrap items-stretch gap-1.5 text-xs">
         {/* Version chip */}
         {result.version !== null && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
-            <Grid3x3 className="w-3 h-3" />
-            V{result.version}
+          <span className={`${badgeBase} bg-primary/10 text-primary`}>
+            <Grid3x3 className="w-3 h-3" />V{result.version}
           </span>
         )}
-        
+
         {/* ECC chip */}
         {result.eccLevel && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-medium">
+          <span className={`${badgeBase} bg-blue-500/10 text-blue-700 dark:text-blue-400`}>
             <Shield className="w-3 h-3" />
             ECC-{result.eccLevel}
           </span>
         )}
-        
+
+        {/* Mask pattern chip */}
+        {result.maskPattern !== null && (
+          <span className={`${badgeBase} bg-indigo-500/10 text-indigo-700 dark:text-indigo-400`}>
+            <Layers className="w-3 h-3" />
+            Mask {result.maskPattern}
+          </span>
+        )}
+
+        {/* Encoding mode chip */}
+        {result.encodingMode && result.encodingMode !== 'unknown' && (
+          <span className={`${badgeBase} bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 capitalize`}>
+            <Code2 className="w-3 h-3" />
+            {result.encodingMode}
+          </span>
+        )}
+
         {/* Content type chip */}
         {result.contentType && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-400 font-medium">
+          <span className={`${badgeBase} bg-purple-500/10 text-purple-700 dark:text-purple-400`}>
             {CONTENT_TYPE_ICONS[result.contentType.type]}
             {result.contentType.label}
           </span>
         )}
-        
+
         {/* Contrast chip */}
         {result.detectedColors && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted font-medium">
+          <span className={`${badgeBase} bg-muted`}>
             <Eye className="w-3 h-3" />
             <WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />
           </span>
         )}
-        
+
         {/* Module count */}
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground">
+        <span className={`${badgeBase} bg-muted text-muted-foreground`}>
+          <Grid3x3 className="w-3 h-3" />
           {result.moduleCount}×{result.moduleCount}
         </span>
-        
-        {/* Payload size */}
+
+        {/* Payload char count */}
         {result.payload && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground">
-            <Database className="w-3 h-3" />
+          <span className={`${badgeBase} bg-muted text-muted-foreground`}>
+            <Type className="w-3 h-3" />
             {result.payload.length} chars
+          </span>
+        )}
+
+        {/* Payload byte count */}
+        {result.payloadBytes && result.payloadBytes.length > 0 && (
+          <span className={`${badgeBase} bg-muted text-muted-foreground`}>
+            <Binary className="w-3 h-3" />
+            {result.payloadBytes.length} bytes
+          </span>
+        )}
+
+        {/* Quiet zone status */}
+        {result.quietZone && (
+          <span className={`${badgeBase} ${result.quietZone.adequate ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}`}>
+            {result.quietZone.adequate ? <Check className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+            Quiet Zone
+          </span>
+        )}
+
+        {/* Image dimensions */}
+        {result.imageProperties && (
+          <span className={`${badgeBase} bg-muted text-muted-foreground`}>
+            <ImageIcon className="w-3 h-3" />
+            {result.imageProperties.width}×{result.imageProperties.height}
           </span>
         )}
       </div>
@@ -671,22 +804,23 @@ function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEff
     const numericChars = (payload.match(/[0-9]/g) || []).length;
     const alphanumericChars = (payload.match(/[0-9A-Z $%*+\-./:]/gi) || []).length;
     const byteChars = payload.length;
-    
+
     // Calculate potential bit savings
     // Numeric: 3.33 bits per char, Alphanumeric: 5.5 bits per char, Byte: 8 bits per char
-    const numericBits = numericChars * 3.33;
-    const alphanumericBits = alphanumericChars * 5.5;
+    const _numericBits = numericChars * 3.33;
+    const _alphanumericBits = alphanumericChars * 5.5;
     const byteBits = byteChars * 8;
-    
+
     const numericPercentage = byteChars > 0 ? Math.round((numericChars / byteChars) * 100) : 0;
-    const alphanumericPercentage = byteChars > 0 ? Math.round((alphanumericChars / byteChars) * 100) : 0;
-    
+    const alphanumericPercentage =
+      byteChars > 0 ? Math.round((alphanumericChars / byteChars) * 100) : 0;
+
     // Determine optimal mode
     let optimalMode = 'byte';
     if (numericPercentage === 100) optimalMode = 'numeric';
     else if (alphanumericPercentage === 100) optimalMode = 'alphanumeric';
     else if (numericPercentage > 50 || alphanumericPercentage > 50) optimalMode = 'mixed';
-    
+
     return {
       numericChars,
       alphanumericChars,
@@ -698,7 +832,7 @@ function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEff
       bytesUsed: payloadBytes?.length ?? new TextEncoder().encode(payload).length,
     };
   }, [payload, payloadBytes]);
-  
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2 text-center">
@@ -719,7 +853,7 @@ function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEff
           <div className="text-[10px] text-muted-foreground">Bytes</div>
         </div>
       </div>
-      
+
       <DetailRow
         label="Current Mode"
         value={<span className="capitalize">{encodingMode || 'Unknown'}</span>}
@@ -728,9 +862,13 @@ function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEff
       <DetailRow
         label="Optimal Mode"
         value={
-          <span className={`capitalize ${
-            analysis.optimalMode === encodingMode ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
-          }`}>
+          <span
+            className={`capitalize ${
+              analysis.optimalMode === encodingMode
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-amber-600 dark:text-amber-400'
+            }`}
+          >
             {analysis.optimalMode}
             {analysis.optimalMode === encodingMode && ' ✓'}
           </span>
@@ -813,9 +951,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       // Version must come from decoder - not estimated
       // For generator source, prefer detected version, fall back to store version only if detected is valid
-      const versionToUse = isGeneratorSource 
-        ? (result.version ?? qrState.version) 
-        : result.version;
+      const versionToUse = isGeneratorSource ? (result.version ?? qrState.version) : result.version;
 
       // Prefer detected mask when available (even for generator), because it is the actual chosen mask.
       const maskToUse =
@@ -858,9 +994,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       })();
 
       // STEP 2: Log encoder input construction
-      const encoderInputPreview = encoderInput.kind === 'bytes'
-        ? `[bytes] len=${encoderInput.data.length}, first32codes=[${encoderInput.data.slice(0, 32).split('').map(c => c.charCodeAt(0)).join(',')}]`
-        : `[string] len=${encoderInput.data.length}, first32="${encoderInput.data.slice(0, 32)}"`;
+      const encoderInputPreview =
+        encoderInput.kind === 'bytes'
+          ? `[bytes] len=${encoderInput.data.length}, first32codes=[${encoderInput.data
+              .slice(0, 32)
+              .split('')
+              .map((c) => c.charCodeAt(0))
+              .join(',')}]`
+          : `[string] len=${encoderInput.data.length}, first32="${encoderInput.data.slice(0, 32)}"`;
       console.log('[QR-Analyzer:trace] STEP 2 - Encoder input:', {
         kind: encoderInput.kind,
         dataLength: encoderInput.data.length,
@@ -929,7 +1070,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         ecc,
         version: versionToUseFinal,
         mode: effectiveMode ?? 'auto (undefined)',
-        maskPattern: typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7 ? maskToUse : 'auto (undefined)',
+        maskPattern:
+          typeof maskToUse === 'number' && maskToUse >= 0 && maskToUse <= 7
+            ? maskToUse
+            : 'auto (undefined)',
         needsIdentityBytes,
       };
       console.log('[QR-Analyzer:trace] STEP 3 - createQRInstance params:', createQRParams);
@@ -946,7 +1090,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         });
         console.log('[QR-Analyzer:trace] STEP 3b - createQRInstance SUCCESS');
       } catch (encoderError) {
-        const errorMessage = encoderError instanceof Error ? encoderError.message : String(encoderError);
+        const errorMessage =
+          encoderError instanceof Error ? encoderError.message : String(encoderError);
         console.error('[QR-Analyzer:trace] STEP 3b - createQRInstance FAILED:', {
           error: errorMessage,
           requestedVersion: versionToUseFinal,
@@ -955,21 +1100,24 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           mode: effectiveMode,
           maskPattern: maskToUse,
         });
-        
+
         // For overflow errors, try mixed mode encoding first, then higher versions
         if (errorMessage.includes('overflow')) {
           // First, try mixed mode encoding at the original version
           // This is crucial for QArt codes that use numeric URL fragments
           const segments = optimizeSegments(encoderInput.data);
-          const hasMixedModeOptimization = segments.length > 1 || 
-            (segments.length === 1 && segments[0].mode !== 'byte');
-          
+          const hasMixedModeOptimization =
+            segments.length > 1 || (segments.length === 1 && segments[0].mode !== 'byte');
+
           if (hasMixedModeOptimization) {
-            console.log('[QR-Analyzer:trace] STEP 3c - Trying MIXED MODE encoding at original version', {
-              segments: segments.map(s => ({ mode: s.mode, len: s.data.length })),
-              originalVersion: versionToUseFinal,
-            });
-            
+            console.log(
+              '[QR-Analyzer:trace] STEP 3c - Trying MIXED MODE encoding at original version',
+              {
+                segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
+                originalVersion: versionToUseFinal,
+              }
+            );
+
             try {
               qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
                 mode: 'mixed',
@@ -979,22 +1127,28 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               });
               console.log('[QR-Analyzer:trace] STEP 3c - MIXED MODE SUCCESS at original version!', {
                 version: versionToUseFinal,
-                segments: segments.map(s => ({ mode: s.mode, len: s.data.length })),
+                segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
               });
               // Successfully encoded with mixed mode at original version
             } catch (mixedModeError) {
-              console.log('[QR-Analyzer:trace] STEP 3c - Mixed mode failed, trying higher versions...', {
-                error: mixedModeError instanceof Error ? mixedModeError.message : String(mixedModeError),
-              });
+              console.log(
+                '[QR-Analyzer:trace] STEP 3c - Mixed mode failed, trying higher versions...',
+                {
+                  error:
+                    mixedModeError instanceof Error
+                      ? mixedModeError.message
+                      : String(mixedModeError),
+                }
+              );
               qr = null; // Reset to try higher versions
             }
           }
-          
+
           // If mixed mode didn't work (or wasn't applicable), try higher versions
           if (!qr) {
             console.log('[QR-Analyzer:trace] STEP 3c - Trying higher versions due to overflow...');
             let foundVersion: number | null = null;
-            
+
             for (let tryVersion = versionToUseFinal + 1; tryVersion <= 40; tryVersion++) {
               try {
                 // Try with mixed mode first at higher version
@@ -1005,24 +1159,29 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     : {}),
                 });
                 foundVersion = tryVersion;
-                console.log('[QR-Analyzer:trace] STEP 3c - VERSION UPGRADE: Successfully encoded at version', {
-                  originalVersion: versionToUseFinal,
-                  newVersion: tryVersion,
-                  versionIncrease: tryVersion - versionToUseFinal,
-                  ecc,
-                  maskPattern: maskToUse,
-                  usedMixedMode: true,
-                });
+                console.log(
+                  '[QR-Analyzer:trace] STEP 3c - VERSION UPGRADE: Successfully encoded at version',
+                  {
+                    originalVersion: versionToUseFinal,
+                    newVersion: tryVersion,
+                    versionIncrease: tryVersion - versionToUseFinal,
+                    ecc,
+                    maskPattern: maskToUse,
+                    usedMixedMode: true,
+                  }
+                );
                 break;
               } catch {
                 // Try next version
               }
             }
-            
+
             if (foundVersion !== null) {
               actualVersionUsed = foundVersion;
             } else {
-              throw new Error(`Data too large: cannot fit in any QR version (1-40) with ECC ${ecc}`);
+              throw new Error(
+                `Data too large: cannot fit in any QR version (1-40) with ECC ${ecc}`
+              );
             }
           }
         } else {
@@ -1031,15 +1190,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       } finally {
         if (needsIdentityBytes) setStringToBytes(prevStringToBytes);
       }
-      
+
       // At this point qr must be non-null
       if (!qr) {
         throw new Error('QR instance is null - this should not happen');
       }
-      
+
       // Store the actual version used for import to generator
       setActualUsedVersion(actualVersionUsed);
-      
+
       const moduleCount = qr.getModuleCount();
       const actualVersion = (moduleCount - 17) / 4;
 
@@ -1072,7 +1231,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           const modulePxFromStore = Math.max(1, Math.floor(renderState.modulePx || 1));
           const totalModules = Math.round(generatedCanvas.width / modulePxFromStore);
           const inferred = Math.max(0, Math.floor((totalModules - moduleCount) / 2));
-          
+
           // STEP 5: Log margin calculation (generator source)
           console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (generator):', {
             renderStateModulePx: renderState.modulePx,
@@ -1083,17 +1242,17 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             inferredMargin: inferred,
             calculation: `floor((${totalModules} - ${moduleCount}) / 2) = ${inferred}`,
           });
-          
+
           return inferred;
         }
-        
+
         // STEP 5: Log margin calculation (external source)
         const margin = Math.max(4, result.quietZone?.top ?? 4);
         console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (external):', {
           quietZoneTop: result.quietZone?.top,
           margin,
         });
-        
+
         return margin;
       })();
 
@@ -1109,7 +1268,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         size = generatedCanvas.width;
         const totalModulesWithMargin = moduleCount + marginModules * 2;
         modulePx = Math.max(1, Math.floor(size / totalModulesWithMargin));
-        
+
         // STEP 6: Log canvas sizing (generator)
         console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (generator):', {
           canvasSize: size,
@@ -1126,7 +1285,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         const totalModules = moduleCount + marginModules * 2;
         modulePx = Math.max(3, Math.floor(targetSize / totalModules));
         size = totalModules * modulePx;
-        
+
         // STEP 6: Log canvas sizing (external)
         console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (external):', {
           targetSize,
@@ -1155,11 +1314,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       });
 
       if (result.version && actualVersion !== result.version) {
-        console.warn('[QR-Analyzer:trace] FINAL WARNING: Version mismatch will cause visual discrepancy!', {
-          expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
-          produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
-          sizeDiff: moduleCount - (result.version * 4 + 17),
-        });
+        console.warn(
+          '[QR-Analyzer:trace] FINAL WARNING: Version mismatch will cause visual discrepancy!',
+          {
+            expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
+            produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
+            sizeDiff: moduleCount - (result.version * 4 + 17),
+          }
+        );
       }
 
       // Colors
@@ -1285,7 +1447,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       // Track if reproduction matches original - should always match now since we don't allow fallbacks
       const reproductionMismatch = actualVersion !== result.version;
-      
+
       console.log('[QR-Analyzer:reproduced] Generated QR code', {
         strategy: isGeneratorSource ? 'exact' : 'detected_only',
         reproductionMismatch,
@@ -1624,45 +1786,2420 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     }
   }, [generatedCanvas, hasAutoAnalyzed, result, isLoading, handleAnalyzeGenerator]);
 
-  // Render content type details - exhaustive list of ALL possible fields
-  const renderContentTypeDetails = (contentType: ContentTypeDetails) => {
-    const details: Array<{ label: string; value: string; icon?: React.ReactNode }> = [];
+  // ==================== PAYLOAD PARSERS FOR COMPREHENSIVE CONTENT ANALYSIS ====================
 
-    // URL details
-    if (contentType.url) details.push({ label: 'URL', value: contentType.url, icon: <Globe className="w-3 h-3" /> });
-    if (contentType.protocol) details.push({ label: 'Protocol', value: contentType.protocol, icon: <Lock className="w-3 h-3" /> });
+  // WiFi payload parser - parses WIFI:T:WPA;S:Name;P:pass;H:true;;
+  const parseWifiPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      ssid: null,
+      password: null,
+      security: null,
+      hidden: null,
+      eapMethod: null,
+      identity: null,
+      anonymousIdentity: null,
+      phase2: null,
+    };
     
-    // WiFi details
-    if (contentType.wifiSsid) details.push({ label: 'Network Name (SSID)', value: contentType.wifiSsid, icon: <Wifi className="w-3 h-3" /> });
-    if (contentType.wifiAuth) details.push({ label: 'Security Type', value: contentType.wifiAuth, icon: <Shield className="w-3 h-3" /> });
+    if (!payload.toUpperCase().startsWith('WIFI:')) return result;
     
-    // Contact details
-    if (contentType.contactName) details.push({ label: 'Contact Name', value: contentType.contactName, icon: <FileText className="w-3 h-3" /> });
-    if (contentType.phoneNumber) details.push({ label: 'Phone Number', value: contentType.phoneNumber, icon: <Phone className="w-3 h-3" /> });
-    if (contentType.emailAddress) details.push({ label: 'Email Address', value: contentType.emailAddress, icon: <Mail className="w-3 h-3" /> });
+    // Remove WIFI: prefix and trailing ;;
+    const content = payload.slice(5).replace(/;;\s*$/, '');
+    const parts = content.split(';');
     
-    // Crypto details
-    if (contentType.cryptoCurrency) details.push({ label: 'Cryptocurrency', value: contentType.cryptoCurrency, icon: <Wallet className="w-3 h-3" /> });
-    if (contentType.cryptoAddress) details.push({ label: 'Wallet Address', value: contentType.cryptoAddress, icon: <Hash className="w-3 h-3" /> });
-    if (contentType.amount) details.push({ label: 'Amount', value: contentType.amount, icon: <CreditCard className="w-3 h-3" /> });
+    for (const part of parts) {
+      const colonIdx = part.indexOf(':');
+      if (colonIdx === -1) continue;
+      const key = part.slice(0, colonIdx).toUpperCase();
+      const value = part.slice(colonIdx + 1);
+      
+      switch (key) {
+        case 'S': result.ssid = value; break;
+        case 'P': result.password = value; break;
+        case 'T': result.security = value.toUpperCase(); break;
+        case 'H': result.hidden = value.toLowerCase() === 'true' ? 'true' : 'false'; break;
+        case 'E': result.eapMethod = value; break;
+        case 'I': result.identity = value; break;
+        case 'A': result.anonymousIdentity = value; break;
+        case 'PH2': result.phase2 = value; break;
+      }
+    }
+    
+    return result;
+  }, []);
 
-    // UTM parameters (marketing tracking)
-    if (contentType.hasUtmParams) {
-      if (contentType.utmSource)
-        details.push({ label: 'UTM Source', value: contentType.utmSource, icon: <BarChart3 className="w-3 h-3" /> });
-      if (contentType.utmMedium)
-        details.push({ label: 'UTM Medium', value: contentType.utmMedium, icon: <BarChart3 className="w-3 h-3" /> });
-      if (contentType.utmCampaign)
-        details.push({ label: 'UTM Campaign', value: contentType.utmCampaign, icon: <BarChart3 className="w-3 h-3" /> });
+  // vCard parser - parses BEGIN:VCARD...END:VCARD
+  const parseVCardPayload = useCallback((payload: string): Record<string, string | string[] | null> => {
+    const result: Record<string, string | string[] | null> = {
+      version: null,
+      fullName: null,
+      name: null,
+      organization: null,
+      title: null,
+      phones: [],
+      emails: [],
+      addresses: [],
+      birthday: null,
+      url: null,
+      note: null,
+      hasPhoto: null,
+    };
+    
+    if (!payload.toUpperCase().includes('BEGIN:VCARD')) return result;
+    
+    const lines = payload.split(/\r?\n/);
+    const phones: string[] = [];
+    const emails: string[] = [];
+    const addresses: string[] = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      // Handle line folding (continuation lines start with space or tab)
+      while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
+        line += lines[++i].slice(1);
+      }
+      
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) continue;
+      
+      const keyPart = line.slice(0, colonIdx).toUpperCase();
+      const value = line.slice(colonIdx + 1);
+      const baseKey = keyPart.split(';')[0];
+      
+      switch (baseKey) {
+        case 'VERSION': result.version = value; break;
+        case 'FN': result.fullName = value; break;
+        case 'N': result.name = value.replace(/;/g, ' ').trim(); break;
+        case 'ORG': result.organization = value.replace(/;/g, ', '); break;
+        case 'TITLE': result.title = value; break;
+        case 'TEL': {
+          const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
+          const type = typeMatch ? typeMatch[1] : 'Phone';
+          phones.push(`${type}: ${value}`);
+          break;
+        }
+        case 'EMAIL': {
+          const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
+          const type = typeMatch ? typeMatch[1] : 'Email';
+          emails.push(`${type}: ${value}`);
+          break;
+        }
+        case 'ADR': {
+          const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
+          const type = typeMatch ? typeMatch[1] : 'Address';
+          const addrParts = value.split(';').filter(Boolean);
+          if (addrParts.length > 0) {
+            addresses.push(`${type}: ${addrParts.join(', ')}`);
+          }
+          break;
+        }
+        case 'BDAY': result.birthday = value; break;
+        case 'URL': result.url = value; break;
+        case 'NOTE': result.note = value; break;
+        case 'PHOTO': result.hasPhoto = 'true'; break;
+      }
+    }
+    
+    result.phones = phones;
+    result.emails = emails;
+    result.addresses = addresses;
+    
+    return result;
+  }, []);
+
+  // MeCard parser - parses MECARD:N:Last,First;...;;
+  const parseMeCardPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      name: null,
+      organization: null,
+      phone: null,
+      email: null,
+      address: null,
+      birthday: null,
+      url: null,
+      note: null,
+    };
+    
+    if (!payload.toUpperCase().startsWith('MECARD:')) return result;
+    
+    const content = payload.slice(7).replace(/;;\s*$/, '');
+    const parts = content.split(';');
+    
+    for (const part of parts) {
+      const colonIdx = part.indexOf(':');
+      if (colonIdx === -1) continue;
+      const key = part.slice(0, colonIdx).toUpperCase();
+      const value = part.slice(colonIdx + 1);
+      
+      switch (key) {
+        case 'N': result.name = value.replace(',', ' '); break;
+        case 'ORG': result.organization = value; break;
+        case 'TEL': result.phone = value; break;
+        case 'EMAIL': result.email = value; break;
+        case 'ADR': result.address = value.replace(/,/g, ', '); break;
+        case 'BDAY': result.birthday = value; break;
+        case 'URL': result.url = value; break;
+        case 'NOTE': result.note = value; break;
+      }
+    }
+    
+    return result;
+  }, []);
+
+  // Email (mailto:) parser
+  const parseEmailPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      to: null,
+      subject: null,
+      body: null,
+      cc: null,
+      bcc: null,
+      domain: null,
+      provider: null,
+    };
+    
+    if (!payload.toLowerCase().startsWith('mailto:')) return result;
+    
+    const content = payload.slice(7);
+    const [email, queryString] = content.split('?');
+    result.to = decodeURIComponent(email);
+    
+    // Extract domain
+    const atIdx = result.to.indexOf('@');
+    if (atIdx !== -1) {
+      result.domain = result.to.slice(atIdx + 1).toLowerCase();
+      // Detect provider
+      if (result.domain.includes('gmail')) result.provider = 'Gmail';
+      else if (result.domain.includes('outlook') || result.domain.includes('hotmail') || result.domain.includes('live.com')) result.provider = 'Microsoft Outlook';
+      else if (result.domain.includes('yahoo')) result.provider = 'Yahoo Mail';
+      else if (result.domain.includes('icloud') || result.domain.includes('me.com') || result.domain.includes('mac.com')) result.provider = 'Apple iCloud';
+      else if (result.domain.includes('protonmail') || result.domain.includes('proton.me')) result.provider = 'ProtonMail';
+      else result.provider = 'Custom Domain';
+    }
+    
+    if (queryString) {
+      const params = new URLSearchParams(queryString);
+      result.subject = params.get('subject');
+      result.body = params.get('body');
+      result.cc = params.get('cc');
+      result.bcc = params.get('bcc');
+    }
+    
+    return result;
+  }, []);
+
+  // Phone (tel:) parser with country detection
+  const parseTelPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      number: null,
+      formatted: null,
+      countryCode: null,
+      country: null,
+      countryFlag: null,
+    };
+    
+    let number = payload.toLowerCase().startsWith('tel:') ? payload.slice(4) : payload;
+    number = number.replace(/[^+\d]/g, '');
+    result.number = number;
+    result.formatted = number;
+    
+    // Detect country by dialing code
+    const countryCodes: Record<string, { name: string; flag: string }> = {
+      '+1': { name: 'USA/Canada', flag: '🇺🇸' },
+      '+44': { name: 'United Kingdom', flag: '🇬🇧' },
+      '+61': { name: 'Australia', flag: '🇦🇺' },
+      '+91': { name: 'India', flag: '🇮🇳' },
+      '+86': { name: 'China', flag: '🇨🇳' },
+      '+81': { name: 'Japan', flag: '🇯🇵' },
+      '+49': { name: 'Germany', flag: '🇩🇪' },
+      '+33': { name: 'France', flag: '🇫🇷' },
+      '+39': { name: 'Italy', flag: '🇮🇹' },
+      '+34': { name: 'Spain', flag: '🇪🇸' },
+      '+55': { name: 'Brazil', flag: '🇧🇷' },
+      '+52': { name: 'Mexico', flag: '🇲🇽' },
+      '+82': { name: 'South Korea', flag: '🇰🇷' },
+      '+7': { name: 'Russia', flag: '🇷🇺' },
+      '+31': { name: 'Netherlands', flag: '🇳🇱' },
+      '+46': { name: 'Sweden', flag: '🇸🇪' },
+      '+41': { name: 'Switzerland', flag: '🇨🇭' },
+      '+65': { name: 'Singapore', flag: '🇸🇬' },
+      '+64': { name: 'New Zealand', flag: '🇳🇿' },
+      '+353': { name: 'Ireland', flag: '🇮🇪' },
+      '+972': { name: 'Israel', flag: '🇮🇱' },
+      '+971': { name: 'UAE', flag: '🇦🇪' },
+      '+966': { name: 'Saudi Arabia', flag: '🇸🇦' },
+      '+27': { name: 'South Africa', flag: '🇿🇦' },
+      '+62': { name: 'Indonesia', flag: '🇮🇩' },
+      '+60': { name: 'Malaysia', flag: '🇲🇾' },
+      '+63': { name: 'Philippines', flag: '🇵🇭' },
+      '+66': { name: 'Thailand', flag: '🇹🇭' },
+      '+84': { name: 'Vietnam', flag: '🇻🇳' },
+    };
+    
+    if (number.startsWith('+')) {
+      // Try to match longest prefix first
+      for (const prefix of Object.keys(countryCodes).sort((a, b) => b.length - a.length)) {
+        if (number.startsWith(prefix)) {
+          result.countryCode = prefix;
+          result.country = countryCodes[prefix].name;
+          result.countryFlag = countryCodes[prefix].flag;
+          break;
+        }
+      }
+    }
+    
+    return result;
+  }, []);
+
+  // SMS parser
+  const parseSmsPayload = useCallback((payload: string): Record<string, string | number | null> => {
+    const result: Record<string, string | number | null> = {
+      number: null,
+      body: null,
+      charCount: null,
+      segmentCount: null,
+    };
+    
+    let content = payload;
+    if (payload.toLowerCase().startsWith('sms:')) content = payload.slice(4);
+    else if (payload.toLowerCase().startsWith('smsto:')) content = payload.slice(6);
+    
+    const [number, queryPart] = content.split('?');
+    result.number = number;
+    
+    if (queryPart) {
+      const params = new URLSearchParams(queryPart);
+      result.body = params.get('body');
+      if (result.body) {
+        result.charCount = result.body.length;
+        // SMS segments: 160 chars for GSM-7, 70 for Unicode
+        const hasUnicode = /[^\x00-\x7F]/.test(result.body);
+        const charsPerSegment = hasUnicode ? 70 : 160;
+        result.segmentCount = Math.ceil(result.body.length / charsPerSegment);
+      }
+    }
+    
+    return result;
+  }, []);
+
+  // Geo coordinate parser with DMS conversion
+  const parseGeoPayload = useCallback((payload: string): Record<string, string | number | null> => {
+    const result: Record<string, string | number | null> = {
+      latitude: null,
+      longitude: null,
+      altitude: null,
+      uncertainty: null,
+      latDms: null,
+      lonDms: null,
+      latHemisphere: null,
+      lonHemisphere: null,
+      googleMapsUrl: null,
+      appleMapsUrl: null,
+      osmUrl: null,
+    };
+    
+    const match = payload.match(/^geo:([\d.-]+),([\d.-]+)(?:,([\d.-]+))?(?:\?.*u=([\d.]+))?/i);
+    if (!match) return result;
+    
+    const lat = parseFloat(match[1]);
+    const lon = parseFloat(match[2]);
+    result.latitude = lat;
+    result.longitude = lon;
+    result.altitude = match[3] ? parseFloat(match[3]) : null;
+    result.uncertainty = match[4] ? parseFloat(match[4]) : null;
+    
+    // Determine hemispheres
+    result.latHemisphere = lat >= 0 ? 'N' : 'S';
+    result.lonHemisphere = lon >= 0 ? 'E' : 'W';
+    
+    // Convert to DMS
+    const toDms = (decimal: number): string => {
+      const abs = Math.abs(decimal);
+      const deg = Math.floor(abs);
+      const minFloat = (abs - deg) * 60;
+      const min = Math.floor(minFloat);
+      const sec = ((minFloat - min) * 60).toFixed(2);
+      return `${deg}° ${min}' ${sec}"`;
+    };
+    
+    result.latDms = toDms(lat) + ' ' + result.latHemisphere;
+    result.lonDms = toDms(lon) + ' ' + result.lonHemisphere;
+    
+    // Generate map URLs
+    result.googleMapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+    result.appleMapsUrl = `https://maps.apple.com/?ll=${lat},${lon}`;
+    result.osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}&zoom=15`;
+    
+    return result;
+  }, []);
+
+  // Crypto address parser
+  const parseCryptoPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      network: null,
+      address: null,
+      addressPreview: null,
+      amount: null,
+      label: null,
+      message: null,
+      explorerUrl: null,
+      networkColor: null,
+    };
+    
+    const lowerPayload = payload.toLowerCase();
+    let network = 'Unknown';
+    let address = payload;
+    let queryString = '';
+    
+    if (lowerPayload.startsWith('bitcoin:')) {
+      network = 'Bitcoin';
+      result.networkColor = 'orange';
+      const content = payload.slice(8);
+      [address, queryString] = content.split('?');
+      result.explorerUrl = `https://www.blockchain.com/btc/address/${address}`;
+    } else if (lowerPayload.startsWith('ethereum:')) {
+      network = 'Ethereum';
+      result.networkColor = 'purple';
+      const content = payload.slice(9);
+      [address, queryString] = content.split('?');
+      result.explorerUrl = `https://etherscan.io/address/${address}`;
+    } else if (lowerPayload.startsWith('litecoin:')) {
+      network = 'Litecoin';
+      result.networkColor = 'gray';
+      const content = payload.slice(9);
+      [address, queryString] = content.split('?');
+      result.explorerUrl = `https://blockchair.com/litecoin/address/${address}`;
+    } else if (lowerPayload.startsWith('dogecoin:')) {
+      network = 'Dogecoin';
+      result.networkColor = 'yellow';
+      const content = payload.slice(9);
+      [address, queryString] = content.split('?');
+      result.explorerUrl = `https://dogechain.info/address/${address}`;
+    }
+    
+    result.network = network;
+    result.address = address;
+    result.addressPreview = address.length > 20 
+      ? `${address.slice(0, 10)}...${address.slice(-10)}`
+      : address;
+    
+    if (queryString) {
+      const params = new URLSearchParams(queryString);
+      result.amount = params.get('amount');
+      result.label = params.get('label');
+      result.message = params.get('message') || params.get('memo');
+    }
+    
+    return result;
+  }, []);
+
+  // EPC/SEPA payment parser
+  const parseEpcSepaPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      serviceTag: null,
+      version: null,
+      encoding: null,
+      bic: null,
+      beneficiaryName: null,
+      iban: null,
+      amount: null,
+      currency: null,
+      purposeCode: null,
+      referenceType: null,
+      reference: null,
+      remittanceInfo: null,
+      beneficiaryToOriginator: null,
+    };
+    
+    const lines = payload.split('\n');
+    if (lines.length < 4) return result;
+    
+    result.serviceTag = lines[0] || null; // Should be 'BCD'
+    result.version = lines[1] || null;
+    result.encoding = lines[2] || null;
+    // Line 3 is identification code
+    result.bic = lines[4] || null;
+    result.beneficiaryName = lines[5] || null;
+    result.iban = lines[6] || null;
+    
+    // Parse amount (format: EUR123.45)
+    if (lines[7]) {
+      const amountMatch = lines[7].match(/([A-Z]{3})([\d.]+)/);
+      if (amountMatch) {
+        result.currency = amountMatch[1];
+        result.amount = amountMatch[2];
+      }
+    }
+    
+    result.purposeCode = lines[8] || null;
+    result.referenceType = lines[9] || null;
+    result.reference = lines[10] || null;
+    result.remittanceInfo = lines[11] || null;
+    result.beneficiaryToOriginator = lines[12] || null;
+    
+    // Format IBAN with spaces
+    if (result.iban) {
+      result.iban = result.iban.replace(/(.{4})/g, '$1 ').trim();
+    }
+    
+    return result;
+  }, []);
+
+  // UPI payment parser
+  const parseUpiPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      vpa: null,
+      payeeName: null,
+      amount: null,
+      currency: 'INR',
+      transactionRef: null,
+      transactionNote: null,
+      merchantCode: null,
+      minAmount: null,
+      url: null,
+    };
+    
+    if (!payload.toLowerCase().startsWith('upi://')) return result;
+    
+    try {
+      const url = new URL(payload);
+      result.vpa = url.searchParams.get('pa');
+      result.payeeName = url.searchParams.get('pn');
+      result.amount = url.searchParams.get('am');
+      result.currency = url.searchParams.get('cu') || 'INR';
+      result.transactionRef = url.searchParams.get('tr');
+      result.transactionNote = url.searchParams.get('tn');
+      result.merchantCode = url.searchParams.get('mc');
+      result.minAmount = url.searchParams.get('mam');
+      result.url = url.searchParams.get('url');
+    } catch {
+      // Invalid URL format
+    }
+    
+    return result;
+  }, []);
+
+  // Calendar event parser
+  const parseCalendarPayload = useCallback((payload: string): Record<string, string | boolean | null> => {
+    const result: Record<string, string | boolean | null> = {
+      summary: null,
+      description: null,
+      location: null,
+      startDate: null,
+      startFormatted: null,
+      endDate: null,
+      endFormatted: null,
+      duration: null,
+      organizer: null,
+      attendeesCount: null,
+      recurrence: null,
+      recurrenceFormatted: null,
+      isAllDay: false,
+      timezone: null,
+      alarm: null,
+    };
+    
+    if (!payload.toUpperCase().includes('BEGIN:VCALENDAR') && !payload.toUpperCase().includes('BEGIN:VEVENT')) {
+      return result;
+    }
+    
+    const lines = payload.split(/\r?\n/);
+    let attendeesCount = 0;
+    
+    const formatDateTime = (dt: string): string => {
+      // Parse iCal datetime format: YYYYMMDDTHHMMSS or YYYYMMDD
+      try {
+        const isAllDay = dt.length === 8;
+        const year = parseInt(dt.slice(0, 4));
+        const month = parseInt(dt.slice(4, 6)) - 1;
+        const day = parseInt(dt.slice(6, 8));
+        let hours = 0, minutes = 0;
+        
+        if (!isAllDay && dt.includes('T')) {
+          const timePart = dt.split('T')[1];
+          hours = parseInt(timePart.slice(0, 2));
+          minutes = parseInt(timePart.slice(2, 4));
+        }
+        
+        const date = new Date(year, month, day, hours, minutes);
+        
+        if (isAllDay) {
+          return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        return date.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      } catch {
+        return dt;
+      }
+    };
+    
+    const formatRecurrence = (rrule: string): string => {
+      const parts: Record<string, string> = {};
+      rrule.replace('RRULE:', '').split(';').forEach(p => {
+        const [k, v] = p.split('=');
+        if (k && v) parts[k] = v;
+      });
+      
+      const freq = parts.FREQ;
+      const interval = parts.INTERVAL ? parseInt(parts.INTERVAL) : 1;
+      const byday = parts.BYDAY;
+      const until = parts.UNTIL;
+      const count = parts.COUNT;
+      
+      let text = '';
+      const dayNames: Record<string, string> = { SU: 'Sunday', MO: 'Monday', TU: 'Tuesday', WE: 'Wednesday', TH: 'Thursday', FR: 'Friday', SA: 'Saturday' };
+      
+      if (freq === 'DAILY') text = interval === 1 ? 'Daily' : `Every ${interval} days`;
+      else if (freq === 'WEEKLY') {
+        if (byday) {
+          const days = byday.split(',').map(d => dayNames[d] || d).join(', ');
+          text = interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
+        } else {
+          text = interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
+        }
+      }
+      else if (freq === 'MONTHLY') text = interval === 1 ? 'Monthly' : `Every ${interval} months`;
+      else if (freq === 'YEARLY') text = interval === 1 ? 'Yearly' : `Every ${interval} years`;
+      else text = freq || 'Recurring';
+      
+      if (until) text += ` until ${formatDateTime(until)}`;
+      if (count) text += ` (${count} times)`;
+      
+      return text;
+    };
+    
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      // Handle line folding
+      while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
+        line += lines[++i].slice(1);
+      }
+      
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) continue;
+      
+      const keyPart = line.slice(0, colonIdx).toUpperCase();
+      const value = line.slice(colonIdx + 1);
+      const baseKey = keyPart.split(';')[0];
+      
+      switch (baseKey) {
+        case 'SUMMARY': result.summary = value; break;
+        case 'DESCRIPTION': result.description = value.replace(/\\n/g, '\n').replace(/\\,/g, ','); break;
+        case 'LOCATION': result.location = value.replace(/\\,/g, ','); break;
+        case 'DTSTART': {
+          result.startDate = value;
+          result.startFormatted = formatDateTime(value.replace('Z', ''));
+          result.isAllDay = value.length === 8;
+          const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
+          if (tzMatch) result.timezone = tzMatch[1];
+          break;
+        }
+        case 'DTEND': {
+          result.endDate = value;
+          result.endFormatted = formatDateTime(value.replace('Z', ''));
+          break;
+        }
+        case 'DURATION': result.duration = value; break;
+        case 'ORGANIZER': {
+          const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
+          result.organizer = cnMatch ? cnMatch[1] : value.replace('mailto:', '');
+          break;
+        }
+        case 'ATTENDEE': attendeesCount++; break;
+        case 'RRULE': {
+          result.recurrence = value;
+          result.recurrenceFormatted = formatRecurrence(line);
+          break;
+        }
+        case 'VALARM': 
+        case 'TRIGGER': {
+          if (value) result.alarm = value;
+          break;
+        }
+      }
+    }
+    
+    result.attendeesCount = attendeesCount > 0 ? String(attendeesCount) : null;
+    
+    return result;
+  }, []);
+
+  // OTP Auth parser
+  const parseOtpAuthPayload = useCallback((payload: string): Record<string, string | null> => {
+    const result: Record<string, string | null> = {
+      type: null,
+      issuer: null,
+      account: null,
+      algorithm: null,
+      algorithmNote: null,
+      digits: null,
+      period: null,
+      counter: null,
+      hasSecret: null,
+    };
+    
+    const match = payload.match(/^otpauth:\/\/(totp|hotp)\/([^?]+)(?:\?(.*))?$/i);
+    if (!match) return result;
+    
+    result.type = match[1].toUpperCase();
+    const label = decodeURIComponent(match[2]);
+    const queryString = match[3];
+    
+    // Parse label (format: Issuer:Account or just Account)
+    if (label.includes(':')) {
+      const [issuer, account] = label.split(':');
+      result.issuer = issuer;
+      result.account = account;
+    } else {
+      result.account = label;
+    }
+    
+    if (queryString) {
+      const params = new URLSearchParams(queryString);
+      result.issuer = result.issuer || params.get('issuer');
+      result.algorithm = params.get('algorithm')?.toUpperCase() || 'SHA1';
+      result.digits = params.get('digits') || '6';
+      result.period = params.get('period') || '30';
+      result.counter = params.get('counter');
+      result.hasSecret = params.has('secret') ? 'Present (hidden for security)' : 'Missing';
+      
+      // Add security note for algorithm
+      if (result.algorithm === 'SHA1') {
+        result.algorithmNote = 'Standard, widely compatible';
+      } else if (result.algorithm === 'SHA256') {
+        result.algorithmNote = 'More secure, good compatibility';
+      } else if (result.algorithm === 'SHA512') {
+        result.algorithmNote = 'Most secure, limited compatibility';
+      }
+    }
+    
+    return result;
+  }, []);
+
+  // URL parser with comprehensive breakdown
+  interface UrlParseResult {
+    full: string;
+    protocol: string | null;
+    hostname: string | null;
+    port: string | null;
+    path: string | null;
+    queryString: string | null;
+    fragment: string | null;
+    isSecure: string | null;
+    isShortened: string | null;
+    shortenerService: string | null;
+    params: Array<{key: string; value: string}>;
+    urlLength: string;
+    hasPercentEncoding: string | null;
+  }
+  const parseUrlPayload = useCallback((payload: string): UrlParseResult => {
+    const result: UrlParseResult = {
+      full: payload,
+      protocol: null,
+      hostname: null,
+      port: null,
+      path: null,
+      queryString: null,
+      fragment: null,
+      isSecure: null,
+      isShortened: null,
+      shortenerService: null,
+      params: [],
+      urlLength: String(payload.length),
+      hasPercentEncoding: /%[0-9A-Fa-f]{2}/.test(payload) ? 'true' : null,
+    };
+    
+    try {
+      const url = new URL(payload);
+      result.protocol = url.protocol.replace(':', '');
+      result.hostname = url.hostname;
+      result.port = url.port || null;
+      result.path = url.pathname !== '/' ? url.pathname : null;
+      result.queryString = url.search || null;
+      result.fragment = url.hash ? url.hash.slice(1) : null;
+      result.isSecure = url.protocol === 'https:' ? 'true' : 'false';
+      
+      // Check if shortened URL
+      const shorteners = ['bit.ly', 't.co', 'goo.gl', 'tinyurl.com', 'ow.ly', 'is.gd', 'buff.ly', 'adf.ly', 'j.mp', 'rb.gy', 'cutt.ly', 'shorturl.at'];
+      for (const shortener of shorteners) {
+        if (url.hostname.includes(shortener)) {
+          result.isShortened = 'true';
+          result.shortenerService = shortener;
+          break;
+        }
+      }
+      
+      // Parse all query parameters
+      const params: Array<{key: string; value: string}> = [];
+      url.searchParams.forEach((value, key) => {
+        params.push({ key, value: decodeURIComponent(value) });
+      });
+      result.params = params;
+      
+    } catch {
+      // Not a valid URL
+    }
+    
+    return result;
+  }, []);
+
+  // Plain text analyzer
+  const analyzePlainText = useCallback((payload: string): Record<string, string | number | boolean> => {
+    const result: Record<string, string | number | boolean> = {
+      charCount: payload.length,
+      wordCount: payload.trim().split(/\s+/).filter(Boolean).length,
+      lineCount: payload.split(/\r?\n/).length,
+      hasSpecialChars: /[^a-zA-Z0-9\s]/.test(payload),
+      hasNonAscii: /[^\x00-\x7F]/.test(payload),
+      hasEmoji: /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/u.test(payload),
+      isAllNumeric: /^[0-9]+$/.test(payload),
+      isAllAlphanumeric: /^[0-9A-Z $%*+\-./:]+$/i.test(payload),
+      encodingRecommendation: 'Byte mode',
+      preview: payload.length > 200 ? payload.slice(0, 200) + '...' : payload,
+    };
+    
+    if (result.isAllNumeric) {
+      result.encodingRecommendation = 'Numeric mode (most efficient)';
+    } else if (result.isAllAlphanumeric && !result.hasNonAscii) {
+      result.encodingRecommendation = 'Alphanumeric mode (efficient)';
+    } else if (result.hasNonAscii) {
+      result.encodingRecommendation = 'Byte mode (UTF-8 required)';
+    }
+    
+    return result;
+  }, []);
+
+  // Social media platform detection
+  const detectSocialPlatform = (url: string): { name: string; badge: React.ReactNode; extractedInfo?: React.ReactNode } | null => {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase();
+      const pathname = urlObj.pathname;
+
+      // WhatsApp - extract phone number
+      if (hostname.includes('wa.me') || hostname.includes('whatsapp.com') || hostname.includes('api.whatsapp.com')) {
+        const phoneMatch = pathname.match(/\/(\d+)/);
+        const phone = phoneMatch ? phoneMatch[1] : null;
+        return {
+          name: 'WhatsApp',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white flex items-center gap-1">
+              <MessageSquare className="w-3 h-3" />
+              WhatsApp
+            </span>
+          ),
+          extractedInfo: phone ? (
+            <a href={`tel:+${phone}`} className="font-mono text-xs text-primary hover:underline">+{phone}</a>
+          ) : null,
+        };
+      }
+
+      // Facebook
+      if (hostname.includes('facebook.com') || hostname.includes('fb.com') || hostname.includes('fb.me') || hostname.includes('m.facebook.com')) {
+        return {
+          name: 'Facebook',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-600 text-white">
+              Facebook
+            </span>
+          ),
+        };
+      }
+
+      // Instagram
+      if (hostname.includes('instagram.com') || hostname.includes('instagr.am')) {
+        const usernameMatch = pathname.match(/^\/([^/]+)/);
+        const username = usernameMatch && !['p', 'reel', 'stories', 'explore'].includes(usernameMatch[1]) ? usernameMatch[1] : null;
+        return {
+          name: 'Instagram',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 text-white">
+              Instagram
+            </span>
+          ),
+          extractedInfo: username ? <span className="font-mono text-xs">@{username}</span> : null,
+        };
+      }
+
+      // Twitter/X
+      if (hostname.includes('twitter.com') || hostname.includes('x.com') || hostname.includes('t.co')) {
+        const usernameMatch = pathname.match(/^\/([^/]+)/);
+        const username = usernameMatch && !['search', 'explore', 'home', 'i', 'intent'].includes(usernameMatch[1]) ? usernameMatch[1] : null;
+        return {
+          name: 'X (Twitter)',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-black text-white dark:bg-white dark:text-black">
+              𝕏
+            </span>
+          ),
+          extractedInfo: username ? <span className="font-mono text-xs">@{username}</span> : null,
+        };
+      }
+
+      // YouTube
+      if (hostname.includes('youtube.com') || hostname.includes('youtu.be') || hostname.includes('m.youtube.com')) {
+        let videoId: string | null = null;
+        if (hostname.includes('youtu.be')) {
+          videoId = pathname.slice(1).split('?')[0];
+        } else {
+          const vParam = urlObj.searchParams.get('v');
+          if (vParam) videoId = vParam;
+        }
+        return {
+          name: 'YouTube',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-600 text-white">
+              ▶ YouTube
+            </span>
+          ),
+          extractedInfo: videoId ? <span className="font-mono text-xs">Video: {videoId}</span> : null,
+        };
+      }
+
+      // LinkedIn
+      if (hostname.includes('linkedin.com') || hostname.includes('lnkd.in')) {
+        return {
+          name: 'LinkedIn',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-700 text-white">
+              LinkedIn
+            </span>
+          ),
+        };
+      }
+
+      // TikTok
+      if (hostname.includes('tiktok.com') || hostname.includes('vm.tiktok.com')) {
+        const usernameMatch = pathname.match(/^\/@([^/]+)/);
+        return {
+          name: 'TikTok',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-black text-white">
+              ♪ TikTok
+            </span>
+          ),
+          extractedInfo: usernameMatch ? <span className="font-mono text-xs">@{usernameMatch[1]}</span> : null,
+        };
+      }
+
+      // Telegram
+      if (hostname.includes('t.me') || hostname.includes('telegram.me') || hostname.includes('telegram.org')) {
+        const usernameMatch = pathname.match(/^\/([^/]+)/);
+        return {
+          name: 'Telegram',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-sky-500 text-white">
+              Telegram
+            </span>
+          ),
+          extractedInfo: usernameMatch ? <span className="font-mono text-xs">@{usernameMatch[1]}</span> : null,
+        };
+      }
+
+      // Discord
+      if (hostname.includes('discord.gg') || hostname.includes('discord.com') || hostname.includes('discordapp.com')) {
+        return {
+          name: 'Discord',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-600 text-white">
+              Discord
+            </span>
+          ),
+        };
+      }
+
+      // Snapchat
+      if (hostname.includes('snapchat.com') || hostname.includes('snap.com')) {
+        return {
+          name: 'Snapchat',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-400 text-black">
+              👻 Snapchat
+            </span>
+          ),
+        };
+      }
+
+      // Reddit
+      if (hostname.includes('reddit.com') || hostname.includes('redd.it')) {
+        const subredditMatch = pathname.match(/^\/r\/([^/]+)/);
+        return {
+          name: 'Reddit',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-orange-600 text-white">
+              Reddit
+            </span>
+          ),
+          extractedInfo: subredditMatch ? <span className="font-mono text-xs">r/{subredditMatch[1]}</span> : null,
+        };
+      }
+
+      // Pinterest
+      if (hostname.includes('pinterest.com') || hostname.includes('pin.it')) {
+        return {
+          name: 'Pinterest',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-700 text-white">
+              Pinterest
+            </span>
+          ),
+        };
+      }
+
+      // App Store (Apple)
+      if (hostname.includes('apps.apple.com') || hostname.includes('itunes.apple.com')) {
+        return {
+          name: 'App Store',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white flex items-center gap-1">
+              <Smartphone className="w-3 h-3" />
+              App Store
+            </span>
+          ),
+        };
+      }
+
+      // Google Play Store
+      if (hostname.includes('play.google.com')) {
+        return {
+          name: 'Google Play',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-600 text-white flex items-center gap-1">
+              <Smartphone className="w-3 h-3" />
+              Google Play
+            </span>
+          ),
+        };
+      }
+
+      // Spotify
+      if (hostname.includes('spotify.com') || hostname.includes('open.spotify.com')) {
+        return {
+          name: 'Spotify',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white">
+              ♫ Spotify
+            </span>
+          ),
+        };
+      }
+
+      // GitHub
+      if (hostname.includes('github.com') || hostname.includes('gist.github.com')) {
+        const repoMatch = pathname.match(/^\/([^/]+)\/([^/]+)/);
+        return {
+          name: 'GitHub',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800">
+              GitHub
+            </span>
+          ),
+          extractedInfo: repoMatch ? <span className="font-mono text-xs">{repoMatch[1]}/{repoMatch[2]}</span> : null,
+        };
+      }
+
+      // PayPal
+      if (hostname.includes('paypal.com') || hostname.includes('paypal.me')) {
+        const usernameMatch = pathname.match(/^\/([^/]+)/);
+        return {
+          name: 'PayPal',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-800 text-white flex items-center gap-1">
+              <CreditCard className="w-3 h-3" />
+              PayPal
+            </span>
+          ),
+          extractedInfo: usernameMatch && hostname.includes('paypal.me') ? <span className="font-mono text-xs">@{usernameMatch[1]}</span> : null,
+        };
+      }
+
+      // Venmo
+      if (hostname.includes('venmo.com')) {
+        return {
+          name: 'Venmo',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-400 text-white flex items-center gap-1">
+              <CreditCard className="w-3 h-3" />
+              Venmo
+            </span>
+          ),
+        };
+      }
+
+      // Cash App
+      if (hostname.includes('cash.app')) {
+        const cashtagMatch = pathname.match(/^\/(\$[^/]+)/);
+        return {
+          name: 'Cash App',
+          badge: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white flex items-center gap-1">
+              <CreditCard className="w-3 h-3" />
+              Cash App
+            </span>
+          ),
+          extractedInfo: cashtagMatch ? <span className="font-mono text-xs">{cashtagMatch[1]}</span> : null,
+        };
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Render content type details - COMPREHENSIVE analysis using ALL parsers
+  const renderContentTypeDetails = (contentType: ContentTypeDetails, payload: string) => {
+    const details: Array<{ label: string; value: React.ReactNode; icon?: React.ReactNode }> = [];
+
+    // Helper to add plain text analysis as fallback
+    const addPlainTextAnalysis = () => {
+      const analysis = analyzePlainText(payload);
+      details.push({
+        label: 'Character Count',
+        value: `${analysis.charCount} characters`,
+        icon: <Type className="w-3 h-3" />,
+      });
+      details.push({
+        label: 'Word Count',
+        value: `${analysis.wordCount} words`,
+        icon: <Type className="w-3 h-3" />,
+      });
+      details.push({
+        label: 'Line Count',
+        value: `${analysis.lineCount} lines`,
+        icon: <Type className="w-3 h-3" />,
+      });
+      if (analysis.hasEmoji) {
+        details.push({
+          label: 'Contains Emoji',
+          value: <span className="text-amber-600 dark:text-amber-400">Yes</span>,
+          icon: <Type className="w-3 h-3" />,
+        });
+      }
+      if (analysis.hasNonAscii) {
+        details.push({
+          label: 'Contains Non-ASCII',
+          value: <span className="text-blue-600 dark:text-blue-400">Yes (UTF-8)</span>,
+          icon: <Binary className="w-3 h-3" />,
+        });
+      }
+      details.push({
+        label: 'Encoding Recommendation',
+        value: <span className="font-medium">{analysis.encodingRecommendation}</span>,
+        icon: <Settings className="w-3 h-3" />,
+      });
+    };
+
+    switch (contentType.type) {
+      case 'url': {
+        const urlData = parseUrlPayload(payload);
+        const socialPlatform = detectSocialPlatform(payload);
+        
+        // Social platform badge first if detected
+        if (socialPlatform) {
+          details.push({
+            label: 'Platform',
+            value: socialPlatform.badge,
+            icon: <Globe className="w-3 h-3" />,
+          });
+          if (socialPlatform.extractedInfo) {
+            details.push({
+              label: socialPlatform.name === 'WhatsApp' ? 'Phone' : 'Handle',
+              value: socialPlatform.extractedInfo,
+              icon: socialPlatform.name === 'WhatsApp' ? <Phone className="w-3 h-3" /> : <Type className="w-3 h-3" />,
+            });
+          }
+        }
+        
+        // Domain with security indicator
+        if (urlData.hostname) {
+          details.push({
+            label: 'Domain',
+            value: (
+              <span className="flex items-center gap-1">
+                {urlData.isSecure === 'true' && <Lock className="w-3 h-3 text-green-500" />}
+                <span className="font-mono text-xs">{urlData.hostname}</span>
+              </span>
+            ),
+            icon: <Globe className="w-3 h-3" />,
+          });
+        }
+        
+        // Security status
+        details.push({
+          label: 'Security',
+          value: urlData.isSecure === 'true' ? (
+            <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
+              <Lock className="w-3 h-3" /> HTTPS (Encrypted)
+            </span>
+          ) : (
+            <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" /> HTTP (Not Encrypted)
+            </span>
+          ),
+          icon: <Shield className="w-3 h-3" />,
+        });
+        
+        // Protocol
+        if (urlData.protocol) {
+          details.push({
+            label: 'Protocol',
+            value: <span className="font-mono text-xs uppercase">{urlData.protocol}</span>,
+            icon: <Link className="w-3 h-3" />,
+          });
+        }
+        
+        // Port (if non-standard)
+        if (urlData.port) {
+          details.push({
+            label: 'Port',
+            value: <span className="font-mono text-xs">{urlData.port}</span>,
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        
+        // Path
+        if (urlData.path) {
+          details.push({
+            label: 'Path',
+            value: <span className="font-mono text-xs break-all">{urlData.path}</span>,
+            icon: <Link className="w-3 h-3" />,
+          });
+        }
+        
+        // Fragment/Hash
+        if (urlData.fragment) {
+          details.push({
+            label: 'Fragment',
+            value: <span className="font-mono text-xs">#{urlData.fragment}</span>,
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        
+        // Shortened URL detection
+        if (urlData.isShortened === 'true') {
+          details.push({
+            label: 'URL Type',
+            value: (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                Shortened ({urlData.shortenerService})
+              </span>
+            ),
+            icon: <Link className="w-3 h-3" />,
+          });
+        }
+        
+        // Query parameters
+        const params = urlData.params;
+        if (params && params.length > 0) {
+          details.push({
+            label: 'Query Parameters',
+            value: <span className="font-medium">{params.length} parameter(s)</span>,
+            icon: <Settings className="w-3 h-3" />,
+          });
+          // Show first 5 params
+          params.slice(0, 5).forEach((param) => {
+            details.push({
+              label: `  └ ${param.key}`,
+              value: <span className="font-mono text-xs truncate max-w-[150px] block">{param.value}</span>,
+              icon: <ChevronRight className="w-3 h-3 text-muted-foreground" />,
+            });
+          });
+          if (params.length > 5) {
+            details.push({
+              label: '',
+              value: <span className="text-xs text-muted-foreground">...and {params.length - 5} more</span>,
+            });
+          }
+        }
+        
+        // URL length and encoding
+        details.push({
+          label: 'URL Length',
+          value: `${urlData.urlLength} characters`,
+          icon: <Ruler className="w-3 h-3" />,
+        });
+        
+        if (urlData.hasPercentEncoding === 'true') {
+          details.push({
+            label: 'Encoding',
+            value: <span className="text-xs">Contains percent-encoded characters</span>,
+            icon: <Binary className="w-3 h-3" />,
+          });
+        }
+        
+        // Clickable link
+        details.push({
+          label: 'Open URL',
+          value: (
+            <a
+              href={payload}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
+              Open in new tab <ChevronRight className="w-3 h-3" />
+            </a>
+          ),
+          icon: <Globe className="w-3 h-3" />,
+        });
+        break;
+      }
+      
+      case 'wifi': {
+        const wifiData = parseWifiPayload(payload);
+        
+        // SSID
+        if (wifiData.ssid) {
+          details.push({
+            label: 'Network Name (SSID)',
+            value: <span className="font-mono text-xs font-medium">{wifiData.ssid}</span>,
+            icon: <Wifi className="w-3 h-3" />,
+          });
+        }
+        
+        // Security type with detailed explanation
+        if (wifiData.security) {
+          const sec = String(wifiData.security).toUpperCase();
+          let securityBadge: React.ReactNode;
+          let securityNote = '';
+          
+          if (sec.includes('WPA3')) {
+            securityBadge = (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400">
+                WPA3 (Strongest)
+              </span>
+            );
+            securityNote = 'AES-256 encryption, latest standard';
+          } else if (sec.includes('WPA2')) {
+            securityBadge = (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400">
+                WPA2 (Strong)
+              </span>
+            );
+            securityNote = 'AES encryption, widely compatible';
+          } else if (sec.includes('WPA')) {
+            securityBadge = (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                WPA (Moderate)
+              </span>
+            );
+            securityNote = 'TKIP encryption, upgrade recommended';
+          } else if (sec.includes('WEP')) {
+            securityBadge = (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400">
+                WEP (Weak)
+              </span>
+            );
+            securityNote = '⚠️ Deprecated, easily cracked';
+          } else if (sec === 'NOPASS' || sec === 'OPEN' || sec === '') {
+            securityBadge = (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400">
+                Open (No Security)
+              </span>
+            );
+            securityNote = '⚠️ No encryption, avoid for sensitive data';
+          } else {
+            securityBadge = <span className="font-mono text-xs">{wifiData.security}</span>;
+          }
+          
+          details.push({
+            label: 'Security Type',
+            value: securityBadge,
+            icon: <Shield className="w-3 h-3" />,
+          });
+          
+          if (securityNote) {
+            details.push({
+              label: 'Security Note',
+              value: <span className="text-xs text-muted-foreground">{securityNote}</span>,
+              icon: <Info className="w-3 h-3" />,
+            });
+          }
+        }
+        
+        // Password (masked)
+        if (wifiData.password) {
+          const pwd = String(wifiData.password);
+          details.push({
+            label: 'Password',
+            value: (
+              <span className="font-mono text-xs">
+                {'•'.repeat(Math.min(pwd.length, 12))}
+                <span className="text-muted-foreground ml-1">({pwd.length} chars)</span>
+              </span>
+            ),
+            icon: <Lock className="w-3 h-3" />,
+          });
+        }
+        
+        // Hidden network
+        details.push({
+          label: 'Hidden Network',
+          value: wifiData.hidden === 'true' ? (
+            <span className="text-amber-600 dark:text-amber-400">Yes (won't appear in scan)</span>
+          ) : (
+            <span className="text-green-600 dark:text-green-400">No (visible)</span>
+          ),
+          icon: <Eye className="w-3 h-3" />,
+        });
+        
+        // Enterprise settings
+        if (wifiData.eapMethod) {
+          details.push({
+            label: 'EAP Method',
+            value: <span className="font-mono text-xs">{wifiData.eapMethod}</span>,
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        if (wifiData.identity) {
+          details.push({
+            label: 'Identity',
+            value: <span className="font-mono text-xs">{wifiData.identity}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        if (wifiData.phase2) {
+          details.push({
+            label: 'Phase 2',
+            value: <span className="font-mono text-xs">{wifiData.phase2}</span>,
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'vcard': {
+        const vcardData = parseVCardPayload(payload);
+        
+        // vCard version
+        if (vcardData.version) {
+          details.push({
+            label: 'vCard Version',
+            value: <span className="font-mono text-xs">v{vcardData.version}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Full name
+        if (vcardData.fullName) {
+          details.push({
+            label: 'Full Name',
+            value: <span className="font-medium">{vcardData.fullName}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Organization & Title
+        if (vcardData.organization) {
+          details.push({
+            label: 'Organization',
+            value: vcardData.organization,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        if (vcardData.title) {
+          details.push({
+            label: 'Title',
+            value: vcardData.title,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Phone numbers (clickable)
+        const phones = vcardData.phones as string[];
+        if (phones && phones.length > 0) {
+          phones.forEach((phone) => {
+            const [type, number] = phone.includes(':') ? phone.split(': ') : ['Phone', phone];
+            details.push({
+              label: type,
+              value: (
+                <a href={`tel:${number.replace(/[^+\d]/g, '')}`} className="font-mono text-xs text-primary hover:underline">
+                  {number}
+                </a>
+              ),
+              icon: <Phone className="w-3 h-3" />,
+            });
+          });
+        }
+        
+        // Email addresses (clickable)
+        const emails = vcardData.emails as string[];
+        if (emails && emails.length > 0) {
+          emails.forEach((email) => {
+            const [type, address] = email.includes(':') ? email.split(': ') : ['Email', email];
+            details.push({
+              label: type,
+              value: (
+                <a href={`mailto:${address}`} className="font-mono text-xs text-primary hover:underline">
+                  {address}
+                </a>
+              ),
+              icon: <Mail className="w-3 h-3" />,
+            });
+          });
+        }
+        
+        // Addresses
+        const addresses = vcardData.addresses as string[];
+        if (addresses && addresses.length > 0) {
+          addresses.forEach((addr) => {
+            details.push({
+              label: 'Address',
+              value: <span className="text-xs">{addr}</span>,
+              icon: <MapPin className="w-3 h-3" />,
+            });
+          });
+        }
+        
+        // Birthday
+        if (vcardData.birthday) {
+          details.push({
+            label: 'Birthday',
+            value: vcardData.birthday,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // URL
+        if (vcardData.url) {
+          details.push({
+            label: 'Website',
+            value: (
+              <a href={String(vcardData.url)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                {String(vcardData.url)}
+              </a>
+            ),
+            icon: <Globe className="w-3 h-3" />,
+          });
+        }
+        
+        // Note
+        if (vcardData.note) {
+          details.push({
+            label: 'Notes',
+            value: <span className="text-xs">{String(vcardData.note).slice(0, 100)}{String(vcardData.note).length > 100 ? '...' : ''}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Photo indicator
+        if (vcardData.hasPhoto === 'true') {
+          details.push({
+            label: 'Photo',
+            value: <span className="text-green-600 dark:text-green-400">Embedded</span>,
+            icon: <ImageIcon className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'mecard': {
+        const mecardData = parseMeCardPayload(payload);
+        
+        if (mecardData.name) {
+          details.push({
+            label: 'Name',
+            value: <span className="font-medium">{mecardData.name}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        if (mecardData.organization) {
+          details.push({
+            label: 'Organization',
+            value: mecardData.organization,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        if (mecardData.phone) {
+          details.push({
+            label: 'Phone',
+            value: (
+              <a href={`tel:${String(mecardData.phone).replace(/[^+\d]/g, '')}`} className="font-mono text-xs text-primary hover:underline">
+                {mecardData.phone}
+              </a>
+            ),
+            icon: <Phone className="w-3 h-3" />,
+          });
+        }
+        if (mecardData.email) {
+          details.push({
+            label: 'Email',
+            value: (
+              <a href={`mailto:${mecardData.email}`} className="font-mono text-xs text-primary hover:underline">
+                {mecardData.email}
+              </a>
+            ),
+            icon: <Mail className="w-3 h-3" />,
+          });
+        }
+        if (mecardData.address) {
+          details.push({
+            label: 'Address',
+            value: <span className="text-xs">{mecardData.address}</span>,
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        if (mecardData.birthday) {
+          details.push({
+            label: 'Birthday',
+            value: mecardData.birthday,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        if (mecardData.url) {
+          details.push({
+            label: 'Website',
+            value: (
+              <a href={String(mecardData.url)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                {mecardData.url}
+              </a>
+            ),
+            icon: <Globe className="w-3 h-3" />,
+          });
+        }
+        if (mecardData.note) {
+          details.push({
+            label: 'Notes',
+            value: <span className="text-xs">{mecardData.note}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'email': {
+        const emailData = parseEmailPayload(payload);
+        
+        // Provider badge
+        if (emailData.provider) {
+          const providerColors: Record<string, string> = {
+            'Gmail': 'bg-red-500/10 text-red-600 dark:text-red-400',
+            'Microsoft Outlook': 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+            'Yahoo Mail': 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+            'Apple iCloud': 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
+            'ProtonMail': 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+          };
+          const colorClass = providerColors[String(emailData.provider)] || 'bg-muted text-foreground';
+          details.push({
+            label: 'Email Provider',
+            value: (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
+                {emailData.provider}
+              </span>
+            ),
+            icon: <Mail className="w-3 h-3" />,
+          });
+        }
+        
+        // Recipient
+        if (emailData.to) {
+          details.push({
+            label: 'Recipient',
+            value: (
+              <a href={`mailto:${emailData.to}`} className="font-mono text-xs text-primary hover:underline">
+                {emailData.to}
+              </a>
+            ),
+            icon: <Mail className="w-3 h-3" />,
+          });
+        }
+        
+        // Domain
+        if (emailData.domain) {
+          details.push({
+            label: 'Domain',
+            value: <span className="font-mono text-xs">{emailData.domain}</span>,
+            icon: <Globe className="w-3 h-3" />,
+          });
+        }
+        
+        // Subject
+        if (emailData.subject) {
+          details.push({
+            label: 'Subject',
+            value: <span className="text-xs font-medium">{emailData.subject}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Body preview
+        if (emailData.body) {
+          details.push({
+            label: 'Body Preview',
+            value: <span className="text-xs text-muted-foreground">{String(emailData.body).slice(0, 80)}{String(emailData.body).length > 80 ? '...' : ''}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // CC/BCC
+        if (emailData.cc) {
+          details.push({
+            label: 'CC',
+            value: <span className="font-mono text-xs">{emailData.cc}</span>,
+            icon: <Mail className="w-3 h-3" />,
+          });
+        }
+        if (emailData.bcc) {
+          details.push({
+            label: 'BCC',
+            value: <span className="font-mono text-xs">{emailData.bcc}</span>,
+            icon: <Mail className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'tel': {
+        const telData = parseTelPayload(payload);
+        
+        // Country with flag
+        if (telData.country && telData.countryFlag) {
+          details.push({
+            label: 'Country',
+            value: (
+              <span className="flex items-center gap-1">
+                <span className="text-lg">{telData.countryFlag}</span>
+                <span>{telData.country}</span>
+              </span>
+            ),
+            icon: <Globe className="w-3 h-3" />,
+          });
+        }
+        
+        // Country code
+        if (telData.countryCode) {
+          details.push({
+            label: 'Country Code',
+            value: <span className="font-mono text-xs font-medium">{telData.countryCode}</span>,
+            icon: <Phone className="w-3 h-3" />,
+          });
+        }
+        
+        // Phone number (clickable)
+        if (telData.number) {
+          details.push({
+            label: 'Phone Number',
+            value: (
+              <a href={`tel:${telData.number}`} className="font-mono text-sm text-primary hover:underline font-medium">
+                {telData.formatted || telData.number}
+              </a>
+            ),
+            icon: <Phone className="w-3 h-3" />,
+          });
+        }
+        
+        // Call action
+        details.push({
+          label: 'Action',
+          value: (
+            <a href={`tel:${telData.number}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+              <Phone className="w-3 h-3" /> Tap to call
+            </a>
+          ),
+          icon: <ChevronRight className="w-3 h-3" />,
+        });
+        break;
+      }
+      
+      case 'sms': {
+        const smsData = parseSmsPayload(payload);
+        
+        // Phone number
+        if (smsData.number) {
+          details.push({
+            label: 'Recipient',
+            value: (
+              <a href={`tel:${String(smsData.number).replace(/[^+\d]/g, '')}`} className="font-mono text-xs text-primary hover:underline">
+                {smsData.number}
+              </a>
+            ),
+            icon: <Phone className="w-3 h-3" />,
+          });
+        }
+        
+        // Message body
+        if (smsData.body) {
+          details.push({
+            label: 'Message',
+            value: <span className="text-xs">{smsData.body}</span>,
+            icon: <MessageSquare className="w-3 h-3" />,
+          });
+        }
+        
+        // Character count
+        if (smsData.charCount) {
+          details.push({
+            label: 'Character Count',
+            value: `${smsData.charCount} characters`,
+            icon: <Type className="w-3 h-3" />,
+          });
+        }
+        
+        // SMS segments
+        if (smsData.segmentCount) {
+          details.push({
+            label: 'SMS Segments',
+            value: (
+              <span className={Number(smsData.segmentCount) > 1 ? 'text-amber-600 dark:text-amber-400' : ''}>
+                {smsData.segmentCount} segment(s)
+                {Number(smsData.segmentCount) > 1 && ' (may cost more)'}
+              </span>
+            ),
+            icon: <MessageSquare className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'geo': {
+        const geoData = parseGeoPayload(payload);
+        
+        // Coordinates in decimal
+        if (geoData.latitude !== null && geoData.longitude !== null) {
+          details.push({
+            label: 'Latitude',
+            value: <span className="font-mono text-xs">{Number(geoData.latitude).toFixed(6)}° {geoData.latHemisphere}</span>,
+            icon: <MapPin className="w-3 h-3" />,
+          });
+          details.push({
+            label: 'Longitude',
+            value: <span className="font-mono text-xs">{Number(geoData.longitude).toFixed(6)}° {geoData.lonHemisphere}</span>,
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        
+        // DMS format
+        if (geoData.latDms && geoData.lonDms) {
+          details.push({
+            label: 'DMS Format',
+            value: <span className="font-mono text-xs">{geoData.latDms}, {geoData.lonDms}</span>,
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        
+        // Altitude
+        if (geoData.altitude !== null) {
+          details.push({
+            label: 'Altitude',
+            value: `${geoData.altitude}m`,
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        
+        // Uncertainty
+        if (geoData.uncertainty !== null) {
+          details.push({
+            label: 'Uncertainty',
+            value: `±${geoData.uncertainty}m`,
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        
+        // Map links
+        if (geoData.googleMapsUrl) {
+          details.push({
+            label: 'Google Maps',
+            value: (
+              <a href={String(geoData.googleMapsUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                Open in Google Maps <ChevronRight className="w-3 h-3" />
+              </a>
+            ),
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        if (geoData.appleMapsUrl) {
+          details.push({
+            label: 'Apple Maps',
+            value: (
+              <a href={String(geoData.appleMapsUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                Open in Apple Maps <ChevronRight className="w-3 h-3" />
+              </a>
+            ),
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        if (geoData.osmUrl) {
+          details.push({
+            label: 'OpenStreetMap',
+            value: (
+              <a href={String(geoData.osmUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                Open in OpenStreetMap <ChevronRight className="w-3 h-3" />
+              </a>
+            ),
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'crypto_bitcoin':
+      case 'crypto_ethereum':
+      case 'crypto_other': {
+        const cryptoData = parseCryptoPayload(payload);
+        
+        // Network badge
+        if (cryptoData.network) {
+          const networkColors: Record<string, string> = {
+            'Bitcoin': 'bg-orange-500 text-white',
+            'Ethereum': 'bg-purple-500 text-white',
+            'Litecoin': 'bg-gray-500 text-white',
+            'Dogecoin': 'bg-yellow-500 text-black',
+          };
+          const colorClass = networkColors[String(cryptoData.network)] || 'bg-muted text-foreground';
+          details.push({
+            label: 'Network',
+            value: (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
+                {cryptoData.network}
+              </span>
+            ),
+            icon: <Wallet className="w-3 h-3" />,
+          });
+        }
+        
+        // Address preview
+        if (cryptoData.addressPreview) {
+          details.push({
+            label: 'Address',
+            value: <span className="font-mono text-xs">{cryptoData.addressPreview}</span>,
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        
+        // Full address with copy
+        if (cryptoData.address) {
+          details.push({
+            label: 'Full Address',
+            value: (
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-[10px] break-all max-w-[150px]">{cryptoData.address}</span>
+                <CopyButton text={String(cryptoData.address)} />
+              </div>
+            ),
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        
+        // Amount
+        if (cryptoData.amount) {
+          details.push({
+            label: 'Amount',
+            value: <span className="font-mono text-sm font-bold">{cryptoData.amount} {cryptoData.network}</span>,
+            icon: <CreditCard className="w-3 h-3" />,
+          });
+        }
+        
+        // Label
+        if (cryptoData.label) {
+          details.push({
+            label: 'Label',
+            value: cryptoData.label,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Message
+        if (cryptoData.message) {
+          details.push({
+            label: 'Message',
+            value: <span className="text-xs">{cryptoData.message}</span>,
+            icon: <MessageSquare className="w-3 h-3" />,
+          });
+        }
+        
+        // Block explorer
+        if (cryptoData.explorerUrl) {
+          details.push({
+            label: 'Block Explorer',
+            value: (
+              <a href={String(cryptoData.explorerUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                View on blockchain <ChevronRight className="w-3 h-3" />
+              </a>
+            ),
+            icon: <Globe className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'epc_sepa': {
+        const epcData = parseEpcSepaPayload(payload);
+        
+        // Payment standard badge
+        details.push({
+          label: 'Payment Standard',
+          value: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white">
+              EPC/SEPA Credit Transfer
+            </span>
+          ),
+          icon: <CreditCard className="w-3 h-3" />,
+        });
+        
+        // Service tag & version
+        if (epcData.serviceTag) {
+          details.push({
+            label: 'Service Tag',
+            value: <span className="font-mono text-xs">{epcData.serviceTag}</span>,
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        if (epcData.version) {
+          details.push({
+            label: 'Version',
+            value: <span className="font-mono text-xs">{epcData.version}</span>,
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        
+        // Beneficiary
+        if (epcData.beneficiaryName) {
+          details.push({
+            label: 'Beneficiary',
+            value: <span className="font-medium">{epcData.beneficiaryName}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // IBAN (formatted)
+        if (epcData.iban) {
+          details.push({
+            label: 'IBAN',
+            value: (
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-xs">{epcData.iban}</span>
+                <CopyButton text={String(epcData.iban).replace(/\s/g, '')} />
+              </div>
+            ),
+            icon: <CreditCard className="w-3 h-3" />,
+          });
+        }
+        
+        // BIC
+        if (epcData.bic) {
+          details.push({
+            label: 'BIC/SWIFT',
+            value: <span className="font-mono text-xs">{epcData.bic}</span>,
+            icon: <CreditCard className="w-3 h-3" />,
+          });
+        }
+        
+        // Amount & currency
+        if (epcData.amount) {
+          details.push({
+            label: 'Amount',
+            value: <span className="font-mono text-sm font-bold">{epcData.currency || 'EUR'} {epcData.amount}</span>,
+            icon: <CreditCard className="w-3 h-3" />,
+          });
+        }
+        
+        // Reference
+        if (epcData.referenceType) {
+          details.push({
+            label: 'Reference Type',
+            value: <span className="font-mono text-xs">{epcData.referenceType}</span>,
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        if (epcData.reference) {
+          details.push({
+            label: 'Reference',
+            value: <span className="font-mono text-xs">{epcData.reference}</span>,
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        
+        // Remittance info
+        if (epcData.remittanceInfo) {
+          details.push({
+            label: 'Remittance Info',
+            value: <span className="text-xs">{epcData.remittanceInfo}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'upi': {
+        const upiData = parseUpiPayload(payload);
+        
+        // Payment standard badge
+        details.push({
+          label: 'Payment Standard',
+          value: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white">
+              UPI (India)
+            </span>
+          ),
+          icon: <Smartphone className="w-3 h-3" />,
+        });
+        
+        // VPA
+        if (upiData.vpa) {
+          details.push({
+            label: 'UPI ID (VPA)',
+            value: <span className="font-mono text-xs font-medium">{upiData.vpa}</span>,
+            icon: <CreditCard className="w-3 h-3" />,
+          });
+        }
+        
+        // Payee name
+        if (upiData.payeeName) {
+          details.push({
+            label: 'Payee Name',
+            value: <span className="font-medium">{upiData.payeeName}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Amount & currency
+        if (upiData.amount) {
+          details.push({
+            label: 'Amount',
+            value: <span className="font-mono text-sm font-bold">{upiData.currency || 'INR'} {upiData.amount}</span>,
+            icon: <CreditCard className="w-3 h-3" />,
+          });
+        }
+        
+        // Transaction reference
+        if (upiData.transactionRef) {
+          details.push({
+            label: 'Transaction Ref',
+            value: <span className="font-mono text-xs">{upiData.transactionRef}</span>,
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        
+        // Transaction note
+        if (upiData.transactionNote) {
+          details.push({
+            label: 'Note',
+            value: <span className="text-xs">{upiData.transactionNote}</span>,
+            icon: <MessageSquare className="w-3 h-3" />,
+          });
+        }
+        
+        // Merchant code
+        if (upiData.merchantCode) {
+          details.push({
+            label: 'Merchant Code',
+            value: <span className="font-mono text-xs">{upiData.merchantCode}</span>,
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'emv_qr': {
+        // Payment standard badge
+        details.push({
+          label: 'Payment Standard',
+          value: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500 text-white">
+              EMVCo QR
+            </span>
+          ),
+          icon: <CreditCard className="w-3 h-3" />,
+        });
+        details.push({
+          label: 'Format',
+          value: 'Merchant-Presented Mode',
+          icon: <Settings className="w-3 h-3" />,
+        });
+        // Add plain text analysis for additional info
+        addPlainTextAnalysis();
+        break;
+      }
+      
+      case 'swiss_qr_bill': {
+        // Payment standard badge
+        details.push({
+          label: 'Payment Standard',
+          value: (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white">
+              Swiss QR-bill
+            </span>
+          ),
+          icon: <CreditCard className="w-3 h-3" />,
+        });
+        details.push({
+          label: 'Country',
+          value: (
+            <span className="flex items-center gap-1">
+              <span className="text-lg">🇨🇭</span> Switzerland
+            </span>
+          ),
+          icon: <Globe className="w-3 h-3" />,
+        });
+        // Add plain text analysis for additional info
+        addPlainTextAnalysis();
+        break;
+      }
+      
+      case 'calendar_event': {
+        const calData = parseCalendarPayload(payload);
+        
+        // Event summary
+        if (calData.summary) {
+          details.push({
+            label: 'Event',
+            value: <span className="font-medium">{calData.summary}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // All-day indicator
+        if (calData.isAllDay) {
+          details.push({
+            label: 'Type',
+            value: (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                All-Day Event
+              </span>
+            ),
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Start date/time
+        if (calData.startFormatted) {
+          details.push({
+            label: 'Start',
+            value: <span className="text-sm">{calData.startFormatted}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // End date/time
+        if (calData.endFormatted) {
+          details.push({
+            label: 'End',
+            value: <span className="text-sm">{calData.endFormatted}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Duration
+        if (calData.duration) {
+          details.push({
+            label: 'Duration',
+            value: <span className="font-mono text-xs">{calData.duration}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Timezone
+        if (calData.timezone) {
+          details.push({
+            label: 'Timezone',
+            value: <span className="font-mono text-xs">{calData.timezone}</span>,
+            icon: <Globe className="w-3 h-3" />,
+          });
+        }
+        
+        // Location
+        if (calData.location) {
+          details.push({
+            label: 'Location',
+            value: <span className="text-xs">{calData.location}</span>,
+            icon: <MapPin className="w-3 h-3" />,
+          });
+        }
+        
+        // Description
+        if (calData.description) {
+          const desc = String(calData.description);
+          details.push({
+            label: 'Description',
+            value: <span className="text-xs text-muted-foreground">{desc.slice(0, 100)}{desc.length > 100 ? '...' : ''}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Recurrence
+        if (calData.recurrenceFormatted) {
+          details.push({
+            label: 'Recurrence',
+            value: (
+              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                {calData.recurrenceFormatted}
+              </span>
+            ),
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        
+        // Organizer
+        if (calData.organizer) {
+          details.push({
+            label: 'Organizer',
+            value: <span className="text-xs">{calData.organizer}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Attendees
+        if (calData.attendeesCount) {
+          details.push({
+            label: 'Attendees',
+            value: `${calData.attendeesCount} invited`,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'otp_auth': {
+        const otpData = parseOtpAuthPayload(payload);
+        
+        // Type badge
+        if (otpData.type) {
+          details.push({
+            label: 'Type',
+            value: (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                otpData.type === 'TOTP' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+              }`}>
+                {otpData.type === 'TOTP' ? 'Time-based OTP' : 'Counter-based OTP'}
+              </span>
+            ),
+            icon: <Lock className="w-3 h-3" />,
+          });
+        }
+        
+        // Issuer
+        if (otpData.issuer) {
+          details.push({
+            label: 'Issuer',
+            value: <span className="font-medium">{otpData.issuer}</span>,
+            icon: <Shield className="w-3 h-3" />,
+          });
+        }
+        
+        // Account
+        if (otpData.account) {
+          details.push({
+            label: 'Account',
+            value: <span className="font-mono text-xs">{otpData.account}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        
+        // Algorithm
+        if (otpData.algorithm) {
+          details.push({
+            label: 'Algorithm',
+            value: (
+              <div className="text-right">
+                <span className="font-mono text-xs">{otpData.algorithm}</span>
+                {otpData.algorithmNote && (
+                  <div className="text-[10px] text-muted-foreground">{otpData.algorithmNote}</div>
+                )}
+              </div>
+            ),
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        
+        // Digits
+        if (otpData.digits) {
+          details.push({
+            label: 'Code Length',
+            value: `${otpData.digits} digits`,
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        
+        // Period (for TOTP)
+        if (otpData.period && otpData.type === 'TOTP') {
+          details.push({
+            label: 'Refresh Period',
+            value: `${otpData.period} seconds`,
+            icon: <Settings className="w-3 h-3" />,
+          });
+        }
+        
+        // Counter (for HOTP)
+        if (otpData.counter && otpData.type === 'HOTP') {
+          details.push({
+            label: 'Counter',
+            value: <span className="font-mono text-xs">{otpData.counter}</span>,
+            icon: <Hash className="w-3 h-3" />,
+          });
+        }
+        
+        // Secret status
+        if (otpData.hasSecret) {
+          details.push({
+            label: 'Secret',
+            value: (
+              <span className={otpData.hasSecret === 'Missing' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
+                {otpData.hasSecret}
+              </span>
+            ),
+            icon: <Lock className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+      
+      case 'plain_text':
+      case 'unknown':
+      default: {
+        // For plain text and unknown types, always provide comprehensive analysis
+        addPlainTextAnalysis();
+        
+        // Content preview
+        if (payload.length > 0) {
+          const preview = payload.length > 200 ? payload.slice(0, 200) + '...' : payload;
+          details.push({
+            label: 'Content Preview',
+            value: <span className="text-xs font-mono break-all">{preview}</span>,
+            icon: <FileText className="w-3 h-3" />,
+          });
+        }
+        break;
+      }
+    }
+
+    // Ensure we always have at least some details
+    if (details.length === 0) {
+      addPlainTextAnalysis();
     }
 
     return details;
   };
-  
+
+  // Parse geo coordinates from payload for geo content type
+  const renderGeoDetails = (payload: string) => {
+    const geoMatch = payload.match(/^geo:([\d.-]+),([\d.-]+)/i);
+    if (!geoMatch) return null;
+    const lat = parseFloat(geoMatch[1]);
+    const lng = parseFloat(geoMatch[2]);
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    return (
+      <div className="mt-2 p-2 rounded-lg bg-muted/50">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Coordinates</span>
+          <span className="font-mono text-xs">{lat.toFixed(6)}, {lng.toFixed(6)}</span>
+        </div>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 flex items-center gap-1 text-xs text-primary hover:underline"
+        >
+          <MapPin className="w-3 h-3" />
+          Open in Google Maps
+        </a>
+      </div>
+    );
+  };
+
   // Export analysis result as JSON for Netlify API
   const handleExportJSON = useCallback(() => {
     if (!result?.success) return;
-    
+
     // Create a clean export object with all analysis data
     const exportData = {
       version: '1.0',
@@ -1676,38 +4213,38 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         eccLevel: result.eccLevel,
         maskPattern: result.maskPattern,
         encodingMode: result.encodingMode,
-        
+
         // Analysis metadata
         confidence: result.confidence,
         warnings: result.warnings,
-        
+
         // Content analysis
         contentType: result.contentType,
-        
+
         // Visual properties
         detectedColors: result.detectedColors,
         estimatedModulePx: result.estimatedModulePx,
         quietZone: result.quietZone,
-        
+
         // Capacity
         dataCapacity: result.dataCapacity,
-        
+
         // Structure
         structuralAnalysis: result.structuralAnalysis,
-        
+
         // Image
         imageProperties: result.imageProperties,
-        
+
         // Error correction
         errorsCorrected: result.errorsCorrected,
-        
+
         // Decoder metadata
         decoderMetadata: result.decoderMetadata,
-        
+
         // Module matrix as compact format
-        moduleMatrix: result.moduleMatrix ? result.moduleMatrix.map(row => 
-          row.map(cell => cell ? 1 : 0).join('')
-        ) : undefined,
+        moduleMatrix: result.moduleMatrix
+          ? result.moduleMatrix.map((row) => row.map((cell) => (cell ? 1 : 0)).join(''))
+          : undefined,
       },
       // Settings for recreation in generator
       generatorSettings: {
@@ -1715,14 +4252,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         ecc: result.eccLevel,
         version: actualUsedVersion ?? result.version,
         maskPattern: result.maskPattern,
-        encodingMode: result.encodingMode !== 'unknown' && result.encodingMode !== 'mixed' 
-          ? result.encodingMode 
-          : undefined,
+        encodingMode:
+          result.encodingMode !== 'unknown' && result.encodingMode !== 'mixed'
+            ? result.encodingMode
+            : undefined,
         fgColor: result.detectedColors?.foreground,
         bgColor: result.detectedColors?.background,
       },
     };
-    
+
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1752,30 +4290,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               {t('analyze.title', 'QR Code Analyzer')}
             </h1>
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              {t(
-                'analyze.description',
-                'The most comprehensive QR code analyzer available. Extract every technical detail, visualize the module matrix, check WCAG compliance, and export analysis data for recreation.'
-              )}
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 pt-1">
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
-                <Binary className="w-3 h-3" />
-                Hex Dump
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
-                <Grid3x3 className="w-3 h-3" />
-                Matrix View
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
-                <Eye className="w-3 h-3" />
-                WCAG Check
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
-                <FileJson className="w-3 h-3" />
-                JSON Export
-              </span>
-            </div>
+            {/* Hide description on Android */}
+            {!Capacitor.isNativePlatform() && (
+              <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                {t(
+                  'analyze.description',
+                  'The most comprehensive QR code analyzer available. Extract every technical detail, visualize the module matrix, check WCAG compliance, and export analysis data for recreation.'
+                )}
+              </p>
+            )}
           </div>
 
           {/* Input Section - Always visible, compact cards */}
@@ -1786,7 +4309,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                 type="button"
                 onClick={handleAnalyzeGenerator}
                 disabled={isLoading}
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full ${
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
                   isLoading && loadingSource === 'generator'
                     ? 'border-primary bg-primary/5'
                     : 'border-primary/50 bg-primary/5 hover:border-primary hover:bg-primary/10'
@@ -1807,7 +4330,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                 </div>
               </button>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full">
+              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
                 <QrCode className="w-6 h-6 text-muted-foreground" />
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">
@@ -1830,7 +4353,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                 disabled={isLoading}
               />
               <div
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed transition-all h-full ${
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed transition-all h-full shadow-sm ${
                   isLoading && loadingSource === 'file'
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary hover:bg-primary/5'
@@ -1852,7 +4375,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
             {/* URL Input Card */}
             <div
-              className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full ${
+              className={`flex flex-col gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
                 isLoading && loadingSource === 'url'
                   ? 'border-primary bg-primary/5'
                   : 'border-border'
@@ -1893,7 +4416,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                 type="button"
                 onClick={handleCameraCapture}
                 disabled={isLoading}
-                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full ${
+                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all h-full shadow-sm ${
                   isLoading && loadingSource === 'camera'
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary hover:bg-primary/5'
@@ -1912,7 +4435,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                 </div>
               </button>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full">
+              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
                 <CameraIcon className="w-6 h-6 text-muted-foreground" />
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">
@@ -1928,7 +4451,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
           {/* Error State */}
           {error && !result && (
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive shadow-sm">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium">{t('analyze.error', 'Analysis Failed')}</p>
@@ -1945,7 +4468,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             <div className="space-y-4">
               {/* Status Header - Success */}
               {result.success && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 shadow-sm">
                   <CheckCircle className="w-5 h-5 shrink-0" />
                   <div className="flex-1">
                     <p className="font-medium text-sm">
@@ -2047,7 +4570,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
               {/* Warnings */}
               {result.warnings && result.warnings.length > 0 && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 shadow-sm">
                   <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                   <div className="text-sm text-amber-700 dark:text-amber-400">
                     {result.warnings.map((warning, i) => (
@@ -2061,11 +4584,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                 <>
                   {/* Sticky Summary Bar */}
                   <SummaryBar result={result} />
-                  
+
                   {/* Side-by-Side Preview */}
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* Original Image */}
-                    <div className="border rounded-lg p-4 bg-card">
+                    <div className="border rounded-lg p-4 bg-card shadow-sm">
                       <div className="flex items-center gap-2 mb-3">
                         <ImageIcon className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm font-medium">Original</span>
@@ -2089,11 +4612,13 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     </div>
 
                     {/* Reproduced QR */}
-                    <div className="border rounded-lg p-4 bg-card">
+                    <div className="border rounded-lg p-4 bg-card shadow-sm">
                       <div className="flex items-center gap-2 mb-3">
                         <QrCode className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm font-medium">Reproduced</span>
-                        <span className="text-xs text-muted-foreground ml-auto">From Extracted Settings</span>
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          From Extracted Settings
+                        </span>
                       </div>
                       <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         <canvas
@@ -2107,7 +4632,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
                   {/* Payload Content with Copy */}
                   {result.payload && (
-                    <div className="border rounded-lg p-4 bg-card">
+                    <div className="border rounded-lg p-4 bg-card shadow-sm">
                       <div className="flex items-center gap-2 mb-2">
                         <Database className="w-4 h-4 text-primary" />
                         <span className="text-sm font-medium">Payload Content</span>
@@ -2117,35 +4642,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                         </span>
                         <CopyButton text={result.payload} label="Copy" />
                       </div>
-                      <pre className="text-sm font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-32 whitespace-pre-wrap break-all">
+                      <pre className="text-sm font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all">
                         {result.payload}
                       </pre>
                     </div>
                   )}
 
-                  {/* Tabbed Analysis Sections */}
-                  <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 mb-4">
-                      <TabsTrigger value="overview" className="text-xs sm:text-sm">
-                        <Eye className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
-                        Overview
-                      </TabsTrigger>
-                      <TabsTrigger value="technical" className="text-xs sm:text-sm">
-                        <Settings className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
-                        Technical
-                      </TabsTrigger>
-                      <TabsTrigger value="visual" className="text-xs sm:text-sm">
-                        <Palette className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
-                        Visual
-                      </TabsTrigger>
-                      <TabsTrigger value="advanced" className="text-xs sm:text-sm">
-                        <Code2 className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
-                        Advanced
-                      </TabsTrigger>
-                    </TabsList>
-                    
-                    {/* Overview Tab */}
-                    <TabsContent value="overview" className="space-y-4 animate-in fade-in duration-200">
+                  {/* Analysis Sections - Continuous listing */}
+                  <div className="space-y-4">
+                    {/* Content & Structure */}
                       <div className="grid md:grid-cols-2 gap-4">
                         {/* Content Analysis */}
                         {result.contentType && (
@@ -2168,24 +4673,24 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                 value={result.contentType.label}
                                 icon={<Fingerprint className="w-3.5 h-3.5" />}
                               />
-                              {renderContentTypeDetails(result.contentType).map((detail, i) => (
+                              {renderContentTypeDetails(result.contentType, result.payload || '').map((detail, i) => (
                                 <DetailRow
                                   key={i}
                                   label={detail.label}
-                                  value={
-                                    <span className="font-mono text-xs truncate max-w-[200px] block">
-                                      {detail.value}
-                                    </span>
-                                  }
+                                  value={detail.value}
                                   icon={detail.icon}
                                 />
                               ))}
+                              {/* Geo coordinates are now handled in renderContentTypeDetails */}
                             </div>
                           </CollapsibleSection>
                         )}
 
                         {/* QR Structure */}
-                        <CollapsibleSection title="QR Structure" icon={<Grid3x3 className="w-4 h-4" />}>
+                        <CollapsibleSection
+                          title="QR Structure"
+                          icon={<Grid3x3 className="w-4 h-4" />}
+                        >
                           <div className="space-y-2">
                             <DetailRow
                               label="Version"
@@ -2239,8 +4744,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
                               <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
                                 <Shield className="w-3 h-3" />
-                                {result.errorsCorrected} error{result.errorsCorrected !== 1 ? 's' : ''}{' '}
-                                corrected
+                                {result.errorsCorrected} error
+                                {result.errorsCorrected !== 1 ? 's' : ''} corrected
                               </span>
                             ) : null
                           }
@@ -2249,7 +4754,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <DetailRow
                               label="Mode"
                               value={
-                                <span className="capitalize">{result.encodingMode || 'Unknown'}</span>
+                                <span className="capitalize">
+                                  {result.encodingMode || 'Unknown'}
+                                </span>
                               }
                               icon={<Type className="w-3.5 h-3.5" />}
                             />
@@ -2312,9 +4819,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                 <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
                                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                                   <span>
-                                    Payload ({result.dataCapacity.used} bytes) exceeds detected capacity
-                                    ({result.dataCapacity.total} bytes). Version or ECC detection may be
-                                    inaccurate.
+                                    Payload ({result.dataCapacity.used} bytes) exceeds detected
+                                    capacity ({result.dataCapacity.total} bytes). Version or ECC
+                                    detection may be inaccurate.
                                   </span>
                                 </div>
                                 <DetailRow
@@ -2381,11 +4888,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           </CollapsibleSection>
                         )}
                       </div>
-                    </TabsContent>
-                    
-                    {/* Technical Tab */}
-                    <TabsContent value="technical" className="space-y-4 animate-in fade-in duration-200">
-                      <div className="grid md:grid-cols-2 gap-4">
+
+                    {/* Technical Section */}
+                    <div className="grid md:grid-cols-2 gap-4">
                         {/* Capacity by Mode */}
                         {result.version !== null && result.eccLevel && (
                           <CollapsibleSection
@@ -2413,7 +4918,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             />
                           </CollapsibleSection>
                         )}
+                    </div>
 
+                    {/* Decoder Metadata, Format Info + Image Properties - 2 column layout */}
+                    <div className="grid md:grid-cols-2 gap-4">
                         {/* Decoder Raw Metadata - Authoritative source of truth */}
                         {result.decoderMetadata && (
                           <CollapsibleSection
@@ -2433,27 +4941,33 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                               <DetailRow
                                 label="Version"
                                 value={
-                                  result.decoderMetadata.version !== null
-                                    ? `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
-                                    : <span className="text-red-500">— (not detected)</span>
+                                  result.decoderMetadata.version !== null ? (
+                                    `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
+                                  ) : (
+                                    <span className="text-red-500">— (not detected)</span>
+                                  )
                                 }
                                 icon={<Hash className="w-3.5 h-3.5" />}
                               />
                               <DetailRow
                                 label="Mask Pattern"
                                 value={
-                                  result.decoderMetadata.maskPattern !== null
-                                    ? `${result.decoderMetadata.maskPattern}`
-                                    : <span className="text-amber-500">— (not detected)</span>
+                                  result.decoderMetadata.maskPattern !== null ? (
+                                    `${result.decoderMetadata.maskPattern}`
+                                  ) : (
+                                    <span className="text-amber-500">— (not detected)</span>
+                                  )
                                 }
                                 icon={<Layers className="w-3.5 h-3.5" />}
                               />
                               <DetailRow
                                 label="ECC Level"
                                 value={
-                                  result.decoderMetadata.eccLevel !== null
-                                    ? result.decoderMetadata.eccLevel
-                                    : <span className="text-amber-500">— (not detected)</span>
+                                  result.decoderMetadata.eccLevel !== null ? (
+                                    result.decoderMetadata.eccLevel
+                                  ) : (
+                                    <span className="text-amber-500">— (not detected)</span>
+                                  )
                                 }
                                 icon={<Shield className="w-3.5 h-3.5" />}
                               />
@@ -2461,8 +4975,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                 label="Errors Corrected"
                                 value={
                                   result.decoderMetadata.errorsCorrected !== null
-                                    ? result.decoderMetadata.errorsCorrected
-                                    : '—'
+                                    ? result.decoderMetadata.errorsCorrected === 0 
+                                      ? <span className="text-green-600 dark:text-green-400">0 (no errors)</span>
+                                      : <span className="text-amber-600 dark:text-amber-400">{result.decoderMetadata.errorsCorrected}</span>
+                                    : <span className="text-muted-foreground">0 (clean decode)</span>
                                 }
                                 icon={<Shield className="w-3.5 h-3.5" />}
                               />
@@ -2470,8 +4986,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                 label="Erasures"
                                 value={
                                   result.decoderMetadata.erasures !== null
-                                    ? result.decoderMetadata.erasures
-                                    : '—'
+                                    ? result.decoderMetadata.erasures === 0
+                                      ? <span className="text-green-600 dark:text-green-400">0</span>
+                                      : result.decoderMetadata.erasures
+                                    : <span className="text-muted-foreground">N/A</span>
                                 }
                                 icon={<Shield className="w-3.5 h-3.5" />}
                               />
@@ -2480,16 +4998,16 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                 value={
                                   result.decoderMetadata.numBits !== null
                                     ? `${result.decoderMetadata.numBits} bits`
-                                    : '—'
+                                    : <span className="text-muted-foreground">N/A</span>
                                 }
                                 icon={<Binary className="w-3.5 h-3.5" />}
                               />
                               <DetailRow
                                 label="Orientation"
                                 value={
-                                  result.decoderMetadata.orientation !== null
+                                  result.decoderMetadata.orientation !== null && result.decoderMetadata.orientation !== 0
                                     ? `${result.decoderMetadata.orientation}°`
-                                    : '—'
+                                    : <span className="text-muted-foreground">Standard (0°)</span>
                                 }
                                 icon={<Settings className="w-3.5 h-3.5" />}
                               />
@@ -2515,45 +5033,87 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           </CollapsibleSection>
                         )}
 
-                        {/* Format Info */}
-                        <CollapsibleSection
-                          title="Format Information"
-                          icon={<Info className="w-4 h-4" />}
-                        >
-                          <div className="space-y-2">
-                            <DetailRow
-                              label="Module Count"
-                              value={`${result.moduleCount} × ${result.moduleCount}`}
-                              icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                            />
-                            {result.version !== null && (
+                        {/* Format Info + Image Properties stacked */}
+                        <div className="space-y-4">
+                          <CollapsibleSection
+                            title="Format Information"
+                            icon={<Info className="w-4 h-4" />}
+                          >
+                            <div className="space-y-2">
                               <DetailRow
-                                label="Data Modules"
-                                value={`~${Math.pow(result.moduleCount, 2) - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * Math.pow(Math.floor(result.version / 7) + 2, 2) : 0)}`}
-                                icon={<Database className="w-3.5 h-3.5" />}
+                                label="Module Count"
+                                value={`${result.moduleCount} × ${result.moduleCount}`}
+                                icon={<Grid3x3 className="w-3.5 h-3.5" />}
                               />
-                            )}
-                            {result.eccLevel && (
-                              <DetailRow
-                                label="ECC Description"
-                                value={ECC_DESCRIPTIONS[result.eccLevel].description}
-                                icon={<Info className="w-3.5 h-3.5" />}
-                              />
-                            )}
-                          </div>
-                        </CollapsibleSection>
-                      </div>
-                    </TabsContent>
-                    
-                    {/* Visual Tab */}
-                    <TabsContent value="visual" className="space-y-4 animate-in fade-in duration-200">
-                      <div className="grid md:grid-cols-2 gap-4">
+                              {result.version !== null && (
+                                <DetailRow
+                                  label="Data Modules"
+                                  value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
+                                  icon={<Database className="w-3.5 h-3.5" />}
+                                />
+                              )}
+                              {result.eccLevel && (
+                                <DetailRow
+                                  label="ECC Description"
+                                  value={ECC_DESCRIPTIONS[result.eccLevel].description}
+                                  icon={<Info className="w-3.5 h-3.5" />}
+                                />
+                              )}
+                            </div>
+                          </CollapsibleSection>
+
+                          {/* Image Properties - below Format Info */}
+                          {result.imageProperties && (
+                            <CollapsibleSection
+                              title="Image Properties"
+                              icon={<FileImage className="w-4 h-4" />}
+                            >
+                              <div className="space-y-2">
+                                <DetailRow
+                                  label="Image Size"
+                                  value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
+                                  icon={<ImageIcon className="w-3.5 h-3.5" />}
+                                />
+                                <DetailRow
+                                  label="Aspect Ratio"
+                                  value={
+                                    result.imageProperties.aspectRatio === 1
+                                      ? '1:1 (Square)'
+                                      : `${result.imageProperties.aspectRatio}:1`
+                                  }
+                                  icon={<Ratio className="w-3.5 h-3.5" />}
+                                />
+                                {result.imageProperties.estimatedQrSizePx > 0 && (
+                                  <DetailRow
+                                    label="QR Code Size"
+                                    value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
+                                    icon={<QrCode className="w-3.5 h-3.5" />}
+                                  />
+                                )}
+                                {result.imageProperties.estimatedQrSizePx > 0 &&
+                                  result.imageProperties.width > 0 && (
+                                    <DetailRow
+                                      label="QR Coverage"
+                                      value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
+                                      icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                                    />
+                                  )}
+                              </div>
+                            </CollapsibleSection>
+                          )}
+                        </div>
+                    </div>
+
+                    {/* Visual Section */}
+                    <div className="grid md:grid-cols-2 gap-4">
                         {/* Colors & Contrast */}
                         {result.detectedColors && (
                           <CollapsibleSection
                             title="Colors & WCAG Compliance"
                             icon={<Palette className="w-4 h-4" />}
-                            badge={<WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />}
+                            badge={
+                              <WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />
+                            }
                           >
                             <div className="space-y-4">
                               {/* Color Swatches */}
@@ -2571,41 +5131,50 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                   label="Background"
                                 />
                               </div>
-                              
+
                               {/* WCAG Compliance Details */}
-                              <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+                              <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm font-medium">WCAG Compliance</span>
-                                  <WCAGBadge ratio={result.detectedColors.contrastRatio} size="md" />
+                                  <WCAGBadge
+                                    ratio={result.detectedColors.contrastRatio}
+                                    size="md"
+                                  />
                                 </div>
                                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                                  <div className={`p-2 rounded ${
-                                    result.detectedColors.contrastRatio >= 3 
-                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
-                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                  }`}>
+                                  <div
+                                    className={`p-2 rounded ${
+                                      result.detectedColors.contrastRatio >= 3
+                                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                        : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                    }`}
+                                  >
                                     <div className="font-bold">AA-Large</div>
                                     <div className="text-[10px]">≥3:1</div>
                                   </div>
-                                  <div className={`p-2 rounded ${
-                                    result.detectedColors.contrastRatio >= 4.5 
-                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
-                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                  }`}>
+                                  <div
+                                    className={`p-2 rounded ${
+                                      result.detectedColors.contrastRatio >= 4.5
+                                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                        : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                    }`}
+                                  >
                                     <div className="font-bold">AA</div>
                                     <div className="text-[10px]">≥4.5:1</div>
                                   </div>
-                                  <div className={`p-2 rounded ${
-                                    result.detectedColors.contrastRatio >= 7 
-                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
-                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                  }`}>
+                                  <div
+                                    className={`p-2 rounded ${
+                                      result.detectedColors.contrastRatio >= 7
+                                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                        : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                    }`}
+                                  >
                                     <div className="font-bold">AAA</div>
                                     <div className="text-[10px]">≥7:1</div>
                                   </div>
                                 </div>
                               </div>
-                              
+
                               <DetailRow
                                 label="Contrast Ratio"
                                 value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
@@ -2647,11 +5216,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                     <div className="text-[10px] text-muted-foreground">Top</div>
                                   </div>
                                   <div className="p-2 rounded bg-muted/50">
-                                    <div className="text-sm font-mono">{result.quietZone.right}</div>
+                                    <div className="text-sm font-mono">
+                                      {result.quietZone.right}
+                                    </div>
                                     <div className="text-[10px] text-muted-foreground">Right</div>
                                   </div>
                                   <div className="p-2 rounded bg-muted/50">
-                                    <div className="text-sm font-mono">{result.quietZone.bottom}</div>
+                                    <div className="text-sm font-mono">
+                                      {result.quietZone.bottom}
+                                    </div>
                                     <div className="text-[10px] text-muted-foreground">Bottom</div>
                                   </div>
                                   <div className="p-2 rounded bg-muted/50">
@@ -2663,52 +5236,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             )}
                           </div>
                         </CollapsibleSection>
+                    </div>
 
-                        {/* Image Properties */}
-                        {result.imageProperties && (
-                          <CollapsibleSection
-                            title="Image Properties"
-                            icon={<FileImage className="w-4 h-4" />}
-                          >
-                            <div className="space-y-2">
-                              <DetailRow
-                                label="Image Size"
-                                value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
-                                icon={<ImageIcon className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Aspect Ratio"
-                                value={
-                                  result.imageProperties.aspectRatio === 1
-                                    ? '1:1 (Square)'
-                                    : `${result.imageProperties.aspectRatio}:1`
-                                }
-                                icon={<Ratio className="w-3.5 h-3.5" />}
-                              />
-                              {result.imageProperties.estimatedQrSizePx > 0 && (
-                                <DetailRow
-                                  label="QR Code Size"
-                                  value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
-                                  icon={<QrCode className="w-3.5 h-3.5" />}
-                                />
-                              )}
-                              {result.imageProperties.estimatedQrSizePx > 0 &&
-                                result.imageProperties.width > 0 && (
-                                  <DetailRow
-                                    label="QR Coverage"
-                                    value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
-                                    icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                                  />
-                                )}
-                            </div>
-                          </CollapsibleSection>
-                        )}
-                      </div>
-                    </TabsContent>
-                    
-                    {/* Advanced Tab */}
-                    <TabsContent value="advanced" className="space-y-4 animate-in fade-in duration-200">
-                      <div className="grid md:grid-cols-1 gap-4">
+                    {/* Advanced Section */}
+                    <div className="grid md:grid-cols-1 gap-4">
                         {/* Binary/Hex View */}
                         {result.payloadBytes && result.payloadBytes.length > 0 && (
                           <CollapsibleSection
@@ -2756,102 +5287,29 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             </pre>
                           </CollapsibleSection>
                         )}
-                        
-                        {/* Export Section */}
-                        <div className="border rounded-lg p-4 bg-card">
-                          <div className="flex items-center gap-2 mb-3">
-                            <FileJson className="w-4 h-4 text-primary" />
-                            <span className="font-medium text-sm">Export Analysis Data</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mb-3">
-                            Download the complete analysis as JSON. This can be used with the Netlify API
-                            for exact recreation or imported into other tools.
-                          </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleExportJSON}
-                            className="gap-2"
-                          >
-                            <Download className="w-4 h-4" />
-                            Export as JSON
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
 
-                  {/* Import Section */}
-                  <div className="border rounded-lg p-4 bg-card space-y-4">
-                    <div className="flex items-center gap-2">
-                      <ArrowRight className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Import to Generator</span>
                     </div>
-
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p className="font-medium text-foreground">Settings to be imported:</p>
-                      <ul className="grid grid-cols-2 gap-1 text-xs">
-                        <li className="flex items-center gap-1">
-                          <Check className="w-3 h-3 text-green-500" />
-                          Payload content
-                        </li>
-                        {(actualUsedVersion ?? result.version) !== null && (
-                          <li className="flex items-center gap-1">
-                            <Check className="w-3 h-3 text-green-500" />
-                            Version {actualUsedVersion ?? result.version}
-                            {actualUsedVersion !== null && actualUsedVersion !== result.version && (
-                              <span className="text-amber-500 text-[10px] ml-1">
-                                (upgraded from {result.version})
-                              </span>
-                            )}
-                          </li>
-                        )}
-                        {result.eccLevel && (
-                          <li className="flex items-center gap-1">
-                            <Check className="w-3 h-3 text-green-500" />
-                            ECC Level {result.eccLevel}
-                          </li>
-                        )}
-                        {result.maskPattern !== null && (
-                          <li className="flex items-center gap-1">
-                            <Check className="w-3 h-3 text-green-500" />
-                            Mask Pattern {result.maskPattern}
-                          </li>
-                        )}
-                        {result.encodingMode && result.encodingMode !== 'unknown' && (
-                          <li className="flex items-center gap-1">
-                            <Check className="w-3 h-3 text-green-500" />
-                            {result.encodingMode} mode
-                          </li>
-                        )}
-                        {result.detectedColors && (
-                          <li className="flex items-center gap-1">
-                            <Check className="w-3 h-3 text-green-500" />
-                            Colors (FG/BG)
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
-                    <Button
-                      size="lg"
-                      className="w-full gap-2"
-                      onClick={handleImportToGenerator}
-                      disabled={imported}
-                    >
-                      {imported ? (
-                        <>
-                          <Check className="w-5 h-5" />
-                          {t('analyze.imported', 'Imported!')}
-                        </>
-                      ) : (
-                        <>
-                          <ArrowRight className="w-5 h-5" />
-                          {t('analyze.importToGenerator', 'Import to Generator')}
-                        </>
-                      )}
-                    </Button>
                   </div>
+
+                  {/* Import Button - Simplified */}
+                  <Button
+                    size="lg"
+                    className="w-full gap-2 shadow-md"
+                    onClick={handleImportToGenerator}
+                    disabled={imported}
+                  >
+                    {imported ? (
+                      <>
+                        <Check className="w-5 h-5" />
+                        {t('analyze.imported', 'Imported!')}
+                      </>
+                    ) : (
+                      <>
+                        <ArrowRight className="w-5 h-5" />
+                        {t('analyze.importToGenerator', 'Import to Generator')}
+                      </>
+                    )}
+                  </Button>
                 </>
               )}
             </div>

@@ -78,19 +78,21 @@ export function isValidIBAN(iban: string): boolean {
  */
 export function isValidCryptoAddress(address: string, type: string): boolean {
   if (!address || address.length < 10) return false;
-  
+
   switch (type.toLowerCase()) {
     case 'bitcoin':
       // Legacy (1...), P2SH (3...), Bech32 (bc1...)
-      return /^(1|3)[a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) ||
-             /^bc1[a-z0-9]{39,59}$/i.test(address);
+      return (
+        /^(1|3)[a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || /^bc1[a-z0-9]{39,59}$/i.test(address)
+      );
     case 'ethereum':
       // 0x followed by 40 hex characters
       return /^0x[a-fA-F0-9]{40}$/.test(address);
     case 'litecoin':
       // Legacy (L..., M...), Bech32 (ltc1...)
-      return /^[LM][a-km-zA-HJ-NP-Z1-9]{26,33}$/.test(address) ||
-             /^ltc1[a-z0-9]{39,59}$/i.test(address);
+      return (
+        /^[LM][a-km-zA-HJ-NP-Z1-9]{26,33}$/.test(address) || /^ltc1[a-z0-9]{39,59}$/i.test(address)
+      );
     default:
       // Generic: at least 20 alphanumeric characters
       return /^[a-zA-Z0-9]{20,}$/.test(address);
@@ -229,7 +231,7 @@ export function isValidABN(abn: string): boolean {
  */
 export function isValidProxyValue(value: string, proxyType: string): boolean {
   if (!value || value.trim().length === 0) return false;
-  
+
   switch (proxyType) {
     case 'MOBILE':
       // Valid phone number with at least 3 digits
@@ -237,10 +239,6 @@ export function isValidProxyValue(value: string, proxyType: string): boolean {
     case 'NRIC':
       // Malaysian NRIC is 12 digits (without dashes)
       return /^\d{12}$/.test(value.replace(/[-\s]/g, ''));
-    case 'PASSPORT':
-    case 'ARMY':
-    case 'BUSINESS':
-    case 'OTHERS':
     default:
       // Just needs to be non-empty
       return value.trim().length >= 1;

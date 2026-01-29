@@ -20,50 +20,50 @@ const MIN_DYNAMIC_RANGE = 24; // Minimum contrast to consider a block as having 
 /**
  * Calculate per-block black point thresholds for the entire image.
  * This is the core of the HybridBinarizer algorithm.
- * 
+ *
  * @param pixels - RGBA pixel data
  * @param width - Image width
  * @param height - Image height
  * @returns 2D array of threshold values per 8x8 block
  */
-function calculateBlackPoints(
+function _calculateBlackPoints(
   pixels: Uint8ClampedArray,
   width: number,
   height: number
 ): number[][] {
   const subWidth = (width >> BLOCK_SIZE_POWER) + ((width & BLOCK_SIZE_MASK) !== 0 ? 1 : 0);
   const subHeight = (height >> BLOCK_SIZE_POWER) + ((height & BLOCK_SIZE_MASK) !== 0 ? 1 : 0);
-  
+
   const maxYOffset = height - BLOCK_SIZE;
   const maxXOffset = width - BLOCK_SIZE;
-  
+
   // First pass: calculate raw black points for each block
   const blackPoints: number[][] = [];
-  
+
   for (let y = 0; y < subHeight; y++) {
     blackPoints[y] = [];
     let yoffset = y << BLOCK_SIZE_POWER;
     if (yoffset > maxYOffset) {
       yoffset = maxYOffset;
     }
-    
+
     for (let x = 0; x < subWidth; x++) {
       let xoffset = x << BLOCK_SIZE_POWER;
       if (xoffset > maxXOffset) {
         xoffset = maxXOffset;
       }
-      
+
       let sum = 0;
       let min = 255;
       let max = 0;
-      
+
       // Process block pixels
       for (let yy = 0; yy < BLOCK_SIZE; yy++) {
         for (let xx = 0; xx < BLOCK_SIZE; xx++) {
           const px = xoffset + xx;
           const py = yoffset + yy;
           const idx = (py * width + px) * 4;
-          
+
           // Convert to grayscale, compositing over white for transparent pixels
           const a = pixels[idx + 3] / 255;
           let gray: number;
@@ -78,46 +78,43 @@ function calculateBlackPoints(
             const b = pixels[idx + 2] * a + 255 * inv;
             gray = (r + g + b) / 3;
           }
-          
+
           sum += gray;
           if (gray < min) min = gray;
           if (gray > max) max = gray;
         }
       }
-      
+
       // Calculate threshold for this block
       let average = sum / (BLOCK_SIZE * BLOCK_SIZE);
-      
+
       if (max - min <= MIN_DYNAMIC_RANGE) {
         // Low contrast block - assume it's background (light)
         // Use half the min as threshold, so it classifies as light
         average = min / 2;
-        
+
         if (y > 0 && x > 0) {
           // Use neighbor info to correct if this might actually be dark region
-          const averageNeighborBlackPoint = (
-            blackPoints[y - 1][x] + 
-            2 * blackPoints[y][x - 1] + 
-            blackPoints[y - 1][x - 1]
-          ) / 4;
-          
+          const averageNeighborBlackPoint =
+            (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
+
           if (min < averageNeighborBlackPoint) {
             average = averageNeighborBlackPoint;
           }
         }
       }
-      
+
       blackPoints[y][x] = average;
     }
   }
-  
+
   return blackPoints;
 }
 
 /**
  * Get the adaptive threshold for a specific pixel coordinate.
  * Uses 5x5 block neighborhood smoothing for more robust thresholds.
- * 
+ *
  * @param blackPoints - Pre-computed block thresholds
  * @param x - Pixel x coordinate
  * @param y - Pixel y coordinate
@@ -125,41 +122,38 @@ function calculateBlackPoints(
  * @param height - Image height
  * @returns Threshold value to use at this position
  */
-function getAdaptiveThreshold(
-  blackPoints: number[][],
-  x: number,
-  y: number
-): number {
+function _getAdaptiveThreshold(blackPoints: number[][], x: number, y: number): number {
   const subWidth = blackPoints[0]?.length ?? 1;
   const subHeight = blackPoints.length;
-  
+
   // Convert pixel coordinate to block coordinate, clamping to valid range
   const blockX = Math.max(0, Math.min(Math.floor(x / BLOCK_SIZE), subWidth - 1));
   const blockY = Math.max(0, Math.min(Math.floor(y / BLOCK_SIZE), subHeight - 1));
-  
+
   // Use 5x5 neighborhood average for smoother thresholds
   // Clamp center to ensure full 5x5 neighborhood fits (when possible)
   const centerX = Math.max(2, Math.min(blockX, subWidth - 3));
   const centerY = Math.max(2, Math.min(blockY, subHeight - 3));
-  
+
   let sum = 0;
   let count = 0;
-  
+
   for (let dy = -2; dy <= 2; dy++) {
     const by = centerY + dy;
     if (by < 0 || by >= subHeight) continue;
-    
+
     for (let dx = -2; dx <= 2; dx++) {
       const bx = centerX + dx;
       if (bx < 0 || bx >= subWidth) continue;
-      
+
       sum += blackPoints[by][bx];
       count++;
     }
   }
-  
+
   return count > 0 ? sum / count : 128;
 }
+
 import type { FinderPattern, Point, QRLocation } from './types';
 import { pointDistance } from './utils';
 
@@ -253,7 +247,7 @@ function sampleSinglePixel(
  * Sample a pixel using a 3x3 kernel for more robust detection
  * This helps avoid hitting anti-aliased edges between modules
  */
-function samplePixelKernel(
+function _samplePixelKernel(
   pixels: Uint8ClampedArray,
   width: number,
   height: number,
@@ -300,11 +294,11 @@ export function extractModuleMatrix(
   // Calculate distances and unified pitch
   const topDist = Math.sqrt(
     (location.topRight.x - location.topLeft.x) ** 2 +
-    (location.topRight.y - location.topLeft.y) ** 2
+      (location.topRight.y - location.topLeft.y) ** 2
   );
   const leftDist = Math.sqrt(
     (location.bottomLeft.x - location.topLeft.x) ** 2 +
-    (location.bottomLeft.y - location.topLeft.y) ** 2
+      (location.bottomLeft.y - location.topLeft.y) ** 2
   );
   const avgDist = (topDist + leftDist) / 2;
   const unifiedPitch = avgDist / moduleSpan;
@@ -336,7 +330,9 @@ export function extractModuleMatrix(
     originalRightMag: (topDist / moduleSpan).toFixed(3),
     originalDownMag: (leftDist / moduleSpan).toFixed(3),
     driftPerModule: Math.abs(topDist / moduleSpan - leftDist / moduleSpan).toFixed(4),
-    totalDriftOver29Modules: (Math.abs(topDist / moduleSpan - leftDist / moduleSpan) * 29).toFixed(2),
+    totalDriftOver29Modules: (Math.abs(topDist / moduleSpan - leftDist / moduleSpan) * 29).toFixed(
+      2
+    ),
   });
 
   // Calculate origin (module 0,0) by going back from top-left finder center
@@ -348,7 +344,7 @@ export function extractModuleMatrix(
   // ========================================
   // VALIDATION: Verify origin computation by checking finder centers map correctly
   // ========================================
-  
+
   // The finder center at module position (3.5, 3.5) should map back to topLeft
   const verifyTopLeft = {
     x: origin.x + finderOffset * rightVec.x + finderOffset * downVec.x,
@@ -440,10 +436,10 @@ export function extractModuleMatrix(
       // Sample at center of module
       const x = origin.x + (col + 0.5) * rightVec.x + (row + 0.5) * downVec.x;
       const y = origin.y + (col + 0.5) * rightVec.y + (row + 0.5) * downVec.y;
-      
+
       // Sample the pixel
       const gray = sampleSinglePixel(pixels, width, height, x, y);
-      
+
       // Classify using global threshold (from finder pattern detection)
       const isDark = gray < globalThreshold;
       matrixRow.push(isDark);

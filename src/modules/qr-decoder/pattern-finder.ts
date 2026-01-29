@@ -3,10 +3,9 @@
  * Finder pattern and alignment pattern detection
  */
 
-import { BitMatrix } from './bit-matrix';
-import { ResultPoint } from './result-types';
+import type { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
-import { MathUtils } from './perspective';
+import { ResultPoint } from './result-types';
 
 /**
  * Finder pattern (one of three corner squares)
@@ -45,7 +44,8 @@ export class FinderPattern extends ResultPoint {
     const combinedCount = this.count + 1;
     const combinedX = (this.count * this.getX() + j) / combinedCount;
     const combinedY = (this.count * this.getY() + i) / combinedCount;
-    const combinedModuleSize = (this.count * this.estimatedModuleSize + newModuleSize) / combinedCount;
+    const combinedModuleSize =
+      (this.count * this.estimatedModuleSize + newModuleSize) / combinedCount;
     return new FinderPattern(combinedX, combinedY, combinedModuleSize, combinedCount);
   }
 }
@@ -225,7 +225,12 @@ export class FinderPatternFinder {
     return this.crossCheckStateCount;
   }
 
-  private crossCheckVertical(startI: number, centerJ: number, maxCount: number, originalStateCountTotal: number): number {
+  private crossCheckVertical(
+    startI: number,
+    centerJ: number,
+    maxCount: number,
+    originalStateCountTotal: number
+  ): number {
     const image = this.image;
     const maxI = image.getHeight();
     const stateCount = this.getCrossCheckStateCount();
@@ -264,12 +269,21 @@ export class FinderPatternFinder {
     }
     if (stateCount[4] >= maxCount) return NaN;
 
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
-    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) return NaN;
-    return FinderPatternFinder.foundPatternCross(stateCount) ? FinderPatternFinder.centerFromEnd(stateCount, i) : NaN;
+    const stateCountTotal =
+      stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
+    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal)
+      return NaN;
+    return FinderPatternFinder.foundPatternCross(stateCount)
+      ? FinderPatternFinder.centerFromEnd(stateCount, i)
+      : NaN;
   }
 
-  private crossCheckHorizontal(startJ: number, centerI: number, maxCount: number, originalStateCountTotal: number): number {
+  private crossCheckHorizontal(
+    startJ: number,
+    centerI: number,
+    maxCount: number,
+    originalStateCountTotal: number
+  ): number {
     const image = this.image;
     const maxJ = image.getWidth();
     const stateCount = this.getCrossCheckStateCount();
@@ -308,24 +322,38 @@ export class FinderPatternFinder {
     }
     if (stateCount[4] >= maxCount) return NaN;
 
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
-    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= originalStateCountTotal) return NaN;
-    return FinderPatternFinder.foundPatternCross(stateCount) ? FinderPatternFinder.centerFromEnd(stateCount, j) : NaN;
+    const stateCountTotal =
+      stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
+    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= originalStateCountTotal)
+      return NaN;
+    return FinderPatternFinder.foundPatternCross(stateCount)
+      ? FinderPatternFinder.centerFromEnd(stateCount, j)
+      : NaN;
   }
 
   private handlePossibleCenter(stateCount: Int32Array, i: number, j: number): boolean {
-    const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
+    const stateCountTotal =
+      stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
     let centerJ = FinderPatternFinder.centerFromEnd(stateCount, j);
-    let centerI = this.crossCheckVertical(i, Math.floor(centerJ), stateCount[2], stateCountTotal);
-    if (!isNaN(centerI)) {
-      centerJ = this.crossCheckHorizontal(Math.floor(centerJ), Math.floor(centerI), stateCount[2], stateCountTotal);
-      if (!isNaN(centerJ)) {
+    const centerI = this.crossCheckVertical(i, Math.floor(centerJ), stateCount[2], stateCountTotal);
+    if (!Number.isNaN(centerI)) {
+      centerJ = this.crossCheckHorizontal(
+        Math.floor(centerJ),
+        Math.floor(centerI),
+        stateCount[2],
+        stateCountTotal
+      );
+      if (!Number.isNaN(centerJ)) {
         const estimatedModuleSize = stateCountTotal / 7.0;
         let found = false;
         for (let index = 0; index < this.possibleCenters.length; index++) {
           const center = this.possibleCenters[index];
           if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
-            this.possibleCenters[index] = center.combineEstimate(centerI, centerJ, estimatedModuleSize);
+            this.possibleCenters[index] = center.combineEstimate(
+              centerI,
+              centerJ,
+              estimatedModuleSize
+            );
             found = true;
             break;
           }
@@ -344,7 +372,7 @@ export class FinderPatternFinder {
   }
 
   private static centerFromEnd(stateCount: Int32Array, end: number): number {
-    return (end - stateCount[4] - stateCount[3]) - stateCount[2] / 2.0;
+    return end - stateCount[4] - stateCount[3] - stateCount[2] / 2.0;
   }
 
   private findRowSkip(): number {
@@ -359,7 +387,8 @@ export class FinderPatternFinder {
           this.hasSkipped = true;
           return Math.floor(
             (Math.abs(firstConfirmedCenter.getX() - center.getX()) -
-              Math.abs(firstConfirmedCenter.getY() - center.getY())) / 2
+              Math.abs(firstConfirmedCenter.getY() - center.getY())) /
+              2
           );
         }
       }
@@ -421,7 +450,9 @@ export class FinderPatternFinder {
 
           const d = Math.abs(sides[1] - sides[2]) / Math.min(sides[1], sides[2]);
           if (d < 0.1) {
-            const estimatedModuleCount = Math.sqrt(sides[0]) / ((fpi.getEstimatedModuleSize() + fpk.getEstimatedModuleSize()) / 2);
+            const estimatedModuleCount =
+              Math.sqrt(sides[0]) /
+              ((fpi.getEstimatedModuleSize() + fpk.getEstimatedModuleSize()) / 2);
             const distanceFromIdeal = Math.abs(estimatedModuleCount - 14);
             if (distanceFromIdeal < distortion) {
               distortion = distanceFromIdeal;
@@ -466,7 +497,7 @@ export class AlignmentPatternFinder {
     const startX = this.startX;
     const height = this.height;
     const maxJ = startX + this.width;
-    const middleI = this.startY + (height / 2);
+    const middleI = this.startY + height / 2;
     const stateCount = new Int32Array(3);
 
     for (let iGen = 0; iGen < height; iGen++) {
@@ -522,7 +553,12 @@ export class AlignmentPatternFinder {
     return true;
   }
 
-  private crossCheckVertical(startI: number, centerJ: number, maxCount: number, originalStateCountTotal: number): number {
+  private crossCheckVertical(
+    startI: number,
+    centerJ: number,
+    maxCount: number,
+    originalStateCountTotal: number
+  ): number {
     const image = this.image;
     const maxI = image.getHeight();
     const stateCount = this.crossCheckStateCount;
@@ -555,15 +591,25 @@ export class AlignmentPatternFinder {
     if (stateCount[2] > maxCount) return NaN;
 
     const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal) return NaN;
-    return this.foundPatternCross(stateCount) ? (i - stateCount[2] - stateCount[1] / 2.0) : NaN;
+    if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal)
+      return NaN;
+    return this.foundPatternCross(stateCount) ? i - stateCount[2] - stateCount[1] / 2.0 : NaN;
   }
 
-  private handlePossibleCenter(stateCount: Int32Array, i: number, j: number): AlignmentPattern | null {
+  private handlePossibleCenter(
+    stateCount: Int32Array,
+    i: number,
+    j: number
+  ): AlignmentPattern | null {
     const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
     const centerJ = j - stateCount[2] - stateCount[1] / 2.0;
-    const centerI = this.crossCheckVertical(i, Math.floor(centerJ), 2 * stateCount[1], stateCountTotal);
-    if (!isNaN(centerI)) {
+    const centerI = this.crossCheckVertical(
+      i,
+      Math.floor(centerJ),
+      2 * stateCount[1],
+      stateCountTotal
+    );
+    if (!Number.isNaN(centerI)) {
       const estimatedModuleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3.0;
       for (const center of this.possibleCenters) {
         if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
