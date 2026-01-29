@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { OpenLocationCode } from 'open-location-code';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useTranslation } from 'react-i18next';
 import { HelpLink } from '@/components/ui/help-link';
@@ -523,21 +524,75 @@ interface ShortLinkForm {
   error: string;
 }
 
-// What3Words suggestion
-interface W3WSuggestion {
-  words: string;
-  country: string;
-  nearestPlace: string;
-  coordinates: { lat: number; lng: number };
+// Plus Code Display component - uses proper import and useMemo
+// Always renders with fallback to raw coordinates if Plus Code generation fails
+// Generates SHORT Plus Codes that can be searched in Google Maps with a locality
+function PlusCodeDisplay({ lat, lon, t }: { lat: number; lon: number; t: ReturnType<typeof useTranslation>['t'] }) {
+  const { plusCode, shortCode, error } = useMemo(() => {
+    try {
+      // OpenLocationCode is a class that needs to be instantiated
+      const olc = new OpenLocationCode();
+      // Generate full Plus Code (10 character precision)
+      // Full format: "4RJ65XP7+87" = area(4) + local(4) + "+" + suffix(2)
+      const fullCode = olc.encode(lat, lon, 10);
+      
+      // Generate SHORT Plus Code by finding the + sign and taking 4 chars before it
+      // Short format: "5XP7+87" = local(4) + "+" + suffix(2)
+      // This can be searched in Google Maps with a locality (e.g., "5XP7+87 Melbourne")
+      const plusIndex = fullCode.indexOf('+');
+      // Take 4 characters before the + sign, plus everything after (including +)
+      const shortened = plusIndex >= 4 ? fullCode.substring(plusIndex - 4) : fullCode;
+      
+      // Debug logging to help diagnose issues
+      console.debug('Plus Code debug:', { lat, lon, fullCode, plusIndex, shortCode: shortened });
+      
+      return { plusCode: fullCode, shortCode: shortened, error: null };
+    } catch (e) {
+      console.error('Plus Code generation error:', e);
+      return { plusCode: null, shortCode: null, error: e instanceof Error ? e.message : 'Failed to generate Plus Code' };
+    }
+  }, [lat, lon]);
+
+  // Always generate a Google Maps URL - use full Plus Code for accuracy, otherwise coordinates
+  const googleMapsUrl = plusCode 
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(plusCode)}`
+    : `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+
+  // Display the SHORT code (can be searched with locality in Google Maps)
+  const displayText = shortCode || plusCode || `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+
+  // ALWAYS render - never return null
+  return (
+    <div className="space-y-2 pt-2 border-t">
+      <Label>
+        <HighlightedLabel>{plusCode ? t('payload.plusCode', 'Plus Code') : t('payload.coordinates', 'Coordinates')}</HighlightedLabel>
+      </Label>
+      <div className="flex items-center gap-2">
+        <code className="flex-1 px-3 py-2 bg-muted rounded-md text-sm font-mono overflow-hidden text-ellipsis">
+          {displayText}
+        </code>
+        <a
+          href={googleMapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 whitespace-nowrap"
+        >
+          {t('actions.open', 'Open')}
+        </a>
+      </div>
+      {error ? (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          {t('hints.plusCodeFallback', 'Plus Code unavailable, using coordinates.')}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          {t('hints.plusCodeShort', 'Short Plus Code - search in Google Maps with a city name (e.g., "' + displayText + ' Melbourne").')}
+        </p>
+      )}
+    </div>
+  );
 }
 
-// What3Words state
-interface W3WState {
-  input: string;
-  suggestions: W3WSuggestion[];
-  isLoading: boolean;
-  error: string;
-}
 
 export function PayloadSection() {
   const {
@@ -739,13 +794,6 @@ export function PayloadSection() {
     error: '',
   });
 
-  // What3Words state
-  const [w3wState, setW3WState] = useState<W3WState>({
-    input: '',
-    suggestions: [],
-    isLoading: false,
-    error: '',
-  });
 
   // Show startup highlight only once on initial mount
   useEffect(() => {
@@ -1301,115 +1349,8 @@ export function PayloadSection() {
             </p>
           </div>
 
-          {/* What3Words Lookup */}
-          <div className="space-y-2 pt-2 border-t">
-            <Label>
-              <HighlightedLabel>{t('payload.what3words', 'what3words')}</HighlightedLabel>
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                value={w3wState.input}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setW3WState(prev => ({ ...prev, input: val, error: '' }));
-                  // Auto-suggest with debounce (300ms delay to avoid rate limiting)
-                  // Free tier autosuggest - no radius/clip parameters (those require paid plan)
-                  if (val.length >= 3) {
-                    // Clear previous timeout if exists
-                    const timeoutId = setTimeout(() => {
-                      const W3W_API_KEY = 'P7REO4AP';
-                      // Free tier: only input and optional focus (no clip-to-circle)
-                      const focusParam = payload.geo.lat !== 0 || payload.geo.lon !== 0 
-                        ? `&focus=${payload.geo.lat},${payload.geo.lon}` 
-                        : '';
-                      fetch(`https://api.what3words.com/v3/autosuggest?input=${encodeURIComponent(val)}&key=${W3W_API_KEY}${focusParam}`)
-                        .then(res => res.json())
-                        .then(data => {
-                          if (data.suggestions) {
-                            setW3WState(prev => ({ 
-                              ...prev, 
-                              suggestions: data.suggestions.map((s: { words: string; country: string; nearestPlace: string }) => ({
-                                words: s.words,
-                                country: s.country,
-                                nearestPlace: s.nearestPlace,
-                                coordinates: { lat: 0, lng: 0 } // Will be fetched on selection
-                              }))
-                            }));
-                          }
-                        })
-                        .catch(() => {});
-                    }, 300);
-                    return () => clearTimeout(timeoutId);
-                  } else {
-                    setW3WState(prev => ({ ...prev, suggestions: [] }));
-                  }
-                }}
-                placeholder="filled.count.soap"
-                className="flex-1"
-              />
-              <button
-                type="button"
-                className="px-3 py-2 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 disabled:opacity-50"
-                disabled={w3wState.isLoading || (payload.geo.lat === 0 && payload.geo.lon === 0)}
-                onClick={() => {
-                  // Convert current lat/lon to what3words
-                  setW3WState(prev => ({ ...prev, isLoading: true, error: '' }));
-                  const W3W_API_KEY = 'P7REO4AP';
-                  fetch(`https://api.what3words.com/v3/convert-to-3wa?coordinates=${payload.geo.lat},${payload.geo.lon}&key=${W3W_API_KEY}`)
-                    .then(res => res.json())
-                    .then(data => {
-                      if (data.words) {
-                        setW3WState(prev => ({ ...prev, input: data.words, isLoading: false }));
-                      } else {
-                        setW3WState(prev => ({ ...prev, isLoading: false, error: data.error?.message || 'Lookup failed' }));
-                      }
-                    })
-                    .catch(() => {
-                      setW3WState(prev => ({ ...prev, isLoading: false, error: 'Network error' }));
-                    });
-                }}
-              >
-                {w3wState.isLoading ? '...' : t('actions.getWords', 'Get w3w')}
-              </button>
-            </div>
-            {/* Suggestions list */}
-            {w3wState.suggestions.length > 0 && (
-              <div className="border rounded-md divide-y max-h-40 overflow-y-auto">
-                {w3wState.suggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.words}
-                    type="button"
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
-                    onClick={() => {
-                      // When a suggestion is selected, fetch its coordinates
-                      const W3W_API_KEY = 'P7REO4AP';
-                      fetch(`https://api.what3words.com/v3/convert-to-coordinates?words=${encodeURIComponent(suggestion.words)}&key=${W3W_API_KEY}`)
-                        .then(res => res.json())
-                        .then(data => {
-                          if (data.coordinates) {
-                            setPayloadGeo({ 
-                              lat: data.coordinates.lat, 
-                              lon: data.coordinates.lng 
-                            });
-                            setW3WState(prev => ({ ...prev, input: suggestion.words, suggestions: [] }));
-                          }
-                        })
-                        .catch(() => {});
-                    }}
-                  >
-                    <div className="font-medium">///{suggestion.words}</div>
-                    <div className="text-xs text-muted-foreground">{suggestion.nearestPlace}, {suggestion.country}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-            {w3wState.error && (
-              <p className="text-xs text-destructive">{w3wState.error}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              {t('hints.w3wLookup', 'Enter a what3words address (e.g., filled.count.soap) to look up coordinates.')}
-            </p>
-          </div>
+          {/* Plus Code (Open Location Code) - always show in geo mode */}
+          <PlusCodeDisplay lat={payload.geo.lat} lon={payload.geo.lon} t={t} />
 
           {/* Coordinates */}
           <div className="grid grid-cols-2 gap-2">

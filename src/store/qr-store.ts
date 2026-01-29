@@ -1562,22 +1562,18 @@ export const useQRStore = create<QRState>((set, get) => ({
 
       case 'social_profile': {
         // Use generateSocialProfile for proper URL generation
+        // Always generate the platform-specific URL, even with empty username
+        // This shows the URL prefix (e.g., https://linkedin.com/in/) as a placeholder
         const social = payload.socialProfile;
-        if (social.username) {
-          return generateSocialProfile(social.platform, social.username);
-        }
-        // Fallback to payload.text if no username set
-        return payload.text;
+        return generateSocialProfile(social.platform, social.username);
       }
 
       case 'messaging_link': {
         // Use generateMessagingLink for proper deep link generation
+        // Always generate the platform-specific URL, even with empty identifier
+        // This shows the URL prefix (e.g., https://wa.me/) as a placeholder
         const msg = payload.messaging;
-        if (msg.identifier) {
-          return generateMessagingLink(msg.platform, msg.identifier, msg.message);
-        }
-        // Fallback to payload.text if no identifier set
-        return payload.text;
+        return generateMessagingLink(msg.platform, msg.identifier, msg.message);
       }
 
       case 'gs1_digital_link': {
