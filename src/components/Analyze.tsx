@@ -1,7 +1,7 @@
 /**
  * Analyze Component
- * Comprehensive QR Code analysis page that extracts and displays detailed metadata
- * from uploaded/captured QR codes with side-by-side original vs reproduced preview
+ * Premier QR Code analysis page - the most comprehensive QR analyzer available
+ * Extracts and displays every possible detail from uploaded/captured QR codes
  */
 
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -10,16 +10,21 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowRight,
+  BarChart3,
   Binary,
   Camera as CameraIcon,
   Check,
   CheckCircle,
   ChevronDown,
   ChevronRight,
+  ClipboardCopy,
+  Code2,
   CreditCard,
   Database,
+  Download,
   Eye,
   FileImage,
+  FileJson,
   FileText,
   Fingerprint,
   Globe,
@@ -49,12 +54,15 @@ import {
   Wallet,
   Wifi,
   XCircle,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   analyzeQRCode,
   analyzeQRFromFile,
@@ -66,6 +74,11 @@ import {
   type DecoderMetadata,
 } from '@/modules/qr-analyzer';
 import { createQRInstance, getStringToBytes, optimizeSegments, setStringToBytes } from '@/modules/qr-encoder';
+import {
+  ECC_CAPACITIES_BYTE,
+  ECC_CAPACITIES_NUMERIC,
+  ECC_CAPACITIES_ALPHANUMERIC,
+} from '@/modules/qr-spec/constants';
 import { useQRStore } from '@/store/qr-store';
 
 interface AnalyzeProps {
@@ -247,6 +260,489 @@ function StatusBadge({ status, trueLabel, falseLabel }: StatusBadgeProps) {
       {status ? <Check className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
       {status ? trueLabel : falseLabel}
     </span>
+  );
+}
+
+// WCAG Compliance Badge Component
+interface WCAGBadgeProps {
+  ratio: number;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+function WCAGBadge({ ratio, size = 'md' }: WCAGBadgeProps) {
+  const meetsAAA = ratio >= 7;
+  const meetsAA = ratio >= 4.5;
+  const meetsAALarge = ratio >= 3;
+  
+  const sizeClasses = {
+    sm: 'text-[10px] px-1.5 py-0.5',
+    md: 'text-xs px-2 py-1',
+    lg: 'text-sm px-3 py-1.5',
+  };
+  
+  return (
+    <div className="flex items-center gap-1.5">
+      <span
+        className={`inline-flex items-center gap-1 rounded-md font-bold ${sizeClasses[size]} ${
+          meetsAAA
+            ? 'bg-green-500 text-white'
+            : meetsAA
+              ? 'bg-green-400 text-white'
+              : meetsAALarge
+                ? 'bg-amber-500 text-white'
+                : 'bg-red-500 text-white'
+        }`}
+      >
+        {meetsAAA ? 'AAA' : meetsAA ? 'AA' : meetsAALarge ? 'AA-L' : 'Fail'}
+      </span>
+      <span className={`text-muted-foreground ${size === 'sm' ? 'text-[10px]' : 'text-xs'}`}>
+        {ratio.toFixed(1)}:1
+      </span>
+    </div>
+  );
+}
+
+// Copy Button Component
+interface CopyButtonProps {
+  text: string;
+  label?: string;
+  className?: string;
+}
+
+function CopyButton({ text, label, className = '' }: CopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+  
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [text]);
+  
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleCopy}
+      className={`h-7 gap-1.5 text-xs ${className}`}
+    >
+      {copied ? (
+        <>
+          <Check className="w-3 h-3 text-green-500" />
+          <span className="text-green-500">Copied!</span>
+        </>
+      ) : (
+        <>
+          <ClipboardCopy className="w-3 h-3" />
+          {label && <span>{label}</span>}
+        </>
+      )}
+    </Button>
+  );
+}
+
+// Hex Dump View Component
+interface HexDumpViewProps {
+  bytes: Uint8Array;
+  maxRows?: number;
+}
+
+function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
+  const [expanded, setExpanded] = useState(false);
+  const bytesPerRow = 16;
+  const totalRows = Math.ceil(bytes.length / bytesPerRow);
+  const displayRows = expanded ? totalRows : Math.min(maxRows, totalRows);
+  
+  const hexDump = useMemo(() => {
+    const rows: Array<{ offset: string; hex: string; ascii: string }> = [];
+    for (let i = 0; i < displayRows * bytesPerRow && i < bytes.length; i += bytesPerRow) {
+      const slice = bytes.slice(i, Math.min(i + bytesPerRow, bytes.length));
+      const hex = Array.from(slice)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join(' ');
+      const ascii = Array.from(slice)
+        .map((b) => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.'))
+        .join('');
+      rows.push({
+        offset: i.toString(16).padStart(8, '0'),
+        hex: hex.padEnd(bytesPerRow * 3 - 1, ' '),
+        ascii,
+      });
+    }
+    return rows;
+  }, [bytes, displayRows]);
+  
+  const fullHex = useMemo(
+    () =>
+      Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join(' '),
+    [bytes]
+  );
+  
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {bytes.length} bytes
+        </span>
+        <CopyButton text={fullHex} label="Copy Hex" />
+      </div>
+      <div className="bg-muted/50 rounded-lg p-3 overflow-x-auto">
+        <pre className="font-mono text-[10px] sm:text-xs leading-relaxed">
+          <span className="text-muted-foreground">Offset    </span>
+          <span className="text-muted-foreground">Hex{' '.repeat(bytesPerRow * 3 - 3)}</span>
+          <span className="text-muted-foreground">ASCII</span>
+          {'\n'}
+          {hexDump.map((row, i) => (
+            <span key={i}>
+              <span className="text-blue-500 dark:text-blue-400">{row.offset}</span>
+              {'  '}
+              <span className="text-foreground">{row.hex}</span>
+              {'  '}
+              <span className="text-green-600 dark:text-green-400">{row.ascii}</span>
+              {'\n'}
+            </span>
+          ))}
+        </pre>
+      </div>
+      {totalRows > maxRows && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setExpanded(!expanded)}
+          className="w-full text-xs"
+        >
+          {expanded ? 'Show Less' : `Show All (${totalRows} rows)`}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// Module Matrix Visualization Component
+interface ModuleMatrixViewProps {
+  matrix: boolean[][];
+  version: number | null;
+  fgColor?: string;
+  bgColor?: string;
+}
+
+function ModuleMatrixView({ matrix, version, fgColor = '#000000', bgColor = '#ffffff' }: ModuleMatrixViewProps) {
+  const [zoom, setZoom] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const moduleCount = matrix.length;
+  
+  // Calculate module size based on container and zoom
+  const baseModuleSize = Math.max(2, Math.min(8, Math.floor(280 / moduleCount)));
+  const moduleSize = baseModuleSize * zoom;
+  const gridSize = moduleCount * moduleSize;
+  
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-muted-foreground">
+          {moduleCount} × {moduleCount} modules
+          {version && ` (Version ${version})`}
+        </span>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}
+            className="h-7 w-7 p-0"
+            disabled={zoom <= 0.5}
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+          </Button>
+          <span className="text-xs text-muted-foreground w-12 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setZoom(Math.min(3, zoom + 0.25))}
+            className="h-7 w-7 p-0"
+            disabled={zoom >= 3}
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
+      <div
+        ref={containerRef}
+        className="overflow-auto max-h-[400px] rounded-lg border bg-white dark:bg-gray-900 p-2"
+      >
+        <div
+          style={{
+            width: gridSize,
+            height: gridSize,
+            display: 'grid',
+            gridTemplateColumns: `repeat(${moduleCount}, ${moduleSize}px)`,
+            gap: 0,
+          }}
+        >
+          {matrix.map((row, r) =>
+            row.map((isDark, c) => (
+              <div
+                key={`${r}-${c}`}
+                style={{
+                  width: moduleSize,
+                  height: moduleSize,
+                  backgroundColor: isDark ? fgColor : bgColor,
+                }}
+                title={`Row ${r}, Col ${c}: ${isDark ? 'Dark' : 'Light'}`}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Capacity Table by Mode Component
+interface CapacityByModeProps {
+  version: number;
+  eccLevel: ECCLevel;
+  currentBytes?: number;
+}
+
+function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByModeProps) {
+  const versionIndex = version - 1;
+  
+  const capacities = [
+    {
+      mode: 'Numeric',
+      icon: <Hash className="w-3.5 h-3.5" />,
+      capacity: ECC_CAPACITIES_NUMERIC[eccLevel]?.[versionIndex] ?? 0,
+      unit: 'digits',
+    },
+    {
+      mode: 'Alphanumeric',
+      icon: <Type className="w-3.5 h-3.5" />,
+      capacity: ECC_CAPACITIES_ALPHANUMERIC[eccLevel]?.[versionIndex] ?? 0,
+      unit: 'chars',
+    },
+    {
+      mode: 'Byte',
+      icon: <Binary className="w-3.5 h-3.5" />,
+      capacity: ECC_CAPACITIES_BYTE[eccLevel]?.[versionIndex] ?? 0,
+      unit: 'bytes',
+      current: currentBytes,
+    },
+    {
+      mode: 'Kanji',
+      icon: <Globe className="w-3.5 h-3.5" />,
+      capacity: Math.floor((ECC_CAPACITIES_BYTE[eccLevel]?.[versionIndex] ?? 0) * 0.6),
+      unit: 'chars',
+    },
+  ];
+  
+  return (
+    <div className="space-y-2">
+      <div className="text-xs text-muted-foreground mb-2">
+        Maximum capacity for Version {version} with ECC {eccLevel}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {capacities.map((cap) => (
+          <div
+            key={cap.mode}
+            className={`p-2.5 rounded-lg border bg-card ${
+              cap.current !== undefined ? 'ring-1 ring-primary/50' : ''
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="text-muted-foreground">{cap.icon}</div>
+              <span className="text-xs font-medium">{cap.mode}</span>
+            </div>
+            <div className="text-lg font-bold">
+              {cap.capacity.toLocaleString()}
+              <span className="text-xs font-normal text-muted-foreground ml-1">
+                {cap.unit}
+              </span>
+            </div>
+            {cap.current !== undefined && (
+              <div className="mt-1">
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all ${
+                      (cap.current / cap.capacity) > 0.9
+                        ? 'bg-red-500'
+                        : (cap.current / cap.capacity) > 0.7
+                          ? 'bg-amber-500'
+                          : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min(100, (cap.current / cap.capacity) * 100)}%` }}
+                  />
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">
+                  {cap.current} used ({Math.round((cap.current / cap.capacity) * 100)}%)
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Sticky Summary Bar Component
+interface SummaryBarProps {
+  result: QRAnalysisResult;
+}
+
+function SummaryBar({ result }: SummaryBarProps) {
+  if (!result.success) return null;
+  
+  return (
+    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b py-2 px-4 -mx-4 mb-4 animate-in slide-in-from-top duration-300">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        {/* Version chip */}
+        {result.version !== null && (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+            <Grid3x3 className="w-3 h-3" />
+            V{result.version}
+          </span>
+        )}
+        
+        {/* ECC chip */}
+        {result.eccLevel && (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 font-medium">
+            <Shield className="w-3 h-3" />
+            ECC-{result.eccLevel}
+          </span>
+        )}
+        
+        {/* Content type chip */}
+        {result.contentType && (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-400 font-medium">
+            {CONTENT_TYPE_ICONS[result.contentType.type]}
+            {result.contentType.label}
+          </span>
+        )}
+        
+        {/* Contrast chip */}
+        {result.detectedColors && (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted font-medium">
+            <Eye className="w-3 h-3" />
+            <WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />
+          </span>
+        )}
+        
+        {/* Module count */}
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground">
+          {result.moduleCount}×{result.moduleCount}
+        </span>
+        
+        {/* Payload size */}
+        {result.payload && (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground">
+            <Database className="w-3 h-3" />
+            {result.payload.length} chars
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Encoding Efficiency Component
+interface EncodingEfficiencyProps {
+  payload: string;
+  payloadBytes?: Uint8Array;
+  encodingMode: string | null;
+}
+
+function EncodingEfficiency({ payload, payloadBytes, encodingMode }: EncodingEfficiencyProps) {
+  const analysis = useMemo(() => {
+    const numericChars = (payload.match(/[0-9]/g) || []).length;
+    const alphanumericChars = (payload.match(/[0-9A-Z $%*+\-./:]/gi) || []).length;
+    const byteChars = payload.length;
+    
+    // Calculate potential bit savings
+    // Numeric: 3.33 bits per char, Alphanumeric: 5.5 bits per char, Byte: 8 bits per char
+    const numericBits = numericChars * 3.33;
+    const alphanumericBits = alphanumericChars * 5.5;
+    const byteBits = byteChars * 8;
+    
+    const numericPercentage = byteChars > 0 ? Math.round((numericChars / byteChars) * 100) : 0;
+    const alphanumericPercentage = byteChars > 0 ? Math.round((alphanumericChars / byteChars) * 100) : 0;
+    
+    // Determine optimal mode
+    let optimalMode = 'byte';
+    if (numericPercentage === 100) optimalMode = 'numeric';
+    else if (alphanumericPercentage === 100) optimalMode = 'alphanumeric';
+    else if (numericPercentage > 50 || alphanumericPercentage > 50) optimalMode = 'mixed';
+    
+    return {
+      numericChars,
+      alphanumericChars,
+      byteChars,
+      numericPercentage,
+      alphanumericPercentage,
+      estimatedBits: Math.round(byteBits),
+      optimalMode,
+      bytesUsed: payloadBytes?.length ?? new TextEncoder().encode(payload).length,
+    };
+  }, [payload, payloadBytes]);
+  
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="p-2 rounded-lg bg-muted/50">
+          <div className="text-lg font-bold text-primary">{analysis.numericPercentage}%</div>
+          <div className="text-[10px] text-muted-foreground">Numeric</div>
+        </div>
+        <div className="p-2 rounded-lg bg-muted/50">
+          <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+            {analysis.alphanumericPercentage}%
+          </div>
+          <div className="text-[10px] text-muted-foreground">Alphanumeric</div>
+        </div>
+        <div className="p-2 rounded-lg bg-muted/50">
+          <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+            {analysis.bytesUsed}
+          </div>
+          <div className="text-[10px] text-muted-foreground">Bytes</div>
+        </div>
+      </div>
+      
+      <DetailRow
+        label="Current Mode"
+        value={<span className="capitalize">{encodingMode || 'Unknown'}</span>}
+        icon={<Code2 className="w-3.5 h-3.5" />}
+      />
+      <DetailRow
+        label="Optimal Mode"
+        value={
+          <span className={`capitalize ${
+            analysis.optimalMode === encodingMode ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
+          }`}>
+            {analysis.optimalMode}
+            {analysis.optimalMode === encodingMode && ' ✓'}
+          </span>
+        }
+        icon={<BarChart3 className="w-3.5 h-3.5" />}
+      />
+      <DetailRow
+        label="Character Count"
+        value={`${analysis.byteChars} chars`}
+        icon={<Type className="w-3.5 h-3.5" />}
+      />
+    </div>
   );
 }
 
@@ -1128,50 +1624,115 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     }
   }, [generatedCanvas, hasAutoAnalyzed, result, isLoading, handleAnalyzeGenerator]);
 
-  // Render content type details
+  // Render content type details - exhaustive list of ALL possible fields
   const renderContentTypeDetails = (contentType: ContentTypeDetails) => {
-    const details: Array<{ label: string; value: string }> = [];
+    const details: Array<{ label: string; value: string; icon?: React.ReactNode }> = [];
 
-    if (contentType.url) details.push({ label: 'URL', value: contentType.url });
-    if (contentType.protocol) details.push({ label: 'Protocol', value: contentType.protocol });
-    if (contentType.wifiSsid) details.push({ label: 'SSID', value: contentType.wifiSsid });
-    if (contentType.wifiAuth) details.push({ label: 'Auth', value: contentType.wifiAuth });
-    if (contentType.contactName) details.push({ label: 'Name', value: contentType.contactName });
-    if (contentType.phoneNumber) details.push({ label: 'Phone', value: contentType.phoneNumber });
-    if (contentType.emailAddress) details.push({ label: 'Email', value: contentType.emailAddress });
-    if (contentType.cryptoCurrency)
-      details.push({ label: 'Currency', value: contentType.cryptoCurrency });
-    if (contentType.cryptoAddress)
-      details.push({ label: 'Address', value: contentType.cryptoAddress });
-    if (contentType.amount) details.push({ label: 'Amount', value: contentType.amount });
+    // URL details
+    if (contentType.url) details.push({ label: 'URL', value: contentType.url, icon: <Globe className="w-3 h-3" /> });
+    if (contentType.protocol) details.push({ label: 'Protocol', value: contentType.protocol, icon: <Lock className="w-3 h-3" /> });
+    
+    // WiFi details
+    if (contentType.wifiSsid) details.push({ label: 'Network Name (SSID)', value: contentType.wifiSsid, icon: <Wifi className="w-3 h-3" /> });
+    if (contentType.wifiAuth) details.push({ label: 'Security Type', value: contentType.wifiAuth, icon: <Shield className="w-3 h-3" /> });
+    
+    // Contact details
+    if (contentType.contactName) details.push({ label: 'Contact Name', value: contentType.contactName, icon: <FileText className="w-3 h-3" /> });
+    if (contentType.phoneNumber) details.push({ label: 'Phone Number', value: contentType.phoneNumber, icon: <Phone className="w-3 h-3" /> });
+    if (contentType.emailAddress) details.push({ label: 'Email Address', value: contentType.emailAddress, icon: <Mail className="w-3 h-3" /> });
+    
+    // Crypto details
+    if (contentType.cryptoCurrency) details.push({ label: 'Cryptocurrency', value: contentType.cryptoCurrency, icon: <Wallet className="w-3 h-3" /> });
+    if (contentType.cryptoAddress) details.push({ label: 'Wallet Address', value: contentType.cryptoAddress, icon: <Hash className="w-3 h-3" /> });
+    if (contentType.amount) details.push({ label: 'Amount', value: contentType.amount, icon: <CreditCard className="w-3 h-3" /> });
 
-    // UTM parameters
+    // UTM parameters (marketing tracking)
     if (contentType.hasUtmParams) {
       if (contentType.utmSource)
-        details.push({ label: 'UTM Source', value: contentType.utmSource });
+        details.push({ label: 'UTM Source', value: contentType.utmSource, icon: <BarChart3 className="w-3 h-3" /> });
       if (contentType.utmMedium)
-        details.push({ label: 'UTM Medium', value: contentType.utmMedium });
+        details.push({ label: 'UTM Medium', value: contentType.utmMedium, icon: <BarChart3 className="w-3 h-3" /> });
       if (contentType.utmCampaign)
-        details.push({ label: 'UTM Campaign', value: contentType.utmCampaign });
+        details.push({ label: 'UTM Campaign', value: contentType.utmCampaign, icon: <BarChart3 className="w-3 h-3" /> });
     }
 
     return details;
   };
-
-  // Get contrast badge color
-  const getContrastBadgeColor = (ratio: number) => {
-    if (ratio >= 7) return 'bg-green-500 text-white';
-    if (ratio >= 4.5) return 'bg-green-400 text-white';
-    if (ratio >= 3) return 'bg-yellow-500 text-black';
-    return 'bg-red-500 text-white';
-  };
-
-  const getContrastLabel = (ratio: number) => {
-    if (ratio >= 7) return 'AAA';
-    if (ratio >= 4.5) return 'AA';
-    if (ratio >= 3) return 'AA-L';
-    return 'Poor';
-  };
+  
+  // Export analysis result as JSON for Netlify API
+  const handleExportJSON = useCallback(() => {
+    if (!result?.success) return;
+    
+    // Create a clean export object with all analysis data
+    const exportData = {
+      version: '1.0',
+      timestamp: new Date().toISOString(),
+      analysis: {
+        // Core QR properties
+        payload: result.payload,
+        payloadBytes: result.payloadBytes ? Array.from(result.payloadBytes) : undefined,
+        version: result.version,
+        moduleCount: result.moduleCount,
+        eccLevel: result.eccLevel,
+        maskPattern: result.maskPattern,
+        encodingMode: result.encodingMode,
+        
+        // Analysis metadata
+        confidence: result.confidence,
+        warnings: result.warnings,
+        
+        // Content analysis
+        contentType: result.contentType,
+        
+        // Visual properties
+        detectedColors: result.detectedColors,
+        estimatedModulePx: result.estimatedModulePx,
+        quietZone: result.quietZone,
+        
+        // Capacity
+        dataCapacity: result.dataCapacity,
+        
+        // Structure
+        structuralAnalysis: result.structuralAnalysis,
+        
+        // Image
+        imageProperties: result.imageProperties,
+        
+        // Error correction
+        errorsCorrected: result.errorsCorrected,
+        
+        // Decoder metadata
+        decoderMetadata: result.decoderMetadata,
+        
+        // Module matrix as compact format
+        moduleMatrix: result.moduleMatrix ? result.moduleMatrix.map(row => 
+          row.map(cell => cell ? 1 : 0).join('')
+        ) : undefined,
+      },
+      // Settings for recreation in generator
+      generatorSettings: {
+        text: result.payload,
+        ecc: result.eccLevel,
+        version: actualUsedVersion ?? result.version,
+        maskPattern: result.maskPattern,
+        encodingMode: result.encodingMode !== 'unknown' && result.encodingMode !== 'mixed' 
+          ? result.encodingMode 
+          : undefined,
+        fgColor: result.detectedColors?.foreground,
+        bgColor: result.detectedColors?.background,
+      },
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qr-analysis-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [result, actualUsedVersion]);
 
   return (
     <main className="flex-1 flex bg-background overflow-hidden">
@@ -1184,19 +1745,37 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       <div className="flex-1 overflow-y-auto scrollbar-hide">
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
           {/* Hero Section */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-2">
-              <ScanLine className="w-7 h-7 text-primary" />
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-2 shadow-lg shadow-primary/10">
+              <ScanLine className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
               {t('analyze.title', 'QR Code Analyzer')}
             </h1>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+            <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               {t(
                 'analyze.description',
-                'Upload or capture a QR code to extract its complete technical specification and import settings to recreate or modify it.'
+                'The most comprehensive QR code analyzer available. Extract every technical detail, visualize the module matrix, check WCAG compliance, and export analysis data for recreation.'
               )}
             </p>
+            <div className="flex flex-wrap justify-center gap-2 pt-1">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
+                <Binary className="w-3 h-3" />
+                Hex Dump
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
+                <Grid3x3 className="w-3 h-3" />
+                Matrix View
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
+                <Eye className="w-3 h-3" />
+                WCAG Check
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground">
+                <FileJson className="w-3 h-3" />
+                JSON Export
+              </span>
+            </div>
           </div>
 
           {/* Input Section - Always visible, compact cards */}
@@ -1379,6 +1958,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       </p>
                     )}
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleExportJSON}
+                    className="gap-1.5 text-green-700 dark:text-green-400 hover:bg-green-500/10"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="hidden sm:inline">Export JSON</span>
+                  </Button>
                 </div>
               )}
 
@@ -1471,6 +2059,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
               {result.success && (
                 <>
+                  {/* Sticky Summary Bar */}
+                  <SummaryBar result={result} />
+                  
                   {/* Side-by-Side Preview */}
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* Original Image */}
@@ -1478,6 +2069,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       <div className="flex items-center gap-2 mb-3">
                         <ImageIcon className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm font-medium">Original</span>
+                        {result.imageProperties && (
+                          <span className="text-xs text-muted-foreground ml-auto">
+                            {result.imageProperties.width} × {result.imageProperties.height}
+                          </span>
+                        )}
                       </div>
                       <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         {originalImageUrl ? (
@@ -1496,7 +2092,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     <div className="border rounded-lg p-4 bg-card">
                       <div className="flex items-center gap-2 mb-3">
                         <QrCode className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">Reproduced (Extracted Settings)</span>
+                        <span className="text-sm font-medium">Reproduced</span>
+                        <span className="text-xs text-muted-foreground ml-auto">From Extracted Settings</span>
                       </div>
                       <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         <canvas
@@ -1508,15 +2105,17 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     </div>
                   </div>
 
-                  {/* Payload Content */}
+                  {/* Payload Content with Copy */}
                   {result.payload && (
                     <div className="border rounded-lg p-4 bg-card">
                       <div className="flex items-center gap-2 mb-2">
                         <Database className="w-4 h-4 text-primary" />
                         <span className="text-sm font-medium">Payload Content</span>
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          {result.payload.length} characters
+                        <span className="text-xs text-muted-foreground ml-auto mr-2">
+                          {result.payload.length} chars
+                          {result.payloadBytes && ` · ${result.payloadBytes.length} bytes`}
                         </span>
+                        <CopyButton text={result.payload} label="Copy" />
                       </div>
                       <pre className="text-sm font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-32 whitespace-pre-wrap break-all">
                         {result.payload}
@@ -1524,479 +2123,663 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     </div>
                   )}
 
-                  {/* Analysis Sections */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* Content Analysis */}
-                    {result.contentType && (
-                      <CollapsibleSection
-                        title="Content Analysis"
-                        icon={
-                          CONTENT_TYPE_ICONS[result.contentType.type] || (
-                            <QrCode className="w-4 h-4" />
-                          )
-                        }
-                        badge={
-                          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                            {result.contentType.label}
-                          </span>
-                        }
-                      >
-                        <div className="space-y-2">
-                          <DetailRow
-                            label="Content Type"
-                            value={result.contentType.label}
-                            icon={<Fingerprint className="w-3.5 h-3.5" />}
-                          />
-                          {renderContentTypeDetails(result.contentType).map((detail, i) => (
-                            <DetailRow
-                              key={i}
-                              label={detail.label}
-                              value={
-                                <span className="font-mono text-xs truncate max-w-[200px] block">
-                                  {detail.value}
-                                </span>
-                              }
-                            />
-                          ))}
-                        </div>
-                      </CollapsibleSection>
-                    )}
-
-                    {/* QR Structure */}
-                    <CollapsibleSection title="QR Structure" icon={<Grid3x3 className="w-4 h-4" />}>
-                      <div className="space-y-2">
-                        <DetailRow
-                          label="Version"
-                          value={
-                            result.version !== null
-                              ? `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
-                              : '—'
-                          }
-                          icon={<Hash className="w-3.5 h-3.5" />}
-                        />
-                        <DetailRow
-                          label="Error Correction"
-                          value={
-                            result.eccLevel ? (
-                              <div className="text-right">
-                                <div>Level {result.eccLevel}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
-                                </div>
-                              </div>
-                            ) : (
-                              '—'
-                            )
-                          }
-                          icon={<Shield className="w-3.5 h-3.5" />}
-                        />
-                        <DetailRow
-                          label="Mask Pattern"
-                          value={
-                            result.maskPattern !== null ? (
-                              <div className="text-right">
-                                <div>Pattern {result.maskPattern}</div>
-                                <div className="text-xs text-muted-foreground font-mono">
-                                  {MASK_DESCRIPTIONS[result.maskPattern]}
-                                </div>
-                              </div>
-                            ) : (
-                              '—'
-                            )
-                          }
-                          icon={<Layers className="w-3.5 h-3.5" />}
-                        />
-                      </div>
-                    </CollapsibleSection>
-
-                    {/* Encoding */}
-                    <CollapsibleSection
-                      title="Encoding"
-                      icon={<Binary className="w-4 h-4" />}
-                      badge={
-                        result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
-                          <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                            <Shield className="w-3 h-3" />
-                            {result.errorsCorrected} error{result.errorsCorrected !== 1 ? 's' : ''}{' '}
-                            corrected
-                          </span>
-                        ) : null
-                      }
-                    >
-                      <div className="space-y-2">
-                        <DetailRow
-                          label="Mode"
-                          value={
-                            <span className="capitalize">{result.encodingMode || 'Unknown'}</span>
-                          }
-                          icon={<Type className="w-3.5 h-3.5" />}
-                        />
-                        {result.payloadBytes && (
-                          <DetailRow
-                            label="Raw Bytes"
-                            value={`${result.payloadBytes.length} bytes`}
-                            icon={<Database className="w-3.5 h-3.5" />}
-                          />
-                        )}
-                        <DetailRow
-                          label="RS Error Correction"
-                          value={
-                            result.errorsCorrected === null ? (
-                              <span className="text-muted-foreground">Not available</span>
-                            ) : result.errorsCorrected > 0 ? (
-                              <span className="text-amber-600 dark:text-amber-400 font-medium">
-                                {result.errorsCorrected} error
-                                {result.errorsCorrected !== 1 ? 's' : ''} recovered
-                              </span>
-                            ) : (
-                              <span className="text-green-600 dark:text-green-400">
-                                No errors detected
-                              </span>
-                            )
-                          }
-                          icon={<Shield className="w-3.5 h-3.5" />}
-                        />
-                      </div>
-                    </CollapsibleSection>
-
-                    {/* Colors */}
-                    {result.detectedColors && (
-                      <CollapsibleSection
-                        title="Colors"
-                        icon={<Palette className="w-4 h-4" />}
-                        badge={
-                          <span
-                            className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${getContrastBadgeColor(result.detectedColors.contrastRatio)}`}
-                          >
-                            {result.detectedColors.contrastRatio.toFixed(1)}:1 (
-                            {getContrastLabel(result.detectedColors.contrastRatio)})
-                          </span>
-                        }
-                      >
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <ColorSwatch
-                              color={result.detectedColors.foreground}
-                              label="Foreground"
-                            />
-                            <ColorSwatch
-                              color={result.detectedColors.background}
-                              label="Background"
-                            />
-                          </div>
-                          <DetailRow
-                            label="Contrast Ratio"
-                            value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
-                            icon={<Eye className="w-3.5 h-3.5" />}
-                          />
-                        </div>
-                      </CollapsibleSection>
-                    )}
-
-                    {/* Spatial Analysis */}
-                    <CollapsibleSection
-                      title="Spatial Analysis"
-                      icon={<Ruler className="w-4 h-4" />}
-                    >
-                      <div className="space-y-2">
-                        {result.estimatedModulePx !== null && (
-                          <DetailRow
-                            label="Module Size"
-                            value={`~${result.estimatedModulePx} px`}
-                            icon={<Square className="w-3.5 h-3.5" />}
-                          />
-                        )}
-                        {result.quietZone && (
-                          <>
-                            <DetailRow
-                              label="Quiet Zone"
-                              value={
-                                <StatusBadge
-                                  status={result.quietZone.adequate}
-                                  trueLabel="Adequate"
-                                  falseLabel="Insufficient"
-                                />
-                              }
-                              icon={<Square className="w-3.5 h-3.5" />}
-                            />
-                            <div className="grid grid-cols-4 gap-1 text-center mt-2">
-                              <div className="p-2 rounded bg-muted/50">
-                                <div className="text-sm font-mono">{result.quietZone.top}</div>
-                                <div className="text-[10px] text-muted-foreground">Top</div>
-                              </div>
-                              <div className="p-2 rounded bg-muted/50">
-                                <div className="text-sm font-mono">{result.quietZone.right}</div>
-                                <div className="text-[10px] text-muted-foreground">Right</div>
-                              </div>
-                              <div className="p-2 rounded bg-muted/50">
-                                <div className="text-sm font-mono">{result.quietZone.bottom}</div>
-                                <div className="text-[10px] text-muted-foreground">Bottom</div>
-                              </div>
-                              <div className="p-2 rounded bg-muted/50">
-                                <div className="text-sm font-mono">{result.quietZone.left}</div>
-                                <div className="text-[10px] text-muted-foreground">Left</div>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </CollapsibleSection>
-
-                    {/* Data Capacity */}
-                    {result.dataCapacity && (
-                      <CollapsibleSection
-                        title="Data Capacity"
-                        icon={<Database className="w-4 h-4" />}
-                        badge={
-                          result.dataCapacity.overflow ? (
-                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                              <AlertTriangle className="w-3 h-3" />
-                              Detection mismatch
-                            </span>
-                          ) : (
-                            <span
-                              className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
-                                result.dataCapacity.percentage > 90
-                                  ? 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                  : result.dataCapacity.percentage > 70
-                                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                                    : 'bg-green-500/10 text-green-700 dark:text-green-400'
-                              }`}
-                            >
-                              {result.dataCapacity.percentage}% used
-                            </span>
-                          )
-                        }
-                      >
-                        {result.dataCapacity.overflow ? (
-                          <div className="space-y-2">
-                            <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
-                              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                              <span>
-                                Payload ({result.dataCapacity.used} bytes) exceeds detected capacity
-                                ({result.dataCapacity.total} bytes). Version or ECC detection may be
-                                inaccurate.
-                              </span>
-                            </div>
-                            <DetailRow
-                              label="Payload Size"
-                              value={`${result.dataCapacity.used} bytes`}
-                              icon={<Database className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Detected Capacity"
-                              value={`${result.dataCapacity.total} bytes`}
-                              icon={<Database className="w-3.5 h-3.5" />}
-                            />
-                          </div>
-                        ) : (
-                          <ProgressBar
-                            value={result.dataCapacity.used}
-                            max={result.dataCapacity.total}
-                            label="Byte Mode Capacity"
-                          />
-                        )}
-                      </CollapsibleSection>
-                    )}
-
-                    {/* Structural Patterns */}
-                    {result.structuralAnalysis && (
-                      <CollapsibleSection
-                        title="Structural Patterns"
-                        icon={<Settings className="w-4 h-4" />}
-                      >
-                        <div className="space-y-2">
-                          <DetailRow
-                            label="Finder Patterns"
-                            value={
-                              <StatusBadge
-                                status={result.structuralAnalysis.hasFinderPatterns}
-                                trueLabel="Detected"
-                                falseLabel="Missing"
-                              />
-                            }
-                          />
-                          <DetailRow
-                            label="Timing Patterns"
-                            value={
-                              <StatusBadge
-                                status={result.structuralAnalysis.hasTimingPatterns}
-                                trueLabel="Detected"
-                                falseLabel="Missing"
-                              />
-                            }
-                          />
-                          <DetailRow
-                            label="Alignment Patterns"
-                            value={
-                              result.structuralAnalysis.hasAlignmentPatterns ? (
-                                <span className="text-sm">
-                                  {result.structuralAnalysis.alignmentPatternCount} expected
-                                </span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">N/A (v1)</span>
+                  {/* Tabbed Analysis Sections */}
+                  <Tabs defaultValue="overview" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4 mb-4">
+                      <TabsTrigger value="overview" className="text-xs sm:text-sm">
+                        <Eye className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
+                        Overview
+                      </TabsTrigger>
+                      <TabsTrigger value="technical" className="text-xs sm:text-sm">
+                        <Settings className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
+                        Technical
+                      </TabsTrigger>
+                      <TabsTrigger value="visual" className="text-xs sm:text-sm">
+                        <Palette className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
+                        Visual
+                      </TabsTrigger>
+                      <TabsTrigger value="advanced" className="text-xs sm:text-sm">
+                        <Code2 className="w-3.5 h-3.5 mr-1.5 hidden sm:inline" />
+                        Advanced
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    {/* Overview Tab */}
+                    <TabsContent value="overview" className="space-y-4 animate-in fade-in duration-200">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Content Analysis */}
+                        {result.contentType && (
+                          <CollapsibleSection
+                            title="Content Analysis"
+                            icon={
+                              CONTENT_TYPE_ICONS[result.contentType.type] || (
+                                <QrCode className="w-4 h-4" />
                               )
                             }
-                          />
-                        </div>
-                      </CollapsibleSection>
-                    )}
-
-                    {/* Image Properties */}
-                    {result.imageProperties && (
-                      <CollapsibleSection
-                        title="Image Properties"
-                        icon={<FileImage className="w-4 h-4" />}
-                      >
-                        <div className="space-y-2">
-                          <DetailRow
-                            label="Image Size"
-                            value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
-                            icon={<ImageIcon className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Aspect Ratio"
-                            value={
-                              result.imageProperties.aspectRatio === 1
-                                ? '1:1 (Square)'
-                                : `${result.imageProperties.aspectRatio}:1`
+                            badge={
+                              <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                                {result.contentType.label}
+                              </span>
                             }
-                            icon={<Ratio className="w-3.5 h-3.5" />}
-                          />
-                          {result.imageProperties.estimatedQrSizePx > 0 && (
-                            <DetailRow
-                              label="QR Code Size"
-                              value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
-                              icon={<QrCode className="w-3.5 h-3.5" />}
-                            />
-                          )}
-                          {result.imageProperties.estimatedQrSizePx > 0 &&
-                            result.imageProperties.width > 0 && (
+                          >
+                            <div className="space-y-2">
                               <DetailRow
-                                label="QR Coverage"
-                                value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
-                                icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                                label="Content Type"
+                                value={result.contentType.label}
+                                icon={<Fingerprint className="w-3.5 h-3.5" />}
+                              />
+                              {renderContentTypeDetails(result.contentType).map((detail, i) => (
+                                <DetailRow
+                                  key={i}
+                                  label={detail.label}
+                                  value={
+                                    <span className="font-mono text-xs truncate max-w-[200px] block">
+                                      {detail.value}
+                                    </span>
+                                  }
+                                  icon={detail.icon}
+                                />
+                              ))}
+                            </div>
+                          </CollapsibleSection>
+                        )}
+
+                        {/* QR Structure */}
+                        <CollapsibleSection title="QR Structure" icon={<Grid3x3 className="w-4 h-4" />}>
+                          <div className="space-y-2">
+                            <DetailRow
+                              label="Version"
+                              value={
+                                result.version !== null
+                                  ? `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
+                                  : '—'
+                              }
+                              icon={<Hash className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Error Correction"
+                              value={
+                                result.eccLevel ? (
+                                  <div className="text-right">
+                                    <div>Level {result.eccLevel}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
+                                    </div>
+                                  </div>
+                                ) : (
+                                  '—'
+                                )
+                              }
+                              icon={<Shield className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Mask Pattern"
+                              value={
+                                result.maskPattern !== null ? (
+                                  <div className="text-right">
+                                    <div>Pattern {result.maskPattern}</div>
+                                    <div className="text-xs text-muted-foreground font-mono">
+                                      {MASK_DESCRIPTIONS[result.maskPattern]}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  '—'
+                                )
+                              }
+                              icon={<Layers className="w-3.5 h-3.5" />}
+                            />
+                          </div>
+                        </CollapsibleSection>
+
+                        {/* Encoding */}
+                        <CollapsibleSection
+                          title="Encoding"
+                          icon={<Binary className="w-4 h-4" />}
+                          badge={
+                            result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
+                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                                <Shield className="w-3 h-3" />
+                                {result.errorsCorrected} error{result.errorsCorrected !== 1 ? 's' : ''}{' '}
+                                corrected
+                              </span>
+                            ) : null
+                          }
+                        >
+                          <div className="space-y-2">
+                            <DetailRow
+                              label="Mode"
+                              value={
+                                <span className="capitalize">{result.encodingMode || 'Unknown'}</span>
+                              }
+                              icon={<Type className="w-3.5 h-3.5" />}
+                            />
+                            {result.payloadBytes && (
+                              <DetailRow
+                                label="Raw Bytes"
+                                value={`${result.payloadBytes.length} bytes`}
+                                icon={<Database className="w-3.5 h-3.5" />}
                               />
                             )}
-                        </div>
-                      </CollapsibleSection>
-                    )}
-
-                    {/* Decoder Raw Metadata - Authoritative source of truth */}
-                    {result.decoderMetadata && (
-                      <CollapsibleSection
-                        title="Decoder Raw Data"
-                        icon={<Database className="w-4 h-4" />}
-                        defaultOpen={false}
-                        badge={
-                          <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
-                            Authoritative
-                          </span>
-                        }
-                      >
-                        <div className="space-y-2">
-                          <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
-                            This data comes directly from the decoder and is the authoritative source for reproduction.
-                            Values shown as "—" were not detected by the decoder.
+                            <DetailRow
+                              label="RS Error Correction"
+                              value={
+                                result.errorsCorrected === null ? (
+                                  <span className="text-muted-foreground">Not available</span>
+                                ) : result.errorsCorrected > 0 ? (
+                                  <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                    {result.errorsCorrected} error
+                                    {result.errorsCorrected !== 1 ? 's' : ''} recovered
+                                  </span>
+                                ) : (
+                                  <span className="text-green-600 dark:text-green-400">
+                                    No errors detected
+                                  </span>
+                                )
+                              }
+                              icon={<Shield className="w-3.5 h-3.5" />}
+                            />
                           </div>
-                          <DetailRow
-                            label="Version"
-                            value={
-                              result.decoderMetadata.version !== null
-                                ? `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
-                                : <span className="text-red-500">— (not detected)</span>
-                            }
-                            icon={<Hash className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Mask Pattern"
-                            value={
-                              result.decoderMetadata.maskPattern !== null
-                                ? `${result.decoderMetadata.maskPattern}`
-                                : <span className="text-amber-500">— (not detected)</span>
-                            }
-                            icon={<Layers className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="ECC Level"
-                            value={
-                              result.decoderMetadata.eccLevel !== null
-                                ? result.decoderMetadata.eccLevel
-                                : <span className="text-amber-500">— (not detected)</span>
-                            }
-                            icon={<Shield className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Errors Corrected"
-                            value={
-                              result.decoderMetadata.errorsCorrected !== null
-                                ? result.decoderMetadata.errorsCorrected
-                                : '—'
-                            }
-                            icon={<Shield className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Erasures"
-                            value={
-                              result.decoderMetadata.erasures !== null
-                                ? result.decoderMetadata.erasures
-                                : '—'
-                            }
-                            icon={<Shield className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Raw Bits"
-                            value={
-                              result.decoderMetadata.numBits !== null
-                                ? `${result.decoderMetadata.numBits} bits`
-                                : '—'
-                            }
-                            icon={<Binary className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Orientation"
-                            value={
-                              result.decoderMetadata.orientation !== null
-                                ? `${result.decoderMetadata.orientation}°`
-                                : '—'
-                            }
-                            icon={<Settings className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Structured Append"
-                            value={
-                              result.decoderMetadata.hasStructuredAppend
-                                ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
-                                : 'No'
-                            }
-                            icon={<Layers className="w-3.5 h-3.5" />}
-                          />
-                          <DetailRow
-                            label="Byte Segments"
-                            value={
-                              result.decoderMetadata.byteSegmentCount > 0
-                                ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
-                                : 'None'
-                            }
-                            icon={<Database className="w-3.5 h-3.5" />}
-                          />
-                        </div>
-                      </CollapsibleSection>
-                    )}
-                  </div>
+                        </CollapsibleSection>
 
-                  {/* Debug Log (collapsible, for diagnostics) */}
-                  {result.debugLog && (
-                    <CollapsibleSection
-                      title="Debug Log"
-                      icon={<Settings className="w-4 h-4" />}
-                      defaultOpen={false}
-                    >
-                      <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
-                        {result.debugLog}
-                      </pre>
-                    </CollapsibleSection>
-                  )}
+                        {/* Data Capacity */}
+                        {result.dataCapacity && (
+                          <CollapsibleSection
+                            title="Data Capacity"
+                            icon={<Database className="w-4 h-4" />}
+                            badge={
+                              result.dataCapacity.overflow ? (
+                                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  Detection mismatch
+                                </span>
+                              ) : (
+                                <span
+                                  className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+                                    result.dataCapacity.percentage > 90
+                                      ? 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                      : result.dataCapacity.percentage > 70
+                                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                                        : 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                  }`}
+                                >
+                                  {result.dataCapacity.percentage}% used
+                                </span>
+                              )
+                            }
+                          >
+                            {result.dataCapacity.overflow ? (
+                              <div className="space-y-2">
+                                <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
+                                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                                  <span>
+                                    Payload ({result.dataCapacity.used} bytes) exceeds detected capacity
+                                    ({result.dataCapacity.total} bytes). Version or ECC detection may be
+                                    inaccurate.
+                                  </span>
+                                </div>
+                                <DetailRow
+                                  label="Payload Size"
+                                  value={`${result.dataCapacity.used} bytes`}
+                                  icon={<Database className="w-3.5 h-3.5" />}
+                                />
+                                <DetailRow
+                                  label="Detected Capacity"
+                                  value={`${result.dataCapacity.total} bytes`}
+                                  icon={<Database className="w-3.5 h-3.5" />}
+                                />
+                              </div>
+                            ) : (
+                              <ProgressBar
+                                value={result.dataCapacity.used}
+                                max={result.dataCapacity.total}
+                                label="Byte Mode Capacity"
+                              />
+                            )}
+                          </CollapsibleSection>
+                        )}
+
+                        {/* Structural Patterns */}
+                        {result.structuralAnalysis && (
+                          <CollapsibleSection
+                            title="Structural Patterns"
+                            icon={<Settings className="w-4 h-4" />}
+                          >
+                            <div className="space-y-2">
+                              <DetailRow
+                                label="Finder Patterns"
+                                value={
+                                  <StatusBadge
+                                    status={result.structuralAnalysis.hasFinderPatterns}
+                                    trueLabel="Detected"
+                                    falseLabel="Missing"
+                                  />
+                                }
+                              />
+                              <DetailRow
+                                label="Timing Patterns"
+                                value={
+                                  <StatusBadge
+                                    status={result.structuralAnalysis.hasTimingPatterns}
+                                    trueLabel="Detected"
+                                    falseLabel="Missing"
+                                  />
+                                }
+                              />
+                              <DetailRow
+                                label="Alignment Patterns"
+                                value={
+                                  result.structuralAnalysis.hasAlignmentPatterns ? (
+                                    <span className="text-sm">
+                                      {result.structuralAnalysis.alignmentPatternCount} expected
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">N/A (v1)</span>
+                                  )
+                                }
+                              />
+                            </div>
+                          </CollapsibleSection>
+                        )}
+                      </div>
+                    </TabsContent>
+                    
+                    {/* Technical Tab */}
+                    <TabsContent value="technical" className="space-y-4 animate-in fade-in duration-200">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Capacity by Mode */}
+                        {result.version !== null && result.eccLevel && (
+                          <CollapsibleSection
+                            title="Capacity by Mode"
+                            icon={<BarChart3 className="w-4 h-4" />}
+                          >
+                            <CapacityByModeTable
+                              version={result.version}
+                              eccLevel={result.eccLevel}
+                              currentBytes={result.payloadBytes?.length}
+                            />
+                          </CollapsibleSection>
+                        )}
+
+                        {/* Encoding Efficiency */}
+                        {result.payload && (
+                          <CollapsibleSection
+                            title="Encoding Efficiency"
+                            icon={<BarChart3 className="w-4 h-4" />}
+                          >
+                            <EncodingEfficiency
+                              payload={result.payload}
+                              payloadBytes={result.payloadBytes}
+                              encodingMode={result.encodingMode}
+                            />
+                          </CollapsibleSection>
+                        )}
+
+                        {/* Decoder Raw Metadata - Authoritative source of truth */}
+                        {result.decoderMetadata && (
+                          <CollapsibleSection
+                            title="Decoder Metadata"
+                            icon={<Database className="w-4 h-4" />}
+                            defaultOpen={true}
+                            badge={
+                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                                Authoritative
+                              </span>
+                            }
+                          >
+                            <div className="space-y-2">
+                              <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
+                                Raw decoder output - authoritative source for reproduction.
+                              </div>
+                              <DetailRow
+                                label="Version"
+                                value={
+                                  result.decoderMetadata.version !== null
+                                    ? `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
+                                    : <span className="text-red-500">— (not detected)</span>
+                                }
+                                icon={<Hash className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Mask Pattern"
+                                value={
+                                  result.decoderMetadata.maskPattern !== null
+                                    ? `${result.decoderMetadata.maskPattern}`
+                                    : <span className="text-amber-500">— (not detected)</span>
+                                }
+                                icon={<Layers className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="ECC Level"
+                                value={
+                                  result.decoderMetadata.eccLevel !== null
+                                    ? result.decoderMetadata.eccLevel
+                                    : <span className="text-amber-500">— (not detected)</span>
+                                }
+                                icon={<Shield className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Errors Corrected"
+                                value={
+                                  result.decoderMetadata.errorsCorrected !== null
+                                    ? result.decoderMetadata.errorsCorrected
+                                    : '—'
+                                }
+                                icon={<Shield className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Erasures"
+                                value={
+                                  result.decoderMetadata.erasures !== null
+                                    ? result.decoderMetadata.erasures
+                                    : '—'
+                                }
+                                icon={<Shield className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Raw Bits"
+                                value={
+                                  result.decoderMetadata.numBits !== null
+                                    ? `${result.decoderMetadata.numBits} bits`
+                                    : '—'
+                                }
+                                icon={<Binary className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Orientation"
+                                value={
+                                  result.decoderMetadata.orientation !== null
+                                    ? `${result.decoderMetadata.orientation}°`
+                                    : '—'
+                                }
+                                icon={<Settings className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Structured Append"
+                                value={
+                                  result.decoderMetadata.hasStructuredAppend
+                                    ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
+                                    : 'No'
+                                }
+                                icon={<Layers className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Byte Segments"
+                                value={
+                                  result.decoderMetadata.byteSegmentCount > 0
+                                    ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
+                                    : 'None'
+                                }
+                                icon={<Database className="w-3.5 h-3.5" />}
+                              />
+                            </div>
+                          </CollapsibleSection>
+                        )}
+
+                        {/* Format Info */}
+                        <CollapsibleSection
+                          title="Format Information"
+                          icon={<Info className="w-4 h-4" />}
+                        >
+                          <div className="space-y-2">
+                            <DetailRow
+                              label="Module Count"
+                              value={`${result.moduleCount} × ${result.moduleCount}`}
+                              icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                            />
+                            {result.version !== null && (
+                              <DetailRow
+                                label="Data Modules"
+                                value={`~${Math.pow(result.moduleCount, 2) - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * Math.pow(Math.floor(result.version / 7) + 2, 2) : 0)}`}
+                                icon={<Database className="w-3.5 h-3.5" />}
+                              />
+                            )}
+                            {result.eccLevel && (
+                              <DetailRow
+                                label="ECC Description"
+                                value={ECC_DESCRIPTIONS[result.eccLevel].description}
+                                icon={<Info className="w-3.5 h-3.5" />}
+                              />
+                            )}
+                          </div>
+                        </CollapsibleSection>
+                      </div>
+                    </TabsContent>
+                    
+                    {/* Visual Tab */}
+                    <TabsContent value="visual" className="space-y-4 animate-in fade-in duration-200">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {/* Colors & Contrast */}
+                        {result.detectedColors && (
+                          <CollapsibleSection
+                            title="Colors & WCAG Compliance"
+                            icon={<Palette className="w-4 h-4" />}
+                            badge={<WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />}
+                          >
+                            <div className="space-y-4">
+                              {/* Color Swatches */}
+                              <div className="flex justify-between items-center">
+                                <ColorSwatch
+                                  color={result.detectedColors.foreground}
+                                  label="Foreground"
+                                />
+                                <div className="flex flex-col items-center">
+                                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                                  <span className="text-xs text-muted-foreground">contrast</span>
+                                </div>
+                                <ColorSwatch
+                                  color={result.detectedColors.background}
+                                  label="Background"
+                                />
+                              </div>
+                              
+                              {/* WCAG Compliance Details */}
+                              <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium">WCAG Compliance</span>
+                                  <WCAGBadge ratio={result.detectedColors.contrastRatio} size="md" />
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                  <div className={`p-2 rounded ${
+                                    result.detectedColors.contrastRatio >= 3 
+                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
+                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                  }`}>
+                                    <div className="font-bold">AA-Large</div>
+                                    <div className="text-[10px]">≥3:1</div>
+                                  </div>
+                                  <div className={`p-2 rounded ${
+                                    result.detectedColors.contrastRatio >= 4.5 
+                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
+                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                  }`}>
+                                    <div className="font-bold">AA</div>
+                                    <div className="text-[10px]">≥4.5:1</div>
+                                  </div>
+                                  <div className={`p-2 rounded ${
+                                    result.detectedColors.contrastRatio >= 7 
+                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400' 
+                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                  }`}>
+                                    <div className="font-bold">AAA</div>
+                                    <div className="text-[10px]">≥7:1</div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <DetailRow
+                                label="Contrast Ratio"
+                                value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
+                                icon={<Eye className="w-3.5 h-3.5" />}
+                              />
+                            </div>
+                          </CollapsibleSection>
+                        )}
+
+                        {/* Spatial Analysis */}
+                        <CollapsibleSection
+                          title="Spatial Analysis"
+                          icon={<Ruler className="w-4 h-4" />}
+                        >
+                          <div className="space-y-2">
+                            {result.estimatedModulePx !== null && (
+                              <DetailRow
+                                label="Module Size"
+                                value={`~${result.estimatedModulePx} px`}
+                                icon={<Square className="w-3.5 h-3.5" />}
+                              />
+                            )}
+                            {result.quietZone && (
+                              <>
+                                <DetailRow
+                                  label="Quiet Zone"
+                                  value={
+                                    <StatusBadge
+                                      status={result.quietZone.adequate}
+                                      trueLabel="Adequate"
+                                      falseLabel="Insufficient"
+                                    />
+                                  }
+                                  icon={<Square className="w-3.5 h-3.5" />}
+                                />
+                                <div className="grid grid-cols-4 gap-1 text-center mt-2">
+                                  <div className="p-2 rounded bg-muted/50">
+                                    <div className="text-sm font-mono">{result.quietZone.top}</div>
+                                    <div className="text-[10px] text-muted-foreground">Top</div>
+                                  </div>
+                                  <div className="p-2 rounded bg-muted/50">
+                                    <div className="text-sm font-mono">{result.quietZone.right}</div>
+                                    <div className="text-[10px] text-muted-foreground">Right</div>
+                                  </div>
+                                  <div className="p-2 rounded bg-muted/50">
+                                    <div className="text-sm font-mono">{result.quietZone.bottom}</div>
+                                    <div className="text-[10px] text-muted-foreground">Bottom</div>
+                                  </div>
+                                  <div className="p-2 rounded bg-muted/50">
+                                    <div className="text-sm font-mono">{result.quietZone.left}</div>
+                                    <div className="text-[10px] text-muted-foreground">Left</div>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </CollapsibleSection>
+
+                        {/* Image Properties */}
+                        {result.imageProperties && (
+                          <CollapsibleSection
+                            title="Image Properties"
+                            icon={<FileImage className="w-4 h-4" />}
+                          >
+                            <div className="space-y-2">
+                              <DetailRow
+                                label="Image Size"
+                                value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
+                                icon={<ImageIcon className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Aspect Ratio"
+                                value={
+                                  result.imageProperties.aspectRatio === 1
+                                    ? '1:1 (Square)'
+                                    : `${result.imageProperties.aspectRatio}:1`
+                                }
+                                icon={<Ratio className="w-3.5 h-3.5" />}
+                              />
+                              {result.imageProperties.estimatedQrSizePx > 0 && (
+                                <DetailRow
+                                  label="QR Code Size"
+                                  value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
+                                  icon={<QrCode className="w-3.5 h-3.5" />}
+                                />
+                              )}
+                              {result.imageProperties.estimatedQrSizePx > 0 &&
+                                result.imageProperties.width > 0 && (
+                                  <DetailRow
+                                    label="QR Coverage"
+                                    value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
+                                    icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                                  />
+                                )}
+                            </div>
+                          </CollapsibleSection>
+                        )}
+                      </div>
+                    </TabsContent>
+                    
+                    {/* Advanced Tab */}
+                    <TabsContent value="advanced" className="space-y-4 animate-in fade-in duration-200">
+                      <div className="grid md:grid-cols-1 gap-4">
+                        {/* Binary/Hex View */}
+                        {result.payloadBytes && result.payloadBytes.length > 0 && (
+                          <CollapsibleSection
+                            title="Binary Data (Hex Dump)"
+                            icon={<Binary className="w-4 h-4" />}
+                            badge={
+                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                                {result.payloadBytes.length} bytes
+                              </span>
+                            }
+                          >
+                            <HexDumpView bytes={result.payloadBytes} maxRows={8} />
+                          </CollapsibleSection>
+                        )}
+
+                        {/* Module Matrix Visualization */}
+                        {result.moduleMatrix && result.moduleMatrix.length > 0 && (
+                          <CollapsibleSection
+                            title="Module Matrix"
+                            icon={<Grid3x3 className="w-4 h-4" />}
+                            badge={
+                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                                {result.moduleMatrix.length}×{result.moduleMatrix.length}
+                              </span>
+                            }
+                          >
+                            <ModuleMatrixView
+                              matrix={result.moduleMatrix}
+                              version={result.version}
+                              fgColor={result.detectedColors?.foreground}
+                              bgColor={result.detectedColors?.background}
+                            />
+                          </CollapsibleSection>
+                        )}
+
+                        {/* Debug Log */}
+                        {result.debugLog && (
+                          <CollapsibleSection
+                            title="Debug Log"
+                            icon={<Settings className="w-4 h-4" />}
+                            defaultOpen={false}
+                          >
+                            <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
+                              {result.debugLog}
+                            </pre>
+                          </CollapsibleSection>
+                        )}
+                        
+                        {/* Export Section */}
+                        <div className="border rounded-lg p-4 bg-card">
+                          <div className="flex items-center gap-2 mb-3">
+                            <FileJson className="w-4 h-4 text-primary" />
+                            <span className="font-medium text-sm">Export Analysis Data</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            Download the complete analysis as JSON. This can be used with the Netlify API
+                            for exact recreation or imported into other tools.
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleExportJSON}
+                            className="gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Export as JSON
+                          </Button>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
 
                   {/* Import Section */}
                   <div className="border rounded-lg p-4 bg-card space-y-4">
