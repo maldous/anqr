@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "132751292439",
+    "project_id": "anqr-link",
+    "storage_bucket": "anqr-link.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:132751292439:android:03e858e36be3fc1a458452",
+        "android_client_info": {
+          "package_name": "link.anqr.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAB6tWdMmLmIhz6DLKqZZHFGzkyYY6VQ20"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
