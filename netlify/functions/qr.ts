@@ -223,6 +223,7 @@
  * - maxIntH: Max overlay intensity for ECC H (default: 100)
  */
 
+import { createHash } from 'node:crypto';
 import { type Canvas, createCanvas, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
 import gifenc from 'gifenc';
 
@@ -2338,11 +2339,16 @@ async function handler(request: Request) {
         break;
     }
 
+    // Generate ETag from content hash (deterministic output = consistent ETag)
+    const etag = `"${createHash('md5').update(outputBuffer).digest('hex')}"`;
+
     return new Response(new Uint8Array(outputBuffer), {
       status: 200,
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
+        ETag: etag,
+        Vary: 'Accept-Encoding',
         'Access-Control-Allow-Origin': '*',
       },
     });
