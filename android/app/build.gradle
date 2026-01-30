@@ -7,8 +7,8 @@ android {
         applicationId "link.anqr.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 56
-        versionName "1.56"
+        versionCode 57
+        versionName "1.57"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable vector drawable support for smaller APK
@@ -40,6 +40,11 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // Include native debug symbols in AAB for Play Store crash reporting
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
         }
         debug {
             minifyEnabled false
