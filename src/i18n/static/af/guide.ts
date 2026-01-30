@@ -970,6 +970,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG-metadatavelde.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Gewasparameters',
+      paragraphs: ['Opsies vir oorlegbeeldsnoei:'],
+      bullets: [
+        'cropEn: Aktiveer oorlegbesnoeiing 0/1 (verstek: 0).',
+        'cropX: Gewasmiddel X as breuk 0-1 (verstek: 0,5).',
+        'cropY: Gewasmiddelpunt Y as breuk 0-1 (verstek: 0.5).',
+        'cropSize: Snygrootte as fraksie van beeld 0-1 (verstek: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Veiligheidslotparameters',
+      paragraphs: ['Beheer watter QR-elemente teen oorlegwysiging beskerm word:'],
+      bullets: [
+        'lockF: Slotvinderpatrone 0/1 (verstek: 1).',
+        'lockT: Sluit tydsberekening patrone 0/1 (verstek: 1).',
+        'lockA: Sluit belyningspatrone 0/1 (verstek: 1).',
+        'lockFmt: Slotformaatinligting 0/1 (verstek: 1).',
+        'lockV: Slot weergawe inligting 0/1 (verstek: 1).',
+        'veilige modus: Veiligheidsmodus - af, gebalanseerd, streng (verstek: af).',
+        'safeMinPx: Minimum module grootte in pixels (verstek: 2).',
+        'safeMinQz: Minimum stil sone modules (verstek: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Outo-instelparameters',
+      paragraphs: ['Outomatiese optimalisering instellings:'],
+      bullets: [
+        'autoVer: Kies outomaties QR-weergawe 0/1 (verstek: 1).',
+        'autoEcc: Outo-kies ECC-vlak 0/1 (verstek: 0) - slegs wenk aan die bedienerkant.',
+        'outoVerminder: [SLEGS KLIËNT] Verminder intensiteit outomaties totdat dit skandeerbaar is - vereis skanderingbekragtigingslus.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Bykomende animasieparameters',
+      paragraphs: ['Uitgebreide animasiekontroles vir GIF-uitvoer:'],
+      bullets: [
+        'lus: Animasie loop voortdurend 0/1 (verstek: 1).',
+        'weiering: Tafeltennis animasie rigting 0/1 (verstek: 0).',
+        'omgekeerd: Speel animasie in omgekeerde 0/1 (verstek: 0).',
+        'colorCycle: Aktiveer kleurfietsry-effek 0/1 (verstek: 0).',
+        'interp: Raaminterpolasie - geen, kruisvervaag, morf (verstek: geen).',
+        'tempDither: Temporele wankeling - af, blou_geraas, flikker_veilig (verstek: af).',
+        'startF: Animasie-beginraam (verstek: 0).',
+        'maxF: Maksimum rame om weer te gee (verstek: 0 = outo).',
+        'stapF: Raamstap-interval (verstek: 1).',
+        'jitter: [SLEGS KLIËNT] Module jitter in pieksels - vereis per-raam QR-regenerasie.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering-parameters',
+      paragraphs: ['Beheer dithering-algoritmes vir oorlegverwerking:'],
+      bullets: [
+        'ditherKind: Dither-algoritme - error_diffusion, ordered_bayer, blue_noise, ens (verstek: ordered_bayer).',
+        'diffusionKernel: Fout diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (verstek: floyd_steinberg).',
+        'ditherStrength: Dither-intensiteit 0-100 (verstek: 50).',
+        'serpentyn: Serpentyn-dithering 0/1 (verstek: 0).',
+        'matriks: Geordende dither-matriks - bayer2, bayer4, bayer8 (verstek: bayer4).',
+        'bnTeël: Blou geraas-teëlgrootte (verstek: 64).',
+        'bnSaad: Blou geraas ewekansige saad (verstek: 0).',
+        'colorDither: Kleur-dithering - geen, per_kanaal, perseptueel (verstek: geen).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpixel-parameters',
+      paragraphs: ['Instellings vir subpixel-versnitmodus:'],
+      bullets: [
+        'spGrid: Subpixel-roostergrootte - 2x2, 3x3, 4x4 (verstek: 3x3).',
+        'spCenter: Sentrumreël - streng, halftoonsentrum (verstek: streng).',
+        'spNeutral: Neutrale kleur hex sonder # (verstek: 808080).',
+        'spFinder: Finder override - solied, gestileer (verstek: solied).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Halftoonparameters',
+      paragraphs: ['Instellings vir halftoonversnitmodus:'],
+      bullets: [
+        'htCell: Halftoonselgrootte - per_module of nxn-rooster (verstek: per_module).',
+        'htDot: Puntvorm - sirkel, vierkant, lyn (verstek: sirkel).',
+        'htCurve: Helderheidskromme - lineêr, s-kromme, gamma (verstek: lineêr).',
+        'duo1: Duotoon skadu kleur hekshoek sonder # (verstek: 000000).',
+        'duo2: Duotoon hoogtepunt kleur hekshoek sonder # (verstek: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-bewuste modusparameters',
+      paragraphs: ['Intelligente oorlegverspreiding gebaseer op foutkorreksiekapasiteit:'],
+      bullets: [
+        'eccAware: Aktiveer ECC-bewuste modus 0/1 (verstek: 0).',
+        'eccRisk: Risikobegrotingspersentasie 0-100 (verstek: 50).',
+        'eccMap: Gewigkaart - afstand_na_vinders, blok_hittekaart, empiriese_skandering_hittekaart (verstek: afstand_na_vinders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Raamparameters',
+      paragraphs: ['Dekoratiewe raam instellings:'],
+      bullets: [
+        'raam: Raamstyl - geen, afgeronde raam, plakker, merker (verstek: geen).',
+        'raamTeks: Teks om in raam te vertoon (URL-gekodeerde).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Per-Module Kleur Parameters',
+      paragraphs: ['Individuele module kleur opsies:'],
+      bullets: [
+        'modColor: Kleurmodus - solied, by_helderheid, by_posisie, by_overlay, by_cluster (verstek: solied).',
+        'cGuard: Kontraswag 0/1 (verstek: 0).',
+        'minContrast: Minimum kontrasverhouding 1-21 (verstek: 4,5).',
+        'palet: Komma-geskeide hekskleure vir paletmodus.',
+        'paletmodus: paletverspreiding - posisie, helderheid, diagonaal, radiaal, ewekansig, ry, kolom (verstek: posisie).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF-oorlegparameters',
+      paragraphs: ['Instellings vir geanimeerde GIF-oorlegbeelde:'],
+      bullets: [
+        'ovType: Oorlegtipe - staties, gif, apng, webp_anim, video (verstek: staties).',
+        'ovFramePick: Raamkeuse - almal, elke_n, maksimum_rame, duur_limiet (verstek: almal).',
+        'gifVertragings: Gebruik oorspronklike GIF-raamvertragings 0/1 (verstek: 1).',
+        'gifDispH: GIF wegdoening hantering - respekteer, vereenvoudig (verstek: respek).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Per-ECC intensiteitsbeperkings',
+      paragraphs: ['Maksimum oorlegintensiteit per foutkorreksievlak:'],
+      bullets: [
+        'maxIntL: Maksimum intensiteit vir ECC L 0-100 (verstek: 100).',
+        'maxIntM: Maksimum intensiteit vir ECC M 0-100 (verstek: 100).',
+        'maxIntQ: Maksimum intensiteit vir ECC Q 0-100 (verstek: 100).',
+        'maxIntH: Maksimum intensiteit vir ECC H 0-100 (verstek: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA-simulasieparameters (slegs kliënt)',
+      paragraphs: [
+        'Hierdie parameters word ontleed vir URL-versoenbaarheid, maar werk net in die blaaier:',
+      ],
+      bullets: [
+        'qaContrast: Aktiveer kontraskontrole 0/1 - vereis interaktiewe validering.',
+        'qaBlur: Simuleer vervaging in pixels - slegs vir interaktiewe toetsing.',
+        'qaNoise: Simuleer geraasvlak - slegs vir interaktiewe toetsing.',
+        'qaHeatmap: Wys leesbaarheid-hittekaart 0/1 - vereis doekoorleg-UI.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Net-kliënt-parameters',
+      paragraphs: [
+        'Die meeste API-parameters word ten volle ondersteun aan die bedienerkant. Parameters gemerk [KLIËNT-SLEGS] word ontleed vir URL-versoenbaarheid, maar vereis blaaierkenmerke:',
+      ],
+      bullets: [
+        'jitter: Module jitter vereis per-raam QR-regenerasie met willekeurigheid.',
+        'outoVerminder: Outo-verminder intensiteit vereis iteratiewe skanderingstoetsing.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA-simulasie vereis interaktiewe doek-validering.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Bykomende uitsetparameters',
+      paragraphs: ['Uitgebreide uitvoer- en uitvoerinstellings:'],
+      bullets: [
+        'fname: Pasgemaakte lêernaam vir aflaaie (verstek: anqr-qrcode).',
+        'inclQz: Sluit stil sone in by uitsetafmetings 0/1 (verstek: 1).',
+        'bgOver: Agtergrondkleur ignoreer heksasie sonder # (vernietig bg-parameter).',
+        'fmtExtra: Bykomende formaat afvoer - geen, eps, animated_webp (verstek: geen). Let wel: eps is [GEDEELTELIK].',
+        'svgPrec: SVG-vormpresisie - pixel, presies (verstek: pixel). [GEDEELTELIK] SVG-uitset beperkte bedienerkant.',
+        'svgInsluit: Sluit raster-oorleg in SVG 0/1 in (verstek: 1). [GEDEELTELIK] SVG-uitset beperkte bedienerkant.',
+        'modulePx: Module pixel grootte (verstek: outomaties bereken vanaf grootte).',
+        'grens: Ekstra grensmodules buite stil sone (verstek: 0).',
+        'skerp: Aktiveer skerp/gepixeleerde beeldweergawe 0/1 (verstek: 1).',
+        'snap: Pixel snap-modus - vloer, rond, plafon (verstek: vloer).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Patroonbehoudparameters',
+      paragraphs: ['Beheer watter strukturele elemente teen oorleg beskerm word:'],
+      bullets: [
+        'keepFinders: Behou vinderpatrone 0/1 (verstek: 1).',
+        'keepTiming: Behou tydsberekeningpatrone 0/1 (verstek: 0).',
+        'keepAlign: Behou belyningspatrone 0/1 (verstek: 0).',
+        'protectFmt: Beskerm formaat inligting modules 0/1 (verstek: 0).',
+        'protectVer: Beskerm weergawe-inligtingmodules 0/1 (verstek: 0).',
+      ],
+    },
     {
       heading: 'Voorbeeld Gebruik',
       paragraphs: [

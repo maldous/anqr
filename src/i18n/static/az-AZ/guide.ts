@@ -966,6 +966,206 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, meta Desc: PNG metadata sahəsi.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Bitki Parametrləri',
+      paragraphs: ['Overlay şəkil kəsmə seçimləri:'],
+      bullets: [
+        'cropEn: 0/1 örtük kəsilməsini aktivləşdirin (defolt: 0).',
+        'cropX: X kəsir mərkəzi 0-1 fraksiya kimi (defolt: 0.5).',
+        'cropY: Kəsmə mərkəzi Y fraksiya 0-1 (defolt: 0.5).',
+        'cropSize: Şəklin 0-1 hissəsi kimi kəsmə ölçüsü (defolt: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Təhlükəsizlik Kilidi Parametrləri',
+      paragraphs: [
+        'Hansı QR elementlərinin üst-üstə düşmə modifikasiyasından qorunduğuna nəzarət edin:',
+      ],
+      bullets: [
+        'lockF: Kilid tapıcı nümunələri 0/1 (defolt: 1).',
+        'lockT: Kilid vaxtı nümunələri 0/1 (defolt: 1).',
+        'lockA: Hizalanma nümunələrini kilidləyin 0/1 (defolt: 1).',
+        'lockFmt: Kilid formatı məlumatı 0/1 (defolt: 1).',
+        'lockV: Kilid versiyası məlumatı 0/1 (defolt: 1).',
+        'SafeMode: Təhlükəsizlik rejimi - söndürülmüş, balanslaşdırılmış, ciddi (standart: söndürülmüş).',
+        'safeMinPx: Minimum modul ölçüsü piksellə (defolt: 2).',
+        'safeMinQz: Minimum sakit zona modulları (defolt: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametrlərin avtomatik tənzimlənməsi',
+      paragraphs: ['Avtomatik optimallaşdırma parametrləri:'],
+      bullets: [
+        'autoVer: QR versiyasını avtomatik seçin 0/1 (defolt: 1).',
+        'autoEcc: Avtomatik seçim ECC səviyyəsi 0/1 (defolt: 0) - yalnız server tərəfi göstərişi.',
+        'autoReduce: [YALNIZ MÜŞTƏRİDƏ] Skan edilə bilənə qədər intensivliyi avtomatik azaldın - skan doğrulama dövrəsini tələb edir.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Əlavə Animasiya Parametrləri',
+      paragraphs: ['GIF çıxışı üçün genişləndirilmiş animasiya nəzarətləri:'],
+      bullets: [
+        'loop: Animasiya davamlı olaraq 0/1 dövrə edir (defolt: 1).',
+        'sıçrayış: Ping-pong animasiya istiqaməti 0/1 (defolt: 0).',
+        'tərs: Animasiyanı tərs 0/1 (defolt: 0) ilə səsləndirin.',
+        'colorCycle: Rəng dövriyyəsi effektini aktivləşdirin 0/1 (defolt: 0).',
+        'interp: Çərçivə interpolasiyası - heç biri, crossfade, morph (defolt: heç biri).',
+        'tempDither: Müvəqqəti dithering - söndürülür, mavi_səs, flicker_safe (defolt: söndürülür).',
+        'startF: Animasiya başlanğıc çərçivəsi (standart: 0).',
+        'maxF: Göstəriləcək maksimum çərçivələr (defolt: 0 = avtomatik).',
+        'stepF: Çərçivə addım intervalı (defolt: 1).',
+        'jitter: [YALNIZ MÜŞTƏRİDƏ] Piksellərdə modul titrəməsi - hər çərçivədə QR bərpası tələb olunur.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering Parametrləri',
+      paragraphs: ['Overlay emal üçün dithering alqoritmlərinə nəzarət edin:'],
+      bullets: [
+        'ditherKind: Dither alqoritmi - error_diffusion, ordered_bayer, blue_noise və s (defolt: ordered_bayer).',
+        'diffusionKernel: Səhv diffuziya nüvəsi - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (defolt: floyd_steinberg).',
+        'ditherStrength: Dither intensivliyi 0-100 (defolt: 50).',
+        'serpentine: Serpentine dithering 0/1 (defolt: 0).',
+        'matris: Sıralı dither matrisi - bayer2, bayer4, bayer8 (defolt: bayer4).',
+        'bnTile: Mavi səs-küy kafel ölçüsü (defolt: 64).',
+        'bnSeed: Mavi səs-küylü təsadüfi toxum (defolt: 0).',
+        'colorDither: Rəng dəyişməsi - heç biri, hər_kanal, qavrayış (defolt: heç biri).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpiksel Parametrləri',
+      paragraphs: ['Subpiksel qarışığı rejimi üçün parametrlər:'],
+      bullets: [
+        'spGrid: Subpiksel şəbəkə ölçüsü - 2x2, 3x3, 4x4 (defolt: 3x3).',
+        'spCenter: Mərkəz qaydası - ciddi, yarım ton_mərkəz (defolt: ciddi).',
+        'spNeutral: Neytral rəngli hex # olmadan (defolt: 808080).',
+        'spFinder: Finder ləğvi - möhkəm, stilize (defolt: bərk).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Yarım ton parametrləri',
+      paragraphs: ['Yarım ton qarışdırma rejimi üçün parametrlər:'],
+      bullets: [
+        'htCell: Yarım ton hüceyrə ölçüsü - per_module və ya nxn grid (defolt: per_module).',
+        'htDot: Nöqtə forması - dairə, kvadrat, xətt (standart: dairə).',
+        'htCurve: Parlaqlıq əyrisi - xətti, s-əyri, qamma (defolt: xətti).',
+        'duo1: # olmadan iki ton kölgə rəng altılıq (defolt: 000000).',
+        'duo2: # olmadan iki tonlu vurğu rəng altılıq (defolt: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-dən xəbərdar rejim parametrləri',
+      paragraphs: ['Səhvlərin düzəltmə qabiliyyətinə əsaslanan ağıllı overlay paylanması:'],
+      bullets: [
+        'eccAware: ECC-dən xəbərdar rejimi 0/1 aktivləşdirin (defolt: 0).',
+        'eccRisk: Risk büdcəsi faizi 0-100 (defolt: 50).',
+        'eccMap: Çəki xəritəsi - finders_to_to_mesafe, block_heatmap, empirical_scan_heatmap (defolt: məsafə_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Çərçivə parametrləri',
+      paragraphs: ['Dekorativ çərçivə parametrləri:'],
+      bullets: [
+        'çərçivə: Çərçivə tərzi - heç biri, yuvarlaqlaşdırılmış_çərçivə, etiket, etiket (defolt: heç biri).',
+        'frameText: Çərçivədə göstəriləcək mətn (URL kodlu).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Modul Başına Rəng Parametrləri',
+      paragraphs: ['Fərdi modul rəngləmə seçimləri:'],
+      bullets: [
+        'modColor: Rəng rejimi - bərk, parlaqlığa görə, mövqeyə görə, üst-üstə düşməyə görə, klasterə görə (defolt: bərk).',
+        'cGuard: Kontrast qoruyucu 0/1 (defolt: 0).',
+        'minContrast: Minimum kontrast nisbəti 1-21 (defolt: 4.5).',
+        'palitrası: Palitra rejimi üçün vergüllə ayrılmış altıbucaqlı rənglər.',
+        'paletteMode: Palitra paylanması - mövqe, parlaqlıq, diaqonal, radial, təsadüfi, sıra, sütun (defolt: mövqe).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF Overlay Parametrləri',
+      paragraphs: ['Animasiyalı GIF örtük şəkilləri üçün parametrlər:'],
+      bullets: [
+        'ovType: Overlay növü - statik, gif, apng, webp_anim, video (defolt: statik).',
+        'ovFramePick: Çərçivə seçimi - hamısı, hər_n, maksimum_kadrlar, müddət_limiti (defolt: hamısı).',
+        'gifDelays: Orijinal GIF çərçivə gecikmələrindən istifadə edin 0/1 (defolt: 1).',
+        'gifDispH: GIF xaric edilməsi - hörmət et, sadələşdir (defolt: hörmət).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Hər ECC İntensivlik Limitləri',
+      paragraphs: ['Səhv düzəliş səviyyəsinə görə maksimum üst-üstə düşmə intensivliyi:'],
+      bullets: [
+        'maxIntL: ECC L 0-100 üçün maksimum intensivlik (defolt: 100).',
+        'maxIntM: ECC M 0-100 üçün maksimum intensivlik (defolt: 100).',
+        'maxIntQ: ECC Q 0-100 üçün maksimum intensivlik (defolt: 100).',
+        'maxIntH: ECC H 0-100 üçün maksimum intensivlik (defolt: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA Simulyasiya Parametrləri (Yalnız Müştəri üçün)',
+      paragraphs: [
+        'Bu parametrlər URL uyğunluğu üçün təhlil edilir, lakin yalnız brauzerdə işləyir:',
+      ],
+      bullets: [
+        'qaContrast: Kontrast yoxlamasını aktivləşdirin 0/1 - interaktiv yoxlama tələb olunur.',
+        'qaBlur: Bulanıqlığı piksellərdə simulyasiya edin - yalnız interaktiv test üçün.',
+        'qaNoise: Səs-küy səviyyəsini simulyasiya edin - yalnız interaktiv test üçün.',
+        'qaHeatmap: Oxunabilirlik istilik xəritəsini göstər 0/1 - kətan örtüyü UI tələb edir.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Yalnız Müştəri Parametrləri',
+      paragraphs: [
+        'Əksər API parametrləri server tərəfində tam dəstəklənir. [YALNIZ MÜŞTƏRİYƏ] ilə işarələnmiş parametrlər URL uyğunluğu üçün təhlil edilir, lakin brauzer funksiyalarını tələb edir:',
+      ],
+      bullets: [
+        'jitter: Modul titrəməsi təsadüfiliklə hər çərçivədə QR regenerasiyasını tələb edir.',
+        'autoReduce: Avtomatik azaltma intensivliyi iterativ skan testini tələb edir.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA simulyasiyası interaktiv kətan təsdiqini tələb edir.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Əlavə Çıxış Parametrləri',
+      paragraphs: ['Genişləndirilmiş çıxış və ixrac parametrləri:'],
+      bullets: [
+        'fname: Yükləmələr üçün fərdi fayl adı (defolt: anqr-qrcode).',
+        'inclQz: Səssiz zonanı çıxış ölçülərinə 0/1 daxil edin (defolt: 1).',
+        'bgOver: Arxa fon rəngini # olmadan hex əvəz edir (bg parametrini ləğv edir).',
+        'fmtExtra: Əlavə format çıxışı - heç biri, eps, animated_webp (defolt: heç biri). Qeyd: eps [PARTIAL]dır.',
+        'svgPrec: SVG forma dəqiqliyi - piksel, dəqiq (defolt: piksel). [PARTIAL] SVG çıxışı məhdud server tərəfində.',
+        'svgEmbed: Raster örtüyünü SVG 0/1-də yerləşdirin (defolt: 1). [PARTIAL] SVG çıxışı məhdud server tərəfində.',
+        'modulePx: Modul piksel ölçüsü (defolt: ölçüdən avtomatik hesablanır).',
+        'sərhəd: Sakit zonadan kənarda əlavə sərhəd modulları (defolt: 0).',
+        'xırtıldayan: Xırtıldayan/pikselləşdirilmiş təsvirin 0/1 göstərilməsini aktivləşdirin (defolt: 1).',
+        'snap: Pixel snap rejimi - mərtəbə, dairəvi, tavan (defolt: mərtəbə).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Nümunə Qoruma Parametrləri',
+      paragraphs: ['Hansı struktur elementlərin üst-üstə düşmədən qorunduğuna nəzarət edin:'],
+      bullets: [
+        'keepFinders: Tapıcı nümunələrini qoruyun 0/1 (defolt: 1).',
+        'keepTiming: Vaxt sxemlərini qoruyun 0/1 (defolt: 0).',
+        'keepAlign: Hizalanma nümunələrini qoruyun 0/1 (defolt: 0).',
+        'protectFmt: 0/1 format məlumat modullarını qoruyun (defolt: 0).',
+        'protectVer: Versiya məlumat modullarını qoruyun 0/1 (defolt: 0).',
+      ],
+    },
     {
       heading: 'Qeydiyyat',
       paragraphs: [

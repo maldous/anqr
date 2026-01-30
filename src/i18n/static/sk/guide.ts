@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: polia metadát PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parametre orezania',
+      paragraphs: ['Možnosti orezania prekryvného obrázka:'],
+      bullets: [
+        'cropEn: Povolí orezanie prekrytia 0/1 (predvolené: 0).',
+        'cropX: Stred orezu X ako zlomok 0-1 (predvolené: 0,5).',
+        'cropY: Stred orezania Y ako zlomok 0-1 (predvolené: 0,5).',
+        'cropSize: Veľkosť orezania ako zlomok obrázka 0-1 (predvolené: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parametre bezpečnostného zámku',
+      paragraphs: ['Ovládajte, ktoré QR prvky sú chránené pred úpravou prekrytia:'],
+      bullets: [
+        'lockF: Uzamknutie vzorov vyhľadávača 0/1 (predvolené: 1).',
+        'lockT: Zamknutie vzorov časovania 0/1 (predvolené: 1).',
+        'lockA: Uzamknutie vzorov zarovnania 0/1 (predvolené: 1).',
+        'lockFmt: Informácie o formáte zámku 0/1 (predvolené: 1).',
+        'lockV: Informácie o verzii zámku 0/1 (predvolené: 1).',
+        'safeMode: Bezpečný režim - vypnutý, vyvážený, prísny (predvolené: vypnuté).',
+        'safeMinPx: Minimálna veľkosť modulu v pixeloch (predvolené: 2).',
+        'safeMinQz: Minimálne moduly tichej zóny (predvolené: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametre automatického ladenia',
+      paragraphs: ['Nastavenia automatickej optimalizácie:'],
+      bullets: [
+        'autoVer: Automatický výber QR verzie 0/1 (predvolená hodnota: 1).',
+        'autoEcc: Automatický výber ECC úroveň 0/1 (predvolená hodnota: 0) – len nápoveda na strane servera.',
+        'autoReduce: [IBA KLIENT] Automatické zníženie intenzity, kým nebude možné skenovať – vyžaduje slučku overenia skenovania.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Ďalšie parametre animácie',
+      paragraphs: ['Rozšírené ovládacie prvky animácie pre výstup GIF:'],
+      bullets: [
+        'loop: Animácia sa neustále cyklicky 0/1 (predvolená: 1).',
+        'odraz: smer animácie ping-pongu 0/1 (predvolené: 0).',
+        'dozadu: Prehrať animáciu v opačnom smere 0/1 (predvolené: 0).',
+        'colorCycle: Povolí efekt cyklovania farieb 0/1 (predvolená hodnota: 0).',
+        'interp: Interpolácia rámca - žiadna, crossfade, morph (predvolené: žiadne).',
+        'tempDither: Temporal dithering - off, blue_noise, flicker_safe (predvolené: vypnuté).',
+        'startF: Úvodný rámec animácie (predvolená hodnota: 0).',
+        'maxF: Maximálny počet snímok na vykreslenie (predvolené: 0 = auto).',
+        'stepF: Interval krokov snímok (predvolené: 1).',
+        'Jitter: [IBA KLIENT] Jitter modulu v pixeloch – vyžaduje regeneráciu QR kódu na snímku.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parametre rozkladu',
+      paragraphs: ['Riadenie algoritmov rozkladu pre spracovanie prekrytia:'],
+      bullets: [
+        'ditherKind: Algoritmus rozkladu - error_diffusion, order_bayer, blue_noise, atď (predvolené: order_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, sticki, burkes, sierra, atkinson (predvolené: floyd_steinberg).',
+        'DitherStrength: Intenzita ditheru 0-100 (predvolená hodnota: 50).',
+        'serpentín: serpentínové dithering 0/1 (predvolené: 0).',
+        'matica: Usporiadaná matica rozkladu - bayer2, bayer4, bayer8 (predvolené: bayer4).',
+        'bnTile: Veľkosť dlaždice modrého šumu (predvolená: 64).',
+        'bnSeed: Náhodný zdroj modrého šumu (predvolené: 0).',
+        'colorDither: Rozklad farieb - žiadne, per_channel, perceptual (predvolené: žiadne).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpixelové parametre',
+      paragraphs: ['Nastavenia pre režim prelínania subpixelov:'],
+      bullets: [
+        'spGrid: Veľkosť mriežky subpixelov – 2x2, 3x3, 4x4 (predvolené: 3x3).',
+        'spCenter: Center rule - strict, halftone_center (predvolené: strict).',
+        'spNeutral: Neutrálny farebný hex bez # (predvolené: 808080).',
+        'spFinder: Prepísanie Finder – plné, štylizované (predvolené: plné).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Poltónové parametre',
+      paragraphs: ['Nastavenia pre režim prelínania poltónov:'],
+      bullets: [
+        'htCell: Veľkosť poltónovej bunky - na_modul alebo mriežku nxn (predvolené: na_modul).',
+        'htDot: Tvar bodky – kruh, štvorec, čiara (predvolené: kruh).',
+        'htCurve: Krivka jasu - lineárna, s-krivka, gama (predvolené: lineárne).',
+        'duo1: Šestnástková farba tieňa Duotone bez # (predvolené: 000000).',
+        'duo2: Duotónová farba zvýraznenia hex bez # (predvolené: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parametre režimu ECC',
+      paragraphs: ['Inteligentná distribúcia prekrytia založená na kapacite opravy chýb:'],
+      bullets: [
+        'eccAware: Povolí režim ECC 0/1 (predvolené: 0).',
+        'eccRisk: Percento rizikového rozpočtu 0-100 (predvolené: 50).',
+        'eccMap: Hmotnostná mapa - distance_to_finders, block_heatmap, empirical_scan_heatmap (predvolené: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parametre rámu',
+      paragraphs: ['Nastavenia ozdobného rámu:'],
+      bullets: [
+        'rám: Štýl rámu – žiadny, zaoblený_rám, nálepka, značka (predvolené: žiadne).',
+        'frameText: Text, ktorý sa má zobraziť v rámci (kódované URL).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parametre farieb podľa modulu',
+      paragraphs: ['Možnosti farbenia jednotlivých modulov:'],
+      bullets: [
+        'modColor: Farebný režim – plný, podľa_jasu, podľa_pozície, podľa_prekrytia, podľa_klastra (predvolené: plné).',
+        'cGuard: Ochrana kontrastu 0/1 (predvolená hodnota: 0).',
+        'minContrast: Minimálny kontrastný pomer 1-21 (predvolené: 4,5).',
+        'paleta: Šestnástkové farby oddelené čiarkou pre režim palety.',
+        'paletteMode: Distribúcia palety - poloha, jas, uhlopriečka, radiálna, náhodná, riadok, stĺpec (predvolené: poloha).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parametre prekrytia GIF',
+      paragraphs: ['Nastavenia pre animované prekryvné obrázky GIF:'],
+      bullets: [
+        'ovType: Typ prekrytia - statický, gif, apng, webp_anim, video (predvolené: statické).',
+        'ovFramePick: Výber snímok - všetky, každý_n, maximálny_počet snímok, dĺžka_limitu (predvolené: všetky).',
+        'gifDelays: Použiť pôvodné oneskorenia snímok GIF 0/1 (predvolené: 1).',
+        'gifDispH: Nakladanie s GIF - rešpektovať, zjednodušiť (predvolené: rešpektovať).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Limity intenzity na ECC',
+      paragraphs: ['Maximálna intenzita prekrytia na úroveň opravy chýb:'],
+      bullets: [
+        'maxIntL: Maximálna intenzita pre ECC L 0-100 (predvolené: 100).',
+        'maxIntM: Maximálna intenzita pre ECC M 0-100 (predvolené: 100).',
+        'maxIntQ: Maximálna intenzita pre ECC Q 0-100 (predvolená hodnota: 100).',
+        'maxIntH: Maximálna intenzita pre ECC H 0-100 (predvolené: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parametre simulácie kontroly kvality (iba klient)',
+      paragraphs: [
+        'Tieto parametre sú analyzované kvôli kompatibilite URL, ale fungujú iba v prehliadači:',
+      ],
+      bullets: [
+        'qaContrast: Povoliť kontrolu kontrastu 0/1 – vyžaduje interaktívne overenie.',
+        'qaBlur: Simulácia rozmazania v pixeloch – len na interaktívne testovanie.',
+        'qaNoise: Simulácia hladiny hluku – len na interaktívne testovanie.',
+        'qaHeatmap: Zobraziť teplotnú mapu čitateľnosti 0/1 – vyžaduje používateľské rozhranie prekrytia plátna.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parametre iba pre klienta',
+      paragraphs: [
+        'Väčšina parametrov API je plne podporovaná na strane servera. Parametre označené [KLIENT-IBA] sú analyzované z hľadiska kompatibility s webovou adresou, ale vyžadujú funkcie prehliadača:',
+      ],
+      bullets: [
+        'Jitter: Jitter modulu vyžaduje regeneráciu QR kódov s náhodnosťou.',
+        'autoReduce: Automatické zníženie intenzity vyžaduje opakované testovanie skenovania.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Simulácia kvality vyžaduje interaktívne overenie plátna.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Dodatočné výstupné parametre',
+      paragraphs: ['Rozšírené nastavenia výstupu a exportu:'],
+      bullets: [
+        'fname: Vlastný názov súboru pre sťahovanie (predvolené: anqr-qrcode).',
+        'inclQz: Zahrnúť tichú zónu do výstupných rozmerov 0/1 (predvolené: 1).',
+        'bgOver: Farba pozadia prepíše hex bez # (prepíše parameter bg).',
+        'fmtExtra: Ďalší formát výstupu - žiadny, eps, animovaný_webp (predvolené: žiadne). Poznámka: eps je [PARTIAL].',
+        'svgPrec: presnosť tvaru SVG – pixel, presná (predvolené: pixel). [ČIASTOČNÉ] Obmedzený výstup SVG na strane servera.',
+        'svgEmbed: Vložiť rastrové prekrytie do SVG 0/1 (predvolené: 1). [ČIASTOČNÉ] Obmedzený výstup SVG na strane servera.',
+        'modulePx: Veľkosť modulu v pixeloch (predvolená hodnota: automaticky vypočítaná z veľkosti).',
+        'border: Extra hraničné moduly za pokojnou zónou (predvolené: 0).',
+        'crisp: Povolí vykresľovanie ostrého/pixelovaného obrazu 0/1 (predvolené: 1).',
+        'snap: Režim Pixel snap - podlaha, okrúhly, strop (predvolené: podlaha).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametre zachovania vzoru',
+      paragraphs: ['Ovládajte, ktoré konštrukčné prvky sú chránené pred prekrytím:'],
+      bullets: [
+        'keepFinders: Zachovať vyhľadávacie vzory 0/1 (predvolené: 1).',
+        'keepTiming: Zachová vzory časovania 0/1 (predvolené: 0).',
+        'keepAlign: Zachovať vzory zarovnania 0/1 (predvolené: 0).',
+        'protectFmt: Ochrana informačných modulov formátu 0/1 (predvolené: 0).',
+        'protectVer: Ochrana informačných modulov verzie 0/1 (predvolené: 0).',
+      ],
+    },
     {
       heading: 'Príklad použitia',
       paragraphs: [

@@ -970,6 +970,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG metadatu lauki.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Apgriešanas parametri',
+      paragraphs: ['Pārklājuma attēla apgriešanas iespējas:'],
+      bullets: [
+        'cropEn: iespējot pārklājuma apgriešanu 0/1 (noklusējums: 0).',
+        'cropX: apgriešanas centrs X kā daļa no 0–1 (noklusējums: 0,5).',
+        'cropY: apgriešanas centrs Y kā daļa 0–1 (noklusējums: 0,5).',
+        'cropSize: apgriešanas lielums kā attēla daļa no 0-1 (noklusējums: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Drošības bloķēšanas parametri',
+      paragraphs: ['Kontrolējiet, kuri QR elementi ir aizsargāti pret pārklājuma izmaiņām:'],
+      bullets: [
+        'lockF: slēdzenes meklētāja modeļi 0/1 (noklusējums: 1).',
+        'lockT: bloķēšanas laika shēmas 0/1 (noklusējums: 1).',
+        'lockA: bloķēšanas izlīdzināšanas modeļi 0/1 (noklusējums: 1).',
+        'lockFmt: bloķēšanas formāta informācija 0/1 (noklusējums: 1).',
+        'lockV: bloķēšanas versijas informācija 0/1 (noklusējums: 1).',
+        'safeMode: Drošais režīms - izslēgts, līdzsvarots, stingrs (noklusējums: izslēgts).',
+        'safeMinPx: minimālais moduļa izmērs pikseļos (noklusējums: 2).',
+        'safeMinQz: minimālais klusās zonas moduļu skaits (noklusējums: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Automātiskā parametru regulēšana',
+      paragraphs: ['Automātiskās optimizācijas iestatījumi:'],
+      bullets: [
+        'autoVer: Automātiski izvēlieties QR versiju 0/1 (noklusējums: 1).',
+        'autoEcc: automātiskās izvēles ECC līmenis 0/1 (noklusējums: 0) — tikai servera puses padoms.',
+        'autoReduce: [TIKAI KLIENTAM] Automātiski samazināt intensitāti līdz skenēšanai — nepieciešama skenēšanas validācijas cilpa.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Papildu animācijas parametri',
+      paragraphs: ['Paplašinātas animācijas vadīklas GIF izvadei:'],
+      bullets: [
+        'cilpa: animācijas cilpas nepārtraukti 0/1 (noklusējums: 1).',
+        'atlēciens: galda tenisa animācijas virziens 0/1 (noklusējums: 0).',
+        'reverss: atskaņot animāciju reversā 0/1 (noklusējums: 0).',
+        'colorCycle: iespējojiet krāsu cikliskuma efektu 0/1 (noklusējums: 0).',
+        'interp: kadra interpolācija — nav, krusteniskā izbalēšana, morph (noklusējums: nav).',
+        'tempDither: īslaicīga izkliedēšana — izslēgts, zils_troksnis, mirgošanas_drošs (noklusējums: izslēgts).',
+        'startF: animācijas sākuma kadrs (noklusējums: 0).',
+        'maxF: maksimālais renderējamo kadru skaits (noklusējums: 0 = automātiski).',
+        'stepF: kadra soļu intervāls (noklusējums: 1).',
+        'nervozitāte: [TIKAI KLIENTAM] Moduļa trīce pikseļos — nepieciešama QR atjaunošana katrā kadrā.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Atdalīšanas parametri',
+      paragraphs: ['Pārklājuma apstrādes pārklāšanās algoritmi:'],
+      bullets: [
+        'ditherKind: šķelšanās algoritms — error_diffusion, ordered_bayer, blue_noise utt. (noklusējums: ordered_bayer).',
+        'diffusionKernel: kļūdu difūzijas kodols — floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (noklusējums: floyd_steinberg).',
+        'ditherStrength: izkliedēšanas intensitāte 0–100 (noklusējums: 50).',
+        'serpentīns: serpentīna griešana 0/1 (noklusējums: 0).',
+        'matrica: pasūtītā dither matrica - bayer2, bayer4, bayer8 (noklusējums: bayer4).',
+        'bnTile: zilā trokšņa flīzes izmērs (noklusējums: 64).',
+        'bnSeed: Blue noise izlases sēkla (noklusējums: 0).',
+        'colorDither: krāsu izkliedēšana — nav, pa kanālam, uztveres (noklusējums: nav).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Apakšpikseļu parametri',
+      paragraphs: ['Iestatījumi apakšpikseļu sajaukšanas režīmam:'],
+      bullets: [
+        'spGrid: apakšpikseļu režģa izmērs — 2x2, 3x3, 4x4 (noklusējums: 3x3).',
+        'spCenter: centra noteikums — stingrs, pustoņu_centrs (noklusējums: stingrs).',
+        'spNeutral: neitrālas krāsas sešstūra bez # (noklusējums: 808080).',
+        'spFinder: Finder ignorēšana — vienkrāsains, stilizēts (noklusējums: ciets).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Pustoņu parametri',
+      paragraphs: ['Iestatījumi pustoņu sajaukšanas režīmam:'],
+      bullets: [
+        'htCell: pustoņu šūnas izmērs — per_module vai nxn režģis (noklusējums: per_module).',
+        'htDot: punkta forma — aplis, kvadrāts, līnija (noklusējums: aplis).',
+        'htCurve: spilgtuma līkne — lineāra, s-līkne, gamma (noklusējums: lineāra).',
+        'duo1: Duotone ēnu krāsu sešstūra bez # (noklusējums: 000000).',
+        'duo2: Duotone izceltā krāsa hex bez # (noklusējums: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-Aware režīma parametri',
+      paragraphs: ['Inteliģents pārklājuma sadalījums, pamatojoties uz kļūdu labošanas spēju:'],
+      bullets: [
+        'eccAware: iespējojiet ECC-aware režīmu 0/1 (noklusējums: 0).',
+        'eccRisk: riska budžeta procentuālā vērtība 0–100 (noklusējums: 50).',
+        'eccMap: svara karte — distance_to_finders, block_heatmap, empirical_scan_heatmap (noklusējums: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Rāmja parametri',
+      paragraphs: ['Dekoratīvā rāmja iestatījumi:'],
+      bullets: [
+        'rāmis: rāmja stils — nav, noapaļots_rāmis, uzlīme, atzīme (noklusējums: nav).',
+        'frameText: teksts, kas jāparāda rāmī (URL kodēts).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Katra moduļa krāsu parametri',
+      paragraphs: ['Atsevišķu moduļu krāsošanas iespējas:'],
+      bullets: [
+        'modColor: krāsu režīms — vienkrāsains, pēc_spilgtuma, pēc_pozīcijas, pēc pārklājuma, pēc kopas (noklusējums: vienkrāsains).',
+        'cGuard: Kontrasta aizsargs 0/1 (noklusējums: 0).',
+        'minContrast: minimālā kontrasta attiecība 1-21 (noklusējums: 4,5).',
+        'palete: ar komatu atdalītas sešstūra krāsas paletes režīmam.',
+        'paleteMode: Paletes sadalījums - pozīcija, spilgtums, diagonāli, radiāli, nejauši, rinda, kolonna (noklusējums: pozīcija).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF pārklājuma parametri',
+      paragraphs: ['Iestatījumi animētiem GIF pārklājuma attēliem:'],
+      bullets: [
+        'ovType: pārklājuma veids — statisks, gif, apng, webp_anim, video (noklusējums: statisks).',
+        'ovFramePick: kadru atlase — visi, every_n, max_frames, duration_limit (noklusējums: visi).',
+        'gifDelays: izmantojiet sākotnējo GIF kadru aizkavi 0/1 (noklusējums: 1).',
+        'gifDispH: GIF iznīcināšanas apstrāde — ievērojiet, vienkāršojiet (noklusējums: cieņa).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Per-ECC intensitātes ierobežojumi',
+      paragraphs: ['Maksimālā pārklājuma intensitāte katrā kļūdu labošanas līmenī:'],
+      bullets: [
+        'maxIntL: maksimālā intensitāte ECC L 0-100 (noklusējums: 100).',
+        'maxIntM: maksimālā intensitāte ECC M 0–100 (noklusējums: 100).',
+        'maxIntQ: maksimālā intensitāte ECC Q 0–100 (noklusējums: 100).',
+        'maxIntH: maksimālā intensitāte ECC H 0-100 (noklusējums: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA simulācijas parametri (tikai klientam)',
+      paragraphs: [
+        'Šie parametri tiek parsēti URL saderībai, taču tie darbojas tikai pārlūkprogrammā:',
+      ],
+      bullets: [
+        'qaContrast: iespējot kontrasta pārbaudi 0/1 — nepieciešama interaktīva validācija.',
+        'qaBlur: simulējiet izplūšanu pikseļos — tikai interaktīvai testēšanai.',
+        'qaNoise: simulējiet trokšņa līmeni — tikai interaktīvai testēšanai.',
+        'qaHeatmap: Rādīt lasāmības siltuma karti 0/1 — nepieciešama kanvas pārklājuma lietotāja saskarne.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Tikai klienta parametri',
+      paragraphs: [
+        'Lielākā daļa API parametru tiek pilnībā atbalstīti servera pusē. Parametri, kas atzīmēti [CLIENT-ONLY], tiek parsēti URL saderībai, taču tiem ir nepieciešamas pārlūkprogrammas funkcijas:',
+      ],
+      bullets: [
+        'nervozitāte: moduļa nervozitātei ir nepieciešama katra kadra QR reģenerācija ar nejaušību.',
+        'autoReduce: automātiskās intensitātes samazināšanai nepieciešama iteratīva skenēšanas pārbaude.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: kvalitātes nodrošināšanas simulācijai nepieciešama interaktīva kanvas validācija.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Papildu izvades parametri',
+      paragraphs: ['Paplašināti izvades un eksporta iestatījumi:'],
+      bullets: [
+        'fname: pielāgots faila nosaukums lejupielādēm (noklusējums: anqr-qrcode).',
+        'inclQz: iekļaut kluso zonu izvades izmēros 0/1 (noklusējums: 1).',
+        'bgOver: fona krāsas ignorēšana hex bez # (ignorē bg parametru).',
+        'fmtExtra: papildu formāta izvade — nav, eps, animated_webp (noklusējums: nav). Piezīme: eps ir [DAĻĒJA].',
+        'svgPrec: SVG formas precizitāte — pikseļi, precīza (noklusējums: pikseļi). [DAĻĒJA] SVG izvade ir ierobežota servera pusē.',
+        'svgEmbed: iegult rastra pārklājumu SVG 0/1 (noklusējums: 1). [DAĻĒJA] SVG izvade ir ierobežota servera pusē.',
+        'modulePx: moduļa pikseļu lielums (noklusējums: automātiski aprēķināts pēc izmēra).',
+        'robeža: papildu apmales moduļi ārpus klusās zonas (noklusējums: 0).',
+        'crisp: iespējot izteiksmīgu/pikseļu attēla renderēšanu 0/1 (noklusējums: 1).',
+        'snap: pikseļu uzņemšanas režīms — grīda, apaļš, griesti (noklusējums: grīda).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Rakstu saglabāšanas parametri',
+      paragraphs: ['Kontrolējiet, kuri konstrukcijas elementi ir aizsargāti no pārklājuma:'],
+      bullets: [
+        'keepFinders: saglabā meklētāja modeļus 0/1 (noklusējums: 1).',
+        'keepTiming: saglabājiet laika shēmas 0/1 (noklusējums: 0).',
+        'keepAlign: saglabā līdzinājuma modeļus 0/1 (noklusējums: 0).',
+        'ProtectFmt: Aizsargājiet formāta informācijas moduļus 0/1 (noklusējums: 0).',
+        'ProtectVer: Aizsargājiet versijas informācijas moduļus 0/1 (noklusējums: 0).',
+      ],
+    },
     {
       heading: 'Lietošanas piemērs',
       paragraphs: [

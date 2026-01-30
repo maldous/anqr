@@ -968,6 +968,208 @@ export const guide: PageDefinition = {
         'metaTitle, metaMwandishi, metaCopy, metaDesc: sehemu za metadata za PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Vigezo vya Mazao',
+      paragraphs: ['Chaguzi za upunguzaji wa picha zinazowekelea:'],
+      bullets: [
+        'cropEn: Washa upunguzaji wa kuwekelea 0/1 (chaguo-msingi: 0).',
+        'cropX: Kituo cha mazao X kama sehemu 0-1 (chaguo-msingi: 0.5).',
+        'cropY: Kituo cha mazao Y kama sehemu 0-1 (chaguo-msingi: 0.5).',
+        'Ukubwa wa mazao: Ukubwa wa mazao kama sehemu ya picha 0-1 (chaguo-msingi: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Vigezo vya Kufuli Usalama',
+      paragraphs: [
+        'Dhibiti ni vipengele vipi vya QR vinavyolindwa dhidi ya urekebishaji wa kuwekelea:',
+      ],
+      bullets: [
+        'lockF: Funga mifumo ya kitafutaji 0/1 (chaguo-msingi: 1).',
+        'lockT: Funga mifumo ya muda 0/1 (chaguo-msingi: 1).',
+        'lockA: Mifumo ya upangaji wa kufuli 0/1 (chaguo-msingi: 1).',
+        'lockFmt: Funga maelezo ya umbizo 0/1 (chaguo-msingi: 1).',
+        'lockV: Maelezo ya toleo la kufuli 0/1 (chaguo-msingi: 1).',
+        'Modi salama: Hali ya usalama - imezimwa, uwiano, kali (chaguo-msingi: imezimwa).',
+        'safeMinPx: Kiwango cha chini cha ukubwa wa moduli katika saizi (chaguo-msingi: 2).',
+        'safeMinQz: Kiwango cha chini cha moduli za eneo tulivu (chaguo-msingi: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Vigezo vya kurekebisha kiotomatiki',
+      paragraphs: ['Mipangilio ya uboreshaji kiotomatiki:'],
+      bullets: [
+        'autoVer: Chagua kiotomatiki toleo la QR 0/1 (chaguo-msingi: 1).',
+        'autoEcc: Chagua kiotomatiki kiwango cha ECC 0/1 (chaguo-msingi: 0) - kidokezo cha upande wa seva pekee.',
+        'Punguza kiotomatiki: [MTEJA-PEKEE] Punguza kiwango kiotomatiki hadi uchanganue - inahitaji kitanzi cha uthibitishaji wa skanisho.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Vigezo vya Ziada vya Uhuishaji',
+      paragraphs: ['Vidhibiti vilivyopanuliwa vya uhuishaji vya pato la GIF:'],
+      bullets: [
+        'kitanzi: Mizunguko ya uhuishaji mfululizo 0/1 (chaguo-msingi: 1).',
+        'bounce: Mwelekeo wa uhuishaji wa Ping-pong 0/1 (chaguo-msingi: 0).',
+        'kinyume: Cheza uhuishaji kinyume 0/1 (chaguo-msingi: 0).',
+        'colorCycle: Washa madoido ya rangi ya baiskeli 0/1 (chaguo-msingi: 0).',
+        'interp: Ufafanuzi wa fremu - hakuna, kufifia, morph (chaguo-msingi: hakuna).',
+        'tempDither: Utaftaji wa muda - umezimwa, sauti_ya_buluu, salama_salama (chaguo-msingi: imezimwa).',
+        'startF: fremu ya kuanza kwa uhuishaji (chaguo-msingi: 0).',
+        'maxF: Upeo wa juu wa fremu za kutoa (chaguo-msingi: 0 = otomatiki).',
+        'stepF: Muda wa hatua ya fremu (chaguo-msingi: 1).',
+        'jitter: [CLIENT-PEKEE] Kizunguzungu cha moduli katika pikseli - kinahitaji uundaji upya wa QR kwa kila fremu.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Vigezo vya Dithering',
+      paragraphs: ['Dhibiti algoriti za upunguzaji wa usindikaji wa uchakataji:'],
+      bullets: [
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, n.k (chaguo-msingi: ordered_bayer).',
+        'diffusionKernel: Kosa la uenezaji wa hitilafu - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (chaguo-msingi: floyd_steinberg).',
+        'ditherNguvu: Dither intensiteten 0-100 (chaguo-msingi: 50).',
+        'serpentine: Serpentine dithering 0/1 (chaguo-msingi: 0).',
+        'matrix: Matrix ya dither iliyoagizwa - bayer2, bayer4, bayer8 (chaguo-msingi: bayer4).',
+        'bnTile: Saizi ya kigae cha kelele ya bluu (chaguo-msingi: 64).',
+        'bnSeed: Sauti ya bluu mbegu nasibu (chaguo-msingi: 0).',
+        'colorDither: Kubadilisha rangi - hakuna, per_channel, perceptual (chaguo-msingi: hakuna).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Vigezo vya Subpixel',
+      paragraphs: ['Mipangilio ya hali ya mchanganyiko ya pikseli ndogo:'],
+      bullets: [
+        'spGrid: Ukubwa wa gridi ya pikseli ndogo - 2x2, 3x3, 4x4 (chaguo-msingi: 3x3).',
+        'spCenter: Sheria ya kituo - kali, halftone_center (chaguo-msingi: kali).',
+        'spNeutral: Neutral rangi hex bila # (chaguo-msingi: 808080).',
+        'spFinder: Finder override - imara, stylized (default: imara).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Vigezo vya Halftone',
+      paragraphs: ['Mipangilio ya hali ya mchanganyiko wa halftone:'],
+      bullets: [
+        'htCell: Ukubwa wa nusu ya seli - per_module au gridi ya nxn (chaguo-msingi: per_module).',
+        'htDot: Umbo la nukta - duara, mraba, mstari (chaguo-msingi: mduara).',
+        "htCurve: Mviringo wa kung'aa - mstari, s-curve, gamma (chaguo-msingi: mstari).",
+        'duo1: hex ya rangi ya kivuli cha Duotone bila # (chaguo-msingi: 000000).',
+        'duo2: Duotone iangazie hex ya rangi bila # (chaguo-msingi: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Vigezo vya Modi ya ECC-Aware',
+      paragraphs: ['Usambazaji wa uwekaji wa akili kulingana na uwezo wa kurekebisha makosa:'],
+      bullets: [
+        'eccAware: Washa hali ya kufahamu ECC 0/1 (chaguo-msingi: 0).',
+        'eccRisk: Asilimia ya bajeti ya hatari 0-100 (chaguo-msingi: 50).',
+        'eccMap: Uzito ramani - distance_to_finders, block_heatmap, empirical_scan_heatmap (chaguo-msingi: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Vigezo vya Frame',
+      paragraphs: ['Mipangilio ya fremu ya mapambo:'],
+      bullets: [
+        'fremu: Mtindo wa fremu - hakuna, sura_iliyozunguka, kibandiko, lebo (chaguo-msingi: hakuna).',
+        'frameText: Nakala ya kuonyesha katika fremu (URL iliyosimbwa).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Vigezo vya Rangi kwa Kila-Moduli',
+      paragraphs: ['Chaguzi za kuchorea za moduli za kibinafsi:'],
+      bullets: [
+        'modColor: Hali ya rangi - imara, kwa_mwangaza, kwa_nafasi, kwa_kuweka juu, kwa_cluster (chaguo-msingi: imara).',
+        'cWalinzi: Kilinzi cha kulinganisha 0/1 (chaguo-msingi: 0).',
+        'minContrast: Kiwango cha chini cha uwiano wa utofautishaji 1-21 (chaguo-msingi: 4.5).',
+        'palette: rangi za heksi zilizotenganishwa kwa koma kwa modi ya palette.',
+        'paletteMode: Usambazaji wa palette - nafasi, mwangaza, diagonal, radial, random, safu, safu (chaguo-msingi: nafasi).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Vigezo vya Kufunika kwa GIF',
+      paragraphs: ['Mipangilio ya picha za uhuishaji za GIF zinazowekelea:'],
+      bullets: [
+        'ovAina: Aina ya ufunikaji - tuli, gif, apng, webp_anim, video (chaguo-msingi: tuli).',
+        'ovFramePick: Uchaguzi wa fremu - yote, kila_n, max_frames, duration_limit (chaguo-msingi: zote).',
+        'gifDelays: Tumia ucheleweshaji wa fremu asili ya GIF 0/1 (chaguo-msingi: 1).',
+        'gifDispH: Ushughulikiaji wa utupaji wa GIF - heshima, kurahisisha (chaguo-msingi: heshima).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Vikomo vya Kiwango cha Per-ECC',
+      paragraphs: [
+        'Kiwango cha juu zaidi cha uwekaji kwa kila kiwango cha urekebishaji wa hitilafu:',
+      ],
+      bullets: [
+        'maxIntL: Kiwango cha juu zaidi cha ECC L 0-100 (chaguo-msingi: 100).',
+        'maxIntM: Kiwango cha juu cha nguvu kwa ECC M 0-100 (chaguo-msingi: 100).',
+        'maxIntQ: Nguvu ya juu zaidi ya ECC Q 0-100 (chaguo-msingi: 100).',
+        'maxIntH: Kiwango cha juu cha nguvu kwa ECC H 0-100 (chaguo-msingi: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Vigezo vya Kuiga vya QA (Mteja Pekee)',
+      paragraphs: [
+        'Vigezo hivi vinachanganuliwa kwa uoanifu wa URL lakini hufanya kazi kwenye kivinjari pekee:',
+      ],
+      bullets: [
+        'qaContrast: Washa ukaguzi wa utofautishaji 0/1 - inahitaji uthibitishaji mwingiliano.',
+        'qaBlur: Iga ukungu katika pikseli - kwa majaribio ya mwingiliano pekee.',
+        'qaNoise: Iga kiwango cha kelele - kwa majaribio ya mwingiliano pekee.',
+        'qaHeatmap: Onyesha ramani ya joto inayoweza kusomeka 0/1 - inahitaji kiolesura cha turubai.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Vigezo vya Mteja Pekee',
+      paragraphs: [
+        'Vigezo vingi vya API vinatumika kikamilifu upande wa seva. Vigezo vilivyowekwa alama [CLIENT-TU] vinachanganuliwa ili uoanifu wa URL lakini vinahitaji vipengele vya kivinjari:',
+      ],
+      bullets: [
+        'jitter: Moduli ya jita inahitaji uundaji upya wa QR kwa kila fremu bila mpangilio.',
+        'Punguza kiotomatiki: Kiwango cha kupunguza kiotomatiki kinahitaji majaribio ya mara kwa mara ya uchanganuzi.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Uigaji wa QA unahitaji uthibitishaji shirikishi wa turubai.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Vigezo vya ziada vya Pato',
+      paragraphs: ['Mipangilio iliyopanuliwa ya pato na usafirishaji:'],
+      bullets: [
+        'fname: Jina la faili maalum la vipakuliwa (chaguo-msingi: anqr-qrcode).',
+        'inclQz: Jumuisha eneo tulivu katika vipimo vya matokeo 0/1 (chaguo-msingi: 1).',
+        'bgOver: Rangi ya usuli hubatilisha hex bila # (hubatilisha kigezo cha bg).',
+        'fmtExtra: Towe la umbizo la ziada - hakuna, eps, animated_webp (chaguo-msingi: hakuna). Kumbuka: eps ni [SEHEMU].',
+        'svgPrec: usahihi wa umbo la SVG - pixel, sahihi (chaguo-msingi: pixel). [SEHEMU] Pato la SVG lenye upande wa seva.',
+        'svgEmbed: Pachika wekeleo la raster katika SVG 0/1 (chaguo-msingi: 1). [SEHEMU] Pato la SVG lenye upande wa seva.',
+        'modulePx: Ukubwa wa saizi ya moduli (chaguo-msingi: inakokotolewa kiotomatiki kutoka kwa saizi).',
+        'mpaka: Sehemu za ziada za mpaka zaidi ya eneo tulivu (chaguo-msingi: 0).',
+        'crisp: Washa uwasilishaji wa picha crisp/pixelated 0/1 (chaguo-msingi: 1).',
+        'snap: Pixel snap mode - sakafu, pande zote, dari (chaguo-msingi: sakafu).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Vigezo vya Uhifadhi wa Muundo',
+      paragraphs: ['Dhibiti ni vipengele vipi vya kimuundo vinavyolindwa dhidi ya kuwekelea:'],
+      bullets: [
+        'keepFinders: Hifadhi ruwaza za kipataji 0/1 (chaguo-msingi: 1).',
+        'keepTiming: Hifadhi ruwaza za muda 0/1 (chaguo-msingi: 0).',
+        'keepAlign: Hifadhi ruwaza za upatanishi 0/1 (chaguo-msingi: 0).',
+        'protectFmt: Linda moduli za maelezo ya umbizo 0/1 (chaguo-msingi: 0).',
+        'protectVer: Linda moduli za maelezo ya toleo 0/1 (chaguo-msingi: 0).',
+      ],
+    },
     {
       heading: 'Matumizi ya Mfano',
       paragraphs: [

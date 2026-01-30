@@ -978,6 +978,208 @@ export const guide: PageDefinition = {
         'métaTitre, métaAuteur, métaCopie, méta Desc: champs de métadonnées PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Paramètres de culture',
+      paragraphs: ['Options de recadrage des images superposées :'],
+      bullets: [
+        'cropEn : Activer le recadrage par superposition 0/1 (par défaut : 0).',
+        'cropX : recadrer le centre X sous forme de fraction 0-1 (par défaut : 0,5).',
+        'cropY : recadrer le centre Y sous forme de fraction 0-1 (par défaut : 0,5).',
+        "cropSize : taille du recadrage en fraction de l'image 0-1 (par défaut : 1).",
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Paramètres de verrouillage de sécurité',
+      paragraphs: [
+        'Contrôlez quels éléments QR sont protégés contre les modifications de superposition :',
+      ],
+      bullets: [
+        'lockF : Verrouiller les modèles de recherche 0/1 (par défaut : 1).',
+        'lockT : verrouille les modèles de synchronisation 0/1 (par défaut : 1).',
+        "lockA : verrouille les modèles d'alignement 0/1 (par défaut : 1).",
+        'lockFmt : informations sur le format de verrouillage 0/1 (par défaut : 1).',
+        'lockV : Verrouiller les informations de version 0/1 (par défaut : 1).',
+        'safeMode : Mode de sécurité - désactivé, équilibré, strict (par défaut : désactivé).',
+        'safeMinPx : Taille minimale du module en pixels (par défaut : 2).',
+        'safeMinQz : modules de zone de silence minimum (par défaut : 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Paramètres de réglage automatique',
+      paragraphs: ["Paramètres d'optimisation automatique :"],
+      bullets: [
+        'autoVer : sélection automatique de la version 0/1 du QR (par défaut : 1).',
+        'autoEcc : sélection automatique du niveau ECC 0/1 (par défaut : 0) - indice côté serveur uniquement.',
+        "autoReduce : [CLIENT UNIQUEMENT] Réduire automatiquement l'intensité jusqu'à ce qu'elle soit numérisable - nécessite une boucle de validation de numérisation.",
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: "Paramètres d'animation supplémentaires",
+      paragraphs: ["Commandes d'animation étendues pour la sortie GIF :"],
+      bullets: [
+        "boucle : L'animation boucle en continu 0/1 (par défaut : 1).",
+        "rebond : direction de l'animation Ping-pong 0/1 (par défaut : 0).",
+        "reverse : lire l'animation en reverse 0/1 (par défaut : 0).",
+        "colorCycle : active l'effet de cycle de couleur 0/1 (par défaut : 0).",
+        "interp : interpolation d'image - aucune, fondu enchaîné, morph (par défaut : aucune).",
+        'tempDither : tramage temporel - désactivé, blue_noise, flicker_safe (par défaut : désactivé).',
+        "startF : Image de début de l'animation (par défaut : 0).",
+        "maxF : nombre maximal d'images à restituer (par défaut : 0 = auto).",
+        'stepF : intervalle de pas de trame (par défaut : 1).',
+        'gigue : [CLIENT UNIQUEMENT] Gigue du module en pixels - nécessite une régénération QR par image.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Paramètres de tramage',
+      paragraphs: ['Contrôlez les algorithmes de tramage pour le traitement de superposition :'],
+      bullets: [
+        'ditherKind : algorithme de tramage - error_diffusion, ordonné_bayer, blue_noise, etc (par défaut : ordonné_bayer).',
+        "diffusionKernel : noyau de diffusion d'erreurs - floyd_steinberg, jarvis_judice_ninke, sticki, burkes, sierra, atkinson (par défaut : floyd_steinberg).",
+        'ditherStrength : intensité de tramage 0-100 (par défaut : 50).',
+        'serpentine : tramage serpentin 0/1 (par défaut : 0).',
+        'matrice : matrice de tramage ordonnée - bayer2, bayer4, bayer8 (par défaut : bayer4).',
+        'bnTile : taille de la tuile de bruit bleu (par défaut : 64).',
+        'bnSeed : graine aléatoire de bruit bleu (par défaut : 0).',
+        'colorDither : tramage des couleurs - aucun, par canal, perceptuel (par défaut : aucun).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Paramètres de sous-pixels',
+      paragraphs: ['Paramètres du mode de fusion des sous-pixels :'],
+      bullets: [
+        'spGrid : taille de la grille de sous-pixels - 2x2, 3x3, 4x4 (par défaut : 3x3).',
+        'spCenter : règle centrale - stricte, halftone_center (par défaut : stricte).',
+        'spNeutral : hexadécimal de couleur neutre sans # (par défaut : 808080).',
+        'spFinder : remplacement du Finder - solide, stylisé (par défaut : solide).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Paramètres de demi-teintes',
+      paragraphs: ['Paramètres du mode de fusion des demi-teintes :'],
+      bullets: [
+        'htCell : taille de cellule en demi-teinte - par_module ou grille nxn (par défaut : par_module).',
+        'htDot : Forme du point - cercle, carré, ligne (par défaut : cercle).',
+        'htCurve : Courbe de luminosité - linéaire, courbe en S, gamma (par défaut : linéaire).',
+        "duo1 : couleur d'ombre bicolore hexadécimale sans # (par défaut : 000000).",
+        'duo2 : couleur de surbrillance bicolore hexadécimale sans # (par défaut : ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Paramètres du mode compatible ECC',
+      paragraphs: [
+        "Distribution de superposition intelligente basée sur la capacité de correction d'erreurs :",
+      ],
+      bullets: [
+        'eccAware : active le mode compatible ECC 0/1 (par défaut : 0).',
+        'eccRisk : pourcentage du budget de risque 0-100 (par défaut : 50).',
+        'eccMap : carte de poids - distance_to_finders, block_heatmap, empirical_scan_heatmap (par défaut : distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Paramètres du cadre',
+      paragraphs: ['Paramètres du cadre décoratif :'],
+      bullets: [
+        'frame : style de cadre - aucun, round_frame, autocollant, balise (par défaut : aucun).',
+        'frameText : Texte à afficher dans le cadre (URL encodée).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Paramètres de couleur par module',
+      paragraphs: ['Options de coloration des modules individuels :'],
+      bullets: [
+        'modColor : Mode couleur - solid, by_brightness, by_position, by_overlay, by_cluster (par défaut : solid).',
+        'cGuard : Protection de contraste 0/1 (par défaut : 0).',
+        'minContraste : rapport de contraste minimum 1-21 (par défaut : 4,5).',
+        'palette : couleurs hexadécimales séparées par des virgules pour le mode palette.',
+        'paletteMode : distribution de la palette - position, luminosité, diagonale, radiale, aléatoire, ligne, colonne (par défaut : position).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Paramètres de superposition GIF',
+      paragraphs: ['Paramètres pour les images de superposition GIF animées :'],
+      bullets: [
+        'ovType : Type de superposition - statique, gif, apng, webp_anim, vidéo (par défaut : statique).',
+        'ovFramePick : sélection de trames - all, each_n, max_frames, duration_limit (par défaut : all).',
+        "gifDelays : utilise les délais de trame GIF d'origine 0/1 (par défaut : 1).",
+        "gifDispH : gestion de l'élimination des GIF - respecter, simplifier (par défaut : respecter).",
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: "Limites d'intensité par ECC",
+      paragraphs: ["Intensité de superposition maximale par niveau de correction d'erreur :"],
+      bullets: [
+        'maxIntL : intensité maximale pour ECC L 0-100 (par défaut : 100).',
+        'maxIntM : Intensité maximale pour ECC M 0-100 (par défaut : 100).',
+        'maxIntQ : intensité maximale pour ECC Q 0-100 (par défaut : 100).',
+        'maxIntH : intensité maximale pour ECC H 0-100 (par défaut : 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: "Paramètres de simulation d'assurance qualité (client uniquement)",
+      paragraphs: [
+        'Ces paramètres sont analysés pour vérifier la compatibilité des URL mais ne fonctionnent que dans le navigateur :',
+      ],
+      bullets: [
+        'qaContrast : Activer la vérification du contraste 0/1 - nécessite une validation interactive.',
+        'qaBlur : simule le flou en pixels - pour les tests interactifs uniquement.',
+        'qaNoise : Simuler le niveau de bruit - pour les tests interactifs uniquement.',
+        'qaHeatmap : Afficher la carte thermique de lisibilité 0/1 - nécessite une interface utilisateur de superposition de canevas.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Paramètres client uniquement',
+      paragraphs: [
+        'La plupart des paramètres API sont entièrement pris en charge côté serveur. Les paramètres marqués [CLIENT-ONLY] sont analysés pour vérifier la compatibilité des URL mais nécessitent des fonctionnalités de navigateur :',
+      ],
+      bullets: [
+        'gigue : la gigue du module nécessite une régénération QR par image de manière aléatoire.',
+        "autoReduce : la réduction automatique de l'intensité nécessite des tests d'analyse itératifs.",
+        'qaContrast, qaBlur, qaNoise, qaHeatmap : la simulation QA nécessite une validation interactive du canevas.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Paramètres de sortie supplémentaires',
+      paragraphs: ["Paramètres de sortie et d'exportation étendus :"],
+      bullets: [
+        'fname : nom de fichier personnalisé pour les téléchargements (par défaut : anqr-qrcode).',
+        'inclQz : Inclut la zone silencieuse dans les dimensions de sortie 0/1 (par défaut : 1).',
+        "bgOver : remplacement de la couleur d'arrière-plan hexadécimal sans # (remplace le paramètre bg).",
+        'fmtExtra : sortie au format supplémentaire - aucun, eps, animation_webp (par défaut : aucun). Remarque : eps est [PARTIEL].',
+        'svgPrec : précision de la forme SVG - pixel, précis (par défaut : pixel). [PARTIEL] Sortie SVG limitée côté serveur.',
+        'svgEmbed : incorporer la superposition raster dans SVG 0/1 (par défaut : 1). [PARTIEL] Sortie SVG limitée côté serveur.',
+        'modulePx : taille des pixels du module (par défaut : calculée automatiquement à partir de la taille).',
+        'border : modules de bordure supplémentaires au-delà de la zone calme (par défaut : 0).',
+        "crisp : Active le rendu d'image net/pixélisé 0/1 (par défaut : 1).",
+        'snap : mode Pixel snap - sol, rond, plafond (par défaut : sol).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Paramètres de préservation des motifs',
+      paragraphs: ['Contrôlez quels éléments structurels sont protégés contre la superposition :'],
+      bullets: [
+        'keepFinders : conserver les modèles de recherche 0/1 (par défaut : 1).',
+        'keepTiming : préserve les modèles de synchronisation 0/1 (par défaut : 0).',
+        "keepAlign : préserve les modèles d'alignement 0/1 (par défaut : 0).",
+        "ProtectFmt : Protéger les modules d'informations sur le format 0/1 (par défaut : 0).",
+        "ProtectVer : Protéger les modules d'informations de version 0/1 (par défaut : 0).",
+      ],
+    },
     {
       heading: "Exemple d'utilisation",
       paragraphs: [

@@ -974,6 +974,204 @@ export const guide: PageDefinition = {
         'metaTitel, metaAuthor, metaCopy, meta Desc: PNG Metadatenfelder.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Zuschneideparameter',
+      paragraphs: ['Optionen zum Zuschneiden von Overlay-Bildern:'],
+      bullets: [
+        'cropEn: Overlay-Zuschneiden 0/1 aktivieren (Standard: 0).',
+        'CropX: Mitte X als Bruch 0-1 zuschneiden (Standard: 0,5).',
+        'CropY: Schnittmitte Y als Bruch 0-1 (Standard: 0,5).',
+        'CropSize: Zuschnittgröße als Bruchteil des Bildes 0-1 (Standard: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parameter der Sicherheitsverriegelung',
+      paragraphs: ['Steuern Sie, welche QR-Elemente vor Overlay-Änderungen geschützt sind:'],
+      bullets: [
+        'lockF: Lock-Finder-Muster 0/1 (Standard: 1).',
+        'lockT: Zeitmuster 0/1 sperren (Standard: 1).',
+        'lockA: Ausrichtungsmuster 0/1 sperren (Standard: 1).',
+        'lockFmt: Formatinfo 0/1 sperren (Standard: 1).',
+        'lockV: Versionsinfo 0/1 sperren (Standard: 1).',
+        'safeMode: Sicherheitsmodus – aus, ausgeglichen, streng (Standard: aus).',
+        'safeMinPx: Minimale Modulgröße in Pixel (Standard: 2).',
+        'safeMinQz: Mindestanzahl an Ruhezonenmodulen (Standard: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Autotuning-Parameter',
+      paragraphs: ['Automatische Optimierungseinstellungen:'],
+      bullets: [
+        'autoVer: QR-Version 0/1 automatisch auswählen (Standard: 1).',
+        'autoEcc: ECC-Level 0/1 automatisch auswählen (Standard: 0) – nur serverseitiger Hinweis.',
+        'autoReduce: [NUR FÜR KUNDEN] Reduziert die Intensität automatisch, bis sie scanbar ist – erfordert eine Scan-Validierungsschleife.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Zusätzliche Animationsparameter',
+      paragraphs: ['Erweiterte Animationssteuerung für die GIF-Ausgabe:'],
+      bullets: [
+        'Schleife: Animationsschleifen kontinuierlich 0/1 (Standard: 1).',
+        'Bounce: Ping-Pong-Animationsrichtung 0/1 (Standard: 0).',
+        'Reverse: Animation in umgekehrter Reihenfolge 0/1 abspielen (Standard: 0).',
+        'colorCycle: Farbwechseleffekt 0/1 aktivieren (Standard: 0).',
+        'interp: Frame-Interpolation – keine, Crossfade, Morph (Standard: keine).',
+        'tempDither: Zeitliches Dithering – aus, blue_noise, flicker_safe (Standard: aus).',
+        'startF: Startbild der Animation (Standard: 0).',
+        'maxF: Maximal zu rendernde Frames (Standard: 0 = automatisch).',
+        'stepF: Frame-Schrittintervall (Standard: 1).',
+        'Jitter: [NUR FÜR CLIENT] Modul-Jitter in Pixel – erfordert eine QR-Regeneration pro Frame.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering-Parameter',
+      paragraphs: ['Steuern Sie Dithering-Algorithmen für die Overlay-Verarbeitung:'],
+      bullets: [
+        'ditherKind: Dither-Algorithmus – error_diffusion, ordered_bayer, blue_noise usw. (Standard: ordered_bayer).',
+        'diffusionKernel: Fehler beim Diffusionskernel – floyd_steinberg, jarvis_judice_ninke, sticki, burkes, sierra, atkinson (Standard: floyd_steinberg).',
+        'ditherStrength: Dither-Intensität 0–100 (Standard: 50).',
+        'Serpentine: Serpentinen-Dithering 0/1 (Standard: 0).',
+        'Matrix: Geordnete Dither-Matrix – Bayer2, Bayer4, Bayer8 (Standard: Bayer4).',
+        'bnTile: Kachelgröße für blaues Rauschen (Standard: 64).',
+        'bnSeed: Zufälliger Startwert für blaues Rauschen (Standard: 0).',
+        'colorDither: Farbdithering – keine, per_channel, perceptual (Standard: keine).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpixel-Parameter',
+      paragraphs: ['Einstellungen für den Subpixel-Mischmodus:'],
+      bullets: [
+        'spGrid: Subpixel-Rastergröße – 2x2, 3x3, 4x4 (Standard: 3x3).',
+        'spCenter: Mittenregel – streng, halftone_center (Standard: streng).',
+        'spNeutral: Neutrales Farbhex ohne # (Standard: 808080).',
+        'spFinder: Finder-Überschreibung – einfarbig, stilisiert (Standard: einfarbig).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Halbtonparameter',
+      paragraphs: ['Einstellungen für den Halbton-Mischmodus:'],
+      bullets: [
+        'htCell: Halbtonzellengröße – per_module oder nxn-Raster (Standard: per_module).',
+        'htDot: Punktform – Kreis, Quadrat, Linie (Standard: Kreis).',
+        'htCurve: Helligkeitskurve – linear, S-Kurve, Gamma (Standard: linear).',
+        'duo1: Duotone-Schattenfarbe hex ohne # (Standard: 000000).',
+        'duo2: Duotone-Hervorhebungsfarbe hex ohne # (Standard: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parameter des ECC-fähigen Modus',
+      paragraphs: ['Intelligente Overlay-Verteilung basierend auf der Fehlerkorrekturkapazität:'],
+      bullets: [
+        'eccAware: ECC-fähigen Modus 0/1 aktivieren (Standard: 0).',
+        'eccRisk: Risikobudget-Prozentsatz 0–100 (Standard: 50).',
+        'eccMap: Gewichtskarte – distance_to_finders, block_heatmap, empirical_scan_heatmap (Standard: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Rahmenparameter',
+      paragraphs: ['Dekorrahmenfassungen:'],
+      bullets: [
+        'Rahmen: Rahmenstil – keiner, abgerundeter_Rahmen, Aufkleber, Tag (Standard: keiner).',
+        'FrameText: Text, der im Frame angezeigt werden soll (URL-codiert).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Farbparameter pro Modul',
+      paragraphs: ['Farboptionen für einzelne Module:'],
+      bullets: [
+        'modColor: Farbmodus – solid, by_brightness, by_position, by_overlay, by_cluster (Standard: solid).',
+        'cGuard: Kontrastschutz 0/1 (Standard: 0).',
+        'minContrast: Minimales Kontrastverhältnis 1-21 (Standard: 4,5).',
+        'palette: Durch Kommas getrennte Hex-Farben für den Palettenmodus.',
+        'paletteMode: Palettenverteilung – Position, Helligkeit, diagonal, radial, zufällig, Zeile, Spalte (Standard: Position).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF-Overlay-Parameter',
+      paragraphs: ['Einstellungen für animierte GIF-Overlay-Bilder:'],
+      bullets: [
+        'ovType: Overlay-Typ – statisch, gif, apng, webp_anim, video (Standard: statisch).',
+        'ovFramePick: Frame-Auswahl – alle, every_n, max_frames, duration_limit (Standard: alle).',
+        'gifDelays: Original-GIF-Frameverzögerungen 0/1 verwenden (Standard: 1).',
+        'gifDispH: Handhabung der GIF-Entsorgung – respektieren, vereinfachen (Standard: respektieren).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Intensitätsgrenzen pro ECC',
+      paragraphs: ['Maximale Overlay-Intensität pro Fehlerkorrekturstufe:'],
+      bullets: [
+        'maxIntL: Maximale Intensität für ECC L 0–100 (Standard: 100).',
+        'maxIntM: Maximale Intensität für ECC M 0-100 (Standard: 100).',
+        'maxIntQ: Maximale Intensität für ECC Q 0-100 (Standard: 100).',
+        'maxIntH: Maximale Intensität für ECC H 0-100 (Standard: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA-Simulationsparameter (nur Client)',
+      paragraphs: [
+        'Diese Parameter werden aus Gründen der URL-Kompatibilität analysiert, funktionieren aber nur im Browser:',
+      ],
+      bullets: [
+        'qaContrast: Kontrastprüfung 0/1 aktivieren – erfordert interaktive Validierung.',
+        'qaBlur: Unschärfe in Pixeln simulieren – nur für interaktive Tests.',
+        'qaNoise: Geräuschpegel simulieren – nur für interaktive Tests.',
+        'qaHeatmap: Lesbarkeits-Heatmap 0/1 anzeigen – erfordert Canvas-Overlay-Benutzeroberfläche.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Nur-Client-Parameter',
+      paragraphs: [
+        'Die meisten API-Parameter werden serverseitig vollständig unterstützt. Mit [CLIENT-ONLY] gekennzeichnete Parameter werden auf URL-Kompatibilität analysiert, erfordern jedoch Browserfunktionen:',
+      ],
+      bullets: [
+        'Jitter: Modul-Jitter erfordert eine QR-Regeneration pro Frame mit Zufälligkeit.',
+        'autoReduce: Die automatische Reduzierung der Intensität erfordert iterative Scantests.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Die QA-Simulation erfordert eine interaktive Canvas-Validierung.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Zusätzliche Ausgabeparameter',
+      paragraphs: ['Erweiterte Ausgabe- und Exporteinstellungen:'],
+      bullets: [
+        'fname: Benutzerdefinierter Dateiname für Downloads (Standard: anqr-qrcode).',
+        'inclQz: Ruhezone in Ausgabedimensionen 0/1 einbeziehen (Standard: 1).',
+        'bgOver: Hintergrundfarbe hexadezimal ohne # überschreiben (überschreibt den bg-Parameter).',
+        'fmtExtra: Zusätzliche Formatausgabe – keine, eps, animierte_webp (Standard: keine). Hinweis: eps ist [TEILWEISE].',
+        'svgPrec: SVG-Formpräzision – Pixel, präzise (Standard: Pixel). [TEILWEISE] Die SVG-Ausgabe ist serverseitig eingeschränkt.',
+        'svgEmbed: Raster-Overlay in SVG 0/1 einbetten (Standard: 1). [TEILWEISE] Die SVG-Ausgabe ist serverseitig eingeschränkt.',
+        'modulePx: Modulpixelgröße (Standard: automatisch aus der Größe berechnet).',
+        'Grenze: Zusätzliche Grenzmodule außerhalb der Ruhezone (Standard: 0).',
+        'gestochen scharf: Aktivieren Sie die gestochen scharfe/pixelige Bildwiedergabe 0/1 (Standard: 1).',
+        'snap: Pixel-Snap-Modus – Boden, rund, Decke (Standard: Boden).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Mustererhaltungsparameter',
+      paragraphs: ['Steuern Sie, welche Strukturelemente vor Überlagerung geschützt sind:'],
+      bullets: [
+        'keepFinders: Finder-Muster 0/1 beibehalten (Standard: 1).',
+        'keepTiming: Zeitmuster 0/1 beibehalten (Standard: 0).',
+        'keepAlign: Ausrichtungsmuster 0/1 beibehalten (Standard: 0).',
+        'protectedFmt: Formatinfomodule 0/1 schützen (Standard: 0).',
+        'ProtectVer: Versionsinformationsmodule 0/1 schützen (Standard: 0).',
+      ],
+    },
     {
       heading: 'Beispiel Verwendung',
       paragraphs: [

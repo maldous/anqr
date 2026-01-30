@@ -970,6 +970,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, meta Desc: Pole metadat PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parametry oříznutí',
+      paragraphs: ['Možnosti oříznutí překryvného obrázku:'],
+      bullets: [
+        'cropEn: Povolí oříznutí překrytí 0/1 (výchozí: 0).',
+        'cropX: Střed oříznutí X jako zlomek 0-1 (výchozí: 0,5).',
+        'cropY: Střed oříznutí Y jako zlomek 0-1 (výchozí: 0,5).',
+        'cropSize: Velikost oříznutí jako zlomek obrázku 0-1 (výchozí: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parametry bezpečnostního zámku',
+      paragraphs: ['Určete, které QR prvky jsou chráněny před překryvnými úpravami:'],
+      bullets: [
+        'lockF: Uzamčení vyhledávacích vzorů 0/1 (výchozí: 1).',
+        'lockT: Uzamčení vzorů časování 0/1 (výchozí: 1).',
+        'lockA: Uzamknout vzory zarovnání 0/1 (výchozí: 1).',
+        'lockFmt: Informace o formátu zámku 0/1 (výchozí: 1).',
+        'lockV: Informace o verzi zámku 0/1 (výchozí: 1).',
+        'safeMode: Bezpečný režim - vypnutý, vyvážený, přísný (výchozí: vypnuto).',
+        'safeMinPx: Minimální velikost modulu v pixelech (výchozí: 2).',
+        'safeMinQz: Minimální moduly tiché zóny (výchozí: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametry automatického ladění',
+      paragraphs: ['Nastavení automatické optimalizace:'],
+      bullets: [
+        'autoVer: Automatický výběr QR verze 0/1 (výchozí: 1).',
+        'autoEcc: Automatický výběr ECC úroveň 0/1 (výchozí: 0) – pouze nápověda na straně serveru.',
+        'autoReduce: [POUZE KLIENT] Automatické snížení intenzity, dokud nebude možné skenovat – vyžaduje smyčku ověření skenování.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Další parametry animace',
+      paragraphs: ['Rozšířené ovládací prvky animace pro výstup GIF:'],
+      bullets: [
+        'loop: Animační smyčky nepřetržitě 0/1 (výchozí: 1).',
+        'bounce: Směr animace ping-pongu 0/1 (výchozí: 0).',
+        'obráceně: Přehrát animaci pozpátku 0/1 (výchozí: 0).',
+        'colorCycle: Povolí efekt cyklování barev 0/1 (výchozí: 0).',
+        'interp: Interpolace snímků - žádná, prolínání, morph (výchozí: žádná).',
+        'tempDither: Temporal dithering - off, blue_noise, flicker_safe (výchozí: vypnuto).',
+        'startF: Počáteční snímek animace (výchozí: 0).',
+        'maxF: Maximální počet snímků k vykreslení (výchozí: 0 = auto).',
+        'stepF: Interval kroku snímku (výchozí: 1).',
+        'jitter: [POUZE KLIENT] Jitter modulu v pixelech – vyžaduje regeneraci QR kódu na snímek.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parametry rozkladu',
+      paragraphs: ['Řídit algoritmy rozkladu pro zpracování překryvů:'],
+      bullets: [
+        'ditherKind: Algoritmus rozkladu - error_diffusion, order_bayer, blue_noise atd. (výchozí: order_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, sticki, burkes, sierra, atkinson (výchozí: floyd_steinberg).',
+        'ditherStrength: Intenzita ditheru 0-100 (výchozí: 50).',
+        'serpentýn: Hadí dithering 0/1 (výchozí: 0).',
+        'matice: Uspořádaná matice rozkladu - bayer2, bayer4, bayer8 (výchozí: bayer4).',
+        'bnTile: Velikost dlaždice modrého šumu (výchozí: 64).',
+        'bnSeed: Náhodný zdroj modrého šumu (výchozí: 0).',
+        'colorDither: Rozklad barev - žádný, per_channel, percepční (výchozí: žádné).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parametry subpixelů',
+      paragraphs: ['Nastavení režimu prolnutí subpixelů:'],
+      bullets: [
+        'spGrid: Velikost mřížky subpixelů – 2x2, 3x3, 4x4 (výchozí: 3x3).',
+        'spCenter: Center rule - strict, halftone_center (výchozí: strict).',
+        'spNeutral: Neutrální šestihranná barva bez # (výchozí: 808080).',
+        'spFinder: Přepsání Finderu – plné, stylizované (výchozí: plné).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parametry polotónů',
+      paragraphs: ['Nastavení režimu prolnutí polotónů:'],
+      bullets: [
+        'htCell: Velikost půltónové buňky - per_module nebo nxn grid (výchozí: per_module).',
+        'htDot: Tvar tečky - kruh, čtverec, čára (výchozí: kruh).',
+        'htCurve: Křivka jasu - lineární, s-křivka, gama (výchozí: lineární).',
+        'duo1: Šestnáctková barva stínu Duotone bez # (výchozí: 000000).',
+        'duo2: Duotone zvýrazněná barva hex bez # (výchozí: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parametry režimu ECC',
+      paragraphs: ['Inteligentní distribuce překrytí založená na kapacitě opravy chyb:'],
+      bullets: [
+        'eccAware: Povolí režim ECC 0/1 (výchozí: 0).',
+        'eccRisk: Procento rizikového rozpočtu 0-100 (výchozí: 50).',
+        'eccMap: Hmotnostní mapa - distance_to_finders, block_heatmap, empirical_scan_heatmap (výchozí: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parametry rámu',
+      paragraphs: ['Nastavení ozdobného rámu:'],
+      bullets: [
+        'rám: Styl rámečku – žádný, rounded_frame, nálepka, tag (výchozí: žádný).',
+        'frameText: Text, který se má zobrazit v rámci (zakódováno URL).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parametry barev podle modulu',
+      paragraphs: ['Možnosti barevného provedení jednotlivých modulů:'],
+      bullets: [
+        'modColor: Barevný režim - plný, by_jas, by_position, by_overlay, by_cluster (výchozí: solid).',
+        'cGuard: Ochrana kontrastu 0/1 (výchozí: 0).',
+        'minContrast: Minimální kontrastní poměr 1-21 (výchozí: 4,5).',
+        'paleta: Čárkami oddělené hexadecimální barvy pro režim palety.',
+        'paletteMode: Rozložení palety - pozice, jas, úhlopříčka, radiální, náhodné, řádek, sloupec (výchozí: pozice).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parametry překrytí GIF',
+      paragraphs: ['Nastavení pro animované překryvné obrázky GIF:'],
+      bullets: [
+        'ovType: Typ překrytí - statický, gif, apng, webp_anim, video (výchozí: statický).',
+        'ovFramePick: Výběr snímků - vše, každý_n, max_snímky, limit trvání (výchozí: vše).',
+        'gifDelays: Použít původní zpoždění snímků GIF 0/1 (výchozí: 1).',
+        'gifDispH: Manipulace s likvidací GIF - respektovat, zjednodušit (výchozí: respektovat).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Limity intenzity na ECC',
+      paragraphs: ['Maximální intenzita překrytí na úroveň opravy chyb:'],
+      bullets: [
+        'maxIntL: Maximální intenzita pro ECC L 0-100 (výchozí: 100).',
+        'maxIntM: Maximální intenzita pro ECC M 0-100 (výchozí: 100).',
+        'maxIntQ: Maximální intenzita pro ECC Q 0-100 (výchozí: 100).',
+        'maxIntH: Maximální intenzita pro ECC H 0-100 (výchozí: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parametry simulace kontroly kvality (pouze klient)',
+      paragraphs: [
+        'Tyto parametry jsou analyzovány kvůli kompatibilitě URL, ale fungují pouze v prohlížeči:',
+      ],
+      bullets: [
+        'qaContrast: Povolit kontrolu kontrastu 0/1 – vyžaduje interaktivní ověření.',
+        'qaBlur: Simulace rozostření v pixelech – pouze pro interaktivní testování.',
+        'qaNoise: Simulace hladiny hluku – pouze pro interaktivní testování.',
+        'qaHeatmap: Zobrazit teplotní mapu čitelnosti 0/1 – vyžaduje uživatelské rozhraní pro překrytí plátna.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parametry pouze pro klienta',
+      paragraphs: [
+        'Většina parametrů API je plně podporována na straně serveru. Parametry označené [POUZE KLIENT] jsou analyzovány z důvodu kompatibility URL, ale vyžadují funkce prohlížeče:',
+      ],
+      bullets: [
+        'Jitter: Jitter modulu vyžaduje regeneraci QR QR s náhodností.',
+        'autoReduce: Automatické snížení intenzity vyžaduje opakované testování skenování.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Simulace QA vyžaduje ověření interaktivního plátna.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Další výstupní parametry',
+      paragraphs: ['Rozšířené nastavení výstupu a exportu:'],
+      bullets: [
+        'fname: Vlastní název souboru pro stahování (výchozí: anqr-qrcode).',
+        'inclQz: Zahrnout tichou zónu do výstupních rozměrů 0/1 (výchozí: 1).',
+        'bgOver: Přepíše barvu pozadí hex bez # (přepíše parametr bg).',
+        'fmtExtra: Výstup dalšího formátu – žádný, eps, animovaný_webp (výchozí: žádný). Poznámka: eps je [PARTIAL].',
+        'svgPrec: Přesnost tvaru SVG - pixel, přesný (výchozí: pixel). [ČÁSTEČNÝ] Omezený výstup SVG na straně serveru.',
+        'svgEmbed: Vloží rastrové překrytí do SVG 0/1 (výchozí: 1). [ČÁSTEČNÝ] Omezený výstup SVG na straně serveru.',
+        'modulePx: Velikost modulu v pixelech (výchozí: automaticky počítáno z velikosti).',
+        'border: Extra hraniční moduly mimo klidovou zónu (výchozí: 0).',
+        'crisp: Povolí vykreslování ostrého/pixelovaného obrazu 0/1 (výchozí: 1).',
+        'snap: Režim Pixel snap - podlaha, kulatý, strop (výchozí: podlaha).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametry zachování vzoru',
+      paragraphs: ['Určete, které konstrukční prvky jsou chráněny před překrytím:'],
+      bullets: [
+        'keepFinders: Zachovat vyhledávací vzory 0/1 (výchozí: 1).',
+        'keepTiming: Zachová vzory časování 0/1 (výchozí: 0).',
+        'keepAlign: Zachová vzory zarovnání 0/1 (výchozí: 0).',
+        'protectFmt: Ochrana informačních modulů formátu 0/1 (výchozí: 0).',
+        'protectVer: Ochrana informačních modulů verze 0/1 (výchozí: 0).',
+      ],
+    },
     {
       heading: 'Příklad použití',
       paragraphs: [

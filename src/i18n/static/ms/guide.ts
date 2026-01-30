@@ -972,6 +972,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, meta Data metadata PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parameter Tanaman',
+      paragraphs: ['Pilihan pemangkasan imej tindanan:'],
+      bullets: [
+        'cropEn: Dayakan pemangkasan tindanan 0/1 (lalai: 0).',
+        'cropX: Pusat tanaman X sebagai pecahan 0-1 (lalai: 0.5).',
+        'cropY: Pusat tanaman Y sebagai pecahan 0-1 (lalai: 0.5).',
+        'cropSize: Saiz pangkas sebagai pecahan imej 0-1 (lalai: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parameter Kunci Keselamatan',
+      paragraphs: ['Kawal elemen QR yang dilindungi daripada pengubahsuaian tindanan:'],
+      bullets: [
+        'lockF: Corak pencari kunci 0/1 (lalai: 1).',
+        'lockT: Corak pemasaan kunci 0/1 (lalai: 1).',
+        'lockA: Corak penjajaran kunci 0/1 (lalai: 1).',
+        'lockFmt: Maklumat format kunci 0/1 (lalai: 1).',
+        'lockV: Kunci maklumat versi 0/1 (lalai: 1).',
+        'safeMode: Mod keselamatan - mati, seimbang, ketat (lalai: mati).',
+        'safeMinPx: Saiz modul minimum dalam piksel (lalai: 2).',
+        'safeMinQz: Modul zon senyap minimum (lalai: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parameter penalaan automatik',
+      paragraphs: ['Tetapan pengoptimuman automatik:'],
+      bullets: [
+        'autoVer: Autopilih QR versi 0/1 (lalai: 1).',
+        'autoEcc: Auto-pilih tahap ECC 0/1 (lalai: 0) - pembayang sebelah pelayan sahaja.',
+        'autoReduce: [CLIENT-ONLY] Auto-kurangkan keamatan sehingga boleh diimbas - memerlukan gelung pengesahan imbasan.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Parameter Animasi Tambahan',
+      paragraphs: ['Kawalan animasi lanjutan untuk output GIF:'],
+      bullets: [
+        'gelung: Gelung animasi secara berterusan 0/1 (lalai: 1).',
+        'lantunan: Arah animasi ping-pong 0/1 (lalai: 0).',
+        'terbalik: Mainkan animasi secara terbalik 0/1 (lalai: 0).',
+        'colorCycle: Dayakan kesan kitaran warna 0/1 (lalai: 0).',
+        'interp: Interpolasi bingkai - tiada, luntur silang, morf (lalai: tiada).',
+        'tempDither: Dithering sementara - dimatikan, blue_noise, flicker_safe (lalai: dimatikan).',
+        'startF: Bingkai permulaan animasi (lalai: 0).',
+        'maxF: Bingkai maksimum untuk dipaparkan (lalai: 0 = auto).',
+        'stepF: Selang langkah bingkai (lalai: 1).',
+        'jitter: [CLIENT-ONLY] Jitter modul dalam piksel - memerlukan penjanaan semula QR setiap bingkai.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parameter Dithering',
+      paragraphs: ['Kawal algoritma dithering untuk pemprosesan tindanan:'],
+      bullets: [
+        'ditherKind: Algoritma dither - error_diffusion, ordered_bayer, blue_noise, dll (lalai: ordered_bayer).',
+        'diffusionKernel: Ralat inti resapan - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (lalai: floyd_steinberg).',
+        'ditherStrength: Keamatan dither 0-100 (lalai: 50).',
+        'serpentine: Serpentine dithering 0/1 (lalai: 0).',
+        'matriks: Matriks dither tersusun - bayer2, bayer4, bayer8 (lalai: bayer4).',
+        'bnTile: Saiz jubin hingar biru (lalai: 64).',
+        'bnSeed: Benih rawak hingar biru (lalai: 0).',
+        'colorDither: Warna dithering - tiada, per_channel, persepsi (lalai: tiada).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parameter Subpiksel',
+      paragraphs: ['Tetapan untuk mod campuran subpiksel:'],
+      bullets: [
+        'spGrid: Saiz grid subpiksel - 2x2, 3x3, 4x4 (lalai: 3x3).',
+        'spCenter: Peraturan pusat - ketat, halftone_center (lalai: ketat).',
+        'spNeutral: Hex warna neutral tanpa # (lalai: 808080).',
+        'spFinder: Pencari menimpa - pepejal, digayakan (lalai: pepejal).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parameter Halftone',
+      paragraphs: ['Tetapan untuk mod campuran halftone:'],
+      bullets: [
+        'htCell: Saiz sel Halftone - per_module atau grid nxn (lalai: per_module).',
+        'htDot: Bentuk titik - bulatan, segi empat sama, garis (lalai: bulatan).',
+        'htCurve: Lengkung kecerahan - linear, s-curve, gamma (lalai: linear).',
+        'duo1: Hex warna bayang duotone tanpa # (lalai: 000000).',
+        'duo2: Hex warna serlahkan Duotone tanpa # (lalai: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parameter Mod Sedar ECC',
+      paragraphs: ['Pengagihan tindanan pintar berdasarkan kapasiti pembetulan ralat:'],
+      bullets: [
+        'eccAware: Dayakan mod ECC-aware 0/1 (lalai: 0).',
+        'eccRisk: Peratusan belanjawan risiko 0-100 (lalai: 50).',
+        'eccMap: Peta berat - distance_to_finders, block_heatmap, empirical_scan_heatmap (lalai: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parameter Bingkai',
+      paragraphs: ['Tetapan bingkai hiasan:'],
+      bullets: [
+        'bingkai: Gaya bingkai - tiada, bingkai_bulat, pelekat, tag (lalai: tiada).',
+        'frameText: Teks untuk dipaparkan dalam bingkai (URL dikodkan).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parameter Warna Per-Modul',
+      paragraphs: ['Pilihan pewarna modul individu:'],
+      bullets: [
+        'modColor: Mod warna - pepejal, by_brightness, by_position, by_overlay, by_cluster (lalai: solid).',
+        'cGuard: Pengawal kontras 0/1 (lalai: 0).',
+        'minContrast: Nisbah kontras minimum 1-21 (lalai: 4.5).',
+        'palet: Warna heks yang dipisahkan koma untuk mod palet.',
+        'paletteMode: Taburan palet - kedudukan, kecerahan, pepenjuru, jejari, rawak, baris, lajur (lalai: kedudukan).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parameter Tindanan GIF',
+      paragraphs: ['Tetapan untuk imej tindanan GIF animasi:'],
+      bullets: [
+        'ovType: Jenis tindanan - statik, gif, apng, webp_anim, video (lalai: statik).',
+        'ovFramePick: Pemilihan bingkai - semua, every_n, max_frames, duration_limit (lalai: semua).',
+        'gifDelays: Gunakan kelewatan bingkai GIF asal 0/1 (lalai: 1).',
+        'gifDispH: pengendalian pelupusan GIF - hormati, mudahkan (lalai: hormat).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Had Intensiti Per-ECC',
+      paragraphs: ['Keamatan tindanan maksimum setiap tahap pembetulan ralat:'],
+      bullets: [
+        'maxIntL: Keamatan maksimum untuk ECC L 0-100 (lalai: 100).',
+        'maxIntM: Keamatan maksimum untuk ECC M 0-100 (lalai: 100).',
+        'maxIntQ: Keamatan maksimum untuk ECC Q 0-100 (lalai: 100).',
+        'maxIntH: Keamatan maksimum untuk ECC H 0-100 (lalai: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parameter Simulasi QA (Klien Sahaja)',
+      paragraphs: [
+        'Parameter ini dihuraikan untuk keserasian URL tetapi hanya berfungsi dalam penyemak imbas:',
+      ],
+      bullets: [
+        'qaContrast: Dayakan semakan kontras 0/1 - memerlukan pengesahan interaktif.',
+        'qaBlur: Simulasikan kabur dalam piksel - untuk ujian interaktif sahaja.',
+        'qaNoise: Simulasikan tahap hingar - untuk ujian interaktif sahaja.',
+        'qaHeatmap: Tunjukkan peta haba kebolehbacaan 0/1 - memerlukan UI tindanan kanvas.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parameter Pelanggan Sahaja',
+      paragraphs: [
+        'Kebanyakan parameter API disokong sepenuhnya bahagian pelayan. Parameter yang ditanda [CLIENT-ONLY] dihuraikan untuk keserasian URL tetapi memerlukan ciri penyemak imbas:',
+      ],
+      bullets: [
+        'jitter: Jitter modul memerlukan penjanaan semula QR setiap bingkai dengan rawak.',
+        'autoReduce: Auto-mengurangkan keamatan memerlukan ujian imbasan berulang.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Simulasi QA memerlukan pengesahan kanvas interaktif.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Parameter Output Tambahan',
+      paragraphs: ['Tetapan output dan eksport lanjutan:'],
+      bullets: [
+        'fname: Nama fail tersuai untuk muat turun (lalai: anqr-qrcode).',
+        'inclQz: Sertakan zon senyap dalam dimensi output 0/1 (lalai: 1).',
+        'bgOver: Warna latar belakang mengatasi hex tanpa # (mengatasi parameter bg).',
+        'fmtExtra: Output format tambahan - tiada, eps, animated_webp (lalai: tiada). Nota: eps ialah [PARTIAL].',
+        'svgPrec: ketepatan bentuk SVG - piksel, tepat (lalai: piksel). [PARTIAL] Output SVG di bahagian pelayan terhad.',
+        'svgEmbed: Benamkan tindanan raster dalam SVG 0/1 (lalai: 1). [PARTIAL] Output SVG di bahagian pelayan terhad.',
+        'modulePx: Saiz piksel modul (lalai: dikira secara automatik daripada saiz).',
+        'sempadan: Modul sempadan tambahan di luar zon senyap (lalai: 0).',
+        'crisp: Dayakan rendering imej crisp/pixel 0/1 (lalai: 1).',
+        'snap: Mod snap piksel - lantai, bulat, siling (lalai: lantai).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parameter Pemeliharaan Corak',
+      paragraphs: ['Kawal elemen struktur mana yang dilindungi daripada tindanan:'],
+      bullets: [
+        'keepFinders: Kekalkan corak pencari 0/1 (lalai: 1).',
+        'keepTiming: Kekalkan corak pemasaan 0/1 (lalai: 0).',
+        'keepAlign: Kekalkan corak penjajaran 0/1 (lalai: 0).',
+        'protectFmt: Lindungi modul maklumat format 0/1 (lalai: 0).',
+        'protectVer: Lindungi modul maklumat versi 0/1 (lalai: 0).',
+      ],
+    },
     {
       heading: 'Contoh Contoh Contoh Penggunaan',
       paragraphs: [

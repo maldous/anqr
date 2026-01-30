@@ -976,6 +976,208 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: campos de metadados PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parâmetros de corte',
+      paragraphs: ['Opções de corte de imagem de sobreposição:'],
+      bullets: [
+        'cropEn: Ativa o corte de sobreposição 0/1 (padrão: 0).',
+        'cropX: Corte o centro X como fração 0-1 (padrão: 0,5).',
+        'cropY: Corte o centro Y como fração 0-1 (padrão: 0,5).',
+        'cropSize: Tamanho do corte como fração da imagem 0-1 (padrão: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parâmetros de bloqueio de segurança',
+      paragraphs: [
+        'Controle quais elementos QR estão protegidos contra modificação de sobreposição:',
+      ],
+      bullets: [
+        'lockF: Padrões de localização de bloqueio 0/1 (padrão: 1).',
+        'lockT: Bloqueia padrões de temporização 0/1 (padrão: 1).',
+        'lockA: Bloqueia padrões de alinhamento 0/1 (padrão: 1).',
+        'lockFmt: Bloqueia informações de formato 0/1 (padrão: 1).',
+        'lockV: Bloqueia informações da versão 0/1 (padrão: 1).',
+        'safeMode: Modo de segurança - desligado, balanceado, estrito (padrão: desligado).',
+        'safeMinPx: Tamanho mínimo do módulo em pixels (padrão: 2).',
+        'safeMinQz: Módulos mínimos de zona silenciosa (padrão: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parâmetros de autoajuste',
+      paragraphs: ['Configurações de otimização automática:'],
+      bullets: [
+        'autoVer: seleção automática do QR versão 0/1 (padrão: 1).',
+        'autoEcc: seleção automática de ECC nível 0/1 (padrão: 0) - apenas dica do lado do servidor.',
+        'autoReduce: [SOMENTE CLIENTE] Reduz automaticamente a intensidade até que possa ser escaneada - requer loop de validação de varredura.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Parâmetros Adicionais de Animação',
+      paragraphs: ['Controles de animação estendidos para saída GIF:'],
+      bullets: [
+        'loop: a animação faz um loop contínuo de 0/1 (padrão: 1).',
+        'salto: direção da animação de pingue-pongue 0/1 (padrão: 0).',
+        'reverso: reproduz animação em reverso 0/1 (padrão: 0).',
+        'colorCycle: Habilita o efeito de ciclo de cores 0/1 (padrão: 0).',
+        'interp: Interpolação de quadros - nenhum, crossfade, morph (padrão: nenhum).',
+        'tempDither: Pontilhamento temporal - desligado, blue_noise, flicker_safe (padrão: desligado).',
+        'startF: Quadro inicial da animação (padrão: 0).',
+        'maxF: Máximo de quadros a serem renderizados (padrão: 0 = automático).',
+        'stepF: Intervalo de passo do quadro (padrão: 1).',
+        'jitter: [SOMENTE CLIENTE] Jitter do módulo em pixels - requer regeneração QR por quadro.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parâmetros de pontilhamento',
+      paragraphs: ['Controle algoritmos de pontilhamento para processamento de sobreposição:'],
+      bullets: [
+        'ditherKind: Algoritmo de pontilhamento - error_diffusion, ordenado_bayer, blue_noise, etc (padrão: ordenado_bayer).',
+        'diffusionKernel: Erro no kernel de difusão - floyd_steinberg, jarvis_judice_ninke, sticki, burkes, sierra, atkinson (padrão: floyd_steinberg).',
+        'ditherStrength: Intensidade de pontilhamento 0-100 (padrão: 50).',
+        'serpentina: pontilhamento serpentino 0/1 (padrão: 0).',
+        'matriz: Matriz de pontilhamento ordenada - bayer2, bayer4, bayer8 (padrão: bayer4).',
+        'bnTile: Tamanho do bloco de ruído azul (padrão: 64).',
+        'bnSeed: Semente aleatória de ruído azul (padrão: 0).',
+        'colorDither: pontilhamento de cores - nenhum, por canal, perceptivo (padrão: nenhum).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parâmetros de subpixel',
+      paragraphs: ['Configurações para modo de mesclagem de subpixel:'],
+      bullets: [
+        'spGrid: Tamanho da grade de subpixel - 2x2, 3x3, 4x4 (padrão: 3x3).',
+        'spCenter: Regra central - estrito, halftone_center (padrão: estrito).',
+        'spNeutral: hexadecimal de cor neutra sem # (padrão: 808080).',
+        'spFinder: Substituição do Finder - sólido, estilizado (padrão: sólido).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parâmetros de meio-tom',
+      paragraphs: ['Configurações para modo de mesclagem de meio-tom:'],
+      bullets: [
+        'htCell: tamanho da célula de meio-tom - grade per_module ou nxn (padrão: per_module).',
+        'htDot: Forma de ponto - círculo, quadrado, linha (padrão: círculo).',
+        'htCurve: Curva de brilho - linear, curva S, gama (padrão: linear).',
+        'duo1: cor de sombra duotônica hexadecimal sem # (padrão: 000000).',
+        'duo2: cor de destaque Duotone hexadecimal sem # (padrão: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parâmetros do modo ECC-Aware',
+      paragraphs: [
+        'Distribuição inteligente de sobreposição baseada na capacidade de correção de erros:',
+      ],
+      bullets: [
+        'eccAware: Ativa o modo compatível com ECC 0/1 (padrão: 0).',
+        'eccRisk: Porcentagem do orçamento de risco 0-100 (padrão: 50).',
+        'eccMap: Mapa de pesos - distance_to_finders, block_heatmap, empiric_scan_heatmap (padrão: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parâmetros de quadro',
+      paragraphs: ['Configurações de moldura decorativa:'],
+      bullets: [
+        'frame: Estilo do quadro - nenhum, quadro_arredondado, adesivo, tag (padrão: nenhum).',
+        'frameText: Texto a ser exibido no quadro (URL codificado).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parâmetros de cores por módulo',
+      paragraphs: ['Opções de coloração de módulos individuais:'],
+      bullets: [
+        'modColor: Modo de cor - sólido, by_brightness, by_position, by_overlay, by_cluster (padrão: sólido).',
+        'cGuard: Proteção de contraste 0/1 (padrão: 0).',
+        'minContrast: Taxa de contraste mínima 1-21 (padrão: 4,5).',
+        'paleta: Cores hexadecimais separadas por vírgula para o modo paleta.',
+        'paletaMode: Distribuição da paleta - posição, brilho, diagonal, radial, aleatório, linha, coluna (padrão: posição).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parâmetros de sobreposição de GIF',
+      paragraphs: ['Configurações para imagens de sobreposição de GIF animado:'],
+      bullets: [
+        'ovType: Tipo de sobreposição - estático, gif, apng, webp_anim, vídeo (padrão: estático).',
+        'ovFramePick: Seleção de quadros - todos, todos_n, max_frames, duração_limit (padrão: todos).',
+        'gifDelays: Use atrasos de quadro GIF originais 0/1 (padrão: 1).',
+        'gifDispH: Tratamento de descarte de GIF - respeite, simplifique (padrão: respeito).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Limites de intensidade por ECC',
+      paragraphs: ['Intensidade máxima de sobreposição por nível de correção de erros:'],
+      bullets: [
+        'maxIntL: Intensidade máxima para ECC L 0-100 (padrão: 100).',
+        'maxIntM: Intensidade máxima para ECC M 0-100 (padrão: 100).',
+        'maxIntQ: Intensidade máxima para ECC Q 0-100 (padrão: 100).',
+        'maxIntH: Intensidade máxima para ECC H 0-100 (padrão: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parâmetros de simulação de controle de qualidade (somente cliente)',
+      paragraphs: [
+        'Esses parâmetros são analisados quanto à compatibilidade de URL, mas funcionam apenas no navegador:',
+      ],
+      bullets: [
+        'qaContrast: Habilitar verificação de contraste 0/1 - requer validação interativa.',
+        'qaBlur: Simula desfoque em pixels - apenas para testes interativos.',
+        'qaNoise: Simula o nível de ruído - apenas para testes interativos.',
+        'qaHeatmap: Mostrar mapa de calor de legibilidade 0/1 - requer UI de sobreposição de tela.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parâmetros somente cliente',
+      paragraphs: [
+        'A maioria dos parâmetros da API tem suporte total no servidor. Os parâmetros marcados como [SOMENTE CLIENTE] são analisados quanto à compatibilidade de URL, mas exigem recursos do navegador:',
+      ],
+      bullets: [
+        'jitter: O jitter do módulo requer regeneração QR por quadro com aleatoriedade.',
+        'autoReduce: a intensidade de redução automática requer testes de varredura iterativos.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: a simulação de controle de qualidade requer validação de tela interativa.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Parâmetros de saída adicionais',
+      paragraphs: ['Configurações estendidas de saída e exportação:'],
+      bullets: [
+        'fname: nome de arquivo personalizado para downloads (padrão: anqr-qrcode).',
+        'inclQz: Inclui zona silenciosa nas dimensões de saída 0/1 (padrão: 1).',
+        'bgOver: substituição da cor de fundo hexadecimal sem # (substitui o parâmetro bg).',
+        'fmtExtra: Formato de saída adicional - nenhum, eps, animado_webp (padrão: nenhum). Nota: eps é [PARCIAL].',
+        'svgPrec: precisão da forma SVG - pixel, preciso (padrão: pixel). [PARCIAL] Saída SVG limitada no lado do servidor.',
+        'svgEmbed: Incorpora sobreposição raster em SVG 0/1 (padrão: 1). [PARCIAL] Saída SVG limitada no lado do servidor.',
+        'modulePx: Tamanho do pixel do módulo (padrão: calculado automaticamente a partir do tamanho).',
+        'border: Módulos de borda extras além da zona tranquila (padrão: 0).',
+        'nítido: Ativa a renderização de imagem nítida/pixelada 0/1 (padrão: 1).',
+        'snap: Modo de snap de pixel - piso, redondo, teto (padrão: piso).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parâmetros de preservação de padrão',
+      paragraphs: ['Controle quais elementos estruturais estão protegidos contra sobreposição:'],
+      bullets: [
+        'keepFinders: preserva os padrões do localizador 0/1 (padrão: 1).',
+        'keepTiming: preserva os padrões de tempo 0/1 (padrão: 0).',
+        'keepAlign: Preserva padrões de alinhamento 0/1 (padrão: 0).',
+        'ProtectFmt: Protege módulos de informações de formato 0/1 (padrão: 0).',
+        'ProtectVer: Protege os módulos de informações da versão 0/1 (padrão: 0).',
+      ],
+    },
     {
       heading: 'Exemplo de uso',
       paragraphs: [

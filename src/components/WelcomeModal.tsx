@@ -12,7 +12,7 @@ import {
   Image,
   Palette,
   QrCode,
-  Settings,
+  ScanSearch,
   Share2,
   Sparkles,
   X,
@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { languages } from '@/i18n';
 
 // Increment this version whenever you want to show the modal again to all users
-const WELCOME_VERSION = '2026.01.11';
+const WELCOME_VERSION = '2026.01.30';
 const STORAGE_KEY = 'anqr-welcome-seen';
 
 interface WelcomeModalProps {
@@ -79,15 +79,25 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
 
   const features = [
     { icon: QrCode, title: t('welcome.feature1Title'), desc: t('welcome.feature1Desc') },
-    { icon: Image, title: t('welcome.feature2Title'), desc: t('welcome.feature2Desc') },
-    { icon: Palette, title: t('welcome.feature3Title'), desc: t('welcome.feature3Desc') },
-    { icon: Zap, title: t('welcome.feature4Title'), desc: t('welcome.feature4Desc') },
-    { icon: Settings, title: t('welcome.feature5Title'), desc: t('welcome.feature5Desc') },
+    { icon: ScanSearch, title: t('welcome.feature2Title'), desc: t('welcome.feature2Desc') },
+    { icon: Image, title: t('welcome.feature3Title'), desc: t('welcome.feature3Desc') },
+    { icon: Palette, title: t('welcome.feature4Title'), desc: t('welcome.feature4Desc') },
+    { icon: Zap, title: t('welcome.feature5Title'), desc: t('welcome.feature5Desc') },
     { icon: Share2, title: t('welcome.feature6Title'), desc: t('welcome.feature6Desc') },
   ];
 
   // Grouped updates by date - newest first
   const updateGroups = [
+    {
+      date: t('welcome.updateDate3'),
+      items: [
+        t('welcome.update12'),
+        t('welcome.update13'),
+        t('welcome.update14'),
+        t('welcome.update15'),
+        t('welcome.update16'),
+      ],
+    },
     {
       date: t('welcome.updateDate2'),
       items: [
@@ -97,6 +107,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
         t('welcome.update8'),
         t('welcome.update9'),
         t('welcome.update10'),
+        t('welcome.update11'),
       ],
     },
     {

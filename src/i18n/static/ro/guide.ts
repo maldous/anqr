@@ -980,6 +980,206 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: Câmpuri de metadate PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parametrii de decupare',
+      paragraphs: ['Opțiuni de decupare a imaginii de suprapunere:'],
+      bullets: [
+        'cropEn: Activați tăierea suprapusă 0/1 (implicit: 0).',
+        'cropX: Decupați centrul X ca fracție 0-1 (implicit: 0,5).',
+        'cropY: Decupați centrul Y ca fracție 0-1 (implicit: 0,5).',
+        'cropSize: Decupați dimensiunea ca fracțiune a imaginii 0-1 (implicit: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parametrii de blocare de siguranță',
+      paragraphs: ['Controlați ce elemente QR sunt protejate de modificarea suprapunerii:'],
+      bullets: [
+        'lockF: Blocați modelele de căutare 0/1 (implicit: 1).',
+        'lockT: Blocare tipare de sincronizare 0/1 (implicit: 1).',
+        'lockA: Blocați modelele de aliniere 0/1 (implicit: 1).',
+        'lockFmt: Informații format blocare 0/1 (implicit: 1).',
+        'lockV: Blocare informații despre versiunea 0/1 (implicit: 1).',
+        'safeMode: Modul de siguranță - dezactivat, echilibrat, strict (implicit: dezactivat).',
+        'safeMinPx: Dimensiunea minimă a modulului în pixeli (implicit: 2).',
+        'safeMinQz: Module minime pentru zone silențioase (implicit: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametrii de reglare automată',
+      paragraphs: ['Setări de optimizare automată:'],
+      bullets: [
+        'autoVer: Alegeți automat versiunea QR 0/1 (implicit: 1).',
+        'autoEcc: Alegerea automată a nivelului ECC 0/1 (implicit: 0) - doar indiciu pe partea serverului.',
+        'autoReduce: [NUMAI CLIENT] Reducere automată a intensității până la scanare - necesită bucla de validare a scanării.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Parametri suplimentari de animație',
+      paragraphs: ['Controale extinse pentru animație pentru ieșirea GIF:'],
+      bullets: [
+        'buclă: Bucle de animație continuu 0/1 (implicit: 1).',
+        'bounce: direcția de animație de ping-pong 0/1 (implicit: 0).',
+        'invers: Redați animația invers 0/1 (implicit: 0).',
+        'colorCycle: Activați efectul de ciclizare a culorilor 0/1 (implicit: 0).',
+        'interp: Interpolare cadru - niciunul, crossfade, morph (implicit: niciunul).',
+        'tempDither: Dithering temporal - off, blue_noise, flicker_safe (implicit: off).',
+        'startF: Cadrul de pornire al animației (implicit: 0).',
+        'maxF: Numărul maxim de cadre de randat (implicit: 0 = automat).',
+        'stepF: interval de pas de cadru (implicit: 1).',
+        'jitter: [NUMAI CLIENT] Trecerea modulului în pixeli - necesită regenerare QR per cadru.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parametrii de dithering',
+      paragraphs: ['Algoritmi de dithering de control pentru procesarea suprapunerii:'],
+      bullets: [
+        'ditherKind: algoritmul Dither - error_diffusion, ordered_bayer, blue_noise, etc (implicit: ordered_bayer).',
+        'diffusionKernel: Eroare diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (implicit: floyd_steinberg).',
+        'ditherStrength: intensitate dither 0-100 (implicit: 50).',
+        'serpentine: Serpentine dithering 0/1 (implicit: 0).',
+        'matrice: Matrice dither ordonată - bayer2, bayer4, bayer8 (implicit: bayer4).',
+        'bnTile: Dimensiunea plăcii de zgomot albastru (implicit: 64).',
+        'bnSeed: semințe aleatoare de zgomot albastru (implicit: 0).',
+        'colorDither: Dithering de culoare - niciunul, per_canal, perceptiv (implicit: niciunul).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parametrii subpixeli',
+      paragraphs: ['Setări pentru modul de amestecare subpixeli:'],
+      bullets: [
+        'spGrid: dimensiunea grilei subpixeli - 2x2, 3x3, 4x4 (implicit: 3x3).',
+        'spCenter: Regula centrală - strict, halftone_center (implicit: strict).',
+        'spNeutral: Hex de culoare neutră fără # (implicit: 808080).',
+        'spFinder: Override Finder - solid, stilizat (implicit: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parametrii de semiton',
+      paragraphs: ['Setări pentru modul de amestecare semitonuri:'],
+      bullets: [
+        'htCell: dimensiunea celulei semiton - per_module sau grila nxn (implicit: per_module).',
+        'htDot: Forma punct - cerc, pătrat, linie (implicit: cerc).',
+        'htCurve: Curba de luminozitate - liniară, curbă s, gamma (implicit: liniar).',
+        'duo1: Duotone umbră hexagonală fără # (implicit: 000000).',
+        'duo2: hexadecimal de culoare de evidențiere biton fără # (implicit: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parametrii modului ECC-Aware',
+      paragraphs: [
+        'Distribuție inteligentă de suprapunere bazată pe capacitatea de corectare a erorilor:',
+      ],
+      bullets: [
+        'eccAware: Activați modul ECC-aware 0/1 (implicit: 0).',
+        'eccRisk: Procentaj buget de risc 0-100 (implicit: 50).',
+        'eccMap: Hartă de greutate - distance_to_finders, block_heatmap, empirical_scan_heatmap (implicit: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parametrii cadru',
+      paragraphs: ['Setări de cadru decorativ:'],
+      bullets: [
+        'cadru: Stil cadru - niciunul, cadru_rotunjit, autocolant, etichetă (implicit: niciunul).',
+        'frameText: text de afișat în cadru (URL codificat).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parametrii de culoare per modul',
+      paragraphs: ['Opțiuni de colorare a modulelor individuale:'],
+      bullets: [
+        'modColor: Mod de culoare - solid, by_brightness, by_position, by_overlay, by_cluster (implicit: solid).',
+        'cGuard: Protecție de contrast 0/1 (implicit: 0).',
+        'minContrast: Raport minim de contrast 1-21 (implicit: 4,5).',
+        'paletă: culori hexagonale separate prin virgulă pentru modul paletă.',
+        'paletteMode: Distribuția paletei - poziție, luminozitate, diagonală, radială, aleatorie, rând, coloană (implicit: poziție).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parametrii de suprapunere GIF',
+      paragraphs: ['Setări pentru imaginile animate GIF suprapuse:'],
+      bullets: [
+        'ovType: tip de suprapunere - static, gif, apng, webp_anim, video (implicit: static).',
+        'ovFramePick: Selectare cadre - all, every_n, max_frames, duration_limit (implicit: toate).',
+        'gifDelays: Folosiți întârzierile originale ale cadrelor GIF 0/1 (implicit: 1).',
+        'gifDispH: Manipularea eliminarea GIF - respect, simplifica (implicit: respect).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Limite de intensitate per-ECC',
+      paragraphs: ['Intensitatea maximă de suprapunere pe nivel de corectare a erorilor:'],
+      bullets: [
+        'maxIntL: Intensitate maximă pentru ECC L 0-100 (implicit: 100).',
+        'maxIntM: Intensitate maximă pentru ECC M 0-100 (implicit: 100).',
+        'maxIntQ: Intensitate maximă pentru ECC Q 0-100 (implicit: 100).',
+        'maxIntH: Intensitate maximă pentru ECC H 0-100 (implicit: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parametri de simulare QA (doar pentru client)',
+      paragraphs: [
+        'Acești parametri sunt analizați pentru compatibilitatea URL-urilor, dar funcționează numai în browser:',
+      ],
+      bullets: [
+        'qaContrast: Activați verificarea contrastului 0/1 - necesită validare interactivă.',
+        'qaBlur: Simulați estomparea în pixeli - numai pentru testare interactivă.',
+        'qaNoise: Simulați nivelul de zgomot - numai pentru testare interactivă.',
+        'qaHeatmap: Afișați harta termică de lizibilitate 0/1 - necesită interfața de utilizare cu suprapunere canvas.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parametri numai pentru client',
+      paragraphs: [
+        'Majoritatea parametrilor API sunt pe deplin acceptați pe partea serverului. Parametrii marcați [NUMAI CLIENT] sunt analizați pentru compatibilitatea cu adresele URL, dar necesită funcții de browser:',
+      ],
+      bullets: [
+        'jitter: fluctuația modulului necesită regenerarea QR pe ​​cadru cu caracter aleatoriu.',
+        'autoReduce: intensitatea de reducere automată necesită testare de scanare iterativă.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: simularea QA necesită validare interactivă a pânzei.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Parametri suplimentari de ieșire',
+      paragraphs: ['Setări extinse de ieșire și export:'],
+      bullets: [
+        'fname: nume de fișier personalizat pentru descărcări (implicit: anqr-qrcode).',
+        'inclQz: Includeți zona de liniște în dimensiunile de ieșire 0/1 (implicit: 1).',
+        'bgOver: Culoarea de fundal înlocuiește hexadecimal fără # (înlocuiește parametrul bg).',
+        'fmtExtra: Format suplimentar de ieșire - none, eps, animated_webp (implicit: none). Notă: eps este [PARTIAL].',
+        'svgPrec: Precizia formei SVG - pixel, precis (implicit: pixel). [PARTIAL] Ieșire SVG limitată pe partea serverului.',
+        'svgEmbed: Încorporați suprapunerea raster în SVG 0/1 (implicit: 1). [PARTIAL] Ieșire SVG limitată pe partea serverului.',
+        'modulePx: dimensiunea pixelilor modulului (implicit: calculat automat din dimensiune).',
+        'border: module de margine suplimentare dincolo de zona liniştită (implicit: 0).',
+        'clar: Activați redarea imaginii clare/pixelate 0/1 (implicit: 1).',
+        'snap: modul Pixel snap - podea, rotund, tavan (implicit: podea).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametrii de conservare a modelului',
+      paragraphs: ['Controlați ce elemente structurale sunt protejate de suprapunere:'],
+      bullets: [
+        'keepFinders: Păstrați modelele de căutare 0/1 (implicit: 1).',
+        'keepTiming: Păstrați modelele de sincronizare 0/1 (implicit: 0).',
+        'keepAlign: Păstrați modelele de aliniere 0/1 (implicit: 0).',
+        'protectFmt: Protejați modulele de informații de format 0/1 (implicit: 0).',
+        'protectVer: Protejează modulele de informații despre versiunea 0/1 (implicit: 0).',
+      ],
+    },
     {
       heading: 'Exemplu de utilizare',
       paragraphs: [

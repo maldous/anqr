@@ -970,6 +970,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAutor, metaCopy, meta Desc: pola metadanych PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parametry upraw',
+      paragraphs: ['Opcje przycinania obrazu nakładki:'],
+      bullets: [
+        'uprawEn: Włącz przycinanie nakładki 0/1 (domyślnie: 0).',
+        'uprawX: Środek kadrowania X jako ułamek 0-1 (domyślnie: 0,5).',
+        'uprawY: Środek kadrowania Y jako ułamek 0-1 (domyślnie: 0,5).',
+        'CropSize: Rozmiar przycięcia jako ułamek obrazu 0-1 (domyślnie: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parametry blokady bezpieczeństwa',
+      paragraphs: ['Kontroluj, które elementy QR są chronione przed modyfikacją nakładek:'],
+      bullets: [
+        'lockF: Wzory wyszukiwania blokad 0/1 (domyślnie: 1).',
+        'lockT: Zablokuj wzorce synchronizacji 0/1 (domyślnie: 1).',
+        'lockA: Zablokuj wzory wyrównania 0/1 (domyślnie: 1).',
+        'lockFmt: Informacje o formacie blokady 0/1 (domyślnie: 1).',
+        'lockV: Zablokuj informacje o wersji 0/1 (domyślnie: 1).',
+        'SafeMode: Tryb bezpieczeństwa - wyłączony, zrównoważony, rygorystyczny (domyślnie: wyłączony).',
+        'SafeMinPx: Minimalny rozmiar modułu w pikselach (domyślnie: 2).',
+        'SafeMinQz: Minimalna liczba modułów cichej strefy (domyślnie: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametry automatycznego dostrajania',
+      paragraphs: ['Ustawienia automatycznej optymalizacji:'],
+      bullets: [
+        'autoVer: Automatyczny wybór wersji QR 0/1 (domyślnie: 1).',
+        'autoEcc: Automatyczny wybór poziomu ECC 0/1 (domyślnie: 0) - tylko wskazówka po stronie serwera.',
+        'autoReduce: [TYLKO KLIENT] Automatycznie zmniejsz intensywność do momentu, aż będzie można ją zeskanować — wymaga pętli sprawdzania poprawności skanowania.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Dodatkowe parametry animacji',
+      paragraphs: ['Rozszerzone sterowanie animacją dla wyjścia GIF:'],
+      bullets: [
+        'pętla: Animacja zapętla się w sposób ciągły 0/1 (domyślnie: 1).',
+        'odbicie: kierunek animacji ping-ponga 0/1 (domyślnie: 0).',
+        'wstecz: Odtwórz animację do tyłu 0/1 (domyślnie: 0).',
+        'colorCycle: Włącz efekt cykliczności kolorów 0/1 (domyślnie: 0).',
+        'interp: Interpolacja klatek - brak, przenikanie, zmiana (domyślnie: brak).',
+        'tempDither: Dithering czasowy - wyłączony, blue_noise, flicker_safe (domyślnie: wyłączony).',
+        'startF: Klatka początkowa animacji (domyślnie: 0).',
+        'maxF: Maksymalna liczba klatek do renderowania (domyślnie: 0 = auto).',
+        'stepF: Interwał kroku ramki (domyślnie: 1).',
+        'Jitter: [TYLKO KLIENT] Jitter modułu w pikselach - wymaga regeneracji QR na klatkę.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parametry ditheringu',
+      paragraphs: ['Kontroluj algorytmy ditheringu dla przetwarzania nakładek:'],
+      bullets: [
+        'ditherKind: Algorytm roztrząsania - error_diffusion, uporządkowany_bayer, blue_noise itp. (domyślnie: zamówiony_bayer).',
+        'diffusionKernel: Błąd dyfuzji jądra - floyd_steinberg, jarvis_judice_ninke, sticki, burkes, sierra, atkinson (domyślnie: floyd_steinberg).',
+        'ditherStrength: Intensywność ditheringu 0-100 (domyślnie: 50).',
+        'serpentyn: Roztrząsanie serpentynu 0/1 (domyślnie: 0).',
+        'matrix: Uporządkowana macierz ditherowania - bayer2, bayer4, bayer8 (domyślnie: bayer4).',
+        'bnTile: Rozmiar kafelka niebieskiego szumu (domyślnie: 64).',
+        'bnSeed: losowe ziarno niebieskiego szumu (domyślnie: 0).',
+        'colorDither: Roztrząsanie kolorów - brak, na kanał, percepcyjne (domyślnie: brak).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parametry subpikseli',
+      paragraphs: ['Ustawienia trybu mieszania subpikseli:'],
+      bullets: [
+        'spGrid: Rozmiar siatki subpikseli - 2x2, 3x3, 4x4 (domyślnie: 3x3).',
+        'spCenter: Reguła centrum - ścisła, halftone_center (domyślnie: ścisła).',
+        'spNeutral: Heks koloru neutralnego bez # (domyślnie: 808080).',
+        'spFinder: Nadpisanie Findera - pełne, stylizowane (domyślnie: pełne).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parametry półtonów',
+      paragraphs: ['Ustawienia trybu mieszania półtonów:'],
+      bullets: [
+        'htCell: Rozmiar komórki rastra - na moduł lub siatkę nxn (domyślnie: na moduł).',
+        'htDot: Kształt kropki - okrąg, kwadrat, linia (domyślnie: okrąg).',
+        'htCurve: Krzywa jasności - liniowa, s-curve, gamma (domyślnie: liniowa).',
+        'duo1: Heks koloru cienia duotone bez # (domyślnie: 000000).',
+        'duo2: Hex koloru podświetlenia Duotone bez # (domyślnie: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parametry trybu uwzględniającego ECC',
+      paragraphs: ['Inteligentna dystrybucja nakładek oparta na możliwościach korekcji błędów:'],
+      bullets: [
+        'eccAware: Włącz tryb obsługujący ECC 0/1 (domyślnie: 0).',
+        'eccRisk: Procent budżetu ryzyka 0-100 (domyślnie: 50).',
+        'eccMap: Mapa wag - Distance_to_finders, block_heatmap, empirical_scan_heatmap (domyślnie: Distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parametry ramy',
+      paragraphs: ['Ustawienia ramki dekoracyjnej:'],
+      bullets: [
+        'ramka: Styl ramki - brak, zaokrąglona_ramka, naklejka, znacznik (domyślnie: brak).',
+        'FrameText: Tekst wyświetlany w ramce (zakodowany adres URL).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parametry koloru na moduł',
+      paragraphs: ['Indywidualne możliwości kolorowania modułu:'],
+      bullets: [
+        'modColor: Tryb koloru - solid, by_jasność, by_position, by_overlay, by_cluster (domyślnie: solidny).',
+        'cGuard: Strażnik kontrastu 0/1 (domyślnie: 0).',
+        'minContrast: Minimalny współczynnik kontrastu 1-21 (domyślnie: 4,5).',
+        'paleta: kolory szesnastkowe oddzielone przecinkami dla trybu palety.',
+        'paletaMode: Rozkład palety - pozycja, jasność, przekątna, promieniowa, losowa, wiersz, kolumna (domyślnie: pozycja).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parametry nakładki GIF',
+      paragraphs: ['Ustawienia animowanych obrazów nakładek GIF:'],
+      bullets: [
+        'ovType: Typ nakładki - statyczny, gif, apng, webp_anim, wideo (domyślnie: statyczny).',
+        'ovFramePick: Wybór klatki - wszystkie, co_n, max_frames, limit_czasu (domyślnie: wszystkie).',
+        'gifDelays: Użyj oryginalnych opóźnień klatek GIF 0/1 (domyślnie: 1).',
+        'gifDispH: Obsługa usuwania GIF - szanuj, upraszczaj (domyślnie: szanuj).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Limity intensywności według ECC',
+      paragraphs: ['Maksymalna intensywność nakładki na poziom korekcji błędów:'],
+      bullets: [
+        'maxIntL: Maksymalna intensywność dla ECC L 0-100 (domyślnie: 100).',
+        'maxIntM: Maksymalna intensywność dla ECC M 0-100 (domyślnie: 100).',
+        'maxIntQ: Maksymalna intensywność dla ECC Q 0-100 (domyślnie: 100).',
+        'maxIntH: Maksymalna intensywność dla ECC H 0-100 (domyślnie: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parametry symulacji kontroli jakości (tylko klient)',
+      paragraphs: [
+        'Te parametry są analizowane pod kątem zgodności z adresami URL, ale działają tylko w przeglądarce:',
+      ],
+      bullets: [
+        'qaContrast: Włącz kontrolę kontrastu 0/1 — wymaga interaktywnej weryfikacji.',
+        'qaBlur: Symuluj rozmycie w pikselach - tylko do testów interaktywnych.',
+        'qaNoise: Symuluj poziom hałasu - tylko do testów interaktywnych.',
+        'qaHeatmap: Pokaż mapę cieplną czytelności 0/1 - wymaga interfejsu użytkownika nakładki płótna.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parametry tylko dla klienta',
+      paragraphs: [
+        'Większość parametrów API jest w pełni obsługiwana po stronie serwera. Parametry oznaczone jako [CLIENT-ONLY] są analizowane pod kątem zgodności z adresami URL, ale wymagają funkcji przeglądarki:',
+      ],
+      bullets: [
+        'Jitter: Jitter modułu wymaga losowej regeneracji QR na klatkę.',
+        'autoReduce: Intensywność automatycznego zmniejszania wymaga iteracyjnego testowania skanowania.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Symulacja kontroli jakości wymaga interaktywnej weryfikacji płótna.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Dodatkowe parametry wyjściowe',
+      paragraphs: ['Rozszerzone ustawienia wyjściowe i eksportowe:'],
+      bullets: [
+        'fname: Niestandardowa nazwa pliku do pobrania (domyślnie: anqr-qrcode).',
+        'inclQz: Uwzględnij cichą strefę w wymiarach wyjściowych 0/1 (domyślnie: 1).',
+        'bgOver: Zastąpienie koloru tła w formacie szesnastkowym bez # (zastąpienie parametru bg).',
+        'fmtExtra: Dodatkowy format wyjściowy - brak, eps, animowany_webp (domyślnie: brak). Uwaga: eps to [CZĘŚCIOWE].',
+        'svgPrec: Precyzja kształtu SVG - piksel, precyzyjny (domyślnie: piksel). [CZĘŚCIOWE] Ograniczone wyjście SVG po stronie serwera.',
+        'svgEmbed: Osadź nakładkę rastrową w SVG 0/1 (domyślnie: 1). [CZĘŚCIOWE] Ograniczone wyjście SVG po stronie serwera.',
+        'modulePx: Rozmiar modułu w pikselach (domyślnie: obliczany automatycznie na podstawie rozmiaru).',
+        'obramowanie: Dodatkowe moduły obramowania poza cichą strefą (domyślnie: 0).',
+        'wyraźny: Włącz ostre/pikselowane renderowanie obrazu 0/1 (domyślnie: 1).',
+        'przyciąganie: tryb przyciągania pikseli - podłoga, okrągła, sufit (domyślnie: podłoga).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametry zachowania wzoru',
+      paragraphs: ['Kontroluj, które elementy konstrukcyjne są chronione przed nałożeniem:'],
+      bullets: [
+        'keepFinders: Zachowaj wzorce wyszukiwania 0/1 (domyślnie: 1).',
+        'keepTiming: Zachowaj wzorce synchronizacji 0/1 (domyślnie: 0).',
+        'keepAlign: Zachowaj wzorce wyrównania 0/1 (domyślnie: 0).',
+        'ProtectFmt: Chroń moduły informacyjne w formacie 0/1 (domyślnie: 0).',
+        'ProtectVer: Chroń moduły informacji o wersji 0/1 (domyślnie: 0).',
+      ],
+    },
     {
       heading: 'Przykład użycia',
       paragraphs: [

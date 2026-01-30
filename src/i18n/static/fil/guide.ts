@@ -984,6 +984,208 @@ export const guide: PageDefinition = {
         'meta Tittle, metaAuthor, metaCopy, meta meta Desc: Mga bukirin ng metadata.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Mga Parameter ng I-crop',
+      paragraphs: ['Mga opsyon sa pag-crop ng overlay na larawan:'],
+      bullets: [
+        'cropEn: I-enable ang overlay cropping 0/1 (default: 0).',
+        'cropX: I-crop ang center X bilang fraction 0-1 (default: 0.5).',
+        'cropY: I-crop ang center Y bilang fraction 0-1 (default: 0.5).',
+        'cropSize: Laki ng crop bilang fraction ng larawan 0-1 (default: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Mga Parameter ng Safety Lock',
+      paragraphs: [
+        'Kontrolin kung aling mga elemento ng QR ang protektado mula sa pagbabago ng overlay:',
+      ],
+      bullets: [
+        'lockF: Mga pattern ng lock finder 0/1 (default: 1).',
+        'lockT: Mga pattern ng timing ng lock 0/1 (default: 1).',
+        'lockA: Mga pattern ng alignment ng lock 0/1 (default: 1).',
+        'lockFmt: Impormasyon sa format ng lock 0/1 (default: 1).',
+        'lockV: I-lock ang impormasyon ng bersyon 0/1 (default: 1).',
+        'safeMode: Safety mode - naka-off, balanse, mahigpit (default: naka-off).',
+        'safeMinPx: Pinakamababang laki ng module sa mga pixel (default: 2).',
+        'safeMinQz: Minimum quiet zone modules (default: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Mga Parameter ng Auto-tuning',
+      paragraphs: ['Mga setting ng awtomatikong pag-optimize:'],
+      bullets: [
+        'autoVer: Auto-pick QR version 0/1 (default: 1).',
+        'autoEcc: Auto-pick ECC level 0/1 (default: 0) - server-side na pahiwatig lang.',
+        'autoReduce: [CLIENT-ONLY] Awtomatikong bawasan ang intensity hanggang sa ma-scan - nangangailangan ng scan validation loop.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Karagdagang Mga Parameter ng Animation',
+      paragraphs: ['Pinalawak na mga kontrol sa animation para sa output ng GIF:'],
+      bullets: [
+        'loop: Patuloy na naglo-loop ang animation 0/1 (default: 1).',
+        'bounce: Ping-pong animation direction 0/1 (default: 0).',
+        'reverse: I-play ang animation sa reverse 0/1 (default: 0).',
+        'colorCycle: I-enable ang color cycling effect 0/1 (default: 0).',
+        'interp: Frame interpolation - wala, crossfade, morph (default: wala).',
+        'tempDither: Temporal dithering - off, blue_noise, flicker_safe (default: off).',
+        'startF: Animation start frame (default: 0).',
+        'maxF: Maximum na mga frame na ire-render (default: 0 = auto).',
+        'stepF: Frame step interval (default: 1).',
+        'jitter: [CLIENT-ONLY] Jitter ng module sa mga pixel - nangangailangan ng per-frame QR regeneration.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Mga Parameter ng Dithering',
+      paragraphs: ['Kontrolin ang mga algorithm ng dithering para sa pagproseso ng overlay:'],
+      bullets: [
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, atbp (default: ordered_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
+        'ditherStrength: Dither intensity 0-100 (default: 50).',
+        'serpentine: Serpentine dithering 0/1 (default: 0).',
+        'matrix: Nag-order ng dither matrix - bayer2, bayer4, bayer8 (default: bayer4).',
+        'bnTile: Laki ng asul na ingay na tile (default: 64).',
+        'bnSeed: Asul na ingay na random na binhi (default: 0).',
+        'colorDither: Color dithering - wala, per_channel, perceptual (default: wala).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Mga Parameter ng Subpixel',
+      paragraphs: ['Mga setting para sa subpixel blend mode:'],
+      bullets: [
+        'spGrid: Laki ng grid ng subpixel - 2x2, 3x3, 4x4 (default: 3x3).',
+        'spCenter: Center rule - mahigpit, halftone_center (default: mahigpit).',
+        'spNeutral: Neutral na kulay hex na walang # (default: 808080).',
+        'spFinder: Finder override - solid, stylized (default: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Mga Parameter ng Halftone',
+      paragraphs: ['Mga setting para sa halftone blend mode:'],
+      bullets: [
+        'htCell: Halftone cell size - per_module o nxn grid (default: per_module).',
+        'htDot: Hugis na tuldok - bilog, parisukat, linya (default: bilog).',
+        'htCurve: Brightness curve - linear, s-curve, gamma (default: linear).',
+        'duo1: Duotone shadow color hex na walang # (default: 000000).',
+        'duo2: Duotone highlight color hex na walang # (default: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Mga Parameter ng ECC-Aware Mode',
+      paragraphs: ['Intelligent overlay distribution batay sa kapasidad sa pagwawasto ng error:'],
+      bullets: [
+        'eccAware: Paganahin ang ECC-aware mode 0/1 (default: 0).',
+        'eccRisk: Porsyento ng badyet sa peligro 0-100 (default: 50).',
+        'eccMap: Weight map - distance_to_finders, block_heatmap, empirical_scan_heatmap (default: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Mga Parameter ng Frame',
+      paragraphs: ['Mga setting ng pandekorasyon na frame:'],
+      bullets: [
+        'frame: Estilo ng frame - wala, rounded_frame, sticker, tag (default: wala).',
+        'frameText: Text na ipapakita sa frame (URL encoded).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Mga Parameter ng Kulay ng Bawat Module',
+      paragraphs: ['Mga pagpipilian sa pangkulay ng indibidwal na module:'],
+      bullets: [
+        'modColor: Color mode - solid, by_brightness, by_position, by_overlay, by_cluster (default: solid).',
+        'cGuard: Contrast guard 0/1 (default: 0).',
+        'minContrast: Minimum na contrast ratio 1-21 (default: 4.5).',
+        'palette: Mga kulay na hex na pinaghihiwalay ng kuwit para sa palette mode.',
+        'paletteMode: Pamamahagi ng palette - posisyon, liwanag, dayagonal, radial, random, row, column (default: posisyon).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF Overlay Parameter',
+      paragraphs: ['Mga setting para sa mga animated na GIF overlay na larawan:'],
+      bullets: [
+        'ovType: Uri ng overlay - static, gif, apng, webp_anim, video (default: static).',
+        'ovFramePick: Pagpili ng frame - lahat, every_n, max_frames, duration_limit (default: lahat).',
+        'gifDelays: Gumamit ng orihinal na GIF frame delays 0/1 (default: 1).',
+        'gifDispH: GIF disposal handling - paggalang, pasimplehin (default: paggalang).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Bawat-ECC Intensity Limits',
+      paragraphs: ['Maximum na overlay intensity sa bawat antas ng pagwawasto ng error:'],
+      bullets: [
+        'maxIntL: Max intensity para sa ECC L 0-100 (default: 100).',
+        'maxIntM: Max intensity para sa ECC M 0-100 (default: 100).',
+        'maxIntQ: Max intensity para sa ECC Q 0-100 (default: 100).',
+        'maxIntH: Max intensity para sa ECC H 0-100 (default: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Mga Parameter ng Simulation ng QA (Client-Only)',
+      paragraphs: [
+        'Ang mga parameter na ito ay na-parse para sa pagiging tugma ng URL ngunit gumagana lamang sa browser:',
+      ],
+      bullets: [
+        'qaContrast: Paganahin ang contrast check 0/1 - nangangailangan ng interactive na pagpapatunay.',
+        'qaBlur: Gayahin ang blur sa mga pixel - para sa interactive na pagsubok lamang.',
+        'qaNoise: Gayahin ang antas ng ingay - para sa interactive na pagsubok lamang.',
+        'qaHeatmap: Ipakita ang pagiging madaling mabasa ng heatmap 0/1 - nangangailangan ng canvas overlay na UI.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Client-Only Parameter',
+      paragraphs: [
+        'Karamihan sa mga parameter ng API ay ganap na sinusuportahan sa panig ng server. Ang mga parameter na may markang [CLIENT-ONLY] ay na-parse para sa pagiging tugma ng URL ngunit nangangailangan ng mga feature ng browser:',
+      ],
+      bullets: [
+        'jitter: Ang module jitter ay nangangailangan ng per-frame QR regeneration na may randomness.',
+        'autoReduce: Ang auto-reduce intensity ay nangangailangan ng iterative scan testing.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Ang QA simulation ay nangangailangan ng interactive na canvas validation.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Karagdagang Mga Parameter ng Output',
+      paragraphs: ['Mga setting ng pinalawak na output at pag-export:'],
+      bullets: [
+        'fname: Custom na filename para sa mga download (default: anqr-qrcode).',
+        'inclQz: Isama ang quiet zone sa mga sukat ng output 0/1 (default: 1).',
+        'bgOver: I-override ng kulay ng background ang hex na walang # (i-override ang bg parameter).',
+        'fmtExtra: Karagdagang format na output - wala, eps, animated_webp (default: wala). Tandaan: ang eps ay [PARTIAL].',
+        'svgPrec: Katumpakan ng hugis ng SVG - pixel, tumpak (default: pixel). [PARTIAL] Limitado ang output ng SVG sa server-side.',
+        'svgEmbed: I-embed ang raster overlay sa SVG 0/1 (default: 1). [PARTIAL] Limitado ang output ng SVG sa server-side.',
+        'modulePx: Laki ng pixel ng module (default: awtomatikong kinakalkula mula sa laki).',
+        'hangganan: Mga karagdagang module ng hangganan na lampas sa tahimik na zone (default: 0).',
+        'crisp: I-enable ang crisp/pixelated na pag-render ng larawan 0/1 (default: 1).',
+        'snap: Pixel snap mode - floor, round, ceil (default: floor).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Mga Parameter ng Pagpapanatili ng Pattern',
+      paragraphs: [
+        'Kontrolin kung aling mga elemento ng istruktura ang protektado mula sa overlay:',
+      ],
+      bullets: [
+        'keepFinders: Panatilihin ang mga pattern ng finder 0/1 (default: 1).',
+        'keepTiming: Panatilihin ang mga pattern ng timing 0/1 (default: 0).',
+        'keepAlign: Panatilihin ang mga pattern ng alignment 0/1 (default: 0).',
+        'protectFmt: Protektahan ang mga module ng impormasyon ng format 0/1 (default: 0).',
+        'protectVer: Protektahan ang mga module ng impormasyon ng bersyon 0/1 (default: 0).',
+      ],
+    },
     {
       heading: 'Halimbawa sa Paggamit',
       paragraphs: [
