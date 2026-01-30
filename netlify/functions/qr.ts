@@ -242,6 +242,7 @@ import {
   applyAnimationShimmer,
   applyAnimationWave,
 } from '../../src/modules/animation';
+import { calculateOptimalVersion } from '../../src/modules/qr-encoder/encoder-api';
 // @ts-expect-error - JS module
 import { QRGenerator } from '../../src/modules/qr-generator';
 
@@ -1966,7 +1967,7 @@ async function handler(request: Request) {
 
     // Calculate module size based on desired output size
     // Estimate module count first (depends on content length and ECC)
-    const estimatedVersion = qrGenerator.calculateOptimalVersion(data, ec);
+    const estimatedVersion = calculateOptimalVersion(data, ec);
     const estimatedModuleCount = estimatedVersion * 4 + 17;
     // Use final margin (including borderModulesExtra) for module size calculation
     // to avoid sizing drift/crop issues
