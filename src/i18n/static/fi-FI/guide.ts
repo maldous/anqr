@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'MetaTime, metaAuthor, metaCopy, meta Desc: PNG-metatietokentät.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Rajausparametrit',
+      paragraphs: ['Peittokuvan rajausasetukset:'],
+      bullets: [
+        'cropEn: Ota käyttöön peittokuvan rajaus 0/1 (oletus: 0).',
+        'cropX: Rajaa keskipiste X murto-osana 0-1 (oletus: 0,5).',
+        'cropY: Rajaa keskipiste Y murto-osana 0-1 (oletus: 0,5).',
+        'cropSize: Rajaa koko kuvan 0-1 murto-osana (oletus: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Turvalukon parametrit',
+      paragraphs: ['Hallitse, mitkä QR-elementit on suojattu peittokuvan muutoksilta:'],
+      bullets: [
+        'lockF: Lukon etsinkuviot 0/1 (oletus: 1).',
+        'lockT: Lukitusajoituskuviot 0/1 (oletus: 1).',
+        'lockA: Lukituskohdistuskuviot 0/1 (oletus: 1).',
+        'lockFmt: Lukitusmuototiedot 0/1 (oletus: 1).',
+        'lockV: Lukon versiotiedot 0/1 (oletus: 1).',
+        'safeMode: Turvatila - pois päältä, tasapainotettu, tiukka (oletus: pois päältä).',
+        'safeMinPx: Moduulin vähimmäiskoko pikseleinä (oletus: 2).',
+        'safeMinQz: Hiljaisten vyöhykkeiden vähimmäismäärä (oletus: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametrien automaattinen viritys',
+      paragraphs: ['Automaattiset optimointiasetukset:'],
+      bullets: [
+        'autoVer: Valitse automaattisesti QR-versio 0/1 (oletus: 1).',
+        'autoEcc: Automaattinen valinta ECC-taso 0/1 (oletus: 0) - vain palvelinpuolen vihje.',
+        'autoReduce: [VAIN ASIAKAS] Vähennä voimakkuutta automaattisesti, kunnes se voidaan skannata - vaatii tarkistuksen vahvistussilmukan.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Animaation lisäparametrit',
+      paragraphs: ['Laajennetut animaatiosäätimet GIF-ulostulolle:'],
+      bullets: [
+        'loop: Animaatiosilmukat jatkuvasti 0/1 (oletus: 1).',
+        'bounce: Ping-pong-animaatiosuunta 0/1 (oletus: 0).',
+        'taaksepäin: Toista animaatio käänteisesti 0/1 (oletus: 0).',
+        'colorCycle: Ota käyttöön värikiertotehoste 0/1 (oletus: 0).',
+        'interp: Kehyksen interpolointi - ei mitään, ristihäivytys, morph (oletus: ei mitään).',
+        'tempDither: Temporaalinen häivytys - pois, blue_noise, flicker_safe (oletus: pois).',
+        'startF: Animaation aloituskehys (oletus: 0).',
+        'maxF: Piirrettävien kehysten enimmäismäärä (oletus: 0 = automaattinen).',
+        'stepF: Kehyksen askelväli (oletus: 1).',
+        'värinää: [VAIN ASIAKAS] Moduulin värinä pikseleinä – vaatii kehyskohtaisen QR-regeneroinnin.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering-parametrit',
+      paragraphs: ['Ohjaa erotusalgoritmeja peittokuvakäsittelyä varten:'],
+      bullets: [
+        'ditherKind: Dither-algoritmi - error_diffusion, ordered_bayer, blue_noise jne (oletus: ordered_bayer).',
+        'diffusionKernel: Virhe diffuusioydin - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (oletus: floyd_steinberg).',
+        'ditherStrength: Datherin voimakkuus 0-100 (oletus: 50).',
+        'serpentiini: Käärmeen värjäys 0/1 (oletus: 0).',
+        'matriisi: Tilattu dither-matriisi - bayer2, bayer4, bayer8 (oletus: bayer4).',
+        'bnTile: Sinisen kohinaruudun koko (oletus: 64).',
+        'bnSeed: Blue noise satunnainen siemen (oletus: 0).',
+        'colorDither: Värien erottelu - ei mitään, per_kanava, havainnollinen (oletus: ei mitään).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpikseliparametrit',
+      paragraphs: ['Alipikselin sekoitustilan asetukset:'],
+      bullets: [
+        'spGrid: Subpikseliruudukon koko - 2x2, 3x3, 4x4 (oletus: 3x3).',
+        'spCenter: Keskityssääntö - tiukka, rasterointikeskus (oletus: tiukka).',
+        'spNeutraali: Neutraali väriheksaani ilman #-merkkiä (oletus: 808080).',
+        'spFinder: Finderin ohitus - kiinteä, tyylitelty (oletus: kiinteä).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Rasteriparametrit',
+      paragraphs: ['Rasterisekoitustilan asetukset:'],
+      bullets: [
+        'htCell: Rasterisolukoko - per_moduuli tai nxn-ruudukko (oletus: per_moduuli).',
+        'htDot: Pistemuoto - ympyrä, neliö, viiva (oletus: ympyrä).',
+        'htCurve: Kirkkauskäyrä - lineaarinen, s-käyrä, gamma (oletus: lineaarinen).',
+        'duo1: Duuotone-varjon hex ilman #-merkkiä (oletus: 000000).',
+        'duo2: Duuotonen korostusväri hex ilman # (oletus: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-tietoisen tilan parametrit',
+      paragraphs: ['Älykäs peittokuvan jakautuminen virheenkorjauskapasiteetin perusteella:'],
+      bullets: [
+        'eccAware: Ota käyttöön ECC-tietoinen tila 0/1 (oletus: 0).',
+        'eccRisk: Riskibudjettiprosentti 0-100 (oletus: 50).',
+        'eccMap: Painokartta - etäisyys_löytöihin, block_heatmap, empirical_scan_heatmap (oletus: etäisyys_finderiin).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Kehyksen parametrit',
+      paragraphs: ['Koristekehyksen asetukset:'],
+      bullets: [
+        'kehys: Kehystyyli - ei mitään, pyöristetty_kehys, tarra, tunniste (oletus: ei mitään).',
+        'frameText: Kehyksessä näytettävä teksti (URL-koodattu).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Moduulikohtaiset väriparametrit',
+      paragraphs: ['Yksittäisten moduulien väritysvaihtoehdot:'],
+      bullets: [
+        'modColor: Väritila - kiinteä, kirkkauden mukaan, sijainnin mukaan, peittokuvan mukaan, klusterin mukaan (oletus: kiinteä).',
+        'cGuard: Kontrastivartija 0/1 (oletus: 0).',
+        'minContrast: Vähimmäiskontrastisuhde 1-21 (oletus: 4,5).',
+        'paletti: Pilkuilla erotetut kuusiovärit palettitilassa.',
+        'palettitila: Paletin jakautuminen - sijainti, kirkkaus, diagonaalinen, säteittäinen, satunnainen, rivi, sarake (oletus: sijainti).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF-peittokuvan parametrit',
+      paragraphs: ['Animoitujen GIF-peittokuvien asetukset:'],
+      bullets: [
+        'ovType: Peittokuvatyyppi - staattinen, gif, apng, webp_anim, video (oletus: staattinen).',
+        'ovFramePick: Kehyksen valinta - all, every_n, max_frames, duration_limit (oletus: kaikki).',
+        'gifDelays: Käytä alkuperäisiä GIF-kehysviiveitä 0/1 (oletus: 1).',
+        'gifDispH: GIF-jätteiden käsittely - kunnioita, yksinkertaista (oletus: kunnioitus).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Per-ECC Intensity Limits',
+      paragraphs: ['Peittokuvan enimmäisintensiteetti virheenkorjaustasoa kohden:'],
+      bullets: [
+        'maxIntL: ECC L:n enimmäisintensiteetti 0-100 (oletus: 100).',
+        'maxIntM: ECC M 0-100 enimmäisintensiteetti (oletus: 100).',
+        'maxIntQ: ECC Q:n enimmäisintensiteetti 0-100 (oletus: 100).',
+        'maxIntH: Suurin intensiteetti ECC H 0-100 (oletus: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Laadunvarmistuksen simulointiparametrit (vain asiakas)',
+      paragraphs: [
+        'Nämä parametrit jäsennetään URL-yhteensopivuuden varmistamiseksi, mutta ne toimivat vain selaimessa:',
+      ],
+      bullets: [
+        'qaContrast: Ota kontrastin tarkistus käyttöön 0/1 - vaatii interaktiivista vahvistusta.',
+        'qaBlur: Simuloi epäterävyyttä pikseleinä - vain interaktiiviseen testaukseen.',
+        'qaNoise: Simuloi melutasoa - vain interaktiiviseen testaukseen.',
+        'qaHeatmap: Näytä luettavuuden lämpökartta 0/1 – vaatii kanvas-peittokäyttöliittymän.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Vain asiakasparametrit',
+      paragraphs: [
+        'Useimmat API-parametrit ovat täysin tuettuja palvelinpuolella. [CLIENT-ONLY]-merkityt parametrit jäsennetään URL-yhteensopivuuden varmistamiseksi, mutta ne vaativat selaimen ominaisuuksia:',
+      ],
+      bullets: [
+        'jitter: Moduulin värinä vaatii kehyskohtaista QR-regenerointia satunnaisesti.',
+        'autoReduce: Automaattisen vähennyksen intensiteetti vaatii iteratiivisen skannaustestin.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Laadunvarmistussimulointi vaatii interaktiivisen kanvas-validoinnin.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Lisälähtöparametrit',
+      paragraphs: ['Laajennetut tulostus- ja vientiasetukset:'],
+      bullets: [
+        'fname: Mukautettu tiedostonimi latauksille (oletus: anqr-qrcode).',
+        'inclQz: Sisällytä hiljainen vyöhyke lähtömitoihin 0/1 (oletus: 1).',
+        'bgOver: Taustavärin ohitus heksadesimaalista ilman #-merkkiä (ohittaa bg-parametrin).',
+        'fmtExtra: Lisämuototulostus - ei mitään, eps, animated_webp (oletus: ei mitään). Huomautus: eps on [OSITTAINEN].',
+        'svgPrec: SVG-muodon tarkkuus - pikseli, tarkka (oletus: pikseli). [OSITTAINEN] SVG-lähtö rajoitettu palvelinpuolella.',
+        'svgEmbed: upota rasteripeittokuva SVG 0/1:een (oletus: 1). [OSITTAINEN] SVG-lähtö rajoitettu palvelinpuolella.',
+        'modulePx: Moduulin pikselin koko (oletus: lasketaan automaattisesti koosta).',
+        'raja: Ylimääräiset reunamoduulit hiljaisen alueen ulkopuolella (oletus: 0).',
+        'crisp: Ota käyttöön terävän/pikseloidun kuvan renderöinti 0/1 (oletus: 1).',
+        'snap: Pixel Snap -tila – lattia, pyöreä, katto (oletus: lattia).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Kuvion säilytysparametrit',
+      paragraphs: ['Hallitse, mitkä rakenneosat on suojattu päällekkäisyydeltä:'],
+      bullets: [
+        'keepFinders: Säilytä etsinkuviot 0/1 (oletus: 1).',
+        'keepTiming: Säilytä ajoituskuviot 0/1 (oletus: 0).',
+        'keepAlign: Säilytä kohdistuskuviot 0/1 (oletus: 0).',
+        'ProtectFmt: Suojaa muototietomoduulit 0/1 (oletus: 0).',
+        'ProtectVer: Suojaa version tietomoduulit 0/1 (oletus: 0).',
+      ],
+    },
     {
       heading: 'Esimerkki Usage',
       paragraphs: [

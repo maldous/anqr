@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG lýsigagnareitir.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Uppskera færibreytur',
+      paragraphs: ['Skurðvalkostir fyrir yfirlagsmynd:'],
+      bullets: [
+        'cropEn: Virkja yfirlagsskurð 0/1 (sjálfgefið: 0).',
+        'cropX: Crop Center X sem brot 0-1 (sjálfgefið: 0,5).',
+        'cropY: Uppskera miðja Y sem brot 0-1 (sjálfgefið: 0,5).',
+        'cropSize: Skera stærð sem brot af mynd 0-1 (sjálfgefið: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Öryggislásstillingar',
+      paragraphs: ['Stjórnaðu hvaða QR þættir eru varðir fyrir breytingum á yfirborði:'],
+      bullets: [
+        'lockF: Mynstur fyrir lásleitara 0/1 (sjálfgefið: 1).',
+        'lockT: Læsa tímasetningarmynstur 0/1 (sjálfgefið: 1).',
+        'lockA: Læsa jöfnunarmynstur 0/1 (sjálfgefið: 1).',
+        'lockFmt: Upplýsingar um læsingarsnið 0/1 (sjálfgefið: 1).',
+        'lockV: Upplýsingar um læsa útgáfu 0/1 (sjálfgefið: 1).',
+        'safeMode: Öryggisstilling - slökkt, jafnvægi, strangt (sjálfgefið: slökkt).',
+        'safeMinPx: Lágmarkseiningsstærð í pixlum (sjálfgefið: 2).',
+        'safeMinQz: Lágmarkseining fyrir hljóðlát svæði (sjálfgefið: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Sjálfvirk stilling færibreytur',
+      paragraphs: ['Sjálfvirkar fínstillingarstillingar:'],
+      bullets: [
+        'autoVer: Veldu QR útgáfu 0/1 sjálfkrafa (sjálfgefið: 1).',
+        'autoEcc: Sjálfvirk val ECC stig 0/1 (sjálfgefið: 0) - aðeins vísbending á þjóninum.',
+        'autoReduce: [AÐEINS BÚNAÐUR] Dragðu sjálfkrafa úr styrkleika þar til hægt er að skanna - krefst skannastaðfestingarlykkja.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Viðbótarbreytur hreyfimynda',
+      paragraphs: ['Útvíkkuð hreyfimyndastýringar fyrir GIF úttak:'],
+      bullets: [
+        'lykkja: Hreyfilykkjur ganga stöðugt 0/1 (sjálfgefið: 1).',
+        'hopp: Ping-pong hreyfimyndastefna 0/1 (sjálfgefið: 0).',
+        'afturábak: Spila hreyfimynd afturábak 0/1 (sjálfgefið: 0).',
+        'colorCycle: Virkja lithjólaáhrif 0/1 (sjálfgefið: 0).',
+        'interp: Frame interpolation - engin, crossfade, morph (sjálfgefið: enginn).',
+        'tempDither: Temporal dithering - off, blue_noise, flicker_safe (sjálfgefið: slökkt).',
+        'startF: Upphafsrammi hreyfimynda (sjálfgefið: 0).',
+        'maxF: Hámarks rammar til að birta (sjálfgefið: 0 = sjálfvirkt).',
+        'stepF: Frame step interval (sjálfgefið: 1).',
+        'jitter: [AÐEINS BÚNAÐUR] Eining jitter í pixlum - krefst endurnýjunar á QR fyrir hvern ramma.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Þurrunarfæribreytur',
+      paragraphs: ['Stjórna töfrunaralgrím fyrir yfirlagsvinnslu:'],
+      bullets: [
+        'ditherKind: Dither reiknirit - error_diffusion, ordered_bayer, blue_noise, etc (sjálfgefið: ordered_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (sjálfgefið: floyd_steinberg).',
+        'ditherStrength: Dither styrkleiki 0-100 (sjálfgefið: 50).',
+        'Serpentine: Serpentine dithering 0/1 (sjálfgefið: 0).',
+        'fylki: Pöntuð töfrafylki - bayer2, bayer4, bayer8 (sjálfgefið: bayer4).',
+        'bnTile: Blue noise flísastærð (sjálfgefin: 64).',
+        'bnSeed: Blue noise random seed (sjálfgefið: 0).',
+        'colorDither: Litasvifing - enginn, á_rás, skynjun (sjálfgefið: enginn).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Undirpixla færibreytur',
+      paragraphs: ['Stillingar fyrir blöndunarstillingu undirpixla:'],
+      bullets: [
+        'spGrid: Stærð undirpixla - 2x2, 3x3, 4x4 (sjálfgefið: 3x3).',
+        'spCenter: Miðjuregla - strangt, halftone_center (sjálfgefið: strangt).',
+        'spNeutral: Hlutlaus litur hex án # (sjálfgefið: 808080).',
+        'spFinder: Finder override - traustur, stílfærður (sjálfgefið: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Hálftónsfæribreytur',
+      paragraphs: ['Stillingar fyrir hálftónablöndunarstillingu:'],
+      bullets: [
+        'htCell: Hálftónar frumustærð - per_module eða nxn grid (sjálfgefið: per_module).',
+        'htDot: Punktaform - hringur, ferningur, lína (sjálfgefið: hringur).',
+        'htCurve: Birtuferill - línuleg, s-ferill, gamma (sjálfgefið: línuleg).',
+        'duo1: Duotone shadow color hex án # (sjálfgefið: 000000).',
+        'duo2: Duotone highlight litur hex án # (sjálfgefið: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-Aware Mode færibreytur',
+      paragraphs: ['Snjöll yfirborðsdreifing byggð á getu villuleiðréttingar:'],
+      bullets: [
+        'eccAware: Virkja ECC-meðvitaða stillingu 0/1 (sjálfgefið: 0).',
+        'eccRisk: Áhættuáætlunarprósenta 0-100 (sjálfgefið: 50).',
+        'eccMap: Þyngdarkort - fjarlægð_til_finna, blokk_hitakort, empirical_scan_hitakort (sjálfgefið: fjarlægð_til_finna).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Frame færibreytur',
+      paragraphs: ['Stillingar fyrir skrautramma:'],
+      bullets: [
+        'frame: Frame style - none, rounded_frame, sticker, tag (sjálfgefið: enginn).',
+        'frameText: Texti sem á að birta í ramma (URL kóðaður).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Litabreytur fyrir hverja einingu',
+      paragraphs: ['Einstakir mát litarvalkostir:'],
+      bullets: [
+        'modColor: Litastilling - solid, by_brightness, by_position, by_overlay, by_cluster (sjálfgefið: solid).',
+        'cGuard: Andstæðuvörn 0/1 (sjálfgefið: 0).',
+        'minContrast: Lágmarksbirtuhlutfall 1-21 (sjálfgefið: 4,5).',
+        'litatöflu: Kommaaðskildir sexkantslitir fyrir litatöflustillingu.',
+        'paletteMode: Litatöfludreifing - staðsetning, birta, ská, geislamynd, handahófi, röð, dálkur (sjálfgefin: staðsetning).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF yfirlagsfæribreytur',
+      paragraphs: ['Stillingar fyrir hreyfimyndir af GIF yfirborðsmyndum:'],
+      bullets: [
+        'ovType: Yfirlagsgerð - static, gif, apng, webp_anim, video (sjálfgefið: static).',
+        'ovFramePick: Rammaval - allir, allir_n, hámarksrammar, lengd_takmark (sjálfgefið: allir).',
+        'gifDelays: Notaðu upprunalega GIF ramma tafir 0/1 (sjálfgefið: 1).',
+        'gifDispH: GIF förgun meðhöndlun - virða, einfalda (sjálfgefið: virðing).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Per-ECC styrkleikamörk',
+      paragraphs: ['Hámarksálagsstyrkur fyrir hvert villuleiðréttingarstig:'],
+      bullets: [
+        'maxIntL: Hámarksstyrkur fyrir ECC L 0-100 (sjálfgefið: 100).',
+        'maxIntM: Hámarksstyrkur fyrir ECC M 0-100 (sjálfgefið: 100).',
+        'maxIntQ: Hámarksstyrkur fyrir ECC Q 0-100 (sjálfgefið: 100).',
+        'maxIntH: Hámarksstyrkur fyrir ECC H 0-100 (sjálfgefið: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA uppgerð færibreytur (aðeins viðskiptavinar)',
+      paragraphs: [
+        'Þessar færibreytur eru flokkaðar fyrir samhæfni vefslóða en virka aðeins í vafranum:',
+      ],
+      bullets: [
+        'qaContrast: Virkja birtuskilaskoðun 0/1 - krefst gagnvirkrar staðfestingar.',
+        'qaBlur: Líktu eftir óskýrleika í pixlum - eingöngu fyrir gagnvirkar prófanir.',
+        'qaNoise: Líkja eftir hávaðastigi - eingöngu fyrir gagnvirkar prófanir.',
+        'qaHeatmap: Sýna læsileika hitakort 0/1 - krefst striga yfirborðs UI.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Færibreytur eingöngu fyrir viðskiptavini',
+      paragraphs: [
+        'Flestar API breytur eru að fullu studdar miðlarahlið. Færibreytur merktar [BÚNAÐUR AÐEINS] eru flokkaðar fyrir samhæfni vefslóða en þurfa vafraeiginleika:',
+      ],
+      bullets: [
+        'jitter: Module jitter krefst endurnýjunar á QR fyrir hvern ramma með tilviljun.',
+        'autoReduce: Sjálfvirk minnkandi styrkleiki krefst ítrekaðrar skönnunarprófunar.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA uppgerð krefst gagnvirkrar sannprófunar á striga.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Viðbótarúttaksfæribreytur',
+      paragraphs: ['Auknar úttaks- og útflutningsstillingar:'],
+      bullets: [
+        'fname: Sérsniðið skráarheiti fyrir niðurhal (sjálfgefið: anqr-qrcode).',
+        'inclQz: Hafa rólegt svæði í úttaksstærðum 0/1 (sjálfgefið: 1).',
+        'bgOver: Bakgrunnslitur hnekkir sexkanti án # (hnekkir bg færibreytu).',
+        'fmtExtra: Viðbótarsnið framleiðsla - enginn, eps, animated_webp (sjálfgefið: enginn). Athugið: eps er [PARTIAL].',
+        'svgPrec: SVG lögun nákvæmni - pixla, nákvæm (sjálfgefið: pixla). [HLUTA] SVG úttak takmörkuð miðlarahlið.',
+        'svgEmbed: Fella inn rasteryfirlag í SVG 0/1 (sjálfgefið: 1). [HLUTA] SVG úttak takmörkuð miðlarahlið.',
+        'modulePx: Mát pixlastærð (sjálfgefið: sjálfvirkt reiknað út frá stærð).',
+        'landamæri: Auka landamæraeiningar handan hljóðláts svæðis (sjálfgefið: 0).',
+        'crisp: Virkja crisp/pixelated image rendering 0/1 (sjálfgefið: 1).',
+        'snap: Pixel snap mode - gólf, kringlótt, loft (sjálfgefið: gólf).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Mynstur varðveislu færibreytur',
+      paragraphs: ['Stjórnaðu hvaða burðarvirki eru varin fyrir yfirborði:'],
+      bullets: [
+        'keepFinders: Varðveittu leitarmynstur 0/1 (sjálfgefið: 1).',
+        'keepTiming: Varðveittu tímasetningarmynstur 0/1 (sjálfgefið: 0).',
+        'keepAlign: Varðveittu jöfnunarmynstur 0/1 (sjálfgefið: 0).',
+        'protectFmt: Vernda snið upplýsingaeiningar 0/1 (sjálfgefið: 0).',
+        'protectVer: Vernda útgáfuupplýsingaeiningar 0/1 (sjálfgefið: 0).',
+      ],
+    },
     {
       heading: 'Dæmi um notkun',
       paragraphs: [

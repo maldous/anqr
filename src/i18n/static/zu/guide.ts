@@ -978,6 +978,206 @@ export const guide: PageDefinition = {
         'i-metaTitle, i-metaAuthor, i-metaCopy, i-metaDesc: Izinkambu ze-metadata ze-PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Nqampuna Amapharamitha',
+      paragraphs: ['Izinketho zokunqampuna imbondela yesithombe:'],
+      bullets: [
+        'CropEn: Nika amandla ukunqampuna kwembondela 0/1 (okuzenzakalelayo: 0).',
+        'CropX: Isikhungo sokusika X njengengxenye 0-1 (okuzenzakalelayo: 0.5).',
+        'CropY: Isikhungo sokusika Y njengengxenye 0-1 (okuzenzakalelayo: 0.5).',
+        'CropSize: Usayizi wenqampuna njengengxenye yesithombe 0-1 (okuzenzakalelayo: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Amapharamitha wokukhiya ukuphepha',
+      paragraphs: ['Lawula ukuthi yiziphi izici ze-QR ezivikelekile ekulungisweni kwembondela:'],
+      bullets: [
+        'lockF: Khiya amaphethini esitholi 0/1 (okuzenzakalelayo: 1).',
+        'lockT: Khiya amaphethini wesikhathi 0/1 (okuzenzakalelayo: 1).',
+        'lockA: Amaphethini okuqondanisa nokukhiya 0/1 (okuzenzakalelayo: 1).',
+        'I-lockFmt: Ulwazi lwefomethi yokukhiya 0/1 (okuzenzakalelayo: 1).',
+        'I-lockV: Ulwazi lwenguqulo yokukhiya 0/1 (okuzenzakalelayo: 1).',
+        'Imodi ephephile: Imodi yokuphepha - icishiwe, ibhalansile, iqinile (okuzenzakalelayo: kuvaliwe).',
+        'I-safeMinPx: Ubuncane bosayizi wemojuli ngamaphikseli (okuzenzakalelayo: 2).',
+        'I-safeMinQz: Amamojula amancane wendawo ethulile (okuzenzakalelayo: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Ukushuna Okuzenzakalelayo Amapharamitha',
+      paragraphs: ['Izilungiselelo zokuthuthukisa okuzenzakalelayo:'],
+      bullets: [
+        'I-autoVer: Khetha ngokuzenzakalelayo inguqulo ye-QR engu-0/1 (okuzenzakalelayo: 1).',
+        'i-autoEcc: Khetha ngokuzenzakalelayo izinga le-ECC 0/1 (okuzenzakalelayo: 0) - iseluleko sohlangothi lweseva kuphela.',
+        'Nciphisa ngokuzenzakalelayo: [CLIENT-KUPHELA] Nciphisa ngokuzenzakalelayo ukuqina uze uskeneke - kudinga iluphu yokuqinisekisa yokuskena.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Amapharamitha Opopayi Engeziwe',
+      paragraphs: ['Izilawuli ezinwetshiwe zokugqwayiza zokukhishwa kwe-GIF:'],
+      bullets: [
+        'iluphu: Amalophu opopayi ngokuqhubekayo 0/1 (okuzenzakalelayo: 1).',
+        'bounce: isiqondiso sopopayi se-Ping-pong 0/1 (okuzenzakalelayo: 0).',
+        'hlehla: Dlala opopayi ngokuhlehla 0/1 (okuzenzakalelayo: 0).',
+        'colorCycle: Nika amandla umphumela wamabhayisikili wombala 0/1 (okuzenzakalelayo: 0).',
+        'interp: Ukuhumusha kohlaka - none, crossfade, morph (okuzenzakalelayo: akukho).',
+        'i-tempDither: I-dithering yesikhashana - icishiwe, umsindo_oluhlaza okwesibhakabhaka, i-flicker_safe (okuzenzakalelayo: kuvaliwe).',
+        'startF: Uhlaka lokuqalisa lokugqwayiza (okuzenzakalelayo: 0).',
+        'maxF: Ubuningi bozimele okufanele bunikezwe (okuzenzakalelayo: 0 = okuzenzakalelayo).',
+        'stepF: Isikhawu sesinyathelo sohlaka (okuzenzakalelayo: 1).',
+        'i-jitter: [CLIENT-ONLY] I-jitter yemojuli ngamaphikseli - idinga ukuvuselelwa kwe-QR yozimele ngamunye.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'I-Dithering Parameters',
+      paragraphs: ['Lawula ama-algorithms e-dithering okucubungula imbondela:'],
+      bullets: [
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, njll (okuzenzakalelayo: ordered_bayer).',
+        'diffusionKernel: Iphutha lokusabalalisa i-kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (okuzenzakalelayo: floyd_steinberg).',
+        'I-ditherAmandla: I-Dither intensity 0-100 (okuzenzakalelayo: 50).',
+        'inyoka: I-Serpentine dithering 0/1 (okuzenzakalelayo: 0).',
+        'i-matrix: I-oda le-matrix ye-dither - i-bayer2, i-bayer4, i-bayer8 (okuzenzakalelayo: i-bayer4).',
+        'bnTile: Usayizi wethayela eliluhlaza okwesibhakabhaka (okuzenzakalelayo: 64).',
+        'I-bnSeed: Imbewu engahleliwe yomsindo oluhlaza okwesibhakabhaka (okuzenzakalelayo: 0).',
+        'colorDither: Color Dithering - akukho, per_channel, perceptual (okuzenzakalelayo: akukho).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Amapharamitha e-Subpixel',
+      paragraphs: ['Izilungiselelo zemodi yokuhlanganisa i-subpixel:'],
+      bullets: [
+        'I-spGrid: Usayizi wegridi ye-Subpixel - 2x2, 3x3, 4x4 (okuzenzakalelayo: 3x3).',
+        'I-spCenter: Umthetho wesikhungo - uqinile, i-halftone_center (okuzenzakalelayo: okuqinile).',
+        'spOkumaphakathi: I-hex yombala omaphakathi ngaphandle kwe-# (okuzenzakalelayo: 808080).',
+        'spFinder: Finder override - okuqinile, isitayela (okuzenzakalelayo: okuqinile).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Amapharamitha we-Halftone',
+      paragraphs: ['Izilungiselelo zemodi ye-halftone blend:'],
+      bullets: [
+        'I-htCell: Usayizi weseli ye-Halftone - per_module noma igridi ye-nxn (okuzenzakalelayo: imojula ngayinye).',
+        'I-htDot: Isimo sechashazi - indilinga, isikwele, umugqa (okuzenzakalelayo: indilinga).',
+        'I-htCurve: Ijika lokukhanya - linear, s-curve, gamma (okuzenzakalelayo: umugqa).',
+        'i-duo1: i-hex yombala wesithunzi se-Duotone ngaphandle kwe-# (okuzenzakalelayo: 000000).',
+        'I-duo2: I-Duotone igqamisa i-hex yombala ngaphandle kwe-# (okuzenzakalelayo: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'I-ECC-Aware Mode Parameters',
+      paragraphs: [
+        'Ukusabalalisa imbondela ehlakaniphile ngokusekelwe kumthamo wokulungisa iphutha:',
+      ],
+      bullets: [
+        'I-eccAware: Nika amandla imodi ye-ECC-aware 0/1 (okuzenzakalelayo: 0).',
+        'I-eccRisk: Iphesenti lesabelomali sobungozi 0-100 (okuzenzakalelayo: 50).',
+        'I-eccMap: Imephu yesisindo - ibanga_to_finders, i-block_heatmap, i-empirical_scan_heatmap (okuzenzakalelayo: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Amapharamitha ozimele',
+      paragraphs: ['Izilungiselelo zozimele zokuhlobisa:'],
+      bullets: [
+        'ifreyimu: Isitayela sozimele - akukho, uzimele_oyindilinga, isitika, ithegi (okuzenzakalelayo: akukho).',
+        'frameText: Umbhalo ozoboniswa kuhlaka (URL ifakwe ikhodi).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Amapharamitha Wombala Wemojuli ngayinye',
+      paragraphs: ['Izinketho zokufaka umbala zemojuli ngayinye:'],
+      bullets: [
+        'I-modColor: Imodi yombala - okuqinile, ngoku_brightness, by_position, by_overlay, by_cluster (okuzenzakalelayo: okuqinile).',
+        'cGada: Qhathanisa unogada 0/1 (okuzenzakalelayo: 0).',
+        'minUkugqama: Isilinganiso esincane sokungafani 1-21 (okuzenzakalelayo: 4.5).',
+        'iphalethi: Imibala ye-hex ehlukaniswe ngokhefana yemodi yephalethi.',
+        'I-paletteMode: Ukusabalalisa kwephalethi - indawo, ukukhanya, i-diagonal, i-radial, okungahleliwe, umugqa, ikholomu (okuzenzakalelayo: isikhundla).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Amapharamitha wokumbondela we-GIF',
+      paragraphs: ['Izilungiselelo zezithombe ezimboziwe ze-GIF:'],
+      bullets: [
+        'I-ovType: Uhlobo lwembondela - static, gif, apng, webp_anim, ividiyo (okuzenzakalelayo: static).',
+        'I-ovFramePick: Ukukhetha kozimele - konke, konke, konke_kozimele, umkhawulo_wesikhathi (okuzenzakalelayo: konke).',
+        'Ukubambezeleka kwe-gif: Sebenzisa ukubambezeleka kozimele we-GIF yasekuqaleni 0/1 (okuzenzakalelayo: 1).',
+        'I-gifDispH: Ukuphathwa kokulahlwa kwe-GIF - inhlonipho, yenza lula (okuzenzakalelayo: inhlonipho).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Imikhawulo ye-Per-ECC Intensity',
+      paragraphs: ['Ubukhulu bembondela yezinga ngalinye lokulungiswa kwephutha:'],
+      bullets: [
+        'maxIntL: Ukuqina okukhulu kwe-ECC L 0-100 (okuzenzakalelayo: 100).',
+        'maxIntM: Ukuqina okukhulu kwe-ECC M 0-100 (okuzenzakalelayo: 100).',
+        'maxIntQ: Ukuqina okukhulu kwe-ECC Q 0-100 (okuzenzakalelayo: 100).',
+        'maxIntH: Ukuqina okukhulu kwe-ECC H 0-100 (okuzenzakalelayo: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'I-QA Simulation Parameters (Iklayenti-kuphela)',
+      paragraphs: [
+        'Lawa mapharamitha acutshungulwa ukuhambisana kwe-URL kodwa asebenza kuphela kusiphequluli:',
+      ],
+      bullets: [
+        'qaContrast: Nika amandla ukuhlola kokugqama 0/1 - kudinga ukuqinisekiswa okusebenzisanayo.',
+        'qaBlur: Lingisa ukufiphala ngamaphikseli - ngokuhlolwa okusebenzisanayo kuphela.',
+        'qaNoise: Lingisa izinga lomsindo - ukuhlola okusebenzisanayo kuphela.',
+        'qaHeatmap: Bonisa imephu yokushisa efundekayo 0/1 - idinga i-UI yembondela yekhanvasi.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Amapharamitha eklayenti kuphela',
+      paragraphs: [
+        'Iningi lamapharamitha e-API asekelwa ngokugcwele ohlangothini lweseva. Amapharamitha amakwe [CLIENT-ONLY] acutshungulwa ukuhambisana kwe-URL kodwa adinga izici zesiphequluli:',
+      ],
+      bullets: [
+        'i-jitter: I-jitter yemojuli idinga ukuvuselelwa kwe-QR yozimele ngamunye ngokungahleliwe.',
+        'Nciphisa ngokuzenzakalelayo: Ukunciphisa ngokuzenzakalela ukuqina kudinga ukuhlolwa okuphindaphindayo kokuskena.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Ukulingiswa kwe-QA kudinga ukuqinisekiswa okusebenzisanayo kwekhanvasi.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Amapharamitha Wokukhipha Engeziwe',
+      paragraphs: ['Izilungiselelo ezinwetshiwe zokukhiphayo nezokuthumela:'],
+      bullets: [
+        'fname: Igama lefayela langokwezifiso lokulanda (okuzenzakalelayo: anqr-qrcode).',
+        'inclQz: Faka indawo ethule kubukhulu bokuphumayo 0/1 (okuzenzakalelayo: 1).',
+        'bgOver: Umbala wangemuva ubhala ngaphezulu i-hex ngaphandle kwe-# (ikhipha ipharamitha ye-bg).',
+        'fmtExtra: Okukhiphayo kwefomethi eyengeziwe - akukho, eps, animated_webp (okuzenzakalelayo: akukho). Qaphela: i-eps ithi [INGXENYE].',
+        'svgPrec: Ukunemba komumo we-SVG - pixel, enembile (okuzenzakalelayo: pixel). [INGXENYE] Uhlangothi lweseva olukhawulelwe okukhiphayo kwe-SVG.',
+        'svgShumeka: Shumeka imbondela ye-raster ku-SVG 0/1 (okuzenzakalelayo: 1). [INGXENYE] Uhlangothi lweseva olukhawulelwe okukhiphayo kwe-SVG.',
+        'I-modulePx: Usayizi we-pixel yemojuli (okuzenzakalelayo: kubalwa ngokuzenzakalelayo ukusuka kusayizi).',
+        'umngcele: Amamojula emingcele engeziwe ngale kwendawo ethulile (okuzenzakalelayo: 0).',
+        'crisp: Nika amandla ukunikezwa kwesithombe esicacile/esinephikiseli 0/1 (okuzenzakalelayo: 1).',
+        'i-snap: Imodi ye-Pixel snap - phansi, nxazonke, isilingi (okuzenzakalelayo: phansi).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Amapharamitha Wokulondoloza Iphethini',
+      paragraphs: ['Lawula ukuthi yiziphi izici zesakhiwo ezivikelekile ekumbondeleni:'],
+      bullets: [
+        'KeepFinders: Gcina amaphethini okuthola 0/1 (okuzenzakalelayo: 1).',
+        'GcinaIsikhathi: Londoloza amaphethini wesikhathi 0/1 (okuzenzakalelayo: 0).',
+        'keepAlign: Londoloza amaphethini okuqondanisa 0/1 (okuzenzakalelayo: 0).',
+        'protectFmt: Vikela ifomethi yolwazi lwamamojula 0/1 (okuzenzakalelayo: 0).',
+        'protectVer: Vikela inguqulo yolwazi lwamamojula 0/1 (okuzenzakalelayo: 0).',
+      ],
+    },
     {
       heading: 'Ukusetshenziswa Kwesibonelo',
       paragraphs: [

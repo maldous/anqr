@@ -233,13 +233,13 @@ import { decompressFrames, parseGIF } from 'gifuct-js';
 import {
   type AnimationEasing,
   type AnimationPattern,
-  applyColorCyclePattern,
-  applyDriftPattern,
-  applyEasing,
-  applyPulsePattern,
-  applyScanlinePattern,
-  applyShimmerPattern,
-  applyWavePattern,
+  applyAnimationColorCycle,
+  applyAnimationDrift,
+  applyAnimationEasing,
+  applyAnimationPulse,
+  applyAnimationScanline,
+  applyAnimationShimmer,
+  applyAnimationWave,
 } from '../../src/modules/animation';
 // @ts-expect-error - JS module
 import { QRGenerator } from '../../src/modules/qr-generator';
@@ -832,7 +832,7 @@ function generatePatternFramesServer(
 
   for (let i = 0; i < frameCount; i++) {
     const linearProgress = i / frameCount;
-    const progress = applyEasing(linearProgress, easing);
+    const progress = applyAnimationEasing(linearProgress, easing);
     const frame = createCanvas(width, height);
     const ctx = frame.getContext('2d');
 
@@ -841,22 +841,22 @@ function generatePatternFramesServer(
 
     switch (pattern) {
       case 'pulse':
-        applyPulsePattern(frameData.data, progress, seed);
+        applyAnimationPulse(frameData.data, progress, seed);
         break;
       case 'wave':
-        applyWavePattern(frameData.data, progress, width, height, seed);
+        applyAnimationWave(frameData.data, progress, width, height, seed);
         break;
       case 'scanline':
-        applyScanlinePattern(frameData.data, progress, width, height, seed);
+        applyAnimationScanline(frameData.data, progress, width, height, seed);
         break;
       case 'shimmer':
-        applyShimmerPattern(frameData.data, progress, width, height, seed);
+        applyAnimationShimmer(frameData.data, progress, width, height, seed);
         break;
       case 'drift':
-        applyDriftPattern(frameData.data, progress, width, height, seed);
+        applyAnimationDrift(frameData.data, progress, width, height, seed);
         break;
       case 'color_cycle':
-        applyColorCyclePattern(frameData.data, progress, seed);
+        applyAnimationColorCycle(frameData.data, progress, seed);
         break;
     }
 

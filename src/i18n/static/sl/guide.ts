@@ -970,6 +970,206 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: metapodatkovna polja PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parametri obrezovanja',
+      paragraphs: ['Možnosti obrezovanja prekrivne slike:'],
+      bullets: [
+        'cropEn: Omogoči obrezovanje prekrivanja 0/1 (privzeto: 0).',
+        'cropX: središče obrezovanja X kot frakcija 0-1 (privzeto: 0,5).',
+        'cropY: Center za pridelke Y kot frakcija 0-1 (privzeto: 0,5).',
+        'cropSize: velikost obreza kot del slike 0-1 (privzeto: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parametri varnostne ključavnice',
+      paragraphs: ['Nadzirajte, kateri elementi QR so zaščiteni pred spreminjanjem prekrivanja:'],
+      bullets: [
+        'lockF: Zakleni vzorce iskalnika 0/1 (privzeto: 1).',
+        'lockT: Zakleni časovne vzorce 0/1 (privzeto: 1).',
+        'lockA: Zakleni vzorce poravnave 0/1 (privzeto: 1).',
+        'lockFmt: Zakleni informacije o formatu 0/1 (privzeto: 1).',
+        'lockV: Zakleni informacije o različici 0/1 (privzeto: 1).',
+        'safeMode: Varnostni način - izklopljen, uravnotežen, strog (privzeto: izklopljen).',
+        'safeMinPx: Najmanjša velikost modula v slikovnih pikah (privzeto: 2).',
+        'safeMinQz: Najmanjši moduli tihega območja (privzeto: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametri samodejnega prilagajanja',
+      paragraphs: ['Nastavitve samodejne optimizacije:'],
+      bullets: [
+        'autoVer: Samodejni izbor različice QR 0/1 (privzeto: 1).',
+        'autoEcc: Samodejna izbira ravni ECC 0/1 (privzeto: 0) – samo namig na strani strežnika.',
+        'autoReduce: [SAMO ZA ODJEMALCA] Samodejno zmanjša intenzivnost, dokler ni mogoče optično prebrati – zahteva preverjanje skeniranja v zanki.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Dodatni parametri animacije',
+      paragraphs: ['Razširjeni kontrolniki animacije za izpis GIF:'],
+      bullets: [
+        'zanka: animacija se neprekinjeno ponavlja 0/1 (privzeto: 1).',
+        'odboj: smer animacije ping-ponga 0/1 (privzeto: 0).',
+        'vzvratno: predvajanje animacije vzvratno 0/1 (privzeto: 0).',
+        'colorCycle: Omogoči učinek barvnega cikla 0/1 (privzeto: 0).',
+        'interp: interpolacija okvirja - brez, navzkrižno pojemanje, preoblikovanje (privzeto: brez).',
+        'tempDither: začasno drhtanje - izklopljeno, blue_noise, flicker_safe (privzeto: izklopljeno).',
+        'startF: začetni okvir animacije (privzeto: 0).',
+        'maxF: največje število sličic za upodabljanje (privzeto: 0 = samodejno).',
+        'stepF: interval korakov okvirja (privzeto: 1).',
+        'tresenje: [SAMO ZA ODJEMALCA] Trepetanje modula v slikovnih pikah - zahteva regeneracijo QR na okvir.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parametri ditheringa',
+      paragraphs: ['Nadzirajte algoritme drhtenja za obdelavo prekrivanja:'],
+      bullets: [
+        'ditherKind: Algoritem ditherja - error_diffusion, ordered_bayer, blue_noise itd. (privzeto: ordered_bayer).',
+        'diffusionKernel: Jedro razširjanja napak - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (privzeto: floyd_steinberg).',
+        'ditherStrength: Intenzivnost ditherja 0-100 (privzeto: 50).',
+        'serpentine: serpentinasto drhtanje 0/1 (privzeto: 0).',
+        'matrika: urejena matrika drhtanja - bayer2, bayer4, bayer8 (privzeto: bayer4).',
+        'bnTile: velikost ploščice z modrim šumom (privzeto: 64).',
+        'bnSeed: naključno seme modrega šuma (privzeto: 0).',
+        'colorDither: mehčanje barv – brez, na_kanal, zaznavno (privzeto: brez).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parametri podpikslov',
+      paragraphs: ['Nastavitve za način mešanja podpikslov:'],
+      bullets: [
+        'spGrid: Velikost mreže podpikslov - 2x2, 3x3, 4x4 (privzeto: 3x3).',
+        'spCenter: sredinsko pravilo - strogo, halftone_center (privzeto: strogo).',
+        'spNeutral: šestnajstiški nevtralni barvi brez # (privzeto: 808080).',
+        'spFinder: preglasitev iskalnika - polno, stilizirano (privzeto: polno).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parametri poltonov',
+      paragraphs: ['Nastavitve za način mešanja poltonov:'],
+      bullets: [
+        'htCell: velikost poltonske celice - mreža na_modul ali nxn (privzeto: na_modul).',
+        'htDot: oblika pike - krog, kvadrat, črta (privzeto: krog).',
+        'htCurve: Krivulja svetlosti - linearna, s-krivulja, gama (privzeto: linearna).',
+        'duo1: šestnajstiška barva sence dvojne barve brez # (privzeto: 000000).',
+        'duo2: šestnajstiška barva dvotonskega poudarka brez # (privzeto: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parametri načina z upoštevanjem ECC',
+      paragraphs: [
+        'Inteligentna porazdelitev prekrivanja na podlagi zmogljivosti odpravljanja napak:',
+      ],
+      bullets: [
+        'eccAware: Omogoči način z zavedanjem o ECC 0/1 (privzeto: 0).',
+        'eccRisk: Odstotek proračuna tveganja 0–100 (privzeto: 50).',
+        'eccMap: Zemljevid teže - distance_to_finders, block_heatmap, empirical_scan_heatmap (privzeto: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parametri okvirja',
+      paragraphs: ['Nastavitve okrasnega okvirja:'],
+      bullets: [
+        'okvir: slog okvirja - brez, zaobljeni_okvir, nalepka, oznaka (privzeto: brez).',
+        'frameText: Besedilo za prikaz v okvirju (URL kodirano).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Barvni parametri na modul',
+      paragraphs: ['Možnosti barvanja posameznih modulov:'],
+      bullets: [
+        'modColor: barvni način - polno, by_brightness, by_position, by_overlay, by_cluster (privzeto: solid).',
+        'cGuard: Zaščita kontrasta 0/1 (privzeto: 0).',
+        'minContrast: Najmanjše kontrastno razmerje 1–21 (privzeto: 4,5).',
+        'paleta: šestnajstiške barve, ločene z vejicami, za paletni način.',
+        'paletteMode: Porazdelitev palete - položaj, svetlost, diagonala, radialno, naključno, vrstica, stolpec (privzeto: položaj).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parametri prekrivanja GIF',
+      paragraphs: ['Nastavitve za animirane prekrivne slike GIF:'],
+      bullets: [
+        'ovType: Vrsta prekrivanja - statična, gif, apng, webp_anim, video (privzeto: statična).',
+        'ovFramePick: Izbira okvirja - vse, vsak_n, max_frames, duration_limit (privzeto: vse).',
+        'gifDelays: Uporabi originalne zakasnitve okvirjev GIF 0/1 (privzeto: 1).',
+        'gifDispH: obravnavanje odlaganja GIF-ov - spoštovanje, poenostavitev (privzeto: spoštovanje).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Meje intenzivnosti po ECC',
+      paragraphs: ['Največja intenzivnost prekrivanja na raven popravka napak:'],
+      bullets: [
+        'maxIntL: največja intenzivnost za ECC L 0–100 (privzeto: 100).',
+        'maxIntM: največja intenzivnost za ECC M 0–100 (privzeto: 100).',
+        'maxIntQ: največja intenzivnost za ECC Q 0–100 (privzeto: 100).',
+        'maxIntH: največja intenzivnost za ECC H 0–100 (privzeto: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parametri simulacije QA (samo za odjemalca)',
+      paragraphs: [
+        'Ti parametri so razčlenjeni za združljivost URL-jev, vendar delujejo samo v brskalniku:',
+      ],
+      bullets: [
+        'qaContrast: Omogoči preverjanje kontrasta 0/1 – zahteva interaktivno preverjanje.',
+        'qaBlur: Simulirajte zameglitev v slikovnih pikah – samo za interaktivno testiranje.',
+        'qaNoise: Simulacija ravni hrupa – samo za interaktivno testiranje.',
+        'qaHeatmap: Prikaži toplotni zemljevid berljivosti 0/1 – zahteva uporabniški vmesnik s prekrivanjem platna.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parametri samo za odjemalca',
+      paragraphs: [
+        'Večina parametrov API je v celoti podprtih na strani strežnika. Parametri z oznako [SAMO ZA ODJEMALCA] so razčlenjeni glede združljivosti URL-jev, vendar zahtevajo funkcije brskalnika:',
+      ],
+      bullets: [
+        'tresenje: tresenje modula zahteva regeneracijo QR na okvir z naključnostjo.',
+        'autoReduce: intenzivnost samodejnega zmanjšanja zahteva iterativno testiranje skeniranja.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA simulacija zahteva interaktivno validacijo platna.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Dodatni izhodni parametri',
+      paragraphs: ['Razširjene nastavitve izpisa in izvoza:'],
+      bullets: [
+        'fname: Ime datoteke po meri za prenose (privzeto: anqr-qrcode).',
+        'inclQz: vključi tiho območje v izhodne dimenzije 0/1 (privzeto: 1).',
+        'bgOver: heksadecimalna preglasitev barve ozadja brez # (preglasi parameter bg).',
+        'fmtExtra: dodatni izhodni format - brez, eps, animated_webp (privzeto: brez). Opomba: eps je [DELNO].',
+        'svgPrec: natančnost oblike SVG - piksel, natančno (privzeto: piksel). [DELNO] Izhod SVG je omejen na strani strežnika.',
+        'svgEmbed: Vdelaj rastrsko prekrivanje v SVG 0/1 (privzeto: 1). [DELNO] Izhod SVG je omejen na strani strežnika.',
+        'modulePx: velikost slikovnih pik modula (privzeto: samodejno izračunano iz velikosti).',
+        'meja: dodatni mejni moduli onkraj tihega območja (privzeto: 0).',
+        'crisp: Omogoči upodabljanje ostre/pikselizirane slike 0/1 (privzeto: 1).',
+        'snap: način snap slikovnih pik - tla, okroglo, strop (privzeto: tla).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametri ohranjanja vzorca',
+      paragraphs: ['Nadzirajte, kateri strukturni elementi so zaščiteni pred prekrivanjem:'],
+      bullets: [
+        'keepFinders: Ohrani vzorce iskalnika 0/1 (privzeto: 1).',
+        'keepTiming: Ohrani časovne vzorce 0/1 (privzeto: 0).',
+        'keepAlign: Ohrani vzorce poravnave 0/1 (privzeto: 0).',
+        'protectFmt: Zaščiti informacijske module oblike 0/1 (privzeto: 0).',
+        'protectVer: Zaščiti informacijske module različice 0/1 (privzeto: 0).',
+      ],
+    },
     {
       heading: 'Primer uporabe',
       paragraphs: [

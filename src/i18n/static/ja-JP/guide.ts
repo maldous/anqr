@@ -938,6 +938,204 @@ export const guide: PageDefinition = {
         'metaTitle、metaAuthor、metaCopy、メタ Desc: PNGメタデータフィールド',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'クロップパラメータ',
+      paragraphs: ['オーバーレイ画像のトリミング オプション:'],
+      bullets: [
+        'CropEn: オーバーレイのトリミング 0/1 を有効にします (デフォルト: 0)。',
+        'CropX: 中心 X を小数点 0 ～ 1 として切り抜きます (デフォルト: 0.5)。',
+        'CropY: 中心 Y を分数 0 ～ 1 として切り取ります (デフォルト: 0.5)。',
+        'CropSize: 画像の一部としてトリミング サイズ 0 ～ 1 (デフォルト: 1)。',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: '安全ロックパラメータ',
+      paragraphs: ['どの QR 要素をオーバーレイの変更から保護するかを制御します。'],
+      bullets: [
+        'lockF: ファインダー パターン 0/1 をロックします (デフォルト: 1)。',
+        'lockT: ロック タイミング パターン 0/1 (デフォルト: 1)。',
+        'lockA: 位置合わせパターン 0/1 をロックします (デフォルト: 1)。',
+        'lockFmt: ロック形式情報 0/1 (デフォルト: 1)。',
+        'lockV: ロックのバージョン情報 0/1 (デフォルト: 1)。',
+        'safeMode: 安全モード - オフ、バランス、厳密 (デフォルト: オフ)。',
+        'safeMinPx: ピクセル単位の最小モジュール サイズ (デフォルト: 2)。',
+        'safeMinQz: 最小のクワイエット ゾーン モジュール (デフォルト: 4)。',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'オートチューニングパラメータ',
+      paragraphs: ['自動最適化設定:'],
+      bullets: [
+        'autoVer: QR バージョン 0/1 を自動選択します (デフォルト: 1)。',
+        'autoEcc: ECC レベル 0/1 を自動選択 (デフォルト: 0) - サーバー側のヒントのみ。',
+        'autoReduce: [クライアントのみ] スキャン可能になるまで強度を自動的に下げます - スキャン検証ループが必要です。',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: '追加のアニメーションパラメータ',
+      paragraphs: ['GIF 出力用の拡張アニメーション コントロール:'],
+      bullets: [
+        'ループ: アニメーションは連続的に 0/1 ループします (デフォルト: 1)。',
+        'bounce: ピンポンアニメーションの方向 0/1 (デフォルト: 0)。',
+        'reverse: アニメーションを逆方向 0/1 (デフォルト: 0) で再生します。',
+        'colorCycle: カラー サイクリング効果 0/1 を有効にします (デフォルト: 0)。',
+        'interp: フレーム補間 - なし、クロスフェード、モーフ (デフォルト: なし)。',
+        'tempDither: 時間的ディザリング - オフ、ブルーノイズ、フリッカーセーフ (デフォルト: オフ)。',
+        'startF: アニメーションの開始フレーム (デフォルト: 0)。',
+        'maxF: レンダリングする最大フレーム数 (デフォルト: 0 = 自動)。',
+        'stepF: フレームステップ間隔 (デフォルト: 1)。',
+        'jitter: [クライアントのみ] ピクセル単位のモジュール ジッター - フレームごとの QR 再生成が必要です。',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'ディザリングパラメータ',
+      paragraphs: ['オーバーレイ処理のディザリング アルゴリズムを制御します。'],
+      bullets: [
+        'ditherKind: ディザ アルゴリズム - error_diffusion、ORDER_BAYER、BLUE_NOISE など (デフォルト:ORDER_BAYER)。',
+        'diffusionKernel: 誤差拡散カーネル - floyd_steinberg、jarvis_judice_ninke、sticki、burkes、sierra、atkinson (デフォルト: floyd_steinberg)。',
+        'ditherStrength: ディザー強度 0 ～ 100 (デフォルト: 50)。',
+        'serpentine: 蛇行ディザリング 0/1 (デフォルト: 0)。',
+        '行列: 順序付きディザ行列 - ベイヤー 2、ベイヤー 4、ベイヤー 8 (デフォルト: ベイヤー 4)。',
+        'bnTile: ブルー ノイズ タイル サイズ (デフォルト: 64)。',
+        'bnSeed: ブルー ノイズのランダム シード (デフォルト: 0)。',
+        'colorDither: カラーディザリング - なし、チャネルごと、知覚的 (デフォルト: なし)。',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'サブピクセルパラメータ',
+      paragraphs: ['サブピクセルブレンドモードの設定:'],
+      bullets: [
+        'spGrid: サブピクセル グリッド サイズ - 2x2、3x3、4x4 (デフォルト: 3x3)。',
+        'spCenter: センター ルール - 厳密、halftone_center (デフォルト: 厳密)。',
+        'spNeutral: # なしのニュートラル色の 16 進数 (デフォルト: 808080)。',
+        'spFinder: ファインダー オーバーライド - ソリッド、スタイル化 (デフォルト: ソリッド)。',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'ハーフトーンパラメータ',
+      paragraphs: ['ハーフトーン ブレンド モードの設定:'],
+      bullets: [
+        'htCell: ハーフトーン セル サイズ - per_module または nxn グリッド (デフォルト: per_module)。',
+        'htDot: ドットの形状 - 円、四角、線 (デフォルト: 円)。',
+        'htCurve: 輝度カーブ - リニア、S カーブ、ガンマ (デフォルト: リニア)。',
+        'due1: # なしの 16 進数のデュオトーン シャドウ カラー (デフォルト: 000000)。',
+        'due2: # なしのデュオトーン ハイライト カラー 16 進数 (デフォルト: ffffff)。',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC 対応モードのパラメータ',
+      paragraphs: ['エラー訂正能力に基づいたインテリジェントなオーバーレイ配信:'],
+      bullets: [
+        'eccAware: ECC 認識モード 0/1 を有効にします (デフォルト: 0)。',
+        'eccRisk: リスク バジェットの割合 0 ～ 100 (デフォルト: 50)。',
+        'eccMap: ウェイト マップ - distance_to_finders、block_heatmap、empirical_scan_heatmap (デフォルト: distance_to_finders)。',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'フレームパラメータ',
+      paragraphs: ['飾り枠の設定：'],
+      bullets: [
+        'Frame: フレーム スタイル - なし、rounded_frame、ステッカー、タグ (デフォルト: なし)。',
+        'FrameText: フレーム内に表示するテキスト (URL エンコード)。',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'モジュールごとのカラーパラメータ',
+      paragraphs: ['個々のモジュールの色付けオプション:'],
+      bullets: [
+        'modColor: カラー モード - ソリッド、by_brightness、by_position、by_overlay、by_cluster (デフォルト: ソリッド)。',
+        'cGuard: コントラスト ガード 0/1 (デフォルト: 0)。',
+        'minContrast: 最小コントラスト比 1 ～ 21 (デフォルト: 4.5)。',
+        'パレット: パレット モードのカンマ区切りの 16 進カラー。',
+        'パレットモード: パレットの分布 - 位置、明るさ、対角線、放射状、ランダム、行、列 (デフォルト: 位置)。',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF オーバーレイ パラメータ',
+      paragraphs: ['アニメーション GIF オーバーレイ画像の設定:'],
+      bullets: [
+        'ovType: オーバーレイ タイプ - 静的、gif、apng、webp_anim、ビデオ (デフォルト: 静的)。',
+        'ovFramePick: フレーム選択 - all、every_n、max_frames、duration_limit (デフォルト: all)。',
+        'gifDelays: オリジナルの GIF フレーム遅延 0/1 (デフォルト: 1) を使用します。',
+        'gifDispH: GIF 破棄処理 - 尊重、単純化 (デフォルト: 尊重)。',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'ECC ごとの強度制限',
+      paragraphs: ['エラー訂正レベルごとの最大オーバーレイ強度:'],
+      bullets: [
+        'maxIntL: ECC L の最大強度 0 ～ 100 (デフォルト: 100)。',
+        'maxIntM: ECC M の最大強度 0 ～ 100 (デフォルト: 100)。',
+        'maxIntQ: ECC Q の最大強度 0 ～ 100 (デフォルト: 100)。',
+        'maxIntH: ECC H の最大強度 0 ～ 100 (デフォルト: 100)。',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA シミュレーション パラメータ (クライアントのみ)',
+      paragraphs: [
+        'これらのパラメータは URL 互換性のために解析されますが、ブラウザでのみ機能します。',
+      ],
+      bullets: [
+        'qaContrast: コントラスト チェックを有効にする 0/1 - 対話型の検証が必要です。',
+        'qaBlur: ピクセル単位でぼかしをシミュレートします - インタラクティブなテストのみ。',
+        'qaNoise: ノイズ レベルをシミュレートします - インタラクティブ テストのみ。',
+        'qaHeatmap: 可読性ヒートマップを表示 0/1 - キャンバス オーバーレイ UI が必要です。',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'クライアント専用パラメータ',
+      paragraphs: [
+        'ほとんどの API パラメーターはサーバー側で完全にサポートされています。 [CLIENT-ONLY] とマークされたパラメータは URL 互換性のために解析されますが、ブラウザの機能が必要です。',
+      ],
+      bullets: [
+        'ジッター: モジュールのジッターでは、ランダムなフレームごとの QR 再生成が必要です。',
+        'autoReduce: 強度を自動低減するには、反復的なスキャン テストが必要です。',
+        'qaContrast、qaBlur、qaNoise、qaHeatmap: QA シミュレーションには対話型のキャンバス検証が必要です。',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: '追加の出力パラメータ',
+      paragraphs: ['拡張出力およびエクスポート設定:'],
+      bullets: [
+        'fname: ダウンロード用のカスタム ファイル名 (デフォルト: anqr-qrcode)。',
+        'inclQz: 出力次元 0/1 にクワイエット ゾーンを含めます (デフォルト: 1)。',
+        'bgOver: # なしの背景色オーバーライド 16 進数 (bg パラメーターをオーバーライド)。',
+        'fmtExtra: 追加の形式出力 - なし、eps、animate_webp (デフォルト: なし)。注: eps は [部分] です。',
+        'svgPrec: SVG 形状の精度 - ピクセル、正確 (デフォルト: ピクセル)。 [部分] SVG 出力はサーバー側に限定されます。',
+        'svgEmbed: ラスター オーバーレイを SVG 0/1 に埋め込みます (デフォルト: 1)。 [部分] SVG 出力はサーバー側に限定されます。',
+        'modulePx: モジュールのピクセル サイズ (デフォルト: サイズから自動計算)。',
+        'border: クワイエット ゾーンを超える追加のボーダー モジュール (デフォルト: 0)。',
+        '鮮明: 鮮明/ピクセル化されたイメージのレンダリング 0/1 (デフォルト: 1) を有効にします。',
+        'スナップ: ピクセル スナップ モード - 床、円形、天井 (デフォルト: 床)。',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'パターン保存パラメータ',
+      paragraphs: ['どの構造要素をオーバーレイから保護するかを制御します。'],
+      bullets: [
+        'keepFinders: ファインダー パターン 0/1 を保持します (デフォルト: 1)。',
+        'keepTiming: タイミング パターン 0/1 を保持します (デフォルト: 0)。',
+        'keepAlign: 位置合わせパターン 0/1 を保持します (デフォルト: 0)。',
+        'protectedFmt: フォーマット情報モジュール 0/1 を保護します (デフォルト: 0)。',
+        'protectedVer: バージョン情報モジュール 0/1 を保護します (デフォルト: 0)。',
+      ],
+    },
     {
       heading: '用途例',
       paragraphs: [

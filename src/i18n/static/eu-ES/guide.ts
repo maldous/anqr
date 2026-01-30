@@ -970,6 +970,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG metadatuen eremuak.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Mozketa-parametroak',
+      paragraphs: ['Gainjarri irudiak mozteko aukerak:'],
+      bullets: [
+        'cropEn: Gaitu gainjarrizko mozketa 0/1 (lehenetsia: 0).',
+        'cropX: Moztu zentro X 0-1 frakzio gisa (lehenetsia: 0,5).',
+        'cropY: Moztu Y zentroa 0-1 frakzio gisa (lehenetsia: 0,5).',
+        'cropSize: Moztu tamaina 0-1 irudiaren zati gisa (lehenetsia: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Segurtasun-blokeoaren parametroak',
+      paragraphs: ['Kontrolatu zein QR elementu babestuta dauden gainjarriz aldaketetatik:'],
+      bullets: [
+        'lockF: Blokeatu bilatzailearen ereduak 0/1 (lehenetsia: 1).',
+        'lockT: Blokeatu denbora-ereduak 0/1 (lehenetsia: 1).',
+        'lockA: Blokeatu lerrokatze ereduak 0/1 (lehenetsia: 1).',
+        'lockFmt: Blokeatu formatuaren informazioa 0/1 (lehenetsia: 1).',
+        'lockV: Blokeatu bertsioaren informazioa 0/1 (lehenetsia: 1).',
+        'safeMode: Segurtasun modua - desaktibatuta, orekatua, zorrotza (lehenetsia: desaktibatuta).',
+        'safeMinPx: Moduluaren gutxieneko tamaina pixeletan (lehenetsia: 2).',
+        'safeMinQz: gutxieneko gune lasaien moduluak (lehenetsia: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Sintonizazio automatikoko parametroak',
+      paragraphs: ['Optimizazio automatikoaren ezarpenak:'],
+      bullets: [
+        'autoVer: 0/1 QR bertsioa automatikoki hautatzea (lehenetsia: 1).',
+        'autoEcc: ECC maila automatikoki hautatzea 0/1 (lehenetsia: 0) - zerbitzariaren aldeko aholkua soilik.',
+        'autoReduce: [BEZEROA BAKARRIK] Intentsitatea automatikoki murriztea eskaneatu arte - eskaneatzea baliozkotzeko begizta behar du.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Animazio-parametro osagarriak',
+      paragraphs: ['GIF irteerarako animazio-kontrol hedatuak:'],
+      bullets: [
+        'begizta: animazio begiztak etengabe 0/1 (lehenetsia: 1).',
+        'Errebotea: Ping-pong animazioaren norabidea 0/1 (lehenetsia: 0).',
+        'alderantzizkoa: 0/1 alderantziz erreproduzitu animazioa (lehenetsia: 0).',
+        'colorCycle: Gaitu koloreen ziklo-efektua 0/1 (lehenetsia: 0).',
+        'interp: Markoen interpolazioa - none, crossfade, morph (lehenetsia: none).',
+        'tempDither: dithering tenporala - desaktibatuta, blue_noise, flicker_safe (lehenetsia: desaktibatuta).',
+        'startF: animazioaren hasierako fotograma (lehenetsia: 0).',
+        'maxF: Errendatu beharreko gehienezko fotograma (lehenetsia: 0 = automatikoa).',
+        'stepF: fotograma-pauso-tartea (lehenetsia: 1).',
+        'jitter: [BEZEROA BAKARRIK] Moduluaren jitter pixeletan - fotograma bakoitzeko QR birsorkuntza behar du.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering-parametroak',
+      paragraphs: ['Kontrolatu dithering algoritmoak gainjarri prozesatzeko:'],
+      bullets: [
+        'ditherKind: Dither algoritmoa - error_diffusion, ordered_bayer, blue_noise, etab (lehenetsia: ordered_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (lehenetsia: floyd_steinberg).',
+        'ditherStrength: Dither intentsitatea 0-100 (lehenetsia: 50).',
+        'serpentine: Serpentine dithering 0/1 (lehenetsia: 0).',
+        'matrizea: dither matrize ordenatua - bayer2, bayer4, bayer8 (lehenetsia: bayer4).',
+        'bnTile: Blue noise lauzaren tamaina (lehenetsia: 64).',
+        'bnSeed: Blue noise ausazko hazia (lehenetsia: 0).',
+        'colorDither: Koloreen dithering - bat ere ez, kanal bakoitzeko, pertzeptiboa (lehenetsia: bat ere ez).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Azpipixeleko parametroak',
+      paragraphs: ['Azpipixelen nahasketa moduaren ezarpenak:'],
+      bullets: [
+        'spGrid: azpipixeleko sareta-tamaina - 2x2, 3x3, 4x4 (lehenetsia: 3x3).',
+        'spCenter: Erdiko araua - zorrotza, erdi-tonu_zentroa (lehenetsia: zorrotza).',
+        'spNeutral: kolore neutroko hex # gabe (lehenetsia: 808080).',
+        'spFinder: Bilatzailea gainidaztea - solidoa, estilizatua (lehenetsia: solidoa).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Tonu erdiko parametroak',
+      paragraphs: ['Tonu erdiko nahasketa moduaren ezarpenak:'],
+      bullets: [
+        'htCell: tonu erdiko gelaxken tamaina - per_module edo nxn grid (lehenetsia: per_module).',
+        'htDot: Puntu forma - zirkulua, karratua, lerroa (lehenetsia: zirkulua).',
+        'htCurve: Distira-kurba - lineala, s-kurba, gamma (lehenetsia: lineala).',
+        'duo1: Itzalen kolore bikoitza # gabe (lehenetsia: 000000).',
+        'duo2: Duotone nabarmendu kolorea # gabe (lehenetsia: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-aware moduko parametroak',
+      paragraphs: ['Gainjarri banaketa adimenduna erroreak zuzentzeko ahalmenean oinarrituta:'],
+      bullets: [
+        'eccAware: Gaitu ECC-aware modua 0/1 (lehenetsia: 0).',
+        'eccRisk: Arriskuaren aurrekontuaren ehunekoa 0-100 (lehenetsia: 50).',
+        'eccMap: Pisu-mapa - distance_to_finders, block_heatmap, enpirical_scan_heatmap (lehenetsia: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Marko-parametroak',
+      paragraphs: ['Marko apaingarriaren ezarpenak:'],
+      bullets: [
+        'markoa: markoaren estiloa - bat ere ez, marko_biribildua, eranskailua, etiketa (lehenetsia: bat ere ez).',
+        'frameText: markoan bistaratzeko testua (URL kodetuta).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Modulu bakoitzeko kolore-parametroak',
+      paragraphs: ['Modulu indibidualak koloreztatzeko aukerak:'],
+      bullets: [
+        'modColor: Kolore modua - solidoa, by_distira, by_position, by_overlay, by_cluster (lehenetsia: solidoa).',
+        'cGuard: kontraste babeslea 0/1 (lehenetsia: 0).',
+        'minKontrastea: gutxieneko kontraste-erlazioa 1-21 (lehenetsia: 4,5).',
+        'paleta: komaz bereizitako hex koloreak paleta modurako.',
+        'paletteMode: Paleta banaketa - posizioa, distira, diagonala, erradiala, ausazkoa, errenkada, zutabea (lehenetsia: posizioa).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF gainjartze-parametroak',
+      paragraphs: ['GIF animatuen gainjartze-irudien ezarpenak:'],
+      bullets: [
+        'ovType: gainjarri mota - estatikoa, gif, apng, webp_anim, bideoa (lehenetsia: estatikoa).',
+        'ovFramePick: fotograma hautatzea - ​​guztiak, every_n, max_frames, duration_limit (lehenetsia: guztiak).',
+        'gifDelays: Erabili jatorrizko GIF fotograma atzerapenak 0/1 (lehenetsia: 1).',
+        'gifDispH: GIF eliminazio-kudeaketa - errespetatu, sinplifikatu (lehenetsia: errespetatu).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'ECC bakoitzeko Intentsitate Mugak',
+      paragraphs: ['Gehienezko gainjartze intentsitatea erroreak zuzentzeko maila bakoitzeko:'],
+      bullets: [
+        'maxIntL: ECC L 0-100erako intentsitate maximoa (lehenetsia: 100).',
+        'maxIntM: ECC M 0-100rako intentsitate maximoa (lehenetsia: 100).',
+        'maxIntQ: ECC Q 0-100erako intentsitate maximoa (lehenetsia: 100).',
+        'maxIntH: ECC H 0-100erako intentsitate maximoa (lehenetsia: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA simulazio-parametroak (bezeroarentzat soilik)',
+      paragraphs: [
+        'Parametro hauek URL bateragarritasunerako analizatzen dira, baina arakatzailean bakarrik funtzionatzen dute:',
+      ],
+      bullets: [
+        'qaContrast: Gaitu kontraste egiaztapena 0/1 - baliozkotze interaktiboa behar du.',
+        'qaBlur: simulatu lausotzea pixeletan - proba interaktiboetarako soilik.',
+        'qaNoise: simulatu zarata maila - proba interaktiboetarako soilik.',
+        'qaHeatmap: Erakutsi irakurgarritasunaren bero-mapa 0/1 - mihisearen gainjartze-interfazea behar du.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Bezeroentzako soilik parametroak',
+      paragraphs: [
+        'API parametro gehienak zerbitzariaren aldetik guztiz onartzen dira. [BEZEROA BAKARRIK] markatutako parametroak URL bateragarritasunerako analizatzen dira, baina arakatzailearen funtzioak behar dituzte:',
+      ],
+      bullets: [
+        'jitter: moduluen jitter-ek fotograma bakoitzeko QR birsorkuntza behar du ausaz.',
+        'autoReduce: Auto-murrizketaren intentsitatea eskaneatze proba errepikakorra behar da.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA simulazioak mihise interaktiboa balioztatzea behar du.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Irteera-parametro gehigarriak',
+      paragraphs: ['Irteera eta esportazio ezarpen hedatuak:'],
+      bullets: [
+        'fname: deskargak egiteko fitxategi-izen pertsonalizatua (lehenetsia: anqr-qrcode).',
+        'inclQz: Sartu gune lasaia irteerako 0/1 dimentsioetan (lehenetsia: 1).',
+        'bgOver: atzeko planoko kolorea gainidazten du hex # gabe (bg parametroa gainidazten du).',
+        'fmtExtra: Formatu gehigarriaren irteera - none, eps, animated_webp (lehenetsia: bat ere ez). Oharra: eps [PARTEZIALA] da.',
+        'svgPrec: SVG forma zehaztasuna - pixel, zehatza (lehenetsia: pixel). [PARTIALA] SVG irteera mugatua zerbitzariaren aldetik.',
+        'svgEmbed: txertatu raster gainjartzea SVG 0/1-n (lehenetsia: 1). [PARTIALA] SVG irteera mugatua zerbitzariaren aldetik.',
+        'modulePx: Moduluaren pixel-tamaina (lehenetsia: tamainatik automatikoki kalkulatua).',
+        'ertza: ertz-modulu gehigarriak eremu lasaitik haratago (lehenetsia: 0).',
+        'kurruskaria: gaitu irudi kurruskariak/pixelatuak errendatzea 0/1 (lehenetsia: 1).',
+        'snap: Pixel snap modua - solairua, biribila, sabai (lehenetsia: solairua).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Ereduak zaintzeko parametroak',
+      paragraphs: ['Kontrolatu zein egitura-elementu babesten diren gainjartzetik:'],
+      bullets: [
+        'keepFinders: gorde bilatzaile-ereduak 0/1 (lehenetsia: 1).',
+        'keepTiming: gorde denbora-ereduak 0/1 (lehenetsia: 0).',
+        'keepAlign: Lerrokatze ereduak gorde 0/1 (lehenetsia: 0).',
+        'protectFmt: Babestu formatuaren informazio moduluak 0/1 (lehenetsia: 0).',
+        'protectVer: Babestu bertsioaren informazio moduluak 0/1 (lehenetsia: 0).',
+      ],
+    },
     {
       heading: 'Erabilera adibidea',
       paragraphs: [

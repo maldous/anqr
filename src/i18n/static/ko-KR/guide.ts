@@ -934,6 +934,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, 메타코피, 메타 Desc: PNG 메타데이터 필드.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: '자르기 매개변수',
+      paragraphs: ['오버레이 이미지 자르기 옵션:'],
+      bullets: [
+        'CropEn: 오버레이 자르기 0/1을 활성화합니다(기본값: 0).',
+        'CropX: 자르기 중심 X를 분수 0-1로 표시합니다(기본값: 0.5).',
+        'CropY: 자르기 중심 Y를 분수 0-1로 표시합니다(기본값: 0.5).',
+        'CropSize: 이미지 0~1의 비율로 자르기 크기(기본값: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: '안전 잠금 매개변수',
+      paragraphs: ['오버레이 수정으로부터 보호되는 QR 요소를 제어합니다.'],
+      bullets: [
+        'lockF: 잠금 파인더 패턴 0/1(기본값: 1).',
+        'lockT: 잠금 타이밍 패턴 0/1(기본값: 1)',
+        'lockA: 정렬 패턴을 0/1로 잠급니다(기본값: 1).',
+        'lockFmt: 잠금 형식 정보 0/1(기본값: 1).',
+        'lockV: 잠금 버전 정보 0/1(기본값: 1).',
+        'safeMode: 안전 모드 - 꺼짐, 균형, 엄격(기본값: 꺼짐).',
+        'safeMinPx: 최소 모듈 크기(픽셀 단위)(기본값: 2).',
+        'safeMinQz: 최소 여백 모듈(기본값: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: '자동 튜닝 매개변수',
+      paragraphs: ['자동 최적화 설정:'],
+      bullets: [
+        'autoVer: QR 버전 0/1을 자동 선택합니다(기본값: 1).',
+        'autoEcc: ECC 레벨 0/1 자동 선택(기본값: 0) - 서버측 힌트만 해당됩니다.',
+        'autoReduce: [클라이언트 전용] 스캔할 수 있을 때까지 강도를 자동으로 줄입니다. 스캔 검증 루프가 필요합니다.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: '추가 애니메이션 매개변수',
+      paragraphs: ['GIF 출력을 위한 확장된 애니메이션 컨트롤:'],
+      bullets: [
+        'loop: 애니메이션이 연속적으로 0/1 반복됩니다(기본값: 1).',
+        '바운스: 탁구 애니메이션 방향 0/1 (기본값: 0).',
+        'reverse: 애니메이션을 역방향 0/1로 재생합니다(기본값: 0).',
+        'colorCycle: 색상 순환 효과 0/1을 활성화합니다(기본값: 0).',
+        'interp: 프레임 보간 - 없음, 크로스페이드, 모프(기본값: 없음).',
+        'tempDither: 시간적 디더링 - off, blue_noise, flicker_safe (기본값: off).',
+        'startF: 애니메이션 시작 프레임(기본값: 0).',
+        'maxF: 렌더링할 최대 프레임(기본값: 0 = 자동).',
+        'stepF: 프레임 단계 간격(기본값: 1).',
+        '지터: [클라이언트 전용] 픽셀 단위의 모듈 지터 - 프레임당 QR 재생성이 필요합니다.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: '디더링 매개변수',
+      paragraphs: ['오버레이 처리를 위한 디더링 알고리즘 제어:'],
+      bullets: [
+        'ditherKind: 디더링 알고리즘 - error_diffusion,order_bayer, blue_noise 등(기본값:order_bayer).',
+        '확산 커널: 오류 확산 커널 - floyd_steinberg, jarvis_judice_ninke, stutu, burkes, sierra, atkinson (기본값: floyd_steinberg).',
+        'ditherStrength: 디더 강도 0-100(기본값: 50).',
+        'serpentine: 서펜타인 디더링 0/1 (기본값: 0).',
+        '매트릭스: 순서가 지정된 디더링 매트릭스 - bayer2, bayer4, bayer8 (기본값: bayer4).',
+        'bnTile: 블루 노이즈 타일 크기(기본값: 64).',
+        'bnSeed: 블루 노이즈 무작위 시드(기본값: 0).',
+        'colorDither: 색상 디더링 - 없음, 채널별, 지각적(기본값: 없음).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: '하위 픽셀 매개변수',
+      paragraphs: ['하위 픽셀 혼합 모드 설정:'],
+      bullets: [
+        'spGrid: 하위 픽셀 격자 크기 - 2x2, 3x3, 4x4(기본값: 3x3).',
+        'spCenter: 중심 규칙 - 엄격, halftone_center(기본값: 엄격).',
+        'spNeutral: #이 없는 중간색 16진수(기본값: 808080).',
+        'spFinder: Finder 재정의 - 단색, 양식화(기본값: 단색).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: '하프톤 매개변수',
+      paragraphs: ['하프톤 블렌드 모드 설정:'],
+      bullets: [
+        'htCell: 하프톤 셀 크기 - per_module 또는 nxn 그리드(기본값: per_module).',
+        'htDot: 점 모양 - 원, 사각형, 선(기본값: 원).',
+        'htCurve: 밝기 곡선 - 선형, S-곡선, 감마(기본값: 선형).',
+        'duo1: #이 없는 이중톤 그림자 색상 16진수(기본값: 000000).',
+        'duo2: #이 없는 이중톤 강조 색상 16진수(기본값: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC 인식 모드 매개변수',
+      paragraphs: ['오류 수정 용량을 기반으로 한 지능형 오버레이 배포:'],
+      bullets: [
+        'eccAware: ECC 인식 모드 0/1을 활성화합니다(기본값: 0).',
+        'eccRisk: 위험 예산 비율 0-100(기본값: 50)',
+        'eccMap: 가중치 맵 - distance_to_finders, block_heatmap, empirical_scan_heatmap (기본값: distance_to_finders)',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: '프레임 매개변수',
+      paragraphs: ['장식 프레임 설정:'],
+      bullets: [
+        '프레임: 프레임 스타일 - 없음, rounded_frame, 스티커, 태그(기본값: 없음).',
+        'FrameText: 프레임에 표시할 텍스트(URL 인코딩됨).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: '모듈별 색상 매개변수',
+      paragraphs: ['개별 모듈 색상 옵션:'],
+      bullets: [
+        'modColor: 색상 모드 - solid, by_brightness, by_position, by_overlay, by_cluster (기본값: solid).',
+        'cGuard: 대비 가드 0/1(기본값: 0).',
+        'minContrast: 최소 명암비 1-21(기본값: 4.5)',
+        '팔레트: 팔레트 모드를 위한 쉼표로 구분된 16진수 색상입니다.',
+        'palemode: 팔레트 분포 - 위치, 밝기, 대각선, 방사형, 무작위, 행, 열(기본값: 위치).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF 오버레이 매개변수',
+      paragraphs: ['애니메이션 GIF 오버레이 이미지 설정:'],
+      bullets: [
+        'ovType: 오버레이 유형 - static, gif, apng, webp_anim, video(기본값: static).',
+        'ovFramePick: 프레임 선택 - all, Every_n, max_frames, Duration_limit(기본값: all).',
+        'gifDelays: 원본 GIF 프레임 지연 0/1을 사용합니다(기본값: 1).',
+        'gifDispH: GIF 처리 처리 - 존중, 단순화(기본값: 존중).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'ECC당 강도 제한',
+      paragraphs: ['오류 수정 수준당 최대 오버레이 강도:'],
+      bullets: [
+        'maxIntL: ECC L 0-100의 최대 강도(기본값: 100).',
+        'maxIntM: ECC M 0-100의 최대 강도(기본값: 100).',
+        'maxIntQ: ECC Q 0~100의 최대 강도(기본값: 100).',
+        'maxIntH: ECC H 0-100의 최대 강도(기본값: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA 시뮬레이션 매개변수(클라이언트 전용)',
+      paragraphs: [
+        '이러한 매개변수는 URL 호환성을 위해 구문 분석되지만 브라우저에서만 작동합니다.',
+      ],
+      bullets: [
+        'qaContrast: 대비 확인 0/1 활성화 - 대화형 검증이 필요합니다.',
+        'qaBlur: 픽셀 단위로 흐림 효과를 시뮬레이션합니다. - 대화형 테스트에만 해당됩니다.',
+        'qaNoise: 소음 수준 시뮬레이션 - 대화형 테스트에만 사용됩니다.',
+        'qaHeatmap: 가독성 히트맵 표시 0/1 - 캔버스 오버레이 UI가 필요합니다.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: '클라이언트 전용 매개변수',
+      paragraphs: [
+        '대부분의 API 매개변수는 서버 측에서 완전히 지원됩니다. [CLIENT-ONLY]로 표시된 매개변수는 URL 호환성을 위해 구문 분석되지만 브라우저 기능이 필요합니다.',
+      ],
+      bullets: [
+        '지터: 모듈 지터에는 무작위로 프레임당 QR 재생성이 필요합니다.',
+        'autoReduce: 자동 감소 강도에는 반복적인 스캔 테스트가 필요합니다.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA 시뮬레이션에는 대화형 캔버스 유효성 검사가 필요합니다.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: '추가 출력 매개변수',
+      paragraphs: ['확장된 출력 및 내보내기 설정:'],
+      bullets: [
+        'fname: 다운로드를 위한 사용자 정의 파일 이름(기본값: anqr-qrcode).',
+        'inclQz: 출력 차원 0/1에 여백을 포함합니다(기본값: 1).',
+        'bgOver: # 없이 배경색을 16진수로 재정의합니다(bg 매개변수를 재정의함).',
+        'fmtExtra: 추가 형식 출력 - 없음, EPS, animation_webp(기본값: 없음). 참고: EPS는 [PARTIAL]입니다.',
+        'svgPrec: SVG 모양 정밀도 - 픽셀, 정밀(기본값: 픽셀). [일부] 서버 측 SVG 출력이 제한되었습니다.',
+        'svgEmbed: SVG 0/1에 래스터 오버레이를 포함합니다(기본값: 1). [일부] 서버 측 SVG 출력이 제한되었습니다.',
+        'modulePx: 모듈 픽셀 크기(기본값: 크기에서 자동 계산됨)',
+        'border: Quiet Zone 너머의 추가 경계 모듈(기본값: 0)',
+        '선명함: 선명하고 픽셀화된 이미지 렌더링 0/1을 활성화합니다(기본값: 1).',
+        '스냅: 픽셀 스냅 모드 - 바닥, 원형, 천장(기본값: 바닥).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: '패턴 보존 매개변수',
+      paragraphs: ['오버레이로부터 보호되는 구조 요소를 제어합니다.'],
+      bullets: [
+        'keepFinders: 파인더 패턴을 0/1로 유지합니다(기본값: 1).',
+        'keepTiming: 타이밍 패턴을 0/1로 유지합니다(기본값: 0).',
+        'keepAlign: 정렬 패턴을 0/1로 유지합니다(기본값: 0).',
+        'protectedFmt: 형식 정보 모듈을 0/1로 보호합니다(기본값: 0).',
+        'protectedVer: 버전 정보 모듈을 0/1로 보호합니다(기본값: 0).',
+      ],
+    },
     {
       heading: '예 사용',
       paragraphs: [

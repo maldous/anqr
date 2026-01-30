@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, meta Táblázat: PNG metaadatmezők.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Vágási paraméterek',
+      paragraphs: ['Fedvénykép kivágási beállításai:'],
+      bullets: [
+        'cropEn: Engedélyezze a fedvényvágást 0/1 (alapértelmezett: 0).',
+        'cropX: Crop center X 0-1 törtként (alapértelmezett: 0,5).',
+        'cropY: Vágás középpontja Y 0-1 törtként (alapértelmezett: 0,5).',
+        'cropSize: Vágás mérete a 0-1 kép töredékeként (alapértelmezett: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Biztonsági zár paraméterei',
+      paragraphs: ['Szabályozza, hogy mely QR-elemek legyenek védve a fedvénymódosítás ellen:'],
+      bullets: [
+        'lockF: Zárkereső minták 0/1 (alapértelmezett: 1).',
+        'lockT: Zárolási időzítési minták 0/1 (alapértelmezett: 1).',
+        'lockA: Zárolási igazítási minták 0/1 (alapértelmezett: 1).',
+        'lockFmt: Zárolási formátum információ 0/1 (alapértelmezett: 1).',
+        'lockV: Zárolási verzió információ 0/1 (alapértelmezett: 1).',
+        'safeMode: Biztonsági mód - kikapcsolt, kiegyensúlyozott, szigorú (alapértelmezett: kikapcsolva).',
+        'safeMinPx: A modul minimális mérete pixelben (alapértelmezett: 2).',
+        'safeMinQz: Minimális csendes zóna modulok (alapértelmezett: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Paraméterek automatikus hangolása',
+      paragraphs: ['Automatikus optimalizálási beállítások:'],
+      bullets: [
+        'autoVer: A QR-verzió automatikus kiválasztása 0/1 (alapértelmezett: 1).',
+        'autoEcc: 0/1-es ECC szint automatikus kiválasztása (alapértelmezett: 0) - csak szerveroldali tipp.',
+        'autoReduce: [CSAK KLIENS] Az intenzitás automatikus csökkentése a beolvasásig – szkennelési ellenőrzési ciklus szükséges.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'További animációs paraméterek',
+      paragraphs: ['Bővített animációs vezérlők a GIF kimenethez:'],
+      bullets: [
+        'ciklus: Animációs ciklusok folyamatosan 0/1 (alapértelmezett: 1).',
+        'ugrálás: Ping-pong animáció iránya 0/1 (alapértelmezett: 0).',
+        'fordított: Animáció lejátszása fordítottan 0/1 (alapértelmezett: 0).',
+        'colorCycle: 0/1 színciklus-effektus engedélyezése (alapértelmezett: 0).',
+        'interp: Keret interpoláció - nincs, keresztfade, morph (alapértelmezett: nincs).',
+        'tempDither: Időbeli dithering - off, blue_noise, flicker_safe (alapértelmezett: ki).',
+        'startF: Animáció kezdő kerete (alapértelmezett: 0).',
+        'maxF: A megjeleníthető képkockák maximális száma (alapértelmezett: 0 = automatikus).',
+        'stepF: Képkocka lépésköze (alapértelmezett: 1).',
+        'jitter: [CSAK CLIENT] Modul remegés képpontokban – képkockánkénti QR-regenerálást igényel.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering paraméterek',
+      paragraphs: ['Szabályozási algoritmusok átfedés feldolgozásához:'],
+      bullets: [
+        'ditherKind: Dither algoritmus - error_diffusion, ordered_bayer, blue_noise stb (alapértelmezett: ordered_bayer).',
+        'diffusionKernel: Hiba diffúziós kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (alapértelmezett: floyd_steinberg).',
+        'ditherStrength: Dither intenzitása 0-100 (alapértelmezett: 50).',
+        'szerpentin: Szerpentin dithering 0/1 (alapértelmezett: 0).',
+        'mátrix: Rendezett dither mátrix - bayer2, bayer4, bayer8 (alapértelmezett: bayer4).',
+        'bnTile: Kék zajcsempék mérete (alapértelmezett: 64).',
+        'bnSeed: Kék zaj véletlenszerű mag (alapértelmezett: 0).',
+        'colorDither: Színdithering – nincs, csatornánként, észlelési (alapértelmezett: nincs).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpixel paraméterek',
+      paragraphs: ['Az alpixel keverési mód beállításai:'],
+      bullets: [
+        'spGrid: Subpixel rács mérete - 2x2, 3x3, 4x4 (alapértelmezett: 3x3).',
+        'spCenter: Középső szabály – szigorú, halftone_center (alapértelmezett: szigorú).',
+        'spNeutral: Semleges szín hatszög # nélkül (alapértelmezett: 808080).',
+        'spFinder: Kereső felülírása - tömör, stilizált (alapértelmezett: szilárd).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Féltónus paraméterek',
+      paragraphs: ['A féltónus keverési mód beállításai:'],
+      bullets: [
+        'htCell: Féltónus cellaméret - modulonként vagy nxn rácsonként (alapértelmezett: modulonként).',
+        'htDot: Pont alakja - kör, négyzet, vonal (alapértelmezett: kör).',
+        'htCurve: Fényerősségi görbe – lineáris, s-görbe, gamma (alapértelmezett: lineáris).',
+        'duo1: Duotone shadow color hexa # nélkül (alapértelmezett: 000000).',
+        'duo2: Duotone kiemelési szín hexa # nélkül (alapértelmezett: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-tudatos mód paraméterei',
+      paragraphs: ['Intelligens fedvényelosztás a hibajavítási kapacitás alapján:'],
+      bullets: [
+        'eccAware: Engedélyezze az ECC-tudatos módot 0/1 (alapértelmezett: 0).',
+        'eccRisk: A kockázati költségvetés százaléka 0-100 (alapértelmezett: 50).',
+        'eccMap: Súlytérkép - távolság_találókig, blokk_hőtérkép, empirikus_scan_heatmap (alapértelmezett: távolság_keresőkig).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Keret paraméterei',
+      paragraphs: ['Dekoratív keret beállításai:'],
+      bullets: [
+        'keret: Keretstílus – nincs, kerekített_keret, matrica, címke (alapértelmezett: nincs).',
+        'frameText: A keretben megjelenítendő szöveg (URL kódolt).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Modulonkénti színparaméterek',
+      paragraphs: ['Egyedi modul színezési lehetőségek:'],
+      bullets: [
+        'modColor: Színmód - szilárd, fényerő szerint, pozíció szerint, átfedés szerint, fürt szerint (alapértelmezett: szilárd).',
+        'cGuard: Kontrasztőr 0/1 (alapértelmezett: 0).',
+        'minContrast: Minimális kontrasztarány 1-21 (alapértelmezett: 4,5).',
+        'paletta: vesszővel elválasztott hexadecimális színek paletta módhoz.',
+        'palettaMode: Paletta eloszlás - pozíció, fényerő, átlós, radiális, véletlenszerű, sor, oszlop (alapértelmezett: pozíció).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF átfedési paraméterek',
+      paragraphs: ['Az animált GIF fedvényképek beállításai:'],
+      bullets: [
+        'ovType: Fedvénytípus – statikus, gif, apng, webp_anim, videó (alapértelmezett: statikus).',
+        'ovFramePick: Képkocka kiválasztása – mind, every_n, max_frames, duration_limit (alapértelmezett: minden).',
+        'gifDelays: Használja az eredeti GIF-kockák késleltetését 0/1 (alapértelmezett: 1).',
+        'gifDispH: GIF selejtezés kezelése – tisztelet, egyszerűsítés (alapértelmezett: tisztelet).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'ECC-nkénti intenzitáshatárok',
+      paragraphs: ['Az átfedés maximális intenzitása hibajavítási szintenként:'],
+      bullets: [
+        'maxIntL: Maximális intenzitás az ECC L 0-100-hoz (alapértelmezett: 100).',
+        'maxIntM: Maximális intenzitás az ECC M 0-100-hoz (alapértelmezett: 100).',
+        'maxIntQ: Max. intenzitás az ECC Q 0-100-hoz (alapértelmezett: 100).',
+        'maxIntH: Maximális intenzitás az ECC H 0-100-hoz (alapértelmezett: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Minőségbiztosítási szimulációs paraméterek (csak ügyfél számára)',
+      paragraphs: [
+        'Ezek a paraméterek elemzésre kerülnek az URL-kompatibilitás érdekében, de csak a böngészőben működnek:',
+      ],
+      bullets: [
+        'qaContrast: Kontrasztellenőrzés engedélyezése 0/1 – interaktív érvényesítés szükséges.',
+        'qaBlur: Az elmosódás szimulálása képpontokban – csak interaktív teszteléshez.',
+        'qaNoise: Szimulálja a zajszintet – csak interaktív teszteléshez.',
+        'qaHeatmap: 0/1 olvashatósági hőtérkép megjelenítése – vászonfedő felhasználói felület szükséges.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Csak kliens paraméterei',
+      paragraphs: [
+        'A legtöbb API-paraméter teljes mértékben támogatott szerveroldali. A [CLIENT-ONLY] megjelölésű paraméterek elemzése az URL-kompatibilitás érdekében történik, de böngészőfunkciókat igényelnek:',
+      ],
+      bullets: [
+        'jitter: A modul jitterhez képkockánkénti QR-regenerálás szükséges, véletlenszerűséggel.',
+        'autoReduce: Az automatikus csökkentés intenzitása iteratív szkennelési tesztet igényel.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: A minőségbiztosítási szimuláció interaktív vászonellenőrzést igényel.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'További kimeneti paraméterek',
+      paragraphs: ['Kibővített kimeneti és exportálási beállítások:'],
+      bullets: [
+        'fname: Egyéni fájlnév a letöltésekhez (alapértelmezett: anqr-qrcode).',
+        'inclQz: Csendes zóna belefoglalása a 0/1 kimeneti méretbe (alapértelmezett: 1).',
+        'bgOver: A háttérszín felülírása hexadecimális szám nélkül # (felülbírálja a bg paramétert).',
+        'fmtExtra: További formátumú kimenet – nincs, eps, animated_webp (alapértelmezett: nincs). Megjegyzés: az eps a [PARTIAL].',
+        'svgPrec: SVG alakzat pontosság - pixel, precíz (alapértelmezett: pixel). [RÉSZLETES] Az SVG kimenet korlátozott szerveroldali.',
+        'svgEmbed: Raszteres fedvény beágyazása az SVG 0/1-be (alapértelmezett: 1). [RÉSZLETES] Az SVG kimenet korlátozott szerveroldali.',
+        'modulePx: Modul pixel mérete (alapértelmezett: automatikusan a méret alapján számítva).',
+        'határ: Extra határmodulok a csendes zónán kívül (alapértelmezett: 0).',
+        'crisp: Éles/pixeles képmegjelenítés engedélyezése 0/1 (alapértelmezett: 1).',
+        'snap: Pixel snap mód – padló, kerek, mennyezet (alapértelmezett: padló).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Mintamegőrzési paraméterek',
+      paragraphs: ['Szabályozza, hogy mely szerkezeti elemek legyenek védve az átfedéstől:'],
+      bullets: [
+        'keepFinders: A keresőminták megőrzése 0/1 (alapértelmezett: 1).',
+        'keepTiming: Az időzítési minták megőrzése 0/1 (alapértelmezett: 0).',
+        'keepAlign: Az igazítási minták megőrzése 0/1 (alapértelmezett: 0).',
+        'ProtectFmt: Védi a formátuminformációs modulokat 0/1 (alapértelmezett: 0).',
+        'ProtectVer: Verzióinformációs modulok védelme 0/1 (alapértelmezett: 0).',
+      ],
+    },
     {
       heading: 'Példa Használat',
       paragraphs: [

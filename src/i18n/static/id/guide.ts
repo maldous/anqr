@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'metaCopy, meta Bagian metadata PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parameter Pangkas',
+      paragraphs: ['Opsi pemotongan gambar hamparan:'],
+      bullets: [
+        'cropEn: Mengaktifkan pemotongan overlay 0/1 (default: 0).',
+        'cropX: Pangkas pusat X sebagai pecahan 0-1 (default: 0,5).',
+        'cropY: Pangkas pusat Y sebagai pecahan 0-1 (default: 0,5).',
+        'cropSize: Pangkas ukuran sebagai pecahan gambar 0-1 (default: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parameter Kunci Pengaman',
+      paragraphs: ['Kontrol elemen QR mana yang dilindungi dari modifikasi overlay:'],
+      bullets: [
+        'lockF: Pola pencari kunci 0/1 (default: 1).',
+        'lockT: Pola waktu kunci 0/1 (default: 1).',
+        'lockA: Kunci pola penyelarasan 0/1 (default: 1).',
+        'lockFmt: Info format kunci 0/1 (default: 1).',
+        'lockV: Info versi kunci 0/1 (default: 1).',
+        'safeMode: Mode keamanan - mati, seimbang, ketat (default: mati).',
+        'safeMinPx: Ukuran modul minimum dalam piksel (default: 2).',
+        'safeMinQz: Modul zona tenang minimum (default: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parameter Penyetelan Otomatis',
+      paragraphs: ['Pengaturan pengoptimalan otomatis:'],
+      bullets: [
+        'autoVer: Pilih otomatis QR versi 0/1 (default: 1).',
+        'autoEcc: Pilih otomatis level ECC 0/1 (default: 0) - petunjuk sisi server saja.',
+        'autoReduce: [KHUSUS KLIEN] Mengurangi intensitas secara otomatis hingga dapat dipindai - memerlukan loop validasi pemindaian.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Parameter Animasi Tambahan',
+      paragraphs: ['Kontrol animasi yang diperluas untuk keluaran GIF:'],
+      bullets: [
+        'loop: Animasi berulang terus menerus 0/1 (default: 1).',
+        'pentalan: Arah animasi ping-pong 0/1 (default: 0).',
+        'terbalik: Memutar animasi secara terbalik 0/1 (default: 0).',
+        'colorCycle: Mengaktifkan efek perputaran warna 0/1 (default: 0).',
+        'interp: Interpolasi bingkai - tidak ada, crossfade, morph (default: tidak ada).',
+        'tempDither: Dithering sementara - mati, blue_noise, flick_safe (default: mati).',
+        'startF: Bingkai awal animasi (default: 0).',
+        'maxF: Bingkai maksimum yang akan dirender (default: 0 = otomatis).',
+        'stepF: Interval langkah bingkai (default: 1).',
+        'jitter: [KHUSUS KLIEN] Modul jitter dalam piksel - memerlukan regenerasi QR per frame.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parameter Dithering',
+      paragraphs: ['Kontrol algoritme dithering untuk pemrosesan overlay:'],
+      bullets: [
+        'ditherKind: Algoritma gentar - error_diffusion, order_bayer, blue_noise, dll (default: order_bayer).',
+        'diffusionKernel: Kernel difusi kesalahan - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
+        'ditherStrength: Intensitas gentar 0-100 (default: 50).',
+        'serpentine: Keragu-raguan serpentine 0/1 (default: 0).',
+        'matriks: Matriks gentar yang diurutkan - bayer2, bayer4, bayer8 (default: bayer4).',
+        'bnTile: Ukuran ubin derau biru (default: 64).',
+        'bnSeed: Benih acak derau biru (default: 0).',
+        'colorDither: Keragu-raguan warna - tidak ada, per_saluran, perseptual (default: tidak ada).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parameter Subpiksel',
+      paragraphs: ['Pengaturan untuk mode campuran subpiksel:'],
+      bullets: [
+        'spGrid: Ukuran kisi subpiksel - 2x2, 3x3, 4x4 (default: 3x3).',
+        'spCenter: Aturan tengah - ketat, halftone_center (default: ketat).',
+        'spNeutral: Hex warna netral tanpa # (default: 808080).',
+        'spFinder: Finder override - solid, bergaya (default: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parameter Setengah Nada',
+      paragraphs: ['Pengaturan untuk mode campuran halftone:'],
+      bullets: [
+        'htCell: Ukuran sel halftone - per_module atau nxn grid (default: per_module).',
+        'htDot: Bentuk titik - lingkaran, persegi, garis (default: lingkaran).',
+        'htCurve: Kurva kecerahan - linier, kurva s, gamma (default: linier).',
+        'duo1: Warna bayangan duotone hex tanpa # (default: 000000).',
+        'duo2: Warna highlight Duotone hex tanpa # (default: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parameter Mode Sadar ECC',
+      paragraphs: ['Distribusi overlay cerdas berdasarkan kapasitas koreksi kesalahan:'],
+      bullets: [
+        'eccAware: Mengaktifkan mode sadar ECC 0/1 (default: 0).',
+        'eccRisk: Persentase anggaran risiko 0-100 (default: 50).',
+        'eccMap: Peta berat - distance_to_finders, block_heatmap, empiris_scan_heatmap (default: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parameter Bingkai',
+      paragraphs: ['Pengaturan bingkai dekoratif:'],
+      bullets: [
+        'bingkai: Gaya bingkai - tidak ada, bingkai_bulat, stiker, tag (default: tidak ada).',
+        'frameText: Teks untuk ditampilkan dalam bingkai (URL dikodekan).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parameter Warna Per Modul',
+      paragraphs: ['Opsi pewarnaan modul individual:'],
+      bullets: [
+        'modColor: Mode warna - solid, by_brightness, by_position, by_overlay, by_cluster (default: solid).',
+        'cGuard: Penjaga kontras 0/1 (default: 0).',
+        'minContrast: Rasio kontras minimum 1-21 (default: 4,5).',
+        'palet: Warna hex yang dipisahkan koma untuk mode palet.',
+        'paletMode: Distribusi palet - posisi, kecerahan, diagonal, radial, acak, baris, kolom (default: posisi).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parameter Hamparan GIF',
+      paragraphs: ['Pengaturan untuk gambar hamparan GIF animasi:'],
+      bullets: [
+        'ovType: Jenis overlay - statis, gif, apng, webp_anim, video (default: statis).',
+        'ovFramePick: Pemilihan bingkai - semua, setiap_n, max_frames, durasi_batas (default: semua).',
+        'gifDelays: Gunakan penundaan bingkai GIF asli 0/1 (default: 1).',
+        'gifDispH: Penanganan pembuangan GIF - hormati, sederhanakan (default: hormati).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Batas Intensitas Per-ECC',
+      paragraphs: ['Intensitas overlay maksimum per tingkat koreksi kesalahan:'],
+      bullets: [
+        'maxIntL: Intensitas maks untuk ECC L 0-100 (default: 100).',
+        'maxIntM: Intensitas maks untuk ECC M 0-100 (default: 100).',
+        'maxIntQ: Intensitas maks untuk ECC Q 0-100 (default: 100).',
+        'maxIntH: Intensitas maks untuk ECC H 0-100 (default: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parameter Simulasi QA (Khusus Klien)',
+      paragraphs: [
+        'Parameter berikut diurai untuk kompatibilitas URL tetapi hanya berfungsi di browser:',
+      ],
+      bullets: [
+        'qaContrast: Aktifkan pemeriksaan kontras 0/1 - memerlukan validasi interaktif.',
+        'qaBlur: Simulasikan keburaman dalam piksel - hanya untuk pengujian interaktif.',
+        'qaNoise: Simulasikan tingkat kebisingan - hanya untuk pengujian interaktif.',
+        'qaHeatmap: Tampilkan peta panas keterbacaan 0/1 - memerlukan UI hamparan kanvas.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parameter Khusus Klien',
+      paragraphs: [
+        'Sebagian besar parameter API didukung sepenuhnya di sisi server. Parameter yang ditandai [KHUSUS KLIEN] diurai untuk kompatibilitas URL tetapi memerlukan fitur browser:',
+      ],
+      bullets: [
+        'jitter: Jitter modul memerlukan regenerasi QR per-frame secara acak.',
+        'autoReduce: Pengurangan intensitas otomatis memerlukan pengujian pemindaian berulang.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Simulasi QA memerlukan validasi kanvas interaktif.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Parameter Keluaran Tambahan',
+      paragraphs: ['Pengaturan keluaran dan ekspor yang diperluas:'],
+      bullets: [
+        'fname: Nama file khusus untuk unduhan (default: anqr-qrcode).',
+        'inclQz: Sertakan zona tenang dalam dimensi keluaran 0/1 (default: 1).',
+        'bgOver: Warna latar belakang menggantikan hex tanpa # (mengganti parameter bg).',
+        'fmtExtra: Output format tambahan - tidak ada, eps, animasi_webp (default: tidak ada). Catatan: eps adalah [PARTIAL].',
+        'svgPrec: Presisi bentuk SVG - piksel, presisi (default: piksel). [PARTIAL] Output SVG terbatas pada sisi server.',
+        'svgEmbed: Sematkan overlay raster di SVG 0/1 (default: 1). [PARTIAL] Output SVG terbatas pada sisi server.',
+        'modulePx: Ukuran piksel modul (default: dihitung otomatis dari ukuran).',
+        'perbatasan: Modul perbatasan ekstra di luar zona tenang (default: 0).',
+        'garing: Mengaktifkan rendering gambar tajam/piksel 0/1 (default: 1).',
+        'jepret: Mode jepret piksel - lantai, bulat, langit-langit (default: lantai).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parameter Pelestarian Pola',
+      paragraphs: ['Kontrol elemen struktural mana yang dilindungi dari overlay:'],
+      bullets: [
+        'keepFinders: Pertahankan pola pencari 0/1 (default: 1).',
+        'keepTiming: Pertahankan pola waktu 0/1 (default: 0).',
+        'keepAlign: Mempertahankan pola perataan 0/1 (default: 0).',
+        'proteksiFmt: Lindungi modul info format 0/1 (default: 0).',
+        'proteksiVer: Lindungi modul info versi 0/1 (default: 0).',
+      ],
+    },
     {
       heading: 'Penggunaan Contoh',
       paragraphs: [

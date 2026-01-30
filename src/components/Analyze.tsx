@@ -161,9 +161,13 @@ function CollapsibleSection({
           <span className="font-medium text-sm">{title}</span>
           {badge}
         </div>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`} />
+        <ChevronDown
+          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+        />
       </button>
-      {isOpen && <div className="px-3 pb-3 pt-3 mt-1 bg-card rounded-md shadow-sm border">{children}</div>}
+      {isOpen && (
+        <div className="px-3 pb-3 pt-3 mt-1 bg-card rounded-md shadow-sm border">{children}</div>
+      )}
     </div>
   );
 }
@@ -361,17 +365,21 @@ function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
   // Use 16 bytes per row on desktop, 8 on mobile
   const bytesPerRowDesktop = 16;
   const bytesPerRowMobile = 8;
-  
+
   // Calculate rows for mobile (used for display)
   const totalRowsMobile = Math.ceil(bytes.length / bytesPerRowMobile);
   const displayRowsMobile = expanded ? totalRowsMobile : Math.min(maxRows, totalRowsMobile);
-  
+
   const totalRowsDesktop = Math.ceil(bytes.length / bytesPerRowDesktop);
   const displayRowsDesktop = expanded ? totalRowsDesktop : Math.min(maxRows, totalRowsDesktop);
 
   const hexDumpMobile = useMemo(() => {
     const rows: Array<{ offset: string; hex: string; ascii: string }> = [];
-    for (let i = 0; i < displayRowsMobile * bytesPerRowMobile && i < bytes.length; i += bytesPerRowMobile) {
+    for (
+      let i = 0;
+      i < displayRowsMobile * bytesPerRowMobile && i < bytes.length;
+      i += bytesPerRowMobile
+    ) {
       const slice = bytes.slice(i, Math.min(i + bytesPerRowMobile, bytes.length));
       const hex = Array.from(slice)
         .map((b) => b.toString(16).padStart(2, '0'))
@@ -390,7 +398,11 @@ function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
 
   const hexDumpDesktop = useMemo(() => {
     const rows: Array<{ offset: string; hex: string; ascii: string }> = [];
-    for (let i = 0; i < displayRowsDesktop * bytesPerRowDesktop && i < bytes.length; i += bytesPerRowDesktop) {
+    for (
+      let i = 0;
+      i < displayRowsDesktop * bytesPerRowDesktop && i < bytes.length;
+      i += bytesPerRowDesktop
+    ) {
       const slice = bytes.slice(i, Math.min(i + bytesPerRowDesktop, bytes.length));
       const hex = Array.from(slice)
         .map((b) => b.toString(16).padStart(2, '0'))
@@ -499,9 +511,7 @@ function ModuleMatrixView({
 
   // Generate ASCII art representation
   const generateAsciiArt = useCallback(() => {
-    return matrix.map(row => 
-      row.map(isDark => isDark ? '██' : '░░').join('')
-    ).join('\n');
+    return matrix.map((row) => row.map((isDark) => (isDark ? '██' : '░░')).join('')).join('\n');
   }, [matrix]);
 
   const handleCopyAsText = useCallback(async () => {
@@ -698,7 +708,8 @@ function SummaryBar({ result }: SummaryBarProps) {
   if (!result.success) return null;
 
   // Common badge styling for consistent width
-  const badgeBase = "inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md font-medium text-center flex-1 min-w-[65px] shadow-sm";
+  const badgeBase =
+    'inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md font-medium text-center flex-1 min-w-[65px] shadow-sm';
 
   return (
     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border rounded-lg shadow-sm py-2 px-3 mb-4 animate-in slide-in-from-top duration-300">
@@ -728,7 +739,9 @@ function SummaryBar({ result }: SummaryBarProps) {
 
         {/* Encoding mode chip */}
         {result.encodingMode && result.encodingMode !== 'unknown' && (
-          <span className={`${badgeBase} bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 capitalize`}>
+          <span
+            className={`${badgeBase} bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 capitalize`}
+          >
             <Code2 className="w-3 h-3" />
             {result.encodingMode}
           </span>
@@ -774,8 +787,14 @@ function SummaryBar({ result }: SummaryBarProps) {
 
         {/* Quiet zone status */}
         {result.quietZone && (
-          <span className={`${badgeBase} ${result.quietZone.adequate ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}`}>
-            {result.quietZone.adequate ? <Check className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+          <span
+            className={`${badgeBase} ${result.quietZone.adequate ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'}`}
+          >
+            {result.quietZone.adequate ? (
+              <Check className="w-3 h-3" />
+            ) : (
+              <AlertTriangle className="w-3 h-3" />
+            )}
             Quiet Zone
           </span>
         )}
@@ -1800,112 +1819,149 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       anonymousIdentity: null,
       phase2: null,
     };
-    
+
     if (!payload.toUpperCase().startsWith('WIFI:')) return result;
-    
+
     // Remove WIFI: prefix and trailing ;;
     const content = payload.slice(5).replace(/;;\s*$/, '');
     const parts = content.split(';');
-    
+
     for (const part of parts) {
       const colonIdx = part.indexOf(':');
       if (colonIdx === -1) continue;
       const key = part.slice(0, colonIdx).toUpperCase();
       const value = part.slice(colonIdx + 1);
-      
+
       switch (key) {
-        case 'S': result.ssid = value; break;
-        case 'P': result.password = value; break;
-        case 'T': result.security = value.toUpperCase(); break;
-        case 'H': result.hidden = value.toLowerCase() === 'true' ? 'true' : 'false'; break;
-        case 'E': result.eapMethod = value; break;
-        case 'I': result.identity = value; break;
-        case 'A': result.anonymousIdentity = value; break;
-        case 'PH2': result.phase2 = value; break;
+        case 'S':
+          result.ssid = value;
+          break;
+        case 'P':
+          result.password = value;
+          break;
+        case 'T':
+          result.security = value.toUpperCase();
+          break;
+        case 'H':
+          result.hidden = value.toLowerCase() === 'true' ? 'true' : 'false';
+          break;
+        case 'E':
+          result.eapMethod = value;
+          break;
+        case 'I':
+          result.identity = value;
+          break;
+        case 'A':
+          result.anonymousIdentity = value;
+          break;
+        case 'PH2':
+          result.phase2 = value;
+          break;
       }
     }
-    
+
     return result;
   }, []);
 
   // vCard parser - parses BEGIN:VCARD...END:VCARD
-  const parseVCardPayload = useCallback((payload: string): Record<string, string | string[] | null> => {
-    const result: Record<string, string | string[] | null> = {
-      version: null,
-      fullName: null,
-      name: null,
-      organization: null,
-      title: null,
-      phones: [],
-      emails: [],
-      addresses: [],
-      birthday: null,
-      url: null,
-      note: null,
-      hasPhoto: null,
-    };
-    
-    if (!payload.toUpperCase().includes('BEGIN:VCARD')) return result;
-    
-    const lines = payload.split(/\r?\n/);
-    const phones: string[] = [];
-    const emails: string[] = [];
-    const addresses: string[] = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-      // Handle line folding (continuation lines start with space or tab)
-      while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
-        line += lines[++i].slice(1);
-      }
-      
-      const colonIdx = line.indexOf(':');
-      if (colonIdx === -1) continue;
-      
-      const keyPart = line.slice(0, colonIdx).toUpperCase();
-      const value = line.slice(colonIdx + 1);
-      const baseKey = keyPart.split(';')[0];
-      
-      switch (baseKey) {
-        case 'VERSION': result.version = value; break;
-        case 'FN': result.fullName = value; break;
-        case 'N': result.name = value.replace(/;/g, ' ').trim(); break;
-        case 'ORG': result.organization = value.replace(/;/g, ', '); break;
-        case 'TITLE': result.title = value; break;
-        case 'TEL': {
-          const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
-          const type = typeMatch ? typeMatch[1] : 'Phone';
-          phones.push(`${type}: ${value}`);
-          break;
+  const parseVCardPayload = useCallback(
+    (payload: string): Record<string, string | string[] | null> => {
+      const result: Record<string, string | string[] | null> = {
+        version: null,
+        fullName: null,
+        name: null,
+        organization: null,
+        title: null,
+        phones: [],
+        emails: [],
+        addresses: [],
+        birthday: null,
+        url: null,
+        note: null,
+        hasPhoto: null,
+      };
+
+      if (!payload.toUpperCase().includes('BEGIN:VCARD')) return result;
+
+      const lines = payload.split(/\r?\n/);
+      const phones: string[] = [];
+      const emails: string[] = [];
+      const addresses: string[] = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        // Handle line folding (continuation lines start with space or tab)
+        while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
+          line += lines[++i].slice(1);
         }
-        case 'EMAIL': {
-          const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
-          const type = typeMatch ? typeMatch[1] : 'Email';
-          emails.push(`${type}: ${value}`);
-          break;
-        }
-        case 'ADR': {
-          const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
-          const type = typeMatch ? typeMatch[1] : 'Address';
-          const addrParts = value.split(';').filter(Boolean);
-          if (addrParts.length > 0) {
-            addresses.push(`${type}: ${addrParts.join(', ')}`);
+
+        const colonIdx = line.indexOf(':');
+        if (colonIdx === -1) continue;
+
+        const keyPart = line.slice(0, colonIdx).toUpperCase();
+        const value = line.slice(colonIdx + 1);
+        const baseKey = keyPart.split(';')[0];
+
+        switch (baseKey) {
+          case 'VERSION':
+            result.version = value;
+            break;
+          case 'FN':
+            result.fullName = value;
+            break;
+          case 'N':
+            result.name = value.replace(/;/g, ' ').trim();
+            break;
+          case 'ORG':
+            result.organization = value.replace(/;/g, ', ');
+            break;
+          case 'TITLE':
+            result.title = value;
+            break;
+          case 'TEL': {
+            const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
+            const type = typeMatch ? typeMatch[1] : 'Phone';
+            phones.push(`${type}: ${value}`);
+            break;
           }
-          break;
+          case 'EMAIL': {
+            const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
+            const type = typeMatch ? typeMatch[1] : 'Email';
+            emails.push(`${type}: ${value}`);
+            break;
+          }
+          case 'ADR': {
+            const typeMatch = keyPart.match(/TYPE=([^;:]+)/i);
+            const type = typeMatch ? typeMatch[1] : 'Address';
+            const addrParts = value.split(';').filter(Boolean);
+            if (addrParts.length > 0) {
+              addresses.push(`${type}: ${addrParts.join(', ')}`);
+            }
+            break;
+          }
+          case 'BDAY':
+            result.birthday = value;
+            break;
+          case 'URL':
+            result.url = value;
+            break;
+          case 'NOTE':
+            result.note = value;
+            break;
+          case 'PHOTO':
+            result.hasPhoto = 'true';
+            break;
         }
-        case 'BDAY': result.birthday = value; break;
-        case 'URL': result.url = value; break;
-        case 'NOTE': result.note = value; break;
-        case 'PHOTO': result.hasPhoto = 'true'; break;
       }
-    }
-    
-    result.phones = phones;
-    result.emails = emails;
-    result.addresses = addresses;
-    
-    return result;
-  }, []);
+
+      result.phones = phones;
+      result.emails = emails;
+      result.addresses = addresses;
+
+      return result;
+    },
+    []
+  );
 
   // MeCard parser - parses MECARD:N:Last,First;...;;
   const parseMeCardPayload = useCallback((payload: string): Record<string, string | null> => {
@@ -1919,30 +1975,46 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       url: null,
       note: null,
     };
-    
+
     if (!payload.toUpperCase().startsWith('MECARD:')) return result;
-    
+
     const content = payload.slice(7).replace(/;;\s*$/, '');
     const parts = content.split(';');
-    
+
     for (const part of parts) {
       const colonIdx = part.indexOf(':');
       if (colonIdx === -1) continue;
       const key = part.slice(0, colonIdx).toUpperCase();
       const value = part.slice(colonIdx + 1);
-      
+
       switch (key) {
-        case 'N': result.name = value.replace(',', ' '); break;
-        case 'ORG': result.organization = value; break;
-        case 'TEL': result.phone = value; break;
-        case 'EMAIL': result.email = value; break;
-        case 'ADR': result.address = value.replace(/,/g, ', '); break;
-        case 'BDAY': result.birthday = value; break;
-        case 'URL': result.url = value; break;
-        case 'NOTE': result.note = value; break;
+        case 'N':
+          result.name = value.replace(',', ' ');
+          break;
+        case 'ORG':
+          result.organization = value;
+          break;
+        case 'TEL':
+          result.phone = value;
+          break;
+        case 'EMAIL':
+          result.email = value;
+          break;
+        case 'ADR':
+          result.address = value.replace(/,/g, ', ');
+          break;
+        case 'BDAY':
+          result.birthday = value;
+          break;
+        case 'URL':
+          result.url = value;
+          break;
+        case 'NOTE':
+          result.note = value;
+          break;
       }
     }
-    
+
     return result;
   }, []);
 
@@ -1957,26 +2029,37 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       domain: null,
       provider: null,
     };
-    
+
     if (!payload.toLowerCase().startsWith('mailto:')) return result;
-    
+
     const content = payload.slice(7);
     const [email, queryString] = content.split('?');
     result.to = decodeURIComponent(email);
-    
+
     // Extract domain
     const atIdx = result.to.indexOf('@');
     if (atIdx !== -1) {
       result.domain = result.to.slice(atIdx + 1).toLowerCase();
       // Detect provider
       if (result.domain.includes('gmail')) result.provider = 'Gmail';
-      else if (result.domain.includes('outlook') || result.domain.includes('hotmail') || result.domain.includes('live.com')) result.provider = 'Microsoft Outlook';
+      else if (
+        result.domain.includes('outlook') ||
+        result.domain.includes('hotmail') ||
+        result.domain.includes('live.com')
+      )
+        result.provider = 'Microsoft Outlook';
       else if (result.domain.includes('yahoo')) result.provider = 'Yahoo Mail';
-      else if (result.domain.includes('icloud') || result.domain.includes('me.com') || result.domain.includes('mac.com')) result.provider = 'Apple iCloud';
-      else if (result.domain.includes('protonmail') || result.domain.includes('proton.me')) result.provider = 'ProtonMail';
+      else if (
+        result.domain.includes('icloud') ||
+        result.domain.includes('me.com') ||
+        result.domain.includes('mac.com')
+      )
+        result.provider = 'Apple iCloud';
+      else if (result.domain.includes('protonmail') || result.domain.includes('proton.me'))
+        result.provider = 'ProtonMail';
       else result.provider = 'Custom Domain';
     }
-    
+
     if (queryString) {
       const params = new URLSearchParams(queryString);
       result.subject = params.get('subject');
@@ -1984,7 +2067,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       result.cc = params.get('cc');
       result.bcc = params.get('bcc');
     }
-    
+
     return result;
   }, []);
 
@@ -1997,12 +2080,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       country: null,
       countryFlag: null,
     };
-    
+
     let number = payload.toLowerCase().startsWith('tel:') ? payload.slice(4) : payload;
     number = number.replace(/[^+\d]/g, '');
     result.number = number;
     result.formatted = number;
-    
+
     // Detect country by dialing code
     const countryCodes: Record<string, { name: string; flag: string }> = {
       '+1': { name: 'USA/Canada', flag: '🇺🇸' },
@@ -2035,7 +2118,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       '+66': { name: 'Thailand', flag: '🇹🇭' },
       '+84': { name: 'Vietnam', flag: '🇻🇳' },
     };
-    
+
     if (number.startsWith('+')) {
       // Try to match longest prefix first
       for (const prefix of Object.keys(countryCodes).sort((a, b) => b.length - a.length)) {
@@ -2047,7 +2130,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
       }
     }
-    
+
     return result;
   }, []);
 
@@ -2059,26 +2142,26 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       charCount: null,
       segmentCount: null,
     };
-    
+
     let content = payload;
     if (payload.toLowerCase().startsWith('sms:')) content = payload.slice(4);
     else if (payload.toLowerCase().startsWith('smsto:')) content = payload.slice(6);
-    
+
     const [number, queryPart] = content.split('?');
     result.number = number;
-    
+
     if (queryPart) {
       const params = new URLSearchParams(queryPart);
       result.body = params.get('body');
       if (result.body) {
         result.charCount = result.body.length;
         // SMS segments: 160 chars for GSM-7, 70 for Unicode
-        const hasUnicode = /[^\x00-\x7F]/.test(result.body);
+        const hasUnicode = /\P{ASCII}/u.test(result.body);
         const charsPerSegment = hasUnicode ? 70 : 160;
         result.segmentCount = Math.ceil(result.body.length / charsPerSegment);
       }
     }
-    
+
     return result;
   }, []);
 
@@ -2097,21 +2180,21 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       appleMapsUrl: null,
       osmUrl: null,
     };
-    
+
     const match = payload.match(/^geo:([\d.-]+),([\d.-]+)(?:,([\d.-]+))?(?:\?.*u=([\d.]+))?/i);
     if (!match) return result;
-    
+
     const lat = parseFloat(match[1]);
     const lon = parseFloat(match[2]);
     result.latitude = lat;
     result.longitude = lon;
     result.altitude = match[3] ? parseFloat(match[3]) : null;
     result.uncertainty = match[4] ? parseFloat(match[4]) : null;
-    
+
     // Determine hemispheres
     result.latHemisphere = lat >= 0 ? 'N' : 'S';
     result.lonHemisphere = lon >= 0 ? 'E' : 'W';
-    
+
     // Convert to DMS
     const toDms = (decimal: number): string => {
       const abs = Math.abs(decimal);
@@ -2121,15 +2204,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       const sec = ((minFloat - min) * 60).toFixed(2);
       return `${deg}° ${min}' ${sec}"`;
     };
-    
-    result.latDms = toDms(lat) + ' ' + result.latHemisphere;
-    result.lonDms = toDms(lon) + ' ' + result.lonHemisphere;
-    
+
+    result.latDms = `${toDms(lat)} ${result.latHemisphere}`;
+    result.lonDms = `${toDms(lon)} ${result.lonHemisphere}`;
+
     // Generate map URLs
     result.googleMapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
     result.appleMapsUrl = `https://maps.apple.com/?ll=${lat},${lon}`;
     result.osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}&zoom=15`;
-    
+
     return result;
   }, []);
 
@@ -2145,12 +2228,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       explorerUrl: null,
       networkColor: null,
     };
-    
+
     const lowerPayload = payload.toLowerCase();
     let network = 'Unknown';
     let address = payload;
     let queryString = '';
-    
+
     if (lowerPayload.startsWith('bitcoin:')) {
       network = 'Bitcoin';
       result.networkColor = 'orange';
@@ -2176,20 +2259,19 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       [address, queryString] = content.split('?');
       result.explorerUrl = `https://dogechain.info/address/${address}`;
     }
-    
+
     result.network = network;
     result.address = address;
-    result.addressPreview = address.length > 20 
-      ? `${address.slice(0, 10)}...${address.slice(-10)}`
-      : address;
-    
+    result.addressPreview =
+      address.length > 20 ? `${address.slice(0, 10)}...${address.slice(-10)}` : address;
+
     if (queryString) {
       const params = new URLSearchParams(queryString);
       result.amount = params.get('amount');
       result.label = params.get('label');
       result.message = params.get('message') || params.get('memo');
     }
-    
+
     return result;
   }, []);
 
@@ -2210,10 +2292,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       remittanceInfo: null,
       beneficiaryToOriginator: null,
     };
-    
+
     const lines = payload.split('\n');
     if (lines.length < 4) return result;
-    
+
     result.serviceTag = lines[0] || null; // Should be 'BCD'
     result.version = lines[1] || null;
     result.encoding = lines[2] || null;
@@ -2221,7 +2303,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     result.bic = lines[4] || null;
     result.beneficiaryName = lines[5] || null;
     result.iban = lines[6] || null;
-    
+
     // Parse amount (format: EUR123.45)
     if (lines[7]) {
       const amountMatch = lines[7].match(/([A-Z]{3})([\d.]+)/);
@@ -2230,18 +2312,18 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         result.amount = amountMatch[2];
       }
     }
-    
+
     result.purposeCode = lines[8] || null;
     result.referenceType = lines[9] || null;
     result.reference = lines[10] || null;
     result.remittanceInfo = lines[11] || null;
     result.beneficiaryToOriginator = lines[12] || null;
-    
+
     // Format IBAN with spaces
     if (result.iban) {
       result.iban = result.iban.replace(/(.{4})/g, '$1 ').trim();
     }
-    
+
     return result;
   }, []);
 
@@ -2258,9 +2340,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       minAmount: null,
       url: null,
     };
-    
+
     if (!payload.toLowerCase().startsWith('upi://')) return result;
-    
+
     try {
       const url = new URL(payload);
       result.vpa = url.searchParams.get('pa');
@@ -2275,153 +2357,198 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     } catch {
       // Invalid URL format
     }
-    
+
     return result;
   }, []);
 
   // Calendar event parser
-  const parseCalendarPayload = useCallback((payload: string): Record<string, string | boolean | null> => {
-    const result: Record<string, string | boolean | null> = {
-      summary: null,
-      description: null,
-      location: null,
-      startDate: null,
-      startFormatted: null,
-      endDate: null,
-      endFormatted: null,
-      duration: null,
-      organizer: null,
-      attendeesCount: null,
-      recurrence: null,
-      recurrenceFormatted: null,
-      isAllDay: false,
-      timezone: null,
-      alarm: null,
-    };
-    
-    if (!payload.toUpperCase().includes('BEGIN:VCALENDAR') && !payload.toUpperCase().includes('BEGIN:VEVENT')) {
+  const parseCalendarPayload = useCallback(
+    (payload: string): Record<string, string | boolean | null> => {
+      const result: Record<string, string | boolean | null> = {
+        summary: null,
+        description: null,
+        location: null,
+        startDate: null,
+        startFormatted: null,
+        endDate: null,
+        endFormatted: null,
+        duration: null,
+        organizer: null,
+        attendeesCount: null,
+        recurrence: null,
+        recurrenceFormatted: null,
+        isAllDay: false,
+        timezone: null,
+        alarm: null,
+      };
+
+      if (
+        !(
+          payload.toUpperCase().includes('BEGIN:VCALENDAR') ||
+          payload.toUpperCase().includes('BEGIN:VEVENT')
+        )
+      ) {
+        return result;
+      }
+
+      const lines = payload.split(/\r?\n/);
+      let attendeesCount = 0;
+
+      const formatDateTime = (dt: string): string => {
+        // Parse iCal datetime format: YYYYMMDDTHHMMSS or YYYYMMDD
+        try {
+          const isAllDay = dt.length === 8;
+          const year = parseInt(dt.slice(0, 4), 10);
+          const month = parseInt(dt.slice(4, 6), 10) - 1;
+          const day = parseInt(dt.slice(6, 8), 10);
+          let hours = 0,
+            minutes = 0;
+
+          if (!isAllDay && dt.includes('T')) {
+            const timePart = dt.split('T')[1];
+            hours = parseInt(timePart.slice(0, 2), 10);
+            minutes = parseInt(timePart.slice(2, 4), 10);
+          }
+
+          const date = new Date(year, month, day, hours, minutes);
+
+          if (isAllDay) {
+            return date.toLocaleDateString(undefined, {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            });
+          }
+          return date.toLocaleString(undefined, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+          });
+        } catch {
+          return dt;
+        }
+      };
+
+      const formatRecurrence = (rrule: string): string => {
+        const parts: Record<string, string> = {};
+        rrule
+          .replace('RRULE:', '')
+          .split(';')
+          .forEach((p) => {
+            const [k, v] = p.split('=');
+            if (k && v) parts[k] = v;
+          });
+
+        const freq = parts.FREQ;
+        const interval = parts.INTERVAL ? parseInt(parts.INTERVAL, 10) : 1;
+        const byday = parts.BYDAY;
+        const until = parts.UNTIL;
+        const count = parts.COUNT;
+
+        let text = '';
+        const dayNames: Record<string, string> = {
+          SU: 'Sunday',
+          MO: 'Monday',
+          TU: 'Tuesday',
+          WE: 'Wednesday',
+          TH: 'Thursday',
+          FR: 'Friday',
+          SA: 'Saturday',
+        };
+
+        if (freq === 'DAILY') text = interval === 1 ? 'Daily' : `Every ${interval} days`;
+        else if (freq === 'WEEKLY') {
+          if (byday) {
+            const days = byday
+              .split(',')
+              .map((d) => dayNames[d] || d)
+              .join(', ');
+            text = interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
+          } else {
+            text = interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
+          }
+        } else if (freq === 'MONTHLY')
+          text = interval === 1 ? 'Monthly' : `Every ${interval} months`;
+        else if (freq === 'YEARLY') text = interval === 1 ? 'Yearly' : `Every ${interval} years`;
+        else text = freq || 'Recurring';
+
+        if (until) text += ` until ${formatDateTime(until)}`;
+        if (count) text += ` (${count} times)`;
+
+        return text;
+      };
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        // Handle line folding
+        while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
+          line += lines[++i].slice(1);
+        }
+
+        const colonIdx = line.indexOf(':');
+        if (colonIdx === -1) continue;
+
+        const keyPart = line.slice(0, colonIdx).toUpperCase();
+        const value = line.slice(colonIdx + 1);
+        const baseKey = keyPart.split(';')[0];
+
+        switch (baseKey) {
+          case 'SUMMARY':
+            result.summary = value;
+            break;
+          case 'DESCRIPTION':
+            result.description = value.replace(/\\n/g, '\n').replace(/\\,/g, ',');
+            break;
+          case 'LOCATION':
+            result.location = value.replace(/\\,/g, ',');
+            break;
+          case 'DTSTART': {
+            result.startDate = value;
+            result.startFormatted = formatDateTime(value.replace('Z', ''));
+            result.isAllDay = value.length === 8;
+            const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
+            if (tzMatch) result.timezone = tzMatch[1];
+            break;
+          }
+          case 'DTEND': {
+            result.endDate = value;
+            result.endFormatted = formatDateTime(value.replace('Z', ''));
+            break;
+          }
+          case 'DURATION':
+            result.duration = value;
+            break;
+          case 'ORGANIZER': {
+            const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
+            result.organizer = cnMatch ? cnMatch[1] : value.replace('mailto:', '');
+            break;
+          }
+          case 'ATTENDEE':
+            attendeesCount++;
+            break;
+          case 'RRULE': {
+            result.recurrence = value;
+            result.recurrenceFormatted = formatRecurrence(line);
+            break;
+          }
+          case 'VALARM':
+          case 'TRIGGER': {
+            if (value) result.alarm = value;
+            break;
+          }
+        }
+      }
+
+      result.attendeesCount = attendeesCount > 0 ? String(attendeesCount) : null;
+
       return result;
-    }
-    
-    const lines = payload.split(/\r?\n/);
-    let attendeesCount = 0;
-    
-    const formatDateTime = (dt: string): string => {
-      // Parse iCal datetime format: YYYYMMDDTHHMMSS or YYYYMMDD
-      try {
-        const isAllDay = dt.length === 8;
-        const year = parseInt(dt.slice(0, 4));
-        const month = parseInt(dt.slice(4, 6)) - 1;
-        const day = parseInt(dt.slice(6, 8));
-        let hours = 0, minutes = 0;
-        
-        if (!isAllDay && dt.includes('T')) {
-          const timePart = dt.split('T')[1];
-          hours = parseInt(timePart.slice(0, 2));
-          minutes = parseInt(timePart.slice(2, 4));
-        }
-        
-        const date = new Date(year, month, day, hours, minutes);
-        
-        if (isAllDay) {
-          return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-        }
-        return date.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-      } catch {
-        return dt;
-      }
-    };
-    
-    const formatRecurrence = (rrule: string): string => {
-      const parts: Record<string, string> = {};
-      rrule.replace('RRULE:', '').split(';').forEach(p => {
-        const [k, v] = p.split('=');
-        if (k && v) parts[k] = v;
-      });
-      
-      const freq = parts.FREQ;
-      const interval = parts.INTERVAL ? parseInt(parts.INTERVAL) : 1;
-      const byday = parts.BYDAY;
-      const until = parts.UNTIL;
-      const count = parts.COUNT;
-      
-      let text = '';
-      const dayNames: Record<string, string> = { SU: 'Sunday', MO: 'Monday', TU: 'Tuesday', WE: 'Wednesday', TH: 'Thursday', FR: 'Friday', SA: 'Saturday' };
-      
-      if (freq === 'DAILY') text = interval === 1 ? 'Daily' : `Every ${interval} days`;
-      else if (freq === 'WEEKLY') {
-        if (byday) {
-          const days = byday.split(',').map(d => dayNames[d] || d).join(', ');
-          text = interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
-        } else {
-          text = interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
-        }
-      }
-      else if (freq === 'MONTHLY') text = interval === 1 ? 'Monthly' : `Every ${interval} months`;
-      else if (freq === 'YEARLY') text = interval === 1 ? 'Yearly' : `Every ${interval} years`;
-      else text = freq || 'Recurring';
-      
-      if (until) text += ` until ${formatDateTime(until)}`;
-      if (count) text += ` (${count} times)`;
-      
-      return text;
-    };
-    
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-      // Handle line folding
-      while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
-        line += lines[++i].slice(1);
-      }
-      
-      const colonIdx = line.indexOf(':');
-      if (colonIdx === -1) continue;
-      
-      const keyPart = line.slice(0, colonIdx).toUpperCase();
-      const value = line.slice(colonIdx + 1);
-      const baseKey = keyPart.split(';')[0];
-      
-      switch (baseKey) {
-        case 'SUMMARY': result.summary = value; break;
-        case 'DESCRIPTION': result.description = value.replace(/\\n/g, '\n').replace(/\\,/g, ','); break;
-        case 'LOCATION': result.location = value.replace(/\\,/g, ','); break;
-        case 'DTSTART': {
-          result.startDate = value;
-          result.startFormatted = formatDateTime(value.replace('Z', ''));
-          result.isAllDay = value.length === 8;
-          const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
-          if (tzMatch) result.timezone = tzMatch[1];
-          break;
-        }
-        case 'DTEND': {
-          result.endDate = value;
-          result.endFormatted = formatDateTime(value.replace('Z', ''));
-          break;
-        }
-        case 'DURATION': result.duration = value; break;
-        case 'ORGANIZER': {
-          const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
-          result.organizer = cnMatch ? cnMatch[1] : value.replace('mailto:', '');
-          break;
-        }
-        case 'ATTENDEE': attendeesCount++; break;
-        case 'RRULE': {
-          result.recurrence = value;
-          result.recurrenceFormatted = formatRecurrence(line);
-          break;
-        }
-        case 'VALARM': 
-        case 'TRIGGER': {
-          if (value) result.alarm = value;
-          break;
-        }
-      }
-    }
-    
-    result.attendeesCount = attendeesCount > 0 ? String(attendeesCount) : null;
-    
-    return result;
-  }, []);
+    },
+    []
+  );
 
   // OTP Auth parser
   const parseOtpAuthPayload = useCallback((payload: string): Record<string, string | null> => {
@@ -2436,14 +2563,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       counter: null,
       hasSecret: null,
     };
-    
+
     const match = payload.match(/^otpauth:\/\/(totp|hotp)\/([^?]+)(?:\?(.*))?$/i);
     if (!match) return result;
-    
+
     result.type = match[1].toUpperCase();
     const label = decodeURIComponent(match[2]);
     const queryString = match[3];
-    
+
     // Parse label (format: Issuer:Account or just Account)
     if (label.includes(':')) {
       const [issuer, account] = label.split(':');
@@ -2452,7 +2579,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     } else {
       result.account = label;
     }
-    
+
     if (queryString) {
       const params = new URLSearchParams(queryString);
       result.issuer = result.issuer || params.get('issuer');
@@ -2461,7 +2588,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       result.period = params.get('period') || '30';
       result.counter = params.get('counter');
       result.hasSecret = params.has('secret') ? 'Present (hidden for security)' : 'Missing';
-      
+
       // Add security note for algorithm
       if (result.algorithm === 'SHA1') {
         result.algorithmNote = 'Standard, widely compatible';
@@ -2471,7 +2598,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         result.algorithmNote = 'Most secure, limited compatibility';
       }
     }
-    
+
     return result;
   }, []);
 
@@ -2487,7 +2614,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     isSecure: string | null;
     isShortened: string | null;
     shortenerService: string | null;
-    params: Array<{key: string; value: string}>;
+    params: Array<{ key: string; value: string }>;
     urlLength: string;
     hasPercentEncoding: string | null;
   }
@@ -2507,7 +2634,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       urlLength: String(payload.length),
       hasPercentEncoding: /%[0-9A-Fa-f]{2}/.test(payload) ? 'true' : null,
     };
-    
+
     try {
       const url = new URL(payload);
       result.protocol = url.protocol.replace(':', '');
@@ -2517,9 +2644,22 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       result.queryString = url.search || null;
       result.fragment = url.hash ? url.hash.slice(1) : null;
       result.isSecure = url.protocol === 'https:' ? 'true' : 'false';
-      
+
       // Check if shortened URL
-      const shorteners = ['bit.ly', 't.co', 'goo.gl', 'tinyurl.com', 'ow.ly', 'is.gd', 'buff.ly', 'adf.ly', 'j.mp', 'rb.gy', 'cutt.ly', 'shorturl.at'];
+      const shorteners = [
+        'bit.ly',
+        't.co',
+        'goo.gl',
+        'tinyurl.com',
+        'ow.ly',
+        'is.gd',
+        'buff.ly',
+        'adf.ly',
+        'j.mp',
+        'rb.gy',
+        'cutt.ly',
+        'shorturl.at',
+      ];
       for (const shortener of shorteners) {
         if (url.hostname.includes(shortener)) {
           result.isShortened = 'true';
@@ -2527,56 +2667,64 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           break;
         }
       }
-      
+
       // Parse all query parameters
-      const params: Array<{key: string; value: string}> = [];
+      const params: Array<{ key: string; value: string }> = [];
       url.searchParams.forEach((value, key) => {
         params.push({ key, value: decodeURIComponent(value) });
       });
       result.params = params;
-      
     } catch {
       // Not a valid URL
     }
-    
+
     return result;
   }, []);
 
   // Plain text analyzer
-  const analyzePlainText = useCallback((payload: string): Record<string, string | number | boolean> => {
-    const result: Record<string, string | number | boolean> = {
-      charCount: payload.length,
-      wordCount: payload.trim().split(/\s+/).filter(Boolean).length,
-      lineCount: payload.split(/\r?\n/).length,
-      hasSpecialChars: /[^a-zA-Z0-9\s]/.test(payload),
-      hasNonAscii: /[^\x00-\x7F]/.test(payload),
-      hasEmoji: /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/u.test(payload),
-      isAllNumeric: /^[0-9]+$/.test(payload),
-      isAllAlphanumeric: /^[0-9A-Z $%*+\-./:]+$/i.test(payload),
-      encodingRecommendation: 'Byte mode',
-      preview: payload.length > 200 ? payload.slice(0, 200) + '...' : payload,
-    };
-    
-    if (result.isAllNumeric) {
-      result.encodingRecommendation = 'Numeric mode (most efficient)';
-    } else if (result.isAllAlphanumeric && !result.hasNonAscii) {
-      result.encodingRecommendation = 'Alphanumeric mode (efficient)';
-    } else if (result.hasNonAscii) {
-      result.encodingRecommendation = 'Byte mode (UTF-8 required)';
-    }
-    
-    return result;
-  }, []);
+  const analyzePlainText = useCallback(
+    (payload: string): Record<string, string | number | boolean> => {
+      const result: Record<string, string | number | boolean> = {
+        charCount: payload.length,
+        wordCount: payload.trim().split(/\s+/).filter(Boolean).length,
+        lineCount: payload.split(/\r?\n/).length,
+        hasSpecialChars: /[^a-zA-Z0-9\s]/.test(payload),
+        hasNonAscii: /\P{ASCII}/u.test(payload),
+        hasEmoji: /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]/u.test(payload),
+        isAllNumeric: /^[0-9]+$/.test(payload),
+        isAllAlphanumeric: /^[0-9A-Z $%*+\-./:]+$/i.test(payload),
+        encodingRecommendation: 'Byte mode',
+        preview: payload.length > 200 ? `${payload.slice(0, 200)}...` : payload,
+      };
+
+      if (result.isAllNumeric) {
+        result.encodingRecommendation = 'Numeric mode (most efficient)';
+      } else if (result.isAllAlphanumeric && !result.hasNonAscii) {
+        result.encodingRecommendation = 'Alphanumeric mode (efficient)';
+      } else if (result.hasNonAscii) {
+        result.encodingRecommendation = 'Byte mode (UTF-8 required)';
+      }
+
+      return result;
+    },
+    []
+  );
 
   // Social media platform detection
-  const detectSocialPlatform = (url: string): { name: string; badge: React.ReactNode; extractedInfo?: React.ReactNode } | null => {
+  const detectSocialPlatform = (
+    url: string
+  ): { name: string; badge: React.ReactNode; extractedInfo?: React.ReactNode } | null => {
     try {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname.toLowerCase();
       const pathname = urlObj.pathname;
 
       // WhatsApp - extract phone number
-      if (hostname.includes('wa.me') || hostname.includes('whatsapp.com') || hostname.includes('api.whatsapp.com')) {
+      if (
+        hostname.includes('wa.me') ||
+        hostname.includes('whatsapp.com') ||
+        hostname.includes('api.whatsapp.com')
+      ) {
         const phoneMatch = pathname.match(/\/(\d+)/);
         const phone = phoneMatch ? phoneMatch[1] : null;
         return {
@@ -2588,13 +2736,20 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             </span>
           ),
           extractedInfo: phone ? (
-            <a href={`tel:+${phone}`} className="font-mono text-xs text-primary hover:underline">+{phone}</a>
+            <a href={`tel:+${phone}`} className="font-mono text-xs text-primary hover:underline">
+              +{phone}
+            </a>
           ) : null,
         };
       }
 
       // Facebook
-      if (hostname.includes('facebook.com') || hostname.includes('fb.com') || hostname.includes('fb.me') || hostname.includes('m.facebook.com')) {
+      if (
+        hostname.includes('facebook.com') ||
+        hostname.includes('fb.com') ||
+        hostname.includes('fb.me') ||
+        hostname.includes('m.facebook.com')
+      ) {
         return {
           name: 'Facebook',
           badge: (
@@ -2608,7 +2763,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       // Instagram
       if (hostname.includes('instagram.com') || hostname.includes('instagr.am')) {
         const usernameMatch = pathname.match(/^\/([^/]+)/);
-        const username = usernameMatch && !['p', 'reel', 'stories', 'explore'].includes(usernameMatch[1]) ? usernameMatch[1] : null;
+        const username =
+          usernameMatch && !['p', 'reel', 'stories', 'explore'].includes(usernameMatch[1])
+            ? usernameMatch[1]
+            : null;
         return {
           name: 'Instagram',
           badge: (
@@ -2621,9 +2779,16 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       }
 
       // Twitter/X
-      if (hostname.includes('twitter.com') || hostname.includes('x.com') || hostname.includes('t.co')) {
+      if (
+        hostname.includes('twitter.com') ||
+        hostname.includes('x.com') ||
+        hostname.includes('t.co')
+      ) {
         const usernameMatch = pathname.match(/^\/([^/]+)/);
-        const username = usernameMatch && !['search', 'explore', 'home', 'i', 'intent'].includes(usernameMatch[1]) ? usernameMatch[1] : null;
+        const username =
+          usernameMatch && !['search', 'explore', 'home', 'i', 'intent'].includes(usernameMatch[1])
+            ? usernameMatch[1]
+            : null;
         return {
           name: 'X (Twitter)',
           badge: (
@@ -2636,7 +2801,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       }
 
       // YouTube
-      if (hostname.includes('youtube.com') || hostname.includes('youtu.be') || hostname.includes('m.youtube.com')) {
+      if (
+        hostname.includes('youtube.com') ||
+        hostname.includes('youtu.be') ||
+        hostname.includes('m.youtube.com')
+      ) {
         let videoId: string | null = null;
         if (hostname.includes('youtu.be')) {
           videoId = pathname.slice(1).split('?')[0];
@@ -2651,7 +2820,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               ▶ YouTube
             </span>
           ),
-          extractedInfo: videoId ? <span className="font-mono text-xs">Video: {videoId}</span> : null,
+          extractedInfo: videoId ? (
+            <span className="font-mono text-xs">Video: {videoId}</span>
+          ) : null,
         };
       }
 
@@ -2677,12 +2848,18 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               ♪ TikTok
             </span>
           ),
-          extractedInfo: usernameMatch ? <span className="font-mono text-xs">@{usernameMatch[1]}</span> : null,
+          extractedInfo: usernameMatch ? (
+            <span className="font-mono text-xs">@{usernameMatch[1]}</span>
+          ) : null,
         };
       }
 
       // Telegram
-      if (hostname.includes('t.me') || hostname.includes('telegram.me') || hostname.includes('telegram.org')) {
+      if (
+        hostname.includes('t.me') ||
+        hostname.includes('telegram.me') ||
+        hostname.includes('telegram.org')
+      ) {
         const usernameMatch = pathname.match(/^\/([^/]+)/);
         return {
           name: 'Telegram',
@@ -2691,12 +2868,18 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               Telegram
             </span>
           ),
-          extractedInfo: usernameMatch ? <span className="font-mono text-xs">@{usernameMatch[1]}</span> : null,
+          extractedInfo: usernameMatch ? (
+            <span className="font-mono text-xs">@{usernameMatch[1]}</span>
+          ) : null,
         };
       }
 
       // Discord
-      if (hostname.includes('discord.gg') || hostname.includes('discord.com') || hostname.includes('discordapp.com')) {
+      if (
+        hostname.includes('discord.gg') ||
+        hostname.includes('discord.com') ||
+        hostname.includes('discordapp.com')
+      ) {
         return {
           name: 'Discord',
           badge: (
@@ -2729,7 +2912,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               Reddit
             </span>
           ),
-          extractedInfo: subredditMatch ? <span className="font-mono text-xs">r/{subredditMatch[1]}</span> : null,
+          extractedInfo: subredditMatch ? (
+            <span className="font-mono text-xs">r/{subredditMatch[1]}</span>
+          ) : null,
         };
       }
 
@@ -2793,7 +2978,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               GitHub
             </span>
           ),
-          extractedInfo: repoMatch ? <span className="font-mono text-xs">{repoMatch[1]}/{repoMatch[2]}</span> : null,
+          extractedInfo: repoMatch ? (
+            <span className="font-mono text-xs">
+              {repoMatch[1]}/{repoMatch[2]}
+            </span>
+          ) : null,
         };
       }
 
@@ -2808,7 +2997,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               PayPal
             </span>
           ),
-          extractedInfo: usernameMatch && hostname.includes('paypal.me') ? <span className="font-mono text-xs">@{usernameMatch[1]}</span> : null,
+          extractedInfo:
+            usernameMatch && hostname.includes('paypal.me') ? (
+              <span className="font-mono text-xs">@{usernameMatch[1]}</span>
+            ) : null,
         };
       }
 
@@ -2836,7 +3028,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               Cash App
             </span>
           ),
-          extractedInfo: cashtagMatch ? <span className="font-mono text-xs">{cashtagMatch[1]}</span> : null,
+          extractedInfo: cashtagMatch ? (
+            <span className="font-mono text-xs">{cashtagMatch[1]}</span>
+          ) : null,
         };
       }
 
@@ -2893,7 +3087,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       case 'url': {
         const urlData = parseUrlPayload(payload);
         const socialPlatform = detectSocialPlatform(payload);
-        
+
         // Social platform badge first if detected
         if (socialPlatform) {
           details.push({
@@ -2905,11 +3099,16 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             details.push({
               label: socialPlatform.name === 'WhatsApp' ? 'Phone' : 'Handle',
               value: socialPlatform.extractedInfo,
-              icon: socialPlatform.name === 'WhatsApp' ? <Phone className="w-3 h-3" /> : <Type className="w-3 h-3" />,
+              icon:
+                socialPlatform.name === 'WhatsApp' ? (
+                  <Phone className="w-3 h-3" />
+                ) : (
+                  <Type className="w-3 h-3" />
+                ),
             });
           }
         }
-        
+
         // Domain with security indicator
         if (urlData.hostname) {
           details.push({
@@ -2923,22 +3122,23 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Globe className="w-3 h-3" />,
           });
         }
-        
+
         // Security status
         details.push({
           label: 'Security',
-          value: urlData.isSecure === 'true' ? (
-            <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-              <Lock className="w-3 h-3" /> HTTPS (Encrypted)
-            </span>
-          ) : (
-            <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" /> HTTP (Not Encrypted)
-            </span>
-          ),
+          value:
+            urlData.isSecure === 'true' ? (
+              <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
+                <Lock className="w-3 h-3" /> HTTPS (Encrypted)
+              </span>
+            ) : (
+              <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> HTTP (Not Encrypted)
+              </span>
+            ),
           icon: <Shield className="w-3 h-3" />,
         });
-        
+
         // Protocol
         if (urlData.protocol) {
           details.push({
@@ -2947,7 +3147,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Link className="w-3 h-3" />,
           });
         }
-        
+
         // Port (if non-standard)
         if (urlData.port) {
           details.push({
@@ -2956,7 +3156,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Settings className="w-3 h-3" />,
           });
         }
-        
+
         // Path
         if (urlData.path) {
           details.push({
@@ -2965,7 +3165,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Link className="w-3 h-3" />,
           });
         }
-        
+
         // Fragment/Hash
         if (urlData.fragment) {
           details.push({
@@ -2974,7 +3174,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Hash className="w-3 h-3" />,
           });
         }
-        
+
         // Shortened URL detection
         if (urlData.isShortened === 'true') {
           details.push({
@@ -2987,7 +3187,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Link className="w-3 h-3" />,
           });
         }
-        
+
         // Query parameters
         const params = urlData.params;
         if (params && params.length > 0) {
@@ -3000,25 +3200,33 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           params.slice(0, 5).forEach((param) => {
             details.push({
               label: `  └ ${param.key}`,
-              value: <span className="font-mono text-xs truncate max-w-[150px] block">{param.value}</span>,
+              value: (
+                <span className="font-mono text-xs truncate max-w-[150px] block">
+                  {param.value}
+                </span>
+              ),
               icon: <ChevronRight className="w-3 h-3 text-muted-foreground" />,
             });
           });
           if (params.length > 5) {
             details.push({
               label: '',
-              value: <span className="text-xs text-muted-foreground">...and {params.length - 5} more</span>,
+              value: (
+                <span className="text-xs text-muted-foreground">
+                  ...and {params.length - 5} more
+                </span>
+              ),
             });
           }
         }
-        
+
         // URL length and encoding
         details.push({
           label: 'URL Length',
           value: `${urlData.urlLength} characters`,
           icon: <Ruler className="w-3 h-3" />,
         });
-        
+
         if (urlData.hasPercentEncoding === 'true') {
           details.push({
             label: 'Encoding',
@@ -3026,7 +3234,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Binary className="w-3 h-3" />,
           });
         }
-        
+
         // Clickable link
         details.push({
           label: 'Open URL',
@@ -3044,10 +3252,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         });
         break;
       }
-      
+
       case 'wifi': {
         const wifiData = parseWifiPayload(payload);
-        
+
         // SSID
         if (wifiData.ssid) {
           details.push({
@@ -3056,13 +3264,13 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Wifi className="w-3 h-3" />,
           });
         }
-        
+
         // Security type with detailed explanation
         if (wifiData.security) {
           const sec = String(wifiData.security).toUpperCase();
           let securityBadge: React.ReactNode;
           let securityNote = '';
-          
+
           if (sec.includes('WPA3')) {
             securityBadge = (
               <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400">
@@ -3101,13 +3309,13 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           } else {
             securityBadge = <span className="font-mono text-xs">{wifiData.security}</span>;
           }
-          
+
           details.push({
             label: 'Security Type',
             value: securityBadge,
             icon: <Shield className="w-3 h-3" />,
           });
-          
+
           if (securityNote) {
             details.push({
               label: 'Security Note',
@@ -3116,7 +3324,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             });
           }
         }
-        
+
         // Password (masked)
         if (wifiData.password) {
           const pwd = String(wifiData.password);
@@ -3131,18 +3339,19 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Lock className="w-3 h-3" />,
           });
         }
-        
+
         // Hidden network
         details.push({
           label: 'Hidden Network',
-          value: wifiData.hidden === 'true' ? (
-            <span className="text-amber-600 dark:text-amber-400">Yes (won't appear in scan)</span>
-          ) : (
-            <span className="text-green-600 dark:text-green-400">No (visible)</span>
-          ),
+          value:
+            wifiData.hidden === 'true' ? (
+              <span className="text-amber-600 dark:text-amber-400">Yes (won't appear in scan)</span>
+            ) : (
+              <span className="text-green-600 dark:text-green-400">No (visible)</span>
+            ),
           icon: <Eye className="w-3 h-3" />,
         });
-        
+
         // Enterprise settings
         if (wifiData.eapMethod) {
           details.push({
@@ -3167,10 +3376,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'vcard': {
         const vcardData = parseVCardPayload(payload);
-        
+
         // vCard version
         if (vcardData.version) {
           details.push({
@@ -3179,7 +3388,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Full name
         if (vcardData.fullName) {
           details.push({
@@ -3188,7 +3397,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Organization & Title
         if (vcardData.organization) {
           details.push({
@@ -3204,7 +3413,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Phone numbers (clickable)
         const phones = vcardData.phones as string[];
         if (phones && phones.length > 0) {
@@ -3213,7 +3422,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             details.push({
               label: type,
               value: (
-                <a href={`tel:${number.replace(/[^+\d]/g, '')}`} className="font-mono text-xs text-primary hover:underline">
+                <a
+                  href={`tel:${number.replace(/[^+\d]/g, '')}`}
+                  className="font-mono text-xs text-primary hover:underline"
+                >
                   {number}
                 </a>
               ),
@@ -3221,7 +3433,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             });
           });
         }
-        
+
         // Email addresses (clickable)
         const emails = vcardData.emails as string[];
         if (emails && emails.length > 0) {
@@ -3230,7 +3442,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             details.push({
               label: type,
               value: (
-                <a href={`mailto:${address}`} className="font-mono text-xs text-primary hover:underline">
+                <a
+                  href={`mailto:${address}`}
+                  className="font-mono text-xs text-primary hover:underline"
+                >
                   {address}
                 </a>
               ),
@@ -3238,7 +3453,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             });
           });
         }
-        
+
         // Addresses
         const addresses = vcardData.addresses as string[];
         if (addresses && addresses.length > 0) {
@@ -3250,7 +3465,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             });
           });
         }
-        
+
         // Birthday
         if (vcardData.birthday) {
           details.push({
@@ -3259,29 +3474,39 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // URL
         if (vcardData.url) {
           details.push({
             label: 'Website',
             value: (
-              <a href={String(vcardData.url)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+              <a
+                href={String(vcardData.url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline"
+              >
                 {String(vcardData.url)}
               </a>
             ),
             icon: <Globe className="w-3 h-3" />,
           });
         }
-        
+
         // Note
         if (vcardData.note) {
           details.push({
             label: 'Notes',
-            value: <span className="text-xs">{String(vcardData.note).slice(0, 100)}{String(vcardData.note).length > 100 ? '...' : ''}</span>,
+            value: (
+              <span className="text-xs">
+                {String(vcardData.note).slice(0, 100)}
+                {String(vcardData.note).length > 100 ? '...' : ''}
+              </span>
+            ),
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Photo indicator
         if (vcardData.hasPhoto === 'true') {
           details.push({
@@ -3292,10 +3517,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'mecard': {
         const mecardData = parseMeCardPayload(payload);
-        
+
         if (mecardData.name) {
           details.push({
             label: 'Name',
@@ -3314,7 +3539,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           details.push({
             label: 'Phone',
             value: (
-              <a href={`tel:${String(mecardData.phone).replace(/[^+\d]/g, '')}`} className="font-mono text-xs text-primary hover:underline">
+              <a
+                href={`tel:${String(mecardData.phone).replace(/[^+\d]/g, '')}`}
+                className="font-mono text-xs text-primary hover:underline"
+              >
                 {mecardData.phone}
               </a>
             ),
@@ -3325,7 +3553,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           details.push({
             label: 'Email',
             value: (
-              <a href={`mailto:${mecardData.email}`} className="font-mono text-xs text-primary hover:underline">
+              <a
+                href={`mailto:${mecardData.email}`}
+                className="font-mono text-xs text-primary hover:underline"
+              >
                 {mecardData.email}
               </a>
             ),
@@ -3350,7 +3581,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           details.push({
             label: 'Website',
             value: (
-              <a href={String(mecardData.url)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+              <a
+                href={String(mecardData.url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline"
+              >
                 {mecardData.url}
               </a>
             ),
@@ -3366,20 +3602,21 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'email': {
         const emailData = parseEmailPayload(payload);
-        
+
         // Provider badge
         if (emailData.provider) {
           const providerColors: Record<string, string> = {
-            'Gmail': 'bg-red-500/10 text-red-600 dark:text-red-400',
+            Gmail: 'bg-red-500/10 text-red-600 dark:text-red-400',
             'Microsoft Outlook': 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
             'Yahoo Mail': 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
             'Apple iCloud': 'bg-gray-500/10 text-gray-600 dark:text-gray-400',
-            'ProtonMail': 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+            ProtonMail: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
           };
-          const colorClass = providerColors[String(emailData.provider)] || 'bg-muted text-foreground';
+          const colorClass =
+            providerColors[String(emailData.provider)] || 'bg-muted text-foreground';
           details.push({
             label: 'Email Provider',
             value: (
@@ -3390,20 +3627,23 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Mail className="w-3 h-3" />,
           });
         }
-        
+
         // Recipient
         if (emailData.to) {
           details.push({
             label: 'Recipient',
             value: (
-              <a href={`mailto:${emailData.to}`} className="font-mono text-xs text-primary hover:underline">
+              <a
+                href={`mailto:${emailData.to}`}
+                className="font-mono text-xs text-primary hover:underline"
+              >
                 {emailData.to}
               </a>
             ),
             icon: <Mail className="w-3 h-3" />,
           });
         }
-        
+
         // Domain
         if (emailData.domain) {
           details.push({
@@ -3412,7 +3652,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Globe className="w-3 h-3" />,
           });
         }
-        
+
         // Subject
         if (emailData.subject) {
           details.push({
@@ -3421,16 +3661,21 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Body preview
         if (emailData.body) {
           details.push({
             label: 'Body Preview',
-            value: <span className="text-xs text-muted-foreground">{String(emailData.body).slice(0, 80)}{String(emailData.body).length > 80 ? '...' : ''}</span>,
+            value: (
+              <span className="text-xs text-muted-foreground">
+                {String(emailData.body).slice(0, 80)}
+                {String(emailData.body).length > 80 ? '...' : ''}
+              </span>
+            ),
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // CC/BCC
         if (emailData.cc) {
           details.push({
@@ -3448,10 +3693,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'tel': {
         const telData = parseTelPayload(payload);
-        
+
         // Country with flag
         if (telData.country && telData.countryFlag) {
           details.push({
@@ -3465,7 +3710,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Globe className="w-3 h-3" />,
           });
         }
-        
+
         // Country code
         if (telData.countryCode) {
           details.push({
@@ -3474,25 +3719,31 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Phone className="w-3 h-3" />,
           });
         }
-        
+
         // Phone number (clickable)
         if (telData.number) {
           details.push({
             label: 'Phone Number',
             value: (
-              <a href={`tel:${telData.number}`} className="font-mono text-sm text-primary hover:underline font-medium">
+              <a
+                href={`tel:${telData.number}`}
+                className="font-mono text-sm text-primary hover:underline font-medium"
+              >
                 {telData.formatted || telData.number}
               </a>
             ),
             icon: <Phone className="w-3 h-3" />,
           });
         }
-        
+
         // Call action
         details.push({
           label: 'Action',
           value: (
-            <a href={`tel:${telData.number}`} className="text-xs text-primary hover:underline flex items-center gap-1">
+            <a
+              href={`tel:${telData.number}`}
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
               <Phone className="w-3 h-3" /> Tap to call
             </a>
           ),
@@ -3500,23 +3751,26 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         });
         break;
       }
-      
+
       case 'sms': {
         const smsData = parseSmsPayload(payload);
-        
+
         // Phone number
         if (smsData.number) {
           details.push({
             label: 'Recipient',
             value: (
-              <a href={`tel:${String(smsData.number).replace(/[^+\d]/g, '')}`} className="font-mono text-xs text-primary hover:underline">
+              <a
+                href={`tel:${String(smsData.number).replace(/[^+\d]/g, '')}`}
+                className="font-mono text-xs text-primary hover:underline"
+              >
                 {smsData.number}
               </a>
             ),
             icon: <Phone className="w-3 h-3" />,
           });
         }
-        
+
         // Message body
         if (smsData.body) {
           details.push({
@@ -3525,7 +3779,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <MessageSquare className="w-3 h-3" />,
           });
         }
-        
+
         // Character count
         if (smsData.charCount) {
           details.push({
@@ -3534,13 +3788,17 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Type className="w-3 h-3" />,
           });
         }
-        
+
         // SMS segments
         if (smsData.segmentCount) {
           details.push({
             label: 'SMS Segments',
             value: (
-              <span className={Number(smsData.segmentCount) > 1 ? 'text-amber-600 dark:text-amber-400' : ''}>
+              <span
+                className={
+                  Number(smsData.segmentCount) > 1 ? 'text-amber-600 dark:text-amber-400' : ''
+                }
+              >
                 {smsData.segmentCount} segment(s)
                 {Number(smsData.segmentCount) > 1 && ' (may cost more)'}
               </span>
@@ -3550,33 +3808,45 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'geo': {
         const geoData = parseGeoPayload(payload);
-        
+
         // Coordinates in decimal
         if (geoData.latitude !== null && geoData.longitude !== null) {
           details.push({
             label: 'Latitude',
-            value: <span className="font-mono text-xs">{Number(geoData.latitude).toFixed(6)}° {geoData.latHemisphere}</span>,
+            value: (
+              <span className="font-mono text-xs">
+                {Number(geoData.latitude).toFixed(6)}° {geoData.latHemisphere}
+              </span>
+            ),
             icon: <MapPin className="w-3 h-3" />,
           });
           details.push({
             label: 'Longitude',
-            value: <span className="font-mono text-xs">{Number(geoData.longitude).toFixed(6)}° {geoData.lonHemisphere}</span>,
+            value: (
+              <span className="font-mono text-xs">
+                {Number(geoData.longitude).toFixed(6)}° {geoData.lonHemisphere}
+              </span>
+            ),
             icon: <MapPin className="w-3 h-3" />,
           });
         }
-        
+
         // DMS format
         if (geoData.latDms && geoData.lonDms) {
           details.push({
             label: 'DMS Format',
-            value: <span className="font-mono text-xs">{geoData.latDms}, {geoData.lonDms}</span>,
+            value: (
+              <span className="font-mono text-xs">
+                {geoData.latDms}, {geoData.lonDms}
+              </span>
+            ),
             icon: <MapPin className="w-3 h-3" />,
           });
         }
-        
+
         // Altitude
         if (geoData.altitude !== null) {
           details.push({
@@ -3585,7 +3855,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <MapPin className="w-3 h-3" />,
           });
         }
-        
+
         // Uncertainty
         if (geoData.uncertainty !== null) {
           details.push({
@@ -3594,13 +3864,18 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <MapPin className="w-3 h-3" />,
           });
         }
-        
+
         // Map links
         if (geoData.googleMapsUrl) {
           details.push({
             label: 'Google Maps',
             value: (
-              <a href={String(geoData.googleMapsUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+              <a
+                href={String(geoData.googleMapsUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
                 Open in Google Maps <ChevronRight className="w-3 h-3" />
               </a>
             ),
@@ -3611,7 +3886,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           details.push({
             label: 'Apple Maps',
             value: (
-              <a href={String(geoData.appleMapsUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+              <a
+                href={String(geoData.appleMapsUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
                 Open in Apple Maps <ChevronRight className="w-3 h-3" />
               </a>
             ),
@@ -3622,7 +3902,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           details.push({
             label: 'OpenStreetMap',
             value: (
-              <a href={String(geoData.osmUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+              <a
+                href={String(geoData.osmUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
                 Open in OpenStreetMap <ChevronRight className="w-3 h-3" />
               </a>
             ),
@@ -3631,21 +3916,22 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'crypto_bitcoin':
       case 'crypto_ethereum':
       case 'crypto_other': {
         const cryptoData = parseCryptoPayload(payload);
-        
+
         // Network badge
         if (cryptoData.network) {
           const networkColors: Record<string, string> = {
-            'Bitcoin': 'bg-orange-500 text-white',
-            'Ethereum': 'bg-purple-500 text-white',
-            'Litecoin': 'bg-gray-500 text-white',
-            'Dogecoin': 'bg-yellow-500 text-black',
+            Bitcoin: 'bg-orange-500 text-white',
+            Ethereum: 'bg-purple-500 text-white',
+            Litecoin: 'bg-gray-500 text-white',
+            Dogecoin: 'bg-yellow-500 text-black',
           };
-          const colorClass = networkColors[String(cryptoData.network)] || 'bg-muted text-foreground';
+          const colorClass =
+            networkColors[String(cryptoData.network)] || 'bg-muted text-foreground';
           details.push({
             label: 'Network',
             value: (
@@ -3656,7 +3942,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Wallet className="w-3 h-3" />,
           });
         }
-        
+
         // Address preview
         if (cryptoData.addressPreview) {
           details.push({
@@ -3665,30 +3951,36 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Hash className="w-3 h-3" />,
           });
         }
-        
+
         // Full address with copy
         if (cryptoData.address) {
           details.push({
             label: 'Full Address',
             value: (
               <div className="flex items-center gap-1">
-                <span className="font-mono text-[10px] break-all max-w-[150px]">{cryptoData.address}</span>
+                <span className="font-mono text-[10px] break-all max-w-[150px]">
+                  {cryptoData.address}
+                </span>
                 <CopyButton text={String(cryptoData.address)} />
               </div>
             ),
             icon: <Hash className="w-3 h-3" />,
           });
         }
-        
+
         // Amount
         if (cryptoData.amount) {
           details.push({
             label: 'Amount',
-            value: <span className="font-mono text-sm font-bold">{cryptoData.amount} {cryptoData.network}</span>,
+            value: (
+              <span className="font-mono text-sm font-bold">
+                {cryptoData.amount} {cryptoData.network}
+              </span>
+            ),
             icon: <CreditCard className="w-3 h-3" />,
           });
         }
-        
+
         // Label
         if (cryptoData.label) {
           details.push({
@@ -3697,7 +3989,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Message
         if (cryptoData.message) {
           details.push({
@@ -3706,13 +3998,18 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <MessageSquare className="w-3 h-3" />,
           });
         }
-        
+
         // Block explorer
         if (cryptoData.explorerUrl) {
           details.push({
             label: 'Block Explorer',
             value: (
-              <a href={String(cryptoData.explorerUrl)} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+              <a
+                href={String(cryptoData.explorerUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
                 View on blockchain <ChevronRight className="w-3 h-3" />
               </a>
             ),
@@ -3721,10 +4018,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'epc_sepa': {
         const epcData = parseEpcSepaPayload(payload);
-        
+
         // Payment standard badge
         details.push({
           label: 'Payment Standard',
@@ -3735,7 +4032,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           ),
           icon: <CreditCard className="w-3 h-3" />,
         });
-        
+
         // Service tag & version
         if (epcData.serviceTag) {
           details.push({
@@ -3751,7 +4048,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Settings className="w-3 h-3" />,
           });
         }
-        
+
         // Beneficiary
         if (epcData.beneficiaryName) {
           details.push({
@@ -3760,7 +4057,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // IBAN (formatted)
         if (epcData.iban) {
           details.push({
@@ -3774,7 +4071,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <CreditCard className="w-3 h-3" />,
           });
         }
-        
+
         // BIC
         if (epcData.bic) {
           details.push({
@@ -3783,16 +4080,20 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <CreditCard className="w-3 h-3" />,
           });
         }
-        
+
         // Amount & currency
         if (epcData.amount) {
           details.push({
             label: 'Amount',
-            value: <span className="font-mono text-sm font-bold">{epcData.currency || 'EUR'} {epcData.amount}</span>,
+            value: (
+              <span className="font-mono text-sm font-bold">
+                {epcData.currency || 'EUR'} {epcData.amount}
+              </span>
+            ),
             icon: <CreditCard className="w-3 h-3" />,
           });
         }
-        
+
         // Reference
         if (epcData.referenceType) {
           details.push({
@@ -3808,7 +4109,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Hash className="w-3 h-3" />,
           });
         }
-        
+
         // Remittance info
         if (epcData.remittanceInfo) {
           details.push({
@@ -3819,10 +4120,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'upi': {
         const upiData = parseUpiPayload(payload);
-        
+
         // Payment standard badge
         details.push({
           label: 'Payment Standard',
@@ -3833,7 +4134,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           ),
           icon: <Smartphone className="w-3 h-3" />,
         });
-        
+
         // VPA
         if (upiData.vpa) {
           details.push({
@@ -3842,7 +4143,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <CreditCard className="w-3 h-3" />,
           });
         }
-        
+
         // Payee name
         if (upiData.payeeName) {
           details.push({
@@ -3851,16 +4152,20 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Amount & currency
         if (upiData.amount) {
           details.push({
             label: 'Amount',
-            value: <span className="font-mono text-sm font-bold">{upiData.currency || 'INR'} {upiData.amount}</span>,
+            value: (
+              <span className="font-mono text-sm font-bold">
+                {upiData.currency || 'INR'} {upiData.amount}
+              </span>
+            ),
             icon: <CreditCard className="w-3 h-3" />,
           });
         }
-        
+
         // Transaction reference
         if (upiData.transactionRef) {
           details.push({
@@ -3869,7 +4174,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Hash className="w-3 h-3" />,
           });
         }
-        
+
         // Transaction note
         if (upiData.transactionNote) {
           details.push({
@@ -3878,7 +4183,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <MessageSquare className="w-3 h-3" />,
           });
         }
-        
+
         // Merchant code
         if (upiData.merchantCode) {
           details.push({
@@ -3889,7 +4194,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'emv_qr': {
         // Payment standard badge
         details.push({
@@ -3910,7 +4215,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         addPlainTextAnalysis();
         break;
       }
-      
+
       case 'swiss_qr_bill': {
         // Payment standard badge
         details.push({
@@ -3935,10 +4240,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         addPlainTextAnalysis();
         break;
       }
-      
+
       case 'calendar_event': {
         const calData = parseCalendarPayload(payload);
-        
+
         // Event summary
         if (calData.summary) {
           details.push({
@@ -3947,7 +4252,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // All-day indicator
         if (calData.isAllDay) {
           details.push({
@@ -3960,7 +4265,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Start date/time
         if (calData.startFormatted) {
           details.push({
@@ -3969,7 +4274,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // End date/time
         if (calData.endFormatted) {
           details.push({
@@ -3978,7 +4283,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Duration
         if (calData.duration) {
           details.push({
@@ -3987,7 +4292,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Timezone
         if (calData.timezone) {
           details.push({
@@ -3996,7 +4301,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Globe className="w-3 h-3" />,
           });
         }
-        
+
         // Location
         if (calData.location) {
           details.push({
@@ -4005,17 +4310,22 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <MapPin className="w-3 h-3" />,
           });
         }
-        
+
         // Description
         if (calData.description) {
           const desc = String(calData.description);
           details.push({
             label: 'Description',
-            value: <span className="text-xs text-muted-foreground">{desc.slice(0, 100)}{desc.length > 100 ? '...' : ''}</span>,
+            value: (
+              <span className="text-xs text-muted-foreground">
+                {desc.slice(0, 100)}
+                {desc.length > 100 ? '...' : ''}
+              </span>
+            ),
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Recurrence
         if (calData.recurrenceFormatted) {
           details.push({
@@ -4028,7 +4338,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Settings className="w-3 h-3" />,
           });
         }
-        
+
         // Organizer
         if (calData.organizer) {
           details.push({
@@ -4037,7 +4347,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Attendees
         if (calData.attendeesCount) {
           details.push({
@@ -4048,25 +4358,29 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
+
       case 'otp_auth': {
         const otpData = parseOtpAuthPayload(payload);
-        
+
         // Type badge
         if (otpData.type) {
           details.push({
             label: 'Type',
             value: (
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                otpData.type === 'TOTP' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-              }`}>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  otpData.type === 'TOTP'
+                    ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                    : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                }`}
+              >
                 {otpData.type === 'TOTP' ? 'Time-based OTP' : 'Counter-based OTP'}
               </span>
             ),
             icon: <Lock className="w-3 h-3" />,
           });
         }
-        
+
         // Issuer
         if (otpData.issuer) {
           details.push({
@@ -4075,7 +4389,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Shield className="w-3 h-3" />,
           });
         }
-        
+
         // Account
         if (otpData.account) {
           details.push({
@@ -4084,7 +4398,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <FileText className="w-3 h-3" />,
           });
         }
-        
+
         // Algorithm
         if (otpData.algorithm) {
           details.push({
@@ -4100,7 +4414,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Settings className="w-3 h-3" />,
           });
         }
-        
+
         // Digits
         if (otpData.digits) {
           details.push({
@@ -4109,7 +4423,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Hash className="w-3 h-3" />,
           });
         }
-        
+
         // Period (for TOTP)
         if (otpData.period && otpData.type === 'TOTP') {
           details.push({
@@ -4118,7 +4432,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Settings className="w-3 h-3" />,
           });
         }
-        
+
         // Counter (for HOTP)
         if (otpData.counter && otpData.type === 'HOTP') {
           details.push({
@@ -4127,13 +4441,19 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             icon: <Hash className="w-3 h-3" />,
           });
         }
-        
+
         // Secret status
         if (otpData.hasSecret) {
           details.push({
             label: 'Secret',
             value: (
-              <span className={otpData.hasSecret === 'Missing' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}>
+              <span
+                className={
+                  otpData.hasSecret === 'Missing'
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-green-600 dark:text-green-400'
+                }
+              >
                 {otpData.hasSecret}
               </span>
             ),
@@ -4142,16 +4462,13 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         }
         break;
       }
-      
-      case 'plain_text':
-      case 'unknown':
       default: {
         // For plain text and unknown types, always provide comprehensive analysis
         addPlainTextAnalysis();
-        
+
         // Content preview
         if (payload.length > 0) {
-          const preview = payload.length > 200 ? payload.slice(0, 200) + '...' : payload;
+          const preview = payload.length > 200 ? `${payload.slice(0, 200)}...` : payload;
           details.push({
             label: 'Content Preview',
             value: <span className="text-xs font-mono break-all">{preview}</span>,
@@ -4171,7 +4488,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   };
 
   // Parse geo coordinates from payload for geo content type
-  const renderGeoDetails = (payload: string) => {
+  const _renderGeoDetails = (payload: string) => {
     const geoMatch = payload.match(/^geo:([\d.-]+),([\d.-]+)/i);
     if (!geoMatch) return null;
     const lat = parseFloat(geoMatch[1]);
@@ -4181,7 +4498,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       <div className="mt-2 p-2 rounded-lg bg-muted/50">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Coordinates</span>
-          <span className="font-mono text-xs">{lat.toFixed(6)}, {lng.toFixed(6)}</span>
+          <span className="font-mono text-xs">
+            {lat.toFixed(6)}, {lng.toFixed(6)}
+          </span>
         </div>
         <a
           href={mapsUrl}
@@ -4651,643 +4970,652 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                   {/* Analysis Sections - Continuous listing */}
                   <div className="space-y-4">
                     {/* Content & Structure */}
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {/* Content Analysis */}
-                        {result.contentType && (
-                          <CollapsibleSection
-                            title="Content Analysis"
-                            icon={
-                              CONTENT_TYPE_ICONS[result.contentType.type] || (
-                                <QrCode className="w-4 h-4" />
-                              )
-                            }
-                            badge={
-                              <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                                {result.contentType.label}
-                              </span>
-                            }
-                          >
-                            <div className="space-y-2">
-                              <DetailRow
-                                label="Content Type"
-                                value={result.contentType.label}
-                                icon={<Fingerprint className="w-3.5 h-3.5" />}
-                              />
-                              {renderContentTypeDetails(result.contentType, result.payload || '').map((detail, i) => (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Content Analysis */}
+                      {result.contentType && (
+                        <CollapsibleSection
+                          title="Content Analysis"
+                          icon={
+                            CONTENT_TYPE_ICONS[result.contentType.type] || (
+                              <QrCode className="w-4 h-4" />
+                            )
+                          }
+                          badge={
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                              {result.contentType.label}
+                            </span>
+                          }
+                        >
+                          <div className="space-y-2">
+                            <DetailRow
+                              label="Content Type"
+                              value={result.contentType.label}
+                              icon={<Fingerprint className="w-3.5 h-3.5" />}
+                            />
+                            {renderContentTypeDetails(result.contentType, result.payload || '').map(
+                              (detail, i) => (
                                 <DetailRow
                                   key={i}
                                   label={detail.label}
                                   value={detail.value}
                                   icon={detail.icon}
                                 />
-                              ))}
-                              {/* Geo coordinates are now handled in renderContentTypeDetails */}
-                            </div>
-                          </CollapsibleSection>
-                        )}
-
-                        {/* QR Structure */}
-                        <CollapsibleSection
-                          title="QR Structure"
-                          icon={<Grid3x3 className="w-4 h-4" />}
-                        >
-                          <div className="space-y-2">
-                            <DetailRow
-                              label="Version"
-                              value={
-                                result.version !== null
-                                  ? `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
-                                  : '—'
-                              }
-                              icon={<Hash className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Error Correction"
-                              value={
-                                result.eccLevel ? (
-                                  <div className="text-right">
-                                    <div>Level {result.eccLevel}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
-                                    </div>
-                                  </div>
-                                ) : (
-                                  '—'
-                                )
-                              }
-                              icon={<Shield className="w-3.5 h-3.5" />}
-                            />
-                            <DetailRow
-                              label="Mask Pattern"
-                              value={
-                                result.maskPattern !== null ? (
-                                  <div className="text-right">
-                                    <div>Pattern {result.maskPattern}</div>
-                                    <div className="text-xs text-muted-foreground font-mono">
-                                      {MASK_DESCRIPTIONS[result.maskPattern]}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  '—'
-                                )
-                              }
-                              icon={<Layers className="w-3.5 h-3.5" />}
-                            />
-                          </div>
-                        </CollapsibleSection>
-
-                        {/* Encoding */}
-                        <CollapsibleSection
-                          title="Encoding"
-                          icon={<Binary className="w-4 h-4" />}
-                          badge={
-                            result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
-                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                                <Shield className="w-3 h-3" />
-                                {result.errorsCorrected} error
-                                {result.errorsCorrected !== 1 ? 's' : ''} corrected
-                              </span>
-                            ) : null
-                          }
-                        >
-                          <div className="space-y-2">
-                            <DetailRow
-                              label="Mode"
-                              value={
-                                <span className="capitalize">
-                                  {result.encodingMode || 'Unknown'}
-                                </span>
-                              }
-                              icon={<Type className="w-3.5 h-3.5" />}
-                            />
-                            {result.payloadBytes && (
-                              <DetailRow
-                                label="Raw Bytes"
-                                value={`${result.payloadBytes.length} bytes`}
-                                icon={<Database className="w-3.5 h-3.5" />}
-                              />
+                              )
                             )}
-                            <DetailRow
-                              label="RS Error Correction"
-                              value={
-                                result.errorsCorrected === null ? (
-                                  <span className="text-muted-foreground">Not available</span>
-                                ) : result.errorsCorrected > 0 ? (
-                                  <span className="text-amber-600 dark:text-amber-400 font-medium">
-                                    {result.errorsCorrected} error
-                                    {result.errorsCorrected !== 1 ? 's' : ''} recovered
-                                  </span>
-                                ) : (
-                                  <span className="text-green-600 dark:text-green-400">
-                                    No errors detected
-                                  </span>
-                                )
-                              }
-                              icon={<Shield className="w-3.5 h-3.5" />}
-                            />
+                            {/* Geo coordinates are now handled in renderContentTypeDetails */}
                           </div>
                         </CollapsibleSection>
+                      )}
 
-                        {/* Data Capacity */}
-                        {result.dataCapacity && (
-                          <CollapsibleSection
-                            title="Data Capacity"
-                            icon={<Database className="w-4 h-4" />}
-                            badge={
-                              result.dataCapacity.overflow ? (
-                                <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
-                                  <AlertTriangle className="w-3 h-3" />
-                                  Detection mismatch
+                      {/* QR Structure */}
+                      <CollapsibleSection
+                        title="QR Structure"
+                        icon={<Grid3x3 className="w-4 h-4" />}
+                      >
+                        <div className="space-y-2">
+                          <DetailRow
+                            label="Version"
+                            value={
+                              result.version !== null
+                                ? `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
+                                : '—'
+                            }
+                            icon={<Hash className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Error Correction"
+                            value={
+                              result.eccLevel ? (
+                                <div className="text-right">
+                                  <div>Level {result.eccLevel}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {ECC_DESCRIPTIONS[result.eccLevel].recovery} recovery
+                                  </div>
+                                </div>
+                              ) : (
+                                '—'
+                              )
+                            }
+                            icon={<Shield className="w-3.5 h-3.5" />}
+                          />
+                          <DetailRow
+                            label="Mask Pattern"
+                            value={
+                              result.maskPattern !== null ? (
+                                <div className="text-right">
+                                  <div>Pattern {result.maskPattern}</div>
+                                  <div className="text-xs text-muted-foreground font-mono">
+                                    {MASK_DESCRIPTIONS[result.maskPattern]}
+                                  </div>
+                                </div>
+                              ) : (
+                                '—'
+                              )
+                            }
+                            icon={<Layers className="w-3.5 h-3.5" />}
+                          />
+                        </div>
+                      </CollapsibleSection>
+
+                      {/* Encoding */}
+                      <CollapsibleSection
+                        title="Encoding"
+                        icon={<Binary className="w-4 h-4" />}
+                        badge={
+                          result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              {result.errorsCorrected} error
+                              {result.errorsCorrected !== 1 ? 's' : ''} corrected
+                            </span>
+                          ) : null
+                        }
+                      >
+                        <div className="space-y-2">
+                          <DetailRow
+                            label="Mode"
+                            value={
+                              <span className="capitalize">{result.encodingMode || 'Unknown'}</span>
+                            }
+                            icon={<Type className="w-3.5 h-3.5" />}
+                          />
+                          {result.payloadBytes && (
+                            <DetailRow
+                              label="Raw Bytes"
+                              value={`${result.payloadBytes.length} bytes`}
+                              icon={<Database className="w-3.5 h-3.5" />}
+                            />
+                          )}
+                          <DetailRow
+                            label="RS Error Correction"
+                            value={
+                              result.errorsCorrected === null ? (
+                                <span className="text-muted-foreground">Not available</span>
+                              ) : result.errorsCorrected > 0 ? (
+                                <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                  {result.errorsCorrected} error
+                                  {result.errorsCorrected !== 1 ? 's' : ''} recovered
                                 </span>
                               ) : (
-                                <span
-                                  className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
-                                    result.dataCapacity.percentage > 90
-                                      ? 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                      : result.dataCapacity.percentage > 70
-                                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                                        : 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                  }`}
-                                >
-                                  {result.dataCapacity.percentage}% used
+                                <span className="text-green-600 dark:text-green-400">
+                                  No errors detected
                                 </span>
                               )
                             }
-                          >
-                            {result.dataCapacity.overflow ? (
-                              <div className="space-y-2">
-                                <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
-                                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                                  <span>
-                                    Payload ({result.dataCapacity.used} bytes) exceeds detected
-                                    capacity ({result.dataCapacity.total} bytes). Version or ECC
-                                    detection may be inaccurate.
-                                  </span>
-                                </div>
-                                <DetailRow
-                                  label="Payload Size"
-                                  value={`${result.dataCapacity.used} bytes`}
-                                  icon={<Database className="w-3.5 h-3.5" />}
-                                />
-                                <DetailRow
-                                  label="Detected Capacity"
-                                  value={`${result.dataCapacity.total} bytes`}
-                                  icon={<Database className="w-3.5 h-3.5" />}
-                                />
-                              </div>
-                            ) : (
-                              <ProgressBar
-                                value={result.dataCapacity.used}
-                                max={result.dataCapacity.total}
-                                label="Byte Mode Capacity"
-                              />
-                            )}
-                          </CollapsibleSection>
-                        )}
+                            icon={<Shield className="w-3.5 h-3.5" />}
+                          />
+                        </div>
+                      </CollapsibleSection>
 
-                        {/* Structural Patterns */}
-                        {result.structuralAnalysis && (
-                          <CollapsibleSection
-                            title="Structural Patterns"
-                            icon={<Settings className="w-4 h-4" />}
-                          >
+                      {/* Data Capacity */}
+                      {result.dataCapacity && (
+                        <CollapsibleSection
+                          title="Data Capacity"
+                          icon={<Database className="w-4 h-4" />}
+                          badge={
+                            result.dataCapacity.overflow ? (
+                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" />
+                                Detection mismatch
+                              </span>
+                            ) : (
+                              <span
+                                className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+                                  result.dataCapacity.percentage > 90
+                                    ? 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                    : result.dataCapacity.percentage > 70
+                                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                                      : 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                }`}
+                              >
+                                {result.dataCapacity.percentage}% used
+                              </span>
+                            )
+                          }
+                        >
+                          {result.dataCapacity.overflow ? (
                             <div className="space-y-2">
+                              <div className="flex items-start gap-2 p-2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs">
+                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span>
+                                  Payload ({result.dataCapacity.used} bytes) exceeds detected
+                                  capacity ({result.dataCapacity.total} bytes). Version or ECC
+                                  detection may be inaccurate.
+                                </span>
+                              </div>
                               <DetailRow
-                                label="Finder Patterns"
-                                value={
-                                  <StatusBadge
-                                    status={result.structuralAnalysis.hasFinderPatterns}
-                                    trueLabel="Detected"
-                                    falseLabel="Missing"
-                                  />
-                                }
+                                label="Payload Size"
+                                value={`${result.dataCapacity.used} bytes`}
+                                icon={<Database className="w-3.5 h-3.5" />}
                               />
                               <DetailRow
-                                label="Timing Patterns"
-                                value={
-                                  <StatusBadge
-                                    status={result.structuralAnalysis.hasTimingPatterns}
-                                    trueLabel="Detected"
-                                    falseLabel="Missing"
-                                  />
-                                }
-                              />
-                              <DetailRow
-                                label="Alignment Patterns"
-                                value={
-                                  result.structuralAnalysis.hasAlignmentPatterns ? (
-                                    <span className="text-sm">
-                                      {result.structuralAnalysis.alignmentPatternCount} expected
-                                    </span>
-                                  ) : (
-                                    <span className="text-sm text-muted-foreground">N/A (v1)</span>
-                                  )
-                                }
+                                label="Detected Capacity"
+                                value={`${result.dataCapacity.total} bytes`}
+                                icon={<Database className="w-3.5 h-3.5" />}
                               />
                             </div>
-                          </CollapsibleSection>
-                        )}
-                      </div>
+                          ) : (
+                            <ProgressBar
+                              value={result.dataCapacity.used}
+                              max={result.dataCapacity.total}
+                              label="Byte Mode Capacity"
+                            />
+                          )}
+                        </CollapsibleSection>
+                      )}
+
+                      {/* Structural Patterns */}
+                      {result.structuralAnalysis && (
+                        <CollapsibleSection
+                          title="Structural Patterns"
+                          icon={<Settings className="w-4 h-4" />}
+                        >
+                          <div className="space-y-2">
+                            <DetailRow
+                              label="Finder Patterns"
+                              value={
+                                <StatusBadge
+                                  status={result.structuralAnalysis.hasFinderPatterns}
+                                  trueLabel="Detected"
+                                  falseLabel="Missing"
+                                />
+                              }
+                            />
+                            <DetailRow
+                              label="Timing Patterns"
+                              value={
+                                <StatusBadge
+                                  status={result.structuralAnalysis.hasTimingPatterns}
+                                  trueLabel="Detected"
+                                  falseLabel="Missing"
+                                />
+                              }
+                            />
+                            <DetailRow
+                              label="Alignment Patterns"
+                              value={
+                                result.structuralAnalysis.hasAlignmentPatterns ? (
+                                  <span className="text-sm">
+                                    {result.structuralAnalysis.alignmentPatternCount} expected
+                                  </span>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">N/A (v1)</span>
+                                )
+                              }
+                            />
+                          </div>
+                        </CollapsibleSection>
+                      )}
+                    </div>
 
                     {/* Technical Section */}
                     <div className="grid md:grid-cols-2 gap-4">
-                        {/* Capacity by Mode */}
-                        {result.version !== null && result.eccLevel && (
-                          <CollapsibleSection
-                            title="Capacity by Mode"
-                            icon={<BarChart3 className="w-4 h-4" />}
-                          >
-                            <CapacityByModeTable
-                              version={result.version}
-                              eccLevel={result.eccLevel}
-                              currentBytes={result.payloadBytes?.length}
-                            />
-                          </CollapsibleSection>
-                        )}
+                      {/* Capacity by Mode */}
+                      {result.version !== null && result.eccLevel && (
+                        <CollapsibleSection
+                          title="Capacity by Mode"
+                          icon={<BarChart3 className="w-4 h-4" />}
+                        >
+                          <CapacityByModeTable
+                            version={result.version}
+                            eccLevel={result.eccLevel}
+                            currentBytes={result.payloadBytes?.length}
+                          />
+                        </CollapsibleSection>
+                      )}
 
-                        {/* Encoding Efficiency */}
-                        {result.payload && (
-                          <CollapsibleSection
-                            title="Encoding Efficiency"
-                            icon={<BarChart3 className="w-4 h-4" />}
-                          >
-                            <EncodingEfficiency
-                              payload={result.payload}
-                              payloadBytes={result.payloadBytes}
-                              encodingMode={result.encodingMode}
-                            />
-                          </CollapsibleSection>
-                        )}
+                      {/* Encoding Efficiency */}
+                      {result.payload && (
+                        <CollapsibleSection
+                          title="Encoding Efficiency"
+                          icon={<BarChart3 className="w-4 h-4" />}
+                        >
+                          <EncodingEfficiency
+                            payload={result.payload}
+                            payloadBytes={result.payloadBytes}
+                            encodingMode={result.encodingMode}
+                          />
+                        </CollapsibleSection>
+                      )}
                     </div>
 
                     {/* Decoder Metadata, Format Info + Image Properties - 2 column layout */}
                     <div className="grid md:grid-cols-2 gap-4">
-                        {/* Decoder Raw Metadata - Authoritative source of truth */}
-                        {result.decoderMetadata && (
-                          <CollapsibleSection
-                            title="Decoder Metadata"
-                            icon={<Database className="w-4 h-4" />}
-                            defaultOpen={true}
-                            badge={
-                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
-                                Authoritative
-                              </span>
-                            }
-                          >
-                            <div className="space-y-2">
-                              <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
-                                Raw decoder output - authoritative source for reproduction.
-                              </div>
-                              <DetailRow
-                                label="Version"
-                                value={
-                                  result.decoderMetadata.version !== null ? (
-                                    `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
+                      {/* Decoder Raw Metadata - Authoritative source of truth */}
+                      {result.decoderMetadata && (
+                        <CollapsibleSection
+                          title="Decoder Metadata"
+                          icon={<Database className="w-4 h-4" />}
+                          defaultOpen={true}
+                          badge={
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                              Authoritative
+                            </span>
+                          }
+                        >
+                          <div className="space-y-2">
+                            <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/50 rounded">
+                              Raw decoder output - authoritative source for reproduction.
+                            </div>
+                            <DetailRow
+                              label="Version"
+                              value={
+                                result.decoderMetadata.version !== null ? (
+                                  `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
+                                ) : (
+                                  <span className="text-red-500">— (not detected)</span>
+                                )
+                              }
+                              icon={<Hash className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Mask Pattern"
+                              value={
+                                result.decoderMetadata.maskPattern !== null ? (
+                                  `${result.decoderMetadata.maskPattern}`
+                                ) : (
+                                  <span className="text-amber-500">— (not detected)</span>
+                                )
+                              }
+                              icon={<Layers className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="ECC Level"
+                              value={
+                                result.decoderMetadata.eccLevel !== null ? (
+                                  result.decoderMetadata.eccLevel
+                                ) : (
+                                  <span className="text-amber-500">— (not detected)</span>
+                                )
+                              }
+                              icon={<Shield className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Errors Corrected"
+                              value={
+                                result.decoderMetadata.errorsCorrected !== null ? (
+                                  result.decoderMetadata.errorsCorrected === 0 ? (
+                                    <span className="text-green-600 dark:text-green-400">
+                                      0 (no errors)
+                                    </span>
                                   ) : (
-                                    <span className="text-red-500">— (not detected)</span>
+                                    <span className="text-amber-600 dark:text-amber-400">
+                                      {result.decoderMetadata.errorsCorrected}
+                                    </span>
                                   )
-                                }
-                                icon={<Hash className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Mask Pattern"
-                                value={
-                                  result.decoderMetadata.maskPattern !== null ? (
-                                    `${result.decoderMetadata.maskPattern}`
+                                ) : (
+                                  <span className="text-muted-foreground">0 (clean decode)</span>
+                                )
+                              }
+                              icon={<Shield className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Erasures"
+                              value={
+                                result.decoderMetadata.erasures !== null ? (
+                                  result.decoderMetadata.erasures === 0 ? (
+                                    <span className="text-green-600 dark:text-green-400">0</span>
                                   ) : (
-                                    <span className="text-amber-500">— (not detected)</span>
+                                    result.decoderMetadata.erasures
                                   )
-                                }
-                                icon={<Layers className="w-3.5 h-3.5" />}
-                              />
+                                ) : (
+                                  <span className="text-muted-foreground">N/A</span>
+                                )
+                              }
+                              icon={<Shield className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Raw Bits"
+                              value={
+                                result.decoderMetadata.numBits !== null ? (
+                                  `${result.decoderMetadata.numBits} bits`
+                                ) : (
+                                  <span className="text-muted-foreground">N/A</span>
+                                )
+                              }
+                              icon={<Binary className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Orientation"
+                              value={
+                                result.decoderMetadata.orientation !== null &&
+                                result.decoderMetadata.orientation !== 0 ? (
+                                  `${result.decoderMetadata.orientation}°`
+                                ) : (
+                                  <span className="text-muted-foreground">Standard (0°)</span>
+                                )
+                              }
+                              icon={<Settings className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Structured Append"
+                              value={
+                                result.decoderMetadata.hasStructuredAppend
+                                  ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
+                                  : 'No'
+                              }
+                              icon={<Layers className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Byte Segments"
+                              value={
+                                result.decoderMetadata.byteSegmentCount > 0
+                                  ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
+                                  : 'None'
+                              }
+                              icon={<Database className="w-3.5 h-3.5" />}
+                            />
+                          </div>
+                        </CollapsibleSection>
+                      )}
+
+                      {/* Format Info + Image Properties stacked */}
+                      <div className="space-y-4">
+                        <CollapsibleSection
+                          title="Format Information"
+                          icon={<Info className="w-4 h-4" />}
+                        >
+                          <div className="space-y-2">
+                            <DetailRow
+                              label="Module Count"
+                              value={`${result.moduleCount} × ${result.moduleCount}`}
+                              icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                            />
+                            {result.version !== null && (
                               <DetailRow
-                                label="ECC Level"
-                                value={
-                                  result.decoderMetadata.eccLevel !== null ? (
-                                    result.decoderMetadata.eccLevel
-                                  ) : (
-                                    <span className="text-amber-500">— (not detected)</span>
-                                  )
-                                }
-                                icon={<Shield className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Errors Corrected"
-                                value={
-                                  result.decoderMetadata.errorsCorrected !== null
-                                    ? result.decoderMetadata.errorsCorrected === 0 
-                                      ? <span className="text-green-600 dark:text-green-400">0 (no errors)</span>
-                                      : <span className="text-amber-600 dark:text-amber-400">{result.decoderMetadata.errorsCorrected}</span>
-                                    : <span className="text-muted-foreground">0 (clean decode)</span>
-                                }
-                                icon={<Shield className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Erasures"
-                                value={
-                                  result.decoderMetadata.erasures !== null
-                                    ? result.decoderMetadata.erasures === 0
-                                      ? <span className="text-green-600 dark:text-green-400">0</span>
-                                      : result.decoderMetadata.erasures
-                                    : <span className="text-muted-foreground">N/A</span>
-                                }
-                                icon={<Shield className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Raw Bits"
-                                value={
-                                  result.decoderMetadata.numBits !== null
-                                    ? `${result.decoderMetadata.numBits} bits`
-                                    : <span className="text-muted-foreground">N/A</span>
-                                }
-                                icon={<Binary className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Orientation"
-                                value={
-                                  result.decoderMetadata.orientation !== null && result.decoderMetadata.orientation !== 0
-                                    ? `${result.decoderMetadata.orientation}°`
-                                    : <span className="text-muted-foreground">Standard (0°)</span>
-                                }
-                                icon={<Settings className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Structured Append"
-                                value={
-                                  result.decoderMetadata.hasStructuredAppend
-                                    ? `Seq ${result.decoderMetadata.structuredAppendSequence}, Parity ${result.decoderMetadata.structuredAppendParity}`
-                                    : 'No'
-                                }
-                                icon={<Layers className="w-3.5 h-3.5" />}
-                              />
-                              <DetailRow
-                                label="Byte Segments"
-                                value={
-                                  result.decoderMetadata.byteSegmentCount > 0
-                                    ? `${result.decoderMetadata.byteSegmentCount} segment(s), ${result.decoderMetadata.totalByteLength} bytes`
-                                    : 'None'
-                                }
+                                label="Data Modules"
+                                value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
                                 icon={<Database className="w-3.5 h-3.5" />}
                               />
+                            )}
+                            {result.eccLevel && (
+                              <DetailRow
+                                label="ECC Description"
+                                value={ECC_DESCRIPTIONS[result.eccLevel].description}
+                                icon={<Info className="w-3.5 h-3.5" />}
+                              />
+                            )}
+                          </div>
+                        </CollapsibleSection>
+
+                        {/* Image Properties - below Format Info */}
+                        {result.imageProperties && (
+                          <CollapsibleSection
+                            title="Image Properties"
+                            icon={<FileImage className="w-4 h-4" />}
+                          >
+                            <div className="space-y-2">
+                              <DetailRow
+                                label="Image Size"
+                                value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
+                                icon={<ImageIcon className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Aspect Ratio"
+                                value={
+                                  result.imageProperties.aspectRatio === 1
+                                    ? '1:1 (Square)'
+                                    : `${result.imageProperties.aspectRatio}:1`
+                                }
+                                icon={<Ratio className="w-3.5 h-3.5" />}
+                              />
+                              {result.imageProperties.estimatedQrSizePx > 0 && (
+                                <DetailRow
+                                  label="QR Code Size"
+                                  value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
+                                  icon={<QrCode className="w-3.5 h-3.5" />}
+                                />
+                              )}
+                              {result.imageProperties.estimatedQrSizePx > 0 &&
+                                result.imageProperties.width > 0 && (
+                                  <DetailRow
+                                    label="QR Coverage"
+                                    value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
+                                    icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                                  />
+                                )}
                             </div>
                           </CollapsibleSection>
                         )}
-
-                        {/* Format Info + Image Properties stacked */}
-                        <div className="space-y-4">
-                          <CollapsibleSection
-                            title="Format Information"
-                            icon={<Info className="w-4 h-4" />}
-                          >
-                            <div className="space-y-2">
-                              <DetailRow
-                                label="Module Count"
-                                value={`${result.moduleCount} × ${result.moduleCount}`}
-                                icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                              />
-                              {result.version !== null && (
-                                <DetailRow
-                                  label="Data Modules"
-                                  value={`~${result.moduleCount ** 2 - (result.version > 6 ? 67 : 49) - (result.version > 1 ? 25 * (Math.floor(result.version / 7) + 2) ** 2 : 0)}`}
-                                  icon={<Database className="w-3.5 h-3.5" />}
-                                />
-                              )}
-                              {result.eccLevel && (
-                                <DetailRow
-                                  label="ECC Description"
-                                  value={ECC_DESCRIPTIONS[result.eccLevel].description}
-                                  icon={<Info className="w-3.5 h-3.5" />}
-                                />
-                              )}
-                            </div>
-                          </CollapsibleSection>
-
-                          {/* Image Properties - below Format Info */}
-                          {result.imageProperties && (
-                            <CollapsibleSection
-                              title="Image Properties"
-                              icon={<FileImage className="w-4 h-4" />}
-                            >
-                              <div className="space-y-2">
-                                <DetailRow
-                                  label="Image Size"
-                                  value={`${result.imageProperties.width} × ${result.imageProperties.height} px`}
-                                  icon={<ImageIcon className="w-3.5 h-3.5" />}
-                                />
-                                <DetailRow
-                                  label="Aspect Ratio"
-                                  value={
-                                    result.imageProperties.aspectRatio === 1
-                                      ? '1:1 (Square)'
-                                      : `${result.imageProperties.aspectRatio}:1`
-                                  }
-                                  icon={<Ratio className="w-3.5 h-3.5" />}
-                                />
-                                {result.imageProperties.estimatedQrSizePx > 0 && (
-                                  <DetailRow
-                                    label="QR Code Size"
-                                    value={`~${result.imageProperties.estimatedQrSizePx} × ${result.imageProperties.estimatedQrSizePx} px`}
-                                    icon={<QrCode className="w-3.5 h-3.5" />}
-                                  />
-                                )}
-                                {result.imageProperties.estimatedQrSizePx > 0 &&
-                                  result.imageProperties.width > 0 && (
-                                    <DetailRow
-                                      label="QR Coverage"
-                                      value={`${Math.round((result.imageProperties.estimatedQrSizePx / Math.min(result.imageProperties.width, result.imageProperties.height)) * 100)}% of image`}
-                                      icon={<Grid3x3 className="w-3.5 h-3.5" />}
-                                    />
-                                  )}
-                              </div>
-                            </CollapsibleSection>
-                          )}
-                        </div>
+                      </div>
                     </div>
 
                     {/* Visual Section */}
                     <div className="grid md:grid-cols-2 gap-4">
-                        {/* Colors & Contrast */}
-                        {result.detectedColors && (
-                          <CollapsibleSection
-                            title="Colors & WCAG Compliance"
-                            icon={<Palette className="w-4 h-4" />}
-                            badge={
-                              <WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />
-                            }
-                          >
-                            <div className="space-y-4">
-                              {/* Color Swatches */}
-                              <div className="flex justify-between items-center">
-                                <ColorSwatch
-                                  color={result.detectedColors.foreground}
-                                  label="Foreground"
-                                />
-                                <div className="flex flex-col items-center">
-                                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                                  <span className="text-xs text-muted-foreground">contrast</span>
-                                </div>
-                                <ColorSwatch
-                                  color={result.detectedColors.background}
-                                  label="Background"
-                                />
+                      {/* Colors & Contrast */}
+                      {result.detectedColors && (
+                        <CollapsibleSection
+                          title="Colors & WCAG Compliance"
+                          icon={<Palette className="w-4 h-4" />}
+                          badge={
+                            <WCAGBadge ratio={result.detectedColors.contrastRatio} size="sm" />
+                          }
+                        >
+                          <div className="space-y-4">
+                            {/* Color Swatches */}
+                            <div className="flex justify-between items-center">
+                              <ColorSwatch
+                                color={result.detectedColors.foreground}
+                                label="Foreground"
+                              />
+                              <div className="flex flex-col items-center">
+                                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">contrast</span>
                               </div>
-
-                              {/* WCAG Compliance Details */}
-                              <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium">WCAG Compliance</span>
-                                  <WCAGBadge
-                                    ratio={result.detectedColors.contrastRatio}
-                                    size="md"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                                  <div
-                                    className={`p-2 rounded ${
-                                      result.detectedColors.contrastRatio >= 3
-                                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                        : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                    }`}
-                                  >
-                                    <div className="font-bold">AA-Large</div>
-                                    <div className="text-[10px]">≥3:1</div>
-                                  </div>
-                                  <div
-                                    className={`p-2 rounded ${
-                                      result.detectedColors.contrastRatio >= 4.5
-                                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                        : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                    }`}
-                                  >
-                                    <div className="font-bold">AA</div>
-                                    <div className="text-[10px]">≥4.5:1</div>
-                                  </div>
-                                  <div
-                                    className={`p-2 rounded ${
-                                      result.detectedColors.contrastRatio >= 7
-                                        ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                        : 'bg-red-500/10 text-red-700 dark:text-red-400'
-                                    }`}
-                                  >
-                                    <div className="font-bold">AAA</div>
-                                    <div className="text-[10px]">≥7:1</div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <DetailRow
-                                label="Contrast Ratio"
-                                value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
-                                icon={<Eye className="w-3.5 h-3.5" />}
+                              <ColorSwatch
+                                color={result.detectedColors.background}
+                                label="Background"
                               />
                             </div>
-                          </CollapsibleSection>
-                        )}
 
-                        {/* Spatial Analysis */}
-                        <CollapsibleSection
-                          title="Spatial Analysis"
-                          icon={<Ruler className="w-4 h-4" />}
-                        >
-                          <div className="space-y-2">
-                            {result.estimatedModulePx !== null && (
-                              <DetailRow
-                                label="Module Size"
-                                value={`~${result.estimatedModulePx} px`}
-                                icon={<Square className="w-3.5 h-3.5" />}
-                              />
-                            )}
-                            {result.quietZone && (
-                              <>
-                                <DetailRow
-                                  label="Quiet Zone"
-                                  value={
-                                    <StatusBadge
-                                      status={result.quietZone.adequate}
-                                      trueLabel="Adequate"
-                                      falseLabel="Insufficient"
-                                    />
-                                  }
-                                  icon={<Square className="w-3.5 h-3.5" />}
-                                />
-                                <div className="grid grid-cols-4 gap-1 text-center mt-2">
-                                  <div className="p-2 rounded bg-muted/50">
-                                    <div className="text-sm font-mono">{result.quietZone.top}</div>
-                                    <div className="text-[10px] text-muted-foreground">Top</div>
-                                  </div>
-                                  <div className="p-2 rounded bg-muted/50">
-                                    <div className="text-sm font-mono">
-                                      {result.quietZone.right}
-                                    </div>
-                                    <div className="text-[10px] text-muted-foreground">Right</div>
-                                  </div>
-                                  <div className="p-2 rounded bg-muted/50">
-                                    <div className="text-sm font-mono">
-                                      {result.quietZone.bottom}
-                                    </div>
-                                    <div className="text-[10px] text-muted-foreground">Bottom</div>
-                                  </div>
-                                  <div className="p-2 rounded bg-muted/50">
-                                    <div className="text-sm font-mono">{result.quietZone.left}</div>
-                                    <div className="text-[10px] text-muted-foreground">Left</div>
-                                  </div>
+                            {/* WCAG Compliance Details */}
+                            <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">WCAG Compliance</span>
+                                <WCAGBadge ratio={result.detectedColors.contrastRatio} size="md" />
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div
+                                  className={`p-2 rounded ${
+                                    result.detectedColors.contrastRatio >= 3
+                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                  }`}
+                                >
+                                  <div className="font-bold">AA-Large</div>
+                                  <div className="text-[10px]">≥3:1</div>
                                 </div>
-                              </>
-                            )}
+                                <div
+                                  className={`p-2 rounded ${
+                                    result.detectedColors.contrastRatio >= 4.5
+                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                  }`}
+                                >
+                                  <div className="font-bold">AA</div>
+                                  <div className="text-[10px]">≥4.5:1</div>
+                                </div>
+                                <div
+                                  className={`p-2 rounded ${
+                                    result.detectedColors.contrastRatio >= 7
+                                      ? 'bg-green-500/10 text-green-700 dark:text-green-400'
+                                      : 'bg-red-500/10 text-red-700 dark:text-red-400'
+                                  }`}
+                                >
+                                  <div className="font-bold">AAA</div>
+                                  <div className="text-[10px]">≥7:1</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <DetailRow
+                              label="Contrast Ratio"
+                              value={`${result.detectedColors.contrastRatio.toFixed(2)}:1`}
+                              icon={<Eye className="w-3.5 h-3.5" />}
+                            />
                           </div>
                         </CollapsibleSection>
+                      )}
+
+                      {/* Spatial Analysis */}
+                      <CollapsibleSection
+                        title="Spatial Analysis"
+                        icon={<Ruler className="w-4 h-4" />}
+                      >
+                        <div className="space-y-2">
+                          {result.estimatedModulePx !== null && (
+                            <DetailRow
+                              label="Module Size"
+                              value={`~${result.estimatedModulePx} px`}
+                              icon={<Square className="w-3.5 h-3.5" />}
+                            />
+                          )}
+                          {result.quietZone && (
+                            <>
+                              <DetailRow
+                                label="Quiet Zone"
+                                value={
+                                  <StatusBadge
+                                    status={result.quietZone.adequate}
+                                    trueLabel="Adequate"
+                                    falseLabel="Insufficient"
+                                  />
+                                }
+                                icon={<Square className="w-3.5 h-3.5" />}
+                              />
+                              <div className="grid grid-cols-4 gap-1 text-center mt-2">
+                                <div className="p-2 rounded bg-muted/50">
+                                  <div className="text-sm font-mono">{result.quietZone.top}</div>
+                                  <div className="text-[10px] text-muted-foreground">Top</div>
+                                </div>
+                                <div className="p-2 rounded bg-muted/50">
+                                  <div className="text-sm font-mono">{result.quietZone.right}</div>
+                                  <div className="text-[10px] text-muted-foreground">Right</div>
+                                </div>
+                                <div className="p-2 rounded bg-muted/50">
+                                  <div className="text-sm font-mono">{result.quietZone.bottom}</div>
+                                  <div className="text-[10px] text-muted-foreground">Bottom</div>
+                                </div>
+                                <div className="p-2 rounded bg-muted/50">
+                                  <div className="text-sm font-mono">{result.quietZone.left}</div>
+                                  <div className="text-[10px] text-muted-foreground">Left</div>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </CollapsibleSection>
                     </div>
 
                     {/* Advanced Section */}
                     <div className="grid md:grid-cols-1 gap-4">
-                        {/* Binary/Hex View */}
-                        {result.payloadBytes && result.payloadBytes.length > 0 && (
-                          <CollapsibleSection
-                            title="Binary Data (Hex Dump)"
-                            icon={<Binary className="w-4 h-4" />}
-                            badge={
-                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
-                                {result.payloadBytes.length} bytes
-                              </span>
-                            }
-                          >
-                            <HexDumpView bytes={result.payloadBytes} maxRows={8} />
-                          </CollapsibleSection>
-                        )}
+                      {/* Binary/Hex View */}
+                      {result.payloadBytes && result.payloadBytes.length > 0 && (
+                        <CollapsibleSection
+                          title="Binary Data (Hex Dump)"
+                          icon={<Binary className="w-4 h-4" />}
+                          badge={
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                              {result.payloadBytes.length} bytes
+                            </span>
+                          }
+                        >
+                          <HexDumpView bytes={result.payloadBytes} maxRows={8} />
+                        </CollapsibleSection>
+                      )}
 
-                        {/* Module Matrix Visualization */}
-                        {result.moduleMatrix && result.moduleMatrix.length > 0 && (
-                          <CollapsibleSection
-                            title="Module Matrix"
-                            icon={<Grid3x3 className="w-4 h-4" />}
-                            badge={
-                              <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
-                                {result.moduleMatrix.length}×{result.moduleMatrix.length}
-                              </span>
-                            }
-                          >
-                            <ModuleMatrixView
-                              matrix={result.moduleMatrix}
-                              version={result.version}
-                              fgColor={result.detectedColors?.foreground}
-                              bgColor={result.detectedColors?.background}
-                            />
-                          </CollapsibleSection>
-                        )}
+                      {/* Module Matrix Visualization */}
+                      {result.moduleMatrix && result.moduleMatrix.length > 0 && (
+                        <CollapsibleSection
+                          title="Module Matrix"
+                          icon={<Grid3x3 className="w-4 h-4" />}
+                          badge={
+                            <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
+                              {result.moduleMatrix.length}×{result.moduleMatrix.length}
+                            </span>
+                          }
+                        >
+                          <ModuleMatrixView
+                            matrix={result.moduleMatrix}
+                            version={result.version}
+                            fgColor={result.detectedColors?.foreground}
+                            bgColor={result.detectedColors?.background}
+                          />
+                        </CollapsibleSection>
+                      )}
 
-                        {/* Debug Log */}
-                        {result.debugLog && (
-                          <CollapsibleSection
-                            title="Debug Log"
-                            icon={<Settings className="w-4 h-4" />}
-                            defaultOpen={false}
-                          >
-                            <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
-                              {result.debugLog}
-                            </pre>
-                          </CollapsibleSection>
-                        )}
-
+                      {/* Debug Log */}
+                      {result.debugLog && (
+                        <CollapsibleSection
+                          title="Debug Log"
+                          icon={<Settings className="w-4 h-4" />}
+                          defaultOpen={false}
+                        >
+                          <pre className="text-xs font-mono bg-muted/50 p-3 rounded-lg overflow-x-auto max-h-64 whitespace-pre-wrap break-all">
+                            {result.debugLog}
+                          </pre>
+                        </CollapsibleSection>
+                      )}
                     </div>
                   </div>
 

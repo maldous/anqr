@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG-metadatafält.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Beskärningsparametrar',
+      paragraphs: ['Alternativ för beskärning av överläggsbild:'],
+      bullets: [
+        'cropEn: Aktivera överläggsbeskärning 0/1 (standard: 0).',
+        'cropX: Crop center X som bråkdel 0-1 (standard: 0,5).',
+        'cropY: Beskärningscentrum Y som bråkdel 0-1 (standard: 0,5).',
+        'cropSize: Beskärningsstorlek som bråkdel av bilden 0-1 (standard: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Säkerhetslåsparametrar',
+      paragraphs: ['Styr vilka QR-element som skyddas från överlagringsändringar:'],
+      bullets: [
+        'lockF: Låssökarmönster 0/1 (standard: 1).',
+        'lockT: Lås timingmönster 0/1 (standard: 1).',
+        'lockA: Lås inriktningsmönster 0/1 (standard: 1).',
+        'lockFmt: Låsformat info 0/1 (standard: 1).',
+        'lockV: Låsversionsinformation 0/1 (standard: 1).',
+        'safeMode: Säkert läge - av, balanserat, strikt (standard: av).',
+        'safeMinPx: Minsta modulstorlek i pixlar (standard: 2).',
+        'safeMinQz: Minimum tysta zonmoduler (standard: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Auto-tuning parametrar',
+      paragraphs: ['Inställningar för automatisk optimering:'],
+      bullets: [
+        'autoVer: Välj QR-version 0/1 automatiskt (standard: 1).',
+        'autoEcc: Autovälj ECC-nivå 0/1 (standard: 0) - endast tips på serversidan.',
+        'autoReduce: [KLIENT-ENDAST] Minska automatiskt intensiteten tills det går att skanna - kräver skanningsvalideringsslinga.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Ytterligare animationsparametrar',
+      paragraphs: ['Utökade animeringskontroller för GIF-utdata:'],
+      bullets: [
+        'loop: Animationsloopar kontinuerligt 0/1 (standard: 1).',
+        'bounce: Ping-pong animationsriktning 0/1 (standard: 0).',
+        'omvänd: Spela upp animation omvänt 0/1 (standard: 0).',
+        'colorCycle: Aktivera färgcykeleffekt 0/1 (standard: 0).',
+        'interp: Raminterpolation - ingen, övertoning, morph (standard: ingen).',
+        'tempDither: Temporal dithering - off, blue_noise, flicker_safe (standard: off).',
+        'startF: Startbild för animering (standard: 0).',
+        'maxF: Maximalt antal bilder att rendera (standard: 0 = auto).',
+        'stepF: Ramstegsintervall (standard: 1).',
+        'jitter: [KUNDEN ENDAST] Moduljitter i pixlar - kräver QR-regenerering per bildruta.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Vibrerande parametrar',
+      paragraphs: ['Styr dithering-algoritmer för överlagringsbehandling:'],
+      bullets: [
+        'ditherKind: Dither-algoritm - error_diffusion, ordered_bayer, blue_noise, etc (standard: ordered_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (standard: floyd_steinberg).',
+        'ditherStrength: Dither-intensitet 0-100 (standard: 50).',
+        'serpentine: Serpentine vibrering 0/1 (standard: 0).',
+        'matris: Ordnad slingringsmatris - bayer2, bayer4, bayer8 (standard: bayer4).',
+        'bnTile: Kakelstorlek med blått brus (standard: 64).',
+        'bnSeed: Slumpmässigt utsäde med blått brus (standard: 0).',
+        'colorDither: Färgdithering - ingen, per_kanal, perceptuell (standard: ingen).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpixelparametrar',
+      paragraphs: ['Inställningar för blandningsläge för underpixlar:'],
+      bullets: [
+        'spGrid: Subpixel rutnätsstorlek - 2x2, 3x3, 4x4 (standard: 3x3).',
+        'spCenter: Mittregel - strikt, halvtonscentrum (standard: strikt).',
+        'spNeutral: Neutral färg hex utan # (standard: 808080).',
+        'spFinder: Finder åsidosätta - solid, stiliserad (standard: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Halvtonsparametrar',
+      paragraphs: ['Inställningar för halvtonsblandningsläge:'],
+      bullets: [
+        'htCell: Halvtonscellstorlek - per_modul eller nxn-rutnät (standard: per_modul).',
+        'htDot: Punktform - cirkel, kvadrat, linje (standard: cirkel).',
+        'htCurve: Ljusstyrkekurva - linjär, s-kurva, gamma (standard: linjär).',
+        'duo1: Duotone shadow color hex utan # (standard: 000000).',
+        'duo2: Duotone highlight color hex utan # (standard: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-medvetna lägesparametrar',
+      paragraphs: ['Intelligent överlagringsfördelning baserad på felkorrigeringskapacitet:'],
+      bullets: [
+        'eccAware: Aktivera ECC-medvetet läge 0/1 (standard: 0).',
+        'eccRisk: Riskbudgetprocent 0-100 (standard: 50).',
+        'eccMap: Viktkarta - distance_to_finders, block_heatmap, empirical_scan_heatmap (standard: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Ramparametrar',
+      paragraphs: ['Inställningar för dekorativa ramar:'],
+      bullets: [
+        'frame: Frame style - none, rounded_frame, sticker, tag (standard: none).',
+        'frameText: Text som ska visas i ram (URL-kodad).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Färgparametrar per modul',
+      paragraphs: ['Individuella modulfärgningsalternativ:'],
+      bullets: [
+        'modColor: Färgläge - solid, by_brightness, by_position, by_overlay, by_cluster (standard: solid).',
+        'cGuard: Kontrastskydd 0/1 (standard: 0).',
+        'minContrast: Minsta kontrastförhållande 1-21 (standard: 4,5).',
+        'palett: Kommaseparerade hex-färger för palettläge.',
+        'paletteMode: Palettfördelning - position, ljusstyrka, diagonal, radiell, slumpmässig, rad, kolumn (standard: position).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF-överlagringsparametrar',
+      paragraphs: ['Inställningar för animerade GIF-överlagringsbilder:'],
+      bullets: [
+        'ovType: Överläggstyp - statisk, gif, apng, webp_anim, video (standard: statisk).',
+        'ovFramePick: Val av ram - alla, varje_n, max_ramar, varaktighetsgräns (standard: alla).',
+        'gifDelays: Använd ursprungliga GIF-ramfördröjningar 0/1 (standard: 1).',
+        'gifDispH: GIF-avfallshantering - respektera, förenkla (standard: respekt).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Intensitetsgränser per ECC',
+      paragraphs: ['Maximal överlagringsintensitet per felkorrigeringsnivå:'],
+      bullets: [
+        'maxIntL: Max intensitet för ECC L 0-100 (standard: 100).',
+        'maxIntM: Max intensitet för ECC M 0-100 (standard: 100).',
+        'maxIntQ: Max intensitet för ECC Q 0-100 (standard: 100).',
+        'maxIntH: Max intensitet för ECC H 0-100 (standard: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA-simuleringsparametrar (endast klient)',
+      paragraphs: [
+        'Dessa parametrar analyseras för URL-kompatibilitet men fungerar bara i webbläsaren:',
+      ],
+      bullets: [
+        'qaContrast: Aktivera kontrastkontroll 0/1 - kräver interaktiv validering.',
+        'qaBlur: Simulera oskärpa i pixlar - endast för interaktiva tester.',
+        'qaNoise: Simulera brusnivå - endast för interaktiva tester.',
+        'qaHeatmap: Visa värmekarta för läsbarhet 0/1 - kräver gränssnitt för canvas-överlagring.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parametrar endast för klient',
+      paragraphs: [
+        'De flesta API-parametrar stöds fullt ut på serversidan. Parametrar märkta [KLIENT-ONLY] analyseras för URL-kompatibilitet men kräver webbläsarfunktioner:',
+      ],
+      bullets: [
+        'jitter: Moduljitter kräver QR-regenerering per bildruta med slumpmässighet.',
+        'autoReduce: Automatisk reducering av intensitet kräver iterativ skanningstestning.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA-simulering kräver interaktiv dukvalidering.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Ytterligare utgångsparametrar',
+      paragraphs: ['Utökade utdata- och exportinställningar:'],
+      bullets: [
+        'fname: Anpassat filnamn för nedladdningar (standard: anqr-qrcode).',
+        'inclQz: Inkludera tyst zon i utgångsmått 0/1 (standard: 1).',
+        'bgOver: Bakgrundsfärg åsidosätter hex utan # (åsidosätter bg-parameter).',
+        'fmtExtra: Ytterligare formatutdata - ingen, eps, animated_webp (standard: ingen). Obs: eps är [DELVIS].',
+        'svgPrec: SVG-formprecision - pixel, precis (standard: pixel). [DELVIS] SVG-utdata begränsad server-sida.',
+        'svgBädda in: Bädda in rasteröverlägg i SVG 0/1 (standard: 1). [DELVIS] SVG-utdata begränsad server-sida.',
+        'modulePx: Modulens pixelstorlek (standard: automatiskt beräknad från storlek).',
+        'border: Extra kantmoduler bortom tyst zon (standard: 0).',
+        'crisp: Aktivera skarp/pixelerad bildåtergivning 0/1 (standard: 1).',
+        'snap: Pixel snap mode - golv, rund, tak (standard: golv).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametrar för mönsterbevarande',
+      paragraphs: ['Kontrollera vilka strukturella element som skyddas från överlagring:'],
+      bullets: [
+        'keepFinders: Bevara sökmönster 0/1 (standard: 1).',
+        'keepTiming: Bevara timingmönster 0/1 (standard: 0).',
+        'keepAlign: Bevara justeringsmönster 0/1 (standard: 0).',
+        'protectFmt: Skydda formatinformationsmoduler 0/1 (standard: 0).',
+        'protectVer: Skydda versionsinformationsmoduler 0/1 (standard: 0).',
+      ],
+    },
     {
       heading: 'Exempel på användning',
       paragraphs: [

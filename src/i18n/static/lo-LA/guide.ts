@@ -952,6 +952,202 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: ຊ່ອງຂໍ້ມູນ metadata PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'ຕົວກໍານົດການການປູກພືດ',
+      paragraphs: ['ຕົວເລືອກການຕັດຮູບພາບຊ້ອນກັນ:'],
+      bullets: [
+        'cropEn: ເປີດໃຊ້ການຕັດຊ້ອນກັນ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'cropX: ສູນກາງການປູກພືດ X ເປັນສ່ວນໜຶ່ງ 0-1 (ຄ່າເລີ່ມຕົ້ນ: 0.5).',
+        'cropY: ສູນປູກພືດ Y ເປັນແຕ່ສ່ວນ 0-1 (ຄ່າເລີ່ມຕົ້ນ: 0.5).',
+        'cropSize: ຂະໜາດການປູກພືດເປັນສ່ວນໜຶ່ງຂອງຮູບ 0-1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'ຕົວກໍານົດການລັອກຄວາມປອດໄພ',
+      paragraphs: ['ຄວບຄຸມວ່າອົງປະກອບ QR ໃດຖືກປ້ອງກັນຈາກການດັດແກ້ການວາງຊ້ອນ:'],
+      bullets: [
+        'lockF: ຮູບແບບຕົວຊອກຫາລັອກ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'lockT: ຮູບແບບການລັອກເວລາ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'lockA: ຮູບແບບການຈັດຮຽງລັອກ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'lockFmt: ຂໍ້ມູນຮູບແບບລັອກ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'lockV: ຂໍ້ມູນສະບັບ Lock 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'safeMode: ໂຫມດຄວາມປອດໄພ - ປິດ, ດຸ່ນດ່ຽງ, ເຄັ່ງຄັດ (ຄ່າເລີ່ມຕົ້ນ: ປິດ).',
+        'safeMinPx: ຂະຫນາດໂມດູນຕໍາ່ສຸດໃນ pixels (ຄ່າເລີ່ມຕົ້ນ: 2).',
+        'safeMinQz: ໂມດູນເຂດງຽບຕໍ່າສຸດ (ຄ່າເລີ່ມຕົ້ນ: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'ຕົວກໍານົດການປັບອັດຕະໂນມັດ',
+      paragraphs: ['ການຕັ້ງຄ່າການເພີ່ມປະສິດທິພາບອັດຕະໂນມັດ:'],
+      bullets: [
+        'autoVer: ເລືອກ QR ເວີຊັນ 0/1 ອັດຕະໂນມັດ (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'autoEcc: ເລືອກອັດຕະໂນມັດ ECC ລະດັບ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0) - server-side hint only .',
+        'ຫຼຸດອັດຕະໂນມັດ: [CLIENT-ONLY] ຫຼຸດຄວາມເຂັ້ມອັດຕະໂນມັດຈົນກວ່າຈະສະແກນໄດ້ - ຕ້ອງການການກວດສອບການສະແກນ.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'ພາລາມິເຕີພາບເຄື່ອນໄຫວເພີ່ມເຕີມ',
+      paragraphs: ['ການ​ຄວບ​ຄຸມ​ການ​ເຄື່ອນ​ໄຫວ​ຂະ​ຫຍາຍ​ສໍາ​ລັບ​ຜົນ​ຜະ​ລິດ GIF​:'],
+      bullets: [
+        'loop: ການເຄື່ອນໄຫວເຄື່ອນໄຫວຢ່າງຕໍ່ເນື່ອງ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'bounce: Ping-pong animation direction 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'ປີ້ນກັບກັນ: ຫຼິ້ນອະນິເມຊັນແບບປີ້ນກັບ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'colorCycle: ເປີດໃຊ້ຜົນຮອບວຽນສີ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'interp: Frame interpolation - none, crossfade, morph (ຄ່າເລີ່ມຕົ້ນ: none).',
+        'tempDither: ການລົບກວນຊົ່ວຄາວ - ປິດ, blue_noise, flicker_safe (ຄ່າເລີ່ມຕົ້ນ: ປິດ).',
+        'startF: ເຟຣມເລີ່ມຕົ້ນອະນິເມຊັນ (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'maxF: ເຟຣມສູງສຸດທີ່ຈະສະແດງ (ຄ່າເລີ່ມຕົ້ນ: 0 = ອັດຕະໂນມັດ).',
+        'stepF: ໄລຍະຫ່າງຂອງເຟຣມ (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'jitter: [CLIENT-ONLY] ໂມດູນ jitter ເປັນ pixels - ຮຽກຮ້ອງໃຫ້ມີການ regeneration QR ຕໍ່ເຟຣມ.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'ຕົວກໍານົດການ Dithering',
+      paragraphs: ['ຄວບຄຸມສູດການຄິດໄລ່ dithering ສໍາລັບການປຸງແຕ່ງ overlay:'],
+      bullets: [
+        'ditherKind: Dither algorithm - error_diffusion, order_bayer, blue_noise, ແລະອື່ນໆ (ຄ່າເລີ່ມຕົ້ນ: order_bayer).',
+        'diffusionKernel: ຄວາມຜິດພາດການກະຈາຍແກ່ນ - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (ຄ່າເລີ່ມຕົ້ນ: floyd_steinberg).',
+        'ditherStrength: ຄວາມເຂັ້ມຂຸ້ນຂອງ Dither 0-100 (ຄ່າເລີ່ມຕົ້ນ: 50).',
+        'serpentine: Serpentine dithering 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'matrix: ສັ່ງ dither matrix - bayer2, bayer4, bayer8 (ຄ່າເລີ່ມຕົ້ນ: bayer4).',
+        'bnTile: ຂະໜາດກະເບື້ອງສຽງດັງສີຟ້າ (ຄ່າເລີ່ມຕົ້ນ: 64).',
+        'bnSeed: Blue noise random seed (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'colorDither: ສີ dithering - none, per_channel, perceptual (ຄ່າເລີ່ມຕົ້ນ: none).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'ພາລາມິເຕີ Subpixel',
+      paragraphs: ['ການ​ຕັ້ງ​ຄ່າ​ສໍາ​ລັບ​ຮູບ​ແບບ​ການ​ຜະ​ສົມ subpixel​:'],
+      bullets: [
+        'spGrid: ຂະໜາດຕາຂ່າຍຍ່ອຍຍ່ອຍ - 2x2, 3x3, 4x4 (ຄ່າເລີ່ມຕົ້ນ: 3x3).',
+        'spCenter: ກົດລະບຽບສູນກາງ - ເຄັ່ງຄັດ, halftone_center (ຄ່າເລີ່ມຕົ້ນ: ເຄັ່ງຄັດ).',
+        'spNeutral: hex ສີກາງທີ່ບໍ່ມີ # (ຄ່າເລີ່ມຕົ້ນ: 808080).',
+        'spFinder: Finder override - ແຂງ, stylized (ຄ່າເລີ່ມຕົ້ນ: ແຂງ).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'ພາລາມິເຕີເຄິ່ງສຽງ',
+      paragraphs: ['ການ​ຕັ້ງ​ຄ່າ​ສໍາ​ລັບ​ຮູບ​ແບບ​ການ​ປະ​ສົມ halftone​:'],
+      bullets: [
+        'htCell: ຂະໜາດຕາລາງເຄິ່ງສຽງ - per_module ຫຼື nxn grid (ຄ່າເລີ່ມຕົ້ນ: per_module).',
+        'htDot: ຮູບຮ່າງຈຸດ - ວົງມົນ, ສີ່ຫຼ່ຽມ, ເສັ້ນ (ຄ່າເລີ່ມຕົ້ນ: ວົງມົນ).',
+        'htCurve: ເສັ້ນໂຄ້ງຄວາມສະຫວ່າງ - linear, s-curve, gamma (ຄ່າເລີ່ມຕົ້ນ: linear).',
+        'duo1: Duotone shadow color hex ບໍ່ມີ # (ຄ່າເລີ່ມຕົ້ນ: 000000).',
+        'duo2: Duotone ເນັ້ນສີ hex ໂດຍບໍ່ມີ # (ຄ່າເລີ່ມຕົ້ນ: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ພາຣາມິເຕີໂໝດ ECC-Aware',
+      paragraphs: ['ການແຈກຢາຍຊ້ອນຊ້ອນອັດສະລິຍະໂດຍອີງໃສ່ຄວາມສາມາດໃນການແກ້ໄຂຂໍ້ຜິດພາດ:'],
+      bullets: [
+        'eccAware: ເປີດໃຊ້ໂໝດ ECC-aware 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'eccRisk: ອັດຕາສ່ວນງົບປະມານຄວາມສ່ຽງ 0-100 (ຄ່າເລີ່ມຕົ້ນ: 50).',
+        'eccMap: ແຜນທີ່ນ້ຳໜັກ - distance_to_finders, block_heatmap, empirical_scan_heatmap (ຄ່າເລີ່ມຕົ້ນ: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'ພາລາມິເຕີກອບ',
+      paragraphs: ['ການຕັ້ງຄ່າຂອບຕົກແຕ່ງ:'],
+      bullets: [
+        'ກອບ: ຮູບແບບເຟຣມ - none, rounded_frame, sticker, tag (ຄ່າເລີ່ມຕົ້ນ: none).',
+        'frameText: ຂໍ້ຄວາມທີ່ຈະສະແດງໃນກອບ (URL ເຂົ້າລະຫັດ).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'ພາຣາມິເຕີສີຕໍ່ໂມດູນ',
+      paragraphs: ['ທາງ​ເລືອກ​ການ​ສີ​ຂອງ​ໂມ​ດູນ​ສ່ວນ​ບຸກ​ຄົນ​:'],
+      bullets: [
+        'modColor: ຮູບແບບສີ - ແຂງ, by_brightness, by_position, by_overlay, by_cluster (ຄ່າເລີ່ມຕົ້ນ: ແຂງ).',
+        'cGuard: Contrast guard 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'minContrast: ອັດຕາສ່ວນກົງກັນຂ້າມຂັ້ນຕ່ຳ 1-21 (ຄ່າເລີ່ມຕົ້ນ: 4.5).',
+        'palette: ສີ hex ທີ່ຂັ້ນດ້ວຍເຄື່ອງໝາຍຈຸດສໍາລັບໂໝດ palette.',
+        'paletteMode: ການແຈກຢາຍ Palette - ຕໍາແຫນ່ງ, ຄວາມສະຫວ່າງ, ເສັ້ນຂວາງ, radial, Random, ແຖວ, ຖັນ (ຄ່າເລີ່ມຕົ້ນ: ຕໍາແຫນ່ງ).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'ພາຣາມິເຕີການວາງຊ້ອນ GIF',
+      paragraphs: ['ການຕັ້ງຄ່າສຳລັບພາບເຄື່ອນໄຫວ GIF ຊ້ອນກັນ:'],
+      bullets: [
+        'ovType: ປະເພດການວາງຊ້ອນ - static, gif, apng, webp_anim, ວິດີໂອ (ຄ່າເລີ່ມຕົ້ນ: static).',
+        'ovFramePick: ການເລືອກເຟຣມ - ທັງໝົດ, every_n, max_frames, duration_limit (ຄ່າເລີ່ມຕົ້ນ: ທັງໝົດ).',
+        'gifDelays: ໃຊ້ການລ່າຊ້າເຟຣມ GIF ຕົ້ນສະບັບ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'gifDispH: ການຈັດການການກໍາຈັດ GIF - ເຄົາລົບ, ເຮັດໃຫ້ງ່າຍ (ຄ່າເລີ່ມຕົ້ນ: ເຄົາລົບ).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'ຂີດຈຳກັດຄວາມເຂັ້ມງວດຕໍ່ ECC',
+      paragraphs: ['ຄວາມເຂັ້ມຂອງການວາງຊ້ອນສູງສຸດຕໍ່ລະດັບການແກ້ໄຂຂໍ້ຜິດພາດ:'],
+      bullets: [
+        'maxIntL: ຄວາມເຂັ້ມສູງສຸດສໍາລັບ ECC L 0-100 (ຄ່າເລີ່ມຕົ້ນ: 100).',
+        'maxIntM: ຄວາມເຂັ້ມສູງສຸດສໍາລັບ ECC M 0-100 (ຄ່າເລີ່ມຕົ້ນ: 100).',
+        'maxIntQ: ຄວາມເຂັ້ມສູງສຸດສໍາລັບ ECC Q 0-100 (ຄ່າເລີ່ມຕົ້ນ: 100).',
+        'maxIntH: ຄວາມເຂັ້ມສູງສຸດສໍາລັບ ECC H 0-100 (ຄ່າເລີ່ມຕົ້ນ: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'ຕົວກໍານົດການຈໍາລອງ QA (ລູກຄ້າເທົ່ານັ້ນ)',
+      paragraphs: ['ພາລາມິເຕີເຫຼົ່ານີ້ຖືກວິເຄາະສໍາລັບຄວາມເຂົ້າກັນໄດ້ຂອງ URL ແຕ່ພຽງແຕ່ເຮັດວຽກຢູ່ໃນຕົວທ່ອງເວັບ:'],
+      bullets: [
+        'qaContrast: ເປີດໃຊ້ການກວດສອບຄວາມຄົມຊັດ 0/1 - ຕ້ອງການການກວດສອບແບບໂຕ້ຕອບ.',
+        'qaBlur: ຈໍາລອງການມົວໃນ pixels - ສໍາລັບການທົດສອບແບບໂຕ້ຕອບເທົ່ານັ້ນ.',
+        'qaNoise: ຈໍາລອງລະດັບສຽງ - ສໍາລັບການທົດສອບແບບໂຕ້ຕອບເທົ່ານັ້ນ.',
+        'qaHeatmap: ສະແດງແຜນທີ່ຄວາມຮ້ອນທີ່ສາມາດອ່ານໄດ້ 0/1 - ຕ້ອງການ UI ວາງຊ້ອນຜ້າໃບ.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'ຕົວກໍານົດການລູກຄ້າເທົ່ານັ້ນ',
+      paragraphs: [
+        'ພາລາມິເຕີ API ສ່ວນໃຫຍ່ໄດ້ຮັບການສະຫນັບສະຫນູນຢ່າງເຕັມທີ່ດ້ານເຊີຟເວີ. ພາຣາມິເຕີທີ່ໝາຍໄວ້ [CLIENT-ONLY] ຖືກແຍກວິເຄາະສໍາລັບຄວາມເຂົ້າກັນໄດ້ຂອງ URL ແຕ່ຕ້ອງການຄຸນສົມບັດຂອງຕົວທ່ອງເວັບ:',
+      ],
+      bullets: [
+        'jitter: ການສັ່ນສະເທືອນຂອງໂມດູນຮຽກຮ້ອງໃຫ້ມີການສ້າງໃຫມ່ QR ຕໍ່ເຟຣມດ້ວຍຄວາມສຸ່ມ.',
+        'autoReduce: ການຫຼຸດຜ່ອນຄວາມເຂັ້ມອັດຕະໂນມັດຮຽກຮ້ອງໃຫ້ມີການທົດສອບການສະແກນຊໍ້າຄືນ.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: ການຈຳລອງ QA ຕ້ອງການການກວດສອບຄວາມຖືກຕ້ອງຂອງຜ້າໃບແບບໂຕ້ຕອບ.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'ຕົວກໍານົດການຜົນຜະລິດເພີ່ມເຕີມ',
+      paragraphs: ['ຂະຫຍາຍຜົນຜະລິດ ແລະການຕັ້ງຄ່າການສົ່ງອອກ:'],
+      bullets: [
+        'fname: ຊື່ໄຟລ໌ແບບກຳນົດເອງສຳລັບການດາວໂຫຼດ (ຄ່າເລີ່ມຕົ້ນ: anqr-qrcode).',
+        'inclQz: ລວມເຂດງຽບຢູ່ໃນຂະຫນາດຜົນຜະລິດ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'bgOver: ສີພື້ນຫຼັງ override hex ໂດຍບໍ່ມີ # (overrides bg parameter).',
+        'fmtExtra: ຜົນຜະລິດຮູບແບບເພີ່ມເຕີມ - none, eps, animated_webp (ຄ່າເລີ່ມຕົ້ນ: none). ໝາຍເຫດ: eps ແມ່ນ [PARTIAL].',
+        'svgPrec: SVG shape precision - pixel, precise (ຄ່າເລີ່ມຕົ້ນ: pixel). [PARTIAL] SVG output ຈໍາກັດຂ້າງເຊີບເວີ.',
+        'svgEmbed: ຝັງທັບຊ້ອນ raster ໃນ SVG 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1). [PARTIAL] SVG output ຈໍາກັດຂ້າງເຊີບເວີ.',
+        'modulePx: ຂະຫນາດ pixels ຂອງໂມດູນ (ຄ່າເລີ່ມຕົ້ນ: ການຄິດໄລ່ອັດຕະໂນມັດຈາກຂະຫນາດ).',
+        'ຂອບ: ໂມດູນຂອບພິເສດນອກເໜືອຈາກເຂດງຽບ (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'crisp: ເປີດໃຊ້ການໃຫ້ຮູບພາບ crisp/pixelated 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'snap: pixel snap mode - floor, round, ceil (default: floor).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'ຕົວກໍານົດການເກັບຮັກສາຮູບແບບ',
+      paragraphs: ['ຄວບຄຸມວ່າອົງປະກອບໂຄງສ້າງໃດຖືກປ້ອງກັນຈາກການຊ້ອນກັນ:'],
+      bullets: [
+        'KeepFinders: ຮັກສາຮູບແບບຕົວຊອກຫາ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
+        'KeepTiming: ຮັກສາຮູບແບບເວລາ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'KeepAlign: ຮັກສາຮູບແບບການຈັດຮຽງ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'protectFmt: ປົກປ້ອງໂມດູນຂໍ້ມູນຮູບແບບ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+        'protectVer: ປົກປ້ອງຂໍ້ມູນສະບັບໂມດູນ 0/1 (ຄ່າເລີ່ມຕົ້ນ: 0).',
+      ],
+    },
     {
       heading: 'ຕົວຢ່າງການນໍາໃຊ້',
       paragraphs: [

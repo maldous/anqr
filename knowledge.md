@@ -1762,6 +1762,48 @@ _(none)_
 
 ---
 
+## i18n Translation Workflow
+
+### Critical Rules for Updating Translations
+
+The i18n system uses numbered line files (`src/i18n/locales/txt/*.txt`) and a template (`src/i18n/locales/template.json`) to generate JSON locale files.
+
+**NEVER modify existing line numbers to change text** - this breaks the translation system!
+
+#### How the System Works
+
+1. **Source of Truth**: `en-GB.txt` is the master English translation file
+2. **Line Numbers**: Each string has a unique line number (e.g., `1427\t"Generate"`)
+3. **Template Mapping**: `template.json` maps translation keys to line numbers (e.g., `"feature1Title": "1427"`)
+4. **Translation Detection**: `xlate.py` only translates lines that are **missing** in other language `.txt` files
+
+#### Rules for Adding/Changing Strings
+
+1. **New strings = NEW incremental line numbers** at the end of `en-GB.txt`
+2. **Changing existing strings = Add NEW line numbers** with the new text, then update `template.json` to point to the new line numbers
+3. **Blank out old strings** that are being replaced by setting them to an empty placeholder like `"(deprecated)"` or `"_"` - this prevents stale translations from being used
+4. **Never delete line numbers** - this would break the line number alignment across all language files
+
+#### Workflow for Updating Welcome Modal (example)
+
+```bash
+# 1. Add new strings at end of en-GB.txt (e.g., lines 1774-1780)
+# 2. Blank out the old strings you're replacing (e.g., line 1427 becomes: 1427\t"_")
+# 3. Update template.json to point to new line numbers
+# 4. Run make i18n:xlate to translate new lines to all languages
+# 5. Run make i18n:fill to generate JSON files from txt files
+```
+
+#### Make Commands (USER RUNS THESE - NEVER RUN AUTOMATICALLY)
+
+**IMPORTANT**: The AI assistant must NEVER run these commands. The user will always run them manually after reviewing the changes to `en-GB.txt` and `template.json`.
+
+- `make i18n:xlate` - Translates missing lines in `en-GB.txt` to all other language `.txt` files
+- `make i18n:fill` - Generates `.json` locale files from `template.json` + `.txt` files
+- `make i18n:sync` - Runs both xlate and fill
+
+---
+
 ## Community Translations
 
 Translation files are open-sourced in a separate public repository to allow community contributions:

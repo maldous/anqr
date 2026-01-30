@@ -974,6 +974,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, meta Desc: PNG-metadatavelden.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Gewasparameters',
+      paragraphs: ['Opties voor bijsnijden van overlay-afbeeldingen:'],
+      bullets: [
+        'cropEn: Overlay-bijsnijden inschakelen 0/1 (standaard: 0).',
+        'cropX: Snijcentrum X als fractie 0-1 (standaard: 0,5).',
+        'cropY: Gewascentrum Y als fractie 0-1 (standaard: 0,5).',
+        'cropSize: Bijsnijdgrootte als fractie van afbeelding 0-1 (standaard: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parameters veiligheidsslot',
+      paragraphs: ['Bepaal welke QR-elementen worden beschermd tegen overlay-wijziging:'],
+      bullets: [
+        'lockF: Vergrendelzoekerpatronen 0/1 (standaard: 1).',
+        'lockT: Vergrendel timingpatronen 0/1 (standaard: 1).',
+        'lockA: Uitlijningspatronen vergrendelen 0/1 (standaard: 1).',
+        'lockFmt: Formaat info 0/1 vergrendelen (standaard: 1).',
+        'lockV: Info slotversie 0/1 (standaard: 1).',
+        'safeMode: Veiligheidsmodus - uit, gebalanceerd, strikt (standaard: uit).',
+        'safeMinPx: Minimale modulegrootte in pixels (standaard: 2).',
+        'safeMinQz: Minimale stille zonemodules (standaard: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parameters voor automatisch afstemmen',
+      paragraphs: ['Automatische optimalisatie-instellingen:'],
+      bullets: [
+        'autoVer: Auto-pick QR-versie 0/1 (standaard: 1).',
+        'autoEcc: ECC-niveau automatisch kiezen 0/1 (standaard: 0) - alleen hint op de server.',
+        'autoReduce: [ALLEEN CLIENT] Intensiteit automatisch verlagen tot scanbaar - vereist scanvalidatielus.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Aanvullende animatieparameters',
+      paragraphs: ['Uitgebreide animatiebediening voor GIF-uitvoer:'],
+      bullets: [
+        'loop: Animatie loopt continu door 0/1 (standaard: 1).',
+        'bounce: richting pingponganimatie 0/1 (standaard: 0).',
+        'reverse: animatie achteruit afspelen 0/1 (standaard: 0).',
+        'colorCycle: Kleurcycluseffect 0/1 inschakelen (standaard: 0).',
+        'interp: Frame-interpolatie - geen, crossfade, morph (standaard: geen).',
+        'tempDither: Tijdelijke dithering - uit, blue_noise, flicker_safe (standaard: uit).',
+        'startF: startframe van animatie (standaard: 0).',
+        'maxF: Maximaal aantal frames dat kan worden weergegeven (standaard: 0 = automatisch).',
+        'stepF: Framestapinterval (standaard: 1).',
+        'jitter: [ALLEEN CLIENT] Modulejitter in pixels - vereist QR-regeneratie per frame.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering-parameters',
+      paragraphs: ['Beheer dithering-algoritmen voor overlay-verwerking:'],
+      bullets: [
+        'ditherKind: Dither-algoritme - error_diffusion, orderd_bayer, blue_noise, enz. (standaard: orderd_bayer).',
+        'diffusionKernel: Fout bij diffusiekernel - floyd_steinberg, jarvis_judice_ninke, sticki, burkes, sierra, atkinson (standaard: floyd_steinberg).',
+        'ditherStrength: Dither-intensiteit 0-100 (standaard: 50).',
+        'serpentine: Serpentine dithering 0/1 (standaard: 0).',
+        'matrix: Bestelde dither-matrix - bayer2, bayer4, bayer8 (standaard: bayer4).',
+        'bnTile: tegelgrootte blauwe ruis (standaard: 64).',
+        'bnSeed: Willekeurig zaad met blauwe ruis (standaard: 0).',
+        'colorDither: Kleurdithering - geen, per_kanaal, perceptueel (standaard: geen).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpixelparameters',
+      paragraphs: ['Instellingen voor subpixel-overvloeimodus:'],
+      bullets: [
+        'spGrid: Subpixelrastergrootte - 2x2, 3x3, 4x4 (standaard: 3x3).',
+        'spCenter: Middelste regel - strikt, halftone_center (standaard: strikt).',
+        'spNeutral: Neutrale kleur hex zonder # (standaard: 808080).',
+        'spFinder: Finder overschrijven - effen, gestileerd (standaard: effen).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Halftoonparameters',
+      paragraphs: ['Instellingen voor halftoonovervloeimodus:'],
+      bullets: [
+        'htCell: Halftooncelgrootte - per_module of nxn-raster (standaard: per_module).',
+        'htDot: Puntvorm - cirkel, vierkant, lijn (standaard: cirkel).',
+        'htCurve: Helderheidscurve - lineair, s-curve, gamma (standaard: lineair).',
+        'duo1: Duotone schaduwkleur hex zonder # (standaard: 000000).',
+        'duo2: Duotoon-markeringskleur hex zonder # (standaard: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-bewuste modusparameters',
+      paragraphs: ['Intelligente overlay-distributie op basis van foutcorrectiecapaciteit:'],
+      bullets: [
+        'eccAware: ECC-bewuste modus 0/1 inschakelen (standaard: 0).',
+        'eccRisk: Risicobudgetpercentage 0-100 (standaard: 50).',
+        'eccMap: Gewichtskaart - afstand_tot_vinders, blok_heatmap, empirische_scan_heatmap (standaard: afstand_tot_zoekers).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Frameparameters',
+      paragraphs: ['Decoratieve frame-instellingen:'],
+      bullets: [
+        'frame: Framestijl - geen, afgerond_frame, sticker, tag (standaard: geen).',
+        'frameText: tekst die in frame moet worden weergegeven (URL-gecodeerd).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Kleurparameters per module',
+      paragraphs: ['Kleuropties voor individuele modules:'],
+      bullets: [
+        'modColor: Kleurmodus - effen, by_brightness, by_position, by_overlay, by_cluster (standaard: effen).',
+        'cGuard: Contrastbewaking 0/1 (standaard: 0).',
+        'minContrast: Minimale contrastverhouding 1-21 (standaard: 4,5).',
+        "palet: Door komma's gescheiden hex-kleuren voor paletmodus.",
+        'paletteMode: Paletverdeling - positie, helderheid, diagonaal, radiaal, willekeurig, rij, kolom (standaard: positie).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF-overlayparameters',
+      paragraphs: ['Instellingen voor geanimeerde GIF-overlay-afbeeldingen:'],
+      bullets: [
+        'ovType: Overlay-type - statisch, gif, apng, webp_anim, video (standaard: statisch).',
+        'ovFramePick: Frameselectie - alles, elke_n, max_frames, duur_limiet (standaard: alles).',
+        'gifDelays: gebruik originele GIF-framevertragingen 0/1 (standaard: 1).',
+        'gifDispH: afhandeling van GIF-verwijdering - respect, vereenvoudiging (standaard: respect).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Intensiteitslimieten per ECC',
+      paragraphs: ['Maximale overlay-intensiteit per foutcorrectieniveau:'],
+      bullets: [
+        'maxIntL: Max. intensiteit voor ECC L 0-100 (standaard: 100).',
+        'maxIntM: maximale intensiteit voor ECC M 0-100 (standaard: 100).',
+        'maxIntQ: Max. intensiteit voor ECC Q 0-100 (standaard: 100).',
+        'maxIntH: Max. intensiteit voor ECC H 0-100 (standaard: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA-simulatieparameters (alleen client)',
+      paragraphs: [
+        'Deze parameters worden geparseerd voor URL-compatibiliteit, maar werken alleen in de browser:',
+      ],
+      bullets: [
+        'qaContrast: Schakel contrastcontrole 0/1 in - vereist interactieve validatie.',
+        'qaBlur: Simuleer onscherpte in pixels - alleen voor interactief testen.',
+        'qaNoise: Simuleer het geluidsniveau - alleen voor interactief testen.',
+        'qaHeatmap: Toon leesbaarheid heatmap 0/1 - vereist canvas-overlay-UI.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parameters voor alleen clienten',
+      paragraphs: [
+        'De meeste API-parameters worden volledig ondersteund aan de serverzijde. Parameters gemarkeerd als [CLIENT-ONLY] worden geparseerd op URL-compatibiliteit, maar vereisen browserfuncties:',
+      ],
+      bullets: [
+        'jitter: Modulejitter vereist QR-regeneratie per frame met willekeur.',
+        'autoReduce: Voor het automatisch verminderen van de intensiteit zijn iteratieve scantests vereist.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA-simulatie vereist interactieve canvasvalidatie.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Aanvullende uitvoerparameters',
+      paragraphs: ['Uitgebreide uitvoer- en exportinstellingen:'],
+      bullets: [
+        'fname: Aangepaste bestandsnaam voor downloads (standaard: anqr-qrcode).',
+        'inclQz: Stille zone opnemen in uitvoerafmetingen 0/1 (standaard: 1).',
+        'bgOver: Achtergrondkleur overschrijft hex zonder # (overschrijft bg-parameter).',
+        'fmtExtra: Extra formaatuitvoer - geen, eps, geanimeerde_webp (standaard: geen). Opmerking: eps is [GEDEELTELIJK].',
+        'svgPrec: Precisie van de SVG-vorm - pixel, nauwkeurig (standaard: pixel). [GEDEELTELIJK] SVG-uitvoer beperkt op de server.',
+        'svgEmbed: Rasteroverlay insluiten in SVG 0/1 (standaard: 1). [GEDEELTELIJK] SVG-uitvoer beperkt op de server.',
+        'modulePx: Pixelgrootte van module (standaard: automatisch berekend op basis van grootte).',
+        'grens: Extra grensmodules buiten de stille zone (standaard: 0).',
+        'helder: Schakel scherpe/gepixelde afbeeldingsweergave in 0/1 (standaard: 1).',
+        'snap: Pixel-snapmodus - vloer, rond, plafond (standaard: vloer).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Patroonbehoudparameters',
+      paragraphs: ['Bepaal welke structurele elementen beschermd zijn tegen overlay:'],
+      bullets: [
+        'keepFinders: Behoud zoekerpatronen 0/1 (standaard: 1).',
+        'keepTiming: Behoud timingpatronen 0/1 (standaard: 0).',
+        'keepAlign: Behoud uitlijningspatronen 0/1 (standaard: 0).',
+        'protectFmt: Bescherm formaat-infomodules 0/1 (standaard: 0).',
+        'protectVer: Bescherm versie-infomodules 0/1 (standaard: 0).',
+      ],
+    },
     {
       heading: 'Voorbeeld Gebruik',
       paragraphs: [

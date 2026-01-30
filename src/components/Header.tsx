@@ -1033,9 +1033,7 @@ export function Header({
                       title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
                     >
                       <IconComponent className="w-5 h-5" />
-                      <span className="text-sm">
-                        {t(link.labelKey, link.defaultLabel)}
-                      </span>
+                      <span className="text-sm">{t(link.labelKey, link.defaultLabel)}</span>
                     </a>
                   );
                 })}

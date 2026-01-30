@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG metaandmete väljad.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Kärpimisparameetrid',
+      paragraphs: ['Ülekattepildi kärpimise valikud:'],
+      bullets: [
+        'cropEn: lubab ülekatte kärpimise 0/1 (vaikeseade: 0).',
+        'cropX: kärbi keskpunkti X murdosana 0–1 (vaikeseade: 0,5).',
+        'cropY: kärpimise keskpunkt Y murdosana 0-1 (vaikeseade: 0,5).',
+        'cropSize: kärpimise suurus murdosa kujutisest 0-1 (vaikeseade: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Turvaluku parameetrid',
+      paragraphs: ['Saate juhtida, millised QR-elemendid on ülekatte muutmise eest kaitstud.'],
+      bullets: [
+        'lockF: lukuotsija mustrid 0/1 (vaikimisi: 1).',
+        'lockT: lukustamise ajastusmustrid 0/1 (vaikeseade: 1).',
+        'lockA: lukustuse joondusmustrid 0/1 (vaikeseade: 1).',
+        'lockFmt: lukuvormingu teave 0/1 (vaikeseade: 1).',
+        'lockV: luku versiooni teave 0/1 (vaikimisi: 1).',
+        'safeMode: ohutusrežiim – väljas, tasakaalustatud, range (vaikimisi: väljas).',
+        'safeMinPx: mooduli minimaalne suurus pikslites (vaikimisi: 2).',
+        'safeMinQz: vaikse tsooni minimaalsed moodulid (vaikimisi: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parameetrite automaatne häälestamine',
+      paragraphs: ['Automaatse optimeerimise seaded:'],
+      bullets: [
+        'autoVer: QR-versiooni 0/1 automaatne valimine (vaikeseade: 1).',
+        'autoEcc: ECC taseme automaatne valimine 0/1 (vaikeseade: 0) – ainult serveripoolne vihje.',
+        'automaatne vähendamine: [AINULT KLIENDIL] Vähendab intensiivsust automaatselt kuni skannimiseni – nõuab skannimise valideerimissilmust.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Täiendavad animatsiooniparameetrid',
+      paragraphs: ['Laiendatud animatsiooni juhtnupud GIF-väljundi jaoks:'],
+      bullets: [
+        'tsükkel: animatsioonitsüklid pidevalt 0/1 (vaikeseade: 1).',
+        'põrge: pingpongi animatsiooni suund 0/1 (vaikeseade: 0).',
+        'tagurpidi: esita animatsiooni tagurpidi 0/1 (vaikeseade: 0).',
+        'colorCycle: lubab värvide tsükliefekti 0/1 (vaikeseade: 0).',
+        'interp: kaadri interpolatsioon – puudub, risttumedus, morph (vaikimisi: puudub).',
+        'tempDither: Ajutine segamine – väljas, sinine_müra, virvendusohutu (vaikimisi: väljas).',
+        'startF: animatsiooni alguskaader (vaikimisi: 0).',
+        'maxF: maksimaalne renderdatavate kaadrite arv (vaikeseade: 0 = automaatne).',
+        'sammF: kaadri sammude intervall (vaikeseade: 1).',
+        'värin: [AINULT KLIENDIL] Mooduli värin pikslites – nõuab QR-i taastamist kaadri kohta.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering parameetrid',
+      paragraphs: ['Ülekatte töötlemiseks kasutatavate dithering-algoritmide juhtimine:'],
+      bullets: [
+        'ditherKind: Ditheri algoritm – error_diffusion, ordered_bayer, blue_noise jne (vaikimisi: ordered_bayer).',
+        'diffusionKernel: Viga difusioonituum – floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (vaikimisi: floyd_steinberg).',
+        'ditherStrength: ditheri intensiivsus 0-100 (vaikimisi: 50).',
+        'serpentiin: Serpentine dithering 0/1 (vaikimisi: 0).',
+        'maatriks: tellitud dither-maatriks - bayer2, bayer4, bayer8 (vaikimisi: bayer4).',
+        'bnTile: sinise müraplaadi suurus (vaikeseade: 64).',
+        'bnSeed: Blue Noise juhuslik seeme (vaikimisi: 0).',
+        'colorDither: värvide erinevus – puudub, kanali kohta, tajutav (vaikeseade: puudub).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpiksli parameetrid',
+      paragraphs: ['Alampikslite segamisrežiimi seaded:'],
+      bullets: [
+        'spGrid: alampikslite ruudustiku suurus – 2x2, 3x3, 4x4 (vaikimisi: 3x3).',
+        'spCenter: keskreegel – range, pooltooni_keskus (vaikimisi: range).',
+        'spNeutral: neutraalse värvi hex ilma # (vaikeseade: 808080).',
+        'spFinder: Finderi alistamine – ühtlane, stiliseeritud (vaikimisi: tahke).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Pooltooni parameetrid',
+      paragraphs: ['Pooltoonide segamisrežiimi seaded:'],
+      bullets: [
+        'htCell: pooltooni lahtri suurus – per_moodul või nxn-võrk (vaikimisi: per_moodul).',
+        'htDot: punkti kuju – ring, ruut, joon (vaikimisi: ring).',
+        'htCurve: heleduse kõver – lineaarne, s-kõver, gamma (vaikimisi: lineaarne).',
+        'duo1: Duotone varjuvärvi kuusnurk ilma # (vaikimisi: 000000).',
+        'duo2: Duotone esiletõstmise värv kuueteistkümnend ilma # (vaikimisi: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-teadliku režiimi parameetrid',
+      paragraphs: ['Arukas ülekatte jaotus, mis põhineb veaparandusvõimel:'],
+      bullets: [
+        'eccAware: lubage ECC-teadlik režiim 0/1 (vaikeseade: 0).',
+        'eccRisk: riskieelarve protsent 0–100 (vaikimisi: 50).',
+        'eccMap: kaalukaart – kaugus_leidjateni, block_heatmap, empiiriline_scan_heatmap (vaikimisi: kaugus_leidjateni).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Raami parameetrid',
+      paragraphs: ['Dekoratiivse raami seaded:'],
+      bullets: [
+        'raam: raami stiil – puudub, ümardatud_raam, kleebis, silt (vaikimisi: puudub).',
+        'frameText: raamis kuvatav tekst (URL kodeeritud).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Moodulipõhised värviparameetrid',
+      paragraphs: ['Üksikute moodulite värvimisvalikud:'],
+      bullets: [
+        'modColor: värvirežiim – ühtlane, heleduse järgi, asukoha järgi, ülekatte järgi, klastri järgi (vaikimisi: ühtlane).',
+        'cGuard: kontrastikaitse 0/1 (vaikimisi: 0).',
+        'minContrast: minimaalne kontrastsussuhe 1-21 (vaikimisi: 4,5).',
+        'palett: komadega eraldatud kuueteistkümnendvärvid palettrežiimi jaoks.',
+        'paletirežiim: Paleti jaotus – asukoht, heledus, diagonaal, radiaalne, juhuslik, rida, veerg (vaikimisi: asukoht).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF-i ülekatte parameetrid',
+      paragraphs: ['Animeeritud GIF-ülekattepiltide seaded:'],
+      bullets: [
+        'ovType: ülekatte tüüp – staatiline, gif, apng, webp_anim, video (vaikimisi: staatiline).',
+        'ovFramePick: kaadri valik – kõik, iga_n, max_kaadrid, kestuse_piirang (vaikimisi: kõik).',
+        'gifDelays: kasutage algseid GIF-kaadri viivitusi 0/1 (vaikimisi: 1).',
+        'gifDispH: GIF-i kõrvaldamise käsitlemine – austa, lihtsusta (vaikimisi: austus).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'ECC intensiivsuse piirid',
+      paragraphs: ['Ülekatte maksimaalne intensiivsus veaparandustaseme kohta:'],
+      bullets: [
+        'maxIntL: maksimaalne intensiivsus ECC L 0–100 jaoks (vaikeväärtus: 100).',
+        'maxIntM: ECC M maksimaalne intensiivsus 0–100 (vaikeväärtus: 100).',
+        'maxIntQ: ECC Q maksimaalne intensiivsus 0–100 (vaikeväärtus: 100).',
+        'maxIntH: maksimaalne intensiivsus ECC H 0-100 jaoks (vaikeväärtus: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA simulatsiooni parameetrid (ainult kliendile)',
+      paragraphs: [
+        'Need parameetrid sõelutakse URL-i ühilduvuse tagamiseks, kuid need töötavad ainult brauseris:',
+      ],
+      bullets: [
+        'qaContrast: kontrastsuse kontrolli lubamine 0/1 – nõuab interaktiivset valideerimist.',
+        'qaBlur: simuleerige hägusust pikslites – ainult interaktiivseks testimiseks.',
+        'qaNoise: simuleerige mürataset – ainult interaktiivseks testimiseks.',
+        'qaHeatmap: kuva loetavuse soojuskaart 0/1 – nõuab lõuendi ülekatte kasutajaliidest.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Ainult kliendi parameetrid',
+      paragraphs: [
+        'Enamik API parameetreid on serveripoolselt täielikult toetatud. Parameetrid, mis on märgitud [KLIENT-AINULT], sõelutakse URL-i ühilduvuse tagamiseks, kuid nõuavad brauseri funktsioone:',
+      ],
+      bullets: [
+        'värin: mooduli värin nõuab kaadri kohta QR-regenereerimist juhuslikult.',
+        'automaatne vähendamine: automaatse vähendamise intensiivsus nõuab iteratiivset skannimistesti.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA simulatsioon nõuab interaktiivset lõuendi valideerimist.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Täiendavad väljundparameetrid',
+      paragraphs: ['Laiendatud väljundi ja ekspordi sätted:'],
+      bullets: [
+        'fname: allalaadimiseks kohandatud failinimi (vaikimisi: anqr-qrcode).',
+        'inclQz: vaikse tsooni kaasamine väljundmõõtmetesse 0/1 (vaikimisi: 1).',
+        'bgOver: taustavärvi alistamine kuueteistkümnendikuta ilma # (alistab bg parameetri).',
+        'fmtExtra: lisavormingu väljund – puudub, eps, animated_webp (vaikimisi: puudub). Märkus: eps on [PARTIAL].',
+        'svgPrec: SVG kuju täpsus – piksel, täpne (vaikimisi: piksel). [OSALINE] SVG väljund piiratud serveripoolne.',
+        'svgEmbed: manustatakse rastri ülekate SVG-s 0/1 (vaikeseade: 1). [OSALINE] SVG väljund piiratud serveripoolne.',
+        'modulePx: mooduli piksli suurus (vaikimisi: arvutatakse automaatselt suuruse järgi).',
+        'ääris: vaiksest tsoonist kaugemal olevad lisapiirimoodulid (vaikimisi: 0).',
+        'crisp: lubage terava/pikslilise pildi renderdamine 0/1 (vaikeseade: 1).',
+        'snap: Pixel Snap režiim – põrand, ümmargune, lae (vaikimisi: põrand).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Mustri säilitamise parameetrid',
+      paragraphs: ['Kontrollige, millised konstruktsioonielemendid on ülekatte eest kaitstud:'],
+      bullets: [
+        'keepFinders: säilitab leidja mustrid 0/1 (vaikimisi: 1).',
+        'keepTiming: säilitab ajastusmustrid 0/1 (vaikimisi: 0).',
+        'keepAlign: Säilitage joondusmustrid 0/1 (vaikimisi: 0).',
+        'ProtectFmt: Kaitsevormingu teabemoodulid 0/1 (vaikeseade: 0).',
+        'ProtectVer: Kaitske versiooni teabemooduleid 0/1 (vaikimisi: 0).',
+      ],
+    },
     {
       heading: 'Kasutamise näide',
       paragraphs: [

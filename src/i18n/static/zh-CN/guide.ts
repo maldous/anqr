@@ -906,6 +906,202 @@ export const guide: PageDefinition = {
         'metaTitle、metaAuthor、metaCopy、metaDesc：PNG 元数据字段。',
       ],
     },
+    // Crop Parameters
+    {
+      heading: '作物参数',
+      paragraphs: ['叠加图像裁剪选项：'],
+      bullets: [
+        'cropEn：启用叠加裁剪 0/1（默认值：0）。',
+        'cropX：裁剪中心 X 作为分数 0-1（默认值：0.5）。',
+        'cropY：裁剪中心 Y 作为分数 0-1（默认值：0.5）。',
+        'cropSize：裁剪大小作为图像 0-1 的一部分（默认值：1）。',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: '安全锁参数',
+      paragraphs: ['控制哪些 QR 元素免受覆盖修改：'],
+      bullets: [
+        'lockF：锁定查找器模式 0/1（默认值：1）。',
+        'lockT：锁定时序模式 0/1（默认值：1）。',
+        'lockA：锁定对齐模式 0/1（默认值：1）。',
+        'lockFmt：锁定格式信息0/1（默认值：1）。',
+        'lockV：锁定版本信息0/1（默认：1）。',
+        'safeMode：安全模式 - 关闭、平衡、严格（默认值：关闭）。',
+        'safeMinPx：最小模块大小（以像素为单位）（默认值：2）。',
+        'safeMinQz：最小静区模块数（默认值：4）。',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: '自整定参数',
+      paragraphs: ['自动优化设置：'],
+      bullets: [
+        'autoVer：自动选取 QR 版本 0/1（默认值：1）。',
+        'autoEcc：自动选择 ECC 级别 0/1（默认值：0）- 仅服务器端提示。',
+        'autoReduce：[仅限客户端] 自动降低强度直到可扫描 - 需要扫描验证循环。',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: '附加动画参数',
+      paragraphs: ['GIF 输出的扩展动画控件：'],
+      bullets: [
+        '循环：动画连续循环0/1（默认值：1）。',
+        '弹跳：乒乓动画方向0/1（默认值：0）。',
+        '反向：反向播放动画 0/1（默认值：0）。',
+        'colorCycle：启用颜色循环效果 0/1（默认值：0）。',
+        'interp：帧插值 - 无、交叉淡入淡出、变形（默认值：无）。',
+        'tempDither：临时抖动 - 关闭、blue_noise、flicker_safe（默认值：关闭）。',
+        'startF：动画开始帧（默认值：0）。',
+        'maxF：渲染的最大帧数（默认值：0 = 自动）。',
+        'stepF：帧步长间隔（默认值：1）。',
+        '抖动：[仅限客户端] 模块抖动（以像素为单位）- 需要每帧 QR 重新生成。',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: '抖动参数',
+      paragraphs: ['控制叠加处理的抖动算法：'],
+      bullets: [
+        'ditherKind：抖动算法 - error_diffusion、ordered_bayer、blue_noise 等（默认：ordered_bayer）。',
+        'fusionKernel：误差扩散内核 - floyd_steinberg、jarvis_judice_ninke、sticki、burkes、sierra、atkinson（默认值：floyd_steinberg）。',
+        'ditherStrength：抖动强度 0-100（默认值：50）。',
+        'serpentine：蛇形抖动 0/1（默认值：0）。',
+        '矩阵：有序抖动矩阵 - bayer2、bayer4、bayer8（默认值：bayer4）。',
+        'bnTile：蓝色噪声图块大小（默认值：64）。',
+        'bnSeed：蓝噪声随机种子（默认值：0）。',
+        'colorDither：颜色抖动 - 无、per_channel、感知（默认值：无）。',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: '子像素参数',
+      paragraphs: ['子像素混合模式的设置：'],
+      bullets: [
+        'spGrid：子像素网格大小 - 2x2、3x3、4x4（默认值：3x3）。',
+        'spCenter：中心规则 - 严格，halftone_center（默认值：严格）。',
+        'spNeutral：不带#的中性色十六进制（默认值：808080）。',
+        'spFinder：Finder 覆盖 - 实心、风格化（默认值：实心）。',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: '半色调参数',
+      paragraphs: ['半色调混合模式的设置：'],
+      bullets: [
+        'htCell：半色调单元大小 - per_module 或 nxn 网格（默认值：per_module）。',
+        'htDot：点形状 - 圆形、方形、直线（默认：圆形）。',
+        'htCurve：亮度曲线 - 线性、S 曲线、伽马（默认值：线性）。',
+        'duo1：双色调阴影颜色十六进制，不带#（默认值：000000）。',
+        'duo2：双色调突出显示颜色十六进制，不带 #（默认值：ffffff）。',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC 感知模式参数',
+      paragraphs: ['基于纠错能力的智能叠加分发：'],
+      bullets: [
+        'eccAware：启用 ECC 感知模式 0/1（默认值：0）。',
+        'eccRisk：风险预算百分比 0-100（默认值：50）。',
+        'eccMap：权重图 - distance_to_finders、block_heatmap、empirical_scan_heatmap（默认值：distance_to_finders）。',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: '机架参数',
+      paragraphs: ['装饰框设置：'],
+      bullets: [
+        '框架：框架样式 - 无、圆角框架、贴纸、标签（默认值：无）。',
+        'frameText：要在框架中显示的文本（URL 编码）。',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: '每个模块的颜色参数',
+      paragraphs: ['单独的模块着色选项：'],
+      bullets: [
+        'modColor：颜色模式-solid、by_brightness、by_position、by_overlay、by_cluster（默认值：solid）。',
+        'cGuard：对比度保护 0/1（默认值：0）。',
+        'minContrast：最小对比度 1-21（默认值：4.5）。',
+        '调色板：调色板模式的逗号分隔的十六进制颜色。',
+        'PaletteMode：调色板分布 - 位置、亮度、对角线、径向、随机、行、列（默认：位置）。',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF 叠加参数',
+      paragraphs: ['动画 GIF 叠加图像的设置：'],
+      bullets: [
+        'ovType：叠加类型 - 静态、gif、apng、webp_anim、视频（默认值：静态）。',
+        'ovFramePick：帧选择 - all、every_n、max_frames、duration_limit（默认值：all）。',
+        'gifDelays：使用原始 GIF 帧延迟 0/1（默认值：1）。',
+        'gifDispH：GIF 处理处理 - 尊重、简化（默认值：尊重）。',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: '每个 ECC 强度限制',
+      paragraphs: ['每个纠错级别的最大叠加强度：'],
+      bullets: [
+        'maxIntL：ECC L 0-100 的最大强度（默认值：100）。',
+        'maxIntM：ECC M 0-100 的最大强度（默认值：100）。',
+        'maxIntQ：ECC Q 0-100 的最大强度（默认值：100）。',
+        'maxIntH：ECC H 0-100 的最大强度（默认值：100）。',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA 模拟参数（仅限客户端）',
+      paragraphs: ['这些参数被解析为 URL 兼容性，但仅在浏览器中有效：'],
+      bullets: [
+        'qaContrast：启用对比度检查 0/1 - 需要交互式验证。',
+        'qaBlur：模拟像素模糊 - 仅用于交互式测试。',
+        'qaNoise：模拟噪音水平 - 仅用于交互式测试。',
+        'qaHeatmap：显示可读性热图 0/1 - 需要画布覆盖 UI。',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: '仅限客户端参数',
+      paragraphs: [
+        '大多数 API 参数在服务器端得到完全支持。标记为 [CLIENT-ONLY] 的参数将被解析以实现 URL 兼容性，但需要浏览器功能：',
+      ],
+      bullets: [
+        '抖动：模块抖动需要随机性地进行每帧 QR 再生。',
+        'autoReduce：自动降低强度需要迭代扫描测试。',
+        'qaContrast、qaBlur、qaNoise、qaHeatmap：QA 模拟需要交互式画布验证。',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: '附加输出参数',
+      paragraphs: ['扩展输出和导出设置：'],
+      bullets: [
+        'fname：下载的自定义文件名（默认值：anqr-qrcode）。',
+        'inclQz：在输出维度 0/1 中包括静区（默认值：1）。',
+        'bgOver：背景颜色覆盖十六进制，不带#（覆盖bg参数）。',
+        'fmtExtra：附加格式输出 - 无、eps、animated_webp（默认值：无）。注：eps 为[部分]。',
+        'svgPrec：SVG 形状精度 - 像素，精确（默认值：像素）。 [部分] SVG 输出受限于服务器端。',
+        'svgEmbed：在 SVG 0/1 中嵌入光栅叠加（默认值：1）。 [部分] SVG 输出受限于服务器端。',
+        'modulePx：模块像素大小（默认：根据大小自动计算）。',
+        'border：安静区域之外的额外边框模块（默认值：0）。',
+        '清晰：启用清晰/像素化图像渲染 0/1（默认值：1）。',
+        'snap：像素捕捉模式 - 地板、圆形、天花板（默认：地板）。',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: '模式保存参数',
+      paragraphs: ['控制哪些结构元素免受覆盖：'],
+      bullets: [
+        'keepFinders：保留查找器模式 0/1（默认值：1）。',
+        'keepTiming：保留计时模式 0/1（默认值：0）。',
+        'keepAlign：保留对齐模式 0/1（默认值：0）。',
+        'ProtectFmt：保护格式信息模块0/1（默认值：0）。',
+        'ProtectVer：保护版本信息模块0/1（默认值：0）。',
+      ],
+    },
     {
       heading: '用法示例',
       paragraphs: [

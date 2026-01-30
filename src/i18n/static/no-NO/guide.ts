@@ -970,6 +970,204 @@ export const guide: PageDefinition = {
         'metaTitel, metaAuthor, metaCopy, meta Desc: PNG metadata felt.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Beskjæringsparametere',
+      paragraphs: ['Alternativer for beskjæring av overleggsbilde:'],
+      bullets: [
+        'cropEn: Aktiver overleggsbeskjæring 0/1 (standard: 0).',
+        'cropX: Beskjæringssenter X som brøk 0-1 (standard: 0,5).',
+        'cropY: Avlingssenter Y som brøk 0-1 (standard: 0,5).',
+        'cropSize: Beskjæringsstørrelse som brøkdel av bildet 0-1 (standard: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Sikkerhetslåsparametere',
+      paragraphs: ['Kontroller hvilke QR-elementer som er beskyttet mot modifikasjon av overlegg:'],
+      bullets: [
+        'lockF: Låssøkermønstre 0/1 (standard: 1).',
+        'lockT: Lås timing mønstre 0/1 (standard: 1).',
+        'lockA: Lås justeringsmønstre 0/1 (standard: 1).',
+        'lockFmt: Låseformatinfo 0/1 (standard: 1).',
+        'lockV: Lås versjon info 0/1 (standard: 1).',
+        'safeMode: Sikkerhetsmodus - av, balansert, streng (standard: av).',
+        'safeMinPx: Minimum modulstørrelse i piksler (standard: 2).',
+        'safeMinQz: Minimum stillesonemoduler (standard: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Auto-tuning parametere',
+      paragraphs: ['Innstillinger for automatisk optimalisering:'],
+      bullets: [
+        'autoVer: Velg QR-versjon 0/1 automatisk (standard: 1).',
+        'autoEcc: Automatisk velg ECC-nivå 0/1 (standard: 0) - kun hint på serversiden.',
+        'autoReduce: [KUN KLIENT] Reduser intensiteten automatisk til den kan skannes – krever skanningsvalideringssløyfe.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Ytterligere animasjonsparametere',
+      paragraphs: ['Utvidede animasjonskontroller for GIF-utdata:'],
+      bullets: [
+        'loop: Animasjon looper kontinuerlig 0/1 (standard: 1).',
+        'sprett: Ping-pong animasjonsretning 0/1 (standard: 0).',
+        'revers: Spill av animasjon i revers 0/1 (standard: 0).',
+        'colorCycle: Aktiver fargesykluseffekt 0/1 (standard: 0).',
+        'interp: Rammeinterpolasjon - ingen, crossfade, morph (standard: ingen).',
+        'tempDither: Temporal dithering - off, blue_noise, flicker_safe (standard: off).',
+        'startF: Animasjons startramme (standard: 0).',
+        'maxF: Maksimalt antall bilder å gjengi (standard: 0 = auto).',
+        'stepF: Frame step intervall (standard: 1).',
+        'jitter: [KUN KLIENT] Modul jitter i piksler – krever QR-regenerering per bilde.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering-parametere',
+      paragraphs: ['Kontroller dithering-algoritmer for overleggsbehandling:'],
+      bullets: [
+        'ditherKind: Dither-algoritme - error_diffusion, ordered_bayer, blue_noise, etc (standard: ordered_bayer).',
+        'diffusionKernel: Feil diffusjonskjerne - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (standard: floyd_steinberg).',
+        'ditherStrength: Dither-intensitet 0-100 (standard: 50).',
+        'serpentine: Serpentine-dithering 0/1 (standard: 0).',
+        'matrise: Bestilt dither-matrise - bayer2, bayer4, bayer8 (standard: bayer4).',
+        'bnTile: Blå støyflisestørrelse (standard: 64).',
+        'bnSeed: Blå støy tilfeldig frø (standard: 0).',
+        'colorDither: Fargedithering - ingen, per_kanal, perseptuell (standard: ingen).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpikselparametere',
+      paragraphs: ['Innstillinger for blandingsmodus for underpiksler:'],
+      bullets: [
+        'spGrid: Størrelse på underpiksler - 2x2, 3x3, 4x4 (standard: 3x3).',
+        'spCenter: Senterregel - streng, halvtone_senter (standard: streng).',
+        'spNøytral: Nøytral farge hex uten # (standard: 808080).',
+        'spFinder: Finder-overstyring - solid, stilisert (standard: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Halvtoneparametere',
+      paragraphs: ['Innstillinger for halvtoneblandingsmodus:'],
+      bullets: [
+        'htCell: Halvtone cellestørrelse - per_modul eller nxn rutenett (standard: per_module).',
+        'htDot: Punktform - sirkel, firkant, linje (standard: sirkel).',
+        'htCurve: Lysstyrkekurve - lineær, s-kurve, gamma (standard: lineær).',
+        'duo1: Duotone skyggefarge hex uten # (standard: 000000).',
+        'duo2: Duotone highlight color hex uten # (standard: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-Aware Mode Parameters',
+      paragraphs: ['Intelligent overleggsdistribusjon basert på feilrettingskapasitet:'],
+      bullets: [
+        'eccAware: Aktiver ECC-bevisst modus 0/1 (standard: 0).',
+        'eccRisk: Risikobudsjettprosent 0-100 (standard: 50).',
+        'eccMap: Vektkart - distance_to_finders, block_heatmap, empirical_scan_heatmap (standard: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Rammeparametere',
+      paragraphs: ['Innstillinger for dekorative rammer:'],
+      bullets: [
+        'frame: Rammestil - ingen, avrundet_ramme, klistremerke, tag (standard: ingen).',
+        'frameText: Tekst som skal vises i ramme (URL-kodet).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Fargeparametere per modul',
+      paragraphs: ['Individuelle modulfargealternativer:'],
+      bullets: [
+        'modColor: Fargemodus - solid, by_brightness, by_position, by_overlay, by_cluster (standard: solid).',
+        'cGuard: Kontrastvakt 0/1 (standard: 0).',
+        'minContrast: Minimum kontrastforhold 1-21 (standard: 4,5).',
+        'palett: Kommaseparerte sekskantfarger for palettmodus.',
+        'paletteMode: Palettfordeling - posisjon, lysstyrke, diagonal, radial, tilfeldig, rad, kolonne (standard: posisjon).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF-overleggsparametere',
+      paragraphs: ['Innstillinger for animerte GIF-overleggsbilder:'],
+      bullets: [
+        'ovType: Overleggstype - statisk, gif, apng, webp_anim, video (standard: statisk).',
+        'ovFramePick: Rammevalg - alle, hver_n, maks_rammer, varighetsgrense (standard: alle).',
+        'gifDelays: Bruk originale GIF-rammeforsinkelser 0/1 (standard: 1).',
+        'gifDispH: GIF-avhendingshåndtering - respektere, forenkle (standard: respekt).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Per-ECC Intensitetsgrenser',
+      paragraphs: ['Maksimal overleggsintensitet per feilkorrigeringsnivå:'],
+      bullets: [
+        'maxIntL: Maks intensitet for ECC L 0-100 (standard: 100).',
+        'maxIntM: Maks intensitet for ECC M 0-100 (standard: 100).',
+        'maxIntQ: Maks intensitet for ECC Q 0-100 (standard: 100).',
+        'maxIntH: Maks intensitet for ECC H 0-100 (standard: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA-simuleringsparametere (kun klient)',
+      paragraphs: [
+        'Disse parameterne analyseres for URL-kompatibilitet, men fungerer bare i nettleseren:',
+      ],
+      bullets: [
+        'qaContrast: Aktiver kontrastkontroll 0/1 - krever interaktiv validering.',
+        'qaBlur: Simuler uskarphet i piksler – kun for interaktiv testing.',
+        'qaNoise: Simuler støynivå - kun for interaktiv testing.',
+        'qaHeatmap: Vis varmekart for lesbarhet 0/1 – krever grensesnitt for lerretsoverlegg.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Kun klientparametere',
+      paragraphs: [
+        'De fleste API-parametere støttes fullt ut på serversiden. Parametere merket med [KUN KLIENT] analyseres for URL-kompatibilitet, men krever nettleserfunksjoner:',
+      ],
+      bullets: [
+        'jitter: Modul jitter krever per-frame QR-regenerering med tilfeldighet.',
+        'autoreduksjon: Autoreduser intensitet krever iterativ skanningstesting.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA-simulering krever interaktiv lerretsvalidering.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Ytterligere utgangsparametere',
+      paragraphs: ['Utvidede utdata- og eksportinnstillinger:'],
+      bullets: [
+        'fname: Egendefinert filnavn for nedlastinger (standard: anqr-qrcode).',
+        'inclQz: Inkluder stillesone i utgangsdimensjoner 0/1 (standard: 1).',
+        'bgOver: Bakgrunnsfarge overstyrer hex uten # (overstyrer bg-parameter).',
+        'fmtExtra: Ytterligere formatutgang - ingen, eps, animated_webp (standard: ingen). Merk: eps er [DELVIS].',
+        'svgPrec: SVG-formpresisjon - piksel, presis (standard: piksel). [DELVIS] SVG-utdata begrenset på serversiden.',
+        'svgEmbed: Bygg inn rasteroverlegg i SVG 0/1 (standard: 1). [DELVIS] SVG-utdata begrenset på serversiden.',
+        'modulePx: Modulpikselstørrelse (standard: automatisk beregnet fra størrelse).',
+        'border: Ekstra kantmoduler utenfor stillesonen (standard: 0).',
+        'crisp: Aktiver skarp/pikselert bildegjengivelse 0/1 (standard: 1).',
+        'snap: Pixel snap-modus - gulv, rund, tak (standard: gulv).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametere for mønsterbevaring',
+      paragraphs: ['Kontroller hvilke strukturelle elementer som er beskyttet mot overlegg:'],
+      bullets: [
+        'keepFinders: Bevar finnermønstre 0/1 (standard: 1).',
+        'keepTiming: Bevar timingmønstrene 0/1 (standard: 0).',
+        'keepAlign: Bevar justeringsmønstre 0/1 (standard: 0).',
+        'protectFmt: Beskytt formatinfomoduler 0/1 (standard: 0).',
+        'protectVer: Beskytt versjonsinfomoduler 0/1 (standard: 0).',
+      ],
+    },
     {
       heading: 'Eksempel Bruk',
       paragraphs: [

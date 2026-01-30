@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: các trường siêu dữ liệu PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Cắt thông số',
+      paragraphs: ['Tùy chọn cắt ảnh lớp phủ:'],
+      bullets: [
+        'cropEn: Bật cắt lớp phủ 0/1 (mặc định: 0).',
+        'cropX: Cắt trung tâm X thành phân số 0-1 (mặc định: 0,5).',
+        'cropY: Cắt trung tâm Y dưới dạng phân số 0-1 (mặc định: 0,5).',
+        'cropSize: Cắt kích thước theo phân số của hình ảnh 0-1 (mặc định: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Thông số khóa an toàn',
+      paragraphs: ['Kiểm soát phần tử QR nào được bảo vệ khỏi sửa đổi lớp phủ:'],
+      bullets: [
+        'lockF: Mẫu tìm khóa 0/1 (mặc định: 1).',
+        'lockT: Khóa mẫu thời gian 0/1 (mặc định: 1).',
+        'lockA: Khóa mẫu căn chỉnh 0/1 (mặc định: 1).',
+        'lockFmt: Khóa thông tin định dạng 0/1 (mặc định: 1).',
+        'lockV: Khóa thông tin phiên bản 0/1 (mặc định: 1).',
+        'safeMode: Chế độ an toàn - tắt, cân bằng, nghiêm ngặt (mặc định: tắt).',
+        'safeMinPx: Kích thước mô-đun tối thiểu tính bằng pixel (mặc định: 2).',
+        'safeMinQz: Các mô-đun vùng yên tĩnh tối thiểu (mặc định: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Tự động điều chỉnh các thông số',
+      paragraphs: ['Cài đặt tối ưu hóa tự động:'],
+      bullets: [
+        'autoVer: Tự động chọn phiên bản QR 0/1 (mặc định: 1).',
+        'autoEcc: Tự động chọn mức ECC 0/1 (mặc định: 0) - chỉ gợi ý phía máy chủ.',
+        'autoReduce: [CHỈ DÀNH CHO KHÁCH HÀNG] Tự động giảm cường độ cho đến khi có thể quét được - yêu cầu vòng xác thực quét.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Thông số hoạt ảnh bổ sung',
+      paragraphs: ['Điều khiển hoạt ảnh mở rộng cho đầu ra GIF:'],
+      bullets: [
+        'vòng lặp: Hoạt ảnh lặp lại liên tục 0/1 (mặc định: 1).',
+        'nảy: Hướng hoạt hình bóng bàn 0/1 (mặc định: 0).',
+        'đảo ngược: Phát hoạt ảnh ngược 0/1 (mặc định: 0).',
+        'colorCycle: Bật hiệu ứng chuyển màu 0/1 (mặc định: 0).',
+        'interp: Nội suy khung - không có, crossfade, morph (mặc định: không có).',
+        'tempDither: Phối màu theo thời gian - tắt, blue_noise, Flickr_safe (mặc định: tắt).',
+        'startF: Khung bắt đầu hoạt ảnh (mặc định: 0).',
+        'maxF: Số khung hình tối đa cần hiển thị (mặc định: 0 = tự động).',
+        'stepF: Khoảng thời gian của khung hình (mặc định: 1).',
+        'jitter: [CHỈ KHÁCH HÀNG] Độ giật mô-đun tính bằng pixel - yêu cầu tái tạo QR trên mỗi khung hình.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Thông số phối màu',
+      paragraphs: ['Kiểm soát các thuật toán phối màu để xử lý lớp phủ:'],
+      bullets: [
+        'ditherKind: Thuật toán hòa sắc - error_diffusion, order_bayer, blue_noise, v.v. (mặc định: order_bayer).',
+        'khuếch tánKernel: Lỗi khuếch tán hạt nhân - floyd_steinberg, jarvis_judice_ninke, Sticki, burkes, sierra, atkinson (mặc định: floyd_steinberg).',
+        'Độ hoà sắc: Cường độ hoà sắc 0-100 (mặc định: 50).',
+        'ngoằn ngoèo: Phối màu Serpentine 0/1 (mặc định: 0).',
+        'ma trận: Ma trận hòa sắc có thứ tự - bayer2, bayer4, bayer8 (mặc định: bayer4).',
+        'bnTile: Kích thước ô nhiễu xanh (mặc định: 64).',
+        'bnSeed: Hạt giống ngẫu nhiên có tiếng ồn xanh (mặc định: 0).',
+        'colorDither: Phối màu - không có, mỗi kênh, theo nhận thức (mặc định: không có).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Thông số pixel phụ',
+      paragraphs: ['Cài đặt cho chế độ hòa trộn pixel phụ:'],
+      bullets: [
+        'spGrid: Kích thước lưới Subpixel - 2x2, 3x3, 4x4 (mặc định: 3x3).',
+        'spCenter: Quy tắc trung tâm - nghiêm ngặt, bán sắc_center (mặc định: nghiêm ngặt).',
+        'spNeutral: Hệ lục phân màu trung tính không có # (mặc định: 808080).',
+        'spFinder: Ghi đè Finder - liền khối, cách điệu (mặc định: rắn).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Thông số bán sắc',
+      paragraphs: ['Cài đặt cho chế độ hòa trộn bán sắc:'],
+      bullets: [
+        'htCell: Kích thước ô Halftone - lưới per_module hoặc nxn (mặc định: per_module).',
+        'htDot: Hình dạng chấm - hình tròn, hình vuông, đường thẳng (mặc định: hình tròn).',
+        'htCurve: Đường cong độ sáng - tuyến tính, đường cong s, gamma (mặc định: tuyến tính).',
+        'Duo1: Hệ lục phân màu bóng Duotone không có # (mặc định: 000000).',
+        'Duo2: Hệ lục phân màu nổi bật Duotone không có # (mặc định: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Thông số chế độ nhận biết ECC',
+      paragraphs: ['Phân phối lớp phủ thông minh dựa trên khả năng sửa lỗi:'],
+      bullets: [
+        'eccAware: Bật chế độ nhận biết ECC 0/1 (mặc định: 0).',
+        'eccRisk: Tỷ lệ ngân sách rủi ro 0-100 (mặc định: 50).',
+        'eccMap: Bản đồ trọng lượng - distance_to_finders, block_heatmap, theo kinh nghiệm_scan_heatmap (mặc định: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Thông số khung',
+      paragraphs: ['Cài đặt khung trang trí:'],
+      bullets: [
+        'khung: Kiểu khung - không có, round_frame, nhãn dán, thẻ (mặc định: không có).',
+        'frameText: Văn bản hiển thị trong khung (được mã hóa URL).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Thông số màu trên mỗi mô-đun',
+      paragraphs: ['Tùy chọn tô màu mô-đun riêng lẻ:'],
+      bullets: [
+        'modColor: Chế độ màu - rắn, by_brightness, by_position, by_overlay, by_cluster (mặc định: rắn).',
+        'cGuard: Bảo vệ tương phản 0/1 (mặc định: 0).',
+        'minContrast: Tỷ lệ tương phản tối thiểu 1-21 (mặc định: 4,5).',
+        'bảng màu: Màu hex được phân tách bằng dấu phẩy cho chế độ bảng màu.',
+        'bảng màuChế độ: Phân phối bảng màu - vị trí, độ sáng, đường chéo, hướng tâm, ngẫu nhiên, hàng, cột (mặc định: vị trí).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Thông số lớp phủ GIF',
+      paragraphs: ['Cài đặt cho hình ảnh lớp phủ GIF động:'],
+      bullets: [
+        'ovType: Loại lớp phủ - tĩnh, gif, apng, webp_anim, video (mặc định: tĩnh).',
+        'ovFramePick: Lựa chọn khung hình - tất cả, mọi_n, max_frames, thời lượng_limit (mặc định: tất cả).',
+        'gifDelays: Sử dụng độ trễ khung GIF gốc 0/1 (mặc định: 1).',
+        'gifDispH: Xử lý loại bỏ GIF - tôn trọng, đơn giản hóa (mặc định: tôn trọng).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Giới hạn cường độ trên mỗi ECC',
+      paragraphs: ['Cường độ lớp phủ tối đa trên mỗi mức sửa lỗi:'],
+      bullets: [
+        'maxIntL: Cường độ tối đa cho ECC L 0-100 (mặc định: 100).',
+        'maxIntM: Cường độ tối đa cho ECC M 0-100 (mặc định: 100).',
+        'maxIntQ: Cường độ tối đa cho ECC Q 0-100 (mặc định: 100).',
+        'maxIntH: Cường độ tối đa cho ECC H 0-100 (mặc định: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Tham số mô phỏng QA (Chỉ dành cho khách hàng)',
+      paragraphs: [
+        'Các tham số này được phân tích cú pháp để tương thích với URL nhưng chỉ hoạt động trong trình duyệt:',
+      ],
+      bullets: [
+        'qaContrast: Bật kiểm tra độ tương phản 0/1 - yêu cầu xác thực tương tác.',
+        'qaBlur: Mô phỏng độ mờ bằng pixel - chỉ dành cho thử nghiệm tương tác.',
+        'qaNoise: Mô phỏng mức độ tiếng ồn - chỉ dành cho thử nghiệm tương tác.',
+        'qaHeatmap: Hiển thị bản đồ nhiệt khả năng đọc 0/1 - yêu cầu giao diện người dùng lớp phủ canvas.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Thông số chỉ dành cho khách hàng',
+      paragraphs: [
+        'Hầu hết các tham số API đều được phía máy chủ hỗ trợ đầy đủ. Các tham số được đánh dấu [CHỈ KHÁCH HÀNG] được phân tích cú pháp để tương thích với URL nhưng yêu cầu các tính năng của trình duyệt:',
+      ],
+      bullets: [
+        'jitter: jitter mô-đun yêu cầu tái tạo QR trên mỗi khung hình một cách ngẫu nhiên.',
+        'autoReduce: Cường độ tự động giảm yêu cầu kiểm tra quét lặp đi lặp lại.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Mô phỏng QA yêu cầu xác thực canvas tương tác.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Thông số đầu ra bổ sung',
+      paragraphs: ['Cài đặt đầu ra và xuất mở rộng:'],
+      bullets: [
+        'fname: Tên tệp tùy chỉnh để tải xuống (mặc định: anqr-qrcode).',
+        'inclQz: Bao gồm vùng yên tĩnh trong kích thước đầu ra 0/1 (mặc định: 1).',
+        'bgOver: Hex ghi đè màu nền không có # (ghi đè tham số bg).',
+        'fmtExtra: Đầu ra định dạng bổ sung - không có, eps, hoạt hình_webp (mặc định: không có). Lưu ý: eps là [BẢNG].',
+        'svgPrec: Độ chính xác của hình dạng SVG - pixel, chính xác (mặc định: pixel). [BẢNG] Phía máy chủ giới hạn đầu ra SVG.',
+        'svgEmbed: Nhúng lớp phủ raster vào SVG 0/1 (mặc định: 1). [BẢNG] Phía máy chủ giới hạn đầu ra SVG.',
+        'modulePx: Kích thước pixel mô-đun (mặc định: được tính toán tự động từ kích thước).',
+        'đường viền: Các mô-đun viền bổ sung ngoài vùng yên tĩnh (mặc định: 0).',
+        'sắc nét: Cho phép hiển thị hình ảnh sắc nét/pixel 0/1 (mặc định: 1).',
+        'snap: Chế độ chụp pixel - sàn, tròn, trần (mặc định: sàn).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Thông số bảo quản mẫu',
+      paragraphs: ['Kiểm soát các thành phần cấu trúc nào được bảo vệ khỏi lớp phủ:'],
+      bullets: [
+        'keepFinders: Giữ nguyên các mẫu tìm kiếm 0/1 (mặc định: 1).',
+        'keepTiming: Giữ nguyên các mẫu thời gian 0/1 (mặc định: 0).',
+        'keepAlign: Giữ nguyên các mẫu căn chỉnh 0/1 (mặc định: 0).',
+        'ProtectFmt: Bảo vệ mô-đun thông tin định dạng 0/1 (mặc định: 0).',
+        'ProtectVer: Bảo vệ mô-đun thông tin phiên bản 0/1 (mặc định: 0).',
+      ],
+    },
     {
       heading: 'Cách sử dụng ví dụ',
       paragraphs: [

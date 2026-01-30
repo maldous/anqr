@@ -972,6 +972,206 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: fushat e meta të dhënave PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Parametrat e prerjes',
+      paragraphs: ['Opsionet e prerjes së imazhit të mbivendosur:'],
+      bullets: [
+        'cropEn: Aktivizo prerjen e mbivendosjes 0/1 (parazgjedhja: 0).',
+        'cropX: Prisni qendrën X si fraksion 0-1 (parazgjedhja: 0,5).',
+        'CropY: Prisni qendrën Y si fraksion 0-1 (parazgjedhja: 0,5).',
+        'cropSize: Madhësia e prerjes si pjesë e imazhit 0-1 (parazgjedhja: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Parametrat e bllokimit të sigurisë',
+      paragraphs: ['Kontrolloni se cilët elementë QR mbrohen nga modifikimi i mbivendosjes:'],
+      bullets: [
+        'lockF: Modelet e gjetësit të kyçjes 0/1 (parazgjedhja: 1).',
+        'lockT: Modelet e kohës së kyçjes 0/1 (parazgjedhja: 1).',
+        'lockA: Blloko modelet e shtrirjes 0/1 (parazgjedhja: 1).',
+        'lockFmt: Mbyll informacionin e formatit 0/1 (parazgjedhja: 1).',
+        'lockV: Blloko informacionin e versionit 0/1 (parazgjedhja: 1).',
+        'safeMode: Modaliteti i sigurisë - joaktiv, i balancuar, i rreptë (parazgjedhja: joaktiv).',
+        'safeMinPx: Madhësia minimale e modulit në pixel (parazgjedhja: 2).',
+        'safeMinQz: Modulet minimale të zonës së qetë (parazgjedhja: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Parametrat e akordimit automatik',
+      paragraphs: ['Cilësimet e optimizimit automatik:'],
+      bullets: [
+        'autoVer: Zgjidh automatikisht versionin 0/1 QR (parazgjedhja: 1).',
+        'autoEcc: Zgjidh automatikisht nivelin ECC 0/1 (parazgjedhja: 0) - vetëm sugjerim nga ana e serverit.',
+        'AutoReduce: [VETËM-KLIENTI] Zvogëlo automatikisht intensitetin derisa të skanohet - kërkon ciklin e vërtetimit të skanimit.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Parametrat shtesë të animacionit',
+      paragraphs: ['Kontrollet e zgjeruara të animacionit për daljen GIF:'],
+      bullets: [
+        'cikli: Animacioni qarkullon vazhdimisht 0/1 (parazgjedhja: 1).',
+        'kërcim: drejtimi i animacionit ping-pong 0/1 (parazgjedhja: 0).',
+        'anasjelltas: Luaj animacionin në të kundërt 0/1 (parazgjedhja: 0).',
+        'colorCycle: Aktivizo efektin e ciklit të ngjyrave 0/1 (parazgjedhja: 0).',
+        'interp: Interpolation Frame - asnjë, crossfade, morph (default: asnjë).',
+        'tempDither: Acarim i përkohshëm - joaktiv, zhurmë_blu, dridhje_e sigurt (e parazgjedhur: joaktiv).',
+        'startF: Korniza e fillimit të animacionit (parazgjedhja: 0).',
+        "maxF: Kornizat maksimale për t'u dhënë (e parazgjedhur: 0 = automatik).",
+        'stepF: Intervali i hapave të kornizës (parazgjedhja: 1).',
+        'nervozizëm: [VETËM-KLIENTI] Dridhja e modulit në piksel - kërkon rigjenerimin e QR-së për kornizë.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Parametrat e dithering',
+      paragraphs: ['Kontrolloni algoritmet e ndërlikimit për përpunimin e mbivendosjes:'],
+      bullets: [
+        'ditherKind: Algoritmi Dither - error_diffusion, ordered_bayer, blue_noise, etj (default: ordered_bayer).',
+        'diffusionKernel: Gabim kernel difuzioni - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (parazgjedhja: floyd_steinberg).',
+        'Fuqia e dithers: Intensiteti i turbullimit 0-100 (parazgjedhja: 50).',
+        'serpentine: Gjarpërimë 0/1 (parazgjedhja: 0).',
+        'matrica: Matrica e renditur dither - Bayer2, Bayer4, Bayer8 (e parazgjedhur: Bayer4).',
+        'bnTile: Madhësia e pllakës së zhurmës blu (e parazgjedhur: 64).',
+        'bnSeed: Farë e rastësishme me zhurmë blu (e parazgjedhur: 0).',
+        'colorDither: Ndryshimi i ngjyrës - asnjë, për_kanal, perceptues (parazgjedhja: asnjë).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Parametrat e nënpikselit',
+      paragraphs: ['Cilësimet për modalitetin e përzierjes së nënpikselëve:'],
+      bullets: [
+        'spGrid: Madhësia e rrjetit nënpiksel - 2x2, 3x3, 4x4 (parazgjedhja: 3x3).',
+        'spCenter: Rregulli qendror - i rreptë, qendra e gjysmëtonit (e parazgjedhur: strikte).',
+        'spNeutral: Heks me ngjyrë neutrale pa # (parazgjedhja: 808080).',
+        'spFinder: Mbështetja e gjetësit - e ngurtë, e stilizuar (e parazgjedhur: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Parametrat gjysmëton',
+      paragraphs: ['Cilësimet për modalitetin e përzierjes së gjysmëtoneve:'],
+      bullets: [
+        'htCell: Madhësia e qelizës gjysmëton - për_modul ose rrjetë nxn (e parazgjedhur: për_modul).',
+        'htDot: Forma e pikës - rrethi, katrori, vija (e parazgjedhur: rrethi).',
+        'htCurve: Kurba e ndriçimit - lineare, kurba s, gama (parazgjedhja: lineare).',
+        'duo1: ngjyra e hijes duoton heks pa # (parazgjedhja: 000000).',
+        'duo2: me ngjyra të nënvizuara me ngjyra të dyfishta heks pa # (parazgjedhja: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Parametrat e modalitetit ECC-Aware',
+      paragraphs: [
+        'Shpërndarja inteligjente e mbivendosjes bazuar në kapacitetin e korrigjimit të gabimeve:',
+      ],
+      bullets: [
+        'eccAware: Aktivizo modalitetin ECC-aware 0/1 (parazgjedhja: 0).',
+        'eccRisk: Përqindja e buxhetit të rrezikut 0-100 (parazgjedhja: 50).',
+        'eccMap: Harta e peshës - distance_to_finders, block_heatmap, empirical_scan_heatmap (parazgjedhja: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Parametrat e kornizës',
+      paragraphs: ['Cilësimet e kornizës dekorative:'],
+      bullets: [
+        'kornizë: Stili i kornizës - asnjë, korniza e rrumbullakosur, ngjitëse, etiketa (parazgjedhja: asnjë).',
+        "frameText: Teksti për t'u shfaqur në kornizë (URL e koduar).",
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Parametrat e ngjyrave për çdo modul',
+      paragraphs: ['Opsionet individuale të ngjyrosjes së modulit:'],
+      bullets: [
+        'modColor: Modaliteti i ngjyrës - i ngurtë, nga_shkëlqimi, nga_pozicioni, nga_mbivendosja, nga_grupi (parazgjedhja: solid).',
+        'cGuard: Mbrojtësi i kontrastit 0/1 (parazgjedhja: 0).',
+        'MinContrast: Raporti minimal i kontrastit 1-21 (parazgjedhja: 4,5).',
+        'paleta: Ngjyrat gjashtëkëndore të ndara me presje për modalitetin e paletës.',
+        'paletteMode: Shpërndarja e paletës - pozicioni, shkëlqimi, diagonale, radiale, e rastësishme, rreshti, kolona (parazgjedhja: pozicioni).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Parametrat e mbivendosjes GIF',
+      paragraphs: ['Cilësimet për imazhet e animuara të mbivendosjes GIF:'],
+      bullets: [
+        'ovType: Lloji i mbivendosjes - statike, gif, apng, webp_anim, video (parazgjedhja: statike).',
+        'ovFramePick: Zgjedhja e kornizës - të gjitha, çdo_n, max_kornizat, kohëzgjatja_limit (parazgjedhja: të gjitha).',
+        'gifVonesat: Përdorni vonesat origjinale të kornizës GIF 0/1 (parazgjedhja: 1).',
+        'gifDispH: Trajtimi i asgjësimit të GIF - respektoni, thjeshtoni (parazgjedhja: respekt).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Kufijtë e intensitetit për ECC',
+      paragraphs: ['Intensiteti maksimal i mbivendosjes për nivel korrigjimi të gabimit:'],
+      bullets: [
+        'maxIntL: Intensiteti maksimal për ECC L 0-100 (parazgjedhja: 100).',
+        'maxIntM: Intensiteti maksimal për ECC M 0-100 (parazgjedhja: 100).',
+        'maxIntQ: Intensiteti maksimal për ECC Q 0-100 (parazgjedhja: 100).',
+        'maxIntH: Intensiteti maksimal për ECC H 0-100 (parazgjedhja: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Parametrat e simulimit të QA (vetëm për klient)',
+      paragraphs: [
+        'Këta parametra analizohen për pajtueshmërinë me URL-në, por funksionojnë vetëm në shfletues:',
+      ],
+      bullets: [
+        'qaContrast: Aktivizo kontrollin e kontrastit 0/1 - kërkon vërtetim interaktiv.',
+        'qaBlur: Simuloni turbullimin në piksel - vetëm për testim interaktiv.',
+        'qaNoise: Simuloni nivelin e zhurmës - vetëm për testim interaktiv.',
+        'qaHeatmap: Shfaq hartën e nxehtësisë së lexueshmërisë 0/1 - kërkon ndërfaqen e përdoruesit të mbivendosjes së kanavacës.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Parametrat vetëm për klientin',
+      paragraphs: [
+        'Shumica e parametrave të API-së mbështeten plotësisht nga ana e serverit. Parametrat e shënuar [VETËM-KLIENTI] analizohen për pajtueshmërinë me URL-në, por kërkojnë veçori të shfletuesit:',
+      ],
+      bullets: [
+        'Jitter: Moduli nervoz kërkon rigjenerimin e QR-së për kornizë me rastësi.',
+        'AutoReduce: Intensiteti i zvogëlimit automatik kërkon testim të përsëritur të skanimit.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: Simulimi i QA kërkon vërtetim interaktiv të kanavacës.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Parametrat shtesë të daljes',
+      paragraphs: ['Cilësimet e zgjeruara të prodhimit dhe eksportit:'],
+      bullets: [
+        'fname: Emri i personalizuar i skedarit për shkarkime (parazgjedhja: anqr-qrcode).',
+        'përfshirëQz: Përfshi zonën e qetë në dimensionet e daljes 0/1 (parazgjedhja: 1).',
+        'bgOver: Mbivendosja e ngjyrës së sfondit hex pa # (shfuqizon parametrin bg).',
+        'fmtExtra: Dalja e formatit shtesë - asnjë, eps, animated_webp (parazgjedhja: asnjë). Shënim: eps është [PARCIAL].',
+        'svgPrec: Preciziteti i formës SVG - piksel, i saktë (i parazgjedhur: piksel). [PJESËRI] Dalja SVG e kufizuar nga ana e serverit.',
+        'svgEmbed: Fut mbivendosjen raster në SVG 0/1 (parazgjedhja: 1). [PJESËRI] Dalja SVG e kufizuar nga ana e serverit.',
+        'modulePx: Madhësia e pikselit të modulit (parazgjedhja: llogaritet automatikisht nga madhësia).',
+        'kufiri: Modulet shtesë kufitare përtej zonës së qetë (parazgjedhja: 0).',
+        'crisp: Aktivizo paraqitjen e imazhit të mprehtë/pikseluar 0/1 (parazgjedhja: 1).',
+        'snap: Modaliteti i kapjes së pikselit - dysheme, rrumbullakët, tavan (parazgjedhja: dysheme).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Parametrat e ruajtjes së modelit',
+      paragraphs: ['Kontrolloni cilët elementë strukturorë janë të mbrojtur nga mbivendosja:'],
+      bullets: [
+        'KeepFinders: Ruani modelet e gjetësit 0/1 (parazgjedhja: 1).',
+        'KeepTiming: Ruaj modelet e kohës 0/1 (parazgjedhja: 0).',
+        'keepAlign: Ruaj modelet e shtrirjes 0/1 (parazgjedhja: 0).',
+        'protectFmt: Mbroni modulet e informacionit të formatit 0/1 (parazgjedhja: 0).',
+        'protectVer: Mbroni modulet e informacionit të versionit 0/1 (parazgjedhja: 0).',
+      ],
+    },
     {
       heading: 'Shembull i përdorimit',
       paragraphs: [

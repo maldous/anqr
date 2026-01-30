@@ -972,6 +972,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG meta veri alanları.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Kırpma Parametreleri',
+      paragraphs: ['Yer paylaşımlı görüntü kırpma seçenekleri:'],
+      bullets: [
+        'cropEn: Yer paylaşımlı kırpmayı etkinleştir 0/1 (varsayılan: 0).',
+        "kırpmaX: Merkezi X'i 0-1 kesri olarak kırpın (varsayılan: 0,5).",
+        "kırpmaY: Kırpma merkezi Y'yi 0-1 kesri olarak kırpın (varsayılan: 0,5).",
+        'kırpmaBoyutu: Görüntünün kesri olarak kırpma boyutu 0-1 (varsayılan: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Emniyet Kilidi Parametreleri',
+      paragraphs: ['Hangi QR öğelerinin katman değişikliğinden korunacağını kontrol edin:'],
+      bullets: [
+        'lockF: Bulucu modellerini kilitle 0/1 (varsayılan: 1).',
+        'lockT: Zamanlama modellerini kilitle 0/1 (varsayılan: 1).',
+        'lockA: Hizalama desenlerini kilitle 0/1 (varsayılan: 1).',
+        'lockFmt: Format bilgisini kilitle 0/1 (varsayılan: 1).',
+        'lockV: Sürüm bilgisini kilitle 0/1 (varsayılan: 1).',
+        'SafeMode: Güvenlik modu - kapalı, dengeli, katı (varsayılan: kapalı).',
+        'SafeMinPx: Piksel cinsinden minimum modül boyutu (varsayılan: 2).',
+        'SafeMinQz: Minimum sessiz bölge modülleri (varsayılan: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Otomatik Ayarlama Parametreleri',
+      paragraphs: ['Otomatik optimizasyon ayarları:'],
+      bullets: [
+        'autoVer: QR sürümünü 0/1 otomatik olarak seç (varsayılan: 1).',
+        'autoEcc: ECC düzeyini otomatik seç 0/1 (varsayılan: 0) - yalnızca sunucu tarafı ipucu.',
+        'autoReduce: [YALNIZCA İSTEMCİ] Taranabilir hale gelinceye kadar yoğunluğu otomatik azalt - tarama doğrulama döngüsü gerektirir.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Ek Animasyon Parametreleri',
+      paragraphs: ['GIF çıkışı için genişletilmiş animasyon kontrolleri:'],
+      bullets: [
+        'döngü: Animasyon sürekli olarak 0/1 döngüye girer (varsayılan: 1).',
+        'sıçrama: Masa tenisi animasyon yönü 0/1 (varsayılan: 0).',
+        'ters: Animasyonu ters yönde oynat 0/1 (varsayılan: 0).',
+        'colorCycle: Renk döngüsü efektini etkinleştirin 0/1 (varsayılan: 0).',
+        'interp: Çerçeve enterpolasyonu - yok, çapraz geçiş, morf (varsayılan: yok).',
+        'tempDither: Geçici renk taklidi - kapalı, blue_noise, flicker_safe (varsayılan: kapalı).',
+        'startF: Animasyon başlangıç çerçevesi (varsayılan: 0).',
+        'maxF: Oluşturulacak maksimum kare (varsayılan: 0 = otomatik).',
+        'stepF: Çerçeve adım aralığı (varsayılan: 1).',
+        'titreşim: [YALNIZCA İSTEMCİ] Piksel cinsinden modül titreşimi - kare başına QR yeniden oluşturma gerektirir.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Titreme Parametreleri',
+      paragraphs: ['Kaplama işleme için renk taklidi algoritmalarını kontrol edin:'],
+      bullets: [
+        'ditherKind: Titreme algoritması - error_diffusion,order_bayer, blue_noise, vb. (varsayılan:order_bayer).',
+        'diffusionKernel: Hata difüzyon çekirdeği - floyd_steinberg, jarvis_judice_ninke, studi, burkes, sierra, atkinson (varsayılan: floyd_steinberg).',
+        'ditherStrength: Titreme yoğunluğu 0-100 (varsayılan: 50).',
+        'serpantin: Serpantin renk taklidi 0/1 (varsayılan: 0).',
+        'matris: Sıralı renk taklidi matrisi - bayer2, bayer4, bayer8 (varsayılan: bayer4).',
+        'bnTile: Mavi gürültü döşemesi boyutu (varsayılan: 64).',
+        'bnSeed: Mavi gürültü rastgele tohum (varsayılan: 0).',
+        'colorDither: Renk taklidi - yok, kanal başına, algısal (varsayılan: yok).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Alt Piksel Parametreleri',
+      paragraphs: ['Alt piksel karışım modu ayarları:'],
+      bullets: [
+        'spGrid: Alt piksel ızgara boyutu - 2x2, 3x3, 4x4 (varsayılan: 3x3).',
+        'spCenter: Merkez kuralı - katı, yarı ton_merkezli (varsayılan: katı).',
+        'spNeutral: # olmadan nötr renk altıgen (varsayılan: 808080).',
+        'spFinder: Bulucuyu geçersiz kılma - katı, stilize (varsayılan: katı).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Noktalı Resim Parametreleri',
+      paragraphs: ['Yarım ton karışım modu ayarları:'],
+      bullets: [
+        'htCell: Yarı ton hücre boyutu - modül başına veya nxn ızgarası (varsayılan: modül başına).',
+        'htDot: Nokta şekli - daire, kare, çizgi (varsayılan: daire).',
+        'htCurve: Parlaklık eğrisi - doğrusal, s eğrisi, gama (varsayılan: doğrusal).',
+        'duo1: Çift tonlu gölge rengi onaltılı # olmadan (varsayılan: 000000).',
+        'duo2: # olmadan çift tonlu vurgu rengi onaltılı (varsayılan: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC Farkındalık Modu Parametreleri',
+      paragraphs: ['Hata düzeltme kapasitesine dayalı akıllı katman dağıtımı:'],
+      bullets: [
+        'eccAware: ECC uyumlu modunu etkinleştirin 0/1 (varsayılan: 0).',
+        'eccRisk: Risk bütçesi yüzdesi 0-100 (varsayılan: 50).',
+        'eccMap: Ağırlık haritası - distance_to_finders, block_heatmap, ampirik_scan_heatmap (varsayılan: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Çerçeve Parametreleri',
+      paragraphs: ['Dekoratif çerçeve ayarları:'],
+      bullets: [
+        'çerçeve: Çerçeve stili - yok, rounded_frame, çıkartma, etiket (varsayılan: yok).',
+        'FrameText: Çerçevede görüntülenecek metin (URL kodlu).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Modül Başına Renk Parametreleri',
+      paragraphs: ['Bireysel modül renklendirme seçenekleri:'],
+      bullets: [
+        'modColor: Renk modu - düz, parlaklığa göre, konuma göre, kaplamaya göre, kümeye göre (varsayılan: düz).',
+        'cGuard: Kontrast koruması 0/1 (varsayılan: 0).',
+        'minContrast: Minimum kontrast oranı 1-21 (varsayılan: 4,5).',
+        'palet: Palet modu için virgülle ayrılmış onaltılık renkler.',
+        'paletModu: Palet dağıtımı - konum, parlaklık, çapraz, radyal, rastgele, satır, sütun (varsayılan: konum).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF Yer Paylaşımı Parametreleri',
+      paragraphs: ['Animasyonlu GIF yer paylaşımlı görsellerine ilişkin ayarlar:'],
+      bullets: [
+        'ovType: Kaplama türü - statik, gif, apng, webp_anim, video (varsayılan: statik).',
+        'ovFramePick: Çerçeve seçimi - tümü, her_n, maksimum_kareler, süre_limit (varsayılan: tümü).',
+        'gifDelays: Orijinal GIF çerçeve gecikmelerini 0/1 kullanın (varsayılan: 1).',
+        'gifDispH: GIF imha işlemi - saygı gösterin, basitleştirin (varsayılan: saygı gösterin).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'ECC Başına Yoğunluk Limitleri',
+      paragraphs: ['Hata düzeltme düzeyi başına maksimum katman yoğunluğu:'],
+      bullets: [
+        'maxIntL: ECC L 0-100 için maksimum yoğunluk (varsayılan: 100).',
+        'maxIntM: ECC M 0-100 için maksimum yoğunluk (varsayılan: 100).',
+        'maxIntQ: ECC Q 0-100 için maksimum yoğunluk (varsayılan: 100).',
+        'maxIntH: ECC H 0-100 için maksimum yoğunluk (varsayılan: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA Simülasyon Parametreleri (Yalnızca İstemci)',
+      paragraphs: [
+        'Bu parametreler URL uyumluluğu açısından ayrıştırılır ancak yalnızca tarayıcıda çalışır:',
+      ],
+      bullets: [
+        'qaContrast: Kontrast kontrolünü etkinleştir 0/1 - etkileşimli doğrulama gerektirir.',
+        'qaBlur: Piksel cinsinden bulanıklığı simüle edin - yalnızca etkileşimli testler için.',
+        'qaNoise: Gürültü seviyesini simüle edin - yalnızca etkileşimli testler için.',
+        'qaHeatmap: Okunabilirlik ısı haritasını göster 0/1 - tuval kaplama kullanıcı arayüzü gerektirir.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Yalnızca İstemci Parametreleri',
+      paragraphs: [
+        'Çoğu API parametresi sunucu tarafında tamamen desteklenir. [YALNIZCA İSTEMCİ] olarak işaretlenen parametreler, URL uyumluluğu açısından ayrıştırılır ancak tarayıcı özellikleri gerektirir:',
+      ],
+      bullets: [
+        "titreşim: Modül titreşimi, kare başına QR'nin rastgele bir şekilde yeniden oluşturulmasını gerektirir.",
+        'autoReduce: Yoğunluğu otomatik olarak azaltmak, yinelemeli tarama testi gerektirir.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA simülasyonu etkileşimli tuval doğrulaması gerektirir.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Ek Çıkış Parametreleri',
+      paragraphs: ['Genişletilmiş çıktı ve dışa aktarma ayarları:'],
+      bullets: [
+        'fname: İndirilenler için özel dosya adı (varsayılan: anqr-qrcode).',
+        'inclQz: Sessiz bölgeyi 0/1 çıkış boyutlarına dahil edin (varsayılan: 1).',
+        'bgOver: # olmadan arka plan rengi onaltılıyı geçersiz kılar (bg parametresini geçersiz kılar).',
+        "fmtExtra: Ek format çıktısı - yok, eps, animasyonlu_webp (varsayılan: yok). Not: eps [KISMİ]'dir.",
+        'svgPrec: SVG şekil hassasiyeti - piksel, hassas (varsayılan: piksel). [KISMİ] SVG çıkışı sunucu tarafında sınırlıdır.',
+        "svgEmbed: SVG 0/1'e tarama katmanını gömün (varsayılan: 1). [KISMİ] SVG çıkışı sunucu tarafında sınırlıdır.",
+        'modulePx: Modül piksel boyutu (varsayılan: boyuttan otomatik olarak hesaplanır).',
+        'sınır: Sessiz bölgenin ötesinde ekstra sınır modülleri (varsayılan: 0).',
+        'net: Net/pikselli görüntü oluşturmayı etkinleştir 0/1 (varsayılan: 1).',
+        'snap: Piksel snap modu - zemin, yuvarlak, tavan (varsayılan: zemin).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Desen Koruma Parametreleri',
+      paragraphs: ['Hangi yapısal elemanların kaplamaya karşı korunduğunu kontrol edin:'],
+      bullets: [
+        'keepFinders: Bulucu modellerini koru 0/1 (varsayılan: 1).',
+        'keepTiming: Zamanlama modellerini koru 0/1 (varsayılan: 0).',
+        'keepAlign: Hizalama desenlerini koru 0/1 (varsayılan: 0).',
+        'protectFmt: Format bilgi modüllerini koruyun 0/1 (varsayılan: 0).',
+        'protectVer: Sürüm bilgisi modüllerini koruyun 0/1 (varsayılan: 0).',
+      ],
+    },
     {
       heading: 'Örnek Kullanım',
       paragraphs: [

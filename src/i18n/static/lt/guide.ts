@@ -974,6 +974,204 @@ export const guide: PageDefinition = {
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG metaduomenų laukai.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Apkarpymo parametrai',
+      paragraphs: ['Perdangos vaizdo apkarpymo parinktys:'],
+      bullets: [
+        'cropEn: įgalinti perdangos apkarpymą 0/1 (numatytasis nustatymas: 0).',
+        'cropX: apkarpyti centrą X kaip trupmeną 0–1 (numatytasis nustatymas: 0,5).',
+        'cropY: apkarpymo centras Y kaip trupmena 0–1 (numatytasis nustatymas: 0,5).',
+        'cropSize: apkarpymo dydis kaip 0–1 vaizdo dalis (numatytasis nustatymas: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Saugos užrakto parametrai',
+      paragraphs: ['Valdykite, kurie QR elementai yra apsaugoti nuo perdangos modifikavimo:'],
+      bullets: [
+        'lockF: užrakto ieškiklio šablonai 0/1 (numatytasis nustatymas: 1).',
+        'lockT: užrakinimo laiko šablonai 0/1 (numatytasis nustatymas: 1).',
+        'lockA: užrakto lygiavimo šablonai 0/1 (numatytasis nustatymas: 1).',
+        'lockFmt: užrakto formato informacija 0/1 (numatytasis nustatymas: 1).',
+        'lockV: užrakto versijos informacija 0/1 (numatytasis: 1).',
+        'safeMode: saugos režimas – išjungtas, subalansuotas, griežtas (numatytasis: išjungtas).',
+        'safeMinPx: Minimalus modulio dydis pikseliais (numatytasis: 2).',
+        'safeMinQz: Minimalus tylios zonos modulis (numatytasis: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Automatinis parametrų derinimas',
+      paragraphs: ['Automatinio optimizavimo nustatymai:'],
+      bullets: [
+        'autoVer: automatiškai pasirinkite QR versiją 0/1 (numatytasis: 1).',
+        'autoEcc: Automatinis ECC lygio pasirinkimas 0/1 (numatytasis: 0) – tik serverio užuomina.',
+        'autoReduce: [TIK KLIENTUI] Automatiškai sumažinti intensyvumą, kol bus galima nuskaityti – reikalinga nuskaitymo patvirtinimo kilpa.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Papildomi animacijos parametrai',
+      paragraphs: ['Išplėstiniai GIF išvesties animacijos valdikliai:'],
+      bullets: [
+        'ciklas: animacijos ciklai nenutrūkstamai 0/1 (numatytasis nustatymas: 1).',
+        'atšokimas: stalo teniso animacijos kryptis 0/1 (numatytasis nustatymas: 0).',
+        'Reverse: Leisti animaciją atvirkščiai 0/1 (numatytasis: 0).',
+        'colorCycle: įgalinkite spalvų ciklo efektą 0/1 (numatytasis: 0).',
+        'interp: kadro interpoliacija – nėra, kryžminis išblukimas, morph (numatytasis: nėra).',
+        'tempDither: laikinas keitimas – išjungtas, mėlynas_triukšmas, mirgėjimo_saugus (numatytasis nustatymas: išjungtas).',
+        'startF: animacijos pradžios kadras (numatytasis nustatymas: 0).',
+        'maxF: maksimalus kadrų skaičius, kurį reikia pateikti (numatytasis nustatymas: 0 = automatinis).',
+        'stepF: kadro žingsnio intervalas (numatytasis: 1).',
+        'virpėjimas: [TIK KLIENTUI] Modulio virpėjimas pikseliais – reikalingas QR atkūrimas kiekvienam kadrui.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Skirstymo parametrai',
+      paragraphs: ['Valdymo perdangos apdorojimo algoritmai:'],
+      bullets: [
+        'ditherKind: Dither algoritmas – error_diffusion, ordered_bayer, blue_noise ir tt (numatytasis: ordered_bayer).',
+        'diffusionKernel: klaidos difuzijos branduolys – floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (numatytasis nustatymas: floyd_steinberg).',
+        'ditherStrength: Dygimo intensyvumas 0–100 (numatytasis: 50).',
+        'serpantinas: Serpantino dithering 0/1 (numatytasis: 0).',
+        'matrica: užsakyta dither matrica - bayer2, bayer4, bayer8 (numatytasis: bayer4).',
+        'bnTile: mėlynos triukšmo plytelės dydis (numatytasis: 64).',
+        'bnSeed: Blue noise atsitiktinė sėkla (numatytasis nustatymas: 0).',
+        'colorDither: spalvų skirstymas – nėra, per_kanalą, suvokiamas (numatytasis: nėra).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpikselio parametrai',
+      paragraphs: ['Subpikselių maišymo režimo nustatymai:'],
+      bullets: [
+        '„spGrid": Subpikselių tinklelio dydis – 2x2, 3x3, 4x4 (numatytasis dydis: 3x3).',
+        'spCenter: Centro taisyklė – griežta, pustonių_centras (numatytasis: griežtas).',
+        'spNeutral: neutralios spalvos šešioliktainis be # (numatytasis: 808080).',
+        'spFinder: ieškiklio nepaisymas – vientisas, stilizuotas (numatytasis: vientisas).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Pustonio parametrai',
+      paragraphs: ['Pustonių maišymo režimo nustatymai:'],
+      bullets: [
+        'htCell: pustonio langelio dydis – per_module arba nxn tinklelis (numatytasis: per_module).',
+        'htDot: taško forma – apskritimas, kvadratas, linija (numatytasis: apskritimas).',
+        'htCurve: Ryškumo kreivė – tiesinė, s kreivė, gama (numatytasis: linijinis).',
+        'duo1: dvispalvės šešėlių spalvos šešioliktainis be # (numatytasis nustatymas: 000000).',
+        'duo2: Duotone paryškinimo šešioliktainė spalva be # (numatytasis nustatymas: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC žinomo režimo parametrai',
+      paragraphs: ['Sumanus perdangos paskirstymas, pagrįstas klaidų taisymo pajėgumu:'],
+      bullets: [
+        'eccAware: įgalinkite ECC suvokimo režimą 0/1 (numatytasis nustatymas: 0).',
+        'eccRisk: rizikos biudžeto procentas 0–100 (numatytasis dydis: 50).',
+        'eccMap: svorio žemėlapis – atstumas iki ieškiklių, bloko_šilumos žemėlapis, empirinis_skanavimo_šilumos žemėlapis (numatytasis: atstumas iki ieškiklių).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Rėmelio parametrai',
+      paragraphs: ['Dekoratyvinio rėmo nustatymai:'],
+      bullets: [
+        'rėmelis: rėmelio stilius – nėra, suapvalintas_rėmas, lipdukas, žyma (numatytasis: nėra).',
+        'frameText: tekstas, kuris rodomas rėmelyje (užkoduotas URL).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Modulio spalvų parametrai',
+      paragraphs: ['Atskirų modulių spalvinimo parinktys:'],
+      bullets: [
+        'modColor: spalvų režimas – vientisas, pagal_ryškumą, pagal_poziciją, pagal_perdangą, pagal_grupę (numatytasis nustatymas: vientisas).',
+        'cGuard: Kontrasto apsauga 0/1 (numatytasis: 0).',
+        'minContrast: Minimalus kontrasto santykis 1-21 (numatytasis: 4,5).',
+        'paletė: kableliais atskirtos šešioliktainės spalvos paletės režimui.',
+        'paletės režimas: paletės paskirstymas – padėtis, ryškumas, įstrižainė, radialinis, atsitiktinis, eilutė, stulpelis (numatytasis: padėtis).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF perdangos parametrai',
+      paragraphs: ['Animuotų GIF perdangos vaizdų nustatymai:'],
+      bullets: [
+        'ovType: perdangos tipas – statinis, gif, apng, webp_anim, vaizdo įrašas (numatytasis: statinis).',
+        'ovFramePick: kadrų pasirinkimas – visi, kas_n, maks. kadrai, trukmės_riba (numatytasis nustatymas: visi).',
+        'gifDelays: naudokite originalų GIF kadrų delsą 0/1 (numatytasis: 1).',
+        'gifDispH: GIF šalinimo tvarkymas – gerbk, supaprastink (numatytasis: pagarba).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Per-ECC intensyvumo ribos',
+      paragraphs: ['Didžiausias perdangos intensyvumas klaidų taisymo lygiu:'],
+      bullets: [
+        'maxIntL: maksimalus intensyvumas ECC L 0-100 (numatytasis: 100).',
+        'maxIntM: maksimalus intensyvumas ECC M 0-100 (numatytasis: 100).',
+        'maxIntQ: maksimalus intensyvumas ECC Q 0-100 (numatytasis: 100).',
+        'maxIntH: maksimalus intensyvumas ECC H 0-100 (numatytasis: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA modeliavimo parametrai (tik klientui)',
+      paragraphs: [
+        'Šie parametrai analizuojami siekiant suderinti URL, bet veikia tik naršyklėje:',
+      ],
+      bullets: [
+        'qaContrast: įgalinti kontrasto patikrinimą 0/1 – reikalingas interaktyvus patvirtinimas.',
+        'qaBlur: imituokite suliejimą pikseliais – tik interaktyviems bandymams.',
+        'qaNoise: imituokite triukšmo lygį – tik interaktyviems bandymams.',
+        'qaHeatmap: Rodyti skaitomumo šilumos žemėlapį 0/1 – reikalinga drobės perdangos vartotojo sąsaja.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Tik klientui skirti parametrai',
+      paragraphs: [
+        'Dauguma API parametrų yra visiškai palaikomi serverio pusėje. Parametrai, pažymėti [CLIENT-ONLY], yra analizuojami, kad būtų suderinami URL, tačiau jiems reikia naršyklės funkcijų:',
+      ],
+      bullets: [
+        'virpėjimas: modulio virpėjimui reikalingas atsitiktinis QR regeneravimas kiekviename kadre.',
+        '„autoReduce": norint automatiškai sumažinti intensyvumą, reikia atlikti kartotinį nuskaitymo testą.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA modeliavimui reikalingas interaktyvus drobės patvirtinimas.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Papildomi išvesties parametrai',
+      paragraphs: ['Išplėstiniai išvesties ir eksporto nustatymai:'],
+      bullets: [
+        'fname: pasirinktinis atsisiuntimo failo pavadinimas (numatytasis: anqr-qrcode).',
+        'inclQz: įtraukite tyliąją zoną į išvesties matmenis 0/1 (numatytasis nustatymas: 1).',
+        'bgOver: fono spalvos nepaisymas šešioliktadienio be # (nepaiso bg parametro).',
+        'fmtExtra: papildomo formato išvestis – nėra, eps, animated_webp (numatytasis: nėra). Pastaba: eps yra [DALINĖ].',
+        'svgPrec: SVG formos tikslumas – pikselis, tikslus (numatytasis: pikselis). [DALINĖ] SVG išvestis apribota serverio pusėje.',
+        'svgEmbed: įterpkite rastrinę perdangą į SVG 0/1 (numatytasis nustatymas: 1). [DALINĖ] SVG išvestis apribota serverio pusėje.',
+        'modulePx: modulio pikselių dydis (numatytasis: automatiškai apskaičiuojamas pagal dydį).',
+        'siena: papildomi kraštiniai moduliai už tyliosios zonos (numatytasis nustatymas: 0).',
+        'crisp: įgalinkite ryškaus / pikselių vaizdo atvaizdavimą 0/1 (numatytasis: 1).',
+        '„Snap": „Pixel Snap" režimas – grindys, apvalios, lubos (numatytasis nustatymas: grindys).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Rašto išsaugojimo parametrai',
+      paragraphs: ['Valdykite, kurie konstrukciniai elementai yra apsaugoti nuo perdangos:'],
+      bullets: [
+        'keepFinders: Išsaugoti ieškiklio šablonus 0/1 (numatytasis nustatymas: 1).',
+        'KeepTiming: Išsaugokite laiko šablonus 0/1 (numatytasis nustatymas: 0).',
+        'KeepAlign: Išsaugokite lygiavimo šablonus 0/1 (numatytasis nustatymas: 0).',
+        'ProtectFmt: Apsaugokite formato informacijos modulius 0/1 (numatytasis: 0).',
+        'ProtectVer: Apsaugokite versijos informacijos modulius 0/1 (numatytasis: 0).',
+      ],
+    },
     {
       heading: 'Naudojimo pavyzdys',
       paragraphs: [

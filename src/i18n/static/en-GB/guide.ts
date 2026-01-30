@@ -927,11 +927,11 @@ export const guide: PageDefinition = {
         'gamma: Value 0.1 to 3 (default: 1).',
         'saturation: Adjustment -100 to 100 (default: 0).',
         'hue: Hue rotation in degrees.',
-        'blur: Blur in pixels.',
-        'sharpen: Sharpen amount 0-100.',
-        'posterize: Posterize levels.',
-        'threshold: Binary threshold 0-255.',
-        'edge: Edge detection - off, sobel, canny.',
+        'blur: Blur radius in pixels (box blur via convolution, max radius 10).',
+        'sharpen: Sharpen amount 0-100 (convolution kernel sharpening).',
+        'posterize: Posterize levels 2-256 (reduces color palette).',
+        'threshold: Binary threshold 0-255 (black/white conversion).',
+        'edge: Edge detection - off, sobel, canny (Sobel/Canny algorithms).',
         'invert: Set to 1 to invert colors.',
       ],
     },
@@ -968,6 +968,204 @@ export const guide: PageDefinition = {
         'gifColors: GIF palette size 2-256 (default: 256).',
         'dpi: Output DPI for PNG (default: 72).',
         'metaTitle, metaAuthor, metaCopy, metaDesc: PNG metadata fields.',
+      ],
+    },
+    // Crop Parameters
+    {
+      heading: 'Crop Parameters',
+      paragraphs: ['Overlay image cropping options:'],
+      bullets: [
+        'cropEn: Enable overlay cropping 0/1 (default: 0).',
+        'cropX: Crop center X as fraction 0-1 (default: 0.5).',
+        'cropY: Crop center Y as fraction 0-1 (default: 0.5).',
+        'cropSize: Crop size as fraction of image 0-1 (default: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Safety Lock Parameters',
+      paragraphs: ['Control which QR elements are protected from overlay modification:'],
+      bullets: [
+        'lockF: Lock finder patterns 0/1 (default: 1).',
+        'lockT: Lock timing patterns 0/1 (default: 1).',
+        'lockA: Lock alignment patterns 0/1 (default: 1).',
+        'lockFmt: Lock format info 0/1 (default: 1).',
+        'lockV: Lock version info 0/1 (default: 1).',
+        'safeMode: Safety mode - off, balanced, strict (default: off).',
+        'safeMinPx: Minimum module size in pixels (default: 2).',
+        'safeMinQz: Minimum quiet zone modules (default: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: 'Auto-tuning Parameters',
+      paragraphs: ['Automatic optimization settings:'],
+      bullets: [
+        'autoVer: Auto-pick QR version 0/1 (default: 1).',
+        'autoEcc: Auto-pick ECC level 0/1 (default: 0) - server-side hint only.',
+        'autoReduce: [CLIENT-ONLY] Auto-reduce intensity until scannable - requires scan validation loop.',
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: 'Additional Animation Parameters',
+      paragraphs: ['Extended animation controls for GIF output:'],
+      bullets: [
+        'loop: Animation loops continuously 0/1 (default: 1).',
+        'bounce: Ping-pong animation direction 0/1 (default: 0).',
+        'reverse: Play animation in reverse 0/1 (default: 0).',
+        'colorCycle: Enable color cycling effect 0/1 (default: 0).',
+        'interp: Frame interpolation - none, crossfade, morph (default: none).',
+        'tempDither: Temporal dithering - off, blue_noise, flicker_safe (default: off).',
+        'startF: Animation start frame (default: 0).',
+        'maxF: Maximum frames to render (default: 0 = auto).',
+        'stepF: Frame step interval (default: 1).',
+        'jitter: [CLIENT-ONLY] Module jitter in pixels - requires per-frame QR regeneration.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Dithering Parameters',
+      paragraphs: ['Control dithering algorithms for overlay processing:'],
+      bullets: [
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, etc (default: ordered_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
+        'ditherStrength: Dither intensity 0-100 (default: 50).',
+        'serpentine: Serpentine dithering 0/1 (default: 0).',
+        'matrix: Ordered dither matrix - bayer2, bayer4, bayer8 (default: bayer4).',
+        'bnTile: Blue noise tile size (default: 64).',
+        'bnSeed: Blue noise random seed (default: 0).',
+        'colorDither: Color dithering - none, per_channel, perceptual (default: none).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Subpixel Parameters',
+      paragraphs: ['Settings for subpixel blend mode:'],
+      bullets: [
+        'spGrid: Subpixel grid size - 2x2, 3x3, 4x4 (default: 3x3).',
+        'spCenter: Center rule - strict, halftone_center (default: strict).',
+        'spNeutral: Neutral color hex without # (default: 808080).',
+        'spFinder: Finder override - solid, stylized (default: solid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Halftone Parameters',
+      paragraphs: ['Settings for halftone blend mode:'],
+      bullets: [
+        'htCell: Halftone cell size - per_module or nxn grid (default: per_module).',
+        'htDot: Dot shape - circle, square, line (default: circle).',
+        'htCurve: Brightness curve - linear, s-curve, gamma (default: linear).',
+        'duo1: Duotone shadow color hex without # (default: 000000).',
+        'duo2: Duotone highlight color hex without # (default: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'ECC-Aware Mode Parameters',
+      paragraphs: ['Intelligent overlay distribution based on error correction capacity:'],
+      bullets: [
+        'eccAware: Enable ECC-aware mode 0/1 (default: 0).',
+        'eccRisk: Risk budget percentage 0-100 (default: 50).',
+        'eccMap: Weight map - distance_to_finders, block_heatmap, empirical_scan_heatmap (default: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Frame Parameters',
+      paragraphs: ['Decorative frame settings:'],
+      bullets: [
+        'frame: Frame style - none, rounded_frame, sticker, tag (default: none).',
+        'frameText: Text to display in frame (URL encoded).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Per-Module Color Parameters',
+      paragraphs: ['Individual module coloring options:'],
+      bullets: [
+        'modColor: Color mode - solid, by_brightness, by_position, by_overlay, by_cluster (default: solid).',
+        'cGuard: Contrast guard 0/1 (default: 0).',
+        'minContrast: Minimum contrast ratio 1-21 (default: 4.5).',
+        'palette: Comma-separated hex colors for palette mode.',
+        'paletteMode: Palette distribution - position, brightness, diagonal, radial, random, row, column (default: position).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'GIF Overlay Parameters',
+      paragraphs: ['Settings for animated GIF overlay images:'],
+      bullets: [
+        'ovType: Overlay type - static, gif, apng, webp_anim, video (default: static).',
+        'ovFramePick: Frame selection - all, every_n, max_frames, duration_limit (default: all).',
+        'gifDelays: Use original GIF frame delays 0/1 (default: 1).',
+        'gifDispH: GIF disposal handling - respect, simplify (default: respect).',
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: 'Per-ECC Intensity Limits',
+      paragraphs: ['Maximum overlay intensity per error correction level:'],
+      bullets: [
+        'maxIntL: Max intensity for ECC L 0-100 (default: 100).',
+        'maxIntM: Max intensity for ECC M 0-100 (default: 100).',
+        'maxIntQ: Max intensity for ECC Q 0-100 (default: 100).',
+        'maxIntH: Max intensity for ECC H 0-100 (default: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'QA Simulation Parameters (Client-Only)',
+      paragraphs: [
+        'These parameters are parsed for URL compatibility but only work in the browser:',
+      ],
+      bullets: [
+        'qaContrast: Enable contrast check 0/1 - requires interactive validation.',
+        'qaBlur: Simulate blur in pixels - for interactive testing only.',
+        'qaNoise: Simulate noise level - for interactive testing only.',
+        'qaHeatmap: Show readability heatmap 0/1 - requires canvas overlay UI.',
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Client-Only Parameters',
+      paragraphs: [
+        'Most API parameters are fully supported server-side. Parameters marked [CLIENT-ONLY] are parsed for URL compatibility but require browser features:',
+      ],
+      bullets: [
+        'jitter: Module jitter requires per-frame QR regeneration with randomness.',
+        'autoReduce: Auto-reduce intensity requires iterative scan testing.',
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: QA simulation requires interactive canvas validation.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Additional Output Parameters',
+      paragraphs: ['Extended output and export settings:'],
+      bullets: [
+        'fname: Custom filename for downloads (default: anqr-qrcode).',
+        'inclQz: Include quiet zone in output dimensions 0/1 (default: 1).',
+        'bgOver: Background color override hex without # (overrides bg parameter).',
+        'fmtExtra: Additional format output - none, eps, animated_webp (default: none). Note: eps is [PARTIAL].',
+        'svgPrec: SVG shape precision - pixel, precise (default: pixel). [PARTIAL] SVG output limited server-side.',
+        'svgEmbed: Embed raster overlay in SVG 0/1 (default: 1). [PARTIAL] SVG output limited server-side.',
+        'modulePx: Module pixel size (default: auto-calculated from size).',
+        'border: Extra border modules beyond quiet zone (default: 0).',
+        'crisp: Enable crisp/pixelated image rendering 0/1 (default: 1).',
+        'snap: Pixel snap mode - floor, round, ceil (default: floor).',
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Pattern Preservation Parameters',
+      paragraphs: ['Control which structural elements are protected from overlay:'],
+      bullets: [
+        'keepFinders: Preserve finder patterns 0/1 (default: 1).',
+        'keepTiming: Preserve timing patterns 0/1 (default: 0).',
+        'keepAlign: Preserve alignment patterns 0/1 (default: 0).',
+        'protectFmt: Protect format info modules 0/1 (default: 0).',
+        'protectVer: Protect version info modules 0/1 (default: 0).',
       ],
     },
     {

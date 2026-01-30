@@ -3,6 +3,7 @@
  * Geometric transformations for overlay images
  */
 
+import { preprocessImageData } from './filters-preprocess';
 import type { CreateCanvasFn, QRGeneratorConfig } from './types';
 
 /**
@@ -84,8 +85,7 @@ export async function preprocessOverlay(
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  // Import and apply filters
-  const { preprocessImageData } = await import('./filters-preprocess');
+  // Apply filters
   const processed = preprocessImageData(imageData, config);
 
   // Create output canvas

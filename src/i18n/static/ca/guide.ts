@@ -978,6 +978,208 @@ export const guide: PageDefinition = {
         'metatitle, metauthor, metacopia, meta Camps de metadades PNG.',
       ],
     },
+    // Crop Parameters
+    {
+      heading: 'Paràmetres de cultiu',
+      paragraphs: ['Opcions de retall de la imatge de superposició:'],
+      bullets: [
+        'cropEn: activa el retall de superposició 0/1 (per defecte: 0).',
+        'cropX: retalla el centre X com a fracció 0-1 (per defecte: 0,5).',
+        'cropY: retalla el centre Y com a fracció 0-1 (per defecte: 0,5).',
+        'cropSize: retalla la mida com a fracció de la imatge 0-1 (per defecte: 1).',
+      ],
+    },
+    // Safety Lock Parameters
+    {
+      heading: 'Paràmetres de bloqueig de seguretat',
+      paragraphs: [
+        'Controleu quins elements QR estan protegits de la modificació de la superposició:',
+      ],
+      bullets: [
+        'lockF: Patrons de cerca de bloqueig 0/1 (per defecte: 1).',
+        'lockT: Patrons de temporització de bloqueig 0/1 (per defecte: 1).',
+        "lockA: patrons d'alineació de bloqueig 0/1 (per defecte: 1).",
+        'lockFmt: informació de format de bloqueig 0/1 (per defecte: 1).',
+        'lockV: Bloqueja la informació de la versió 0/1 (per defecte: 1).',
+        'safeMode: mode de seguretat: desactivat, equilibrat, estricte (per defecte: desactivat).',
+        'safeMinPx: Mida mínima del mòdul en píxels (per defecte: 2).',
+        'safeMinQz: mòduls mínims de zones tranquil·les (per defecte: 4).',
+      ],
+    },
+    // Auto-tuning Parameters
+    {
+      heading: "Paràmetres d'autoajustament",
+      paragraphs: ["Configuració d'optimització automàtica:"],
+      bullets: [
+        'autoVer: Tria automàticament la versió QR 0/1 (per defecte: 1).',
+        'autoEcc: Tria automàticament el nivell ECC 0/1 (per defecte: 0) - només la pista del servidor.',
+        "autoReduce: [NOMÉS PER A CLIENT] Redueix automàticament la intensitat fins que es pugui escanejar: requereix un bucle de validació d'escaneig.",
+      ],
+    },
+    // Additional Animation Parameters
+    {
+      heading: "Paràmetres d'animació addicionals",
+      paragraphs: ["Controls d'animació ampliats per a la sortida GIF:"],
+      bullets: [
+        "bucle: l'animació fa bucles contínuament 0/1 (per defecte: 1).",
+        "rebot: direcció d'animació de ping-pong 0/1 (per defecte: 0).",
+        "inversa: reprodueix l'animació al revés 0/1 (per defecte: 0).",
+        "colorCycle: activa l'efecte de cicle de color 0/1 (per defecte: 0).",
+        'interp: interpolació de fotogrames - none, crossfade, morph (per defecte: none).',
+        'tempDither: tramado temporal: desactivat, blue_noise, flicker_safe (per defecte: desactivat).',
+        "startF: fotograma inicial de l'animació (per defecte: 0).",
+        'maxF: nombre màxim de fotogrames per renderitzar (per defecte: 0 = automàtic).',
+        'stepF: interval de pas de fotograma (per defecte: 1).',
+        'jitter: [NOMÉS PER A CLIENT] Oscil·lació del mòdul en píxels: requereix regeneració de QR per fotograma.',
+      ],
+    },
+    // Dithering Parameters
+    {
+      heading: 'Paràmetres de tramado',
+      paragraphs: ['Controla els algorismes de tramado per al processament de superposició:'],
+      bullets: [
+        'ditherKind: algorisme de dither - error_diffusion, ordered_bayer, blue_noise, etc. (per defecte: ordered_bayer).',
+        "diffusionKernel: Nucli de difusió d'error - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (per defecte: floyd_steinberg).",
+        'ditherStrength: intensitat de dither 0-100 (per defecte: 50).',
+        'serpentina: tramado de serpentina 0/1 (per defecte: 0).',
+        'matriu: matriu de tramado ordenada: bayer2, bayer4, bayer8 (per defecte: bayer4).',
+        'bnTile: mida del quadre de soroll blau (per defecte: 64).',
+        'bnSeed: llavor aleatòria de soroll blau (per defecte: 0).',
+        'colorDither: tramado de color: cap, per_canal, perceptiu (per defecte: cap).',
+      ],
+    },
+    // Subpixel Parameters
+    {
+      heading: 'Paràmetres de subpíxels',
+      paragraphs: ['Configuració per al mode de combinació de subpíxels:'],
+      bullets: [
+        'spGrid: mida de la quadrícula de subpíxels: 2x2, 3x3, 4x4 (per defecte: 3x3).',
+        'spCenter: Regla central: estricte, centre de mitges tons (per defecte: estricte).',
+        'spNeutral: hexadecimal de color neutre sense # (per defecte: 808080).',
+        'spFinder: substitució del cercador - sòlid, estilitzat (per defecte: sòlid).',
+      ],
+    },
+    // Halftone Parameters
+    {
+      heading: 'Paràmetres de mitges tintes',
+      paragraphs: ['Configuració del mode de combinació de mitges tintes:'],
+      bullets: [
+        'htCell: mida de cel·la de mitges tons: per_mòdul o quadrícula nxn (per defecte: per_mòdul).',
+        'htDot: forma de punt - cercle, quadrat, línia (per defecte: cercle).',
+        'htCurve: corba de brillantor - lineal, corba s, gamma (per defecte: lineal).',
+        "duo1: hexadecimal de color d'ombra duoton sense # (per defecte: 000000).",
+        'duo2: hexadecimal de color de ressaltat biton sense # (per defecte: ffffff).',
+      ],
+    },
+    // ECC-Aware Mode Parameters
+    {
+      heading: 'Paràmetres del mode ECC-Aware',
+      paragraphs: [
+        "Distribució intel·ligent de superposició basada en la capacitat de correcció d'errors:",
+      ],
+      bullets: [
+        "eccAware: activa el mode d'ECC-aware 0/1 (per defecte: 0).",
+        'eccRisk: percentatge del pressupost de risc 0-100 (per defecte: 50).',
+        'eccMap: mapa de pes - distance_to_finders, block_heatmap, empirical_scan_heatmap (per defecte: distance_to_finders).',
+      ],
+    },
+    // Frame Parameters
+    {
+      heading: 'Paràmetres del marc',
+      paragraphs: ['Configuració del marc decoratiu:'],
+      bullets: [
+        'marc: estil de marc: cap, marc_arrodonit, adhesiu, etiqueta (per defecte: cap).',
+        'frameText: text per mostrar al marc (URL codificat).',
+      ],
+    },
+    // Per-Module Color Parameters
+    {
+      heading: 'Paràmetres de color per mòdul',
+      paragraphs: ['Opcions de coloració de mòduls individuals:'],
+      bullets: [
+        'modColor: mode de color: sòlid, per_brillante, per_posició, per_superposició, per_cluster (per defecte: sòlid).',
+        'cGuard: protecció de contrast 0/1 (per defecte: 0).',
+        'minContrast: relació de contrast mínima 1-21 (per defecte: 4,5).',
+        'paleta: colors hexadecimals separats per comes per al mode de paleta.',
+        'paletteMode: distribució de la paleta: posició, brillantor, diagonal, radial, aleatori, fila, columna (per defecte: posició).',
+      ],
+    },
+    // GIF Overlay Parameters
+    {
+      heading: 'Paràmetres de superposició GIF',
+      paragraphs: ['Configuració per a imatges de superposició GIF animades:'],
+      bullets: [
+        'ovType: tipus de superposició: estàtic, gif, apng, webp_anim, vídeo (per defecte: estàtic).',
+        'ovFramePick: selecció de fotogrames - all, every_n, max_frames, duration_limit (per defecte: tots).',
+        'gifDelays: utilitza retards de fotogrames GIF originals 0/1 (per defecte: 1).',
+        "gifDispH: gestió de l'eliminació de GIF: respectar, simplificar (per defecte: respectar).",
+      ],
+    },
+    // Per-ECC Intensity Limits
+    {
+      heading: "Límits d'intensitat per ECC",
+      paragraphs: ["Intensitat màxima de superposició per nivell de correcció d'errors:"],
+      bullets: [
+        'maxIntL: intensitat màxima per a ECC L 0-100 (per defecte: 100).',
+        'maxIntM: intensitat màxima per a ECC M 0-100 (per defecte: 100).',
+        'maxIntQ: intensitat màxima per a ECC Q 0-100 (per defecte: 100).',
+        'maxIntH: intensitat màxima per a ECC H 0-100 (per defecte: 100).',
+      ],
+    },
+    // QA Simulation Parameters (Client-Only)
+    {
+      heading: 'Paràmetres de simulació de control de qualitat (només per al client)',
+      paragraphs: [
+        "Aquests paràmetres s'analitzen per a la compatibilitat d'URL, però només funcionen al navegador:",
+      ],
+      bullets: [
+        'qaContrast: activa la comprovació de contrast 0/1: requereix validació interactiva.',
+        'qaBlur: simula el desenfocament en píxels, només per a proves interactives.',
+        'qaNoise: simula el nivell de soroll, només per a proves interactives.',
+        "qaHeatmap: mostra el mapa de calor de llegibilitat 0/1: requereix una interfície d'usuari de superposició de llenç.",
+      ],
+    },
+    // Client-Only Parameters
+    {
+      heading: 'Paràmetres només per al client',
+      paragraphs: [
+        "La majoria dels paràmetres de l'API són totalment compatibles amb el servidor. Els paràmetres marcats com [NOMÉS PER A CLIENT] s'analitzen per a la compatibilitat d'URL, però requereixen funcions del navegador:",
+      ],
+      bullets: [
+        'jitter: el jitter del mòdul requereix una regeneració de QR per fotograma amb aleatorietat.',
+        "autoReduce: la reducció automàtica d'intensitat requereix proves d'exploració iteratives.",
+        'qaContrast, qaBlur, qaNoise, qaHeatmap: la simulació de control de qualitat requereix la validació interactiva del llenç.',
+      ],
+    },
+    // Additional Output Parameters
+    {
+      heading: 'Paràmetres de sortida addicionals',
+      paragraphs: ['Configuració de sortida i exportació ampliada:'],
+      bullets: [
+        'fname: nom de fitxer personalitzat per a les baixades (per defecte: anqr-qrcode).',
+        'inclQz: Inclou la zona tranquil·la a les dimensions de sortida 0/1 (per defecte: 1).',
+        "bgOver: el color de fons anul·la l'hexadecimal sense # (substitueix el paràmetre bg).",
+        'fmtExtra: sortida de format addicional: cap, eps, animated_webp (per defecte: cap). Nota: eps és [PARCIAL].',
+        'svgPrec: precisió de la forma SVG - píxel, precís (per defecte: píxel). [PARCIAL] Sortida SVG limitada al costat del servidor.',
+        'svgEmbed: incrusta una superposició de ràster a SVG 0/1 (per defecte: 1). [PARCIAL] Sortida SVG limitada al costat del servidor.',
+        'modulePx: mida del píxel del mòdul (per defecte: es calcula automàticament a partir de la mida).',
+        'border: mòduls de vora addicionals més enllà de la zona tranquil·la (per defecte: 0).',
+        "nítid: activa la representació d'imatges nítides/pixelades 0/1 (per defecte: 1).",
+        "snap: mode d'ajust de píxels: pis, rodó, sostre (per defecte: pis).",
+      ],
+    },
+    // Pattern Preservation Parameters
+    {
+      heading: 'Paràmetres de preservació del patró',
+      paragraphs: ['Controleu quins elements estructurals estan protegits de la superposició:'],
+      bullets: [
+        'keepFinders: conserva els patrons del cercador 0/1 (per defecte: 1).',
+        'keepTiming: conserva els patrons de temporització 0/1 (per defecte: 0).',
+        "keepAlign: conserva els patrons d'alineació 0/1 (per defecte: 0).",
+        "protectFmt: Protegeix els mòduls d'informació de format 0/1 (per defecte: 0).",
+        "protectVer: Protegeix els mòduls d'informació de versió 0/1 (per defecte: 0).",
+      ],
+    },
     {
       heading: "Ús d' exemple",
       paragraphs: [
