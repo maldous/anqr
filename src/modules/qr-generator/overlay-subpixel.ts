@@ -129,6 +129,6 @@ export async function generateSubpixelMatrix(
     colors: colorMatrix,
     scale,
     overlayData: null,
-    effectiveIntensity: intensity,
+    effectiveIntensity: intensity * 100, // Return as percentage (0-100) for consistency
   };
 }
