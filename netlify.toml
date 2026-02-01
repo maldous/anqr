@@ -7,6 +7,23 @@
   node_bundler = "esbuild"
 
 # ============================================
+# Security Headers (applied to all routes)
+# ============================================
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Prevent MIME type sniffing
+    X-Content-Type-Options = "nosniff"
+    # Prevent clickjacking
+    X-Frame-Options = "SAMEORIGIN"
+    # Control referrer information
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Restrict browser features
+    Permissions-Policy = "accelerometer=(), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+    # Content Security Policy - Allow inline scripts/styles for React, Google services, and iubenda
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https://www.google-analytics.com https://pagead2.googlesyndication.com https://*.iubenda.com https://*.netlify.app https://anqr.link; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
+
+# ============================================
 # Cache Headers
 # ============================================
 

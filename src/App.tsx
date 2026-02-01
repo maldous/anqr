@@ -190,19 +190,28 @@ function App() {
     document.documentElement.lang = i18n.language.split('-')[0];
 
     // Update hreflang links for SEO
-    // Only add hreflang for static pages that have translations
+    // Add hreflang for all translatable pages (static pages and editor)
     const staticPageTypes = ['learn', 'examples', 'guide', 'about', 'privacy', 'terms', 'contact'];
     const isStaticPage = staticPageTypes.includes(currentPage);
+    const shouldAddHreflang = isStaticPage || showEditor;
 
-    // Remove existing hreflang links
+    // Remove existing hreflang links (including static ones from index.html)
     for (const el of document.querySelectorAll('link[rel="alternate"][hreflang]')) {
       el.remove();
     }
 
     // Add hreflang links for translatable pages
-    if (isStaticPage || showEditor) {
-      const basePath = showEditor ? '' : `/${currentPage}`;
+    if (shouldAddHreflang) {
       const baseUrl = 'https://anqr.link';
+      // For editor (root), use '/' as path; for other pages, use '/page'
+      const pagePath = showEditor ? '/' : `/${currentPage}`;
+
+      // Add x-default pointing to English version first
+      const xDefaultLink = document.createElement('link');
+      xDefaultLink.rel = 'alternate';
+      xDefaultLink.hreflang = 'x-default';
+      xDefaultLink.href = `${baseUrl}${pagePath}`;
+      document.head.appendChild(xDefaultLink);
 
       // Add hreflang for each supported language
       for (const lang of languages) {
@@ -210,19 +219,13 @@ function App() {
         link.rel = 'alternate';
         // Use 'en' for en-GB (broader match), lowercase for others
         link.hreflang = lang.code === 'en-GB' ? 'en' : lang.code.toLowerCase();
+        // en-GB is the default, so no lang parameter; others get ?lang=code
         link.href =
           lang.code === 'en-GB'
-            ? `${baseUrl}${basePath || '/'}`
-            : `${baseUrl}${basePath || '/'}?lang=${lang.code}`;
+            ? `${baseUrl}${pagePath}`
+            : `${baseUrl}${pagePath}?lang=${lang.code}`;
         document.head.appendChild(link);
       }
-
-      // Add x-default pointing to English version
-      const xDefaultLink = document.createElement('link');
-      xDefaultLink.rel = 'alternate';
-      xDefaultLink.hreflang = 'x-default';
-      xDefaultLink.href = `${baseUrl}${basePath || '/'}`;
-      document.head.appendChild(xDefaultLink);
     }
 
     // Update canonical URL based on current page and language

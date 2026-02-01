@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import compression from 'vite-plugin-compression';
@@ -9,6 +10,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 // Android WebView doesn't use pre-compressed .gz/.br files anyway
 const isAndroidBuild =
   process.env.CAPACITOR_PLATFORM === 'android' || process.env.npm_lifecycle_event?.includes('cap');
+
+// Sentry source map upload configuration
+// Only enable when SENTRY_AUTH_TOKEN is set (CI/production builds)
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+const sentryOrg = process.env.SENTRY_ORG || 'anqr';
+const sentryProject = process.env.SENTRY_PROJECT || 'anqr-web';
+// Generate release name from package.json version or git commit
+const sentryRelease = process.env.SENTRY_RELEASE || `anqr@${process.env.npm_package_version || '1.0.0'}`;
 
 // Custom middleware to serve static files from public/gallery before SPA fallback
 function serveGalleryFiles() {
@@ -57,6 +66,8 @@ function getEnvDefines() {
       defines[`import.meta.env.${key}`] = JSON.stringify(process.env[key]);
     }
   }
+  // Inject Sentry release name for SDK initialization
+  defines['import.meta.env.VITE_SENTRY_RELEASE'] = JSON.stringify(sentryRelease);
   return defines;
 }
 
@@ -81,6 +92,30 @@ export default defineConfig({
             algorithm: 'brotliCompress',
             ext: '.br',
             threshold: 1024,
+          }),
+        ]
+      : []),
+    // Sentry source map upload plugin (only enabled when auth token is provided)
+    ...(sentryAuthToken
+      ? [
+          sentryVitePlugin({
+            org: sentryOrg,
+            project: sentryProject,
+            authToken: sentryAuthToken,
+            release: {
+              name: sentryRelease,
+              deploy: {
+                env: process.env.NODE_ENV || 'production',
+              },
+            },
+            sourcemaps: {
+              assets: ['./dist/**/*.js', './dist/**/*.js.map'],
+              ignore: ['node_modules/**'],
+              // Delete source maps after upload to avoid exposing them publicly
+              filesToDeleteAfterUpload: ['./dist/**/*.js.map'],
+            },
+            // Disable telemetry
+            telemetry: false,
           }),
         ]
       : []),
@@ -268,6 +303,8 @@ export default defineConfig({
     },
   },
   build: {
+    // Enable source maps for Sentry (they're deleted after upload)
+    sourcemap: true,
     // Target modern browsers for smaller bundles
     target: 'es2020',
     // Enable CSS code splitting for better caching

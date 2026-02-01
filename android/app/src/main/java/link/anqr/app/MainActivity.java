@@ -11,6 +11,9 @@ import androidx.core.view.WindowCompat;
 
 import com.getcapacitor.BridgeActivity;
 
+import io.sentry.Sentry;
+import io.sentry.android.core.SentryAndroid;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
@@ -20,8 +23,12 @@ public class MainActivity extends BridgeActivity {
 
   private static boolean activityCallbacksRegistered = false;
   private static boolean cmpInitialized = false;
+  private static boolean sentryInitialized = false;
 
   private static final String TAG = "ANQR";
+  
+  // Sentry DSN for native Android crash reporting
+  private static final String SENTRY_DSN = "https://e21ce35eef457e8b07408316ee9cb262@o4510808522489856.ingest.us.sentry.io/4510808544247808";
   
   // iubenda CMP configuration
   private static final String IUBENDA_WIDGET_ID = "28e23ca9-eb78-41ab-ac5e-46b90c7791c7";
@@ -47,6 +54,9 @@ public class MainActivity extends BridgeActivity {
     
     super.onCreate(savedInstanceState);
     Log.e(TAG, "Capacitor bridge initialized");
+    
+    // Initialize Sentry for crash reporting (must be before other initializations)
+    initializeSentry();
     
     // Initialize iubenda CMP SDK for consent management
     initializeConsentManager();
@@ -83,6 +93,40 @@ public class MainActivity extends BridgeActivity {
         @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
         @Override public void onActivityDestroyed(Activity activity) {}
       });
+    }
+  }
+  
+  /**
+   * Initialize Sentry for native Android crash reporting and error tracking
+   * This captures native crashes that occur outside the WebView
+   */
+  private void initializeSentry() {
+    if (sentryInitialized) {
+      Log.e(TAG, "Sentry already initialized, skipping");
+      return;
+    }
+    
+    try {
+      Log.e(TAG, "Initializing Sentry SDK");
+      
+      SentryAndroid.init(this, options -> {
+        options.setDsn(SENTRY_DSN);
+        options.setSendDefaultPii(true);
+        // Set sample rates for performance monitoring
+        options.setTracesSampleRate(0.1); // 10% of transactions
+        // Set app name for easier identification in Sentry dashboard
+        options.setRelease("link.anqr.app@" + BuildConfig.VERSION_NAME);
+        options.setEnvironment(BuildConfig.DEBUG ? "development" : "production");
+      });
+      
+      // Add breadcrumb to indicate successful initialization
+      Sentry.addBreadcrumb("Sentry SDK initialized successfully");
+      
+      sentryInitialized = true;
+      Log.e(TAG, "Sentry SDK initialized successfully");
+      
+    } catch (Exception e) {
+      Log.e(TAG, "Failed to initialize Sentry SDK", e);
     }
   }
   
