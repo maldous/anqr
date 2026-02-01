@@ -1,3 +1,13 @@
+// Initialize Sentry for error tracking (must be first import)
+import * as Sentry from '@sentry/node';
+
+Sentry.init({
+  dsn: 'https://6935e811c47169e037e31209f2d46fbd@o4510808522489856.ingest.us.sentry.io/4510808547917824',
+  sendDefaultPii: true,
+  tracesSampleRate: 0.1, // 10% of transactions for performance monitoring
+  environment: 'production',
+});
+
 /**
  * Netlify Function: QR Code Image Generator
  *
@@ -2356,6 +2366,8 @@ async function handler(request: Request) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('QR generation error:', error);
+    // Report error to Sentry
+    Sentry.captureException(error);
     return new Response(`Error generating QR code: ${message}`, {
       status: 500,
       headers: { 'Access-Control-Allow-Origin': '*' },

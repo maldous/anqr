@@ -156,3 +156,11 @@
 -keep class net.consentmanager.** { *; }
 -keep interface net.consentmanager.** { *; }
 -dontwarn net.consentmanager.**
+
+# ============================================
+# Sentry SDK (Crash Reporting)
+# ============================================
+-keep class io.sentry.** { *; }
+-keep interface io.sentry.** { *; }
+-keepclassmembers class io.sentry.** { *; }
+-dontwarn io.sentry.**

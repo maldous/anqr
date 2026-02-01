@@ -1,6 +1,9 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  // Sentry release version for source map matching
+  readonly VITE_SENTRY_RELEASE: string;
+  // AdSense configuration
   readonly VITE_ADSENSE_ENABLED: string;
   // Main app ads
   readonly VITE_ADSENSE_SLOT_LEFT_SKYSCRAPER: string;

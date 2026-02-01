@@ -134,6 +134,9 @@ dependencies {
     
     // iubenda CMP SDK for GDPR/CCPA consent management
     implementation "net.consentmanager.sdkv3:cmsdkv3:3.6.0"
+    
+    // Sentry SDK for crash reporting and error tracking
+    implementation 'io.sentry:sentry-android:8.10.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
