@@ -1786,3 +1786,8 @@
 1786	"30 janar 2026"
 1787	"Regjistri i korrigjimit të gabimeve dhe pamja hex demp për analizën teknike QR"
 1788	"Mbivendosjet e imazhit"
+1789	"1 shkurt 2026"
+1790	"E RE: Analizuesi i kodit QR - skanoni, deshifroni dhe inspektoni çdo kod QR në detaje"
+1791	"Analizoni regjistrimet, ngarkimet ose URL-të e kamerës me ndarje të plotë teknike"
+1792	"Importoni kodet QR të analizuara drejtpërdrejt në gjenerator për të modifikuar dhe rikrijuar"
+1793	"Optimizimet e performancës me ngarkimin dinamik të fontit dhe aksesueshmërinë e përmirësuar"

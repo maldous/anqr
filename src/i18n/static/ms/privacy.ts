@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Kebijakan Privasi',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Dasar Privasi Penuh',
       paragraphs: ['Halaman ini menyediakan ringkasan amalan privasi kami. Untuk mendapatkan dasar privasi yang lengkap dan mengikat secara sah dengan butiran lengkap tentang pemprosesan data, hak anda dan kewajipan kami di bawah GDPR, CCPA dan undang-undang privasi lain, sila lihat dasar penuh kami yang dihoskan oleh iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Lihat Dasar Privasi Penuh di iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Lihat Dasar Privasi Penuh di iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

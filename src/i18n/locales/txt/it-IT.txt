@@ -1786,3 +1786,8 @@
 1786	"30 gennaio 2026"
 1787	"Registro di debug e vista dump esadecimale per analisi QR tecniche"
 1788	"Sovrapposizioni di immagini"
+1789	"1 febbraio 2026"
+1790	"NOVITÀ: Analizzatore di codici QR: scansiona, decodifica e ispeziona qualsiasi codice QR in dettaglio"
+1791	"Analizza le acquisizioni, i caricamenti o gli URL della fotocamera con un'analisi tecnica completa"
+1792	"Importa i codici QR analizzati direttamente nel generatore per modificarli e ricrearli"
+1793	"Ottimizzazioni delle prestazioni con caricamento dinamico dei caratteri e migliore accessibilità"

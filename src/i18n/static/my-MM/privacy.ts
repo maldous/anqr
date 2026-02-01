@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'ကိုယ်ရေးအချက်အလက်မူဝါဒ',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'ကိုယ်ရေးကိုယ်တာ မူဝါဒ အပြည့်အစုံ',
       paragraphs: ['ဤစာမျက်နှာသည် ကျွန်ုပ်တို့၏ ကိုယ်ရေးကိုယ်တာအလေ့အကျင့်များ၏ အကျဉ်းချုပ်ကို ပေးပါသည်။ ဒေတာလုပ်ဆောင်ခြင်း၊ သင်၏အခွင့်အရေးများနှင့် GDPR၊ CCPA နှင့် အခြားကိုယ်ရေးကိုယ်တာဥပဒေများအောက်ရှိ ကျွန်ုပ်တို့၏တာဝန်ဝတ္တရားများ အပြည့်အစုံပါရှိသော အချက်အလက်အပြည့်အစုံဖြင့် တရားဝင်စည်းနှောင်ထားသော ကိုယ်ရေးကိုယ်တာမူဝါဒအတွက်၊ iubenda မှ စီစဉ်ဆောင်ရွက်ပေးသည့် ကျွန်ုပ်တို့၏မူဝါဒအပြည့်အစုံကို ကြည့်ရှုပါ။'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda ရှိ ကိုယ်ရေးကိုယ်တာ မူဝါဒ အပြည့်အစုံကို ကြည့်ပါ။', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda ရှိ ကိုယ်ရေးကိုယ်တာ မူဝါဒ အပြည့်အစုံကို ကြည့်ပါ။',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

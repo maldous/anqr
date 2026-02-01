@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Zásady ochrany osobných údajov',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Úplné zásady ochrany osobných údajov',
       paragraphs: ['Táto stránka poskytuje súhrn našich postupov ochrany osobných údajov. Úplné, právne záväzné zásady ochrany osobných údajov s úplnými podrobnosťami o spracovaní údajov, vašich právach a našich povinnostiach podľa GDPR, CCPA a iných zákonov o ochrane osobných údajov nájdete v našich úplných zásadách, ktorých hostiteľom je iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Zobraziť úplné zásady ochrany osobných údajov na iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Zobraziť úplné zásady ochrany osobných údajov na iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

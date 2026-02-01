@@ -1786,3 +1786,8 @@
 1786	"30. januar 2026"
 1787	"Feilsøkingslogg og hex-dumpvisning for teknisk QR-analyse"
 1788	"Bildeoverlegg"
+1789	"1. februar 2026"
+1790	"NYHET: QR Code Analyzer - skann, dekod og inspiser enhver QR-kode i detalj"
+1791	"Analyser kameraopptak, opplastinger eller URL-er med fullstendig teknisk oversikt"
+1792	"Importer analyserte QR-koder direkte inn i generatoren for å endre og gjenskape"
+1793	"Ytelsesoptimaliseringer med dynamisk skriftinnlasting og forbedret tilgjengelighet"

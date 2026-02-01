@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Купуялык саясаты',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Толук Купуялык саясаты',
       paragraphs: ['Бул барак биздин купуялык практикабыздын кыскача баяндамасын берет. Маалыматтарды иштетүү, сиздин укуктарыңыз жана GDPR, CCPA жана башка купуялык мыйзамдары боюнча милдеттенмелерибиз менен толук, юридикалык жактан милдеттүү купуялык саясатын көрүү үчүн iubenda тарабынан уюштурулган толук саясатыбызды караңыз.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Толук Купуялык саясатын iubendaдан көрүңүз', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Толук Купуялык саясатын iubendaдан көрүңүз',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

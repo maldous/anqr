@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Política de privadesa',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Política de privadesa completa',
       paragraphs: ['Aquesta pàgina ofereix un resum de les nostres pràctiques de privadesa. Per obtenir la política de privadesa completa i legalment vinculant amb tots els detalls sobre el processament de dades, els vostres drets i les nostres obligacions en virtut del GDPR, CCPA i altres lleis de privadesa, consulteu la nostra política completa allotjada per iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Consulta la Política de privadesa completa a iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Consulta la Política de privadesa completa a iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

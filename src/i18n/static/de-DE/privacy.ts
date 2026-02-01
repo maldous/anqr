@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Datenschutz',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Vollständige Datenschutzrichtlinie',
       paragraphs: ['Auf dieser Seite finden Sie eine Zusammenfassung unserer Datenschutzpraktiken. Die vollständige, rechtsverbindliche Datenschutzrichtlinie mit allen Einzelheiten zur Datenverarbeitung, Ihren Rechten und unseren Pflichten gemäß DSGVO, CCPA und anderen Datenschutzgesetzen finden Sie in unserer vollständigen Richtlinie, die von iubenda gehostet wird.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Die vollständige Datenschutzrichtlinie finden Sie auf iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Die vollständige Datenschutzrichtlinie finden Sie auf iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

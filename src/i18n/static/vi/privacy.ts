@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Chính sách bảo mật',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Chính sách bảo mật đầy đủ',
       paragraphs: ['Trang này cung cấp bản tóm tắt các biện pháp bảo mật của chúng tôi. Để biết chính sách quyền riêng tư đầy đủ, ràng buộc về mặt pháp lý với đầy đủ chi tiết về xử lý dữ liệu, quyền của bạn và nghĩa vụ của chúng tôi theo GDPR, CCPA và các luật về quyền riêng tư khác, vui lòng xem chính sách đầy đủ của chúng tôi do iubenda lưu trữ.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Xem toàn bộ Chính sách quyền riêng tư trên iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Xem toàn bộ Chính sách quyền riêng tư trên iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

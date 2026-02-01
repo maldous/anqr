@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Sera ya Faragha',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Sera Kamili ya Faragha',
       paragraphs: ['Ukurasa huu unatoa muhtasari wa desturi zetu za faragha. Kwa sera kamili ya faragha inayofunga kisheria yenye maelezo kamili kuhusu uchakataji wa data, haki zako, na wajibu wetu chini ya GDPR, CCPA, na sheria zingine za faragha, tafadhali tazama sera yetu kamili inayopangishwa na iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Tazama Sera Kamili ya Faragha kwenye iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Tazama Sera Kamili ya Faragha kwenye iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

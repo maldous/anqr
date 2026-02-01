@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Գաղտնիության քաղաքականություն',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Ամբողջական Գաղտնիության քաղաքականություն',
       paragraphs: ['Այս էջը ներկայացնում է մեր գաղտնիության պրակտիկայի ամփոփագիրը: Գաղտնիության ամբողջական, իրավաբանորեն պարտադիր քաղաքականության համար՝ տվյալների մշակման, ձեր իրավունքների և մեր պարտավորությունների վերաբերյալ GDPR-ի, CCPA-ի և գաղտնիության այլ օրենքների վերաբերյալ ամբողջական մանրամասների համար, խնդրում ենք դիտել iubenda-ի կողմից ներկայացված մեր ամբողջական քաղաքականությունը:'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Դիտեք ամբողջական Գաղտնիության քաղաքականությունը iubenda-ում', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Դիտեք ամբողջական Գաղտնիության քաղաքականությունը iubenda-ում',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

@@ -1786,3 +1786,8 @@
 1786	"Januwari 30, 2026"
 1787	"Ilogi yokulungisa iphutha nokulahla kwe-hex ukuze kuhlaziywe i-QR yobuchwepheshe"
 1788	"Izembozwe zesithombe"
+1789	"Februwari 1, 2026"
+1790	"OKUSHA: I-QR Code Analyzer - scan, decode, futhi uhlole noma iyiphi ikhodi ye-QR ngokuningiliziwe"
+1791	"Hlaziya ukuthwebula kwekhamera, okulayishiwe, noma ama-URL ngokuhlukaniswa okugcwele kobuchwepheshe"
+1792	"Ngenisa amakhodi e-QR ahlaziyiwe ngqo kujeneretha ukuze ulungise futhi udale kabusha"
+1793	"Ukuthuthukiswa kokusebenza ngokulayisha kwefonti okuguquguqukayo nokufinyeleleka okuthuthukisiwe"

@@ -1786,3 +1786,8 @@
 1786	"30 de janeiro de 2026"
 1787	"Log de depuração e visualização de dump hexadecimal para análise técnica de QR"
 1788	"Sobreposições de imagens"
+1789	"1º de fevereiro de 2026"
+1790	"NOVO: QR Code Analyzer - escaneie, decodifique e inspecione qualquer código QR em detalhes"
+1791	"Analise capturas de câmeras, uploads ou URLs com detalhes técnicos completos"
+1792	"Importe códigos QR analisados diretamente no gerador para modificar e recriar"
+1793	"Otimizações de desempenho com carregamento dinâmico de fontes e acessibilidade aprimorada"

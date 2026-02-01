@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'מדיניות פרטיות',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'מדיניות הפרטיות המלאה',
       paragraphs: ['דף זה מספק תקציר של נוהלי הפרטיות שלנו. למדיניות הפרטיות המלאה והמחייבת מבחינה משפטית עם פרטים מלאים על עיבוד נתונים, זכויותיך והחובות שלנו על פי GDPR, CCPA וחוקי פרטיות אחרים, אנא עיין במדיניות המלאה שלנו המאוחסנת על ידי iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'צפה במדיניות הפרטיות המלאה ב-iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'צפה במדיניות הפרטיות המלאה ב-iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

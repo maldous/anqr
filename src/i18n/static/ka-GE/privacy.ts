@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'კონფიდენციალურობის პოლიტიკა',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'სრული კონფიდენციალურობის პოლიტიკა',
       paragraphs: ['ეს გვერდი გთავაზობთ ჩვენი კონფიდენციალურობის პრაქტიკის შეჯამებას. სრული, იურიდიულად სავალდებულო კონფიდენციალურობის პოლიტიკისთვის სრული დეტალებით მონაცემთა დამუშავების, თქვენი უფლებებისა და ჩვენი ვალდებულებების შესახებ GDPR, CCPA და კონფიდენციალურობის სხვა კანონების შესაბამისად, გთხოვთ, იხილოთ ჩვენი სრული პოლიტიკა, რომელსაც მასპინძლობს iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'იხილეთ სრული კონფიდენციალურობის პოლიტიკა iubenda-ზე', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'იხილეთ სრული კონფიდენციალურობის პოლიტიკა iubenda-ზე',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

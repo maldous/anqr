@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Политика за приватност',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Целосна политика за приватност',
       paragraphs: ['Оваа страница дава резиме на нашите практики за приватност. За целосна, правно обврзувачка политика за приватност со целосни детали за обработката на податоците, вашите права и нашите обврски според GDPR, CCPA и другите закони за приватност, ве молиме погледнете ја нашата целосна политика хостирана од iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Погледнете ја целосната политика за приватност на iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Погледнете ја целосната политика за приватност на iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

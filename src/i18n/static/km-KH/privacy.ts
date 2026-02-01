@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'គោលការណ៍ឯកជនភាព',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'គោលការណ៍ឯកជនភាពពេញលេញ',
       paragraphs: ['ទំព័រនេះផ្តល់នូវសេចក្តីសង្ខេបនៃការអនុវត្តឯកជនភាពរបស់យើង។ សម្រាប់គោលការណ៍ឯកជនភាពពេញលេញ ដែលចងតាមច្បាប់ជាមួយនឹងព័ត៌មានលម្អិតពេញលេញស្តីពីដំណើរការទិន្នន័យ សិទ្ធិរបស់អ្នក និងកាតព្វកិច្ចរបស់យើងក្រោម GDPR, CCPA និងច្បាប់ឯកជនភាពផ្សេងទៀត សូមមើលគោលការណ៍ពេញលេញរបស់យើងដែលរៀបចំដោយ iubenda។'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'មើលគោលការណ៍ឯកជនភាពពេញលេញនៅលើ iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'មើលគោលការណ៍ឯកជនភាពពេញលេញនៅលើ iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

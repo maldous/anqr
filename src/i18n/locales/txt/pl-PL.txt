@@ -1786,3 +1786,8 @@
 1786	"30 stycznia 2026 r"
 1787	"Dziennik debugowania i widok zrzutu szesnastkowego do technicznej analizy QR"
 1788	"Nakładki obrazu"
+1789	"1 lutego 2026 r"
+1790	"NOWOŚĆ: Analizator kodów QR - skanuj, dekoduj i szczegółowo sprawdzaj dowolny kod QR"
+1791	"Analizuj nagrania z kamer, przesłane pliki lub adresy URL z pełnym opisem technicznym"
+1792	"Importuj przeanalizowane kody QR bezpośrednio do generatora, aby je modyfikować i odtwarzać"
+1793	"Optymalizacje wydajności dzięki dynamicznemu ładowaniu czcionek i lepszej dostępności"

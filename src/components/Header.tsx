@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
   Check,
@@ -31,7 +32,6 @@ import {
   Sparkles,
   Sun,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StaticPageType } from '@/components/StaticPage';
@@ -560,7 +560,6 @@ export function Header({
       <header
         className={`border-b bg-card shadow-lg fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${sidebarOpen && isEditor ? 'lg:ms-96' : ''}`}
         style={{ paddingTop: 'max(var(--sat, 0px), env(safe-area-inset-top, 0px))' }}
-        role="banner"
       >
         <div className="relative flex items-center h-[52px]">
           {/* Left scroll indicator (start side in RTL) */}
@@ -630,7 +629,9 @@ export function Header({
                 title={`${t('app.name')} - ${t('app.tagline')}`}
                 aria-label={`${t('app.name', 'ANQR')} - ${t('nav.generator', 'Go to Generator')}`}
               >
-                <span className="text-xl font-bold leading-6" aria-hidden="true">ANQR</span>
+                <span className="text-xl font-bold leading-6" aria-hidden="true">
+                  ANQR
+                </span>
               </button>
 
               {/* Desktop Nav */}
@@ -751,7 +752,11 @@ export function Header({
                           }
                           disabled={loadingAd}
                           data-testid="tier-tab-professional"
-                          aria-label={Capacitor.isNativePlatform() && !checkPremiumAccess() ? t('tiers.watchAdForPro', 'Watch ad for Professional') : t('tiers.professional', 'Professional')}
+                          aria-label={
+                            Capacitor.isNativePlatform() && !checkPremiumAccess()
+                              ? t('tiers.watchAdForPro', 'Watch ad for Professional')
+                              : t('tiers.professional', 'Professional')
+                          }
                         >
                           {Capacitor.isNativePlatform() && !checkPremiumAccess() && (
                             <Play className="w-3 h-3" aria-hidden="true" />
@@ -767,7 +772,11 @@ export function Header({
                       onValueChange={(v) => handleTierChange(v as Tier)}
                       disabled={loadingAd}
                     >
-                      <SelectTrigger className="w-[72px] h-9 text-xs" data-testid="tier-select">
+                      <SelectTrigger
+                        className="w-[72px] h-9 text-xs"
+                        data-testid="tier-select"
+                        aria-label={t('accessibility.selectTier', 'Select feature tier')}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -800,7 +809,11 @@ export function Header({
                     className="shadow-sm"
                     onClick={handleShare}
                     title={t('accessibility.copyShareLink')}
-                    aria-label={copied ? t('share.copied', 'Link copied') : t('accessibility.copyShareLink', 'Copy share link')}
+                    aria-label={
+                      copied
+                        ? t('share.copied', 'Link copied')
+                        : t('accessibility.copyShareLink', 'Copy share link')
+                    }
                   >
                     {copied ? (
                       <Check className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -830,12 +843,14 @@ export function Header({
                   size="icon"
                   onClick={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
                   className="h-9 w-9"
-                  title={t('language.select')}
-                  aria-label={t('language.select', 'Select language')}
+                  title={`${t('language.select')}: ${currentLang.name}`}
+                  aria-label={`${currentLang.name} - ${t('language.select', 'Select language')}`}
                   aria-expanded={langMenuOpen}
                   aria-haspopup="listbox"
                 >
-                  <span className="text-base" aria-hidden="true">{currentLang.flag}</span>
+                  <span className="text-base" aria-hidden="true">
+                    {currentLang.flag}
+                  </span>
                   <span className="sr-only">{currentLang.name}</span>
                 </Button>
                 {(langMenuOpen || isLangMenuClosing) && (
@@ -895,7 +910,9 @@ export function Header({
                             className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 ${i18n.language === lang.code || i18n.language.startsWith(lang.code) ? 'bg-muted' : ''}`}
                             title={`${lang.nativeName} - ${t(`languages.${lang.code}`)}`}
                             aria-label={`${lang.nativeName} (${lang.name})`}
-                            aria-selected={i18n.language === lang.code || i18n.language.startsWith(lang.code)}
+                            aria-selected={
+                              i18n.language === lang.code || i18n.language.startsWith(lang.code)
+                            }
                             role="option"
                           >
                             <span>{lang.flag}</span>
@@ -930,10 +947,18 @@ export function Header({
                 onClick={toggleDarkMode}
                 className="h-9 w-9"
                 title={darkMode ? t('header.lightMode') : t('header.darkMode')}
-                aria-label={darkMode ? t('header.lightMode', 'Switch to light mode') : t('header.darkMode', 'Switch to dark mode')}
+                aria-label={
+                  darkMode
+                    ? t('header.lightMode', 'Switch to light mode')
+                    : t('header.darkMode', 'Switch to dark mode')
+                }
                 aria-pressed={darkMode}
               >
-                {darkMode ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
+                {darkMode ? (
+                  <Sun className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Moon className="h-4 w-4" aria-hidden="true" />
+                )}
               </Button>
 
               {/* Mobile Menu Button - shows when desktop nav is hidden (below lg breakpoint) */}
@@ -1078,9 +1103,17 @@ export function Header({
               className="flex-1 shadow-sm"
               onClick={handleShare}
               title={t('accessibility.copyShareLink')}
-              aria-label={copied ? t('share.copied', 'Link copied') : t('accessibility.copyShareLink', 'Copy share link')}
+              aria-label={
+                copied
+                  ? t('share.copied', 'Link copied')
+                  : t('accessibility.copyShareLink', 'Copy share link')
+              }
             >
-              {copied ? <Check className="h-4 w-4 mr-2" aria-hidden="true" /> : <Share2 className="h-4 w-4 mr-2" aria-hidden="true" />}
+              {copied ? (
+                <Check className="h-4 w-4 mr-2" aria-hidden="true" />
+              ) : (
+                <Share2 className="h-4 w-4 mr-2" aria-hidden="true" />
+              )}
               {copied ? t('share.copied') : t('header.share')}
             </Button>
             <Button

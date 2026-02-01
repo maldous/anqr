@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Politika zasebnosti',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Celoten pravilnik o zasebnosti',
       paragraphs: ['Na tej strani je povzetek naših praks glede zasebnosti. Za popolno, pravno zavezujočo politiko zasebnosti s podrobnostmi o obdelavi podatkov, vaših pravicah in naših obveznostih v skladu z GDPR, CCPA in drugimi zakoni o zasebnosti si oglejte našo celotno politiko, ki jo gosti iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Oglejte si celotno politiko zasebnosti na iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Oglejte si celotno politiko zasebnosti na iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

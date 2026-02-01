@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Inqubomgomo Yobumfihlo',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Inqubomgomo Yobumfihlo Egcwele',
       paragraphs: ['Leli khasi linikeza isifinyezo sezinqubo zethu zobumfihlo. Ukuze uthole inqubomgomo yobumfihlo ephelele, ebophezela ngokusemthethweni enemininingwane egcwele yokucutshungulwa kwedatha, amalungelo akho, nezibopho zethu ngaphansi kwe-GDPR, CCPA, neminye imithetho yobumfihlo, sicela ubheke inqubomgomo yethu egcwele ephethwe yi-iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Buka Inqubomgomo Yobumfihlo Egcwele ku-iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Buka Inqubomgomo Yobumfihlo Egcwele ku-iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

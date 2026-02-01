@@ -1786,3 +1786,8 @@
 1786	"30 de enero de 2026"
 1787	"Registro de depuración y vista de volcado hexadecimal para análisis QR técnico"
 1788	"Superposiciones de imágenes"
+1789	"1 de febrero de 2026"
+1790	"NUEVO: Analizador de códigos QR: escanee, decodifique e inspeccione cualquier código QR en detalle"
+1791	"Analice capturas, cargas o URL de cámaras con un desglose técnico completo"
+1792	"Importe códigos QR analizados directamente al generador para modificarlos y recrearlos"
+1793	"Optimizaciones de rendimiento con carga dinámica de fuentes y accesibilidad mejorada"

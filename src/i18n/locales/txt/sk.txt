@@ -1786,3 +1786,8 @@
 1786	"30. januára 2026"
 1787	"Debug log a hexadecimálny výpis pre technickú QR analýzu"
 1788	"Prekryvné obrázky"
+1789	"1. februára 2026"
+1790	"NOVINKA: QR Code Analyzer – naskenujte, dekódujte a podrobne skontrolujte akýkoľvek QR kód"
+1791	"Analyzujte zábery z fotoaparátu, nahrávané súbory alebo adresy URL s úplným technickým rozpisom"
+1792	"Importujte analyzované QR kódy priamo do generátora na úpravu a opätovné vytvorenie"
+1793	"Optimalizácia výkonu s dynamickým načítavaním písma a vylepšenou dostupnosťou"

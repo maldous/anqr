@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Політика конфіденційності',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Повна політика конфіденційності',
       paragraphs: ['На цій сторінці наведено стислий опис наших методів забезпечення конфіденційності. Щоб отримати повну юридично обов\'язкову політику конфіденційності з детальною інформацією про обробку даних, ваші права та наші зобов\'язання відповідно до GDPR, CCPA та інших законів про конфіденційність, будь ласка, перегляньте нашу повну політику, розміщену на iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Переглянути повну політику конфіденційності на сайті iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Переглянути повну політику конфіденційності на сайті iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

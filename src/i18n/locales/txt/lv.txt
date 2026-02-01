@@ -1786,3 +1786,8 @@
 1786	"2026. gada 30. janvāris"
 1787	"Atkļūdošanas žurnāls un hex dump skats tehniskai QR analīzei"
 1788	"Attēlu pārklājumi"
+1789	"2026. gada 1. februāris"
+1790	"JAUNUMS: QR koda analizators — skenējiet, atkodējiet un detalizēti pārbaudiet jebkuru QR kodu"
+1791	"Analizējiet kameras ierakstus, augšupielādes vai URL ar pilnu tehnisko sadalījumu"
+1792	"Importējiet analizētos QR kodus tieši ģeneratorā, lai tos pārveidotu un izveidotu no jauna"
+1793	"Veiktspējas optimizācija ar dinamisku fontu ielādi un uzlabotu pieejamību"

@@ -138,6 +138,89 @@ const supportedLngs: string[] = languages.map((l) => l.code);
 // Track which locales have been loaded
 const loadedLocales = new Set<string>(['en-GB']);
 
+// Track which font scripts have been loaded (to avoid duplicate link tags)
+const loadedFontScripts = new Set<string>(['latin']);
+
+/**
+ * Font script mapping for languages that require non-Latin fonts
+ * Maps language codes to Google Fonts family names
+ * Latin-based languages don't need additional fonts (already loaded in index.html)
+ */
+const LANGUAGE_FONT_MAP: Record<string, string> = {
+  // Devanagari script (Hindi, Marathi, Nepali)
+  'hi-IN': 'Noto+Sans+Devanagari',
+  'mr-IN': 'Noto+Sans+Devanagari',
+  'ne-NP': 'Noto+Sans+Devanagari',
+  // Chinese
+  'zh-CN': 'Noto+Sans+SC',
+  'zh-HK': 'Noto+Sans+TC',
+  'zh-TW': 'Noto+Sans+TC',
+  // Tamil
+  'ta-IN': 'Noto+Sans+Tamil',
+  // Thai
+  th: 'Noto+Sans+Thai',
+  // Bengali
+  'bn-BD': 'Noto+Sans+Bengali',
+  // Telugu
+  'te-IN': 'Noto+Sans+Telugu',
+  // Kannada
+  'kn-IN': 'Noto+Sans+Kannada',
+  // Malayalam
+  'ml-IN': 'Noto+Sans+Malayalam',
+  // Gujarati
+  gu: 'Noto+Sans+Gujarati',
+  // Punjabi (Gurmukhi script)
+  pa: 'Noto+Sans+Gurmukhi',
+  // Japanese
+  'ja-JP': 'Noto+Sans+JP',
+  // Korean
+  'ko-KR': 'Noto+Sans+KR',
+  // Arabic script (Arabic, Persian, Urdu)
+  ar: 'Noto+Sans+Arabic',
+  fa: 'Noto+Sans+Arabic',
+  'fa-AE': 'Noto+Sans+Arabic',
+  'fa-AF': 'Noto+Sans+Arabic',
+  'fa-IR': 'Noto+Sans+Arabic',
+  ur: 'Noto+Sans+Arabic',
+  // Hebrew
+  'iw-IL': 'Noto+Sans+Hebrew',
+  // Armenian
+  'hy-AM': 'Noto+Sans+Armenian',
+  // Georgian
+  'ka-GE': 'Noto+Sans+Georgian',
+  // Khmer
+  'km-KH': 'Noto+Sans+Khmer',
+  // Lao
+  'lo-LA': 'Noto+Sans+Lao',
+  // Myanmar/Burmese
+  'my-MM': 'Noto+Sans+Myanmar',
+  // Sinhala
+  'si-LK': 'Noto+Sans+Sinhala',
+  // Amharic (Ethiopic script)
+  am: 'Noto+Sans+Ethiopic',
+};
+
+/**
+ * Dynamically load a Google Font for a specific script
+ * This reduces initial page load by ~110KB for most users
+ */
+function loadFontForLanguage(lang: string): void {
+  const fontFamily = LANGUAGE_FONT_MAP[lang];
+  if (!fontFamily) return; // Latin-based language, no extra font needed
+
+  // Don't load the same font twice
+  if (loadedFontScripts.has(fontFamily)) return;
+  loadedFontScripts.add(fontFamily);
+
+  // Create and inject the stylesheet link
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${fontFamily}:wght@400;500;600;700&display=swap`;
+  document.head.appendChild(link);
+
+  console.log(`[i18n] Loaded font: ${fontFamily} for language: ${lang}`);
+}
+
 /**
  * Lazy load a locale on demand
  * This significantly reduces initial bundle size by ~1.5MB
@@ -250,17 +333,21 @@ i18n
     },
   });
 
-// Listen for language changes and lazy-load locales
+// Listen for language changes and lazy-load locales + fonts
 i18n.on('languageChanged', async (lng) => {
   if (!loadedLocales.has(lng)) {
     await loadLocale(lng);
   }
+  // Load script-specific font if needed (non-blocking)
+  loadFontForLanguage(lng);
 });
 
 // Pre-load detected language if not English
 const detectedLang = i18n.language;
 if (detectedLang && detectedLang !== 'en-GB' && !loadedLocales.has(detectedLang)) {
   loadLocale(detectedLang);
+  // Also pre-load the font for the detected language
+  loadFontForLanguage(detectedLang);
 }
 
 export default i18n;

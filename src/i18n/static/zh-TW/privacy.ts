@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: '隱私政策',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: '完整的隱私政策',
       paragraphs: ['本頁提供了我們的隱私慣例的摘要。如需完整的、具有法律約束力的隱私政策，其中包含有關數據處理、您的權利以及我們在 GDPR、CCPA 和其他隱私法下的義務的完整詳細信息，請查看我們由 iubenda 託管的完整政策。'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: '查看 iubenda 上的完整隱私政策', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: '查看 iubenda 上的完整隱私政策',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

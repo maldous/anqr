@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Adatvédelmi irányelvek',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Teljes adatvédelmi szabályzat',
       paragraphs: ['Ez az oldal adatvédelmi gyakorlataink összefoglalását tartalmazza. A teljes, jogilag kötelező erejű adatvédelmi szabályzatért, amely az adatkezelésről, az Ön jogairól és a GDPR, CCPA és más adatvédelmi törvények szerinti kötelezettségeinkről részletesen tájékozódhat, tekintse meg az iubenda által üzemeltetett teljes szabályzatunkat.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Tekintse meg az iubenda teljes adatvédelmi szabályzatát', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Tekintse meg az iubenda teljes adatvédelmi szabályzatát',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

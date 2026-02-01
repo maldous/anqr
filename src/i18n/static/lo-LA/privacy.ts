@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວຢ່າງເຕັມທີ່',
       paragraphs: ['ຫນ້ານີ້ສະຫນອງບົດສະຫຼຸບຂອງການປະຕິບັດຄວາມເປັນສ່ວນຕົວຂອງພວກເຮົາ. ສໍາລັບນະໂຍບາຍຄວາມເປັນສ່ວນຕົວທີ່ສົມບູນ, ຜູກມັດທາງກົດໝາຍທີ່ມີລາຍລະອຽດເຕັມກ່ຽວກັບການປະມວນຜົນຂໍ້ມູນ, ສິດທິຂອງທ່ານ, ແລະພັນທະຂອງພວກເຮົາພາຍໃຕ້ GDPR, CCPA, ແລະກົດໝາຍຄວາມເປັນສ່ວນຕົວອື່ນໆ, ກະລຸນາເບິ່ງນະໂຍບາຍເຕັມທີ່ຈັດໂດຍ iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'ເບິ່ງນະໂຍບາຍຄວາມເປັນສ່ວນຕົວເຕັມທີ່ກ່ຽວກັບ iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'ເບິ່ງນະໂຍບາຍຄວາມເປັນສ່ວນຕົວເຕັມທີ່ກ່ຽວກັບ iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

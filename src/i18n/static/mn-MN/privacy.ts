@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Нууцлалын бодлого',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Бүрэн нууцлалын бодлого',
       paragraphs: ['Энэ хуудсанд бидний нууцлалын үйл ажиллагааны хураангуй мэдээлэл өгдөг. Өгөгдлийн боловсруулалт, таны эрх, GDPR, CCPA болон бусад нууцлалын хуулиудын дагуу хүлээсэн үүргүүдийн талаарх бүрэн дэлгэрэнгүй мэдээллийг агуулсан, хууль ёсны дагуу заавал дагаж мөрдөх нууцлалын бодлогыг iubenda-н зохион байгуулсан манай бүрэн бүтэн бодлогыг үзнэ үү.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Нууцлалын бүрэн бодлогыг iubenda дээрээс үзнэ үү', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Нууцлалын бүрэн бодлогыг iubenda дээрээс үзнэ үү',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

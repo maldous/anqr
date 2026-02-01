@@ -1786,3 +1786,8 @@
 1786	"30 yanvar 2026-cı il"
 1787	"Texniki QR təhlili üçün sazlama jurnalı və hex dump görünüşü"
 1788	"Şəkil Bindirmələri"
+1789	"1 fevral 2026-cı il"
+1790	"YENİ: QR Kod Analizatoru - istənilən QR kodunu skan edin, deşifrə edin və yoxlayın"
+1791	"Kamera çəkilişlərini, yükləmələri və ya URL-ləri tam texniki nasazlıqla təhlil edin"
+1792	"Dəyişdirmək və yenidən yaratmaq üçün təhlil edilmiş QR kodları birbaşa generatora idxal edin"
+1793	"Dinamik şrift yükləməsi və təkmilləşdirilmiş əlçatanlıq ilə performans optimallaşdırmaları"

@@ -1786,3 +1786,8 @@
 1786	"30 Ocak 2026"
 1787	"Teknik QR analizi için hata ayıklama günlüğü ve onaltılık döküm görünümü"
 1788	"Görüntü Kaplamaları"
+1789	"1 Şubat 2026"
+1790	"YENİ: QR Kod Analizörü - herhangi bir QR kodunu ayrıntılı olarak tarayın, kodunu çözün ve inceleyin"
+1791	"Kamera kayıtlarını, yüklemeleri veya URL'leri tam teknik dökümle analiz edin"
+1792	"Analiz edilen QR kodlarını değiştirmek ve yeniden oluşturmak için doğrudan oluşturucuya aktarın"
+1793	"Dinamik yazı tipi yükleme ve iyileştirilmiş erişilebilirlik ile performans optimizasyonları"

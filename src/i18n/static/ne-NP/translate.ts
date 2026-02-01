@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const translate: PageDefinition = {
   title: 'ANQR अनुवाद गर्न मद्दत गर्नुहोस्',

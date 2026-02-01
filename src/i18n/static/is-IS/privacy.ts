@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Persónuverndarstefna',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Full persónuverndarstefna',
       paragraphs: ['Þessi síða veitir yfirlit yfir persónuverndarvenjur okkar. Fyrir heildar, lagalega bindandi persónuverndarstefnu með öllum upplýsingum um gagnavinnslu, réttindi þín og skyldur okkar samkvæmt GDPR, CCPA og öðrum persónuverndarlögum, vinsamlegast skoðaðu stefnu okkar í heild sinni sem hýst er af iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Skoðaðu alla persónuverndarstefnu á iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Skoðaðu alla persónuverndarstefnu á iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

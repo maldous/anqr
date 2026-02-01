@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Politica de confidențialitate',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Politica de confidențialitate completă',
       paragraphs: ['Această pagină oferă un rezumat al practicilor noastre de confidențialitate. Pentru politica de confidențialitate completă, obligatorie din punct de vedere juridic, cu detalii complete despre prelucrarea datelor, drepturile dumneavoastră și obligațiile noastre conform GDPR, CCPA și alte legi de confidențialitate, vă rugăm să consultați politica noastră completă găzduită de iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Vezi Politica de confidențialitate completă pe iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Vezi Politica de confidențialitate completă pe iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

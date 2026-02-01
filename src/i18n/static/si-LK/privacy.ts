@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'රහස්‍යතා ප්‍රතිපත්තිය',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'සම්පූර්ණ රහස්‍යතා ප්‍රතිපත්තිය',
       paragraphs: ['මෙම පිටුව අපගේ රහස්‍යතා පරිචයන් වල සාරාංශයක් සපයයි. දත්ත සැකසීම, ඔබේ අයිතීන් සහ GDPR, CCPA සහ වෙනත් රහස්‍යතා නීති යටතේ ඇති අපගේ බැඳීම් පිළිබඳ සම්පූර්ණ විස්තර සහිත සම්පූර්ණ, නීත්‍යානුකූලව බැඳී ඇති රහස්‍යතා ප්‍රතිපත්තිය සඳහා, කරුණාකර iubenda විසින් සත්කාරකත්වය සපයන අපගේ සම්පූර්ණ ප්‍රතිපත්තිය බලන්න.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda හි සම්පූර්ණ රහස්‍යතා ප්‍රතිපත්තිය බලන්න', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda හි සම්පූර්ණ රහස්‍යතා ප්‍රතිපත්තිය බලන්න',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

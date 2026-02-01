@@ -59,6 +59,6 @@ export type StaticPageType =
   | 'contact'
   | 'translate';
 
-// Shared constants
-export const LAST_UPDATED = '4 January 2026';
-export const CONTACT_EMAIL = 'email@anqr.link';
+// Note: LAST_UPDATED and CONTACT_EMAIL are now in constants.ts to avoid circular imports
+// Re-export them for backward compatibility with existing imports
+export { CONTACT_EMAIL, LAST_UPDATED } from './constants';

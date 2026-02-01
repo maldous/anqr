@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Privacy Policy',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Full Privacy Policy',
       paragraphs: ['This page provides a summary of our privacy practices. For the complete, legally binding privacy policy with full details on data processing, your rights, and our obligations under GDPR, CCPA, and other privacy laws, please view our full policy hosted by iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'View Full Privacy Policy on iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'View Full Privacy Policy on iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

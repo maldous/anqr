@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'سیاست حفظ حریم خصوصی',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'سیاست حفظ حریم خصوصی کامل',
       paragraphs: ['این صفحه خلاصه ای از شیوه های حفظ حریم خصوصی ما را ارائه می دهد. برای سیاست حفظ حریم خصوصی کامل و الزام آور قانونی با جزئیات کامل در مورد پردازش داده ها، حقوق شما، و تعهدات ما تحت GDPR، CCPA و سایر قوانین حفظ حریم خصوصی، لطفاً خط مشی کامل ما را که توسط iubenda میزبانی شده است، مشاهده کنید.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'مشاهده سیاست حفظ حریم خصوصی کامل در iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'مشاهده سیاست حفظ حریم خصوصی کامل در iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };
