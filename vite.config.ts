@@ -338,8 +338,13 @@ export default defineConfig({
           ) {
             return 'vendor-utils';
           }
-          // Capacitor (native platform support)
-          if (id.includes('node_modules/@capacitor')) {
+          // Capacitor (native platform support) + app platform modules
+          // These are grouped together to avoid circular dependencies with app-exporter
+          if (
+            id.includes('node_modules/@capacitor') ||
+            id.includes('/modules/platform') ||
+            id.includes('/modules/browser-io')
+          ) {
             return 'vendor-capacitor';
           }
           // Zustand state management

@@ -510,47 +510,6 @@ function Breadcrumb({ items, lang }: Readonly<{ items: string[]; lang: string }>
   );
 }
 
-// Render primary CTA links as prominent styled buttons
-function PrimaryLinks({ links, lang }: Readonly<{ links: PageLink[]; lang: string }>) {
-  if (!links || links.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap justify-center gap-3 mt-6 mb-2">
-      {links.map((link, idx) => (
-        <Button
-          key={link.href}
-          asChild
-          variant={idx === 0 ? 'default' : 'outline'}
-          size="default"
-          className="min-w-[140px]"
-        >
-          <a href={processHref(link.href, lang)}>{link.label}</a>
-        </Button>
-      ))}
-    </div>
-  );
-}
-
-// Render section contextual links
-function SectionLinks({ links, lang }: Readonly<{ links: PageLink[]; lang: string }>) {
-  if (!links || links.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 pt-3 border-t border-border/50">
-      {links.map((link) => (
-        <a
-          key={link.href}
-          href={processHref(link.href, lang)}
-          className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-        >
-          <span>→</span>
-          <span>{link.label}</span>
-        </a>
-      ))}
-    </div>
-  );
-}
-
 // Render related content links as consistent styled buttons
 function RelatedLinks({
   links,
@@ -829,7 +788,6 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
               <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
                 {def.description}
               </p>
-              {def.primaryLinks && <PrimaryLinks links={def.primaryLinks} lang={i18n.language} />}
             </div>
           </div>
 
@@ -913,7 +871,7 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                               loading="lazy"
                             />
                             {image.caption && (
-                              <figcaption className="text-sm sm:text-base text-muted-foreground mt-2 text-justify">
+                              <figcaption className="text-sm sm:text-base text-muted-foreground mt-2 text-justify italic">
                                 {image.caption}
                               </figcaption>
                             )}
@@ -921,8 +879,6 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                         ))}
                       </div>
                     )}
-
-                    {section.links && <SectionLinks links={section.links} lang={i18n.language} />}
                   </section>
                 );
               })}
@@ -975,7 +931,6 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
             <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
               {def.description}
             </p>
-            {def.primaryLinks && <PrimaryLinks links={def.primaryLinks} lang={i18n.language} />}
           </div>
         </div>
 
@@ -1021,7 +976,7 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                           loading="lazy"
                         />
                         {image.caption && (
-                          <figcaption className="text-sm sm:text-base text-muted-foreground mt-2 text-justify">
+                          <figcaption className="text-sm sm:text-base text-muted-foreground mt-2 text-justify italic">
                             {image.caption}
                           </figcaption>
                         )}
@@ -1029,8 +984,6 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                     ))}
                   </div>
                 )}
-
-                {section.links && <SectionLinks links={section.links} lang={i18n.language} />}
               </section>
             ))}
 

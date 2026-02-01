@@ -7,8 +7,8 @@ android {
         applicationId "link.anqr.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 57
-        versionName "1.57"
+        versionCode 60
+        versionName "1.60"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable vector drawable support for smaller APK
@@ -131,6 +131,9 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
     implementation platform('com.google.firebase:firebase-bom:34.8.0')
     implementation 'com.google.firebase:firebase-analytics'
+    
+    // iubenda CMP SDK for GDPR/CCPA consent management
+    implementation "net.consentmanager.sdkv3:cmsdkv3:3.6.0"
 }
 
 apply plugin: 'com.google.gms.google-services'
