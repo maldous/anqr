@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Ruaj modelet e shtrirjes 0/1 (parazgjedhja: 0)."
 1331	"protectFmt: Mbroni modulet e informacionit të formatit 0/1 (parazgjedhja: 0)."
 1332	"protectVer: Mbroni modulet e informacionit të versionit 0/1 (parazgjedhja: 0)."
+1333	"Politika e plotë e privatësisë"
+1334	"Kjo faqe ofron një përmbledhje të praktikave tona të privatësisë. Për politikën e plotë, ligjërisht të detyrueshme të privatësisë me detaje të plota mbi përpunimin e të dhënave, të drejtat tuaja dhe detyrimet tona sipas GDPR, CCPA dhe ligjeve të tjera të privatësisë, ju lutemi shikoni politikën tonë të plotë të organizuar nga iubenda."
+1335	"Shikoni politikën e plotë të privatësisë në iubenda"

@@ -1,16 +1,32 @@
 import { Capacitor } from '@capacitor/core';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Analyze } from '@/components/Analyze';
 import { BusyOverlay } from '@/components/BusyOverlay';
-import { Gallery } from '@/components/Gallery';
 import { Header } from '@/components/Header';
 import { MobileDivider } from '@/components/MobileDivider';
 import { Preview } from '@/components/Preview';
 import { Sidebar } from '@/components/Sidebar';
-import { StaticPage, type StaticPageType } from '@/components/StaticPage';
+import type { StaticPageType } from '@/components/StaticPage';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { WelcomeModal } from '@/components/WelcomeModal';
+
+// Lazy-loaded components for bundle optimization
+const Analyze = lazy(() => import('@/components/Analyze').then((m) => ({ default: m.Analyze })));
+const Gallery = lazy(() => import('@/components/Gallery').then((m) => ({ default: m.Gallery })));
+const StaticPage = lazy(() =>
+  import('@/components/StaticPage').then((m) => ({ default: m.StaticPage }))
+);
+const WelcomeModal = lazy(() =>
+  import('@/components/WelcomeModal').then((m) => ({ default: m.WelcomeModal }))
+);
+
+// Simple loading spinner for lazy-loaded components
+function LazyLoadFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[200px]">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
 import type { GalleryCategory } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
@@ -817,11 +833,21 @@ function App() {
 
   return (
     <TooltipProvider>
+      {/* Skip to main content link for keyboard navigation (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none"
+        aria-label="Skip to main content"
+      >
+        Skip to main content
+      </a>
       <div className="h-screen bg-background flex flex-col overflow-hidden relative">
         {/* Global busy overlay for export operations */}
         <BusyOverlay visible={isExporting} />
         {/* Welcome modal for first-time visitors (web only) */}
-        <WelcomeModal />
+        <Suspense fallback={null}>
+          <WelcomeModal />
+        </Suspense>
         <Header
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           sidebarOpen={showEditor ? sidebarOpen : false}
@@ -873,9 +899,11 @@ function App() {
             }}
           >
             {showEditor && <Preview sidebarOpen={sidebarOpen} />}
-            {showAnalyze && <Analyze onNavigate={navigateTo} generatedCanvas={generatedCanvas} />}
-            {showGallery && <Gallery filter={galleryFilter} />}
-            {showStaticPage && <StaticPage page={currentPage as StaticPageType} />}
+            <Suspense fallback={<LazyLoadFallback />}>
+              {showAnalyze && <Analyze onNavigate={navigateTo} generatedCanvas={generatedCanvas} />}
+              {showGallery && <Gallery filter={galleryFilter} />}
+              {showStaticPage && <StaticPage page={currentPage as StaticPageType} />}
+            </Suspense>
           </div>
         </div>
         {/* Fixed Footer - visible on all platforms */}

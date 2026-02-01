@@ -1,29 +1,37 @@
 import { Capacitor } from '@capacitor/core';
-import * as LucideIcons from 'lucide-react';
 import {
   BookOpen,
   Check,
   ChevronLeft,
   ChevronRight,
+  Contrast,
   Download,
   FileText,
+  Film,
   Globe,
   Grid3x3,
+  Image,
   Images,
   Info,
+  Layers,
   Lightbulb,
   Mail,
   Menu,
   Moon,
+  Palette,
   PanelLeft,
   Play,
   QrCode,
   ScanLine,
+  Settings2,
+  Shapes,
   Share2,
   Shield,
+  Sliders,
   Sparkles,
   Sun,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StaticPageType } from '@/components/StaticPage';
@@ -44,11 +52,25 @@ import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { getShareableUrl } from '@/modules/share-links';
 import { type Tier, useQRStore } from '@/store/qr-store';
 
-// Dynamic icon component for gallery filters
+// Icon map for gallery section icons - explicit imports for tree-shaking
+const GALLERY_ICON_MAP: Record<string, LucideIcon> = {
+  QrCode,
+  FileText,
+  Shapes,
+  Palette,
+  Image,
+  Film,
+  Layers,
+  Contrast,
+  Sliders,
+  Settings2,
+  Grid3x3,
+  Sparkles,
+};
+
+// Dynamic icon component for gallery filters - uses explicit map instead of barrel import
 function DynamicIcon({ name, className }: { name: string; className?: string }) {
-  const Icon = (
-    LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
-  )[name];
+  const Icon = GALLERY_ICON_MAP[name];
   return Icon ? <Icon className={className} /> : null;
 }
 
@@ -89,13 +111,11 @@ const NAV_LINKS: Array<{
   },
   { href: '/about', labelKey: 'nav.about', defaultLabel: 'About', page: 'about', icon: Info },
   {
-    href: 'https://www.iubenda.com/privacy-policy/70266922',
+    href: '/privacy',
     labelKey: 'nav.privacy',
     defaultLabel: 'Privacy',
     page: 'privacy',
     icon: Shield,
-    external: true,
-    iubendaEmbed: true,
   },
   { href: '/terms', labelKey: 'nav.terms', defaultLabel: 'Terms', page: 'terms', icon: FileText },
   {
@@ -540,6 +560,7 @@ export function Header({
       <header
         className={`border-b bg-card shadow-lg fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${sidebarOpen && isEditor ? 'lg:ms-96' : ''}`}
         style={{ paddingTop: 'max(var(--sat, 0px), env(safe-area-inset-top, 0px))' }}
+        role="banner"
       >
         <div className="relative flex items-center h-[52px]">
           {/* Left scroll indicator (start side in RTL) */}
@@ -553,8 +574,9 @@ export function Header({
                   : 'left-0 bg-gradient-to-r from-card to-transparent hover:from-muted'
               }`}
               title={t('accessibility.scrollLeft')}
+              aria-label={t('accessibility.scrollLeft', 'Scroll left')}
             >
-              <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+              <ChevronLeft className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </button>
           )}
 
@@ -569,8 +591,9 @@ export function Header({
                   : 'right-0 bg-gradient-to-l from-card to-transparent hover:from-muted'
               }`}
               title={t('accessibility.scrollRight')}
+              aria-label={t('accessibility.scrollRight', 'Scroll right')}
             >
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             </button>
           )}
 
@@ -586,8 +609,10 @@ export function Header({
                   onClick={onToggleSidebar}
                   className="flex items-center justify-center w-8 h-8 hover:opacity-80 cursor-pointer"
                   title={t('accessibility.toggleSettings')}
+                  aria-label={t('accessibility.toggleSettings', 'Toggle settings panel')}
+                  aria-expanded={sidebarOpen}
                 >
-                  <PanelLeft className="h-6 w-6 text-muted-foreground" />
+                  <PanelLeft className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                 </button>
               ) : (
                 /* Placeholder space to keep layout consistent with Generator */
@@ -603,12 +628,13 @@ export function Header({
                 }}
                 className="flex items-center gap-2 transition-opacity hover:opacity-80 cursor-pointer"
                 title={`${t('app.name')} - ${t('app.tagline')}`}
+                aria-label={`${t('app.name', 'ANQR')} - ${t('nav.generator', 'Go to Generator')}`}
               >
-                <span className="text-xl font-bold leading-6">ANQR</span>
+                <span className="text-xl font-bold leading-6" aria-hidden="true">ANQR</span>
               </button>
 
               {/* Desktop Nav */}
-              <nav className="hidden lg:flex items-center gap-1">
+              <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
                 {NAV_LINKS.map((link) => {
                   const isActive = link.page === resolvedPage;
                   // External links (like iubenda) don't navigate internally
@@ -662,8 +688,10 @@ export function Header({
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
                     title={t('accessibility.allCategories')}
+                    aria-label={t('accessibility.allCategories', 'Show all categories')}
+                    aria-pressed={galleryFilter === 'all'}
                   >
-                    <Grid3x3 className="w-4 h-4" />
+                    <Grid3x3 className="w-4 h-4" aria-hidden="true" />
                   </button>
                   {gallerySections.map((section) => (
                     <button
@@ -676,6 +704,8 @@ export function Header({
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                       title={section.title}
+                      aria-label={`Filter by ${section.title}`}
+                      aria-pressed={galleryFilter === section.id}
                     >
                       <DynamicIcon name={section.icon} className="w-4 h-4" />
                     </button>
@@ -721,9 +751,10 @@ export function Header({
                           }
                           disabled={loadingAd}
                           data-testid="tier-tab-professional"
+                          aria-label={Capacitor.isNativePlatform() && !checkPremiumAccess() ? t('tiers.watchAdForPro', 'Watch ad for Professional') : t('tiers.professional', 'Professional')}
                         >
                           {Capacitor.isNativePlatform() && !checkPremiumAccess() && (
-                            <Play className="w-3 h-3" />
+                            <Play className="w-3 h-3" aria-hidden="true" />
                           )}
                           {t('tiers.professional')}
                         </TabsTrigger>
@@ -749,7 +780,7 @@ export function Header({
                         <SelectItem value="professional" data-testid="tier-option-professional">
                           <span className="flex items-center gap-1">
                             {Capacitor.isNativePlatform() && !checkPremiumAccess() && (
-                              <Play className="w-3 h-3" />
+                              <Play className="w-3 h-3" aria-hidden="true" />
                             )}
                             {t('tiers.professional')}
                           </span>
@@ -769,11 +800,12 @@ export function Header({
                     className="shadow-sm"
                     onClick={handleShare}
                     title={t('accessibility.copyShareLink')}
+                    aria-label={copied ? t('share.copied', 'Link copied') : t('accessibility.copyShareLink', 'Copy share link')}
                   >
                     {copied ? (
-                      <Check className="h-4 w-4 mr-2" />
+                      <Check className="h-4 w-4 mr-2" aria-hidden="true" />
                     ) : (
-                      <Share2 className="h-4 w-4 mr-2" />
+                      <Share2 className="h-4 w-4 mr-2" aria-hidden="true" />
                     )}
                     {copied ? t('share.copied') : t('header.share')}
                   </Button>
@@ -782,9 +814,10 @@ export function Header({
                     className="shadow-sm"
                     onClick={onExport}
                     title={t('accessibility.exportQrCode')}
+                    aria-label={t('accessibility.exportQrCode', 'Export QR code')}
                     data-testid="export-button"
                   >
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     {t('header.export')}
                   </Button>
                 </div>
@@ -798,8 +831,12 @@ export function Header({
                   onClick={() => (langMenuOpen ? closeLangMenu() : setLangMenuOpen(true))}
                   className="h-9 w-9"
                   title={t('language.select')}
+                  aria-label={t('language.select', 'Select language')}
+                  aria-expanded={langMenuOpen}
+                  aria-haspopup="listbox"
                 >
-                  <span className="text-base">{currentLang.flag}</span>
+                  <span className="text-base" aria-hidden="true">{currentLang.flag}</span>
+                  <span className="sr-only">{currentLang.name}</span>
                 </Button>
                 {(langMenuOpen || isLangMenuClosing) && (
                   <>
@@ -810,7 +847,7 @@ export function Header({
                       onKeyDown={(e) => {
                         if (e.key === 'Escape') closeLangMenu();
                       }}
-                      aria-label="Close menu"
+                      aria-label={t('common.close', 'Close language menu')}
                       tabIndex={-1}
                     />
                     <div
@@ -833,6 +870,8 @@ export function Header({
                           setIsLangMenuClosing(false);
                         }
                       }}
+                      role="listbox"
+                      aria-label={t('language.select', 'Select language')}
                     >
                       {/* Sort languages: current language first, then alphabetically by translated name */}
                       {[...languages]
@@ -855,6 +894,9 @@ export function Header({
                             onClick={() => changeLanguage(lang.code)}
                             className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 ${i18n.language === lang.code || i18n.language.startsWith(lang.code) ? 'bg-muted' : ''}`}
                             title={`${lang.nativeName} - ${t(`languages.${lang.code}`)}`}
+                            aria-label={`${lang.nativeName} (${lang.name})`}
+                            aria-selected={i18n.language === lang.code || i18n.language.startsWith(lang.code)}
+                            role="option"
                           >
                             <span>{lang.flag}</span>
                             <span>
@@ -872,7 +914,7 @@ export function Header({
                             </span>
                             {(i18n.language === lang.code ||
                               i18n.language.startsWith(lang.code)) && (
-                              <Check className="h-4 w-4 ml-auto" />
+                              <Check className="h-4 w-4 ml-auto" aria-hidden="true" />
                             )}
                           </button>
                         ))}
@@ -888,8 +930,10 @@ export function Header({
                 onClick={toggleDarkMode}
                 className="h-9 w-9"
                 title={darkMode ? t('header.lightMode') : t('header.darkMode')}
+                aria-label={darkMode ? t('header.lightMode', 'Switch to light mode') : t('header.darkMode', 'Switch to dark mode')}
+                aria-pressed={darkMode}
               >
-                {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {darkMode ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
               </Button>
 
               {/* Mobile Menu Button - shows when desktop nav is hidden (below lg breakpoint) */}
@@ -899,8 +943,11 @@ export function Header({
                 className="lg:hidden h-9 w-9"
                 onClick={() => (mobileMenuOpen ? closeMobileMenu() : setMobileMenuOpen(true))}
                 title={t('accessibility.openNavMenu')}
+                aria-label={t('accessibility.openNavMenu', 'Open navigation menu')}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-nav-menu"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -909,6 +956,7 @@ export function Header({
         {/* Mobile Menu - shows when desktop nav is hidden (below lg breakpoint) */}
         {(mobileMenuOpen || isMobileMenuClosing) && (
           <div
+            id="mobile-nav-menu"
             className={`lg:hidden border-t bg-card shadow-lg p-3 overflow-hidden origin-top ${
               isMobileMenuClosing
                 ? 'animate-[slide-up_0.2s_ease-in_forwards]'
@@ -919,6 +967,8 @@ export function Header({
                 setIsMobileMenuClosing(false);
               }
             }}
+            role="navigation"
+            aria-label="Mobile navigation"
           >
             <nav className="flex flex-col gap-2">
               {/* Generator and Analyze - Half width each */}
@@ -943,8 +993,9 @@ export function Header({
                         closeMobileMenu();
                       }}
                       title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                      aria-current={isActive ? 'page' : undefined}
                     >
-                      <IconComponent className="w-5 h-5" />
+                      <IconComponent className="w-5 h-5" aria-hidden="true" />
                       <span className="text-sm">{t(link.labelKey, link.defaultLabel)}</span>
                     </a>
                   );
@@ -967,8 +1018,9 @@ export function Header({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => closeMobileMenu()}
+                        aria-label={`${t(link.labelKey, link.defaultLabel)} (opens in new tab)`}
                       >
-                        <IconComponent className="w-5 h-5" />
+                        <IconComponent className="w-5 h-5" aria-hidden="true" />
                         <span className="text-[11px] leading-tight text-center">
                           {t(link.labelKey, link.defaultLabel)}
                         </span>
@@ -992,8 +1044,9 @@ export function Header({
                         closeMobileMenu();
                       }}
                       title={`Go to ${t(link.labelKey, link.defaultLabel)}`}
+                      aria-current={isActive ? 'page' : undefined}
                     >
-                      <IconComponent className="w-5 h-5" />
+                      <IconComponent className="w-5 h-5" aria-hidden="true" />
                       <span className="text-[11px] leading-tight text-center">
                         {t(link.labelKey, link.defaultLabel)}
                       </span>
@@ -1025,8 +1078,9 @@ export function Header({
               className="flex-1 shadow-sm"
               onClick={handleShare}
               title={t('accessibility.copyShareLink')}
+              aria-label={copied ? t('share.copied', 'Link copied') : t('accessibility.copyShareLink', 'Copy share link')}
             >
-              {copied ? <Check className="h-4 w-4 mr-2" /> : <Share2 className="h-4 w-4 mr-2" />}
+              {copied ? <Check className="h-4 w-4 mr-2" aria-hidden="true" /> : <Share2 className="h-4 w-4 mr-2" aria-hidden="true" />}
               {copied ? t('share.copied') : t('header.share')}
             </Button>
             <Button
@@ -1034,8 +1088,9 @@ export function Header({
               className="flex-1 shadow-sm"
               onClick={onExport}
               title={t('accessibility.exportQrCode')}
+              aria-label={t('accessibility.exportQrCode', 'Export QR code')}
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
               {t('header.export')}
             </Button>
           </div>

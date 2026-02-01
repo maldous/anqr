@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Bevar justeringsmønstre 0/1 (standard: 0)."
 1331	"protectFmt: Beskytt formatinfomoduler 0/1 (standard: 0)."
 1332	"protectVer: Beskytt versjonsinfomoduler 0/1 (standard: 0)."
+1333	"Fullstendig personvernerklæring"
+1334	"Denne siden gir et sammendrag av vår personvernpraksis. For den fullstendige, juridisk bindende personvernerklæringen med fullstendige detaljer om databehandling, dine rettigheter og våre forpliktelser i henhold til GDPR, CCPA og andre personvernlover, vennligst se våre fullstendige retningslinjer hostet av iubenda."
+1335	"Se hele personvernreglene på iubenda"

@@ -1330,3 +1330,6 @@
 1330	"keepAlign: conserva els patrons d'alineació 0/1 (per defecte: 0)."
 1331	"protectFmt: Protegeix els mòduls d'informació de format 0/1 (per defecte: 0)."
 1332	"protectVer: Protegeix els mòduls d'informació de versió 0/1 (per defecte: 0)."
+1333	"Política de privadesa completa"
+1334	"Aquesta pàgina ofereix un resum de les nostres pràctiques de privadesa. Per obtenir la política de privadesa completa i legalment vinculant amb tots els detalls sobre el processament de dades, els vostres drets i les nostres obligacions en virtut del GDPR, CCPA i altres lleis de privadesa, consulteu la nostra política completa allotjada per iubenda."
+1335	"Consulta la Política de privadesa completa a iubenda"

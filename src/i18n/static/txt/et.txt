@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Säilitage joondusmustrid 0/1 (vaikimisi: 0)."
 1331	"ProtectFmt: Kaitsevormingu teabemoodulid 0/1 (vaikeseade: 0)."
 1332	"ProtectVer: Kaitske versiooni teabemooduleid 0/1 (vaikimisi: 0)."
+1333	"Täielik privaatsuspoliitika"
+1334	"Sellel lehel on kokkuvõte meie privaatsuspõhimõtetest. Täieliku, juriidiliselt siduva privaatsuspoliitika täieliku üksikasjadega andmetöötluse, teie õiguste ja meie kohustuste kohta GDPR-i, CCPA ja muude privaatsusseaduste alusel vaadake meie täielikku poliitikat, mida hostib iubenda."
+1335	"Vaadake iubenda täielikku privaatsuspoliitikat"

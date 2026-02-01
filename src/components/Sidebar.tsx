@@ -1144,6 +1144,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
       )}
 
       <aside
+        aria-label="QR code settings"
         ref={sidebarRef}
         data-testid="sidebar"
         className={`

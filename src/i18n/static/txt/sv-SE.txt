@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Bevara justeringsmönster 0/1 (standard: 0)."
 1331	"protectFmt: Skydda formatinformationsmoduler 0/1 (standard: 0)."
 1332	"protectVer: Skydda versionsinformationsmoduler 0/1 (standard: 0)."
+1333	"Fullständig sekretesspolicy"
+1334	"Den här sidan ger en sammanfattning av vår sekretesspraxis. För den fullständiga, juridiskt bindande integritetspolicyn med fullständig information om databehandling, dina rättigheter och våra skyldigheter enligt GDPR, CCPA och andra integritetslagar, vänligen se vår fullständiga policy som tillhandahålls av iubenda."
+1335	"Se hela sekretesspolicyn på iubenda"

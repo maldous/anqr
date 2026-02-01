@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Hizalama desenlerini koru 0/1 (varsayılan: 0)."
 1331	"protectFmt: Format bilgi modüllerini koruyun 0/1 (varsayılan: 0)."
 1332	"protectVer: Sürüm bilgisi modüllerini koruyun 0/1 (varsayılan: 0)."
+1333	"Tam Gizlilik Politikası"
+1334	"Bu sayfada gizlilik uygulamalarımızın bir özeti sunulmaktadır. Veri işleme, haklarınız ve GDPR, CCPA ve diğer gizlilik yasaları kapsamındaki yükümlülüklerimize ilişkin tüm ayrıntıları içeren yasal olarak bağlayıcı gizlilik politikasının tamamı için lütfen iubenda tarafından barındırılan politikamızın tamamını görüntüleyin."
+1335	"iubenda'da Gizlilik Politikasının tamamını görüntüleyin"

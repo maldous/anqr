@@ -6,6 +6,31 @@
 [functions]
   node_bundler = "esbuild"
 
+# ===================================================================================
+# SECURITY NOTES (for ZAP/security scanner audits):
+# 
+# 1. CSP 'unsafe-inline' and 'unsafe-eval' are REQUIRED for:
+#    - React's development and some production features
+#    - Google AdSense (requires eval for ad rendering)
+#    - iubenda cookie consent manager (uses inline scripts)
+#    - Google Analytics gtag.js
+#    These cannot be removed without breaking core functionality.
+#
+# 2. img-src allows 'https:' because:
+#    - Users can provide external image URLs for QR code overlays
+#    - This is a core feature of the application
+#    - Restricting to specific domains would break user-provided images
+#
+# 3. /api/qr endpoint has CORS: * because:
+#    - It's a public QR code generation API
+#    - Designed for cross-origin embedding via <img src="...">
+#    - No sensitive data is exposed (generates images from query params)
+#
+# 4. Cross-Origin-Embedder-Policy is NOT set because:
+#    - Third-party scripts (AdSense, Analytics, iubenda) don't support COEP
+#    - Setting COEP would break these integrations
+# ===================================================================================
+
 # ============================================
 # Security Headers (applied to all routes)
 # ============================================
@@ -20,8 +45,13 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     # Restrict browser features
     Permissions-Policy = "accelerometer=(), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+    # Cross-Origin isolation headers for Spectre protection
+    Cross-Origin-Resource-Policy = "same-origin"
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     # Content Security Policy - Allow inline scripts/styles for React, Google services, and iubenda
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https://www.google-analytics.com https://pagead2.googlesyndication.com https://*.iubenda.com https://*.netlify.app https://anqr.link; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
+    # Note: 'unsafe-inline' and 'unsafe-eval' are required for React, Google AdSense, and iubenda consent manager
+    # img-src allows https: for user-provided overlay image URLs (required feature)
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com https://*.sentry.io https://*.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://pagead2.googlesyndication.com https://*.iubenda.com https://*.netlify.app https://anqr.link https://*.sentry.io https://*.ingest.sentry.io; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
 
 # ============================================
 # Cache Headers
@@ -32,11 +62,14 @@
   for = "/"
   [headers.values]
     Cache-Control = "no-cache"
+    # Relax CORP for HTML to allow embedding in iframes where needed
+    Cross-Origin-Resource-Policy = "cross-origin"
 
 [[headers]]
   for = "/index.html"
   [headers.values]
     Cache-Control = "no-cache"
+    Cross-Origin-Resource-Policy = "cross-origin"
 
 # Hashed assets from Vite build - cache forever (hash changes on content change)
 [[headers]]
@@ -81,10 +114,13 @@
 # ============================================
 
 # API redirect - must come BEFORE the SPA catch-all
+# Note: The /api/qr endpoint intentionally uses CORS: * to allow cross-origin embedding
+# This is a public API endpoint designed for <img src="..."> usage across domains
 [[redirects]]
   from = "/api/qr"
   to = "/.netlify/functions/qr"
   status = 200
+  headers = { Cross-Origin-Resource-Policy = "cross-origin" }
 
 # Legacy endpoint - redirect to new path for backward compatibility
 [[redirects]]

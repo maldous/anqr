@@ -1330,3 +1330,6 @@
 1330	"keepAlign: preserva i modelli di allineamento 0/1 (impostazione predefinita: 0)."
 1331	"ProtectFmt: protegge i moduli informativi del formato 0/1 (impostazione predefinita: 0)."
 1332	"ProtectVer: protegge i moduli informativi sulla versione 0/1 (impostazione predefinita: 0)."
+1333	"Informativa sulla privacy completa"
+1334	"Questa pagina fornisce un riepilogo delle nostre pratiche sulla privacy. Per la politica sulla privacy completa e legalmente vincolante con tutti i dettagli sul trattamento dei dati, i tuoi diritti e i nostri obblighi ai sensi del GDPR, del CCPA e di altre leggi sulla privacy, consulta la nostra politica completa ospitata da iubenda."
+1335	"Visualizza la Privacy Policy completa su iubenda"

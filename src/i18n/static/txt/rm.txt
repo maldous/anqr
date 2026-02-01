@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Preserve alignment patterns 0/1 (default: 0)."
 1331	"protectFmt: Protect format info modules 0/1 (default: 0)."
 1332	"protectVer: Protect version info modules 0/1 (default: 0)."
+1333	"Full Privacy Policy"
+1334	"This page provides a summary of our privacy practices. For the complete, legally binding privacy policy with full details on data processing, your rights, and our obligations under GDPR, CCPA, and other privacy laws, please view our full policy hosted by iubenda."
+1335	"View Full Privacy Policy on iubenda"

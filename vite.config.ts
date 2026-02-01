@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import compression from 'vite-plugin-compression';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -18,6 +19,9 @@ const sentryOrg = process.env.SENTRY_ORG || 'anqr';
 const sentryProject = process.env.SENTRY_PROJECT || 'anqr-web';
 // Generate release name from package.json version or git commit
 const sentryRelease = process.env.SENTRY_RELEASE || `anqr@${process.env.npm_package_version || '1.0.0'}`;
+
+// Bundle analysis - enable with ANALYZE=true yarn build
+const analyzeBundle = process.env.ANALYZE === 'true';
 
 // Custom middleware to serve static files from public/gallery before SPA fallback
 function serveGalleryFiles() {
@@ -116,6 +120,17 @@ export default defineConfig({
             },
             // Disable telemetry
             telemetry: false,
+          }),
+        ]
+      : []),
+    // Bundle analyzer (only when ANALYZE=true)
+    ...(analyzeBundle
+      ? [
+          visualizer({
+            filename: 'dist/stats.html',
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
           }),
         ]
       : []),
@@ -271,6 +286,21 @@ export default defineConfig({
             },
           },
           {
+            // Cache learn/examples images on-demand (not precached due to size)
+            urlPattern: /\/images\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'content-images-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
             // Fallback for navigation requests (SPA support)
             urlPattern: ({ request }) => request.mode === 'navigate',
             handler: 'NetworkFirst',
@@ -290,10 +320,42 @@ export default defineConfig({
         // Skip waiting and claim clients immediately
         skipWaiting: true,
         clientsClaim: true,
-        // Precache app shell - include all JS chunks for offline support
+        // Precache app shell - core assets only, not language files
+        // Language/locale files are cached on-demand via runtimeCaching above
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,json}'],
-        // Ensure locale and static chunks are included
-        globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'],
+        // Exclude non-essential files from precache to reduce initial install size
+        globIgnores: [
+          '**/node_modules/**/*',
+          'sw.js',
+          'workbox-*.js',
+          // Exclude gallery images from precache (large, cached on-demand)
+          '**/gallery/**/*',
+          // Exclude learn/examples images from precache (large, cached on-demand)
+          '**/images/**/*',
+          // Exclude source maps if any slip through
+          '**/*.map',
+          // Exclude stats.html bundle analyzer output
+          '**/stats.html',
+        ],
+        // Filter manifest entries to exclude non-English locale/static chunks
+        // This keeps English in precache for offline-first, others cached on-demand
+        manifestTransforms: [
+          (entries: Array<{ url: string; revision: string | null; size: number }>) => {
+            const manifest = entries.filter((entry) => {
+              const url = entry.url;
+              // Keep English locale and static files for offline-first experience
+              if (url.includes('/assets/locale-en')) return true;
+              if (url.includes('/assets/static-en')) return true;
+              // Exclude all other locale chunks (80+ languages, ~10MB+)
+              if (url.includes('/assets/locale-')) return false;
+              // Exclude all other static content chunks (translated pages, ~80MB+)
+              if (url.includes('/assets/static-')) return false;
+              // Keep everything else
+              return true;
+            });
+            return { manifest, warnings: [] as string[] };
+          },
+        ],
       },
     }),
   ],
@@ -388,9 +450,28 @@ export default defineConfig({
           if (id.includes('node_modules/zustand')) {
             return 'vendor-zustand';
           }
-          // Lucide icons - large but necessary for UI
+          // Sentry SDK (loaded early but can be separate chunk)
+          if (id.includes('node_modules/@sentry')) {
+            return 'vendor-sentry';
+          }
+          // Lucide icons - tree-shaken via explicit imports
+          // Note: Removed barrel import in Header.tsx for proper tree-shaking
           if (id.includes('node_modules/lucide-react')) {
             return 'vendor-icons';
+          }
+          // Lazy-loaded page components
+          if (id.includes('/components/Gallery')) {
+            return 'app-gallery';
+          }
+          if (id.includes('/components/StaticPage')) {
+            return 'app-static-page';
+          }
+          if (id.includes('/components/Analyze')) {
+            return 'app-analyze';
+          }
+          // Welcome modal - only shown on first visit
+          if (id.includes('/components/WelcomeModal')) {
+            return 'app-welcome';
           }
           // QR code generation library (now in src/modules)
           if (id.includes('/modules/qrcode.mjs')) {

@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Lerrokatze ereduak gorde 0/1 (lehenetsia: 0)."
 1331	"protectFmt: Babestu formatuaren informazio moduluak 0/1 (lehenetsia: 0)."
 1332	"protectVer: Babestu bertsioaren informazio moduluak 0/1 (lehenetsia: 0)."
+1333	"Pribatutasun politika osoa"
+1334	"Orrialde honek gure pribatutasun praktiken laburpena eskaintzen du. Datuen tratamenduari, zure eskubideei eta GDPR, CCPA eta beste pribatutasun-lege batzuen arabera ditugun betebeharrei buruzko xehetasun osoak dituen pribatutasun-politika osoa eta legezko loteslea lortzeko, ikusi iubenda-k ostatatutako gure politika osoa."
+1335	"Ikusi Pribatutasun-politika osoa iubenda-n"
