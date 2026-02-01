@@ -233,7 +233,7 @@ export async function generateDitheredMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
-  const intensity = effectiveIntensity; // already 0..1
+  const intensity = effectiveIntensity / 100; // Convert from 0-100 to 0-1
   const ditherStrength = (config.ditherStrength ?? 50) / 100;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
@@ -349,7 +349,7 @@ export async function generateBlueNoiseMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
-  const intensity = effectiveIntensity; // 0..1
+  const intensity = effectiveIntensity / 100; // Convert from 0-100 to 0-1
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
