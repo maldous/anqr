@@ -1330,3 +1330,6 @@
 1330	"KeepAlign: Išsaugokite lygiavimo šablonus 0/1 (numatytasis nustatymas: 0)."
 1331	"ProtectFmt: Apsaugokite formato informacijos modulius 0/1 (numatytasis: 0)."
 1332	"ProtectVer: Apsaugokite versijos informacijos modulius 0/1 (numatytasis: 0)."
+1333	"Visa privatumo politika"
+1334	"Šiame puslapyje pateikiama mūsų privatumo praktikos santrauka. Norėdami gauti išsamią, teisiškai įpareigojančią privatumo politiką su visa informacija apie duomenų tvarkymą, jūsų teises ir mūsų įsipareigojimus pagal GDPR, CCPA ir kitus privatumo įstatymus, peržiūrėkite visą mūsų politiką, kurią talpina iubenda."
+1335	"Peržiūrėkite visą „iubenda“ privatumo politiką"

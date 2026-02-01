@@ -267,7 +267,9 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
 
   return (
     <main
+      id="main-content"
       className={`flex-1 flex flex-col lg:flex-row bg-background overflow-auto scrollbar-hide transition-all duration-300 ${sidebarOpen ? 'lg:ms-96' : ''}`}
+      tabIndex={-1}
     >
       {/* Desktop Left Column Ad - Skyscraper 160x600, always visible */}
       {/* Fixed height based on viewport to prevent layout shift from AdSense */}
@@ -299,8 +301,10 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
                       if (contrastAnalysis.meetsAA) return 'WCAG AA';
                       return t('safety.poor');
                     })()}`}
+                    role="status"
+                    aria-label={`Contrast ratio: ${contrastAnalysis.ratio.toFixed(1)} to 1, ${getContrastLabel(contrastAnalysis.ratio)}`}
                   >
-                    <Eye className="h-3 w-3" />
+                    <Eye className="h-3 w-3" aria-hidden="true" />
                     <span>{contrastAnalysis.ratio.toFixed(1)}:1</span>
                     <span className="opacity-75">({getContrastLabel(contrastAnalysis.ratio)})</span>
                   </div>
@@ -314,8 +318,10 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
                       title={t('safety.showHeatmap')}
+                      aria-label={t('safety.showHeatmap', 'Toggle contrast heatmap')}
+                      aria-pressed={heatmapActive}
                     >
-                      <Thermometer className="h-3 w-3" />
+                      <Thermometer className="h-3 w-3" aria-hidden="true" />
                       <span>{t('safety.showHeatmap')}</span>
                     </button>
                   )}
@@ -323,10 +329,10 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
               )}
               {/* Safety warnings */}
               {safetyWarnings.length > 0 && showWarnings && (
-                <div className="absolute top-2 right-2 max-w-xs z-10">
+                <div className="absolute top-2 right-2 max-w-xs z-10" role="alert" aria-live="polite">
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 shadow-sm">
                     <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
                       <div className="flex-1">
                         <p className="text-xs font-medium text-amber-800">{t('sections.safety')}</p>
                         <ul className="text-xs text-amber-700 mt-1 space-y-0.5">
@@ -340,8 +346,9 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
                         onClick={() => setShowWarnings(false)}
                         className="text-amber-600 hover:text-amber-800 text-xs"
                         title={t('common.close')}
+                        aria-label={t('common.close', 'Close warnings')}
                       >
-                        ✕
+                        <span aria-hidden="true">✕</span>
                       </button>
                     </div>
                   </div>
@@ -357,8 +364,10 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
                   <div
                     className="absolute -top-2 -right-2 z-20 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm"
                     title={t('preview.simulationActive')}
+                    role="status"
+                    aria-label={t('preview.simulationActive', 'Simulation mode active')}
                   >
-                    <Sparkles className="h-3 w-3" />
+                    <Sparkles className="h-3 w-3" aria-hidden="true" />
                     <span>{t('preview.simulating')}</span>
                   </div>
                 )}
@@ -367,6 +376,8 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
                   className="max-w-full max-h-full transition-all duration-200"
                   style={simulationStyles}
                   title={t('preview.qrCodePreview')}
+                  aria-label={t('preview.qrCodePreview', 'QR code preview')}
+                  role="img"
                 />
                 {/* Noise overlay canvas - positioned over the QR canvas */}
                 {qa.simulateNoise > 0 && (

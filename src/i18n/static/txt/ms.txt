@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Kekalkan corak penjajaran 0/1 (lalai: 0)."
 1331	"protectFmt: Lindungi modul maklumat format 0/1 (lalai: 0)."
 1332	"protectVer: Lindungi modul maklumat versi 0/1 (lalai: 0)."
+1333	"Dasar Privasi Penuh"
+1334	"Halaman ini menyediakan ringkasan amalan privasi kami. Untuk mendapatkan dasar privasi yang lengkap dan mengikat secara sah dengan butiran lengkap tentang pemprosesan data, hak anda dan kewajipan kami di bawah GDPR, CCPA dan undang-undang privasi lain, sila lihat dasar penuh kami yang dihoskan oleh iubenda."
+1335	"Lihat Dasar Privasi Penuh di iubenda"

@@ -94,6 +94,9 @@ export ENV := PROD
 #
 export VITE_ADSENSE_ENABLED := true
 export VITE_ADSENSE_PUBLISHER_ID := ca-pub-2270701384951162
+# Test Mode - show placeholder ads in production before AdSense approval
+# Set to 'true' to show test placeholders, 'false' or remove when AdSense is approved
+export VITE_ADSENSE_TEST_MODE := true
 
 # HIGH PRIORITY - Main app ads
 export VITE_ADSENSE_SLOT_LEFT_SKYSCRAPER := 7394019600
@@ -155,7 +158,7 @@ export VITE_ADMOB_REWARDED_PREMIUM := ca-app-pub-2270701384951162/8325432672
 export VITE_ADMOB_REWARDED_EXPORT_HD := ca-app-pub-2270701384951162/4911983037
 #
 # Set to 'true' to show test ads while waiting for approval, 'false' for production
-export VITE_ADMOB_TESTING := false
+export VITE_ADMOB_TESTING := true
 
 # Android SDK path (adjust for your system)
 export ANDROID_HOME ?= $(HOME)/Android/Sdk

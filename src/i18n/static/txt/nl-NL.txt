@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Behoud uitlijningspatronen 0/1 (standaard: 0)."
 1331	"protectFmt: Bescherm formaat-infomodules 0/1 (standaard: 0)."
 1332	"protectVer: Bescherm versie-infomodules 0/1 (standaard: 0)."
+1333	"Volledig privacybeleid"
+1334	"Deze pagina geeft een samenvatting van onze privacypraktijken. Voor het volledige, juridisch bindende privacybeleid met volledige details over gegevensverwerking, uw rechten en onze verplichtingen onder de AVG, CCPA en andere privacywetten, kunt u ons volledige beleid bekijken, gehost door iubenda."
+1335	"Bekijk het volledige privacybeleid op iubenda"

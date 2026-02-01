@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Ohrani vzorce poravnave 0/1 (privzeto: 0)."
 1331	"protectFmt: Zaščiti informacijske module oblike 0/1 (privzeto: 0)."
 1332	"protectVer: Zaščiti informacijske module različice 0/1 (privzeto: 0)."
+1333	"Celoten pravilnik o zasebnosti"
+1334	"Na tej strani je povzetek naših praks glede zasebnosti. Za popolno, pravno zavezujočo politiko zasebnosti s podrobnostmi o obdelavi podatkov, vaših pravicah in naših obveznostih v skladu z GDPR, CCPA in drugimi zakoni o zasebnosti si oglejte našo celotno politiko, ki jo gosti iubenda."
+1335	"Oglejte si celotno politiko zasebnosti na iubenda"

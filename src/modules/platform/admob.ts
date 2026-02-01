@@ -23,14 +23,58 @@ let currentBannerHeight = 0;
 let bannerHeightCallbacks: Array<(height: number) => void> = [];
 let currentBannerPosition: 'top' | 'bottom' | null = null;
 
-// Ad unit IDs - these would typically come from environment/config
-const AD_UNIT_IDS = {
-  // Test IDs for development
+// Test ad unit IDs from Google (for testing before approval)
+const TEST_AD_UNIT_IDS = {
   banner: 'ca-app-pub-3940256099942544/6300978111',
   interstitial: 'ca-app-pub-3940256099942544/1033173712',
   rewarded: 'ca-app-pub-3940256099942544/5224354917',
   rewardedInterstitial: 'ca-app-pub-3940256099942544/5354046379',
 };
+
+// Production ad unit IDs from environment (set in Makefile)
+const PROD_AD_UNIT_IDS = {
+  bannerBottom: import.meta.env.VITE_ADMOB_BANNER_BOTTOM || '',
+  bannerTop: import.meta.env.VITE_ADMOB_BANNER_TOP || '',
+  interstitialExport: import.meta.env.VITE_ADMOB_INTERSTITIAL_EXPORT || '',
+  interstitialGallery: import.meta.env.VITE_ADMOB_INTERSTITIAL_GALLERY || '',
+  interstitialGeneration: import.meta.env.VITE_ADMOB_INTERSTITIAL_GENERATION || '',
+  rewardedPremium: import.meta.env.VITE_ADMOB_REWARDED_PREMIUM || '',
+  rewardedExportHd: import.meta.env.VITE_ADMOB_REWARDED_EXPORT_HD || '',
+};
+
+// Check if we're in test mode - strictly honor the Makefile env var
+const isTestMode = import.meta.env.VITE_ADMOB_TESTING === 'true';
+
+/**
+ * Get the appropriate ad unit ID based on test mode and ad type
+ */
+function getAdUnitId(
+  type: 'banner' | 'interstitial' | 'rewarded' | 'rewardedInterstitial',
+  context?: string
+): string {
+  if (isTestMode) {
+    // Test mode: use Google's test ad unit IDs
+    return TEST_AD_UNIT_IDS[type];
+  }
+
+  // Production mode: use environment-configured ad unit IDs
+  switch (type) {
+    case 'banner':
+      return context === 'top' ? PROD_AD_UNIT_IDS.bannerTop : PROD_AD_UNIT_IDS.bannerBottom;
+    case 'interstitial':
+      if (context === 'export') return PROD_AD_UNIT_IDS.interstitialExport;
+      if (context === 'gallery') return PROD_AD_UNIT_IDS.interstitialGallery;
+      return PROD_AD_UNIT_IDS.interstitialGeneration;
+    case 'rewarded':
+      return context === 'export_hd'
+        ? PROD_AD_UNIT_IDS.rewardedExportHd
+        : PROD_AD_UNIT_IDS.rewardedPremium;
+    case 'rewardedInterstitial':
+      return PROD_AD_UNIT_IDS.rewardedPremium;
+    default:
+      return TEST_AD_UNIT_IDS[type];
+  }
+}
 
 // Types for interstitial and rewarded ads
 // These are flexible string types to allow for different ad contexts
@@ -76,7 +120,7 @@ export async function initializeAdMob(): Promise<boolean> {
 
     adMobAvailable = true;
     adMobInitialized = true;
-    console.log('[AdMob] Initialized successfully');
+    console.log(`[AdMob] Initialized successfully (${isTestMode ? 'TEST MODE' : 'PRODUCTION MODE'})`);
     return true;
   } catch (_err) {
     console.log('[AdMob] Not available (web environment or plugin not installed)');
@@ -130,7 +174,7 @@ export async function showBannerAd(position: 'top' | 'bottom' = 'bottom'): Promi
 
   try {
     const bannerOptions = {
-      adId: AD_UNIT_IDS.banner,
+      adId: getAdUnitId('banner', position),
       adSize: BannerAdSize.ADAPTIVE_BANNER,
       position: position === 'top' ? BannerAdPosition.TOP_CENTER : BannerAdPosition.BOTTOM_CENTER,
       margin: 0,
@@ -208,14 +252,16 @@ export async function prepareInterstitial(
 
   try {
     const adId =
-      type === 'rewardedInterstitial' ? AD_UNIT_IDS.rewardedInterstitial : AD_UNIT_IDS.interstitial;
+      type === 'rewardedInterstitial'
+        ? getAdUnitId('rewardedInterstitial')
+        : getAdUnitId('interstitial', type);
 
     if (type === 'rewardedInterstitial') {
       await AdMob.prepareRewardedInterstitialAd({ adId });
     } else {
       await AdMob.prepareInterstitial({ adId });
     }
-    console.log(`[AdMob] ${type} prepared`);
+    console.log(`[AdMob] ${type} prepared (${isTestMode ? 'TEST' : 'PROD'})`);
     return true;
   } catch (err) {
     console.error(`[AdMob] Failed to prepare ${type}:`, err);
@@ -251,15 +297,18 @@ export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promis
   if (!(adMobAvailable && AdMob)) return false;
 
   try {
+    const context = type === 'premium' ? 'premium' : type === 'rewardedInterstitial' ? undefined : 'export_hd';
     const adId =
-      type === 'rewardedInterstitial' ? AD_UNIT_IDS.rewardedInterstitial : AD_UNIT_IDS.rewarded;
+      type === 'rewardedInterstitial'
+        ? getAdUnitId('rewardedInterstitial')
+        : getAdUnitId('rewarded', context);
 
     if (type === 'rewardedInterstitial') {
       await AdMob.prepareRewardedInterstitialAd({ adId });
     } else {
       await AdMob.prepareRewardedAd({ adId });
     }
-    console.log(`[AdMob] ${type} ad prepared`);
+    console.log(`[AdMob] ${type} ad prepared (${isTestMode ? 'TEST' : 'PROD'})`);
     return true;
   } catch (err) {
     console.error(`[AdMob] Failed to prepare ${type} ad:`, err);

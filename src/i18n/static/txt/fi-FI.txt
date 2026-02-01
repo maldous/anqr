@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Säilytä kohdistuskuviot 0/1 (oletus: 0)."
 1331	"ProtectFmt: Suojaa muototietomoduulit 0/1 (oletus: 0)."
 1332	"ProtectVer: Suojaa version tietomoduulit 0/1 (oletus: 0)."
+1333	"Täydellinen tietosuojakäytäntö"
+1334	"Tällä sivulla on yhteenveto tietosuojakäytännöistämme. Täydellisen, laillisesti sitovan tietosuojakäytännön, joka sisältää täydelliset tiedot tietojenkäsittelystä, oikeuksistasi ja GDPR-, CCPA- ja muiden tietosuojalakien mukaisista velvoitteistamme, katso iubendan isännöimä täydellinen käytäntömme."
+1335	"Katso koko iubendan tietosuojakäytäntö"

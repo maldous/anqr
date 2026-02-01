@@ -77,6 +77,11 @@ export const privacy: PageDefinition = {
       heading: '441',
       paragraphs: ['442'],
     },
+    {
+      heading: '1333',
+      paragraphs: ['1334'],
+      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: '1335', type: 'external' }],
+    },
   ],
 };
 

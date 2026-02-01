@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Hifadhi ruwaza za upatanishi 0/1 (chaguo-msingi: 0)."
 1331	"protectFmt: Linda moduli za maelezo ya umbizo 0/1 (chaguo-msingi: 0)."
 1332	"protectVer: Linda moduli za maelezo ya toleo 0/1 (chaguo-msingi: 0)."
+1333	"Sera Kamili ya Faragha"
+1334	"Ukurasa huu unatoa muhtasari wa desturi zetu za faragha. Kwa sera kamili ya faragha inayofunga kisheria yenye maelezo kamili kuhusu uchakataji wa data, haki zako, na wajibu wetu chini ya GDPR, CCPA, na sheria zingine za faragha, tafadhali tazama sera yetu kamili inayopangishwa na iubenda."
+1335	"Tazama Sera Kamili ya Faragha kwenye iubenda"

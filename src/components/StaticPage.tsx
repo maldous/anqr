@@ -510,40 +510,6 @@ function Breadcrumb({ items, lang }: Readonly<{ items: string[]; lang: string }>
   );
 }
 
-// Render related content links as consistent styled buttons
-function RelatedLinks({
-  links,
-  lang,
-  t,
-}: Readonly<{
-  links: PageLink[];
-  lang: string;
-  t: (key: string) => string;
-}>) {
-  if (!links || links.length === 0) return null;
-
-  return (
-    <div className="mt-8 pt-6 border-t border-border">
-      <h3 className="text-lg font-semibold text-foreground mb-4">
-        {t('nav.related') || 'Related'}
-      </h3>
-      <div className="flex flex-wrap justify-center gap-3">
-        {links.map((link) => (
-          <Button
-            key={link.href}
-            asChild
-            variant="outline"
-            size="default"
-            className="min-w-[140px]"
-          >
-            <a href={processHref(link.href, lang)}>{link.label}</a>
-          </Button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ContactEmailLink() {
   const { t } = useTranslation();
 
@@ -879,14 +845,34 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                         ))}
                       </div>
                     )}
+
+                    {/* External links only (e.g., iubenda privacy policy) */}
+                    {section.links && section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
+                      <div className="flex flex-wrap gap-3 mt-4">
+                        {section.links
+                          .filter((link) => link.href.startsWith('http'))
+                          .map((link) => (
+                            <Button
+                              key={link.href}
+                              asChild
+                              variant="outline"
+                              size="default"
+                            >
+                              <a
+                                href={link.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {link.label}
+                              </a>
+                            </Button>
+                          ))}
+                      </div>
+                    )}
                   </section>
                 );
               })}
             </div>
-
-            {def.relatedLinks && (
-              <RelatedLinks links={def.relatedLinks} lang={i18n.language} t={t} />
-            )}
 
             {/* Bottom horizontal ad */}
             <div className="mt-8 flex justify-center">
@@ -984,6 +970,30 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                     ))}
                   </div>
                 )}
+
+                {/* External links only (e.g., iubenda privacy policy) */}
+                {section.links && section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    {section.links
+                      .filter((link) => link.href.startsWith('http'))
+                      .map((link) => (
+                        <Button
+                          key={link.href}
+                          asChild
+                          variant="outline"
+                          size="default"
+                        >
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {link.label}
+                          </a>
+                        </Button>
+                      ))}
+                  </div>
+                )}
               </section>
             ))}
 
@@ -994,8 +1004,6 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
               </div>
             )}
           </div>
-
-          {def.relatedLinks && <RelatedLinks links={def.relatedLinks} lang={i18n.language} t={t} />}
 
           {/* Bottom horizontal ad */}
           <div className="mt-8 flex justify-center">

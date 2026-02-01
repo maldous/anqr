@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Mempertahankan pola perataan 0/1 (default: 0)."
 1331	"proteksiFmt: Lindungi modul info format 0/1 (default: 0)."
 1332	"proteksiVer: Lindungi modul info versi 0/1 (default: 0)."
+1333	"Kebijakan Privasi Penuh"
+1334	"Halaman ini memberikan ringkasan praktik privasi kami. Untuk kebijakan privasi yang lengkap dan mengikat secara hukum dengan perincian lengkap tentang pemrosesan data, hak Anda, dan kewajiban kami berdasarkan GDPR, CCPA, dan undang-undang privasi lainnya, silakan lihat kebijakan lengkap kami yang diselenggarakan oleh iubenda."
+1335	"Lihat Kebijakan Privasi Lengkap di iubenda"

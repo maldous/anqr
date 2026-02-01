@@ -1764,15 +1764,37 @@ _(none)_
 
 ## i18n Translation Workflow
 
-### Critical Rules for Updating Translations
+There are **TWO separate i18n systems** in this project:
 
-The i18n system uses numbered line files (`src/i18n/locales/txt/*.txt`) and a template (`src/i18n/locales/template.json`) to generate JSON locale files.
+1. **UI Strings (locales)**: Button labels, menu items, tooltips - uses `src/i18n/locales/txt/*.txt` + `template.json`
+2. **Static Content (pages)**: Privacy, Terms, About, Guide, Learn, Examples pages - uses `src/i18n/static/txt/*.txt` + `template-*.ts`
 
-**NEVER modify existing line numbers to change text** - this breaks the translation system!
+---
 
-#### How the System Works
+### ⚠️ CRITICAL: NEVER EDIT GENERATED FILES DIRECTLY ⚠️
 
-1. **Source of Truth**: `en-GB.txt` is the master English translation file
+**YOU MUST NEVER DIRECTLY EDIT:**
+- `src/i18n/locales/*.json` - These are GENERATED from txt + template.json
+- `src/i18n/static/<lang>/*.ts` (e.g., `en-GB/privacy.ts`) - These are GENERATED from txt + template-*.ts
+
+**YOU MUST ONLY EDIT:**
+- `src/i18n/locales/txt/en-GB.txt` - Master English UI strings
+- `src/i18n/locales/template.json` - Maps JSON keys to line numbers
+- `src/i18n/static/txt/en-GB.txt` - Master English static content
+- `src/i18n/static/txt/template-*.ts` - Template files with line number references
+
+Editing generated files directly will:
+1. Break translation detection (xlate.py won't see your changes)
+2. Get overwritten next time `make i18n:fill` runs
+3. Cause inconsistencies across languages
+
+---
+
+### UI Strings System (`src/i18n/locales/`)
+
+#### How It Works
+
+1. **Source of Truth**: `txt/en-GB.txt` is the master English translation file
 2. **Line Numbers**: Each string has a unique line number (e.g., `1427\t"Generate"`)
 3. **Template Mapping**: `template.json` maps translation keys to line numbers (e.g., `"feature1Title": "1427"`)
 4. **Translation Detection**: `xlate.py` only translates lines that are **missing** in other language `.txt` files
@@ -1784,22 +1806,88 @@ The i18n system uses numbered line files (`src/i18n/locales/txt/*.txt`) and a te
 3. **Blank out old strings** that are being replaced by setting them to an empty placeholder like `"(deprecated)"` or `"_"` - this prevents stale translations from being used
 4. **Never delete line numbers** - this would break the line number alignment across all language files
 
-#### Workflow for Updating Welcome Modal (example)
+#### Example: Updating a UI String
 
 ```bash
-# 1. Add new strings at end of en-GB.txt (e.g., lines 1774-1780)
+# 1. Add new strings at end of txt/en-GB.txt (e.g., lines 1774-1780)
 # 2. Blank out the old strings you're replacing (e.g., line 1427 becomes: 1427\t"_")
 # 3. Update template.json to point to new line numbers
-# 4. Run make i18n:xlate to translate new lines to all languages
-# 5. Run make i18n:fill to generate JSON files from txt files
+# 4. User runs: make i18n:xlate (translates new lines to all languages)
+# 5. User runs: make i18n:fill (generates JSON files from txt files)
 ```
 
-#### Make Commands (USER RUNS THESE - NEVER RUN AUTOMATICALLY)
+---
 
-**IMPORTANT**: The AI assistant must NEVER run these commands. The user will always run them manually after reviewing the changes to `en-GB.txt` and `template.json`.
+### Static Content System (`src/i18n/static/`)
+
+#### How It Works
+
+1. **Source of Truth**: `txt/en-GB.txt` contains all translatable strings with line numbers
+2. **Template Files**: `txt/template-*.ts` files contain page structure with line number references instead of text
+   - Example: `title: '374'` means "use the string from line 374 of the txt file"
+3. **Generated Files**: `fill.py` reads the template + txt file and generates the actual `<lang>/*.ts` files
+
+#### File Structure
+
+```
+src/i18n/static/
+├── txt/
+│   ├── en-GB.txt           # Master English content (line numbers → strings)
+│   ├── de-DE.txt           # German translations
+│   ├── fr-FR.txt           # French translations
+│   ├── template-privacy.ts # Privacy page template (uses line number refs)
+│   ├── template-terms.ts   # Terms page template
+│   ├── template-about.ts   # About page template
+│   └── ...                 # Other templates
+├── en-GB/
+│   ├── privacy.ts          # GENERATED - DO NOT EDIT
+│   ├── terms.ts            # GENERATED - DO NOT EDIT
+│   └── ...                 # GENERATED files
+├── de-DE/                  # GENERATED - DO NOT EDIT
+├── fr-FR/                  # GENERATED - DO NOT EDIT
+└── fill.py                 # Script that generates <lang>/*.ts from txt + templates
+```
+
+#### Rules for Adding/Changing Static Content
+
+1. **New content = Add NEW lines at END of `txt/en-GB.txt`**
+   - Format: `<line_number>\t"<content>"`
+   - Example: `1333\t"Full Privacy Policy"`
+
+2. **Update the template file** (`txt/template-*.ts`) to reference the new line numbers
+   - Example: Add a new section with `heading: '1333'`
+
+3. **Never modify line numbers or reorder lines** - this breaks alignment across all language files
+
+4. **Changing existing content = Add NEW line numbers** with new text, update template to use new numbers
+
+#### Example: Adding a New Section to Privacy Page
+
+```bash
+# 1. Add new lines at END of txt/en-GB.txt:
+#    1333\t"Full Privacy Policy"
+#    1334\t"For the complete, legally binding privacy policy, please visit our privacy policy page."
+#    1335\t"View Full Privacy Policy on iubenda"
+
+# 2. Update txt/template-privacy.ts to add new section:
+#    {
+#      heading: '1333',
+#      paragraphs: ['1334'],
+#      links: [{ href: 'https://...', label: '1335' }],
+#    },
+
+# 3. User runs: make i18n:xlate (translates new lines to all languages)
+# 4. User runs: make i18n:fill (generates the actual .ts files)
+```
+
+---
+
+### Make Commands (USER RUNS THESE - NEVER RUN AUTOMATICALLY)
+
+**IMPORTANT**: The AI assistant must NEVER run these commands. The user will always run them manually after reviewing the changes to source files.
 
 - `make i18n:xlate` - Translates missing lines in `en-GB.txt` to all other language `.txt` files
-- `make i18n:fill` - Generates `.json` locale files from `template.json` + `.txt` files
+- `make i18n:fill` - Generates output files (JSON for locales, TS for static) from txt + templates
 - `make i18n:sync` - Runs both xlate and fill
 
 ---

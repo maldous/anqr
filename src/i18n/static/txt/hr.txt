@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Sačuvaj uzorke poravnanja 0/1 (zadano: 0)."
 1331	"protectFmt: Zaštiti format info modula 0/1 (zadano: 0)."
 1332	"protectVer: Zaštitite info module verzije 0/1 (zadano: 0)."
+1333	"Potpuna pravila o privatnosti"
+1334	"Ova stranica pruža sažetak naših praksi glede privatnosti. Za cjelovita, pravno obvezujuća pravila o privatnosti s potpunim pojedinostima o obradi podataka, vašim pravima i našim obvezama prema GDPR-u, CCPA-u i drugim zakonima o privatnosti, pogledajte našu cjelovitu politiku koju hostira iubenda."
+1335	"Pogledajte punu politiku privatnosti na iubenda"

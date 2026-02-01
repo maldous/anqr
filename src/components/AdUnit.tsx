@@ -135,10 +135,16 @@ export function AdUnit({
     return null;
   }
 
-  const enabled =
-    import.meta.env.PROD && import.meta.env.VITE_ADSENSE_ENABLED !== 'false' && !!slotId;
+  // Test mode: show placeholders in production before AdSense approval
+  const isTestMode = import.meta.env.VITE_ADSENSE_TEST_MODE === 'true';
 
-  // Show placeholder in development or when slot not configured (web only)
+  const enabled =
+    import.meta.env.PROD &&
+    import.meta.env.VITE_ADSENSE_ENABLED !== 'false' &&
+    !!slotId &&
+    !isTestMode;
+
+  // Show placeholder in development, test mode, or when slot not configured (web only)
   if (!enabled) {
     return (
       <AdPlaceholder

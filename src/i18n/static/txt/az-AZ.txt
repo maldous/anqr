@@ -1330,3 +1330,6 @@
 1330	"keepAlign: Hizalanma nümunələrini qoruyun 0/1 (defolt: 0)."
 1331	"protectFmt: 0/1 format məlumat modullarını qoruyun (defolt: 0)."
 1332	"protectVer: Versiya məlumat modullarını qoruyun 0/1 (defolt: 0)."
+1333	"Tam Məxfilik Siyasəti"
+1334	"Bu səhifə məxfilik təcrübələrimizin xülasəsini təqdim edir. Məlumatların emalı, hüquqlarınız və GDPR, CCPA və digər məxfilik qanunları üzrə öhdəliklərimizlə bağlı tam təfərrüatları olan tam, qanuni məcburi məxfilik siyasəti üçün lütfən, iubenda tərəfindən təşkil edilən tam siyasətimizə baxın."
+1335	"Tam Məxfilik Siyasətinə iubenda-da baxın"

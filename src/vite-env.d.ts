@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_RELEASE: string;
   // AdSense configuration
   readonly VITE_ADSENSE_ENABLED: string;
+  // Show placeholder ads in production (for testing before AdSense approval)
+  readonly VITE_ADSENSE_TEST_MODE: string;
   // Main app ads
   readonly VITE_ADSENSE_SLOT_LEFT_SKYSCRAPER: string;
   readonly VITE_ADSENSE_SLOT_RIGHT_SKYSCRAPER: string;
