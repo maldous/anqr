@@ -1,5 +1,5 @@
-import type { PageDefinition } from '../types';
 import { LAST_UPDATED } from '../constants';
+import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: '1179',
