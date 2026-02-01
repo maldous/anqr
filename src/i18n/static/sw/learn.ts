@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Jifunze na ANQR',
   description:
     'Miongozo inayofaa, ya kwanza ya biashara ya kubadilisha misimbo ya QR kuwa mali halisi ya uuzaji - sio tu miraba inayofanya kazi. Jifunze jinsi ya kuboresha misimbo ya urithi ya mauzo, kuunda alama za QR zinazotii, kuandaa bidhaa ambazo tayari zimechapishwa, kutumia uhuishaji kwa usalama kwenye maonyesho ya dijitali, na kushiriki usanidi uliofungiwa ndani kwa timu zinazozungumza lugha nyingi kwa kutumia viungo vya ANQR ("nanga").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Fungua jenereta', type: 'generator' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQRについて',
   description:
     'ANQR は、クライアントファーストのアプローチで無料の QR コードジェネレーターです。QR コードをローカルに生成したり、API を使って埋め込みます。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
   primaryLinks: [
     { href: '/?lang=${lang}', label: '発電機を開けて下さい', type: 'generator' },
     { href: '/learn?lang=${lang}', label: '学習記事の閲覧', type: 'learn' },

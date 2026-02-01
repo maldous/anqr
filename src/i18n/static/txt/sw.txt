@@ -1333,3 +1333,5 @@
 1333	"Sera Kamili ya Faragha"
 1334	"Ukurasa huu unatoa muhtasari wa desturi zetu za faragha. Kwa sera kamili ya faragha inayofunga kisheria yenye maelezo kamili kuhusu uchakataji wa data, haki zako, na wajibu wetu chini ya GDPR, CCPA, na sheria zingine za faragha, tafadhali tazama sera yetu kamili inayopangishwa na iubenda."
 1335	"Tazama Sera Kamili ya Faragha kwenye iubenda"
+1794	"1 Februari 2026"
+1795	"Mwongozo"

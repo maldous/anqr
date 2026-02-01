@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Tietoja ANQR:stä',
   description:
     'ANQR on ilmainen QR-koodigeneraattori asiakkaan ensimmäinen lähestymistapa - luoda QR-koodit paikallisesti tai käyttää API upottamalla.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. helmikuuta 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Avaa generaattori', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Selaa Opi artikkeleita', type: 'learn' },

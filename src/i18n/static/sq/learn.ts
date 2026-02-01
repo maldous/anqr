@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Mësoni me ANQR',
   description:
     'Udhëzues praktik, të parë të biznesit për kthimin e kodeve QR në asete reale marketingu - jo vetëm katrorë funksionalë. Mësoni se si të përmirësoni kodet e vjetra të pikave të shitjes, të krijoni sinjalistikë QR në përputhje me pagesën, të përgatitni eksporte të gatshme për printim, të përdorni animacionin në mënyrë të sigurt në ekranet dixhitale dhe të ndani konfigurimet e kyçura në ekipet shumëgjuhëshe duke përdorur lidhjet ANQR ("ankor").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 shkurt 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Hapni gjeneratorin', type: 'generator' },

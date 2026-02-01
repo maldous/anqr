@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Contacte amb nosaltres',
   description:
     "Nosaltres donem la benvinguda, informes d'errors, peticions de característiques i investigacions generals.",
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 de febrer de 2026',
   sections: [
     {
       heading: 'Com arribar a nosaltres',

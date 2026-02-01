@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR მომხმარებლის სახელმძღვანელო',
   description: 'სრული სახელმძღვანელო QR კოდების შესაქმნელად ANQR-ის გამოყენების შესახებ.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '2026 წლის 1 თებერვალი',
+  breadcrumb: ['გზამკვლევი'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'გახსენით გენერატორი', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ისწავლეთ სტატიების დათვალიერება', type: 'learn' },

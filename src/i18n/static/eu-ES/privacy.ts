@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Pribatutasun politika',
   description:
     'ANQR-k biltzen duen informazioa, nola erabiltzen den eta pribatutasun-lege aplikagarrien arabera zure eskubideak.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026ko otsailaren 1a',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Zerbitzu-baldintzak', type: 'external' }],
   sections: [
     {

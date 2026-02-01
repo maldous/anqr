@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Leer met ANQR',
   description:
     'Praktiese, besigheids-eerste gidse om QR-kodes in regte bemarkingsbates te omskep - nie net funksionele vierkante nie. Leer hoe om verouderde verkoopspuntkodes op te gradeer, voldoenende betalings-QR-tekens te skep, drukgereed uitvoere voor te berei, animasie veilig op digitale skerms te gebruik, en toegesluite konfigurasies oor veeltalige spanne te deel deur ANQR ("anker")-skakels te gebruik.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februarie 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Maak die kragopwekker oop', type: 'generator' },

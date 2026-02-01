@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Ծառայության պայմաններ',
   description:
     'Մուտք գործելով կամ օգտագործելով կայք՝ դուք համաձայնում եք պարտավորված լինել այս պայմաններով:',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 փետրվարի 2026թ',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Գաղտնիության քաղաքականություն', type: 'external' },
   ],

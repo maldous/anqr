@@ -1333,3 +1333,5 @@
 1333	"Kebijakan Privasi Penuh"
 1334	"Halaman ini memberikan ringkasan praktik privasi kami. Untuk kebijakan privasi yang lengkap dan mengikat secara hukum dengan perincian lengkap tentang pemrosesan data, hak Anda, dan kewajiban kami berdasarkan GDPR, CCPA, dan undang-undang privasi lainnya, silakan lihat kebijakan lengkap kami yang diselenggarakan oleh iubenda."
 1335	"Lihat Kebijakan Privasi Lengkap di iubenda"
+1794	"1 Februari 2026"
+1795	"Panduan"

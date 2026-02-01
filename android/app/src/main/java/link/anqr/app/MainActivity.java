@@ -14,6 +14,8 @@ import com.getcapacitor.BridgeActivity;
 import io.sentry.Sentry;
 import io.sentry.android.core.SentryAndroid;
 
+import link.anqr.app.BuildConfig;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;

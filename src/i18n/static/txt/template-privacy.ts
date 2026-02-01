@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: '374',
   description: '375',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1794',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: '443', type: 'external' }],
   sections: [
     {

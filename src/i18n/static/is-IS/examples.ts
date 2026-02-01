@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Dæmi um ANQR',
   description:
     'Fimm raunveruleg dæmi í framleiðslustíl sem sýna hvar QR kóðar skapa mælanlegt verðmæti: upplyftingu eldri verslunarteljarakóða, vörumerki smásölugreiðslur og „skanna-til" aðgerðir, prentað stærð frá flugmiðum til auglýsingaskilta, hreyfimyndað QR fyrir stafræn skilti og þvermállegt samstarf með því að nota ankeratengla sem hægt er að deila. Hvert dæmi inniheldur myndir, hagnýtar takmarkanir og endurhljóðblöndun tengil aftur á rafallinn.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. febrúar 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Opnaðu rafalann', type: 'generator' },

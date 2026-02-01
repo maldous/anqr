@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Contoh ANQR',
   description:
     'Lima contoh gaya produksi di dunia nyata yang menunjukkan di mana kode QR menciptakan nilai terukur: meningkatkan kode counter ritel lama, pembayaran ritel bermerek dan tindakan "scan-to", penskalaan pencetakan dari pamflet ke papan reklame, animasi QR untuk papan reklame digital, dan kolaborasi lintas bahasa menggunakan tautan Anchor yang dapat dibagikan. Setiap contoh menyertakan gambar, batasan praktis, dan tautan remix kembali ke generator.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buka generator', type: 'generator' },

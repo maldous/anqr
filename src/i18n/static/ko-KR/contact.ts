@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: '제품 정보',
   description: '우리는 피드백, 버그 보고서, 기능 요청 및 일반 문의를 환영합니다.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026년 2월 1일',
   sections: [
     {
       heading: '오시는 길',

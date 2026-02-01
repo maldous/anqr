@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQRri buruz',
   description:
     'ANQR doako QR kode-sorgailu bat da, bezeroaren lehen ikuspegia duena. Sortu QR kodeak lokalean edo erabili gure APIa txertatzeko.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026ko otsailaren 1a',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Ireki sorgailua', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Arakatu Ikasi artikuluak', type: 'learn' },

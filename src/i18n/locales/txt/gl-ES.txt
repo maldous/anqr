@@ -1791,3 +1791,5 @@
 1791	"Analiza as capturas, as cargas ou os URL da cámara cun desglose técnico completo"
 1792	"Importa os códigos QR analizados directamente no xerador para modificalos e recrealos"
 1793	"Optimizacións de rendemento con carga dinámica de fontes e accesibilidade mellorada"
+1794	"1 de febreiro de 2026"
+1795	"Guía"

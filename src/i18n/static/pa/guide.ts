@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR ਉਪਭੋਗਤਾ ਗਾਈਡ',
   description: 'QR ਕੋਡ ਬਣਾਉਣ ਲਈ ANQR ਦੀ ਵਰਤੋਂ ਕਰਨ ਲਈ ਪੂਰੀ ਗਾਈਡ।',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 ਫਰਵਰੀ 2026',
+  breadcrumb: ['ਗਾਈਡ'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ਜਨਰੇਟਰ ਖੋਲ੍ਹੋ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ਸਿੱਖੋ ਲੇਖਾਂ ਨੂੰ ਬ੍ਰਾਊਜ਼ ਕਰੋ', type: 'learn' },

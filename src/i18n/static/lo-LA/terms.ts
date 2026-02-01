@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'ເງື່ອນໄຂການໃຫ້ບໍລິການ',
   description: 'ໂດຍການເຂົ້າເຖິງຫຼືການນໍາໃຊ້ເວັບໄຊທ໌, ທ່ານຕົກລົງເຫັນດີທີ່ຈະຜູກມັດໂດຍຂໍ້ກໍານົດເຫຼົ່ານີ້.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ວັນທີ 1 ກຸມພາ 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ', type: 'external' }],
   sections: [
     {

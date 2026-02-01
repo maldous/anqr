@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Warunki świadczenia usług',
   description:
     'Poprzez dostęp lub korzystanie z witryny, zgadzasz się być związany tymi warunkami.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 lutego 2026 r',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Polityka prywatności', type: 'external' },
   ],

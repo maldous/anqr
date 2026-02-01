@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Xhumana Nathi',
   description:
     'Samukela impendulo, imibiko yeziphazamiso, izicelo zezici, kanye nemibuzo ejwayelekile.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
   sections: [
     {
       heading: 'Indlela yokusithinta',

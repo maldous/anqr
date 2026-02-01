@@ -1333,3 +1333,5 @@
 1333	"Fullständig sekretesspolicy"
 1334	"Den här sidan ger en sammanfattning av vår sekretesspraxis. För den fullständiga, juridiskt bindande integritetspolicyn med fullständig information om databehandling, dina rättigheter och våra skyldigheter enligt GDPR, CCPA och andra integritetslagar, vänligen se vår fullständiga policy som tillhandahålls av iubenda."
 1335	"Se hela sekretesspolicyn på iubenda"
+1794	"1 februari 2026"
+1795	"Guide"

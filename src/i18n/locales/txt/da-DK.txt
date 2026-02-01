@@ -1791,3 +1791,5 @@
 1791	"Analyser kameraoptagelser, uploads eller URL'er med fuld teknisk opdeling"
 1792	"Importer analyserede QR-koder direkte i generatoren for at ændre og genskabe"
 1793	"Ydeevneoptimeringer med dynamisk skrifttypeindlæsning og forbedret tilgængelighed"
+1794	"1. februar 2026"
+1795	"Vejledning"

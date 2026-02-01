@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Käyttöehdot',
   description: 'Käyttämällä sivustoa hyväksyt näiden ehtojen sitomisen.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. helmikuuta 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Yksityisyyden suoja', type: 'external' }],
   sections: [
     {

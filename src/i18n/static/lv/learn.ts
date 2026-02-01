@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Mācieties, izmantojot ANQR',
   description:
     'Praktiski, biznesam domāti ceļveži QR kodu pārvēršanai reālos mārketinga aktīvos — ne tikai funkcionālos kvadrātos. Uzziniet, kā jaunināt mantotos tirdzniecības vietu kodus, izveidot saderīgus maksājumu QR signālus, sagatavot drukāšanai gatavu eksportēšanu, droši izmantot animāciju digitālajos displejos un koplietot bloķētas konfigurācijas daudzvalodu komandās, izmantojot ANQR ("enkura") saites.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. gada 1. februāris',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Atveriet ģeneratoru', type: 'generator' },

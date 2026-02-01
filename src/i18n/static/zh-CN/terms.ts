@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: '服务条款',
   description: '通过访问或使用该网站，您同意受这些条款的约束。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: '隐私政策', type: 'external' }],
   sections: [
     {

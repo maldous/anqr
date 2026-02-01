@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'مدة الخدمة',
   description: 'عن طريق الدخول إلى الموقع أو استخدامه، توافق على الالتزام بهذه الشروط.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبراير 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'سياسة الخصوصية', type: 'external' }],
   sections: [
     {

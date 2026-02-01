@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Imigomo Yesevisi',
   description: 'Ngokungena noma ukusebenzisa isayithi, uyavuma ukuboshwa yile migomo.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Inqubomgomo Yobumfihlo', type: 'external' },
   ],

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'მომსახურების პირობები',
   description: 'საიტზე წვდომით ან გამოყენებით, თქვენ ეთანხმებით ამ პირობებს.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 წლის 1 თებერვალი',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'კონფიდენციალურობის პოლიტიკა', type: 'external' },
   ],

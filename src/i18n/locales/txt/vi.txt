@@ -1791,3 +1791,5 @@
 1791	"Phân tích ảnh chụp, video tải lên hoặc URL của camera với thông tin chi tiết kỹ thuật đầy đủ"
 1792	"Nhập mã QR đã phân tích trực tiếp vào trình tạo để sửa đổi và tạo lại"
 1793	"Tối ưu hóa hiệu suất với tải phông chữ động và khả năng truy cập được cải thiện"
+1794	"ngày 1 tháng 2 năm 2026"
+1795	"hướng dẫn"

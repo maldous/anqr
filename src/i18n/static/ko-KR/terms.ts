@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: '서비스 약관',
   description: '사이트에 액세스하거나 사용하는 경우, 이 약관에 동의하는 것입니다.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026년 2월 1일',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: '개인 정보 보호 정책', type: 'external' }],
   sections: [
     {

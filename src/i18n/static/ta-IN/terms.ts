@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'சேவை விதிமுறைகள்',
   description:
     'தளத்தை அணுகுவதன் மூலம் அல்லது பயன்படுத்துவதன் மூலம், இந்த விதிமுறைகளுக்குக் கட்டுப்படுவதை ஒப்புக்கொள்கிறீர்கள்.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 பிப்ரவரி 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'தனியுரிமைக் கொள்கை', type: 'external' }],
   sections: [
     {

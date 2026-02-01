@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Võtke meiega ühendust',
   description: 'Ootame tagasisidet, veaaruandeid, funktsioonitaotlusi ja üldisi päringuid.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veebruar 2026',
   sections: [
     {
       heading: 'Kuidas meieni jõuda',

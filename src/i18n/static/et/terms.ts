@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Kasutustingimused',
   description: 'Saidile sisenedes või seda kasutades nõustute järgima neid tingimusi.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veebruar 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Privaatsuspoliitika', type: 'external' }],
   sections: [
     {

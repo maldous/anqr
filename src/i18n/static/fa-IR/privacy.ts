@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'سیاست حفظ حریم خصوصی',
   description:
     'اطلاعاتی که ANQR جمع آوری می کند، نحوه استفاده از آن و حقوق شما تحت قوانین مربوط به حریم خصوصی.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فوریه 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'شرایط خدمات', type: 'external' }],
   sections: [
     {

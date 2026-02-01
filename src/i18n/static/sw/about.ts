@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Kuhusu ANQR',
   description:
     'ANQR ni jenereta isiyolipishwa ya msimbo wa QR yenye mbinu ya mteja-kwanza - tengeneza misimbo ya QR ndani ya nchi au tumia API yetu kupachika.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Fungua jenereta', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Vinjari Makala ya Jifunze', type: 'learn' },

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'የግላዊነት ፖሊሲ',
   description: 'ANQR መረጃ ይሰበስባል፣ እንዴት ጥቅም ላይ እንደሚውል፣ እና በሚመለከተው የግላዊነት ህጎች መሰረት የእርስዎን መብቶች።',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'የካቲት 1 ቀን 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'የአገልግሎት ውል', type: 'external' }],
   sections: [
     {

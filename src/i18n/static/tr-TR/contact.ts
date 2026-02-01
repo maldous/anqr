@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Bize Ulaşın',
   description:
     'Geri bildirimleri, hata raporlarını, özellik isteklerini ve genel soruları memnuniyetle karşılıyoruz.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Şubat 2026',
   sections: [
     {
       heading: 'Bize nasıl ulaşabilirsiniz?',

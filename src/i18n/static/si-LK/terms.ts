@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'සේවා කොන්දේසි',
   description: 'වෙබ් අඩවියට පිවිසීමෙන් හෝ භාවිතා කිරීමෙන්, ඔබ මෙම නියමයන්ට බැඳී සිටීමට එකඟ වේ.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 පෙබරවාරි 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'රහස්‍යතා ප්‍රතිපත්තිය', type: 'external' }],
   sections: [
     {

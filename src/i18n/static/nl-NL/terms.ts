@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Servicevoorwaarden',
   description:
     'Door de site te bezoeken of te gebruiken, gaat u ermee akkoord gebonden te zijn aan deze voorwaarden.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februari 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Privacybeleid', type: 'external' }],
   sections: [
     {

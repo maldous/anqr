@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Rreth ANQR',
   description:
     'ANQR është një gjenerues falas i kodit QR me një qasje të parë të klientit - gjeneroni kode QR në nivel lokal ose përdorni API-në tonë për ngulitje.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 shkurt 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Hapni gjeneratorin', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Shfletoni artikujt Mësoni', type: 'learn' },

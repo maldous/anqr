@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'เกี่ยวกับ ANQR',
   description:
     'ANQR คือโปรแกรมสร้างโค้ด QR ฟรีที่ให้ความสำคัญกับลูกค้าเป็นอันดับแรก - สร้างโค้ด QR ในเครื่องหรือใช้ API ของเราสำหรับการฝัง',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 กุมภาพันธ์ 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'เปิดเครื่องกำเนิดไฟฟ้า', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'เรียกดูบทความเรียนรู้', type: 'learn' },

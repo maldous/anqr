@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'আমাদের সাথে',
   description: 'আমরা প্রতিক্রিয়া, বাগ রিপোর্ট, অনুরোধ এবং সাধারণ ক্ষমা প্রার্থনা স্বাগত জানাই।.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ফেব্রুয়ারি 2026',
   sections: [
     {
       heading: 'কিভাবে আমাদের কাছে পৌঁছাতে হবে',

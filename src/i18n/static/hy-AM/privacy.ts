@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Գաղտնիության քաղաքականություն',
   description:
     'ANQR-ի հավաքած տեղեկատվությունը, ինչպես է այն օգտագործվում և ձեր իրավունքները՝ համաձայն գործող գաղտնիության մասին օրենքների:',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 փետրվարի 2026թ',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Ծառայության պայմաններ', type: 'external' }],
   sections: [
     {

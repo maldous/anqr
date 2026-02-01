@@ -1333,3 +1333,5 @@
 1333	"Politica de confidențialitate completă"
 1334	"Această pagină oferă un rezumat al practicilor noastre de confidențialitate. Pentru politica de confidențialitate completă, obligatorie din punct de vedere juridic, cu detalii complete despre prelucrarea datelor, drepturile dumneavoastră și obligațiile noastre conform GDPR, CCPA și alte legi de confidențialitate, vă rugăm să consultați politica noastră completă găzduită de iubenda."
 1335	"Vezi Politica de confidențialitate completă pe iubenda"
+1794	"1 februarie 2026"
+1795	"Ghid"

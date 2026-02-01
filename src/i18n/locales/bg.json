@@ -1312,6 +1312,7 @@
     "joinReddit": "Присъединете се към r/ANQR"
   },
   "overlay": {
+    "photo": "Камера",
     "blueNoise": "Син шум",
     "blueNoiseMode": "Син шум",
     "none": "Няма",

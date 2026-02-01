@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'Pomozite prevesti ANQR',
   description:
     'Pridružite se našoj zajednici prevoditelja koji pomažu da ANQR bude dostupan korisnicima širom svijeta. Nije potrebno iskustvo kodiranja - doprinosite izravno iz svog preglednika.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veljače 2026',
   primaryLinks: [
     {
       href: 'https://github.com/maldous/anqr-i18n',

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'O ANQR',
   description:
     'ANQR je bezplatný generátor QR kódov s prístupom na prvom mieste klienta – generujte QR kódy lokálne alebo použite naše API na vkladanie.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februára 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Otvorte generátor', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Prechádzať Učiť sa články', type: 'learn' },

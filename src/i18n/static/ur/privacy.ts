@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'رازداری کی پالیسی',
   description:
     'انفارمیشن اے این کیو آر جمع کرتی ہے ، یہ کس طرح استعمال ہوتی ہے ، اور آپ کے حقوق پرائیویسی قوانین کے تحت آپ کے حقوق۔',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فروری 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'خدمت کی شرائط', type: 'external' }],
   sections: [
     {

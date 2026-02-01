@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ការណែនាំអ្នកប្រើប្រាស់ ANQR',
   description: 'ការណែនាំពេញលេញអំពីការប្រើប្រាស់ ANQR សម្រាប់ការបង្កើតកូដ QR ។',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: 'ថ្ងៃទី 1 ខែកុម្ភៈ ឆ្នាំ 2026',
+  breadcrumb: ['មគ្គុទ្ទេសក៍'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'បើកម៉ាស៊ីនភ្លើង', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'រកមើលអត្ថបទសិក្សា', type: 'learn' },

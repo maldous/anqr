@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'מדיניות פרטיות',
   description: 'מידע ש-ANQR אוספת, אופן השימוש בו והזכויות שלך על פי חוקי הפרטיות החלים.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 בפברואר 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'תנאים והגבלות', type: 'external' }],
   sections: [
     {

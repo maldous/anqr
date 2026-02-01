@@ -1791,3 +1791,5 @@
 1791	"Greindu myndatökur, upphleðslur eða vefslóðir með fullri tæknilegri sundurliðun"
 1792	"Flyttu inn greinda QR kóða beint inn í rafallinn til að breyta og endurskapa"
 1793	"Hagræðing afkasta með kraftmikilli leturhleðslu og bættu aðgengi"
+1794	"1. febrúar 2026"
+1795	"Leiðsögumaður"

@@ -1312,6 +1312,7 @@
     "joinReddit": "r/ANQR에 가입하세요"
   },
   "overlay": {
+    "photo": "카메라",
     "blueNoise": "파란 소음",
     "blueNoiseMode": "파란 소음",
     "none": "이름 *",

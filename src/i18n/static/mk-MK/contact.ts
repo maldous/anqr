@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Контактирајте со нас',
   description:
     'Ги поздравуваме повратните информации, извештаите за грешки, барањата за функции и општите прашања.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 февруари 2026 година',
   sections: [
     {
       heading: 'Како да стигнете до нас',

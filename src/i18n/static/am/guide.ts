@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR የተጠቃሚ መመሪያ',
   description: 'የQR ኮዶችን ለመፍጠር ANQRን ለመጠቀም የተሟላ መመሪያ።',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: 'የካቲት 1 ቀን 2026',
+  breadcrumb: ['መመሪያ'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ጄነሬተሩን ይክፈቱ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ጽሑፎችን ተማር አስስ', type: 'learn' },

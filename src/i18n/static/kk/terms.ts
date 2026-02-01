@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Қызмет көрсету шарттары',
   description: 'Сайтқа кіру немесе пайдалану арқылы сіз осы шарттарды орындауға келісесіз.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 жылғы 1 ақпан',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Құпиялық саясаты', type: 'external' }],
   sections: [
     {

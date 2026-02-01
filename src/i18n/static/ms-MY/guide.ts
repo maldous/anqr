@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Panduan Pengguna ANQR',
   description: 'Panduan lengkap menggunakan ANQR untuk membuat kod QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 Februari 2026',
+  breadcrumb: ['Panduan'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buka penjana', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Semak imbas artikel Pelajari', type: 'learn' },

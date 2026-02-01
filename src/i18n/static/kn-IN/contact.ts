@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ',
   description: 'ಪ್ರತಿಕ್ರಿಯೆ, ದೋಷ ವರದಿಗಳು, ವೈಶಿಷ್ಟ್ಯದ ವಿನಂತಿಗಳು ಮತ್ತು ಸಾಮಾನ್ಯ ವಿಚಾರಣೆಗಳನ್ನು ನಾವು ಸ್ವಾಗತಿಸುತ್ತೇವೆ.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ಫೆಬ್ರವರಿ 2026',
   sections: [
     {
       heading: 'ನಮ್ಮನ್ನು ತಲುಪುವುದು ಹೇಗೆ',

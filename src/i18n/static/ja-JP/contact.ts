@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'お問い合わせ',
   description: 'フィードバック、バグ報告、機能リクエスト、一般的なお問い合わせを歓迎します。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
   sections: [
     {
       heading: '私達に連絡する方法',

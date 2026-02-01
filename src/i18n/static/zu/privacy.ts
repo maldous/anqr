@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Inqubomgomo Yobumfihlo',
   description:
     'Ulwazi oluqoqwa yi-ANQR, ukuthi lusetshenziswa kanjani, kanye namalungelo akho ngaphansi kwemithetho yobumfihlo esebenzayo.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Imigomo Yesevisi', type: 'external' }],
   sections: [
     {

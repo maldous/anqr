@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ANQR ਨਾਲ ਸਿੱਖੋ',
   description:
     'QR ਕੋਡਾਂ ਨੂੰ ਅਸਲ ਮਾਰਕੀਟਿੰਗ ਸੰਪਤੀਆਂ ਵਿੱਚ ਬਦਲਣ ਲਈ ਵਿਹਾਰਕ, ਵਪਾਰਕ-ਪਹਿਲੀ ਗਾਈਡ - ਸਿਰਫ਼ ਕਾਰਜਸ਼ੀਲ ਵਰਗ ਨਹੀਂ। ANQR ("ਐਂਕਰ") ਲਿੰਕਾਂ ਦੀ ਵਰਤੋਂ ਕਰਦੇ ਹੋਏ ਪੁਰਾਤਨ ਪੁਆਇੰਟ-ਆਫ-ਸੇਲ ਕੋਡਾਂ ਨੂੰ ਅਪਗ੍ਰੇਡ ਕਰਨਾ, ਅਨੁਕੂਲ ਭੁਗਤਾਨ QR ਸਾਈਨੇਜ ਬਣਾਉਣਾ, ਪ੍ਰਿੰਟ-ਰੈਡੀ ਨਿਰਯਾਤ ਤਿਆਰ ਕਰਨਾ, ਡਿਜੀਟਲ ਡਿਸਪਲੇ \'ਤੇ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਐਨੀਮੇਸ਼ਨ ਦੀ ਵਰਤੋਂ ਕਰਨਾ, ਅਤੇ ਲਾਕ-ਇਨ ਕੌਂਫਿਗਰੇਸ਼ਨਾਂ ਨੂੰ ਬਹੁ-ਭਾਸ਼ਾਈ ਟੀਮਾਂ ਵਿੱਚ ਸਾਂਝਾ ਕਰਨਾ ਸਿੱਖੋ।',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ਫਰਵਰੀ 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ਜਨਰੇਟਰ ਖੋਲ੍ਹੋ', type: 'generator' },

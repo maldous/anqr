@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR 用户指南',
   description: '使用 ANQR 创建 QR 码的完整指南。',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '2026 年 2 月 1 日',
+  breadcrumb: ['指南'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: '打开发电机', type: 'generator' },
     { href: '/learn?lang=${lang}', label: '浏览学习文章', type: 'learn' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Kebijakan Privasi',
   description:
     'Informasi ANQR mengumpulkan, bagaimana digunakan, dan hak-hak Anda di bawah hukum privasi berlaku.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Akhir Layanan', type: 'external' }],
   sections: [
     {

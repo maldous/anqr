@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR Beispiele',
   description:
     'Fünf reale Beispiele im Produktionsstil, die zeigen, wo QR-Codes einen messbaren Wert schaffen: Aufwertung eines alten Ladenthekencodes, markenbezogene Einzelhandelszahlungen und "Scan-to"-Aktionen, Druckskalierung von Flyern bis hin zu Werbetafeln, animierte QR-Codes für digitale Beschilderung und sprachübergreifende Zusammenarbeit mithilfe gemeinsam nutzbarer Ankerlinks. Jedes Beispiel enthält Bilder, praktische Einschränkungen und einen Remix-Link zurück zum Generator.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. Februar 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Öffnen Sie den Generator', type: 'generator' },

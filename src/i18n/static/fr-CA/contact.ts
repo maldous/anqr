@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Contactez-nous',
   description:
     'Nous apprécions les commentaires, les rapports de bogues, les demandes de fonctionnalités et les demandes générales.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 février 2026',
   sections: [
     {
       heading: 'Comment nous joindre',

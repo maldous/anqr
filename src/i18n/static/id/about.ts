@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Tentang ANQR',
   description:
     'ANQR adalah generator kode QR bebas dengan pendekatan pertama - hasilkan kode QR lokal atau gunakan API kami untuk embedding.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buka generator', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Ramban artikel Pelajari', type: 'learn' },

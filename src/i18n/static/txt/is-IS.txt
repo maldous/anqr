@@ -1333,3 +1333,5 @@
 1333	"Full persónuverndarstefna"
 1334	"Þessi síða veitir yfirlit yfir persónuverndarvenjur okkar. Fyrir heildar, lagalega bindandi persónuverndarstefnu með öllum upplýsingum um gagnavinnslu, réttindi þín og skyldur okkar samkvæmt GDPR, CCPA og öðrum persónuverndarlögum, vinsamlegast skoðaðu stefnu okkar í heild sinni sem hýst er af iubenda."
 1335	"Skoðaðu alla persónuverndarstefnu á iubenda"
+1794	"1. febrúar 2026"
+1795	"Leiðsögumaður"

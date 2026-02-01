@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ਸਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੋ',
   description: 'ਅਸੀਂ ਫੀਡਬੈਕ, ਬੱਗ ਰਿਪੋਰਟਾਂ, ਵਿਸ਼ੇਸ਼ਤਾ ਬੇਨਤੀਆਂ, ਅਤੇ ਆਮ ਪੁੱਛਗਿੱਛਾਂ ਦਾ ਸੁਆਗਤ ਕਰਦੇ ਹਾਂ।',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ਫਰਵਰੀ 2026',
   sections: [
     {
       heading: 'ਸਾਡੇ ਤੱਕ ਕਿਵੇਂ ਪਹੁੰਚਣਾ ਹੈ',

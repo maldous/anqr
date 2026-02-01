@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'ဝန်ဆောင်မှုစည်းမျဉ်းများ',
   description: 'ဆိုက်ကိုဝင်ရောက်ခြင်း သို့မဟုတ် အသုံးပြုခြင်းဖြင့် သင်သည် ဤစည်းမျဥ်းများနှင့်အညီ ချည်နှောင်ရန် သဘောတူပါသည်။',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ဖေဖော်ဝါရီ ၁၊ ၂၀၂၆',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'ကိုယ်ရေးအချက်အလက်မူဝါဒ', type: 'external' }],
   sections: [
     {

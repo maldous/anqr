@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Биз менен байланышыңыз',
   description:
     'Пикирлерди, мүчүлүштүктөр тууралуу отчетторду, өзгөчөлүктөргө суроо-талаптарды жана жалпы суроолорду кабыл алабыз.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 февраль 2026 жыл',
   sections: [
     {
       heading: 'Бизге кантип жетсе болот',

@@ -1312,6 +1312,7 @@
     "joinReddit": "加入r/ANQR"
   },
   "overlay": {
+    "photo": "相机",
     "blueNoise": "蓝噪声",
     "blueNoiseMode": "蓝噪声",
     "none": "无",

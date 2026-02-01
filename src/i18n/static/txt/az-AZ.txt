@@ -1333,3 +1333,5 @@
 1333	"Tam Məxfilik Siyasəti"
 1334	"Bu səhifə məxfilik təcrübələrimizin xülasəsini təqdim edir. Məlumatların emalı, hüquqlarınız və GDPR, CCPA və digər məxfilik qanunları üzrə öhdəliklərimizlə bağlı tam təfərrüatları olan tam, qanuni məcburi məxfilik siyasəti üçün lütfən, iubenda tərəfindən təşkil edilən tam siyasətimizə baxın."
 1335	"Tam Məxfilik Siyasətinə iubenda-da baxın"
+1794	"1 fevral 2026-cı il"
+1795	"Bələdçi"

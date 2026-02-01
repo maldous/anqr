@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'درباره ANQR',
   description:
     'ANQR یک تولید کننده کد QR رایگان با رویکرد مشتری اول است - کدهای QR را به صورت محلی تولید کنید یا از API ما برای جاسازی استفاده کنید.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فوریه 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ژنراتور را باز کنید', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'مقالات یادگیری را مرور کنید', type: 'learn' },

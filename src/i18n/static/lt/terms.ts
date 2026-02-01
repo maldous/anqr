@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Paslaugų teikimo sąlygos',
   description: 'Prisijungdami prie svetainės ar naudodamiesi ja sutinkate laikytis šių sąlygų.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 m. vasario 1 d',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Privatumo politika', type: 'external' }],
   sections: [
     {

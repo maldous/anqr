@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Exemples ANQR',
   description:
     'Cinc exemples d\'estil real del món real, de producció que mostren on els codis QR creen un valor considerable: al·lucinar un codi de comptadors antics, signes de pagaments i accions de "escan-to", imprimir l\' escalat dels volants als cartells, animació de QR per a cartells digitals, i la col·laboració bilingüe usant enllaços ancorables. Cada exemple inclou imatges, restriccions pràctiques i un enllaç de remix al generador.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 de febrer de 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Obre el generador', type: 'generator' },

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Apprenez avec ANQR',
   description:
     "Des guides pratiques et axés sur les entreprises pour transformer les codes QR en véritables atouts marketing – et pas seulement en carrés fonctionnels. Découvrez comment mettre à niveau les anciens codes de point de vente, créer une signalisation QR de paiement conforme, préparer des exportations prêtes à imprimer, utiliser des animations en toute sécurité sur des écrans numériques et partager des configurations verrouillées entre des équipes multilingues à l'aide de liens ANQR (« ancre »).",
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 février 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Ouvrez le générateur', type: 'generator' },

@@ -1333,3 +1333,5 @@
 1333	"Volledig privacybeleid"
 1334	"Deze pagina geeft een samenvatting van onze privacypraktijken. Voor het volledige, juridisch bindende privacybeleid met volledige details over gegevensverwerking, uw rechten en onze verplichtingen onder de AVG, CCPA en andere privacywetten, kunt u ons volledige beleid bekijken, gehost door iubenda."
 1335	"Bekijk het volledige privacybeleid op iubenda"
+1794	"1 februari 2026"
+1795	"Gids"

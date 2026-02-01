@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR 사용자 가이드',
   description: 'QR 코드를 생성하기 위해 ANQR을 사용하는 가이드.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '2026년 2월 1일',
+  breadcrumb: ['가이드'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: '발전기 열기', type: 'generator' },
     { href: '/learn?lang=${lang}', label: '자주 묻는 질문', type: 'learn' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Polityka prywatności',
   description:
     'Informacje ANQR zbiera, jak jest używany, i swoje prawa zgodnie z obowiązującymi przepisami prywatności.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 lutego 2026 r',
   relatedLinks: [
     { href: '/terms?lang=${lang}', label: 'Warunki świadczenia usług', type: 'external' },
   ],

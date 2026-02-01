@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Ví dụ về ANQR',
   description:
     'Năm ví dụ về phong cách sản xuất, trong thế giới thực cho thấy nơi mã QR tạo ra giá trị có thể đo lường được: nâng cao mã quầy bán lẻ truyền thống, thanh toán bán lẻ có thương hiệu và hành động "quét đến", in tỷ lệ từ tờ rơi đến bảng quảng cáo, QR hoạt hình cho bảng hiệu kỹ thuật số và cộng tác đa ngôn ngữ bằng cách sử dụng các liên kết Anchor có thể chia sẻ. Mỗi ví dụ bao gồm hình ảnh, các ràng buộc thực tế và liên kết phối lại trở lại trình tạo.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Mở máy phát điện', type: 'generator' },

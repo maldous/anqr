@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'గోప్యతా విధానం',
   description: 'ANQR సమాచారాన్ని సేకరిస్తుంది, అది ఎలా ఉపయోగించబడుతుంది మరియు వర్తించే గోప్యతా చట్టాల ప్రకారం మీ హక్కులు.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ఫిబ్రవరి 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'సేవా నిబంధనలు', type: 'external' }],
   sections: [
     {

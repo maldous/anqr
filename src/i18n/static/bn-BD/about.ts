@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ARP এর পরিচিতি',
   description:
     'ARPR একটি মুক্তQR কোড জেনারেটর একটি ক্লায়েন্ট-প্রথমে প্রথম পদক্ষেপ নিয়ে - স্থানীয়ভাবে তৈরী করুন অথবা স্বয়ংক্রিয়ভাবে আমাদের API ব্যবহার করুন।.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ফেব্রুয়ারি 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'জেনারেটর খোলো', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'শিখুনComment', type: 'learn' },

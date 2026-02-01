@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Нууцлалын бодлого',
   description:
     'ANQR цуглуулдаг мэдээлэл, түүнийг хэрхэн ашиглах, холбогдох нууцлалын хуулийн дагуу таны эрх.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 оны хоёрдугаар сарын 1',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Үйлчилгээний нөхцөл', type: 'external' }],
   sections: [
     {

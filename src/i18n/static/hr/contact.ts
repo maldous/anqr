@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Kontaktirajte nas',
   description:
     'Pozdravljamo povratne informacije, izvješća o greškama, zahtjeve za značajkama i općenite upite.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veljače 2026',
   sections: [
     {
       heading: 'Kako doći do nas',

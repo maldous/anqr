@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Používateľská príručka ANQR',
   description: 'Kompletný návod na používanie ANQR na vytváranie QR kódov.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1. februára 2026',
+  breadcrumb: ['Sprievodca'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Otvorte generátor', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Prechádzať Učiť sa články', type: 'learn' },

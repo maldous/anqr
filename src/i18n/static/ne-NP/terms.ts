@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'सेवाका सर्तहरू',
   description: 'साइट पहुँच गरेर वा प्रयोग गरेर, तपाइँ यी सर्तहरू द्वारा बाध्य हुन सहमत हुनुहुन्छ।',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '१ फेब्रुअरी २०२६',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'गोपनीयता नीति', type: 'external' }],
   sections: [
     {

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'सेवा अटी',
   description: 'साइटवर प्रवेश करून किंवा वापरून, तुम्ही या अटींना बांधील असण्यास सहमती देता.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 फेब्रुवारी 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'गोपनीयता धोरण', type: 'external' }],
   sections: [
     {

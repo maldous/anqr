@@ -1333,3 +1333,5 @@
 1333	"Tam Gizlilik Politikası"
 1334	"Bu sayfada gizlilik uygulamalarımızın bir özeti sunulmaktadır. Veri işleme, haklarınız ve GDPR, CCPA ve diğer gizlilik yasaları kapsamındaki yükümlülüklerimize ilişkin tüm ayrıntıları içeren yasal olarak bağlayıcı gizlilik politikasının tamamı için lütfen iubenda tarafından barındırılan politikamızın tamamını görüntüleyin."
 1335	"iubenda'da Gizlilik Politikasının tamamını görüntüleyin"
+1794	"1 Şubat 2026"
+1795	"Rehber"

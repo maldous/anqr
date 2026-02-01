@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ہم سے رابطہ کریں',
   description:
     'ہم آراء ، بگ رپورٹس ، خصوصیت کی درخواستوں اور عمومی انکوائریوں کا خیرمقدم کرتے ہیں۔',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فروری 2026',
   sections: [
     {
       heading: 'ہم تک کیسے پہنچیں',

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'АНКР упутство за употребу',
   description: 'Комплетан водич за коришћење АНКР-а за креирање КР кодова.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1. фебруар 2026',
+  breadcrumb: ['Водич'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Отворите генератор', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Прегледајте чланке за учење', type: 'learn' },

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Příklady ANQR',
   description:
     'Pět reálných příkladů produkčního stylu, které ukazují, kde QR kódy vytvářejí měřitelnou hodnotu: pozvednutí staršího maloobchodního pultového kódu, značkové maloobchodní platby a akce "scan-to", škálování tisku od letáků po billboardy, animované QR pro digitální značení a spolupráce mezi jazyky pomocí sdílených odkazů Anchor. Každý příklad obsahuje obrázky, praktická omezení a odkaz na remix zpět do generátoru.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. února 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Otevři generátor', type: 'generator' },

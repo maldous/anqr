@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'Помоћ у преводу АНКР',
   description:
     'Придружите се нашој заједници преводилаца који помажу да АНКР буде доступан корисницима широм света. Није потребно искуство кодирања - доприносите директно из свог претраживача.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. фебруар 2026',
   primaryLinks: [
     {
       href: 'https://github.com/maldous/anqr-i18n',

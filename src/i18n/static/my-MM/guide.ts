@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR အသုံးပြုသူလမ်းညွှန်',
   description: 'QR ကုဒ်များဖန်တီးရန်အတွက် ANQR အသုံးပြုခြင်းဆိုင်ရာ လမ်းညွှန်ချက်အပြည့်အစုံ။',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: 'ဖေဖော်ဝါရီ ၁၊ ၂၀၂၆',
+  breadcrumb: ['လမ်းညွှန်'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'မီးစက်ကိုဖွင့်ပါ။', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ဆောင်းပါးများကို လေ့လာကြည့်ရှုပါ။', type: 'learn' },

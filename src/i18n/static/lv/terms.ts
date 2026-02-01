@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Pakalpojuma noteikumi',
   description: 'Piekļūstot vietnei vai izmantojot to, jūs piekrītat ievērot šos noteikumus.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. gada 1. februāris',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Privātuma politika', type: 'external' }],
   sections: [
     {

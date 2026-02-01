@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Πολιτική απορρήτου',
   description:
     'Πληροφορίες ANQR συλλέγει, πώς χρησιμοποιείται, και τα δικαιώματά σας σύμφωνα με τους ισχύοντες νόμους προστασίας προσωπικών δεδομένων.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Φεβρουαρίου 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Όροι υπηρεσίας', type: 'external' }],
   sections: [
     {

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR primjeri',
   description:
     'Pet primjera iz stvarnog svijeta u produkcijskom stilu koji pokazuju gdje QR kodovi stvaraju mjerljivu vrijednost: podizanje starog koda maloprodajnog brojača, robna maloprodajna plaćanja i radnje "skeniranja", skaliranje ispisa od letaka do reklamnih panoa, animirani QR za digitalno označavanje i međujezična suradnja korištenjem sidrišnih veza koje se mogu dijeliti. Svaki primjer uključuje slike, praktična ograničenja i vezu remiksa natrag na generator.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veljače 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Otvorite generator', type: 'generator' },

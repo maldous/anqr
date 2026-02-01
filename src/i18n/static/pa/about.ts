@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR ਬਾਰੇ',
   description:
     "ANQR ਇੱਕ ਗਾਹਕ-ਪਹਿਲੀ ਪਹੁੰਚ ਵਾਲਾ ਇੱਕ ਮੁਫਤ QR ਕੋਡ ਜਨਰੇਟਰ ਹੈ - ਸਥਾਨਕ ਤੌਰ 'ਤੇ QR ਕੋਡ ਤਿਆਰ ਕਰੋ ਜਾਂ ਏਮਬੈਡਿੰਗ ਲਈ ਸਾਡੇ API ਦੀ ਵਰਤੋਂ ਕਰੋ।",
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ਫਰਵਰੀ 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ਜਨਰੇਟਰ ਖੋਲ੍ਹੋ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ਸਿੱਖੋ ਲੇਖਾਂ ਨੂੰ ਬ੍ਰਾਊਜ਼ ਕਰੋ', type: 'learn' },

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR piemēri',
   description:
     'Pieci reāli, ražošanas stila piemēri, kas parāda, kur QR kodi rada izmērāmu vērtību: mantotā mazumtirdzniecības skaitītāja koda uzlabošana, zīmola mazumtirdzniecības maksājumi un skenēšanas darbības, drukas mērogošana no skrejlapām līdz stendiem, animēts QR digitālajām norādēm un vairāku valodu sadarbība, izmantojot koplietojamas enkura saites. Katrs piemērs ietver attēlus, praktiskus ierobežojumus un remiksa saiti atpakaļ uz ģeneratoru.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. gada 1. februāris',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Atveriet ģeneratoru', type: 'generator' },

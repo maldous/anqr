@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Sazinieties ar mums',
   description:
     'Mēs atzinīgi vērtējam atsauksmes, kļūdu ziņojumus, funkciju pieprasījumus un vispārīgus jautājumus.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. gada 1. februāris',
   sections: [
     {
       heading: 'Kā ar mums sazināties',

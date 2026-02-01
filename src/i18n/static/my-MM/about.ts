@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR အကြောင်း',
   description:
     'ANQR သည် ဖောက်သည်-ဦးစွာချဉ်းကပ်မှုဖြင့် အခမဲ့ QR ကုဒ်ထုတ်ပေးသည့်ကိရိယာတစ်ခုဖြစ်သည်- QR ကုဒ်များကို ပြည်တွင်းတွင်ထုတ်လုပ်ပါ သို့မဟုတ် ထည့်သွင်းရန်အတွက် ကျွန်ုပ်တို့၏ API ကို အသုံးပြုပါ။',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ဖေဖော်ဝါရီ ၁၊ ၂၀၂၆',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'မီးစက်ကိုဖွင့်ပါ။', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ဆောင်းပါးများကို လေ့လာကြည့်ရှုပါ။', type: 'learn' },

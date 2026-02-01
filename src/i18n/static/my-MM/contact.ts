@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ကြှနျုပျတို့ကိုဆကျသှယျရနျ',
   description:
     'တုံ့ပြန်ချက်၊ ချွတ်ယွင်းချက်အစီရင်ခံစာများ၊ လုပ်ဆောင်ချက်တောင်းဆိုမှုများနှင့် အထွေထွေစုံစမ်းမေးမြန်းမှုများကို ကျွန်ုပ်တို့ကြိုဆိုပါသည်။',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ဖေဖော်ဝါရီ ၁၊ ၂၀၂၆',
   sections: [
     {
       heading: 'ငါတို့ကို ဘယ်လိုရောက်အောင်သွားရမလဲ',

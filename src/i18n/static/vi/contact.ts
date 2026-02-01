@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Liên hệ với chúng tôi',
   description:
     'Chúng tôi hoan nghênh phản hồi, báo cáo lỗi, yêu cầu tính năng và các câu hỏi chung.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
   sections: [
     {
       heading: 'Làm thế nào để liên hệ với chúng tôi',

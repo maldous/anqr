@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Exemple ANQR',
   description:
     'Cinci exemple din lumea reală, în stil de producție, care arată unde codurile QR creează valoare măsurabilă: îmbunătățirea unui cod de contor de vânzare cu amănuntul vechi, plăți de vânzare cu amănuntul de marcă și acțiuni "scanare către", scalarea imprimării de la pliante la panouri publicitare, cod QR animat pentru semnalizare digitală și colaborare interlingvistică folosind linkuri Anchor partajabile. Fiecare exemplu include imagini, constrângeri practice și un link remix înapoi la generator.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februarie 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Deschideți generatorul', type: 'generator' },

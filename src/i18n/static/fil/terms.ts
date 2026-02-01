@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Mga Termino ng Paglilingkod',
   description:
     'Sa pamamagitan ng pag - access o paggamit sa site, sasang - ayon kang sundin ang mga terminong ito.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Pebrero 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Pribadong Patakaran', type: 'external' }],
   sections: [
     {

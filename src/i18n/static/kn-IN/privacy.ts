@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'ಗೌಪ್ಯತೆ ನೀತಿ',
   description:
     'ಮಾಹಿತಿ ANQR ಸಂಗ್ರಹಿಸುತ್ತದೆ, ಅದನ್ನು ಹೇಗೆ ಬಳಸಲಾಗುತ್ತದೆ ಮತ್ತು ಅನ್ವಯಿಸುವ ಗೌಪ್ಯತೆ ಕಾನೂನುಗಳ ಅಡಿಯಲ್ಲಿ ನಿಮ್ಮ ಹಕ್ಕುಗಳು.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ಫೆಬ್ರವರಿ 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'ಸೇವಾ ನಿಯಮಗಳು', type: 'external' }],
   sections: [
     {

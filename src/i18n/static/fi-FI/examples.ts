@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Esimerkkejä',
   description:
     'Viisi todellista, tuotantotyylistä esimerkkiä, jotka osoittavat, missä QR-koodit luovat mitattavaa arvoa: vanhan vähittäiskaupan laskurikoodin kohottaminen, merkkivähittäismaksut ja skannaustoiminnot, tulosteiden skaalaus lentolehtisistä mainostauluihin, animoitu QR digitaalisiin kylteihin ja monikielinen yhteistyö jaettavien ankkurilinkkien avulla. Jokainen esimerkki sisältää kuvia, käytännön rajoituksia ja remix-linkin takaisin generaattoriin.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. helmikuuta 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Avaa generaattori', type: 'generator' },

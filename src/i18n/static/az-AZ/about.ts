@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR',
   description:
     'ANQR, bir müştəri-ilk yanaşma ilə pulsuz QR kodu generatorudur - yerli QR kodları yaradır və ya əlavə üçün API istifadə edin.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 fevral 2026-cı il',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'İstehsalçı', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Elanlar', type: 'learn' },

@@ -1333,3 +1333,5 @@
 1333	"Fuld privatlivspolitik"
 1334	"Denne side giver en oversigt over vores privatlivspraksis. For den komplette, juridisk bindende privatlivspolitik med alle detaljer om databehandling, dine rettigheder og vores forpligtelser i henhold til GDPR, CCPA og anden privatlivslovgivning, se venligst vores fulde politik hostet af iubenda."
 1335	"Se den fulde privatlivspolitik på iubenda"
+1794	"1. februar 2026"
+1795	"Vejledning"

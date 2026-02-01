@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Lær med ANQR',
   description:
     'Praktiske, business-first guides for å gjøre QR-koder til virkelige markedsføringsressurser – ikke bare funksjonelle firkanter. Lær hvordan du oppgraderer eldre salgssteder, oppretter kompatibel QR-skilting for betaling, forbereder utskriftsklare eksporter, bruker animasjon trygt på digitale skjermer og deler innelåste konfigurasjoner på tvers av flerspråklige team ved å bruke ANQR ("anker")-lenker.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februar 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Åpne generatoren', type: 'generator' },

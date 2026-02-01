@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'ಸೇವಾ ನಿಯಮಗಳು',
   description: 'ಸೈಟ್ ಅನ್ನು ಪ್ರವೇಶಿಸುವ ಮೂಲಕ ಅಥವಾ ಬಳಸುವ ಮೂಲಕ, ನೀವು ಈ ನಿಯಮಗಳಿಗೆ ಬದ್ಧರಾಗಿರಲು ಒಪ್ಪುತ್ತೀರಿ.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ಫೆಬ್ರವರಿ 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'ಗೌಪ್ಯತೆ ನೀತಿ', type: 'external' }],
   sections: [
     {

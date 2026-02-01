@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Тейлөө шарттары',
   description: 'Сайтка кирүү же колдонуу менен, сиз бул шарттарга макул болосуз.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 февраль 2026 жыл',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Купуялык саясаты', type: 'external' }],
   sections: [
     {

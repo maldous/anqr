@@ -8,8 +8,6 @@
 
 import type { PageDefinition, StaticPageType } from './types';
 
-// Import constants from the dedicated constants file to avoid circular dependencies
-export { CONTACT_EMAIL, LAST_UPDATED } from './constants';
 // Re-export types for convenience
 export type { PageDefinition, PageImage, PageLink, PageSection, StaticPageType } from './types';
 

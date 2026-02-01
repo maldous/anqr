@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ANQR के साथ सीखें',
   description:
     'क्यूआर कोड को वास्तविक विपणन परिसंपत्तियों में बदलने के लिए प्रैक्टिकल, व्यावसायिक-प्रथम गाइड - सिर्फ कार्यात्मक वर्ग नहीं। विरासत बिंदु-ऑफ-सेल कोड को अपग्रेड करने का तरीका जानें, अनुरूप भुगतान क्यूआर साइनेज तैयार करें, प्रिंट-रीडी निर्यात तैयार करें, डिजिटल डिस्प्ले पर सुरक्षित रूप से एनीमेशन का उपयोग करें, और AQR ("anchor") लिंक का उपयोग करके बहुभाषी टीमों में लॉक-इन कॉन्फ़िगरेशन साझा करें।.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 फरवरी 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'जनरेटर खोलें', type: 'generator' },

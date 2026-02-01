@@ -1791,3 +1791,5 @@
 1791	"Analisis pengambilan kamera, unggahan, atau URL dengan rincian teknis lengkap"
 1792	"Impor kode QR yang dianalisis langsung ke generator untuk dimodifikasi dan dibuat ulang"
 1793	"Pengoptimalan kinerja dengan pemuatan font dinamis dan peningkatan aksesibilitas"
+1794	"1 Februari 2026"
+1795	"Panduan"

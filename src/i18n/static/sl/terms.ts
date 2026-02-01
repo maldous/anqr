@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Pogoji storitve',
   description: 'Z dostopom ali uporabo spletnega mesta se strinjate, da vas zavezujejo ti pogoji.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februar 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Politika zasebnosti', type: 'external' }],
   sections: [
     {

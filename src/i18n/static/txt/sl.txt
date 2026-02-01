@@ -1333,3 +1333,5 @@
 1333	"Celoten pravilnik o zasebnosti"
 1334	"Na tej strani je povzetek naših praks glede zasebnosti. Za popolno, pravno zavezujočo politiko zasebnosti s podrobnostmi o obdelavi podatkov, vaših pravicah in naših obveznostih v skladu z GDPR, CCPA in drugimi zakoni o zasebnosti si oglejte našo celotno politiko, ki jo gosti iubenda."
 1335	"Oglejte si celotno politiko zasebnosti na iubenda"
+1794	"1. februar 2026"
+1795	"Vodnik"

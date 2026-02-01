@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'የአገልግሎት ውል',
   description: 'ጣቢያውን በመድረስ ወይም በመጠቀም፣ በእነዚህ ውሎች ለመገዛት ተስማምተሃል።',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'የካቲት 1 ቀን 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'የግላዊነት ፖሊሲ', type: 'external' }],
   sections: [
     {

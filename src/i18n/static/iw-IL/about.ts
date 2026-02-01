@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'על ANQR',
   description:
     'ANQR הוא מחולל קוד QR בחינם עם גישה של לקוח ראשון - צור קודי QR באופן מקומי או השתמש ב-API שלנו להטמעה.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 בפברואר 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'פתח את הגנרטור', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'עיון למד מאמרים', type: 'learn' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Privatumo politika',
   description:
     'Informacija, kurią ANQR renka, kaip ji naudojama, ir jūsų teisės pagal galiojančius privatumo įstatymus.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 m. vasario 1 d',
   relatedLinks: [
     { href: '/terms?lang=${lang}', label: 'Paslaugų teikimo sąlygos', type: 'external' },
   ],

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Over ANQR',
   description:
     'ANQR is een gratis QR-codegenerator met een klantgerichte aanpak: genereer lokaal QR-codes of gebruik onze API voor insluiting.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februari 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Open de generator', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Blader door artikels', type: 'learn' },

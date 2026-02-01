@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'රහස්‍යතා ප්‍රතිපත්තිය',
   description: 'තොරතුරු ANQR රැස් කරයි, එය භාවිතා කරන ආකාරය, සහ අදාළ රහස්‍යතා නීති යටතේ ඔබේ අයිතිවාසිකම්.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 පෙබරවාරි 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'සේවා කොන්දේසි', type: 'external' }],
   sections: [
     {

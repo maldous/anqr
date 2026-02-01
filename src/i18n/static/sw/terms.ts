@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Masharti ya Huduma',
   description: 'Kwa kufikia au kutumia tovuti, unakubali kufungwa na masharti haya.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Sera ya Faragha', type: 'external' }],
   sections: [
     {

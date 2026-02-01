@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Mokykitės naudodami ANQR',
   description:
     'Praktiški, pirmiausia verslui skirti vadovai, kaip QR kodus paversti tikru rinkodaros turtu – ne tik funkciniais kvadratais. Sužinokite, kaip atnaujinti senus pardavimo vietos kodus, sukurti suderinamus mokėjimo QR ženklus, paruošti spausdinimui paruoštus eksportus, saugiai naudoti animaciją skaitmeniniuose ekranuose ir bendrinti užrakintas konfigūracijas tarp daugiakalbių komandų naudojant ANQR („inchor") nuorodas.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 m. vasario 1 d',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Atidarykite generatorių', type: 'generator' },

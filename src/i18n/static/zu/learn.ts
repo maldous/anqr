@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Funda nge-ANQR',
   description:
     'Imihlahlandlela esebenzayo, yokuqala yebhizinisi yokuguqula amakhodi e-QR abe izimpahla zokuthengisa zangempela - hhayi nje izikwele ezisebenzayo. Funda indlela yokuthuthukisa amakhodi ezindawo zokuthengisa zefa, dala izimpawu ze-QR zokukhokha ezivumelanayo, ulungiselele ukuthunyelwa okulungele ukuphrinta, sebenzisa ukugqwayiza ngokuphephile kuzibonisi zedijithali, futhi wabelane ngokulungiselelwa okukhiyiwe kuwo wonke amaqembu ezilimi eziningi usebenzisa izixhumanisi ze-ANQR ("ihange").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Vula ijenereyitha', type: 'generator' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ກ່ຽວກັບ ANQR',
   description:
     'ANQR ເປັນເຄື່ອງສ້າງລະຫັດ QR ຟຣີທີ່ມີວິທີການລູກຄ້າທໍາອິດ - ສ້າງລະຫັດ QR ຢູ່ໃນທ້ອງຖິ່ນຫຼືໃຊ້ API ຂອງພວກເຮົາສໍາລັບການຝັງ.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ວັນທີ 1 ກຸມພາ 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ເປີດເຄື່ອງກໍາເນີດ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ຊອກຫາບົດຄວາມ ຮຽນຮູ້', type: 'learn' },

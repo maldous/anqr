@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ติดต่อเรา',
   description: 'เรายินดีรับข้อเสนอแนะ รายงานข้อผิดพลาด คำขอคุณสมบัติ และการสอบถามทั่วไป',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 กุมภาพันธ์ 2026',
   sections: [
     {
       heading: 'ติดต่อเราได้อย่างไร',

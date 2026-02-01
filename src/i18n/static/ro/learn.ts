@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Învățați cu ANQR',
   description:
     'Ghiduri practice, dedicate afacerilor, pentru transformarea codurilor QR în active de marketing reale - nu doar pătrate funcționale." "Aflați cum să actualizați codurile POS vechi, să creați semnalizare QR conformă pentru plăți, să pregătiți exporturi gata de imprimare, să utilizați animația în siguranță pe afișaje digitale și să partajați configurații blocate între echipe multilingve folosind linkuri ANQR ("ancoră").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februarie 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Deschideți generatorul', type: 'generator' },

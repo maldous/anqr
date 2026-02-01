@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'MGA Halimbawa ng ANQR',
   description:
     'Limang real-world, production-style na mga halimbawa na nagpapakita kung saan ang mga QR code ay lumilikha ng masusukat na halaga: pagtaas ng isang legacy na retail counter code, branded retail na mga pagbabayad at "scan-to" na mga aksyon, print scaling mula sa mga flyer hanggang sa mga billboard, animated na QR para sa digital signage, at cross-lingual na pakikipagtulungan gamit ang mga naibabahaging Anchor link. Kasama sa bawat halimbawa ang mga larawan, praktikal na mga hadlang, at isang link ng remix pabalik sa generator.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Pebrero 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buksan ang generator', type: 'generator' },

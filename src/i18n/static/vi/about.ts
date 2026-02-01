@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Giới thiệu về ANQR',
   description:
     'ANQR là trình tạo mã QR miễn phí với cách tiếp cận ưu tiên khách hàng - tạo mã QR cục bộ hoặc sử dụng API của chúng tôi để nhúng.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Mở máy phát điện', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Duyệt tìm hiểu bài viết', type: 'learn' },

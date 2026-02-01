@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR பற்றி',
   description:
     'ANQR என்பது கிளையன்ட்-முதல் அணுகுமுறையுடன் கூடிய இலவச QR குறியீடு ஜெனரேட்டராகும் - QR குறியீடுகளை உள்நாட்டில் உருவாக்கவும் அல்லது உட்பொதிக்க எங்கள் API ஐப் பயன்படுத்தவும்.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 பிப்ரவரி 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ஜெனரேட்டரைத் திறக்கவும்', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'கற்றல் கட்டுரைகளை உலாவவும்', type: 'learn' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Kontakt oss',
   description:
     'Vi ønsker gjerne tilbakemeldinger, feilrapporter, funksjonsforespørsler og generelle forespørsler.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februar 2026',
   sections: [
     {
       heading: 'Hvordan nå oss',

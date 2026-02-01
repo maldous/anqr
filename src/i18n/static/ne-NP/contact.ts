@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'हामीलाई सम्पर्क गर्नुहोस्',
   description: 'हामी प्रतिक्रिया, बग रिपोर्ट, सुविधा अनुरोध, र सामान्य सोधपुछ स्वागत गर्दछौं।',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '१ फेब्रुअरी २०२६',
   sections: [
     {
       heading: 'हामी सम्म कसरी पुग्ने',

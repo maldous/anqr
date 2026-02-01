@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'מדריך למשתמש של ANQR',
   description: 'מדריך שלם לשימוש ב-ANQR ליצירת קודי QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 בפברואר 2026',
+  breadcrumb: ['מדריך'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'פתח את הגנרטור', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'עיון למד מאמרים', type: 'learn' },

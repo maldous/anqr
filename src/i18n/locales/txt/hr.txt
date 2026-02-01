@@ -1791,3 +1791,5 @@
 1791	"Analizirajte snimke kamera, prijenose ili URL-ove s potpunom tehničkom analizom"
 1792	"Uvezite analizirane QR kodove izravno u generator za izmjenu i ponovno stvaranje"
 1793	"Optimizacije performansi s dinamičkim učitavanjem fonta i poboljšanom pristupačnošću"
+1794	"1. veljače 2026"
+1795	"vodič"

@@ -1333,3 +1333,5 @@
 1333	"Inqubomgomo Yobumfihlo Egcwele"
 1334	"Leli khasi linikeza isifinyezo sezinqubo zethu zobumfihlo. Ukuze uthole inqubomgomo yobumfihlo ephelele, ebophezela ngokusemthethweni enemininingwane egcwele yokucutshungulwa kwedatha, amalungelo akho, nezibopho zethu ngaphansi kwe-GDPR, CCPA, neminye imithetho yobumfihlo, sicela ubheke inqubomgomo yethu egcwele ephethwe yi-iubenda."
 1335	"Buka Inqubomgomo Yobumfihlo Egcwele ku-iubenda"
+1794	"1 February 2026"
+1795	"Umhlahlandlela"

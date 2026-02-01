@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'დაგვიკავშირდით',
   description:
     'ჩვენ მივესალმებით გამოხმაურებას, შეცდომების ანგარიშებს, ფუნქციების მოთხოვნებს და ზოგად შეკითხვებს.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 წლის 1 თებერვალი',
   sections: [
     {
       heading: 'როგორ მივაღწიოთ ჩვენამდე',

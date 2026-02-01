@@ -1333,3 +1333,5 @@
 1333	"Política de privacidade completa"
 1334	"Esta páxina ofrece un resumo das nosas prácticas de privacidade. Para obter a política de privacidade completa e legalmente vinculante con todos os detalles sobre o procesamento de datos, os teus dereitos e as nosas obrigas en virtude do GDPR, CCPA e outras leis de privacidade, consulta a nosa política completa aloxada por iubenda."
 1335	"Ver política de privacidade completa en iubenda"
+1794	"1 de febreiro de 2026"
+1795	"Guía"

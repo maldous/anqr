@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: '通過 ANQR 學習',
   description:
     '將二維碼轉變為真正的營銷資產（而不僅僅是功能方塊）的實用且業務至上的指南。了解如何升級舊版銷售點代碼、創建合規的支付 QR 標牌、準備可打印的導出、在數字顯示器上安全地使用動畫以及使用 ANQR（"錨點"）鏈接在多語言團隊之間共享鎖定配置。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '打開發電機', type: 'generator' },

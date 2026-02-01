@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Geschäftsbedingungen',
   description:
     'Durch den Zugriff oder die Nutzung der Website erklären Sie sich damit einverstanden, an diese Bedingungen gebunden zu sein.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. Februar 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Datenschutz', type: 'external' }],
   sections: [
     {

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Contactați-ne',
   description:
     'Așteptăm cu nerăbdare feedback, raportări de erori, solicitări de funcții și întrebări generale.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februarie 2026',
   sections: [
     {
       heading: 'Cum ne puteți contacta',

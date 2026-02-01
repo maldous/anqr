@@ -87,6 +87,22 @@ for = "/*.svg"
 Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
+for = "/tsunami.jpg"
+
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
+
+[[headers]]
+for = "/king.gif"
+
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
+
+[[headers]]
 for = "/manifest.json"
 
 [headers.values]

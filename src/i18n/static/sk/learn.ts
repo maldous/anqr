@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Učte sa s ANQR',
   description:
     'Praktické, obchodné príručky na premenu QR kódov na skutočné marketingové aktíva – nielen funkčné štvorce. Naučte sa, ako inovovať staršie kódy miesta predaja, vytvárať kompatibilné platobné QR označenia, pripravovať exporty pripravené na tlač, bezpečne používať animácie na digitálnych displejoch a zdieľať uzamknuté konfigurácie medzi viacjazyčnými tímami pomocou odkazov ANQR („kotvy").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februára 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Otvorte generátor', type: 'generator' },

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: '개인 정보 보호 정책',
   description: '정보 ANQR 수집, 사용 방법, 적용 가능한 개인 정보 보호법에 따라 귀하의 권리.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026년 2월 1일',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: '서비스 약관', type: 'external' }],
   sections: [
     {

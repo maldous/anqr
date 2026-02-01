@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Ota yhteyttä',
   description:
     'Olemme tyytyväisiä palautteisiin, vikaraportteihin, ominaisuuspyyntöihin ja yleisiin tiedusteluihin.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. helmikuuta 2026',
   sections: [
     {
       heading: 'Miten tavoittaa meidät?',

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Hafðu samband',
   description: 'Við fögnum viðbrögðum, villuskýrslum, eiginleikumbeiðnum og almennum fyrirspurnum.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. febrúar 2026',
   sections: [
     {
       heading: 'Hvernig á að ná til okkar',

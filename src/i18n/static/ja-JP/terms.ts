@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'サービス利用規約',
   description:
     '本サイトにアクセスまたは利用することにより、本規約に拘束されることに同意するものとします。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'プライバシーポリシー', type: 'external' },
   ],

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Mengenai ANQR',
   description:
     'ANQR ialah penjana kod QR percuma dengan pendekatan mengutamakan pelanggan - jana kod QR secara setempat atau gunakan API kami untuk membenamkan.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buka penjana', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Semak imbas artikel Pelajari', type: 'learn' },

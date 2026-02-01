@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'با ما تماس بگیرید',
   description:
     'ما از بازخورد، گزارش های اشکال، درخواست های ویژگی ها، و پرس و جو های عمومی استقبال میکنیم.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبروری 2026',
   sections: [
     {
       heading: 'چگونه به ما برسیم',

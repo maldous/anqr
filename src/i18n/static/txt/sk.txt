@@ -1333,3 +1333,5 @@
 1333	"Úplné zásady ochrany osobných údajov"
 1334	"Táto stránka poskytuje súhrn našich postupov ochrany osobných údajov. Úplné, právne záväzné zásady ochrany osobných údajov s úplnými podrobnosťami o spracovaní údajov, vašich právach a našich povinnostiach podľa GDPR, CCPA a iných zákonov o ochrane osobných údajov nájdete v našich úplných zásadách, ktorých hostiteľom je iubenda."
 1335	"Zobraziť úplné zásady ochrany osobných údajov na iubenda"
+1794	"1. februára 2026"
+1795	"Sprievodca"

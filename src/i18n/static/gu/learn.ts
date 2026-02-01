@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ANQR સાથે શીખો',
   description:
     'QR કોડને વાસ્તવિક માર્કેટિંગ અસ્કયામતોમાં ફેરવવા માટે વ્યવહારુ, વ્યવસાય-પ્રથમ માર્ગદર્શિકાઓ - માત્ર કાર્યાત્મક ચોરસ જ નહીં. લેગસી પોઈન્ટ-ઓફ-સેલ કોડ્સ કેવી રીતે અપગ્રેડ કરવા, સુસંગત ચુકવણી QR સિગ્નેજ બનાવવા, પ્રિન્ટ-રેડી નિકાસ તૈયાર કરવા, ડિજિટલ ડિસ્પ્લે પર એનિમેશનનો સુરક્ષિત રીતે ઉપયોગ કરવા અને ANQR ("એન્કર") લિંક્સનો ઉપયોગ કરીને બહુભાષી ટીમોમાં લૉક-ઇન ગોઠવણીઓ કેવી રીતે શેર કરવી તે જાણો.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ફેબ્રુઆરી 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'જનરેટર ખોલો', type: 'generator' },

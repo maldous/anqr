@@ -1791,3 +1791,5 @@
 1791	"Elemezze a kamerarögzítéseket, feltöltéseket vagy URL-eket teljes műszaki lebontással"
 1792	"Importálja az elemzett QR-kódokat közvetlenül a generátorba, hogy módosítsa és újra létrehozza"
 1793	"Teljesítményoptimalizálás dinamikus betűtípus-betöltéssel és jobb hozzáférhetőséggel"
+1794	"2026. február 1"
+1795	"Útmutató"

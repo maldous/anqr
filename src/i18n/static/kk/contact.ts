@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Бізбен байланысыңыз',
   description:
     'Біз кері байланысты, қате туралы есептерді, мүмкіндік сұрауларын және жалпы сұрауларды құптаймыз.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 жылғы 1 ақпан',
   sections: [
     {
       heading: 'Бізге қалай жетуге болады',

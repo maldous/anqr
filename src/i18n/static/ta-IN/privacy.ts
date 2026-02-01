@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'தனியுரிமைக் கொள்கை',
   description:
     'ANQR சேகரிக்கும் தகவல், அது எவ்வாறு பயன்படுத்தப்படுகிறது மற்றும் பொருந்தக்கூடிய தனியுரிமைச் சட்டங்களின் கீழ் உங்கள் உரிமைகள்.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 பிப்ரவரி 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'சேவை விதிமுறைகள்', type: 'external' }],
   sections: [
     {

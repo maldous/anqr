@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'سياسة الخصوصية',
   description:
     'المعلومات التي تجمعها (أنقر) وكيف تستخدمها وحقوقك بموجب قوانين الخصوصية الواجبة التطبيق.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبراير 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'مدة الخدمة', type: 'external' }],
   sections: [
     {

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: '通过 ANQR 学习',
   description:
     '将二维码转变为真正的营销资产（而不仅仅是功能方块）的实用且业务至上的指南。了解如何升级旧版销售点代码、创建合规的支付 QR 标牌、准备可打印的导出、在数字显示器上安全地使用动画以及使用 ANQR（锚点）链接在多语言团队之间共享锁定配置。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '打开发电机', type: 'generator' },

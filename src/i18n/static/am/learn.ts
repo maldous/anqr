@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'በANQR ተማር',
   description:
     'የQR ኮዶችን ወደ እውነተኛ የግብይት ንብረቶች ለመቀየር ተግባራዊ፣ ንግድ-መጀመሪያ መመሪያዎች - ተግባራዊ ካሬዎች ብቻ አይደሉም። የቆዩ የሽያጭ ኮዶችን እንዴት ማሻሻል እንደሚችሉ ይወቁ፣ ታዛዥ ክፍያ QR ምልክት መፍጠር፣ ለህትመት ዝግጁ የሆኑ ወደ ውጭ መላክን ማዘጋጀት፣ በዲጂታል ማሳያዎች ላይ እነማ በጥንቃቄ መጠቀም እና የ ANQR ("መልህቅ") አገናኞችን በመጠቀም የተቆለፉትን የብዙ ቋንቋ ቡድኖች ማጋራት እንደሚችሉ ይወቁ።',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'የካቲት 1 ቀን 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ጄነሬተሩን ይክፈቱ', type: 'generator' },

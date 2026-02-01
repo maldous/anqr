@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Shembuj të ANQR',
   description:
     'Pesë shembuj të botës reale, të stilit të prodhimit që tregojnë se ku kodet QR krijojnë vlerë të matshme: ngritja e një kodi numërues të vjetër të shitjes me pakicë, pagesat me pakicë të markës dhe veprimet "skanimi në", shkallëzimi i printimit nga fletushkat në tabela, QR i animuar për sinjalistikën dixhitale dhe bashkëpunimi ndërgjuhësor duke përdorur lidhje të përbashkëta Anchor. Secili shembull përfshin imazhe, kufizime praktike dhe një lidhje ripërzierjeje në gjenerator.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 shkurt 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Hapni gjeneratorin', type: 'generator' },

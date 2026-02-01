@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Kontaktujte nás',
   description: 'Vítame spätnú väzbu, hlásenia chýb, požiadavky na funkcie a všeobecné otázky.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februára 2026',
   sections: [
     {
       heading: 'Ako sa k nám dostať',

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Szolgáltatási feltételek',
   description:
     'Az oldal elérésével vagy használatával Ön beleegyezik, hogy ezek a feltételek kötelezőek.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. február 1',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Adatvédelmi irányelvek', type: 'external' },
   ],

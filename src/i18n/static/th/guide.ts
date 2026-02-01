@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'คู่มือผู้ใช้ ANQR',
   description: 'คำแนะนำฉบับสมบูรณ์เกี่ยวกับการใช้ ANQR ในการสร้างโค้ด QR',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 กุมภาพันธ์ 2026',
+  breadcrumb: ['คู่มือ'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'เปิดเครื่องกำเนิดไฟฟ้า', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'เรียกดูบทความเรียนรู้', type: 'learn' },

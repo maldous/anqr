@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ANQR',
   description:
     'İnformasiya, biznes-ilk sifarişlər QR kodları real marketinq aktivləri - yalnız funksional meydanlar deyil. ANQR ("anchor") dəstəkləri istifadə edən müxtəlif komandalar üçün müxtəlif təhlükəsizlik təşkilatçıları üzrə fəaliyyət göstərir.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 fevral 2026-cı il',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'İstehsalçı', type: 'generator' },

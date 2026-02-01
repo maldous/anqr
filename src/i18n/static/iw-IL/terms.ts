@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'תנאים והגבלות',
   description: 'על ידי גישה או שימוש באתר, אתה מסכים להיות כפוף לתנאים אלה.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 בפברואר 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'מדיניות פרטיות', type: 'external' }],
   sections: [
     {

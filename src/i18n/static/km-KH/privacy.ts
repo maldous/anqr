@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'គោលការណ៍ឯកជនភាព',
   description: 'ព័ត៌មាន ANQR ប្រមូល របៀបដែលវាត្រូវបានប្រើ និងសិទ្ធិរបស់អ្នកក្រោមច្បាប់ឯកជនភាពដែលអាចអនុវត្តបាន។',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ថ្ងៃទី 1 ខែកុម្ភៈ ឆ្នាំ 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'លក្ខខណ្ឌនៃសេវាកម្ម', type: 'external' }],
   sections: [
     {

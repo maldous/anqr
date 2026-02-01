@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ANQRで学ぶ',
   description:
     '実際のマーケティング資産にQRコードを回すための実用的、ビジネスファーストガイド - 機能的な正方形ではありません。 従来のPOSコードをアップグレードする方法を学び、QR(「アンカー」)リンクを使用して、一貫性のある支払いQRサイネージを作成し、プリント対応のエクスポートを準備し、デジタルディスプレイで安全にアニメーションを使用し、多言語チーム間でロックされた設定を共有します。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '発電機を開けて下さい', type: 'generator' },

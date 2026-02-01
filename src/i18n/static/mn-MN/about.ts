@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR-ийн тухай',
   description:
     'ANQR бол үйлчлүүлэгчийн хамгийн түрүүнд ханддаг QR код үүсгэгч үнэгүй QR кодыг дотооддоо үүсгэх эсвэл оруулахдаа манай API-г ашиглана.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 оны хоёрдугаар сарын 1',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Генераторыг нээ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Сурах нийтлэлүүдийг үзэх', type: 'learn' },

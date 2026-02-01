@@ -1791,3 +1791,5 @@
 1791	"Analizați capturile, încărcările sau adresele URL ale camerei cu o defalcare tehnică completă"
 1792	"Importați codurile QR analizate direct în generator pentru a le modifica și recrea"
 1793	"Optimizări de performanță cu încărcare dinamică a fonturilor și accesibilitate îmbunătățită"
+1794	"1 februarie 2026"
+1795	"Ghid"
