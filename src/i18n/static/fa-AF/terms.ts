@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'شرایط خدمات',
   description: 'با دسترسی یا استفاده از سایت، شما موافقت میکنید که با این شرایط محدود شوید.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبروری 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'پالیسی حریم خصوصی', type: 'external' }],
   sections: [
     {

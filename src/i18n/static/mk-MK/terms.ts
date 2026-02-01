@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Услови за користење',
   description:
     'Со пристап или користење на страницата, вие се согласувате да бидете обврзани со овие услови.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 февруари 2026 година',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Политика за приватност', type: 'external' },
   ],

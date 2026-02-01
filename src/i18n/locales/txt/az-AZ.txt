@@ -1791,3 +1791,5 @@
 1791	"Kamera çəkilişlərini, yükləmələri və ya URL-ləri tam texniki nasazlıqla təhlil edin"
 1792	"Dəyişdirmək və yenidən yaratmaq üçün təhlil edilmiş QR kodları birbaşa generatora idxal edin"
 1793	"Dinamik şrift yükləməsi və təkmilləşdirilmiş əlçatanlıq ilə performans optimallaşdırmaları"
+1794	"1 fevral 2026-cı il"
+1795	"Bələdçi"

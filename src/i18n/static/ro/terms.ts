@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Termeni și condiții',
   description:
     'Prin accesarea sau utilizarea site-ului, sunteți de acord să respectați acești termeni.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februarie 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Politica de confidențialitate', type: 'external' },
   ],

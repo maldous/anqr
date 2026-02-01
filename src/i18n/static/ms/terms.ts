@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Terminologi Layanan',
   description:
     'Dengan mengakses atau menggunakan situs, Anda setuju untuk terikat dengan istilah ini.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Kebijakan Privasi', type: 'external' }],
   sections: [
     {

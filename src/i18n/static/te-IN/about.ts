@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR గురించి',
   description:
     'ANQR అనేది క్లయింట్-ఫస్ట్ విధానంతో ఉచిత QR కోడ్ జనరేటర్ - స్థానికంగా QR కోడ్‌లను రూపొందించండి లేదా పొందుపరచడానికి మా APIని ఉపయోగించండి.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ఫిబ్రవరి 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'జనరేటర్ తెరవండి', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'నేర్చుకునే కథనాలను బ్రౌజ్ చేయండి', type: 'learn' },

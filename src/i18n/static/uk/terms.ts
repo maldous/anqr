@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Умови обслуговування',
   description: 'Відкриваючи або використовуючи сайт, ви погоджуєтеся дотримуватися цих умов.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 лютого 2026 р',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Політика конфіденційності', type: 'external' },
   ],

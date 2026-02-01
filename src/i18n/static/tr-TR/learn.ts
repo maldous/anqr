@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ANQR ile öğrenin',
   description:
     'QR kodlarını yalnızca işlevsel karelere değil, gerçek pazarlama varlıklarına dönüştürmek için pratik, öncelikli iş kılavuzları. Eski satış noktası kodlarını nasıl yükselteceğinizi, uyumlu ödeme QR tabelasını nasıl oluşturacağınızı, baskıya hazır dışa aktarımlar hazırlamayı, dijital ekranlarda animasyonu güvenli bir şekilde kullanmayı ve ANQR ("bağlantı") bağlantılarını kullanarak çok dilli ekipler arasında kilitli yapılandırmaları nasıl paylaşacağınızı öğrenin.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Şubat 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Jeneratörü aç', type: 'generator' },

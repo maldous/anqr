@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Mayelana ne-ANQR',
   description:
     'I-ANQR iyijeneretha yamakhodi e-QR yamahhala enendlela yokusebenzisa iklayenti kuqala - khiqiza amakhodi e-QR endaweni noma sebenzisa i-API yethu yokufaka.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Vula ijenereyitha', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Dlulisa amehlo Funda izihloko', type: 'learn' },

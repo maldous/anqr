@@ -1333,3 +1333,5 @@
 1333	"Täydellinen tietosuojakäytäntö"
 1334	"Tällä sivulla on yhteenveto tietosuojakäytännöistämme. Täydellisen, laillisesti sitovan tietosuojakäytännön, joka sisältää täydelliset tiedot tietojenkäsittelystä, oikeuksistasi ja GDPR-, CCPA- ja muiden tietosuojalakien mukaisista velvoitteistamme, katso iubendan isännöimä täydellinen käytäntömme."
 1335	"Katso koko iubendan tietosuojakäytäntö"
+1794	"1. helmikuuta 2026"
+1795	"Opas"

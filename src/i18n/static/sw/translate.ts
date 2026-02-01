@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'Saidia Kutafsiri ANQR',
   description:
     'Jiunge na jumuiya yetu ya watafsiri wanaosaidia kufanya ANQR kupatikana kwa watumiaji duniani kote. Hakuna matumizi ya usimbaji yanayohitajika - toa moja kwa moja kutoka kwa kivinjari chako.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   primaryLinks: [
     {
       href: 'https://github.com/maldous/anqr-i18n',

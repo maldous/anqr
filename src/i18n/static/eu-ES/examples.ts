@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR Adibideak',
   description:
     'Mundu errealeko bost adibide, QR kodeak balio neurgarria non sortzen duten erakusten duten: txikizkako txikizkako kontagailu kode tradizional bat hobetzea, markako txikizkako ordainketak eta "eskaneatzeko" ekintzak, flyeretatik iragarkietara inprimatzeko eskalatzea, seinaleztapen digitalerako QR animatua eta hizkuntza anitzeko lankidetza parteka daitezkeen Anchor estekak erabiliz. Adibide bakoitzak irudiak, murrizketa praktikoak eta sorgailura itzultzeko remix esteka bat biltzen ditu.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026ko otsailaren 1a',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Ireki sorgailua', type: 'generator' },

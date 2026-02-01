@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Gizlilik Politikası',
   description:
     "ANQR'un topladığı bilgiler, bunların nasıl kullanıldığı ve geçerli gizlilik yasaları kapsamındaki haklarınız.",
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Şubat 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Hizmet Şartları', type: 'external' }],
   sections: [
     {

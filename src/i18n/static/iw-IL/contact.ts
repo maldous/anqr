@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'צור קשר',
   description: 'נשמח לקבל משוב, דיווחי באגים, בקשות לתכונה, ופניות כלליות.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 בפברואר 2026',
   sections: [
     {
       heading: 'איך להגיע אלינו',

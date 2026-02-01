@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Zásady ochrany osobných údajov',
   description:
     'Informácie, ktoré ANQR zhromažďuje, ako sa používajú a vaše práva podľa platných zákonov na ochranu súkromia.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februára 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Zmluvné podmienky', type: 'external' }],
   sections: [
     {

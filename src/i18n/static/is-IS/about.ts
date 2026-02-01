@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Um ANQR',
   description:
     'ANQR er ókeypis QR kóða rafall með viðskiptavinur-fyrsta nálgun - búðu til QR kóða á staðnum eða notaðu API okkar til að fella inn.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. febrúar 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Opnaðu rafalann', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Skoða Lærðu greinar', type: 'learn' },

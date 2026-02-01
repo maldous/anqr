@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Aprenda com ANQR',
   description:
     'Guias práticos e inovadores para transformar códigos QR em verdadeiros ativos de marketing - não apenas em quadrados funcionais. Aprenda como atualizar códigos de ponto de venda legados, criar sinalização QR de pagamento compatível, preparar exportações prontas para impressão, usar animações com segurança em displays digitais e compartilhar configurações bloqueadas entre equipes multilíngues usando links ANQR ("âncora").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1º de fevereiro de 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Abra o gerador', type: 'generator' },

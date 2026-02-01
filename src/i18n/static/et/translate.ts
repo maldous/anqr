@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'Aidake ANQR-i tõlkida',
   description:
     'Liituge meie tõlkijate kogukonnaga, aidates muuta ANQR-i kasutajatele kättesaadavaks kogu maailmas. Kodeerimiskogemust pole vaja – panustage otse oma brauserist.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veebruar 2026',
   primaryLinks: [
     { href: 'https://github.com/maldous/anqr-i18n', label: 'Avage tõlkehoidla', type: 'external' },
     { href: '/?lang=${lang}', label: 'Avage generaator', type: 'generator' },

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'අප අමතන්න',
   description: 'අපි ප්‍රතිපෝෂණ, දෝෂ වාර්තා, විශේෂාංග ඉල්ලීම් සහ සාමාන්‍ය විමසීම් සාදරයෙන් පිළිගනිමු.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 පෙබරවාරි 2026',
   sections: [
     {
       heading: 'අප වෙත ළඟා වන්නේ කෙසේද',

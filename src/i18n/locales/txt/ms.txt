@@ -1791,3 +1791,5 @@
 1791	"Analisis tangkapan kamera, muat naik atau URL dengan pecahan teknikal penuh"
 1792	"Import kod QR yang dianalisis terus ke dalam penjana untuk mengubah suai dan mencipta semula"
 1793	"Pengoptimuman prestasi dengan pemuatan fon dinamik dan kebolehcapaian yang dipertingkatkan"
+1794	"1 Februari 2026"
+1795	"Panduan"

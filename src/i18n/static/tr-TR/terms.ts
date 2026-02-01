@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Hizmet Şartları',
   description:
     'Siteye erişerek veya siteyi kullanarak bu şartlara bağlı kalmayı kabul etmiş olursunuz.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Şubat 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Gizlilik Politikası', type: 'external' }],
   sections: [
     {

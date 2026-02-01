@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR lietotāja rokasgrāmata',
   description: 'Pilnīga rokasgrāmata par ANQR izmantošanu QR kodu izveidošanai.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '2026. gada 1. februāris',
+  breadcrumb: ['Ceļvedis'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Atveriet ģeneratoru', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Pārlūkot Uzziniet rakstus', type: 'learn' },

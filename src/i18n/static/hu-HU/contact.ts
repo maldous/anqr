@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Kapcsolatfelvétel',
   description:
     'Üdvözöljük a visszajelzéseket, a hibajelentéseket, a funkciókat és az általános vizsgálatokat.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. február 1',
   sections: [
     {
       heading: 'Hogyan érjünk el minket',

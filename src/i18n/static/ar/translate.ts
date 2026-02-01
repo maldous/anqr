@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'المساعدة في تحويل الأنكروات',
   description:
     'انضموا إلى مجتمعنا من المترجمين الذين يساعدون على جعل (أنكرو) متاحة للمستعملين في جميع أنحاء العالم لا حاجة لتجربة الترميز - المساهمة مباشرة من منظفك.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبراير 2026',
   primaryLinks: [
     {
       href: 'https://github.com/maldous/anqr-i18n',

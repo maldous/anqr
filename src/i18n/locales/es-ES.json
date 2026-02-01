@@ -1312,6 +1312,7 @@
     "joinReddit": "Únete a r/ANQR"
   },
   "overlay": {
+    "photo": "cámara",
     "blueNoise": "ruido azul",
     "blueNoiseMode": "ruido azul",
     "none": "Ninguno",

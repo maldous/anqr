@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: '关于ANQR',
   description:
     'ANQR 是一款免费的 QR 码生成器，采用客户端优先的方法 - 在本地生成 QR 码或使用我们的 API 进行嵌入。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
   primaryLinks: [
     { href: '/?lang=${lang}', label: '打开发电机', type: 'generator' },
     { href: '/learn?lang=${lang}', label: '浏览学习文章', type: 'learn' },

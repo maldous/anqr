@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { Button } from '@/components/ui/button';
 import type { PageDefinition, PageSection } from '@/i18n/static';
-import { CONTACT_EMAIL, getStaticContentAsync, LAST_UPDATED } from '@/i18n/static';
+import { getStaticContentAsync } from '@/i18n/static';
 
 export type StaticPageType =
   | 'about'
@@ -519,9 +519,9 @@ function ContactEmailLink() {
       <h3 className="text-lg font-semibold text-foreground mb-2">{t('contact.emailUs')}</h3>
       <p className="text-sm text-muted-foreground mb-4">{t('contact.emailUsDesc')}</p>
       <Button asChild size="lg">
-        <a href={`mailto:${CONTACT_EMAIL}`}>
+        <a href="mailto:email@anqr.link">
           <Mail className="h-4 w-4 mr-2" />
-          {CONTACT_EMAIL}
+          email@anqr.link
         </a>
       </Button>
     </div>
@@ -873,7 +873,7 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
 
             <div className="mt-8 pt-4 border-t border-border text-center">
               <p className="text-xs text-muted-foreground">
-                {t('accessibility.lastUpdated')}: {LAST_UPDATED}
+                {t('accessibility.lastUpdated')}: {def.lastUpdated}
               </p>
             </div>
           </article>
@@ -996,7 +996,7 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
 
           <div className="mt-8 pt-4 border-t border-border text-center">
             <p className="text-xs text-muted-foreground">
-              {t('accessibility.lastUpdated')}: {LAST_UPDATED}
+              {t('accessibility.lastUpdated')}: {def.lastUpdated}
             </p>
           </div>
         </article>

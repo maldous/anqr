@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR-i näited',
   description:
     'Viis reaalset tootmisstiilis näidet, mis näitavad, kus QR-koodid loovad mõõdetavat väärtust: pärand jaemüügi loenduri koodi täiustamine, kaubamärgiga jaemüügimaksed ja skannimistoimingud, printimise skaleerimine flaieritelt stendidele, animeeritud QR digitaalsete märgistuste jaoks ja keeleülene koostöö jagatavate ankrulinkide abil. Iga näide sisaldab pilte, praktilisi piiranguid ja remiksi linki tagasi generaatorisse.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veebruar 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Avage generaator', type: 'generator' },

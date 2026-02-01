@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'Siza Ukuhumusha i-ANQR',
   description:
     'Joyina umphakathi wethu wabahumushi abasiza ukwenza i-ANQR ifinyeleleke kubasebenzisi emhlabeni wonke. Asikho ulwazi lokubhala ngekhodi oludingekayo - nikela ngokuqondile esipheqululini sakho.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
   primaryLinks: [
     {
       href: 'https://github.com/maldous/anqr-i18n',

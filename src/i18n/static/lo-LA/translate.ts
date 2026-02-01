@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'ຊ່ວຍແປ ANQR',
   description:
     'ເຂົ້າຮ່ວມຊຸມຊົນນັກແປຂອງພວກເຮົາຊ່ວຍເຮັດໃຫ້ ANQR ເຂົ້າເຖິງໄດ້ກັບຜູ້ໃຊ້ທົ່ວໂລກ. ບໍ່​ມີ​ປະ​ສົບ​ການ​ການ​ເຂົ້າ​ລະ​ຫັດ​ທີ່​ຕ້ອງ​ການ - ປະ​ກອບ​ສ່ວນ​ໂດຍ​ກົງ​ຈາກ​ຕົວ​ທ່ອງ​ເວັບ​ຂອງ​ທ່ານ​.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ວັນທີ 1 ກຸມພາ 2026',
   primaryLinks: [
     { href: 'https://github.com/maldous/anqr-i18n', label: 'ເປີດຄັງການແປ', type: 'external' },
     { href: '/?lang=${lang}', label: 'ເປີດ Generator', type: 'generator' },

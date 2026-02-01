@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR-ის შესახებ',
   description:
     'ANQR არის უფასო QR კოდების გენერატორი კლიენტის პირველი მიდგომით - შექმენით QR კოდები ადგილობრივად ან გამოიყენეთ ჩვენი API ჩაშენებისთვის.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 წლის 1 თებერვალი',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'გახსენით გენერატორი', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ისწავლეთ სტატიების დათვალიერება', type: 'learn' },

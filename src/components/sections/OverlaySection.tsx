@@ -1,6 +1,14 @@
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
-import { Camera as CameraIcon, Link, Loader2, Move, Upload, X } from 'lucide-react';
+import {
+  Camera as CameraIcon,
+  Image as ImageIcon,
+  Link,
+  Loader2,
+  Move,
+  Upload,
+  X,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -88,6 +96,8 @@ export function OverlaySection() {
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [showGalleryPicker, setShowGalleryPicker] = useState(false);
+  const [galleryLoading, setGalleryLoading] = useState(false);
 
   // Create image preview URL when file or URL changes
   useEffect(() => {
@@ -211,6 +221,43 @@ export function OverlaySection() {
     setUrlInput('');
     setUrlError(null);
   };
+
+  // Built-in gallery images - use absolute URLs on native platforms
+  const getGalleryImageUrl = (path: string) =>
+    Capacitor.isNativePlatform() ? `https://anqr.link${path}` : path;
+
+  const GALLERY_IMAGES = [
+    { id: 'tsunami', name: 'Tsunami', url: getGalleryImageUrl('/tsunami.jpg'), isAnimated: false },
+    { id: 'king', name: 'King', url: getGalleryImageUrl('/king.gif'), isAnimated: true },
+  ];
+
+  // Load image from gallery
+  const loadGalleryImage = useCallback(
+    async (imageUrl: string) => {
+      setGalleryLoading(true);
+      setShowGalleryPicker(false);
+
+      try {
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to load: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const filename = imageUrl.split('/').pop() || 'gallery-image';
+        const file = new File([blob], filename, { type: blob.type });
+
+        setOverlayUrl(imageUrl);
+        setOverlayFile(file);
+        setOverlayEnabled(true);
+      } catch (err) {
+        console.error('Failed to load gallery image:', err);
+      } finally {
+        setGalleryLoading(false);
+      }
+    },
+    [setOverlayFile, setOverlayUrl, setOverlayEnabled]
+  );
 
   // Handle crop region drag (mouse)
   const handleCropDrag = useCallback(
@@ -404,43 +451,83 @@ export function OverlaySection() {
                 {cameraError}
               </div>
             )}
-            <div className="flex gap-2">
+            <div
+              className={`grid gap-2 ${Capacitor.isNativePlatform() ? 'grid-cols-4' : 'grid-cols-3'}`}
+            >
               <Button
                 variant="outline"
-                className="flex-1"
+                className="flex flex-col items-center justify-center h-16 p-2"
                 onClick={() => fileInputRef.current?.click()}
                 data-testid="overlay-upload"
               >
-                <Upload className="h-4 w-4 mr-2" />
-                {t('overlay.upload')}
+                <Upload className="h-5 w-5 mb-1" />
+                <span className="text-xs">{t('overlay.upload')}</span>
               </Button>
               <Button
                 variant="outline"
-                className="flex-1"
+                className="flex flex-col items-center justify-center h-16 p-2"
                 onClick={() => setShowUrlInput(!showUrlInput)}
                 data-testid="overlay-from-url-button"
               >
-                <Link className="h-4 w-4 mr-2" />
-                {t('overlay.fromUrl')}
+                <Link className="h-5 w-5 mb-1" />
+                <span className="text-xs">{t('payload.url')}</span>
               </Button>
-              {/* Photo button - only on native mobile */}
+              <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-16 p-2"
+                onClick={() => setShowGalleryPicker(!showGalleryPicker)}
+                disabled={galleryLoading}
+                data-testid="overlay-gallery-button"
+              >
+                {galleryLoading ? (
+                  <Loader2 className="h-5 w-5 mb-1 animate-spin" />
+                ) : (
+                  <ImageIcon className="h-5 w-5 mb-1" />
+                )}
+                <span className="text-xs">{t('nav.gallery')}</span>
+              </Button>
               {Capacitor.isNativePlatform() && (
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex flex-col items-center justify-center h-16 p-2"
                   onClick={handleCameraCapture}
                   disabled={cameraLoading}
                   data-testid="overlay-photo-button"
                 >
                   {cameraLoading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-5 w-5 mb-1 animate-spin" />
                   ) : (
-                    <CameraIcon className="h-4 w-4 mr-2" />
+                    <CameraIcon className="h-5 w-5 mb-1" />
                   )}
-                  {t('overlay.photo')}
+                  <span className="text-xs">{t('overlay.photo')}</span>
                 </Button>
               )}
             </div>
+
+            {/* Gallery Picker */}
+            {showGalleryPicker && (
+              <div className="space-y-2 p-3 border rounded-md bg-muted/30">
+                <Label className="text-sm">{t('overlay.selectImage')}</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {GALLERY_IMAGES.map((img) => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => loadGalleryImage(img.url)}
+                      className="relative aspect-square rounded-md overflow-hidden border-2 border-transparent hover:border-primary focus:border-primary focus:outline-none transition-colors"
+                    >
+                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
+                        <span className="text-xs text-white font-medium">{img.name}</span>
+                        {img.isAnimated && (
+                          <span className="text-xs text-white/70 ml-1">(GIF)</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* URL Input */}
             {showUrlInput && (

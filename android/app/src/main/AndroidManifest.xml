@@ -62,6 +62,11 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-2270701384951162~3067761782"/>
         
+        <!-- Disable Sentry auto-initialization - we initialize manually in MainActivity -->
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false"/>
+        
 
 
     </application>

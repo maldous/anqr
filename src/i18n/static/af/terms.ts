@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Diensbepalings',
   description:
     'Deur toegang tot die webwerf te verkry of te gebruik, stem jy in om aan hierdie bepalings gebind te wees.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februarie 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Privaatheidsbeleid', type: 'external' }],
   sections: [
     {

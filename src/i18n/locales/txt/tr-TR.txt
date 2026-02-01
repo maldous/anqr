@@ -1791,3 +1791,5 @@
 1791	"Kamera kayıtlarını, yüklemeleri veya URL'leri tam teknik dökümle analiz edin"
 1792	"Analiz edilen QR kodlarını değiştirmek ve yeniden oluşturmak için doğrudan oluşturucuya aktarın"
 1793	"Dinamik yazı tipi yükleme ve iyileştirilmiş erişilebilirlik ile performans optimizasyonları"
+1794	"1 Şubat 2026"
+1795	"Rehber"

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'За ANQR',
   description:
     'ANQR е безплатен QR код генератор с клиент-първи подход - генерира QR кодове локално или използва нашия API за вграждане.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 февруари 2026 г',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Отвори генератора', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Преглед на статиите', type: 'learn' },

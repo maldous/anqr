@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Syarat Perkhidmatan',
   description:
     'Dengan mengakses atau menggunakan tapak, anda bersetuju untuk terikat dengan syarat ini.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Dasar Privasi', type: 'external' }],
   sections: [
     {

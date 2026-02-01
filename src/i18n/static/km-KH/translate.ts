@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'ជួយបកប្រែ ANQR',
   description:
     'ចូលរួមជាមួយសហគមន៍អ្នកបកប្រែរបស់យើងដែលជួយធ្វើឱ្យ ANQR អាចចូលប្រើបានសម្រាប់អ្នកប្រើប្រាស់ទូទាំងពិភពលោក។ មិនចាំបាច់មានបទពិសោធន៍សរសេរកូដទេ - ចូលរួមដោយផ្ទាល់ពីកម្មវិធីរុករករបស់អ្នក។',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ថ្ងៃទី 1 ខែកុម្ភៈ ឆ្នាំ 2026',
   primaryLinks: [
     { href: 'https://github.com/maldous/anqr-i18n', label: 'បើកឃ្លាំងការបកប្រែ', type: 'external' },
     { href: '/?lang=${lang}', label: 'បើកម៉ាស៊ីនភ្លើង', type: 'generator' },

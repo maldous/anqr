@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'Trợ giúp Dịch ANQR',
   description:
     'Tham gia cộng đồng dịch giả của chúng tôi để giúp ANQR có thể truy cập được cho người dùng trên toàn thế giới. Không cần kinh nghiệm viết mã - đóng góp trực tiếp từ trình duyệt của bạn.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
   primaryLinks: [
     { href: 'https://github.com/maldous/anqr-i18n', label: 'Mở kho dịch', type: 'external' },
     { href: '/?lang=${lang}', label: 'Mở máy phát điện', type: 'generator' },

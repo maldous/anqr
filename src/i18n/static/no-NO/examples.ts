@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR Eksempler',
   description:
     'Fem virkelige eksempler i produksjonsstil som viser hvor QR-koder skaper målbar verdi: oppløfting av en eldre tellerkode, merkevarebetalinger og "skanne-til"-handlinger, utskriftsskalering fra flygeblad til reklametavler, animert QR for digital skilting og tverrspråklig samarbeid ved bruk av delbare ankerlenker. Hvert eksempel inkluderer bilder, praktiske begrensninger og en remikskobling tilbake til generatoren.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. februar 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Åpne generatoren', type: 'generator' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'ANQRን ለመተርጎም ያግዙ',
   description:
     'ANQR በዓለም ዙሪያ ላሉ ተጠቃሚዎች ተደራሽ ለማድረግ የኛን የተርጓሚዎች ማህበረሰብ ይቀላቀሉ። ምንም ኮድ የማድረግ ልምድ አያስፈልግም - ከአሳሽዎ በቀጥታ ያዋጡ።',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'የካቲት 1 ቀን 2026',
   primaryLinks: [
     { href: 'https://github.com/maldous/anqr-i18n', label: 'የትርጉም ማከማቻ ክፈት', type: 'external' },
     { href: '/?lang=${lang}', label: 'ጄነሬተሩን ይክፈቱ', type: 'generator' },

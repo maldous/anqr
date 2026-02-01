@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'পরিসেবাের উৎস',
   description: 'এই সাইটটি ব্যবহার করে বা ব্যবহার করে আপনি এই শর্ত মেনে নিতে রাজি।.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ফেব্রুয়ারি 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'ব্যক্তিগত তথ্যের নীতিমালা', type: 'external' },
   ],

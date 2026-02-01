@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'गोपनीयता नीति',
   description:
     'ANQR ले सङ्कलन गर्छ, यो कसरी प्रयोग गरिन्छ, र लागू हुने गोपनीयता कानून अन्तर्गत तपाईंको अधिकारहरू।',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '१ फेब्रुअरी २०२६',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'सेवाका सर्तहरू', type: 'external' }],
   sections: [
     {

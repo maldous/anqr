@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR Erabiltzailearen Gida',
   description: 'QR kodeak sortzeko ANQR erabiltzeko gida osoa.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '2026ko otsailaren 1a',
+  breadcrumb: ['Gida'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Ireki sorgailua', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Arakatu Ikasi artikuluak', type: 'learn' },

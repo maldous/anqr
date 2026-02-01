@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Chính sách bảo mật',
   description:
     'Thông tin ANQR thu thập, cách sử dụng thông tin đó và các quyền của bạn theo luật bảo mật hiện hành.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Điều khoản dịch vụ', type: 'external' }],
   sections: [
     {

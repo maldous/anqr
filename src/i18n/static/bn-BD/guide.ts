@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ARON ব্যবহারকারীর গাইড',
   description: 'QR কোড নির্মাণের জন্য AROD কোড প্রয়োগ করার উদ্দেশ্যে সম্পূর্ণ গাইড।.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 ফেব্রুয়ারি 2026',
+  breadcrumb: ['গাইড'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'জেনারেটর খোলো', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'শিখুনComment', type: 'learn' },

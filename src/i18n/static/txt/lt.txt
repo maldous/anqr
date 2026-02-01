@@ -1333,3 +1333,5 @@
 1333	"Visa privatumo politika"
 1334	"Šiame puslapyje pateikiama mūsų privatumo praktikos santrauka. Norėdami gauti išsamią, teisiškai įpareigojančią privatumo politiką su visa informacija apie duomenų tvarkymą, jūsų teises ir mūsų įsipareigojimus pagal GDPR, CCPA ir kitus privatumo įstatymus, peržiūrėkite visą mūsų politiką, kurią talpina iubenda."
 1335	"Peržiūrėkite visą „iubenda“ privatumo politiką"
+1794	"2026 m. vasario 1 d"
+1795	"Vadovas"

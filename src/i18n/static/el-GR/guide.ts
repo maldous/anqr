@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Οδηγός χρήσης ANQR',
   description: 'Πλήρης οδηγός για τη χρήση ANQR για τη δημιουργία κωδικών QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 Φεβρουαρίου 2026',
+  breadcrumb: ['Οδηγός'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Ανοίξτε τη γεννήτρια', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Αναζήτηση άρθρων', type: 'learn' },

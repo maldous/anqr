@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'సేవా నిబంధనలు',
   description: 'సైట్‌ను యాక్సెస్ చేయడం లేదా ఉపయోగించడం ద్వారా, మీరు ఈ నిబంధనలకు కట్టుబడి ఉండేందుకు అంగీకరిస్తున్నారు.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ఫిబ్రవరి 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'గోప్యతా విధానం', type: 'external' }],
   sections: [
     {

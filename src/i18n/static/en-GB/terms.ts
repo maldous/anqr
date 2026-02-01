@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Terms of Service',
   description: 'By accessing or using the site, you agree to be bound by these terms.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Privacy Policy', type: 'external' }],
   sections: [
     {

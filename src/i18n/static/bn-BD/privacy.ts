@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'ব্যক্তিগত তথ্যের নীতিমালা',
   description:
     'তথ্য ANRI সংগৃহীত হয়, কিভাবে এটি ব্যবহার করা হয়, এবং আপনার অধিকার প্রযোজ্য গোপনীয়তা আইনের অধীনে।.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ফেব্রুয়ারি 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'পরিসেবাের উৎস', type: 'external' }],
   sections: [
     {

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Mwongozo wa Mtumiaji wa ANQR',
   description: 'Mwongozo kamili wa kutumia ANQR kuunda misimbo ya QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 Februari 2026',
+  breadcrumb: ['Mwongozo'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Fungua jenereta', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Vinjari Makala ya Jifunze', type: 'learn' },

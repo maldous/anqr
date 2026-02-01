@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQRの例',
   description:
     'QRコードが測定可能な値を作成する場所を示す5つの実態、生産様式の例:レガシー小売カウンターコード、ブランドの小売決済、および「スキャンツー」アクションを持ち上げ、フライヤーから請求ボード、デジタルサイネージ用のQアニメーション、および共有可能なアンカーリンクを使用してクロスリンガルコラボレーションへの印刷。 各例には、画像、実用的な制約、および再混合リンクをジェネレータに含めます。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '発電機を開けて下さい', type: 'generator' },

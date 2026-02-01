@@ -1791,3 +1791,5 @@
 1791	"Aztertu kameraren atzemateak, kargatzeak edo URLak matxura tekniko osoarekin"
 1792	"Inportatu analizatutako QR kodeak zuzenean sorgailura aldatzeko eta birsortzeko"
 1793	"Errendimenduaren optimizazioak letra-tipoen karga dinamikoarekin eta irisgarritasun hobearekin"
+1794	"2026ko otsailaren 1a"
+1795	"Gida"

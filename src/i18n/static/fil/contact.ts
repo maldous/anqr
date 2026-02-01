@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Makipag - ugnayan sa Atin',
   description:
     'Malugod naming tinatanggap ang impormasyon, mga ulat ng insekto, mga kahilingan sa tampok na bahagi, at pangkalahatang mga enquiry.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Pebrero 2026',
   sections: [
     {
       heading: 'Kung paano tayo maaabot',

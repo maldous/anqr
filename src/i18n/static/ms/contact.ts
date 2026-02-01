@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Kenalan Kita',
   description: 'Kami menyambut tanggapan, laporan bug, permintaan fitur, dan pertanyaan umum.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   sections: [
     {
       heading: 'Bagaimana untuk mencapai kita',

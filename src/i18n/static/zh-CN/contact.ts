@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: '联系我们',
   description: '我们欢迎反馈、错误报告、功能请求和一般查询。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
   sections: [
     {
       heading: '如何联系我们',

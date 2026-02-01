@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR ምሳሌዎች',
   description:
     'የQR ኮድ የሚለካ እሴት የት እንደሚፈጥር የሚያሳዩ አምስት የገሃዱ ዓለም፣ የምርት አይነት ምሳሌዎች፡- የቆየ የችርቻሮ መለያ ኮድን ከፍ ማድረግ፣ የችርቻሮ ንግድ ክፍያ እና የ"ስካን-ወደ" ድርጊቶች፣ ከበራሪ ወረቀቶች ወደ ቢልቦርድ ልኬት ማተም፣ ለዲጂታል ምልክት የታነሙ QR እና ሊጋሩ የሚችሉ መልህቅ አገናኞችን በመጠቀም ቋንቋ አቋራጭ ትብብር። እያንዳንዱ ምሳሌ ምስሎችን፣ ተግባራዊ ገደቦችን እና ወደ ጄኔሬተሩ የሚመለስ ማገናኛን ያካትታል።',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'የካቲት 1 ቀን 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ጄነሬተሩን ይክፈቱ', type: 'generator' },

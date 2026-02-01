@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Susisiekite su mumis',
   description: 'Laukiame atsiliepimų, klaidų pranešimų, funkcijų užklausų ir bendrų užklausų.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 m. vasario 1 d',
   sections: [
     {
       heading: 'Kaip mus pasiekti',

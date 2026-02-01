@@ -1791,3 +1791,5 @@
 1791	"Analysoi kamerakaappauksia, latauksia tai URL-osoitteita täydellä teknisellä erittelyllä"
 1792	"Tuo analysoidut QR-koodit suoraan generaattoriin muokkaamista ja uudelleenluomista varten"
 1793	"Suorituskyvyn optimointi dynaamisella kirjasinten latauksella ja parannetulla saavutettavuudella"
+1794	"1. helmikuuta 2026"
+1795	"Opas"

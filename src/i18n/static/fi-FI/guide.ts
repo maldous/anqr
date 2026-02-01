@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ANQR-käyttäjäopas',
   description: 'Täydellinen opas ANQR:n käyttöön QR-koodien luomisessa.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1. helmikuuta 2026',
+  breadcrumb: ['Opas'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Avaa generaattori', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Selaa Opi artikkeleita', type: 'learn' },

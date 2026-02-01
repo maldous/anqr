@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Izibonelo ze-ANQR',
   description:
     'Izibonelo ezinhlanu zangempela, zesitayela sokukhiqiza ezibonisa lapho amakhodi e-QR adala khona inani elilinganisekayo: ukuphakamisa ikhodi yokuphikisana yokuthengisa endala, izinkokhelo zokuthengisa ezinophawu kanye nezenzo "zokuskena", ukukala kokuphrinta kusuka kumaflaya kuya kumabhodi okukhangisa, i-QR enyakazayo yezibonakaliso zedijithali, kanye nokubambisana kwezilimi ezahlukene usebenzisa izixhumanisi ze-Anchor ezabiwe. Isibonelo ngasinye sihlanganisa izithombe, imikhawulo esebenzayo, kanye nesixhumanisi sokuxuba kabusha esibuyela kujeneretha.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Vula ijenereyitha', type: 'generator' },

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const translate: PageDefinition = {
   title: 'ANOP অনুবাদ করুন',
   description:
     'আমাদের অনুবাদকদের সাথে যোগ দিন যারা বিশ্বব্যাপী প্রবেশ করতে সাহায্য করছেন। এনকোডিং সংক্রান্ত কোনো অভিজ্ঞতা নেই - আপনার ব্রাউজারের মধ্যে সরাসরি ফলাফল প্রাপ্ত করা আবশ্যক।.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ফেব্রুয়ারি 2026',
   primaryLinks: [
     {
       href: 'https://github.com/maldous/anqr-i18n',

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR 소개',
   description:
     'ANQR은 클라이언트 첫 번째 접근 방식을 가진 무료 QR 코드 생성기입니다. 로컬 또는 embedding에 대한 API를 사용합니다.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026년 2월 1일',
   primaryLinks: [
     { href: '/?lang=${lang}', label: '발전기 열기', type: 'generator' },
     { href: '/learn?lang=${lang}', label: '자주 묻는 질문', type: 'learn' },

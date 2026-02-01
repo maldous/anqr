@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Användarvillkor',
   description:
     'Genom att gå in på eller använda webbplatsen samtycker du till att vara bunden av dessa villkor.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februari 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Sekretesspolicy', type: 'external' }],
   sections: [
     {

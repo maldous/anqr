@@ -1791,3 +1791,5 @@
 1791	"Analysieren Sie Kameraaufnahmen, Uploads oder URLs mit vollständiger technischer Aufschlüsselung"
 1792	"Importieren Sie analysierte QR-Codes direkt in den Generator, um sie zu ändern und neu zu erstellen"
 1793	"Leistungsoptimierungen durch dynamisches Laden von Schriftarten und verbesserte Barrierefreiheit"
+1794	"1. Februar 2026"
+1795	"Leitfaden"

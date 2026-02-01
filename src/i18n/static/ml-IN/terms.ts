@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'സേവന നിബന്ധനകൾ',
   description:
     'സൈറ്റ് ആക്‌സസ് ചെയ്യുന്നതിലൂടെയോ ഉപയോഗിക്കുന്നതിലൂടെയോ, ഈ നിബന്ധനകൾക്ക് വിധേയമായിരിക്കാൻ നിങ്ങൾ സമ്മതിക്കുന്നു.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ഫെബ്രുവരി 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'സ്വകാര്യതാ നയം', type: 'external' }],
   sections: [
     {

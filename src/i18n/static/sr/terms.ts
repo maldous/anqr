@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Услови коришћења услуге',
   description: 'Приступањем или коришћењем сајта, прихватате да будете обавезани овим условима.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. фебруар 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Политика приватности', type: 'external' },
   ],

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR pavyzdžiai',
   description:
     'Penki realūs gamybos stiliaus pavyzdžiai, parodantys, kur QR kodai sukuria išmatuojamą vertę: senojo mažmeninės prekybos skaitiklio kodo pakėlimas, firminiai mažmeniniai mokėjimai ir nuskaitymo veiksmai, spausdinimo mastelio keitimas nuo skrajučių iki reklaminių skydelių, animuotas QR skaitmeniniams ženklams ir bendradarbiavimas keliomis kalbomis naudojant bendrinamas Inkaro nuorodas. Kiekviename pavyzdyje yra vaizdai, praktiniai apribojimai ir remikso nuoroda į generatorių.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 m. vasario 1 d',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Atidarykite generatorių', type: 'generator' },

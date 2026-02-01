@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'تعلم مع أنقر',
   description:
     'أدلة عملية وأولية في مجال الأعمال لتحويل رموز QR إلى أصول تسويقية حقيقية - وليس مجرد مربعات وظيفية. تعرف على كيفية ترقية رموز نقاط البيع القديمة، وإنشاء لافتات QR متوافقة للدفع، وإعداد عمليات التصدير الجاهزة للطباعة، واستخدام الرسوم المتحركة بأمان على شاشات العرض الرقمية، ومشاركة التكوينات المقفلة عبر فرق متعددة اللغات باستخدام روابط ANQR ("المرساة").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبراير 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'افتح المولد', type: 'generator' },

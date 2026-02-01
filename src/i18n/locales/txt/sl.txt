@@ -1791,3 +1791,5 @@
 1791	"Analizirajte posnetke s kamero, nalaganja ali URL-je s popolno tehnično razčlenitvijo"
 1792	"Uvozite analizirane kode QR neposredno v generator za spreminjanje in ponovno ustvarjanje"
 1793	"Optimizacije delovanja z dinamičnim nalaganjem pisav in izboljšano dostopnostjo"
+1794	"1. februar 2026"
+1795	"Vodnik"

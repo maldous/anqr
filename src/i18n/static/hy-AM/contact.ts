@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Կապ մեզ հետ',
   description:
     'Մենք ողջունում ենք արձագանքները, վրիպակների հաշվետվությունները, հնարավորությունների հարցումները և ընդհանուր հարցումները:',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 փետրվարի 2026թ',
   sections: [
     {
       heading: 'Ինչպես հասնել մեզ',

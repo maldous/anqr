@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ስለ ANQR',
   description:
     'ANQR ከደንበኛ-የመጀመሪያ አቀራረብ ጋር ነፃ የQR ኮድ ጀነሬተር ነው - የQR ኮዶችን በአገር ውስጥ ያመንጩ ወይም ለመክተት የእኛን ኤፒአይ ይጠቀሙ።',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'የካቲት 1 ቀን 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ጄነሬተሩን ይክፈቱ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ጽሑፎችን ተማር አስስ', type: 'learn' },

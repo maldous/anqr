@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ຮຽນຮູ້ກັບ ANQR',
   description:
     'ການປະຕິບັດ, ຄູ່ມືທຸລະກິດທໍາອິດສໍາລັບການປ່ຽນລະຫັດ QR ເຂົ້າໄປໃນຊັບສິນການຕະຫຼາດທີ່ແທ້ຈິງ - ບໍ່ພຽງແຕ່ສີ່ຫລ່ຽມທີ່ເປັນປະໂຫຍດ. ຮຽນຮູ້ວິທີອັບເກຣດລະຫັດຈຸດຂາຍແບບເກົ່າ, ສ້າງປ້າຍ QR ການຈ່າຍເງິນທີ່ສອດຄ້ອງກັນ, ກະກຽມການສົ່ງອອກທີ່ພ້ອມພິມ, ໃຊ້ອະນິເມຊັນຢ່າງປອດໄພໃນຈໍສະແດງຜົນດິຈິຕອລ, ແລະແບ່ງປັນການຕັ້ງຄ່າທີ່ຖືກລັອກໃນທົ່ວທີມງານຫຼາຍພາສາໂດຍໃຊ້ລິ້ງ ANQR ("ສະມໍ").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ວັນທີ 1 ກຸມພາ 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ເປີດເຄື່ອງກໍາເນີດ', type: 'generator' },

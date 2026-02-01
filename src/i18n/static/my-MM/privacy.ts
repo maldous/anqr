@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'ကိုယ်ရေးအချက်အလက်မူဝါဒ',
   description:
     'သတင်းအချက်အလက် ANQR သည် စုဆောင်းပုံ၊ ၎င်းကိုအသုံးပြုပုံနှင့် သက်ဆိုင်ရာ ကိုယ်ရေးကိုယ်တာဥပဒေများအောက်တွင် သင်၏အခွင့်အရေးများ။',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ဖေဖော်ဝါရီ ၁၊ ၂၀၂၆',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'ဝန်ဆောင်မှုစည်းမျဉ်းများ', type: 'external' }],
   sections: [
     {

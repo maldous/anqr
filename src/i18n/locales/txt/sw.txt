@@ -1791,3 +1791,5 @@
 1791	"Changanua picha za kamera, vipakiaji au URL kwa uchanganuzi kamili wa kiufundi"
 1792	"Ingiza misimbo ya QR iliyochanganuliwa moja kwa moja kwenye jenereta ili kurekebisha na kuunda upya"
 1793	"Uboreshaji wa utendakazi kwa upakiaji wa fonti unaobadilika na ufikivu ulioboreshwa"
+1794	"1 Februari 2026"
+1795	"Mwongozo"

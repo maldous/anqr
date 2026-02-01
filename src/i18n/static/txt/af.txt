@@ -1333,3 +1333,5 @@
 1333	"Volledige privaatheidsbeleid"
 1334	"Hierdie bladsy bied 'n opsomming van ons privaatheidspraktyke. Vir die volledige, wetlik bindende privaatheidsbeleid met volledige besonderhede oor dataverwerking, jou regte en ons verpligtinge onder GDPR, CCPA en ander privaatheidswette, sien asseblief ons volledige beleid wat deur iubenda aangebied word."
 1335	"Sien volledige privaatheidsbeleid op iubenda"
+1794	"1 Februarie 2026"
+1795	"Gids"

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Wasiliana Nasi',
   description: 'Tunakaribisha maoni, ripoti za hitilafu, maombi ya vipengele na maswali ya jumla.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   sections: [
     {
       heading: 'Jinsi ya kutufikia',

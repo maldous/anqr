@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'સેવાની શરતો',
   description: 'સાઇટને ઍક્સેસ કરીને અથવા તેનો ઉપયોગ કરીને, તમે આ શરતોથી બંધાયેલા રહેવા માટે સંમત થાઓ છો.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ફેબ્રુઆરી 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'ગોપનીયતા નીતિ', type: 'external' }],
   sections: [
     {

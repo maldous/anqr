@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Yadda saxla',
   description: 'QR kodları yaratmaq üçün ANQR istifadəçisi.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 fevral 2026-cı il',
+  breadcrumb: ['Bələdçi'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'İstehsalçı', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Elanlar', type: 'learn' },

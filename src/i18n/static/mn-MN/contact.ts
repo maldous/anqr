@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Бидэнтэй холбоо барина уу',
   description: 'Бид санал хүсэлт, алдааны мэдээ, функцийн хүсэлт, ерөнхий лавлагааг хүлээн авна.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 оны хоёрдугаар сарын 1',
   sections: [
     {
       heading: 'Бидэнтэй хэрхэн холбогдох вэ',

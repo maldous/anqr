@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Kontaktieren Sie uns',
   description: 'Wir begrüßen Feedback, Bugberichte, Feature-Anfragen und allgemeine Anfragen.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. Februar 2026',
   sections: [
     {
       heading: 'Wie erreichen Sie uns',

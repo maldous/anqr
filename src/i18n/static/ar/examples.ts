@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'أمثلة أنقر',
   description:
     'خمسة أمثلة واقعية لأسلوب الإنتاج توضح أين تخلق رموز QR قيمة قابلة للقياس: الارتقاء برمز عداد التجزئة القديم، ومدفوعات التجزئة ذات العلامات التجارية وإجراءات "المسح الضوئي إلى"، وتوسيع نطاق الطباعة من النشرات الإعلانية إلى اللوحات الإعلانية، و QR المتحرك للافتات الرقمية، والتعاون بين اللغات باستخدام روابط Anchor القابلة للمشاركة. يشتمل كل مثال على صور وقيود عملية ورابط ريمكس يعود إلى المولد.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبراير 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'افتح المولد', type: 'generator' },

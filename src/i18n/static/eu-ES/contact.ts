@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Jarri gurekin harremanetan',
   description:
     'Iritziak, akatsen txostenak, funtzioen eskaerak eta kontsulta orokorrak ongi etorriak ditugu.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026ko otsailaren 1a',
   sections: [
     {
       heading: 'Nola iritsi gurera',

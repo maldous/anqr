@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Učite uz ANQR',
   description:
     'Praktični, poslovni vodiči za pretvaranje QR kodova u stvarna marketinška sredstva - ne samo u funkcionalne kvadrate. Naučite kako nadograditi naslijeđene kodove prodajnih mjesta, izraditi usklađene QR natpise za plaćanje, pripremiti izvoze spremne za ispis, sigurno koristiti animaciju na digitalnim zaslonima i dijeliti zaključane konfiguracije među višejezičnim timovima koristeći ANQR ("sidro") veze.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veljače 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Otvorite generator', type: 'generator' },

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'דוגמאות ANQR',
   description:
     'חמש דוגמאות בעולם האמיתי בסגנון ייצור המראות היכן קודי QR יוצרים ערך מדיד: העלאת קוד דלפק קמעונאי מדור קודם, תשלומים קמעונאיים ממותגים ופעולות "סריקה אל", הדפסת קנה מידה מפליירים לשלטי חוצות, QR מונפש לשילוט דיגיטלי ושיתוף פעולה חוצה לשוני באמצעות קישורי עוגן שניתנים לשיתוף. כל דוגמה כוללת תמונות, אילוצים מעשיים וקישור רמיקס חזרה למחולל.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 בפברואר 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'פתח את הגנרטור', type: 'generator' },

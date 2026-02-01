@@ -1791,3 +1791,5 @@
 1791	"Analizējiet kameras ierakstus, augšupielādes vai URL ar pilnu tehnisko sadalījumu"
 1792	"Importējiet analizētos QR kodus tieši ģeneratorā, lai tos pārveidotu un izveidotu no jauna"
 1793	"Veiktspējas optimizācija ar dinamisku fontu ielādi un uzlabotu pieejamību"
+1794	"2026. gada 1. februāris"
+1795	"Ceļvedis"

@@ -1333,3 +1333,5 @@
 1333	"Buong Patakaran sa Privacy"
 1334	"Nagbibigay ang page na ito ng buod ng aming mga kasanayan sa privacy. Para sa kumpleto, legal na may-bisang patakaran sa privacy na may kumpletong detalye sa pagpoproseso ng data, iyong mga karapatan, at aming mga obligasyon sa ilalim ng GDPR, CCPA, at iba pang mga batas sa privacy, pakitingnan ang aming buong patakarang hino-host ng iubenda."
 1335	"Tingnan ang Buong Patakaran sa Privacy sa iubenda"
+1794	"1 Pebrero 2026"
+1795	"Patnubay"

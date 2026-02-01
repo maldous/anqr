@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'លក្ខខណ្ឌនៃសេវាកម្ម',
   description: 'តាមរយៈការចូលប្រើ ឬប្រើប្រាស់គេហទំព័រ អ្នកយល់ព្រមនឹងចងភ្ជាប់ដោយលក្ខខណ្ឌទាំងនេះ។',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ថ្ងៃទី 1 ខែកុម្ភៈ ឆ្នាំ 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'គោលការណ៍ឯកជនភាព', type: 'external' }],
   sections: [
     {

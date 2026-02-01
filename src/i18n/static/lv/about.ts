@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Par ANQR',
   description:
     'ANQR ir bezmaksas QR koda ģenerators ar pieeju vispirms klientam — ģenerējiet QR kodus lokāli vai izmantojiet mūsu API iegulšanai.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. gada 1. februāris',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Atveriet ģeneratoru', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Pārlūkot Uzziniet rakstus', type: 'learn' },

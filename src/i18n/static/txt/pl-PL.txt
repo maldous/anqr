@@ -1333,3 +1333,5 @@
 1333	"Pełna polityka prywatności"
 1334	"Na tej stronie znajduje się podsumowanie naszych praktyk dotyczących prywatności. Aby zapoznać się z pełną, prawnie wiążącą polityką prywatności ze wszystkimi szczegółami dotyczącymi przetwarzania danych, Twoich praw i naszych obowiązków wynikających z RODO, CCPA i innych przepisów dotyczących prywatności, zapoznaj się z naszą pełną polityką prowadzoną przez iubenda."
 1335	"Zobacz pełną Politykę prywatności na iubenda"
+1794	"1 lutego 2026 r"
+1795	"Przewodnik"

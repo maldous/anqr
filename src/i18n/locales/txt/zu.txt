@@ -1791,3 +1791,5 @@
 1791	"Hlaziya ukuthwebula kwekhamera, okulayishiwe, noma ama-URL ngokuhlukaniswa okugcwele kobuchwepheshe"
 1792	"Ngenisa amakhodi e-QR ahlaziyiwe ngqo kujeneretha ukuze ulungise futhi udale kabusha"
 1793	"Ukuthuthukiswa kokusebenza ngokulayisha kwefonti okuguquguqukayo nokufinyeleleka okuthuthukisiwe"
+1794	"1 February 2026"
+1795	"Umhlahlandlela"

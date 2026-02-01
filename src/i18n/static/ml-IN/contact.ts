@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ഞങ്ങളെ ബന്ധപ്പെടുക',
   description: 'ഫീഡ്‌ബാക്ക്, ബഗ് റിപ്പോർട്ടുകൾ, ഫീച്ചർ അഭ്യർത്ഥനകൾ, പൊതുവായ അന്വേഷണങ്ങൾ എന്നിവ ഞങ്ങൾ സ്വാഗതം ചെയ്യുന്നു.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ഫെബ്രുവരി 2026',
   sections: [
     {
       heading: 'ഞങ്ങളിലേക്ക് എങ്ങനെ എത്തിച്ചേരാം',

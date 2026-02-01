@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Tanulj az ANQR-rel',
   description:
     'Gyakorlati, üzleti célú útmutatók a QR-kódok valódi marketingeszközzé alakításához – nem csak funkcionális négyzetekké. Tanulja meg, hogyan frissítheti a régi értékesítési pontkódokat, hozhat létre megfelelő fizetési QR-jelzéseket, készíthet elő nyomtatásra kész exportokat, hogyan használhat biztonságosan animációkat digitális kijelzőkön, és hogyan oszthatja meg a zárt konfigurációkat többnyelvű csapatok között ANQR ("horgony") hivatkozások segítségével.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. február 1',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Nyisd ki a generátort', type: 'generator' },

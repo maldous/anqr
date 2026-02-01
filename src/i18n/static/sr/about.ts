@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'О АНКР-у',
   description:
     'АНКР је бесплатни генератор КР кодова са приступом на првом месту - генеришете КР кодове локално или користите наш АПИ за уградњу.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. фебруар 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Отворите генератор', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Прегледајте чланке за учење', type: 'learn' },

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ຕິດຕໍ່ພວກເຮົາ',
   description: 'ພວກ​ເຮົາ​ຍິນ​ດີ​ຕ້ອນ​ຮັບ​ຄໍາ​ຄຶດ​ຄໍາ​ເຫັນ​, ບົດ​ລາຍ​ງານ bug​, ການ​ຮ້ອງ​ຂໍ​ຄຸນ​ສົມ​ບັດ​, ແລະ​ການ​ສອບ​ຖາມ​ທົ່ວ​ໄປ​.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ວັນທີ 1 ກຸມພາ 2026',
   sections: [
     {
       heading: 'ວິທີການເຂົ້າຫາພວກເຮົາ',

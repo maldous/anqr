@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Opi ANQR:llä',
   description:
     'Käytännön oppaita, joilla QR-koodit muutetaan todellisiksi markkinointivaroiksi - ei vain toiminnallisiksi neliöiksi. Opi päivittämään perinteisiä myyntipistekoodeja, luomaan vaatimustenmukaisia maksumerkkejä QR-kylttejä, valmistelemaan tulostusvalmiita vientiä, käyttämään animaatiota turvallisesti digitaalisissa näytöissä ja jakamaan lukittuja konfiguraatioita monikielisissä ryhmissä ANQR-linkeillä.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. helmikuuta 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Avaa generaattori', type: 'generator' },

@@ -1333,3 +1333,5 @@
 1333	"Chính sách bảo mật đầy đủ"
 1334	"Trang này cung cấp bản tóm tắt các biện pháp bảo mật của chúng tôi. Để biết chính sách quyền riêng tư đầy đủ, ràng buộc về mặt pháp lý với đầy đủ chi tiết về xử lý dữ liệu, quyền của bạn và nghĩa vụ của chúng tôi theo GDPR, CCPA và các luật về quyền riêng tư khác, vui lòng xem chính sách đầy đủ của chúng tôi do iubenda lưu trữ."
 1335	"Xem toàn bộ Chính sách quyền riêng tư trên iubenda"
+1794	"ngày 1 tháng 2 năm 2026"
+1795	"hướng dẫn"

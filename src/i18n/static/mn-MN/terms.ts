@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Үйлчилгээний нөхцөл',
   description:
     'Сайт руу нэвтэрч эсвэл ашигласнаар та эдгээр нөхцлийг дагаж мөрдөхийг зөвшөөрч байна.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 оны хоёрдугаар сарын 1',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Нууцлалын бодлого', type: 'external' }],
   sections: [
     {

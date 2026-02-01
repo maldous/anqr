@@ -1333,3 +1333,5 @@
 1333	"Politique de confidentialité complète"
 1334	"Cette page fournit un résumé de nos pratiques en matière de confidentialité. Pour obtenir la politique de confidentialité complète et juridiquement contraignante avec tous les détails sur le traitement des données, vos droits et nos obligations en vertu du RGPD, du CCPA et d'autres lois sur la confidentialité, veuillez consulter notre politique complète hébergée par iubenda."
 1335	"Voir la politique de confidentialité complète sur iubenda"
+1794	"1 février 2026"
+1795	"Guider"

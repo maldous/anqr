@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Pelajari dengan ANQR',
   description:
     'Panduan praktis dan mengutamakan bisnis untuk mengubah kode QR menjadi aset pemasaran nyata - bukan hanya kotak fungsional. Pelajari cara meningkatkan kode tempat penjualan lama, membuat tanda QR pembayaran yang sesuai, menyiapkan ekspor siap cetak, menggunakan animasi dengan aman di tampilan digital, dan berbagi konfigurasi terkunci ke seluruh tim multibahasa menggunakan tautan ANQR ("anchor").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buka generator', type: 'generator' },

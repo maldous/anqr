@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Hướng dẫn sử dụng ANQR',
   description: 'Hướng dẫn đầy đủ về cách sử dụng ANQR để tạo mã QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
+  breadcrumb: ['hướng dẫn'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Mở máy phát điện', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Duyệt tìm hiểu bài viết', type: 'learn' },

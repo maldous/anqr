@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'حول أنقر',
   description:
     'ANQR هو منشئ رموز QR مجاني مع نهج العميل أولاً - قم بإنشاء رموز QR محليًا أو استخدم واجهة برمجة التطبيقات الخاصة بنا للتضمين.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبراير 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'افتح المولد', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'تصفح تعلم المقالات', type: 'learn' },

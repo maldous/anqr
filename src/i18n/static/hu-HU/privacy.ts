@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Adatvédelmi irányelvek',
   description:
     'Információ ANQR gyűjti, hogyan használják, és az Ön jogait vonatkozó adatvédelmi törvények.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. február 1',
   relatedLinks: [
     { href: '/terms?lang=${lang}', label: 'Szolgáltatási feltételek', type: 'external' },
   ],

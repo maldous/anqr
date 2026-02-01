@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Επικοινωνήστε μαζί μας',
   description:
     'Χαιρετίζουμε ανατροφοδότηση, αναφορές σφαλμάτων, αιτήματα χαρακτηριστικών και γενικές έρευνες.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Φεβρουαρίου 2026',
   sections: [
     {
       heading: 'Πώς να μας φτάσει',

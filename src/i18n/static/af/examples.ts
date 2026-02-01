@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR voorbeelde',
   description:
     'Vyf werklike, produksiestyl-voorbeelde wat wys waar QR-kodes meetbare waarde skep: die opheffing van \'n erfenis-kleinhandeltoonbankkode, handelsmerk-kleinhandelbetalings en "scan-to"-aksies, drukskaal van strooibiljette na advertensieborde, geanimeerde QR vir digitale naamborde, en kruistalige samewerking deur gebruik te maak van deelbare Anchor-skakels. Elke voorbeeld bevat beelde, praktiese beperkings en \'n hermengskakel terug na die kragopwekker.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februarie 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Maak die kragopwekker oop', type: 'generator' },

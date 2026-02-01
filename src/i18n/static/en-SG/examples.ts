@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR Examples',
   description:
     'Five real-world, production-style examples that show where QR codes create measurable value: uplifting a legacy retail counter code, branded retail payments and "scan-to" actions, print scaling from flyers to billboards, animated QR for digital signage, and cross-lingual collaboration using shareable Anchor links. Each example includes images, practical constraints, and a remix link back to the generator.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 February 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Open the generator', type: 'generator' },

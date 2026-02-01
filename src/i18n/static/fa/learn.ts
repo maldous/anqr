@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'با ANQR بیاموزید',
   description:
     'راهنماهای عملی و اولیه برای تبدیل کدهای QR به دارایی های بازاریابی واقعی - نه فقط مربع های کاربردی. با نحوه ارتقاء کدهای قدیمی محل فروش، ایجاد علائم QR پرداخت سازگار، آماده کردن صادرات آماده چاپ، استفاده ایمن از انیمیشن در نمایشگرهای دیجیتال، و به اشتراک گذاری تنظیمات قفل شده در بین تیم های چند زبانه با استفاده از پیوندهای ANQR ("لنگر") آشنا شوید.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فوریه 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ژنراتور را باز کنید', type: 'generator' },

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'نمونه های ANQR',
   description:
     'پنج نمونه واقعی به سبک تولید که نشان می‌دهد کدهای QR کجا ارزش قابل اندازه‌گیری ایجاد می‌کنند: ارتقای کد پیشخوان خرده‌فروشی قدیمی، پرداخت‌های خرده‌فروشی مارک دار و اقدامات «اسکن به»، مقیاس‌بندی چاپ از آگهی‌ها به بیلبوردها، QR متحرک برای تابلوهای دیجیتال و همکاری بین زبانی با استفاده از پیوندهای Anchor قابل اشتراک‌گذاری. هر مثال شامل تصاویر، محدودیت‌های عملی و یک پیوند ریمیکس به ژنراتور است.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فوریه 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ژنراتور را باز کنید', type: 'generator' },

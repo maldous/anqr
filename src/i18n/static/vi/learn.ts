@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Tìm hiểu với ANQR',
   description:
     'Hướng dẫn thực tế, dành cho doanh nghiệp để biến mã QR thành tài sản tiếp thị thực sự - không chỉ là các ô vuông chức năng. Tìm hiểu cách nâng cấp mã điểm bán hàng cũ, tạo bảng hiệu QR thanh toán tuân thủ, chuẩn bị xuất sẵn để in, sử dụng hoạt ảnh một cách an toàn trên màn hình kỹ thuật số và chia sẻ cấu hình khóa giữa các nhóm đa ngôn ngữ bằng cách sử dụng liên kết ANQR ("neo").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Mở máy phát điện', type: 'generator' },

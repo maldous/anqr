@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Perihal ANQR',
   description:
     'ANUQR adalah generator kode QR gratis dengan pendekatan pertama klien - menghasilkan kode QR secara lokal atau menggunakan API kami untuk pembenaman.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: '♪ Buka generatornya ♪', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Artikel - artikel yang telah diulas', type: 'learn' },

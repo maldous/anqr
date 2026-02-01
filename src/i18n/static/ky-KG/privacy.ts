@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Купуялык саясаты',
   description:
     'ANQR маалымат чогултат, ал кантип колдонулат жана тиешелүү купуялык мыйзамдарына ылайык укуктарыңыз.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 февраль 2026 жыл',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Тейлөө шарттары', type: 'external' }],
   sections: [
     {

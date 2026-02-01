@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Sera ya Faragha',
   description:
     'Maelezo ambayo ANQR hukusanya, jinsi yanavyotumiwa na haki zako chini ya sheria zinazotumika za faragha.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Masharti ya Huduma', type: 'external' }],
   sections: [
     {

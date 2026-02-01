@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'الاتصال بنا',
   description: 'ونرحب بالتعليقات، وتقارير الحشرات، والطلبات الخاصة، والاستفسارات العامة.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فبراير 2026',
   sections: [
     {
       heading: 'كيف نصل إلينا',

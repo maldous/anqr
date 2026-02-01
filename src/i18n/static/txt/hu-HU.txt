@@ -1333,3 +1333,5 @@
 1333	"Teljes adatvédelmi szabályzat"
 1334	"Ez az oldal adatvédelmi gyakorlataink összefoglalását tartalmazza. A teljes, jogilag kötelező erejű adatvédelmi szabályzatért, amely az adatkezelésről, az Ön jogairól és a GDPR, CCPA és más adatvédelmi törvények szerinti kötelezettségeinkről részletesen tájékozódhat, tekintse meg az iubenda által üzemeltetett teljes szabályzatunkat."
 1335	"Tekintse meg az iubenda teljes adatvédelmi szabályzatát"
+1794	"2026. február 1"
+1795	"Útmutató"

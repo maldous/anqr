@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Contáctenos',
   description:
     'Damos la bienvenida a los comentarios, informes de fallos, peticiones de características y preguntas generales.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 de febrero de 2026',
   sections: [
     {
       heading: 'Cómo llegar a nosotros',

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Kontak ons',
   description: 'Ons verwelkom terugvoer, foutverslae, kenmerkversoeke en algemene navrae.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februarie 2026',
   sections: [
     {
       heading: 'Hoe om ons te bereik',

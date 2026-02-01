@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Pribadong Patakaran',
   description:
     'Ang Information ANQR ay nagtitipon, kung paano ito ginagamit, at ang iyong mga karapatan sa ilalim ng kapit na mga batas sa pribadong buhay.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Pebrero 2026',
   relatedLinks: [
     { href: '/terms?lang=${lang}', label: 'Mga Termino ng Paglilingkod', type: 'external' },
   ],

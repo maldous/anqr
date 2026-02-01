@@ -1791,3 +1791,5 @@
 1791	"Analyzujte zábery z fotoaparátu, nahrávané súbory alebo adresy URL s úplným technickým rozpisom"
 1792	"Importujte analyzované QR kódy priamo do generátora na úpravu a opätovné vytvorenie"
 1793	"Optimalizácia výkonu s dynamickým načítavaním písma a vylepšenou dostupnosťou"
+1794	"1. februára 2026"
+1795	"Sprievodca"

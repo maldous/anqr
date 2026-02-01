@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Lærðu með ANQR',
   description:
     'Hagnýtar, fyrst og fremst leiðbeiningar um að breyta QR kóða í alvöru markaðseignir - ekki bara hagnýt ferninga. Lærðu hvernig á að uppfæra eldri sölustaðakóða, búa til samhæft QR-merki fyrir greiðslur, undirbúa útflutning tilbúinn til prentunar, nota hreyfimyndir á öruggan hátt á stafrænum skjám og deila læstum stillingum milli fjöltyngda teyma með því að nota ANQR ("akkeri") tengla.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. febrúar 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Opnaðu rafalann', type: 'generator' },

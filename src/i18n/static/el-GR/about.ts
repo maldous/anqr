@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Σχετικά με το ANQR',
   description:
     'ANQR είναι μια ελεύθερη QR γεννήτρια κώδικα με μια πρώτη προσέγγιση πελάτη - παράγουν κωδικούς QR τοπικά ή χρησιμοποιήστε API μας για την ενσωμάτωση.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Φεβρουαρίου 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Ανοίξτε τη γεννήτρια', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Αναζήτηση άρθρων', type: 'learn' },

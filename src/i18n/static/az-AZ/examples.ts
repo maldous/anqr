@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'E-poçt',
   description:
     'QR kodlarının measurable dəyişiklik yaratmaq olduğunu göstərir ki, beş real-world, istehsal üslubu məhsulları məhsullaşdırmaq: miras ictimai tərəf kodu, markalı məhsulları və "scan-to" həyataları, uçuşçulardan billboards, digital imzalamaq üçün fəaliyyətli QR, və paylanabilir Anchor bağlantılar istifadə edən cross-lingual əlaqə. Hər bir nümunə fotoşəkillər, praktik zənglər, və generator geri bir remix link daxildir.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 fevral 2026-cı il',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'İstehsalçı', type: 'generator' },

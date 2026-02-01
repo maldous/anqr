@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Õppige ANQR-iga',
   description:
     'Praktilised ärikesksed juhendid QR-koodide muutmiseks tõelisteks turundusvaradeks – mitte ainult funktsionaalseteks ruutudeks. Siit saate teada, kuidas uuendada müügikoha pärandkoode, luua nõuetele vastavaid maksete QR-märke, valmistada ette printimisvalmis eksporti, kasutada digitaalekraanidel turvaliselt animatsioone ja jagada lukustatud konfiguratsioone mitmekeelsete meeskondade vahel, kasutades ANQR-i ("ankur") linke.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veebruar 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Avage generaator', type: 'generator' },

@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'எங்களை தொடர்பு கொள்ளவும்',
   description: 'கருத்து, பிழை அறிக்கைகள், அம்சக் கோரிக்கைகள் மற்றும் பொதுவான விசாரணைகளை வரவேற்கிறோம்.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 பிப்ரவரி 2026',
   sections: [
     {
       heading: 'எங்களை எப்படி அடைவது',

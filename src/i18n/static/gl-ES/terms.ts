@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Condicións de servizo',
   description: 'Ao acceder ou usar o sitio, aceptas estar obrigado por estes termos.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 de febreiro de 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Política de privacidade', type: 'external' },
   ],

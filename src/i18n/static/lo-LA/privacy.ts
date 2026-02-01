@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ',
   description: 'ຂໍ້​ມູນ ANQR ເກັບ​ກໍາ, ວິ​ທີ​ການ​ນໍາ​ໃຊ້​ມັນ, ແລະ​ສິດ​ທິ​ຂອງ​ທ່ານ​ພາຍ​ໃຕ້​ກົດ​ຫມາຍ​ວ່າ​ດ້ວຍ​ຄວາມ​ເປັນ​ສ່ວນ​ຕົວ​ທີ່​ນໍາ​ໃຊ້.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ວັນທີ 1 ກຸມພາ 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'ເງື່ອນໄຂການໃຫ້ບໍລິການ', type: 'external' }],
   sections: [
     {

@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'ANQR ಬಗ್ಗೆ',
   description:
     'ANQR ಕ್ಲೈಂಟ್-ಮೊದಲ ವಿಧಾನದೊಂದಿಗೆ ಉಚಿತ QR ಕೋಡ್ ಜನರೇಟರ್ ಆಗಿದೆ - ಸ್ಥಳೀಯವಾಗಿ QR ಕೋಡ್‌ಗಳನ್ನು ರಚಿಸಿ ಅಥವಾ ಎಂಬೆಡಿಂಗ್‌ಗಾಗಿ ನಮ್ಮ API ಅನ್ನು ಬಳಸಿ.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ಫೆಬ್ರವರಿ 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ಜನರೇಟರ್ ತೆರೆಯಿರಿ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ಕಲಿಯಿರಿ ಲೇಖನಗಳನ್ನು ಬ್ರೌಸ್ ಮಾಡಿ', type: 'learn' },

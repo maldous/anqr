@@ -1791,3 +1791,5 @@
 1791	"Analüüsige kaamera jäädvustusi, üleslaadimisi või URL-e koos täieliku tehnilise jaotusega"
 1792	"Importige analüüsitud QR-koodid otse generaatorisse, et neid muuta ja uuesti luua"
 1793	"Toimivuse optimeerimine dünaamilise fontide laadimise ja parema juurdepääsetavuse abil"
+1794	"1. veebruar 2026"
+1795	"Juhend"

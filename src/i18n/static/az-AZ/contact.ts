@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Əməkdaşlıq',
   description: 'Geri bildirim, bug hesabatları, xüsusiyyət məlumatları və ümumi məlumatları qoşun.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 fevral 2026-cı il',
   sections: [
     {
       heading: 'Bizimlə necə çatdırmaq',

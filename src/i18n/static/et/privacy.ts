@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Privaatsuspoliitika',
   description:
     'Teave, mida ANQR kogub, kuidas seda kasutatakse, ja teie õigused vastavalt kohaldatavatele privaatsusseadustele.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. veebruar 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Kasutustingimused', type: 'external' }],
   sections: [
     {

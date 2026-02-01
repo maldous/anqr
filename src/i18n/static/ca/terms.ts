@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Termes del servei',
   description: "Per accedir o usar el lloc web, esteu d'acord amb aquests termes.",
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 de febrer de 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Política de privadesa', type: 'external' },
   ],

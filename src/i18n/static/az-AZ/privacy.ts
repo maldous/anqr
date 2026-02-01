@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Qeydiyyat',
   description:
     'İnformasiya ANQR, necə istifadə olunur, və mövcud gizlilik tərəfindən sizin hüquqları toplamaq.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 fevral 2026-cı il',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Xidmətləri', type: 'external' }],
   sections: [
     {

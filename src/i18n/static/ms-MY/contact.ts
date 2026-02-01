@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'Hubungi Kami',
   description:
     'Kami mengalu-alukan maklum balas, laporan pepijat, permintaan ciri dan pertanyaan umum.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
   sections: [
     {
       heading: 'Bagaimana untuk menghubungi kami',

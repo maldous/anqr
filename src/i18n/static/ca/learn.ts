@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Aprèn amb ANQR',
   description:
     'Pràctic, guies de negocis per convertir codis QR en actius reals, no només quadrats funcionals. Apreneu a actualitzar els codis de punts heretats, creeu una signatura del pagament QR compatible amb el pagament QR, prepareu les exportacions de la impressió, useu l\' animació segura en les pantalles digitals i compartiu les configuracions tancades a través d\' equips multilingüe usant els enllaços ANQR ("anchor").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 de febrer de 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Obre el generador', type: 'generator' },

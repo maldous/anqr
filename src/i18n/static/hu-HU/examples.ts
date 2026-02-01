@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR példák',
   description:
     'Öt valós, gyártási stílusú példa, amely bemutatja, hogy a QR-kódok hol teremtenek mérhető értéket: egy régi kiskereskedelmi számlálókód felemelése, márkás kiskereskedelmi fizetések és "beolvasási" műveletek, nyomtatási méretezés a szórólapokról óriásplakátokra, animált QR digitális jelzésekhez és többnyelvű együttműködés megosztható horgonylinkekkel. Minden példa tartalmaz képeket, gyakorlati korlátokat, és egy remix hivatkozást, amely vissza a generátorhoz.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. február 1',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Nyisd ki a generátort', type: 'generator' },

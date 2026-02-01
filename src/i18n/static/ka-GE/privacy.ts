@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'კონფიდენციალურობის პოლიტიკა',
   description:
     'ინფორმაციას ANQR აგროვებს, როგორ გამოიყენება და თქვენი უფლებები კონფიდენციალურობის შესახებ მოქმედი კანონმდებლობით.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 წლის 1 თებერვალი',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'მომსახურების პირობები', type: 'external' }],
   sections: [
     {

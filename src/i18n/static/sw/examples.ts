@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'Mifano ya ANQR',
   description:
     'Mifano mitano ya ulimwengu halisi, ya mtindo wa uzalishaji inayoonyesha mahali ambapo misimbo ya QR huunda thamani inayoweza kupimika: kuinua nambari ya kaunta iliyopitwa na wakati, malipo ya rejareja yenye chapa na vitendo vya "kuchanganua", kuongeza viwango vya kuchapisha kutoka kwa vipeperushi hadi kwenye mabango, QR iliyohuishwa kwa alama za kidijitali, na ushirikiano wa lugha mbalimbali kwa kutumia viungo vinavyoweza kushirikiwa. Kila mfano unajumuisha picha, vikwazo vya vitendo, na kiungo cha remix kurudi kwa jenereta.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Februari 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Fungua jenereta', type: 'generator' },

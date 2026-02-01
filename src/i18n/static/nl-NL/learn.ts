@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Leren met ANQR',
   description:
     'Praktische, zakelijke handleidingen voor het omzetten van QR-codes in echte marketingmiddelen - niet alleen in functionele vierkanten. Leer hoe u verouderde kassacodes kunt upgraden, QR-signage voor betalingen kunt maken die aan de regels voldoen, afdrukklare exports kunt voorbereiden, animaties veilig op digitale schermen kunt gebruiken en vergrendelde configuraties kunt delen met meertalige teams met behulp van ANQR-links ("anker").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 februari 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Open de generator', type: 'generator' },

@@ -1791,3 +1791,5 @@
 1791	"Analizuokite fotoaparato užfiksuotus, įkeltus ar URL adresus su visa technine informacija"
 1792	"Importuokite analizuotus QR kodus tiesiai į generatorių, kad galėtumėte juos modifikuoti ir atkurti"
 1793	"Našumo optimizavimas naudojant dinaminį šrifto įkėlimą ir pagerintą prieinamumą"
+1794	"2026 m. vasario 1 d"
+1795	"Vadovas"

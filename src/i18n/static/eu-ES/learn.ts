@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'Ikasi ANQR-ekin',
   description:
     'QR kodeak benetako marketin-aktibo bihurtzeko gida praktikoak, negozioak, ez soilik karratu funtzionalak. Ikasi salmenta-puntuetako kodeak berritzen, ordainketa-QR seinaleztapena sortzen, inprimatzeko prest dauden esportazioak prestatzen, pantaila digitaletan animazioa modu seguruan erabiltzen eta talde eleanitzetan blokeatutako konfigurazioak partekatu ANQR ("aingura") estekak erabiliz.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026ko otsailaren 1a',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Ireki sorgailua', type: 'generator' },

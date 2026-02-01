@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Tungkol sa ANQR',
   description:
     'Ang ANQR ay isang malayang QR code generator na may client-first approwed QR code lokal o gamitin ang ating API para sa embbeding.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Pebrero 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buksan ang generator', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Browse Matuto ng mga artikulo', type: 'learn' },

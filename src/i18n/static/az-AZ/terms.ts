@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Xidmətləri',
   description: 'Saytın giriş və ya istifadə edilən, bu şərtlərin qarşısını almaq razıdır.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 fevral 2026-cı il',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Qeydiyyat', type: 'external' }],
   sections: [
     {

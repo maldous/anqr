@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'למד עם ANQR',
   description:
     'מדריכים מעשיים, ראשונים לעסקים, להפיכת קודי QR לנכסי שיווק אמיתיים - לא רק ריבועים פונקציונליים. למד כיצד לשדרג קודים מדור קודם של נקודות מכירה, ליצור שילוט QR לתשלום תואם, להכין יצוא מוכן להדפסה, להשתמש באנימציה בבטחה על צגים דיגיטליים ולשתף תצורות נעולות בין צוותים רב לשוניים באמצעות קישורי ANQR ("עוגן").',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 בפברואר 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'פתח את הגנרטור', type: 'generator' },

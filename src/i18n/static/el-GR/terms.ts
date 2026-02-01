@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Όροι υπηρεσίας',
   description:
     'Με την πρόσβαση ή τη χρήση του site, συμφωνείτε να δεσμεύεται από αυτούς τους όρους.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Φεβρουαρίου 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Πολιτική απορρήτου', type: 'external' }],
   sections: [
     {

@@ -1791,3 +1791,5 @@
 1791	"Analyseer camera-opnamen, uploads of URL's met een volledig technisch overzicht"
 1792	"Importeer geanalyseerde QR-codes rechtstreeks in de generator om deze te wijzigen en opnieuw te creëren"
 1793	"Prestatie-optimalisaties met dynamisch laden van lettertypen en verbeterde toegankelijkheid"
+1794	"1 februari 2026"
+1795	"Gids"

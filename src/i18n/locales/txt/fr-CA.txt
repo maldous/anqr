@@ -1791,3 +1791,5 @@
 1791	"Analysez les captures de caméra, les téléchargements ou les URL avec une ventilation technique complète"
 1792	"Importez les codes QR analysés directement dans le générateur pour modifier et recréer"
 1793	"Optimisations des performances avec chargement dynamique des polices et accessibilité améliorée"
+1794	"1 février 2026"
+1795	"Guider"

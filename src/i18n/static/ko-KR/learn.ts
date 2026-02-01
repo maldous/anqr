@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -10,7 +9,7 @@ export const learn: PageDefinition = {
   title: 'ANQR 소개',
   description:
     'QR 코드를 단순한 기능 사각형이 아닌 실제 마케팅 자산으로 전환하기 위한 실용적이고 비즈니스 우선적인 가이드입니다. 기존 POS 코드를 업그레이드하고, 규정을 준수하는 결제 QR 간판을 만들고, 인쇄 가능한 내보내기를 준비하고, 디지털 디스플레이에서 애니메이션을 안전하게 사용하고, ANQR("앵커") 링크를 사용하여 다국어 팀 간에 고정된 구성을 공유하는 방법을 알아보세요.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026년 2월 1일',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '발전기 열기', type: 'generator' },

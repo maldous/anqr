@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Yksityisyyden suoja',
   description:
     'Tietoja ANQR kerää, miten sitä käytetään, ja oikeuksia sovellettavien tietosuojalakien mukaisesti.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. helmikuuta 2026',
   relatedLinks: [{ href: '/terms?lang=${lang}', label: 'Käyttöehdot', type: 'external' }],
   sections: [
     {

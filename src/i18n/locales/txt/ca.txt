@@ -1791,3 +1791,5 @@
 1791	"Analitzeu les captures, les càrregues o els URL de la càmera amb un desglossament tècnic complet"
 1792	"Importeu codis QR analitzats directament al generador per modificar-los i recrear-los"
 1793	"Optimitzacions de rendiment amb càrrega de tipus de lletra dinàmica i accessibilitat millorada"
+1794	"1 de febrer de 2026"
+1795	"Guia"

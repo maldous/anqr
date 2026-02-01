@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'ਸੇਵਾ ਦੀਆਂ ਸ਼ਰਤਾਂ',
   description: 'ਸਾਈਟ ਨੂੰ ਐਕਸੈਸ ਕਰਨ ਜਾਂ ਵਰਤ ਕੇ, ਤੁਸੀਂ ਇਹਨਾਂ ਸ਼ਰਤਾਂ ਦੁਆਰਾ ਬੰਨ੍ਹੇ ਜਾਣ ਲਈ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ਫਰਵਰੀ 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'ਗੋਪਨੀਯਤਾ ਨੀਤੀ', type: 'external' }],
   sections: [
     {

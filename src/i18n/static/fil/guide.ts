@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Patnubay ng ANQR User',
   description: 'Kumpletong gabay sa paggamit ng ANQR para sa paglikha ng mga QR code.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 Pebrero 2026',
+  breadcrumb: ['Patnubay'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Buksan ang generator', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Browse Matuto ng mga artikulo', type: 'learn' },

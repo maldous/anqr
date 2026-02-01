@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'អំពី ANQR',
   description:
     'ANQR គឺជាម៉ាស៊ីនបង្កើតកូដ QR ឥតគិតថ្លៃជាមួយនឹងវិធីសាស្រ្តដំបូងរបស់អតិថិជន - បង្កើតកូដ QR ក្នុងស្រុក ឬប្រើ API របស់យើងសម្រាប់ការបង្កប់។',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ថ្ងៃទី 1 ខែកុម្ភៈ ឆ្នាំ 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'បើកម៉ាស៊ីនភ្លើង', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'រកមើលអត្ថបទសិក្សា', type: 'learn' },

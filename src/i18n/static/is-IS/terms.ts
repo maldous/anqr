@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Þjónustuskilmálar',
   description: 'Með því að opna eða nota síðuna samþykkir þú að vera bundinn af þessum skilmálum.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. febrúar 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Persónuverndarstefna', type: 'external' },
   ],

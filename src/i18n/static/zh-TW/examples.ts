@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR 示例',
   description:
     '五個真實的生產型示例展示了 QR 碼在何處創造了可衡量的價值：提升傳統零售櫃檯代碼、品牌零售支付和"掃描到"操作、從傳單到廣告牌的打印縮放、數字標牌的動畫 QR 以及使用可共享錨鏈接的跨語言協作。每個示例都包含圖像、實際約束以及返回生成器的混音鏈接。',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 年 2 月 1 日',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '打開發電機', type: 'generator' },

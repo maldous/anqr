@@ -1791,3 +1791,5 @@
 1791	"Analizoni regjistrimet, ngarkimet ose URL-të e kamerës me ndarje të plotë teknike"
 1792	"Importoni kodet QR të analizuara drejtpërdrejt në gjenerator për të modifikuar dhe rikrijuar"
 1793	"Optimizimet e performancës me ngarkimin dinamik të fontit dhe aksesueshmërinë e përmirësuar"
+1794	"1 shkurt 2026"
+1795	"Udhëzues"

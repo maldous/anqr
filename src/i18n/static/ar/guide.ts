@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'دليل المستخدم أنقر',
   description: 'الدليل الكامل لاستخدام ANQR لإنشاء رموز QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 فبراير 2026',
+  breadcrumb: ['دليل'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'افتح المولد', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'تصفح تعلم المقالات', type: 'learn' },

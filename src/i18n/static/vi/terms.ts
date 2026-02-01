@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Điều khoản dịch vụ',
   description:
     'Bằng cách truy cập hoặc sử dụng trang web, bạn đồng ý bị ràng buộc bởi các điều khoản này.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'ngày 1 tháng 2 năm 2026',
   relatedLinks: [{ href: '/privacy?lang=${lang}', label: 'Chính sách bảo mật', type: 'external' }],
   sections: [
     {

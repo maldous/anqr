@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'Umhlahlandlela Womsebenzisi we-ANQR',
   description: 'Umhlahlandlela ophelele wokusebenzisa i-ANQR ekudaleni amakhodi e-QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 February 2026',
+  breadcrumb: ['Umhlahlandlela'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Vula ijenereyitha', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Dlulisa amehlo Funda izihloko', type: 'learn' },

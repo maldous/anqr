@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'Az ANQR-ről',
   description:
     'Az ANQR egy ingyenes QR kódgenerátor kliens-első megközelítéssel - QR-kódokat generál helyben vagy API-t használ beágyazáshoz.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026. február 1',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Nyisd ki a generátort', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'Böngészés Tanulj cikkeket', type: 'learn' },

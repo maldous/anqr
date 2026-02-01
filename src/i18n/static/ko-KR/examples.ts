@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR 예제',
   description:
     'QR 코드가 측정 가능한 가치를 창출하는 위치를 보여주는 5가지 실제 생산 스타일 사례: 기존 소매 카운터 코드 향상, 브랜드 소매 결제 및 "스캔 후" 작업, 전단지에서 광고판까지 인쇄 크기 조정, 디지털 간판용 애니메이션 QR, 공유 가능한 앵커 링크를 사용한 언어 간 협업. 각 예에는 이미지, 실제 제약 조건 및 생성기로 돌아가는 리믹스 링크가 포함되어 있습니다.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026년 2월 1일',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '발전기 열기', type: 'generator' },

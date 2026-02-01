@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Podmínky služby',
   description: 'Tím, že přístup nebo používání webu, souhlasíte být vázán těmito podmínkami.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1. února 2026',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Ochrana osobních údajů', type: 'external' },
   ],

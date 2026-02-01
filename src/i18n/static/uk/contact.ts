@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: "Зв'яжіться з нами",
   description: 'Ми вітаємо відгуки, звіти про помилки, запити щодо функцій і загальні запитання.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 лютого 2026 р',
   sections: [
     {
       heading: 'Як до нас доїхати',

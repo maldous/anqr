@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'راهنمای کاربر ANQR',
   description: 'راهنمای کامل برای استفاده از ANQR برای ایجاد کودهای QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1 فبروری 2026',
+  breadcrumb: ['رهنما'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'جنراتور را باز کنید', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'مرور مقاله های یادگیری', type: 'learn' },

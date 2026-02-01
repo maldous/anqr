@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'మమ్మల్ని సంప్రదించండి',
   description: 'మేము అభిప్రాయం, బగ్ నివేదికలు, ఫీచర్ అభ్యర్థనలు మరియు సాధారణ విచారణలను స్వాగతిస్తాము.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 ఫిబ్రవరి 2026',
   sections: [
     {
       heading: 'మమ్మల్ని ఎలా చేరుకోవాలి',

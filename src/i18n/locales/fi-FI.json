@@ -1312,6 +1312,7 @@
     "joinReddit": "Liity r/ANQR:iin"
   },
   "overlay": {
+    "photo": "Kamera",
     "blueNoise": "Sininen melu",
     "blueNoiseMode": "Sininen melu",
     "none": "Ei ole",

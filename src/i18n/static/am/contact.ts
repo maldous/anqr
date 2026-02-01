@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const contact: PageDefinition = {
   title: 'ያግኙን',
   description: 'ግብረ መልስን፣ የሳንካ ሪፖርቶችን፣ የባህሪ ጥያቄዎችን እና አጠቃላይ ጥያቄዎችን እንቀበላለን።',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: 'የካቲት 1 ቀን 2026',
   sections: [
     {
       heading: 'ወደ እኛ እንዴት እንደሚደርሱ',

@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -9,7 +8,7 @@ import type { PageDefinition } from '../types';
 export const learn: PageDefinition = {
   title: '640',
   description: '641',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1794',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '684', type: 'generator' },

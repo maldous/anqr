@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const privacy: PageDefinition = {
   title: 'Құпиялық саясаты',
   description:
     'Ақпаратты ANQR жинайды, оны пайдалану жолы және қолданыстағы құпиялылық туралы заңдарға сәйкес құқықтарыңыз.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026 жылғы 1 ақпан',
   relatedLinks: [
     { href: '/terms?lang=${lang}', label: 'Қызмет көрсету шарттары', type: 'external' },
   ],

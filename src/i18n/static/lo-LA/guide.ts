@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: 'ຄູ່ມືຜູ້ໃຊ້ ANQR',
   description: 'ຄູ່ມືຄົບຖ້ວນສົມບູນໃນການນໍາໃຊ້ ANQR ສໍາລັບການສ້າງລະຫັດ QR.',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: 'ວັນທີ 1 ກຸມພາ 2026',
+  breadcrumb: ['ຄູ່ມື'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'ເປີດເຄື່ອງກໍາເນີດ', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'ຊອກຫາບົດຄວາມ ຮຽນຮູ້', type: 'learn' },

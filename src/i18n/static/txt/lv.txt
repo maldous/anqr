@@ -1333,3 +1333,5 @@
 1333	"Pilna privātuma politika"
 1334	"Šajā lapā ir sniegts mūsu privātuma prakses kopsavilkums. Lai iegūtu pilnīgu, juridiski saistošu privātuma politiku ar pilnu informāciju par datu apstrādi, jūsu tiesībām un mūsu pienākumiem saskaņā ar GDPR, CCPA un citiem privātuma likumiem, lūdzu, skatiet mūsu pilno politiku, ko mitina iubenda."
 1335	"Skatīt pilnu iubenda konfidencialitātes politiku"
+1794	"2026. gada 1. februāris"
+1795	"Ceļvedis"

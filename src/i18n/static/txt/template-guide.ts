@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const guide: PageDefinition = {
   title: '62',
   description: '63',
-  lastUpdated: LAST_UPDATED,
-  breadcrumb: ['Guide'],
+  lastUpdated: '1794',
+  breadcrumb: ['1795'],
   primaryLinks: [
     { href: '/?lang=${lang}', label: '684', type: 'generator' },
     { href: '/learn?lang=${lang}', label: '682', type: 'learn' },

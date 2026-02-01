@@ -1,11 +1,10 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const about: PageDefinition = {
   title: 'anqr کے بارے میں',
   description:
     'اے این کیو آر ایک مفت کیو آر کوڈ جنریٹر ہے جس میں کلائنٹ کا پہلا نقطہ نظر ہے - مقامی طور پر کیو آر کوڈ تیار کریں یا ایمبیڈنگ کے لئے ہمارے API کا استعمال کریں۔',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 فروری 2026',
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'جنریٹر کھولیں', type: 'generator' },
     { href: '/learn?lang=${lang}', label: 'سیکھیں مضامین کو براؤز کریں', type: 'learn' },

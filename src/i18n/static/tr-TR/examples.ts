@@ -1,4 +1,3 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 /**
@@ -11,7 +10,7 @@ export const examples: PageDefinition = {
   title: 'ANQR Örnekleri',
   description:
     'QR kodlarının nerede ölçülebilir değer yarattığını gösteren gerçek dünyadan beş üretim tarzı örnek: eski bir perakende sayaç kodunun geliştirilmesi, markalı perakende ödemeleri ve "tarama" eylemleri, el ilanlarından reklam panolarına kadar baskı ölçeklendirmesi, dijital tabela için animasyonlu QR ve paylaşılabilir Bağlantı bağlantılarını kullanarak diller arası işbirliği. Her örnekte görüntüler, pratik kısıtlamalar ve oluşturucuya giden bir remiks bağlantısı bulunur.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1 Şubat 2026',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: 'Jeneratörü aç', type: 'generator' },

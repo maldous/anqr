@@ -1,10 +1,9 @@
-import { LAST_UPDATED } from '../constants';
 import type { PageDefinition } from '../types';
 
 export const terms: PageDefinition = {
   title: 'Zerbitzu-baldintzak',
   description: 'Gunean sartuz edo erabiliz gero, baldintza hauek betetzea onartzen duzu.',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '2026ko otsailaren 1a',
   relatedLinks: [
     { href: '/privacy?lang=${lang}', label: 'Pribatutasun politika', type: 'external' },
   ],
