@@ -33,7 +33,7 @@ import { getAlignmentPositionsCached } from './pattern-helpers';
 import { getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 import { renderModules } from './render-loop';
 import { generateScaledQR } from './scaled-render';
-import type { QRGeneratorConfig, QRMatrixResult } from './types';
+import type { OverlayData, QRGeneratorConfig, QRMatrixResult } from './types';
 import { validateColor } from './utils';
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
@@ -261,12 +261,55 @@ export class QRGenerator {
 
     // Apply overlay preprocessing (brightness/contrast/gamma/etc) after geometry.
     // This must run BEFORE we sample overlay pixels for scaled/dithered/subpixel modes.
-    if (processedOverlayCanvas && hasPreprocessingOptions(config)) {
-      processedOverlayCanvas = await preprocessOverlay(
-        processedOverlayCanvas,
-        config,
-        this.createCanvas.bind(this)
-      );
+    // For center mode, we only apply colorMode-related filters (grayscale/bw) and skip
+    // other filters that would distort the logo (invert, edge detect, brightness, etc.).
+    if (processedOverlayCanvas) {
+      const isCenterMode = config.overlayMode === 'center';
+      
+      if (isCenterMode) {
+        // For center mode, only apply colorMode conversion (grayscale/bw)
+        // Skip all other preprocessing filters that could distort the logo
+        const colorModeConfig: QRGeneratorConfig = {
+          ...config,
+          // Clear all preprocessing filters except colorMode-related ones
+          filterBrightness: 0,
+          filterContrast: 0,
+          filterSaturation: 0,
+          filterHue: 0,
+          filterGamma: 1,
+          filterInvert: false,
+          filterBlur: 0,
+          filterSharpen: 0,
+          filterPosterize: 0,
+          filterThreshold: 0,
+          filterEdgeDetect: false,
+          filterDuotone1: undefined,
+          filterDuotone2: undefined,
+          // Apply colorMode as grayscale filter
+          filterGrayscale: config.colorMode === 'grayscale' || config.colorMode === 'bw',
+        };
+        
+        // For B&W mode, also apply a threshold
+        if (config.colorMode === 'bw') {
+          colorModeConfig.filterThreshold = 128; // Standard B&W threshold
+        }
+        
+        // Only preprocess if we have colorMode settings to apply
+        if (config.colorMode === 'grayscale' || config.colorMode === 'bw') {
+          processedOverlayCanvas = await preprocessOverlay(
+            processedOverlayCanvas,
+            colorModeConfig,
+            this.createCanvas.bind(this)
+          );
+        }
+      } else if (hasPreprocessingOptions(config)) {
+        // For non-center modes, apply full preprocessing
+        processedOverlayCanvas = await preprocessOverlay(
+          processedOverlayCanvas,
+          config,
+          this.createCanvas.bind(this)
+        );
+      }
     }
 
     // =======================================================================
@@ -342,16 +385,26 @@ export class QRGenerator {
     }
 
     // =======================================================================
-    // STAGE 2: OVERLAY PROCESSING (for non-scaled modes like blend, center, etc.)
+    // STAGE 2: OVERLAY PROCESSING (for non-scaled modes like blend, halftone, etc.)
     // =======================================================================
+    // SKIP overlay data preparation for center mode - we don't need brightness/color
+    // data since we just draw the logo on top without modifying QR modules.
+    let ditherPattern: boolean[][] | null = null;
+    let overlayData: OverlayData | null = null;
+    let effectiveIntensity = 0;
 
-    const { ditherPattern, overlayData, effectiveIntensity } = await prepareUnifiedOverlayData(
-      qr,
-      effectiveConfig,
-      processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas | null,
-      moduleCount,
-      this.createCanvas.bind(this)
-    );
+    if (effectiveConfig.overlayMode !== 'center') {
+      const overlayResult = await prepareUnifiedOverlayData(
+        qr,
+        effectiveConfig,
+        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas | null,
+        moduleCount,
+        this.createCanvas.bind(this)
+      );
+      ditherPattern = overlayResult.ditherPattern;
+      overlayData = overlayResult.overlayData;
+      effectiveIntensity = overlayResult.effectiveIntensity;
+    }
 
     // =======================================================================
     // STAGE 3: CANVAS SETUP
