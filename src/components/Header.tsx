@@ -1,9 +1,7 @@
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import * as LucideIcons from 'lucide-react';
 import {
   BookOpen,
-  Camera as CameraIcon,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -62,6 +60,8 @@ const NAV_LINKS: Array<{
   defaultLabel: string;
   page: HeaderPage;
   icon: React.ComponentType<{ className?: string }>;
+  external?: boolean;
+  iubendaEmbed?: boolean;
 }> = [
   { href: '/', labelKey: 'nav.generator', defaultLabel: 'Generator', page: 'editor', icon: QrCode },
   {
@@ -89,11 +89,13 @@ const NAV_LINKS: Array<{
   },
   { href: '/about', labelKey: 'nav.about', defaultLabel: 'About', page: 'about', icon: Info },
   {
-    href: '/privacy',
+    href: 'https://www.iubenda.com/privacy-policy/70266922',
     labelKey: 'nav.privacy',
     defaultLabel: 'Privacy',
     page: 'privacy',
     icon: Shield,
+    external: true,
+    iubendaEmbed: true,
   },
   { href: '/terms', labelKey: 'nav.terms', defaultLabel: 'Terms', page: 'terms', icon: FileText },
   {
@@ -136,8 +138,6 @@ export function Header({
   // Use individual selectors to avoid re-renders when unrelated state changes
   // State slices - these change and would cause re-renders if subscribed to whole store
   const tier = useQRStore((s) => s.tier);
-  const setOverlayFile = useQRStore((s) => s.setOverlayFile);
-  const setOverlayEnabled = useQRStore((s) => s.setOverlayEnabled);
   const qr = useQRStore((s) => s.qr);
   const render = useQRStore((s) => s.render);
   const overlay = useQRStore((s) => s.overlay);
@@ -159,8 +159,6 @@ export function Header({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loadingAd, setLoadingAd] = useState(false);
-  const [cameraLoading, setCameraLoading] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [isLangMenuClosing, setIsLangMenuClosing] = useState(false);
   const [isMobileMenuClosing, setIsMobileMenuClosing] = useState(false);
@@ -297,77 +295,6 @@ export function Header({
     localStorage.setItem('darkMode', String(newMode));
     document.documentElement.classList.toggle('dark', newMode);
   };
-
-  // Camera capture for quick overlay demo (Android only)
-  const handleCameraCapture = async () => {
-    setCameraError(null);
-    setCameraLoading(true);
-
-    try {
-      // Check permissions first
-      const permissions = await Camera.checkPermissions();
-      if (permissions.camera === 'denied') {
-        // Try to request permissions
-        const requested = await Camera.requestPermissions();
-        if (requested.camera === 'denied') {
-          setCameraError(t('camera.permissionDenied'));
-          return;
-        }
-      }
-
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        source: CameraSource.Camera,
-      });
-
-      if (image.dataUrl) {
-        // Convert data URL to File object
-        const response = await fetch(image.dataUrl);
-        const blob = await response.blob();
-        const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
-
-        // Set as overlay and enable it
-        setOverlayFile(file);
-        setOverlayEnabled(true);
-
-        // Navigate to editor if not already there
-        if (resolvedPage !== 'editor') {
-          onNavigate?.('editor');
-        }
-      }
-    } catch (error: unknown) {
-      // Check for user cancellation vs actual error
-      let errorMessage: string;
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      } else {
-        errorMessage = 'Unknown error';
-      }
-      if (errorMessage.includes('cancelled') || errorMessage.includes('User cancelled')) {
-        // User cancelled - silently ignore
-        console.log('Camera capture cancelled');
-      } else if (errorMessage.includes('permission') || errorMessage.includes('Permission')) {
-        setCameraError(t('camera.permissionDenied'));
-      } else {
-        setCameraError(t('camera.error'));
-        console.error('Camera capture failed:', errorMessage);
-      }
-    } finally {
-      setCameraLoading(false);
-    }
-  };
-
-  // Clear camera error after 3 seconds
-  useEffect(() => {
-    if (cameraError) {
-      const timer = setTimeout(() => setCameraError(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [cameraError]);
 
   const handleShare = async () => {
     const shareConfig = {
@@ -610,22 +537,6 @@ export function Header({
 
   return (
     <>
-      {/* Camera loading overlay */}
-      {cameraLoading && (
-        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-white text-sm font-medium">{t('camera.loading')}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Camera error toast */}
-      {cameraError && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] bg-destructive text-destructive-foreground px-4 py-2 rounded-lg shadow-lg animate-[slide-down_0.2s_ease-out]">
-          {cameraError}
-        </div>
-      )}
       <header
         className={`border-b bg-card shadow-lg fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${sidebarOpen && isEditor ? 'lg:ms-96' : ''}`}
         style={{ paddingTop: 'max(var(--sat, 0px), env(safe-area-inset-top, 0px))' }}
@@ -696,24 +607,25 @@ export function Header({
                 <span className="text-xl font-bold leading-6">ANQR</span>
               </button>
 
-              {/* Camera button for quick overlay demo (Android only, editor only) */}
-              {isEditor && Capacitor.isNativePlatform() && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCameraCapture}
-                  className="h-9 w-9"
-                  title={t('header.captureOverlay')}
-                  disabled={cameraLoading}
-                >
-                  <CameraIcon className="h-5 w-5" />
-                </Button>
-              )}
-
               {/* Desktop Nav */}
               <nav className="hidden lg:flex items-center gap-1">
                 {NAV_LINKS.map((link) => {
                   const isActive = link.page === resolvedPage;
+                  // External links (like iubenda) don't navigate internally
+                  if (link.external) {
+                    return (
+                      <a
+                        key={link.labelKey}
+                        href={link.href}
+                        className={`px-3 py-2 text-sm rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
+                        title={t(link.labelKey, link.defaultLabel)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t(link.labelKey, link.defaultLabel)}
+                      </a>
+                    );
+                  }
                   return (
                     <a
                       key={link.labelKey}
@@ -1044,6 +956,25 @@ export function Header({
                 {NAV_LINKS.slice(2).map((link) => {
                   const isActive = link.page === resolvedPage;
                   const IconComponent = link.icon;
+                  // External links (like iubenda) don't navigate internally
+                  if (link.external) {
+                    return (
+                      <a
+                        key={link.labelKey}
+                        href={link.href}
+                        className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-md transition-colors shadow-sm text-muted-foreground hover:bg-muted hover:text-foreground${link.iubendaEmbed ? ' iubenda-noiframe iubenda-embed' : ''}`}
+                        title={t(link.labelKey, link.defaultLabel)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => closeMobileMenu()}
+                      >
+                        <IconComponent className="w-5 h-5" />
+                        <span className="text-[11px] leading-tight text-center">
+                          {t(link.labelKey, link.defaultLabel)}
+                        </span>
+                      </a>
+                    );
+                  }
                   return (
                     <a
                       key={link.labelKey}

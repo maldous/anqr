@@ -149,3 +149,10 @@
 -dontwarn org.conscrypt.**
 -dontwarn org.bouncycastle.**
 -dontwarn org.openjsse.**
+
+# ============================================
+# iubenda CMP SDK (Consentmanager)
+# ============================================
+-keep class net.consentmanager.** { *; }
+-keep interface net.consentmanager.** { *; }
+-dontwarn net.consentmanager.**

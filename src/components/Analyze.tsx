@@ -4621,7 +4621,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           </div>
 
           {/* Input Section - Always visible, compact cards */}
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+          {/* On web: 3 columns (no camera), on native: 4 columns (with camera) */}
+          <div
+            className={`grid gap-3 ${Capacitor.isNativePlatform() ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3'}`}
+          >
             {/* Use Current QR Card - only shown when generator canvas is available */}
             {generatedCanvas ? (
               <button
@@ -4729,8 +4732,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               </div>
             </div>
 
-            {/* Camera Card */}
-            {Capacitor.isNativePlatform() ? (
+            {/* Camera Card - only on native mobile */}
+            {Capacitor.isNativePlatform() && (
               <button
                 type="button"
                 onClick={handleCameraCapture}
@@ -4753,18 +4756,6 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                   </p>
                 </div>
               </button>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border opacity-40 h-full shadow-sm">
-                <CameraIcon className="w-6 h-6 text-muted-foreground" />
-                <div className="text-center">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {t('analyze.captureCamera', 'Photo')}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t('analyze.cameraWebHint', 'App only')}
-                  </p>
-                </div>
-              </div>
             )}
           </div>
 

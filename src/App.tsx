@@ -907,12 +907,11 @@ function App() {
               </a>
               {' · '}
               <a
-                href="/privacy"
-                className="hover:underline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigateTo('privacy');
-                }}
+                href="https://www.iubenda.com/privacy-policy/70266922"
+                className="iubenda-noiframe iubenda-embed hover:underline"
+                title={t('nav.privacy')}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 {t('nav.privacy')}
               </a>

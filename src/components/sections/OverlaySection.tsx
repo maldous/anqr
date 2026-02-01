@@ -1,4 +1,6 @@
-import { Link, Loader2, Move, Upload, X } from 'lucide-react';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+import { Camera as CameraIcon, Link, Loader2, Move, Upload, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -84,6 +86,8 @@ export function OverlaySection() {
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Create image preview URL when file or URL changes
   useEffect(() => {
@@ -145,6 +149,49 @@ export function OverlaySection() {
       setIsLoadingUrl(false);
     }
   }, [urlInput, setOverlayFile, setOverlayUrl, setOverlayEnabled, t]);
+
+  // Camera capture for quick overlay (native only)
+  const handleCameraCapture = useCallback(async () => {
+    setCameraError(null);
+    setCameraLoading(true);
+
+    try {
+      const permissions = await Camera.checkPermissions();
+      if (permissions.camera === 'denied') {
+        const requested = await Camera.requestPermissions();
+        if (requested.camera === 'denied') {
+          setCameraError(t('camera.permissionDenied'));
+          return;
+        }
+      }
+
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+
+      if (image.dataUrl) {
+        const response = await fetch(image.dataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        setOverlayFile(file);
+        setOverlayEnabled(true);
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
+        if (errorMessage.includes('permission') || errorMessage.includes('Permission')) {
+          setCameraError(t('camera.permissionDenied'));
+        } else {
+          setCameraError(t('camera.error'));
+        }
+      }
+    } finally {
+      setCameraLoading(false);
+    }
+  }, [t, setOverlayFile, setOverlayEnabled]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -351,8 +398,13 @@ export function OverlaySection() {
           </div>
         ) : (
           <div className="space-y-2">
+            {/* Camera error toast */}
+            {cameraError && (
+              <div className="p-2 rounded-md bg-destructive/10 text-destructive text-sm">
+                {cameraError}
+              </div>
+            )}
             <div className="flex gap-2">
-              {' '}
               <Button
                 variant="outline"
                 className="flex-1"
@@ -371,6 +423,23 @@ export function OverlaySection() {
                 <Link className="h-4 w-4 mr-2" />
                 {t('overlay.fromUrl')}
               </Button>
+              {/* Photo button - only on native mobile */}
+              {Capacitor.isNativePlatform() && (
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCameraCapture}
+                  disabled={cameraLoading}
+                  data-testid="overlay-photo-button"
+                >
+                  {cameraLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <CameraIcon className="h-4 w-4 mr-2" />
+                  )}
+                  {t('overlay.photo')}
+                </Button>
+              )}
             </div>
 
             {/* URL Input */}
