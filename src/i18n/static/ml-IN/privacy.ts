@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'സ്വകാര്യതാ നയം',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'പൂർണ്ണ സ്വകാര്യതാ നയം',
       paragraphs: ['ഈ പേജ് ഞങ്ങളുടെ സ്വകാര്യതാ രീതികളുടെ ഒരു സംഗ്രഹം നൽകുന്നു. ഡാറ്റാ പ്രോസസ്സിംഗ്, നിങ്ങളുടെ അവകാശങ്ങൾ, GDPR, CCPA, മറ്റ് സ്വകാര്യതാ നിയമങ്ങൾ എന്നിവയ്ക്ക് കീഴിലുള്ള ഞങ്ങളുടെ ബാധ്യതകൾ എന്നിവയെക്കുറിച്ചുള്ള പൂർണ്ണമായ വിശദാംശങ്ങളുള്ള പൂർണ്ണവും നിയമപരമായി ബന്ധിപ്പിക്കുന്നതുമായ സ്വകാര്യതാ നയത്തിന്, iubenda ഹോസ്റ്റ് ചെയ്യുന്ന ഞങ്ങളുടെ മുഴുവൻ നയവും കാണുക.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda-ൽ പൂർണ്ണ സ്വകാര്യതാ നയം കാണുക', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda-ൽ പൂർണ്ണ സ്വകാര്യതാ നയം കാണുക',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

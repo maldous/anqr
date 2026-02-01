@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const guide: PageDefinition = {
   title: 'ARON ব্যবহারকারীর গাইড',

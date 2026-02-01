@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'గోప్యతా విధానం',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'పూర్తి గోప్యతా విధానం',
       paragraphs: ['ఈ పేజీ మా గోప్యతా పద్ధతుల సారాంశాన్ని అందిస్తుంది. డేటా ప్రాసెసింగ్, మీ హక్కులు మరియు GDPR, CCPA మరియు ఇతర గోప్యతా చట్టాల ప్రకారం మా బాధ్యతలపై పూర్తి వివరాలతో కూడిన పూర్తి, చట్టబద్ధంగా కట్టుబడి ఉండే గోప్యతా విధానం కోసం, దయచేసి iubenda హోస్ట్ చేసిన మా పూర్తి విధానాన్ని వీక్షించండి.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'ఐబెండాలో పూర్తి గోప్యతా విధానాన్ని వీక్షించండి', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'ఐబెండాలో పూర్తి గోప్యతా విధానాన్ని వీక్షించండి',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

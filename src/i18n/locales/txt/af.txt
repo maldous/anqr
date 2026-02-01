@@ -1786,3 +1786,8 @@
 1786	"30 Januarie 2026"
 1787	"Ontfout log en hex dump-aansig vir tegniese QR-analise"
 1788	"Beeld-oorlegsels"
+1789	"1 Februarie 2026"
+1790	"NUUT: QR-kode-analiseerder - skandeer, dekodeer en inspekteer enige QR-kode in detail"
+1791	"Ontleed kamera-opnames, -oplaaie of URL's met volledige tegniese uiteensetting"
+1792	"Voer geanaliseerde QR-kodes direk in die kragopwekker in om te verander en te herskep"
+1793	"Werkverrigtingoptimalisasies met dinamiese fontlaai en verbeterde toeganklikheid"

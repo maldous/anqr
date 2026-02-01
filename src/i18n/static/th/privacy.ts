@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'นโยบายความเป็นส่วนตัว',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'นโยบายความเป็นส่วนตัวฉบับเต็ม',
       paragraphs: ['หน้านี้ให้ข้อมูลสรุปแนวทางปฏิบัติด้านความเป็นส่วนตัวของเรา สำหรับนโยบายความเป็นส่วนตัวที่มีผลผูกพันทางกฎหมายฉบับสมบูรณ์พร้อมรายละเอียดทั้งหมดเกี่ยวกับการประมวลผลข้อมูล สิทธิ์ของคุณ และภาระผูกพันของเราภายใต้ GDPR, CCPA และกฎหมายความเป็นส่วนตัวอื่น ๆ โปรดดูนโยบายฉบับเต็มของเราที่โฮสต์โดย iubenda'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'ดูนโยบายความเป็นส่วนตัวฉบับเต็มบน iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'ดูนโยบายความเป็นส่วนตัวฉบับเต็มบน iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

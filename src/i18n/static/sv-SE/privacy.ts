@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Sekretesspolicy',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Fullständig sekretesspolicy',
       paragraphs: ['Den här sidan ger en sammanfattning av vår sekretesspraxis. För den fullständiga, juridiskt bindande integritetspolicyn med fullständig information om databehandling, dina rättigheter och våra skyldigheter enligt GDPR, CCPA och andra integritetslagar, vänligen se vår fullständiga policy som tillhandahålls av iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Se hela sekretesspolicyn på iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Se hela sekretesspolicyn på iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

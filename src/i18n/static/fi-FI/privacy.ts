@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Yksityisyyden suoja',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Täydellinen tietosuojakäytäntö',
       paragraphs: ['Tällä sivulla on yhteenveto tietosuojakäytännöistämme. Täydellisen, laillisesti sitovan tietosuojakäytännön, joka sisältää täydelliset tiedot tietojenkäsittelystä, oikeuksistasi ja GDPR-, CCPA- ja muiden tietosuojalakien mukaisista velvoitteistamme, katso iubendan isännöimä täydellinen käytäntömme.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Katso koko iubendan tietosuojakäytäntö', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Katso koko iubendan tietosuojakäytäntö',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

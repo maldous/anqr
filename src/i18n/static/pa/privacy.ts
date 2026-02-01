@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'ਗੋਪਨੀਯਤਾ ਨੀਤੀ',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'ਪੂਰੀ ਗੋਪਨੀਯਤਾ ਨੀਤੀ',
       paragraphs: ['ਇਹ ਪੰਨਾ ਸਾਡੇ ਗੋਪਨੀਯਤਾ ਅਭਿਆਸਾਂ ਦਾ ਸਾਰ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ। ਡਾਟਾ ਪ੍ਰੋਸੈਸਿੰਗ, ਤੁਹਾਡੇ ਅਧਿਕਾਰਾਂ, ਅਤੇ GDPR, CCPA ਅਤੇ ਹੋਰ ਪਰਦੇਦਾਰੀ ਕਾਨੂੰਨਾਂ ਦੇ ਅਧੀਨ ਸਾਡੀਆਂ ਜ਼ਿੰਮੇਵਾਰੀਆਂ ਦੇ ਪੂਰੇ ਵੇਰਵਿਆਂ ਦੇ ਨਾਲ ਪੂਰੀ, ਕਾਨੂੰਨੀ ਤੌਰ \'ਤੇ ਬੰਧਨ ਵਾਲੀ ਪਰਦੇਦਾਰੀ ਨੀਤੀ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ iubenda ਦੁਆਰਾ ਹੋਸਟ ਕੀਤੀ ਗਈ ਸਾਡੀ ਪੂਰੀ ਨੀਤੀ ਦੇਖੋ।'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda \'ਤੇ ਪੂਰੀ ਗੋਪਨੀਯਤਾ ਨੀਤੀ ਦੇਖੋ', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda \'ਤੇ ਪੂਰੀ ਗੋਪਨੀਯਤਾ ਨੀਤੀ ਦੇਖੋ',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

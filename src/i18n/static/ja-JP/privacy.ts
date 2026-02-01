@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'プライバシーポリシー',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: '完全なプライバシーポリシー',
       paragraphs: ['このページでは、当社のプライバシー慣行の概要を説明します。 GDPR、CCPA、およびその他のプライバシー法に基づくデータ処理、お客様の権利、および当社の義務に関する詳細を含む完全で法的拘束力のあるプライバシー ポリシーについては、iubenda がホストする当社のポリシー全文をご覧ください。'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda でプライバシー ポリシーの全文を表示する', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda でプライバシー ポリシーの全文を表示する',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

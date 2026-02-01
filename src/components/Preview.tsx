@@ -329,10 +329,17 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
               )}
               {/* Safety warnings */}
               {safetyWarnings.length > 0 && showWarnings && (
-                <div className="absolute top-2 right-2 max-w-xs z-10" role="alert" aria-live="polite">
+                <div
+                  className="absolute top-2 right-2 max-w-xs z-10"
+                  role="alert"
+                  aria-live="polite"
+                >
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 shadow-sm">
                     <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                      <AlertTriangle
+                        className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5"
+                        aria-hidden="true"
+                      />
                       <div className="flex-1">
                         <p className="text-xs font-medium text-amber-800">{t('sections.safety')}</p>
                         <ul className="text-xs text-amber-700 mt-1 space-y-0.5">

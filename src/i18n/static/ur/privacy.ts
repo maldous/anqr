@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'رازداری کی پالیسی',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'مکمل رازداری کی پالیسی',
       paragraphs: ['یہ صفحہ ہمارے رازداری کے طریقوں کا خلاصہ فراہم کرتا ہے۔ جی ڈی پی آر ، سی سی پی اے ، اور رازداری کے دیگر قوانین کے تحت ڈیٹا پروسیسنگ ، آپ کے حقوق ، اور ہماری ذمہ داریوں کے بارے میں مکمل تفصیلات کے ساتھ مکمل ، قانونی طور پر پابند رازداری کی پالیسی کے لئے ، براہ کرم آئوبینڈا کے ذریعہ ہماری مکمل پالیسی دیکھیں۔'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'آئوبینڈا پر رازداری کی مکمل پالیسی دیکھیں', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'آئوبینڈا پر رازداری کی مکمل پالیسی دیکھیں',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

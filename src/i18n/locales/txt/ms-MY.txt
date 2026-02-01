@@ -1786,3 +1786,8 @@
 1786	"30 Januari 2026"
 1787	"Log nyahpepijat dan paparan hex dump untuk analisis QR teknikal"
 1788	"Tindanan Imej"
+1789	"1 Februari 2026"
+1790	"BAHARU: Penganalisis Kod QR - imbas, nyahkod dan periksa sebarang kod QR secara terperinci"
+1791	"Analisis tangkapan kamera, muat naik atau URL dengan pecahan teknikal penuh"
+1792	"Import kod QR yang dianalisis terus ke dalam penjana untuk mengubah suai dan mencipta semula"
+1793	"Pengoptimuman prestasi dengan pemuatan fon dinamik dan kebolehcapaian yang dipertingkatkan"

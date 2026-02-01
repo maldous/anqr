@@ -9,7 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { Button } from '@/components/ui/button';
-import type { PageDefinition, PageLink, PageSection } from '@/i18n/static';
+import type { PageDefinition, PageSection } from '@/i18n/static';
 import { CONTACT_EMAIL, getStaticContentAsync, LAST_UPDATED } from '@/i18n/static';
 
 export type StaticPageType =
@@ -847,28 +847,20 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                     )}
 
                     {/* External links only (e.g., iubenda privacy policy) */}
-                    {section.links && section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
-                      <div className="flex flex-wrap gap-3 mt-4">
-                        {section.links
-                          .filter((link) => link.href.startsWith('http'))
-                          .map((link) => (
-                            <Button
-                              key={link.href}
-                              asChild
-                              variant="outline"
-                              size="default"
-                            >
-                              <a
-                                href={link.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {link.label}
-                              </a>
-                            </Button>
-                          ))}
-                      </div>
-                    )}
+                    {section.links &&
+                      section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
+                        <div className="flex flex-wrap gap-3 mt-4">
+                          {section.links
+                            .filter((link) => link.href.startsWith('http'))
+                            .map((link) => (
+                              <Button key={link.href} asChild variant="outline" size="default">
+                                <a href={link.href} target="_blank" rel="noopener noreferrer">
+                                  {link.label}
+                                </a>
+                              </Button>
+                            ))}
+                        </div>
+                      )}
                   </section>
                 );
               })}
@@ -972,28 +964,20 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
                 )}
 
                 {/* External links only (e.g., iubenda privacy policy) */}
-                {section.links && section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
-                  <div className="flex flex-wrap gap-3 mt-4">
-                    {section.links
-                      .filter((link) => link.href.startsWith('http'))
-                      .map((link) => (
-                        <Button
-                          key={link.href}
-                          asChild
-                          variant="outline"
-                          size="default"
-                        >
-                          <a
-                            href={link.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {link.label}
-                          </a>
-                        </Button>
-                      ))}
-                  </div>
-                )}
+                {section.links &&
+                  section.links.filter((link) => link.href.startsWith('http')).length > 0 && (
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      {section.links
+                        .filter((link) => link.href.startsWith('http'))
+                        .map((link) => (
+                          <Button key={link.href} asChild variant="outline" size="default">
+                            <a href={link.href} target="_blank" rel="noopener noreferrer">
+                              {link.label}
+                            </a>
+                          </Button>
+                        ))}
+                    </div>
+                  )}
               </section>
             ))}
 

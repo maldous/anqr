@@ -1786,3 +1786,8 @@
 1786	"30 ianuarie 2026"
 1787	"Jurnal de depanare și vizualizare hex dump pentru analiza QR tehnică"
 1788	"Suprapuneri de imagini"
+1789	"1 februarie 2026"
+1790	"NOU: Analizor de coduri QR - scanează, decodifică și inspectează orice cod QR în detaliu"
+1791	"Analizați capturile, încărcările sau adresele URL ale camerei cu o defalcare tehnică completă"
+1792	"Importați codurile QR analizate direct în generator pentru a le modifica și recrea"
+1793	"Optimizări de performanță cu încărcare dinamică a fonturilor și accesibilitate îmbunătățită"

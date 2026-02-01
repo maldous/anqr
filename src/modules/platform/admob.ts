@@ -120,7 +120,9 @@ export async function initializeAdMob(): Promise<boolean> {
 
     adMobAvailable = true;
     adMobInitialized = true;
-    console.log(`[AdMob] Initialized successfully (${isTestMode ? 'TEST MODE' : 'PRODUCTION MODE'})`);
+    console.log(
+      `[AdMob] Initialized successfully (${isTestMode ? 'TEST MODE' : 'PRODUCTION MODE'})`
+    );
     return true;
   } catch (_err) {
     console.log('[AdMob] Not available (web environment or plugin not installed)');
@@ -297,7 +299,8 @@ export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promis
   if (!(adMobAvailable && AdMob)) return false;
 
   try {
-    const context = type === 'premium' ? 'premium' : type === 'rewardedInterstitial' ? undefined : 'export_hd';
+    const context =
+      type === 'premium' ? 'premium' : type === 'rewardedInterstitial' ? undefined : 'export_hd';
     const adId =
       type === 'rewardedInterstitial'
         ? getAdUnitId('rewardedInterstitial')

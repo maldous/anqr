@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'ગોપનીયતા નીતિ',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'સંપૂર્ણ ગોપનીયતા નીતિ',
       paragraphs: ['આ પૃષ્ઠ અમારી ગોપનીયતા પ્રથાઓનો સારાંશ પ્રદાન કરે છે. ડેટા પ્રોસેસિંગ, તમારા અધિકારો અને GDPR, CCPA અને અન્ય ગોપનીયતા કાયદા હેઠળની અમારી જવાબદારીઓની સંપૂર્ણ વિગતો સાથે સંપૂર્ણ, કાયદેસર રીતે બંધનકર્તા ગોપનીયતા નીતિ માટે, કૃપા કરીને iubenda દ્વારા હોસ્ટ કરવામાં આવેલી અમારી સંપૂર્ણ નીતિ જુઓ.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda પર સંપૂર્ણ ગોપનીયતા નીતિ જુઓ', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda પર સંપૂર્ણ ગોપનીયતા નીતિ જુઓ',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

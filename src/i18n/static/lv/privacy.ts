@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Privātuma politika',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Pilna privātuma politika',
       paragraphs: ['Šajā lapā ir sniegts mūsu privātuma prakses kopsavilkums. Lai iegūtu pilnīgu, juridiski saistošu privātuma politiku ar pilnu informāciju par datu apstrādi, jūsu tiesībām un mūsu pienākumiem saskaņā ar GDPR, CCPA un citiem privātuma likumiem, lūdzu, skatiet mūsu pilno politiku, ko mitina iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Skatīt pilnu iubenda konfidencialitātes politiku', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Skatīt pilnu iubenda konfidencialitātes politiku',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

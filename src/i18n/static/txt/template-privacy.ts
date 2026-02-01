@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: '374',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: '1333',
       paragraphs: ['1334'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: '1335', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: '1335',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

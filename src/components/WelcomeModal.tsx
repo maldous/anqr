@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { languages } from '@/i18n';
 
 // Increment this version whenever you want to show the modal again to all users
-const WELCOME_VERSION = '2026.01.30';
+const WELCOME_VERSION = '2026.02.01';
 const STORAGE_KEY = 'anqr-welcome-seen';
 
 interface WelcomeModalProps {
@@ -89,13 +89,14 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
   // Grouped updates by date - newest first
   const updateGroups = [
     {
-      date: t('welcome.updateDate3'),
+      date: t('welcome.updateDate4'),
       items: [
-        t('welcome.update12'),
-        t('welcome.update13'),
+        t('welcome.update17'),
+        t('welcome.update19'),
         t('welcome.update14'),
         t('welcome.update15'),
         t('welcome.update16'),
+        t('welcome.update20'),
       ],
     },
     {

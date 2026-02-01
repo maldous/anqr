@@ -1786,3 +1786,8 @@
 1786	"30. janúar 2026"
 1787	"Villuleitarskrár og hex dump útsýni fyrir tæknilega QR greiningu"
 1788	"Myndyfirlag"
+1789	"1. febrúar 2026"
+1790	"NÝTT: QR Code Analyzer - skannaðu, afkóðaðu og skoðaðu hvaða QR kóða sem er í smáatriðum"
+1791	"Greindu myndatökur, upphleðslur eða vefslóðir með fullri tæknilegri sundurliðun"
+1792	"Flyttu inn greinda QR kóða beint inn í rafallinn til að breyta og endurskapa"
+1793	"Hagræðing afkasta með kraftmikilli leturhleðslu og bættu aðgengi"

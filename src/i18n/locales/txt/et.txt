@@ -1786,3 +1786,8 @@
 1786	"30. jaanuar 2026"
 1787	"Silumislogi ja hex dump vaade tehnilise QR-analüüsi jaoks"
 1788	"Pildi ülekatted"
+1789	"1. veebruar 2026"
+1790	"UUS: QR-koodi analüsaator – skannige, dekodeerige ja kontrollige iga QR-koodi üksikasjalikult"
+1791	"Analüüsige kaamera jäädvustusi, üleslaadimisi või URL-e koos täieliku tehnilise jaotusega"
+1792	"Importige analüüsitud QR-koodid otse generaatorisse, et neid muuta ja uuesti luua"
+1793	"Toimivuse optimeerimine dünaamilise fontide laadimise ja parema juurdepääsetavuse abil"

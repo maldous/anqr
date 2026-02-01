@@ -1786,3 +1786,8 @@
 1786	"30. januar 2026"
 1787	"Dnevnik odpravljanja napak in šestnajstiški pogled izpisa za tehnično analizo QR"
 1788	"Prekrivne slike"
+1789	"1. februar 2026"
+1790	"NOVO: QR Code Analyzer - skenirajte, dekodirajte in podrobno preglejte katero koli kodo QR"
+1791	"Analizirajte posnetke s kamero, nalaganja ali URL-je s popolno tehnično razčlenitvijo"
+1792	"Uvozite analizirane kode QR neposredno v generator za spreminjanje in ponovno ustvarjanje"
+1793	"Optimizacije delovanja z dinamičnim nalaganjem pisav in izboljšano dostopnostjo"

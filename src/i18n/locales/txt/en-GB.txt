@@ -1786,3 +1786,8 @@
 1786	"January 30, 2026"
 1787	"Debug log and hex dump view for technical QR analysis"
 1788	"Image Overlays"
+1789	"February 1, 2026"
+1790	"NEW: QR Code Analyser - scan, decode, and inspect any QR code in detail"
+1791	"Analyse camera captures, uploads, or URLs with full technical breakdown"
+1792	"Import analysed QR codes directly into the generator to modify and recreate"
+1793	"Performance optimisations with dynamic font loading and improved accessibility"

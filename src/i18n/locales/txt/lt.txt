@@ -1786,3 +1786,8 @@
 1786	"2026 m. sausio 30 d"
 1787	"Derinimo žurnalas ir šešioliktainis iškrovimo vaizdas techninei QR analizei"
 1788	"Vaizdo perdangos"
+1789	"2026 m. vasario 1 d"
+1790	"NAUJIENA: QR kodo analizatorius – nuskaitykite, iššifruokite ir išsamiai patikrinkite bet kurį QR kodą"
+1791	"Analizuokite fotoaparato užfiksuotus, įkeltus ar URL adresus su visa technine informacija"
+1792	"Importuokite analizuotus QR kodus tiesiai į generatorių, kad galėtumėte juos modifikuoti ir atkurti"
+1793	"Našumo optimizavimas naudojant dinaminį šrifto įkėlimą ir pagerintą prieinamumą"

@@ -1786,3 +1786,8 @@
 1786	"30. tammikuuta 2026"
 1787	"Virheenkorjausloki ja hex dump -näkymä teknistä QR-analyysiä varten"
 1788	"Peittokuvat"
+1789	"1. helmikuuta 2026"
+1790	"UUSI: QR Code Analyzer - skannaa, pura ja tarkasta kaikki QR-koodit yksityiskohtaisesti"
+1791	"Analysoi kamerakaappauksia, latauksia tai URL-osoitteita täydellä teknisellä erittelyllä"
+1792	"Tuo analysoidut QR-koodit suoraan generaattoriin muokkaamista ja uudelleenluomista varten"
+1793	"Suorituskyvyn optimointi dynaamisella kirjasinten latauksella ja parannetulla saavutettavuudella"

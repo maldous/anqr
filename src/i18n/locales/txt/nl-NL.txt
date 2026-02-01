@@ -1786,3 +1786,8 @@
 1786	"30 januari 2026"
 1787	"Foutopsporingslogboek en hex-dumpweergave voor technische QR-analyse"
 1788	"Afbeeldingsoverlays"
+1789	"1 februari 2026"
+1790	"NIEUW: QR Code Analyzer - scan, decodeer en inspecteer elke QR-code in detail"
+1791	"Analyseer camera-opnamen, uploads of URL's met een volledig technisch overzicht"
+1792	"Importeer geanalyseerde QR-codes rechtstreeks in de generator om deze te wijzigen en opnieuw te creëren"
+1793	"Prestatie-optimalisaties met dynamisch laden van lettertypen en verbeterde toegankelijkheid"

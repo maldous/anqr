@@ -1786,3 +1786,8 @@
 1786	"2026. január 30"
 1787	"Hibakeresési napló és hexadecimális kiíratási nézet a technikai QR-elemzéshez"
 1788	"Képlefedések"
+1789	"2026. február 1"
+1790	"ÚJ: QR Code Analyzer – szkennelje be, dekódolja és ellenőrizze a QR-kódokat részletesen"
+1791	"Elemezze a kamerarögzítéseket, feltöltéseket vagy URL-eket teljes műszaki lebontással"
+1792	"Importálja az elemzett QR-kódokat közvetlenül a generátorba, hogy módosítsa és újra létrehozza"
+1793	"Teljesítményoptimalizálás dinamikus betűtípus-betöltéssel és jobb hozzáférhetőséggel"

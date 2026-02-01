@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Pribadong Patakaran',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Buong Patakaran sa Privacy',
       paragraphs: ['Nagbibigay ang page na ito ng buod ng aming mga kasanayan sa privacy. Para sa kumpleto, legal na may-bisang patakaran sa privacy na may kumpletong detalye sa pagpoproseso ng data, iyong mga karapatan, at aming mga obligasyon sa ilalim ng GDPR, CCPA, at iba pang mga batas sa privacy, pakitingnan ang aming buong patakarang hino-host ng iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Tingnan ang Buong Patakaran sa Privacy sa iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Tingnan ang Buong Patakaran sa Privacy sa iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

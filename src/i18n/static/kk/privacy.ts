@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Құпиялық саясаты',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Толық құпиялылық саясаты',
       paragraphs: ['Бұл бетте біздің құпиялылық тәжірибелеріміздің қысқаша мазмұны берілген. Деректерді өңдеу, сіздің құқықтарыңыз және GDPR, CCPA және басқа да құпиялылық заңдары бойынша міндеттемелеріміз туралы толық мәліметтері бар толық, заңды түрде міндетті құпиялылық саясатын алу үшін iubenda ұсынған толық саясатымызды қараңыз.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Iubenda сайтында толық құпиялылық саясатын қараңыз', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Iubenda сайтында толық құпиялылық саясатын қараңыз',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

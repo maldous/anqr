@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'தனியுரிமைக் கொள்கை',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'முழு தனியுரிமைக் கொள்கை',
       paragraphs: ['இந்தப் பக்கம் எங்கள் தனியுரிமை நடைமுறைகளின் சுருக்கத்தை வழங்குகிறது. தரவு செயலாக்கம், உங்கள் உரிமைகள் மற்றும் GDPR, CCPA மற்றும் பிற தனியுரிமைச் சட்டங்களின் கீழ் எங்களின் கடமைகள் பற்றிய முழு விவரங்களுடன் முழுமையான, சட்டப்பூர்வமாக பிணைக்கப்பட்ட தனியுரிமைக் கொள்கைக்கு, iubenda வழங்கும் எங்கள் முழுக் கொள்கையைப் பார்க்கவும்.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda இல் முழு தனியுரிமைக் கொள்கையைப் பார்க்கவும்', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda இல் முழு தனியுரிமைக் கொள்கையைப் பார்க்கவும்',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

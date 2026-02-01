@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Qeydiyyat',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Tam Məxfilik Siyasəti',
       paragraphs: ['Bu səhifə məxfilik təcrübələrimizin xülasəsini təqdim edir. Məlumatların emalı, hüquqlarınız və GDPR, CCPA və digər məxfilik qanunları üzrə öhdəliklərimizlə bağlı tam təfərrüatları olan tam, qanuni məcburi məxfilik siyasəti üçün lütfən, iubenda tərəfindən təşkil edilən tam siyasətimizə baxın.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Tam Məxfilik Siyasətinə iubenda-da baxın', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Tam Məxfilik Siyasətinə iubenda-da baxın',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

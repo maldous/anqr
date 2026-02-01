@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BusyOverlay } from '@/components/BusyOverlay';
 import { Header } from '@/components/Header';
@@ -27,6 +27,7 @@ function LazyLoadFallback() {
     </div>
   );
 }
+
 import type { GalleryCategory } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { useQRGenerator } from '@/hooks/useQRGenerator';

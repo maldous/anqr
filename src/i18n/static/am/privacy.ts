@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'የግላዊነት ፖሊሲ',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'ሙሉ የግላዊነት ፖሊሲ',
       paragraphs: ['ይህ ገጽ የግላዊነት ተግባሮቻችንን ማጠቃለያ ያቀርባል። ለሙሉ፣ በህጋዊ መንገድ አስገዳጅ የግላዊነት ፖሊሲ በውሂብ ሂደት፣ በመብቶችዎ እና በGDPR፣ CCPA እና ሌሎች የግላዊነት ህጎች ላይ ያሉን ግዴታዎች፣ እባክዎ በiubenda የሚስተናገደውን ሙሉ መመሪያችንን ይመልከቱ።'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'በ iubenda ላይ ሙሉ የግላዊነት ፖሊሲን ይመልከቱ', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'በ iubenda ላይ ሙሉ የግላዊነት ፖሊሲን ይመልከቱ',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

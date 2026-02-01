@@ -40,7 +40,7 @@ Referrer-Policy = "strict-origin-when-cross-origin"
 Permissions-Policy = "accelerometer=(), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
 Cross-Origin-Resource-Policy = "same-origin"
 Cross-Origin-Opener-Policy = "same-origin-allow-popups"
-Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com https://*.sentry.io https://*.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://pagead2.googlesyndication.com https://*.iubenda.com https://*.netlify.app https://anqr.link https://*.sentry.io https://*.ingest.sentry.io; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
+Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com https://*.sentry.io https://*.sentry-cdn.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://pagead2.googlesyndication.com https://*.iubenda.com https://*.netlify.app https://anqr.link https://*.sentry.io https://*.ingest.sentry.io https://*.adtrafficquality.google https://*.doubleclick.net; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
 
 [[headers]]
 for = "/"
@@ -66,31 +66,31 @@ Cache-Control = "public, max-age=31536000, immutable"
 for = "/gallery/*"
 
 [headers.values]
-Cache-Control = "public, max-age=86400"
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
 for = "/*.png"
 
 [headers.values]
-Cache-Control = "public, max-age=86400"
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
 for = "/*.ico"
 
 [headers.values]
-Cache-Control = "public, max-age=86400"
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
 for = "/*.svg"
 
 [headers.values]
-Cache-Control = "public, max-age=86400"
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
 for = "/manifest.json"
 
 [headers.values]
-Cache-Control = "public, max-age=3600"
+Cache-Control = "public, max-age=86400, stale-while-revalidate=3600"
 
 [[headers]]
 for = "/*"

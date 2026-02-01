@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'ব্যক্তিগত তথ্যের নীতিমালা',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'সম্পূর্ণ গোপনীয়তা নীতি',
       paragraphs: ['এই পৃষ্ঠাটি আমাদের গোপনীয়তা অনুশীলনের একটি সারসংক্ষেপ প্রদান করে। ডেটা প্রসেসিং, আপনার অধিকার এবং GDPR, CCPA এবং অন্যান্য গোপনীয়তা আইনের অধীনে আমাদের বাধ্যবাধকতাগুলির সম্পূর্ণ বিবরণ সহ সম্পূর্ণ, আইনত বাধ্যতামূলক গোপনীয়তা নীতির জন্য, অনুগ্রহ করে iubenda দ্বারা হোস্ট করা আমাদের সম্পূর্ণ নীতি দেখুন।'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'iubenda-এ সম্পূর্ণ গোপনীয়তা নীতি দেখুন', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'iubenda-এ সম্পূর্ণ গোপনীয়তা নীতি দেখুন',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

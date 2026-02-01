@@ -1786,3 +1786,8 @@
 1786	"Januari 30, 2026"
 1787	"Rekodi ya utatuzi na mwonekano wa kutupa hex kwa uchanganuzi wa kiufundi wa QR"
 1788	"Viwekeleo vya Picha"
+1789	"Tarehe 1 Februari 2026"
+1790	"MPYA: Kichanganuzi cha Msimbo wa QR - changanua, chagua, na uangalie msimbo wowote wa QR kwa undani"
+1791	"Changanua picha za kamera, vipakiaji au URL kwa uchanganuzi kamili wa kiufundi"
+1792	"Ingiza misimbo ya QR iliyochanganuliwa moja kwa moja kwenye jenereta ili kurekebisha na kuunda upya"
+1793	"Uboreshaji wa utendakazi kwa upakiaji wa fonti unaobadilika na ufikivu ulioboreshwa"

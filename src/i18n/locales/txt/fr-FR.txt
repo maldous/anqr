@@ -1786,3 +1786,8 @@
 1786	"30 janvier 2026"
 1787	"Journal de débogage et vue de vidage hexadécimal pour l'analyse technique QR"
 1788	"Superpositions d'images"
+1789	"1 février 2026"
+1790	"NOUVEAU : Analyseur de code QR - scannez, décodez et inspectez n'importe quel code QR en détail"
+1791	"Analysez les captures de caméra, les téléchargements ou les URL avec une ventilation technique complète"
+1792	"Importez les codes QR analysés directement dans le générateur pour modifier et recréer"
+1793	"Optimisations des performances avec chargement dynamique des polices et accessibilité améliorée"

@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'Πολιτική απορρήτου',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Πλήρης Πολιτική Απορρήτου',
       paragraphs: ['Αυτή η σελίδα παρέχει μια περίληψη των πρακτικών απορρήτου μας. Για την πλήρη, νομικά δεσμευτική πολιτική απορρήτου με πλήρεις λεπτομέρειες σχετικά με την επεξεργασία δεδομένων, τα δικαιώματά σας και τις υποχρεώσεις μας βάσει του GDPR, του CCPA και άλλων νόμων περί απορρήτου, δείτε την πλήρη πολιτική μας που φιλοξενείται από την iubenda.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'Δείτε την Πλήρη Πολιτική Απορρήτου στο iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'Δείτε την Πλήρη Πολιτική Απορρήτου στο iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };

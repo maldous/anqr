@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const contact: PageDefinition = {
   title: 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ',

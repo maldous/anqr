@@ -1786,3 +1786,8 @@
 1786	"Ngày 30 tháng 1 năm 2026"
 1787	"Nhật ký gỡ lỗi và chế độ xem kết xuất hex để phân tích QR kỹ thuật"
 1788	"Lớp phủ hình ảnh"
+1789	"Ngày 1 tháng 2 năm 2026"
+1790	"MỚI: Trình phân tích mã QR - quét, giải mã và kiểm tra chi tiết bất kỳ mã QR nào"
+1791	"Phân tích ảnh chụp, video tải lên hoặc URL của camera với thông tin chi tiết kỹ thuật đầy đủ"
+1792	"Nhập mã QR đã phân tích trực tiếp vào trình tạo để sửa đổi và tạo lại"
+1793	"Tối ưu hóa hiệu suất với tải phông chữ động và khả năng truy cập được cải thiện"

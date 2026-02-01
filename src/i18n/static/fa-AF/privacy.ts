@@ -1,5 +1,5 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
+import { LAST_UPDATED } from '../constants';
 
 export const privacy: PageDefinition = {
   title: 'پالیسی حریم خصوصی',
@@ -80,7 +80,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'پالیسی کامل حریم خصوصی',
       paragraphs: ['این صفحه یک خلاصه از شیوه های حریم خصوصی ما را فراهم میسازد. برای پالیسی کامل و قانونی الزام آور حریم خصوصی با جزئیات کامل در مورد پروسس کردن معلومات، حقوق شما، و تعهدات ما تحت GDPR، CCPA، و دیگر قوانین حریم، لطفاً پالیسی کامل ما را که توسط iubenda میزبانی میشود مشاهده کنید.'],
-      links: [{ href: 'https://www.iubenda.com/privacy-policy/70266922', label: 'مشاهده پالیسی کامل حریم خصوصی در iubenda', type: 'external' }],
+      links: [
+        {
+          href: 'https://www.iubenda.com/privacy-policy/70266922',
+          label: 'مشاهده پالیسی کامل حریم خصوصی در iubenda',
+          type: 'external',
+        },
+      ],
     },
   ],
 };
