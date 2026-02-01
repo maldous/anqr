@@ -60,5 +60,4 @@ export type StaticPageType =
   | 'translate';
 
 // Note: LAST_UPDATED and CONTACT_EMAIL are now in constants.ts to avoid circular imports
-// Re-export them for backward compatibility with existing imports
-export { CONTACT_EMAIL, LAST_UPDATED } from './constants';
+// Do NOT re-export them here - it creates circular dependencies with the page files
