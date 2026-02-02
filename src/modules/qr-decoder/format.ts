@@ -3,8 +3,9 @@
  * Reads format bits to get ECC level and mask pattern
  */
 
-// Shared logger
-import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import { createLogger } from '../../lib/logger';
+
+const qrDecoderLog = createLogger('DECODER');
 import {
   getAlignmentPositions as getAlignmentPositionsFromSpec,
   getMaskFunction as getMaskFunctionFromSpec,
@@ -151,7 +152,7 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
     trace2.push({ bit: i, row, col, value });
   }
 
-  log('format', 'Read format bits with trace', {
+  qrDecoderLog.trace('format: Read format bits with trace', {
     bits1: bits1.toString(2).padStart(15, '0'),
     bits2: bits2.toString(2).padStart(15, '0'),
     bits1Hex: `0x${bits1.toString(16).padStart(4, '0')}`,
@@ -184,7 +185,7 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
 
   if (bestMatch) {
     const eccChar = ECC_LEVEL_MAP[bestMatch.eccLevel];
-    log('format', 'Decoded format info', {
+    qrDecoderLog.trace('format: Decoded format info', {
       eccLevel: bestMatch.eccLevel,
       eccChar,
       maskPattern: bestMatch.maskPattern,
@@ -194,7 +195,7 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
       usedCopy: bestFromCopy,
     });
   } else {
-    log('format', 'Failed to decode format info', {
+    qrDecoderLog.trace('format: Failed to decode format info', {
       bits1: bits1.toString(2).padStart(15, '0'),
       bits2: bits2.toString(2).padStart(15, '0'),
       bits1Hex: `0x${bits1.toString(16).padStart(4, '0')}`,

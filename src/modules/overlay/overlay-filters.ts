@@ -4,6 +4,10 @@
  * Works with Canvas ImageData for real-time processing
  */
 
+import { createLogger } from '../../lib/logger';
+
+const log = createLogger('OVERLAY');
+
 // ============================================
 // TYPES
 // ============================================
@@ -416,92 +420,87 @@ export function applyColorMode(imageData: ImageData, mode: ColorMode): ImageData
 export function applyFilters(imageData: ImageData, options: FilterOptions): ImageData {
   let result = copyImageData(imageData);
 
-  // Debug: log filter application order and values
-  // Automatically enabled in development builds, disabled in production
-  const debug = import.meta.env.DEV;
-  if (debug) {
-    console.log('[OVERLAY] applyFilters called with options:', {
-      brightness: options.brightness,
-      contrast: options.contrast,
-      saturation: options.saturation,
-      hue: options.hue,
-      gamma: options.gamma,
-      invert: options.invert,
-      grayscale: options.grayscale,
-      threshold: options.threshold,
-      posterize: options.posterize,
-      sharpen: options.sharpen,
-      blur: options.blur,
-      colorMode: options.colorMode,
-      hasDuotone: !!options.duotone,
-    });
-  }
+  log.debug('applyFilters called', {
+    brightness: options.brightness,
+    contrast: options.contrast,
+    saturation: options.saturation,
+    hue: options.hue,
+    gamma: options.gamma,
+    invert: options.invert,
+    grayscale: options.grayscale,
+    threshold: options.threshold,
+    posterize: options.posterize,
+    sharpen: options.sharpen,
+    blur: options.blur,
+    colorMode: options.colorMode,
+    hasDuotone: !!options.duotone,
+  });
 
   if (options.brightness !== undefined && options.brightness !== 0) {
-    if (debug) console.log('[OVERLAY] Applying brightness:', options.brightness);
+    log.debug('Applying brightness', { value: options.brightness });
     result = brightness(result, options.brightness);
   }
 
   if (options.contrast !== undefined && options.contrast !== 0) {
-    if (debug) console.log('[OVERLAY] Applying contrast:', options.contrast);
+    log.debug('Applying contrast', { value: options.contrast });
     result = contrast(result, options.contrast);
   }
 
   if (options.saturation !== undefined && options.saturation !== 100) {
-    if (debug) console.log('[OVERLAY] Applying saturation:', options.saturation);
+    log.debug('Applying saturation', { value: options.saturation });
     result = saturation(result, options.saturation);
   }
 
   if (options.hue !== undefined && options.hue !== 0) {
-    if (debug) console.log('[OVERLAY] Applying hue rotation:', options.hue);
+    log.debug('Applying hue rotation', { value: options.hue });
     result = hueRotate(result, options.hue);
   }
 
   if (options.gamma !== undefined && options.gamma !== 1) {
-    if (debug) console.log('[OVERLAY] Applying gamma:', options.gamma);
+    log.debug('Applying gamma', { value: options.gamma });
     result = gamma(result, options.gamma);
   }
 
   if (options.invert) {
-    if (debug) console.log('[OVERLAY] Applying INVERT - this will flip perceived brightness!');
+    log.debug('Applying INVERT - this will flip perceived brightness');
     result = invert(result);
   }
 
   if (options.grayscale) {
-    if (debug) console.log('[OVERLAY] Applying grayscale');
+    log.debug('Applying grayscale');
     result = grayscale(result);
   }
 
   if (options.threshold !== undefined) {
-    if (debug) console.log('[OVERLAY] Applying threshold:', options.threshold);
+    log.debug('Applying threshold', { value: options.threshold });
     result = threshold(result, options.threshold);
   }
 
   if (options.posterize !== undefined && options.posterize > 0) {
-    if (debug) console.log('[OVERLAY] Applying posterize:', options.posterize);
+    log.debug('Applying posterize', { value: options.posterize });
     result = posterize(result, options.posterize);
   }
 
   if (options.sharpen !== undefined && options.sharpen > 0) {
-    if (debug) console.log('[OVERLAY] Applying sharpen:', options.sharpen);
+    log.debug('Applying sharpen', { value: options.sharpen });
     result = sharpen(result, options.sharpen);
   }
 
   if (options.blur !== undefined && options.blur > 0) {
-    if (debug) console.log('[OVERLAY] Applying blur:', options.blur);
+    log.debug('Applying blur', { value: options.blur });
     result = blur(result, options.blur);
   }
 
   if (options.duotone) {
-    if (debug) console.log('[OVERLAY] Applying duotone');
+    log.debug('Applying duotone');
     result = duotone(result, options.duotone.light, options.duotone.dark);
   }
 
   if (options.colorMode) {
-    if (debug) console.log('[OVERLAY] Applying colorMode:', options.colorMode);
+    log.debug('Applying colorMode', { mode: options.colorMode });
     result = applyColorMode(result, options.colorMode);
   }
 
-  if (debug) console.log('[OVERLAY] Filter pipeline complete');
+  log.debug('Filter pipeline complete');
   return result;
 }

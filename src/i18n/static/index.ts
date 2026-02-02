@@ -6,6 +6,7 @@
  * OPTIMIZATION: Only English is bundled. Other languages are lazy-loaded on demand.
  */
 
+import { createLogger } from '@/lib/logger';
 import type { PageDefinition, StaticPageType } from './types';
 
 // Re-export types for convenience
@@ -13,6 +14,8 @@ export type { PageDefinition, PageImage, PageLink, PageSection, StaticPageType }
 
 // Only import English - other languages are lazy-loaded
 import * as enGB from './en-GB';
+
+const log = createLogger('STATIC');
 
 // Cache for loaded static content
 const contentCache = new Map<string, Record<StaticPageType, PageDefinition>>();
@@ -220,7 +223,7 @@ async function loadLanguageContent(lang: string): Promise<Record<StaticPageType,
     const loader = staticModules[modulePath];
 
     if (!loader) {
-      console.warn(`No static content module found for: ${lang}`);
+      log.warn('No static content module found', { lang });
       const fallback = contentCache.get('en-GB');
       if (!fallback) {
         throw new Error('English fallback content not loaded');
@@ -232,7 +235,7 @@ async function loadLanguageContent(lang: string): Promise<Record<StaticPageType,
     contentCache.set(lang, content);
     return content;
   } catch (error) {
-    console.error(`Failed to load static content for: ${lang}`, error);
+    log.error('Failed to load static content', { lang, error });
     // Fall back to English
     const fallback = contentCache.get('en-GB');
     if (!fallback) throw new Error('English fallback not available');

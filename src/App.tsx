@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { createLogger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { BusyOverlay } from '@/components/BusyOverlay';
 import { Header } from '@/components/Header';
@@ -43,6 +44,8 @@ import {
 
 type PageView = 'editor' | 'gallery' | 'analyze' | StaticPageType;
 type ModuleStyleOption = 'square' | 'rounded' | 'dots' | 'diamond' | 'connected';
+
+const log = createLogger('APP');
 
 /** Type alias for gradient update configuration */
 interface GradientUpdate {
@@ -275,16 +278,16 @@ function App() {
       try {
         const parsed = new URL(url);
         if (!parsed.protocol.startsWith('http')) {
-          console.error('Invalid overlay URL - must be http/https:', url);
+          log.warn('Invalid overlay URL', { url, reason: 'must be http/https' });
           return;
         }
       } catch {
-        console.error('Invalid overlay URL format:', url);
+        log.warn('Invalid overlay URL format', { url });
         return;
       }
 
       try {
-        console.log('Loading overlay from URL:', url);
+        log.debug('Loading overlay from URL', { url });
         const response = await fetch(url, { mode: 'cors' });
         if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
 
@@ -295,9 +298,9 @@ function App() {
         store.setOverlayUrl(url);
         store.setOverlayFile(file);
         store.setOverlayEnabled(true);
-        console.log('Overlay loaded successfully from URL');
+        log.debug('Overlay loaded successfully');
       } catch (err) {
-        console.error('Failed to load overlay from URL:', err);
+        log.error('Failed to load overlay from URL', { error: err, url });
       }
     },
     []
@@ -751,7 +754,7 @@ function App() {
           useQRStore.setState((s) => ({ metadata: { ...s.metadata, customKv } }));
         }
       } catch (e) {
-        console.error('Failed to parse custom metadata:', e);
+        log.warn('Failed to parse custom metadata', { error: e });
       }
     }
 
@@ -769,7 +772,7 @@ function App() {
           useQRStore.setState((s) => ({ render: { ...s.render, palette: paletteArray } }));
         }
       } catch (e) {
-        console.error('Failed to parse palette:', e);
+        log.warn('Failed to parse palette', { error: e });
       }
     }
     if (params.paletteMode)

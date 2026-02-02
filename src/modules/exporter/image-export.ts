@@ -4,9 +4,12 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { createLogger } from '../../lib/logger';
 import { embedPngDpi, embedPngMetadata } from './png-metadata';
 import type { ExportConfig, ExportResult, PngMetadata } from './types';
 import { downloadUrl } from './utils';
+
+const log = createLogger('EXPORT');
 
 /**
  * Export canvas as PNG or WebP image
@@ -73,7 +76,7 @@ export async function exportImage(
     try {
       blob = await embedPngMetadata(blob, pngMetadata);
     } catch (err) {
-      console.warn('Failed to embed PNG metadata:', err);
+      log.warn('Failed to embed PNG metadata', { error: err });
     }
   }
 
@@ -82,7 +85,7 @@ export async function exportImage(
     try {
       blob = await embedPngDpi(blob, dpi);
     } catch (err) {
-      console.warn('Failed to embed PNG DPI:', err);
+      log.warn('Failed to embed PNG DPI', { error: err });
     }
   }
 

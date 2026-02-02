@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { createLogger } from '@/lib/logger';
 import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
@@ -73,6 +74,8 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
   const Icon = GALLERY_ICON_MAP[name];
   return Icon ? <Icon className={className} /> : null;
 }
+
+const log = createLogger('HEADER');
 
 type HeaderPage = 'editor' | 'gallery' | 'analyze' | StaticPageType;
 
@@ -297,7 +300,7 @@ export function Header({
         }
         // If reward is null, user didn't complete the ad - don't change tier
       } catch (error) {
-        console.error('Failed to show rewarded ad:', error);
+        log.error('Failed to show rewarded ad', { error });
       } finally {
         setLoadingAd(false);
         // Prepare next ad

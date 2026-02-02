@@ -8,11 +8,14 @@
  */
 
 import i18n from 'i18next';
+import { createLogger } from '@/lib/logger';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
 
 // Only import English - other locales are lazy-loaded
 import en from './locales/en-GB.json';
+
+const log = createLogger('I18N');
 
 // Language metadata for the selector - using Google Play language codes
 // Authoritative list from lang.txt (all Google Play supported languages)
@@ -218,7 +221,7 @@ function loadFontForLanguage(lang: string): void {
   link.href = `https://fonts.googleapis.com/css2?family=${fontFamily}:wght@400;500;600;700&display=swap`;
   document.head.appendChild(link);
 
-  console.log(`[i18n] Loaded font: ${fontFamily} for language: ${lang}`);
+  log.debug('Loaded font', { fontFamily, lang });
 }
 
 /**
@@ -234,7 +237,7 @@ export async function loadLocale(lang: string): Promise<void> {
     i18n.addResourceBundle(lang, 'translation', localeModule.default, true, true);
     loadedLocales.add(lang);
   } catch (error) {
-    console.error(`Failed to load locale: ${lang}`, error);
+    log.error('Failed to load locale', { lang, error });
     // Fall back to English if locale fails to load
   }
 }

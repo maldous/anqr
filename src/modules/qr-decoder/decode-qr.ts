@@ -3,8 +3,7 @@
  * Main QR code decoding logic
  */
 
-// Shared logger
-import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import { createLogger } from '../../lib/logger';
 import { getAlignmentPatternCenters } from '../qr-spec';
 import { decodeDataCodewordsDetailed, RS_BLOCKS, readCodewords } from './decode';
 import { calculateLocation, extractModuleMatrix } from './extract';
@@ -13,6 +12,8 @@ import { findFinderPatterns, selectFinderPatterns } from './locate';
 import { correctRSCodewords } from './rs-decoder';
 import { rsRootabilityFor } from './rs-rootability';
 import type { DecodeResult } from './types';
+
+const qrDecoderLog = createLogger('DECODER');
 
 /**
  * Decode a QR code from ImageData
@@ -45,19 +46,19 @@ export function decodeQR(
  */
 function tryDecode(imageData: ImageData): DecodeResult | null {
   try {
-    log('main', 'Starting decode attempt', { width: imageData.width, height: imageData.height });
+    qrDecoderLog.trace('main: Starting decode attempt', { width: imageData.width, height: imageData.height });
 
     // Step 1: Find finder patterns (returns patterns and the threshold used for detection)
     const { patterns, threshold } = findFinderPatterns(imageData);
     if (patterns.length < 3) {
-      log('main', 'Failed: not enough finder patterns', { found: patterns.length });
+      qrDecoderLog.trace('main: Failed - not enough finder patterns', { found: patterns.length });
       return null;
     }
 
     // Step 2: Select the 3 finder patterns that form the QR code
     const selected = selectFinderPatterns(patterns);
     if (!selected) {
-      log('main', 'Failed: could not select valid pattern triplet');
+      qrDecoderLog.trace('main: Failed - could not select valid pattern triplet');
       return null;
     }
 
@@ -66,7 +67,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     // Step 3: Calculate QR code location and module count
     const location = calculateLocation(topLeft, topRight, bottomLeft);
     const version = (location.moduleCount - 17) / 4;
-    log('main', 'Calculated version', { version, moduleCount: location.moduleCount });
+    qrDecoderLog.trace('main: Calculated version', { version, moduleCount: location.moduleCount });
 
     // Step 4: Extract module matrix from image using the threshold from finder detection
     const rawMatrix = extractModuleMatrix(imageData, location, threshold);
@@ -74,7 +75,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     // Step 5: Read format info (ECC level and mask pattern)
     const formatInfo = readFormatInfo(rawMatrix, location.moduleCount);
     if (!formatInfo) {
-      log('main', 'Failed: could not read format info');
+      qrDecoderLog.trace('main: Failed - could not read format info');
       return null;
     }
 
@@ -96,7 +97,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       const got: 0 | 1 = (rawMatrix[r]?.[6] ? 1 : 0) as 0 | 1;
       if (exp !== got && timingMismatches.length < 12) timingMismatches.push({ r, c: 6, exp, got });
     }
-    log('diag', 'Timing pattern mismatches (first 12)', {
+    qrDecoderLog.trace('diag: Timing pattern mismatches (first 12)', {
       count: timingMismatches.length,
       mismatches: timingMismatches.map((m) => `(${m.r},${m.c}) exp=${m.exp} got=${m.got}`),
     });
@@ -137,12 +138,12 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       });
     }
     if (alignmentScores.length) {
-      log('diag', 'Alignment pattern score(s)', {
+      qrDecoderLog.trace('diag: Alignment pattern scores', {
         version: versionRounded,
         scores: alignmentScores,
       });
     } else {
-      log('diag', 'Alignment pattern score(s)', {
+      qrDecoderLog.trace('diag: Alignment pattern scores', {
         version: versionRounded,
         scores: 'none (v1 or finder-overlap only)',
       });
@@ -168,7 +169,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
         })),
       });
     }
-    log('diag', 'RS rootability sweep (masks 0..7)', {
+    qrDecoderLog.trace('diag: RS rootability sweep (masks 0..7)', {
       version: versionRounded,
       ecc: diagEccChar,
       maskSweep,
@@ -180,7 +181,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
 
     // Step 7: Read codewords
     const codewords = readCodewords(matrix, location.moduleCount);
-    log('main', 'Read codewords', { count: codewords.length });
+    qrDecoderLog.trace('main: Read codewords', { count: codewords.length });
 
     // Step 8: RS Error Correction
     // Get RS block configuration for this version/ECC
@@ -188,14 +189,14 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     const rsBlocks = RS_BLOCKS[eccChar]?.[Math.round(version) - 1];
 
     if (!rsBlocks) {
-      log('main', 'Failed: No RS block configuration found', {
+      qrDecoderLog.trace('main: Failed - No RS block configuration found', {
         version: Math.round(version),
         eccLevel: eccChar,
       });
       return null;
     }
 
-    log('main', 'Starting RS error correction', {
+    qrDecoderLog.trace('main: Starting RS error correction', {
       version: Math.round(version),
       eccLevel: eccChar,
       rsBlocks: rsBlocks.map((b) => `${b[0]}x(${b[2]}d+${b[1] - b[2]}e)`).join(', '),
@@ -207,7 +208,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
     let usedMask = formatInfo.maskPattern;
 
     if (rsResult === null) {
-      log('main', 'RS error correction failed with detected mask, trying fallback');
+      qrDecoderLog.trace('main: RS error correction failed with detected mask, trying fallback');
 
       // Use the rootability sweep to find a mask that produces rootable blocks
       // This helps when format info is ambiguous (copies disagreed)
@@ -219,7 +220,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
         const testRsResult = correctRSCodewords(testCodewords, rsBlocks);
 
         if (testRsResult !== null) {
-          log('main', 'Mask fallback SUCCESS', {
+          qrDecoderLog.trace('main: Mask fallback SUCCESS', {
             originalMask: formatInfo.maskPattern,
             workingMask: testMask,
             corrections: testRsResult.correctionsMade,
@@ -231,14 +232,14 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       }
 
       if (rsResult === null) {
-        log('main', 'Failed: RS error correction failed (too many errors, all masks tried)');
+        qrDecoderLog.trace('main: Failed - RS error correction failed (too many errors, all masks tried)');
         return null;
       }
     }
 
     const { dataCodewords, correctionsMade } = rsResult;
 
-    log('main', 'RS correction completed', {
+    qrDecoderLog.trace('main: RS correction completed', {
       dataCodewords: dataCodewords.length,
       correctionsMade,
       first10: dataCodewords
@@ -256,16 +257,16 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
 
     // Check if decode was valid (no truncation or corrupt segments)
     if (!decoded.valid) {
-      log('main', 'Failed: decode reported invalid (truncation or corrupt data)');
+      qrDecoderLog.trace('main: Failed - decode reported invalid (truncation or corrupt data)');
       return null;
     }
 
     if (!data) {
-      log('main', 'Failed: could not decode data');
+      qrDecoderLog.trace('main: Failed - could not decode data');
       return null;
     }
 
-    log('main', 'Decode SUCCESS', {
+    qrDecoderLog.trace('main: Decode SUCCESS', {
       version: Math.round(version),
       eccLevel: getECCLevelChar(formatInfo.eccLevel),
       dataLength: data.length,
@@ -289,7 +290,7 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       maskPattern: usedMask,
     };
   } catch (err) {
-    log('main', 'Exception during decode', { error: String(err) });
+    qrDecoderLog.trace('main: Exception during decode', { error: String(err) });
     return null;
   }
 }

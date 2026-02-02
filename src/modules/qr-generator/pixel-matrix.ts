@@ -4,6 +4,7 @@
  * Re-exports from split module files
  */
 
+import { createLogger } from '../../lib/logger';
 import type { CanvasFactory } from './canvas-factory';
 import { generateSubpixelMatrix } from './overlay';
 import { generateDitherModeMatrix } from './pixel-matrix-dither';
@@ -18,6 +19,8 @@ export { prepareUnifiedOverlayData } from './pixel-matrix-overlay';
 export { generateStandardMatrix } from './pixel-matrix-standard';
 // Re-export utilities
 export { generateBaseMatrix, getEffectiveIntensity, getScaleFactor } from './pixel-matrix-utils';
+
+const log = createLogger('GENERATE');
 
 /**
  * UNIFIED PIXEL DECISION MATRIX
@@ -41,7 +44,7 @@ export async function generatePixelDecisionMatrix(
 
   // Debug (targeted): only emit overlay-dither logs when explicitly enabled.
   if (config.debugOverlayDither) {
-    console.log('[OverlayDither] pixel-matrix', {
+    log.debug('pixel-matrix', {
       overlayMode,
       scale,
       scaledSize,

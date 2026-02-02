@@ -3,10 +3,13 @@
  * Color manipulation and per-module color effects
  */
 
+import { createLogger } from '../../lib/logger';
 import { blendColors, getRelativeLuminance, parseColor } from '../core';
 import type { OverlayDataMatrix } from './cache';
 import type { QRGeneratorConfig } from './types';
 import { getContrastRatio } from './utils';
+
+const log = createLogger('GENERATE');
 
 /**
  * Darken a color by a factor (0-1)
@@ -187,7 +190,7 @@ export function ensureContrast(moduleColor: string, bgColor: string, minRatio: n
       return '#000000';
     }
   } catch (error) {
-    console.warn('Contrast check failed:', error);
+    log.warn('Contrast check failed', { error });
     return moduleColor;
   }
 }

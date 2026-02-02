@@ -1,4 +1,5 @@
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { createLogger } from '@/lib/logger';
 import { Capacitor } from '@capacitor/core';
 import {
   Camera as CameraIcon,
@@ -59,6 +60,8 @@ const PRO_OVERLAY_MODES: { value: OverlayMode; labelKey: string }[] = [
   { value: 'dither', labelKey: 'overlay.trueDitherMode' },
   { value: 'extreme', labelKey: 'overlay.extremeMode' },
 ];
+
+const log = createLogger('OVERLAY');
 
 export function OverlaySection() {
   const {
@@ -149,7 +152,7 @@ export function OverlaySection() {
       setOverlayEnabled(true); // Explicitly enable overlay
       setShowUrlInput(false);
     } catch (err) {
-      console.error('Failed to load image from URL:', err);
+      log.error('Failed to load image from URL', { error: err });
       if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
         setUrlError('Cannot load: CORS blocked or invalid URL');
       } else {
@@ -251,7 +254,7 @@ export function OverlaySection() {
         setOverlayFile(file);
         setOverlayEnabled(true);
       } catch (err) {
-        console.error('Failed to load gallery image:', err);
+        log.error('Failed to load gallery image', { error: err });
       } finally {
         setGalleryLoading(false);
       }

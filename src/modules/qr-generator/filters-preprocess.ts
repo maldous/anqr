@@ -3,10 +3,13 @@
  * QR-specific image preprocessing that uses overlay module filters
  */
 
+import { createLogger } from '../../lib/logger';
 import { parseColor } from '../core';
 import { applyFilters, copyImageData, type ColorMode, type FilterOptions } from '../overlay';
 import { applyCannyEdge, applySobelEdge } from './filters-edge';
 import type { QRGeneratorConfig } from './types';
+
+const log = createLogger('GENERATE');
 
 /**
  * Preprocess image data with configured filters
@@ -106,7 +109,7 @@ export function preprocessImageData(
 
   // Debug logging for preprocessing decisions
   if (debug) {
-    console.log('[OVERLAY] preprocessImageData - filter options:', {
+    log.debug('preprocessImageData - filter options', {
       brightness: filterOptions.brightness,
       contrast: filterOptions.contrast,
       saturation: filterOptions.saturation,
@@ -127,14 +130,14 @@ export function preprocessImageData(
   // If no filters to apply, return copy of original
   if (Object.keys(filterOptions).length === 0) {
     if (debug) {
-      console.log('[OVERLAY] preprocessImageData - no filters to apply, returning copy');
+      log.debug('preprocessImageData - no filters to apply, returning copy');
     }
     return copyImageData(imageData);
   }
 
   // Apply basic color filters first.
   if (debug) {
-    console.log('[OVERLAY] preprocessImageData - applying filters');
+    log.debug('preprocessImageData - applying filters');
   }
   let out = applyFilters(imageData, filterOptions);
 
@@ -142,13 +145,13 @@ export function preprocessImageData(
   if (config.filterEdgeDetect) {
     const mode = (config.filterEdgeMode || 'sobel').toLowerCase();
     if (debug) {
-      console.log('[OVERLAY] preprocessImageData - applying edge detection:', mode);
+      log.debug('preprocessImageData - applying edge detection', { mode });
     }
     out = mode === 'canny' ? applyCannyEdge(out) : applySobelEdge(out);
   }
 
   if (debug) {
-    console.log('[OVERLAY] preprocessImageData - complete');
+    log.debug('preprocessImageData - complete');
   }
   return out;
 }

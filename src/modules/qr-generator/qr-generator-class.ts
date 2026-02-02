@@ -3,6 +3,7 @@
  * Main QR code generation class with unified rendering pipeline
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRCodeInstance } from '../qr-encoder';
 import {
   calculateOptimalVersion,
@@ -35,6 +36,8 @@ import { renderModules } from './render-loop';
 import { generateScaledQR } from './scaled-render';
 import type { OverlayData, QRGeneratorConfig, QRMatrixResult } from './types';
 import { validateColor } from './utils';
+
+const log = createLogger('GENERATE');
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
@@ -263,38 +266,33 @@ export class QRGenerator {
     // This must run BEFORE we sample overlay pixels for scaled/dithered/subpixel modes.
     // ALL overlay modes (including center) apply the full set of visual effects.
     const needsPreprocessing = hasPreprocessingOptions(config);
-    // Debug logging: debugOverlayDither is automatically true in dev, false in production
-    if (config.debugOverlayDither) {
-      console.log('[OVERLAY] Preprocessing check:', {
-        hasOverlay: !!processedOverlayCanvas,
-        needsPreprocessing,
-        overlayMode: config.overlayMode,
-        colorMode: config.colorMode,
-        filterGrayscale: config.filterGrayscale,
-        filterBrightness: config.filterBrightness,
-        filterContrast: config.filterContrast,
-      });
-    }
+    log.debug('Preprocessing check', {
+      hasOverlay: !!processedOverlayCanvas,
+      needsPreprocessing,
+      overlayMode: config.overlayMode,
+      colorMode: config.colorMode,
+      filterGrayscale: config.filterGrayscale,
+      filterBrightness: config.filterBrightness,
+      filterContrast: config.filterContrast,
+    });
 
     if (processedOverlayCanvas && needsPreprocessing) {
-      if (config.debugOverlayDither) {
-        console.log('[OVERLAY] Preprocessing overlay - full config:', {
-          overlayMode: config.overlayMode,
-          colorMode: config.colorMode,
-          filterBrightness: config.filterBrightness,
-          filterContrast: config.filterContrast,
-          filterGamma: config.filterGamma,
-          filterSaturation: config.filterSaturation,
-          filterHue: config.filterHue,
-          filterBlur: config.filterBlur,
-          filterSharpen: config.filterSharpen,
-          filterPosterize: config.filterPosterize,
-          filterThreshold: config.filterThreshold,
-          filterEdgeDetect: config.filterEdgeDetect,
-          filterInvert: config.filterInvert,
-          filterGrayscale: config.filterGrayscale,
-        });
-      }
+      log.debug('Preprocessing overlay', {
+        overlayMode: config.overlayMode,
+        colorMode: config.colorMode,
+        filterBrightness: config.filterBrightness,
+        filterContrast: config.filterContrast,
+        filterGamma: config.filterGamma,
+        filterSaturation: config.filterSaturation,
+        filterHue: config.filterHue,
+        filterBlur: config.filterBlur,
+        filterSharpen: config.filterSharpen,
+        filterPosterize: config.filterPosterize,
+        filterThreshold: config.filterThreshold,
+        filterEdgeDetect: config.filterEdgeDetect,
+        filterInvert: config.filterInvert,
+        filterGrayscale: config.filterGrayscale,
+      });
 
       processedOverlayCanvas = await preprocessOverlay(
         processedOverlayCanvas,
@@ -302,14 +300,12 @@ export class QRGenerator {
         this.createCanvas.bind(this)
       );
 
-      if (config.debugOverlayDither) {
-        console.log('[OVERLAY] Preprocessing complete - canvas size:', {
-          width: processedOverlayCanvas.width,
-          height: processedOverlayCanvas.height,
-        });
-      }
-    } else if (processedOverlayCanvas && config.debugOverlayDither) {
-      console.log('[OVERLAY] Skipping preprocessing - no filters to apply');
+      log.debug('Preprocessing complete', {
+        width: processedOverlayCanvas.width,
+        height: processedOverlayCanvas.height,
+      });
+    } else if (processedOverlayCanvas) {
+      log.debug('Skipping preprocessing - no filters to apply');
     }
 
     // =======================================================================
@@ -327,16 +323,14 @@ export class QRGenerator {
       characterEncodingConfig
     );
 
-    // Lightweight structural verification (debug-only)
-    if (config.debugOverlayDither === true) {
-      const vr = verifyQRStructure(qr, typeNumber || undefined);
-      if (!vr.ok) {
-        console.warn('[QRVerify] structural check failed', {
-          moduleCount,
-          version: vr.version,
-          issues: vr.issues,
-        });
-      }
+    // Lightweight structural verification
+    const vr = verifyQRStructure(qr, typeNumber || undefined);
+    if (!vr.ok) {
+      log.warn('QR structural check failed', {
+        moduleCount,
+        version: vr.version,
+        issues: vr.issues,
+      });
     }
 
     // =======================================================================
@@ -359,18 +353,15 @@ export class QRGenerator {
     // =======================================================================
     const scale = getScaleFactor(effectiveOverlayMode, effectiveConfig);
 
-    // Targeted debug for overlay dithering only.
-    if (effectiveConfig.debugOverlayDither) {
-      console.log('[OverlayDither] qr-generator', {
-        hasOverlay: !!processedOverlayCanvas,
-        configOverlayMode: config.overlayMode,
-        effectiveOverlayMode,
-        scale,
-        willUseScaledPath: scale > 1 && !!processedOverlayCanvas,
-        colorMode: config.colorMode,
-        overlayIntensity: config.overlayIntensity,
-      });
-    }
+    log.debug('Overlay mode resolution', {
+      hasOverlay: !!processedOverlayCanvas,
+      configOverlayMode: config.overlayMode,
+      effectiveOverlayMode,
+      scale,
+      willUseScaledPath: scale > 1 && !!processedOverlayCanvas,
+      colorMode: config.colorMode,
+      overlayIntensity: config.overlayIntensity,
+    });
     if (scale > 1 && processedOverlayCanvas) {
       return await generateScaledQR(
         qr,
@@ -478,15 +469,13 @@ export class QRGenerator {
     // =======================================================================
     // Draw center logo if in center mode
     if (processedOverlayCanvas && config.overlayMode === 'center') {
-      if (config.debugOverlayDither) {
-        console.log('[OVERLAY] Drawing center logo:', {
-          canvasSize: size,
-          logoSize: config.logoSize,
-          overlayWidth: processedOverlayCanvas.width,
-          overlayHeight: processedOverlayCanvas.height,
-          colorMode: config.colorMode,
-        });
-      }
+      log.debug('Drawing center logo', {
+        canvasSize: size,
+        logoSize: config.logoSize,
+        overlayWidth: processedOverlayCanvas.width,
+        overlayHeight: processedOverlayCanvas.height,
+        colorMode: config.colorMode,
+      });
       drawCenterLogo(ctx, processedOverlayCanvas, size, config.logoSize);
     }
 
