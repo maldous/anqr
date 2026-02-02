@@ -198,18 +198,15 @@ export function initRemoteDiagnostics(): void {
       },
       getLogs: () => {
         const logs = getStructuredLogs();
-        // biome-ignore lint/suspicious/noConsole: Intentional user feedback
         console.log(`${logs.length} log entries (expand objects below):`);
         return logs;
       },
       clearLogs: () => {
         clearStructuredLogs();
-        // biome-ignore lint/suspicious/noConsole: Intentional user feedback
         console.log('Structured log buffer cleared.');
       },
       logCount: () => {
         const count = getStructuredLogCount();
-        // biome-ignore lint/suspicious/noConsole: Intentional user feedback
         console.log(`${count} log entries in buffer`);
         return count;
       },

@@ -318,7 +318,6 @@ export function saveLogs(filename?: string): void {
   const logs = getStructuredLogs();
 
   if (logs.length === 0) {
-    // biome-ignore lint/suspicious/noConsole: Intentional user feedback
     console.log('No logs to save. Buffer is empty.');
     return;
   }
@@ -338,7 +337,6 @@ export function saveLogs(filename?: string): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  // biome-ignore lint/suspicious/noConsole: Intentional user feedback
   console.log(`Saved ${logs.length} log entries to ${name}`);
 }
 
