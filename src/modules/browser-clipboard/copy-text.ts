@@ -3,6 +3,10 @@
  * Text clipboard operations
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('CLIPBOARD');
+
 /**
  * Copy text to clipboard
  */

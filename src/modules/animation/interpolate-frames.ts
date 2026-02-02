@@ -3,6 +3,10 @@
  * Interpolate between animation frames
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 /**
  * Interpolate between two frames
  */

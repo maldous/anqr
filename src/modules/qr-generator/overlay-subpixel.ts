@@ -3,8 +3,11 @@
  * Subpixel rendering for high-quality overlay integration
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Generate subpixel matrix for overlay modes

@@ -3,6 +3,10 @@
  * for selecting regions from non-square images
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('OVERLAY');
+
 export interface CropRegion {
   x: number;
   y: number;

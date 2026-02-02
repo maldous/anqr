@@ -3,7 +3,10 @@
  * Halftone pattern rendering for artistic QR effects
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Draw a halftone-style module with size based on brightness

@@ -2,6 +2,10 @@
  * Animation Types
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 export interface AnimationFrame {
   canvas: HTMLCanvasElement | OffscreenCanvas;
   delay: number; // milliseconds

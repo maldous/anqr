@@ -3,6 +3,10 @@
  * Types for URL sharing and embed generation
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SHARE');
+
 /**
  * Maximum recommended URL length for reliable sharing
  */

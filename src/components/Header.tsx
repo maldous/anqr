@@ -1,5 +1,4 @@
 import { Capacitor } from '@capacitor/core';
-import { createLogger } from '@/lib/logger';
 import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
@@ -48,6 +47,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type GalleryCategory, gallerySections } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { isRtlLanguage, languages, loadLocale } from '@/i18n';
+import { createLogger } from '@/lib/logger';
 import { copyToClipboard } from '@/modules/browser-clipboard';
 import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { getShareableUrl } from '@/modules/share-links';

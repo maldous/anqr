@@ -3,6 +3,10 @@
  * Basic shape drawing functions for QR modules
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('GENERATE');
+
 export interface DrawModuleOptions {
   cornerRadius?: number;
   rotation?: number;

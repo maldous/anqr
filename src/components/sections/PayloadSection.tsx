@@ -1,5 +1,4 @@
 import { OpenLocationCode } from 'open-location-code';
-import { createLogger } from '@/lib/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
@@ -18,6 +17,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import i18n from '@/i18n';
+import { createLogger } from '@/lib/logger';
 import { HighlightedLabel } from '@/lib/search-context';
 
 import {

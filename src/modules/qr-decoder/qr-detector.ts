@@ -3,6 +3,10 @@
  * Main QR code detector using finder patterns
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import type { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
 import {

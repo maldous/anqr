@@ -3,6 +3,10 @@
  * Canvas to Blob/DataURL conversion
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DOWNLOAD');
+
 /**
  * Convert canvas to Blob
  */

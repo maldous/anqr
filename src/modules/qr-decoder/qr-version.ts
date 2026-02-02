@@ -3,6 +3,10 @@
  * QR Code version, mode, and error correction level definitions
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import { BitMatrix } from './bit-matrix';
 import { FormatException, IllegalArgumentException } from './exceptions';
 

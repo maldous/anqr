@@ -51,7 +51,10 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
   // Enable log buffering to capture debug info for failed detections
   enableLogBuffer();
 
-  qrAnalyzerLog.trace('decode: Starting QR decode', { canvasWidth: canvas.width, canvasHeight: canvas.height });
+  qrAnalyzerLog.trace('decode: Starting QR decode', {
+    canvasWidth: canvas.width,
+    canvasHeight: canvas.height,
+  });
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
@@ -150,7 +153,9 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     // Warn if version not detected - reproduction will fail
     if (version === null) {
-      qrAnalyzerLog.warn('detection: Decoder did not provide version - reproduction will not work correctly');
+      qrAnalyzerLog.warn(
+        'detection: Decoder did not provide version - reproduction will not work correctly'
+      );
     }
 
     // Detect content type
@@ -404,7 +409,10 @@ function buildModuleMatrix(
 
   const { data, width } = imageData;
 
-  qrAnalyzerLog.trace('matrix: Building module matrix', { moduleCount, modulePx: modulePx.toFixed(3) });
+  qrAnalyzerLog.trace('matrix: Building module matrix', {
+    moduleCount,
+    modulePx: modulePx.toFixed(3),
+  });
 
   // The jsQR location corners are at the CENTERS of the finder patterns
   // Top-left finder center = module position (3.5, 3.5) in the QR grid

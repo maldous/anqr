@@ -3,9 +3,12 @@
  * Finder and alignment pattern drawing functions
  */
 
+import { createLogger } from '../../lib/logger';
 import { drawModule, roundRect } from './drawing-primitives';
 import type { QRGeneratorConfig } from './types';
 import { validateColor } from './utils';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Draw a complete finder pattern at the specified position

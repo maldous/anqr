@@ -12,6 +12,10 @@
  * - No dependencies on other modules except platform
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('BROWSER_IO');
+
 // Canvas utilities
 export { canvasToBlob, canvasToDataUrl } from './canvas-utils';
 

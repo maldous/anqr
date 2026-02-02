@@ -3,10 +3,13 @@
  * Dither and extreme mode pixel matrix generation
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import { applyDitherToMatrix } from './dithering-matrix';
 import { getOverlayData } from './overlay-data';
 import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Normalize colors to RGB format

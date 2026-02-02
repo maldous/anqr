@@ -10,6 +10,10 @@
  * - It checks only a few scan-critical invariants.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SPEC');
+
 export interface DarkModuleReader {
   getModuleCount(): number;
   isDark(row: number, col: number): boolean;

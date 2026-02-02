@@ -11,6 +11,10 @@
  * - No dependencies on other modules
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('CLIPBOARD');
+
 // Image clipboard
 export { copyImageToClipboard } from './copy-image';
 // Text clipboard

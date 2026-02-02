@@ -2,6 +2,10 @@
  * Advanced Dithering Algorithms
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DITHER');
+
 import { generateBlueNoiseTile, sampleBlueNoise } from './blue-noise';
 import { distributeErrorWithKernel } from './error-diffusion';
 import { DIFFUSION_KERNELS } from './kernels';

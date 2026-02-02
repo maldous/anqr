@@ -3,6 +3,10 @@
  * Re-exports from split module files
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('GENERATE');
+
 export { applyAdvancedDither } from './dithering-advanced';
 export { distributeError } from './dithering-error';
 export { getDiffusionKernel } from './dithering-kernels';

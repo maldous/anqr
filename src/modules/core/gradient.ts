@@ -3,8 +3,11 @@
  * Gradient color interpolation and CSS generation
  */
 
+import { createLogger } from '../../lib/logger';
 import { parseColor } from './color';
 import type { RGB } from './types';
+
+const _log = createLogger('GRADIENT');
 
 // ============================================
 // GRADIENT TYPES

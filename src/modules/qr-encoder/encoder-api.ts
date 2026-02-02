@@ -3,8 +3,11 @@
  * Provides QR encoding helper functions including multi-segment mixed mode encoding
  */
 
+import { createLogger } from '../../lib/logger';
 import { qrcode } from './encoder';
 import type { QRErrorCorrectionLevelChar } from './types';
+
+const _log = createLogger('ENCODER');
 
 // Type aliases for QR encoding
 export type ECCLevel = 'L' | 'M' | 'Q' | 'H';

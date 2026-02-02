@@ -3,7 +3,10 @@
  * Error distribution for dithering algorithms
  */
 
+import { createLogger } from '../../lib/logger';
 import type { DiffusionKernel } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Distribute quantization error to neighboring pixels

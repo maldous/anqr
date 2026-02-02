@@ -2,6 +2,10 @@
  * Scan Logging Telemetry
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('TELEMETRY');
+
 export interface LogEntry {
   timestamp: number;
   category: string;

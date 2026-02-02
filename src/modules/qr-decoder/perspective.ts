@@ -3,6 +3,10 @@
  * Perspective transformation and grid sampling
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
 

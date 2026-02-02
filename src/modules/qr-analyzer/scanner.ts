@@ -3,7 +3,10 @@
  * Uses our own QR decoder for scanning
  */
 
+import { createLogger } from '../../lib/logger';
 import { decodeQR } from '../qr-decoder';
+
+const _log = createLogger('SCANNER');
 
 export interface QRLocation {
   topLeftCorner: { x: number; y: number };

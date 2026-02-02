@@ -3,8 +3,11 @@
  * Provides comprehensive QR code analysis combining content, structure, and safety analysis
  */
 
+import { createLogger } from '../../lib/logger';
 import { decodeQRFromCanvas } from './decoder';
 import type { QRAnalysisResult } from './types';
+
+const _log = createLogger('ANALYZER');
 
 /**
  * Analyze a QR code from a canvas element

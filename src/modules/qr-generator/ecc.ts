@@ -3,7 +3,10 @@
  * Handles error correction constraint checking for safe module modification
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Calculate ECC-aware weight for a module position

@@ -9,6 +9,10 @@
  * the failure is upstream (format/mask selection, traversal, or function-module skipping).
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import { RS_BLOCKS } from './decode';
 import type { ECCLevelChar } from './types';
 

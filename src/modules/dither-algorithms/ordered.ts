@@ -2,9 +2,12 @@
  * Ordered Dithering Algorithms
  */
 
+import { createLogger } from '../../lib/logger';
 import { BAYER_2, BAYER_4, BAYER_8 } from './matrices';
 import type { DitherResult, RGB } from './types';
 import { clamp01, rgbToGray } from './utils';
+
+const _log = createLogger('DITHER');
 
 /** Apply ordered (threshold) dithering */
 export function orderedDither(

@@ -5,6 +5,10 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('GENERATE');
+
 // Main generator
 export const GENERATOR_API = ['QRGenerator', 'generateScaledQR', 'renderModules'] as const;
 

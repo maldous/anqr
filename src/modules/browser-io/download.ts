@@ -4,7 +4,10 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { createLogger } from '../../lib/logger';
 import { saveFileNative } from './native-save';
+
+const _log = createLogger('DOWNLOAD');
 
 /**
  * Create a download link for a blob

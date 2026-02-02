@@ -3,6 +3,10 @@
  * Re-exports from split module files
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('GENERATE');
+
 // Re-export GradientConfig from core
 export type { GradientConfig } from '../core';
 // Cache utilities

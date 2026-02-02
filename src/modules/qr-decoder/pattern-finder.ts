@@ -3,6 +3,10 @@
  * Finder pattern and alignment pattern detection
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import type { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
 import { ResultPoint } from './result-types';

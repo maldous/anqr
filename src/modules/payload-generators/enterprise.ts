@@ -3,7 +3,10 @@
  * GS1 Digital Link, OTPAuth
  */
 
+import { createLogger } from '../../lib/logger';
 import type { GS1DigitalLinkParams, OTPAuthParams } from './types';
+
+const _log = createLogger('PAYLOAD');
 
 /** Generate GS1 Digital Link URI */
 export function generateGS1DigitalLink(params: GS1DigitalLinkParams): string {

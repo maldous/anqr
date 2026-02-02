@@ -3,7 +3,10 @@
  * Gradient creation and application for QR modules
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Create a gradient fill based on config

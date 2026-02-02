@@ -4,6 +4,10 @@
  * Supports error diffusion, ordered dithering, and noise-based methods
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DITHER');
+
 // Advanced algorithms
 export {
   adaptiveThresholdDither,

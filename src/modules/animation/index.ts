@@ -3,6 +3,10 @@
  * Handles GIF and WebP animation parsing, frame management, animation patterns, and temporal effects
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 // Re-export temporal dithering from canonical source (dither-algorithms)
 export {
   applyTemporalNoiseToCanvas,

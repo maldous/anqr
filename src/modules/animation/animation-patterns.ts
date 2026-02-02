@@ -3,6 +3,10 @@
  * Generates animated QR code effects from static images
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 // ============================================
 // TYPES
 // ============================================

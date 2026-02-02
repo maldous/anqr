@@ -3,8 +3,11 @@
  * iCalendar event, calendar subscription
  */
 
+import { createLogger } from '../../lib/logger';
 import type { EventHelper } from './types';
 import { escapeValue, formatICalDate } from './utils';
+
+const _log = createLogger('PAYLOAD');
 
 /** Generate iCalendar VEVENT string per RFC 5545
  * Optimized for QR code size - uses minimal required fields

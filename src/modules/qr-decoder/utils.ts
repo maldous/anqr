@@ -3,6 +3,10 @@
  * Shared helper functions for QR decoding
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import type { Point } from './types';
 
 /**

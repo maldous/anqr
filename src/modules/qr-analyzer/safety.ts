@@ -3,8 +3,11 @@
  * Provides QA tools, contrast checking, scan simulation, and readability analysis
  */
 
+import { createLogger } from '../../lib/logger';
 import { getContrastRatio, parseColor } from '../core';
 import { scanCanvas } from './scanner';
+
+const _log = createLogger('SAFETY');
 
 export type SafetyMode = 'off' | 'balanced' | 'strict';
 

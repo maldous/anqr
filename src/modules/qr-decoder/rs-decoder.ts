@@ -600,7 +600,10 @@ export function correctRSBlock(
   for (let i = 0; i < errorLocators.length; i++) {
     const position = n - 1 - GF_LOG[errorLocators[i]];
     if (position < 0) {
-      qrDecoderLog.debug('rs-decoder: Bad error location', { position, errorLocator: errorLocators[i] });
+      qrDecoderLog.debug('rs-decoder: Bad error location', {
+        position,
+        errorLocator: errorLocators[i],
+      });
       return null;
     }
 

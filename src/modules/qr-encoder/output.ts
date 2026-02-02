@@ -3,6 +3,10 @@
  * GIF generation, base64 encoding, and data URL creation
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 /**
  * Byte array output stream
  */

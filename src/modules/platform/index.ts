@@ -3,6 +3,10 @@
  * Platform-specific adapters for Capacitor plugins (AdMob, MediaStore)
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('PLATFORM');
+
 // AdMob Service
 export {
   getBannerHeight,

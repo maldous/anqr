@@ -3,6 +3,10 @@
  * Our own QR code decoding types - no external dependencies
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 export interface Point {
   x: number;
   y: number;

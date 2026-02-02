@@ -3,8 +3,11 @@
  * vCard, MeCard, BizCard
  */
 
+import { createLogger } from '../../lib/logger';
 import type { BizCardParams, MeCardHelper, VCardHelper } from './types';
 import { escapeValue, isValidEmail, isValidPhone, isValidUrl } from './utils';
+
+const _log = createLogger('PAYLOAD');
 
 /** Generate vCard string (2.1, 3.0, or 4.0) */
 export function generateVCard(params: VCardHelper): string {

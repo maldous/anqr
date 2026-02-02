@@ -4,6 +4,9 @@
  */
 
 import { registerPlugin } from '@capacitor/core';
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('STORAGE');
 
 export interface MediaStoreWriterPlugin {
   saveBase64ToDocuments(options: {

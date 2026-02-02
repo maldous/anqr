@@ -8,6 +8,10 @@
  * coverage, consider using the Kanji encoding mode which handles this natively.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 // Hiragana (U+3041 - U+3096) -> Shift-JIS (0x829F - 0x82F1)
 const HIRAGANA_START = 0x3041;
 const HIRAGANA_END = 0x3096;

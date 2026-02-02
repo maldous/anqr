@@ -15,7 +15,16 @@
  *   window.anqrDiag.status()
  */
 
-import { createLogger, setLogLevel, resetLogLevel, getLogLevel } from './logger';
+import {
+  clearStructuredLogs,
+  createLogger,
+  getLogLevel,
+  getStructuredLogCount,
+  getStructuredLogs,
+  resetLogLevel,
+  saveLogs,
+  setLogLevel,
+} from './logger';
 
 const log = createLogger('DIAG');
 
@@ -71,7 +80,7 @@ function writeState(state: DiagnosticsState | null): void {
  */
 function isEnabled(): boolean {
   const state = readState();
-  if (!state || !state.enabled) return false;
+  if (!state?.enabled) return false;
   if (Date.now() > state.expiresAt) {
     // Expired - clean up
     writeState(null);
@@ -157,7 +166,7 @@ export function getDiagnosticsStatus(): {
 export function initRemoteDiagnostics(): void {
   const state = readState();
 
-  if (state && state.enabled) {
+  if (state?.enabled) {
     if (Date.now() > state.expiresAt) {
       // Expired - clean up and use default level
       writeState(null);
@@ -180,21 +189,49 @@ export function initRemoteDiagnostics(): void {
       disable: disableDiagnostics,
       status: () => {
         const s = getDiagnosticsStatus();
-        // biome-ignore lint/suspicious/noConsole: Intentional console output for user diagnostics
         console.log('ANQR Diagnostics Status:', s);
         return s;
       },
+      // Log saving functions
+      saveLogs: (filename?: string) => {
+        saveLogs(filename);
+      },
+      getLogs: () => {
+        const logs = getStructuredLogs();
+        // biome-ignore lint/suspicious/noConsole: Intentional user feedback
+        console.log(`${logs.length} log entries (expand objects below):`);
+        return logs;
+      },
+      clearLogs: () => {
+        clearStructuredLogs();
+        // biome-ignore lint/suspicious/noConsole: Intentional user feedback
+        console.log('Structured log buffer cleared.');
+      },
+      logCount: () => {
+        const count = getStructuredLogCount();
+        // biome-ignore lint/suspicious/noConsole: Intentional user feedback
+        console.log(`${count} log entries in buffer`);
+        return count;
+      },
       help: () => {
-        // biome-ignore lint/suspicious/noConsole: Intentional console output for user help
         console.log(`
 ANQR Diagnostics Commands:
   anqrDiag.enable(minutes?, reason?)  - Enable debug logging (default 60 min)
   anqrDiag.disable()                  - Disable debug logging
   anqrDiag.status()                   - Show current status
+
+Log Saving (objects fully expanded in output):
+  anqrDiag.saveLogs(filename?)        - Download logs as JSON file
+  anqrDiag.getLogs()                  - Get logs array in console (expandable)
+  anqrDiag.clearLogs()                - Clear the log buffer
+  anqrDiag.logCount()                 - Show number of buffered logs
+
   anqrDiag.help()                     - Show this help
 
-Example:
+Examples:
   anqrDiag.enable(30, 'debugging overlay issue')
+  anqrDiag.saveLogs()                 - Downloads anqr-logs-{timestamp}.json
+  anqrDiag.saveLogs('my-debug.json')  - Downloads with custom filename
         `);
       },
     };

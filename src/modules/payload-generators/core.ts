@@ -3,7 +3,10 @@
  * URL, tel, email, SMS, geo, WiFi
  */
 
+import { createLogger } from '../../lib/logger';
 import type { EmailHelper, GeoHelper, SmsHelper, TelHelper, UrlHelper, WifiHelper } from './types';
+
+const _log = createLogger('PAYLOAD');
 
 /** Generate URL payload with optional UTM parameters */
 export function generateUrl(params: UrlHelper): string {

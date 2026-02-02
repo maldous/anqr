@@ -6,6 +6,7 @@
 import { createLogger } from '../../lib/logger';
 
 const qrDecoderLog = createLogger('DECODER');
+
 import type { FinderPattern, FinderPatternResult } from './types';
 import { pointDistance } from './utils';
 
@@ -677,14 +678,18 @@ export function selectFinderPatterns(
 
         // Only accept triplets that are reasonably square (< 10% difference)
         if (squareness > 0.1) {
-          qrDecoderLog.trace('select: Rejecting - not square enough', { squareness: squareness.toFixed(3) });
+          qrDecoderLog.trace('select: Rejecting - not square enough', {
+            squareness: squareness.toFixed(3),
+          });
           continue;
         }
 
         // Only accept triplets with angles close to 90 degrees (< 15 degrees off)
         if (angleDev > 0.26) {
           // cos(75°) ≈ 0.26
-          qrDecoderLog.trace('select: Rejecting - angle not close to 90°', { angleDev: angleDev.toFixed(3) });
+          qrDecoderLog.trace('select: Rejecting - angle not close to 90°', {
+            angleDev: angleDev.toFixed(3),
+          });
           continue;
         }
 

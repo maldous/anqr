@@ -5,6 +5,10 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('PAYLOAD');
+
 // Core generators
 export const CORE_API = [
   'generateUrl',

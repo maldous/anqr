@@ -3,6 +3,10 @@
  * LuminanceSource and BinaryBitmap for image processing
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import type { BitArray, BitMatrix } from './bit-matrix';
 import { IllegalArgumentException, UnsupportedOperationException } from './exceptions';
 import { StringBuilder } from './util';

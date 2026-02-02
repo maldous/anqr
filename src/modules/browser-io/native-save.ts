@@ -3,6 +3,10 @@
  * Save file on native platform (Android/iOS) using MediaStore API
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DOWNLOAD');
+
 import { saveBase64ToDocuments } from '../platform';
 
 /**

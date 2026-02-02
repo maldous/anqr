@@ -3,6 +3,10 @@
  * Re-exports from split module files
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('PAYLOAD');
+
 // Calendar generators
 export { generateCalendarSubscription, generateEvent } from './calendar';
 // Contact generators

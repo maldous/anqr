@@ -3,6 +3,10 @@
  * Galois Field arithmetic and Reed-Solomon error correction decoding
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import {
   ArithmeticException,
   IllegalArgumentException,

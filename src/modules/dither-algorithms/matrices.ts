@@ -2,6 +2,10 @@
  * Ordered Dithering Matrices
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DITHER');
+
 /** Bayer 2x2 matrix */
 export const BAYER_2 = [
   [0, 2],

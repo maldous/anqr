@@ -4,6 +4,10 @@
  * Canonical source for image filters used by overlay and qr-generator modules
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('OVERLAY');
+
 export type { CropRegion as CropHandlerRegion } from './crop-handler';
 // Crop Handler
 export { CropHandler, type CropHandlerOptions } from './crop-handler';
@@ -13,10 +17,10 @@ export {
   applyFilters,
   blur,
   brightness,
+  type ColorMode,
   cannyEdge,
   clamp,
   clamp01,
-  type ColorMode,
   contrast,
   convolve,
   copyImageData,

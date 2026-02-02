@@ -3,6 +3,10 @@
  * Handles text and image watermarks with positioning and blending
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('WATERMARK');
+
 // ============================================
 // TYPES
 // ============================================

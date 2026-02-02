@@ -20,8 +20,12 @@ import { QRMaskPattern } from './types';
  *   7: ((i*j) mod 3 + (i+j) mod 2) mod 2 == 0
  *
  * @param maskPattern Mask pattern number (0-7)
- * @returns Function that returns true if the module at (i, j) should be flipped
- */
+ * @returns Function that returns true if the module at (i, j) should be flipped */
+
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SPEC');
+
 export function getMaskFunction(maskPattern: number): (i: number, j: number) => boolean {
   switch (maskPattern) {
     case QRMaskPattern.PATTERN000:

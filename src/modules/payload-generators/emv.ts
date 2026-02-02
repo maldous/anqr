@@ -2,8 +2,11 @@
  * EMV QR Code Builder
  */
 
+import { createLogger } from '../../lib/logger';
 import { EMV_TAGS, MAI_SUBTAGS, POI_METHOD } from './types';
 import { crc16CCITT, utf8ByteLength } from './utils';
+
+const _log = createLogger('PAYLOAD');
 
 /**
  * EMV QR Code Builder class for Merchant-Presented Mode

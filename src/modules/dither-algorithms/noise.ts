@@ -2,8 +2,11 @@
  * Noise-Based Dithering Algorithms
  */
 
+import { createLogger } from '../../lib/logger';
 import type { ColorMode, DitherResult } from './types';
 import { clamp01, createRNG, rgbToGray } from './utils';
+
+const _log = createLogger('DITHER');
 
 /** Apply white noise dithering */
 export function whiteNoiseDither(

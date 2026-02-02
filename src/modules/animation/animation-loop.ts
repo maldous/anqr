@@ -3,8 +3,11 @@
  * Create and manage animation loop handlers
  */
 
+import { createLogger } from '../../lib/logger';
 import { advanceAnimation, createAnimationState } from './state';
 import type { AnimationFrame, AnimationOptions, AnimationState } from './types';
+
+const _log = createLogger('ANIMATION');
 
 /**
  * Create an animation loop handler

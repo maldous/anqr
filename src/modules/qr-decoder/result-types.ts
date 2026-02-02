@@ -3,8 +3,11 @@
  * Result, ResultPoint, and related types for decode results
  */
 
+import { createLogger } from '../../lib/logger';
 import { MathUtils } from './perspective';
 import { arraycopy, currentTimeMillis, Float } from './util';
+
+const _log = createLogger('DECODER');
 
 /**
  * Barcode format enum

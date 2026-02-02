@@ -3,8 +3,11 @@
  * Frame background and border drawing functions
  */
 
+import { createLogger } from '../../lib/logger';
 import { roundRect } from './drawing-primitives';
 import type { QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Draw frame background (sticker style)

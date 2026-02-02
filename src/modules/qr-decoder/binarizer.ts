@@ -3,6 +3,10 @@
  * Global histogram and hybrid binarizers for image thresholding
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import { BitArray, BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
 import { Binarizer, type LuminanceSource } from './luminance';
