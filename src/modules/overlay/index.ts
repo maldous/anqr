@@ -16,6 +16,7 @@ export {
   cannyEdge,
   clamp,
   clamp01,
+  type ColorMode,
   contrast,
   convolve,
   copyImageData,

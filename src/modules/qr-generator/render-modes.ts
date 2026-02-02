@@ -61,7 +61,7 @@ export function applyQROverlayMode(
           result.halftoneBrightness = brightness;
         } else {
           // Legacy halftone behavior
-          const intensity = effectiveIntensity / 100;
+          const intensity = effectiveIntensity; // 0..1
           const minSize = 0.3;
           const maxSize = 1;
           result.moduleSizeModifier =
@@ -76,7 +76,7 @@ export function applyQROverlayMode(
       if (isDark) {
         const blendColor = overlayWithColors.colors?.[row]?.[col];
         if (blendColor) {
-          const blendAmount = effectiveIntensity / 100;
+          const blendAmount = effectiveIntensity; // 0..1
           result.moduleColor = blendColors(
             config.fgColor,
             `rgb(${blendColor.r},${blendColor.g},${blendColor.b})`,
@@ -88,7 +88,7 @@ export function applyQROverlayMode(
 
     case 'brightness':
       if (isDark) {
-        const threshold = (100 - effectiveIntensity) / 100;
+        const threshold = 1 - effectiveIntensity; // effectiveIntensity is 0..1
         if (brightness > threshold) {
           result.moduleOpacity = 0;
         }
@@ -202,7 +202,7 @@ export function applyQROverlayMode(
       result.shouldDrawCell = true; // Draw all cells
       const mosaicColor = overlayWithColors.colors?.[row]?.[col];
       if (mosaicColor) {
-        const intensity = effectiveIntensity / 100;
+        const intensity = effectiveIntensity; // 0..1
         if (isDark) {
           // Dark cells get the actual image color (darkened slightly to maintain QR readability)
           const darkFactor = 0.7;

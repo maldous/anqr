@@ -23,7 +23,9 @@ export function hasPreprocessingOptions(config: QRGeneratorConfig): boolean {
     (config.filterSharpen !== undefined && config.filterSharpen > 0) ||
     (config.filterPosterize !== undefined && config.filterPosterize > 0) ||
     (!!config.filterDuotone1 && !!config.filterDuotone2) ||
-    !!config.filterEdgeDetect
+    !!config.filterEdgeDetect ||
+    // colorMode 'grayscale' or 'bw' requires preprocessing
+    (config.colorMode !== undefined && config.colorMode !== 'color')
   );
 }
 
@@ -66,8 +68,23 @@ export async function preprocessOverlay(
   config: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  const debug = config.debugOverlayDither === true;
+
   if (!hasPreprocessingOptions(config)) {
+    if (debug) {
+      console.log('[OVERLAY] preprocessOverlay - no preprocessing needed, returning original canvas');
+    }
     return canvas;
+  }
+
+  if (debug) {
+    console.log('[OVERLAY] preprocessOverlay - starting preprocessing', {
+      canvasSize: { width: canvas.width, height: canvas.height },
+      colorMode: config.colorMode,
+      filterGrayscale: config.filterGrayscale,
+      filterBrightness: config.filterBrightness,
+      filterContrast: config.filterContrast,
+    });
   }
 
   // Get image data
@@ -85,8 +102,8 @@ export async function preprocessOverlay(
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  // Apply filters
-  const processed = preprocessImageData(imageData, config);
+  // Apply filters - pass debug flag through
+  const processed = preprocessImageData(imageData, config, debug);
 
   // Create output canvas
   const result = await createCanvasFn(canvas.width, canvas.height);
@@ -94,5 +111,12 @@ export async function preprocessOverlay(
   if (!resultCtx) return canvas;
 
   resultCtx.putImageData(processed, 0, 0);
+
+  if (debug) {
+    console.log('[OVERLAY] preprocessOverlay - complete', {
+      resultSize: { width: result.width, height: result.height },
+    });
+  }
+
   return result as HTMLCanvasElement | OffscreenCanvas;
 }

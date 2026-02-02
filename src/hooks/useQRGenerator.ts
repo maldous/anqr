@@ -545,11 +545,14 @@ export function useQRGenerator(): UseQRGeneratorResult {
       filterBlur: overlay.blurPx,
       filterSharpen: overlay.sharpen,
       filterPosterize: overlay.posterizeLevels,
-      filterThreshold: overlay.threshold,
+      // For threshold: if colorMode is 'bw', use 128 as default threshold unless user set one
+      filterThreshold: overlay.colorMode === 'bw' && !overlay.threshold ? 128 : overlay.threshold,
       filterEdgeDetect: overlay.edgeDetect !== 'off',
       filterEdgeMode: overlay.edgeDetect,
       filterDuotone1: overlay.duotoneColors?.[0],
       filterDuotone2: overlay.duotoneColors?.[1],
+      // Map colorMode to filterGrayscale for preprocessing
+      filterGrayscale: overlay.colorMode === 'grayscale' || overlay.colorMode === 'bw',
       // NOTE: Geometric transforms (rotate, flip, crop, fit) are applied in
       // applyGeometricTransforms() BEFORE passing to qr-generator.
       // We intentionally do NOT pass these values to avoid double-application.
@@ -584,6 +587,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
       eccAwareEnabled: overlay.eccAwareEnabled,
       eccAwareRiskBudget: overlay.eccAwareRiskBudget,
       eccAwareWeightMap: overlay.eccAwareWeightMap,
+
+      // Debug flag for overlay preprocessing
+      // Automatically enabled in development builds, disabled in production
+      debugOverlayDither: import.meta.env.DEV, // Debug logging: ON in dev, OFF in production
 
       // === ANIMATION / TEMPORAL DITHERING ===
       temporalDither: animation.temporalDither,
