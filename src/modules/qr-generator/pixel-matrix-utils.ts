@@ -42,13 +42,11 @@ export function getEffectiveIntensity(config: QRGeneratorConfig): {
   };
 
   const maxIntensity = eccLimits[config.errorCorrection] ?? 0.5;
-  const effectiveIntensityFraction = Math.min(intensity, maxIntensity);
-  // Return as percentage (0-100) since render-modes.ts expects percentage and divides by 100
-  const effectiveIntensity = effectiveIntensityFraction * 100;
+  const effectiveIntensity = Math.min(intensity, maxIntensity);
 
   return {
     effectiveIntensity,
-    effectiveConfig: { ...config, overlayIntensity: effectiveIntensity },
+    effectiveConfig: { ...config, overlayIntensity: effectiveIntensity * 100 },
   };
 }
 

@@ -82,6 +82,7 @@ import {
   ECC_CAPACITIES_NUMERIC,
 } from '@/modules/qr-spec';
 import { useQRStore } from '@/store/qr-store';
+import { isDev } from '@/lib/debug';
 
 interface AnalyzeProps {
   onNavigate?: (page: 'editor' | 'gallery' | 'analyze') => void;
@@ -954,7 +955,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       const isGeneratorSource = analysisSource === 'generator' && !!generatedCanvas;
 
       // STEP 1: Log detected params
-      console.log('[QR-Analyzer:trace] STEP 1 - Detected params:', {
+      isDev && console.log('[QR-Analyzer:trace] STEP 1 - Detected params:', {
         detectedVersion: result.version,
         detectedMaskPattern: result.maskPattern,
         detectedEcc: result.eccLevel,
@@ -1021,7 +1022,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               .map((c) => c.charCodeAt(0))
               .join(',')}]`
           : `[string] len=${encoderInput.data.length}, first32="${encoderInput.data.slice(0, 32)}"`;
-      console.log('[QR-Analyzer:trace] STEP 2 - Encoder input:', {
+      isDev && console.log('[QR-Analyzer:trace] STEP 2 - Encoder input:', {
         kind: encoderInput.kind,
         dataLength: encoderInput.data.length,
         preview: encoderInputPreview,
@@ -1041,7 +1042,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       // If version is not available from decoder, we cannot reproduce accurately
       if (versionToUseFinal === null) {
-        console.error('[QR-Analyzer:trace] CANNOT REPRODUCE: Version not detected by decoder');
+        isDev && console.error('[QR-Analyzer:trace] CANNOT REPRODUCE: Version not detected by decoder');
         // Clear canvas and show error
         canvas.width = 200;
         canvas.height = 200;
@@ -1095,7 +1096,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             : 'auto (undefined)',
         needsIdentityBytes,
       };
-      console.log('[QR-Analyzer:trace] STEP 3 - createQRInstance params:', createQRParams);
+      isDev && console.log('[QR-Analyzer:trace] STEP 3 - createQRInstance params:', createQRParams);
 
       let qr: ReturnType<typeof createQRInstance> | null = null;
       let actualVersionUsed = versionToUseFinal;
@@ -1107,11 +1108,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
             : {}),
         });
-        console.log('[QR-Analyzer:trace] STEP 3b - createQRInstance SUCCESS');
+        isDev && console.log('[QR-Analyzer:trace] STEP 3b - createQRInstance SUCCESS');
       } catch (encoderError) {
         const errorMessage =
           encoderError instanceof Error ? encoderError.message : String(encoderError);
-        console.error('[QR-Analyzer:trace] STEP 3b - createQRInstance FAILED:', {
+        isDev && console.error('[QR-Analyzer:trace] STEP 3b - createQRInstance FAILED:', {
           error: errorMessage,
           requestedVersion: versionToUseFinal,
           ecc,
@@ -1129,7 +1130,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             segments.length > 1 || (segments.length === 1 && segments[0].mode !== 'byte');
 
           if (hasMixedModeOptimization) {
-            console.log(
+            isDev && console.log(
               '[QR-Analyzer:trace] STEP 3c - Trying MIXED MODE encoding at original version',
               {
                 segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
@@ -1144,13 +1145,13 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                   ? { maskPattern: maskToUse as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 }
                   : {}),
               });
-              console.log('[QR-Analyzer:trace] STEP 3c - MIXED MODE SUCCESS at original version!', {
+              isDev && console.log('[QR-Analyzer:trace] STEP 3c - MIXED MODE SUCCESS at original version!', {
                 version: versionToUseFinal,
                 segments: segments.map((s) => ({ mode: s.mode, len: s.data.length })),
               });
               // Successfully encoded with mixed mode at original version
             } catch (mixedModeError) {
-              console.log(
+              isDev && console.log(
                 '[QR-Analyzer:trace] STEP 3c - Mixed mode failed, trying higher versions...',
                 {
                   error:
@@ -1165,7 +1166,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
           // If mixed mode didn't work (or wasn't applicable), try higher versions
           if (!qr) {
-            console.log('[QR-Analyzer:trace] STEP 3c - Trying higher versions due to overflow...');
+            isDev && console.log('[QR-Analyzer:trace] STEP 3c - Trying higher versions due to overflow...');
             let foundVersion: number | null = null;
 
             for (let tryVersion = versionToUseFinal + 1; tryVersion <= 40; tryVersion++) {
@@ -1178,7 +1179,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     : {}),
                 });
                 foundVersion = tryVersion;
-                console.log(
+                isDev && console.log(
                   '[QR-Analyzer:trace] STEP 3c - VERSION UPGRADE: Successfully encoded at version',
                   {
                     originalVersion: versionToUseFinal,
@@ -1222,7 +1223,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       const actualVersion = (moduleCount - 17) / 4;
 
       // STEP 4: Log QR instance result
-      console.log('[QR-Analyzer:trace] STEP 4 - QR instance result:', {
+      isDev && console.log('[QR-Analyzer:trace] STEP 4 - QR instance result:', {
         moduleCount,
         actualVersion,
         requestedVersion: versionToUseFinal,
@@ -1232,7 +1233,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       // STEP 4b: Warn if version mismatch
       if (result.version && actualVersion !== result.version) {
-        console.warn('[QR-Analyzer:trace] VERSION MISMATCH!', {
+        isDev && console.warn('[QR-Analyzer:trace] VERSION MISMATCH!', {
           detectedVersion: result.version,
           detectedModuleCount: result.moduleCount,
           producedVersion: actualVersion,
@@ -1252,7 +1253,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           const inferred = Math.max(0, Math.floor((totalModules - moduleCount) / 2));
 
           // STEP 5: Log margin calculation (generator source)
-          console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (generator):', {
+          isDev && console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (generator):', {
             renderStateModulePx: renderState.modulePx,
             modulePxFromStore,
             canvasWidth: generatedCanvas.width,
@@ -1267,7 +1268,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
         // STEP 5: Log margin calculation (external source)
         const margin = Math.max(4, result.quietZone?.top ?? 4);
-        console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (external):', {
+        isDev && console.log('[QR-Analyzer:trace] STEP 5 - Margin calculation (external):', {
           quietZoneTop: result.quietZone?.top,
           margin,
         });
@@ -1289,7 +1290,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         modulePx = Math.max(1, Math.floor(size / totalModulesWithMargin));
 
         // STEP 6: Log canvas sizing (generator)
-        console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (generator):', {
+        isDev && console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (generator):', {
           canvasSize: size,
           moduleCount,
           marginModules,
@@ -1306,7 +1307,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         size = totalModules * modulePx;
 
         // STEP 6: Log canvas sizing (external)
-        console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (external):', {
+        isDev && console.log('[QR-Analyzer:trace] STEP 6 - Canvas sizing (external):', {
           targetSize,
           moduleCount,
           marginModules,
@@ -1320,7 +1321,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       canvas.height = size;
 
       // STEP 7: Final summary before drawing
-      console.log('[QR-Analyzer:trace] STEP 7 - Final render summary:', {
+      isDev && console.log('[QR-Analyzer:trace] STEP 7 - Final render summary:', {
         canvasSize: `${size}x${size}`,
         modulePx,
         moduleCount,
@@ -1333,9 +1334,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       });
 
       if (result.version && actualVersion !== result.version) {
-        console.warn(
-          '[QR-Analyzer:trace] FINAL WARNING: Version mismatch will cause visual discrepancy!',
-          {
+        isDev && console.warn('[QR-Analyzer:trace] FINAL WARNING: Version mismatch will cause visual discrepancy!', {
             expected: `Version ${result.version} (${result.version * 4 + 17}x${result.version * 4 + 17} modules)`,
             produced: `Version ${actualVersion} (${moduleCount}x${moduleCount} modules)`,
             sizeDiff: moduleCount - (result.version * 4 + 17),
@@ -1467,7 +1466,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       // Track if reproduction matches original - should always match now since we don't allow fallbacks
       const reproductionMismatch = actualVersion !== result.version;
 
-      console.log('[QR-Analyzer:reproduced] Generated QR code', {
+      isDev && console.log('[QR-Analyzer:reproduced] Generated QR code', {
         strategy: isGeneratorSource ? 'exact' : 'detected_only',
         reproductionMismatch,
         encoderInputKind: encoderInput.kind,
@@ -1496,7 +1495,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         },
       });
       if (regenVsOriginal && regenVsOriginal.diffCount > 0) {
-        console.warn('[QR-Analyzer:reproduced] Matrix mismatch (original vs regenerated)', {
+        isDev && console.warn('[QR-Analyzer:reproduced] Matrix mismatch (original vs regenerated)', {
           ecc,
           version: { detected: result.version, used: versionToUseFinal, actual: actualVersion },
           mask: {
@@ -1513,7 +1512,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         });
       }
     } catch (err) {
-      console.error('[QR-Analyzer:reproduced] Failed to generate QR code:', err);
+      isDev && console.error('[QR-Analyzer:reproduced] Failed to generate QR code:', err);
       // Clear canvas and show error state
       canvas.width = 200;
       canvas.height = 200;

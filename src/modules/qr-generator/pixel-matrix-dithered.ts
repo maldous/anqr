@@ -14,13 +14,7 @@
  */
 
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
-import {
-  isAlignmentPattern,
-  isFinderPattern,
-  isFormatInfo,
-  isTimingPattern,
-  isVersionInfo,
-} from '../qr-spec/qr-patterns';
+import { isLocked } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
 import type {
   CreateCanvasFn,
@@ -31,55 +25,6 @@ import type {
 } from './types';
 
 type RGBi = { r: number; g: number; b: number };
-
-function isFinderSeparator(row: number, col: number, moduleCount: number): boolean {
-  const sepSize = 8;
-  // top-left
-  if ((row === sepSize || col === sepSize) && row <= sepSize && col <= sepSize) return true;
-  // top-right
-  if (
-    (row === sepSize || col === moduleCount - sepSize - 1) &&
-    row <= sepSize &&
-    col >= moduleCount - sepSize - 1
-  )
-    return true;
-  // bottom-left
-  if (
-    (row === moduleCount - sepSize - 1 || col === sepSize) &&
-    row >= moduleCount - sepSize - 1 &&
-    col <= sepSize
-  )
-    return true;
-  return false;
-}
-
-function shouldLockModule(
-  row: number,
-  col: number,
-  moduleCount: number,
-  version: number,
-  config: QRGeneratorConfig
-): boolean {
-  // Always lock format/version if protection is enabled.
-  if (config.protectFormatInfo && isFormatInfo(row, col, moduleCount)) return true;
-  if (config.protectVersionInfo && isVersionInfo(row, col, moduleCount, version)) return true;
-
-  // Finder + separators (scan critical). Respect toggle.
-  if (
-    config.preserveFinders &&
-    (isFinderPattern(row, col, moduleCount) || isFinderSeparator(row, col, moduleCount))
-  ) {
-    return true;
-  }
-
-  // Timing patterns. Respect toggle.
-  if (config.preserveTiming && isTimingPattern(row, col, moduleCount)) return true;
-
-  // Alignment patterns. Respect toggle.
-  if (config.preserveAlignment && isAlignmentPattern(row, col, moduleCount, version)) return true;
-
-  return false;
-}
 
 function luma01(r: number, g: number, b: number): number {
   return (r * 0.299 + g * 0.587 + b * 0.114) / 255;
@@ -117,8 +62,7 @@ function enforceModuleConstraints(
   desire: number[][],
   moduleCount: number,
   scale: number,
-  version: number,
-  config: QRGeneratorConfig
+  version: number
 ): void {
   // Bounds chosen to preserve sampling robustness (center pixel correct) while still allowing texture.
   const DARK_MIN = 0.65; // dark modules keep majority dark
@@ -129,7 +73,7 @@ function enforceModuleConstraints(
 
   for (let mr = 0; mr < moduleCount; mr++) {
     for (let mc = 0; mc < moduleCount; mc++) {
-      if (shouldLockModule(mr, mc, moduleCount, version, config)) continue;
+      if (isLocked(mr, mc, moduleCount, version)) continue;
 
       const qrIsDark = qr.isDark(mr, mc);
       const y0 = mr * scale;
@@ -233,7 +177,7 @@ export async function generateDitheredMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
-  const intensity = effectiveIntensity / 100; // Convert from 0-100 to 0-1
+  const intensity = effectiveIntensity; // 0..1
   const ditherStrength = (config.ditherStrength ?? 50) / 100;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
@@ -271,7 +215,7 @@ export async function generateDitheredMatrix(
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
 
       // Structural modules are exact.
-      if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
+      if (isLocked(moduleRow, moduleCol, moduleCount, version)) {
         matrix[y][x] = qrIsDark;
         colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
         desire[y][x] = qrIsDark ? 1 : 0;
@@ -310,7 +254,7 @@ export async function generateDitheredMatrix(
   }
 
   // Post-pass: enforce per-module constraints (center pixel correctness + ratio bounds)
-  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, config);
+  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version);
 
   if (config.debugOverlayDither) {
     // One small log with key stats.
@@ -349,7 +293,7 @@ export async function generateBlueNoiseMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
-  const intensity = effectiveIntensity / 100; // Convert from 0-100 to 0-1
+  const intensity = effectiveIntensity; // 0..1
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
@@ -385,7 +329,7 @@ export async function generateBlueNoiseMatrix(
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
 
-      if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
+      if (isLocked(moduleRow, moduleCol, moduleCount, version)) {
         matrix[y][x] = qrIsDark;
         colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
         desire[y][x] = qrIsDark ? 1 : 0;
@@ -409,7 +353,7 @@ export async function generateBlueNoiseMatrix(
     }
   }
 
-  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, config);
+  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version);
 
   if (config.debugOverlayDither) {
     console.log('[OverlayDither] blue-noise-matrix', {

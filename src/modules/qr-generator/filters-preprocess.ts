@@ -4,7 +4,7 @@
  */
 
 import { parseColor } from '../core';
-import { applyFilters, copyImageData, type FilterOptions } from '../overlay';
+import { applyFilters, copyImageData, type ColorMode, type FilterOptions } from '../overlay';
 import { applyCannyEdge, applySobelEdge } from './filters-edge';
 import type { QRGeneratorConfig } from './types';
 
@@ -12,7 +12,11 @@ import type { QRGeneratorConfig } from './types';
  * Preprocess image data with configured filters
  * Uses overlay module's applyFilters (canonical source) with QR config mapping
  */
-export function preprocessImageData(imageData: ImageData, config: QRGeneratorConfig): ImageData {
+export function preprocessImageData(
+  imageData: ImageData,
+  config: QRGeneratorConfig,
+  debug = false
+): ImageData {
   // Map QR config to FilterOptions
   const filterOptions: FilterOptions = {};
 
@@ -83,19 +87,68 @@ export function preprocessImageData(imageData: ImageData, config: QRGeneratorCon
     filterOptions.duotone = { light: lightRgb, dark: darkRgb };
   }
 
+  // CRITICAL: Map colorMode to filterOptions.colorMode
+  // This was previously missing, causing center logos to appear grayscale even with colorMode='color'
+  // The applyFilters function supports colorMode at the end of its processing chain
+  if (config.colorMode) {
+    if (config.colorMode === 'color') {
+      // When colorMode is 'color', ensure we DON'T apply grayscale filter
+      // This fixes the issue where center logos appeared grayscale even with colorMode='color'
+      filterOptions.grayscale = false;
+      // Don't set filterOptions.colorMode - applyColorMode returns early for 'color' anyway
+    } else {
+      // For 'grayscale' or 'bw', set the colorMode and disable separate grayscale filter
+      // to avoid double-processing (colorMode handles conversion internally)
+      filterOptions.colorMode = config.colorMode as ColorMode;
+      filterOptions.grayscale = false;
+    }
+  }
+
+  // Debug logging for preprocessing decisions
+  if (debug) {
+    console.log('[OVERLAY] preprocessImageData - filter options:', {
+      brightness: filterOptions.brightness,
+      contrast: filterOptions.contrast,
+      saturation: filterOptions.saturation,
+      hue: filterOptions.hue,
+      gamma: filterOptions.gamma,
+      invert: filterOptions.invert,
+      grayscale: filterOptions.grayscale,
+      threshold: filterOptions.threshold,
+      blur: filterOptions.blur,
+      sharpen: filterOptions.sharpen,
+      posterize: filterOptions.posterize,
+      colorMode: filterOptions.colorMode,
+      hasDuotone: !!filterOptions.duotone,
+      configColorMode: config.colorMode,
+    });
+  }
+
   // If no filters to apply, return copy of original
   if (Object.keys(filterOptions).length === 0) {
+    if (debug) {
+      console.log('[OVERLAY] preprocessImageData - no filters to apply, returning copy');
+    }
     return copyImageData(imageData);
   }
 
   // Apply basic color filters first.
+  if (debug) {
+    console.log('[OVERLAY] preprocessImageData - applying filters');
+  }
   let out = applyFilters(imageData, filterOptions);
 
   // Optional edge-detect post-pass.
   if (config.filterEdgeDetect) {
     const mode = (config.filterEdgeMode || 'sobel').toLowerCase();
+    if (debug) {
+      console.log('[OVERLAY] preprocessImageData - applying edge detection:', mode);
+    }
     out = mode === 'canny' ? applyCannyEdge(out) : applySobelEdge(out);
   }
 
+  if (debug) {
+    console.log('[OVERLAY] preprocessImageData - complete');
+  }
   return out;
 }

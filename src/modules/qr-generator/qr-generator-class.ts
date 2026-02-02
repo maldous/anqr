@@ -261,55 +261,55 @@ export class QRGenerator {
 
     // Apply overlay preprocessing (brightness/contrast/gamma/etc) after geometry.
     // This must run BEFORE we sample overlay pixels for scaled/dithered/subpixel modes.
-    // For center mode, we only apply colorMode-related filters (grayscale/bw) and skip
-    // other filters that would distort the logo (invert, edge detect, brightness, etc.).
-    if (processedOverlayCanvas) {
-      const isCenterMode = config.overlayMode === 'center';
-      
-      if (isCenterMode) {
-        // For center mode, only apply colorMode conversion (grayscale/bw)
-        // Skip all other preprocessing filters that could distort the logo
-        const colorModeConfig: QRGeneratorConfig = {
-          ...config,
-          // Clear all preprocessing filters except colorMode-related ones
-          filterBrightness: 0,
-          filterContrast: 0,
-          filterSaturation: 0,
-          filterHue: 0,
-          filterGamma: 1,
-          filterInvert: false,
-          filterBlur: 0,
-          filterSharpen: 0,
-          filterPosterize: 0,
-          filterThreshold: 0,
-          filterEdgeDetect: false,
-          filterDuotone1: undefined,
-          filterDuotone2: undefined,
-          // Apply colorMode as grayscale filter
-          filterGrayscale: config.colorMode === 'grayscale' || config.colorMode === 'bw',
-        };
-        
-        // For B&W mode, also apply a threshold
-        if (config.colorMode === 'bw') {
-          colorModeConfig.filterThreshold = 128; // Standard B&W threshold
-        }
-        
-        // Only preprocess if we have colorMode settings to apply
-        if (config.colorMode === 'grayscale' || config.colorMode === 'bw') {
-          processedOverlayCanvas = await preprocessOverlay(
-            processedOverlayCanvas,
-            colorModeConfig,
-            this.createCanvas.bind(this)
-          );
-        }
-      } else if (hasPreprocessingOptions(config)) {
-        // For non-center modes, apply full preprocessing
-        processedOverlayCanvas = await preprocessOverlay(
-          processedOverlayCanvas,
-          config,
-          this.createCanvas.bind(this)
-        );
+    // ALL overlay modes (including center) apply the full set of visual effects.
+    const needsPreprocessing = hasPreprocessingOptions(config);
+    // Debug logging: debugOverlayDither is automatically true in dev, false in production
+    if (config.debugOverlayDither) {
+      console.log('[OVERLAY] Preprocessing check:', {
+        hasOverlay: !!processedOverlayCanvas,
+        needsPreprocessing,
+        overlayMode: config.overlayMode,
+        colorMode: config.colorMode,
+        filterGrayscale: config.filterGrayscale,
+        filterBrightness: config.filterBrightness,
+        filterContrast: config.filterContrast,
+      });
+    }
+
+    if (processedOverlayCanvas && needsPreprocessing) {
+      if (config.debugOverlayDither) {
+        console.log('[OVERLAY] Preprocessing overlay - full config:', {
+          overlayMode: config.overlayMode,
+          colorMode: config.colorMode,
+          filterBrightness: config.filterBrightness,
+          filterContrast: config.filterContrast,
+          filterGamma: config.filterGamma,
+          filterSaturation: config.filterSaturation,
+          filterHue: config.filterHue,
+          filterBlur: config.filterBlur,
+          filterSharpen: config.filterSharpen,
+          filterPosterize: config.filterPosterize,
+          filterThreshold: config.filterThreshold,
+          filterEdgeDetect: config.filterEdgeDetect,
+          filterInvert: config.filterInvert,
+          filterGrayscale: config.filterGrayscale,
+        });
       }
+
+      processedOverlayCanvas = await preprocessOverlay(
+        processedOverlayCanvas,
+        config,
+        this.createCanvas.bind(this)
+      );
+
+      if (config.debugOverlayDither) {
+        console.log('[OVERLAY] Preprocessing complete - canvas size:', {
+          width: processedOverlayCanvas.width,
+          height: processedOverlayCanvas.height,
+        });
+      }
+    } else if (processedOverlayCanvas && config.debugOverlayDither) {
+      console.log('[OVERLAY] Skipping preprocessing - no filters to apply');
     }
 
     // =======================================================================
@@ -478,6 +478,15 @@ export class QRGenerator {
     // =======================================================================
     // Draw center logo if in center mode
     if (processedOverlayCanvas && config.overlayMode === 'center') {
+      if (config.debugOverlayDither) {
+        console.log('[OVERLAY] Drawing center logo:', {
+          canvasSize: size,
+          logoSize: config.logoSize,
+          overlayWidth: processedOverlayCanvas.width,
+          overlayHeight: processedOverlayCanvas.height,
+          colorMode: config.colorMode,
+        });
+      }
       drawCenterLogo(ctx, processedOverlayCanvas, size, config.logoSize);
     }
 

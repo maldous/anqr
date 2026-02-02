@@ -6,8 +6,8 @@
  * that can be retrieved for debug output (e.g., when QR detection fails).
  */
 
-// Debug logging to console - enable for troubleshooting
-const DEBUG_CONSOLE = true;
+// Debug logging to console - automatically enabled in development builds
+const DEBUG_CONSOLE = import.meta.env.DEV;
 
 export type LogData = Record<string, unknown>;
 
