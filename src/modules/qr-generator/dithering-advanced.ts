@@ -3,9 +3,12 @@
  * Advanced dithering algorithms with blue noise support
  */
 
+import { createLogger } from '../../lib/logger';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
 import type { QRCodeObject } from './cache';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Apply advanced dithering with blue noise

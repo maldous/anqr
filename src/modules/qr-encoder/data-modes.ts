@@ -3,10 +3,14 @@
  * Encoders for different QR data modes: Numeric, Alphanumeric, Byte, Kanji
  */
 
+import { createLogger } from '../../lib/logger';
+
 // Note: We import the function getter to allow runtime changes to stringToBytes
 import { stringToBytesFn } from './string-bytes';
 import type { QRBitBuffer, QRDataSegment } from './types';
 import { QRMode } from './types';
+
+const _log = createLogger('ENCODER');
 
 /**
  * Numeric mode encoder (0-9 only)

@@ -2,6 +2,10 @@
  * Error Diffusion Dithering
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DITHER');
+
 import { DIFFUSION_KERNELS, type DiffusionKernelDef } from './kernels';
 import type { ColorMode, DiffusionKernel, DitherResult, RGB } from './types';
 import { clamp01, rgbToGray } from './utils';

@@ -3,6 +3,10 @@
  * Image clipboard operations
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('CLIPBOARD');
+
 /**
  * Copy image to clipboard (if supported)
  */

@@ -3,7 +3,10 @@
  * TypeScript type definitions for the QR generator module
  */
 
+import { createLogger } from '../../lib/logger';
 import type { GradientConfig } from '../core';
+
+const _log = createLogger('GENERATE');
 
 export interface QRGeneratorConfig {
   content: string;

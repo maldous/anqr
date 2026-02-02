@@ -3,8 +3,13 @@
  * Our own QR code generator - zero external dependencies
  */
 
+import { createLogger } from '../../lib/logger';
+
 // Main encoder
 import { qrcode } from './encoder';
+
+const _log = createLogger('ENCODER');
+
 export { qrcode };
 
 // Pattern functions - re-exported from qr-spec (canonical source)

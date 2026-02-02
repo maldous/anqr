@@ -3,6 +3,10 @@
  * Pattern positions, BCH encoding, mask functions, and lost point calculation
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 // Import from canonical sources in qr-spec
 import {
   getBCHTypeInfo as getBCHTypeInfoFromSpec,

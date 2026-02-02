@@ -5,6 +5,10 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('EXPORT');
+
 // Image export (PNG, WebP, JPEG)
 export const IMAGE_API = ['exportImage', 'downloadImage'] as const;
 

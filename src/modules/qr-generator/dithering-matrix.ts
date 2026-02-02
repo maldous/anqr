@@ -3,10 +3,13 @@
  * Matrix-based dithering for QR modules
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import { distributeError } from './dithering-error';
 import { getDiffusionKernel } from './dithering-kernels';
 import type { OverlayData, QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Apply dithering to create a modified QR matrix

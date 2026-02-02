@@ -5,6 +5,10 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('PLATFORM');
+
 // AdMob initialization
 export const ADMOB_INIT_API = ['initializeAdMob', 'isAdMobAvailable'] as const;
 

@@ -3,6 +3,10 @@
  * Used for format information and version information in QR codes
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SPEC');
+
 // BCH(15,5) generator polynomial for format info: x^10 + x^8 + x^5 + x^4 + x^2 + x + 1
 const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
 

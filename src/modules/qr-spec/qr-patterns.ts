@@ -3,7 +3,10 @@
  * Functions to identify structural elements in QR codes
  */
 
+import { createLogger } from '../../lib/logger';
 import { ALIGNMENT_POSITIONS } from './constants';
+
+const _log = createLogger('SPEC');
 
 /**
  * Check if position is within a finder pattern

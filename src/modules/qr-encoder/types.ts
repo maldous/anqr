@@ -3,6 +3,10 @@
  * Core constants for QR code generation
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 // Mode indicators (4-bit)
 export const QRMode = {
   MODE_NUMBER: 1 << 0, // 0001

@@ -2,6 +2,10 @@
  * Frame Decimation Utilities
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 import type { AnimationFrame, GifCompositor } from './types';
 
 /**

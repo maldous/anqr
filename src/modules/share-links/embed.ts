@@ -3,7 +3,10 @@
  * Generates HTML, iframe, markdown, and BBCode embed snippets
  */
 
+import { createLogger } from '../../lib/logger';
 import type { EmbedOptions } from './types';
+
+const _log = createLogger('SHARE');
 
 /**
  * Convert a shareable app URL to an image API URL

@@ -3,6 +3,10 @@
  * Apply color cycling effect to animation frames
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 import { hslToRgb } from '../core';
 
 /**

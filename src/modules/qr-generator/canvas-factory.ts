@@ -3,6 +3,10 @@
  * Provides environment-agnostic canvas creation
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('GENERATE');
+
 /**
  * Canvas factory interface for environment-agnostic canvas creation.
  * Allows QRGenerator to work in both browser and Node.js (Netlify functions).

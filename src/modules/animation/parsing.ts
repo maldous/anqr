@@ -4,8 +4,8 @@
 
 /// <reference path="../../types/image-decoder.d.ts" />
 
-import { createLogger } from '../../lib/logger';
 import { decompressFrames, parseGIF } from 'gifuct-js';
+import { createLogger } from '../../lib/logger';
 import { detectImageFormat, isAnimatedWebP } from './format-detection';
 import { createGifCompositor } from './gif-compositor';
 import type { AnimationFrame } from './types';

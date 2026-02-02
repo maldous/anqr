@@ -2,6 +2,10 @@
  * Social and Messaging Payload Generators
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('PAYLOAD');
+
 /** Generate social profile deep link */
 export function generateSocialProfile(platform: string, username: string): string {
   const platformLinks: Record<string, (u: string) => string> = {

@@ -11,8 +11,12 @@ export {
 } from '../browser-io';
 
 /**
- * Escape XML special characters
- */
+ * Escape XML special characters */
+
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('EXPORT');
+
 export function escapeXml(str: string): string {
   return str
     .replaceAll('&', '&amp;')

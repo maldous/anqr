@@ -3,6 +3,10 @@
  * Native JavaScript implementations replacing Java utility classes
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 /**
  * Array utility functions
  */

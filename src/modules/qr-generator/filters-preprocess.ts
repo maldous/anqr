@@ -5,7 +5,7 @@
 
 import { createLogger } from '../../lib/logger';
 import { parseColor } from '../core';
-import { applyFilters, copyImageData, type ColorMode, type FilterOptions } from '../overlay';
+import { applyFilters, type ColorMode, copyImageData, type FilterOptions } from '../overlay';
 import { applyCannyEdge, applySobelEdge } from './filters-edge';
 import type { QRGeneratorConfig } from './types';
 
@@ -83,7 +83,9 @@ export function preprocessImageData(
     filterOptions.posterize = config.filterPosterize;
   }
 
-  if (config.filterDuotone1 && config.filterDuotone2) {
+  // Only apply duotone if colorMode is NOT 'color' (full color mode should preserve original colors)
+  // Duotone converts image to grayscale then maps to two colors, which destroys full color
+  if (config.filterDuotone1 && config.filterDuotone2 && config.colorMode !== 'color') {
     // Parse hex color strings into RGB objects for duotone filter
     const lightRgb = parseColor(config.filterDuotone1);
     const darkRgb = parseColor(config.filterDuotone2);

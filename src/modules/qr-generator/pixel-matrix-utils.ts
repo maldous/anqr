@@ -3,8 +3,11 @@
  * Helper functions for pixel matrix generation
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import type { QRGeneratorConfig, RGBWithMeta } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Get scale factor based on overlay mode

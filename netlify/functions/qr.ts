@@ -1351,15 +1351,11 @@ function parseGifFramesServer(arrayBuffer: ArrayBuffer): ServerAnimationFrame[] 
   // Limit frame count to prevent excessive processing
   const framesToProcess = frames.slice(0, MAX_GIF_FRAMES);
   if (frames.length > MAX_GIF_FRAMES) {
-    console.warn(`GIF has ${frames.length} frames, limiting to ${MAX_GIF_FRAMES}`);
   }
 
   // Calculate total duration and warn if excessive
   const totalDuration = framesToProcess.reduce((sum, f) => sum + f.delay * 10, 0);
   if (totalDuration > MAX_GIF_DURATION_MS) {
-    console.warn(
-      `GIF duration ${totalDuration}ms exceeds recommended max ${MAX_GIF_DURATION_MS}ms`
-    );
   }
 
   const { width, height } = gif.lsd;
@@ -1490,17 +1486,14 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     try {
       parsedUrl = new URL(url);
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        console.error(`Invalid URL protocol: ${parsedUrl.protocol}`);
         return null;
       }
 
       // SSRF protection: block private/internal IP addresses
       if (isPrivateOrReservedIP(parsedUrl.hostname)) {
-        console.error(`Blocked request to private/reserved IP: ${parsedUrl.hostname}`);
         return null;
       }
     } catch {
-      console.error(`Invalid URL format: ${url}`);
       return null;
     }
 
@@ -1519,7 +1512,6 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -1535,7 +1527,6 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     ];
     const isImage = validImageTypes.some((type) => contentType.toLowerCase().startsWith(type));
     if (!isImage && contentType && !contentType.startsWith('application/octet-stream')) {
-      console.error(`Invalid Content-Type for image: ${contentType}`);
       return null;
     }
 
@@ -1543,7 +1534,6 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     // This prevents memory spikes from malicious/buggy servers that lie about Content-Length
     const reader = response.body?.getReader();
     if (!reader) {
-      console.error('Response body is not readable');
       return null;
     }
 
@@ -1560,16 +1550,12 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
         // Abort immediately if we exceed the size limit
         if (totalBytes > MAX_OVERLAY_BYTES) {
           reader.cancel();
-          console.error(
-            `Overlay image too large: ${totalBytes}+ bytes (max: ${MAX_OVERLAY_BYTES})`
-          );
           return null;
         }
 
         chunks.push(value);
       }
-    } catch (streamError) {
-      console.error('Error reading overlay stream:', streamError);
+    } catch (_streamError) {
       return null;
     }
 
@@ -1590,23 +1576,19 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
         const gif = parseGIF(arrayBuffer);
         const frames = decompressFrames(gif, true);
         isAnimatedGif = frames.length > 1;
-      } catch (e) {
-        console.warn('Failed to parse GIF for frame detection:', e);
-      }
+      } catch (_e) {}
     }
 
     const img = await loadImage(buffer);
 
     // Validate image dimensions
     if (!(img.width && img.height) || img.width <= 0 || img.height <= 0) {
-      console.error(`Invalid image dimensions: ${img.width}x${img.height}`);
       return null;
     }
 
     // Validate pixel count to prevent memory issues
     const pixelCount = img.width * img.height;
     if (pixelCount > MAX_OVERLAY_PIXELS) {
-      console.error(`Overlay image too large: ${pixelCount} pixels (max: ${MAX_OVERLAY_PIXELS})`);
       return null;
     }
 
@@ -1619,8 +1601,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
       arrayBuffer,
       isAnimatedGif,
     };
-  } catch (error) {
-    console.error('Error fetching overlay image:', error);
+  } catch (_error) {
     return null;
   }
 }
@@ -1938,9 +1919,6 @@ async function handler(request: Request) {
     qaSimulateNoiseClientOnly ||
     qaShowHeatmapClientOnly
   ) {
-    console.info(
-      'QA simulation params requested but are client-only (qaContrast, qaBlur, qaNoise, qaHeatmap)'
-    );
   }
 
   // Output extras (missing from server previously)
@@ -2365,7 +2343,6 @@ async function handler(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('QR generation error:', error);
     // Report error to Sentry
     Sentry.captureException(error);
     return new Response(`Error generating QR code: ${message}`, {

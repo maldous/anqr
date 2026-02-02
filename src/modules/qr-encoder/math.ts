@@ -3,6 +3,10 @@
  * Galois field arithmetic for Reed-Solomon error correction
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 import type { QRPolynomial } from './types';
 
 // Galois field exponent table

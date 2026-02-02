@@ -5,6 +5,10 @@
  * Used by CI to check for API drift against index.ts exports.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DITHER');
+
 // Main apply function
 export const MAIN_API = ['applyDither'] as const;
 

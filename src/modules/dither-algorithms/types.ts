@@ -2,6 +2,10 @@
  * Dithering Types
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DITHER');
+
 export interface RGB {
   r: number;
   g: number;

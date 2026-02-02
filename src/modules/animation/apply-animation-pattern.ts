@@ -3,6 +3,10 @@
  * Apply visual effects to animation frames
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 import type { AnimationOptions, AnimationPattern } from './types';
 
 /**

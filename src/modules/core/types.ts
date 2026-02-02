@@ -3,6 +3,10 @@
  * Shared type definitions for color and math utilities
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('CORE');
+
 /** RGB color with values 0-255 */
 export interface RGB {
   r: number;

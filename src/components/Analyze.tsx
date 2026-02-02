@@ -61,6 +61,7 @@ import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { createLogger } from '@/lib/logger';
 import {
   analyzeQRCode,
   analyzeQRFromFile,
@@ -82,7 +83,6 @@ import {
   ECC_CAPACITIES_NUMERIC,
 } from '@/modules/qr-spec';
 import { useQRStore } from '@/store/qr-store';
-import { createLogger } from '@/lib/logger';
 
 const log = createLogger('ANALYZE');
 
@@ -1152,9 +1152,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             } catch (mixedModeError) {
               log.debug('STEP 3c - Mixed mode failed, trying higher versions...', {
                 error:
-                  mixedModeError instanceof Error
-                    ? mixedModeError.message
-                    : String(mixedModeError),
+                  mixedModeError instanceof Error ? mixedModeError.message : String(mixedModeError),
               });
               qr = null; // Reset to try higher versions
             }

@@ -3,6 +3,10 @@
  * Functions for converting strings to byte arrays for QR encoding
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 // Default stringToBytes function - can be replaced for different encodings
 let _stringToBytes = (s: string): number[] => {
   const bytes: number[] = [];

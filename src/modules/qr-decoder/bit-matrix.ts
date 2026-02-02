@@ -3,6 +3,10 @@
  * BitMatrix and BitArray classes for QR code data representation
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import { IllegalArgumentException } from './exceptions';
 import { Arrays, arraycopy, Integer, StringBuilder } from './util';
 

@@ -2,6 +2,10 @@
  * QR Analyzer Types
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANALYZER');
+
 export type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 
 export type ContentType =

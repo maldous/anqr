@@ -3,6 +3,7 @@
  * Handles image loading, cropping, filter application, and overlay modes
  */
 
+import { createLogger } from '../../lib/logger';
 import type {
   DiffusionKernel,
   DitherKind as DitherAlgKind,
@@ -10,6 +11,8 @@ import type {
 } from '../dither-algorithms';
 import { applyDither } from '../dither-algorithms';
 import { applyFilters, type FilterOptions } from './overlay-filters';
+
+const _log = createLogger('OVERLAY');
 
 // Re-export types from dither-algorithms for convenience
 export type DitherKind = DitherAlgKind;

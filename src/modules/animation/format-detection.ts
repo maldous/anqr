@@ -2,6 +2,10 @@
  * Format Detection
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 /**
  * Detect if an ArrayBuffer contains an animated WebP
  */

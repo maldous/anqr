@@ -3,7 +3,10 @@
  * Complementary, analogous, and triadic color generation
  */
 
+import { createLogger } from '../../lib/logger';
 import { hslToRgb, parseColor, rgbToHsl } from './color';
+
+const _log = createLogger('COLOR');
 
 /**
  * Get complementary color (opposite on color wheel)

@@ -8,7 +8,10 @@
  * - Browser URL updates
  */
 
+import { createLogger } from '../../lib/logger';
 import { MAX_SHARE_URL_LENGTH, type ShareConfig } from './types';
+
+const _log = createLogger('SHARE');
 
 // Helper functions to reduce code duplication
 function parseIntParam(value: string | null): number | undefined {

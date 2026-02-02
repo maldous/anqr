@@ -3,8 +3,11 @@
  * Applies overlay effects based on the selected mode
  */
 
+import { createLogger } from '../../lib/logger';
 import { blendColors, parseColor } from '../core';
 import type { OverlayData, QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 export interface OverlayModeResult {
   moduleColor: string;

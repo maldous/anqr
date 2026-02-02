@@ -46,7 +46,10 @@ export function decodeQR(
  */
 function tryDecode(imageData: ImageData): DecodeResult | null {
   try {
-    qrDecoderLog.trace('main: Starting decode attempt', { width: imageData.width, height: imageData.height });
+    qrDecoderLog.trace('main: Starting decode attempt', {
+      width: imageData.width,
+      height: imageData.height,
+    });
 
     // Step 1: Find finder patterns (returns patterns and the threshold used for detection)
     const { patterns, threshold } = findFinderPatterns(imageData);
@@ -232,7 +235,9 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       }
 
       if (rsResult === null) {
-        qrDecoderLog.trace('main: Failed - RS error correction failed (too many errors, all masks tried)');
+        qrDecoderLog.trace(
+          'main: Failed - RS error correction failed (too many errors, all masks tried)'
+        );
         return null;
       }
     }

@@ -6,6 +6,7 @@
 import { createLogger } from '../../lib/logger';
 
 const qrDecoderLog = createLogger('DECODER');
+
 import { GlobalHistogramBinarizer, HybridBinarizer } from './binarizer';
 import { decodeQR as customDecodeQR } from './decode-qr';
 import { ChecksumException, FormatException, NotFoundException } from './exceptions';

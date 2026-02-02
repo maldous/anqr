@@ -3,9 +3,12 @@
  * Overlay data extraction and processing
  */
 
+import { createLogger } from '../../lib/logger';
 import { overlayDataCache } from './cache';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 import { hashCanvasContent } from './utils';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Get overlay data (brightness and colors) from canvas

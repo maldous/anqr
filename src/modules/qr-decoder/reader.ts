@@ -3,6 +3,10 @@
  * Main entry point for QR code decoding
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import { BitMatrix } from './bit-matrix';
 import { NotFoundException } from './exceptions';
 import type { BinaryBitmap } from './luminance';

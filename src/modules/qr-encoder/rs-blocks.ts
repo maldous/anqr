@@ -3,6 +3,10 @@
  * Defines the RS block structure for each QR version and ECC level
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 import type { RSBlock } from './types';
 import { QRErrorCorrectionLevel } from './types';
 

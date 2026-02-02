@@ -3,6 +3,10 @@
  * Provides QR code analysis, scanning, validation, and safety checking
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANALYZER');
+
 // High-level analysis functions
 export {
   analyzeQRCode,

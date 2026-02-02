@@ -2,6 +2,10 @@
  * Payload Generator Utilities
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('PAYLOAD');
+
 /**
  * Validate phone number for vCard compatibility.
  * Android requires TEL to look like an actual phone number with digits.

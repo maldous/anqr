@@ -211,6 +211,9 @@ export type ScopePrefix = (typeof SCOPE_PREFIXES)[keyof typeof SCOPE_PREFIXES];
 /** Maximum number of log entries to keep in buffer (oldest are dropped when exceeded) */
 const MAX_BUFFER_SIZE = 1000;
 
+/** Maximum number of structured log entries to keep (always active, for saveLogs) */
+const MAX_STRUCTURED_BUFFER_SIZE = 500;
+
 /** Maximum depth for context object serialization (prevents infinite recursion) */
 const MAX_CONTEXT_DEPTH = 10;
 
@@ -220,6 +223,22 @@ const MAX_CONTEXT_DEPTH = 10;
 
 let logBufferEnabled = false;
 let logBuffer: string[] = [];
+
+// ============================================================================
+// Structured Log Buffer - always active, for saveLogs() functionality
+// ============================================================================
+
+/** Structured log entry with full context objects preserved */
+export interface StructuredLogEntry {
+  timestamp: string;
+  scope: string;
+  level: string;
+  message: string;
+  context?: unknown;
+}
+
+/** Always-active structured buffer for saveLogs() - captures last N entries */
+let structuredLogBuffer: StructuredLogEntry[] = [];
 
 /**
  * Enable log buffering and clear any existing buffer.
@@ -263,15 +282,101 @@ export function clearLogBuffer(): void {
   logBuffer = [];
 }
 
+// ============================================================================
+// Structured Log Buffer Functions (always active)
+// ============================================================================
+
+/**
+ * Get all structured log entries.
+ * Returns a copy of the buffer with full context objects preserved.
+ */
+export function getStructuredLogs(): StructuredLogEntry[] {
+  return [...structuredLogBuffer];
+}
+
+/**
+ * Clear the structured log buffer.
+ */
+export function clearStructuredLogs(): void {
+  structuredLogBuffer = [];
+}
+
+/**
+ * Get the number of entries in the structured log buffer.
+ */
+export function getStructuredLogCount(): number {
+  return structuredLogBuffer.length;
+}
+
+/**
+ * Save all structured logs to a JSON file (browser download).
+ * Objects are fully expanded in the JSON output.
+ *
+ * @param filename - Optional filename (default: anqr-logs-{timestamp}.json)
+ */
+export function saveLogs(filename?: string): void {
+  const logs = getStructuredLogs();
+
+  if (logs.length === 0) {
+    // biome-ignore lint/suspicious/noConsole: Intentional user feedback
+    console.log('No logs to save. Buffer is empty.');
+    return;
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const name = filename || `anqr-logs-${timestamp}.json`;
+
+  const json = JSON.stringify(logs, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // biome-ignore lint/suspicious/noConsole: Intentional user feedback
+  console.log(`Saved ${logs.length} log entries to ${name}`);
+}
+
 /**
  * Capture a log line to the buffer if buffering is enabled.
+ * Also always captures to structured buffer for saveLogs() functionality.
  * Includes ISO 8601 timestamp and enforces buffer size limits.
  */
 function captureToBuffer(scope: string, level: string, message: string, context?: unknown): void {
-  if (!logBufferEnabled) return;
-
   // ISO 8601 timestamp with milliseconds
   const timestamp = new Date().toISOString();
+
+  // Always capture to structured buffer (for saveLogs)
+  if (structuredLogBuffer.length >= MAX_STRUCTURED_BUFFER_SIZE) {
+    structuredLogBuffer.shift();
+  }
+  try {
+    structuredLogBuffer.push({
+      timestamp,
+      scope,
+      level,
+      message,
+      context: context ? structuredClone(context) : undefined,
+    });
+  } catch {
+    // structuredClone may fail on non-cloneable objects (DOM elements, etc.)
+    structuredLogBuffer.push({
+      timestamp,
+      scope,
+      level,
+      message,
+      context: context ? '[non-cloneable object]' : undefined,
+    });
+  }
+
+  // Only capture to string buffer if explicitly enabled
+  if (!logBufferEnabled) return;
+
   const prefix = `${timestamp} [${scope}:${level}]`;
   let logLine: string;
 

@@ -3,6 +3,10 @@
  * File export functionality for PNG, GIF, SVG, and vector SVG
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('EXPORT');
+
 // GIF export
 export { downloadGif, exportGif } from './gif-export';
 // Image export (PNG, WebP, JPEG)

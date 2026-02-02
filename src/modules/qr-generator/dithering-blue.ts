@@ -8,10 +8,19 @@
  * - Blue noise provides better visual quality than ordered dithering
  */
 
+import { createLogger } from '../../lib/logger';
+
 // Import from canonical sources
 import { rgbToGray } from '../core';
+// Import blue noise from canonical source
+import {
+  generateBlueNoiseTile as generateTile,
+  sampleBlueNoise as sampleNoise,
+} from '../dither-algorithms';
 import { type ECCLevel, qrcode } from '../qr-encoder';
 import { getVersionFromModuleCount, isStructuralModule } from '../qr-spec';
+
+const _log = createLogger('GENERATE');
 
 // Error correction level mapping
 const ECC_MAP: Record<string, ECCLevel> = {
@@ -24,12 +33,6 @@ const ECC_MAP: Record<string, ECCLevel> = {
   quartile: 'Q',
   high: 'H',
 };
-
-// Import blue noise from canonical source
-import {
-  generateBlueNoiseTile as generateTile,
-  sampleBlueNoise as sampleNoise,
-} from '../dither-algorithms';
 
 // Pre-computed 64x64 blue noise tile (normalized 0-1)
 const BLUE_NOISE_TILE_SIZE = 64;

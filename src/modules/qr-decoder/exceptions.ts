@@ -3,6 +3,10 @@
  * Consolidated exception classes for QR code decoding
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 /**
  * Base exception class for decoder errors
  */

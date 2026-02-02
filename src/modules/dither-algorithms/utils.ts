@@ -2,6 +2,7 @@
  * Dithering Utility Functions
  */
 
+import { createLogger } from '../../lib/logger';
 // Import core utilities from canonical source
 import {
   clamp01 as clamp01FromCore,
@@ -10,6 +11,8 @@ import {
 } from '../core';
 import { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
 import type { OrderedMatrix } from './types';
+
+const _log = createLogger('DITHER');
 
 // Re-export from core for backward compatibility within dither-algorithms
 export const clamp01 = clamp01FromCore;

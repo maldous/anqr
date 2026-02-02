@@ -3,6 +3,10 @@
  * Generates social media share URLs
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SHARE');
+
 /**
  * Generate social share URLs
  */

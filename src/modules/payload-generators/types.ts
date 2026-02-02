@@ -5,6 +5,10 @@
  * The store imports from here, not the other way around.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('PAYLOAD');
+
 // ============================================
 // HELPER TYPES (local definitions - no store dependency)
 // ============================================

@@ -3,6 +3,10 @@
  * LRU-style caching for expensive QR generation computations
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('GENERATE');
+
 /**
  * LRU-style cache with max size limit
  * Used for memoizing expensive computations

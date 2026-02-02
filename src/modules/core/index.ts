@@ -15,6 +15,10 @@
  * - Pure functions only
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('CORE');
+
 // Color utilities
 export {
   alphaBlend,

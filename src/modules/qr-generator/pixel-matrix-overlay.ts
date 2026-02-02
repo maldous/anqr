@@ -3,11 +3,14 @@
  * Unified overlay data preparation
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import { applyDitherToMatrix } from './dithering-matrix';
 import { getOverlayData } from './overlay-data';
 import { getEffectiveIntensity } from './pixel-matrix-utils';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Prepare unified overlay data for rendering

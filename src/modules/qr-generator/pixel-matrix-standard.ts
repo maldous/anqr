@@ -3,10 +3,13 @@
  * Standard overlay mode pixel matrix generation
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import { getOverlayData } from './overlay-data';
 import { normalizeColors } from './pixel-matrix-dither';
 import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Generate standard mode pixel matrix

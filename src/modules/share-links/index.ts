@@ -13,6 +13,10 @@
  * - Pure URL/string manipulation
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SHARE');
+
 // Embed code generation
 export {
   convertToImageApiUrl,

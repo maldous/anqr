@@ -6,10 +6,10 @@
  */
 
 import { Capacitor } from '@capacitor/core';
-import { createLogger } from '@/lib/logger';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { createLogger } from '@/lib/logger';
 import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { type Tier, useQRStore } from '@/store/qr-store';
 

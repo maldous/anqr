@@ -3,6 +3,10 @@
  * Type definitions for export functionality
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('EXPORT');
+
 export type OutputFormat = 'png' | 'webp' | 'gif' | 'svg' | 'jpeg';
 
 export interface ExportConfig {

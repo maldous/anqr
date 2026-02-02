@@ -2,6 +2,10 @@
  * Analysis Statistics Telemetry
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('TELEMETRY');
+
 export interface AnalysisStats {
   totalAnalyzed: number;
   successRate: number;

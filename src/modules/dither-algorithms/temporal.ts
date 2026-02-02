@@ -9,9 +9,12 @@
  * 2. Temporal offset utilities for animation frames (calculateTemporalOffset, etc.)
  */
 
+import { createLogger } from '../../lib/logger';
 import { generateBlueNoiseTile } from './blue-noise';
 import type { ColorMode, DitherResult } from './types';
 import { rgbToGray } from './utils';
+
+const _log = createLogger('DITHER');
 
 // ============================================================================
 // Temporal Dither Mode Types and Utilities

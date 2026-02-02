@@ -3,7 +3,10 @@
  * True pixel-level dithering for high-quality overlay integration
  */
 
+import { createLogger } from '../../lib/logger';
 import type { QRGeneratorConfig, RGBWithMeta } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Apply true dithering at pixel level

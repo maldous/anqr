@@ -1,5 +1,4 @@
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { createLogger } from '@/lib/logger';
 import { Capacitor } from '@capacitor/core';
 import {
   Camera as CameraIcon,
@@ -25,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { createLogger } from '@/lib/logger';
 import { HighlightedLabel } from '@/lib/search-context';
 import {
   type ColorMode,

@@ -3,6 +3,10 @@
  * Provides utilities for analyzing QR code content
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANALYZER');
+
 // Types
 export interface ImageProperties {
   width: number;

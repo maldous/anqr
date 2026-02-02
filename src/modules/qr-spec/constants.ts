@@ -3,7 +3,10 @@
  * Single source of truth for QR code specification data
  */
 
+import { createLogger } from '../../lib/logger';
 import type { ECCLevel } from './types';
+
+const _log = createLogger('SPEC');
 
 // ============================================
 // ALIGNMENT PATTERN POSITIONS
@@ -16,6 +19,7 @@ import type { ECCLevel } from './types';
  *
  * This is THE canonical source - all other modules should import from here
  */
+
 export const ALIGNMENT_POSITIONS: number[][] = [
   [], // Version 1 - no alignment
   [6, 18], // Version 2

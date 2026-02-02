@@ -2,6 +2,10 @@
  * Contrast Analysis Telemetry
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('TELEMETRY');
+
 export interface ContrastReport {
   ratio: number;
   lighterColor: string;

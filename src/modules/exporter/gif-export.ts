@@ -5,6 +5,10 @@
 
 import { Capacitor } from '@capacitor/core';
 import { applyPalette, GIFEncoder, quantize } from 'gifenc';
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('EXPORT');
+
 import type { ExportConfig, ExportResult } from './types';
 import { downloadUrl } from './utils';
 

@@ -15,6 +15,10 @@
  * - Pure coordinate/number math only
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SPEC');
+
 // BCH encoding
 export { getBCHTypeInfo, getBCHTypeNumber } from './bch';
 // Constants

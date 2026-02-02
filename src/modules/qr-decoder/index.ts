@@ -3,6 +3,10 @@
  * High-quality QR code decoding with multiple fallback strategies
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 // Canvas decoder
 export { decodeFromCanvas } from './decode-canvas';
 // Legacy exports for backwards compatibility (if needed)

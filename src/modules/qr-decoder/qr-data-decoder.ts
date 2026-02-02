@@ -3,6 +3,10 @@
  * Decodes QR code data from bit matrix
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import type { BitMatrix } from './bit-matrix';
 import { ChecksumException, FormatException } from './exceptions';
 import {

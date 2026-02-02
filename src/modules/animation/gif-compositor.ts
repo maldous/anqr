@@ -2,6 +2,10 @@
  * GIF Compositor - Optimal patch-only decode
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 import { decompressFrames, parseGIF } from 'gifuct-js';
 import type { GifCompositor } from './types';
 

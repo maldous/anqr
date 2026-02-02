@@ -534,9 +534,13 @@ export function extractModuleMatrix(
 
   // Detect 180° rotation: top-left looks good but top-right is garbage (or vice versa)
   if (tlAccuracy > 0.8 && trAccuracy < 0.5) {
-    qrDecoderLog.debug('extract: Possible 180° rotation detected - top-left OK but top-right wrong');
+    qrDecoderLog.debug(
+      'extract: Possible 180° rotation detected - top-left OK but top-right wrong'
+    );
   } else if (trAccuracy > 0.8 && tlAccuracy < 0.5) {
-    qrDecoderLog.debug('extract: Possible 180° rotation detected - top-right OK but top-left wrong');
+    qrDecoderLog.debug(
+      'extract: Possible 180° rotation detected - top-right OK but top-left wrong'
+    );
   }
 
   return matrix;

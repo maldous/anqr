@@ -5,6 +5,10 @@
  * These are used by both client (useQRGenerator) and server (netlify function).
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 import { createSeededRandom, hslToRgbTuple } from '../core';
 
 // ============================================

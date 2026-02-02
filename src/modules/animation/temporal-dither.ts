@@ -4,6 +4,10 @@
  * @deprecated Use calculateTemporalOffset and applyTemporalNoiseToCanvas directly from dither-algorithms
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ANIMATION');
+
 import {
   applyTemporalNoiseToCanvas,
   calculateTemporalOffset,

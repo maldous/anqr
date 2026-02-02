@@ -3,7 +3,10 @@
  * Pure color math functions - NO DOM, canvas, or pixel dependencies
  */
 
+import { createLogger } from '../../lib/logger';
 import type { HSL, HSLA, RGB, RGBA } from './types';
+
+const _log = createLogger('COLOR');
 
 // Re-export types for convenience
 export type { RGB, RGBA, HSL, HSLA };

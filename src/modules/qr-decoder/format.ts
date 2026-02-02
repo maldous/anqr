@@ -6,6 +6,7 @@
 import { createLogger } from '../../lib/logger';
 
 const qrDecoderLog = createLogger('DECODER');
+
 import {
   getAlignmentPositions as getAlignmentPositionsFromSpec,
   getMaskFunction as getMaskFunctionFromSpec,

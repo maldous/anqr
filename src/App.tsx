@@ -1,6 +1,5 @@
 import { Capacitor } from '@capacitor/core';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { createLogger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { BusyOverlay } from '@/components/BusyOverlay';
 import { Header } from '@/components/Header';
@@ -9,6 +8,7 @@ import { Preview } from '@/components/Preview';
 import { Sidebar } from '@/components/Sidebar';
 import type { StaticPageType } from '@/components/StaticPage';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { createLogger } from '@/lib/logger';
 
 // Lazy-loaded components for bundle optimization
 const Analyze = lazy(() => import('@/components/Analyze').then((m) => ({ default: m.Analyze })));

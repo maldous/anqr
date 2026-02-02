@@ -3,6 +3,10 @@
  * Buffer for building QR code data bit stream
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('ENCODER');
+
 import type { QRBitBuffer } from './types';
 
 /**

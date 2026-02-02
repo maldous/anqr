@@ -3,8 +3,12 @@
  * Main factory function for creating QR codes
  */
 
+import { createLogger } from '../../lib/logger';
 import { qrBitBuffer } from './bit-buffer';
 import { qr8BitByte, qrAlphaNum, qrKanji, qrNumber } from './data-modes';
+
+const _log = createLogger('ENCODER');
+
 import { qrPolynomial } from './math';
 import { createDataURL } from './output';
 import { getRSBlocks } from './rs-blocks';

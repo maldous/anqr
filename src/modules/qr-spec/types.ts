@@ -3,6 +3,10 @@
  * Core QR code types and constants per ISO/IEC 18004
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('SPEC');
+
 // ============================================
 // ERROR CORRECTION LEVELS
 // ============================================

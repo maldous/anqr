@@ -616,7 +616,10 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   };
   const isDarkModule = (row: number, col: number): boolean => row === moduleCount - 8 && col === 8;
 
-  qrDecoderLog.trace('codewords: Starting codeword extraction', { moduleCount, matrixRows: matrix.length });
+  qrDecoderLog.trace('codewords: Starting codeword extraction', {
+    moduleCount,
+    matrixRows: matrix.length,
+  });
 
   // Start from bottom-right, move up in two-column pairs
   let up = true;
@@ -850,7 +853,9 @@ export function decodeDataCodewordsDetailed(
 
     // Sanity check: if charCount is unreasonably large, something is wrong
     if (charCount > 7000) {
-      qrDecoderLog.debug('decode: Unreasonable char count, aborting - decode invalid', { charCount });
+      qrDecoderLog.debug('decode: Unreasonable char count, aborting - decode invalid', {
+        charCount,
+      });
       valid = false;
       break;
     }

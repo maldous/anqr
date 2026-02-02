@@ -3,6 +3,10 @@
  * Pure math functions with no dependencies
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('COLOR');
+
 /** Clamp value to 0-255 range */
 export function clamp(value: number): number {
   return Math.max(0, Math.min(255, Math.round(value)));

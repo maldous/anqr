@@ -3,6 +3,10 @@
  * Decode QR code from canvas element
  */
 
+import { createLogger } from '../../lib/logger';
+
+const _log = createLogger('DECODER');
+
 import { decodeQR } from './decoder-adapter';
 import type { DecodeResult } from './types';
 

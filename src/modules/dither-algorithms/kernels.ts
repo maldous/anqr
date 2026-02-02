@@ -2,7 +2,10 @@
  * Error Diffusion Kernels
  */
 
+import { createLogger } from '../../lib/logger';
 import type { DiffusionKernel } from './types';
+
+const _log = createLogger('DITHER');
 
 export interface DiffusionKernelDef {
   matrix: number[][];

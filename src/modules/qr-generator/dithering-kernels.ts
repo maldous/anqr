@@ -3,7 +3,10 @@
  * Error diffusion kernels for dithering algorithms
  */
 
+import { createLogger } from '../../lib/logger';
 import type { DiffusionKernel } from './types';
+
+const _log = createLogger('GENERATE');
 
 /**
  * Get diffusion kernel by name

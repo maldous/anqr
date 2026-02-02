@@ -4,8 +4,11 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { createLogger } from '../../lib/logger';
 import type { ExportConfig, ExportResult } from './types';
 import { downloadUrl, escapeXml } from './utils';
+
+const _log = createLogger('EXPORT');
 
 /**
  * Export canvas as SVG (embedded raster)
