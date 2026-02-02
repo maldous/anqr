@@ -31,14 +31,6 @@ export {
 export { detectContentType as detectContentTypeDetails } from './content-detection';
 // Main decoder
 export { decodeQRFromCanvas } from './decoder';
-// Logger utilities
-export {
-  createLogger,
-  type LogData,
-  type Logger,
-  qrAnalyzerLog,
-  qrDecoderLog,
-} from './logger';
 // Safety analyzer
 export {
   type AnalysisIssue,

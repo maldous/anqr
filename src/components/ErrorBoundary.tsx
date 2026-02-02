@@ -9,6 +9,9 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('ERROR');
 
 interface Props {
   children: ReactNode;
@@ -84,14 +87,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in development
-    if (import.meta.env.DEV) {
-      console.error('ErrorBoundary caught an error:', error);
-      console.error('Component stack:', errorInfo.componentStack);
-    }
-
-    // In production, you could send this to an error tracking service
-    // e.g., Sentry, LogRocket, etc.
+    // Log error using canonical logger (sends to Sentry automatically)
+    log.error('ErrorBoundary caught an error', {
+      error,
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   handleRetry = () => {

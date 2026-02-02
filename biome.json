@@ -84,7 +84,8 @@
         "noExplicitAny": "off",
         "noArrayIndexKey": "off",
         "noTemplateCurlyInString": "off",
-        "noAssignInExpressions": "off"
+        "noAssignInExpressions": "off",
+        "noConsole": "error"
       },
 
       "a11y": {
@@ -193,6 +194,22 @@
         "rules": {
           "style": {
             "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/lib/logger.ts",
+        "src/lib/logger-remote.ts",
+        "src/modules/qr-analyzer/logger.ts",
+        "src/modules/overlay/overlay-filters.ts",
+        "src/modules/qr-generator/**/*.ts"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
           }
         }
       }

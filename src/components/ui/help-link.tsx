@@ -6,11 +6,14 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { createLogger } from '@/lib/logger';
 import { HelpCircle, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { type Tier, useQRStore } from '@/store/qr-store';
+
+const log = createLogger('HELP');
 
 interface HelpLinkProps {
   /** Path to navigate to, e.g., '/guide#section-5' or '/learn' */
@@ -78,7 +81,7 @@ export function HelpLink({
                 // User watched the ad, grant premium access
                 activatePremiumAccess();
               } catch (error) {
-                console.error('Failed to show rewarded ad:', error);
+                log.error('Failed to show rewarded ad', { error });
                 setLoadingAd(false);
                 return;
               }

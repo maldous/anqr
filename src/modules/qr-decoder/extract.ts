@@ -4,8 +4,9 @@
  * Includes HybridBinarizer-style adaptive local thresholding for robust decoding
  */
 
-// Shared logger
-import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import { createLogger } from '../../lib/logger';
+
+const qrDecoderLog = createLogger('DECODER');
 
 // ============================================================================
 // Adaptive Local Thresholding (HybridBinarizer style)
@@ -184,7 +185,7 @@ export function calculateLocation(
   const clampedVersion = Math.max(1, Math.min(40, version));
   const moduleCount = clampedVersion * 4 + 17;
 
-  log('extract', 'Calculated location', {
+  qrDecoderLog.trace('extract: Calculated location', {
     moduleSize: moduleSize.toFixed(2),
     topDist: topDist.toFixed(1),
     leftDist: leftDist.toFixed(1),
@@ -321,7 +322,7 @@ export function extractModuleMatrix(
     y: downDirY * unifiedPitch,
   };
 
-  log('extract', 'Unified pitch calculation', {
+  qrDecoderLog.trace('extract: Unified pitch calculation', {
     topDist: topDist.toFixed(2),
     leftDist: leftDist.toFixed(2),
     avgDist: avgDist.toFixed(2),
@@ -373,7 +374,7 @@ export function extractModuleMatrix(
       (verifyBottomLeft.y - location.bottomLeft.y) ** 2
   );
 
-  log('extract', 'Origin validation', {
+  qrDecoderLog.trace('extract: Origin validation', {
     origin: `(${origin.x.toFixed(1)}, ${origin.y.toFixed(1)})`,
     rightVec: `(${rightVec.x.toFixed(2)}, ${rightVec.y.toFixed(2)})`,
     downVec: `(${downVec.x.toFixed(2)}, ${downVec.y.toFixed(2)})`,
@@ -389,7 +390,7 @@ export function extractModuleMatrix(
   });
 
   if (topLeftError > 1 || topRightError > 1 || bottomLeftError > 1) {
-    log('extract', 'WARNING: Finder center mapping errors detected!', {
+    qrDecoderLog.debug('extract: Finder center mapping errors detected', {
       topLeftError: topLeftError.toFixed(2),
       topRightError: topRightError.toFixed(2),
       bottomLeftError: bottomLeftError.toFixed(2),
@@ -399,7 +400,7 @@ export function extractModuleMatrix(
   // Note: Adaptive local thresholding (HybridBinarizer) infrastructure is kept
   // but not used - the global threshold from finder patterns is more reliable.
 
-  log('extract', 'Sampling configuration', {
+  qrDecoderLog.trace('extract: Sampling configuration', {
     moduleSize: location.moduleSize.toFixed(1),
     samplingMode: 'global threshold (from finder patterns)',
     globalThreshold: globalThreshold.toFixed(1),
@@ -449,7 +450,7 @@ export function extractModuleMatrix(
     matrix.push(matrixRow);
   }
 
-  log('extract', 'Extracted matrix', {
+  qrDecoderLog.trace('extract: Extracted matrix', {
     moduleCount,
     thresholdMode: 'global (from finder patterns)',
     threshold: globalThreshold.toFixed(1),
@@ -482,7 +483,7 @@ export function extractModuleMatrix(
     }
   }
 
-  log('extract', 'Top-left finder pattern validation', {
+  qrDecoderLog.trace('extract: Top-left finder pattern validation', {
     matches: tlMatches,
     mismatches: tlMismatches,
     accuracy: `${((tlMatches / 49) * 100).toFixed(1)}%`,
@@ -512,7 +513,7 @@ export function extractModuleMatrix(
     }
   }
 
-  log('extract', 'Top-right finder pattern validation', {
+  qrDecoderLog.trace('extract: Top-right finder pattern validation', {
     matches: trMatches,
     mismatches: trMismatches,
     accuracy: `${((trMatches / 49) * 100).toFixed(1)}%`,
@@ -525,7 +526,7 @@ export function extractModuleMatrix(
   const trAccuracy = trMatches / 49;
 
   if (tlMismatches > 20 || trMismatches > 20) {
-    log('extract', 'WARNING: Finder pattern accuracy very low - matrix may be mis-oriented', {
+    qrDecoderLog.debug('extract: Finder pattern accuracy very low - matrix may be mis-oriented', {
       topLeftAccuracy: `${(tlAccuracy * 100).toFixed(1)}%`,
       topRightAccuracy: `${(trAccuracy * 100).toFixed(1)}%`,
     });
@@ -533,9 +534,9 @@ export function extractModuleMatrix(
 
   // Detect 180° rotation: top-left looks good but top-right is garbage (or vice versa)
   if (tlAccuracy > 0.8 && trAccuracy < 0.5) {
-    log('extract', 'WARNING: Possible 180° rotation detected - top-left OK but top-right wrong');
+    qrDecoderLog.debug('extract: Possible 180° rotation detected - top-left OK but top-right wrong');
   } else if (trAccuracy > 0.8 && tlAccuracy < 0.5) {
-    log('extract', 'WARNING: Possible 180° rotation detected - top-right OK but top-left wrong');
+    qrDecoderLog.debug('extract: Possible 180° rotation detected - top-right OK but top-left wrong');
   }
 
   return matrix;

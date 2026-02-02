@@ -3,8 +3,11 @@
  * Geometric transformations for overlay images
  */
 
+import { createLogger } from '../../lib/logger';
 import { preprocessImageData } from './filters-preprocess';
 import type { CreateCanvasFn, QRGeneratorConfig } from './types';
+
+const log = createLogger('GENERATE');
 
 /**
  * Check if overlay has preprocessing options that need to be applied
@@ -72,13 +75,13 @@ export async function preprocessOverlay(
 
   if (!hasPreprocessingOptions(config)) {
     if (debug) {
-      console.log('[OVERLAY] preprocessOverlay - no preprocessing needed, returning original canvas');
+      log.debug('preprocessOverlay - no preprocessing needed, returning original canvas');
     }
     return canvas;
   }
 
   if (debug) {
-    console.log('[OVERLAY] preprocessOverlay - starting preprocessing', {
+    log.debug('preprocessOverlay - starting preprocessing', {
       canvasSize: { width: canvas.width, height: canvas.height },
       colorMode: config.colorMode,
       filterGrayscale: config.filterGrayscale,
@@ -113,7 +116,7 @@ export async function preprocessOverlay(
   resultCtx.putImageData(processed, 0, 0);
 
   if (debug) {
-    console.log('[OVERLAY] preprocessOverlay - complete', {
+    log.debug('preprocessOverlay - complete', {
       resultSize: { width: result.width, height: result.height },
     });
   }

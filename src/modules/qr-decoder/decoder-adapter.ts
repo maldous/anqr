@@ -3,7 +3,9 @@
  * Provides DecodeResult interface using consolidated decoder modules.
  */
 
-import { qrAnalyzerLog as log } from '../qr-analyzer/logger';
+import { createLogger } from '../../lib/logger';
+
+const qrDecoderLog = createLogger('DECODER');
 import { GlobalHistogramBinarizer, HybridBinarizer } from './binarizer';
 import { decodeQR as customDecodeQR } from './decode-qr';
 import { ChecksumException, FormatException, NotFoundException } from './exceptions';
@@ -62,14 +64,14 @@ export function decodeQR(
   tryHarderHints.set(DecodeHintType.TRY_HARDER, true);
 
   if (inversionAttempts !== 'onlyInvert') {
-    log('strategy', 'Trying: Normal + TRY_HARDER');
+    qrDecoderLog.trace('strategy: Trying Normal + TRY_HARDER');
     const result = tryDecode(imageData, false, tryHarderHints);
     if (result) return result;
   }
 
   // Strategy 2: Inverted with TRY_HARDER
   if (inversionAttempts !== 'dontInvert') {
-    log('strategy', 'Trying: Inverted + TRY_HARDER');
+    qrDecoderLog.trace('strategy: Trying Inverted + TRY_HARDER');
     const result = tryDecode(imageData, true, tryHarderHints);
     if (result) return result;
   }
@@ -80,33 +82,33 @@ export function decodeQR(
   pureHints.set(DecodeHintType.PURE_BARCODE, true);
 
   if (inversionAttempts !== 'onlyInvert') {
-    log('strategy', 'Trying: Normal + TRY_HARDER + PURE_BARCODE');
+    qrDecoderLog.trace('strategy: Trying Normal + TRY_HARDER + PURE_BARCODE');
     const result = tryDecode(imageData, false, pureHints);
     if (result) return result;
   }
 
   // Strategy 4: Try with GlobalHistogramBinarizer instead of HybridBinarizer
   if (inversionAttempts !== 'onlyInvert') {
-    log('strategy', 'Trying: Normal + GlobalHistogramBinarizer');
+    qrDecoderLog.trace('strategy: Trying Normal + GlobalHistogramBinarizer');
     const result = tryDecodeWithGlobalBinarizer(imageData, false, tryHarderHints);
     if (result) return result;
   }
 
   if (inversionAttempts !== 'dontInvert') {
-    log('strategy', 'Trying: Inverted + GlobalHistogramBinarizer');
+    qrDecoderLog.trace('strategy: Trying Inverted + GlobalHistogramBinarizer');
     const result = tryDecodeWithGlobalBinarizer(imageData, true, tryHarderHints);
     if (result) return result;
   }
 
   // Strategy 5: Fallback to our custom decoder (uses different finder pattern detection)
-  log('strategy', 'Trying: Custom decoder fallback');
+  qrDecoderLog.trace('strategy: Trying Custom decoder fallback');
   const customResult = customDecodeQR(imageData, options);
   if (customResult?.success) {
-    log('strategy', 'SUCCESS: Custom decoder worked!');
+    qrDecoderLog.trace('strategy: SUCCESS - Custom decoder worked');
     return customResult;
   }
 
-  log('strategy', 'All strategies exhausted - no QR code detected');
+  qrDecoderLog.trace('strategy: All strategies exhausted - no QR code detected');
   return null;
 }
 
@@ -124,13 +126,13 @@ function tryDecodeWithGlobalBinarizer(
     const bitmap = new BinaryBitmap(binarizer);
     const reader = new Reader();
     const result = reader.decode(bitmap, hints);
-    log('decoder', 'GlobalHistogramBinarizer decode succeeded');
+    qrDecoderLog.trace('decoder: GlobalHistogramBinarizer decode succeeded');
     return extractDecodeResult(result, imageData);
   } catch (err) {
     if (err instanceof NotFoundException) {
-      log('decoder', 'GlobalHistogramBinarizer: NotFoundException', { invert });
+      qrDecoderLog.trace('decoder: GlobalHistogramBinarizer NotFoundException', { invert });
     } else {
-      log('decoder', 'GlobalHistogramBinarizer: Error', { error: String(err), invert });
+      qrDecoderLog.trace('decoder: GlobalHistogramBinarizer Error', { error: String(err), invert });
     }
     return null;
   }
@@ -252,7 +254,7 @@ function tryDecode(
         .map((k) => DecodeHintType[k])
         .join('+')
     : 'none';
-  log('decoder', 'Starting decode attempt', {
+  qrDecoderLog.trace('decoder: Starting decode attempt', {
     width: imageData.width,
     height: imageData.height,
     invert,
@@ -270,7 +272,7 @@ function tryDecode(
     // Use the full QRCodeReader which includes Detector for proper finder pattern detection
     const reader = new Reader();
     const result = reader.decode(bitmap, hints);
-    log('decoder', 'Reader.decode() succeeded', { hints: hintDesc });
+    qrDecoderLog.trace('decoder: Reader.decode() succeeded', { hints: hintDesc });
 
     // Get text content
     const text = result.getText();
@@ -404,22 +406,22 @@ function tryDecode(
   } catch (err) {
     // Decoder throws exceptions for various decode failures - log the specific type
     if (err instanceof NotFoundException) {
-      log('decoder', 'DECODE FAILED: NotFoundException', {
+      qrDecoderLog.trace('decoder: DECODE FAILED - NotFoundException', {
         message: err.message || 'No QR code found in image',
         invert,
       });
     } else if (err instanceof FormatException) {
-      log('decoder', 'DECODE FAILED: FormatException', {
+      qrDecoderLog.trace('decoder: DECODE FAILED - FormatException', {
         message: err.message || 'QR code format error',
         invert,
       });
     } else if (err instanceof ChecksumException) {
-      log('decoder', 'DECODE FAILED: ChecksumException', {
+      qrDecoderLog.trace('decoder: DECODE FAILED - ChecksumException', {
         message: err.message || 'QR code checksum error',
         invert,
       });
     } else {
-      log('decoder', 'DECODE FAILED: Unknown exception', {
+      qrDecoderLog.trace('decoder: DECODE FAILED - Unknown exception', {
         errorType: err?.constructor?.name || 'Unknown',
         message: err instanceof Error ? err.message : String(err),
         invert,

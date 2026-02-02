@@ -3,8 +3,11 @@
  * Helper functions for hashing, random generation, and contrast calculation
  */
 
+import { createLogger } from '../../lib/logger';
 import { createRNG, getContrastRatio as getContrastRatioFromCore } from '../core';
 import { canvasHashCache } from './cache';
+
+const log = createLogger('GENERATE');
 
 /**
  * Validate and normalize a color string.
@@ -131,7 +134,7 @@ export async function hashCanvasContent(
     return hashStr;
   } catch (error) {
     // Fallback to dimensions-only if getImageData fails
-    console.warn('Canvas hashing failed:', error);
+    log.warn('Canvas hashing failed', { error });
     return `${canvas.width}x${canvas.height}`;
   }
 }

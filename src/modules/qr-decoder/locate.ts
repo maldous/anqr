@@ -3,8 +3,9 @@
  * Detects the 3 finder patterns in a QR code image
  */
 
-// Shared logger
-import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import { createLogger } from '../../lib/logger';
+
+const qrDecoderLog = createLogger('DECODER');
 import type { FinderPattern, FinderPatternResult } from './types';
 import { pointDistance } from './utils';
 
@@ -217,7 +218,7 @@ function verifyVertical(
 export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
   const { data: pixels, width, height } = imageData;
 
-  log('locate', 'Finding finder patterns', { width, height });
+  qrDecoderLog.trace('locate: Finding finder patterns', { width, height });
 
   // Calculate threshold (simple mean). We composite transparency over white
   // so a transparent background is treated as light modules.
@@ -229,7 +230,7 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
   }
   const threshold = sum / count;
 
-  log('locate', 'Calculated threshold', { threshold: threshold.toFixed(1) });
+  qrDecoderLog.trace('locate: Calculated threshold', { threshold: threshold.toFixed(1) });
 
   const candidates: Map<string, FinderPattern> = new Map();
 
@@ -286,7 +287,7 @@ export function findFinderPatterns(imageData: ImageData): FinderPatternResult {
     .filter((p) => p.count >= 1)
     .sort((a, b) => b.count - a.count);
 
-  log('locate', 'Found finder pattern candidates', {
+  qrDecoderLog.trace('locate: Found finder pattern candidates', {
     count: patterns.length,
     patterns: patterns.slice(0, 5).map((p) => ({
       x: p.center.x.toFixed(1),
@@ -538,7 +539,7 @@ function refineFinderPatternCenter(
     moduleSize
   );
 
-  log('locate', 'Finder center refinement', {
+  qrDecoderLog.trace('locate: Finder center refinement', {
     original: `(${centerX.toFixed(1)}, ${centerY.toFixed(1)})`,
     refined: `(${bestX.toFixed(1)}, ${bestY.toFixed(1)})`,
     delta: `(${deltaX.toFixed(1)}, ${deltaY.toFixed(1)})`,
@@ -578,7 +579,7 @@ export function selectFinderPatterns(
   patterns: FinderPattern[]
 ): [FinderPattern, FinderPattern, FinderPattern] | null {
   if (patterns.length < 3) {
-    log('select', 'Not enough patterns found', { count: patterns.length });
+    qrDecoderLog.debug('select: Not enough patterns found', { count: patterns.length });
     return null;
   }
 
@@ -661,7 +662,7 @@ export function selectFinderPatterns(
         const score =
           squareness * 5 + angleDev * 5 + sizeVariance + hitCountPenalty * 2 + spanBonus * 2;
 
-        log('select', 'Evaluating triplet', {
+        qrDecoderLog.trace('select: Evaluating triplet', {
           topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
           topRight: { x: topRight.center.x.toFixed(1), y: topRight.center.y.toFixed(1) },
           bottomLeft: { x: bottomLeft.center.x.toFixed(1), y: bottomLeft.center.y.toFixed(1) },
@@ -676,14 +677,14 @@ export function selectFinderPatterns(
 
         // Only accept triplets that are reasonably square (< 10% difference)
         if (squareness > 0.1) {
-          log('select', 'Rejecting: not square enough', { squareness: squareness.toFixed(3) });
+          qrDecoderLog.trace('select: Rejecting - not square enough', { squareness: squareness.toFixed(3) });
           continue;
         }
 
         // Only accept triplets with angles close to 90 degrees (< 15 degrees off)
         if (angleDev > 0.26) {
           // cos(75°) ≈ 0.26
-          log('select', 'Rejecting: angle not close to 90°', { angleDev: angleDev.toFixed(3) });
+          qrDecoderLog.trace('select: Rejecting - angle not close to 90°', { angleDev: angleDev.toFixed(3) });
           continue;
         }
 
@@ -698,7 +699,7 @@ export function selectFinderPatterns(
   }
 
   if (candidates.length === 0) {
-    log('select', 'Could not find valid pattern triplet');
+    qrDecoderLog.debug('select: Could not find valid pattern triplet');
     return null;
   }
 
@@ -706,7 +707,7 @@ export function selectFinderPatterns(
   candidates.sort((a, b) => a.score - b.score);
   const best = candidates[0];
 
-  log('select', 'Selected finder patterns', {
+  qrDecoderLog.trace('select: Selected finder patterns', {
     topLeft: { x: best.ordered[0].center.x.toFixed(1), y: best.ordered[0].center.y.toFixed(1) },
     topRight: { x: best.ordered[1].center.x.toFixed(1), y: best.ordered[1].center.y.toFixed(1) },
     bottomLeft: { x: best.ordered[2].center.x.toFixed(1), y: best.ordered[2].center.y.toFixed(1) },
@@ -774,7 +775,7 @@ function orderByAngle(
     (a.center.x - topLeft.center.x) * (b.center.y - topLeft.center.y) -
     (a.center.y - topLeft.center.y) * (b.center.x - topLeft.center.x);
 
-  log('select', 'Cross product calculation', {
+  qrDecoderLog.trace('select: Cross product calculation', {
     topLeft: { x: topLeft.center.x.toFixed(1), y: topLeft.center.y.toFixed(1) },
     a: { x: a.center.x.toFixed(1), y: a.center.y.toFixed(1) },
     b: { x: b.center.x.toFixed(1), y: b.center.y.toFixed(1) },

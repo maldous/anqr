@@ -13,6 +13,7 @@
  * - Per-module dark-pixel ratio is bounded (data modules only).
  */
 
+import { createLogger } from '../../lib/logger';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
 import { isLocked } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
@@ -23,6 +24,8 @@ import type {
   QRGeneratorConfig,
   RGBWithMeta,
 } from './types';
+
+const log = createLogger('DITHER');
 
 type RGBi = { r: number; g: number; b: number };
 
@@ -256,24 +259,22 @@ export async function generateDitheredMatrix(
   // Post-pass: enforce per-module constraints (center pixel correctness + ratio bounds)
   enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version);
 
-  if (config.debugOverlayDither) {
-    // One small log with key stats.
-    const center = Math.floor(scale / 2);
-    const sampleMr = Math.min(10, moduleCount - 1);
-    const sampleMc = Math.min(10, moduleCount - 1);
-    const sy = sampleMr * scale + center;
-    const sx = sampleMc * scale + center;
-    console.log('[OverlayDither] dithered-matrix', {
-      scaledSize,
-      moduleCount,
-      scale,
-      mix,
-      sample: {
-        module: { row: sampleMr, col: sampleMc, qrIsDark: qr.isDark(sampleMr, sampleMc) },
-        centerPixel: { y: sy, x: sx, isDark: matrix[sy]?.[sx], desire: desire[sy]?.[sx] },
-      },
-    });
-  }
+  // Log key stats for debugging
+  const center = Math.floor(scale / 2);
+  const sampleMr = Math.min(10, moduleCount - 1);
+  const sampleMc = Math.min(10, moduleCount - 1);
+  const sy = sampleMr * scale + center;
+  const sx = sampleMc * scale + center;
+  log.debug('dithered-matrix generated', {
+    scaledSize,
+    moduleCount,
+    scale,
+    mix,
+    sample: {
+      module: { row: sampleMr, col: sampleMc, qrIsDark: qr.isDark(sampleMr, sampleMc) },
+      centerPixel: { y: sy, x: sx, isDark: matrix[sy]?.[sx], desire: desire[sy]?.[sx] },
+    },
+  });
 
   return { matrix, colors, scale, overlayData: null, effectiveIntensity };
 }
@@ -355,15 +356,13 @@ export async function generateBlueNoiseMatrix(
 
   enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version);
 
-  if (config.debugOverlayDither) {
-    console.log('[OverlayDither] blue-noise-matrix', {
-      scaledSize,
-      moduleCount,
-      scale,
-      tileSize,
-      seed,
-    });
-  }
+  log.debug('blue-noise-matrix generated', {
+    scaledSize,
+    moduleCount,
+    scale,
+    tileSize,
+    seed,
+  });
 
   return { matrix, colors, scale, overlayData: null, effectiveIntensity };
 }

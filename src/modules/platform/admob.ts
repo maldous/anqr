@@ -5,6 +5,10 @@
  * This service is only used when running in a native app context.
  */
 
+import { createLogger } from '../../lib/logger';
+
+const log = createLogger('ADMOB');
+
 // AdMob Capacitor Plugin imports (lazy loaded)
 let AdMob: any = null;
 let BannerAdSize: any = null;
@@ -120,12 +124,10 @@ export async function initializeAdMob(): Promise<boolean> {
 
     adMobAvailable = true;
     adMobInitialized = true;
-    console.log(
-      `[AdMob] Initialized successfully (${isTestMode ? 'TEST MODE' : 'PRODUCTION MODE'})`
-    );
+    log.info('Initialized successfully', { mode: isTestMode ? 'TEST' : 'PRODUCTION' });
     return true;
   } catch (_err) {
-    console.log('[AdMob] Not available (web environment or plugin not installed)');
+    log.debug('Not available (web environment or plugin not installed)');
     adMobAvailable = false;
     adMobInitialized = true;
     return false;
@@ -184,10 +186,10 @@ export async function showBannerAd(position: 'top' | 'bottom' = 'bottom'): Promi
 
     await AdMob.showBanner(bannerOptions);
     currentBannerPosition = position;
-    console.log(`[AdMob] Banner shown at ${position}`);
+    log.info('Banner shown', { position });
     return true;
   } catch (err) {
-    console.error('[AdMob] Failed to show banner:', err);
+    log.error('Failed to show banner', { error: err });
     return false;
   }
 }
@@ -219,9 +221,9 @@ export async function hideBannerAd(): Promise<void> {
     for (const cb of bannerHeightCallbacks) {
       cb(0);
     }
-    console.log('[AdMob] Banner hidden');
+    log.info('Banner hidden');
   } catch (err) {
-    console.error('[AdMob] Failed to hide banner:', err);
+    log.error('Failed to hide banner', { error: err });
   }
 }
 
@@ -238,9 +240,9 @@ export async function removeBannerAd(): Promise<void> {
     for (const cb of bannerHeightCallbacks) {
       cb(0);
     }
-    console.log('[AdMob] Banner removed');
+    log.info('Banner removed');
   } catch (err) {
-    console.error('[AdMob] Failed to remove banner:', err);
+    log.error('Failed to remove banner', { error: err });
   }
 }
 
@@ -263,10 +265,10 @@ export async function prepareInterstitial(
     } else {
       await AdMob.prepareInterstitial({ adId });
     }
-    console.log(`[AdMob] ${type} prepared (${isTestMode ? 'TEST' : 'PROD'})`);
+    log.info('Ad prepared', { type, mode: isTestMode ? 'TEST' : 'PROD' });
     return true;
   } catch (err) {
-    console.error(`[AdMob] Failed to prepare ${type}:`, err);
+    log.error('Failed to prepare ad', { type, error: err });
     return false;
   }
 }
@@ -280,14 +282,14 @@ export async function showInterstitial(type: InterstitialType = 'interstitial'):
   try {
     if (type === 'rewardedInterstitial') {
       const result = await AdMob.showRewardedInterstitialAd();
-      console.log('[AdMob] Rewarded interstitial shown, reward:', result);
+      log.info('Rewarded interstitial shown', { reward: result });
     } else {
       await AdMob.showInterstitial();
-      console.log('[AdMob] Interstitial shown');
+      log.info('Interstitial shown');
     }
     return true;
   } catch (err) {
-    console.error(`[AdMob] Failed to show ${type}:`, err);
+    log.error('Failed to show ad', { type, error: err });
     return false;
   }
 }
@@ -311,10 +313,10 @@ export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promis
     } else {
       await AdMob.prepareRewardedAd({ adId });
     }
-    console.log(`[AdMob] ${type} ad prepared (${isTestMode ? 'TEST' : 'PROD'})`);
+    log.info('Rewarded ad prepared', { type, mode: isTestMode ? 'TEST' : 'PROD' });
     return true;
   } catch (err) {
-    console.error(`[AdMob] Failed to prepare ${type} ad:`, err);
+    log.error('Failed to prepare rewarded ad', { type, error: err });
     return false;
   }
 }
@@ -342,14 +344,14 @@ export async function showRewardedAd(
     } else {
       result = await AdMob.showRewardedAd();
     }
-    console.log(`[AdMob] ${type} ad shown, reward:`, result);
+    log.info('Rewarded ad shown', { type, reward: result });
     return {
       rewarded: true,
       amount: result?.amount,
       type: result?.type,
     };
   } catch (err) {
-    console.error(`[AdMob] Failed to show ${type} ad:`, err);
+    log.error('Failed to show rewarded ad', { type, error: err });
     return { rewarded: false };
   }
 }

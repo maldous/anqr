@@ -5,12 +5,16 @@ import App from './App.tsx';
 import './index.css';
 import './i18n'; // Initialize i18n
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { initRemoteDiagnostics } from './lib/logger-remote';
+import { createLogger } from './lib/logger';
 import { initializeAdMob, showBannerAd } from './modules/platform';
+
+const log = createLogger('MAIN');
 
 // Detect if running in Capacitor (native app) environment
 const isCapacitor = typeof (window as Window & { Capacitor?: unknown }).Capacitor !== 'undefined';
 
-// Initialize Sentry for error tracking
+// Initialize Sentry for error tracking (must be first)
 // Web and Capacitor both use the same React SDK - native Android uses its own SDK in MainActivity.java
 // DSN: anqr-web for web browser, anqr-mobile DSN is used in native Android code
 Sentry.init({
@@ -22,12 +26,24 @@ Sentry.init({
   release: import.meta.env.VITE_SENTRY_RELEASE,
   // Performance monitoring - 10% of transactions
   tracesSampleRate: 0.1,
+  // Don't send debug breadcrumbs to Sentry
+  beforeBreadcrumb(breadcrumb) {
+    // Filter out debug-level breadcrumbs in production
+    if (breadcrumb.level === 'debug' && !import.meta.env.DEV) {
+      return null;
+    }
+    return breadcrumb;
+  },
   // Session replay for web only (not available in Capacitor WebView)
   replaysSessionSampleRate: isCapacitor ? 0 : 0.01,
   replaysOnErrorSampleRate: isCapacitor ? 0 : 1.0,
   // Tag environment for filtering in Sentry dashboard
   environment: isCapacitor ? 'capacitor' : 'web',
 });
+
+// Initialize logging system (after Sentry, so errors during init are captured)
+initRemoteDiagnostics();
+log.info('App starting', { environment: isCapacitor ? 'capacitor' : 'web' });
 
 // Initialize AdMob for native apps after a short delay to ensure Capacitor bridge is ready
 // This is more reliable than calling at module load time
@@ -41,7 +57,7 @@ const initAds = async () => {
       await showBannerAd('bottom');
     }
   } catch (error) {
-    console.error('AdMob initialization error:', error);
+    log.error('AdMob initialization error', { error });
   }
 };
 

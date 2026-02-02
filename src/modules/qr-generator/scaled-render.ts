@@ -3,6 +3,7 @@
  * Handles all scaled overlay modes (dithered, blue-noise, subpixel)
  */
 
+import { createLogger } from '../../lib/logger';
 import { isFormatInfo as isFormatInfoSpec, isVersionInfo as isVersionInfoSpec } from '../qr-spec';
 import type { CanvasFactory } from './canvas-factory';
 import {
@@ -17,6 +18,8 @@ import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
 import { validateColor } from './utils';
+
+const log = createLogger('GENERATE');
 
 function _isDarkModule(row: number, col: number, moduleCount: number): boolean {
   // Fixed dark module (always dark) per ISO/IEC 18004.
@@ -113,7 +116,7 @@ export async function generateScaledQR(
 
   const debug = config.debugOverlayDither === true;
   if (debug) {
-    console.log('[OverlayDither][ScaledRender] start', {
+    log.debug('ScaledRender start', {
       moduleCount,
       scale,
       scaledSize,
@@ -148,7 +151,7 @@ export async function generateScaledQR(
         y === Math.floor(scaledSize / 2) &&
         (x === Math.floor(scaledSize / 2) || x === Math.floor(scaledSize / 2) + 4)
       ) {
-        console.log('[OverlayDither][ScaledRender] samplePixel', {
+        log.debug('ScaledRender samplePixel', {
           y,
           x,
           isDark,
@@ -333,7 +336,7 @@ export async function generateScaledQR(
     }
 
     if (debug) {
-      console.log('[OverlayDither][ScaledRender] preserved', {
+      log.debug('ScaledRender preserved', {
         protectFormat,
         protectVersion,
         formatCount,

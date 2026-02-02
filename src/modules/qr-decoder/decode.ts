@@ -3,8 +3,9 @@
  * Extracts and decodes data from the unmasked matrix
  */
 
-// Shared logger
-import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import { createLogger } from '../../lib/logger';
+
+const qrDecoderLog = createLogger('DECODER');
 
 // Import from canonical source (qr-spec)
 import {
@@ -615,7 +616,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
   };
   const isDarkModule = (row: number, col: number): boolean => row === moduleCount - 8 && col === 8;
 
-  log('codewords', 'Starting codeword extraction', { moduleCount, matrixRows: matrix.length });
+  qrDecoderLog.trace('codewords: Starting codeword extraction', { moduleCount, matrixRows: matrix.length });
 
   // Start from bottom-right, move up in two-column pairs
   let up = true;
@@ -660,7 +661,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
     up = !up;
   }
 
-  log('codewords', 'Extracted codewords', {
+  qrDecoderLog.trace('codewords: Extracted codewords', {
     count: codewords.length,
     first10: codewords
       .slice(0, 10)
@@ -726,7 +727,7 @@ function deinterleaveDataCodewords(codewords: number[], rsBlocks: number[][]): n
   // Concatenate blocks to get sequential data
   const result = blockData.flat();
 
-  log('deinterleave', 'De-interleaved data codewords', {
+  qrDecoderLog.trace('deinterleave: De-interleaved data codewords', {
     numBlocks,
     blockSizes: blockSizes.join(','),
     inputLength: codewords.length,
@@ -747,7 +748,7 @@ export function separateCodewords(
   const eccLevelChar = ['M', 'L', 'H', 'Q'][eccLevel] as keyof typeof RS_BLOCKS;
   const rsBlocks = RS_BLOCKS[eccLevelChar]?.[version - 1];
 
-  log('separate', 'Separating codewords', {
+  qrDecoderLog.trace('separate: Separating codewords', {
     version,
     eccLevel,
     eccLevelChar,
@@ -755,7 +756,7 @@ export function separateCodewords(
   });
 
   if (!rsBlocks) {
-    log('separate', 'WARNING: No RS blocks found for version/ECC, returning all as data');
+    qrDecoderLog.warn('separate: No RS blocks found for version/ECC, returning all as data');
     return { dataCodewords: codewords, ecCodewords: [] };
   }
 
@@ -773,7 +774,7 @@ export function separateCodewords(
   // De-interleave for multi-block QR codes
   const dataCodewords = deinterleaveDataCodewords(interleavedData, rsBlocks);
 
-  log('separate', 'Separated codewords', {
+  qrDecoderLog.trace('separate: Separated codewords', {
     totalCodewords: codewords.length,
     dataCodewords: totalDataCodewords,
     ecCodewords: codewords.length - totalDataCodewords,
@@ -820,7 +821,7 @@ export function decodeDataCodewordsDetailed(
   let segmentCount = 0;
   let valid = true; // Track whether decode completed without errors
 
-  log('decode', 'Starting data decode (detailed)', {
+  qrDecoderLog.trace('decode: Starting data decode (detailed)', {
     dataCodewords: dataCodewords.length,
     version,
   });
@@ -830,13 +831,13 @@ export function decodeDataCodewordsDetailed(
     segmentCount++;
 
     if (mode === MODE_TERMINATOR) {
-      log('decode', 'Found terminator', { segmentCount });
+      qrDecoderLog.trace('decode: Found terminator', { segmentCount });
       break;
     }
 
     const charCountBits = getCharCountBits(mode, version);
     if (bits.available() < charCountBits) {
-      log('decode', 'ERROR: Not enough bits for char count - decode invalid', {
+      qrDecoderLog.debug('decode: Not enough bits for char count - decode invalid', {
         mode,
         charCountBits,
         available: bits.available(),
@@ -849,7 +850,7 @@ export function decodeDataCodewordsDetailed(
 
     // Sanity check: if charCount is unreasonably large, something is wrong
     if (charCount > 7000) {
-      log('decode', 'ERROR: Unreasonable char count, aborting - decode invalid', { charCount });
+      qrDecoderLog.debug('decode: Unreasonable char count, aborting - decode invalid', { charCount });
       valid = false;
       break;
     }
@@ -868,7 +869,7 @@ export function decodeDataCodewordsDetailed(
           outBytes.push(decodedText.charCodeAt(i) & 0xff);
         // Validate: decoded length should match charCount
         if (decodedText.length !== charCount) {
-          log('decode', 'ERROR: Numeric segment truncated - decode invalid', {
+          qrDecoderLog.debug('decode: Numeric segment truncated - decode invalid', {
             expected: charCount,
             got: decodedText.length,
           });
@@ -884,7 +885,7 @@ export function decodeDataCodewordsDetailed(
           outBytes.push(decodedText.charCodeAt(i) & 0xff);
         // Validate: decoded length should match charCount
         if (decodedText.length !== charCount) {
-          log('decode', 'ERROR: Alphanumeric segment truncated - decode invalid', {
+          qrDecoderLog.debug('decode: Alphanumeric segment truncated - decode invalid', {
             expected: charCount,
             got: decodedText.length,
           });
@@ -900,7 +901,7 @@ export function decodeDataCodewordsDetailed(
         for (const b of decodedBytes) outBytes.push(b);
         // Validate: byte count should match charCount
         if (decodedBytes.length !== charCount) {
-          log('decode', 'ERROR: Byte segment truncated - decode invalid', {
+          qrDecoderLog.debug('decode: Byte segment truncated - decode invalid', {
             expected: charCount,
             got: decodedBytes.length,
           });
@@ -916,7 +917,7 @@ export function decodeDataCodewordsDetailed(
         for (const b of decodedBytes) outBytes.push(b);
         // Validate: kanji char count (each kanji = 2 bytes in Shift-JIS)
         if (decodedBytes.length !== charCount * 2) {
-          log('decode', 'ERROR: Kanji segment truncated - decode invalid', {
+          qrDecoderLog.debug('decode: Kanji segment truncated - decode invalid', {
             expected: charCount * 2,
             got: decodedBytes.length,
           });
@@ -925,7 +926,7 @@ export function decodeDataCodewordsDetailed(
         break;
       }
       default: {
-        log('decode', 'ERROR: Unknown mode indicator - decode invalid', { mode });
+        qrDecoderLog.debug('decode: Unknown mode indicator - decode invalid', { mode });
         modeTag = 'unknown';
         segmentValid = false;
         break;
@@ -939,7 +940,7 @@ export function decodeDataCodewordsDetailed(
     if (modeTag !== 'unknown') modesSeen.add(modeTag);
     text += decodedText;
 
-    log('decode', `Decoded segment ${segmentCount}`, {
+    qrDecoderLog.trace(`decode: Decoded segment ${segmentCount}`, {
       mode: modeTag,
       charCount,
       textLen: decodedText.length,
@@ -963,7 +964,7 @@ export function decodeDataCodewordsDetailed(
     return 'unknown';
   })();
 
-  log('decode', 'Data decode complete', {
+  qrDecoderLog.trace('decode: Data decode complete', {
     valid,
     textLength: text.length,
     bytesLength: outBytes.length,
@@ -1039,7 +1040,7 @@ function decodeNumeric(bits: BitStream, count: number): string {
     const value = bits.read(10);
     // Validate numeric value (should be 0-999)
     if (value > 999) {
-      log('numeric', 'Invalid 3-digit value', { value });
+      qrDecoderLog.debug('numeric: Invalid 3-digit value', { value });
       result += '???';
     } else {
       result += value.toString().padStart(3, '0');
@@ -1051,7 +1052,7 @@ function decodeNumeric(bits: BitStream, count: number): string {
   if (remaining === 2 && bits.available() >= 7) {
     const value = bits.read(7);
     if (value > 99) {
-      log('numeric', 'Invalid 2-digit value', { value });
+      qrDecoderLog.debug('numeric: Invalid 2-digit value', { value });
       result += '??';
     } else {
       result += value.toString().padStart(2, '0');
@@ -1061,7 +1062,7 @@ function decodeNumeric(bits: BitStream, count: number): string {
   else if (remaining === 1 && bits.available() >= 4) {
     const value = bits.read(4);
     if (value > 9) {
-      log('numeric', 'Invalid 1-digit value', { value });
+      qrDecoderLog.debug('numeric: Invalid 1-digit value', { value });
       result += '?';
     } else {
       result += value.toString();
@@ -1089,7 +1090,7 @@ function decodeAlphanumeric(bits: BitStream, count: number): string {
     if (c1 >= 0 && c1 < ALPHANUMERIC_CHARS.length && c2 >= 0 && c2 < ALPHANUMERIC_CHARS.length) {
       result += ALPHANUMERIC_CHARS[c1] + ALPHANUMERIC_CHARS[c2];
     } else {
-      log('alphanumeric', 'Invalid character index', { value, c1, c2 });
+      qrDecoderLog.debug('alphanumeric: Invalid character index', { value, c1, c2 });
       result += '??'; // Placeholder for invalid characters
     }
     remaining -= 2;
@@ -1101,7 +1102,7 @@ function decodeAlphanumeric(bits: BitStream, count: number): string {
     if (value >= 0 && value < ALPHANUMERIC_CHARS.length) {
       result += ALPHANUMERIC_CHARS[value];
     } else {
-      log('alphanumeric', 'Invalid single character index', { value });
+      qrDecoderLog.debug('alphanumeric: Invalid single character index', { value });
       result += '?';
     }
   }

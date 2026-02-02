@@ -19,7 +19,10 @@
  * - Linear algebra utilities for pixel control (future)
  */
 
+import { createLogger } from '../../lib/logger';
 import type { ECCLevel } from '../qr-encoder';
+
+const log = createLogger('QART');
 
 // ============================================
 // TYPES
@@ -342,7 +345,7 @@ export function buildRSBasis(_version: number, _ecc: ECCLevel): RSBasisBlock[] {
   // 1. Get RS block structure for version/ECC
   // 2. For each data bit, create basis block
   // 3. Compute ECC using polynomial division
-  console.warn('[QArt] buildRSBasis not yet implemented');
+  log.warn('buildRSBasis not yet implemented');
   return [];
 }
 
@@ -363,7 +366,7 @@ export function gaussJordanEliminate(
   // 2. Sort columns by pixel importance
   // 3. Perform row reduction
   // 4. Return modified basis
-  console.warn('[QArt] gaussJordanEliminate not yet implemented');
+  log.warn('gaussJordanEliminate not yet implemented');
   return [];
 }
 
@@ -373,7 +376,7 @@ export function gaussJordanEliminate(
  * TODO: Implement full QArt generation
  */
 export function generateQArt(_config: QArtConfig): QArtResult {
-  console.warn('[QArt] Full QArt generation not yet implemented');
+  log.warn('Full QArt generation not yet implemented');
   return {
     success: false,
     error:

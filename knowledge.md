@@ -1903,6 +1903,226 @@ Translation files are open-sourced in a separate public repository to allow comm
 - **Auto-sync**: Changes to `src/i18n/static/txt/` and `src/i18n/locales/txt/` are automatically pushed via GitHub Action
 - **Contributing**: See the README in the public repo for contribution guidelines
 
+## Professional Logging Standards
+
+The codebase uses a **unified professional logging system** implemented in `src/lib/logger.ts`. All code must use this system - **no direct `console.*` calls are allowed** (enforced by Biome lint rule `noConsole: "error"`).
+
+### Core Principles
+
+1. **Single Source of Truth**: All logging goes through `src/lib/logger.ts`
+2. **No Legacy Patterns**: No wrapper loggers, no direct console calls, no module-specific logging implementations
+3. **Consistent Interface**: All loggers use the same `Logger` interface with `trace/debug/info/warn/error` methods
+4. **Sentry Integration**: Warnings recorded as breadcrumbs, errors sent as events
+5. **Sensitive Data Redaction**: Automatic redaction of passwords, tokens, API keys, etc.
+
+### Logger Interface
+
+```typescript
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('SCOPE_NAME');
+
+log.trace('High-volume diagnostic', { pixels: 1000 });  // Inner loops only
+log.debug('Processing step', { width: 100, height: 100 }); // Development diagnostics
+log.info('Operation complete', { duration: 150 });      // Lifecycle milestones
+log.warn('Fallback triggered', { reason: 'timeout' });  // Recoverable issues
+log.error('Operation failed', { error });               // Failures
+```
+
+### Log Levels (in order of verbosity)
+
+| Level | Purpose | Development | Production | Sentry |
+|-------|---------|-------------|------------|--------|
+| `trace` | Very high-volume diagnostics (decoder inner loops, per-pixel operations) | OFF* | OFF | None |
+| `debug` | Development diagnostics (function entry/exit, state changes, config values) | **ON (default)** | OFF | None |
+| `info` | Lifecycle milestones (initialization, export complete, mode changes) | ON | OFF | None |
+| `warn` | Unexpected but recoverable (fallback triggered, deprecated usage, low contrast) | ON | ON | Breadcrumb |
+| `error` | Failures (unrecoverable errors, failed operations, exceptions) | ON | **ON (default)** | Event |
+
+*trace requires explicit `setLogLevel('trace')` even in development
+
+### Default Log Levels
+
+- **Development** (`import.meta.env.DEV === true`): `debug` (maximum visibility)
+- **Production**: `error` (minimum noise - only failures shown)
+
+### Toggling Log Levels at Runtime
+
+```javascript
+// In browser console - enable debug logging for 30 minutes
+window.anqrDiag.enable(30, 'debugging overlay issue')
+
+// Disable and revert to production default
+window.anqrDiag.disable()
+
+// Check current status
+window.anqrDiag.status()
+
+// Show help
+window.anqrDiag.help()
+```
+
+### Log Buffer (for debugging failed operations)
+
+The logger supports capturing logs to a buffer for debugging failed operations (e.g., QR detection failures):
+
+```typescript
+import { enableLogBuffer, flushLogBuffer, disableLogBuffer, getBufferSize, clearLogBuffer } from '@/lib/logger';
+
+enableLogBuffer();           // Start capturing (clears existing buffer)
+// ... do something that might fail ...
+const debugLog = flushLogBuffer(); // Get captured logs as string and clear
+disableLogBuffer();          // Stop capturing
+
+// Utilities
+getBufferSize();  // Returns current buffer length
+clearLogBuffer(); // Clears buffer without disabling
+```
+
+**Buffer Limits:**
+- Maximum size: **1000 entries** (oldest entries dropped when exceeded)
+- Entries include **ISO 8601 timestamps**: `2024-01-15T10:30:45.123Z [SCOPE:level] message`
+- Buffer captures even when console output is suppressed (production mode)
+
+### Standard Scope Prefixes
+
+When creating a logger, use one of these standard scope names. **If a new scope is needed, add it to `SCOPE_PREFIXES` in `src/lib/logger.ts` first.**
+
+#### App Shell
+| Prefix | Module/File |
+|--------|-------------|
+| `MAIN` | src/main.tsx |
+| `APP` | src/App.tsx |
+| `ERROR` | src/components/ErrorBoundary.tsx |
+| `HEADER` | src/components/Header.tsx |
+| `DIAG` | src/lib/logger-remote.ts |
+
+#### UI Components
+| Prefix | Module/File |
+|--------|-------------|
+| `ANALYZE` | src/components/Analyze.tsx |
+| `OVERLAY` | src/components/sections/OverlaySection.tsx |
+| `PAYLOAD` | src/components/sections/PayloadSection.tsx |
+| `HELP` | src/components/ui/help-link.tsx |
+| `GALLERY` | src/components/Gallery.tsx |
+| `SIDEBAR` | src/components/Sidebar.tsx |
+| `PREVIEW` | src/components/Preview.tsx |
+| `WELCOME` | src/components/WelcomeModal.tsx |
+
+#### QR Generation Pipeline
+| Prefix | Module/File |
+|--------|-------------|
+| `QRGEN` | src/hooks/useQRGenerator.ts |
+| `GENERATE` | src/modules/qr-generator/ (all files) |
+| `DITHER` | src/modules/qr-generator/pixel-matrix-dithered.ts |
+| `ENCODER` | src/modules/qr-encoder/ |
+| `SPEC` | src/modules/qr-spec/ |
+
+#### QR Analysis Pipeline
+| Prefix | Module/File |
+|--------|-------------|
+| `DECODER` | src/modules/qr-decoder/ |
+| `ANALYZER` | src/modules/qr-analyzer/ |
+| `SCANNER` | src/modules/qr-analyzer/scanner.ts |
+| `SAFETY` | src/modules/qr-analyzer/safety.ts |
+
+#### Export & Sharing
+| Prefix | Module/File |
+|--------|-------------|
+| `EXPORT` | src/modules/exporter/ |
+| `SHARE` | src/modules/share-links/ |
+| `CLIPBOARD` | src/modules/browser-clipboard/ |
+| `DOWNLOAD` | src/modules/browser-io/ |
+
+#### Media & Effects
+| Prefix | Module/File |
+|--------|-------------|
+| `ANIMATION` | src/modules/animation/ |
+| `WATERMARK` | src/modules/overlay/watermark.ts |
+| `TELEMETRY` | src/modules/qr-analyzer/telemetry-*.ts |
+
+#### Data & Platform
+| Prefix | Module/File |
+|--------|-------------|
+| `I18N` | src/i18n/index.ts |
+| `STATIC` | src/i18n/static/index.ts |
+| `PLATFORM` | src/modules/platform/ |
+| `ADMOB` | src/modules/platform/admob.ts |
+| `STORAGE` | src/modules/platform/media-store.ts |
+
+#### Advanced Features
+| Prefix | Module/File |
+|--------|-------------|
+| `QART` | src/modules/qr-art/ |
+| `CORE` | src/modules/core/ |
+| `COLOR` | src/modules/core/color.ts |
+| `GRADIENT` | src/modules/core/gradient.ts |
+
+### Logging Rules for New Code
+
+1. **Import the logger**:
+   ```typescript
+   import { createLogger } from '@/lib/logger';
+   // or for path aliases:
+   import { createLogger } from '../../lib/logger';
+   ```
+
+2. **Create a scoped logger** at module level:
+   ```typescript
+   const log = createLogger('SCOPE_NAME');
+   ```
+
+3. **Use appropriate log levels**:
+   - `trace`: Only for inner loops that execute 1000s of times
+   - `debug`: Normal development diagnostics
+   - `info`: Significant state transitions (init complete, export done)
+   - `warn`: Something unexpected but handled (Sentry breadcrumb)
+   - `error`: Something failed (Sentry event)
+
+4. **Use structured context objects** (not string concatenation):
+   ```typescript
+   // GOOD
+   log.debug('Processing image', { width, height, format });
+   
+   // BAD
+   log.debug(`Processing image: ${width}x${height} (${format})`);
+   ```
+
+5. **Don't include scope prefix in message** (logger adds it automatically):
+   ```typescript
+   // GOOD
+   log.debug('Starting decode');
+   
+   // BAD
+   log.debug('[DECODER] Starting decode');
+   ```
+
+6. **Pass errors in context object**:
+   ```typescript
+   try {
+     // ...
+   } catch (error) {
+     log.error('Operation failed', { error });  // Sentry captures the error
+   }
+   ```
+
+### Sensitive Data Redaction
+
+The following keys are automatically redacted from log context:
+- `password`, `token`, `secret`, `apiKey`, `api_key`
+- `authorization`, `auth`, `credential`
+- `sessionId`, `session_id`, `accessToken`, `access_token`
+- `refreshToken`, `refresh_token`, `privateKey`, `private_key`
+
+### Configuration Constants
+
+| Constant | Value | Purpose |
+|----------|-------|--------|
+| `MAX_BUFFER_SIZE` | 1000 | Maximum log buffer entries before oldest are dropped |
+| `MAX_CONTEXT_DEPTH` | 10 | Maximum object nesting depth for context serialization |
+
+---
+
 ## Appendix A: additional key files
 
 ### `netlify/functions/qr.ts`

@@ -28,6 +28,9 @@ export const CONTENT_API = [
 // Decoding
 export const DECODER_API = ['decodeQRFromCanvas'] as const;
 
+// Note: Logger utilities (enableLogBuffer, disableLogBuffer, flushLogBuffer) are
+// available from '@/lib/logger' directly - they are not part of the qr-analyzer public API.
+
 // Safety analysis
 export const SAFETY_API = [
   'analyzeQR',
@@ -55,9 +58,6 @@ export const SCANNER_API = [
   'QRScanner',
 ] as const;
 
-// Logger
-export const LOGGER_API = ['createLogger', 'qrAnalyzerLog', 'qrDecoderLog'] as const;
-
 // Telemetry - Contrast
 export const TELEMETRY_CONTRAST_API = [
   'calculateContrastStats',
@@ -70,7 +70,7 @@ export const TELEMETRY_LOGGING_API = ['createScanLogger'] as const;
 // Telemetry - Stats
 export const TELEMETRY_STATS_API = ['aggregateStats', 'calculateAnalysisStats'] as const;
 
-// Types
+// Types (Logger types now come from central @/lib/logger)
 export const TYPES = [
   'AnalysisIssue',
   'AnalysisResult',
@@ -89,9 +89,7 @@ export const TYPES = [
   'ECCLevel',
   'ErrorType',
   'ImageProperties',
-  'LogData',
   'LogEntry',
-  'Logger',
   'QRAnalysisResult',
   'QRLocation',
   'QuietZoneInfo',
@@ -113,7 +111,6 @@ export const PUBLIC_API = [
   ...DECODER_API,
   ...SAFETY_API,
   ...SCANNER_API,
-  ...LOGGER_API,
   ...TELEMETRY_CONTRAST_API,
   ...TELEMETRY_LOGGING_API,
   ...TELEMETRY_STATS_API,

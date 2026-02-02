@@ -66,6 +66,8 @@
     "i18next-browser-languagedetector": "^8.2.0",
     "ics": "^3.8.1",
     "image-q": "^4.0.0",
+    "loglevel": "^1.9.2",
+    "loglevel-plugin-prefix": "^0.8.4",
     "lucide-react": "^0.562.0",
     "open-location-code": "^1.0.3",
     "poissimple": "^0.0.5",

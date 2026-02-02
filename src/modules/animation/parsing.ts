@@ -4,10 +4,13 @@
 
 /// <reference path="../../types/image-decoder.d.ts" />
 
+import { createLogger } from '../../lib/logger';
 import { decompressFrames, parseGIF } from 'gifuct-js';
 import { detectImageFormat, isAnimatedWebP } from './format-detection';
 import { createGifCompositor } from './gif-compositor';
 import type { AnimationFrame } from './types';
+
+const log = createLogger('ANIMATION');
 
 /**
  * Parse animated WebP using ImageDecoder API
@@ -51,7 +54,7 @@ export async function parseWebPFrames(source: ArrayBuffer): Promise<AnimationFra
     decoder.close();
     return frames;
   } catch (err) {
-    console.warn('ImageDecoder failed, falling back to single frame:', err);
+    log.warn('ImageDecoder failed, falling back to single frame', { error: err });
     return parseWebPAsSingleFrame(source);
   }
 }

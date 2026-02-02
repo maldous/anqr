@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createLogger } from '@/lib/logger';
 import {
   type AnimationFrame,
   type PatternType as AnimationPattern,
@@ -36,6 +37,9 @@ import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance
 const qrGenerator = new QRGenerator();
+
+// Scoped logger for QR generation
+const log = createLogger('QRGEN');
 
 // Target FPS for preview mode (source GIFs above this will be decimated)
 const _PREVIEW_TARGET_FPS = 15;
@@ -741,8 +745,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // useEffect ran. The clearing operations are cheap and ensuring they always run
   // prevents stuck overflow error states, especially in iCalendar/Event content types.
   useEffect(() => {
-    // DEBUG: Use console.warn to ensure visibility (console.debug may be filtered)
-    console.warn('[QR DEBUG] rawContent useEffect triggered', {
+    log.debug('rawContent useEffect triggered', {
       rawContentLength: rawContent.length,
       rawContentPreview: rawContent.substring(0, 100),
       lastOverflowContent: lastOverflowContentRef.current?.substring(0, 50),
@@ -952,7 +955,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             setRawOverlayCanvas(compositor.canvas);
             // Note: Don't clear isLoadingOverlay here - wait for animation cache to be ready
           } catch (err) {
-            console.error('Failed to create GIF compositor:', err);
+            log.error('Failed to create GIF compositor', { error: err });
             setGifCompositor(null);
             // Fall back to static image loading
             const file = overlay.file;
@@ -970,7 +973,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           }
         })
         .catch((err) => {
-          console.error('Failed to read GIF file:', err);
+          log.error('Failed to read GIF file', { error: err });
           setRawOverlayCanvas(null);
           setIsLoadingOverlay(false);
         });
@@ -993,7 +996,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
               setIsLoadingOverlay(false);
             }
           } catch (err) {
-            console.error('Failed to parse animated WebP:', err);
+            log.error('Failed to parse animated WebP', { error: err });
             const file = overlay.file;
             if (!file) return;
             loadFileAsCanvas(file)
@@ -1009,7 +1012,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           }
         })
         .catch((err) => {
-          console.error('Failed to read WebP file:', err);
+          log.error('Failed to read WebP file', { error: err });
           setRawOverlayCanvas(null);
           setIsLoadingOverlay(false);
         });
@@ -1023,7 +1026,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           setIsLoadingOverlay(false);
         })
         .catch((err) => {
-          console.error('Failed to load overlay:', err);
+          log.error('Failed to load overlay', { error: err });
           setRawOverlayCanvas(null);
           setIsLoadingOverlay(false);
         });
@@ -1043,8 +1046,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Generate QR code
   const generate = useCallback(async () => {
-    // DEBUG: Log entry into generate()
-    console.warn('[QR DEBUG] generate() called', {
+    log.debug('generate() called', {
       debouncedContentLength: debouncedConfig.content?.length,
       debouncedContentPreview: debouncedConfig.content?.substring(0, 100),
       lastOverflowContent: lastOverflowContentRef.current?.substring(0, 50),
@@ -1062,7 +1064,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       lastOverflowContentRef.current !== debouncedConfig.content
     ) {
       // Content changed - clear overflow blocking to allow retry with new content
-      console.warn('[QR DEBUG] Content changed from failed content, clearing block');
+      log.debug('Content changed from failed content, clearing block');
       lastOverflowContentRef.current = null;
       isOverflowBlockedRef.current = false;
       setHasOverflowError(false);
@@ -1071,7 +1073,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     // Now check if we're still blocked (same content that previously failed)
     if (isOverflowBlockedRef.current) {
-      console.warn('[QR DEBUG] generate BLOCKED by overflow ref - same content already failed');
+      log.debug('generate BLOCKED by overflow ref');
       return;
     }
 
@@ -1115,7 +1117,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       let usedFallback = false;
 
       try {
-        console.warn('[QR DEBUG] Attempting initial QR generation', {
+        log.debug('Attempting QR generation', {
           contentLength: debouncedConfig.content?.length,
           typeNumber: debouncedConfig.typeNumber,
           errorCorrection: debouncedConfig.errorCorrection,
@@ -1124,11 +1126,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
           debouncedConfig,
           overlay.enabled ? overlayCanvas : null
         );
-        console.warn('[QR DEBUG] Initial generation SUCCEEDED');
+        log.debug('Initial generation succeeded');
       } catch (initialErr) {
         // If overflow error, try progressively more forgiving settings
         const msg = initialErr instanceof Error ? initialErr.message : '';
-        console.warn('[QR DEBUG] Initial generation FAILED', {
+        log.debug('Initial generation failed', {
           errorMessage: msg,
           isOverflow: msg.includes('code length overflow'),
         });
@@ -1154,7 +1156,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
           let succeeded = false;
 
-          console.warn('[QR DEBUG] Trying ECC fallback sequence', { eccToTry, currentEcc });
+          log.debug('Trying ECC fallback sequence', { eccToTry, currentEcc });
           for (const ecc of eccToTry) {
             if (succeeded) break;
             const fallbackConfig = {
@@ -1163,30 +1165,30 @@ export function useQRGenerator(): UseQRGeneratorResult {
               errorCorrection: ecc,
             };
             try {
-              console.warn(`[QR DEBUG] Trying ECC level: ${ecc}`);
+              log.debug('Trying ECC level', { ecc });
               result = await qrGenerator.generate(
                 fallbackConfig,
                 overlay.enabled ? overlayCanvas : null
               );
               usedFallback = true;
               succeeded = true;
-              console.warn(`[QR DEBUG] ECC ${ecc} SUCCEEDED`);
+              log.debug('ECC fallback succeeded', { ecc });
               if (ecc !== currentEcc) {
-                console.info(`QR generated with fallback ECC ${ecc} (was ${currentEcc})`);
+                log.info('QR generated with fallback ECC', { ecc, previousEcc: currentEcc });
               } else {
-                console.info('QR generated with auto-version retry');
+                log.info('QR generated with auto-version retry');
               }
             } catch (eccErr) {
-              console.warn(
-                `[QR DEBUG] ECC ${ecc} FAILED`,
-                eccErr instanceof Error ? eccErr.message : eccErr
-              );
+              log.debug('ECC fallback failed', {
+                ecc,
+                error: eccErr instanceof Error ? eccErr.message : eccErr,
+              });
             }
           }
 
           if (!succeeded) {
             // All attempts failed - content is too long even for max capacity
-            console.warn('[QR DEBUG] ALL ECC LEVELS FAILED - setting overflow block', {
+            log.debug('All ECC levels failed', {
               contentLength: debouncedConfig.content?.length,
               contentPreview: debouncedConfig.content?.substring(0, 100),
               triedEccLevels: eccToTry,
@@ -1214,7 +1216,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
       // Log if we used fallback settings (for debugging)
       if (usedFallback) {
-        console.debug('QR generated using fallback settings due to content length');
+        log.debug('QR generated using fallback settings due to content length');
       }
 
       // Apply watermark if enabled
@@ -1268,7 +1270,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             const validationResult = validateQRCodeRobust(result, debouncedConfig.content);
             setValidation(validationResult);
           } catch (err) {
-            console.error('Validation error:', err);
+            log.error('Validation error', { error: err });
             setValidation(null);
           } finally {
             setIsValidating(false);
@@ -1276,7 +1278,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         }, 50);
       }
     } catch (err) {
-      console.error('QR generation error:', err);
+      log.error('QR generation error', { error: err });
       const rawMessage = err instanceof Error ? err.message : 'Failed to generate QR code';
 
       // Provide user-friendly error messages for common issues
@@ -1329,8 +1331,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   // Regenerate when config changes
   // Skip if we're playing from cached animation frames or if we have an overflow error
   useEffect(() => {
-    // DEBUG: Log regenerate useEffect entry
-    console.warn('[QR DEBUG] regenerate useEffect triggered', {
+    log.debug('regenerate useEffect triggered', {
       hasOverflowError,
       isOverflowBlocked: isOverflowBlockedRef.current,
       isAnimationCacheReady,
@@ -1345,7 +1346,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // from before the rawContent useEffect's state update was flushed.
     // The ref is always up-to-date because it's synchronous.
     if (isOverflowBlockedRef.current) {
-      console.warn('[QR DEBUG] regenerate BLOCKED by overflow ref');
+      log.debug('regenerate BLOCKED by overflow ref');
       return;
     }
     // If we have cached animation frames and animation is playing, don't regenerate
@@ -1683,7 +1684,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         // Use true vector SVG export if enabled and matrix is available
         if (output.svgTrueVector) {
           if (!qrMatrix) {
-            console.warn(
+            log.warn(
               'Vector SVG export requested but QR matrix is unavailable. ' +
                 'Falling back to raster SVG. This can happen with special render modes.'
             );
@@ -1785,7 +1786,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         await downloadImage(exportCanvas, exportConfig, pngMetadata, output.dpi);
       }
     } catch (err) {
-      console.error('Download error:', err);
+      log.error('Download error', { error: err });
     } finally {
       setIsExporting(false);
     }
@@ -1888,7 +1889,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         try {
           watermarkImage = await loadFileAsCanvas(watermark.image);
         } catch (err) {
-          console.error('Error loading watermark:', err);
+          log.error('Error loading watermark', { error: err });
         }
       }
 
@@ -2180,7 +2181,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             }
           }
         } catch (err) {
-          console.error('Error generating frame:', err);
+          log.error('Error generating frame', { error: err });
         }
       }
 

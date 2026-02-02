@@ -3,7 +3,10 @@
  * Functions for embedding metadata and DPI into PNG files
  */
 
+import { createLogger } from '../../lib/logger';
 import type { PngMetadata } from './types';
+
+const log = createLogger('EXPORT');
 
 /**
  * CRC32 calculation for PNG chunks
@@ -170,7 +173,7 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   const pngSignature = [137, 80, 78, 71, 13, 10, 26, 10];
   for (const [i, sigByte] of pngSignature.entries()) {
     if (data[i] !== sigByte) {
-      console.warn('Invalid PNG signature, returning original');
+      log.warn('Invalid PNG signature, returning original');
       return pngBlob;
     }
   }
@@ -212,7 +215,7 @@ export async function embedPngMetadata(pngBlob: Blob, metadata: PngMetadata): Pr
   }
 
   if (iendPos === -1) {
-    console.warn('Could not find IEND chunk, returning original');
+    log.warn('Could not find IEND chunk, returning original');
     return pngBlob;
   }
 

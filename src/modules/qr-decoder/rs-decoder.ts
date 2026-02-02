@@ -8,7 +8,9 @@
  * - Forney algorithm for error magnitudes
  */
 
-import { qrDecoderLog as log } from '../qr-analyzer/logger';
+import { createLogger } from '../../lib/logger';
+
+const qrDecoderLog = createLogger('DECODER');
 
 // ============================================
 // Galois Field GF(256) Arithmetic
@@ -338,7 +340,7 @@ function runEuclideanAlgorithm(
     // Divide rLastLast by rLast, with quotient in q and remainder in r
     if (polyIsZero(rLast)) {
       // Euclidean algorithm already terminated
-      log('rs-decoder', 'Euclidean: r_{i-1} was zero');
+      qrDecoderLog.trace('rs-decoder: Euclidean r_{i-1} was zero');
       return null;
     }
 
@@ -358,7 +360,7 @@ function runEuclideanAlgorithm(
     t = polyAddOrSubtract(polyMultiply(q, tLast), tLastLast);
 
     if (polyDegree(r) >= polyDegree(rLast)) {
-      log('rs-decoder', 'Euclidean: Division algorithm failed to reduce polynomial');
+      qrDecoderLog.trace('rs-decoder: Euclidean Division algorithm failed to reduce polynomial');
       return null;
     }
   }
@@ -366,7 +368,7 @@ function runEuclideanAlgorithm(
   // sigma(0) must not be zero
   const sigmaTildeAtZero = polyGetCoeff(t, 0); // Constant term of t
   if (sigmaTildeAtZero === 0) {
-    log('rs-decoder', 'Euclidean: sigmaTilde(0) was zero');
+    qrDecoderLog.trace('rs-decoder: Euclidean sigmaTilde(0) was zero');
     return null;
   }
 
@@ -375,7 +377,7 @@ function runEuclideanAlgorithm(
   const sigma = polyMultiplyScalar(t, inverse);
   const omega = polyMultiplyScalar(r, inverse);
 
-  log('rs-decoder', 'Euclidean algorithm completed', {
+  qrDecoderLog.trace('rs-decoder: Euclidean algorithm completed', {
     sigmaDegree: polyDegree(sigma),
     omegaDegree: polyDegree(omega),
     sigmaCoeffs: sigma.map((s) => s.toString(16).padStart(2, '0')).join(' '),
@@ -414,7 +416,7 @@ function findErrorLocations(sigma: number[], n: number): number[] | null {
 
   const result: number[] = [];
 
-  log('rs-decoder', 'Chien search starting', {
+  qrDecoderLog.trace('rs-decoder: Chien search starting', {
     numErrors,
     n,
     sigmaCoeffs: sigma.map((s) => s.toString(16).padStart(2, '0')).join(' '),
@@ -426,7 +428,7 @@ function findErrorLocations(sigma: number[], n: number): number[] | null {
       // Found a root at i, error locator is inverse(i)
       result.push(gfInv(i));
 
-      log('rs-decoder', 'Chien: found root', {
+      qrDecoderLog.trace('rs-decoder: Chien found root', {
         i,
         errorLocator: gfInv(i).toString(16).padStart(2, '0'),
       });
@@ -434,14 +436,14 @@ function findErrorLocations(sigma: number[], n: number): number[] | null {
   }
 
   if (result.length !== numErrors) {
-    log('rs-decoder', 'Chien search: wrong number of roots', {
+    qrDecoderLog.trace('rs-decoder: Chien search wrong number of roots', {
       expected: numErrors,
       found: result.length,
     });
     return null;
   }
 
-  log('rs-decoder', 'Chien search: found all roots', {
+  qrDecoderLog.trace('rs-decoder: Chien search found all roots', {
     errorLocators: result.map((e) => e.toString(16).padStart(2, '0')).join(' '),
   });
 
@@ -472,7 +474,7 @@ function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[]
   const numErrors = errorLocators.length;
   const result: number[] = new Array(numErrors);
 
-  log('rs-decoder', 'Forney: calculating magnitudes (direct product)', {
+  qrDecoderLog.trace('rs-decoder: Forney calculating magnitudes (direct product)', {
     numErrors,
     errorLocators: errorLocators.map((e) => e.toString(16).padStart(2, '0')).join(' '),
     omegaCoeffs: omega.map((o) => o.toString(16).padStart(2, '0')).join(' '),
@@ -502,7 +504,7 @@ function findErrorMagnitudes(omega: number[], errorLocators: number[]): number[]
     // For QR codes with generatorBase = 0, NO additional xiInverse multiplication
     // (Only multiply by xiInverse when generatorBase != 0)
 
-    log('rs-decoder', `Forney: magnitude for error ${i}`, {
+    qrDecoderLog.trace(`rs-decoder: Forney magnitude for error ${i}`, {
       errorLocator: errorLocators[i].toString(16).padStart(2, '0'),
       xiInverse: xiInverse.toString(16).padStart(2, '0'),
       omegaVal: omegaVal.toString(16).padStart(2, '0'),
@@ -534,14 +536,14 @@ export function correctRSBlock(
   const n = codeword.length;
 
   if (n !== dataCount + eccCount) {
-    log('rs-decoder', 'ERROR: codeword length mismatch', {
+    qrDecoderLog.debug('rs-decoder: Codeword length mismatch', {
       n,
       expected: dataCount + eccCount,
     });
     return null;
   }
 
-  log('rs-decoder', 'Starting RS error correction', {
+  qrDecoderLog.trace('rs-decoder: Starting RS error correction', {
     n,
     dataCount,
     eccCount,
@@ -551,14 +553,14 @@ export function correctRSBlock(
   // Step 1: Calculate syndrome polynomial
   const syndromePoly = calculateSyndromePolynomial(codeword, eccCount);
 
-  log('rs-decoder', 'Syndromes calculated', {
+  qrDecoderLog.trace('rs-decoder: Syndromes calculated', {
     syndromes: syndromePoly.map((s) => s.toString(16).padStart(2, '0')).join(' '),
     allZero: isSyndromeZero(syndromePoly),
   });
 
   // If all syndromes are 0, no errors
   if (isSyndromeZero(syndromePoly)) {
-    log('rs-decoder', 'No errors detected (all syndromes zero)');
+    qrDecoderLog.trace('rs-decoder: No errors detected (all syndromes zero)');
     return codeword.slice(0, dataCount);
   }
 
@@ -566,13 +568,13 @@ export function correctRSBlock(
   const euclideanResult = runEuclideanAlgorithm(syndromePoly, eccCount);
 
   if (!euclideanResult) {
-    log('rs-decoder', 'ERROR: Euclidean algorithm failed');
+    qrDecoderLog.debug('rs-decoder: Euclidean algorithm failed');
     return null;
   }
 
   const { sigma, omega } = euclideanResult;
 
-  log('rs-decoder', 'Error locator polynomial found', {
+  qrDecoderLog.trace('rs-decoder: Error locator polynomial found', {
     degree: polyDegree(sigma),
     coeffs: sigma.map((s) => s.toString(16).padStart(2, '0')).join(' '),
   });
@@ -581,14 +583,14 @@ export function correctRSBlock(
   const errorLocators = findErrorLocations(sigma, n);
 
   if (!errorLocators) {
-    log('rs-decoder', 'ERROR: Chien search failed');
+    qrDecoderLog.debug('rs-decoder: Chien search failed');
     return null;
   }
 
   // Step 4: Calculate error magnitudes using Forney algorithm
   const magnitudes = findErrorMagnitudes(omega, errorLocators);
 
-  log('rs-decoder', 'Error magnitudes calculated', {
+  qrDecoderLog.trace('rs-decoder: Error magnitudes calculated', {
     magnitudes: magnitudes.map((m) => m.toString(16).padStart(2, '0')).join(' '),
   });
 
@@ -598,14 +600,14 @@ export function correctRSBlock(
   for (let i = 0; i < errorLocators.length; i++) {
     const position = n - 1 - GF_LOG[errorLocators[i]];
     if (position < 0) {
-      log('rs-decoder', 'ERROR: Bad error location', { position, errorLocator: errorLocators[i] });
+      qrDecoderLog.debug('rs-decoder: Bad error location', { position, errorLocator: errorLocators[i] });
       return null;
     }
 
     // In GF(2^m), addition and subtraction are both XOR
     corrected[position] = gfAdd(corrected[position], magnitudes[i]);
 
-    log('rs-decoder', `Corrected position ${position}`, {
+    qrDecoderLog.trace(`rs-decoder: Corrected position ${position}`, {
       original: codeword[position].toString(16).padStart(2, '0'),
       magnitude: magnitudes[i].toString(16).padStart(2, '0'),
       corrected: corrected[position].toString(16).padStart(2, '0'),
@@ -615,11 +617,11 @@ export function correctRSBlock(
   // Step 6: Verify correction by recalculating syndromes
   const verifySyndromes = calculateSyndromePolynomial(corrected, eccCount);
   if (!isSyndromeZero(verifySyndromes)) {
-    log('rs-decoder', 'ERROR: Correction verification failed (syndromes not zero)');
+    qrDecoderLog.debug('rs-decoder: Correction verification failed (syndromes not zero)');
     return null;
   }
 
-  log('rs-decoder', 'Correction verified successfully', {
+  qrDecoderLog.trace('rs-decoder: Correction verified successfully', {
     errorsFixed: errorLocators.length,
   });
 
@@ -682,7 +684,7 @@ export function correctRSCodewords(
     }
   }
 
-  log('rs-decoder', 'De-interleaved into blocks', {
+  qrDecoderLog.trace('rs-decoder: De-interleaved into blocks', {
     numBlocks,
     blockDataLengths: blockData.map((d) => d.length).join(','),
     blockEccLengths: blockEcc.map((e) => e.length).join(','),
@@ -696,7 +698,7 @@ export function correctRSCodewords(
     const blockCodeword = [...blockData[b], ...blockEcc[b]];
     const { dataCount, eccCount } = blockConfigs[b];
 
-    log('rs-decoder', `Processing block ${b}`, {
+    qrDecoderLog.trace(`rs-decoder: Processing block ${b}`, {
       dataCount,
       eccCount,
       blockLength: blockCodeword.length,
@@ -705,7 +707,7 @@ export function correctRSCodewords(
     const corrected = correctRSBlock(blockCodeword, dataCount, eccCount);
 
     if (corrected === null) {
-      log('rs-decoder', `ERROR: Block ${b} is uncorrectable`);
+      qrDecoderLog.debug(`rs-decoder: Block ${b} is uncorrectable`);
       return null;
     }
 
@@ -722,7 +724,7 @@ export function correctRSCodewords(
   // Concatenate corrected data from all blocks
   const dataCodewords = correctedBlocks.flat();
 
-  log('rs-decoder', 'RS correction complete', {
+  qrDecoderLog.trace('rs-decoder: RS correction complete', {
     totalDataCodewords: dataCodewords.length,
     totalCorrections,
   });

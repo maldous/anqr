@@ -2,11 +2,12 @@
  * QR Decoder - uses our own decoder (no external dependencies)
  */
 
+import { createLogger, disableLogBuffer, enableLogBuffer, flushLogBuffer } from '../../lib/logger';
 import { decodeQR } from '../qr-decoder';
 import { detectContentType } from './analyzer-content';
-// Shared logger
-import { disableLogBuffer, enableLogBuffer, flushLogBuffer, qrAnalyzerLog as log } from './logger';
 import type { ContentType, DecoderMetadata, QRAnalysisResult } from './types';
+
+const qrAnalyzerLog = createLogger('ANALYZER');
 
 /**
  * Format content type as human-readable label
@@ -50,11 +51,11 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
   // Enable log buffering to capture debug info for failed detections
   enableLogBuffer();
 
-  log('decode', 'Starting QR decode', { canvasWidth: canvas.width, canvasHeight: canvas.height });
+  qrAnalyzerLog.trace('decode: Starting QR decode', { canvasWidth: canvas.width, canvasHeight: canvas.height });
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    log('decode', 'ERROR: Could not get canvas context');
+    qrAnalyzerLog.debug('decode: Could not get canvas context');
     const debugLog = flushLogBuffer();
     disableLogBuffer();
     return {
@@ -78,7 +79,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     const code = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
 
     if (!(code?.success && code.data)) {
-      log('decode', 'ERROR: No QR code detected by our decoder');
+      qrAnalyzerLog.debug('decode: No QR code detected by our decoder');
       const debugLog = flushLogBuffer();
       disableLogBuffer();
       return {
@@ -101,7 +102,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     // plus an extrapolated 4th corner (bottom-right)
     const location = code.location!;
 
-    log('location', 'Finder pattern centers', {
+    qrAnalyzerLog.trace('location: Finder pattern centers', {
       topLeft: location.topLeftCorner,
       topRight: location.topRightCorner,
       bottomLeft: location.bottomLeftCorner,
@@ -119,7 +120,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     );
     const avgFinderDist = (topEdgeDist + leftEdgeDist) / 2;
 
-    log('location', 'Finder pattern distances', {
+    qrAnalyzerLog.trace('location: Finder pattern distances', {
       topEdge: topEdgeDist.toFixed(2),
       leftEdge: leftEdgeDist.toFixed(2),
       average: avgFinderDist.toFixed(2),
@@ -139,7 +140,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     // This does NOT affect version - version ONLY comes from decoder
     const estimatedModulePx = moduleCount > 0 ? avgFinderDist / (moduleCount - 7) : null;
 
-    log('detection', 'Module count from decoder (authoritative)', {
+    qrAnalyzerLog.trace('detection: Module count from decoder (authoritative)', {
       moduleCount,
       version,
       estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : 'null',
@@ -149,10 +150,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     // Warn if version not detected - reproduction will fail
     if (version === null) {
-      log(
-        'detection',
-        'WARNING: Decoder did not provide version - reproduction will not work correctly'
-      );
+      qrAnalyzerLog.warn('detection: Decoder did not provide version - reproduction will not work correctly');
     }
 
     // Detect content type
@@ -161,7 +159,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     // Analyze colors from the QR region
     const detectedColors = analyzeColors(imageData, location);
-    log('colors', 'Detected colors', detectedColors);
+    qrAnalyzerLog.trace('colors: Detected colors', detectedColors);
 
     // Calculate quiet zone
     const quietZone = analyzeQuietZone(imageData, location, estimatedModulePx || 10);
@@ -202,7 +200,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       totalByteLength: code.dataBytes?.length ?? 0,
     };
 
-    log('decoder', 'Complete decoder metadata (authoritative)', {
+    qrAnalyzerLog.trace('decoder: Complete decoder metadata (authoritative)', {
       version: decoderMetadata.version,
       maskPattern: decoderMetadata.maskPattern,
       eccLevel: decoderMetadata.eccLevel,
@@ -251,7 +249,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       decoderMetadata, // Include decoder metadata for debugging
     };
   } catch (err) {
-    log('decode', 'ERROR: Exception during decode', { error: String(err) });
+    qrAnalyzerLog.debug('decode: Exception during decode', { error: String(err) });
     const debugLog = flushLogBuffer();
     disableLogBuffer();
     return {
@@ -406,7 +404,7 @@ function buildModuleMatrix(
 
   const { data, width } = imageData;
 
-  log('matrix', 'Building module matrix', { moduleCount, modulePx: modulePx.toFixed(3) });
+  qrAnalyzerLog.trace('matrix: Building module matrix', { moduleCount, modulePx: modulePx.toFixed(3) });
 
   // The jsQR location corners are at the CENTERS of the finder patterns
   // Top-left finder center = module position (3.5, 3.5) in the QR grid
@@ -424,7 +422,7 @@ function buildModuleMatrix(
   const moduleSpan = moduleCount - 7;
 
   if (moduleSpan <= 0) {
-    log('matrix', 'ERROR: Invalid module span', { moduleSpan });
+    qrAnalyzerLog.debug('matrix: Invalid module span', { moduleSpan });
     return undefined;
   }
 
@@ -437,7 +435,7 @@ function buildModuleMatrix(
   const downVecX = (blX - tlX) / moduleSpan;
   const downVecY = (blY - tlY) / moduleSpan;
 
-  log('matrix', 'Direction vectors (per module)', {
+  qrAnalyzerLog.trace('matrix: Direction vectors (per module)', {
     right: { x: rightVecX.toFixed(3), y: rightVecY.toFixed(3) },
     down: { x: downVecX.toFixed(3), y: downVecY.toFixed(3) },
   });
@@ -447,7 +445,7 @@ function buildModuleMatrix(
   const originX = tlX - 3.5 * rightVecX - 3.5 * downVecX;
   const originY = tlY - 3.5 * rightVecY - 3.5 * downVecY;
 
-  log('matrix', 'Calculated origin (module 0,0)', {
+  qrAnalyzerLog.trace('matrix: Calculated origin (module 0,0)', {
     originX: originX.toFixed(2),
     originY: originY.toFixed(2),
   });
@@ -463,7 +461,7 @@ function buildModuleMatrix(
   for (const sample of samplePositions) {
     const px = originX + (sample.col + 0.5) * rightVecX + (sample.row + 0.5) * downVecX;
     const py = originY + (sample.col + 0.5) * rightVecY + (sample.row + 0.5) * downVecY;
-    log('matrix', `Sample: ${sample.name}`, {
+    qrAnalyzerLog.trace(`matrix: Sample ${sample.name}`, {
       pixelX: px.toFixed(2),
       pixelY: py.toFixed(2),
     });
@@ -498,7 +496,7 @@ function buildModuleMatrix(
     matrix.push(matrixRow);
   }
 
-  log('matrix', 'Matrix statistics', {
+  qrAnalyzerLog.trace('matrix: Matrix statistics', {
     totalModules: moduleCount * moduleCount,
     darkModules: darkCount,
     lightModules: lightCount,
@@ -547,7 +545,7 @@ function validateFinderPatterns(matrix: boolean[][], moduleCount: number): void 
       correct++;
     } else {
       incorrect++;
-      log('validation', `MISMATCH: ${check.name}`, {
+      qrAnalyzerLog.debug(`validation: Mismatch ${check.name}`, {
         row: check.row,
         col: check.col,
         expected: check.expected ? 'dark' : 'light',
@@ -556,7 +554,7 @@ function validateFinderPatterns(matrix: boolean[][], moduleCount: number): void 
     }
   }
 
-  log('validation', 'Finder pattern validation', {
+  qrAnalyzerLog.trace('validation: Finder pattern validation', {
     correct,
     incorrect,
     total: allChecks.length,

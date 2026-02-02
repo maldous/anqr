@@ -1,4 +1,5 @@
 import { OpenLocationCode } from 'open-location-code';
+import { createLogger } from '@/lib/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
@@ -53,6 +54,8 @@ import {
 } from '@/modules/payload-generators';
 import { ECC_CAPACITIES_BYTE } from '@/modules/qr-spec';
 import { type PayloadKind, useQRStore } from '@/store/qr-store';
+
+const log = createLogger('PAYLOAD');
 
 // Global payment methods available to ALL languages in advanced tier
 const GLOBAL_PAYMENT_METHODS: PayloadKind[] = [
@@ -550,11 +553,11 @@ function PlusCodeDisplay({
       const shortened = plusIndex >= 4 ? fullCode.substring(plusIndex - 4) : fullCode;
 
       // Debug logging to help diagnose issues
-      console.debug('Plus Code debug:', { lat, lon, fullCode, plusIndex, shortCode: shortened });
+      log.debug('Plus Code debug', { lat, lon, fullCode, plusIndex, shortCode: shortened });
 
       return { plusCode: fullCode, shortCode: shortened, error: null };
     } catch (e) {
-      console.error('Plus Code generation error:', e);
+      log.error('Plus Code generation error', { error: e });
       return {
         plusCode: null,
         shortCode: null,
