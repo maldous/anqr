@@ -230,13 +230,16 @@ export function renderModules(
         } else if (useHalftoneRendering && isDark) {
           // Use advanced halftone rendering with htDot/htCurve params
           // Cast to CanvasRenderingContext2D for drawing functions (safe because we only use common 2D methods)
+          // Pass row and col for line shape rotation variation
           drawHalftoneModule(
             ctx as CanvasRenderingContext2D,
             drawX,
             drawY,
             adjustedSize,
             halftoneBrightness,
-            config
+            config,
+            row,
+            col
           );
         } else if (isTiming) {
           // Draw timing pattern module with timing style

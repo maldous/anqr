@@ -530,11 +530,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
       overlayIntensity: safetyAdjustedConfig.intensity,
       colorMode: overlay.colorMode,
       invertImage: overlay.invert,
-      preserveFinders: overlay.preserveFinders || safety.lockFinders,
-      preserveTiming: overlay.preserveTiming || safety.lockTiming,
-      preserveAlignment: overlay.preserveAlignment || safety.lockAlign,
-      protectFormatInfo: overlay.protectFormatInfo || safety.lockFormat,
-      protectVersionInfo: overlay.protectVersionInfo || safety.lockVersion,
+      // Safety locks only apply when safety mode is enabled (not 'off')
+      // This allows users to toggle preserve options in the overlay section when safety is off
+      preserveFinders: (safety.mode !== 'off' && safety.lockFinders) || overlay.preserveFinders,
+      preserveTiming: (safety.mode !== 'off' && safety.lockTiming) || overlay.preserveTiming,
+      preserveAlignment: (safety.mode !== 'off' && safety.lockAlign) || overlay.preserveAlignment,
+      protectFormatInfo: (safety.mode !== 'off' && safety.lockFormat) || overlay.protectFormatInfo,
+      protectVersionInfo: (safety.mode !== 'off' && safety.lockVersion) || overlay.protectVersionInfo,
       logoSize: 25, // For center mode
 
       // Overlay preprocessing (wired to qr-generator filter* fields)
@@ -1254,6 +1256,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
         if (ctx) {
           canvasRef.current.width = result.width;
           canvasRef.current.height = result.height;
+          // Explicitly clear canvas to prevent ghosting
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
           ctx.drawImage(result, 0, 0);
         }
       }
@@ -1483,7 +1487,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
       const frameDelay = animation.speedMs;
 
       if (elapsed >= frameDelay) {
-        lastFrameTime.current = now;
+        // Use additive timing to prevent drift - increment by frameDelay instead of resetting to now
+        lastFrameTime.current += frameDelay;
+        
+        // Prevent catch-up storms: if we've fallen too far behind, reset to now
+        if (now - lastFrameTime.current > frameDelay * 3) {
+          lastFrameTime.current = now;
+        }
 
         setCurrentFrame((prev) => {
           // Get frame delay from current frame if available
@@ -1564,8 +1574,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // If frameIdx === lastRendered, no work needed
 
       lastRenderedFrameRef.current = frameIdx;
-      // Trigger re-render with updated compositor canvas
-      setRawOverlayCanvas(gifCompositor.canvas);
+      // Use getSnapshot() to get a copy of the canvas - passing the canvas reference directly
+      // causes React to not detect changes since it's the same object
+      setRawOverlayCanvas(gifCompositor.getSnapshot());
     } else if (gifFrames[frameIdx]) {
       // Legacy path for WebP
       setRawOverlayCanvas(gifFrames[frameIdx].canvas);
@@ -1593,8 +1604,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
       if (canvasRef.current) {
         const ctx = canvasRef.current.getContext('2d');
         if (ctx) {
+          // Set dimensions first (this may implicitly clear on some browsers)
           canvasRef.current.width = cachedFrame.width;
           canvasRef.current.height = cachedFrame.height;
+          // Explicitly clear canvas to prevent ghosting from previous frames
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
           ctx.drawImage(cachedFrame, 0, 0);
         }
       }
@@ -2225,6 +2239,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
           if (finalCtx) {
             canvasRef.current.width = frames[0].width;
             canvasRef.current.height = frames[0].height;
+            // Explicitly clear canvas to prevent ghosting
+            finalCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
             finalCtx.drawImage(frames[0], 0, 0);
           }
         }

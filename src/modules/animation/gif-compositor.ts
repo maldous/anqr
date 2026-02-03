@@ -88,6 +88,21 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     restoreData = null;
   }
 
+  /**
+   * Get a snapshot (copy) of the current canvas state.
+   * Use this when you need to store or pass the frame to avoid reference issues.
+   */
+  function getSnapshot(): HTMLCanvasElement {
+    const snapshot = document.createElement('canvas');
+    snapshot.width = width;
+    snapshot.height = height;
+    const snapshotCtx = snapshot.getContext('2d');
+    if (snapshotCtx) {
+      snapshotCtx.drawImage(canvas, 0, 0);
+    }
+    return snapshot;
+  }
+
   return {
     canvas,
     frameCount: frames.length,
@@ -97,5 +112,6 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     apply,
     dispose,
     reset,
+    getSnapshot,
   };
 }

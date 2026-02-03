@@ -61,16 +61,34 @@ export function applyQROverlayMode(
         if (config.halftoneCell || config.halftoneDotShape || config.brightnessCurve) {
           // Store brightness for halftone rendering - will be handled specially below
           result.useHalftoneRendering = true;
-          result.halftoneBrightness = brightness;
+          // Apply brightness curve transformation
+          let transformedBrightness = brightness;
+          const curve = config.brightnessCurve;
+          if (curve === 's-curve' || curve === 's_curve') {
+            // S-curve: more contrast in midtones
+            transformedBrightness = brightness * brightness * (3 - 2 * brightness);
+          } else if (curve === 'gamma') {
+            // Gamma curve: lift shadows
+            transformedBrightness = Math.pow(brightness, 0.7);
+          }
+          // 'linear' is the default - no transformation needed
+          // Apply intensity to control how much the overlay brightness affects dot size
+          // At intensity 0: all dots same size (neutral 0.5 brightness)
+          // At intensity 100%: full variation based on overlay brightness
+          result.halftoneBrightness = 0.5 + (transformedBrightness - 0.5) * effectiveIntensity;
         } else {
-          // Legacy halftone behavior
+          // Legacy halftone behavior with improved size mapping
           const intensity = effectiveIntensity; // 0..1
-          const minSize = 0.3;
-          const maxSize = 1;
-          result.moduleSizeModifier =
-            minSize +
-            (1 - brightness) * (maxSize - minSize) * intensity +
-            ((1 - intensity) * (maxSize - minSize)) / 2;
+          // Min size 0.25 ensures dots are always visible
+          // Max size 1.0 allows full coverage for dark areas
+          const minSize = 0.25;
+          const maxSize = 1.0;
+          // Use a smoother curve for size variation - darker = larger dots
+          // Apply intensity to control the strength of the effect
+          const sizeRange = maxSize - minSize;
+          const darknessInfluence = (1 - brightness) * intensity;
+          const baseSize = minSize + (sizeRange * (1 - intensity) * 0.5); // Base size when no overlay effect
+          result.moduleSizeModifier = baseSize + darknessInfluence * (maxSize - baseSize);
         }
       }
       break;
@@ -79,10 +97,16 @@ export function applyQROverlayMode(
       if (isDark) {
         const blendColor = overlayWithColors.colors?.[row]?.[col];
         if (blendColor) {
+          // Apply moderate darkening to preserve QR scannability at high intensity
+          // At 100% intensity, colors are darkened by 25% to ensure dark modules stay dark
           const blendAmount = effectiveIntensity; // 0..1
+          const darkFactor = 0.75 + (1 - blendAmount) * 0.25; // 0.75 at full intensity, 1.0 at zero
+          const darkR = Math.round(blendColor.r * darkFactor);
+          const darkG = Math.round(blendColor.g * darkFactor);
+          const darkB = Math.round(blendColor.b * darkFactor);
           result.moduleColor = blendColors(
             config.fgColor,
-            `rgb(${blendColor.r},${blendColor.g},${blendColor.b})`,
+            `rgb(${darkR},${darkG},${darkB})`,
             blendAmount
           );
         }
@@ -99,14 +123,16 @@ export function applyQROverlayMode(
       break;
 
     case 'gapfill':
-      // Fill white spaces with faded image colors
+      // Fill white spaces with faded image colors - creates ghosted image effect
       if (isDark) {
         result.moduleColor = config.fgColor;
       } else {
-        // Draw white spaces with faded image color
+        // Draw white spaces with visible image color
         const gapColor = overlayWithColors.colors?.[row]?.[col];
         if (gapColor) {
-          const fadeAmount = (config.overlayIntensity / 100) * 0.4; // Max 40% opacity
+          // Max 60% opacity allows image to show through more clearly
+          // while maintaining enough contrast for QR readability
+          const fadeAmount = effectiveIntensity * 0.6;
           const colorStr = `rgb(${gapColor.r},${gapColor.g},${gapColor.b})`;
           result.moduleColor = blendColors(config.bgColor, colorStr, fadeAmount);
           result.shouldDrawCell = true;
@@ -139,9 +165,16 @@ export function applyQROverlayMode(
           avgR = Math.round(avgR / pixCount);
           avgG = Math.round(avgG / pixCount);
           avgB = Math.round(avgB / pixCount);
-          const blockColor = `rgb(${avgR},${avgG},${avgB})`;
-          const pixBlendAmt = config.overlayIntensity / 100;
-          result.moduleColor = blendColors(config.fgColor, blockColor, pixBlendAmt);
+          // Apply moderate darkening to averaged color for QR contrast
+          // This ensures dark modules remain scannable while showing vibrant colors
+          const pixIntensity = effectiveIntensity;
+          const darkFactor = 0.7 + (1 - pixIntensity) * 0.3; // 0.7 at 100% intensity, 1.0 at 0%
+          const darkR = Math.round(avgR * darkFactor);
+          const darkG = Math.round(avgG * darkFactor);
+          const darkB = Math.round(avgB * darkFactor);
+          // Blend from fgColor to darkened block color based on intensity
+          const blockColor = `rgb(${darkR},${darkG},${darkB})`;
+          result.moduleColor = blendColors(config.fgColor, blockColor, pixIntensity);
         }
       }
       break;
@@ -152,28 +185,38 @@ export function applyQROverlayMode(
         const duotoneArr = config.duotoneColors || [];
         const shadowColor = duotoneArr[0] || config.fgColor;
         const highlightColor = duotoneArr[1] || null;
-        const intensity = config.overlayIntensity / 100;
+        const duoIntensity = effectiveIntensity;
 
-        if (brightness > 0.5 && highlightColor) {
-          // Bright areas get highlight color
-          result.moduleColor = blendColors(
-            config.fgColor,
-            highlightColor,
-            intensity * (brightness - 0.5) * 2
-          );
+        // Use a smoother gradient between shadow and highlight colors
+        // This creates more visually appealing duotone effect
+        if (highlightColor) {
+          // Full duotone: blend between shadow and highlight based on brightness
+          // brightness 0 -> full shadow, brightness 1 -> full highlight
+          const shadowParsed = parseColor(shadowColor);
+          const highlightParsed = parseColor(highlightColor);
+          
+          // Apply intensity to control how much duotone effect is applied
+          const duoR = Math.round(shadowParsed.r + (highlightParsed.r - shadowParsed.r) * brightness);
+          const duoG = Math.round(shadowParsed.g + (highlightParsed.g - shadowParsed.g) * brightness);
+          const duoB = Math.round(shadowParsed.b + (highlightParsed.b - shadowParsed.b) * brightness);
+          const duoColor = `rgb(${duoR},${duoG},${duoB})`;
+          
+          // Blend from fgColor to duotone color based on intensity
+          result.moduleColor = blendColors(config.fgColor, duoColor, duoIntensity);
         } else if (brightness > 0.5) {
-          // Fallback: lighten the foreground color
-          const fgParsed = parseColor(config.fgColor);
-          const lightR = Math.min(255, fgParsed.r + 80);
-          const lightG = Math.min(255, fgParsed.g + 80);
-          const lightB = Math.min(255, fgParsed.b + 80);
+          // Fallback: lighten the shadow color for bright areas
+          const shadowParsed = parseColor(shadowColor);
+          const lightenAmt = (brightness - 0.5) * 2 * duoIntensity;
+          const lightR = Math.min(255, Math.round(shadowParsed.r + (255 - shadowParsed.r) * lightenAmt * 0.5));
+          const lightG = Math.min(255, Math.round(shadowParsed.g + (255 - shadowParsed.g) * lightenAmt * 0.5));
+          const lightB = Math.min(255, Math.round(shadowParsed.b + (255 - shadowParsed.b) * lightenAmt * 0.5));
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         } else {
-          // Dark areas get shadow color
+          // Dark areas get shadow color blended with fg
           result.moduleColor = blendColors(
             config.fgColor,
             shadowColor,
-            intensity * (0.5 - brightness) * 2
+            duoIntensity * (0.5 - brightness) * 2
           );
         }
       }
@@ -184,8 +227,13 @@ export function applyQROverlayMode(
         result.drawOutlineOnly = true;
         const outlineColor = overlayWithColors.colors?.[row]?.[col];
         if (outlineColor) {
-          const outlineBlend = config.overlayIntensity / 100;
-          const colorStr = `rgb(${outlineColor.r},${outlineColor.g},${outlineColor.b})`;
+          // Apply moderate darkening to preserve visibility of outlines
+          const outlineBlend = effectiveIntensity;
+          const darkFactor = 0.75 + (1 - outlineBlend) * 0.25;
+          const darkR = Math.round(outlineColor.r * darkFactor);
+          const darkG = Math.round(outlineColor.g * darkFactor);
+          const darkB = Math.round(outlineColor.b * darkFactor);
+          const colorStr = `rgb(${darkR},${darkG},${darkB})`;
           result.moduleColor = blendColors(config.fgColor, colorStr, outlineBlend);
         }
       }
@@ -193,9 +241,22 @@ export function applyQROverlayMode(
 
     case 'wave':
       if (isDark) {
-        const waveAmt = (1 - brightness) * (config.overlayIntensity / 100) * 3;
-        result.waveOffsetX = Math.sin(row * 0.5) * waveAmt;
-        result.waveOffsetY = Math.cos(col * 0.5) * waveAmt;
+        // Wave effect creates flowing distortion based on image brightness
+        // Darker areas have more wave displacement for interesting visual effect
+        const waveIntensity = effectiveIntensity;
+        const waveStrength = (1 - brightness) * waveIntensity * 4; // Increased from 3 to 4 for more dramatic effect
+        // Use different frequencies for X and Y to create more organic wave pattern
+        result.waveOffsetX = Math.sin(row * 0.5 + col * 0.15) * waveStrength;
+        result.waveOffsetY = Math.cos(col * 0.5 + row * 0.15) * waveStrength;
+        
+        // Also apply color from overlay for added visual interest
+        const waveColor = overlayWithColors.colors?.[row]?.[col];
+        if (waveColor && waveIntensity > 0.3) {
+          // Darken overlay color for QR readability, blend based on intensity
+          const darkFactor = 0.7;
+          const colorStr = `rgb(${Math.round(waveColor.r * darkFactor)},${Math.round(waveColor.g * darkFactor)},${Math.round(waveColor.b * darkFactor)})`;
+          result.moduleColor = blendColors(config.fgColor, colorStr, waveIntensity * 0.7);
+        }
       }
       break;
 
@@ -207,12 +268,15 @@ export function applyQROverlayMode(
       if (mosaicColor) {
         const intensity = effectiveIntensity; // 0..1
         if (isDark) {
-          // Dark cells get the actual image color (darkened slightly to maintain QR readability)
-          const darkFactor = 0.7;
+          // Dark cells get the actual image color (moderately darkened to maintain QR readability)
+          // Using 0.8 preserves more color vibrancy while ensuring dark modules read as "dark"
+          const darkFactor = 0.8;
           result.moduleColor = `rgb(${Math.round(mosaicColor.r * darkFactor)},${Math.round(mosaicColor.g * darkFactor)},${Math.round(mosaicColor.b * darkFactor)})`;
         } else {
-          // White cells get a lighter/brighter version of the image color
-          const lightFactor = 0.4 + (1 - intensity) * 0.4;
+          // White cells get a lighter version of the image color
+          // At full intensity (1.0), lightFactor=0.3 gives subtle lightening
+          // At zero intensity (0.0), lightFactor=0.6 gives stronger lightening for more contrast
+          const lightFactor = 0.3 + (1 - intensity) * 0.3;
           const lightR = Math.round(255 - (255 - mosaicColor.r) * lightFactor);
           const lightG = Math.round(255 - (255 - mosaicColor.g) * lightFactor);
           const lightB = Math.round(255 - (255 - mosaicColor.b) * lightFactor);
