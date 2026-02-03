@@ -1,0 +1,578 @@
+/**
+ * QR-Art Gauss-Jordan Elimination
+ *
+ * This module implements the key algorithm that trades pixel control
+ * between data bits and ECC bits. By performing row reduction on the
+ * RS basis matrix, we can assign specific pixels to specific basis vectors.
+ *
+ * IMPORTANT: RS codes are only linear within a single block!
+ * The Gauss-Jordan elimination MUST be performed per-block separately.
+ *
+ * The algorithm:
+ * 1. Group vectors by RS block
+ * 2. For each block, build a matrix where rows are basis vectors, columns are affected pixels
+ * 3. Sort columns by pixel importance (from target image)
+ * 4. Perform Gauss-Jordan elimination per block, assigning pivots to important pixels
+ * 5. Each pivot row now controls one specific pixel
+ * 6. Combine results from all blocks
+ */
+
+import { createLogger } from '../../lib/logger';
+import { type BitPixelMapping, indexToPixel } from './bit-mapping';
+import type { RSBasisVector } from './rs-basis';
+
+const log = createLogger('QART');
+
+/**
+ * Result of Gauss-Jordan elimination for a single RS block
+ */
+export interface BlockEliminationResult {
+  /** RS block index */
+  blockIndex: number;
+  /** Eliminated basis vectors for this block */
+  vectors: RSBasisVector[];
+  /** Map from pixel index to the vector index within this block */
+  pixelToVectorIndex: Map<number, number>;
+  /** Number of pixels this block can control */
+  controllablePixels: number;
+  /** Pixels controlled by this block */
+  controlledPixels: number[];
+}
+
+/**
+ * Result of Gauss-Jordan elimination across all blocks
+ */
+export interface EliminationResult {
+  /** Per-block elimination results */
+  blockResults: BlockEliminationResult[];
+  /** Eliminated basis vectors (all blocks combined, in original order) */
+  vectors: RSBasisVector[];
+  /** Map from pixel index to { blockIndex, vectorIndex } */
+  pixelToVector: Map<number, { blockIndex: number; vectorIndex: number }>;
+  /** Total number of pixels we can control */
+  controllablePixels: number;
+  /** All pixels we control */
+  controlledPixels: number[];
+}
+
+/**
+ * Rank pixels by their importance based on target image
+ * Returns pixel indices sorted from most to least important
+ *
+ * @param targets Target pixel values (true = dark)
+ * @param importance Importance weights (0-1)
+ * @param moduleCount QR module count
+ * @param dataPixels Set of pixel indices that are data (non-structural)
+ * @returns Sorted pixel indices
+ */
+export function rankPixelsByImportance(
+  _targets: boolean[][],
+  importance: number[][],
+  moduleCount: number,
+  dataPixels: Set<number>
+): number[] {
+  const pixelScores: Array<{ index: number; score: number }> = [];
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const pixelIndex = row * moduleCount + col;
+
+      // Only include data pixels
+      if (!dataPixels.has(pixelIndex)) continue;
+
+      const imp = importance[row]?.[col] ?? 0;
+      pixelScores.push({ index: pixelIndex, score: imp });
+    }
+  }
+
+  // Sort by importance (descending)
+  pixelScores.sort((a, b) => b.score - a.score);
+
+  return pixelScores.map((p) => p.index);
+}
+
+/**
+ * Build a pixel affection matrix from basis vectors for a SINGLE RS block
+ * matrix[vectorIdx][pixelIdx] = true if that vector affects that pixel
+ *
+ * @param vectors Basis vectors (all from the same RS block)
+ * @param blockMappings Bit-to-pixel mappings for this block
+ * @param moduleCount Module count
+ * @param maskPattern Mask pattern
+ * @returns Boolean matrix
+ */
+function buildBlockAffectionMatrix(
+  vectors: RSBasisVector[],
+  blockMappings: BitPixelMapping[],
+  moduleCount: number,
+  _maskPattern: number
+): boolean[][] {
+  const totalPixels = moduleCount * moduleCount;
+  const matrix: boolean[][] = [];
+
+  for (const vector of vectors) {
+    const row: boolean[] = new Array(totalPixels).fill(false);
+
+    // For this vector, find which pixels it affects
+    // The vector's blockBits array contains (dataBytes + eccBytes)
+    for (const m of blockMappings) {
+      // Determine which byte in blockBits this mapping corresponds to
+      const byteInBlock = m.posInBlock;
+      if (byteInBlock < vector.blockBits.length) {
+        const byte = vector.blockBits[byteInBlock];
+        if ((byte & (1 << m.bitInByte)) !== 0) {
+          // This bit is set in the vector, so it affects this pixel
+          row[m.pixelIndex] = true;
+        }
+      }
+    }
+
+    matrix.push(row);
+  }
+
+  return matrix;
+}
+
+/**
+ * Perform Gauss-Jordan elimination for a SINGLE RS block
+ * This assigns each basis vector to control one specific pixel
+ *
+ * @param blockIndex The RS block index
+ * @param vectors Basis vectors for this block only
+ * @param blockMappings Bit-to-pixel mappings for this block
+ * @param moduleCount Module count
+ * @param maskPattern Mask pattern
+ * @param pixelOrder Pixels sorted by importance (most important first)
+ * @returns Block elimination result
+ */
+function eliminateBlock(
+  blockIndex: number,
+  vectors: RSBasisVector[],
+  blockMappings: BitPixelMapping[],
+  moduleCount: number,
+  maskPattern: number,
+  pixelOrder: number[]
+): BlockEliminationResult {
+  const numVectors = vectors.length;
+  const totalPixels = moduleCount * moduleCount;
+
+  if (numVectors === 0) {
+    return {
+      blockIndex,
+      vectors: [],
+      pixelToVectorIndex: new Map(),
+      controllablePixels: 0,
+      controlledPixels: [],
+    };
+  }
+
+  // Build the affection matrix for this block only
+  const matrix = buildBlockAffectionMatrix(vectors, blockMappings, moduleCount, maskPattern);
+
+  // Clone vectors for modification
+  const resultVectors = vectors.map((v) => ({
+    ...v,
+    blockBits: new Uint8Array(v.blockBits),
+    affectedPixels: [...v.affectedPixels],
+  }));
+
+  // Track which pixel each row pivots on (-1 if no pivot yet)
+  const rowPivot: number[] = new Array(numVectors).fill(-1);
+  // Track which row controls each pixel (-1 if none)
+  const pixelToRow: number[] = new Array(totalPixels).fill(-1);
+
+  let pivotRow = 0;
+
+  // Process pixels in importance order
+  for (const pixelIdx of pixelOrder) {
+    if (pivotRow >= numVectors) break;
+
+    // Find a row that has this pixel set and isn't already pivoted
+    let foundRow = -1;
+    for (let r = pivotRow; r < numVectors; r++) {
+      if (matrix[r][pixelIdx]) {
+        foundRow = r;
+        break;
+      }
+    }
+
+    if (foundRow === -1) continue; // No row in this block affects this pixel
+
+    // Swap found row with current pivot row
+    if (foundRow !== pivotRow) {
+      [matrix[pivotRow], matrix[foundRow]] = [matrix[foundRow], matrix[pivotRow]];
+      [resultVectors[pivotRow], resultVectors[foundRow]] = [
+        resultVectors[foundRow],
+        resultVectors[pivotRow],
+      ];
+    }
+
+    // Eliminate this pixel from all other rows IN THIS BLOCK ONLY
+    for (let r = 0; r < numVectors; r++) {
+      if (r !== pivotRow && matrix[r][pixelIdx]) {
+        // XOR row r with pivot row (valid because both are from same RS block)
+        for (let c = 0; c < totalPixels; c++) {
+          matrix[r][c] = matrix[r][c] !== matrix[pivotRow][c];
+        }
+        // Also XOR the actual vector data
+        for (let i = 0; i < resultVectors[r].blockBits.length; i++) {
+          resultVectors[r].blockBits[i] ^= resultVectors[pivotRow].blockBits[i];
+        }
+      }
+    }
+
+    // Mark this row as pivoting on this pixel
+    rowPivot[pivotRow] = pixelIdx;
+    pixelToRow[pixelIdx] = pivotRow;
+    resultVectors[pivotRow].pivotPixel = pixelIdx;
+
+    pivotRow++;
+  }
+
+  // Build result for this block
+  const pixelToVectorIndex = new Map<number, number>();
+  const controlledPixels: number[] = [];
+
+  for (let r = 0; r < numVectors; r++) {
+    if (rowPivot[r] !== -1) {
+      pixelToVectorIndex.set(rowPivot[r], r);
+      controlledPixels.push(rowPivot[r]);
+    }
+  }
+
+  return {
+    blockIndex,
+    vectors: resultVectors,
+    pixelToVectorIndex,
+    controllablePixels: controlledPixels.length,
+    controlledPixels,
+  };
+}
+
+/**
+ * Perform Gauss-Jordan elimination on all RS blocks
+ * Each block is processed separately to maintain RS linearity
+ *
+ * @param vectors All basis vectors (will be grouped by rsBlockIndex)
+ * @param mappings Bit-to-pixel mappings
+ * @param moduleCount Module count
+ * @param maskPattern Mask pattern
+ * @param pixelOrder Pixels sorted by importance (most important first)
+ * @returns Combined elimination result
+ */
+export function gaussJordanEliminate(
+  vectors: RSBasisVector[],
+  mappings: BitPixelMapping[],
+  moduleCount: number,
+  maskPattern: number,
+  pixelOrder: number[]
+): EliminationResult {
+  // Group vectors by RS block
+  const blockVectors = new Map<number, RSBasisVector[]>();
+  for (const v of vectors) {
+    const list = blockVectors.get(v.rsBlockIndex) || [];
+    list.push(v);
+    blockVectors.set(v.rsBlockIndex, list);
+  }
+
+  // Group mappings by RS block
+  const blockMappings = new Map<number, BitPixelMapping[]>();
+  for (const m of mappings) {
+    const list = blockMappings.get(m.rsBlockIndex) || [];
+    list.push(m);
+    blockMappings.set(m.rsBlockIndex, list);
+  }
+
+  // Get all block indices, sorted
+  const blockIndices = [...new Set([...blockVectors.keys(), ...blockMappings.keys()])].sort(
+    (a, b) => a - b
+  );
+
+  // Track which pixels have been assigned to a block already
+  const assignedPixels = new Set<number>();
+
+  // Process each block separately
+  const blockResults: BlockEliminationResult[] = [];
+  const allVectors: RSBasisVector[] = [];
+  const pixelToVector = new Map<number, { blockIndex: number; vectorIndex: number }>();
+  const allControlledPixels: number[] = [];
+  let totalControllable = 0;
+
+  for (const blockIndex of blockIndices) {
+    const bVectors = blockVectors.get(blockIndex) || [];
+    const bMappings = blockMappings.get(blockIndex) || [];
+
+    // Filter pixelOrder to only include pixels not yet assigned to another block
+    const availablePixelOrder = pixelOrder.filter((p) => !assignedPixels.has(p));
+
+    const result = eliminateBlock(
+      blockIndex,
+      bVectors,
+      bMappings,
+      moduleCount,
+      maskPattern,
+      availablePixelOrder
+    );
+
+    blockResults.push(result);
+
+    // Mark controlled pixels as assigned
+    for (const pixel of result.controlledPixels) {
+      assignedPixels.add(pixel);
+    }
+
+    // Add vectors to combined list
+    const _vectorOffset = allVectors.length;
+    allVectors.push(...result.vectors);
+
+    // Update pixel-to-vector map
+    for (const [pixel, vectorIdx] of result.pixelToVectorIndex) {
+      pixelToVector.set(pixel, { blockIndex, vectorIndex: vectorIdx });
+      allControlledPixels.push(pixel);
+    }
+
+    totalControllable += result.controllablePixels;
+  }
+
+  log.debug('Gauss-Jordan elimination complete (per-block)', {
+    numBlocks: blockIndices.length,
+    totalVectors: allVectors.length,
+    controllablePixels: totalControllable,
+    totalDataPixels: pixelOrder.length,
+  });
+
+  return {
+    blockResults,
+    vectors: allVectors,
+    pixelToVector,
+    controllablePixels: totalControllable,
+    controlledPixels: allControlledPixels,
+  };
+}
+
+/**
+ * Selection result for a single RS block
+ */
+export interface BlockSelectionResult {
+  blockIndex: number;
+  selectedVectorIndices: number[];
+}
+
+/**
+ * Select which basis vectors to apply to achieve the target pattern
+ * Returns selections per RS block (needed for proper re-encoding)
+ *
+ * @param eliminationResult Full elimination result
+ * @param targets Target pixel values
+ * @param baseMatrix Base QR matrix (from encoding the data)
+ * @param moduleCount Module count
+ * @returns Per-block selection results
+ */
+export function selectBasisVectorsForTarget(
+  eliminationResult: EliminationResult,
+  targets: boolean[][],
+  baseMatrix: boolean[][],
+  moduleCount: number
+): BlockSelectionResult[] {
+  // Initialize result per block
+  const blockSelections = new Map<number, number[]>();
+  for (const br of eliminationResult.blockResults) {
+    blockSelections.set(br.blockIndex, []);
+  }
+
+  // For each controllable pixel, check if we need to flip it
+  for (const [pixelIdx, info] of eliminationResult.pixelToVector) {
+    const { row, col } = indexToPixel(pixelIdx, moduleCount);
+    const target = targets[row]?.[col] ?? false;
+    const base = baseMatrix[row]?.[col] ?? false;
+
+    // If target differs from base, we need to flip this pixel
+    if (target !== base) {
+      const list = blockSelections.get(info.blockIndex);
+      if (list) {
+        list.push(info.vectorIndex);
+      }
+    }
+  }
+
+  // Convert to array
+  const results: BlockSelectionResult[] = [];
+  for (const [blockIndex, selectedVectorIndices] of blockSelections) {
+    results.push({ blockIndex, selectedVectorIndices });
+  }
+
+  return results.sort((a, b) => a.blockIndex - b.blockIndex);
+}
+
+/**
+ * Apply selected basis vectors to modify BOTH data AND ECC bytes for a single block
+ * XORs the selected vectors' complete blockBits (data + ECC) with the base codeword.
+ *
+ * IMPORTANT: RS codes are linear - XOR of valid codewords is valid. Since basis
+ * vectors contain valid codewords (data + correct ECC), XORing preserves validity.
+ * We MUST XOR both data AND ECC to maintain this property.
+ *
+ * @param blockData Original data bytes for this block (will be modified in place)
+ * @param blockEcc Original ECC bytes for this block (will be modified in place)
+ * @param blockVectors Eliminated basis vectors for this block
+ * @param selectedIndices Indices of vectors within this block to apply
+ * @param dataCount Number of data bytes in this block
+ */
+export function applySelectedVectorsToBlock(
+  blockData: Uint8Array,
+  blockEcc: Uint8Array,
+  blockVectors: RSBasisVector[],
+  selectedIndices: number[],
+  dataCount: number
+): void {
+  for (const idx of selectedIndices) {
+    const v = blockVectors[idx];
+    // XOR the data portion of this vector with the block's data
+    for (let i = 0; i < dataCount; i++) {
+      blockData[i] ^= v.blockBits[i];
+    }
+    // XOR the ECC portion of this vector with the block's ECC
+    // blockBits layout: [data0, data1, ..., dataN-1, ecc0, ecc1, ..., eccM-1]
+    const eccCount = blockEcc.length;
+    for (let i = 0; i < eccCount; i++) {
+      blockEcc[i] ^= v.blockBits[dataCount + i];
+    }
+  }
+}
+
+/**
+ * Apply selected basis vectors to modify all block data AND ECC
+ *
+ * IMPORTANT: This XORs both data AND ECC to preserve RS linearity.
+ * The resulting codewords remain valid RS codewords.
+ *
+ * @param blockDataArrays Per-block data byte arrays (modified in place)
+ * @param blockEccArrays Per-block ECC byte arrays (modified in place)
+ * @param eliminationResult Full elimination result
+ * @param blockSelections Per-block selection results
+ * @param blockDataCounts Number of data bytes per block
+ */
+export function applyAllSelectedVectors(
+  blockDataArrays: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  eliminationResult: EliminationResult,
+  blockSelections: BlockSelectionResult[],
+  blockDataCounts: number[]
+): void {
+  for (const selection of blockSelections) {
+    const { blockIndex, selectedVectorIndices } = selection;
+    if (selectedVectorIndices.length === 0) continue;
+
+    // Find the block result
+    const blockResult = eliminationResult.blockResults.find((br) => br.blockIndex === blockIndex);
+    if (!blockResult) continue;
+
+    const blockData = blockDataArrays[blockIndex];
+    const blockEcc = blockEccArrays[blockIndex];
+    const dataCount = blockDataCounts[blockIndex];
+
+    applySelectedVectorsToBlock(
+      blockData,
+      blockEcc,
+      blockResult.vectors,
+      selectedVectorIndices,
+      dataCount
+    );
+  }
+}
+
+/**
+ * Count how many pixels match the target after applying selected vectors
+ *
+ * IMPORTANT: After Gauss-Jordan elimination, each vector's blockBits has been XORed
+ * with other vectors and affects MULTIPLE pixels - not just the pivot pixel.
+ * We must account for ALL pixels affected by each selected vector's blockBits.
+ *
+ * @param baseMatrix Base QR matrix
+ * @param eliminationResult Full elimination result
+ * @param blockSelections Per-block selection results
+ * @param targets Target values
+ * @param moduleCount Module count
+ * @param dataPixels Set of data pixel indices
+ * @param mappings Bit-to-pixel mappings (needed to find all affected pixels)
+ * @returns Number of matching pixels
+ */
+export function countMatchingPixels(
+  baseMatrix: boolean[][],
+  eliminationResult: EliminationResult,
+  blockSelections: BlockSelectionResult[],
+  targets: boolean[][],
+  moduleCount: number,
+  dataPixels: Set<number>,
+  mappings: BitPixelMapping[]
+): { matching: number; total: number } {
+  // Build a lookup: (rsBlockIndex, posInBlock, bitInByte) -> pixelIndex
+  // This lets us find which pixel is affected by each bit in a vector's blockBits
+  const bitToPixelMap = new Map<string, number>();
+  for (const m of mappings) {
+    const key = `${m.rsBlockIndex}-${m.posInBlock}-${m.bitInByte}`;
+    bitToPixelMap.set(key, m.pixelIndex);
+  }
+
+  // Track how many times each pixel is flipped (odd = flipped, even = not flipped)
+  const flipCount = new Map<number, number>();
+
+  // For each selected vector, iterate through ALL bits in its blockBits
+  for (const sel of blockSelections) {
+    const { blockIndex, selectedVectorIndices } = sel;
+
+    // Find the block result
+    const blockResult = eliminationResult.blockResults.find((br) => br.blockIndex === blockIndex);
+    if (!blockResult) continue;
+
+    for (const vectorIdx of selectedVectorIndices) {
+      const vector = blockResult.vectors[vectorIdx];
+      if (!vector) continue;
+
+      // Iterate through each byte in blockBits
+      for (let byteIdx = 0; byteIdx < vector.blockBits.length; byteIdx++) {
+        const byte = vector.blockBits[byteIdx];
+        if (byte === 0) continue; // Skip zero bytes for efficiency
+
+        // Check each bit in this byte
+        for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
+          if ((byte & (1 << bitIdx)) !== 0) {
+            // This bit is set - find the corresponding pixel
+            const key = `${blockIndex}-${byteIdx}-${bitIdx}`;
+            const pixelIdx = bitToPixelMap.get(key);
+            if (pixelIdx !== undefined) {
+              // Increment flip count for this pixel
+              flipCount.set(pixelIdx, (flipCount.get(pixelIdx) || 0) + 1);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  let matching = 0;
+  let total = 0;
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const pixelIdx = row * moduleCount + col;
+      if (!dataPixels.has(pixelIdx)) continue;
+
+      total++;
+      let value = baseMatrix[row]?.[col] ?? false;
+
+      // Check if this pixel is flipped (odd number of flips = flipped)
+      const flips = flipCount.get(pixelIdx) || 0;
+      if (flips % 2 === 1) {
+        value = !value;
+      }
+
+      const target = targets[row]?.[col] ?? false;
+      if (value === target) {
+        matching++;
+      }
+    }
+  }
+
+  return { matching, total };
+}
