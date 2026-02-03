@@ -1,15 +1,161 @@
 /**
  * QR Generator Filter Preprocessing
  * QR-specific image preprocessing that uses overlay module filters
+ * Includes automatic detection and softening of high-contrast B&W images
  */
 
 import { createLogger } from '../../lib/logger';
-import { parseColor } from '../core';
-import { applyFilters, type ColorMode, copyImageData, type FilterOptions } from '../overlay';
+import { parseColor, rgbToGray } from '../core';
+import {
+  applyFilters,
+  type ColorMode,
+  copyImageData,
+  type FilterOptions,
+  gamma,
+  gaussianBlur,
+} from '../overlay';
 import { applyCannyEdge, applySobelEdge } from './filters-edge';
 import type { QRGeneratorConfig } from './types';
 
 const log = createLogger('GENERATE');
+
+// ============================================
+// HIGH-CONTRAST B&W DETECTION AND SOFTENING
+// ============================================
+
+/**
+ * Number of histogram buckets for luminance analysis.
+ * Using 32 buckets (5-bit) like the QR decoder's GlobalHistogramBinarizer.
+ */
+const HISTOGRAM_BUCKETS = 32;
+const BUCKET_SHIFT = 3; // 8 - 5 bits = shift by 3
+
+/**
+ * Thresholds for bimodal B&W detection
+ */
+const DARK_REGION_END = 8; // Buckets 0-7 are "dark"
+const LIGHT_REGION_START = 24; // Buckets 24-31 are "light"
+const MIN_PEAK_RATIO = 0.12; // Each peak must have at least 12% of pixels
+const MAX_VALLEY_RATIO = 0.2; // Valley (middle) must have < 20% of pixels (loosened to catch anti-aliased B&W)
+const MIN_PEAK_SEPARATION = 16; // Peaks must be at least 16 buckets apart
+
+/**
+ * Detect if an image is high-contrast B&W (bimodal histogram).
+ * Uses histogram analysis similar to GlobalHistogramBinarizer from QR decoder.
+ *
+ * A bimodal B&W image has:
+ * - A strong peak near 0 (black)
+ * - A strong peak near 255 (white)
+ * - Very few pixels in the middle (the valley)
+ *
+ * @param imageData - The image data to analyze
+ * @returns true if the image appears to be high-contrast B&W
+ */
+export function detectBimodalBW(imageData: ImageData): boolean {
+  const data = imageData.data;
+  const totalPixels = data.length / 4;
+
+  // Build luminance histogram
+  const histogram = new Int32Array(HISTOGRAM_BUCKETS);
+
+  for (let i = 0; i < data.length; i += 4) {
+    const gray = rgbToGray(data[i], data[i + 1], data[i + 2]);
+    const bucket = Math.min(HISTOGRAM_BUCKETS - 1, gray >> BUCKET_SHIFT);
+    histogram[bucket]++;
+  }
+
+  // Find peak in dark region (buckets 0-7)
+  let darkPeak = 0;
+  let darkPeakBucket = 0;
+  for (let i = 0; i < DARK_REGION_END; i++) {
+    if (histogram[i] > darkPeak) {
+      darkPeak = histogram[i];
+      darkPeakBucket = i;
+    }
+  }
+
+  // Find peak in light region (buckets 24-31)
+  let lightPeak = 0;
+  let lightPeakBucket = 0;
+  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) {
+    if (histogram[i] > lightPeak) {
+      lightPeak = histogram[i];
+      lightPeakBucket = i;
+    }
+  }
+
+  // Check peak separation
+  if (lightPeakBucket - darkPeakBucket < MIN_PEAK_SEPARATION) {
+    return false;
+  }
+
+  // Count pixels in each region
+  let darkRegionCount = 0;
+  for (let i = 0; i < DARK_REGION_END; i++) {
+    darkRegionCount += histogram[i];
+  }
+
+  let lightRegionCount = 0;
+  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) {
+    lightRegionCount += histogram[i];
+  }
+
+  // Count pixels in the valley (middle region)
+  let valleyCount = 0;
+  for (let i = DARK_REGION_END; i < LIGHT_REGION_START; i++) {
+    valleyCount += histogram[i];
+  }
+
+  // Check bimodal criteria
+  const darkRatio = darkRegionCount / totalPixels;
+  const lightRatio = lightRegionCount / totalPixels;
+  const valleyRatio = valleyCount / totalPixels;
+
+  const isBimodal =
+    darkRatio >= MIN_PEAK_RATIO && lightRatio >= MIN_PEAK_RATIO && valleyRatio < MAX_VALLEY_RATIO;
+
+  if (isBimodal) {
+    log.debug('Detected bimodal B&W image', {
+      darkRatio: darkRatio.toFixed(3),
+      lightRatio: lightRatio.toFixed(3),
+      valleyRatio: valleyRatio.toFixed(3),
+      darkPeakBucket,
+      lightPeakBucket,
+    });
+  }
+
+  return isBimodal;
+}
+
+/**
+ * Soften a high-contrast B&W image to create gradients for better dithering.
+ *
+ * Applies:
+ * 1. Gaussian blur (radius 2) to create soft transitions at hard edges
+ * 2. Gamma correction (0.65) to push values toward midtones
+ *
+ * This transforms harsh B&W patterns into smooth gradients that dithering
+ * algorithms can work with effectively.
+ *
+ * @param imageData - The image data to soften (will be copied, not mutated)
+ * @returns Softened image data with gradients
+ */
+export function softenBWImage(imageData: ImageData): ImageData {
+  log.debug('Softening B&W image for better dithering');
+
+  // First copy to avoid mutating original
+  let result = copyImageData(imageData);
+
+  // Apply Gaussian blur to create gradients at edges
+  // Radius 3 creates wide enough transitions for dithering to work with
+  result = gaussianBlur(result, 3);
+
+  // Apply gamma correction to push values toward midtones
+  // Gamma < 1 lightens midtones, creating more variation for dithering
+  result = gamma(result, 0.65);
+
+  return result;
+}
 
 /**
  * Preprocess image data with configured filters
@@ -129,19 +275,43 @@ export function preprocessImageData(
     });
   }
 
-  // If no filters to apply, return copy of original
-  if (Object.keys(filterOptions).length === 0) {
-    if (debug) {
-      log.debug('preprocessImageData - no filters to apply, returning copy');
+  // =========================================
+  // AUTOMATIC B&W DETECTION (no softening)
+  // =========================================
+  // Detect high-contrast B&W images like spirals/concentric circles.
+  // Previously we softened these images, but that defeats the B&W detection
+  // in the dithering code which has a better solution: QR-first mode.
+  //
+  // Now we just detect and skip softening - the dithering code will detect
+  // the B&W image and use QR-first mode which guarantees scannability.
+
+  const workingData = copyImageData(imageData);
+
+  if (!config.disableAutoSoften) {
+    if (detectBimodalBW(workingData)) {
+      if (debug) {
+        log.debug(
+          'preprocessImageData - detected high-contrast B&W, skipping softening (QR-first mode will handle)'
+        );
+      }
+      // Don't soften - let the dithering code detect B&W and use QR-first mode
+      // Softening would change the histogram and defeat QR-first detection
     }
-    return copyImageData(imageData);
   }
 
-  // Apply basic color filters first.
+  // If no additional filters to apply, return the (possibly softened) image
+  if (Object.keys(filterOptions).length === 0) {
+    if (debug) {
+      log.debug('preprocessImageData - no additional filters to apply');
+    }
+    return workingData;
+  }
+
+  // Apply basic color filters.
   if (debug) {
     log.debug('preprocessImageData - applying filters');
   }
-  let out = applyFilters(imageData, filterOptions);
+  let out = applyFilters(workingData, filterOptions);
 
   // Optional edge-detect post-pass.
   if (config.filterEdgeDetect) {

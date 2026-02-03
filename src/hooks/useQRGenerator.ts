@@ -32,6 +32,12 @@ import {
 } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
+import {
+  canUseFragmentSearch,
+  generateFullQArt,
+  getBaseUrl,
+  searchBestFragment,
+} from '@/modules/qr-art';
 import { QRGenerator } from '@/modules/qr-generator';
 import { useQRStore } from '@/store/qr-store';
 
@@ -536,7 +542,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
       preserveTiming: (safety.mode !== 'off' && safety.lockTiming) || overlay.preserveTiming,
       preserveAlignment: (safety.mode !== 'off' && safety.lockAlign) || overlay.preserveAlignment,
       protectFormatInfo: (safety.mode !== 'off' && safety.lockFormat) || overlay.protectFormatInfo,
-      protectVersionInfo: (safety.mode !== 'off' && safety.lockVersion) || overlay.protectVersionInfo,
+      protectVersionInfo:
+        (safety.mode !== 'off' && safety.lockVersion) || overlay.protectVersionInfo,
       logoSize: 25, // For center mode
 
       // Overlay preprocessing (wired to qr-generator filter* fields)
@@ -593,6 +600,14 @@ export function useQRGenerator(): UseQRGeneratorResult {
       eccAwareEnabled: overlay.eccAwareEnabled,
       eccAwareRiskBudget: overlay.eccAwareRiskBudget,
       eccAwareWeightMap: overlay.eccAwareWeightMap,
+
+      // QR-first mode (for high-contrast B&W images)
+      qrFirstMode: overlay.qrFirstMode,
+
+      // QR-Art options
+      qrartIterations: overlay.qrartIterations,
+      qrartFragmentLength: overlay.qrartFragmentLength,
+      qrartSeed: overlay.qrartSeed,
 
       // Debug flag for overlay preprocessing
       // Automatically enabled in development builds, disabled in production
@@ -691,6 +706,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
     overlay.eccAwareEnabled,
     overlay.eccAwareRiskBudget,
     overlay.eccAwareWeightMap,
+    overlay.qrFirstMode,
+    overlay.qrartIterations,
+    overlay.qrartFragmentLength,
+    overlay.qrartSeed,
     // Animation
     animation.temporalDither,
     animation.seed,
@@ -1114,18 +1133,195 @@ export function useQRGenerator(): UseQRGeneratorResult {
     setIsRendering(true);
 
     try {
+      // Build effective config - may be modified by QR-Art fragment search
+      let effectiveConfig = { ...debouncedConfig };
+
+      // QR-Art: if artwork mode is selected, try full RS basis manipulation first, then fall back to fragment search
+      if (overlay.enabled && overlay.mode === 'artwork' && overlayCanvas) {
+        log.info('Starting QR-Art generation', {
+          content: debouncedConfig.content?.substring(0, 50),
+          version: debouncedConfig.typeNumber,
+          ecc: debouncedConfig.errorCorrection,
+        });
+
+        let useFullQArt = false;
+        let fullQArtCanvas: HTMLCanvasElement | null = null;
+
+        // Try full QR-Art algorithm (RS basis manipulation)
+        try {
+          const fullQArtResult = await generateFullQArt({
+            data: debouncedConfig.content,
+            targetImage: overlayCanvas,
+            version: debouncedConfig.typeNumber || 0,
+            ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
+            maskPattern:
+              typeof debouncedConfig.maskPattern === 'number' ? debouncedConfig.maskPattern : -1,
+            onProgress: (stage, percent) => {
+              log.debug('QR-Art progress', { stage, percent: `${percent}%` });
+            },
+          });
+
+          if (fullQArtResult.success && fullQArtResult.matchPercentage >= 65) {
+            log.info('Full QR-Art generation successful', {
+              matchPercentage: `${fullQArtResult.matchPercentage.toFixed(1)}%`,
+              matchingPixels: fullQArtResult.matchingPixels,
+              totalControllable: fullQArtResult.totalControllable,
+              version: fullQArtResult.version,
+              maskPattern: fullQArtResult.maskPattern,
+            });
+
+            // Render the QR-Art matrix to canvas
+            const moduleCount = fullQArtResult.moduleCount;
+            const moduleSize = debouncedConfig.moduleSize || 10;
+            const margin = debouncedConfig.margin || 4;
+            const size = (moduleCount + margin * 2) * moduleSize;
+
+            fullQArtCanvas = document.createElement('canvas');
+            fullQArtCanvas.width = size;
+            fullQArtCanvas.height = size;
+            const ctx = fullQArtCanvas.getContext('2d');
+
+            if (ctx) {
+              // Fill background
+              ctx.fillStyle = debouncedConfig.bgColor || '#ffffff';
+              ctx.fillRect(0, 0, size, size);
+
+              // Draw modules
+              ctx.fillStyle = debouncedConfig.fgColor || '#000000';
+              for (let row = 0; row < moduleCount; row++) {
+                for (let col = 0; col < moduleCount; col++) {
+                  if (fullQArtResult.matrix[row]?.[col]) {
+                    ctx.fillRect(
+                      (col + margin) * moduleSize,
+                      (row + margin) * moduleSize,
+                      moduleSize,
+                      moduleSize
+                    );
+                  }
+                }
+              }
+              useFullQArt = true;
+            }
+          } else if (fullQArtResult.success) {
+            log.info('Full QR-Art match too low, falling back to fragment search', {
+              matchPercentage: `${fullQArtResult.matchPercentage.toFixed(1)}%`,
+            });
+          } else {
+            log.warn('Full QR-Art generation failed', { error: fullQArtResult.error });
+          }
+        } catch (err) {
+          log.warn('Full QR-Art generation threw error, falling back to fragment search', {
+            error: err,
+          });
+        }
+
+        // If full QR-Art succeeded with good match, use that canvas directly
+        if (useFullQArt && fullQArtCanvas) {
+          // Apply watermark if enabled
+          let resultCanvas: HTMLCanvasElement | OffscreenCanvas = fullQArtCanvas;
+          if (watermark.enabled) {
+            let watermarkImage: HTMLImageElement | HTMLCanvasElement | null = null;
+            if ((watermark.kind === 'image' || watermark.kind === 'pattern') && watermark.image) {
+              watermarkImage = await loadFileAsCanvas(watermark.image);
+            }
+            const watermarked = await applyWatermark(fullQArtCanvas, {
+              kind: watermark.kind,
+              text: watermark.text,
+              image: watermarkImage,
+              position: watermark.position as WatermarkPosition,
+              opacity: watermark.opacity,
+              blend: watermark.blend,
+            });
+            resultCanvas = watermarked.canvas;
+          }
+
+          setCanvas(resultCanvas);
+          if (canvasRef.current) {
+            const displayCtx = canvasRef.current.getContext('2d');
+            if (displayCtx) {
+              canvasRef.current.width = resultCanvas.width;
+              canvasRef.current.height = resultCanvas.height;
+              displayCtx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+              displayCtx.drawImage(resultCanvas, 0, 0);
+            }
+          }
+
+          setIsRendering(false);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fall back to fragment search if full QR-Art didn't produce good results
+        if (
+          debouncedConfig.qrartIterations &&
+          debouncedConfig.qrartIterations > 0 &&
+          canUseFragmentSearch(debouncedConfig.content)
+        ) {
+          log.info('Starting QR-Art fragment search (fallback)', {
+            iterations: debouncedConfig.qrartIterations,
+            fragmentLength: debouncedConfig.qrartFragmentLength,
+            baseUrl: getBaseUrl(debouncedConfig.content),
+          });
+
+          let lastLoggedProgress = 0;
+
+          try {
+            const searchResult = await searchBestFragment({
+              baseUrl: getBaseUrl(debouncedConfig.content),
+              targetImage: overlayCanvas,
+              iterations: debouncedConfig.qrartIterations,
+              fragmentLength: debouncedConfig.qrartFragmentLength ?? 8,
+              seed: debouncedConfig.qrartSeed ?? Date.now(),
+              version: debouncedConfig.typeNumber || 0,
+              ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
+              maskPattern:
+                typeof debouncedConfig.maskPattern === 'number' ? debouncedConfig.maskPattern : -1,
+              onProgress: (percent) => {
+                if (percent >= lastLoggedProgress + 25) {
+                  log.debug('QR-Art fragment search progress', { percent: `${percent}%` });
+                  lastLoggedProgress = Math.floor(percent / 25) * 25;
+                }
+              },
+            });
+
+            log.info('QR-Art fragment search complete', {
+              bestUrl: searchResult.url,
+              score: `${(searchResult.score * 100).toFixed(1)}%`,
+              matchPercentage: `${searchResult.matchPercentage.toFixed(1)}%`,
+              matchingModules: searchResult.matchingModules,
+              totalControllable: searchResult.totalControllable,
+              iterations: debouncedConfig.qrartIterations,
+            });
+
+            if (searchResult.matchPercentage < 50) {
+              log.warn('QR-Art match is low - image may not be clearly visible', {
+                matchPercentage: `${searchResult.matchPercentage.toFixed(1)}%`,
+                tip: 'Try a simpler high-contrast image or increase iterations',
+              });
+            }
+
+            effectiveConfig = {
+              ...effectiveConfig,
+              content: searchResult.url,
+            };
+          } catch (err) {
+            log.warn('QR-Art fragment search failed, using original content', { error: err });
+          }
+        }
+      }
+
       // Generate QR code with automatic overflow handling
       let result: HTMLCanvasElement | OffscreenCanvas | null = null;
       let usedFallback = false;
 
       try {
         log.debug('Attempting QR generation', {
-          contentLength: debouncedConfig.content?.length,
-          typeNumber: debouncedConfig.typeNumber,
-          errorCorrection: debouncedConfig.errorCorrection,
+          contentLength: effectiveConfig.content?.length,
+          typeNumber: effectiveConfig.typeNumber,
+          errorCorrection: effectiveConfig.errorCorrection,
         });
         result = await qrGenerator.generate(
-          debouncedConfig,
+          effectiveConfig,
           overlay.enabled ? overlayCanvas : null
         );
         log.debug('Initial generation succeeded');
@@ -1139,7 +1335,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         if (msg.includes('code length overflow')) {
           // Try with lower ECC levels - more data capacity
           // Order: progressively lower ECC levels for more data capacity
-          const currentEcc = debouncedConfig.errorCorrection || 'H';
+          const currentEcc = effectiveConfig.errorCorrection || 'H';
           const allEccLevels = ['H', 'Q', 'M', 'L'] as const;
           const eccIndex = allEccLevels.indexOf(currentEcc as (typeof allEccLevels)[number]);
           // If original call used auto-version (typeNumber: 0), skip the current ECC level
@@ -1162,7 +1358,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           for (const ecc of eccToTry) {
             if (succeeded) break;
             const fallbackConfig = {
-              ...debouncedConfig,
+              ...effectiveConfig,
               typeNumber: 0, // Always use auto-version for retry
               errorCorrection: ecc,
             };
@@ -1191,13 +1387,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
           if (!succeeded) {
             // All attempts failed - content is too long even for max capacity
             log.debug('All ECC levels failed', {
-              contentLength: debouncedConfig.content?.length,
-              contentPreview: debouncedConfig.content?.substring(0, 100),
+              contentLength: effectiveConfig.content?.length,
+              contentPreview: effectiveConfig.content?.substring(0, 100),
               triedEccLevels: eccToTry,
             });
             // CRITICAL: Set BOTH ref and state to block retries
             // Ref provides synchronous blocking, state triggers React update
-            lastOverflowContentRef.current = debouncedConfig.content;
+            lastOverflowContentRef.current = effectiveConfig.content;
             isOverflowBlockedRef.current = true;
             setHasOverflowError(true);
 
@@ -1265,13 +1461,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // Validate the generated QR code (skip during animation playback for performance)
       // Validation will run when animation is paused or for static QR codes
       const isCurrentlyAnimating = animationFrames.length > 1 && animation.playing;
-      const shouldValidate = result && debouncedConfig.content && !isCurrentlyAnimating;
+      const shouldValidate = result && effectiveConfig.content && !isCurrentlyAnimating;
       if (shouldValidate) {
         setIsValidating(true);
         // Use setTimeout to not block the main thread
         setTimeout(() => {
           try {
-            const validationResult = validateQRCodeRobust(result, debouncedConfig.content);
+            const validationResult = validateQRCodeRobust(result, effectiveConfig.content);
             setValidation(validationResult);
           } catch (err) {
             log.error('Validation error', { error: err });
@@ -1318,6 +1514,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   }, [
     debouncedConfig,
     overlay.enabled,
+    overlay.mode,
     overlayCanvas,
     watermark.enabled,
     watermark.kind,
@@ -1489,7 +1686,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       if (elapsed >= frameDelay) {
         // Use additive timing to prevent drift - increment by frameDelay instead of resetting to now
         lastFrameTime.current += frameDelay;
-        
+
         // Prevent catch-up storms: if we've fallen too far behind, reset to now
         if (now - lastFrameTime.current > frameDelay * 3) {
           lastFrameTime.current = now;

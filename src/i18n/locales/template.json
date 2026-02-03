@@ -1456,7 +1456,13 @@
     "pleaseEnterUrl": "1054",
     "preview": "1055",
     "sobel": "1417",
-    "canny": "1418"
+    "canny": "1418",
+    "qrFirstMode": "1796",
+    "qrFirstModeHelp": "1797",
+    "artworkMode": "1798",
+    "artworkModeInfo": "1799",
+    "searchIterations": "1800",
+    "searchIterationsHelp": "1801"
   },
   "welcome": {
     "title": "1423",

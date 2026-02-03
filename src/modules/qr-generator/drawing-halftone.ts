@@ -16,13 +16,13 @@ const _log = createLogger('GENERATE');
 function parseHalftoneCell(cellConfig: number | string | undefined): number {
   if (cellConfig === undefined || cellConfig === 'per_module') return 1;
   if (typeof cellConfig === 'number') return Math.max(1, Math.round(cellConfig));
-  
+
   // Parse 'n×n' or 'nxn' format
   const match = String(cellConfig).match(/^(\d+)[x×](\d+)$/i);
   if (match) {
     return Math.max(1, parseInt(match[1], 10));
   }
-  
+
   return 1; // Default to single dot per module
 }
 
@@ -39,19 +39,19 @@ function drawHalftoneDot(
   col: number
 ): void {
   const halfSize = dotSize / 2;
-  
+
   switch (shape) {
     case 'square':
       // Draw a square centered at (cx, cy)
       ctx.fillRect(cx - halfSize, cy - halfSize, dotSize, dotSize);
       break;
-      
+
     case 'line': {
       // Draw a line-based halftone (alternating 45° and -45° based on position)
       ctx.save();
       ctx.translate(cx, cy);
       // Alternate rotation based on position for visual interest
-      const angle = ((row + col) % 2 === 0) ? Math.PI / 4 : -Math.PI / 4;
+      const angle = (row + col) % 2 === 0 ? Math.PI / 4 : -Math.PI / 4;
       ctx.rotate(angle);
       // Draw an elongated rectangle (line)
       const lineWidth = dotSize * 0.35;
@@ -60,8 +60,6 @@ function drawHalftoneDot(
       ctx.restore();
       break;
     }
-      
-    case 'circle':
     default:
       // Draw a circle (default behavior)
       ctx.beginPath();
@@ -88,7 +86,7 @@ export function drawHalftoneModule(
   // Legacy settings for backward compatibility
   const htDot = config.htDot ?? 0.8;
   const htCurve = config.htCurve ?? 1;
-  
+
   // New configurable settings
   const gridSize = parseHalftoneCell(config.halftoneCell ?? config.htCell);
   const dotShape = config.halftoneDotShape || 'circle';
@@ -101,11 +99,11 @@ export function drawHalftoneModule(
     const minSize = size * 0.1;
     const maxSize = size * htDot;
     const dotSize = minSize + adjustedBrightness * (maxSize - minSize);
-    
+
     // Center the dot in the cell
     const cx = x + size / 2;
     const cy = y + size / 2;
-    
+
     drawHalftoneDot(ctx, cx, cy, dotSize, dotShape, moduleRow, moduleCol);
   } else {
     // Grid pattern (n×n mode) - draw multiple smaller dots
@@ -113,14 +111,22 @@ export function drawHalftoneModule(
     const maxDotSize = cellSize * htDot;
     const minDotSize = cellSize * 0.1;
     const dotSize = minDotSize + adjustedBrightness * (maxDotSize - minDotSize);
-    
+
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         const cx = x + (col + 0.5) * cellSize;
         const cy = y + (row + 0.5) * cellSize;
-        
+
         // Pass grid position for line rotation variation
-        drawHalftoneDot(ctx, cx, cy, dotSize, dotShape, moduleRow * gridSize + row, moduleCol * gridSize + col);
+        drawHalftoneDot(
+          ctx,
+          cx,
+          cy,
+          dotSize,
+          dotShape,
+          moduleRow * gridSize + row,
+          moduleCol * gridSize + col
+        );
       }
     }
   }

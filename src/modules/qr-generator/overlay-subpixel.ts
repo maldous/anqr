@@ -142,17 +142,17 @@ export async function generateSubpixelMatrix(
 
   // Use parsed grid size for center calculation
   const centerIdx = Math.floor(actualScale / 2);
-  
+
   // Parse neutral color for use when no overlay data
   const neutralColor = parseHexColor(config.subpixelNeutralColor);
-  
+
   // Get center rule: 'strict' means exact QR value, 'halftone_center' allows halftone sizing
   const centerRule = config.subpixelCenterRule || 'strict';
   const useHalftone = centerRule === 'halftone_center' || useHalftoneCenter;
-  
+
   // Get finder override: 'solid' means draw finders as solid, 'stylized' allows subpixel effects
   const finderOverride = config.subpixelFinderOverride || 'solid';
-  
+
   // Calculate version for structural pattern detection
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
@@ -183,10 +183,10 @@ export async function generateSubpixelMatrix(
       const qrValue = qr.isDark(moduleRow, moduleCol);
       const overlayBrightness = brightness[y]?.[x] ?? 0.5;
       const overlayColor = colors[y]?.[x];
-      
+
       // Check if this module is a structural pattern
       const isStructural = isStructuralModule(moduleRow, moduleCol, moduleCount, version);
-      
+
       // Handle finder override: if 'solid', structural patterns render as solid QR
       if (isStructural && finderOverride === 'solid') {
         matrix[y][x] = qrValue;

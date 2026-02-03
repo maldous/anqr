@@ -18,6 +18,72 @@ import type { OverlayData, QRGeneratorConfig } from './types';
 
 const log = createLogger('GENERATE');
 
+// ============================================
+// HIGH-CONTRAST B&W DETECTION
+// ============================================
+
+const HISTOGRAM_BUCKETS = 32;
+const BUCKET_SHIFT = 3;
+const DARK_REGION_END = 8;
+const LIGHT_REGION_START = 24;
+const MIN_PEAK_RATIO = 0.12;
+const MAX_VALLEY_RATIO = 0.2;
+const MIN_PEAK_SEPARATION = 16;
+
+/**
+ * Detect if overlay data represents a high-contrast B&W image.
+ */
+function detectBWFromOverlayData(overlayData: OverlayData, moduleCount: number): boolean {
+  const histogram = new Int32Array(HISTOGRAM_BUCKETS);
+  let totalPixels = 0;
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const brightness = overlayData[row]?.[col] ?? 0.5;
+      // brightness is 0-1, convert to 0-255 for histogram
+      const gray = Math.floor(brightness * 255);
+      const bucket = Math.min(HISTOGRAM_BUCKETS - 1, gray >> BUCKET_SHIFT);
+      histogram[bucket]++;
+      totalPixels++;
+    }
+  }
+
+  if (totalPixels === 0) return false;
+
+  let darkPeakBucket = 0,
+    lightPeakBucket = 0;
+  let darkPeak = 0,
+    lightPeak = 0;
+
+  for (let i = 0; i < DARK_REGION_END; i++) {
+    if (histogram[i] > darkPeak) {
+      darkPeak = histogram[i];
+      darkPeakBucket = i;
+    }
+  }
+  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) {
+    if (histogram[i] > lightPeak) {
+      lightPeak = histogram[i];
+      lightPeakBucket = i;
+    }
+  }
+
+  if (lightPeakBucket - darkPeakBucket < MIN_PEAK_SEPARATION) return false;
+
+  let darkCount = 0,
+    lightCount = 0,
+    valleyCount = 0;
+  for (let i = 0; i < DARK_REGION_END; i++) darkCount += histogram[i];
+  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) lightCount += histogram[i];
+  for (let i = DARK_REGION_END; i < LIGHT_REGION_START; i++) valleyCount += histogram[i];
+
+  return (
+    darkCount / totalPixels >= MIN_PEAK_RATIO &&
+    lightCount / totalPixels >= MIN_PEAK_RATIO &&
+    valleyCount / totalPixels < MAX_VALLEY_RATIO
+  );
+}
+
 /**
  * Check if a module is a structural pattern (finder, alignment, timing, format, version)
  * Structural modules should ALWAYS be preserved for QR scannability
@@ -64,10 +130,32 @@ export function applyDitherToMatrix(
   overlayData: OverlayData,
   config: QRGeneratorConfig
 ): boolean[][] {
+  const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
+
+  // =========================================
+  // HIGH-CONTRAST B&W IMAGE DETECTION
+  // =========================================
+  // For high-contrast B&W images (like spirals), use QR-first mode
+  // which simply preserves QR data exactly - no dithering at all.
+  // Dithering on B&W images causes accumulated errors that flip modules.
+
+  if (detectBWFromOverlayData(overlayData, moduleCount)) {
+    log.debug('Detected high-contrast B&W overlay in dither mode - using QR-first (no dithering)');
+
+    // QR-first: return exact QR matrix without any dithering
+    const result: boolean[][] = [];
+    for (let row = 0; row < moduleCount; row++) {
+      result[row] = [];
+      for (let col = 0; col < moduleCount; col++) {
+        result[row][col] = qr.isDark(row, col);
+      }
+    }
+    return result;
+  }
+
   const kernel = getDiffusionKernel(config.ditherKind || 'floyd_steinberg');
   const strength = (config.ditherStrength ?? 50) / 100;
   const intensity = (config.overlayIntensity ?? 100) / 100;
-  const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   // Initialize result matrix with original QR values
   const result: boolean[][] = [];

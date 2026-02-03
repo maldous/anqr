@@ -41,6 +41,7 @@ const BASIC_OVERLAY_MODES: { value: OverlayMode; labelKey: string }[] = [
   { value: 'blend', labelKey: 'overlay.blendMode' },
   { value: 'halftone', labelKey: 'overlay.halftoneMode' },
   { value: 'dithered', labelKey: 'overlay.ditheredMode' },
+  { value: 'artwork', labelKey: 'overlay.artworkMode' },
 ];
 
 const ADVANCED_OVERLAY_MODES: { value: OverlayMode; labelKey: string }[] = [
@@ -1129,6 +1130,22 @@ export function OverlaySection() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* QR-First Mode Toggle */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <Label className="text-sm">
+                      <HighlightedLabel>{t('overlay.qrFirstMode')}</HighlightedLabel>
+                    </Label>
+                    <Switch
+                      checked={overlay.qrFirstMode}
+                      onCheckedChange={(checked) =>
+                        useQRStore.setState((s) => ({
+                          overlay: { ...s.overlay, qrFirstMode: checked },
+                        }))
+                      }
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t('overlay.qrFirstModeHelp')}</p>
                 </>
               )}
 
@@ -1374,6 +1391,41 @@ export function OverlaySection() {
                         />
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Artwork Mode Settings */}
+              {overlay.mode === 'artwork' && (
+                <div className="space-y-3 pt-2 border-t">
+                  <div className="p-3 rounded-md bg-amber-500/10 border border-amber-500/20">
+                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                      {t('overlay.artworkModeInfo')}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">
+                        <HighlightedLabel>{t('overlay.searchIterations')}</HighlightedLabel>
+                      </Label>
+                      <span className="text-sm text-muted-foreground">
+                        {overlay.qrartIterations.toLocaleString()}
+                      </span>
+                    </div>
+                    <Slider
+                      value={[overlay.qrartIterations]}
+                      onValueChange={([v]) =>
+                        useQRStore.setState((s) => ({
+                          overlay: { ...s.overlay, qrartIterations: v },
+                        }))
+                      }
+                      min={1000}
+                      max={100000}
+                      step={1000}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('overlay.searchIterationsHelp')}
+                    </p>
                   </div>
                 </div>
               )}
