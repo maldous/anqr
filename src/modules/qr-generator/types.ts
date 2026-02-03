@@ -119,6 +119,19 @@ export interface QRGeneratorConfig {
   filterBlur?: number;
   filterSharpen?: number;
   filterEdgeDetect?: boolean;
+
+  /** Disable automatic softening of high-contrast B&W images. Default: false (auto-soften enabled) */
+  disableAutoSoften?: boolean;
+
+  /** Force QR-first mode for overlays (guarantees scannability at cost of dithering fidelity) */
+  qrFirstMode?: boolean;
+
+  /** QR-Art: Number of fragment iterations to search */
+  qrartIterations?: number;
+  /** QR-Art: Length of numeric fragment to append */
+  qrartFragmentLength?: number;
+  /** QR-Art: Random seed for reproducible searches */
+  qrartSeed?: number;
   filterEdgeMode?: string;
   filterPosterize?: number;
   filterDuotone1?: string;

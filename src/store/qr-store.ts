@@ -187,7 +187,8 @@ export type OverlayMode =
   | 'wave'
   | 'subpixel-size'
   | 'dither'
-  | 'extreme';
+  | 'extreme'
+  | 'artwork';
 export type ColorMode = 'color' | 'grayscale' | 'bw';
 export type FitMode = 'cover' | 'contain' | 'stretch';
 export type OverlayType = 'static' | 'gif' | 'apng' | 'webp_anim' | 'video';
@@ -739,6 +740,12 @@ export interface QRState {
     gifUseFrameDelays: boolean;
     gifMaxFps: number;
     gifDisposalHandling: 'respect' | 'simplify';
+    // QR-first mode (forces QR data preservation for high-contrast images)
+    qrFirstMode: boolean;
+    // QR-Art settings (fragment search for artwork mode)
+    qrartIterations: number;
+    qrartFragmentLength: number;
+    qrartSeed: number;
   };
   setOverlayEnabled: (enabled: boolean) => void;
   setOverlayFile: (file: File | null) => void;
@@ -1233,6 +1240,10 @@ export const useQRStore = create<QRState>((set, get) => ({
     gifUseFrameDelays: true,
     gifMaxFps: 30,
     gifDisposalHandling: 'respect',
+    qrFirstMode: false,
+    qrartIterations: 10000,
+    qrartFragmentLength: 8,
+    qrartSeed: 42,
   },
   setOverlayEnabled: (enabled) => set((s) => ({ overlay: { ...s.overlay, enabled } })),
   setOverlayFile: (file) =>

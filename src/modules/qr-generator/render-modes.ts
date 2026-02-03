@@ -69,7 +69,7 @@ export function applyQROverlayMode(
             transformedBrightness = brightness * brightness * (3 - 2 * brightness);
           } else if (curve === 'gamma') {
             // Gamma curve: lift shadows
-            transformedBrightness = Math.pow(brightness, 0.7);
+            transformedBrightness = brightness ** 0.7;
           }
           // 'linear' is the default - no transformation needed
           // Apply intensity to control how much the overlay brightness affects dot size
@@ -87,7 +87,7 @@ export function applyQROverlayMode(
           // Apply intensity to control the strength of the effect
           const sizeRange = maxSize - minSize;
           const darknessInfluence = (1 - brightness) * intensity;
-          const baseSize = minSize + (sizeRange * (1 - intensity) * 0.5); // Base size when no overlay effect
+          const baseSize = minSize + sizeRange * (1 - intensity) * 0.5; // Base size when no overlay effect
           result.moduleSizeModifier = baseSize + darknessInfluence * (maxSize - baseSize);
         }
       }
@@ -194,22 +194,37 @@ export function applyQROverlayMode(
           // brightness 0 -> full shadow, brightness 1 -> full highlight
           const shadowParsed = parseColor(shadowColor);
           const highlightParsed = parseColor(highlightColor);
-          
+
           // Apply intensity to control how much duotone effect is applied
-          const duoR = Math.round(shadowParsed.r + (highlightParsed.r - shadowParsed.r) * brightness);
-          const duoG = Math.round(shadowParsed.g + (highlightParsed.g - shadowParsed.g) * brightness);
-          const duoB = Math.round(shadowParsed.b + (highlightParsed.b - shadowParsed.b) * brightness);
+          const duoR = Math.round(
+            shadowParsed.r + (highlightParsed.r - shadowParsed.r) * brightness
+          );
+          const duoG = Math.round(
+            shadowParsed.g + (highlightParsed.g - shadowParsed.g) * brightness
+          );
+          const duoB = Math.round(
+            shadowParsed.b + (highlightParsed.b - shadowParsed.b) * brightness
+          );
           const duoColor = `rgb(${duoR},${duoG},${duoB})`;
-          
+
           // Blend from fgColor to duotone color based on intensity
           result.moduleColor = blendColors(config.fgColor, duoColor, duoIntensity);
         } else if (brightness > 0.5) {
           // Fallback: lighten the shadow color for bright areas
           const shadowParsed = parseColor(shadowColor);
           const lightenAmt = (brightness - 0.5) * 2 * duoIntensity;
-          const lightR = Math.min(255, Math.round(shadowParsed.r + (255 - shadowParsed.r) * lightenAmt * 0.5));
-          const lightG = Math.min(255, Math.round(shadowParsed.g + (255 - shadowParsed.g) * lightenAmt * 0.5));
-          const lightB = Math.min(255, Math.round(shadowParsed.b + (255 - shadowParsed.b) * lightenAmt * 0.5));
+          const lightR = Math.min(
+            255,
+            Math.round(shadowParsed.r + (255 - shadowParsed.r) * lightenAmt * 0.5)
+          );
+          const lightG = Math.min(
+            255,
+            Math.round(shadowParsed.g + (255 - shadowParsed.g) * lightenAmt * 0.5)
+          );
+          const lightB = Math.min(
+            255,
+            Math.round(shadowParsed.b + (255 - shadowParsed.b) * lightenAmt * 0.5)
+          );
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         } else {
           // Dark areas get shadow color blended with fg
@@ -248,7 +263,7 @@ export function applyQROverlayMode(
         // Use different frequencies for X and Y to create more organic wave pattern
         result.waveOffsetX = Math.sin(row * 0.5 + col * 0.15) * waveStrength;
         result.waveOffsetY = Math.cos(col * 0.5 + row * 0.15) * waveStrength;
-        
+
         // Also apply color from overlay for added visual interest
         const waveColor = overlayWithColors.colors?.[row]?.[col];
         if (waveColor && waveIntensity > 0.3) {
@@ -283,6 +298,25 @@ export function applyQROverlayMode(
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         }
       }
+      break;
+    }
+
+    case 'artwork': {
+      // Artwork mode: True QR-Art rendering (Russ Cox algorithm)
+      // The image appears through the DATA MODULE PATTERN, not visual effects.
+      // The QR-Art fragment search finds URL fragments that produce QR data
+      // modules matching the target image - we just render normally as pure B&W.
+      //
+      // This is fundamentally different from other overlay modes:
+      // - Other modes: modify how modules LOOK (size, color, fill)
+      // - Artwork mode: modify what DATA is encoded to control which modules are dark/light
+      //
+      // The overlay image is used only for SCORING during fragment search,
+      // not for visual post-processing during rendering.
+      result.shouldDrawCell = isDark; // Normal QR rendering - only draw dark modules
+      result.moduleColor = isDark ? config.fgColor : config.bgColor; // Pure black/white
+      result.moduleSizeModifier = 1; // Full size modules, no halftone
+      // No fills, no tinting - the art IS the QR pattern itself
       break;
     }
   }

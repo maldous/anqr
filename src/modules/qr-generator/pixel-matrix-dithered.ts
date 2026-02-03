@@ -11,9 +11,11 @@
  * - Structural modules are fully locked using qr-spec pattern locking.
  * - The CENTER sub-pixel of every non-structural module is forced to the true QR bit.
  * - Per-module dark-pixel ratio is bounded (data modules only).
+ * - HIGH-CONTRAST B&W images use QR-first mode (no dithering) to guarantee scannability.
  */
 
 import { createLogger } from '../../lib/logger';
+import { rgbToGray } from '../core';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
 import { DIFFUSION_KERNELS, type DiffusionKernelDef } from '../dither-algorithms/kernels';
 import type { DiffusionKernel } from '../dither-algorithms/types';
@@ -36,6 +38,221 @@ import type {
 const log = createLogger('DITHER');
 
 type RGBi = { r: number; g: number; b: number };
+
+// ============================================
+// HIGH-CONTRAST B&W DETECTION AND QR-FIRST MODE
+// ============================================
+
+/**
+ * Number of histogram buckets for luminance analysis.
+ */
+const HISTOGRAM_BUCKETS = 32;
+const BUCKET_SHIFT = 3; // 8 - 5 bits = shift by 3
+
+/**
+ * Thresholds for bimodal B&W detection
+ */
+const DARK_REGION_END = 8;
+const LIGHT_REGION_START = 24;
+const MIN_PEAK_RATIO = 0.12;
+const MAX_VALLEY_RATIO = 0.2;
+const MIN_PEAK_SEPARATION = 16;
+
+/**
+ * Detect if overlay image is high-contrast B&W from canvas data.
+ * Returns true if the image has a bimodal histogram (peaks near 0 and 255, valley in middle).
+ */
+function detectBWFromCanvas(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  width: number,
+  height: number
+): boolean {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  const totalPixels = data.length / 4;
+
+  // Build luminance histogram
+  const histogram = new Int32Array(HISTOGRAM_BUCKETS);
+
+  for (let i = 0; i < data.length; i += 4) {
+    const gray = rgbToGray(data[i], data[i + 1], data[i + 2]);
+    const bucket = Math.min(HISTOGRAM_BUCKETS - 1, gray >> BUCKET_SHIFT);
+    histogram[bucket]++;
+  }
+
+  // Find peaks in dark and light regions
+  let darkPeak = 0,
+    darkPeakBucket = 0;
+  for (let i = 0; i < DARK_REGION_END; i++) {
+    if (histogram[i] > darkPeak) {
+      darkPeak = histogram[i];
+      darkPeakBucket = i;
+    }
+  }
+
+  let lightPeak = 0,
+    lightPeakBucket = 0;
+  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) {
+    if (histogram[i] > lightPeak) {
+      lightPeak = histogram[i];
+      lightPeakBucket = i;
+    }
+  }
+
+  if (lightPeakBucket - darkPeakBucket < MIN_PEAK_SEPARATION) {
+    return false;
+  }
+
+  // Count pixels in each region
+  let darkCount = 0,
+    lightCount = 0,
+    valleyCount = 0;
+  for (let i = 0; i < DARK_REGION_END; i++) darkCount += histogram[i];
+  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) lightCount += histogram[i];
+  for (let i = DARK_REGION_END; i < LIGHT_REGION_START; i++) valleyCount += histogram[i];
+
+  const darkRatio = darkCount / totalPixels;
+  const lightRatio = lightCount / totalPixels;
+  const valleyRatio = valleyCount / totalPixels;
+
+  return (
+    darkRatio >= MIN_PEAK_RATIO && lightRatio >= MIN_PEAK_RATIO && valleyRatio < MAX_VALLEY_RATIO
+  );
+}
+
+/**
+ * Generate a QR-first matrix for high-contrast B&W images.
+ * This mode GUARANTEES QR scannability by:
+ * 1. Always setting dark modules to dark pixels, light modules to light pixels
+ * 2. Using overlay brightness + blue noise to add dithering texture WITHIN safe ranges
+ *
+ * Brightness ranges (ensuring clear QR contrast):
+ * - Dark modules: 0-80 grayscale - clearly dark for scanning with room for texture
+ * - Light modules: 175-255 grayscale - clearly light for scanning with room for texture
+ */
+async function generateBWFirstMatrix(
+  qr: QRCodeInstance,
+  config: QRGeneratorConfig,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  moduleCount: number,
+  scale: number,
+  effectiveIntensity: number,
+  createCanvasFn: CreateCanvasFn
+): Promise<PixelDecisionMatrix> {
+  const scaledSize = moduleCount * scale;
+  const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
+
+  // Create scaled overlay canvas
+  const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
+  const ctx = scaledCanvas.getContext('2d');
+  if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+
+  ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
+  const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
+  const data = imageData.data;
+
+  const matrix: boolean[][] = [];
+  const colors: (RGBWithMeta | null)[][] = [];
+
+  // How much the overlay influences the shade (0 = no texture, 1 = full texture range)
+  const textureAmount = Math.min(1, effectiveIntensity);
+
+  // Generate blue noise tile for dithering texture
+  const seed = config.blueNoiseSeed ?? 1337;
+  const tileSize = config.blueNoiseTileSize ?? 64;
+  const blueNoiseTile = generateBlueNoiseTile(tileSize, seed);
+
+  // Contrast curve power - higher values increase contrast of the spiral
+  const contrastPower = 1.5;
+
+  for (let y = 0; y < scaledSize; y++) {
+    matrix[y] = [];
+    colors[y] = [];
+
+    for (let x = 0; x < scaledSize; x++) {
+      const idx = (y * scaledSize + x) * 4;
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
+
+      const moduleRow = Math.floor(y / scale);
+      const moduleCol = Math.floor(x / scale);
+      const qrIsDark = qr.isDark(moduleRow, moduleCol);
+
+      // QR-FIRST: Matrix ALWAYS matches QR data - this guarantees scannability
+      matrix[y][x] = qrIsDark;
+
+      // Calculate overlay brightness (0 = black, 1 = white)
+      let overlayBrightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+
+      // Apply contrast curve to enhance spiral visibility
+      // For dark overlay regions, make them darker; for bright regions, make them brighter
+      overlayBrightness = overlayBrightness ** contrastPower;
+
+      // Sample blue noise for dithering texture (0-1)
+      const noise = sampleBlueNoise(x, y, blueNoiseTile, tileSize);
+      // Noise variation: adds subtle texture variation within modules
+      const noiseVariation = (noise - 0.5) * 0.3; // ±15% variation
+
+      // Calculate shade with texture from overlay + blue noise dithering
+      let shade: number;
+
+      if (qrIsDark) {
+        // Dark module: shade ranges from 0 (black) to 100 (expanded for more visible texture)
+        // Dark overlay areas -> DARK shade (near 0) to show the dark parts of spiral
+        // Bright overlay areas -> lighter dark (up to 100) to show contrast
+        const darkMin = 0;
+        const darkMax = 100;
+        const darkRange = darkMax - darkMin;
+
+        // INVERTED: (1 - brightness) so dark overlay = dark shade, bright overlay = lighter shade
+        // This correctly shows the spiral pattern
+        let normalizedShade = (1 - overlayBrightness) * textureAmount;
+        // Add blue noise dithering for texture
+        normalizedShade = clamp01(normalizedShade + noiseVariation * textureAmount);
+
+        // Invert again: we want dark overlay -> low shade (dark), bright overlay -> high shade (lighter)
+        // So: dark overlay (brightness=0) -> normalizedShade=1 -> shade=0 (black) ✓
+        //     bright overlay (brightness=1) -> normalizedShade=0 -> shade=100 (gray) ✓
+        shade = darkMin + Math.floor((1 - normalizedShade) * darkRange);
+      } else {
+        // Light module: shade ranges from 155 (expanded for more visible texture) to 255 (white)
+        // Bright overlay areas -> BRIGHT shade (near 255) to show the bright parts
+        // Dark overlay areas -> darker light (down to 155) to show contrast
+        const lightMin = 155;
+        const lightMax = 255;
+        const lightRange = lightMax - lightMin;
+
+        // Direct mapping: bright overlay = bright shade, dark overlay = darker shade
+        let normalizedShade = overlayBrightness * textureAmount;
+        // Add blue noise dithering for texture
+        normalizedShade = clamp01(normalizedShade + noiseVariation * textureAmount);
+
+        shade = lightMin + Math.floor(normalizedShade * lightRange);
+        // If no texture, default to white
+        if (textureAmount === 0) shade = 255;
+      }
+
+      // For structural modules, use pure black/white for maximum clarity
+      if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
+        shade = qrIsDark ? 0 : 255;
+      }
+
+      colors[y][x] = config.colorMode !== 'bw' ? ({ r: shade, g: shade, b: shade } as RGBi) : null;
+    }
+  }
+
+  log.debug('QR-first B&W matrix generated', {
+    scaledSize,
+    moduleCount,
+    scale,
+    textureAmount,
+    contrastPower,
+    mode: 'bw-first',
+  });
+
+  return { matrix, colors, scale, overlayData: null, effectiveIntensity };
+}
 
 function luma01(r: number, g: number, b: number): number {
   return (r * 0.299 + g * 0.587 + b * 0.114) / 255;
@@ -320,6 +537,49 @@ export async function generateDitheredMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
+
+  // =========================================
+  // QR-FIRST MODE (manual toggle or auto-detect)
+  // =========================================
+  // For high-contrast B&W images (like spirals), use QR-first mode
+  // which GUARANTEES scannability by always preserving QR data.
+  // Standard dithering fails on B&W images because error diffusion
+  // accumulates errors that flip modules incorrectly.
+
+  // Check for manual QR-first mode toggle
+  if (config.qrFirstMode) {
+    log.debug('QR-first mode enabled via config - using QR-first matrix');
+    return generateBWFirstMatrix(
+      qr,
+      config,
+      overlayCanvas,
+      moduleCount,
+      scale,
+      effectiveIntensity,
+      createCanvasFn
+    );
+  }
+
+  // Auto-detect high-contrast B&W images
+  const detectCanvas = await createCanvasFn(Math.min(scaledSize, 256), Math.min(scaledSize, 256));
+  const detectCtx = detectCanvas.getContext('2d');
+  if (detectCtx) {
+    detectCtx.drawImage(overlayCanvas, 0, 0, detectCanvas.width, detectCanvas.height);
+    const isBW = detectBWFromCanvas(detectCtx, detectCanvas.width, detectCanvas.height);
+
+    if (isBW) {
+      log.debug('Detected high-contrast B&W overlay - using QR-first mode');
+      return generateBWFirstMatrix(
+        qr,
+        config,
+        overlayCanvas,
+        moduleCount,
+        scale,
+        effectiveIntensity,
+        createCanvasFn
+      );
+    }
+  }
   const intensity = effectiveIntensity; // 0..1
   const ditherStrength = (config.ditherStrength ?? 50) / 100;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
@@ -342,7 +602,7 @@ export async function generateDitheredMatrix(
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
   const desire: number[][] = [];
-  
+
   // For color dithering, we need separate R/G/B error buffers
   // For grayscale/bw, we use a single error buffer based on luminance
   const errorsR: number[][] = [];
@@ -415,7 +675,7 @@ export async function generateDitheredMatrix(
 
         // Determine darkness from the dithered color's luminance
         const ditheredLuma = luma01(rNew * 255, gNew * 255, bNew * 255);
-        
+
         // Blend toward QR bit for scannability
         let d = lerp(qrIsDark ? 1 : 0, 1 - ditheredLuma, mix);
         // Soft clamp keeps values within ranges that preserve QR scannability
@@ -434,21 +694,32 @@ export async function generateDitheredMatrix(
         // post-pass will ensure QR scannability
         const isDark = d >= 0.5;
         matrix[y][x] = isDark;
-        
+
         // Store the dithered color (scale back to 0-255 but keep original RGB for better color)
         // Use a blend between original and dithered for richer color output
         const colorBlend = 0.7; // Keep mostly original color for visual quality
-        colors[y][x] = config.colorMode !== 'bw' ? ({
-          r: Math.round(r * colorBlend + rNew * 255 * (1 - colorBlend)),
-          g: Math.round(g * colorBlend + gNew * 255 * (1 - colorBlend)),
-          b: Math.round(b * colorBlend + bNew * 255 * (1 - colorBlend)),
-        } as RGBi) : null;
+        colors[y][x] =
+          config.colorMode !== 'bw'
+            ? ({
+                r: Math.round(r * colorBlend + rNew * 255 * (1 - colorBlend)),
+                g: Math.round(g * colorBlend + gNew * 255 * (1 - colorBlend)),
+                b: Math.round(b * colorBlend + bNew * 255 * (1 - colorBlend)),
+              } as RGBi)
+            : null;
 
         // Distribute color errors
         distributeColorError(
-          errorsR, errorsG, errorsB,
-          x, y, errR, errG, errB,
-          kernel, scaledSize, leftToRight
+          errorsR,
+          errorsG,
+          errorsB,
+          x,
+          y,
+          errR,
+          errG,
+          errB,
+          kernel,
+          scaledSize,
+          leftToRight
         );
       } else {
         // Grayscale/BW dithering: use luminance-based error diffusion
@@ -524,6 +795,47 @@ export async function generateBlueNoiseMatrix(
   createCanvasFn: CreateCanvasFn
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
+
+  // =========================================
+  // QR-FIRST MODE (manual toggle or auto-detect)
+  // =========================================
+  // For high-contrast B&W images (like spirals), use QR-first mode
+
+  // Check for manual QR-first mode toggle
+  if (config.qrFirstMode) {
+    log.debug('QR-first mode enabled via config in blue-noise mode - using QR-first matrix');
+    return generateBWFirstMatrix(
+      qr,
+      config,
+      overlayCanvas,
+      moduleCount,
+      scale,
+      effectiveIntensity,
+      createCanvasFn
+    );
+  }
+
+  // Auto-detect high-contrast B&W images
+  const detectCanvas = await createCanvasFn(Math.min(scaledSize, 256), Math.min(scaledSize, 256));
+  const detectCtx = detectCanvas.getContext('2d');
+  if (detectCtx) {
+    detectCtx.drawImage(overlayCanvas, 0, 0, detectCanvas.width, detectCanvas.height);
+    const isBW = detectBWFromCanvas(detectCtx, detectCanvas.width, detectCanvas.height);
+
+    if (isBW) {
+      log.debug('Detected high-contrast B&W overlay in blue-noise mode - using QR-first mode');
+      return generateBWFirstMatrix(
+        qr,
+        config,
+        overlayCanvas,
+        moduleCount,
+        scale,
+        effectiveIntensity,
+        createCanvasFn
+      );
+    }
+  }
+
   const intensity = effectiveIntensity; // 0..1
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 

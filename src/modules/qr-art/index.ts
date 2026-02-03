@@ -388,6 +388,381 @@ export function generateQArt(_config: QArtConfig): QArtResult {
 }
 
 // ============================================
+// FRAGMENT SEARCH ALGORITHM
+// ============================================
+
+/**
+ * Configuration for fragment search
+ */
+export interface FragmentSearchConfig {
+  /** Base URL without fragment */
+  baseUrl: string;
+  /** Target image to match (as ImageData or canvas) */
+  targetImage: ImageData | HTMLCanvasElement | OffscreenCanvas;
+  /** Number of iterations to try */
+  iterations: number;
+  /** Length of numeric fragment (default: 8) */
+  fragmentLength: number;
+  /** Random seed for reproducibility */
+  seed: number;
+  /** QR version (1-40), 0 for auto */
+  version: number;
+  /** Error correction level */
+  ecc: ECCLevel;
+  /** Mask pattern (0-7 or -1 for auto) */
+  maskPattern: number;
+  /** Progress callback (called periodically with 0-100) */
+  onProgress?: (percent: number) => void;
+}
+
+/**
+ * Result of fragment search
+ */
+export interface FragmentSearchResult {
+  /** The best fragment found */
+  fragment: string;
+  /** The complete URL with fragment */
+  url: string;
+  /** Match score (0-1) */
+  score: number;
+  /** Number of matching modules */
+  matchingModules: number;
+  /** Total controllable modules */
+  totalControllable: number;
+  /** Match percentage */
+  matchPercentage: number;
+}
+
+/**
+ * Alignment pattern positions for each QR version
+ * Version 1 has no alignment patterns, version 2+ have alignment patterns
+ */
+const ALIGNMENT_POSITIONS: number[][] = [
+  [], // Version 0 (invalid)
+  [], // Version 1
+  [6, 18], // Version 2
+  [6, 22], // Version 3
+  [6, 26], // Version 4
+  [6, 30], // Version 5
+  [6, 34], // Version 6
+  [6, 22, 38], // Version 7
+  [6, 24, 42], // Version 8
+  [6, 26, 46], // Version 9
+  [6, 28, 50], // Version 10
+  [6, 30, 54], // Version 11
+  [6, 32, 58], // Version 12
+  [6, 34, 62], // Version 13
+  [6, 26, 46, 66], // Version 14
+  [6, 26, 48, 70], // Version 15
+  [6, 26, 50, 74], // Version 16
+  [6, 30, 54, 78], // Version 17
+  [6, 30, 56, 82], // Version 18
+  [6, 30, 58, 86], // Version 19
+  [6, 34, 62, 90], // Version 20
+  [6, 28, 50, 72, 94], // Version 21
+  [6, 26, 50, 74, 98], // Version 22
+  [6, 30, 54, 78, 102], // Version 23
+  [6, 28, 54, 80, 106], // Version 24
+  [6, 32, 58, 84, 110], // Version 25
+  [6, 30, 58, 86, 114], // Version 26
+  [6, 34, 62, 90, 118], // Version 27
+  [6, 26, 50, 74, 98, 122], // Version 28
+  [6, 30, 54, 78, 102, 126], // Version 29
+  [6, 26, 52, 78, 104, 130], // Version 30
+  [6, 30, 56, 82, 108, 134], // Version 31
+  [6, 34, 60, 86, 112, 138], // Version 32
+  [6, 30, 58, 86, 114, 142], // Version 33
+  [6, 34, 62, 90, 118, 146], // Version 34
+  [6, 30, 54, 78, 102, 126, 150], // Version 35
+  [6, 24, 50, 76, 102, 128, 154], // Version 36
+  [6, 28, 54, 80, 106, 132, 158], // Version 37
+  [6, 32, 58, 84, 110, 136, 162], // Version 38
+  [6, 26, 54, 82, 110, 138, 166], // Version 39
+  [6, 30, 58, 86, 114, 142, 170], // Version 40
+];
+
+/**
+ * Get alignment pattern positions for a version
+ */
+function getAlignmentPositionsForVersion(version: number): number[] {
+  if (version < 1 || version > 40) return [];
+  return ALIGNMENT_POSITIONS[version] || [];
+}
+
+/**
+ * Check if a URL can use fragment search (must be a valid URL)
+ */
+export function canUseFragmentSearch(content: string): boolean {
+  // Check if content looks like a URL
+  try {
+    // Try to parse as URL
+    if (content.startsWith('http://') || content.startsWith('https://')) {
+      new URL(content);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get the base URL without fragment
+ */
+export function getBaseUrl(url: string): string {
+  const hashIndex = url.indexOf('#');
+  return hashIndex >= 0 ? url.substring(0, hashIndex) : url;
+}
+
+// Import and re-export mapImageToTargetsSupersampled from image-utils to avoid circular imports
+import { mapImageToTargetsSupersampled } from './image-utils';
+export { mapImageToTargetsSupersampled };
+
+/**
+ * Evaluate how well a QR code matches the target image
+ * Returns a score from 0 to 1, where 1 is a perfect match
+ */
+export function evaluateQRMatch(
+  qrIsDark: (row: number, col: number) => boolean,
+  moduleCount: number,
+  version: number,
+  targets: boolean[][],
+  importance: number[][]
+): { score: number; matchingModules: number; totalControllable: number } {
+  let weightedMatch = 0;
+  let totalWeight = 0;
+  let matchingModules = 0;
+  let totalControllable = 0;
+
+  const alignmentPositions = getAlignmentPositionsForVersion(version);
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      // Skip structural modules (finders, timing, alignment)
+      if (isFinderPattern(row, col, moduleCount)) continue;
+      if (isTimingPattern(row, col)) continue;
+      if (isAlignmentPattern(row, col, alignmentPositions)) continue;
+
+      // This is a controllable (data/ECC) module
+      totalControllable++;
+      const weight = importance[row]?.[col] ?? 0.5;
+      totalWeight += weight;
+
+      const qrValue = qrIsDark(row, col);
+      const targetValue = targets[row]?.[col] ?? false;
+
+      if (qrValue === targetValue) {
+        weightedMatch += weight;
+        matchingModules++;
+      }
+    }
+  }
+
+  const score = totalWeight > 0 ? weightedMatch / totalWeight : 0;
+  return { score, matchingModules, totalControllable };
+}
+
+/**
+ * Generate a random numeric fragment
+ */
+function generateRandomFragment(length: number, rng: () => number): string {
+  let fragment = '';
+  for (let i = 0; i < length; i++) {
+    fragment += Math.floor(rng() * 10).toString();
+  }
+  return fragment;
+}
+
+/**
+ * Create a seeded random number generator
+ */
+function createSeededRandom(seed: number): () => number {
+  let state = seed;
+  return () => {
+    state = (state * 1103515245 + 12345) & 0x7fffffff;
+    return state / 0x7fffffff;
+  };
+}
+
+/**
+ * Search for the best numeric fragment to match the target image
+ * Uses batch processing to keep the UI responsive
+ */
+export async function searchBestFragment(
+  config: FragmentSearchConfig
+): Promise<FragmentSearchResult> {
+  const {
+    baseUrl,
+    targetImage,
+    iterations,
+    fragmentLength,
+    seed,
+    version,
+    ecc,
+    maskPattern,
+    onProgress,
+  } = config;
+
+  // Import qrcode encoder dynamically to avoid circular deps
+  const { qrcode } = await import('../qr-encoder');
+
+  // Map target image to module targets
+  // We'll determine moduleCount after first QR generation
+  let targets: boolean[][] | null = null;
+  let importance: number[][] | null = null;
+  let cachedModuleCount = 0;
+
+  // Create seeded RNG for reproducibility
+  const rng = createSeededRandom(seed);
+
+  // Track best result
+  let bestFragment = '';
+  let bestScore = -1;
+  let bestMatchingModules = 0;
+  let bestTotalControllable = 0;
+
+  // Process in batches to keep UI responsive
+  const batchSize = 50;
+  const totalBatches = Math.ceil(iterations / batchSize);
+
+  log.debug('Starting fragment search', { iterations, fragmentLength, baseUrl });
+
+  for (let batch = 0; batch < totalBatches; batch++) {
+    const batchStart = batch * batchSize;
+    const batchEnd = Math.min(batchStart + batchSize, iterations);
+
+    for (let i = batchStart; i < batchEnd; i++) {
+      const fragment = generateRandomFragment(fragmentLength, rng);
+      const testUrl = `${baseUrl}#${fragment}`;
+
+      try {
+        // Generate QR code for this URL
+        const qr = qrcode(version, ecc);
+        qr.addData(testUrl);
+        qr.make(maskPattern >= 0 ? maskPattern : undefined);
+
+        const moduleCount = qr.getModuleCount();
+
+        // Initialize targets on first successful QR generation
+        if (!targets || moduleCount !== cachedModuleCount) {
+          const mapped = mapImageToTargetsSupersampled(targetImage, moduleCount);
+          targets = mapped.targets;
+          importance = mapped.importance;
+          cachedModuleCount = moduleCount;
+        }
+
+        // Calculate version for alignment pattern detection
+        const actualVersion = version > 0 ? version : Math.ceil((moduleCount - 17) / 4);
+
+        // Evaluate match
+        const { score, matchingModules, totalControllable } = evaluateQRMatch(
+          (row, col) => qr.isDark(row, col),
+          moduleCount,
+          actualVersion,
+          targets!,
+          importance!
+        );
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestFragment = fragment;
+          bestMatchingModules = matchingModules;
+          bestTotalControllable = totalControllable;
+
+          log.debug('New best fragment', {
+            fragment,
+            score: `${(score * 100).toFixed(1)}%`,
+            iteration: i,
+          });
+        }
+      } catch (err) {
+        // Skip URLs that cause encoding errors
+        log.trace('Fragment caused encoding error', { fragment, error: err });
+      }
+    }
+
+    // Report progress
+    if (onProgress) {
+      const percent = Math.round(((batch + 1) / totalBatches) * 100);
+      onProgress(percent);
+    }
+
+    // Yield to main thread between batches
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  const result: FragmentSearchResult = {
+    fragment: bestFragment,
+    url: `${baseUrl}#${bestFragment}`,
+    score: bestScore,
+    matchingModules: bestMatchingModules,
+    totalControllable: bestTotalControllable,
+    matchPercentage:
+      bestTotalControllable > 0 ? (bestMatchingModules / bestTotalControllable) * 100 : 0,
+  };
+
+  log.info('Fragment search complete', {
+    bestFragment,
+    score: `${(bestScore * 100).toFixed(1)}%`,
+    matchPercentage: `${result.matchPercentage.toFixed(1)}%`,
+    iterations,
+  });
+
+  return result;
+}
+
+// ============================================
+// FULL QART ALGORITHM IMPORTS
+// ============================================
+
+// Re-export from new modules
+export {
+  type BitPixelMapping,
+  buildBitPixelMap,
+  buildBitToMappingMap,
+  buildPixelToBitMap,
+  getDataPixelIndices,
+  getModuleCount as getBitMappingModuleCount,
+  getRSBlockInfo,
+  getTotalCodewords,
+  getTotalDataBytes,
+  indexToPixel,
+  pixelToIndex,
+  type RSBlockInfo,
+} from './bit-mapping';
+export {
+  applyAllSelectedVectors,
+  applySelectedVectorsToBlock,
+  type BlockEliminationResult,
+  type BlockSelectionResult,
+  countMatchingPixels,
+  type EliminationResult,
+  gaussJordanEliminate as performGaussJordanElimination,
+  rankPixelsByImportance,
+  selectBasisVectorsForTarget,
+} from './elimination';
+export {
+  type FullQArtConfig,
+  type FullQArtResult,
+  generateFullQArt,
+  generateFullQArtBestMask,
+  generateFullQArtBestRotation,
+  generateFullQArtOptimal,
+  matrixToQRLike,
+} from './generate';
+export {
+  basisToMatrix,
+  buildBlockBasis,
+  buildFullBasis,
+  clearBasisCache,
+  computeECC,
+  getCachedBasis,
+  type RSBasis,
+  type RSBasisVector,
+  xorBasisVectors,
+} from './rs-basis';
+
+// ============================================
 // EXPORTS
 // ============================================
 
@@ -405,12 +780,20 @@ export default {
   isTimingPattern,
   isAlignmentPattern,
   mapImageToTargets,
+  mapImageToTargetsSupersampled,
 
   // URL utilities
   generateQArtUrl,
   analyzeUrlEfficiency,
+  canUseFragmentSearch,
+  getBaseUrl,
 
-  // Future full implementation
+  // Fragment search (basic approach)
+  searchBestFragment,
+  evaluateQRMatch,
+
+  // Full QArt algorithm (advanced)
+  // Note: Use the named exports above for full QArt functionality
   buildRSBasis,
   gaussJordanEliminate,
   generateQArt,
