@@ -177,12 +177,13 @@ export async function generateScaledQR(
             const offset = (subPixelSize - dotSize) / 2;
             ctx.fillRect(dx + offset, dy + offset, dotSize, dotSize);
           } else if (isDitheredMode) {
-            // For dithered/blue-noise modes: DARKEN the overlay color for dark modules
-            // This creates visual contrast between dark and light modules while preserving image colors
-            // Dark modules use strongly darkened overlay color (multiply by ~0.15 for high contrast)
-            const darkR = Math.round(color.r * 0.15);
-            const darkG = Math.round(color.g * 0.15);
-            const darkB = Math.round(color.b * 0.15);
+            // For dithered/blue-noise modes: use overlay color with moderate darkening
+            // The dithering algorithm already chose dark pixels from darker image areas,
+            // so we only need a gentle luminance shift to ensure scanner contrast.
+            // Multiply by ~0.6 preserves color hue/saturation while ensuring "dark" reads as dark.
+            const darkR = Math.round(color.r * 0.6);
+            const darkG = Math.round(color.g * 0.6);
+            const darkB = Math.round(color.b * 0.6);
             ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {
@@ -199,12 +200,13 @@ export async function generateScaledQR(
         // Light module: draw with background color or overlay color
         if (needsBothDarkAndLightColors && useColorRendering && color) {
           if (isDitheredMode) {
-            // For dithered/blue-noise modes: LIGHTEN the overlay color for light modules
-            // This creates visual contrast between dark and light modules while preserving image colors
-            // Light modules use strongly lightened overlay color (blend toward white by ~85% for high contrast)
-            const lightR = Math.round(color.r + (255 - color.r) * 0.85);
-            const lightG = Math.round(color.g + (255 - color.g) * 0.85);
-            const lightB = Math.round(color.b + (255 - color.b) * 0.85);
+            // For dithered/blue-noise modes: use overlay color with moderate lightening
+            // The dithering algorithm already chose light pixels from lighter image areas,
+            // so we only need a gentle luminance shift to ensure scanner contrast.
+            // Blend ~40% toward white preserves color hue/saturation while ensuring "light" reads as light.
+            const lightR = Math.round(color.r + (255 - color.r) * 0.4);
+            const lightG = Math.round(color.g + (255 - color.g) * 0.4);
+            const lightB = Math.round(color.b + (255 - color.b) * 0.4);
             ctx.fillStyle = `rgb(${lightR},${lightG},${lightB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {
