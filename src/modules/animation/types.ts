@@ -54,4 +54,6 @@ export interface GifCompositor {
   dispose: (i: number) => void;
   /** Reset compositor to initial state */
   reset: () => void;
+  /** Get a snapshot (copy) of the current canvas state */
+  getSnapshot: () => HTMLCanvasElement;
 }

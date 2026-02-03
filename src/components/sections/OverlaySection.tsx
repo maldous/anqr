@@ -232,6 +232,8 @@ export function OverlaySection() {
   const GALLERY_IMAGES = [
     { id: 'tsunami', name: 'Tsunami', url: getGalleryImageUrl('/tsunami.jpg'), isAnimated: false },
     { id: 'king', name: 'King', url: getGalleryImageUrl('/king.gif'), isAnimated: true },
+    { id: 'logo', name: 'Logo', url: getGalleryImageUrl('/logo.png'), isAnimated: false },
+    { id: 'test', name: 'Test', url: getGalleryImageUrl('/test.png'), isAnimated: false },
   ];
 
   // Load image from gallery

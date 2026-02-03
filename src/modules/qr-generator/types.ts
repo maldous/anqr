@@ -45,6 +45,11 @@ export interface QRGeneratorConfig {
   blueNoiseSeed?: number;
   blueNoiseTileSize?: number;
 
+  // Advanced dither settings
+  ditherSerpentine?: boolean;
+  diffusionKernel?: string;
+  colorDither?: 'none' | 'per_channel' | 'perceptual';
+
   // Color settings
   gradient?: GradientConfig;
   perModuleColorMode?: string;
@@ -97,6 +102,10 @@ export interface QRGeneratorConfig {
   subpixelGrid?: number;
   subpixelCenter?: string;
   subpixelNeutral?: boolean;
+  subpixelGridSize?: string; // '2x2' | '3x3' | '4x4'
+  subpixelCenterRule?: string; // 'strict' | 'halftone_center'
+  subpixelNeutralColor?: string; // hex color for neutral pixels
+  subpixelFinderOverride?: string; // 'solid' | 'stylized'
 
   // Filter settings
   filterBrightness?: number;
