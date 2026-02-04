@@ -209,10 +209,10 @@ export type ScopePrefix = (typeof SCOPE_PREFIXES)[keyof typeof SCOPE_PREFIXES];
 // ============================================================================
 
 /** Maximum number of log entries to keep in buffer (oldest are dropped when exceeded) */
-const MAX_BUFFER_SIZE = 1000;
+const MAX_BUFFER_SIZE = 2000;
 
 /** Maximum number of structured log entries to keep (always active, for saveLogs) */
-const MAX_STRUCTURED_BUFFER_SIZE = 500;
+const MAX_STRUCTURED_BUFFER_SIZE = 5000;
 
 /** Maximum depth for context object serialization (prevents infinite recursion) */
 const MAX_CONTEXT_DEPTH = 10;
@@ -309,6 +309,39 @@ export function getStructuredLogCount(): number {
 }
 
 /**
+ * Filter logs by scope prefix (e.g., 'QART', 'GENERATE')
+ * 
+ * @param scope - Scope prefix to filter by (case-insensitive)
+ * @returns Filtered log entries
+ */
+export function filterLogs(scope: string): StructuredLogEntry[] {
+  const upperScope = scope.toUpperCase();
+  return structuredLogBuffer.filter(entry => entry.scope.toUpperCase() === upperScope);
+}
+
+/**
+ * Filter logs by multiple scope prefixes
+ * 
+ * @param scopes - Array of scope prefixes to include
+ * @returns Filtered log entries
+ */
+export function filterLogsByScopes(scopes: string[]): StructuredLogEntry[] {
+  const upperScopes = new Set(scopes.map(s => s.toUpperCase()));
+  return structuredLogBuffer.filter(entry => upperScopes.has(entry.scope.toUpperCase()));
+}
+
+/**
+ * Filter logs by level (e.g., 'error', 'warn')
+ * 
+ * @param levels - Array of levels to include
+ * @returns Filtered log entries
+ */
+export function filterLogsByLevel(levels: string[]): StructuredLogEntry[] {
+  const lowerLevels = new Set(levels.map(l => l.toLowerCase()));
+  return structuredLogBuffer.filter(entry => lowerLevels.has(entry.level.toLowerCase()));
+}
+
+/**
  * Save all structured logs to a JSON file (browser download).
  * Objects are fully expanded in the JSON output.
  *
@@ -341,6 +374,121 @@ export function saveLogs(filename?: string): void {
 }
 
 /**
+ * Save filtered logs to a JSON file (browser download).
+ * 
+ * @param scope - Scope prefix to filter by (e.g., 'QART')
+ * @param filename - Optional filename
+ */
+export function saveFilteredLogs(scope: string, filename?: string): void {
+  const logs = filterLogs(scope);
+
+  if (logs.length === 0) {
+    console.log(`No logs found for scope '${scope}'. Buffer has ${structuredLogBuffer.length} total entries.`);
+    return;
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const name = filename || `anqr-${scope.toLowerCase()}-logs-${timestamp}.json`;
+
+  const json = JSON.stringify(logs, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  console.log(`Saved ${logs.length} '${scope}' log entries to ${name} (${structuredLogBuffer.length} total in buffer)`);
+}
+
+/**
+ * Safely serialize an object for logging, handling non-cloneable objects.
+ * Uses JSON serialization as fallback for structuredClone failures.
+ */
+function safeSerializeContext(context: unknown): unknown {
+  if (context === null || context === undefined) {
+    return context;
+  }
+  
+  // First try structuredClone (fastest, preserves most types)
+  try {
+    return structuredClone(context);
+  } catch {
+    // structuredClone failed, try JSON round-trip
+  }
+  
+  // Try JSON serialization (handles most plain objects)
+  try {
+    const jsonStr = JSON.stringify(context, (key, value) => {
+      // Handle special cases
+      if (value instanceof Error) {
+        return {
+          __type: 'Error',
+          name: value.name,
+          message: value.message,
+          stack: value.stack,
+        };
+      }
+      if (value instanceof Set) {
+        return { __type: 'Set', values: Array.from(value) };
+      }
+      if (value instanceof Map) {
+        return { __type: 'Map', entries: Array.from(value.entries()) };
+      }
+      if (typeof value === 'function') {
+        return '[Function]';
+      }
+      if (value instanceof HTMLElement) {
+        return `[HTMLElement: ${value.tagName}]`;
+      }
+      if (value instanceof Node) {
+        return `[Node: ${value.nodeName}]`;
+      }
+      // Handle typed arrays
+      if (ArrayBuffer.isView(value) && !(value instanceof DataView)) {
+        return { __type: value.constructor.name, values: Array.from(value as Uint8Array) };
+      }
+      return value;
+    });
+    return JSON.parse(jsonStr);
+  } catch {
+    // JSON serialization also failed
+  }
+  
+  // Last resort: try to extract what we can
+  if (typeof context === 'object') {
+    const result: Record<string, unknown> = {};
+    try {
+      for (const [key, value] of Object.entries(context as Record<string, unknown>)) {
+        try {
+          if (value === null || value === undefined) {
+            result[key] = value;
+          } else if (typeof value === 'function') {
+            result[key] = '[Function]';
+          } else if (typeof value === 'object') {
+            // Try to serialize nested object
+            result[key] = JSON.parse(JSON.stringify(value));
+          } else {
+            result[key] = value;
+          }
+        } catch {
+          result[key] = `[Unserializable: ${typeof value}]`;
+        }
+      }
+      return result;
+    } catch {
+      return '[Unserializable object]';
+    }
+  }
+  
+  return '[Unserializable]';
+}
+
+/**
  * Capture a log line to the buffer if buffering is enabled.
  * Also always captures to structured buffer for saveLogs() functionality.
  * Includes ISO 8601 timestamp and enforces buffer size limits.
@@ -353,24 +501,17 @@ function captureToBuffer(scope: string, level: string, message: string, context?
   if (structuredLogBuffer.length >= MAX_STRUCTURED_BUFFER_SIZE) {
     structuredLogBuffer.shift();
   }
-  try {
-    structuredLogBuffer.push({
-      timestamp,
-      scope,
-      level,
-      message,
-      context: context ? structuredClone(context) : undefined,
-    });
-  } catch {
-    // structuredClone may fail on non-cloneable objects (DOM elements, etc.)
-    structuredLogBuffer.push({
-      timestamp,
-      scope,
-      level,
-      message,
-      context: context ? '[non-cloneable object]' : undefined,
-    });
-  }
+  
+  // Use robust serialization for context
+  const serializedContext = context ? safeSerializeContext(context) : undefined;
+  
+  structuredLogBuffer.push({
+    timestamp,
+    scope,
+    level,
+    message,
+    context: serializedContext,
+  });
 
   // Only capture to string buffer if explicitly enabled
   if (!logBufferEnabled) return;
@@ -379,15 +520,19 @@ function captureToBuffer(scope: string, level: string, message: string, context?
   let logLine: string;
 
   if (context && typeof context === 'object') {
-    const dataStr = Object.entries(context as Record<string, unknown>)
-      .map(([k, v]) => {
-        if (typeof v === 'object' && v !== null) {
-          return `${k}=${JSON.stringify(v)}`;
-        }
-        return `${k}=${v}`;
-      })
-      .join(', ');
-    logLine = `${prefix} ${message} {${dataStr}}`;
+    try {
+      const dataStr = Object.entries(context as Record<string, unknown>)
+        .map(([k, v]) => {
+          if (typeof v === 'object' && v !== null) {
+            return `${k}=${JSON.stringify(v)}`;
+          }
+          return `${k}=${v}`;
+        })
+        .join(', ');
+      logLine = `${prefix} ${message} {${dataStr}}`;
+    } catch {
+      logLine = `${prefix} ${message} {[serialization failed]}`;
+    }
   } else {
     logLine = `${prefix} ${message}`;
   }

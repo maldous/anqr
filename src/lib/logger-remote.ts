@@ -18,10 +18,14 @@
 import {
   clearStructuredLogs,
   createLogger,
+  filterLogs,
+  filterLogsByLevel,
+  filterLogsByScopes,
   getLogLevel,
   getStructuredLogCount,
   getStructuredLogs,
   resetLogLevel,
+  saveFilteredLogs,
   saveLogs,
   setLogLevel,
 } from './logger';
@@ -196,9 +200,35 @@ export function initRemoteDiagnostics(): void {
       saveLogs: (filename?: string) => {
         saveLogs(filename);
       },
+      saveQartLogs: (filename?: string) => {
+        saveFilteredLogs('QART', filename);
+      },
+      saveByScope: (scope: string, filename?: string) => {
+        saveFilteredLogs(scope, filename);
+      },
       getLogs: () => {
         const logs = getStructuredLogs();
         console.log(`${logs.length} log entries (expand objects below):`);
+        return logs;
+      },
+      getQartLogs: () => {
+        const logs = filterLogs('QART');
+        console.log(`${logs.length} QART log entries (expand objects below):`);
+        return logs;
+      },
+      getLogsByScope: (scope: string) => {
+        const logs = filterLogs(scope);
+        console.log(`${logs.length} '${scope}' log entries:`);
+        return logs;
+      },
+      getLogsByScopes: (scopes: string[]) => {
+        const logs = filterLogsByScopes(scopes);
+        console.log(`${logs.length} log entries for scopes [${scopes.join(', ')}]:`);
+        return logs;
+      },
+      getErrors: () => {
+        const logs = filterLogsByLevel(['error', 'warn']);
+        console.log(`${logs.length} error/warning entries:`);
         return logs;
       },
       clearLogs: () => {
@@ -217,18 +247,30 @@ ANQR Diagnostics Commands:
   anqrDiag.disable()                  - Disable debug logging
   anqrDiag.status()                   - Show current status
 
-Log Saving (objects fully expanded in output):
-  anqrDiag.saveLogs(filename?)        - Download logs as JSON file
-  anqrDiag.getLogs()                  - Get logs array in console (expandable)
+Log Saving (objects fully expanded in JSON output):
+  anqrDiag.saveLogs(filename?)        - Download ALL logs as JSON file
+  anqrDiag.saveQartLogs(filename?)    - Download only QART logs
+  anqrDiag.saveByScope(scope, file?)  - Download logs for a specific scope
+
+Log Viewing (in console):
+  anqrDiag.getLogs()                  - Get all logs (expandable in console)
+  anqrDiag.getQartLogs()              - Get only QART logs
+  anqrDiag.getLogsByScope(scope)      - Get logs for a specific scope
+  anqrDiag.getLogsByScopes([...])     - Get logs for multiple scopes
+  anqrDiag.getErrors()                - Get only errors and warnings
+
+Log Management:
   anqrDiag.clearLogs()                - Clear the log buffer
   anqrDiag.logCount()                 - Show number of buffered logs
-
   anqrDiag.help()                     - Show this help
 
 Examples:
-  anqrDiag.enable(30, 'debugging overlay issue')
-  anqrDiag.saveLogs()                 - Downloads anqr-logs-{timestamp}.json
-  anqrDiag.saveLogs('my-debug.json')  - Downloads with custom filename
+  anqrDiag.enable(30, 'debugging QR-Art')  - Enable debug for 30 minutes
+  anqrDiag.saveLogs()                      - Downloads all logs
+  anqrDiag.saveQartLogs()                  - Downloads only QART-related logs
+  anqrDiag.getLogsByScopes(['QART', 'GENERATE', 'DECODER'])
+
+Note: Log buffer holds up to 5000 entries. Oldest entries are dropped when full.
         `);
       },
     };
