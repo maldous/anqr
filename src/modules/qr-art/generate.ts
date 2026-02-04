@@ -14,6 +14,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import { decodeQR } from '../qr-decoder';
 import { qrcode } from '../qr-encoder';
 import { qrBitBuffer } from '../qr-encoder/bit-buffer';
 import { qr8BitByte } from '../qr-encoder/data-modes';
@@ -26,7 +27,12 @@ import {
   getPatternPosition,
 } from '../qr-encoder/utils';
 import { getMaskFunction } from '../qr-spec/masks';
-import { buildBitPixelMap, type ECCLevel, getDataPixelIndices } from './bit-mapping';
+import {
+  buildBitPixelMap,
+  type ECCLevel,
+  getDataPixelIndices,
+  getRSBlockInfo,
+} from './bit-mapping';
 import {
   applyAllSelectedVectors,
   countMatchingPixels,
@@ -35,7 +41,17 @@ import {
   selectBasisVectorsForTarget,
 } from './elimination';
 import { mapImageToTargetsSupersampled } from './image-utils';
-import { buildFullBasis, computeECC } from './rs-basis';
+import {
+  analyzeQRArtCapacity,
+  buildFullBasis,
+  calculateOptimalVersionAndSuffix,
+  calculateProtectedBitsPerBlock,
+  clearBasisCache,
+  computeECC,
+  getContentBitCount,
+  getHeaderBitCount,
+  getMaxSuffixLength,
+} from './rs-basis';
 
 /**
  * Helper to compare two Uint8Arrays
@@ -49,6 +65,236 @@ function arraysEqual(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 const log = createLogger('QART');
+
+/**
+ * Extract format info bits from a QR matrix
+ * Format info is stored in two places for redundancy
+ */
+function extractFormatInfo(matrix: boolean[][]): {
+  vertical: number;
+  horizontal: number;
+  match: boolean;
+} {
+  const moduleCount = matrix.length;
+  let vertical = 0;
+  let horizontal = 0;
+
+  // Extract vertical format info (left side of top-left finder)
+  for (let i = 0; i < 15; i++) {
+    let row: number;
+    if (i < 6) {
+      row = i;
+    } else if (i < 8) {
+      row = i + 1;
+    } else {
+      row = moduleCount - 15 + i;
+    }
+    if (matrix[row]?.[8]) {
+      vertical |= 1 << i;
+    }
+  }
+
+  // Extract horizontal format info (top of top-left finder)
+  for (let i = 0; i < 15; i++) {
+    let col: number;
+    if (i < 8) {
+      col = moduleCount - i - 1;
+    } else if (i < 9) {
+      col = 15 - i - 1 + 1;
+    } else {
+      col = 15 - i - 1;
+    }
+    if (matrix[8]?.[col]) {
+      horizontal |= 1 << i;
+    }
+  }
+
+  return {
+    vertical,
+    horizontal,
+    match: vertical === horizontal,
+  };
+}
+
+/**
+ * Validate timing patterns are intact (alternating modules on row 6 and col 6)
+ */
+function validateTimingPatterns(matrix: boolean[][]): {
+  horizontal: boolean;
+  vertical: boolean;
+  allValid: boolean;
+  errors: string[];
+} {
+  const moduleCount = matrix.length;
+  const errors: string[] = [];
+  let horizontalOk = true;
+  let verticalOk = true;
+
+  // Check horizontal timing (row 6, columns 8 to moduleCount-9)
+  for (let col = 8; col < moduleCount - 8; col++) {
+    const expected = col % 2 === 0; // Even columns are dark
+    const actual = matrix[6]?.[col] ?? false;
+    if (actual !== expected) {
+      horizontalOk = false;
+      errors.push(`Horizontal timing at col ${col}: expected ${expected}, got ${actual}`);
+    }
+  }
+
+  // Check vertical timing (col 6, rows 8 to moduleCount-9)
+  for (let row = 8; row < moduleCount - 8; row++) {
+    const expected = row % 2 === 0; // Even rows are dark
+    const actual = matrix[row]?.[6] ?? false;
+    if (actual !== expected) {
+      verticalOk = false;
+      errors.push(`Vertical timing at row ${row}: expected ${expected}, got ${actual}`);
+    }
+  }
+
+  return {
+    horizontal: horizontalOk,
+    vertical: verticalOk,
+    allValid: horizontalOk && verticalOk,
+    errors: errors.slice(0, 10),
+  };
+}
+
+/**
+ * Validate finder patterns are intact
+ */
+function validateFinderPatterns(matrix: boolean[][]): {
+  topLeft: boolean;
+  topRight: boolean;
+  bottomLeft: boolean;
+  allValid: boolean;
+  errors: string[];
+} {
+  const moduleCount = matrix.length;
+  const errors: string[] = [];
+
+  // Expected finder pattern (7x7)
+  const expected = [
+    [true, true, true, true, true, true, true],
+    [true, false, false, false, false, false, true],
+    [true, false, true, true, true, false, true],
+    [true, false, true, true, true, false, true],
+    [true, false, true, true, true, false, true],
+    [true, false, false, false, false, false, true],
+    [true, true, true, true, true, true, true],
+  ];
+
+  const checkFinder = (startRow: number, startCol: number, name: string): boolean => {
+    let valid = true;
+    for (let r = 0; r < 7; r++) {
+      for (let c = 0; c < 7; c++) {
+        const actual = matrix[startRow + r]?.[startCol + c] ?? false;
+        if (actual !== expected[r][c]) {
+          valid = false;
+          errors.push(`${name} mismatch at (${r},${c}): expected ${expected[r][c]}, got ${actual}`);
+        }
+      }
+    }
+    return valid;
+  };
+
+  const topLeft = checkFinder(0, 0, 'TopLeft');
+  const topRight = checkFinder(0, moduleCount - 7, 'TopRight');
+  const bottomLeft = checkFinder(moduleCount - 7, 0, 'BottomLeft');
+
+  return {
+    topLeft,
+    topRight,
+    bottomLeft,
+    allValid: topLeft && topRight && bottomLeft,
+    errors: errors.slice(0, 10), // Limit to first 10 errors
+  };
+}
+
+/**
+ * Scan a boolean matrix using jsQR to verify it's a valid, scannable QR code.
+ * Returns the decoded data if successful, or an error message if not.
+ * Tries multiple scale factors and decoder settings for robustness.
+ */
+function scanMatrixWithJsQR(matrix: boolean[][]): {
+  success: boolean;
+  data?: string;
+  error?: string;
+  attempts?: number;
+} {
+  const moduleCount = matrix.length;
+  if (moduleCount === 0) {
+    return { success: false, error: 'Empty matrix' };
+  }
+
+  // Try multiple configurations for robustness
+  const configs = [
+    { scale: 4, quietZone: 4, invert: false },
+    { scale: 8, quietZone: 8, invert: false },
+    { scale: 2, quietZone: 4, invert: false },
+    { scale: 4, quietZone: 4, invert: true },
+  ];
+
+  let lastError = '';
+  let attempts = 0;
+
+  for (const config of configs) {
+    attempts++;
+    const { scale, quietZone, invert } = config;
+    const size = (moduleCount + quietZone * 2) * scale;
+
+    // Create ImageData manually (white background)
+    const data = new Uint8ClampedArray(size * size * 4);
+
+    // Fill with white (or black if inverted)
+    const bgColor = invert ? 0 : 255;
+    const fgColor = invert ? 255 : 0;
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = bgColor;
+      data[i + 1] = bgColor;
+      data[i + 2] = bgColor;
+      data[i + 3] = 255;
+    }
+
+    // Draw the QR modules
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        const isDark = matrix[row]?.[col] ?? false;
+        if (isDark) {
+          const startX = (col + quietZone) * scale;
+          const startY = (row + quietZone) * scale;
+
+          for (let py = 0; py < scale; py++) {
+            for (let px = 0; px < scale; px++) {
+              const idx = ((startY + py) * size + (startX + px)) * 4;
+              data[idx] = fgColor;
+              data[idx + 1] = fgColor;
+              data[idx + 2] = fgColor;
+            }
+          }
+        }
+      }
+    }
+
+    try {
+      const imageData = new ImageData(data, size, size);
+      const result = decodeQR(imageData, {
+        inversionAttempts: 'attemptBoth',
+      });
+
+      if (result) {
+        return { success: true, data: result.data, attempts };
+      }
+      lastError = `Config ${attempts}: Decoder returned null`;
+    } catch (err) {
+      lastError = `Config ${attempts}: ${err instanceof Error ? err.message : String(err)}`;
+    }
+  }
+
+  return {
+    success: false,
+    error: `All ${attempts} scan attempts failed. Last: ${lastError}`,
+    attempts,
+  };
+}
 
 /**
  * Configuration for full QR-Art generation
@@ -66,6 +312,41 @@ export interface FullQArtConfig {
   maskPattern: number;
   /** Progress callback */
   onProgress?: (stage: string, percent: number) => void;
+  /**
+   * Optional suffix to append to the data.
+   * This suffix can be freely modified by QR-Art without affecting
+   * the main content. 
+   * 
+   * If not provided and autoSuffix is true (default), a `#xxx...` fragment
+   * identifier suffix will be auto-generated to fill QR capacity.
+   * Fragment identifiers are client-side only, so URLs still work correctly.
+   * 
+   * The suffix bits become controllable for image embedding.
+   * Longer suffixes = more controllable pixels = better image quality.
+   */
+  suffix?: string;
+  /**
+   * Whether to auto-generate a suffix when none is provided (default: true).
+   * 
+   * When true: Automatically adds `#xxx...` fragment suffix to fill QR capacity.
+   * When false: Only padding bits are controllable (very limited).
+   * 
+   * The auto-generated suffix uses URL fragment identifier (`#`) which:
+   * - Never gets sent to the server (client-side only)
+   * - Doesn't affect URL redirects or destination
+   * - Maximizes controllable bits for better image quality
+   */
+  autoSuffix?: boolean;
+  /**
+   * Whether to protect all content bits (default: true).
+   * 
+   * When true: Only suffix and padding bits can be modified. Original message is preserved.
+   * When false: Legacy mode - all data bits can be modified, corrupting message.
+   * 
+   * Set to false only if you want maximum image control and don't care
+   * about the decoded message (e.g., the QR is just for visual effect).
+   */
+  protectContent?: boolean;
 }
 
 /**
@@ -564,13 +845,92 @@ function regenerateQRFromModifiedData(
  * 6. Regenerate QR with modified data
  */
 export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArtResult> {
-  const { data, targetImage, version, ecc, maskPattern, onProgress } = config;
+  const { 
+    data, 
+    targetImage, 
+    version, 
+    ecc, 
+    maskPattern, 
+    onProgress,
+    suffix: providedSuffix,
+    autoSuffix = true,
+    protectContent = true,
+  } = config;
+
+  // Determine the suffix to use
+  // If no suffix provided and autoSuffix is enabled, generate a `#xxx...` fragment suffix
+  let suffix = providedSuffix ?? '';
+  let autoGeneratedSuffix = false;
+  let recommendedVersion = version; // May be upgraded for better QR-Art control
+  
+  if (!suffix && autoSuffix) {
+    // Calculate optimal version and suffix length to achieve good QR-Art control
+    // This will upgrade the version to a larger one if needed to achieve minimum control threshold
+    // IMPORTANT: The function uses FULL suffix capacity of selected version for maximum control
+    const optimalConfig = calculateOptimalVersionAndSuffix(
+      version, // minVersion (0 = auto, or user-specified)
+      ecc,
+      data.length,
+      50 // Minimum 50% control threshold - version will be upgraded if below this
+    );
+    
+    if (optimalConfig.suffixLength > 1) {
+      // Generate a fragment suffix: #xxxx...
+      // Use alphanumeric characters for maximum compatibility
+      // IMPORTANT: Use the FULL suffix length calculated - this fills the QR capacity
+      const suffixChars = optimalConfig.suffixLength - 1; // -1 for the '#' character
+      suffix = '#' + generateRandomSuffix(suffixChars);
+      autoGeneratedSuffix = true;
+      recommendedVersion = optimalConfig.version;
+      
+      log.info('Auto-generated fragment suffix for QR-Art (FULL capacity)', {
+        originalDataLength: data.length,
+        suffixLength: suffix.length,
+        totalDataLength: data.length + suffix.length,
+        originalVersion: optimalConfig.originalVersion,
+        selectedVersion: optimalConfig.version,
+        versionUpgraded: optimalConfig.versionUpgraded,
+        expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
+        totalCapacity: optimalConfig.totalCapacity,
+        capacityUsed: `${data.length + suffix.length + 3} / ${optimalConfig.totalCapacity} bytes`,
+        reason: 'Using FULL suffix capacity for maximum controllable bits',
+      });
+      
+      if (optimalConfig.versionUpgraded) {
+        log.info('QR version upgraded for better QR-Art quality', {
+          from: optimalConfig.originalVersion,
+          to: optimalConfig.version,
+          reason: 'Previous version did not meet minimum control threshold with full capacity',
+          newCapacity: `${optimalConfig.totalCapacity} bytes`,
+        });
+      }
+    } else {
+      log.warn('Cannot auto-generate suffix - QR capacity too limited', {
+        dataLength: data.length,
+        version: optimalConfig.originalVersion,
+        maxSuffixLen: optimalConfig.suffixLength,
+        suggestion: 'Use a larger QR version or shorter data',
+      });
+    }
+  }
+
+  // Combine data with suffix
+  // The suffix becomes the controllable region for QR-Art manipulation
+  const fullData = suffix ? data + suffix : data;
+  
+  // Use recommended version if auto-suffix upgraded it, otherwise use user-specified version
+  const versionToUse = autoGeneratedSuffix ? recommendedVersion : version;
 
   try {
     onProgress?.('Encoding base data', 0);
 
+    // CRITICAL: Clear basis cache to ensure we're using the latest code with content protection
+    clearBasisCache();
+    log.debug('Cleared basis cache for fresh content-protected vectors');
+
     // Step 1: Generate base QR to determine version, get initial matrix, and extract per-block data/ECC
-    const baseResult = generateBaseQR(data, version, ecc, maskPattern);
+    // Use the recommended version (which may have been upgraded for better QR-Art control)
+    const baseResult = generateBaseQR(fullData, versionToUse, ecc, maskPattern);
     const {
       matrix: baseMatrix,
       actualVersion,
@@ -587,17 +947,89 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       moduleCount,
       maskPattern: actualMask,
       ecc,
+      originalDataLength: data.length,
+      fullDataLength: fullData.length,
+      hasSuffix: suffix.length > 0,
+      suffixLength: suffix.length,
+      autoGeneratedSuffix,
+      suffix: suffix.length > 20 ? suffix.slice(0, 20) + '...' : suffix,
     });
 
     onProgress?.('Building RS basis', 10);
 
-    // Step 2: Build RS basis
-    const basis = buildFullBasis(actualVersion, ecc);
+    // Step 2: Build RS basis with content protection
+    // IMPORTANT: We protect only the ORIGINAL data, not the suffix!
+    // This makes suffix bits controllable for QR-Art manipulation.
+    // When protectContent is true: protect original data only (suffix is controllable)
+    // When false (legacy mode): only protect header bits (all data is controllable but corrupted)
+    const dataLengthForProtection = protectContent ? data.length : undefined;
+    const basis = buildFullBasis(actualVersion, ecc, dataLengthForProtection);
+    
+    if (autoGeneratedSuffix) {
+      log.info('Content protection configured', {
+        originalDataLength: data.length,
+        suffixLength: suffix.length,
+        fullDataLength: fullData.length,
+        protectedBits: dataLengthForProtection ? getContentBitCount(actualVersion, dataLengthForProtection) : getHeaderBitCount(actualVersion),
+        protectionMode: protectContent ? 'original-data-only' : 'header-only',
+        suffixControllable: true,
+      });
+    }
 
-    log.debug('RS basis built', {
-      totalVectors: basis.vectors.length,
-      totalDataBits: basis.totalDataBits,
+    // Analyze capacity and log comprehensive information
+    // Note: Use original data.length for protection analysis (suffix is controllable)
+    const capacityInfo = analyzeQRArtCapacity(actualVersion, ecc, data.length);
+    
+    // Calculate actual controllable bits including suffix
+    const actualControllableBits = basis.vectors.length;
+    const actualControlPercentage = (actualControllableBits / capacityInfo.totalDataBits) * 100;
+    
+    log.info('QR-Art capacity analysis', {
+      totalDataBits: capacityInfo.totalDataBits,
+      protectedBits: capacityInfo.protectedBits,
+      controllableBits: actualControllableBits,
+      controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
+      protectionMode: protectContent ? 'original-data-only' : 'header-only',
+      breakdown: {
+        ...capacityInfo.breakdown,
+        suffixBits: suffix.length * 8,
+      },
+      vectorsCreated: basis.vectors.length,
+      autoGeneratedSuffix,
     });
+
+    // Warn if control is very limited
+    if (basis.vectors.length === 0) {
+      log.warn('ZERO controllable vectors! QR-Art cannot modify any pixels.', {
+        suggestion: 'Enable autoSuffix (default) or add a manual suffix.',
+        example: `suffix: "#${generateRandomSuffix(20)}"`,
+        originalDataLength: data.length,
+        fullDataLength: fullData.length,
+        autoSuffixEnabled: autoSuffix,
+      });
+      
+      // Return the base matrix unchanged - it's a valid QR but without art
+      return {
+        success: true,
+        matrix: baseMatrix,
+        moduleCount,
+        version: actualVersion,
+        maskPattern: actualMask,
+        matchingPixels: 0,
+        totalControllable: 0,
+        matchPercentage: 0,
+        encodedData: fullData,
+      };
+    } else if (actualControlPercentage < 20) {
+      log.warn('Limited QR-Art control. Image quality may be reduced.', {
+        controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
+        controllableVectors: basis.vectors.length,
+        suggestion: 'Use a larger QR version for better results.',
+      });
+    }
+
+    // For logging compatibility, keep some of the old variable names
+    const headerBitCount = getHeaderBitCount(actualVersion);
 
     onProgress?.('Mapping bits to pixels', 20);
 
@@ -727,7 +1159,137 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       log.error('RS LINEARITY CHECK FAILED - QR code will likely not scan!');
     }
 
+    // DEBUG: Verify protected bits are unchanged in ALL blocks
+    // When protectContent is true, we protect header + ORIGINAL data + terminator (not suffix!)
+    // When false (legacy mode), we only verify header bits
+    // 
+    // IMPORTANT: Protection is calculated based on INTERLEAVED byte positions!
+    // The interleaved stream is what gets placed in the QR matrix:
+    //   Interleaved[0] = Block0[0], Interleaved[1] = Block1[0], etc.
+    // So protecting the first N bytes means protecting bytes across ALL blocks.
+    const rsBlockInfo = getRSBlockInfo(actualVersion, ecc);
+    const protectedBitCount = protectContent 
+      ? Math.ceil(getContentBitCount(actualVersion, data.length) / 8) * 8  // data.length, NOT fullData.length!
+      : headerBitCount;
+    const protectedBitsPerBlock = calculateProtectedBitsPerBlock(rsBlockInfo, protectedBitCount);
+
+    let allProtectedBitsUnchanged = true;
+    let modifiedProtectedBitCount = 0;
+    
+    for (let blockIdx = 0; blockIdx < blockDataArrays.length; blockIdx++) {
+      const protectedBitsInBlock = protectedBitsPerBlock[blockIdx];
+      if (protectedBitsInBlock === 0) continue;
+
+      // Check each protected bit individually
+      const originalData = blockDataArrays[blockIdx];
+      const modifiedData = modifiedBlockData[blockIdx];
+
+      for (let bitIdx = 0; bitIdx < protectedBitsInBlock; bitIdx++) {
+        const byteIdx = Math.floor(bitIdx / 8);
+        const bitInByte = 7 - (bitIdx % 8); // MSB first
+
+        const originalBit = (originalData[byteIdx] >> bitInByte) & 1;
+        const modifiedBit = (modifiedData[byteIdx] >> bitInByte) & 1;
+
+        if (originalBit !== modifiedBit) {
+          allProtectedBitsUnchanged = false;
+          modifiedProtectedBitCount++;
+          if (modifiedProtectedBitCount <= 5) { // Limit error spam
+            log.error('PROTECTED BIT MODIFIED - content may be corrupted!', {
+              blockIndex: blockIdx,
+              localBitIndex: bitIdx,
+              byteIndex: byteIdx,
+              bitInByte,
+              originalBit,
+              modifiedBit,
+              isHeaderBit: bitIdx < (blockIdx === 0 ? headerBitCount : 0),
+            });
+          }
+        }
+      }
+    }
+
+    log.info('Protected bits verification', {
+      protectionMode: protectContent ? 'original-data-only' : 'header-only',
+      protectedBitCount,
+      protectedBitsPerBlock,
+      allProtectedBitsUnchanged,
+      modifiedProtectedBitCount,
+      originalDataProtected: data.length,
+      suffixControllable: suffix.length,
+    });
+
+    if (!allProtectedBitsUnchanged) {
+      log.error('PROTECTED BITS MODIFIED - original content may be corrupted!', {
+        modifiedCount: modifiedProtectedBitCount,
+        protectedBitCount,
+        protectionMode: protectContent ? 'original-data-only' : 'header-only',
+      });
+    }
+
     onProgress?.('Re-encoding QR code', 85);
+
+    // DEBUG: Zero-modification test - verify that regenerating with UNMODIFIED data still scans
+    const zeroModMatrix = regenerateQRFromModifiedData(
+      blockDataArrays,
+      blockEccArrays,
+      blockDataCounts,
+      blockEccCounts,
+      actualVersion,
+      ecc,
+      actualMask
+    );
+    const zeroModScan = scanMatrixWithJsQR(zeroModMatrix);
+    if (!zeroModScan.success) {
+      log.error('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
+        error: zeroModScan.error,
+      });
+    } else {
+      log.debug('Zero-modification test PASSED', {
+        decodedData: zeroModScan.data,
+        dataMatches: zeroModScan.data === data,
+      });
+    }
+
+    // Log modification summary per block
+    for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
+      let bytesChanged = 0;
+      let bitsChanged = 0;
+      const origData = blockDataArrays[blockIdx];
+      const modData = modifiedBlockData[blockIdx];
+      const origEcc = blockEccArrays[blockIdx];
+      const modEcc = modifiedBlockEcc[blockIdx];
+      
+      for (let i = 0; i < origData.length; i++) {
+        if (origData[i] !== modData[i]) {
+          bytesChanged++;
+          // Count bits changed
+          let diff = origData[i] ^ modData[i];
+          while (diff) {
+            bitsChanged += diff & 1;
+            diff >>>= 1;
+          }
+        }
+      }
+      
+      let eccBytesChanged = 0;
+      for (let i = 0; i < origEcc.length; i++) {
+        if (origEcc[i] !== modEcc[i]) {
+          eccBytesChanged++;
+        }
+      }
+      
+      if (bytesChanged > 0 || eccBytesChanged > 0) {
+        log.debug('Block modification summary', {
+          blockIndex: blockIdx,
+          dataBytesChanged: bytesChanged,
+          dataBitsChanged: bitsChanged,
+          eccBytesChanged,
+          totalDataBytes: origData.length,
+          totalEccBytes: origEcc.length,
+        });
+      }
+    }
 
     // Step 10: Regenerate QR with modified data AND ECC to get a valid, scannable code
     // We pass the pre-XORed ECC - do NOT recompute it (that would break RS linearity)
@@ -743,15 +1305,47 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // DEBUG: Log differences between base matrix and final matrix
     let diffCount = 0;
-    const sampleDiffs: Array<{ row: number; col: number; base: boolean; final: boolean }> = [];
+    let structuralDiffCount = 0;
+    let dataDiffCount = 0;
+    const sampleDiffs: Array<{ row: number; col: number; base: boolean; final: boolean; isStructural: boolean }> = [];
+    
+    // Build set of structural positions for quick lookup
+    const structuralPositions = new Set<string>();
+    // Finder patterns (7x7 at three corners + separators)
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        structuralPositions.add(`${r},${c}`); // Top-left
+        structuralPositions.add(`${r},${moduleCount - 8 + c}`); // Top-right
+        structuralPositions.add(`${moduleCount - 8 + r},${c}`); // Bottom-left
+      }
+    }
+    // Timing patterns
+    for (let i = 0; i < moduleCount; i++) {
+      structuralPositions.add(`6,${i}`);
+      structuralPositions.add(`${i},6`);
+    }
+    // Format info
+    for (let i = 0; i < 9; i++) {
+      structuralPositions.add(`${i},8`);
+      structuralPositions.add(`8,${i}`);
+      structuralPositions.add(`${moduleCount - 8 + i},8`);
+      structuralPositions.add(`8,${moduleCount - 8 + i}`);
+    }
+    
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
         const baseVal = baseMatrix[row]?.[col] ?? false;
         const finalVal = finalMatrix[row]?.[col] ?? false;
         if (baseVal !== finalVal) {
           diffCount++;
+          const isStructural = structuralPositions.has(`${row},${col}`);
+          if (isStructural) {
+            structuralDiffCount++;
+          } else {
+            dataDiffCount++;
+          }
           if (sampleDiffs.length < 10) {
-            sampleDiffs.push({ row, col, base: baseVal, final: finalVal });
+            sampleDiffs.push({ row, col, base: baseVal, final: finalVal, isStructural });
           }
         }
       }
@@ -759,23 +1353,129 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     log.info('Matrix diff between base and final', {
       diffCount,
+      structuralDiffCount,
+      dataDiffCount,
       moduleCount,
       totalModules: moduleCount * moduleCount,
       diffPercent: `${((diffCount / (moduleCount * moduleCount)) * 100).toFixed(2)}%`,
       sampleDiffs: sampleDiffs.slice(0, 5),
     });
 
-    // DEBUG: Verify structural patterns are intact (finder patterns should match)
-    // Check top-left finder corner
-    const finderOk =
-      finalMatrix[0]?.[0] === true &&
-      finalMatrix[0]?.[6] === true &&
-      finalMatrix[6]?.[0] === true &&
-      finalMatrix[6]?.[6] === true &&
-      finalMatrix[3]?.[3] === true; // center of finder
-    if (!finderOk) {
-      log.error('STRUCTURAL PATTERN CORRUPTED - Finder pattern damaged!');
+    // CRITICAL: If structural modules differ, that's a major bug
+    if (structuralDiffCount > 0) {
+      log.error('CRITICAL: Structural patterns modified!', {
+        structuralDiffCount,
+        structuralDiffs: sampleDiffs.filter(d => d.isStructural),
+      });
     }
+
+    // Comprehensive finder pattern validation
+    const finderValidation = validateFinderPatterns(finalMatrix);
+    if (!finderValidation.allValid) {
+      log.error('FINDER PATTERNS CORRUPTED', {
+        topLeft: finderValidation.topLeft,
+        topRight: finderValidation.topRight,
+        bottomLeft: finderValidation.bottomLeft,
+        errors: finderValidation.errors,
+      });
+    } else {
+      log.debug('Finder patterns validated OK');
+    }
+
+    // Timing pattern validation
+    const timingValidation = validateTimingPatterns(finalMatrix);
+    if (!timingValidation.allValid) {
+      log.error('TIMING PATTERNS CORRUPTED', {
+        horizontal: timingValidation.horizontal,
+        vertical: timingValidation.vertical,
+        errors: timingValidation.errors,
+      });
+    } else {
+      log.debug('Timing patterns validated OK');
+    }
+
+    // Compare format info between base and final
+    const baseFormatInfo = extractFormatInfo(baseMatrix);
+    const finalFormatInfo = extractFormatInfo(finalMatrix);
+    
+    log.info('Format info comparison', {
+      base: {
+        vertical: baseFormatInfo.vertical.toString(2).padStart(15, '0'),
+        horizontal: baseFormatInfo.horizontal.toString(2).padStart(15, '0'),
+        match: baseFormatInfo.match,
+      },
+      final: {
+        vertical: finalFormatInfo.vertical.toString(2).padStart(15, '0'),
+        horizontal: finalFormatInfo.horizontal.toString(2).padStart(15, '0'),
+        match: finalFormatInfo.match,
+      },
+      formatInfoUnchanged: baseFormatInfo.vertical === finalFormatInfo.vertical && 
+                           baseFormatInfo.horizontal === finalFormatInfo.horizontal,
+    });
+
+    if (baseFormatInfo.vertical !== finalFormatInfo.vertical || 
+        baseFormatInfo.horizontal !== finalFormatInfo.horizontal) {
+      log.error('FORMAT INFO CHANGED - This will break scanning!');
+    }
+
+    // DEBUG: Scan the final matrix to verify it's actually scannable
+    const scanResult = scanMatrixWithJsQR(finalMatrix);
+    if (scanResult.success) {
+      // Check if decoded data matches - with suffix, the suffix portion may change
+      const decodedStartsWithOriginal = scanResult.data?.startsWith(data);
+      const fullMatch = scanResult.data === fullData;
+      
+      if (fullMatch) {
+        log.info('QR-Art matrix scan validation PASSED - exact match', {
+          decodedData: scanResult.data,
+          expectedData: fullData,
+          scanAttempts: scanResult.attempts,
+        });
+      } else if (decodedStartsWithOriginal) {
+        // Suffix was modified (expected behavior!) - original content preserved
+        log.info('QR-Art matrix scan validation PASSED - original content preserved', {
+          originalData: data,
+          decodedPrefix: scanResult.data?.slice(0, data.length),
+          originalPreserved: true,
+          suffixModified: true,
+          originalSuffix: suffix,
+          decodedSuffix: scanResult.data?.slice(data.length),
+          scanAttempts: scanResult.attempts,
+        });
+      } else {
+        // Original content was corrupted - this is a bug!
+        log.error('DECODED DATA MISMATCH - original content corrupted!', {
+          expected: data,
+          actual: scanResult.data?.slice(0, data.length),
+          expectedFull: fullData,
+          actualFull: scanResult.data,
+          expectedLength: fullData.length,
+          actualLength: scanResult.data?.length,
+        });
+      }
+    } else {
+      log.error('QR-Art matrix scan validation FAILED - matrix does not scan!', {
+        error: scanResult.error,
+        expectedData: fullData,
+        scanAttempts: scanResult.attempts,
+        finderPatternsOK: finderValidation.allValid,
+        timingPatternsOK: timingValidation.allValid,
+        formatInfoOK: baseFormatInfo.vertical === finalFormatInfo.vertical,
+        structuralDiffsCount: structuralDiffCount,
+        dataDiffsCount: dataDiffCount,
+        controllableVectors: basis.vectors.length,
+        controlPercentage: `${capacityInfo.controlPercentage.toFixed(1)}%`,
+      });
+    }
+
+    // Also scan the base matrix to confirm it was valid
+    const baseScanResult = scanMatrixWithJsQR(baseMatrix);
+    log.debug('Base matrix scan check', {
+      success: baseScanResult.success,
+      data: baseScanResult.data,
+      error: baseScanResult.error,
+      scanAttempts: baseScanResult.attempts,
+    });
 
     onProgress?.('Validating result', 95);
 
@@ -813,7 +1513,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       matchingPixels: matching,
       totalControllable: total,
       matchPercentage,
-      encodedData: data,
+      encodedData: fullData,
     };
   } catch (error) {
     log.error('QR-Art generation failed', { error });
@@ -827,9 +1527,25 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       matchingPixels: 0,
       totalControllable: 0,
       matchPercentage: 0,
-      encodedData: data,
+      encodedData: fullData,
     };
   }
+}
+
+/**
+ * Generate a random URL-safe suffix for QR-Art optimization
+ * Use this when you want maximum control but don't care about the exact suffix value
+ * 
+ * @param length Number of characters (default: 8)
+ * @returns Random suffix string (URL-safe characters)
+ */
+export function generateRandomSuffix(length: number = 8): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 /**
@@ -839,10 +1555,44 @@ export async function generateFullQArtBestMask(
   config: Omit<FullQArtConfig, 'maskPattern'>
 ): Promise<FullQArtResult> {
   let bestResult: FullQArtResult | null = null;
+  
+  // Pre-generate suffix if autoSuffix is enabled and no suffix provided
+  // This ensures all mask patterns use the SAME suffix for fair comparison
+  let sharedSuffix = config.suffix;
+  let sharedVersion = config.version;
+  
+  if (!sharedSuffix && (config.autoSuffix ?? true)) {
+    // Calculate optimal version and suffix for this data
+    // This may upgrade the version to a larger one for better QR-Art quality
+    // The function will use FULL capacity of the selected version for maximum control
+    const optimalConfig = calculateOptimalVersionAndSuffix(
+      config.version,
+      config.ecc,
+      config.data.length,
+      50 // Minimum 50% control threshold for version selection
+    );
+    
+    if (optimalConfig.suffixLength > 1) {
+      const suffixChars = optimalConfig.suffixLength - 1;
+      sharedSuffix = '#' + generateRandomSuffix(suffixChars);
+      sharedVersion = optimalConfig.version;
+      
+      log.info('Pre-generated shared suffix for mask comparison', {
+        suffixLength: sharedSuffix.length,
+        originalVersion: optimalConfig.originalVersion,
+        recommendedVersion: optimalConfig.version,
+        versionUpgraded: optimalConfig.versionUpgraded,
+        expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
+      });
+    }
+  }
 
   for (let mask = 0; mask < 8; mask++) {
     const result = await generateFullQArt({
       ...config,
+      version: sharedVersion, // Use the recommended version (may be upgraded)
+      suffix: sharedSuffix,
+      autoSuffix: false, // Disable auto-generation since we pre-generated
       maskPattern: mask,
       onProgress: (stage, percent) => {
         config.onProgress?.(`Mask ${mask}: ${stage}`, (mask * 100 + percent) / 8);
@@ -867,7 +1617,7 @@ export async function generateFullQArtBestMask(
       matchingPixels: 0,
       totalControllable: 0,
       matchPercentage: 0,
-      encodedData: config.data,
+      encodedData: config.data + (sharedSuffix ?? ''),
     };
   }
 

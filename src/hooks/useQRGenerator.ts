@@ -1161,13 +1161,17 @@ export function useQRGenerator(): UseQRGeneratorResult {
             },
           });
 
-          if (fullQArtResult.success && fullQArtResult.matchPercentage >= 65) {
+          // Use full QR-Art result if successful, regardless of match percentage
+        // The RS basis manipulation algorithm is mathematically correct and produces valid QR codes
+        // Low match percentage just means limited image visibility, not invalid QR
+        if (fullQArtResult.success) {
             log.info('Full QR-Art generation successful', {
               matchPercentage: `${fullQArtResult.matchPercentage.toFixed(1)}%`,
               matchingPixels: fullQArtResult.matchingPixels,
               totalControllable: fullQArtResult.totalControllable,
               version: fullQArtResult.version,
               maskPattern: fullQArtResult.maskPattern,
+              encodedData: fullQArtResult.encodedData,
             });
 
             // Render the QR-Art matrix to canvas
@@ -1202,10 +1206,6 @@ export function useQRGenerator(): UseQRGeneratorResult {
               }
               useFullQArt = true;
             }
-          } else if (fullQArtResult.success) {
-            log.info('Full QR-Art match too low, falling back to fragment search', {
-              matchPercentage: `${fullQArtResult.matchPercentage.toFixed(1)}%`,
-            });
           } else {
             log.warn('Full QR-Art generation failed', { error: fullQArtResult.error });
           }
@@ -1237,10 +1237,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
           setCanvas(resultCanvas);
           if (canvasRef.current) {
+            // Set dimensions first to ensure proper canvas state
+            canvasRef.current.width = resultCanvas.width;
+            canvasRef.current.height = resultCanvas.height;
+            // Get context AFTER setting dimensions to avoid stale context issues
             const displayCtx = canvasRef.current.getContext('2d');
             if (displayCtx) {
-              canvasRef.current.width = resultCanvas.width;
-              canvasRef.current.height = resultCanvas.height;
               displayCtx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
               displayCtx.drawImage(resultCanvas, 0, 0);
             }
@@ -1251,63 +1253,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
           return;
         }
 
-        // Fall back to fragment search if full QR-Art didn't produce good results
-        if (
-          debouncedConfig.qrartIterations &&
-          debouncedConfig.qrartIterations > 0 &&
-          canUseFragmentSearch(debouncedConfig.content)
-        ) {
-          log.info('Starting QR-Art fragment search (fallback)', {
-            iterations: debouncedConfig.qrartIterations,
-            fragmentLength: debouncedConfig.qrartFragmentLength,
-            baseUrl: getBaseUrl(debouncedConfig.content),
-          });
-
-          let lastLoggedProgress = 0;
-
-          try {
-            const searchResult = await searchBestFragment({
-              baseUrl: getBaseUrl(debouncedConfig.content),
-              targetImage: overlayCanvas,
-              iterations: debouncedConfig.qrartIterations,
-              fragmentLength: debouncedConfig.qrartFragmentLength ?? 8,
-              seed: debouncedConfig.qrartSeed ?? Date.now(),
-              version: debouncedConfig.typeNumber || 0,
-              ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
-              maskPattern:
-                typeof debouncedConfig.maskPattern === 'number' ? debouncedConfig.maskPattern : -1,
-              onProgress: (percent) => {
-                if (percent >= lastLoggedProgress + 25) {
-                  log.debug('QR-Art fragment search progress', { percent: `${percent}%` });
-                  lastLoggedProgress = Math.floor(percent / 25) * 25;
-                }
-              },
-            });
-
-            log.info('QR-Art fragment search complete', {
-              bestUrl: searchResult.url,
-              score: `${(searchResult.score * 100).toFixed(1)}%`,
-              matchPercentage: `${searchResult.matchPercentage.toFixed(1)}%`,
-              matchingModules: searchResult.matchingModules,
-              totalControllable: searchResult.totalControllable,
-              iterations: debouncedConfig.qrartIterations,
-            });
-
-            if (searchResult.matchPercentage < 50) {
-              log.warn('QR-Art match is low - image may not be clearly visible', {
-                matchPercentage: `${searchResult.matchPercentage.toFixed(1)}%`,
-                tip: 'Try a simpler high-contrast image or increase iterations',
-              });
-            }
-
-            effectiveConfig = {
-              ...effectiveConfig,
-              content: searchResult.url,
-            };
-          } catch (err) {
-            log.warn('QR-Art fragment search failed, using original content', { error: err });
-          }
-        }
+        // NOTE: Fragment search fallback has been REMOVED.
+        // The full QR-Art algorithm (RS basis manipulation) always produces valid QR codes
+        // and uses the optimal suffix length to maximize controllable bits.
+        // The old fragment search was limited to 8 characters and couldn't achieve good results.
       }
 
       // Generate QR code with automatic overflow handling
@@ -1448,10 +1397,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
       // Copy to display canvas if ref exists
       if (canvasRef.current && result) {
+        // Set dimensions first to ensure proper canvas state
+        canvasRef.current.width = result.width;
+        canvasRef.current.height = result.height;
+        // Get context AFTER setting dimensions to avoid stale context issues
         const ctx = canvasRef.current.getContext('2d');
         if (ctx) {
-          canvasRef.current.width = result.width;
-          canvasRef.current.height = result.height;
           // Explicitly clear canvas to prevent ghosting
           ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
           ctx.drawImage(result, 0, 0);
@@ -1787,30 +1738,35 @@ export function useQRGenerator(): UseQRGeneratorResult {
     animationFrames.length,
   ]);
 
-  // Reset the frame tracking when compositor changes (new GIF loaded)
+  // Reset the frame tracking when compositor changes (new GIF loaded), animation cache state changes,
+  // or when effective frame indices change (user changed frame settings)
   useEffect(() => {
     lastRenderedFrameRef.current = -1;
   }, []);
 
   // Display cached animation frames during playback (fast path - no re-encoding)
   useEffect(() => {
+    // Guard against race conditions: don't draw during active rendering
+    if (isRendering) return;
+
     if (isAnimationCacheReady && animationFrames.length > 1 && animationFrames[currentFrame]) {
       const cachedFrame = animationFrames[currentFrame];
 
       // Draw directly to display canvas (skip setCanvas during playback to avoid re-renders)
       if (canvasRef.current) {
+        // Set dimensions first to ensure proper canvas state
+        canvasRef.current.width = cachedFrame.width;
+        canvasRef.current.height = cachedFrame.height;
+        // Get context AFTER setting dimensions to avoid stale context issues
         const ctx = canvasRef.current.getContext('2d');
         if (ctx) {
-          // Set dimensions first (this may implicitly clear on some browsers)
-          canvasRef.current.width = cachedFrame.width;
-          canvasRef.current.height = cachedFrame.height;
           // Explicitly clear canvas to prevent ghosting from previous frames
           ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
           ctx.drawImage(cachedFrame, 0, 0);
         }
       }
     }
-  }, [currentFrame, isAnimationCacheReady, animationFrames]);
+  }, [currentFrame, isAnimationCacheReady, animationFrames, isRendering]);
 
   // Prepare interstitial ad on mount (so it's ready when user downloads)
   useEffect(() => {
@@ -2386,9 +2342,21 @@ export function useQRGenerator(): UseQRGeneratorResult {
                 opacity: watermark.opacity,
                 blend: watermark.blend,
               });
+              // Always copy frames to avoid shared canvas reference issues
+              // The watermark result is already a new canvas, so we can use it directly
               frames.push(watermarked.canvas);
             } else {
-              frames.push(finalResult);
+              // CRITICAL: Always copy the frame to avoid shared canvas references
+              // Without this, multiple frames may share the same underlying canvas data,
+              // causing ghosting as the last compositor state appears in all frames
+              const frameCopy = document.createElement('canvas');
+              frameCopy.width = finalResult.width;
+              frameCopy.height = finalResult.height;
+              const copyCtx = frameCopy.getContext('2d');
+              if (copyCtx) {
+                copyCtx.drawImage(finalResult, 0, 0);
+              }
+              frames.push(frameCopy);
             }
           }
         } catch (err) {
@@ -2432,10 +2400,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
       if (frames.length > 0) {
         setCanvas(frames[0]);
         if (canvasRef.current) {
+          // Set dimensions first to ensure proper canvas state
+          canvasRef.current.width = frames[0].width;
+          canvasRef.current.height = frames[0].height;
+          // Get context AFTER setting dimensions to avoid stale context issues
           const finalCtx = canvasRef.current.getContext('2d');
           if (finalCtx) {
-            canvasRef.current.width = frames[0].width;
-            canvasRef.current.height = frames[0].height;
             // Explicitly clear canvas to prevent ghosting
             finalCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
             finalCtx.drawImage(frames[0], 0, 0);

@@ -42,6 +42,13 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   function apply(i: number): void {
     if (i < 0 || i >= frames.length) return;
 
+    // Clear canvas on first frame to ensure clean slate and prevent ghosting
+    // from previous animation cycles or stale content
+    if (i === 0) {
+      ctx.clearRect(0, 0, width, height);
+      restoreData = null;
+    }
+
     const f = frames[i];
     const { left, top, width: w, height: h } = f.dims;
 
