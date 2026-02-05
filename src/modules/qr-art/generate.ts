@@ -1783,14 +1783,10 @@ function regenerateQRFromModifiedData(
   setupFinderPattern(moduleCount - 7, 0); // Bottom-left
   setupFinderPattern(0, moduleCount - 7); // Top-right
 
-  // 2. Draw timing patterns (alternating dark/light at row 6 and col 6)
-  for (let i = 8; i < moduleCount - 8; i++) {
-    const dark = i % 2 === 0;
-    if (modules[6][i] === null) modules[6][i] = dark; // Horizontal
-    if (modules[i][6] === null) modules[i][6] = dark; // Vertical
-  }
-
-  // 3. Draw alignment patterns (5x5, version >= 2)
+  // 2. Draw alignment patterns (5x5, version >= 2)
+  // IMPORTANT: Must be placed BEFORE timing patterns to match encoder order!
+  // The encoder does: Finders -> Alignment -> Timing
+  // Timing has null check and won't overwrite alignment patterns.
   if (version >= 2) {
     const positions = getPatternPosition(version);
     for (const row of positions) {
@@ -1809,6 +1805,15 @@ function regenerateQRFromModifiedData(
         }
       }
     }
+  }
+
+  // 3. Draw timing patterns (alternating dark/light at row 6 and col 6)
+  // IMPORTANT: Must be placed AFTER alignment patterns to match encoder order!
+  // This ensures timing doesn't overwrite alignment pattern centers on row/col 6.
+  for (let i = 8; i < moduleCount - 8; i++) {
+    const dark = i % 2 === 0;
+    if (modules[6][i] === null) modules[6][i] = dark; // Horizontal
+    if (modules[i][6] === null) modules[i][6] = dark; // Vertical
   }
 
   // 4. Reserve format information areas (will be filled later)
@@ -2144,8 +2149,15 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     log.debug('Cleared basis cache for fresh calculation');
 
     // Step 1: Generate base QR to determine version, get initial matrix, and extract per-block data/ECC
-    // HYBRID MODE: Pass originalDataLength to track protection boundaries
-    const baseResult = generateBaseQR(encodedData, versionToUse, ecc, maskPattern, originalDataLength);
+    // HYBRID MODE: Pass protectedDataLength to track protection boundaries
+    // CRITICAL: When suffix starts with '#', we must protect the '#' character too!
+    // The '#' separates the URL from the fragment - it must not be corrupted.
+    // Otherwise QR-Art may modify the '#' to garbage, breaking the URL structure.
+    const protectedDataLength = actualSuffix.startsWith('#') 
+      ? originalDataLength + 1  // Include the '#' in protected region
+      : originalDataLength;
+    
+    const baseResult = generateBaseQR(encodedData, versionToUse, ecc, maskPattern, protectedDataLength);
     
     // FAIL FAST: If base matrix generation failed (e.g., ECC/mask mismatch), return error immediately
     if (!baseResult.success) {
@@ -2204,7 +2216,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // There is no "calculated" alternative - encoderLayout IS the source of truth.
     //
     // CRITICAL: Verify our math is internally consistent.
-    const expectedBitsAfterOriginalData = encoderLayout.bitsAfterCharCount + (originalDataLength * 8);
+    // Note: encoderLayout.bitsAfterOriginalData is based on protectedDataLength, not originalDataLength
+    const expectedBitsAfterOriginalData = encoderLayout.bitsAfterCharCount + (protectedDataLength * 8);
     const internalConsistencyOk = encoderLayout.bitsAfterOriginalData === expectedBitsAfterOriginalData;
     
     log.info('BOUNDARY AUDIT (single source of truth: encoderLayout)', {
@@ -2226,6 +2239,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         protectedByteEnd: Math.ceil(encoderLayout.protectedBitEnd / 8),
         protectedBytesCount: Math.ceil(encoderLayout.protectedBitEnd / 8),
         originalDataLength,
+        protectedDataLength,
+        hashCharProtected: actualSuffix.startsWith('#'),
       },
       twoIntervalRanges: {
         interval1_suffix: `bits ${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit} (${encoderLayout.suffixBits} bits)`,
