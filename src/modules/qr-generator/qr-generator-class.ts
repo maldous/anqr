@@ -41,6 +41,38 @@ const log = createLogger('GENERATE');
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
+/**
+ * Wrapper class that provides QRCodeInstance interface for a pre-computed boolean matrix.
+ * Used by renderFromMatrix() to render QR-Art matrices with the full styling pipeline.
+ */
+class MatrixWrapper {
+  private matrix: boolean[][];
+  private moduleCount: number;
+
+  constructor(matrix: boolean[][]) {
+    this.matrix = matrix;
+    this.moduleCount = matrix.length;
+  }
+
+  // Required by QRCodeInstance interface but not used for rendering
+  addData(_data: string, _mode?: string): void {
+    // No-op: matrix is already computed
+  }
+
+  // Required by QRCodeInstance interface but not used for rendering
+  make(_maskPattern?: number): void {
+    // No-op: matrix is already computed
+  }
+
+  getModuleCount(): number {
+    return this.moduleCount;
+  }
+
+  isDark(row: number, col: number): boolean {
+    return this.matrix[row]?.[col] ?? false;
+  }
+}
+
 export class QRGenerator {
   private qrcode: typeof qrcode;
   private canvasFactory: CanvasFactory;
@@ -80,6 +112,14 @@ export class QRGenerator {
         matrix[row][col] = qr.isDark(row, col);
       }
     }
+    this._lastMatrix = matrix;
+    this._lastModuleCount = moduleCount;
+  }
+
+  /**
+   * Store a pre-computed matrix directly (without iterating through QRCodeInstance)
+   */
+  private storeMatrixDirect(matrix: boolean[][], moduleCount: number): void {
     this._lastMatrix = matrix;
     this._lastModuleCount = moduleCount;
   }
@@ -484,6 +524,122 @@ export class QRGenerator {
 
     // Store the QR matrix for vector SVG export
     this.storeMatrix(qr, moduleCount);
+
+    return canvas;
+  }
+
+  /**
+   * Render a pre-computed boolean matrix with full styling.
+   * Used by QR-Art to render matrices that were modified via RS basis manipulation.
+   * 
+   * This method bypasses the encoding stage and directly renders the provided matrix
+   * using the same styling pipeline as generate() (structural patterns, module styles,
+   * gradients, frames, etc.).
+   * 
+   * @param matrix - Pre-computed boolean matrix (true = dark module)
+   * @param config - Rendering configuration (same as generate())
+   * @returns Rendered canvas with proper styling
+   */
+  async renderFromMatrix(
+    matrix: boolean[][],
+    config: QRGeneratorConfig
+  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+    const moduleCount = matrix.length;
+    if (moduleCount === 0) {
+      throw new Error('Empty matrix provided to renderFromMatrix');
+    }
+
+    // Create a wrapper that implements QRCodeInstance interface
+    const qr = new MatrixWrapper(matrix);
+
+    // Calculate version from module count: moduleCount = version * 4 + 17
+    const version = Math.ceil((moduleCount - 17) / 4);
+
+    // Ensure config has the correct typeNumber for structural pattern rendering
+    const effectiveConfig = {
+      ...config,
+      typeNumber: version,
+      // Disable overlay processing - the matrix already represents the final QR
+      overlayMode: undefined,
+    };
+
+    // =======================================================================
+    // STAGE 3: CANVAS SETUP (same as generate())
+    // =======================================================================
+    const moduleSize = config.moduleSize || 10;
+    const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
+    const margin = Math.max(config.margin || 4, quietZoneMin);
+    const frameExtra =
+      config.frameStyle && config.frameStyle !== 'none' && config.frameText ? moduleSize * 4 : 0;
+    const size = moduleCount * moduleSize + margin * 2 * moduleSize + frameExtra;
+
+    const canvas = await this.createCanvas(size, size);
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    ctx.imageSmoothingEnabled = false;
+
+    // Validate and apply background color
+    const effectiveBgColor = validateColor(config.bgColor, '#ffffff');
+    if (!config.transparentBg) {
+      ctx.fillStyle = effectiveBgColor;
+      ctx.fillRect(0, 0, size, size);
+    }
+
+    // Draw frame background
+    drawFrameBackground(ctx, size, moduleSize, margin, effectiveConfig);
+
+    // Create gradient fill if configured
+    const gradientFill = createGradientFill(ctx, effectiveConfig, size);
+    const useGradient = config.gradient && config.gradient.type !== 'none';
+
+    // =======================================================================
+    // STAGE 4: DRAW STRUCTURAL PATTERNS
+    // =======================================================================
+    const { drawnFinderPatterns, drawnAlignmentPatterns } = this.drawStructuralPatterns(
+      ctx,
+      effectiveConfig,
+      moduleCount,
+      moduleSize,
+      margin,
+      null, // No overlay data
+      version
+    );
+
+    // =======================================================================
+    // STAGE 5: RENDER MODULES
+    // =======================================================================
+    renderModules(
+      ctx,
+      qr,
+      effectiveConfig,
+      moduleCount,
+      moduleSize,
+      margin,
+      null, // No overlay data
+      null, // No dither pattern - use qr.isDark() which reads from our matrix
+      0,    // No effective intensity
+      drawnFinderPatterns,
+      drawnAlignmentPatterns,
+      version,
+      gradientFill,
+      useGradient
+    );
+
+    // =======================================================================
+    // STAGE 6: FINAL TOUCHES
+    // =======================================================================
+    // Draw frame if configured
+    drawFrame(ctx, size, moduleSize, margin, effectiveConfig);
+
+    // Store the matrix for vector SVG export
+    this.storeMatrixDirect(matrix, moduleCount);
+
+    log.debug('renderFromMatrix complete', {
+      moduleCount,
+      version,
+      canvasSize: size,
+      moduleSize,
+      margin,
+    });
 
     return canvas;
   }

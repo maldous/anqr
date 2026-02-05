@@ -1168,7 +1168,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
           // Use full QR-Art result if successful, regardless of match percentage
         // The RS basis manipulation algorithm is mathematically correct and produces valid QR codes
         // Low match percentage just means limited image visibility, not invalid QR
-        if (fullQArtResult.success) {
+        if (fullQArtResult.success && fullQArtResult.encodedData) {
             log.info('Full QR-Art generation successful', {
               matchPercentage: `${fullQArtResult.matchPercentage.toFixed(1)}%`,
               matchingPixels: fullQArtResult.matchingPixels,
@@ -1178,38 +1178,35 @@ export function useQRGenerator(): UseQRGeneratorResult {
               encodedData: fullQArtResult.encodedData,
             });
 
-            // Render the QR-Art matrix to canvas
-            const moduleCount = fullQArtResult.moduleCount;
-            const moduleSize = debouncedConfig.moduleSize || 10;
-            const margin = debouncedConfig.margin || 4;
-            const size = (moduleCount + margin * 2) * moduleSize;
+            // CRITICAL: Use renderFromMatrix() to render the QR-Art matrix with proper styling.
+            // This ensures proper module styling, contrast, and quality for phone scannability.
+            // 
+            // IMPORTANT: We cannot use qrGenerator.generate() with encodedData because QR-Art
+            // modifies the encoded codewords via RS basis manipulation - those modifications
+            // are in the matrix, not in the input string. Re-encoding would produce the base
+            // matrix without image matching.
+            //
+            // renderFromMatrix() takes the pre-computed matrix and applies the full styling
+            // pipeline (finder patterns, gradients, module styles, frames, etc.)
+            const qrArtConfig = {
+              ...debouncedConfig,
+              typeNumber: fullQArtResult.version,
+              // Disable overlay mode - QR-Art already computed the optimal matrix
+              overlayMode: undefined,
+            };
 
-            fullQArtCanvas = document.createElement('canvas');
-            fullQArtCanvas.width = size;
-            fullQArtCanvas.height = size;
-            const ctx = fullQArtCanvas.getContext('2d');
-
-            if (ctx) {
-              // Fill background
-              ctx.fillStyle = debouncedConfig.bgColor || '#ffffff';
-              ctx.fillRect(0, 0, size, size);
-
-              // Draw modules
-              ctx.fillStyle = debouncedConfig.fgColor || '#000000';
-              for (let row = 0; row < moduleCount; row++) {
-                for (let col = 0; col < moduleCount; col++) {
-                  if (fullQArtResult.matrix[row]?.[col]) {
-                    ctx.fillRect(
-                      (col + margin) * moduleSize,
-                      (row + margin) * moduleSize,
-                      moduleSize,
-                      moduleSize
-                    );
-                  }
-                }
-              }
+            try {
+              fullQArtCanvas = (await qrGenerator.renderFromMatrix(
+                fullQArtResult.matrix,
+                qrArtConfig
+              )) as HTMLCanvasElement;
               useFullQArt = true;
+            } catch (renderErr) {
+              log.error('Failed to render QR-Art matrix', { error: renderErr });
+              // Fall through to let the standard generation path handle it
             }
+          } else if (fullQArtResult.success) {
+            log.warn('QR-Art succeeded but encodedData is missing');
           } else {
             log.warn('Full QR-Art generation failed', { error: fullQArtResult.error });
           }

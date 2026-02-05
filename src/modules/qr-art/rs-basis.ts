@@ -965,6 +965,25 @@ export const MAX_SUFFIX_LENGTH = 32;
 export const MIN_ECC_HEADROOM_BYTES = 8;
 
 /**
+ * Maximum percentage of controllable vectors to apply for phone camera safety.
+ * 
+ * Phone cameras have less sophisticated decoders than software libraries like jsQR.
+ * When QR-Art applies too many vectors to match the target image, the resulting
+ * QR code may be technically valid (RS linearity preserved, software can read it)
+ * but phone cameras struggle with the disrupted visual pattern.
+ * 
+ * This limit caps the number of vectors applied to ensure phone scannability:
+ * - 40% = Conservative, best phone compatibility, reduced image quality
+ * - 50% = Balanced phone compatibility and image quality
+ * - 60% = Better image quality but may not scan on some phones
+ * - 100% = No limit (original behavior, software-only scannability)
+ * 
+ * The default of 40% ensures reliable scanning on most phone cameras while
+ * still providing reasonable image embedding quality.
+ */
+export const MAX_SAFE_VECTOR_PERCENT = 0;
+
+/**
  * Simple hash function to create a deterministic seed from a string.
  * Uses djb2 algorithm.
  * 
