@@ -182,10 +182,11 @@ export interface BinarySearchResult {
 
 /**
  * Use binary search to find the maximum number of vectors that produces
- * a scannable QR code that matches the expected data.
+ * a scannable QR code that preserves the original data.
  *
- * STRATEGY 2: Since we only modify padding codewords (not actual message content),
- * the decoded data should match EXACTLY. Any mismatch indicates a bug.
+ * HYBRID STRATEGY: The decoded data must START WITH expectedData (prefix match).
+ * The suffix portion CAN be modified - that's the whole point of QR-Art!
+ * Only the original URL/content (protected region) must be preserved.
  *
  * @param flattened Flattened and importance-sorted selections
  * @param originalBlockData Original block data arrays
@@ -195,7 +196,7 @@ export interface BinarySearchResult {
  * @param eliminationResult Full elimination result
  * @param regenerateQRFn Function to regenerate QR matrix
  * @param scanQRFn Function to scan QR matrix and check validity
- * @param expectedData The exact data that should be decoded (Strategy 2: exact match)
+ * @param expectedData The original data that must be preserved (HYBRID: prefix match)
  * @returns Binary search result with optimal matrix
  */
 export function binarySearchMaxVectors(
@@ -220,7 +221,7 @@ export function binarySearchMaxVectors(
     totalVectors,
     expectedDataLength: expectedData.length,
     expectedDataPreview: expectedData.length > 50 ? expectedData.slice(0, 50) + '...' : expectedData,
-    note: 'Strategy 2: exact match validation (only padding codewords modified)',
+    note: 'HYBRID: prefix match validation (original data must be preserved, suffix can vary)',
   });
 
   // Edge case: if there are no vectors, return empty result
@@ -255,9 +256,10 @@ export function binarySearchMaxVectors(
     return { maxCount: 0, matrix: baseResult.matrix, modifiedBlockData: baseResult.modifiedBlockData, modifiedBlockEcc: baseResult.modifiedBlockEcc, iterations: 1 };
   }
   
-  // CRITICAL: Verify base matrix decodes to data that matches expectedData exactly
-  // Note: Base matrix includes the full suffix, so we check prefix match
-  if (baseScan.data !== expectedData) {
+  // CRITICAL: Verify base matrix decodes to data that STARTS WITH expectedData
+  // HYBRID MODE: expectedData is the original URL only - suffix may vary
+  // We use startsWith because the suffix can be modified (that's the point of QR-Art)
+  if (!baseScan.data?.startsWith(expectedData)) {
     log.error('Base matrix (0 vectors) does not match expected data - encoding bug!', {
       expectedData: expectedData,
       expectedDataLength: expectedData.length,
@@ -311,16 +313,16 @@ export function binarySearchMaxVectors(
 
     const scan = scanQRFn(result.matrix);
     
-    // CRITICAL FOR QR-ART: A configuration "works" if:
+    // CRITICAL FOR HYBRID QR-ART: A configuration "works" if:
     // 1. The QR scans successfully AND
-    // 2. The decoded data matches expectedData exactly (prefix match)
+    // 2. The decoded data STARTS WITH expectedData (prefix match)
     //
     // We use prefix match (startsWith) NOT exact match because:
     // - QR-Art intentionally modifies suffix bits to control pixel appearance
     // - The suffix WILL change as we apply vectors - that's the whole point!
     // - Only the original URL/data (protected region) must be preserved
     // - Exact match would reject ALL vector configurations!
-    const exactMatch = scan.success && scan.data === expectedData;
+    const originalDataPreserved = scan.success && scan.data?.startsWith(expectedData);
 
     log.debug('Binary search iteration', {
       iteration: iterations,
@@ -328,22 +330,22 @@ export function binarySearchMaxVectors(
       high,
       mid,
       scans: scan.success,
-      exactMatch,
+      originalDataPreserved,
       // Show details about the decoded data
       ...(scan.success ? {
         decodedLength: scan.data?.length,
         originalLength: expectedData.length,
-        suffixChanged: scan.data?.slice(expectedData.length) !== undefined,
+        suffixModified: scan.data?.slice(expectedData.length),
       } : {}),
       // Show mismatch details if original data is corrupted
-      ...(scan.success && scan.data !== expectedData ? {
+      ...(scan.success && !scan.data?.startsWith(expectedData) ? {
         mismatchType: 'ORIGINAL_DATA_CORRUPTED',
         originalDataPreview: expectedData.slice(0, 40),
         decodedPreview: scan.data?.slice(0, 40),
       } : {}),
     });
 
-    if (exactMatch) {
+    if (originalDataPreserved) {
       // This count works - original data is preserved, try more vectors for better image
       bestCount = mid;
       bestMatrix = result.matrix;

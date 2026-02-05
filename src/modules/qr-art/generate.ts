@@ -47,8 +47,10 @@ import {
 } from './scan-fallback';
 import {
   buildFullBasis,
+  calculateOptimalVersionAndSuffix,
   clearBasisCache,
   computeECC,
+  generateRandomSuffix,
 } from './rs-basis';
 import {
   type BitRange,
@@ -81,13 +83,20 @@ const log = createLogger('QART');
  * - Have different interleaving patterns
  * 
  * We MUST derive protection boundaries from what the encoder actually did.
+ * 
+ * HYBRID STRATEGY: We track BOTH original data and suffix separately:
+ * - Original data (URL) is PROTECTED - cannot be modified
+ * - Suffix (after #) is CONTROLLABLE - can be freely modified
+ * - Padding codewords are also CONTROLLABLE
  */
 export interface EncoderDerivedLayout {
   /** Bits after writing mode indicator (should be 4) */
   bitsAfterMode: number;
   /** Bits after writing character count */
   bitsAfterCharCount: number;
-  /** Bits after writing all segment data (before terminator) */
+  /** Bits after writing ORIGINAL data only (before suffix) - THIS IS THE PROTECTION BOUNDARY */
+  bitsAfterOriginalData: number;
+  /** Bits after writing all segment data including suffix (before terminator) */
   bitsAfterData: number;
   /** Bits after adding terminator (0-4 bits) */
   bitsAfterTerminator: number;
@@ -99,11 +108,20 @@ export interface EncoderDerivedLayout {
   totalDataBytes: number;
   /** Number of padding codeword bytes */
   paddingByteCount: number;
-  /** Protected bit range (everything before padding) */
+  /** Length of original data (without suffix) */
+  originalDataLength: number;
+  /** Length of suffix (0 if no suffix) */
+  suffixLength: number;
+  /** Protected bit range (mode + charCount + original data bytes only) */
   protectedBitEnd: number;
-  /** Allowed/controllable bit range (only padding codewords) */
+  /** Allowed/controllable bit range start (suffix bytes + padding codewords) */
   allowedBitStart: number;
+  /** Allowed/controllable bit range end */
   allowedBitEnd: number;
+  /** Number of controllable suffix bits (8 * suffixLength) */
+  suffixBits: number;
+  /** Number of controllable padding bits */
+  paddingBits: number;
 }
 
 /**
@@ -412,14 +430,21 @@ function scanMatrixWithJsQR(matrix: boolean[][]): {
 /**
  * Configuration for full QR-Art generation
  * 
- * STRATEGY 2: Only padding codewords are controllable.
- * The original data is encoded exactly as-is, and only the padding
- * bytes (0xEC 0x11 pattern) after terminator+pad-to-byte can be modified.
+ * HYBRID STRATEGY: Original data is protected, suffix + padding are controllable.
  * 
- * This ensures the decoded message is ALWAYS preserved exactly.
+ * The algorithm adds a URL fragment suffix (#xxxxxx...) that:
+ * - Does NOT affect the URL destination (fragments are client-side only)
+ * - Provides many more controllable bits for better image quality
+ * - Can be freely modified without corrupting the message
+ * 
+ * Protection boundaries:
+ * - PROTECTED: mode indicator + character count + original data bytes
+ * - CONTROLLABLE: suffix bytes + padding codewords
+ * 
+ * This ensures the BASE URL is always preserved, while maximizing QR-Art control.
  */
 export interface FullQArtConfig {
-  /** The data to encode (URL or text) - will be encoded EXACTLY as provided */
+  /** The data to encode (URL or text) - the original content that will be protected */
   data: string;
   /** Target image as ImageData, HTMLCanvasElement, or OffscreenCanvas */
   targetImage: ImageData | HTMLCanvasElement | OffscreenCanvas;
@@ -432,9 +457,34 @@ export interface FullQArtConfig {
   /** Progress callback */
   onProgress?: (stage: string, percent: number) => void;
   /**
+   * Optional suffix to append to the data.
+   * This suffix CAN be freely modified by QR-Art without affecting
+   * the original content. 
+   * 
+   * If not provided and autoSuffix is true (default), a `#xxx...` fragment
+   * identifier suffix will be auto-generated to fill QR capacity.
+   * Fragment identifiers are client-side only, so URLs still work correctly.
+   * 
+   * The suffix bits become controllable for image embedding.
+   * Longer suffixes = more controllable pixels = better image quality.
+   */
+  suffix?: string;
+  /**
+   * Whether to auto-generate a suffix when none is provided (default: true).
+   * 
+   * When true: Automatically adds `#xxx...` fragment suffix to fill QR capacity.
+   * When false: Only padding bits are controllable (very limited).
+   * 
+   * The auto-generated suffix uses URL fragment identifier (`#`) which:
+   * - Never gets sent to the server (client-side only)
+   * - Doesn't affect URL redirects or destination
+   * - Maximizes controllable bits for better image quality
+   */
+  autoSuffix?: boolean;
+  /**
    * Minimum number of padding codewords required for QR-Art manipulation.
    * A larger version will be selected if needed to achieve this many padding bytes.
-   * Default: 30 (provides ~50% control for typical URLs)
+   * Default: 10 (lower than before since suffix provides most control)
    * 
    * More padding = more controllable pixels = better image quality.
    * Set to 0 to use the minimum version that fits the data.
@@ -446,6 +496,12 @@ export interface FullQArtConfig {
    * Useful for consistent sizing or when you know the exact version needed.
    */
   forceVersion?: number;
+  /**
+   * Target control percentage for auto-suffix generation (default: 50).
+   * A larger QR version may be selected to achieve this control level.
+   * Higher values = more controllable pixels = better image quality.
+   */
+  targetControlPercent?: number;
 }
 
 /**
@@ -470,8 +526,12 @@ export interface FullQArtResult {
   totalControllable: number;
   /** Match percentage */
   matchPercentage: number;
-  /** The data that was encoded */
+  /** The full data that was encoded (original + suffix) */
   encodedData: string;
+  /** The original data (URL/text) that was protected */
+  originalData?: string;
+  /** The suffix that was added (if any) */
+  suffix?: string;
 }
 
 /**
@@ -533,12 +593,16 @@ function eccNumericToLevel(eccNumeric: number): ECCLevel {
  * CRITICAL FIX: When maskPattern=-1 (auto), we must extract the ACTUAL mask
  * that the encoder chose from the format info bits. Previously the code
  * incorrectly assumed mask 0, causing matrix mismatches.
+ * 
+ * HYBRID MODE: The originalDataLength parameter tells us where the original
+ * data ends and the suffix begins. This is critical for protection boundaries.
  */
 function generateBaseQR(
   data: string,
   version: number,
   ecc: ECCLevel,
-  maskPattern: number
+  maskPattern: number,
+  originalDataLength: number  // Length of original data (without suffix)
 ): BaseQRResult {
   // Log the exact data being encoded for debugging
   log.debug('generateBaseQR called', {
@@ -602,10 +666,12 @@ function generateBaseQR(
   // Get the actual encoded data bytes and compute ECC using the encoder's bit buffer
   // This is critical - we need the real data bytes AND their ECC for RS linearity
   // Also captures the ACTUAL semantic bit positions from the encoder
+  // HYBRID MODE: Pass originalDataLength to track protection boundaries
   const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts, encoderLayout } = encodeDataToBytes(
     data,
     actualVersion,
-    ecc
+    ecc,
+    originalDataLength
   );
 
   // DEBUG: Verify that computeECC produces the same ECC as the encoder
@@ -710,13 +776,21 @@ function eccToNumericForEncoder(ecc: ECCLevel): number {
  * Also computes and returns the ECC bytes for each block (needed for RS linearity)
  * 
  * CRITICAL: Also returns the EncoderDerivedLayout which captures the ACTUAL
- * bit positions from the encoder. This is essential for Strategy 2 protection
- * as it tells us exactly where padding codewords start.
+ * bit positions from the encoder. This is essential for HYBRID protection
+ * as it tells us exactly where the original data ends and suffix begins.
+ * 
+ * HYBRID STRATEGY:
+ * - originalDataLength: length of the original URL/text (PROTECTED)
+ * - suffixLength: length of the suffix (CONTROLLABLE)
+ * - The full encoded data is: originalData + suffix
+ * - Protection boundary is at: mode + charCount + originalData
+ * - Controllable region is: suffix + padding
  */
 function encodeDataToBytes(
-  data: string,
+  fullData: string,
   version: number,
-  ecc: ECCLevel
+  ecc: ECCLevel,
+  originalDataLength: number  // Length of original data (without suffix)
 ): {
   blockDataArrays: Uint8Array[];
   blockEccArrays: Uint8Array[];
@@ -724,11 +798,18 @@ function encodeDataToBytes(
   blockEccCounts: number[];
   encoderLayout: EncoderDerivedLayout;
 } {
+  // Calculate suffix length
+  const suffixLength = fullData.length - originalDataLength;
+  const suffix = suffixLength > 0 ? fullData.slice(originalDataLength) : '';
+  
   // Log the exact data being encoded for debugging
-  log.debug('encodeDataToBytes called', {
-    dataLength: data.length,
-    dataPreview: data.length > 80 ? data.slice(0, 80) + '...' : data,
-    dataHash: data.split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0).toString(16),
+  log.debug('encodeDataToBytes called (HYBRID mode)', {
+    fullDataLength: fullData.length,
+    originalDataLength,
+    suffixLength,
+    originalDataPreview: fullData.slice(0, Math.min(60, originalDataLength)) + (originalDataLength > 60 ? '...' : ''),
+    suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
+    dataHash: fullData.split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0).toString(16),
     version,
     ecc,
   });
@@ -738,21 +819,24 @@ function encodeDataToBytes(
 
   // Create bit buffer and encode the data
   const buffer = qrBitBuffer();
-  const segment = qr8BitByte(data);
+  const segment = qr8BitByte(fullData);  // Full data including suffix
 
   // CHECKPOINT 1: After mode indicator (4 bits)
   buffer.put(segment.getMode(), 4);
   const bitsAfterMode = buffer.getLengthInBits();
   
-  // CHECKPOINT 2: After character count
+  // CHECKPOINT 2: After character count (for FULL data including suffix)
   buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
   const bitsAfterCharCount = buffer.getLengthInBits();
   
-  // Write the actual data
+  // CHECKPOINT 3: Where ORIGINAL data ends (PROTECTION BOUNDARY)
+  // This is calculated, not measured, because segment.write() writes all at once
+  const bitsAfterOriginalData = bitsAfterCharCount + (originalDataLength * 8);
+  
+  // Write the actual data (includes suffix)
   segment.write(buffer);
   
-  // CHECKPOINT 3: After all segment data (BEFORE terminator)
-  // This is the critical boundary - everything up to here is the actual message
+  // CHECKPOINT 4: After all segment data including suffix (BEFORE terminator)
   const bitsAfterData = buffer.getLengthInBits();
 
   // Calculate total data capacity
@@ -768,7 +852,7 @@ function encodeDataToBytes(
     buffer.put(0, terminatorBits);
   }
   
-  // CHECKPOINT 4: After terminator
+  // CHECKPOINT 5: After terminator
   const bitsAfterTerminator = buffer.getLengthInBits();
 
   // Pad to byte boundary with zeros
@@ -776,7 +860,7 @@ function encodeDataToBytes(
     buffer.putBit(false);
   }
   
-  // CHECKPOINT 5: After padding to byte boundary
+  // CHECKPOINT 6: After padding to byte boundary
   const bitsAfterPadToByte = buffer.getLengthInBits();
   
   // CRITICAL: This is where padding codewords start (byte index)
@@ -795,41 +879,72 @@ function encodeDataToBytes(
   // Calculate padding byte count
   const paddingByteCount = totalDataCount - paddingStartByte;
   
+  // HYBRID STRATEGY: Calculate controllable bits
+  // - Suffix bits: starts after original data, ends at bitsAfterData
+  // - Padding bits: starts at paddingStartByte * 8, ends at totalDataCount * 8
+  const suffixBits = suffixLength * 8;
+  const paddingBits = paddingByteCount * 8;
+  const totalControllableBits = suffixBits + paddingBits;
+  
+  // Protection boundary: after mode + charCount + original data (rounded up to byte)
+  // We protect complete bytes, so round up to next byte boundary
+  const protectedBitEnd = Math.ceil(bitsAfterOriginalData / 8) * 8;
+  
+  // Allowed region starts where protection ends (suffix bytes start here or after)
+  // Since protection is byte-aligned, allowed region also starts at byte boundary
+  const allowedBitStart = protectedBitEnd;
+  const allowedBitEnd = totalDataCount * 8;
+  
   // Build the encoder-derived layout
   const encoderLayout: EncoderDerivedLayout = {
     bitsAfterMode,
     bitsAfterCharCount,
+    bitsAfterOriginalData,
     bitsAfterData,
     bitsAfterTerminator,
     bitsAfterPadToByte,
     paddingStartByte,
     totalDataBytes: totalDataCount,
     paddingByteCount,
-    // Protected region: everything before padding codewords (in bits)
-    protectedBitEnd: paddingStartByte * 8,
-    // Allowed region: only padding codewords
-    allowedBitStart: paddingStartByte * 8,
-    allowedBitEnd: totalDataCount * 8,
+    originalDataLength,
+    suffixLength,
+    // HYBRID protection: only mode + charCount + original data is protected
+    protectedBitEnd,
+    // Controllable: suffix bytes + padding codewords
+    allowedBitStart,
+    allowedBitEnd,
+    suffixBits,
+    paddingBits,
   };
   
-  // Log the ACTUAL semantic boundaries from the encoder
-  log.info('ENCODER-DERIVED SEMANTIC BOUNDARIES (from actual bit buffer)', {
+  // Log the ACTUAL semantic boundaries from the encoder (HYBRID mode)
+  log.info('ENCODER-DERIVED SEMANTIC BOUNDARIES (HYBRID mode)', {
     version,
     ecc,
-    dataLength: data.length,
+    originalDataLength,
+    suffixLength,
+    fullDataLength: fullData.length,
     checkpoints: {
       bitsAfterMode: `${bitsAfterMode} bits (mode indicator)`,
       bitsAfterCharCount: `${bitsAfterCharCount} bits (+char count)`,
-      bitsAfterData: `${bitsAfterData} bits (+segment data)`,
+      bitsAfterOriginalData: `${bitsAfterOriginalData} bits (+original data) [PROTECTION BOUNDARY]`,
+      bitsAfterData: `${bitsAfterData} bits (+suffix data)`,
       bitsAfterTerminator: `${bitsAfterTerminator} bits (+terminator)`,
       bitsAfterPadToByte: `${bitsAfterPadToByte} bits (+pad-to-byte)`,
     },
     paddingStartByte,
     totalDataBytes: totalDataCount,
     paddingByteCount,
-    protectedBits: `0 - ${paddingStartByte * 8}`,
-    controllableBits: `${paddingStartByte * 8} - ${totalDataCount * 8}`,
-    controllablePercent: `${((paddingByteCount / totalDataCount) * 100).toFixed(1)}%`,
+    protection: {
+      protectedBits: `0 - ${protectedBitEnd}`,
+      protectedBytes: Math.ceil(protectedBitEnd / 8),
+    },
+    controllable: {
+      suffixBits: `${bitsAfterOriginalData} - ${bitsAfterData} (${suffixBits} bits, ${suffixLength} chars)`,
+      paddingBits: `${paddingStartByte * 8} - ${totalDataCount * 8} (${paddingBits} bits, ${paddingByteCount} bytes)`,
+      totalControllableBits,
+      controllablePercent: `${((totalControllableBits / (totalDataCount * 8)) * 100).toFixed(1)}%`,
+    },
   });
 
   // Extract bytes for each block and compute ECC
@@ -1111,41 +1226,111 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     ecc, 
     maskPattern, 
     onProgress,
-    minPadCodewords = 30,
+    suffix,
+    autoSuffix = true,  // Default to auto-generating suffix for better control
+    minPadCodewords = 10,  // Lower default since suffix provides most control
     forceVersion,
+    targetControlPercent = 50,
   } = config;
 
-  // STRATEGY 2: Encode data EXACTLY as provided - no suffix!
-  // Only padding codewords will be controllable
-  const encodedData = data;
+  // Store original data length for protection boundary tracking
+  const originalDataLength = data.length;
 
-  // Determine the version to use
+  // HYBRID STRATEGY: Add suffix for more controllable bits
+  // The suffix can be modified freely while original data is protected
+  let encodedData: string;
+  let actualSuffix: string;
   let versionToUse: number;
+  
+  // First, determine the version to use (needed for suffix calculation)
   if (forceVersion && forceVersion > 0) {
-    // User forced a specific version
     versionToUse = forceVersion;
     log.info('Using forced QR version', { forceVersion });
   } else if (version > 0) {
-    // User specified a minimum version
     versionToUse = version;
     log.info('Using specified QR version', { version });
   } else {
-    // Auto-calculate version with sufficient padding for QR-Art
-    versionToUse = calculateVersionForSlack(data.length, ecc, minPadCodewords);
-    log.info('Auto-selected QR version for sufficient padding', {
-      dataLength: data.length,
+    // Will be calculated after suffix determination
+    versionToUse = 0;
+  }
+
+  // Handle suffix generation
+  if (suffix !== undefined) {
+    // User provided explicit suffix
+    actualSuffix = suffix;
+    encodedData = data + suffix;
+    log.info('Using user-provided suffix', {
+      originalDataLength,
+      suffixLength: suffix.length,
+      suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
+    });
+  } else if (autoSuffix) {
+    // Auto-generate suffix to fill capacity
+    // Use calculateOptimalVersionAndSuffix from rs-basis.ts
+    const optimalConfig = calculateOptimalVersionAndSuffix(
+      versionToUse,  // 0 for auto, or user-specified minimum
+      ecc,
+      originalDataLength,
+      targetControlPercent
+    );
+    
+    // Generate random suffix with # prefix (URL fragment)
+    // Account for the # character in the suffix length
+    const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
+    actualSuffix = '#' + generateRandomSuffix(suffixCharCount);
+    encodedData = data + actualSuffix;
+    
+    // Use the optimal version calculated
+    if (versionToUse === 0) {
+      versionToUse = optimalConfig.version;
+    } else {
+      // User specified a version, but we may need to upgrade for suffix capacity
+      if (optimalConfig.version > versionToUse) {
+        log.warn('Upgrading version to fit auto-generated suffix', {
+          requestedVersion: versionToUse,
+          upgradeToVersion: optimalConfig.version,
+        });
+        versionToUse = optimalConfig.version;
+      }
+    }
+    
+    log.info('Auto-generated suffix for HYBRID QR-Art', {
+      originalDataLength,
+      suffixLength: actualSuffix.length,
+      suffixPreview: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
+      optimalVersion: optimalConfig.version,
+      versionToUse,
+      expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
+      versionUpgraded: optimalConfig.versionUpgraded,
+    });
+  } else {
+    // No suffix - only padding codewords will be controllable (limited)
+    actualSuffix = '';
+    encodedData = data;
+    
+    // If version is auto, calculate with padding slack
+    if (versionToUse === 0) {
+      versionToUse = calculateVersionForSlack(data.length, ecc, minPadCodewords);
+    }
+    
+    log.warn('No suffix - only padding codewords controllable (limited QR-Art control)', {
+      originalDataLength,
+      versionToUse,
       minPadCodewords,
-      selectedVersion: versionToUse,
+      note: 'Set autoSuffix=true for better image quality',
     });
   }
 
-  // Log the encoding target
-  log.info('QR-Art encoding target (Strategy 2: padding-only)', {
-    data: data.length > 60 ? data.slice(0, 60) + '...' : data,
-    dataLength: data.length,
+  // Log the encoding target (HYBRID mode)
+  log.info('QR-Art encoding target (HYBRID STRATEGY)', {
+    originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+    originalDataLength,
+    suffix: actualSuffix.length > 30 ? actualSuffix.slice(0, 30) + '...' : actualSuffix,
+    suffixLength: actualSuffix.length,
+    fullEncodedLength: encodedData.length,
     versionToUse,
     ecc,
-    strategy: 'PADDING_ONLY - only pad codewords are controllable',
+    strategy: 'HYBRID - original data protected, suffix + padding controllable',
   });
 
   try {
@@ -1156,7 +1341,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     log.debug('Cleared basis cache for fresh calculation');
 
     // Step 1: Generate base QR to determine version, get initial matrix, and extract per-block data/ECC
-    const baseResult = generateBaseQR(encodedData, versionToUse, ecc, maskPattern);
+    // HYBRID MODE: Pass originalDataLength to track protection boundaries
+    const baseResult = generateBaseQR(encodedData, versionToUse, ecc, maskPattern, originalDataLength);
     const {
       matrix: baseMatrix,
       actualVersion,
@@ -1182,36 +1368,20 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     onProgress?.('Analyzing semantic layout', 5);
     
     // Also get the calculated layout for comparison (to detect mismatches)
-    const calculatedLayout = getSemanticBitLayout(actualVersion, ecc, data.length);
+    // Note: For HYBRID mode, we use encodedData.length (full data), not original data.length
+    const calculatedLayout = getSemanticBitLayout(actualVersion, ecc, encodedData.length);
     
-    // CRITICAL: Compare encoder-derived vs calculated layout to detect mismatches
-    const layoutMismatch = 
-      encoderLayout.paddingStartByte !== Math.ceil(calculatedLayout.padCodewords.startBit / 8) ||
-      encoderLayout.allowedBitStart !== calculatedLayout.padCodewords.startBit;
-    
-    if (layoutMismatch) {
-      log.warn('LAYOUT MISMATCH - encoder boundaries differ from calculated!', {
-        encoderDerived: {
-          paddingStartByte: encoderLayout.paddingStartByte,
-          protectedBitEnd: encoderLayout.protectedBitEnd,
-          allowedBitStart: encoderLayout.allowedBitStart,
-        },
-        calculated: {
-          paddingStartByte: Math.ceil(calculatedLayout.padCodewords.startBit / 8),
-          protectedBitEnd: calculatedLayout.padCodewords.startBit,
-        },
-        note: 'USING ENCODER-DERIVED LAYOUT - this is the safe choice',
-      });
-    }
-
-    // Log comprehensive semantic boundary information using ENCODER-DERIVED values
-    log.info('ENCODER-DERIVED SEMANTIC LAYOUT (Strategy 2)', {
+    // Log comprehensive semantic boundary information using ENCODER-DERIVED values (HYBRID mode)
+    log.info('ENCODER-DERIVED SEMANTIC LAYOUT (HYBRID STRATEGY)', {
       version: actualVersion,
       ecc,
-      dataLength: data.length,
+      originalDataLength: encoderLayout.originalDataLength,
+      suffixLength: encoderLayout.suffixLength,
+      fullDataLength: encodedData.length,
       encoderCheckpoints: {
         bitsAfterMode: encoderLayout.bitsAfterMode,
         bitsAfterCharCount: encoderLayout.bitsAfterCharCount,
+        bitsAfterOriginalData: `${encoderLayout.bitsAfterOriginalData} [PROTECTION BOUNDARY]`,
         bitsAfterData: encoderLayout.bitsAfterData,
         bitsAfterTerminator: encoderLayout.bitsAfterTerminator,
         bitsAfterPadToByte: encoderLayout.bitsAfterPadToByte,
@@ -1219,22 +1389,32 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       paddingStartByte: encoderLayout.paddingStartByte,
       totalDataBytes: encoderLayout.totalDataBytes,
       paddingByteCount: encoderLayout.paddingByteCount,
-      protectedBits: `0 - ${encoderLayout.protectedBitEnd}`,
-      controllableBits: `${encoderLayout.allowedBitStart} - ${encoderLayout.allowedBitEnd}`,
-      controllablePercent: `${((encoderLayout.paddingByteCount / encoderLayout.totalDataBytes) * 100).toFixed(1)}%`,
+      protection: {
+        protectedRegion: `bits 0 - ${encoderLayout.protectedBitEnd} (mode + charCount + original data)`,
+        protectedBytes: Math.ceil(encoderLayout.protectedBitEnd / 8),
+      },
+      controllable: {
+        suffixRegion: `bits ${encoderLayout.bitsAfterOriginalData} - ${encoderLayout.bitsAfterData} (${encoderLayout.suffixBits} bits)`,
+        paddingRegion: `bits ${encoderLayout.paddingStartByte * 8} - ${encoderLayout.allowedBitEnd} (${encoderLayout.paddingBits} bits)`,
+        totalControllableBits: encoderLayout.suffixBits + encoderLayout.paddingBits,
+        controllablePercent: `${(((encoderLayout.suffixBits + encoderLayout.paddingBits) / (encoderLayout.totalDataBytes * 8)) * 100).toFixed(1)}%`,
+      },
     });
 
     // CRITICAL VERIFICATION: Scan the base matrix to verify it encodes data correctly
     const baseVerificationScan = scanMatrixWithJsQR(baseMatrix);
     if (baseVerificationScan.success) {
-      const exactMatch = baseVerificationScan.data === encodedData;
-      if (exactMatch) {
-        log.info('BASE MATRIX VERIFICATION PASSED - encodes data exactly', {
-          data: encodedData.length > 60 ? encodedData.slice(0, 60) + '...' : encodedData,
+      // HYBRID: Check that original data is at the start (prefix match)
+      const originalDataPreserved = baseVerificationScan.data?.startsWith(data);
+      if (originalDataPreserved) {
+        log.info('BASE MATRIX VERIFICATION PASSED - original data preserved (HYBRID)', {
+          originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+          decodedDataLength: baseVerificationScan.data?.length,
+          suffixPresent: (baseVerificationScan.data?.length ?? 0) > originalDataLength,
         });
       } else {
-        log.error('BASE MATRIX VERIFICATION FAILED - encoding mismatch!', {
-          expectedData: encodedData,
+        log.error('BASE MATRIX VERIFICATION FAILED - original data not at start!', {
+          expectedOriginal: data,
           actualDecodedData: baseVerificationScan.data,
         });
       }
@@ -1246,12 +1426,13 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     onProgress?.('Building RS basis', 10);
 
-    // Step 2: Build RS basis with ENCODER-DERIVED RANGE protection (Strategy 2)
-    // ONLY padding codewords are controllable - everything else is protected
-    // CRITICAL: Use encoderLayout, not calculated semanticLayout!
+    // Step 2: Build RS basis with ENCODER-DERIVED RANGE protection (HYBRID STRATEGY)
+    // CONTROLLABLE: suffix bytes + padding codewords
+    // PROTECTED: mode + charCount + original data bytes
+    // CRITICAL: Use encoderLayout.allowedBitStart which accounts for ORIGINAL data protection!
     const allowedBitRanges: BitRange[] = [{
-      startBit: encoderLayout.allowedBitStart,
-      endBit: encoderLayout.allowedBitEnd,
+      startBit: encoderLayout.allowedBitStart,  // Starts after protected original data
+      endBit: encoderLayout.allowedBitEnd,      // Ends at total data capacity
     }];
     const basis = buildFullBasis(actualVersion, ecc, allowedBitRanges);
 
@@ -1259,27 +1440,30 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     const actualControllableBits = basis.vectors.length;
     const totalDataBits = encoderLayout.totalDataBytes * 8;
     const actualControlPercentage = totalDataBits > 0 ? (actualControllableBits / totalDataBits) * 100 : 0;
+    const expectedControllableBits = encoderLayout.suffixBits + encoderLayout.paddingBits;
     
-    log.info('QR-Art capacity analysis (Strategy 2 - ENCODER DERIVED)', {
+    log.info('QR-Art capacity analysis (HYBRID STRATEGY)', {
       totalDataBits,
-      protectedBits: encoderLayout.protectedBitEnd, // Everything before pad codewords
-      controllableBits: actualControllableBits,
-      controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
-      padCodewordBytes: encoderLayout.paddingByteCount,
+      protectedBits: encoderLayout.protectedBitEnd,
+      protectedContent: `mode + charCount + original data (${encoderLayout.originalDataLength} chars)`,
+      controllable: {
+        suffixBits: encoderLayout.suffixBits,
+        paddingBits: encoderLayout.paddingBits,
+        totalControllable: actualControllableBits,
+        expectedControllable: expectedControllableBits,
+        controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
+      },
       vectorsCreated: basis.vectors.length,
-      source: 'ENCODER_DERIVED',
-      // Also show comparison with calculated layout
-      calculatedPaddingStart: calculatedLayout.padCodewords.startBit,
-      encoderPaddingStart: encoderLayout.allowedBitStart,
-      boundariesMatch: calculatedLayout.padCodewords.startBit === encoderLayout.allowedBitStart,
+      source: 'ENCODER_DERIVED_HYBRID',
     });
 
     // Warn if control is very limited
     if (basis.vectors.length === 0) {
       log.warn('ZERO controllable vectors! QR-Art cannot modify any pixels.', {
-        suggestion: 'Use a larger QR version to create more padding codewords.',
-        padCodewordBytes: encoderLayout.paddingByteCount,
-        dataLength: data.length,
+        suggestion: 'Use a larger QR version or add a longer suffix.',
+        suffixLength: actualSuffix.length,
+        paddingBytes: encoderLayout.paddingByteCount,
+        originalDataLength,
       });
       
       // Return the base matrix unchanged - it's a valid QR but without art
@@ -1293,29 +1477,34 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         totalControllable: 0,
         matchPercentage: 0,
         encodedData: encodedData,
+        originalData: data,
+        suffix: actualSuffix,
       };
     } else if (actualControlPercentage < 20) {
       log.warn('Limited QR-Art control. Image quality may be reduced.', {
         controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
         controllableVectors: basis.vectors.length,
-        padCodewordBytes: encoderLayout.paddingByteCount,
-        suggestion: 'Use a larger QR version for more padding codewords.',
+        suffixBits: encoderLayout.suffixBits,
+        paddingBits: encoderLayout.paddingBits,
+        suggestion: 'Use a larger QR version or enable autoSuffix for better control.',
       });
     }
 
     // =========================================================================
-    // DETERMINISTIC PADDING-ONLY MUTATION TEST
+    // DETERMINISTIC HYBRID MUTATION TEST
     // =========================================================================
     // Before running the full solver, verify that applying a single controllable
-    // vector actually works and doesn't corrupt the message.
+    // vector actually works and doesn't corrupt the ORIGINAL DATA.
+    // 
+    // HYBRID MODE: The suffix CAN be modified - we only verify original data is preserved.
     // 
     // This catches issues where:
-    // - Our "controllable" region is actually protected
+    // - Our "controllable" region includes protected original data
     // - The bit mapping doesn't match regeneration
     // - Interleaving assumptions are wrong
     //
     if (basis.vectors.length > 0) {
-      log.info('Running deterministic padding-only mutation test...');
+      log.info('Running deterministic HYBRID mutation test...');
       
       // Pick the first controllable vector
       const testVector = basis.vectors[0];
@@ -1376,7 +1565,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       const testScan = scanMatrixWithJsQR(testMatrix);
       
       if (!testScan.success) {
-        log.error('PADDING-ONLY MUTATION TEST FAILED - single vector breaks scan!', {
+        log.error('HYBRID MUTATION TEST FAILED - single vector breaks scan!', {
           vectorDataBitIndex: testVector.dataBitIndex,
           vectorBlockIndex: testVector.rsBlockIndex,
           vectorPosInBlock: testVector.posInBlock,
@@ -1392,7 +1581,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         // This is a critical failure - our "controllable" region is not actually safe
         return {
           success: false,
-          error: 'Padding-only mutation test failed: single vector application broke QR scan',
+          error: 'HYBRID mutation test failed: single vector application broke QR scan',
           matrix: baseMatrix,
           moduleCount,
           version: actualVersion,
@@ -1401,14 +1590,20 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           totalControllable: 0,
           matchPercentage: 0,
           encodedData: encodedData,
+          originalData: data,
+          suffix: actualSuffix,
         };
       }
       
-      if (testScan.data !== encodedData) {
-        log.error('PADDING-ONLY MUTATION TEST FAILED - decoded data changed!', {
-          expectedData: encodedData,
+      // HYBRID: Check that ORIGINAL DATA is preserved (prefix match)
+      // The suffix can be modified, so we only check that decoded data STARTS WITH original data
+      const originalDataPreserved = testScan.data?.startsWith(data);
+      
+      if (!originalDataPreserved) {
+        log.error('HYBRID MUTATION TEST FAILED - original data corrupted!', {
+          expectedOriginal: data,
           actualData: testScan.data,
-          expectedLength: encodedData.length,
+          expectedLength: originalDataLength,
           actualLength: testScan.data?.length,
           vectorDataBitIndex: testVector.dataBitIndex,
           vectorBlockIndex: testVector.rsBlockIndex,
@@ -1417,12 +1612,13 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           linearBit,
           paddingStartByte: encoderLayout.paddingStartByte,
           allowedBitStart: encoderLayout.allowedBitStart,
-          note: 'This means our "controllable" bits are actually message content!',
+          protectedBitEnd: encoderLayout.protectedBitEnd,
+          note: 'This means our "controllable" bits include protected original data!',
         });
         
         return {
           success: false,
-          error: 'Padding-only mutation test failed: vector modified message content',
+          error: 'HYBRID mutation test failed: vector modified original data content',
           matrix: baseMatrix,
           moduleCount,
           version: actualVersion,
@@ -1431,17 +1627,24 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           totalControllable: 0,
           matchPercentage: 0,
           encodedData: encodedData,
+          originalData: data,
+          suffix: actualSuffix,
         };
       }
       
-      log.info('PADDING-ONLY MUTATION TEST PASSED', {
+      // Log whether suffix was modified (expected in HYBRID mode)
+      const decodedSuffix = testScan.data?.slice(originalDataLength) || '';
+      const suffixWasModified = decodedSuffix !== actualSuffix;
+      
+      log.info('HYBRID MUTATION TEST PASSED', {
         vectorDataBitIndex: testVector.dataBitIndex,
         vectorBlockIndex: testVector.rsBlockIndex,
         localBitIndex: testLocalBitIndex,
         linearByte,
         linearBit,
         paddingStartByte: encoderLayout.paddingStartByte,
-        decodedDataUnchanged: true,
+        originalDataPreserved: true,
+        suffixWasModified,
         matrixScansCorrectly: true,
       });
     }
@@ -1584,13 +1787,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         totalControllable: 0,
         matchPercentage: 0,
         encodedData: encodedData,
+        originalData: data,
+        suffix: actualSuffix,
       };
     }
 
     // =========================================================================
     // CRITICAL: Protected-region byte verification (UNCONDITIONAL, FAIL-ON-VIOLATION)
     // =========================================================================
-    // This verifies that ONLY padding codewords were modified (Strategy 2 requirement)
+    // This verifies that ONLY suffix + padding codewords were modified (HYBRID requirement)
+    // The original data bytes must remain unchanged.
     // Uses ENCODER-DERIVED boundaries, not calculated ones!
     
     // First, verify each block's protected bytes are unchanged
@@ -1661,17 +1867,19 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     }
     
     if (protectedBytesViolated) {
-      log.error('PROTECTED BYTES MODIFIED - Strategy 2 violation!', {
+      log.error('PROTECTED BYTES MODIFIED - HYBRID protection violation!', {
         violationCount: violations.length,
         violations: violations.slice(0, 10),
-        note: 'This means vectors modified protected region - algorithm bug!',
+        protectedBitEnd: encoderLayout.protectedBitEnd,
+        originalDataLength: encoderLayout.originalDataLength,
+        note: 'Vectors modified original data bytes - algorithm bug!',
       });
       
       // FAIL FAST: Return base matrix since we can't trust the modified data
       log.error('FAILING FAST - returning base matrix due to protected byte violation');
       return {
         success: false,
-        error: `Protected byte violation: ${violations.length} protected bytes were modified`,
+        error: `Protected byte violation: ${violations.length} original data bytes were modified`,
         matrix: baseMatrix,
         moduleCount,
         version: actualVersion,
@@ -1680,12 +1888,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         totalControllable: 0,
         matchPercentage: 0,
         encodedData: encodedData,
+        originalData: data,
+        suffix: actualSuffix,
       };
     }
     
-    log.info('Strategy 2 protection validation PASSED (encoder-derived)', {
-      protectedBitRange: `0 - ${encoderLayout.protectedBitEnd}`,
-      allowedBitRange: `${encoderLayout.allowedBitStart} - ${encoderLayout.allowedBitEnd}`,
+    log.info('HYBRID protection validation PASSED (encoder-derived)', {
+      protectedBitRange: `0 - ${encoderLayout.protectedBitEnd} (mode + charCount + original data)`,
+      allowedBitRange: `${encoderLayout.allowedBitStart} - ${encoderLayout.allowedBitEnd} (suffix + padding)`,
+      originalDataLength: encoderLayout.originalDataLength,
+      suffixLength: encoderLayout.suffixLength,
       totalVectorsApplied: totalSelected,
       protectedBytesChecked: 'all blocks verified',
     });
@@ -1897,22 +2109,30 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     let finalMatrixToUse = finalMatrix;
     let actualVectorsApplied = totalSelected;
     if (scanResult.success) {
-      // Strategy 2: Check if decoded data matches EXACTLY (no suffix modification)
-      // Since we only modify padding codewords, the message should be identical
-      const exactMatch = scanResult.data === encodedData;
+      // HYBRID STRATEGY: Check if ORIGINAL DATA is preserved (prefix match)
+      // The suffix may be modified, so we check that the decoded data STARTS WITH original data
+      const originalDataPreserved = scanResult.data?.startsWith(data);
       
-      if (exactMatch) {
-        log.info('QR-Art matrix scan validation PASSED - data preserved exactly', {
-          decodedData: scanResult.data,
+      if (originalDataPreserved) {
+        // Log the decoded suffix to see how it was modified
+        const decodedSuffix = scanResult.data?.slice(originalDataLength) || '';
+        log.info('QR-Art matrix scan validation PASSED - original data preserved (HYBRID)', {
+          originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+          originalDataLength,
+          decodedDataLength: scanResult.data?.length,
+          originalSuffix: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
+          decodedSuffix: decodedSuffix.slice(0, 30) + (decodedSuffix.length > 30 ? '...' : ''),
+          suffixModified: decodedSuffix !== actualSuffix,
           scanAttempts: scanResult.attempts,
         });
       } else {
-        // Data was corrupted - this should NOT happen with Strategy 2!
-        log.error('DECODED DATA MISMATCH - Strategy 2 protection failed!', {
-          expected: encodedData,
+        // ORIGINAL DATA was corrupted - this should NOT happen with HYBRID!
+        log.error('ORIGINAL DATA CORRUPTED - HYBRID protection failed!', {
+          expectedOriginal: data,
           actual: scanResult.data,
-          expectedLength: encodedData.length,
+          expectedLength: originalDataLength,
           actualLength: scanResult.data?.length,
+          note: 'The original URL/data was modified - this is a bug!',
         });
       }
     } else {
@@ -1957,8 +2177,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         actualMask
       );
       
-      // Run binary search - pass encodedData for EXACT match validation
-      // Strategy 2: We only modify padding codewords, so decoded data should match exactly
+      // Run binary search - pass original data for PREFIX match validation (HYBRID mode)
+      // HYBRID: We can modify suffix, so decoded data should START WITH original data
       const binarySearchResult = binarySearchMaxVectors(
         flattenedSelections,
         blockDataArrays,  // Original, unmodified data
@@ -1968,7 +2188,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         elimination,
         regenerateFn,
         scanMatrixWithJsQR,
-        encodedData  // Strategy 2: exact match validation
+        data  // HYBRID: prefix match validation (original data only)
       );
       
       if (binarySearchResult.maxCount > 0) {
@@ -1986,15 +2206,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         // Re-scan to confirm and validate decoded content
         scanResult = scanMatrixWithJsQR(finalMatrixToUse);
         if (scanResult.success) {
-          // Strategy 2: Validate exact match - no modification to actual data
-          const exactMatch = scanResult.data === encodedData;
-          if (exactMatch) {
-            log.info('Binary search result validated - data preserved exactly', {
-              decodedData: scanResult.data,
+          // HYBRID: Validate prefix match - original data preserved, suffix may be modified
+          const originalDataPreserved = scanResult.data?.startsWith(data);
+          if (originalDataPreserved) {
+            log.info('Binary search result validated - original data preserved (HYBRID)', {
+              originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+              decodedDataLength: scanResult.data?.length,
             });
           } else {
-            log.error('Binary search result scans but DATA CORRUPTED!', {
-              expected: encodedData,
+            log.error('Binary search result scans but ORIGINAL DATA CORRUPTED!', {
+              expectedOriginal: data,
               actual: scanResult.data,
             });
           }
@@ -2042,12 +2263,15 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     const matchPercentage = total > 0 ? (matching / total) * 100 : 0;
 
-    log.info('QR-Art generation complete', {
+    log.info('QR-Art generation complete (HYBRID)', {
       matchingPixels: matching,
       totalControllable: total,
       matchPercentage: `${matchPercentage.toFixed(1)}%`,
       vectorsApplied: actualVectorsApplied,
       usedBinarySearchFallback: actualVectorsApplied < totalSelected,
+      originalDataLength,
+      suffixLength: actualSuffix.length,
+      controllablePercent: `${actualControlPercentage.toFixed(1)}%`,
     });
 
     onProgress?.('Complete', 100);
@@ -2062,6 +2286,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       totalControllable: total,
       matchPercentage,
       encodedData: encodedData,
+      originalData: data,
+      suffix: actualSuffix,
     };
   } catch (error) {
     log.error('QR-Art generation failed', { error });
@@ -2075,38 +2301,52 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       matchingPixels: 0,
       totalControllable: 0,
       matchPercentage: 0,
-      encodedData: data,
+      encodedData: encodedData,
+      originalData: data,
+      suffix: actualSuffix,
     };
   }
 }
 
-// Note: generateRandomSuffix removed - Strategy 2 doesn't use suffix modification
-
 /**
  * Generate QR-Art trying all 8 mask patterns and selecting the best
- * Uses encoder-derived semantic layout for protection.
+ * Uses encoder-derived semantic layout for HYBRID protection.
  */
 export async function generateFullQArtBestMask(
   config: Omit<FullQArtConfig, 'maskPattern'>
 ): Promise<FullQArtResult> {
   let bestResult: FullQArtResult | null = null;
   
-  // Pre-calculate version with sufficient padding for all mask comparisons
-  const minPadCodewords = config.minPadCodewords ?? 30;
-  const sharedVersion = config.forceVersion ?? 
-    (config.version > 0 ? config.version : calculateVersionForSlack(config.data.length, config.ecc, minPadCodewords));
+  // Pre-calculate optimal version and suffix for all mask comparisons
+  // This ensures consistent encoding across all mask attempts
+  const targetControlPercent = config.targetControlPercent ?? 50;
+  const optimalConfig = calculateOptimalVersionAndSuffix(
+    config.forceVersion ?? config.version,
+    config.ecc,
+    config.data.length,
+    targetControlPercent
+  );
   
-  log.info('Pre-selected version for mask comparison (using encoder-derived layout)', {
+  // Generate suffix once for all masks (ensures consistent comparison)
+  const sharedSuffix = config.suffix ?? (config.autoSuffix !== false 
+    ? '#' + generateRandomSuffix(optimalConfig.suffixLength)
+    : '');
+  const sharedVersion = config.forceVersion ?? optimalConfig.version;
+  
+  log.info('Pre-selected version and suffix for mask comparison (HYBRID mode)', {
     sharedVersion,
-    dataLength: config.data.length,
-    minPadCodewords,
-    note: 'Each mask will use encoder-derived semantic boundaries',
+    originalDataLength: config.data.length,
+    suffixLength: sharedSuffix.length,
+    expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
+    note: 'Each mask will use the same suffix for fair comparison',
   });
 
   for (let mask = 0; mask < 8; mask++) {
     const result = await generateFullQArt({
       ...config,
-      forceVersion: sharedVersion, // Use same version for all masks
+      forceVersion: sharedVersion,  // Use same version for all masks
+      suffix: sharedSuffix,          // Use same suffix for fair comparison
+      autoSuffix: false,             // Disable auto-suffix since we pre-generated it
       maskPattern: mask,
       onProgress: (stage, percent) => {
         config.onProgress?.(`Mask ${mask}: ${stage}`, (mask * 100 + percent) / 8);
@@ -2131,7 +2371,9 @@ export async function generateFullQArtBestMask(
       matchingPixels: 0,
       totalControllable: 0,
       matchPercentage: 0,
-      encodedData: config.data,
+      encodedData: config.data + sharedSuffix,
+      originalData: config.data,
+      suffix: sharedSuffix,
     };
   }
 
