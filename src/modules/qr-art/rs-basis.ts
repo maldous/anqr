@@ -785,11 +785,16 @@ export function calculateOptimalVersionAndSuffix(
     const blocks = getRSBlockInfo(version, ecc);
     const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
     const totalDataBits = totalDataBytes * 8;
+    const totalEccBytes = blocks.reduce((sum, b) => sum + b.eccCount, 0);
     
-    // Calculate MAXIMUM suffix for this version
+    // Calculate MAXIMUM suffix for this version, reserving ECC headroom
     const headerOverhead = version <= 9 ? 2 : 3;
     const terminatorOverhead = 1;
-    const maxSuffixLen = totalDataBytes - dataLength - headerOverhead - terminatorOverhead;
+    
+    // Reserve MIN_ECC_HEADROOM_BYTES to avoid running at 100% ECC capacity
+    // This reduces the effective suffix capacity but improves robustness
+    const eccHeadroom = Math.min(MIN_ECC_HEADROOM_BYTES, Math.floor(totalEccBytes / 4));
+    const maxSuffixLen = totalDataBytes - dataLength - headerOverhead - terminatorOverhead - eccHeadroom;
     
     if (maxSuffixLen <= 0) continue;
     
@@ -798,8 +803,8 @@ export function calculateOptimalVersionAndSuffix(
     const actualSuffixLen = Math.min(maxSuffixLen, MAX_SUFFIX_LENGTH);
     const wasCapped = maxSuffixLen > MAX_SUFFIX_LENGTH;
     
-    // Padding bytes = capacity not used by original data, suffix, header, terminator
-    const paddingBytes = Math.max(0, totalDataBytes - dataLength - actualSuffixLen - headerOverhead - terminatorOverhead);
+    // Padding bytes = capacity not used by original data, suffix, header, terminator, ecc headroom
+    const paddingBytes = Math.max(0, totalDataBytes - dataLength - actualSuffixLen - headerOverhead - terminatorOverhead - eccHeadroom);
     
     // Calculate protected bits (original data only, not suffix)
     const headerBits = getHeaderBitCount(version);
@@ -926,10 +931,20 @@ export function calculateOptimalVersionAndSuffix(
  * Maximum suffix length to prevent baseline from becoming too noisy.
  * Larger versions should use PADDING for extra control, not more suffix bytes.
  * 
- * With 64 chars of suffix + header, we get ~520 bits of controllable suffix.
+ * REDUCED from 64 to 46 to reduce controllable entropy pressure.
+ * Running at full capacity (46/46) amplifies fragility - this gives us some headroom.
+ * 
+ * With 46 chars of suffix + header, we get ~376 bits of controllable suffix.
  * Additional controllable bits come from padding codewords.
  */
-export const MAX_SUFFIX_LENGTH = 64;
+export const MAX_SUFFIX_LENGTH = 46;
+
+/**
+ * Minimum number of ECC headroom bytes to reserve.
+ * This ensures we don't run at 100% ECC correction capacity,
+ * which would cause any small error to break decoding.
+ */
+export const MIN_ECC_HEADROOM_BYTES = 4;
 
 /**
  * Simple hash function to create a deterministic seed from a string.

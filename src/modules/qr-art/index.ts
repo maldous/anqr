@@ -749,6 +749,18 @@ export {
   generateFullQArtBestRotation,
   generateFullQArtOptimal,
   matrixToQRLike,
+  // Format info utilities
+  extractFormatInfo,
+  extractMaskFromMatrix,
+  readFormatInfoFromDecoder,
+  verifyMatrixFormatInfo,
+  eccNumericToLevel,
+  // Suffix charset validation
+  validateSuffixCharset,
+  VALID_SUFFIX_CHARS,
+  type RejectionReason,
+  type FormatVerificationResult,
+  type SemanticValidationResult,
 } from './generate';
 export {
   basisToMatrix,
@@ -760,6 +772,12 @@ export {
   type RSBasis,
   type RSBasisVector,
   xorBasisVectors,
+  // Suffix and capacity configuration
+  MAX_SUFFIX_LENGTH,
+  MIN_ECC_HEADROOM_BYTES,
+  calculateOptimalVersionAndSuffix,
+  generateDeterministicSuffix,
+  hashStringToSeed,
 } from './rs-basis';
 
 // ============================================
