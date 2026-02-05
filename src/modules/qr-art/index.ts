@@ -775,6 +775,7 @@ export {
   // Suffix and capacity configuration
   MAX_SUFFIX_LENGTH,
   MIN_ECC_HEADROOM_BYTES,
+  MIN_QART_VERSION,
   calculateOptimalVersionAndSuffix,
   generateDeterministicSuffix,
   hashStringToSeed,
