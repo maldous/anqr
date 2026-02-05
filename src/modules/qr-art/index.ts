@@ -779,6 +779,12 @@ export {
   generateDeterministicSuffix,
   hashStringToSeed,
 } from './rs-basis';
+export {
+  type RejectionHistogram,
+  binarySearchMaxVectors,
+  flattenAndOrderSelections,
+  unflattenSelections,
+} from './scan-fallback';
 
 // ============================================
 // EXPORTS
