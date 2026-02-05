@@ -191,14 +191,23 @@ function validateOriginalDataPreserved(
 /**
  * SEMANTIC-HARD-GATE VALIDATION
  * 
- * This is the STRICT acceptance criteria for QR-Art candidates.
- * A candidate is ONLY accepted if ALL of the following are true:
+ * This is the acceptance criteria for QR-Art candidates.
+ * A candidate is ONLY accepted if ALL of the following HARD GATE checks pass:
  * 
  * 1. Decoder successfully scanned the matrix
  * 2. Decoded data length >= original data length  
  * 3. First N bytes match exactly (N = original data length)
  * 4. Format info ECC matches requested ECC
  * 5. Format info mask matches requested mask
+ * 6. Structural validity (no fake segments)
+ * 
+ * SOFT PENALTY (does NOT cause rejection unless strictSuffix=true):
+ * - Suffix charset violations (non-URL-safe bytes in suffix)
+ * 
+ * The HYBRID mode intentionally allows the suffix to be mutated.
+ * Rejecting candidates for suffix charset violations defeats the purpose
+ * of QArt - we WANT to allow arbitrary byte values in the suffix for
+ * maximum pixel control.
  * 
  * This function performs comprehensive validation and returns
  * detailed rejection reasons for debugging.
@@ -209,6 +218,7 @@ function validateOriginalDataPreserved(
  * @param expectedMask The requested mask pattern
  * @param expectedSuffix Optional: the expected suffix (for HYBRID mode)
  * @param scanFn Function to scan the matrix
+ * @param strictSuffix If true, reject candidates with non-URL-safe suffix bytes (default: false)
  * @returns Comprehensive validation result
  */
 function performSemanticValidation(
@@ -217,7 +227,8 @@ function performSemanticValidation(
   expectedEcc: ECCLevel,
   expectedMask: number,
   expectedSuffix: string | undefined,
-  scanFn: (matrix: boolean[][]) => ScanResult
+  scanFn: (matrix: boolean[][]) => ScanResult,
+  strictSuffix: boolean = false
 ): SemanticValidationResult {
   // Step 1: Scan the matrix
   const scanResult = scanFn(matrix);
@@ -300,22 +311,33 @@ function performSemanticValidation(
     };
   }
   
-  // Step 5: If suffix is expected, validate suffix charset
-  // The suffix CAN be modified by QR-Art, but should remain URL-safe
+  // Step 5: If suffix is expected, validate suffix charset (SOFT PENALTY unless strictSuffix=true)
+  // The suffix CAN be modified by QR-Art - that's the whole point of HYBRID mode!
+  // Non-URL-safe bytes in the suffix are expected when maximizing pixel control.
   if (expectedSuffix !== undefined && decoded.length > originalData.length) {
     const actualSuffix = decoded.slice(originalData.length);
     const charsetValidation = validateSuffixCharset(actualSuffix);
     
     if (!charsetValidation.valid) {
-      return {
-        valid: false,
-        reason: 'SUFFIX_CHARSET_INVALID',
-        description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
-        details: {
-          mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
-          actualByte: charsetValidation.invalidCharCode,
-        },
-      };
+      // Only reject if strictSuffix is enabled
+      if (strictSuffix) {
+        return {
+          valid: false,
+          reason: 'SUFFIX_CHARSET_INVALID',
+          description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
+          details: {
+            mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
+            actualByte: charsetValidation.invalidCharCode,
+          },
+        };
+      }
+      // With strictSuffix=false, we log the violation but don't reject
+      log.debug('Suffix charset violation (accepted - strictSuffix=false)', {
+        invalidCharIndex: charsetValidation.invalidCharIndex,
+        invalidChar: charsetValidation.invalidChar,
+        invalidCharCode: charsetValidation.invalidCharCode,
+        suffixPreview: actualSuffix.slice(0, 30),
+      });
     }
   }
   
@@ -1046,6 +1068,20 @@ export interface FullQArtConfig {
    * Higher values = more controllable pixels = better image quality.
    */
   targetControlPercent?: number;
+  /**
+   * Whether to enforce strict suffix charset validation (default: false).
+   * 
+   * When false (default, recommended for QArt):
+   * - Suffix bytes can be ANY byte value (including non-printable)
+   * - Maximizes pixel control for better image quality
+   * - The QR will still scan to the correct URL (suffix is mutable)
+   * 
+   * When true:
+   * - Suffix must contain only URL-safe characters
+   * - Reduces pixel control (fewer candidates accepted)
+   * - Use this if you need deterministic, URL-safe suffix bytes
+   */
+  strictSuffix?: boolean;
 }
 
 /**
@@ -1960,6 +1996,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     minPadCodewords = 10,  // Lower default since suffix provides most control
     forceVersion,
     targetControlPercent = 50,
+    strictSuffix = false,  // Default to false for maximum QArt pixel control
   } = config;
 
   // Store original data length for protection boundary tracking
@@ -2070,7 +2107,11 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     fullEncodedLength: encodedData.length,
     versionToUse,
     ecc,
+    strictSuffix,
     strategy: 'HYBRID - original data protected, suffix + padding controllable',
+    suffixPolicy: strictSuffix 
+      ? 'STRICT - suffix must contain only URL-safe characters'
+      : 'RELAXED - suffix can contain ANY byte values (max QArt control)',
   });
 
   try {
@@ -3279,7 +3320,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       ecc,
       actualMask,
       actualSuffix,
-      scanMatrixWithJsQR
+      scanMatrixWithJsQR,
+      strictSuffix
     );
     
     if (semanticValidation.valid) {
@@ -3290,6 +3332,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         decodedDataLength: scanResult.data?.length,
         ecc,
         mask: actualMask,
+        strictSuffix,
         structurallyValid: scanResult.structurallyValid,
         segmentCount: scanResult.segmentCount,
         segmentModes: scanResult.segments?.map(s => s.modeName),
@@ -3301,6 +3344,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           'ECC_INVARIANT',
           'MASK_INVARIANT',
           'STRUCTURAL_VALIDITY',
+          strictSuffix ? 'SUFFIX_CHARSET_STRICT' : 'SUFFIX_CHARSET_SOFT',
         ],
       });
     } else {
@@ -3391,6 +3435,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       // Run binary search - pass original data for PREFIX match validation (HYBRID mode)
       // HYBRID: We can modify suffix, so decoded data should START WITH original data
       // SEMANTIC-HARD-GATE: Also pass ECC and mask for format info verification
+      // strictSuffix: Controls whether suffix charset violations cause rejection
       const binarySearchResult = binarySearchMaxVectors(
         flattenedSelections,
         blockDataArrays,  // Original, unmodified data
@@ -3402,7 +3447,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         scanMatrixWithJsQR,
         data,  // HYBRID: prefix match validation (original data only)
         ecc,   // SEMANTIC-HARD-GATE: verify format info ECC
-        actualMask  // SEMANTIC-HARD-GATE: verify format info mask
+        actualMask,  // SEMANTIC-HARD-GATE: verify format info mask
+        strictSuffix  // Controls suffix charset rejection (default: false for max QArt control)
       );
       
       if (binarySearchResult.maxCount > 0) {
@@ -3424,7 +3470,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           ecc,
           actualMask,
           actualSuffix,
-          scanMatrixWithJsQR
+          scanMatrixWithJsQR,
+          strictSuffix
         );
         
         if (postSearchValidation.valid) {
@@ -3515,12 +3562,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       originalDataLength,
       suffixLength: actualSuffix.length,
       controllablePercent: `${actualControlPercentage.toFixed(1)}%`,
+      strictSuffix,
       semanticValidation: {
         eccInvariantLocked: true,
         maskInvariantLocked: true,
         byteExactPrefixMatch: true,
         formatInfoVerified: true,
         structuralValidityChecked: true,
+        suffixCharsetMode: strictSuffix ? 'STRICT' : 'RELAXED',
         ecc,
         mask: actualMask,
       },
@@ -3621,6 +3670,7 @@ export async function generateFullQArtBestMask(
       suffix: sharedSuffix,          // Use same suffix for fair comparison
       autoSuffix: false,             // Disable auto-suffix since we pre-generated it
       maskPattern: mask,
+      strictSuffix: config.strictSuffix ?? false,  // Pass through strictSuffix setting
       onProgress: (stage, percent) => {
         config.onProgress?.(`Mask ${mask}: ${stage}`, (mask * 100 + percent) / 8);
       },

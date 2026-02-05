@@ -26,6 +26,37 @@ import {
   validateSuffixCharset,
 } from './generate';
 
+/**
+ * Rejection histogram for tracking why candidates were rejected.
+ * Used for debugging and diagnosing acceptance policy issues.
+ */
+export interface RejectionHistogram {
+  SCAN_FAILED: number;
+  LENGTH_TOO_SHORT: number;
+  BYTE_MISMATCH: number;
+  ECC_MISMATCH: number;
+  MASK_MISMATCH: number;
+  SUFFIX_CHARSET_INVALID: number;
+  ACCEPTED: number;
+  total: number;
+}
+
+/**
+ * Create an empty rejection histogram
+ */
+function createRejectionHistogram(): RejectionHistogram {
+  return {
+    SCAN_FAILED: 0,
+    LENGTH_TOO_SHORT: 0,
+    BYTE_MISMATCH: 0,
+    ECC_MISMATCH: 0,
+    MASK_MISMATCH: 0,
+    SUFFIX_CHARSET_INVALID: 0,
+    ACCEPTED: 0,
+    total: 0,
+  };
+}
+
 const log = createLogger('QART');
 
 /**
@@ -33,36 +64,48 @@ const log = createLogger('QART');
  */
 interface BinarySearchValidationResult {
   valid: boolean;
+  /** Rejection reason if hard gate failed */
   reason?: RejectionReason | 'SUFFIX_CHARSET_INVALID';
   description?: string;
   mismatchIndex?: number;
   expectedByte?: number;
   actualByte?: number;
+  /** Soft penalty for suffix charset violations (0 = no penalty, higher = worse) */
+  suffixCharsetPenalty?: number;
+  /** Whether this was a hard gate failure vs soft penalty */
+  hardGateFailed?: boolean;
 }
 
 /**
  * Validate that decoded data preserves the original data exactly (byte-level comparison).
- * This is the STRICT acceptance criteria for HYBRID QR-Art.
+ * This is the HARD GATE acceptance criteria for HYBRID QR-Art.
  * 
- * Requirements:
+ * HARD GATE REQUIREMENTS (must pass):
  * 1. Decoded data must exist
  * 2. Decoded data length >= original data length
  * 3. First N bytes must match exactly (N = original data length)
- * 4. Suffix (if present) must contain only URL-safe characters
+ * 
+ * SOFT PENALTY (does not cause rejection):
+ * 4. Suffix charset violations are counted as soft penalty, NOT hard rejection
+ *    This allows the optimizer to accept candidates with non-URL-safe suffix bytes.
+ *    The suffix is intentionally mutable in HYBRID mode!
  * 
  * @param decoded The decoded string from scanning
  * @param originalData The original data that must be preserved
+ * @param strictSuffix If true, suffix charset violations cause hard rejection (default: false)
  * @returns Validation result with details
  */
 function validateByteExactPrefix(
   decoded: string | undefined,
-  originalData: string
+  originalData: string,
+  strictSuffix: boolean = false
 ): BinarySearchValidationResult {
   if (decoded === undefined || decoded === null) {
     return { 
       valid: false, 
       reason: 'SCAN_FAILED',
       description: 'decoded data is null/undefined',
+      hardGateFailed: true,
     };
   }
   
@@ -71,10 +114,11 @@ function validateByteExactPrefix(
       valid: false, 
       reason: 'LENGTH_TOO_SHORT',
       description: `decoded length (${decoded.length}) < original length (${originalData.length})`,
+      hardGateFailed: true,
     };
   }
   
-  // Byte-exact comparison for the protected prefix
+  // Byte-exact comparison for the protected prefix - THIS IS THE HARD GATE
   for (let i = 0; i < originalData.length; i++) {
     const expectedByte = originalData.charCodeAt(i);
     const actualByte = decoded.charCodeAt(i);
@@ -87,27 +131,53 @@ function validateByteExactPrefix(
         mismatchIndex: i,
         expectedByte,
         actualByte,
+        hardGateFailed: true,
       };
     }
   }
   
-  // Validate suffix charset if there is a suffix
+  // Calculate suffix charset penalty (SOFT PENALTY, not hard rejection by default)
+  let suffixCharsetPenalty = 0;
   if (decoded.length > originalData.length) {
     const suffix = decoded.slice(originalData.length);
     const charsetValidation = validateSuffixCharset(suffix);
     
     if (!charsetValidation.valid) {
-      return {
-        valid: false,
-        reason: 'SUFFIX_CHARSET_INVALID',
-        description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
-        mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
-        actualByte: charsetValidation.invalidCharCode,
-      };
+      // Count how many invalid characters are in the suffix
+      let invalidCount = 0;
+      for (let i = 0; i < suffix.length; i++) {
+        const char = suffix[i];
+        const charCode = suffix.charCodeAt(i);
+        // Check if character is outside printable ASCII or not URL-safe
+        if (charCode < 32 || charCode > 126 || 
+            !('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~#'.includes(char))) {
+          invalidCount++;
+        }
+      }
+      suffixCharsetPenalty = invalidCount / suffix.length;
+      
+      // If strictSuffix is enabled, reject on charset violation
+      if (strictSuffix) {
+        return {
+          valid: false,
+          reason: 'SUFFIX_CHARSET_INVALID',
+          description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
+          mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
+          actualByte: charsetValidation.invalidCharCode,
+          suffixCharsetPenalty,
+          hardGateFailed: true,
+        };
+      }
     }
   }
   
-  return { valid: true };
+  // HARD GATE PASSED - candidate is accepted
+  // Suffix charset penalty is recorded but does NOT cause rejection
+  return { 
+    valid: true,
+    suffixCharsetPenalty,
+    hardGateFailed: false,
+  };
 }
 
 /**
@@ -295,6 +365,7 @@ export interface BinarySearchResult {
  * @param expectedData The original data that must be preserved (HYBRID: prefix match)
  * @param expectedEcc Expected ECC level (for format info verification)
  * @param expectedMask Expected mask pattern (for format info verification)
+ * @param strictSuffix If true, reject candidates with non-URL-safe suffix bytes (default: false)
  * @returns Binary search result with optimal matrix
  */
 export function binarySearchMaxVectors(
@@ -313,10 +384,14 @@ export function binarySearchMaxVectors(
   scanQRFn: (matrix: boolean[][]) => { success: boolean; data?: string },
   expectedData: string,
   expectedEcc?: ECCLevel,
-  expectedMask?: number
+  expectedMask?: number,
+  strictSuffix: boolean = false
 ): BinarySearchResult {
   const totalVectors = flattened.length;
 
+  // Initialize rejection histogram for tracking why candidates were rejected
+  const rejectionHistogram = createRejectionHistogram();
+  
   log.info('Starting binary search for maximum scannable vectors', {
     totalVectors,
     expectedDataLength: expectedData.length,
@@ -324,7 +399,10 @@ export function binarySearchMaxVectors(
     formatVerificationEnabled: expectedEcc !== undefined && expectedMask !== undefined,
     expectedEcc,
     expectedMask,
-    note: 'SEMANTIC-HARD-GATE: prefix match + format info verification',
+    strictSuffix,
+    note: strictSuffix 
+      ? 'SEMANTIC-HARD-GATE: prefix match + format info + strict suffix charset'
+      : 'SEMANTIC-HARD-GATE: prefix match + format info (suffix charset is SOFT PENALTY)',
   });
 
   // Edge case: if there are no vectors, return empty result
@@ -362,7 +440,8 @@ export function binarySearchMaxVectors(
   // CRITICAL: Use STRICT byte-exact validation for base matrix
   // HYBRID MODE: expectedData is the original URL only - suffix may vary
   // We use byte-exact comparison to catch subtle corruption
-  const baseValidation = validateByteExactPrefix(baseScan.data, expectedData);
+  const baseValidation = validateByteExactPrefix(baseScan.data, expectedData, strictSuffix);
+  rejectionHistogram.total++;
   
   if (!baseValidation.valid) {
     // Generate hex dump of first 32 bytes for comparison
@@ -411,6 +490,8 @@ export function binarySearchMaxVectors(
     }
   }
   
+  rejectionHistogram.ACCEPTED++;
+  
   log.debug('Base matrix (0 vectors) validation PASSED', {
     decodedData: baseScan.data,
     decodedLength: baseScan.data?.length,
@@ -418,6 +499,7 @@ export function binarySearchMaxVectors(
     formatVerified: baseFormatVerification?.valid,
     extractedEcc: baseFormatVerification?.extractedEcc,
     extractedMask: baseFormatVerification?.extractedMask,
+    suffixCharsetPenalty: baseValidation.suffixCharsetPenalty,
   });
 
   // Binary search for maximum vectors
@@ -463,12 +545,16 @@ export function binarySearchMaxVectors(
       valid: false, 
       reason: 'SCAN_FAILED',
       description: 'not scanned',
+      hardGateFailed: true,
     };
     let formatVerification: FormatVerificationResult | undefined;
     
+    rejectionHistogram.total++;
+    
     if (scan.success) {
-      // Step 1: Byte-exact prefix validation
-      validation = validateByteExactPrefix(scan.data, expectedData);
+      // Step 1: Byte-exact prefix validation (HARD GATE)
+      // Suffix charset is now a SOFT PENALTY unless strictSuffix is true
+      validation = validateByteExactPrefix(scan.data, expectedData, strictSuffix);
       
       if (validation.valid) {
         // Step 2: Format info verification (if ECC and mask provided)
@@ -479,30 +565,48 @@ export function binarySearchMaxVectors(
               valid: false,
               reason: formatVerification.reason || 'ECC_MISMATCH',
               description: `Format info mismatch: ECC ${formatVerification.extractedEcc} vs ${expectedEcc}, mask ${formatVerification.extractedMask} vs ${expectedMask}`,
+              hardGateFailed: true,
             };
           } else {
             isValid = true;
+            rejectionHistogram.ACCEPTED++;
           }
         } else {
           // No format verification requested, byte-exact is enough
           isValid = true;
+          rejectionHistogram.ACCEPTED++;
         }
       }
     }
+    
+    // Track rejection reasons in histogram
+    if (!isValid && validation.reason) {
+      const reason = validation.reason as keyof RejectionHistogram;
+      if (reason in rejectionHistogram && reason !== 'ACCEPTED' && reason !== 'total') {
+        rejectionHistogram[reason]++;
+      }
+    }
 
+    // Per-candidate logging with hardGate pass/fail, rejection reason, vectorsApplied count
     log.debug('Binary search iteration', {
       iteration: iterations,
+      vectorsApplied: mid,
       low,
       high,
-      mid,
+      // Hard gate status
+      hardGatePassed: isValid,
+      hardGateFailed: validation.hardGateFailed,
       scans: scan.success,
       byteExactValid: validation.valid || isValid,
-      formatVerified: formatVerification?.valid,
+      // Rejection details
       rejectionReason: isValid ? undefined : validation.reason,
       description: isValid ? undefined : validation.description,
       mismatchIndex: validation.mismatchIndex,
+      // Soft penalty (suffix charset)
+      suffixCharsetPenalty: validation.suffixCharsetPenalty,
       // Format info details if verified
       ...(formatVerification ? {
+        formatVerified: formatVerification.valid,
         extractedEcc: formatVerification.extractedEcc,
         extractedMask: formatVerification.extractedMask,
         eccMatch: formatVerification.eccMatch,
@@ -512,7 +616,7 @@ export function binarySearchMaxVectors(
       ...(scan.success ? {
         decodedLength: scan.data?.length,
         originalLength: expectedData.length,
-        suffixModified: scan.data?.slice(expectedData.length)?.slice(0, 20),
+        suffixPreview: scan.data?.slice(expectedData.length)?.slice(0, 20),
       } : {}),
     });
 
@@ -529,12 +633,29 @@ export function binarySearchMaxVectors(
     }
   }
 
+  // Log rejection histogram at end of binary search
   log.info('Binary search complete', {
     maxCount: bestCount,
     totalVectors,
     percentageUsed: `${((bestCount / totalVectors) * 100).toFixed(1)}%`,
     iterations,
+    strictSuffix,
+    rejectionHistogram: {
+      ...rejectionHistogram,
+      acceptanceRate: rejectionHistogram.total > 0 
+        ? `${((rejectionHistogram.ACCEPTED / rejectionHistogram.total) * 100).toFixed(1)}%`
+        : 'N/A',
+    },
   });
+  
+  // Warn if suffix charset rejections are dominating and strictSuffix is enabled
+  if (strictSuffix && rejectionHistogram.SUFFIX_CHARSET_INVALID > rejectionHistogram.ACCEPTED) {
+    log.warn('High suffix charset rejection rate with strictSuffix=true', {
+      suffixCharsetRejections: rejectionHistogram.SUFFIX_CHARSET_INVALID,
+      accepted: rejectionHistogram.ACCEPTED,
+      suggestion: 'Consider setting strictSuffix=false to allow more candidates',
+    });
+  }
 
   return {
     maxCount: bestCount,

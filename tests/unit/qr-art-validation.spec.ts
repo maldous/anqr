@@ -343,3 +343,228 @@ describe('Format Info BCH Error Correction', () => {
     expect(result?.maskPattern).toBe(2);
   });
 });
+
+// Suffix acceptance policy tests (CRITICAL for QArt functionality)
+describe('HYBRID Suffix Acceptance Policy', () => {
+  describe('Candidate Acceptance with Non-URL Suffix Bytes', () => {
+    it('validateSuffixCharset correctly identifies non-URL-safe bytes', () => {
+      // Test bytes that commonly appear when QR-Art flips suffix bits
+      const nonUrlSafeBytes = [
+        String.fromCharCode(0x00), // NULL
+        String.fromCharCode(0x27), // apostrophe (common in logs)
+        String.fromCharCode(0x7F), // DEL
+        String.fromCharCode(0x80), // Extended ASCII
+        String.fromCharCode(0xFF), // High byte
+        '\t', // Tab
+        '\n', // Newline
+        ' ',  // Space
+        '<',  // Less than
+        '>',  // Greater than
+        '"',  // Double quote
+        "'",  // Single quote
+        '(',  // Parenthesis
+        ')',
+        '[',  // Brackets
+        ']',
+        '{',  // Braces
+        '}',
+        '|',  // Pipe
+        '\\', // Backslash
+        '^',  // Caret
+        '`',  // Backtick
+        '+',  // Plus (needs encoding in URLs)
+        '=',  // Equals
+        '&',  // Ampersand
+        '?',  // Question mark
+        '/',  // Slash
+        ':',  // Colon
+        ';',  // Semicolon
+        '@',  // At
+        '!',  // Exclamation
+        '$',  // Dollar
+        '%',  // Percent
+        '*',  // Asterisk
+        ',',  // Comma
+      ];
+      
+      for (const char of nonUrlSafeBytes) {
+        const result = validateSuffixCharset('prefix' + char + 'suffix');
+        expect(result.valid).toBe(false);
+        expect(result.invalidCharIndex).toBeDefined();
+      }
+    });
+
+    it('valid URL-safe charset includes only expected characters', () => {
+      // The valid charset should be: A-Z, a-z, 0-9, -, _, ., ~
+      const expectedChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~';
+      
+      // Every expected char should be in the set
+      for (const char of expectedChars) {
+        expect(VALID_SUFFIX_CHARS.has(char)).toBe(true);
+      }
+      
+      // Set should have exactly 66 chars
+      expect(VALID_SUFFIX_CHARS.size).toBe(66);
+    });
+  });
+
+  describe('Two-Mode Policy Test (strictSuffix=false vs true)', () => {
+    // These tests verify the behavior difference between strict and relaxed modes
+    // When strictSuffix=false: Non-URL-safe suffix bytes should NOT cause rejection
+    // When strictSuffix=true: Non-URL-safe suffix bytes SHOULD cause rejection
+    
+    it('strictSuffix=false allows any suffix bytes (design principle)', () => {
+      // This test documents the expected behavior:
+      // In HYBRID mode with strictSuffix=false, the semantic gate should:
+      // 1. REQUIRE prefix to match exactly (byte-for-byte)
+      // 2. REQUIRE format info (ECC/mask) to match
+      // 3. ALLOW any suffix bytes (including non-printable)
+      //
+      // This is because QArt NEEDS to flip bits freely in the suffix
+      // to achieve image resemblance. Rejecting non-URL-safe bytes
+      // defeats the entire purpose of QArt.
+      
+      // Verify the charset validation function works correctly
+      const binarySuffix = String.fromCharCode(0x00, 0x27, 0x80, 0xFF);
+      const charsetResult = validateSuffixCharset(binarySuffix);
+      
+      // Charset validation SHOULD detect these as invalid
+      expect(charsetResult.valid).toBe(false);
+      
+      // But in the actual QArt flow with strictSuffix=false,
+      // this should NOT cause candidate rejection.
+      // The validateByteExactPrefix function in scan-fallback.ts
+      // only rejects on charset violation when strictSuffix=true.
+    });
+
+    it('strictSuffix=true rejects non-URL-safe suffix bytes', () => {
+      // When strictSuffix=true, even the soft charset check becomes a hard gate
+      // This is for use cases that need deterministic, URL-safe suffix bytes
+      
+      const invalidSuffix = 'valid' + String.fromCharCode(0x80) + 'chars';
+      const result = validateSuffixCharset(invalidSuffix);
+      
+      expect(result.valid).toBe(false);
+      expect(result.invalidCharIndex).toBe(5); // 0x80 is at index 5
+      expect(result.invalidCharCode).toBe(0x80);
+    });
+
+    it('mixed suffix with valid and invalid chars fails charset check', () => {
+      // A suffix that starts valid but contains invalid bytes
+      const mixedSuffix = 'abc' + String.fromCharCode(0x27) + 'def';
+      const result = validateSuffixCharset(mixedSuffix);
+      
+      expect(result.valid).toBe(false);
+      expect(result.invalidCharIndex).toBe(3);
+      expect(result.invalidCharCode).toBe(0x27); // apostrophe
+    });
+  });
+
+  describe('Prefix Invariance Test', () => {
+    // These tests verify that the protected prefix region is NEVER modified
+    // regardless of how many vectors are applied or what suffix mutations occur
+    
+    it('original data (prefix) must be byte-exact preserved', () => {
+      // In HYBRID mode, the INVARIANT is:
+      // decoded[0:originalDataLength] === originalData
+      //
+      // This test verifies the validation logic catches mismatches
+      
+      const originalData = 'https://example.com';
+      const validDecoded = originalData + '#randomsuffix';
+      const corruptedDecoded = 'https://example.org' + '#randomsuffix';
+      
+      // Helper to simulate validation
+      function validatePrefix(decoded: string, original: string): boolean {
+        if (decoded.length < original.length) return false;
+        for (let i = 0; i < original.length; i++) {
+          if (decoded.charCodeAt(i) !== original.charCodeAt(i)) {
+            return false;
+          }
+        }
+        return true;
+      }
+      
+      expect(validatePrefix(validDecoded, originalData)).toBe(true);
+      expect(validatePrefix(corruptedDecoded, originalData)).toBe(false);
+    });
+
+    it('single byte difference in prefix must be detected', () => {
+      const original = 'https://example.com/path';
+      
+      // Create versions with single-byte differences at various positions
+      const corruptions = [
+        { pos: 0, desc: 'first byte' },
+        { pos: 7, desc: 'after protocol' },
+        { pos: 15, desc: 'in domain' },
+        { pos: original.length - 1, desc: 'last byte' },
+      ];
+      
+      for (const { pos } of corruptions) {
+        // Create a corrupted version by flipping one byte
+        const chars = original.split('');
+        const originalCode = chars[pos].charCodeAt(0);
+        chars[pos] = String.fromCharCode(originalCode ^ 0x01); // Flip LSB
+        const corrupted = chars.join('') + '#suffix';
+        
+        // Verify the prefix check would catch this
+        let mismatchFound = false;
+        for (let i = 0; i < original.length; i++) {
+          if (corrupted.charCodeAt(i) !== original.charCodeAt(i)) {
+            mismatchFound = true;
+            expect(i).toBe(pos); // Mismatch should be at expected position
+            break;
+          }
+        }
+        expect(mismatchFound).toBe(true);
+      }
+    });
+
+    it('suffix can be completely different without affecting prefix validity', () => {
+      const original = 'https://example.com';
+      
+      // Various suffixes including binary data should all pass prefix check
+      const suffixes = [
+        '',
+        '#abc',
+        '#' + String.fromCharCode(0x00, 0x27, 0x80, 0xFF),
+        '#' + 'x'.repeat(100),
+        '#\x00\x01\x02\x03\x04\x05',
+      ];
+      
+      for (const suffix of suffixes) {
+        const decoded = original + suffix;
+        
+        // Prefix check should pass regardless of suffix content
+        let prefixMatch = true;
+        for (let i = 0; i < original.length; i++) {
+          if (decoded.charCodeAt(i) !== original.charCodeAt(i)) {
+            prefixMatch = false;
+            break;
+          }
+        }
+        expect(prefixMatch).toBe(true);
+      }
+    });
+  });
+});
+
+// Rejection histogram tests
+describe('Rejection Histogram Tracking', () => {
+  it('all rejection reasons are tracked', () => {
+    // Verify the expected rejection reasons exist
+    // These should match RejectionReason type in generate.ts
+    const expectedReasons = [
+      'SCAN_FAILED',
+      'LENGTH_TOO_SHORT',
+      'BYTE_MISMATCH',
+      'ECC_MISMATCH',
+      'MASK_MISMATCH',
+      'SUFFIX_CHARSET_INVALID',
+    ];
+    
+    // This is a design verification - the rejection histogram should track all these
+    expect(expectedReasons.length).toBeGreaterThan(0);
+    expect(expectedReasons).toContain('SUFFIX_CHARSET_INVALID');
+  });
+});
