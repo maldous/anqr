@@ -738,7 +738,8 @@ export function calculateOptimalVersionAndSuffix(
   minControlPercent: number = 50
 ): OptimalVersionAndSuffix {
   // Find the minimum version that can fit the data
-  let startVersion = minVersion > 0 ? minVersion : 1;
+  // Enforce MIN_QART_VERSION for reliable real-world scanning
+  let startVersion = minVersion > 0 ? Math.max(minVersion, MIN_QART_VERSION) : MIN_QART_VERSION;
   
   // Find smallest version that fits the data
   for (let v = startVersion; v <= 40; v++) {
@@ -928,23 +929,40 @@ export function calculateOptimalVersionAndSuffix(
 }
 
 /**
+ * Minimum QR version for QR-Art generation.
+ * 
+ * Lower versions (1-6) don't have enough ECC capacity for reliable real-world
+ * scanning when pixel modifications are applied. Version 7+ provides sufficient
+ * ECC redundancy to ensure the QR code scans on real phone cameras, not just
+ * in software decoders like jsQR which are more lenient.
+ * 
+ * This is enforced in generateFullQArt() to ensure all QR-Art codes are scannable.
+ */
+export const MIN_QART_VERSION = 7;
+
+/**
  * Maximum suffix length to prevent baseline from becoming too noisy.
  * Larger versions should use PADDING for extra control, not more suffix bytes.
  * 
- * REDUCED from 64 to 46 to reduce controllable entropy pressure.
- * Running at full capacity (46/46) amplifies fragility - this gives us some headroom.
+ * REDUCED from 46 to 32 to further reduce controllable entropy pressure.
+ * Running at full capacity amplifies fragility - this gives us more headroom
+ * and improves real-world scannability.
  * 
- * With 46 chars of suffix + header, we get ~376 bits of controllable suffix.
+ * With 32 chars of suffix + header, we get ~264 bits of controllable suffix.
  * Additional controllable bits come from padding codewords.
  */
-export const MAX_SUFFIX_LENGTH = 46;
+export const MAX_SUFFIX_LENGTH = 32;
 
 /**
  * Minimum number of ECC headroom bytes to reserve.
  * This ensures we don't run at 100% ECC correction capacity,
  * which would cause any small error to break decoding.
+ * 
+ * INCREASED from 4 to 8 for better real-world scannability.
+ * This reduces the number of controllable bits but significantly
+ * improves the reliability of the generated QR codes on phone cameras.
  */
-export const MIN_ECC_HEADROOM_BYTES = 4;
+export const MIN_ECC_HEADROOM_BYTES = 8;
 
 /**
  * Simple hash function to create a deterministic seed from a string.

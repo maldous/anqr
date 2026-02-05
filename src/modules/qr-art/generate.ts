@@ -54,6 +54,7 @@ import {
   generateDeterministicSuffix,
   hashStringToSeed,
   MAX_SUFFIX_LENGTH,
+  MIN_QART_VERSION,
 } from './rs-basis';
 import {
   type BitRange,
@@ -1069,17 +1070,17 @@ export interface FullQArtConfig {
    */
   targetControlPercent?: number;
   /**
-   * Whether to enforce strict suffix charset validation (default: false).
+   * Whether to enforce strict suffix charset validation (default: true).
    * 
-   * When false (default, recommended for QArt):
-   * - Suffix bytes can be ANY byte value (including non-printable)
-   * - Maximizes pixel control for better image quality
-   * - The QR will still scan to the correct URL (suffix is mutable)
-   * 
-   * When true:
+   * When true (default, recommended for real-world scanning):
    * - Suffix must contain only URL-safe characters
-   * - Reduces pixel control (fewer candidates accepted)
-   * - Use this if you need deterministic, URL-safe suffix bytes
+   * - Ensures the QR decodes to a valid, clean URL
+   * - Better compatibility with real phone cameras
+   * 
+   * When false:
+   * - Suffix bytes can be ANY byte value (including non-printable)
+   * - May produce more visually accurate QR-Art
+   * - Risk of binary garbage in the decoded URL suffix
    */
   strictSuffix?: boolean;
 }
@@ -1996,11 +1997,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     minPadCodewords = 10,  // Lower default since suffix provides most control
     forceVersion,
     targetControlPercent = 50,
-    strictSuffix = false,  // Default to false for maximum QArt pixel control
+    strictSuffix = true,  // Default to true for real-world scannability
   } = config;
 
   // Store original data length for protection boundary tracking
   const originalDataLength = data.length;
+
+  // Track if version was auto-upgraded for QR-Art
+  let versionWasUpgradedForQArt = false;
 
   // HYBRID STRATEGY: Add suffix for more controllable bits
   // The suffix can be modified freely while original data is protected
@@ -2009,14 +2013,36 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
   let versionToUse: number;
   
   // First, determine the version to use (needed for suffix calculation)
+  // QR-Art requires minimum version for reliable real-world scanning
   if (forceVersion && forceVersion > 0) {
-    versionToUse = forceVersion;
-    log.info('Using forced QR version', { forceVersion });
+    if (forceVersion < MIN_QART_VERSION) {
+      log.warn('Forced version is below MIN_QART_VERSION, upgrading for reliable scanning', {
+        requestedVersion: forceVersion,
+        minQArtVersion: MIN_QART_VERSION,
+        reason: 'Lower versions have insufficient ECC capacity for real phone cameras',
+      });
+      versionToUse = MIN_QART_VERSION;
+      versionWasUpgradedForQArt = true;
+    } else {
+      versionToUse = forceVersion;
+    }
+    log.info('Using QR version for QR-Art', { version: versionToUse, wasUpgraded: versionWasUpgradedForQArt });
   } else if (version > 0) {
-    versionToUse = version;
-    log.info('Using specified QR version', { version });
+    if (version < MIN_QART_VERSION) {
+      log.warn('Specified version is below MIN_QART_VERSION, upgrading for reliable scanning', {
+        requestedVersion: version,
+        minQArtVersion: MIN_QART_VERSION,
+        reason: 'Lower versions have insufficient ECC capacity for real phone cameras',
+      });
+      versionToUse = MIN_QART_VERSION;
+      versionWasUpgradedForQArt = true;
+    } else {
+      versionToUse = version;
+    }
+    log.info('Using QR version for QR-Art', { version: versionToUse, wasUpgraded: versionWasUpgradedForQArt });
   } else {
     // Will be calculated after suffix determination
+    // calculateOptimalVersionAndSuffix enforces MIN_QART_VERSION internally
     versionToUse = 0;
   }
 
@@ -2088,6 +2114,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // If version is auto, calculate with padding slack
     if (versionToUse === 0) {
       versionToUse = calculateVersionForSlack(data.length, ecc, minPadCodewords);
+      // Enforce MIN_QART_VERSION for reliable scanning
+      if (versionToUse < MIN_QART_VERSION) {
+        log.warn('Calculated version is below MIN_QART_VERSION, upgrading for reliable scanning', {
+          calculatedVersion: versionToUse,
+          minQArtVersion: MIN_QART_VERSION,
+          reason: 'Lower versions have insufficient ECC capacity for real phone cameras',
+        });
+        versionToUse = MIN_QART_VERSION;
+        versionWasUpgradedForQArt = true;
+      }
     }
     
     log.warn('No suffix - only padding codewords controllable (limited QR-Art control)', {
@@ -2106,6 +2142,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     suffixLength: actualSuffix.length,
     fullEncodedLength: encodedData.length,
     versionToUse,
+    versionWasUpgradedForQArt,
+    minQArtVersion: MIN_QART_VERSION,
     ecc,
     strictSuffix,
     strategy: 'HYBRID - original data protected, suffix + padding controllable',

@@ -282,9 +282,9 @@ describe('QR-Art Format Info Validation', () => {
   });
 
   describe('MAX_SUFFIX_LENGTH Constraint', () => {
-    it('MAX_SUFFIX_LENGTH is capped at 46', () => {
-      // MAX_SUFFIX_LENGTH should be 46 (reduced from 64 to reduce entropy pressure)
-      expect(MAX_SUFFIX_LENGTH).toBe(46);
+    it('MAX_SUFFIX_LENGTH is capped at 32', () => {
+      // MAX_SUFFIX_LENGTH should be 32 (reduced from 46 to improve real-world scannability)
+      expect(MAX_SUFFIX_LENGTH).toBe(32);
     });
 
     it('MIN_ECC_HEADROOM_BYTES is positive', () => {
