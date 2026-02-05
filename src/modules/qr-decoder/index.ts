@@ -14,5 +14,5 @@ export { decodeQR as decodeQRLegacy } from './decode-qr';
 // Main decoder function
 export { decodeQR } from './decoder-adapter';
 // Types
-export type { DecodeResult, FinderPatternResult, Point } from './types';
+export type { DecodeResult, DecodedSegmentInfo, FinderPatternResult, Point } from './types';
 export { ECC_LEVEL_MAP } from './types';

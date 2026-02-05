@@ -19,8 +19,10 @@ import {
 } from '../qr-spec';
 import {
   ALPHANUMERIC_CHARS,
+  type DecodedSegmentInfo,
   MODE_ALPHANUMERIC,
   MODE_BYTE,
+  MODE_ECI,
   MODE_KANJI,
   MODE_NUMERIC,
   MODE_TERMINATOR,
@@ -811,6 +813,27 @@ export interface DecodedDataResult {
   encodingMode: DecodedEncodingMode;
   /** Whether the decode completed successfully without truncation */
   valid: boolean;
+  /** Whether the decode was structurally valid (no extra non-terminator segments after primary) */
+  structurallyValid: boolean;
+  /** Number of segments decoded (including terminator if found) */
+  segmentCount: number;
+  /** Detailed info for each decoded segment */
+  segments: DecodedSegmentInfo[];
+}
+
+/**
+ * Helper to convert mode indicator to mode name
+ */
+function modeToName(mode: number): DecodedSegmentInfo['modeName'] {
+  switch (mode) {
+    case MODE_NUMERIC: return 'numeric';
+    case MODE_ALPHANUMERIC: return 'alphanumeric';
+    case MODE_BYTE: return 'byte';
+    case MODE_KANJI: return 'kanji';
+    case MODE_ECI: return 'eci';
+    case MODE_TERMINATOR: return 'terminator';
+    default: return 'unknown';
+  }
 }
 
 export function decodeDataCodewordsDetailed(
@@ -821,8 +844,12 @@ export function decodeDataCodewordsDetailed(
   let text = '';
   const outBytes: number[] = [];
   const modesSeen = new Set<DecodedEncodingMode>();
-  let segmentCount = 0;
+  const segments: DecodedSegmentInfo[] = [];
+  let segmentIndex = 0;
   let valid = true; // Track whether decode completed without errors
+  let foundTerminator = false;
+  let primarySegmentEnded = false; // Track if we've finished decoding primary content
+  let hasExtraSegmentsAfterPrimary = false; // Track if there are non-terminator segments after primary
 
   qrDecoderLog.trace('decode: Starting data decode (detailed)', {
     dataCodewords: dataCodewords.length,
@@ -830,11 +857,22 @@ export function decodeDataCodewordsDetailed(
   });
 
   while (bits.available() >= 4) {
+    const bitOffset = (dataCodewords.length * 8) - bits.available();
     const mode = bits.read(4);
-    segmentCount++;
 
     if (mode === MODE_TERMINATOR) {
-      qrDecoderLog.trace('decode: Found terminator', { segmentCount });
+      qrDecoderLog.trace('decode: Found terminator', { segmentIndex: segmentIndex + 1 });
+      segments.push({
+        index: segmentIndex,
+        mode,
+        modeName: 'terminator',
+        charCount: 0,
+        decodedLength: 0,
+        valid: true,
+        bitOffset,
+      });
+      segmentIndex++;
+      foundTerminator = true;
       break;
     }
 
@@ -845,7 +883,22 @@ export function decodeDataCodewordsDetailed(
         charCountBits,
         available: bits.available(),
       });
+      segments.push({
+        index: segmentIndex,
+        mode,
+        modeName: modeToName(mode),
+        charCount: -1, // Unknown - couldn't read
+        decodedLength: 0,
+        valid: false,
+        bitOffset,
+      });
+      segmentIndex++;
       valid = false;
+      
+      // If we already had a successful primary segment, this is an extra invalid segment
+      if (primarySegmentEnded) {
+        hasExtraSegmentsAfterPrimary = true;
+      }
       break;
     }
 
@@ -855,8 +908,24 @@ export function decodeDataCodewordsDetailed(
     if (charCount > 7000) {
       qrDecoderLog.debug('decode: Unreasonable char count, aborting - decode invalid', {
         charCount,
+        mode,
       });
+      segments.push({
+        index: segmentIndex,
+        mode,
+        modeName: modeToName(mode),
+        charCount,
+        decodedLength: 0,
+        valid: false,
+        bitOffset,
+      });
+      segmentIndex++;
       valid = false;
+      
+      // If we already had a successful primary segment, this is an extra invalid segment
+      if (primarySegmentEnded) {
+        hasExtraSegmentsAfterPrimary = true;
+      }
       break;
     }
 
@@ -938,14 +1007,39 @@ export function decodeDataCodewordsDetailed(
       }
     }
 
+    // Track segment info
+    const decodedLength = modeTag === 'kanji' ? decodedBytes.length / 2 : 
+                          modeTag === 'byte' ? decodedBytes.length : 
+                          decodedText.length;
+    segments.push({
+      index: segmentIndex,
+      mode,
+      modeName: modeToName(mode),
+      charCount,
+      decodedLength,
+      valid: segmentValid,
+      bitOffset,
+    });
+    segmentIndex++;
+
     if (!segmentValid) {
       valid = false;
+      // If we already had a successful primary segment, this is an extra invalid segment
+      if (primarySegmentEnded) {
+        hasExtraSegmentsAfterPrimary = true;
+      }
+    } else {
+      // Mark that we've finished at least one successful segment
+      // For simple QR codes (single byte segment), we set this after the first valid segment
+      if (modeTag !== 'unknown') {
+        primarySegmentEnded = true;
+      }
     }
 
     if (modeTag !== 'unknown') modesSeen.add(modeTag);
     text += decodedText;
 
-    qrDecoderLog.trace(`decode: Decoded segment ${segmentCount}`, {
+    qrDecoderLog.trace(`decode: Decoded segment ${segmentIndex}`, {
       mode: modeTag,
       charCount,
       textLen: decodedText.length,
@@ -969,8 +1063,19 @@ export function decodeDataCodewordsDetailed(
     return 'unknown';
   })();
 
+  // Structural validity:
+  // - All segments must be valid (no truncation)
+  // - Must end with terminator OR run out of bits cleanly
+  // - No extra non-terminator segments after primary data (catches fake Kanji segments)
+  const structurallyValid = valid && !hasExtraSegmentsAfterPrimary;
+
   qrDecoderLog.trace('decode: Data decode complete', {
     valid,
+    structurallyValid,
+    foundTerminator,
+    hasExtraSegmentsAfterPrimary,
+    segmentCount: segments.length,
+    segmentModes: segments.map(s => s.modeName),
     textLength: text.length,
     bytesLength: outBytes.length,
     encodingMode,
@@ -981,6 +1086,9 @@ export function decodeDataCodewordsDetailed(
     bytes: new Uint8Array(outBytes),
     encodingMode,
     valid,
+    structurallyValid,
+    segmentCount: segments.length,
+    segments,
   };
 }
 
