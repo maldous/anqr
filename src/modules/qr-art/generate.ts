@@ -45,6 +45,7 @@ import { mapImageToTargetsSupersampled } from './image-utils';
 import {
   binarySearchMaxVectors,
   flattenAndOrderSelections,
+  unflattenSelections,
 } from './scan-fallback';
 import {
   buildFullBasis,
@@ -53,6 +54,7 @@ import {
   computeECC,
   generateDeterministicSuffix,
   hashStringToSeed,
+  MAX_SAFE_VECTOR_PERCENT,
   MAX_SUFFIX_LENGTH,
   MIN_QART_VERSION,
 } from './rs-basis';
@@ -2815,14 +2817,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     onProgress?.('Selecting basis vectors', 70);
 
     // Step 7: Select which vectors to apply (per-block)
-    const blockSelections = selectBasisVectorsForTarget(
+    let blockSelections = selectBasisVectorsForTarget(
       elimination,
       targets,
       baseMatrix,
       moduleCount
     );
 
-    const totalSelected = blockSelections.reduce(
+    let totalSelected = blockSelections.reduce(
       (sum, s) => sum + s.selectedVectorIndices.length,
       0
     );
@@ -2832,6 +2834,57 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       blocksWithSelections: blockSelections.filter((s) => s.selectedVectorIndices.length > 0)
         .length,
     });
+
+    // =========================================================================
+    // PHONE CAMERA SAFETY: Limit vectors to ensure phone scannability
+    // =========================================================================
+    // Phone cameras have less sophisticated decoders than software libraries.
+    // When QR-Art applies too many vectors, the QR may scan in software (jsQR)
+    // but fail on phone cameras. We cap the vector count to ensure compatibility.
+    //
+    // MAX_SAFE_VECTOR_PERCENT limits how many of the controllable pixels can be
+    // modified. This preserves enough of the original QR structure for phones.
+    const maxSafeVectors = Math.floor(elimination.controllablePixels * MAX_SAFE_VECTOR_PERCENT / 100);
+    let phoneCapApplied = false;
+    let originalSelectedCount = totalSelected;
+    
+    if (totalSelected > maxSafeVectors) {
+      phoneCapApplied = true;
+      
+      log.warn('PHONE SAFETY: Capping vectors for phone camera scannability', {
+        originalSelected: totalSelected,
+        maxSafeVectors,
+        maxSafePercent: `${MAX_SAFE_VECTOR_PERCENT}%`,
+        controllablePixels: elimination.controllablePixels,
+        reductionPercent: `${((1 - maxSafeVectors / totalSelected) * 100).toFixed(1)}%`,
+        note: 'Reducing vectors to ensure QR scans on phone cameras, not just software',
+      });
+      
+      // Flatten selections by importance (most important pixels first)
+      const flattenedForCap = flattenAndOrderSelections(
+        blockSelections,
+        elimination,
+        importance,
+        moduleCount
+      );
+      
+      // Keep only the most important vectors up to the safe limit
+      blockSelections = unflattenSelections(flattenedForCap, maxSafeVectors);
+      totalSelected = maxSafeVectors;
+      
+      log.info('PHONE SAFETY: Vectors capped', {
+        newSelectedCount: totalSelected,
+        keptPercent: `${((totalSelected / originalSelectedCount) * 100).toFixed(1)}%`,
+        expectedImageQualityReduction: `${((1 - totalSelected / originalSelectedCount) * 100).toFixed(1)}%`,
+      });
+    } else {
+      log.debug('PHONE SAFETY: Vector count within safe limit', {
+        selectedCount: totalSelected,
+        maxSafeVectors,
+        maxSafePercent: `${MAX_SAFE_VECTOR_PERCENT}%`,
+        utilizationPercent: `${((totalSelected / maxSafeVectors) * 100).toFixed(1)}%`,
+      });
+    }
 
     onProgress?.('Counting predicted matches', 75);
 
@@ -3584,6 +3637,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       matchPercentage: `${matchPercentage.toFixed(1)}%`,
       vectorsApplied: actualVectorsApplied,
       usedBinarySearchFallback: actualVectorsApplied < totalSelected,
+      phoneSafety: {
+        capApplied: phoneCapApplied,
+        maxSafePercent: `${MAX_SAFE_VECTOR_PERCENT}%`,
+        originalSelected: originalSelectedCount,
+        afterCap: phoneCapApplied ? totalSelected : originalSelectedCount,
+      },
       originalDataLength,
       suffixLength: actualSuffix.length,
       controllablePercent: `${actualControlPercentage.toFixed(1)}%`,
