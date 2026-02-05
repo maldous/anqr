@@ -15,6 +15,7 @@
 
 import { createLogger } from '../../lib/logger';
 import { decodeQR, type DecodedSegmentInfo } from '../qr-decoder';
+import { readFormatInfo as decoderReadFormatInfo } from '../qr-decoder/format';
 import { qrcode } from '../qr-encoder';
 import { qrBitBuffer } from '../qr-encoder/bit-buffer';
 import { qr8BitByte } from '../qr-encoder/data-modes';
@@ -299,12 +300,23 @@ function performSemanticValidation(
     };
   }
   
-  // Step 5: If suffix is expected, verify total length matches
-  if (expectedSuffix !== undefined) {
-    const expectedTotalLength = originalData.length + expectedSuffix.length;
-    // Note: We don't require exact suffix match (that's the point of QR-Art!)
-    // But we should have SOME data after the original
-    // For now, just log the suffix status
+  // Step 5: If suffix is expected, validate suffix charset
+  // The suffix CAN be modified by QR-Art, but should remain URL-safe
+  if (expectedSuffix !== undefined && decoded.length > originalData.length) {
+    const actualSuffix = decoded.slice(originalData.length);
+    const charsetValidation = validateSuffixCharset(actualSuffix);
+    
+    if (!charsetValidation.valid) {
+      return {
+        valid: false,
+        reason: 'SUFFIX_CHARSET_INVALID',
+        description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
+        details: {
+          mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
+          actualByte: charsetValidation.invalidCharCode,
+        },
+      };
+    }
   }
   
   // Step 6: Verify structural validity (no extra fake segments after primary data)
@@ -374,7 +386,54 @@ export type RejectionReason =
   | 'TERMINATOR_CORRUPT'
   | 'BLOCK_BUDGET_EXCEEDED'
   | 'RS_LINEARITY_BROKEN'
-  | 'PROTECTED_BYTE_VIOLATION';
+  | 'PROTECTED_BYTE_VIOLATION'
+  | 'SUFFIX_CHARSET_INVALID';
+
+/**
+ * Valid characters for URL fragment suffix in HYBRID mode.
+ * This is a strict subset of URL-safe characters that should be
+ * preserved through QR encoding/decoding without corruption.
+ * 
+ * Includes: A-Z, a-z, 0-9, and limited special chars: - _ . ~
+ * The '#' character is NOT included as it's added as the prefix.
+ */
+export const VALID_SUFFIX_CHARS = new Set(
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~'.split('')
+);
+
+/**
+ * Validate that a suffix contains only URL-safe printable characters.
+ * Non-printable or non-URL-safe bytes indicate corruption.
+ * 
+ * @param suffix The suffix string to validate (without leading #)
+ * @returns Validation result with details
+ */
+export function validateSuffixCharset(suffix: string): {
+  valid: boolean;
+  invalidCharIndex?: number;
+  invalidCharCode?: number;
+  invalidChar?: string;
+} {
+  // Skip the leading '#' if present
+  const toValidate = suffix.startsWith('#') ? suffix.slice(1) : suffix;
+  
+  for (let i = 0; i < toValidate.length; i++) {
+    const char = toValidate[i];
+    const charCode = toValidate.charCodeAt(i);
+    
+    // Check if character is in valid set
+    if (!VALID_SUFFIX_CHARS.has(char)) {
+      return {
+        valid: false,
+        invalidCharIndex: i,
+        invalidCharCode: charCode,
+        invalidChar: charCode >= 32 && charCode < 127 ? char : `\\x${charCode.toString(16).padStart(2, '0')}`,
+      };
+    }
+  }
+  
+  return { valid: true };
+}
 
 /**
  * Result of semantic validation
@@ -487,6 +546,9 @@ export interface EncoderDerivedLayout {
 /**
  * Extract format info bits from a QR matrix
  * Format info is stored in two places for redundancy
+ * 
+ * NOTE: This is a legacy implementation. Prefer using `readFormatInfoFromDecoder()`
+ * which uses the decoder's proven format parser.
  */
 export function extractFormatInfo(matrix: boolean[][]): {
   vertical: number;
@@ -535,6 +597,22 @@ export function extractFormatInfo(matrix: boolean[][]): {
 }
 
 /**
+ * Read format info using the decoder's proven format parser.
+ * This is the PREFERRED method for reading format info as it uses
+ * BCH error correction and handles edge cases correctly.
+ * 
+ * @param matrix The QR matrix to read format info from
+ * @returns FormatInfo with eccLevel (0-3) and maskPattern (0-7), or null if unreadable
+ */
+export function readFormatInfoFromDecoder(matrix: boolean[][]): {
+  eccLevel: number;
+  maskPattern: number;
+} | null {
+  const moduleCount = matrix.length;
+  return decoderReadFormatInfo(matrix, moduleCount);
+}
+
+/**
  * Map ECC numeric value (from format info) to ECCLevel character
  * Format info encoding: L=1, M=0, Q=3, H=2
  * 
@@ -565,6 +643,10 @@ export function eccNumericToLevel(eccNumeric: number): ECCLevel {
  * The format info is XORed with 0x5412 before placement to ensure
  * the pattern is never all-zeros (which would be hard to detect).
  * 
+ * UPDATED: Now uses the decoder's proven format parser as the primary method,
+ * with legacy extraction as fallback. This ensures consistency between
+ * encoder and decoder format info handling.
+ * 
  * Exported for use in validation functions.
  * 
  * @param matrix The QR matrix to extract mask from
@@ -578,6 +660,29 @@ export function extractMaskFromMatrix(matrix: boolean[][]): {
   rawVertical: number;
   rawHorizontal: number;
 } {
+  // FIRST: Try using the decoder's proven format parser
+  // This uses BCH error correction and handles edge cases correctly
+  const decoderResult = readFormatInfoFromDecoder(matrix);
+  
+  if (decoderResult !== null) {
+    // Decoder successfully parsed format info
+    // Get raw bits for diagnostic info (legacy method)
+    const legacyFormatInfo = extractFormatInfo(matrix);
+    
+    return {
+      mask: decoderResult.maskPattern,
+      eccLevel: decoderResult.eccLevel,
+      isValid: true,  // Decoder parsed it successfully with BCH correction
+      formatInfoMatch: legacyFormatInfo.match,
+      rawVertical: legacyFormatInfo.vertical,
+      rawHorizontal: legacyFormatInfo.horizontal,
+    };
+  }
+  
+  // FALLBACK: Use legacy extraction if decoder failed
+  // This shouldn't happen for valid QR codes, but provides backwards compatibility
+  log.warn('Decoder format parser failed, falling back to legacy extraction');
+  
   // The format info XOR mask (10101000010010 in binary)
   const FORMAT_INFO_MASK = 0x5412;
   

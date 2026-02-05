@@ -23,6 +23,7 @@ import {
   type FormatVerificationResult,
   type ECCLevel,
   verifyMatrixFormatInfo,
+  validateSuffixCharset,
 } from './generate';
 
 const log = createLogger('QART');
@@ -32,7 +33,7 @@ const log = createLogger('QART');
  */
 interface BinarySearchValidationResult {
   valid: boolean;
-  reason?: RejectionReason;
+  reason?: RejectionReason | 'SUFFIX_CHARSET_INVALID';
   description?: string;
   mismatchIndex?: number;
   expectedByte?: number;
@@ -47,6 +48,7 @@ interface BinarySearchValidationResult {
  * 1. Decoded data must exist
  * 2. Decoded data length >= original data length
  * 3. First N bytes must match exactly (N = original data length)
+ * 4. Suffix (if present) must contain only URL-safe characters
  * 
  * @param decoded The decoded string from scanning
  * @param originalData The original data that must be preserved
@@ -85,6 +87,22 @@ function validateByteExactPrefix(
         mismatchIndex: i,
         expectedByte,
         actualByte,
+      };
+    }
+  }
+  
+  // Validate suffix charset if there is a suffix
+  if (decoded.length > originalData.length) {
+    const suffix = decoded.slice(originalData.length);
+    const charsetValidation = validateSuffixCharset(suffix);
+    
+    if (!charsetValidation.valid) {
+      return {
+        valid: false,
+        reason: 'SUFFIX_CHARSET_INVALID',
+        description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
+        mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
+        actualByte: charsetValidation.invalidCharCode,
       };
     }
   }
