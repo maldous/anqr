@@ -37,6 +37,12 @@ import { gexp, qrPolynomial } from '../qr-encoder/math';
 import { QRErrorCorrectionLevel, QRMode } from '../qr-encoder/types';
 import { getLengthInBits } from '../qr-encoder/utils';
 import { type ECCLevel, getRSBlockInfo, type RSBlockInfo } from './bit-mapping';
+import {
+  type BitRange,
+  type SemanticBitLayout,
+  getSemanticBitLayout,
+  mapAllowedRangesToBlocks,
+} from './semantic-layout';
 
 const log = createLogger('QART');
 
@@ -356,14 +362,14 @@ export function calculateHeaderBitsPerBlock(
  * @param blockInfo The RS block info
  * @param rsBlockIndex Index of this block
  * @param globalBitOffset Starting global bit index for this block's data
- * @param protectedBitsInBlock Number of protected bits at the START of this block to skip
+ * @param allowedLocalBits Set of local bit indices that are allowed to be modified (if undefined, all bits allowed)
  * @returns Array of basis vectors for this block
  */
 export function buildBlockBasis(
   blockInfo: RSBlockInfo,
   rsBlockIndex: number,
   globalBitOffset: number,
-  protectedBitsInBlock: number = 0
+  allowedLocalBits?: Set<number>
 ): RSBasisVector[] {
   const { dataCount, eccCount, totalCount } = blockInfo;
   const vectors: RSBasisVector[] = [];
@@ -376,9 +382,9 @@ export function buildBlockBasis(
       // Calculate the local bit index within this block (0-indexed from start of block)
       const localBitIndex = byteIdx * 8 + (7 - bitIdx);
 
-      // Skip protected bits (content) at the start of this block to preserve message
-      // Only create vectors for padding bits that can be safely modified
-      if (localBitIndex < protectedBitsInBlock) {
+      // If allowedLocalBits is provided, only create vectors for allowed bits
+      // This is Strategy 2: only padding codewords are controllable
+      if (allowedLocalBits !== undefined && !allowedLocalBits.has(localBitIndex)) {
         continue;
       }
 
@@ -413,23 +419,28 @@ export function buildBlockBasis(
  * Build the complete RS basis for a version/ECC combination
  * This creates one basis vector per controllable data bit across all RS blocks
  *
- * IMPORTANT: Content Protection
- * When dataLength is provided, we protect the ENTIRE content (header + data + terminator)
- * and only create vectors for padding bits. This preserves the decoded message.
+ * STRATEGY 2: Semantic Bit Range Protection
+ * When allowedBitRanges is provided, ONLY those bit ranges can be modified.
+ * This should be the padding codewords region from SemanticBitLayout.
  *
- * When dataLength is not provided (legacy mode), we only protect the header bits.
- * WARNING: Legacy mode allows modifying content, which corrupts the decoded message!
+ * Legacy mode (no ranges): Creates vectors for all data bits (DANGEROUS - corrupts message!)
  *
  * @param version QR version (1-40)
  * @param ecc Error correction level
- * @param dataLength Optional: length of data string for full content protection
+ * @param allowedBitRanges Optional: explicit bit ranges that are allowed to be modified
+ *                          (in pre-interleaved stream coordinates)
  * @returns Complete RS basis
  */
-export function buildFullBasis(version: number, ecc: ECCLevel, dataLength?: number): RSBasis {
-  // Include dataLength in cache key for proper caching
-  const cacheKey = dataLength !== undefined 
-    ? `${version}-${ecc}-${dataLength}` 
-    : `${version}-${ecc}`;
+export function buildFullBasis(
+  version: number,
+  ecc: ECCLevel,
+  allowedBitRanges?: BitRange[]
+): RSBasis {
+  // Build cache key from allowed ranges
+  const rangesKey = allowedBitRanges 
+    ? allowedBitRanges.map(r => `${r.startBit}-${r.endBit}`).join(',')
+    : 'all';
+  const cacheKey = `${version}-${ecc}-${rangesKey}`;
   const cached = basisCache.get(cacheKey);
   if (cached) return cached;
 
@@ -440,72 +451,70 @@ export function buildFullBasis(version: number, ecc: ECCLevel, dataLength?: numb
   let totalDataBits = 0;
   let totalEccBits = 0;
 
-  // Calculate how many bits to protect
-  // With dataLength: protect header + content + terminator (full content protection)
-  // Without dataLength: protect only header (legacy mode - corrupts message!)
-  let protectedBitCount: number;
-  let protectionMode: 'full-content' | 'header-only';
-  
-  if (dataLength !== undefined) {
-    // Full content protection: header + data + terminator, rounded up to byte boundary
-    const contentBits = getContentBitCount(version, dataLength);
-    protectedBitCount = Math.ceil(contentBits / 8) * 8; // Round up to byte boundary
-    protectionMode = 'full-content';
-  } else {
-    // Legacy mode: only protect header
-    protectedBitCount = getHeaderBitCount(version);
-    protectionMode = 'header-only';
-    log.warn('Building RS basis in LEGACY MODE (header-only protection). ' +
-             'This will corrupt the decoded message! Pass dataLength for content protection.');
-  }
-
-  // Calculate how many protected bits are in EACH block based on sequential data splitting
-  const protectedBitsPerBlock = calculateProtectedBitsPerBlock(blocks, protectedBitCount);
-
-  let totalSkippedVectors = 0;
-
   // Calculate total data bits first for capacity analysis
   for (const block of blocks) {
     totalDataBits += block.dataCount * 8;
     totalEccBits += block.eccCount * 8;
   }
 
-  const controllableBits = totalDataBits - protectedBitCount;
-  const controlPercentage = totalDataBits > 0 ? (controllableBits / totalDataBits) * 100 : 0;
+  // Map allowed ranges to per-block allowed bits (handles interleaving!)
+  let blockAllowedBits: Map<number, Set<number>> | undefined;
+  let controllableBits: number;
+  let protectionMode: 'semantic-ranges' | 'legacy-all';
 
-  log.info('Building RS basis with content protection', {
-    version,
-    protectionMode,
-    protectedBitCount,
-    totalDataBits,
-    controllableBits,
-    controlPercentage: `${controlPercentage.toFixed(1)}%`,
-    numBlocks: blocks.length,
-    protectedBitsPerBlock,
-  });
+  if (allowedBitRanges !== undefined && allowedBitRanges.length > 0) {
+    // Strategy 2: Only specific bit ranges are allowed
+    blockAllowedBits = mapAllowedRangesToBlocks(allowedBitRanges, version, ecc);
+    
+    // Count total allowed bits
+    controllableBits = 0;
+    for (const allowedSet of blockAllowedBits.values()) {
+      controllableBits += allowedSet.size;
+    }
+    protectionMode = 'semantic-ranges';
+    
+    log.info('Building RS basis with SEMANTIC RANGE protection (Strategy 2)', {
+      version,
+      ecc,
+      allowedRanges: allowedBitRanges.map(r => `${r.startBit}-${r.endBit}`),
+      totalDataBits,
+      controllableBits,
+      controlPercentage: `${((controllableBits / totalDataBits) * 100).toFixed(1)}%`,
+      numBlocks: blocks.length,
+    });
+  } else {
+    // Legacy mode: all bits allowed (DANGEROUS!)
+    controllableBits = totalDataBits;
+    protectionMode = 'legacy-all';
+    log.warn('Building RS basis in LEGACY MODE (all bits allowed). ' +
+             'This WILL corrupt the decoded message! Pass allowedBitRanges for safe QR-Art.');
+  }
+
+  const controlPercentage = totalDataBits > 0 ? (controllableBits / totalDataBits) * 100 : 0;
 
   // Warn if control percentage is very low
   if (controllableBits <= 0) {
     log.warn('ZERO controllable bits! QR-Art cannot modify any pixels.', {
-      suggestion: 'Add a suffix to the data (e.g., ?q=xxxx) to create controllable bits',
+      suggestion: 'Use a larger QR version to create more padding codewords',
     });
   } else if (controlPercentage < 10) {
     log.warn('Very low controllable bit percentage. QR-Art effect will be minimal.', {
       controllableBits,
       controlPercentage: `${controlPercentage.toFixed(1)}%`,
-      suggestion: 'Add a longer suffix or use a larger QR version',
+      suggestion: 'Use a larger QR version for more padding codewords',
     });
   }
 
+  let totalSkippedVectors = 0;
   globalBitOffset = 0; // Reset for actual vector building
   
   for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
     const block = blocks[blockIdx];
-    const protectedBitsInBlock = protectedBitsPerBlock[blockIdx];
+    const allowedBitsForBlock = blockAllowedBits?.get(blockIdx);
     const maxPossibleVectors = block.dataCount * 8;
-    const blockVectors = buildBlockBasis(block, blockIdx, globalBitOffset, protectedBitsInBlock);
+    const blockVectors = buildBlockBasis(block, blockIdx, globalBitOffset, allowedBitsForBlock);
 
-    // Track how many vectors were skipped due to content protection
+    // Track how many vectors were skipped due to protection
     const skippedInBlock = maxPossibleVectors - blockVectors.length;
     totalSkippedVectors += skippedInBlock;
 
@@ -534,7 +543,6 @@ export function buildFullBasis(version: number, ecc: ECCLevel, dataLength?: numb
     skippedVectors: totalSkippedVectors,
     controllableVectors: vectors.length,
     expectedControllable: controllableBits,
-    protectedBitsPerBlock,
   });
 
   basisCache.set(cacheKey, basis);
