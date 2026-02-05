@@ -200,20 +200,23 @@ export function calculateVersionForSlack(
 }
 
 /**
- * Map allowed bit ranges from the pre-interleaved stream to per-block allowed bits.
+ * Map allowed bit ranges from the LINEAR BUFFER to per-block allowed bits.
  *
- * The QR data stream is interleaved across RS blocks before placement:
- * - Interleaved byte 0 = Block 0 byte 0
- * - Interleaved byte 1 = Block 1 byte 0 (if 2+ blocks)
- * - etc.
+ * CRITICAL FIX: The input allowedRanges are in LINEAR BUFFER coordinates,
+ * NOT interleaved coordinates! The linear buffer is filled sequentially,
+ * then SPLIT into blocks:
+ *   - Block 0 gets linear bytes [0, block0.dataCount)
+ *   - Block 1 gets linear bytes [block0.dataCount, block0.dataCount + block1.dataCount)
+ *   - etc.
  *
- * This function traces which bytes in each block correspond to the allowed
- * bit ranges in the pre-interleaved stream.
+ * This function maps linear buffer bit positions to per-block local bit positions.
+ * Interleaving happens AFTER block splitting (during matrix placement), so we
+ * must NOT simulate interleaving here.
  *
- * @param allowedRanges Allowed bit ranges in pre-interleaved stream
+ * @param allowedRanges Allowed bit ranges in LINEAR BUFFER coordinates
  * @param version QR version
  * @param ecc Error correction level
- * @returns Map of blockIndex -> array of allowed local bit indices
+ * @returns Map of blockIndex -> set of allowed local bit indices
  */
 export function mapAllowedRangesToBlocks(
   allowedRanges: BitRange[],
@@ -223,13 +226,25 @@ export function mapAllowedRangesToBlocks(
   const blocks = getRSBlockInfo(version, ecc);
   const numBlocks = blocks.length;
 
-  // Build a set of allowed bit indices (in pre-interleaved stream)
-  const allowedBits = new Set<number>();
-  for (const range of allowedRanges) {
-    for (let bit = range.startBit; bit < range.endBit; bit++) {
-      allowedBits.add(bit);
-    }
+  // Calculate block byte boundaries in the LINEAR buffer
+  // Block 0 starts at offset 0, Block 1 starts at block0.dataCount, etc.
+  const blockStartBytes: number[] = [];
+  const blockEndBytes: number[] = [];
+  let offset = 0;
+  for (const block of blocks) {
+    blockStartBytes.push(offset);
+    blockEndBytes.push(offset + block.dataCount);
+    offset += block.dataCount;
   }
+  const totalLinearBytes = offset;
+
+  log.debug('Block boundaries in linear buffer', {
+    numBlocks,
+    blockStartBytes,
+    blockEndBytes,
+    totalLinearBytes,
+    blockDataCounts: blocks.map((b) => b.dataCount),
+  });
 
   // Result: per-block set of allowed local bit indices
   const blockAllowedBits = new Map<number, Set<number>>();
@@ -237,45 +252,73 @@ export function mapAllowedRangesToBlocks(
     blockAllowedBits.set(i, new Set());
   }
 
-  // Find max data count for interleaving
-  const maxDataCount = Math.max(...blocks.map((b) => b.dataCount));
+  // For each allowed range, map linear buffer positions to per-block positions
+  for (const range of allowedRanges) {
+    log.debug('Processing allowed range', {
+      startBit: range.startBit,
+      endBit: range.endBit,
+      startByte: Math.floor(range.startBit / 8),
+      endByte: Math.ceil(range.endBit / 8),
+    });
 
-  // Simulate the interleaving pattern
-  let interleavedByteIndex = 0;
+    for (let linearBit = range.startBit; linearBit < range.endBit; linearBit++) {
+      const linearByte = Math.floor(linearBit / 8);
+      const bitInByte = linearBit % 8;  // 0 = MSB (first bit in stream)
 
-  for (let bytePos = 0; bytePos < maxDataCount; bytePos++) {
-    for (let blockIdx = 0; blockIdx < numBlocks; blockIdx++) {
-      if (bytePos < blocks[blockIdx].dataCount) {
-        // This block contributes a byte at this interleaved position
-        // Check which bits of this interleaved byte are allowed
-        const interleavedBitStart = interleavedByteIndex * 8;
+      // Skip if beyond total buffer
+      if (linearByte >= totalLinearBytes) {
+        continue;
+      }
 
-        for (let bitInByte = 0; bitInByte < 8; bitInByte++) {
-          const interleavedBitIndex = interleavedBitStart + bitInByte;
-          if (allowedBits.has(interleavedBitIndex)) {
-            // This bit is allowed - map to local block position
-            // Local bit index = bytePos * 8 + bitInByte
-            const localBitIndex = bytePos * 8 + bitInByte;
-            blockAllowedBits.get(blockIdx)!.add(localBitIndex);
-          }
+      // Find which block this linear byte belongs to
+      let blockIdx = -1;
+      let localByte = -1;
+      for (let b = 0; b < numBlocks; b++) {
+        if (linearByte >= blockStartBytes[b] && linearByte < blockEndBytes[b]) {
+          blockIdx = b;
+          localByte = linearByte - blockStartBytes[b];
+          break;
         }
+      }
 
-        interleavedByteIndex++;
+      if (blockIdx >= 0 && localByte >= 0) {
+        // Local bit index uses same convention: byteIndex * 8 + bitInByte
+        // where bitInByte 0 = MSB (matches buildBlockBasis convention)
+        const localBitIndex = localByte * 8 + bitInByte;
+        blockAllowedBits.get(blockIdx)!.add(localBitIndex);
       }
     }
   }
 
-  // Log the mapping
+  // Log the mapping results with details
+  let totalAllowedBits = 0;
   for (const [blockIdx, allowedSet] of blockAllowedBits) {
-    if (allowedSet.size > 0) {
-      log.debug('Block allowed bits mapped', {
-        blockIndex: blockIdx,
-        allowedBitCount: allowedSet.size,
-        allowedByteCount: Math.ceil(allowedSet.size / 8),
-        blockDataBytes: blocks[blockIdx].dataCount,
-      });
-    }
+    totalAllowedBits += allowedSet.size;
+    
+    // Find the range of allowed local bits for logging
+    const sortedBits = Array.from(allowedSet).sort((a, b) => a - b);
+    const minBit = sortedBits.length > 0 ? sortedBits[0] : -1;
+    const maxBit = sortedBits.length > 0 ? sortedBits[sortedBits.length - 1] : -1;
+    
+    log.info('Block allowed bits mapped (LINEAR algorithm)', {
+      blockIndex: blockIdx,
+      allowedBitCount: allowedSet.size,
+      allowedByteCount: Math.ceil(allowedSet.size / 8),
+      blockDataBytes: blocks[blockIdx].dataCount,
+      blockTotalBits: blocks[blockIdx].dataCount * 8,
+      localBitRange: minBit >= 0 ? `${minBit} - ${maxBit}` : 'none',
+      localByteRange: minBit >= 0 ? `${Math.floor(minBit / 8)} - ${Math.floor(maxBit / 8)}` : 'none',
+      linearByteRange: `${blockStartBytes[blockIdx]} - ${blockEndBytes[blockIdx] - 1}`,
+    });
   }
+
+  log.info('Total allowed bits across all blocks', {
+    totalAllowedBits,
+    numBlocks,
+    inputRanges: allowedRanges.map((r) => `${r.startBit}-${r.endBit}`),
+    expectedBits: allowedRanges.reduce((sum, r) => sum + (r.endBit - r.startBit), 0),
+    matches: totalAllowedBits === allowedRanges.reduce((sum, r) => sum + (r.endBit - r.startBit), 0),
+  });
 
   return blockAllowedBits;
 }

@@ -373,20 +373,37 @@ export function buildBlockBasis(
 ): RSBasisVector[] {
   const { dataCount, eccCount, totalCount } = blockInfo;
   const vectors: RSBasisVector[] = [];
+  
+  // Track statistics for logging
+  let skippedCount = 0;
+  let createdCount = 0;
+  let firstCreatedLocalBit = -1;
+  let lastCreatedLocalBit = -1;
 
   // For each data bit, create a basis vector
   for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
     for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
+      // dataBitIndex is the global index (used for tracking, not protection)
       const dataBitIndex = globalBitOffset + byteIdx * 8 + (7 - bitIdx);
 
       // Calculate the local bit index within this block (0-indexed from start of block)
+      // Convention: localBitIndex 0 = MSB of byte 0, localBitIndex 7 = LSB of byte 0
+      // This matches the linear buffer convention where bit 0 is the first bit written (MSB)
       const localBitIndex = byteIdx * 8 + (7 - bitIdx);
 
       // If allowedLocalBits is provided, only create vectors for allowed bits
       // This is Strategy 2: only padding codewords are controllable
       if (allowedLocalBits !== undefined && !allowedLocalBits.has(localBitIndex)) {
+        skippedCount++;
         continue;
       }
+
+      // Track created range
+      if (firstCreatedLocalBit < 0) {
+        firstCreatedLocalBit = localBitIndex;
+      }
+      lastCreatedLocalBit = localBitIndex;
+      createdCount++;
 
       // Create data bytes with just this one bit set
       const dataBytes = new Uint8Array(dataCount);
@@ -410,6 +427,22 @@ export function buildBlockBasis(
         pivotPixel: -1,
       });
     }
+  }
+  
+  // Log block basis creation details
+  if (allowedLocalBits !== undefined) {
+    log.debug('Block basis created with protection', {
+      blockIndex: rsBlockIndex,
+      dataBytes: dataCount,
+      totalBlockBits: dataCount * 8,
+      allowedBitsProvided: allowedLocalBits.size,
+      vectorsCreated: createdCount,
+      vectorsSkipped: skippedCount,
+      createdLocalBitRange: createdCount > 0 ? `${firstCreatedLocalBit} - ${lastCreatedLocalBit}` : 'none',
+      createdByteRange: createdCount > 0 
+        ? `${Math.floor(firstCreatedLocalBit / 8)} - ${Math.floor(lastCreatedLocalBit / 8)}`
+        : 'none',
+    });
   }
 
   return vectors;
