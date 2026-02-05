@@ -1156,6 +1156,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
             ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
             maskPattern:
               typeof debouncedConfig.maskPattern === 'number' ? debouncedConfig.maskPattern : -1,
+            // IMPORTANT: strictSuffix=false allows arbitrary byte values in the suffix after '#'
+            // This maximizes QR-Art quality (~64% match vs ~51% with strictSuffix=true)
+            // The '#' character is protected separately to preserve URL structure
+            strictSuffix: false,
             onProgress: (stage, percent) => {
               log.debug('QR-Art progress', { stage, percent: `${percent}%` });
             },

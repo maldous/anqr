@@ -589,7 +589,9 @@ prefix.apply(loglevel, {
 // Set default level based on environment
 // Development: show all logs (debug and above) - maximum visibility for debugging
 // Production: show only errors - minimum noise, failures only (toggle via anqrDiag)
-const defaultLevel = import.meta.env.DEV ? 'debug' : 'error';
+// Note: Handle Node.js environment where import.meta.env may not exist
+const isDev = typeof import.meta?.env?.DEV !== 'undefined' ? import.meta.env.DEV : process.env.NODE_ENV !== 'production';
+const defaultLevel = isDev ? 'debug' : 'error';
 loglevel.setLevel(defaultLevel);
 
 // ============================================================================
