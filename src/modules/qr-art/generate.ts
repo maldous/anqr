@@ -60,6 +60,9 @@ import {
   mapAllowedRangesToBlocks,
 } from './semantic-layout';
 
+// Re-export BitRange for use in EncoderDerivedLayout
+export type { BitRange };
+
 /**
  * Helper to compare two Uint8Arrays
  */
@@ -223,6 +226,13 @@ const log = createLogger('QART');
  * - Original data (URL) is PROTECTED - cannot be modified
  * - Suffix (after #) is CONTROLLABLE - can be freely modified
  * - Padding codewords are also CONTROLLABLE
+ * 
+ * CRITICAL FIX: The mutable region is split into TWO SEPARATE BYTE-ALIGNED INTERVALS:
+ * 1. Suffix BYTES only (complete bytes, not including the boundary byte with terminator)
+ * 2. Padding codeword BYTES only (the 0xEC 0x11 pattern)
+ * 
+ * The GAP between these intervals (terminator + pad-to-byte) is PROTECTED and NEVER modified.
+ * This prevents the decoder from seeing fake mode indicators when terminator bits flip.
  */
 export interface EncoderDerivedLayout {
   /** Bits after writing mode indicator (should be 4) */
@@ -249,11 +259,36 @@ export interface EncoderDerivedLayout {
   suffixLength: number;
   /** Protected bit range (mode + charCount + original data bytes only) */
   protectedBitEnd: number;
-  /** Allowed/controllable bit range start (suffix bytes + padding codewords) */
+  
+  // =========================================================================
+  // TWO-INTERVAL SAFE MUTATION REGIONS (byte-aligned, excludes terminator)
+  // =========================================================================
+  
+  /** INTERVAL 1: Safe suffix bit range start (byte-aligned, after protection) */
+  suffixSafeStartBit: number;
+  /** INTERVAL 1: Safe suffix bit range end (byte-aligned, before terminator boundary byte) */
+  suffixSafeEndBit: number;
+  /** INTERVAL 2: Safe padding bit range start (byte-aligned, after pad-to-byte) */
+  paddingSafeStartBit: number;
+  /** INTERVAL 2: Safe padding bit range end (byte-aligned, end of data capacity) */
+  paddingSafeEndBit: number;
+  
+  /** The GAP between suffix and padding that contains terminator + pad-to-byte (PROTECTED) */
+  gapStartBit: number;
+  /** End of the protected gap */
+  gapEndBit: number;
+  /** Number of bits in the protected gap (terminator + pad-to-byte) */
+  gapBitCount: number;
+  
+  /** The two allowed bit ranges for mutation (suffix bytes + padding bytes) */
+  allowedBitRanges: BitRange[];
+  
+  // Legacy fields (kept for backwards compatibility)
+  /** @deprecated Use suffixSafeStartBit instead */
   allowedBitStart: number;
-  /** Allowed/controllable bit range end */
+  /** @deprecated Use paddingSafeEndBit instead */
   allowedBitEnd: number;
-  /** Number of controllable suffix bits (8 * suffixLength) */
+  /** Number of controllable suffix bits (in safe range only) */
   suffixBits: number;
   /** Number of controllable padding bits */
   paddingBits: number;
@@ -1031,23 +1066,65 @@ function encodeDataToBytes(
   // Calculate padding byte count
   const paddingByteCount = totalDataCount - paddingStartByte;
   
-  // HYBRID STRATEGY: Calculate controllable bits
-  // - Suffix bits: starts after original data, ends at bitsAfterData
-  // - Padding bits: starts at paddingStartByte * 8, ends at totalDataCount * 8
-  const suffixBits = suffixLength * 8;
-  const paddingBits = paddingByteCount * 8;
-  const totalControllableBits = suffixBits + paddingBits;
+  // =========================================================================
+  // CRITICAL FIX: TWO-INTERVAL SAFE MUTATION REGIONS
+  // =========================================================================
+  // 
+  // The mutable region is split into TWO SEPARATE BYTE-ALIGNED INTERVALS:
+  // 1. Suffix BYTES only (complete bytes, excludes boundary byte with terminator)
+  // 2. Padding codeword BYTES only (the 0xEC 0x11 pattern)
+  // 
+  // The GAP between these intervals (terminator + pad-to-byte) is PROTECTED.
+  // This prevents the decoder from seeing fake mode indicators when terminator bits flip.
+  //
+  // Bit layout:
+  // [Mode][CharCount][Original Data][Suffix Data][Terminator][Pad-to-byte][Padding codewords]
+  // |<---- PROTECTED ---->|         |<- GAP ->|              |<-- SAFE -->|
+  // |<------ PROTECTED -------->|   |<- SAFE SUFFIX ->|      |<- SAFE PAD ->|
+  //
+  // Key insight: The byte containing the END of suffix also contains the START of terminator.
+  // We must NOT modify that boundary byte, so suffix safe range ends at floor(bitsAfterData/8)*8.
   
   // Protection boundary: after mode + charCount + original data (rounded up to byte)
-  // We protect complete bytes, so round up to next byte boundary
   const protectedBitEnd = Math.ceil(bitsAfterOriginalData / 8) * 8;
   
-  // Allowed region starts where protection ends (suffix bytes start here or after)
-  // Since protection is byte-aligned, allowed region also starts at byte boundary
-  const allowedBitStart = protectedBitEnd;
-  const allowedBitEnd = totalDataCount * 8;
+  // INTERVAL 1: Safe suffix bytes
+  // Start: where protection ends (already byte-aligned)
+  // End: floor(bitsAfterData/8)*8 - excludes the boundary byte containing terminator
+  const suffixSafeStartBit = protectedBitEnd;
+  const suffixSafeEndBit = Math.floor(bitsAfterData / 8) * 8;
   
-  // Build the encoder-derived layout
+  // INTERVAL 2: Safe padding codeword bytes  
+  // Start: paddingStartByte * 8 (already byte-aligned, after terminator + pad-to-byte)
+  // End: total data capacity
+  const paddingSafeStartBit = paddingStartByte * 8;
+  const paddingSafeEndBit = totalDataCount * 8;
+  
+  // THE GAP: Contains terminator + pad-to-byte bits (PROTECTED, NEVER MODIFY)
+  // This is the byte(s) between suffix safe end and padding safe start
+  const gapStartBit = suffixSafeEndBit;
+  const gapEndBit = paddingSafeStartBit;
+  const gapBitCount = gapEndBit - gapStartBit;
+  
+  // Calculate actual controllable bits (only in safe ranges)
+  const suffixSafeBits = Math.max(0, suffixSafeEndBit - suffixSafeStartBit);
+  const paddingSafeBits = Math.max(0, paddingSafeEndBit - paddingSafeStartBit);
+  const totalControllableBits = suffixSafeBits + paddingSafeBits;
+  
+  // Build the two allowed bit ranges for the RS basis builder
+  const allowedBitRanges: BitRange[] = [];
+  if (suffixSafeEndBit > suffixSafeStartBit) {
+    allowedBitRanges.push({ startBit: suffixSafeStartBit, endBit: suffixSafeEndBit });
+  }
+  if (paddingSafeEndBit > paddingSafeStartBit) {
+    allowedBitRanges.push({ startBit: paddingSafeStartBit, endBit: paddingSafeEndBit });
+  }
+  
+  // Legacy fields for backwards compatibility
+  const allowedBitStart = suffixSafeStartBit;
+  const allowedBitEnd = paddingSafeEndBit;
+  
+  // Build the encoder-derived layout with TWO-INTERVAL safe ranges
   const encoderLayout: EncoderDerivedLayout = {
     bitsAfterMode,
     bitsAfterCharCount,
@@ -1060,17 +1137,29 @@ function encodeDataToBytes(
     paddingByteCount,
     originalDataLength,
     suffixLength,
-    // HYBRID protection: only mode + charCount + original data is protected
+    // Protection boundary (mode + charCount + original data)
     protectedBitEnd,
-    // Controllable: suffix bytes + padding codewords
+    // TWO-INTERVAL safe mutation ranges (byte-aligned, excludes terminator)
+    suffixSafeStartBit,
+    suffixSafeEndBit,
+    paddingSafeStartBit,
+    paddingSafeEndBit,
+    // The protected gap (terminator + pad-to-byte)
+    gapStartBit,
+    gapEndBit,
+    gapBitCount,
+    // The two allowed bit ranges for RS basis building
+    allowedBitRanges,
+    // Legacy fields for backwards compatibility
     allowedBitStart,
     allowedBitEnd,
-    suffixBits,
-    paddingBits,
+    suffixBits: suffixSafeBits,
+    paddingBits: paddingSafeBits,
   };
   
   // Log the ACTUAL semantic boundaries from the encoder (HYBRID mode)
-  log.info('ENCODER-DERIVED SEMANTIC BOUNDARIES (HYBRID mode)', {
+  // This now shows the TWO-INTERVAL safe ranges and the protected gap
+  log.info('ENCODER-DERIVED SEMANTIC BOUNDARIES (TWO-INTERVAL HYBRID mode)', {
     version,
     ecc,
     originalDataLength,
@@ -1079,7 +1168,7 @@ function encodeDataToBytes(
     checkpoints: {
       bitsAfterMode: `${bitsAfterMode} bits (mode indicator)`,
       bitsAfterCharCount: `${bitsAfterCharCount} bits (+char count)`,
-      bitsAfterOriginalData: `${bitsAfterOriginalData} bits (+original data) [PROTECTION BOUNDARY]`,
+      bitsAfterOriginalData: `${bitsAfterOriginalData} bits (+original data)`,
       bitsAfterData: `${bitsAfterData} bits (+suffix data)`,
       bitsAfterTerminator: `${bitsAfterTerminator} bits (+terminator)`,
       bitsAfterPadToByte: `${bitsAfterPadToByte} bits (+pad-to-byte)`,
@@ -1088,14 +1177,24 @@ function encodeDataToBytes(
     totalDataBytes: totalDataCount,
     paddingByteCount,
     protection: {
-      protectedBits: `0 - ${protectedBitEnd}`,
+      protectedBits: `0 - ${protectedBitEnd} (mode + charCount + original data)`,
       protectedBytes: Math.ceil(protectedBitEnd / 8),
     },
+    twoIntervalSafeRanges: {
+      interval1_suffix: suffixSafeEndBit > suffixSafeStartBit
+        ? `bits ${suffixSafeStartBit} - ${suffixSafeEndBit} (${suffixSafeBits} bits, ${suffixSafeBits / 8} bytes)`
+        : 'NONE (suffix too short or ends mid-byte)',
+      interval2_padding: paddingSafeEndBit > paddingSafeStartBit
+        ? `bits ${paddingSafeStartBit} - ${paddingSafeEndBit} (${paddingSafeBits} bits, ${paddingSafeBits / 8} bytes)`
+        : 'NONE (no padding codewords)',
+      gap_protected: gapBitCount > 0
+        ? `bits ${gapStartBit} - ${gapEndBit} (${gapBitCount} bits) [TERMINATOR + PAD-TO-BYTE - NEVER MODIFY!]`
+        : 'NONE (no gap)',
+    },
     controllable: {
-      suffixBits: `${bitsAfterOriginalData} - ${bitsAfterData} (${suffixBits} bits, ${suffixLength} chars)`,
-      paddingBits: `${paddingStartByte * 8} - ${totalDataCount * 8} (${paddingBits} bits, ${paddingByteCount} bytes)`,
       totalControllableBits,
       controllablePercent: `${((totalControllableBits / (totalDataCount * 8)) * 100).toFixed(1)}%`,
+      numIntervals: allowedBitRanges.length,
     },
   });
 
@@ -1561,11 +1660,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         protectedBytesCount: Math.ceil(encoderLayout.protectedBitEnd / 8),
         originalDataLength,
       },
+      twoIntervalRanges: {
+        interval1_suffix: `bits ${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit} (${encoderLayout.suffixBits} bits)`,
+        interval2_padding: `bits ${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit} (${encoderLayout.paddingBits} bits)`,
+        gap_protected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits) [TERMINATOR + PAD-TO-BYTE]`,
+      },
       controllable: {
-        allowedBitStart: encoderLayout.allowedBitStart,
-        allowedBitEnd: encoderLayout.allowedBitEnd,
-        suffixBits: encoderLayout.suffixBits,
-        paddingBits: encoderLayout.paddingBits,
+        totalSuffixBits: encoderLayout.suffixBits,
+        totalPaddingBits: encoderLayout.paddingBits,
+        totalControllableBits: encoderLayout.suffixBits + encoderLayout.paddingBits,
+        numIntervals: encoderLayout.allowedBitRanges.length,
       },
     });
     
@@ -1594,8 +1698,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       };
     }
     
-    // Log comprehensive semantic boundary information using ENCODER-DERIVED values (HYBRID mode)
-    log.info('ENCODER-DERIVED SEMANTIC LAYOUT (HYBRID STRATEGY)', {
+    // Log comprehensive semantic boundary information using ENCODER-DERIVED values (TWO-INTERVAL HYBRID mode)
+    log.info('ENCODER-DERIVED SEMANTIC LAYOUT (TWO-INTERVAL HYBRID STRATEGY)', {
       version: actualVersion,
       ecc,
       originalDataLength: encoderLayout.originalDataLength,
@@ -1604,8 +1708,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       encoderCheckpoints: {
         bitsAfterMode: encoderLayout.bitsAfterMode,
         bitsAfterCharCount: encoderLayout.bitsAfterCharCount,
-        bitsAfterOriginalData: `${encoderLayout.bitsAfterOriginalData} [PROTECTION BOUNDARY]`,
-        bitsAfterData: encoderLayout.bitsAfterData,
+        bitsAfterOriginalData: encoderLayout.bitsAfterOriginalData,
+        bitsAfterData: `${encoderLayout.bitsAfterData} [SUFFIX END - TERMINATOR STARTS HERE]`,
         bitsAfterTerminator: encoderLayout.bitsAfterTerminator,
         bitsAfterPadToByte: encoderLayout.bitsAfterPadToByte,
       },
@@ -1616,11 +1720,15 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         protectedRegion: `bits 0 - ${encoderLayout.protectedBitEnd} (mode + charCount + original data)`,
         protectedBytes: Math.ceil(encoderLayout.protectedBitEnd / 8),
       },
+      twoIntervalSafeRanges: {
+        interval1_suffix: `bits ${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit} (${encoderLayout.suffixBits} safe bits)`,
+        interval2_padding: `bits ${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit} (${encoderLayout.paddingBits} safe bits)`,
+        gap_protected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits) [TERMINATOR + PAD-TO-BYTE - NEVER MODIFY!]`,
+      },
       controllable: {
-        suffixRegion: `bits ${encoderLayout.bitsAfterOriginalData} - ${encoderLayout.bitsAfterData} (${encoderLayout.suffixBits} bits)`,
-        paddingRegion: `bits ${encoderLayout.paddingStartByte * 8} - ${encoderLayout.allowedBitEnd} (${encoderLayout.paddingBits} bits)`,
         totalControllableBits: encoderLayout.suffixBits + encoderLayout.paddingBits,
         controllablePercent: `${(((encoderLayout.suffixBits + encoderLayout.paddingBits) / (encoderLayout.totalDataBytes * 8)) * 100).toFixed(1)}%`,
+        numIntervals: encoderLayout.allowedBitRanges.length,
       },
     });
 
@@ -1713,27 +1821,53 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     onProgress?.('Building RS basis', 10);
 
-    // Step 2: Build RS basis with ENCODER-DERIVED RANGE protection (HYBRID STRATEGY)
-    // CONTROLLABLE: suffix bytes + padding codewords
-    // PROTECTED: mode + charCount + original data bytes
-    // CRITICAL: Use encoderLayout.allowedBitStart which accounts for ORIGINAL data protection!
-    const allowedBitRanges: BitRange[] = [{
-      startBit: encoderLayout.allowedBitStart,  // Starts after protected original data
-      endBit: encoderLayout.allowedBitEnd,      // Ends at total data capacity
-    }];
+    // Step 2: Build RS basis with TWO-INTERVAL RANGE protection (HYBRID STRATEGY)
+    // =========================================================================
+    // CRITICAL FIX: Use TWO separate byte-aligned intervals, NOT one continuous range!
+    // =========================================================================
+    // INTERVAL 1: Suffix BYTES only (excludes boundary byte with terminator)
+    // INTERVAL 2: Padding codeword BYTES only (0xEC 0x11 pattern)
+    // GAP: Terminator + pad-to-byte bits are PROTECTED (never modify!)
+    //
+    // This prevents the decoder from seeing fake mode indicators when terminator bits flip.
+    const allowedBitRanges = encoderLayout.allowedBitRanges;
+    
+    log.info('TWO-INTERVAL SAFE RANGES for RS basis', {
+      numIntervals: allowedBitRanges.length,
+      interval1_suffix: allowedBitRanges[0] 
+        ? `bits ${allowedBitRanges[0].startBit} - ${allowedBitRanges[0].endBit}`
+        : 'NONE',
+      interval2_padding: allowedBitRanges[1]
+        ? `bits ${allowedBitRanges[1].startBit} - ${allowedBitRanges[1].endBit}`
+        : 'NONE (may be included in interval 1)',
+      gap_protected: {
+        startBit: encoderLayout.gapStartBit,
+        endBit: encoderLayout.gapEndBit,
+        bitCount: encoderLayout.gapBitCount,
+        description: 'TERMINATOR + PAD-TO-BYTE - NEVER MODIFY!',
+      },
+    });
+    
     const basis = buildFullBasis(actualVersion, ecc, allowedBitRanges);
 
     // =========================================================================
-    // GUARD: Verify no basis vector touches protected bits
+    // GUARD: Verify no basis vector touches protected bits OR the terminator gap
     // =========================================================================
-    // This is a sanity check - if any vector's dataBitIndex is below protectedBitEnd,
-    // something is wrong with our allowed range calculation.
+    // This is a sanity check - if any vector's linear bit is:
+    // 1. Below protectedBitEnd (in original data region), OR
+    // 2. In the GAP between suffix safe end and padding safe start (terminator region)
+    // Then something is wrong with our allowed range calculation.
     const protectedBitEnd = encoderLayout.protectedBitEnd;
+    const gapStartBit = encoderLayout.gapStartBit;
+    const gapEndBit = encoderLayout.gapEndBit;
+    
     const vectorsInProtectedRegion: Array<{
       vectorIndex: number;
       dataBitIndex: number;
       blockIndex: number;
       localBitIndex: number;
+      linearBit: number;
+      violationType: 'ORIGINAL_DATA' | 'TERMINATOR_GAP';
     }> = [];
     
     for (let i = 0; i < basis.vectors.length; i++) {
@@ -1747,29 +1881,50 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       const linearByte = linearByteOffset + vector.posInBlock;
       const linearBit = linearByte * 8 + (7 - vector.bitInByte);
       
-      // Check if this linear bit is in the protected region
+      // Check if this linear bit is in the protected region (original data)
       if (linearBit < protectedBitEnd) {
         vectorsInProtectedRegion.push({
           vectorIndex: i,
           dataBitIndex: vector.dataBitIndex,
           blockIndex: vector.rsBlockIndex,
           localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
+          linearBit,
+          violationType: 'ORIGINAL_DATA',
+        });
+      }
+      // Check if this linear bit is in the GAP (terminator + pad-to-byte)
+      else if (linearBit >= gapStartBit && linearBit < gapEndBit) {
+        vectorsInProtectedRegion.push({
+          vectorIndex: i,
+          dataBitIndex: vector.dataBitIndex,
+          blockIndex: vector.rsBlockIndex,
+          localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
+          linearBit,
+          violationType: 'TERMINATOR_GAP',
         });
       }
     }
     
     if (vectorsInProtectedRegion.length > 0) {
-      log.error('CRITICAL: Basis vectors exist in PROTECTED region!', {
+      const originalDataViolations = vectorsInProtectedRegion.filter(v => v.violationType === 'ORIGINAL_DATA');
+      const terminatorViolations = vectorsInProtectedRegion.filter(v => v.violationType === 'TERMINATOR_GAP');
+      
+      log.error('CRITICAL: Basis vectors exist in PROTECTED region or TERMINATOR GAP!', {
         protectedBitEnd,
-        vectorsInProtectedRegion: vectorsInProtectedRegion.slice(0, 10),
+        gapRange: `${gapStartBit} - ${gapEndBit}`,
+        originalDataViolations: originalDataViolations.length,
+        terminatorViolations: terminatorViolations.length,
         totalViolations: vectorsInProtectedRegion.length,
-        note: 'These vectors would corrupt original data if applied!',
+        sampleViolations: vectorsInProtectedRegion.slice(0, 10),
+        note: originalDataViolations.length > 0 
+          ? 'These vectors would corrupt original data!'
+          : 'These vectors would corrupt terminator bits (causing fake mode indicators)!',
       });
       
       // FAIL FAST - this is a fundamental bug in allowed range calculation
       return {
         success: false,
-        error: `${vectorsInProtectedRegion.length} basis vectors touch protected bits - algorithm bug`,
+        error: `${vectorsInProtectedRegion.length} basis vectors touch protected/gap bits - algorithm bug`,
         matrix: baseMatrix,
         moduleCount,
         version: actualVersion,
@@ -1783,10 +1938,13 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       };
     }
     
-    log.info('GUARD PASSED: All basis vectors are in allowed region', {
+    log.info('GUARD PASSED: All basis vectors are in allowed regions (suffix bytes OR padding bytes)', {
       protectedBitEnd,
-      allowedBitStart: encoderLayout.allowedBitStart,
+      gapRange: `${gapStartBit} - ${gapEndBit} (${encoderLayout.gapBitCount} bits protected)`,
+      suffixSafeRange: `${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
+      paddingSafeRange: `${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
       vectorCount: basis.vectors.length,
+      numIntervals: encoderLayout.allowedBitRanges.length,
       stage: 'POST_BASIS_BUILD',
     });
 
@@ -1796,19 +1954,23 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     const actualControlPercentage = totalDataBits > 0 ? (actualControllableBits / totalDataBits) * 100 : 0;
     const expectedControllableBits = encoderLayout.suffixBits + encoderLayout.paddingBits;
     
-    log.info('QR-Art capacity analysis (HYBRID STRATEGY)', {
+    log.info('QR-Art capacity analysis (TWO-INTERVAL HYBRID STRATEGY)', {
       totalDataBits,
       protectedBits: encoderLayout.protectedBitEnd,
       protectedContent: `mode + charCount + original data (${encoderLayout.originalDataLength} chars)`,
+      twoIntervalRanges: {
+        interval1_suffix: `${encoderLayout.suffixBits} bits (bytes ${Math.floor(encoderLayout.suffixSafeStartBit/8)} - ${Math.floor(encoderLayout.suffixSafeEndBit/8)})`,
+        interval2_padding: `${encoderLayout.paddingBits} bits (bytes ${Math.floor(encoderLayout.paddingSafeStartBit/8)} - ${Math.floor(encoderLayout.paddingSafeEndBit/8)})`,
+        gap_protected: `${encoderLayout.gapBitCount} bits (terminator + pad-to-byte)`,
+      },
       controllable: {
-        suffixBits: encoderLayout.suffixBits,
-        paddingBits: encoderLayout.paddingBits,
         totalControllable: actualControllableBits,
         expectedControllable: expectedControllableBits,
         controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
+        numIntervals: encoderLayout.allowedBitRanges.length,
       },
       vectorsCreated: basis.vectors.length,
-      source: 'ENCODER_DERIVED_HYBRID',
+      source: 'ENCODER_DERIVED_TWO_INTERVAL',
     });
 
     // Warn if control is very limited
@@ -1875,7 +2037,13 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       const linearByte = linearByteOffset + testVector.posInBlock;
       const linearBit = linearByte * 8 + (7 - testVector.bitInByte);
       
-      log.info('Test vector details', {
+      // Determine which interval this vector is in
+      const isInSuffixInterval = linearBit >= encoderLayout.suffixSafeStartBit && linearBit < encoderLayout.suffixSafeEndBit;
+      const isInPaddingInterval = linearBit >= encoderLayout.paddingSafeStartBit && linearBit < encoderLayout.paddingSafeEndBit;
+      const isInGap = linearBit >= encoderLayout.gapStartBit && linearBit < encoderLayout.gapEndBit;
+      const isInProtected = linearBit < encoderLayout.protectedBitEnd;
+      
+      log.info('Test vector details (TWO-INTERVAL)', {
         vectorDataBitIndex: testVector.dataBitIndex,
         vectorBlockIndex: testVector.rsBlockIndex,
         vectorPosInBlock: testVector.posInBlock,
@@ -1883,12 +2051,24 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         localBitIndex: testLocalBitIndex,
         linearByte,
         linearBit,
-        paddingStartByte: encoderLayout.paddingStartByte,
-        allowedBitStart: encoderLayout.allowedBitStart,
-        isInAllowedRange: linearBit >= encoderLayout.allowedBitStart && linearBit < encoderLayout.allowedBitEnd,
-        note: linearBit >= encoderLayout.allowedBitStart 
-          ? 'Vector is in padding region (EXPECTED)' 
-          : `Vector is in PROTECTED region! Expected >= ${encoderLayout.allowedBitStart}, got ${linearBit}`,
+        twoIntervalAnalysis: {
+          isInSuffixInterval,
+          isInPaddingInterval,
+          isInGap,
+          isInProtected,
+          suffixRange: `${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
+          paddingRange: `${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
+          gapRange: `${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit}`,
+        },
+        status: isInSuffixInterval 
+          ? 'Vector is in SUFFIX safe interval (EXPECTED)'
+          : isInPaddingInterval
+            ? 'Vector is in PADDING safe interval (EXPECTED)'
+            : isInGap
+              ? 'Vector is in TERMINATOR GAP - BUG!'
+              : isInProtected
+                ? 'Vector is in PROTECTED region - BUG!'
+                : 'Vector is in UNKNOWN region - BUG!',
       });
       
       // Clone original data/ECC
@@ -1991,13 +2171,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       const decodedSuffix = testScan.data?.slice(originalDataLength) || '';
       const suffixWasModified = decodedSuffix !== actualSuffix;
       
-      log.info('HYBRID MUTATION TEST PASSED (byte-exact)', {
+      log.info('HYBRID MUTATION TEST PASSED (TWO-INTERVAL byte-exact)', {
         vectorDataBitIndex: testVector.dataBitIndex,
         vectorBlockIndex: testVector.rsBlockIndex,
         localBitIndex: testLocalBitIndex,
         linearByte,
         linearBit,
-        paddingStartByte: encoderLayout.paddingStartByte,
+        vectorInterval: isInSuffixInterval ? 'SUFFIX' : isInPaddingInterval ? 'PADDING' : 'UNKNOWN',
+        gapProtected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits)`,
         originalDataPreserved: true,
         validationMethod: 'BYTE_EXACT_PREFIX',
         suffixWasModified,
@@ -2195,17 +2376,21 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     log.info('BOUNDARY AUDIT (single source of truth: encoderLayout)', {
       version: actualVersion,
       stage: 'PRE_SCAN',
-      source: 'ENCODER_DERIVED_ONLY',
+      source: 'ENCODER_DERIVED_TWO_INTERVAL',
       protection: {
         protectedBitEnd: encoderLayout.protectedBitEnd,
         protectedByteEnd: Math.ceil(encoderLayout.protectedBitEnd / 8),
         originalDataLength: encoderLayout.originalDataLength,
       },
+      twoIntervalRanges: {
+        interval1_suffix: `bits ${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
+        interval2_padding: `bits ${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
+        gap_protected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits)`,
+      },
       controllable: {
-        allowedBitStart: encoderLayout.allowedBitStart,
-        allowedBitEnd: encoderLayout.allowedBitEnd,
         vectorsApplied: totalSelected,
         anyBlockOverBudget,
+        numIntervals: encoderLayout.allowedBitRanges.length,
       },
     });
 
@@ -2310,13 +2495,17 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       };
     }
     
-    log.info('HYBRID protection validation PASSED (encoder-derived)', {
+    log.info('HYBRID protection validation PASSED (TWO-INTERVAL encoder-derived)', {
       protectedBitRange: `0 - ${encoderLayout.protectedBitEnd} (mode + charCount + original data)`,
-      allowedBitRange: `${encoderLayout.allowedBitStart} - ${encoderLayout.allowedBitEnd} (suffix + padding)`,
+      twoIntervalRanges: {
+        interval1_suffix: `${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
+        interval2_padding: `${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
+        gap_protected: `${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (terminator + pad-to-byte)`,
+      },
       originalDataLength: encoderLayout.originalDataLength,
       suffixLength: encoderLayout.suffixLength,
       totalVectorsApplied: totalSelected,
-      protectedBytesChecked: 'all blocks verified',
+      protectedBytesChecked: 'all blocks verified (including terminator gap)',
     });
 
     onProgress?.('Re-encoding QR code', 85);
@@ -2714,7 +2903,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     const matchPercentage = total > 0 ? (matching / total) * 100 : 0;
 
-    log.info('QR-Art generation complete (HYBRID)', {
+    log.info('QR-Art generation complete (TWO-INTERVAL HYBRID)', {
       matchingPixels: matching,
       totalControllable: total,
       matchPercentage: `${matchPercentage.toFixed(1)}%`,
@@ -2723,6 +2912,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       originalDataLength,
       suffixLength: actualSuffix.length,
       controllablePercent: `${actualControlPercentage.toFixed(1)}%`,
+      twoIntervalStrategy: {
+        suffixSafeBits: encoderLayout.suffixBits,
+        paddingSafeBits: encoderLayout.paddingBits,
+        gapProtectedBits: encoderLayout.gapBitCount,
+        numIntervals: encoderLayout.allowedBitRanges.length,
+      },
     });
 
     onProgress?.('Complete', 100);
