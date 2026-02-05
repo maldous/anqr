@@ -55,6 +55,7 @@ import {
   type SemanticBitLayout,
   getSemanticBitLayout,
   calculateVersionForSlack,
+  mapAllowedRangesToBlocks,
 } from './semantic-layout';
 
 /**
@@ -69,6 +70,41 @@ function arraysEqual(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 const log = createLogger('QART');
+
+/**
+ * Encoder-derived semantic layout - these are the ACTUAL bit positions
+ * from the encoder's bit buffer, NOT calculated from data.length.
+ * 
+ * This is critical because the actual encoder may:
+ * - Use different segment modes
+ * - Place terminators differently
+ * - Have different interleaving patterns
+ * 
+ * We MUST derive protection boundaries from what the encoder actually did.
+ */
+export interface EncoderDerivedLayout {
+  /** Bits after writing mode indicator (should be 4) */
+  bitsAfterMode: number;
+  /** Bits after writing character count */
+  bitsAfterCharCount: number;
+  /** Bits after writing all segment data (before terminator) */
+  bitsAfterData: number;
+  /** Bits after adding terminator (0-4 bits) */
+  bitsAfterTerminator: number;
+  /** Bits after padding to byte boundary */
+  bitsAfterPadToByte: number;
+  /** Byte index where padding codewords (0xEC 0x11) start */
+  paddingStartByte: number;
+  /** Total data bytes capacity */
+  totalDataBytes: number;
+  /** Number of padding codeword bytes */
+  paddingByteCount: number;
+  /** Protected bit range (everything before padding) */
+  protectedBitEnd: number;
+  /** Allowed/controllable bit range (only padding codewords) */
+  allowedBitStart: number;
+  allowedBitEnd: number;
+}
 
 /**
  * Extract format info bits from a QR matrix
@@ -371,6 +407,8 @@ function scanMatrixWithJsQR(matrix: boolean[][]): {
   };
 }
 
+// EncoderDerivedLayout is already exported via its interface declaration above
+
 /**
  * Configuration for full QR-Art generation
  * 
@@ -466,6 +504,8 @@ interface BaseQRResult {
   blockEccArrays: Uint8Array[];
   blockDataCounts: number[];
   blockEccCounts: number[];
+  /** Encoder-derived semantic layout with ACTUAL bit positions */
+  encoderLayout: EncoderDerivedLayout;
 }
 
 /**
@@ -561,7 +601,8 @@ function generateBaseQR(
 
   // Get the actual encoded data bytes and compute ECC using the encoder's bit buffer
   // This is critical - we need the real data bytes AND their ECC for RS linearity
-  const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts } = encodeDataToBytes(
+  // Also captures the ACTUAL semantic bit positions from the encoder
+  const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts, encoderLayout } = encodeDataToBytes(
     data,
     actualVersion,
     ecc
@@ -641,6 +682,7 @@ function generateBaseQR(
     blockEccArrays,
     blockDataCounts,
     blockEccCounts,
+    encoderLayout,
   };
 }
 
@@ -666,6 +708,10 @@ function eccToNumericForEncoder(ecc: ECCLevel): number {
  * Encode a string to data bytes using the QR encoder's bit buffer
  * This gives us the actual encoded bytes that would go into the QR code
  * Also computes and returns the ECC bytes for each block (needed for RS linearity)
+ * 
+ * CRITICAL: Also returns the EncoderDerivedLayout which captures the ACTUAL
+ * bit positions from the encoder. This is essential for Strategy 2 protection
+ * as it tells us exactly where padding codewords start.
  */
 function encodeDataToBytes(
   data: string,
@@ -676,6 +722,7 @@ function encodeDataToBytes(
   blockEccArrays: Uint8Array[];
   blockDataCounts: number[];
   blockEccCounts: number[];
+  encoderLayout: EncoderDerivedLayout;
 } {
   // Log the exact data being encoded for debugging
   log.debug('encodeDataToBytes called', {
@@ -693,10 +740,20 @@ function encodeDataToBytes(
   const buffer = qrBitBuffer();
   const segment = qr8BitByte(data);
 
-  // Write mode indicator (4 bits) + character count + data
+  // CHECKPOINT 1: After mode indicator (4 bits)
   buffer.put(segment.getMode(), 4);
+  const bitsAfterMode = buffer.getLengthInBits();
+  
+  // CHECKPOINT 2: After character count
   buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
+  const bitsAfterCharCount = buffer.getLengthInBits();
+  
+  // Write the actual data
   segment.write(buffer);
+  
+  // CHECKPOINT 3: After all segment data (BEFORE terminator)
+  // This is the critical boundary - everything up to here is the actual message
+  const bitsAfterData = buffer.getLengthInBits();
 
   // Calculate total data capacity
   let totalDataCount = 0;
@@ -704,17 +761,28 @@ function encodeDataToBytes(
     totalDataCount += block.dataCount;
   }
 
-  // Add terminator if there's room
-  if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
-    buffer.put(0, 4);
+  // Add terminator if there's room (up to 4 bits of zeros)
+  const remainingBits = totalDataCount * 8 - buffer.getLengthInBits();
+  const terminatorBits = Math.min(4, remainingBits);
+  if (terminatorBits > 0) {
+    buffer.put(0, terminatorBits);
   }
+  
+  // CHECKPOINT 4: After terminator
+  const bitsAfterTerminator = buffer.getLengthInBits();
 
-  // Pad to byte boundary
+  // Pad to byte boundary with zeros
   while (buffer.getLengthInBits() % 8 !== 0) {
     buffer.putBit(false);
   }
+  
+  // CHECKPOINT 5: After padding to byte boundary
+  const bitsAfterPadToByte = buffer.getLengthInBits();
+  
+  // CRITICAL: This is where padding codewords start (byte index)
+  const paddingStartByte = buffer.getLengthInBits() / 8;
 
-  // Add padding bytes
+  // Add padding bytes (0xEC 0x11 pattern)
   const PAD0 = 0xec;
   const PAD1 = 0x11;
   while (buffer.getLengthInBits() < totalDataCount * 8) {
@@ -723,9 +791,57 @@ function encodeDataToBytes(
       buffer.put(PAD1, 8);
     }
   }
+  
+  // Calculate padding byte count
+  const paddingByteCount = totalDataCount - paddingStartByte;
+  
+  // Build the encoder-derived layout
+  const encoderLayout: EncoderDerivedLayout = {
+    bitsAfterMode,
+    bitsAfterCharCount,
+    bitsAfterData,
+    bitsAfterTerminator,
+    bitsAfterPadToByte,
+    paddingStartByte,
+    totalDataBytes: totalDataCount,
+    paddingByteCount,
+    // Protected region: everything before padding codewords (in bits)
+    protectedBitEnd: paddingStartByte * 8,
+    // Allowed region: only padding codewords
+    allowedBitStart: paddingStartByte * 8,
+    allowedBitEnd: totalDataCount * 8,
+  };
+  
+  // Log the ACTUAL semantic boundaries from the encoder
+  log.info('ENCODER-DERIVED SEMANTIC BOUNDARIES (from actual bit buffer)', {
+    version,
+    ecc,
+    dataLength: data.length,
+    checkpoints: {
+      bitsAfterMode: `${bitsAfterMode} bits (mode indicator)`,
+      bitsAfterCharCount: `${bitsAfterCharCount} bits (+char count)`,
+      bitsAfterData: `${bitsAfterData} bits (+segment data)`,
+      bitsAfterTerminator: `${bitsAfterTerminator} bits (+terminator)`,
+      bitsAfterPadToByte: `${bitsAfterPadToByte} bits (+pad-to-byte)`,
+    },
+    paddingStartByte,
+    totalDataBytes: totalDataCount,
+    paddingByteCount,
+    protectedBits: `0 - ${paddingStartByte * 8}`,
+    controllableBits: `${paddingStartByte * 8} - ${totalDataCount * 8}`,
+    controllablePercent: `${((paddingByteCount / totalDataCount) * 100).toFixed(1)}%`,
+  });
 
   // Extract bytes for each block and compute ECC
   const bufferBytes = buffer.getBuffer();
+  
+  // Log first 32 bytes of the encoded buffer for debugging
+  log.debug('ENCODE SUMMARY - first 32 bytes of buffer', {
+    bufferBits: buffer.getLengthInBits(),
+    bufferBytesLen: bufferBytes.length,
+    first32Bytes: Array.from(bufferBytes.slice(0, 32)),
+  });
+  
   const blockDataArrays: Uint8Array[] = [];
   const blockEccArrays: Uint8Array[] = [];
   const blockDataCounts: number[] = [];
@@ -750,7 +866,7 @@ function encodeDataToBytes(
     offset += block.dataCount;
   }
 
-  return { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts };
+  return { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts, encoderLayout };
 }
 
 /**
@@ -1049,6 +1165,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       blockEccArrays,
       blockDataCounts,
       blockEccCounts,
+      encoderLayout,
     } = baseResult;
     const moduleCount = baseMatrix.length;
 
@@ -1060,27 +1177,51 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       dataLength: data.length,
     });
 
-    // Step 1.5: Calculate semantic bit layout for this configuration
-    // This tells us EXACTLY which bits are padding codewords (the ONLY controllable region)
+    // Step 1.5: Use ENCODER-DERIVED semantic layout (not calculated from data.length!)
+    // This is CRITICAL - we use the actual bit positions from the encoder, not assumptions
     onProgress?.('Analyzing semantic layout', 5);
-    const semanticLayout = getSemanticBitLayout(actualVersion, ecc, data.length);
+    
+    // Also get the calculated layout for comparison (to detect mismatches)
+    const calculatedLayout = getSemanticBitLayout(actualVersion, ecc, data.length);
+    
+    // CRITICAL: Compare encoder-derived vs calculated layout to detect mismatches
+    const layoutMismatch = 
+      encoderLayout.paddingStartByte !== Math.ceil(calculatedLayout.padCodewords.startBit / 8) ||
+      encoderLayout.allowedBitStart !== calculatedLayout.padCodewords.startBit;
+    
+    if (layoutMismatch) {
+      log.warn('LAYOUT MISMATCH - encoder boundaries differ from calculated!', {
+        encoderDerived: {
+          paddingStartByte: encoderLayout.paddingStartByte,
+          protectedBitEnd: encoderLayout.protectedBitEnd,
+          allowedBitStart: encoderLayout.allowedBitStart,
+        },
+        calculated: {
+          paddingStartByte: Math.ceil(calculatedLayout.padCodewords.startBit / 8),
+          protectedBitEnd: calculatedLayout.padCodewords.startBit,
+        },
+        note: 'USING ENCODER-DERIVED LAYOUT - this is the safe choice',
+      });
+    }
 
-    // Log comprehensive semantic boundary information (critical for debugging)
-    log.info('SEMANTIC BIT LAYOUT (Strategy 2)', {
+    // Log comprehensive semantic boundary information using ENCODER-DERIVED values
+    log.info('ENCODER-DERIVED SEMANTIC LAYOUT (Strategy 2)', {
       version: actualVersion,
       ecc,
       dataLength: data.length,
-      segments: [
-        { region: 'modeIndicator', ...semanticLayout.modeIndicator, bits: semanticLayout.modeIndicator.endBit - semanticLayout.modeIndicator.startBit },
-        { region: 'characterCount', ...semanticLayout.characterCount, bits: semanticLayout.characterCount.endBit - semanticLayout.characterCount.startBit },
-        { region: 'dataContent', ...semanticLayout.dataContent, bits: semanticLayout.dataContent.endBit - semanticLayout.dataContent.startBit },
-        { region: 'terminator', ...semanticLayout.terminator, bits: semanticLayout.terminator.endBit - semanticLayout.terminator.startBit },
-        { region: 'padToByte', ...semanticLayout.padToByte, bits: semanticLayout.padToByte.endBit - semanticLayout.padToByte.startBit },
-        { region: 'padCodewords (CONTROLLABLE)', ...semanticLayout.padCodewords, bits: semanticLayout.padCodewords.endBit - semanticLayout.padCodewords.startBit, bytes: semanticLayout.padCodewords.byteCount },
-      ],
-      totalDataBits: semanticLayout.totalDataBits,
-      controllableBits: semanticLayout.padCodewords.endBit - semanticLayout.padCodewords.startBit,
-      controllablePercent: `${(((semanticLayout.padCodewords.endBit - semanticLayout.padCodewords.startBit) / semanticLayout.totalDataBits) * 100).toFixed(1)}%`,
+      encoderCheckpoints: {
+        bitsAfterMode: encoderLayout.bitsAfterMode,
+        bitsAfterCharCount: encoderLayout.bitsAfterCharCount,
+        bitsAfterData: encoderLayout.bitsAfterData,
+        bitsAfterTerminator: encoderLayout.bitsAfterTerminator,
+        bitsAfterPadToByte: encoderLayout.bitsAfterPadToByte,
+      },
+      paddingStartByte: encoderLayout.paddingStartByte,
+      totalDataBytes: encoderLayout.totalDataBytes,
+      paddingByteCount: encoderLayout.paddingByteCount,
+      protectedBits: `0 - ${encoderLayout.protectedBitEnd}`,
+      controllableBits: `${encoderLayout.allowedBitStart} - ${encoderLayout.allowedBitEnd}`,
+      controllablePercent: `${((encoderLayout.paddingByteCount / encoderLayout.totalDataBytes) * 100).toFixed(1)}%`,
     });
 
     // CRITICAL VERIFICATION: Scan the base matrix to verify it encodes data correctly
@@ -1105,29 +1246,39 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     onProgress?.('Building RS basis', 10);
 
-    // Step 2: Build RS basis with SEMANTIC RANGE protection (Strategy 2)
+    // Step 2: Build RS basis with ENCODER-DERIVED RANGE protection (Strategy 2)
     // ONLY padding codewords are controllable - everything else is protected
-    const allowedBitRanges: BitRange[] = [semanticLayout.padCodewords];
+    // CRITICAL: Use encoderLayout, not calculated semanticLayout!
+    const allowedBitRanges: BitRange[] = [{
+      startBit: encoderLayout.allowedBitStart,
+      endBit: encoderLayout.allowedBitEnd,
+    }];
     const basis = buildFullBasis(actualVersion, ecc, allowedBitRanges);
 
     // Calculate actual controllable bits
     const actualControllableBits = basis.vectors.length;
-    const actualControlPercentage = (actualControllableBits / semanticLayout.totalDataBits) * 100;
+    const totalDataBits = encoderLayout.totalDataBytes * 8;
+    const actualControlPercentage = totalDataBits > 0 ? (actualControllableBits / totalDataBits) * 100 : 0;
     
-    log.info('QR-Art capacity analysis (Strategy 2)', {
-      totalDataBits: semanticLayout.totalDataBits,
-      protectedBits: semanticLayout.padCodewords.startBit, // Everything before pad codewords
+    log.info('QR-Art capacity analysis (Strategy 2 - ENCODER DERIVED)', {
+      totalDataBits,
+      protectedBits: encoderLayout.protectedBitEnd, // Everything before pad codewords
       controllableBits: actualControllableBits,
       controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
-      padCodewordBytes: semanticLayout.padCodewords.byteCount,
+      padCodewordBytes: encoderLayout.paddingByteCount,
       vectorsCreated: basis.vectors.length,
+      source: 'ENCODER_DERIVED',
+      // Also show comparison with calculated layout
+      calculatedPaddingStart: calculatedLayout.padCodewords.startBit,
+      encoderPaddingStart: encoderLayout.allowedBitStart,
+      boundariesMatch: calculatedLayout.padCodewords.startBit === encoderLayout.allowedBitStart,
     });
 
     // Warn if control is very limited
     if (basis.vectors.length === 0) {
       log.warn('ZERO controllable vectors! QR-Art cannot modify any pixels.', {
         suggestion: 'Use a larger QR version to create more padding codewords.',
-        padCodewordBytes: semanticLayout.padCodewords.byteCount,
+        padCodewordBytes: encoderLayout.paddingByteCount,
         dataLength: data.length,
       });
       
@@ -1147,8 +1298,151 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       log.warn('Limited QR-Art control. Image quality may be reduced.', {
         controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
         controllableVectors: basis.vectors.length,
-        padCodewordBytes: semanticLayout.padCodewords.byteCount,
+        padCodewordBytes: encoderLayout.paddingByteCount,
         suggestion: 'Use a larger QR version for more padding codewords.',
+      });
+    }
+
+    // =========================================================================
+    // DETERMINISTIC PADDING-ONLY MUTATION TEST
+    // =========================================================================
+    // Before running the full solver, verify that applying a single controllable
+    // vector actually works and doesn't corrupt the message.
+    // 
+    // This catches issues where:
+    // - Our "controllable" region is actually protected
+    // - The bit mapping doesn't match regeneration
+    // - Interleaving assumptions are wrong
+    //
+    if (basis.vectors.length > 0) {
+      log.info('Running deterministic padding-only mutation test...');
+      
+      // Pick the first controllable vector
+      const testVector = basis.vectors[0];
+      
+      // Calculate the local bit index for this vector (for debugging)
+      const testLocalBitIndex = testVector.posInBlock * 8 + (7 - testVector.bitInByte);
+      
+      // Calculate what linear buffer byte this corresponds to
+      // (sum of previous blocks' data counts + local byte position)
+      let linearByteOffset = 0;
+      for (let b = 0; b < testVector.rsBlockIndex; b++) {
+        linearByteOffset += blockDataCounts[b];
+      }
+      const linearByte = linearByteOffset + testVector.posInBlock;
+      const linearBit = linearByte * 8 + (7 - testVector.bitInByte);
+      
+      log.info('Test vector details', {
+        vectorDataBitIndex: testVector.dataBitIndex,
+        vectorBlockIndex: testVector.rsBlockIndex,
+        vectorPosInBlock: testVector.posInBlock,
+        vectorBitInByte: testVector.bitInByte,
+        localBitIndex: testLocalBitIndex,
+        linearByte,
+        linearBit,
+        paddingStartByte: encoderLayout.paddingStartByte,
+        allowedBitStart: encoderLayout.allowedBitStart,
+        isInAllowedRange: linearBit >= encoderLayout.allowedBitStart && linearBit < encoderLayout.allowedBitEnd,
+        note: linearBit >= encoderLayout.allowedBitStart 
+          ? 'Vector is in padding region (EXPECTED)' 
+          : `Vector is in PROTECTED region! Expected >= ${encoderLayout.allowedBitStart}, got ${linearBit}`,
+      });
+      
+      // Clone original data/ECC
+      const testBlockData = blockDataArrays.map(arr => new Uint8Array(arr));
+      const testBlockEcc = blockEccArrays.map(arr => new Uint8Array(arr));
+      
+      // Apply just this one vector (XOR it into the block)
+      const blockIdx = testVector.rsBlockIndex;
+      for (let byteIdx = 0; byteIdx < testBlockData[blockIdx].length; byteIdx++) {
+        testBlockData[blockIdx][byteIdx] ^= testVector.blockBits[byteIdx];
+      }
+      for (let byteIdx = 0; byteIdx < testBlockEcc[blockIdx].length; byteIdx++) {
+        testBlockEcc[blockIdx][byteIdx] ^= testVector.blockBits[blockDataCounts[blockIdx] + byteIdx];
+      }
+      
+      // Regenerate matrix
+      const testMatrix = regenerateQRFromModifiedData(
+        testBlockData,
+        testBlockEcc,
+        blockDataCounts,
+        blockEccCounts,
+        actualVersion,
+        ecc,
+        actualMask
+      );
+      
+      // Scan and verify
+      const testScan = scanMatrixWithJsQR(testMatrix);
+      
+      if (!testScan.success) {
+        log.error('PADDING-ONLY MUTATION TEST FAILED - single vector breaks scan!', {
+          vectorDataBitIndex: testVector.dataBitIndex,
+          vectorBlockIndex: testVector.rsBlockIndex,
+          vectorPosInBlock: testVector.posInBlock,
+          vectorBitInByte: testVector.bitInByte,
+          localBitIndex: testLocalBitIndex,
+          linearByte,
+          linearBit,
+          paddingStartByte: encoderLayout.paddingStartByte,
+          allowedBitStart: encoderLayout.allowedBitStart,
+          scanError: testScan.error,
+        });
+        
+        // This is a critical failure - our "controllable" region is not actually safe
+        return {
+          success: false,
+          error: 'Padding-only mutation test failed: single vector application broke QR scan',
+          matrix: baseMatrix,
+          moduleCount,
+          version: actualVersion,
+          maskPattern: actualMask,
+          matchingPixels: 0,
+          totalControllable: 0,
+          matchPercentage: 0,
+          encodedData: encodedData,
+        };
+      }
+      
+      if (testScan.data !== encodedData) {
+        log.error('PADDING-ONLY MUTATION TEST FAILED - decoded data changed!', {
+          expectedData: encodedData,
+          actualData: testScan.data,
+          expectedLength: encodedData.length,
+          actualLength: testScan.data?.length,
+          vectorDataBitIndex: testVector.dataBitIndex,
+          vectorBlockIndex: testVector.rsBlockIndex,
+          localBitIndex: testLocalBitIndex,
+          linearByte,
+          linearBit,
+          paddingStartByte: encoderLayout.paddingStartByte,
+          allowedBitStart: encoderLayout.allowedBitStart,
+          note: 'This means our "controllable" bits are actually message content!',
+        });
+        
+        return {
+          success: false,
+          error: 'Padding-only mutation test failed: vector modified message content',
+          matrix: baseMatrix,
+          moduleCount,
+          version: actualVersion,
+          maskPattern: actualMask,
+          matchingPixels: 0,
+          totalControllable: 0,
+          matchPercentage: 0,
+          encodedData: encodedData,
+        };
+      }
+      
+      log.info('PADDING-ONLY MUTATION TEST PASSED', {
+        vectorDataBitIndex: testVector.dataBitIndex,
+        vectorBlockIndex: testVector.rsBlockIndex,
+        localBitIndex: testLocalBitIndex,
+        linearByte,
+        linearBit,
+        paddingStartByte: encoderLayout.paddingStartByte,
+        decodedDataUnchanged: true,
+        matrixScansCorrectly: true,
       });
     }
 
@@ -1278,18 +1572,122 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       log.info('RS linearity preserved - all modified codewords are valid');
     } else {
       log.error('RS LINEARITY CHECK FAILED - QR code will likely not scan!');
+      // FAIL FAST: RS linearity is fundamental - if broken, the QR will not decode
+      return {
+        success: false,
+        error: 'RS linearity broken - modified codewords are invalid',
+        matrix: baseMatrix,
+        moduleCount,
+        version: actualVersion,
+        maskPattern: actualMask,
+        matchingPixels: 0,
+        totalControllable: 0,
+        matchPercentage: 0,
+        encodedData: encodedData,
+      };
     }
 
-    // DEBUG: Verify that padding codewords are the ONLY bits modified (Strategy 2 validation)
-    // Protected region: everything BEFORE padCodewords.startBit
-    const protectedBitEnd = semanticLayout.padCodewords.startBit;
+    // =========================================================================
+    // CRITICAL: Protected-region byte verification (UNCONDITIONAL, FAIL-ON-VIOLATION)
+    // =========================================================================
+    // This verifies that ONLY padding codewords were modified (Strategy 2 requirement)
+    // Uses ENCODER-DERIVED boundaries, not calculated ones!
     
-    // Since we're using semantic range protection, any modification outside
-    // the allowed range (padding codewords) is a bug in the algorithm
-    log.info('Strategy 2 protection validation', {
-      protectedBitRange: `0 - ${protectedBitEnd}`,
-      allowedBitRange: `${semanticLayout.padCodewords.startBit} - ${semanticLayout.padCodewords.endBit}`,
+    // First, verify each block's protected bytes are unchanged
+    // Protected region: bytes 0 to (paddingStartByte - 1) in the PRE-INTERLEAVED stream
+    // We need to map this to per-block byte indices accounting for interleaving
+    
+    // Get per-block allowed bits using encoder-derived ranges
+    const blockAllowedBits = mapAllowedRangesToBlocks(allowedBitRanges, actualVersion, ecc);
+    
+    let protectedBytesViolated = false;
+    const violations: Array<{
+      blockIdx: number;
+      byteIdx: number;
+      original: number;
+      modified: number;
+      localBitStart: number;
+    }> = [];
+    
+    for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
+      const originalData = blockDataArrays[blockIdx];
+      const modifiedData = modifiedBlockData[blockIdx];
+      const allowedBitsInBlock = blockAllowedBits.get(blockIdx) || new Set<number>();
+      
+      // Check EACH BIT individually - not just whole bytes
+      // This catches boundary bytes that have both protected and allowed bits
+      for (let byteIdx = 0; byteIdx < originalData.length; byteIdx++) {
+        const originalByte = originalData[byteIdx];
+        const modifiedByte = modifiedData[byteIdx];
+        
+        // Skip if byte is unchanged
+        if (originalByte === modifiedByte) continue;
+        
+        // Check each bit in this byte
+        for (let bitIdx = 0; bitIdx < 8; bitIdx++) {
+          const localBitIndex = byteIdx * 8 + bitIdx;
+          
+          // If this bit is NOT allowed (i.e., it's protected), check if it changed
+          if (!allowedBitsInBlock.has(localBitIndex)) {
+            // Extract the bit values (MSB first, so bit 0 is most significant)
+            const originalBit = (originalByte >> (7 - bitIdx)) & 1;
+            const modifiedBit = (modifiedByte >> (7 - bitIdx)) & 1;
+            
+            if (originalBit !== modifiedBit) {
+              protectedBytesViolated = true;
+              violations.push({
+                blockIdx,
+                byteIdx,
+                original: originalData[byteIdx],
+                modified: modifiedData[byteIdx],
+                localBitStart: byteIdx * 8,
+              });
+              // Only record one violation per byte (to avoid spam)
+              break;
+            }
+          }
+        }
+      }
+      
+      // Log block comparison for debugging
+      const firstProtectedBytes = Math.min(24, originalData.length);
+      log.debug('BLOCK HEAD BYTES (orig vs mod)', {
+        blockIdx,
+        blockDataBytes: originalData.length,
+        allowedBitsCount: allowedBitsInBlock.size,
+        origHead: Array.from(originalData.slice(0, firstProtectedBytes)),
+        modHead: Array.from(modifiedData.slice(0, firstProtectedBytes)),
+      });
+    }
+    
+    if (protectedBytesViolated) {
+      log.error('PROTECTED BYTES MODIFIED - Strategy 2 violation!', {
+        violationCount: violations.length,
+        violations: violations.slice(0, 10),
+        note: 'This means vectors modified protected region - algorithm bug!',
+      });
+      
+      // FAIL FAST: Return base matrix since we can't trust the modified data
+      log.error('FAILING FAST - returning base matrix due to protected byte violation');
+      return {
+        success: false,
+        error: `Protected byte violation: ${violations.length} protected bytes were modified`,
+        matrix: baseMatrix,
+        moduleCount,
+        version: actualVersion,
+        maskPattern: actualMask,
+        matchingPixels: 0,
+        totalControllable: 0,
+        matchPercentage: 0,
+        encodedData: encodedData,
+      };
+    }
+    
+    log.info('Strategy 2 protection validation PASSED (encoder-derived)', {
+      protectedBitRange: `0 - ${encoderLayout.protectedBitEnd}`,
+      allowedBitRange: `${encoderLayout.allowedBitStart} - ${encoderLayout.allowedBitEnd}`,
       totalVectorsApplied: totalSelected,
+      protectedBytesChecked: 'all blocks verified',
     });
 
     onProgress?.('Re-encoding QR code', 85);
@@ -1686,6 +2084,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
 /**
  * Generate QR-Art trying all 8 mask patterns and selecting the best
+ * Uses encoder-derived semantic layout for protection.
  */
 export async function generateFullQArtBestMask(
   config: Omit<FullQArtConfig, 'maskPattern'>
@@ -1697,10 +2096,11 @@ export async function generateFullQArtBestMask(
   const sharedVersion = config.forceVersion ?? 
     (config.version > 0 ? config.version : calculateVersionForSlack(config.data.length, config.ecc, minPadCodewords));
   
-  log.info('Pre-selected version for mask comparison', {
+  log.info('Pre-selected version for mask comparison (using encoder-derived layout)', {
     sharedVersion,
     dataLength: config.data.length,
     minPadCodewords,
+    note: 'Each mask will use encoder-derived semantic boundaries',
   });
 
   for (let mask = 0; mask < 8; mask++) {
