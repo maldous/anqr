@@ -18,8 +18,26 @@ import { createLogger } from '../../lib/logger';
 import type { BlockSelectionResult, EliminationResult } from './elimination';
 import { applySelectedVectorsToBlock } from './elimination';
 import type { RSBasisVector } from './rs-basis';
+import {
+  type RejectionReason,
+  type FormatVerificationResult,
+  type ECCLevel,
+  verifyMatrixFormatInfo,
+} from './generate';
 
 const log = createLogger('QART');
+
+/**
+ * Result of binary search validation
+ */
+interface BinarySearchValidationResult {
+  valid: boolean;
+  reason?: RejectionReason;
+  description?: string;
+  mismatchIndex?: number;
+  expectedByte?: number;
+  actualByte?: number;
+}
 
 /**
  * Validate that decoded data preserves the original data exactly (byte-level comparison).
@@ -37,21 +55,20 @@ const log = createLogger('QART');
 function validateByteExactPrefix(
   decoded: string | undefined,
   originalData: string
-): {
-  valid: boolean;
-  reason?: string;
-  mismatchIndex?: number;
-  expectedByte?: number;
-  actualByte?: number;
-} {
+): BinarySearchValidationResult {
   if (decoded === undefined || decoded === null) {
-    return { valid: false, reason: 'decoded data is null/undefined' };
+    return { 
+      valid: false, 
+      reason: 'SCAN_FAILED',
+      description: 'decoded data is null/undefined',
+    };
   }
   
   if (decoded.length < originalData.length) {
     return { 
       valid: false, 
-      reason: `decoded length (${decoded.length}) < original length (${originalData.length})` 
+      reason: 'LENGTH_TOO_SHORT',
+      description: `decoded length (${decoded.length}) < original length (${originalData.length})`,
     };
   }
   
@@ -63,7 +80,8 @@ function validateByteExactPrefix(
     if (expectedByte !== actualByte) {
       return {
         valid: false,
-        reason: `byte mismatch at index ${i}`,
+        reason: 'BYTE_MISMATCH',
+        description: `byte mismatch at index ${i}: expected 0x${expectedByte.toString(16)}, got 0x${actualByte.toString(16)}`,
         mismatchIndex: i,
         expectedByte,
         actualByte,
@@ -245,6 +263,8 @@ export interface BinarySearchResult {
  * HYBRID STRATEGY: The decoded data must START WITH expectedData (prefix match).
  * The suffix portion CAN be modified - that's the whole point of QR-Art!
  * Only the original URL/content (protected region) must be preserved.
+ * 
+ * SEMANTIC-HARD-GATE: Also verifies format info (ECC and mask) match expected values.
  *
  * @param flattened Flattened and importance-sorted selections
  * @param originalBlockData Original block data arrays
@@ -255,6 +275,8 @@ export interface BinarySearchResult {
  * @param regenerateQRFn Function to regenerate QR matrix
  * @param scanQRFn Function to scan QR matrix and check validity
  * @param expectedData The original data that must be preserved (HYBRID: prefix match)
+ * @param expectedEcc Expected ECC level (for format info verification)
+ * @param expectedMask Expected mask pattern (for format info verification)
  * @returns Binary search result with optimal matrix
  */
 export function binarySearchMaxVectors(
@@ -271,7 +293,9 @@ export function binarySearchMaxVectors(
     blockEccCounts: number[]
   ) => boolean[][],
   scanQRFn: (matrix: boolean[][]) => { success: boolean; data?: string },
-  expectedData: string
+  expectedData: string,
+  expectedEcc?: ECCLevel,
+  expectedMask?: number
 ): BinarySearchResult {
   const totalVectors = flattened.length;
 
@@ -279,7 +303,10 @@ export function binarySearchMaxVectors(
     totalVectors,
     expectedDataLength: expectedData.length,
     expectedDataPreview: expectedData.length > 50 ? expectedData.slice(0, 50) + '...' : expectedData,
-    note: 'HYBRID: prefix match validation (original data must be preserved, suffix can vary)',
+    formatVerificationEnabled: expectedEcc !== undefined && expectedMask !== undefined,
+    expectedEcc,
+    expectedMask,
+    note: 'SEMANTIC-HARD-GATE: prefix match + format info verification',
   });
 
   // Edge case: if there are no vectors, return empty result
@@ -325,12 +352,13 @@ export function binarySearchMaxVectors(
     const expectedHexDump = Array.from(expectedData.slice(0, 32)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
     const decodedHexDump = Array.from(decoded.slice(0, 32)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
     
-    log.error('Base matrix (0 vectors) byte-exact validation FAILED - encoding bug!', {
+    log.error('Base matrix (0 vectors) validation FAILED - encoding bug!', {
+      rejectionReason: baseValidation.reason,
+      description: baseValidation.description,
       expectedData: expectedData,
       expectedDataLength: expectedData.length,
       decodedData: baseScan.data,
       decodedLength: baseScan.data?.length,
-      validationReason: baseValidation.reason,
       mismatchIndex: baseValidation.mismatchIndex,
       expectedByte: baseValidation.expectedByte?.toString(16),
       actualByte: baseValidation.actualByte?.toString(16),
@@ -346,10 +374,32 @@ export function binarySearchMaxVectors(
     return { maxCount: 0, matrix: baseResult.matrix, modifiedBlockData: baseResult.modifiedBlockData, modifiedBlockEcc: baseResult.modifiedBlockEcc, iterations: 1 };
   }
   
-  log.debug('Base matrix (0 vectors) byte-exact validation PASSED', {
+  // Also verify format info for base matrix (if ECC and mask provided)
+  let baseFormatVerification: FormatVerificationResult | undefined;
+  if (expectedEcc !== undefined && expectedMask !== undefined) {
+    baseFormatVerification = verifyMatrixFormatInfo(baseResult.matrix, expectedEcc, expectedMask);
+    if (!baseFormatVerification.valid) {
+      log.error('Base matrix (0 vectors) FORMAT VERIFICATION FAILED!', {
+        rejectionReason: baseFormatVerification.reason,
+        expectedEcc,
+        extractedEcc: baseFormatVerification.extractedEcc,
+        eccMatch: baseFormatVerification.eccMatch,
+        expectedMask,
+        extractedMask: baseFormatVerification.extractedMask,
+        maskMatch: baseFormatVerification.maskMatch,
+      });
+      // This is a critical bug in the base matrix generation
+      // Return base matrix anyway as there's nothing better to return
+    }
+  }
+  
+  log.debug('Base matrix (0 vectors) validation PASSED', {
     decodedData: baseScan.data,
     decodedLength: baseScan.data?.length,
-    validationMethod: 'BYTE_EXACT_PREFIX',
+    validationMethod: 'SEMANTIC_HARD_GATE',
+    formatVerified: baseFormatVerification?.valid,
+    extractedEcc: baseFormatVerification?.extractedEcc,
+    extractedMask: baseFormatVerification?.extractedMask,
   });
 
   // Binary search for maximum vectors
@@ -378,22 +428,48 @@ export function binarySearchMaxVectors(
 
     const scan = scanQRFn(result.matrix);
     
-    // CRITICAL FOR HYBRID QR-ART: Use STRICT byte-exact validation
-    // A configuration "works" if:
-    // 1. The QR scans successfully AND
-    // 2. Decoded data length >= original data length AND
+    // SEMANTIC-HARD-GATE FOR HYBRID QR-ART:
+    // A configuration "works" if ALL of the following are true:
+    // 1. The QR scans successfully
+    // 2. Decoded data length >= original data length
     // 3. First N bytes match exactly (N = original data length)
+    // 4. Format info ECC matches expected (if provided)
+    // 5. Format info mask matches expected (if provided)
     //
     // We use byte-exact comparison to catch subtle corruption.
     // The suffix CAN be modified - that's the point of QR-Art!
     // Only the original URL/data (protected region) must be byte-for-byte identical.
     
-    let originalDataValid = false;
-    let validation: ReturnType<typeof validateByteExactPrefix> = { valid: false, reason: 'not scanned' };
+    let isValid = false;
+    let validation: BinarySearchValidationResult = { 
+      valid: false, 
+      reason: 'SCAN_FAILED',
+      description: 'not scanned',
+    };
+    let formatVerification: FormatVerificationResult | undefined;
     
     if (scan.success) {
+      // Step 1: Byte-exact prefix validation
       validation = validateByteExactPrefix(scan.data, expectedData);
-      originalDataValid = validation.valid;
+      
+      if (validation.valid) {
+        // Step 2: Format info verification (if ECC and mask provided)
+        if (expectedEcc !== undefined && expectedMask !== undefined) {
+          formatVerification = verifyMatrixFormatInfo(result.matrix, expectedEcc, expectedMask);
+          if (!formatVerification.valid) {
+            validation = {
+              valid: false,
+              reason: formatVerification.reason || 'ECC_MISMATCH',
+              description: `Format info mismatch: ECC ${formatVerification.extractedEcc} vs ${expectedEcc}, mask ${formatVerification.extractedMask} vs ${expectedMask}`,
+            };
+          } else {
+            isValid = true;
+          }
+        } else {
+          // No format verification requested, byte-exact is enough
+          isValid = true;
+        }
+      }
     }
 
     log.debug('Binary search iteration', {
@@ -402,9 +478,18 @@ export function binarySearchMaxVectors(
       high,
       mid,
       scans: scan.success,
-      byteExactValid: originalDataValid,
-      validationReason: validation.valid ? undefined : validation.reason,
+      byteExactValid: validation.valid || isValid,
+      formatVerified: formatVerification?.valid,
+      rejectionReason: isValid ? undefined : validation.reason,
+      description: isValid ? undefined : validation.description,
       mismatchIndex: validation.mismatchIndex,
+      // Format info details if verified
+      ...(formatVerification ? {
+        extractedEcc: formatVerification.extractedEcc,
+        extractedMask: formatVerification.extractedMask,
+        eccMatch: formatVerification.eccMatch,
+        maskMatch: formatVerification.maskMatch,
+      } : {}),
       // Show details about the decoded data
       ...(scan.success ? {
         decodedLength: scan.data?.length,
@@ -413,15 +498,15 @@ export function binarySearchMaxVectors(
       } : {}),
     });
 
-    if (originalDataValid) {
-      // This count works - original data is preserved (byte-exact), try more vectors for better image
+    if (isValid) {
+      // This count works - all semantic checks passed, try more vectors for better image
       bestCount = mid;
       bestMatrix = result.matrix;
       bestBlockData = result.modifiedBlockData;
       bestBlockEcc = result.modifiedBlockEcc;
       low = mid + 1;
     } else {
-      // This count doesn't work (either doesn't scan OR byte-exact validation failed), try fewer
+      // This count doesn't work (scan failed, byte mismatch, or format info mismatch), try fewer
       high = mid - 1;
     }
   }
