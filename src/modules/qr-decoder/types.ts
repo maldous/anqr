@@ -101,9 +101,36 @@ export interface DecodeResult {
   structuredAppendParity?: number | null;
   /** Complete decoder metadata for debugging - authoritative source of truth */
   decoderMetadata?: DecoderMetadata;
+  /** Whether the decode was structurally valid (no truncated/fake segments after primary) */
+  structurallyValid?: boolean;
+  /** Number of segments decoded (including terminator if found) */
+  segmentCount?: number;
+  /** Array of segment info for each decoded segment */
+  segments?: DecodedSegmentInfo[];
 }
 
 export type ECCLevelChar = 'L' | 'M' | 'Q' | 'H';
+
+/**
+ * Information about a single decoded segment.
+ * Used to detect fake/truncated segments after the primary data.
+ */
+export interface DecodedSegmentInfo {
+  /** Segment index (0-based) */
+  index: number;
+  /** Mode indicator nibble (0-15) */
+  mode: number;
+  /** Mode name for debugging */
+  modeName: 'numeric' | 'alphanumeric' | 'byte' | 'kanji' | 'eci' | 'terminator' | 'unknown';
+  /** Character count from header */
+  charCount: number;
+  /** Actual characters/bytes decoded */
+  decodedLength: number;
+  /** Whether this segment decoded without truncation */
+  valid: boolean;
+  /** Bit offset where this segment started */
+  bitOffset: number;
+}
 
 // ECC level mapping (from format info bits)
 export const ECC_LEVEL_MAP: Record<number, ECCLevelChar> = {

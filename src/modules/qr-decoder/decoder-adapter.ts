@@ -13,7 +13,7 @@ import { ChecksumException, FormatException, NotFoundException } from './excepti
 import { BinaryBitmap, type LuminanceSource, RGBALuminanceSource } from './luminance';
 import { Reader } from './reader';
 import { DecodeHintType, type Result, ResultMetadataType } from './result-types';
-import type { DecodeResult, DecoderMetadata, ECCLevelChar } from './types';
+import type { DecodeResult, DecodedSegmentInfo, DecoderMetadata, ECCLevelChar } from './types';
 
 /**
  * Create luminance source from ImageData with transparency handling
@@ -221,6 +221,9 @@ function extractDecodeResult(result: Result, imageData: ImageData): DecodeResult
     totalByteLength: dataBytes?.length ?? 0,
   };
 
+  // Note: The ZXing-style decoder doesn't expose segment-level info the same way
+  // our custom decoder does. We set structurallyValid=true since ZXing would have
+  // thrown an exception if segment parsing failed.
   return {
     success: true,
     data: text,
@@ -238,6 +241,9 @@ function extractDecodeResult(result: Result, imageData: ImageData): DecodeResult
     structuredAppendSequence,
     structuredAppendParity,
     decoderMetadata,
+    structurallyValid: true, // ZXing decoder would have failed if segments were corrupt
+    segmentCount: byteSegments?.length ?? 1, // Approximate from byte segments
+    segments: undefined, // Not available from ZXing decoder
   };
 }
 
@@ -386,6 +392,9 @@ function tryDecode(
       totalByteLength: dataBytes?.length ?? 0,
     };
 
+    // Note: The ZXing-style decoder doesn't expose segment-level info the same way
+    // our custom decoder does. We set structurallyValid=true since ZXing would have
+    // thrown an exception if segment parsing failed.
     return {
       success: true,
       data: text,
@@ -403,6 +412,9 @@ function tryDecode(
       structuredAppendSequence,
       structuredAppendParity,
       decoderMetadata, // Complete metadata for debugging
+      structurallyValid: true, // ZXing decoder would have failed if segments were corrupt
+      segmentCount: byteSegments?.length ?? 1, // Approximate from byte segments
+      segments: undefined, // Not available from ZXing decoder
     };
   } catch (err) {
     // Decoder throws exceptions for various decode failures - log the specific type

@@ -14,7 +14,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { decodeQR } from '../qr-decoder';
+import { decodeQR, type DecodedSegmentInfo } from '../qr-decoder';
 import { qrcode } from '../qr-encoder';
 import { qrBitBuffer } from '../qr-encoder/bit-buffer';
 import { qr8BitByte } from '../qr-encoder/data-modes';
@@ -305,6 +305,24 @@ function performSemanticValidation(
     // Note: We don't require exact suffix match (that's the point of QR-Art!)
     // But we should have SOME data after the original
     // For now, just log the suffix status
+  }
+  
+  // Step 6: Verify structural validity (no extra fake segments after primary data)
+  // This catches the "byte segment ok, then fake Kanji" pattern that occurs when
+  // terminator bits get flipped to fake mode indicators
+  if (scanResult.structurallyValid === false) {
+    // Get segment info for detailed error message
+    const segmentModes = scanResult.segments?.map(s => s.modeName) ?? [];
+    const invalidSegments = scanResult.segments?.filter(s => !s.valid) ?? [];
+    
+    return {
+      valid: false,
+      reason: 'EXTRA_SEGMENT',
+      description: `Extra/fake segment(s) detected after primary data (modes: ${segmentModes.join(', ')})`,
+      details: {
+        segmentCount: scanResult.segmentCount,
+      },
+    };
   }
   
   // All checks passed!
@@ -698,6 +716,8 @@ function validateFinderPatterns(matrix: boolean[][]): {
   };
 }
 
+// DecodedSegmentInfo is imported from '../qr-decoder'
+
 /**
  * Result of scanning a QR matrix
  */
@@ -710,8 +730,12 @@ interface ScanResult {
   error?: string;
   /** Number of scan attempts made */
   attempts?: number;
-  /** Whether the decoder reported fully valid structure (no truncated segments) */
+  /** Whether the decoder reported fully valid structure (no truncated/fake segments) */
   structurallyValid?: boolean;
+  /** Number of segments decoded (including terminator if found) */
+  segmentCount?: number;
+  /** Array of segment info for each decoded segment */
+  segments?: DecodedSegmentInfo[];
 }
 
 /**
@@ -724,6 +748,12 @@ interface ScanResult {
  * - The data was extracted
  * 
  * This does NOT guarantee the data is correct - caller must verify content!
+ * 
+ * STRUCTURAL VALIDITY:
+ * The result includes `structurallyValid` to indicate if the QR code has a clean
+ * segment structure (no truncated/fake segments after the primary data).
+ * When terminator bits get flipped to fake mode indicators (like 0x8 = Kanji),
+ * structurallyValid will be false even if data was extracted.
  */
 function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
   const moduleCount = matrix.length;
@@ -786,8 +816,40 @@ function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
         inversionAttempts: 'attemptBoth',
       });
 
-      if (result) {
-        return { success: true, data: result.data, attempts };
+      if (result && result.data !== null) {
+        // Extract segment info for structural validation
+        const segments: DecodedSegmentInfo[] = result.segments?.map(s => ({
+          index: s.index,
+          mode: s.mode,
+          modeName: s.modeName,
+          charCount: s.charCount,
+          decodedLength: s.decodedLength,
+          valid: s.valid,
+          bitOffset: s.bitOffset,
+        })) ?? [];
+        
+        // Check for fake/extra segments after primary data
+        // This catches the "byte segment ok, then fake Kanji" pattern
+        const hasExtraInvalidSegment = segments.some((seg, idx) => {
+          // Skip first segment (primary data)
+          if (idx === 0) return false;
+          // Terminator is fine
+          if (seg.modeName === 'terminator') return false;
+          // Any non-terminator segment after primary that is invalid indicates fake segment
+          return !seg.valid || seg.modeName === 'unknown';
+        });
+        
+        // structurallyValid = decoder said valid AND no extra invalid segments detected
+        const structurallyValid = (result.structurallyValid ?? true) && !hasExtraInvalidSegment;
+        
+        return {
+          success: true,
+          data: result.data,
+          attempts,
+          structurallyValid,
+          segmentCount: result.segmentCount ?? segments.length,
+          segments,
+        };
       }
       lastError = `Config ${attempts}: Decoder returned null`;
     } catch (err) {
@@ -934,6 +996,19 @@ export function matrixToQRLike(matrix: boolean[][]): {
  * Result of base QR generation with data extraction
  */
 interface BaseQRResult {
+  /** Whether generation succeeded */
+  success: boolean;
+  /** Error message if failed */
+  error?: string;
+  /** Rejection reason if failed */
+  rejectionReason?: RejectionReason;
+  /** Details about the failure (e.g., expected vs actual values) */
+  errorDetails?: {
+    expectedEcc?: ECCLevel;
+    actualEcc?: ECCLevel;
+    expectedMask?: number;
+    actualMask?: number;
+  };
   matrix: boolean[][];
   actualVersion: number;
   actualMask: number;
@@ -1075,9 +1150,14 @@ function generateBaseQR(
   );
   
   // VERIFICATION: Verify format info matches expected values
+  // FAIL FAST: If format info doesn't match, return error result immediately
   const formatVerification = verifyMatrixFormatInfo(matrix, ecc, actualMask);
   if (!formatVerification.valid) {
-    log.error('BASE MATRIX FORMAT VERIFICATION FAILED!', {
+    const errorMsg = formatVerification.reason === 'ECC_MISMATCH'
+      ? `Base matrix ECC mismatch: expected ${ecc}, got ${formatVerification.extractedEcc}`
+      : `Base matrix mask mismatch: expected ${actualMask}, got ${formatVerification.extractedMask}`;
+    
+    log.error('BASE MATRIX FORMAT VERIFICATION FAILED - FAIL FAST!', {
       expectedEcc: ecc,
       extractedEcc: formatVerification.extractedEcc,
       eccMatch: formatVerification.eccMatch,
@@ -1085,15 +1165,35 @@ function generateBaseQR(
       extractedMask: formatVerification.extractedMask,
       maskMatch: formatVerification.maskMatch,
       rejectionReason: formatVerification.reason,
-      note: 'This is a critical bug in regenerateQRFromModifiedData',
+      note: 'This is a critical bug in regenerateQRFromModifiedData - returning error result',
     });
-    // We don't throw here to allow investigation, but this is a CRITICAL bug
-  } else {
-    log.debug('Base matrix format verification passed', {
-      ecc,
-      mask: actualMask,
-    });
+    
+    // FAIL FAST: Return error result instead of continuing with broken matrix
+    return {
+      success: false,
+      error: errorMsg,
+      rejectionReason: formatVerification.reason,
+      errorDetails: {
+        expectedEcc: ecc,
+        actualEcc: formatVerification.extractedEcc,
+        expectedMask: actualMask,
+        actualMask: formatVerification.extractedMask,
+      },
+      matrix,
+      actualVersion,
+      actualMask,
+      blockDataArrays,
+      blockEccArrays,
+      blockDataCounts,
+      blockEccCounts,
+      encoderLayout,
+    };
   }
+  
+  log.debug('Base matrix format verification passed', {
+    ecc,
+    mask: actualMask,
+  });
 
   // DEBUG: Compare regenerated matrix with encoder's matrix to find discrepancies
   const debugQr = qrcode(actualVersion, ecc);
@@ -1132,6 +1232,7 @@ function generateBaseQR(
   }
 
   return {
+    success: true,
     matrix,
     actualVersion,
     actualMask,
@@ -1877,6 +1978,32 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // Step 1: Generate base QR to determine version, get initial matrix, and extract per-block data/ECC
     // HYBRID MODE: Pass originalDataLength to track protection boundaries
     const baseResult = generateBaseQR(encodedData, versionToUse, ecc, maskPattern, originalDataLength);
+    
+    // FAIL FAST: If base matrix generation failed (e.g., ECC/mask mismatch), return error immediately
+    if (!baseResult.success) {
+      log.error('BASE QR GENERATION FAILED - FAIL FAST!', {
+        error: baseResult.error,
+        rejectionReason: baseResult.rejectionReason,
+        errorDetails: baseResult.errorDetails,
+        note: 'This indicates a critical bug in the QR encoder or regeneration pipeline',
+      });
+      
+      return {
+        success: false,
+        error: baseResult.error ?? 'Base QR generation failed with unknown error',
+        matrix: baseResult.matrix,
+        moduleCount: baseResult.matrix.length,
+        version: baseResult.actualVersion,
+        maskPattern: baseResult.actualMask,
+        matchingPixels: 0,
+        totalControllable: 0,
+        matchPercentage: 0,
+        encodedData: encodedData,
+        originalData: data,
+        suffix: actualSuffix,
+      };
+    }
+    
     const {
       matrix: baseMatrix,
       actualVersion,
@@ -3058,6 +3185,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         decodedDataLength: scanResult.data?.length,
         ecc,
         mask: actualMask,
+        structurallyValid: scanResult.structurallyValid,
+        segmentCount: scanResult.segmentCount,
+        segmentModes: scanResult.segments?.map(s => s.modeName),
         validationMethod: 'SEMANTIC_HARD_GATE',
         checksPerformed: [
           'SCAN_SUCCESS',
@@ -3065,6 +3195,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           'BYTE_EXACT_PREFIX',
           'ECC_INVARIANT',
           'MASK_INVARIANT',
+          'STRUCTURAL_VALIDITY',
         ],
       });
     } else {
@@ -3077,6 +3208,15 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         originalDataLength,
         ecc,
         mask: actualMask,
+        structurallyValid: scanResult.structurallyValid,
+        segmentCount: scanResult.segmentCount,
+        segmentModes: scanResult.segments?.map(s => s.modeName),
+        segments: scanResult.segments?.map(s => ({
+          mode: s.modeName,
+          charCount: s.charCount,
+          valid: s.valid,
+          bitOffset: s.bitOffset,
+        })),
         note: 'Candidate rejected by semantic-hard-gate',
       });
       
@@ -3183,20 +3323,34 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         );
         
         if (postSearchValidation.valid) {
+          const postSearchScan = scanMatrixWithJsQR(finalMatrixToUse);
           log.info('Binary search result SEMANTIC-HARD-GATE validation PASSED', {
             originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
             ecc,
             mask: actualMask,
+            structurallyValid: postSearchScan.structurallyValid,
+            segmentCount: postSearchScan.segmentCount,
+            segmentModes: postSearchScan.segments?.map(s => s.modeName),
             validationMethod: 'SEMANTIC_HARD_GATE',
           });
           // Update scanResult for downstream logic
-          scanResult = scanMatrixWithJsQR(finalMatrixToUse);
+          scanResult = postSearchScan;
         } else {
+          const postSearchScan = scanMatrixWithJsQR(finalMatrixToUse);
           log.error('Binary search result SEMANTIC-HARD-GATE validation FAILED!', {
             rejectionReason: postSearchValidation.reason,
             description: postSearchValidation.description,
             details: postSearchValidation.details,
             expectedOriginal: data,
+            structurallyValid: postSearchScan.structurallyValid,
+            segmentCount: postSearchScan.segmentCount,
+            segmentModes: postSearchScan.segments?.map(s => s.modeName),
+            segments: postSearchScan.segments?.map(s => ({
+              mode: s.modeName,
+              charCount: s.charCount,
+              valid: s.valid,
+              bitOffset: s.bitOffset,
+            })),
           });
           // Mark as failed
           scanResult = {
@@ -3243,6 +3397,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     const matchPercentage = total > 0 ? (matching / total) * 100 : 0;
 
+    // Get final scan result for segment info
+    const finalScan = scanMatrixWithJsQR(finalMatrixToUse);
+    
     log.info('QR-Art generation complete (SEMANTIC-HARD-GATE TWO-INTERVAL HYBRID)', {
       success: true,
       matchingPixels: matching,
@@ -3258,8 +3415,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         maskInvariantLocked: true,
         byteExactPrefixMatch: true,
         formatInfoVerified: true,
+        structuralValidityChecked: true,
         ecc,
         mask: actualMask,
+      },
+      structuralInfo: {
+        structurallyValid: finalScan.structurallyValid,
+        segmentCount: finalScan.segmentCount,
+        segmentModes: finalScan.segments?.map(s => s.modeName),
       },
       twoIntervalStrategy: {
         suffixSafeBits: encoderLayout.suffixBits,

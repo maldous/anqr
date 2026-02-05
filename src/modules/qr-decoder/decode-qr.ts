@@ -262,7 +262,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
 
     // Check if decode was valid (no truncation or corrupt segments)
     if (!decoded.valid) {
-      qrDecoderLog.trace('main: Failed - decode reported invalid (truncation or corrupt data)');
+      qrDecoderLog.trace('main: Failed - decode reported invalid (truncation or corrupt data)', {
+        structurallyValid: decoded.structurallyValid,
+        segmentCount: decoded.segmentCount,
+        segments: decoded.segments.map(s => ({ mode: s.modeName, valid: s.valid, charCount: s.charCount })),
+      });
       return null;
     }
 
@@ -293,6 +297,9 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       version: Math.round(version),
       eccLevel: getECCLevelChar(formatInfo.eccLevel),
       maskPattern: usedMask,
+      structurallyValid: decoded.structurallyValid,
+      segmentCount: decoded.segmentCount,
+      segments: decoded.segments,
     };
   } catch (err) {
     qrDecoderLog.trace('main: Exception during decode', { error: String(err) });
