@@ -7,6 +7,11 @@
  * When applying all selected vectors produces an unscannable QR code,
  * this module uses binary search to find the optimal subset of vectors
  * that maximizes image quality while maintaining scannability.
+ * 
+ * HYBRID ACCEPTANCE CRITERIA:
+ * - Decoder must successfully scan (success=true)
+ * - Decoded data must be long enough (length >= originalLength)
+ * - First N bytes must match exactly (byte-exact comparison)
  */
 
 import { createLogger } from '../../lib/logger';
@@ -15,6 +20,59 @@ import { applySelectedVectorsToBlock } from './elimination';
 import type { RSBasisVector } from './rs-basis';
 
 const log = createLogger('QART');
+
+/**
+ * Validate that decoded data preserves the original data exactly (byte-level comparison).
+ * This is the STRICT acceptance criteria for HYBRID QR-Art.
+ * 
+ * Requirements:
+ * 1. Decoded data must exist
+ * 2. Decoded data length >= original data length
+ * 3. First N bytes must match exactly (N = original data length)
+ * 
+ * @param decoded The decoded string from scanning
+ * @param originalData The original data that must be preserved
+ * @returns Validation result with details
+ */
+function validateByteExactPrefix(
+  decoded: string | undefined,
+  originalData: string
+): {
+  valid: boolean;
+  reason?: string;
+  mismatchIndex?: number;
+  expectedByte?: number;
+  actualByte?: number;
+} {
+  if (decoded === undefined || decoded === null) {
+    return { valid: false, reason: 'decoded data is null/undefined' };
+  }
+  
+  if (decoded.length < originalData.length) {
+    return { 
+      valid: false, 
+      reason: `decoded length (${decoded.length}) < original length (${originalData.length})` 
+    };
+  }
+  
+  // Byte-exact comparison for the protected prefix
+  for (let i = 0; i < originalData.length; i++) {
+    const expectedByte = originalData.charCodeAt(i);
+    const actualByte = decoded.charCodeAt(i);
+    
+    if (expectedByte !== actualByte) {
+      return {
+        valid: false,
+        reason: `byte mismatch at index ${i}`,
+        mismatchIndex: i,
+        expectedByte,
+        actualByte,
+      };
+    }
+  }
+  
+  return { valid: true };
+}
 
 /**
  * A flattened selection entry that combines block info with vector info
@@ -256,35 +314,42 @@ export function binarySearchMaxVectors(
     return { maxCount: 0, matrix: baseResult.matrix, modifiedBlockData: baseResult.modifiedBlockData, modifiedBlockEcc: baseResult.modifiedBlockEcc, iterations: 1 };
   }
   
-  // CRITICAL: Verify base matrix decodes to data that STARTS WITH expectedData
+  // CRITICAL: Use STRICT byte-exact validation for base matrix
   // HYBRID MODE: expectedData is the original URL only - suffix may vary
-  // We use startsWith because the suffix can be modified (that's the point of QR-Art)
-  if (!baseScan.data?.startsWith(expectedData)) {
-    log.error('Base matrix (0 vectors) does not match expected data - encoding bug!', {
+  // We use byte-exact comparison to catch subtle corruption
+  const baseValidation = validateByteExactPrefix(baseScan.data, expectedData);
+  
+  if (!baseValidation.valid) {
+    // Generate hex dump of first 32 bytes for comparison
+    const decoded = baseScan.data || '';
+    const expectedHexDump = Array.from(expectedData.slice(0, 32)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+    const decodedHexDump = Array.from(decoded.slice(0, 32)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+    
+    log.error('Base matrix (0 vectors) byte-exact validation FAILED - encoding bug!', {
       expectedData: expectedData,
       expectedDataLength: expectedData.length,
       decodedData: baseScan.data,
       decodedLength: baseScan.data?.length,
-      exactMatch: baseScan.data === expectedData,
-      // Show first difference in the protected region
-      firstDiff: (() => {
-        const orig = expectedData;
-        const decoded = baseScan.data || '';
-        for (let i = 0; i < orig.length; i++) {
-          if (orig[i] !== decoded[i]) {
-            return { index: i, expected: orig[i], actual: decoded[i] };
-          }
-        }
-        return null;
-      })(),
+      validationReason: baseValidation.reason,
+      mismatchIndex: baseValidation.mismatchIndex,
+      expectedByte: baseValidation.expectedByte?.toString(16),
+      actualByte: baseValidation.actualByte?.toString(16),
     });
+    
+    log.error('BYTE-LEVEL COMPARISON (first 32 bytes)', {
+      expectedHex: expectedHexDump,
+      decodedHex: decodedHexDump,
+      mismatchIndex: baseValidation.mismatchIndex,
+    });
+    
     // Return base matrix anyway - at least it scans to something
     return { maxCount: 0, matrix: baseResult.matrix, modifiedBlockData: baseResult.modifiedBlockData, modifiedBlockEcc: baseResult.modifiedBlockEcc, iterations: 1 };
   }
   
-  log.debug('Base matrix (0 vectors) validation passed', {
+  log.debug('Base matrix (0 vectors) byte-exact validation PASSED', {
     decodedData: baseScan.data,
-    exactMatch: true,
+    decodedLength: baseScan.data?.length,
+    validationMethod: 'BYTE_EXACT_PREFIX',
   });
 
   // Binary search for maximum vectors
@@ -313,16 +378,23 @@ export function binarySearchMaxVectors(
 
     const scan = scanQRFn(result.matrix);
     
-    // CRITICAL FOR HYBRID QR-ART: A configuration "works" if:
+    // CRITICAL FOR HYBRID QR-ART: Use STRICT byte-exact validation
+    // A configuration "works" if:
     // 1. The QR scans successfully AND
-    // 2. The decoded data STARTS WITH expectedData (prefix match)
+    // 2. Decoded data length >= original data length AND
+    // 3. First N bytes match exactly (N = original data length)
     //
-    // We use prefix match (startsWith) NOT exact match because:
-    // - QR-Art intentionally modifies suffix bits to control pixel appearance
-    // - The suffix WILL change as we apply vectors - that's the whole point!
-    // - Only the original URL/data (protected region) must be preserved
-    // - Exact match would reject ALL vector configurations!
-    const originalDataPreserved = scan.success && scan.data?.startsWith(expectedData);
+    // We use byte-exact comparison to catch subtle corruption.
+    // The suffix CAN be modified - that's the point of QR-Art!
+    // Only the original URL/data (protected region) must be byte-for-byte identical.
+    
+    let originalDataValid = false;
+    let validation: ReturnType<typeof validateByteExactPrefix> = { valid: false, reason: 'not scanned' };
+    
+    if (scan.success) {
+      validation = validateByteExactPrefix(scan.data, expectedData);
+      originalDataValid = validation.valid;
+    }
 
     log.debug('Binary search iteration', {
       iteration: iterations,
@@ -330,30 +402,26 @@ export function binarySearchMaxVectors(
       high,
       mid,
       scans: scan.success,
-      originalDataPreserved,
+      byteExactValid: originalDataValid,
+      validationReason: validation.valid ? undefined : validation.reason,
+      mismatchIndex: validation.mismatchIndex,
       // Show details about the decoded data
       ...(scan.success ? {
         decodedLength: scan.data?.length,
         originalLength: expectedData.length,
-        suffixModified: scan.data?.slice(expectedData.length),
-      } : {}),
-      // Show mismatch details if original data is corrupted
-      ...(scan.success && !scan.data?.startsWith(expectedData) ? {
-        mismatchType: 'ORIGINAL_DATA_CORRUPTED',
-        originalDataPreview: expectedData.slice(0, 40),
-        decodedPreview: scan.data?.slice(0, 40),
+        suffixModified: scan.data?.slice(expectedData.length)?.slice(0, 20),
       } : {}),
     });
 
-    if (originalDataPreserved) {
-      // This count works - original data is preserved, try more vectors for better image
+    if (originalDataValid) {
+      // This count works - original data is preserved (byte-exact), try more vectors for better image
       bestCount = mid;
       bestMatrix = result.matrix;
       bestBlockData = result.modifiedBlockData;
       bestBlockEcc = result.modifiedBlockEcc;
       low = mid + 1;
     } else {
-      // This count doesn't work (either doesn't scan OR original data corrupted), try fewer
+      // This count doesn't work (either doesn't scan OR byte-exact validation failed), try fewer
       high = mid - 1;
     }
   }

@@ -699,6 +699,14 @@ export interface OptimalVersionAndSuffix {
   versionUpgraded: boolean;
   /** Original minimum version that fits the data */
   originalVersion: number;
+  /** Whether suffix was capped at MAX_SUFFIX_LENGTH */
+  suffixWasCapped: boolean;
+  /** Number of padding bytes available (in addition to suffix) */
+  paddingBytes: number;
+  /** Controllable bits from suffix */
+  suffixBits: number;
+  /** Controllable bits from padding */
+  paddingBits: number;
 }
 
 /**
@@ -762,33 +770,59 @@ export function calculateOptimalVersionAndSuffix(
   let bestControlPercent = 0;
   let bestCapacity = 0;
   
+  // Track whether we capped the suffix
+  let suffixWasCapped = false;
+  let selectedPaddingBytes = 0;
+  let selectedSuffixBits = 0;
+  let selectedPaddingBits = 0;
+  
+  let bestPaddingBytes = 0;
+  let bestSuffixBits = 0;
+  let bestPaddingBits = 0;
+  let bestSuffixWasCapped = false;
+
   for (let version = startVersion; version <= maxVersionToTry; version++) {
     const blocks = getRSBlockInfo(version, ecc);
     const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
     const totalDataBits = totalDataBytes * 8;
     
-    // Calculate MAXIMUM suffix for this version - we want to use ALL available capacity
+    // Calculate MAXIMUM suffix for this version
     const headerOverhead = version <= 9 ? 2 : 3;
     const terminatorOverhead = 1;
     const maxSuffixLen = totalDataBytes - dataLength - headerOverhead - terminatorOverhead;
     
     if (maxSuffixLen <= 0) continue;
     
+    // CAP suffix at MAX_SUFFIX_LENGTH to prevent noisy baseline
+    // Extra capacity goes to padding, which is also controllable!
+    const actualSuffixLen = Math.min(maxSuffixLen, MAX_SUFFIX_LENGTH);
+    const wasCapped = maxSuffixLen > MAX_SUFFIX_LENGTH;
+    
+    // Padding bytes = capacity not used by original data, suffix, header, terminator
+    const paddingBytes = Math.max(0, totalDataBytes - dataLength - actualSuffixLen - headerOverhead - terminatorOverhead);
+    
     // Calculate protected bits (original data only, not suffix)
     const headerBits = getHeaderBitCount(version);
     const contentBits = headerBits + dataLength * 8 + 4; // +4 for terminator
     const protectedBits = Math.ceil(contentBits / 8) * 8;
     
-    // Controllable bits = total - protected (suffix bits are controllable!)
-    const controllableBits = totalDataBits - protectedBits;
+    // Controllable bits = suffix bits + padding bits
+    const suffixBits = actualSuffixLen * 8;
+    const paddingBitsVal = paddingBytes * 8;
+    const controllableBits = suffixBits + paddingBitsVal;
     const controlPercent = (controllableBits / totalDataBits) * 100;
     
-    log.debug('Evaluating version for QR-Art (full capacity)', {
+    log.debug('Evaluating version for QR-Art (capped suffix)', {
       version,
       totalDataBytes,
       maxSuffixLen,
+      actualSuffixLen,
+      suffixWasCapped: wasCapped,
+      paddingBytes,
       protectedBits,
       controllableBits,
+      suffixBits,
+      paddingBits: paddingBitsVal,
       controlPercent: `${controlPercent.toFixed(1)}%`,
       meetsThreshold: controlPercent >= minControlPercent,
     });
@@ -796,24 +830,34 @@ export function calculateOptimalVersionAndSuffix(
     // Track the best option seen so far
     if (controlPercent > bestControlPercent) {
       bestVersion = version;
-      bestSuffixLength = maxSuffixLen;
+      bestSuffixLength = actualSuffixLen;
       bestControlPercent = controlPercent;
       bestCapacity = totalDataBytes;
+      bestPaddingBytes = paddingBytes;
+      bestSuffixBits = suffixBits;
+      bestPaddingBits = paddingBitsVal;
+      bestSuffixWasCapped = wasCapped;
     }
     
-    // If this version meets minimum threshold, SELECT it with FULL capacity and stop
-    // We want the SMALLEST version that meets threshold, with FULL suffix
+    // If this version meets minimum threshold, SELECT it and stop
+    // We want the SMALLEST version that meets threshold
     if (controlPercent >= minControlPercent && selectedVersion === startVersion) {
       selectedVersion = version;
-      selectedSuffixLength = maxSuffixLen; // Use FULL capacity, not partial!
+      selectedSuffixLength = actualSuffixLen;
       selectedControlPercent = controlPercent;
       selectedCapacity = totalDataBytes;
+      suffixWasCapped = wasCapped;
+      selectedPaddingBytes = paddingBytes;
+      selectedSuffixBits = suffixBits;
+      selectedPaddingBits = paddingBitsVal;
       
-      log.info('Selected version meets minimum control threshold', {
+      log.info('Selected version meets minimum control threshold (capped suffix)', {
         version,
         controlPercent: `${controlPercent.toFixed(1)}%`,
         minThreshold: `${minControlPercent}%`,
-        suffixLength: maxSuffixLen,
+        suffixLength: actualSuffixLen,
+        suffixWasCapped: wasCapped,
+        paddingBytes,
         totalCapacity: totalDataBytes,
       });
       break;
@@ -826,22 +870,30 @@ export function calculateOptimalVersionAndSuffix(
     selectedSuffixLength = bestSuffixLength;
     selectedControlPercent = bestControlPercent;
     selectedCapacity = bestCapacity;
+    suffixWasCapped = bestSuffixWasCapped;
+    selectedPaddingBytes = bestPaddingBytes;
+    selectedSuffixBits = bestSuffixBits;
+    selectedPaddingBits = bestPaddingBits;
     
     log.warn('No version achieved minimum control threshold, using best available', {
       bestVersion,
       bestControlPercent: `${bestControlPercent.toFixed(1)}%`,
       minThreshold: `${minControlPercent}%`,
       suffixLength: bestSuffixLength,
+      suffixWasCapped: bestSuffixWasCapped,
+      paddingBytes: bestPaddingBytes,
     });
   }
   
   const versionUpgraded = selectedVersion > originalVersion;
   
-  log.info('Calculated optimal version and suffix for QR-Art', {
+  log.info('Calculated optimal version and suffix for QR-Art (DECOUPLED)', {
     originalVersion,
     selectedVersion,
     versionUpgraded,
     suffixLength: selectedSuffixLength,
+    suffixWasCapped,
+    paddingBytes: selectedPaddingBytes,
     expectedControlPercent: `${selectedControlPercent.toFixed(1)}%`,
     minControlPercent: `${minControlPercent}%`,
     thresholdAchieved: selectedControlPercent >= minControlPercent,
@@ -849,6 +901,11 @@ export function calculateOptimalVersionAndSuffix(
     dataLength,
     ecc,
     capacityUsage: `${dataLength + selectedSuffixLength + 3}/${selectedCapacity} bytes`,
+    controllableBits: {
+      suffix: selectedSuffixBits,
+      padding: selectedPaddingBits,
+      total: selectedSuffixBits + selectedPaddingBits,
+    },
   });
   
   return {
@@ -858,13 +915,77 @@ export function calculateOptimalVersionAndSuffix(
     expectedControlPercent: selectedControlPercent,
     versionUpgraded,
     originalVersion,
+    suffixWasCapped,
+    paddingBytes: selectedPaddingBytes,
+    suffixBits: selectedSuffixBits,
+    paddingBits: selectedPaddingBits,
   };
+}
+
+/**
+ * Maximum suffix length to prevent baseline from becoming too noisy.
+ * Larger versions should use PADDING for extra control, not more suffix bytes.
+ * 
+ * With 64 chars of suffix + header, we get ~520 bits of controllable suffix.
+ * Additional controllable bits come from padding codewords.
+ */
+export const MAX_SUFFIX_LENGTH = 64;
+
+/**
+ * Simple hash function to create a deterministic seed from a string.
+ * Uses djb2 algorithm.
+ * 
+ * @param str Input string to hash
+ * @returns 32-bit hash value
+ */
+export function hashStringToSeed(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+  }
+  return hash >>> 0; // Convert to unsigned 32-bit
+}
+
+/**
+ * Mulberry32 PRNG - simple, fast, deterministic random number generator.
+ * Given the same seed, produces the same sequence of numbers.
+ * 
+ * @param seed 32-bit seed value
+ * @returns Function that returns next random number in [0, 1)
+ */
+export function mulberry32(seed: number): () => number {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Generate a deterministic URL-safe suffix.
+ * Given the same input data and version, ALWAYS produces the same suffix.
+ * This ensures the baseline QR is stable across runs, making QR-Art more predictable.
+ * 
+ * @param length Number of characters
+ * @param seed Seed value (typically from hashStringToSeed)
+ * @returns Deterministic suffix string
+ */
+export function generateDeterministicSuffix(length: number, seed: number): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const random = mulberry32(seed);
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(random() * chars.length));
+  }
+  return result;
 }
 
 /**
  * Generate a random URL-safe suffix
  * This is useful for creating controllable characters that can be modified
  * 
+ * @deprecated Use generateDeterministicSuffix for stable baselines
  * @param length Number of characters
  * @returns Random suffix string
  */
