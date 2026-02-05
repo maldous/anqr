@@ -63,6 +63,9 @@ import {
 // Re-export BitRange for use in EncoderDerivedLayout
 export type { BitRange };
 
+// Export ECCLevel type alias for use in other modules
+export type { ECCLevel } from './bit-mapping';
+
 /**
  * Helper to compare two Uint8Arrays
  */
@@ -185,6 +188,132 @@ function validateOriginalDataPreserved(
 }
 
 /**
+ * SEMANTIC-HARD-GATE VALIDATION
+ * 
+ * This is the STRICT acceptance criteria for QR-Art candidates.
+ * A candidate is ONLY accepted if ALL of the following are true:
+ * 
+ * 1. Decoder successfully scanned the matrix
+ * 2. Decoded data length >= original data length  
+ * 3. First N bytes match exactly (N = original data length)
+ * 4. Format info ECC matches requested ECC
+ * 5. Format info mask matches requested mask
+ * 
+ * This function performs comprehensive validation and returns
+ * detailed rejection reasons for debugging.
+ * 
+ * @param matrix The QR matrix to validate
+ * @param originalData The original data that must be preserved
+ * @param expectedEcc The requested ECC level
+ * @param expectedMask The requested mask pattern
+ * @param expectedSuffix Optional: the expected suffix (for HYBRID mode)
+ * @param scanFn Function to scan the matrix
+ * @returns Comprehensive validation result
+ */
+function performSemanticValidation(
+  matrix: boolean[][],
+  originalData: string,
+  expectedEcc: ECCLevel,
+  expectedMask: number,
+  expectedSuffix: string | undefined,
+  scanFn: (matrix: boolean[][]) => ScanResult
+): SemanticValidationResult {
+  // Step 1: Scan the matrix
+  const scanResult = scanFn(matrix);
+  
+  if (!scanResult.success) {
+    return {
+      valid: false,
+      reason: 'SCAN_FAILED',
+      description: `Scan failed: ${scanResult.error}`,
+    };
+  }
+  
+  const decoded = scanResult.data;
+  
+  // Step 2: Check decoded data exists and has sufficient length
+  if (decoded === undefined || decoded === null) {
+    return {
+      valid: false,
+      reason: 'SCAN_FAILED',
+      description: 'Decoded data is null/undefined',
+    };
+  }
+  
+  if (decoded.length < originalData.length) {
+    return {
+      valid: false,
+      reason: 'LENGTH_TOO_SHORT',
+      description: `Decoded length ${decoded.length} < original length ${originalData.length}`,
+      details: {
+        expectedLength: originalData.length,
+        actualLength: decoded.length,
+      },
+    };
+  }
+  
+  // Step 3: Byte-exact prefix comparison
+  for (let i = 0; i < originalData.length; i++) {
+    const expectedByte = originalData.charCodeAt(i);
+    const actualByte = decoded.charCodeAt(i);
+    
+    if (expectedByte !== actualByte) {
+      return {
+        valid: false,
+        reason: 'BYTE_MISMATCH',
+        description: `Byte mismatch at index ${i}: expected 0x${expectedByte.toString(16)}, got 0x${actualByte.toString(16)}`,
+        details: {
+          mismatchIndex: i,
+          expectedByte,
+          actualByte,
+        },
+      };
+    }
+  }
+  
+  // Step 4: Verify format info (ECC and mask)
+  const formatInfo = extractMaskFromMatrix(matrix);
+  const actualEccLevel = eccNumericToLevel(formatInfo.eccLevel);
+  
+  if (actualEccLevel !== expectedEcc) {
+    return {
+      valid: false,
+      reason: 'ECC_MISMATCH',
+      description: `Format ECC mismatch: expected ${expectedEcc}, got ${actualEccLevel}`,
+      details: {
+        expectedEcc,
+        actualEcc: actualEccLevel,
+      },
+    };
+  }
+  
+  if (formatInfo.mask !== expectedMask) {
+    return {
+      valid: false,
+      reason: 'MASK_MISMATCH',
+      description: `Format mask mismatch: expected ${expectedMask}, got ${formatInfo.mask}`,
+      details: {
+        expectedMask,
+        actualMask: formatInfo.mask,
+      },
+    };
+  }
+  
+  // Step 5: If suffix is expected, verify total length matches
+  if (expectedSuffix !== undefined) {
+    const expectedTotalLength = originalData.length + expectedSuffix.length;
+    // Note: We don't require exact suffix match (that's the point of QR-Art!)
+    // But we should have SOME data after the original
+    // For now, just log the suffix status
+  }
+  
+  // All checks passed!
+  return {
+    valid: true,
+  };
+}
+
+/**
  * Calculate ECC damage estimate for a block.
  * Returns the number of data codewords changed and safe limit.
  */
@@ -210,6 +339,49 @@ function calculateECCDamage(
 }
 
 const log = createLogger('QART');
+
+/**
+ * Rejection reason codes for candidate acceptance
+ * These are used for comprehensive logging and debugging
+ */
+export type RejectionReason =
+  | 'SCAN_FAILED'
+  | 'DECODER_INVALID'
+  | 'LENGTH_TOO_SHORT'
+  | 'BYTE_MISMATCH'
+  | 'ECC_MISMATCH'
+  | 'MASK_MISMATCH'
+  | 'EXTRA_SEGMENT'
+  | 'SEGMENT_PLAN_MISMATCH'
+  | 'TERMINATOR_CORRUPT'
+  | 'BLOCK_BUDGET_EXCEEDED'
+  | 'RS_LINEARITY_BROKEN'
+  | 'PROTECTED_BYTE_VIOLATION';
+
+/**
+ * Result of semantic validation
+ */
+export interface SemanticValidationResult {
+  /** Whether validation passed */
+  valid: boolean;
+  /** Rejection reason if not valid */
+  reason?: RejectionReason;
+  /** Human-readable description */
+  description?: string;
+  /** Details about the failure */
+  details?: {
+    mismatchIndex?: number;
+    expectedByte?: number;
+    actualByte?: number;
+    expectedLength?: number;
+    actualLength?: number;
+    expectedEcc?: string;
+    actualEcc?: string;
+    expectedMask?: number;
+    actualMask?: number;
+    segmentCount?: number;
+  };
+}
 
 /**
  * Encoder-derived semantic layout - these are the ACTUAL bit positions
@@ -298,7 +470,7 @@ export interface EncoderDerivedLayout {
  * Extract format info bits from a QR matrix
  * Format info is stored in two places for redundancy
  */
-function extractFormatInfo(matrix: boolean[][]): {
+export function extractFormatInfo(matrix: boolean[][]): {
   vertical: number;
   horizontal: number;
   match: boolean;
@@ -345,6 +517,22 @@ function extractFormatInfo(matrix: boolean[][]): {
 }
 
 /**
+ * Map ECC numeric value (from format info) to ECCLevel character
+ * Format info encoding: L=1, M=0, Q=3, H=2
+ * 
+ * Exported for use in validation functions.
+ */
+export function eccNumericToLevel(eccNumeric: number): ECCLevel {
+  switch (eccNumeric) {
+    case 0: return 'M';
+    case 1: return 'L';
+    case 2: return 'H';
+    case 3: return 'Q';
+    default: return 'M';
+  }
+}
+
+/**
  * Extract the actual mask pattern from a QR matrix by reading the format info bits.
  * 
  * This is CRITICAL for auto-mask mode: when maskPattern=-1, the encoder's
@@ -359,10 +547,12 @@ function extractFormatInfo(matrix: boolean[][]): {
  * The format info is XORed with 0x5412 before placement to ensure
  * the pattern is never all-zeros (which would be hard to detect).
  * 
+ * Exported for use in validation functions.
+ * 
  * @param matrix The QR matrix to extract mask from
  * @returns Object with extracted mask, ECC, and validation info
  */
-function extractMaskFromMatrix(matrix: boolean[][]): {
+export function extractMaskFromMatrix(matrix: boolean[][]): {
   mask: number;
   eccLevel: number;
   isValid: boolean;
@@ -755,19 +945,7 @@ interface BaseQRResult {
   encoderLayout: EncoderDerivedLayout;
 }
 
-/**
- * Map ECC numeric value (from format info) to ECCLevel character
- * Format info encoding: L=1, M=0, Q=3, H=2
- */
-function eccNumericToLevel(eccNumeric: number): ECCLevel {
-  switch (eccNumeric) {
-    case 0: return 'M';
-    case 1: return 'L';
-    case 2: return 'H';
-    case 3: return 'Q';
-    default: return 'M';
-  }
-}
+// Note: eccNumericToLevel is defined and exported above
 
 /**
  * Generate a QR matrix from the encoder and extract per-block data
@@ -832,14 +1010,18 @@ function generateBaseQR(
     const extracted = extractMaskFromMatrix(tempMatrix);
     actualMask = extracted.mask;
     
-    // Validate the extracted ECC matches what we requested
+    // CRITICAL: Validate the extracted ECC matches what we requested
+    // If these don't match, the QR will decode but with wrong error correction!
     const extractedEccLevel = eccNumericToLevel(extracted.eccLevel);
     if (extractedEccLevel !== ecc) {
-      log.warn('Extracted ECC level mismatch!', {
+      log.error('FATAL: Extracted ECC level does not match requested ECC!', {
         requested: ecc,
         extracted: extractedEccLevel,
         extractedNumeric: extracted.eccLevel,
+        note: 'This is a critical encoder bug - ECC invariant violated',
       });
+      // We don't throw here because this would break the flow.
+      // Instead, we'll verify again after regeneration and fail there.
     }
     
     log.info('Extracted actual mask from encoder (auto-mask mode)', {
@@ -847,6 +1029,7 @@ function generateBaseQR(
       extractedEcc: extractedEccLevel,
       formatInfoValid: extracted.isValid,
       formatInfoMatch: extracted.formatInfoMatch,
+      eccInvariantOk: extractedEccLevel === ecc,
     });
   }
 
@@ -890,6 +1073,27 @@ function generateBaseQR(
     ecc,
     actualMask
   );
+  
+  // VERIFICATION: Verify format info matches expected values
+  const formatVerification = verifyMatrixFormatInfo(matrix, ecc, actualMask);
+  if (!formatVerification.valid) {
+    log.error('BASE MATRIX FORMAT VERIFICATION FAILED!', {
+      expectedEcc: ecc,
+      extractedEcc: formatVerification.extractedEcc,
+      eccMatch: formatVerification.eccMatch,
+      expectedMask: actualMask,
+      extractedMask: formatVerification.extractedMask,
+      maskMatch: formatVerification.maskMatch,
+      rejectionReason: formatVerification.reason,
+      note: 'This is a critical bug in regenerateQRFromModifiedData',
+    });
+    // We don't throw here to allow investigation, but this is a CRITICAL bug
+  } else {
+    log.debug('Base matrix format verification passed', {
+      ecc,
+      mask: actualMask,
+    });
+  }
 
   // DEBUG: Compare regenerated matrix with encoder's matrix to find discrepancies
   const debugQr = qrcode(actualVersion, ecc);
@@ -1236,6 +1440,71 @@ function encodeDataToBytes(
 }
 
 /**
+ * Result of format info verification
+ * 
+ * Exported for use in binary search fallback validation.
+ */
+export interface FormatVerificationResult {
+  /** Whether verification passed (both ECC and mask match) */
+  valid: boolean;
+  /** Extracted ECC level from format info */
+  extractedEcc: ECCLevel;
+  /** Extracted mask from format info */
+  extractedMask: number;
+  /** Whether ECC matches expected */
+  eccMatch: boolean;
+  /** Whether mask matches expected */
+  maskMatch: boolean;
+  /** Rejection reason if not valid */
+  reason?: RejectionReason;
+}
+
+/**
+ * Verify that a matrix's format info matches expected ECC and mask.
+ * 
+ * This is a critical sanity check that should be performed after:
+ * 1. Base matrix generation
+ * 2. Final matrix regeneration  
+ * 3. Binary search fallback attempts
+ * 
+ * If format info doesn't match, the QR will decode but with wrong
+ * error correction level, which affects scannability.
+ * 
+ * Exported for use in binary search fallback validation.
+ * 
+ * @param matrix The QR matrix to verify
+ * @param expectedEcc Expected ECC level
+ * @param expectedMask Expected mask pattern
+ * @returns Verification result with extracted values
+ */
+export function verifyMatrixFormatInfo(
+  matrix: boolean[][],
+  expectedEcc: ECCLevel,
+  expectedMask: number
+): FormatVerificationResult {
+  const extracted = extractMaskFromMatrix(matrix);
+  const extractedEcc = eccNumericToLevel(extracted.eccLevel);
+  const eccMatch = extractedEcc === expectedEcc;
+  const maskMatch = extracted.mask === expectedMask;
+  
+  let reason: RejectionReason | undefined;
+  if (!eccMatch) {
+    reason = 'ECC_MISMATCH';
+  } else if (!maskMatch) {
+    reason = 'MASK_MISMATCH';
+  }
+  
+  return {
+    valid: eccMatch && maskMatch,
+    extractedEcc,
+    extractedMask: extracted.mask,
+    eccMatch,
+    maskMatch,
+    reason,
+  };
+}
+
+/**
  * Regenerate a QR code from modified per-block data and ECC
  * This directly constructs a valid QR matrix with all structural patterns
  * and the modified data codewords placed via zigzag traversal.
@@ -1243,6 +1512,9 @@ function encodeDataToBytes(
  * IMPORTANT: The ECC arrays must be pre-computed to preserve RS linearity.
  * When XORing basis vectors, we XOR both data AND ECC, so the combined
  * result remains a valid RS codeword. We must NOT recompute ECC here.
+ * 
+ * VERIFICATION: After regeneration, we verify the format info matches
+ * expected ECC and mask. If not, this indicates a critical bug.
  */
 function regenerateQRFromModifiedData(
   blockDataArrays: Uint8Array[],
@@ -2592,6 +2864,48 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       ecc,
       actualMask
     );
+    
+    // =========================================================================
+    // CRITICAL: Verify format info invariants after regeneration
+    // =========================================================================
+    // If ECC or mask drifted during regeneration, something is fundamentally wrong.
+    // This catches bugs in format info placement in regenerateQRFromModifiedData.
+    const finalFormatVerification = verifyMatrixFormatInfo(finalMatrix, ecc, actualMask);
+    if (!finalFormatVerification.valid) {
+      log.error('FINAL MATRIX FORMAT VERIFICATION FAILED - ECC/MASK INVARIANT VIOLATED!', {
+        expectedEcc: ecc,
+        extractedEcc: finalFormatVerification.extractedEcc,
+        eccMatch: finalFormatVerification.eccMatch,
+        expectedMask: actualMask,
+        extractedMask: finalFormatVerification.extractedMask,
+        maskMatch: finalFormatVerification.maskMatch,
+        rejectionReason: finalFormatVerification.reason,
+        note: 'Format info drift detected - this is a critical regeneration bug!',
+      });
+      
+      // FAIL FAST - this is a fundamental bug
+      return {
+        success: false,
+        error: `Format info invariant violated: ${finalFormatVerification.reason}`,
+        matrix: baseMatrix,
+        moduleCount,
+        version: actualVersion,
+        maskPattern: actualMask,
+        matchingPixels: 0,
+        totalControllable: 0,
+        matchPercentage: 0,
+        encodedData: encodedData,
+        originalData: data,
+        suffix: actualSuffix,
+      };
+    }
+    
+    log.info('FINAL MATRIX FORMAT VERIFICATION PASSED', {
+      ecc,
+      mask: actualMask,
+      eccMatch: finalFormatVerification.eccMatch,
+      maskMatch: finalFormatVerification.maskMatch,
+    });
 
     // DEBUG: Log differences between base matrix and final matrix
     let diffCount = 0;
@@ -2716,60 +3030,75 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     let actualVectorsApplied = totalSelected;
     
     // =========================================================================
-    // STRICT ACCEPTANCE CRITERIA (HYBRID mode)
+    // SEMANTIC-HARD-GATE ACCEPTANCE CRITERIA (HYBRID mode)
     // =========================================================================
-    // A valid QR-Art result requires:
-    // 1. Decoder successfully scans the matrix (scanResult.success === true)
+    // A valid QR-Art result requires ALL of:
+    // 1. Decoder successfully scans the matrix
     // 2. Decoded data is long enough (length >= originalDataLength)
     // 3. Byte-exact match for the original data prefix
+    // 4. Format info ECC matches requested ECC
+    // 5. Format info mask matches requested mask
     //
-    // We use byte-level comparison, not text-level, to catch subtle corruption.
+    // We use comprehensive semantic validation to catch ALL corruption types.
     
-    if (scanResult.success) {
-      // Use strict byte-exact validation
-      const validation = validateOriginalDataPreserved(scanResult.data, data);
+    const semanticValidation = performSemanticValidation(
+      finalMatrix,
+      data,
+      ecc,
+      actualMask,
+      actualSuffix,
+      scanMatrixWithJsQR
+    );
+    
+    if (semanticValidation.valid) {
+      // Full semantic validation passed!
+      log.info('QR-Art SEMANTIC-HARD-GATE validation PASSED', {
+        originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+        originalDataLength,
+        decodedDataLength: scanResult.data?.length,
+        ecc,
+        mask: actualMask,
+        validationMethod: 'SEMANTIC_HARD_GATE',
+        checksPerformed: [
+          'SCAN_SUCCESS',
+          'LENGTH_CHECK',
+          'BYTE_EXACT_PREFIX',
+          'ECC_INVARIANT',
+          'MASK_INVARIANT',
+        ],
+      });
+    } else {
+      // Semantic validation FAILED - log detailed rejection info
+      log.error('QR-Art SEMANTIC-HARD-GATE validation FAILED', {
+        rejectionReason: semanticValidation.reason,
+        description: semanticValidation.description,
+        details: semanticValidation.details,
+        originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+        originalDataLength,
+        ecc,
+        mask: actualMask,
+        note: 'Candidate rejected by semantic-hard-gate',
+      });
       
-      if (validation.valid) {
-        // Log the decoded suffix to see how it was modified
-        const decodedSuffix = scanResult.data?.slice(originalDataLength) || '';
-        log.info('QR-Art matrix scan validation PASSED (byte-exact)', {
-          originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
-          originalDataLength,
-          decodedDataLength: scanResult.data?.length,
-          originalSuffix: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
-          decodedSuffix: decodedSuffix.slice(0, 30) + (decodedSuffix.length > 30 ? '...' : ''),
-          suffixModified: decodedSuffix !== actualSuffix,
-          scanAttempts: scanResult.attempts,
-          validationMethod: 'BYTE_EXACT_PREFIX',
-        });
-      } else {
-        // ORIGINAL DATA was corrupted - this should NOT happen with HYBRID!
-        // Log with byte-level detail to find exactly where corruption occurred
+      // If we had a scan result, add byte-level debug info
+      if (scanResult.success && scanResult.data) {
         const expectedBytes = stringToBytes(data);
-        const actualData = scanResult.data || '';
-        const actualBytes = stringToBytes(actualData);
-        
-        log.error('ORIGINAL DATA CORRUPTED - byte-exact validation FAILED!', {
-          expectedOriginal: data,
-          actual: actualData,
-          expectedLength: originalDataLength,
-          actualLength: actualData.length,
-          validationReason: validation.reason,
-          mismatchDetails: validation.mismatch,
-          note: 'The original URL/data was modified - this is a bug!',
-        });
+        const actualBytes = stringToBytes(scanResult.data);
         
         log.error('DECODED BYTES (hex comparison)', {
           decodedPrefixHex: toHex(actualBytes.slice(0, originalDataLength)),
           expectedPrefixHex: toHex(expectedBytes),
-          mismatchIndex: validation.mismatch?.index,
-          expectedByte: validation.mismatch?.expectedByte?.toString(16),
-          actualByte: validation.mismatch?.actualByte?.toString(16),
+          mismatchIndex: semanticValidation.details?.mismatchIndex,
+          expectedByte: semanticValidation.details?.expectedByte?.toString(16),
+          actualByte: semanticValidation.details?.actualByte?.toString(16),
         });
-        
-        // Mark as failed - need fallback
-        scanResult = { success: false, error: 'Byte-exact validation failed: ' + validation.reason };
       }
+      
+      // Mark scanResult as failed to trigger fallback
+      scanResult = { 
+        success: false, 
+        error: `Semantic validation failed: ${semanticValidation.reason} - ${semanticValidation.description}` 
+      };
     }
     
     if (!scanResult.success) {
@@ -2816,6 +3145,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       
       // Run binary search - pass original data for PREFIX match validation (HYBRID mode)
       // HYBRID: We can modify suffix, so decoded data should START WITH original data
+      // SEMANTIC-HARD-GATE: Also pass ECC and mask for format info verification
       const binarySearchResult = binarySearchMaxVectors(
         flattenedSelections,
         blockDataArrays,  // Original, unmodified data
@@ -2825,7 +3155,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         elimination,
         regenerateFn,
         scanMatrixWithJsQR,
-        data  // HYBRID: prefix match validation (original data only)
+        data,  // HYBRID: prefix match validation (original data only)
+        ecc,   // SEMANTIC-HARD-GATE: verify format info ECC
+        actualMask  // SEMANTIC-HARD-GATE: verify format info mask
       );
       
       if (binarySearchResult.maxCount > 0) {
@@ -2840,29 +3172,37 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         finalMatrixToUse = binarySearchResult.matrix;
         actualVectorsApplied = binarySearchResult.maxCount;
         
-        // Re-scan to confirm and validate decoded content using STRICT byte-exact validation
-        scanResult = scanMatrixWithJsQR(finalMatrixToUse);
-        if (scanResult.success) {
-          // HYBRID: Validate with byte-exact prefix match
-          const postSearchValidation = validateOriginalDataPreserved(scanResult.data, data);
-          if (postSearchValidation.valid) {
-            log.info('Binary search result validated - original data preserved (byte-exact)', {
-              originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
-              decodedDataLength: scanResult.data?.length,
-              validationMethod: 'BYTE_EXACT_PREFIX',
-            });
-          } else {
-            log.error('Binary search result scans but ORIGINAL DATA CORRUPTED!', {
-              expectedOriginal: data,
-              actual: scanResult.data,
-              validationReason: postSearchValidation.reason,
-              mismatchDetails: postSearchValidation.mismatch,
-            });
-          }
-        } else {
-          log.error('Binary search result does not scan!', {
-            error: scanResult.error,
+        // Re-validate using SEMANTIC-HARD-GATE
+        const postSearchValidation = performSemanticValidation(
+          finalMatrixToUse,
+          data,
+          ecc,
+          actualMask,
+          actualSuffix,
+          scanMatrixWithJsQR
+        );
+        
+        if (postSearchValidation.valid) {
+          log.info('Binary search result SEMANTIC-HARD-GATE validation PASSED', {
+            originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+            ecc,
+            mask: actualMask,
+            validationMethod: 'SEMANTIC_HARD_GATE',
           });
+          // Update scanResult for downstream logic
+          scanResult = scanMatrixWithJsQR(finalMatrixToUse);
+        } else {
+          log.error('Binary search result SEMANTIC-HARD-GATE validation FAILED!', {
+            rejectionReason: postSearchValidation.reason,
+            description: postSearchValidation.description,
+            details: postSearchValidation.details,
+            expectedOriginal: data,
+          });
+          // Mark as failed
+          scanResult = {
+            success: false,
+            error: `Post-search semantic validation failed: ${postSearchValidation.reason}`,
+          };
         }
       } else {
         // Even 0 vectors didn't help - return base matrix
@@ -2903,7 +3243,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     const matchPercentage = total > 0 ? (matching / total) * 100 : 0;
 
-    log.info('QR-Art generation complete (TWO-INTERVAL HYBRID)', {
+    log.info('QR-Art generation complete (SEMANTIC-HARD-GATE TWO-INTERVAL HYBRID)', {
+      success: true,
       matchingPixels: matching,
       totalControllable: total,
       matchPercentage: `${matchPercentage.toFixed(1)}%`,
@@ -2912,6 +3253,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       originalDataLength,
       suffixLength: actualSuffix.length,
       controllablePercent: `${actualControlPercentage.toFixed(1)}%`,
+      semanticValidation: {
+        eccInvariantLocked: true,
+        maskInvariantLocked: true,
+        byteExactPrefixMatch: true,
+        formatInfoVerified: true,
+        ecc,
+        mask: actualMask,
+      },
       twoIntervalStrategy: {
         suffixSafeBits: encoderLayout.suffixBits,
         paddingSafeBits: encoderLayout.paddingBits,
