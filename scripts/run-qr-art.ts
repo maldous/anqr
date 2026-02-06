@@ -97,7 +97,7 @@ async function main() {
     ecc: 'H',    // High ECC for robustness
     autoSuffix: true,  // Auto-generate suffix for maximum control
     targetControlPercent: 60,  // Target 60% controllable pixels
-    strictSuffix: false,  // Allow ANY byte values in suffix for maximum art quality (# is still protected)
+    strictSuffix: true,  // Ensure phone-safe URL-safe suffix characters
     onProgress: (stage, percent) => {
       process.stdout.write(`\r  ${stage}: ${percent.toFixed(0)}%`);
     },
