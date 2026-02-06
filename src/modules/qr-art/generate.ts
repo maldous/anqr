@@ -54,8 +54,6 @@ import {
   computeECC,
   generateDeterministicSuffix,
   hashStringToSeed,
-  MAX_SAFE_VECTOR_PERCENT,
-  MAX_SUFFIX_LENGTH,
   MIN_QART_VERSION,
 } from './rs-basis';
 import {
@@ -1199,6 +1197,9 @@ function generateBaseQR(
   });
 
   // First, use the encoder to determine the actual version if auto-detecting
+  // Always use single byte-mode segment for QART compatibility:
+  // byte mode allows ANY bit flip to produce a valid decoded byte,
+  // whereas numeric mode rejects ~90% of vectors (10-bit groups exceed 999).
   const qr = qrcode(version, ecc);
   qr.addData(data);
   const useMask = maskPattern >= 0 ? maskPattern : undefined;
@@ -1423,13 +1424,12 @@ function encodeDataToBytes(
   const suffix = suffixLength > 0 ? fullData.slice(originalDataLength) : '';
   
   // Log the exact data being encoded for debugging
-  log.debug('encodeDataToBytes called (HYBRID mode)', {
+  log.debug('encodeDataToBytes called (HYBRID byte mode)', {
     fullDataLength: fullData.length,
     originalDataLength,
     suffixLength,
     originalDataPreview: fullData.slice(0, Math.min(60, originalDataLength)) + (originalDataLength > 60 ? '...' : ''),
     suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
-    dataHash: fullData.split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0).toString(16),
     version,
     ecc,
   });
@@ -1437,26 +1437,21 @@ function encodeDataToBytes(
   const eccLevel = eccToNumericForEncoder(ecc);
   const rsBlocks = getRSBlocks(version, eccLevel);
 
-  // Create bit buffer and encode the data
+  // Always use single byte-mode segment for QART:
+  // Byte mode allows ANY bit flip to produce a valid decoded byte.
+  // Numeric mode would reject ~90% of vectors (10-bit groups exceed 999).
   const buffer = qrBitBuffer();
-  const segment = qr8BitByte(fullData);  // Full data including suffix
-
-  // CHECKPOINT 1: After mode indicator (4 bits)
+  const segment = qr8BitByte(fullData);
+  
   buffer.put(segment.getMode(), 4);
   const bitsAfterMode = buffer.getLengthInBits();
-  
-  // CHECKPOINT 2: After character count (for FULL data including suffix)
   buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
   const bitsAfterCharCount = buffer.getLengthInBits();
   
-  // CHECKPOINT 3: Where ORIGINAL data ends (PROTECTION BOUNDARY)
-  // This is calculated, not measured, because segment.write() writes all at once
+  // Where ORIGINAL data ends (PROTECTION BOUNDARY)
   const bitsAfterOriginalData = bitsAfterCharCount + (originalDataLength * 8);
   
-  // Write the actual data (includes suffix)
   segment.write(buffer);
-  
-  // CHECKPOINT 4: After all segment data including suffix (BEFORE terminator)
   const bitsAfterData = buffer.getLengthInBits();
 
   // Calculate total data capacity
@@ -1598,6 +1593,7 @@ function encodeDataToBytes(
     originalDataLength,
     suffixLength,
     fullDataLength: fullData.length,
+    encoding: 'byte mode (single segment)',
     checkpoints: {
       bitsAfterMode: `${bitsAfterMode} bits (mode indicator)`,
       bitsAfterCharCount: `${bitsAfterCharCount} bits (+char count)`,
@@ -2083,8 +2079,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       originalDataLength,
       suffixLength: actualSuffix.length,
       suffixPreview: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
-      maxSuffixLength: MAX_SUFFIX_LENGTH,
-      suffixWasCapped: optimalConfig.suffixWasCapped,
+      encoding: 'byte mode (single segment)',
       optimalVersion: optimalConfig.version,
       versionToUse,
       expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
@@ -2217,10 +2212,15 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // The encoderLayout tracks exactly where original data ends in the bit stream.
     // There is no "calculated" alternative - encoderLayout IS the source of truth.
     //
-    // CRITICAL: Verify our math is internally consistent.
-    // Note: encoderLayout.bitsAfterOriginalData is based on protectedDataLength, not originalDataLength
-    const expectedBitsAfterOriginalData = encoderLayout.bitsAfterCharCount + (protectedDataLength * 8);
-    const internalConsistencyOk = encoderLayout.bitsAfterOriginalData === expectedBitsAfterOriginalData;
+    // Verify encoder layout fields are internally consistent.
+    // This works for byte-mode encoding (any future encoding mode changes should be validated here).
+    // Rather than recalculating from scratch (which requires mode-specific formulas),
+    // we validate structural invariants that must hold regardless of encoding mode.
+    const internalConsistencyOk = 
+      encoderLayout.bitsAfterData >= encoderLayout.bitsAfterOriginalData &&
+      encoderLayout.paddingSafeStartBit >= encoderLayout.suffixSafeEndBit &&
+      encoderLayout.protectedBitEnd <= encoderLayout.suffixSafeStartBit &&
+      encoderLayout.totalDataBytes > 0;
     
     log.info('BOUNDARY AUDIT (single source of truth: encoderLayout)', {
       version: actualVersion,
@@ -2233,7 +2233,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         bitsAfterCharCount: encoderLayout.bitsAfterCharCount,
         bitsAfterOriginalData: encoderLayout.bitsAfterOriginalData,
         bitsAfterFullData: encoderLayout.bitsAfterData,
-        expectedBitsAfterOriginalData,
         internalConsistencyOk,
       },
       protection: {
@@ -2260,7 +2259,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     if (!internalConsistencyOk) {
       log.error('INTERNAL CONSISTENCY FAILURE - encoder boundary math is wrong!', {
         bitsAfterOriginalData: encoderLayout.bitsAfterOriginalData,
-        expectedBitsAfterOriginalData,
+        bitsAfterData: encoderLayout.bitsAfterData,
         bitsAfterCharCount: encoderLayout.bitsAfterCharCount,
         originalDataLength,
         note: 'This is a bug in encodeDataToBytes()',
@@ -2835,56 +2834,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         .length,
     });
 
-    // =========================================================================
-    // PHONE CAMERA SAFETY: Limit vectors to ensure phone scannability
-    // =========================================================================
-    // Phone cameras have less sophisticated decoders than software libraries.
-    // When QR-Art applies too many vectors, the QR may scan in software (jsQR)
-    // but fail on phone cameras. We cap the vector count to ensure compatibility.
-    //
-    // MAX_SAFE_VECTOR_PERCENT limits how many of the controllable pixels can be
-    // modified. This preserves enough of the original QR structure for phones.
-    const maxSafeVectors = Math.floor(elimination.controllablePixels * MAX_SAFE_VECTOR_PERCENT / 100);
-    let phoneCapApplied = false;
-    let originalSelectedCount = totalSelected;
-    
-    if (totalSelected > maxSafeVectors) {
-      phoneCapApplied = true;
-      
-      log.warn('PHONE SAFETY: Capping vectors for phone camera scannability', {
-        originalSelected: totalSelected,
-        maxSafeVectors,
-        maxSafePercent: `${MAX_SAFE_VECTOR_PERCENT}%`,
-        controllablePixels: elimination.controllablePixels,
-        reductionPercent: `${((1 - maxSafeVectors / totalSelected) * 100).toFixed(1)}%`,
-        note: 'Reducing vectors to ensure QR scans on phone cameras, not just software',
-      });
-      
-      // Flatten selections by importance (most important pixels first)
-      const flattenedForCap = flattenAndOrderSelections(
-        blockSelections,
-        elimination,
-        importance,
-        moduleCount
-      );
-      
-      // Keep only the most important vectors up to the safe limit
-      blockSelections = unflattenSelections(flattenedForCap, maxSafeVectors);
-      totalSelected = maxSafeVectors;
-      
-      log.info('PHONE SAFETY: Vectors capped', {
-        newSelectedCount: totalSelected,
-        keptPercent: `${((totalSelected / originalSelectedCount) * 100).toFixed(1)}%`,
-        expectedImageQualityReduction: `${((1 - totalSelected / originalSelectedCount) * 100).toFixed(1)}%`,
-      });
-    } else {
-      log.debug('PHONE SAFETY: Vector count within safe limit', {
-        selectedCount: totalSelected,
-        maxSafeVectors,
-        maxSafePercent: `${MAX_SAFE_VECTOR_PERCENT}%`,
-        utilizationPercent: `${((totalSelected / maxSafeVectors) * 100).toFixed(1)}%`,
-      });
-    }
+    // NOTE: No static vector cap. The binary search fallback in scan-fallback.ts
+    // dynamically finds the maximum safe vector count for phone cameras.
 
     onProgress?.('Counting predicted matches', 75);
 
@@ -3637,12 +3588,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       matchPercentage: `${matchPercentage.toFixed(1)}%`,
       vectorsApplied: actualVectorsApplied,
       usedBinarySearchFallback: actualVectorsApplied < totalSelected,
-      phoneSafety: {
-        capApplied: phoneCapApplied,
-        maxSafePercent: `${MAX_SAFE_VECTOR_PERCENT}%`,
-        originalSelected: originalSelectedCount,
-        afterCap: phoneCapApplied ? totalSelected : originalSelectedCount,
-      },
       originalDataLength,
       suffixLength: actualSuffix.length,
       controllablePercent: `${actualControlPercentage.toFixed(1)}%`,
@@ -3741,9 +3686,9 @@ export async function generateFullQArtBestMask(
     sharedVersion,
     originalDataLength: config.data.length,
     suffixLength: sharedSuffix.length,
-    suffixWasCapped: optimalConfig.suffixWasCapped,
     paddingBytes: optimalConfig.paddingBytes,
     expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
+    encoding: 'byte mode (single segment)',
     note: 'Each mask will use the same DETERMINISTIC suffix for fair comparison',
   });
 
@@ -3754,7 +3699,7 @@ export async function generateFullQArtBestMask(
       suffix: sharedSuffix,          // Use same suffix for fair comparison
       autoSuffix: false,             // Disable auto-suffix since we pre-generated it
       maskPattern: mask,
-      strictSuffix: config.strictSuffix ?? false,  // Pass through strictSuffix setting
+      strictSuffix: config.strictSuffix ?? true,  // Default true for phone-safe URLs
       onProgress: (stage, percent) => {
         config.onProgress?.(`Mask ${mask}: ${stage}`, (mask * 100 + percent) / 8);
       },

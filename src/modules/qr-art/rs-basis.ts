@@ -166,6 +166,7 @@ export function getContentBitCount(version: number, dataLength: number): number 
   return headerBits + dataBits + terminatorBits;
 }
 
+
 /**
  * Information about QR-Art capacity for a given configuration
  */
@@ -591,99 +592,6 @@ export function getCachedBasis(version: number, ecc: ECCLevel): RSBasis {
 }
 
 /**
- * Calculate the optimal suffix length for a given version to achieve target control percentage.
- * 
- * KEY INSIGHT: When we protect only the original data (not the suffix), the suffix bits
- * become controllable! So adding a suffix of N characters adds N*8 controllable bits.
- * 
- * The formula is:
- *   totalDataBits = capacity of QR version (depends on version and ECC)
- *   protectedBits = ceil((header + originalData*8 + terminator) / 8) * 8
- *   controllableBits = totalDataBits - protectedBits
- *   
- * With suffix:
- *   newTotalDataBits = capacity of (possibly larger) version
- *   protectedBits = UNCHANGED (we only protect original data)
- *   suffixBits = suffix.length * 8
- *   controllableBits = newTotalDataBits - protectedBits (includes suffix bits!)
- * 
- * @param version QR version (1-40), 0 for auto
- * @param ecc Error correction level
- * @param originalDataLength Length of original data (without suffix)
- * @param targetControlPercent Target control percentage (default: 50%)
- * @returns Recommended suffix length in characters
- */
-export function getRecommendedSuffixLength(
-  version: number,
-  ecc: ECCLevel,
-  originalDataLength: number,
-  targetControlPercent: number = 50
-): number {
-  // Calculate protected bits (based on original data only)
-  const headerBits = getHeaderBitCount(version > 0 ? version : 1);
-  const originalContentBits = headerBits + originalDataLength * 8 + 4; // +4 for terminator
-  const protectedBits = Math.ceil(originalContentBits / 8) * 8;
-  
-  // Get capacity of current version
-  const blocks = getRSBlockInfo(version > 0 ? version : 1, ecc);
-  const totalDataBits = blocks.reduce((sum, b) => sum + b.dataCount * 8, 0);
-  
-  // Calculate how many suffix bytes we need to achieve target control
-  // Target: controllableBits / totalNewDataBits >= targetControlPercent
-  // Where: controllableBits = totalNewDataBits - protectedBits
-  // So: (totalNewDataBits - protectedBits) / totalNewDataBits >= target
-  // totalNewDataBits - protectedBits >= target * totalNewDataBits
-  // totalNewDataBits * (1 - target) >= protectedBits
-  // totalNewDataBits >= protectedBits / (1 - target)
-  
-  const targetRatio = targetControlPercent / 100;
-  const minTotalBits = protectedBits / (1 - targetRatio);
-  
-  // How many additional bits do we need?
-  const additionalBitsNeeded = Math.max(0, minTotalBits - totalDataBits);
-  
-  // Each suffix character adds 8 bits
-  // But we also need to account for the suffix in the QR capacity
-  // For simplicity, calculate based on filling available capacity
-  const availableForSuffix = totalDataBits - protectedBits;
-  
-  if (availableForSuffix >= (targetRatio * totalDataBits)) {
-    // Current version has enough capacity - use all available padding
-    return Math.floor(availableForSuffix / 8) - 1; // -1 for safety margin
-  }
-  
-  // Need more capacity - this would require a larger version
-  // Return a reasonable suffix length that will trigger version increase
-  return Math.ceil(additionalBitsNeeded / 8);
-}
-
-/**
- * Calculate the optimal suffix length to fill the QR capacity for maximum control.
- * This is the "fill to capacity" approach - use all available space.
- * 
- * @param version QR version (1-40)
- * @param ecc Error correction level  
- * @param originalDataLength Length of original data (without suffix)
- * @returns Maximum suffix length that fits in the current version
- */
-export function getMaxSuffixLength(
-  version: number,
-  ecc: ECCLevel,
-  originalDataLength: number
-): number {
-  const blocks = getRSBlockInfo(version, ecc);
-  const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
-  
-  // Total available bytes
-  // Subtract: original data, header overhead (~2 bytes), terminator/padding (~1 byte)
-  const headerOverhead = 2; // Mode (4 bits) + char count (8-16 bits)
-  const terminatorOverhead = 1;
-  const availableForSuffix = totalDataBytes - originalDataLength - headerOverhead - terminatorOverhead;
-  
-  return Math.max(0, availableForSuffix);
-}
-
-/**
  * Result of calculating optimal version and suffix for QR-Art
  */
 export interface OptimalVersionAndSuffix {
@@ -699,8 +607,6 @@ export interface OptimalVersionAndSuffix {
   versionUpgraded: boolean;
   /** Original minimum version that fits the data */
   originalVersion: number;
-  /** Whether suffix was capped at MAX_SUFFIX_LENGTH */
-  suffixWasCapped: boolean;
   /** Number of padding bytes available (in addition to suffix) */
   paddingBytes: number;
   /** Controllable bits from suffix */
@@ -715,15 +621,18 @@ export interface OptimalVersionAndSuffix {
  * This function will automatically upgrade to a larger QR version if the minimum version
  * doesn't provide enough capacity for meaningful QR-Art control.
  * 
- * IMPORTANT: This function always uses the FULL suffix capacity of the selected version.
- * The targetControlPercent is used as a MINIMUM THRESHOLD for version upgrade decisions,
- * not as a target to stop at. This ensures we maximize controllable bits.
+ * Uses byte-mode encoding for the entire data (prefix + '#' + suffix).
+ * Byte mode allows ANY bit pattern to decode as a valid byte, which is essential
+ * for QR-Art: vectors can flip arbitrary bits without producing invalid encodings.
+ * (Numeric mode would reject ~90% of vectors because 10-bit groups exceed 999.)
+ * 
+ * The suffix uses URL-safe characters (A-Za-z0-9) with '#' as separator.
  * 
  * The algorithm:
  * 1. Start with the minimum version that fits the data
- * 2. Calculate what control percentage we'd get with FULL suffix capacity at that version
- * 3. If below minimum threshold, upgrade to larger version and repeat
- * 4. Return the selected version with its FULL suffix capacity (not partial)
+ * 2. Calculate max suffix length using byte mode (8 bits/char)
+ * 3. If control percentage is below minimum threshold, upgrade version and repeat
+ * 4. Return the selected version with its FULL suffix capacity
  * 
  * @param minVersion Minimum version (0 for auto, or user-specified minimum)
  * @param ecc Error correction level
@@ -741,13 +650,14 @@ export function calculateOptimalVersionAndSuffix(
   // Enforce MIN_QART_VERSION for reliable real-world scanning
   let startVersion = minVersion > 0 ? Math.max(minVersion, MIN_QART_VERSION) : MIN_QART_VERSION;
   
-  // Find smallest version that fits the data
+  // Find smallest version that fits the data + '#' separator
+  // Single byte-mode segment: mode(4) + charCount + (data + '#') * 8 + terminator(4)
   for (let v = startVersion; v <= 40; v++) {
     const blocks = getRSBlockInfo(v, ecc);
-    const capacity = blocks.reduce((sum, b) => sum + b.dataCount, 0);
-    // Need space for: header (2-3 bytes) + data + terminator (1 byte)
-    const headerOverhead = v <= 9 ? 2 : 3;
-    if (capacity >= dataLength + headerOverhead + 1) {
+    const capacityBits = blocks.reduce((sum, b) => sum + b.dataCount, 0) * 8;
+    const byteCharCountBits = getLengthInBits(QRMode.MODE_8BIT_BYTE, v);
+    const minBitsNeeded = 4 + byteCharCountBits + (dataLength + 1) * 8 + 4;
+    if (capacityBits >= minBitsNeeded) {
       startVersion = v;
       break;
     }
@@ -764,23 +674,18 @@ export function calculateOptimalVersionAndSuffix(
   let selectedSuffixLength = 0;
   let selectedControlPercent = 0;
   let selectedCapacity = 0;
+  let selectedPaddingBytes = 0;
+  let selectedSuffixBits = 0;
+  let selectedPaddingBits = 0;
   
   // Track best option in case no version achieves threshold
   let bestVersion = startVersion;
   let bestSuffixLength = 0;
   let bestControlPercent = 0;
   let bestCapacity = 0;
-  
-  // Track whether we capped the suffix
-  let suffixWasCapped = false;
-  let selectedPaddingBytes = 0;
-  let selectedSuffixBits = 0;
-  let selectedPaddingBits = 0;
-  
   let bestPaddingBytes = 0;
   let bestSuffixBits = 0;
   let bestPaddingBits = 0;
-  let bestSuffixWasCapped = false;
 
   for (let version = startVersion; version <= maxVersionToTry; version++) {
     const blocks = getRSBlockInfo(version, ecc);
@@ -788,46 +693,46 @@ export function calculateOptimalVersionAndSuffix(
     const totalDataBits = totalDataBytes * 8;
     const totalEccBytes = blocks.reduce((sum, b) => sum + b.eccCount, 0);
     
-    // Calculate MAXIMUM suffix for this version, reserving ECC headroom
-    const headerOverhead = version <= 9 ? 2 : 3;
-    const terminatorOverhead = 1;
-    
     // Reserve MIN_ECC_HEADROOM_BYTES to avoid running at 100% ECC capacity
-    // This reduces the effective suffix capacity but improves robustness
     const eccHeadroom = Math.min(MIN_ECC_HEADROOM_BYTES, Math.floor(totalEccBytes / 4));
-    const maxSuffixLen = totalDataBytes - dataLength - headerOverhead - terminatorOverhead - eccHeadroom;
+    const usableBits = (totalDataBytes - eccHeadroom) * 8;
     
-    if (maxSuffixLen <= 0) continue;
+    // Single byte-mode segment: mode(4) + charCount + allData*8 + terminator(4)
+    const prefixLen = dataLength + 1; // +1 for '#' separator
+    const byteCharCountBits = getLengthInBits(QRMode.MODE_8BIT_BYTE, version);
+    const fixedOverhead = 4 + byteCharCountBits + prefixLen * 8 + 4; // mode + charCount + prefix + terminator
+    const availableForSuffix = Math.floor((usableBits - fixedOverhead) / 8);
     
-    // CAP suffix at MAX_SUFFIX_LENGTH to prevent noisy baseline
-    // Extra capacity goes to padding, which is also controllable!
-    const actualSuffixLen = Math.min(maxSuffixLen, MAX_SUFFIX_LENGTH);
-    const wasCapped = maxSuffixLen > MAX_SUFFIX_LENGTH;
+    if (availableForSuffix <= 0) continue;
     
-    // Padding bytes = capacity not used by original data, suffix, header, terminator, ecc headroom
-    const paddingBytes = Math.max(0, totalDataBytes - dataLength - actualSuffixLen - headerOverhead - terminatorOverhead - eccHeadroom);
+    const suffixCharCount = availableForSuffix;
+    const actualSuffixLen = 1 + suffixCharCount; // '#' + chars
     
-    // Calculate protected bits (original data only, not suffix)
-    const headerBits = getHeaderBitCount(version);
-    const contentBits = headerBits + dataLength * 8 + 4; // +4 for terminator
-    const protectedBits = Math.ceil(contentBits / 8) * 8;
+    // Calculate protection and controllable regions
+    const protectedBits = Math.ceil((4 + byteCharCountBits + prefixLen * 8) / 8) * 8;
+    const bitsAfterAllData = 4 + byteCharCountBits + (prefixLen + suffixCharCount) * 8;
     
-    // Controllable bits = suffix bits + padding bits
-    const suffixBits = actualSuffixLen * 8;
-    const paddingBitsVal = paddingBytes * 8;
-    const controllableBits = suffixBits + paddingBitsVal;
+    // Controllable suffix bits (between protection end and terminator boundary byte)
+    const suffixSafeBits = Math.max(0, Math.floor(bitsAfterAllData / 8) * 8 - protectedBits);
+    
+    // Padding after terminator + pad-to-byte
+    const bitsAfterTerminator = bitsAfterAllData + Math.min(4, totalDataBits - bitsAfterAllData);
+    const paddingStartByte = Math.ceil(bitsAfterTerminator / 8);
+    const paddingBitsVal = Math.max(0, totalDataBits - paddingStartByte * 8);
+    const paddingBytes = Math.floor(paddingBitsVal / 8);
+    
+    const controllableBits = suffixSafeBits + paddingBitsVal;
     const controlPercent = (controllableBits / totalDataBits) * 100;
     
-    log.debug('Evaluating version for QR-Art (capped suffix)', {
+    log.debug('Evaluating version for QR-Art (byte mode suffix)', {
       version,
       totalDataBytes,
-      maxSuffixLen,
+      suffixCharCount,
       actualSuffixLen,
-      suffixWasCapped: wasCapped,
       paddingBytes,
       protectedBits,
       controllableBits,
-      suffixBits,
+      suffixSafeBits,
       paddingBits: paddingBitsVal,
       controlPercent: `${controlPercent.toFixed(1)}%`,
       meetsThreshold: controlPercent >= minControlPercent,
@@ -840,9 +745,8 @@ export function calculateOptimalVersionAndSuffix(
       bestControlPercent = controlPercent;
       bestCapacity = totalDataBytes;
       bestPaddingBytes = paddingBytes;
-      bestSuffixBits = suffixBits;
+      bestSuffixBits = suffixSafeBits;
       bestPaddingBits = paddingBitsVal;
-      bestSuffixWasCapped = wasCapped;
     }
     
     // If this version meets minimum threshold, SELECT it and stop
@@ -852,17 +756,16 @@ export function calculateOptimalVersionAndSuffix(
       selectedSuffixLength = actualSuffixLen;
       selectedControlPercent = controlPercent;
       selectedCapacity = totalDataBytes;
-      suffixWasCapped = wasCapped;
       selectedPaddingBytes = paddingBytes;
-      selectedSuffixBits = suffixBits;
+      selectedSuffixBits = suffixSafeBits;
       selectedPaddingBits = paddingBitsVal;
       
-      log.info('Selected version meets minimum control threshold (capped suffix)', {
+      log.info('Selected version meets minimum control threshold (byte mode suffix)', {
         version,
         controlPercent: `${controlPercent.toFixed(1)}%`,
         minThreshold: `${minControlPercent}%`,
         suffixLength: actualSuffixLen,
-        suffixWasCapped: wasCapped,
+        suffixCharCount,
         paddingBytes,
         totalCapacity: totalDataBytes,
       });
@@ -876,7 +779,6 @@ export function calculateOptimalVersionAndSuffix(
     selectedSuffixLength = bestSuffixLength;
     selectedControlPercent = bestControlPercent;
     selectedCapacity = bestCapacity;
-    suffixWasCapped = bestSuffixWasCapped;
     selectedPaddingBytes = bestPaddingBytes;
     selectedSuffixBits = bestSuffixBits;
     selectedPaddingBits = bestPaddingBits;
@@ -886,19 +788,17 @@ export function calculateOptimalVersionAndSuffix(
       bestControlPercent: `${bestControlPercent.toFixed(1)}%`,
       minThreshold: `${minControlPercent}%`,
       suffixLength: bestSuffixLength,
-      suffixWasCapped: bestSuffixWasCapped,
       paddingBytes: bestPaddingBytes,
     });
   }
   
   const versionUpgraded = selectedVersion > originalVersion;
   
-  log.info('Calculated optimal version and suffix for QR-Art (DECOUPLED)', {
+  log.info('Calculated optimal version and suffix for QR-Art (byte mode)', {
     originalVersion,
     selectedVersion,
     versionUpgraded,
     suffixLength: selectedSuffixLength,
-    suffixWasCapped,
     paddingBytes: selectedPaddingBytes,
     expectedControlPercent: `${selectedControlPercent.toFixed(1)}%`,
     minControlPercent: `${minControlPercent}%`,
@@ -906,7 +806,7 @@ export function calculateOptimalVersionAndSuffix(
     totalCapacity: selectedCapacity,
     dataLength,
     ecc,
-    capacityUsage: `${dataLength + selectedSuffixLength + 3}/${selectedCapacity} bytes`,
+    encoding: 'byte mode (single segment)',
     controllableBits: {
       suffix: selectedSuffixBits,
       padding: selectedPaddingBits,
@@ -921,7 +821,6 @@ export function calculateOptimalVersionAndSuffix(
     expectedControlPercent: selectedControlPercent,
     versionUpgraded,
     originalVersion,
-    suffixWasCapped,
     paddingBytes: selectedPaddingBytes,
     suffixBits: selectedSuffixBits,
     paddingBits: selectedPaddingBits,
@@ -941,47 +840,14 @@ export function calculateOptimalVersionAndSuffix(
 export const MIN_QART_VERSION = 7;
 
 /**
- * Maximum suffix length to prevent baseline from becoming too noisy.
- * Larger versions should use PADDING for extra control, not more suffix bytes.
- * 
- * REDUCED from 46 to 32 to further reduce controllable entropy pressure.
- * Running at full capacity amplifies fragility - this gives us more headroom
- * and improves real-world scannability.
- * 
- * With 32 chars of suffix + header, we get ~264 bits of controllable suffix.
- * Additional controllable bits come from padding codewords.
- */
-export const MAX_SUFFIX_LENGTH = 32;
-
-/**
  * Minimum number of ECC headroom bytes to reserve.
  * This ensures we don't run at 100% ECC correction capacity,
  * which would cause any small error to break decoding.
  * 
- * INCREASED from 4 to 8 for better real-world scannability.
- * This reduces the number of controllable bits but significantly
- * improves the reliability of the generated QR codes on phone cameras.
+ * Set low (2) because the binary search fallback in scan-fallback.ts
+ * automatically finds the maximum safe vector count for phone cameras.
  */
-export const MIN_ECC_HEADROOM_BYTES = 8;
-
-/**
- * Maximum percentage of controllable vectors to apply for phone camera safety.
- * 
- * Phone cameras have less sophisticated decoders than software libraries like jsQR.
- * When QR-Art applies too many vectors to match the target image, the resulting
- * QR code may be technically valid (RS linearity preserved, software can read it)
- * but phone cameras struggle with the disrupted visual pattern.
- * 
- * This limit caps the number of vectors applied to ensure phone scannability:
- * - 40% = Conservative, best phone compatibility, reduced image quality
- * - 50% = Balanced phone compatibility and image quality
- * - 60% = Better image quality but may not scan on some phones
- * - 100% = No limit (original behavior, software-only scannability)
- * 
- * The default of 40% ensures reliable scanning on most phone cameras while
- * still providing reasonable image embedding quality.
- */
-export const MAX_SAFE_VECTOR_PERCENT = 0;
+export const MIN_ECC_HEADROOM_BYTES = 2;
 
 /**
  * Simple hash function to create a deterministic seed from a string.
@@ -1018,73 +884,37 @@ export function mulberry32(seed: number): () => number {
  * Generate a deterministic URL-safe suffix.
  * Given the same input data and version, ALWAYS produces the same suffix.
  * This ensures the baseline QR is stable across runs, making QR-Art more predictable.
+ * Uses alphanumeric characters (A-Za-z0-9) which are URL-safe and byte-mode compatible.
+ * Byte mode is essential for QART: any bit flip produces a valid decoded byte.
  * 
  * @param length Number of characters
  * @param seed Seed value (typically from hashStringToSeed)
- * @returns Deterministic suffix string
+ * @returns Deterministic alphanumeric string
  */
 export function generateDeterministicSuffix(length: number, seed: number): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const random = mulberry32(seed);
   let result = '';
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(random() * chars.length));
+    result += chars[Math.floor(random() * chars.length)];
   }
   return result;
 }
 
 /**
  * Generate a random URL-safe suffix
- * This is useful for creating controllable characters that can be modified
  * 
  * @deprecated Use generateDeterministicSuffix for stable baselines
  * @param length Number of characters
- * @returns Random suffix string
+ * @returns Random alphanumeric string
  */
 export function generateRandomSuffix(length: number): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars[Math.floor(Math.random() * chars.length)];
   }
   return result;
-}
-
-/**
- * Find the optimal QR version for a given data length and target control percentage.
- * Returns the smallest version that can achieve the target control.
- * 
- * @param dataLength Length of the data to encode
- * @param ecc Error correction level
- * @param targetControlPercent Target control percentage (default: 50%)
- * @returns Optimal version number, or 40 if target cannot be achieved
- */
-export function findOptimalVersion(
-  dataLength: number,
-  ecc: ECCLevel,
-  targetControlPercent: number = 50
-): number {
-  const headerBits = 12; // Approximate for version 1-9 (4 + 8 bits)
-  const contentBits = headerBits + dataLength * 8 + 4;
-  const protectedBits = Math.ceil(contentBits / 8) * 8;
-  
-  // Target: controllable / total >= target%
-  // So: total >= protected / (1 - target)
-  const targetRatio = targetControlPercent / 100;
-  const minTotalBits = protectedBits / (1 - targetRatio);
-  const minTotalBytes = Math.ceil(minTotalBits / 8);
-  
-  // Find smallest version with enough capacity
-  for (let version = 1; version <= 40; version++) {
-    const blocks = getRSBlockInfo(version, ecc);
-    const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
-    
-    if (totalDataBytes >= minTotalBytes + dataLength) {
-      return version;
-    }
-  }
-  
-  return 40; // Max version if target cannot be achieved
 }
 
 /**
