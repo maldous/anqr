@@ -35,6 +35,7 @@ import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyz
 import {
   canUseFragmentSearch,
   generateFullQArt,
+  generateFullQArtOptimal,
   getBaseUrl,
   searchBestFragment,
 } from '@/modules/qr-art';
@@ -1149,18 +1150,25 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
         // Try full QR-Art algorithm (RS basis manipulation)
         try {
-          const fullQArtResult = await generateFullQArt({
+          const useAutoMask =
+            typeof debouncedConfig.maskPattern !== 'number' || debouncedConfig.maskPattern < 0;
+          const qartConfig = {
             data: debouncedConfig.content,
             targetImage: overlayCanvas,
             version: debouncedConfig.typeNumber || 0,
             ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
-            maskPattern:
-              typeof debouncedConfig.maskPattern === 'number' ? debouncedConfig.maskPattern : -1,
             strictSuffix: true,
             onProgress: (stage, percent) => {
               log.debug('QR-Art progress', { stage, percent: `${percent}%` });
             },
-          });
+          };
+
+          const fullQArtResult = useAutoMask
+            ? await generateFullQArtOptimal(qartConfig)
+            : await generateFullQArt({
+                ...qartConfig,
+                maskPattern: debouncedConfig.maskPattern as number,
+              });
 
           // Use full QR-Art result if successful, regardless of match percentage
         // The RS basis manipulation algorithm is mathematically correct and produces valid QR codes

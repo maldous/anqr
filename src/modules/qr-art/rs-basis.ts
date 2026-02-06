@@ -644,11 +644,12 @@ export function calculateOptimalVersionAndSuffix(
   minVersion: number,
   ecc: ECCLevel,
   dataLength: number,
-  minControlPercent: number = 50
+  minControlPercent: number = 50,
+  suffixMode: 'numeric' | 'byte' = 'byte'
 ): OptimalVersionAndSuffix {
   // Find the minimum version that can fit the data
   // Enforce MIN_QART_VERSION for reliable real-world scanning
-  let startVersion = minVersion > 0 ? Math.max(minVersion, MIN_QART_VERSION) : MIN_QART_VERSION;
+  let startVersion = minVersion > 0 ? minVersion : 1;
   
   // Find smallest version that fits the data + '#' separator
   // Single byte-mode segment: mode(4) + charCount + (data + '#') * 8 + terminator(4)
@@ -685,6 +686,31 @@ export function calculateOptimalVersionAndSuffix(
   let bestCapacity = 0;
   let bestPaddingBytes = 0;
   let bestSuffixBits = 0;
+
+  const getNumericBits = (digits: number): number => {
+    const fullGroups = Math.floor(digits / 3);
+    const rem = digits % 3;
+    return fullGroups * 10 + (rem === 1 ? 4 : rem === 2 ? 7 : 0);
+  };
+
+  const getMaxNumericDigits = (availableBits: number, version: number): number => {
+    if (availableBits <= 0) return 0;
+    const numCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
+    // We will solve for max digits such that 4 + numCharCountBits + numericBits(d) <= availableBits
+    let low = 0;
+    let high = 10000;
+    while (low < high) {
+      const mid = Math.ceil((low + high) / 2);
+      const needed = 4 + numCharCountBits + getNumericBits(mid);
+      if (needed <= availableBits) {
+        low = mid;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return low;
+  };
+
   let bestPaddingBits = 0;
 
   for (let version = startVersion; version <= maxVersionToTry; version++) {
@@ -697,20 +723,38 @@ export function calculateOptimalVersionAndSuffix(
     const eccHeadroom = Math.min(MIN_ECC_HEADROOM_BYTES, Math.floor(totalEccBytes / 4));
     const usableBits = (totalDataBytes - eccHeadroom) * 8;
     
-    // Single byte-mode segment: mode(4) + charCount + allData*8 + terminator(4)
-    const prefixLen = dataLength + 1; // +1 for '#' separator
     const byteCharCountBits = getLengthInBits(QRMode.MODE_8BIT_BYTE, version);
-    const fixedOverhead = 4 + byteCharCountBits + prefixLen * 8 + 4; // mode + charCount + prefix + terminator
-    const availableForSuffix = Math.floor((usableBits - fixedOverhead) / 8);
-    
-    if (availableForSuffix <= 0) continue;
-    
-    const suffixCharCount = availableForSuffix;
-    const actualSuffixLen = 1 + suffixCharCount; // '#' + chars
-    
+    const prefixLen = suffixMode === 'numeric' ? dataLength : dataLength + 1; // numeric mode already includes '#'
+    const prefixBits = 4 + byteCharCountBits + prefixLen * 8;
+    const terminatorBits = 4;
+
+    let suffixDigits = 0;
+    let suffixCharCount = 0;
+    let actualSuffixLen = 0;
+    let bitsAfterAllData = 0;
+
+    if (suffixMode === 'numeric') {
+      const availableForNumeric = usableBits - prefixBits - terminatorBits;
+      if (availableForNumeric <= 0) continue;
+      suffixDigits = getMaxNumericDigits(availableForNumeric, version);
+      if (suffixDigits <= 0) continue;
+      const numericCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
+      const numericBits = getNumericBits(suffixDigits);
+      bitsAfterAllData = prefixBits + 4 + numericCharCountBits + numericBits;
+      actualSuffixLen = suffixDigits; // digits only
+      suffixCharCount = suffixDigits;
+    } else {
+      // Single byte-mode segment: mode(4) + charCount + allData*8 + terminator(4)
+      const fixedOverhead = prefixBits + terminatorBits;
+      const availableForSuffix = Math.floor((usableBits - fixedOverhead) / 8);
+      if (availableForSuffix <= 0) continue;
+      suffixCharCount = availableForSuffix;
+      actualSuffixLen = 1 + suffixCharCount; // '#' + chars
+      bitsAfterAllData = 4 + byteCharCountBits + (prefixLen + suffixCharCount) * 8;
+    }
+
     // Calculate protection and controllable regions
-    const protectedBits = Math.ceil((4 + byteCharCountBits + prefixLen * 8) / 8) * 8;
-    const bitsAfterAllData = 4 + byteCharCountBits + (prefixLen + suffixCharCount) * 8;
+    const protectedBits = Math.ceil(prefixBits / 8) * 8;
     
     // Controllable suffix bits (between protection end and terminator boundary byte)
     const suffixSafeBits = Math.max(0, Math.floor(bitsAfterAllData / 8) * 8 - protectedBits);
@@ -724,7 +768,7 @@ export function calculateOptimalVersionAndSuffix(
     const controllableBits = suffixSafeBits + paddingBitsVal;
     const controlPercent = (controllableBits / totalDataBits) * 100;
     
-    log.debug('Evaluating version for QR-Art (byte mode suffix)', {
+    log.debug('Evaluating version for QR-Art (suffix mode)', {
       version,
       totalDataBytes,
       suffixCharCount,
@@ -760,7 +804,7 @@ export function calculateOptimalVersionAndSuffix(
       selectedSuffixBits = suffixSafeBits;
       selectedPaddingBits = paddingBitsVal;
       
-      log.info('Selected version meets minimum control threshold (byte mode suffix)', {
+      log.info('Selected version meets minimum control threshold (suffix mode)', {
         version,
         controlPercent: `${controlPercent.toFixed(1)}%`,
         minThreshold: `${minControlPercent}%`,
@@ -794,7 +838,7 @@ export function calculateOptimalVersionAndSuffix(
   
   const versionUpgraded = selectedVersion > originalVersion;
   
-  log.info('Calculated optimal version and suffix for QR-Art (byte mode)', {
+  log.info('Calculated optimal version and suffix for QR-Art (suffix mode)', {
     originalVersion,
     selectedVersion,
     versionUpgraded,
@@ -806,7 +850,7 @@ export function calculateOptimalVersionAndSuffix(
     totalCapacity: selectedCapacity,
     dataLength,
     ecc,
-    encoding: 'byte mode (single segment)',
+    encoding: suffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
     controllableBits: {
       suffix: selectedSuffixBits,
       padding: selectedPaddingBits,
@@ -830,14 +874,9 @@ export function calculateOptimalVersionAndSuffix(
 /**
  * Minimum QR version for QR-Art generation.
  * 
- * Lower versions (1-6) don't have enough ECC capacity for reliable real-world
- * scanning when pixel modifications are applied. Version 7+ provides sufficient
- * ECC redundancy to ensure the QR code scans on real phone cameras, not just
- * in software decoders like jsQR which are more lenient.
- * 
- * This is enforced in generateFullQArt() to ensure all QR-Art codes are scannable.
+ * No enforced minimum; version selection is dynamic.
  */
-export const MIN_QART_VERSION = 7;
+export const MIN_QART_VERSION = 1;
 
 /**
  * Minimum number of ECC headroom bytes to reserve.
@@ -897,6 +936,23 @@ export function generateDeterministicSuffix(length: number, seed: number): strin
   let result = '';
   for (let i = 0; i < length; i++) {
     result += chars[Math.floor(random() * chars.length)];
+  }
+  return result;
+}
+
+/**
+ * Generate a deterministic numeric suffix (digits only).
+ * Useful for mixed-mode QR (byte prefix + numeric suffix).
+ *
+ * @param length Number of digits
+ * @param seed Seed value
+ * @returns Deterministic numeric string
+ */
+export function generateDeterministicNumericSuffix(length: number, seed: number): string {
+  const random = mulberry32(seed);
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += Math.floor(random() * 10).toString();
   }
   return result;
 }

@@ -754,6 +754,17 @@ export function qrcode(
         }
       }
     },
+
+    // Debug/test helper to access interleaved data bytes
+    getDataCache: (): number[] => {
+      if (_typeNumber < 1) {
+        throw new Error('QR code not initialized: call make() before getDataCache()');
+      }
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+      return _dataCache;
+    },
   };
 
   return _this;
