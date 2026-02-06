@@ -41,12 +41,14 @@ import {
   gaussJordanEliminate,
   rankPixelsByImportance,
   selectBasisVectorsForTarget,
+  type BlockSelectionResult,
 } from './elimination';
 import { mapImageToTargetsSupersampled } from './image-utils';
 import {
   binarySearchMaxVectors,
   flattenAndOrderSelections,
   unflattenSelections,
+  type FlattenedSelection,
 } from './scan-fallback';
 import {
   buildFullBasis,
@@ -1867,6 +1869,162 @@ function encodeDataToBytes(
   return { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts, encoderLayout };
 }
 
+// ============================================================================
+// NUMERIC SUFFIX SAFETY FILTER (greedy, preserves numeric validity)
+// ============================================================================
+
+function getNumericBitsCount(digits: number): number {
+  const fullGroups = Math.floor(digits / 3);
+  const rem = digits % 3;
+  return fullGroups * 10 + (rem === 1 ? 4 : rem === 2 ? 7 : 0);
+}
+
+function getNumericGroupMax(bits: number): number {
+  return bits === 10 ? 999 : bits === 7 ? 99 : 9;
+}
+
+function getLinearBit(data: Uint8Array, bitIndex: number): number {
+  const byteIndex = Math.floor(bitIndex / 8);
+  const bitInByte = bitIndex % 8;
+  const byte = data[byteIndex] ?? 0;
+  // bitIndex 0 is MSB of byte 0
+  return (byte >> (7 - bitInByte)) & 1;
+}
+
+function buildBlockSelectionsFromFlattened(
+  flattened: FlattenedSelection[],
+  blockIndices: number[]
+): BlockSelectionResult[] {
+  const blockMap = new Map<number, number[]>();
+  for (const idx of blockIndices) {
+    blockMap.set(idx, []);
+  }
+  for (const entry of flattened) {
+    const list = blockMap.get(entry.blockIndex);
+    if (list) list.push(entry.vectorIndex);
+  }
+  return Array.from(blockMap.entries())
+    .map(([blockIndex, selectedVectorIndices]) => ({ blockIndex, selectedVectorIndices }))
+    .sort((a, b) => a.blockIndex - b.blockIndex);
+}
+
+function filterSelectionsForNumericSuffix(
+  flattened: FlattenedSelection[],
+  blockDataArrays: Uint8Array[],
+  blockDataCounts: number[],
+  encoderLayout: EncoderDerivedLayout,
+  version: number
+): FlattenedSelection[] {
+  if (encoderLayout.suffixMode !== 'numeric' || encoderLayout.suffixLength <= 0) {
+    return flattened;
+  }
+
+  const numericCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
+  const numericDataStart = encoderLayout.bitsAfterOriginalData + 4 + numericCharCountBits;
+  const numericDataBits = getNumericBitsCount(encoderLayout.suffixLength);
+  if (numericDataBits <= 0) return flattened;
+
+  const totalDataBytes = blockDataCounts.reduce((sum, c) => sum + c, 0);
+  const linearData = new Uint8Array(totalDataBytes);
+  let offset = 0;
+  for (let i = 0; i < blockDataArrays.length; i++) {
+    linearData.set(blockDataArrays[i], offset);
+    offset += blockDataCounts[i];
+  }
+
+  // Build group maps and base values
+  const groupIndexForBit = new Int32Array(numericDataBits).fill(-1);
+  const bitMaskForBit = new Int32Array(numericDataBits).fill(0);
+  const groupMax: number[] = [];
+  const groupValues: number[] = [];
+
+  let remainingDigits = encoderLayout.suffixLength;
+  let bitCursor = 0;
+  let groupIndex = 0;
+  while (remainingDigits > 0) {
+    const groupDigits = remainingDigits >= 3 ? 3 : remainingDigits;
+    const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+    const maxVal = getNumericGroupMax(bitsPerGroup);
+
+    let value = 0;
+    for (let i = 0; i < bitsPerGroup; i++) {
+      const bit = getLinearBit(linearData, numericDataStart + bitCursor + i);
+      value = (value << 1) | bit;
+      groupIndexForBit[bitCursor + i] = groupIndex;
+      bitMaskForBit[bitCursor + i] = 1 << (bitsPerGroup - 1 - i);
+    }
+
+    groupMax.push(maxVal);
+    groupValues.push(value);
+
+    bitCursor += bitsPerGroup;
+    remainingDigits -= groupDigits;
+    groupIndex++;
+  }
+
+  // Precompute block start byte offsets in linear buffer
+  const blockStartBytes: number[] = [];
+  offset = 0;
+  for (const count of blockDataCounts) {
+    blockStartBytes.push(offset);
+    offset += count;
+  }
+
+  const accepted: FlattenedSelection[] = [];
+
+  for (const entry of flattened) {
+    const blockIndex = entry.blockIndex;
+    const vector = entry.vector;
+    const dataCount = blockDataCounts[blockIndex] ?? 0;
+    const blockStart = blockStartBytes[blockIndex] ?? 0;
+
+    const groupMasks = new Map<number, number>();
+
+    for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
+      const byte = vector.blockBits[byteIdx];
+      if (!byte) continue;
+      for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
+        if ((byte & (1 << bitInByte)) === 0) continue;
+        const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
+        if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
+          continue;
+        }
+        const local = linearBit - numericDataStart;
+        const g = groupIndexForBit[local];
+        if (g < 0) continue;
+        const mask = bitMaskForBit[local];
+        groupMasks.set(g, (groupMasks.get(g) ?? 0) ^ mask);
+      }
+    }
+
+    let ok = true;
+    for (const [g, mask] of groupMasks) {
+      const nextVal = (groupValues[g] ?? 0) ^ mask;
+      if (nextVal > (groupMax[g] ?? 0)) {
+        ok = false;
+        break;
+      }
+    }
+
+    if (ok) {
+      for (const [g, mask] of groupMasks) {
+        groupValues[g] = (groupValues[g] ?? 0) ^ mask;
+      }
+      accepted.push(entry);
+    }
+  }
+
+  if (accepted.length !== flattened.length) {
+    log.info('Numeric suffix safety filter applied', {
+      originalSelections: flattened.length,
+      acceptedSelections: accepted.length,
+      removed: flattened.length - accepted.length,
+    });
+  }
+
+  return accepted;
+}
+
 /**
  * Result of format info verification
  * 
@@ -3072,6 +3230,39 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       blocksWithSelections: blockSelections.filter((s) => s.selectedVectorIndices.length > 0)
         .length,
     });
+
+    // Numeric suffix safety: greedily filter selections to preserve numeric validity
+    if (resolvedSuffixMode === 'numeric' && strictSuffix) {
+      const flattenedSelections = flattenAndOrderSelections(
+        blockSelections,
+        elimination,
+        importance,
+        moduleCount
+      );
+      const filteredSelections = filterSelectionsForNumericSuffix(
+        flattenedSelections,
+        blockDataArrays,
+        blockDataCounts,
+        encoderLayout,
+        actualVersion
+      );
+
+      if (filteredSelections.length !== flattenedSelections.length) {
+        blockSelections = buildBlockSelectionsFromFlattened(
+          filteredSelections,
+          elimination.blockResults.map((b) => b.blockIndex)
+        );
+        totalSelected = blockSelections.reduce(
+          (sum, s) => sum + s.selectedVectorIndices.length,
+          0
+        );
+        log.info('Numeric suffix selection constrained', {
+          selectedCount: totalSelected,
+          removed: flattenedSelections.length - filteredSelections.length,
+          controllable: elimination.controllablePixels,
+        });
+      }
+    }
 
     // NOTE: No static vector cap. The binary search fallback in scan-fallback.ts
     // dynamically finds the maximum safe vector count for phone cameras.
