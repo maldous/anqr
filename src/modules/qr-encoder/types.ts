@@ -55,6 +55,8 @@ export interface QRCodeInstance {
   createImgTag: (cellSize?: number, margin?: number, alt?: string) => string;
   createASCII: (cellSize?: number, margin?: number) => string;
   renderTo2dContext: (context: CanvasRenderingContext2D, cellSize?: number) => void;
+  // Test/debug helper: access interleaved data bytes
+  getDataCache?: () => number[];
 }
 
 // Data segment interface (for mode encoders)

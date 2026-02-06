@@ -777,6 +777,7 @@ export {
   MIN_QART_VERSION,
   calculateOptimalVersionAndSuffix,
   generateDeterministicSuffix,
+  generateDeterministicNumericSuffix,
   hashStringToSeed,
 
 } from './rs-basis';

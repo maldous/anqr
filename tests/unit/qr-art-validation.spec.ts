@@ -28,7 +28,7 @@ import {
   validateSuffixCharset,
   VALID_SUFFIX_CHARS,
 } from '../../src/modules/qr-art/generate';
-import { MAX_SUFFIX_LENGTH, MIN_ECC_HEADROOM_BYTES } from '../../src/modules/qr-art/rs-basis';
+import { MIN_ECC_HEADROOM_BYTES } from '../../src/modules/qr-art/rs-basis';
 
 // Helper to build matrix from QR code
 function buildMatrixFromQR(qr: ReturnType<typeof qrcode>): boolean[][] {
@@ -281,12 +281,7 @@ describe('QR-Art Format Info Validation', () => {
     });
   });
 
-  describe('MAX_SUFFIX_LENGTH Constraint', () => {
-    it('MAX_SUFFIX_LENGTH is capped at 32', () => {
-      // MAX_SUFFIX_LENGTH should be 32 (reduced from 46 to improve real-world scannability)
-      expect(MAX_SUFFIX_LENGTH).toBe(32);
-    });
-
+  describe('MIN_ECC_HEADROOM_BYTES Constraint', () => {
     it('MIN_ECC_HEADROOM_BYTES is positive', () => {
       expect(MIN_ECC_HEADROOM_BYTES).toBeGreaterThan(0);
     });

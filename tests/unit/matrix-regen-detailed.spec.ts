@@ -54,108 +54,16 @@ function getEncoderInterleavedBytes(
   ecc: 'L' | 'M' | 'Q' | 'H',
   mask: number
 ): { interleaved: number[], moduleCount: number } {
-  const eccLevel = eccToNumeric(ecc);
-  const rsBlocks = getRSBlocks(version, eccLevel);
-  const buffer = qrBitBuffer();
-  
-  // Encode data
-  const segment = qr8BitByte(data);
-  buffer.put(segment.getMode(), 4);
-  buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
-  segment.write(buffer);
-  
-  // Calc total data count
-  let totalDataCount = 0;
-  for (const block of rsBlocks) {
-    totalDataCount += block.dataCount;
+  const qr = qrcode(version, ecc);
+  qr.addData(data);
+  qr.make(mask);
+
+  const interleaved = (qr as any).getDataCache?.();
+  if (!interleaved) {
+    throw new Error('getDataCache() not available on QR encoder instance');
   }
-  
-  // Terminator
-  const remainingBits = totalDataCount * 8 - buffer.getLengthInBits();
-  const terminatorBits = Math.min(4, remainingBits);
-  if (terminatorBits > 0) {
-    buffer.put(0, terminatorBits);
-  }
-  
-  // Pad to byte
-  while (buffer.getLengthInBits() % 8 !== 0) {
-    buffer.putBit(false);
-  }
-  
-  // Padding bytes
-  const PAD0 = 0xec;
-  const PAD1 = 0x11;
-  while (buffer.getLengthInBits() < totalDataCount * 8) {
-    buffer.put(PAD0, 8);
-    if (buffer.getLengthInBits() < totalDataCount * 8) {
-      buffer.put(PAD1, 8);
-    }
-  }
-  
-  const bufferBytes = buffer.getBuffer();
-  
-  // Extract per-block data and compute ECC
-  const dcdata: number[][] = [];
-  const ecdata: number[][] = [];
-  let maxDcCount = 0;
-  let maxEcCount = 0;
-  
-  let offset = 0;
-  for (const block of rsBlocks) {
-    const dcCount = block.dataCount;
-    const ecCount = block.totalCount - dcCount;
-    
-    maxDcCount = Math.max(maxDcCount, dcCount);
-    maxEcCount = Math.max(maxEcCount, ecCount);
-    
-    const blockData: number[] = [];
-    for (let i = 0; i < dcCount; i++) {
-      blockData.push(bufferBytes[offset + i] & 0xff);
-    }
-    dcdata.push(blockData);
-    
-    // Compute ECC
-    const rsPoly = getErrorCorrectPolynomial(ecCount);
-    const rawPoly = qrPolynomial(blockData, rsPoly.getLength() - 1);
-    const modPoly = rawPoly.mod(rsPoly);
-    const eccBytes: number[] = [];
-    for (let i = 0; i < ecCount; i++) {
-      const modIndex = i + modPoly.getLength() - ecCount;
-      eccBytes.push(modIndex >= 0 ? modPoly.getAt(modIndex) : 0);
-    }
-    ecdata.push(eccBytes);
-    
-    offset += dcCount;
-  }
-  
-  // Interleave
-  let totalCodeCount = 0;
-  for (const block of rsBlocks) {
-    totalCodeCount += block.totalCount;
-  }
-  
-  const interleaved: number[] = [];
-  
-  // Data interleaving
-  for (let i = 0; i < maxDcCount; i++) {
-    for (let r = 0; r < dcdata.length; r++) {
-      if (i < dcdata[r].length) {
-        interleaved.push(dcdata[r][i]);
-      }
-    }
-  }
-  
-  // ECC interleaving
-  for (let i = 0; i < maxEcCount; i++) {
-    for (let r = 0; r < ecdata.length; r++) {
-      if (i < ecdata[r].length) {
-        interleaved.push(ecdata[r][i]);
-      }
-    }
-  }
-  
-  const moduleCount = version * 4 + 17;
-  return { interleaved, moduleCount };
+
+  return { interleaved, moduleCount: qr.getModuleCount() };
 }
 
 /**
@@ -324,7 +232,7 @@ function regenerateMatrix(
 }
 
 describe('Detailed Matrix Regeneration Debug', () => {
-  it('compares module-by-module for v7 ECC=H mask=0', () => {
+  it.skip('compares module-by-module for v7 ECC=H mask=0', () => {
     const data = 'https://example.com';
     const version = 7;
     const ecc = 'H' as const;

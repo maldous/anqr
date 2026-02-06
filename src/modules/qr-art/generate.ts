@@ -18,9 +18,10 @@ import { decodeQR, type DecodedSegmentInfo } from '../qr-decoder';
 import { readFormatInfo as decoderReadFormatInfo } from '../qr-decoder/format';
 import { qrcode } from '../qr-encoder';
 import { qrBitBuffer } from '../qr-encoder/bit-buffer';
-import { qr8BitByte } from '../qr-encoder/data-modes';
+import { qr8BitByte, qrNumber } from '../qr-encoder/data-modes';
+import { createQRInstanceWithSegments } from '../qr-encoder/encoder-api';
 import { getRSBlocks } from '../qr-encoder/rs-blocks';
-import { QRErrorCorrectionLevel } from '../qr-encoder/types';
+import { QRErrorCorrectionLevel, QRMode } from '../qr-encoder/types';
 import {
   getBCHTypeInfo,
   getBCHTypeNumber,
@@ -53,6 +54,7 @@ import {
   clearBasisCache,
   computeECC,
   generateDeterministicSuffix,
+  generateDeterministicNumericSuffix,
   hashStringToSeed,
   MIN_QART_VERSION,
 } from './rs-basis';
@@ -229,7 +231,8 @@ function performSemanticValidation(
   expectedMask: number,
   expectedSuffix: string | undefined,
   scanFn: (matrix: boolean[][]) => ScanResult,
-  strictSuffix: boolean = false
+  strictSuffix: boolean = false,
+  suffixMode: 'byte' | 'numeric' = 'byte'
 ): SemanticValidationResult {
   // Step 1: Scan the matrix
   const scanResult = scanFn(matrix);
@@ -317,7 +320,10 @@ function performSemanticValidation(
   // Non-URL-safe bytes in the suffix are expected when maximizing pixel control.
   if (expectedSuffix !== undefined && decoded.length > originalData.length) {
     const actualSuffix = decoded.slice(originalData.length);
-    const charsetValidation = validateSuffixCharset(actualSuffix);
+    const charsetValidation =
+      suffixMode === 'numeric'
+        ? validateNumericSuffix(actualSuffix)
+        : validateSuffixCharset(actualSuffix);
     
     if (!charsetValidation.valid) {
       // Only reject if strictSuffix is enabled
@@ -459,6 +465,33 @@ export function validateSuffixCharset(suffix: string): {
 }
 
 /**
+ * Validate that a suffix contains only digits (numeric mode).
+ */
+export function validateNumericSuffix(suffix: string): {
+  valid: boolean;
+  invalidCharIndex?: number;
+  invalidCharCode?: number;
+  invalidChar?: string;
+} {
+  const toValidate = suffix.startsWith('#') ? suffix.slice(1) : suffix;
+
+  for (let i = 0; i < toValidate.length; i++) {
+    const char = toValidate[i];
+    const charCode = toValidate.charCodeAt(i);
+    if (char < '0' || char > '9') {
+      return {
+        valid: false,
+        invalidCharIndex: i,
+        invalidCharCode: charCode,
+        invalidChar: charCode >= 32 && charCode < 127 ? char : `\\x${charCode.toString(16).padStart(2, '0')}`,
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
  * Result of semantic validation
  */
 export interface SemanticValidationResult {
@@ -527,8 +560,10 @@ export interface EncoderDerivedLayout {
   paddingByteCount: number;
   /** Length of original data (without suffix) */
   originalDataLength: number;
-  /** Length of suffix (0 if no suffix) */
+  /** Length of suffix (0 if no suffix). For numeric mode, this is digits only. */
   suffixLength: number;
+  /** Suffix encoding mode */
+  suffixMode: 'byte' | 'numeric';
   /** Protected bit range (mode + charCount + original data bytes only) */
   protectedBitEnd: number;
   
@@ -1025,27 +1060,23 @@ export interface FullQArtConfig {
   onProgress?: (stage: string, percent: number) => void;
   /**
    * Optional suffix to append to the data.
-   * This suffix CAN be freely modified by QR-Art without affecting
-   * the original content. 
    * 
-   * If not provided and autoSuffix is true (default), a `#xxx...` fragment
-   * identifier suffix will be auto-generated to fill QR capacity.
-   * Fragment identifiers are client-side only, so URLs still work correctly.
-   * 
-   * The suffix bits become controllable for image embedding.
-   * Longer suffixes = more controllable pixels = better image quality.
+   * For suffixMode = "byte": include the leading '#' (e.g. "#ABC123").
+   * For suffixMode = "numeric": provide digits only (e.g. "123456").
    */
   suffix?: string;
   /**
+   * Suffix encoding mode.
+   * - "numeric": mixed-mode encoding (byte prefix + numeric suffix).
+   * - "byte": single byte-mode segment (legacy).
+   * - "auto": prefer numeric for URLs, otherwise byte.
+   */
+  suffixMode?: 'numeric' | 'byte' | 'auto';
+  /**
    * Whether to auto-generate a suffix when none is provided (default: true).
    * 
-   * When true: Automatically adds `#xxx...` fragment suffix to fill QR capacity.
+   * When true: Automatically adds a fragment suffix to fill QR capacity.
    * When false: Only padding bits are controllable (very limited).
-   * 
-   * The auto-generated suffix uses URL fragment identifier (`#`) which:
-   * - Never gets sent to the server (client-side only)
-   * - Doesn't affect URL redirects or destination
-   * - Maximizes controllable bits for better image quality
    */
   autoSuffix?: boolean;
   /**
@@ -1073,9 +1104,8 @@ export interface FullQArtConfig {
    * Whether to enforce strict suffix charset validation (default: true).
    * 
    * When true (default, recommended for real-world scanning):
-   * - Suffix must contain only URL-safe characters
-   * - Ensures the QR decodes to a valid, clean URL
-   * - Better compatibility with real phone cameras
+   * - Suffix must contain only URL-safe characters (byte mode)
+   * - Numeric mode requires digits only
    * 
    * When false:
    * - Suffix bytes can be ANY byte value (including non-printable)
@@ -1184,7 +1214,8 @@ function generateBaseQR(
   version: number,
   ecc: ECCLevel,
   maskPattern: number,
-  originalDataLength: number  // Length of original data (without suffix)
+  originalDataLength: number,  // Length of original data (without suffix)
+  suffixMode: 'byte' | 'numeric'
 ): BaseQRResult {
   // Log the exact data being encoded for debugging
   log.debug('generateBaseQR called', {
@@ -1197,13 +1228,27 @@ function generateBaseQR(
   });
 
   // First, use the encoder to determine the actual version if auto-detecting
-  // Always use single byte-mode segment for QART compatibility:
-  // byte mode allows ANY bit flip to produce a valid decoded byte,
-  // whereas numeric mode rejects ~90% of vectors (10-bit groups exceed 999).
-  const qr = qrcode(version, ecc);
-  qr.addData(data);
+  // Mixed-mode support: use a byte prefix + numeric suffix when requested.
+  // This matches the encoder-derived bit layout used for protection boundaries.
   const useMask = maskPattern >= 0 ? maskPattern : undefined;
-  qr.make(useMask);
+  const qr = suffixMode === 'numeric'
+    ? createQRInstanceWithSegments(
+        [
+          { data: data.slice(0, originalDataLength), mode: 'byte' },
+          ...(data.slice(originalDataLength).length > 0
+            ? [{ data: data.slice(originalDataLength), mode: 'numeric' }]
+            : []),
+        ],
+        ecc,
+        version,
+        { maskPattern: useMask }
+      )
+    : (() => {
+        const instance = qrcode(version, ecc);
+        instance.addData(data);
+        instance.make(useMask);
+        return instance;
+      })();
 
   const moduleCount = qr.getModuleCount();
   const actualVersion = version > 0 ? version : Math.ceil((moduleCount - 17) / 4);
@@ -1260,12 +1305,24 @@ function generateBaseQR(
   // This is critical - we need the real data bytes AND their ECC for RS linearity
   // Also captures the ACTUAL semantic bit positions from the encoder
   // HYBRID MODE: Pass originalDataLength to track protection boundaries
-  const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts, encoderLayout } = encodeDataToBytes(
-    data,
-    actualVersion,
-    ecc,
-    originalDataLength
-  );
+  const plan: QArtEncodingPlan =
+    suffixMode === 'numeric'
+      ? {
+          mode: 'numeric',
+          prefix: data.slice(0, originalDataLength),
+          suffix: data.slice(originalDataLength),
+          originalDataLength,
+          suffixLength: data.length - originalDataLength,
+        }
+      : {
+          mode: 'byte',
+          fullData: data,
+          originalDataLength,
+          suffixLength: data.length - originalDataLength,
+        };
+
+  const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts, encoderLayout } =
+    encodeDataToBytes(plan, actualVersion, ecc);
 
   // DEBUG: Verify that computeECC produces the same ECC as the encoder
   for (let i = 0; i < blockDataArrays.length; i++) {
@@ -1325,9 +1382,24 @@ function generateBaseQR(
   }
 
   // DEBUG: Compare regenerated matrix with encoder's matrix to find discrepancies
-  const debugQr = qrcode(actualVersion, ecc);
-  debugQr.addData(data);
-  debugQr.make(actualMask);
+  const debugQr = suffixMode === 'numeric'
+    ? createQRInstanceWithSegments(
+        [
+          { data: data.slice(0, originalDataLength), mode: 'byte' },
+          ...(data.slice(originalDataLength).length > 0
+            ? [{ data: data.slice(originalDataLength), mode: 'numeric' }]
+            : []),
+        ],
+        ecc,
+        actualVersion,
+        { maskPattern: actualMask }
+      )
+    : (() => {
+        const instance = qrcode(actualVersion, ecc);
+        instance.addData(data);
+        instance.make(actualMask);
+        return instance;
+      })();
 
   let mismatchCount = 0;
   const maxMismatches = 10;
@@ -1407,11 +1479,25 @@ function eccToNumericForEncoder(ecc: ECCLevel): number {
  * - Protection boundary is at: mode + charCount + originalData
  * - Controllable region is: suffix + padding
  */
+type QArtEncodingPlan =
+  | {
+      mode: 'byte';
+      fullData: string;
+      originalDataLength: number;
+      suffixLength: number;
+    }
+  | {
+      mode: 'numeric';
+      prefix: string;
+      suffix: string;
+      originalDataLength: number;
+      suffixLength: number;
+    };
+
 function encodeDataToBytes(
-  fullData: string,
+  plan: QArtEncodingPlan,
   version: number,
-  ecc: ECCLevel,
-  originalDataLength: number  // Length of original data (without suffix)
+  ecc: ECCLevel
 ): {
   blockDataArrays: Uint8Array[];
   blockEccArrays: Uint8Array[];
@@ -1419,40 +1505,72 @@ function encodeDataToBytes(
   blockEccCounts: number[];
   encoderLayout: EncoderDerivedLayout;
 } {
-  // Calculate suffix length
-  const suffixLength = fullData.length - originalDataLength;
-  const suffix = suffixLength > 0 ? fullData.slice(originalDataLength) : '';
-  
-  // Log the exact data being encoded for debugging
-  log.debug('encodeDataToBytes called (HYBRID byte mode)', {
-    fullDataLength: fullData.length,
-    originalDataLength,
-    suffixLength,
-    originalDataPreview: fullData.slice(0, Math.min(60, originalDataLength)) + (originalDataLength > 60 ? '...' : ''),
-    suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
-    version,
-    ecc,
-  });
-
   const eccLevel = eccToNumericForEncoder(ecc);
   const rsBlocks = getRSBlocks(version, eccLevel);
-
-  // Always use single byte-mode segment for QART:
-  // Byte mode allows ANY bit flip to produce a valid decoded byte.
-  // Numeric mode would reject ~90% of vectors (10-bit groups exceed 999).
   const buffer = qrBitBuffer();
-  const segment = qr8BitByte(fullData);
-  
-  buffer.put(segment.getMode(), 4);
-  const bitsAfterMode = buffer.getLengthInBits();
-  buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
-  const bitsAfterCharCount = buffer.getLengthInBits();
-  
-  // Where ORIGINAL data ends (PROTECTION BOUNDARY)
-  const bitsAfterOriginalData = bitsAfterCharCount + (originalDataLength * 8);
-  
-  segment.write(buffer);
-  const bitsAfterData = buffer.getLengthInBits();
+
+  let bitsAfterMode = 0;
+  let bitsAfterCharCount = 0;
+  let bitsAfterOriginalData = 0;
+  let bitsAfterData = 0;
+
+  const suffixLength = plan.suffixLength;
+  const originalDataLength = plan.originalDataLength;
+  const suffixMode: 'byte' | 'numeric' = plan.mode === 'numeric' ? 'numeric' : 'byte';
+
+  let originalDataPreview = '';
+  let suffixPreview = '';
+  let fullDataLength = 0;
+
+  if (plan.mode === 'numeric') {
+    const prefixSegment = qr8BitByte(plan.prefix);
+    buffer.put(prefixSegment.getMode(), 4);
+    bitsAfterMode = buffer.getLengthInBits();
+    buffer.put(prefixSegment.getLength(), getLengthInBits(prefixSegment.getMode(), version));
+    bitsAfterCharCount = buffer.getLengthInBits();
+    prefixSegment.write(buffer);
+    bitsAfterOriginalData = buffer.getLengthInBits();
+
+    if (plan.suffix.length > 0) {
+      const suffixSegment = qrNumber(plan.suffix);
+      buffer.put(suffixSegment.getMode(), 4);
+      buffer.put(suffixSegment.getLength(), getLengthInBits(suffixSegment.getMode(), version));
+      suffixSegment.write(buffer);
+    }
+
+    bitsAfterData = buffer.getLengthInBits();
+
+    originalDataPreview = plan.prefix.slice(0, Math.min(60, plan.prefix.length)) +
+      (plan.prefix.length > 60 ? '...' : '');
+    suffixPreview = plan.suffix.slice(0, 20) + (plan.suffix.length > 20 ? '...' : '');
+    fullDataLength = plan.prefix.length + plan.suffix.length;
+  } else {
+    const segment = qr8BitByte(plan.fullData);
+    buffer.put(segment.getMode(), 4);
+    bitsAfterMode = buffer.getLengthInBits();
+    buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
+    bitsAfterCharCount = buffer.getLengthInBits();
+    bitsAfterOriginalData = bitsAfterCharCount + plan.originalDataLength * 8;
+    segment.write(buffer);
+    bitsAfterData = buffer.getLengthInBits();
+
+    originalDataPreview = plan.fullData.slice(0, Math.min(60, plan.originalDataLength)) +
+      (plan.originalDataLength > 60 ? '...' : '');
+    suffixPreview = plan.fullData.slice(plan.originalDataLength, plan.originalDataLength + 20) +
+      (plan.fullData.length - plan.originalDataLength > 20 ? '...' : '');
+    fullDataLength = plan.fullData.length;
+  }
+
+  log.debug(`encodeDataToBytes called (HYBRID ${suffixMode} mode)`, {
+    fullDataLength,
+    originalDataLength,
+    suffixLength,
+    originalDataPreview,
+    suffixPreview,
+    version,
+    ecc,
+    suffixMode,
+  });
 
   // Calculate total data capacity
   let totalDataCount = 0;
@@ -1534,14 +1652,98 @@ function encodeDataToBytes(
   const gapEndBit = paddingSafeStartBit;
   const gapBitCount = gapEndBit - gapStartBit;
   
+  const getNumericBits = (digits: number): number => {
+    const fullGroups = Math.floor(digits / 3);
+    const rem = digits % 3;
+    return fullGroups * 10 + (rem === 1 ? 4 : rem === 2 ? 7 : 0);
+  };
+
+  const getNumericMaxForBits = (bits: number): number => {
+    return bits === 10 ? 999 : bits === 7 ? 99 : 9;
+  };
+
+  const buildNumericSafeRanges = (): { ranges: BitRange[]; safeBitCount: number } => {
+    const numericCharCountBits = getLengthInBits(QRMode.MODE_NUMBER, version);
+    const numericDataStart = bitsAfterOriginalData + 4 + numericCharCountBits;
+    const numericDataBits = getNumericBits(suffixLength);
+    const safeBits: boolean[] = new Array(numericDataBits).fill(false);
+
+    let bitCursor = numericDataStart;
+    let remaining = suffixLength;
+    let localIndex = 0;
+
+    while (remaining > 0) {
+      const groupDigits = remaining >= 3 ? 3 : remaining;
+      const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
+
+      let value = 0;
+      for (let j = 0; j < bitsPerGroup; j++) {
+        value = (value << 1) | (buffer.getAt(bitCursor + j) ? 1 : 0);
+      }
+
+      const maxVal = getNumericMaxForBits(bitsPerGroup);
+      for (let j = 0; j < bitsPerGroup; j++) {
+        const mask = 1 << (bitsPerGroup - 1 - j);
+        const flipped = value ^ mask;
+        if (flipped <= maxVal) {
+          safeBits[localIndex + j] = true;
+        }
+      }
+
+      bitCursor += bitsPerGroup;
+      localIndex += bitsPerGroup;
+      remaining -= groupDigits;
+    }
+
+    const ranges: BitRange[] = [];
+    let safeBitCount = 0;
+    let inRange = false;
+    let start = 0;
+
+    for (let i = 0; i < safeBits.length; i++) {
+      if (safeBits[i]) {
+        safeBitCount++;
+        if (!inRange) {
+          inRange = true;
+          start = i;
+        }
+      } else if (inRange) {
+        ranges.push({ startBit: numericDataStart + start, endBit: numericDataStart + i });
+        inRange = false;
+      }
+    }
+
+    if (inRange) {
+      ranges.push({ startBit: numericDataStart + start, endBit: numericDataStart + safeBits.length });
+    }
+
+    return { ranges, safeBitCount };
+  };
+
+  let numericSafeBitCount = 0;
+  let numericSafeRanges: BitRange[] = [];
+  if (suffixMode === 'numeric' && suffixLength > 0) {
+    const numericSafe = buildNumericSafeRanges();
+    // Clamp numeric-safe ranges to the suffix-safe window (exclude terminator gap)
+    numericSafeRanges = numericSafe.ranges
+      .map((range) => ({
+        startBit: Math.max(range.startBit, suffixSafeStartBit),
+        endBit: Math.min(range.endBit, suffixSafeEndBit),
+      }))
+      .filter((range) => range.endBit > range.startBit);
+    numericSafeBitCount = numericSafeRanges.reduce((sum, r) => sum + (r.endBit - r.startBit), 0);
+  }
+
   // Calculate actual controllable bits (only in safe ranges)
-  const suffixSafeBits = Math.max(0, suffixSafeEndBit - suffixSafeStartBit);
+  const suffixSafeBits = suffixMode === 'numeric' ? numericSafeBitCount : Math.max(0, suffixSafeEndBit - suffixSafeStartBit);
   const paddingSafeBits = Math.max(0, paddingSafeEndBit - paddingSafeStartBit);
   const totalControllableBits = suffixSafeBits + paddingSafeBits;
   
-  // Build the two allowed bit ranges for the RS basis builder
+  // Build the allowed bit ranges for the RS basis builder
   const allowedBitRanges: BitRange[] = [];
-  if (suffixSafeEndBit > suffixSafeStartBit) {
+  if (suffixMode === 'numeric') {
+    allowedBitRanges.push(...numericSafeRanges);
+  } else if (suffixSafeEndBit > suffixSafeStartBit) {
     allowedBitRanges.push({ startBit: suffixSafeStartBit, endBit: suffixSafeEndBit });
   }
   if (paddingSafeEndBit > paddingSafeStartBit) {
@@ -1565,6 +1767,7 @@ function encodeDataToBytes(
     paddingByteCount,
     originalDataLength,
     suffixLength,
+    suffixMode,
     // Protection boundary (mode + charCount + original data)
     protectedBitEnd,
     // TWO-INTERVAL safe mutation ranges (byte-aligned, excludes terminator)
@@ -1592,8 +1795,8 @@ function encodeDataToBytes(
     ecc,
     originalDataLength,
     suffixLength,
-    fullDataLength: fullData.length,
-    encoding: 'byte mode (single segment)',
+    fullDataLength,
+    encoding: suffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
     checkpoints: {
       bitsAfterMode: `${bitsAfterMode} bits (mode indicator)`,
       bitsAfterCharCount: `${bitsAfterCharCount} bits (+char count)`,
@@ -1980,6 +2183,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     maskPattern, 
     onProgress,
     suffix,
+    suffixMode = 'auto',
     autoSuffix = true,  // Default to auto-generating suffix for better control
     minPadCodewords = 10,  // Lower default since suffix provides most control
     forceVersion,
@@ -1987,8 +2191,26 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     strictSuffix = true,  // Default to true for real-world scannability
   } = config;
 
-  // Store original data length for protection boundary tracking
-  const originalDataLength = data.length;
+  // Resolve suffix mode (prefer numeric for URLs when auto)
+  const isUrlLike = /^https?:\/\//i.test(data);
+  let resolvedSuffixMode: 'numeric' | 'byte' =
+    suffixMode === 'auto' ? (isUrlLike ? 'numeric' : 'byte') : suffixMode;
+
+  // Encode using the resolved suffix mode (mixed-mode when numeric).
+  const encodingSuffixMode: 'numeric' | 'byte' = resolvedSuffixMode;
+
+  // Base URL handling for numeric mode (we control the fragment)
+  const hashIndex = data.indexOf('#');
+  const baseUrl = hashIndex >= 0 ? data.slice(0, hashIndex) : data;
+  if (resolvedSuffixMode === 'numeric' && hashIndex >= 0) {
+    log.warn('Numeric suffix mode: dropping existing fragment and regenerating numeric suffix', {
+      originalData: data.length > 60 ? data.slice(0, 60) + '...' : data,
+    });
+  }
+
+  const prefix = resolvedSuffixMode === 'numeric' ? `${baseUrl}#` : data;
+  let originalData = prefix;
+  let originalDataLength = originalData.length;
 
   // Track if version was auto-upgraded for QR-Art
   let versionWasUpgradedForQArt = false;
@@ -2015,17 +2237,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     }
     log.info('Using QR version for QR-Art', { version: versionToUse, wasUpgraded: versionWasUpgradedForQArt });
   } else if (version > 0) {
-    if (version < MIN_QART_VERSION) {
-      log.warn('Specified version is below MIN_QART_VERSION, upgrading for reliable scanning', {
-        requestedVersion: version,
-        minQArtVersion: MIN_QART_VERSION,
-        reason: 'Lower versions have insufficient ECC capacity for real phone cameras',
-      });
-      versionToUse = MIN_QART_VERSION;
-      versionWasUpgradedForQArt = true;
-    } else {
-      versionToUse = version;
-    }
+    versionToUse = version;
     log.info('Using QR version for QR-Art', { version: versionToUse, wasUpgraded: versionWasUpgradedForQArt });
   } else {
     // Will be calculated after suffix determination
@@ -2035,37 +2247,61 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
   // Handle suffix generation
   if (suffix !== undefined) {
-    // User provided explicit suffix
-    actualSuffix = suffix;
-    encodedData = data + suffix;
-    log.info('Using user-provided suffix', {
-      originalDataLength,
-      suffixLength: suffix.length,
-      suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
-    });
+    if (resolvedSuffixMode === 'numeric') {
+      const normalized = suffix.startsWith('#') ? suffix.slice(1) : suffix;
+      if (!/^[0-9]*$/.test(normalized)) {
+        log.warn('Numeric suffix mode requires digits only; falling back to byte suffix mode', {
+          providedSuffix: suffix,
+        });
+        resolvedSuffixMode = 'byte';
+        originalData = data;
+        originalDataLength = data.length;
+      } else {
+        actualSuffix = normalized;
+        encodedData = prefix + actualSuffix;
+        log.info('Using user-provided numeric suffix', {
+          originalDataLength,
+          suffixLength: actualSuffix.length,
+          suffixPreview: actualSuffix.slice(0, 20) + (actualSuffix.length > 20 ? '...' : ''),
+        });
+      }
+    }
+
+    if (resolvedSuffixMode === 'byte') {
+      actualSuffix = suffix;
+      encodedData = data + suffix;
+      log.info('Using user-provided suffix', {
+        originalDataLength,
+        suffixLength: suffix.length,
+        suffixPreview: suffix.slice(0, 20) + (suffix.length > 20 ? '...' : ''),
+      });
+    }
   } else if (autoSuffix) {
     // Auto-generate suffix to fill capacity
-    // Use calculateOptimalVersionAndSuffix from rs-basis.ts
     const optimalConfig = calculateOptimalVersionAndSuffix(
       versionToUse,  // 0 for auto, or user-specified minimum
       ecc,
       originalDataLength,
-      targetControlPercent
+      targetControlPercent,
+      resolvedSuffixMode
     );
-    
-    // Generate DETERMINISTIC suffix with # prefix (URL fragment)
-    // Using deterministic suffix ensures stable baseline across runs
-    // Account for the # character in the suffix length
-    const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
+
     const seed = hashStringToSeed(data + optimalConfig.version.toString() + ecc);
-    actualSuffix = '#' + generateDeterministicSuffix(suffixCharCount, seed);
-    encodedData = data + actualSuffix;
+
+    if (resolvedSuffixMode === 'numeric') {
+      const suffixDigits = Math.max(0, optimalConfig.suffixLength);
+      actualSuffix = generateDeterministicNumericSuffix(suffixDigits, seed);
+      encodedData = prefix + actualSuffix;
+    } else {
+      const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
+      actualSuffix = '#' + generateDeterministicSuffix(suffixCharCount, seed);
+      encodedData = data + actualSuffix;
+    }
     
     // Use the optimal version calculated
     if (versionToUse === 0) {
       versionToUse = optimalConfig.version;
     } else {
-      // User specified a version, but we may need to upgrade for suffix capacity
       if (optimalConfig.version > versionToUse) {
         log.warn('Upgrading version to fit auto-generated suffix', {
           requestedVersion: versionToUse,
@@ -2079,7 +2315,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       originalDataLength,
       suffixLength: actualSuffix.length,
       suffixPreview: actualSuffix.slice(0, 30) + (actualSuffix.length > 30 ? '...' : ''),
-      encoding: 'byte mode (single segment)',
+      encoding: resolvedSuffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
       optimalVersion: optimalConfig.version,
       versionToUse,
       expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
@@ -2096,20 +2332,13 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // No suffix - only padding codewords will be controllable (limited)
     actualSuffix = '';
     encodedData = data;
+    resolvedSuffixMode = 'byte';
+    originalData = data;
+    originalDataLength = data.length;
     
     // If version is auto, calculate with padding slack
     if (versionToUse === 0) {
       versionToUse = calculateVersionForSlack(data.length, ecc, minPadCodewords);
-      // Enforce MIN_QART_VERSION for reliable scanning
-      if (versionToUse < MIN_QART_VERSION) {
-        log.warn('Calculated version is below MIN_QART_VERSION, upgrading for reliable scanning', {
-          calculatedVersion: versionToUse,
-          minQArtVersion: MIN_QART_VERSION,
-          reason: 'Lower versions have insufficient ECC capacity for real phone cameras',
-        });
-        versionToUse = MIN_QART_VERSION;
-        versionWasUpgradedForQArt = true;
-      }
     }
     
     log.warn('No suffix - only padding codewords controllable (limited QR-Art control)', {
@@ -2122,7 +2351,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
   // Log the encoding target (HYBRID mode)
   log.info('QR-Art encoding target (HYBRID STRATEGY)', {
-    originalData: data.length > 50 ? data.slice(0, 50) + '...' : data,
+    originalData: originalData.length > 50 ? originalData.slice(0, 50) + '...' : originalData,
     originalDataLength,
     suffix: actualSuffix.length > 30 ? actualSuffix.slice(0, 30) + '...' : actualSuffix,
     suffixLength: actualSuffix.length,
@@ -2132,9 +2361,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     minQArtVersion: MIN_QART_VERSION,
     ecc,
     strictSuffix,
+    suffixMode: resolvedSuffixMode,
     strategy: 'HYBRID - original data protected, suffix + padding controllable',
     suffixPolicy: strictSuffix 
-      ? 'STRICT - suffix must contain only URL-safe characters'
+      ? resolvedSuffixMode === 'numeric'
+        ? 'STRICT - numeric suffix digits only'
+        : 'STRICT - suffix must contain only URL-safe characters'
       : 'RELAXED - suffix can contain ANY byte values (max QArt control)',
   });
 
@@ -2147,14 +2379,21 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // Step 1: Generate base QR to determine version, get initial matrix, and extract per-block data/ECC
     // HYBRID MODE: Pass protectedDataLength to track protection boundaries
-    // CRITICAL: When suffix starts with '#', we must protect the '#' character too!
-    // The '#' separates the URL from the fragment - it must not be corrupted.
-    // Otherwise QR-Art may modify the '#' to garbage, breaking the URL structure.
-    const protectedDataLength = actualSuffix.startsWith('#') 
-      ? originalDataLength + 1  // Include the '#' in protected region
-      : originalDataLength;
+    // CRITICAL: When using byte-mode suffix with a leading '#', protect the separator.
+    // In numeric mode, the prefix already includes '#', so originalDataLength is correct.
+    const protectedDataLength =
+      resolvedSuffixMode === 'byte' && actualSuffix.startsWith('#')
+        ? originalDataLength + 1
+        : originalDataLength;
     
-    const baseResult = generateBaseQR(encodedData, versionToUse, ecc, maskPattern, protectedDataLength);
+    const baseResult = generateBaseQR(
+      encodedData,
+      versionToUse,
+      ecc,
+      maskPattern,
+      protectedDataLength,
+      encodingSuffixMode
+    );
     
     // FAIL FAST: If base matrix generation failed (e.g., ECC/mask mismatch), return error immediately
     if (!baseResult.success) {
@@ -3345,12 +3584,13 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     
     const semanticValidation = performSemanticValidation(
       finalMatrix,
-      data,
+      originalData,
       ecc,
       actualMask,
       actualSuffix,
       scanMatrixWithJsQR,
-      strictSuffix
+      strictSuffix,
+      resolvedSuffixMode
     );
     
     if (semanticValidation.valid) {
@@ -3661,11 +3901,21 @@ export async function generateFullQArtBestMask(
   // Pre-calculate optimal version and suffix for all mask comparisons
   // This ensures consistent encoding across all mask attempts
   const targetControlPercent = config.targetControlPercent ?? 50;
+  const resolvedSuffixMode: 'numeric' | 'byte' =
+    config.suffixMode === 'numeric'
+      ? 'numeric'
+      : config.suffixMode === 'byte'
+        ? 'byte'
+        : /^https?:\/\//i.test(config.data)
+          ? 'numeric'
+          : 'byte';
+
   const optimalConfig = calculateOptimalVersionAndSuffix(
     config.forceVersion ?? config.version,
     config.ecc,
     config.data.length,
-    targetControlPercent
+    targetControlPercent,
+    resolvedSuffixMode
   );
   
   // Generate DETERMINISTIC suffix once for all masks (ensures consistent comparison)
@@ -3675,9 +3925,14 @@ export async function generateFullQArtBestMask(
   if (config.suffix !== undefined) {
     sharedSuffix = config.suffix;
   } else if (config.autoSuffix !== false) {
-    const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
     const seed = hashStringToSeed(config.data + sharedVersion.toString() + config.ecc);
-    sharedSuffix = '#' + generateDeterministicSuffix(suffixCharCount, seed);
+    if (resolvedSuffixMode === 'numeric') {
+      const suffixDigits = Math.max(0, optimalConfig.suffixLength);
+      sharedSuffix = generateDeterministicNumericSuffix(suffixDigits, seed);
+    } else {
+      const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
+      sharedSuffix = '#' + generateDeterministicSuffix(suffixCharCount, seed);
+    }
   } else {
     sharedSuffix = '';
   }
@@ -3688,7 +3943,7 @@ export async function generateFullQArtBestMask(
     suffixLength: sharedSuffix.length,
     paddingBytes: optimalConfig.paddingBytes,
     expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
-    encoding: 'byte mode (single segment)',
+    encoding: resolvedSuffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
     note: 'Each mask will use the same DETERMINISTIC suffix for fair comparison',
   });
 
@@ -3697,6 +3952,7 @@ export async function generateFullQArtBestMask(
       ...config,
       forceVersion: sharedVersion,  // Use same version for all masks
       suffix: sharedSuffix,          // Use same suffix for fair comparison
+      suffixMode: resolvedSuffixMode,
       autoSuffix: false,             // Disable auto-suffix since we pre-generated it
       maskPattern: mask,
       strictSuffix: config.strictSuffix ?? true,  // Default true for phone-safe URLs
@@ -3723,7 +3979,9 @@ export async function generateFullQArtBestMask(
       matchingPixels: 0,
       totalControllable: 0,
       matchPercentage: 0,
-      encodedData: config.data + sharedSuffix,
+      encodedData: resolvedSuffixMode === 'numeric'
+        ? `${config.data.split('#')[0]}#${sharedSuffix}`
+        : config.data + sharedSuffix,
       originalData: config.data,
       suffix: sharedSuffix,
     };
