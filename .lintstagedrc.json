@@ -1,0 +1,4 @@
+{
+  "*.{ts,tsx,js,jsx}": ["npx @biomejs/biome check --write --unsafe"],
+  "*.json": ["npx @biomejs/biome format --write"]
+}
