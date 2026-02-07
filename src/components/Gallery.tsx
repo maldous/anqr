@@ -398,5 +398,3 @@ export function Gallery({ filter }: GalleryProps) {
     </main>
   );
 }
-
-export default Gallery;

@@ -165,5 +165,3 @@ export function HelpLink({
     </a>
   );
 }
-
-export default HelpLink;

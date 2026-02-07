@@ -170,5 +170,3 @@ export function AdPlaceholder({
     </div>
   );
 }
-
-export default AdPlaceholder;

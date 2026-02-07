@@ -535,7 +535,7 @@ _quality-gates:
 	npm audit --audit-level=high
 	@which osv-scanner > /dev/null 2>&1 && osv-scanner --lockfile package-lock.json || echo 'osv-scanner not installed, skipping'
 	@which semgrep > /dev/null 2>&1 && semgrep --config auto src/ --exclude 'src/i18n/**' --severity WARNING --severity ERROR --error --quiet || echo 'semgrep not installed, skipping'
-	npx knip --include dependencies,unlisted
+	npx knip --include dependencies,unlisted,exports
 
 quality: UNIT_CMD = test:unit:ci
 quality: _quality-gates
