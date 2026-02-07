@@ -13,7 +13,7 @@ There are three “execution surfaces” that all reuse the same core renderer:
 2. **Netlify Function (`netlify/functions/qr.ts`)**: server-side image generator used for `https://anqr.link/?...` style embed URLs (e.g. `<img src="...">`).
 3. **Android native plugin**: a Capacitor plugin used to write files to the device’s Documents folder (MediaStore).
 
-Key design idea: a single “QR render config object” is assembled from UI state, then passed into `src/modules/qr-generator.js` to produce a canvas (and optionally matrix data for vector export).
+Key design idea: a single “QR render config object” is assembled from UI state, then passed into `src/modules/qr-generator/qr-generator-class.ts` to produce a canvas (and optionally matrix data for vector export).
 
 ## Core runtime flow (web)
 
@@ -26,18 +26,16 @@ flowchart TD
   D --> C
   E --> F[src/hooks/useQRGenerator.ts]
   F --> C
-  F --> G[src/modules/qr-generator.js]
-  F --> H[src/modules/overlay-processor.ts]
-  F --> I[src/modules/animation.ts]
-  F --> J[src/modules/exporter.ts]
-  F --> K[src/modules/qr-scanner.ts]
-  F --> L[src/modules/safety-analyzer.ts]
-  G --> M[src/modules/qr-core.ts]
-  M --> N[src/modules/qrcode.mjs]
-  G --> O[src/modules/dither-algorithms.ts]
-  G --> P[src/modules/blue-noise-dither.ts]
-  G --> Q[src/modules/color-utils.ts]
-  J --> R[src/modules/media-store-writer.ts]
+  F --> G[src/modules/qr-generator/*]
+  F --> H[src/modules/overlay/processor.ts]
+  F --> I[src/modules/animation/*]
+  F --> J[src/modules/exporter/*]
+  F --> K[src/modules/qr-analyzer/*]
+  G --> M[src/modules/qr-encoder/*]
+  M --> N[src/modules/qr-spec/*]
+  G --> O[src/modules/dither-algorithms/*]
+  G --> Q[src/modules/core/color.ts]
+  J --> R[src/modules/platform/media-store.ts]
 ```
 
 ### Step-by-step (editor)
@@ -61,8 +59,8 @@ flowchart TD
    - Copies the generated canvas into a visible canvas element.
    - Optionally validates by scanning the output canvas (`validateQRCodeRobust`).
 6. **Export/share**
-   - Export uses `src/modules/exporter.ts` (PNG/WebP/JPEG/GIF/SVG/vector SVG).
-   - Sharing uses `src/modules/share-utils.ts` (URL params + embed snippets).
+   - Export uses `src/modules/exporter/*` (PNG/WebP/JPEG/GIF/SVG/vector SVG).
+   - Sharing uses `src/modules/share-links/*` (URL params + embed snippets).
 
 ## Core runtime flow (server / embed)
 
@@ -70,14 +68,14 @@ The Netlify function takes **query parameters**, maps them to the same render co
 
 ```mermaid
 flowchart TD
-  S[netlify/functions/qr.ts] --> G[src/modules/qr-generator.js]
+  S[netlify/functions/qr.ts] --> G[src/modules/qr-generator/*]
   S --> SH[src/modules/shared/index.ts]
-  G --> M[src/modules/qr-core.ts]
-  M --> N[src/modules/qrcode.mjs]
+  G --> M[src/modules/qr-encoder/*]
+  M --> N[src/modules/qr-spec/*]
 ```
 
 Important implication: **URL parameter compatibility** is enforced in two places:
-- Client share encoder/decoder (`src/modules/share-utils.ts`)
+- Client share encoder/decoder (`src/modules/share-links/url-params.ts`)
 - Server query parser (`netlify/functions/qr.ts`)
 
 If either side adds options without the other being updated, you can get subtle “web looks different from <img> embed” mismatches.
@@ -114,35 +112,34 @@ flowchart LR
 ```
 
 Where:
-- `Payload text` comes from `qr-store.ts` via `getPayloadText()` and `payload-generators.ts`.
-- Overlay preprocessing is in `overlay-processor.ts` (+ `image-filters.ts` / dithering helpers).
-- Rendering + styling + compositing is `qr-generator.js` (backed by `qr-core.ts` and vendor QR matrix logic).
-- Validation is `qr-scanner.ts` (decode/scan check).
-- Export is `exporter.ts` (plus native file writing if running on mobile).
+- `Payload text` comes from `qr-store.ts` via `getPayloadText()` and `payload-generators/*`.
+- Overlay preprocessing is in `src/modules/overlay/processor.ts` (+ `overlay-filters.ts` / `dither-algorithms/*`).
+- Rendering + styling + compositing is `src/modules/qr-generator/*` (backed by `qr-encoder/*` and `qr-spec/*`).
+- Validation + safety checks are in `src/modules/qr-analyzer/*`.
+- Export is `src/modules/exporter/*` (plus native file writing via `src/modules/platform/media-store.ts`).
 
 ## URL parameter parity (client share encoder vs server image function)
 
-The **client** (`src/modules/share-utils.ts`) can generate URLs with **163** query keys.
+The **client** (`src/modules/share-links/url-params.ts`) emits **165** query keys.  
+The **server** (`netlify/functions/qr.ts`) currently reads **158** query keys.
 
-The **server** (`netlify/functions/qr.ts`) currently reads **110** query keys.
+That leaves **11** client-only keys (embed ignores them) and **4** server-only keys. See `reports/param-parity.json` and the guard test `tests/unit/share-param-parity.spec.ts`.
 
-That means **57** keys that the client may emit are not read by the server, so they will be ignored in `<img src="...">` embeds unless you add server-side support.
-
-### Keys emitted by client but not read by server (57)
+### Client-only keys (11)
 
 ```text
-autoEcc, autoReduce, autoVer, bgOver, bounce, colorCycle, cropEn, cropSize, cropX, cropY, fmtExtra, fname, gifDelays, gifDisp, gifDispH, gifDispW, gifFps, gifPalette, gifQuant, gifScale, lockA, lockAll, lockF, lockT, lockV, loop, maxF, metaKv, metaLic, metaTime, ovFramePick, ovType, qaBlur, qaContrast, qaHeatmap, qaScans, qaStrict, qaWarn, reduce, reduceStyle, rseed, safeEdges, safeMinModule, safeMinQZ, safeOverlay, safeOverlayMax, safeScan, safeWarn, scanEvery, subGrid, subMode, trace, wmt, wmtH, wmtW
+gifDisp, gifDith, gifMaxFps, gifPal, gifQuant, gifTrans, jpegQ, lang, qaRot, subpixel, svgVec
 ```
 
-### Keys read by server but not emitted by client (4)
+### Server-only keys (4)
 
 ```text
 maxOverlayIntensityH, maxOverlayIntensityL, maxOverlayIntensityM, maxOverlayIntensityQ
 ```
 
 Recommended workflow:
-- Treat `share-utils.ts` as the canonical list of public query params.
-- Add a small unit test (or script) that parses both files and fails CI if the sets diverge.
+- Treat `src/modules/share-links/url-params.ts` as the canonical list of public query params.
+- Keep the parity unit test as a CI guard and shrink allowlists toward zero.
 
 ## Supporting (non-73) files worth knowing about
 
