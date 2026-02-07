@@ -1,0 +1,79 @@
+1) Rendering/visual change tests
+- Changing a control updates the QR output
+- “Produces different result/output/pattern/snapshot”
+- “Changes QR appearance” for styles, gradients, modes, intensity, etc
+- Combined settings produce cumulative/unique visual outcomes
+
+2) Encoding/data correctness tests
+- URL/plain text/numeric/alphanumeric/byte mode behavior
+- ECC level behavior (L/M/Q/H), density/complexity expectations
+- Version logic (auto/min required/manual version changes)
+- Format info round-trip and parser/decoder consistency
+- Suffix charset validation and strictness
+- Deterministic snapshot/output checks
+
+3) Conditional visibility/state tests
+- Controls appear/disappear based on tier, mode, format, or toggles
+- Dependent controls show/hide correctly (e.g., ECC-aware, GIF/WebP/SVG settings)
+- Section collapse/expand behavior
+
+4) Persistence tests
+- Values persist after accordion collapse/expand
+- Settings persist across interactions and section toggles
+- State retention across kind/mode/format switches
+
+5) Accessibility (a11y) tests
+- Keyboard navigation (Tab/Shift+Tab/Enter/Space/Arrow keys)
+- Focusability of inputs and controls
+- Visible labels/placeholders
+- Correct ARIA roles/attributes (switch, slider, combobox, option, aria-valuenow/min/max, aria-checked)
+
+6) Interaction/UX behavior tests
+- Buttons clickable after repeated interactions
+- Add/remove/edit custom KV rows (CRUD)
+- Copy/share buttons behavior and feedback
+- Select open/close and keyboard operation
+- Readonly field behavior where required
+
+7) Input validation/edge-case tests
+- Empty, long, unicode, RTL, emoji, special chars
+- Numeric bounds/min/max and invalid values
+- Filename rules and unusual filenames
+- URL validity/encoding/protocol variants
+- Whitespace-only or very short content
+
+8) Overlay/watermark/media tests
+- Static image/GIF upload and URL loading
+- Preview availability
+- Overlay mode/intensity/crop interactions
+- Watermark kind/position/blend/opacity behaviors
+- Animation controls (speed, frame step, loop, bounce, jitter, seed, interpolation, etc)
+
+9) Output/export format tests
+- PNG/SVG/GIF/WebP selection
+- Format-specific controls and constraints
+- DPI/quality/precision/quiet-zone/background options
+- Embed HTML/Markdown/direct-link generation correctness
+
+10) Cross-section integration tests
+- Multiple sections changed sequentially without breakage
+- Pairwise/value-iteration combination coverage
+- End-to-end workflows (payload -> overlay -> mode/format/share)
+
+11) Performance/stability/rapid-change tests
+- Rapid toggling/input changes settle to correct final render
+- “Wait for render cycle” completeness checks
+- No broken interactivity after stress interactions
+
+12) Safety/protection behavior tests
+- Safety mode Off/Balanced/Strict logic
+- Protection locks visibility and behavior
+- Risk budget/min module/min quiet-zone conditional controls
+- Finder/format/timing/version lock toggles and effect
+
+13) Test ID integrity/completeness tests
+- Every interactive UI element has a `data-testid` at runtime (all routes + tiers + expanded states)
+- Every `data-testid` is unique in the live DOM for a given state (no duplicates)
+- `tests/ids.txt` is regenerated and treated as canonical managed inventory
+- Parameterized IDs (e.g. `{param}` templates) are enumerated and validated
+- Test references only use managed IDs or approved parameterized template families

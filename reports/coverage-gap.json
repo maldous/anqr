@@ -1,0 +1,2061 @@
+{
+  "generatedAt": "2026-02-07T11:02:23.717Z",
+  "total": {
+    "statements": 37.84,
+    "branches": 33.3,
+    "functions": 33.05,
+    "lines": 38.6,
+    "missed": {
+      "statements": 10535,
+      "branches": 6229,
+      "functions": 1211,
+      "lines": 9383
+    }
+  },
+  "filesBelow100": [
+    {
+      "file": "src/lib/auto-testid.ts",
+      "statements": 4.16,
+      "branches": 0,
+      "functions": 0,
+      "lines": 5.26,
+      "minPct": 0,
+      "missed": {
+        "statements": 46,
+        "branches": 24,
+        "functions": 6,
+        "lines": 36
+      }
+    },
+    {
+      "file": "src/lib/logger-remote.ts",
+      "statements": 5.55,
+      "branches": 0,
+      "functions": 0,
+      "lines": 5.71,
+      "minPct": 0,
+      "missed": {
+        "statements": 68,
+        "branches": 28,
+        "functions": 19,
+        "lines": 66
+      }
+    },
+    {
+      "file": "src/lib/utils.ts",
+      "statements": 0,
+      "branches": 100,
+      "functions": 0,
+      "lines": 0,
+      "minPct": 0,
+      "missed": {
+        "statements": 1,
+        "branches": 0,
+        "functions": 1,
+        "lines": 1
+      }
+    },
+    {
+      "file": "src/modules/animation/animation-loop.ts",
+      "statements": 4.34,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4.54,
+      "minPct": 0,
+      "missed": {
+        "statements": 22,
+        "branches": 12,
+        "functions": 5,
+        "lines": 21
+      }
+    },
+    {
+      "file": "src/modules/animation/animation-patterns.ts",
+      "statements": 0.94,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1,
+      "minPct": 0,
+      "missed": {
+        "statements": 105,
+        "branches": 36,
+        "functions": 4,
+        "lines": 99
+      }
+    },
+    {
+      "file": "src/modules/animation/apply-animation-pattern.ts",
+      "statements": 1.78,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.96,
+      "minPct": 0,
+      "missed": {
+        "statements": 55,
+        "branches": 17,
+        "functions": 1,
+        "lines": 50
+      }
+    },
+    {
+      "file": "src/modules/animation/color-cycle.ts",
+      "statements": 3.03,
+      "branches": 0,
+      "functions": 0,
+      "lines": 3.22,
+      "minPct": 0,
+      "missed": {
+        "statements": 32,
+        "branches": 4,
+        "functions": 1,
+        "lines": 30
+      }
+    },
+    {
+      "file": "src/modules/animation/decimation.ts",
+      "statements": 1.69,
+      "branches": 0,
+      "functions": 0,
+      "lines": 2.04,
+      "minPct": 0,
+      "missed": {
+        "statements": 58,
+        "branches": 36,
+        "functions": 9,
+        "lines": 48
+      }
+    },
+    {
+      "file": "src/modules/animation/format-detection.ts",
+      "statements": 3.22,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4.34,
+      "minPct": 0,
+      "missed": {
+        "statements": 30,
+        "branches": 18,
+        "functions": 2,
+        "lines": 22
+      }
+    },
+    {
+      "file": "src/modules/animation/gif-compositor.ts",
+      "statements": 1.78,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.85,
+      "minPct": 0,
+      "missed": {
+        "statements": 55,
+        "branches": 24,
+        "functions": 6,
+        "lines": 53
+      }
+    },
+    {
+      "file": "src/modules/animation/interpolate-frames.ts",
+      "statements": 3.03,
+      "branches": 0,
+      "functions": 0,
+      "lines": 3.44,
+      "minPct": 0,
+      "missed": {
+        "statements": 32,
+        "branches": 15,
+        "functions": 1,
+        "lines": 28
+      }
+    },
+    {
+      "file": "src/modules/animation/parsing.ts",
+      "statements": 0.78,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.8,
+      "minPct": 0,
+      "missed": {
+        "statements": 126,
+        "branches": 36,
+        "functions": 13,
+        "lines": 123
+      }
+    },
+    {
+      "file": "src/modules/animation/shared-patterns.ts",
+      "statements": 0.66,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.7,
+      "minPct": 0,
+      "missed": {
+        "statements": 150,
+        "branches": 29,
+        "functions": 7,
+        "lines": 141
+      }
+    },
+    {
+      "file": "src/modules/animation/state.ts",
+      "statements": 4.34,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4.34,
+      "minPct": 0,
+      "missed": {
+        "statements": 22,
+        "branches": 12,
+        "functions": 3,
+        "lines": 22
+      }
+    },
+    {
+      "file": "src/modules/animation/temporal-dither.ts",
+      "statements": 20,
+      "branches": 0,
+      "functions": 0,
+      "lines": 25,
+      "minPct": 0,
+      "missed": {
+        "statements": 4,
+        "branches": 3,
+        "functions": 1,
+        "lines": 3
+      }
+    },
+    {
+      "file": "src/modules/browser-clipboard/copy-image.ts",
+      "statements": 11.11,
+      "branches": 0,
+      "functions": 0,
+      "lines": 12.5,
+      "minPct": 0,
+      "missed": {
+        "statements": 8,
+        "branches": 2,
+        "functions": 2,
+        "lines": 7
+      }
+    },
+    {
+      "file": "src/modules/browser-clipboard/copy-text.ts",
+      "statements": 6.66,
+      "branches": 100,
+      "functions": 0,
+      "lines": 6.66,
+      "minPct": 0,
+      "missed": {
+        "statements": 14,
+        "branches": 0,
+        "functions": 1,
+        "lines": 14
+      }
+    },
+    {
+      "file": "src/modules/browser-io/canvas-utils.ts",
+      "statements": 14.28,
+      "branches": 0,
+      "functions": 0,
+      "lines": 14.28,
+      "minPct": 0,
+      "missed": {
+        "statements": 6,
+        "branches": 8,
+        "functions": 4,
+        "lines": 6
+      }
+    },
+    {
+      "file": "src/modules/browser-io/download.ts",
+      "statements": 5.88,
+      "branches": 0,
+      "functions": 0,
+      "lines": 5.88,
+      "minPct": 0,
+      "missed": {
+        "statements": 16,
+        "branches": 4,
+        "functions": 2,
+        "lines": 16
+      }
+    },
+    {
+      "file": "src/modules/browser-io/native-save.ts",
+      "statements": 7.14,
+      "branches": 0,
+      "functions": 0,
+      "lines": 7.14,
+      "minPct": 0,
+      "missed": {
+        "statements": 13,
+        "branches": 2,
+        "functions": 3,
+        "lines": 13
+      }
+    },
+    {
+      "file": "src/modules/core/contrast.ts",
+      "statements": 0,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0,
+      "minPct": 0,
+      "missed": {
+        "statements": 32,
+        "branches": 19,
+        "functions": 3,
+        "lines": 27
+      }
+    },
+    {
+      "file": "src/modules/core/gradient.ts",
+      "statements": 3.33,
+      "branches": 0,
+      "functions": 0,
+      "lines": 3.7,
+      "minPct": 0,
+      "missed": {
+        "statements": 29,
+        "branches": 31,
+        "functions": 5,
+        "lines": 26
+      }
+    },
+    {
+      "file": "src/modules/core/harmony.ts",
+      "statements": 3.84,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4.34,
+      "minPct": 0,
+      "missed": {
+        "statements": 25,
+        "branches": 7,
+        "functions": 3,
+        "lines": 22
+      }
+    },
+    {
+      "file": "src/modules/dither-algorithms/error-diffusion.ts",
+      "statements": 1.29,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.47,
+      "minPct": 0,
+      "missed": {
+        "statements": 76,
+        "branches": 36,
+        "functions": 2,
+        "lines": 67
+      }
+    },
+    {
+      "file": "src/modules/dither-algorithms/noise.ts",
+      "statements": 1.31,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.42,
+      "minPct": 0,
+      "missed": {
+        "statements": 75,
+        "branches": 17,
+        "functions": 5,
+        "lines": 69
+      }
+    },
+    {
+      "file": "src/modules/dither-algorithms/temporal.ts",
+      "statements": 1.53,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.63,
+      "minPct": 0,
+      "missed": {
+        "statements": 64,
+        "branches": 24,
+        "functions": 5,
+        "lines": 60
+      }
+    },
+    {
+      "file": "src/modules/dither-algorithms/utils.ts",
+      "statements": 72,
+      "branches": 0,
+      "functions": 50,
+      "lines": 69.56,
+      "minPct": 0,
+      "missed": {
+        "statements": 7,
+        "branches": 6,
+        "functions": 1,
+        "lines": 7
+      }
+    },
+    {
+      "file": "src/modules/exporter/gif-export.ts",
+      "statements": 1.56,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.63,
+      "minPct": 0,
+      "missed": {
+        "statements": 63,
+        "branches": 54,
+        "functions": 2,
+        "lines": 60
+      }
+    },
+    {
+      "file": "src/modules/exporter/image-export.ts",
+      "statements": 2.77,
+      "branches": 0,
+      "functions": 0,
+      "lines": 2.85,
+      "minPct": 0,
+      "missed": {
+        "statements": 35,
+        "branches": 49,
+        "functions": 4,
+        "lines": 34
+      }
+    },
+    {
+      "file": "src/modules/exporter/png-metadata.ts",
+      "statements": 0.92,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.97,
+      "minPct": 0,
+      "missed": {
+        "statements": 107,
+        "branches": 24,
+        "functions": 6,
+        "lines": 102
+      }
+    },
+    {
+      "file": "src/modules/exporter/svg-export.ts",
+      "statements": 5.26,
+      "branches": 0,
+      "functions": 0,
+      "lines": 5.88,
+      "minPct": 0,
+      "missed": {
+        "statements": 18,
+        "branches": 36,
+        "functions": 2,
+        "lines": 16
+      }
+    },
+    {
+      "file": "src/modules/exporter/types.ts",
+      "statements": 50,
+      "branches": 100,
+      "functions": 0,
+      "lines": 50,
+      "minPct": 0,
+      "missed": {
+        "statements": 1,
+        "branches": 0,
+        "functions": 1,
+        "lines": 1
+      }
+    },
+    {
+      "file": "src/modules/exporter/utils.ts",
+      "statements": 50,
+      "branches": 100,
+      "functions": 0,
+      "lines": 50,
+      "minPct": 0,
+      "missed": {
+        "statements": 1,
+        "branches": 0,
+        "functions": 1,
+        "lines": 1
+      }
+    },
+    {
+      "file": "src/modules/exporter/vector-svg.ts",
+      "statements": 0,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0,
+      "minPct": 0,
+      "missed": {
+        "statements": 184,
+        "branches": 105,
+        "functions": 9,
+        "lines": 175
+      }
+    },
+    {
+      "file": "src/modules/index.ts",
+      "statements": 0,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0,
+      "minPct": 0,
+      "missed": {
+        "statements": 0,
+        "branches": 0,
+        "functions": 0,
+        "lines": 0
+      }
+    },
+    {
+      "file": "src/modules/overlay/crop-handler.ts",
+      "statements": 0.78,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.8,
+      "minPct": 0,
+      "missed": {
+        "statements": 127,
+        "branches": 42,
+        "functions": 17,
+        "lines": 123
+      }
+    },
+    {
+      "file": "src/modules/overlay/overlay-filters.ts",
+      "statements": 0.4,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.45,
+      "minPct": 0,
+      "missed": {
+        "statements": 246,
+        "branches": 64,
+        "functions": 23,
+        "lines": 221
+      }
+    },
+    {
+      "file": "src/modules/overlay/processor.ts",
+      "statements": 1.39,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.51,
+      "minPct": 0,
+      "missed": {
+        "statements": 212,
+        "branches": 85,
+        "functions": 22,
+        "lines": 195
+      }
+    },
+    {
+      "file": "src/modules/overlay/watermark.ts",
+      "statements": 1.6,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.65,
+      "minPct": 0,
+      "missed": {
+        "statements": 123,
+        "branches": 59,
+        "functions": 6,
+        "lines": 119
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/calendar.ts",
+      "statements": 3.33,
+      "branches": 0,
+      "functions": 0,
+      "lines": 3.33,
+      "minPct": 0,
+      "missed": {
+        "statements": 29,
+        "branches": 22,
+        "functions": 2,
+        "lines": 29
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/emv.ts",
+      "statements": 0.94,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.96,
+      "minPct": 0,
+      "missed": {
+        "statements": 105,
+        "branches": 63,
+        "functions": 22,
+        "lines": 103
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/enterprise.ts",
+      "statements": 3.44,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4,
+      "minPct": 0,
+      "missed": {
+        "statements": 28,
+        "branches": 37,
+        "functions": 2,
+        "lines": 24
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/payments.ts",
+      "statements": 0,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0,
+      "minPct": 0,
+      "missed": {
+        "statements": 357,
+        "branches": 360,
+        "functions": 21,
+        "lines": 328
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/social.ts",
+      "statements": 2.22,
+      "branches": 0,
+      "functions": 0,
+      "lines": 2.38,
+      "minPct": 0,
+      "missed": {
+        "statements": 44,
+        "branches": 35,
+        "functions": 16,
+        "lines": 41
+      }
+    },
+    {
+      "file": "src/modules/platform/admob.ts",
+      "statements": 9.33,
+      "branches": 13.72,
+      "functions": 0,
+      "lines": 10.14,
+      "minPct": 0,
+      "missed": {
+        "statements": 136,
+        "branches": 88,
+        "functions": 24,
+        "lines": 124
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/telemetry-contrast.ts",
+      "statements": 4.54,
+      "branches": 0,
+      "functions": 0,
+      "lines": 5.55,
+      "minPct": 0,
+      "missed": {
+        "statements": 21,
+        "branches": 12,
+        "functions": 6,
+        "lines": 17
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/telemetry-logging.ts",
+      "statements": 4.34,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4.34,
+      "minPct": 0,
+      "missed": {
+        "statements": 22,
+        "branches": 10,
+        "functions": 5,
+        "lines": 22
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/telemetry-stats.ts",
+      "statements": 2.56,
+      "branches": 0,
+      "functions": 0,
+      "lines": 2.85,
+      "minPct": 0,
+      "missed": {
+        "statements": 38,
+        "branches": 28,
+        "functions": 7,
+        "lines": 34
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/decode-canvas.ts",
+      "statements": 16.66,
+      "branches": 0,
+      "functions": 0,
+      "lines": 20,
+      "minPct": 0,
+      "missed": {
+        "statements": 5,
+        "branches": 2,
+        "functions": 1,
+        "lines": 4
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/decode-qr.ts",
+      "statements": 0.71,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.79,
+      "minPct": 0,
+      "missed": {
+        "statements": 139,
+        "branches": 67,
+        "functions": 8,
+        "lines": 125
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/decode.ts",
+      "statements": 0.56,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.63,
+      "minPct": 0,
+      "missed": {
+        "statements": 353,
+        "branches": 174,
+        "functions": 22,
+        "lines": 315
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/exceptions.ts",
+      "statements": 72.22,
+      "branches": 0,
+      "functions": 66.66,
+      "lines": 72.22,
+      "minPct": 0,
+      "missed": {
+        "statements": 5,
+        "branches": 2,
+        "functions": 2,
+        "lines": 5
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/extract.ts",
+      "statements": 2.52,
+      "branches": 0,
+      "functions": 0,
+      "lines": 2.82,
+      "minPct": 0,
+      "missed": {
+        "statements": 193,
+        "branches": 92,
+        "functions": 6,
+        "lines": 172
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/locate.ts",
+      "statements": 1,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.1,
+      "minPct": 0,
+      "missed": {
+        "statements": 296,
+        "branches": 134,
+        "functions": 19,
+        "lines": 268
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/rs-rootability.ts",
+      "statements": 3.12,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4,
+      "minPct": 0,
+      "missed": {
+        "statements": 124,
+        "branches": 58,
+        "functions": 12,
+        "lines": 96
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/utils.ts",
+      "statements": 50,
+      "branches": 100,
+      "functions": 0,
+      "lines": 50,
+      "minPct": 0,
+      "missed": {
+        "statements": 1,
+        "branches": 0,
+        "functions": 1,
+        "lines": 1
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/output.ts",
+      "statements": 0.6,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.64,
+      "minPct": 0,
+      "missed": {
+        "statements": 164,
+        "branches": 33,
+        "functions": 26,
+        "lines": 155
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/shift-jis.ts",
+      "statements": 11.88,
+      "branches": 0,
+      "functions": 0,
+      "lines": 13.63,
+      "minPct": 0,
+      "missed": {
+        "statements": 89,
+        "branches": 84,
+        "functions": 6,
+        "lines": 76
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/string-bytes.ts",
+      "statements": 17.02,
+      "branches": 0,
+      "functions": 30.76,
+      "lines": 15.9,
+      "minPct": 0,
+      "missed": {
+        "statements": 78,
+        "branches": 36,
+        "functions": 9,
+        "lines": 74
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/canvas-factory.ts",
+      "statements": 14.28,
+      "branches": 100,
+      "functions": 0,
+      "lines": 16.66,
+      "minPct": 0,
+      "missed": {
+        "statements": 12,
+        "branches": 0,
+        "functions": 5,
+        "lines": 10
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/color.ts",
+      "statements": 0.9,
+      "branches": 0,
+      "functions": 0,
+      "lines": 0.97,
+      "minPct": 0,
+      "missed": {
+        "statements": 109,
+        "branches": 40,
+        "functions": 5,
+        "lines": 102
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/dithering-advanced.ts",
+      "statements": 5.26,
+      "branches": 0,
+      "functions": 0,
+      "lines": 5.88,
+      "minPct": 0,
+      "missed": {
+        "statements": 18,
+        "branches": 12,
+        "functions": 1,
+        "lines": 16
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/dithering-blue.ts",
+      "statements": 5.08,
+      "branches": 0,
+      "functions": 0,
+      "lines": 5.82,
+      "minPct": 0,
+      "missed": {
+        "statements": 112,
+        "branches": 41,
+        "functions": 9,
+        "lines": 97
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/dithering-error.ts",
+      "statements": 12.5,
+      "branches": 0,
+      "functions": 0,
+      "lines": 14.28,
+      "minPct": 0,
+      "missed": {
+        "statements": 7,
+        "branches": 10,
+        "functions": 1,
+        "lines": 6
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/dithering-kernels.ts",
+      "statements": 33.33,
+      "branches": 0,
+      "functions": 0,
+      "lines": 33.33,
+      "minPct": 0,
+      "missed": {
+        "statements": 2,
+        "branches": 2,
+        "functions": 1,
+        "lines": 2
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/dithering-matrix.ts",
+      "statements": 0.9,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.16,
+      "minPct": 0,
+      "missed": {
+        "statements": 110,
+        "branches": 70,
+        "functions": 5,
+        "lines": 85
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/dithering-true.ts",
+      "statements": 4.34,
+      "branches": 0,
+      "functions": 0,
+      "lines": 4.76,
+      "minPct": 0,
+      "missed": {
+        "statements": 22,
+        "branches": 6,
+        "functions": 1,
+        "lines": 20
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/drawing-halftone.ts",
+      "statements": 2.04,
+      "branches": 0,
+      "functions": 0,
+      "lines": 2.22,
+      "minPct": 0,
+      "missed": {
+        "statements": 48,
+        "branches": 25,
+        "functions": 3,
+        "lines": 44
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/ecc.ts",
+      "statements": 3.57,
+      "branches": 0,
+      "functions": 0,
+      "lines": 3.84,
+      "minPct": 0,
+      "missed": {
+        "statements": 27,
+        "branches": 16,
+        "functions": 2,
+        "lines": 25
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/filters-preprocess.ts",
+      "statements": 0.97,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.03,
+      "minPct": 0,
+      "missed": {
+        "statements": 102,
+        "branches": 85,
+        "functions": 3,
+        "lines": 96
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/overlay-subpixel.ts",
+      "statements": 1.23,
+      "branches": 0,
+      "functions": 0,
+      "lines": 1.33,
+      "minPct": 0,
+      "missed": {
+        "statements": 80,
+        "branches": 53,
+        "functions": 5,
+        "lines": 74
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/pixel-matrix-dither.ts",
+      "statements": 6.25,
+      "branches": 0,
+      "functions": 0,
+      "lines": 7.14,
+      "minPct": 0,
+      "missed": {
+        "statements": 15,
+        "branches": 2,
+        "functions": 2,
+        "lines": 13
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/pixel-matrix-standard.ts",
+      "statements": 9.09,
+      "branches": 100,
+      "functions": 0,
+      "lines": 11.11,
+      "minPct": 0,
+      "missed": {
+        "statements": 10,
+        "branches": 0,
+        "functions": 1,
+        "lines": 8
+      }
+    },
+    {
+      "file": "src/modules/share-links/embed.ts",
+      "statements": 2.32,
+      "branches": 0,
+      "functions": 0,
+      "lines": 2.32,
+      "minPct": 0,
+      "missed": {
+        "statements": 42,
+        "branches": 66,
+        "functions": 5,
+        "lines": 42
+      }
+    },
+    {
+      "file": "src/modules/share-links/social.ts",
+      "statements": 25,
+      "branches": 0,
+      "functions": 0,
+      "lines": 25,
+      "minPct": 0,
+      "missed": {
+        "statements": 3,
+        "branches": 1,
+        "functions": 1,
+        "lines": 3
+      }
+    },
+    {
+      "file": "src/store/qr-store.ts",
+      "statements": 0.67,
+      "branches": 0,
+      "functions": 0.4,
+      "lines": 0.68,
+      "minPct": 0,
+      "missed": {
+        "statements": 441,
+        "branches": 245,
+        "functions": 243,
+        "lines": 288
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/rs-decoder.ts",
+      "statements": 6.2,
+      "branches": 1.96,
+      "functions": 2.5,
+      "lines": 6.12,
+      "minPct": 1.96,
+      "missed": {
+        "statements": 272,
+        "branches": 100,
+        "functions": 39,
+        "lines": 230
+      }
+    },
+    {
+      "file": "src/modules/qr-art/index.ts",
+      "statements": 8.37,
+      "branches": 2.24,
+      "functions": 4,
+      "lines": 8.17,
+      "minPct": 2.24,
+      "missed": {
+        "statements": 164,
+        "branches": 87,
+        "functions": 24,
+        "lines": 146
+      }
+    },
+    {
+      "file": "netlify/functions/qr.ts",
+      "statements": 26.91,
+      "branches": 41.23,
+      "functions": 4.25,
+      "lines": 28.65,
+      "minPct": 4.25,
+      "missed": {
+        "statements": 660,
+        "branches": 419,
+        "functions": 45,
+        "lines": 605
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/utils.ts",
+      "statements": 5.74,
+      "branches": 4.44,
+      "functions": 9.67,
+      "lines": 6.25,
+      "minPct": 4.44,
+      "missed": {
+        "statements": 82,
+        "branches": 43,
+        "functions": 28,
+        "lines": 75
+      }
+    },
+    {
+      "file": "src/modules/qr-art/scan-fallback.ts",
+      "statements": 10.34,
+      "branches": 5.64,
+      "functions": 15.78,
+      "lines": 10.86,
+      "minPct": 5.64,
+      "missed": {
+        "statements": 182,
+        "branches": 117,
+        "functions": 16,
+        "lines": 164
+      }
+    },
+    {
+      "file": "src/modules/dither-algorithms/advanced.ts",
+      "statements": 11.5,
+      "branches": 7.87,
+      "functions": 9.09,
+      "lines": 11.97,
+      "minPct": 7.87,
+      "missed": {
+        "statements": 277,
+        "branches": 117,
+        "functions": 10,
+        "lines": 250
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/scanner.ts",
+      "statements": 12,
+      "branches": 19.04,
+      "functions": 9.09,
+      "lines": 13.33,
+      "minPct": 9.09,
+      "missed": {
+        "statements": 44,
+        "branches": 17,
+        "functions": 10,
+        "lines": 39
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/overlay-transforms.ts",
+      "statements": 9.67,
+      "branches": 36.58,
+      "functions": 50,
+      "lines": 10.71,
+      "minPct": 9.67,
+      "missed": {
+        "statements": 28,
+        "branches": 26,
+        "functions": 2,
+        "lines": 25
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/analyzer-content.ts",
+      "statements": 25,
+      "branches": 10.34,
+      "functions": 40,
+      "lines": 29.03,
+      "minPct": 10.34,
+      "missed": {
+        "statements": 60,
+        "branches": 52,
+        "functions": 6,
+        "lines": 44
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/drawing-gradients.ts",
+      "statements": 10.71,
+      "branches": 16.66,
+      "functions": 100,
+      "lines": 10.71,
+      "minPct": 10.71,
+      "missed": {
+        "statements": 25,
+        "branches": 10,
+        "functions": 0,
+        "lines": 25
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/drawing-primitives.ts",
+      "statements": 11.26,
+      "branches": 33.33,
+      "functions": 33.33,
+      "lines": 11.42,
+      "minPct": 11.26,
+      "missed": {
+        "statements": 63,
+        "branches": 12,
+        "functions": 2,
+        "lines": 62
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/luminance.ts",
+      "statements": 16.32,
+      "branches": 13.33,
+      "functions": 26.31,
+      "lines": 18.18,
+      "minPct": 13.33,
+      "missed": {
+        "statements": 82,
+        "branches": 13,
+        "functions": 28,
+        "lines": 72
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/bit-matrix.ts",
+      "statements": 13.86,
+      "branches": 15.09,
+      "functions": 22.44,
+      "lines": 14.93,
+      "minPct": 13.86,
+      "missed": {
+        "statements": 292,
+        "branches": 135,
+        "functions": 38,
+        "lines": 245
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/analyzer.ts",
+      "statements": 14.58,
+      "branches": 16.66,
+      "functions": 21.42,
+      "lines": 14.58,
+      "minPct": 14.58,
+      "missed": {
+        "statements": 41,
+        "branches": 5,
+        "functions": 11,
+        "lines": 41
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/data-modes.ts",
+      "statements": 39.02,
+      "branches": 18.18,
+      "functions": 52.63,
+      "lines": 37.5,
+      "minPct": 18.18,
+      "missed": {
+        "statements": 50,
+        "branches": 36,
+        "functions": 9,
+        "lines": 50
+      }
+    },
+    {
+      "file": "src/modules/dither-algorithms/apply-dither.ts",
+      "statements": 36.84,
+      "branches": 23.52,
+      "functions": 100,
+      "lines": 36.84,
+      "minPct": 23.52,
+      "missed": {
+        "statements": 12,
+        "branches": 13,
+        "functions": 0,
+        "lines": 12
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/contacts.ts",
+      "statements": 37.5,
+      "branches": 29.26,
+      "functions": 25,
+      "lines": 45.56,
+      "minPct": 25,
+      "missed": {
+        "statements": 60,
+        "branches": 58,
+        "functions": 3,
+        "lines": 43
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/util.ts",
+      "statements": 34.97,
+      "branches": 25.49,
+      "functions": 74.07,
+      "lines": 37.38,
+      "minPct": 25.49,
+      "missed": {
+        "statements": 158,
+        "branches": 76,
+        "functions": 14,
+        "lines": 139
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/safety.ts",
+      "statements": 28.28,
+      "branches": 34.04,
+      "functions": 58.33,
+      "lines": 29.78,
+      "minPct": 28.28,
+      "missed": {
+        "statements": 71,
+        "branches": 31,
+        "functions": 5,
+        "lines": 66
+      }
+    },
+    {
+      "file": "src/modules/core/color.ts",
+      "statements": 41.86,
+      "branches": 30.15,
+      "functions": 53.57,
+      "lines": 43.8,
+      "minPct": 30.15,
+      "missed": {
+        "statements": 75,
+        "branches": 44,
+        "functions": 13,
+        "lines": 68
+      }
+    },
+    {
+      "file": "src/modules/qr-art/image-utils.ts",
+      "statements": 82.92,
+      "branches": 61.53,
+      "functions": 33.33,
+      "lines": 82.05,
+      "minPct": 33.33,
+      "missed": {
+        "statements": 7,
+        "branches": 5,
+        "functions": 2,
+        "lines": 7
+      }
+    },
+    {
+      "file": "src/modules/qr-spec/constants.ts",
+      "statements": 70,
+      "branches": 66.66,
+      "functions": 33.33,
+      "lines": 77.77,
+      "minPct": 33.33,
+      "missed": {
+        "statements": 3,
+        "branches": 2,
+        "functions": 2,
+        "lines": 2
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/scaled-render.ts",
+      "statements": 53.59,
+      "branches": 34.61,
+      "functions": 50,
+      "lines": 55.94,
+      "minPct": 34.61,
+      "missed": {
+        "statements": 71,
+        "branches": 85,
+        "functions": 1,
+        "lines": 63
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/pixel-matrix.ts",
+      "statements": 52.94,
+      "branches": 35.71,
+      "functions": 100,
+      "lines": 52.94,
+      "minPct": 35.71,
+      "missed": {
+        "statements": 8,
+        "branches": 9,
+        "functions": 0,
+        "lines": 8
+      }
+    },
+    {
+      "file": "src/i18n/static/index.ts",
+      "statements": 52.63,
+      "branches": 36.66,
+      "functions": 85.71,
+      "lines": 58,
+      "minPct": 36.66,
+      "missed": {
+        "statements": 27,
+        "branches": 19,
+        "functions": 1,
+        "lines": 21
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/decoder-adapter.ts",
+      "statements": 55.68,
+      "branches": 36.76,
+      "functions": 75,
+      "lines": 55.76,
+      "minPct": 36.76,
+      "missed": {
+        "statements": 74,
+        "branches": 86,
+        "functions": 2,
+        "lines": 69
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/drawing-frames.ts",
+      "statements": 59.25,
+      "branches": 36.84,
+      "functions": 66.66,
+      "lines": 58.33,
+      "minPct": 36.84,
+      "missed": {
+        "statements": 11,
+        "branches": 12,
+        "functions": 1,
+        "lines": 10
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/qr-generator-class.ts",
+      "statements": 70.12,
+      "branches": 54.2,
+      "functions": 37.5,
+      "lines": 69.42,
+      "minPct": 37.5,
+      "missed": {
+        "statements": 49,
+        "branches": 49,
+        "functions": 10,
+        "lines": 48
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/utils.ts",
+      "statements": 56.36,
+      "branches": 39.28,
+      "functions": 50,
+      "lines": 56.6,
+      "minPct": 39.28,
+      "missed": {
+        "statements": 24,
+        "branches": 17,
+        "functions": 2,
+        "lines": 23
+      }
+    },
+    {
+      "file": "src/modules/qr-art/semantic-layout.ts",
+      "statements": 47.52,
+      "branches": 41.37,
+      "functions": 54.54,
+      "lines": 46.8,
+      "minPct": 41.37,
+      "missed": {
+        "statements": 53,
+        "branches": 17,
+        "functions": 5,
+        "lines": 50
+      }
+    },
+    {
+      "file": "src/lib/logger.ts",
+      "statements": 46.35,
+      "branches": 46.23,
+      "functions": 42.85,
+      "lines": 46.7,
+      "minPct": 42.85,
+      "missed": {
+        "statements": 103,
+        "branches": 50,
+        "functions": 20,
+        "lines": 97
+      }
+    },
+    {
+      "file": "src/modules/core/math.ts",
+      "statements": 60,
+      "branches": 100,
+      "functions": 42.85,
+      "lines": 60,
+      "minPct": 42.85,
+      "missed": {
+        "statements": 6,
+        "branches": 0,
+        "functions": 4,
+        "lines": 6
+      }
+    },
+    {
+      "file": "src/modules/qr-art/rs-basis.ts",
+      "statements": 62.42,
+      "branches": 42.85,
+      "functions": 51.51,
+      "lines": 64.88,
+      "minPct": 42.85,
+      "missed": {
+        "statements": 124,
+        "branches": 52,
+        "functions": 16,
+        "lines": 105
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/reader.ts",
+      "statements": 81.17,
+      "branches": 62,
+      "functions": 42.85,
+      "lines": 80.72,
+      "minPct": 42.85,
+      "missed": {
+        "statements": 16,
+        "branches": 19,
+        "functions": 4,
+        "lines": 16
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/encoder.ts",
+      "statements": 57.46,
+      "branches": 44.49,
+      "functions": 65.38,
+      "lines": 55.44,
+      "minPct": 44.49,
+      "missed": {
+        "statements": 188,
+        "branches": 131,
+        "functions": 9,
+        "lines": 176
+      }
+    },
+    {
+      "file": "src/modules/share-links/url-params.ts",
+      "statements": 55.27,
+      "branches": 59.76,
+      "functions": 45.45,
+      "lines": 55.27,
+      "minPct": 45.45,
+      "missed": {
+        "statements": 161,
+        "branches": 305,
+        "functions": 6,
+        "lines": 161
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/qr-data-decoder.ts",
+      "statements": 63.01,
+      "branches": 45.66,
+      "functions": 64,
+      "lines": 64.57,
+      "minPct": 45.66,
+      "missed": {
+        "statements": 135,
+        "branches": 69,
+        "functions": 9,
+        "lines": 113
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/result-types.ts",
+      "statements": 72.72,
+      "branches": 46.29,
+      "functions": 56.25,
+      "lines": 72.18,
+      "minPct": 46.29,
+      "missed": {
+        "statements": 42,
+        "branches": 29,
+        "functions": 21,
+        "lines": 42
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/pixel-matrix-dithered.ts",
+      "statements": 48.79,
+      "branches": 47.84,
+      "functions": 60,
+      "lines": 48.74,
+      "minPct": 47.84,
+      "missed": {
+        "statements": 212,
+        "branches": 109,
+        "functions": 6,
+        "lines": 184
+      }
+    },
+    {
+      "file": "src/i18n/index.ts",
+      "statements": 60.71,
+      "branches": 48.14,
+      "functions": 88.88,
+      "lines": 65.21,
+      "minPct": 48.14,
+      "missed": {
+        "statements": 22,
+        "branches": 14,
+        "functions": 1,
+        "lines": 16
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/pixel-matrix-utils.ts",
+      "statements": 48.14,
+      "branches": 85.71,
+      "functions": 66.66,
+      "lines": 52,
+      "minPct": 48.14,
+      "missed": {
+        "statements": 14,
+        "branches": 2,
+        "functions": 1,
+        "lines": 12
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/binarizer.ts",
+      "statements": 50.74,
+      "branches": 55.38,
+      "functions": 58.33,
+      "lines": 48.83,
+      "minPct": 48.83,
+      "missed": {
+        "statements": 99,
+        "branches": 29,
+        "functions": 5,
+        "lines": 88
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/overlay-data.ts",
+      "statements": 72,
+      "branches": 56.25,
+      "functions": 50,
+      "lines": 75.55,
+      "minPct": 50,
+      "missed": {
+        "statements": 14,
+        "branches": 7,
+        "functions": 1,
+        "lines": 11
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/format.ts",
+      "statements": 71.52,
+      "branches": 51.56,
+      "functions": 62.5,
+      "lines": 72.13,
+      "minPct": 51.56,
+      "missed": {
+        "statements": 41,
+        "branches": 31,
+        "functions": 3,
+        "lines": 34
+      }
+    },
+    {
+      "file": "src/modules/qr-art/generate.ts",
+      "statements": 78.09,
+      "branches": 54.89,
+      "functions": 55.88,
+      "lines": 77.59,
+      "minPct": 54.89,
+      "missed": {
+        "statements": 260,
+        "branches": 304,
+        "functions": 30,
+        "lines": 240
+      }
+    },
+    {
+      "file": "src/modules/payload-generators/core.ts",
+      "statements": 88.67,
+      "branches": 55.26,
+      "functions": 85.71,
+      "lines": 97.56,
+      "minPct": 55.26,
+      "missed": {
+        "statements": 6,
+        "branches": 17,
+        "functions": 1,
+        "lines": 1
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/cache.ts",
+      "statements": 66.66,
+      "branches": 55.55,
+      "functions": 60,
+      "lines": 66.66,
+      "minPct": 55.55,
+      "missed": {
+        "statements": 8,
+        "branches": 4,
+        "functions": 2,
+        "lines": 8
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/encoder-api.ts",
+      "statements": 71.12,
+      "branches": 56.41,
+      "functions": 90,
+      "lines": 72.22,
+      "minPct": 56.41,
+      "missed": {
+        "statements": 41,
+        "branches": 51,
+        "functions": 1,
+        "lines": 35
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/reed-solomon.ts",
+      "statements": 76.22,
+      "branches": 56.73,
+      "functions": 86.66,
+      "lines": 79.47,
+      "minPct": 56.73,
+      "missed": {
+        "statements": 63,
+        "branches": 45,
+        "functions": 4,
+        "lines": 47
+      }
+    },
+    {
+      "file": "src/modules/qr-analyzer/decoder.ts",
+      "statements": 86.17,
+      "branches": 63.2,
+      "functions": 100,
+      "lines": 88.43,
+      "minPct": 63.2,
+      "missed": {
+        "statements": 26,
+        "branches": 46,
+        "functions": 0,
+        "lines": 20
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/qr-version.ts",
+      "statements": 81.28,
+      "branches": 65.62,
+      "functions": 80,
+      "lines": 83.15,
+      "minPct": 65.62,
+      "missed": {
+        "statements": 38,
+        "branches": 22,
+        "functions": 11,
+        "lines": 31
+      }
+    },
+    {
+      "file": "src/modules/dither-algorithms/ordered.ts",
+      "statements": 92.1,
+      "branches": 66.66,
+      "functions": 100,
+      "lines": 94.11,
+      "minPct": 66.66,
+      "missed": {
+        "statements": 3,
+        "branches": 3,
+        "functions": 0,
+        "lines": 2
+      }
+    },
+    {
+      "file": "src/modules/platform/media-store.ts",
+      "statements": 92.3,
+      "branches": 66.66,
+      "functions": 100,
+      "lines": 92.3,
+      "minPct": 66.66,
+      "missed": {
+        "statements": 1,
+        "branches": 2,
+        "functions": 0,
+        "lines": 1
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/render-loop.ts",
+      "statements": 77,
+      "branches": 68.47,
+      "functions": 100,
+      "lines": 76.04,
+      "minPct": 68.47,
+      "missed": {
+        "statements": 23,
+        "branches": 29,
+        "functions": 0,
+        "lines": 23
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/drawing-patterns.ts",
+      "statements": 70.31,
+      "branches": 69.23,
+      "functions": 100,
+      "lines": 70.31,
+      "minPct": 69.23,
+      "missed": {
+        "statements": 19,
+        "branches": 8,
+        "functions": 0,
+        "lines": 19
+      }
+    },
+    {
+      "file": "src/modules/qr-spec/verify.ts",
+      "statements": 81.35,
+      "branches": 69.56,
+      "functions": 100,
+      "lines": 95.55,
+      "minPct": 69.56,
+      "missed": {
+        "statements": 11,
+        "branches": 14,
+        "functions": 0,
+        "lines": 2
+      }
+    },
+    {
+      "file": "src/modules/qr-art/bit-mapping.ts",
+      "statements": 86.66,
+      "branches": 90.16,
+      "functions": 70.58,
+      "lines": 84.14,
+      "minPct": 70.58,
+      "missed": {
+        "statements": 14,
+        "branches": 6,
+        "functions": 5,
+        "lines": 13
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/perspective.ts",
+      "statements": 71.18,
+      "branches": 76.19,
+      "functions": 85.71,
+      "lines": 70.9,
+      "minPct": 70.9,
+      "missed": {
+        "statements": 34,
+        "branches": 10,
+        "functions": 2,
+        "lines": 32
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/rs-blocks.ts",
+      "statements": 91.66,
+      "branches": 71.42,
+      "functions": 100,
+      "lines": 90.9,
+      "minPct": 71.42,
+      "missed": {
+        "statements": 2,
+        "branches": 2,
+        "functions": 0,
+        "lines": 2
+      }
+    },
+    {
+      "file": "src/modules/qr-art/elimination.ts",
+      "statements": 92.69,
+      "branches": 74.41,
+      "functions": 100,
+      "lines": 95.16,
+      "minPct": 74.41,
+      "missed": {
+        "statements": 16,
+        "branches": 22,
+        "functions": 0,
+        "lines": 9
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/math.ts",
+      "statements": 94.82,
+      "branches": 75,
+      "functions": 100,
+      "lines": 93.87,
+      "minPct": 75,
+      "missed": {
+        "statements": 3,
+        "branches": 2,
+        "functions": 0,
+        "lines": 3
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/pattern-helpers.ts",
+      "statements": 90.9,
+      "branches": 75,
+      "functions": 100,
+      "lines": 100,
+      "minPct": 75,
+      "missed": {
+        "statements": 1,
+        "branches": 1,
+        "functions": 0,
+        "lines": 0
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/pixel-matrix-overlay.ts",
+      "statements": 90,
+      "branches": 75,
+      "functions": 100,
+      "lines": 90,
+      "minPct": 75,
+      "missed": {
+        "statements": 1,
+        "branches": 2,
+        "functions": 0,
+        "lines": 1
+      }
+    },
+    {
+      "file": "src/modules/qr-art/validation.ts",
+      "statements": 78.94,
+      "branches": 76.59,
+      "functions": 100,
+      "lines": 77.77,
+      "minPct": 76.59,
+      "missed": {
+        "statements": 16,
+        "branches": 11,
+        "functions": 0,
+        "lines": 16
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/qr-detector.ts",
+      "statements": 89.2,
+      "branches": 78.43,
+      "functions": 100,
+      "lines": 90.83,
+      "minPct": 78.43,
+      "missed": {
+        "statements": 15,
+        "branches": 11,
+        "functions": 0,
+        "lines": 12
+      }
+    },
+    {
+      "file": "src/modules/qr-spec/qr-patterns.ts",
+      "statements": 83.95,
+      "branches": 80.18,
+      "functions": 88.88,
+      "lines": 96.22,
+      "minPct": 80.18,
+      "missed": {
+        "statements": 13,
+        "branches": 21,
+        "functions": 1,
+        "lines": 2
+      }
+    },
+    {
+      "file": "src/modules/qr-encoder/utils.ts",
+      "statements": 84.78,
+      "branches": 80.28,
+      "functions": 100,
+      "lines": 80.55,
+      "minPct": 80.28,
+      "missed": {
+        "statements": 14,
+        "branches": 14,
+        "functions": 0,
+        "lines": 14
+      }
+    },
+    {
+      "file": "src/modules/qr-decoder/pattern-finder.ts",
+      "statements": 92.89,
+      "branches": 85.32,
+      "functions": 96.96,
+      "lines": 95.3,
+      "minPct": 85.32,
+      "missed": {
+        "statements": 27,
+        "branches": 32,
+        "functions": 1,
+        "lines": 16
+      }
+    },
+    {
+      "file": "src/modules/qr-generator/render-modes.ts",
+      "statements": 98.61,
+      "branches": 85.71,
+      "functions": 100,
+      "lines": 98.59,
+      "minPct": 85.71,
+      "missed": {
+        "statements": 2,
+        "branches": 11,
+        "functions": 0,
+        "lines": 2
+      }
+    },
+    {
+      "file": "src/modules/qr-spec/masks.ts",
+      "statements": 94.73,
+      "branches": 94.11,
+      "functions": 100,
+      "lines": 90.9,
+      "minPct": 90.9,
+      "missed": {
+        "statements": 1,
+        "branches": 1,
+        "functions": 0,
+        "lines": 1
+      }
+    }
+  ]
+}

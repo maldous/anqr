@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report quality test test\:unit test\:unit\:ci test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
+.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
 
 # ============================================
 # Help
@@ -72,7 +72,14 @@ help:
 	@echo "    make quality        Run local quality gate (typecheck + unit CI subset + i18n check)"
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
+	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
+	@echo "    make test:coverage:gap  Generate coverage debt report"
 	@echo "    make test:unit:ci   Run CI-safe Vitest subset (excludes missing local fixture tests)"
+	@echo "    make test:ids       Generate canonical tests/ids.txt inventory"
+	@echo "    make test:required  Generate tests/required.txt requirement matrix"
+	@echo "    make test:required:strict  Fail if requirements are not direct-id backed"
+	@echo "    make test:required:gap  Generate required mapping debt report"
+	@echo "    make test:testid:refs  Validate tests only use managed test IDs"
 	@echo "    make test           Run ALL tests (basic + advanced + pro + permutations)"
 	@echo "    make test:basic     Run basic tier UI tests only"
 	@echo "    make test:advanced  Run advanced tier UI tests only"
@@ -501,8 +508,12 @@ sonar-report:
 
 quality:
 	$(MAKE) fix
+	npm run test:ids
+	npm run test:required
 	npm run typecheck
 	npm run test:unit:ci
+	npm run test:testid
+	npm run test:testid:refs
 	npm run test:i18n
 
 signoff:
@@ -511,8 +522,32 @@ signoff:
 test\:unit:
 	npm run test:unit
 
+test\:unit\:coverage:
+	npm run test:unit:coverage
+
+test\:coverage\:gap:
+	npm run test:coverage:gap
+
 test\:unit\:ci:
 	npm run test:unit:ci
+
+test\:ids:
+	npm run test:ids
+
+test\:required:
+	npm run test:required
+
+test\:required\:strict:
+	npm run test:required:strict
+
+test\:required\:gap:
+	npm run test:required:gap
+
+test\:testid:
+	npm run test:testid
+
+test\:testid\:refs:
+	npm run test:testid:refs
 
 # Run ALL tests (basic + advanced + professional + permutations)
 # This is the comprehensive test target - use for full CI validation

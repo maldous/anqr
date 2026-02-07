@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import { HelpLink } from '@/components/ui/help-link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,7 +46,7 @@ export function AnimationSection() {
           </span>
         </div>
         <Slider
-          data-testid="animation-speed-slider"
+          data-testid={DynamicTestId.resolve('animation-speed-slider', 'animation-speed-slider')}
           value={[animation.speedMs]}
           onValueChange={([v]) => setAnimationSpeedMs(v)}
           min={20}
@@ -63,7 +64,7 @@ export function AnimationSection() {
           <HelpLink anchor="section-31" />
         </div>
         <Switch
-          data-testid="animation-loop-switch"
+          data-testid={DynamicTestId.resolve('animation-loop-switch', 'animation-loop-switch')}
           checked={animation.loop}
           onCheckedChange={setAnimationLoop}
           title={t('hints.loopAnimation')}
@@ -76,7 +77,7 @@ export function AnimationSection() {
           <HighlightedLabel>{t('animation.bounce')}</HighlightedLabel>
         </Label>
         <Switch
-          data-testid="animation-bounce-switch"
+          data-testid={DynamicTestId.resolve('animation-bounce-switch', 'animation-bounce-switch')}
           checked={animation.bounce}
           onCheckedChange={setAnimationBounce}
           title={t('hints.bounceAnimation')}
@@ -95,7 +96,10 @@ export function AnimationSection() {
               <span className="text-sm text-muted-foreground">{animation.startFrame}</span>
             </div>
             <Slider
-              data-testid="animation-start-frame-slider"
+              data-testid={DynamicTestId.resolve(
+                'animation-start-frame-slider',
+                'animation-start-frame-slider'
+              )}
               value={[animation.startFrame]}
               onValueChange={([v]) => setAnimationStartFrame(v)}
               min={0}
@@ -117,7 +121,10 @@ export function AnimationSection() {
               </span>
             </div>
             <Slider
-              data-testid="animation-max-frames-slider"
+              data-testid={DynamicTestId.resolve(
+                'animation-max-frames-slider',
+                'animation-max-frames-slider'
+              )}
               value={[animation.maxFrames]}
               onValueChange={([v]) => setAnimationMaxFrames(v)}
               min={0}
@@ -142,7 +149,10 @@ export function AnimationSection() {
               </span>
             </div>
             <Slider
-              data-testid="animation-frame-step-slider"
+              data-testid={DynamicTestId.resolve(
+                'animation-frame-step-slider',
+                'animation-frame-step-slider'
+              )}
               value={[animation.frameStep]}
               onValueChange={([v]) => setAnimationFrameStep(v)}
               min={1}
@@ -164,10 +174,20 @@ export function AnimationSection() {
                 }))
               }
             >
-              <SelectTrigger data-testid="animation-interpolation-trigger">
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'animation-interpolation-trigger',
+                  'animation-interpolation-trigger'
+                )}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent data-testid="animation-interpolation-content">
+              <SelectContent
+                data-testid={DynamicTestId.resolve(
+                  'animation-interpolation-content',
+                  'animation-interpolation-content'
+                )}
+              >
                 <SelectItem value="none">{t('animation.none')}</SelectItem>
                 <SelectItem value="crossfade">{t('animation.crossfade')}</SelectItem>
                 <SelectItem value="morph">{t('animation.morph')}</SelectItem>
@@ -199,10 +219,20 @@ export function AnimationSection() {
                 }))
               }
             >
-              <SelectTrigger data-testid="animation-temporal-dither-trigger">
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'animation-temporal-dither-trigger',
+                  'animation-temporal-dither-trigger'
+                )}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent data-testid="animation-temporal-dither-content">
+              <SelectContent
+                data-testid={DynamicTestId.resolve(
+                  'animation-temporal-dither-content',
+                  'animation-temporal-dither-content'
+                )}
+              >
                 <SelectItem value="off">{t('animation.off')}</SelectItem>
                 <SelectItem value="blue_noise">{t('animation.blueNoise')}</SelectItem>
                 <SelectItem value="flicker_safe">{t('animation.flickerSafe')}</SelectItem>
@@ -228,10 +258,20 @@ export function AnimationSection() {
                 }))
               }
             >
-              <SelectTrigger data-testid="animation-pattern-trigger">
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'animation-pattern-trigger',
+                  'animation-pattern-trigger'
+                )}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent data-testid="animation-pattern-content">
+              <SelectContent
+                data-testid={DynamicTestId.resolve(
+                  'animation-pattern-content',
+                  'animation-pattern-content'
+                )}
+              >
                 <SelectItem value="none">{t('animation.none')}</SelectItem>
                 <SelectItem value="pulse">{t('animation.pulse')}</SelectItem>
                 <SelectItem value="wave">{t('animation.wave')}</SelectItem>
@@ -253,7 +293,10 @@ export function AnimationSection() {
               </span>
             </div>
             <Slider
-              data-testid="animation-module-jitter-slider"
+              data-testid={DynamicTestId.resolve(
+                'animation-module-jitter-slider',
+                'animation-module-jitter-slider'
+              )}
               value={[animation.moduleJitterPx]}
               onValueChange={([v]) =>
                 useQRStore.setState((s) => ({ animation: { ...s.animation, moduleJitterPx: v } }))
@@ -271,7 +314,10 @@ export function AnimationSection() {
               <HighlightedLabel>{t('animation.colorCycle')}</HighlightedLabel>
             </Label>
             <Switch
-              data-testid="animation-color-cycle-switch"
+              data-testid={DynamicTestId.resolve(
+                'animation-color-cycle-switch',
+                'animation-color-cycle-switch'
+              )}
               checked={animation.colorCycle}
               onCheckedChange={(checked) =>
                 useQRStore.setState((s) => ({ animation: { ...s.animation, colorCycle: checked } }))
@@ -285,7 +331,7 @@ export function AnimationSection() {
               <HighlightedLabel>{t('animation.randomSeed')}</HighlightedLabel>
             </Label>
             <Input
-              data-testid="animation-seed-input"
+              data-testid={DynamicTestId.resolve('animation-seed-input', 'animation-seed-input')}
               type="number"
               value={animation.seed}
               onChange={(e) =>

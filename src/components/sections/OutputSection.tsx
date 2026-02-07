@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import { HelpLink } from '@/components/ui/help-link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,10 +41,15 @@ export function OutputSection() {
           <HelpLink anchor="section-13" />
         </div>
         <Select value={output.format} onValueChange={(v) => setOutputFormat(v as OutputFormat)}>
-          <SelectTrigger data-testid="output-format-trigger" title={t('hints.outputFormat')}>
+          <SelectTrigger
+            data-testid={DynamicTestId.resolve('output-format-trigger', 'output-format-trigger')}
+            title={t('hints.outputFormat')}
+          >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent data-testid="output-format-content">
+          <SelectContent
+            data-testid={DynamicTestId.resolve('output-format-content', 'output-format-content')}
+          >
             <SelectItem value="png">PNG</SelectItem>
             <SelectItem value="webp">WebP</SelectItem>
             <SelectItem value="gif">GIF</SelectItem>
@@ -66,7 +72,7 @@ export function OutputSection() {
               <HighlightedLabel>{t('output.width')}</HighlightedLabel>
             </Label>
             <Input
-              data-testid="output-width-input"
+              data-testid={DynamicTestId.resolve('output-width-input', 'output-width-input')}
               type="number"
               value={output.widthPx}
               onChange={(e) => setOutputWidth(Number.parseInt(e.target.value, 10) || 400)}
@@ -79,7 +85,7 @@ export function OutputSection() {
               <HighlightedLabel>{t('output.height')}</HighlightedLabel>
             </Label>
             <Input
-              data-testid="output-height-input"
+              data-testid={DynamicTestId.resolve('output-height-input', 'output-height-input')}
               type="number"
               value={output.heightPx}
               onChange={(e) => setOutputHeight(Number.parseInt(e.target.value, 10) || 400)}
@@ -102,7 +108,7 @@ export function OutputSection() {
             </span>
           </div>
           <Slider
-            data-testid="output-quality-slider"
+            data-testid={DynamicTestId.resolve('output-quality-slider', 'output-quality-slider')}
             value={[output.quality]}
             onValueChange={([v]) => setOutputQuality(v)}
             min={0.1}
@@ -121,7 +127,7 @@ export function OutputSection() {
               <HighlightedLabel>{t('output.filename')}</HighlightedLabel>
             </Label>
             <Input
-              data-testid="output-filename-input"
+              data-testid={DynamicTestId.resolve('output-filename-input', 'output-filename-input')}
               value={output.filename}
               onChange={(e) => setOutputFilename(e.target.value)}
               placeholder="anqr-qrcode"
@@ -144,7 +150,10 @@ export function OutputSection() {
                   <span className="text-sm text-muted-foreground">{output.gifPaletteSize}</span>
                 </div>
                 <Slider
-                  data-testid="output-gif-palette-slider"
+                  data-testid={DynamicTestId.resolve(
+                    'output-gif-palette-slider',
+                    'output-gif-palette-slider'
+                  )}
                   value={[output.gifPaletteSize]}
                   onValueChange={([v]) => setOutputGifPaletteSize(v)}
                   min={2}
@@ -161,10 +170,20 @@ export function OutputSection() {
                   value={output.gifQuantizer}
                   onValueChange={(v) => setOutputGifQuantizer(v as GifQuantizer)}
                 >
-                  <SelectTrigger data-testid="output-gif-quantizer-trigger">
+                  <SelectTrigger
+                    data-testid={DynamicTestId.resolve(
+                      'output-gif-quantizer-trigger',
+                      'output-gif-quantizer-trigger'
+                    )}
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent data-testid="output-gif-quantizer-content">
+                  <SelectContent
+                    data-testid={DynamicTestId.resolve(
+                      'output-gif-quantizer-content',
+                      'output-gif-quantizer-content'
+                    )}
+                  >
                     <SelectItem value="median_cut">{t('output.medianCut')}</SelectItem>
                     <SelectItem value="neuquant">{t('output.neuquant')}</SelectItem>
                     <SelectItem value="octree">{t('output.octree')}</SelectItem>
@@ -184,10 +203,20 @@ export function OutputSection() {
                     }))
                   }
                 >
-                  <SelectTrigger data-testid="output-gif-dither-trigger">
+                  <SelectTrigger
+                    data-testid={DynamicTestId.resolve(
+                      'output-gif-dither-trigger',
+                      'output-gif-dither-trigger'
+                    )}
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent data-testid="output-gif-dither-content">
+                  <SelectContent
+                    data-testid={DynamicTestId.resolve(
+                      'output-gif-dither-content',
+                      'output-gif-dither-content'
+                    )}
+                  >
                     <SelectItem value="off">{t('output.off')}</SelectItem>
                     <SelectItem value="floyd">{t('output.floydSteinberg')}</SelectItem>
                     <SelectItem value="ordered">{t('output.ordered')}</SelectItem>
@@ -213,7 +242,10 @@ export function OutputSection() {
                   <p className="text-xs text-muted-foreground">{t('output.trueVectorDesc')}</p>
                 </div>
                 <Switch
-                  data-testid="output-svg-true-vector-switch"
+                  data-testid={DynamicTestId.resolve(
+                    'output-svg-true-vector-switch',
+                    'output-svg-true-vector-switch'
+                  )}
                   checked={output.svgTrueVector}
                   onCheckedChange={setOutputSvgTrueVector}
                 />
@@ -235,10 +267,20 @@ export function OutputSection() {
                       }))
                     }
                   >
-                    <SelectTrigger data-testid="output-svg-precision-trigger">
+                    <SelectTrigger
+                      data-testid={DynamicTestId.resolve(
+                        'output-svg-precision-trigger',
+                        'output-svg-precision-trigger'
+                      )}
+                    >
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent data-testid="output-svg-precision-content">
+                    <SelectContent
+                      data-testid={DynamicTestId.resolve(
+                        'output-svg-precision-content',
+                        'output-svg-precision-content'
+                      )}
+                    >
                       <SelectItem value="pixel">{t('output.pixel')}</SelectItem>
                       <SelectItem value="precise">{t('output.precise')}</SelectItem>
                     </SelectContent>
@@ -251,7 +293,10 @@ export function OutputSection() {
                   <HighlightedLabel>{t('output.embedRasterOverlay')}</HighlightedLabel>
                 </Label>
                 <Switch
-                  data-testid="output-svg-embed-raster-switch"
+                  data-testid={DynamicTestId.resolve(
+                    'output-svg-embed-raster-switch',
+                    'output-svg-embed-raster-switch'
+                  )}
                   checked={output.svgEmbedRasterOverlay}
                   onCheckedChange={(checked) =>
                     useQRStore.setState((s) => ({
@@ -339,7 +384,7 @@ export function OutputSection() {
               <span className="text-sm text-muted-foreground">{output.dpi}</span>
             </div>
             <Slider
-              data-testid="output-dpi-slider"
+              data-testid={DynamicTestId.resolve('output-dpi-slider', 'output-dpi-slider')}
               value={[output.dpi]}
               onValueChange={([v]) =>
                 useQRStore.setState((s) => ({ output: { ...s.output, dpi: v } }))
@@ -356,7 +401,10 @@ export function OutputSection() {
               <HighlightedLabel>{t('output.includeQuietZone')}</HighlightedLabel>
             </Label>
             <Switch
-              data-testid="output-include-quiet-zone-switch"
+              data-testid={DynamicTestId.resolve(
+                'output-include-quiet-zone-switch',
+                'output-include-quiet-zone-switch'
+              )}
               checked={output.includeQuietZone}
               onCheckedChange={(checked) =>
                 useQRStore.setState((s) => ({ output: { ...s.output, includeQuietZone: checked } }))
@@ -377,10 +425,20 @@ export function OutputSection() {
                 }))
               }
             >
-              <SelectTrigger data-testid="output-format-extra-trigger">
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'output-format-extra-trigger',
+                  'output-format-extra-trigger'
+                )}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent data-testid="output-format-extra-content">
+              <SelectContent
+                data-testid={DynamicTestId.resolve(
+                  'output-format-extra-content',
+                  'output-format-extra-content'
+                )}
+              >
                 <SelectItem value="none">{t('output.none')}</SelectItem>
                 <SelectItem value="eps">EPS</SelectItem>
                 <SelectItem value="animated_webp">{t('output.animatedWebp')}</SelectItem>

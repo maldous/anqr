@@ -1,3 +1,4 @@
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 /**
  * Analyze Component
  * Premier QR Code analysis page - the most comprehensive QR analyzer available
@@ -733,7 +734,7 @@ function SummaryBar({ result }: SummaryBarProps) {
   return (
     <div
       className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border rounded-lg shadow-sm py-2 px-3 mb-4 animate-in slide-in-from-top duration-300"
-      data-testid="analyze-summary-bar"
+      data-testid={DynamicTestId.resolve('analyze-summary-bar', 'analyze-summary-bar')}
     >
       <div className="flex flex-wrap items-stretch gap-1.5 text-xs">
         {/* Version chip */}
@@ -4952,7 +4953,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <img
                             src={originalImageUrl}
                             alt="Original QR Code"
-                            data-testid="analyze-original-image"
+                            data-testid={DynamicTestId.resolve(
+                              'analyze-original-image',
+                              'analyze-original-image'
+                            )}
                             className="max-w-full max-h-full object-contain"
                           />
                         ) : (
@@ -4973,7 +4977,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         <canvas
                           ref={reproducedCanvasRef}
-                          data-testid="analyze-reproduced-canvas"
+                          data-testid={DynamicTestId.resolve(
+                            'analyze-reproduced-canvas',
+                            'analyze-reproduced-canvas'
+                          )}
                           className="max-w-full max-h-full object-contain"
                           style={{ imageRendering: 'pixelated' }}
                         />

@@ -16,6 +16,34 @@ function bufferToImageData(buffer: Buffer) {
 }
 
 describe('netlify qr function', () => {
+  it('returns 400 for missing data parameter', async () => {
+    const res = await handler(new Request('https://example.com/api/qr?format=png&size=256'));
+    expect(res.status).toBe(400);
+    await expect(res.text()).resolves.toContain('Missing required "data" parameter');
+  });
+
+  it('returns 400 for invalid ec/style parameters', async () => {
+    const badEc = await handler(
+      new Request('https://example.com/api/qr?data=test&format=png&size=128&ec=Z')
+    );
+    expect(badEc.status).toBe(400);
+    await expect(badEc.text()).resolves.toContain('Invalid "ec"');
+
+    const badStyle = await handler(
+      new Request('https://example.com/api/qr?data=test&format=png&size=128&style=invalid-style')
+    );
+    expect(badStyle.status).toBe(400);
+    await expect(badStyle.text()).resolves.toContain('Invalid "style"');
+  });
+
+  it('returns 400 for payloads over max length', async () => {
+    const veryLong = `https://example.com/${'a'.repeat(10000)}`;
+    const url = `https://example.com/api/qr?data=${encodeURIComponent(veryLong)}&format=png`;
+    const res = await handler(new Request(url));
+    expect(res.status).toBe(400);
+    await expect(res.text()).resolves.toContain('Data too long');
+  });
+
   it('generates a scannable PNG', async () => {
     const payload = 'https://example.com/netlify-test';
     const url = `https://example.com/api/qr?data=${encodeURIComponent(payload)}&format=png&size=256&ec=H`;

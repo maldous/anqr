@@ -32,6 +32,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import { HighlightedLabel, SearchProvider } from '@/lib/search-context';
 import { useQRStore } from '@/store/qr-store';
 
@@ -1146,7 +1147,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
       <aside
         aria-label="QR code settings"
         ref={sidebarRef}
-        data-testid="sidebar"
+        data-testid={DynamicTestId.resolve('sidebar', 'sidebar')}
         className={`
           ${/* Mobile: relative in-flow element for split view */ ''}
           ${/* Tablet: fixed overlay */ ''}
@@ -1171,7 +1172,7 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
         {/* Sections - scrolls within container */}
         <div
           className="flex-1 overflow-y-auto px-4 pt-1 scrollbar-hide"
-          data-testid="sidebar-scroll"
+          data-testid={DynamicTestId.resolve('sidebar-scroll', 'sidebar-scroll')}
         >
           {/* Search bar styled like accordion items */}
           <div className="flex items-center gap-2 px-3 py-3 bg-muted/50 rounded-md shadow-sm mb-[6px]">
@@ -1218,7 +1219,10 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
                   key={section.id}
                   value={section.id}
                   className="border-none mb-[6px]"
-                  data-testid={`accordion-${section.id}`}
+                  data-testid={DynamicTestId.resolve(
+                    `accordion-${section.id}`,
+                    `accordion-${section.id}`
+                  )}
                 >
                   <AccordionTrigger
                     className="hover:no-underline py-3 px-3 bg-muted/50 rounded-md shadow-sm [&>svg]:ml-auto"
