@@ -205,8 +205,8 @@ export function applyQROverlayMode(
         if (highlightColor) {
           // Full duotone: blend between shadow and highlight based on brightness
           // brightness 0 -> full shadow, brightness 1 -> full highlight
-          const shadowParsed = parseColor(shadowColor);
-          const highlightParsed = parseColor(highlightColor);
+          const shadowParsed = parseColor(shadowColor) ?? { r: 0, g: 0, b: 0, a: 1 };
+          const highlightParsed = parseColor(highlightColor) ?? { r: 0, g: 0, b: 0, a: 1 };
 
           // Apply intensity to control how much duotone effect is applied
           const duoR = Math.round(
@@ -224,7 +224,7 @@ export function applyQROverlayMode(
           result.moduleColor = blendColors(config.fgColor, duoColor, duoIntensity);
         } else if (brightness > 0.5) {
           // Fallback: lighten the shadow color for bright areas
-          const shadowParsed = parseColor(shadowColor);
+          const shadowParsed = parseColor(shadowColor) ?? { r: 0, g: 0, b: 0, a: 1 };
           const lightenAmt = (brightness - 0.5) * 2 * duoIntensity;
           const lightR = Math.min(
             255,

@@ -55,27 +55,30 @@ describe('qr-analyzer/safety.ts', () => {
       expect(result.meetsAAA).toBe(false);
     });
 
-    it('falls back for invalid fg color (parseColor returns black)', async () => {
+    it('returns guard defaults for invalid fg color (parseColor returns null)', async () => {
       const analyzeContrast = await getAnalyzeContrast();
       const result = analyzeContrast('invalid', '#ffffff');
-      // parseColor('invalid') falls back to black → black vs white → high contrast
-      expect(result.ratio).toBeGreaterThan(20);
-      expect(result.meetsAA).toBe(true);
-      expect(result.meetsAAA).toBe(true);
+      expect(result.ratio).toBe(1);
+      expect(result.meetsAA).toBe(false);
+      expect(result.meetsAAA).toBe(false);
+      expect(result.fgLuminance).toBe(0);
+      expect(result.bgLuminance).toBe(0);
     });
 
-    it('falls back for invalid bg color (parseColor returns black)', async () => {
+    it('returns guard defaults for invalid bg color (parseColor returns null)', async () => {
       const analyzeContrast = await getAnalyzeContrast();
       const result = analyzeContrast('#000000', 'notacolor');
-      // parseColor('notacolor') falls back to black → black vs black → ratio 1
-      expect(result.ratio).toBeCloseTo(1, 0);
+      expect(result.ratio).toBe(1);
       expect(result.meetsAA).toBe(false);
+      expect(result.fgLuminance).toBe(0);
+      expect(result.bgLuminance).toBe(0);
     });
 
-    it('falls back when both colors invalid (both become black)', async () => {
+    it('returns guard defaults when both colors invalid', async () => {
       const analyzeContrast = await getAnalyzeContrast();
       const result = analyzeContrast('bad', 'worse');
-      expect(result.ratio).toBeCloseTo(1, 0);
+      expect(result.ratio).toBe(1);
+      expect(result.meetsAA).toBe(false);
     });
 
     it('calculates mid-contrast colors correctly', async () => {

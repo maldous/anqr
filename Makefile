@@ -69,7 +69,7 @@ help:
 	@echo "    make sonar-report   Get full issues report from SonarQube"
 	@echo ""
 	@echo "  UI TESTING (Playwright)"
-	@echo "    make quality        Run local quality gate (typecheck + unit CI subset + i18n check)"
+	@echo "    make quality        Run local quality gate (fix + typecheck + unit CI subset + audits)"
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
@@ -80,7 +80,7 @@ help:
 	@echo "    make test:required:strict  Fail if requirements are not direct-id backed"
 	@echo "    make test:required:gap  Generate required mapping debt report"
 	@echo "    make test:testid:refs  Validate tests only use managed test IDs"
-	@echo "    make test           Run ALL tests (basic + advanced + pro + permutations)"
+	@echo "    make test           Run ALL tests: quality gates + full unit suite + E2E (basic/advanced/pro/permutations)"
 	@echo "    make test:basic     Run basic tier UI tests only"
 	@echo "    make test:advanced  Run advanced tier UI tests only"
 	@echo "    make test:pro       Run professional tier UI tests only"
@@ -549,10 +549,19 @@ test\:testid:
 test\:testid\:refs:
 	npm run test:testid:refs
 
-# Run ALL tests (basic + advanced + professional + permutations)
+# Run ALL tests: quality gates + full unit suite + E2E
 # This is the comprehensive test target - use for full CI validation
-# Outputs to test-report.txt for text-based review (with test names and pass/fail status)
+# Order: fix → audits → typecheck → full vitest → test-id checks → i18n → Playwright E2E
+# Outputs E2E results to test-report.txt for text-based review
 test:
+	$(MAKE) fix
+	npm run test:ids
+	npm run test:required
+	npm run typecheck
+	npm run test:unit
+	npm run test:testid
+	npm run test:testid:refs
+	npm run test:i18n
 	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=permutations --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)

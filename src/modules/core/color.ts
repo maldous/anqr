@@ -8,6 +8,8 @@ import type { HSL, HSLA, RGB, RGBA } from './types';
 
 const _log = createLogger('COLOR');
 
+const BLACK: RGBA = { r: 0, g: 0, b: 0, a: 1 };
+
 // Re-export types for convenience
 export type { RGB, RGBA, HSL, HSLA };
 
@@ -89,8 +91,8 @@ const NAMED_COLORS: Record<string, string> = {
   transparent: '#00000000',
 };
 
-/** Parse any color string to RGBA */
-export function parseColor(color: string): RGBA {
+/** Parse any color string to RGBA, or null if unrecognizable */
+export function parseColor(color: string): RGBA | null {
   color = color.trim().toLowerCase();
 
   if (color.startsWith('#')) {
@@ -111,7 +113,7 @@ export function parseColor(color: string): RGBA {
     return parseHexAlpha(NAMED_COLORS[color]);
   }
 
-  return { r: 0, g: 0, b: 0, a: 1 };
+  return null;
 }
 
 // ============================================
@@ -244,8 +246,8 @@ export function blendRgb(c1: RGB, c2: RGB, ratio: number): RGB {
 
 /** Blend two color strings with given ratio */
 export function blendColors(color1: string, color2: string, ratio: number): string {
-  const c1 = parseColor(color1);
-  const c2 = parseColor(color2);
+  const c1 = parseColor(color1) ?? BLACK;
+  const c2 = parseColor(color2) ?? BLACK;
 
   const r = Math.round(c1.r + (c2.r - c1.r) * ratio);
   const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
@@ -311,7 +313,7 @@ export function overlayBlend(c1: RGB, c2: RGB): RGB {
 
 /** Calculate relative luminance for WCAG contrast */
 export function getRelativeLuminance(color: RGB | string): number {
-  const c = typeof color === 'string' ? parseColor(color) : color;
+  const c = typeof color === 'string' ? (parseColor(color) ?? BLACK) : color;
 
   const rsRGB = c.r / 255;
   const gsRGB = c.g / 255;
@@ -337,14 +339,14 @@ export function getContrastRatio(color1: RGB | string, color2: RGB | string): nu
 
 /** Check if a color is considered "dark" */
 export function isDark(color: RGB | string): boolean {
-  const c = typeof color === 'string' ? parseColor(color) : color;
+  const c = typeof color === 'string' ? (parseColor(color) ?? BLACK) : color;
   const gray = rgbToGray(c.r, c.g, c.b);
   return gray < 128;
 }
 
 /** Get best text color (black or white) for given background */
 export function getTextColor(backgroundColor: string): string {
-  const bg = parseColor(backgroundColor);
+  const bg = parseColor(backgroundColor) ?? BLACK;
   const luminance = getRelativeLuminance(bg);
   return luminance > 0.179 ? '#000000' : '#ffffff';
 }

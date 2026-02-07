@@ -194,9 +194,9 @@ describe('core/color.ts', () => {
       expect(result).toEqual({ r: 255, g: 255, b: 255, a: 1 });
     });
 
-    it('returns black for unknown color', async () => {
+    it('returns null for unknown color', async () => {
       const { parseColor } = await getMod();
-      expect(parseColor('unknown')).toEqual({ r: 0, g: 0, b: 0, a: 1 });
+      expect(parseColor('unknown')).toBeNull();
     });
 
     it('trims whitespace and is case-insensitive', async () => {
