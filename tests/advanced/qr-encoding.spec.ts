@@ -18,7 +18,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
     // page.goto('/') is handled by fixture's resetAppState
     await setTier('advanced');
     // Wait for initial render
-    await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
+    await page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: 10000 });
     await waitForRenderComplete(page, 'settle');
   });
 
@@ -552,7 +552,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await setQuietZoneSlider(page, 100);
       await waitForQRRender();
       
-      const canvasWithQZ = page.locator('canvas').first();
+      const canvasWithQZ = page.locator('[data-testid="qr-preview"] canvas').first();
       const sizeWithQZ = await canvasWithQZ.evaluate((el: HTMLCanvasElement) => ({
         width: el.width,
         height: el.height
@@ -562,7 +562,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await setQuietZoneSlider(page, 0);
       await waitForQRRender();
       
-      const canvasNoQZ = page.locator('canvas').first();
+      const canvasNoQZ = page.locator('[data-testid="qr-preview"] canvas').first();
       const sizeNoQZ = await canvasNoQZ.evaluate((el: HTMLCanvasElement) => ({
         width: el.width,
         height: el.height

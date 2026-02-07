@@ -518,7 +518,7 @@ test\:unit\:ci:
 # This is the comprehensive test target - use for full CI validation
 # Outputs to test-report.txt for text-based review (with test names and pass/fail status)
 test:
-	npx playwright test --project=basic --project=advanced --project=professional --project=permutations --reporter=list 2>&1 | tee test-report.txt
+	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=permutations --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)
 test\:basic:
@@ -552,7 +552,7 @@ test\:permutations:
 
 # Generate settings QR change report for manual review
 test\:report\:settings:
-	npx playwright test tests/reports/settings-report.spec.ts --reporter=list 2>&1 | tee test-results/settings-report.txt
+	bash -o pipefail -c 'npx playwright test tests/reports/settings-report.spec.ts --reporter=list 2>&1 | tee test-results/settings-report.txt'
 
 # Show test report
 test\:report:

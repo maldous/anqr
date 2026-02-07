@@ -102,48 +102,36 @@ export async function waitForRenderComplete(
   timeout: number = RENDER_TIMEOUT
 ): Promise<void> {
   // Ensure the canvas exists and is visible. If the app cannot render, fail fast.
-  await page.waitForSelector('canvas', { state: 'visible', timeout: Math.min(timeout, 5000) });
+  await page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: Math.min(timeout, 5000) });
 
-  // Strategy 1: Listen for CustomEvent 'anqr:render-complete' (fully event-driven)
-  // This is the most reliable method - the app explicitly signals when render is done
-  const eventReceived = await page.evaluate((timeoutMs: number) => {
-    return new Promise<boolean>((resolve) => {
-      // Check if already idle before setting up listener
-      const idleMarker = document.querySelector('[data-rendering-state="idle"]');
-      if (idleMarker) {
-        resolve(true);
-        return;
-      }
-      
-      const handler = () => {
-        document.removeEventListener('anqr:render-complete', handler);
-        resolve(true);
-      };
-      
-      document.addEventListener('anqr:render-complete', handler);
-      
-      // Timeout fallback
-      setTimeout(() => {
-        document.removeEventListener('anqr:render-complete', handler);
-        resolve(false);
-      }, timeoutMs);
-    });
-  }, timeout);
+  // If already idle, allow a short window for debounce/render to begin.
+  // This avoids returning too early immediately after a user action.
+  const startsIdle = (await page.locator('[data-testid="qr-preview"]').getAttribute('data-rendering-state')) === 'idle';
+  if (startsIdle) {
+    const transitioned = await page
+      .waitForFunction(() => {
+        const el = document.querySelector('[data-testid="qr-preview"]');
+        const state = el?.getAttribute('data-rendering-state');
+        return state === 'pending' || state === 'rendering';
+      }, { timeout: 500, polling: 25 })
+      .then(() => true)
+      .catch(() => false);
 
-  if (eventReceived) {
-    return;
+    if (!transitioned) {
+      // No render cycle started; just ensure the preview is stable.
+      await waitForCanvasStable(page, 150, Math.min(timeout, 2000));
+      return;
+    }
   }
 
-  // Strategy 2: Wait for data-rendering-state="idle" attribute
-  try {
-    await page.waitForSelector('[data-rendering-state="idle"]', { state: 'attached', timeout: 2000 });
-    return;
-  } catch {
-    // Continue to fallback
-  }
+  // Wait until the app explicitly reports idle again.
+  await page.waitForSelector('[data-testid="qr-preview"][data-rendering-state="idle"]', {
+    state: 'attached',
+    timeout,
+  });
 
-  // Strategy 3: Fall back to canvas stability polling (last resort)
-  await waitForCanvasStable(page, 200, timeout);
+  // Small stability guard for immediate post-idle reads.
+  await waitForCanvasStable(page, 100, Math.min(timeout, 1500));
 }
 
 /**
@@ -262,7 +250,7 @@ export async function waitForCanvasStable(
 ): Promise<void> {
   await page.waitForFunction(
     (stability: number) => {
-      const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+      const canvas = document.querySelector('[data-testid="qr-preview"] canvas') as HTMLCanvasElement;
       if (!canvas) return true;
       
       const curr = canvas.toDataURL('image/png');
@@ -309,7 +297,7 @@ export function getControl(page: Page, testId: string): Locator {
  * @returns Locator for the canvas
  */
 export function getCanvas(page: Page): Locator {
-  return page.locator('canvas').first();
+  return page.locator('[data-testid="qr-preview"] canvas').first();
 }
 
 /**
@@ -720,7 +708,7 @@ export async function waitForCanvasChange(
   try {
     await page.waitForFunction(
       (prevSnapshot: string) => {
-        const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+        const canvas = document.querySelector('[data-testid="qr-preview"] canvas') as HTMLCanvasElement;
         if (!canvas) return false;
         const currentSnapshot = canvas.toDataURL('image/png');
         return currentSnapshot !== prevSnapshot;
@@ -766,7 +754,7 @@ export const WELCOME_MODAL_STORAGE_KEY = 'anqr-welcome-seen';
 /** Current version value that marks the modal as "seen" 
  * IMPORTANT: This MUST match WELCOME_VERSION in src/components/WelcomeModal.tsx
  */
-export const WELCOME_MODAL_VERSION = '2026.01.11';
+export const WELCOME_MODAL_VERSION = '2026.02.01';
 
 /**
  * Dismiss the welcome modal if it's visible.

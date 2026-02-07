@@ -20,6 +20,11 @@ import type { Page, Locator } from '@playwright/test';
 
 /** Default timeout for waiting operations */
 const DEFAULT_TIMEOUT = 10000;
+const QR_CANVAS_SELECTOR = '[data-testid="qr-preview"] canvas';
+
+function getQRCanvas(page: Page): Locator {
+  return page.locator(QR_CANVAS_SELECTOR).first();
+}
 
 /**
  * Get the sidebar's scrollable container using data-testid
@@ -138,7 +143,7 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
  * Get a snapshot of the canvas as a data URL
  */
 export async function getCanvasSnapshot(page: Page): Promise<string> {
-  const canvas = page.locator('canvas').first();
+  const canvas = getQRCanvas(page);
   await canvas.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   
   const dataUrl = await canvas.evaluate((el: HTMLCanvasElement) => {
@@ -152,7 +157,7 @@ export async function getCanvasSnapshot(page: Page): Promise<string> {
  * Get canvas pixel data for more precise comparison
  */
 export async function getCanvasPixels(page: Page): Promise<Uint8ClampedArray> {
-  const canvas = page.locator('canvas').first();
+  const canvas = getQRCanvas(page);
   
   const pixelData = await canvas.evaluate((el: HTMLCanvasElement) => {
     const ctx = el.getContext('2d');
@@ -183,7 +188,7 @@ export async function waitForCanvasChange(
   try {
     await page.waitForFunction(
       (prevSnapshot: string) => {
-        const canvas = document.querySelector('canvas');
+        const canvas = document.querySelector('[data-testid="qr-preview"] canvas') as HTMLCanvasElement | null;
         if (!canvas) return false;
         const currentSnapshot = canvas.toDataURL('image/png');
         return currentSnapshot !== prevSnapshot;
@@ -221,7 +226,7 @@ export async function expectQRChanged(
  * Get canvas dimensions
  */
 export async function getCanvasDimensions(page: Page): Promise<{ width: number; height: number }> {
-  const canvas = page.locator('canvas').first();
+  const canvas = getQRCanvas(page);
   
   const dimensions = await canvas.evaluate((el: HTMLCanvasElement) => ({
     width: el.width,
@@ -362,7 +367,7 @@ export async function waitForQRStable(
     { state: 'attached', timeout }
   ).catch(() => {
     // Fallback: wait for canvas to be visible
-    return page.waitForSelector('canvas', { state: 'visible', timeout: 2000 });
+    return page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: 2000 });
   });
 }
 
