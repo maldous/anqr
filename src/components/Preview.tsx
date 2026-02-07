@@ -1,5 +1,6 @@
 import { AlertTriangle, Eye, Sparkles, Thermometer } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 
 // Type for render state
 type RenderState = 'pending' | 'rendering' | 'idle';
@@ -364,7 +365,7 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
               <div
                 className="relative inline-block"
                 data-rendering-state={renderingState}
-                data-testid="qr-preview"
+                data-testid={DynamicTestId.resolve('qr-preview', 'qr-preview')}
               >
                 {/* Simulation indicator badge */}
                 {hasActiveSimulation && (

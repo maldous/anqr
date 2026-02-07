@@ -1,3 +1,4 @@
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 /**
  * WelcomeModal Component
  *
@@ -276,7 +277,11 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
           {/* Footer */}
           <div className="px-6 py-4 border-t bg-muted/30 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">{t('welcome.footerNote')}</p>
-            <Button size="sm" onClick={handleDismiss}>
+            <Button
+              data-testid={DynamicTestId.resolve('welcome-get-started', 'welcome-get-started')}
+              size="sm"
+              onClick={handleDismiss}
+            >
               {t('welcome.getStarted')}
             </Button>
           </div>

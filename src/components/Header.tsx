@@ -36,6 +36,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StaticPageType } from '@/components/StaticPage';
 import { Button } from '@/components/ui/button';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import {
   Select,
   SelectContent,
@@ -724,7 +725,7 @@ export function Header({
                     <Tabs
                       value={tier}
                       onValueChange={(v) => handleTierChange(v as Tier)}
-                      data-testid="tier-tabs"
+                      data-testid={DynamicTestId.resolve('tier-tabs', 'tier-tabs')}
                     >
                       <TabsList className="shadow-sm">
                         <TabsTrigger
@@ -732,7 +733,7 @@ export function Header({
                           className="text-xs px-3"
                           title={t('tiers.basic')}
                           disabled={loadingAd}
-                          data-testid="tier-tab-basic"
+                          data-testid={DynamicTestId.resolve('tier-tab-basic', 'tier-tab-basic')}
                         >
                           {t('tiers.basic')}
                         </TabsTrigger>
@@ -741,7 +742,10 @@ export function Header({
                           className="text-xs px-3"
                           title={t('tiers.advanced')}
                           disabled={loadingAd}
-                          data-testid="tier-tab-advanced"
+                          data-testid={DynamicTestId.resolve(
+                            'tier-tab-advanced',
+                            'tier-tab-advanced'
+                          )}
                         >
                           {t('tiers.advanced')}
                         </TabsTrigger>
@@ -754,7 +758,10 @@ export function Header({
                               : t('tiers.professional')
                           }
                           disabled={loadingAd}
-                          data-testid="tier-tab-professional"
+                          data-testid={DynamicTestId.resolve(
+                            'tier-tab-professional',
+                            'tier-tab-professional'
+                          )}
                           aria-label={
                             Capacitor.isNativePlatform() && !checkPremiumAccess()
                               ? t('tiers.watchAdForPro', 'Watch ad for Professional')
@@ -777,19 +784,37 @@ export function Header({
                     >
                       <SelectTrigger
                         className="w-[72px] h-9 text-xs"
-                        data-testid="tier-select"
+                        data-testid={DynamicTestId.resolve('tier-select', 'tier-select')}
                         aria-label={t('accessibility.selectTier', 'Select feature tier')}
                       >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="basic" data-testid="tier-option-basic">
+                        <SelectItem
+                          value="basic"
+                          data-testid={DynamicTestId.resolve(
+                            'tier-option-basic',
+                            'tier-option-basic'
+                          )}
+                        >
                           {t('tiers.basic')}
                         </SelectItem>
-                        <SelectItem value="advanced" data-testid="tier-option-advanced">
+                        <SelectItem
+                          value="advanced"
+                          data-testid={DynamicTestId.resolve(
+                            'tier-option-advanced',
+                            'tier-option-advanced'
+                          )}
+                        >
                           {t('tiers.advanced')}
                         </SelectItem>
-                        <SelectItem value="professional" data-testid="tier-option-professional">
+                        <SelectItem
+                          value="professional"
+                          data-testid={DynamicTestId.resolve(
+                            'tier-option-professional',
+                            'tier-option-professional'
+                          )}
+                        >
                           <span className="flex items-center gap-1">
                             {Capacitor.isNativePlatform() && !checkPremiumAccess() && (
                               <Play className="w-3 h-3" aria-hidden="true" />
@@ -831,7 +856,7 @@ export function Header({
                     onClick={onExport}
                     title={t('accessibility.exportQrCode')}
                     aria-label={t('accessibility.exportQrCode', 'Export QR code')}
-                    data-testid="export-button"
+                    data-testid={DynamicTestId.resolve('export-button', 'export-button')}
                   >
                     <Download className="h-4 w-4 mr-2" aria-hidden="true" />
                     {t('header.export')}

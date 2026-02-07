@@ -5,6 +5,7 @@ import App from './App.tsx';
 import './index.css';
 import './i18n'; // Initialize i18n
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { initAutoDynamicTestIds } from './lib/auto-testid';
 import { createLogger } from './lib/logger';
 import { initRemoteDiagnostics } from './lib/logger-remote';
 import { initializeAdMob, showBannerAd } from './modules/platform';
@@ -85,3 +86,6 @@ ReactDOM.createRoot(rootElement).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+// Ensure every interactive element has a unique dynamic test id.
+initAutoDynamicTestIds();

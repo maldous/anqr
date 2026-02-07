@@ -13,8 +13,23 @@ export default defineConfig({
     // Coverage configuration
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
-      exclude: ['node_modules/**', 'tests/**', '**/*.d.ts'],
+      reporter: ['text', 'html', 'json', 'json-summary'],
+      all: true,
+      include: [
+        'src/modules/**/*.ts',
+        'src/lib/**/*.ts',
+        'src/store/**/*.ts',
+        'src/i18n/index.ts',
+        'src/i18n/static/index.ts',
+        'netlify/functions/**/*.ts',
+      ],
+      exclude: ['node_modules/**', 'tests/**', '**/*.d.ts', 'dist/**', 'coverage/**'],
+      thresholds: {
+        lines: 100,
+        functions: 100,
+        branches: 100,
+        statements: 100,
+      },
     },
   },
   resolve: {

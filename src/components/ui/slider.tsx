@@ -1,13 +1,15 @@
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { Minus, Plus } from 'lucide-react';
 import * as React from 'react';
-
+import { useDynamicTestId } from '@/components/ui/dynamic-testid';
 import { cn } from '@/lib/utils';
 
 const Slider = React.forwardRef<
   React.ComponentRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
 >(({ className, min = 0, max = 100, step = 1, value, onValueChange, disabled, ...props }, ref) => {
+  const testId = useDynamicTestId(props, 'slider');
+
   const handleDecrement = () => {
     if (!value) return;
     const newVal = Math.round(Math.max(min, value[0] - step) * 1e10) / 1e10;
@@ -24,6 +26,7 @@ const Slider = React.forwardRef<
     <div className="flex items-center gap-1.5">
       <button
         type="button"
+        data-testid={`${testId}-decrement`}
         onClick={handleDecrement}
         disabled={disabled || !value || value[0] <= min}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none"
@@ -33,6 +36,7 @@ const Slider = React.forwardRef<
       </button>
       <SliderPrimitive.Root
         ref={ref}
+        data-testid={testId}
         min={min}
         max={max}
         step={step}
@@ -49,6 +53,7 @@ const Slider = React.forwardRef<
       </SliderPrimitive.Root>
       <button
         type="button"
+        data-testid={`${testId}-increment`}
         onClick={handleIncrement}
         disabled={disabled || !value || value[0] >= max}
         className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50 disabled:pointer-events-none"

@@ -14,7 +14,7 @@ import type { Page, Locator } from '@playwright/test';
  * - data-testid="overlay-color-mode-select" - color mode dropdown
  * - data-testid="overlay-preserve-finders-switch" - preserve finders toggle
  * - data-testid="overlay-upload" - upload button
- * - data-testid="overlay-from-url" - from URL button
+ * - data-testid="overlay-from-url-button" - from URL button
  * - data-testid="qr-preview" - the QR canvas container
  */
 

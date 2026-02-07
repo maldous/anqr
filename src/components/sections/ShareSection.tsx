@@ -2,6 +2,7 @@ import { Check, Code, Copy, Link, MessageCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -318,7 +319,10 @@ export function ShareSection() {
           <p className="text-xs text-muted-foreground">{t('share.directLinkDesc')}</p>
         </div>
         <Switch
-          data-testid="share-direct-link-switch"
+          data-testid={DynamicTestId.resolve(
+            'share-direct-link-switch',
+            'share-direct-link-switch'
+          )}
           checked={share.directLink}
           onCheckedChange={(checked) => setShare({ directLink: checked })}
         />
@@ -328,13 +332,19 @@ export function ShareSection() {
         <div className="space-y-2">
           <div className="flex gap-2">
             <Input
-              data-testid="share-direct-link-input"
+              data-testid={DynamicTestId.resolve(
+                'share-direct-link-input',
+                'share-direct-link-input'
+              )}
               readOnly
               value={shareableUrl}
               className="flex-1 text-xs"
             />
             <Button
-              data-testid="share-copy-link-button"
+              data-testid={DynamicTestId.resolve(
+                'share-copy-link-button',
+                'share-copy-link-button'
+              )}
               variant="outline"
               size="icon"
               onClick={() => handleCopy(shareableUrl, 'link')}
@@ -358,7 +368,7 @@ export function ShareSection() {
           <p className="text-xs text-muted-foreground">{t('share.embedHtmlDesc')}</p>
         </div>
         <Switch
-          data-testid="share-embed-html-switch"
+          data-testid={DynamicTestId.resolve('share-embed-html-switch', 'share-embed-html-switch')}
           checked={share.embedHtml}
           onCheckedChange={(checked) => setShare({ embedHtml: checked })}
         />
@@ -368,13 +378,19 @@ export function ShareSection() {
         <div className="space-y-2">
           <div className="flex gap-2">
             <Input
-              data-testid="share-embed-code-input"
+              data-testid={DynamicTestId.resolve(
+                'share-embed-code-input',
+                'share-embed-code-input'
+              )}
               readOnly
               value={embedCode}
               className="flex-1 text-xs font-mono"
             />
             <Button
-              data-testid="share-copy-embed-button"
+              data-testid={DynamicTestId.resolve(
+                'share-copy-embed-button',
+                'share-copy-embed-button'
+              )}
               variant="outline"
               size="icon"
               onClick={() => handleCopy(embedCode, 'embed')}
@@ -388,14 +404,17 @@ export function ShareSection() {
           </div>
           <div className="flex gap-2">
             <Input
-              data-testid="share-markdown-input"
+              data-testid={DynamicTestId.resolve('share-markdown-input', 'share-markdown-input')}
               readOnly
               value={markdownEmbed}
               className="flex-1 text-xs font-mono"
               placeholder={t('share.markdown')}
             />
             <Button
-              data-testid="share-copy-markdown-button"
+              data-testid={DynamicTestId.resolve(
+                'share-copy-markdown-button',
+                'share-copy-markdown-button'
+              )}
               variant="outline"
               size="icon"
               onClick={() => handleCopy(markdownEmbed, 'markdown')}
@@ -419,7 +438,10 @@ export function ShareSection() {
           <p className="text-xs text-muted-foreground">{t('share.encodeAllParamsDesc')}</p>
         </div>
         <Switch
-          data-testid="share-encode-more-params-switch"
+          data-testid={DynamicTestId.resolve(
+            'share-encode-more-params-switch',
+            'share-encode-more-params-switch'
+          )}
           checked={share.encodeMoreParams}
           onCheckedChange={(checked) => setShare({ encodeMoreParams: checked })}
         />
@@ -432,7 +454,10 @@ export function ShareSection() {
         </Label>
         <div className="flex gap-2">
           <Button
-            data-testid="share-quick-copy-button"
+            data-testid={DynamicTestId.resolve(
+              'share-quick-copy-button',
+              'share-quick-copy-button'
+            )}
             variant="outline"
             size="sm"
             className="flex-1"
@@ -448,7 +473,7 @@ export function ShareSection() {
         </div>
         <div className="flex gap-2">
           <Button
-            data-testid="share-twitter-button"
+            data-testid={DynamicTestId.resolve('share-twitter-button', 'share-twitter-button')}
             variant="outline"
             size="sm"
             className="flex-1"
@@ -457,7 +482,7 @@ export function ShareSection() {
             {t('share.twitter')}
           </Button>
           <Button
-            data-testid="share-whatsapp-button"
+            data-testid={DynamicTestId.resolve('share-whatsapp-button', 'share-whatsapp-button')}
             variant="outline"
             size="sm"
             className="flex-1"

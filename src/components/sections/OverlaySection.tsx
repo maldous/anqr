@@ -12,6 +12,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import { HelpLink } from '@/components/ui/help-link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -424,7 +425,7 @@ export function OverlaySection() {
               <Switch
                 checked={overlay.cropEnabled}
                 onCheckedChange={(checked) => setOverlayCrop({ enabled: checked })}
-                data-testid="overlay-crop-switch"
+                data-testid={DynamicTestId.resolve('overlay-crop-switch', 'overlay-crop-switch')}
               />
             </div>
 
@@ -444,7 +445,7 @@ export function OverlaySection() {
                   min={0.1}
                   max={1}
                   step={0.05}
-                  data-testid="overlay-crop-slider"
+                  data-testid={DynamicTestId.resolve('overlay-crop-slider', 'overlay-crop-slider')}
                 />
               </div>
             )}
@@ -464,7 +465,7 @@ export function OverlaySection() {
                 variant="outline"
                 className="flex flex-col items-center justify-center h-16 p-2"
                 onClick={() => fileInputRef.current?.click()}
-                data-testid="overlay-upload"
+                data-testid={DynamicTestId.resolve('overlay-upload', 'overlay-upload')}
               >
                 <Upload className="h-5 w-5 mb-1" />
                 <span className="text-xs">{t('overlay.upload')}</span>
@@ -473,7 +474,10 @@ export function OverlaySection() {
                 variant="outline"
                 className="flex flex-col items-center justify-center h-16 p-2"
                 onClick={() => setShowUrlInput(!showUrlInput)}
-                data-testid="overlay-from-url-button"
+                data-testid={DynamicTestId.resolve(
+                  'overlay-from-url-button',
+                  'overlay-from-url-button'
+                )}
               >
                 <Link className="h-5 w-5 mb-1" />
                 <span className="text-xs">{t('payload.url')}</span>
@@ -483,7 +487,10 @@ export function OverlaySection() {
                 className="flex flex-col items-center justify-center h-16 p-2"
                 onClick={() => setShowGalleryPicker(!showGalleryPicker)}
                 disabled={galleryLoading}
-                data-testid="overlay-gallery-button"
+                data-testid={DynamicTestId.resolve(
+                  'overlay-gallery-button',
+                  'overlay-gallery-button'
+                )}
               >
                 {galleryLoading ? (
                   <Loader2 className="h-5 w-5 mb-1 animate-spin" />
@@ -498,7 +505,10 @@ export function OverlaySection() {
                   className="flex flex-col items-center justify-center h-16 p-2"
                   onClick={handleCameraCapture}
                   disabled={cameraLoading}
-                  data-testid="overlay-photo-button"
+                  data-testid={DynamicTestId.resolve(
+                    'overlay-photo-button',
+                    'overlay-photo-button'
+                  )}
                 >
                   {cameraLoading ? (
                     <Loader2 className="h-5 w-5 mb-1 animate-spin" />
@@ -555,7 +565,10 @@ export function OverlaySection() {
                     onClick={loadFromUrl}
                     disabled={isLoadingUrl || !urlInput.trim()}
                     size="sm"
-                    data-testid="overlay-load-url-button"
+                    data-testid={DynamicTestId.resolve(
+                      'overlay-load-url-button',
+                      'overlay-load-url-button'
+                    )}
                   >
                     {isLoadingUrl ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -581,7 +594,7 @@ export function OverlaySection() {
           checked={overlay.enabled}
           onCheckedChange={setOverlayEnabled}
           disabled={!overlay.file}
-          data-testid="overlay-enabled-switch"
+          data-testid={DynamicTestId.resolve('overlay-enabled-switch', 'overlay-enabled-switch')}
         />
       </div>
 
@@ -594,10 +607,14 @@ export function OverlaySection() {
               <HelpLink anchor="overlay-modes" />
             </Label>
             <Select value={overlay.mode} onValueChange={(v) => setOverlayMode(v as OverlayMode)}>
-              <SelectTrigger data-testid="overlay-mode-select">
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve('overlay-mode-select', 'overlay-mode-select')}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent data-testid="overlay-mode-content">
+              <SelectContent
+                data-testid={DynamicTestId.resolve('overlay-mode-content', 'overlay-mode-content')}
+              >
                 {availableModes.map((m) => (
                   <SelectItem key={m.value} value={m.value}>
                     {t(m.labelKey)}
@@ -624,7 +641,10 @@ export function OverlaySection() {
               min={0}
               max={100}
               step={1}
-              data-testid="overlay-intensity-slider"
+              data-testid={DynamicTestId.resolve(
+                'overlay-intensity-slider',
+                'overlay-intensity-slider'
+              )}
             />
           </div>
 
@@ -637,10 +657,20 @@ export function OverlaySection() {
               value={overlay.colorMode}
               onValueChange={(v) => setOverlayColorMode(v as ColorMode)}
             >
-              <SelectTrigger data-testid="overlay-color-mode-select">
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'overlay-color-mode-select',
+                  'overlay-color-mode-select'
+                )}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent data-testid="overlay-color-mode-content">
+              <SelectContent
+                data-testid={DynamicTestId.resolve(
+                  'overlay-color-mode-content',
+                  'overlay-color-mode-content'
+                )}
+              >
                 <SelectItem value="color">{t('overlay.fullColor')}</SelectItem>
                 <SelectItem value="grayscale">{t('overlay.grayscale')}</SelectItem>
                 <SelectItem value="bw">{t('overlay.bw')}</SelectItem>
@@ -656,7 +686,10 @@ export function OverlaySection() {
             <Switch
               checked={overlay.preserveFinders}
               onCheckedChange={setOverlayPreserveFinders}
-              data-testid="overlay-preserve-finders-switch"
+              data-testid={DynamicTestId.resolve(
+                'overlay-preserve-finders-switch',
+                'overlay-preserve-finders-switch'
+              )}
             />
           </div>
 

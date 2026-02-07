@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import { HelpLink } from '@/components/ui/help-link';
 import { Label } from '@/components/ui/label';
 import {
@@ -115,7 +116,7 @@ export function QREncodingSection() {
           </span>
         </div>
         <Slider
-          data-testid="qr-version-slider"
+          data-testid={DynamicTestId.resolve('qr-version-slider', 'qr-version-slider')}
           value={[localVersion]}
           onValueChange={([v]) => handleVersionChange(v)}
           min={0}
@@ -149,7 +150,10 @@ export function QREncodingSection() {
           onValueChange={(v) => setQrEcc(v as ECCLevel)}
           disabled={isArtworkMode}
         >
-          <SelectTrigger data-testid="qr-ecc-select" title={t('hints.errorCorrection')}>
+          <SelectTrigger
+            data-testid={DynamicTestId.resolve('qr-ecc-select', 'qr-ecc-select')}
+            title={t('hints.errorCorrection')}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -182,7 +186,7 @@ export function QREncodingSection() {
           </span>
         </div>
         <Slider
-          data-testid="qr-quiet-zone-slider"
+          data-testid={DynamicTestId.resolve('qr-quiet-zone-slider', 'qr-quiet-zone-slider')}
           value={[qr.quietZoneModules]}
           onValueChange={([v]) => setQrQuietZone(v)}
           min={0}
@@ -207,7 +211,13 @@ export function QREncodingSection() {
               value={qr.encodingMode}
               onValueChange={(v) => setQrEncodingMode(v as EncodingMode)}
             >
-              <SelectTrigger data-testid="qr-encoding-mode-select" title={t('hints.encodingMode')}>
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'qr-encoding-mode-select',
+                  'qr-encoding-mode-select'
+                )}
+                title={t('hints.encodingMode')}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -233,7 +243,10 @@ export function QREncodingSection() {
               onValueChange={(v) => setQrCharacterEncoding(v as CharacterEncoding)}
             >
               <SelectTrigger
-                data-testid="qr-character-encoding-select"
+                data-testid={DynamicTestId.resolve(
+                  'qr-character-encoding-select',
+                  'qr-character-encoding-select'
+                )}
                 title={t('hints.characterEncoding')}
               >
                 <SelectValue />
@@ -262,7 +275,13 @@ export function QREncodingSection() {
                 setQrMaskPattern(v === 'auto' ? 'auto' : (Number.parseInt(v, 10) as MaskPattern))
               }
             >
-              <SelectTrigger data-testid="qr-mask-pattern-select" title={t('hints.maskPattern')}>
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'qr-mask-pattern-select',
+                  'qr-mask-pattern-select'
+                )}
+                title={t('hints.maskPattern')}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -289,7 +308,10 @@ export function QREncodingSection() {
               <p className="text-xs text-muted-foreground">{t('qr.enforceMinQuietZoneDesc')}</p>
             </div>
             <Switch
-              data-testid="qr-quiet-zone-enforce-switch"
+              data-testid={DynamicTestId.resolve(
+                'qr-quiet-zone-enforce-switch',
+                'qr-quiet-zone-enforce-switch'
+              )}
               checked={qr.quietZoneMinEnforce}
               onCheckedChange={setQrQuietZoneMinEnforce}
               title={t('hints.enforceMinQuietZone')}
