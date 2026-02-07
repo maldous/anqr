@@ -71,6 +71,7 @@
     "loglevel": "^1.9.2",
     "loglevel-plugin-prefix": "^0.8.4",
     "lucide-react": "^0.562.0",
+    "netlify-cli": "^23.15.1",
     "open-location-code": "^1.0.3",
     "poissimple": "^0.0.5",
     "react": "^19.2.3",
