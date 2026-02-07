@@ -15,8 +15,12 @@
   ],
   "ignoreDependencies": [
     "@biomejs/biome",
-    "madge",
+    "cspell",
+    "jscpd",
+    "license-checker",
+    "lockfile-lint",
     "netlify-cli",
+    "type-coverage",
     "@capacitor/filesystem",
     "@capacitor/splash-screen",
     "@dnd-kit/core",

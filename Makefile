@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
+.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
 
 # ============================================
 # Help
@@ -9,7 +9,8 @@ help:
 	@echo "ANQR Makefile - Available targets:"
 	@echo ""
 	@echo "  WEB DEVELOPMENT"
-	@echo "    make install        Install npm dependencies"
+	@echo "    make install        Install npm dependencies + git hooks"
+	@echo "    make hooks          Install git hooks (lefthook + commitlint + lint-staged)"
 	@echo "    make dev            Start development server"
 	@echo "    make build          Build production bundle"
 	@echo "    make clean          Remove dist, node_modules, and Android build files"
@@ -69,7 +70,7 @@ help:
 	@echo "    make sonar-report   Get full issues report from SonarQube"
 	@echo ""
 	@echo "  UI TESTING (Playwright)"
-	@echo "    make quality        Run local quality gate (fix + typecheck + unit + audits + depcruise + knip)"
+	@echo "    make quality        Run comprehensive quality gate (18 checks: lint, types, coverage, deps, security, spelling)"
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
@@ -80,7 +81,7 @@ help:
 	@echo "    make test:required:strict  Fail if requirements are not direct-id backed"
 	@echo "    make test:required:gap  Generate required mapping debt report"
 	@echo "    make test:testid:refs  Validate tests only use managed test IDs"
-	@echo "    make test           Run ALL tests: quality gates + full unit suite + E2E (basic/advanced/pro/permutations)"
+	@echo "    make test           Run ALL tests: comprehensive quality gates + full unit suite + E2E"
 	@echo "    make test:basic     Run basic tier UI tests only"
 	@echo "    make test:advanced  Run advanced tier UI tests only"
 	@echo "    make test:pro       Run professional tier UI tests only"
@@ -182,6 +183,11 @@ export PATH := $(ANDROID_HOME)/tools:$(ANDROID_HOME)/platform-tools:$(PATH)
 
 install:
 	npm install
+	$(MAKE) hooks
+
+hooks:
+	npx lefthook install
+	@echo "Git hooks installed (pre-commit: lint-staged + typecheck, commit-msg: commitlint)"
 
 dev:
 	npm run dev
@@ -506,19 +512,29 @@ sonar-report:
 # Tests are organized by tier: basic, advanced, professional
 # Permutation tests run exhaustive setting combinations (very long!)
 
-# Shared quality gate steps used by both 'quality' and 'test'.
-# The caller sets UNIT_CMD to choose which unit-test npm script to run.
+# Shared quality gate pipeline used by both 'quality' and 'test'.
+# UNIT_CMD is set per-caller: test:unit:ci for quality, test:unit for test.
+# 18 checks: biome → tsc → lockfile → licenses → type-coverage → duplication →
+#   spelling → inventories → unit-tests → test-ids → i18n → depcruise → audit →
+#   osv-scanner → semgrep → knip
 _quality-gates:
 	$(MAKE) fix
+	npm run typecheck
+	npx lockfile-lint
+	npx license-checker --failOn 'AGPL-1.0-only;AGPL-1.0-or-later;AGPL-3.0-only;AGPL-3.0-or-later;GPL-2.0-only;GPL-3.0-only;GPL-3.0-or-later' --production
+	npx type-coverage --at-least 95 --strict --ignore-catch
+	npx jscpd src
+	npx cspell 'src/**/*.{ts,tsx}' '!src/i18n/**' --no-progress
 	npm run test:ids
 	npm run test:required
-	npm run typecheck
 	npm run $(UNIT_CMD)
 	npm run test:testid
 	npm run test:testid:refs
 	npm run test:i18n
 	npx depcruise --config .dependency-cruiser.cjs src
 	npm audit --audit-level=high
+	@which osv-scanner > /dev/null 2>&1 && osv-scanner --lockfile package-lock.json || echo 'osv-scanner not installed, skipping'
+	@which semgrep > /dev/null 2>&1 && semgrep --config auto src/ --exclude 'src/i18n/**' --severity WARNING --severity ERROR --error --quiet || echo 'semgrep not installed, skipping'
 	npx knip --include dependencies,unlisted
 
 quality: UNIT_CMD = test:unit:ci

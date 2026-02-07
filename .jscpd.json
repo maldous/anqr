@@ -1,0 +1,20 @@
+{
+  "threshold": 5,
+  "reporters": ["console"],
+  "ignore": [
+    "node_modules/**",
+    "dist/**",
+    "android/**",
+    ".netlify/**",
+    "src/i18n/**",
+    "reports/**",
+    "coverage/**",
+    "**/*.json",
+    "**/*.md",
+    "**/*.txt"
+  ],
+  "absolute": true,
+  "gitignore": true,
+  "minLines": 10,
+  "minTokens": 50
+}
