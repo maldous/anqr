@@ -1674,11 +1674,13 @@ async function handler(request: Request) {
     10,
     Math.max(0, Number.parseInt(params.get('border') || '0', 10))
   );
+  const quietZoneMinEnforce = params.has('qzEnforce') ? params.get('qzEnforce') !== '0' : undefined;
   const crispEdges = params.get('crisp') !== '0';
   const pixelSnap = params.get('snap') || 'floor';
   const perModuleColorMode = params.get('modColor') || 'solid';
   const contrastGuard = params.get('cGuard') === '1';
   const minContrastRatio = Number.parseFloat(params.get('minContrast') || '4.5');
+  const renderSeed = params.get('seed') ? Number.parseInt(params.get('seed') || '0', 10) : undefined;
 
   // Module styling
   const moduleStyle = params.get('style') || 'square';
@@ -1778,6 +1780,9 @@ async function handler(request: Request) {
 
   // Subpixel options
   const subpixelGridSize = params.get('spGrid') || '3x3';
+  const subpixelGridNum = params.get('spGridNum')
+    ? Number.parseInt(params.get('spGridNum') || '3', 10)
+    : undefined;
   const subpixelCenterRule = params.get('spCenter') || 'strict';
   const subpixelNeutralColor = params.get('spNeutral') ? `#${params.get('spNeutral')}` : '#808080';
   const subpixelFinderOverride = params.get('spFinder') || 'solid';
@@ -1852,7 +1857,10 @@ async function handler(request: Request) {
     Math.max(1, Number.isNaN(animationFramesRaw) ? 24 : animationFramesRaw)
   );
   // Ensure speed is valid to prevent division issues
-  const animationSpeedRaw = Number.parseInt(params.get('animSpeed') || '100', 10);
+  const animationSpeedRaw = Number.parseInt(
+    params.get('animSpeed') || params.get('speed') || '100',
+    10
+  );
   const animationSpeed = Math.min(
     1000,
     Math.max(10, Number.isNaN(animationSpeedRaw) ? 100 : animationSpeedRaw)
@@ -1977,8 +1985,10 @@ async function handler(request: Request) {
       encodingMode,
       maskPattern,
       characterEncoding,
+      seed: renderSeed,
       moduleSize,
       margin: margin + borderModulesExtra,
+      quietZoneMinEnforce,
       crispEdges,
       pixelSnap,
       fgColor: `#${fg}`,
@@ -2038,6 +2048,7 @@ async function handler(request: Request) {
       colorDither,
       // Subpixel options
       subpixelGridSize,
+      subpixelGrid: subpixelGridNum,
       subpixelCenterRule,
       subpixelNeutralColor,
       subpixelFinderOverride,
