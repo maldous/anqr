@@ -53,27 +53,29 @@ describe('qr-analyzer/safety.ts branch coverage', () => {
       expect(report.meetsAAA).toBe(false);
     });
 
-    it('invalid fg color → parseColor defaults to black, so contrast is calculated normally', () => {
-      // NOTE: parseColor() never returns null/undefined - it defaults to {r:0,g:0,b:0}
-      // for unrecognizable input. This means the early-return guard `if (!(fg && bg))`
-      // in analyzeContrast is dead code. Invalid colors are treated as black.
+    it('invalid fg color → guard returns defaults', () => {
       const report = analyzeContrast('not-a-color', '#ffffff');
-      // 'not-a-color' defaults to black → high contrast with white
-      expect(report.ratio).toBeGreaterThan(10);
-      expect(report.meetsAA).toBe(true);
-      expect(report.fgLuminance).toBeCloseTo(0, 2);
-    });
-
-    it('invalid bg color → parseColor defaults to black', () => {
-      const report = analyzeContrast('#000000', 'xyz');
-      // Both default to black → ratio ~1
-      expect(report.ratio).toBeCloseTo(1, 0);
+      expect(report.ratio).toBe(1);
       expect(report.meetsAA).toBe(false);
+      expect(report.meetsAAA).toBe(false);
+      expect(report.fgLuminance).toBe(0);
+      expect(report.bgLuminance).toBe(0);
     });
 
-    it('both invalid → both default to black', () => {
+    it('invalid bg color → guard returns defaults', () => {
+      const report = analyzeContrast('#000000', 'xyz');
+      expect(report.ratio).toBe(1);
+      expect(report.meetsAA).toBe(false);
+      expect(report.meetsAAA).toBe(false);
+      expect(report.fgLuminance).toBe(0);
+      expect(report.bgLuminance).toBe(0);
+    });
+
+    it('both invalid → guard returns defaults', () => {
       const report = analyzeContrast('xyz', 'abc');
-      expect(report.ratio).toBeCloseTo(1, 0);
+      expect(report.ratio).toBe(1);
+      expect(report.meetsAA).toBe(false);
+      expect(report.meetsAAA).toBe(false);
     });
 
     it('dark red on white → hits luminance > 0.03928 branch for R, <= branch for G/B', () => {

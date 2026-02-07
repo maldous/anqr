@@ -16,7 +16,7 @@ describe('auto-testid', () => {
       <button aria-label="Save">Save</button>
       <input name="email" />
       <a href="/x">Link</a>
-      <button data-testid="existing-id">Has Existing</button>
+      <button data-testid="export-button">Has Existing</button>
     `;
 
     initAutoDynamicTestIds();
@@ -25,7 +25,7 @@ describe('auto-testid', () => {
     expect(btn.getAttribute('data-testid')).toMatch(/^auto-button-save/);
     expect(input.getAttribute('data-testid')).toMatch(/^auto-input-email/);
     expect(link.getAttribute('data-testid')).toMatch(/^auto-a-link/);
-    expect(existing.getAttribute('data-testid')).toBe('existing-id');
+    expect(existing.getAttribute('data-testid')).toBe('export-button');
 
     expect(btn.getAttribute('data-auto-testid-key')).toBeTruthy();
     expect(input.getAttribute('data-auto-testid-key')).toBeTruthy();

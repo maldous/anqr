@@ -224,7 +224,9 @@ export function preprocessImageData(
     // Parse hex color strings into RGB objects for duotone filter
     const lightRgb = parseColor(config.filterDuotone1);
     const darkRgb = parseColor(config.filterDuotone2);
-    filterOptions.duotone = { light: lightRgb, dark: darkRgb };
+    if (lightRgb && darkRgb) {
+      filterOptions.duotone = { light: lightRgb, dark: darkRgb };
+    }
   }
 
   // CRITICAL: Map colorMode to filterOptions.colorMode
