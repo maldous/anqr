@@ -27,6 +27,19 @@ import {
   isVersionInfo,
 } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
+import {
+  BUCKET_SHIFT,
+  DARK_DESIRE_MAX,
+  DARK_DESIRE_MIN,
+  DARK_REGION_END,
+  HISTOGRAM_BUCKETS,
+  LIGHT_DESIRE_MAX,
+  LIGHT_DESIRE_MIN,
+  LIGHT_REGION_START,
+  MAX_VALLEY_RATIO,
+  MIN_PEAK_RATIO,
+  MIN_PEAK_SEPARATION,
+} from './dithering-constants';
 import type {
   CreateCanvasFn,
   PixelDecisionMatrix,
@@ -39,24 +52,8 @@ const log = createLogger('DITHER');
 
 type RGBi = { r: number; g: number; b: number };
 
-// ============================================
-// HIGH-CONTRAST B&W DETECTION AND QR-FIRST MODE
-// ============================================
-
-/**
- * Number of histogram buckets for luminance analysis.
- */
-const HISTOGRAM_BUCKETS = 32;
-const BUCKET_SHIFT = 3; // 8 - 5 bits = shift by 3
-
-/**
- * Thresholds for bimodal B&W detection
- */
-const DARK_REGION_END = 8;
-const LIGHT_REGION_START = 24;
-const MIN_PEAK_RATIO = 0.12;
-const MAX_VALLEY_RATIO = 0.2;
-const MIN_PEAK_SEPARATION = 16;
+/** Ratio of original overlay color preserved when blending with dithered output (color dither mode). */
+const COLOR_PRESERVE_RATIO = 0.7;
 
 /**
  * Detect if overlay image is high-contrast B&W from canvas data.
@@ -183,7 +180,7 @@ async function generateBWFirstMatrix(
       matrix[y][x] = qrIsDark;
 
       // Calculate overlay brightness (0 = black, 1 = white)
-      let overlayBrightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+      let overlayBrightness = rgbToGray(r, g, b) / 255;
 
       // Apply contrast curve to enhance spiral visibility
       // For dark overlay regions, make them darker; for bright regions, make them brighter
@@ -255,7 +252,7 @@ async function generateBWFirstMatrix(
 }
 
 function luma01(r: number, g: number, b: number): number {
-  return (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+  return rgbToGray(r, g, b) / 255;
 }
 
 function clamp01(x: number): number {
@@ -678,32 +675,25 @@ export async function generateDitheredMatrix(
 
         // Blend toward QR bit for scannability
         let d = lerp(qrIsDark ? 1 : 0, 1 - ditheredLuma, mix);
-        // Soft clamp keeps values within ranges that preserve QR scannability
-        // The ranges are chosen to keep desire on the "correct" side of 0.5:
-        // - Dark modules: 0.55-0.95 ensures majority dark pixels (avg > 55%)
-        // - Light modules: 0.05-0.45 ensures majority light pixels (avg < 45%)
-        // This prevents high-contrast B&W overlays from overwhelming QR data
+        // Soft-clamp keeps desire within DARK_DESIRE / LIGHT_DESIRE ranges
+        // so the dithered output preserves QR scannability
         if (qrIsDark) {
-          d = clamp01(lerp(0.55, 0.95, d));
+          d = clamp01(lerp(DARK_DESIRE_MIN, DARK_DESIRE_MAX, d));
         } else {
-          d = clamp01(lerp(0.05, 0.45, d));
+          d = clamp01(lerp(LIGHT_DESIRE_MIN, LIGHT_DESIRE_MAX, d));
         }
         desire[y][x] = d;
 
-        // Use standard 0.5 threshold - the soft-clamped ranges and enforceModuleConstraints
-        // post-pass will ensure QR scannability
         const isDark = d >= 0.5;
         matrix[y][x] = isDark;
 
-        // Store the dithered color (scale back to 0-255 but keep original RGB for better color)
-        // Use a blend between original and dithered for richer color output
-        const colorBlend = 0.7; // Keep mostly original color for visual quality
+        // Blend original and dithered color for richer output
         colors[y][x] =
           config.colorMode !== 'bw'
             ? ({
-                r: Math.round(r * colorBlend + rNew * 255 * (1 - colorBlend)),
-                g: Math.round(g * colorBlend + gNew * 255 * (1 - colorBlend)),
-                b: Math.round(b * colorBlend + bNew * 255 * (1 - colorBlend)),
+                r: Math.round(r * COLOR_PRESERVE_RATIO + rNew * 255 * (1 - COLOR_PRESERVE_RATIO)),
+                g: Math.round(g * COLOR_PRESERVE_RATIO + gNew * 255 * (1 - COLOR_PRESERVE_RATIO)),
+                b: Math.round(b * COLOR_PRESERVE_RATIO + bNew * 255 * (1 - COLOR_PRESERVE_RATIO)),
               } as RGBi)
             : null;
 
@@ -726,22 +716,17 @@ export async function generateDitheredMatrix(
         const overlayDark = 1 - luma01(r, g, b);
         let d = lerp(qrIsDark ? 1 : 0, overlayDark, mix);
 
-        // Soft clamp keeps values within ranges that preserve QR scannability
-        // The ranges are chosen to keep desire on the "correct" side of 0.5:
-        // - Dark modules: 0.55-0.95 ensures majority dark pixels (avg > 55%)
-        // - Light modules: 0.05-0.45 ensures majority light pixels (avg < 45%)
-        // This prevents high-contrast B&W overlays from overwhelming QR data
+        // Soft-clamp keeps desire within DARK_DESIRE / LIGHT_DESIRE ranges
+        // so the dithered output preserves QR scannability
         if (qrIsDark) {
-          d = clamp01(lerp(0.55, 0.95, d));
+          d = clamp01(lerp(DARK_DESIRE_MIN, DARK_DESIRE_MAX, d));
         } else {
-          d = clamp01(lerp(0.05, 0.45, d));
+          d = clamp01(lerp(LIGHT_DESIRE_MIN, LIGHT_DESIRE_MAX, d));
         }
         desire[y][x] = d;
 
         // Error diffusion over desired darkness
         const adjusted = d + errors[y][x];
-        // Use standard 0.5 threshold - the soft-clamped ranges and enforceModuleConstraints
-        // post-pass will ensure QR scannability
         const isDark = adjusted >= 0.5;
         matrix[y][x] = isDark;
         colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
@@ -881,15 +866,12 @@ export async function generateBlueNoiseMatrix(
 
       const overlayDark = 1 - luma01(r, g, b);
       let d = lerp(qrIsDark ? 1 : 0, overlayDark, intensity);
-      // Soft clamp keeps values within ranges that preserve QR scannability
-      // The ranges are chosen to keep desire on the "correct" side of 0.5:
-      // - Dark modules: 0.55-0.95 ensures majority dark pixels (avg > 55%)
-      // - Light modules: 0.05-0.45 ensures majority light pixels (avg < 45%)
-      // This prevents high-contrast B&W overlays from overwhelming QR data
+      // Soft-clamp keeps desire within DARK_DESIRE / LIGHT_DESIRE ranges
+      // so the dithered output preserves QR scannability
       if (qrIsDark) {
-        d = clamp01(lerp(0.55, 0.95, d));
+        d = clamp01(lerp(DARK_DESIRE_MIN, DARK_DESIRE_MAX, d));
       } else {
-        d = clamp01(lerp(0.05, 0.45, d));
+        d = clamp01(lerp(LIGHT_DESIRE_MIN, LIGHT_DESIRE_MAX, d));
       }
       desire[y][x] = d;
 

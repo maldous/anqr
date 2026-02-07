@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Voer asseblief 'n URL in",
     "preview": "Voorskou",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-eerste modus",
+    "qrFirstModeHelp": "Forseer QR-dataprioriteit bo oorleg vir hoë-kontras S&W beelde",
+    "artworkMode": "Kunswerk",
+    "artworkModeInfo": "Kunswerkmodus soek URL-fragmente wat die QR-patroon by jou prent laat pas. Resultate verskil - werk die beste met eenvoudige beelde met hoë kontras. Vir komplekse beelde kan ander oorlegmodusse soos Dithered of Halftoon beter resultate lewer.",
+    "searchIterations": "Soek Iterasies",
+    "searchIterationsHelp": "Meer iterasies = beter pasmaat maar stadiger generasie. 10 000-50 000 aanbeveel vir die meeste beelde.",
+    "artworkRequiresLowEcc": "Kunswerkmodus vereis Lae foutkorreksie vir maksimum piekselbeheer."
   },
   "welcome": {
     "title": "Welkom by ANQR",

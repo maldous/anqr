@@ -1275,7 +1275,11 @@ export const useQRStore = create<QRState>((set, get) => ({
   setOverlayBrightness: (brightness) => set((s) => ({ overlay: { ...s.overlay, brightness } })),
   setOverlayContrast: (contrast) => set((s) => ({ overlay: { ...s.overlay, contrast } })),
   setOverlayGamma: (gamma) => set((s) => ({ overlay: { ...s.overlay, gamma } })),
-  setOverlayMode: (mode) => set((s) => ({ overlay: { ...s.overlay, mode } })),
+  setOverlayMode: (mode) =>
+    set((s) => ({
+      overlay: { ...s.overlay, mode },
+      ...(mode === 'artwork' ? { qr: { ...s.qr, ecc: 'L' as ECCLevel, version: 6 } } : {}),
+    })),
   setOverlayIntensity: (intensity) => set((s) => ({ overlay: { ...s.overlay, intensity } })),
   setOverlayPreserveFinders: (preserveFinders) =>
     set((s) => ({ overlay: { ...s.overlay, preserveFinders } })),

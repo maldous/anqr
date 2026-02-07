@@ -16,8 +16,8 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { getLengthInBits } from '../qr-encoder/utils';
 import { QRMode } from '../qr-encoder/types';
+import { getLengthInBits } from '../qr-encoder/utils';
 import { type ECCLevel, getRSBlockInfo } from './bit-mapping';
 
 const log = createLogger('QART');
@@ -263,7 +263,7 @@ export function mapAllowedRangesToBlocks(
 
     for (let linearBit = range.startBit; linearBit < range.endBit; linearBit++) {
       const linearByte = Math.floor(linearBit / 8);
-      const bitInByte = linearBit % 8;  // 0 = MSB (first bit in stream)
+      const bitInByte = linearBit % 8; // 0 = MSB (first bit in stream)
 
       // Skip if beyond total buffer
       if (linearByte >= totalLinearBytes) {
@@ -294,12 +294,12 @@ export function mapAllowedRangesToBlocks(
   let totalAllowedBits = 0;
   for (const [blockIdx, allowedSet] of blockAllowedBits) {
     totalAllowedBits += allowedSet.size;
-    
+
     // Find the range of allowed local bits for logging
     const sortedBits = Array.from(allowedSet).sort((a, b) => a - b);
     const minBit = sortedBits.length > 0 ? sortedBits[0] : -1;
     const maxBit = sortedBits.length > 0 ? sortedBits[sortedBits.length - 1] : -1;
-    
+
     log.info('Block allowed bits mapped (LINEAR algorithm)', {
       blockIndex: blockIdx,
       allowedBitCount: allowedSet.size,
@@ -307,7 +307,8 @@ export function mapAllowedRangesToBlocks(
       blockDataBytes: blocks[blockIdx].dataCount,
       blockTotalBits: blocks[blockIdx].dataCount * 8,
       localBitRange: minBit >= 0 ? `${minBit} - ${maxBit}` : 'none',
-      localByteRange: minBit >= 0 ? `${Math.floor(minBit / 8)} - ${Math.floor(maxBit / 8)}` : 'none',
+      localByteRange:
+        minBit >= 0 ? `${Math.floor(minBit / 8)} - ${Math.floor(maxBit / 8)}` : 'none',
       linearByteRange: `${blockStartBytes[blockIdx]} - ${blockEndBytes[blockIdx] - 1}`,
     });
   }
@@ -317,7 +318,8 @@ export function mapAllowedRangesToBlocks(
     numBlocks,
     inputRanges: allowedRanges.map((r) => `${r.startBit}-${r.endBit}`),
     expectedBits: allowedRanges.reduce((sum, r) => sum + (r.endBit - r.startBit), 0),
-    matches: totalAllowedBits === allowedRanges.reduce((sum, r) => sum + (r.endBit - r.startBit), 0),
+    matches:
+      totalAllowedBits === allowedRanges.reduce((sum, r) => sum + (r.endBit - r.startBit), 0),
   });
 
   return blockAllowedBits;

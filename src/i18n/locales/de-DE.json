@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Bitte geben Sie eine URL ein",
     "preview": "Vorschau",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-First-Modus",
+    "qrFirstModeHelp": "Erzwingen Sie die Priorität von QR-Daten gegenüber der Überlagerung für kontrastreiche Schwarzweißbilder",
+    "artworkMode": "Kunstwerk",
+    "artworkModeInfo": "Der Grafikmodus sucht nach URL-Fragmenten, die dafür sorgen, dass das QR-Muster zu Ihrem Bild passt. Die Ergebnisse variieren – funktioniert am besten mit einfachen, kontrastreichen Bildern. Bei komplexen Bildern können andere Überlagerungsmodi wie Dithered oder Halftone bessere Ergebnisse liefern.",
+    "searchIterations": "Suchiterationen",
+    "searchIterationsHelp": "Mehr Iterationen = bessere Übereinstimmung, aber langsamere Generierung. Für die meisten Bilder werden 10.000–50.000 empfohlen.",
+    "artworkRequiresLowEcc": "Der Grafikmodus erfordert eine geringe Fehlerkorrektur für maximale Pixelkontrolle."
   },
   "welcome": {
     "title": "Willkommen bei ANQR",

@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Proszę podać adres URL",
     "preview": "Podgląd",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "Tryb QR-First",
+    "qrFirstModeHelp": "Wymuś priorytet danych QR nad nakładką w przypadku obrazów czarno-białych o wysokim kontraście",
+    "artworkMode": "Grafika",
+    "artworkModeInfo": "Tryb graficzny wyszukuje fragmenty adresu URL, które sprawiają, że wzór QR pasuje do Twojego obrazu. Wyniki są różne — najlepiej sprawdza się w przypadku prostych obrazów o wysokim kontraście. W przypadku złożonych obrazów lepsze rezultaty mogą dać inne tryby nakładania, takie jak Dithered lub Halftone.",
+    "searchIterations": "Szukaj iteracji",
+    "searchIterationsHelp": "Więcej iteracji = lepsze dopasowanie, ale wolniejsze generowanie. W przypadku większości obrazów zalecana jest wartość 10 000–50 000.",
+    "artworkRequiresLowEcc": "Tryb graficzny wymaga niskiej korekcji błędów w celu zapewnienia maksymalnej kontroli pikseli."
   },
   "welcome": {
     "title": "Witamy w ANQR",

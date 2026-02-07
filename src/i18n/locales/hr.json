@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Unesite URL",
     "preview": "Pregled",
     "sobel": "Sobel",
-    "canny": "lukav"
+    "canny": "lukav",
+    "qrFirstMode": "QR-First Mode",
+    "qrFirstModeHelp": "Forsirajte prioritet QR podataka u odnosu na sloj za crno-bijele slike visokog kontrasta",
+    "artworkMode": "Umjetnička djela",
+    "artworkModeInfo": "Način rada Artwork traži fragmente URL-a zbog kojih QR uzorak odgovara vašoj slici. Rezultati variraju - najbolje funkcionira s jednostavnim slikama visokog kontrasta. Za složene slike, drugi načini preklapanja kao što su Dithered ili Halftone mogu dati bolje rezultate.",
+    "searchIterations": "Iteracije pretraživanja",
+    "searchIterationsHelp": "Više ponavljanja = bolje podudaranje, ali sporije generiranje. 10.000-50.000 preporučeno za većinu slika.",
+    "artworkRequiresLowEcc": "Način rada Artwork zahtijeva Low error correction za maksimalnu kontrolu piksela."
   },
   "welcome": {
     "title": "Dobrodošli u ANQR",

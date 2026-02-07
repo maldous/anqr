@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "請輸入網址",
     "preview": "預覽",
     "sobel": "索貝爾",
-    "canny": "精明的"
+    "canny": "精明的",
+    "qrFirstMode": "QR優先模式",
+    "qrFirstModeHelp": "對於高對比度黑白圖像，強制 QR 數據優先於疊加",
+    "artworkMode": "藝術品",
+    "artworkModeInfo": "圖稿模式搜索使 QR 圖案與您的圖像匹配的 URL 片段。結果各不相同 - 最適合簡單、高對比度的圖像。對於復雜的圖像，其他疊加模式（例如抖動或半色調）可能會產生更好的結果。",
+    "searchIterations": "搜索迭代",
+    "searchIterationsHelp": "更多迭代=更好的匹配但生成速度更慢。對於大多數圖像，建議使用 10,000-50,000。",
+    "artworkRequiresLowEcc": "圖稿模式需要低誤差校正以實現最大像素控制。"
   },
   "welcome": {
     "title": "歡迎來到ANQR",

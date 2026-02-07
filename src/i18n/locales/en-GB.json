@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Please enter a URL",
     "preview": "Preview",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-First Mode",
+    "qrFirstModeHelp": "Force QR data priority over overlay for high-contrast B&W images",
+    "artworkMode": "Artwork",
+    "artworkModeInfo": "Artwork mode searches for URL fragments that make the QR pattern match your image. Results vary - works best with simple, high-contrast images. For complex images, other overlay modes like Dithered or Halftone may produce better results.",
+    "searchIterations": "Search Iterations",
+    "searchIterationsHelp": "More iterations = better match but slower generation. 10,000-50,000 recommended for most images.",
+    "artworkRequiresLowEcc": "Artwork mode requires Low error correction for maximum pixel control."
   },
   "welcome": {
     "title": "Welcome to ANQR",

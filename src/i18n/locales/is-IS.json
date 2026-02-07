@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Vinsamlegast sláðu inn vefslóð",
     "preview": "Forskoðun",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-First Mode",
+    "qrFirstModeHelp": "Þvingaðu QR gagnaforgang fram yfir yfirborð fyrir svart-hvítar myndir með mikilli birtuskil",
+    "artworkMode": "Listaverk",
+    "artworkModeInfo": "Myndlistarstilling leitar að vefslóðarbrotum sem láta QR-mynstrið passa við myndina þína. Niðurstöður eru mismunandi - virkar best með einföldum myndum með mikilli birtuskil. Fyrir flóknar myndir geta aðrar yfirlagsstillingar eins og dreifður eða hálftónn skilað betri árangri.",
+    "searchIterations": "Leita endurtekningar",
+    "searchIterationsHelp": "Fleiri endurtekningar = betri samsvörun en hægari kynslóð. Mælt er með 10.000-50.000 fyrir flestar myndir.",
+    "artworkRequiresLowEcc": "Myndlistarstilling krefst lítillar villuleiðréttingar fyrir hámarks pixelstýringu."
   },
   "welcome": {
     "title": "Velkomin í ANQR",

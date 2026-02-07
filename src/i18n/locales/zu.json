@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Sicela ufake i-URL",
     "preview": "Buka kuqala",
     "sobel": "Sobel",
-    "canny": "UCanny"
+    "canny": "UCanny",
+    "qrFirstMode": "Imodi ye-QR-Yokuqala",
+    "qrFirstModeHelp": "Phoqa idatha ye-QR kuqala ngaphezu kwembondela yezithombe ze-B&W ezinomehluko ophezulu",
+    "artworkMode": "Umsebenzi wobuciko",
+    "artworkModeInfo": "Imodi yomsebenzi wobuciko isesha izingcezu ze-URL ezenza iphethini ye-QR ifane nesithombe sakho. Imiphumela iyahlukahluka - isebenza kangcono ngezithombe ezilula, ezinomehluko ophezulu. Ezithombeni eziyinkimbinkimbi, ezinye izindlela zokumbondela ezifana ne-Dithered noma i-Halftone zingaveza imiphumela engcono.",
+    "searchIterations": "Sesha Ukuphindaphinda",
+    "searchIterationsHelp": "Ukuphindaphinda okwengeziwe = ukufanisa okungcono kodwa isizukulwane esihamba kancane. 10,000-50,000 inconyelwe izithombe eziningi.",
+    "artworkRequiresLowEcc": "Imodi yomsebenzi wobuciko idinga ukulungiswa kwephutha eliphansi ukuze uthole isilawuli se-pixel esiphezulu."
   },
   "welcome": {
     "title": "Siyakwamukela ku-ANQR",

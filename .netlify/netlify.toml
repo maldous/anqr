@@ -109,6 +109,27 @@ for = "/manifest.json"
 Cache-Control = "public, max-age=86400, stale-while-revalidate=3600"
 
 [[headers]]
+for = "/sw.js"
+
+[headers.values]
+Cache-Control = "no-cache"
+Content-Type = "application/javascript"
+
+[[headers]]
+for = "/workbox-*.js"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Content-Type = "application/javascript"
+
+[[headers]]
+for = "/registerSW.js"
+
+[headers.values]
+Cache-Control = "no-cache"
+Content-Type = "application/javascript"
+
+[[headers]]
 for = "/*"
 
 [headers.values]
@@ -119,6 +140,42 @@ from = "/api/qr"
 to = "/.netlify/functions/qr"
 status = 200.0
 force = true
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
+
+[[redirects]]
+from = "/sw.js"
+to = "/sw.js"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
+
+[[redirects]]
+from = "/workbox-*.js"
+to = "/workbox-:splat.js"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
+
+[[redirects]]
+from = "/registerSW.js"
+to = "/registerSW.js"
+status = 200.0
+force = false
 
 [redirects.query]
 

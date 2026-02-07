@@ -19,15 +19,16 @@ export function mapImageToTargetsSupersampled(
     imageData = image;
   } else if (
     image &&
-    typeof (image as ImageData).width === 'number' &&
-    typeof (image as ImageData).height === 'number' &&
-    (image as ImageData).data != null
+    typeof (image as unknown as ImageData).width === 'number' &&
+    typeof (image as unknown as ImageData).height === 'number' &&
+    (image as unknown as ImageData).data != null
   ) {
     // Accept ImageData-like objects (e.g., Node test fixtures)
-    const candidate = image as ImageData;
+    const candidate = image as unknown as ImageData;
     const data = candidate.data;
     imageData = {
-      data: data instanceof Uint8ClampedArray ? data : new Uint8ClampedArray(data as ArrayLike<number>),
+      data:
+        data instanceof Uint8ClampedArray ? data : new Uint8ClampedArray(data as ArrayLike<number>),
       width: candidate.width,
       height: candidate.height,
     } as ImageData;
@@ -43,7 +44,12 @@ export function mapImageToTargetsSupersampled(
         importance: Array.from({ length: moduleCount }, () => Array(moduleCount).fill(0)),
       };
     }
-    imageData = ctx.getImageData(0, 0, (image as HTMLCanvasElement | OffscreenCanvas).width, (image as HTMLCanvasElement | OffscreenCanvas).height);
+    imageData = ctx.getImageData(
+      0,
+      0,
+      (image as HTMLCanvasElement | OffscreenCanvas).width,
+      (image as HTMLCanvasElement | OffscreenCanvas).height
+    );
   }
 
   const targets: boolean[][] = [];

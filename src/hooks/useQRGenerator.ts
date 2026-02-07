@@ -32,13 +32,7 @@ import {
 } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
-import {
-  canUseFragmentSearch,
-  generateFullQArt,
-  generateFullQArtOptimal,
-  getBaseUrl,
-  searchBestFragment,
-} from '@/modules/qr-art';
+import { generateFullQArt, generateFullQArtOptimal } from '@/modules/qr-art';
 import { QRGenerator } from '@/modules/qr-generator';
 import { useQRStore } from '@/store/qr-store';
 
@@ -315,9 +309,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
         warnings.push(`Quiet zone increased to ${safety.minQuietZoneModules} modules`);
       }
 
-      // Check overlay intensity against ECC capacity
-      const maxIntensityByEcc: Record<string, number> = { L: 30, M: 50, Q: 70, H: 85 };
-      const maxSafeIntensity = maxIntensityByEcc[effectiveEcc] || 50;
+      // Check overlay intensity against ECC capacity (use store-configured limits)
+      const maxSafeIntensity = safety.maxOverlayIntensityByEcc[effectiveEcc] ?? 50;
 
       if (safety.mode === 'strict' && overlay.enabled && overlay.intensity > maxSafeIntensity) {
         adjustedIntensity = maxSafeIntensity;
@@ -372,6 +365,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     safety.mode,
     safety.minModulePx,
     safety.minQuietZoneModules,
+    safety.maxOverlayIntensityByEcc,
     render.modulePx,
     render.moduleGapPercent,
     render.moduleStyle,
@@ -536,7 +530,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       overlayMode: overlay.enabled ? overlay.mode : undefined,
       overlayIntensity: safetyAdjustedConfig.intensity,
       colorMode: overlay.colorMode,
-      invertImage: overlay.invert,
+      maxOverlayIntensityByEcc: safety.maxOverlayIntensityByEcc,
       // Safety locks only apply when safety mode is enabled (not 'off')
       // This allows users to toggle preserve options in the overlay section when safety is off
       preserveFinders: (safety.mode !== 'off' && safety.lockFinders) || overlay.preserveFinders,
@@ -725,6 +719,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     safety.lockVersion,
     safety.minModulePx,
     safety.minQuietZoneModules,
+    safety.maxOverlayIntensityByEcc,
   ]);
 
   // Debounce config changes to prevent excessive regeneration
@@ -1135,7 +1130,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     try {
       // Build effective config - may be modified by QR-Art fragment search
-      let effectiveConfig = { ...debouncedConfig };
+      const effectiveConfig = { ...debouncedConfig };
 
       // QR-Art: if artwork mode is selected, try full RS basis manipulation first, then fall back to fragment search
       if (overlay.enabled && overlay.mode === 'artwork' && overlayCanvas) {
@@ -1175,9 +1170,9 @@ export function useQRGenerator(): UseQRGeneratorResult {
               });
 
           // Use full QR-Art result if successful, regardless of match percentage
-        // The RS basis manipulation algorithm is mathematically correct and produces valid QR codes
-        // Low match percentage just means limited image visibility, not invalid QR
-        if (fullQArtResult.success && fullQArtResult.encodedData) {
+          // The RS basis manipulation algorithm is mathematically correct and produces valid QR codes
+          // Low match percentage just means limited image visibility, not invalid QR
+          if (fullQArtResult.success && fullQArtResult.encodedData) {
             log.info('Full QR-Art generation successful', {
               matchPercentage: `${fullQArtResult.matchPercentage.toFixed(1)}%`,
               matchingPixels: fullQArtResult.matchingPixels,
@@ -1189,7 +1184,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
             // CRITICAL: Use renderFromMatrix() to render the QR-Art matrix with proper styling.
             // This ensures proper module styling, contrast, and quality for phone scannability.
-            // 
+            //
             // IMPORTANT: We cannot use qrGenerator.generate() with encodedData because QR-Art
             // modifies the encoded codewords via RS basis manipulation - those modifications
             // are in the matrix, not in the input string. Re-encoding would produce the base

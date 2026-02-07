@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Vänligen ange en URL",
     "preview": "Förhandsgranskning",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-först läge",
+    "qrFirstModeHelp": "Tvinga QR-dataprioritet över överlagring för svartvita bilder med hög kontrast",
+    "artworkMode": "Konstverk",
+    "artworkModeInfo": "Konstverksläget söker efter URL-fragment som gör att QR-mönstret matchar din bild. Resultaten varierar – fungerar bäst med enkla bilder med hög kontrast. För komplicerade bilder kan andra överlagringslägen, som Raster eller Halvton, ge bättre resultat.",
+    "searchIterations": "Sök Iterationer",
+    "searchIterationsHelp": "Fler iterationer = bättre matchning men långsammare generering. 10 000-50 000 rekommenderas för de flesta bilder.",
+    "artworkRequiresLowEcc": "Artwork-läget kräver låg felkorrigering för maximal pixelkontroll."
   },
   "welcome": {
     "title": "Välkommen till ANQR",

@@ -29,6 +29,7 @@ export function QREncodingSection() {
   const {
     tier,
     qr,
+    overlay,
     setQrVersion,
     setQrEcc,
     setQrEncodingMode,
@@ -38,6 +39,8 @@ export function QREncodingSection() {
     setQrQuietZoneMinEnforce,
     getPayloadText,
   } = useQRStore();
+
+  const isArtworkMode = overlay.enabled && overlay.mode === 'artwork';
   const { t } = useTranslation();
 
   // Local version state for immediate slider feedback
@@ -141,7 +144,11 @@ export function QREncodingSection() {
           </Label>
           <HelpLink anchor="section-6" />
         </div>
-        <Select value={qr.ecc} onValueChange={(v) => setQrEcc(v as ECCLevel)}>
+        <Select
+          value={qr.ecc}
+          onValueChange={(v) => setQrEcc(v as ECCLevel)}
+          disabled={isArtworkMode}
+        >
           <SelectTrigger data-testid="qr-ecc-select" title={t('hints.errorCorrection')}>
             <SelectValue />
           </SelectTrigger>
@@ -152,7 +159,13 @@ export function QREncodingSection() {
             <SelectItem value="H">{t('qr.high')}</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">{t('hints.higherEccLargerQr')}</p>
+        {isArtworkMode ? (
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            {t('overlay.artworkRequiresLowEcc')}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">{t('hints.higherEccLargerQr')}</p>
+        )}
       </div>
 
       {/* Quiet Zone / Margin */}

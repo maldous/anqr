@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Tafadhali weka URL",
     "preview": "Hakiki",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "Hali ya QR-Kwanza",
+    "qrFirstModeHelp": "Lazimisha kipaumbele cha data ya QR juu ya uwekeleaji kwa picha za B&W zenye utofauti wa juu",
+    "artworkMode": "Mchoro",
+    "artworkModeInfo": "Hali ya mchoro hutafuta vipande vya URL vinavyofanya mchoro wa QR ulingane na picha yako. Matokeo hutofautiana - hufanya kazi vyema kwa picha rahisi na zenye utofautishaji wa juu. Kwa picha changamano, njia zingine za kuwekelea kama vile Dithered au Halftone zinaweza kutoa matokeo bora zaidi.",
+    "searchIterations": "Tafuta Marudio",
+    "searchIterationsHelp": "Marudio zaidi = mechi bora lakini kizazi polepole. 10,000-50,000 zinazopendekezwa kwa picha nyingi.",
+    "artworkRequiresLowEcc": "Hali ya mchoro inahitaji marekebisho ya hitilafu ya Chini kwa udhibiti wa juu wa pikseli."
   },
   "welcome": {
     "title": "Karibu ANQR",

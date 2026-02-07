@@ -1462,7 +1462,8 @@
     "artworkMode": "1798",
     "artworkModeInfo": "1799",
     "searchIterations": "1800",
-    "searchIterationsHelp": "1801"
+    "searchIterationsHelp": "1801",
+    "artworkRequiresLowEcc": "1802"
   },
   "welcome": {
     "title": "1423",

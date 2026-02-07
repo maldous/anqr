@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Pakisuyong pumasok sa isang URL",
     "preview": "Patiunang Pag - isipan",
     "sobel": "Sobelo",
-    "canny": "Katanga"
+    "canny": "Katanga",
+    "qrFirstMode": "QR-Unang Mode",
+    "qrFirstModeHelp": "Pilitin ang priority ng QR data sa overlay para sa mga high-contrast na B&W na larawan",
+    "artworkMode": "likhang sining",
+    "artworkModeInfo": "Naghahanap ang artwork mode ng mga fragment ng URL na nagpapatugma sa pattern ng QR sa iyong larawan. Nag-iiba-iba ang mga resulta - pinakamahusay na gumagana sa simple at mataas na contrast na mga larawan. Para sa mga kumplikadong larawan, ang iba pang mga overlay na mode tulad ng Dithered o Halftone ay maaaring makagawa ng mas magagandang resulta.",
+    "searchIterations": "Mga Pag-uulit ng Paghahanap",
+    "searchIterationsHelp": "Higit pang mga pag-ulit = mas mahusay na tugma ngunit mas mabagal na henerasyon. 10,000-50,000 ang inirerekomenda para sa karamihan ng mga larawan.",
+    "artworkRequiresLowEcc": "Nangangailangan ang artwork mode ng Mababang error correction para sa maximum na pixel control."
   },
   "welcome": {
     "title": "Maligayang Pagdating sa ANQR",

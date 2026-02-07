@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Por favor, introduzca una URL",
     "preview": "Vista previa",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "Primer modo QR",
+    "qrFirstModeHelp": "Forzar la prioridad de los datos QR sobre la superposición para imágenes en blanco y negro de alto contraste",
+    "artworkMode": "Obra de arte",
+    "artworkModeInfo": "El modo de ilustración busca fragmentos de URL que hacen que el patrón QR coincida con su imagen. Los resultados varían: funciona mejor con imágenes simples y de alto contraste. Para imágenes complejas, otros modos de superposición como Dithered o Halftone pueden producir mejores resultados.",
+    "searchIterations": "Iteraciones de búsqueda",
+    "searchIterationsHelp": "Más iteraciones = mejor coincidencia pero generación más lenta. Se recomienda entre 10.000 y 50.000 para la mayoría de las imágenes.",
+    "artworkRequiresLowEcc": "El modo de ilustraciones requiere una corrección de errores baja para un control máximo de píxeles."
   },
   "welcome": {
     "title": "Bienvenido a ANQR",

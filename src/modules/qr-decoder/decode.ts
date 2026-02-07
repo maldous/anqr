@@ -826,13 +826,20 @@ export interface DecodedDataResult {
  */
 function modeToName(mode: number): DecodedSegmentInfo['modeName'] {
   switch (mode) {
-    case MODE_NUMERIC: return 'numeric';
-    case MODE_ALPHANUMERIC: return 'alphanumeric';
-    case MODE_BYTE: return 'byte';
-    case MODE_KANJI: return 'kanji';
-    case MODE_ECI: return 'eci';
-    case MODE_TERMINATOR: return 'terminator';
-    default: return 'unknown';
+    case MODE_NUMERIC:
+      return 'numeric';
+    case MODE_ALPHANUMERIC:
+      return 'alphanumeric';
+    case MODE_BYTE:
+      return 'byte';
+    case MODE_KANJI:
+      return 'kanji';
+    case MODE_ECI:
+      return 'eci';
+    case MODE_TERMINATOR:
+      return 'terminator';
+    default:
+      return 'unknown';
   }
 }
 
@@ -857,7 +864,7 @@ export function decodeDataCodewordsDetailed(
   });
 
   while (bits.available() >= 4) {
-    const bitOffset = (dataCodewords.length * 8) - bits.available();
+    const bitOffset = dataCodewords.length * 8 - bits.available();
     const mode = bits.read(4);
 
     if (mode === MODE_TERMINATOR) {
@@ -894,7 +901,7 @@ export function decodeDataCodewordsDetailed(
       });
       segmentIndex++;
       valid = false;
-      
+
       // If we already had a successful primary segment, this is an extra invalid segment
       if (primarySegmentEnded) {
         hasExtraSegmentsAfterPrimary = true;
@@ -921,7 +928,7 @@ export function decodeDataCodewordsDetailed(
       });
       segmentIndex++;
       valid = false;
-      
+
       // If we already had a successful primary segment, this is an extra invalid segment
       if (primarySegmentEnded) {
         hasExtraSegmentsAfterPrimary = true;
@@ -1008,9 +1015,12 @@ export function decodeDataCodewordsDetailed(
     }
 
     // Track segment info
-    const decodedLength = modeTag === 'kanji' ? decodedBytes.length / 2 : 
-                          modeTag === 'byte' ? decodedBytes.length : 
-                          decodedText.length;
+    const decodedLength =
+      modeTag === 'kanji'
+        ? decodedBytes.length / 2
+        : modeTag === 'byte'
+          ? decodedBytes.length
+          : decodedText.length;
     segments.push({
       index: segmentIndex,
       mode,
@@ -1075,7 +1085,7 @@ export function decodeDataCodewordsDetailed(
     foundTerminator,
     hasExtraSegmentsAfterPrimary,
     segmentCount: segments.length,
-    segmentModes: segments.map(s => s.modeName),
+    segmentModes: segments.map((s) => s.modeName),
     textLength: text.length,
     bytesLength: outBytes.length,
     encodingMode,

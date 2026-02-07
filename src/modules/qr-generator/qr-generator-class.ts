@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import type { GradientConfig } from '../core';
 import type { QRCodeInstance } from '../qr-encoder';
 import {
   calculateOptimalVersion,
@@ -531,11 +532,11 @@ export class QRGenerator {
   /**
    * Render a pre-computed boolean matrix with full styling.
    * Used by QR-Art to render matrices that were modified via RS basis manipulation.
-   * 
+   *
    * This method bypasses the encoding stage and directly renders the provided matrix
    * using the same styling pipeline as generate() (structural patterns, module styles,
    * gradients, frames, etc.).
-   * 
+   *
    * @param matrix - Pre-computed boolean matrix (true = dark module)
    * @param config - Rendering configuration (same as generate())
    * @returns Rendered canvas with proper styling
@@ -557,7 +558,7 @@ export class QRGenerator {
 
     // Ensure config has the correct typeNumber for structural pattern rendering
     const rawMatrixRender = config.rawMatrixRender === true;
-    const effectiveConfig = rawMatrixRender
+    const effectiveConfig: QRGeneratorConfig = rawMatrixRender
       ? {
           ...config,
           typeNumber: version,
@@ -643,7 +644,7 @@ export class QRGenerator {
       margin,
       null, // No overlay data
       null, // No dither pattern - use qr.isDark() which reads from our matrix
-      0,    // No effective intensity
+      0, // No effective intensity
       drawnFinderPatterns,
       drawnAlignmentPatterns,
       version,

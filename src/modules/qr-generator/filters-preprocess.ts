@@ -14,30 +14,19 @@ import {
   gamma,
   gaussianBlur,
 } from '../overlay';
+import {
+  BUCKET_SHIFT,
+  DARK_REGION_END,
+  HISTOGRAM_BUCKETS,
+  LIGHT_REGION_START,
+  MAX_VALLEY_RATIO,
+  MIN_PEAK_RATIO,
+  MIN_PEAK_SEPARATION,
+} from './dithering-constants';
 import { applyCannyEdge, applySobelEdge } from './filters-edge';
 import type { QRGeneratorConfig } from './types';
 
 const log = createLogger('GENERATE');
-
-// ============================================
-// HIGH-CONTRAST B&W DETECTION AND SOFTENING
-// ============================================
-
-/**
- * Number of histogram buckets for luminance analysis.
- * Using 32 buckets (5-bit) like the QR decoder's GlobalHistogramBinarizer.
- */
-const HISTOGRAM_BUCKETS = 32;
-const BUCKET_SHIFT = 3; // 8 - 5 bits = shift by 3
-
-/**
- * Thresholds for bimodal B&W detection
- */
-const DARK_REGION_END = 8; // Buckets 0-7 are "dark"
-const LIGHT_REGION_START = 24; // Buckets 24-31 are "light"
-const MIN_PEAK_RATIO = 0.12; // Each peak must have at least 12% of pixels
-const MAX_VALLEY_RATIO = 0.2; // Valley (middle) must have < 20% of pixels (loosened to catch anti-aliased B&W)
-const MIN_PEAK_SEPARATION = 16; // Peaks must be at least 16 buckets apart
 
 /**
  * Detect if an image is high-contrast B&W (bimodal histogram).

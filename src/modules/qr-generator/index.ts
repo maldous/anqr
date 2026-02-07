@@ -96,7 +96,7 @@ export { QRGenerator } from './qr-generator-class';
 export { renderModules } from './render-loop';
 export type { OverlayModeResult } from './render-modes';
 // Overlay mode rendering
-export { applyQROverlayMode } from './render-modes';
+export { applyQROverlayMode, computeDarkFactor, computeLightBlend } from './render-modes';
 // Scaled QR rendering
 export { generateScaledQR } from './scaled-render';
 // Types from local types.ts

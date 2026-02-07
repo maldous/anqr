@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Lütfen bir URL girin",
     "preview": "Önizleme",
     "sobel": "Sobel",
-    "canny": "kurnaz"
+    "canny": "kurnaz",
+    "qrFirstMode": "QR-Birinci Modu",
+    "qrFirstModeHelp": "Yüksek kontrastlı siyah-beyaz görüntüler için katmana göre QR veri önceliğini zorunlu kılın",
+    "artworkMode": "Sanat eseri",
+    "artworkModeInfo": "Resim modu, QR modelinin görselinizle eşleşmesini sağlayan URL parçalarını arar. Sonuçlar farklılık gösterir; basit, yüksek kontrastlı görüntülerde en iyi sonucu verir. Karmaşık görüntüler için Titreme veya Yarı Ton gibi diğer kaplama modları daha iyi sonuçlar verebilir.",
+    "searchIterations": "Yinelemeleri Ara",
+    "searchIterationsHelp": "Daha fazla yineleme = daha iyi eşleşme ancak daha yavaş oluşturma. Çoğu görsel için 10.000-50.000 önerilir.",
+    "artworkRequiresLowEcc": "Sanat eseri modu, maksimum piksel kontrolü için Düşük hata düzeltmesi gerektirir."
   },
   "welcome": {
     "title": "ANQR'a hoş geldiniz",

@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Sisestage URL",
     "preview": "Eelvaade",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-esimene režiim",
+    "qrFirstModeHelp": "Suure kontrastsusega mustvalgete piltide jaoks sundige QR-andmete prioriteet ülekattele",
+    "artworkMode": "Kunstiteos",
+    "artworkModeInfo": "Kunstirežiim otsib URL-i fragmente, mis muudavad QR-mustri teie pildiga sobivaks. Tulemused on erinevad – töötab kõige paremini lihtsate ja suure kontrastsusega piltidega. Keeruliste piltide puhul võivad muud ülekatterežiimid, nagu Dithered või Halftone, anda paremaid tulemusi.",
+    "searchIterations": "Otsi iteratsioonid",
+    "searchIterationsHelp": "Rohkem iteratsioone = parem vaste, kuid aeglasem genereerimine. Enamiku piltide puhul soovitatakse 10 000–50 000.",
+    "artworkRequiresLowEcc": "Kunstiteos nõuab maksimaalse pikslikontrolli jaoks madalat veaparandust."
   },
   "welcome": {
     "title": "Tere tulemast ANQR-i",
