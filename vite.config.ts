@@ -433,7 +433,8 @@ export default defineConfig({
           if (
             id.includes('node_modules/clsx') ||
             id.includes('node_modules/tailwind-merge') ||
-            id.includes('node_modules/class-variance-authority')
+            id.includes('node_modules/class-variance-authority') ||
+            id.includes('node_modules/loglevel')
           ) {
             return 'vendor-utils';
           }
@@ -465,9 +466,6 @@ export default defineConfig({
           }
           if (id.includes('/components/StaticPage')) {
             return 'app-static-page';
-          }
-          if (id.includes('/components/Analyze')) {
-            return 'app-analyze';
           }
           // Welcome modal - only shown on first visit
           if (id.includes('/components/WelcomeModal')) {
