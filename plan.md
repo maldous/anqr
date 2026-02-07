@@ -44,6 +44,8 @@
   - Added MediaStore adapter tests: `tests/unit/platform-media-store.spec.ts` (pass) and corrected Platform README API examples.
   - Added Makefile quality targets: `quality`, `test:unit`, `test:unit:ci`, `i18n:check` (verified via `make quality`).
   - Added analyzer geometry validation test: `tests/unit/qr-analyzer-geometry.spec.ts` (pass).
+  - Added analyzer timing diagnostics (`decodeMs`, `totalAnalysisMs`) through decoder/analyzer/export, surfaced in Analyze UI, and covered by export/geometry unit tests.
+  - Expanded Analyze summary/scannability diagnostics: promoted decoder bytes, erasures, orientation chips and added explicit module-size scan-safe status.
   - Strengthened Netlify response test with header assertions (content-type/cache/etag/CORS) in `tests/unit/netlify-qr-function.spec.ts`.
   - Added extra Analyze automation hooks: `data-testid` on original/reproduced preview surfaces.
   - Added consolidated sign-off status report: `reports/production-signoff.md` (completed items + remaining blockers).

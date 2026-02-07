@@ -48,6 +48,7 @@ import {
   Shield,
   Smartphone,
   Square,
+  Timer,
   Type,
   Upload,
   Wallet,
@@ -247,6 +248,11 @@ function ProgressBar({ value, max, label }: ProgressBarProps) {
       </div>
     </div>
   );
+}
+
+function formatMilliseconds(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined || Number.isNaN(ms)) return 'N/A';
+  return `${ms.toFixed(2)} ms`;
 }
 
 // Status Badge Component
@@ -791,6 +797,31 @@ function SummaryBar({ result }: SummaryBarProps) {
           <span className={`${badgeBase} bg-muted text-muted-foreground`}>
             <Binary className="w-3 h-3" />
             {result.payloadBytes.length} bytes
+          </span>
+        )}
+
+        {/* Decoder byte count */}
+        {typeof result.decoderMetadata?.totalByteLength === 'number' &&
+          result.decoderMetadata.totalByteLength > 0 && (
+            <span className={`${badgeBase} bg-muted text-muted-foreground`}>
+              <Database className="w-3 h-3" />
+              Dec {result.decoderMetadata.totalByteLength}
+            </span>
+          )}
+
+        {/* Erasures */}
+        {typeof result.erasures === 'number' && result.erasures >= 0 && (
+          <span className={`${badgeBase} bg-amber-500/10 text-amber-700 dark:text-amber-400`}>
+            <AlertTriangle className="w-3 h-3" />
+            Erasures {result.erasures}
+          </span>
+        )}
+
+        {/* Orientation */}
+        {typeof result.orientation === 'number' && (
+          <span className={`${badgeBase} bg-muted text-muted-foreground`}>
+            <Ruler className="w-3 h-3" />
+            {result.orientation}°
           </span>
         )}
 
@@ -5377,6 +5408,46 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
                     {/* Visual Section */}
                     <div className="grid md:grid-cols-2 gap-4">
+                      {/* Processing Timings */}
+                      {(result.timing?.decodeMs !== null &&
+                        result.timing?.decodeMs !== undefined) ||
+                      (result.timing?.totalAnalysisMs !== null &&
+                        result.timing?.totalAnalysisMs !== undefined) ? (
+                        <CollapsibleSection
+                          title="Processing Timings"
+                          icon={<Timer className="w-4 h-4" />}
+                          testId="analyze-section-processing-timings"
+                        >
+                          <div className="space-y-2">
+                            <DetailRow
+                              label="Decode Time"
+                              value={formatMilliseconds(result.timing?.decodeMs)}
+                              icon={<ScanLine className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Total Analysis Time"
+                              value={formatMilliseconds(result.timing?.totalAnalysisMs)}
+                              icon={<BarChart3 className="w-3.5 h-3.5" />}
+                            />
+                            {result.timing?.decodeMs !== null &&
+                              result.timing?.decodeMs !== undefined &&
+                              result.timing?.totalAnalysisMs !== null &&
+                              result.timing?.totalAnalysisMs !== undefined && (
+                                <DetailRow
+                                  label="Non-Decode Overhead"
+                                  value={formatMilliseconds(
+                                    Math.max(
+                                      0,
+                                      result.timing.totalAnalysisMs - result.timing.decodeMs
+                                    )
+                                  )}
+                                  icon={<Settings className="w-3.5 h-3.5" />}
+                                />
+                              )}
+                          </div>
+                        </CollapsibleSection>
+                      ) : null}
+
                       {/* Colors & Contrast */}
                       {result.detectedColors && (
                         <CollapsibleSection
@@ -5464,6 +5535,19 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                               label="Module Size"
                               value={`~${result.estimatedModulePx} px`}
                               icon={<Square className="w-3.5 h-3.5" />}
+                            />
+                          )}
+                          {result.estimatedModulePx !== null && (
+                            <DetailRow
+                              label="Scan Module Size"
+                              value={
+                                <StatusBadge
+                                  status={result.estimatedModulePx >= 3}
+                                  trueLabel="Scan-safe"
+                                  falseLabel="Too small"
+                                />
+                              }
+                              icon={<ScanLine className="w-3.5 h-3.5" />}
                             />
                           )}
                           {result.geometry && (

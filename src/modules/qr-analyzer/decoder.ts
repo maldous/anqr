@@ -100,6 +100,9 @@ function calculateGeometryDiagnostics(location: QRLocationCorners) {
  * Decode a QR code from canvas and extract all metadata
  */
 export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult {
+  const decodeStartMs =
+    typeof globalThis.performance?.now === 'function' ? globalThis.performance.now() : Date.now();
+
   // Enable log buffering to capture debug info for failed detections
   enableLogBuffer();
 
@@ -148,6 +151,16 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
         encodingMode: null,
         errorsCorrected: null,
         estimatedModulePx: null,
+        timing: {
+          decodeMs:
+            Math.round(
+              ((typeof globalThis.performance?.now === 'function'
+                ? globalThis.performance.now()
+                : Date.now()) -
+                decodeStartMs) *
+                100
+            ) / 100,
+        },
         debugLog,
       };
     }
@@ -305,6 +318,16 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       geometry,
       moduleMatrix,
       confidence: 'high',
+      timing: {
+        decodeMs:
+          Math.round(
+            ((typeof globalThis.performance?.now === 'function'
+              ? globalThis.performance.now()
+              : Date.now()) -
+              decodeStartMs) *
+              100
+          ) / 100,
+      },
       decoderMetadata, // Include decoder metadata for debugging
     };
   } catch (err) {
@@ -322,6 +345,16 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       encodingMode: null,
       errorsCorrected: null,
       estimatedModulePx: null,
+      timing: {
+        decodeMs:
+          Math.round(
+            ((typeof globalThis.performance?.now === 'function'
+              ? globalThis.performance.now()
+              : Date.now()) -
+              decodeStartMs) *
+              100
+          ) / 100,
+      },
       debugLog,
     };
   }

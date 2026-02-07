@@ -103,4 +103,5 @@ export type {
   QRAnalysisResult,
   QuietZoneInfo,
   StructuralAnalysis,
+  TimingDiagnostics,
 } from './types';

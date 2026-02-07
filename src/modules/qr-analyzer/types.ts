@@ -103,6 +103,11 @@ export interface GeometryDiagnostics {
   estimatedRotationDeg: number;
 }
 
+export interface TimingDiagnostics {
+  decodeMs?: number | null;
+  totalAnalysisMs?: number | null;
+}
+
 export type ErrorType = 'no_qr_detected' | 'cors_blocked' | 'decode_error' | 'unknown';
 
 // Import and re-export DecoderMetadata from qr-decoder to avoid duplicate type definition
@@ -155,6 +160,7 @@ export interface QRAnalysisResult {
   // Image
   imageProperties?: ImageProperties;
   geometry?: GeometryDiagnostics;
+  timing?: TimingDiagnostics;
 
   // Matrix for reproduction
   moduleMatrix?: boolean[][];
