@@ -1,8 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "src/main.tsx",
-    "netlify/functions/qr.ts",
     "scripts/*.{js,mjs,ts}"
   ],
   "project": [
@@ -18,7 +16,6 @@
   "ignoreDependencies": [
     "@biomejs/biome",
     "madge",
-    "puppeteer",
     "netlify-cli",
     "@capacitor/filesystem",
     "@capacitor/splash-screen",

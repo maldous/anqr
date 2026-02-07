@@ -2466,6 +2466,11 @@
   resolved "https://registry.npmjs.org/@oxc-resolver/binding-linux-x64-gnu/-/binding-linux-x64-gnu-11.17.0.tgz"
   integrity sha512-Z4J7XlPMQOLPANyu6y3B3V417Md4LKH5bV6bhqgaG99qLHmU5LV2k9ErV14fSqoRc/GU/qOpqMdotxiJqN/YWg==
 
+"@oxc-resolver/binding-linux-x64-musl@11.17.0":
+  version "11.17.0"
+  resolved "https://registry.npmjs.org/@oxc-resolver/binding-linux-x64-musl/-/binding-linux-x64-musl-11.17.0.tgz"
+  integrity sha512-0effK+8lhzXsgsh0Ny2ngdnTPF30v6QQzVFApJ1Ctk315YgpGkghkelvrLYYgtgeFJFrzwmOJ2nDvCrUFKsS2Q==
+
 "@parcel/watcher-linux-x64-glibc@2.5.1":
   version "2.5.1"
   resolved "https://registry.npmjs.org/@parcel/watcher-linux-x64-glibc/-/watcher-linux-x64-glibc-2.5.1.tgz"
@@ -3563,6 +3568,11 @@
   version "2.4.4"
   resolved "https://registry.npmjs.org/@types/normalize-package-data/-/normalize-package-data-2.4.4.tgz"
   integrity sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==
+
+"@types/open-location-code@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/@types/open-location-code/-/open-location-code-1.0.1.tgz"
+  integrity sha512-txJKhrRpT2fw8RgZQUeT6qycBVIzRQ2zD7ecdLvc5R2QaeqSLcYIh1jxLSC+LjcpUT26Qyfw2UTttmhgk3sWmg==
 
 "@types/pg-pool@2.0.7":
   version "2.0.7"

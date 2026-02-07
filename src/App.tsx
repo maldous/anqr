@@ -418,7 +418,9 @@ function App() {
       store.setRenderFrameStyle(params.frameStyle as 'none' | 'rounded_frame' | 'sticker' | 'tag');
     if (params.frameText) store.setRenderFrameText(params.frameText);
     if (params.dotRotation !== undefined)
-      useQRStore.setState((s) => ({ render: { ...s.render, dotRotationDeg: params.dotRotation! } }));
+      useQRStore.setState((s) => ({
+        render: { ...s.render, dotRotationDeg: params.dotRotation! },
+      }));
     if (params.crispEdges === false)
       useQRStore.setState((s) => ({ render: { ...s.render, crispEdges: false } }));
     if (params.pixelSnap)

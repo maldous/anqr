@@ -99,7 +99,7 @@ describe('exporter gif', () => {
     // first frame carries repeat flag and disposal for "keep"
     const firstOpts = writeFrame.mock.calls[0][3];
     expect(firstOpts.repeat).toBe(-1);
-    expect(firstOpts.disposal).toBe(1);
+    expect(firstOpts.dispose).toBe(1);
     expect(firstOpts.delay).toBe(2); // min 2cs
 
     const thirdOpts = writeFrame.mock.calls[2][3];
@@ -123,7 +123,7 @@ describe('exporter gif', () => {
 
     expect(quantize).toHaveBeenCalled();
     const opts = writeFrame.mock.calls[0][3];
-    expect(opts.disposal).toBe(2); // fallback
+    expect(opts.dispose).toBe(2); // fallback
     expect(opts.repeat).toBe(0); // default loopAnimation true
   });
 

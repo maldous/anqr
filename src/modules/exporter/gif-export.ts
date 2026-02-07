@@ -130,7 +130,7 @@ export async function exportGif(
     gif.writeFrame(index, width, height, {
       palette,
       delay: delayCentiseconds,
-      disposal,
+      dispose: disposal,
       ...(i === 0 && { repeat }),
     });
   }
@@ -138,7 +138,7 @@ export async function exportGif(
   gif.finish();
 
   const bytes = gif.bytes();
-  const blob = new Blob([bytes], { type: 'image/gif' });
+  const blob = new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
   const filename = `${opts.filename}.gif`;
   const url = URL.createObjectURL(blob);
 

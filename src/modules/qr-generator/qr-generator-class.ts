@@ -412,7 +412,10 @@ export class QRGenerator {
         scale,
         this.createCanvas.bind(this),
         this.canvasFactory,
-        this.storeMatrix.bind(this) as (qr: { isDark(row: number, col: number): boolean; getModuleCount(): number }, moduleCount: number) => void
+        this.storeMatrix.bind(this) as (
+          qr: { isDark(row: number, col: number): boolean; getModuleCount(): number },
+          moduleCount: number
+        ) => void
       );
     }
 

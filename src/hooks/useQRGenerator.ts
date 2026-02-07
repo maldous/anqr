@@ -1157,7 +1157,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             // QArt: start at 100% control and reduce until scannable (handled in generator)
             targetControlPercent: 100,
             lockVersionToMinimum: debouncedConfig.typeNumber === 0,
-            onProgress: (stage, percent) => {
+            onProgress: (stage: string, percent: number) => {
               log.debug('QR-Art progress', { stage, percent: `${percent}%` });
             },
           };
