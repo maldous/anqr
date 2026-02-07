@@ -556,12 +556,39 @@ export class QRGenerator {
     const version = Math.ceil((moduleCount - 17) / 4);
 
     // Ensure config has the correct typeNumber for structural pattern rendering
-    const effectiveConfig = {
-      ...config,
-      typeNumber: version,
-      // Disable overlay processing - the matrix already represents the final QR
-      overlayMode: undefined,
-    };
+    const rawMatrixRender = config.rawMatrixRender === true;
+    const effectiveConfig = rawMatrixRender
+      ? {
+          ...config,
+          typeNumber: version,
+          overlayMode: undefined,
+          moduleStyle: 'square',
+          moduleGap: 0,
+          gapMode: 'none',
+          cornerRadius: 0,
+          finderStyle: 'square',
+          eyeOuterStyle: 'square',
+          eyeInnerStyle: 'square',
+          alignmentStyle: 'square',
+          timingStyle: 'square',
+          preserveFinders: true,
+          preserveTiming: true,
+          preserveAlignment: true,
+          gradient: { type: 'none' } as GradientConfig,
+          frameStyle: 'none',
+          frameText: undefined,
+          frameColor: undefined,
+          frameTextColor: undefined,
+          fgColor: '#000000',
+          bgColor: '#ffffff',
+          transparentBg: false,
+        }
+      : {
+          ...config,
+          typeNumber: version,
+          // Disable overlay processing - the matrix already represents the final QR
+          overlayMode: undefined,
+        };
 
     // =======================================================================
     // STAGE 3: CANVAS SETUP (same as generate())
