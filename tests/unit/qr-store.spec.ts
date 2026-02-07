@@ -444,6 +444,9 @@ describe('qr-store', () => {
     expect(store.getState().getPayloadText()).toBe('https://example.com/rsvp');
 
     store.getState().setPayloadKind('gs1_digital_link');
+    store.getState().setPayloadGS1({ gtin: '09506000134352', resolver: 'id.gs1.org' });
+    expect(store.getState().getPayloadText()).toContain('https://id.gs1.org/01/');
+    store.getState().setPayloadKind('gs1_digital_link');
     store.getState().setPayloadGS1({ gtin: '', resolver: 'id.gs1.org' });
     expect(store.getState().getPayloadText()).toContain('https://id.gs1.org/01/');
     store.getState().setPayloadText('');
@@ -472,6 +475,25 @@ describe('qr-store', () => {
     expect(store.getState().getPayloadText()).toContain('intent://');
 
     store.getState().setPayloadKind('app_link');
+    store.getState().setPayloadText('');
+    store.getState().setPayloadAppLink({
+      platform: 'universal',
+      scheme: '',
+      host: '',
+      path: '',
+    });
+    expect(store.getState().getPayloadText()).toBe('');
+
+    store.getState().setPayloadKind('app_link');
+    store.getState().setPayloadAppLink({
+      platform: 'universal',
+      scheme: 'https',
+      host: 'anqr.link',
+      path: '/u',
+    });
+    expect(store.getState().getPayloadText()).toBe('https://anqr.link/u');
+
+    store.getState().setPayloadKind('app_link');
     store.getState().setPayloadText('fallback-link');
     store.getState().setPayloadAppLink({
       platform: 'custom',
@@ -480,12 +502,21 @@ describe('qr-store', () => {
       path: '',
     });
     expect(store.getState().getPayloadText()).toBe('fallback-link');
+    store.getState().setPayloadAppLink({
+      platform: 'custom',
+      scheme: 'anqr',
+      host: 'open',
+      path: '',
+    });
+    expect(store.getState().getPayloadText()).toBe('anqr://open');
 
     store.getState().setPayloadKind('utm_link');
     store.getState().setPayloadUrl({ href: 'http://example.com/no-utm', forceHttps: true });
     expect(store.getState().getPayloadText()).toBe('https://example.com/no-utm');
     store.getState().setPayloadUrl({ href: 'https://example.com/no-utm', forceHttps: false });
     expect(store.getState().getPayloadText()).toBe('https://example.com/no-utm');
+    store.getState().setPayloadUrl({ href: 'https://example.com/new', utmSource: 'src' });
+    expect(store.getState().getPayloadText()).toBe('https://example.com/new?utm_source=src');
 
     store.getState().setPayloadKind('swiss_qr_bill');
     store.getState().setPayloadSwissQRBill({
@@ -540,9 +571,33 @@ describe('qr-store', () => {
     store.getState().setPayloadKind('hkqr');
     store.getState().setPayloadHKQR({ fpsId: 'FPS123456', merchantName: 'ANQR' });
     expect(store.getState().getPayloadText()).toContain('000201');
+    store.getState().setPayloadHKQR({ fpsId: 'FPS123456', merchantName: 'ANQR', merchantCity: '' });
+    expect(store.getState().getPayloadText()).toContain('000201');
+    store.getState().setPayloadHKQR({ fpsId: '', merchantName: 'ANQR' });
+    expect(store.getState().getPayloadText()).toContain('000201');
 
     store.getState().setPayloadKind('jpqr');
     store.getState().setPayloadJPQR({ storeId: 'STORE1', merchantName: 'ANQR' });
+    expect(store.getState().getPayloadText()).toContain('000201');
+
+    store.getState().setPayloadKind('auspaynet');
+    store.getState().setPayloadAusPayNet({
+      payId: '',
+      bsb: '082902',
+      accountNumber: '12345678',
+      merchantName: 'ANQR',
+    });
+    expect(store.getState().getPayloadText()).toContain('000201');
+
+    store.getState().setPayloadKind('emv_generic');
+    store.getState().setPayloadEMVGeneric({
+      merchantName: 'ANQR',
+      merchantCity: 'Sydney',
+      countryCode: 'AU',
+      currencyCode: '036',
+      tipIndicator: 'fixed',
+      tipAmount: 2.5,
+    });
     expect(store.getState().getPayloadText()).toContain('000201');
 
     store.setState((s) => ({ payload: { ...s.payload, kind: '__unknown__' as any, text: ' fallback ' } }));
