@@ -65,6 +65,10 @@ export interface RSBasisVector {
   affectedPixels: number[];
   /** After elimination: which pixel this primarily controls (-1 if none) */
   pivotPixel: number;
+  /** Sparse representation of blockBits (byte indices with non-zero values) */
+  nonZeroByteIndices?: Uint16Array;
+  /** Sparse representation values corresponding to nonZeroByteIndices */
+  nonZeroByteValues?: Uint8Array;
 }
 
 /**

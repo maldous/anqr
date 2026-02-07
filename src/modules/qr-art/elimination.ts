@@ -23,6 +23,23 @@ import type { RSBasisVector } from './rs-basis';
 
 const log = createLogger('QART');
 
+function attachNonZeroBytes(vectors: RSBasisVector[]): void {
+  for (const v of vectors) {
+    const idx: number[] = [];
+    const vals: number[] = [];
+    const bits = v.blockBits;
+    for (let i = 0; i < bits.length; i++) {
+      const b = bits[i];
+      if (b !== 0) {
+        idx.push(i);
+        vals.push(b);
+      }
+    }
+    v.nonZeroByteIndices = new Uint16Array(idx);
+    v.nonZeroByteValues = new Uint8Array(vals);
+  }
+}
+
 /**
  * Result of Gauss-Jordan elimination for a single RS block
  */
@@ -240,6 +257,8 @@ function eliminateBlock(
     }
   }
 
+  attachNonZeroBytes(resultVectors);
+
   return {
     blockIndex,
     vectors: resultVectors,
@@ -372,33 +391,35 @@ export function selectBasisVectorsForTarget(
   eliminationResult: EliminationResult,
   targets: boolean[][],
   baseMatrix: boolean[][],
-  moduleCount: number
+  moduleCount: number,
+  pixelDiff?: Uint8Array
 ): BlockSelectionResult[] {
-  // Initialize result per block
-  const blockSelections = new Map<number, number[]>();
-  for (const br of eliminationResult.blockResults) {
-    blockSelections.set(br.blockIndex, []);
-  }
+  const results: BlockSelectionResult[] = [];
 
-  // For each controllable pixel, check if we need to flip it
-  for (const [pixelIdx, info] of eliminationResult.pixelToVector) {
-    const { row, col } = indexToPixel(pixelIdx, moduleCount);
-    const target = targets[row]?.[col] ?? false;
-    const base = baseMatrix[row]?.[col] ?? false;
+  for (const blockResult of eliminationResult.blockResults) {
+    const selectedVectorIndices: number[] = [];
 
-    // If target differs from base, we need to flip this pixel
-    if (target !== base) {
-      const list = blockSelections.get(info.blockIndex);
-      if (list) {
-        list.push(info.vectorIndex);
+    for (let vectorIndex = 0; vectorIndex < blockResult.vectors.length; vectorIndex++) {
+      const pivotPixel = blockResult.vectors[vectorIndex]?.pivotPixel ?? -1;
+      if (pivotPixel < 0) continue;
+
+      if (pixelDiff) {
+        if (pixelDiff[pivotPixel]) {
+          selectedVectorIndices.push(vectorIndex);
+        }
+        continue;
+      }
+
+      const { row, col } = indexToPixel(pivotPixel, moduleCount);
+      const target = targets[row]?.[col] ?? false;
+      const base = baseMatrix[row]?.[col] ?? false;
+
+      if (target !== base) {
+        selectedVectorIndices.push(vectorIndex);
       }
     }
-  }
 
-  // Convert to array
-  const results: BlockSelectionResult[] = [];
-  for (const [blockIndex, selectedVectorIndices] of blockSelections) {
-    results.push({ blockIndex, selectedVectorIndices });
+    results.push({ blockIndex: blockResult.blockIndex, selectedVectorIndices });
   }
 
   return results.sort((a, b) => a.blockIndex - b.blockIndex);
@@ -427,6 +448,24 @@ export function applySelectedVectorsToBlock(
 ): void {
   for (const idx of selectedIndices) {
     const v = blockVectors[idx];
+    const nzIdx = v.nonZeroByteIndices;
+    const nzVals = v.nonZeroByteValues;
+    if (nzIdx && nzVals) {
+      for (let k = 0; k < nzIdx.length; k++) {
+        const byteIdx = nzIdx[k];
+        const byteVal = nzVals[k];
+        if (byteIdx < dataCount) {
+          blockData[byteIdx] ^= byteVal;
+        } else {
+          const eccIdx = byteIdx - dataCount;
+          if (eccIdx >= 0 && eccIdx < blockEcc.length) {
+            blockEcc[eccIdx] ^= byteVal;
+          }
+        }
+      }
+      continue;
+    }
+
     // XOR the data portion of this vector with the block's data
     for (let i = 0; i < dataCount; i++) {
       blockData[i] ^= v.blockBits[i];
