@@ -237,14 +237,19 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     const quietZone = analyzeQuietZone(imageData, location, estimatedModulePx ?? 10);
 
     // Build module matrix if possible
-    const moduleMatrix = buildModuleMatrix(imageData, location, moduleCount, estimatedModulePx ?? 10);
+    const moduleMatrix = buildModuleMatrix(
+      imageData,
+      location,
+      moduleCount,
+      estimatedModulePx ?? 10
+    );
 
     // Validate matrix by checking finder patterns
     if (moduleMatrix) {
       validateFinderPatterns(moduleMatrix, moduleCount);
     }
 
-    const qrSize = avgFinderDist + 7 * estimatedModulePx; // Approximate full QR size
+    const qrSize = avgFinderDist + 7 * (estimatedModulePx ?? 10); // Approximate full QR size
 
     const encodingMode = detectEncodingMode(code.data!);
     const payloadBytes =

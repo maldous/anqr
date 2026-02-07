@@ -107,6 +107,7 @@
     "@playwright/test": "^1.57.0",
     "@sentry/vite-plugin": "^4.9.0",
     "@tailwindcss/postcss": "^4.1.18",
+    "@types/open-location-code": "^1.0.1",
     "autoprefixer": "^10.4.23",
     "dependency-cruiser": "^17.3.5",
     "knip": "^5.83.1",
