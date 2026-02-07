@@ -72,3 +72,6 @@ test-results/
 tests/reports
 tests/.storage-state.json
 .aider*
+
+# Sentry Config File
+.env.sentry-build-plugin
