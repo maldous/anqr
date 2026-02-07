@@ -50,6 +50,10 @@ export interface QRGeneratorConfig {
   diffusionKernel?: string;
   colorDither?: 'none' | 'per_channel' | 'perceptual';
 
+  // ECC-based overlay intensity limits (0-100 per ECC level)
+  // When provided, overrides the hardcoded defaults in getEffectiveIntensity()
+  maxOverlayIntensityByEcc?: Record<string, number>;
+
   // Color settings
   gradient?: GradientConfig;
   perModuleColorMode?: string;

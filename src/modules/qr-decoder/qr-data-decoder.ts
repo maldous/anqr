@@ -521,7 +521,7 @@ export class QRDecoder {
 
 /**
  * Bit source for reading bits from byte array
- * 
+ *
  * Enhanced with diagnostic logging for QR-Art debugging.
  * When a read overruns available bits, we log detailed context
  * to help identify whether terminator/padding was corrupted.
@@ -540,7 +540,12 @@ class BitSource {
   /**
    * Get current position for diagnostic logging
    */
-  getPosition(): { byteOffset: number; bitOffset: number; totalBitsRead: number; available: number } {
+  getPosition(): {
+    byteOffset: number;
+    bitOffset: number;
+    totalBitsRead: number;
+    available: number;
+  } {
     return {
       byteOffset: this.byteOffset,
       bitOffset: this.bitOffset,
@@ -561,14 +566,17 @@ class BitSource {
         totalBitsRead: pos.totalBitsRead,
         totalBytes: this.bytes.length,
         // Show remaining bytes as hex for debugging
-        remainingBytesHex: Array.from(this.bytes.slice(pos.byteOffset, Math.min(pos.byteOffset + 8, this.bytes.length)))
-          .map(b => b.toString(16).padStart(2, '0')).join(' '),
+        remainingBytesHex: Array.from(
+          this.bytes.slice(pos.byteOffset, Math.min(pos.byteOffset + 8, this.bytes.length))
+        )
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join(' '),
       };
       throw new FormatException(
         `BitSource overrun: requested ${numBits} bits but only ${pos.available} available. ` +
-        `Position: byte ${pos.byteOffset}, bit ${pos.bitOffset}. ` +
-        `This often indicates corrupted terminator/padding in QR-Art. ` +
-        `Context: ${JSON.stringify(context)}`
+          `Position: byte ${pos.byteOffset}, bit ${pos.bitOffset}. ` +
+          `This often indicates corrupted terminator/padding in QR-Art. ` +
+          `Context: ${JSON.stringify(context)}`
       );
     }
 

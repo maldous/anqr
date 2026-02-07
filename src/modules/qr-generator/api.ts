@@ -47,6 +47,8 @@ export const OVERLAY_API = [
   'loadImageDataRGB',
   'preprocessOverlay',
   'applyQROverlayMode',
+  'computeDarkFactor',
+  'computeLightBlend',
 ] as const;
 
 // Pixel matrix

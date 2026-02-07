@@ -310,35 +310,35 @@ export function getStructuredLogCount(): number {
 
 /**
  * Filter logs by scope prefix (e.g., 'QART', 'GENERATE')
- * 
+ *
  * @param scope - Scope prefix to filter by (case-insensitive)
  * @returns Filtered log entries
  */
 export function filterLogs(scope: string): StructuredLogEntry[] {
   const upperScope = scope.toUpperCase();
-  return structuredLogBuffer.filter(entry => entry.scope.toUpperCase() === upperScope);
+  return structuredLogBuffer.filter((entry) => entry.scope.toUpperCase() === upperScope);
 }
 
 /**
  * Filter logs by multiple scope prefixes
- * 
+ *
  * @param scopes - Array of scope prefixes to include
  * @returns Filtered log entries
  */
 export function filterLogsByScopes(scopes: string[]): StructuredLogEntry[] {
-  const upperScopes = new Set(scopes.map(s => s.toUpperCase()));
-  return structuredLogBuffer.filter(entry => upperScopes.has(entry.scope.toUpperCase()));
+  const upperScopes = new Set(scopes.map((s) => s.toUpperCase()));
+  return structuredLogBuffer.filter((entry) => upperScopes.has(entry.scope.toUpperCase()));
 }
 
 /**
  * Filter logs by level (e.g., 'error', 'warn')
- * 
+ *
  * @param levels - Array of levels to include
  * @returns Filtered log entries
  */
 export function filterLogsByLevel(levels: string[]): StructuredLogEntry[] {
-  const lowerLevels = new Set(levels.map(l => l.toLowerCase()));
-  return structuredLogBuffer.filter(entry => lowerLevels.has(entry.level.toLowerCase()));
+  const lowerLevels = new Set(levels.map((l) => l.toLowerCase()));
+  return structuredLogBuffer.filter((entry) => lowerLevels.has(entry.level.toLowerCase()));
 }
 
 /**
@@ -375,7 +375,7 @@ export function saveLogs(filename?: string): void {
 
 /**
  * Save filtered logs to a JSON file (browser download).
- * 
+ *
  * @param scope - Scope prefix to filter by (e.g., 'QART')
  * @param filename - Optional filename
  */
@@ -383,7 +383,9 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
   const logs = filterLogs(scope);
 
   if (logs.length === 0) {
-    console.log(`No logs found for scope '${scope}'. Buffer has ${structuredLogBuffer.length} total entries.`);
+    console.log(
+      `No logs found for scope '${scope}'. Buffer has ${structuredLogBuffer.length} total entries.`
+    );
     return;
   }
 
@@ -402,7 +404,9 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  console.log(`Saved ${logs.length} '${scope}' log entries to ${name} (${structuredLogBuffer.length} total in buffer)`);
+  console.log(
+    `Saved ${logs.length} '${scope}' log entries to ${name} (${structuredLogBuffer.length} total in buffer)`
+  );
 }
 
 /**
@@ -413,17 +417,17 @@ function safeSerializeContext(context: unknown): unknown {
   if (context === null || context === undefined) {
     return context;
   }
-  
+
   // First try structuredClone (fastest, preserves most types)
   try {
     return structuredClone(context);
   } catch {
     // structuredClone failed, try JSON round-trip
   }
-  
+
   // Try JSON serialization (handles most plain objects)
   try {
-    const jsonStr = JSON.stringify(context, (key, value) => {
+    const jsonStr = JSON.stringify(context, (_key, value) => {
       // Handle special cases
       if (value instanceof Error) {
         return {
@@ -458,7 +462,7 @@ function safeSerializeContext(context: unknown): unknown {
   } catch {
     // JSON serialization also failed
   }
-  
+
   // Last resort: try to extract what we can
   if (typeof context === 'object') {
     const result: Record<string, unknown> = {};
@@ -484,7 +488,7 @@ function safeSerializeContext(context: unknown): unknown {
       return '[Unserializable object]';
     }
   }
-  
+
   return '[Unserializable]';
 }
 
@@ -501,10 +505,10 @@ function captureToBuffer(scope: string, level: string, message: string, context?
   if (structuredLogBuffer.length >= MAX_STRUCTURED_BUFFER_SIZE) {
     structuredLogBuffer.shift();
   }
-  
+
   // Use robust serialization for context
   const serializedContext = context ? safeSerializeContext(context) : undefined;
-  
+
   structuredLogBuffer.push({
     timestamp,
     scope,
@@ -590,7 +594,10 @@ prefix.apply(loglevel, {
 // Development: show all logs (debug and above) - maximum visibility for debugging
 // Production: show only errors - minimum noise, failures only (toggle via anqrDiag)
 // Note: Handle Node.js environment where import.meta.env may not exist
-const isDev = typeof import.meta?.env?.DEV !== 'undefined' ? import.meta.env.DEV : process.env.NODE_ENV !== 'production';
+const isDev =
+  typeof import.meta?.env?.DEV !== 'undefined'
+    ? import.meta.env.DEV
+    : process.env.NODE_ENV !== 'production';
 const defaultLevel = isDev ? 'debug' : 'error';
 loglevel.setLevel(defaultLevel);
 

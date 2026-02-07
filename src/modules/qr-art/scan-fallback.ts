@@ -7,7 +7,7 @@
  * When applying all selected vectors produces an unscannable QR code,
  * this module uses binary search to find the optimal subset of vectors
  * that maximizes image quality while maintaining scannability.
- * 
+ *
  * HYBRID ACCEPTANCE CRITERIA:
  * - Decoder must successfully scan (success=true)
  * - Decoded data must be long enough (length >= originalLength)
@@ -15,16 +15,20 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import type { BlockSelectionResult, BlockEliminationResult, EliminationResult } from './elimination';
+import type {
+  BlockEliminationResult,
+  BlockSelectionResult,
+  EliminationResult,
+} from './elimination';
 import { applySelectedVectorsToBlock } from './elimination';
 import type { RSBasisVector } from './rs-basis';
 import {
-  type RejectionReason,
-  type FormatVerificationResult,
   type ECCLevel,
-  verifyMatrixFormatInfo,
+  type FormatVerificationResult,
+  type RejectionReason,
   validateSuffixCharset,
-} from './generate';
+  verifyMatrixFormatInfo,
+} from './validation';
 
 /**
  * Rejection histogram for tracking why candidates were rejected.
@@ -79,17 +83,17 @@ interface BinarySearchValidationResult {
 /**
  * Validate that decoded data preserves the original data exactly (byte-level comparison).
  * This is the HARD GATE acceptance criteria for HYBRID QR-Art.
- * 
+ *
  * HARD GATE REQUIREMENTS (must pass):
  * 1. Decoded data must exist
  * 2. Decoded data length >= original data length
  * 3. First N bytes must match exactly (N = original data length)
- * 
+ *
  * SOFT PENALTY (does not cause rejection):
  * 4. Suffix charset violations are counted as soft penalty, NOT hard rejection
  *    This allows the optimizer to accept candidates with non-URL-safe suffix bytes.
  *    The suffix is intentionally mutable in HYBRID mode!
- * 
+ *
  * @param decoded The decoded string from scanning
  * @param originalData The original data that must be preserved
  * @param strictSuffix If true, suffix charset violations cause hard rejection (default: false)
@@ -101,28 +105,28 @@ function validateByteExactPrefix(
   strictSuffix: boolean = false
 ): BinarySearchValidationResult {
   if (decoded === undefined || decoded === null) {
-    return { 
-      valid: false, 
+    return {
+      valid: false,
       reason: 'SCAN_FAILED',
       description: 'decoded data is null/undefined',
       hardGateFailed: true,
     };
   }
-  
+
   if (decoded.length < originalData.length) {
-    return { 
-      valid: false, 
+    return {
+      valid: false,
       reason: 'LENGTH_TOO_SHORT',
       description: `decoded length (${decoded.length}) < original length (${originalData.length})`,
       hardGateFailed: true,
     };
   }
-  
+
   // Byte-exact comparison for the protected prefix - THIS IS THE HARD GATE
   for (let i = 0; i < originalData.length; i++) {
     const expectedByte = originalData.charCodeAt(i);
     const actualByte = decoded.charCodeAt(i);
-    
+
     if (expectedByte !== actualByte) {
       return {
         valid: false,
@@ -135,13 +139,13 @@ function validateByteExactPrefix(
       };
     }
   }
-  
+
   // Calculate suffix charset penalty (SOFT PENALTY, not hard rejection by default)
   let suffixCharsetPenalty = 0;
   if (decoded.length > originalData.length) {
     const suffix = decoded.slice(originalData.length);
     const charsetValidation = validateSuffixCharset(suffix);
-    
+
     if (!charsetValidation.valid) {
       // Count how many invalid characters are in the suffix
       let invalidCount = 0;
@@ -149,13 +153,16 @@ function validateByteExactPrefix(
         const char = suffix[i];
         const charCode = suffix.charCodeAt(i);
         // Check if character is outside printable ASCII or not URL-safe
-        if (charCode < 32 || charCode > 126 || 
-            !('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~#'.includes(char))) {
+        if (
+          charCode < 32 ||
+          charCode > 126 ||
+          !'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~#'.includes(char)
+        ) {
           invalidCount++;
         }
       }
       suffixCharsetPenalty = invalidCount / suffix.length;
-      
+
       // If strictSuffix is enabled, reject on charset violation
       if (strictSuffix) {
         return {
@@ -170,10 +177,10 @@ function validateByteExactPrefix(
       }
     }
   }
-  
+
   // HARD GATE PASSED - candidate is accepted
   // Suffix charset penalty is recorded but does NOT cause rejection
-  return { 
+  return {
     valid: true,
     suffixCharsetPenalty,
     hardGateFailed: false,
@@ -418,7 +425,12 @@ export function applySubsetAndRegenerate(
   }
 
   // Regenerate matrix
-  const matrix = regenerateQRFn(modifiedBlockData, modifiedBlockEcc, blockDataCounts, blockEccCounts);
+  const matrix = regenerateQRFn(
+    modifiedBlockData,
+    modifiedBlockEcc,
+    blockDataCounts,
+    blockEccCounts
+  );
 
   return { matrix, modifiedBlockData, modifiedBlockEcc };
 }
@@ -446,7 +458,7 @@ export interface BinarySearchResult {
  * HYBRID STRATEGY: The decoded data must START WITH expectedData (prefix match).
  * The suffix portion CAN be modified - that's the whole point of QR-Art!
  * Only the original URL/content (protected region) must be preserved.
- * 
+ *
  * SEMANTIC-HARD-GATE: Also verifies format info (ECC and mask) match expected values.
  *
  * @param flattened Flattened and importance-sorted selections
@@ -486,16 +498,17 @@ export function binarySearchMaxVectors(
 
   // Initialize rejection histogram for tracking why candidates were rejected
   const rejectionHistogram = createRejectionHistogram();
-  
+
   log.info('Starting binary search for maximum scannable vectors', {
     totalVectors,
     expectedDataLength: expectedData.length,
-    expectedDataPreview: expectedData.length > 50 ? expectedData.slice(0, 50) + '...' : expectedData,
+    expectedDataPreview:
+      expectedData.length > 50 ? `${expectedData.slice(0, 50)}...` : expectedData,
     formatVerificationEnabled: expectedEcc !== undefined && expectedMask !== undefined,
     expectedEcc,
     expectedMask,
     strictSuffix,
-    note: strictSuffix 
+    note: strictSuffix
       ? 'SEMANTIC-HARD-GATE: prefix match + format info + strict suffix charset'
       : 'SEMANTIC-HARD-GATE: prefix match + format info (suffix charset is SOFT PENALTY)',
   });
@@ -529,21 +542,31 @@ export function binarySearchMaxVectors(
   const baseScan = scanQRFn(baseResult.matrix);
   if (!baseScan.success) {
     log.error('Base matrix (0 vectors) does not scan - this is a fundamental bug');
-    return { maxCount: 0, matrix: baseResult.matrix, modifiedBlockData: baseResult.modifiedBlockData, modifiedBlockEcc: baseResult.modifiedBlockEcc, iterations: 1 };
+    return {
+      maxCount: 0,
+      matrix: baseResult.matrix,
+      modifiedBlockData: baseResult.modifiedBlockData,
+      modifiedBlockEcc: baseResult.modifiedBlockEcc,
+      iterations: 1,
+    };
   }
-  
+
   // CRITICAL: Use STRICT byte-exact validation for base matrix
   // HYBRID MODE: expectedData is the original URL only - suffix may vary
   // We use byte-exact comparison to catch subtle corruption
   const baseValidation = validateByteExactPrefix(baseScan.data, expectedData, strictSuffix);
   rejectionHistogram.total++;
-  
+
   if (!baseValidation.valid) {
     // Generate hex dump of first 32 bytes for comparison
     const decoded = baseScan.data || '';
-    const expectedHexDump = Array.from(expectedData.slice(0, 32)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
-    const decodedHexDump = Array.from(decoded.slice(0, 32)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
-    
+    const expectedHexDump = Array.from(expectedData.slice(0, 32))
+      .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
+      .join(' ');
+    const decodedHexDump = Array.from(decoded.slice(0, 32))
+      .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
+      .join(' ');
+
     log.error('Base matrix (0 vectors) validation FAILED - encoding bug!', {
       rejectionReason: baseValidation.reason,
       description: baseValidation.description,
@@ -555,17 +578,23 @@ export function binarySearchMaxVectors(
       expectedByte: baseValidation.expectedByte?.toString(16),
       actualByte: baseValidation.actualByte?.toString(16),
     });
-    
+
     log.error('BYTE-LEVEL COMPARISON (first 32 bytes)', {
       expectedHex: expectedHexDump,
       decodedHex: decodedHexDump,
       mismatchIndex: baseValidation.mismatchIndex,
     });
-    
+
     // Return base matrix anyway - at least it scans to something
-    return { maxCount: 0, matrix: baseResult.matrix, modifiedBlockData: baseResult.modifiedBlockData, modifiedBlockEcc: baseResult.modifiedBlockEcc, iterations: 1 };
+    return {
+      maxCount: 0,
+      matrix: baseResult.matrix,
+      modifiedBlockData: baseResult.modifiedBlockData,
+      modifiedBlockEcc: baseResult.modifiedBlockEcc,
+      iterations: 1,
+    };
   }
-  
+
   // Also verify format info for base matrix (if ECC and mask provided)
   let baseFormatVerification: FormatVerificationResult | undefined;
   if (expectedEcc !== undefined && expectedMask !== undefined) {
@@ -584,9 +613,9 @@ export function binarySearchMaxVectors(
       // Return base matrix anyway as there's nothing better to return
     }
   }
-  
+
   rejectionHistogram.ACCEPTED++;
-  
+
   log.debug('Base matrix (0 vectors) validation PASSED', {
     decodedData: baseScan.data,
     decodedLength: baseScan.data?.length,
@@ -622,7 +651,7 @@ export function binarySearchMaxVectors(
     );
 
     const scan = scanQRFn(result.matrix);
-    
+
     // SEMANTIC-HARD-GATE FOR HYBRID QR-ART:
     // A configuration "works" if ALL of the following are true:
     // 1. The QR scans successfully
@@ -634,23 +663,23 @@ export function binarySearchMaxVectors(
     // We use byte-exact comparison to catch subtle corruption.
     // The suffix CAN be modified - that's the point of QR-Art!
     // Only the original URL/data (protected region) must be byte-for-byte identical.
-    
+
     let isValid = false;
-    let validation: BinarySearchValidationResult = { 
-      valid: false, 
+    let validation: BinarySearchValidationResult = {
+      valid: false,
       reason: 'SCAN_FAILED',
       description: 'not scanned',
       hardGateFailed: true,
     };
     let formatVerification: FormatVerificationResult | undefined;
-    
+
     rejectionHistogram.total++;
-    
+
     if (scan.success) {
       // Step 1: Byte-exact prefix validation (HARD GATE)
       // Suffix charset is now a SOFT PENALTY unless strictSuffix is true
       validation = validateByteExactPrefix(scan.data, expectedData, strictSuffix);
-      
+
       if (validation.valid) {
         // Step 2: Format info verification (if ECC and mask provided)
         if (expectedEcc !== undefined && expectedMask !== undefined) {
@@ -673,7 +702,7 @@ export function binarySearchMaxVectors(
         }
       }
     }
-    
+
     // Track rejection reasons in histogram
     if (!isValid && validation.reason) {
       const reason = validation.reason as keyof RejectionHistogram;
@@ -700,19 +729,23 @@ export function binarySearchMaxVectors(
       // Soft penalty (suffix charset)
       suffixCharsetPenalty: validation.suffixCharsetPenalty,
       // Format info details if verified
-      ...(formatVerification ? {
-        formatVerified: formatVerification.valid,
-        extractedEcc: formatVerification.extractedEcc,
-        extractedMask: formatVerification.extractedMask,
-        eccMatch: formatVerification.eccMatch,
-        maskMatch: formatVerification.maskMatch,
-      } : {}),
+      ...(formatVerification
+        ? {
+            formatVerified: formatVerification.valid,
+            extractedEcc: formatVerification.extractedEcc,
+            extractedMask: formatVerification.extractedMask,
+            eccMatch: formatVerification.eccMatch,
+            maskMatch: formatVerification.maskMatch,
+          }
+        : {}),
       // Show details about the decoded data
-      ...(scan.success ? {
-        decodedLength: scan.data?.length,
-        originalLength: expectedData.length,
-        suffixPreview: scan.data?.slice(expectedData.length)?.slice(0, 20),
-      } : {}),
+      ...(scan.success
+        ? {
+            decodedLength: scan.data?.length,
+            originalLength: expectedData.length,
+            suffixPreview: scan.data?.slice(expectedData.length)?.slice(0, 20),
+          }
+        : {}),
     });
 
     if (isValid) {
@@ -737,12 +770,13 @@ export function binarySearchMaxVectors(
     strictSuffix,
     rejectionHistogram: {
       ...rejectionHistogram,
-      acceptanceRate: rejectionHistogram.total > 0 
-        ? `${((rejectionHistogram.ACCEPTED / rejectionHistogram.total) * 100).toFixed(1)}%`
-        : 'N/A',
+      acceptanceRate:
+        rejectionHistogram.total > 0
+          ? `${((rejectionHistogram.ACCEPTED / rejectionHistogram.total) * 100).toFixed(1)}%`
+          : 'N/A',
     },
   });
-  
+
   // Warn if suffix charset rejections are dominating and strictSuffix is enabled
   if (strictSuffix && rejectionHistogram.SUFFIX_CHARSET_INVALID > rejectionHistogram.ACCEPTED) {
     log.warn('High suffix charset rejection rate with strictSuffix=true', {

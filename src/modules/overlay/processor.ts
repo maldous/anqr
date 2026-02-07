@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import { rgbToGray } from '../core';
 import type {
   DiffusionKernel,
   DitherKind as DitherAlgKind,
@@ -354,7 +355,7 @@ export function extractOverlayBrightnessData(
 
   for (let i = 0; i < data.length; i += 4) {
     // Convert to grayscale brightness (0-1)
-    brightness[i / 4] = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
+    brightness[i / 4] = rgbToGray(data[i], data[i + 1], data[i + 2]) / 255;
   }
 
   return brightness;

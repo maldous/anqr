@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Voer een URL in",
     "preview": "Voorbeeld",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-First-modus",
+    "qrFirstModeHelp": "Forceer QR-gegevensprioriteit boven overlay voor zwart-witafbeeldingen met hoog contrast",
+    "artworkMode": "Kunstwerk",
+    "artworkModeInfo": "De Artwork-modus zoekt naar URL-fragmenten die ervoor zorgen dat het QR-patroon overeenkomt met uw afbeelding. De resultaten variëren - werkt het beste met eenvoudige afbeeldingen met hoog contrast. Voor complexe afbeeldingen kunnen andere overlaymodi zoals Dithered of Halftone betere resultaten opleveren.",
+    "searchIterations": "Zoek iteraties",
+    "searchIterationsHelp": "Meer iteraties = betere match maar langzamere generatie. 10.000-50.000 aanbevolen voor de meeste afbeeldingen.",
+    "artworkRequiresLowEcc": "De artworkmodus vereist een lage foutcorrectie voor maximale pixelcontrole."
   },
   "welcome": {
     "title": "Welkom bij ANQR",

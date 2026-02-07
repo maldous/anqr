@@ -16,6 +16,7 @@ import {
 } from './drawing';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
+import { computeDarkFactor, computeLightBlend } from './render-modes';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
 import { validateColor } from './utils';
 
@@ -134,6 +135,10 @@ export async function generateScaledQR(
     });
   }
 
+  // Pre-compute darkening/lightening factors outside the pixel loop for performance
+  const overlayDkFactor = computeDarkFactor(pixelData.effectiveIntensity, 0.6);
+  const overlayLtBlend = computeLightBlend(pixelData.effectiveIntensity, 0.4);
+
   // Render all pixels
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
@@ -177,13 +182,11 @@ export async function generateScaledQR(
             const offset = (subPixelSize - dotSize) / 2;
             ctx.fillRect(dx + offset, dy + offset, dotSize, dotSize);
           } else if (isDitheredMode) {
-            // For dithered/blue-noise modes: use overlay color with moderate darkening
-            // The dithering algorithm already chose dark pixels from darker image areas,
-            // so we only need a gentle luminance shift to ensure scanner contrast.
-            // Multiply by ~0.6 preserves color hue/saturation while ensuring "dark" reads as dark.
-            const darkR = Math.round(color.r * 0.6);
-            const darkG = Math.round(color.g * 0.6);
-            const darkB = Math.round(color.b * 0.6);
+            // Darken overlay colors on dark modules to maintain scanner contrast.
+            // Factor scales with effective intensity: more overlay influence → more darkening.
+            const darkR = Math.round(color.r * overlayDkFactor);
+            const darkG = Math.round(color.g * overlayDkFactor);
+            const darkB = Math.round(color.b * overlayDkFactor);
             ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {
@@ -200,13 +203,11 @@ export async function generateScaledQR(
         // Light module: draw with background color or overlay color
         if (needsBothDarkAndLightColors && useColorRendering && color) {
           if (isDitheredMode) {
-            // For dithered/blue-noise modes: use overlay color with moderate lightening
-            // The dithering algorithm already chose light pixels from lighter image areas,
-            // so we only need a gentle luminance shift to ensure scanner contrast.
-            // Blend ~40% toward white preserves color hue/saturation while ensuring "light" reads as light.
-            const lightR = Math.round(color.r + (255 - color.r) * 0.4);
-            const lightG = Math.round(color.g + (255 - color.g) * 0.4);
-            const lightB = Math.round(color.b + (255 - color.b) * 0.4);
+            // Lighten overlay colors on light modules to maintain scanner contrast.
+            // Blend amount scales with effective intensity.
+            const lightR = Math.round(color.r + (255 - color.r) * overlayLtBlend);
+            const lightG = Math.round(color.g + (255 - color.g) * overlayLtBlend);
+            const lightB = Math.round(color.b + (255 - color.b) * overlayLtBlend);
             ctx.fillStyle = `rgb(${lightR},${lightG},${lightB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {

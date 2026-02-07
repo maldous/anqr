@@ -27,8 +27,18 @@ export function getScaleFactor(overlayMode: string | undefined, config: QRGenera
   }
 }
 
+/** Default ECC-based intensity limits (0-100 scale, matching store defaults) */
+const DEFAULT_ECC_LIMITS: Record<string, number> = {
+  L: 30,
+  M: 50,
+  Q: 70,
+  H: 85,
+};
+
 /**
- * Get effective intensity based on ECC level limits
+ * Get effective intensity based on ECC level limits.
+ * Uses config.maxOverlayIntensityByEcc when provided (from store),
+ * falling back to built-in defaults that match the store's initial values.
  */
 export function getEffectiveIntensity(config: QRGeneratorConfig): {
   effectiveIntensity: number;
@@ -36,15 +46,10 @@ export function getEffectiveIntensity(config: QRGeneratorConfig): {
 } {
   const intensity = (config.overlayIntensity ?? 100) / 100;
 
-  // Apply ECC-based intensity limits
-  const eccLimits: Record<string, number> = {
-    L: 0.3,
-    M: 0.5,
-    Q: 0.7,
-    H: 0.85,
-  };
-
-  const maxIntensity = eccLimits[config.errorCorrection] ?? 0.5;
+  // Use config-provided ECC limits (0-100 scale) or fall back to defaults
+  const eccLimits = config.maxOverlayIntensityByEcc ?? DEFAULT_ECC_LIMITS;
+  const maxIntensityPct = eccLimits[config.errorCorrection] ?? 50;
+  const maxIntensity = maxIntensityPct / 100;
   const effectiveIntensity = Math.min(intensity, maxIntensity);
 
   return {

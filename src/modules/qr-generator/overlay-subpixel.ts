@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import { rgbToGray } from '../core';
 import {
   isAlignmentPattern,
   isFinderPattern,
@@ -102,7 +103,7 @@ export async function getSubpixelOverlayData(
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      brightness[y][x] = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+      brightness[y][x] = rgbToGray(r, g, b) / 255;
       colors[y][x] = { r, g, b };
     }
   }

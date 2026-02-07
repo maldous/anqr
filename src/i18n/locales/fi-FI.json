@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Anna URL",
     "preview": "Esikatselu",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-First-tila",
+    "qrFirstModeHelp": "Pakota QR-tietojen prioriteetti peittokuvaan nähden suurikontrastisia mustavalkokuvia varten",
+    "artworkMode": "Taideteos",
+    "artworkModeInfo": "Kuvitustila etsii URL-osia, joiden avulla QR-malli vastaa kuvaasi. Tulokset vaihtelevat – toimii parhaiten yksinkertaisilla, suurikontrastisilla kuvilla. Monimutkaisissa kuvissa muut peittotilat, kuten Dithered tai Halftone, voivat tuottaa parempia tuloksia.",
+    "searchIterations": "Etsi iteraatiot",
+    "searchIterationsHelp": "Enemmän iteraatioita = parempi vastaavuus, mutta hitaampi sukupolvi. Useimmille kuville suositellaan 10 000–50 000.",
+    "artworkRequiresLowEcc": "Kuvitustila vaatii alhaisen virheenkorjauksen maksimaalisen pikselinhallinnan saavuttamiseksi."
   },
   "welcome": {
     "title": "Tervetuloa ANQR:ään.",

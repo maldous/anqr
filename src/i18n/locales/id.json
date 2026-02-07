@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Silakan masukkan suatu URL:",
     "preview": "Pratilik",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-Mode Pertama",
+    "qrFirstModeHelp": "Paksa prioritas data QR dibandingkan overlay untuk gambar Hitam dan Putih dengan kontras tinggi",
+    "artworkMode": "Karya seni",
+    "artworkModeInfo": "Mode karya seni mencari fragmen URL yang membuat pola QR cocok dengan gambar Anda. Hasil bervariasi - berfungsi paling baik dengan gambar sederhana dan kontras tinggi. Untuk gambar yang kompleks, mode overlay lain seperti Dithered atau Halftone mungkin memberikan hasil yang lebih baik.",
+    "searchIterations": "Iterasi Pencarian",
+    "searchIterationsHelp": "Lebih banyak iterasi = kecocokan lebih baik tetapi generasi lebih lambat. 10.000-50.000 direkomendasikan untuk sebagian besar gambar.",
+    "artworkRequiresLowEcc": "Mode karya seni memerlukan koreksi kesalahan rendah untuk kontrol piksel maksimum."
   },
   "welcome": {
     "title": "Selamat Datang di ANQR",

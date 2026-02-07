@@ -12,23 +12,24 @@ import {
   isVersionInfo,
 } from '../qr-spec/qr-patterns';
 import type { QRCodeObject } from './cache';
+import {
+  BUCKET_SHIFT,
+  DARK_DESIRE_MAX,
+  DARK_DESIRE_MIN,
+  DARK_REGION_END,
+  HISTOGRAM_BUCKETS,
+  LIGHT_DESIRE_MAX,
+  LIGHT_DESIRE_MIN,
+  LIGHT_REGION_START,
+  MAX_VALLEY_RATIO,
+  MIN_PEAK_RATIO,
+  MIN_PEAK_SEPARATION,
+} from './dithering-constants';
 import { distributeError } from './dithering-error';
 import { getDiffusionKernel } from './dithering-kernels';
 import type { OverlayData, QRGeneratorConfig } from './types';
 
 const log = createLogger('GENERATE');
-
-// ============================================
-// HIGH-CONTRAST B&W DETECTION
-// ============================================
-
-const HISTOGRAM_BUCKETS = 32;
-const BUCKET_SHIFT = 3;
-const DARK_REGION_END = 8;
-const LIGHT_REGION_START = 24;
-const MIN_PEAK_RATIO = 0.12;
-const MAX_VALLEY_RATIO = 0.2;
-const MIN_PEAK_SEPARATION = 16;
 
 /**
  * Detect if overlay data represents a high-contrast B&W image.
@@ -199,12 +200,10 @@ export function applyDitherToMatrix(
       let targetValue = originalValue * (1 - mix) + overlayDark * mix;
 
       // Apply soft clamp to keep value on the correct side of threshold for QR scannability
-      // Dark modules: clamp to 0.55-0.95 range (stays above 0.5 threshold)
-      // Light modules: clamp to 0.05-0.45 range (stays below 0.5 threshold)
       if (qrIsDark) {
-        targetValue = 0.55 + targetValue * 0.4; // Maps to 0.55-0.95
+        targetValue = DARK_DESIRE_MIN + targetValue * (DARK_DESIRE_MAX - DARK_DESIRE_MIN);
       } else {
-        targetValue = 0.05 + targetValue * 0.4; // Maps to 0.05-0.45
+        targetValue = LIGHT_DESIRE_MIN + targetValue * (LIGHT_DESIRE_MAX - LIGHT_DESIRE_MIN);
       }
 
       const adjustedValue = targetValue + error;

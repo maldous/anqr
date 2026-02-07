@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import { rgbToGray } from '../core';
 import { overlayDataCache } from './cache';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 import { hashCanvasContent } from './utils';
@@ -71,7 +72,7 @@ export async function getOverlayData(
       const b = data[idx + 2];
 
       // Calculate brightness
-      const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+      const brightness = rgbToGray(r, g, b) / 255;
       result[row][col] = brightness;
 
       // Store color if needed

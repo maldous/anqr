@@ -9,6 +9,28 @@ import type { OverlayData, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');
 
+/**
+ * Compute darkening factor for overlay colors on dark QR modules.
+ * Scales linearly: at intensity 0 → 1.0 (no darkening), at intensity 1 → minFactor.
+ * Each overlay mode can pass its own minFactor to set the maximum darkening at full intensity.
+ */
+export function computeDarkFactor(intensity: number, minFactor: number = 0.55): number {
+  const i = Math.max(0, Math.min(1, intensity));
+  return 1.0 - (1.0 - minFactor) * i;
+}
+
+/**
+ * Compute blend amount toward white for overlay colors on light QR modules.
+ * Scales linearly: at intensity 0 → 0 (no lightening), at intensity 1 → maxBlend.
+ */
+export function computeLightBlend(intensity: number, maxBlend: number = 0.4): number {
+  const i = Math.max(0, Math.min(1, intensity));
+  return maxBlend * i;
+}
+
+/** Maximum lightening applied to shadow color in duotone bright-area fallback (no highlight color). */
+const DUOTONE_MAX_LIGHTEN = 0.5;
+
 export interface OverlayModeResult {
   moduleColor: string;
   moduleSizeModifier: number;
@@ -79,15 +101,13 @@ export function applyQROverlayMode(
         } else {
           // Legacy halftone behavior with improved size mapping
           const intensity = effectiveIntensity; // 0..1
-          // Min size 0.25 ensures dots are always visible
-          // Max size 1.0 allows full coverage for dark areas
-          const minSize = 0.25;
+          // Min size scales with intensity: higher intensity allows smaller dots for more detail
+          // At intensity 0: 0.25 (visible base size), at intensity 1: 0.15 (finer detail)
+          const minSize = 0.15 + 0.1 * (1 - intensity);
           const maxSize = 1.0;
-          // Use a smoother curve for size variation - darker = larger dots
-          // Apply intensity to control the strength of the effect
           const sizeRange = maxSize - minSize;
           const darknessInfluence = (1 - brightness) * intensity;
-          const baseSize = minSize + sizeRange * (1 - intensity) * 0.5; // Base size when no overlay effect
+          const baseSize = minSize + sizeRange * (1 - intensity) * 0.5;
           result.moduleSizeModifier = baseSize + darknessInfluence * (maxSize - baseSize);
         }
       }
@@ -97,10 +117,8 @@ export function applyQROverlayMode(
       if (isDark) {
         const blendColor = overlayWithColors.colors?.[row]?.[col];
         if (blendColor) {
-          // Apply moderate darkening to preserve QR scannability at high intensity
-          // At 100% intensity, colors are darkened by 25% to ensure dark modules stay dark
           const blendAmount = effectiveIntensity; // 0..1
-          const darkFactor = 0.75 + (1 - blendAmount) * 0.25; // 0.75 at full intensity, 1.0 at zero
+          const darkFactor = computeDarkFactor(blendAmount, 0.75);
           const darkR = Math.round(blendColor.r * darkFactor);
           const darkG = Math.round(blendColor.g * darkFactor);
           const darkB = Math.round(blendColor.b * darkFactor);
@@ -127,12 +145,10 @@ export function applyQROverlayMode(
       if (isDark) {
         result.moduleColor = config.fgColor;
       } else {
-        // Draw white spaces with visible image color
         const gapColor = overlayWithColors.colors?.[row]?.[col];
         if (gapColor) {
-          // Max 60% opacity allows image to show through more clearly
-          // while maintaining enough contrast for QR readability
-          const fadeAmount = effectiveIntensity * 0.6;
+          // Fade amount derived from intensity (already ECC-capped)
+          const fadeAmount = computeLightBlend(effectiveIntensity, 0.75);
           const colorStr = `rgb(${gapColor.r},${gapColor.g},${gapColor.b})`;
           result.moduleColor = blendColors(config.bgColor, colorStr, fadeAmount);
           result.shouldDrawCell = true;
@@ -165,14 +181,11 @@ export function applyQROverlayMode(
           avgR = Math.round(avgR / pixCount);
           avgG = Math.round(avgG / pixCount);
           avgB = Math.round(avgB / pixCount);
-          // Apply moderate darkening to averaged color for QR contrast
-          // This ensures dark modules remain scannable while showing vibrant colors
           const pixIntensity = effectiveIntensity;
-          const darkFactor = 0.7 + (1 - pixIntensity) * 0.3; // 0.7 at 100% intensity, 1.0 at 0%
+          const darkFactor = computeDarkFactor(pixIntensity, 0.7);
           const darkR = Math.round(avgR * darkFactor);
           const darkG = Math.round(avgG * darkFactor);
           const darkB = Math.round(avgB * darkFactor);
-          // Blend from fgColor to darkened block color based on intensity
           const blockColor = `rgb(${darkR},${darkG},${darkB})`;
           result.moduleColor = blendColors(config.fgColor, blockColor, pixIntensity);
         }
@@ -215,15 +228,15 @@ export function applyQROverlayMode(
           const lightenAmt = (brightness - 0.5) * 2 * duoIntensity;
           const lightR = Math.min(
             255,
-            Math.round(shadowParsed.r + (255 - shadowParsed.r) * lightenAmt * 0.5)
+            Math.round(shadowParsed.r + (255 - shadowParsed.r) * lightenAmt * DUOTONE_MAX_LIGHTEN)
           );
           const lightG = Math.min(
             255,
-            Math.round(shadowParsed.g + (255 - shadowParsed.g) * lightenAmt * 0.5)
+            Math.round(shadowParsed.g + (255 - shadowParsed.g) * lightenAmt * DUOTONE_MAX_LIGHTEN)
           );
           const lightB = Math.min(
             255,
-            Math.round(shadowParsed.b + (255 - shadowParsed.b) * lightenAmt * 0.5)
+            Math.round(shadowParsed.b + (255 - shadowParsed.b) * lightenAmt * DUOTONE_MAX_LIGHTEN)
           );
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         } else {
@@ -242,9 +255,8 @@ export function applyQROverlayMode(
         result.drawOutlineOnly = true;
         const outlineColor = overlayWithColors.colors?.[row]?.[col];
         if (outlineColor) {
-          // Apply moderate darkening to preserve visibility of outlines
           const outlineBlend = effectiveIntensity;
-          const darkFactor = 0.75 + (1 - outlineBlend) * 0.25;
+          const darkFactor = computeDarkFactor(outlineBlend, 0.75);
           const darkR = Math.round(outlineColor.r * darkFactor);
           const darkG = Math.round(outlineColor.g * darkFactor);
           const darkB = Math.round(outlineColor.b * darkFactor);
@@ -256,45 +268,37 @@ export function applyQROverlayMode(
 
     case 'wave':
       if (isDark) {
-        // Wave effect creates flowing distortion based on image brightness
-        // Darker areas have more wave displacement for interesting visual effect
         const waveIntensity = effectiveIntensity;
-        const waveStrength = (1 - brightness) * waveIntensity * 4; // Increased from 3 to 4 for more dramatic effect
-        // Use different frequencies for X and Y to create more organic wave pattern
+        const waveStrength = (1 - brightness) * waveIntensity * 4;
         result.waveOffsetX = Math.sin(row * 0.5 + col * 0.15) * waveStrength;
         result.waveOffsetY = Math.cos(col * 0.5 + row * 0.15) * waveStrength;
 
-        // Also apply color from overlay for added visual interest
         const waveColor = overlayWithColors.colors?.[row]?.[col];
-        if (waveColor && waveIntensity > 0.3) {
-          // Darken overlay color for QR readability, blend based on intensity
-          const darkFactor = 0.7;
+        if (waveColor && waveIntensity > 0) {
+          const darkFactor = computeDarkFactor(waveIntensity, 0.7);
           const colorStr = `rgb(${Math.round(waveColor.r * darkFactor)},${Math.round(waveColor.g * darkFactor)},${Math.round(waveColor.b * darkFactor)})`;
-          result.moduleColor = blendColors(config.fgColor, colorStr, waveIntensity * 0.7);
+          result.moduleColor = blendColors(config.fgColor, colorStr, waveIntensity);
         }
       }
       break;
 
     case 'mosaic': {
       // Mosaic fills EVERY cell with image colors - reveals full image
-      // Dark modules get actual color, white spaces get lighter version
-      result.shouldDrawCell = true; // Draw all cells
+      result.shouldDrawCell = true;
       const mosaicColor = overlayWithColors.colors?.[row]?.[col];
       if (mosaicColor) {
-        const intensity = effectiveIntensity; // 0..1
+        const mosaicIntensity = effectiveIntensity; // 0..1
         if (isDark) {
-          // Dark cells get the actual image color (moderately darkened to maintain QR readability)
-          // Using 0.8 preserves more color vibrancy while ensuring dark modules read as "dark"
-          const darkFactor = 0.8;
+          const darkFactor = computeDarkFactor(mosaicIntensity, 0.8);
           result.moduleColor = `rgb(${Math.round(mosaicColor.r * darkFactor)},${Math.round(mosaicColor.g * darkFactor)},${Math.round(mosaicColor.b * darkFactor)})`;
         } else {
-          // White cells get a lighter version of the image color
-          // At full intensity (1.0), lightFactor=0.3 gives subtle lightening
-          // At zero intensity (0.0), lightFactor=0.6 gives stronger lightening for more contrast
-          const lightFactor = 0.3 + (1 - intensity) * 0.3;
-          const lightR = Math.round(255 - (255 - mosaicColor.r) * lightFactor);
-          const lightG = Math.round(255 - (255 - mosaicColor.g) * lightFactor);
-          const lightB = Math.round(255 - (255 - mosaicColor.b) * lightFactor);
+          // Light cells: blend toward white for scanner contrast.
+          // Base 0.4 ensures light cells are always significantly lighter than dark cells.
+          // Additional lightening scales with intensity via computeLightBlend.
+          const blendToWhite = 0.4 + computeLightBlend(mosaicIntensity, 0.3);
+          const lightR = Math.round(mosaicColor.r + (255 - mosaicColor.r) * blendToWhite);
+          const lightG = Math.round(mosaicColor.g + (255 - mosaicColor.g) * blendToWhite);
+          const lightB = Math.round(mosaicColor.b + (255 - mosaicColor.b) * blendToWhite);
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         }
       }

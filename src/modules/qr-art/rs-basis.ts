@@ -37,12 +37,7 @@ import { gexp, qrPolynomial } from '../qr-encoder/math';
 import { QRErrorCorrectionLevel, QRMode } from '../qr-encoder/types';
 import { getLengthInBits } from '../qr-encoder/utils';
 import { type ECCLevel, getRSBlockInfo, type RSBlockInfo } from './bit-mapping';
-import {
-  type BitRange,
-  type SemanticBitLayout,
-  getSemanticBitLayout,
-  mapAllowedRangesToBlocks,
-} from './semantic-layout';
+import { type BitRange, mapAllowedRangesToBlocks } from './semantic-layout';
 
 const log = createLogger('QART');
 
@@ -170,7 +165,6 @@ export function getContentBitCount(version: number, dataLength: number): number 
   return headerBits + dataBits + terminatorBits;
 }
 
-
 /**
  * Information about QR-Art capacity for a given configuration
  */
@@ -219,24 +213,24 @@ export function analyzeQRArtCapacity(
 ): QRArtCapacityInfo {
   const blocks = getRSBlockInfo(version, ecc);
   const totalDataBits = blocks.reduce((sum, b) => sum + b.dataCount * 8, 0);
-  
+
   const headerBits = getHeaderBitCount(version);
   const dataBits = dataLength * 8;
   const terminatorBits = 4;
   const contentBits = headerBits + dataBits + terminatorBits;
-  
+
   // Round up to byte boundary for protected bit count
   const protectedBitCount = Math.ceil(contentBits / 8) * 8;
-  
+
   // Use interleave-aware calculation to get actual protected bits per block
   const protectedBitsPerBlock = calculateProtectedBitsPerBlock(blocks, protectedBitCount);
-  
+
   // Actual protected bits is the sum across all blocks (accounting for interleaving)
   const actualProtectedBits = protectedBitsPerBlock.reduce((sum, b) => sum + b, 0);
-  
+
   // Controllable bits is what remains after protection
   const controllableBits = Math.max(0, totalDataBits - actualProtectedBits);
-  
+
   return {
     version,
     ecc,
@@ -378,7 +372,7 @@ export function buildBlockBasis(
 ): RSBasisVector[] {
   const { dataCount, eccCount, totalCount } = blockInfo;
   const vectors: RSBasisVector[] = [];
-  
+
   // Track statistics for logging
   let skippedCount = 0;
   let createdCount = 0;
@@ -433,7 +427,7 @@ export function buildBlockBasis(
       });
     }
   }
-  
+
   // Log block basis creation details
   if (allowedLocalBits !== undefined) {
     log.debug('Block basis created with protection', {
@@ -443,10 +437,12 @@ export function buildBlockBasis(
       allowedBitsProvided: allowedLocalBits.size,
       vectorsCreated: createdCount,
       vectorsSkipped: skippedCount,
-      createdLocalBitRange: createdCount > 0 ? `${firstCreatedLocalBit} - ${lastCreatedLocalBit}` : 'none',
-      createdByteRange: createdCount > 0 
-        ? `${Math.floor(firstCreatedLocalBit / 8)} - ${Math.floor(lastCreatedLocalBit / 8)}`
-        : 'none',
+      createdLocalBitRange:
+        createdCount > 0 ? `${firstCreatedLocalBit} - ${lastCreatedLocalBit}` : 'none',
+      createdByteRange:
+        createdCount > 0
+          ? `${Math.floor(firstCreatedLocalBit / 8)} - ${Math.floor(lastCreatedLocalBit / 8)}`
+          : 'none',
     });
   }
 
@@ -475,8 +471,8 @@ export function buildFullBasis(
   allowedBitRanges?: BitRange[]
 ): RSBasis {
   // Build cache key from allowed ranges
-  const rangesKey = allowedBitRanges 
-    ? allowedBitRanges.map(r => `${r.startBit}-${r.endBit}`).join(',')
+  const rangesKey = allowedBitRanges
+    ? allowedBitRanges.map((r) => `${r.startBit}-${r.endBit}`).join(',')
     : 'all';
   const cacheKey = `${version}-${ecc}-${rangesKey}`;
   const cached = basisCache.get(cacheKey);
@@ -503,18 +499,18 @@ export function buildFullBasis(
   if (allowedBitRanges !== undefined && allowedBitRanges.length > 0) {
     // Strategy 2: Only specific bit ranges are allowed
     blockAllowedBits = mapAllowedRangesToBlocks(allowedBitRanges, version, ecc);
-    
+
     // Count total allowed bits
     controllableBits = 0;
     for (const allowedSet of blockAllowedBits.values()) {
       controllableBits += allowedSet.size;
     }
     protectionMode = 'semantic-ranges';
-    
+
     log.info('Building RS basis with SEMANTIC RANGE protection (Strategy 2)', {
       version,
       ecc,
-      allowedRanges: allowedBitRanges.map(r => `${r.startBit}-${r.endBit}`),
+      allowedRanges: allowedBitRanges.map((r) => `${r.startBit}-${r.endBit}`),
       totalDataBits,
       controllableBits,
       controlPercentage: `${((controllableBits / totalDataBits) * 100).toFixed(1)}%`,
@@ -524,8 +520,10 @@ export function buildFullBasis(
     // Legacy mode: all bits allowed (DANGEROUS!)
     controllableBits = totalDataBits;
     protectionMode = 'legacy-all';
-    log.warn('Building RS basis in LEGACY MODE (all bits allowed). ' +
-             'This WILL corrupt the decoded message! Pass allowedBitRanges for safe QR-Art.');
+    log.warn(
+      'Building RS basis in LEGACY MODE (all bits allowed). ' +
+        'This WILL corrupt the decoded message! Pass allowedBitRanges for safe QR-Art.'
+    );
   }
 
   const controlPercentage = totalDataBits > 0 ? (controllableBits / totalDataBits) * 100 : 0;
@@ -545,7 +543,7 @@ export function buildFullBasis(
 
   let totalSkippedVectors = 0;
   globalBitOffset = 0; // Reset for actual vector building
-  
+
   for (let blockIdx = 0; blockIdx < blocks.length; blockIdx++) {
     const block = blocks[blockIdx];
     const allowedBitsForBlock = blockAllowedBits?.get(blockIdx);
@@ -621,23 +619,23 @@ export interface OptimalVersionAndSuffix {
 
 /**
  * Calculate the optimal QR version and suffix length to achieve a target control percentage.
- * 
+ *
  * This function will automatically upgrade to a larger QR version if the minimum version
  * doesn't provide enough capacity for meaningful QR-Art control.
- * 
+ *
  * Uses byte-mode encoding for the entire data (prefix + '#' + suffix).
  * Byte mode allows ANY bit pattern to decode as a valid byte, which is essential
  * for QR-Art: vectors can flip arbitrary bits without producing invalid encodings.
  * (Numeric mode would reject ~90% of vectors because 10-bit groups exceed 999.)
- * 
+ *
  * The suffix uses URL-safe characters (A-Za-z0-9) with '#' as separator.
- * 
+ *
  * The algorithm:
  * 1. Start with the minimum version that fits the data
  * 2. Calculate max suffix length using byte mode (8 bits/char)
  * 3. If control percentage is below minimum threshold, upgrade version and repeat
  * 4. Return the selected version with its FULL suffix capacity
- * 
+ *
  * @param minVersion Minimum version (0 for auto, or user-specified minimum)
  * @param ecc Error correction level
  * @param dataLength Length of original data (without suffix)
@@ -654,7 +652,7 @@ export function calculateOptimalVersionAndSuffix(
   // Find the minimum version that can fit the data
   // Enforce MIN_QART_VERSION for reliable real-world scanning
   let startVersion = minVersion > 0 ? minVersion : 1;
-  
+
   // Find smallest version that fits the data + '#' separator
   // Single byte-mode segment: mode(4) + charCount + (data + '#') * 8 + terminator(4)
   for (let v = startVersion; v <= 40; v++) {
@@ -667,14 +665,14 @@ export function calculateOptimalVersionAndSuffix(
       break;
     }
   }
-  
+
   const originalVersion = startVersion;
-  
+
   // Calculate control percentage for each version from startVersion upward
   // We look for the first version that achieves minimum threshold, then use its FULL capacity
   // Cap at version 15 to avoid unnecessarily large QR codes (can go higher if needed)
   const maxVersionToTry = Math.min(40, Math.max(startVersion + 10, 15));
-  
+
   let selectedVersion = startVersion;
   let selectedSuffixLength = 0;
   let selectedControlPercent = 0;
@@ -682,7 +680,7 @@ export function calculateOptimalVersionAndSuffix(
   let selectedPaddingBytes = 0;
   let selectedSuffixBits = 0;
   let selectedPaddingBits = 0;
-  
+
   // Track best option in case no version achieves threshold
   let bestVersion = startVersion;
   let bestSuffixLength = 0;
@@ -722,11 +720,11 @@ export function calculateOptimalVersionAndSuffix(
     const totalDataBytes = blocks.reduce((sum, b) => sum + b.dataCount, 0);
     const totalDataBits = totalDataBytes * 8;
     const totalEccBytes = blocks.reduce((sum, b) => sum + b.eccCount, 0);
-    
+
     // Reserve MIN_ECC_HEADROOM_BYTES to avoid running at 100% ECC capacity
     const eccHeadroom = Math.min(MIN_ECC_HEADROOM_BYTES, Math.floor(totalEccBytes / 4));
     const usableBits = (totalDataBytes - eccHeadroom) * 8;
-    
+
     const byteCharCountBits = getLengthInBits(QRMode.MODE_8BIT_BYTE, version);
     const prefixLen = suffixMode === 'numeric' ? dataLength : dataLength + 1; // numeric mode already includes '#'
     const prefixBits = 4 + byteCharCountBits + prefixLen * 8;
@@ -759,19 +757,19 @@ export function calculateOptimalVersionAndSuffix(
 
     // Calculate protection and controllable regions
     const protectedBits = Math.ceil(prefixBits / 8) * 8;
-    
+
     // Controllable suffix bits (between protection end and terminator boundary byte)
     const suffixSafeBits = Math.max(0, Math.floor(bitsAfterAllData / 8) * 8 - protectedBits);
-    
+
     // Padding after terminator + pad-to-byte
     const bitsAfterTerminator = bitsAfterAllData + Math.min(4, totalDataBits - bitsAfterAllData);
     const paddingStartByte = Math.ceil(bitsAfterTerminator / 8);
     const paddingBitsVal = Math.max(0, totalDataBits - paddingStartByte * 8);
     const paddingBytes = Math.floor(paddingBitsVal / 8);
-    
+
     const controllableBits = suffixSafeBits + paddingBitsVal;
     const controlPercent = (controllableBits / totalDataBits) * 100;
-    
+
     log.debug('Evaluating version for QR-Art (suffix mode)', {
       version,
       totalDataBytes,
@@ -785,7 +783,7 @@ export function calculateOptimalVersionAndSuffix(
       controlPercent: `${controlPercent.toFixed(1)}%`,
       meetsThreshold: controlPercent >= minControlPercent,
     });
-    
+
     // Track the best option seen so far
     if (controlPercent > bestControlPercent) {
       bestVersion = version;
@@ -796,7 +794,7 @@ export function calculateOptimalVersionAndSuffix(
       bestSuffixBits = suffixSafeBits;
       bestPaddingBits = paddingBitsVal;
     }
-    
+
     // If this version meets minimum threshold, SELECT it and stop
     // We want the SMALLEST version that meets threshold
     if (controlPercent >= minControlPercent && selectedVersion === startVersion) {
@@ -807,7 +805,7 @@ export function calculateOptimalVersionAndSuffix(
       selectedPaddingBytes = paddingBytes;
       selectedSuffixBits = suffixSafeBits;
       selectedPaddingBits = paddingBitsVal;
-      
+
       log.info('Selected version meets minimum control threshold (suffix mode)', {
         version,
         controlPercent: `${controlPercent.toFixed(1)}%`,
@@ -820,7 +818,7 @@ export function calculateOptimalVersionAndSuffix(
       break;
     }
   }
-  
+
   // If no version met threshold, use the best one found (highest control %)
   if (selectedSuffixLength === 0) {
     selectedVersion = bestVersion;
@@ -830,7 +828,7 @@ export function calculateOptimalVersionAndSuffix(
     selectedPaddingBytes = bestPaddingBytes;
     selectedSuffixBits = bestSuffixBits;
     selectedPaddingBits = bestPaddingBits;
-    
+
     log.warn('No version achieved minimum control threshold, using best available', {
       bestVersion,
       bestControlPercent: `${bestControlPercent.toFixed(1)}%`,
@@ -839,9 +837,9 @@ export function calculateOptimalVersionAndSuffix(
       paddingBytes: bestPaddingBytes,
     });
   }
-  
+
   const versionUpgraded = selectedVersion > originalVersion;
-  
+
   log.info('Calculated optimal version and suffix for QR-Art (suffix mode)', {
     originalVersion,
     selectedVersion,
@@ -861,7 +859,7 @@ export function calculateOptimalVersionAndSuffix(
       total: selectedSuffixBits + selectedPaddingBits,
     },
   });
-  
+
   return {
     version: selectedVersion,
     suffixLength: selectedSuffixLength,
@@ -877,7 +875,7 @@ export function calculateOptimalVersionAndSuffix(
 
 /**
  * Minimum QR version for QR-Art generation.
- * 
+ *
  * No enforced minimum; version selection is dynamic.
  */
 export const MIN_QART_VERSION = 1;
@@ -886,7 +884,7 @@ export const MIN_QART_VERSION = 1;
  * Minimum number of ECC headroom bytes to reserve.
  * This ensures we don't run at 100% ECC correction capacity,
  * which would cause any small error to break decoding.
- * 
+ *
  * Set low (2) because the binary search fallback in scan-fallback.ts
  * automatically finds the maximum safe vector count for phone cameras.
  */
@@ -895,7 +893,7 @@ export const MIN_ECC_HEADROOM_BYTES = 2;
 /**
  * Simple hash function to create a deterministic seed from a string.
  * Uses djb2 algorithm.
- * 
+ *
  * @param str Input string to hash
  * @returns 32-bit hash value
  */
@@ -910,16 +908,16 @@ export function hashStringToSeed(str: string): number {
 /**
  * Mulberry32 PRNG - simple, fast, deterministic random number generator.
  * Given the same seed, produces the same sequence of numbers.
- * 
+ *
  * @param seed 32-bit seed value
  * @returns Function that returns next random number in [0, 1)
  */
 export function mulberry32(seed: number): () => number {
-  return function() {
-    let t = seed += 0x6D2B79F5;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  return () => {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
 
@@ -929,7 +927,7 @@ export function mulberry32(seed: number): () => number {
  * This ensures the baseline QR is stable across runs, making QR-Art more predictable.
  * Uses alphanumeric characters (A-Za-z0-9) which are URL-safe and byte-mode compatible.
  * Byte mode is essential for QART: any bit flip produces a valid decoded byte.
- * 
+ *
  * @param length Number of characters
  * @param seed Seed value (typically from hashStringToSeed)
  * @returns Deterministic alphanumeric string
@@ -963,7 +961,7 @@ export function generateDeterministicNumericSuffix(length: number, seed: number)
 
 /**
  * Generate a random URL-safe suffix
- * 
+ *
  * @deprecated Use generateDeterministicSuffix for stable baselines
  * @param length Number of characters
  * @returns Random alphanumeric string

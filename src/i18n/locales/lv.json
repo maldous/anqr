@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Lūdzu, ievadiet URL",
     "preview": "Priekšskatījums",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR Pirmais režīms",
+    "qrFirstModeHelp": "Augsta kontrasta melnbaltajiem attēliem piespiediet QR datu prioritāti pār pārklājumu",
+    "artworkMode": "Mākslas darbs",
+    "artworkModeInfo": "Mākslas darba režīmā tiek meklēti URL fragmenti, kas nodrošina QR parauga atbilstību jūsu attēlam. Rezultāti atšķiras — vislabāk darbojas ar vienkāršiem, augsta kontrasta attēliem. Sarežģītiem attēliem labākus rezultātus var nodrošināt citi pārklājuma režīmi, piemēram, krāsoti vai pustoņi.",
+    "searchIterations": "Meklēšanas iterācijas",
+    "searchIterationsHelp": "Vairāk atkārtojumu = labāka atbilstība, bet lēnāka ģenerēšana. Lielākajai daļai attēlu ieteicams 10 000–50 000.",
+    "artworkRequiresLowEcc": "Mākslas darba režīmā ir nepieciešama zema kļūdu korekcija, lai nodrošinātu maksimālu pikseļu kontroli."
   },
   "welcome": {
     "title": "Laipni lūdzam ANQR",

@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "请输入 URL",
     "preview": "预览",
     "sobel": "索贝尔",
-    "canny": "兰尼"
+    "canny": "兰尼",
+    "qrFirstMode": "QR优先模式",
+    "qrFirstModeHelp": "对于高对比度黑白图像，强制 QR 数据优先于叠加",
+    "artworkMode": "艺术品",
+    "artworkModeInfo": "图稿模式搜索使 QR 图案与您的图像匹配的 URL 片段。结果各不相同 - 最适合简单、高对比度的图像。对于复杂的图像，其他叠加模式（例如抖动或半色调）可能会产生更好的结果。",
+    "searchIterations": "搜索迭代",
+    "searchIterationsHelp": "更多迭代=更好的匹配但生成速度更慢。对于大多数图像，建议使用 10,000-50,000。",
+    "artworkRequiresLowEcc": "图稿模式需要低误差校正以实现最大像素控制。"
   },
   "welcome": {
     "title": "欢迎来到ANQR",

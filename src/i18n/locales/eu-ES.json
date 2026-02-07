@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Mesedez, sartu URL bat",
     "preview": "Aurrebista",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-Lehenengo modua",
+    "qrFirstModeHelp": "Behartu QR datuen lehentasuna gainjartzea baino kontraste handiko B/W irudietarako",
+    "artworkMode": "Artelana",
+    "artworkModeInfo": "Artelanaren moduak QR eredua zure irudiarekin bat egiten duten URL zatiak bilatzen ditu. Emaitzak aldatu egiten dira: ondoen funtzionatzen du kontraste handiko irudi sinpleekin. Irudi konplexuetarako, beste gainjartze-modu batzuek, hala nola Dithered edo Halftone, emaitza hobeak sor ditzakete.",
+    "searchIterations": "Bilatu Iterazioak",
+    "searchIterationsHelp": "Iterazio gehiago = parekatze hobea baina belaunaldi motelagoa. 10.000-50.000 gomendatzen dira irudi gehienetarako.",
+    "artworkRequiresLowEcc": "Artelanaren moduak errore baxua zuzentzea eskatzen du pixelen kontrol maximorako."
   },
   "welcome": {
     "title": "Ongi etorri ANQRra",

@@ -265,7 +265,11 @@ function tryDecode(imageData: ImageData): DecodeResult | null {
       qrDecoderLog.trace('main: Failed - decode reported invalid (truncation or corrupt data)', {
         structurallyValid: decoded.structurallyValid,
         segmentCount: decoded.segmentCount,
-        segments: decoded.segments.map(s => ({ mode: s.modeName, valid: s.valid, charCount: s.charCount })),
+        segments: decoded.segments.map((s) => ({
+          mode: s.modeName,
+          valid: s.valid,
+          charCount: s.charCount,
+        })),
       });
       return null;
     }

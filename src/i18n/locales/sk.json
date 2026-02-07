@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Zadajte adresu URL",
     "preview": "Ukážka",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "Režim QR-First",
+    "qrFirstModeHelp": "Vynútiť prioritu údajov QR pred prekrytím pre vysoko kontrastné čiernobiele obrázky",
+    "artworkMode": "Umelecké dielo",
+    "artworkModeInfo": "Režim umeleckého diela vyhľadá fragmenty adresy URL, vďaka ktorým sa vzor QR zhoduje s vaším obrázkom. Výsledky sa líšia – najlepšie funguje s jednoduchými obrázkami s vysokým kontrastom. Pri zložitých obrázkoch môžu dosiahnuť lepšie výsledky iné režimy prekrytia, ako napríklad Dithered alebo Halftone.",
+    "searchIterations": "Iterácie vyhľadávania",
+    "searchIterationsHelp": "Viac iterácií = lepšia zhoda, ale pomalšie generovanie. Pre väčšinu obrázkov sa odporúča 10 000 – 50 000.",
+    "artworkRequiresLowEcc": "Režim umeleckého diela vyžaduje nízku korekciu chýb pre maximálnu kontrolu pixelov."
   },
   "welcome": {
     "title": "Vitajte v ANQR",

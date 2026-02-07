@@ -742,6 +742,11 @@ export {
   selectBasisVectorsForTarget,
 } from './elimination';
 export {
+  eccNumericToLevel,
+  // Format info utilities
+  extractFormatInfo,
+  extractMaskFromMatrix,
+  type FormatVerificationResult,
   type FullQArtConfig,
   type FullQArtResult,
   generateFullQArt,
@@ -749,42 +754,36 @@ export {
   generateFullQArtBestRotation,
   generateFullQArtOptimal,
   matrixToQRLike,
-  // Format info utilities
-  extractFormatInfo,
-  extractMaskFromMatrix,
+  type RejectionReason,
   readFormatInfoFromDecoder,
-  verifyMatrixFormatInfo,
-  eccNumericToLevel,
+  type SemanticValidationResult,
+  VALID_SUFFIX_CHARS,
   // Suffix charset validation
   validateSuffixCharset,
-  VALID_SUFFIX_CHARS,
-  type RejectionReason,
-  type FormatVerificationResult,
-  type SemanticValidationResult,
+  verifyMatrixFormatInfo,
 } from './generate';
 export {
   basisToMatrix,
   buildBlockBasis,
   buildFullBasis,
+  calculateOptimalVersionAndSuffix,
   clearBasisCache,
   computeECC,
+  generateDeterministicNumericSuffix,
+  generateDeterministicSuffix,
   getCachedBasis,
-  type RSBasis,
-  type RSBasisVector,
-  xorBasisVectors,
+  hashStringToSeed,
   // Suffix and capacity configuration
   MIN_ECC_HEADROOM_BYTES,
   MIN_QART_VERSION,
-  calculateOptimalVersionAndSuffix,
-  generateDeterministicSuffix,
-  generateDeterministicNumericSuffix,
-  hashStringToSeed,
-
+  type RSBasis,
+  type RSBasisVector,
+  xorBasisVectors,
 } from './rs-basis';
 export {
-  type RejectionHistogram,
   binarySearchMaxVectors,
   flattenAndOrderSelections,
+  type RejectionHistogram,
   unflattenSelections,
 } from './scan-fallback';
 

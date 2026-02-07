@@ -1456,7 +1456,14 @@
     "pleaseEnterUrl": "Introduceți un URL",
     "preview": "Previzualizare",
     "sobel": "Sobel",
-    "canny": "Canny"
+    "canny": "Canny",
+    "qrFirstMode": "QR-Primul mod",
+    "qrFirstModeHelp": "Forțați prioritatea datelor QR față de suprapunere pentru imagini alb-negru cu contrast ridicat",
+    "artworkMode": "Operă de artă",
+    "artworkModeInfo": "Modul Artwork caută fragmente URL care fac ca modelul QR să se potrivească cu imaginea dvs. Rezultatele variază - funcționează cel mai bine cu imagini simple, cu contrast ridicat. Pentru imagini complexe, alte moduri de suprapunere, cum ar fi Dithered sau Halftone, pot produce rezultate mai bune.",
+    "searchIterations": "Căutare iterații",
+    "searchIterationsHelp": "Mai multe iterații = potrivire mai bună, dar generare mai lentă. 10.000-50.000 recomandat pentru majoritatea imaginilor.",
+    "artworkRequiresLowEcc": "Modul ilustrație necesită o corecție redusă a erorilor pentru un control maxim al pixelilor."
   },
   "welcome": {
     "title": "Bine ati venit la ANQR",
