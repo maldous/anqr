@@ -463,24 +463,23 @@ export default defineConfig({
           if (id.includes('/modules/qrcode.mjs')) {
             return 'app-qr-lib';
           }
-          // App modules - split heavy processing
-          // Includes the full native I/O chain to avoid circular chunk dependencies:
-          // exporter → browser-io → platform → @capacitor
+          // Image processing & effects pipeline:
+          // overlay, dither-algorithms, animation (animation depends on dither)
+          if (
+            id.includes('/modules/overlay') ||
+            id.includes('/modules/dither') ||
+            id.includes('/modules/animation')
+          ) {
+            return 'app-image-processing';
+          }
+          // Native I/O chain: exporter → browser-io → platform → @capacitor
           if (
             id.includes('/modules/exporter') ||
-            id.includes('/modules/animation') ||
             id.includes('/modules/platform') ||
             id.includes('/modules/browser-io') ||
             id.includes('node_modules/@capacitor')
           ) {
             return 'app-exporter';
-          }
-          if (
-            id.includes('/modules/overlay-processor') ||
-            id.includes('/modules/image-filters') ||
-            id.includes('/modules/dither')
-          ) {
-            return 'app-image-processing';
           }
           if (
             id.includes('/modules/renderer') ||
