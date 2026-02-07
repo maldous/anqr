@@ -73,6 +73,45 @@ describe('netlify qr function', () => {
     expect(webpRes.headers.get('Content-Type')).toBe('image/webp');
   });
 
+  it('returns a handled server error on default GIF output path', async () => {
+    const payload = 'https://example.com/netlify-gif-default';
+
+    const res = await handler(
+      new Request(`https://example.com/api/qr?data=${encodeURIComponent(payload)}`)
+    );
+
+    expect(res.status).toBe(500);
+    expect(await res.text()).toContain('Error generating QR code');
+  });
+
+  it('renders watermark and PNG metadata path successfully', async () => {
+    const payload = 'https://example.com/netlify-watermark-metadata';
+    const url =
+      `https://example.com/api/qr?data=${encodeURIComponent(payload)}` +
+      '&format=png&size=256&dpi=300&metaTitle=ANQR%20Test&metaAuthor=Tester' +
+      '&wmEn=1&wmKind=text&wmText=SCAN%20ME&wmPos=center&wmOpacity=60&wmBlend=overlay';
+    const res = await handler(new Request(url));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe('image/png');
+    expect((await res.arrayBuffer()).byteLength).toBeGreaterThan(0);
+  });
+
+  it('blocks private overlay URLs (SSRF protection) and still generates output', async () => {
+    const payload = 'https://example.com/netlify-ssrf-protection';
+    const url =
+      `https://example.com/api/qr?data=${encodeURIComponent(payload)}` +
+      '&format=png&size=256&mode=dithered&img=http%3A%2F%2F127.0.0.1%2Fprivate.png';
+    const res = await handler(new Request(url));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe('image/png');
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const imageData = await bufferToImageData(buffer);
+    const decoded = decodeQR(imageData as ImageData);
+    expect(decoded?.data).toBe(payload);
+  });
+
   it('produces stable ETag for identical requests', async () => {
     const payload = 'https://example.com/netlify-etag-test';
     const req = new Request(
