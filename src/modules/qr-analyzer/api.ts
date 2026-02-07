@@ -106,6 +106,7 @@ export const TYPES = [
   'ScanSimulationResult',
   'ScanStats',
   'StructuralAnalysis',
+  'TimingDiagnostics',
   'UrlDetails',
   'ValidationResult',
 ] as const;

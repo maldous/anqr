@@ -32,6 +32,7 @@ export interface AnalysisExportData {
     structuralAnalysis?: QRAnalysisResult['structuralAnalysis'];
     imageProperties?: QRAnalysisResult['imageProperties'];
     geometry?: QRAnalysisResult['geometry'];
+    timing?: QRAnalysisResult['timing'];
     errorsCorrected: number | null;
     decoderMetadata?: QRAnalysisResult['decoderMetadata'];
     moduleMatrix?: string[];
@@ -43,6 +44,8 @@ export interface AnalysisExportData {
       quietZoneAdequate: boolean;
       contrastRatio?: number;
       estimatedRotationDeg?: number;
+      decodeMs?: number | null;
+      totalAnalysisMs?: number | null;
     };
   };
   generatorSettings: AnalysisExportGeneratorSettings;
@@ -99,6 +102,7 @@ export function buildAnalysisExportData(
       structuralAnalysis: result.structuralAnalysis,
       imageProperties: result.imageProperties,
       geometry: result.geometry,
+      timing: result.timing,
       errorsCorrected: result.errorsCorrected,
       decoderMetadata: result.decoderMetadata,
       moduleMatrix,
@@ -110,6 +114,8 @@ export function buildAnalysisExportData(
         quietZoneAdequate: !!result.quietZone?.adequate,
         contrastRatio: result.detectedColors?.contrastRatio,
         estimatedRotationDeg: result.geometry?.estimatedRotationDeg,
+        decodeMs: result.timing?.decodeMs ?? null,
+        totalAnalysisMs: result.timing?.totalAnalysisMs ?? null,
       },
     },
     generatorSettings,

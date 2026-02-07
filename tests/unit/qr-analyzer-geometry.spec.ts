@@ -1,6 +1,6 @@
 import { createCanvas } from '@napi-rs/canvas';
 import { describe, expect, it } from 'vitest';
-import { decodeQRFromCanvas } from '../../src/modules/qr-analyzer';
+import { analyzeQRFromCanvas } from '../../src/modules/qr-analyzer';
 import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
 
 if (typeof globalThis.ImageData === 'undefined') {
@@ -34,7 +34,7 @@ const nodeCanvasFactory: CanvasFactory = {
 };
 
 describe('qr-analyzer geometry diagnostics', () => {
-  it('includes corners, bounding box, and rotation', async () => {
+  it('includes corners, bounding box, rotation, and timing diagnostics', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
     const config: QRGeneratorConfig = {
       content: 'https://example.com/geometry-check',
@@ -47,13 +47,15 @@ describe('qr-analyzer geometry diagnostics', () => {
     };
 
     const canvas = await qr.generate(config, null);
-    const analysis = decodeQRFromCanvas(canvas as any);
+    const analysis = await analyzeQRFromCanvas(canvas as any);
 
     expect(analysis.success).toBe(true);
     expect(analysis.geometry).toBeDefined();
     expect(analysis.geometry?.boundingBox.width).toBeGreaterThan(0);
     expect(analysis.geometry?.boundingBox.height).toBeGreaterThan(0);
     expect(Math.abs(analysis.geometry?.estimatedRotationDeg ?? 999)).toBeLessThan(5);
+    expect(analysis.timing?.decodeMs).toBeTypeOf('number');
+    expect(analysis.timing?.totalAnalysisMs).toBeTypeOf('number');
+    expect(analysis.timing?.totalAnalysisMs ?? 0).toBeGreaterThanOrEqual(analysis.timing?.decodeMs ?? 0);
   });
 });
-

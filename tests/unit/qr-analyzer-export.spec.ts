@@ -32,6 +32,10 @@ describe('qr-analyzer export builder', () => {
         leftEdgePx: 101.0,
         estimatedRotationDeg: 1.1,
       },
+      timing: {
+        decodeMs: 12.34,
+        totalAnalysisMs: 19.87,
+      },
     };
 
     const out = buildAnalysisExportData(result, {
@@ -48,6 +52,9 @@ describe('qr-analyzer export builder', () => {
     expect(out.diagnostics.summary.scannable).toBe(true);
     expect(out.diagnostics.summary.quietZoneAdequate).toBe(true);
     expect(out.diagnostics.summary.estimatedRotationDeg).toBeCloseTo(1.1, 5);
+    expect(out.analysis.timing).toEqual({ decodeMs: 12.34, totalAnalysisMs: 19.87 });
+    expect(out.diagnostics.summary.decodeMs).toBe(12.34);
+    expect(out.diagnostics.summary.totalAnalysisMs).toBe(19.87);
   });
 
   it('omits invalid generator encoding mode values', () => {
@@ -67,4 +74,3 @@ describe('qr-analyzer export builder', () => {
     expect(out.generatorSettings.encodingMode).toBeUndefined();
   });
 });
-
