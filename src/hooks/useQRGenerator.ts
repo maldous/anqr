@@ -1156,8 +1156,8 @@ export function useQRGenerator(): UseQRGeneratorResult {
             data: debouncedConfig.content,
             targetImage: overlayCanvas,
             version: debouncedConfig.typeNumber || 0,
-            // QArt: start with ECC L (more controllable capacity)
-            ecc: 'L' as 'L' | 'M' | 'Q' | 'H',
+            // QArt: honor user-selected ECC (default to M if unset)
+            ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
             strictSuffix: true,
             // QArt: start at 100% control and reduce until scannable (handled in generator)
             targetControlPercent: 100,

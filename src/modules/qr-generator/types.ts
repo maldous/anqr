@@ -132,6 +132,8 @@ export interface QRGeneratorConfig {
   qrartFragmentLength?: number;
   /** QR-Art: Random seed for reproducible searches */
   qrartSeed?: number;
+  /** Render QR-Art matrix without styling (debug) */
+  rawMatrixRender?: boolean;
   filterEdgeMode?: string;
   filterPosterize?: number;
   filterDuotone1?: string;

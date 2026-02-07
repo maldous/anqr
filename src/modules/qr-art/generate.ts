@@ -1945,7 +1945,7 @@ function filterSelectionsForNumericSuffix(
   const groupIndexForBit = new Int32Array(numericDataBits).fill(-1);
   const bitMaskForBit = new Int32Array(numericDataBits).fill(0);
   const groupMax: number[] = [];
-  const groupValues: number[] = [];
+  const baseGroupValues: number[] = [];
 
   let remainingDigits = encoderLayout.suffixLength;
   let bitCursor = 0;
@@ -1964,7 +1964,7 @@ function filterSelectionsForNumericSuffix(
     }
 
     groupMax.push(maxVal);
-    groupValues.push(value);
+    baseGroupValues.push(value);
 
     bitCursor += bitsPerGroup;
     remainingDigits -= groupDigits;
@@ -1979,7 +1979,13 @@ function filterSelectionsForNumericSuffix(
     offset += count;
   }
 
-  const accepted: FlattenedSelection[] = [];
+  type SelectionMask = {
+    entry: FlattenedSelection;
+    groups: Int32Array;
+    masks: Int32Array;
+  };
+
+  const selections: SelectionMask[] = [];
   const groupCount = groupMax.length;
   const groupMasks = new Int32Array(groupCount);
   const touched = new Int32Array(groupCount);
@@ -1997,27 +2003,25 @@ function filterSelectionsForNumericSuffix(
     if (nzIdx && nzVals) {
       const firstByte = nzIdx[0] ?? -1;
       const lastByte = nzIdx[nzIdx.length - 1] ?? -1;
-      if (firstByte >= numericEndByte || lastByte < numericStartByte) {
-        accepted.push(entry);
-        continue;
-      }
-      for (let k = 0; k < nzIdx.length; k++) {
-        const byteIdx = nzIdx[k];
-        if (byteIdx >= dataCount) continue;
-        const byte = nzVals[k];
-        for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
-          if ((byte & (1 << bitInByte)) === 0) continue;
-          const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
-          if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
-            continue;
+      if (firstByte < numericEndByte && lastByte >= numericStartByte) {
+        for (let k = 0; k < nzIdx.length; k++) {
+          const byteIdx = nzIdx[k];
+          if (byteIdx >= dataCount) continue;
+          const byte = nzVals[k];
+          for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
+            if ((byte & (1 << bitInByte)) === 0) continue;
+            const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
+            if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
+              continue;
+            }
+            const local = linearBit - numericDataStart;
+            const g = groupIndexForBit[local];
+            if (g < 0) continue;
+            if (groupMasks[g] === 0) {
+              touched[touchedCount++] = g;
+            }
+            groupMasks[g] ^= bitMaskForBit[local];
           }
-          const local = linearBit - numericDataStart;
-          const g = groupIndexForBit[local];
-          if (g < 0) continue;
-          if (groupMasks[g] === 0) {
-            touched[touchedCount++] = g;
-          }
-          groupMasks[g] ^= bitMaskForBit[local];
         }
       }
     } else {
@@ -2041,31 +2045,77 @@ function filterSelectionsForNumericSuffix(
       }
     }
 
-    let ok = true;
-    for (let i = 0; i < touchedCount; i++) {
-      const g = touched[i];
-      const nextVal = (groupValues[g] ?? 0) ^ groupMasks[g];
-      if (nextVal > (groupMax[g] ?? 0)) {
-        ok = false;
-        break;
-      }
-    }
-
-    if (ok) {
+    if (touchedCount === 0) {
+      selections.push({ entry, groups: new Int32Array(0), masks: new Int32Array(0) });
+    } else {
+      const groups = new Int32Array(touchedCount);
+      const masks = new Int32Array(touchedCount);
       for (let i = 0; i < touchedCount; i++) {
         const g = touched[i];
-        groupValues[g] = (groupValues[g] ?? 0) ^ groupMasks[g];
+        groups[i] = g;
+        masks[i] = groupMasks[g];
+        groupMasks[g] = 0;
       }
-      accepted.push(entry);
-    }
-
-    for (let i = 0; i < touchedCount; i++) {
-      groupMasks[touched[i]] = 0;
+      selections.push({ entry, groups, masks });
     }
   }
 
+  const currentValues = baseGroupValues.slice();
+  for (const sel of selections) {
+    for (let i = 0; i < sel.groups.length; i++) {
+      const g = sel.groups[i];
+      currentValues[g] = (currentValues[g] ?? 0) ^ sel.masks[i];
+    }
+  }
+
+  const invalid = new Uint8Array(groupCount);
+  const markInvalid = (): number => {
+    let count = 0;
+    for (let g = 0; g < groupCount; g++) {
+      const bad = currentValues[g] > (groupMax[g] ?? 0);
+      invalid[g] = bad ? 1 : 0;
+      if (bad) count++;
+    }
+    return count;
+  };
+
+  let invalidCount = markInvalid();
+  const keep = new Array(selections.length).fill(true);
+
+  while (invalidCount > 0) {
+    let removed = false;
+    for (let i = selections.length - 1; i >= 0; i--) {
+      if (!keep[i]) continue;
+      const sel = selections[i];
+      let touchesInvalid = false;
+      for (let j = 0; j < sel.groups.length; j++) {
+        if (invalid[sel.groups[j]]) {
+          touchesInvalid = true;
+          break;
+        }
+      }
+      if (!touchesInvalid) continue;
+
+      // remove this (lowest-importance) selection
+      keep[i] = false;
+      for (let j = 0; j < sel.groups.length; j++) {
+        const g = sel.groups[j];
+        currentValues[g] = (currentValues[g] ?? 0) ^ sel.masks[j];
+      }
+      removed = true;
+      invalidCount = markInvalid();
+      break;
+    }
+    if (!removed) break;
+  }
+
+  const accepted: FlattenedSelection[] = [];
+  for (let i = 0; i < selections.length; i++) {
+    if (keep[i]) accepted.push(selections[i].entry);
+  }
+
   if (accepted.length !== flattened.length) {
-    log.info('Numeric suffix safety filter applied', {
+    log.info('Numeric suffix repair filter applied', {
       originalSelections: flattened.length,
       acceptedSelections: accepted.length,
       removed: flattened.length - accepted.length,
