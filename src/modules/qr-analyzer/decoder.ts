@@ -234,10 +234,10 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     qrAnalyzerLog.trace('colors: Detected colors', detectedColors);
 
     // Calculate quiet zone
-    const quietZone = analyzeQuietZone(imageData, location, estimatedModulePx || 10);
+    const quietZone = analyzeQuietZone(imageData, location, estimatedModulePx ?? 10);
 
     // Build module matrix if possible
-    const moduleMatrix = buildModuleMatrix(imageData, location, moduleCount, estimatedModulePx);
+    const moduleMatrix = buildModuleMatrix(imageData, location, moduleCount, estimatedModulePx ?? 10);
 
     // Validate matrix by checking finder patterns
     if (moduleMatrix) {

@@ -413,12 +413,12 @@ function App() {
         },
       }));
     if (params.eyeScale !== undefined)
-      useQRStore.setState((s) => ({ render: { ...s.render, eyeScale: params.eyeScale } }));
+      useQRStore.setState((s) => ({ render: { ...s.render, eyeScale: params.eyeScale! } }));
     if (params.frameStyle)
       store.setRenderFrameStyle(params.frameStyle as 'none' | 'rounded_frame' | 'sticker' | 'tag');
     if (params.frameText) store.setRenderFrameText(params.frameText);
     if (params.dotRotation !== undefined)
-      useQRStore.setState((s) => ({ render: { ...s.render, dotRotationDeg: params.dotRotation } }));
+      useQRStore.setState((s) => ({ render: { ...s.render, dotRotationDeg: params.dotRotation! } }));
     if (params.crispEdges === false)
       useQRStore.setState((s) => ({ render: { ...s.render, crispEdges: false } }));
     if (params.pixelSnap)
@@ -441,7 +441,7 @@ function App() {
       useQRStore.setState((s) => ({ render: { ...s.render, contrastGuard: true } }));
     if (params.minContrastRatio !== undefined)
       useQRStore.setState((s) => ({
-        render: { ...s.render, minContrastRatio: params.minContrastRatio },
+        render: { ...s.render, minContrastRatio: params.minContrastRatio! },
       }));
     // Overlay
     if (params.mode) store.setOverlayMode(params.mode as any);
@@ -461,7 +461,7 @@ function App() {
       useQRStore.setState((s) => ({ overlay: { ...s.overlay, eccAwareEnabled: true } }));
     if (params.eccAwareRiskBudget !== undefined)
       useQRStore.setState((s) => ({
-        overlay: { ...s.overlay, eccAwareRiskBudget: params.eccAwareRiskBudget },
+        overlay: { ...s.overlay, eccAwareRiskBudget: params.eccAwareRiskBudget! },
       }));
     if (params.eccAwareWeightMap)
       useQRStore.setState((s) => ({
@@ -494,7 +494,7 @@ function App() {
     if (params.gifUseFrameDelays === false)
       useQRStore.setState((s) => ({ overlay: { ...s.overlay, gifUseFrameDelays: false } }));
     if (params.gifMaxFps !== undefined)
-      useQRStore.setState((s) => ({ overlay: { ...s.overlay, gifMaxFps: params.gifMaxFps } }));
+      useQRStore.setState((s) => ({ overlay: { ...s.overlay, gifMaxFps: params.gifMaxFps! } }));
     if (params.gifDisposalHandling)
       useQRStore.setState((s) => ({
         overlay: { ...s.overlay, gifDisposalHandling: params.gifDisposalHandling as any },
@@ -527,11 +527,11 @@ function App() {
       }));
     if (params.blueNoiseTileSize !== undefined)
       useQRStore.setState((s) => ({
-        overlay: { ...s.overlay, blueNoiseTileSize: params.blueNoiseTileSize },
+        overlay: { ...s.overlay, blueNoiseTileSize: params.blueNoiseTileSize! },
       }));
     if (params.blueNoiseSeed !== undefined)
       useQRStore.setState((s) => ({
-        overlay: { ...s.overlay, blueNoiseSeed: params.blueNoiseSeed },
+        overlay: { ...s.overlay, blueNoiseSeed: params.blueNoiseSeed! },
       }));
     if (params.colorDither)
       useQRStore.setState((s) => ({
@@ -549,7 +549,7 @@ function App() {
       }));
     if (params.subpixelNeutralColor)
       useQRStore.setState((s) => ({
-        overlay: { ...s.overlay, subpixelNeutralColor: params.subpixelNeutralColor },
+        overlay: { ...s.overlay, subpixelNeutralColor: params.subpixelNeutralColor! },
       }));
     if (params.subpixelFinderOverride)
       useQRStore.setState((s) => ({
@@ -609,12 +609,12 @@ function App() {
       }));
     if (params.moduleJitter !== undefined)
       useQRStore.setState((s) => ({
-        animation: { ...s.animation, moduleJitterPx: params.moduleJitter },
+        animation: { ...s.animation, moduleJitterPx: params.moduleJitter! },
       }));
     if (params.colorCycle)
       useQRStore.setState((s) => ({ animation: { ...s.animation, colorCycle: true } }));
     if (params.seed !== undefined)
-      useQRStore.setState((s) => ({ animation: { ...s.animation, seed: params.seed } }));
+      useQRStore.setState((s) => ({ animation: { ...s.animation, seed: params.seed! } }));
 
     // Output params
     if (params.format) store.setOutputFormat(params.format as 'png' | 'webp' | 'gif' | 'svg');
@@ -629,14 +629,14 @@ function App() {
       useQRStore.setState((s) => ({ output: { ...s.output, gifDither: params.gifDither as any } }));
     if (params.svgTrueVector) store.setOutputSvgTrueVector(true);
     if (params.dpi !== undefined)
-      useQRStore.setState((s) => ({ output: { ...s.output, dpi: params.dpi } }));
+      useQRStore.setState((s) => ({ output: { ...s.output, dpi: params.dpi! } }));
     if (params.includeQuietZone === false)
       useQRStore.setState((s) => ({ output: { ...s.output, includeQuietZone: false } }));
     if (params.bgOverride)
-      useQRStore.setState((s) => ({ output: { ...s.output, bgOverride: params.bgOverride } }));
+      useQRStore.setState((s) => ({ output: { ...s.output, bgOverride: params.bgOverride! } }));
     if (params.gifTransparentColor)
       useQRStore.setState((s) => ({
-        output: { ...s.output, gifTransparentColor: params.gifTransparentColor },
+        output: { ...s.output, gifTransparentColor: params.gifTransparentColor! },
       }));
     if (params.svgShapePrecision)
       useQRStore.setState((s) => ({
@@ -656,7 +656,7 @@ function App() {
       );
     if (params.borderModulesExtra !== undefined)
       useQRStore.setState((s) => ({
-        qr: { ...s.qr, borderModulesExtra: params.borderModulesExtra },
+        qr: { ...s.qr, borderModulesExtra: params.borderModulesExtra! },
       }));
     if (params.quietZoneMinEnforce === false)
       useQRStore.setState((s) => ({ qr: { ...s.qr, quietZoneMinEnforce: false } }));
@@ -671,11 +671,11 @@ function App() {
       useQRStore.setState((s) => ({ safety: { ...s.safety, mode: params.safetyMode as any } }));
     if (params.safetyMinModulePx !== undefined)
       useQRStore.setState((s) => ({
-        safety: { ...s.safety, minModulePx: params.safetyMinModulePx },
+        safety: { ...s.safety, minModulePx: params.safetyMinModulePx! },
       }));
     if (params.safetyMinQuietZone !== undefined)
       useQRStore.setState((s) => ({
-        safety: { ...s.safety, minQuietZoneModules: params.safetyMinQuietZone },
+        safety: { ...s.safety, minQuietZoneModules: params.safetyMinQuietZone! },
       }));
     if (params.lockFinders === false)
       useQRStore.setState((s) => ({ safety: { ...s.safety, lockFinders: false } }));
@@ -692,12 +692,12 @@ function App() {
     if (params.qaContrastCheck)
       useQRStore.setState((s) => ({ qa: { ...s.qa, contrastCheck: true } }));
     if (params.qaSimulateBlur !== undefined)
-      useQRStore.setState((s) => ({ qa: { ...s.qa, simulateBlurPx: params.qaSimulateBlur } }));
+      useQRStore.setState((s) => ({ qa: { ...s.qa, simulateBlurPx: params.qaSimulateBlur! } }));
     if (params.qaSimulateNoise !== undefined)
-      useQRStore.setState((s) => ({ qa: { ...s.qa, simulateNoise: params.qaSimulateNoise } }));
+      useQRStore.setState((s) => ({ qa: { ...s.qa, simulateNoise: params.qaSimulateNoise! } }));
     if (params.qaSimulateRotation !== undefined)
       useQRStore.setState((s) => ({
-        qa: { ...s.qa, simulateRotationDeg: params.qaSimulateRotation },
+        qa: { ...s.qa, simulateRotationDeg: params.qaSimulateRotation! },
       }));
     if (params.qaShowHeatmap) useQRStore.setState((s) => ({ qa: { ...s.qa, showHeatmap: true } }));
 
@@ -716,14 +716,14 @@ function App() {
         watermark: { ...s.watermark, kind: params.watermarkKind as any },
       }));
     if (params.watermarkText)
-      useQRStore.setState((s) => ({ watermark: { ...s.watermark, text: params.watermarkText } }));
+      useQRStore.setState((s) => ({ watermark: { ...s.watermark, text: params.watermarkText! } }));
     if (params.watermarkPosition)
       useQRStore.setState((s) => ({
         watermark: { ...s.watermark, position: params.watermarkPosition as any },
       }));
     if (params.watermarkOpacity !== undefined)
       useQRStore.setState((s) => ({
-        watermark: { ...s.watermark, opacity: params.watermarkOpacity },
+        watermark: { ...s.watermark, opacity: params.watermarkOpacity! },
       }));
     if (params.watermarkBlend)
       useQRStore.setState((s) => ({
@@ -732,18 +732,18 @@ function App() {
 
     // Metadata params
     if (params.metaTitle)
-      useQRStore.setState((s) => ({ metadata: { ...s.metadata, title: params.metaTitle } }));
+      useQRStore.setState((s) => ({ metadata: { ...s.metadata, title: params.metaTitle! } }));
     if (params.metaAuthor)
-      useQRStore.setState((s) => ({ metadata: { ...s.metadata, author: params.metaAuthor } }));
+      useQRStore.setState((s) => ({ metadata: { ...s.metadata, author: params.metaAuthor! } }));
     if (params.metaCopyright)
       useQRStore.setState((s) => ({
-        metadata: { ...s.metadata, copyright: params.metaCopyright },
+        metadata: { ...s.metadata, copyright: params.metaCopyright! },
       }));
     if (params.metaLicense)
-      useQRStore.setState((s) => ({ metadata: { ...s.metadata, license: params.metaLicense } }));
+      useQRStore.setState((s) => ({ metadata: { ...s.metadata, license: params.metaLicense! } }));
     if (params.metaDescription)
       useQRStore.setState((s) => ({
-        metadata: { ...s.metadata, description: params.metaDescription },
+        metadata: { ...s.metadata, description: params.metaDescription! },
       }));
     if (params.metaCreationTime)
       useQRStore.setState((s) => ({ metadata: { ...s.metadata, creationTime: true } }));
@@ -832,7 +832,7 @@ function App() {
 
     // GIF disposal
     if (params.gifDisposal)
-      useQRStore.setState((s) => ({ output: { ...s.output, gifDisposal: params.gifDisposal } }));
+      useQRStore.setState((s) => ({ output: { ...s.output, gifDisposal: params.gifDisposal! } }));
   }, [loadOverlayFromUrl]);
 
   return (

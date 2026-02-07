@@ -21,10 +21,11 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
+  const _ctx = canvas.getContext('2d');
+  if (!_ctx) {
     throw new Error('Failed to get 2D context for GIF compositor canvas');
   }
+  const ctx: CanvasRenderingContext2D = _ctx;
 
   let maxPatchW = 0;
   let maxPatchH = 0;

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.tsx",
+    "netlify/functions/qr.ts",
+    "scripts/*.{js,mjs,ts}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "netlify/**/*.ts"
+  ],
+  "ignore": [
+    "android/**",
+    ".netlify/**",
+    "src/i18n/static/*/*.ts",
+    "src/i18n/locales/*.json"
+  ],
+  "ignoreDependencies": [
+    "@biomejs/biome",
+    "madge",
+    "puppeteer",
+    "netlify-cli",
+    "@capacitor/filesystem",
+    "@capacitor/splash-screen",
+    "@dnd-kit/core",
+    "@dnd-kit/sortable",
+    "@dnd-kit/utilities",
+    "@hookform/resolvers",
+    "@radix-ui/react-checkbox",
+    "@radix-ui/react-collapsible",
+    "@radix-ui/react-dialog",
+    "@radix-ui/react-dropdown-menu",
+    "@radix-ui/react-radio-group",
+    "comlink",
+    "ics",
+    "image-q",
+    "poissimple",
+    "react-easy-crop",
+    "react-hook-form",
+    "ts-custom-error",
+    "vcard-creator",
+    "zod"
+  ]
+}
