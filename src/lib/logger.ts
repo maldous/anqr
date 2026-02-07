@@ -553,23 +553,23 @@ function captureToBuffer(scope: string, level: string, message: string, context?
 // Configuration
 // ============================================================================
 
-/** Keys that should be redacted from log context */
+/** Keys that should be redacted from log context (all lowercase for case-insensitive matching) */
 const SENSITIVE_KEYS = new Set([
   'password',
   'token',
   'secret',
-  'apiKey',
+  'apikey',
   'api_key',
   'authorization',
   'auth',
   'credential',
-  'sessionId',
+  'sessionid',
   'session_id',
-  'accessToken',
+  'accesstoken',
   'access_token',
-  'refreshToken',
+  'refreshtoken',
   'refresh_token',
-  'privateKey',
+  'privatekey',
   'private_key',
 ]);
 
@@ -620,13 +620,11 @@ function redactSensitive(obj: unknown, depth = 0): unknown {
     return obj.map((item) => redactSensitive(item, depth + 1));
   }
 
-  if (obj instanceof Error) {
-    return {
-      name: obj.name,
-      message: obj.message,
-      stack: obj.stack,
-    };
-  }
+  // Pass through special types unchanged — safeSerializeContext handles them later
+  if (obj instanceof Error) return obj;
+  if (obj instanceof Set || obj instanceof Map) return obj;
+  if (typeof Node !== 'undefined' && obj instanceof Node) return obj;
+  if (ArrayBuffer.isView(obj)) return obj;
 
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
@@ -705,11 +703,12 @@ export function createLogger(scope: string): Logger {
 
   return {
     trace(message: string, context?: LogContext): void {
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'trace', message, context);
+      const safe = context ? redactSensitive(context) : undefined;
 
-      if (context) {
-        const safe = redactSensitive(context);
+      // Capture to buffer even if console output is suppressed
+      captureToBuffer(upperScope, 'trace', message, safe);
+
+      if (safe) {
         logger.trace(message, safe);
       } else {
         logger.trace(message);
@@ -717,11 +716,12 @@ export function createLogger(scope: string): Logger {
     },
 
     debug(message: string, context?: LogContext): void {
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'debug', message, context);
+      const safe = context ? redactSensitive(context) : undefined;
 
-      if (context) {
-        const safe = redactSensitive(context);
+      // Capture to buffer even if console output is suppressed
+      captureToBuffer(upperScope, 'debug', message, safe);
+
+      if (safe) {
         logger.debug(message, safe);
       } else {
         logger.debug(message);
@@ -729,11 +729,12 @@ export function createLogger(scope: string): Logger {
     },
 
     info(message: string, context?: LogContext): void {
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'info', message, context);
+      const safe = context ? redactSensitive(context) : undefined;
 
-      if (context) {
-        const safe = redactSensitive(context);
+      // Capture to buffer even if console output is suppressed
+      captureToBuffer(upperScope, 'info', message, safe);
+
+      if (safe) {
         logger.info(message, safe);
       } else {
         logger.info(message);
