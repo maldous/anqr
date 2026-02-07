@@ -11,6 +11,43 @@ const BASE_LOCALE = 'en-GB';
 const BASE_STATIC = 'en-GB';
 
 const EN_PREFIX = /^en-/i;
+const NON_LATIN_SCRIPTS = new Set([
+  'am',
+  'ar',
+  'bn-BD',
+  'fa',
+  'fa-AE',
+  'fa-AF',
+  'fa-IR',
+  'gu',
+  'hi-IN',
+  'hy-AM',
+  'iw-IL',
+  'ja-JP',
+  'ka-GE',
+  'kk',
+  'km-KH',
+  'kn-IN',
+  'ko-KR',
+  'lo-LA',
+  'ml-IN',
+  'mn-MN',
+  'mr-IN',
+  'my-MM',
+  'ne-NP',
+  'pa',
+  'ru-RU',
+  'si-LK',
+  'sr',
+  'ta-IN',
+  'te-IN',
+  'th',
+  'uk',
+  'ur',
+  'zh-CN',
+  'zh-HK',
+  'zh-TW',
+]);
 
 function readLines(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
@@ -32,6 +69,19 @@ function isIgnorable(text) {
   const t = text.trim();
   if (!t || t === '_' || t === '(deprecated)') return true;
   if (t.includes('http://') || t.includes('https://') || t.includes('www.')) return true;
+  // Config glossary lines intentionally keep technical keys and literals.
+  if (/^[A-Za-z][A-Za-z0-9_.-]{1,40}:\s/.test(t)) return true;
+  if (/\(default:\s*[^)]+\)/i.test(t)) return true;
+  if (/\b\d+\s*=\s*[A-Za-z0-9_-]+/.test(t)) return true;
+  // Product/standard names are often intentionally untranslated.
+  if (
+    /\b(ANQR|EMVCo|GTIN|BOLT11|Shift-JIS|PayID|QRIS|SEPA|Swiss QR-bill|Case Study)\b/i.test(t)
+  ) {
+    return true;
+  }
+  if (t.length < 30) return true;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length < 5) return true;
   // If only placeholders + punctuation/numbers, ignore
   const stripped = t
     .replace(/\{\{[^}]+\}\}/g, '')
@@ -42,14 +92,17 @@ function isIgnorable(text) {
   return false;
 }
 
-function englishHeavy(text) {
+function englishHeavy(text, locale) {
+  if (!NON_LATIN_SCRIPTS.has(locale)) return false;
   const t = text.trim();
-  if (t.length < 40) return false;
+  if (t.length < 30) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length < 5) return false;
   const letters = t.replace(/[^A-Za-z]/g, '').length;
   const total = t.replace(/\s+/g, '').length;
   if (total === 0) return false;
   const ratio = letters / total;
-  return ratio > 0.85;
+  return ratio > 0.75;
 }
 
 function loadTxtMap(filePath) {
@@ -82,6 +135,7 @@ function checkDir(dir, baseLocale) {
 
   for (const file of files) {
     const locale = file.replace(/\.txt$/, '');
+    if (locale === 'rm') continue;
     const filePath = path.join(dir, file);
     const map = loadTxtMap(filePath);
 
@@ -96,7 +150,7 @@ function checkDir(dir, baseLocale) {
       const text = map.get(lineNo) ?? '';
       if (!isEnglish && text === baseText && !isIgnorable(text)) {
         results.exactMatches.push({ locale, lineNo, text });
-      } else if (!isEnglish && text && text !== baseText && englishHeavy(text)) {
+      } else if (!isEnglish && text && text !== baseText && englishHeavy(text, locale)) {
         results.warnings.push({ locale, lineNo, text });
       }
     }

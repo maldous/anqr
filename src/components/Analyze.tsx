@@ -63,6 +63,7 @@ import { AdUnit } from '@/components/AdUnit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createLogger } from '@/lib/logger';
+import { saveFileNative } from '@/modules/browser-io';
 import {
   analyzeQRCode,
   analyzeQRFromFile,
@@ -253,6 +254,12 @@ function ProgressBar({ value, max, label }: ProgressBarProps) {
 function formatMilliseconds(ms: number | null | undefined): string {
   if (ms === null || ms === undefined || Number.isNaN(ms)) return 'N/A';
   return `${ms.toFixed(2)} ms`;
+}
+
+function nowMs(): number {
+  return typeof globalThis.performance?.now === 'function'
+    ? globalThis.performance.now()
+    : Date.now();
 }
 
 // Status Badge Component
@@ -959,6 +966,11 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const [imported, setImported] = useState(false);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [actualUsedVersion, setActualUsedVersion] = useState<number | null>(null);
+  const [uiTimings, setUiTimings] = useState<{
+    encodeMs?: number | null;
+    renderMs?: number | null;
+    exportMs?: number | null;
+  }>({});
   const reproducedCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Store getters (for exact reproduction of the self-generated QR)
@@ -976,6 +988,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const setRenderFgColor = useQRStore((s) => s.setRenderFgColor);
   const setRenderBgColor = useQRStore((s) => s.setRenderBgColor);
 
+  const combinedTimings = useMemo(
+    () => ({
+      ...(result?.timing ?? {}),
+      ...uiTimings,
+    }),
+    [result?.timing, uiTimings]
+  );
+
   // Render reproduced QR by generating a fresh, clean QR code from extracted settings
   useEffect(() => {
     if (!(result?.success && result.payload && reproducedCanvasRef.current)) return;
@@ -985,6 +1005,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     if (!ctx) return;
 
     try {
+      let encodeMs: number | null = null;
+      let renderMs: number | null = null;
       const ecc: ECCLevel = result.eccLevel || 'M';
 
       // Strategy:
@@ -1139,6 +1161,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       let qr: ReturnType<typeof createQRInstance> | null = null;
       let actualVersionUsed = versionToUseFinal;
+      const encodeStartMs = nowMs();
       try {
         // NEVER use auto version (0) - always use the detected version from decoder
         qr = createQRInstance(encoderInput.data, ecc, versionToUseFinal, {
@@ -1243,6 +1266,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       if (!qr) {
         throw new Error('QR instance is null - this should not happen');
       }
+      encodeMs = Math.round((nowMs() - encodeStartMs) * 100) / 100;
 
       // Store the actual version used for import to generator
       setActualUsedVersion(actualVersionUsed);
@@ -1382,6 +1406,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         : result.detectedColors?.background || '#ffffff';
 
       // Draw background
+      const renderStartMs = nowMs();
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, size, size);
 
@@ -1395,6 +1420,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           ctx.fillRect(x, y, modulePx, modulePx);
         }
       }
+      renderMs = Math.round((nowMs() - renderStartMs) * 100) / 100;
 
       // --- Debug: matrix comparisons to pinpoint mismatch source ---
       const buildRegenMatrix = (): boolean[][] => {
@@ -1538,7 +1564,18 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           bestShift,
         });
       }
+
+      setUiTimings((prev) => ({
+        ...prev,
+        encodeMs,
+        renderMs,
+      }));
     } catch (err) {
+      setUiTimings((prev) => ({
+        ...prev,
+        encodeMs: null,
+        renderMs: null,
+      }));
       log.error('Failed to generate QR code', { error: err });
       // Clear canvas and show error state
       canvas.width = 200;
@@ -1564,6 +1601,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       setError(null);
       setResult(null);
       setImported(false);
+      setUiTimings({});
 
       // Create object URL for original image display
       const imageUrl = URL.createObjectURL(file);
@@ -1603,6 +1641,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setError(null);
     setResult(null);
     setImported(false);
+    setUiTimings({});
     setOriginalImageUrl(urlInput.trim());
 
     try {
@@ -1629,6 +1668,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setError(null);
     setResult(null);
     setImported(false);
+    setUiTimings({});
 
     try {
       const permissions = await Camera.checkPermissions();
@@ -1779,6 +1819,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setImported(false);
     setAnalysisSource(null);
     setActualUsedVersion(null);
+    setUiTimings({});
     if (originalImageUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(originalImageUrl);
     }
@@ -1794,6 +1835,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setError(null);
     setResult(null);
     setImported(false);
+    setUiTimings({});
 
     try {
       // Create a data URL from the canvas for original image display
@@ -4544,21 +4586,47 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   // Export analysis result as JSON for Netlify API
   const handleExportJSON = useCallback(() => {
     if (!result?.success) return;
-    const exportData = buildAnalysisExportData(result, {
-      source: analysisSource,
-      actualUsedVersion,
-    });
+    const exportStartMs = nowMs();
+    const exportData = buildAnalysisExportData(
+      {
+        ...result,
+        timing: {
+          ...(result.timing ?? {}),
+          encodeMs: uiTimings.encodeMs ?? result.timing?.encodeMs ?? null,
+          renderMs: uiTimings.renderMs ?? result.timing?.renderMs ?? null,
+          exportMs: null,
+        },
+      },
+      {
+        source: analysisSource,
+        actualUsedVersion,
+      }
+    );
+    const exportMs = Math.round((nowMs() - exportStartMs) * 100) / 100;
+    exportData.analysis.timing = {
+      ...(exportData.analysis.timing ?? {}),
+      exportMs,
+    };
+    exportData.diagnostics.summary.exportMs = exportMs;
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    setUiTimings((prev) => ({ ...prev, exportMs }));
+    const filename = `qr-analysis-${Date.now()}.json`;
+
+    if (Capacitor.isNativePlatform()) {
+      void saveFileNative(filename, blob);
+      return;
+    }
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `qr-analysis-${Date.now()}.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [result, actualUsedVersion, analysisSource]);
+  }, [result, actualUsedVersion, analysisSource, uiTimings]);
 
   return (
     <main className="flex-1 flex bg-background overflow-hidden">
@@ -4767,7 +4835,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     className="gap-1.5 text-green-700 dark:text-green-400 hover:bg-green-500/10"
                   >
                     <Download className="w-4 h-4" />
-                    <span className="hidden sm:inline">Export JSON</span>
+                    <span className={Capacitor.isNativePlatform() ? 'inline' : 'hidden sm:inline'}>
+                      Export JSON
+                    </span>
                   </Button>
                 </div>
               )}
@@ -5409,10 +5479,16 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     {/* Visual Section */}
                     <div className="grid md:grid-cols-2 gap-4">
                       {/* Processing Timings */}
-                      {(result.timing?.decodeMs !== null &&
-                        result.timing?.decodeMs !== undefined) ||
-                      (result.timing?.totalAnalysisMs !== null &&
-                        result.timing?.totalAnalysisMs !== undefined) ? (
+                      {(combinedTimings.decodeMs !== null &&
+                        combinedTimings.decodeMs !== undefined) ||
+                      (combinedTimings.totalAnalysisMs !== null &&
+                        combinedTimings.totalAnalysisMs !== undefined) ||
+                      (combinedTimings.encodeMs !== null &&
+                        combinedTimings.encodeMs !== undefined) ||
+                      (combinedTimings.renderMs !== null &&
+                        combinedTimings.renderMs !== undefined) ||
+                      (combinedTimings.exportMs !== null &&
+                        combinedTimings.exportMs !== undefined) ? (
                         <CollapsibleSection
                           title="Processing Timings"
                           icon={<Timer className="w-4 h-4" />}
@@ -5421,24 +5497,39 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <div className="space-y-2">
                             <DetailRow
                               label="Decode Time"
-                              value={formatMilliseconds(result.timing?.decodeMs)}
+                              value={formatMilliseconds(combinedTimings.decodeMs)}
                               icon={<ScanLine className="w-3.5 h-3.5" />}
                             />
                             <DetailRow
                               label="Total Analysis Time"
-                              value={formatMilliseconds(result.timing?.totalAnalysisMs)}
+                              value={formatMilliseconds(combinedTimings.totalAnalysisMs)}
                               icon={<BarChart3 className="w-3.5 h-3.5" />}
                             />
-                            {result.timing?.decodeMs !== null &&
-                              result.timing?.decodeMs !== undefined &&
-                              result.timing?.totalAnalysisMs !== null &&
-                              result.timing?.totalAnalysisMs !== undefined && (
+                            <DetailRow
+                              label="Encode Time"
+                              value={formatMilliseconds(combinedTimings.encodeMs)}
+                              icon={<Code2 className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Render Time"
+                              value={formatMilliseconds(combinedTimings.renderMs)}
+                              icon={<Palette className="w-3.5 h-3.5" />}
+                            />
+                            <DetailRow
+                              label="Export Time"
+                              value={formatMilliseconds(combinedTimings.exportMs)}
+                              icon={<Download className="w-3.5 h-3.5" />}
+                            />
+                            {combinedTimings.decodeMs !== null &&
+                              combinedTimings.decodeMs !== undefined &&
+                              combinedTimings.totalAnalysisMs !== null &&
+                              combinedTimings.totalAnalysisMs !== undefined && (
                                 <DetailRow
                                   label="Non-Decode Overhead"
                                   value={formatMilliseconds(
                                     Math.max(
                                       0,
-                                      result.timing.totalAnalysisMs - result.timing.decodeMs
+                                      combinedTimings.totalAnalysisMs - combinedTimings.decodeMs
                                     )
                                   )}
                                   icon={<Settings className="w-3.5 h-3.5" />}
@@ -5473,6 +5564,27 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                                 label="Background"
                               />
                             </div>
+
+                            {result.dominantColors && result.dominantColors.length > 0 && (
+                              <div className="space-y-2">
+                                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                  Dominant Palette
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                  {result.dominantColors.map((entry, idx) => (
+                                    <div
+                                      key={`${entry.color}-${idx}`}
+                                      className="p-2 rounded-md bg-muted/50"
+                                    >
+                                      <ColorSwatch
+                                        color={entry.color}
+                                        label={`#${idx + 1} • ${entry.percentage}%`}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                             {/* WCAG Compliance Details */}
                             <div className="p-3 rounded-lg bg-muted/50 space-y-2 shadow-inner">

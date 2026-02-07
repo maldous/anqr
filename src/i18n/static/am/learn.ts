@@ -429,14 +429,14 @@ export const learn: PageDefinition = {
       heading: 'የANQR ደህንነት ሁነታን በመጠቀም',
       paragraphs: [
         'የANQR ደህንነት ሁነታ በቅኝት አስተማማኝነት ላይ የእውነተኛ ጊዜ ግብረመልስ ይሰጣል። የንፅፅር ሬሾዎችን፣ ጸጥ ያለ የዞን ተገዢነትን፣ የተደራቢ ጥንካሬን እና ሌሎች ስካንን የሚነኩ ነገሮችን ይቆጣጠራል። ማንኛውም መለኪያ ወደ አደገኛ ደረጃዎች ሲቃረብ፣ አስተማማኝነትን እንዴት ማሻሻል እንደሚቻል ላይ ልዩ መመሪያ ያላቸው ማስጠንቀቂያዎችን ያያሉ። አለመሳካቱ ውድ በሆነባቸው ሙያዊ ማሰማራት፣ የደህንነት ሁነታን በንድፍ ሂደቱ ውስጥ ንቁ ያድርጉት።',
-        'Safety Mode also includes a scan verification feature that attempts to decode your generated code and reports success or failure. ምንም እንኳን ይህ የውስጠ-መተግበሪያ ማረጋገጫ እያንዳንዱን የገሃዱ ዓለም ሁኔታ መድገም ባይችልም፣ ለህትመት ወይም ለማሰራጨት ኢንቨስት ከማድረግዎ በፊት ብዙ የተለመዱ ጉዳዮችን ይይዛል። Treat successful verification as a minimum bar, not a guarantee - real-world testing remains essential.',
+        'የደህንነት ሁነታ የተፈጠረውን ኮድ ለመፈተሽ የሚሞክር የስካን ማረጋገጫ ባህሪ ያካትታል። ውጤቱ ስኬት ወይም ውድቀት መሆኑን ያሳያል፣ ነገር ግን የእውነተኛ ዓለም ሙከራ ሁልጊዜ አስፈላጊ ነው።',
       ],
     },
     {
       heading: 'የእውነተኛ ዓለም የሙከራ ፕሮቶኮሎች',
       paragraphs: [
-        'No amount of software verification replaces physical testing. Print your code at the intended size on representative material. Test it in the actual deployment environment with lighting conditions that match real use. በበርካታ መሳሪያዎች ይቃኙ - ዋና ስልክዎን ብቻ ሳይሆን አንድሮይድ መሣሪያዎችን፣ የቆዩ አይፎኖችን እና ታዳሚዎችዎ በብዛት የሚጠቀሙባቸውን ማናቸውንም ልዩ መሣሪያዎችን ያቀናብሩ።',
-        'Document your testing systematically. Record which devices were tested, under what conditions, with what results. ኮዶችን በመጠን ላይ እያሰማራህ ከሆነ፣ የመቀበያ መስፈርቶችን አስፍር፡ ምናልባት 95% በመሳሪያህ የሙከራ ገንዳ ላይ የስኬት መጠን፣ ወይም በሁሉም የተፈተኑ መሳሪያዎች ላይ በ2 ሰከንድ ውስጥ የተሳካ ቅኝት አድርግ። These standards help make go/no-go decisions objective rather than hoping for the best.',
+        'የሶፍትዌር ማረጋገጫ ብቻ የአካል ሙከራን አይተካም። ኮዱን በትክክለኛ መጠን በሚወክል ቁሳቁስ ላይ ያትሙ እና በእውነተኛ መተግበሪያ አካባቢ ውስጥ በተለያዩ መሳሪያዎች ይፈትሹ።',
+        'ሙከራዎችዎን በስርዓት ያስመዝግቡ። የተፈተኑ መሳሪያዎች፣ ሁኔታዎች እና ውጤቶች ግልጽ እንዲሆኑ ይዘጋጁ፤ ይህ የመፍቀድ/የመከልከል ውሳኔዎችን በግልጽ መረጃ ላይ ያደርጋል።',
       ],
       images: [
         {

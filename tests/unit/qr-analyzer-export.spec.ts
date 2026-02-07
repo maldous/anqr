@@ -16,6 +16,11 @@ describe('qr-analyzer export builder', () => {
       estimatedModulePx: 5.5,
       quietZone: { top: 4, right: 4, bottom: 4, left: 4, adequate: true },
       detectedColors: { foreground: '#000000', background: '#ffffff', contrastRatio: 21 },
+      dominantColors: [
+        { color: '#000000', percentage: 62, rgb: { r: 0, g: 0, b: 0 } },
+        { color: '#ffffff', percentage: 34, rgb: { r: 255, g: 255, b: 255 } },
+        { color: '#808080', percentage: 4, rgb: { r: 128, g: 128, b: 128 } },
+      ],
       moduleMatrix: [
         [true, false, true],
         [false, true, false],
@@ -35,6 +40,9 @@ describe('qr-analyzer export builder', () => {
       timing: {
         decodeMs: 12.34,
         totalAnalysisMs: 19.87,
+        encodeMs: 4.56,
+        renderMs: 7.89,
+        exportMs: 1.23,
       },
     };
 
@@ -52,9 +60,20 @@ describe('qr-analyzer export builder', () => {
     expect(out.diagnostics.summary.scannable).toBe(true);
     expect(out.diagnostics.summary.quietZoneAdequate).toBe(true);
     expect(out.diagnostics.summary.estimatedRotationDeg).toBeCloseTo(1.1, 5);
-    expect(out.analysis.timing).toEqual({ decodeMs: 12.34, totalAnalysisMs: 19.87 });
+    expect(out.analysis.timing).toEqual({
+      decodeMs: 12.34,
+      totalAnalysisMs: 19.87,
+      encodeMs: 4.56,
+      renderMs: 7.89,
+      exportMs: 1.23,
+    });
+    expect(out.analysis.dominantColors).toHaveLength(3);
+    expect(out.analysis.dominantColors?.[0]?.color).toBe('#000000');
     expect(out.diagnostics.summary.decodeMs).toBe(12.34);
     expect(out.diagnostics.summary.totalAnalysisMs).toBe(19.87);
+    expect(out.diagnostics.summary.encodeMs).toBe(4.56);
+    expect(out.diagnostics.summary.renderMs).toBe(7.89);
+    expect(out.diagnostics.summary.exportMs).toBe(1.23);
   });
 
   it('omits invalid generator encoding mode values', () => {

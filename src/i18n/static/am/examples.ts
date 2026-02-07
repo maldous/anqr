@@ -23,8 +23,8 @@ export const examples: PageDefinition = {
     {
       heading: 'የጉዳይ ጥናት፡ የችርቻሮ ቆጣሪ QR አሻሽል።',
       paragraphs: [
-        'This real-world example follows a small café that had been using the same QR code on their counter for three years. The original code was generated quickly during the pandemic rush, printed on standard paper, and slipped into a plastic stand. አሁንም ይሰራል - በቴክኒካል - ነገር ግን ደንበኞች ብዙ ጊዜ ለመቃኘት ብዙ ሙከራዎች ያስፈልጉ ነበር፣ እና የካፌውን በጥንቃቄ የተሰራ የምርት መለያን ለማጠናከር ምንም አላደረገም።',
-        "The transformation began with a simple audit: the existing code encoded the café's online menu URL, which they wanted to keep. The challenge was making the QR feel like part of the café experience rather than an afterthought utility from 2020.",
+        'ይህ የተግባራዊ ምሳሌ ለሶስት ዓመታት በቆጣሪ ላይ አንድ ኮድ ብቻ የተጠቀመ ትንሽ ካፌ ይከታተላል። የመጀመሪያው ኮድ በፍጥነት ተፈጥሮ በመደበኛ ወረቀት ላይ ታትሞ በፕላስቲክ ማቆሚያ ውስጥ ተደርጓል።',
+        'ለውጡ በቀላል ግምገማ ተጀመረ፤ ያለው ኮድ የካፌውን የመስመር ላይ ሜኑ አድራሻ ይይዛ ነበር እና ይህን ማስቀጠል ተፈለገ። እርምጃው ኮዱን ከ"ተጨማሪ መሣሪያ" ወደ የብራንድ ልምድ ክፍል ማድረግ ነበር።',
       ],
       images: [
         {
@@ -37,8 +37,8 @@ export const examples: PageDefinition = {
     {
       heading: 'የዋናው ኮድ ችግሮች መመርመር',
       paragraphs: [
-        "ሙከራው በርካታ ጉዳዮችን አሳይቷል፡ ዋናው ኮድ የተጠቀመው ስህተት እርማት L (ቢያንስ ድግግሞሽ)፣ ጸጥ ያለ ዞን 2 ሞጁሎች ብቻ ነበረው እና በዝቅተኛ ጥራት ታትሟል። Under the café's warm tungsten lighting, the already-faded black modules barely contrasted against the yellowed paper. የቆዩ ስልኮች ታግለዋል; newer phones succeeded but with noticeable delay.",
-        "Beyond technical issues, the generic black-and-white square communicated nothing about the brand. Customers hesitated before scanning - a subtle trust barrier that reduced engagement with the café's carefully designed digital menu.",
+        'ሙከራው ብዙ ጉድለቶችን አሳየ፤ ዋናው ኮድ ዝቅተኛ የስህተት እርማት ነበረው፣ ጸጥ ያለ ዞን አነስተኛ ነበር እና የህትመት ጥራት ዝቅተኛ ነበር። በውስጣዊ መብራት ሁኔታ ላይ ንፅፅሩ ዝቅ ነበር እና አንዳንድ መሳሪያዎች በመቃኘት ተከራክረዋል።',
+        'ከቴክኒካዊ ጉድለቶች በላይ፣ ቀላል ጥቁር-ነጭ ኮዱ ስለ ብራንዱ ምንም አያሳይም ነበር። ደንበኞች ከመቃኘት በፊት ይጠራጠሩ ነበር፣ ይህም ከዲጂታል ሜኑ ጋር ያለውን ተሳትፎ አነሰ።',
       ],
       images: [
         {
@@ -65,7 +65,7 @@ export const examples: PageDefinition = {
     {
       heading: 'ሊለኩ የሚችሉ ውጤቶች',
       paragraphs: [
-        'After deploying the new QR on professional matte-laminated card stock, the café tracked results over four weeks. Scan success rate improved from an estimated 70% to near-100%. Average scan time dropped from 3-4 seconds to under 1 second. Most significantly, menu engagement increased 40% - customers who previously glanced at the QR and gave up were now scanning confidently.',
+        'አዲሱ ኮድ በሙያዊ ማት ላሚኔት ካርድ ላይ ከተሰራጨ በኋላ ካፌው ለአራት ሳምንት ውጤቶችን አከታተለ። የስካን ስኬት መጠን ከ70% ወደ ቅርብ 100% ከፍ አለ፣ አማካይ የስካን ጊዜም ከ3-4 ሰከንድ ወደ ከ1 ሰከንድ በታች ወረደ። በተጨማሪም የሜኑ ተሳትፎ 40% በመጨመር ግልጽ ተፅእኖ ታየ።',
         "ሰራተኞች ስለ'እንዴት QRን መጠቀም እንደሚቻል' የደንበኛ ጥያቄዎችን ያነሱ ናቸው እና ከዚህ በኋላ ለተበሳጩ ደንበኞች ዩአርኤልን በእጅ የሚተይቡበት ሁኔታ እንደሌለ ተናግረዋል ። የምርት ምልክት የተደረገበት ገጽታ ንግግሮችን አስነስቷል, ደንበኞች በተቀናጀ ንድፍ ላይ አዎንታዊ አስተያየት ሰጥተዋል.",
       ],
       images: [

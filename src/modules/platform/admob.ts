@@ -49,6 +49,19 @@ const PROD_AD_UNIT_IDS = {
 // Check if we're in test mode - strictly honor the Makefile env var
 const isTestMode = import.meta.env.VITE_ADMOB_TESTING === 'true';
 
+function pickProdAdUnitId(
+  type: 'banner' | 'interstitial' | 'rewarded' | 'rewardedInterstitial',
+  candidate: string | undefined
+): string {
+  const trimmed = (candidate ?? '').trim();
+  if (trimmed) return trimmed;
+
+  // Native builds without env wiring should still render ads in test mode,
+  // otherwise AdMob receives an empty ad ID and never shows.
+  log.warn('Missing production ad unit ID; falling back to Google test ID', { type });
+  return TEST_AD_UNIT_IDS[type];
+}
+
 /**
  * Get the appropriate ad unit ID based on test mode and ad type
  */
@@ -64,17 +77,24 @@ function getAdUnitId(
   // Production mode: use environment-configured ad unit IDs
   switch (type) {
     case 'banner':
-      return context === 'top' ? PROD_AD_UNIT_IDS.bannerTop : PROD_AD_UNIT_IDS.bannerBottom;
+      return pickProdAdUnitId(
+        type,
+        context === 'top' ? PROD_AD_UNIT_IDS.bannerTop : PROD_AD_UNIT_IDS.bannerBottom
+      );
     case 'interstitial':
-      if (context === 'export') return PROD_AD_UNIT_IDS.interstitialExport;
-      if (context === 'gallery') return PROD_AD_UNIT_IDS.interstitialGallery;
-      return PROD_AD_UNIT_IDS.interstitialGeneration;
+      if (context === 'export') return pickProdAdUnitId(type, PROD_AD_UNIT_IDS.interstitialExport);
+      if (context === 'gallery')
+        return pickProdAdUnitId(type, PROD_AD_UNIT_IDS.interstitialGallery);
+      return pickProdAdUnitId(type, PROD_AD_UNIT_IDS.interstitialGeneration);
     case 'rewarded':
-      return context === 'export_hd'
-        ? PROD_AD_UNIT_IDS.rewardedExportHd
-        : PROD_AD_UNIT_IDS.rewardedPremium;
+      return pickProdAdUnitId(
+        type,
+        context === 'export_hd'
+          ? PROD_AD_UNIT_IDS.rewardedExportHd
+          : PROD_AD_UNIT_IDS.rewardedPremium
+      );
     case 'rewardedInterstitial':
-      return PROD_AD_UNIT_IDS.rewardedPremium;
+      return pickProdAdUnitId(type, PROD_AD_UNIT_IDS.rewardedPremium);
     default:
       return TEST_AD_UNIT_IDS[type];
   }
