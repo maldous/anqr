@@ -28,7 +28,7 @@ const languages = [
   'mk-MK', 'ml-IN', 'mn-MN', 'mr-IN', 'ms', 'ms-MY', 'my-MM',
   'ne-NP', 'nl-NL', 'no-NO',
   'pa', 'pl-PL', 'pt-BR', 'pt-PT',
-  'rm', 'ro', 'ru-RU',
+  'ro', 'ru-RU',
   'si-LK', 'sk', 'sl', 'sq', 'sr', 'sv-SE', 'sw',
   'ta-IN', 'te-IN', 'th', 'tr-TR',
   'uk', 'ur',

@@ -62,6 +62,12 @@ export interface DetectedColors {
   contrastRatio: number;
 }
 
+export interface DominantColorInfo {
+  color: string;
+  percentage: number;
+  rgb: { r: number; g: number; b: number };
+}
+
 export interface DataCapacity {
   used: number;
   total: number;
@@ -106,6 +112,9 @@ export interface GeometryDiagnostics {
 export interface TimingDiagnostics {
   decodeMs?: number | null;
   totalAnalysisMs?: number | null;
+  encodeMs?: number | null;
+  renderMs?: number | null;
+  exportMs?: number | null;
 }
 
 export type ErrorType = 'no_qr_detected' | 'cors_blocked' | 'decode_error' | 'unknown';
@@ -148,6 +157,7 @@ export interface QRAnalysisResult {
 
   // Visual Analysis
   detectedColors?: DetectedColors;
+  dominantColors?: DominantColorInfo[];
   estimatedModulePx: number | null;
   quietZone?: QuietZoneInfo;
 

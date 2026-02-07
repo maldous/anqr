@@ -15,7 +15,7 @@
     "loop": "लूप एनिमेशन",
     "maxFrames": "मैक्स फ्रेम",
     "moduleJitter": "मॉड्यूल जेटर",
-    "moduleJitterWarning": "⚠️ May affect scannability",
+    "moduleJitterWarning": "⚠️ स्कैनयोग्यता प्रभावित हो सकती है",
     "morph": "मोर्फ",
     "none": "कोई नहीं",
     "off": "बंद",
@@ -166,8 +166,8 @@
     "viewAll": "सभी देखें",
     "yes": "हाँ"
   },
-  "fileSaveFailed": "Failed to save file: {{error}}",
-  "fileSaved": "दस्तावेजों को सहेजा गया: A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-E-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-A-",
+  "fileSaveFailed": "फ़ाइल सहेजने में विफल: {{error}}",
+  "fileSaved": "दस्तावेज़ों में सहेजा गया: {{filename}}",
   "footer": {
     "copyright": "ANQR __ ANQR_PH_0_"
   },
@@ -905,7 +905,7 @@
     "share": "शेयर"
   },
   "hints": {
-    "moduleJitterWarning": "⚠️ May affect scannability",
+    "moduleJitterWarning": "⚠️ स्कैनयोग्यता प्रभावित हो सकती है",
     "alignmentStyle": "संरेखण पैटर्न की शैली (बड़े क्यूआर कोड में इस्तेमाल)",
     "appLinkNote": "मोबाइल ऐप के भीतर विशिष्ट सामग्री खोलें",
     "autoDetect": "स्वतः पता लगाएं (वर्तमान सामग्री के लिए v{{version}}+ की आवश्यकता है)",

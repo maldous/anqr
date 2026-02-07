@@ -1229,11 +1229,11 @@ export const guide: PageDefinition = {
     // Best Practices & Troubleshooting (sections 70+)
     {
       heading: 'Labākā prakse',
-      paragraphs: ['Follow these guidelines for reliable QR codes:'],
+      paragraphs: ['Ievērojiet šīs vadlīnijas uzticamiem QR kodiem:'],
       bullets: [
         'Pirms drukāšanas vienmēr pārbaudiet QR kodus, izmantojot vairākas skenera lietotnes.',
         'Pievienojot pārklājumus, izmantojiet kļūdu labojumu H (augsta).',
-        'Keep at least 4 modules of quiet zone (margin).',
+        'Saglabājiet vismaz 4 moduļu kluso zonu (malu).',
         'Nodrošiniet augstu kontrastu starp priekšplānu un fonu.',
         'Drukāšanai izmantojiet vismaz 300 DPI un pārbaudiet faktisko drukas izmēru.',
         'Iespējot Preserve Finder Patterns, kad izmantojat pārklājumus.',

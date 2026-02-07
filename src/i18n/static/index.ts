@@ -28,7 +28,7 @@ contentCache.set('en-GB', enGB);
 // Each language folder gets its own chunk
 // Exclude txt/ folder (build tools) and use single-level glob to avoid matching root index.ts
 const staticModules = import.meta.glob<Record<StaticPageType, PageDefinition>>(
-  ['./*/index.ts', '!./txt/index.ts'],
+  ['./*/index.ts', '!./txt/index.ts', '!./rm/index.ts'],
   {
     import: '*',
     eager: false,
@@ -160,7 +160,6 @@ const supportedLanguages = new Set([
   'pl-PL',
   'pt-BR',
   'pt-PT',
-  'rm',
   'ro',
   'ru-RU',
   'si-LK',

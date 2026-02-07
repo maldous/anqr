@@ -13,8 +13,10 @@ const isAndroidBuild =
   process.env.CAPACITOR_PLATFORM === 'android' || process.env.npm_lifecycle_event?.includes('cap');
 
 // Sentry source map upload configuration
-// Only enable when SENTRY_AUTH_TOKEN is set (CI/production builds)
+// Only enable when explicitly requested and token is set.
+// This keeps local/offline builds stable while still allowing CI release uploads.
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+const sentryUploadEnabled = process.env.SENTRY_UPLOAD === 'true';
 const sentryOrg = process.env.SENTRY_ORG || 'anqr';
 const sentryProject = process.env.SENTRY_PROJECT || 'anqr-web';
 // Generate release name from package.json version or git commit
@@ -78,58 +80,64 @@ function getEnvDefines() {
 // https://vitejs.dev/config/
 export default defineConfig({
   define: getEnvDefines(),
-  plugins: [// Serve gallery files before React plugin
-  serveGalleryFiles(), react(), // Gzip compression for production builds (disabled for Android)
-  ...(!isAndroidBuild
-    ? [
-        compression({
-          verbose: false,
-          algorithm: 'gzip',
-          ext: '.gz',
-          threshold: 1024, // Only compress files > 1KB
-        }),
-        // Brotli compression for modern browsers (better compression ratio)
-        compression({
-          verbose: false,
-          algorithm: 'brotliCompress',
-          ext: '.br',
-          threshold: 1024,
-        }),
-      ]
-    : []), // Sentry source map upload plugin (only enabled when auth token is provided)
-  ...(sentryAuthToken
-    ? [
-        sentryVitePlugin({
-          org: sentryOrg,
-          project: sentryProject,
-          authToken: sentryAuthToken,
-          release: {
-            name: sentryRelease,
-            deploy: {
-              env: process.env.NODE_ENV || 'production',
+  plugins: [
+    // Serve gallery files before React plugin
+    serveGalleryFiles(),
+    react(),
+    // Gzip compression for production builds (disabled for Android)
+    ...(!isAndroidBuild
+      ? [
+          compression({
+            verbose: false,
+            algorithm: 'gzip',
+            ext: '.gz',
+            threshold: 1024, // Only compress files > 1KB
+          }),
+          // Brotli compression for modern browsers (better compression ratio)
+          compression({
+            verbose: false,
+            algorithm: 'brotliCompress',
+            ext: '.br',
+            threshold: 1024,
+          }),
+        ]
+      : []),
+    // Sentry source map upload plugin (only enabled when explicitly requested)
+    ...(sentryUploadEnabled && sentryAuthToken
+      ? [
+          sentryVitePlugin({
+            org: sentryOrg,
+            project: sentryProject,
+            authToken: sentryAuthToken,
+            release: {
+              name: sentryRelease,
+              deploy: {
+                env: process.env.NODE_ENV || 'production',
+              },
             },
-          },
-          sourcemaps: {
-            assets: ['./dist/**/*.js', './dist/**/*.js.map'],
-            ignore: ['node_modules/**'],
-            // Delete source maps after upload to avoid exposing them publicly
-            filesToDeleteAfterUpload: ['./dist/**/*.js.map'],
-          },
-          // Disable telemetry
-          telemetry: false,
-        }),
-      ]
-    : []), // Bundle analyzer (only when ANALYZE=true)
-  ...(analyzeBundle
-    ? [
-        visualizer({
-          filename: 'dist/stats.html',
-          open: true,
-          gzipSize: true,
-          brotliSize: true,
-        }),
-      ]
-    : []), VitePWA({
+            sourcemaps: {
+              assets: ['./dist/**/*.js', './dist/**/*.js.map'],
+              ignore: ['node_modules/**'],
+              // Delete source maps after upload to avoid exposing them publicly
+              filesToDeleteAfterUpload: ['./dist/**/*.js.map'],
+            },
+            // Disable telemetry
+            telemetry: false,
+          }),
+        ]
+      : []),
+    // Bundle analyzer (only when ANALYZE=true)
+    ...(analyzeBundle
+      ? [
+          visualizer({
+            filename: 'dist/stats.html',
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : []),
+    VitePWA({
     registerType: 'autoUpdate',
     includeAssets: ['favicon.ico', 'robots.txt', 'sitemap.xml'],
     manifest: {
@@ -352,10 +360,8 @@ export default defineConfig({
         },
       ],
     },
-  }), sentryVitePlugin({
-    org: "anqr",
-    project: "anqr-mobile"
-  })],
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

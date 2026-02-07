@@ -96,6 +96,7 @@ export type {
   DataCapacity,
   DecoderMetadata,
   DetectedColors,
+  DominantColorInfo,
   ECCLevel,
   ErrorType,
   GeometryDiagnostics,

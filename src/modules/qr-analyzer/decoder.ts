@@ -4,7 +4,7 @@
 
 import { createLogger, disableLogBuffer, enableLogBuffer, flushLogBuffer } from '../../lib/logger';
 import { decodeQR } from '../qr-decoder';
-import { detectContentType } from './analyzer-content';
+import { detectContentType, extractDominantColors } from './analyzer-content';
 import type { ContentType, DecoderMetadata, QRAnalysisResult } from './types';
 
 const qrAnalyzerLog = createLogger('ANALYZER');
@@ -230,6 +230,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
 
     // Analyze colors from the QR region
     const detectedColors = analyzeColors(imageData, location);
+    const dominantColors = extractDominantColors(imageData, 3);
     qrAnalyzerLog.trace('colors: Detected colors', detectedColors);
 
     // Calculate quiet zone
@@ -301,6 +302,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       structuredAppendParity: code.structuredAppendParity ?? null,
       contentType,
       detectedColors,
+      dominantColors,
       estimatedModulePx,
       quietZone,
       structuralAnalysis: {

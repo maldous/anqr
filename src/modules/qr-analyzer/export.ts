@@ -26,6 +26,7 @@ export interface AnalysisExportData {
     warnings?: string[];
     contentType?: QRAnalysisResult['contentType'];
     detectedColors?: QRAnalysisResult['detectedColors'];
+    dominantColors?: QRAnalysisResult['dominantColors'];
     estimatedModulePx: number | null;
     quietZone?: QRAnalysisResult['quietZone'];
     dataCapacity?: QRAnalysisResult['dataCapacity'];
@@ -46,6 +47,9 @@ export interface AnalysisExportData {
       estimatedRotationDeg?: number;
       decodeMs?: number | null;
       totalAnalysisMs?: number | null;
+      encodeMs?: number | null;
+      renderMs?: number | null;
+      exportMs?: number | null;
     };
   };
   generatorSettings: AnalysisExportGeneratorSettings;
@@ -96,6 +100,7 @@ export function buildAnalysisExportData(
       warnings: result.warnings,
       contentType: result.contentType,
       detectedColors: result.detectedColors,
+      dominantColors: result.dominantColors,
       estimatedModulePx: result.estimatedModulePx,
       quietZone: result.quietZone,
       dataCapacity: result.dataCapacity,
@@ -116,6 +121,9 @@ export function buildAnalysisExportData(
         estimatedRotationDeg: result.geometry?.estimatedRotationDeg,
         decodeMs: result.timing?.decodeMs ?? null,
         totalAnalysisMs: result.timing?.totalAnalysisMs ?? null,
+        encodeMs: result.timing?.encodeMs ?? null,
+        renderMs: result.timing?.renderMs ?? null,
+        exportMs: result.timing?.exportMs ?? null,
       },
     },
     generatorSettings,

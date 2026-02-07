@@ -90,6 +90,7 @@ export const TYPES = [
   'ContrastReport',
   'DataCapacity',
   'DetectedColors',
+  'DominantColorInfo',
   'DominantColor',
   'ECCLevel',
   'ErrorType',

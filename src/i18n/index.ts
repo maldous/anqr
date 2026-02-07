@@ -94,7 +94,6 @@ export const languages = [
   { code: 'pl-PL', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱', rtl: false },
   { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português', flag: '🇧🇷', rtl: false },
   { code: 'pt-PT', name: 'Portuguese (Portugal)', nativeName: 'Português', flag: '🇵🇹', rtl: false },
-  { code: 'rm', name: 'Romansh', nativeName: 'Rumantsch', flag: '🇨🇭', rtl: false },
   { code: 'ro', name: 'Romanian', nativeName: 'Română', flag: '🇷🇴', rtl: false },
   { code: 'ru-RU', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺', rtl: false },
   { code: 'si-LK', name: 'Sinhala', nativeName: 'සිංහල', flag: '🇱🇰', rtl: false },
@@ -143,6 +142,15 @@ const loadedLocales = new Set<string>(['en-GB']);
 
 // Track which font scripts have been loaded (to avoid duplicate link tags)
 const loadedFontScripts = new Set<string>(['latin']);
+
+// Use Vite glob loading so unsupported locales can be excluded from emitted chunks.
+const localeModules = import.meta.glob<Record<string, unknown>>(
+  ['./locales/*.json', '!./locales/rm.json'],
+  {
+    import: 'default',
+    eager: false,
+  }
+);
 
 /**
  * Font script mapping for languages that require non-Latin fonts
@@ -232,9 +240,13 @@ export async function loadLocale(lang: string): Promise<void> {
   if (loadedLocales.has(lang)) return;
 
   try {
-    // Dynamic import - Vite will code-split these
-    const localeModule = await import(`./locales/${lang}.json`);
-    i18n.addResourceBundle(lang, 'translation', localeModule.default, true, true);
+    const modulePath = `./locales/${lang}.json`;
+    const loader = localeModules[modulePath];
+    if (!loader) {
+      throw new Error(`Locale module not found for ${lang}`);
+    }
+    const localeData = await loader();
+    i18n.addResourceBundle(lang, 'translation', localeData, true, true);
     loadedLocales.add(lang);
   } catch (error) {
     log.error('Failed to load locale', { lang, error });
