@@ -2148,8 +2148,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
   // HYBRID STRATEGY: Add suffix for more controllable bits
   // The suffix can be modified freely while original data is protected
-  let encodedData: string;
-  let actualSuffix: string;
+  let encodedData = '';
+  let actualSuffix = '';
   let versionToUse: number;
 
   // First, determine the version to use (needed for suffix calculation)

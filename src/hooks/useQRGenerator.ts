@@ -1232,7 +1232,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
             const watermarked = await applyWatermark(fullQArtCanvas, {
               kind: watermark.kind,
               text: watermark.text,
-              image: watermarkImage,
+              image: watermarkImage ?? undefined,
               position: watermark.position as WatermarkPosition,
               opacity: watermark.opacity,
               blend: watermark.blend,
@@ -1383,7 +1383,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         const watermarked = await applyWatermark(result as HTMLCanvasElement, {
           kind: watermark.kind,
           text: watermark.text,
-          image: watermarkImage,
+          image: watermarkImage ?? undefined,
           position: watermark.position as WatermarkPosition,
           opacity: watermark.opacity,
           blend: watermark.blend,
@@ -1423,7 +1423,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         // Use setTimeout to not block the main thread
         setTimeout(() => {
           try {
-            const validationResult = validateQRCodeRobust(result, effectiveConfig.content);
+            const validationResult = validateQRCodeRobust(result!, effectiveConfig.content);
             setValidation(validationResult);
           } catch (err) {
             log.error('Validation error', { error: err });
@@ -2342,7 +2342,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
               const watermarked = await applyWatermark(finalResult as HTMLCanvasElement, {
                 kind: watermark.kind,
                 text: watermark.text,
-                image: watermarkImage,
+                image: watermarkImage ?? undefined,
                 position: watermark.position as WatermarkPosition,
                 opacity: watermark.opacity,
                 blend: watermark.blend,
@@ -2468,7 +2468,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
       isLoading);
 
   return {
-    canvasRef,
+    canvasRef: canvasRef as React.RefObject<HTMLCanvasElement>,
     canvas,
     isLoading,
     isExporting,

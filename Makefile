@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
+.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
 
 # ============================================
 # Help
@@ -69,7 +69,7 @@ help:
 	@echo "    make sonar-report   Get full issues report from SonarQube"
 	@echo ""
 	@echo "  UI TESTING (Playwright)"
-	@echo "    make quality        Run local quality gate (fix + typecheck + unit CI subset + audits)"
+	@echo "    make quality        Run local quality gate (fix + typecheck + unit + audits + depcruise + knip)"
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
@@ -506,15 +506,23 @@ sonar-report:
 # Tests are organized by tier: basic, advanced, professional
 # Permutation tests run exhaustive setting combinations (very long!)
 
-quality:
+# Shared quality gate steps used by both 'quality' and 'test'.
+# The caller sets UNIT_CMD to choose which unit-test npm script to run.
+_quality-gates:
 	$(MAKE) fix
 	npm run test:ids
 	npm run test:required
 	npm run typecheck
-	npm run test:unit:ci
+	npm run $(UNIT_CMD)
 	npm run test:testid
 	npm run test:testid:refs
 	npm run test:i18n
+	npx depcruise --config .dependency-cruiser.cjs src
+	npm audit --audit-level=high
+	npx knip --include dependencies,unlisted
+
+quality: UNIT_CMD = test:unit:ci
+quality: _quality-gates
 
 signoff:
 	npm run test:signoff
@@ -553,15 +561,8 @@ test\:testid\:refs:
 # This is the comprehensive test target - use for full CI validation
 # Order: fix → audits → typecheck → full vitest → test-id checks → i18n → Playwright E2E
 # Outputs E2E results to test-report.txt for text-based review
-test:
-	$(MAKE) fix
-	npm run test:ids
-	npm run test:required
-	npm run typecheck
-	npm run test:unit
-	npm run test:testid
-	npm run test:testid:refs
-	npm run test:i18n
+test: UNIT_CMD = test:unit
+test: _quality-gates
 	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=permutations --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)

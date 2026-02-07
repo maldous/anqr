@@ -27,7 +27,7 @@ export function applyDither(imageData: ImageData, options: DitherOptions): Dithe
   switch (options.kind) {
     case 'ordered_bayer': {
       const bayerSizeMap: Record<string, 2 | 4 | 8> = { bayer2: 2, bayer4: 4, bayer8: 8 };
-      const bayerSize = bayerSizeMap[options.orderedMatrix] ?? 4;
+      const bayerSize = bayerSizeMap[options.orderedMatrix ?? ''] ?? 4;
       return bayerDither(floatData, width, height, bayerSize, options.levels, options.strength);
     }
 

@@ -412,7 +412,7 @@ export class QRGenerator {
         scale,
         this.createCanvas.bind(this),
         this.canvasFactory,
-        this.storeMatrix.bind(this)
+        this.storeMatrix.bind(this) as (qr: { isDark(row: number, col: number): boolean; getModuleCount(): number }, moduleCount: number) => void
       );
     }
 
@@ -502,7 +502,7 @@ export class QRGenerator {
       drawnAlignmentPatterns,
       version,
       gradientFill,
-      useGradient
+      useGradient ?? false
     );
 
     // =======================================================================
@@ -649,7 +649,7 @@ export class QRGenerator {
       drawnAlignmentPatterns,
       version,
       gradientFill,
-      useGradient
+      useGradient ?? false
     );
 
     // =======================================================================
