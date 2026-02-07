@@ -1680,7 +1680,9 @@ async function handler(request: Request) {
   const perModuleColorMode = params.get('modColor') || 'solid';
   const contrastGuard = params.get('cGuard') === '1';
   const minContrastRatio = Number.parseFloat(params.get('minContrast') || '4.5');
-  const renderSeed = params.get('seed') ? Number.parseInt(params.get('seed') || '0', 10) : undefined;
+  const renderSeed = params.get('seed')
+    ? Number.parseInt(params.get('seed') || '0', 10)
+    : undefined;
 
   // Module styling
   const moduleStyle = params.get('style') || 'square';

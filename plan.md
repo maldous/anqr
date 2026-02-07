@@ -26,7 +26,8 @@
   - Added QR encoder utils tests: `tests/unit/qr-encoder-utils.spec.ts` (pass).
   - Added QR generator decode tests: `tests/unit/qr-generator-decode.spec.ts` (pass; includes overlay path).
   - Added Netlify function integration test: `tests/unit/netlify-qr-function.spec.ts` (pass; PNG decode).
-  - Noted `knowledge.md` is out of date vs current module layout (now `src/modules/*` directories).
+  - Added safety analyzer unit tests: `tests/unit/qr-analyzer-safety.spec.ts` (pass).
+  - Updated `knowledge.md` to new module layout, parity section, and module directory reference.
   - Drafted gap notes: `reports/knowledge-gap.md`.
   - Created initial risk register: `reports/risk-register.md`.
 
