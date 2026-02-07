@@ -74,6 +74,10 @@ test.describe('E2E Library Demo', () => {
       // First ensure we're on Plain Text (to have a different starting point)
       await contentTypeSelect.choose('Plain Text');
       await ctx.waitForRender();
+      const plainText = region.locator('textarea').first();
+      await plainText.fill('e2e-library-demo plain text');
+      await plainText.blur();
+      await ctx.waitForRender();
       
       // Take snapshot after switching to Plain Text
       const before = await ctx.getSnapshot();

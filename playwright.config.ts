@@ -24,10 +24,10 @@ const STORAGE_STATE_PATH = path.join(__dirname, 'tests', '.storage-state.json');
  */
 
 // Calculate optimal worker count based on hardware
-// Use 50% of CPUs - each Playwright worker spawns ~6 Chrome processes
-// On 32-core: 16 workers × 6 processes = 96 total, leaving headroom for system
+// Use 25% of CPUs for local stability - each Playwright worker spawns multiple browser processes.
+// On 32-core: 8 workers keeps memory/CPU pressure lower for heavy overlay/GIF tests.
 const cpuCount = os.cpus().length;
-const optimalWorkers = Math.max(4, Math.floor(cpuCount * 0.50));
+const optimalWorkers = Math.max(4, Math.floor(cpuCount * 0.25));
 
 export default defineConfig({
   testDir: './tests',

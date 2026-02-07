@@ -25,7 +25,7 @@ test.describe('Render Section - Advanced Tier', () => {
     // page.goto('/') is handled by fixture's resetAppState
     await setTier('advanced');
     // Wait for initial render
-    await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
+    await page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: 10000 });
     await waitForRenderComplete(page, 'settle');
   });
 

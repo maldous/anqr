@@ -98,7 +98,7 @@ export function enableServerCorrelation(page: Page) {
  */
 export async function waitForAppReady(page: Page): Promise<void> {
   // Wait for canvas to be present (main app indicator)
-  await page.waitForSelector('canvas', { state: 'visible', timeout: 10000 });
+  await page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: 10000 });
   
   // Wait for the app to be interactive by checking for the sidebar
   await page.waitForSelector('[role="tablist"], [role="combobox"]', { state: 'visible', timeout: 5000 });
@@ -136,7 +136,7 @@ export async function waitForCanvasMutation(
   try {
     await page.waitForFunction(
       (prev: string) => {
-        const canvas = document.querySelector('canvas');
+        const canvas = document.querySelector('[data-testid="qr-preview"] canvas');
         if (!canvas) return false;
         return canvas.toDataURL('image/png') !== prev;
       },
@@ -163,7 +163,7 @@ export async function waitForRenderingIdle(
     { state: 'attached', timeout }
   ).catch(() => {
     // Fallback: if attribute not found, wait for canvas to be visible
-    return page.waitForSelector('canvas', { state: 'visible', timeout: 2000 });
+    return page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: 2000 });
   });
 }
 
@@ -182,7 +182,7 @@ export async function waitForCanvasStable(
   // Then optionally wait for canvas stability as a backup
   await page.waitForFunction(
     (stability: number) => {
-      const canvas = document.querySelector('canvas');
+      const canvas = document.querySelector('[data-testid="qr-preview"] canvas');
       if (!canvas) return true;
       
       const curr = canvas.toDataURL('image/png');
@@ -212,7 +212,7 @@ export async function waitForCanvasStable(
  * Get current canvas data URL snapshot
  */
 export async function getCanvasDataUrl(page: Page): Promise<string> {
-  const canvas = page.locator('canvas').first();
+  const canvas = page.locator('[data-testid="qr-preview"] canvas').first();
   return await canvas.evaluate((el: HTMLCanvasElement) => el.toDataURL('image/png'));
 }
 
