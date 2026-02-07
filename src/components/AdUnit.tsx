@@ -170,5 +170,3 @@ export function AdUnit({
     />
   );
 }
-
-export default AdUnit;

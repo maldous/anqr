@@ -29,5 +29,3 @@ export function BusyOverlay({ visible }: Readonly<BusyOverlayProps>) {
     </div>
   );
 }
-
-export default BusyOverlay;

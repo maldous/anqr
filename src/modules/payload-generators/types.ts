@@ -151,25 +151,6 @@ export const POI_METHOD = {
   DYNAMIC: '12',
 } as const;
 
-export const TIP_INDICATOR = {
-  NOT_SUPPORTED: '00',
-  PROMPT_MOBILE: '01',
-  FIXED_VALUE: '02',
-  PERCENTAGE: '03',
-} as const;
-
-export const ADDITIONAL_DATA_TAGS = {
-  BILL_NUMBER: '01',
-  MOBILE_NUMBER: '02',
-  STORE_LABEL: '03',
-  LOYALTY_NUMBER: '04',
-  REFERENCE_LABEL: '05',
-  CUSTOMER_LABEL: '06',
-  TERMINAL_LABEL: '07',
-  PURPOSE_OF_TRANSACTION: '08',
-  ADDITIONAL_CONSUMER_DATA: '09',
-} as const;
-
 export const MAI_SUBTAGS = {
   GLOBALLY_UNIQUE_ID: '00',
 } as const;

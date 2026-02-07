@@ -25,7 +25,7 @@
  *   window.anqrDiag.disable()  - Revert to production default
  *
  * Usage:
- *   import { createLogger, log } from '@/lib/logger';
+ *   import { createLogger } from '@/lib/logger';
  *
  *   // Use a scoped logger (recommended)
  *   const log = createLogger('OVERLAY');
@@ -36,7 +36,7 @@
  *   log.error('Failed to load image', { error, url });
  *
  *   // For debugging failed operations, capture logs to a buffer:
- *   import { enableLogBuffer, flushLogBuffer, disableLogBuffer, getBufferSize, clearLogBuffer } from '@/lib/logger';
+ *   import { enableLogBuffer, flushLogBuffer, disableLogBuffer, getBufferSize } from '@/lib/logger';
  *   enableLogBuffer();
  *   // ... do something that might fail ...
  *   const debugLog = flushLogBuffer(); // Get captured logs (includes ISO timestamps)
@@ -46,7 +46,6 @@
  *   - Maximum buffer size: 1000 entries (oldest entries are dropped when exceeded)
  *   - Buffer entries include ISO 8601 timestamps for debugging
  *   - Use getBufferSize() to check current buffer size
- *   - Use clearLogBuffer() to clear without disabling
  *
  * STANDARD SCOPE PREFIXES (see SCOPE_PREFIXES export for complete list):
  *
@@ -272,14 +271,6 @@ export function flushLogBuffer(): string {
  */
 export function getBufferSize(): number {
   return logBuffer.length;
-}
-
-/**
- * Clear the log buffer without disabling buffering.
- * Useful for resetting the buffer between operations.
- */
-export function clearLogBuffer(): void {
-  logBuffer = [];
 }
 
 // ============================================================================
@@ -793,13 +784,6 @@ export function createLogger(scope: string): Logger {
     },
   };
 }
-
-// ============================================================================
-// Default logger instance
-// ============================================================================
-
-/** Root logger for general use */
-export const log = createLogger('APP');
 
 // ============================================================================
 // Level management (for remote diagnostics)

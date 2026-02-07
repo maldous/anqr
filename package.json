@@ -2,7 +2,6 @@
   "name": "anqr",
   "version": "1.0.0",
   "description": "These are my existing files for ANQR:",
-  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

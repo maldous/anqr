@@ -1009,5 +1009,3 @@ export function StaticPage({ page }: Readonly<StaticPageProps>) {
     </main>
   );
 }
-
-export default StaticPage;

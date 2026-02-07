@@ -290,5 +290,3 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
     </div>
   );
 }
-
-export default WelcomeModal;

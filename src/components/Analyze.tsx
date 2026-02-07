@@ -5806,5 +5806,3 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     </main>
   );
 }
-
-export default Analyze;

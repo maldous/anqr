@@ -2492,5 +2492,3 @@ export function useQRGenerator(): UseQRGeneratorResult {
     animationFrames,
   };
 }
-
-export default useQRGenerator;

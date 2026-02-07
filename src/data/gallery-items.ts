@@ -1286,9 +1286,6 @@ export const gallerySections: GallerySection[] = [
   },
 ];
 
-// Flat list of all items
-export const galleryItems: GalleryItem[] = gallerySections.flatMap((s) => s.items);
-
 // ============================================
 // URL HELPERS
 // ============================================

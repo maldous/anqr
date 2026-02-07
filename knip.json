@@ -1,8 +1,14 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "scripts/*.{js,mjs,ts}"
+    "netlify/functions/**/*.ts",
+    "scripts/*.{js,mjs,ts}",
+    "tests/**/*.spec.ts",
+    "tests/helpers/**/*.ts",
+    "tests/fixtures/**/*.ts",
+    "src/modules/**/index.ts"
   ],
+  "ignoreExportsUsedInFile": true,
   "project": [
     "src/**/*.{ts,tsx}",
     "netlify/**/*.ts"
