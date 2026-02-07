@@ -47,6 +47,7 @@ import { mapImageToTargetsSupersampled } from './image-utils';
 import {
   binarySearchMaxVectors,
   flattenAndOrderSelections,
+  flattenAndOrderSelectionsLimited,
   unflattenSelections,
   type FlattenedSelection,
 } from './scan-fallback';
@@ -1097,11 +1098,17 @@ export interface FullQArtConfig {
    */
   forceVersion?: number;
   /**
-   * Target control percentage for auto-suffix generation (default: 50).
-   * A larger QR version may be selected to achieve this control level.
+   * Target control percentage for auto-suffix generation (default: 100).
+   * A larger QR version may be selected to achieve this control level,
+   * unless lockVersionToMinimum is enabled.
    * Higher values = more controllable pixels = better image quality.
    */
   targetControlPercent?: number;
+  /**
+   * If true and version=0, lock to the minimum version that fits the payload
+   * and only adjust suffix length within that version (no auto-upgrade).
+   */
+  lockVersionToMinimum?: boolean;
   /**
    * Whether to enforce strict suffix charset validation (default: true).
    * 
@@ -1923,6 +1930,8 @@ function filterSelectionsForNumericSuffix(
   const numericDataStart = encoderLayout.bitsAfterOriginalData + 4 + numericCharCountBits;
   const numericDataBits = getNumericBitsCount(encoderLayout.suffixLength);
   if (numericDataBits <= 0) return flattened;
+  const numericStartByte = Math.floor(numericDataStart / 8);
+  const numericEndByte = Math.ceil((numericDataStart + numericDataBits) / 8);
 
   const totalDataBytes = blockDataCounts.reduce((sum, c) => sum + c, 0);
   const linearData = new Uint8Array(totalDataBytes);
@@ -1971,6 +1980,9 @@ function filterSelectionsForNumericSuffix(
   }
 
   const accepted: FlattenedSelection[] = [];
+  const groupCount = groupMax.length;
+  const groupMasks = new Int32Array(groupCount);
+  const touched = new Int32Array(groupCount);
 
   for (const entry of flattened) {
     const blockIndex = entry.blockIndex;
@@ -1978,28 +1990,61 @@ function filterSelectionsForNumericSuffix(
     const dataCount = blockDataCounts[blockIndex] ?? 0;
     const blockStart = blockStartBytes[blockIndex] ?? 0;
 
-    const groupMasks = new Map<number, number>();
+    let touchedCount = 0;
 
-    for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
-      const byte = vector.blockBits[byteIdx];
-      if (!byte) continue;
-      for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
-        if ((byte & (1 << bitInByte)) === 0) continue;
-        const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
-        if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
-          continue;
+    const nzIdx = vector.nonZeroByteIndices;
+    const nzVals = vector.nonZeroByteValues;
+    if (nzIdx && nzVals) {
+      const firstByte = nzIdx[0] ?? -1;
+      const lastByte = nzIdx[nzIdx.length - 1] ?? -1;
+      if (firstByte >= numericEndByte || lastByte < numericStartByte) {
+        accepted.push(entry);
+        continue;
+      }
+      for (let k = 0; k < nzIdx.length; k++) {
+        const byteIdx = nzIdx[k];
+        if (byteIdx >= dataCount) continue;
+        const byte = nzVals[k];
+        for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
+          if ((byte & (1 << bitInByte)) === 0) continue;
+          const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
+          if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
+            continue;
+          }
+          const local = linearBit - numericDataStart;
+          const g = groupIndexForBit[local];
+          if (g < 0) continue;
+          if (groupMasks[g] === 0) {
+            touched[touchedCount++] = g;
+          }
+          groupMasks[g] ^= bitMaskForBit[local];
         }
-        const local = linearBit - numericDataStart;
-        const g = groupIndexForBit[local];
-        if (g < 0) continue;
-        const mask = bitMaskForBit[local];
-        groupMasks.set(g, (groupMasks.get(g) ?? 0) ^ mask);
+      }
+    } else {
+      for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
+        const byte = vector.blockBits[byteIdx];
+        if (!byte) continue;
+        for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
+          if ((byte & (1 << bitInByte)) === 0) continue;
+          const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
+          if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
+            continue;
+          }
+          const local = linearBit - numericDataStart;
+          const g = groupIndexForBit[local];
+          if (g < 0) continue;
+          if (groupMasks[g] === 0) {
+            touched[touchedCount++] = g;
+          }
+          groupMasks[g] ^= bitMaskForBit[local];
+        }
       }
     }
 
     let ok = true;
-    for (const [g, mask] of groupMasks) {
-      const nextVal = (groupValues[g] ?? 0) ^ mask;
+    for (let i = 0; i < touchedCount; i++) {
+      const g = touched[i];
+      const nextVal = (groupValues[g] ?? 0) ^ groupMasks[g];
       if (nextVal > (groupMax[g] ?? 0)) {
         ok = false;
         break;
@@ -2007,10 +2052,15 @@ function filterSelectionsForNumericSuffix(
     }
 
     if (ok) {
-      for (const [g, mask] of groupMasks) {
-        groupValues[g] = (groupValues[g] ?? 0) ^ mask;
+      for (let i = 0; i < touchedCount; i++) {
+        const g = touched[i];
+        groupValues[g] = (groupValues[g] ?? 0) ^ groupMasks[g];
       }
       accepted.push(entry);
+    }
+
+    for (let i = 0; i < touchedCount; i++) {
+      groupMasks[touched[i]] = 0;
     }
   }
 
@@ -2345,8 +2395,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     autoSuffix = true,  // Default to auto-generating suffix for better control
     minPadCodewords = 10,  // Lower default since suffix provides most control
     forceVersion,
-    targetControlPercent = 50,
+    targetControlPercent = 100,
     strictSuffix = true,  // Default to true for real-world scannability
+    lockVersionToMinimum = false,
   } = config;
 
   // Resolve suffix mode (prefer numeric for URLs when auto)
@@ -2436,11 +2487,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     }
   } else if (autoSuffix) {
     // Auto-generate suffix to fill capacity
+    const controlTarget = lockVersionToMinimum || versionToUse > 0 ? 0 : targetControlPercent;
     const optimalConfig = calculateOptimalVersionAndSuffix(
       versionToUse,  // 0 for auto, or user-specified minimum
       ecc,
       originalDataLength,
-      targetControlPercent,
+      controlTarget,
       resolvedSuffixMode
     );
 
@@ -2459,14 +2511,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // Use the optimal version calculated
     if (versionToUse === 0) {
       versionToUse = optimalConfig.version;
-    } else {
-      if (optimalConfig.version > versionToUse) {
-        log.warn('Upgrading version to fit auto-generated suffix', {
-          requestedVersion: versionToUse,
-          upgradeToVersion: optimalConfig.version,
-        });
-        versionToUse = optimalConfig.version;
-      }
     }
     
     log.info('Auto-generated DETERMINISTIC suffix for HYBRID QR-Art', {
@@ -2485,6 +2529,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         total: optimalConfig.suffixBits + optimalConfig.paddingBits,
       },
       seedUsed: seed,
+      lockVersionToMinimum,
     });
   } else {
     // No suffix - only padding codewords will be controllable (limited)
@@ -3213,12 +3258,30 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     onProgress?.('Selecting basis vectors', 70);
 
     // Step 7: Select which vectors to apply (per-block)
+    const timingEnabled = typeof process !== 'undefined' && process?.env?.QART_TIMING === '1';
+    const timingMarks: Record<string, number> = {};
+    const mark = (label: string) => {
+      if (timingEnabled) timingMarks[label] = performance.now();
+    };
+
+    const pixelDiff = new Uint8Array(moduleCount * moduleCount);
+    for (const pixelIdx of dataPixelIndices) {
+      const row = Math.floor(pixelIdx / moduleCount);
+      const col = pixelIdx % moduleCount;
+      const target = targets[row]?.[col] ?? false;
+      const base = baseMatrix[row]?.[col] ?? false;
+      if (target !== base) pixelDiff[pixelIdx] = 1;
+    }
+
+    mark('select_start');
     let blockSelections = selectBasisVectorsForTarget(
       elimination,
       targets,
       baseMatrix,
-      moduleCount
+      moduleCount,
+      pixelDiff
     );
+    mark('select_done');
 
     let totalSelected = blockSelections.reduce(
       (sum, s) => sum + s.selectedVectorIndices.length,
@@ -3231,14 +3294,32 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         .length,
     });
 
+    // Pre-reduce selection size using ECC budget ratio (fast heuristic)
+    // Disabled by default: can over-reduce and remove visible artwork.
+    let preReduceTargetCount: number | undefined;
+
+    mark('flatten_start');
+    let flattenedSelections = flattenAndOrderSelectionsLimited(
+      blockSelections,
+      elimination,
+      importance,
+      moduleCount,
+      preReduceTargetCount
+    );
+    mark('flatten_done');
+
+    if (preReduceTargetCount && flattenedSelections.length > 0) {
+      blockSelections = buildBlockSelectionsFromFlattened(
+        flattenedSelections,
+        elimination.blockResults.map((b) => b.blockIndex)
+      );
+      totalSelected = flattenedSelections.length;
+    }
+
     // Numeric suffix safety: greedily filter selections to preserve numeric validity
     if (resolvedSuffixMode === 'numeric' && strictSuffix) {
-      const flattenedSelections = flattenAndOrderSelections(
-        blockSelections,
-        elimination,
-        importance,
-        moduleCount
-      );
+      const preFilterCount = flattenedSelections.length;
+      mark('numeric_filter_start');
       const filteredSelections = filterSelectionsForNumericSuffix(
         flattenedSelections,
         blockDataArrays,
@@ -3246,8 +3327,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         encoderLayout,
         actualVersion
       );
+      mark('numeric_filter_done');
 
-      if (filteredSelections.length !== flattenedSelections.length) {
+      if (filteredSelections.length !== preFilterCount) {
         blockSelections = buildBlockSelectionsFromFlattened(
           filteredSelections,
           elimination.blockResults.map((b) => b.blockIndex)
@@ -3256,9 +3338,10 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           (sum, s) => sum + s.selectedVectorIndices.length,
           0
         );
+        flattenedSelections = filteredSelections;
         log.info('Numeric suffix selection constrained', {
           selectedCount: totalSelected,
-          removed: flattenedSelections.length - filteredSelections.length,
+          removed: preFilterCount - filteredSelections.length,
           controllable: elimination.controllablePixels,
         });
       }
@@ -3266,6 +3349,20 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // NOTE: No static vector cap. The binary search fallback in scan-fallback.ts
     // dynamically finds the maximum safe vector count for phone cameras.
+
+    const orderedSelections = flattenedSelections;
+
+    if (timingEnabled) {
+      const t = timingMarks;
+      log.info('QART selection timing', {
+        selectMs: t.select_done && t.select_start ? (t.select_done - t.select_start).toFixed(1) : undefined,
+        eccApplyMs: t.ecc_apply_done && t.ecc_apply_start ? (t.ecc_apply_done - t.ecc_apply_start).toFixed(1) : undefined,
+        flattenMs: t.flatten_done && t.flatten_start ? (t.flatten_done - t.flatten_start).toFixed(1) : undefined,
+        numericFilterMs: t.numeric_filter_done && t.numeric_filter_start ? (t.numeric_filter_done - t.numeric_filter_start).toFixed(1) : undefined,
+        preReduceTargetCount,
+        totalSelected,
+      });
+    }
 
     onProgress?.('Counting predicted matches', 75);
 
@@ -3351,17 +3448,20 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // Track how many codewords changed per block vs ECC budget
     // This helps diagnose "scans but corrupted" issues
     let anyBlockOverBudget = false;
+    const blockDamage: Array<{ changed: number; safeLimit: number }> = [];
     for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
       const eccDamage = calculateECCDamage(
         blockDataArrays[blockIdx],
         modifiedBlockData[blockIdx],
         blockEccCounts[blockIdx]
       );
-      
+
+      blockDamage.push({ changed: eccDamage.changedCodewords, safeLimit: eccDamage.safeLimit });
+
       if (eccDamage.isOverBudget) {
         anyBlockOverBudget = true;
       }
-      
+
       log.info('ECC DAMAGE ESTIMATE', {
         blockIndex: blockIdx,
         eccCount: blockEccCounts[blockIdx],
@@ -3369,12 +3469,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         changedTotalCodewords: eccDamage.changedCodewords, // Data only, ECC is XORed
         safeLimit: eccDamage.safeLimit,
         isOverBudget: eccDamage.isOverBudget,
-        percentOfBudget: eccDamage.safeLimit > 0 
+        percentOfBudget: eccDamage.safeLimit > 0
           ? `${((eccDamage.changedCodewords / eccDamage.safeLimit) * 100).toFixed(1)}%`
           : 'N/A',
       });
     }
-    
+
     if (anyBlockOverBudget) {
       log.error('ECC budget exceeded in one or more blocks - falling back to binary search', {
         suggestion: 'Reduce number of vectors or use higher ECC level',
@@ -4091,7 +4191,7 @@ export async function generateFullQArtBestMask(
   
   // Pre-calculate optimal version and suffix for all mask comparisons
   // This ensures consistent encoding across all mask attempts
-  const targetControlPercent = config.targetControlPercent ?? 50;
+  const targetControlPercent = config.targetControlPercent ?? 100;
   const resolvedSuffixMode: 'numeric' | 'byte' =
     config.suffixMode === 'numeric'
       ? 'numeric'
@@ -4101,11 +4201,16 @@ export async function generateFullQArtBestMask(
           ? 'numeric'
           : 'byte';
 
+  const requestedVersion = config.forceVersion ?? config.version;
+  const controlTarget = (config.lockVersionToMinimum || (requestedVersion ?? 0) > 0)
+    ? 0
+    : targetControlPercent;
+
   const optimalConfig = calculateOptimalVersionAndSuffix(
-    config.forceVersion ?? config.version,
+    requestedVersion,
     config.ecc,
     config.data.length,
-    targetControlPercent,
+    controlTarget,
     resolvedSuffixMode
   );
   
@@ -4135,6 +4240,7 @@ export async function generateFullQArtBestMask(
     paddingBytes: optimalConfig.paddingBytes,
     expectedControlPercent: `${optimalConfig.expectedControlPercent.toFixed(1)}%`,
     encoding: resolvedSuffixMode === 'numeric' ? 'mixed (byte + numeric)' : 'byte mode (single segment)',
+    lockVersionToMinimum: config.lockVersionToMinimum,
     note: 'Each mask will use the same DETERMINISTIC suffix for fair comparison',
   });
 

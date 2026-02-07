@@ -1156,8 +1156,12 @@ export function useQRGenerator(): UseQRGeneratorResult {
             data: debouncedConfig.content,
             targetImage: overlayCanvas,
             version: debouncedConfig.typeNumber || 0,
-            ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
+            // QArt: start with ECC L (more controllable capacity)
+            ecc: 'L' as 'L' | 'M' | 'Q' | 'H',
             strictSuffix: true,
+            // QArt: start at 100% control and reduce until scannable (handled in generator)
+            targetControlPercent: 100,
+            lockVersionToMinimum: debouncedConfig.typeNumber === 0,
             onProgress: (stage, percent) => {
               log.debug('QR-Art progress', { stage, percent: `${percent}%` });
             },
