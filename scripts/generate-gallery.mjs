@@ -14,6 +14,7 @@
  */
 
 import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
@@ -927,14 +928,29 @@ function generateGalleryItems() {
 }
 
 // Build URL from params
+function normalizedParamEntries(params) {
+  return Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .sort(([a], [b]) => a.localeCompare(b));
+}
+
 function buildUrl(params) {
   const url = new URL(DEV_SERVER_URL);
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null) {
-      url.searchParams.set(key, String(value));
-    }
+  for (const [key, value] of normalizedParamEntries(params)) {
+    url.searchParams.set(key, String(value));
   }
   return url.toString();
+}
+
+function buildDeterministicQuery(params) {
+  return normalizedParamEntries(params)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join('&');
+}
+
+function stableParamHash(params) {
+  const normalized = JSON.stringify(normalizedParamEntries(params));
+  return createHash('sha256').update(normalized).digest('hex');
 }
 
 // Wait for canvas to have non-empty content
@@ -1172,8 +1188,16 @@ async function processItem(browser, item) {
     const ext = result.isGif ? 'gif' : 'png';
     const filepath = path.join(GALLERY_DIR, `${item.id}.${ext}`);
     await fs.writeFile(filepath, result.buffer);
+    const contentSha256 = createHash('sha256').update(result.buffer).digest('hex');
     console.log(`  [OK] ${item.id}${result.isGif ? ' (GIF)' : ''}`);
-    return { id: item.id, success: true, isGif: result.isGif };
+    return {
+      id: item.id,
+      success: true,
+      isGif: result.isGif,
+      outputFile: `${item.id}.${ext}`,
+      outputBytes: result.buffer.length,
+      outputSha256: contentSha256,
+    };
   } catch (error) {
     console.error(`  [FAIL] ${item.id}: ${error.message}`);
     return { id: item.id, success: false, error: error.message };
@@ -1220,7 +1244,7 @@ async function main() {
   console.log('\n=== ANQR Gallery Generator ===\n');
 
   // Generate items
-  const allItems = generateGalleryItems();
+  const allItems = generateGalleryItems().sort((a, b) => a.id.localeCompare(b.id));
 
   // Separate static and animated items
   const staticItems = allItems.filter((item) => !item.isAnimated);
@@ -1309,13 +1333,47 @@ async function main() {
   }
 
   // Save manifest
+  const resultById = new Map(results.map((r) => [r.id, r]));
   const manifest = {
+    manifestVersion: '2.0',
+    permutationSpecVersion: '1.0',
     generated: new Date().toISOString(),
+    source: {
+      script: 'scripts/generate-gallery.mjs',
+      devServer: DEV_SERVER_URL,
+      args: process.argv.slice(2),
+    },
+    generatorConfig: {
+      imageSize: IMAGE_SIZE,
+      staticCaptureDelayMs: STATIC_CAPTURE_DELAY,
+      animatedMaxTimeoutMs: ANIMATED_MAX_TIMEOUT,
+      animatedPollIntervalMs: ANIMATED_POLL_INTERVAL,
+      parallelStatic: PARALLEL_STATIC,
+      parallelAnimated: PARALLEL_ANIMATED,
+    },
     count: itemsToProcess.length,
     successful,
     failed: failed.length,
-    imageSize: IMAGE_SIZE,
-    items: itemsToProcess.map((i) => ({ id: i.id, isAnimated: !!i.isAnimated })),
+    items: itemsToProcess.map((item) => {
+      const run = resultById.get(item.id);
+      const query = buildDeterministicQuery(item.params);
+      return {
+        id: item.id,
+        isAnimated: !!item.isAnimated,
+        params: Object.fromEntries(normalizedParamEntries(item.params)),
+        query,
+        paramSignatureSha256: stableParamHash(item.params),
+        output: run
+          ? {
+              success: !!run.success,
+              file: run.outputFile,
+              bytes: run.outputBytes,
+              sha256: run.outputSha256,
+              error: run.error ?? null,
+            }
+          : null,
+      };
+    }),
   };
 
   await fs.writeFile(path.join(GALLERY_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));

@@ -745,7 +745,7 @@ function embedPngMetadataAndDpi(pngBuffer: Buffer, metadata?: PngMetadata, dpi?:
 /**
  * Encode canvas as GIF (single frame)
  */
-function encodeGif(canvas: Canvas, colors: number = 256): Buffer {
+function encodeGif(canvas: Canvas, colors: number = 256, disposal: number = 2): Buffer {
   const width = canvas.width;
   const height = canvas.height;
   const ctx = canvas.getContext('2d');
@@ -760,6 +760,7 @@ function encodeGif(canvas: Canvas, colors: number = 256): Buffer {
     palette,
     delay: 100,
     repeat: 0,
+    disposal,
   });
 
   gif.finish();
@@ -775,7 +776,8 @@ function encodeGif(canvas: Canvas, colors: number = 256): Buffer {
 function encodeAnimatedGif(
   frames: Canvas[],
   frameDelayMs: number = 100,
-  colors: number = 256
+  colors: number = 256,
+  disposal: number = 2
 ): Buffer {
   if (frames.length === 0) {
     throw new Error('No frames to encode');
@@ -803,6 +805,7 @@ function encodeAnimatedGif(
     const frameOptions: Record<string, unknown> = {
       palette,
       delay: delayCentiseconds,
+      disposal,
     };
     if (i === 0) {
       frameOptions.repeat = 0; // 0 = loop forever
@@ -1403,10 +1406,52 @@ function parseGifFramesServer(arrayBuffer: ArrayBuffer): ServerAnimationFrame[] 
   return animationFrames;
 }
 
+function decimateFramesToMaxFps(
+  frames: ServerAnimationFrame[],
+  targetFps: number
+): ServerAnimationFrame[] {
+  if (frames.length <= 1 || targetFps <= 0) {
+    return frames;
+  }
+
+  const totalDelay = frames.reduce((sum, f) => sum + (f.delay || 100), 0);
+  const avgDelay = totalDelay / frames.length;
+  const sourceFps = avgDelay > 0 ? 1000 / avgDelay : 0;
+
+  if (!sourceFps || sourceFps <= targetFps) {
+    return frames;
+  }
+
+  const ratio = sourceFps / targetFps;
+  const keepIndices: number[] = [];
+
+  let accumulator = 0;
+  for (let i = 0; i < frames.length; i++) {
+    accumulator += 1;
+    if (accumulator >= ratio) {
+      keepIndices.push(i);
+      accumulator -= ratio;
+    }
+  }
+
+  if (keepIndices.length > 0 && keepIndices[0] !== 0) {
+    keepIndices.unshift(0);
+  }
+  if (keepIndices.length > 0 && keepIndices[keepIndices.length - 1] !== frames.length - 1) {
+    keepIndices.push(frames.length - 1);
+  }
+
+  return keepIndices.map((idx) => frames[idx]).filter(Boolean);
+}
+
 /**
  * Encode multiple canvases as animated GIF with per-frame delays
  */
-function encodeAnimatedGifWithDelays(frames: ServerAnimationFrame[], colors: number = 256): Buffer {
+function encodeAnimatedGifWithDelays(
+  frames: ServerAnimationFrame[],
+  colors: number = 256,
+  disposal: number = 2
+): Buffer {
   if (frames.length === 0) {
     throw new Error('No frames to encode');
   }
@@ -1432,6 +1477,7 @@ function encodeAnimatedGifWithDelays(frames: ServerAnimationFrame[], colors: num
     const frameOptions: Record<string, unknown> = {
       palette,
       delay: delayCentiseconds,
+      disposal,
     };
     if (i === 0) {
       frameOptions.repeat = 0; // 0 = loop forever
@@ -1635,6 +1681,10 @@ async function handler(request: Request) {
     });
   }
 
+  // Client-only hint (UI locale)
+  const lang = params.get('lang') || undefined;
+  void lang;
+
   // Parse all parameters with defaults
   const sizeParam = Number.parseInt(params.get('size') || '400', 10);
   const modulePxParam = params.get('modulePx')
@@ -1729,7 +1779,9 @@ async function handler(request: Request) {
   const overlayUrl = params.get('img');
   // Default to 'dithered' mode when overlay URL is provided but mode is not specified
   // This matches the client-side default in qr-store.ts
-  const overlayMode = params.get('mode') || (overlayUrl ? 'dithered' : undefined);
+  const legacySubpixel = params.get('subpixel') === '1';
+  const overlayMode =
+    params.get('mode') || (legacySubpixel ? 'subpixel' : overlayUrl ? 'dithered' : undefined);
   const overlayIntensity = Math.min(
     100,
     Math.max(0, Number.parseInt(params.get('intensity') || '100', 10))
@@ -1872,10 +1924,18 @@ async function handler(request: Request) {
 
   // Format-specific quality params
   const webpQuality = Math.min(100, Math.max(0, Number.parseInt(params.get('webpQ') || '90', 10)));
+  const _jpegQuality = Math.min(100, Math.max(0, Number.parseInt(params.get('jpegQ') || '92', 10)));
+  const gifPaletteSize = params.get('gifPal');
   const gifColors = Math.min(
     256,
-    Math.max(2, Number.parseInt(params.get('gifColors') || '256', 10))
+    Math.max(2, Number.parseInt(params.get('gifColors') || gifPaletteSize || '256', 10))
   );
+  const gifQuantizer = params.get('gifQuant') || undefined;
+  const gifDither = params.get('gifDith') || undefined;
+  const gifTransparentColor = params.get('gifTrans') ? `#${params.get('gifTrans')}` : undefined;
+  void gifQuantizer;
+  void gifDither;
+  void gifTransparentColor;
 
   // Metadata
   const metaTitle = params.get('metaTitle') || undefined;
@@ -1899,6 +1959,7 @@ async function handler(request: Request) {
   // GIF-specific overlay parameters
   const gifUseFrameDelays = params.get('gifDelays') !== '0';
   const gifDisposalHandling = params.get('gifDispH') || 'respect';
+  const gifMaxFps = Number.parseInt(params.get('gifMaxFps') || '0', 10);
 
   // Safety locks (missing from server previously)
   const lockFinders = params.get('lockF') !== '0';
@@ -1921,12 +1982,14 @@ async function handler(request: Request) {
   const qaContrastCheckClientOnly = params.get('qaContrast') === '1';
   const qaSimulateBlurClientOnly = Number.parseFloat(params.get('qaBlur') || '0');
   const qaSimulateNoiseClientOnly = Number.parseInt(params.get('qaNoise') || '0', 10);
+  const qaSimulateRotationClientOnly = Number.parseInt(params.get('qaRot') || '0', 10);
   const qaShowHeatmapClientOnly = params.get('qaHeatmap') === '1';
   // Log if QA params are requested but can't be applied
   if (
     qaContrastCheckClientOnly ||
     qaSimulateBlurClientOnly ||
     qaSimulateNoiseClientOnly ||
+    qaSimulateRotationClientOnly ||
     qaShowHeatmapClientOnly
   ) {
   }
@@ -1936,8 +1999,19 @@ async function handler(request: Request) {
   const formatExtra = params.get('fmtExtra') || 'none';
   const filename = params.get('fname') || 'anqr-qrcode';
   const includeQuietZone = params.get('inclQz') !== '0';
+  const gifDisposal = params.get('gifDisp') || 'restore_bg';
+  const gifDisposalCode =
+    gifDisposal === 'none'
+      ? 0
+      : gifDisposal === 'keep'
+        ? 1
+        : gifDisposal === 'restore_previous'
+          ? 3
+          : 2;
+  const svgTrueVector = params.get('svgVec') === '1';
   const svgShapePrecision = params.get('svgPrec') || 'pixel';
   const svgEmbedRasterOverlay = params.get('svgEmbed') !== '0';
+  void svgTrueVector;
 
   // Render palette (missing from server previously)
   const paletteMode = params.get('paletteMode') || 'position';
@@ -2189,6 +2263,9 @@ async function handler(request: Request) {
             ...frame,
             canvas: preprocessCanvas(frame.canvas),
           }));
+          if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
+            overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
+          }
           // For animated GIFs, use the first preprocessed frame as the static overlay
           overlayCanvas = overlayFrames[0]?.canvas ?? preprocessCanvas(fetchedImage.canvas);
         } else {
@@ -2313,13 +2390,22 @@ async function handler(request: Request) {
       case 'gif':
         if (animatedOverlayFrames.length > 1) {
           // Animated GIF from overlay frames (preserves original frame delays)
-          outputBuffer = encodeAnimatedGifWithDelays(animatedOverlayFrames, gifColors);
+          outputBuffer = encodeAnimatedGifWithDelays(
+            animatedOverlayFrames,
+            gifColors,
+            gifDisposalCode
+          );
         } else if (animationFrameCanvases.length > 1) {
           // Animated GIF with pattern
-          outputBuffer = encodeAnimatedGif(animationFrameCanvases, animationSpeed, gifColors);
+          outputBuffer = encodeAnimatedGif(
+            animationFrameCanvases,
+            animationSpeed,
+            gifColors,
+            gifDisposalCode
+          );
         } else {
           // Single frame GIF
-          outputBuffer = encodeGif(outputCanvas, gifColors);
+          outputBuffer = encodeGif(outputCanvas, gifColors, gifDisposalCode);
         }
         contentType = 'image/gif';
         break;

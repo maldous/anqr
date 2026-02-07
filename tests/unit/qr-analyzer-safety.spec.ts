@@ -3,6 +3,7 @@ import {
   analyzeContrast,
   analyzeMatrixContrast,
   calculateSafeIntensity,
+  validateOverlayIntensity,
   validateModuleSize,
   validateQuietZone,
 } from '../../src/modules/qr-analyzer/safety';
@@ -37,5 +38,14 @@ describe('qr-analyzer safety (pure functions)', () => {
     const result = validateQuietZone(2, 4);
     expect(result.valid).toBe(false);
     expect(result.warning).toBeDefined();
+  });
+
+  it('validateOverlayIntensity enforces ECC-specific limits', () => {
+    expect(validateOverlayIntensity(30, 'L').valid).toBe(true);
+    expect(validateOverlayIntensity(31, 'L').valid).toBe(false);
+    expect(validateOverlayIntensity(50, 'M').valid).toBe(true);
+    expect(validateOverlayIntensity(70, 'Q').valid).toBe(true);
+    expect(validateOverlayIntensity(85, 'H').valid).toBe(true);
+    expect(validateOverlayIntensity(86, 'H').valid).toBe(false);
   });
 });

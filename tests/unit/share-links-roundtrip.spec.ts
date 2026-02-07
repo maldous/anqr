@@ -69,4 +69,17 @@ describe('share-links round trip', () => {
       watermarkImageUrl: config.watermarkImageUrl,
     });
   });
+
+  it('parses legacy per-ECC intensity aliases', () => {
+    const parsed = parseUrlParamsFromSearchParams(
+      new URLSearchParams(
+        'data=https%3A%2F%2Fexample.com&maxOverlayIntensityL=91&maxOverlayIntensityM=92&maxOverlayIntensityQ=93&maxOverlayIntensityH=94'
+      )
+    );
+
+    expect(parsed.maxOverlayIntensityL).toBe(91);
+    expect(parsed.maxOverlayIntensityM).toBe(92);
+    expect(parsed.maxOverlayIntensityQ).toBe(93);
+    expect(parsed.maxOverlayIntensityH).toBe(94);
+  });
 });

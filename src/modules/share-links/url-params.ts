@@ -241,10 +241,18 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     paletteMode: params.get('paletteMode') || undefined,
 
     // Safety per-ECC limits
-    maxOverlayIntensityL: parseIntParam(params.get('maxIntL')),
-    maxOverlayIntensityM: parseIntParam(params.get('maxIntM')),
-    maxOverlayIntensityQ: parseIntParam(params.get('maxIntQ')),
-    maxOverlayIntensityH: parseIntParam(params.get('maxIntH')),
+    maxOverlayIntensityL: parseIntParam(
+      params.get('maxIntL') || params.get('maxOverlayIntensityL')
+    ),
+    maxOverlayIntensityM: parseIntParam(
+      params.get('maxIntM') || params.get('maxOverlayIntensityM')
+    ),
+    maxOverlayIntensityQ: parseIntParam(
+      params.get('maxIntQ') || params.get('maxOverlayIntensityQ')
+    ),
+    maxOverlayIntensityH: parseIntParam(
+      params.get('maxIntH') || params.get('maxOverlayIntensityH')
+    ),
 
     // Module pixel size (for server-side generation)
     modulePx: parseIntParam(params.get('modulePx')),

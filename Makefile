@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report test test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
+.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report quality test test\:unit test\:unit\:ci test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
 
 # ============================================
 # Help
@@ -54,6 +54,7 @@ help:
 	@echo "    make i18n:fill               Generate TS/JSON from all txt files"
 	@echo "    make i18n:fill:static        Generate static TS files only"
 	@echo "    make i18n:fill:locales       Generate locales JSON files only"
+	@echo "    make i18n:check              Check i18n regressions vs baseline"
 	@echo ""
 	@echo "    Use LANGS=\"fr-FR de-DE\" to process specific languages:"
 	@echo "      make i18n:xlate LANGS=\"fr-FR de-DE\""
@@ -68,6 +69,10 @@ help:
 	@echo "    make sonar-report   Get full issues report from SonarQube"
 	@echo ""
 	@echo "  UI TESTING (Playwright)"
+	@echo "    make quality        Run local quality gate (typecheck + unit CI subset + i18n check)"
+	@echo "    make signoff        Run full production sign-off checker"
+	@echo "    make test:unit      Run all Vitest unit tests"
+	@echo "    make test:unit:ci   Run CI-safe Vitest subset (excludes missing local fixture tests)"
 	@echo "    make test           Run ALL tests (basic + advanced + pro + permutations)"
 	@echo "    make test:basic     Run basic tier UI tests only"
 	@echo "    make test:advanced  Run advanced tier UI tests only"
@@ -459,6 +464,9 @@ i18n\:fill\:locales:
 
 # Generate both static TS and locales JSON
 i18n\:fill: i18n\:fill\:static i18n\:fill\:locales
+
+i18n\:check:
+	npm run test:i18n
 	@echo "All fills complete."
 
 dep:
@@ -490,6 +498,21 @@ sonar-report:
 # Runs E2E tests against local dev server with Chrome
 # Tests are organized by tier: basic, advanced, professional
 # Permutation tests run exhaustive setting combinations (very long!)
+
+quality:
+	$(MAKE) fix
+	npm run typecheck
+	npm run test:unit:ci
+	npm run test:i18n
+
+signoff:
+	npm run test:signoff
+
+test\:unit:
+	npm run test:unit
+
+test\:unit\:ci:
+	npm run test:unit:ci
 
 # Run ALL tests (basic + advanced + professional + permutations)
 # This is the comprehensive test target - use for full CI validation

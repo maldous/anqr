@@ -1,23 +1,6 @@
 {
-  "clientKeyCount": 165,
-  "serverKeyCount": 158,
-  "clientOnly": [
-    "gifDisp",
-    "gifDith",
-    "gifMaxFps",
-    "gifPal",
-    "gifQuant",
-    "gifTrans",
-    "jpegQ",
-    "lang",
-    "qaRot",
-    "subpixel",
-    "svgVec"
-  ],
-  "serverOnly": [
-    "maxOverlayIntensityH",
-    "maxOverlayIntensityL",
-    "maxOverlayIntensityM",
-    "maxOverlayIntensityQ"
-  ]
+  "clientKeyCount": 169,
+  "serverKeyCount": 169,
+  "clientOnly": [],
+  "serverOnly": []
 }

@@ -83,6 +83,26 @@ export interface ImageProperties {
   estimatedQrSizePx: number;
 }
 
+export interface GeometryDiagnostics {
+  corners: {
+    topLeft: { x: number; y: number };
+    topRight: { x: number; y: number };
+    bottomLeft: { x: number; y: number };
+    bottomRight: { x: number; y: number };
+  };
+  boundingBox: {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+    width: number;
+    height: number;
+  };
+  topEdgePx: number;
+  leftEdgePx: number;
+  estimatedRotationDeg: number;
+}
+
 export type ErrorType = 'no_qr_detected' | 'cors_blocked' | 'decode_error' | 'unknown';
 
 // Import and re-export DecoderMetadata from qr-decoder to avoid duplicate type definition
@@ -134,6 +154,7 @@ export interface QRAnalysisResult {
 
   // Image
   imageProperties?: ImageProperties;
+  geometry?: GeometryDiagnostics;
 
   // Matrix for reproduction
   moduleMatrix?: boolean[][];

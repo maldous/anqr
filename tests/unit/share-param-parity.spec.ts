@@ -25,27 +25,10 @@ describe('share params parity (client vs netlify function)', () => {
     const clientOnly = [...clientKeys].filter((k) => !serverKeys.has(k)).sort();
     const serverOnly = [...serverKeys].filter((k) => !clientKeys.has(k)).sort();
 
-    // TODO: shrink these allowlists to zero as parity gaps are fixed.
-    const allowClientOnly = [
-      'gifDisp',
-      'gifDith',
-      'gifMaxFps',
-      'gifPal',
-      'gifQuant',
-      'gifTrans',
-      'jpegQ',
-      'lang',
-      'qaRot',
-      'subpixel',
-      'svgVec',
-    ];
+    // Client/server parity is now complete for all client-emitted keys.
+    const allowClientOnly: string[] = [];
 
-    const allowServerOnly = [
-      'maxOverlayIntensityH',
-      'maxOverlayIntensityL',
-      'maxOverlayIntensityM',
-      'maxOverlayIntensityQ',
-    ];
+    const allowServerOnly: string[] = [];
 
     expect(clientOnly).toEqual(allowClientOnly);
     expect(serverOnly).toEqual(allowServerOnly);

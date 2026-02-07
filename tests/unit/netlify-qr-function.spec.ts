@@ -22,10 +22,41 @@ describe('netlify qr function', () => {
     const res = await handler(new Request(url));
 
     expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe('image/png');
+    expect(res.headers.get('Cache-Control')).toContain('immutable');
+    expect(res.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(res.headers.get('ETag')).toMatch(/^".+"$/);
     const buffer = Buffer.from(await res.arrayBuffer());
     const imageData = await bufferToImageData(buffer);
     const decoded = decodeQR(imageData as ImageData);
 
     expect(decoded?.data).toBe(payload);
+  });
+
+  it('returns correct Content-Type for WEBP', async () => {
+    const payload = 'https://example.com/netlify-format-test';
+
+    const webpRes = await handler(
+      new Request(
+        `https://example.com/api/qr?data=${encodeURIComponent(payload)}&format=webp&size=256&ec=H`
+      )
+    );
+    expect(webpRes.status).toBe(200);
+    expect(webpRes.headers.get('Content-Type')).toBe('image/webp');
+  });
+
+  it('produces stable ETag for identical requests', async () => {
+    const payload = 'https://example.com/netlify-etag-test';
+    const req = new Request(
+      `https://example.com/api/qr?data=${encodeURIComponent(payload)}&format=png&size=256&ec=H`
+    );
+
+    const a = await handler(req);
+    const b = await handler(req);
+
+    expect(a.status).toBe(200);
+    expect(b.status).toBe(200);
+    expect(a.headers.get('ETag')).toBeDefined();
+    expect(a.headers.get('ETag')).toBe(b.headers.get('ETag'));
   });
 });

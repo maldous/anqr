@@ -15,6 +15,7 @@ export const ANALYSIS_API = [
   'analyzeQRFromCanvas',
   'analyzeQRFromFile',
   'analyzeQRFromUrl',
+  'buildAnalysisExportData',
 ] as const;
 
 // Content analysis
@@ -92,6 +93,7 @@ export const TYPES = [
   'DominantColor',
   'ECCLevel',
   'ErrorType',
+  'GeometryDiagnostics',
   'ImageProperties',
   'LogEntry',
   'QRAnalysisResult',
