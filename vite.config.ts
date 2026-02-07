@@ -438,15 +438,6 @@ export default defineConfig({
           ) {
             return 'vendor-utils';
           }
-          // Capacitor (native platform support) + app platform modules
-          // These are grouped together to avoid circular dependencies with app-exporter
-          if (
-            id.includes('node_modules/@capacitor') ||
-            id.includes('/modules/platform') ||
-            id.includes('/modules/browser-io')
-          ) {
-            return 'vendor-capacitor';
-          }
           // Zustand state management
           if (id.includes('node_modules/zustand')) {
             return 'vendor-zustand';
@@ -476,7 +467,15 @@ export default defineConfig({
             return 'app-qr-lib';
           }
           // App modules - split heavy processing
-          if (id.includes('/modules/exporter') || id.includes('/modules/animation')) {
+          // Includes the full native I/O chain to avoid circular chunk dependencies:
+          // exporter → browser-io → platform → @capacitor
+          if (
+            id.includes('/modules/exporter') ||
+            id.includes('/modules/animation') ||
+            id.includes('/modules/platform') ||
+            id.includes('/modules/browser-io') ||
+            id.includes('node_modules/@capacitor')
+          ) {
             return 'app-exporter';
           }
           if (
