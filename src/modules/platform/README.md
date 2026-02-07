@@ -81,13 +81,14 @@ resetGenerationCount();
 import { saveBase64ToDocuments, MediaStoreWriter } from '@/modules/platform';
 
 // Save file to Documents folder
-await saveBase64ToDocuments(base64Data, 'qrcode.png', 'image/png');
+await saveBase64ToDocuments('qrcode.png', base64Data, 'image/png', 'ANQR');
 
 // Use MediaStoreWriter directly
-await MediaStoreWriter.writeFile({
-  data: base64Data,
+await MediaStoreWriter.saveBase64ToDocuments({
   filename: 'qrcode.png',
+  base64Data,
   mimeType: 'image/png',
+  subfolder: 'ANQR',
 });
 ```
 

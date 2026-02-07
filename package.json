@@ -16,7 +16,10 @@
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
     "test:unit": "vitest run",
-    "test:unit:watch": "vitest"
+    "test:unit:watch": "vitest",
+    "test:unit:ci": "npm run test:unit",
+    "test:i18n": "node scripts/check-i18n-regressions.js",
+    "test:signoff": "node scripts/production-signoff-check.js"
   },
   "repository": {
     "type": "git",

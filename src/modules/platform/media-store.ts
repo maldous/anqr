@@ -9,12 +9,19 @@ import { createLogger } from '../../lib/logger';
 const _log = createLogger('STORAGE');
 
 export interface MediaStoreWriterPlugin {
-  saveBase64ToDocuments(options: {
+  saveBase64ToDocuments?: (options: {
     filename: string;
     base64Data: string;
     mimeType: string;
     subfolder?: string;
-  }): Promise<{ uri: string; path: string }>;
+  }) => Promise<{ uri?: string; path?: string; displayName?: string }>;
+  // Backward-compatible native method name used by Android plugin
+  saveToDocuments?: (options: {
+    filename: string;
+    data: string;
+    mimeType: string;
+    subdir?: string;
+  }) => Promise<{ uri?: string; path?: string; displayName?: string }>;
 }
 
 // Lazy-loaded plugin instance to avoid circular dependency initialization issues
@@ -32,7 +39,21 @@ function getMediaStoreWriter(): MediaStoreWriterPlugin {
  * @deprecated Use saveBase64ToDocuments instead. This export is kept for backward compatibility.
  */
 export const MediaStoreWriter: MediaStoreWriterPlugin = {
-  saveBase64ToDocuments: (options) => getMediaStoreWriter().saveBase64ToDocuments(options),
+  saveBase64ToDocuments: (options) => {
+    const plugin = getMediaStoreWriter();
+    if (plugin.saveBase64ToDocuments) {
+      return plugin.saveBase64ToDocuments(options);
+    }
+    if (plugin.saveToDocuments) {
+      return plugin.saveToDocuments({
+        filename: options.filename,
+        data: options.base64Data,
+        mimeType: options.mimeType,
+        subdir: options.subfolder,
+      });
+    }
+    throw new Error('MediaStoreWriter plugin method not available');
+  },
 };
 
 /**
@@ -48,8 +69,8 @@ export async function saveBase64ToDocuments(
   base64Data: string,
   mimeType: string,
   subfolder?: string
-): Promise<{ uri: string; path: string }> {
-  return getMediaStoreWriter().saveBase64ToDocuments({
+): Promise<{ uri?: string; path?: string; displayName?: string }> {
+  return MediaStoreWriter.saveBase64ToDocuments!({
     filename,
     base64Data,
     mimeType,

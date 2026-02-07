@@ -120,26 +120,24 @@ Where:
 
 ## URL parameter parity (client share encoder vs server image function)
 
-The **client** (`src/modules/share-links/url-params.ts`) emits **165** query keys.  
-The **server** (`netlify/functions/qr.ts`) currently reads **158** query keys.
+Parity is now **closed**:
 
-That leaves **11** client-only keys (embed ignores them) and **4** server-only keys. See `reports/param-parity.json` and the guard test `tests/unit/share-param-parity.spec.ts`.
+- Client parser (`src/modules/share-links/url-params.ts`): **169** keys
+- Server parser (`netlify/functions/qr.ts`): **169** keys
+- Client-only: **0**
+- Server-only: **0**
 
-### Client-only keys (11)
+Reference artifacts:
+- `reports/param-parity.json`
+- `reports/parity-analysis.md`
+- `tests/unit/share-param-parity.spec.ts`
 
-```text
-gifDisp, gifDith, gifMaxFps, gifPal, gifQuant, gifTrans, jpegQ, lang, qaRot, subpixel, svgVec
-```
-
-### Server-only keys (4)
-
-```text
-maxOverlayIntensityH, maxOverlayIntensityL, maxOverlayIntensityM, maxOverlayIntensityQ
-```
+Compatibility note:
+- Both client and server accept legacy per-ECC keys (`maxOverlayIntensity*`) and canonical keys (`maxInt*`) to keep old links working.
 
 Recommended workflow:
 - Treat `src/modules/share-links/url-params.ts` as the canonical list of public query params.
-- Keep the parity unit test as a CI guard and shrink allowlists toward zero.
+- Keep `tests/unit/share-param-parity.spec.ts` failing on any key-set drift (allowlists at zero).
 
 ## Supporting (non-73) files worth knowing about
 
@@ -248,6 +246,8 @@ Responsibilities:
   - low contrast
 - **Scanner** decodes the rendered canvas and compares result to intended content.
   - used as a regression guard: “the pretty QR still scans”
+- **Structured export builder** (`src/modules/qr-analyzer/export.ts`) produces normalized JSON diagnostics for analysis export and test harnesses (`buildAnalysisExportData`).
+- Decoder now emits geometry diagnostics (`QRAnalysisResult.geometry`) including corners, bounding box, and estimated rotation.
 
 ### 8) Export: `src/modules/exporter/*` + `src/modules/platform/media-store.ts`
 
@@ -258,6 +258,7 @@ Exports:
 
 Also:
 - embeds metadata (optional)
+- native Android save path uses Capacitor MediaStore with method-name compatibility (`saveBase64ToDocuments` and `saveToDocuments`) in `src/modules/platform/media-store.ts`.
 - writes to disk in browser (download) or Android Documents (MediaStore plugin)
 
 ### 9) Sharing: `src/modules/share-links/*`

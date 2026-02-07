@@ -44,6 +44,58 @@ interface QRLocationCorners {
   bottomRightCorner: { x: number; y: number };
 }
 
+function calculateGeometryDiagnostics(location: QRLocationCorners) {
+  const corners = [
+    location.topLeftCorner,
+    location.topRightCorner,
+    location.bottomLeftCorner,
+    location.bottomRightCorner,
+  ];
+
+  const xs = corners.map((p) => p.x);
+  const ys = corners.map((p) => p.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  const topEdgePx = Math.hypot(
+    location.topRightCorner.x - location.topLeftCorner.x,
+    location.topRightCorner.y - location.topLeftCorner.y
+  );
+  const leftEdgePx = Math.hypot(
+    location.bottomLeftCorner.x - location.topLeftCorner.x,
+    location.bottomLeftCorner.y - location.topLeftCorner.y
+  );
+  const estimatedRotationDeg =
+    (Math.atan2(
+      location.topRightCorner.y - location.topLeftCorner.y,
+      location.topRightCorner.x - location.topLeftCorner.x
+    ) *
+      180) /
+    Math.PI;
+
+  return {
+    corners: {
+      topLeft: location.topLeftCorner,
+      topRight: location.topRightCorner,
+      bottomLeft: location.bottomLeftCorner,
+      bottomRight: location.bottomRightCorner,
+    },
+    boundingBox: {
+      minX,
+      minY,
+      maxX,
+      maxY,
+      width: maxX - minX,
+      height: maxY - minY,
+    },
+    topEdgePx,
+    leftEdgePx,
+    estimatedRotationDeg,
+  };
+}
+
 /**
  * Decode a QR code from canvas and extract all metadata
  */
@@ -104,6 +156,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
     // NOTE: location corners are the CENTERS of the 3 finder patterns
     // plus an extrapolated 4th corner (bottom-right)
     const location = code.location!;
+    const geometry = calculateGeometryDiagnostics(location as QRLocationCorners);
 
     qrAnalyzerLog.trace('location: Finder pattern centers', {
       topLeft: location.topLeftCorner,
@@ -249,6 +302,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
         aspectRatio: Math.round((canvas.width / canvas.height) * 100) / 100,
         estimatedQrSizePx: Math.round(qrSize),
       },
+      geometry,
       moduleMatrix,
       confidence: 'high',
       decoderMetadata, // Include decoder metadata for debugging

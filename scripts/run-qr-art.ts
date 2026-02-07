@@ -6,8 +6,8 @@
  * Usage: npx tsx scripts/run-qr-art.ts [image-path] [output-path]
  * 
  * Examples:
- *   npx tsx scripts/run-qr-art.ts public/face.jpg qr-art-output.png
- *   npx tsx scripts/run-qr-art.ts public/face.jpg  # outputs to qr-art-face.png
+ *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg qr-art-output.png
+ *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg
  */
 
 // Polyfill import.meta.env for Node.js (Vite-specific)
@@ -47,7 +47,7 @@ if (typeof globalThis.ImageData === 'undefined') {
 
 async function main() {
   const args = process.argv.slice(2);
-  const imagePath = args[0] || 'public/face.jpg';
+  const imagePath = args[0] || 'public/tsunami.jpg';
   const outputPath = args[1] || `qr-art-${path.basename(imagePath, path.extname(imagePath))}.png`;
   
   console.log('='.repeat(60));

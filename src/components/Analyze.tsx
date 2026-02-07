@@ -66,6 +66,7 @@ import {
   analyzeQRCode,
   analyzeQRFromFile,
   analyzeQRFromUrl,
+  buildAnalysisExportData,
   type ContentType,
   type ContentTypeDetails,
   type ECCLevel,
@@ -141,6 +142,7 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean;
   children: React.ReactNode;
   badge?: React.ReactNode;
+  testId?: string;
 }
 
 function CollapsibleSection({
@@ -149,11 +151,12 @@ function CollapsibleSection({
   defaultOpen = true,
   children,
   badge,
+  testId,
 }: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-lg overflow-hidden">
+    <div className="rounded-lg overflow-hidden" data-testid={testId}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -715,7 +718,10 @@ function SummaryBar({ result }: SummaryBarProps) {
     'inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md font-medium text-center flex-1 min-w-[65px] shadow-sm';
 
   return (
-    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border rounded-lg shadow-sm py-2 px-3 mb-4 animate-in slide-in-from-top duration-300">
+    <div
+      className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border rounded-lg shadow-sm py-2 px-3 mb-4 animate-in slide-in-from-top duration-300"
+      data-testid="analyze-summary-bar"
+    >
       <div className="flex flex-wrap items-stretch gap-1.5 text-xs">
         {/* Version chip */}
         {result.version !== null && (
@@ -4507,67 +4513,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   // Export analysis result as JSON for Netlify API
   const handleExportJSON = useCallback(() => {
     if (!result?.success) return;
-
-    // Create a clean export object with all analysis data
-    const exportData = {
-      version: '1.0',
-      timestamp: new Date().toISOString(),
-      analysis: {
-        // Core QR properties
-        payload: result.payload,
-        payloadBytes: result.payloadBytes ? Array.from(result.payloadBytes) : undefined,
-        version: result.version,
-        moduleCount: result.moduleCount,
-        eccLevel: result.eccLevel,
-        maskPattern: result.maskPattern,
-        encodingMode: result.encodingMode,
-
-        // Analysis metadata
-        confidence: result.confidence,
-        warnings: result.warnings,
-
-        // Content analysis
-        contentType: result.contentType,
-
-        // Visual properties
-        detectedColors: result.detectedColors,
-        estimatedModulePx: result.estimatedModulePx,
-        quietZone: result.quietZone,
-
-        // Capacity
-        dataCapacity: result.dataCapacity,
-
-        // Structure
-        structuralAnalysis: result.structuralAnalysis,
-
-        // Image
-        imageProperties: result.imageProperties,
-
-        // Error correction
-        errorsCorrected: result.errorsCorrected,
-
-        // Decoder metadata
-        decoderMetadata: result.decoderMetadata,
-
-        // Module matrix as compact format
-        moduleMatrix: result.moduleMatrix
-          ? result.moduleMatrix.map((row) => row.map((cell) => (cell ? 1 : 0)).join(''))
-          : undefined,
-      },
-      // Settings for recreation in generator
-      generatorSettings: {
-        text: result.payload,
-        ecc: result.eccLevel,
-        version: actualUsedVersion ?? result.version,
-        maskPattern: result.maskPattern,
-        encodingMode:
-          result.encodingMode !== 'unknown' && result.encodingMode !== 'mixed'
-            ? result.encodingMode
-            : undefined,
-        fgColor: result.detectedColors?.foreground,
-        bgColor: result.detectedColors?.background,
-      },
-    };
+    const exportData = buildAnalysisExportData(result, {
+      source: analysisSource,
+      actualUsedVersion,
+    });
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -4578,7 +4527,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [result, actualUsedVersion]);
+  }, [result, actualUsedVersion, analysisSource]);
 
   return (
     <main className="flex-1 flex bg-background overflow-hidden">
@@ -4902,6 +4851,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <img
                             src={originalImageUrl}
                             alt="Original QR Code"
+                            data-testid="analyze-original-image"
                             className="max-w-full max-h-full object-contain"
                           />
                         ) : (
@@ -4922,6 +4872,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       <div className="aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         <canvas
                           ref={reproducedCanvasRef}
+                          data-testid="analyze-reproduced-canvas"
                           className="max-w-full max-h-full object-contain"
                           style={{ imageRendering: 'pixelated' }}
                         />
@@ -4991,6 +4942,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       <CollapsibleSection
                         title="QR Structure"
                         icon={<Grid3x3 className="w-4 h-4" />}
+                        testId="analyze-section-qr-structure"
                       >
                         <div className="space-y-2">
                           <DetailRow
@@ -5041,6 +4993,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       <CollapsibleSection
                         title="Encoding"
                         icon={<Binary className="w-4 h-4" />}
+                        testId="analyze-section-encoding"
                         badge={
                           result.errorsCorrected !== null && result.errorsCorrected > 0 ? (
                             <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
@@ -5149,6 +5102,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                         <CollapsibleSection
                           title="Structural Patterns"
                           icon={<Settings className="w-4 h-4" />}
+                          testId="analyze-section-structural-patterns"
                         >
                           <div className="space-y-2">
                             <DetailRow
@@ -5226,6 +5180,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                         <CollapsibleSection
                           title="Decoder Metadata"
                           icon={<Database className="w-4 h-4" />}
+                          testId="analyze-section-decoder-metadata"
                           defaultOpen={true}
                           badge={
                             <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400">
@@ -5501,6 +5456,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       <CollapsibleSection
                         title="Spatial Analysis"
                         icon={<Ruler className="w-4 h-4" />}
+                        testId="analyze-section-spatial-analysis"
                       >
                         <div className="space-y-2">
                           {result.estimatedModulePx !== null && (
@@ -5509,6 +5465,20 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                               value={`~${result.estimatedModulePx} px`}
                               icon={<Square className="w-3.5 h-3.5" />}
                             />
+                          )}
+                          {result.geometry && (
+                            <>
+                              <DetailRow
+                                label="Rotation"
+                                value={`${result.geometry.estimatedRotationDeg.toFixed(1)}°`}
+                                icon={<Ruler className="w-3.5 h-3.5" />}
+                              />
+                              <DetailRow
+                                label="Bounding Box"
+                                value={`${Math.round(result.geometry.boundingBox.width)} × ${Math.round(result.geometry.boundingBox.height)} px`}
+                                icon={<Grid3x3 className="w-3.5 h-3.5" />}
+                              />
+                            </>
                           )}
                           {result.quietZone && (
                             <>
@@ -5569,6 +5539,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                         <CollapsibleSection
                           title="Module Matrix"
                           icon={<Grid3x3 className="w-4 h-4" />}
+                          testId="analyze-section-module-matrix"
                           badge={
                             <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-muted">
                               {result.moduleMatrix.length}×{result.moduleMatrix.length}

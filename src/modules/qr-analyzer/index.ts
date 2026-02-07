@@ -30,11 +30,11 @@ export {
   rgbToHex,
   type UrlDetails,
 } from './analyzer-content';
-
 // Content detection (from content-detection.ts)
 export { detectContentType as detectContentTypeDetails } from './content-detection';
 // Main decoder
 export { decodeQRFromCanvas } from './decoder';
+export { type AnalysisExportData, buildAnalysisExportData } from './export';
 // Safety analyzer
 export {
   type AnalysisIssue,
@@ -98,6 +98,7 @@ export type {
   DetectedColors,
   ECCLevel,
   ErrorType,
+  GeometryDiagnostics,
   ImageProperties,
   QRAnalysisResult,
   QuietZoneInfo,
