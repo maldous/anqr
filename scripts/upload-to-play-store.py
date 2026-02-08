@@ -23,6 +23,7 @@ PACKAGE_NAME = 'link.anqr.app'
 AAB_FILE = 'android/app/build/outputs/bundle/release/app-release.aab'
 KEY_FILE = 'play-store-key.json'
 TRACK = 'internal'  # Options: internal, alpha, beta, production
+SYMBOLS_FILE = 'android/app/build/outputs/bundle/release/native-debug-symbols.zip'
 
 def main():
     # Check if AAB file exists
@@ -70,6 +71,24 @@ def main():
         
         version_code = bundle_response['versionCode']
         print(f"Uploaded bundle with version code: {version_code}")
+        
+        # Upload native debug symbols if available (non-fatal)
+        if os.path.exists(SYMBOLS_FILE):
+            try:
+                print("Uploading native debug symbols...")
+                symbols_media = MediaFileUpload(SYMBOLS_FILE, mimetype='application/octet-stream')
+                service.edits().deobfuscationfiles().upload(
+                    packageName=PACKAGE_NAME,
+                    editId=edit_id,
+                    apkVersionCode=version_code,
+                    deobfuscationFileType='nativeCode',
+                    media_body=symbols_media
+                ).execute()
+                print("Native debug symbols uploaded")
+            except Exception as e:
+                print(f"Warning: Failed to upload debug symbols: {e}")
+        else:
+            print(f"Warning: {SYMBOLS_FILE} not found, skipping debug symbols upload")
         
         # Assign to track
         print(f"Assigning to {TRACK} track...")
