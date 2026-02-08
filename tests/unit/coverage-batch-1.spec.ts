@@ -252,7 +252,7 @@ describe('exporter/types.ts', () => {
     expect(cfg.includeMetadata).toBe(false);
     expect(cfg.includeQuietZone).toBe(true);
     expect(cfg.bgOverride).toBe('');
-    expect(cfg.gifDisposal).toBe('restore_bg');
+    expect(cfg.gifDisposal).toBe('keep');
   });
 });
 

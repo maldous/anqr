@@ -4,7 +4,8 @@
  * Supports animated GIF overlays
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { createLogger } from '@/lib/logger';
 import {
   type AnimationFrame,
@@ -184,7 +185,7 @@ declare global {
     | undefined;
 }
 
-export function useQRGenerator(): UseQRGeneratorResult {
+function useQRGenerator(): UseQRGeneratorResult {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -1003,7 +1004,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
         .arrayBuffer()
         .then(async (arrayBuffer) => {
           try {
-            const frames = await parseAnimatedImage(arrayBuffer);
+            const frames = await parseAnimatedImage(arrayBuffer, overlay.gifDisposalHandling);
             setGifFrames(frames);
             setGifCompositor(null);
             setCurrentFrame(0);
@@ -1544,11 +1545,24 @@ export function useQRGenerator(): UseQRGeneratorResult {
     }
 
     // Second pass: apply FPS-based decimation if source FPS > target
+    const preDecimationCount = candidateIndices.length;
     if (candidateIndices.length > 1 && overlay.gifMaxFps > 0 && gifCompositor) {
       // Use compositor-based decimation for GIFs
       const allIndices = decimateCompositorFrames(gifCompositor, overlay.gifMaxFps);
       // Filter to only keep indices that are in our candidate set
       candidateIndices = candidateIndices.filter((i) => allIndices.includes(i));
+    }
+
+    if (candidateIndices.length > 0) {
+      log.debug('effectiveFrameIndices', {
+        totalFrames,
+        preDecimation: preDecimationCount,
+        postDecimation: candidateIndices.length,
+        dropped: preDecimationCount - candidateIndices.length,
+        gifMaxFps: overlay.gifMaxFps,
+        startFrame: animation.startFrame,
+        frameStep: animation.frameStep,
+      });
     }
 
     return candidateIndices;
@@ -1565,15 +1579,38 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const effectiveFrames = useMemo(() => {
     if (gifCompositor) {
       // Create synthetic AnimationFrame objects from compositor
-      return effectiveFrameIndices.map((i) => ({
-        canvas: gifCompositor.canvas, // Note: this is the same canvas, caller must use compositor.apply(i)
-        delay: gifCompositor.delayMs(i),
-        disposalType: 0, // Compositor handles disposal internally
-      }));
+      const frames = effectiveFrameIndices.map((i) => {
+        const srcDisposal = gifCompositor.disposalType(i);
+        const effectiveDisposal =
+          overlay.gifDisposalHandling === 'simplify' && srcDisposal === 3 ? 2 : srcDisposal;
+        return {
+          canvas: gifCompositor.canvas, // Note: this is the same canvas, caller must use compositor.apply(i)
+          delay: gifCompositor.delayMs(i),
+          disposalType: effectiveDisposal,
+        };
+      });
+      const totalMs = frames.reduce((s, f) => s + f.delay, 0);
+      const uniqueDisposals = [...new Set(frames.map((f) => f.disposalType))].sort((a, b) => a - b);
+      log.debug('effectiveFrames: compositor', {
+        frameCount: frames.length,
+        sampleDelays: frames.slice(0, 3).map((f) => f.delay),
+        uniqueDisposals,
+        disposalHandling: overlay.gifDisposalHandling,
+        totalDurationMs: totalMs,
+        avgFps: totalMs > 0 ? Math.round((frames.length / totalMs) * 1000 * 10) / 10 : 0,
+      });
+      return frames;
     }
     // Legacy path for WebP
-    return effectiveFrameIndices.map((i) => gifFrames[i]).filter(Boolean);
-  }, [gifCompositor, gifFrames, effectiveFrameIndices]);
+    const frames = effectiveFrameIndices.map((i) => gifFrames[i]).filter(Boolean);
+    if (frames.length > 0) {
+      log.debug('effectiveFrames: legacy', {
+        frameCount: frames.length,
+        sampleDelays: frames.slice(0, 3).map((f) => f.delay),
+      });
+    }
+    return frames;
+  }, [gifCompositor, gifFrames, effectiveFrameIndices, overlay.gifDisposalHandling]);
 
   // Expose state to window for external tools (gallery generator)
   // NOTE: We intentionally DON'T store animationFrames directly to avoid pinning
@@ -1640,6 +1677,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // Reset direction when animation settings change
     animationDirection.current = 1;
 
+    let tickCount = 0;
     const tick = (now: number) => {
       const elapsed = now - lastFrameTime.current;
       const activeFrameIndex = currentFrameRef.current;
@@ -1651,6 +1689,24 @@ export function useQRGenerator(): UseQRGeneratorResult {
       });
 
       if (elapsed >= frameDelay) {
+        if (tickCount < 3) {
+          log.debug('animation tick', {
+            tickCount,
+            frameIndex: activeFrameIndex,
+            elapsed: Math.round(elapsed),
+            frameDelay,
+            playbackFrameCount,
+          });
+        } else if (tickCount % 60 === 0) {
+          log.trace('animation tick', {
+            tickCount,
+            frameIndex: activeFrameIndex,
+            elapsed: Math.round(elapsed),
+            frameDelay,
+            playbackFrameCount,
+          });
+        }
+        tickCount++;
         // Use additive timing to prevent drift - increment by frameDelay instead of resetting to now
         lastFrameTime.current += frameDelay;
 
@@ -1730,6 +1786,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // OPTIMIZATION: Only replay from lastRenderedFrame instead of always from 0
       // This reduces O(n²) to O(n) for sequential playback
       const lastRendered = lastRenderedFrameRef.current;
+
+      log.trace('overlay frame update', {
+        currentFrame,
+        frameIdx,
+        lastRendered,
+        action: lastRendered < 0 || frameIdx < lastRendered ? 'replay' : frameIdx > lastRendered ? 'forward' : 'noop',
+      });
 
       if (lastRendered < 0 || frameIdx < lastRendered) {
         // Need to reset and replay from start (seeking backward or first frame)
@@ -1958,6 +2021,19 @@ export function useQRGenerator(): UseQRGeneratorResult {
           frameDelays = animationFrames.map(() => animation.speedMs);
         }
 
+        log.debug('download GIF: delays computed', {
+          effectiveFramesLen: effectiveFrames.length,
+          animationFramesLen: animationFrames.length,
+          scaledFramesLen: scaledFrames.length,
+          frameDelaysLen: frameDelays?.length,
+          minDelay: frameDelays ? Math.min(...frameDelays) : undefined,
+          maxDelay: frameDelays ? Math.max(...frameDelays) : undefined,
+          totalMs: frameDelays?.reduce((s, d) => s + d, 0),
+          gifUseFrameDelays: overlay.gifUseFrameDelays,
+          gifMaxFps: overlay.gifMaxFps,
+          animSpeedMs: animation.speedMs,
+        });
+
         // Export animated GIF with all frames
         await downloadGif(
           scaledFrames,
@@ -2094,6 +2170,16 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // For GIF compositor, we need to process frames sequentially using apply/dispose
       let framesToProcess = effectiveFrames;
       const useCompositor = gifCompositor && effectiveFrameIndices.length > 0 && overlay.enabled;
+
+      log.debug('animation cache: building', {
+        effectiveFrameCount: effectiveFrames.length,
+        useCompositor: !!useCompositor,
+        hasMultiFrameOverlay,
+        shouldGenerateBaseAnimation,
+        shouldGeneratePatternAnimation,
+        shouldGenerateStaticOverlayAnimation,
+        sampleDelays: effectiveFrames.slice(0, 3).map((f) => f.delay),
+      });
 
       // Generate animation frames for base QR (no overlay)
       if (shouldGenerateBaseAnimation) {
@@ -2417,6 +2503,11 @@ export function useQRGenerator(): UseQRGeneratorResult {
       // Only update state if not cancelled
       if (isCancelled) return;
 
+      log.debug('animation cache: complete', {
+        totalFrames: frames.length,
+        firstFrameSize: frames[0] ? { w: frames[0].width, h: frames[0].height } : null,
+      });
+
       setAnimationFrames(frames);
       setIsAnimationCacheReady(true);
       setIsLoading(false);
@@ -2512,4 +2603,18 @@ export function useQRGenerator(): UseQRGeneratorResult {
     // Animation frames for GIF export
     animationFrames,
   };
+}
+
+// Singleton context — ensures only ONE animation loop + compositor effect runs
+const QRGeneratorContext = createContext<UseQRGeneratorResult | null>(null);
+
+export function QRGeneratorProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const value = useQRGenerator();
+  return createElement(QRGeneratorContext.Provider, { value }, children);
+}
+
+export function useQRGeneratorContext(): UseQRGeneratorResult {
+  const ctx = useContext(QRGeneratorContext);
+  if (!ctx) throw new Error('useQRGeneratorContext must be used within QRGeneratorProvider');
+  return ctx;
 }

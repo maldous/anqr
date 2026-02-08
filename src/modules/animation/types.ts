@@ -48,6 +48,10 @@ export interface GifCompositor {
   height: number;
   /** Get delay for frame i in milliseconds */
   delayMs: (i: number) => number;
+  /** Get source disposal type for frame i (0=unspecified, 1=keep, 2=restore_bg, 3=restore_previous) */
+  disposalType: (i: number) => number;
+  /** Get patch dimensions for frame i */
+  frameDims: (i: number) => { left: number; top: number; width: number; height: number };
   /** Apply frame i's patch to the canvas */
   apply: (i: number) => void;
   /** Handle disposal after frame i (call before applying next frame) */

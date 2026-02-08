@@ -7,7 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { createLogger } from '../../lib/logger';
 import { createGifEncoder, indexGifPixels, quantizeGifPalette } from '../animation';
 
-const _log = createLogger('EXPORT');
+const log = createLogger('EXPORT');
 
 import type { ExportConfig, ExportResult } from './types';
 import { downloadUrl } from './utils';
@@ -19,7 +19,8 @@ import { downloadUrl } from './utils';
 export async function exportGif(
   frames: HTMLCanvasElement[],
   config: Partial<ExportConfig> = {},
-  frameDelays?: number[] // Optional per-frame delays in ms
+  frameDelays?: number[], // Optional per-frame delays in ms
+  frameDisposals?: number[] // Optional per-frame disposal codes (0-3)
 ): Promise<ExportResult> {
   const opts: ExportConfig = {
     outputFormat: 'gif',
@@ -34,7 +35,7 @@ export async function exportGif(
     includeMetadata: config.includeMetadata ?? false,
     includeQuietZone: config.includeQuietZone ?? true,
     bgOverride: config.bgOverride ?? '',
-    gifDisposal: config.gifDisposal ?? 'restore_bg',
+    gifDisposal: config.gifDisposal ?? 'keep',
     metadata: config.metadata,
   };
 
@@ -70,6 +71,19 @@ export async function exportGif(
 
   // Check if we need to apply background
   const hasBgOverride = opts.bgOverride?.trim();
+
+  log.debug('exportGif: start', {
+    frameCount: frames.length,
+    width,
+    height,
+    defaultDelayMs: defaultDelay,
+    disposal: opts.gifDisposal,
+    hasPerFrameDelays: !!frameDelays,
+    perFrameDelayCount: frameDelays?.length,
+    hasPerFrameDisposals: !!frameDisposals,
+    paletteSize,
+    loop: opts.loopAnimation,
+  });
 
   // GLOBAL PALETTE STRATEGY: Build palette from first frame (or sample multiple frames)
   let globalPalette: number[][] | null = null;
@@ -124,13 +138,25 @@ export async function exportGif(
     const palette = globalPalette || quantizeGifPalette(data, paletteSize);
     const index = indexGifPixels(data, palette);
 
-    // Convert milliseconds to centiseconds (minimum 2 centiseconds)
-    const delayCentiseconds = Math.max(2, Math.round(frameDelay / 10));
+    // gifenc expects delay in milliseconds (it converts to centiseconds internally)
+    // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
+    const delayMs = Math.max(20, frameDelay);
+
+    const frameDisposal = frameDisposals?.[i] ?? disposal;
+
+    if (i === 0 || i === frames.length - 1) {
+      log.debug('exportGif: frame', {
+        index: i,
+        delayMs,
+        disposal: frameDisposal,
+        source: frameDelays?.[i] ? 'perFrame' : 'default',
+      });
+    }
 
     gif.writeFrame(index, width, height, {
       palette,
-      delay: delayCentiseconds,
-      dispose: disposal,
+      delay: delayMs,
+      dispose: frameDisposal,
       ...(i === 0 && { repeat }),
     });
   }
@@ -138,6 +164,17 @@ export async function exportGif(
   gif.finish();
 
   const bytes = gif.bytes();
+
+  const totalDelayMs = frames.reduce(
+    (sum, _, i) => sum + (frameDelays?.[i] ? frameDelays[i] : defaultDelay),
+    0
+  );
+  log.debug('exportGif: complete', {
+    framesEncoded: frames.length,
+    totalDurationMs: totalDelayMs,
+    avgDelayMs: Math.round(totalDelayMs / frames.length),
+    outputBytes: bytes.length,
+  });
   const blob = new Blob([new Uint8Array(bytes)], { type: 'image/gif' });
   const filename = `${opts.filename}.gif`;
   const url = URL.createObjectURL(blob);
@@ -158,9 +195,10 @@ export async function exportGif(
 export async function downloadGif(
   frames: HTMLCanvasElement[],
   config: Partial<ExportConfig> = {},
-  frameDelays?: number[]
+  frameDelays?: number[],
+  frameDisposals?: number[]
 ): Promise<void> {
-  const result = await exportGif(frames, config, frameDelays);
+  const result = await exportGif(frames, config, frameDelays, frameDisposals);
   downloadUrl(result.url, result.filename, result.blob);
   if (!Capacitor.isNativePlatform()) {
     URL.revokeObjectURL(result.url);

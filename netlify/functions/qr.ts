@@ -787,7 +787,7 @@ function encodeAnimatedGif(
   frames: Canvas[],
   frameDelayMs: number = 100,
   colors: number = 256,
-  disposal: number = 2
+  disposal: number = 1
 ): Buffer {
   if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
@@ -801,9 +801,9 @@ function encodeAnimatedGif(
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
 
-  // Convert milliseconds to centiseconds (gifenc uses 1/100th seconds)
-  // Use minimum of 2 centiseconds (20ms) - browsers interpret <2cs as 10cs anyway
-  const delayCentiseconds = Math.max(2, Math.round(frameDelayMs / 10));
+  // gifenc expects delay in milliseconds (it converts to centiseconds internally)
+  // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
+  const delayMs = Math.max(20, frameDelayMs);
 
   for (let i = 0; i < frames.length; i++) {
     const frame = frames[i];
@@ -817,7 +817,7 @@ function encodeAnimatedGif(
     // Only set repeat on first frame
     const frameOptions: Record<string, unknown> = {
       palette,
-      delay: delayCentiseconds,
+      delay: delayMs,
       disposal,
     };
     if (i === 0) {
@@ -1369,7 +1369,7 @@ function parseGifFramesServer(
   }
 
   // Calculate total duration and warn if excessive
-  const totalDuration = framesToProcess.reduce((sum, f) => sum + f.delay * 10, 0);
+  const totalDuration = framesToProcess.reduce((sum, f) => sum + f.delay, 0);
   if (totalDuration > MAX_GIF_DURATION_MS) {
   }
 
@@ -1410,7 +1410,7 @@ function parseGifFramesServer(
 
     animationFrames.push({
       canvas: outputCanvas,
-      delay: delay * 10, // GIF delay is in centiseconds, convert to ms
+      delay, // already in milliseconds (gifuct-js converts centiseconds internally)
       disposalType: effectiveDisposal,
     });
 
@@ -1475,7 +1475,7 @@ function decimateFramesToMaxFps(
 function encodeAnimatedGifWithDelays(
   frames: ServerAnimationFrame[],
   colors: number = 256,
-  disposal: number = 2
+  disposal: number = 1
 ): Buffer {
   if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
@@ -1498,13 +1498,13 @@ function encodeAnimatedGifWithDelays(
     const palette = quantizeGifPalette(data, paletteSize);
     const index = indexGifPixels(data, palette);
 
-    // Convert milliseconds to centiseconds
-    // Use minimum of 2 centiseconds (20ms) - browsers interpret <2cs as 10cs anyway
-    const delayCentiseconds = Math.max(2, Math.round(frame.delay / 10));
+    // gifenc expects delay in milliseconds (it converts to centiseconds internally)
+    // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
+    const delayMs = Math.max(20, frame.delay);
 
     const frameOptions: Record<string, unknown> = {
       palette,
-      delay: delayCentiseconds,
+      delay: delayMs,
       disposal,
     };
     if (i === 0) {

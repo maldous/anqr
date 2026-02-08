@@ -100,10 +100,10 @@ describe('exporter gif', () => {
     const firstOpts = writeFrame.mock.calls[0][3];
     expect(firstOpts.repeat).toBe(-1);
     expect(firstOpts.dispose).toBe(1);
-    expect(firstOpts.delay).toBe(2); // min 2cs
+    expect(firstOpts.delay).toBe(20); // min 20ms (gifenc expects ms)
 
     const thirdOpts = writeFrame.mock.calls[2][3];
-    expect(thirdOpts.delay).toBe(3); // 33ms -> 3cs
+    expect(thirdOpts.delay).toBe(33); // 33ms passed directly (gifenc expects ms)
     expect(thirdOpts.repeat).toBeUndefined();
 
     expect(finish).toHaveBeenCalled();

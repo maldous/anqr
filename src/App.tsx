@@ -31,7 +31,7 @@ function LazyLoadFallback() {
 
 import type { GalleryCategory } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
-import { useQRGenerator } from '@/hooks/useQRGenerator';
+import { QRGeneratorProvider, useQRGeneratorContext } from '@/hooks/useQRGenerator';
 import i18n, { isRtlLanguage, languages, loadLocale } from '@/i18n';
 import { parseUrlParams } from '@/modules/share-links';
 import {
@@ -92,7 +92,7 @@ const DEFAULT_MOBILE_SPLIT = 50; // Start with 50/50 split
 const MIN_MOBILE_SPLIT = 20; // Minimum sidebar height %
 const MAX_MOBILE_SPLIT = 70; // Maximum sidebar height %
 
-function App() {
+function AppContent() {
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentPage, setCurrentPage] = useState<PageView>('editor');
@@ -100,7 +100,7 @@ function App() {
   const [mobileSplitPercent, setMobileSplitPercent] = useState(DEFAULT_MOBILE_SPLIT);
   const containerRef = useRef<HTMLDivElement>(null);
   const bannerHeight = useBannerHeight();
-  const { download, isExporting, canvas: generatedCanvas } = useQRGenerator();
+  const { download, isExporting, canvas: generatedCanvas } = useQRGeneratorContext();
 
   // Handle mobile divider drag
   const handleMobileDividerDrag = useCallback((deltaY: number) => {
@@ -984,4 +984,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <QRGeneratorProvider>
+      <AppContent />
+    </QRGeneratorProvider>
+  );
+}
