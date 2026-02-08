@@ -1,11 +1,8 @@
 apply plugin: 'com.android.application'
-apply plugin: 'io.sentry.android.gradle'
 
 android {
     namespace = "link.anqr.app"
     compileSdk = rootProject.ext.compileSdkVersion
-    ndkVersion '27.2.12479018'
-    
     // Enable BuildConfig generation (required in AGP 8.0+)
     buildFeatures {
         buildConfig = true
@@ -15,8 +12,8 @@ android {
         applicationId "link.anqr.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 65
-        versionName "1.65"
+        versionCode 66
+        versionName "1.66"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable vector drawable support for smaller APK
@@ -49,10 +46,6 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             
-            // Include native debug symbols in AAB for Play Store crash reporting
-            ndk {
-                debugSymbolLevel 'FULL'
-            }
         }
         debug {
             minifyEnabled false
@@ -121,22 +114,6 @@ android {
     }
 }
 
-sentry {
-    def token = System.getenv('SENTRY_AUTH_TOKEN')
-    org = 'anqr'
-    projectName = 'anqr-mobile'
-    authToken = token
-    uploadNativeSymbols = token != null
-    includeNativeSources = false
-    autoUploadProguardMapping = token != null
-    autoUploadNativeSymbols = token != null
-    tracingInstrumentation {
-        enabled = false
-    }
-    autoInstallation {
-        enabled = false
-    }
-}
 
 repositories {
     flatDir{
