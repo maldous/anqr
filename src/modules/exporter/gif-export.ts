@@ -4,8 +4,8 @@
  */
 
 import { Capacitor } from '@capacitor/core';
-import { applyPalette, GIFEncoder, quantize } from 'gifenc';
 import { createLogger } from '../../lib/logger';
+import { createGifEncoder, indexGifPixels, quantizeGifPalette } from '../animation';
 
 const _log = createLogger('EXPORT');
 
@@ -50,7 +50,7 @@ export async function exportGif(
   );
 
   // Create GIF encoder
-  const gif = GIFEncoder();
+  const gif = createGifEncoder();
 
   // OPTIMIZATION: Reuse a single scaling canvas for all frames
   const scaledCanvas = document.createElement('canvas');
@@ -100,7 +100,7 @@ export async function exportGif(
       offset += imageData.data.length;
     }
 
-    globalPalette = quantize(sampledPixels, paletteSize);
+    globalPalette = quantizeGifPalette(sampledPixels, paletteSize);
   }
 
   // Encode each frame using the global palette
@@ -121,8 +121,8 @@ export async function exportGif(
     const imageData = scaledCtx.getImageData(0, 0, width, height);
     const { data } = imageData;
 
-    const palette = globalPalette || quantize(data, paletteSize);
-    const index = applyPalette(data, palette);
+    const palette = globalPalette || quantizeGifPalette(data, paletteSize);
+    const index = indexGifPixels(data, palette);
 
     // Convert milliseconds to centiseconds (minimum 2 centiseconds)
     const delayCentiseconds = Math.max(2, Math.round(frameDelay / 10));

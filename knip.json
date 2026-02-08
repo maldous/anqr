@@ -28,24 +28,6 @@
     "netlify-cli",
     "type-coverage",
     "@capacitor/filesystem",
-    "@capacitor/splash-screen",
-    "@dnd-kit/core",
-    "@dnd-kit/sortable",
-    "@dnd-kit/utilities",
-    "@hookform/resolvers",
-    "@radix-ui/react-checkbox",
-    "@radix-ui/react-collapsible",
-    "@radix-ui/react-dialog",
-    "@radix-ui/react-dropdown-menu",
-    "@radix-ui/react-radio-group",
-    "comlink",
-    "ics",
-    "image-q",
-    "poissimple",
-    "react-easy-crop",
-    "react-hook-form",
-    "ts-custom-error",
-    "vcard-creator",
-    "zod"
+    "@capacitor/splash-screen"
   ]
 }

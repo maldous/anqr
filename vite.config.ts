@@ -453,23 +453,18 @@ export default defineConfig({
           if (id.includes('/modules/qrcode.mjs')) {
             return 'app-qr-lib';
           }
-          // Image processing & effects pipeline:
-          // overlay, dither-algorithms, animation (animation depends on dither)
+          // Media pipeline: image processing + export I/O (merged to avoid circular chunks)
+          // overlay, dither-algorithms, animation, exporter, browser-io, platform, @capacitor
           if (
             id.includes('/modules/overlay') ||
             id.includes('/modules/dither') ||
-            id.includes('/modules/animation')
-          ) {
-            return 'app-image-processing';
-          }
-          // Native I/O chain: exporter → browser-io → platform → @capacitor
-          if (
+            id.includes('/modules/animation') ||
             id.includes('/modules/exporter') ||
             id.includes('/modules/platform') ||
             id.includes('/modules/browser-io') ||
             id.includes('node_modules/@capacitor')
           ) {
-            return 'app-exporter';
+            return 'app-media-pipeline';
           }
           if (
             id.includes('/modules/renderer') ||
@@ -513,7 +508,7 @@ export default defineConfig({
   },
   // Optimize dependencies
   optimizeDeps: {
-    include: ['react', 'react-dom', 'zustand', 'clsx', 'tailwind-merge', 'comlink'],
+    include: ['react', 'react-dom', 'zustand', 'clsx', 'tailwind-merge'],
     exclude: ['sharp', 'puppeteer'], // These are dev/build only
   },
 });

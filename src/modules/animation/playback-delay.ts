@@ -25,4 +25,3 @@ export function resolveAnimationFrameDelay(
   const minDelayMs = gifMaxFps > 0 ? Math.floor(1000 / gifMaxFps) : 0;
   return Math.max(sourceDelay, minDelayMs);
 }
-

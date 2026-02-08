@@ -38,10 +38,19 @@ export {
 } from './decimation';
 // Format Detection
 export { detectImageFormat, isAnimatedWebP } from './format-detection';
+// GIF Codec Facade
+export {
+  createGifEncoder,
+  type DecodedGif,
+  decodeGif,
+  type GifPatchFrame,
+  indexGifPixels,
+  isGifEncodingAvailable,
+  isGifSignature,
+  quantizeGifPalette,
+} from './gif-codec';
 // GIF Compositor
 export { createGifCompositor } from './gif-compositor';
-// Playback delay resolution
-export { resolveAnimationFrameDelay } from './playback-delay';
 // Frame interpolation
 export { interpolateFrames } from './interpolate-frames';
 // Parsing
@@ -51,6 +60,8 @@ export {
   parseGifFrames,
   parseWebPFrames,
 } from './parsing';
+// Playback delay resolution
+export { resolveAnimationFrameDelay } from './playback-delay';
 // Shared pixel-level pattern functions (used by client and server)
 export type { AnimationEasing } from './shared-patterns';
 export {

@@ -235,37 +235,6 @@ Sentry.init({
 
 import { createHash } from 'node:crypto';
 import { type Canvas, createCanvas, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
-import * as gifenc from 'gifenc';
-
-const GIFEncoder =
-  (gifenc as { GIFEncoder?: () => unknown }).GIFEncoder ??
-  (
-    gifenc as {
-      default?: { GIFEncoder?: () => unknown };
-    }
-  ).default?.GIFEncoder;
-const quantize =
-  (gifenc as { quantize?: (data: Uint8ClampedArray, colors: number) => number[][] }).quantize ??
-  (
-    gifenc as {
-      default?: { quantize?: (data: Uint8ClampedArray, colors: number) => number[][] };
-    }
-  ).default?.quantize;
-const applyPalette =
-  (
-    gifenc as {
-      applyPalette?: (data: Uint8ClampedArray, palette: number[][]) => Uint8Array;
-    }
-  ).applyPalette ??
-  (
-    gifenc as {
-      default?: {
-        applyPalette?: (data: Uint8ClampedArray, palette: number[][]) => Uint8Array;
-      };
-    }
-  ).default?.applyPalette;
-
-import { decompressFrames, parseGIF } from 'gifuct-js';
 // Import animation utilities
 import {
   type AnimationEasing,
@@ -277,6 +246,12 @@ import {
   applyAnimationScanline,
   applyAnimationShimmer,
   applyAnimationWave,
+  createGifEncoder,
+  decodeGif,
+  indexGifPixels,
+  isGifEncodingAvailable,
+  isGifSignature,
+  quantizeGifPalette,
 } from '../../src/modules/animation';
 import { calculateOptimalVersion } from '../../src/modules/qr-encoder/encoder-api';
 // @ts-expect-error - JS module
@@ -778,7 +753,7 @@ function embedPngMetadataAndDpi(pngBuffer: Buffer, metadata?: PngMetadata, dpi?:
  * Encode canvas as GIF (single frame)
  */
 function encodeGif(canvas: Canvas, colors: number = 256, disposal: number = 2): Buffer {
-  if (!(GIFEncoder && quantize && applyPalette)) {
+  if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
   }
   const width = canvas.width;
@@ -787,9 +762,9 @@ function encodeGif(canvas: Canvas, colors: number = 256, disposal: number = 2): 
   const imageData = ctx.getImageData(0, 0, width, height);
   const { data } = imageData;
 
-  const gif = GIFEncoder();
-  const palette = quantize(data, Math.min(256, Math.max(2, colors)));
-  const index = applyPalette(data, palette);
+  const gif = createGifEncoder();
+  const palette = quantizeGifPalette(data, Math.min(256, Math.max(2, colors)));
+  const index = indexGifPixels(data, palette);
 
   gif.writeFrame(index, width, height, {
     palette,
@@ -814,7 +789,7 @@ function encodeAnimatedGif(
   colors: number = 256,
   disposal: number = 2
 ): Buffer {
-  if (!(GIFEncoder && quantize && applyPalette)) {
+  if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
   }
   if (frames.length === 0) {
@@ -823,7 +798,7 @@ function encodeAnimatedGif(
 
   const width = frames[0].width;
   const height = frames[0].height;
-  const gif = GIFEncoder();
+  const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
 
   // Convert milliseconds to centiseconds (gifenc uses 1/100th seconds)
@@ -836,8 +811,8 @@ function encodeAnimatedGif(
     const imageData = ctx.getImageData(0, 0, width, height);
     const { data } = imageData;
 
-    const palette = quantize(data, paletteSize);
-    const index = applyPalette(data, palette);
+    const palette = quantizeGifPalette(data, paletteSize);
+    const index = indexGifPixels(data, palette);
 
     // Only set repeat on first frame
     const frameOptions: Record<string, unknown> = {
@@ -1371,10 +1346,7 @@ interface ServerAnimationFrame {
  * Detect if an ArrayBuffer contains a GIF
  */
 function isGifBuffer(buffer: ArrayBuffer): boolean {
-  const view = new DataView(buffer);
-  if (view.byteLength < 6) return false;
-  const sig = String.fromCodePoint(view.getUint8(0), view.getUint8(1), view.getUint8(2));
-  return sig === 'GIF';
+  return isGifSignature(buffer);
 }
 
 /**
@@ -1385,16 +1357,15 @@ function parseGifFramesServer(
   arrayBuffer: ArrayBuffer,
   disposalHandling: 'respect' | 'simplify' = 'respect'
 ): ServerAnimationFrame[] {
-  const gif = parseGIF(arrayBuffer);
-  const frames = decompressFrames(gif, true);
+  const decoded = decodeGif(arrayBuffer);
 
-  if (frames.length === 0) {
+  if (decoded.frames.length === 0) {
     throw new Error('No frames found in GIF');
   }
 
   // Limit frame count to prevent excessive processing
-  const framesToProcess = frames.slice(0, MAX_GIF_FRAMES);
-  if (frames.length > MAX_GIF_FRAMES) {
+  const framesToProcess = decoded.frames.slice(0, MAX_GIF_FRAMES);
+  if (decoded.frames.length > MAX_GIF_FRAMES) {
   }
 
   // Calculate total duration and warn if excessive
@@ -1402,7 +1373,7 @@ function parseGifFramesServer(
   if (totalDuration > MAX_GIF_DURATION_MS) {
   }
 
-  const { width, height } = gif.lsd;
+  const { width, height } = decoded;
 
   // Create a persistent canvas for compositing frames
   const compositeCanvas = createCanvas(width, height);
@@ -1412,7 +1383,8 @@ function parseGifFramesServer(
 
   for (const frame of framesToProcess) {
     const { dims, patch, disposalType, delay } = frame;
-    const effectiveDisposal = disposalHandling === 'simplify' && disposalType === 3 ? 2 : disposalType;
+    const effectiveDisposal =
+      disposalHandling === 'simplify' && disposalType === 3 ? 2 : disposalType;
     let restoreData: ReturnType<typeof compositeCtx.getImageData> | null = null;
 
     if (effectiveDisposal === 3) {
@@ -1505,7 +1477,7 @@ function encodeAnimatedGifWithDelays(
   colors: number = 256,
   disposal: number = 2
 ): Buffer {
-  if (!(GIFEncoder && quantize && applyPalette)) {
+  if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
   }
   if (frames.length === 0) {
@@ -1514,7 +1486,7 @@ function encodeAnimatedGifWithDelays(
 
   const width = frames[0].canvas.width;
   const height = frames[0].canvas.height;
-  const gif = GIFEncoder();
+  const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
 
   for (let i = 0; i < frames.length; i++) {
@@ -1523,8 +1495,8 @@ function encodeAnimatedGifWithDelays(
     const imageData = ctx.getImageData(0, 0, width, height);
     const { data } = imageData;
 
-    const palette = quantize(data, paletteSize);
-    const index = applyPalette(data, palette);
+    const palette = quantizeGifPalette(data, paletteSize);
+    const index = indexGifPixels(data, palette);
 
     // Convert milliseconds to centiseconds
     // Use minimum of 2 centiseconds (20ms) - browsers interpret <2cs as 10cs anyway
@@ -1675,9 +1647,8 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     let isAnimatedGif = false;
     if (isGifBuffer(arrayBuffer)) {
       try {
-        const gif = parseGIF(arrayBuffer);
-        const frames = decompressFrames(gif, true);
-        isAnimatedGif = frames.length > 1;
+        const decoded = decodeGif(arrayBuffer);
+        isAnimatedGif = decoded.frames.length > 1;
       } catch (_e) {}
     }
 
