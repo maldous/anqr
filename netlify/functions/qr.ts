@@ -235,9 +235,35 @@ Sentry.init({
 
 import { createHash } from 'node:crypto';
 import { type Canvas, createCanvas, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
-import gifenc from 'gifenc';
+import * as gifenc from 'gifenc';
 
-const { GIFEncoder, quantize, applyPalette } = gifenc;
+const GIFEncoder =
+  (gifenc as { GIFEncoder?: () => unknown }).GIFEncoder ??
+  (
+    gifenc as {
+      default?: { GIFEncoder?: () => unknown };
+    }
+  ).default?.GIFEncoder;
+const quantize =
+  (gifenc as { quantize?: (data: Uint8ClampedArray, colors: number) => number[][] }).quantize ??
+  (
+    gifenc as {
+      default?: { quantize?: (data: Uint8ClampedArray, colors: number) => number[][] };
+    }
+  ).default?.quantize;
+const applyPalette =
+  (
+    gifenc as {
+      applyPalette?: (data: Uint8ClampedArray, palette: number[][]) => Uint8Array;
+    }
+  ).applyPalette ??
+  (
+    gifenc as {
+      default?: {
+        applyPalette?: (data: Uint8ClampedArray, palette: number[][]) => Uint8Array;
+      };
+    }
+  ).default?.applyPalette;
 
 import { decompressFrames, parseGIF } from 'gifuct-js';
 // Import animation utilities
@@ -311,6 +337,12 @@ const DEFAULT_SERVER_DITHER: DitherKind = 'ordered_bayer';
 
 // Default output format - align with client default (GIF) for consistency
 const DEFAULT_OUTPUT_FORMAT: OutputFormat = 'gif';
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 /**
  * Check if an IP address is private/internal (SSRF protection)
@@ -407,7 +439,7 @@ const nodeCanvasFactory = {
   createCanvas: async (width: number, height: number) => {
     return createCanvas(width, height);
   },
-  loadImage: async (src: string) => {
+  loadImage: async (src: string | Buffer | URL | ArrayBuffer) => {
     return loadImage(src);
   },
 };
@@ -746,6 +778,9 @@ function embedPngMetadataAndDpi(pngBuffer: Buffer, metadata?: PngMetadata, dpi?:
  * Encode canvas as GIF (single frame)
  */
 function encodeGif(canvas: Canvas, colors: number = 256, disposal: number = 2): Buffer {
+  if (!(GIFEncoder && quantize && applyPalette)) {
+    throw new Error('GIF encoder is unavailable in this runtime');
+  }
   const width = canvas.width;
   const height = canvas.height;
   const ctx = canvas.getContext('2d');
@@ -779,6 +814,9 @@ function encodeAnimatedGif(
   colors: number = 256,
   disposal: number = 2
 ): Buffer {
+  if (!(GIFEncoder && quantize && applyPalette)) {
+    throw new Error('GIF encoder is unavailable in this runtime');
+  }
   if (frames.length === 0) {
     throw new Error('No frames to encode');
   }
@@ -1343,7 +1381,10 @@ function isGifBuffer(buffer: ArrayBuffer): boolean {
  * Parse a GIF file and extract frames as Canvas elements (server-side)
  * Adapted from src/modules/animation.ts for Node.js
  */
-function parseGifFramesServer(arrayBuffer: ArrayBuffer): ServerAnimationFrame[] {
+function parseGifFramesServer(
+  arrayBuffer: ArrayBuffer,
+  disposalHandling: 'respect' | 'simplify' = 'respect'
+): ServerAnimationFrame[] {
   const gif = parseGIF(arrayBuffer);
   const frames = decompressFrames(gif, true);
 
@@ -1371,6 +1412,12 @@ function parseGifFramesServer(arrayBuffer: ArrayBuffer): ServerAnimationFrame[] 
 
   for (const frame of framesToProcess) {
     const { dims, patch, disposalType, delay } = frame;
+    const effectiveDisposal = disposalHandling === 'simplify' && disposalType === 3 ? 2 : disposalType;
+    let restoreData: ReturnType<typeof compositeCtx.getImageData> | null = null;
+
+    if (effectiveDisposal === 3) {
+      restoreData = compositeCtx.getImageData(dims.left, dims.top, dims.width, dims.height);
+    }
 
     // Create ImageData from patch
     const imageData = compositeCtx.createImageData(dims.width, dims.height);
@@ -1392,15 +1439,18 @@ function parseGifFramesServer(arrayBuffer: ArrayBuffer): ServerAnimationFrame[] 
     animationFrames.push({
       canvas: outputCanvas,
       delay: delay * 10, // GIF delay is in centiseconds, convert to ms
-      disposalType,
+      disposalType: effectiveDisposal,
     });
 
     // Handle disposal
-    if (disposalType === 2) {
+    if (effectiveDisposal === 2) {
       // Restore to background
       compositeCtx.clearRect(dims.left, dims.top, dims.width, dims.height);
+    } else if (effectiveDisposal === 3 && restoreData) {
+      // Restore to previous canvas content for next frame compositing
+      compositeCtx.putImageData(restoreData, dims.left, dims.top);
     }
-    // disposalType 0, 1, or 3: leave frame in place
+    // disposalType 0 or 1: leave frame in place
   }
 
   return animationFrames;
@@ -1434,10 +1484,13 @@ function decimateFramesToMaxFps(
     }
   }
 
-  if (keepIndices.length > 0 && keepIndices[0] !== 0) {
+  if (keepIndices.length === 0) {
+    keepIndices.push(0);
+  }
+  if (keepIndices[0] !== 0) {
     keepIndices.unshift(0);
   }
-  if (keepIndices.length > 0 && keepIndices[keepIndices.length - 1] !== frames.length - 1) {
+  if (keepIndices[keepIndices.length - 1] !== frames.length - 1) {
     keepIndices.push(frames.length - 1);
   }
 
@@ -1452,6 +1505,9 @@ function encodeAnimatedGifWithDelays(
   colors: number = 256,
   disposal: number = 2
 ): Buffer {
+  if (!(GIFEncoder && quantize && applyPalette)) {
+    throw new Error('GIF encoder is unavailable in this runtime');
+  }
   if (frames.length === 0) {
     throw new Error('No frames to encode');
   }
@@ -1625,7 +1681,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
       } catch (_e) {}
     }
 
-    const img = await loadImage(buffer);
+    const img = await nodeCanvasFactory.loadImage(buffer);
 
     // Validate image dimensions
     if (!(img.width && img.height) || img.width <= 0 || img.height <= 0) {
@@ -1661,6 +1717,13 @@ async function fetchImageAsCanvas(url: string): Promise<ReturnType<typeof create
 }
 
 async function handler(request: Request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: CORS_HEADERS,
+    });
+  }
+
   const url = new URL(request.url);
   const params = url.searchParams;
 
@@ -1669,7 +1732,7 @@ async function handler(request: Request) {
   if (!data) {
     return new Response('Missing required "data" parameter', {
       status: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: CORS_HEADERS,
     });
   }
 
@@ -1677,7 +1740,7 @@ async function handler(request: Request) {
   if (data.length > MAX_DATA_LENGTH) {
     return new Response(`Data too long: ${data.length} characters (max: ${MAX_DATA_LENGTH})`, {
       status: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: CORS_HEADERS,
     });
   }
 
@@ -2020,7 +2083,7 @@ async function handler(request: Request) {
   if (!['L', 'M', 'Q', 'H'].includes(ec)) {
     return new Response('Invalid "ec" parameter. Use L, M, Q, or H', {
       status: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: CORS_HEADERS,
     });
   }
 
@@ -2029,7 +2092,7 @@ async function handler(request: Request) {
   if (!validModuleStyles.includes(moduleStyle)) {
     return new Response(`Invalid "style" parameter. Use one of: ${validModuleStyles.join(', ')}`, {
       status: 400,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: CORS_HEADERS,
     });
   }
 
@@ -2258,7 +2321,10 @@ async function handler(request: Request) {
           outputFormat = 'gif';
           hasAnimatedOverlay = true;
           // Parse frames and apply preprocessing to each
-          const rawFrames = parseGifFramesServer(fetchedImage.arrayBuffer);
+          const rawFrames = parseGifFramesServer(
+            fetchedImage.arrayBuffer,
+            gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
+          );
           overlayFrames = rawFrames.map((frame) => ({
             ...frame,
             canvas: preprocessCanvas(frame.canvas),
@@ -2437,7 +2503,7 @@ async function handler(request: Request) {
         'Cache-Control': 'public, max-age=31536000, immutable',
         ETag: etag,
         Vary: 'Accept-Encoding',
-        'Access-Control-Allow-Origin': '*',
+        ...CORS_HEADERS,
       },
     });
   } catch (error) {
@@ -2446,9 +2512,45 @@ async function handler(request: Request) {
     Sentry.captureException(error);
     return new Response(`Error generating QR code: ${message}`, {
       status: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: CORS_HEADERS,
     });
   }
 }
 
 export default handler;
+
+export const __test = {
+  nodeCanvasFactory,
+  isPrivateOrReservedIP,
+  _isPrivateHostname,
+  createTextWatermark,
+  getWatermarkPositions,
+  applyBlendMode,
+  applyWatermarkServer,
+  calculateCrc32,
+  createPngTextChunk,
+  createPngPhysChunk,
+  embedPngMetadataAndDpi,
+  encodeGif,
+  encodeAnimatedGif,
+  generatePatternFramesServer,
+  cropOverlayServer,
+  rgbToGrayServer,
+  convolveServer,
+  blurServer,
+  sharpenServer,
+  posterizeServer,
+  thresholdServer,
+  sobelEdgeServer,
+  cannyEdgeServer,
+  applyOverlayFiltersServer,
+  flipOverlayServer,
+  rotateOverlayServer,
+  isGifBuffer,
+  parseGifFramesServer,
+  decimateFramesToMaxFps,
+  encodeAnimatedGifWithDelays,
+  parseGradientStops,
+  fetchImageWithBuffer,
+  fetchImageAsCanvas,
+};
