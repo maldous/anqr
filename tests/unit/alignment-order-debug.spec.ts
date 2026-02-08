@@ -204,6 +204,8 @@ describe('Alignment Pattern Order Debug', () => {
     // 1. Place alignment BEFORE timing (match encoder order), OR
     // 2. Remove the null check when placing alignment centers
     
-    expect(true).toBe(true);
+    // Verify the documented finding: alignment positions exist for version 7
+    const positions = getPatternPosition(7);
+    expect(positions, 'version 7 alignment positions should be [6, 22, 38]').toEqual([6, 22, 38]);
   });
 });

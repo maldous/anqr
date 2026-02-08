@@ -904,7 +904,7 @@ function App() {
               })(),
             }}
           >
-            {showEditor && <Preview sidebarOpen={sidebarOpen} />}
+            <Preview sidebarOpen={sidebarOpen} hidden={!showEditor} />
             <Suspense fallback={<LazyLoadFallback />}>
               {showAnalyze && <Analyze onNavigate={navigateTo} generatedCanvas={generatedCanvas} />}
               {showGallery && <Gallery filter={galleryFilter} />}

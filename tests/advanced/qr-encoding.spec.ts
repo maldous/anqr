@@ -288,15 +288,17 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
     test('ECC M produces medium density QR', async ({ page, waitForQRRender }) => {
       await expandQREncodingSection(page);
       
-      const before = await getCanvasSnapshot(page);
+      // Set to L first to establish a baseline
+      await selectECCLevel(page, 'L');
+      await waitForQRRender();
+      const eccLSnapshot = await getCanvasSnapshot(page);
       
       await selectECCLevel(page, 'M');
       await waitForQRRender();
+      const eccMSnapshot = await getCanvasSnapshot(page);
       
-      // ECC change should produce a different QR
-      const after = await getCanvasSnapshot(page);
-      // Note: might be same if M is default, but test passes either way
-      expect(true).toBe(true);
+      // M should produce a different pattern than L
+      expect(snapshotsAreDifferent(eccLSnapshot, eccMSnapshot)).toBe(true);
     });
 
     test('ECC Q produces higher density than M', async ({ page, waitForQRRender }) => {

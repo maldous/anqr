@@ -524,10 +524,7 @@ for (const [section, sectionSettings] of settingsBySection) {
           const testValue = setting.testValues?.[0] ?? true;
           const interacted = await setControlValue(page, setting, testValue);
           
-          if (!interacted) {
-            test.skip();
-            return;
-          }
+          expect(interacted, `control interaction failed for ${setting.id}`).toBe(true);
           
           await waitForQRStable(page);
           const after = await getCanvasSnapshot(page);
@@ -535,7 +532,7 @@ for (const [section, sectionSettings] of settingsBySection) {
           const changed = snapshotsAreDifferent(before, after);
           
           if (setting.conditional) {
-            expect(true).toBe(true);
+            expect(after.length, `canvas should render meaningful content for conditional setting ${setting.id}`).toBeGreaterThan(100);
           } else {
             expect(changed).toBe(true);
           }
@@ -555,16 +552,13 @@ for (const [section, sectionSettings] of settingsBySection) {
           const testValue = setting.testValues?.[0] ?? true;
           const interacted = await setControlValue(page, setting, testValue);
           
-          if (!interacted) {
-            test.skip();
-            return;
-          }
+          expect(interacted, `control interaction failed for ${setting.id}`).toBe(true);
           
           await waitForRenderComplete(page, 'settle');
           const after = await getCanvasSnapshot(page);
           
-          // Just verify we didn't crash - some "non-QR" settings may actually affect preview
-          expect(true).toBe(true);
+          // Verify canvas rendered meaningful content after interaction
+          expect(after.length, 'canvas should render meaningful content after non-QR interaction').toBeGreaterThan(100);
         });
       }
     });
@@ -591,10 +585,7 @@ test.describe('Value Iteration Tests', () => {
             
             const interacted = await setControlValue(page, setting, value);
             
-            if (!interacted) {
-              test.skip();
-              return;
-            }
+            expect(interacted, `control interaction failed for ${setting.id}=${value}`).toBe(true);
             
             await waitForQRStable(page);
             const after = await getCanvasSnapshot(page);
@@ -648,17 +639,11 @@ test.describe('Value-Level Pairwise Combination Tests', () => {
             
             // Set first setting with specific value
             const interactedA = await setControlValue(page, pair.settingA, pair.valueA);
-            if (!interactedA) {
-              test.skip();
-              return;
-            }
+            expect(interactedA, `control interaction failed for ${pair.settingA.id}=${pair.valueA}`).toBe(true);
             
             // Set second setting with specific value
             const interactedB = await setControlValue(page, pair.settingB, pair.valueB);
-            if (!interactedB) {
-              test.skip();
-              return;
-            }
+            expect(interactedB, `control interaction failed for ${pair.settingB.id}=${pair.valueB}`).toBe(true);
             
             await waitForQRStable(page);
             const after = await getCanvasSnapshot(page);
@@ -701,16 +686,10 @@ test.describe('Value-Level Pairwise Combination Tests', () => {
             const before = await getCanvasSnapshot(page);
             
             const interactedA = await setControlValue(page, pair.settingA, pair.valueA);
-            if (!interactedA) {
-              test.skip();
-              return;
-            }
+            expect(interactedA, `control interaction failed for ${pair.settingA.id}=${pair.valueA}`).toBe(true);
             
             const interactedB = await setControlValue(page, pair.settingB, pair.valueB);
-            if (!interactedB) {
-              test.skip();
-              return;
-            }
+            expect(interactedB, `control interaction failed for ${pair.settingB.id}=${pair.valueB}`).toBe(true);
             
             await waitForQRStable(page);
             const after = await getCanvasSnapshot(page);

@@ -311,10 +311,9 @@ test.describe('Share Quick Share', () => {
     await quickCopyButton.scrollIntoViewIfNeeded();
     await quickCopyButton.click();
     
-    // Button should show "Copied" state briefly
+    // Button should remain functional after click
     await waitForRenderComplete(page, 'settle');
-    // Button click should not throw error
-    expect(true).toBe(true);
+    await expect(quickCopyButton).toBeEnabled();
   });
 });
 
@@ -388,8 +387,8 @@ test.describe('Share Section Accessibility', () => {
     // Should be able to activate with Enter
     await page.keyboard.press('Enter');
     await waitForRenderComplete(page, 'settle');
-    // Button should have been activated
-    expect(true).toBe(true);
+    // Button should remain enabled after keyboard activation
+    await expect(quickCopyButton).toBeEnabled();
   });
 });
 
@@ -887,8 +886,9 @@ test.describe('Share Input Fields', () => {
     
     // Should be able to select text even if readonly
     await page.keyboard.press('Control+a');
-    // No error means it works
-    expect(true).toBe(true);
+    // Verify the input has a value that could be copied
+    const value = await urlInput.inputValue();
+    expect(value, 'URL input should have a value to copy').toBeTruthy();
   });
 });
 
