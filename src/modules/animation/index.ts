@@ -40,6 +40,8 @@ export {
 export { detectImageFormat, isAnimatedWebP } from './format-detection';
 // GIF Compositor
 export { createGifCompositor } from './gif-compositor';
+// Playback delay resolution
+export { resolveAnimationFrameDelay } from './playback-delay';
 // Frame interpolation
 export { interpolateFrames } from './interpolate-frames';
 // Parsing

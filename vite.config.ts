@@ -412,25 +412,9 @@ export default defineConfig({
           if (id.includes('node_modules/gifenc') || id.includes('node_modules/gifuct-js')) {
             return 'vendor-gif';
           }
-          // Image processing
-          if (id.includes('node_modules/image-q')) {
-            return 'vendor-image';
-          }
           // QR scanning
           if (id.includes('node_modules/jsqr')) {
             return 'vendor-qr-scanner';
-          }
-          // Form and validation
-          if (
-            id.includes('node_modules/zod') ||
-            id.includes('node_modules/react-hook-form') ||
-            id.includes('node_modules/@hookform')
-          ) {
-            return 'vendor-forms';
-          }
-          // Drag and drop
-          if (id.includes('node_modules/@dnd-kit')) {
-            return 'vendor-dnd';
           }
           // Utility libraries
           if (

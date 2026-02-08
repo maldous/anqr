@@ -16,6 +16,7 @@ import {
   generateAnimationPatternFrames,
   interpolateFrames,
   parseAnimatedImage,
+  resolveAnimationFrameDelay,
 } from '@/modules/animation';
 import {
   applyTemporalNoiseToCanvas,
@@ -202,6 +203,7 @@ export function useQRGenerator(): UseQRGeneratorResult {
   const animationDirection = useRef<1 | -1>(1);
   const lastFrameTime = useRef(0);
   const animationRef = useRef<number | null>(null);
+  const currentFrameRef = useRef(0);
 
   // Track content that caused overflow to prevent infinite retry loop
   // Using a ref because state updates are async and may not prevent immediate re-calls
@@ -1619,6 +1621,10 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
   // Animation loop for both overlay-based and base QR animations
   useEffect(() => {
+    currentFrameRef.current = currentFrame;
+  }, [currentFrame]);
+
+  useEffect(() => {
     // Only animate if we have multiple frames and animation is playing
     if (playbackFrameCount <= 1 || !animation.playing) {
       setIsAnimating(false);
@@ -1636,8 +1642,13 @@ export function useQRGenerator(): UseQRGeneratorResult {
 
     const tick = (now: number) => {
       const elapsed = now - lastFrameTime.current;
-      // Use configured speed (frames have their own delays but we use speedMs for consistency)
-      const frameDelay = animation.speedMs;
+      const activeFrameIndex = currentFrameRef.current;
+      const frameDelay = resolveAnimationFrameDelay(effectiveFrames, activeFrameIndex, {
+        useSourceFrameDelays:
+          overlay.enabled && effectiveFrames.length > 1 && overlay.gifUseFrameDelays,
+        gifMaxFps: overlay.gifMaxFps,
+        fallbackDelayMs: animation.speedMs,
+      });
 
       if (elapsed >= frameDelay) {
         // Use additive timing to prevent drift - increment by frameDelay instead of resetting to now
@@ -1688,7 +1699,17 @@ export function useQRGenerator(): UseQRGeneratorResult {
         animationRef.current = null;
       }
     };
-  }, [playbackFrameCount, animation.playing, animation.speedMs, animation.loop, animation.bounce]);
+  }, [
+    playbackFrameCount,
+    animation.playing,
+    animation.speedMs,
+    animation.loop,
+    animation.bounce,
+    effectiveFrames,
+    overlay.enabled,
+    overlay.gifUseFrameDelays,
+    overlay.gifMaxFps,
+  ]);
 
   // Update overlay canvas when current frame changes (for animation preview)
   // Uses compositor for GIFs (optimal), legacy frames for WebP
