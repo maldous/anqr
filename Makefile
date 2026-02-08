@@ -307,11 +307,8 @@ android\:release:
 	# Remove large demo files not needed in mobile app (images load from anqr.link)
 	rm -rf dist/king.gif dist/tsunami.jpg dist/images 2>/dev/null || true
 	npx cap sync android
-	cd android && SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' ../.env.sentry-build-plugin | tail -1 | cut -d= -f2-) ./gradlew bundleRelease
-	# Zip merged native libs for Play Store debug symbols upload
-	(cd android/app/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out && zip -r $(CURDIR)/android/app/build/outputs/bundle/release/native-debug-symbols.zip lib/) || echo "Warning: could not create native debug symbols zip"
+	cd android && ./gradlew bundleRelease
 	@echo "Release AAB: android/app/build/outputs/bundle/release/app-release.aab"
-	@echo "Debug symbols: android/app/build/outputs/bundle/release/native-debug-symbols.zip"
 
 # Run on connected device or emulator
 android\:run:
