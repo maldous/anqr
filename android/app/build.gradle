@@ -1,8 +1,10 @@
 apply plugin: 'com.android.application'
+apply plugin: 'io.sentry.android.gradle'
 
 android {
     namespace = "link.anqr.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    ndkVersion '27.2.12479018'
     
     // Enable BuildConfig generation (required in AGP 8.0+)
     buildFeatures {
@@ -13,8 +15,8 @@ android {
         applicationId "link.anqr.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 63
-        versionName "1.63"
+        versionCode 64
+        versionName "1.64"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable vector drawable support for smaller APK
@@ -119,6 +121,23 @@ android {
     }
 }
 
+sentry {
+    def token = System.getenv('SENTRY_AUTH_TOKEN')
+    org = 'anqr'
+    projectName = 'anqr-mobile'
+    authToken = token
+    uploadNativeSymbols = token != null
+    includeNativeSources = false
+    autoUploadProguardMapping = token != null
+    autoUploadNativeSymbols = token != null
+    tracingInstrumentation {
+        enabled = false
+    }
+    autoInstallation {
+        enabled = false
+    }
+}
+
 repositories {
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
@@ -143,6 +162,8 @@ dependencies {
     
     // Sentry SDK for crash reporting and error tracking
     implementation 'io.sentry:sentry-android:8.10.0'
+    // Sentry NDK integration for native crash stack traces
+    implementation 'io.sentry:sentry-android-ndk:8.10.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

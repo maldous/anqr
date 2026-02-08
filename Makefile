@@ -295,7 +295,7 @@ android\:build:
 
 # Build release AAB for Play Store
 android\:release:
-	CAPACITOR_PLATFORM=android npm run build
+	SENTRY_UPLOAD=true CAPACITOR_PLATFORM=android npm run build
 	# Remove pre-compressed files that cause Android asset merger conflicts
 	find dist -name '*.gz' -delete 2>/dev/null || true
 	find dist -name '*.br' -delete 2>/dev/null || true
@@ -306,7 +306,7 @@ android\:release:
 	# Remove large demo files not needed in mobile app (images load from anqr.link)
 	rm -rf dist/king.gif dist/tsunami.jpg dist/images 2>/dev/null || true
 	npx cap sync android
-	cd android && ./gradlew bundleRelease
+	cd android && SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' ../.env.sentry-build-plugin | tail -1 | cut -d= -f2-) ./gradlew bundleRelease
 	@echo "Release AAB: android/app/build/outputs/bundle/release/app-release.aab"
 
 # Run on connected device or emulator
