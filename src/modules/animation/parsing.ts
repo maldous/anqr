@@ -4,9 +4,9 @@
 
 /// <reference path="../../types/image-decoder.d.ts" />
 
-import { decompressFrames, parseGIF } from 'gifuct-js';
 import { createLogger } from '../../lib/logger';
 import { detectImageFormat, isAnimatedWebP } from './format-detection';
+import { decodeGif } from './gif-codec';
 import { createGifCompositor } from './gif-compositor';
 import type { AnimationFrame } from './types';
 
@@ -194,13 +194,11 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
     arrayBuffer = source;
   }
 
-  const gif = parseGIF(arrayBuffer);
-  const frames = decompressFrames(gif, true);
+  const { width, height, frames } = decodeGif(arrayBuffer);
 
   if (frames.length === 0) {
     throw new Error('No frames found in GIF');
   }
-  const { width, height } = gif.lsd;
 
   const compositeCanvas = document.createElement('canvas');
   compositeCanvas.width = width;
@@ -262,8 +260,7 @@ export async function getGifDelays(source: string | ArrayBuffer): Promise<number
     arrayBuffer = source;
   }
 
-  const gif = parseGIF(arrayBuffer);
-  const frames = decompressFrames(gif, true);
+  const { frames } = decodeGif(arrayBuffer);
 
   return frames.map((frame) => frame.delay * 10);
 }

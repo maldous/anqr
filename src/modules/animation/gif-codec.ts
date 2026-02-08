@@ -15,7 +15,12 @@ export interface DecodedGif {
 }
 
 interface GifEncoderLike {
-  writeFrame: (index: Uint8Array, width: number, height: number, options: Record<string, unknown>) => void;
+  writeFrame: (
+    index: Uint8Array,
+    width: number,
+    height: number,
+    options: Record<string, unknown>
+  ) => void;
   finish: () => void;
   bytes: () => Uint8Array;
 }
@@ -83,4 +88,3 @@ export function isGifSignature(buffer: ArrayBuffer): boolean {
     view.getUint8(0) === 0x47 && view.getUint8(1) === 0x49 && view.getUint8(2) === 0x46 // GIF
   );
 }
-

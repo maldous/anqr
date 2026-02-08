@@ -6,7 +6,7 @@ import { createLogger } from '../../lib/logger';
 
 const _log = createLogger('ANIMATION');
 
-import { decompressFrames, parseGIF } from 'gifuct-js';
+import { decodeGif } from './gif-codec';
 import type { GifCompositor } from './types';
 
 /**
@@ -14,9 +14,7 @@ import type { GifCompositor } from './types';
  * Uses patch-only decode for minimal memory usage.
  */
 export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
-  const gif = parseGIF(arrayBuffer);
-  const frames = decompressFrames(gif, true);
-  const { width, height } = gif.lsd;
+  const { width, height, frames } = decodeGif(arrayBuffer);
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
