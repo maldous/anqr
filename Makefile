@@ -250,6 +250,7 @@ sitemap:
 # ============================================
 
 deploy:
+	SENTRY_UPLOAD=true npm run build
 	netlify deploy --prod --site anqr.link --dir=dist
 
 # ============================================

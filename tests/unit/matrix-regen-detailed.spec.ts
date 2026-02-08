@@ -232,7 +232,7 @@ function regenerateMatrix(
 }
 
 describe('Detailed Matrix Regeneration Debug', () => {
-  it.skip('compares module-by-module for v7 ECC=H mask=0', () => {
+  it.fails('compares module-by-module for v7 ECC=H mask=0 (quarantined: known alignment/timing order mismatch)', () => {
     const data = 'https://example.com';
     const version = 7;
     const ecc = 'H' as const;

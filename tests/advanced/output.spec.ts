@@ -120,8 +120,9 @@ test.describe('Output Format Selection', () => {
 
   test('selecting PNG format works', async ({ page }) => {
     await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.PNG);
-    // Format was selected successfully if no error thrown
-    expect(true).toBe(true);
+    const trigger = page.locator('[data-testid="output-format-trigger"]');
+    const selectedText = await trigger.textContent();
+    expect(selectedText?.toLowerCase()).toContain('png');
   });
 
   test('selecting WebP format shows quality slider', async ({ page }) => {
@@ -152,8 +153,8 @@ test.describe('Output Format Selection', () => {
     const trueVectorSwitch = page.locator('[data-testid="output-svg-true-vector-switch"]');
     const isVisible = await trueVectorSwitch.isVisible().catch(() => false);
     
-    // SVG settings may only show in advanced tier
-    expect(true).toBe(true);
+    // In advanced tier, SVG settings should be visible after selecting SVG format
+    expect(isVisible, 'SVG true vector switch should be visible after selecting SVG format').toBe(true);
   });
 
   test('format select uses keyboard navigation', async ({ page }) => {
@@ -597,8 +598,10 @@ test.describe('Output Edge Cases', () => {
       await waitForRenderComplete(page, 'settle');
     }
     
-    // Should complete without errors
-    expect(true).toBe(true);
+    // Last format was PNG - verify it's selected
+    const trigger = page.locator('[data-testid="output-format-trigger"]');
+    const finalText = await trigger.textContent();
+    expect(finalText?.toLowerCase()).toContain('png');
   });
 
   test('output settings persist after section collapse/expand', async ({ page }) => {
@@ -967,8 +970,10 @@ test.describe('Output GIF Settings Combinations', () => {
       // Select first option (index 0)
       await page.keyboard.press('Home');
       await page.keyboard.press('Enter');
-      // Selection should work without error
-      expect(true).toBe(true);
+      // Verify dropdown closed after selection
+      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+      const isOpen = await dropdown.isVisible().catch(() => false);
+      expect(isOpen, 'dropdown should close after quantizer selection').toBe(false);
     }
   });
 
@@ -981,8 +986,10 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('Home');
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
-      // Selection should work without error
-      expect(true).toBe(true);
+      // Verify dropdown closed after selection
+      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+      const isOpen = await dropdown.isVisible().catch(() => false);
+      expect(isOpen, 'dropdown should close after quantizer selection').toBe(false);
     }
   });
 
@@ -996,8 +1003,10 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
-      // Selection should work without error
-      expect(true).toBe(true);
+      // Verify dropdown closed after selection
+      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+      const isOpen = await dropdown.isVisible().catch(() => false);
+      expect(isOpen, 'dropdown should close after quantizer selection').toBe(false);
     }
   });
 
@@ -1009,8 +1018,10 @@ test.describe('Output GIF Settings Combinations', () => {
       // Select first option (index 0 = off)
       await page.keyboard.press('Home');
       await page.keyboard.press('Enter');
-      // Selection should work without error
-      expect(true).toBe(true);
+      // Verify dropdown closed after selection
+      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+      const isOpen = await dropdown.isVisible().catch(() => false);
+      expect(isOpen, 'dropdown should close after dither selection').toBe(false);
     }
   });
 
@@ -1023,8 +1034,10 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('Home');
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
-      // Selection should work without error
-      expect(true).toBe(true);
+      // Verify dropdown closed after selection
+      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+      const isOpen = await dropdown.isVisible().catch(() => false);
+      expect(isOpen, 'dropdown should close after dither selection').toBe(false);
     }
   });
 
@@ -1038,8 +1051,10 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
-      // Selection should work without error
-      expect(true).toBe(true);
+      // Verify dropdown closed after selection
+      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+      const isOpen = await dropdown.isVisible().catch(() => false);
+      expect(isOpen, 'dropdown should close after dither selection').toBe(false);
     }
   });
 
@@ -1072,8 +1087,12 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('Enter');
     }
     
-    // Settings combination should work without error
-    expect(true).toBe(true);
+    // Verify palette was set to minimum
+    if (await paletteSlider.isVisible().catch(() => false)) {
+      const sliderThumb = paletteSlider.locator('[role="slider"]');
+      const value = await sliderThumb.getAttribute('aria-valuenow');
+      expect(Number(value)).toBe(2);
+    }
   });
 
   test('GIF settings combination: high palette + octree + off', async ({ page }) => {
@@ -1166,8 +1185,10 @@ test.describe('Output SVG Settings', () => {
         // Select first option (index 0 = pixel)
         await page.keyboard.press('Home');
         await page.keyboard.press('Enter');
-        // Selection should work without error
-        expect(true).toBe(true);
+        // Verify dropdown closed after precision selection
+        const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+        const isOpen = await dropdown.isVisible().catch(() => false);
+        expect(isOpen, 'dropdown should close after precision selection').toBe(false);
       }
     }
   });
@@ -1188,8 +1209,10 @@ test.describe('Output SVG Settings', () => {
         await page.keyboard.press('Home');
         await page.keyboard.press('ArrowDown');
         await page.keyboard.press('Enter');
-        // Selection should work without error
-        expect(true).toBe(true);
+        // Verify dropdown closed after precision selection
+        const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+        const isOpen = await dropdown.isVisible().catch(() => false);
+        expect(isOpen, 'dropdown should close after precision selection').toBe(false);
       }
     }
   });
@@ -1225,10 +1248,17 @@ test.describe('Output DPI Settings', () => {
 
   test('DPI slider visible in professional tier', async ({ page }) => {
     const slider = page.locator('[data-testid="output-dpi-slider"]');
-    // May or may not be visible depending on tier
     const isVisible = await slider.isVisible().catch(() => false);
-    // Just verify no error - visibility depends on tier
-    expect(true).toBe(true);
+    // DPI is a professional-tier feature; in advanced tier it should not be visible
+    // If visible, verify it has the expected ARIA attributes
+    if (isVisible) {
+      const sliderThumb = slider.locator('[role="slider"]');
+      const ariaMin = await sliderThumb.getAttribute('aria-valuemin');
+      expect(ariaMin).toBe('72');
+    } else {
+      // DPI slider correctly hidden in advanced tier
+      expect(isVisible).toBe(false);
+    }
   });
 
   test('DPI slider minimum is 72', async ({ page }) => {
@@ -1313,10 +1343,9 @@ test.describe('Output Background Override', () => {
   });
 
   test('background override color input exists', async ({ page }) => {
-    const colorInput = page.locator('input[type="color"]').first();
-    // May or may not be visible depending on tier
-    const isVisible = await colorInput.isVisible().catch(() => false);
-    expect(true).toBe(true); // No error means test passes
+    const colorInputCount = await page.locator('input[type="color"]').count();
+    // At least one color input should exist on the page
+    expect(colorInputCount, 'at least one color input should exist on the page').toBeGreaterThan(0);
   });
 
   test('background override accepts hex color', async ({ page }) => {
@@ -1397,8 +1426,10 @@ test.describe('Output Extra Formats', () => {
       await page.keyboard.press('Home');
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
-      // Selection should work without error
-      expect(true).toBe(true);
+      // Verify dropdown closed after selection
+      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
+      const isOpen = await dropdown.isVisible().catch(() => false);
+      expect(isOpen, 'dropdown should close after EPS selection').toBe(false);
     }
   });
 });
@@ -1436,10 +1467,11 @@ test.describe('Output Keyboard Navigation', () => {
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isVisible = await dropdown.isVisible().catch(() => false);
     
+    // Dropdown should have opened with Enter key
+    expect(isVisible, 'dropdown should open when Enter is pressed on format trigger').toBe(true);
     if (isVisible) {
       await page.keyboard.press('Escape');
     }
-    expect(true).toBe(true);
   });
 
   test('format select opens with Space key', async ({ page }) => {
@@ -1450,10 +1482,11 @@ test.describe('Output Keyboard Navigation', () => {
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isVisible = await dropdown.isVisible().catch(() => false);
     
+    // Dropdown should have opened with Space key
+    expect(isVisible, 'dropdown should open when Space is pressed on format trigger').toBe(true);
     if (isVisible) {
       await page.keyboard.press('Escape');
     }
-    expect(true).toBe(true);
   });
 
   test('format select closes with Escape', async ({ page }) => {

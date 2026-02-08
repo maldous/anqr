@@ -14,9 +14,10 @@ import { useQRStore } from '@/store/qr-store';
 
 interface PreviewProps {
   sidebarOpen?: boolean;
+  hidden?: boolean;
 }
 
-export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
+export function Preview({ sidebarOpen = true, hidden = false }: Readonly<PreviewProps>) {
   const { t } = useTranslation();
   const {
     canvasRef,
@@ -268,9 +269,10 @@ export function Preview({ sidebarOpen = true }: Readonly<PreviewProps>) {
 
   return (
     <main
-      id="main-content"
+      id={hidden ? undefined : 'main-content'}
       className={`flex-1 flex flex-col lg:flex-row bg-background overflow-auto scrollbar-hide transition-all duration-300 ${sidebarOpen ? 'lg:ms-96' : ''}`}
       tabIndex={-1}
+      style={hidden ? { display: 'none' } : undefined}
     >
       {/* Desktop Left Column Ad - Skyscraper 160x600, always visible */}
       {/* Fixed height based on viewport to prevent layout shift from AdSense */}

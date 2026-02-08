@@ -265,8 +265,8 @@ test.describe('Animation Start Frame (Advanced Tier)', () => {
     const slider = page.locator('[data-testid="animation-start-frame-slider"]');
     // May or may not be visible depending on tier implementation
     const isVisible = await slider.isVisible().catch(() => false);
-    // Test passes if slider exists (even if not visible due to tier restrictions)
-    expect(true).toBe(true);
+    const exists = (await slider.count()) > 0;
+    expect(isVisible || exists, 'start frame slider should be present in advanced tier').toBe(true);
   });
 
   test('start frame slider has correct range (0-100)', async ({ page }) => {
@@ -305,11 +305,9 @@ test.describe('Animation Max Frames (Advanced Tier)', () => {
     const slider = page.locator('[data-testid="animation-max-frames-slider"] [role="slider"]');
     if (await slider.isVisible().catch(() => false)) {
       await setSliderByTestId(page, 'animation-max-frames-slider', 0);
-      // Check for "Auto" text display
-      const autoText = page.locator('text=/auto/i');
-      const hasAutoText = await autoText.count() > 0;
-      // Test structure is valid even if auto text not shown
-      expect(true).toBe(true);
+      // Verify slider is at 0 (auto) value
+      const sliderValue = await slider.getAttribute('aria-valuenow');
+      expect(Number(sliderValue), 'slider should be at 0 (auto) value').toBe(0);
     }
   });
 });

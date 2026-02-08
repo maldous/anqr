@@ -730,10 +730,10 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(state3).toBe(state1);
     });
 
-    // Skip visual delta test - known no-op, see tests_knowledge.md
-    test.skip('toggling preserve finders changes QR output', async ({ page, waitForQRRender }) => {
-      // SKIPPED: preserveFinders toggle doesn't affect rendering currently.
-      // This test documents expected behavior once the feature is implemented.
+    test('toggling preserve finders changes QR output', async ({ page, waitForQRRender }) => {
+      // Known issue: preserveFinders toggle is currently a no-op in the renderer.
+      // This test will pass once the feature is implemented.
+      test.fail(true, 'preserveFinders toggle is currently a no-op in the renderer');
       const before = await getCanvasSnapshot(page);
       
       await togglePreserveFinders(page);
