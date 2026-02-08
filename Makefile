@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
+.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
 
 # ============================================
 # Help
@@ -37,6 +37,7 @@ help:
 	@echo "    make android:sync   Sync web assets to Android project"
 	@echo "    make android:build  Build debug APK"
 	@echo "    make android:release Build release AAB for Play Store"
+	@echo "    make android:upload Full build + upload AAB to Play Store"
 	@echo "    make android:run    Run on connected device/emulator"
 	@echo "    make android:open   Open in Android Studio"
 	@echo "    make android:keystore Generate release keystore (run once)"
@@ -307,7 +308,10 @@ android\:release:
 	rm -rf dist/king.gif dist/tsunami.jpg dist/images 2>/dev/null || true
 	npx cap sync android
 	cd android && SENTRY_AUTH_TOKEN=$$(grep '^SENTRY_AUTH_TOKEN=' ../.env.sentry-build-plugin | tail -1 | cut -d= -f2-) ./gradlew bundleRelease
+	# Zip merged native libs for Play Store debug symbols upload
+	(cd android/app/build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out && zip -r $(CURDIR)/android/app/build/outputs/bundle/release/native-debug-symbols.zip lib/) || echo "Warning: could not create native debug symbols zip"
 	@echo "Release AAB: android/app/build/outputs/bundle/release/app-release.aab"
+	@echo "Debug symbols: android/app/build/outputs/bundle/release/native-debug-symbols.zip"
 
 # Run on connected device or emulator
 android\:run:
@@ -343,11 +347,12 @@ android: build android\:bump android\:release
 	@echo "Android production build complete!"
 	@echo "AAB file: android/app/build/outputs/bundle/release/app-release.aab"
 	@echo ""
-	@echo "To upload to Play Store:"
-	@echo "1. Go to https://play.google.com/console"
-	@echo "2. Create/select your app"
-	@echo "3. Upload the AAB file"
+	@echo "Run 'make android:upload' to upload to Play Store."
 	@echo "============================================"
+
+# Full build + upload to Google Play Store
+android\:upload: android
+	python3 scripts/upload-to-play-store.py
 
 zip:
 	@rm -f anqr.zip
