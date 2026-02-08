@@ -1341,7 +1341,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     gifQuantizer: 'median_cut',
     gifDither: 'floyd',
     gifTransparentColor: '',
-    gifDisposal: 'restore_bg',
+    gifDisposal: 'keep',
     svgTrueVector: false,
     svgShapePrecision: 'pixel',
     svgEmbedRasterOverlay: true,

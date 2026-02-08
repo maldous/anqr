@@ -8,7 +8,7 @@ type RenderState = 'pending' | 'rendering' | 'idle';
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import { BusyOverlay } from '@/components/BusyOverlay';
-import { useQRGenerator } from '@/hooks/useQRGenerator';
+import { useQRGeneratorContext } from '@/hooks/useQRGenerator';
 import { getContrastRatio, meetsContrastAA, meetsContrastAAA, parseColor } from '@/modules/core';
 import { useQRStore } from '@/store/qr-store';
 
@@ -28,7 +28,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     safetyWarnings,
     canvas,
     isPreparingAnimation,
-  } = useQRGenerator();
+  } = useQRGeneratorContext();
 
   // Show busy overlay while loading OR while preparing multi-frame animation OR during active rendering
   // isPreparingAnimation is true when we have multi-frame content but cache isn't ready yet

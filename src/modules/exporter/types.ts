@@ -110,6 +110,6 @@ export function getDefaultExportConfig(): ExportConfig {
     includeMetadata: false,
     includeQuietZone: true,
     bgOverride: '',
-    gifDisposal: 'restore_bg',
+    gifDisposal: 'keep',
   };
 }

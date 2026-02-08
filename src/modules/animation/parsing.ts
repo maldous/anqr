@@ -136,7 +136,10 @@ async function parseStaticImageAsFrame(source: ArrayBuffer): Promise<AnimationFr
 /**
  * Parse any animated image (GIF or WebP) and extract frames
  */
-export async function parseAnimatedImage(source: string | ArrayBuffer): Promise<AnimationFrame[]> {
+export async function parseAnimatedImage(
+  source: string | ArrayBuffer,
+  disposalHandling: 'respect' | 'simplify' = 'respect'
+): Promise<AnimationFrame[]> {
   let arrayBuffer: ArrayBuffer;
 
   if (typeof source === 'string') {
@@ -147,6 +150,12 @@ export async function parseAnimatedImage(source: string | ArrayBuffer): Promise<
   }
 
   const format = detectImageFormat(arrayBuffer);
+
+  log.debug('parseAnimatedImage: start', {
+    sourceType: typeof source === 'string' ? 'url' : 'buffer',
+    bytes: arrayBuffer.byteLength,
+    format,
+  });
 
   if (format === 'gif') {
     const compositor = createGifCompositor(arrayBuffer);
@@ -160,13 +169,26 @@ export async function parseAnimatedImage(source: string | ArrayBuffer): Promise<
       if (frameCtx) {
         frameCtx.drawImage(compositor.canvas, 0, 0);
       }
+      const srcDisposal = compositor.disposalType(i);
+      const effectiveDisposal =
+        disposalHandling === 'simplify' && srcDisposal === 3 ? 2 : srcDisposal;
       animationFrames.push({
         canvas: frameCanvas,
         delay: compositor.delayMs(i),
-        disposalType: 0,
+        disposalType: effectiveDisposal,
       });
       compositor.dispose(i);
     }
+    const totalMs = animationFrames.reduce((s, f) => s + f.delay, 0);
+    const uniqueDisposals = [...new Set(animationFrames.map((f) => f.disposalType))].sort((a, b) => a - b);
+    log.debug('parseAnimatedImage: GIF parsed', {
+      format,
+      frameCount: animationFrames.length,
+      totalDurationMs: totalMs,
+      sampleDelays: animationFrames.slice(0, 3).map((f) => f.delay),
+      uniqueDisposals,
+      disposalHandling,
+    });
     return animationFrames;
   }
 
@@ -210,8 +232,21 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
 
   const animationFrames: AnimationFrame[] = [];
 
+  log.debug('parseGifFrames: decoding', {
+    frameCount: frames.length,
+    width,
+    height,
+    sampleDelays: frames.slice(0, 5).map((f) => f.delay),
+  });
+
   for (const frame of frames) {
     const { dims, patch, disposalType, delay } = frame;
+
+    // Save region before patch for disposal type 3 (restore previous)
+    let restoreData: ImageData | null = null;
+    if (disposalType === 3) {
+      restoreData = compositeCtx.getImageData(dims.left, dims.top, dims.width, dims.height);
+    }
 
     const imageData = new ImageData(new Uint8ClampedArray(patch), dims.width, dims.height);
 
@@ -235,12 +270,14 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
 
     animationFrames.push({
       canvas: outputCanvas,
-      delay: delay * 10,
+      delay,
       disposalType,
     });
 
     if (disposalType === 2) {
       compositeCtx.clearRect(dims.left, dims.top, dims.width, dims.height);
+    } else if (disposalType === 3 && restoreData) {
+      compositeCtx.putImageData(restoreData, dims.left, dims.top);
     }
   }
 
@@ -261,6 +298,13 @@ export async function getGifDelays(source: string | ArrayBuffer): Promise<number
   }
 
   const { frames } = decodeGif(arrayBuffer);
+  const delays = frames.map((frame) => frame.delay);
 
-  return frames.map((frame) => frame.delay * 10);
+  log.debug('getGifDelays: extracted', {
+    frameCount: delays.length,
+    uniqueDelays: [...new Set(delays)].sort((a, b) => a - b),
+    totalMs: delays.reduce((s, d) => s + d, 0),
+  });
+
+  return delays;
 }

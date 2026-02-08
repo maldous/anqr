@@ -4,7 +4,7 @@
 
 import { createLogger } from '../../lib/logger';
 
-const _log = createLogger('ANIMATION');
+const log = createLogger('ANIMATION');
 
 import { decodeGif } from './gif-codec';
 import type { GifCompositor } from './types';
@@ -15,6 +15,26 @@ import type { GifCompositor } from './types';
  */
 export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   const { width, height, frames } = decodeGif(arrayBuffer);
+
+  const uniqueDelays = [...new Set(frames.map((f) => f.delay))].sort((a, b) => a - b);
+  const uniqueDisposals = [...new Set(frames.map((f) => f.disposalType))].sort((a, b) => a - b);
+  const totalDurationMs = frames.reduce((sum, f) => sum + f.delay, 0);
+  const hasDeltaPatches = frames.some(
+    (f) => f.dims.left !== 0 || f.dims.top !== 0 || f.dims.width !== width || f.dims.height !== height
+  );
+
+  log.debug('compositor: created', {
+    width,
+    height,
+    frameCount: frames.length,
+    uniqueDelaysMs: uniqueDelays,
+    hasConstantDelay: uniqueDelays.length <= 1,
+    uniqueDisposals,
+    disposalPattern: uniqueDisposals.length <= 1 ? `uniform(${uniqueDisposals[0] ?? 0})` : `mixed(${uniqueDisposals.join(',')})`,
+    hasDeltaPatches,
+    totalDurationMs,
+    avgFps: totalDurationMs > 0 ? Math.round((frames.length / totalDurationMs) * 1000 * 10) / 10 : 0,
+  });
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -51,6 +71,14 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     const f = frames[i];
     const { left, top, width: w, height: h } = f.dims;
 
+    log.trace('compositor: apply', {
+      frame: i,
+      dims: { left, top, w, h },
+      disposalType: f.disposalType,
+      delayMs: f.delay,
+      isFullFrame: left === 0 && top === 0 && w === width && h === height,
+    });
+
     if (f.disposalType === 3) {
       restoreData = {
         x: left,
@@ -77,6 +105,12 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     const f = frames[i];
     const { left, top, width: w, height: h } = f.dims;
 
+    log.trace('compositor: dispose', {
+      frame: i,
+      disposalType: f.disposalType,
+      action: f.disposalType === 2 ? 'clearRect' : f.disposalType === 3 ? 'restorePrevious' : 'none',
+    });
+
     switch (f.disposalType) {
       case 2:
         ctx.clearRect(left, top, w, h);
@@ -90,6 +124,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   }
 
   function reset(): void {
+    log.trace('compositor: reset');
     ctx.clearRect(0, 0, width, height);
     restoreData = null;
   }
@@ -114,7 +149,9 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     frameCount: frames.length,
     width,
     height,
-    delayMs: (i: number) => Math.max(frames[i]?.delay || 10, 1) * 10,
+    delayMs: (i: number) => Math.max(frames[i]?.delay || 100, 10),
+    disposalType: (i: number) => frames[i]?.disposalType ?? 0,
+    frameDims: (i: number) => frames[i]?.dims ?? { left: 0, top: 0, width: 0, height: 0 },
     apply,
     dispose,
     reset,

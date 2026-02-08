@@ -68,13 +68,13 @@ describe('animation gif-compositor + parsing + loop', () => {
         dims: { left: 0, top: 0, width: 2, height: 2 },
         patch: new Uint8Array(16),
         disposalType: 2,
-        delay: 5,
+        delay: 50, // gifuct-js returns ms (gce.delay=5 → (5||10)*10 = 50)
       },
       {
         dims: { left: 0, top: 0, width: 2, height: 2 },
         patch: new Uint8Array(16),
         disposalType: 3,
-        delay: 0,
+        delay: 100, // gifuct-js returns ms (gce.delay=0 → (0||10)*10 = 100)
       },
     ];
 
@@ -130,6 +130,17 @@ describe('animation gif-compositor + parsing + loop', () => {
     expect(compositor.delayMs(0)).toBe(50);
     expect(compositor.delayMs(1)).toBe(100);
 
+    // New: disposalType getter exposes source disposal per frame
+    expect(compositor.disposalType(0)).toBe(2);
+    expect(compositor.disposalType(1)).toBe(3);
+    expect(compositor.disposalType(-1)).toBe(0); // out of bounds fallback
+    expect(compositor.disposalType(99)).toBe(0); // out of bounds fallback
+
+    // New: frameDims getter exposes patch dimensions per frame
+    expect(compositor.frameDims(0)).toEqual({ left: 0, top: 0, width: 2, height: 2 });
+    expect(compositor.frameDims(1)).toEqual({ left: 0, top: 0, width: 2, height: 2 });
+    expect(compositor.frameDims(-1)).toEqual({ left: 0, top: 0, width: 0, height: 0 }); // out of bounds fallback
+
     compositor.apply(-1);
     compositor.dispose(-1);
 
@@ -172,7 +183,7 @@ describe('animation gif-compositor + parsing + loop', () => {
     expect(frames[1].disposalType).toBe(3);
 
     const delays = await mod.getGifDelays('https://example.com/a.gif');
-    expect(delays).toEqual([50, 0]);
+    expect(delays).toEqual([50, 100]);
     expect(fetch).toHaveBeenCalled();
 
     currentGifFrames = [];
@@ -185,6 +196,14 @@ describe('animation gif-compositor + parsing + loop', () => {
     const gifFrames = await mod.parseAnimatedImage(gifBuffer());
     expect(gifFrames).toHaveLength(2);
     expect(gifFrames[0].delay).toBe(50);
+    // Source disposal types are preserved from compositor
+    expect(gifFrames[0].disposalType).toBe(2);
+    expect(gifFrames[1].disposalType).toBe(3);
+
+    // With 'simplify' mode, disposal type 3 is converted to 2
+    const simplifiedFrames = await mod.parseAnimatedImage(gifBuffer(), 'simplify');
+    expect(simplifiedFrames[0].disposalType).toBe(2);
+    expect(simplifiedFrames[1].disposalType).toBe(2); // 3 → 2
 
     const webpStaticFrames = await mod.parseAnimatedImage(webpBuffer(false));
     expect(webpStaticFrames).toHaveLength(1);

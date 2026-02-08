@@ -30,7 +30,7 @@ export async function exportSvg(
     includeMetadata: config.includeMetadata ?? false,
     includeQuietZone: config.includeQuietZone ?? true,
     bgOverride: config.bgOverride ?? '',
-    gifDisposal: config.gifDisposal ?? 'restore_bg',
+    gifDisposal: config.gifDisposal ?? 'keep',
     metadata: config.metadata,
   };
 
