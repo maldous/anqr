@@ -267,26 +267,21 @@ export function preprocessImageData(
   }
 
   // =========================================
-  // AUTOMATIC B&W DETECTION (no softening)
+  // AUTOMATIC B&W SOFTENING
   // =========================================
-  // Detect high-contrast B&W images like spirals/concentric circles.
-  // Previously we softened these images, but that defeats the B&W detection
-  // in the dithering code which has a better solution: QR-first mode.
-  //
-  // Now we just detect and skip softening - the dithering code will detect
-  // the B&W image and use QR-first mode which guarantees scannability.
+  // Detect high-contrast B&W images (spirals, concentric circles, etc.)
+  // and soften them with blur + gamma to create gradients that error
+  // diffusion and blue-noise dithering can work with effectively.
+  // Without softening, raw 0/255 pixels produce poor dithering results.
 
-  const workingData = copyImageData(imageData);
+  let workingData = copyImageData(imageData);
 
-  if (!config.disableAutoSoften) {
+  if (!config.disableAutoSoften && !config.qrFirstMode) {
     if (detectBimodalBW(workingData)) {
       if (debug) {
-        log.debug(
-          'preprocessImageData - detected high-contrast B&W, skipping softening (QR-first mode will handle)'
-        );
+        log.debug('preprocessImageData - detected high-contrast B&W, applying softening');
       }
-      // Don't soften - let the dithering code detect B&W and use QR-first mode
-      // Softening would change the histogram and defeat QR-first detection
+      workingData = softenBWImage(workingData);
     }
   }
 

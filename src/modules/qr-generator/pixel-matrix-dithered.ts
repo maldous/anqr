@@ -28,17 +28,10 @@ import {
 } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
 import {
-  BUCKET_SHIFT,
-  DARK_DESIRE_MAX,
-  DARK_DESIRE_MIN,
-  DARK_REGION_END,
-  HISTOGRAM_BUCKETS,
-  LIGHT_DESIRE_MAX,
-  LIGHT_DESIRE_MIN,
-  LIGHT_REGION_START,
-  MAX_VALLEY_RATIO,
-  MIN_PEAK_RATIO,
-  MIN_PEAK_SEPARATION,
+  SCALED_DARK_DESIRE_MAX,
+  SCALED_DARK_DESIRE_MIN,
+  SCALED_LIGHT_DESIRE_MAX,
+  SCALED_LIGHT_DESIRE_MIN,
 } from './dithering-constants';
 import type {
   CreateCanvasFn,
@@ -54,68 +47,6 @@ type RGBi = { r: number; g: number; b: number };
 
 /** Ratio of original overlay color preserved when blending with dithered output (color dither mode). */
 const COLOR_PRESERVE_RATIO = 0.7;
-
-/**
- * Detect if overlay image is high-contrast B&W from canvas data.
- * Returns true if the image has a bimodal histogram (peaks near 0 and 255, valley in middle).
- */
-function detectBWFromCanvas(
-  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  width: number,
-  height: number
-): boolean {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const data = imageData.data;
-  const totalPixels = data.length / 4;
-
-  // Build luminance histogram
-  const histogram = new Int32Array(HISTOGRAM_BUCKETS);
-
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = rgbToGray(data[i], data[i + 1], data[i + 2]);
-    const bucket = Math.min(HISTOGRAM_BUCKETS - 1, gray >> BUCKET_SHIFT);
-    histogram[bucket]++;
-  }
-
-  // Find peaks in dark and light regions
-  let darkPeak = 0,
-    darkPeakBucket = 0;
-  for (let i = 0; i < DARK_REGION_END; i++) {
-    if (histogram[i] > darkPeak) {
-      darkPeak = histogram[i];
-      darkPeakBucket = i;
-    }
-  }
-
-  let lightPeak = 0,
-    lightPeakBucket = 0;
-  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) {
-    if (histogram[i] > lightPeak) {
-      lightPeak = histogram[i];
-      lightPeakBucket = i;
-    }
-  }
-
-  if (lightPeakBucket - darkPeakBucket < MIN_PEAK_SEPARATION) {
-    return false;
-  }
-
-  // Count pixels in each region
-  let darkCount = 0,
-    lightCount = 0,
-    valleyCount = 0;
-  for (let i = 0; i < DARK_REGION_END; i++) darkCount += histogram[i];
-  for (let i = LIGHT_REGION_START; i < HISTOGRAM_BUCKETS; i++) lightCount += histogram[i];
-  for (let i = DARK_REGION_END; i < LIGHT_REGION_START; i++) valleyCount += histogram[i];
-
-  const darkRatio = darkCount / totalPixels;
-  const lightRatio = lightCount / totalPixels;
-  const valleyRatio = valleyCount / totalPixels;
-
-  return (
-    darkRatio >= MIN_PEAK_RATIO && lightRatio >= MIN_PEAK_RATIO && valleyRatio < MAX_VALLEY_RATIO
-  );
-}
 
 /**
  * Generate a QR-first matrix for high-contrast B&W images.
@@ -557,26 +488,6 @@ export async function generateDitheredMatrix(
     );
   }
 
-  // Auto-detect high-contrast B&W images
-  const detectCanvas = await createCanvasFn(Math.min(scaledSize, 256), Math.min(scaledSize, 256));
-  const detectCtx = detectCanvas.getContext('2d');
-  if (detectCtx) {
-    detectCtx.drawImage(overlayCanvas, 0, 0, detectCanvas.width, detectCanvas.height);
-    const isBW = detectBWFromCanvas(detectCtx, detectCanvas.width, detectCanvas.height);
-
-    if (isBW) {
-      log.debug('Detected high-contrast B&W overlay - using QR-first mode');
-      return generateBWFirstMatrix(
-        qr,
-        config,
-        overlayCanvas,
-        moduleCount,
-        scale,
-        effectiveIntensity,
-        createCanvasFn
-      );
-    }
-  }
   const intensity = effectiveIntensity; // 0..1
   const ditherStrength = (config.ditherStrength ?? 50) / 100;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
@@ -675,12 +586,12 @@ export async function generateDitheredMatrix(
 
         // Blend toward QR bit for scannability
         let d = lerp(qrIsDark ? 1 : 0, 1 - ditheredLuma, mix);
-        // Soft-clamp keeps desire within DARK_DESIRE / LIGHT_DESIRE ranges
-        // so the dithered output preserves QR scannability
+        // Soft-clamp using wider scaled ranges — enforceModuleConstraints
+        // ensures scannability at the sub-pixel level
         if (qrIsDark) {
-          d = clamp01(lerp(DARK_DESIRE_MIN, DARK_DESIRE_MAX, d));
+          d = clamp01(lerp(SCALED_DARK_DESIRE_MIN, SCALED_DARK_DESIRE_MAX, d));
         } else {
-          d = clamp01(lerp(LIGHT_DESIRE_MIN, LIGHT_DESIRE_MAX, d));
+          d = clamp01(lerp(SCALED_LIGHT_DESIRE_MIN, SCALED_LIGHT_DESIRE_MAX, d));
         }
         desire[y][x] = d;
 
@@ -716,12 +627,12 @@ export async function generateDitheredMatrix(
         const overlayDark = 1 - luma01(r, g, b);
         let d = lerp(qrIsDark ? 1 : 0, overlayDark, mix);
 
-        // Soft-clamp keeps desire within DARK_DESIRE / LIGHT_DESIRE ranges
-        // so the dithered output preserves QR scannability
+        // Soft-clamp using wider scaled ranges — enforceModuleConstraints
+        // ensures scannability at the sub-pixel level
         if (qrIsDark) {
-          d = clamp01(lerp(DARK_DESIRE_MIN, DARK_DESIRE_MAX, d));
+          d = clamp01(lerp(SCALED_DARK_DESIRE_MIN, SCALED_DARK_DESIRE_MAX, d));
         } else {
-          d = clamp01(lerp(LIGHT_DESIRE_MIN, LIGHT_DESIRE_MAX, d));
+          d = clamp01(lerp(SCALED_LIGHT_DESIRE_MIN, SCALED_LIGHT_DESIRE_MAX, d));
         }
         desire[y][x] = d;
 
@@ -800,27 +711,6 @@ export async function generateBlueNoiseMatrix(
     );
   }
 
-  // Auto-detect high-contrast B&W images
-  const detectCanvas = await createCanvasFn(Math.min(scaledSize, 256), Math.min(scaledSize, 256));
-  const detectCtx = detectCanvas.getContext('2d');
-  if (detectCtx) {
-    detectCtx.drawImage(overlayCanvas, 0, 0, detectCanvas.width, detectCanvas.height);
-    const isBW = detectBWFromCanvas(detectCtx, detectCanvas.width, detectCanvas.height);
-
-    if (isBW) {
-      log.debug('Detected high-contrast B&W overlay in blue-noise mode - using QR-first mode');
-      return generateBWFirstMatrix(
-        qr,
-        config,
-        overlayCanvas,
-        moduleCount,
-        scale,
-        effectiveIntensity,
-        createCanvasFn
-      );
-    }
-  }
-
   const intensity = effectiveIntensity; // 0..1
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
@@ -866,12 +756,12 @@ export async function generateBlueNoiseMatrix(
 
       const overlayDark = 1 - luma01(r, g, b);
       let d = lerp(qrIsDark ? 1 : 0, overlayDark, intensity);
-      // Soft-clamp keeps desire within DARK_DESIRE / LIGHT_DESIRE ranges
-      // so the dithered output preserves QR scannability
+      // Soft-clamp using wider scaled ranges — enforceModuleConstraints
+      // ensures scannability at the sub-pixel level
       if (qrIsDark) {
-        d = clamp01(lerp(DARK_DESIRE_MIN, DARK_DESIRE_MAX, d));
+        d = clamp01(lerp(SCALED_DARK_DESIRE_MIN, SCALED_DARK_DESIRE_MAX, d));
       } else {
-        d = clamp01(lerp(LIGHT_DESIRE_MIN, LIGHT_DESIRE_MAX, d));
+        d = clamp01(lerp(SCALED_LIGHT_DESIRE_MIN, SCALED_LIGHT_DESIRE_MAX, d));
       }
       desire[y][x] = d;
 
