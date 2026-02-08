@@ -420,7 +420,7 @@ export function applyColorMode(imageData: ImageData, mode: ColorMode): ImageData
 export function applyFilters(imageData: ImageData, options: FilterOptions): ImageData {
   let result = copyImageData(imageData);
 
-  log.debug('applyFilters called', {
+  log.trace('applyFilters called', {
     brightness: options.brightness,
     contrast: options.contrast,
     saturation: options.saturation,
@@ -437,70 +437,70 @@ export function applyFilters(imageData: ImageData, options: FilterOptions): Imag
   });
 
   if (options.brightness !== undefined && options.brightness !== 0) {
-    log.debug('Applying brightness', { value: options.brightness });
+    log.trace('Applying brightness', { value: options.brightness });
     result = brightness(result, options.brightness);
   }
 
   if (options.contrast !== undefined && options.contrast !== 0) {
-    log.debug('Applying contrast', { value: options.contrast });
+    log.trace('Applying contrast', { value: options.contrast });
     result = contrast(result, options.contrast);
   }
 
   if (options.saturation !== undefined && options.saturation !== 100) {
-    log.debug('Applying saturation', { value: options.saturation });
+    log.trace('Applying saturation', { value: options.saturation });
     result = saturation(result, options.saturation);
   }
 
   if (options.hue !== undefined && options.hue !== 0) {
-    log.debug('Applying hue rotation', { value: options.hue });
+    log.trace('Applying hue rotation', { value: options.hue });
     result = hueRotate(result, options.hue);
   }
 
   if (options.gamma !== undefined && options.gamma !== 1) {
-    log.debug('Applying gamma', { value: options.gamma });
+    log.trace('Applying gamma', { value: options.gamma });
     result = gamma(result, options.gamma);
   }
 
   if (options.invert) {
-    log.debug('Applying INVERT - this will flip perceived brightness');
+    log.trace('Applying INVERT - this will flip perceived brightness');
     result = invert(result);
   }
 
   if (options.grayscale) {
-    log.debug('Applying grayscale');
+    log.trace('Applying grayscale');
     result = grayscale(result);
   }
 
   if (options.threshold !== undefined) {
-    log.debug('Applying threshold', { value: options.threshold });
+    log.trace('Applying threshold', { value: options.threshold });
     result = threshold(result, options.threshold);
   }
 
   if (options.posterize !== undefined && options.posterize > 0) {
-    log.debug('Applying posterize', { value: options.posterize });
+    log.trace('Applying posterize', { value: options.posterize });
     result = posterize(result, options.posterize);
   }
 
   if (options.sharpen !== undefined && options.sharpen > 0) {
-    log.debug('Applying sharpen', { value: options.sharpen });
+    log.trace('Applying sharpen', { value: options.sharpen });
     result = sharpen(result, options.sharpen);
   }
 
   if (options.blur !== undefined && options.blur > 0) {
-    log.debug('Applying blur', { value: options.blur });
+    log.trace('Applying blur', { value: options.blur });
     result = blur(result, options.blur);
   }
 
   if (options.duotone) {
-    log.debug('Applying duotone');
+    log.trace('Applying duotone');
     result = duotone(result, options.duotone.light, options.duotone.dark);
   }
 
   if (options.colorMode) {
-    log.debug('Applying colorMode', { mode: options.colorMode });
+    log.trace('Applying colorMode', { mode: options.colorMode });
     result = applyColorMode(result, options.colorMode);
   }
 
-  log.debug('Filter pipeline complete');
+  log.trace('Filter pipeline complete');
   return result;
 }

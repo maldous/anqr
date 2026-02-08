@@ -220,6 +220,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
   // GIF Compositor for optimal patch-only decoding (no per-frame canvas allocation)
   const [gifCompositor, setGifCompositor] = useState<GifCompositor | null>(null);
+  const hasMultipleSourceFramesRef = useRef(false);
 
   // Store raw overlay canvas before preprocessing
   const [rawOverlayCanvas, setRawOverlayCanvas] = useState<
@@ -1419,7 +1420,10 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       // Validate the generated QR code (skip during animation playback for performance)
       // Validation will run when animation is paused or for static QR codes
-      const isCurrentlyAnimating = animationFrames.length > 1 && animation.playing;
+      // Check both cached frames (animationFrames) AND source frames (via ref) to skip
+      // validation even during cache building when animationFrames is still being populated
+      const isCurrentlyAnimating =
+        (animationFrames.length > 1 || hasMultipleSourceFramesRef.current) && animation.playing;
       const shouldValidate = result && effectiveConfig.content && !isCurrentlyAnimating;
       if (shouldValidate) {
         setIsValidating(true);
@@ -1512,6 +1516,10 @@ function useQRGenerator(): UseQRGeneratorResult {
     // If we have cached animation frames and animation is playing, don't regenerate
     // The cached frames will be displayed by the animation playback effect
     if (isAnimationCacheReady && animationFrames.length > 1 && animation.playing) {
+      return;
+    }
+    // During cache building for multi-frame animations, skip - cache builder handles generation
+    if (!isAnimationCacheReady && hasMultipleSourceFramesRef.current && animation.playing) {
       return;
     }
     generate();
@@ -1651,10 +1659,13 @@ function useQRGenerator(): UseQRGeneratorResult {
   // Determine the total frame count for animation playback
   // This handles both overlay-based animations (effectiveFrames) and base QR animations (animationFrames)
   const playbackFrameCount = useMemo(() => {
-    if (effectiveFrames.length > 1) return effectiveFrames.length;
+    // Only start playback tick once cache is fully built.
+    // All animated content (multi-frame overlays, patterns, base effects) goes through
+    // the cache path. Starting the tick before cache is ready causes the tick, overlay
+    // frame update effect, and cache builder to fight over the shared gifCompositor.
     if (isAnimationCacheReady && animationFrames.length > 1) return animationFrames.length;
     return 0;
-  }, [effectiveFrames.length, isAnimationCacheReady, animationFrames.length]);
+  }, [isAnimationCacheReady, animationFrames.length]);
 
   // Animation loop for both overlay-based and base QR animations
   useEffect(() => {
@@ -1778,6 +1789,10 @@ function useQRGenerator(): UseQRGeneratorResult {
       return;
     }
 
+    // During cache building for multi-frame overlays, skip compositor operations.
+    // The cache builder exclusively owns the compositor during this phase.
+    if (!isAnimationCacheReady && hasMultipleSourceFramesRef.current) return;
+
     const frameIdx = effectiveFrameIndices[currentFrame];
     if (frameIdx === undefined) return;
 
@@ -1832,6 +1847,12 @@ function useQRGenerator(): UseQRGeneratorResult {
   useEffect(() => {
     lastRenderedFrameRef.current = -1;
   }, []);
+
+  // Track whether we have multiple source frames (for validation skip during cache building)
+  useEffect(() => {
+    hasMultipleSourceFramesRef.current =
+      (gifCompositor?.frameCount ?? 0) > 1 || effectiveFrameIndices.length > 1;
+  }, [gifCompositor, effectiveFrameIndices.length]);
 
   // Display cached animation frames during playback (fast path - no re-encoding)
   useEffect(() => {
