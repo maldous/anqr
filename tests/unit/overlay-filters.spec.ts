@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const debug = vi.fn();
+const trace = vi.fn();
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug, info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({ trace, debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
 function mkImageData(px: number[], width = 2, height = 2): ImageData {
@@ -128,7 +128,7 @@ describe('overlay filters', () => {
     });
 
     expect(piped.data.length).toBe(base.data.length);
-    expect(debug).toHaveBeenCalled();
+    expect(trace).toHaveBeenCalled();
 
     const unchanged = mod.applyFilters(base, {
       brightness: 0,

@@ -307,7 +307,7 @@ export class QRGenerator {
     // This must run BEFORE we sample overlay pixels for scaled/dithered/subpixel modes.
     // ALL overlay modes (including center) apply the full set of visual effects.
     const needsPreprocessing = hasPreprocessingOptions(config);
-    log.debug('Preprocessing check', {
+    log.trace('Preprocessing check', {
       hasOverlay: !!processedOverlayCanvas,
       needsPreprocessing,
       overlayMode: config.overlayMode,
@@ -318,7 +318,7 @@ export class QRGenerator {
     });
 
     if (processedOverlayCanvas && needsPreprocessing) {
-      log.debug('Preprocessing overlay', {
+      log.trace('Preprocessing overlay', {
         overlayMode: config.overlayMode,
         colorMode: config.colorMode,
         filterBrightness: config.filterBrightness,
@@ -341,12 +341,12 @@ export class QRGenerator {
         this.createCanvas.bind(this)
       );
 
-      log.debug('Preprocessing complete', {
+      log.trace('Preprocessing complete', {
         width: processedOverlayCanvas.width,
         height: processedOverlayCanvas.height,
       });
     } else if (processedOverlayCanvas) {
-      log.debug('Skipping preprocessing - no filters to apply');
+      log.trace('Skipping preprocessing - no filters to apply');
     }
 
     // =======================================================================
