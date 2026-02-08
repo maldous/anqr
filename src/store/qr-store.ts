@@ -678,6 +678,9 @@ export interface QRState {
   setRenderBgTransparent: (transparent: boolean) => void;
   setRenderGradient: (gradient: Partial<QRState['render']['gradient']>) => void;
 
+  // Internal: saved QR settings before artwork mode override (restored on mode switch back)
+  _preArtworkQr: { ecc: ECCLevel; version: number } | null;
+
   // === OVERLAY ===
   overlay: {
     enabled: boolean;
@@ -1185,6 +1188,8 @@ export const useQRStore = create<QRState>((set, get) => ({
   setRenderGradient: (gradient) =>
     set((s) => ({ render: { ...s.render, gradient: { ...s.render.gradient, ...gradient } } })),
 
+  _preArtworkQr: null,
+
   // Overlay defaults
   overlay: {
     enabled: false,
@@ -1276,10 +1281,29 @@ export const useQRStore = create<QRState>((set, get) => ({
   setOverlayContrast: (contrast) => set((s) => ({ overlay: { ...s.overlay, contrast } })),
   setOverlayGamma: (gamma) => set((s) => ({ overlay: { ...s.overlay, gamma } })),
   setOverlayMode: (mode) =>
-    set((s) => ({
-      overlay: { ...s.overlay, mode },
-      ...(mode === 'artwork' ? { qr: { ...s.qr, ecc: 'L' as ECCLevel, version: 6 } } : {}),
-    })),
+    set((s) => {
+      const enteringArtwork = mode === 'artwork' && s.overlay.mode !== 'artwork';
+      const leavingArtwork = mode !== 'artwork' && s.overlay.mode === 'artwork';
+
+      if (enteringArtwork) {
+        return {
+          overlay: { ...s.overlay, mode },
+          qr: { ...s.qr, ecc: 'L' as ECCLevel, version: 6 },
+          _preArtworkQr: { ecc: s.qr.ecc, version: s.qr.version },
+        };
+      }
+
+      if (leavingArtwork && s._preArtworkQr) {
+        const restored = s._preArtworkQr;
+        return {
+          overlay: { ...s.overlay, mode },
+          qr: { ...s.qr, ecc: restored.ecc, version: restored.version },
+          _preArtworkQr: null,
+        };
+      }
+
+      return { overlay: { ...s.overlay, mode } };
+    }),
   setOverlayIntensity: (intensity) => set((s) => ({ overlay: { ...s.overlay, intensity } })),
   setOverlayPreserveFinders: (preserveFinders) =>
     set((s) => ({ overlay: { ...s.overlay, preserveFinders } })),

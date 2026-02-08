@@ -135,18 +135,15 @@ export async function generateScaledQR(
     });
   }
 
-  // Two-tier darkening/lightening tuned for PHONE SCANNER contrast.
-  // Structural sub-pixels (matching their QR module) are pushed aggressively toward
-  // black/white so phones can reliably distinguish dark vs light modules.
-  // At intensity 0.85: structural dark factor ≈ 0.24 (white overlay → ~60),
-  //                    structural light blend ≈ 0.77 (black overlay → ~195).
-  // Contrast ratio ≈ 195/60 = 3.25:1 — sufficient for phone cameras.
-  // Texture sub-pixels (dither dots in the opposite module type) stay moderate
-  // so overlay colors remain visible through the dithering pattern.
-  const overlayDkStructural = computeDarkFactor(pixelData.effectiveIntensity, 0.1);
-  const overlayLtStructural = computeLightBlend(pixelData.effectiveIntensity, 0.9);
-  const overlayDkTexture = computeDarkFactor(pixelData.effectiveIntensity, 0.72);
-  const overlayLtTexture = computeLightBlend(pixelData.effectiveIntensity, 0.18);
+  // Fixed color factor intensity — decoupled from the ECC-based intensity cap.
+  // The ECC cap (effectiveIntensity) controls dithering PATTERN density (how many
+  // sub-pixels are flipped), but the per-pixel color treatment should always produce
+  // strong contrast for phone scanning regardless of ECC level.
+  const COLOR_FACTOR_INTENSITY = 0.85;
+  const overlayDkStructural = computeDarkFactor(COLOR_FACTOR_INTENSITY, 0.1);
+  const overlayLtStructural = computeLightBlend(COLOR_FACTOR_INTENSITY, 0.9);
+  const overlayDkTexture = computeDarkFactor(COLOR_FACTOR_INTENSITY, 0.72);
+  const overlayLtTexture = computeLightBlend(COLOR_FACTOR_INTENSITY, 0.18);
 
   // Texture dots (opposite to their QR module) are blended toward the module's
   // target color so they never stray far from the module's intended brightness.
