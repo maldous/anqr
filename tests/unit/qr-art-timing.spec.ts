@@ -6,7 +6,7 @@
 import { describe, it } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
-import sharp from 'sharp';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 
 import { generateFullQArt, type FullQArtConfig } from '../../src/modules/qr-art/generate';
 
@@ -38,17 +38,15 @@ async function loadImageAsImageData(imagePath: string, targetSize: number): Prom
     throw new Error(`Image not found: ${absolutePath}`);
   }
 
-  const imageBuffer = await sharp(absolutePath)
-    .resize(targetSize, targetSize, { fit: 'cover' })
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-
-  const { data, info } = imageBuffer;
+  const img = await loadImage(absolutePath);
+  const canvas = createCanvas(targetSize, targetSize);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, targetSize, targetSize);
+  const imageData = ctx.getImageData(0, 0, targetSize, targetSize);
   return {
-    data: new Uint8ClampedArray(data),
-    width: info.width,
-    height: info.height,
+    data: new Uint8ClampedArray(imageData.data),
+    width: imageData.width,
+    height: imageData.height,
   } as ImageData;
 }
 

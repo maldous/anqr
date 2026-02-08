@@ -6,8 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
-    // Use 'node' environment for unit tests (not browser)
-    environment: 'node',
+    // Use 'happy-dom' environment for unit tests - provides DOM APIs (document, Image, FileReader, canvas, etc.)
+    environment: 'happy-dom',
     // Include unit test files
     include: ['tests/unit/**/*.spec.ts', 'tests/unit/**/*.test.ts'],
     // Coverage configuration
