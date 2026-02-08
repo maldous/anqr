@@ -1,18 +1,23 @@
-import { describe, expect, it } from 'vitest';
-import sharp from 'sharp';
+// @vitest-environment node
+import { describe, expect, it, vi } from 'vitest';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { decodeQR } from '../../src/modules/qr-decoder';
+
+vi.mock('@sentry/node', () => ({ init: vi.fn(), captureException: vi.fn() }));
+
 import handler from '../../netlify/functions/qr';
 
-function bufferToImageData(buffer: Buffer) {
-  return sharp(buffer)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true })
-    .then(({ data, info }) => ({
-      data: new Uint8ClampedArray(data),
-      width: info.width,
-      height: info.height,
-    }));
+async function bufferToImageData(buffer: Buffer) {
+  const img = await loadImage(buffer);
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, img.width, img.height);
+  return {
+    data: new Uint8ClampedArray(imageData.data),
+    width: imageData.width,
+    height: imageData.height,
+  };
 }
 
 describe('netlify qr function', () => {
