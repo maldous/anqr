@@ -135,9 +135,23 @@ export async function generateScaledQR(
     });
   }
 
-  // Pre-compute darkening/lightening factors outside the pixel loop for performance
-  const overlayDkFactor = computeDarkFactor(pixelData.effectiveIntensity, 0.6);
-  const overlayLtBlend = computeLightBlend(pixelData.effectiveIntensity, 0.4);
+  // Two-tier darkening/lightening tuned for PHONE SCANNER contrast.
+  // Structural sub-pixels (matching their QR module) are pushed aggressively toward
+  // black/white so phones can reliably distinguish dark vs light modules.
+  // At intensity 0.85: structural dark factor ≈ 0.24 (white overlay → ~60),
+  //                    structural light blend ≈ 0.77 (black overlay → ~195).
+  // Contrast ratio ≈ 195/60 = 3.25:1 — sufficient for phone cameras.
+  // Texture sub-pixels (dither dots in the opposite module type) stay moderate
+  // so overlay colors remain visible through the dithering pattern.
+  const overlayDkStructural = computeDarkFactor(pixelData.effectiveIntensity, 0.1);
+  const overlayLtStructural = computeLightBlend(pixelData.effectiveIntensity, 0.9);
+  const overlayDkTexture = computeDarkFactor(pixelData.effectiveIntensity, 0.72);
+  const overlayLtTexture = computeLightBlend(pixelData.effectiveIntensity, 0.18);
+
+  // Texture dots (opposite to their QR module) are blended toward the module's
+  // target color so they never stray far from the module's intended brightness.
+  // Without this, a black overlay pixel creates a pure-black dot in a light module.
+  const TEXTURE_TOWARD_MODULE = 0.6;
 
   // Render all pixels
   for (let y = 0; y < scaledSize; y++) {
@@ -166,6 +180,14 @@ export async function generateScaledQR(
 
       if (!(isDark || shouldDrawLightPixel)) continue;
 
+      // Map sub-pixel back to QR module to distinguish structural vs texture dots
+      const qrModuleRow = Math.floor(y / scale);
+      const qrModuleCol = Math.floor(x / scale);
+      const isQrDark =
+        qrModuleRow < moduleCount &&
+        qrModuleCol < moduleCount &&
+        qr.isDark(qrModuleRow, qrModuleCol);
+
       const dx = marginPx + x * subPixelSize;
       const dy = marginPx + y * subPixelSize;
 
@@ -182,11 +204,15 @@ export async function generateScaledQR(
             const offset = (subPixelSize - dotSize) / 2;
             ctx.fillRect(dx + offset, dy + offset, dotSize, dotSize);
           } else if (isDitheredMode) {
-            // Darken overlay colors on dark modules to maintain scanner contrast.
-            // Factor scales with effective intensity: more overlay influence → more darkening.
-            const darkR = Math.round(color.r * overlayDkFactor);
-            const darkG = Math.round(color.g * overlayDkFactor);
-            const darkB = Math.round(color.b * overlayDkFactor);
+            const dkFactor = isQrDark ? overlayDkStructural : overlayDkTexture;
+            let darkR = Math.round(color.r * dkFactor);
+            let darkG = Math.round(color.g * dkFactor);
+            let darkB = Math.round(color.b * dkFactor);
+            if (!isQrDark) {
+              darkR = Math.round(darkR + (255 - darkR) * TEXTURE_TOWARD_MODULE);
+              darkG = Math.round(darkG + (255 - darkG) * TEXTURE_TOWARD_MODULE);
+              darkB = Math.round(darkB + (255 - darkB) * TEXTURE_TOWARD_MODULE);
+            }
             ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {
@@ -203,11 +229,15 @@ export async function generateScaledQR(
         // Light module: draw with background color or overlay color
         if (needsBothDarkAndLightColors && useColorRendering && color) {
           if (isDitheredMode) {
-            // Lighten overlay colors on light modules to maintain scanner contrast.
-            // Blend amount scales with effective intensity.
-            const lightR = Math.round(color.r + (255 - color.r) * overlayLtBlend);
-            const lightG = Math.round(color.g + (255 - color.g) * overlayLtBlend);
-            const lightB = Math.round(color.b + (255 - color.b) * overlayLtBlend);
+            const ltBlend = isQrDark ? overlayLtTexture : overlayLtStructural;
+            let lightR = Math.round(color.r + (255 - color.r) * ltBlend);
+            let lightG = Math.round(color.g + (255 - color.g) * ltBlend);
+            let lightB = Math.round(color.b + (255 - color.b) * ltBlend);
+            if (isQrDark) {
+              lightR = Math.round(lightR * (1 - TEXTURE_TOWARD_MODULE));
+              lightG = Math.round(lightG * (1 - TEXTURE_TOWARD_MODULE));
+              lightB = Math.round(lightB * (1 - TEXTURE_TOWARD_MODULE));
+            }
             ctx.fillStyle = `rgb(${lightR},${lightG},${lightB})`;
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           } else {
