@@ -31,8 +31,27 @@ export const MIN_PEAK_SEPARATION = 16;
  * Soft-clamp ranges for QR scannability in dithered output.
  * Dark modules are clamped to [DARK_DESIRE_MIN, DARK_DESIRE_MAX] so the
  * majority of sub-pixels stay dark. Light modules use the LIGHT_* pair.
+ *
+ * These tight ranges are used by module-level dithering (scale=1, dithering-matrix.ts)
+ * where each module is a single pixel and there is no sub-pixel safety net.
  */
 export const DARK_DESIRE_MIN = 0.55;
 export const DARK_DESIRE_MAX = 0.95;
 export const LIGHT_DESIRE_MIN = 0.05;
 export const LIGHT_DESIRE_MAX = 0.45;
+
+/**
+ * Wider desire ranges for sub-pixel (scaled) dithering paths (pixel-matrix-dithered.ts).
+ * These allow significantly more visible overlay texture because the
+ * enforceModuleConstraints post-pass guarantees scannability at the sub-pixel level
+ * (DARK_MIN=0.75 → ≥12/16 dark sub-pixels, LIGHT_MAX=0.25 → ≤4/16 dark sub-pixels).
+ *
+ * The ranges are intentionally wide: error diffusion / blue-noise may produce
+ * sub-pixel patterns that exceed QR scannability thresholds, but
+ * enforceModuleConstraints corrects them by flipping pixels sorted by desire
+ * score, preserving the overlay's spatial pattern.
+ */
+export const SCALED_DARK_DESIRE_MIN = 0.15;
+export const SCALED_DARK_DESIRE_MAX = 0.95;
+export const SCALED_LIGHT_DESIRE_MIN = 0.05;
+export const SCALED_LIGHT_DESIRE_MAX = 0.85;

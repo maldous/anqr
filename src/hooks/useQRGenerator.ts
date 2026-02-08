@@ -35,7 +35,7 @@ import {
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
 import { generateFullQArt, generateFullQArtOptimal } from '@/modules/qr-art';
-import { QRGenerator } from '@/modules/qr-generator';
+import { canvasHashCache, QRGenerator } from '@/modules/qr-generator';
 import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance
@@ -2345,10 +2345,74 @@ function useQRGenerator(): UseQRGeneratorResult {
         gifCompositor.reset();
       }
 
+      // Artwork mode: lock mask pattern and version after first frame for visual consistency
+      const isArtworkMode = overlay.enabled && overlay.mode === 'artwork';
+      let artworkLockedMask = -1;
+      let artworkLockedVersion = debouncedConfig.typeNumber || 0;
+
+      const generateArtworkFrame = async (
+        frameOverlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+        frameIdx: number,
+      ): Promise<HTMLCanvasElement | OffscreenCanvas | null> => {
+        try {
+          const useAutoMask =
+            typeof debouncedConfig.maskPattern !== 'number' || debouncedConfig.maskPattern < 0;
+          const qartConfig = {
+            data: debouncedConfig.content,
+            targetImage: frameOverlayCanvas,
+            version: artworkLockedVersion,
+            ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
+            strictSuffix: true,
+            targetControlPercent: 100,
+            lockVersionToMinimum: debouncedConfig.typeNumber === 0 && frameIdx === 0,
+          };
+
+          const qartResult =
+            useAutoMask && artworkLockedMask < 0
+              ? await generateFullQArtOptimal(qartConfig)
+              : await generateFullQArt({
+                  ...qartConfig,
+                  maskPattern:
+                    artworkLockedMask >= 0
+                      ? artworkLockedMask
+                      : (debouncedConfig.maskPattern as number),
+                });
+
+          if (qartResult.success && qartResult.matrix) {
+            if (frameIdx === 0) {
+              artworkLockedMask = qartResult.maskPattern;
+              artworkLockedVersion = qartResult.version;
+            }
+            const qrArtConfig = {
+              ...debouncedConfig,
+              typeNumber: qartResult.version,
+              overlayMode: undefined,
+            };
+            return await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig);
+          }
+          log.warn('QR-Art failed for animation frame', { frameIdx });
+        } catch (err) {
+          log.warn('QR-Art frame generation failed, falling back to standard', {
+            frameIdx,
+            error: err,
+          });
+        }
+        return await qrGenerator.generate(
+          { ...debouncedConfig, frameIndex: frameIdx, overlayMode: 'dithered' },
+          frameOverlayCanvas,
+        );
+      };
+
       for (let frameIdx = 0; frameIdx < framesToProcess.length; frameIdx++) {
         const frame = framesToProcess[frameIdx];
         // Check if cancelled before each expensive operation
         if (isCancelled) return;
+
+        // Invalidate canvas hash cache to prevent stale overlay data
+        // when the compositor reuses the same canvas object across frames
+        if (gifCompositor?.canvas instanceof HTMLCanvasElement) {
+          canvasHashCache.delete(gifCompositor.canvas);
+        }
 
         // Time-based yielding: yield when we've used up our frame budget
         // This is more efficient than fixed-interval yielding
@@ -2417,7 +2481,9 @@ function useQRGenerator(): UseQRGeneratorResult {
                 ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
                 : 0,
             };
-            result = await qrGenerator.generate(frameConfig, overlayToUse);
+            result = isArtworkMode
+              ? await generateArtworkFrame(overlayToUse, frameIdx)
+              : await qrGenerator.generate(frameConfig, overlayToUse);
           } else {
             // Legacy path for WebP or pattern animation
             // NOTE: Color adjustments (brightness/contrast/etc) are now done at moduleCount
@@ -2452,7 +2518,9 @@ function useQRGenerator(): UseQRGeneratorResult {
                 ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
                 : 0,
             };
-            result = await qrGenerator.generate(frameConfig, processedOverlay);
+            result = isArtworkMode
+              ? await generateArtworkFrame(processedOverlay, frameIdx)
+              : await qrGenerator.generate(frameConfig, processedOverlay);
           }
 
           if (isCancelled) return;
