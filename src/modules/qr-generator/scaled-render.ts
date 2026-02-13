@@ -113,8 +113,8 @@ export async function generateScaledQR(
   const needsBothDarkAndLightColors = isSubpixelMode;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
   const qrDrawSize = scaledSize * subPixelSize;
-  const ditherBackdropAlpha = Math.max(0, Math.min(0.8, config.ditherBackdropAlpha ?? 0.5));
-  const ditherBackdropWash = Math.max(0, Math.min(1, config.ditherBackdropWash ?? 0.25));
+  const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
+  const ditherBackdropWash = Math.max(0, Math.min(1, config.ditherBackdropWash ?? 0.18));
 
   const debug = config.debugOverlayDither === true;
   if (debug) {
@@ -183,11 +183,11 @@ export async function generateScaledQR(
   const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;
   const lightGrainDensity = Math.max(
     0,
-    Math.min(0.08, (config.lightGrainDensity ?? 0.02) * qrFirstLightBoost)
+    Math.min(0.025, (config.lightGrainDensity ?? 0.004) * qrFirstLightBoost)
   );
   const lightGrainAlpha = Math.max(
     0,
-    Math.min(0.3, (config.lightGrainAlpha ?? 0.14) * (config.qrFirstMode ? 1.2 : 1))
+    Math.min(0.1, (config.lightGrainAlpha ?? 0.05) * (config.qrFirstMode ? 1.15 : 1))
   );
   const seed = config.seed ?? 1337;
   const radiusBins = 9;
@@ -227,7 +227,7 @@ export async function generateScaledQR(
   };
 
   const drawDitherDot = (x: number, y: number, radius: number, jitterN: number): void => {
-    const jitterAmp = subPixelSize * 0.11;
+    const jitterAmp = subPixelSize * 0.2;
     const jxA = hash01(x * 1.37, y * 0.83, seed + 11) - 0.5;
     const jxB = hash01(x * 0.61, y * 1.91, seed + 53) - 0.5;
     const jyA = hash01(x * 0.79, y * 1.23, seed + 29) - 0.5;
@@ -280,7 +280,7 @@ export async function generateScaledQR(
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
       const isDark = matrix[y]?.[x];
-      const color = colors[y]?.[x] as PixelColor | undefined;
+      const color = (colors[y]?.[x] ?? null) as PixelColor | null;
 
       const shouldDrawLightPixel =
         !isDitheredMode && (needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering));
@@ -304,38 +304,20 @@ export async function generateScaledQR(
       const moduleCol = Math.floor(x / scale);
       const moduleLocked = isLockedSpec(moduleRow, moduleCol, moduleCount, version);
 
-      if (isDitheredMode && useColorRendering && color) {
-        const baseLuma = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
-        const baseVar = localVariance(x, y);
-        const baseNoise = hash01(x, y, seed + 211);
-        const baseTarget = Math.max(0.72, Math.min(0.92, 0.8 + baseLuma * 0.1 - baseVar * 0.04));
-        const baseTint = adjustLumaPreserveChroma(color, baseTarget, 1.08);
-        const prevAlpha = ctx.globalAlpha;
-        const baseAlpha = Math.max(0.06, Math.min(0.16, 0.08 + baseVar * 0.05 + (baseNoise - 0.5) * 0.03));
-        ctx.globalAlpha = baseAlpha;
-        ctx.fillStyle = `rgb(${baseTint.r},${baseTint.g},${baseTint.b})`;
-        const baseRadius = Math.max(
-          0.07,
-          quantizeRadius(dotMinRadiusPx * (0.72 + baseLuma * 0.4 + baseNoise * 0.2))
-        );
-        drawDitherDot(dx, dy, baseRadius, 0.2 + baseNoise * 0.08);
-        ctx.globalAlpha = prevAlpha;
-      }
-
       if (!isDark) {
         if (isDitheredMode) {
-          const sourceLuma =
-            color !== undefined
-              ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255
-              : 1;
+          const sourceLuma = color ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255 : 1;
           const toneN = 1 - sourceLuma;
           const varN = localVariance(x, y);
           const noiseN = hash01(x, y, seed + 149);
-          const grainChance = Math.min(
-            config.qrFirstMode ? 0.98 : 0.95,
-            0.74 + lightGrainDensity * (6.4 + toneN * 2.8 + varN * 2.2)
+          const grainChance = Math.max(
+            0,
+            Math.min(
+              config.qrFirstMode ? 0.2 : 0.08,
+              lightGrainDensity * (0.9 + toneN * 1.5 + varN * 1.1 + (noiseN - 0.5) * 0.3)
+            )
           );
-          if (hash01(x, y, seed + 131) < grainChance) {
+          if (grainChance > 0 && hash01(x, y, seed + 131) < grainChance) {
             const lightTarget = Math.max(0.32, Math.min(0.76, 0.46 + sourceLuma * 0.22 - varN * 0.06));
             const grain = color
               ? adjustLumaPreserveChroma(color, lightTarget, 1.42)
@@ -343,15 +325,15 @@ export async function generateScaledQR(
             ctx.fillStyle = `rgb(${grain.r},${grain.g},${grain.b})`;
             const prevAlpha = ctx.globalAlpha;
             const alpha = Math.min(
-              0.74,
-              Math.max(0.34, lightGrainAlpha * (1.52 + toneN * 0.52 + varN * 0.22 + (noiseN - 0.5) * 0.12))
+              0.12,
+              Math.max(0.02, lightGrainAlpha * (0.55 + toneN * 0.4 + varN * 0.18 + (noiseN - 0.5) * 0.08))
             );
             ctx.globalAlpha = alpha;
             const grainRadius = Math.max(
-              0.12,
-              quantizeRadius(dotMinRadiusPx * (1.9 + toneN * 1.05 + varN * 0.32 + noiseN * 0.24))
+              0.04,
+              quantizeRadius(dotMinRadiusPx * (0.95 + toneN * 0.7 + varN * 0.22 + noiseN * 0.16))
             );
-            drawDitherDot(dx, dy, grainRadius, 0.36 + 0.1 * noiseN);
+            drawDitherDot(dx, dy, grainRadius, 0.25 + 0.08 * noiseN);
             ctx.globalAlpha = prevAlpha;
           }
           continue;
@@ -377,16 +359,19 @@ export async function generateScaledQR(
             const toneN = Math.pow(1 - luma, 0.9);
             if (!moduleLocked) {
               const dropoutNoise = hash01(x, y, seed + 257);
-              const dropoutChance = Math.max(0, Math.min(0.1, 0.012 + (1 - toneN) * 0.065 + varN * 0.02));
+              const dropoutChance = Math.max(
+                0,
+                Math.min(0.05, 0.004 + (1 - toneN) * 0.03 + varN * 0.012)
+              );
               if (dropoutNoise < dropoutChance) continue;
             }
             const radiusT = Math.max(
               0,
-              Math.min(1, 0.22 + toneN * 0.62 + varN * 0.18 + (noiseN - 0.5) * 0.32)
+              Math.min(1, 0.16 + toneN * 0.68 + varN * 0.22 + (noiseN - 0.5) * 0.34)
             );
             const rawRadius = dotMinRadiusPx + radiusT * (dotMaxRadiusPx - dotMinRadiusPx);
             const radius = quantizeRadius(Math.max(dotMinRadiusPx, rawRadius));
-            const jitterN = 0.5 + 0.35 * hash01(x, y, seed + 7);
+            const jitterN = 0.66 + 0.34 * hash01(x, y, seed + 7);
             drawDitherDot(dx, dy, radius, jitterN);
           } else {
             // For subpixel modes: use raw overlay color

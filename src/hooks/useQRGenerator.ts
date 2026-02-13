@@ -222,6 +222,8 @@ function useQRGenerator(): UseQRGeneratorResult {
   // Additional flag to block generate() - using ref for synchronous checking
   // This is more reliable than state for preventing loops
   const isOverflowBlockedRef = useRef(false);
+  // Monotonic generation id to prevent stale async renders from overwriting latest preview.
+  const generationRequestIdRef = useRef(0);
 
   // State to block generate() calls when we're in an overflow error state
   // This prevents the blur loop by stopping the useEffect from calling generate()
@@ -1107,11 +1109,15 @@ function useQRGenerator(): UseQRGeneratorResult {
       return;
     }
 
+    const requestId = ++generationRequestIdRef.current;
+    const isStaleRequest = (): boolean => generationRequestIdRef.current !== requestId;
+
     // Check for empty content - don't generate QR if there's nothing to encode
     // This prevents displaying a non-scannable QR code
     // Just show a blank white screen without any text message
     const trimmedContent = debouncedConfig.content?.trim() || '';
     if (!trimmedContent) {
+      if (isStaleRequest()) return;
       setCanvas(null);
       setError(null); // No error message - just blank
       setIsLoading(false);
@@ -1139,6 +1145,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       });
     });
 
+    if (isStaleRequest()) return;
     setIsRendering(true);
 
     try {
@@ -1235,6 +1242,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
         // If full QR-Art succeeded with good match, use that canvas directly
         if (useFullQArt && fullQArtCanvas) {
+          if (isStaleRequest()) return;
           // Apply watermark if enabled
           let resultCanvas: HTMLCanvasElement | OffscreenCanvas = fullQArtCanvas;
           if (watermark.enabled) {
@@ -1253,6 +1261,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             resultCanvas = watermarked.canvas;
           }
 
+          if (isStaleRequest()) return;
           setCanvas(resultCanvas);
           if (canvasRef.current) {
             // Set dimensions first to ensure proper canvas state
@@ -1291,6 +1300,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           effectiveConfig,
           overlay.enabled ? overlayCanvas : null
         );
+        if (isStaleRequest()) return;
         log.debug('Initial generation succeeded');
       } catch (initialErr) {
         // If overflow error, try progressively more forgiving settings
@@ -1335,6 +1345,7 @@ function useQRGenerator(): UseQRGeneratorResult {
                 fallbackConfig,
                 overlay.enabled ? overlayCanvas : null
               );
+              if (isStaleRequest()) return;
               usedFallback = true;
               succeeded = true;
               log.debug('ECC fallback succeeded', { ecc });
@@ -1405,6 +1416,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         result = watermarked.canvas;
       }
 
+      if (isStaleRequest()) return;
       setCanvas(result);
 
       // Capture the QR matrix for vector SVG export
@@ -1435,9 +1447,13 @@ function useQRGenerator(): UseQRGeneratorResult {
         (animationFrames.length > 1 || hasMultipleSourceFramesRef.current) && animation.playing;
       const shouldValidate = result && effectiveConfig.content && !isCurrentlyAnimating;
       if (shouldValidate) {
+        const validationRequestId = requestId;
         setIsValidating(true);
         // Use setTimeout to not block the main thread
         setTimeout(() => {
+          if (generationRequestIdRef.current !== validationRequestId) {
+            return;
+          }
           try {
             const validationResult = validateQRCodeRobust(result!, effectiveConfig.content);
             setValidation(validationResult);
@@ -1450,6 +1466,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         }, 50);
       }
     } catch (err) {
+      if (isStaleRequest()) return;
       log.error('QR generation error', { error: err });
       const rawMessage = err instanceof Error ? err.message : 'Failed to generate QR code';
 
@@ -1472,6 +1489,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         })
       );
     } finally {
+      if (isStaleRequest()) return;
       setIsRendering(false);
       setIsLoading(false);
       // Dispatch render-complete event on success (no error was thrown)

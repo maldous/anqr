@@ -218,9 +218,15 @@ export function preprocessImageData(
     filterOptions.posterize = config.filterPosterize;
   }
 
-  // Only apply duotone if colorMode is NOT 'color' (full color mode should preserve original colors)
-  // Duotone converts image to grayscale then maps to two colors, which destroys full color
-  if (config.filterDuotone1 && config.filterDuotone2 && config.colorMode !== 'color') {
+  // Apply duotone only when duotone overlay mode is explicitly selected.
+  // Do NOT implicitly apply duotone in grayscale/B&W color modes; that can invert tones
+  // when default duotone swatches are present in store state.
+  if (
+    config.overlayMode === 'duotone' &&
+    config.filterDuotone1 &&
+    config.filterDuotone2 &&
+    config.colorMode !== 'color'
+  ) {
     // Parse hex color strings into RGB objects for duotone filter
     const lightRgb = parseColor(config.filterDuotone1);
     const darkRgb = parseColor(config.filterDuotone2);

@@ -8,18 +8,19 @@ describe('qr-generator artistic guards', () => {
   it('keeps dithered light-dot fog disabled and grain explicitly capped', () => {
     const src = read('src/modules/qr-generator/scaled-render.ts');
     expect(src).toContain('!isDitheredMode && (needsExplicitLightModules');
-    expect(src).toContain('const qrFirstLightBoost = config.qrFirstMode ? 4 : 1;');
+    expect(src).toContain('const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;');
     expect(src).toContain('(config.lightGrainDensity ?? 0.004) * qrFirstLightBoost');
     expect(src).toContain('(config.lightGrainAlpha ?? 0.05)');
     expect(src).toContain('if (isDitheredMode) {');
-    expect(src).toContain('const grainChance = Math.min(');
+    expect(src).toContain('const grainChance = Math.max(');
   });
 
   it('removes center-lock writeback and module-local target quotas in dither correction', () => {
     const src = read('src/modules/qr-generator/pixel-matrix-dithered.ts');
     expect(src).not.toContain('matrix[cy][cx]');
     expect(src).not.toContain('targetNeed');
-    expect(src).toContain('totalViolationPixels');
+    expect(src).toContain('totalViolationEnergy');
+    expect(src).toContain('candidates.sort((a, b) => b.score - a.score)');
   });
 
   it('enforces final-raster decode gate with png roundtrip and single primary decoder', () => {
