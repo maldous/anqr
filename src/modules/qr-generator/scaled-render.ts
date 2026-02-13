@@ -110,7 +110,7 @@ export async function generateScaledQR(
   const forceBinaryFunctionPatterns = isDitheredMode;
   const isSubpixelMode =
     config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
-  const needsBothDarkAndLightColors = isDitheredMode || isSubpixelMode;
+  const needsBothDarkAndLightColors = isSubpixelMode;
 
   const debug = config.debugOverlayDither === true;
   if (debug) {
@@ -279,9 +279,12 @@ export async function generateScaledQR(
             ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
           }
         } else {
-          // Standard: draw with background color
-          ctx.fillStyle = effectiveBgColor;
-          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+          // Dithered modes are ink-first: leave paper open for light cells.
+          // Only non-dithered modes or explicit light drawing paths paint here.
+          if (!isDitheredMode) {
+            ctx.fillStyle = effectiveBgColor;
+            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+          }
         }
       }
     }
