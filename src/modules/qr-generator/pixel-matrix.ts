@@ -63,6 +63,18 @@ export async function generatePixelDecisionMatrix(
   // Route to mode-specific pixel generation
   switch (overlayMode) {
     case 'dithered':
+      if (config.ditherMode === 'blue_noise' || config.ditherKind === 'blue_noise') {
+        return generateBlueNoiseMatrix(
+          qr,
+          config,
+          overlayCanvas,
+          moduleCount,
+          scale,
+          effectiveIntensity,
+          canvasFactory,
+          createCanvasFn
+        );
+      }
       return generateDitheredMatrix(
         qr,
         config,

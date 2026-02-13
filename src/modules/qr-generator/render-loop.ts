@@ -228,6 +228,32 @@ export function renderModules(
             adjustedSize - ctx.lineWidth
           );
         } else if (useHalftoneRendering) {
+          // In halftone-dithered mode, paint a color backdrop first so the
+          // source image remains visible behind variable-size dots.
+          if (config.overlayMode === 'halftone-dithered') {
+            const cellColor = (overlayData as OverlayData | null)?.colors?.[row]?.[col];
+            if (cellColor) {
+              if (isDark) {
+                // Dark QR modules: keep backdrop moderately dark for contrast.
+                const darkBackdrop = 0.5;
+                const backR = Math.round(cellColor.r * darkBackdrop);
+                const backG = Math.round(cellColor.g * darkBackdrop);
+                const backB = Math.round(cellColor.b * darkBackdrop);
+                ctx.fillStyle = `rgb(${backR},${backG},${backB})`;
+              } else {
+                // Light QR modules: brighten backdrop to preserve scan-safe separation.
+                const lightBlend = 0.46;
+                const backR = Math.round(cellColor.r + (255 - cellColor.r) * lightBlend);
+                const backG = Math.round(cellColor.g + (255 - cellColor.g) * lightBlend);
+                const backB = Math.round(cellColor.b + (255 - cellColor.b) * lightBlend);
+                ctx.fillStyle = `rgb(${backR},${backG},${backB})`;
+              }
+              ctx.fillRect(drawX, drawY, adjustedSize, adjustedSize);
+              // Restore dot fill after backdrop pass.
+              ctx.fillStyle = finalModuleColor;
+            }
+          }
+
           // Use advanced halftone rendering with htDot/htCurve params
           // Cast to CanvasRenderingContext2D for drawing functions (safe because we only use common 2D methods)
           // Pass row and col for line shape rotation variation

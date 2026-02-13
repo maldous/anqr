@@ -27,12 +27,6 @@ import {
   isVersionInfo,
 } from '../qr-spec/qr-patterns';
 import type { CanvasFactory } from './canvas-factory';
-import {
-  SCALED_DARK_DESIRE_MAX,
-  SCALED_DARK_DESIRE_MIN,
-  SCALED_LIGHT_DESIRE_MAX,
-  SCALED_LIGHT_DESIRE_MIN,
-} from './dithering-constants';
 import type {
   CreateCanvasFn,
   OverlayData,
@@ -229,45 +223,6 @@ function distributeError(
   }
 }
 
-/**
- * Distribute RGB errors to neighboring pixels using the specified kernel.
- * Supports serpentine scanning and per-channel color dithering.
- */
-function distributeColorError(
-  errorsR: number[][],
-  errorsG: number[][],
-  errorsB: number[][],
-  x: number,
-  y: number,
-  errorR: number,
-  errorG: number,
-  errorB: number,
-  kernel: DiffusionKernelDef,
-  scaledSize: number,
-  leftToRight: boolean
-): void {
-  const { matrix, divisor, offset } = kernel;
-  for (let ky = 0; ky < matrix.length; ky++) {
-    for (let kx = 0; kx < matrix[ky].length; kx++) {
-      const weight = matrix[ky][kx];
-      if (weight === 0) continue;
-
-      let offsetX = kx - offset;
-      if (!leftToRight) offsetX = -offsetX;
-
-      const nx = x + offsetX;
-      const ny = y + ky;
-
-      if (nx >= 0 && nx < scaledSize && ny < scaledSize) {
-        const factor = weight / divisor;
-        errorsR[ny][nx] += errorR * factor;
-        errorsG[ny][nx] += errorG * factor;
-        errorsB[ny][nx] += errorB * factor;
-      }
-    }
-  }
-}
-
 function createEmptyMatrix(
   size: number,
   scale: number,
@@ -298,46 +253,48 @@ function shouldLockModule(
   version: number,
   config: QRGeneratorConfig
 ): boolean {
+  const preserveFunctional = config.preserveFunctionalPatterns !== false;
+
   // Fixed dark module is ALWAYS locked (scan critical per ISO/IEC 18004)
   if (row === moduleCount - 8 && col === 8) return true;
 
   // Check finder patterns - lock if preserveFinders is true (default) or not set
   if (isFinderPattern(row, col, moduleCount)) {
-    return config.preserveFinders !== false;
+    return preserveFunctional || config.preserveFinders !== false;
   }
 
   // Check timing patterns - lock if preserveTiming is true
   if (isTimingPattern(row, col, moduleCount)) {
-    return config.preserveTiming === true;
+    return preserveFunctional || config.preserveTiming === true;
   }
 
   // Check alignment patterns - lock if preserveAlignment is true
   if (isAlignmentPattern(row, col, moduleCount, version)) {
-    return config.preserveAlignment === true;
+    return preserveFunctional || config.preserveAlignment === true;
   }
 
   // Check format info - lock if protectFormatInfo is true
   if (isFormatInfo(row, col, moduleCount)) {
-    return config.protectFormatInfo === true;
+    return preserveFunctional || config.protectFormatInfo === true;
   }
 
   // Check version info - lock if protectVersionInfo is true
   if (isVersionInfo(row, col, moduleCount, version)) {
-    return config.protectVersionInfo === true;
+    return preserveFunctional || config.protectVersionInfo === true;
   }
 
   // Quiet zone separators around finders - lock with finders
   // Top-left separator
   if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) {
-    return config.preserveFinders !== false;
+    return preserveFunctional || config.preserveFinders !== false;
   }
   // Top-right separator
   if ((row === 7 && col >= moduleCount - 8) || (col === moduleCount - 8 && row <= 7)) {
-    return config.preserveFinders !== false;
+    return preserveFunctional || config.preserveFinders !== false;
   }
   // Bottom-left separator
   if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) {
-    return config.preserveFinders !== false;
+    return preserveFunctional || config.preserveFinders !== false;
   }
 
   return false;
@@ -352,11 +309,9 @@ function enforceModuleConstraints(
   version: number,
   config: QRGeneratorConfig
 ): void {
-  // Bounds chosen to preserve QR scannability while allowing some texture.
-  // Increased from 0.65/0.35 to 0.75/0.25 for better scannability with high-contrast overlays.
-  const DARK_MIN = 0.75; // dark modules must be at least 75% dark
-  const DARK_MAX = 0.97;
-  const LIGHT_MAX = 0.25; // light modules must be at most 25% dark
+  const baseDarkMin = clamp01(config.darkMinOccupancy ?? 0.56);
+  const DARK_MAX = 1.0;
+  const baseLightMax = clamp01(config.lightMaxOccupancy ?? 0.44);
 
   const half = Math.floor(scale / 2);
 
@@ -368,10 +323,10 @@ function enforceModuleConstraints(
       const y0 = mr * scale;
       const x0 = mc * scale;
 
-      // Force center sub-pixel to the true module value.
+      // Optional center lock for stricter correction passes.
       const cy = y0 + half;
       const cx = x0 + half;
-      if (matrix[cy] && typeof matrix[cy][cx] === 'boolean') {
+      if (config.forceCenterLock === true && matrix[cy] && typeof matrix[cy][cx] === 'boolean') {
         matrix[cy][cx] = qrIsDark;
       }
 
@@ -385,6 +340,21 @@ function enforceModuleConstraints(
       }
 
       const ratio = darkCount / total;
+      // Adaptive policy: high local contrast needs less correction.
+      let desireSum = 0;
+      let desireSqSum = 0;
+      for (let y = 0; y < scale; y++) {
+        for (let x = 0; x < scale; x++) {
+          const d = desire[y0 + y][x0 + x];
+          desireSum += d;
+          desireSqSum += d * d;
+        }
+      }
+      const desireMean = desireSum / total;
+      const variance = Math.max(0, desireSqSum / total - desireMean * desireMean);
+      const contrast = clamp01(Math.sqrt(variance) * 3.2);
+      const DARK_MIN = clamp01(baseDarkMin - contrast * 0.08);
+      const LIGHT_MAX = clamp01(baseLightMax + contrast * 0.08);
 
       if (qrIsDark) {
         // If too light, flip some light pixels with highest "desire" to dark.
@@ -421,7 +391,8 @@ function enforceModuleConstraints(
             candidates.sort((a, b) => a.score - b.score);
             for (let i = 0; i < excess && i < candidates.length; i++) {
               // Don't flip the center pixel we just forced.
-              if (candidates[i].y === cy && candidates[i].x === cx) continue;
+              if (config.forceCenterLock === true && candidates[i].y === cy && candidates[i].x === cx)
+                continue;
               matrix[candidates[i].y][candidates[i].x] = false;
             }
           }
@@ -441,11 +412,50 @@ function enforceModuleConstraints(
             }
             candidates.sort((a, b) => a.score - b.score);
             for (let i = 0; i < excess && i < candidates.length; i++) {
-              if (candidates[i].y === cy && candidates[i].x === cx) continue;
+              if (config.forceCenterLock === true && candidates[i].y === cy && candidates[i].x === cx)
+                continue;
               matrix[candidates[i].y][candidates[i].x] = false;
             }
           }
         }
+      }
+    }
+  }
+}
+
+function removeIsolatedSpeckles(
+  qr: QRCodeInstance,
+  matrix: boolean[][],
+  moduleCount: number,
+  scale: number,
+  version: number,
+  config: QRGeneratorConfig
+): void {
+  const size = matrix.length;
+  const copy = matrix.map((row) => row.slice());
+  for (let y = 1; y < size - 1; y++) {
+    for (let x = 1; x < size - 1; x++) {
+      const mr = Math.floor(y / scale);
+      const mc = Math.floor(x / scale);
+      if (
+        mr < 0 ||
+        mc < 0 ||
+        mr >= moduleCount ||
+        mc >= moduleCount ||
+        shouldLockModule(mr, mc, moduleCount, version, config)
+      ) {
+        continue;
+      }
+      const current = copy[y][x];
+      let sameNeighbors = 0;
+      for (let oy = -1; oy <= 1; oy++) {
+        for (let ox = -1; ox <= 1; ox++) {
+          if (ox === 0 && oy === 0) continue;
+          if (copy[y + oy][x + ox] === current) sameNeighbors++;
+        }
+      }
+      if (sameNeighbors <= 1) {
+        matrix[y][x] = qr.isDark(mr, mc);
       }
     }
   }
@@ -490,15 +500,21 @@ export async function generateDitheredMatrix(
   }
 
   const intensity = effectiveIntensity; // 0..1
-  const ditherStrength = (config.ditherStrength ?? 50) / 100;
+  const rawStrength = config.ditherStrength ?? 0.85;
+  const ditherStrength = rawStrength > 1 ? rawStrength / 100 : rawStrength;
+  const ditherScale = Math.max(0, config.ditherScale ?? 1);
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   // Get configurable dither settings
-  const serpentine = config.ditherSerpentine ?? false;
+  const serpentine = config.ditherSerpentine ?? true;
   const colorDitherMode = config.colorDither ?? 'none';
   const useColorDither = colorDitherMode !== 'none';
   const kernelName = (config.diffusionKernel ?? 'floyd_steinberg') as DiffusionKernel;
   const kernel = DIFFUSION_KERNELS[kernelName] ?? DIFFUSION_KERNELS.floyd_steinberg;
+  const ditherMode = config.ditherMode ?? 'error_diffusion';
+  const seed = config.seed ?? config.blueNoiseSeed ?? 1337;
+  const tileSize = config.blueNoiseTileSize ?? 64;
+  const noiseTile = generateBlueNoiseTile(tileSize, seed);
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d');
@@ -512,27 +528,16 @@ export async function generateDitheredMatrix(
   const colors: (RGBWithMeta | null)[][] = [];
   const desire: number[][] = [];
 
-  // For color dithering, we need separate R/G/B error buffers
-  // For grayscale/bw, we use a single error buffer based on luminance
-  const errorsR: number[][] = [];
-  const errorsG: number[][] = [];
-  const errorsB: number[][] = [];
   const errors: number[][] = [];
 
   for (let y = 0; y < scaledSize; y++) {
     matrix[y] = [];
     colors[y] = [];
     desire[y] = new Array(scaledSize).fill(0.5);
-    if (useColorDither) {
-      errorsR[y] = new Array(scaledSize).fill(0);
-      errorsG[y] = new Array(scaledSize).fill(0);
-      errorsB[y] = new Array(scaledSize).fill(0);
-    } else {
-      errors[y] = new Array(scaledSize).fill(0);
-    }
+    errors[y] = new Array(scaledSize).fill(0);
   }
 
-  const mix = clamp01(intensity * ditherStrength);
+  const mix = clamp01(intensity * ditherStrength * ditherScale);
 
   for (let y = 0; y < scaledSize; y++) {
     // Serpentine: alternate scan direction per row
@@ -559,100 +564,42 @@ export async function generateDitheredMatrix(
         continue;
       }
 
-      if (useColorDither) {
-        // Color dithering: process R, G, B channels separately
-        // Normalize to 0..1 and apply accumulated error
-        const rNorm = r / 255;
-        const gNorm = g / 255;
-        const bNorm = b / 255;
+      // ART-FIRST: generate a global halftone candidate from artwork only.
+      // QR bits are applied later in the projection/correction stage.
+      const overlayDark = 1 - luma01(r, g, b);
+      const n = sampleBlueNoise(x, y, noiseTile, tileSize);
+      const threshold = clamp01(0.5 + mix * (n - 0.5));
 
-        // Apply error from previous pixels
-        const rAdjusted = clamp01(rNorm + errorsR[y][x]);
-        const gAdjusted = clamp01(gNorm + errorsG[y][x]);
-        const bAdjusted = clamp01(bNorm + errorsB[y][x]);
-
-        // Quantize to nearest value (0 or 1 for each channel for 2-level dithering)
-        // But we want to preserve more levels for color richness
-        const rNew = rAdjusted > 0.5 ? 1 : 0;
-        const gNew = gAdjusted > 0.5 ? 1 : 0;
-        const bNew = bAdjusted > 0.5 ? 1 : 0;
-
-        // Calculate errors for each channel
-        const errR = (rAdjusted - rNew) * mix;
-        const errG = (gAdjusted - gNew) * mix;
-        const errB = (bAdjusted - bNew) * mix;
-
-        // Determine darkness from the dithered color's luminance
-        const ditheredLuma = luma01(rNew * 255, gNew * 255, bNew * 255);
-
-        // Blend toward QR bit for scannability
-        let d = lerp(qrIsDark ? 1 : 0, 1 - ditheredLuma, mix);
-        // Soft-clamp using wider scaled ranges — enforceModuleConstraints
-        // ensures scannability at the sub-pixel level
-        if (qrIsDark) {
-          d = clamp01(lerp(SCALED_DARK_DESIRE_MIN, SCALED_DARK_DESIRE_MAX, d));
-        } else {
-          d = clamp01(lerp(SCALED_LIGHT_DESIRE_MIN, SCALED_LIGHT_DESIRE_MAX, d));
-        }
-        desire[y][x] = d;
-
-        const isDark = d >= 0.5;
-        matrix[y][x] = isDark;
-
-        // Blend original and dithered color for richer output
-        colors[y][x] =
-          config.colorMode !== 'bw'
-            ? ({
-                r: Math.round(r * COLOR_PRESERVE_RATIO + rNew * 255 * (1 - COLOR_PRESERVE_RATIO)),
-                g: Math.round(g * COLOR_PRESERVE_RATIO + gNew * 255 * (1 - COLOR_PRESERVE_RATIO)),
-                b: Math.round(b * COLOR_PRESERVE_RATIO + bNew * 255 * (1 - COLOR_PRESERVE_RATIO)),
-              } as RGBi)
-            : null;
-
-        // Distribute color errors
-        distributeColorError(
-          errorsR,
-          errorsG,
-          errorsB,
-          x,
-          y,
-          errR,
-          errG,
-          errB,
-          kernel,
-          scaledSize,
-          leftToRight
-        );
+      let isDark: boolean;
+      if (ditherMode === 'blue_noise' && !useColorDither) {
+        isDark = overlayDark > threshold;
       } else {
-        // Grayscale/BW dithering: use luminance-based error diffusion
-        const overlayDark = 1 - luma01(r, g, b);
-        let d = lerp(qrIsDark ? 1 : 0, overlayDark, mix);
-
-        // Soft-clamp using wider scaled ranges — enforceModuleConstraints
-        // ensures scannability at the sub-pixel level
-        if (qrIsDark) {
-          d = clamp01(lerp(SCALED_DARK_DESIRE_MIN, SCALED_DARK_DESIRE_MAX, d));
-        } else {
-          d = clamp01(lerp(SCALED_LIGHT_DESIRE_MIN, SCALED_LIGHT_DESIRE_MAX, d));
-        }
-        desire[y][x] = d;
-
-        // Error diffusion over desired darkness
-        const adjusted = d + errors[y][x];
-        const isDark = adjusted >= 0.5;
-        matrix[y][x] = isDark;
-        colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
-
-        // Use original adjusted (not clamped) for error calculation to preserve some texture
-        const err = adjusted - (isDark ? 1 : 0);
-        // Distribute error using selected kernel
+        // Global error diffusion over artwork luminance, perturbed by blue-noise threshold
+        const adjusted = overlayDark + errors[y][x];
+        isDark = adjusted > threshold;
+        const err = (overlayDark - (isDark ? 1 : 0)) * mix;
         distributeError(errors, x, y, err, kernel, scaledSize, leftToRight);
       }
+
+      matrix[y][x] = isDark;
+      // Desire is artwork-driven and used later for minimal-cost correction ranking.
+      desire[y][x] = overlayDark;
+      colors[y][x] =
+        config.colorMode !== 'bw'
+          ? ({
+              r: Math.round(r * COLOR_PRESERVE_RATIO + r * (1 - COLOR_PRESERVE_RATIO)),
+              g: Math.round(g * COLOR_PRESERVE_RATIO + g * (1 - COLOR_PRESERVE_RATIO)),
+              b: Math.round(b * COLOR_PRESERVE_RATIO + b * (1 - COLOR_PRESERVE_RATIO)),
+            } as RGBi)
+          : null;
     }
   }
 
   // Post-pass: enforce per-module constraints (center pixel correctness + ratio bounds)
   enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, config);
+  if (config.cleanupSpeckle === true) {
+    removeIsolatedSpeckles(qr, matrix, moduleCount, scale, version, config);
+  }
 
   // Log key stats for debugging
   const center = Math.floor(scale / 2);
@@ -733,7 +680,7 @@ export async function generateBlueNoiseMatrix(
     desire[y] = new Array(scaledSize).fill(0.5);
   }
 
-  const seed = config.blueNoiseSeed ?? 1337;
+  const seed = config.seed ?? config.blueNoiseSeed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
   const tile = generateBlueNoiseTile(tileSize, seed);
 
@@ -756,19 +703,11 @@ export async function generateBlueNoiseMatrix(
       }
 
       const overlayDark = 1 - luma01(r, g, b);
-      let d = lerp(qrIsDark ? 1 : 0, overlayDark, intensity);
-      // Soft-clamp using wider scaled ranges — enforceModuleConstraints
-      // ensures scannability at the sub-pixel level
-      if (qrIsDark) {
-        d = clamp01(lerp(SCALED_DARK_DESIRE_MIN, SCALED_DARK_DESIRE_MAX, d));
-      } else {
-        d = clamp01(lerp(SCALED_LIGHT_DESIRE_MIN, SCALED_LIGHT_DESIRE_MAX, d));
-      }
-      desire[y][x] = d;
+      // ART-FIRST: base decision solely on artwork luminance + global noise field.
+      const d = clamp01(overlayDark * (0.75 + intensity * 0.5));
+      desire[y][x] = overlayDark;
 
       const n = sampleBlueNoise(x, y, tile, tileSize);
-      // Use d directly with blue noise threshold - the soft-clamped ranges
-      // and enforceModuleConstraints post-pass will ensure QR scannability
       const isDark = n < d;
 
       matrix[y][x] = isDark;
@@ -777,6 +716,9 @@ export async function generateBlueNoiseMatrix(
   }
 
   enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, config);
+  if (config.cleanupSpeckle === true) {
+    removeIsolatedSpeckles(qr, matrix, moduleCount, scale, version, config);
+  }
 
   log.debug('blue-noise-matrix generated', {
     scaledSize,
@@ -817,9 +759,24 @@ export async function generateHalftoneDitheredOverlayData(
     createCanvasFn
   );
 
+  // Also sample the original overlay at module resolution so halftone dot sizing
+  // preserves the actual image luminance instead of only QR-constrained density.
+  const moduleCanvas = await createCanvasFn(moduleCount, moduleCount);
+  const moduleCtx = moduleCanvas.getContext('2d');
+  let moduleData: Uint8ClampedArray | null = null;
+  if (moduleCtx) {
+    moduleCtx.imageSmoothingEnabled = true;
+    moduleCtx.imageSmoothingQuality = 'high';
+    moduleCtx.drawImage(overlayCanvas, 0, 0, moduleCount, moduleCount);
+    moduleData = moduleCtx.getImageData(0, 0, moduleCount, moduleCount).data;
+  }
+
   const overlayData: OverlayData = {};
   overlayData.colors = {};
   const total = scale * scale;
+  // 0 => pure original overlay luminance, 1 => pure dither density.
+  // Keep original image dominant so backdrop remains clearly visible.
+  const densityInfluence = clamp01(0.15 + effectiveIntensity * 0.15);
 
   for (let mr = 0; mr < moduleCount; mr++) {
     overlayData[mr] = {};
@@ -831,6 +788,18 @@ export async function generateHalftoneDitheredOverlayData(
       let sumG = 0;
       let sumB = 0;
       let colorCount = 0;
+      let srcR = 127;
+      let srcG = 127;
+      let srcB = 127;
+      let srcBrightness = 0.5;
+
+      if (moduleData) {
+        const srcIdx = (mr * moduleCount + mc) * 4;
+        srcR = moduleData[srcIdx];
+        srcG = moduleData[srcIdx + 1];
+        srcB = moduleData[srcIdx + 2];
+        srcBrightness = luma01(srcR, srcG, srcB);
+      }
 
       for (let sy = 0; sy < scale; sy++) {
         for (let sx = 0; sx < scale; sx++) {
@@ -848,17 +817,25 @@ export async function generateHalftoneDitheredOverlayData(
       }
 
       const density = darkCount / total;
-      overlayData[mr][mc] = 1 - density;
+      const densityBrightness = 1 - density;
+      overlayData[mr][mc] = clamp01(
+        lerp(srcBrightness, densityBrightness, densityInfluence)
+      );
 
       if (colorCount > 0) {
+        // Blend true source color with dither-aggregated color so the backdrop
+        // reads as the actual image while retaining dither texture character.
+        const ditherR = Math.round(sumR / colorCount);
+        const ditherG = Math.round(sumG / colorCount);
+        const ditherB = Math.round(sumB / colorCount);
+        const colorMix = clamp01(0.2 + effectiveIntensity * 0.25);
         overlayData.colors[mr][mc] = {
-          r: Math.round(sumR / colorCount),
-          g: Math.round(sumG / colorCount),
-          b: Math.round(sumB / colorCount),
+          r: Math.round(lerp(srcR, ditherR, colorMix)),
+          g: Math.round(lerp(srcG, ditherG, colorMix)),
+          b: Math.round(lerp(srcB, ditherB, colorMix)),
         };
       } else {
-        const gray = Math.round((1 - density) * 255);
-        overlayData.colors[mr][mc] = { r: gray, g: gray, b: gray };
+        overlayData.colors[mr][mc] = { r: srcR, g: srcG, b: srcB };
       }
     }
   }

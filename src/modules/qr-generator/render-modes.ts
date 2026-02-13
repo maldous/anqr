@@ -119,16 +119,18 @@ export function applyQROverlayMode(
       if (isDark) {
         result.halftoneBrightness = 0.5 + (htdTransformed - 0.5) * effectiveIntensity;
         if (htdColor) {
-          const dkF = computeDarkFactor(effectiveIntensity, 0.5);
+          // Keep dark-module dots clearly dark for scanner contrast.
+          const dkF = computeDarkFactor(effectiveIntensity, 0.35);
           result.moduleColor = `rgb(${Math.round(htdColor.r * dkF)},${Math.round(htdColor.g * dkF)},${Math.round(htdColor.b * dkF)})`;
         }
       } else {
+        // Keep light-module dots small/subtle so background image remains visible.
         result.halftoneBrightness = Math.max(
-          0.6,
+          0.68,
           0.5 + (htdTransformed - 0.5) * effectiveIntensity
         );
         if (htdColor) {
-          const ltBlend = computeLightBlend(effectiveIntensity, 0.4);
+          const ltBlend = computeLightBlend(effectiveIntensity, 0.72);
           const lightR = Math.round(htdColor.r + (255 - htdColor.r) * ltBlend);
           const lightG = Math.round(htdColor.g + (255 - htdColor.g) * ltBlend);
           const lightB = Math.round(htdColor.b + (255 - htdColor.b) * ltBlend);

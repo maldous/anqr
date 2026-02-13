@@ -44,11 +44,21 @@ export interface QRGeneratorConfig {
   ditherStrength?: number;
   blueNoiseSeed?: number;
   blueNoiseTileSize?: number;
+  ditherMode?: 'blue_noise' | 'error_diffusion';
+  ditherScale?: number;
 
   // Advanced dither settings
   ditherSerpentine?: boolean;
   diffusionKernel?: string;
   colorDither?: 'none' | 'per_channel' | 'perceptual';
+  dotMinRadiusPx?: number;
+  dotMaxRadiusPx?: number;
+  renderScalePerModule?: number;
+  darkMinOccupancy?: number;
+  lightMaxOccupancy?: number;
+  preserveFunctionalPatterns?: boolean;
+  cleanupSpeckle?: boolean;
+  forceCenterLock?: boolean;
 
   // ECC-based overlay intensity limits (0-100 per ECC level)
   // When provided, overrides the hardcoded defaults in getEffectiveIntensity()
