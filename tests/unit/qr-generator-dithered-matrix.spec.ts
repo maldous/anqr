@@ -39,6 +39,15 @@ function createMockQr(moduleCount: number) {
   };
 }
 
+/** Checkerboard QR mock but with spec fixed-dark module forced to true */
+function createMockQrWithFixedDark(moduleCount: number) {
+  return {
+    isDark: (row: number, col: number) =>
+      row === moduleCount - 8 && col === 8 ? true : (row + col) % 2 === 0,
+    getModuleCount: () => moduleCount,
+  };
+}
+
 /** Create an all-dark QR mock (every module is dark) */
 function createAllDarkQr(moduleCount: number) {
   return {
@@ -104,6 +113,18 @@ function mockCreateCanvasFn(filler: PixelFiller) {
       getContext: vi.fn(() => ctx),
     } as unknown as HTMLCanvasElement;
   };
+}
+
+function countDarkInModule(matrix: boolean[][], scale: number, moduleRow: number, moduleCol: number): number {
+  let dark = 0;
+  const y0 = moduleRow * scale;
+  const x0 = moduleCol * scale;
+  for (let y = y0; y < y0 + scale; y++) {
+    for (let x = x0; x < x0 + scale; x++) {
+      if (matrix[y]?.[x]) dark++;
+    }
+  }
+  return dark;
 }
 
 /** Create a createCanvasFn that returns null ctx (for error paths) */
@@ -397,10 +418,10 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
       expect(result.matrix.length).toBe(moduleCount * scale);
     });
 
-    it('exercises shouldLockModule with preserveFinders=false', async () => {
+    it('does not hard-lock finder modules when preserveFinders=false', async () => {
       const gen = await getDithered();
       const moduleCount = 21;
-      const scale = 2;
+      const scale = 8;
       const qr = createMockQr(moduleCount);
       const config = baseConfig({ preserveFinders: false });
       const overlay = createOverlayCanvas();
@@ -418,6 +439,148 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
       );
 
       expect(result.matrix.length).toBe(moduleCount * scale);
+      // Top-left finder module (0,0) should not be forced fully to QR bit when finder protection is off.
+      // With locking on and checkerboard mock QR, this module would be fully dark (64/64).
+      const darkCount = countDarkInModule(result.matrix, scale, 0, 0);
+      expect(darkCount).toBeGreaterThan(0);
+      expect(darkCount).toBeLessThan(scale * scale);
+    });
+
+    it('keeps finder modules locked when preserveFinders=true', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQr(moduleCount);
+      const config = baseConfig({ preserveFinders: true });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      const darkCount = countDarkInModule(result.matrix, scale, 0, 0);
+      expect(darkCount).toBe(scale * scale);
+    });
+
+    it('does not hard-lock timing modules when preserveTiming=false', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQr(moduleCount);
+      const config = baseConfig({ preserveTiming: false });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      // Timing module at (6,8) should not be forced fully to QR bit when preserveTiming is off.
+      const darkCount = countDarkInModule(result.matrix, scale, 6, 8);
+      expect(darkCount).toBeGreaterThan(0);
+      expect(darkCount).toBeLessThan(scale * scale);
+    });
+
+    it('keeps timing modules locked when preserveTiming=true', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQr(moduleCount);
+      const config = baseConfig({ preserveTiming: true });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      const darkCount = countDarkInModule(result.matrix, scale, 6, 8);
+      expect(darkCount).toBe(scale * scale);
+    });
+
+    it('does not hard-lock fixed dark module when all preserve/protect toggles are off', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQrWithFixedDark(moduleCount);
+      const config = baseConfig({
+        preserveFunctionalPatterns: false,
+        preserveFinders: false,
+        preserveTiming: false,
+        preserveAlignment: false,
+        protectFormatInfo: false,
+        protectVersionInfo: false,
+      });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      const darkCount = countDarkInModule(result.matrix, scale, moduleCount - 8, 8);
+      expect(darkCount).toBeGreaterThan(0);
+      expect(darkCount).toBeLessThan(scale * scale);
+    });
+
+    it('keeps fixed dark module locked when preserveFunctionalPatterns=true', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQrWithFixedDark(moduleCount);
+      const config = baseConfig({
+        preserveFunctionalPatterns: true,
+        preserveFinders: false,
+        preserveTiming: false,
+        preserveAlignment: false,
+        protectFormatInfo: false,
+        protectVersionInfo: false,
+      });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      const darkCount = countDarkInModule(result.matrix, scale, moduleCount - 8, 8);
+      expect(darkCount).toBe(scale * scale);
     });
 
     it('handles zero intensity (no overlay influence)', async () => {

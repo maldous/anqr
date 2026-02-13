@@ -103,6 +103,54 @@ class YieldController {
   }
 }
 
+type ResolvedPreservationOptions = {
+  preserveFinders: boolean;
+  preserveTiming: boolean;
+  preserveAlignment: boolean;
+  protectFormatInfo: boolean;
+  protectVersionInfo: boolean;
+};
+
+export function resolveOverlayPreservationOptions(params: {
+  overlayEnabled: boolean;
+  overlayMode: string | undefined;
+  safetyMode: string;
+  safetyLockFinders: boolean;
+  safetyLockTiming: boolean;
+  safetyLockAlign: boolean;
+  safetyLockFormat: boolean;
+  safetyLockVersion: boolean;
+  preserveFinders: boolean;
+  preserveTiming: boolean;
+  preserveAlignment: boolean;
+  protectFormatInfo: boolean;
+  protectVersionInfo: boolean;
+}): ResolvedPreservationOptions {
+  const isDitheredOverlayMode =
+    params.overlayMode === 'dithered' ||
+    params.overlayMode === 'blue_noise' ||
+    params.overlayMode === 'blue-noise';
+  const applySafetyLocks = params.overlayEnabled && params.safetyMode !== 'off' && !isDitheredOverlayMode;
+
+  return {
+    preserveFinders: applySafetyLocks
+      ? params.safetyLockFinders || params.preserveFinders
+      : params.preserveFinders,
+    preserveTiming: applySafetyLocks
+      ? params.safetyLockTiming || params.preserveTiming
+      : params.preserveTiming,
+    preserveAlignment: applySafetyLocks
+      ? params.safetyLockAlign || params.preserveAlignment
+      : params.preserveAlignment,
+    protectFormatInfo: applySafetyLocks
+      ? params.safetyLockFormat || params.protectFormatInfo
+      : params.protectFormatInfo,
+    protectVersionInfo: applySafetyLocks
+      ? params.safetyLockVersion || params.protectVersionInfo
+      : params.protectVersionInfo,
+  };
+}
+
 interface UseQRGeneratorResult {
   canvasRef: React.RefObject<HTMLCanvasElement>;
   canvas: HTMLCanvasElement | OffscreenCanvas | null;
@@ -501,6 +549,22 @@ function useQRGenerator(): UseQRGeneratorResult {
   const config = useMemo(() => {
     // Use debounced content to avoid frequent re-renders while typing
     const content = debouncedContent;
+    const resolvedOverlayMode = overlay.enabled ? overlay.mode : undefined;
+    const preservation = resolveOverlayPreservationOptions({
+      overlayEnabled: overlay.enabled,
+      overlayMode: resolvedOverlayMode,
+      safetyMode: safety.mode,
+      safetyLockFinders: safety.lockFinders,
+      safetyLockTiming: safety.lockTiming,
+      safetyLockAlign: safety.lockAlign,
+      safetyLockFormat: safety.lockFormat,
+      safetyLockVersion: safety.lockVersion,
+      preserveFinders: overlay.preserveFinders,
+      preserveTiming: overlay.preserveTiming,
+      preserveAlignment: overlay.preserveAlignment,
+      protectFormatInfo: overlay.protectFormatInfo,
+      protectVersionInfo: overlay.protectVersionInfo,
+    });
 
     return {
       content,
@@ -542,18 +606,15 @@ function useQRGenerator(): UseQRGeneratorResult {
       minContrastRatio: render.minContrastRatio,
 
       // === OVERLAY SETTINGS (with safety adjustments) ===
-      overlayMode: overlay.enabled ? overlay.mode : undefined,
+      overlayMode: resolvedOverlayMode,
       overlayIntensity: safetyAdjustedConfig.intensity,
       colorMode: overlay.colorMode,
       maxOverlayIntensityByEcc: safety.maxOverlayIntensityByEcc,
-      // Safety locks only apply when safety mode is enabled (not 'off')
-      // This allows users to toggle preserve options in the overlay section when safety is off
-      preserveFinders: (safety.mode !== 'off' && safety.lockFinders) || overlay.preserveFinders,
-      preserveTiming: (safety.mode !== 'off' && safety.lockTiming) || overlay.preserveTiming,
-      preserveAlignment: (safety.mode !== 'off' && safety.lockAlign) || overlay.preserveAlignment,
-      protectFormatInfo: (safety.mode !== 'off' && safety.lockFormat) || overlay.protectFormatInfo,
-      protectVersionInfo:
-        (safety.mode !== 'off' && safety.lockVersion) || overlay.protectVersionInfo,
+      preserveFinders: preservation.preserveFinders,
+      preserveTiming: preservation.preserveTiming,
+      preserveAlignment: preservation.preserveAlignment,
+      protectFormatInfo: preservation.protectFormatInfo,
+      protectVersionInfo: preservation.protectVersionInfo,
       logoSize: 25, // For center mode
 
       // Overlay preprocessing (wired to qr-generator filter* fields)
@@ -568,8 +629,8 @@ function useQRGenerator(): UseQRGeneratorResult {
       filterBlur: overlay.blurPx,
       filterSharpen: overlay.sharpen,
       filterPosterize: overlay.posterizeLevels,
-      // For threshold: if colorMode is 'bw', use 128 as default threshold unless user set one
-      filterThreshold: overlay.colorMode === 'bw' && !overlay.threshold ? 128 : overlay.threshold,
+      // Threshold remains opt-in from the overlay control. B&W mode itself is handled by colorMode.
+      filterThreshold: overlay.threshold,
       filterEdgeDetect: overlay.edgeDetect !== 'off',
       filterEdgeMode: overlay.edgeDetect,
       filterDuotone1: overlay.duotoneColors?.[0],
@@ -2233,6 +2294,10 @@ function useQRGenerator(): UseQRGeneratorResult {
         shouldGenerateStaticOverlayAnimation,
         sampleDelays: effectiveFrames.slice(0, 3).map((f) => f.delay),
       });
+      const previewScanConfigBase = {
+        ...debouncedConfig,
+        scanGateProfile: 'preview' as const,
+      };
 
       // Generate animation frames for base QR (no overlay)
       if (shouldGenerateBaseAnimation) {
@@ -2243,7 +2308,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
         if (hasPattern && !needsPerFrameQR) {
           // Generate base QR once, then apply pattern animation
-          const baseQR = await qrGenerator.generate(debouncedConfig, null);
+          const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
           if (!baseQR || isCancelled) return;
 
           const patternFrames = generateAnimationPatternFrames(
@@ -2261,7 +2326,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         } else if (hasPattern && needsPerFrameQR) {
           // Generate QR per frame for jitter, then apply pattern
           // First generate all pattern frames from a base QR to get the pattern progression
-          const baseQR = await qrGenerator.generate(debouncedConfig, null);
+          const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
           if (!baseQR || isCancelled) return;
 
           const _basePatternFrames = generateAnimationPatternFrames(
@@ -2283,7 +2348,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             }
 
             // Generate QR with jitter for this frame
-            const frameConfig = { ...debouncedConfig, frameIndex: i };
+            const frameConfig = { ...previewScanConfigBase, frameIndex: i };
             const jitteredQR = await qrGenerator.generate(frameConfig, null);
             if (!jitteredQR) continue;
 
@@ -2316,7 +2381,7 @@ function useQRGenerator(): UseQRGeneratorResult {
               if (isCancelled) return;
             }
 
-            const frameConfig = { ...debouncedConfig, frameIndex: i };
+            const frameConfig = { ...previewScanConfigBase, frameIndex: i };
             const qrFrame = await qrGenerator.generate(frameConfig, null);
             if (qrFrame) jitteredFrames.push(qrFrame);
           }
@@ -2329,7 +2394,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         } else {
           // For colorCycle/temporalDither without pattern or jitter
           // Generate base QR once, then create placeholder frames for post-processing
-          const staticBaseQR = await qrGenerator.generate(debouncedConfig, null);
+          const staticBaseQR = await qrGenerator.generate(previewScanConfigBase, null);
           if (!staticBaseQR || isCancelled) return;
 
           framesToProcess = Array.from({ length: frameCount }, () => ({
@@ -2430,7 +2495,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           });
         }
         return await qrGenerator.generate(
-          { ...debouncedConfig, frameIndex: frameIdx, overlayMode: 'dithered' },
+          { ...previewScanConfigBase, frameIndex: frameIdx, overlayMode: 'dithered' },
           frameOverlayCanvas
         );
       };
@@ -2465,7 +2530,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             } else {
               // Re-render QR with different frameIndex for temporal effects
               const frameConfig = {
-                ...debouncedConfig,
+                ...previewScanConfigBase,
                 frameIndex: frameIdx,
                 temporalOffset: useTemporalDither
                   ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
@@ -2507,7 +2572,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             }
 
             const frameConfig = {
-              ...debouncedConfig,
+              ...previewScanConfigBase,
               frameIndex: frameIdx,
               temporalOffset: useTemporalDither
                 ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
@@ -2544,7 +2609,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
             // Pass frame index for temporal dithering (also used in qr-generator for dither pattern offset)
             const frameConfig = {
-              ...debouncedConfig,
+              ...previewScanConfigBase,
               frameIndex: frameIdx,
               temporalOffset: useTemporalDither
                 ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)

@@ -75,11 +75,28 @@ class MatrixWrapper {
   }
 }
 
+type DitherAttemptPatch = {
+  darkMinOccupancy?: number;
+  lightMaxOccupancy?: number;
+  optimizeIterations?: number;
+  overlayIntensity?: number;
+  qrBitBiasStrength?: number;
+  qrFirstMode?: boolean;
+};
+
+type DitherPatchCacheEntry = {
+  patch: DitherAttemptPatch;
+  updatedAt: number;
+};
+
 export class QRGenerator {
   private qrcode: typeof qrcode;
   private canvasFactory: CanvasFactory;
   private _lastMatrix: boolean[][] | null = null;
   private _lastModuleCount: number = 0;
+  private _ditherPatchCache: Map<string, DitherPatchCacheEntry> = new Map();
+  private static readonly DITHER_PATCH_CACHE_MAX_ENTRIES = 64;
+  private static readonly DITHER_PATCH_CACHE_TTL_MS = 5 * 60 * 1000;
 
   /**
    * Create a QR generator instance
@@ -433,6 +450,9 @@ export class QRGenerator {
         };
 
         const clamp = (v: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, v));
+        const scanGateProfile = effectiveConfig.scanGateProfile ?? 'full';
+        const isPreviewScanGate = scanGateProfile === 'preview';
+        const isScanGateDisabled = scanGateProfile === 'off';
         const edgeImprintThreshold = clamp(effectiveConfig.edgeImprintThreshold ?? 0.2, 0.05, 0.5);
         const toneStdThreshold = clamp(effectiveConfig.toneStdThreshold ?? 0.12, 0.05, 0.3);
         const edgeWorsenLimit = clamp(effectiveConfig.edgeImprintWorsenLimit ?? 0.015, 0, 0.2);
@@ -451,59 +471,161 @@ export class QRGenerator {
           seed: effectiveConfig.seed,
         };
 
-        const attempts: Array<{
-          darkMinOccupancy?: number;
-          lightMaxOccupancy?: number;
-          optimizeIterations?: number;
-          overlayIntensity?: number;
-          qrFirstMode?: boolean;
-        }> = [
-          {
-            darkMinOccupancy: effectiveConfig.darkMinOccupancy ?? 0.0,
-            lightMaxOccupancy: effectiveConfig.lightMaxOccupancy ?? 1.0,
-            optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: Math.min(100, effectiveConfig.overlayIntensity ?? 100),
-          },
-          {
-            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.53, 0.52, 0.58),
-            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.47, 0.42, 0.48),
-            optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: Math.min(94, effectiveConfig.overlayIntensity ?? 100),
-          },
-          {
-            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.55, 0.53, 0.58),
-            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.45, 0.42, 0.47),
-            optimizeIterations: Math.max(8, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: Math.min(92, effectiveConfig.overlayIntensity ?? 100),
-          },
-          {
-            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.57, 0.55, 0.6),
-            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.43, 0.4, 0.45),
-            optimizeIterations: Math.max(10, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: Math.min(88, effectiveConfig.overlayIntensity ?? 100),
-          },
-          {
-            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.6, 0.57, 0.62),
-            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.4, 0.38, 0.43),
-            optimizeIterations: Math.max(12, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: Math.min(86, effectiveConfig.overlayIntensity ?? 100),
-          },
-        ];
+        const patchSignature = (patch: DitherAttemptPatch): string =>
+          JSON.stringify({
+            d: patch.darkMinOccupancy ?? null,
+            l: patch.lightMaxOccupancy ?? null,
+            i: patch.optimizeIterations ?? null,
+            o: patch.overlayIntensity ?? null,
+            b: patch.qrBitBiasStrength ?? null,
+            q: patch.qrFirstMode ?? null,
+          });
 
-        const buildAttemptConfig = (
-          patch: (typeof attempts)[number]
-        ): QRGeneratorConfig => ({
+        const scanCacheKey = [
+          effectiveConfig.content,
+          effectiveConfig.errorCorrection,
+          moduleCount,
+          effectiveConfig.overlayMode,
+          effectiveConfig.colorMode,
+          scanGateProfile,
+          effectiveConfig.preserveFinders === false ? 0 : 1,
+          effectiveConfig.preserveTiming === true ? 1 : 0,
+          effectiveConfig.preserveAlignment === true ? 1 : 0,
+          effectiveConfig.protectFormatInfo === true ? 1 : 0,
+          effectiveConfig.protectVersionInfo === true ? 1 : 0,
+          effectiveConfig.seed ?? 'seed:auto',
+        ].join('|');
+
+        const getCachedPatch = (): DitherAttemptPatch | null => {
+          const entry = this._ditherPatchCache.get(scanCacheKey);
+          if (!entry) return null;
+          if (Date.now() - entry.updatedAt > QRGenerator.DITHER_PATCH_CACHE_TTL_MS) {
+            this._ditherPatchCache.delete(scanCacheKey);
+            return null;
+          }
+          return { ...entry.patch };
+        };
+
+        const rememberPatch = (patch: DitherAttemptPatch): void => {
+          this._ditherPatchCache.set(scanCacheKey, {
+            patch: { ...patch },
+            updatedAt: Date.now(),
+          });
+          if (this._ditherPatchCache.size <= QRGenerator.DITHER_PATCH_CACHE_MAX_ENTRIES) return;
+          let oldestKey: string | null = null;
+          let oldestAt = Number.POSITIVE_INFINITY;
+          for (const [k, v] of this._ditherPatchCache.entries()) {
+            if (v.updatedAt < oldestAt) {
+              oldestAt = v.updatedAt;
+              oldestKey = k;
+            }
+          }
+          if (oldestKey) this._ditherPatchCache.delete(oldestKey);
+        };
+
+        const baseAttempts: DitherAttemptPatch[] = isPreviewScanGate
+          ? [
+              {
+                darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.0, 0, 1),
+                lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 1.0, 0, 1),
+                optimizeIterations: Math.max(2, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(100, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.24),
+              },
+              {
+                darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.56, 0.54, 0.62),
+                lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.38, 0.46),
+                optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(62, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.1, 0, 0.28),
+              },
+            ]
+          : [
+              {
+                darkMinOccupancy: effectiveConfig.darkMinOccupancy ?? 0.0,
+                lightMaxOccupancy: effectiveConfig.lightMaxOccupancy ?? 1.0,
+                optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(100, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.24),
+              },
+              {
+                darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.5, 0.5, 0.56),
+                lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.5, 0.44, 0.5),
+                optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(82, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03, 0, 0.24),
+              },
+              {
+                darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.53, 0.51, 0.56),
+                lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.47, 0.44, 0.49),
+                optimizeIterations: Math.max(7, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(74, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.06, 0, 0.24),
+              },
+              {
+                darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.55, 0.53, 0.58),
+                lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.45, 0.42, 0.47),
+                optimizeIterations: Math.max(8, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(66, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.09, 0, 0.24),
+              },
+              {
+                darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.57, 0.55, 0.6),
+                lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.43, 0.4, 0.45),
+                optimizeIterations: Math.max(9, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(58, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.12, 0, 0.24),
+              },
+              {
+                darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.58, 0.56, 0.62),
+                lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.42, 0.38, 0.44),
+                optimizeIterations: Math.max(10, effectiveConfig.optimizeIterations ?? 6),
+                overlayIntensity: Math.min(50, effectiveConfig.overlayIntensity ?? 100),
+                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.16, 0, 0.28),
+              },
+            ];
+
+        const attempts: DitherAttemptPatch[] = [];
+        const seenAttemptSignatures = new Set<string>();
+        const pushUniqueAttempt = (patch: DitherAttemptPatch): void => {
+          const sig = patchSignature(patch);
+          if (seenAttemptSignatures.has(sig)) return;
+          seenAttemptSignatures.add(sig);
+          attempts.push(patch);
+        };
+        const cachedPatch = getCachedPatch();
+        if (cachedPatch) pushUniqueAttempt(cachedPatch);
+        for (const patch of baseAttempts) pushUniqueAttempt(patch);
+
+        const buildAttemptConfig = (patch: DitherAttemptPatch): QRGeneratorConfig => ({
           ...effectiveConfig,
           ...fixedVisualPolicy,
-          preserveFunctionalPatterns: true,
+          preserveFunctionalPatterns: effectiveConfig.preserveFunctionalPatterns,
           forceCenterLock: false,
           cleanupSpeckle: false,
           darkMinOccupancy: patch.darkMinOccupancy,
           lightMaxOccupancy: patch.lightMaxOccupancy,
           optimizeIterations: patch.optimizeIterations,
           overlayIntensity: patch.overlayIntensity ?? effectiveConfig.overlayIntensity,
+          qrBitBiasStrength: patch.qrBitBiasStrength ?? effectiveConfig.qrBitBiasStrength,
           qrFirstMode: patch.qrFirstMode ?? (effectiveConfig.qrFirstMode ?? false),
         });
+
+        const buildDecodeRescuePatches = (): DitherAttemptPatch[] => {
+          const baseDark = clamp(effectiveConfig.darkMinOccupancy ?? 0.56, 0.5, 0.62);
+          const baseLight = clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.38, 0.5);
+          const baseBias = clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
+          const previewRescueIntensities = [54, 46, 38, 30, 24];
+          const fullRescueIntensities = [58, 50, 42, 34, 26, 18];
+          const intensities = isPreviewScanGate ? previewRescueIntensities : fullRescueIntensities;
+          return intensities.map((overlayIntensity, idx) => ({
+            darkMinOccupancy: clamp(baseDark + idx * 0.01, 0.5, 0.64),
+            lightMaxOccupancy: clamp(baseLight - idx * 0.01, 0.36, 0.5),
+            optimizeIterations: Math.max(4 + idx, effectiveConfig.optimizeIterations ?? 6),
+            overlayIntensity: Math.min(overlayIntensity, effectiveConfig.overlayIntensity ?? 100),
+            qrBitBiasStrength: clamp(baseBias + 0.1 + idx * 0.03, 0, 0.34),
+          }));
+        };
 
         const computeFinalRasterMetrics = (
           src: HTMLCanvasElement | OffscreenCanvas
@@ -615,11 +737,19 @@ export class QRGenerator {
           metrics: { edgeImprint: number; toneStd: number } | null;
           evaluatedCanvas: HTMLCanvasElement | OffscreenCanvas;
         }> => {
-          const finalRaster = await toFinalRasterCanvas(canvas);
+          if (isScanGateDisabled) {
+            return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
+          }
+          // Preview mode prioritizes generation throughput and checks decode on the render canvas.
+          // Full mode validates on an export-equivalent raster roundtrip.
+          const finalRaster = isPreviewScanGate ? canvas : await toFinalRasterCanvas(canvas);
           if (!runDecode(finalRaster)) {
             return { ok: false, baseDecodeOk: false, metrics: null, evaluatedCanvas: finalRaster };
           }
 
+          if (isPreviewScanGate) {
+            return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: finalRaster };
+          }
           const baseMetrics = computeFinalRasterMetrics(finalRaster);
           if (baseMetrics) {
             if (baseMetrics.edgeImprint > edgeImprintThreshold || baseMetrics.toneStd < toneStdThreshold) {
@@ -705,6 +835,7 @@ export class QRGenerator {
 
         let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
         let bestBaseDecodable: HTMLCanvasElement | OffscreenCanvas | null = null;
+        let bestBaseDecodablePatch: DitherAttemptPatch | null = null;
         let prevEdgeImprint: number | null = null;
         for (const patch of attempts) {
           const attemptCanvas = await renderScaled(buildAttemptConfig(patch));
@@ -713,6 +844,7 @@ export class QRGenerator {
             lastCanvas = evaluated.evaluatedCanvas;
             if (evaluated.baseDecodeOk && !bestBaseDecodable) {
               bestBaseDecodable = evaluated.evaluatedCanvas;
+              bestBaseDecodablePatch = patch;
             }
             if (
               evaluated.metrics &&
@@ -721,6 +853,7 @@ export class QRGenerator {
               prevEdgeImprint = evaluated.metrics.edgeImprint;
             }
             if (evaluated.ok) {
+              rememberPatch(patch);
               return evaluated.evaluatedCanvas;
             }
           } catch {
@@ -729,27 +862,50 @@ export class QRGenerator {
           }
         }
         if (bestBaseDecodable) {
+          if (bestBaseDecodablePatch) rememberPatch(bestBaseDecodablePatch);
           return bestBaseDecodable;
         }
 
+        const rescuePatches = buildDecodeRescuePatches();
+        for (const patch of rescuePatches) {
+          const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
+          const rescueRaster = isPreviewScanGate ? rescueCanvas : await toFinalRasterCanvas(rescueCanvas);
+          if (runDecode(rescueRaster)) {
+            rememberPatch(patch);
+            return rescueRaster;
+          }
+          lastCanvas = rescueRaster;
+        }
+
         const lastPatch = attempts[attempts.length - 1] || {};
-        if (effectiveConfig.qrFirstMode !== true) {
+        const requireDecodableResult = !isScanGateDisabled;
+        if (!requireDecodableResult && effectiveConfig.qrFirstMode !== true) {
           // Artistic mode defaults to art-preserving fallback unless QR-first is explicitly requested.
           return lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
         }
 
-        // Optional safety fallback: QR-first variants when explicitly enabled.
+        // Emergency scan fallback: QR-first variants with conservative intensity.
+        // This only runs when scan gating is enabled or QR-first was explicitly requested.
         let qrFirstLast: HTMLCanvasElement | OffscreenCanvas | null = null;
-        const qrFirstIntensities = [70, 62, 54, 46];
+        const qrFirstIntensities = isPreviewScanGate ? [62, 54, 46, 38, 30, 22] : [70, 62, 54, 46, 38, 30, 22];
         for (const intensity of qrFirstIntensities) {
           const qrFirstFallback = await renderScaled({
             ...buildAttemptConfig(lastPatch),
             qrFirstMode: true,
             overlayIntensity: Math.min(intensity, effectiveConfig.overlayIntensity ?? 100),
           });
-          const fallbackRaster = await toFinalRasterCanvas(qrFirstFallback);
+          const fallbackRaster = isPreviewScanGate
+            ? qrFirstFallback
+            : await toFinalRasterCanvas(qrFirstFallback);
           qrFirstLast = fallbackRaster;
           if (runDecode(fallbackRaster)) {
+            if (effectiveConfig.qrFirstMode === true) {
+              rememberPatch({
+                ...lastPatch,
+                qrFirstMode: true,
+                overlayIntensity: Math.min(intensity, effectiveConfig.overlayIntensity ?? 100),
+              });
+            }
             return fallbackRaster;
           }
         }

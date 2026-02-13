@@ -13,6 +13,15 @@ describe('qr-generator artistic guards', () => {
     expect(src).toContain('(config.lightGrainAlpha ?? 0.05)');
     expect(src).toContain('if (isDitheredMode) {');
     expect(src).toContain('const grainChance = Math.max(');
+    expect(src).toContain('const shouldForceBinaryModule = (row: number, col: number): boolean => {');
+    expect(src).toContain('if (isFinderPatternSpec(row, col, moduleCount) || isFinderSeparator(row, col)) {');
+    expect(src).toContain('return preserveFinders;');
+    expect(src).toContain('if (isTimingPatternSpec(row, col, moduleCount)) return preserveTiming;');
+    expect(src).toContain('if (isAlignmentPatternSpec(row, col, moduleCount, version)) return preserveAlignment;');
+    expect(src).toContain('if (isFormatInfoSpec(row, col, moduleCount)) return protectFormat;');
+    expect(src).toContain('if (isVersionInfoSpec(row, col, moduleCount, version)) return protectVersion;');
+    expect(src).toContain('const preserveFixedDark =');
+    expect(src).toContain('if (row === moduleCount - 8 && col === 8) return preserveFixedDark;');
   });
 
   it('removes center-lock writeback and module-local target quotas in dither correction', () => {
