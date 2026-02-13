@@ -312,111 +312,152 @@ function enforceModuleConstraints(
   const baseDarkMin = clamp01(config.darkMinOccupancy ?? 0.56);
   const DARK_MAX = 1.0;
   const baseLightMax = clamp01(config.lightMaxOccupancy ?? 0.44);
+  if (baseDarkMin <= 0.001 && baseLightMax >= 0.999) return;
 
   const half = Math.floor(scale / 2);
+  const total = scale * scale;
+  const maxIters = Math.max(1, Math.min(12, config.optimizeIterations ?? 6));
+  const occupancies: number[][] = Array.from({ length: moduleCount }, () =>
+    new Array(moduleCount).fill(0)
+  );
+  const darkMinMap: number[][] = Array.from({ length: moduleCount }, () =>
+    new Array(moduleCount).fill(baseDarkMin)
+  );
+  const lightMaxMap: number[][] = Array.from({ length: moduleCount }, () =>
+    new Array(moduleCount).fill(baseLightMax)
+  );
+  const locked: boolean[][] = Array.from({ length: moduleCount }, () =>
+    new Array(moduleCount).fill(false)
+  );
 
   for (let mr = 0; mr < moduleCount; mr++) {
     for (let mc = 0; mc < moduleCount; mc++) {
-      if (shouldLockModule(mr, mc, moduleCount, version, config)) continue;
+      locked[mr][mc] = shouldLockModule(mr, mc, moduleCount, version, config);
+    }
+  }
 
-      const qrIsDark = qr.isDark(mr, mc);
-      const y0 = mr * scale;
-      const x0 = mc * scale;
-
-      // Optional center lock for stricter correction passes.
-      const cy = y0 + half;
-      const cx = x0 + half;
-      if (config.forceCenterLock === true && matrix[cy] && typeof matrix[cy][cx] === 'boolean') {
-        matrix[cy][cx] = qrIsDark;
-      }
-
-      // Count dark pixels in this module block.
-      let darkCount = 0;
-      const total = scale * scale;
-      for (let y = 0; y < scale; y++) {
-        for (let x = 0; x < scale; x++) {
-          if (matrix[y0 + y][x0 + x]) darkCount++;
+  const recomputeModuleStats = (): void => {
+    for (let mr = 0; mr < moduleCount; mr++) {
+      for (let mc = 0; mc < moduleCount; mc++) {
+        const y0 = mr * scale;
+        const x0 = mc * scale;
+        let darkCount = 0;
+        let desireSum = 0;
+        let desireSq = 0;
+        for (let y = 0; y < scale; y++) {
+          for (let x = 0; x < scale; x++) {
+            if (matrix[y0 + y][x0 + x]) darkCount++;
+            const d = desire[y0 + y][x0 + x];
+            desireSum += d;
+            desireSq += d * d;
+          }
         }
+        occupancies[mr][mc] = darkCount / total;
+        const mean = desireSum / total;
+        const variance = Math.max(0, desireSq / total - mean * mean);
+        const contrast = clamp01(Math.sqrt(variance) * 3.2);
+        darkMinMap[mr][mc] = clamp01(baseDarkMin - contrast * 0.08);
+        lightMaxMap[mr][mc] = clamp01(baseLightMax + contrast * 0.08);
       }
+    }
+  };
 
-      const ratio = darkCount / total;
-      // Adaptive policy: high local contrast needs less correction.
-      let desireSum = 0;
-      let desireSqSum = 0;
-      for (let y = 0; y < scale; y++) {
-        for (let x = 0; x < scale; x++) {
-          const d = desire[y0 + y][x0 + x];
-          desireSum += d;
-          desireSqSum += d * d;
+  recomputeModuleStats();
+
+  for (let iter = 0; iter < maxIters; iter++) {
+    type Candidate = { y: number; x: number; score: number; toDark: boolean; mr: number; mc: number };
+    const candidates: Candidate[] = [];
+    let violationCount = 0;
+    let totalNeeded = 0;
+
+    for (let mr = 0; mr < moduleCount; mr++) {
+      for (let mc = 0; mc < moduleCount; mc++) {
+        if (locked[mr][mc]) continue;
+        const qrIsDark = qr.isDark(mr, mc);
+        const occ = occupancies[mr][mc];
+        const darkMin = darkMinMap[mr][mc];
+        const lightMax = lightMaxMap[mr][mc];
+
+        let targetNeed = 0;
+        let toDark = false;
+        if (qrIsDark && occ < darkMin) {
+          targetNeed = Math.ceil((darkMin - occ) * total);
+          toDark = true;
+        } else if (!qrIsDark && occ > lightMax) {
+          targetNeed = Math.ceil((occ - lightMax) * total);
+          toDark = false;
+        } else {
+          continue;
         }
-      }
-      const desireMean = desireSum / total;
-      const variance = Math.max(0, desireSqSum / total - desireMean * desireMean);
-      const contrast = clamp01(Math.sqrt(variance) * 3.2);
-      const DARK_MIN = clamp01(baseDarkMin - contrast * 0.08);
-      const LIGHT_MAX = clamp01(baseLightMax + contrast * 0.08);
+        violationCount++;
+        totalNeeded += targetNeed;
 
-      if (qrIsDark) {
-        // If too light, flip some light pixels with highest "desire" to dark.
-        if (ratio < DARK_MIN) {
-          const need = Math.ceil(DARK_MIN * total - darkCount);
-          if (need > 0) {
-            const candidates: { y: number; x: number; score: number }[] = [];
-            for (let y = 0; y < scale; y++) {
-              for (let x = 0; x < scale; x++) {
-                const yy = y0 + y;
-                const xx = x0 + x;
-                if (!matrix[yy][xx]) candidates.push({ y: yy, x: xx, score: desire[yy][xx] });
-              }
+        const y0 = mr * scale;
+        const x0 = mc * scale;
+        for (let y = 0; y < scale; y++) {
+          for (let x = 0; x < scale; x++) {
+            const yy = y0 + y;
+            const xx = x0 + x;
+            const current = matrix[yy][xx];
+            if ((toDark && current) || (!toDark && !current)) continue;
+            if (
+              config.forceCenterLock === true &&
+              yy === y0 + half &&
+              xx === x0 + half
+            ) {
+              continue;
             }
-            candidates.sort((a, b) => b.score - a.score);
-            for (let i = 0; i < need && i < candidates.length; i++) {
-              matrix[candidates[i].y][candidates[i].x] = true;
-            }
+
+            // Global energy: preserve art + avoid module-edge imprint + reduce scan violation.
+            const d = desire[yy][xx];
+            const beforeErr = Math.abs((current ? 1 : 0) - d);
+            const afterErr = Math.abs((toDark ? 1 : 0) - d);
+            const artPenalty = afterErr - beforeErr;
+            const edgePenalty = x === 0 || y === 0 || x === scale - 1 || y === scale - 1 ? 0.28 : 0;
+            const severity = Math.abs((toDark ? darkMin - occ : occ - lightMax));
+            const score = severity * 2.3 - artPenalty * 1.4 - edgePenalty + d * 0.15;
+            candidates.push({ y: yy, x: xx, score, toDark, mr, mc });
           }
         }
 
-        // If too dark, flip some dark pixels with lowest desire to light.
-        if (ratio > DARK_MAX) {
-          const excess = Math.ceil(darkCount - DARK_MAX * total);
-          if (excess > 0) {
-            const candidates: { y: number; x: number; score: number }[] = [];
-            for (let y = 0; y < scale; y++) {
-              for (let x = 0; x < scale; x++) {
-                const yy = y0 + y;
-                const xx = x0 + x;
-                if (matrix[yy][xx]) candidates.push({ y: yy, x: xx, score: desire[yy][xx] });
-              }
-            }
-            candidates.sort((a, b) => a.score - b.score);
-            for (let i = 0; i < excess && i < candidates.length; i++) {
-              // Don't flip the center pixel we just forced.
-              if (config.forceCenterLock === true && candidates[i].y === cy && candidates[i].x === cx)
-                continue;
-              matrix[candidates[i].y][candidates[i].x] = false;
-            }
-          }
+        // Keep module-local budget by embedding targetNeed as repeated severity weight.
+        if (targetNeed > 0) {
+          darkMinMap[mr][mc] = darkMin;
+          lightMaxMap[mr][mc] = lightMax;
         }
-      } else {
-        // Light modules: if too dark, flip some dark pixels with lowest desire to light.
-        if (ratio > LIGHT_MAX) {
-          const excess = Math.ceil(darkCount - LIGHT_MAX * total);
-          if (excess > 0) {
-            const candidates: { y: number; x: number; score: number }[] = [];
-            for (let y = 0; y < scale; y++) {
-              for (let x = 0; x < scale; x++) {
-                const yy = y0 + y;
-                const xx = x0 + x;
-                if (matrix[yy][xx]) candidates.push({ y: yy, x: xx, score: desire[yy][xx] });
-              }
-            }
-            candidates.sort((a, b) => a.score - b.score);
-            for (let i = 0; i < excess && i < candidates.length; i++) {
-              if (config.forceCenterLock === true && candidates[i].y === cy && candidates[i].x === cx)
-                continue;
-              matrix[candidates[i].y][candidates[i].x] = false;
-            }
-          }
+      }
+    }
+
+    if (violationCount === 0) break;
+    if (candidates.length === 0) break;
+
+    candidates.sort((a, b) => b.score - a.score);
+
+    // Apply top global candidates; global list avoids per-module block surgery patterns.
+    const maxFlips = Math.max(1, Math.min(candidates.length, totalNeeded));
+    let applied = 0;
+    for (let i = 0; i < candidates.length && applied < maxFlips; i++) {
+      const c = candidates[i];
+      const current = matrix[c.y][c.x];
+      if (c.toDark === current) continue;
+      matrix[c.y][c.x] = c.toDark;
+      applied++;
+    }
+
+    if (applied === 0) break;
+    recomputeModuleStats();
+  }
+
+  if (config.forceCenterLock === true) {
+    for (let mr = 0; mr < moduleCount; mr++) {
+      for (let mc = 0; mc < moduleCount; mc++) {
+        if (locked[mr][mc]) continue;
+        const y0 = mr * scale;
+        const x0 = mc * scale;
+        const cy = y0 + half;
+        const cx = x0 + half;
+        if (matrix[cy] && typeof matrix[cy][cx] === 'boolean') {
+          matrix[cy][cx] = qr.isDark(mr, mc);
         }
       }
     }
@@ -459,6 +500,46 @@ function removeIsolatedSpeckles(
       }
     }
   }
+}
+
+function computeQualityMetrics(
+  matrix: boolean[][],
+  desire: number[][],
+  scale: number
+): { artCorrelation: number; edgeImprint: number } {
+  const h = matrix.length;
+  const w = matrix[0]?.length ?? 0;
+  if (h === 0 || w === 0) return { artCorrelation: 0, edgeImprint: 0 };
+
+  let mae = 0;
+  let count = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      mae += Math.abs((matrix[y][x] ? 1 : 0) - desire[y][x]);
+      count++;
+    }
+  }
+  const artCorrelation = 1 - mae / Math.max(1, count);
+
+  let boundaryDiff = 0;
+  let nonBoundaryDiff = 0;
+  let boundaryCount = 0;
+  let nonBoundaryCount = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w - 1; x++) {
+      const d = Math.abs((matrix[y][x] ? 1 : 0) - (matrix[y][x + 1] ? 1 : 0));
+      if ((x + 1) % scale === 0) {
+        boundaryDiff += d;
+        boundaryCount++;
+      } else {
+        nonBoundaryDiff += d;
+        nonBoundaryCount++;
+      }
+    }
+  }
+  const b = boundaryDiff / Math.max(1, boundaryCount);
+  const n = nonBoundaryDiff / Math.max(1, nonBoundaryCount);
+  return { artCorrelation: clamp01(artCorrelation), edgeImprint: b - n };
 }
 
 /**
@@ -587,9 +668,9 @@ export async function generateDitheredMatrix(
       colors[y][x] =
         config.colorMode !== 'bw'
           ? ({
-              r: Math.round(r * COLOR_PRESERVE_RATIO + r * (1 - COLOR_PRESERVE_RATIO)),
-              g: Math.round(g * COLOR_PRESERVE_RATIO + g * (1 - COLOR_PRESERVE_RATIO)),
-              b: Math.round(b * COLOR_PRESERVE_RATIO + b * (1 - COLOR_PRESERVE_RATIO)),
+              r,
+              g,
+              b,
             } as RGBi)
           : null;
     }
@@ -619,6 +700,7 @@ export async function generateDitheredMatrix(
       module: { row: sampleMr, col: sampleMc, qrIsDark: qr.isDark(sampleMr, sampleMc) },
       centerPixel: { y: sy, x: sx, isDark: matrix[sy]?.[sx], desire: desire[sy]?.[sx] },
     },
+    quality: computeQualityMetrics(matrix, desire, scale),
   });
 
   return { matrix, colors, scale, overlayData: null, effectiveIntensity };

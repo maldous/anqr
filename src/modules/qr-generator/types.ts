@@ -59,6 +59,7 @@ export interface QRGeneratorConfig {
   preserveFunctionalPatterns?: boolean;
   cleanupSpeckle?: boolean;
   forceCenterLock?: boolean;
+  optimizeIterations?: number;
 
   // ECC-based overlay intensity limits (0-100 per ECC level)
   // When provided, overrides the hardcoded defaults in getEffectiveIntensity()

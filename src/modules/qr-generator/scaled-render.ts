@@ -149,12 +149,57 @@ export async function generateScaledQR(
     return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
   };
   const dotMinRadiusPx = Math.max(0.2, config.dotMinRadiusPx ?? subPixelSize * 0.18);
-  const dotMaxRadiusPx = Math.max(dotMinRadiusPx + 0.1, config.dotMaxRadiusPx ?? subPixelSize * 0.52);
+  const dotMaxRadiusPx = Math.max(dotMinRadiusPx + 0.1, config.dotMaxRadiusPx ?? subPixelSize * 0.58);
   const maxRadiusBound = subPixelSize * 0.5;
+  const seed = config.seed ?? 1337;
+  const radiusBins = 7;
 
-  const drawDitherDot = (x: number, y: number, radius: number): void => {
+  const hash01 = (x: number, y: number, s: number): number => {
+    const n = Math.sin(x * 12.9898 + y * 78.233 + s * 37.719) * 43758.5453;
+    return n - Math.floor(n);
+  };
+
+  const quantizeRadius = (r: number): number => {
+    const t = Math.max(0, Math.min(1, (r - dotMinRadiusPx) / Math.max(1e-6, dotMaxRadiusPx - dotMinRadiusPx)));
+    const q = Math.round(t * (radiusBins - 1)) / Math.max(1, radiusBins - 1);
+    return dotMinRadiusPx + q * (dotMaxRadiusPx - dotMinRadiusPx);
+  };
+
+  const localVariance = (x: number, y: number): number => {
+    const c = colors[y]?.[x] as PixelColor | undefined;
+    if (!c) return 0;
+    const luma = (p: PixelColor) => (0.299 * p.r + 0.587 * p.g + 0.114 * p.b) / 255;
+    const center = luma(c);
+    let sum = 0;
+    let n = 0;
+    const nb = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ];
+    for (const [ox, oy] of nb) {
+      const p = colors[y + oy]?.[x + ox] as PixelColor | undefined;
+      if (!p) continue;
+      const d = luma(p) - center;
+      sum += d * d;
+      n++;
+    }
+    return n > 0 ? Math.min(1, Math.sqrt(sum / n) * 3.0) : 0;
+  };
+
+  const drawDitherDot = (x: number, y: number, radius: number, jitterN: number): void => {
+    const jitterAmp = subPixelSize * 0.18;
+    const jx = (hash01(x, y, seed + 11) - 0.5) * 2 * jitterAmp * jitterN;
+    const jy = (hash01(x, y, seed + 29) - 0.5) * 2 * jitterAmp * jitterN;
     ctx.beginPath();
-    ctx.arc(x + subPixelSize / 2, y + subPixelSize / 2, Math.min(radius, maxRadiusBound), 0, Math.PI * 2);
+    ctx.arc(
+      x + subPixelSize / 2 + jx,
+      y + subPixelSize / 2 + jy,
+      Math.min(radius, maxRadiusBound),
+      0,
+      Math.PI * 2
+    );
     ctx.fill();
   };
 
@@ -198,8 +243,14 @@ export async function generateScaledQR(
             const darkB = dark.b;
             ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
             const luma = (0.299 * darkR + 0.587 * darkG + 0.114 * darkB) / 255;
-            const radius = dotMinRadiusPx + (1 - luma) * (dotMaxRadiusPx - dotMinRadiusPx);
-            drawDitherDot(dx, dy, radius);
+            const varN = localVariance(x, y);
+            const noiseN = hash01(x, y, seed);
+            const rawRadius =
+              dotMinRadiusPx +
+              (1 - luma) * (dotMaxRadiusPx - dotMinRadiusPx) * (0.78 + 0.34 * varN) +
+              (noiseN - 0.5) * (dotMaxRadiusPx - dotMinRadiusPx) * 0.22;
+            const radius = quantizeRadius(Math.max(dotMinRadiusPx, rawRadius));
+            drawDitherDot(dx, dy, radius, 1.0);
           } else {
             // For subpixel modes: use raw overlay color
             ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
@@ -214,14 +265,14 @@ export async function generateScaledQR(
         // Light module: draw with background color or overlay color
         if (needsBothDarkAndLightColors && useColorRendering && color) {
           if (isDitheredMode) {
-            const light = adjustLumaPreserveChroma(color, 0.9, 0.88);
-            const lightR = light.r;
-            const lightG = light.g;
-            const lightB = light.b;
-            ctx.fillStyle = `rgb(${lightR},${lightG},${lightB})`;
-            const luma = (0.299 * lightR + 0.587 * lightG + 0.114 * lightB) / 255;
-            const radius = dotMinRadiusPx + luma * (dotMaxRadiusPx - dotMinRadiusPx) * 0.75;
-            drawDitherDot(dx, dy, radius);
+            // Ink-only rendering model: keep paper mostly open for highlights.
+            // Optional sparse warm/cool paper grain prevents sterile flat whites.
+            const n = hash01(x, y, seed + 71);
+            if (n > 0.992) {
+              const tint = adjustLumaPreserveChroma(color, 0.95, 0.35);
+              ctx.fillStyle = `rgba(${tint.r},${tint.g},${tint.b},0.08)`;
+              drawDitherDot(dx, dy, dotMinRadiusPx * 0.55, 0.5);
+            }
           } else {
             // For subpixel modes: use raw overlay color
             ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
