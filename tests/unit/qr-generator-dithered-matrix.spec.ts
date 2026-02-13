@@ -552,6 +552,38 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
       expect(darkCount).toBeLessThan(scale * scale);
     });
 
+    it('does not hard-lock fixed dark module when only finder preservation is enabled', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQrWithFixedDark(moduleCount);
+      const config = baseConfig({
+        preserveFunctionalPatterns: false,
+        preserveFinders: true,
+        preserveTiming: false,
+        preserveAlignment: false,
+        protectFormatInfo: false,
+        protectVersionInfo: false,
+      });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      const darkCount = countDarkInModule(result.matrix, scale, moduleCount - 8, 8);
+      expect(darkCount).toBeGreaterThan(0);
+      expect(darkCount).toBeLessThan(scale * scale);
+    });
+
     it('keeps fixed dark module locked when preserveFunctionalPatterns=true', async () => {
       const gen = await getDithered();
       const moduleCount = 21;

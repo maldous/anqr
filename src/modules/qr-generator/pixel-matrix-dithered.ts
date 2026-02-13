@@ -280,7 +280,7 @@ function createEmptyMatrix(
 /**
  * Check if a module should be locked based on config preserve/protect settings.
  * This allows users to include structural modules in the overlay rendering when desired.
- * The fixed dark module at (moduleCount-8, 8) is ALWAYS locked (scan critical).
+ * The fixed dark module follows preserveFunctionalPatterns (so artistic dithering can remove it).
  */
 function shouldLockModule(
   row: number,
@@ -303,13 +303,7 @@ function shouldLockModule(
   const protectVersion = preserveFunctional
     ? config.protectVersionInfo !== false
     : config.protectVersionInfo === true;
-  const preserveFixedDark =
-    preserveFunctional ||
-    preserveFinders ||
-    preserveTiming ||
-    preserveAlignment ||
-    protectFormat ||
-    protectVersion;
+  const preserveFixedDark = preserveFunctional;
   const isFinderSeparator =
     (row === 7 && col <= 7) ||
     (col === 7 && row <= 7) ||

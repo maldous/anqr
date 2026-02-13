@@ -86,17 +86,18 @@ function detectBWFromOverlayData(overlayData: OverlayData, moduleCount: number):
 }
 
 /**
- * Check if a module is a structural pattern (finder, alignment, timing, format, version)
- * Structural modules should ALWAYS be preserved for QR scannability
+ * Check if a module is a structural pattern (finder, alignment, timing, format, version).
+ * Structural modules are preserved based on active preserve/protect config.
  */
 function isStructuralModule(
   row: number,
   col: number,
   moduleCount: number,
-  version: number
+  version: number,
+  config: QRGeneratorConfig
 ): boolean {
-  // Fixed dark module is ALWAYS structural (scan critical per ISO/IEC 18004)
-  if (row === moduleCount - 8 && col === 8) return true;
+  // Fixed dark module is only structural in full functional-preservation mode.
+  if (row === moduleCount - 8 && col === 8) return config.preserveFunctionalPatterns === true;
 
   return (
     isFinderPattern(row, col, moduleCount) ||
@@ -180,7 +181,7 @@ export function applyDitherToMatrix(
 
       // CRITICAL: Structural modules are NEVER modified
       if (
-        isStructuralModule(row, col, moduleCount, version) ||
+        isStructuralModule(row, col, moduleCount, version, config) ||
         isQuietZoneSeparator(row, col, moduleCount)
       ) {
         result[row][col] = qrIsDark;
