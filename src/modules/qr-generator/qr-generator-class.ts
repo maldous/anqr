@@ -442,7 +442,7 @@ export class QRGenerator {
           },
           {
             preserveFunctionalPatterns: true,
-            forceCenterLock: true,
+            forceCenterLock: false,
             cleanupSpeckle: false,
             darkMinOccupancy: Math.max(
               effectiveConfig.darkMinOccupancy !== undefined
@@ -459,10 +459,10 @@ export class QRGenerator {
           },
           {
             preserveFunctionalPatterns: true,
-            forceCenterLock: true,
+            forceCenterLock: false,
             cleanupSpeckle: true,
-            darkMinOccupancy: Math.max(effectiveConfig.darkMinOccupancy ?? 0.56, 0.68),
-            lightMaxOccupancy: Math.min(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.32),
+            darkMinOccupancy: Math.max(effectiveConfig.darkMinOccupancy ?? 0.56, 0.62),
+            lightMaxOccupancy: Math.min(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.38),
             optimizeIterations: Math.max(effectiveConfig.optimizeIterations ?? 6, 10),
           },
         ];

@@ -262,29 +262,17 @@ export async function generateScaledQR(
           ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
         }
       } else {
-        // Light module: draw with background color or overlay color
+        // Dithered modes are strict ink-only: never draw light-cell dots.
+        if (isDitheredMode) {
+          continue;
+        }
+        // Non-dithered light rendering paths.
         if (needsBothDarkAndLightColors && useColorRendering && color) {
-          if (isDitheredMode) {
-            // Ink-only rendering model: keep paper mostly open for highlights.
-            // Optional sparse warm/cool paper grain prevents sterile flat whites.
-            const n = hash01(x, y, seed + 71);
-            if (n > 0.992) {
-              const tint = adjustLumaPreserveChroma(color, 0.95, 0.35);
-              ctx.fillStyle = `rgba(${tint.r},${tint.g},${tint.b},0.08)`;
-              drawDitherDot(dx, dy, dotMinRadiusPx * 0.55, 0.5);
-            }
-          } else {
-            // For subpixel modes: use raw overlay color
-            ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-          }
+          ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
         } else {
-          // Dithered modes are ink-first: leave paper open for light cells.
-          // Only non-dithered modes or explicit light drawing paths paint here.
-          if (!isDitheredMode) {
-            ctx.fillStyle = effectiveBgColor;
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-          }
+          ctx.fillStyle = effectiveBgColor;
+          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
         }
       }
     }
