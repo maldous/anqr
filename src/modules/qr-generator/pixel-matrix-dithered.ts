@@ -356,8 +356,9 @@ function enforceModuleConstraints(
         const mean = desireSum / total;
         const variance = Math.max(0, desireSq / total - mean * mean);
         const contrast = clamp01(Math.sqrt(variance) * 3.2);
-        darkMinMap[mr][mc] = clamp01(baseDarkMin - contrast * 0.08);
-        lightMaxMap[mr][mc] = clamp01(baseLightMax + contrast * 0.08);
+        // Keep adaptive bounds inside artist-safe ranges to avoid blocky over-correction.
+        darkMinMap[mr][mc] = clamp01(Math.max(0.52, Math.min(0.62, baseDarkMin - contrast * 0.06)));
+        lightMaxMap[mr][mc] = clamp01(Math.max(0.38, Math.min(0.48, baseLightMax + contrast * 0.06)));
       }
     }
   };
@@ -400,13 +401,7 @@ function enforceModuleConstraints(
             const xx = x0 + x;
             const current = matrix[yy][xx];
             if ((toDark && current) || (!toDark && !current)) continue;
-            if (
-              config.forceCenterLock === true &&
-              yy === y0 + half &&
-              xx === x0 + half
-            ) {
-              continue;
-            }
+            // Never force center-lock during global optimization; preserve continuity.
 
             // Global energy: preserve art + avoid module-edge imprint + reduce scan violation.
             const d = desire[yy][xx];
@@ -420,11 +415,6 @@ function enforceModuleConstraints(
           }
         }
 
-        // Keep module-local budget by embedding targetNeed as repeated severity weight.
-        if (targetNeed > 0) {
-          darkMinMap[mr][mc] = darkMin;
-          lightMaxMap[mr][mc] = lightMax;
-        }
       }
     }
 
@@ -448,20 +438,7 @@ function enforceModuleConstraints(
     recomputeModuleStats();
   }
 
-  if (config.forceCenterLock === true) {
-    for (let mr = 0; mr < moduleCount; mr++) {
-      for (let mc = 0; mc < moduleCount; mc++) {
-        if (locked[mr][mc]) continue;
-        const y0 = mr * scale;
-        const x0 = mc * scale;
-        const cy = y0 + half;
-        const cx = x0 + half;
-        if (matrix[cy] && typeof matrix[cy][cx] === 'boolean') {
-          matrix[cy][cx] = qr.isDark(mr, mc);
-        }
-      }
-    }
-  }
+  // Do not add a post-center-lock pass; it re-imprints module structure.
 }
 
 function removeIsolatedSpeckles(
