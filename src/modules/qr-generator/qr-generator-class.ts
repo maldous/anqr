@@ -15,7 +15,7 @@ import {
   setStringToBytes,
 } from '../qr-encoder';
 import { verifyQRStructure } from '../qr-spec';
-import { decodeFromCanvas, decodeQR } from '../qr-decoder';
+import { decodeFromCanvas, decodeQR, decodeQRLegacy } from '../qr-decoder';
 import { qrMatrixCache } from './cache';
 import { type CanvasFactory, defaultBrowserCanvasFactory } from './canvas-factory';
 import {
@@ -437,15 +437,25 @@ export class QRGenerator {
             preserveFunctionalPatterns: true,
             forceCenterLock: false,
             cleanupSpeckle: false,
-            darkMinOccupancy: effectiveConfig.darkMinOccupancy ?? 0.56,
-            lightMaxOccupancy: effectiveConfig.lightMaxOccupancy ?? 0.44,
+            darkMinOccupancy: effectiveConfig.darkMinOccupancy ?? 0.0,
+            lightMaxOccupancy: effectiveConfig.lightMaxOccupancy ?? 1.0,
           },
           {
             preserveFunctionalPatterns: true,
             forceCenterLock: true,
             cleanupSpeckle: false,
-            darkMinOccupancy: Math.max(effectiveConfig.darkMinOccupancy ?? 0.56, 0.6),
-            lightMaxOccupancy: Math.min(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.42),
+            darkMinOccupancy: Math.max(
+              effectiveConfig.darkMinOccupancy !== undefined
+                ? effectiveConfig.darkMinOccupancy
+                : 0.55,
+              0.55
+            ),
+            lightMaxOccupancy: Math.min(
+              effectiveConfig.lightMaxOccupancy !== undefined
+                ? effectiveConfig.lightMaxOccupancy
+                : 0.45,
+              0.45
+            ),
           },
           {
             preserveFunctionalPatterns: true,
@@ -453,6 +463,16 @@ export class QRGenerator {
             cleanupSpeckle: true,
             darkMinOccupancy: Math.max(effectiveConfig.darkMinOccupancy ?? 0.56, 0.75),
             lightMaxOccupancy: Math.min(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.25),
+            optimizeIterations: Math.max(effectiveConfig.optimizeIterations ?? 6, 10),
+          },
+          {
+            preserveFunctionalPatterns: true,
+            forceCenterLock: true,
+            cleanupSpeckle: true,
+            darkMinOccupancy: Math.max(effectiveConfig.darkMinOccupancy ?? 0.56, 0.8),
+            lightMaxOccupancy: Math.min(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.2),
+            optimizeIterations: Math.max(effectiveConfig.optimizeIterations ?? 6, 12),
+            renderScalePerModule: Math.min(effectiveConfig.renderScalePerModule ?? 18, 14),
           },
         ];
 
@@ -461,7 +481,16 @@ export class QRGenerator {
           const runDecode = (src: HTMLCanvasElement | OffscreenCanvas): boolean => {
             if (typeof HTMLCanvasElement !== 'undefined' && src instanceof HTMLCanvasElement) {
               const decoded = decodeFromCanvas(src);
-              return decoded?.success === true && decoded?.data === effectiveConfig.content;
+              if (!(decoded?.success === true && decoded?.data === effectiveConfig.content)) {
+                return false;
+              }
+              // Secondary decoder is advisory; do not override primary failure.
+              const ctx = src.getContext('2d');
+              if (ctx) {
+                const imageData = ctx.getImageData(0, 0, src.width, src.height);
+                void decodeQRLegacy(imageData, { inversionAttempts: 'attemptBoth' });
+              }
+              return true;
             }
             const decoded = decodeCanvasData(src);
             return decoded?.success === true && decoded?.data === effectiveConfig.content;
