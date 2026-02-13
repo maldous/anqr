@@ -1339,6 +1339,7 @@
     "extreme": "322",
     "extremeMode": "322",
     "halftone": "324",
+    "halftoneDitheredMode": "1803",
     "halftoneMode": "324",
     "mosaic": "326",
     "mosaicMode": "326",

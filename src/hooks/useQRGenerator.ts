@@ -4,8 +4,17 @@
  * Supports animated GIF overlays
  */
 
-import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createLogger } from '@/lib/logger';
 import {
   type AnimationFrame,
@@ -1052,7 +1061,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           setIsLoadingOverlay(false);
         });
     }
-  }, [overlay.file]);
+  }, [overlay.file, overlay.gifDisposalHandling]);
 
   // Apply geometric transforms when raw canvas or transform settings change
   // NOTE: Color adjustments are now done at moduleCount resolution in qr-generator.js
@@ -1806,7 +1815,12 @@ function useQRGenerator(): UseQRGeneratorResult {
         currentFrame,
         frameIdx,
         lastRendered,
-        action: lastRendered < 0 || frameIdx < lastRendered ? 'replay' : frameIdx > lastRendered ? 'forward' : 'noop',
+        action:
+          lastRendered < 0 || frameIdx < lastRendered
+            ? 'replay'
+            : frameIdx > lastRendered
+              ? 'forward'
+              : 'noop',
       });
 
       if (lastRendered < 0 || frameIdx < lastRendered) {
@@ -2352,7 +2366,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       const generateArtworkFrame = async (
         frameOverlayCanvas: HTMLCanvasElement | OffscreenCanvas,
-        frameIdx: number,
+        frameIdx: number
       ): Promise<HTMLCanvasElement | OffscreenCanvas | null> => {
         try {
           const useAutoMask =
@@ -2399,7 +2413,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         }
         return await qrGenerator.generate(
           { ...debouncedConfig, frameIndex: frameIdx, overlayMode: 'dithered' },
-          frameOverlayCanvas,
+          frameOverlayCanvas
         );
       };
 
@@ -2645,6 +2659,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     animation.colorCycle,
     animation.moduleJitterPx,
     applyGeometricTransforms,
+    overlay.mode,
   ]);
 
   // Determine if we're still preparing animation
