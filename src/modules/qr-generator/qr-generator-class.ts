@@ -15,6 +15,7 @@ import {
   setStringToBytes,
 } from '../qr-encoder';
 import { verifyQRStructure } from '../qr-spec';
+import { decodeFromCanvas, decodeQR } from '../qr-decoder';
 import { qrMatrixCache } from './cache';
 import { type CanvasFactory, defaultBrowserCanvasFactory } from './canvas-factory';
 import {
@@ -380,8 +381,10 @@ export class QRGenerator {
     // Default to 'dithered' to match the store default in qr-store.ts
     // IMPORTANT: This must happen BEFORE the scale factor check!
     // =======================================================================
-    const effectiveOverlayMode =
+    const overlayModeWithDefault =
       processedOverlayCanvas && !config.overlayMode ? 'dithered' : config.overlayMode;
+
+    const effectiveOverlayMode = overlayModeWithDefault;
 
     const effectiveConfig = {
       ...config,
@@ -404,19 +407,124 @@ export class QRGenerator {
       overlayIntensity: config.overlayIntensity,
     });
     if (scale > 1 && processedOverlayCanvas) {
-      return await generateScaledQR(
-        qr,
-        effectiveConfig, // Use effectiveConfig with corrected overlayMode
-        processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
-        moduleCount,
-        scale,
-        this.createCanvas.bind(this),
-        this.canvasFactory,
-        this.storeMatrix.bind(this) as (
-          qr: { isDark(row: number, col: number): boolean; getModuleCount(): number },
-          moduleCount: number
-        ) => void
-      );
+      const renderScaled = async (cfg: QRGeneratorConfig) =>
+        await generateScaledQR(
+          qr,
+          cfg,
+          processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
+          moduleCount,
+          scale,
+          this.createCanvas.bind(this),
+          this.canvasFactory,
+          this.storeMatrix.bind(this) as (
+            qr: { isDark(row: number, col: number): boolean; getModuleCount(): number },
+            moduleCount: number
+          ) => void
+        );
+
+      if (effectiveConfig.overlayMode === 'dithered') {
+        const decodeCanvasData = (
+          c: HTMLCanvasElement | OffscreenCanvas
+        ): { success: boolean; data: string | null } | null => {
+          const ctx = c.getContext('2d');
+          if (!ctx) return null;
+          const imageData = ctx.getImageData(0, 0, c.width, c.height);
+          return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
+        };
+
+        const attempts: Partial<QRGeneratorConfig>[] = [
+          {
+            preserveFunctionalPatterns: true,
+            forceCenterLock: false,
+            cleanupSpeckle: false,
+            darkMinOccupancy: effectiveConfig.darkMinOccupancy ?? 0.56,
+            lightMaxOccupancy: effectiveConfig.lightMaxOccupancy ?? 0.44,
+          },
+          {
+            preserveFunctionalPatterns: true,
+            forceCenterLock: true,
+            cleanupSpeckle: false,
+            darkMinOccupancy: Math.max(effectiveConfig.darkMinOccupancy ?? 0.56, 0.6),
+            lightMaxOccupancy: Math.min(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.42),
+          },
+          {
+            preserveFunctionalPatterns: true,
+            forceCenterLock: true,
+            cleanupSpeckle: true,
+            darkMinOccupancy: Math.max(effectiveConfig.darkMinOccupancy ?? 0.56, 0.75),
+            lightMaxOccupancy: Math.min(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.25),
+          },
+        ];
+
+        let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
+        const decodeScenarios = (canvas: HTMLCanvasElement | OffscreenCanvas): boolean => {
+          const runDecode = (src: HTMLCanvasElement | OffscreenCanvas): boolean => {
+            if (typeof HTMLCanvasElement !== 'undefined' && src instanceof HTMLCanvasElement) {
+              const decoded = decodeFromCanvas(src);
+              return decoded?.success === true && decoded?.data === effectiveConfig.content;
+            }
+            const decoded = decodeCanvasData(src);
+            return decoded?.success === true && decoded?.data === effectiveConfig.content;
+          };
+          if (!runDecode(canvas)) return false;
+          if (
+            typeof document === 'undefined' ||
+            typeof HTMLCanvasElement === 'undefined' ||
+            !(canvas instanceof HTMLCanvasElement)
+          ) {
+            return true;
+          }
+
+          const scenarios = [
+            { blur: 0.8, exposure: -0.2 },
+            { blur: 1.2, exposure: 0.25 },
+          ];
+
+          for (const s of scenarios) {
+            const sim = document.createElement('canvas');
+            sim.width = canvas.width;
+            sim.height = canvas.height;
+            const simCtx = sim.getContext('2d');
+            if (!simCtx) return false;
+            simCtx.filter = `blur(${s.blur}px) brightness(${1 + s.exposure})`;
+            simCtx.drawImage(canvas, 0, 0);
+            simCtx.filter = 'none';
+            if (!runDecode(sim)) return false;
+          }
+
+          // iPhone-like off-axis capture simulation: mild perspective/skew.
+          const warp = document.createElement('canvas');
+          warp.width = canvas.width;
+          warp.height = canvas.height;
+          const wctx = warp.getContext('2d');
+          if (!wctx) return false;
+          const skewX = canvas.width * 0.03;
+          const skewY = canvas.height * 0.02;
+          wctx.setTransform(1, -skewY / canvas.height, skewX / canvas.width, 1, 0, 0);
+          wctx.filter = 'blur(0.8px) brightness(0.95)';
+          wctx.drawImage(canvas, 0, 0, canvas.width - skewX, canvas.height - skewY);
+          wctx.setTransform(1, 0, 0, 1, 0, 0);
+          wctx.filter = 'none';
+          if (!runDecode(warp)) return false;
+
+          return true;
+        };
+
+        for (const patch of attempts) {
+          const canvas = await renderScaled({ ...effectiveConfig, ...patch });
+          lastCanvas = canvas;
+          try {
+            if (decodeScenarios(canvas)) {
+              return canvas;
+            }
+          } catch {
+            // Keep iterating toward stricter correction settings.
+          }
+        }
+        return lastCanvas as HTMLCanvasElement | OffscreenCanvas;
+      }
+
+      return await renderScaled(effectiveConfig);
     }
 
     // =======================================================================

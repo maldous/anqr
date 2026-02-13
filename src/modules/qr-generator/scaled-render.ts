@@ -16,7 +16,6 @@ import {
 } from './drawing';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
-import { computeDarkFactor, computeLightBlend } from './render-modes';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
 import { validateColor } from './utils';
 
@@ -61,8 +60,8 @@ export async function generateScaledQR(
   const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
   const marginModules = Math.max(quietZoneMin, config.margin);
 
-  // Calculate pixel size
-  const subPixelSize = Math.max(1, Math.round(config.moduleSize / scale));
+  // Calculate micro-pixel size with fractional support for smoother high-density rendering.
+  const subPixelSize = Math.max(0.5, config.moduleSize / scale);
   const effectiveModuleSize = subPixelSize * scale;
 
   // UNIFIED: Apply frame settings
@@ -71,7 +70,7 @@ export async function generateScaledQR(
       ? effectiveModuleSize * 4
       : 0;
   const marginPx = marginModules * effectiveModuleSize;
-  const size = scaledSize * subPixelSize + marginPx * 2 + frameExtra;
+  const size = Math.round(scaledSize * subPixelSize + marginPx * 2 + frameExtra);
 
   const canvas = await createCanvasFn(size, size);
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -108,6 +107,7 @@ export async function generateScaledQR(
     config.overlayMode === 'dithered' ||
     config.overlayMode === 'blue_noise' ||
     config.overlayMode === 'blue-noise';
+  const forceBinaryFunctionPatterns = isDitheredMode;
   const isSubpixelMode =
     config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
   const needsBothDarkAndLightColors = isDitheredMode || isSubpixelMode;
@@ -132,20 +132,31 @@ export async function generateScaledQR(
     });
   }
 
-  // Fixed color factor intensity — decoupled from the ECC-based intensity cap.
-  // The ECC cap (effectiveIntensity) controls dithering PATTERN density (how many
-  // sub-pixels are flipped), but the per-pixel color treatment should always produce
-  // strong contrast for phone scanning regardless of ECC level.
-  const COLOR_FACTOR_INTENSITY = 0.85;
-  const overlayDkStructural = computeDarkFactor(COLOR_FACTOR_INTENSITY, 0.35);
-  const overlayLtStructural = computeLightBlend(COLOR_FACTOR_INTENSITY, 0.9);
-  const overlayDkTexture = computeDarkFactor(COLOR_FACTOR_INTENSITY, 0.72);
-  const overlayLtTexture = computeLightBlend(COLOR_FACTOR_INTENSITY, 0.18);
+  const adjustLumaPreserveChroma = (
+    c: PixelColor,
+    targetLuma: number,
+    chromaScale: number
+  ): { r: number; g: number; b: number } => {
+    const gray = (c.r + c.g + c.b) / 3;
+    let r = gray + (c.r - gray) * chromaScale;
+    let g = gray + (c.g - gray) * chromaScale;
+    let b = gray + (c.b - gray) * chromaScale;
+    const currentLuma = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    const delta = (targetLuma - currentLuma) * 255;
+    r = Math.max(0, Math.min(255, r + delta));
+    g = Math.max(0, Math.min(255, g + delta));
+    b = Math.max(0, Math.min(255, b + delta));
+    return { r: Math.round(r), g: Math.round(g), b: Math.round(b) };
+  };
+  const dotMinRadiusPx = Math.max(0.2, config.dotMinRadiusPx ?? subPixelSize * 0.18);
+  const dotMaxRadiusPx = Math.max(dotMinRadiusPx + 0.1, config.dotMaxRadiusPx ?? subPixelSize * 0.52);
+  const maxRadiusBound = subPixelSize * 0.5;
 
-  // Texture dots (opposite to their QR module) are blended toward the module's
-  // target color so they never stray far from the module's intended brightness.
-  // Without this, a black overlay pixel creates a pure-black dot in a light module.
-  const TEXTURE_TOWARD_MODULE = 0.6;
+  const drawDitherDot = (x: number, y: number, radius: number): void => {
+    ctx.beginPath();
+    ctx.arc(x + subPixelSize / 2, y + subPixelSize / 2, Math.min(radius, maxRadiusBound), 0, Math.PI * 2);
+    ctx.fill();
+  };
 
   // Render all pixels
   for (let y = 0; y < scaledSize; y++) {
@@ -174,14 +185,6 @@ export async function generateScaledQR(
 
       if (!(isDark || shouldDrawLightPixel)) continue;
 
-      // Map sub-pixel back to QR module to distinguish structural vs texture dots
-      const qrModuleRow = Math.floor(y / scale);
-      const qrModuleCol = Math.floor(x / scale);
-      const isQrDark =
-        qrModuleRow < moduleCount &&
-        qrModuleCol < moduleCount &&
-        qr.isDark(qrModuleRow, qrModuleCol);
-
       const dx = marginPx + x * subPixelSize;
       const dy = marginPx + y * subPixelSize;
 
@@ -189,17 +192,14 @@ export async function generateScaledQR(
         // Dark module: use overlay color if available, otherwise foreground color
         if (useColorRendering && color) {
           if (isDitheredMode) {
-            const dkFactor = isQrDark ? overlayDkStructural : overlayDkTexture;
-            let darkR = Math.round(color.r * dkFactor);
-            let darkG = Math.round(color.g * dkFactor);
-            let darkB = Math.round(color.b * dkFactor);
-            if (!isQrDark) {
-              darkR = Math.round(darkR + (255 - darkR) * TEXTURE_TOWARD_MODULE);
-              darkG = Math.round(darkG + (255 - darkG) * TEXTURE_TOWARD_MODULE);
-              darkB = Math.round(darkB + (255 - darkB) * TEXTURE_TOWARD_MODULE);
-            }
+            const dark = adjustLumaPreserveChroma(color, 0.22, 1.08);
+            const darkR = dark.r;
+            const darkG = dark.g;
+            const darkB = dark.b;
             ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+            const luma = (0.299 * darkR + 0.587 * darkG + 0.114 * darkB) / 255;
+            const radius = dotMinRadiusPx + (1 - luma) * (dotMaxRadiusPx - dotMinRadiusPx);
+            drawDitherDot(dx, dy, radius);
           } else {
             // For subpixel modes: use raw overlay color
             ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
@@ -214,17 +214,14 @@ export async function generateScaledQR(
         // Light module: draw with background color or overlay color
         if (needsBothDarkAndLightColors && useColorRendering && color) {
           if (isDitheredMode) {
-            const ltBlend = isQrDark ? overlayLtTexture : overlayLtStructural;
-            let lightR = Math.round(color.r + (255 - color.r) * ltBlend);
-            let lightG = Math.round(color.g + (255 - color.g) * ltBlend);
-            let lightB = Math.round(color.b + (255 - color.b) * ltBlend);
-            if (isQrDark) {
-              lightR = Math.round(lightR * (1 - TEXTURE_TOWARD_MODULE));
-              lightG = Math.round(lightG * (1 - TEXTURE_TOWARD_MODULE));
-              lightB = Math.round(lightB * (1 - TEXTURE_TOWARD_MODULE));
-            }
+            const light = adjustLumaPreserveChroma(color, 0.9, 0.88);
+            const lightR = light.r;
+            const lightG = light.g;
+            const lightB = light.b;
             ctx.fillStyle = `rgb(${lightR},${lightG},${lightB})`;
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+            const luma = (0.299 * lightR + 0.587 * lightG + 0.114 * lightB) / 255;
+            const radius = dotMinRadiusPx + luma * (dotMaxRadiusPx - dotMinRadiusPx) * 0.75;
+            drawDitherDot(dx, dy, radius);
           } else {
             // For subpixel modes: use raw overlay color
             ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
@@ -242,7 +239,8 @@ export async function generateScaledQR(
   // UNIFIED: Draw styled finder patterns on top of pixel rendering
   // Only draw finders separately if preserveFinders is true OR there's no overlay
   // When preserveFinders=false with overlay, finder modules were already rendered with overlay effects
-  const shouldDrawFindersFirst = config.preserveFinders !== false || !overlayCanvas;
+  const shouldDrawFindersFirst =
+    forceBinaryFunctionPatterns || config.preserveFinders !== false || !overlayCanvas;
 
   const finderPositions = [
     { row: 0, col: 0 }, // Top-left
@@ -255,14 +253,24 @@ export async function generateScaledQR(
       // Position is in module coordinates, convert to pixels
       const x = marginPx + pos.col * effectiveModuleSize;
       const y = marginPx + pos.row * effectiveModuleSize;
-      drawFinderPatternComplete(ctx, x, y, effectiveModuleSize, config);
+      if (forceBinaryFunctionPatterns) {
+        drawFinderPatternComplete(ctx, x, y, effectiveModuleSize, {
+          ...config,
+          gradient: { type: 'none', stops: [] },
+          fgColor: effectiveFgColor,
+          bgColor: effectiveBgColor,
+        });
+      } else {
+        drawFinderPatternComplete(ctx, x, y, effectiveModuleSize, config);
+      }
     }
   }
 
   // UNIFIED: Draw styled alignment patterns (for version 2+)
   // Only draw alignment patterns separately if preserveAlignment is true OR there's no overlay
   // When preserveAlignment=false with overlay, alignment modules were already rendered with overlay effects
-  const shouldDrawAlignmentFirst = config.preserveAlignment !== false || !overlayCanvas;
+  const shouldDrawAlignmentFirst =
+    forceBinaryFunctionPatterns || config.preserveAlignment !== false || !overlayCanvas;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
   if (version >= 2 && shouldDrawAlignmentFirst) {
     const alignPositions = getAlignmentPositionsCached(version, moduleCount);
@@ -272,13 +280,22 @@ export async function generateScaledQR(
       // Convert to pixel center position
       const centerX = marginPx + (pos.col + 0.5) * effectiveModuleSize;
       const centerY = marginPx + (pos.row + 0.5) * effectiveModuleSize;
-      drawAlignmentPattern(ctx, centerX, centerY, effectiveModuleSize, alignmentStyle, config);
+      if (forceBinaryFunctionPatterns) {
+        drawAlignmentPattern(ctx, centerX, centerY, effectiveModuleSize, alignmentStyle, {
+          ...config,
+          gradient: { type: 'none', stops: [] },
+          fgColor: effectiveFgColor,
+          bgColor: effectiveBgColor,
+        });
+      } else {
+        drawAlignmentPattern(ctx, centerX, centerY, effectiveModuleSize, alignmentStyle, config);
+      }
     }
   }
 
   // Preserve timing pattern modules on top (scan critical)
   // When preserveTiming is false, we intentionally leave timing modules subject to the overlay.
-  const shouldPreserveTiming = config.preserveTiming === true;
+  const shouldPreserveTiming = forceBinaryFunctionPatterns || config.preserveTiming === true;
   if (shouldPreserveTiming) {
     const timingStyle = config.timingStyle || 'match_module';
     // Horizontal timing (row 6, between finders)
@@ -288,7 +305,11 @@ export async function generateScaledQR(
       const x = marginPx + col * effectiveModuleSize;
       const y = marginPx + timingRow * effectiveModuleSize;
       if (isDark) {
-        ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+        ctx.fillStyle = forceBinaryFunctionPatterns
+          ? effectiveFgColor
+          : useGradient && gradientFill
+            ? gradientFill
+            : effectiveFgColor;
         drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
       } else {
         // Override any overlay color for light timing modules
@@ -303,7 +324,11 @@ export async function generateScaledQR(
       const x = marginPx + timingCol * effectiveModuleSize;
       const y = marginPx + row * effectiveModuleSize;
       if (isDark) {
-        ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+        ctx.fillStyle = forceBinaryFunctionPatterns
+          ? effectiveFgColor
+          : useGradient && gradientFill
+            ? gradientFill
+            : effectiveFgColor;
         drawTimingModule(ctx, x, y, effectiveModuleSize, timingStyle, config);
       } else {
         ctx.fillStyle = effectiveBgColor;
@@ -314,8 +339,8 @@ export async function generateScaledQR(
 
   // Preserve format + version info modules on top (scan critical)
   // These are small fixed areas, and should be kept clean when protection is enabled.
-  const protectFormat = config.protectFormatInfo === true;
-  const protectVersion = config.protectVersionInfo === true;
+  const protectFormat = forceBinaryFunctionPatterns || config.protectFormatInfo === true;
+  const protectVersion = forceBinaryFunctionPatterns || config.protectVersionInfo === true;
 
   if (protectFormat || protectVersion) {
     let formatCount = 0;
@@ -331,7 +356,11 @@ export async function generateScaledQR(
         const y = marginPx + row * effectiveModuleSize;
 
         if (isDark) {
-          ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+          ctx.fillStyle = forceBinaryFunctionPatterns
+            ? effectiveFgColor
+            : useGradient && gradientFill
+              ? gradientFill
+              : effectiveFgColor;
         } else {
           ctx.fillStyle = effectiveBgColor;
         }
@@ -349,7 +378,11 @@ export async function generateScaledQR(
     if (dmRow >= 0 && dmRow < moduleCount && dmCol >= 0 && dmCol < moduleCount) {
       const x = marginPx + dmCol * effectiveModuleSize;
       const y = marginPx + dmRow * effectiveModuleSize;
-      ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+      ctx.fillStyle = forceBinaryFunctionPatterns
+        ? effectiveFgColor
+        : useGradient && gradientFill
+          ? gradientFill
+          : effectiveFgColor;
       ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
     }
 

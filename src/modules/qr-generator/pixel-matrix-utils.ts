@@ -13,12 +13,13 @@ const _log = createLogger('GENERATE');
  * Get scale factor based on overlay mode
  */
 export function getScaleFactor(overlayMode: string | undefined, config: QRGeneratorConfig): number {
+  const renderScale = Math.max(8, Math.min(16, Math.round(config.renderScalePerModule ?? 12)));
   switch (overlayMode) {
     case 'dithered':
-      return 4;
+      return renderScale;
     case 'blue-noise':
     case 'blue_noise':
-      return 4;
+      return renderScale;
     case 'subpixel':
     case 'subpixel-size':
       return config.subpixelGrid ?? 3;
