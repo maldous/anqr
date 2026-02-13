@@ -9,8 +9,7 @@
  *
  * Scannability constraints
  * - Structural modules are fully locked using qr-spec pattern locking.
- * - The CENTER sub-pixel of every non-structural module is forced to the true QR bit.
- * - Per-module dark-pixel ratio is bounded (data modules only).
+ * - Data-module occupancy is corrected after art-first dithering.
  * - HIGH-CONTRAST B&W images use QR-first mode (no dithering) to guarantee scannability.
  */
 
@@ -39,9 +38,6 @@ import type {
 const log = createLogger('DITHER');
 
 type RGBi = { r: number; g: number; b: number };
-
-/** Ratio of original overlay color preserved when blending with dithered output (color dither mode). */
-const COLOR_PRESERVE_RATIO = 0.7;
 
 /**
  * Generate a QR-first matrix for high-contrast B&W images.
@@ -76,6 +72,26 @@ async function generateBWFirstMatrix(
 
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
+  const clampByte = (v: number): number => Math.max(0, Math.min(255, Math.round(v)));
+  const mapShadeWithSourceColor = (
+    srcR: number,
+    srcG: number,
+    srcB: number,
+    shade: number,
+    qrDark: boolean
+  ): RGBi => {
+    const gray = (srcR + srcG + srcB) / 3;
+    const chromaScale = qrDark ? 0.9 : 0.58;
+    let rOut = gray + (srcR - gray) * chromaScale;
+    let gOut = gray + (srcG - gray) * chromaScale;
+    let bOut = gray + (srcB - gray) * chromaScale;
+    const currentShade = rgbToGray(clampByte(rOut), clampByte(gOut), clampByte(bOut));
+    const delta = shade - currentShade;
+    rOut += delta;
+    gOut += delta;
+    bOut += delta;
+    return { r: clampByte(rOut), g: clampByte(gOut), b: clampByte(bOut) };
+  };
 
   // How much the overlay influences the shade (0 = no texture, 1 = full texture range)
   const textureAmount = Math.min(1, effectiveIntensity);
@@ -161,7 +177,10 @@ async function generateBWFirstMatrix(
         shade = qrIsDark ? 0 : 255;
       }
 
-      colors[y][x] = config.colorMode !== 'bw' ? ({ r: shade, g: shade, b: shade } as RGBi) : null;
+      colors[y][x] =
+        config.colorMode !== 'bw'
+          ? mapShadeWithSourceColor(r, g, b, shade, qrIsDark)
+          : null;
     }
   }
 
@@ -183,6 +202,23 @@ function luma01(r: number, g: number, b: number): number {
 
 function clamp01(x: number): number {
   return x < 0 ? 0 : x > 1 ? 1 : x;
+}
+
+function shapeOverlayDarkness(overlayDark: number): number {
+  const t = clamp01(overlayDark);
+  // Preserve shadow anchor while lifting mids so subject structure survives dithering.
+  const gammaLift = Math.pow(t, 0.9);
+  const smooth = t * t * (3 - 2 * t);
+  const midBoost = gammaLift + 0.14 * (1 - Math.abs(2 * smooth - 1));
+  return clamp01(0.58 * gammaLift + 0.42 * midBoost);
+}
+
+function moduleCenterWeight(x: number, y: number, scale: number): number {
+  const fx = ((x % scale) + 0.5) / Math.max(1, scale) - 0.5;
+  const fy = ((y % scale) + 0.5) / Math.max(1, scale) - 0.5;
+  const r2 = fx * fx + fy * fy;
+  const radial = Math.max(0, 1 - r2 * 3.8);
+  return radial * radial;
 }
 
 function lerp(a: number, b: number, t: number): number {
@@ -309,15 +345,19 @@ function enforceModuleConstraints(
   version: number,
   config: QRGeneratorConfig
 ): void {
-  const baseDarkMin = clamp01(config.darkMinOccupancy ?? 0.56);
-  const DARK_MAX = 1.0;
-  const baseLightMax = clamp01(config.lightMaxOccupancy ?? 0.44);
+  const baseDarkMin = clamp01(config.darkMinOccupancy ?? 0.38);
+  const baseLightMax = clamp01(config.lightMaxOccupancy ?? 0.62);
   if (baseDarkMin <= 0.001 && baseLightMax >= 0.999) return;
 
-  const half = Math.floor(scale / 2);
   const total = scale * scale;
-  const maxIters = Math.max(1, Math.min(12, config.optimizeIterations ?? 6));
+  const maxIters = Math.max(1, Math.min(16, config.optimizeIterations ?? 8));
+  const centerRadius = Math.max(1, Math.floor(scale * 0.18));
+  const centerArea = (centerRadius * 2 + 1) * (centerRadius * 2 + 1);
+  const moduleCenter = (scale - 1) / 2;
   const occupancies: number[][] = Array.from({ length: moduleCount }, () =>
+    new Array(moduleCount).fill(0)
+  );
+  const centerOcc: number[][] = Array.from({ length: moduleCount }, () =>
     new Array(moduleCount).fill(0)
   );
   const darkMinMap: number[][] = Array.from({ length: moduleCount }, () =>
@@ -325,6 +365,12 @@ function enforceModuleConstraints(
   );
   const lightMaxMap: number[][] = Array.from({ length: moduleCount }, () =>
     new Array(moduleCount).fill(baseLightMax)
+  );
+  const darkCenterMinMap: number[][] = Array.from({ length: moduleCount }, () =>
+    new Array(moduleCount).fill(Math.min(0.64, baseDarkMin + 0.18))
+  );
+  const lightCenterMaxMap: number[][] = Array.from({ length: moduleCount }, () =>
+    new Array(moduleCount).fill(Math.max(0.36, baseLightMax - 0.18))
   );
   const locked: boolean[][] = Array.from({ length: moduleCount }, () =>
     new Array(moduleCount).fill(false)
@@ -342,56 +388,103 @@ function enforceModuleConstraints(
         const y0 = mr * scale;
         const x0 = mc * scale;
         let darkCount = 0;
+        let centerDarkCount = 0;
         let desireSum = 0;
         let desireSq = 0;
         for (let y = 0; y < scale; y++) {
           for (let x = 0; x < scale; x++) {
-            if (matrix[y0 + y][x0 + x]) darkCount++;
+            const yy = y0 + y;
+            const xx = x0 + x;
+            const dark = matrix[yy][xx];
+            if (dark) darkCount++;
+            if (
+              dark &&
+              Math.abs(y - moduleCenter) <= centerRadius &&
+              Math.abs(x - moduleCenter) <= centerRadius
+            ) {
+              centerDarkCount++;
+            }
             const d = desire[y0 + y][x0 + x];
             desireSum += d;
             desireSq += d * d;
           }
         }
         occupancies[mr][mc] = darkCount / total;
+        centerOcc[mr][mc] = centerDarkCount / Math.max(1, centerArea);
         const mean = desireSum / total;
         const variance = Math.max(0, desireSq / total - mean * mean);
         const contrast = clamp01(Math.sqrt(variance) * 3.2);
-        // Keep adaptive bounds inside artist-safe ranges to avoid blocky over-correction.
-        darkMinMap[mr][mc] = clamp01(Math.max(0.52, Math.min(0.62, baseDarkMin - contrast * 0.06)));
-        lightMaxMap[mr][mc] = clamp01(Math.max(0.38, Math.min(0.48, baseLightMax + contrast * 0.06)));
+        // Keep module-wide occupancy loose; center-zone carries most decode pressure.
+        darkMinMap[mr][mc] = clamp01(Math.max(0.34, Math.min(0.5, baseDarkMin - contrast * 0.02)));
+        lightMaxMap[mr][mc] = clamp01(Math.max(0.5, Math.min(0.66, baseLightMax + contrast * 0.02)));
+        darkCenterMinMap[mr][mc] = clamp01(
+          Math.max(darkMinMap[mr][mc] + 0.12, Math.min(0.68, darkMinMap[mr][mc] + 0.2 - contrast * 0.04))
+        );
+        lightCenterMaxMap[mr][mc] = clamp01(
+          Math.min(lightMaxMap[mr][mc] - 0.12, Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04))
+        );
       }
     }
   };
 
+  const computeViolationEnergy = (): number => {
+    let energy = 0;
+    for (let mr = 0; mr < moduleCount; mr++) {
+      for (let mc = 0; mc < moduleCount; mc++) {
+        if (locked[mr][mc]) continue;
+        const qrIsDark = qr.isDark(mr, mc);
+        if (qrIsDark) {
+          const occViolation = Math.max(0, darkMinMap[mr][mc] - occupancies[mr][mc]);
+          const centerViolation = Math.max(0, darkCenterMinMap[mr][mc] - centerOcc[mr][mc]);
+          energy += occViolation * 0.35 + centerViolation * 1.8;
+        } else {
+          const occViolation = Math.max(0, occupancies[mr][mc] - lightMaxMap[mr][mc]);
+          const centerViolation = Math.max(0, centerOcc[mr][mc] - lightCenterMaxMap[mr][mc]);
+          energy += occViolation * 0.35 + centerViolation * 1.8;
+        }
+      }
+    }
+    return energy;
+  };
+
   recomputeModuleStats();
+  let prevViolationEnergy = computeViolationEnergy();
 
   for (let iter = 0; iter < maxIters; iter++) {
-    type Candidate = { y: number; x: number; score: number; toDark: boolean; mr: number; mc: number };
+    type Candidate = { y: number; x: number; score: number; toDark: boolean; scanGain: number };
     const candidates: Candidate[] = [];
-    let violationCount = 0;
-    let totalNeeded = 0;
+    let totalViolationEnergy = 0;
 
     for (let mr = 0; mr < moduleCount; mr++) {
       for (let mc = 0; mc < moduleCount; mc++) {
         if (locked[mr][mc]) continue;
         const qrIsDark = qr.isDark(mr, mc);
         const occ = occupancies[mr][mc];
+        const cOcc = centerOcc[mr][mc];
         const darkMin = darkMinMap[mr][mc];
         const lightMax = lightMaxMap[mr][mc];
+        const darkCenterMin = darkCenterMinMap[mr][mc];
+        const lightCenterMax = lightCenterMaxMap[mr][mc];
 
-        let targetNeed = 0;
+        let occViolation = 0;
+        let centerViolation = 0;
         let toDark = false;
         if (qrIsDark && occ < darkMin) {
-          targetNeed = Math.ceil((darkMin - occ) * total);
+          occViolation = darkMin - occ;
           toDark = true;
         } else if (!qrIsDark && occ > lightMax) {
-          targetNeed = Math.ceil((occ - lightMax) * total);
+          occViolation = occ - lightMax;
           toDark = false;
-        } else {
-          continue;
         }
-        violationCount++;
-        totalNeeded += targetNeed;
+        if (qrIsDark && cOcc < darkCenterMin) {
+          centerViolation = darkCenterMin - cOcc;
+          toDark = true;
+        } else if (!qrIsDark && cOcc > lightCenterMax) {
+          centerViolation = cOcc - lightCenterMax;
+          toDark = false;
+        }
+        if (occViolation <= 0 && centerViolation <= 0) continue;
+        totalViolationEnergy += occViolation * 0.35 + centerViolation * 1.8;
 
         const y0 = mr * scale;
         const x0 = mc * scale;
@@ -401,41 +494,54 @@ function enforceModuleConstraints(
             const xx = x0 + x;
             const current = matrix[yy][xx];
             if ((toDark && current) || (!toDark && !current)) continue;
-            // Never force center-lock during global optimization; preserve continuity.
+            const inCenter =
+              Math.abs(y - moduleCenter) <= centerRadius && Math.abs(x - moduleCenter) <= centerRadius;
+            const occGain = occViolation > 0 ? Math.min(occViolation, 1 / total) * 0.35 : 0;
+            const centerGain =
+              inCenter && centerViolation > 0 ? Math.min(centerViolation, 1 / centerArea) * 1.8 : 0;
+            const scanGain = occGain + centerGain;
+            if (scanGain <= 0) continue;
 
-            // Global energy: preserve art + avoid module-edge imprint + reduce scan violation.
+            // Global energy: preserve art + avoid module-edge imprint + prioritize scan recovery.
             const d = desire[yy][xx];
             const beforeErr = Math.abs((current ? 1 : 0) - d);
             const afterErr = Math.abs((toDark ? 1 : 0) - d);
             const artPenalty = afterErr - beforeErr;
-            const edgePenalty = x === 0 || y === 0 || x === scale - 1 || y === scale - 1 ? 0.28 : 0;
-            const severity = Math.abs((toDark ? darkMin - occ : occ - lightMax));
-            const score = severity * 2.3 - artPenalty * 1.4 - edgePenalty + d * 0.15;
-            candidates.push({ y: yy, x: xx, score, toDark, mr, mc });
+            const edgeBand = x <= 1 || y <= 1 || x >= scale - 2 || y >= scale - 2;
+            const edgePenalty = edgeBand ? 0.44 : 0;
+            const centerBonus = inCenter ? 0.07 : 0;
+            const score = scanGain * 12.5 - artPenalty * 1.7 - edgePenalty + centerBonus;
+            candidates.push({ y: yy, x: xx, score, toDark, scanGain });
           }
         }
-
       }
     }
 
-    if (violationCount === 0) break;
+    if (totalViolationEnergy <= 1e-5) break;
     if (candidates.length === 0) break;
 
     candidates.sort((a, b) => b.score - a.score);
 
-    // Apply top global candidates; global list avoids per-module block surgery patterns.
-    const maxFlips = Math.max(1, Math.min(candidates.length, totalNeeded));
+    // Apply globally ranked candidates only until violation energy is reduced.
+    const targetGain = totalViolationEnergy * 0.9;
+    const maxFlips = Math.max(1, Math.min(candidates.length, Math.ceil(totalViolationEnergy * total * 0.9)));
     let applied = 0;
-    for (let i = 0; i < candidates.length && applied < maxFlips; i++) {
+    let gained = 0;
+    for (let i = 0; i < candidates.length && applied < maxFlips && gained < targetGain; i++) {
       const c = candidates[i];
+      if (c.score < -0.2 && gained > targetGain * 0.6) break;
       const current = matrix[c.y][c.x];
       if (c.toDark === current) continue;
       matrix[c.y][c.x] = c.toDark;
       applied++;
+      gained += c.scanGain;
     }
 
     if (applied === 0) break;
     recomputeModuleStats();
+    const newViolationEnergy = computeViolationEnergy();
+    if (prevViolationEnergy - newViolationEnergy < 1e-4) break;
+    prevViolationEnergy = newViolationEnergy;
   }
 
   // Do not add a post-center-lock pass; it re-imprints module structure.
@@ -569,7 +675,7 @@ export async function generateDitheredMatrix(
   const useColorDither = colorDitherMode !== 'none';
   const kernelName = (config.diffusionKernel ?? 'floyd_steinberg') as DiffusionKernel;
   const kernel = DIFFUSION_KERNELS[kernelName] ?? DIFFUSION_KERNELS.floyd_steinberg;
-  const ditherMode = config.ditherMode ?? 'error_diffusion';
+  const ditherMode = config.ditherMode ?? 'blue_noise';
   const seed = config.seed ?? config.blueNoiseSeed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
   const noiseTile = generateBlueNoiseTile(tileSize, seed);
@@ -596,6 +702,7 @@ export async function generateDitheredMatrix(
   }
 
   const mix = clamp01(intensity * ditherStrength * ditherScale);
+  const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
 
   for (let y = 0; y < scaledSize; y++) {
     // Serpentine: alternate scan direction per row
@@ -624,18 +731,21 @@ export async function generateDitheredMatrix(
 
       // ART-FIRST: generate a global halftone candidate from artwork only.
       // QR bits are applied later in the projection/correction stage.
-      const overlayDark = 1 - luma01(r, g, b);
+      const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
+      const centerW = moduleCenterWeight(x, y, scale);
+      const qrBias = (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + mix * 0.8);
+      const biasedOverlayDark = clamp01(overlayDark + qrBias);
       const n = sampleBlueNoise(x, y, noiseTile, tileSize);
       const threshold = clamp01(0.5 + mix * (n - 0.5));
 
       let isDark: boolean;
       if (ditherMode === 'blue_noise' && !useColorDither) {
-        isDark = overlayDark > threshold;
+        isDark = biasedOverlayDark > threshold;
       } else {
         // Global error diffusion over artwork luminance, perturbed by blue-noise threshold
-        const adjusted = overlayDark + errors[y][x];
+        const adjusted = biasedOverlayDark + errors[y][x];
         isDark = adjusted > threshold;
-        const err = (overlayDark - (isDark ? 1 : 0)) * mix;
+        const err = (biasedOverlayDark - (isDark ? 1 : 0)) * mix;
         distributeError(errors, x, y, err, kernel, scaledSize, leftToRight);
       }
 
@@ -653,7 +763,7 @@ export async function generateDitheredMatrix(
     }
   }
 
-  // Post-pass: enforce per-module constraints (center pixel correctness + ratio bounds)
+  // Post-pass: enforce adaptive data-module occupancy constraints.
   enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, config);
   if (config.cleanupSpeckle === true) {
     removeIsolatedSpeckles(qr, matrix, moduleCount, scale, version, config);
@@ -742,6 +852,7 @@ export async function generateBlueNoiseMatrix(
   const seed = config.seed ?? config.blueNoiseSeed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
   const tile = generateBlueNoiseTile(tileSize, seed);
+  const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
 
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
@@ -761,9 +872,11 @@ export async function generateBlueNoiseMatrix(
         continue;
       }
 
-      const overlayDark = 1 - luma01(r, g, b);
+      const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
       // ART-FIRST: base decision solely on artwork luminance + global noise field.
-      const d = clamp01(overlayDark * (0.75 + intensity * 0.5));
+      const centerW = moduleCenterWeight(x, y, scale);
+      const qrBias = (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + intensity * 0.8);
+      const d = clamp01((overlayDark + qrBias) * (0.72 + intensity * 0.56));
       desire[y][x] = overlayDark;
 
       const n = sampleBlueNoise(x, y, tile, tileSize);
