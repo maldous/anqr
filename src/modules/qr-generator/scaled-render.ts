@@ -129,13 +129,7 @@ export async function generateScaledQR(
   const protectVersion = preserveFunctional
     ? config.protectVersionInfo !== false
     : config.protectVersionInfo === true;
-  const preserveFixedDark =
-    preserveFunctional ||
-    preserveFinders ||
-    preserveTiming ||
-    preserveAlignment ||
-    protectFormat ||
-    protectVersion;
+  const preserveFixedDark = preserveFunctional;
   const qrDrawSize = scaledSize * subPixelSize;
   const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
   const ditherBackdropWash = Math.max(0, Math.min(1, config.ditherBackdropWash ?? 0.18));
