@@ -511,6 +511,13 @@ export default defineConfig({
   // Optimize dependencies
   optimizeDeps: {
     include: ['react', 'react-dom', 'zustand', 'clsx', 'tailwind-merge'],
-    exclude: ['sharp', 'puppeteer'], // These are dev/build only
+    exclude: [
+      'sharp',
+      'puppeteer',
+      // Node-native canvas packages are test/server-only and must never be optimized for client.
+      '@napi-rs/canvas',
+      '@napi-rs/canvas-linux-x64-gnu',
+      '@napi-rs/canvas-linux-x64-musl',
+    ],
   },
 });

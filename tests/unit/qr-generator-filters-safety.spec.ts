@@ -221,15 +221,53 @@ describe('preprocessImageData', () => {
     expect(result.width).toBe(img.width);
   });
 
-  it('applies duotone filter (non-color mode)', async () => {
+  it('applies duotone filter only in duotone overlay mode', async () => {
     const { preprocessImageData } = await import('../../src/modules/qr-generator/filters-preprocess');
     const img = makeTestImage();
     const result = preprocessImageData(img, {
+      overlayMode: 'duotone',
       filterDuotone1: '#ff0000',
       filterDuotone2: '#0000ff',
       colorMode: 'grayscale',
     } as never);
     expect(result.width).toBe(img.width);
+  });
+
+  it('does not implicitly apply duotone in dithered grayscale mode', async () => {
+    const { preprocessImageData } = await import('../../src/modules/qr-generator/filters-preprocess');
+    const data = new Uint8ClampedArray([
+      32, 32, 32, 255, 224, 224, 224, 255,
+      32, 32, 32, 255, 224, 224, 224, 255,
+    ]);
+    const img = new ImageData(data, 2, 2);
+    const result = preprocessImageData(img, {
+      overlayMode: 'dithered',
+      colorMode: 'grayscale',
+      filterDuotone1: '#000000',
+      filterDuotone2: '#ffffff',
+      disableAutoSoften: true,
+    } as never);
+    // Dark source should remain darker than light source (not inverted).
+    expect(result.data[0]).toBeLessThan(result.data[4]);
+  });
+
+  it('does not implicitly apply duotone in dithered bw mode', async () => {
+    const { preprocessImageData } = await import('../../src/modules/qr-generator/filters-preprocess');
+    const data = new Uint8ClampedArray([
+      32, 32, 32, 255, 224, 224, 224, 255,
+      32, 32, 32, 255, 224, 224, 224, 255,
+    ]);
+    const img = new ImageData(data, 2, 2);
+    const result = preprocessImageData(img, {
+      overlayMode: 'dithered',
+      colorMode: 'bw',
+      filterDuotone1: '#000000',
+      filterDuotone2: '#ffffff',
+      disableAutoSoften: true,
+    } as never);
+    // B&W output should keep dark pixel as black and light pixel as white.
+    expect(result.data[0]).toBe(0);
+    expect(result.data[4]).toBe(255);
   });
 
   it('skips duotone in color mode', async () => {

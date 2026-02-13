@@ -482,6 +482,12 @@ export class QRGenerator {
             optimizeIterations: Math.max(10, effectiveConfig.optimizeIterations ?? 6),
             overlayIntensity: Math.min(88, effectiveConfig.overlayIntensity ?? 100),
           },
+          {
+            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.6, 0.57, 0.62),
+            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.4, 0.38, 0.43),
+            optimizeIterations: Math.max(12, effectiveConfig.optimizeIterations ?? 6),
+            overlayIntensity: Math.min(86, effectiveConfig.overlayIntensity ?? 100),
+          },
         ];
 
         const buildAttemptConfig = (
@@ -496,7 +502,7 @@ export class QRGenerator {
           lightMaxOccupancy: patch.lightMaxOccupancy,
           optimizeIterations: patch.optimizeIterations,
           overlayIntensity: patch.overlayIntensity ?? effectiveConfig.overlayIntensity,
-          qrFirstMode: patch.qrFirstMode ?? false,
+          qrFirstMode: patch.qrFirstMode ?? (effectiveConfig.qrFirstMode ?? false),
         });
 
         const computeFinalRasterMetrics = (
@@ -726,8 +732,13 @@ export class QRGenerator {
           return bestBaseDecodable;
         }
 
-        // Safety fallback: keep artwork by trying QR-first variants instead of plain QR fallback.
         const lastPatch = attempts[attempts.length - 1] || {};
+        if (effectiveConfig.qrFirstMode !== true) {
+          // Artistic mode defaults to art-preserving fallback unless QR-first is explicitly requested.
+          return lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
+        }
+
+        // Optional safety fallback: QR-first variants when explicitly enabled.
         let qrFirstLast: HTMLCanvasElement | OffscreenCanvas | null = null;
         const qrFirstIntensities = [70, 62, 54, 46];
         for (const intensity of qrFirstIntensities) {
