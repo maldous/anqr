@@ -180,7 +180,9 @@ export async function parseAnimatedImage(
       compositor.dispose(i);
     }
     const totalMs = animationFrames.reduce((s, f) => s + f.delay, 0);
-    const uniqueDisposals = [...new Set(animationFrames.map((f) => f.disposalType))].sort((a, b) => a - b);
+    const uniqueDisposals = [...new Set(animationFrames.map((f) => f.disposalType))].sort(
+      (a, b) => a - b
+    );
     log.debug('parseAnimatedImage: GIF parsed', {
       format,
       frameCount: animationFrames.length,

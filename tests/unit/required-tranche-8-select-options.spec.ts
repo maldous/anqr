@@ -105,6 +105,7 @@ const EXPLICIT_IDS = [
   "select-item-option-h",
   "select-item-option-halftone",
   "select-item-option-halftone-center",
+  "select-item-option-halftone-dithered",
   "select-item-option-hotp",
   "select-item-option-id",
   "select-item-option-image",

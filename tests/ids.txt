@@ -1,5 +1,5 @@
 1) Canonical Managed data-testid Inventory
-- Total managed IDs: 460
+- Total managed IDs: 461
 - Source: auto-generated from DynamicTestId + literal fallback scan of `src/**` and `index.html`
 - Rule: when adding/removing IDs, regenerate this file with `node scripts/generate-test-ids.js`
 
@@ -707,6 +707,8 @@
 - select-item-option-halftone
   source: src/components/sections/OverlaySection.tsx
 - select-item-option-halftone-center
+  source: src/components/sections/OverlaySection.tsx
+- select-item-option-halftone-dithered
   source: src/components/sections/OverlaySection.tsx
 - select-item-option-hotp
   source: src/components/sections/PayloadSection.tsx

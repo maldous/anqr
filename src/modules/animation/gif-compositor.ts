@@ -20,7 +20,8 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   const uniqueDisposals = [...new Set(frames.map((f) => f.disposalType))].sort((a, b) => a - b);
   const totalDurationMs = frames.reduce((sum, f) => sum + f.delay, 0);
   const hasDeltaPatches = frames.some(
-    (f) => f.dims.left !== 0 || f.dims.top !== 0 || f.dims.width !== width || f.dims.height !== height
+    (f) =>
+      f.dims.left !== 0 || f.dims.top !== 0 || f.dims.width !== width || f.dims.height !== height
   );
 
   log.debug('compositor: created', {
@@ -30,10 +31,14 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     uniqueDelaysMs: uniqueDelays,
     hasConstantDelay: uniqueDelays.length <= 1,
     uniqueDisposals,
-    disposalPattern: uniqueDisposals.length <= 1 ? `uniform(${uniqueDisposals[0] ?? 0})` : `mixed(${uniqueDisposals.join(',')})`,
+    disposalPattern:
+      uniqueDisposals.length <= 1
+        ? `uniform(${uniqueDisposals[0] ?? 0})`
+        : `mixed(${uniqueDisposals.join(',')})`,
     hasDeltaPatches,
     totalDurationMs,
-    avgFps: totalDurationMs > 0 ? Math.round((frames.length / totalDurationMs) * 1000 * 10) / 10 : 0,
+    avgFps:
+      totalDurationMs > 0 ? Math.round((frames.length / totalDurationMs) * 1000 * 10) / 10 : 0,
   });
 
   const canvas = document.createElement('canvas');
@@ -108,7 +113,8 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     log.trace('compositor: dispose', {
       frame: i,
       disposalType: f.disposalType,
-      action: f.disposalType === 2 ? 'clearRect' : f.disposalType === 3 ? 'restorePrevious' : 'none',
+      action:
+        f.disposalType === 2 ? 'clearRect' : f.disposalType === 3 ? 'restorePrevious' : 'none',
     });
 
     switch (f.disposalType) {

@@ -7,7 +7,9 @@ const read = (p: string): string => fs.readFileSync(path.join(process.cwd(), p),
 describe('qr-generator artistic guards', () => {
   it('keeps dithered light-dot fog disabled and grain explicitly capped', () => {
     const src = read('src/modules/qr-generator/scaled-render.ts');
-    expect(src).toContain('!isDitheredMode && (needsExplicitLightModules');
+    expect(src).toContain('const shouldDrawLightPixel =');
+    expect(src).toContain('!isDitheredMode');
+    expect(src).toContain('needsExplicitLightModules');
     expect(src).toContain('const qrFirstLightBoost = config.qrFirstMode ? 1.3 : 1;');
     expect(src).toContain('(config.lightGrainDensity ?? 0.004) * qrFirstLightBoost');
     expect(src).toContain('(config.lightGrainAlpha ?? 0.05)');

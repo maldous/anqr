@@ -1,6 +1,6 @@
 1) Required Test Matrix (Generated)
 - Generated from: tests/ids.txt + tests/types.txt
-- Total IDs: 460
+- Total IDs: 461
 - Rule: every requirement row must map to at least one concrete test file
 
 ID: export-button
@@ -3601,6 +3601,17 @@ ID: select-item-option-halftone
   - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
 
 ID: select-item-option-halftone-center
+- section: Select Option IDs
+- source: src/components/sections/OverlaySection.tsx
+- inferred-domain: overlay
+- requirements:
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+
+ID: select-item-option-halftone-dithered
 - section: Select Option IDs
 - source: src/components/sections/OverlaySection.tsx
 - inferred-domain: overlay
