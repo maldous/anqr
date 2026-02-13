@@ -1800,3 +1800,4 @@
 1800	"Iteraciones de búsqueda"
 1801	"Más iteraciones = mejor coincidencia pero generación más lenta. Se recomienda entre 10.000 y 50.000 para la mayoría de las imágenes."
 1802	"El modo de ilustraciones requiere una corrección de errores baja para un control máximo de píxeles."
+1803	"_"

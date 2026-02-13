@@ -1800,3 +1800,4 @@
 1800	"Paieškos iteracijos"
 1801	"Daugiau iteracijų = geresnis atitikimas, bet lėtesnis generavimas. Daugumai vaizdų rekomenduojama 10 000–50 000."
 1802	"Meno kūrinio režimui reikalingas mažas klaidų taisymas, kad būtų galima maksimaliai valdyti pikselius."
+1803	"_"

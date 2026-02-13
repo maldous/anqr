@@ -1800,3 +1800,4 @@
 1800	"Iterasi Pencarian"
 1801	"Lebih banyak iterasi = kecocokan lebih baik tetapi generasi lebih lambat. 10.000-50.000 direkomendasikan untuk sebagian besar gambar."
 1802	"Mode karya seni memerlukan koreksi kesalahan rendah untuk kontrol piksel maksimum."
+1803	"_"

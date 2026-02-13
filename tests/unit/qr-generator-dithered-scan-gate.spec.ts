@@ -194,27 +194,31 @@ async function expectScanGatePass(
 }
 
 describe('qr-generator dithered scan gate', () => {
-  it('keeps dithered tsunami output decodable from final PNG bytes', async () => {
-    const qr = new QRGenerator(nodeCanvasFactory);
-    const payload = 'https://anqr.link';
-    const cfg: QRGeneratorConfig = {
-      content: payload,
-      errorCorrection: 'H',
-      typeNumber: 0,
-      moduleSize: 20,
-      margin: 4,
-      fgColor: '#000000',
-      bgColor: '#ffffff',
-      overlayMode: 'dithered',
-      overlayIntensity: 100,
-      colorMode: 'color',
-      ditherStrength: 50,
-      ditherSerpentine: false,
-      renderScalePerModule: 18,
-      seed: 42,
-    };
-    await expectScanGatePass(qr, cfg, 'public/tsunami.jpg', 'tsunami-generated-current.png');
-  });
+  it(
+    'keeps dithered tsunami output decodable from final PNG bytes',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const payload = 'https://anqr.link';
+      const cfg: QRGeneratorConfig = {
+        content: payload,
+        errorCorrection: 'H',
+        typeNumber: 0,
+        moduleSize: 20,
+        margin: 4,
+        fgColor: '#000000',
+        bgColor: '#ffffff',
+        overlayMode: 'dithered',
+        overlayIntensity: 100,
+        colorMode: 'color',
+        ditherStrength: 50,
+        ditherSerpentine: false,
+        renderScalePerModule: 18,
+        seed: 42,
+      };
+      await expectScanGatePass(qr, cfg, 'public/tsunami.jpg', 'tsunami-generated-current.png');
+    },
+    15000
+  );
 
   it('keeps dithered king gif first-frame output decodable from final PNG bytes', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);

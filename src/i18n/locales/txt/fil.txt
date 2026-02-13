@@ -1800,3 +1800,4 @@
 1800	"Mga Pag-uulit ng Paghahanap"
 1801	"Higit pang mga pag-ulit = mas mahusay na tugma ngunit mas mabagal na henerasyon. 10,000-50,000 ang inirerekomenda para sa karamihan ng mga larawan."
 1802	"Nangangailangan ang artwork mode ng Mababang error correction para sa maximum na pixel control."
+1803	"_"

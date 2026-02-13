@@ -222,7 +222,7 @@ export function applyDitherToMatrix(
   }
 
   // Post-pass: Enforce module constraints for guaranteed scannability
-  enforceModuleConstraints(qr, result, moduleCount, version);
+  enforceModuleConstraints(qr, result, moduleCount, version, config);
 
   log.debug('dither-matrix applied with QR protection', {
     moduleCount,
@@ -246,7 +246,8 @@ function enforceModuleConstraints(
   qr: QRCodeObject,
   matrix: boolean[][],
   moduleCount: number,
-  version: number
+  version: number,
+  config: QRGeneratorConfig
 ): void {
   // For module-level dithering (scale=1), each module is a single pixel
   // We simply ensure structural modules are correct and non-structural modules
@@ -258,7 +259,7 @@ function enforceModuleConstraints(
 
       // Force structural modules to exact QR value
       if (
-        isStructuralModule(row, col, moduleCount, version) ||
+        isStructuralModule(row, col, moduleCount, version, config) ||
         isQuietZoneSeparator(row, col, moduleCount)
       ) {
         matrix[row][col] = qrIsDark;

@@ -1800,3 +1800,4 @@
 1800	"Otsi iteratsioonid"
 1801	"Rohkem iteratsioone = parem vaste, kuid aeglasem genereerimine. Enamiku piltide puhul soovitatakse 10 000–50 000."
 1802	"Kunstiteos nõuab maksimaalse pikslikontrolli jaoks madalat veaparandust."
+1803	"_"

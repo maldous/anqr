@@ -1800,3 +1800,4 @@
 1800	"Tafuta Marudio"
 1801	"Marudio zaidi = mechi bora lakini kizazi polepole. 10,000-50,000 zinazopendekezwa kwa picha nyingi."
 1802	"Hali ya mchoro inahitaji marekebisho ya hitilafu ya Chini kwa udhibiti wa juu wa pikseli."
+1803	"_"

@@ -1800,3 +1800,4 @@
 1800	"Soek Iterasies"
 1801	"Meer iterasies = beter pasmaat maar stadiger generasie. 10 000-50 000 aanbeveel vir die meeste beelde."
 1802	"Kunswerkmodus vereis Lae foutkorreksie vir maksimum piekselbeheer."
+1803	"_"

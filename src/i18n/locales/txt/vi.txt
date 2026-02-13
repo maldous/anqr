@@ -1800,3 +1800,4 @@
 1800	"Tìm kiếm lặp lại"
 1801	"Lặp lại nhiều hơn = kết hợp tốt hơn nhưng tạo chậm hơn. Khuyến nghị 10.000-50.000 cho hầu hết các hình ảnh."
 1802	"Chế độ tác phẩm nghệ thuật yêu cầu sửa lỗi thấp để kiểm soát pixel tối đa."
+1803	"_"

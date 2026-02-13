@@ -1800,3 +1800,4 @@
 1800	"Căutare iterații"
 1801	"Mai multe iterații = potrivire mai bună, dar generare mai lentă. 10.000-50.000 recomandat pentru majoritatea imaginilor."
 1802	"Modul ilustrație necesită o corecție redusă a erorilor pentru un control maxim al pixelilor."
+1803	"_"

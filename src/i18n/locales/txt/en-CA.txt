@@ -1800,3 +1800,4 @@
 1800	"Search Iterations"
 1801	"More iterations = better match but slower generation. 10,000-50,000 recommended for most images."
 1802	"Artwork mode requires Low error correction for maximum pixel control."
+1803	"Halftone Dithered"

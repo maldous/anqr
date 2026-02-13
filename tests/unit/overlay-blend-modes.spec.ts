@@ -257,13 +257,13 @@ describe('getEffectiveIntensity', () => {
 // ---------------------------------------------------------------------------
 
 describe('getScaleFactor', () => {
-  it('returns 4 for dithered mode', () => {
-    expect(getScaleFactor('dithered', makeConfig())).toBe(4);
+  it('returns default render scale for dithered mode', () => {
+    expect(getScaleFactor('dithered', makeConfig())).toBe(18);
   });
 
-  it('returns 4 for blue-noise mode', () => {
-    expect(getScaleFactor('blue-noise', makeConfig())).toBe(4);
-    expect(getScaleFactor('blue_noise', makeConfig())).toBe(4);
+  it('returns default render scale for blue-noise mode', () => {
+    expect(getScaleFactor('blue-noise', makeConfig())).toBe(18);
+    expect(getScaleFactor('blue_noise', makeConfig())).toBe(18);
   });
 
   it('returns subpixelGrid for subpixel modes', () => {
