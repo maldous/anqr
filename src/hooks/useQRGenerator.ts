@@ -130,7 +130,8 @@ export function resolveOverlayPreservationOptions(params: {
     params.overlayMode === 'dithered' ||
     params.overlayMode === 'blue_noise' ||
     params.overlayMode === 'blue-noise';
-  const applySafetyLocks = params.overlayEnabled && params.safetyMode !== 'off' && !isDitheredOverlayMode;
+  const applySafetyLocks =
+    params.overlayEnabled && params.safetyMode !== 'off' && !isDitheredOverlayMode;
 
   return {
     preserveFinders: applySafetyLocks
@@ -1550,16 +1551,17 @@ function useQRGenerator(): UseQRGeneratorResult {
         })
       );
     } finally {
-      if (isStaleRequest()) return;
-      setIsRendering(false);
-      setIsLoading(false);
-      // Dispatch render-complete event on success (no error was thrown)
-      if (!error) {
-        document.dispatchEvent(
-          new CustomEvent('anqr:render-complete', {
-            detail: { success: true, error: null },
-          })
-        );
+      if (!isStaleRequest()) {
+        setIsRendering(false);
+        setIsLoading(false);
+        // Dispatch render-complete event on success (no error was thrown)
+        if (!error) {
+          document.dispatchEvent(
+            new CustomEvent('anqr:render-complete', {
+              detail: { success: true, error: null },
+            })
+          );
+        }
       }
     }
   }, [

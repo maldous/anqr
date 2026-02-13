@@ -178,9 +178,7 @@ async function generateBWFirstMatrix(
       }
 
       colors[y][x] =
-        config.colorMode !== 'bw'
-          ? mapShadeWithSourceColor(r, g, b, shade, qrIsDark)
-          : null;
+        config.colorMode !== 'bw' ? mapShadeWithSourceColor(r, g, b, shade, qrIsDark) : null;
     }
   }
 
@@ -207,7 +205,7 @@ function clamp01(x: number): number {
 function shapeOverlayDarkness(overlayDark: number): number {
   const t = clamp01(overlayDark);
   // Preserve shadow anchor while lifting mids so subject structure survives dithering.
-  const gammaLift = Math.pow(t, 0.9);
+  const gammaLift = t ** 0.9;
   const smooth = t * t * (3 - 2 * t);
   const midBoost = gammaLift + 0.14 * (1 - Math.abs(2 * smooth - 1));
   return clamp01(0.58 * gammaLift + 0.42 * midBoost);
@@ -432,12 +430,20 @@ function enforceModuleConstraints(
         const contrast = clamp01(Math.sqrt(variance) * 3.2);
         // Keep module-wide occupancy loose; center-zone carries most decode pressure.
         darkMinMap[mr][mc] = clamp01(Math.max(0.34, Math.min(0.5, baseDarkMin - contrast * 0.02)));
-        lightMaxMap[mr][mc] = clamp01(Math.max(0.5, Math.min(0.66, baseLightMax + contrast * 0.02)));
+        lightMaxMap[mr][mc] = clamp01(
+          Math.max(0.5, Math.min(0.66, baseLightMax + contrast * 0.02))
+        );
         darkCenterMinMap[mr][mc] = clamp01(
-          Math.max(darkMinMap[mr][mc] + 0.12, Math.min(0.68, darkMinMap[mr][mc] + 0.2 - contrast * 0.04))
+          Math.max(
+            darkMinMap[mr][mc] + 0.12,
+            Math.min(0.68, darkMinMap[mr][mc] + 0.2 - contrast * 0.04)
+          )
         );
         lightCenterMaxMap[mr][mc] = clamp01(
-          Math.min(lightMaxMap[mr][mc] - 0.12, Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04))
+          Math.min(
+            lightMaxMap[mr][mc] - 0.12,
+            Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
+          )
         );
       }
     }
@@ -511,9 +517,10 @@ function enforceModuleConstraints(
             const yy = y0 + y;
             const xx = x0 + x;
             const current = matrix[yy][xx];
-            if ((toDark && current) || (!toDark && !current)) continue;
+            if ((toDark && current) || !(toDark || current)) continue;
             const inCenter =
-              Math.abs(y - moduleCenter) <= centerRadius && Math.abs(x - moduleCenter) <= centerRadius;
+              Math.abs(y - moduleCenter) <= centerRadius &&
+              Math.abs(x - moduleCenter) <= centerRadius;
             const occGain = occViolation > 0 ? Math.min(occViolation, 1 / total) * 0.35 : 0;
             const centerGain =
               inCenter && centerViolation > 0 ? Math.min(centerViolation, 1 / centerArea) * 1.8 : 0;
@@ -542,7 +549,10 @@ function enforceModuleConstraints(
 
     // Apply globally ranked candidates only until violation energy is reduced.
     const targetGain = totalViolationEnergy * 0.9;
-    const maxFlips = Math.max(1, Math.min(candidates.length, Math.ceil(totalViolationEnergy * total * 0.9)));
+    const maxFlips = Math.max(
+      1,
+      Math.min(candidates.length, Math.ceil(totalViolationEnergy * total * 0.9))
+    );
     let applied = 0;
     let gained = 0;
     for (let i = 0; i < candidates.length && applied < maxFlips && gained < targetGain; i++) {
@@ -739,7 +749,8 @@ export async function generateDitheredMatrix(
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
       const moduleLocked = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
-      const fixedDarkUnlocked = !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
+      const fixedDarkUnlocked =
+        !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
 
       // Structural modules are exact when locked by config.
       if (moduleLocked) {
@@ -887,7 +898,8 @@ export async function generateBlueNoiseMatrix(
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
       const moduleLocked = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
-      const fixedDarkUnlocked = !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
+      const fixedDarkUnlocked =
+        !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
 
       if (moduleLocked) {
         matrix[y][x] = qrIsDark;
@@ -1016,9 +1028,7 @@ export async function generateHalftoneDitheredOverlayData(
 
       const density = darkCount / total;
       const densityBrightness = 1 - density;
-      overlayData[mr][mc] = clamp01(
-        lerp(srcBrightness, densityBrightness, densityInfluence)
-      );
+      overlayData[mr][mc] = clamp01(lerp(srcBrightness, densityBrightness, densityInfluence));
 
       if (colorCount > 0) {
         // Blend true source color with dither-aggregated color so the backdrop

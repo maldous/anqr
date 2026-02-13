@@ -5,6 +5,7 @@
 
 import { createLogger } from '../../lib/logger';
 import type { GradientConfig } from '../core';
+import { decodeQR } from '../qr-decoder';
 import type { QRCodeInstance } from '../qr-encoder';
 import {
   calculateOptimalVersion,
@@ -15,7 +16,6 @@ import {
   setStringToBytes,
 } from '../qr-encoder';
 import { verifyQRStructure } from '../qr-spec';
-import { decodeQR } from '../qr-decoder';
 import { qrMatrixCache } from './cache';
 import { type CanvasFactory, defaultBrowserCanvasFactory } from './canvas-factory';
 import {
@@ -537,7 +537,11 @@ export class QRGenerator {
                 lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.38, 0.46),
                 optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
                 overlayIntensity: Math.min(62, effectiveConfig.overlayIntensity ?? 100),
-                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.1, 0, 0.28),
+                qrBitBiasStrength: clamp(
+                  (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.1,
+                  0,
+                  0.28
+                ),
               },
             ]
           : [
@@ -553,35 +557,55 @@ export class QRGenerator {
                 lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.5, 0.44, 0.5),
                 optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
                 overlayIntensity: Math.min(82, effectiveConfig.overlayIntensity ?? 100),
-                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03, 0, 0.24),
+                qrBitBiasStrength: clamp(
+                  (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03,
+                  0,
+                  0.24
+                ),
               },
               {
                 darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.53, 0.51, 0.56),
                 lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.47, 0.44, 0.49),
                 optimizeIterations: Math.max(7, effectiveConfig.optimizeIterations ?? 6),
                 overlayIntensity: Math.min(74, effectiveConfig.overlayIntensity ?? 100),
-                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.06, 0, 0.24),
+                qrBitBiasStrength: clamp(
+                  (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.06,
+                  0,
+                  0.24
+                ),
               },
               {
                 darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.55, 0.53, 0.58),
                 lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.45, 0.42, 0.47),
                 optimizeIterations: Math.max(8, effectiveConfig.optimizeIterations ?? 6),
                 overlayIntensity: Math.min(66, effectiveConfig.overlayIntensity ?? 100),
-                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.09, 0, 0.24),
+                qrBitBiasStrength: clamp(
+                  (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.09,
+                  0,
+                  0.24
+                ),
               },
               {
                 darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.57, 0.55, 0.6),
                 lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.43, 0.4, 0.45),
                 optimizeIterations: Math.max(9, effectiveConfig.optimizeIterations ?? 6),
                 overlayIntensity: Math.min(58, effectiveConfig.overlayIntensity ?? 100),
-                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.12, 0, 0.24),
+                qrBitBiasStrength: clamp(
+                  (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.12,
+                  0,
+                  0.24
+                ),
               },
               {
                 darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.58, 0.56, 0.62),
                 lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.42, 0.38, 0.44),
                 optimizeIterations: Math.max(10, effectiveConfig.optimizeIterations ?? 6),
                 overlayIntensity: Math.min(50, effectiveConfig.overlayIntensity ?? 100),
-                qrBitBiasStrength: clamp((effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.16, 0, 0.28),
+                qrBitBiasStrength: clamp(
+                  (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.16,
+                  0,
+                  0.28
+                ),
               },
             ];
 
@@ -608,7 +632,7 @@ export class QRGenerator {
           optimizeIterations: patch.optimizeIterations,
           overlayIntensity: patch.overlayIntensity ?? effectiveConfig.overlayIntensity,
           qrBitBiasStrength: patch.qrBitBiasStrength ?? effectiveConfig.qrBitBiasStrength,
-          qrFirstMode: patch.qrFirstMode ?? (effectiveConfig.qrFirstMode ?? false),
+          qrFirstMode: patch.qrFirstMode ?? effectiveConfig.qrFirstMode ?? false,
         });
 
         const buildDecodeRescuePatches = (): DitherAttemptPatch[] => {
@@ -752,14 +776,27 @@ export class QRGenerator {
           }
           const baseMetrics = computeFinalRasterMetrics(finalRaster);
           if (baseMetrics) {
-            if (baseMetrics.edgeImprint > edgeImprintThreshold || baseMetrics.toneStd < toneStdThreshold) {
-              return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+            if (
+              baseMetrics.edgeImprint > edgeImprintThreshold ||
+              baseMetrics.toneStd < toneStdThreshold
+            ) {
+              return {
+                ok: false,
+                baseDecodeOk: true,
+                metrics: baseMetrics,
+                evaluatedCanvas: finalRaster,
+              };
             }
             if (
               prevEdgeImprint !== null &&
               baseMetrics.edgeImprint > prevEdgeImprint + edgeWorsenLimit
             ) {
-              return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+              return {
+                ok: false,
+                baseDecodeOk: true,
+                metrics: baseMetrics,
+                evaluatedCanvas: finalRaster,
+              };
             }
           }
 
@@ -784,14 +821,24 @@ export class QRGenerator {
             const sim = await this.createCanvas(finalRaster.width, finalRaster.height);
             const simCtx = sim.getContext('2d');
             if (!simCtx)
-              return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+              return {
+                ok: false,
+                baseDecodeOk: true,
+                metrics: baseMetrics,
+                evaluatedCanvas: finalRaster,
+              };
 
             const dsW = Math.max(1, Math.round(finalRaster.width * s.downscale));
             const dsH = Math.max(1, Math.round(finalRaster.height * s.downscale));
             const ds = await this.createCanvas(dsW, dsH);
             const dsCtx = ds.getContext('2d');
             if (!dsCtx)
-              return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+              return {
+                ok: false,
+                baseDecodeOk: true,
+                metrics: baseMetrics,
+                evaluatedCanvas: finalRaster,
+              };
             dsCtx.imageSmoothingEnabled = true;
             dsCtx.drawImage(finalRaster as CanvasImageSource, 0, 0, dsW, dsH);
 
@@ -826,11 +873,21 @@ export class QRGenerator {
             }
 
             if (!runDecode(sim)) {
-              return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+              return {
+                ok: false,
+                baseDecodeOk: true,
+                metrics: baseMetrics,
+                evaluatedCanvas: finalRaster,
+              };
             }
           }
 
-          return { ok: true, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+          return {
+            ok: true,
+            baseDecodeOk: true,
+            metrics: baseMetrics,
+            evaluatedCanvas: finalRaster,
+          };
         };
 
         let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
@@ -869,7 +926,9 @@ export class QRGenerator {
         const rescuePatches = buildDecodeRescuePatches();
         for (const patch of rescuePatches) {
           const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
-          const rescueRaster = isPreviewScanGate ? rescueCanvas : await toFinalRasterCanvas(rescueCanvas);
+          const rescueRaster = isPreviewScanGate
+            ? rescueCanvas
+            : await toFinalRasterCanvas(rescueCanvas);
           if (runDecode(rescueRaster)) {
             rememberPatch(patch);
             return rescueRaster;
@@ -887,7 +946,9 @@ export class QRGenerator {
         // Emergency scan fallback: QR-first variants with conservative intensity.
         // This only runs when scan gating is enabled or QR-first was explicitly requested.
         let qrFirstLast: HTMLCanvasElement | OffscreenCanvas | null = null;
-        const qrFirstIntensities = isPreviewScanGate ? [62, 54, 46, 38, 30, 22] : [70, 62, 54, 46, 38, 30, 22];
+        const qrFirstIntensities = isPreviewScanGate
+          ? [62, 54, 46, 38, 30, 22]
+          : [70, 62, 54, 46, 38, 30, 22];
         for (const intensity of qrFirstIntensities) {
           const qrFirstFallback = await renderScaled({
             ...buildAttemptConfig(lastPatch),

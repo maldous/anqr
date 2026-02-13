@@ -282,7 +282,7 @@ export function preprocessImageData(
 
   let workingData = copyImageData(imageData);
 
-  if (!config.disableAutoSoften && !config.qrFirstMode) {
+  if (!(config.disableAutoSoften || config.qrFirstMode)) {
     if (detectBimodalBW(workingData)) {
       if (debug) {
         log.debug('preprocessImageData - detected high-contrast B&W, applying softening');

@@ -157,13 +157,7 @@ export async function generateScaledQR(
   if (isDitheredMode && overlayCanvas && useColorRendering) {
     ctx.save();
     ctx.globalAlpha = ditherBackdropAlpha;
-    ctx.drawImage(
-      overlayCanvas as CanvasImageSource,
-      marginPx,
-      marginPx,
-      qrDrawSize,
-      qrDrawSize
-    );
+    ctx.drawImage(overlayCanvas as CanvasImageSource, marginPx, marginPx, qrDrawSize, qrDrawSize);
     if (ditherBackdropWash > 0) {
       ctx.globalCompositeOperation = 'source-atop';
       ctx.globalAlpha = ditherBackdropWash;
@@ -192,7 +186,10 @@ export async function generateScaledQR(
   };
   const defaultDotMin = subPixelSize * 0.14;
   const defaultDotMax = subPixelSize * 0.62;
-  const dotMinRadiusPx = Math.max(0.02, Math.min(subPixelSize * 0.42, config.dotMinRadiusPx ?? defaultDotMin));
+  const dotMinRadiusPx = Math.max(
+    0.02,
+    Math.min(subPixelSize * 0.42, config.dotMinRadiusPx ?? defaultDotMin)
+  );
   const dotMaxRadiusPx = Math.max(
     dotMinRadiusPx + Math.max(0.01, subPixelSize * 0.08),
     Math.min(subPixelSize * 0.78, config.dotMaxRadiusPx ?? defaultDotMax)
@@ -216,7 +213,10 @@ export async function generateScaledQR(
   };
 
   const quantizeRadius = (r: number): number => {
-    const t = Math.max(0, Math.min(1, (r - dotMinRadiusPx) / Math.max(1e-6, dotMaxRadiusPx - dotMinRadiusPx)));
+    const t = Math.max(
+      0,
+      Math.min(1, (r - dotMinRadiusPx) / Math.max(1e-6, dotMaxRadiusPx - dotMinRadiusPx))
+    );
     const q = Math.round(t * (radiusBins - 1)) / Math.max(1, radiusBins - 1);
     return dotMinRadiusPx + q * (dotMaxRadiusPx - dotMinRadiusPx);
   };
@@ -324,7 +324,8 @@ export async function generateScaledQR(
       const color = (colors[y]?.[x] ?? null) as PixelColor | null;
 
       const shouldDrawLightPixel =
-        !isDitheredMode && (needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering));
+        !isDitheredMode &&
+        (needsExplicitLightModules || (needsBothDarkAndLightColors && useColorRendering));
 
       if (
         debug &&
@@ -347,7 +348,9 @@ export async function generateScaledQR(
 
       if (!isDark) {
         if (isDitheredMode) {
-          const sourceLuma = color ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255 : 1;
+          const sourceLuma = color
+            ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255
+            : 1;
           const toneN = 1 - sourceLuma;
           const varN = localVariance(x, y);
           const noiseN = hash01(x, y, seed + 149);
@@ -359,7 +362,10 @@ export async function generateScaledQR(
             )
           );
           if (grainChance > 0 && hash01(x, y, seed + 131) < grainChance) {
-            const lightTarget = Math.max(0.32, Math.min(0.76, 0.46 + sourceLuma * 0.22 - varN * 0.06));
+            const lightTarget = Math.max(
+              0.32,
+              Math.min(0.76, 0.46 + sourceLuma * 0.22 - varN * 0.06)
+            );
             const grain = color
               ? adjustLumaPreserveChroma(color, lightTarget, 1.42)
               : { r: 226, g: 226, b: 226 };
@@ -367,7 +373,10 @@ export async function generateScaledQR(
             const prevAlpha = ctx.globalAlpha;
             const alpha = Math.min(
               0.12,
-              Math.max(0.02, lightGrainAlpha * (0.55 + toneN * 0.4 + varN * 0.18 + (noiseN - 0.5) * 0.08))
+              Math.max(
+                0.02,
+                lightGrainAlpha * (0.55 + toneN * 0.4 + varN * 0.18 + (noiseN - 0.5) * 0.08)
+              )
             );
             ctx.globalAlpha = alpha;
             const grainRadius = Math.max(
@@ -389,7 +398,7 @@ export async function generateScaledQR(
             : 0.5;
           let drawLuma = sourceLuma;
           if (useColorRendering && color) {
-            const tone = Math.pow(1 - sourceLuma, 0.86);
+            const tone = (1 - sourceLuma) ** 0.86;
             const targetLuma = Math.max(0.04, Math.min(0.21, 0.04 + (1 - tone) * 0.17));
             const dark = adjustLumaPreserveChroma(color, targetLuma, 1.62);
             const darkR = dark.r;
@@ -405,7 +414,7 @@ export async function generateScaledQR(
 
           const varN = localVariance(x, y);
           const noiseN = hash01(x, y, seed);
-          const toneN = Math.pow(1 - drawLuma, 0.9);
+          const toneN = (1 - drawLuma) ** 0.9;
           if (!moduleLocked) {
             const dropoutNoise = hash01(x, y, seed + 257);
             const dropoutChance = Math.max(
@@ -451,7 +460,8 @@ export async function generateScaledQR(
   // UNIFIED: Draw styled finder patterns on top of pixel rendering
   // Only draw finders separately if preserveFinders is true OR there's no overlay
   // When preserveFinders=false with overlay, finder modules were already rendered with overlay effects
-  const shouldDrawFindersFirst = !forceBinaryFunctionPatterns && (config.preserveFinders !== false || !overlayCanvas);
+  const shouldDrawFindersFirst =
+    !forceBinaryFunctionPatterns && (config.preserveFinders !== false || !overlayCanvas);
 
   const finderPositions = [
     { row: 0, col: 0 }, // Top-left
@@ -558,7 +568,8 @@ export async function generateScaledQR(
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
         const isFormat = shouldProtectFormatInfo && isFormatInfoSpec(row, col, moduleCount);
-        const isVersion = shouldProtectVersionInfo && isVersionInfoSpec(row, col, moduleCount, version);
+        const isVersion =
+          shouldProtectVersionInfo && isVersionInfoSpec(row, col, moduleCount, version);
         if (!(isFormat || isVersion)) continue;
 
         const isDark = qr.isDark(row, col);
