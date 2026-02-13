@@ -289,51 +289,73 @@ function shouldLockModule(
   version: number,
   config: QRGeneratorConfig
 ): boolean {
-  const preserveFunctional = config.preserveFunctionalPatterns !== false;
+  const preserveFunctional = config.preserveFunctionalPatterns === true;
+  const preserveFinders = config.preserveFinders !== false;
+  const preserveTiming = preserveFunctional
+    ? config.preserveTiming !== false
+    : config.preserveTiming === true;
+  const preserveAlignment = preserveFunctional
+    ? config.preserveAlignment !== false
+    : config.preserveAlignment === true;
+  const protectFormat = preserveFunctional
+    ? config.protectFormatInfo !== false
+    : config.protectFormatInfo === true;
+  const protectVersion = preserveFunctional
+    ? config.protectVersionInfo !== false
+    : config.protectVersionInfo === true;
+  const preserveFixedDark =
+    preserveFunctional ||
+    preserveFinders ||
+    preserveTiming ||
+    preserveAlignment ||
+    protectFormat ||
+    protectVersion;
+  const isFinderSeparator =
+    (row === 7 && col <= 7) ||
+    (col === 7 && row <= 7) ||
+    (row === 7 && col >= moduleCount - 8) ||
+    (col === moduleCount - 8 && row <= 7) ||
+    (row === moduleCount - 8 && col <= 7) ||
+    (col === 7 && row >= moduleCount - 8);
 
-  // Fixed dark module is ALWAYS locked (scan critical per ISO/IEC 18004)
-  if (row === moduleCount - 8 && col === 8) return true;
+  // Fixed dark module follows global preserve/protect policy.
+  // When all preserve/protect options are disabled, allow dithering here too.
+  if (row === moduleCount - 8 && col === 8) return preserveFixedDark;
 
-  // Check finder patterns - lock if preserveFinders is true (default) or not set
+  // Finder modules and separators respect preserveFinders explicitly.
   if (isFinderPattern(row, col, moduleCount)) {
-    return preserveFunctional || config.preserveFinders !== false;
+    return preserveFinders;
+  }
+
+  if (isFinderSeparator) {
+    return preserveFinders;
   }
 
   // Check timing patterns - lock if preserveTiming is true
   if (isTimingPattern(row, col, moduleCount)) {
-    return preserveFunctional || config.preserveTiming === true;
+    return preserveTiming;
   }
 
   // Check alignment patterns - lock if preserveAlignment is true
   if (isAlignmentPattern(row, col, moduleCount, version)) {
-    return preserveFunctional || config.preserveAlignment === true;
+    return preserveAlignment;
   }
 
   // Check format info - lock if protectFormatInfo is true
   if (isFormatInfo(row, col, moduleCount)) {
-    return preserveFunctional || config.protectFormatInfo === true;
+    return protectFormat;
   }
 
   // Check version info - lock if protectVersionInfo is true
   if (isVersionInfo(row, col, moduleCount, version)) {
-    return preserveFunctional || config.protectVersionInfo === true;
-  }
-
-  // Quiet zone separators around finders - lock with finders
-  // Top-left separator
-  if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) {
-    return preserveFunctional || config.preserveFinders !== false;
-  }
-  // Top-right separator
-  if ((row === 7 && col >= moduleCount - 8) || (col === moduleCount - 8 && row <= 7)) {
-    return preserveFunctional || config.preserveFinders !== false;
-  }
-  // Bottom-left separator
-  if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) {
-    return preserveFunctional || config.preserveFinders !== false;
+    return protectVersion;
   }
 
   return false;
+}
+
+function isFixedDarkModule(row: number, col: number, moduleCount: number): boolean {
+  return row === moduleCount - 8 && col === 8;
 }
 
 function enforceModuleConstraints(
@@ -432,6 +454,7 @@ function enforceModuleConstraints(
     for (let mr = 0; mr < moduleCount; mr++) {
       for (let mc = 0; mc < moduleCount; mc++) {
         if (locked[mr][mc]) continue;
+        if (isFixedDarkModule(mr, mc, moduleCount)) continue;
         const qrIsDark = qr.isDark(mr, mc);
         if (qrIsDark) {
           const occViolation = Math.max(0, darkMinMap[mr][mc] - occupancies[mr][mc]);
@@ -458,6 +481,7 @@ function enforceModuleConstraints(
     for (let mr = 0; mr < moduleCount; mr++) {
       for (let mc = 0; mc < moduleCount; mc++) {
         if (locked[mr][mc]) continue;
+        if (isFixedDarkModule(mr, mc, moduleCount)) continue;
         const qrIsDark = qr.isDark(mr, mc);
         const occ = occupancies[mr][mc];
         const cOcc = centerOcc[mr][mc];
@@ -720,9 +744,11 @@ export async function generateDitheredMatrix(
       const moduleRow = Math.floor(y / scale);
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
+      const moduleLocked = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
+      const fixedDarkUnlocked = !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
 
       // Structural modules are exact when locked by config.
-      if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
+      if (moduleLocked) {
         matrix[y][x] = qrIsDark;
         colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
         desire[y][x] = qrIsDark ? 1 : 0;
@@ -733,7 +759,9 @@ export async function generateDitheredMatrix(
       // QR bits are applied later in the projection/correction stage.
       const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
       const centerW = moduleCenterWeight(x, y, scale);
-      const qrBias = (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + mix * 0.8);
+      const qrBias = fixedDarkUnlocked
+        ? 0
+        : (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + mix * 0.8);
       const biasedOverlayDark = clamp01(overlayDark + qrBias);
       const n = sampleBlueNoise(x, y, noiseTile, tileSize);
       const threshold = clamp01(0.5 + mix * (n - 0.5));
@@ -864,8 +892,10 @@ export async function generateBlueNoiseMatrix(
       const moduleRow = Math.floor(y / scale);
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
+      const moduleLocked = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
+      const fixedDarkUnlocked = !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
 
-      if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
+      if (moduleLocked) {
         matrix[y][x] = qrIsDark;
         colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
         desire[y][x] = qrIsDark ? 1 : 0;
@@ -875,7 +905,9 @@ export async function generateBlueNoiseMatrix(
       const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
       // ART-FIRST: base decision solely on artwork luminance + global noise field.
       const centerW = moduleCenterWeight(x, y, scale);
-      const qrBias = (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + intensity * 0.8);
+      const qrBias = fixedDarkUnlocked
+        ? 0
+        : (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + intensity * 0.8);
       const d = clamp01((overlayDark + qrBias) * (0.72 + intensity * 0.56));
       desire[y][x] = overlayDark;
 

@@ -63,6 +63,7 @@ export interface QRGeneratorConfig {
   edgeImprintThreshold?: number;
   toneStdThreshold?: number;
   edgeImprintWorsenLimit?: number;
+  scanGateProfile?: 'full' | 'preview' | 'off';
   qrBitBiasStrength?: number;
   preserveFunctionalPatterns?: boolean;
   cleanupSpeckle?: boolean;

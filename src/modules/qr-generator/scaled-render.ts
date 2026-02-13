@@ -5,8 +5,11 @@
 
 import { createLogger } from '../../lib/logger';
 import {
+  isAlignmentPattern as isAlignmentPatternSpec,
+  isFinderPattern as isFinderPatternSpec,
   isFormatInfo as isFormatInfoSpec,
   isLocked as isLockedSpec,
+  isTimingPattern as isTimingPatternSpec,
   isVersionInfo as isVersionInfoSpec,
 } from '../qr-spec';
 import type { CanvasFactory } from './canvas-factory';
@@ -100,7 +103,7 @@ export async function generateScaledQR(
   const useGradient = config.gradient && config.gradient.type !== 'none';
 
   // Determine color rendering mode
-  const useColorRendering = overlayCanvas && config.colorMode !== 'bw';
+  const useColorRendering = Boolean(overlayCanvas && config.colorMode !== 'bw');
 
   // Dithered mode is ink-dominant: render dark dots over mostly open paper.
   const isDitheredMode =
@@ -112,6 +115,27 @@ export async function generateScaledQR(
     config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
   const needsBothDarkAndLightColors = isSubpixelMode;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
+  const preserveFunctional = config.preserveFunctionalPatterns === true;
+  const preserveFinders = config.preserveFinders !== false;
+  const preserveTiming = preserveFunctional
+    ? config.preserveTiming !== false
+    : config.preserveTiming === true;
+  const preserveAlignment = preserveFunctional
+    ? config.preserveAlignment !== false
+    : config.preserveAlignment === true;
+  const protectFormat = preserveFunctional
+    ? config.protectFormatInfo !== false
+    : config.protectFormatInfo === true;
+  const protectVersion = preserveFunctional
+    ? config.protectVersionInfo !== false
+    : config.protectVersionInfo === true;
+  const preserveFixedDark =
+    preserveFunctional ||
+    preserveFinders ||
+    preserveTiming ||
+    preserveAlignment ||
+    protectFormat ||
+    protectVersion;
   const qrDrawSize = scaledSize * subPixelSize;
   const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
   const ditherBackdropWash = Math.max(0, Math.min(1, config.ditherBackdropWash ?? 0.18));
@@ -245,6 +269,29 @@ export async function generateScaledQR(
     ctx.fill();
   };
 
+  const isFinderSeparator = (row: number, col: number): boolean =>
+    (row === 7 && col <= 7) ||
+    (col === 7 && row <= 7) ||
+    (row === 7 && col >= moduleCount - 8) ||
+    (col === moduleCount - 8 && row <= 7) ||
+    (row === moduleCount - 8 && col <= 7) ||
+    (col === 7 && row >= moduleCount - 8);
+
+  const shouldForceBinaryModule = (row: number, col: number): boolean => {
+    if (!isLockedSpec(row, col, moduleCount, version)) return false;
+    // Fixed dark module follows preserve/protect policy.
+    if (row === moduleCount - 8 && col === 8) return preserveFixedDark;
+    // Finder regions/separators follow preserveFinders explicitly.
+    if (isFinderPatternSpec(row, col, moduleCount) || isFinderSeparator(row, col)) {
+      return preserveFinders;
+    }
+    if (isTimingPatternSpec(row, col, moduleCount)) return preserveTiming;
+    if (isAlignmentPatternSpec(row, col, moduleCount, version)) return preserveAlignment;
+    if (isFormatInfoSpec(row, col, moduleCount)) return protectFormat;
+    if (isVersionInfoSpec(row, col, moduleCount, version)) return protectVersion;
+    return false;
+  };
+
   const enforceQuietZoneClean = (): void => {
     if (marginPx <= 0) return;
     const qrStart = marginPx;
@@ -267,7 +314,7 @@ export async function generateScaledQR(
   const drawStrictFunctionOverlay = (): void => {
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
-        if (!isLockedSpec(row, col, moduleCount, version)) continue;
+        if (!shouldForceBinaryModule(row, col)) continue;
         const x = marginPx + col * effectiveModuleSize;
         const y = marginPx + row * effectiveModuleSize;
         ctx.fillStyle = qr.isDark(row, col) ? effectiveFgColor : effectiveBgColor;
@@ -302,7 +349,7 @@ export async function generateScaledQR(
       const dy = marginPx + y * subPixelSize;
       const moduleRow = Math.floor(y / scale);
       const moduleCol = Math.floor(x / scale);
-      const moduleLocked = isLockedSpec(moduleRow, moduleCol, moduleCount, version);
+      const moduleLocked = shouldForceBinaryModule(moduleRow, moduleCol);
 
       if (!isDark) {
         if (isDitheredMode) {
@@ -342,10 +389,12 @@ export async function generateScaledQR(
       }
 
       if (isDark) {
-        // Dark module: use overlay color if available, otherwise foreground color
-        if (useColorRendering && color) {
-          if (isDitheredMode) {
-            const sourceLuma = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
+        if (isDitheredMode) {
+          const sourceLuma = color
+            ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255
+            : 0.5;
+          let drawLuma = sourceLuma;
+          if (useColorRendering && color) {
             const tone = Math.pow(1 - sourceLuma, 0.86);
             const targetLuma = Math.max(0.04, Math.min(0.21, 0.04 + (1 - tone) * 0.17));
             const dark = adjustLumaPreserveChroma(color, targetLuma, 1.62);
@@ -353,31 +402,36 @@ export async function generateScaledQR(
             const darkG = dark.g;
             const darkB = dark.b;
             ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
-            const luma = (0.299 * darkR + 0.587 * darkG + 0.114 * darkB) / 255;
-            const varN = localVariance(x, y);
-            const noiseN = hash01(x, y, seed);
-            const toneN = Math.pow(1 - luma, 0.9);
-            if (!moduleLocked) {
-              const dropoutNoise = hash01(x, y, seed + 257);
-              const dropoutChance = Math.max(
-                0,
-                Math.min(0.05, 0.004 + (1 - toneN) * 0.03 + varN * 0.012)
-              );
-              if (dropoutNoise < dropoutChance) continue;
-            }
-            const radiusT = Math.max(
-              0,
-              Math.min(1, 0.16 + toneN * 0.68 + varN * 0.22 + (noiseN - 0.5) * 0.34)
-            );
-            const rawRadius = dotMinRadiusPx + radiusT * (dotMaxRadiusPx - dotMinRadiusPx);
-            const radius = quantizeRadius(Math.max(dotMinRadiusPx, rawRadius));
-            const jitterN = 0.66 + 0.34 * hash01(x, y, seed + 7);
-            drawDitherDot(dx, dy, radius, jitterN);
+            drawLuma = (0.299 * darkR + 0.587 * darkG + 0.114 * darkB) / 255;
           } else {
-            // For subpixel modes: use raw overlay color
-            ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+            const mono = Math.round(Math.max(8, Math.min(76, 8 + sourceLuma * 68)));
+            ctx.fillStyle = `rgb(${mono},${mono},${mono})`;
+            drawLuma = mono / 255;
           }
+
+          const varN = localVariance(x, y);
+          const noiseN = hash01(x, y, seed);
+          const toneN = Math.pow(1 - drawLuma, 0.9);
+          if (!moduleLocked) {
+            const dropoutNoise = hash01(x, y, seed + 257);
+            const dropoutChance = Math.max(
+              0,
+              Math.min(0.05, 0.004 + (1 - toneN) * 0.03 + varN * 0.012)
+            );
+            if (dropoutNoise < dropoutChance) continue;
+          }
+          const radiusT = Math.max(
+            0,
+            Math.min(1, 0.16 + toneN * 0.68 + varN * 0.22 + (noiseN - 0.5) * 0.34)
+          );
+          const rawRadius = dotMinRadiusPx + radiusT * (dotMaxRadiusPx - dotMinRadiusPx);
+          const radius = quantizeRadius(Math.max(dotMinRadiusPx, rawRadius));
+          const jitterN = 0.66 + 0.34 * hash01(x, y, seed + 7);
+          drawDitherDot(dx, dy, radius, jitterN);
+        } else if (useColorRendering && color) {
+          // For subpixel modes: use raw overlay color
+          ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
         } else {
           // B&W mode or no color data: use foreground color (with optional gradient)
           ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
@@ -457,8 +511,8 @@ export async function generateScaledQR(
 
   // Preserve timing pattern modules on top (scan critical)
   // When preserveTiming is false, we intentionally leave timing modules subject to the overlay.
-  const shouldPreserveTiming = !forceBinaryFunctionPatterns && config.preserveTiming === true;
-  if (shouldPreserveTiming) {
+  const shouldPreserveTimingModules = !forceBinaryFunctionPatterns && preserveTiming;
+  if (shouldPreserveTimingModules) {
     const timingStyle = config.timingStyle || 'match_module';
     // Horizontal timing (row 6, between finders)
     const timingRow = 6;
@@ -501,16 +555,16 @@ export async function generateScaledQR(
 
   // Preserve format + version info modules on top (scan critical)
   // These are small fixed areas, and should be kept clean when protection is enabled.
-  const protectFormat = !forceBinaryFunctionPatterns && config.protectFormatInfo === true;
-  const protectVersion = !forceBinaryFunctionPatterns && config.protectVersionInfo === true;
+  const shouldProtectFormatInfo = !forceBinaryFunctionPatterns && protectFormat;
+  const shouldProtectVersionInfo = !forceBinaryFunctionPatterns && protectVersion;
 
-  if (protectFormat || protectVersion) {
+  if (shouldProtectFormatInfo || shouldProtectVersionInfo) {
     let formatCount = 0;
     let versionCount = 0;
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
-        const isFormat = protectFormat && isFormatInfoSpec(row, col, moduleCount);
-        const isVersion = protectVersion && isVersionInfoSpec(row, col, moduleCount, version);
+        const isFormat = shouldProtectFormatInfo && isFormatInfoSpec(row, col, moduleCount);
+        const isVersion = shouldProtectVersionInfo && isVersionInfoSpec(row, col, moduleCount, version);
         if (!(isFormat || isVersion)) continue;
 
         const isDark = qr.isDark(row, col);
@@ -550,11 +604,11 @@ export async function generateScaledQR(
 
     if (debug) {
       log.debug('ScaledRender preserved', {
-        protectFormat,
-        protectVersion,
+        protectFormat: shouldProtectFormatInfo,
+        protectVersion: shouldProtectVersionInfo,
         formatCount,
         versionCount,
-        preservedTiming: shouldPreserveTiming,
+        preservedTiming: shouldPreserveTimingModules,
       });
     }
   }

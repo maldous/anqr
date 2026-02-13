@@ -74,7 +74,7 @@ help:
 	@echo "    make quality        Run comprehensive quality gate (18 checks: lint, types, coverage, deps, security, spelling)"
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
-	@echo "    make test:qr:artifact  Run dithered scan gate and save tsunami-generated-current.png"
+	@echo "    make test:qr:artifact  Run dithered scan gate and save current tsunami/king artifacts"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
 	@echo "    make test:coverage:gap  Generate coverage debt report"
 	@echo "    make test:unit:ci   Run CI-safe Vitest subset (excludes missing local fixture tests)"
