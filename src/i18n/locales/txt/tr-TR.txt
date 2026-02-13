@@ -1800,3 +1800,4 @@
 1800	"Yinelemeleri Ara"
 1801	"Daha fazla yineleme = daha iyi eşleşme ancak daha yavaş oluşturma. Çoğu görsel için 10.000-50.000 önerilir."
 1802	"Sanat eseri modu, maksimum piksel kontrolü için Düşük hata düzeltmesi gerektirir."
+1803	"_"

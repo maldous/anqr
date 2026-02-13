@@ -1800,3 +1800,4 @@
 1800	"Keresési iterációk"
 1801	"Több iteráció = jobb egyezés, de lassabb generálás. A legtöbb képhez 10 000-50 000 ajánlott."
 1802	"Az alkotás mód alacsony hibajavítást igényel a maximális pixelvezérlés érdekében."
+1803	"_"

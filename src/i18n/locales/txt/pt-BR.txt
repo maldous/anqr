@@ -1800,3 +1800,4 @@
 1800	"Iterações de pesquisa"
 1801	"Mais iterações = melhor correspondência, mas geração mais lenta. 10.000-50.000 recomendado para a maioria das imagens."
 1802	"O modo artístico requer baixa correção de erros para controle máximo de pixels."
+1803	"_"

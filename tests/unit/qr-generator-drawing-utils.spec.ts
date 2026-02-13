@@ -196,19 +196,19 @@ describe('validateColor', () => {
 // ========== getScaleFactor ==========
 
 describe('getScaleFactor', () => {
-  it('returns 4 for dithered', async () => {
+  it('returns default render scale for dithered', async () => {
     const { getScaleFactor } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
-    expect(getScaleFactor('dithered', {} as never)).toBe(4);
+    expect(getScaleFactor('dithered', {} as never)).toBe(18);
   });
 
-  it('returns 4 for blue-noise', async () => {
+  it('returns default render scale for blue-noise', async () => {
     const { getScaleFactor } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
-    expect(getScaleFactor('blue-noise', {} as never)).toBe(4);
+    expect(getScaleFactor('blue-noise', {} as never)).toBe(18);
   });
 
-  it('returns 4 for blue_noise', async () => {
+  it('returns default render scale for blue_noise', async () => {
     const { getScaleFactor } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
-    expect(getScaleFactor('blue_noise', {} as never)).toBe(4);
+    expect(getScaleFactor('blue_noise', {} as never)).toBe(18);
   });
 
   it('returns config.subpixelGrid for subpixel', async () => {

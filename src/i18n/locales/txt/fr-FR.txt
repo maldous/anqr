@@ -1800,3 +1800,4 @@
 1800	"Itérations de recherche"
 1801	"Plus d'itérations = meilleure correspondance mais génération plus lente. 10 000 à 50 000 recommandés pour la plupart des images."
 1802	"Le mode Illustration nécessite une faible correction d’erreur pour un contrôle maximal des pixels."
+1803	"_"

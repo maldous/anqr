@@ -1800,3 +1800,4 @@
 1800	"Suchiterationen"
 1801	"Mehr Iterationen = bessere Übereinstimmung, aber langsamere Generierung. Für die meisten Bilder werden 10.000–50.000 empfohlen."
 1802	"Der Grafikmodus erfordert eine geringe Fehlerkorrektur für maximale Pixelkontrolle."
+1803	"_"

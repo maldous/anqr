@@ -1800,3 +1800,4 @@
 1800	"Përsëritjet e kërkimit"
 1801	"Më shumë përsëritje = përputhje më e mirë, por gjenerim më i ngadalshëm. 10,000-50,000 rekomandohen për shumicën e imazheve."
 1802	"Modaliteti i veprës artistike kërkon korrigjim të ulët të gabimit për kontroll maksimal të pikselit."
+1803	"_"

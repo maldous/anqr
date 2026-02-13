@@ -1800,3 +1800,4 @@
 1800	"Lelaran Carian"
 1801	"Lebih banyak lelaran = padanan yang lebih baik tetapi penjanaan lebih perlahan. 10,000-50,000 disyorkan untuk kebanyakan imej."
 1802	"Mod karya seni memerlukan pembetulan ralat rendah untuk kawalan piksel maksimum."
+1803	"_"

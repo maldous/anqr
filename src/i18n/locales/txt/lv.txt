@@ -1800,3 +1800,4 @@
 1800	"Meklēšanas iterācijas"
 1801	"Vairāk atkārtojumu = labāka atbilstība, bet lēnāka ģenerēšana. Lielākajai daļai attēlu ieteicams 10 000–50 000."
 1802	"Mākslas darba režīmā ir nepieciešama zema kļūdu korekcija, lai nodrošinātu maksimālu pikseļu kontroli."
+1803	"_"

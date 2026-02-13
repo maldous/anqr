@@ -1800,3 +1800,4 @@
 1800	"Sök Iterationer"
 1801	"Fler iterationer = bättre matchning men långsammare generering. 10 000-50 000 rekommenderas för de flesta bilder."
 1802	"Artwork-läget kräver låg felkorrigering för maximal pixelkontroll."
+1803	"_"
