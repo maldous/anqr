@@ -48,6 +48,7 @@ const BASIC_OVERLAY_MODES: { value: OverlayMode; labelKey: string }[] = [
 const ADVANCED_OVERLAY_MODES: { value: OverlayMode; labelKey: string }[] = [
   { value: 'subpixel', labelKey: 'overlay.subpixelMode' },
   { value: 'blue-noise', labelKey: 'overlay.blueNoiseMode' },
+  { value: 'halftone-dithered', labelKey: 'overlay.halftoneDitheredMode' },
   { value: 'mosaic', labelKey: 'overlay.mosaicMode' },
   { value: 'gapfill', labelKey: 'overlay.gapFillMode' },
   { value: 'brightness', labelKey: 'overlay.brightnessMode' },
@@ -959,7 +960,7 @@ export function OverlaySection() {
               </div>
 
               {/* Dither Options */}
-              {['dithered', 'blue-noise', 'dither'].includes(overlay.mode) && (
+              {['dithered', 'blue-noise', 'dither', 'halftone-dithered'].includes(overlay.mode) && (
                 <>
                   <div className="space-y-2 pt-2 border-t">
                     <Label className="text-muted-foreground flex items-center gap-1.5">
@@ -1284,7 +1285,7 @@ export function OverlaySection() {
               )}
 
               {/* Halftone Settings */}
-              {overlay.mode === 'halftone' && (
+              {(overlay.mode === 'halftone' || overlay.mode === 'halftone-dithered') && (
                 <div className="space-y-2 pt-2 border-t">
                   <Label className="text-muted-foreground">{t('overlay.halftoneSettings')}</Label>
                   <div className="space-y-2">

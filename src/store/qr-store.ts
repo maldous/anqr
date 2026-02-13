@@ -175,6 +175,7 @@ export type OverlayMode =
   | 'center'
   | 'blend'
   | 'halftone'
+  | 'halftone-dithered'
   | 'mosaic'
   | 'gapfill'
   | 'brightness'

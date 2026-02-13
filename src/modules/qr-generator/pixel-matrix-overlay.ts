@@ -8,7 +8,7 @@ import type { QRCodeObject } from './cache';
 import { applyDitherToMatrix } from './dithering-matrix';
 import { getOverlayData } from './overlay-data';
 import { getEffectiveIntensity } from './pixel-matrix-utils';
-import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
+import type { CreateCanvasFn, OverlayData, QRCodeInstance, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');
 
@@ -36,6 +36,27 @@ export async function prepareUnifiedOverlayData(
 
   const { effectiveIntensity, effectiveConfig } = getEffectiveIntensity(config);
 
+  // Halftone-dithered: use error-diffusion density instead of raw overlay brightness
+  const overlayMode = config.overlayMode || 'blend';
+  if (overlayMode === 'halftone-dithered') {
+    const { generateHalftoneDitheredOverlayData } = await import('./pixel-matrix-dithered');
+    const result = await generateHalftoneDitheredOverlayData(
+      // Safe: QRCodeObject satisfies QRCodeInstance (isDark + getModuleCount)
+      qr as QRCodeInstance,
+      effectiveConfig,
+      overlayCanvas,
+      moduleCount,
+      effectiveIntensity,
+      effectiveConfig,
+      createCanvasFn
+    );
+    return {
+      ditherPattern: null,
+      overlayData: result.overlayData,
+      effectiveIntensity: result.effectiveIntensity,
+    };
+  }
+
   // Get overlay data
   const overlayData = await getOverlayData(
     overlayCanvas,
@@ -46,8 +67,6 @@ export async function prepareUnifiedOverlayData(
 
   // Apply dithering if needed
   let ditherPattern: boolean[][] | null = null;
-  const overlayMode = config.overlayMode || 'blend';
-
   if (overlayMode === 'dither' || overlayMode === 'extreme') {
     ditherPattern = applyDitherToMatrix(qr, moduleCount, overlayData, effectiveConfig);
   }

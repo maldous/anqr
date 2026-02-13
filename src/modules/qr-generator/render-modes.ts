@@ -28,6 +28,16 @@ export function computeLightBlend(intensity: number, maxBlend: number = 0.4): nu
   return maxBlend * i;
 }
 
+function applyBrightnessCurve(brightness: number, curve: string | number | undefined): number {
+  if (curve === 's-curve' || curve === 's_curve') {
+    return brightness * brightness * (3 - 2 * brightness);
+  }
+  if (curve === 'gamma') {
+    return brightness ** 0.7;
+  }
+  return brightness;
+}
+
 /** Maximum lightening applied to shadow color in duotone bright-area fallback (no highlight color). */
 const DUOTONE_MAX_LIGHTEN = 0.5;
 
@@ -83,20 +93,7 @@ export function applyQROverlayMode(
         if (config.halftoneCell || config.halftoneDotShape || config.brightnessCurve) {
           // Store brightness for halftone rendering - will be handled specially below
           result.useHalftoneRendering = true;
-          // Apply brightness curve transformation
-          let transformedBrightness = brightness;
-          const curve = config.brightnessCurve;
-          if (curve === 's-curve' || curve === 's_curve') {
-            // S-curve: more contrast in midtones
-            transformedBrightness = brightness * brightness * (3 - 2 * brightness);
-          } else if (curve === 'gamma') {
-            // Gamma curve: lift shadows
-            transformedBrightness = brightness ** 0.7;
-          }
-          // 'linear' is the default - no transformation needed
-          // Apply intensity to control how much the overlay brightness affects dot size
-          // At intensity 0: all dots same size (neutral 0.5 brightness)
-          // At intensity 100%: full variation based on overlay brightness
+          const transformedBrightness = applyBrightnessCurve(brightness, config.brightnessCurve);
           result.halftoneBrightness = 0.5 + (transformedBrightness - 0.5) * effectiveIntensity;
         } else {
           // Legacy halftone behavior with improved size mapping
@@ -112,6 +109,34 @@ export function applyQROverlayMode(
         }
       }
       break;
+
+    case 'halftone-dithered': {
+      result.useHalftoneRendering = true;
+      result.shouldDrawCell = true;
+      const htdColor = overlayWithColors.colors?.[row]?.[col];
+      const htdTransformed = applyBrightnessCurve(brightness, config.brightnessCurve);
+
+      if (isDark) {
+        result.halftoneBrightness = 0.5 + (htdTransformed - 0.5) * effectiveIntensity;
+        if (htdColor) {
+          const dkF = computeDarkFactor(effectiveIntensity, 0.5);
+          result.moduleColor = `rgb(${Math.round(htdColor.r * dkF)},${Math.round(htdColor.g * dkF)},${Math.round(htdColor.b * dkF)})`;
+        }
+      } else {
+        result.halftoneBrightness = Math.max(
+          0.6,
+          0.5 + (htdTransformed - 0.5) * effectiveIntensity
+        );
+        if (htdColor) {
+          const ltBlend = computeLightBlend(effectiveIntensity, 0.4);
+          const lightR = Math.round(htdColor.r + (255 - htdColor.r) * ltBlend);
+          const lightG = Math.round(htdColor.g + (255 - htdColor.g) * ltBlend);
+          const lightB = Math.round(htdColor.b + (255 - htdColor.b) * ltBlend);
+          result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
+        }
+      }
+      break;
+    }
 
     case 'blend':
       if (isDark) {

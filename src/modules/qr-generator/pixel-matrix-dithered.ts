@@ -35,6 +35,7 @@ import {
 } from './dithering-constants';
 import type {
   CreateCanvasFn,
+  OverlayData,
   PixelDecisionMatrix,
   QRCodeInstance,
   QRGeneratorConfig,
@@ -786,4 +787,87 @@ export async function generateBlueNoiseMatrix(
   });
 
   return { matrix, colors, scale, overlayData: null, effectiveIntensity };
+}
+
+/**
+ * Generate halftone-dithered overlay data.
+ * Runs error diffusion at sub-pixel level (scale=4), then aggregates per-module
+ * dark-pixel density and average overlay color into module-level OverlayData.
+ * The density drives halftone dot sizing in the render loop.
+ */
+export async function generateHalftoneDitheredOverlayData(
+  qr: QRCodeInstance,
+  config: QRGeneratorConfig,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  moduleCount: number,
+  effectiveIntensity: number,
+  effectiveConfig: QRGeneratorConfig,
+  createCanvasFn: CreateCanvasFn
+): Promise<{ overlayData: OverlayData; effectiveIntensity: number }> {
+  const scale = 4;
+
+  const ditheredResult = await generateDitheredMatrix(
+    qr,
+    config,
+    overlayCanvas,
+    moduleCount,
+    scale,
+    effectiveIntensity,
+    effectiveConfig,
+    createCanvasFn
+  );
+
+  const overlayData: OverlayData = {};
+  overlayData.colors = {};
+  const total = scale * scale;
+
+  for (let mr = 0; mr < moduleCount; mr++) {
+    overlayData[mr] = {};
+    overlayData.colors[mr] = {};
+
+    for (let mc = 0; mc < moduleCount; mc++) {
+      let darkCount = 0;
+      let sumR = 0;
+      let sumG = 0;
+      let sumB = 0;
+      let colorCount = 0;
+
+      for (let sy = 0; sy < scale; sy++) {
+        for (let sx = 0; sx < scale; sx++) {
+          const y = mr * scale + sy;
+          const x = mc * scale + sx;
+          if (ditheredResult.matrix[y]?.[x]) darkCount++;
+          const c = ditheredResult.colors[y]?.[x];
+          if (c) {
+            sumR += c.r;
+            sumG += c.g;
+            sumB += c.b;
+            colorCount++;
+          }
+        }
+      }
+
+      const density = darkCount / total;
+      overlayData[mr][mc] = 1 - density;
+
+      if (colorCount > 0) {
+        overlayData.colors[mr][mc] = {
+          r: Math.round(sumR / colorCount),
+          g: Math.round(sumG / colorCount),
+          b: Math.round(sumB / colorCount),
+        };
+      } else {
+        const gray = Math.round((1 - density) * 255);
+        overlayData.colors[mr][mc] = { r: gray, g: gray, b: gray };
+      }
+    }
+  }
+
+  log.debug('halftone-dithered overlay data generated', {
+    moduleCount,
+    scale,
+    effectiveIntensity,
+  });
+
+  return { overlayData, effectiveIntensity };
 }

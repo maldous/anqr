@@ -28,10 +28,7 @@ function _isDarkModule(row: number, col: number, moduleCount: number): boolean {
   return row === moduleCount - 8 && col === 8;
 }
 
-interface PixelColor extends RGB {
-  halftone?: boolean;
-  sizeRatio?: number;
-}
+type PixelColor = RGB;
 
 /**
  * UNIFIED SCALED QR GENERATION
@@ -140,7 +137,7 @@ export async function generateScaledQR(
   // sub-pixels are flipped), but the per-pixel color treatment should always produce
   // strong contrast for phone scanning regardless of ECC level.
   const COLOR_FACTOR_INTENSITY = 0.85;
-  const overlayDkStructural = computeDarkFactor(COLOR_FACTOR_INTENSITY, 0.1);
+  const overlayDkStructural = computeDarkFactor(COLOR_FACTOR_INTENSITY, 0.35);
   const overlayLtStructural = computeLightBlend(COLOR_FACTOR_INTENSITY, 0.9);
   const overlayDkTexture = computeDarkFactor(COLOR_FACTOR_INTENSITY, 0.72);
   const overlayLtTexture = computeLightBlend(COLOR_FACTOR_INTENSITY, 0.18);
@@ -191,16 +188,7 @@ export async function generateScaledQR(
       if (isDark) {
         // Dark module: use overlay color if available, otherwise foreground color
         if (useColorRendering && color) {
-          // Check for halftone rendering flag
-          if (color.halftone) {
-            // Draw halftone dot
-            ctx.fillStyle = effectiveBgColor;
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-            ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
-            const dotSize = subPixelSize * (color.sizeRatio || 1);
-            const offset = (subPixelSize - dotSize) / 2;
-            ctx.fillRect(dx + offset, dy + offset, dotSize, dotSize);
-          } else if (isDitheredMode) {
+          if (isDitheredMode) {
             const dkFactor = isQrDark ? overlayDkStructural : overlayDkTexture;
             let darkR = Math.round(color.r * dkFactor);
             let darkG = Math.round(color.g * dkFactor);
