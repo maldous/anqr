@@ -53,9 +53,17 @@ export interface QRGeneratorConfig {
   colorDither?: 'none' | 'per_channel' | 'perceptual';
   dotMinRadiusPx?: number;
   dotMaxRadiusPx?: number;
+  lightGrainDensity?: number;
+  lightGrainAlpha?: number;
+  ditherBackdropAlpha?: number;
+  ditherBackdropWash?: number;
   renderScalePerModule?: number;
   darkMinOccupancy?: number;
   lightMaxOccupancy?: number;
+  edgeImprintThreshold?: number;
+  toneStdThreshold?: number;
+  edgeImprintWorsenLimit?: number;
+  qrBitBiasStrength?: number;
   preserveFunctionalPatterns?: boolean;
   cleanupSpeckle?: boolean;
   forceCenterLock?: boolean;

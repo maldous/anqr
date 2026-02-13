@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report
+.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:qr\:artifact
 
 # ============================================
 # Help
@@ -74,6 +74,7 @@ help:
 	@echo "    make quality        Run comprehensive quality gate (18 checks: lint, types, coverage, deps, security, spelling)"
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
+	@echo "    make test:qr:artifact  Run dithered scan gate and save tsunami-generated-current.png"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
 	@echo "    make test:coverage:gap  Generate coverage debt report"
 	@echo "    make test:unit:ci   Run CI-safe Vitest subset (excludes missing local fixture tests)"
@@ -548,6 +549,9 @@ signoff:
 
 test\:unit:
 	npm run test:unit
+
+test\:qr\:artifact:
+	SAVE_QR_ARTIFACT=1 npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts
 
 test\:unit\:coverage:
 	npm run test:unit:coverage
