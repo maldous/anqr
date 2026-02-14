@@ -1457,7 +1457,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       const sampleOriginalMatrix = (): boolean[][] | null => {
         if (!(isGeneratorSource && generatedCanvas)) return null;
-        const gctx = generatedCanvas.getContext('2d');
+        const gctx = generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null;
         if (!gctx) return null;
 
         const m: boolean[][] = new Array(moduleCount);

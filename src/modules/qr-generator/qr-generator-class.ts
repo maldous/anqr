@@ -444,7 +444,7 @@ export class QRGenerator {
         const decodeCanvasData = (
           c: HTMLCanvasElement | OffscreenCanvas
         ): { success: boolean; data: string | null } | null => {
-          const ctx = c.getContext('2d');
+          const ctx = c.getContext('2d') as CanvasRenderingContext2D | null;
           if (!ctx) return null;
           const imageData = ctx.getImageData(0, 0, c.width, c.height);
           return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
@@ -694,7 +694,9 @@ export class QRGenerator {
           ...fixedVisualPolicy,
           preserveFunctionalPatterns: effectiveConfig.preserveFunctionalPatterns,
           preserveFinders:
-            patch.preserveFinders !== undefined ? patch.preserveFinders : effectiveConfig.preserveFinders,
+            patch.preserveFinders !== undefined
+              ? patch.preserveFinders
+              : effectiveConfig.preserveFinders,
           forceCenterLock: false,
           cleanupSpeckle: false,
           darkMinOccupancy: patch.darkMinOccupancy,
@@ -724,7 +726,7 @@ export class QRGenerator {
         const computeFinalRasterMetrics = (
           src: HTMLCanvasElement | OffscreenCanvas
         ): { edgeImprint: number; toneStd: number } | null => {
-          const ctx = src.getContext('2d');
+          const ctx = src.getContext('2d') as CanvasRenderingContext2D | null;
           if (!ctx) return null;
           const { width, height } = src;
           const imageData = ctx.getImageData(0, 0, width, height).data;
@@ -843,7 +845,12 @@ export class QRGenerator {
 
           if (skipScanGateEscalation) {
             const baseMetrics = isPreviewScanGate ? null : computeFinalRasterMetrics(finalRaster);
-            return { ok: true, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+            return {
+              ok: true,
+              baseDecodeOk: true,
+              metrics: baseMetrics,
+              evaluatedCanvas: finalRaster,
+            };
           }
 
           if (isPreviewScanGate) {
@@ -894,7 +901,7 @@ export class QRGenerator {
 
           for (const s of scenarios) {
             const sim = await this.createCanvas(finalRaster.width, finalRaster.height);
-            const simCtx = sim.getContext('2d');
+            const simCtx = sim.getContext('2d') as CanvasRenderingContext2D | null;
             if (!simCtx)
               return {
                 ok: false,
@@ -906,7 +913,7 @@ export class QRGenerator {
             const dsW = Math.max(1, Math.round(finalRaster.width * s.downscale));
             const dsH = Math.max(1, Math.round(finalRaster.height * s.downscale));
             const ds = await this.createCanvas(dsW, dsH);
-            const dsCtx = ds.getContext('2d');
+            const dsCtx = ds.getContext('2d') as CanvasRenderingContext2D | null;
             if (!dsCtx)
               return {
                 ok: false,
@@ -993,13 +1000,11 @@ export class QRGenerator {
                 rememberPatch(patch);
                 return evaluated.evaluatedCanvas;
               }
-              continue;
             }
           } catch {
             lastCanvas = attemptCanvas;
             // Keep iterating without escalating occupancy pressure aggressively.
             if (skipScanGateEscalation) {
-              continue;
             }
           }
         }

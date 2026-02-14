@@ -137,7 +137,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     heatmapCanvas.height = canvas.height;
 
     // Get QR canvas pixel data
-    const qrCtx = canvas.getContext('2d');
+    const qrCtx = canvas.getContext('2d') as CanvasRenderingContext2D | null;
     if (!qrCtx) return;
 
     const imageData = qrCtx.getImageData(0, 0, canvas.width, canvas.height);

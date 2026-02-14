@@ -724,7 +724,10 @@ export function OverlaySection() {
                 </div>
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">{t('overlay.preserveTiming')}</Label>
-                  <Switch checked={overlay.preserveTiming} onCheckedChange={setOverlayPreserveTiming} />
+                  <Switch
+                    checked={overlay.preserveTiming}
+                    onCheckedChange={setOverlayPreserveTiming}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">{t('overlay.preserveAlignment')}</Label>
@@ -757,11 +760,13 @@ export function OverlaySection() {
                 </div>
 
                 {['dithered', 'blue-noise', 'dither', 'halftone-dithered'].includes(overlay.mode) &&
-                  (!overlay.preserveFinders ||
-                    !overlay.preserveAlignment ||
-                    !overlay.preserveTiming ||
-                    !overlay.protectFormatInfo ||
-                    !overlay.protectVersionInfo) && (
+                  !(
+                    overlay.preserveFinders &&
+                    overlay.preserveAlignment &&
+                    overlay.preserveTiming &&
+                    overlay.protectFormatInfo &&
+                    overlay.protectVersionInfo
+                  ) && (
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm">Preservation Strength</Label>

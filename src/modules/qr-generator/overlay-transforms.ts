@@ -56,7 +56,7 @@ export async function applyGeometricTransforms(
 
   // Create new canvas for transformed output
   const result = await createCanvasFn(canvas.width, canvas.height);
-  const ctx = result.getContext('2d');
+  const ctx = result.getContext('2d') as CanvasRenderingContext2D | null;
   if (!ctx) return canvas;
 
   ctx.drawImage(canvas as CanvasImageSource, 0, 0);
@@ -110,7 +110,7 @@ export async function preprocessOverlay(
 
   // Create output canvas
   const result = await createCanvasFn(canvas.width, canvas.height);
-  const resultCtx = result.getContext('2d');
+  const resultCtx = result.getContext('2d') as CanvasRenderingContext2D | null;
   if (!resultCtx) return canvas;
 
   resultCtx.putImageData(processed, 0, 0);

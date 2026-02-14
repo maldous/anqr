@@ -108,7 +108,7 @@ export async function getSubpixelOverlayData(
 
   // Scale overlay to subpixel size
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d');
+  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
   if (!ctx) {
     return { brightness: [], colors: [] };
   }

@@ -54,6 +54,7 @@ export interface QRGeneratorConfig {
   // Advanced dither settings
   ditherSerpentine?: boolean;
   diffusionKernel?: string;
+  orderedMatrix?: string;
   colorDither?: 'none' | 'per_channel' | 'perceptual';
   dotMinRadiusPx?: number;
   dotMaxRadiusPx?: number;
