@@ -66,7 +66,8 @@ export function applyQROverlayMode(
   col: number,
   moduleCount: number,
   effectiveIntensity: number,
-  config: QRGeneratorConfig
+  config: QRGeneratorConfig,
+  isFunctionalPattern: boolean = false
 ): OverlayModeResult {
   const result: OverlayModeResult = {
     moduleColor: isDark ? config.fgColor : config.bgColor,
@@ -328,6 +329,48 @@ export function applyQROverlayMode(
           const lightB = Math.round(mosaicColor.b + (255 - mosaicColor.b) * blendToWhite);
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         }
+      }
+      break;
+    }
+
+    case 'dither':
+    case 'extreme': {
+      const ditherColor = overlayWithColors.colors?.[row]?.[col];
+      if (!ditherColor) break;
+
+      const isExtreme = overlayMode === 'extreme';
+      const blendPresFunctional = config.blendPreservations === true && isFunctionalPattern;
+      const preserveBoost = blendPresFunctional ? 1.14 : 1;
+      const darkBlend = isExtreme
+        ? Math.min(1, effectiveIntensity * 1.18 * preserveBoost)
+        : Math.min(1, effectiveIntensity * 0.82 * preserveBoost);
+      const darkFactor = computeDarkFactor(darkBlend, isExtreme ? 0.52 : 0.68);
+      const darkR = Math.round(ditherColor.r * darkFactor);
+      const darkG = Math.round(ditherColor.g * darkFactor);
+      const darkB = Math.round(ditherColor.b * darkFactor);
+      const darkColor = `rgb(${darkR},${darkG},${darkB})`;
+
+      if (isDark) {
+        result.moduleColor = blendColors(config.fgColor, darkColor, darkBlend);
+        break;
+      }
+
+      // When blend preservations is enabled, keep functional light cells image-aware
+      // even in non-extreme dither mode so preservations stay mode-integrated.
+      if (isExtreme || blendPresFunctional) {
+        const lightMix = computeLightBlend(
+          effectiveIntensity,
+          blendPresFunctional ? (isExtreme ? 0.36 : 0.36) : 0.25
+        );
+        const lightR = Math.round(ditherColor.r + (255 - ditherColor.r) * (0.7 + lightMix * 0.3));
+        const lightG = Math.round(ditherColor.g + (255 - ditherColor.g) * (0.7 + lightMix * 0.3));
+        const lightB = Math.round(ditherColor.b + (255 - ditherColor.b) * (0.7 + lightMix * 0.3));
+        result.moduleColor = blendColors(
+          config.bgColor,
+          `rgb(${lightR},${lightG},${lightB})`,
+          lightMix
+        );
+        result.shouldDrawCell = true;
       }
       break;
     }

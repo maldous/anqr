@@ -91,6 +91,23 @@ export function OverlaySection() {
     setOverlayCrop,
   } = useQRStore();
   const { t } = useTranslation();
+  const allPreservationsEnabled =
+    overlay.preserveFinders &&
+    overlay.preserveTiming &&
+    overlay.preserveAlignment &&
+    overlay.protectFormatInfo &&
+    overlay.protectVersionInfo;
+  const setAllPreservations = (checked: boolean) =>
+    useQRStore.setState((s) => ({
+      overlay: {
+        ...s.overlay,
+        preserveFinders: checked,
+        preserveTiming: checked,
+        preserveAlignment: checked,
+        protectFormatInfo: checked,
+        protectVersionInfo: checked,
+      },
+    }));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -679,70 +696,113 @@ export function OverlaySection() {
             </Select>
           </div>
 
-          {/* Preserve Finders */}
-          <div className="flex items-center justify-between">
-            <Label>
-              <HighlightedLabel>{t('overlay.preserveFinders')}</HighlightedLabel>
-            </Label>
-            <Switch
-              checked={overlay.preserveFinders}
-              onCheckedChange={setOverlayPreserveFinders}
-              data-testid={DynamicTestId.resolve(
-                'overlay-preserve-finders-switch',
-                'overlay-preserve-finders-switch'
-              )}
-            />
-          </div>
-
-          {['dithered', 'blue-noise', 'dither', 'halftone-dithered'].includes(overlay.mode) &&
-            (!overlay.preserveFinders ||
-              !overlay.preserveAlignment ||
-              !overlay.preserveTiming ||
-              !overlay.protectFormatInfo ||
-              !overlay.protectVersionInfo) && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">Preservation Strength</Label>
-                  <span className="text-sm text-muted-foreground">
-                    {t('qr.nPercent', { count: overlay.finderDitherStrength })}
-                  </span>
-                </div>
-                <Slider
-                  value={[overlay.finderDitherStrength]}
-                  onValueChange={([v]) =>
-                    useQRStore.setState((s) => ({
-                      overlay: { ...s.overlay, finderDitherStrength: v },
-                    }))
-                  }
-                  min={0}
-                  max={100}
-                  step={5}
-                  data-testid={DynamicTestId.resolve(
-                    'overlay-finder-dither-strength-slider',
-                    'overlay-finder-dither-strength-slider'
-                  )}
-                />
-                <div className="flex items-center justify-between pt-1">
-                  <Label className="text-sm">Blend Preservations</Label>
-                  <Switch
-                    checked={overlay.blendPreservations}
-                    onCheckedChange={(checked) =>
-                      useQRStore.setState((s) => ({
-                        overlay: { ...s.overlay, blendPreservations: checked },
-                      }))
-                    }
-                    data-testid={DynamicTestId.resolve(
-                      'overlay-blend-preservations-switch',
-                      'overlay-blend-preservations-switch'
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-
           {/* Advanced Options */}
           {(tier === 'advanced' || tier === 'professional') && (
             <>
+              {/* Preservation / Protection */}
+              <div className="space-y-2 pt-2 border-t">
+                <Label className="text-muted-foreground flex items-center gap-1.5">
+                  {t('overlay.protection')}
+                  <HelpLink anchor="protection" />
+                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Preserve All</Label>
+                  <Switch checked={allPreservationsEnabled} onCheckedChange={setAllPreservations} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">
+                    <HighlightedLabel>{t('overlay.preserveFinders')}</HighlightedLabel>
+                  </Label>
+                  <Switch
+                    checked={overlay.preserveFinders}
+                    onCheckedChange={setOverlayPreserveFinders}
+                    data-testid={DynamicTestId.resolve(
+                      'overlay-preserve-finders-switch',
+                      'overlay-preserve-finders-switch'
+                    )}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">{t('overlay.preserveTiming')}</Label>
+                  <Switch checked={overlay.preserveTiming} onCheckedChange={setOverlayPreserveTiming} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">{t('overlay.preserveAlignment')}</Label>
+                  <Switch
+                    checked={overlay.preserveAlignment}
+                    onCheckedChange={setOverlayPreserveAlignment}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">{t('overlay.protectFormatInfo')}</Label>
+                  <Switch
+                    checked={overlay.protectFormatInfo}
+                    onCheckedChange={(checked) =>
+                      useQRStore.setState((s) => ({
+                        overlay: { ...s.overlay, protectFormatInfo: checked },
+                      }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">{t('overlay.protectVersionInfo')}</Label>
+                  <Switch
+                    checked={overlay.protectVersionInfo}
+                    onCheckedChange={(checked) =>
+                      useQRStore.setState((s) => ({
+                        overlay: { ...s.overlay, protectVersionInfo: checked },
+                      }))
+                    }
+                  />
+                </div>
+
+                {['dithered', 'blue-noise', 'dither', 'halftone-dithered'].includes(overlay.mode) &&
+                  (!overlay.preserveFinders ||
+                    !overlay.preserveAlignment ||
+                    !overlay.preserveTiming ||
+                    !overlay.protectFormatInfo ||
+                    !overlay.protectVersionInfo) && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Preservation Strength</Label>
+                        <span className="text-sm text-muted-foreground">
+                          {t('qr.nPercent', { count: overlay.finderDitherStrength })}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[overlay.finderDitherStrength]}
+                        onValueChange={([v]) =>
+                          useQRStore.setState((s) => ({
+                            overlay: { ...s.overlay, finderDitherStrength: v },
+                          }))
+                        }
+                        min={0}
+                        max={100}
+                        step={5}
+                        data-testid={DynamicTestId.resolve(
+                          'overlay-finder-dither-strength-slider',
+                          'overlay-finder-dither-strength-slider'
+                        )}
+                      />
+                      <div className="flex items-center justify-between pt-1">
+                        <Label className="text-sm">Blend Preservations</Label>
+                        <Switch
+                          checked={overlay.blendPreservations}
+                          onCheckedChange={(checked) =>
+                            useQRStore.setState((s) => ({
+                              overlay: { ...s.overlay, blendPreservations: checked },
+                            }))
+                          }
+                          data-testid={DynamicTestId.resolve(
+                            'overlay-blend-preservations-switch',
+                            'overlay-blend-preservations-switch'
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+              </div>
+
               {/* Invert */}
               <div className="flex items-center justify-between">
                 <Label>
@@ -1570,50 +1630,6 @@ export function OverlaySection() {
           {/* Professional Options */}
           {tier === 'professional' && (
             <>
-              {/* Preserve Timing & Alignment */}
-              <div className="space-y-2 pt-2 border-t">
-                <Label className="text-muted-foreground flex items-center gap-1.5">
-                  {t('overlay.protection')}
-                  <HelpLink anchor="protection" />
-                </Label>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">{t('overlay.preserveTiming')}</Label>
-                  <Switch
-                    checked={overlay.preserveTiming}
-                    onCheckedChange={setOverlayPreserveTiming}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">{t('overlay.preserveAlignment')}</Label>
-                  <Switch
-                    checked={overlay.preserveAlignment}
-                    onCheckedChange={setOverlayPreserveAlignment}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">{t('overlay.protectFormatInfo')}</Label>
-                  <Switch
-                    checked={overlay.protectFormatInfo}
-                    onCheckedChange={(checked) =>
-                      useQRStore.setState((s) => ({
-                        overlay: { ...s.overlay, protectFormatInfo: checked },
-                      }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm">{t('overlay.protectVersionInfo')}</Label>
-                  <Switch
-                    checked={overlay.protectVersionInfo}
-                    onCheckedChange={(checked) =>
-                      useQRStore.setState((s) => ({
-                        overlay: { ...s.overlay, protectVersionInfo: checked },
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-
               {/* ECC Aware */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">

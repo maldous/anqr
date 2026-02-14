@@ -10,8 +10,7 @@ import {
   scrollOverlaySectionToControls,
   openAccordion,
   selectDropdownOption,
-  setSliderValue,
-  toggleSwitch
+  setSliderValue
 } from '../helpers/qr-detector';
 import { waitForRenderComplete } from '../helpers/test-utils';
 import type { Page } from '@playwright/test';
@@ -25,7 +24,6 @@ import type { Page } from '@playwright/test';
  * - All 4 basic overlay modes: center, blend, halftone, dithered
  * - Intensity slider (25%, 50%, 75%, 100%)
  * - All 3 color modes: color, grayscale, bw
- * - Preserve finder patterns switch
  * - Crop functionality (enable/disable + crop size)
  * - Combined settings permutations
  * - State changes after overlay loaded
@@ -206,18 +204,6 @@ async function setOverlayIntensity(page: Page, percent: number) {
   
   // Use data-testid based slider
   await setSliderValue(page, 'overlay-intensity-slider', percent);
-}
-
-/**
- * Toggle preserve finders switch
- * Uses data-testid for reliable selection
- */
-async function togglePreserveFinders(page: Page) {
-  await expandOverlaySection(page);
-  await scrollOverlaySectionToControls(page);
-  
-  // Use data-testid based toggle
-  await toggleSwitch(page, 'overlay-preserve-finders-switch');
 }
 
 /**
@@ -681,63 +667,19 @@ test.describe('Overlay Section - Basic Tier', () => {
   });
 
   // ==========================================
-  // PRESERVE FINDERS TESTS
+  // PRESERVATION TIER GATING
   // ==========================================
-  test.describe('Preserve Finder Patterns', () => {
+  test.describe('Preservation Controls', () => {
     test.beforeEach(async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
       await waitForQRRender();
     });
 
-    // KNOWN ISSUE: preserveFinders toggle is currently a no-op in the renderer.
-    // Finder patterns are always drawn first and excluded from overlay.
-    // See tests_knowledge.md "Issue 2: preserveFinders Toggle is a No-Op"
-    // These tests verify the UI control works but skip visual delta validation.
-    
-    test('preserve finders switch is clickable', async ({ page }) => {
+    test('preservation controls are hidden in basic tier', async ({ page }) => {
       await scrollOverlaySectionToControls(page);
-      
-      const preserveSwitch = page.locator('[data-testid="overlay-preserve-finders-switch"]');
-      await preserveSwitch.waitFor({ state: 'visible', timeout: 5000 });
-      
-      // Get initial state
-      const initialState = await preserveSwitch.getAttribute('data-state');
-      
-      // Click to toggle
-      await preserveSwitch.click({ force: true });
-      
-      // Verify state changed
-      const newState = await preserveSwitch.getAttribute('data-state');
-      expect(newState).not.toBe(initialState);
-    });
-
-    test('preserve finders switch toggles back and forth', async ({ page }) => {
-      await scrollOverlaySectionToControls(page);
-      
-      const preserveSwitch = page.locator('[data-testid="overlay-preserve-finders-switch"]');
-      await preserveSwitch.waitFor({ state: 'visible', timeout: 5000 });
-      
-      const state1 = await preserveSwitch.getAttribute('data-state');
-      
-      await preserveSwitch.click({ force: true });
-      const state2 = await preserveSwitch.getAttribute('data-state');
-      
-      await preserveSwitch.click({ force: true });
-      const state3 = await preserveSwitch.getAttribute('data-state');
-      
-      // State should toggle: state1 -> state2 -> state3 (back to state1)
-      expect(state2).not.toBe(state1);
-      expect(state3).toBe(state1);
-    });
-
-    test('toggling preserve finders changes QR output', async ({ page, waitForQRRender }) => {
-      const before = await getCanvasSnapshot(page);
-      
-      await togglePreserveFinders(page);
-      await waitForQRRender();
-      const after = await getCanvasSnapshot(page);
-      
-      expect(snapshotsAreDifferent(before, after)).toBe(true);
+      await expect(page.locator('[data-testid="overlay-preserve-finders-switch"]')).toHaveCount(0);
+      await expect(page.locator('[data-testid="overlay-finder-dither-strength-slider"]')).toHaveCount(0);
+      await expect(page.locator('[data-testid="overlay-blend-preservations-switch"]')).toHaveCount(0);
     });
   });
 

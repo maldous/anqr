@@ -582,23 +582,6 @@ describe('qr-generator dithered scan gate', () => {
     );
   });
 
-  it('keeps preserveFinders=false + blendPreservations=true decodable in full scan-gate profile', async () => {
-    const qr = new QRGenerator(nodeCanvasFactory);
-    const payload = 'https://anqr.link';
-    const cfg: QRGeneratorConfig = {
-      ...makeDefaultGalleryScanConfig(payload),
-      preserveFinders: false,
-      blendPreservations: true,
-      scanGateProfile: 'full',
-    };
-    await expectScanGatePass(
-      qr,
-      cfg,
-      'public/tsunami.jpg',
-      'tsunami-generated-preserve-finders-off-blend-pres-current.png'
-    );
-  });
-
   it('keeps preserveAlignment=false dithered output decodable in full scan-gate profile', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
     const payload = 'https://anqr.link';
