@@ -15,9 +15,9 @@
 
 import { createLogger } from '../../lib/logger';
 import { rgbToGray } from '../core';
-import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
+import { createRNG, generateBlueNoiseTile, getOrderedMatrix, sampleBlueNoise } from '../dither-algorithms';
 import { DIFFUSION_KERNELS, type DiffusionKernelDef } from '../dither-algorithms/kernels';
-import type { DiffusionKernel } from '../dither-algorithms/types';
+import type { DiffusionKernel, OrderedMatrix } from '../dither-algorithms/types';
 import {
   isAlignmentPattern,
   isFinderPattern,
@@ -38,6 +38,91 @@ import type {
 const log = createLogger('DITHER');
 
 type RGBi = { r: number; g: number; b: number };
+type DitherThresholdPattern =
+  | 'blue_noise'
+  | 'white_noise'
+  | 'gaussian_noise'
+  | 'triangular_noise'
+  | 'ordered'
+  | 'screened_blue_noise'
+  | 'temporal_blue_noise'
+  | 'adaptive_threshold';
+
+function resolveDitherKind(config: QRGeneratorConfig): string {
+  if (typeof config.ditherKind === 'string' && config.ditherKind.length > 0) return config.ditherKind;
+  if (config.ditherMode === 'blue_noise') return 'blue_noise';
+  return 'error_diffusion';
+}
+
+function resolveDiffusionKernel(
+  configuredKernel: string | undefined,
+  ditherKind: string
+): DiffusionKernel {
+  if (configuredKernel && configuredKernel in DIFFUSION_KERNELS) {
+    return configuredKernel as DiffusionKernel;
+  }
+  const kindKernelMap: Record<string, DiffusionKernel> = {
+    floyd_steinberg: 'floyd_steinberg',
+    atkinson: 'atkinson',
+    stucki: 'stucki',
+    burkes: 'burkes',
+    sierra: 'sierra',
+  };
+  return kindKernelMap[ditherKind] ?? 'floyd_steinberg';
+}
+
+function resolveOrderedMatrixName(ditherKind: string, configured: string | undefined): OrderedMatrix {
+  if (ditherKind === 'ordered_clustered') return 'clustered_dot';
+  if (ditherKind === 'ordered_void_cluster') return 'void_cluster';
+  if (configured === 'bayer2' || configured === 'bayer4' || configured === 'bayer8') return configured;
+  if (configured === 'clustered_dot' || configured === 'void_cluster') return configured;
+  return 'bayer4';
+}
+
+function resolveThresholdPattern(ditherKind: string): DitherThresholdPattern {
+  switch (ditherKind) {
+    case 'white_noise':
+      return 'white_noise';
+    case 'gaussian_noise':
+      return 'gaussian_noise';
+    case 'triangular_noise':
+      return 'triangular_noise';
+    case 'ordered_bayer':
+    case 'ordered_clustered':
+    case 'ordered_void_cluster':
+    case 'true_dither':
+      return 'ordered';
+    case 'screened_blue_noise':
+      return 'screened_blue_noise';
+    case 'temporal_blue_noise':
+      return 'temporal_blue_noise';
+    case 'adaptive_threshold':
+      return 'adaptive_threshold';
+    case 'blue_noise':
+    case 'blue_noise_threshold':
+    default:
+      return 'blue_noise';
+  }
+}
+
+function isThresholdOnlyDitherKind(ditherKind: string): boolean {
+  switch (ditherKind) {
+    case 'blue_noise':
+    case 'blue_noise_threshold':
+    case 'white_noise':
+    case 'gaussian_noise':
+    case 'triangular_noise':
+    case 'ordered_bayer':
+    case 'ordered_clustered':
+    case 'ordered_void_cluster':
+    case 'true_dither':
+    case 'temporal_blue_noise':
+    case 'adaptive_threshold':
+      return true;
+    default:
+      return false;
+  }
+}
 
 /**
  * Generate a QR-first matrix for high-contrast B&W images.
@@ -288,7 +373,11 @@ function shouldLockModule(
   config: QRGeneratorConfig
 ): boolean {
   const preserveFunctional = config.preserveFunctionalPatterns === true;
-  const preserveFinders = config.preserveFinders !== false;
+  const forceFinderLockInMatrix =
+    config.overlayMode === 'dithered' ||
+    config.overlayMode === 'blue-noise' ||
+    config.overlayMode === 'blue_noise';
+  const preserveFinders = forceFinderLockInMatrix ? true : config.preserveFinders !== false;
   const preserveTiming = preserveFunctional
     ? config.preserveTiming !== false
     : config.preserveTiming === true;
@@ -302,13 +391,7 @@ function shouldLockModule(
     ? config.protectVersionInfo !== false
     : config.protectVersionInfo === true;
   const preserveFixedDark = preserveFunctional;
-  const isFinderSeparator =
-    (row === 7 && col <= 7) ||
-    (col === 7 && row <= 7) ||
-    (row === 7 && col >= moduleCount - 8) ||
-    (col === moduleCount - 8 && row <= 7) ||
-    (row === moduleCount - 8 && col <= 7) ||
-    (col === 7 && row >= moduleCount - 8);
+  const isFinderSeparator = isFinderModuleOrSeparator(row, col, moduleCount, true);
 
   // Fixed dark module follows global preserve/protect policy.
   // When all preserve/protect options are disabled, allow dithering here too.
@@ -344,6 +427,23 @@ function shouldLockModule(
   }
 
   return false;
+}
+
+function isFinderModuleOrSeparator(
+  row: number,
+  col: number,
+  moduleCount: number,
+  separatorsOnly: boolean = false
+): boolean {
+  const isFinderSeparator =
+    (row === 7 && col <= 7) ||
+    (col === 7 && row <= 7) ||
+    (row === 7 && col >= moduleCount - 8) ||
+    (col === moduleCount - 8 && row <= 7) ||
+    (row === moduleCount - 8 && col <= 7) ||
+    (col === 7 && row >= moduleCount - 8);
+  if (separatorsOnly) return isFinderSeparator;
+  return isFinderPattern(row, col, moduleCount) || isFinderSeparator;
 }
 
 function isFixedDarkModule(row: number, col: number, moduleCount: number): boolean {
@@ -389,10 +489,13 @@ function enforceModuleConstraints(
   const locked: boolean[][] = Array.from({ length: moduleCount }, () =>
     new Array(moduleCount).fill(false)
   );
+  const decoupleFinderOptimization = config.preserveFinders === false;
 
   for (let mr = 0; mr < moduleCount; mr++) {
     for (let mc = 0; mc < moduleCount; mc++) {
-      locked[mr][mc] = shouldLockModule(mr, mc, moduleCount, version, config);
+      locked[mr][mc] =
+        shouldLockModule(mr, mc, moduleCount, version, config) ||
+        (decoupleFinderOptimization && isFinderModuleOrSeparator(mr, mc, moduleCount));
     }
   }
 
@@ -701,12 +804,32 @@ export async function generateDitheredMatrix(
   const serpentine = config.ditherSerpentine ?? true;
   const colorDitherMode = config.colorDither ?? 'none';
   const useColorDither = colorDitherMode !== 'none';
-  const kernelName = (config.diffusionKernel ?? 'floyd_steinberg') as DiffusionKernel;
+  const ditherKind = resolveDitherKind(config);
+  const thresholdPattern = resolveThresholdPattern(ditherKind);
+  const thresholdOnly = isThresholdOnlyDitherKind(ditherKind);
+  const kernelName = resolveDiffusionKernel(config.diffusionKernel, ditherKind);
   const kernel = DIFFUSION_KERNELS[kernelName] ?? DIFFUSION_KERNELS.floyd_steinberg;
-  const ditherMode = config.ditherMode ?? 'blue_noise';
-  const seed = config.seed ?? config.blueNoiseSeed ?? 1337;
+  const seed = config.blueNoiseSeed ?? config.seed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
   const noiseTile = generateBlueNoiseTile(tileSize, seed);
+  const orderedMatrixName = resolveOrderedMatrixName(ditherKind, config.orderedMatrix);
+  const orderedMatrix = getOrderedMatrix(orderedMatrixName);
+  const orderedH = orderedMatrix.length;
+  const orderedW = orderedMatrix[0]?.length ?? orderedH;
+  const orderedDivisor = Math.max(1, orderedH * orderedW);
+  const whiteNoiseRng = createRNG((seed ^ 0x9e3779b9) >>> 0);
+  const gaussianNoiseRng = createRNG((seed ^ 0x7f4a7c15) >>> 0);
+  const triangularNoiseRng = createRNG((seed ^ 0x94d049bb) >>> 0);
+  const gaussian01 = (): number => {
+    const u1 = Math.max(1e-6, gaussianNoiseRng());
+    const u2 = gaussianNoiseRng();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return clamp01(0.5 + z * 0.18);
+  };
+  const triangular01 = (): number => (triangularNoiseRng() + triangularNoiseRng()) * 0.5;
+  const frameIndex = config.frameIndex ?? 0;
+  const temporalOffsetX = (frameIndex * 17) % tileSize;
+  const temporalOffsetY = (frameIndex * 29) % tileSize;
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d');
@@ -731,6 +854,33 @@ export async function generateDitheredMatrix(
 
   const mix = clamp01(intensity * ditherStrength * ditherScale);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
+  const sampleThreshold = (x: number, y: number, overlayDark: number): number => {
+    const centered = (value01: number): number => clamp01(0.5 + (value01 - 0.5) * mix);
+    switch (thresholdPattern) {
+      case 'white_noise':
+        return centered(whiteNoiseRng());
+      case 'gaussian_noise':
+        return centered(gaussian01());
+      case 'triangular_noise':
+        return centered(triangular01());
+      case 'ordered': {
+        const rank = orderedMatrix[y % orderedH]?.[x % orderedW] ?? 0;
+        return centered((rank + 0.5) / orderedDivisor);
+      }
+      case 'screened_blue_noise': {
+        const blue = sampleBlueNoise(x, y, noiseTile, tileSize);
+        const screen = clamp01(0.5 + 0.5 * Math.sin(x * 0.37 + y * 0.29));
+        return centered(blue * 0.72 + screen * 0.28);
+      }
+      case 'temporal_blue_noise':
+        return centered(sampleBlueNoise(x + temporalOffsetX, y + temporalOffsetY, noiseTile, tileSize));
+      case 'adaptive_threshold':
+        return centered(clamp01(0.55 - (overlayDark - 0.5) * 0.9));
+      case 'blue_noise':
+      default:
+        return centered(sampleBlueNoise(x, y, noiseTile, tileSize));
+    }
+  };
 
   for (let y = 0; y < scaledSize; y++) {
     // Serpentine: alternate scan direction per row
@@ -752,14 +902,6 @@ export async function generateDitheredMatrix(
       const fixedDarkUnlocked =
         !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
 
-      // Structural modules are exact when locked by config.
-      if (moduleLocked) {
-        matrix[y][x] = qrIsDark;
-        colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
-        desire[y][x] = qrIsDark ? 1 : 0;
-        continue;
-      }
-
       // ART-FIRST: generate a global halftone candidate from artwork only.
       // QR bits are applied later in the projection/correction stage.
       const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
@@ -768,23 +910,24 @@ export async function generateDitheredMatrix(
         ? 0
         : (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + mix * 0.8);
       const biasedOverlayDark = clamp01(overlayDark + qrBias);
-      const n = sampleBlueNoise(x, y, noiseTile, tileSize);
-      const threshold = clamp01(0.5 + mix * (n - 0.5));
+      const threshold = sampleThreshold(x, y, overlayDark);
 
-      let isDark: boolean;
-      if (ditherMode === 'blue_noise' && !useColorDither) {
-        isDark = biasedOverlayDark > threshold;
+      let isDarkCandidate: boolean;
+      if (thresholdOnly && !useColorDither) {
+        isDarkCandidate = biasedOverlayDark > threshold;
       } else {
-        // Global error diffusion over artwork luminance, perturbed by blue-noise threshold
+        // Global error diffusion over artwork luminance, with dither-kind specific threshold fields.
         const adjusted = biasedOverlayDark + errors[y][x];
-        isDark = adjusted > threshold;
-        const err = (biasedOverlayDark - (isDark ? 1 : 0)) * mix;
+        isDarkCandidate = adjusted > threshold;
+        const err = (biasedOverlayDark - (isDarkCandidate ? 1 : 0)) * mix;
         distributeError(errors, x, y, err, kernel, scaledSize, leftToRight);
       }
 
-      matrix[y][x] = isDark;
+      // Apply structural lock at the final write stage only.
+      // This keeps diffusion state consistent so toggling locks doesn't re-shape the entire texture.
+      matrix[y][x] = moduleLocked ? qrIsDark : isDarkCandidate;
       // Desire is artwork-driven and used later for minimal-cost correction ranking.
-      desire[y][x] = overlayDark;
+      desire[y][x] = moduleLocked ? (qrIsDark ? 1 : 0) : overlayDark;
       colors[y][x] =
         config.colorMode !== 'bw'
           ? ({
@@ -814,6 +957,9 @@ export async function generateDitheredMatrix(
     scale,
     mix,
     serpentine,
+    ditherKind,
+    thresholdPattern,
+    thresholdOnly,
     colorDitherMode,
     kernelName,
     sample: {
@@ -882,7 +1028,7 @@ export async function generateBlueNoiseMatrix(
     desire[y] = new Array(scaledSize).fill(0.5);
   }
 
-  const seed = config.seed ?? config.blueNoiseSeed ?? 1337;
+  const seed = config.blueNoiseSeed ?? config.seed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
   const tile = generateBlueNoiseTile(tileSize, seed);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);

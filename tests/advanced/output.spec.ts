@@ -47,8 +47,12 @@ async function expandOutputSection(page: Page) {
   }
 }
 
-// Helper: Select dropdown option using index-based keyboard navigation (i18n-safe)
-async function selectDropdownOption(page: Page, triggerTestId: string, optionIndex: number) {
+// Helper: Select dropdown option using index or value (i18n-safe)
+async function selectDropdownOption(
+  page: Page,
+  triggerTestId: string,
+  option: number | string
+) {
   const trigger = page.locator(`[data-testid="${triggerTestId}"]`);
   await trigger.waitFor({ state: 'visible', timeout: 5000 });
   await trigger.scrollIntoViewIfNeeded();
@@ -56,13 +60,49 @@ async function selectDropdownOption(page: Page, triggerTestId: string, optionInd
   
   await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 3000 });
   await waitForRenderComplete(page, 'settle');
-  
-  // Use keyboard navigation to select option by index (i18n-safe)
-  await page.keyboard.press('Home');
-  for (let i = 0; i < optionIndex; i++) {
-    await page.keyboard.press('ArrowDown');
+
+  const dropdown = page.locator('[data-radix-popper-content-wrapper]').first();
+  const options = dropdown.locator('[role="option"]');
+  const optionCount = await options.count();
+  if (optionCount === 0) {
+    await page.keyboard.press('Escape');
+    return;
   }
-  await page.keyboard.press('Enter');
+
+  let targetIndex = -1;
+  if (typeof option === 'number') {
+    targetIndex = Math.max(0, Math.min(optionCount - 1, option));
+  } else {
+    // First prefer data-value matching (stable across i18n).
+    for (let i = 0; i < optionCount; i++) {
+      const value = await options.nth(i).getAttribute('data-value');
+      if (value && value.toLowerCase() === option.toLowerCase()) {
+        targetIndex = i;
+        break;
+      }
+    }
+
+    // Fall back to visible text match.
+    if (targetIndex === -1) {
+      const escaped = option.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      for (let i = 0; i < optionCount; i++) {
+        const text = (await options.nth(i).textContent())?.trim() ?? '';
+        if (new RegExp(escaped, 'i').test(text)) {
+          targetIndex = i;
+          break;
+        }
+      }
+    }
+  }
+
+  if (targetIndex === -1) {
+    await page.keyboard.press('Escape');
+    throw new Error(`Option "${option}" not found for ${triggerTestId}`);
+  }
+
+  const target = options.nth(targetIndex);
+  await target.scrollIntoViewIfNeeded();
+  await target.click();
   await waitForRenderComplete(page, 'settle');
 }
 
