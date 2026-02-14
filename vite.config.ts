@@ -14,8 +14,9 @@ const isAndroidBuild =
 
 // Sentry source map upload configuration
 // Only enable when explicitly requested (SENTRY_UPLOAD=true).
-// Auth token is auto-discovered from .env.sentry-build-plugin by the Sentry plugin.
+// Auth token: prefer SENTRY_AUTH_TOKEN (Sentry convention), fall back to SENTRY_TOKEN.
 // `make deploy` always sets SENTRY_UPLOAD=true so sourcemaps are uploaded on every deploy.
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN || process.env.SENTRY_TOKEN;
 const sentryUploadEnabled = process.env.SENTRY_UPLOAD === 'true';
 const sentryOrg = process.env.SENTRY_ORG || 'anqr';
 const sentryProject = process.env.SENTRY_PROJECT || 'anqr-web';
@@ -102,6 +103,7 @@ export default defineConfig({
   ...(sentryUploadEnabled
     ? [
         sentryVitePlugin({
+          authToken: sentryAuthToken,
           org: sentryOrg,
           project: 'anqr-mobile',
           release: {
@@ -114,6 +116,7 @@ export default defineConfig({
           telemetry: false,
         }),
         sentryVitePlugin({
+          authToken: sentryAuthToken,
           org: sentryOrg,
           project: sentryProject,
           release: {
