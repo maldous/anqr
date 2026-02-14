@@ -1,9 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { decodeGif } from '../../src/modules/animation/gif-codec';
 import { decodeQR } from '../../src/modules/qr-decoder';
+import {
+  isAlignmentPattern,
+  isFinderPattern,
+  isFormatInfo,
+  isTimingPattern,
+  isVersionInfo,
+} from '../../src/modules/qr-spec/qr-patterns';
 import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
 
 if (typeof globalThis.ImageData === 'undefined') {
@@ -61,6 +68,22 @@ function meanChromaDistance(imageData: ImageData): number {
   return sum / Math.max(1, count);
 }
 
+function meanRgbDelta(a: ImageData, b: ImageData): number {
+  if (a.width !== b.width || a.height !== b.height) {
+    throw new Error(`Image sizes differ: ${a.width}x${a.height} vs ${b.width}x${b.height}`);
+  }
+  let sum = 0;
+  let count = 0;
+  for (let i = 0; i < a.data.length; i += 4) {
+    sum +=
+      Math.abs(a.data[i] - b.data[i]) +
+      Math.abs(a.data[i + 1] - b.data[i + 1]) +
+      Math.abs(a.data[i + 2] - b.data[i + 2]);
+    count++;
+  }
+  return sum / Math.max(1, count * 3);
+}
+
 function meanModuleCenterLumaByBit(
   canvas: any,
   matrix: boolean[][],
@@ -103,6 +126,121 @@ function meanModuleCenterLumaByBit(
     darkMean: darkSum / Math.max(1, darkCount),
     lightMean: lightSum / Math.max(1, lightCount),
   };
+}
+
+function meanModuleCenterLumaByBitMasked(
+  canvas: any,
+  matrix: boolean[][],
+  marginModules: number,
+  include: (row: number, col: number, moduleCount: number, version: number) => boolean
+): { darkMean: number; lightMean: number; darkCount: number; lightCount: number } {
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const moduleCount = matrix.length;
+  const version = Math.ceil((moduleCount - 17) / 4);
+  const pitch = canvas.width / Math.max(1, moduleCount + marginModules * 2);
+  const offset = marginModules * pitch;
+
+  const lumaAt = (x: number, y: number): number => {
+    const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
+    const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
+    const idx = (yy * canvas.width + xx) * 4;
+    return (
+      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
+    );
+  };
+
+  let darkSum = 0;
+  let lightSum = 0;
+  let darkCount = 0;
+  let lightCount = 0;
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (!include(row, col, moduleCount, version)) continue;
+      const cx = offset + (col + 0.5) * pitch;
+      const cy = offset + (row + 0.5) * pitch;
+      const l = lumaAt(cx, cy);
+      if (matrix[row][col]) {
+        darkSum += l;
+        darkCount++;
+      } else {
+        lightSum += l;
+        lightCount++;
+      }
+    }
+  }
+
+  return {
+    darkMean: darkSum / Math.max(1, darkCount),
+    lightMean: lightSum / Math.max(1, lightCount),
+    darkCount,
+    lightCount,
+  };
+}
+
+function meanModuleCenterRgbDeltaByMask(
+  canvasA: any,
+  canvasB: any,
+  moduleCount: number,
+  marginModules: number,
+  mask: (row: number, col: number, moduleCount: number, version: number) => boolean
+): { inside: number; outside: number; insideCount: number; outsideCount: number } {
+  const ctxA = canvasA.getContext('2d');
+  const ctxB = canvasB.getContext('2d');
+  const dataA = ctxA.getImageData(0, 0, canvasA.width, canvasA.height).data;
+  const dataB = ctxB.getImageData(0, 0, canvasB.width, canvasB.height).data;
+  const pitch = canvasA.width / Math.max(1, moduleCount + marginModules * 2);
+  const offset = marginModules * pitch;
+  const version = Math.ceil((moduleCount - 17) / 4);
+
+  const pixelDelta = (x: number, y: number): number => {
+    const xx = Math.max(0, Math.min(canvasA.width - 1, Math.round(x)));
+    const yy = Math.max(0, Math.min(canvasA.height - 1, Math.round(y)));
+    const idx = (yy * canvasA.width + xx) * 4;
+    const dr = Math.abs(dataA[idx] - dataB[idx]);
+    const dg = Math.abs(dataA[idx + 1] - dataB[idx + 1]);
+    const db = Math.abs(dataA[idx + 2] - dataB[idx + 2]);
+    return (dr + dg + db) / 3;
+  };
+
+  let insideSum = 0;
+  let outsideSum = 0;
+  let insideCount = 0;
+  let outsideCount = 0;
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const cx = offset + (col + 0.5) * pitch;
+      const cy = offset + (row + 0.5) * pitch;
+      const delta = pixelDelta(cx, cy);
+      if (mask(row, col, moduleCount, version)) {
+        insideSum += delta;
+        insideCount++;
+      } else {
+        outsideSum += delta;
+        outsideCount++;
+      }
+    }
+  }
+
+  return {
+    inside: insideSum / Math.max(1, insideCount),
+    outside: outsideSum / Math.max(1, outsideCount),
+    insideCount,
+    outsideCount,
+  };
+}
+
+function isFinderModuleOrSeparator(row: number, col: number, moduleCount: number): boolean {
+  const isFinderSeparator =
+    (row === 7 && col <= 7) ||
+    (col === 7 && row <= 7) ||
+    (row === 7 && col >= moduleCount - 8) ||
+    (col === moduleCount - 8 && row <= 7) ||
+    (row === moduleCount - 8 && col <= 7) ||
+    (col === 7 && row >= moduleCount - 8);
+  return isFinderPattern(row, col, moduleCount) || isFinderSeparator;
 }
 
 async function loadOverlayCanvas(filePath: string, size: number): Promise<any> {
@@ -250,6 +388,38 @@ describe('qr-generator dithered scan gate', () => {
     await expectScanGatePass(qr, cfg, 'public/test.png', 'test-generated-current.png', {
       minChromaDistance: 0,
     });
+  });
+
+  it('keeps preserveFinders=false dithered output decodable in full scan-gate profile', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const payload = 'https://anqr.link';
+    const cfg: QRGeneratorConfig = {
+      ...makeDefaultGalleryScanConfig(payload),
+      preserveFinders: false,
+      scanGateProfile: 'full',
+    };
+    await expectScanGatePass(
+      qr,
+      cfg,
+      'public/tsunami.jpg',
+      'tsunami-generated-preserve-finders-off-current.png'
+    );
+  });
+
+  it('keeps preserveAlignment=false dithered output decodable in full scan-gate profile', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const payload = 'https://anqr.link';
+    const cfg: QRGeneratorConfig = {
+      ...makeDefaultGalleryScanConfig(payload),
+      preserveAlignment: false,
+      scanGateProfile: 'full',
+    };
+    await expectScanGatePass(
+      qr,
+      cfg,
+      'public/tsunami.jpg',
+      'tsunami-generated-preserve-alignment-off-current.png'
+    );
   });
 
   it('keeps dithered king gif first-frame decodable in preview scan-gate profile', async () => {
@@ -407,4 +577,358 @@ describe('qr-generator dithered scan gate', () => {
     await qr.generate(cfg, overlay);
     expect((qr._ditherPatchCache?.size ?? 0) > 0).toBe(true);
   });
+
+  it('changing dither kind changes rendered output (regression)', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const overlay = await loadOverlayCanvas(path.join(process.cwd(), 'public/tsunami.jpg'), 200);
+    const payload = 'https://anqr.link';
+    const base = makeDefaultGalleryScanConfig(payload);
+
+    const renderA = await qr.generate(
+      {
+        ...base,
+        ditherKind: 'error_diffusion',
+        seed: 42,
+      },
+      overlay
+    );
+    const renderB = await qr.generate(
+      {
+        ...base,
+        ditherKind: 'white_noise',
+        seed: 42,
+      },
+      overlay
+    );
+
+    const imgA = canvasToImageData(renderA as any);
+    const imgB = canvasToImageData(renderB as any);
+    const delta = meanRgbDelta(imgA, imgB);
+    expect(delta).toBeGreaterThan(0.2);
+  });
+});
+
+describe('dither option wiring', () => {
+  let overlay: any;
+  beforeAll(async () => {
+    overlay = await loadOverlayCanvas(path.join(process.cwd(), 'public/tsunami.jpg'), 200);
+  });
+
+  const makeWiringConfig = (): QRGeneratorConfig => ({
+    content: 'https://anqr.link',
+    errorCorrection: 'H',
+    typeNumber: 0,
+    moduleSize: 16,
+    margin: 4,
+    fgColor: '#000000',
+    bgColor: '#ffffff',
+    overlayMode: 'dithered',
+    overlayIntensity: 90,
+    colorMode: 'color',
+    ditherKind: 'error_diffusion',
+    ditherStrength: 50,
+    ditherSerpentine: false,
+    diffusionKernel: 'floyd_steinberg',
+    orderedMatrix: 'bayer4',
+    blueNoiseTileSize: 64,
+    blueNoiseSeed: 42,
+    colorDither: 'none',
+    renderScalePerModule: 12,
+    scanGateProfile: 'off',
+    preserveFinders: true,
+    preserveTiming: true,
+    preserveAlignment: true,
+    protectFormatInfo: true,
+    protectVersionInfo: true,
+    qrFirstMode: false,
+  });
+
+  async function renderDelta(cfgA: QRGeneratorConfig, cfgB: QRGeneratorConfig): Promise<number> {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const renderA = await qr.generate(cfgA, overlay);
+    const renderB = await qr.generate(cfgB, overlay);
+    return meanRgbDelta(canvasToImageData(renderA as any), canvasToImageData(renderB as any));
+  }
+
+  it('dither strength changes output', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta(
+      { ...base, ditherStrength: 20 },
+      { ...base, ditherStrength: 90 }
+    );
+    expect(delta).toBeGreaterThan(0.2);
+  });
+
+  it('diffusion kernel changes output in error diffusion mode', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta(
+      { ...base, ditherKind: 'error_diffusion', diffusionKernel: 'floyd_steinberg' },
+      { ...base, ditherKind: 'error_diffusion', diffusionKernel: 'atkinson' }
+    );
+    expect(delta).toBeGreaterThan(0.2);
+  });
+
+  it('noise-family dither kinds produce distinct output', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta(
+      { ...base, ditherKind: 'white_noise' },
+      { ...base, ditherKind: 'gaussian_noise' }
+    );
+    expect(delta).toBeGreaterThan(0.2);
+  });
+
+  it('ordered matrix affects true_dither output', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta(
+      { ...base, ditherKind: 'true_dither', orderedMatrix: 'bayer2' },
+      { ...base, ditherKind: 'true_dither', orderedMatrix: 'bayer8' }
+    );
+    expect(delta).toBeGreaterThan(0.2);
+  });
+
+  it('blue-noise seed affects blue_noise_threshold output', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta(
+      { ...base, ditherKind: 'blue_noise_threshold', blueNoiseSeed: 11 },
+      { ...base, ditherKind: 'blue_noise_threshold', blueNoiseSeed: 97 }
+    );
+    expect(delta).toBeGreaterThan(0.2);
+  });
+
+  it('color dither mode affects threshold-based dithering output', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta(
+      { ...base, ditherKind: 'white_noise', colorDither: 'none' },
+      { ...base, ditherKind: 'white_noise', colorDither: 'per_channel' }
+    );
+    expect(delta).toBeGreaterThan(0.2);
+  });
+
+  it('qr-first toggle changes output', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta({ ...base, qrFirstMode: false }, { ...base, qrFirstMode: true });
+    expect(delta).toBeGreaterThan(0.2);
+  });
+});
+
+describe('preservation toggle locality', () => {
+  let overlay: any;
+  beforeAll(async () => {
+    overlay = await loadOverlayCanvas(path.join(process.cwd(), 'public/tsunami.jpg'), 200);
+  });
+
+  const makePreserveConfig = (): QRGeneratorConfig => ({
+    content: 'https://anqr.link',
+    errorCorrection: 'H',
+    typeNumber: 8,
+    moduleSize: 12,
+    margin: 4,
+    fgColor: '#000000',
+    bgColor: '#ffffff',
+    overlayMode: 'dithered',
+    overlayIntensity: 90,
+    colorMode: 'color',
+    ditherKind: 'error_diffusion',
+    ditherStrength: 50,
+    ditherSerpentine: false,
+    diffusionKernel: 'floyd_steinberg',
+    renderScalePerModule: 14,
+    seed: 42,
+    preserveFinders: true,
+    preserveTiming: true,
+    preserveAlignment: true,
+    protectFormatInfo: true,
+    protectVersionInfo: true,
+    scanGateProfile: 'off',
+  });
+
+  async function renderCanvas(cfg: QRGeneratorConfig): Promise<{ canvas: any; moduleCount: number }> {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const canvas = await qr.generate(cfg, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
+    return { canvas, moduleCount: matrixData!.matrix.length };
+  }
+
+  async function expectToggleLocality(
+    patch: Partial<QRGeneratorConfig>,
+    mask: (row: number, col: number, moduleCount: number, version: number) => boolean,
+    label: string
+  ): Promise<void> {
+    const base = makePreserveConfig();
+    const baseRender = await renderCanvas(base);
+    const toggledRender = await renderCanvas({ ...base, ...patch });
+    const locality = meanModuleCenterRgbDeltaByMask(
+      baseRender.canvas,
+      toggledRender.canvas,
+      baseRender.moduleCount,
+      base.margin,
+      mask
+    );
+    expect(locality.insideCount, `${label} mask should include modules`).toBeGreaterThan(0);
+    expect(
+      locality.inside,
+      `${label}: region delta should be stronger than outside region`
+    ).toBeGreaterThan(locality.outside * 1.6);
+    expect(locality.outside, `${label}: outside-region drift should stay limited`).toBeLessThan(16);
+  }
+
+  it(
+    'preserveFinders toggle is localized to finder regions',
+    async () => {
+    await expectToggleLocality(
+      { preserveFinders: false },
+      (row, col, moduleCount) => {
+        const isFinderSeparator =
+          (row === 7 && col <= 7) ||
+          (col === 7 && row <= 7) ||
+          (row === 7 && col >= moduleCount - 8) ||
+          (col === moduleCount - 8 && row <= 7) ||
+          (row === moduleCount - 8 && col <= 7) ||
+          (col === 7 && row >= moduleCount - 8);
+        return isFinderPattern(row, col, moduleCount) || isFinderSeparator;
+      },
+      'preserveFinders'
+    );
+    },
+    30000
+  );
+
+  it(
+    'preserveFinders=false bypasses strict scan-gate escalation (full ~= off)',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const cfgBase: QRGeneratorConfig = {
+        content: 'https://anqr.link',
+        errorCorrection: 'H',
+        typeNumber: 0,
+        moduleSize: 20,
+        margin: 4,
+        fgColor: '#000000',
+        bgColor: '#ffffff',
+        overlayMode: 'dithered',
+        overlayIntensity: 90,
+        colorMode: 'color',
+        ditherKind: 'error_diffusion',
+        ditherStrength: 50,
+        ditherSerpentine: false,
+        diffusionKernel: 'floyd_steinberg',
+        renderScalePerModule: 18,
+        seed: 42,
+        preserveFinders: false,
+        preserveTiming: true,
+        preserveAlignment: true,
+        protectFormatInfo: true,
+        protectVersionInfo: true,
+      };
+
+      const fullCanvas = await qr.generate({ ...cfgBase, scanGateProfile: 'full' }, overlay);
+      const offCanvas = await qr.generate({ ...cfgBase, scanGateProfile: 'off' }, overlay);
+      const delta = meanRgbDelta(canvasToImageData(fullCanvas as any), canvasToImageData(offCanvas as any));
+      expect(delta).toBeLessThan(20);
+    },
+    30000
+  );
+
+  it(
+    'preserveFinders=false keeps non-finder module data contrast in full profile',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const cfg: QRGeneratorConfig = {
+        content: 'https://anqr.link',
+        errorCorrection: 'H',
+        typeNumber: 0,
+        moduleSize: 20,
+        margin: 4,
+        fgColor: '#000000',
+        bgColor: '#ffffff',
+        overlayMode: 'dithered',
+        overlayIntensity: 90,
+        colorMode: 'color',
+        ditherKind: 'error_diffusion',
+        ditherStrength: 50,
+        ditherSerpentine: false,
+        diffusionKernel: 'floyd_steinberg',
+        renderScalePerModule: 18,
+        seed: 42,
+        preserveFinders: false,
+        preserveTiming: true,
+        preserveAlignment: true,
+        protectFormatInfo: true,
+        protectVersionInfo: true,
+        scanGateProfile: 'full',
+      };
+
+      const canvas = await qr.generate(cfg, overlay);
+      const matrixData = qr.getLastMatrix();
+      expect(matrixData).not.toBeNull();
+
+      const polarity = meanModuleCenterLumaByBitMasked(
+        canvas as any,
+        matrixData!.matrix,
+        cfg.margin,
+        (row, col, moduleCount, version) =>
+          !isFinderModuleOrSeparator(row, col, moduleCount) &&
+          !isTimingPattern(row, col, moduleCount) &&
+          !isAlignmentPattern(row, col, moduleCount, version) &&
+          !isFormatInfo(row, col, moduleCount) &&
+          !isVersionInfo(row, col, moduleCount, version) &&
+          !(row === moduleCount - 8 && col === 8)
+      );
+
+      expect(polarity.darkCount).toBeGreaterThan(100);
+      expect(polarity.lightCount).toBeGreaterThan(100);
+      expect(polarity.darkMean).toBeLessThan(polarity.lightMean - 0.04);
+    },
+    30000
+  );
+
+  it(
+    'preserveTiming toggle is localized to timing patterns',
+    async () => {
+    await expectToggleLocality(
+      { preserveTiming: false },
+      (row, col, moduleCount) => isTimingPattern(row, col, moduleCount),
+      'preserveTiming'
+    );
+    },
+    30000
+  );
+
+  it(
+    'preserveAlignment toggle is localized to alignment patterns',
+    async () => {
+    await expectToggleLocality(
+      { preserveAlignment: false },
+      (row, col, moduleCount, version) => isAlignmentPattern(row, col, moduleCount, version),
+      'preserveAlignment'
+    );
+    },
+    30000
+  );
+
+  it(
+    'protectFormatInfo toggle is localized to format modules',
+    async () => {
+    await expectToggleLocality(
+      { protectFormatInfo: false },
+      (row, col, moduleCount) => isFormatInfo(row, col, moduleCount),
+      'protectFormatInfo'
+    );
+    },
+    30000
+  );
+
+  it(
+    'protectVersionInfo toggle is localized to version modules',
+    async () => {
+    await expectToggleLocality(
+      { protectVersionInfo: false },
+      (row, col, moduleCount, version) => isVersionInfo(row, col, moduleCount, version),
+      'protectVersionInfo'
+    );
+    },
+    30000
+  );
+
 });

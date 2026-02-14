@@ -731,9 +731,6 @@ test.describe('Overlay Section - Basic Tier', () => {
     });
 
     test('toggling preserve finders changes QR output', async ({ page, waitForQRRender }) => {
-      // Known issue: preserveFinders toggle is currently a no-op in the renderer.
-      // This test will pass once the feature is implemented.
-      test.fail(true, 'preserveFinders toggle is currently a no-op in the renderer');
       const before = await getCanvasSnapshot(page);
       
       await togglePreserveFinders(page);
