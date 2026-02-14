@@ -356,6 +356,7 @@ describe('share-links/url-params.ts', () => {
         ditherKind: 'blue_noise',
         diffusionKernel: 'atkinson',
         ditherStrength: 75,
+        finderDitherStrength: 80,
         ditherSerpentine: true,
         orderedMatrix: 'bayer8',
         blueNoiseTileSize: 128,
@@ -365,6 +366,7 @@ describe('share-links/url-params.ts', () => {
       expect(params).toContain('ditherKind=blue_noise');
       expect(params).toContain('diffusionKernel=atkinson');
       expect(params).toContain('ditherStrength=75');
+      expect(params).toContain('finderDither=80');
       expect(params).toContain('serpentine=1');
       expect(params).toContain('matrix=bayer8');
       expect(params).toContain('bnTile=128');

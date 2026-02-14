@@ -138,6 +138,7 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     ditherKind: params.get('ditherKind') || undefined,
     diffusionKernel: params.get('diffusionKernel') || undefined,
     ditherStrength: parseIntParam(params.get('ditherStrength')),
+    finderDitherStrength: parseIntParam(params.get('finderDither')),
     ditherSerpentine: params.get('serpentine') === '1',
     orderedMatrix: params.get('matrix') || undefined,
     blueNoiseTileSize: parseIntParam(params.get('bnTile')),
@@ -525,6 +526,9 @@ export function buildUrlParams(config: Partial<ShareConfig>): string {
   }
   if (config.ditherStrength !== undefined && config.ditherStrength !== 50) {
     params.set('ditherStrength', config.ditherStrength.toString());
+  }
+  if (config.finderDitherStrength !== undefined && config.finderDitherStrength !== 65) {
+    params.set('finderDither', config.finderDitherStrength.toString());
   }
   if (config.ditherSerpentine) {
     params.set('serpentine', '1');

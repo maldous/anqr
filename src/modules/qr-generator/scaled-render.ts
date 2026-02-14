@@ -149,6 +149,7 @@ export async function generateScaledQR(
       preserveFinders: config.preserveFinders,
       preserveTiming: config.preserveTiming,
       preserveAlignment: config.preserveAlignment,
+      finderDitherStrength: config.finderDitherStrength,
       hasColors: !!(colors?.length && colors[0]?.length),
       sampleColor: colors?.[5]?.[5],
     });
@@ -278,7 +279,7 @@ export async function generateScaledQR(
     // Fixed dark module follows preserve/protect policy.
     if (row === moduleCount - 8 && col === 8) return preserveFixedDark;
     // Finder regions/separators follow preserveFinders explicitly.
-    if (isFinderRegion(row, col)) {
+    if (isFinderPatternSpec(row, col, moduleCount) || isFinderSeparator(row, col)) {
       return preserveFinders;
     }
     if (isTimingPatternSpec(row, col, moduleCount)) return preserveTiming;
@@ -321,6 +322,60 @@ export async function generateScaledQR(
 
   const finderContrastBoost = isDitheredMode && !preserveFinders;
   const alignmentContrastBoost = isDitheredMode && !preserveAlignment;
+  const timingContrastBoost = isDitheredMode && !preserveTiming;
+  const formatContrastBoost = isDitheredMode && !protectFormat;
+  const versionContrastBoost = isDitheredMode && !protectVersion;
+  const fixedDarkContrastBoost = isDitheredMode && !preserveFixedDark;
+  const rawFinderDitherStrength =
+    typeof config.finderDitherStrength === 'number' && Number.isFinite(config.finderDitherStrength)
+      ? config.finderDitherStrength
+      : 65;
+  const finderDitherStrength = Math.max(0, Math.min(100, rawFinderDitherStrength));
+  const finderStrengthN = finderDitherStrength / 100;
+  const drawPatternContrastBoostOverlay = (): void => {
+    if (!isDitheredMode || finderStrengthN <= 0) return;
+    if (
+      !finderContrastBoost &&
+      !alignmentContrastBoost &&
+      !timingContrastBoost &&
+      !formatContrastBoost &&
+      !versionContrastBoost &&
+      !fixedDarkContrastBoost
+    ) {
+      return;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = finderStrengthN;
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        const isFinderBoostModule = finderContrastBoost && isFinderRegion(row, col);
+        const isAlignmentBoostModule =
+          alignmentContrastBoost && isAlignmentPatternSpec(row, col, moduleCount, version);
+        const isTimingBoostModule = timingContrastBoost && isTimingPatternSpec(row, col, moduleCount);
+        const isFormatBoostModule = formatContrastBoost && isFormatInfoSpec(row, col, moduleCount);
+        const isVersionBoostModule =
+          versionContrastBoost && isVersionInfoSpec(row, col, moduleCount, version);
+        const isFixedDarkBoostModule =
+          fixedDarkContrastBoost && row === moduleCount - 8 && col === 8;
+        if (
+          !isFinderBoostModule &&
+          !isAlignmentBoostModule &&
+          !isTimingBoostModule &&
+          !isFormatBoostModule &&
+          !isVersionBoostModule &&
+          !isFixedDarkBoostModule
+        ) {
+          continue;
+        }
+        const x = marginPx + col * effectiveModuleSize;
+        const y = marginPx + row * effectiveModuleSize;
+        ctx.fillStyle = qr.isDark(row, col) ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
+        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
+      }
+    }
+    ctx.restore();
+  };
 
   // Render all pixels
   for (let y = 0; y < scaledSize; y++) {
@@ -350,24 +405,9 @@ export async function generateScaledQR(
       const moduleRow = Math.floor(y / scale);
       const moduleCol = Math.floor(x / scale);
       const moduleLocked = shouldForceBinaryModule(moduleRow, moduleCol);
-      const isFinderBoostModule = finderContrastBoost && isFinderRegion(moduleRow, moduleCol);
-      const isAlignmentBoostModule =
-        alignmentContrastBoost &&
-        isAlignmentPatternSpec(moduleRow, moduleCol, moduleCount, version);
-      const isPatternContrastBoostModule = isFinderBoostModule || isAlignmentBoostModule;
 
       if (!isDark) {
         if (isDitheredMode) {
-          if (isPatternContrastBoostModule) {
-            if (useColorRendering && color) {
-              const light = adjustLumaPreserveChroma(color, 0.96, 0.62);
-              ctx.fillStyle = `rgb(${light.r},${light.g},${light.b})`;
-            } else {
-              ctx.fillStyle = 'rgb(248,248,248)';
-            }
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-            continue;
-          }
           const sourceLuma = color
             ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255
             : 1;
@@ -413,16 +453,6 @@ export async function generateScaledQR(
 
       if (isDark) {
         if (isDitheredMode) {
-          if (isPatternContrastBoostModule) {
-            if (useColorRendering && color) {
-              const dark = adjustLumaPreserveChroma(color, 0.06, 1.75);
-              ctx.fillStyle = `rgb(${dark.r},${dark.g},${dark.b})`;
-            } else {
-              ctx.fillStyle = 'rgb(16,16,16)';
-            }
-            ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-            continue;
-          }
           const sourceLuma = color
             ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255
             : 0.5;
@@ -482,6 +512,8 @@ export async function generateScaledQR(
       }
     }
   }
+
+  drawPatternContrastBoostOverlay();
 
   if (forceBinaryFunctionPatterns) {
     drawStrictFunctionOverlay();

@@ -725,6 +725,7 @@ export interface QRState {
     // Dither
     ditherKind: DitherKind;
     ditherStrength: number;
+    finderDitherStrength: number;
     ditherSerpentine: boolean;
     diffusionKernel: DiffusionKernel;
     orderedMatrix: OrderedMatrix;
@@ -1230,6 +1231,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     subpixelFinderOverride: 'solid',
     ditherKind: 'error_diffusion',
     ditherStrength: 50,
+    finderDitherStrength: 65,
     ditherSerpentine: false,
     diffusionKernel: 'floyd_steinberg',
     orderedMatrix: 'bayer4',

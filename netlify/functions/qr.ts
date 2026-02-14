@@ -151,6 +151,7 @@ Sentry.init({
  * - ditherKind: Dither algorithm (default: ordered_bayer for performance)
  * - diffusionKernel: Diffusion kernel - floyd_steinberg/jarvis_judice_ninke/stucki/etc
  * - ditherStrength: Dither strength 0-100 (default: 50)
+ * - finderDither: Finder/alignment boost strength 0-100 (default: 65)
  * - serpentine: Serpentine dithering 0/1 (default: 0)
  * - matrix: Ordered dither matrix - bayer2/bayer4/bayer8/etc
  * - bnTile: Blue noise tile size (default: 64)
@@ -1860,6 +1861,10 @@ async function handler(request: Request) {
     100,
     Math.max(0, Number.parseInt(params.get('ditherStrength') || '50', 10))
   );
+  const finderDitherStrength = Math.min(
+    100,
+    Math.max(0, Number.parseInt(params.get('finderDither') || '65', 10))
+  );
   const ditherSerpentine = params.get('serpentine') === '1';
   const orderedMatrix = params.get('matrix') || 'bayer4';
   const blueNoiseTileSize = Number.parseInt(params.get('bnTile') || '64', 10);
@@ -2151,6 +2156,7 @@ async function handler(request: Request) {
       ditherKind,
       diffusionKernel,
       ditherStrength,
+      finderDitherStrength,
       ditherSerpentine,
       orderedMatrix,
       blueNoiseTileSize,

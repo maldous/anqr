@@ -126,6 +126,10 @@ export function ShareSection() {
           : undefined,
       ditherStrength:
         overlay.enabled && overlay.ditherStrength !== 50 ? overlay.ditherStrength : undefined,
+      finderDitherStrength:
+        overlay.enabled && overlay.finderDitherStrength !== 65
+          ? overlay.finderDitherStrength
+          : undefined,
       ditherSerpentine: overlay.enabled && overlay.ditherSerpentine ? true : undefined,
       orderedMatrix:
         overlay.enabled && overlay.orderedMatrix !== 'bayer4' ? overlay.orderedMatrix : undefined,
