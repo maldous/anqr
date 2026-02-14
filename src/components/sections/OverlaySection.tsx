@@ -722,6 +722,21 @@ export function OverlaySection() {
                     'overlay-finder-dither-strength-slider'
                   )}
                 />
+                <div className="flex items-center justify-between pt-1">
+                  <Label className="text-sm">Blend Preservations</Label>
+                  <Switch
+                    checked={overlay.blendPreservations}
+                    onCheckedChange={(checked) =>
+                      useQRStore.setState((s) => ({
+                        overlay: { ...s.overlay, blendPreservations: checked },
+                      }))
+                    }
+                    data-testid={DynamicTestId.resolve(
+                      'overlay-blend-preservations-switch',
+                      'overlay-blend-preservations-switch'
+                    )}
+                  />
+                </div>
               </div>
             )}
 

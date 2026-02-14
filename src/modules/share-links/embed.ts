@@ -112,6 +112,7 @@ export function convertToImageApiUrl(
       'diffusionKernel',
       'ditherStrength',
       'finderDither',
+      'blendPres',
       'serpentine',
       'matrix',
       'bnTile',

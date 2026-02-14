@@ -44,6 +44,8 @@ export interface QRGeneratorConfig {
   ditherStrength?: number;
   // Strength of finder/alignment pattern override when preservation is disabled (0-100).
   finderDitherStrength?: number;
+  // When true, preservation-strength overlays use image-aware blended coloring instead of pure B/W alpha.
+  blendPreservations?: boolean;
   blueNoiseSeed?: number;
   blueNoiseTileSize?: number;
   ditherMode?: 'blue_noise' | 'error_diffusion';

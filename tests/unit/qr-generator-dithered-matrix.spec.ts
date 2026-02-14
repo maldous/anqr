@@ -446,12 +446,61 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
       expect(darkCount).toBeLessThan(scale * scale);
     });
 
+    it('does not hard-lock finder modules in dithered overlay mode when preserveFinders=false', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQr(moduleCount);
+      const config = baseConfig({ preserveFinders: false, overlayMode: 'dithered' });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      const darkCount = countDarkInModule(result.matrix, scale, 0, 0);
+      expect(darkCount).toBeGreaterThan(0);
+      expect(darkCount).toBeLessThan(scale * scale);
+    });
+
     it('keeps finder modules locked when preserveFinders=true', async () => {
       const gen = await getDithered();
       const moduleCount = 21;
       const scale = 8;
       const qr = createMockQr(moduleCount);
       const config = baseConfig({ preserveFinders: true });
+      const overlay = createOverlayCanvas();
+      const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
+
+      const result = await gen(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        scale,
+        0.5,
+        config as never,
+        createCanvas
+      );
+
+      const darkCount = countDarkInModule(result.matrix, scale, 0, 0);
+      expect(darkCount).toBe(scale * scale);
+    });
+
+    it('keeps finder modules locked in dithered overlay mode when preserveFinders=true', async () => {
+      const gen = await getDithered();
+      const moduleCount = 21;
+      const scale = 8;
+      const qr = createMockQr(moduleCount);
+      const config = baseConfig({ preserveFinders: true, overlayMode: 'dithered' });
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 

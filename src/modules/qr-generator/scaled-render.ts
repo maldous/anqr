@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import { parseColor } from '../core';
 import {
   isAlignmentPattern as isAlignmentPatternSpec,
   isFinderPattern as isFinderPatternSpec,
@@ -133,6 +134,12 @@ export async function generateScaledQR(
   const qrDrawSize = scaledSize * subPixelSize;
   const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
   const ditherBackdropWash = Math.max(0, Math.min(1, config.ditherBackdropWash ?? 0.18));
+  const bgRgb = parseColor(effectiveBgColor) ?? { r: 255, g: 255, b: 255, a: 1 };
+  const bgLuma = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
+  const ditherPaperOverlayMix =
+    isDitheredMode && overlayCanvas && useColorRendering
+      ? Math.max(0, Math.min(1, ditherBackdropAlpha * (1 - ditherBackdropWash)))
+      : 0;
 
   const debug = config.debugOverlayDither === true;
   if (debug) {
@@ -150,6 +157,7 @@ export async function generateScaledQR(
       preserveTiming: config.preserveTiming,
       preserveAlignment: config.preserveAlignment,
       finderDitherStrength: config.finderDitherStrength,
+      blendPreservations: config.blendPreservations,
       hasColors: !!(colors?.length && colors[0]?.length),
       sampleColor: colors?.[5]?.[5],
     });
@@ -332,6 +340,67 @@ export async function generateScaledQR(
       : 65;
   const finderDitherStrength = Math.max(0, Math.min(100, rawFinderDitherStrength));
   const finderStrengthN = finderDitherStrength / 100;
+  const blendPreservations = config.blendPreservations === true;
+  const blendChannelToward = (src: number, target: number, t: number): number =>
+    Math.round(src + (target - src) * Math.max(0, Math.min(1, t)));
+  const sampleModuleOverlayColor = (row: number, col: number): PixelColor | null => {
+    if (!colors?.length) return null;
+    const px = Math.max(0, Math.min(scaledSize - 1, Math.floor((col + 0.5) * scale)));
+    const py = Math.max(0, Math.min(scaledSize - 1, Math.floor((row + 0.5) * scale)));
+    return (colors[py]?.[px] as PixelColor | undefined) ?? null;
+  };
+  const estimatePaperLuma = (sampled: PixelColor | null): number => {
+    if (!sampled) return bgLuma;
+    const sampledLuma = (0.299 * sampled.r + 0.587 * sampled.g + 0.114 * sampled.b) / 255;
+    return bgLuma * (1 - ditherPaperOverlayMix) + sampledLuma * ditherPaperOverlayMix;
+  };
+  const getPreservationBlendTargetForScaledPixel = (
+    moduleRow: number,
+    moduleCol: number,
+    scaledRow: number,
+    scaledCol: number
+  ): { r: number; g: number; b: number } => {
+    const moduleDark = qr.isDark(moduleRow, moduleCol);
+    const sampled =
+      (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
+      sampleModuleOverlayColor(moduleRow, moduleCol);
+    if (!sampled) {
+      return moduleDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+    }
+    if (isDitheredMode) {
+      // Preserve local dither texture by keeping two tonal rails per module bit:
+      // - QR dark modules: deep dark + softer dark
+      // - QR light modules: bright light + softer light
+      // Rails are selected from the existing scaled pixel decision matrix.
+      const pixelDark = matrix[scaledRow]?.[scaledCol] === true;
+      if (moduleDark) {
+        return pixelDark
+          ? adjustLumaPreserveChroma(sampled, 0.04, 1.65)
+          : adjustLumaPreserveChroma(sampled, 0.18, 1.3);
+      }
+      return pixelDark
+        ? adjustLumaPreserveChroma(sampled, 0.9, 0.9)
+        : adjustLumaPreserveChroma(sampled, 0.97, 0.8);
+    }
+    return moduleDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+  };
+  const isPatternBoostModule = (row: number, col: number): boolean => {
+    const isFinderBoostModule = finderContrastBoost && isFinderRegion(row, col);
+    const isAlignmentBoostModule =
+      alignmentContrastBoost && isAlignmentPatternSpec(row, col, moduleCount, version);
+    const isTimingBoostModule = timingContrastBoost && isTimingPatternSpec(row, col, moduleCount);
+    const isFormatBoostModule = formatContrastBoost && isFormatInfoSpec(row, col, moduleCount);
+    const isVersionBoostModule = versionContrastBoost && isVersionInfoSpec(row, col, moduleCount, version);
+    const isFixedDarkBoostModule = fixedDarkContrastBoost && row === moduleCount - 8 && col === 8;
+    return (
+      isFinderBoostModule ||
+      isAlignmentBoostModule ||
+      isTimingBoostModule ||
+      isFormatBoostModule ||
+      isVersionBoostModule ||
+      isFixedDarkBoostModule
+    );
+  };
   const drawPatternContrastBoostOverlay = (): void => {
     if (!isDitheredMode || finderStrengthN <= 0) return;
     if (
@@ -345,29 +414,67 @@ export async function generateScaledQR(
       return;
     }
 
+    if (blendPreservations) {
+      // Blend preservation targets with the already-rendered current overlay mode output.
+      // This keeps preservation behavior mode-aware (dithered/blue-noise/etc.) instead of
+      // painting a separate standalone texture over the top.
+      const imageData = ctx.getImageData(0, 0, size, size);
+      const data = imageData.data;
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+          if (!isPatternBoostModule(row, col)) continue;
+          const x = marginPx + col * effectiveModuleSize;
+          const y = marginPx + row * effectiveModuleSize;
+          const x0 = Math.max(0, Math.floor(x));
+          const y0 = Math.max(0, Math.floor(y));
+          const x1 = Math.min(size, Math.ceil(x + effectiveModuleSize));
+          const y1 = Math.min(size, Math.ceil(y + effectiveModuleSize));
+          for (let py = y0; py < y1; py++) {
+            let idx = (py * size + x0) * 4;
+            const scaledRow = Math.max(
+              0,
+              Math.min(scaledSize - 1, Math.floor((py - marginPx) / Math.max(1e-6, subPixelSize)))
+            );
+            for (let px = x0; px < x1; px++) {
+              const scaledCol = Math.max(
+                0,
+                Math.min(scaledSize - 1, Math.floor((px - marginPx) / Math.max(1e-6, subPixelSize)))
+              );
+              const sampled =
+                (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
+                sampleModuleOverlayColor(row, col);
+              const paperLuma = estimatePaperLuma(sampled ?? null);
+              const pixelLuma = (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]) / 255;
+              const moduleDark = qr.isDark(row, col);
+              // Restrict blending to existing dither "ink" so preservation boosting does not
+              // flatten whole module rectangles into solid overlays.
+              const rawInkContrast = paperLuma - pixelLuma;
+              const inkCoverageN = moduleDark
+                ? Math.max(0, Math.min(1, (rawInkContrast - 0.015) / 0.28))
+                : Math.max(0, Math.min(1, (rawInkContrast + 0.03) / 0.22));
+              if (inkCoverageN <= 1e-3) {
+                idx += 4;
+                continue;
+              }
+              const target = getPreservationBlendTargetForScaledPixel(row, col, scaledRow, scaledCol);
+              const t = finderStrengthN * inkCoverageN;
+              data[idx] = blendChannelToward(data[idx], target.r, t);
+              data[idx + 1] = blendChannelToward(data[idx + 1], target.g, t);
+              data[idx + 2] = blendChannelToward(data[idx + 2], target.b, t);
+              idx += 4;
+            }
+          }
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      return;
+    }
+
     ctx.save();
     ctx.globalAlpha = finderStrengthN;
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
-        const isFinderBoostModule = finderContrastBoost && isFinderRegion(row, col);
-        const isAlignmentBoostModule =
-          alignmentContrastBoost && isAlignmentPatternSpec(row, col, moduleCount, version);
-        const isTimingBoostModule = timingContrastBoost && isTimingPatternSpec(row, col, moduleCount);
-        const isFormatBoostModule = formatContrastBoost && isFormatInfoSpec(row, col, moduleCount);
-        const isVersionBoostModule =
-          versionContrastBoost && isVersionInfoSpec(row, col, moduleCount, version);
-        const isFixedDarkBoostModule =
-          fixedDarkContrastBoost && row === moduleCount - 8 && col === 8;
-        if (
-          !isFinderBoostModule &&
-          !isAlignmentBoostModule &&
-          !isTimingBoostModule &&
-          !isFormatBoostModule &&
-          !isVersionBoostModule &&
-          !isFixedDarkBoostModule
-        ) {
-          continue;
-        }
+        if (!isPatternBoostModule(row, col)) continue;
         const x = marginPx + col * effectiveModuleSize;
         const y = marginPx + row * effectiveModuleSize;
         ctx.fillStyle = qr.isDark(row, col) ? 'rgb(0,0,0)' : 'rgb(255,255,255)';

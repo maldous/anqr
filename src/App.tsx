@@ -525,6 +525,10 @@ function AppContent() {
       useQRStore.setState((s) => ({
         overlay: { ...s.overlay, finderDitherStrength: params.finderDitherStrength! },
       }));
+    if (params.blendPreservations)
+      useQRStore.setState((s) => ({
+        overlay: { ...s.overlay, blendPreservations: true },
+      }));
     if (params.ditherSerpentine)
       useQRStore.setState((s) => ({ overlay: { ...s.overlay, ditherSerpentine: true } }));
     if (params.orderedMatrix)
