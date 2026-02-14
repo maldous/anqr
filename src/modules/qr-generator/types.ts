@@ -42,6 +42,8 @@ export interface QRGeneratorConfig {
   colorMode?: string;
   ditherKind?: string;
   ditherStrength?: number;
+  // Strength of finder/alignment pattern override when preservation is disabled (0-100).
+  finderDitherStrength?: number;
   blueNoiseSeed?: number;
   blueNoiseTileSize?: number;
   ditherMode?: 'blue_noise' | 'error_diffusion';

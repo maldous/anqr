@@ -111,6 +111,7 @@ export function convertToImageApiUrl(
       'ditherKind',
       'diffusionKernel',
       'ditherStrength',
+      'finderDither',
       'serpentine',
       'matrix',
       'bnTile',

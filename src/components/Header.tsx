@@ -409,6 +409,10 @@ export function Header({
           : overlay.diffusionKernel,
       ditherStrength:
         !overlay.enabled || overlay.ditherStrength === 50 ? undefined : overlay.ditherStrength,
+      finderDitherStrength:
+        !overlay.enabled || overlay.finderDitherStrength === 65
+          ? undefined
+          : overlay.finderDitherStrength,
       ditherSerpentine: overlay.enabled && overlay.ditherSerpentine ? true : undefined,
       orderedMatrix:
         !overlay.enabled || overlay.orderedMatrix === 'bayer4' ? undefined : overlay.orderedMatrix,

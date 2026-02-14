@@ -179,6 +179,92 @@ function meanModuleCenterLumaByBitMasked(
   };
 }
 
+function moduleCenterBinaryAgreementByMask(
+  canvas: any,
+  matrix: boolean[][],
+  marginModules: number,
+  include: (row: number, col: number, moduleCount: number, version: number) => boolean
+): { agreement: number; moduleCount: number } {
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const moduleCount = matrix.length;
+  const version = Math.ceil((moduleCount - 17) / 4);
+  const pitch = canvas.width / Math.max(1, moduleCount + marginModules * 2);
+  const offset = marginModules * pitch;
+
+  const lumaAt = (x: number, y: number): number => {
+    const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
+    const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
+    const idx = (yy * canvas.width + xx) * 4;
+    return (
+      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
+    );
+  };
+
+  let matches = 0;
+  let count = 0;
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (!include(row, col, moduleCount, version)) continue;
+      const cx = offset + (col + 0.5) * pitch;
+      const cy = offset + (row + 0.5) * pitch;
+      const observedDark = lumaAt(cx, cy) < 0.5;
+      if (observedDark === matrix[row][col]) {
+        matches++;
+      }
+      count++;
+    }
+  }
+
+  return {
+    agreement: matches / Math.max(1, count),
+    moduleCount: count,
+  };
+}
+
+function darkModuleInteriorLumaRangeByMask(
+  canvas: any,
+  matrix: boolean[][],
+  marginModules: number,
+  include: (row: number, col: number, moduleCount: number, version: number) => boolean
+): { maxLuma: number; sampleCount: number } {
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const moduleCount = matrix.length;
+  const version = Math.ceil((moduleCount - 17) / 4);
+  const pitch = canvas.width / Math.max(1, moduleCount + marginModules * 2);
+  const offset = marginModules * pitch;
+
+  const lumaAt = (x: number, y: number): number => {
+    const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
+    const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
+    const idx = (yy * canvas.width + xx) * 4;
+    return (
+      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
+    );
+  };
+
+  let maxLuma = 0;
+  let sampleCount = 0;
+  const fractions = [0.25, 0.5, 0.75];
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (!matrix[row][col]) continue;
+      if (!include(row, col, moduleCount, version)) continue;
+      for (const fy of fractions) {
+        for (const fx of fractions) {
+          const x = offset + (col + fx) * pitch;
+          const y = offset + (row + fy) * pitch;
+          maxLuma = Math.max(maxLuma, lumaAt(x, y));
+          sampleCount++;
+        }
+      }
+    }
+  }
+
+  return { maxLuma, sampleCount };
+}
+
 function meanModuleCenterRgbDeltaByMask(
   canvasA: any,
   canvasB: any,
@@ -627,6 +713,7 @@ describe('dither option wiring', () => {
     colorMode: 'color',
     ditherKind: 'error_diffusion',
     ditherStrength: 50,
+    finderDitherStrength: 100,
     ditherSerpentine: false,
     diffusionKernel: 'floyd_steinberg',
     orderedMatrix: 'bayer4',
@@ -658,6 +745,112 @@ describe('dither option wiring', () => {
     );
     expect(delta).toBeGreaterThan(0.2);
   });
+
+  it('finder dither strength changes output when pattern preservation is disabled', async () => {
+    const base = makeWiringConfig();
+    const delta = await renderDelta(
+      {
+        ...base,
+        preserveFinders: false,
+        preserveAlignment: false,
+        finderDitherStrength: 20,
+      },
+      {
+        ...base,
+        preserveFinders: false,
+        preserveAlignment: false,
+        finderDitherStrength: 100,
+      }
+    );
+    expect(delta).toBeGreaterThan(0.05);
+  });
+
+  it(
+    'finder dither strength 100 enforces canonical black/white modules in unpreserved finder/alignment areas',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const cfg: QRGeneratorConfig = {
+        ...makeWiringConfig(),
+        preserveFinders: false,
+        preserveAlignment: false,
+        finderDitherStrength: 100,
+      };
+      const render = await qr.generate(cfg, overlay);
+      const matrixData = qr.getLastMatrix();
+      expect(matrixData).not.toBeNull();
+
+      const agreement = moduleCenterBinaryAgreementByMask(
+        render as any,
+        matrixData!.matrix,
+        cfg.margin,
+        (row, col, moduleCount, version) =>
+          isFinderModuleOrSeparator(row, col, moduleCount) ||
+          isAlignmentPattern(row, col, moduleCount, version)
+      );
+      expect(agreement.moduleCount).toBeGreaterThan(0);
+      expect(agreement.agreement).toBeGreaterThan(0.95);
+    },
+    30000
+  );
+
+  it(
+    'finder dark modules are rendered as solid black at 100 strength',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const cfg: QRGeneratorConfig = {
+        ...makeWiringConfig(),
+        preserveFinders: false,
+        preserveAlignment: false,
+        finderDitherStrength: 100,
+      };
+      const render = await qr.generate(cfg, overlay);
+      const matrixData = qr.getLastMatrix();
+      expect(matrixData).not.toBeNull();
+
+      const lumaRange = darkModuleInteriorLumaRangeByMask(
+        render as any,
+        matrixData!.matrix,
+        cfg.margin,
+        (row, col, moduleCount) => isFinderModuleOrSeparator(row, col, moduleCount)
+      );
+      expect(lumaRange.sampleCount).toBeGreaterThan(0);
+      expect(lumaRange.maxLuma).toBeLessThan(0.08);
+    },
+    30000
+  );
+
+  it(
+    'preservation strength 100 renders dark timing/alignment/format modules as solid black when unprotected',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const cfg: QRGeneratorConfig = {
+        ...makeWiringConfig(),
+        preserveFinders: true,
+        preserveTiming: false,
+        preserveAlignment: false,
+        protectFormatInfo: false,
+        protectVersionInfo: false,
+        finderDitherStrength: 100,
+      };
+      const render = await qr.generate(cfg, overlay);
+      const matrixData = qr.getLastMatrix();
+      expect(matrixData).not.toBeNull();
+
+      const lumaRange = darkModuleInteriorLumaRangeByMask(
+        render as any,
+        matrixData!.matrix,
+        cfg.margin,
+        (row, col, moduleCount, version) =>
+          isTimingPattern(row, col, moduleCount) ||
+          isAlignmentPattern(row, col, moduleCount, version) ||
+          isFormatInfo(row, col, moduleCount) ||
+          isVersionInfo(row, col, moduleCount, version)
+      );
+      expect(lumaRange.sampleCount).toBeGreaterThan(0);
+      expect(lumaRange.maxLuma).toBeLessThan(0.08);
+    },
+    30000
+  );
 
   it('diffusion kernel changes output in error diffusion mode', async () => {
     const base = makeWiringConfig();

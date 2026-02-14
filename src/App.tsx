@@ -521,6 +521,10 @@ function AppContent() {
     if (params.ditherKind) store.setOverlayDitherKind(params.ditherKind as any);
     if (params.diffusionKernel) store.setOverlayDiffusionKernel(params.diffusionKernel as any);
     if (params.ditherStrength !== undefined) store.setOverlayDitherStrength(params.ditherStrength);
+    if (params.finderDitherStrength !== undefined)
+      useQRStore.setState((s) => ({
+        overlay: { ...s.overlay, finderDitherStrength: params.finderDitherStrength! },
+      }));
     if (params.ditherSerpentine)
       useQRStore.setState((s) => ({ overlay: { ...s.overlay, ditherSerpentine: true } }));
     if (params.orderedMatrix)

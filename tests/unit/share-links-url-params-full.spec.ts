@@ -174,13 +174,14 @@ describe('share-links/url-params', () => {
 
     it('parses dither params', () => {
       const params = new URLSearchParams(
-        'ditherKind=ordered&diffusionKernel=atkinson&ditherStrength=75&serpentine=1' +
+        'ditherKind=ordered&diffusionKernel=atkinson&ditherStrength=75&finderDither=80&serpentine=1' +
         '&matrix=bayer8&bnTile=128&bnSeed=42&colorDither=rgb'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.ditherKind).toBe('ordered');
       expect(result.diffusionKernel).toBe('atkinson');
       expect(result.ditherStrength).toBe(75);
+      expect(result.finderDitherStrength).toBe(80);
       expect(result.ditherSerpentine).toBe(true);
       expect(result.orderedMatrix).toBe('bayer8');
       expect(result.blueNoiseTileSize).toBe(128);
@@ -457,11 +458,13 @@ describe('share-links/url-params', () => {
         ditherKind: 'ordered',
         diffusionKernel: 'atkinson',
         ditherStrength: 75,
+        finderDitherStrength: 80,
         ditherSerpentine: true,
       });
       expect(result).toContain('ditherKind=ordered');
       expect(result).toContain('diffusionKernel=atkinson');
       expect(result).toContain('ditherStrength=75');
+      expect(result).toContain('finderDither=80');
       expect(result).toContain('serpentine=1');
     });
 

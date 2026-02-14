@@ -694,6 +694,37 @@ export function OverlaySection() {
             />
           </div>
 
+          {['dithered', 'blue-noise', 'dither', 'halftone-dithered'].includes(overlay.mode) &&
+            (!overlay.preserveFinders ||
+              !overlay.preserveAlignment ||
+              !overlay.preserveTiming ||
+              !overlay.protectFormatInfo ||
+              !overlay.protectVersionInfo) && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Preservation Strength</Label>
+                  <span className="text-sm text-muted-foreground">
+                    {t('qr.nPercent', { count: overlay.finderDitherStrength })}
+                  </span>
+                </div>
+                <Slider
+                  value={[overlay.finderDitherStrength]}
+                  onValueChange={([v]) =>
+                    useQRStore.setState((s) => ({
+                      overlay: { ...s.overlay, finderDitherStrength: v },
+                    }))
+                  }
+                  min={0}
+                  max={100}
+                  step={5}
+                  data-testid={DynamicTestId.resolve(
+                    'overlay-finder-dither-strength-slider',
+                    'overlay-finder-dither-strength-slider'
+                  )}
+                />
+              </div>
+            )}
+
           {/* Advanced Options */}
           {(tier === 'advanced' || tier === 'professional') && (
             <>
