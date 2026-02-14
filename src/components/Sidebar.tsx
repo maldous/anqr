@@ -54,6 +54,32 @@ const SECTIONS = [
   { id: 'safety', labelKey: 'sections.safety', icon: Shield, tier: 'professional' as const },
 ];
 
+const OPEN_SECTIONS_STORAGE_KEY = 'anqr:ui:open-sections';
+const DEFAULT_OPEN_SECTIONS = ['payload', 'render'];
+const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
+
+function loadStoredOpenSections(): string[] {
+  if (!('sessionStorage' in globalThis)) {
+    return DEFAULT_OPEN_SECTIONS;
+  }
+
+  try {
+    const raw = globalThis.sessionStorage.getItem(OPEN_SECTIONS_STORAGE_KEY);
+    if (!raw) return DEFAULT_OPEN_SECTIONS;
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return DEFAULT_OPEN_SECTIONS;
+
+    const validSections = parsed.filter(
+      (sectionId): sectionId is string =>
+        typeof sectionId === 'string' && VALID_SECTION_IDS.has(sectionId)
+    );
+    return validSections.length > 0 ? validSections : DEFAULT_OPEN_SECTIONS;
+  } catch {
+    return DEFAULT_OPEN_SECTIONS;
+  }
+}
+
 // Comprehensive keywords for deep search within each section, organized by tier
 // Includes all field labels, select options, and common synonyms
 const SECTION_KEYWORDS: Record<
@@ -471,10 +497,6 @@ const SECTION_KEYWORDS: Record<
       'grayscale',
       'black white',
       'bw',
-      // Preserve
-      'preserve',
-      'finder',
-      'finder patterns',
     ],
     advanced: [
       // Blend modes dropdown
@@ -526,10 +548,18 @@ const SECTION_KEYWORDS: Record<
       'sobel',
       'canny',
       // Preserve timing/alignment
+      'preserve',
+      'protection',
+      'finder',
+      'finder patterns',
       'timing',
       'alignment',
       'preserve timing',
       'preserve alignment',
+      'protect format',
+      'protect version',
+      'preservation strength',
+      'blend preservations',
       // Dither kind dropdown
       'dither',
       'dither kind',
@@ -985,11 +1015,21 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
   const searchQuery = useQRStore((s) => s.searchQuery);
   const setSearchQuery = useQRStore((s) => s.setSearchQuery);
   const { t, i18n } = useTranslation();
-  const [openSections, setOpenSections] = useState<string[]>(['payload', 'render']);
+  const [openSections, setOpenSections] = useState<string[]>(loadStoredOpenSections);
 
   // Force re-render when language changes by using i18n.language as a key dependency
   const _currentLanguage = i18n.language;
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Preserve open/closed accordion state when switching between editor and analyze views.
+  useEffect(() => {
+    if (!('sessionStorage' in globalThis)) return;
+    try {
+      globalThis.sessionStorage.setItem(OPEN_SECTIONS_STORAGE_KEY, JSON.stringify(openSections));
+    } catch {
+      // Ignore storage quota/private mode issues; state will still work for this mount.
+    }
+  }, [openSections]);
 
   // Click outside to close on tablet and desktop
   useEffect(() => {

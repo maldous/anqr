@@ -3,7 +3,7 @@
  * Renders all QR modules with styling and overlay effects
  */
 
-import { isFinderPattern, isTimingPattern } from '../qr-spec';
+import { isAlignmentPattern, isFinderPattern, isTimingPattern } from '../qr-spec';
 
 import { applyPaletteColor, applyPerModuleColor, ensureContrast } from './color';
 import { drawHalftoneModule, drawModule, drawTimingModule } from './drawing';
@@ -54,10 +54,12 @@ export function renderModules(
 
       const isFinder = isFinderPattern(row, col, moduleCount);
       const isTiming = isTimingPattern(row, col, moduleCount);
+      const isAlignment = isAlignmentPattern(row, col, moduleCount, version);
       const isFormat = isFormatInfo(row, col, moduleCount);
       const isVersion = isVersionInfo(row, col, moduleCount, version);
       // Note: alignment pattern modules are already skipped via drawnAlignmentPatterns set
       const isInAlignmentSet = drawnAlignmentPatterns.has(`${row},${col}`);
+      const isFixedDark = row === moduleCount - 8 && col === 8;
 
       // Protection settings
       const protectFormat = config.protectFormatInfo;
@@ -67,9 +69,11 @@ export function renderModules(
         overlayData &&
         !(config.preserveFinders && isFinder) &&
         !(config.preserveTiming && isTiming) &&
-        !(config.preserveAlignment && isInAlignmentSet) &&
+        !(config.preserveAlignment && isAlignment) &&
         !(protectFormat && isFormat) &&
         !(protectVersion && isVersion);
+      const isFunctionalPattern =
+        isFinder || isTiming || isAlignment || isFormat || isVersion || isFixedDark || isInAlignmentSet;
 
       // Default rendering parameters
       // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black
@@ -102,7 +106,8 @@ export function renderModules(
           col,
           moduleCount,
           effectiveIntensity,
-          config
+          config,
+          isFunctionalPattern
         );
 
         moduleColor = modeResult.moduleColor;

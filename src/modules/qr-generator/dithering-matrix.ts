@@ -85,33 +85,7 @@ function detectBWFromOverlayData(overlayData: OverlayData, moduleCount: number):
   );
 }
 
-/**
- * Check if a module is a structural pattern (finder, alignment, timing, format, version).
- * Structural modules are preserved based on active preserve/protect config.
- */
-function isStructuralModule(
-  row: number,
-  col: number,
-  moduleCount: number,
-  version: number,
-  config: QRGeneratorConfig
-): boolean {
-  // Fixed dark module is only structural in full functional-preservation mode.
-  if (row === moduleCount - 8 && col === 8) return config.preserveFunctionalPatterns === true;
-
-  return (
-    isFinderPattern(row, col, moduleCount) ||
-    isTimingPattern(row, col, moduleCount) ||
-    isAlignmentPattern(row, col, moduleCount, version) ||
-    isFormatInfo(row, col, moduleCount) ||
-    isVersionInfo(row, col, moduleCount, version)
-  );
-}
-
-/**
- * Check if module is in the quiet zone separator around finders
- */
-function isQuietZoneSeparator(row: number, col: number, moduleCount: number): boolean {
+function isFinderSeparator(row: number, col: number, moduleCount: number): boolean {
   // Top-left separator
   if ((row === 7 && col <= 7) || (col === 7 && row <= 7)) return true;
   // Top-right separator
@@ -119,6 +93,44 @@ function isQuietZoneSeparator(row: number, col: number, moduleCount: number): bo
   // Bottom-left separator
   if ((row === moduleCount - 8 && col <= 7) || (col === 7 && row >= moduleCount - 8)) return true;
 
+  return false;
+}
+
+/**
+ * Check if a module should be lock-protected based on active preservation settings.
+ * This mirrors the scaled dither/blue-noise path so all overlay families behave consistently.
+ */
+function shouldLockModule(
+  row: number,
+  col: number,
+  moduleCount: number,
+  version: number,
+  config: QRGeneratorConfig
+): boolean {
+  const preserveFunctional = config.preserveFunctionalPatterns === true;
+  const preserveFinders = config.preserveFinders !== false;
+  const preserveTiming = preserveFunctional
+    ? config.preserveTiming !== false
+    : config.preserveTiming === true;
+  const preserveAlignment = preserveFunctional
+    ? config.preserveAlignment !== false
+    : config.preserveAlignment === true;
+  const protectFormat = preserveFunctional
+    ? config.protectFormatInfo !== false
+    : config.protectFormatInfo === true;
+  const protectVersion = preserveFunctional
+    ? config.protectVersionInfo !== false
+    : config.protectVersionInfo === true;
+  const preserveFixedDark = preserveFunctional;
+
+  if (row === moduleCount - 8 && col === 8) return preserveFixedDark;
+  if (isFinderPattern(row, col, moduleCount) || isFinderSeparator(row, col, moduleCount)) {
+    return preserveFinders;
+  }
+  if (isTimingPattern(row, col, moduleCount)) return preserveTiming;
+  if (isAlignmentPattern(row, col, moduleCount, version)) return preserveAlignment;
+  if (isFormatInfo(row, col, moduleCount)) return protectFormat;
+  if (isVersionInfo(row, col, moduleCount, version)) return protectVersion;
   return false;
 }
 
@@ -179,11 +191,8 @@ export function applyDitherToMatrix(
     for (let col = 0; col < moduleCount; col++) {
       const qrIsDark = qr.isDark(row, col);
 
-      // CRITICAL: Structural modules are NEVER modified
-      if (
-        isStructuralModule(row, col, moduleCount, version, config) ||
-        isQuietZoneSeparator(row, col, moduleCount)
-      ) {
+      // Lock-protected modules keep their canonical QR value.
+      if (shouldLockModule(row, col, moduleCount, version, config)) {
         result[row][col] = qrIsDark;
         continue;
       }
@@ -257,11 +266,8 @@ function enforceModuleConstraints(
     for (let col = 0; col < moduleCount; col++) {
       const qrIsDark = qr.isDark(row, col);
 
-      // Force structural modules to exact QR value
-      if (
-        isStructuralModule(row, col, moduleCount, version, config) ||
-        isQuietZoneSeparator(row, col, moduleCount)
-      ) {
+      // Force lock-protected modules to exact QR value
+      if (shouldLockModule(row, col, moduleCount, version, config)) {
         matrix[row][col] = qrIsDark;
       }
     }

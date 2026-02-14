@@ -115,6 +115,13 @@ export async function generateScaledQR(
   const isSubpixelMode =
     config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
   const needsBothDarkAndLightColors = isSubpixelMode;
+  const subpixelToneStrength = Math.max(0, Math.min(1, (config.overlayIntensity ?? 100) / 100));
+  // Subpixel needs explicit dark/light tonal rails; otherwise both rails collapse to
+  // near-identical image color and QR structure disappears.
+  const subpixelDarkTargetLuma = 0.2 - subpixelToneStrength * 0.1;
+  const subpixelLightTargetLuma = 0.8 + subpixelToneStrength * 0.15;
+  const subpixelDarkChroma = 1.15 + subpixelToneStrength * 0.35;
+  const subpixelLightChroma = 0.92 - subpixelToneStrength * 0.24;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
   const preserveFunctional = config.preserveFunctionalPatterns === true;
   const preserveFinders = config.preserveFinders !== false;
@@ -328,12 +335,14 @@ export async function generateScaledQR(
     }
   };
 
-  const finderContrastBoost = isDitheredMode && !preserveFinders;
-  const alignmentContrastBoost = isDitheredMode && !preserveAlignment;
-  const timingContrastBoost = isDitheredMode && !preserveTiming;
-  const formatContrastBoost = isDitheredMode && !protectFormat;
-  const versionContrastBoost = isDitheredMode && !protectVersion;
-  const fixedDarkContrastBoost = isDitheredMode && !preserveFixedDark;
+  // Preservation strength applies to all scaled modes, not only dithered/blue-noise.
+  // Otherwise toggles can appear inert in modes like subpixel/dither/extreme.
+  const finderContrastBoost = !preserveFinders;
+  const alignmentContrastBoost = !preserveAlignment;
+  const timingContrastBoost = !preserveTiming;
+  const formatContrastBoost = !protectFormat;
+  const versionContrastBoost = !protectVersion;
+  const fixedDarkContrastBoost = !preserveFixedDark;
   const rawFinderDitherStrength =
     typeof config.finderDitherStrength === 'number' && Number.isFinite(config.finderDitherStrength)
       ? config.finderDitherStrength
@@ -367,12 +376,11 @@ export async function generateScaledQR(
     if (!sampled) {
       return moduleDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
     }
+    // Keep preservation blending image-aware in all scaled modes.
+    // Two rails are selected from the existing scaled pixel decision matrix so
+    // preservations stay integrated with the active mode rather than becoming solids.
+    const pixelDark = matrix[scaledRow]?.[scaledCol] === true;
     if (isDitheredMode) {
-      // Preserve local dither texture by keeping two tonal rails per module bit:
-      // - QR dark modules: deep dark + softer dark
-      // - QR light modules: bright light + softer light
-      // Rails are selected from the existing scaled pixel decision matrix.
-      const pixelDark = matrix[scaledRow]?.[scaledCol] === true;
       if (moduleDark) {
         return pixelDark
           ? adjustLumaPreserveChroma(sampled, 0.04, 1.65)
@@ -382,7 +390,14 @@ export async function generateScaledQR(
         ? adjustLumaPreserveChroma(sampled, 0.9, 0.9)
         : adjustLumaPreserveChroma(sampled, 0.97, 0.8);
     }
-    return moduleDark ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+    if (moduleDark) {
+      return pixelDark
+        ? adjustLumaPreserveChroma(sampled, 0.08, 1.28)
+        : adjustLumaPreserveChroma(sampled, 0.2, 1.14);
+    }
+    return pixelDark
+      ? adjustLumaPreserveChroma(sampled, 0.88, 0.95)
+      : adjustLumaPreserveChroma(sampled, 0.97, 0.84);
   };
   const isPatternBoostModule = (row: number, col: number): boolean => {
     const isFinderBoostModule = finderContrastBoost && isFinderRegion(row, col);
@@ -402,7 +417,7 @@ export async function generateScaledQR(
     );
   };
   const drawPatternContrastBoostOverlay = (): void => {
-    if (!isDitheredMode || finderStrengthN <= 0) return;
+    if (finderStrengthN <= 0) return;
     if (
       !finderContrastBoost &&
       !alignmentContrastBoost &&
@@ -449,9 +464,11 @@ export async function generateScaledQR(
               // Restrict blending to existing dither "ink" so preservation boosting does not
               // flatten whole module rectangles into solid overlays.
               const rawInkContrast = paperLuma - pixelLuma;
-              const inkCoverageN = moduleDark
-                ? Math.max(0, Math.min(1, (rawInkContrast - 0.015) / 0.28))
-                : Math.max(0, Math.min(1, (rawInkContrast + 0.03) / 0.22));
+              const inkCoverageN = isDitheredMode
+                ? moduleDark
+                  ? Math.max(0, Math.min(1, (rawInkContrast - 0.015) / 0.28))
+                  : Math.max(0, Math.min(1, (rawInkContrast + 0.03) / 0.22))
+                : 1;
               if (inkCoverageN <= 1e-3) {
                 idx += 4;
                 continue;
@@ -599,8 +616,16 @@ export async function generateScaledQR(
           const jitterN = 0.66 + 0.34 * hash01(x, y, seed + 7);
           drawDitherDot(dx, dy, radius, jitterN);
         } else if (useColorRendering && color) {
-          // For subpixel modes: use raw overlay color
-          ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+          if (needsBothDarkAndLightColors) {
+            const dark = adjustLumaPreserveChroma(
+              color,
+              subpixelDarkTargetLuma,
+              subpixelDarkChroma
+            );
+            ctx.fillStyle = `rgb(${dark.r},${dark.g},${dark.b})`;
+          } else {
+            ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+          }
           ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
         } else {
           // B&W mode or no color data: use foreground color (with optional gradient)
@@ -610,7 +635,12 @@ export async function generateScaledQR(
       } else {
         // Non-dithered light rendering paths.
         if (needsBothDarkAndLightColors && useColorRendering && color) {
-          ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+          const light = adjustLumaPreserveChroma(
+            color,
+            subpixelLightTargetLuma,
+            subpixelLightChroma
+          );
+          ctx.fillStyle = `rgb(${light.r},${light.g},${light.b})`;
           ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
         } else {
           ctx.fillStyle = effectiveBgColor;

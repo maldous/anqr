@@ -46,22 +46,52 @@ function parseHexColor(hex: string | undefined): { r: number; g: number; b: numb
   return null;
 }
 
+function isFinderSeparator(row: number, col: number, moduleCount: number): boolean {
+  return (
+    (row === 7 && col <= 7) ||
+    (col === 7 && row <= 7) ||
+    (row === 7 && col >= moduleCount - 8) ||
+    (col === moduleCount - 8 && row <= 7) ||
+    (row === moduleCount - 8 && col <= 7) ||
+    (col === 7 && row >= moduleCount - 8)
+  );
+}
+
 /**
- * Check if a module is a structural pattern (finder, alignment, timing, format, version)
+ * Check if a module should remain lock-protected based on preservation settings.
  */
-function isStructuralModule(
+function shouldLockModule(
   row: number,
   col: number,
   moduleCount: number,
-  version: number
+  version: number,
+  config: QRGeneratorConfig
 ): boolean {
-  return (
-    isFinderPattern(row, col, moduleCount) ||
-    isTimingPattern(row, col, moduleCount) ||
-    isAlignmentPattern(row, col, moduleCount, version) ||
-    isFormatInfo(row, col, moduleCount) ||
-    isVersionInfo(row, col, moduleCount, version)
-  );
+  const preserveFunctional = config.preserveFunctionalPatterns === true;
+  const preserveFinders = config.preserveFinders !== false;
+  const preserveTiming = preserveFunctional
+    ? config.preserveTiming !== false
+    : config.preserveTiming === true;
+  const preserveAlignment = preserveFunctional
+    ? config.preserveAlignment !== false
+    : config.preserveAlignment === true;
+  const protectFormat = preserveFunctional
+    ? config.protectFormatInfo !== false
+    : config.protectFormatInfo === true;
+  const protectVersion = preserveFunctional
+    ? config.protectVersionInfo !== false
+    : config.protectVersionInfo === true;
+  const preserveFixedDark = preserveFunctional;
+
+  if (row === moduleCount - 8 && col === 8) return preserveFixedDark;
+  if (isFinderPattern(row, col, moduleCount) || isFinderSeparator(row, col, moduleCount)) {
+    return preserveFinders;
+  }
+  if (isTimingPattern(row, col, moduleCount)) return preserveTiming;
+  if (isAlignmentPattern(row, col, moduleCount, version)) return preserveAlignment;
+  if (isFormatInfo(row, col, moduleCount)) return protectFormat;
+  if (isVersionInfo(row, col, moduleCount, version)) return protectVersion;
+  return false;
 }
 
 /**
@@ -185,11 +215,15 @@ export async function generateSubpixelMatrix(
       const overlayBrightness = brightness[y]?.[x] ?? 0.5;
       const overlayColor = colors[y]?.[x];
 
-      // Check if this module is a structural pattern
-      const isStructural = isStructuralModule(moduleRow, moduleCol, moduleCount, version);
+      const lockModule = shouldLockModule(moduleRow, moduleCol, moduleCount, version, config);
+      const isFinderModule =
+        isFinderPattern(moduleRow, moduleCol, moduleCount) ||
+        isFinderSeparator(moduleRow, moduleCol, moduleCount);
+      const forceSolidFinder = finderOverride === 'solid' && isFinderModule && lockModule;
 
-      // Handle finder override: if 'solid', structural patterns render as solid QR
-      if (isStructural && finderOverride === 'solid') {
+      // Locked modules must preserve canonical QR values.
+      // Finder override is a finder-only stylistic control on top of preserve flags.
+      if (lockModule || forceSolidFinder) {
         matrix[y][x] = qrValue;
         colorMatrix[y][x] = null; // No overlay color for solid structural patterns
         continue;
