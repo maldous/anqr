@@ -15,6 +15,7 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { buildScanShowcaseSeeds } from '@/data/gallery-scan-scenarios';
 
 export type GalleryCategory =
   | 'plain'
@@ -28,7 +29,8 @@ export type GalleryCategory =
   | 'preprocessing'
   | 'encoding'
   | 'dithering'
-  | 'power-combos';
+  | 'power-combos'
+  | 'validated-showcase';
 
 export interface GalleryItem {
   id: string;
@@ -1197,6 +1199,21 @@ for (const combo of modeColorCombos) {
 }
 
 // ============================================
+// VALIDATED SHOWCASE - Scan-approved canonical scenarios
+// ============================================
+const validatedShowcaseItems: GalleryItem[] = buildScanShowcaseSeeds(BASE_DATA, TSUNAMI_IMG).map(
+  (seed) => ({
+    id: seed.id,
+    title: seed.title,
+    description: seed.description,
+    category: 'validated-showcase',
+    params: Object.fromEntries(
+      Object.entries(seed.params).filter(([, v]) => v !== undefined)
+    ) as Record<string, string | number | boolean>,
+  })
+);
+
+// ============================================
 // ALL GALLERY SECTIONS
 // ============================================
 export const gallerySections: GallerySection[] = [
@@ -1283,6 +1300,13 @@ export const gallerySections: GallerySection[] = [
     description: 'Striking multi-feature combinations showcasing ANQR capabilities',
     icon: 'Sparkles',
     items: powerComboItems,
+  },
+  {
+    id: 'validated-showcase',
+    title: 'Validated Showcase',
+    description: 'Scan-verified overlay configurations tested across canonical fixtures',
+    icon: 'ShieldCheck',
+    items: validatedShowcaseItems,
   },
 ];
 

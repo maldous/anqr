@@ -100,7 +100,7 @@ export async function hashCanvasContent(
             return c;
           })()
         : await createCanvasFn(hashSize, hashSize);
-    const hashCtx = hashCanvas.getContext('2d');
+    const hashCtx = hashCanvas.getContext('2d') as CanvasRenderingContext2D | null;
     if (!hashCtx) {
       return `${canvas.width}x${canvas.height}`;
     }

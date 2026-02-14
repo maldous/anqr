@@ -1,0 +1,427 @@
+import type { QRGeneratorConfig } from '@/modules/qr-generator';
+
+export type CanonicalFixtureId = 'tsunami' | 'king' | 'logo' | 'test';
+export type ScenarioFeatureGroup =
+  | 'overlay'
+  | 'preservation'
+  | 'render'
+  | 'encoding'
+  | 'animation'
+  | 'output'
+  | 'watermark';
+
+export interface CanonicalFixture {
+  id: CanonicalFixtureId;
+  filePath: string;
+  publicPath: string;
+  isAnimated: boolean;
+}
+
+export interface GalleryScanScenario {
+  id: string;
+  title: string;
+  description: string;
+  featureGroup: ScenarioFeatureGroup;
+  heroPriority: number;
+  galleryEligible: boolean;
+  useOverlay: boolean;
+  generatorPatch: Partial<QRGeneratorConfig>;
+  galleryParams: Record<string, string | number | boolean>;
+}
+
+export const CANONICAL_FIXTURES: readonly CanonicalFixture[] = [
+  { id: 'tsunami', filePath: 'public/tsunami.jpg', publicPath: '/tsunami.jpg', isAnimated: false },
+  { id: 'king', filePath: 'public/king.gif', publicPath: '/king.gif', isAnimated: true },
+  { id: 'logo', filePath: 'public/logo.png', publicPath: '/logo.png', isAnimated: false },
+  { id: 'test', filePath: 'public/test.png', publicPath: '/test.png', isAnimated: false },
+];
+
+export const GALLERY_SCAN_SCENARIOS: readonly GalleryScanScenario[] = [
+  {
+    id: 'overlay-dithered',
+    title: 'Validated Dithered',
+    description: 'Dithered image overlay baseline',
+    featureGroup: 'overlay',
+    heroPriority: 100,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'dithered', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-blue-noise',
+    title: 'Validated Blue Noise',
+    description: 'Blue-noise threshold overlay',
+    featureGroup: 'overlay',
+    heroPriority: 95,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'blue-noise', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'blue-noise', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-subpixel',
+    title: 'Validated Subpixel',
+    description: 'Subpixel overlay with image-aware rails',
+    featureGroup: 'overlay',
+    heroPriority: 92,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'subpixel', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'subpixel', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-halftone',
+    title: 'Validated Halftone',
+    description: 'Classic halftone blend',
+    featureGroup: 'overlay',
+    heroPriority: 86,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'halftone', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'halftone', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-mosaic',
+    title: 'Validated Mosaic',
+    description: 'Mosaic tile interpretation',
+    featureGroup: 'overlay',
+    heroPriority: 84,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'mosaic', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'mosaic', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-extreme',
+    title: 'Validated Extreme',
+    description: 'High-visibility overlay mode',
+    featureGroup: 'overlay',
+    heroPriority: 80,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'extreme', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'extreme', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'preserve-balanced',
+    title: 'Preservation Balanced',
+    description: 'Functional modules preserved for scan stability',
+    featureGroup: 'preservation',
+    heroPriority: 90,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      preserveFinders: true,
+      preserveTiming: true,
+      preserveAlignment: true,
+      protectFormatInfo: true,
+      protectVersionInfo: true,
+      finderDitherStrength: 65,
+      blendPreservations: false,
+    },
+    galleryParams: {
+      mode: 'dithered',
+      intensity: 70,
+      colorMode: 'color',
+      keepFinders: 1,
+      keepTiming: 1,
+      keepAlign: 1,
+      protectFmt: 1,
+      protectVer: 1,
+      finderDither: 65,
+      blendPres: 0,
+      v: 6,
+      ec: 'H',
+    },
+  },
+  {
+    id: 'preserve-blended',
+    title: 'Preservation Blended',
+    description: 'Unpreserved functional modules blended with image rails',
+    featureGroup: 'preservation',
+    heroPriority: 88,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      preserveFinders: false,
+      preserveTiming: false,
+      preserveAlignment: false,
+      protectFormatInfo: false,
+      protectVersionInfo: false,
+      finderDitherStrength: 70,
+      blendPreservations: true,
+    },
+    galleryParams: {
+      mode: 'dithered',
+      intensity: 70,
+      colorMode: 'color',
+      keepFinders: 0,
+      keepTiming: 0,
+      keepAlign: 0,
+      protectFmt: 0,
+      protectVer: 0,
+      finderDither: 70,
+      blendPres: 1,
+      v: 6,
+      ec: 'H',
+    },
+  },
+  {
+    id: 'preserve-strength-100',
+    title: 'Preservation Strength 100',
+    description: 'Maximum preservation contrast',
+    featureGroup: 'preservation',
+    heroPriority: 82,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      preserveFinders: false,
+      preserveTiming: false,
+      preserveAlignment: false,
+      protectFormatInfo: false,
+      protectVersionInfo: false,
+      finderDitherStrength: 100,
+      blendPreservations: false,
+    },
+    galleryParams: {
+      mode: 'dithered',
+      intensity: 70,
+      colorMode: 'color',
+      keepFinders: 0,
+      keepTiming: 0,
+      keepAlign: 0,
+      protectFmt: 0,
+      protectVer: 0,
+      finderDither: 100,
+      blendPres: 0,
+      v: 6,
+      ec: 'H',
+    },
+  },
+  {
+    id: 'render-rounded',
+    title: 'Rounded Render',
+    description: 'Rounded modules and finders over image',
+    featureGroup: 'render',
+    heroPriority: 76,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      moduleStyle: 'rounded',
+      finderStyle: 'rounded',
+    },
+    galleryParams: {
+      mode: 'dithered',
+      intensity: 70,
+      colorMode: 'color',
+      style: 'rounded',
+      finder: 'rounded',
+      v: 6,
+      ec: 'H',
+    },
+  },
+  {
+    id: 'render-dots-circle',
+    title: 'Dots + Circle Finders',
+    description: 'Dot matrix style with circular finders',
+    featureGroup: 'render',
+    heroPriority: 74,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      moduleStyle: 'dots',
+      finderStyle: 'circle',
+    },
+    galleryParams: {
+      mode: 'dithered',
+      intensity: 70,
+      colorMode: 'color',
+      style: 'dots',
+      finder: 'circle',
+      v: 6,
+      ec: 'H',
+    },
+  },
+  {
+    id: 'encoding-v6',
+    title: 'Encoding Version 6',
+    description: 'Version 6 scan profile',
+    featureGroup: 'encoding',
+    heroPriority: 72,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      typeNumber: 6,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'encoding-v9',
+    title: 'Encoding Version 9',
+    description: 'Version 9 high-density scan profile',
+    featureGroup: 'encoding',
+    heroPriority: 71,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      typeNumber: 9,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 9, ec: 'H' },
+  },
+  {
+    id: 'encoding-ecc-q',
+    title: 'Encoding ECC-Q',
+    description: 'Quartile ECC profile',
+    featureGroup: 'encoding',
+    heroPriority: 70,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      errorCorrection: 'Q',
+      typeNumber: 6,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'Q' },
+  },
+  {
+    id: 'animation-dithered',
+    title: 'Animation Dithered',
+    description: 'Animated-source dithered profile',
+    featureGroup: 'animation',
+    heroPriority: 69,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      scanGateProfile: 'preview',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'animation-blue-noise',
+    title: 'Animation Blue Noise',
+    description: 'Animated-source blue-noise profile',
+    featureGroup: 'animation',
+    heroPriority: 68,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'blue-noise',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      scanGateProfile: 'preview',
+    },
+    galleryParams: { mode: 'blue-noise', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'output-hd',
+    title: 'Output High Definition',
+    description: 'Larger module pitch for print/export',
+    featureGroup: 'output',
+    heroPriority: 67,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      moduleSize: 22,
+      margin: 4,
+    },
+    galleryParams: {
+      mode: 'dithered',
+      intensity: 70,
+      colorMode: 'color',
+      size: 22,
+      margin: 4,
+      format: 'png',
+      v: 6,
+      ec: 'H',
+    },
+  },
+  {
+    id: 'watermark-frame-tag',
+    title: 'Watermark/Frame Showcase',
+    description: 'Frame text overlay as branding-safe presentation',
+    featureGroup: 'watermark',
+    heroPriority: 66,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      frameStyle: 'tag',
+      frameText: 'ANQR',
+    },
+    galleryParams: {
+      mode: 'dithered',
+      intensity: 70,
+      colorMode: 'color',
+      frame: 'tag',
+      frameText: 'ANQR',
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: 'ANQR',
+      wmOpacity: 25,
+      wmBlend: 'normal',
+      v: 6,
+      ec: 'H',
+    },
+  },
+];
+
+export interface ScanShowcaseGalleryItemSeed {
+  id: string;
+  title: string;
+  description: string;
+  category: 'validated-showcase';
+  params: Record<string, string | number | boolean>;
+}
+
+export function buildScanShowcaseSeeds(
+  baseData: string = 'https://anqr.link',
+  defaultOverlayPath: string = '/tsunami.jpg'
+): ScanShowcaseGalleryItemSeed[] {
+  return GALLERY_SCAN_SCENARIOS.filter((s) => s.galleryEligible)
+    .sort((a, b) => b.heroPriority - a.heroPriority)
+    .map((scenario) => ({
+      id: `scan-${scenario.id}`,
+      title: scenario.title,
+      description: scenario.description,
+      category: 'validated-showcase',
+      params: {
+        data: baseData,
+        ec: 'H',
+        v: 6,
+        ...(scenario.useOverlay ? { img: defaultOverlayPath } : {}),
+        ...scenario.galleryParams,
+      },
+    }));
+}

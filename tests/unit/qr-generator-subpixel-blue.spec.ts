@@ -365,8 +365,8 @@ describe('qr-generator/overlay-subpixel.ts', () => {
 
       // Non-center pixel of a non-structural module should be dark (brightness < threshold)
       const scale = 3;
-      const py = 4 * scale + 0; // first subpixel, not center
-      const px = 4 * scale + 0;
+      const py = 10 * scale + 0; // first subpixel, not center
+      const px = 10 * scale + 0;
       expect(result.matrix[py][px]).toBe(true); // dark because brightness(10,10,10) < threshold
     });
 
@@ -385,8 +385,8 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
 
       const scale = 3;
-      const py = 4 * scale + 0;
-      const px = 4 * scale + 0;
+      const py = 10 * scale + 0;
+      const px = 10 * scale + 0;
       expect(result.matrix[py][px]).toBe(false); // light because brightness > threshold
     });
 

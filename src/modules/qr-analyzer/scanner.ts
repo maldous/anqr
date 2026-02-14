@@ -32,7 +32,7 @@ export interface ValidationResult {
  * Scan a canvas for QR code
  */
 export function scanCanvas(canvas: HTMLCanvasElement | OffscreenCanvas): ScanResult {
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D | null;
   if (!ctx) {
     return { data: null, location: null };
   }

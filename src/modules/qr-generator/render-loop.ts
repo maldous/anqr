@@ -73,7 +73,13 @@ export function renderModules(
         !(protectFormat && isFormat) &&
         !(protectVersion && isVersion);
       const isFunctionalPattern =
-        isFinder || isTiming || isAlignment || isFormat || isVersion || isFixedDark || isInAlignmentSet;
+        isFinder ||
+        isTiming ||
+        isAlignment ||
+        isFormat ||
+        isVersion ||
+        isFixedDark ||
+        isInAlignmentSet;
 
       // Default rendering parameters
       // IMPORTANT: Validate colors - invalid fillStyle values cause canvas to use black

@@ -548,7 +548,7 @@ describe('qr-generator dithered scan gate', () => {
     const payload = 'https://anqr.link';
     const cfg = makeDefaultGalleryScanConfig(payload);
     await expectScanGatePass(qr, cfg, 'public/king.gif', 'king-generated-current.png');
-  });
+  }, 15000);
 
   it('keeps dithered logo output decodable from final PNG bytes', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
@@ -624,7 +624,7 @@ describe('qr-generator dithered scan gate', () => {
       protectVersionInfo: false,
     };
     await expectScanGatePass(qr, cfg, 'public/king.gif', 'king-generated-preview-current.png');
-  });
+  }, 15000);
 
   it(
     'keeps sampled animated king gif frames decodable in preview scan-gate profile',

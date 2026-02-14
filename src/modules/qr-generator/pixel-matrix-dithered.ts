@@ -15,7 +15,12 @@
 
 import { createLogger } from '../../lib/logger';
 import { rgbToGray } from '../core';
-import { createRNG, generateBlueNoiseTile, getOrderedMatrix, sampleBlueNoise } from '../dither-algorithms';
+import {
+  createRNG,
+  generateBlueNoiseTile,
+  getOrderedMatrix,
+  sampleBlueNoise,
+} from '../dither-algorithms';
 import { DIFFUSION_KERNELS, type DiffusionKernelDef } from '../dither-algorithms/kernels';
 import type { DiffusionKernel, OrderedMatrix } from '../dither-algorithms/types';
 import {
@@ -49,7 +54,8 @@ type DitherThresholdPattern =
   | 'adaptive_threshold';
 
 function resolveDitherKind(config: QRGeneratorConfig): string {
-  if (typeof config.ditherKind === 'string' && config.ditherKind.length > 0) return config.ditherKind;
+  if (typeof config.ditherKind === 'string' && config.ditherKind.length > 0)
+    return config.ditherKind;
   if (config.ditherMode === 'blue_noise') return 'blue_noise';
   return 'error_diffusion';
 }
@@ -71,10 +77,14 @@ function resolveDiffusionKernel(
   return kindKernelMap[ditherKind] ?? 'floyd_steinberg';
 }
 
-function resolveOrderedMatrixName(ditherKind: string, configured: string | undefined): OrderedMatrix {
+function resolveOrderedMatrixName(
+  ditherKind: string,
+  configured: string | undefined
+): OrderedMatrix {
   if (ditherKind === 'ordered_clustered') return 'clustered_dot';
   if (ditherKind === 'ordered_void_cluster') return 'void_cluster';
-  if (configured === 'bayer2' || configured === 'bayer4' || configured === 'bayer8') return configured;
+  if (configured === 'bayer2' || configured === 'bayer4' || configured === 'bayer8')
+    return configured;
   if (configured === 'clustered_dot' || configured === 'void_cluster') return configured;
   return 'bayer4';
 }
@@ -98,8 +108,6 @@ function resolveThresholdPattern(ditherKind: string): DitherThresholdPattern {
       return 'temporal_blue_noise';
     case 'adaptive_threshold':
       return 'adaptive_threshold';
-    case 'blue_noise':
-    case 'blue_noise_threshold':
     default:
       return 'blue_noise';
   }
@@ -148,7 +156,7 @@ async function generateBWFirstMatrix(
 
   // Create scaled overlay canvas
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d');
+  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
   if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
@@ -840,7 +848,7 @@ export async function generateDitheredMatrix(
   const temporalOffsetY = (frameIndex * 29) % tileSize;
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d');
+  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
   if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
@@ -881,10 +889,11 @@ export async function generateDitheredMatrix(
         return centered(blue * 0.72 + screen * 0.28);
       }
       case 'temporal_blue_noise':
-        return centered(sampleBlueNoise(x + temporalOffsetX, y + temporalOffsetY, noiseTile, tileSize));
+        return centered(
+          sampleBlueNoise(x + temporalOffsetX, y + temporalOffsetY, noiseTile, tileSize)
+        );
       case 'adaptive_threshold':
         return centered(clamp01(0.55 - (overlayDark - 0.5) * 0.9));
-      case 'blue_noise':
       default:
         return centered(sampleBlueNoise(x, y, noiseTile, tileSize));
     }
@@ -1019,7 +1028,7 @@ export async function generateBlueNoiseMatrix(
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d');
+  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
   if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
@@ -1126,7 +1135,7 @@ export async function generateHalftoneDitheredOverlayData(
   // Also sample the original overlay at module resolution so halftone dot sizing
   // preserves the actual image luminance instead of only QR-constrained density.
   const moduleCanvas = await createCanvasFn(moduleCount, moduleCount);
-  const moduleCtx = moduleCanvas.getContext('2d');
+  const moduleCtx = moduleCanvas.getContext('2d') as CanvasRenderingContext2D | null;
   let moduleData: Uint8ClampedArray | null = null;
   if (moduleCtx) {
     moduleCtx.imageSmoothingEnabled = true;

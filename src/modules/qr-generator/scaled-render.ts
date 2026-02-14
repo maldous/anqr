@@ -405,7 +405,8 @@ export async function generateScaledQR(
       alignmentContrastBoost && isAlignmentPatternSpec(row, col, moduleCount, version);
     const isTimingBoostModule = timingContrastBoost && isTimingPatternSpec(row, col, moduleCount);
     const isFormatBoostModule = formatContrastBoost && isFormatInfoSpec(row, col, moduleCount);
-    const isVersionBoostModule = versionContrastBoost && isVersionInfoSpec(row, col, moduleCount, version);
+    const isVersionBoostModule =
+      versionContrastBoost && isVersionInfoSpec(row, col, moduleCount, version);
     const isFixedDarkBoostModule = fixedDarkContrastBoost && row === moduleCount - 8 && col === 8;
     return (
       isFinderBoostModule ||
@@ -419,12 +420,14 @@ export async function generateScaledQR(
   const drawPatternContrastBoostOverlay = (): void => {
     if (finderStrengthN <= 0) return;
     if (
-      !finderContrastBoost &&
-      !alignmentContrastBoost &&
-      !timingContrastBoost &&
-      !formatContrastBoost &&
-      !versionContrastBoost &&
-      !fixedDarkContrastBoost
+      !(
+        finderContrastBoost ||
+        alignmentContrastBoost ||
+        timingContrastBoost ||
+        formatContrastBoost ||
+        versionContrastBoost ||
+        fixedDarkContrastBoost
+      )
     ) {
       return;
     }
@@ -459,7 +462,8 @@ export async function generateScaledQR(
                 (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
                 sampleModuleOverlayColor(row, col);
               const paperLuma = estimatePaperLuma(sampled ?? null);
-              const pixelLuma = (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]) / 255;
+              const pixelLuma =
+                (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]) / 255;
               const moduleDark = qr.isDark(row, col);
               // Restrict blending to existing dither "ink" so preservation boosting does not
               // flatten whole module rectangles into solid overlays.
@@ -473,7 +477,12 @@ export async function generateScaledQR(
                 idx += 4;
                 continue;
               }
-              const target = getPreservationBlendTargetForScaledPixel(row, col, scaledRow, scaledCol);
+              const target = getPreservationBlendTargetForScaledPixel(
+                row,
+                col,
+                scaledRow,
+                scaledCol
+              );
               const t = finderStrengthN * inkCoverageN;
               data[idx] = blendChannelToward(data[idx], target.r, t);
               data[idx + 1] = blendChannelToward(data[idx + 1], target.g, t);

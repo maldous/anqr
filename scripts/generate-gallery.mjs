@@ -924,6 +924,41 @@ function generateGalleryItems() {
     });
   }
 
+  // ========== VALIDATED SHOWCASE ==========
+  // Canonical source: src/data/gallery-scan-scenarios.ts (GALLERY_SCAN_SCENARIOS)
+  // These items mirror buildScanShowcaseSeeds() from that module.
+  const validatedScenarios = [
+    { id: 'overlay-dithered', params: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'overlay-blue-noise', params: { mode: 'blue-noise', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'overlay-subpixel', params: { mode: 'subpixel', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'overlay-halftone', params: { mode: 'halftone', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'overlay-mosaic', params: { mode: 'mosaic', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'overlay-extreme', params: { mode: 'extreme', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'preserve-balanced', params: { mode: 'dithered', intensity: 70, colorMode: 'color', keepFinders: 1, keepTiming: 1, keepAlign: 1, protectFmt: 1, protectVer: 1, finderDither: 65, blendPres: 0, v: 6, ec: 'H' } },
+    { id: 'preserve-blended', params: { mode: 'dithered', intensity: 70, colorMode: 'color', keepFinders: 0, keepTiming: 0, keepAlign: 0, protectFmt: 0, protectVer: 0, finderDither: 70, blendPres: 1, v: 6, ec: 'H' } },
+    { id: 'preserve-strength-100', params: { mode: 'dithered', intensity: 70, colorMode: 'color', keepFinders: 0, keepTiming: 0, keepAlign: 0, protectFmt: 0, protectVer: 0, finderDither: 100, blendPres: 0, v: 6, ec: 'H' } },
+    { id: 'render-rounded', params: { mode: 'dithered', intensity: 70, colorMode: 'color', style: 'rounded', finder: 'rounded', v: 6, ec: 'H' } },
+    { id: 'render-dots-circle', params: { mode: 'dithered', intensity: 70, colorMode: 'color', style: 'dots', finder: 'circle', v: 6, ec: 'H' } },
+    { id: 'encoding-v6', params: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'encoding-v9', params: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 9, ec: 'H' } },
+    { id: 'encoding-ecc-q', params: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'Q' } },
+    { id: 'animation-dithered', params: { mode: 'dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'animation-blue-noise', params: { mode: 'blue-noise', intensity: 70, colorMode: 'color', v: 6, ec: 'H' } },
+    { id: 'output-hd', params: { mode: 'dithered', intensity: 70, colorMode: 'color', size: 22, margin: 4, format: 'png', v: 6, ec: 'H' } },
+    { id: 'watermark-frame-tag', params: { mode: 'dithered', intensity: 70, colorMode: 'color', frame: 'tag', frameText: 'ANQR', wmEn: 1, wmKind: 'text', wmText: 'ANQR', wmOpacity: 25, wmBlend: 'normal', v: 6, ec: 'H' } },
+  ];
+
+  for (const scenario of validatedScenarios) {
+    items.push({
+      id: `scan-${scenario.id}`,
+      params: {
+        data: BASE_DATA,
+        img: TSUNAMI_IMG,
+        ...scenario.params,
+      },
+    });
+  }
+
   return items;
 }
 
