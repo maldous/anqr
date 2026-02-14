@@ -8,6 +8,7 @@ import type { QRCodeObject } from './cache';
 import { applyDitherToMatrix } from './dithering-matrix';
 import { getOverlayData } from './overlay-data';
 import { getEffectiveIntensity } from './pixel-matrix-utils';
+import { generateHalftoneDitheredOverlayData } from './pixel-matrix-dithered';
 import type { CreateCanvasFn, OverlayData, QRCodeInstance, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');
@@ -39,7 +40,6 @@ export async function prepareUnifiedOverlayData(
   // Halftone-dithered: use error-diffusion density instead of raw overlay brightness
   const overlayMode = config.overlayMode || 'blend';
   if (overlayMode === 'halftone-dithered') {
-    const { generateHalftoneDitheredOverlayData } = await import('./pixel-matrix-dithered');
     const result = await generateHalftoneDitheredOverlayData(
       // Safe: QRCodeObject satisfies QRCodeInstance (isDark + getModuleCount)
       qr as QRCodeInstance,

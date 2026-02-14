@@ -1339,6 +1339,7 @@
     "extreme": "melampau",
     "extremeMode": "melampau",
     "halftone": "Halftone",
+    "halftoneDitheredMode": "_",
     "halftoneMode": "Halftone",
     "mosaic": "Mozek",
     "mosaicMode": "Mozek",
