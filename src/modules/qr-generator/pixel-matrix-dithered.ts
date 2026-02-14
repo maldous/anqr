@@ -373,11 +373,7 @@ function shouldLockModule(
   config: QRGeneratorConfig
 ): boolean {
   const preserveFunctional = config.preserveFunctionalPatterns === true;
-  const forceFinderLockInMatrix =
-    config.overlayMode === 'dithered' ||
-    config.overlayMode === 'blue-noise' ||
-    config.overlayMode === 'blue_noise';
-  const preserveFinders = forceFinderLockInMatrix ? true : config.preserveFinders !== false;
+  const preserveFinders = config.preserveFinders !== false;
   const preserveTiming = preserveFunctional
     ? config.preserveTiming !== false
     : config.preserveTiming === true;
@@ -489,7 +485,10 @@ function enforceModuleConstraints(
   const locked: boolean[][] = Array.from({ length: moduleCount }, () =>
     new Array(moduleCount).fill(false)
   );
-  const decoupleFinderOptimization = config.preserveFinders === false;
+  const decoupleFinderOptimization =
+    config.preserveFinders === false && config.blendPreservations !== true;
+  const finderBlendGuidance =
+    config.preserveFinders === false && config.blendPreservations === true;
 
   for (let mr = 0; mr < moduleCount; mr++) {
     for (let mc = 0; mc < moduleCount; mc++) {
@@ -548,6 +547,15 @@ function enforceModuleConstraints(
             Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
           )
         );
+        if (finderBlendGuidance && isFinderModuleOrSeparator(mr, mc, moduleCount)) {
+          if (qr.isDark(mr, mc)) {
+            darkMinMap[mr][mc] = Math.max(darkMinMap[mr][mc], 0.56);
+            darkCenterMinMap[mr][mc] = Math.max(darkCenterMinMap[mr][mc], 0.72);
+          } else {
+            lightMaxMap[mr][mc] = Math.min(lightMaxMap[mr][mc], 0.3);
+            lightCenterMaxMap[mr][mc] = Math.min(lightCenterMaxMap[mr][mc], 0.18);
+          }
+        }
       }
     }
   };

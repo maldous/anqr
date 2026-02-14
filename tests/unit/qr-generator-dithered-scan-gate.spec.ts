@@ -265,6 +265,96 @@ function darkModuleInteriorLumaRangeByMask(
   return { maxLuma, sampleCount };
 }
 
+function darkModuleInkCoverageByMask(
+  canvas: any,
+  matrix: boolean[][],
+  marginModules: number,
+  include: (row: number, col: number, moduleCount: number, version: number) => boolean,
+  lumaThreshold: number = 0.55
+): { inkCoverage: number; sampleCount: number } {
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const moduleCount = matrix.length;
+  const version = Math.ceil((moduleCount - 17) / 4);
+  const pitch = canvas.width / Math.max(1, moduleCount + marginModules * 2);
+  const offset = marginModules * pitch;
+
+  const lumaAt = (x: number, y: number): number => {
+    const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
+    const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
+    const idx = (yy * canvas.width + xx) * 4;
+    return (
+      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
+    );
+  };
+
+  const fractions = [0.17, 0.33, 0.5, 0.67, 0.83];
+  let inkCount = 0;
+  let sampleCount = 0;
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (!matrix[row][col]) continue;
+      if (!include(row, col, moduleCount, version)) continue;
+      for (const fy of fractions) {
+        for (const fx of fractions) {
+          const x = offset + (col + fx) * pitch;
+          const y = offset + (row + fy) * pitch;
+          if (lumaAt(x, y) <= lumaThreshold) {
+            inkCount++;
+          }
+          sampleCount++;
+        }
+      }
+    }
+  }
+
+  return {
+    inkCoverage: inkCount / Math.max(1, sampleCount),
+    sampleCount,
+  };
+}
+
+function meanModuleCenterChromaByMask(
+  canvas: any,
+  matrix: boolean[][],
+  marginModules: number,
+  include: (row: number, col: number, moduleCount: number, version: number) => boolean
+): { meanChroma: number; sampleCount: number } {
+  const ctx = canvas.getContext('2d');
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  const moduleCount = matrix.length;
+  const version = Math.ceil((moduleCount - 17) / 4);
+  const pitch = canvas.width / Math.max(1, moduleCount + marginModules * 2);
+  const offset = marginModules * pitch;
+
+  const chromaAt = (x: number, y: number): number => {
+    const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
+    const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
+    const idx = (yy * canvas.width + xx) * 4;
+    const r = imageData[idx];
+    const g = imageData[idx + 1];
+    const b = imageData[idx + 2];
+    return (Math.abs(r - g) + Math.abs(g - b) + Math.abs(b - r)) / 3;
+  };
+
+  let sum = 0;
+  let sampleCount = 0;
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (!include(row, col, moduleCount, version)) continue;
+      const cx = offset + (col + 0.5) * pitch;
+      const cy = offset + (row + 0.5) * pitch;
+      sum += chromaAt(cx, cy);
+      sampleCount++;
+    }
+  }
+  return {
+    meanChroma: sum / Math.max(1, sampleCount),
+    sampleCount,
+  };
+}
+
 function meanModuleCenterRgbDeltaByMask(
   canvasA: any,
   canvasB: any,
@@ -492,6 +582,23 @@ describe('qr-generator dithered scan gate', () => {
     );
   });
 
+  it('keeps preserveFinders=false + blendPreservations=true decodable in full scan-gate profile', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const payload = 'https://anqr.link';
+    const cfg: QRGeneratorConfig = {
+      ...makeDefaultGalleryScanConfig(payload),
+      preserveFinders: false,
+      blendPreservations: true,
+      scanGateProfile: 'full',
+    };
+    await expectScanGatePass(
+      qr,
+      cfg,
+      'public/tsunami.jpg',
+      'tsunami-generated-preserve-finders-off-blend-pres-current.png'
+    );
+  });
+
   it('keeps preserveAlignment=false dithered output decodable in full scan-gate profile', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
     const payload = 'https://anqr.link';
@@ -714,6 +821,7 @@ describe('dither option wiring', () => {
     ditherKind: 'error_diffusion',
     ditherStrength: 50,
     finderDitherStrength: 100,
+    blendPreservations: false,
     ditherSerpentine: false,
     diffusionKernel: 'floyd_steinberg',
     orderedMatrix: 'bayer4',
@@ -848,6 +956,134 @@ describe('dither option wiring', () => {
       );
       expect(lumaRange.sampleCount).toBeGreaterThan(0);
       expect(lumaRange.maxLuma).toBeLessThan(0.08);
+    },
+    30000
+  );
+
+  it(
+    'blend preservations uses image-aware coloring instead of grayscale preservation overlays',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const baseCfg: QRGeneratorConfig = {
+        ...makeWiringConfig(),
+        preserveFinders: false,
+        preserveTiming: false,
+        preserveAlignment: false,
+        protectFormatInfo: false,
+        protectVersionInfo: false,
+        finderDitherStrength: 70,
+      };
+      const flatRender = await qr.generate({ ...baseCfg, blendPreservations: false }, overlay);
+      const blendedRender = await qr.generate({ ...baseCfg, blendPreservations: true }, overlay);
+      const matrixData = qr.getLastMatrix();
+      expect(matrixData).not.toBeNull();
+
+      const mask = (row: number, col: number, moduleCount: number, version: number) =>
+        isFinderModuleOrSeparator(row, col, moduleCount) ||
+        isTimingPattern(row, col, moduleCount) ||
+        isAlignmentPattern(row, col, moduleCount, version) ||
+        isFormatInfo(row, col, moduleCount) ||
+        isVersionInfo(row, col, moduleCount, version);
+
+      const flatChroma = meanModuleCenterChromaByMask(
+        flatRender as any,
+        matrixData!.matrix,
+        baseCfg.margin,
+        mask
+      );
+      const blendedChroma = meanModuleCenterChromaByMask(
+        blendedRender as any,
+        matrixData!.matrix,
+        baseCfg.margin,
+        mask
+      );
+
+      expect(flatChroma.sampleCount).toBeGreaterThan(0);
+      expect(blendedChroma.sampleCount).toBe(flatChroma.sampleCount);
+      expect(blendedChroma.meanChroma).toBeGreaterThan(flatChroma.meanChroma + 1.0);
+    },
+    30000
+  );
+
+  it(
+    'blend preservations keeps preservation regions textured instead of solid fills',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const cfg: QRGeneratorConfig = {
+        ...makeWiringConfig(),
+        preserveFinders: false,
+        preserveTiming: false,
+        preserveAlignment: false,
+        protectFormatInfo: false,
+        protectVersionInfo: false,
+        finderDitherStrength: 100,
+        blendPreservations: true,
+      };
+      const render = await qr.generate(cfg, overlay);
+      const matrixData = qr.getLastMatrix();
+      expect(matrixData).not.toBeNull();
+
+      const textureRange = darkModuleInteriorLumaRangeByMask(
+        render as any,
+        matrixData!.matrix,
+        cfg.margin,
+        (row, col, moduleCount, version) =>
+          (isFinderModuleOrSeparator(row, col, moduleCount) ||
+            isTimingPattern(row, col, moduleCount) ||
+            isAlignmentPattern(row, col, moduleCount, version) ||
+            isFormatInfo(row, col, moduleCount) ||
+            isVersionInfo(row, col, moduleCount, version)) &&
+          matrixData!.matrix[row][col]
+      );
+      expect(textureRange.sampleCount).toBeGreaterThan(0);
+      // Solid-black fallback keeps this near zero; textured preservations should keep variation.
+      expect(textureRange.maxLuma).toBeGreaterThan(0.12);
+    },
+    30000
+  );
+
+  it(
+    'blend preservations avoids module-fill overlays in boosted functional regions',
+    async () => {
+      const qr = new QRGenerator(nodeCanvasFactory);
+      const baseCfg: QRGeneratorConfig = {
+        ...makeWiringConfig(),
+        preserveFinders: false,
+        preserveTiming: false,
+        preserveAlignment: false,
+        protectFormatInfo: false,
+        protectVersionInfo: false,
+        finderDitherStrength: 100,
+      };
+      const flatRender = await qr.generate({ ...baseCfg, blendPreservations: false }, overlay);
+      const blendedRender = await qr.generate({ ...baseCfg, blendPreservations: true }, overlay);
+      const matrixData = qr.getLastMatrix();
+      expect(matrixData).not.toBeNull();
+
+      const mask = (row: number, col: number, moduleCount: number, version: number) =>
+        isFinderModuleOrSeparator(row, col, moduleCount) ||
+        isTimingPattern(row, col, moduleCount) ||
+        isAlignmentPattern(row, col, moduleCount, version) ||
+        isFormatInfo(row, col, moduleCount) ||
+        isVersionInfo(row, col, moduleCount, version);
+
+      const flatCoverage = darkModuleInkCoverageByMask(
+        flatRender as any,
+        matrixData!.matrix,
+        baseCfg.margin,
+        mask
+      );
+      const blendedCoverage = darkModuleInkCoverageByMask(
+        blendedRender as any,
+        matrixData!.matrix,
+        baseCfg.margin,
+        mask
+      );
+
+      expect(flatCoverage.sampleCount).toBeGreaterThan(0);
+      expect(blendedCoverage.sampleCount).toBe(flatCoverage.sampleCount);
+      expect(blendedCoverage.inkCoverage).toBeLessThan(flatCoverage.inkCoverage - 0.1);
+      expect(blendedCoverage.inkCoverage).toBeLessThan(0.75);
     },
     30000
   );

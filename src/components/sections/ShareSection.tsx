@@ -130,6 +130,7 @@ export function ShareSection() {
         overlay.enabled && overlay.finderDitherStrength !== 65
           ? overlay.finderDitherStrength
           : undefined,
+      blendPreservations: overlay.enabled && overlay.blendPreservations ? true : undefined,
       ditherSerpentine: overlay.enabled && overlay.ditherSerpentine ? true : undefined,
       orderedMatrix:
         overlay.enabled && overlay.orderedMatrix !== 'bayer4' ? overlay.orderedMatrix : undefined,

@@ -413,6 +413,8 @@ export function Header({
         !overlay.enabled || overlay.finderDitherStrength === 65
           ? undefined
           : overlay.finderDitherStrength,
+      blendPreservations:
+        !overlay.enabled || overlay.blendPreservations !== true ? undefined : true,
       ditherSerpentine: overlay.enabled && overlay.ditherSerpentine ? true : undefined,
       orderedMatrix:
         !overlay.enabled || overlay.orderedMatrix === 'bayer4' ? undefined : overlay.orderedMatrix,

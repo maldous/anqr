@@ -111,6 +111,7 @@ export interface ShareConfig {
   diffusionKernel?: string;
   ditherStrength?: number;
   finderDitherStrength?: number;
+  blendPreservations?: boolean;
   ditherSerpentine?: boolean;
   orderedMatrix?: string;
   blueNoiseTileSize?: number;
