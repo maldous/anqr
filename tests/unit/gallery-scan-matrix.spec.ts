@@ -1,13 +1,16 @@
+import { readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { describe, expect, it } from 'vitest';
+import { createGifEncoder, decodeGif, quantizeGifPalette, indexGifPixels } from '../../src/modules/animation/gif-codec';
 import { decodeQR } from '../../src/modules/qr-decoder';
 import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
 import {
   CANONICAL_FIXTURES,
   GALLERY_SCAN_SCENARIOS,
   type CanonicalFixtureId,
+  type ScenarioFeatureGroup,
 } from '../../src/data/gallery-scan-scenarios';
 
 if (typeof globalThis.ImageData === 'undefined') {
@@ -91,6 +94,18 @@ const ALL_TIERS: readonly TierConfig[] = [TIER_A, TIER_B];
 
 const SUBPIXEL_DITHERED_MODES: ReadonlySet<string> = new Set(['dithered', 'blue-noise']);
 
+const MAX_ANIMATED_FRAMES = 8;
+
+const FEATURE_COVERAGE_REQUIREMENTS: Record<ScenarioFeatureGroup, number> = {
+  overlay: 6,
+  preservation: 2,
+  render: 3,
+  encoding: 3,
+  animation: 3,
+  output: 2,
+  watermark: 2,
+};
+
 // ---------------------------------------------------------------------------
 // Result types
 // ---------------------------------------------------------------------------
@@ -108,6 +123,7 @@ interface MatrixResult {
   tier: TierId;
   scenarioId: string;
   fixtureId: CanonicalFixtureId;
+  isAnimated: boolean;
   status: Status;
   reasonCode: ReasonCode;
   disposition: Disposition;
@@ -133,6 +149,71 @@ async function loadOverlayCanvas(filePath: string, size: number): Promise<any> {
   const ctx = overlay.getContext('2d');
   ctx.drawImage(image as any, 0, 0, size, size);
   return overlay as any;
+}
+
+function toArrayBuffer(buf: Buffer): ArrayBuffer {
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+}
+
+function loadGifOverlayFrames(
+  filePath: string,
+  size: number,
+  maxFrames: number,
+): { canvases: any[]; delays: number[] } {
+  const gif = decodeGif(toArrayBuffer(readFileSync(filePath)));
+  const composite = createCanvas(gif.width, gif.height);
+  const compositeCtx = composite.getContext('2d');
+  const canvases: any[] = [];
+  const delays: number[] = [];
+  const frameCount = Math.min(maxFrames, gif.frames.length);
+
+  for (let i = 0; i < frameCount; i++) {
+    const frame = gif.frames[i] as {
+      dims: { left: number; top: number; width: number; height: number };
+      patch: Uint8Array;
+      disposalType: number;
+      delay: number;
+    };
+    const { left, top, width, height } = frame.dims;
+    const restore =
+      frame.disposalType === 3 ? compositeCtx.getImageData(left, top, width, height) : null;
+
+    const patchCanvas = createCanvas(width, height);
+    const patchCtx = patchCanvas.getContext('2d');
+    patchCtx.putImageData(new ImageData(new Uint8ClampedArray(frame.patch), width, height), 0, 0);
+    compositeCtx.drawImage(patchCanvas as any, left, top);
+
+    const overlay = createCanvas(size, size);
+    const overlayCtx = overlay.getContext('2d');
+    overlayCtx.imageSmoothingEnabled = true;
+    overlayCtx.imageSmoothingQuality = 'high';
+    overlayCtx.drawImage(composite as any, 0, 0, size, size);
+    canvases.push(overlay as any);
+    delays.push(Math.max(frame.delay, 20));
+
+    if (frame.disposalType === 2) {
+      compositeCtx.clearRect(left, top, width, height);
+    } else if (frame.disposalType === 3 && restore) {
+      compositeCtx.putImageData(restore, left, top);
+    }
+  }
+
+  return { canvases, delays };
+}
+
+function canvasesToAnimatedGifBuffer(canvases: any[], delays: number[]): Buffer {
+  const gif = createGifEncoder();
+  for (let i = 0; i < canvases.length; i++) {
+    const ctx = canvases[i].getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvases[i].width, canvases[i].height);
+    const palette = quantizeGifPalette(imageData.data, 256);
+    const index = indexGifPixels(imageData.data, palette);
+    const opts: Record<string, unknown> = { palette, delay: delays[i] ?? 100, dispose: 2 };
+    if (i === 0) opts.repeat = 0;
+    gif.writeFrame(index, canvases[i].width, canvases[i].height, opts);
+  }
+  gif.finish();
+  return Buffer.from(gif.bytes());
 }
 
 function makeBaseConfig(content: string, tier: TierConfig): QRGeneratorConfig {
@@ -199,6 +280,7 @@ function classifyResult(
 async function runTier(
   tier: TierConfig,
   overlays: Map<CanonicalFixtureId, any>,
+  animatedOverlays: Map<CanonicalFixtureId, { canvases: any[]; delays: number[] }>,
   artifactsBaseDir: string,
 ): Promise<MatrixResult[]> {
   const tierDir = path.join(artifactsBaseDir, tier.id);
@@ -209,7 +291,8 @@ async function runTier(
   for (const scenario of GALLERY_SCAN_SCENARIOS) {
     for (const fixture of CANONICAL_FIXTURES) {
       const start = Date.now();
-      const artifactName = `${tier.id}__${scenario.id}__${fixture.id}.png`;
+      const ext = fixture.isAnimated ? 'gif' : 'png';
+      const artifactName = `${tier.id}__${scenario.id}__${fixture.id}.${ext}`;
       const artifactPath = path.join(tierDir, artifactName);
       try {
         const qr = new QRGenerator(nodeCanvasFactory);
@@ -220,17 +303,36 @@ async function runTier(
           content,
         };
         const overlay = scenario.useOverlay ? overlays.get(fixture.id) ?? null : null;
-        const generated = await qr.generate(cfg, overlay);
+        const animFrames = fixture.isAnimated && scenario.useOverlay
+          ? animatedOverlays.get(fixture.id)
+          : undefined;
 
-        const pngBuffer = (generated as any).toBuffer('image/png');
-        await fs.writeFile(artifactPath, pngBuffer);
+        let generated: any;
+        let imageBuffer: Buffer;
+
+        if (animFrames && animFrames.canvases.length > 1) {
+          const qrFrames: any[] = [];
+          for (let i = 0; i < animFrames.canvases.length; i++) {
+            const frame = await qr.generate(cfg, animFrames.canvases[i]);
+            qrFrames.push(frame);
+          }
+          generated = qrFrames[0];
+          imageBuffer = canvasesToAnimatedGifBuffer(qrFrames, animFrames.delays);
+        } else if (fixture.isAnimated) {
+          generated = await qr.generate(cfg, overlay);
+          imageBuffer = canvasesToAnimatedGifBuffer([generated], [100]);
+        } else {
+          generated = await qr.generate(cfg, overlay);
+          imageBuffer = (generated as any).toBuffer('image/png');
+        }
+        await fs.writeFile(artifactPath, imageBuffer);
 
         const directDecoded = decodeQR(canvasToImageData(generated as any), {
           inversionAttempts: 'attemptBoth',
         });
         const directDecodePass = directDecoded?.data === content;
 
-        const roundtripImage = await loadImage(pngBuffer);
+        const roundtripImage = await loadImage(imageBuffer);
         const roundtripCanvas = createCanvas((generated as any).width, (generated as any).height);
         const roundtripCtx = roundtripCanvas.getContext('2d');
         roundtripCtx.drawImage(
@@ -251,6 +353,7 @@ async function runTier(
           tier: tier.id,
           scenarioId: scenario.id,
           fixtureId: fixture.id,
+          isAnimated: fixture.isAnimated,
           status: classification.status,
           reasonCode: classification.reasonCode,
           disposition: classification.disposition,
@@ -264,6 +367,7 @@ async function runTier(
           tier: tier.id,
           scenarioId: scenario.id,
           fixtureId: fixture.id,
+          isAnimated: fixture.isAnimated,
           status: 'fail',
           reasonCode: 'RENDER_ERROR',
           disposition: 'fix-now',
@@ -432,13 +536,24 @@ describe('gallery scan matrix', () => {
       await fs.mkdir(artifactsDir, { recursive: true });
 
       const overlays = new Map<CanonicalFixtureId, any>();
+      const animatedOverlays = new Map<CanonicalFixtureId, { canvases: any[]; delays: number[] }>();
       for (const fixture of CANONICAL_FIXTURES) {
         const overlay = await loadOverlayCanvas(path.join(process.cwd(), fixture.filePath), 240);
         overlays.set(fixture.id, overlay);
+        if (fixture.isAnimated) {
+          animatedOverlays.set(
+            fixture.id,
+            loadGifOverlayFrames(
+              path.join(process.cwd(), fixture.filePath),
+              240,
+              MAX_ANIMATED_FRAMES,
+            ),
+          );
+        }
       }
 
-      const tierAResults = await runTier(TIER_A, overlays, artifactsDir);
-      const tierBResults = await runTier(TIER_B, overlays, artifactsDir);
+      const tierAResults = await runTier(TIER_A, overlays, animatedOverlays, artifactsDir);
+      const tierBResults = await runTier(TIER_B, overlays, animatedOverlays, artifactsDir);
       const allResults = [...tierAResults, ...tierBResults];
 
       const byScenario = new Map<string, MatrixResult[]>();
@@ -448,19 +563,28 @@ describe('gallery scan matrix', () => {
         byScenario.set(result.scenarioId, arr);
       }
 
+      const scenarioMeta = new Map(
+        GALLERY_SCAN_SCENARIOS.map((s) => [s.id, s]),
+      );
+
       const galleryCandidates = Array.from(byScenario.entries())
         .map(([scenarioId, runs]) => {
           const passRuns = runs.filter((r) => r.status === 'pass');
           if (passRuns.length === 0) return null;
           passRuns.sort((a, b) => a.durationMs - b.durationMs);
+          const meta = scenarioMeta.get(scenarioId);
           return {
             scenarioId,
             selectedFixtureId: passRuns[0].fixtureId,
+            isAnimated: passRuns[0].isAnimated,
+            heroPriority: meta?.heroPriority ?? 0,
+            galleryEligible: meta?.galleryEligible ?? false,
             artifactPath: passRuns[0].artifactPath,
             status: passRuns[0].status,
           };
         })
-        .filter((x): x is NonNullable<typeof x> => x !== null);
+        .filter((x): x is NonNullable<typeof x> => x !== null)
+        .sort((a, b) => b.heroPriority - a.heroPriority);
 
       const tierAPass = tierAResults.filter((r) => r.status === 'pass').length;
       const tierBPass = tierBResults.filter((r) => r.status === 'pass').length;
@@ -520,7 +644,20 @@ describe('gallery scan matrix', () => {
       expect(allResults.length).toBe(runsPerTier * ALL_TIERS.length);
       expect(tierAPass).toBeGreaterThan(0);
       expect(galleryCandidates.length).toBeGreaterThan(0);
+
+      const groupCounts = new Map<string, number>();
+      for (const s of GALLERY_SCAN_SCENARIOS) {
+        groupCounts.set(s.featureGroup, (groupCounts.get(s.featureGroup) ?? 0) + 1);
+      }
+      const coverageGaps: string[] = [];
+      for (const [group, minCount] of Object.entries(FEATURE_COVERAGE_REQUIREMENTS)) {
+        const actual = groupCounts.get(group) ?? 0;
+        if (actual < minCount) {
+          coverageGaps.push(`${group}: ${actual}/${minCount}`);
+        }
+      }
+      expect(coverageGaps, `Feature coverage gaps: ${coverageGaps.join(', ')}`).toHaveLength(0);
     },
-    600000,
+    900000,
   );
 });

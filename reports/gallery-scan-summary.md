@@ -2,10 +2,10 @@
 
 ## Overview
 
-- Total runs: 144 (72 per tier × 2 tiers)
-- **Tier A (Production):** 60 pass / 12 fail (83%)
-- **Tier B (Diagnostic):** 50 pass / 22 fail (69%)
-- Scan-gate-rescued: 10 scenario×fixture pairs
+- Total runs: 240 (120 per tier × 2 tiers)
+- **Tier A (Production):** 107 pass / 13 fail (89%)
+- **Tier B (Diagnostic):** 91 pass / 29 fail (76%)
+- Scan-gate-rescued: 16 scenario×fixture pairs
 
 ## Tier A — Production
 
@@ -15,10 +15,10 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 14 | 4 |
-| king | 13 | 5 |
-| logo | 17 | 1 |
-| test | 16 | 2 |
+| tsunami | 26 | 4 |
+| king | 25 | 5 |
+| logo | 29 | 1 |
+| test | 27 | 3 |
 
 ### Failing Cases
 
@@ -36,6 +36,7 @@
 | preserve-strength-100 | king | CONTRAST_COLLAPSE | fix-now |
 | animation-blue-noise | tsunami | CONTRAST_COLLAPSE | fix-now |
 | animation-blue-noise | king | CONTRAST_COLLAPSE | fix-now |
+| encoding-ecc-m | test | CONTRAST_COLLAPSE | fix-now |
 
 ## Tier B — Diagnostic
 
@@ -45,10 +46,10 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 14 | 4 |
-| king | 4 | 14 |
-| logo | 17 | 1 |
-| test | 15 | 3 |
+| tsunami | 25 | 5 |
+| king | 11 | 19 |
+| logo | 29 | 1 |
+| test | 26 | 4 |
 
 ### Failing Cases
 
@@ -76,6 +77,13 @@
 | output-hd | king | CONTRAST_COLLAPSE | tunable |
 | output-hd | test | CONTRAST_COLLAPSE | tunable |
 | watermark-frame-tag | king | CONTRAST_COLLAPSE | tunable |
+| render-diamond-gap | king | CONTRAST_COLLAPSE | tunable |
+| encoding-ecc-m | tsunami | CONTRAST_COLLAPSE | tunable |
+| encoding-ecc-m | king | CONTRAST_COLLAPSE | tunable |
+| encoding-ecc-m | test | CONTRAST_COLLAPSE | tunable |
+| encoding-byte-v6 | king | CONTRAST_COLLAPSE | tunable |
+| watermark-text-bottom | king | CONTRAST_COLLAPSE | tunable |
+| output-grayscale | king | CONTRAST_COLLAPSE | tunable |
 
 ## Comparison
 
@@ -153,6 +161,54 @@
 | watermark-frame-tag | king | pass | fail | 🟢 rescued |
 | watermark-frame-tag | logo | pass | pass | ✅ both pass |
 | watermark-frame-tag | test | pass | pass | ✅ both pass |
+| overlay-duotone | tsunami | pass | pass | ✅ both pass |
+| overlay-duotone | king | pass | pass | ✅ both pass |
+| overlay-duotone | logo | pass | pass | ✅ both pass |
+| overlay-duotone | test | pass | pass | ✅ both pass |
+| overlay-pixelate | tsunami | pass | pass | ✅ both pass |
+| overlay-pixelate | king | pass | pass | ✅ both pass |
+| overlay-pixelate | logo | pass | pass | ✅ both pass |
+| overlay-pixelate | test | pass | pass | ✅ both pass |
+| overlay-blend | tsunami | pass | pass | ✅ both pass |
+| overlay-blend | king | pass | pass | ✅ both pass |
+| overlay-blend | logo | pass | pass | ✅ both pass |
+| overlay-blend | test | pass | pass | ✅ both pass |
+| render-diamond-gap | tsunami | pass | pass | ✅ both pass |
+| render-diamond-gap | king | pass | fail | 🟢 rescued |
+| render-diamond-gap | logo | pass | pass | ✅ both pass |
+| render-diamond-gap | test | pass | pass | ✅ both pass |
+| render-gradient-linear | tsunami | pass | pass | ✅ both pass |
+| render-gradient-linear | king | pass | pass | ✅ both pass |
+| render-gradient-linear | logo | pass | pass | ✅ both pass |
+| render-gradient-linear | test | pass | pass | ✅ both pass |
+| render-frame-sticker | tsunami | pass | pass | ✅ both pass |
+| render-frame-sticker | king | pass | pass | ✅ both pass |
+| render-frame-sticker | logo | pass | pass | ✅ both pass |
+| render-frame-sticker | test | pass | pass | ✅ both pass |
+| encoding-ecc-m | tsunami | pass | fail | 🟢 rescued |
+| encoding-ecc-m | king | pass | fail | 🟢 rescued |
+| encoding-ecc-m | logo | pass | pass | ✅ both pass |
+| encoding-ecc-m | test | fail | fail | ❌ both fail |
+| encoding-byte-v6 | tsunami | pass | pass | ✅ both pass |
+| encoding-byte-v6 | king | pass | fail | 🟢 rescued |
+| encoding-byte-v6 | logo | pass | pass | ✅ both pass |
+| encoding-byte-v6 | test | pass | pass | ✅ both pass |
+| animation-subpixel | tsunami | pass | pass | ✅ both pass |
+| animation-subpixel | king | pass | pass | ✅ both pass |
+| animation-subpixel | logo | pass | pass | ✅ both pass |
+| animation-subpixel | test | pass | pass | ✅ both pass |
+| animation-halftone | tsunami | pass | pass | ✅ both pass |
+| animation-halftone | king | pass | pass | ✅ both pass |
+| animation-halftone | logo | pass | pass | ✅ both pass |
+| animation-halftone | test | pass | pass | ✅ both pass |
+| watermark-text-bottom | tsunami | pass | pass | ✅ both pass |
+| watermark-text-bottom | king | pass | fail | 🟢 rescued |
+| watermark-text-bottom | logo | pass | pass | ✅ both pass |
+| watermark-text-bottom | test | pass | pass | ✅ both pass |
+| output-grayscale | tsunami | pass | pass | ✅ both pass |
+| output-grayscale | king | pass | fail | 🟢 rescued |
+| output-grayscale | logo | pass | pass | ✅ both pass |
+| output-grayscale | test | pass | pass | ✅ both pass |
 
 ## Scan-Gate-Rescued
 
@@ -170,3 +226,9 @@ Scenarios that pass in Tier A but fail in Tier B — the scan gate made the diff
 | output-hd | king |
 | output-hd | test |
 | watermark-frame-tag | king |
+| render-diamond-gap | king |
+| encoding-ecc-m | tsunami |
+| encoding-ecc-m | king |
+| encoding-byte-v6 | king |
+| watermark-text-bottom | king |
+| output-grayscale | king |
