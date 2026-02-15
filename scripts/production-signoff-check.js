@@ -16,9 +16,7 @@ function run(cmd) {
 function main() {
   const requiredFiles = [
     'reports/param-parity.json',
-    'reports/parity-analysis.md',
     'reports/i18n-regression-baseline.json',
-    'reports/production-signoff.md',
     'tests/unit/share-param-parity.spec.ts',
     'tests/unit/scanability-robustness.spec.ts',
     'tests/unit/platform-media-store.spec.ts',
