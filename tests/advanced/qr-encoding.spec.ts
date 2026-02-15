@@ -1,6 +1,11 @@
 import { test, expect } from '../fixtures/test-fixtures';
 import { getCanvasSnapshot, snapshotsAreDifferent, waitForSelectOpen, waitForSelectClosed } from '../helpers/qr-detector';
-import { waitForRenderComplete } from '../helpers/test-utils';
+import {
+  openAccordion,
+  selectOption as selectDropdownByText,
+  setSlider as setSliderByPercent,
+  waitForRenderComplete,
+} from '../helpers/test-utils';
 
 /**
  * QR Encoding Section - Advanced Tier (Comprehensive)
@@ -26,152 +31,54 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
    * Helper to expand QR Encoding section
    */
   async function expandQREncodingSection(page: import('@playwright/test').Page): Promise<void> {
-    // Scroll sidebar to ensure QR Encoding section is visible
-    const sidebar = page.locator('aside, [role="complementary"], .sidebar').first();
-    if (await sidebar.count() > 0) {
-      await sidebar.evaluate(el => el.scrollTop = 0);
-    }
-    
-    // Use data-testid selector for accordion trigger
-    const qrTrigger = page.locator('[data-testid="accordion-qr"] button[data-state]').first();
-    const trigger = qrTrigger;
-    
-    await trigger.scrollIntoViewIfNeeded();
-    
-    // Check if already expanded by looking for region state
-    const isExpanded = await page.locator('[data-testid="accordion-qr"] [role="region"][data-state="open"]')
-      .count()
-      .catch(() => 0) > 0;
-    
-    if (!isExpanded) {
-      await trigger.click();
-      // Wait for accordion to open
-      await page.waitForSelector('[role="region"][data-state="open"]', { 
-        state: 'visible', 
-        timeout: 5000 
-      });
-      await waitForRenderComplete(page, 'settle');
-    }
+    await openAccordion(page, 'qr');
+    await waitForRenderComplete(page, 'settle');
+  }
+
+  async function setPayloadText(page: import('@playwright/test').Page, text: string): Promise<void> {
+    const payloadRegion = await openAccordion(page, 'payload');
+    const input = payloadRegion
+      .locator(
+        '[data-testid="payload-text-textarea"], [data-testid="payload-url-input"], textarea, input[type="url"], input[type="text"]'
+      )
+      .first();
+    await input.waitFor({ state: 'visible', timeout: 5000 });
+    const type = await input.getAttribute('type');
+    await input.fill(type === 'url' ? `https://example.com/${encodeURIComponent(text)}` : text);
+    await input.blur();
+    await waitForRenderComplete(page, 'payload update');
   }
 
   /**
    * Helper to select an ECC level using keyboard navigation
    */
   async function selectECCLevel(page: import('@playwright/test').Page, level: 'L' | 'M' | 'Q' | 'H'): Promise<void> {
-    const eccSelect = page.locator('[data-testid="qr-ecc-select"]');
-    
-    // If testid doesn't exist, fall back to finding by section context
-    const selectTrigger = await eccSelect.count() > 0 
-      ? eccSelect 
-      : page.locator('[role="region"][data-state="open"]').first().locator('[role="combobox"]').first();
-    
-    await selectTrigger.scrollIntoViewIfNeeded();
-    await selectTrigger.click();
-    await waitForSelectOpen(page);
-    
-    // Use keyboard navigation for reliability
-    const levelIndex = { 'L': 0, 'M': 1, 'Q': 2, 'H': 3 }[level];
-    await page.keyboard.press('Home');
-    for (let i = 0; i < levelIndex; i++) {
-      await page.keyboard.press('ArrowDown');
-    }
-    await page.keyboard.press('Enter');
-    await waitForSelectClosed(page);
+    await selectDropdownByText(page, 'qr-ecc-select', level);
   }
 
   /**
    * Helper to select encoding mode using keyboard navigation
    */
   async function selectEncodingMode(page: import('@playwright/test').Page, mode: string): Promise<void> {
-    const modeSelect = page.locator('[data-testid="qr-encoding-mode-select"]');
-    
-    // If testid doesn't exist, fall back to finding by option text
-    let selectTrigger = await modeSelect.count() > 0 ? modeSelect : null;
-    
-    if (!selectTrigger) {
-      // Find the select that has encoding mode options
-      const comboboxes = page.locator('[role="region"][data-state="open"]').first().locator('[role="combobox"]');
-      const count = await comboboxes.count();
-      
-      for (let i = 0; i < count; i++) {
-        const cb = comboboxes.nth(i);
-        await cb.click();
-        await waitForSelectOpen(page);
-        
-        // Check if this has encoding mode options by counting options
-        // Encoding mode select typically has 4-5 options (Auto, Numeric, Alphanumeric, Byte, Kanji)
-        const optionCount = await page.locator('[role="option"]').count();
-        
-        if (optionCount >= 4) {
-          selectTrigger = cb;
-          break;
-        }
-        await page.keyboard.press('Escape');
-        await waitForRenderComplete(page, 'settle');
-      }
-    } else {
-      await selectTrigger.scrollIntoViewIfNeeded();
-      await selectTrigger.click();
-      await waitForSelectOpen(page);
-    }
-    
-    if (!selectTrigger) {
-      throw new Error('Could not find encoding mode select');
-    }
-    
-    // Select option by index using keyboard navigation (i18n-safe)
-    // Mode indices: Auto=0, Numeric=1, Alphanumeric=2, Byte=3, Kanji=4
-    const modeIndex = { 'Auto': 0, 'Numeric': 1, 'Alphanumeric': 2, 'Byte': 3, 'Kanji': 4 }[mode] ?? 0;
-    await page.keyboard.press('Home');
-    for (let i = 0; i < modeIndex; i++) {
-      await page.keyboard.press('ArrowDown');
-    }
-    await page.keyboard.press('Enter');
-    await waitForSelectClosed(page);
+    const modeValue =
+      { Auto: 'auto', Numeric: 'numeric', Alphanumeric: 'alphanumeric', Byte: 'byte', Kanji: 'kanji' }[
+        mode
+      ] ?? 'auto';
+    await selectDropdownByText(page, 'qr-encoding-mode-select', modeValue);
   }
 
   /**
    * Helper to set version slider by percent
    */
   async function setVersionSlider(page: import('@playwright/test').Page, percent: number): Promise<void> {
-    const slider = page.locator('[data-testid="qr-version-slider"]');
-    
-    // Fall back to first slider if testid not found
-    const versionSlider = await slider.count() > 0 
-      ? slider 
-      : page.locator('[role="region"][data-state="open"]').first().locator('[role="slider"]').first();
-    
-    await versionSlider.scrollIntoViewIfNeeded();
-    await versionSlider.waitFor({ state: 'visible', timeout: 5000 });
-    
-    const box = await versionSlider.boundingBox();
-    if (box) {
-      const x = box.x + (box.width * percent) / 100;
-      const y = box.y + box.height / 2;
-      await page.mouse.click(x, y);
-    }
+    await setSliderByPercent(page, 'qr-version-slider', percent);
   }
 
   /**
    * Helper to set quiet zone slider by percent
    */
   async function setQuietZoneSlider(page: import('@playwright/test').Page, percent: number): Promise<void> {
-    const slider = page.locator('[data-testid="qr-quiet-zone-slider"]');
-    
-    // Fall back to second slider if testid not found
-    const qzSlider = await slider.count() > 0 
-      ? slider 
-      : page.locator('[role="region"][data-state="open"]').first().locator('[role="slider"]').nth(1);
-    
-    await qzSlider.scrollIntoViewIfNeeded();
-    await qzSlider.waitFor({ state: 'visible', timeout: 5000 });
-    
-    const box = await qzSlider.boundingBox();
-    if (box) {
-      const x = box.x + (box.width * percent) / 100;
-      const y = box.y + box.height / 2;
-      await page.mouse.click(x, y);
-    }
+    await setSliderByPercent(page, 'qr-quiet-zone-slider', percent);
   }
 
   // ============================================
@@ -261,7 +168,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
     test('ECC select is accessible with combobox role', async ({ page }) => {
       await expandQREncodingSection(page);
       
-      const eccSelect = page.locator('[role="combobox"]').first();
+      const eccSelect = page.locator('[data-testid="qr-ecc-select"]').first();
       await eccSelect.waitFor({ state: 'visible', timeout: 5000 });
       
       expect(await eccSelect.isVisible()).toBe(true);
@@ -332,7 +239,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
     test('all 4 ECC levels (L, M, Q, H) are available in dropdown', async ({ page }) => {
       await expandQREncodingSection(page);
       
-      const eccSelect = page.locator('[role="combobox"]').first();
+      const eccSelect = page.locator('[data-testid="qr-ecc-select"]').first();
       await eccSelect.click();
       await waitForSelectOpen(page);
       
@@ -410,16 +317,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await expandQREncodingSection(page);
       
       // First set some complex data that needs byte encoding
-      // Expand payload section
-      const payloadTrigger = page.locator('[data-testid="accordion-payload"] button[data-state]').first();
-      await payloadTrigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Set complex text with special characters
-      const textInput = page.locator('textarea, input[type="text"]').first();
-      if (await textInput.isVisible()) {
-        await textInput.fill('Hello! 你好 🎉');
-        await waitForQRRender();
-      }
+      await setPayloadText(page, 'Hello! 你好 🎉');
       
       // Now expand QR encoding and select Byte mode
       await expandQREncodingSection(page);
@@ -438,14 +336,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await expandQREncodingSection(page);
       
       // Set numeric-only data first
-      const payloadTrigger3 = page.locator('[data-testid="accordion-payload"] button[data-state]').first();
-      await payloadTrigger3.click();
-      await waitForRenderComplete(page, 'settle');
-      const textInput = page.locator('textarea, input[type="text"]').first();
-      if (await textInput.isVisible()) {
-        await textInput.fill('1234567890');
-        await waitForQRRender();
-      }
+      await setPayloadText(page, '1234567890');
       
       await expandQREncodingSection(page);
       
@@ -460,14 +351,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await expandQREncodingSection(page);
       
       // Set alphanumeric data
-      const payloadTrigger4 = page.locator('[data-testid="accordion-payload"] button[data-state]').first();
-      await payloadTrigger4.click();
-      await waitForRenderComplete(page, 'settle');
-      const textInput = page.locator('textarea, input[type="text"]').first();
-      if (await textInput.isVisible()) {
-        await textInput.fill('HELLO123');
-        await waitForQRRender();
-      }
+      await setPayloadText(page, 'HELLO123');
       
       await expandQREncodingSection(page);
       
@@ -482,14 +366,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await expandQREncodingSection(page);
       
       // Use numeric data that works with multiple modes
-      const payloadTrigger5 = page.locator('[data-testid="accordion-payload"] button[data-state]').first();
-      await payloadTrigger5.click();
-      await waitForRenderComplete(page, 'settle');
-      const textInput = page.locator('textarea, input[type="text"]').first();
-      if (await textInput.isVisible()) {
-        await textInput.fill('12345678901234567890');
-        await waitForQRRender();
-      }
+      await setPayloadText(page, '12345678901234567890');
       
       await expandQREncodingSection(page);
       
@@ -619,27 +496,14 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
 
     test('changing payload updates minimum version', async ({ page, waitForQRRender }) => {
       // Set short data
-      const payloadTrigger6 = page.locator('[data-testid="accordion-payload"] button[data-state]').first();
-      await payloadTrigger6.click();
-      await waitForRenderComplete(page, 'settle');
-      const textInput = page.locator('textarea, input[type="text"]').first();
-      if (await textInput.isVisible()) {
-        await textInput.fill('short');
-        await waitForQRRender();
-      }
+      await setPayloadText(page, 'short');
       
       await expandQREncodingSection(page);
       const shortDataSnapshot = await getCanvasSnapshot(page);
       
       // Set very long data
-      const payloadTrigger7 = page.locator('[data-testid="accordion-payload"] button[data-state]').first();
-      await payloadTrigger7.click();
-      await waitForRenderComplete(page, 'settle');
-      if (await textInput.isVisible()) {
-        const longText = 'A'.repeat(100);
-        await textInput.fill(longText);
-        await waitForQRRender();
-      }
+      const longText = 'A'.repeat(100);
+      await setPayloadText(page, longText);
       
       await expandQREncodingSection(page);
       const longDataSnapshot = await getCanvasSnapshot(page);
@@ -708,7 +572,7 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
     test('select triggers are keyboard accessible', async ({ page }) => {
       await expandQREncodingSection(page);
       
-      const combobox = page.locator('[role="combobox"]').first();
+      const combobox = page.locator('[data-testid="qr-ecc-select"]').first();
       
       // Tab to the combobox
       await combobox.focus();
@@ -730,7 +594,10 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await expandQREncodingSection(page);
       
       // Check for labels near sliders and selects
-      const labels = page.locator('[role="region"][data-state="open"]').first().locator('label');
+      const labels = page
+        .locator('[data-testid="accordion-qr"] [role="region"][data-state="open"]')
+        .first()
+        .locator('label');
       const labelCount = await labels.count();
       
       // Should have labels for version, ECC, quiet zone at minimum
@@ -787,7 +654,10 @@ test.describe('QR Encoding Section - Advanced Tier', () => {
       await trigger.click();
       await waitForRenderComplete(page, 'settle');
       // Controls should still be visible
-      const sliders = page.locator('[role="region"][data-state="open"]').first().locator('[role="slider"]');
+      const sliders = page
+        .locator('[data-testid="accordion-qr"] [role="region"][data-state="open"]')
+        .first()
+        .locator('[role="slider"]');
       expect(await sliders.count()).toBeGreaterThan(0);
     });
 

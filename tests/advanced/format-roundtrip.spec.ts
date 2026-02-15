@@ -117,13 +117,19 @@ test.describe('Format Info Round-Trip Tests', () => {
     test('regenerating with zero vectors preserves original format info', async () => {
       const testData = 'https://example.com/test';
       
-      // Create a mock image for QR-Art (1x1 white pixel)
-      const canvas = new OffscreenCanvas(21, 21);
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Failed to get canvas context');
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, 21, 21);
-      const imageData = ctx.getImageData(0, 0, 21, 21);
+      // Create a mock image for QR-Art (21x21 white pixel grid).
+      const pixels = new Uint8ClampedArray(21 * 21 * 4);
+      for (let i = 0; i < pixels.length; i += 4) {
+        pixels[i] = 255;
+        pixels[i + 1] = 255;
+        pixels[i + 2] = 255;
+        pixels[i + 3] = 255;
+      }
+      const imageData = {
+        data: pixels,
+        width: 21,
+        height: 21,
+      } as ImageData;
       
       for (const ecc of ECC_LEVELS) {
         for (const mask of [0, 3, 5, 7]) {  // Test subset of masks

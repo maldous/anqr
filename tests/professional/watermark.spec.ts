@@ -9,119 +9,55 @@ import type { Page } from '@playwright/test';
 
 import {
   waitForQRRender,
-  waitForAccordionOpen,
 } from '../helpers/qr-detector';
-import { setTier, waitForRenderComplete } from '../helpers/test-utils';
+import {
+  openAccordion,
+  selectOption as selectDropdownByText,
+  selectTier,
+  setInput,
+  setSlider,
+  toggleSwitch,
+  waitForRenderComplete,
+} from '../helpers/test-utils';
 
 // Helper: Wait for initial load and set tier (page.goto is handled by fixture)
 async function setupPage(page: Page) {
   await page.waitForLoadState('networkidle');
   await waitForQRRender(page);
   // Select professional tier for Watermark section tests
-  await setTier(page, 'professional');
+  await selectTier(page, 'professional');
 }
 
 // Helper: Expand the Watermark section
 async function expandWatermarkSection(page: Page) {
-  // First close any open sections for clean state
-  const openTriggers = page.locator('[data-state="open"] > [role="button"]');
-  const openCount = await openTriggers.count();
-  for (let i = 0; i < openCount; i++) {
-    await openTriggers.nth(i).click();
-    await waitForRenderComplete(page, 'settle');
-  }
-  
-  // Use data-testid for stable selection - scroll sidebar first to reveal pro sections
-  const sidebar = page.locator('[data-testid="sidebar-scroll"]');
-  if (await sidebar.count() > 0) {
-    // Scroll sidebar to bottom to reveal professional tier sections
-    await sidebar.evaluate(el => el.scrollTop = el.scrollHeight);
-    await page.waitForTimeout(100); // Brief wait for scroll to settle
-  }
-  
-  // Find and click Watermark accordion trigger using data-testid
-  const watermarkTrigger = page.locator('[data-testid="accordion-watermark"] button[data-state]').first();
-  const triggerToUse = watermarkTrigger;
-  
-  if (await triggerToUse.count() > 0) {
-    await triggerToUse.scrollIntoViewIfNeeded();
-    await triggerToUse.click();
-    await waitForAccordionOpen(page);
-    await waitForRenderComplete(page, 'settle');
-  }
+  await openAccordion(page, 'watermark');
+  await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Toggle switch using data-testid
-async function toggleSwitchByTestId(page: Page, testId: string) {
-  const switchEl = page.locator(`[data-testid="${testId}"]`);
-  await switchEl.waitFor({ state: 'visible', timeout: 5000 });
-  await switchEl.scrollIntoViewIfNeeded();
-  await switchEl.click();
-  await waitForRenderComplete(page, 'settle');
+async function toggleSwitchByTestId(page: Page, testId: string, settle: boolean = true) {
+  await toggleSwitch(page, testId);
+  if (settle) {
+    await waitForRenderComplete(page, 'settle');
+  }
 }
 
-// Option indices for watermark-kind-trigger: text=0, image=1, pattern=2
-const WATERMARK_KIND_INDEX: Record<string, number> = { text: 0, image: 1, pattern: 2 };
-// Option indices for watermark-position-trigger: center=0, corners=1, edges=2, behind=3, quiet=4
-const WATERMARK_POSITION_INDEX: Record<string, number> = { center: 0, corners: 1, edges: 2, behind: 3, quiet: 4 };
-// Option indices for watermark-blend-trigger: normal=0, multiply=1, screen=2, overlay=3
-const WATERMARK_BLEND_INDEX: Record<string, number> = { normal: 0, multiply: 1, screen: 2, overlay: 3 };
-
-// Helper: Select dropdown option using index-based keyboard navigation (i18n-safe)
+// Helper: Select dropdown option using shared selector logic
 async function selectDropdownOption(page: Page, triggerTestId: string, optionText: string) {
-  const trigger = page.locator(`[data-testid="${triggerTestId}"]`);
-  await trigger.waitFor({ state: 'visible', timeout: 5000 });
-  await trigger.scrollIntoViewIfNeeded();
-  await trigger.click();
-  
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 3000 });
-  await waitForRenderComplete(page, 'settle');
-  
-  // Get option index based on trigger type
-  let optionIndex = 0;
-  const normalizedText = optionText.toLowerCase();
-  
-  if (triggerTestId === 'watermark-kind-trigger') {
-    optionIndex = WATERMARK_KIND_INDEX[normalizedText] ?? 0;
-  } else if (triggerTestId === 'watermark-position-trigger') {
-    optionIndex = WATERMARK_POSITION_INDEX[normalizedText] ?? 0;
-  } else if (triggerTestId === 'watermark-blend-trigger') {
-    optionIndex = WATERMARK_BLEND_INDEX[normalizedText] ?? 0;
-  }
-  
-  // Use keyboard navigation for i18n-safe selection
-  await page.keyboard.press('Home');
-  for (let i = 0; i < optionIndex; i++) {
-    await page.keyboard.press('ArrowDown');
-  }
-  await page.keyboard.press('Enter');
+  await selectDropdownByText(page, triggerTestId, optionText);
   await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Set input value
 async function setInputByTestId(page: Page, testId: string, value: string) {
-  const input = page.locator(`[data-testid="${testId}"]`);
-  await input.waitFor({ state: 'visible', timeout: 5000 });
-  await input.scrollIntoViewIfNeeded();
-  await input.fill('');
-  await input.fill(value);
-  await input.blur();
+  await setInput(page, testId, value);
   await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Set slider value
 async function setSliderByTestId(page: Page, testId: string, percent: number) {
-  const slider = page.locator(`[data-testid="${testId}"] [role="slider"]`);
-  await slider.waitFor({ state: 'visible', timeout: 5000 });
-  await slider.scrollIntoViewIfNeeded();
-  
-  const box = await slider.boundingBox();
-  if (box) {
-    const x = box.x + (box.width * percent) / 100;
-    const y = box.y + box.height / 2;
-    await page.mouse.click(x, y);
-    await waitForRenderComplete(page, 'settle');
-  }
+  await setSlider(page, testId, percent);
+  await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Enable watermark if not already enabled
@@ -680,8 +616,11 @@ test.describe('Watermark Combined Settings', () => {
     const watermarkTriggerEl = page.locator('[data-testid="accordion-watermark"] button[data-state]').first();
     await watermarkTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
-    await watermarkTrigger.click();
-    await waitForAccordionOpen(page);
+    await watermarkTriggerEl.click();
+    await page.waitForSelector('[data-testid="accordion-watermark"] [role="region"][data-state="open"]', {
+      state: 'visible',
+      timeout: 5000,
+    });
     
     // Verify text persisted
     const textInput = page.locator('[data-testid="watermark-text-input"]');
@@ -747,9 +686,9 @@ test.describe('Watermark Edge Cases', () => {
     
     // Toggle rapidly
     for (let i = 0; i < 5; i++) {
-      await toggleSwitchByTestId(page, 'watermark-enabled-switch');
-      await waitForRenderComplete(page, 'settle');
+      await toggleSwitchByTestId(page, 'watermark-enabled-switch', false);
     }
+    await waitForRenderComplete(page, 'settle');
     
     // Switch should still be functional
     const state = await switchEl.getAttribute('data-state');

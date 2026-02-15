@@ -15,7 +15,7 @@ export function mapImageToTargetsSupersampled(
 ): { targets: boolean[][]; importance: number[][] } {
   // Get image data
   let imageData: ImageData;
-  if (image instanceof ImageData) {
+  if (typeof ImageData !== 'undefined' && image instanceof ImageData) {
     imageData = image;
   } else if (
     image &&

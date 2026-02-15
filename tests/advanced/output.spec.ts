@@ -9,101 +9,43 @@ import type { Page } from '@playwright/test';
 
 import {
   waitForQRRender,
-  waitForAccordionOpen,
 } from '../helpers/qr-detector';
-import { setTier, waitForRenderComplete } from '../helpers/test-utils';
+import {
+  openAccordion,
+  selectOption as selectDropdownByText,
+  selectTier,
+  setInput,
+  toggleSwitch,
+  waitForAccordionState,
+  waitForRenderComplete,
+} from '../helpers/test-utils';
 
 // Helper: Wait for initial load and set tier (page.goto is handled by fixture)
 async function setupPage(page: Page) {
   await page.waitForLoadState('networkidle');
   await waitForQRRender(page);
   // Select advanced tier for Output section tests
-  await setTier(page, 'advanced');
+  await selectTier(page, 'advanced');
 }
 
 // Helper: Expand the Output section
 async function expandOutputSection(page: Page) {
-  // First close any open sections for clean state
-  const openTriggers = page.locator('[data-state="open"] > [role="button"]');
-  const openCount = await openTriggers.count();
-  for (let i = 0; i < openCount; i++) {
-    await openTriggers.nth(i).click();
-    await waitForRenderComplete(page, 'settle');
-  }
-  
-  // Scroll sidebar to ensure Output section is visible
-  const sidebar = page.locator('aside, [role="complementary"], .sidebar').first();
-  if (await sidebar.count() > 0) {
-    await sidebar.evaluate(el => el.scrollTop = el.scrollHeight / 2);
-  }
-  
-  // Find and click Output accordion trigger using data-testid
-  const outputTrigger = page.locator('[data-testid="accordion-output"] button[data-radix-collection-item]');
-  if (await outputTrigger.count() > 0) {
-    await outputTrigger.scrollIntoViewIfNeeded();
-    await outputTrigger.click();
-    await waitForAccordionOpen(page);
-    await waitForRenderComplete(page, 'settle');
-  }
+  await openAccordion(page, 'output');
+  await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Select dropdown option using index or value (i18n-safe)
 async function selectDropdownOption(
   page: Page,
   triggerTestId: string,
-  option: number | string
+  option: number | string,
+  settle: boolean = true
 ) {
-  const trigger = page.locator(`[data-testid="${triggerTestId}"]`);
-  await trigger.waitFor({ state: 'visible', timeout: 5000 });
-  await trigger.scrollIntoViewIfNeeded();
-  await trigger.click();
-  
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 3000 });
-  await waitForRenderComplete(page, 'settle');
-
-  const dropdown = page.locator('[data-radix-popper-content-wrapper]').first();
-  const options = dropdown.locator('[role="option"]');
-  const optionCount = await options.count();
-  if (optionCount === 0) {
-    await page.keyboard.press('Escape');
-    return;
+  const label = typeof option === 'number' ? ['PNG', 'WebP', 'GIF', 'SVG'][option] ?? 'PNG' : option;
+  await selectDropdownByText(page, triggerTestId, label);
+  if (settle) {
+    await waitForRenderComplete(page, 'settle');
   }
-
-  let targetIndex = -1;
-  if (typeof option === 'number') {
-    targetIndex = Math.max(0, Math.min(optionCount - 1, option));
-  } else {
-    // First prefer data-value matching (stable across i18n).
-    for (let i = 0; i < optionCount; i++) {
-      const value = await options.nth(i).getAttribute('data-value');
-      if (value && value.toLowerCase() === option.toLowerCase()) {
-        targetIndex = i;
-        break;
-      }
-    }
-
-    // Fall back to visible text match.
-    if (targetIndex === -1) {
-      const escaped = option.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      for (let i = 0; i < optionCount; i++) {
-        const text = (await options.nth(i).textContent())?.trim() ?? '';
-        if (new RegExp(escaped, 'i').test(text)) {
-          targetIndex = i;
-          break;
-        }
-      }
-    }
-  }
-
-  if (targetIndex === -1) {
-    await page.keyboard.press('Escape');
-    throw new Error(`Option "${option}" not found for ${triggerTestId}`);
-  }
-
-  const target = options.nth(targetIndex);
-  await target.scrollIntoViewIfNeeded();
-  await target.click();
-  await waitForRenderComplete(page, 'settle');
 }
 
 // Format option indices for output-format-trigger
@@ -111,23 +53,19 @@ async function selectDropdownOption(
 const FORMAT_INDEX = { PNG: 0, WEBP: 1, GIF: 2, SVG: 3 } as const;
 
 // Helper: Set input value
-async function setInputByTestId(page: Page, testId: string, value: string) {
-  const input = page.locator(`[data-testid="${testId}"]`);
-  await input.waitFor({ state: 'visible', timeout: 5000 });
-  await input.scrollIntoViewIfNeeded();
-  await input.fill('');
-  await input.fill(value);
-  await input.blur();
-  await waitForRenderComplete(page, 'settle');
+async function setInputByTestId(page: Page, testId: string, value: string, settle: boolean = true) {
+  await setInput(page, testId, value);
+  if (settle) {
+    await waitForRenderComplete(page, 'settle');
+  }
 }
 
 // Helper: Toggle switch
-async function toggleSwitchByTestId(page: Page, testId: string) {
-  const switchEl = page.locator(`[data-testid="${testId}"]`);
-  await switchEl.waitFor({ state: 'visible', timeout: 5000 });
-  await switchEl.scrollIntoViewIfNeeded();
-  await switchEl.click();
-  await waitForRenderComplete(page, 'settle');
+async function toggleSwitchByTestId(page: Page, testId: string, settle: boolean = true) {
+  await toggleSwitch(page, testId);
+  if (settle) {
+    await waitForRenderComplete(page, 'settle');
+  }
 }
 
 // ============================================================================
@@ -634,9 +572,9 @@ test.describe('Output Edge Cases', () => {
     const formatIndices = [FORMAT_INDEX.PNG, FORMAT_INDEX.WEBP, FORMAT_INDEX.GIF, FORMAT_INDEX.SVG, FORMAT_INDEX.PNG];
     
     for (const formatIndex of formatIndices) {
-      await selectDropdownOption(page, 'output-format-trigger', formatIndex);
-      await waitForRenderComplete(page, 'settle');
+      await selectDropdownOption(page, 'output-format-trigger', formatIndex, false);
     }
+    await waitForRenderComplete(page, 'settle');
     
     // Last format was PNG - verify it's selected
     const trigger = page.locator('[data-testid="output-format-trigger"]');
@@ -653,9 +591,9 @@ test.describe('Output Edge Cases', () => {
     const trigger = outputTrigger;
     
     await trigger.click();
-    await waitForRenderComplete(page, 'settle');
+    await waitForAccordionState(page, 'output', 'closed');
     await trigger.click();
-    await waitForAccordionOpen(page);
+    await waitForAccordionState(page, 'output', 'open');
     
     // Verify value persisted
     const widthInput = page.locator('[data-testid="output-width-input"]');

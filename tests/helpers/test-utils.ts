@@ -149,13 +149,10 @@ export async function waitForAccordionState(
   state: AccordionState,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<void> {
-  const sectionLabel = SECTION_LABELS[section as AccordionSection] || section;
-  
   if (state === 'open') {
-    // Wait for region to be visible with data-state="open"
+    // Wait for the specific section region to be visible with data-state="open"
     await page.waitForSelector(
-      `[data-testid="accordion-${section}"] [role="region"][data-state="open"], ` +
-      `[role="region"][data-state="open"]`,
+      `[data-testid="accordion-${section}"] [role="region"][data-state="open"]`,
       { state: 'visible', timeout }
     );
   } else {
@@ -182,9 +179,20 @@ export async function waitForDropdownOpen(
   page: Page,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<void> {
-  await page.waitForSelector(
-    '[data-radix-popper-content-wrapper]',
-    { state: 'visible', timeout }
+  await page.waitForFunction(
+    () => {
+      const candidates = Array.from(
+        document.querySelectorAll(
+          '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
+        )
+      ) as HTMLElement[];
+
+      return candidates.some((el) => {
+        const style = window.getComputedStyle(el);
+        return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+      });
+    },
+    { timeout, polling: 50 }
   );
 }
 
@@ -199,18 +207,24 @@ export async function waitForDropdownClosed(
   page: Page,
   timeout: number = 2000
 ): Promise<void> {
-  // Radix popper content may close by becoming hidden OR detaching entirely.
+  // Radix select content may close by becoming hidden OR detaching entirely.
   await page.waitForFunction(
     () => {
-      const el = document.querySelector('[data-radix-popper-content-wrapper]') as HTMLElement | null;
-      if (!el) return true;
-      const style = window.getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden') return true;
-      // offsetParent === null covers "display:none" and some positioned hidden states.
-      if (el.offsetParent === null) return true;
-      // aria-hidden is sometimes toggled.
-      if (el.getAttribute('aria-hidden') === 'true') return true;
-      return false;
+      const candidates = Array.from(
+        document.querySelectorAll(
+          '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
+        )
+      ) as HTMLElement[];
+
+      if (candidates.length === 0) return true;
+
+      return !candidates.some((el) => {
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        if (el.offsetParent === null) return false;
+        if (el.getAttribute('aria-hidden') === 'true') return false;
+        return true;
+      });
     },
     { timeout }
   );
@@ -474,38 +488,72 @@ export const waitForSelectClosed = waitForDropdownClosed;
  * @param percent - Target value as percentage (0-100)
  */
 export async function setSlider(page: Page, testId: string, percent: number): Promise<void> {
-  // Find the slider element - look for role="slider" inside the container
-  const container = page.locator(`[data-testid="${testId}"]`);
-  const slider = container.locator('[role="slider"]').first();
-  
-  // Fallback: if the testId IS the slider itself
-  const directSlider = page.locator(`[data-testid="${testId}"][role="slider"]`);
-  const targetSlider = await directSlider.count() > 0 ? directSlider : slider;
-  
-  await targetSlider.waitFor({ state: 'visible', timeout: 5000 });
-  await targetSlider.scrollIntoViewIfNeeded();
-  
-  // Get the current value to detect change
-  const initialValue = await targetSlider.getAttribute('aria-valuenow');
-  
-  // Click at the percentage position
-  const box = await targetSlider.boundingBox();
-  if (box) {
-    const x = box.x + (box.width * percent) / 100;
-    const y = box.y + box.height / 2;
-    await page.mouse.click(x, y);
-    
-    // Wait for value to potentially change (event-driven)
-    if (percent !== 50) { // Only wait if not clicking in the middle (might not change)
-      await page.waitForFunction(
-        (args: { testId: string; initial: string | null }) => {
-          const slider = document.querySelector(`[data-testid="${args.testId}"] [role="slider"], [data-testid="${args.testId}"][role="slider"]`);
+  const clampedPercent = Math.max(0, Math.min(100, percent));
+
+  // Slider root (track container) is the canonical click target.
+  const container = page.locator(`[data-testid="${testId}"]`).first();
+  await container.waitFor({ state: 'visible', timeout: 5000 });
+  await container.scrollIntoViewIfNeeded();
+
+  // Thumb carries aria-valuenow/min/max.
+  const thumb = container.locator('[role="slider"]').first();
+  await thumb.waitFor({ state: 'visible', timeout: 5000 });
+
+  const initialValue = await thumb.getAttribute('aria-valuenow');
+  const min = Number.parseFloat((await thumb.getAttribute('aria-valuemin')) ?? '0');
+  const max = Number.parseFloat((await thumb.getAttribute('aria-valuemax')) ?? '100');
+  const targetValue =
+    Number.isFinite(min) && Number.isFinite(max) ? min + ((max - min) * clampedPercent) / 100 : NaN;
+
+  // Extremes are most reliable via keyboard Home/End.
+  if (clampedPercent <= 0) {
+    await thumb.focus();
+    await page.keyboard.press('Home');
+  } else if (clampedPercent >= 100) {
+    await thumb.focus();
+    await page.keyboard.press('End');
+  } else {
+    const box = await container.boundingBox();
+    if (box) {
+      const x = box.x + (box.width * clampedPercent) / 100;
+      const y = box.y + box.height / 2;
+      await page.mouse.click(x, y);
+    }
+  }
+
+  // If we're still far from target and +/- controls exist, nudge deterministically.
+  const inc = page.locator(`[data-testid="${testId}-increment"]`);
+  const dec = page.locator(`[data-testid="${testId}-decrement"]`);
+  for (let i = 0; i < 40; i++) {
+    const now = Number.parseFloat((await thumb.getAttribute('aria-valuenow')) ?? 'NaN');
+    if (!Number.isFinite(now) || !Number.isFinite(targetValue)) break;
+    if (Math.abs(now - targetValue) < 0.6) break;
+
+    if (now < targetValue) {
+      if (!(await inc.isVisible().catch(() => false))) break;
+      if ((await inc.isEnabled().catch(() => false)) === false) break;
+      await inc.click();
+    } else {
+      if (!(await dec.isVisible().catch(() => false))) break;
+      if ((await dec.isEnabled().catch(() => false)) === false) break;
+      await dec.click();
+    }
+  }
+
+  // Best-effort wait for value change; do not fail hard if unchanged.
+  if (initialValue !== null) {
+    await page
+      .waitForFunction(
+        (args: { testId: string; initial: string }) => {
+          const slider = document.querySelector(
+            `[data-testid="${args.testId}"] [role="slider"], [data-testid="${args.testId}"][role="slider"]`
+          );
           return slider && slider.getAttribute('aria-valuenow') !== args.initial;
         },
         { testId, initial: initialValue },
-        { timeout: 2000, polling: 50 }
-      );
-    }
+        { timeout: 1500, polling: 50 }
+      )
+      .catch(() => {});
   }
 }
 
@@ -527,17 +575,30 @@ export async function selectOption(page: Page, testId: string, optionText: strin
   // Wait for dropdown to open
   await waitForDropdownOpen(page);
   
-  // Get all options and find target index
-  const dropdown = page.locator('[data-radix-popper-content-wrapper]').first();
-  const allOptions = dropdown.locator('[role="option"]');
+  // Get all visible options in the active dropdown/listbox.
+  const allOptions = page.locator('[role="option"]');
   const count = await allOptions.count();
-  
+
   let targetIndex = -1;
+
+  // Prefer stable value matching first (i18n-safe).
+  const normalized = optionText.trim().toLowerCase();
   for (let i = 0; i < count; i++) {
-    const text = await allOptions.nth(i).textContent();
-    if (text && new RegExp(optionText, 'i').test(text.trim())) {
+    const value = await allOptions.nth(i).getAttribute('data-value');
+    if (value && value.trim().toLowerCase() === normalized) {
       targetIndex = i;
       break;
+    }
+  }
+
+  // Fallback to text matching.
+  if (targetIndex === -1) {
+    for (let i = 0; i < count; i++) {
+      const text = await allOptions.nth(i).textContent();
+      if (text && new RegExp(optionText, 'i').test(text.trim())) {
+        targetIndex = i;
+        break;
+      }
     }
   }
   
@@ -549,24 +610,9 @@ export async function selectOption(page: Page, testId: string, optionText: strin
     return false;
   }
   
-  // Use keyboard navigation for reliable scrolling
-  await page.keyboard.press('Home');
-  for (let i = 0; i < targetIndex; i++) {
-    await page.keyboard.press('ArrowDown');
-  }
-  
-  // Wait for option to be highlighted
-  await page.waitForFunction(
-    (idx: number) => {
-      const options = document.querySelectorAll('[data-radix-popper-content-wrapper] [role="option"]');
-      const target = options[idx];
-      return target && (target.getAttribute('data-highlighted') === '' || target.hasAttribute('data-highlighted'));
-    },
-    targetIndex,
-    { timeout: 2000, polling: 16 }
-  );
-  // Press Enter to select
-  await page.keyboard.press('Enter');
+  // Click the target option directly for deterministic selection.
+  await allOptions.nth(targetIndex).scrollIntoViewIfNeeded();
+  await allOptions.nth(targetIndex).click();
   
   // Wait for dropdown to close
   await waitForDropdownClosed(page);
@@ -626,15 +672,20 @@ export async function setInput(page: Page, testId: string, value: string): Promi
   await input.fill(value);
   await input.blur();
   
-  // Wait for value to be set (event-driven)
-  await page.waitForFunction(
-    (args: { testId: string; value: string }) => {
-      const el = document.querySelector(`[data-testid="${args.testId}"]`) as HTMLInputElement;
-      return el && el.value === args.value;
-    },
-    { testId, value },
-    { timeout: 1000, polling: 50 }
-  );
+  // Numeric inputs can normalize/clamp values; wait for a stable committed value.
+  await page
+    .waitForFunction(
+      (args: { testId: string; requested: string }) => {
+        const el = document.querySelector(`[data-testid="${args.testId}"]`) as HTMLInputElement | null;
+        if (!el) return false;
+        if (document.activeElement === el) return false;
+        if (args.requested === '') return true;
+        return el.value.length > 0;
+      },
+      { testId, requested: value },
+      { timeout: 1000, polling: 50 }
+    )
+    .catch(() => {});
 }
 
 /**

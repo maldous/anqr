@@ -10,104 +10,46 @@ import type { Page } from '@playwright/test';
 
 import {
   waitForQRRender,
-  waitForAccordionOpen,
 } from '../helpers/qr-detector';
-import { setTier, waitForRenderComplete } from '../helpers/test-utils';
+import {
+  openAccordion,
+  selectOption as selectDropdownByText,
+  selectTier,
+  setSlider,
+  toggleSwitch,
+  waitForRenderComplete,
+} from '../helpers/test-utils';
 
 // Helper: Wait for initial load and set tier (page.goto is handled by fixture)
 async function setupPage(page: Page) {
   await page.waitForLoadState('networkidle');
   await waitForQRRender(page);
   // Select professional tier for Safety section tests
-  await setTier(page, 'professional');
+  await selectTier(page, 'professional');
 }
 
 // Helper: Expand the Safety section
 async function expandSafetySection(page: Page) {
-  // First close any open sections for clean state
-  const openTriggers = page.locator('[data-state="open"] > [role="button"]');
-  const openCount = await openTriggers.count();
-  for (let i = 0; i < openCount; i++) {
-    await openTriggers.nth(i).click();
-    await waitForRenderComplete(page, 'settle');
-  }
-  
-  // Use data-testid for stable selection - scroll sidebar first to reveal pro sections
-  const sidebar = page.locator('[data-testid="sidebar-scroll"]');
-  if (await sidebar.count() > 0) {
-    // Scroll sidebar to bottom to reveal professional tier sections
-    await sidebar.evaluate(el => el.scrollTop = el.scrollHeight);
-    await page.waitForTimeout(100); // Brief wait for scroll to settle
-  }
-  
-  // Find and click Safety accordion trigger using data-testid
-  const safetyTrigger = page.locator('[data-testid="accordion-safety"] button[data-state]').first();
-  const triggerToUse = safetyTrigger;
-  
-  if (await triggerToUse.count() > 0) {
-    await triggerToUse.scrollIntoViewIfNeeded();
-    await triggerToUse.click();
-    await waitForAccordionOpen(page);
-    await waitForRenderComplete(page, 'settle');
-  }
+  await openAccordion(page, 'safety');
+  await waitForRenderComplete(page, 'settle');
 }
 
-// Option indices for safety-mode-trigger: Off=0, Balanced=1, Strict=2
-const SAFETY_MODE_INDEX: Record<string, number> = { off: 0, balanced: 1, strict: 2 };
-// Option indices for safety-ecc-weight-map-trigger: distance=0, block=1, empirical=2
-const ECC_WEIGHT_MAP_INDEX: Record<string, number> = { distance: 0, block: 1, empirical: 2 };
-
-// Helper: Select dropdown option using index-based keyboard navigation (i18n-safe)
+// Helper: Select dropdown option using shared selector logic
 async function selectDropdownOption(page: Page, triggerTestId: string, optionText: string) {
-  const trigger = page.locator(`[data-testid="${triggerTestId}"]`);
-  await trigger.waitFor({ state: 'visible', timeout: 5000 });
-  await trigger.scrollIntoViewIfNeeded();
-  await trigger.click();
-  
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 3000 });
-  await waitForRenderComplete(page, 'settle');
-  
-  // Get option index based on trigger type
-  let optionIndex = 0;
-  const normalizedText = optionText.toLowerCase();
-  
-  if (triggerTestId === 'safety-mode-trigger') {
-    optionIndex = SAFETY_MODE_INDEX[normalizedText] ?? 0;
-  } else if (triggerTestId === 'safety-ecc-weight-map-trigger') {
-    optionIndex = ECC_WEIGHT_MAP_INDEX[normalizedText] ?? 0;
-  }
-  
-  // Use keyboard navigation for i18n-safe selection
-  await page.keyboard.press('Home');
-  for (let i = 0; i < optionIndex; i++) {
-    await page.keyboard.press('ArrowDown');
-  }
-  await page.keyboard.press('Enter');
+  await selectDropdownByText(page, triggerTestId, optionText);
   await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Toggle switch
 async function toggleSwitchByTestId(page: Page, testId: string) {
-  const switchEl = page.locator(`[data-testid="${testId}"]`);
-  await switchEl.waitFor({ state: 'visible', timeout: 5000 });
-  await switchEl.scrollIntoViewIfNeeded();
-  await switchEl.click();
+  await toggleSwitch(page, testId);
   await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Set slider value
 async function setSliderByTestId(page: Page, testId: string, percent: number) {
-  const slider = page.locator(`[data-testid="${testId}"] [role="slider"]`);
-  await slider.waitFor({ state: 'visible', timeout: 5000 });
-  await slider.scrollIntoViewIfNeeded();
-  
-  const box = await slider.boundingBox();
-  if (box) {
-    const x = box.x + (box.width * percent) / 100;
-    const y = box.y + box.height / 2;
-    await page.mouse.click(x, y);
-    await waitForRenderComplete(page, 'settle');
-  }
+  await setSlider(page, testId, percent);
+  await waitForRenderComplete(page, 'settle');
 }
 
 // ============================================================================
@@ -710,8 +652,11 @@ test.describe('Safety Edge Cases', () => {
     const safetyTriggerEl = page.locator('[data-testid="accordion-safety"] button[data-state]').first();
     await safetyTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
-    await safetyTrigger.click();
-    await waitForAccordionOpen(page);
+    await safetyTriggerEl.click();
+    await page.waitForSelector('[data-testid="accordion-safety"] [role="region"][data-state="open"]', {
+      state: 'visible',
+      timeout: 5000,
+    });
     
     // Verify state persisted
     const persistedState = await page.locator('[data-testid="safety-lock-finders-switch"]').getAttribute('data-state');
