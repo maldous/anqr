@@ -245,15 +245,13 @@ export function OverlaySection() {
     setUrlError(null);
   };
 
-  // Built-in gallery images - use absolute URLs on native platforms
-  const getGalleryImageUrl = (path: string) =>
-    Capacitor.isNativePlatform() ? `https://anqr.link${path}` : path;
-
+  // Built-in gallery images are shipped in /public and available on the current origin.
+  // Using same-origin paths avoids native WebView CORS failures when fetch() creates a File.
   const GALLERY_IMAGES = [
-    { id: 'tsunami', name: 'Tsunami', url: getGalleryImageUrl('/tsunami.jpg'), isAnimated: false },
-    { id: 'king', name: 'King', url: getGalleryImageUrl('/king.gif'), isAnimated: true },
-    { id: 'logo', name: 'Logo', url: getGalleryImageUrl('/logo.png'), isAnimated: false },
-    { id: 'test', name: 'Test', url: getGalleryImageUrl('/test.png'), isAnimated: false },
+    { id: 'tsunami', name: 'Tsunami', url: '/tsunami.jpg', isAnimated: false },
+    { id: 'king', name: 'King', url: '/king.gif', isAnimated: true },
+    { id: 'logo', name: 'Logo', url: '/logo.png', isAnimated: false },
+    { id: 'test', name: 'Test', url: '/test.png', isAnimated: false },
   ];
 
   // Load image from gallery

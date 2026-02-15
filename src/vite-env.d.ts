@@ -43,6 +43,7 @@ interface ImportMetaEnv {
   readonly VITE_ADSENSE_SLOT_GALLERY_AFTER_PREPROCESSING: string;
   readonly VITE_ADSENSE_SLOT_GALLERY_AFTER_ENCODING: string;
   readonly VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING: string;
+  readonly VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS: string;
   // AdMob (Android/iOS)
   readonly VITE_ADMOB_BANNER_BOTTOM: string;
   readonly VITE_ADMOB_BANNER_TOP: string;

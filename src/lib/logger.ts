@@ -585,11 +585,26 @@ prefix.apply(loglevel, {
 // Development: show all logs (debug and above) - maximum visibility for debugging
 // Production: show only errors - minimum noise, failures only (toggle via anqrDiag)
 // Note: Handle Node.js environment where import.meta.env may not exist
+const envLevelRaw =
+  typeof process !== 'undefined' ? process.env.ANQR_LOG_LEVEL?.toLowerCase() : undefined;
+const envLevel = (() => {
+  switch (envLevelRaw) {
+    case 'trace':
+    case 'debug':
+    case 'info':
+    case 'warn':
+    case 'error':
+    case 'silent':
+      return envLevelRaw;
+    default:
+      return undefined;
+  }
+})();
 const isDev =
   typeof import.meta?.env?.DEV !== 'undefined'
     ? import.meta.env.DEV
     : process.env.NODE_ENV !== 'production';
-const defaultLevel = isDev ? 'debug' : 'error';
+const defaultLevel = envLevel ?? (isDev ? 'debug' : 'error');
 loglevel.setLevel(defaultLevel);
 
 // ============================================================================

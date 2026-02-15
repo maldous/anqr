@@ -26,6 +26,7 @@
     "license-checker",
     "lockfile-lint",
     "netlify-cli",
+    "lefthook",
     "type-coverage",
     "@capacitor/filesystem",
     "@capacitor/splash-screen"

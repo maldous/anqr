@@ -3,9 +3,9 @@
 ## Overview
 
 - Total runs: 240 (120 per tier × 2 tiers)
-- **Tier A (Production):** 107 pass / 13 fail (89%)
-- **Tier B (Diagnostic):** 91 pass / 29 fail (76%)
-- Scan-gate-rescued: 16 scenario×fixture pairs
+- **Tier A (Production):** 120 pass / 0 fail (100%)
+- **Tier B (Diagnostic):** 99 pass / 21 fail (83%)
+- Scan-gate-rescued: 21 scenario×fixture pairs
 
 ## Tier A — Production
 
@@ -15,28 +15,14 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 26 | 4 |
-| king | 25 | 5 |
-| logo | 29 | 1 |
-| test | 27 | 3 |
+| tsunami | 30 | 0 |
+| king | 30 | 0 |
+| logo | 30 | 0 |
+| test | 30 | 0 |
 
 ### Failing Cases
 
-| Scenario | Fixture | Reason | Disposition |
-| --- | --- | --- | --- |
-| overlay-blue-noise | tsunami | CONTRAST_COLLAPSE | fix-now |
-| overlay-blue-noise | king | CONTRAST_COLLAPSE | fix-now |
-| overlay-mosaic | tsunami | CONTRAST_COLLAPSE | fix-now |
-| overlay-mosaic | king | CONTRAST_COLLAPSE | fix-now |
-| overlay-mosaic | logo | CONTRAST_COLLAPSE | fix-now |
-| overlay-mosaic | test | CONTRAST_COLLAPSE | fix-now |
-| preserve-blended | tsunami | CONTRAST_COLLAPSE | fix-now |
-| preserve-blended | king | CONTRAST_COLLAPSE | fix-now |
-| preserve-blended | test | CONTRAST_COLLAPSE | fix-now |
-| preserve-strength-100 | king | CONTRAST_COLLAPSE | fix-now |
-| animation-blue-noise | tsunami | CONTRAST_COLLAPSE | fix-now |
-| animation-blue-noise | king | CONTRAST_COLLAPSE | fix-now |
-| encoding-ecc-m | test | CONTRAST_COLLAPSE | fix-now |
+_None_
 
 ## Tier B — Diagnostic
 
@@ -46,22 +32,17 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 25 | 5 |
-| king | 11 | 19 |
-| logo | 29 | 1 |
-| test | 26 | 4 |
+| tsunami | 29 | 1 |
+| king | 13 | 17 |
+| logo | 30 | 0 |
+| test | 27 | 3 |
 
 ### Failing Cases
 
 | Scenario | Fixture | Reason | Disposition |
 | --- | --- | --- | --- |
 | overlay-dithered | king | CONTRAST_COLLAPSE | tunable |
-| overlay-blue-noise | tsunami | CONTRAST_COLLAPSE | tunable |
 | overlay-blue-noise | king | CONTRAST_COLLAPSE | tunable |
-| overlay-mosaic | tsunami | CONTRAST_COLLAPSE | fix-now |
-| overlay-mosaic | king | CONTRAST_COLLAPSE | fix-now |
-| overlay-mosaic | logo | CONTRAST_COLLAPSE | fix-now |
-| overlay-mosaic | test | CONTRAST_COLLAPSE | fix-now |
 | preserve-balanced | king | CONTRAST_COLLAPSE | tunable |
 | preserve-blended | tsunami | CONTRAST_COLLAPSE | tunable |
 | preserve-blended | king | CONTRAST_COLLAPSE | tunable |
@@ -72,13 +53,10 @@
 | encoding-v6 | king | CONTRAST_COLLAPSE | tunable |
 | encoding-v9 | king | CONTRAST_COLLAPSE | tunable |
 | encoding-ecc-q | king | CONTRAST_COLLAPSE | tunable |
-| animation-blue-noise | tsunami | CONTRAST_COLLAPSE | tunable |
-| animation-blue-noise | king | CONTRAST_COLLAPSE | tunable |
 | output-hd | king | CONTRAST_COLLAPSE | tunable |
 | output-hd | test | CONTRAST_COLLAPSE | tunable |
 | watermark-frame-tag | king | CONTRAST_COLLAPSE | tunable |
 | render-diamond-gap | king | CONTRAST_COLLAPSE | tunable |
-| encoding-ecc-m | tsunami | CONTRAST_COLLAPSE | tunable |
 | encoding-ecc-m | king | CONTRAST_COLLAPSE | tunable |
 | encoding-ecc-m | test | CONTRAST_COLLAPSE | tunable |
 | encoding-byte-v6 | king | CONTRAST_COLLAPSE | tunable |
@@ -93,8 +71,8 @@
 | overlay-dithered | king | pass | fail | 🟢 rescued |
 | overlay-dithered | logo | pass | pass | ✅ both pass |
 | overlay-dithered | test | pass | pass | ✅ both pass |
-| overlay-blue-noise | tsunami | fail | fail | ❌ both fail |
-| overlay-blue-noise | king | fail | fail | ❌ both fail |
+| overlay-blue-noise | tsunami | pass | pass | ✅ both pass |
+| overlay-blue-noise | king | pass | fail | 🟢 rescued |
 | overlay-blue-noise | logo | pass | pass | ✅ both pass |
 | overlay-blue-noise | test | pass | pass | ✅ both pass |
 | overlay-subpixel | tsunami | pass | pass | ✅ both pass |
@@ -105,10 +83,10 @@
 | overlay-halftone | king | pass | pass | ✅ both pass |
 | overlay-halftone | logo | pass | pass | ✅ both pass |
 | overlay-halftone | test | pass | pass | ✅ both pass |
-| overlay-mosaic | tsunami | fail | fail | ❌ both fail |
-| overlay-mosaic | king | fail | fail | ❌ both fail |
-| overlay-mosaic | logo | fail | fail | ❌ both fail |
-| overlay-mosaic | test | fail | fail | ❌ both fail |
+| overlay-mosaic | tsunami | pass | pass | ✅ both pass |
+| overlay-mosaic | king | pass | pass | ✅ both pass |
+| overlay-mosaic | logo | pass | pass | ✅ both pass |
+| overlay-mosaic | test | pass | pass | ✅ both pass |
 | overlay-extreme | tsunami | pass | pass | ✅ both pass |
 | overlay-extreme | king | pass | pass | ✅ both pass |
 | overlay-extreme | logo | pass | pass | ✅ both pass |
@@ -117,12 +95,12 @@
 | preserve-balanced | king | pass | fail | 🟢 rescued |
 | preserve-balanced | logo | pass | pass | ✅ both pass |
 | preserve-balanced | test | pass | pass | ✅ both pass |
-| preserve-blended | tsunami | fail | fail | ❌ both fail |
-| preserve-blended | king | fail | fail | ❌ both fail |
+| preserve-blended | tsunami | pass | fail | 🟢 rescued |
+| preserve-blended | king | pass | fail | 🟢 rescued |
 | preserve-blended | logo | pass | pass | ✅ both pass |
-| preserve-blended | test | fail | fail | ❌ both fail |
+| preserve-blended | test | pass | fail | 🟢 rescued |
 | preserve-strength-100 | tsunami | pass | pass | ✅ both pass |
-| preserve-strength-100 | king | fail | fail | ❌ both fail |
+| preserve-strength-100 | king | pass | fail | 🟢 rescued |
 | preserve-strength-100 | logo | pass | pass | ✅ both pass |
 | preserve-strength-100 | test | pass | pass | ✅ both pass |
 | render-rounded | tsunami | pass | pass | ✅ both pass |
@@ -149,8 +127,8 @@
 | animation-dithered | king | pass | pass | ✅ both pass |
 | animation-dithered | logo | pass | pass | ✅ both pass |
 | animation-dithered | test | pass | pass | ✅ both pass |
-| animation-blue-noise | tsunami | fail | fail | ❌ both fail |
-| animation-blue-noise | king | fail | fail | ❌ both fail |
+| animation-blue-noise | tsunami | pass | pass | ✅ both pass |
+| animation-blue-noise | king | pass | pass | ✅ both pass |
 | animation-blue-noise | logo | pass | pass | ✅ both pass |
 | animation-blue-noise | test | pass | pass | ✅ both pass |
 | output-hd | tsunami | pass | pass | ✅ both pass |
@@ -185,10 +163,10 @@
 | render-frame-sticker | king | pass | pass | ✅ both pass |
 | render-frame-sticker | logo | pass | pass | ✅ both pass |
 | render-frame-sticker | test | pass | pass | ✅ both pass |
-| encoding-ecc-m | tsunami | pass | fail | 🟢 rescued |
+| encoding-ecc-m | tsunami | pass | pass | ✅ both pass |
 | encoding-ecc-m | king | pass | fail | 🟢 rescued |
 | encoding-ecc-m | logo | pass | pass | ✅ both pass |
-| encoding-ecc-m | test | fail | fail | ❌ both fail |
+| encoding-ecc-m | test | pass | fail | 🟢 rescued |
 | encoding-byte-v6 | tsunami | pass | pass | ✅ both pass |
 | encoding-byte-v6 | king | pass | fail | 🟢 rescued |
 | encoding-byte-v6 | logo | pass | pass | ✅ both pass |
@@ -217,7 +195,12 @@ Scenarios that pass in Tier A but fail in Tier B — the scan gate made the diff
 | Scenario | Fixture |
 | --- | --- |
 | overlay-dithered | king |
+| overlay-blue-noise | king |
 | preserve-balanced | king |
+| preserve-blended | tsunami |
+| preserve-blended | king |
+| preserve-blended | test |
+| preserve-strength-100 | king |
 | render-rounded | king |
 | render-dots-circle | king |
 | encoding-v6 | king |
@@ -227,8 +210,8 @@ Scenarios that pass in Tier A but fail in Tier B — the scan gate made the diff
 | output-hd | test |
 | watermark-frame-tag | king |
 | render-diamond-gap | king |
-| encoding-ecc-m | tsunami |
 | encoding-ecc-m | king |
+| encoding-ecc-m | test |
 | encoding-byte-v6 | king |
 | watermark-text-bottom | king |
 | output-grayscale | king |

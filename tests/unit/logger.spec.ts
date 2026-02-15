@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const sentry = {
   addBreadcrumb: vi.fn(),
@@ -60,6 +60,8 @@ vi.mock('loglevel-plugin-prefix', () => ({ default: prefix }));
 vi.mock('loglevel', () => ({ default: loglevelMock }));
 
 describe('logger', () => {
+  const originalAnqrLogLevel = process.env.ANQR_LOG_LEVEL;
+
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
@@ -67,6 +69,15 @@ describe('logger', () => {
     for (const key of Object.keys(levelLoggers)) delete levelLoggers[key];
     document.body.innerHTML = '';
     vi.stubGlobal('structuredClone', globalThis.structuredClone);
+    delete process.env.ANQR_LOG_LEVEL;
+  });
+
+  afterEach(() => {
+    if (originalAnqrLogLevel === undefined) {
+      delete process.env.ANQR_LOG_LEVEL;
+    } else {
+      process.env.ANQR_LOG_LEVEL = originalAnqrLogLevel;
+    }
   });
 
   it('creates scoped logger, redacts sensitive context and reports to sentry', async () => {

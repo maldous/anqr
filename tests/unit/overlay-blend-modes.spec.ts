@@ -457,12 +457,10 @@ describe('applyQROverlayMode', () => {
       expect(lightResult.shouldDrawCell).toBe(true);
     });
 
-    it('light modules use computeLightBlend for whitening (backward-compatible)', () => {
+    it('light modules aggressively whiten for scan-safe separation', () => {
       const overlayData = makeOverlayData(moduleCount, 0.5, { r: 100, g: 150, b: 200 });
       const config = makeConfig({ overlayMode: 'mosaic' });
 
-      // Verify the new formula matches the old formula at key intensity values
-      // Old formula: lightFactor = 0.3 + (1 - i) * 0.3; pixel = 255 - (255 - c) * lightFactor
       const testColor = { r: 100, g: 150, b: 200 };
       for (const i of [0, 0.5, 1.0]) {
         const result = applyQROverlayMode(
@@ -471,11 +469,10 @@ describe('applyQROverlayMode', () => {
         const rgb = parseColorRgb(result.moduleColor);
         expect(rgb).not.toBeNull();
 
-        // Old formula values
-        const oldLightFactor = 0.3 + (1 - i) * 0.3;
-        const expectedR = Math.round(255 - (255 - testColor.r) * oldLightFactor);
-        const expectedG = Math.round(255 - (255 - testColor.g) * oldLightFactor);
-        const expectedB = Math.round(255 - (255 - testColor.b) * oldLightFactor);
+        const blendToWhite = 0.72 + computeLightBlend(i, 0.24);
+        const expectedR = Math.round(testColor.r + (255 - testColor.r) * blendToWhite);
+        const expectedG = Math.round(testColor.g + (255 - testColor.g) * blendToWhite);
+        const expectedB = Math.round(testColor.b + (255 - testColor.b) * blendToWhite);
 
         expect(rgb!.r).toBe(expectedR);
         expect(rgb!.g).toBe(expectedG);

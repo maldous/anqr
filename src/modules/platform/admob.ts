@@ -22,6 +22,10 @@ let adMobInitialized = false;
 // Generation counter for showing interstitials
 let generationCount = 0;
 
+// Track prepared ad inventory per context/type so show calls can self-heal.
+const preparedInterstitialKeys = new Set<string>();
+const preparedRewardedKeys = new Set<string>();
+
 // Banner height tracking
 let currentBannerHeight = 0;
 let bannerHeightCallbacks: Array<(height: number) => void> = [];
@@ -110,6 +114,14 @@ export type InterstitialType =
   | string;
 export type RewardedType = 'rewarded' | 'rewardedInterstitial' | 'premium' | string;
 
+function interstitialPrepareKey(type: InterstitialType): string {
+  return type === 'rewardedInterstitial' ? 'rewardedInterstitial' : `interstitial:${type}`;
+}
+
+function rewardedPrepareKey(type: RewardedType): string {
+  return type === 'rewardedInterstitial' ? 'rewardedInterstitial' : `rewarded:${type}`;
+}
+
 /**
  * Initialize AdMob - call this early in app startup
  */
@@ -144,6 +156,8 @@ export async function initializeAdMob(): Promise<boolean> {
 
     adMobAvailable = true;
     adMobInitialized = true;
+    preparedInterstitialKeys.clear();
+    preparedRewardedKeys.clear();
     log.info('Initialized successfully', { mode: isTestMode ? 'TEST' : 'PRODUCTION' });
     return true;
   } catch (_err) {
@@ -275,6 +289,7 @@ export async function prepareInterstitial(
   if (!(adMobAvailable && AdMob)) return false;
 
   try {
+    const key = interstitialPrepareKey(type);
     const adId =
       type === 'rewardedInterstitial'
         ? getAdUnitId('rewardedInterstitial')
@@ -285,9 +300,11 @@ export async function prepareInterstitial(
     } else {
       await AdMob.prepareInterstitial({ adId });
     }
+    preparedInterstitialKeys.add(key);
     log.info('Ad prepared', { type, mode: isTestMode ? 'TEST' : 'PROD' });
     return true;
   } catch (err) {
+    preparedInterstitialKeys.delete(interstitialPrepareKey(type));
     log.error('Failed to prepare ad', { type, error: err });
     return false;
   }
@@ -299,7 +316,17 @@ export async function prepareInterstitial(
 export async function showInterstitial(type: InterstitialType = 'interstitial'): Promise<boolean> {
   if (!(adMobAvailable && AdMob)) return false;
 
+  const key = interstitialPrepareKey(type);
+
   try {
+    if (!preparedInterstitialKeys.has(key)) {
+      const prepared = await prepareInterstitial(type);
+      if (!prepared) {
+        log.warn('Interstitial not ready and prepare failed', { type });
+        return false;
+      }
+    }
+
     if (type === 'rewardedInterstitial') {
       const result = await AdMob.showRewardedInterstitialAd();
       log.info('Rewarded interstitial shown', { reward: result });
@@ -307,8 +334,11 @@ export async function showInterstitial(type: InterstitialType = 'interstitial'):
       await AdMob.showInterstitial();
       log.info('Interstitial shown');
     }
+    preparedInterstitialKeys.delete(key);
+    void prepareInterstitial(type);
     return true;
   } catch (err) {
+    preparedInterstitialKeys.delete(key);
     log.error('Failed to show ad', { type, error: err });
     return false;
   }
@@ -321,6 +351,7 @@ export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promis
   if (!(adMobAvailable && AdMob)) return false;
 
   try {
+    const key = rewardedPrepareKey(type);
     const context =
       type === 'premium' ? 'premium' : type === 'rewardedInterstitial' ? undefined : 'export_hd';
     const adId =
@@ -333,9 +364,11 @@ export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promis
     } else {
       await AdMob.prepareRewardedAd({ adId });
     }
+    preparedRewardedKeys.add(key);
     log.info('Rewarded ad prepared', { type, mode: isTestMode ? 'TEST' : 'PROD' });
     return true;
   } catch (err) {
+    preparedRewardedKeys.delete(rewardedPrepareKey(type));
     log.error('Failed to prepare rewarded ad', { type, error: err });
     return false;
   }
@@ -345,8 +378,7 @@ export async function prepareRewardedAd(type: RewardedType = 'rewarded'): Promis
  * Check if a rewarded ad is ready to show
  */
 export function isRewardedAdReady(): boolean {
-  // In a real implementation, track the prepared state
-  return adMobAvailable;
+  return adMobAvailable && preparedRewardedKeys.size > 0;
 }
 
 /**
@@ -357,13 +389,25 @@ export async function showRewardedAd(
 ): Promise<{ rewarded: boolean; amount?: number; type?: string }> {
   if (!(adMobAvailable && AdMob)) return { rewarded: false };
 
+  const key = rewardedPrepareKey(type);
+
   try {
+    if (!preparedRewardedKeys.has(key)) {
+      const prepared = await prepareRewardedAd(type);
+      if (!prepared) {
+        log.warn('Rewarded ad not ready and prepare failed', { type });
+        return { rewarded: false };
+      }
+    }
+
     let result: any;
     if (type === 'rewardedInterstitial') {
       result = await AdMob.showRewardedInterstitialAd();
     } else {
       result = await AdMob.showRewardedAd();
     }
+    preparedRewardedKeys.delete(key);
+    void prepareRewardedAd(type);
     log.info('Rewarded ad shown', { type, reward: result });
     return {
       rewarded: true,
@@ -371,6 +415,7 @@ export async function showRewardedAd(
       type: result?.type,
     };
   } catch (err) {
+    preparedRewardedKeys.delete(key);
     log.error('Failed to show rewarded ad', { type, error: err });
     return { rewarded: false };
   }
@@ -383,8 +428,11 @@ export async function prepareAllAds(): Promise<void> {
   if (!adMobAvailable) return;
 
   await Promise.all([
+    prepareInterstitial('export'),
+    prepareInterstitial('gallery'),
     prepareInterstitial('interstitial'),
     prepareInterstitial('rewardedInterstitial'),
+    prepareRewardedAd('premium'),
     prepareRewardedAd('rewarded'),
   ]);
 }

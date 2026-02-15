@@ -454,7 +454,8 @@ export class QRGenerator {
         const scanGateProfile = effectiveConfig.scanGateProfile ?? 'full';
         const isPreviewScanGate = scanGateProfile === 'preview';
         const isScanGateDisabled = scanGateProfile === 'off';
-        const skipScanGateEscalation = effectiveConfig.preserveFinders === false;
+        const skipScanGateEscalation =
+          effectiveConfig.preserveFinders === false && effectiveConfig.blendPreservations !== true;
         const edgeImprintThreshold = clamp(effectiveConfig.edgeImprintThreshold ?? 0.2, 0.05, 0.5);
         const toneStdThreshold = clamp(effectiveConfig.toneStdThreshold ?? 0.12, 0.05, 0.3);
         const edgeWorsenLimit = clamp(effectiveConfig.edgeImprintWorsenLimit ?? 0.015, 0, 0.2);
@@ -720,6 +721,24 @@ export class QRGenerator {
             optimizeIterations: Math.max(4 + idx, effectiveConfig.optimizeIterations ?? 6),
             overlayIntensity: Math.min(overlayIntensity, effectiveConfig.overlayIntensity ?? 100),
             qrBitBiasStrength: clamp(baseBias + 0.1 + idx * 0.03, 0, 0.34),
+          }));
+        };
+
+        const buildFinderRescuePatches = (): DitherAttemptPatch[] => {
+          if (effectiveConfig.preserveFinders !== false || isScanGateDisabled) return [];
+          const baseDark = clamp(effectiveConfig.darkMinOccupancy ?? 0.56, 0.52, 0.66);
+          const baseLight = clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.34, 0.48);
+          const baseBias = clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
+          const previewRescueIntensities = [50, 42, 34, 26, 18];
+          const fullRescueIntensities = [58, 50, 42, 34, 26, 18];
+          const intensities = isPreviewScanGate ? previewRescueIntensities : fullRescueIntensities;
+          return intensities.map((overlayIntensity, idx) => ({
+            preserveFinders: true,
+            darkMinOccupancy: clamp(baseDark + idx * 0.01, 0.52, 0.7),
+            lightMaxOccupancy: clamp(baseLight - idx * 0.01, 0.3, 0.48),
+            optimizeIterations: Math.max(6 + idx, effectiveConfig.optimizeIterations ?? 6),
+            overlayIntensity: Math.min(overlayIntensity, effectiveConfig.overlayIntensity ?? 100),
+            qrBitBiasStrength: clamp(baseBias + 0.12 + idx * 0.03, 0, 0.36),
           }));
         };
 
@@ -1015,12 +1034,24 @@ export class QRGenerator {
 
         const lastPatch = attempts[attempts.length - 1] || {};
         if (skipScanGateEscalation) {
+          const finderRescuePatches = buildFinderRescuePatches();
+          for (const patch of finderRescuePatches) {
+            const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
+            const rescueRaster = isPreviewScanGate
+              ? rescueCanvas
+              : await toFinalRasterCanvas(rescueCanvas);
+            if (runDecode(rescueRaster)) {
+              rememberPatch(patch);
+              return rescueRaster;
+            }
+            lastCanvas = rescueRaster;
+          }
           const fallback = lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
           if (Object.keys(lastPatch).length > 0) rememberPatch(lastPatch);
           return fallback;
         }
 
-        const rescuePatches = buildDecodeRescuePatches();
+        const rescuePatches = [...buildDecodeRescuePatches(), ...buildFinderRescuePatches()];
         for (const patch of rescuePatches) {
           const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
           const rescueRaster = isPreviewScanGate

@@ -7,8 +7,8 @@ import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import { applyDitherToMatrix } from './dithering-matrix';
 import { getOverlayData } from './overlay-data';
-import { getEffectiveIntensity } from './pixel-matrix-utils';
 import { generateHalftoneDitheredOverlayData } from './pixel-matrix-dithered';
+import { getEffectiveIntensity } from './pixel-matrix-utils';
 import type { CreateCanvasFn, OverlayData, QRCodeInstance, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');

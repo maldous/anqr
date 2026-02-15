@@ -1,6 +1,6 @@
 1) Required Test Matrix (Generated)
 - Generated from: tests/ids.txt + tests/types.txt
-- Total IDs: 461
+- Total IDs: 463
 - Rule: every requirement row must map to at least one concrete test file
 
 ID: export-button
@@ -1406,6 +1406,17 @@ ID: render-transparent-bg-switch
   - T10 Cross-section integration tests -> tests/advanced/render.spec.ts [direct-id]
   - T13 Test ID integrity/completeness tests -> tests/advanced/render.spec.ts [direct-id]
 
+ID: overlay-blend-preservations-switch
+- section: Overlay Section
+- source: src/components/sections/OverlaySection.tsx
+- inferred-domain: overlay
+- requirements:
+  - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/basic/overlay.spec.ts [direct-id]
+
 ID: overlay-color-mode-content
 - section: Overlay Section
 - source: src/components/sections/OverlaySection.tsx
@@ -1460,6 +1471,17 @@ ID: overlay-enabled-switch
   - T8 Overlay/watermark/media tests -> tests/basic/e2e-library-demo.spec.ts [direct-id]
   - T10 Cross-section integration tests -> tests/basic/e2e-library-demo.spec.ts [direct-id]
   - T13 Test ID integrity/completeness tests -> tests/basic/e2e-library-demo.spec.ts [direct-id]
+
+ID: overlay-finder-dither-strength-slider
+- section: Overlay Section
+- source: src/components/sections/OverlaySection.tsx
+- inferred-domain: overlay
+- requirements:
+  - T1 Rendering/visual change tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/basic/overlay.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/basic/overlay.spec.ts [direct-id]
 
 ID: overlay-from-url-button
 - section: Overlay Section

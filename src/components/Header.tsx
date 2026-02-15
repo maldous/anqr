@@ -293,8 +293,9 @@ export function Header({
       // Show rewarded ad
       setLoadingAd(true);
       try {
+        await prepareRewardedAd('premium');
         const reward = await showRewardedAd('premium');
-        if (reward) {
+        if (reward.rewarded) {
           // User watched the ad, grant premium access
           activatePremiumAccess();
           setTier('professional');

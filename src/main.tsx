@@ -8,7 +8,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { initAutoDynamicTestIds } from './lib/auto-testid';
 import { createLogger } from './lib/logger';
 import { initRemoteDiagnostics } from './lib/logger-remote';
-import { initializeAdMob, showBannerAd } from './modules/platform';
+import { initializeAdMob, prepareAllAds, showBannerAd } from './modules/platform';
 
 const log = createLogger('MAIN');
 
@@ -54,6 +54,8 @@ const initAds = async () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
     const initialized = await initializeAdMob();
     if (initialized) {
+      // Preload ad inventory so first user action can show an interstitial/rewarded ad.
+      await prepareAllAds();
       // Show banner ad at bottom of screen on native apps
       await showBannerAd('bottom');
     }

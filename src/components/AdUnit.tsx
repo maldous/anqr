@@ -15,6 +15,8 @@ type SlotName =
   | 'right-skyscraper'
   | 'sidebar-bottom'
   // Gallery page ads
+  | 'gallery-top'
+  | 'gallery-bottom'
   | 'gallery-left'
   | 'gallery-right'
   // Static page ads
@@ -45,7 +47,8 @@ type SlotName =
   | 'gallery-after-color-modes'
   | 'gallery-after-preprocessing'
   | 'gallery-after-encoding'
-  | 'gallery-after-dithering';
+  | 'gallery-after-dithering'
+  | 'gallery-after-power-combos';
 
 /**
  * Optional environment-driven slot configuration.
@@ -59,6 +62,12 @@ const SLOT_IDS: Partial<Record<SlotName, string>> = {
   'right-skyscraper': import.meta.env.VITE_ADSENSE_SLOT_RIGHT_SKYSCRAPER,
   'sidebar-bottom': import.meta.env.VITE_ADSENSE_SLOT_SIDEBAR_BOTTOM,
   // Gallery page ads
+  'gallery-top':
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_TOP ||
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_PLAIN,
+  'gallery-bottom':
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_BOTTOM ||
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING,
   'gallery-left': import.meta.env.VITE_ADSENSE_SLOT_GALLERY_LEFT,
   'gallery-right': import.meta.env.VITE_ADSENSE_SLOT_GALLERY_RIGHT,
   // Static page ads
@@ -91,6 +100,9 @@ const SLOT_IDS: Partial<Record<SlotName, string>> = {
   'gallery-after-preprocessing': import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_PREPROCESSING,
   'gallery-after-encoding': import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_ENCODING,
   'gallery-after-dithering': import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING,
+  'gallery-after-power-combos':
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS ||
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING,
 };
 
 function isNumericSlot(value: string | undefined | null): value is string {

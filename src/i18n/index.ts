@@ -137,6 +137,18 @@ const resources: Record<string, { translation: Record<string, unknown> }> = {
 // List of supported language codes for detection
 const supportedLngs: string[] = languages.map((l) => l.code);
 
+// Share locale payloads for variants that currently have identical translations.
+// This keeps language selection intact while avoiding duplicate emitted locale chunks.
+const LOCALE_ALIASES: Record<string, string> = {
+  'en-AU': 'en-US',
+  'en-CA': 'en-US',
+  'en-IN': 'en-US',
+  'en-SG': 'en-US',
+  'en-ZA': 'en-US',
+  'fa-AE': 'fa',
+  'fa-IR': 'fa',
+};
+
 // Track which locales have been loaded
 const loadedLocales = new Set<string>(['en-GB']);
 
@@ -145,7 +157,17 @@ const loadedFontScripts = new Set<string>(['latin']);
 
 // Use Vite glob loading so unsupported locales can be excluded from emitted chunks.
 const localeModules = import.meta.glob<Record<string, unknown>>(
-  ['./locales/*.json', '!./locales/rm.json'],
+  [
+    './locales/*.json',
+    '!./locales/rm.json',
+    '!./locales/en-AU.json',
+    '!./locales/en-CA.json',
+    '!./locales/en-IN.json',
+    '!./locales/en-SG.json',
+    '!./locales/en-ZA.json',
+    '!./locales/fa-AE.json',
+    '!./locales/fa-IR.json',
+  ],
   {
     import: 'default',
     eager: false,
@@ -240,13 +262,29 @@ export async function loadLocale(lang: string): Promise<void> {
   if (loadedLocales.has(lang)) return;
 
   try {
-    const modulePath = `./locales/${lang}.json`;
+    const sourceLang = LOCALE_ALIASES[lang] ?? lang;
+
+    // If the source locale is already loaded, reuse it for the alias.
+    if (loadedLocales.has(sourceLang)) {
+      const cachedData = i18n.getResourceBundle(sourceLang, 'translation');
+      if (cachedData) {
+        i18n.addResourceBundle(lang, 'translation', cachedData, true, true);
+      }
+      loadedLocales.add(lang);
+      return;
+    }
+
+    const modulePath = `./locales/${sourceLang}.json`;
     const loader = localeModules[modulePath];
     if (!loader) {
-      throw new Error(`Locale module not found for ${lang}`);
+      throw new Error(`Locale module not found for ${sourceLang}`);
     }
     const localeData = await loader();
-    i18n.addResourceBundle(lang, 'translation', localeData, true, true);
+    i18n.addResourceBundle(sourceLang, 'translation', localeData, true, true);
+    loadedLocales.add(sourceLang);
+    if (lang !== sourceLang) {
+      i18n.addResourceBundle(lang, 'translation', localeData, true, true);
+    }
     loadedLocales.add(lang);
   } catch (error) {
     log.error('Failed to load locale', { lang, error });
