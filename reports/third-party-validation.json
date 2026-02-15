@@ -1,0 +1,212 @@
+{
+  "title": "ANQR Third-Party Service Validation",
+  "generated": "2026-02-15T10:16:24.347Z",
+  "durationMs": 11481,
+  "summary": {
+    "critical": {
+      "passed": 4,
+      "total": 4
+    },
+    "warnings": 1,
+    "skipped": 1,
+    "allCriticalPassed": true
+  },
+  "results": [
+    {
+      "name": "Netlify",
+      "level": "CRITICAL",
+      "status": "PASS",
+      "summary": "Site active, SSL enabled, latest deploy ready",
+      "details": {
+        "state": "current",
+        "ssl": true,
+        "custom_domain": "anqr.link",
+        "url": "https://anqr.link",
+        "latest_deploy_state": "ready",
+        "latest_deploy_id": "698feb77cf3584673b00a899",
+        "latest_deploy_created": "2026-02-14T03:26:47.230Z"
+      },
+      "timestamp": "2026-02-15T10:16:18.034Z"
+    },
+    {
+      "name": "Google Play",
+      "level": "WARN",
+      "status": "WARN",
+      "summary": "play-store-key.json missing",
+      "details": {
+        "play_store_key": false,
+        "release_keystore": true,
+        "google_services": {
+          "exists": true,
+          "has_project_id": true,
+          "project_id": "anqr-link"
+        }
+      },
+      "timestamp": "2026-02-15T10:16:18.058Z"
+    },
+    {
+      "name": "Ads Config",
+      "level": "WARN",
+      "status": "PASS",
+      "summary": "Publisher IDs consistent",
+      "details": {
+        "ads_txt": {
+          "exists": true,
+          "contains_publisher_id": true
+        },
+        "capacitor_admob": {
+          "exists": true,
+          "admob_app_id_match": true,
+          "expected": "ca-app-pub-2270701384951162~3067761782"
+        },
+        "makefile_adsense": {
+          "exists": true,
+          "publisher_id_match": true
+        }
+      },
+      "timestamp": "2026-02-15T10:16:18.059Z"
+    },
+    {
+      "name": "SonarQube",
+      "level": "WARN",
+      "status": "SKIP",
+      "summary": "localhost:9000 not reachable",
+      "details": {
+        "error": "connect ECONNREFUSED 127.0.0.1:9000"
+      },
+      "timestamp": "2026-02-15T10:16:18.061Z"
+    },
+    {
+      "name": "Snyk",
+      "level": "WARN",
+      "status": "PASS",
+      "summary": "API authenticated",
+      "details": {
+        "statusCode": 200,
+        "username": "maldous"
+      },
+      "timestamp": "2026-02-15T10:16:18.645Z"
+    },
+    {
+      "name": "Cloudflare",
+      "level": "CRITICAL",
+      "status": "PASS",
+      "summary": "Zone active, DNS correct, SSL active",
+      "details": {
+        "zone_id": "9e9c0bfa6fd0264a54e054a4cdd5cecc",
+        "zone_status": "active",
+        "zone_name": "anqr.link",
+        "dns": {
+          "root_cname": {
+            "found": true,
+            "content": "anqr.netlify.app",
+            "proxied": true
+          },
+          "www_cname": {
+            "found": true,
+            "content": "anqr.netlify.app",
+            "proxied": true
+          },
+          "total_cname_records": 4
+        },
+        "ssl": {
+          "status": "active",
+          "raw": {
+            "certificate_status": "active",
+            "cert_pack_uuid": "c6e922b5-0359-4ee6-878e-0dcc87c49945",
+            "validation_method": "txt",
+            "validation_type": "dv",
+            "hostname": "*.anqr.link"
+          }
+        }
+      },
+      "timestamp": "2026-02-15T10:16:19.149Z"
+    },
+    {
+      "name": "Sentry",
+      "level": "CRITICAL",
+      "status": "PASS",
+      "summary": "3/3 projects active (27 unresolved issues)",
+      "details": {
+        "projects": {
+          "anqr-web": {
+            "status": "active",
+            "active": true,
+            "unresolved": 0
+          },
+          "anqr-mobile": {
+            "status": "active",
+            "active": true,
+            "unresolved": 27
+          },
+          "anqr-api": {
+            "status": "active",
+            "active": true,
+            "unresolved": 0
+          }
+        },
+        "dsn_check": {
+          "expected": "https://6935e811c47169e037e31209f2d46fbd@o4510808522489856.ingest.us.sentry.io/4510808547917824",
+          "found_in_function": true,
+          "status": "match"
+        }
+      },
+      "timestamp": "2026-02-15T10:16:21.599Z"
+    },
+    {
+      "name": "Live Site",
+      "level": "CRITICAL",
+      "status": "PASS",
+      "summary": "All endpoints responding, headers correct",
+      "details": {
+        "endpoints": {
+          "homepage": {
+            "url": "https://anqr.link/",
+            "statusCode": 200,
+            "checks": {
+              "status_200": true,
+              "hsts_header": true,
+              "csp_header": true
+            },
+            "passed": true
+          },
+          "qr_api": {
+            "url": "https://anqr.link/api/qr?data=test&size=100",
+            "statusCode": 200,
+            "checks": {
+              "status_200": true,
+              "image_content_type": true
+            },
+            "passed": true
+          },
+          "sitemap": {
+            "url": "https://anqr.link/sitemap.xml",
+            "statusCode": 200,
+            "checks": {
+              "status_200": true
+            },
+            "passed": true
+          },
+          "robots_txt": {
+            "url": "https://anqr.link/robots.txt",
+            "statusCode": 200,
+            "checks": {
+              "status_200": true
+            },
+            "passed": true
+          },
+          "ads_txt": {
+            "url": "https://anqr.link/ads.txt",
+            "statusCode": 200,
+            "checks": {
+              "status_200": true,
+              "contains_publisher_id": true
+            },
+            "passed": true
+          }
+        }
+      },
+      "timestamp": "2026-02-15T10:16:24.346Z"
+    }
+  ]
+}

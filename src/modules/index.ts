@@ -2,7 +2,7 @@
  * ANQR Modules Index
  *
  * Root barrel file that re-exports all module entrypoints.
- * Per RULES.txt: Only re-exports module entrypoints, never deep paths.
+ * Per knowledge.md §Module Architecture Rules: Only re-exports module entrypoints, never deep paths.
  *
  * NOTE: This file exists for convenience but consumers should prefer
  * importing directly from specific modules to avoid name collisions.
