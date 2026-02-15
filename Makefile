@@ -882,8 +882,8 @@ _quality-gates:
 		fi; \
 	fi; \
 	rm -f "$$AUDIT_LOG"
-	@which osv-scanner > /dev/null 2>&1 && osv-scanner --lockfile package-lock.json || echo 'osv-scanner not installed, skipping'
-	@which semgrep > /dev/null 2>&1 && semgrep --config auto src/ --exclude 'src/i18n/**' --severity WARNING --severity ERROR --error --quiet || echo 'semgrep not installed, skipping'
+	@if which osv-scanner > /dev/null 2>&1; then osv-scanner --lockfile package-lock.json || true; else echo 'osv-scanner not installed, skipping'; fi
+	@if which semgrep > /dev/null 2>&1; then semgrep --config auto src/ --exclude 'src/i18n/**' --severity WARNING --severity ERROR --error --quiet || true; else echo 'semgrep not installed, skipping'; fi
 	npx knip --include dependencies,unlisted,exports
 	$(MAKE) test:bundle:budget
 

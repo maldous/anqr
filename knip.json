@@ -20,13 +20,14 @@
     "src/i18n/locales/*.json"
   ],
   "ignoreDependencies": [
-    "@biomejs/biome",
+    "@commitlint/cli",
     "cspell",
     "jscpd",
     "license-checker",
     "lockfile-lint",
     "netlify-cli",
     "lefthook",
+    "lint-staged",
     "serve",
     "type-coverage",
     "@capacitor/filesystem",
