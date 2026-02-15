@@ -1,21 +1,19 @@
 /**
  * Gallery Items - Comprehensive feature showcase for ANQR
  *
- * Organized by feature category to help users understand visual differences:
- * - Plain QR: No overlay, different styles/colors/ECC
- * - Image Overlays: tsunami.jpg with different modes
- * - Animated Overlays: king.gif with different modes
- * - Blend Modes: Different overlay blend modes
- * - Color Modes: color, grayscale, bw
- * - Preprocessing: brightness, contrast, gamma, etc.
- * - QR Encoding: versions and ECC levels
- * - Dithering: Different dither algorithms
- * - Module Styles: square, rounded, dots, diamond
- * - Finder Styles: square, rounded, circle
+ * Non-overlay sections (plain, content-types, styles, colors) are hand-crafted.
+ * Overlay sections are built programmatically from scan-validated Tier A scenarios
+ * (GALLERY_SCAN_SCENARIOS × CANONICAL_FIXTURES) to guarantee every gallery image
+ * is proven scannable.
  */
 
 import { Capacitor } from '@capacitor/core';
-import { buildScanShowcaseSeeds } from '@/data/gallery-scan-scenarios';
+import {
+  CANONICAL_FIXTURES,
+  type CanonicalFixtureId,
+  GALLERY_SCAN_SCENARIOS,
+  type ScenarioFeatureGroup,
+} from '@/data/gallery-scan-scenarios';
 
 export type GalleryCategory =
   | 'plain'
@@ -29,8 +27,7 @@ export type GalleryCategory =
   | 'preprocessing'
   | 'encoding'
   | 'dithering'
-  | 'power-combos'
-  | 'validated-showcase';
+  | 'power-combos';
 
 export interface GalleryItem {
   id: string;
@@ -51,10 +48,6 @@ export interface GallerySection {
 
 // Base URL for sample QR codes
 const BASE_DATA = 'https://anqr.link';
-
-// Image URLs (will be replaced with absolute URLs during generation)
-const TSUNAMI_IMG = '/tsunami.jpg';
-const KING_GIF = '/king.gif';
 
 // ============================================
 // PLAIN QR CODES - No overlay (6 items)
@@ -360,858 +353,112 @@ for (const color of colorSchemes.slice(0, 6)) {
 }
 
 // ============================================
-// IMAGE OVERLAYS - tsunami.jpg
+// SCAN-VALIDATED OVERLAY SECTIONS
+// Built from GALLERY_SCAN_SCENARIOS × CANONICAL_FIXTURES
+// Every image has passed Tier A scan validation
 // ============================================
-const imageOverlayItems: GalleryItem[] = [];
 
-// Different overlay modes
-const overlayModes = [
-  { mode: 'dithered', name: 'Dithered', desc: 'Error diffusion dithering' },
-  { mode: 'blue-noise', name: 'Blue Noise', desc: 'Blue noise threshold dithering' },
-  { mode: 'halftone', name: 'Halftone', desc: 'Classic halftone dots' },
-  { mode: 'mosaic', name: 'Mosaic', desc: 'Mosaic tile effect' },
-  { mode: 'brightness', name: 'Brightness', desc: 'Brightness-based modules' },
-  { mode: 'duotone', name: 'Duotone', desc: 'Two-tone color mapping' },
-  { mode: 'subpixel', name: 'Subpixel', desc: 'High detail subpixel rendering' },
-  { mode: 'pixelate', name: 'Pixelate', desc: 'Pixelated overlay effect' },
-  { mode: 'outline', name: 'Outline', desc: 'Edge detection overlay' },
-  { mode: 'wave', name: 'Wave', desc: 'Wavy distortion effect' },
-  { mode: 'extreme', name: 'Extreme', desc: 'Maximum image visibility' },
-];
+const FIXTURE_DISPLAY_NAMES: Record<CanonicalFixtureId, string> = {
+  tsunami: 'Tsunami',
+  king: 'King',
+  logo: 'Logo',
+  test: 'Test',
+};
 
-for (const overlay of overlayModes) {
-  imageOverlayItems.push({
-    id: `img-${overlay.mode}`,
-    title: overlay.name,
-    description: overlay.desc,
-    category: 'image-overlay',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: overlay.mode,
-      img: TSUNAMI_IMG,
-      intensity: 100,
-    },
-  });
-}
+const FEATURE_GROUP_TO_CATEGORY: Record<ScenarioFeatureGroup, GalleryCategory> = {
+  overlay: 'image-overlay',
+  animation: 'animation-overlay',
+  preservation: 'blend-modes',
+  output: 'color-modes',
+  encoding: 'encoding',
+  render: 'power-combos',
+  watermark: 'power-combos',
+  preprocessing: 'preprocessing',
+  dithering: 'dithering',
+};
 
-// Different intensities
-const intensities = [50, 75, 100];
-for (const intensity of intensities) {
-  imageOverlayItems.push({
-    id: `img-dithered-i${intensity}`,
-    title: `Dithered ${intensity}%`,
-    description: `Dithered at ${intensity}% intensity`,
-    category: 'image-overlay',
-    params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity },
-  });
-}
+function buildValidatedItems(): GalleryItem[] {
+  const items: GalleryItem[] = [];
 
-// Color modes for image
-const colorModes = ['color', 'grayscale', 'bw'];
-for (const cm of colorModes) {
-  imageOverlayItems.push({
-    id: `img-colormode-${cm}`,
-    title: cm === 'bw' ? 'Black & White' : cm.charAt(0).toUpperCase() + cm.slice(1),
-    description: `${cm} color processing`,
-    category: 'image-overlay',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      colorMode: cm,
-    },
-  });
-}
+  for (const scenario of GALLERY_SCAN_SCENARIOS) {
+    if (!scenario.galleryEligible) continue;
+    if (scenario.featureGroup === 'preprocessing' || scenario.featureGroup === 'dithering') continue;
 
-// Add one more to make 18 total
-imageOverlayItems.push({
-  id: 'img-blend',
-  title: 'Blend Mode',
-  description: 'Color blend overlay',
-  category: 'image-overlay',
-  params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'blend', img: TSUNAMI_IMG, intensity: 100 },
-});
+    const category = FEATURE_GROUP_TO_CATEGORY[scenario.featureGroup];
 
-// ============================================
-// ANIMATED OVERLAYS - king.gif
-// ============================================
-const animationOverlayItems: GalleryItem[] = [];
+    const fixturesToUse = scenario.useOverlay ? CANONICAL_FIXTURES : [CANONICAL_FIXTURES[0]];
 
-// Animated overlay modes
-for (const overlay of overlayModes.slice(0, 6)) {
-  animationOverlayItems.push({
-    id: `anim-${overlay.mode}`,
-    title: `Animated ${overlay.name}`,
-    description: `${overlay.desc} with animation`,
-    category: 'animation-overlay',
-    isAnimated: true,
-    params: { data: BASE_DATA, ec: 'H', v: 6, mode: overlay.mode, img: KING_GIF, intensity: 100 },
-  });
-}
+    for (const fixture of fixturesToUse) {
+      const params: Record<string, string | number | boolean> = {
+        data: BASE_DATA,
+        ...Object.fromEntries(
+          Object.entries(scenario.galleryParams).filter(([, v]) => v !== undefined)
+        ),
+      };
 
-// Different intensities for animation
-for (const intensity of intensities) {
-  animationOverlayItems.push({
-    id: `anim-blue-noise-i${intensity}`,
-    title: `Blue Noise ${intensity}%`,
-    description: `Animated blue noise at ${intensity}%`,
-    category: 'animation-overlay',
-    isAnimated: true,
-    params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'blue-noise', img: KING_GIF, intensity },
-  });
-}
+      if (scenario.useOverlay) {
+        params.img = fixture.publicPath;
+      }
 
-// Color modes for animation
-for (const cm of colorModes) {
-  animationOverlayItems.push({
-    id: `anim-colormode-${cm}`,
-    title: cm === 'bw' ? 'Animated B&W' : `Animated ${cm.charAt(0).toUpperCase() + cm.slice(1)}`,
-    description: `${cm} animated overlay`,
-    category: 'animation-overlay',
-    isAnimated: true,
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: KING_GIF,
-      intensity: 100,
-      colorMode: cm,
-    },
-  });
-}
-
-// ============================================
-// PREPROCESSING - Image filters
-// ============================================
-const preprocessingItems: GalleryItem[] = [];
-
-// Brightness variations
-const brightnessLevels = [-50, -25, 25, 50];
-for (const b of brightnessLevels) {
-  preprocessingItems.push({
-    id: `prep-brightness-${b > 0 ? 'p' : 'n'}${Math.abs(b)}`,
-    title: `Brightness ${b > 0 ? '+' : ''}${b}`,
-    description: `Brightness adjusted ${b > 0 ? 'brighter' : 'darker'}`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      brightness: b,
-    },
-  });
-}
-
-// Contrast variations
-const contrastLevels = [-50, 50, 100];
-for (const c of contrastLevels) {
-  preprocessingItems.push({
-    id: `prep-contrast-${c > 0 ? 'p' : 'n'}${Math.abs(c)}`,
-    title: `Contrast ${c > 0 ? '+' : ''}${c}`,
-    description: `${c > 0 ? 'High' : 'Low'} contrast`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      contrast: c,
-    },
-  });
-}
-
-// Gamma variations
-const gammaLevels = [0.5, 1.5, 2];
-for (const g of gammaLevels) {
-  preprocessingItems.push({
-    id: `prep-gamma-${String(g).replace('.', '')}`,
-    title: `Gamma ${g}`,
-    description: `Gamma correction ${g}`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      gamma: g,
-    },
-  });
-}
-
-// Saturation variations
-const saturationLevels = [-100, -50, 50, 100];
-for (const s of saturationLevels) {
-  preprocessingItems.push({
-    id: `prep-saturation-${s > 0 ? 'p' : 'n'}${Math.abs(s)}`,
-    title: `Saturation ${s > 0 ? '+' : ''}${s}`,
-    description: (() => {
-      if (s === -100) return 'Desaturated';
-      if (s > 0) return 'Oversaturated';
-      return 'Reduced saturation';
-    })(),
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      saturation: s,
-    },
-  });
-}
-
-// Blur variations
-const blurLevels = [1, 2, 4];
-for (const blur of blurLevels) {
-  preprocessingItems.push({
-    id: `prep-blur-${blur}`,
-    title: `Blur ${blur}px`,
-    description: `${blur}px gaussian blur`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      blur,
-    },
-  });
-}
-
-// Sharpen variations
-const sharpenLevels = [25, 50, 100];
-for (const sharpen of sharpenLevels) {
-  preprocessingItems.push({
-    id: `prep-sharpen-${sharpen}`,
-    title: `Sharpen ${sharpen}%`,
-    description: `${sharpen}% sharpening`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      sharpen,
-    },
-  });
-}
-
-// Posterize variations
-const posterizeLevels = [2, 4, 8];
-for (const levels of posterizeLevels) {
-  preprocessingItems.push({
-    id: `prep-posterize-${levels}`,
-    title: `Posterize ${levels}`,
-    description: `${levels} color levels`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      posterize: levels,
-    },
-  });
-}
-
-// Threshold variations
-const thresholdLevels = [64, 128, 192];
-for (const thresh of thresholdLevels) {
-  preprocessingItems.push({
-    id: `prep-threshold-${thresh}`,
-    title: `Threshold ${thresh}`,
-    description: `Binary threshold at ${thresh}`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      threshold: thresh,
-    },
-  });
-}
-
-// Edge detection
-const edgeModes = ['sobel', 'canny'];
-for (const edge of edgeModes) {
-  preprocessingItems.push({
-    id: `prep-edge-${edge}`,
-    title: `Edge ${edge.charAt(0).toUpperCase() + edge.slice(1)}`,
-    description: `${edge} edge detection`,
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      edge,
-    },
-  });
-}
-
-// Invert and hue rotate to make 30 total (multiple of 6)
-preprocessingItems.push(
-  {
-    id: 'prep-invert',
-    title: 'Inverted',
-    description: 'Inverted colors',
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      invert: true,
-    },
-  },
-  {
-    id: 'prep-hue-90',
-    title: 'Hue +90°',
-    description: 'Hue rotation 90 degrees',
-    category: 'preprocessing',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      hue: 90,
-    },
+      items.push({
+        id: scenario.useOverlay ? `${scenario.id}-${fixture.id}` : scenario.id,
+        title: scenario.useOverlay
+          ? `${scenario.title} — ${FIXTURE_DISPLAY_NAMES[fixture.id]}`
+          : scenario.title,
+        description: scenario.description,
+        category,
+        isAnimated: scenario.useOverlay ? fixture.isAnimated : false,
+        params,
+      });
+    }
   }
-);
 
-// ============================================
-// QR ENCODING - Versions and ECC
-// ============================================
-const encodingItems: GalleryItem[] = [];
-
-// Version comparisons with image
-const versions = [0, 6, 9, 12];
-for (const v of versions) {
-  encodingItems.push({
-    id: `enc-v${v}`,
-    title: v === 0 ? 'Auto Version' : `Version ${v}`,
-    description: (() => {
-      if (v === 0) return 'Automatic version selection';
-      if (v === 6) return 'Best for overlays (no center eye)';
-      return `Version ${v} QR code`;
-    })(),
-    category: 'encoding',
-    params: { data: BASE_DATA, ec: 'H', v, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100 },
-  });
+  return items;
 }
 
-// ECC level comparisons
-const eccLevels = [
-  { level: 'L', name: 'Low', desc: '7% error correction' },
-  { level: 'M', name: 'Medium', desc: '15% error correction' },
-  { level: 'Q', name: 'Quartile', desc: '25% error correction' },
-  { level: 'H', name: 'High', desc: '30% error correction' },
-];
-for (const ecc of eccLevels) {
-  encodingItems.push({
-    id: `enc-ecc-${ecc.level.toLowerCase()}`,
-    title: `ECC ${ecc.name}`,
-    description: ecc.desc,
-    category: 'encoding',
-    params: {
-      data: BASE_DATA,
-      ec: ecc.level,
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-    },
-  });
-}
+const validatedItems = buildValidatedItems();
 
-// Version + ECC combinations
-const versionEccCombos = [
-  { v: 6, ec: 'L', name: 'V6 + ECC Low' },
-  { v: 6, ec: 'H', name: 'V6 + ECC High' },
-  { v: 9, ec: 'L', name: 'V9 + ECC Low' },
-  { v: 9, ec: 'H', name: 'V9 + ECC High' },
-];
-for (const combo of versionEccCombos) {
-  encodingItems.push({
-    id: `enc-v${combo.v}-${combo.ec.toLowerCase()}`,
-    title: combo.name,
-    description: `Version ${combo.v} with ${combo.ec === 'H' ? 'high' : 'low'} error correction`,
-    category: 'encoding',
-    params: {
-      data: BASE_DATA,
-      ec: combo.ec,
-      v: combo.v,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-    },
-  });
-}
-
+const imageOverlayItems = validatedItems.filter((i) => i.category === 'image-overlay');
+const animationOverlayItems = validatedItems.filter((i) => i.category === 'animation-overlay');
+const blendModeItems = validatedItems.filter((i) => i.category === 'blend-modes');
+const colorModeItems = validatedItems.filter((i) => i.category === 'color-modes');
+const encodingItems = validatedItems.filter((i) => i.category === 'encoding');
+const powerComboItems = validatedItems.filter((i) => i.category === 'power-combos');
 // ============================================
-// DITHERING ALGORITHMS
+// IMAGE PRE-PROCESSING - Hand-crafted HERO items (10 items)
+// IDs match generate-gallery.mjs for image file alignment
 // ============================================
-const ditheringItems: GalleryItem[] = [];
+const TSUNAMI_IMG = '/tsunami.jpg';
 
-// Dither kinds
-const ditherKinds = [
-  { kind: 'error_diffusion', name: 'Error Diffusion', desc: 'Floyd-Steinberg style' },
-  { kind: 'ordered_bayer', name: 'Ordered Bayer', desc: 'Bayer matrix dithering' },
-  { kind: 'blue_noise', name: 'Blue Noise', desc: 'Blue noise threshold' },
-  { kind: 'white_noise', name: 'White Noise', desc: 'Random noise threshold' },
-  { kind: 'blue_noise_error_diffusion', name: 'Blue Noise + Error', desc: 'Hybrid blue noise' },
-  { kind: 'perceptual', name: 'Perceptual', desc: 'Luminance-weighted' },
-  { kind: 'adaptive_threshold', name: 'Adaptive', desc: 'Adaptive threshold' },
-];
-
-for (const dither of ditherKinds) {
-  ditheringItems.push({
-    id: `dither-${dither.kind.replaceAll('_', '-')}`,
-    title: dither.name,
-    description: dither.desc,
-    category: 'dithering',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      ditherKind: dither.kind,
-    },
-  });
-}
-
-// Diffusion kernels
-const diffusionKernels = [
-  { kernel: 'floyd_steinberg', name: 'Floyd-Steinberg' },
-  { kernel: 'jarvis_judice_ninke', name: 'Jarvis-Judice-Ninke' },
-  { kernel: 'stucki', name: 'Stucki' },
-  { kernel: 'atkinson', name: 'Atkinson' },
-  { kernel: 'sierra', name: 'Sierra' },
-  { kernel: 'burkes', name: 'Burkes' },
-];
-
-for (const d of diffusionKernels) {
-  ditheringItems.push({
-    id: `dither-kernel-${d.kernel.replaceAll('_', '-')}`,
-    title: d.name,
-    description: `${d.name} error diffusion`,
-    category: 'dithering',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      ditherKind: 'error_diffusion',
-      diffusionKernel: d.kernel,
-    },
-  });
-}
-
-// Dither strength variations (5 items to make 18 total)
-const ditherStrengths = [20, 40, 60, 80, 100];
-for (const strength of ditherStrengths) {
-  ditheringItems.push({
-    id: `dither-strength-${strength}`,
-    title: `Strength ${strength}%`,
-    description: `Dither strength at ${strength}%`,
-    category: 'dithering',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      ditherStrength: strength,
-    },
-  });
-}
-
-// ============================================
-// POWER COMBOS - Striking multi-feature combinations (12 items)
-// ============================================
-const powerComboItems: GalleryItem[] = [
-  {
-    id: 'combo-dots-halftone-gold',
-    title: 'Dots + Halftone Gold',
-    description: 'Dot modules with halftone overlay',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'dots',
-      finder: 'circle',
-      mode: 'halftone',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '7f5539',
-      bg: 'ffe8cc',
-    },
-  },
-  {
-    id: 'combo-diamond-blue-noise-navy',
-    title: 'Diamond + Blue Noise Navy',
-    description: 'Diamond modules with blue noise',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'diamond',
-      finder: 'rounded',
-      mode: 'blue-noise',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '001d3d',
-      bg: 'a2d2ff',
-    },
-  },
-  {
-    id: 'combo-rounded-mosaic-sunset',
-    title: 'Rounded + Mosaic Sunset',
-    description: 'Rounded modules with mosaic overlay',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'rounded',
-      finder: 'rounded',
-      mode: 'mosaic',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: 'bf0603',
-      bg: 'fff3b0',
-    },
-  },
-  {
-    id: 'combo-connected-wave-ocean',
-    title: 'Connected + Wave Ocean',
-    description: 'Connected modules with wave effect',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'connected',
-      finder: 'square',
-      mode: 'wave',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '023e8a',
-      bg: 'caf0f8',
-    },
-  },
-  {
-    id: 'combo-dots-extreme-forest',
-    title: 'Dots + Extreme Forest',
-    description: 'Maximum visibility with dots',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'dots',
-      finder: 'circle',
-      mode: 'extreme',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '1b4332',
-      bg: 'd8f3dc',
-    },
-  },
-  {
-    id: 'combo-rounded-dithered-royal',
-    title: 'Rounded + Dithered Royal',
-    description: 'Classic dithered with rounded style',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'rounded',
-      finder: 'rounded',
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '4a0080',
-      bg: 'f5e6ff',
-    },
-  },
-  {
-    id: 'combo-diamond-duotone-crimson',
-    title: 'Diamond + Duotone Crimson',
-    description: 'Duotone effect with diamond modules',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'diamond',
-      finder: 'rounded',
-      mode: 'duotone',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '9d0208',
-      bg: 'ffccd5',
-    },
-  },
-  {
-    id: 'combo-connected-pixelate-teal',
-    title: 'Connected + Pixelate Teal',
-    description: 'Pixelated overlay with connected modules',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'connected',
-      finder: 'square',
-      mode: 'pixelate',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '006d77',
-      bg: 'e0f4f5',
-    },
-  },
-  {
-    id: 'combo-dots-outline-slate',
-    title: 'Dots + Outline Slate',
-    description: 'Edge detection with dot modules',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'dots',
-      finder: 'circle',
-      mode: 'outline',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: '343a40',
-      bg: 'e9ecef',
-    },
-  },
-  {
-    id: 'combo-rounded-subpixel-coral',
-    title: 'Rounded + Subpixel Coral',
-    description: 'High-detail subpixel rendering',
-    category: 'power-combos',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'rounded',
-      finder: 'rounded',
-      mode: 'subpixel',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: 'e85d04',
-      bg: 'ffe8d6',
-    },
-  },
-  {
-    id: 'combo-anim-dots-halftone',
-    title: 'Animated Dots + Halftone',
-    description: 'Animated halftone with dot modules',
-    category: 'power-combos',
-    isAnimated: true,
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'dots',
-      finder: 'circle',
-      mode: 'halftone',
-      img: KING_GIF,
-      intensity: 100,
-      fg: '1a1a2e',
-      bg: 'eef1ff',
-    },
-  },
-  {
-    id: 'combo-anim-rounded-blue-noise',
-    title: 'Animated Rounded + Blue Noise',
-    description: 'Animated blue noise with rounded',
-    category: 'power-combos',
-    isAnimated: true,
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      style: 'rounded',
-      finder: 'rounded',
-      mode: 'blue-noise',
-      img: KING_GIF,
-      intensity: 100,
-      fg: '702459',
-      bg: 'fff5f7',
-    },
-  },
+const preprocessingItems: GalleryItem[] = [
+  { id: 'prep-brightness-p50', title: 'Brightness +50', description: 'Brightness-boosted overlay', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, brightness: 50 } },
+  { id: 'prep-contrast-p100', title: 'High Contrast', description: 'Maximum contrast enhancement', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, contrast: 100 } },
+  { id: 'prep-gamma-05', title: 'Gamma Darkened', description: 'Low gamma for dramatic shadows', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, gamma: 0.5 } },
+  { id: 'prep-saturation-n100', title: 'Desaturated', description: 'Full desaturation effect', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, saturation: -100 } },
+  { id: 'prep-saturation-p100', title: 'Full Vibrance', description: 'Maximum saturation boost', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, saturation: 100 } },
+  { id: 'prep-blur-4', title: 'Soft Blur', description: 'Dreamy soft blur effect', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, blur: 4 } },
+  { id: 'prep-sharpen-100', title: 'Sharpened Detail', description: 'Maximum sharpening for crisp detail', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, sharpen: 100 } },
+  { id: 'prep-posterize-4', title: 'Posterized', description: 'Bold 4-level posterization', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, posterize: 4 } },
+  { id: 'prep-edge-sobel', title: 'Sobel Edge Detection', description: 'Outline-style edge filter', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, edge: 'sobel' } },
+  { id: 'prep-invert', title: 'Inverted', description: 'Negative/inverted overlay', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, invert: true } },
 ];
 
 // ============================================
-// BLEND MODES (for advanced overlays)
+// DITHERING ALGORITHMS - Hand-crafted HERO items (10 items)
+// IDs match generate-gallery.mjs for image file alignment
 // ============================================
-const blendModeItems: GalleryItem[] = [];
-
-// Image blend with different color schemes
-const blendColors = [
-  { name: 'Classic', fg: '000000', bg: 'ffffff' },
-  { name: 'Navy', fg: '1a365d', bg: 'ebf8ff' },
-  { name: 'Wine', fg: '702459', bg: 'fff5f7' },
-  { name: 'Forest', fg: '1c4532', bg: 'f0fff4' },
+const ditheringItems: GalleryItem[] = [
+  { id: 'dither-error-diffusion', title: 'Error Diffusion', description: 'Classic error diffusion dithering', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion' } },
+  { id: 'dither-ordered-bayer', title: 'Ordered Bayer', description: 'Bayer matrix dithering pattern', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'ordered_bayer' } },
+  { id: 'dither-blue-noise', title: 'Blue Noise', description: 'Smooth blue noise threshold', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'blue_noise' } },
+  { id: 'dither-perceptual', title: 'Perceptual', description: 'Perceptually-weighted adaptive dithering', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'perceptual' } },
+  { id: 'dither-adaptive-threshold', title: 'Adaptive Threshold', description: 'Locally adaptive threshold dithering', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'adaptive_threshold' } },
+  { id: 'dither-kernel-floyd-steinberg', title: 'Floyd-Steinberg', description: 'Classic Floyd-Steinberg diffusion kernel', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion', diffusionKernel: 'floyd_steinberg' } },
+  { id: 'dither-kernel-atkinson', title: 'Atkinson', description: 'Classic Macintosh Atkinson kernel', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion', diffusionKernel: 'atkinson' } },
+  { id: 'dither-kernel-stucki', title: 'Stucki', description: 'High-quality Stucki diffusion kernel', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion', diffusionKernel: 'stucki' } },
+  { id: 'dither-strength-20', title: 'Subtle Dither (20%)', description: 'Light dithering at 20% strength', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherStrength: 20 } },
+  { id: 'dither-strength-100', title: 'Full Dither (100%)', description: 'Maximum dithering strength', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherStrength: 100 } },
 ];
-
-for (const color of blendColors) {
-  blendModeItems.push({
-    id: `blend-${color.name.toLowerCase()}`,
-    title: `${color.name} Blend`,
-    description: `Dithered overlay with ${color.name.toLowerCase()} palette`,
-    category: 'blend-modes',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'dithered',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: color.fg,
-      bg: color.bg,
-    },
-  });
-}
-
-// Halftone with colors
-for (const color of blendColors) {
-  blendModeItems.push({
-    id: `halftone-${color.name.toLowerCase()}`,
-    title: `${color.name} Halftone`,
-    description: `Halftone with ${color.name.toLowerCase()} palette`,
-    category: 'blend-modes',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'halftone',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: color.fg,
-      bg: color.bg,
-    },
-  });
-}
-
-// Mosaic with colors (4 more to make 12 total)
-for (const color of blendColors) {
-  blendModeItems.push({
-    id: `mosaic-${color.name.toLowerCase()}`,
-    title: `${color.name} Mosaic`,
-    description: `Mosaic with ${color.name.toLowerCase()} palette`,
-    category: 'blend-modes',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: 'mosaic',
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      fg: color.fg,
-      bg: color.bg,
-    },
-  });
-}
-
-// ============================================
-// COLOR MODES - Processing modes (6 items)
-// ============================================
-const colorModeItems: GalleryItem[] = [];
-
-// Color modes with different overlay modes (reduced to 6 most distinct)
-const modeColorCombos = [
-  { overlayMode: 'dithered', colorMode: 'color' },
-  { overlayMode: 'dithered', colorMode: 'grayscale' },
-  { overlayMode: 'blue-noise', colorMode: 'color' },
-  { overlayMode: 'blue-noise', colorMode: 'bw' },
-  { overlayMode: 'halftone', colorMode: 'color' },
-  { overlayMode: 'halftone', colorMode: 'bw' },
-];
-
-for (const combo of modeColorCombos) {
-  const overlayName = combo.overlayMode
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
-  const colorName =
-    combo.colorMode === 'bw'
-      ? 'B&W'
-      : combo.colorMode.charAt(0).toUpperCase() + combo.colorMode.slice(1);
-  colorModeItems.push({
-    id: `cmode-${combo.overlayMode}-${combo.colorMode}`,
-    title: `${overlayName} ${colorName}`,
-    description: `${overlayName} in ${colorName}`,
-    category: 'color-modes',
-    params: {
-      data: BASE_DATA,
-      ec: 'H',
-      v: 6,
-      mode: combo.overlayMode,
-      img: TSUNAMI_IMG,
-      intensity: 100,
-      colorMode: combo.colorMode,
-    },
-  });
-}
-
-// ============================================
-// VALIDATED SHOWCASE - Scan-approved canonical scenarios
-// ============================================
-const validatedShowcaseItems: GalleryItem[] = buildScanShowcaseSeeds(BASE_DATA, TSUNAMI_IMG).map(
-  (seed) => ({
-    id: seed.id,
-    title: seed.title,
-    description: seed.description,
-    category: 'validated-showcase',
-    params: Object.fromEntries(
-      Object.entries(seed.params).filter(([, v]) => v !== undefined)
-    ) as Record<string, string | number | boolean>,
-  })
-);
 
 // ============================================
 // ALL GALLERY SECTIONS
@@ -1248,65 +495,58 @@ export const gallerySections: GallerySection[] = [
   {
     id: 'image-overlay',
     title: 'Image Overlays',
-    description: 'Static image overlays with different blend modes',
+    description: 'Scan-validated image overlays across all fixture images',
     icon: 'Image',
     items: imageOverlayItems,
   },
   {
     id: 'animation-overlay',
     title: 'Animated Overlays',
-    description: 'Animated GIF overlays with different blend modes',
+    description: 'Scan-validated animated overlays across all fixture images',
     icon: 'Film',
     items: animationOverlayItems,
   },
   {
     id: 'blend-modes',
-    title: 'Blend Modes',
-    description: 'Different color blending with image overlays',
+    title: 'Preservation Modes',
+    description: 'Scan-validated functional module preservation strategies',
     icon: 'Layers',
     items: blendModeItems,
   },
   {
     id: 'color-modes',
-    title: 'Color Processing',
-    description: 'Color, grayscale, and black & white processing',
+    title: 'Output Modes',
+    description: 'Scan-validated output rendering modes',
     icon: 'Contrast',
     items: colorModeItems,
   },
   {
-    id: 'preprocessing',
-    title: 'Image Preprocessing',
-    description: 'Brightness, contrast, gamma, blur, sharpen, posterize, edge detection',
-    icon: 'Sliders',
-    items: preprocessingItems,
-  },
-  {
     id: 'encoding',
     title: 'QR Encoding',
-    description: 'Different QR versions and error correction levels',
+    description: 'Scan-validated QR versions and error correction levels',
     icon: 'Settings2',
     items: encodingItems,
   },
   {
+    id: 'preprocessing',
+    title: 'Image Pre-Processing',
+    description: 'Brightness, contrast, gamma, sharpen, posterize, and edge detection filters',
+    icon: 'Sliders',
+    items: preprocessingItems,
+  },
+  {
     id: 'dithering',
     title: 'Dithering Algorithms',
-    description: 'Different dithering methods and error diffusion kernels',
+    description: 'Different dithering algorithms and diffusion kernels for overlay rendering',
     icon: 'Grid3x3',
     items: ditheringItems,
   },
   {
     id: 'power-combos',
     title: 'Power Combos',
-    description: 'Striking multi-feature combinations showcasing ANQR capabilities',
+    description: 'Scan-validated render styles, frames, and watermark combinations',
     icon: 'Sparkles',
     items: powerComboItems,
-  },
-  {
-    id: 'validated-showcase',
-    title: 'Validated Showcase',
-    description: 'Scan-verified overlay configurations tested across canonical fixtures',
-    icon: 'ShieldCheck',
-    items: validatedShowcaseItems,
   },
 ];
 

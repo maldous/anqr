@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 
+// Copies scan-validated Tier A artifacts from reports/gallery-artifacts/tier-a/
+// to public/gallery/ with filenames matching gallery item IDs.
+//
+// Tier A artifact naming: tier-a__{scenario-id}__{fixture-id}.{ext}
+// Gallery item naming:    {scenario-id}-{fixture-id}.{ext}
+//
+// This script is the source of truth for overlay gallery images.
+// Non-overlay images (plain, content-types, styles, colors) are generated
+// by generate-gallery.mjs via Puppeteer.
+
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const MATRIX_PATH = path.join(ROOT, 'reports', 'gallery-scan-matrix.json');
+const TIER_A_DIR = path.join(ROOT, 'reports', 'gallery-artifacts', 'tier-a');
 const GALLERY_DIR = path.join(ROOT, 'public', 'gallery');
-const MANIFEST_PATH = path.join(GALLERY_DIR, 'scan-showcase-manifest.json');
 
 async function exists(filePath) {
   try {
@@ -20,49 +29,89 @@ async function exists(filePath) {
 }
 
 async function main() {
-  if (!(await exists(MATRIX_PATH))) {
+  if (!(await exists(TIER_A_DIR))) {
     throw new Error(
-      `Missing matrix report at ${MATRIX_PATH}. Run tests/unit/gallery-scan-matrix.spec.ts first.`
+      `Missing Tier A artifacts at ${TIER_A_DIR}. Run make test:gallery:matrix first.`
     );
   }
 
-  const matrix = JSON.parse(await fs.readFile(MATRIX_PATH, 'utf8'));
-  const candidates = Array.isArray(matrix.galleryCandidates) ? matrix.galleryCandidates : [];
   await fs.mkdir(GALLERY_DIR, { recursive: true });
 
+  const files = await fs.readdir(TIER_A_DIR);
+  const tierAFiles = files.filter((f) => f.startsWith('tier-a__'));
+
+  // Non-overlay scenarios produce identical output for all fixtures.
+  // Only copy the first fixture (tsunami) and name it without the fixture suffix.
+  const NON_OVERLAY_SCENARIOS = new Set(['render-gradient-linear', 'render-frame-sticker']);
+
   const copied = [];
-  for (const candidate of candidates) {
-    const scenarioId = candidate.scenarioId;
-    const src = path.join(ROOT, candidate.artifactPath);
-    if (!(await exists(src))) continue;
-    const isAnimated = candidate.isAnimated ?? matrix.fixtures?.find(f => f.id === candidate.selectedFixtureId)?.isAnimated ?? false;
-    const ext = isAnimated ? 'gif' : 'png';
-    const dstFile = `scan-${scenarioId}.${ext}`;
-    const dst = path.join(GALLERY_DIR, dstFile);
+  const skipped = [];
+
+  for (const filename of tierAFiles) {
+    // Parse: tier-a__{scenario}__{fixture}.{ext}
+    const match = filename.match(/^tier-a__(.+)__(.+)\.(png|gif)$/);
+    if (!match) {
+      skipped.push({ filename, reason: 'unrecognized naming pattern' });
+      continue;
+    }
+
+    const [, scenarioId, fixtureId, ext] = match;
+
+    // For non-overlay scenarios, only copy the tsunami fixture (canonical)
+    // and name it without the fixture suffix to match gallery item ID
+    if (NON_OVERLAY_SCENARIOS.has(scenarioId)) {
+      if (fixtureId !== 'tsunami') {
+        skipped.push({ filename, reason: 'non-overlay duplicate (tsunami is canonical)' });
+        continue;
+      }
+      const galleryFilename = `${scenarioId}.${ext}`;
+      const src = path.join(TIER_A_DIR, filename);
+      const dst = path.join(GALLERY_DIR, galleryFilename);
+      await fs.copyFile(src, dst);
+      const stat = await fs.stat(dst);
+      copied.push({ scenarioId, fixtureId: 'canonical', sourceFile: filename, galleryFile: galleryFilename, bytes: stat.size });
+      continue;
+    }
+
+    const galleryFilename = `${scenarioId}-${fixtureId}.${ext}`;
+
+    const src = path.join(TIER_A_DIR, filename);
+    const dst = path.join(GALLERY_DIR, galleryFilename);
+
     await fs.copyFile(src, dst);
+    const stat = await fs.stat(dst);
+
     copied.push({
       scenarioId,
-      selectedFixtureId: candidate.selectedFixtureId,
-      isAnimated: candidate.isAnimated ?? false,
-      heroPriority: candidate.heroPriority ?? 0,
-      galleryEligible: candidate.galleryEligible ?? false,
-      sourceArtifact: candidate.artifactPath,
-      galleryFile: dstFile,
+      fixtureId,
+      sourceFile: filename,
+      galleryFile: galleryFilename,
+      bytes: stat.size,
     });
   }
 
-  const manifest = {
-    generatedAt: new Date().toISOString(),
-    sourceReport: 'reports/gallery-scan-matrix.json',
-    copiedCount: copied.length,
-    tierA: matrix.tierA ?? null,
-    tierB: matrix.tierB ?? null,
-    items: copied,
-  };
-  await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+  // Summary
+  console.log(`\nCopied ${copied.length} Tier A artifacts to public/gallery/`);
+  if (skipped.length > 0) {
+    console.log(`Skipped ${skipped.length} files:`);
+    for (const s of skipped) {
+      console.log(`  ${s.filename}: ${s.reason}`);
+    }
+  }
 
-  console.log(`Copied ${copied.length} scan-validated showcase images to public/gallery.`);
-  console.log(`Wrote ${MANIFEST_PATH}`);
+  // Group by scenario for display
+  const byScenario = new Map();
+  for (const item of copied) {
+    if (!byScenario.has(item.scenarioId)) byScenario.set(item.scenarioId, []);
+    byScenario.get(item.scenarioId).push(item.fixtureId);
+  }
+
+  console.log(`\nScenarios (${byScenario.size}):`);
+  for (const [scenario, fixtures] of byScenario) {
+    console.log(`  ${scenario}: ${fixtures.join(', ')}`);
+  }
+
+  console.log('\nDone!\n');
 }
 
 main().catch((err) => {

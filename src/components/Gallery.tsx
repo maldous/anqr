@@ -17,7 +17,6 @@ import {
   QrCode,
   Settings2,
   Shapes,
-  ShieldCheck,
   Sliders,
   Sparkles,
 } from 'lucide-react';
@@ -44,10 +43,9 @@ const iconRegistry: Record<string, LucideIcon> = {
   Film,
   Layers,
   Contrast,
-  Sliders,
   Settings2,
+  Sliders,
   Grid3x3,
-  ShieldCheck,
   Sparkles,
 };
 
@@ -383,15 +381,13 @@ export function Gallery({ filter }: GalleryProps) {
 
         {/* Gallery content */}
         <div className="max-w-7xl mx-auto px-4 py-4">
-          {displaySections.map((section, index) => (
+          {displaySections.map((section, _index) => (
             <GallerySectionComponent
               key={section.id}
               section={section}
               isExpanded={expandedSections.has(section.id)}
               onToggle={() => toggleSection(section.id)}
-              showAdAfter={
-                index < displaySections.length - 1 ? `gallery-after-${section.id}` : undefined
-              }
+              showAdAfter={`gallery-after-${section.id}`}
             />
           ))}
         </div>

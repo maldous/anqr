@@ -36,6 +36,8 @@ type SlotName =
   | 'terms-bottom'
   | 'contact-top'
   | 'contact-bottom'
+  | 'translate-top'
+  | 'translate-bottom'
   // Gallery section divider ads
   | 'gallery-after-plain'
   | 'gallery-after-content-types'
@@ -87,6 +89,8 @@ const SLOT_IDS: Partial<Record<SlotName, string>> = {
   'terms-bottom': import.meta.env.VITE_ADSENSE_SLOT_TERMS_BOTTOM,
   'contact-top': import.meta.env.VITE_ADSENSE_SLOT_CONTACT_TOP,
   'contact-bottom': import.meta.env.VITE_ADSENSE_SLOT_CONTACT_BOTTOM,
+  'translate-top': import.meta.env.VITE_ADSENSE_SLOT_TRANSLATE_TOP,
+  'translate-bottom': import.meta.env.VITE_ADSENSE_SLOT_TRANSLATE_BOTTOM,
   // Gallery section divider ads
   'gallery-after-plain': import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_PLAIN,
   'gallery-after-content-types': import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_CONTENT_TYPES,

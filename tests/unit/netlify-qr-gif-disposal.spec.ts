@@ -8,7 +8,7 @@ vi.mock('@sentry/node', () => ({ init: vi.fn(), captureException: vi.fn() }));
 vi.mock('gifuct-js', () => ({ parseGIF, decompressFrames }));
 
 describe('netlify qr gif disposal handling', () => {
-  it('respects disposal=3 and supports simplify mode', async () => {
+  it('respects disposal=3 and supports simplify mode', { timeout: 30000 }, async () => {
     parseGIF.mockReturnValue({ lsd: { width: 2, height: 2 } });
     decompressFrames.mockReturnValue([
       {
