@@ -378,7 +378,8 @@ function buildValidatedItems(): GalleryItem[] {
 
   for (const scenario of GALLERY_SCAN_SCENARIOS) {
     if (!scenario.galleryEligible) continue;
-    if (scenario.featureGroup === 'preprocessing' || scenario.featureGroup === 'dithering') continue;
+    if (scenario.featureGroup === 'preprocessing' || scenario.featureGroup === 'dithering')
+      continue;
 
     const category = FEATURE_GROUP_TO_CATEGORY[scenario.featureGroup];
     if (!category) continue;

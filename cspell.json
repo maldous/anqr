@@ -38,7 +38,7 @@
     "maxicode", "mecard", "midtones",
     "napas", "neuquant", "nominatim", "nosonar", "npci", "nppa", "nric",
     "octree", "otpauth", "oversaturated",
-    "paynow", "posterize", "ppmi", "promptpay",
+    "paynow", "posterize", "posterized", "ppmi", "promptpay",
     "qart", "qrart", "qrcode", "qrgen", "qris", "qrph", "qrpush", "qrrs",
     "quantizer", "refreshtoken",
     "regen", "remask", "rmqr", "rootable", "rootability", "rrggbb", "rrggbbaa", "rrule",
