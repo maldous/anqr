@@ -24,9 +24,7 @@ export type GalleryCategory =
   | 'animation-overlay'
   | 'blend-modes'
   | 'color-modes'
-  | 'preprocessing'
   | 'encoding'
-  | 'dithering'
   | 'power-combos';
 
 export interface GalleryItem {
@@ -365,7 +363,7 @@ const FIXTURE_DISPLAY_NAMES: Record<CanonicalFixtureId, string> = {
   test: 'Test',
 };
 
-const FEATURE_GROUP_TO_CATEGORY: Record<ScenarioFeatureGroup, GalleryCategory> = {
+const FEATURE_GROUP_TO_CATEGORY: Partial<Record<ScenarioFeatureGroup, GalleryCategory>> = {
   overlay: 'image-overlay',
   animation: 'animation-overlay',
   preservation: 'blend-modes',
@@ -373,8 +371,6 @@ const FEATURE_GROUP_TO_CATEGORY: Record<ScenarioFeatureGroup, GalleryCategory> =
   encoding: 'encoding',
   render: 'power-combos',
   watermark: 'power-combos',
-  preprocessing: 'preprocessing',
-  dithering: 'dithering',
 };
 
 function buildValidatedItems(): GalleryItem[] {
@@ -385,6 +381,7 @@ function buildValidatedItems(): GalleryItem[] {
     if (scenario.featureGroup === 'preprocessing' || scenario.featureGroup === 'dithering') continue;
 
     const category = FEATURE_GROUP_TO_CATEGORY[scenario.featureGroup];
+    if (!category) continue;
 
     const fixturesToUse = scenario.useOverlay ? CANONICAL_FIXTURES : [CANONICAL_FIXTURES[0]];
 
@@ -424,41 +421,6 @@ const blendModeItems = validatedItems.filter((i) => i.category === 'blend-modes'
 const colorModeItems = validatedItems.filter((i) => i.category === 'color-modes');
 const encodingItems = validatedItems.filter((i) => i.category === 'encoding');
 const powerComboItems = validatedItems.filter((i) => i.category === 'power-combos');
-// ============================================
-// IMAGE PRE-PROCESSING - Hand-crafted HERO items (10 items)
-// IDs match generate-gallery.mjs for image file alignment
-// ============================================
-const TSUNAMI_IMG = '/tsunami.jpg';
-
-const preprocessingItems: GalleryItem[] = [
-  { id: 'prep-brightness-p50', title: 'Brightness +50', description: 'Brightness-boosted overlay', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, brightness: 50 } },
-  { id: 'prep-contrast-p100', title: 'High Contrast', description: 'Maximum contrast enhancement', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, contrast: 100 } },
-  { id: 'prep-gamma-05', title: 'Gamma Darkened', description: 'Low gamma for dramatic shadows', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, gamma: 0.5 } },
-  { id: 'prep-saturation-n100', title: 'Desaturated', description: 'Full desaturation effect', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, saturation: -100 } },
-  { id: 'prep-saturation-p100', title: 'Full Vibrance', description: 'Maximum saturation boost', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, saturation: 100 } },
-  { id: 'prep-blur-4', title: 'Soft Blur', description: 'Dreamy soft blur effect', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, blur: 4 } },
-  { id: 'prep-sharpen-100', title: 'Sharpened Detail', description: 'Maximum sharpening for crisp detail', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, sharpen: 100 } },
-  { id: 'prep-posterize-4', title: 'Posterized', description: 'Bold 4-level posterization', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, posterize: 4 } },
-  { id: 'prep-edge-sobel', title: 'Sobel Edge Detection', description: 'Outline-style edge filter', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, edge: 'sobel' } },
-  { id: 'prep-invert', title: 'Inverted', description: 'Negative/inverted overlay', category: 'preprocessing', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, invert: true } },
-];
-
-// ============================================
-// DITHERING ALGORITHMS - Hand-crafted HERO items (10 items)
-// IDs match generate-gallery.mjs for image file alignment
-// ============================================
-const ditheringItems: GalleryItem[] = [
-  { id: 'dither-error-diffusion', title: 'Error Diffusion', description: 'Classic error diffusion dithering', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion' } },
-  { id: 'dither-ordered-bayer', title: 'Ordered Bayer', description: 'Bayer matrix dithering pattern', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'ordered_bayer' } },
-  { id: 'dither-blue-noise', title: 'Blue Noise', description: 'Smooth blue noise threshold', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'blue_noise' } },
-  { id: 'dither-perceptual', title: 'Perceptual', description: 'Perceptually-weighted adaptive dithering', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'perceptual' } },
-  { id: 'dither-adaptive-threshold', title: 'Adaptive Threshold', description: 'Locally adaptive threshold dithering', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'adaptive_threshold' } },
-  { id: 'dither-kernel-floyd-steinberg', title: 'Floyd-Steinberg', description: 'Classic Floyd-Steinberg diffusion kernel', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion', diffusionKernel: 'floyd_steinberg' } },
-  { id: 'dither-kernel-atkinson', title: 'Atkinson', description: 'Classic Macintosh Atkinson kernel', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion', diffusionKernel: 'atkinson' } },
-  { id: 'dither-kernel-stucki', title: 'Stucki', description: 'High-quality Stucki diffusion kernel', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherKind: 'error_diffusion', diffusionKernel: 'stucki' } },
-  { id: 'dither-strength-20', title: 'Subtle Dither (20%)', description: 'Light dithering at 20% strength', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherStrength: 20 } },
-  { id: 'dither-strength-100', title: 'Full Dither (100%)', description: 'Maximum dithering strength', category: 'dithering', params: { data: BASE_DATA, ec: 'H', v: 6, mode: 'dithered', img: TSUNAMI_IMG, intensity: 100, ditherStrength: 100 } },
-];
 
 // ============================================
 // ALL GALLERY SECTIONS
@@ -526,20 +488,6 @@ export const gallerySections: GallerySection[] = [
     description: 'Scan-validated QR versions and error correction levels',
     icon: 'Settings2',
     items: encodingItems,
-  },
-  {
-    id: 'preprocessing',
-    title: 'Image Pre-Processing',
-    description: 'Brightness, contrast, gamma, sharpen, posterize, and edge detection filters',
-    icon: 'Sliders',
-    items: preprocessingItems,
-  },
-  {
-    id: 'dithering',
-    title: 'Dithering Algorithms',
-    description: 'Different dithering algorithms and diffusion kernels for overlay rendering',
-    icon: 'Grid3x3',
-    items: ditheringItems,
   },
   {
     id: 'power-combos',
