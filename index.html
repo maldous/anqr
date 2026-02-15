@@ -179,16 +179,17 @@
     <link rel="alternate" hreflang="zh-tw" href="https://anqr.link/?lang=zh-TW" />
     <link rel="alternate" hreflang="zu" href="https://anqr.link/?lang=zu" />
     
-    <!-- Preconnect to third-party origins for faster loading -->
+    <!-- Preconnect to highest-value origins only (max 4 per PSI guidance) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
     <link rel="preconnect" href="https://cdn.iubenda.com">
-    <link rel="preconnect" href="https://cs.iubenda.com">
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com">
-    <link rel="preconnect" href="https://www.googletagmanager.com">
-    <!-- DNS prefetch for additional domains -->
+    <!-- DNS prefetch for lower-priority third-party domains -->
+    <link rel="dns-prefetch" href="https://cs.iubenda.com">
     <link rel="dns-prefetch" href="https://embeds.iubenda.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://fundingchoicesmessages.google.com">
     
     <!-- Google Fonts - Noto Sans Latin only for initial load -->
     <!-- Other script fonts (Devanagari, SC, Tamil, Thai, etc.) are loaded dynamically by src/i18n/index.ts -->

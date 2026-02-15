@@ -8,7 +8,9 @@ export type ScenarioFeatureGroup =
   | 'encoding'
   | 'animation'
   | 'output'
-  | 'watermark';
+  | 'watermark'
+  | 'preprocessing'
+  | 'dithering';
 
 export interface CanonicalFixture {
   id: CanonicalFixtureId;
@@ -626,33 +628,201 @@ export const GALLERY_SCAN_SCENARIOS: readonly GalleryScanScenario[] = [
     },
     galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'grayscale', v: 6, ec: 'H' },
   },
+  // --- Preprocessing scenarios (scan matrix validation only — gallery items are hand-crafted in gallery-items.ts) ---
+  {
+    id: 'preprocess-contrast',
+    title: 'High Contrast',
+    description: 'Maximum contrast enhancement on overlay image',
+    featureGroup: 'preprocessing',
+    heroPriority: 52,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      filterContrast: 100,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', contrast: 100, v: 6, ec: 'H' },
+  },
+  {
+    id: 'preprocess-brightness',
+    title: 'Bright Lift',
+    description: 'Brightness-boosted overlay for light compositions',
+    featureGroup: 'preprocessing',
+    heroPriority: 51,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      filterBrightness: 50,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', brightness: 50, v: 6, ec: 'H' },
+  },
+  {
+    id: 'preprocess-gamma',
+    title: 'Gamma Darkened',
+    description: 'Low gamma for dramatic shadow emphasis',
+    featureGroup: 'preprocessing',
+    heroPriority: 50,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      filterGamma: 0.5,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', gamma: 0.5, v: 6, ec: 'H' },
+  },
+  {
+    id: 'preprocess-sharpen',
+    title: 'Sharpened Detail',
+    description: 'Maximum sharpening for crisp detail retention',
+    featureGroup: 'preprocessing',
+    heroPriority: 49,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      filterSharpen: 100,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', sharpen: 100, v: 6, ec: 'H' },
+  },
+  {
+    id: 'preprocess-posterize',
+    title: 'Posterized',
+    description: 'Posterize to 4 levels for bold graphic effect',
+    featureGroup: 'preprocessing',
+    heroPriority: 48,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      filterPosterize: 4,
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', posterize: 4, v: 6, ec: 'H' },
+  },
+  {
+    id: 'preprocess-edge-sobel',
+    title: 'Sobel Edge Detection',
+    description: 'Sobel edge filter for outline-style overlay',
+    featureGroup: 'preprocessing',
+    heroPriority: 47,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      filterEdgeDetect: true,
+      filterEdgeMode: 'sobel',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', edge: 'sobel', v: 6, ec: 'H' },
+  },
+  // --- Dithering algorithm scenarios (scan matrix validation only — gallery items are hand-crafted in gallery-items.ts) ---
+  {
+    id: 'dither-error-diffusion',
+    title: 'Error Diffusion',
+    description: 'Classic error diffusion dithering',
+    featureGroup: 'dithering',
+    heroPriority: 46,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      ditherKind: 'error_diffusion',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', ditherKind: 'error_diffusion', v: 6, ec: 'H' },
+  },
+  {
+    id: 'dither-ordered-bayer',
+    title: 'Ordered Bayer',
+    description: 'Ordered Bayer matrix dithering pattern',
+    featureGroup: 'dithering',
+    heroPriority: 45,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      ditherKind: 'ordered_bayer',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', ditherKind: 'ordered_bayer', v: 6, ec: 'H' },
+  },
+  {
+    id: 'dither-blue-noise',
+    title: 'Blue Noise Dither',
+    description: 'Smooth blue noise threshold dithering',
+    featureGroup: 'dithering',
+    heroPriority: 44,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      ditherKind: 'blue_noise',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', ditherKind: 'blue_noise', v: 6, ec: 'H' },
+  },
+  {
+    id: 'dither-perceptual',
+    title: 'Perceptual',
+    description: 'Perceptually-weighted adaptive dithering',
+    featureGroup: 'dithering',
+    heroPriority: 43,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      ditherKind: 'perceptual',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', ditherKind: 'perceptual', v: 6, ec: 'H' },
+  },
+  {
+    id: 'dither-floyd-steinberg',
+    title: 'Floyd-Steinberg',
+    description: 'Classic Floyd-Steinberg error diffusion kernel',
+    featureGroup: 'dithering',
+    heroPriority: 42,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      ditherKind: 'error_diffusion',
+      diffusionKernel: 'floyd_steinberg',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', ditherKind: 'error_diffusion', diffusionKernel: 'floyd_steinberg', v: 6, ec: 'H' },
+  },
+  {
+    id: 'dither-atkinson',
+    title: 'Atkinson',
+    description: 'Classic Macintosh Atkinson dithering kernel',
+    featureGroup: 'dithering',
+    heroPriority: 41,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: {
+      overlayMode: 'dithered',
+      overlayIntensity: 70,
+      colorMode: 'color',
+      ditherKind: 'error_diffusion',
+      diffusionKernel: 'atkinson',
+    },
+    galleryParams: { mode: 'dithered', intensity: 70, colorMode: 'color', ditherKind: 'error_diffusion', diffusionKernel: 'atkinson', v: 6, ec: 'H' },
+  },
 ];
-
-export interface ScanShowcaseGalleryItemSeed {
-  id: string;
-  title: string;
-  description: string;
-  category: 'validated-showcase';
-  params: Record<string, string | number | boolean>;
-}
-
-export function buildScanShowcaseSeeds(
-  baseData: string = 'https://anqr.link',
-  defaultOverlayPath: string = '/tsunami.jpg'
-): ScanShowcaseGalleryItemSeed[] {
-  return GALLERY_SCAN_SCENARIOS.filter((s) => s.galleryEligible)
-    .sort((a, b) => b.heroPriority - a.heroPriority)
-    .map((scenario) => ({
-      id: `scan-${scenario.id}`,
-      title: scenario.title,
-      description: scenario.description,
-      category: 'validated-showcase',
-      params: {
-        data: baseData,
-        ec: 'H',
-        v: 6,
-        ...(scenario.useOverlay ? { img: defaultOverlayPath } : {}),
-        ...scenario.galleryParams,
-      },
-    }));
-}

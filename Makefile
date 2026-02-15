@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif gallery\:auto sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources
+.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources
 
 # ============================================
 # Help
@@ -7,6 +7,10 @@
 help:
 	@echo ""
 	@echo "ANQR Makefile - Available targets:"
+	@echo ""
+	@echo "  FULL PIPELINE"
+	@echo "    make all            Complete fresh-to-production pipeline"
+	@echo "                        (install → build → gallery → sitemap → test → deploy)"
 	@echo ""
 	@echo "  WEB DEVELOPMENT"
 	@echo "    make install        Install npm dependencies + git hooks"
@@ -25,6 +29,7 @@ help:
 	@echo "    make icons          Generate PWA icons"
 	@echo "    make icons:android  Generate Android launcher icons"
 	@echo "    make gallery        Generate gallery images (PNG)"
+	@echo "    make gallery:fresh  Clean + regenerate all gallery images from scratch"
 	@echo "    make gallery:gif    Generate gallery images (with GIFs)"
 	@echo "    make gallery:auto   Run scan matrix → copy approved artifacts to gallery"
 	@echo "    make sitemap        Generate sitemap.xml"
@@ -72,8 +77,8 @@ help:
 	@echo "    make sonar          Run SonarQube analysis (requires local server)"
 	@echo "    make sonar-report   Get full issues report from SonarQube"
 	@echo ""
-	@echo "  UI TESTING (Playwright)"
-	@echo "    make quality        Run comprehensive quality gate (18 checks: lint, types, coverage, deps, security, spelling)"
+	@echo "  TESTING & QUALITY"
+	@echo "    make quality        Run comprehensive quality gate (19 checks: lint, types, coverage, deps, security, spelling, bundle)"
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:qr:artifact  Run dithered scan gate and save current tsunami/king artifacts"
@@ -193,6 +198,9 @@ BUNDLE_BUDGET_NON_I18N_TOTAL_KIB ?= 2200
 BUNDLE_BUDGET_I18N_WARN_KIB ?= 22000
 BUNDLE_BUDGET_I18N_MAX_KIB ?= 24000
 
+# Gallery generation server port (default matches dev server).
+GALLERY_PORT ?= 5173
+
 resources:
 	@echo ""
 	@echo "ANQR Resource Profile (auto-detected)"
@@ -207,6 +215,39 @@ resources:
 	@echo "  Matrix run shards:    $(SCAN_MATRIX_SHARDS)"
 	@echo "  Playwright workers:   $(PLAYWRIGHT_WORKERS)"
 	@echo ""
+
+# ============================================
+# Full Production Pipeline
+# ============================================
+# Complete pipeline from fresh checkout to production-ready deploy.
+# Starts a temporary preview server for gallery capture, then tears it down.
+
+all:
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — Full Production Pipeline"
+	@echo "============================================"
+	$(MAKE) install
+	$(MAKE) build
+	@echo "Starting preview server for gallery generation..."
+	@npx vite preview --port 4174 & echo $$! > .gallery-server.pid; \
+		for i in 1 2 3 4 5 6 7 8 9 10; do \
+			curl -s -o /dev/null http://localhost:4174/ && break; \
+			sleep 1; \
+		done
+	$(MAKE) gallery:fresh GALLERY_PORT=4174
+	@kill $$(cat .gallery-server.pid) 2>/dev/null; rm -f .gallery-server.pid
+	$(MAKE) sitemap
+	# Note: test + deploy each do their own builds (test for bundle budget, deploy for Sentry sourcemaps)
+	$(MAKE) test
+	$(MAKE) test:overlay:audit
+	$(MAKE) test:gallery:matrix
+	$(MAKE) signoff
+	$(MAKE) deploy
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — Production pipeline complete!"
+	@echo "============================================"
 
 # ============================================
 # AdSense Configuration (for Web - anqr.link)
@@ -251,6 +292,8 @@ export VITE_ADSENSE_SLOT_TERMS_TOP := 5810949978
 export VITE_ADSENSE_SLOT_TERMS_BOTTOM := 5814819407
 export VITE_ADSENSE_SLOT_CONTACT_TOP := 4497868307
 export VITE_ADSENSE_SLOT_CONTACT_BOTTOM := 9562492724
+export VITE_ADSENSE_SLOT_TRANSLATE_TOP := 4497868307
+export VITE_ADSENSE_SLOT_TRANSLATE_BOTTOM := 9562492724
 
 # Gallery section divider ads (between gallery sections)
 export VITE_ADSENSE_SLOT_GALLERY_AFTER_PLAIN := 5862086716
@@ -348,10 +391,23 @@ icons\:android:
 # ============================================
 
 gallery:
-	node scripts/generate-gallery.mjs
+	GALLERY_PORT=$(GALLERY_PORT) node scripts/generate-gallery.mjs
+
+gallery\:fresh:
+	@curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
+		(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first, or use 'make all'." && exit 1)
+	@echo "Cleaning gallery directory..."
+	rm -rf public/gallery
+	mkdir -p public/gallery
+	@echo "Generating gallery from scratch..."
+	GALLERY_PORT=$(GALLERY_PORT) node scripts/generate-gallery.mjs
+	@echo ""
+	@echo "Gallery generation complete."
+	@echo "  Images: public/gallery/"
+	@echo "  Manifest: public/gallery/manifest.json"
 
 gallery\:gif:
-	node scripts/generate-gallery.mjs --gif
+	GALLERY_PORT=$(GALLERY_PORT) node scripts/generate-gallery.mjs --gif
 
 # ============================================
 # Gallery Scan Pipeline (heavyweight — not in regular test:unit)
@@ -397,6 +453,8 @@ sitemap:
 # Deployment
 # ============================================
 
+# Deploy rebuilds with SENTRY_UPLOAD=true to upload sourcemaps.
+# This is intentionally separate from the earlier build steps.
 deploy:
 	SENTRY_UPLOAD=true npm run build
 	netlify deploy --prod --site anqr.link --dir=dist
@@ -497,6 +555,10 @@ android: build android\:bump android\:release
 # Full build + upload to Google Play Store
 android\:upload: android
 	python3 scripts/upload-to-play-store.py
+
+# ============================================
+# Utilities
+# ============================================
 
 zip:
 	@rm -f anqr.zip
@@ -627,10 +689,10 @@ i18n\:fill\:locales:
 
 # Generate both static TS and locales JSON
 i18n\:fill: i18n\:fill\:static i18n\:fill\:locales
+	@echo "All fills complete."
 
 i18n\:check:
 	npm run test:i18n
-	@echo "All fills complete."
 
 dep:
 	@npx depcruise src --output-type dot | dot -Tpng > deps.png
@@ -707,7 +769,7 @@ signoff:
 	npm run test:signoff
 
 test\:unit:
-	npx vitest run --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts'
+	npm run test:unit
 
 test\:qr\:artifact:
 	SAVE_QR_ARTIFACT=1 npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts

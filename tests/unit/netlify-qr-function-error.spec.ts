@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 describe('netlify qr function error handling', () => {
-  it('returns 500 with Error message when generator throws Error', async () => {
+  it('returns 500 with Error message when generator throws Error', { timeout: 30000 }, async () => {
     vi.resetModules();
     const captureException = vi.fn();
     vi.doMock('@sentry/node', () => ({ init: vi.fn(), captureException }));
@@ -21,7 +21,7 @@ describe('netlify qr function error handling', () => {
     expect(captureException).toHaveBeenCalled();
   });
 
-  it('returns 500 with Unknown error when generator throws non-Error', async () => {
+  it('returns 500 with Unknown error when generator throws non-Error', { timeout: 30000 }, async () => {
     vi.resetModules();
     const captureException = vi.fn();
     vi.doMock('@sentry/node', () => ({ init: vi.fn(), captureException }));

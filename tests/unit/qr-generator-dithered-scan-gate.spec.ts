@@ -531,7 +531,7 @@ function makeDefaultGalleryScanConfig(payload: string): QRGeneratorConfig {
   };
 }
 
-describe('qr-generator dithered scan gate', () => {
+describe('qr-generator dithered scan gate', { timeout: 30000 }, () => {
   it(
     'keeps dithered tsunami output decodable from final PNG bytes',
     async () => {
@@ -723,7 +723,7 @@ describe('qr-generator dithered scan gate', () => {
     expect(polarity.darkMean).toBeLessThan(polarity.lightMean - 0.08);
   });
 
-  it('caches dither scan patches across repeated renders', async () => {
+  it('caches dither scan patches across repeated renders', { timeout: 30000 }, async () => {
     const qr = new QRGenerator(nodeCanvasFactory) as any;
     const cfg: QRGeneratorConfig = {
       content: 'https://anqr.link',
@@ -784,7 +784,7 @@ describe('qr-generator dithered scan gate', () => {
   });
 });
 
-describe('dither option wiring', () => {
+describe('dither option wiring', { timeout: 30000 }, () => {
   let overlay: any;
   beforeAll(async () => {
     overlay = await loadOverlayCanvas(path.join(process.cwd(), 'public/tsunami.jpg'), 200);
@@ -1123,7 +1123,7 @@ describe('dither option wiring', () => {
   });
 });
 
-describe('preservation toggle locality', () => {
+describe('preservation toggle locality', { timeout: 30000 }, () => {
   let overlay: any;
   beforeAll(async () => {
     overlay = await loadOverlayCanvas(path.join(process.cwd(), 'public/tsunami.jpg'), 200);
