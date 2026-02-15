@@ -18,7 +18,7 @@ import en from './locales/en-GB.json';
 const log = createLogger('I18N');
 
 // Language metadata for the selector - using Google Play language codes
-// Authoritative list from lang.txt (all Google Play supported languages)
+// Authoritative list of all Google Play supported languages (86 locales)
 export const languages = [
   // Primary languages
   { code: 'en-GB', name: 'English (UK)', nativeName: 'English', flag: '🇬🇧', rtl: false },

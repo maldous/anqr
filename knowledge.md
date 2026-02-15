@@ -299,6 +299,8 @@ Also:
 
 ## i18n Translation Workflow
 
+The authoritative list of **86 Google Play supported language codes** is defined in `src/i18n/index.ts` (the `languages` array with code, name, nativeName, flag, and RTL metadata). This is the single source of truth for supported locales.
+
 There are **TWO separate i18n systems** in this project:
 
 1. **UI Strings (locales)**: Button labels, menu items, tooltips - uses `src/i18n/locales/txt/*.txt` + `template.json`
@@ -419,11 +421,13 @@ src/i18n/static/
 
 ### Make Commands (USER RUNS THESE - NEVER RUN AUTOMATICALLY)
 
-**IMPORTANT**: The AI assistant must NEVER run these commands. The user will always run them manually after reviewing the changes to source files.
+**IMPORTANT**: The AI assistant must NEVER run these commands. The user will always run them manually after reviewing the changes to source files. (They are also automated as non-blocking steps in `make all`.)
 
-- `make i18n:xlate` - Translates missing lines in `en-GB.txt` to all other language `.txt` files
-- `make i18n:fill` - Generates output files (JSON for locales, TS for static) from txt + templates
+- `make i18n:xlate` - Translates missing lines in `en-GB.txt` to all other language `.txt` files. Automated in `make all` step 3.
+- `make i18n:fill` - Generates output files (JSON for locales, TS for static) from txt + templates. Automated in `make all` step 4.
 - `make i18n:sync` - Runs both xlate and fill
+
+Translation uses **Google Translate only** (`translate.googleapis.com` gtx endpoint — free, no API key required).
 
 ---
 
@@ -435,7 +439,7 @@ Translation files are open-sourced in a separate public repository to allow comm
 - **Branches**:
   - `static` - Static content translations (guides, about pages)
   - `locales` - UI string translations
-- **Auto-sync**: Changes to `src/i18n/static/txt/` and `src/i18n/locales/txt/` are automatically pushed via GitHub Action
+- **Auto-sync**: `i18n:pull` (step 2) and `i18n:push` (step 16) are now part of the `make all` pipeline as non-blocking steps
 - **Contributing**: See the README in the public repo for contribution guidelines
 
 ## Professional Logging Standards
@@ -691,7 +695,7 @@ The gallery is a **fully automated, config-driven hero page** showcasing all ANQ
 make gallery:fresh    # Clean + regenerate all gallery images (needs dev server on :5173)
 make gallery          # Regenerate without cleaning
 make gallery:auto     # Scan matrix → copy approved artifacts → manifest
-make all              # Full pipeline including gallery (auto-manages preview server)
+make all              # Full 16-step pipeline including gallery + PWA screenshots (auto-manages preview server)
 ```
 
 Gallery images are hosted on Netlify (anqr.link) to keep the app bundle small. After `make deploy`, gallery images load from `https://anqr.link/gallery/`.
@@ -804,9 +808,32 @@ make test:gallery:matrix  # Scan matrix 36×4×2 = 288 runs (sharded)
 ### Complete Pipeline
 
 ```bash
-make all              # Everything: install → build → gallery → sitemap → test → deploy
+make all              # Full 16-step production pipeline (see below)
 make test             # Quality gates + full Playwright E2E
 ```
+
+`make all` runs the following 16 steps end-to-end:
+
+```
+ 1. install        — npm install + hooks + Playwright browsers
+ 2. i18n:pull      — pull community translations (non-blocking)
+ 3. i18n:xlate     — auto-translate missing strings (free Google Translate)
+ 4. i18n:fill      — regenerate all i18n TS/JSON from txt
+ 5. assets         — PWA icons + Android icons + sitemap
+ 6. build          — production bundle (tsc + Vite)
+ 7. gallery        — gallery images + PWA screenshots (serve → Playwright)
+ 8. test           — quality gates + unit + E2E (19 checks)
+ 9. validate       — overlay audit + scan matrix + signoff
+10. gallery:update — copy Tier A scan-validated overlays back to gallery
+11. reports        — payload matrix + i18n + coverage gap
+12. sonar          — SonarQube code analysis (non-blocking)
+13. deploy         — rebuild with Sentry + Netlify deploy
+14. android        — release AAB + upload to Play Store
+15. services       — third-party service validation (non-blocking)
+16. i18n:push      — push translations + final summary
+```
+
+Non-blocking steps (2, 3, 12, 15, 16) use `|| echo/true` so the pipeline continues if a service is temporarily unavailable.
 
 ### Resource Auto-Tuning
 
@@ -817,6 +844,30 @@ The Makefile auto-detects CPU/memory/disk and scales parallelism:
 - `PLAYWRIGHT_WORKERS` — auto-computed from CPU utilization
 
 Run `make resources` to see detected values.
+
+---
+
+## Test Infrastructure Files
+
+Three files under `tests/` support the test ID coverage and requirement mapping pipeline. They **must remain in the repository** — they are actively consumed by scripts and test specs at runtime.
+
+| File | Type | Generator | Consumers |
+|------|------|-----------|----------|
+| `tests/ids.txt` | **GENERATED** | `scripts/generate-test-ids.js` (`make test:ids`) | 7+ unit test specs (`required-tranche-*.spec.ts`, `testid-inventory-explicit.spec.ts`), `generate-required-tests.js` |
+| `tests/required.txt` | **GENERATED** | `scripts/generate-required-tests.js` (`make test:required`) | `scripts/check-required-tests.js`, `scripts/report-required-gap.js` |
+| `tests/types.txt` | **HAND-WRITTEN** | Manually maintained | `scripts/generate-required-tests.js` |
+
+### How they work together
+
+1. `tests/types.txt` defines **13 test requirement categories** (rendering, encoding, visibility, persistence, a11y, interaction, validation, overlay, output, integration, performance, safety, test-id integrity).
+2. `tests/ids.txt` is the **canonical inventory** of all `data-testid` attributes in the UI (463 IDs across 17 sections: app, payload, qr, render, overlay, animation, output, watermark, metadata, share, safety, analyze, tier, select options, etc.).
+3. `tests/required.txt` is generated by cross-referencing `ids.txt` and `types.txt` to produce a **requirement matrix** mapping every test ID to required test categories and concrete test files.
+
+### Regeneration
+
+- After adding/removing UI test IDs: run `make test:ids` to regenerate `tests/ids.txt`
+- After changing IDs or types: run `make test:required` to regenerate `tests/required.txt`
+- `tests/types.txt` is edited manually when new test categories are needed
 
 ---
 
@@ -839,7 +890,176 @@ The `reports/` directory contains a mix of **committed baselines** and **auto-ge
 
 ## Outstanding Items
 
-See `tbd.md` for post-launch follow-up items (not blockers).
+See `tbd.md` for the consolidated launch checklist including: pre-deploy smoke test, service-specific checklists (Netlify, Sentry, AdSense, AdMob, Cloudflare, Search Console, etc.), third-party tokens & access status, Google project verification, Sentry issues, ad revenue readiness, and environment variable reference. The `make all` pipeline is now fully automated (16 steps) with no known gaps.
+
+---
+
+## Root-Level File Inventory
+
+All files at the repository root, grouped by purpose.
+
+### Build & Config (essential)
+
+- `biome.json`, `.biomeignore` — Biome linter config
+- `tsconfig.json`, `tsconfig.node.json` — TypeScript config
+- `vite.config.ts`, `vitest.config.ts` — Vite build & test config
+- `tailwind.config.js`, `postcss.config.js` — CSS tooling
+- `playwright.config.ts` — E2E test config
+- `capacitor.config.ts` — Capacitor/Android mobile config
+- `Makefile` — Build system, pipeline, ad config env vars
+- `netlify.toml` — Netlify deploy config, security headers, CSP
+- `sonar-project.properties` — SonarQube config (local server)
+- `package.json`, `package-lock.json` — npm dependencies
+- `index.html` — Vite entry point
+
+### Quality & Linting
+
+- `.dependency-cruiser.cjs` — Module boundary enforcement
+- `.jscpd.json` — Copy-paste detection config
+- `knip.json` — Dead code/export detection
+- `.lintstagedrc.json` — Pre-commit lint config
+- `.lockfile-lintrc.json` — Lockfile integrity checks
+- `commitlint.config.js` — Commit message format enforcement
+- `cspell.json` — Spell checker dictionary
+- `.lefthook.yml` — Git hooks config (pre-commit, commit-msg)
+
+### Developer Reference
+
+- `knowledge.md` — This file. AI assistant context for the codebase. Includes full module architecture rules (see §Module Architecture Rules).
+- `tbd.md` — Exhaustive launch & post-launch checklist with actionable items, third-party service tokens, and environment variable reference. The single canonical TBD document. All pipeline gaps are now resolved (see §Testing Strategy → Complete Pipeline).
+- `ISO_IEC_18004_2015.md` — QR code ISO specification reference (241KB). Used during encoder/decoder development.
+- `src/payload.md` — Payload wiring integrity status report.
+- `src/i18n/locales/txt/play.html` — Google Play Store listing description in multiple languages. Copy-paste into Play Console.
+
+### Netlify Edge Functions
+
+- `deno.lock` — Dependency lock file for Netlify Edge Functions (Deno runtime). The Netlify function at `netlify/functions/qr.ts` runs on Deno when deployed as an Edge Function. This lock file pins remote Deno module versions. KEEP — required for reproducible builds.
+
+### Git
+
+- `.gitignore` — Exclusion rules (node_modules, dist, logs, coverage, etc.)
+- `.gitattributes` — Line ending normalization
+
+---
+
+## Module Architecture Rules
+
+Canonical module design rules for the ANQR codebase. Partially enforced by `.dependency-cruiser.cjs`; the rest are design constraints for contributors and AI assistants.
+
+### Module Boundaries
+
+- `src/modules/` contains only module directories plus an optional `src/modules/index.ts`.
+- No functional `*.ts`/`*.js` files at `src/modules/` root.
+- The only public surface of a module is `src/modules/<module>/index.ts`.
+- Anything not exported from that `index.ts` is non-public.
+- A **sub-API** is any public surface other than `index.ts` — deep imports (`../<module>/<path>`), subdirectory barrels, or deep re-exports. These are **not allowed**.
+- After enforcement, the only legal cross-module import target is `../<module>`.
+
+### Import Rules
+
+- Intra-repo imports use directory specifiers only — no trailing slashes, no explicit `index` imports.
+- `src/modules/index.ts` (if present) re-exports only module entrypoints, never deep paths.
+- Module `index.ts` files must not re-export deep paths from other modules.
+- Public code imports internal code through internal facades only, no cross-folder reach.
+
+### Ownership & Deduplication
+
+- Each exported symbol has exactly one owning module. All others consume it via that owner's `index.ts`.
+- Shared functionality must not be duplicated across modules. Resolution: centralize in the existing owner or promote into a new root module.
+- If a cohesive surface is used by multiple modules, it becomes `src/modules/<new-module>/index.ts` following all rules above.
+- Avoid generic buckets (`shared`, `common`, `utils`) unless tightly scoped and owned.
+
+### Naming Conventions
+
+- Module directory names: **kebab-case**, domain-oriented (not implementation-oriented).
+- File names: **kebab-case**, express responsibility. No redundant prefixes inside a module.
+- Public APIs use named exports. Default exports allowed for main classes and React components.
+- No legacy or compat export names.
+
+### Module Internal Structure
+
+- `index.ts` defines the public API only — no business logic.
+- Exports are explicit and minimal. Treat every export as a contract.
+- Each module may have `types.ts` and `constants.ts` as needed.
+- Each module has allowed dependencies declared and enforced — no upward deps, no cycles.
+
+### Change Management
+
+- Public API changes require updating all call sites in the same change set.
+- Removing/renaming exports must be tool-verified as unused.
+- Breaking export changes require a version bump.
+- Deprecations use explicit `@deprecated` JSDoc with removal date. No compat aliases.
+
+### Build & Configuration
+
+- One TS module resolution strategy across the repo.
+- One lint config, one formatter config applied to all modules.
+- Build output folders are git-ignored.
+- Public package entrypoints map to module `index.ts` only.
+- Tree-shaking friendliness preserved — no re-export chains that block it.
+
+### Runtime Rules
+
+- Public modules must be **side-effect free** at import time. Side effects live behind explicit functions.
+- Cross-runtime code avoids direct global usage and uses adapters owned by the module.
+- Public async APIs accept `AbortSignal` where long work exists.
+- No unbounded parallelism without explicit limits.
+- No background work started on import.
+
+### Error Model
+
+- Public APIs return typed results or throw typed errors (one repo-wide choice).
+- Errors include stable codes, message, and cause — without leaking secrets.
+
+### Security & Secrets
+
+- Any input crossing a trust boundary is validated at the owning module edge.
+- Validation rules live next to the public entrypoint, not scattered.
+- No secrets in source, tests, fixtures, or logs.
+- Secrets flow through a typed config object, never `process.env` lookups inside business code.
+- One config loading path, immutable after boot, accessed through a dedicated config module.
+
+### Code Quality
+
+- No unused exports, no implicit `any`, no floating promises.
+- Exhaustive switch over discriminated unions.
+- Hot paths avoid allocations in loops and polymorphic shapes.
+- Performance-sensitive APIs document complexity and constraints.
+- No direct `console.*` calls — use `src/lib/logger.ts` (see §Professional Logging Standards).
+
+### Dependency Hygiene
+
+- Each module declares third-party deps in one place and documents purpose.
+- No transitive dependency reliance for public APIs.
+- No dual competing libs for the same concern without an explicit decision record.
+- No hidden coupling — cross-module communication uses explicit types and functions, not shared mutable singletons.
+
+### Feature Flags
+
+- Flags live in one module with typed accessors.
+- Named by user-facing behavior, not ticket IDs.
+- Have expiry dates and removal tasks.
+- Never gate module boundary rules.
+
+---
+
+## Public Assets Inventory
+
+Contents of the `public/` directory.
+
+- `public/gallery/` — Auto-generated gallery images (PNG/GIF) + `manifest.json`
+- `public/images/examples/` — Static content images for Examples page (25 images)
+- `public/images/learn/` — Static content images for Learn page (16 images)
+- `public/icons/` — PWA icons (generated by `make icons`)
+- `public/screenshots/` — PWA install screenshots (desktop 1280×720, mobile 720×1280), auto-generated via `make screenshots` (Playwright)
+- `public/tsunami.jpg`, `public/king.gif`, `public/logo.png`, `public/test.png` — Overlay gallery fixture images (bundled for native WebView same-origin access)
+- `public/ads.txt` — AdSense publisher verification
+- `public/robots.txt` — Search engine directives
+- `public/sitemap.xml` — Generated sitemap (`make sitemap`)
+- `public/manifest.json` — PWA manifest (icons, screenshots, app metadata)
+- `public/_redirects` — Netlify redirect rules (API proxy, SPA fallback)
+- `public/.well-known/assetlinks.json` — Android App Links verification
+- `public/og-banner.html`, `public/og-image.html`, `public/app-icon.html` — HTML templates for generating OG images and app icons via screenshot tools
 
 ---
 

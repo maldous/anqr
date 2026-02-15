@@ -26,8 +26,7 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -121,7 +120,7 @@ async function checkNetlify() {
   try {
     // Use Netlify CLI to get site info
     const siteRaw = execSync(
-      `npx --yes netlify api getSite --data '{"site_id":"${NETLIFY_SITE_ID}"}'`,
+      `npx netlify api getSite --data '{"site_id":"${NETLIFY_SITE_ID}"}'`,
       { encoding: 'utf-8', timeout: 30_000, stdio: ['pipe', 'pipe', 'pipe'] },
     );
     const site = safeJSON(siteRaw);
@@ -139,7 +138,7 @@ async function checkNetlify() {
     let deployReady = false;
     try {
       const deploysRaw = execSync(
-        `npx --yes netlify api listSiteDeploys --data '{"site_id":"${NETLIFY_SITE_ID}","per_page":1}'`,
+        `npx netlify api listSiteDeploys --data '{"site_id":"${NETLIFY_SITE_ID}","per_page":1}'`,
         { encoding: 'utf-8', timeout: 30_000, stdio: ['pipe', 'pipe', 'pipe'] },
       );
       const deploys = safeJSON(deploysRaw);

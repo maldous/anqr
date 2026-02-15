@@ -1,4 +1,4 @@
-.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources
+.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto sitemap screenshots deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources validate\:services qr\:art
 
 # ============================================
 # Help
@@ -11,16 +11,21 @@ help:
 	@echo "  FULL PIPELINE"
 	@echo "    make all            Complete fresh-to-production pipeline"
 	@echo "                         1. install    — npm install + hooks + Playwright browsers"
-	@echo "                         2. i18n:fill  — regenerate all i18n TS/JSON from txt"
-	@echo "                         3. assets     — PWA icons + Android icons + sitemap"
-	@echo "                         4. build      — production bundle (tsc + Vite)"
-	@echo "                         5. gallery    — generate gallery images (serve → Puppeteer)"
-	@echo "                         6. test       — quality gates + unit + E2E (19 checks)"
-	@echo "                         7. validate   — overlay audit + scan matrix + signoff"
-	@echo "                         8. reports    — payload matrix + coverage gap"
-	@echo "                         9. deploy     — rebuild with Sentry + Netlify deploy"
-	@echo "                        10. android    — release AAB (if SDK available)"
-	@echo "                        11. summary    — final status + tbd.md reminder"
+	@echo "                         2. i18n:pull  — pull community translations (non-blocking)"
+	@echo "                         3. i18n:xlate — auto-translate missing strings (free Google)"
+	@echo "                         4. i18n:fill  — regenerate all i18n TS/JSON from txt"
+	@echo "                         5. assets     — PWA icons + Android icons + sitemap"
+	@echo "                         6. build      — production bundle (tsc + Vite)"
+	@echo "                         7. gallery    — gallery images + PWA screenshots (serve → Playwright)"
+	@echo "                         8. test       — quality gates + unit + E2E (19 checks)"
+	@echo "                         9. validate   — overlay audit + scan matrix + signoff"
+	@echo "                        10. gallery    — copy Tier A scan-validated overlays back"
+	@echo "                        11. reports    — payload matrix + coverage gap"
+	@echo "                        12. sonar      — SonarQube code analysis (non-blocking)"
+	@echo "                        13. deploy     — rebuild with Sentry + Netlify deploy"
+	@echo "                        14. android    — release AAB + upload (if SDK available)"
+	@echo "                        15. services   — third-party service checks (non-blocking)"
+	@echo "                        16. i18n:push  — push translations + final summary"
 	@echo ""
 	@echo "  WEB DEVELOPMENT"
 	@echo "    make install        Install npm dependencies + git hooks"
@@ -43,6 +48,7 @@ help:
 	@echo "    make gallery:gif    Generate gallery images (with GIFs)"
 	@echo "    make gallery:auto   Run scan matrix → copy approved artifacts to gallery"
 	@echo "    make sitemap        Generate sitemap.xml"
+	@echo "    make screenshots    Generate PWA screenshots (desktop + mobile) via Playwright"
 	@echo ""
 	@echo "  DEPLOYMENT"
 	@echo "    make deploy         Deploy to Netlify (anqr.link)"
@@ -82,6 +88,8 @@ help:
 	@echo "    make zip            Create git archive zip of the project"
 	@echo "    make dep            Generate dependency graph (deps.png)"
 	@echo "    make resources      Show auto-detected CPU/mem/disk tuning values"
+	@echo "    make validate:services  Validate all third-party services (Netlify, Sentry, Cloudflare, etc.)"
+	@echo "    make qr:art         Generate QR-Art PNG from image (IMG=path OUT=path)"
 	@echo ""
 	@echo "  CODE ANALYSIS (SonarQube)"
 	@echo "    make sonar          Run SonarQube analysis (requires local server)"
@@ -108,6 +116,7 @@ help:
 	@echo "    make test:testid:refs  Validate tests only use managed test IDs"
 	@echo "    make test:bundle:budget Build + enforce bundle budgets (main/non-i18n/i18n)"
 	@echo "    make report:payload:matrix Generate per-kind payload wiring verification report"
+	@echo "    make report:i18n:txt Check i18n txt files for untranslated strings and line-count mismatches"
 	@echo "    make test           Run ALL tests: comprehensive quality gates + full unit suite + E2E"
 	@echo "    make test:basic     Run basic tier UI tests only"
 	@echo "    make test:advanced  Run advanced tier UI tests only"
@@ -211,6 +220,12 @@ BUNDLE_BUDGET_I18N_MAX_KIB ?= 24000
 # Gallery generation server port (default matches dev server).
 GALLERY_PORT ?= 5173
 
+# PWA screenshot generation server port (default matches dev server).
+SCREENSHOT_PORT ?= 5173
+
+validate\:services:
+	node scripts/validate-third-party.mjs
+
 resources:
 	@echo ""
 	@echo "ANQR Resource Profile (auto-detected)"
@@ -233,16 +248,21 @@ resources:
 #
 # Steps:
 #   1. install     — npm install + lefthook git hooks + Playwright browsers
-#   2. i18n:fill   — regenerate all i18n TS/JSON from txt sources
-#   3. assets      — PWA icons + Android icons (if SDK) + sitemap.xml
-#   4. build       — production bundle (tsc + Vite + compression)
-#   5. gallery     — spin up lightweight serve, capture gallery images via Puppeteer
-#   6. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
-#   7. validate    — heavyweight overlay audit + gallery scan matrix + production signoff
-#   8. reports     — payload verification matrix + coverage gap report
-#   9. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy
-#  10. android     — release AAB for Play Store (skipped if SDK/Java unavailable)
-#  11. summary     — final status banner + tbd.md reminder
+#   2. i18n:pull   — pull community translations from anqr-i18n (non-blocking)
+#   3. i18n:xlate  — auto-translate missing strings (free Google Translate, no API key)
+#   4. i18n:fill   — regenerate all i18n TS/JSON from txt sources
+#   5. assets      — PWA icons + Android icons (if SDK) + sitemap.xml
+#   6. build       — production bundle (tsc + Vite + compression)
+#   7. gallery     — spin up lightweight serve, capture gallery images + PWA screenshots
+#   8. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
+#   9. validate    — heavyweight overlay audit + gallery scan matrix + production signoff
+#  10. gallery:update — copy Tier A scan-validated overlay artifacts back to public/gallery/
+#  11. reports     — payload verification matrix + coverage gap report
+#  12. sonar       — SonarQube code analysis (non-blocking, requires localhost:9000)
+#  13. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy
+#  14. android     — release AAB + upload to Play Store (skipped if SDK/Java unavailable)
+#  15. services    — third-party service checks (non-blocking)
+#  16. i18n:push   — push translations to public repo + final status banner
 #
 # Gallery capture uses `npx serve` (high-performance static server, installed as devDep)
 # instead of `vite preview` for faster startup and lower memory overhead.
@@ -254,58 +274,82 @@ all:
 	@echo "ANQR — Full Production Pipeline"
 	@echo "============================================"
 	@echo ""
-	@echo "[1/11] Installing dependencies..."
+	@echo "[1/16] Installing dependencies..."
 	$(MAKE) install
 	npx playwright install chromium
 	@echo ""
-	@echo "[2/11] Regenerating i18n output files..."
+	@echo "[2/16] Pulling community translations..."
+	@$(MAKE) i18n:pull || echo "⚠️  i18n:pull failed (no remote access?) — continuing with local translations"
+	@echo ""
+	@echo "[3/16] Auto-translating missing strings (free Google Translate)..."
+	@$(MAKE) i18n:xlate || echo "⚠️  i18n:xlate failed — continuing with existing translations"
+	@echo ""
+	@echo "[4/16] Regenerating i18n output files..."
 	$(MAKE) i18n:fill
 	@echo ""
-	@echo "[3/11] Generating assets (icons + sitemap)..."
+	@echo "[5/16] Generating assets (icons + sitemap)..."
 	$(MAKE) icons
 	@if [ -d android ]; then $(MAKE) icons:android; fi
 	$(MAKE) sitemap
 	@echo ""
-	@echo "[4/11] Building production bundle..."
+	@echo "[6/16] Building production bundle..."
 	$(MAKE) build
 	@echo ""
-	@echo "[5/11] Generating gallery images..."
+	@echo "[7/16] Generating gallery images + PWA screenshots..."
 	@npx serve dist -l 4174 --no-clipboard --single & echo $$! > .gallery-server.pid; \
 		for i in 1 2 3 4 5 6 7 8 9 10; do \
 			curl -s -o /dev/null http://localhost:4174/ && break; \
 			sleep 1; \
 		done
-	@$(MAKE) gallery:fresh GALLERY_PORT=4174; \
-		gallery_exit=$$?; \
+	@$(MAKE) gallery:fresh GALLERY_PORT=4174 && \
+		$(MAKE) screenshots SCREENSHOT_PORT=4174; \
+		step7_exit=$$?; \
 		kill $$(cat .gallery-server.pid) 2>/dev/null; rm -f .gallery-server.pid; \
-		[ $$gallery_exit -eq 0 ] || exit $$gallery_exit
+		[ $$step7_exit -eq 0 ] || exit $$step7_exit
 	@echo ""
-	@echo "[6/11] Running full test suite (quality gates + unit + E2E)..."
+	@echo "[8/16] Running full test suite (quality gates + unit + E2E)..."
 	# Note: test includes fix, bundle budget (which rebuilds), and Playwright (which starts its own dev server)
 	$(MAKE) test
 	@echo ""
-	@echo "[7/11] Running heavyweight validation..."
+	@echo "[9/16] Running heavyweight validation..."
 	$(MAKE) test:overlay:audit
 	$(MAKE) test:gallery:matrix
 	$(MAKE) signoff
 	@echo ""
-	@echo "[8/11] Generating reports..."
+	@echo "[10/16] Copying Tier A scan-validated overlay artifacts to gallery..."
+	node scripts/update-gallery-from-scan-matrix.mjs
+	@echo ""
+	@echo "[11/16] Generating reports..."
 	$(MAKE) report:payload:matrix
+	$(MAKE) report:i18n:txt
 	@if [ -d coverage ]; then $(MAKE) test:coverage:gap; else echo "Skipping coverage gap (no coverage/ data — run make test:unit:coverage first)"; fi
 	@echo ""
-	@echo "[9/11] Deploying web to production (Netlify)..."
+	@echo "[12/16] Running SonarQube analysis..."
+	@$(MAKE) sonar || echo "⚠️  SonarQube not available (localhost:9000) — skipping"
+	@echo ""
+	@echo "[13/16] Deploying web to production (Netlify)..."
 	# Deploy rebuilds with SENTRY_UPLOAD=true for sourcemap upload, then pushes to Netlify.
-	# This final build includes gallery images generated in step 5.
+	# This final build includes gallery images (step 7) + Tier A overlays (step 10).
 	$(MAKE) deploy
 	@echo ""
-	@echo "[10/11] Building Android release AAB..."
+	@echo "[14/16] Building Android release AAB + uploading..."
 	@if [ -d android ] && command -v java >/dev/null 2>&1 && [ -n "$$ANDROID_HOME" ]; then \
 		$(MAKE) android:release; \
+		if [ -f play-store-key.json ]; then \
+			echo "Uploading to Play Store..."; \
+			python3 scripts/upload-to-play-store.py || echo "⚠️  Play Store upload failed"; \
+		else \
+			echo "Skipping Play Store upload (play-store-key.json not found)"; \
+		fi; \
 	else \
 		echo "Skipping Android build (SDK/Java not available)"; \
 	fi
 	@echo ""
-	@echo "[11/11] Final summary"
+	@echo "[15/16] Validating third-party services..."
+	@$(MAKE) validate:services || echo "⚠️  Some third-party validations failed — see reports/third-party-validation.json"
+	@echo ""
+	@echo "[16/16] Pushing translations + final summary"
+	@$(MAKE) i18n:push || echo "⚠️  i18n:push failed (no remote access?) — skipping"
 	@echo ""
 	@echo "============================================"
 	@echo "ANQR — Production pipeline complete!"
@@ -515,6 +559,15 @@ sitemap:
 	node scripts/generate-sitemap.mjs
 
 # ============================================
+# PWA Screenshots Generation
+# ============================================
+
+screenshots:
+	@curl -sf -o /dev/null http://localhost:$(SCREENSHOT_PORT)/ || \
+		(echo "ERROR: No server on :$(SCREENSHOT_PORT). Run 'make dev' first, or use 'make all'." && exit 1)
+	SCREENSHOT_PORT=$(SCREENSHOT_PORT) node scripts/generate-pwa-screenshots.mjs
+
+# ============================================
 # Deployment
 # ============================================
 
@@ -633,6 +686,13 @@ zip:
 		HEAD \
 		:\(exclude\)public/sitemap.xml \
 		-o anqr.zip
+
+# Generate QR-Art PNG from a target image
+# Usage: make qr:art IMG=public/tsunami.jpg OUT=qr-art.png
+IMG ?= public/tsunami.jpg
+OUT ?= qr-art-output.png
+qr\:art:
+	npx tsx scripts/run-qr-art.ts $(IMG) $(OUT)
 
 # ============================================
 # i18n Public Repo Sync (anqr-i18n)
@@ -876,6 +936,10 @@ test\:bundle\:budget:
 
 report\:payload\:matrix:
 	npm run report:payload:matrix
+
+# Check i18n txt files for untranslated strings, line-count mismatches, and English-heavy warnings
+report\:i18n\:txt:
+	npm run report:i18n:txt || true
 
 # Run ALL tests: quality gates + full unit suite + E2E
 # This is the comprehensive test target - use for full CI validation
