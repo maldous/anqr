@@ -478,23 +478,27 @@ export function ShareSection() {
         </div>
         <div className="flex gap-2">
           <Button
+            asChild
             data-testid={DynamicTestId.resolve('share-twitter-button', 'share-twitter-button')}
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => globalThis.open(socialUrls.twitter, '_blank')}
           >
-            {t('share.twitter')}
+            <a href={socialUrls.twitter} target="_blank" rel="noopener noreferrer">
+              {t('share.twitter')}
+            </a>
           </Button>
           <Button
+            asChild
             data-testid={DynamicTestId.resolve('share-whatsapp-button', 'share-whatsapp-button')}
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => globalThis.open(socialUrls.whatsapp, '_blank')}
           >
-            <MessageCircle className="h-4 w-4 mr-1" />
-            {t('share.whatsapp')}
+            <a href={socialUrls.whatsapp} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="h-4 w-4 mr-1" />
+              {t('share.whatsapp')}
+            </a>
           </Button>
         </div>
       </div>

@@ -1,7 +1,13 @@
 import { test, expect } from '../fixtures/test-fixtures';
 import { getCanvasSnapshot, snapshotsAreDifferent, waitForSelectOpen, waitForSelectClosed } from '../helpers/qr-detector';
 import { setColorInput } from '../helpers/input-helpers';
-import { waitForRenderComplete } from '../helpers/test-utils';
+import {
+  openAccordion,
+  selectOption as selectDropdownByText,
+  setSlider as setSliderByPercent,
+  toggleSwitch as toggleSwitchById,
+  waitForRenderComplete,
+} from '../helpers/test-utils';
 
 /**
  * Render Section - Advanced Tier (Comprehensive)
@@ -33,33 +39,28 @@ test.describe('Render Section - Advanced Tier', () => {
    * Helper to expand Render section
    */
   async function expandRenderSection(page: import('@playwright/test').Page): Promise<void> {
-    // Scroll sidebar to ensure Render section is visible
-    const sidebar = page.locator('aside, [role="complementary"], .sidebar').first();
-    if (await sidebar.count() > 0) {
-      await sidebar.evaluate(el => el.scrollTop = 0);
-    }
-    
-    // Use data-testid selector for accordion trigger
-    const renderTrigger = page.locator('[data-testid="accordion-render"] button[data-state]').first();
-    const trigger = renderTrigger;
-    
-    await trigger.scrollIntoViewIfNeeded();
-    
-    // Check if already expanded
-    const section = page.locator('[role="region"][data-state="open"]');
-    const isExpanded = await section.count() > 0;
-    
-    // Click to expand/ensure open
-    await trigger.click();
-    await page.waitForSelector('[role="region"][data-state="open"]', { 
-      state: 'visible', 
-      timeout: 5000 
-    });
+    await openAccordion(page, 'render');
     await waitForRenderComplete(page, 'settle');
   }
 
-  // Option indices for render-module-style-select: Square=0, Rounded=1, Dots=2, Diamond=3, Connected=4
-  const MODULE_STYLE_INDEX: Record<string, number> = { square: 0, rounded: 1, dots: 2, diamond: 3, connected: 4 };
+  const OPTION_VALUE_BY_LABEL: Record<string, string> = {
+    square: 'square',
+    rounded: 'rounded',
+    dots: 'dots',
+    diamond: 'diamond',
+    connected: 'connected',
+    circle: 'circle',
+    linear: 'linear',
+    radial: 'radial',
+    conic: 'conic',
+    sticker: 'sticker',
+    tag: 'tag',
+    none: 'none',
+    solid: 'solid',
+    dashed: 'dashed',
+    matchfinder: 'match_finder',
+    matchmodule: 'match_module',
+  };
   
   /**
    * Helper to select an option from a dropdown by testid using keyboard navigation (i18n-safe)
@@ -69,36 +70,21 @@ test.describe('Render Section - Advanced Tier', () => {
     testId: string, 
     optionText: string
   ): Promise<void> {
-    const select = page.locator(`[data-testid="${testId}"]`);
-    
-    // Fall back to finding by context if testid not found
-    const selectTrigger = await select.count() > 0 
-      ? select 
-      : page.locator('[role="region"][data-state="open"]').first().locator('[role="combobox"]').first();
-    
-    await selectTrigger.scrollIntoViewIfNeeded();
-    await selectTrigger.click();
-    await waitForSelectOpen(page);
-    
-    // Get option index based on normalized text
-    const normalizedText = optionText.toLowerCase();
-    const optionIndex = MODULE_STYLE_INDEX[normalizedText] ?? 0;
-    
-    // Use keyboard navigation for i18n-safe selection
-    await page.keyboard.press('Home');
-    for (let i = 0; i < optionIndex; i++) {
-      await page.keyboard.press('ArrowDown');
-    }
-    await page.keyboard.press('Enter');
-    await waitForSelectClosed(page);
+    const normalizedLabel = optionText.toLowerCase().replace(/\s+/g, '');
+    const value = OPTION_VALUE_BY_LABEL[normalizedLabel] ?? optionText.toLowerCase();
+    await selectDropdownByText(page, testId, value);
   }
 
-  // General option indices for common dropdown values
-  const GENERAL_OPTION_INDEX: Record<string, number> = {
-    square: 0, rounded: 1, circle: 2, dots: 2, diamond: 3, connected: 4,
-    linear: 1, radial: 2, conic: 3,
-    sticker: 1, tag: 2,
-    none: 0
+  const TRIGGER_BY_OPTION: Record<string, string> = {
+    square: 'render-finder-style-select',
+    rounded: 'render-finder-style-select',
+    circle: 'render-finder-style-select',
+    linear: 'render-gradient-type-select',
+    radial: 'render-gradient-type-select',
+    conic: 'render-gradient-type-select',
+    sticker: 'render-frame-style-select',
+    tag: 'render-frame-style-select',
+    none: 'render-frame-style-select',
   };
   
   /**
@@ -109,35 +95,10 @@ test.describe('Render Section - Advanced Tier', () => {
     page: import('@playwright/test').Page,
     optionText: string
   ): Promise<boolean> {
-    const comboboxes = page.locator('[role="region"][data-state="open"]').first().locator('[role="combobox"]');
-    const count = await comboboxes.count();
-    const normalizedText = optionText.toLowerCase();
-    const targetIndex = GENERAL_OPTION_INDEX[normalizedText] ?? 0;
-    
-    for (let i = 0; i < count; i++) {
-      const cb = comboboxes.nth(i);
-      await cb.scrollIntoViewIfNeeded();
-      await cb.click();
-      await waitForSelectOpen(page);
-      
-      // Check if this dropdown has enough options for the target index
-      const options = page.locator('[role="option"]');
-      const optionCount = await options.count();
-      
-      if (optionCount > targetIndex) {
-        // Use keyboard navigation for i18n-safe selection
-        await page.keyboard.press('Home');
-        for (let j = 0; j < targetIndex; j++) {
-          await page.keyboard.press('ArrowDown');
-        }
-        await page.keyboard.press('Enter');
-        await waitForSelectClosed(page);
-        return true;
-      }
-      await page.keyboard.press('Escape');
-      await waitForRenderComplete(page, 'settle');
-    }
-    return false;
+    const triggerTestId = TRIGGER_BY_OPTION[optionText.toLowerCase()];
+    if (!triggerTestId) return false;
+    await selectOption(page, triggerTestId, optionText);
+    return true;
   }
 
   /**
@@ -148,34 +109,14 @@ test.describe('Render Section - Advanced Tier', () => {
     testId: string, 
     percent: number
   ): Promise<void> {
-    const slider = page.locator(`[data-testid="${testId}"]`);
-    
-    // Fall back to first slider if testid not found
-    const sliderEl = await slider.count() > 0 
-      ? slider 
-      : page.locator('[role="region"][data-state="open"]').first().locator('[role="slider"]').first();
-    
-    await sliderEl.scrollIntoViewIfNeeded();
-    await sliderEl.waitFor({ state: 'visible', timeout: 5000 });
-    
-    const box = await sliderEl.boundingBox();
-    if (box) {
-      const x = box.x + (box.width * percent) / 100;
-      const y = box.y + box.height / 2;
-      await page.mouse.click(x, y);
-    }
+    await setSliderByPercent(page, testId, percent);
   }
 
   /**
    * Helper to toggle switch by testid
    */
   async function toggleSwitch(page: import('@playwright/test').Page, testId: string): Promise<void> {
-    const switchEl = page.locator(`[data-testid="${testId}"]`);
-    
-    if (await switchEl.count() > 0) {
-      await switchEl.scrollIntoViewIfNeeded();
-      await switchEl.click();
-    }
+    await toggleSwitchById(page, testId);
   }
 
   /**
@@ -491,7 +432,7 @@ test.describe('Render Section - Advanced Tier', () => {
     test('module size slider has correct range (2-20)', async ({ page }) => {
       await expandRenderSection(page);
       
-      const slider = page.locator('[data-testid="render-module-size-slider"]');
+      const slider = page.locator('[data-testid="render-module-size-slider"] [role="slider"]');
       const fallback = page.locator('[role="slider"]').first();
       
       const sliderEl = await slider.count() > 0 ? slider : fallback;
@@ -522,7 +463,7 @@ test.describe('Render Section - Advanced Tier', () => {
     test('module gap slider has correct range (0-30)', async ({ page }) => {
       await expandRenderSection(page);
       
-      const slider = page.locator('[data-testid="render-module-gap-slider"]');
+      const slider = page.locator('[data-testid="render-module-gap-slider"] [role="slider"]');
       const sliders = page.locator('[role="slider"]');
       const fallback = sliders.nth(1);
       
@@ -538,7 +479,7 @@ test.describe('Render Section - Advanced Tier', () => {
     test('module size responds to keyboard input', async ({ page, waitForQRRender }) => {
       await expandRenderSection(page);
       
-      const slider = page.locator('[role="slider"]').first();
+      const slider = page.locator('[data-testid="render-module-size-slider"] [role="slider"]').first();
       await slider.focus();
       
       const before = await getCanvasSnapshot(page);
@@ -914,7 +855,7 @@ test.describe('Render Section - Advanced Tier', () => {
     test('select triggers are keyboard accessible', async ({ page }) => {
       await expandRenderSection(page);
       
-      const combobox = page.locator('[role="combobox"]').first();
+      const combobox = page.locator('[data-testid="render-module-style-select"]').first();
       
       // Focus and open with Enter
       await combobox.focus();
@@ -933,7 +874,10 @@ test.describe('Render Section - Advanced Tier', () => {
     test('all controls have visible labels', async ({ page }) => {
       await expandRenderSection(page);
       
-      const labels = page.locator('[role="region"][data-state="open"]').first().locator('label');
+      const labels = page
+        .locator('[data-testid="accordion-render"] [role="region"][data-state="open"]')
+        .first()
+        .locator('label');
       const labelCount = await labels.count();
       
       // Should have multiple labels
@@ -959,7 +903,10 @@ test.describe('Render Section - Advanced Tier', () => {
       await trigger.click();
       await waitForRenderComplete(page, 'settle');
       // Controls should still be visible
-      const sliders = page.locator('[role="region"][data-state="open"]').first().locator('[role="slider"]');
+      const sliders = page
+        .locator('[data-testid="accordion-render"] [role="region"][data-state="open"]')
+        .first()
+        .locator('[role="slider"]');
       expect(await sliders.count()).toBeGreaterThan(0);
     });
 
@@ -987,7 +934,9 @@ test.describe('Render Section - Advanced Tier', () => {
     test('scrolling within section works correctly', async ({ page }) => {
       await expandRenderSection(page);
       
-      const section = page.locator('[role="region"][data-state="open"]').first();
+      const section = page
+        .locator('[data-testid="accordion-render"] [role="region"][data-state="open"]')
+        .first();
       
       // Scroll to bottom
       await section.evaluate(el => el.scrollTop = el.scrollHeight);

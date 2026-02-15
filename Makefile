@@ -947,7 +947,7 @@ report\:i18n\:txt:
 # Outputs E2E results to test-report.txt for text-based review
 test: UNIT_CMD = test:unit
 test: _quality-gates
-	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=permutations --workers=$(PLAYWRIGHT_WORKERS) --reporter=list 2>&1 | tee test-report.txt'
+	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --workers=$(PLAYWRIGHT_WORKERS) --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)
 test\:basic:

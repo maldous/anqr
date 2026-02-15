@@ -9,65 +9,38 @@ import type { Page } from '@playwright/test';
 
 import {
   waitForQRRender,
-  waitForAccordionOpen,
 } from '../helpers/qr-detector';
-import { setTier, waitForRenderComplete } from '../helpers/test-utils';
+import {
+  openAccordion,
+  selectTier,
+  setInput,
+  toggleSwitch,
+  waitForRenderComplete,
+} from '../helpers/test-utils';
 
 // Helper: Wait for initial load and set tier (page.goto is handled by fixture)
 async function setupPage(page: Page) {
   await page.waitForLoadState('networkidle');
   await waitForQRRender(page);
   // Select professional tier for Metadata section tests
-  await setTier(page, 'professional');
+  await selectTier(page, 'professional');
 }
 
 // Helper: Expand the Metadata section
 async function expandMetadataSection(page: Page) {
-  // First close any open sections for clean state
-  const openTriggers = page.locator('[data-state="open"] > [role="button"]');
-  const openCount = await openTriggers.count();
-  for (let i = 0; i < openCount; i++) {
-    await openTriggers.nth(i).click();
-    await waitForRenderComplete(page, 'settle');
-  }
-  
-  // Use data-testid for stable selection - scroll sidebar first to reveal pro sections
-  const sidebar = page.locator('[data-testid="sidebar-scroll"]');
-  if (await sidebar.count() > 0) {
-    // Scroll sidebar to bottom to reveal professional tier sections
-    await sidebar.evaluate(el => el.scrollTop = el.scrollHeight);
-    await page.waitForTimeout(100); // Brief wait for scroll to settle
-  }
-  
-  // Find and click Metadata accordion trigger using data-testid
-  const metadataTrigger = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
-  const triggerToUse = metadataTrigger;
-  
-  if (await triggerToUse.count() > 0) {
-    await triggerToUse.scrollIntoViewIfNeeded();
-    await triggerToUse.click();
-    await waitForAccordionOpen(page);
-    await waitForRenderComplete(page, 'settle');
-  }
+  await openAccordion(page, 'metadata');
+  await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Set input value using data-testid
 async function setInputByTestId(page: Page, testId: string, value: string) {
-  const input = page.locator(`[data-testid="${testId}"]`);
-  await input.waitFor({ state: 'visible', timeout: 5000 });
-  await input.scrollIntoViewIfNeeded();
-  await input.fill('');
-  await input.fill(value);
-  await input.blur();
+  await setInput(page, testId, value);
   await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Toggle switch using data-testid
 async function toggleSwitchByTestId(page: Page, testId: string) {
-  const switchEl = page.locator(`[data-testid="${testId}"]`);
-  await switchEl.waitFor({ state: 'visible', timeout: 5000 });
-  await switchEl.scrollIntoViewIfNeeded();
-  await switchEl.click();
+  await toggleSwitch(page, testId);
   await waitForRenderComplete(page, 'settle');
 }
 
@@ -428,8 +401,11 @@ test.describe('Metadata Combined Settings', () => {
     const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
     await metadataTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
-    await metadataTrigger.click();
-    await waitForAccordionOpen(page);
+    await metadataTriggerEl.click();
+    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
+      state: 'visible',
+      timeout: 5000,
+    });
     
     // Verify value persisted
     const titleInput = page.locator('[data-testid="metadata-title-input"]');
@@ -796,8 +772,11 @@ test.describe('Metadata Persistence', () => {
     const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
     await metadataTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
-    await metadataTrigger.click();
-    await waitForAccordionOpen(page);
+    await metadataTriggerEl.click();
+    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
+      state: 'visible',
+      timeout: 5000,
+    });
     
     // Verify all values persisted
     expect(await page.locator('[data-testid="metadata-title-input"]').inputValue()).toBe('Persistent Title');
@@ -820,8 +799,11 @@ test.describe('Metadata Persistence', () => {
     const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
     await metadataTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
-    await metadataTrigger.click();
-    await waitForAccordionOpen(page);
+    await metadataTriggerEl.click();
+    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
+      state: 'visible',
+      timeout: 5000,
+    });
     
     // Verify KV row persisted
     const keyInput = page.locator('[data-testid="metadata-custom-key-input-0"]');
@@ -845,8 +827,11 @@ test.describe('Metadata Persistence', () => {
     const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
     await metadataTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
-    await metadataTrigger.click();
-    await waitForAccordionOpen(page);
+    await metadataTriggerEl.click();
+    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
+      state: 'visible',
+      timeout: 5000,
+    });
     
     // Verify state persisted
     const persistedState = await switchEl.getAttribute('data-state');

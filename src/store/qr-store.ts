@@ -1375,8 +1375,20 @@ export const useQRStore = create<QRState>((set, get) => ({
     formatExtra: 'none',
   },
   setOutputFormat: (format) => set((s) => ({ output: { ...s.output, format } })),
-  setOutputWidth: (widthPx) => set((s) => ({ output: { ...s.output, widthPx } })),
-  setOutputHeight: (heightPx) => set((s) => ({ output: { ...s.output, heightPx } })),
+  setOutputWidth: (widthPx) =>
+    set((s) => ({
+      output: {
+        ...s.output,
+        widthPx: Math.max(100, Math.min(2000, Number.isFinite(widthPx) ? widthPx : 400)),
+      },
+    })),
+  setOutputHeight: (heightPx) =>
+    set((s) => ({
+      output: {
+        ...s.output,
+        heightPx: Math.max(100, Math.min(2000, Number.isFinite(heightPx) ? heightPx : 400)),
+      },
+    })),
   setOutputQuality: (quality) => set((s) => ({ output: { ...s.output, quality } })),
   setOutputFilename: (filename) => set((s) => ({ output: { ...s.output, filename } })),
   setOutputGifPaletteSize: (gifPaletteSize) =>

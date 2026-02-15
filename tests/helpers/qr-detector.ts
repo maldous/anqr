@@ -320,20 +320,16 @@ export async function waitForAccordionOpen(
   sectionId?: string,
   timeout = DEFAULT_TIMEOUT
 ): Promise<void> {
-  // Wait for the accordion content region to be visible
-  // If sectionId provided, wait for that specific section's region
   if (sectionId) {
     await page.waitForSelector(
       `[data-testid="accordion-${sectionId}"] [role="region"][data-state="open"]`,
       { state: 'visible', timeout }
-    ).catch(() => {
-      // Fallback: wait for any open region
-    });
+    );
+    return;
   }
-  
-  // Also wait for the content to be visible
-  const content = page.locator(`[role="region"][data-state="open"]`).first();
-  await content.waitFor({ state: 'visible', timeout });
+
+  // Fallback for legacy callers that do not pass a section id.
+  await page.waitForSelector('[role="region"][data-state="open"]', { state: 'visible', timeout });
 }
 
 /**
@@ -375,14 +371,47 @@ export async function waitForQRStable(
  * Wait for select dropdown to open (Radix UI)
  */
 export async function waitForSelectOpen(page: Page, timeout = DEFAULT_TIMEOUT): Promise<void> {
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { state: 'visible', timeout });
+  await page.waitForFunction(
+    () => {
+      const candidates = Array.from(
+        document.querySelectorAll(
+          '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
+        )
+      ) as HTMLElement[];
+
+      return candidates.some((el) => {
+        const style = window.getComputedStyle(el);
+        return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+      });
+    },
+    { timeout, polling: 50 }
+  );
 }
 
 /**
  * Wait for select dropdown to close (Radix UI)
  */
 export async function waitForSelectClosed(page: Page, timeout = DEFAULT_TIMEOUT): Promise<void> {
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { state: 'hidden', timeout });
+  await page.waitForFunction(
+    () => {
+      const candidates = Array.from(
+        document.querySelectorAll(
+          '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
+        )
+      ) as HTMLElement[];
+
+      if (candidates.length === 0) return true;
+
+      return !candidates.some((el) => {
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        if (el.offsetParent === null) return false;
+        if (el.getAttribute('aria-hidden') === 'true') return false;
+        return true;
+      });
+    },
+    { timeout, polling: 50 }
+  );
 }
 
 /**
@@ -399,11 +428,8 @@ export async function clickSelectOption(
   optionIndex: number,
   timeout = DEFAULT_TIMEOUT
 ): Promise<boolean> {
-  const dropdown = page.locator('[data-radix-popper-content-wrapper]').first();
-  await dropdown.waitFor({ state: 'visible', timeout });
-  
-  // Get all options
-  const allOptions = dropdown.locator('[role="option"]');
+  // Get all visible options in the active dropdown/listbox.
+  const allOptions = page.locator('[role="option"]');
   const count = await allOptions.count();
   
   if (optionIndex < 0 || optionIndex >= count) return false;

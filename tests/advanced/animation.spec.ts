@@ -557,7 +557,10 @@ test.describe('Animation Section Accessibility', () => {
   });
 
   test('all switches have role="switch"', async ({ page }) => {
-    const switches = page.locator('[data-testid*="switch"]');
+    const switches = page
+      .locator('[data-testid="accordion-animation"] [role="region"][data-state="open"]')
+      .first()
+      .locator('[data-testid^="animation-"][data-testid$="-switch"]');
     const count = await switches.count();
     
     for (let i = 0; i < count; i++) {

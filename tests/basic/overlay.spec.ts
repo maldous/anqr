@@ -322,7 +322,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(snapshotsAreDifferent(before, after)).toBe(true);
     });
 
-    test.fixme('uploads animated GIF (king.gif) and changes QR', async ({ page, waitForQRRender }) => {
+    test('uploads animated GIF (king.gif) and changes QR', async ({ page, waitForQRRender }) => {
       const before = await getCanvasSnapshot(page);
       
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
@@ -347,7 +347,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(hasPreview || hasCanvas).toBe(true);
     });
 
-    test.fixme('animated GIF shows preview', async ({ page, waitForQRRender }) => {
+    test('animated GIF shows preview', async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
       await waitForQRRender();
       
@@ -372,7 +372,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(snapshotsAreDifferent(withOverlay, afterClear)).toBe(true);
     });
 
-    test.fixme('re-uploading different image changes QR', async ({ page, waitForQRRender }) => {
+    test('re-uploading different image changes QR', async ({ page, waitForQRRender }) => {
       // Upload static image
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
       await waitForQRRender();
@@ -450,7 +450,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(snapshotsAreDifferent(centerSnapshot, blendSnapshot)).toBe(true);
     });
 
-    test.fixme('halftone mode changes QR', async ({ page, waitForQRRender }) => {
+    test('halftone mode changes QR', async ({ page, waitForQRRender }) => {
       const before = await getCanvasSnapshot(page);
       
       await setOverlayMode(page, 'Halftone');
@@ -461,7 +461,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       if (!changed) expect(after.length).toBeGreaterThan(100);
     });
 
-    test.fixme('dithered mode changes QR', async ({ page, waitForQRRender }) => {
+    test('dithered mode changes QR', async ({ page, waitForQRRender }) => {
       await setOverlayMode(page, 'Blend');
       await waitForQRRender();
       const before = await getCanvasSnapshot(page);
@@ -474,7 +474,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       if (!changed) expect(after.length).toBeGreaterThan(100);
     });
 
-    test.fixme('all 4 modes produce different results', async ({ page, waitForQRRender }) => {
+    test('all 4 modes produce different results', async ({ page, waitForQRRender }) => {
       const snapshots: Record<string, string> = {};
       
       // Use exact translated labels from en-US.json
@@ -490,7 +490,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(uniqueSnapshots.size).toBeGreaterThanOrEqual(3);
     });
 
-    test.fixme('switching between modes multiple times works', async ({ page, waitForQRRender }) => {
+    test('switching between modes multiple times works', async ({ page, waitForQRRender }) => {
       // Switch modes several times and verify each switch produces a valid result
       await setOverlayMode(page, 'Blend');
       await waitForQRRender();
@@ -558,7 +558,7 @@ test.describe('Overlay Section - Basic Tier', () => {
 
     // KNOWN ISSUE: Intensity changes may not produce visible differences due to safety clamping
     // or the render debounce race condition. See tests_knowledge.md for details.
-    test.fixme('intensity 100% vs 25% produces visible difference', async ({ page, waitForQRRender }) => {
+    test('intensity 100% vs 25% produces visible difference', async ({ page, waitForQRRender }) => {
       // First set to a mode where intensity has visible effect
       await setOverlayMode(page, 'Blend');
       await waitForQRRender();
@@ -628,7 +628,7 @@ test.describe('Overlay Section - Basic Tier', () => {
     // KNOWN ISSUE: B&W and Grayscale may produce identical output in some modes.
     // This is a potential product issue where colorMode may not be applied correctly.
     // See tests_knowledge.md "Issue 3: Color Mode May Not Reach Final Paint"
-    test.fixme('B&W mode changes QR from grayscale', async ({ page, waitForQRRender }) => {
+    test('B&W mode changes QR from grayscale', async ({ page, waitForQRRender }) => {
       // Use Dithered mode which should show color mode differences more clearly
       await setOverlayMode(page, 'Dithered');
       await waitForQRRender();
@@ -755,7 +755,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // ANIMATED GIF SPECIFIC TESTS
   // ==========================================
   test.describe('Animated GIF Overlay', () => {
-    test.fixme('animated GIF from file produces output', async ({ page, waitForQRRender }) => {
+    test('animated GIF from file produces output', async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
       await waitForQRRender();
       
@@ -773,7 +773,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(snapshot.length).toBeGreaterThan(100);
     });
 
-    test.fixme('animated GIF supports all 4 modes', async ({ page, waitForQRRender }) => {
+    test('animated GIF supports all 4 modes', async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
       await waitForQRRender();
       
@@ -787,7 +787,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       }
     });
 
-    test.fixme('animated GIF supports color modes', async ({ page, waitForQRRender }) => {
+    test('animated GIF supports color modes', async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
       await waitForQRRender();
       
