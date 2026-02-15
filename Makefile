@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:qr\:artifact
+.PHONY: help dev build gallery gallery\:gif gallery\:auto sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix
 
 # ============================================
 # Help
@@ -26,6 +26,7 @@ help:
 	@echo "    make icons:android  Generate Android launcher icons"
 	@echo "    make gallery        Generate gallery images (PNG)"
 	@echo "    make gallery:gif    Generate gallery images (with GIFs)"
+	@echo "    make gallery:auto   Run scan matrix → copy approved artifacts to gallery"
 	@echo "    make sitemap        Generate sitemap.xml"
 	@echo ""
 	@echo "  DEPLOYMENT"
@@ -75,6 +76,9 @@ help:
 	@echo "    make signoff        Run full production sign-off checker"
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:qr:artifact  Run dithered scan gate and save current tsunami/king artifacts"
+	@echo "    make test:overlay:audit  Run overlay preservation wiring audit (heavyweight, ~2min)"
+	@echo "    make test:gallery:matrix Run gallery scan matrix across 4 fixtures x 2 tiers (~4min)"
+	@echo "    make gallery:auto        Full pipeline: scan matrix → copy approved → gallery manifest"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
 	@echo "    make test:coverage:gap  Generate coverage debt report"
 	@echo "    make test:unit:ci   Run CI-safe Vitest subset (excludes missing local fixture tests)"
@@ -239,6 +243,35 @@ gallery:
 
 gallery\:gif:
 	node scripts/generate-gallery.mjs --gif
+
+# ============================================
+# Gallery Scan Pipeline (heavyweight — not in regular test:unit)
+# ============================================
+# These targets are isolated from fast local loops.
+# Run explicitly or wire into nightly CI.
+
+# Run overlay preservation wiring audit across all modes × toggle cases
+test\:overlay\:audit:
+	npx vitest run tests/unit/overlay-preservation-mode-audit.spec.ts
+
+# Run gallery scan matrix: 30 scenarios × 4 fixtures × 2 tiers = 240 runs
+# Produces reports/gallery-scan-matrix.json and reports/gallery-scan-summary.md
+test\:gallery\:matrix:
+	npx vitest run tests/unit/gallery-scan-matrix.spec.ts
+
+# Full gallery auto-generation pipeline:
+# 1. Run scan matrix test (generates reports + artifacts)
+# 2. Copy scan-approved artifacts to public/gallery/
+# 3. Generate scan-showcase-manifest.json
+gallery\:auto: test\:gallery\:matrix
+	node scripts/update-gallery-from-scan-matrix.mjs
+	@echo ""
+	@echo "Gallery auto-generation complete."
+	@echo "  - Scan matrix: reports/gallery-scan-matrix.json"
+	@echo "  - Summary:     reports/gallery-scan-summary.md"
+	@echo "  - Artifacts:   reports/gallery-artifacts/"
+	@echo "  - Gallery:     public/gallery/"
+	@echo "  - Manifest:    public/gallery/scan-showcase-manifest.json"
 
 # ============================================
 # Sitemap Generation
@@ -548,7 +581,7 @@ signoff:
 	npm run test:signoff
 
 test\:unit:
-	npm run test:unit
+	npx vitest run --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts'
 
 test\:qr\:artifact:
 	SAVE_QR_ARTIFACT=1 npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts

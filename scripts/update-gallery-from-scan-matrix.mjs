@@ -35,12 +35,17 @@ async function main() {
     const scenarioId = candidate.scenarioId;
     const src = path.join(ROOT, candidate.artifactPath);
     if (!(await exists(src))) continue;
-    const dstFile = `scan-${scenarioId}.png`;
+    const isAnimated = candidate.isAnimated ?? matrix.fixtures?.find(f => f.id === candidate.selectedFixtureId)?.isAnimated ?? false;
+    const ext = isAnimated ? 'gif' : 'png';
+    const dstFile = `scan-${scenarioId}.${ext}`;
     const dst = path.join(GALLERY_DIR, dstFile);
     await fs.copyFile(src, dst);
     copied.push({
       scenarioId,
       selectedFixtureId: candidate.selectedFixtureId,
+      isAnimated: candidate.isAnimated ?? false,
+      heroPriority: candidate.heroPriority ?? 0,
+      galleryEligible: candidate.galleryEligible ?? false,
       sourceArtifact: candidate.artifactPath,
       galleryFile: dstFile,
     });
@@ -50,6 +55,8 @@ async function main() {
     generatedAt: new Date().toISOString(),
     sourceReport: 'reports/gallery-scan-matrix.json',
     copiedCount: copied.length,
+    tierA: matrix.tierA ?? null,
+    tierB: matrix.tierB ?? null,
     items: copied,
   };
   await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
@@ -62,4 +69,3 @@ main().catch((err) => {
   console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });
-

@@ -10,6 +10,9 @@ export default defineConfig({
     environment: 'happy-dom',
     // Include unit test files
     include: ['tests/unit/**/*.spec.ts', 'tests/unit/**/*.test.ts'],
+    // Heavyweight suites are excluded at the CLI level (see Makefile test:unit)
+    // rather than here, so `make test:gallery:matrix` and `make test:overlay:audit`
+    // can still target them directly.
     // Coverage configuration
     coverage: {
       provider: 'v8',

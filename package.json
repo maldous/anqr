@@ -14,7 +14,7 @@
     "test:permutations": "playwright test --project=permutations",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run --exclude 'tests/unit/gallery-scan-matrix.spec.ts' --exclude 'tests/unit/overlay-preservation-mode-audit.spec.ts'",
     "test:unit:coverage": "vitest run --coverage",
     "test:coverage:gap": "node scripts/report-code-coverage-gap.js",
     "test:unit:watch": "vitest",
