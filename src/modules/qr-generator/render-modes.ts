@@ -311,19 +311,20 @@ export function applyQROverlayMode(
       break;
 
     case 'mosaic': {
-      // Mosaic fills EVERY cell with image colors - reveals full image
+      // Mosaic fills every cell with image colors.
+      // Keep a strict dark/light luminance split so module boundaries stay scannable.
       result.shouldDrawCell = true;
       const mosaicColor = overlayWithColors.colors?.[row]?.[col];
       if (mosaicColor) {
         const mosaicIntensity = effectiveIntensity; // 0..1
         if (isDark) {
-          const darkFactor = computeDarkFactor(mosaicIntensity, 0.8);
+          // High floor contrast for dark modules:
+          // at full intensity, dark rails stay near-black instead of midtones.
+          const darkFactor = computeDarkFactor(mosaicIntensity, 0.08);
           result.moduleColor = `rgb(${Math.round(mosaicColor.r * darkFactor)},${Math.round(mosaicColor.g * darkFactor)},${Math.round(mosaicColor.b * darkFactor)})`;
         } else {
-          // Light cells: blend toward white for scanner contrast.
-          // Base 0.4 ensures light cells are always significantly lighter than dark cells.
-          // Additional lightening scales with intensity via computeLightBlend.
-          const blendToWhite = 0.4 + computeLightBlend(mosaicIntensity, 0.3);
+          // Light modules stay close to paper-white so the scanner sees clear separation.
+          const blendToWhite = 0.72 + computeLightBlend(mosaicIntensity, 0.24);
           const lightR = Math.round(mosaicColor.r + (255 - mosaicColor.r) * blendToWhite);
           const lightG = Math.round(mosaicColor.g + (255 - mosaicColor.g) * blendToWhite);
           const lightB = Math.round(mosaicColor.b + (255 - mosaicColor.b) * blendToWhite);
@@ -340,11 +341,16 @@ export function applyQROverlayMode(
 
       const isExtreme = overlayMode === 'extreme';
       const blendPresFunctional = config.blendPreservations === true && isFunctionalPattern;
+      const functionalExtremeBlend = isExtreme && blendPresFunctional;
       const preserveBoost = blendPresFunctional ? 1.14 : 1;
       const darkBlend = isExtreme
         ? Math.min(1, effectiveIntensity * 1.18 * preserveBoost)
         : Math.min(1, effectiveIntensity * 0.82 * preserveBoost);
-      const darkFactor = computeDarkFactor(darkBlend, isExtreme ? 0.52 : 0.68);
+      // Keep extreme mode dark rail significantly darker to preserve scanner contrast.
+      const darkFactor = computeDarkFactor(
+        darkBlend,
+        functionalExtremeBlend ? 0.22 : isExtreme ? 0.44 : 0.68
+      );
       const darkR = Math.round(ditherColor.r * darkFactor);
       const darkG = Math.round(ditherColor.g * darkFactor);
       const darkB = Math.round(ditherColor.b * darkFactor);
@@ -360,11 +366,27 @@ export function applyQROverlayMode(
       if (isExtreme || blendPresFunctional) {
         const lightMix = computeLightBlend(
           effectiveIntensity,
-          blendPresFunctional ? (isExtreme ? 0.36 : 0.36) : 0.25
+          functionalExtremeBlend
+            ? 0.62
+            : blendPresFunctional
+              ? isExtreme
+                ? 0.42
+                : 0.36
+              : isExtreme
+                ? 0.34
+                : 0.25
         );
-        const lightR = Math.round(ditherColor.r + (255 - ditherColor.r) * (0.7 + lightMix * 0.3));
-        const lightG = Math.round(ditherColor.g + (255 - ditherColor.g) * (0.7 + lightMix * 0.3));
-        const lightB = Math.round(ditherColor.b + (255 - ditherColor.b) * (0.7 + lightMix * 0.3));
+        const whiteBase = functionalExtremeBlend ? 0.58 : isExtreme ? 0.82 : 0.7;
+        const whitePush = functionalExtremeBlend ? 0.32 : isExtreme ? 0.18 : 0.3;
+        const lightR = Math.round(
+          ditherColor.r + (255 - ditherColor.r) * (whiteBase + lightMix * whitePush)
+        );
+        const lightG = Math.round(
+          ditherColor.g + (255 - ditherColor.g) * (whiteBase + lightMix * whitePush)
+        );
+        const lightB = Math.round(
+          ditherColor.b + (255 - ditherColor.b) * (whiteBase + lightMix * whitePush)
+        );
         result.moduleColor = blendColors(
           config.bgColor,
           `rgb(${lightR},${lightG},${lightB})`,

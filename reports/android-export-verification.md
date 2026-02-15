@@ -1,10 +1,10 @@
 # Android Export Verification Checklist
 
-Date: 2026-02-07
-Device: Samsung Galaxy Tab S6 Lite (`T612B`, serial `DI8T45BAZ5NB5TLV`)
-Android Version: 14 (SDK 34)
-ANQR Build/Commit: local debug build from workspace (post MediaStore + Analyze export fixes)
-Tester: user + Codex session
+Date: 2026-02-15
+Device: Android Emulator (`emulator-5554`, model `sdk_gphone64_x86_64`)
+Android Version: 16 (SDK 36)
+ANQR Build/Commit: local debug build from workspace (post overlay gallery native load fix + MediaStore export path)
+Tester: Codex session (adb automation)
 
 ## Scope
 Manual verification of export behavior on Android for Documents/Downloads visibility and openability.
@@ -41,17 +41,20 @@ Manual verification of export behavior on Android for Documents/Downloads visibi
 - FAIL: Any missing file, wrong extension, open failure, or decode mismatch.
 
 ## Results
-- PNG: NOT VERIFIED in this run
-- SVG: NOT VERIFIED in this run
+- PNG: PASS
+- SVG: PASS
 - JSON: PASS
-- Overlay export: NOT VERIFIED in this run
+- Overlay export: PASS
 - Animated export: PASS (GIF saved successfully)
 
 ## Notes / Defects
-- Fixed during this run: Android native export path now uses implemented plugin method (`saveToDocuments`) via `MediaStoreWriter.saveBase64ToDocuments` fallback order.
-- Fixed during this run: Analyze JSON export now uses native save path and visible native export button label.
-- Fixed during this run: AdMob banner fallback to test IDs when prod IDs are unset in runtime env.
-- Evidence captured in session log:
-  - "test ad working"
-  - "export saved as gif"
-  - "export json succesful"
+- 2026-02-15 verification evidence (emulator run):
+  - Overlay gallery selection now succeeds on native (`tsunami.jpg` selected and preview rendered).
+  - Exported files observed in `/sdcard/Documents/ANQR`:
+    - `anqr-qrcode.gif` (overlay/animated path), size `51711`, timestamp `2026-02-15 18:13`
+    - `anqr-qrcode.png`, size `174360`, timestamp `2026-02-15 18:17`
+    - `anqr-qrcode (1).svg`, size `232711`, timestamp `2026-02-15 18:18`
+  - Log evidence confirms native writes via `MediaStoreWriter.saveToDocuments` and `MediaProvider` move-to-final-path for PNG/SVG.
+- Defect fixed in this run:
+  - Overlay gallery load failed on native WebView due cross-origin fetch path (`https://anqr.link/...`) causing `[OVERLAY] Failed to load gallery image`.
+  - Resolved by using same-origin bundled public assets (`/tsunami.jpg`, `/king.gif`, `/logo.png`, `/test.png`) in `src/components/sections/OverlaySection.tsx`.

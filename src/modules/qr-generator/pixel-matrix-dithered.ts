@@ -454,6 +454,22 @@ function isFixedDarkModule(row: number, col: number, moduleCount: number): boole
   return row === moduleCount - 8 && col === 8;
 }
 
+function isFunctionalPatternModule(
+  row: number,
+  col: number,
+  moduleCount: number,
+  version: number
+): boolean {
+  return (
+    isFixedDarkModule(row, col, moduleCount) ||
+    isFinderModuleOrSeparator(row, col, moduleCount) ||
+    isTimingPattern(row, col, moduleCount) ||
+    isAlignmentPattern(row, col, moduleCount, version) ||
+    isFormatInfo(row, col, moduleCount) ||
+    isVersionInfo(row, col, moduleCount, version)
+  );
+}
+
 function enforceModuleConstraints(
   qr: QRCodeInstance,
   matrix: boolean[][],
@@ -555,13 +571,13 @@ function enforceModuleConstraints(
             Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
           )
         );
-        if (finderBlendGuidance && isFinderModuleOrSeparator(mr, mc, moduleCount)) {
+        if (finderBlendGuidance && isFunctionalPatternModule(mr, mc, moduleCount, version)) {
           if (qr.isDark(mr, mc)) {
-            darkMinMap[mr][mc] = Math.max(darkMinMap[mr][mc], 0.56);
-            darkCenterMinMap[mr][mc] = Math.max(darkCenterMinMap[mr][mc], 0.72);
+            darkMinMap[mr][mc] = Math.max(darkMinMap[mr][mc], 0.58);
+            darkCenterMinMap[mr][mc] = Math.max(darkCenterMinMap[mr][mc], 0.74);
           } else {
-            lightMaxMap[mr][mc] = Math.min(lightMaxMap[mr][mc], 0.3);
-            lightCenterMaxMap[mr][mc] = Math.min(lightCenterMaxMap[mr][mc], 0.18);
+            lightMaxMap[mr][mc] = Math.min(lightMaxMap[mr][mc], 0.26);
+            lightCenterMaxMap[mr][mc] = Math.min(lightCenterMaxMap[mr][mc], 0.14);
           }
         }
       }
@@ -1049,6 +1065,14 @@ export async function generateBlueNoiseMatrix(
   const tileSize = config.blueNoiseTileSize ?? 64;
   const tile = generateBlueNoiseTile(tileSize, seed);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
+  const scanGateProfile = config.scanGateProfile ?? 'full';
+  const scanGateActive = scanGateProfile !== 'off';
+  const scanGateBiasBoost = scanGateActive ? 0.06 + intensity * 0.04 : 0;
+  const minPolarityBias = 0.08 + intensity * 0.08;
+  const effectiveBitBias = Math.max(
+    qrBitBiasStrength + scanGateBiasBoost,
+    minPolarityBias + scanGateBiasBoost * 0.4
+  );
 
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
@@ -1074,11 +1098,15 @@ export async function generateBlueNoiseMatrix(
       const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
       // ART-FIRST: base decision solely on artwork luminance + global noise field.
       const centerW = moduleCenterWeight(x, y, scale);
+      const polarityBoost = scanGateActive ? 1.18 : 1;
+      const polarityBias =
+        (qrIsDark ? 1 : -1) * (0.14 + intensity * 0.18) * (0.4 + centerW * 0.6) * polarityBoost;
       const qrBias = fixedDarkUnlocked
         ? 0
-        : (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + intensity * 0.8);
-      const d = clamp01((overlayDark + qrBias) * (0.72 + intensity * 0.56));
-      desire[y][x] = overlayDark;
+        : (qrIsDark ? 1 : -1) * effectiveBitBias * centerW * (0.45 + intensity * 0.8);
+      const decisionGain = (0.64 + intensity * 0.44) * (scanGateActive ? 1.04 : 1);
+      const d = clamp01((overlayDark + qrBias + polarityBias) * decisionGain);
+      desire[y][x] = clamp01(overlayDark + (qrIsDark ? 0.12 : -0.12));
 
       const n = sampleBlueNoise(x, y, tile, tileSize);
       const isDark = n < d;
@@ -1088,7 +1116,19 @@ export async function generateBlueNoiseMatrix(
     }
   }
 
-  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, config);
+  const strictConstraintConfig: QRGeneratorConfig = {
+    ...config,
+    darkMinOccupancy: Math.max(
+      config.darkMinOccupancy ?? 0,
+      (scanGateActive ? 0.56 : 0.52) + intensity * 0.08
+    ),
+    lightMaxOccupancy: Math.min(
+      config.lightMaxOccupancy ?? 1,
+      (scanGateActive ? 0.44 : 0.48) - intensity * 0.08
+    ),
+    optimizeIterations: Math.max(config.optimizeIterations ?? 0, scanGateActive ? 10 : 8),
+  };
+  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, strictConstraintConfig);
   if (config.cleanupSpeckle === true) {
     removeIsolatedSpeckles(qr, matrix, moduleCount, scale, version, config);
   }

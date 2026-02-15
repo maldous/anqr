@@ -24,11 +24,33 @@ const contentCache = new Map<string, Record<StaticPageType, PageDefinition>>();
 // The module exports match the expected Record type structure
 contentCache.set('en-GB', enGB);
 
+// Share static content payloads for variants that currently have identical content.
+const STATIC_LANGUAGE_ALIASES: Record<string, string> = {
+  'en-AU': 'en-US',
+  'en-CA': 'en-US',
+  'en-IN': 'en-US',
+  'en-SG': 'en-US',
+  'en-ZA': 'en-US',
+  'fa-AE': 'fa',
+  'fa-IR': 'fa',
+};
+
 // Use import.meta.glob for Vite to properly analyze and code-split
 // Each language folder gets its own chunk
 // Exclude txt/ folder (build tools) and use single-level glob to avoid matching root index.ts
 const staticModules = import.meta.glob<Record<StaticPageType, PageDefinition>>(
-  ['./*/index.ts', '!./txt/index.ts', '!./rm/index.ts'],
+  [
+    './*/index.ts',
+    '!./txt/index.ts',
+    '!./rm/index.ts',
+    '!./en-AU/index.ts',
+    '!./en-CA/index.ts',
+    '!./en-IN/index.ts',
+    '!./en-SG/index.ts',
+    '!./en-ZA/index.ts',
+    '!./fa-AE/index.ts',
+    '!./fa-IR/index.ts',
+  ],
   {
     import: '*',
     eager: false,
@@ -186,20 +208,22 @@ const supportedLanguages = new Set([
  * Resolve a language code to a supported language code
  */
 function resolveLanguageCode(language: string): string {
+  const resolveAlias = (code: string): string => STATIC_LANGUAGE_ALIASES[code] ?? code;
+
   // Direct match
-  if (supportedLanguages.has(language)) return language;
+  if (supportedLanguages.has(language)) return resolveAlias(language);
 
   // Try mapped code
   const mappedCode = browserToGooglePlay[language];
-  if (mappedCode && supportedLanguages.has(mappedCode)) return mappedCode;
+  if (mappedCode && supportedLanguages.has(mappedCode)) return resolveAlias(mappedCode);
 
   // Try base language mapping
   const baseLanguage = language.split('-')[0];
   const mappedBase = browserToGooglePlay[baseLanguage];
-  if (mappedBase && supportedLanguages.has(mappedBase)) return mappedBase;
+  if (mappedBase && supportedLanguages.has(mappedBase)) return resolveAlias(mappedBase);
 
   // Try base language direct match
-  if (supportedLanguages.has(baseLanguage)) return baseLanguage;
+  if (supportedLanguages.has(baseLanguage)) return resolveAlias(baseLanguage);
 
   // Fallback to English
   return 'en-GB';

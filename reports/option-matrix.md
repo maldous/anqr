@@ -184,8 +184,6 @@
 - event
 - event_rsvp
 - calendar_subscription
-- file_url
-- cloud_link
 - social_profile
 - messaging_link
 - epc_sepa
@@ -231,4 +229,3 @@
 - match_module
 - solid
 - dashed
-

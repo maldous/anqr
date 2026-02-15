@@ -265,9 +265,9 @@ describe('qr-store', () => {
     store.getState().setPayloadAppLink({ platform: 'custom', scheme: 'anqr', host: 'open', path: '/foo' });
     expect(store.getState().getPayloadText()).toBe('anqr://open/foo');
 
-    store.getState().setPayloadKind('file_url');
-    store.getState().setPayloadText('files.example.com/a.pdf');
-    expect(store.getState().getPayloadText()).toBe('https://files.example.com/a.pdf');
+    store.getState().setPayloadKind('url');
+    store.getState().setPayloadUrl({ href: 'files.example.com/a.pdf' });
+    expect(store.getState().getPayloadText()).toBe('files.example.com/a.pdf');
 
     store.getState().setPayloadKind('custom');
     store.getState().setPayloadValidation({ trim: true, normalizeNewlines: false });

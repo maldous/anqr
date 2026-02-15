@@ -42,6 +42,8 @@ function main() {
   run('npm run typecheck');
   run('npm run test:unit:ci');
   run('npm run test:i18n');
+  run('npm run build');
+  run('npm run test:bundle:budget');
 
   console.log('\nProduction sign-off check passed.');
 }

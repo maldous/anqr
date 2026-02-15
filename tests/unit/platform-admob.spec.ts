@@ -84,6 +84,13 @@ describe('platform admob service', () => {
     const mod = await import('../../src/modules/platform/admob');
     await mod.initializeAdMob();
 
+    // showInterstitial should self-prepare when a context was not preloaded
+    const prepareBeforeGallery = plugin.module.AdMob.prepareInterstitial.mock.calls.length;
+    expect(await mod.showInterstitial('gallery')).toBe(true);
+    expect(plugin.module.AdMob.prepareInterstitial.mock.calls.length).toBeGreaterThan(
+      prepareBeforeGallery
+    );
+
     expect(await mod.prepareInterstitial('interstitial')).toBe(true);
     expect(await mod.prepareInterstitial('rewardedInterstitial')).toBe(true);
     expect(plugin.module.AdMob.prepareInterstitial).toHaveBeenCalled();
@@ -97,6 +104,18 @@ describe('platform admob service', () => {
     expect(await mod.prepareRewardedAd('premium')).toBe(true);
 
     expect(mod.isRewardedAdReady()).toBe(true);
+
+    // showRewardedAd should self-prepare when needed
+    const prepareBeforePremium = plugin.module.AdMob.prepareRewardedAd.mock.calls.length;
+    await expect(mod.showRewardedAd('premium')).resolves.toMatchObject({
+      rewarded: true,
+      amount: 5,
+      type: 'gem',
+    });
+    expect(plugin.module.AdMob.prepareRewardedAd.mock.calls.length).toBeGreaterThanOrEqual(
+      prepareBeforePremium
+    );
+
     await expect(mod.showRewardedAd('rewarded')).resolves.toMatchObject({
       rewarded: true,
       amount: 5,

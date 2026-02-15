@@ -32,7 +32,7 @@ import {
   gallerySections,
   getGalleryImagePath,
 } from '@/data/gallery-items';
-import { showInterstitial } from '@/modules/platform';
+import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 
 // Icon registry for gallery sections - only import icons actually used in gallery-items.ts
 const iconRegistry: Record<string, LucideIcon> = {
@@ -283,7 +283,17 @@ export function Gallery({ filter }: GalleryProps) {
 
   // Show interstitial ad when Gallery opens (on native apps)
   useEffect(() => {
-    showInterstitial('gallery');
+    let cancelled = false;
+    const showGalleryInterstitial = async () => {
+      await prepareInterstitial('gallery');
+      if (!cancelled) {
+        await showInterstitial('gallery');
+      }
+    };
+    void showGalleryInterstitial();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Update document title when language changes

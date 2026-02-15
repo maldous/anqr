@@ -101,9 +101,6 @@ export type PayloadKind =
   | 'event'
   | 'event_rsvp'
   | 'calendar_subscription'
-  // Documents/Media
-  | 'file_url'
-  | 'cloud_link'
   // Social/Communication
   | 'social_profile'
   | 'messaging_link'
@@ -1611,17 +1608,6 @@ export const useQRStore = create<QRState>((set, get) => ({
         const url = rsvp.rsvpUrl || payload.text;
         if (url.includes('@') && !url.startsWith('mailto:') && !url.startsWith('http')) {
           return `mailto:${url}?subject=RSVP`;
-        }
-        return url;
-      }
-
-      // file_url and cloud_link removed - use URL payload type instead
-      case 'file_url':
-      case 'cloud_link': {
-        // Fallback for any persisted data - treat as plain URL
-        let url = payload.text || payload.cloudLink?.url || '';
-        if (url && !(url.startsWith('http://') || url.startsWith('https://'))) {
-          url = `https://${url}`;
         }
         return url;
       }

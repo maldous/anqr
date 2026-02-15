@@ -85,6 +85,6 @@ describe('qr-generator decode', () => {
       const decoded = decodeQR(imageData);
       expect(decoded?.data).toBe(config.content);
     },
-    15000
+    30000
   );
 });

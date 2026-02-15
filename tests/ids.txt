@@ -1,5 +1,5 @@
 1) Canonical Managed data-testid Inventory
-- Total managed IDs: 461
+- Total managed IDs: 463
 - Source: auto-generated from DynamicTestId + literal fallback scan of `src/**` and `index.html`
 - Rule: when adding/removing IDs, regenerate this file with `node scripts/generate-test-ids.js`
 
@@ -270,6 +270,8 @@
   source: src/components/sections/RenderSection.tsx
 
 6) Overlay Section
+- overlay-blend-preservations-switch
+  source: src/components/sections/OverlaySection.tsx
 - overlay-color-mode-content
   source: src/components/sections/OverlaySection.tsx
 - overlay-color-mode-select
@@ -279,6 +281,8 @@
 - overlay-crop-switch
   source: src/components/sections/OverlaySection.tsx
 - overlay-enabled-switch
+  source: src/components/sections/OverlaySection.tsx
+- overlay-finder-dither-strength-slider
   source: src/components/sections/OverlaySection.tsx
 - overlay-from-url-button
   source: src/components/sections/OverlaySection.tsx

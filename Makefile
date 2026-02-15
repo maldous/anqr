@@ -1,4 +1,4 @@
-.PHONY: help dev build gallery gallery\:gif gallery\:auto sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix
+.PHONY: help dev build gallery gallery\:gif gallery\:auto sitemap deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources
 
 # ============================================
 # Help
@@ -66,6 +66,7 @@ help:
 	@echo "  UTILITIES"
 	@echo "    make zip            Create git archive zip of the project"
 	@echo "    make dep            Generate dependency graph (deps.png)"
+	@echo "    make resources      Show auto-detected CPU/mem/disk tuning values"
 	@echo ""
 	@echo "  CODE ANALYSIS (SonarQube)"
 	@echo "    make sonar          Run SonarQube analysis (requires local server)"
@@ -77,7 +78,10 @@ help:
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:qr:artifact  Run dithered scan gate and save current tsunami/king artifacts"
 	@echo "    make test:overlay:audit  Run overlay preservation wiring audit (heavyweight, ~2min)"
-	@echo "    make test:gallery:matrix Run gallery scan matrix across 4 fixtures x 2 tiers (~4min)"
+	@echo "    make test:gallery:matrix Run sharded gallery scan matrix across 4 fixtures x 2 tiers"
+	@echo "                            Tunables: RESOURCE_UTILIZATION_PCT, RESOURCE_RESERVED_CORES,"
+	@echo "                                      SCAN_MATRIX_SHARDS, SCAN_MATRIX_ESTIMATED_SHARD_GIB,"
+	@echo "                                      SCAN_MATRIX_ESTIMATED_SHARD_DISK_GIB, SCAN_MATRIX_KEEP_SHARDS"
 	@echo "    make gallery:auto        Full pipeline: scan matrix → copy approved → gallery manifest"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
 	@echo "    make test:coverage:gap  Generate coverage debt report"
@@ -87,6 +91,8 @@ help:
 	@echo "    make test:required:strict  Fail if requirements are not direct-id backed"
 	@echo "    make test:required:gap  Generate required mapping debt report"
 	@echo "    make test:testid:refs  Validate tests only use managed test IDs"
+	@echo "    make test:bundle:budget Build + enforce bundle budgets (main/non-i18n/i18n)"
+	@echo "    make report:payload:matrix Generate per-kind payload wiring verification report"
 	@echo "    make test           Run ALL tests: comprehensive quality gates + full unit suite + E2E"
 	@echo "    make test:basic     Run basic tier UI tests only"
 	@echo "    make test:advanced  Run advanced tier UI tests only"
@@ -101,6 +107,106 @@ help:
 # Environment variables
 # ============================================
 export ENV := PROD
+
+# Host resource autodetection used for reusable max-utilization defaults.
+# Override any value on invocation when needed.
+HOST_CPU_CORES ?= $(shell \
+	if command -v nproc >/dev/null 2>&1; then \
+		nproc; \
+	elif command -v sysctl >/dev/null 2>&1; then \
+		sysctl -n hw.ncpu 2>/dev/null || echo 1; \
+	else \
+		echo 1; \
+	fi)
+HOST_MEM_GIB ?= $(shell \
+	if [ -r /proc/meminfo ]; then \
+		awk '/MemTotal/ {printf "%d\n", $$2 / 1024 / 1024}' /proc/meminfo; \
+	elif command -v sysctl >/dev/null 2>&1; then \
+		bytes=$$(sysctl -n hw.memsize 2>/dev/null || echo 0); \
+		awk "BEGIN {v=$$bytes/1024/1024/1024; if (v < 1) v = 1; printf \"%d\n\", v}"; \
+	else \
+		echo 1; \
+	fi)
+HOST_DISK_FREE_GIB ?= $(shell \
+	val=$$(df -Pk . 2>/dev/null | awk 'NR==2 {print int($$4/1024/1024)}'); \
+	if [ -n "$$val" ] && [ "$$val" -gt 0 ] 2>/dev/null; then \
+		echo $$val; \
+	else \
+		echo 1; \
+	fi)
+
+# Global utilization strategy for heavy jobs.
+# Example: make test:gallery:matrix RESOURCE_UTILIZATION_PCT=98 RESOURCE_RESERVED_CORES=0
+RESOURCE_UTILIZATION_PCT ?= 95
+RESOURCE_RESERVED_CORES ?= 1
+
+# Gallery scan matrix tuning.
+# Auto shards are bounded by CPU, memory, and free disk budgets.
+SCAN_MATRIX_ESTIMATED_SHARD_GIB ?= 2
+SCAN_MATRIX_ESTIMATED_SHARD_DISK_GIB ?= 1
+SCAN_MATRIX_KEEP_SHARDS ?= 0
+SCAN_MATRIX_AUTO_SHARDS ?= $(shell \
+	cpu=$(HOST_CPU_CORES); \
+	mem=$(HOST_MEM_GIB); \
+	disk=$(HOST_DISK_FREE_GIB); \
+	util=$(RESOURCE_UTILIZATION_PCT); \
+	reserve=$(RESOURCE_RESERVED_CORES); \
+	mem_per=$(SCAN_MATRIX_ESTIMATED_SHARD_GIB); \
+	disk_per=$(SCAN_MATRIX_ESTIMATED_SHARD_DISK_GIB); \
+	cpu_budget=$$((cpu * util / 100)); \
+	[ $$cpu_budget -lt 1 ] && cpu_budget=1; \
+	cpu_budget=$$((cpu_budget - reserve)); \
+	[ $$cpu_budget -lt 1 ] && cpu_budget=1; \
+	mem_budget=$$((mem * util / 100)); \
+	[ $$mem_budget -lt 1 ] && mem_budget=1; \
+	disk_budget=$$((disk * util / 100)); \
+	[ $$disk_budget -lt 1 ] && disk_budget=1; \
+	[ $$mem_per -lt 1 ] && mem_per=1; \
+	[ $$disk_per -lt 1 ] && disk_per=1; \
+	by_mem=$$((mem_budget / mem_per)); \
+	[ $$by_mem -lt 1 ] && by_mem=1; \
+	by_disk=$$((disk_budget / disk_per)); \
+	[ $$by_disk -lt 1 ] && by_disk=1; \
+	shards=$$cpu_budget; \
+	[ $$by_mem -lt $$shards ] && shards=$$by_mem; \
+	[ $$by_disk -lt $$shards ] && shards=$$by_disk; \
+	echo $$shards)
+SCAN_MATRIX_SHARDS ?= $(SCAN_MATRIX_AUTO_SHARDS)
+
+# Playwright default worker pool also follows CPU utilization controls.
+PLAYWRIGHT_WORKERS ?= $(shell \
+	cpu=$(HOST_CPU_CORES); \
+	util=$(RESOURCE_UTILIZATION_PCT); \
+	reserve=$(RESOURCE_RESERVED_CORES); \
+	workers=$$((cpu * util / 100)); \
+	[ $$workers -lt 1 ] && workers=1; \
+	workers=$$((workers - reserve)); \
+	[ $$workers -lt 1 ] && workers=1; \
+	echo $$workers)
+
+# Vitest worker policy for heavyweight suites.
+VITEST_MAX_WORKERS ?= 100%
+
+# Bundle budget gates (KiB). i18n has warning and hard-fail thresholds.
+BUNDLE_BUDGET_MAIN_ENTRY_KIB ?= 700
+BUNDLE_BUDGET_NON_I18N_TOTAL_KIB ?= 2200
+BUNDLE_BUDGET_I18N_WARN_KIB ?= 22000
+BUNDLE_BUDGET_I18N_MAX_KIB ?= 24000
+
+resources:
+	@echo ""
+	@echo "ANQR Resource Profile (auto-detected)"
+	@echo "  CPU cores:            $(HOST_CPU_CORES)"
+	@echo "  Memory (GiB):         $(HOST_MEM_GIB)"
+	@echo "  Free disk (GiB):      $(HOST_DISK_FREE_GIB)"
+	@echo "  Utilization target:   $(RESOURCE_UTILIZATION_PCT)%"
+	@echo "  Reserved CPU cores:   $(RESOURCE_RESERVED_CORES)"
+	@echo "  Matrix shard memory:  $(SCAN_MATRIX_ESTIMATED_SHARD_GIB) GiB/shard"
+	@echo "  Matrix shard disk:    $(SCAN_MATRIX_ESTIMATED_SHARD_DISK_GIB) GiB/shard"
+	@echo "  Matrix auto shards:   $(SCAN_MATRIX_AUTO_SHARDS)"
+	@echo "  Matrix run shards:    $(SCAN_MATRIX_SHARDS)"
+	@echo "  Playwright workers:   $(PLAYWRIGHT_WORKERS)"
+	@echo ""
 
 # ============================================
 # AdSense Configuration (for Web - anqr.link)
@@ -125,6 +231,8 @@ export VITE_ADSENSE_SLOT_SIDEBAR_BOTTOM := 3247547575
 # MEDIUM PRIORITY - Gallery page ads
 export VITE_ADSENSE_SLOT_GALLERY_LEFT := 2684618407
 export VITE_ADSENSE_SLOT_GALLERY_RIGHT := 3454774598
+export VITE_ADSENSE_SLOT_GALLERY_TOP := 5862086716
+export VITE_ADSENSE_SLOT_GALLERY_BOTTOM := 9557805050
 
 # LOWER PRIORITY - Static page ads
 export VITE_ADSENSE_SLOT_STATIC_LEFT := 1934465907
@@ -156,6 +264,7 @@ export VITE_ADSENSE_SLOT_GALLERY_AFTER_COLOR_MODES := 2062458418
 export VITE_ADSENSE_SLOT_GALLERY_AFTER_PREPROCESSING := 8436295070
 export VITE_ADSENSE_SLOT_GALLERY_AFTER_ENCODING := 4497050062
 export VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING := 9557805050
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS := 9557805050
 
 # ============================================
 # AdMob Configuration (for native Android/iOS apps)
@@ -252,12 +361,16 @@ gallery\:gif:
 
 # Run overlay preservation wiring audit across all modes × toggle cases
 test\:overlay\:audit:
-	npx vitest run tests/unit/overlay-preservation-mode-audit.spec.ts
+	ANQR_LOG_LEVEL=error npx vitest run --maxWorkers=$(VITEST_MAX_WORKERS) tests/unit/overlay-preservation-mode-audit.spec.ts
 
 # Run gallery scan matrix: 30 scenarios × 4 fixtures × 2 tiers = 240 runs
 # Produces reports/gallery-scan-matrix.json and reports/gallery-scan-summary.md
 test\:gallery\:matrix:
-	npx vitest run tests/unit/gallery-scan-matrix.spec.ts
+	ANQR_LOG_LEVEL=error \
+	SCAN_MATRIX_SHARDS=$(SCAN_MATRIX_SHARDS) \
+	SCAN_MATRIX_ESTIMATED_SHARD_GIB=$(SCAN_MATRIX_ESTIMATED_SHARD_GIB) \
+	SCAN_MATRIX_KEEP_SHARDS=$(SCAN_MATRIX_KEEP_SHARDS) \
+	node scripts/run-gallery-matrix-sharded.mjs
 
 # Full gallery auto-generation pipeline:
 # 1. Run scan matrix test (generates reports + artifacts)
@@ -569,10 +682,23 @@ _quality-gates:
 	npm run test:testid:refs
 	npm run test:i18n
 	npx depcruise --config .dependency-cruiser.cjs src
-	npm audit --audit-level=high
+	@AUDIT_LOG=$$(mktemp); \
+	if npm audit --audit-level=high > "$$AUDIT_LOG" 2>&1; then \
+		cat "$$AUDIT_LOG"; \
+	else \
+		cat "$$AUDIT_LOG"; \
+		if rg -q 'ENOTFOUND|EAI_AGAIN|ECONNREFUSED|network' "$$AUDIT_LOG"; then \
+			echo "npm audit unavailable (network resolution failure), skipping in this run."; \
+		else \
+			rm -f "$$AUDIT_LOG"; \
+			exit 1; \
+		fi; \
+	fi; \
+	rm -f "$$AUDIT_LOG"
 	@which osv-scanner > /dev/null 2>&1 && osv-scanner --lockfile package-lock.json || echo 'osv-scanner not installed, skipping'
 	@which semgrep > /dev/null 2>&1 && semgrep --config auto src/ --exclude 'src/i18n/**' --severity WARNING --severity ERROR --error --quiet || echo 'semgrep not installed, skipping'
 	npx knip --include dependencies,unlisted,exports
+	$(MAKE) test:bundle:budget
 
 quality: UNIT_CMD = test:unit:ci
 quality: _quality-gates
@@ -613,30 +739,41 @@ test\:testid:
 test\:testid\:refs:
 	npm run test:testid:refs
 
+test\:bundle\:budget:
+	npm run build
+	BUNDLE_BUDGET_MAIN_ENTRY_KIB=$(BUNDLE_BUDGET_MAIN_ENTRY_KIB) \
+	BUNDLE_BUDGET_NON_I18N_TOTAL_KIB=$(BUNDLE_BUDGET_NON_I18N_TOTAL_KIB) \
+	BUNDLE_BUDGET_I18N_WARN_KIB=$(BUNDLE_BUDGET_I18N_WARN_KIB) \
+	BUNDLE_BUDGET_I18N_MAX_KIB=$(BUNDLE_BUDGET_I18N_MAX_KIB) \
+	npm run test:bundle:budget
+
+report\:payload\:matrix:
+	npm run report:payload:matrix
+
 # Run ALL tests: quality gates + full unit suite + E2E
 # This is the comprehensive test target - use for full CI validation
 # Order: fix → audits → typecheck → full vitest → test-id checks → i18n → Playwright E2E
 # Outputs E2E results to test-report.txt for text-based review
 test: UNIT_CMD = test:unit
 test: _quality-gates
-	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=permutations --reporter=list 2>&1 | tee test-report.txt'
+	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=permutations --workers=$(PLAYWRIGHT_WORKERS) --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)
 test\:basic:
-	npx playwright test --project=basic
+	npx playwright test --project=basic --workers=$(PLAYWRIGHT_WORKERS)
 
 # Run advanced tier tests only (tests/advanced/*.spec.ts)
 test\:advanced:
-	npx playwright test --project=advanced
+	npx playwright test --project=advanced --workers=$(PLAYWRIGHT_WORKERS)
 
 # Run professional tier tests only (tests/professional/*.spec.ts)
 test\:pro:
-	npx playwright test --project=professional
+	npx playwright test --project=professional --workers=$(PLAYWRIGHT_WORKERS)
 
 # Run all tier tests (basic + advanced + professional) but NOT permutations
 # Use this for faster feedback during development
 test\:tiers:
-	npx playwright test --project=basic --project=advanced --project=professional
+	npx playwright test --project=basic --project=advanced --project=professional --workers=$(PLAYWRIGHT_WORKERS)
 
 # Open Playwright UI mode for interactive debugging
 test\:ui:
@@ -649,7 +786,7 @@ test\:ui:
 #   PERM_SECTION=payload|overlay|render|etc (filter by section)
 #   PERM_MAX=50 (limit tests per section)
 test\:permutations:
-	npx playwright test --project=permutations
+	npx playwright test --project=permutations --workers=$(PLAYWRIGHT_WORKERS)
 
 # Generate settings QR change report for manual review
 test\:report\:settings:
