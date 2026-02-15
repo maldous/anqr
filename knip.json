@@ -27,6 +27,7 @@
     "lockfile-lint",
     "netlify-cli",
     "lefthook",
+    "serve",
     "type-coverage",
     "@capacitor/filesystem",
     "@capacitor/splash-screen"

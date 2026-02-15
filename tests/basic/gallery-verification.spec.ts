@@ -17,8 +17,8 @@ const GALLERY_SECTION_TITLES = [
   'Colors & Themes',
   'Image Overlays',
   'Animated Overlays',
-  'Preservation Modes',
-  'Output Modes',
+  'Blend Modes',
+  'Color Processing',
   'QR Encoding',
   'Power Combos',
 ];
@@ -261,7 +261,7 @@ test.describe('Gallery Verification', () => {
       // The section's grid of items is a sibling div after the header button
       // Gallery cards are <a> tags containing <img> elements
       // Find the parent section container - each section is inside a mb-8 div
-      const sectionContainer = heading.locator('..').locator('..').locator('..');
+      const sectionContainer = heading.locator('..').locator('..').locator('..').locator('..');
       const sectionImages = sectionContainer.locator('img[loading="lazy"]');
       const itemCount = await sectionImages.count();
       expect(itemCount, `Section "${title}" should have gallery items`).toBeGreaterThan(0);
@@ -274,7 +274,7 @@ test.describe('Gallery Verification', () => {
     await expect(firstSectionButton).toBeVisible();
 
     // The grid should be visible initially (sections expanded by default)
-    const firstSectionContainer = firstSectionButton.locator('..').locator('..');
+    const firstSectionContainer = firstSectionButton.locator('..');
     const gridBefore = firstSectionContainer.locator('.grid');
     await expect(gridBefore).toBeVisible();
 

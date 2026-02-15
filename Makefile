@@ -10,15 +10,17 @@ help:
 	@echo ""
 	@echo "  FULL PIPELINE"
 	@echo "    make all            Complete fresh-to-production pipeline"
-	@echo "                        1. install    — npm install + git hooks + Playwright browsers"
-	@echo "                        2. i18n:fill  — regenerate all i18n TS/JSON from txt"
-	@echo "                        3. icons      — generate PWA icons"
-	@echo "                        4. sitemap    — generate sitemap.xml"
-	@echo "                        5. build      — production bundle (tsc + Vite)"
-	@echo "                        6. gallery    — generate gallery images (serve → Puppeteer)"
-	@echo "                        7. test       — quality gates (incl. fix) + unit + E2E"
-	@echo "                        8. validate   — overlay audit + scan matrix + signoff"
-	@echo "                        9. deploy     — rebuild with Sentry + Netlify deploy"
+	@echo "                         1. install    — npm install + hooks + Playwright browsers"
+	@echo "                         2. i18n:fill  — regenerate all i18n TS/JSON from txt"
+	@echo "                         3. assets     — PWA icons + Android icons + sitemap"
+	@echo "                         4. build      — production bundle (tsc + Vite)"
+	@echo "                         5. gallery    — generate gallery images (serve → Puppeteer)"
+	@echo "                         6. test       — quality gates + unit + E2E (19 checks)"
+	@echo "                         7. validate   — overlay audit + scan matrix + signoff"
+	@echo "                         8. reports    — payload matrix + coverage gap"
+	@echo "                         9. deploy     — rebuild with Sentry + Netlify deploy"
+	@echo "                        10. android    — release AAB (if SDK available)"
+	@echo "                        11. summary    — final status + tbd.md reminder"
 	@echo ""
 	@echo "  WEB DEVELOPMENT"
 	@echo "    make install        Install npm dependencies + git hooks"
@@ -232,16 +234,18 @@ resources:
 # Steps:
 #   1. install     — npm install + lefthook git hooks + Playwright browsers
 #   2. i18n:fill   — regenerate all i18n TS/JSON from txt sources
-#   3. icons       — generate PWA icons from source SVG
-#   4. sitemap     — generate sitemap.xml for SEO
-#   5. build       — production bundle (tsc + Vite + compression)
-#   6. gallery     — spin up lightweight serve, capture gallery images via Puppeteer
-#   7. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
-#   8. validate    — heavyweight overlay audit + gallery scan matrix + production signoff
+#   3. assets      — PWA icons + Android icons (if SDK) + sitemap.xml
+#   4. build       — production bundle (tsc + Vite + compression)
+#   5. gallery     — spin up lightweight serve, capture gallery images via Puppeteer
+#   6. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
+#   7. validate    — heavyweight overlay audit + gallery scan matrix + production signoff
+#   8. reports     — payload verification matrix + coverage gap report
 #   9. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy
+#  10. android     — release AAB for Play Store (skipped if SDK/Java unavailable)
+#  11. summary     — final status banner + tbd.md reminder
 #
-# Gallery capture uses `npx serve` (high-performance static server) instead of
-# `vite preview` for faster startup and lower memory overhead.
+# Gallery capture uses `npx serve` (high-performance static server, installed as devDep)
+# instead of `vite preview` for faster startup and lower memory overhead.
 # After gallery images land in public/gallery/, the deploy step rebuilds to include them.
 
 all:
@@ -250,23 +254,22 @@ all:
 	@echo "ANQR — Full Production Pipeline"
 	@echo "============================================"
 	@echo ""
-	@echo "[1/9] Installing dependencies..."
+	@echo "[1/11] Installing dependencies..."
 	$(MAKE) install
 	npx playwright install chromium
 	@echo ""
-	@echo "[2/9] Regenerating i18n output files..."
+	@echo "[2/11] Regenerating i18n output files..."
 	$(MAKE) i18n:fill
 	@echo ""
-	@echo "[3/9] Generating PWA icons..."
+	@echo "[3/11] Generating assets (icons + sitemap)..."
 	$(MAKE) icons
-	@echo ""
-	@echo "[4/9] Generating sitemap..."
+	@if [ -d android ]; then $(MAKE) icons:android; fi
 	$(MAKE) sitemap
 	@echo ""
-	@echo "[5/9] Building production bundle..."
+	@echo "[4/11] Building production bundle..."
 	$(MAKE) build
 	@echo ""
-	@echo "[6/9] Generating gallery images..."
+	@echo "[5/11] Generating gallery images..."
 	@npx serve dist -l 4174 --no-clipboard --single & echo $$! > .gallery-server.pid; \
 		for i in 1 2 3 4 5 6 7 8 9 10; do \
 			curl -s -o /dev/null http://localhost:4174/ && break; \
@@ -276,27 +279,40 @@ all:
 		gallery_exit=$$?; \
 		kill $$(cat .gallery-server.pid) 2>/dev/null; rm -f .gallery-server.pid; \
 		[ $$gallery_exit -eq 0 ] || exit $$gallery_exit
-	# Note: gallery images land in public/gallery/ — included in dist/ by deploy's rebuild.
 	@echo ""
-	@echo "[7/9] Running full test suite (quality gates + unit + E2E)..."
+	@echo "[6/11] Running full test suite (quality gates + unit + E2E)..."
 	# Note: test includes fix, bundle budget (which rebuilds), and Playwright (which starts its own dev server)
 	$(MAKE) test
 	@echo ""
-	@echo "[8/9] Running heavyweight validation (overlay audit + scan matrix + signoff)..."
+	@echo "[7/11] Running heavyweight validation..."
 	$(MAKE) test:overlay:audit
 	$(MAKE) test:gallery:matrix
 	$(MAKE) signoff
 	@echo ""
-	@echo "[9/9] Deploying to production..."
+	@echo "[8/11] Generating reports..."
+	$(MAKE) report:payload:matrix
+	@if [ -d coverage ]; then $(MAKE) test:coverage:gap; else echo "Skipping coverage gap (no coverage/ data — run make test:unit:coverage first)"; fi
+	@echo ""
+	@echo "[9/11] Deploying web to production (Netlify)..."
 	# Deploy rebuilds with SENTRY_UPLOAD=true for sourcemap upload, then pushes to Netlify.
-	# This final build includes gallery images generated in step 6.
+	# This final build includes gallery images generated in step 5.
 	$(MAKE) deploy
+	@echo ""
+	@echo "[10/11] Building Android release AAB..."
+	@if [ -d android ] && command -v java >/dev/null 2>&1 && [ -n "$$ANDROID_HOME" ]; then \
+		$(MAKE) android:release; \
+	else \
+		echo "Skipping Android build (SDK/Java not available)"; \
+	fi
+	@echo ""
+	@echo "[11/11] Final summary"
 	@echo ""
 	@echo "============================================"
 	@echo "ANQR — Production pipeline complete!"
 	@echo "============================================"
 	@echo ""
-	@echo "Post-deploy checklist: see tbd.md"
+	@echo "Post-deploy manual checklist: see tbd.md"
+	@echo "Reports generated in: reports/"
 
 # ============================================
 # AdSense Configuration (for Web - anqr.link)
