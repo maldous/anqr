@@ -10,7 +10,15 @@ help:
 	@echo ""
 	@echo "  FULL PIPELINE"
 	@echo "    make all            Complete fresh-to-production pipeline"
-	@echo "                        (install → build → gallery → sitemap → test → deploy)"
+	@echo "                        1. install    — npm install + git hooks + Playwright browsers"
+	@echo "                        2. i18n:fill  — regenerate all i18n TS/JSON from txt"
+	@echo "                        3. icons      — generate PWA icons"
+	@echo "                        4. sitemap    — generate sitemap.xml"
+	@echo "                        5. build      — production bundle (tsc + Vite)"
+	@echo "                        6. gallery    — generate gallery images (serve → Puppeteer)"
+	@echo "                        7. test       — quality gates (incl. fix) + unit + E2E"
+	@echo "                        8. validate   — overlay audit + scan matrix + signoff"
+	@echo "                        9. deploy     — rebuild with Sentry + Netlify deploy"
 	@echo ""
 	@echo "  WEB DEVELOPMENT"
 	@echo "    make install        Install npm dependencies + git hooks"
@@ -219,35 +227,76 @@ resources:
 # ============================================
 # Full Production Pipeline
 # ============================================
-# Complete pipeline from fresh checkout to production-ready deploy.
-# Starts a temporary preview server for gallery capture, then tears it down.
+# Complete pipeline from fresh git checkout to production-ready deploy.
+#
+# Steps:
+#   1. install     — npm install + lefthook git hooks + Playwright browsers
+#   2. i18n:fill   — regenerate all i18n TS/JSON from txt sources
+#   3. icons       — generate PWA icons from source SVG
+#   4. sitemap     — generate sitemap.xml for SEO
+#   5. build       — production bundle (tsc + Vite + compression)
+#   6. gallery     — spin up lightweight serve, capture gallery images via Puppeteer
+#   7. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
+#   8. validate    — heavyweight overlay audit + gallery scan matrix + production signoff
+#   9. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy
+#
+# Gallery capture uses `npx serve` (high-performance static server) instead of
+# `vite preview` for faster startup and lower memory overhead.
+# After gallery images land in public/gallery/, the deploy step rebuilds to include them.
 
 all:
 	@echo ""
 	@echo "============================================"
 	@echo "ANQR — Full Production Pipeline"
 	@echo "============================================"
+	@echo ""
+	@echo "[1/9] Installing dependencies..."
 	$(MAKE) install
+	npx playwright install chromium
+	@echo ""
+	@echo "[2/9] Regenerating i18n output files..."
+	$(MAKE) i18n:fill
+	@echo ""
+	@echo "[3/9] Generating PWA icons..."
+	$(MAKE) icons
+	@echo ""
+	@echo "[4/9] Generating sitemap..."
+	$(MAKE) sitemap
+	@echo ""
+	@echo "[5/9] Building production bundle..."
 	$(MAKE) build
-	@echo "Starting preview server for gallery generation..."
-	@npx vite preview --port 4174 & echo $$! > .gallery-server.pid; \
+	@echo ""
+	@echo "[6/9] Generating gallery images..."
+	@npx serve dist -l 4174 --no-clipboard --single & echo $$! > .gallery-server.pid; \
 		for i in 1 2 3 4 5 6 7 8 9 10; do \
 			curl -s -o /dev/null http://localhost:4174/ && break; \
 			sleep 1; \
 		done
-	$(MAKE) gallery:fresh GALLERY_PORT=4174
-	@kill $$(cat .gallery-server.pid) 2>/dev/null; rm -f .gallery-server.pid
-	$(MAKE) sitemap
-	# Note: test + deploy each do their own builds (test for bundle budget, deploy for Sentry sourcemaps)
+	@$(MAKE) gallery:fresh GALLERY_PORT=4174; \
+		gallery_exit=$$?; \
+		kill $$(cat .gallery-server.pid) 2>/dev/null; rm -f .gallery-server.pid; \
+		[ $$gallery_exit -eq 0 ] || exit $$gallery_exit
+	# Note: gallery images land in public/gallery/ — included in dist/ by deploy's rebuild.
+	@echo ""
+	@echo "[7/9] Running full test suite (quality gates + unit + E2E)..."
+	# Note: test includes fix, bundle budget (which rebuilds), and Playwright (which starts its own dev server)
 	$(MAKE) test
+	@echo ""
+	@echo "[8/9] Running heavyweight validation (overlay audit + scan matrix + signoff)..."
 	$(MAKE) test:overlay:audit
 	$(MAKE) test:gallery:matrix
 	$(MAKE) signoff
+	@echo ""
+	@echo "[9/9] Deploying to production..."
+	# Deploy rebuilds with SENTRY_UPLOAD=true for sourcemap upload, then pushes to Netlify.
+	# This final build includes gallery images generated in step 6.
 	$(MAKE) deploy
 	@echo ""
 	@echo "============================================"
 	@echo "ANQR — Production pipeline complete!"
 	@echo "============================================"
+	@echo ""
+	@echo "Post-deploy checklist: see tbd.md"
 
 # ============================================
 # AdSense Configuration (for Web - anqr.link)
@@ -726,9 +775,9 @@ sonar-report:
 
 # Shared quality gate pipeline used by both 'quality' and 'test'.
 # UNIT_CMD is set per-caller: test:unit:ci for quality, test:unit for test.
-# 18 checks: biome → tsc → lockfile → licenses → type-coverage → duplication →
+# 19 checks: biome → tsc → lockfile → licenses → type-coverage → duplication →
 #   spelling → inventories → unit-tests → test-ids → i18n → depcruise → audit →
-#   osv-scanner → semgrep → knip
+#   osv-scanner → semgrep → knip → bundle-budget
 _quality-gates:
 	$(MAKE) fix
 	npm run typecheck

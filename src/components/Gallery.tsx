@@ -17,7 +17,6 @@ import {
   QrCode,
   Settings2,
   Shapes,
-  Sliders,
   Sparkles,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -44,8 +43,6 @@ const iconRegistry: Record<string, LucideIcon> = {
   Layers,
   Contrast,
   Settings2,
-  Sliders,
-  Grid3x3,
   Sparkles,
 };
 
