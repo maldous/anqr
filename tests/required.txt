@@ -36,9 +36,9 @@ ID: sidebar-scroll
 - source: src/components/Sidebar.tsx
 - inferred-domain: app
 - requirements:
-  - T6 Interaction/UX behavior tests -> tests/professional/metadata.spec.ts [direct-id]
-  - T10 Cross-section integration tests -> tests/professional/metadata.spec.ts [direct-id]
-  - T13 Test ID integrity/completeness tests -> tests/professional/metadata.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-4-app.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-4-app.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-4-app.spec.ts [direct-id]
 
 ID: welcome-get-started
 - section: App Shell & Navigation
@@ -912,11 +912,11 @@ ID: payload-text-textarea
 - source: src/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
-  - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T7 Input validation/edge-case tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T10 Cross-section integration tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
+  - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T7 Input validation/edge-case tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
 
 ID: payload-trim-switch
 - section: Payload Section
@@ -989,11 +989,11 @@ ID: payload-url-input
 - source: src/components/sections/PayloadSection.tsx
 - inferred-domain: payload
 - requirements:
-  - T2 Encoding/data correctness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T7 Input validation/edge-case tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T10 Cross-section integration tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
-  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-1-payload.spec.ts [direct-id]
+  - T2 Encoding/data correctness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T7 Input validation/edge-case tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/advanced/qr-encoding.spec.ts [direct-id]
 
 ID: payload-validate-switch
 - section: Payload Section
@@ -1312,11 +1312,11 @@ ID: render-frame-style-select
 - source: src/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
-  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/advanced/render.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/advanced/render.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/advanced/render.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/advanced/render.spec.ts [direct-id]
 
 ID: render-frame-text-input
 - section: Render Section
@@ -1345,11 +1345,11 @@ ID: render-gradient-type-select
 - source: src/components/sections/RenderSection.tsx
 - inferred-domain: render
 - requirements:
-  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
-  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/advanced/render.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/advanced/render.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/advanced/render.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/advanced/render.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/advanced/render.spec.ts [direct-id]
 
 ID: render-module-gap-slider
 - section: Render Section

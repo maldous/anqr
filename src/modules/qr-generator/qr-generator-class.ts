@@ -1133,8 +1133,7 @@ export class QRGenerator {
     const moduleSize = config.moduleSize;
     const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
     const margin = Math.max(config.margin, quietZoneMin);
-    const frameExtra =
-      config.frameStyle && config.frameStyle !== 'none' && config.frameText ? moduleSize * 4 : 0;
+    const frameExtra = config.frameStyle && config.frameStyle !== 'none' ? moduleSize * 4 : 0;
     const size = moduleCount * moduleSize + margin * 2 * moduleSize + frameExtra;
 
     const canvas = await this.createCanvas(size, size);
@@ -1303,8 +1302,7 @@ export class QRGenerator {
     const moduleSize = config.moduleSize || 10;
     const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
     const margin = Math.max(config.margin || 4, quietZoneMin);
-    const frameExtra =
-      config.frameStyle && config.frameStyle !== 'none' && config.frameText ? moduleSize * 4 : 0;
+    const frameExtra = config.frameStyle && config.frameStyle !== 'none' ? moduleSize * 4 : 0;
     const size = moduleCount * moduleSize + margin * 2 * moduleSize + frameExtra;
 
     const canvas = await this.createCanvas(size, size);

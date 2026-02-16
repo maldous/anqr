@@ -9,21 +9,33 @@ import { test, expect } from '@playwright/test';
  *   ANQR_PRODUCTION_BASE=https://anqr.link npx playwright test tests/basic/gallery-production.spec.ts
  */
 
-const BASE_URL = process.env.ANQR_PRODUCTION_BASE || process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5173';
+const BASE_URL =
+  process.env.ANQR_PRODUCTION_BASE || process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5173';
 const GALLERY_PATH = '/gallery';
 
-function toAbsolute(base: string, value: string): string {
-  return new URL(value, base).toString();
-}
+async function getGalleryAssets(
+  request: import('@playwright/test').APIRequestContext
+): Promise<{ pngs: string[]; gifs: string[] }> {
+  const manifestUrl = `${BASE_URL}${GALLERY_PATH}/manifest.json`;
+  const resp = await request.get(manifestUrl);
+  if (!resp.ok()) {
+    return { pngs: [], gifs: [] };
+  }
 
-function extractGalleryAssets(html: string, base: string): { pngs: string[]; gifs: string[] } {
-  const matches = Array.from(
-    html.matchAll(/(?:src|href)=["']([^"']+\/gallery\/[^"']+\.(?:png|gif))["']/gi)
-  ).map((m) => toAbsolute(base, m[1]));
+  const manifest = (await resp.json()) as {
+    items?: Array<{ output?: { file?: string } }>;
+  };
+  const files = (manifest.items || [])
+    .map((item) => item.output?.file)
+    .filter((v): v is string => Boolean(v));
 
-  const deduped = Array.from(new Set(matches));
-  const pngs = deduped.filter((u) => /\.png(?:\?|#|$)/i.test(u));
-  const gifs = deduped.filter((u) => /\.gif(?:\?|#|$)/i.test(u));
+  const pngs = files
+    .filter((f) => f.toLowerCase().endsWith('.png'))
+    .map((f) => `${BASE_URL}${GALLERY_PATH}/${f}`);
+  const gifs = files
+    .filter((f) => f.toLowerCase().endsWith('.gif'))
+    .map((f) => `${BASE_URL}${GALLERY_PATH}/${f}`);
+
   return { pngs, gifs };
 }
 
@@ -41,9 +53,7 @@ test.describe('Gallery Production Verification', () => {
   });
 
   test('static gallery images (PNG) return HTTP 200', async ({ request }) => {
-    const pageResp = await request.get(`${BASE_URL}${GALLERY_PATH}`);
-    const html = await pageResp.text();
-    const { pngs } = extractGalleryAssets(html, `${BASE_URL}${GALLERY_PATH}`);
+    const { pngs } = await getGalleryAssets(request);
     expect(pngs.length).toBeGreaterThan(0);
 
     for (const url of pngs.slice(0, 24)) {
@@ -53,9 +63,7 @@ test.describe('Gallery Production Verification', () => {
   });
 
   test('animated gallery images (GIF) return HTTP 200', async ({ request }) => {
-    const pageResp = await request.get(`${BASE_URL}${GALLERY_PATH}`);
-    const html = await pageResp.text();
-    const { gifs } = extractGalleryAssets(html, `${BASE_URL}${GALLERY_PATH}`);
+    const { gifs } = await getGalleryAssets(request);
 
     // Some environments may ship PNG-only gallery sets.
     if (gifs.length === 0) {
@@ -70,9 +78,7 @@ test.describe('Gallery Production Verification', () => {
   });
 
   test('gallery images have correct content-type headers', async ({ request }) => {
-    const pageResp = await request.get(`${BASE_URL}${GALLERY_PATH}`);
-    const html = await pageResp.text();
-    const { pngs, gifs } = extractGalleryAssets(html, `${BASE_URL}${GALLERY_PATH}`);
+    const { pngs, gifs } = await getGalleryAssets(request);
     expect(pngs.length).toBeGreaterThan(0);
 
     const pngResponse = await request.get(pngs[0]);
@@ -89,9 +95,7 @@ test.describe('Gallery Production Verification', () => {
   });
 
   test('gallery images have non-trivial file sizes', async ({ request }) => {
-    const pageResp = await request.get(`${BASE_URL}${GALLERY_PATH}`);
-    const html = await pageResp.text();
-    const { pngs, gifs } = extractGalleryAssets(html, `${BASE_URL}${GALLERY_PATH}`);
+    const { pngs, gifs } = await getGalleryAssets(request);
     expect(pngs.length).toBeGreaterThan(0);
 
     const pngResponse = await request.get(pngs[0]);

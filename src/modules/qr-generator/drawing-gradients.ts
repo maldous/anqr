@@ -20,11 +20,16 @@ export function createGradientFill(
     return null;
   }
 
-  const { type, angle = 0, stops = [] } = config.gradient;
+  const { type, angle = 0, stops: configStops = [] } = config.gradient;
 
-  if (stops.length === 0) {
-    return null;
-  }
+  // Auto-generate default stops from fg/bg colors when stops are empty
+  const stops =
+    configStops.length > 0
+      ? configStops
+      : [
+          { pos: 0, color: config.fgColor || '#000000' },
+          { pos: 1, color: config.bgColor || '#ffffff' },
+        ];
 
   let gradient: CanvasGradient;
 

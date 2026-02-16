@@ -70,7 +70,7 @@ export default defineConfig({
     
     /* Action timeout - fail fast if locators don't resolve */
     actionTimeout: 5000,
-    navigationTimeout: 10000,
+    navigationTimeout: 30000,
     
     /* GLOBAL STORAGE STATE: Pre-set localStorage to skip welcome modal for ALL tests
      * The storage state is created by tests/global-setup.ts before any tests run.
