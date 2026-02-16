@@ -5,13 +5,13 @@
   <!-- Global Pages (no language variants) -->
   <url>
     <loc>https://anqr.link/</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://anqr.link/gallery</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -19,7 +19,7 @@
   <!-- LEARN page - all languages with hreflang -->
   <url>
     <loc>https://anqr.link/learn</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -112,7 +112,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=en-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -205,7 +205,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=en-AU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -298,7 +298,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=en-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -391,7 +391,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=en-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -484,7 +484,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=en-SG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -577,7 +577,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=en-ZA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -670,7 +670,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=af</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -763,7 +763,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=am</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -856,7 +856,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ar</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -949,7 +949,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=az-AZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1042,7 +1042,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=be</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1135,7 +1135,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=bg</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1228,7 +1228,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=bn-BD</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1321,7 +1321,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ca</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1414,7 +1414,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=cs-CZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1507,7 +1507,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=da-DK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1600,7 +1600,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=de-DE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1693,7 +1693,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=el-GR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1786,7 +1786,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=es-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1879,7 +1879,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=es-419</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -1972,7 +1972,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=es-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2065,7 +2065,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=et</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2158,7 +2158,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=eu-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2251,7 +2251,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2344,7 +2344,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fa-AE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2437,7 +2437,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fa-AF</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2530,7 +2530,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fa-IR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2623,7 +2623,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fi-FI</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2716,7 +2716,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fil</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2809,7 +2809,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fr-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2902,7 +2902,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=fr-FR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -2995,7 +2995,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=gl-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3088,7 +3088,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=gu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3181,7 +3181,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=hi-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3274,7 +3274,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=hr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3367,7 +3367,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=hu-HU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3460,7 +3460,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=hy-AM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3553,7 +3553,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=id</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3646,7 +3646,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=is-IS</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3739,7 +3739,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=it-IT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3832,7 +3832,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=iw-IL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -3925,7 +3925,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ja-JP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4018,7 +4018,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ka-GE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4111,7 +4111,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=kk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4204,7 +4204,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=km-KH</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4297,7 +4297,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=kn-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4390,7 +4390,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ko-KR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4483,7 +4483,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ky-KG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4576,7 +4576,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=lo-LA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4669,7 +4669,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=lt</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4762,7 +4762,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=lv</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4855,7 +4855,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=mk-MK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -4948,7 +4948,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ml-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5041,7 +5041,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=mn-MN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5134,7 +5134,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=mr-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5227,7 +5227,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5320,7 +5320,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ms-MY</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5413,7 +5413,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=my-MM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5506,7 +5506,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ne-NP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5599,7 +5599,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=nl-NL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5692,7 +5692,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=no-NO</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5785,7 +5785,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=pa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5878,7 +5878,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=pl-PL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -5971,7 +5971,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=pt-BR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6064,7 +6064,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=pt-PT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6157,7 +6157,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ro</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6250,7 +6250,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ru-RU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6343,7 +6343,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=si-LK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6436,7 +6436,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=sk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6529,7 +6529,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=sl</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6622,7 +6622,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=sq</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6715,7 +6715,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=sr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6808,7 +6808,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=sv-SE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6901,7 +6901,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=sw</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -6994,7 +6994,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ta-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7087,7 +7087,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=te-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7180,7 +7180,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=th</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7273,7 +7273,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=tr-TR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7366,7 +7366,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=uk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7459,7 +7459,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=ur</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7552,7 +7552,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=vi</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7645,7 +7645,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=zh-CN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7738,7 +7738,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=zh-HK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7831,7 +7831,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=zh-TW</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -7924,7 +7924,7 @@
   </url>
   <url>
     <loc>https://anqr.link/learn?lang=zu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/learn"/>
@@ -8019,7 +8019,7 @@
   <!-- EXAMPLES page - all languages with hreflang -->
   <url>
     <loc>https://anqr.link/examples</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8112,7 +8112,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=en-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8205,7 +8205,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=en-AU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8298,7 +8298,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=en-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8391,7 +8391,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=en-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8484,7 +8484,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=en-SG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8577,7 +8577,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=en-ZA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8670,7 +8670,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=af</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8763,7 +8763,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=am</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8856,7 +8856,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ar</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -8949,7 +8949,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=az-AZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9042,7 +9042,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=be</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9135,7 +9135,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=bg</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9228,7 +9228,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=bn-BD</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9321,7 +9321,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ca</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9414,7 +9414,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=cs-CZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9507,7 +9507,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=da-DK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9600,7 +9600,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=de-DE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9693,7 +9693,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=el-GR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9786,7 +9786,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=es-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9879,7 +9879,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=es-419</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -9972,7 +9972,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=es-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10065,7 +10065,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=et</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10158,7 +10158,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=eu-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10251,7 +10251,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10344,7 +10344,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fa-AE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10437,7 +10437,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fa-AF</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10530,7 +10530,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fa-IR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10623,7 +10623,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fi-FI</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10716,7 +10716,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fil</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10809,7 +10809,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fr-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10902,7 +10902,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=fr-FR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -10995,7 +10995,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=gl-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11088,7 +11088,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=gu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11181,7 +11181,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=hi-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11274,7 +11274,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=hr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11367,7 +11367,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=hu-HU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11460,7 +11460,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=hy-AM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11553,7 +11553,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=id</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11646,7 +11646,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=is-IS</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11739,7 +11739,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=it-IT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11832,7 +11832,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=iw-IL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -11925,7 +11925,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ja-JP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12018,7 +12018,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ka-GE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12111,7 +12111,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=kk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12204,7 +12204,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=km-KH</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12297,7 +12297,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=kn-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12390,7 +12390,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ko-KR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12483,7 +12483,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ky-KG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12576,7 +12576,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=lo-LA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12669,7 +12669,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=lt</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12762,7 +12762,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=lv</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12855,7 +12855,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=mk-MK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -12948,7 +12948,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ml-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13041,7 +13041,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=mn-MN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13134,7 +13134,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=mr-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13227,7 +13227,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13320,7 +13320,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ms-MY</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13413,7 +13413,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=my-MM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13506,7 +13506,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ne-NP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13599,7 +13599,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=nl-NL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13692,7 +13692,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=no-NO</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13785,7 +13785,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=pa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13878,7 +13878,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=pl-PL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -13971,7 +13971,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=pt-BR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14064,7 +14064,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=pt-PT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14157,7 +14157,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ro</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14250,7 +14250,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ru-RU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14343,7 +14343,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=si-LK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14436,7 +14436,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=sk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14529,7 +14529,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=sl</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14622,7 +14622,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=sq</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14715,7 +14715,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=sr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14808,7 +14808,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=sv-SE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14901,7 +14901,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=sw</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -14994,7 +14994,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ta-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15087,7 +15087,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=te-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15180,7 +15180,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=th</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15273,7 +15273,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=tr-TR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15366,7 +15366,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=uk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15459,7 +15459,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=ur</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15552,7 +15552,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=vi</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15645,7 +15645,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=zh-CN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15738,7 +15738,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=zh-HK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15831,7 +15831,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=zh-TW</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -15924,7 +15924,7 @@
   </url>
   <url>
     <loc>https://anqr.link/examples?lang=zu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/examples"/>
@@ -16019,7 +16019,7 @@
   <!-- GUIDE page - all languages with hreflang -->
   <url>
     <loc>https://anqr.link/guide</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16112,7 +16112,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=en-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16205,7 +16205,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=en-AU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16298,7 +16298,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=en-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16391,7 +16391,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=en-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16484,7 +16484,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=en-SG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16577,7 +16577,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=en-ZA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16670,7 +16670,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=af</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16763,7 +16763,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=am</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16856,7 +16856,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ar</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -16949,7 +16949,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=az-AZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17042,7 +17042,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=be</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17135,7 +17135,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=bg</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17228,7 +17228,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=bn-BD</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17321,7 +17321,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ca</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17414,7 +17414,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=cs-CZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17507,7 +17507,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=da-DK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17600,7 +17600,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=de-DE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17693,7 +17693,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=el-GR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17786,7 +17786,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=es-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17879,7 +17879,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=es-419</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -17972,7 +17972,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=es-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18065,7 +18065,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=et</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18158,7 +18158,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=eu-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18251,7 +18251,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18344,7 +18344,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fa-AE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18437,7 +18437,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fa-AF</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18530,7 +18530,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fa-IR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18623,7 +18623,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fi-FI</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18716,7 +18716,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fil</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18809,7 +18809,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fr-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18902,7 +18902,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=fr-FR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -18995,7 +18995,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=gl-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19088,7 +19088,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=gu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19181,7 +19181,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=hi-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19274,7 +19274,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=hr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19367,7 +19367,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=hu-HU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19460,7 +19460,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=hy-AM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19553,7 +19553,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=id</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19646,7 +19646,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=is-IS</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19739,7 +19739,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=it-IT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19832,7 +19832,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=iw-IL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -19925,7 +19925,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ja-JP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20018,7 +20018,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ka-GE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20111,7 +20111,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=kk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20204,7 +20204,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=km-KH</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20297,7 +20297,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=kn-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20390,7 +20390,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ko-KR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20483,7 +20483,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ky-KG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20576,7 +20576,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=lo-LA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20669,7 +20669,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=lt</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20762,7 +20762,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=lv</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20855,7 +20855,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=mk-MK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -20948,7 +20948,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ml-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21041,7 +21041,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=mn-MN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21134,7 +21134,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=mr-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21227,7 +21227,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21320,7 +21320,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ms-MY</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21413,7 +21413,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=my-MM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21506,7 +21506,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ne-NP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21599,7 +21599,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=nl-NL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21692,7 +21692,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=no-NO</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21785,7 +21785,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=pa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21878,7 +21878,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=pl-PL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -21971,7 +21971,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=pt-BR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22064,7 +22064,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=pt-PT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22157,7 +22157,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ro</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22250,7 +22250,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ru-RU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22343,7 +22343,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=si-LK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22436,7 +22436,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=sk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22529,7 +22529,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=sl</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22622,7 +22622,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=sq</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22715,7 +22715,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=sr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22808,7 +22808,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=sv-SE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22901,7 +22901,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=sw</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -22994,7 +22994,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ta-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23087,7 +23087,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=te-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23180,7 +23180,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=th</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23273,7 +23273,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=tr-TR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23366,7 +23366,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=uk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23459,7 +23459,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=ur</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23552,7 +23552,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=vi</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23645,7 +23645,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=zh-CN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23738,7 +23738,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=zh-HK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23831,7 +23831,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=zh-TW</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -23924,7 +23924,7 @@
   </url>
   <url>
     <loc>https://anqr.link/guide?lang=zu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/guide"/>
@@ -24019,7 +24019,7 @@
   <!-- ABOUT page - all languages with hreflang -->
   <url>
     <loc>https://anqr.link/about</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24112,7 +24112,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=en-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24205,7 +24205,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=en-AU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24298,7 +24298,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=en-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24391,7 +24391,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=en-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24484,7 +24484,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=en-SG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24577,7 +24577,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=en-ZA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24670,7 +24670,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=af</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24763,7 +24763,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=am</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24856,7 +24856,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ar</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -24949,7 +24949,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=az-AZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25042,7 +25042,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=be</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25135,7 +25135,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=bg</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25228,7 +25228,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=bn-BD</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25321,7 +25321,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ca</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25414,7 +25414,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=cs-CZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25507,7 +25507,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=da-DK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25600,7 +25600,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=de-DE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25693,7 +25693,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=el-GR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25786,7 +25786,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=es-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25879,7 +25879,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=es-419</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -25972,7 +25972,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=es-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26065,7 +26065,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=et</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26158,7 +26158,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=eu-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26251,7 +26251,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26344,7 +26344,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fa-AE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26437,7 +26437,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fa-AF</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26530,7 +26530,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fa-IR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26623,7 +26623,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fi-FI</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26716,7 +26716,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fil</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26809,7 +26809,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fr-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26902,7 +26902,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=fr-FR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -26995,7 +26995,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=gl-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27088,7 +27088,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=gu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27181,7 +27181,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=hi-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27274,7 +27274,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=hr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27367,7 +27367,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=hu-HU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27460,7 +27460,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=hy-AM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27553,7 +27553,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=id</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27646,7 +27646,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=is-IS</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27739,7 +27739,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=it-IT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27832,7 +27832,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=iw-IL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -27925,7 +27925,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ja-JP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28018,7 +28018,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ka-GE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28111,7 +28111,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=kk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28204,7 +28204,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=km-KH</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28297,7 +28297,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=kn-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28390,7 +28390,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ko-KR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28483,7 +28483,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ky-KG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28576,7 +28576,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=lo-LA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28669,7 +28669,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=lt</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28762,7 +28762,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=lv</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28855,7 +28855,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=mk-MK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -28948,7 +28948,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ml-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29041,7 +29041,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=mn-MN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29134,7 +29134,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=mr-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29227,7 +29227,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29320,7 +29320,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ms-MY</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29413,7 +29413,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=my-MM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29506,7 +29506,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ne-NP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29599,7 +29599,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=nl-NL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29692,7 +29692,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=no-NO</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29785,7 +29785,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=pa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29878,7 +29878,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=pl-PL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -29971,7 +29971,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=pt-BR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30064,7 +30064,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=pt-PT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30157,7 +30157,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ro</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30250,7 +30250,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ru-RU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30343,7 +30343,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=si-LK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30436,7 +30436,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=sk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30529,7 +30529,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=sl</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30622,7 +30622,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=sq</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30715,7 +30715,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=sr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30808,7 +30808,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=sv-SE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30901,7 +30901,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=sw</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -30994,7 +30994,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ta-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31087,7 +31087,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=te-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31180,7 +31180,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=th</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31273,7 +31273,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=tr-TR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31366,7 +31366,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=uk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31459,7 +31459,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=ur</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31552,7 +31552,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=vi</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31645,7 +31645,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=zh-CN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31738,7 +31738,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=zh-HK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31831,7 +31831,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=zh-TW</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -31924,7 +31924,7 @@
   </url>
   <url>
     <loc>https://anqr.link/about?lang=zu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/about"/>
@@ -32019,7 +32019,7 @@
   <!-- CONTACT page - all languages with hreflang -->
   <url>
     <loc>https://anqr.link/contact</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32112,7 +32112,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=en-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32205,7 +32205,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=en-AU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32298,7 +32298,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=en-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32391,7 +32391,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=en-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32484,7 +32484,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=en-SG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32577,7 +32577,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=en-ZA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32670,7 +32670,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=af</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32763,7 +32763,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=am</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32856,7 +32856,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ar</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -32949,7 +32949,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=az-AZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33042,7 +33042,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=be</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33135,7 +33135,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=bg</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33228,7 +33228,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=bn-BD</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33321,7 +33321,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ca</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33414,7 +33414,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=cs-CZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33507,7 +33507,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=da-DK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33600,7 +33600,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=de-DE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33693,7 +33693,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=el-GR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33786,7 +33786,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=es-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33879,7 +33879,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=es-419</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -33972,7 +33972,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=es-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34065,7 +34065,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=et</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34158,7 +34158,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=eu-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34251,7 +34251,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34344,7 +34344,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fa-AE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34437,7 +34437,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fa-AF</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34530,7 +34530,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fa-IR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34623,7 +34623,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fi-FI</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34716,7 +34716,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fil</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34809,7 +34809,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fr-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34902,7 +34902,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=fr-FR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -34995,7 +34995,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=gl-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35088,7 +35088,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=gu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35181,7 +35181,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=hi-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35274,7 +35274,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=hr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35367,7 +35367,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=hu-HU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35460,7 +35460,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=hy-AM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35553,7 +35553,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=id</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35646,7 +35646,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=is-IS</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35739,7 +35739,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=it-IT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35832,7 +35832,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=iw-IL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -35925,7 +35925,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ja-JP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36018,7 +36018,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ka-GE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36111,7 +36111,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=kk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36204,7 +36204,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=km-KH</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36297,7 +36297,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=kn-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36390,7 +36390,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ko-KR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36483,7 +36483,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ky-KG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36576,7 +36576,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=lo-LA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36669,7 +36669,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=lt</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36762,7 +36762,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=lv</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36855,7 +36855,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=mk-MK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -36948,7 +36948,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ml-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37041,7 +37041,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=mn-MN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37134,7 +37134,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=mr-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37227,7 +37227,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37320,7 +37320,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ms-MY</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37413,7 +37413,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=my-MM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37506,7 +37506,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ne-NP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37599,7 +37599,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=nl-NL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37692,7 +37692,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=no-NO</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37785,7 +37785,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=pa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37878,7 +37878,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=pl-PL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -37971,7 +37971,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=pt-BR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38064,7 +38064,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=pt-PT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38157,7 +38157,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ro</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38250,7 +38250,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ru-RU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38343,7 +38343,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=si-LK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38436,7 +38436,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=sk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38529,7 +38529,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=sl</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38622,7 +38622,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=sq</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38715,7 +38715,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=sr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38808,7 +38808,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=sv-SE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38901,7 +38901,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=sw</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -38994,7 +38994,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ta-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39087,7 +39087,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=te-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39180,7 +39180,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=th</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39273,7 +39273,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=tr-TR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39366,7 +39366,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=uk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39459,7 +39459,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=ur</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39552,7 +39552,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=vi</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39645,7 +39645,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=zh-CN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39738,7 +39738,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=zh-HK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39831,7 +39831,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=zh-TW</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -39924,7 +39924,7 @@
   </url>
   <url>
     <loc>https://anqr.link/contact?lang=zu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/contact"/>
@@ -40019,7 +40019,7 @@
   <!-- PRIVACY page - all languages with hreflang -->
   <url>
     <loc>https://anqr.link/privacy</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40112,7 +40112,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=en-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40205,7 +40205,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=en-AU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40298,7 +40298,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=en-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40391,7 +40391,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=en-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40484,7 +40484,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=en-SG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40577,7 +40577,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=en-ZA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40670,7 +40670,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=af</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40763,7 +40763,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=am</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40856,7 +40856,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ar</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -40949,7 +40949,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=az-AZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41042,7 +41042,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=be</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41135,7 +41135,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=bg</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41228,7 +41228,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=bn-BD</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41321,7 +41321,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ca</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41414,7 +41414,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=cs-CZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41507,7 +41507,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=da-DK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41600,7 +41600,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=de-DE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41693,7 +41693,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=el-GR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41786,7 +41786,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=es-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41879,7 +41879,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=es-419</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -41972,7 +41972,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=es-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42065,7 +42065,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=et</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42158,7 +42158,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=eu-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42251,7 +42251,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42344,7 +42344,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fa-AE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42437,7 +42437,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fa-AF</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42530,7 +42530,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fa-IR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42623,7 +42623,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fi-FI</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42716,7 +42716,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fil</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42809,7 +42809,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fr-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42902,7 +42902,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=fr-FR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -42995,7 +42995,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=gl-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43088,7 +43088,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=gu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43181,7 +43181,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=hi-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43274,7 +43274,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=hr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43367,7 +43367,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=hu-HU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43460,7 +43460,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=hy-AM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43553,7 +43553,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=id</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43646,7 +43646,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=is-IS</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43739,7 +43739,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=it-IT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43832,7 +43832,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=iw-IL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -43925,7 +43925,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ja-JP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44018,7 +44018,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ka-GE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44111,7 +44111,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=kk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44204,7 +44204,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=km-KH</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44297,7 +44297,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=kn-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44390,7 +44390,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ko-KR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44483,7 +44483,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ky-KG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44576,7 +44576,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=lo-LA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44669,7 +44669,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=lt</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44762,7 +44762,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=lv</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44855,7 +44855,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=mk-MK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -44948,7 +44948,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ml-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45041,7 +45041,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=mn-MN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45134,7 +45134,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=mr-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45227,7 +45227,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45320,7 +45320,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ms-MY</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45413,7 +45413,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=my-MM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45506,7 +45506,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ne-NP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45599,7 +45599,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=nl-NL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45692,7 +45692,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=no-NO</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45785,7 +45785,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=pa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45878,7 +45878,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=pl-PL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -45971,7 +45971,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=pt-BR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46064,7 +46064,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=pt-PT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46157,7 +46157,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ro</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46250,7 +46250,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ru-RU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46343,7 +46343,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=si-LK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46436,7 +46436,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=sk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46529,7 +46529,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=sl</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46622,7 +46622,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=sq</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46715,7 +46715,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=sr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46808,7 +46808,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=sv-SE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46901,7 +46901,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=sw</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -46994,7 +46994,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ta-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47087,7 +47087,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=te-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47180,7 +47180,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=th</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47273,7 +47273,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=tr-TR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47366,7 +47366,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=uk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47459,7 +47459,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=ur</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47552,7 +47552,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=vi</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47645,7 +47645,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=zh-CN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47738,7 +47738,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=zh-HK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47831,7 +47831,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=zh-TW</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -47924,7 +47924,7 @@
   </url>
   <url>
     <loc>https://anqr.link/privacy?lang=zu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/privacy"/>
@@ -48019,7 +48019,7 @@
   <!-- TERMS page - all languages with hreflang -->
   <url>
     <loc>https://anqr.link/terms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48112,7 +48112,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=en-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48205,7 +48205,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=en-AU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48298,7 +48298,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=en-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48391,7 +48391,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=en-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48484,7 +48484,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=en-SG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48577,7 +48577,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=en-ZA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48670,7 +48670,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=af</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48763,7 +48763,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=am</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48856,7 +48856,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ar</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -48949,7 +48949,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=az-AZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49042,7 +49042,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=be</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49135,7 +49135,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=bg</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49228,7 +49228,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=bn-BD</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49321,7 +49321,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ca</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49414,7 +49414,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=cs-CZ</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49507,7 +49507,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=da-DK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49600,7 +49600,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=de-DE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49693,7 +49693,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=el-GR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49786,7 +49786,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=es-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49879,7 +49879,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=es-419</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -49972,7 +49972,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=es-US</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50065,7 +50065,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=et</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50158,7 +50158,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=eu-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50251,7 +50251,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50344,7 +50344,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fa-AE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50437,7 +50437,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fa-AF</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50530,7 +50530,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fa-IR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50623,7 +50623,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fi-FI</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50716,7 +50716,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fil</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50809,7 +50809,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fr-CA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50902,7 +50902,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=fr-FR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -50995,7 +50995,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=gl-ES</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51088,7 +51088,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=gu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51181,7 +51181,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=hi-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51274,7 +51274,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=hr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51367,7 +51367,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=hu-HU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51460,7 +51460,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=hy-AM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51553,7 +51553,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=id</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51646,7 +51646,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=is-IS</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51739,7 +51739,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=it-IT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51832,7 +51832,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=iw-IL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -51925,7 +51925,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ja-JP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52018,7 +52018,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ka-GE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52111,7 +52111,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=kk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52204,7 +52204,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=km-KH</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52297,7 +52297,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=kn-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52390,7 +52390,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ko-KR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52483,7 +52483,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ky-KG</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52576,7 +52576,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=lo-LA</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52669,7 +52669,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=lt</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52762,7 +52762,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=lv</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52855,7 +52855,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=mk-MK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -52948,7 +52948,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ml-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53041,7 +53041,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=mn-MN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53134,7 +53134,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=mr-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53227,7 +53227,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ms</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53320,7 +53320,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ms-MY</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53413,7 +53413,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=my-MM</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53506,7 +53506,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ne-NP</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53599,7 +53599,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=nl-NL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53692,7 +53692,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=no-NO</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53785,7 +53785,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=pa</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53878,7 +53878,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=pl-PL</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -53971,7 +53971,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=pt-BR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54064,7 +54064,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=pt-PT</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54157,7 +54157,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ro</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54250,7 +54250,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ru-RU</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54343,7 +54343,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=si-LK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54436,7 +54436,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=sk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54529,7 +54529,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=sl</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54622,7 +54622,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=sq</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54715,7 +54715,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=sr</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54808,7 +54808,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=sv-SE</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54901,7 +54901,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=sw</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -54994,7 +54994,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ta-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55087,7 +55087,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=te-IN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55180,7 +55180,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=th</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55273,7 +55273,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=tr-TR</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55366,7 +55366,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=uk</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55459,7 +55459,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=ur</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55552,7 +55552,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=vi</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55645,7 +55645,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=zh-CN</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55738,7 +55738,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=zh-HK</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55831,7 +55831,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=zh-TW</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>
@@ -55924,7 +55924,7 @@
   </url>
   <url>
     <loc>https://anqr.link/terms?lang=zu</loc>
-    <lastmod>2026-02-15</lastmod>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://anqr.link/terms"/>

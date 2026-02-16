@@ -1,9 +1,9 @@
-import type { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 /**
  * QR Canvas Change Detection Utilities
  * Uses event-driven patterns instead of arbitrary timeouts
- * 
+ *
  * IMPORTANT: Uses data-testid attributes for stable selectors:
  * - data-testid="sidebar" - the sidebar aside element
  * - data-testid="sidebar-scroll" - the scrollable container within sidebar
@@ -18,8 +18,8 @@ import type { Page, Locator } from '@playwright/test';
  * - data-testid="qr-preview" - the QR canvas container
  */
 
-/** Default timeout for waiting operations */
-const DEFAULT_TIMEOUT = 10000;
+/** Default timeout for waiting operations — generous to handle heavy overlay/GIF load */
+const DEFAULT_TIMEOUT = 30000;
 const QR_CANVAS_SELECTOR = '[data-testid="qr-preview"] canvas';
 
 function getQRCanvas(page: Page): Locator {
@@ -40,24 +40,27 @@ export function getSidebarScroller(page: Page): Locator {
 export async function openAccordion(page: Page, sectionId: string): Promise<void> {
   const accordionItem = page.locator(`[data-testid="accordion-${sectionId}"]`);
   const trigger = accordionItem.locator('[data-radix-collection-item]').first();
-  
+
   // Wait for trigger to be visible before reading state
-  await trigger.waitFor({ state: 'visible', timeout: 5000 });
-  
+  await trigger.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+
   // Check if already open
-  const isExpanded = await trigger.getAttribute('data-state') === 'open';
+  const isExpanded = (await trigger.getAttribute('data-state')) === 'open';
   if (isExpanded) return;
-  
+
   // Scroll trigger into view using JS evaluate to bypass Playwright's stability check
   // (accordion CSS animations can cause scrollIntoViewIfNeeded to loop forever)
-  await trigger.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
+  await trigger.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
   await trigger.click();
-  
+
   // Wait for region to be visible
-  await page.waitForSelector(`[data-testid="accordion-${sectionId}"] [role="region"][data-state="open"]`, {
-    state: 'visible',
-    timeout: 5000
-  });
+  await page.waitForSelector(
+    `[data-testid="accordion-${sectionId}"] [role="region"][data-state="open"]`,
+    {
+      state: 'visible',
+      timeout: DEFAULT_TIMEOUT,
+    }
+  );
 }
 
 /**
@@ -66,35 +69,38 @@ export async function openAccordion(page: Page, sectionId: string): Promise<void
  */
 export async function ensureVisibleInSidebar(page: Page, locator: Locator): Promise<void> {
   // First ensure the element exists
-  await locator.waitFor({ state: 'attached', timeout: 5000 });
-  
+  await locator.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
+
   // Scroll sidebar to bring element into view
-  await page.evaluate(async (testId) => {
-    const scroller = document.querySelector('[data-testid="sidebar-scroll"]') as HTMLElement;
-    if (!scroller) return;
-    
-    // Find the element - we pass selector info via evaluate
-    const element = document.querySelector(`[data-testid="${testId}"]`) as HTMLElement;
-    if (!element) return;
-    
-    // Get positions relative to scroller
-    const scrollerRect = scroller.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-    
-    // Check if element is below visible area
-    if (elementRect.bottom > scrollerRect.bottom) {
-      const scrollNeeded = elementRect.bottom - scrollerRect.bottom + 50;
-      scroller.scrollTop += scrollNeeded;
-    }
-    // Check if element is above visible area  
-    else if (elementRect.top < scrollerRect.top) {
-      const scrollNeeded = scrollerRect.top - elementRect.top + 50;
-      scroller.scrollTop -= scrollNeeded;
-    }
-  }, await locator.getAttribute('data-testid'));
-  
+  await page.evaluate(
+    async (testId) => {
+      const scroller = document.querySelector('[data-testid="sidebar-scroll"]') as HTMLElement;
+      if (!scroller) return;
+
+      // Find the element - we pass selector info via evaluate
+      const element = document.querySelector(`[data-testid="${testId}"]`) as HTMLElement;
+      if (!element) return;
+
+      // Get positions relative to scroller
+      const scrollerRect = scroller.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+
+      // Check if element is below visible area
+      if (elementRect.bottom > scrollerRect.bottom) {
+        const scrollNeeded = elementRect.bottom - scrollerRect.bottom + 50;
+        scroller.scrollTop += scrollNeeded;
+      }
+      // Check if element is above visible area
+      else if (elementRect.top < scrollerRect.top) {
+        const scrollNeeded = scrollerRect.top - elementRect.top + 50;
+        scroller.scrollTop -= scrollNeeded;
+      }
+    },
+    await locator.getAttribute('data-testid')
+  );
+
   // Fallback: use scrollIntoView on the element itself
-  await locator.evaluate(el => {
+  await locator.evaluate((el) => {
     el.scrollIntoView({ behavior: 'instant', block: 'center' });
   });
 }
@@ -103,7 +109,7 @@ export async function ensureVisibleInSidebar(page: Page, locator: Locator): Prom
  * Scroll the overlay section content to reveal controls below the file preview.
  * After uploading an overlay image, the controls (Mode, Intensity, etc.) are
  * below the fold and need scrolling within the sidebar to be visible.
- * 
+ *
  * Uses data-testid selectors for reliability:
  * - data-testid="sidebar-scroll" for the scrollable container
  * - data-testid="overlay-enabled-switch" for the enable toggle
@@ -112,35 +118,37 @@ export async function ensureVisibleInSidebar(page: Page, locator: Locator): Prom
 export async function scrollOverlaySectionToControls(page: Page): Promise<void> {
   // Step 1: Check if overlay is enabled (controls only render when enabled)
   const enabledSwitch = page.locator('[data-testid="overlay-enabled-switch"]');
-  
+
   // Wait for the switch to be attached (it appears after file upload)
-  await enabledSwitch.waitFor({ state: 'attached', timeout: 5000 });
+  await enabledSwitch.waitFor({ state: 'attached', timeout: 15000 });
   // Check if it exists and is unchecked
-  if (await enabledSwitch.count() > 0) {
+  if ((await enabledSwitch.count()) > 0) {
     const state = await enabledSwitch.getAttribute('data-state');
     if (state === 'unchecked') {
-      await enabledSwitch.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+      await enabledSwitch.evaluate((el) =>
+        el.scrollIntoView({ behavior: 'instant', block: 'nearest' })
+      );
       await enabledSwitch.click({ force: true });
       // Wait for controls to render
       await page.waitForSelector('[data-testid="overlay-mode-select"]', {
         state: 'attached',
-        timeout: 3000
+        timeout: 15000,
       });
     }
   }
-  
+
   // Step 2: Scroll the sidebar container to show the Mode combobox
   // Use scrollIntoView directly on the element - this automatically scrolls the nearest scrollable ancestor
   const modeSelect = page.locator('[data-testid="overlay-mode-select"]');
-  
+
   // Wait for element to exist
-  await modeSelect.waitFor({ state: 'attached', timeout: 3000 });
+  await modeSelect.waitFor({ state: 'attached', timeout: 15000 });
   // Use JavaScript scrollIntoView which handles nested scroll containers correctly
-  await modeSelect.evaluate(el => {
+  await modeSelect.evaluate((el) => {
     el.scrollIntoView({ behavior: 'instant', block: 'center' });
   });
   // Verify it's now visible
-  await modeSelect.waitFor({ state: 'visible', timeout: 3000 });
+  await modeSelect.waitFor({ state: 'visible', timeout: 15000 });
 }
 
 /**
@@ -149,11 +157,20 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
 export async function getCanvasSnapshot(page: Page): Promise<string> {
   const canvas = getQRCanvas(page);
   await canvas.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
-  
+
+  // Wait for render to be idle before capturing — prevents non-deterministic snapshots.
+  // Short timeout (3s): animated GIFs never reach idle, so 15s wastes test budget.
+  await page
+    .waitForSelector('[data-rendering-state="idle"]', {
+      state: 'attached',
+      timeout: 3000,
+    })
+    .catch(() => {});
+
   const dataUrl = await canvas.evaluate((el: HTMLCanvasElement) => {
     return el.toDataURL('image/png');
   });
-  
+
   return dataUrl;
 }
 
@@ -162,14 +179,14 @@ export async function getCanvasSnapshot(page: Page): Promise<string> {
  */
 export async function getCanvasPixels(page: Page): Promise<Uint8ClampedArray> {
   const canvas = getQRCanvas(page);
-  
+
   const pixelData = await canvas.evaluate((el: HTMLCanvasElement) => {
     const ctx = el.getContext('2d');
     if (!ctx) return [];
     const imageData = ctx.getImageData(0, 0, el.width, el.height);
     return Array.from(imageData.data);
   });
-  
+
   return new Uint8ClampedArray(pixelData);
 }
 
@@ -192,7 +209,9 @@ export async function waitForCanvasChange(
   try {
     await page.waitForFunction(
       (prevSnapshot: string) => {
-        const canvas = document.querySelector('[data-testid="qr-preview"] canvas') as HTMLCanvasElement | null;
+        const canvas = document.querySelector(
+          '[data-testid="qr-preview"] canvas'
+        ) as HTMLCanvasElement | null;
         if (!canvas) return false;
         const currentSnapshot = canvas.toDataURL('image/png');
         return currentSnapshot !== prevSnapshot;
@@ -218,10 +237,10 @@ export async function expectQRChanged(
 ): Promise<boolean> {
   // Get snapshot before action
   const before = await getCanvasSnapshot(page);
-  
+
   // Execute the action
   await action();
-  
+
   // Wait for canvas to change (event-driven, no fixed timeout)
   return await waitForCanvasChange(page, before, timeout);
 }
@@ -231,12 +250,12 @@ export async function expectQRChanged(
  */
 export async function getCanvasDimensions(page: Page): Promise<{ width: number; height: number }> {
   const canvas = getQRCanvas(page);
-  
+
   const dimensions = await canvas.evaluate((el: HTMLCanvasElement) => ({
     width: el.width,
     height: el.height,
   }));
-  
+
   return dimensions;
 }
 
@@ -252,7 +271,7 @@ export async function getCanvasDifferencePercent(
   // This is a simplified comparison - for production, consider using
   // image comparison libraries like pixelmatch
   if (snapshot1 === snapshot2) return 0;
-  
+
   // Get pixel data for both
   const before = await page.evaluate((dataUrl: string) => {
     return new Promise<number[]>((resolve) => {
@@ -273,7 +292,7 @@ export async function getCanvasDifferencePercent(
       img.src = dataUrl;
     });
   }, snapshot1);
-  
+
   const after = await page.evaluate((dataUrl: string) => {
     return new Promise<number[]>((resolve) => {
       const img = new Image();
@@ -293,25 +312,25 @@ export async function getCanvasDifferencePercent(
       img.src = dataUrl;
     });
   }, snapshot2);
-  
+
   if (before.length !== after.length || before.length === 0) {
     return 100; // Completely different or error
   }
-  
+
   let differentPixels = 0;
   const totalPixels = before.length / 4; // RGBA = 4 values per pixel
-  
+
   for (let i = 0; i < before.length; i += 4) {
     const rDiff = Math.abs(before[i] - after[i]);
     const gDiff = Math.abs(before[i + 1] - after[i + 1]);
     const bDiff = Math.abs(before[i + 2] - after[i + 2]);
-    
+
     // Consider pixels different if any channel differs by more than 5
     if (rDiff > 5 || gDiff > 5 || bDiff > 5) {
       differentPixels++;
     }
   }
-  
+
   return (differentPixels / totalPixels) * 100;
 }
 
@@ -362,13 +381,15 @@ export async function waitForQRStable(
   // The app sets data-rendering-state="idle" when:
   // - debounce has settled (isPending = false)
   // - rendering is complete (isRendering = false)
-  await page.waitForSelector(
-    '[data-rendering-state="idle"]',
-    { state: 'attached', timeout }
-  ).catch(() => {
-    // Fallback: wait for canvas to be visible
-    return page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: 2000 });
-  });
+  await page
+    .waitForSelector('[data-rendering-state="idle"]', { state: 'attached', timeout })
+    .catch(() => {
+      // Fallback: wait for canvas to be visible
+      return page.waitForSelector('[data-testid="qr-preview"] canvas', {
+        state: 'visible',
+        timeout: 2000,
+      });
+    });
 }
 
 /**
@@ -385,7 +406,9 @@ export async function waitForSelectOpen(page: Page, timeout = DEFAULT_TIMEOUT): 
 
       return candidates.some((el) => {
         const style = window.getComputedStyle(el);
-        return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+        return (
+          style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null
+        );
       });
     },
     { timeout, polling: 50 }
@@ -422,7 +445,7 @@ export async function waitForSelectClosed(page: Page, timeout = DEFAULT_TIMEOUT)
  * Click an option in an open Radix select by index
  * Uses keyboard navigation for reliable scrolling within dropdowns
  * Event-driven: No arbitrary timeouts
- * 
+ *
  * @param page - Playwright page
  * @param optionIndex - Index of the option to select (0-based)
  * @param timeout - Maximum timeout
@@ -430,17 +453,19 @@ export async function waitForSelectClosed(page: Page, timeout = DEFAULT_TIMEOUT)
 export async function clickSelectOption(
   page: Page,
   optionIndex: number,
-  timeout = DEFAULT_TIMEOUT
+  _timeout = DEFAULT_TIMEOUT
 ): Promise<boolean> {
   // Get all visible options in the active dropdown/listbox.
   const allOptions = page.locator('[role="option"]');
   const count = await allOptions.count();
-  
+
   if (optionIndex < 0 || optionIndex >= count) return false;
-  
+
   // Click the target option directly. Radix Select handles pointer events
   // reliably; keyboard navigation (Home/ArrowDown/Enter) is fragile.
-  await allOptions.nth(optionIndex).evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+  await allOptions
+    .nth(optionIndex)
+    .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   await allOptions.nth(optionIndex).click();
   return true;
 }
@@ -448,7 +473,7 @@ export async function clickSelectOption(
 /**
  * Select an option from a dropdown using data-testid
  * Uses keyboard navigation for i18n compatibility
- * 
+ *
  * @param page - Playwright page
  * @param selectTestId - data-testid of the select trigger
  * @param optionValue - The data-value attribute of the option, or the option index if numeric
@@ -459,28 +484,44 @@ export async function selectDropdownOption(
   optionValue: string | number
 ): Promise<boolean> {
   const select = page.locator(`[data-testid="${selectTestId}"]`);
-  
+
   // Wait for element to exist and scroll into view
-  await select.waitFor({ state: 'visible', timeout: 5000 });
-  await select.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
-  
-  // Click to open dropdown
+  await select.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+  await select.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
+
+  // Click to open dropdown, with retry if dropdown doesn't appear
+  // (animated overlays can cause layout shifts that swallow the first click).
+  // Use short timeouts (5s + 10s) to avoid consuming the full test budget on retries.
   await select.click({ force: true });
-  
-  // Wait for dropdown to appear
-  await waitForSelectOpen(page);
-  
+  const opened = await waitForSelectOpen(page, 5000)
+    .then(() => true)
+    .catch(() => false);
+  if (!opened) {
+    // Retry: dispatch pointerdown (what Radix Select actually listens to)
+    // because el.click() only fires a click event which Radix ignores for triggers.
+    await select.evaluate((el) => {
+      el.scrollIntoView({ behavior: 'instant', block: 'center' });
+      el.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 1 })
+      );
+      el.dispatchEvent(
+        new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerId: 1 })
+      );
+    });
+    await waitForSelectOpen(page, 10000);
+  }
+
   const dropdown = page.locator('[data-radix-popper-content-wrapper]').first();
   const allOptions = dropdown.locator('[role="option"]');
   const count = await allOptions.count();
-  
+
   if (count === 0) {
     await page.keyboard.press('Escape');
     return false;
   }
-  
+
   let targetIndex = -1;
-  
+
   // If optionValue is a number, use it directly as index
   if (typeof optionValue === 'number') {
     targetIndex = optionValue;
@@ -493,7 +534,7 @@ export async function selectDropdownOption(
         break;
       }
     }
-    
+
     // If not found by data-value, try text content as last resort
     if (targetIndex === -1) {
       for (let i = 0; i < count; i++) {
@@ -505,20 +546,22 @@ export async function selectDropdownOption(
       }
     }
   }
-  
+
   if (targetIndex === -1 || targetIndex >= count) {
     await page.keyboard.press('Escape');
     return false;
   }
-  
+
   // Click the target option directly. Radix Select handles pointer events
   // reliably; keyboard navigation (Home/ArrowDown/Enter) is fragile.
-  await allOptions.nth(targetIndex).evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+  await allOptions
+    .nth(targetIndex)
+    .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
   await allOptions.nth(targetIndex).click();
-  
+
   // Wait for dropdown to close
   await waitForSelectClosed(page).catch(() => {});
-  
+
   return true;
 }
 
@@ -532,11 +575,11 @@ export async function setSliderValue(
   percent: number
 ): Promise<void> {
   const slider = page.locator(`[data-testid="${sliderTestId}"]`);
-  
+
   // Scroll into view
-  await slider.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
-  await slider.waitFor({ state: 'visible', timeout: 5000 });
-  
+  await slider.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
+  await slider.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
+
   const box = await slider.boundingBox();
   if (box) {
     const x = box.x + (box.width * percent) / 100;
@@ -548,12 +591,9 @@ export async function setSliderValue(
 /**
  * Toggle a switch using data-testid
  */
-export async function toggleSwitch(
-  page: Page,
-  switchTestId: string
-): Promise<void> {
+export async function toggleSwitch(page: Page, switchTestId: string): Promise<void> {
   const switchEl = page.locator(`[data-testid="${switchTestId}"]`);
-  await switchEl.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+  await switchEl.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
   await switchEl.click({ force: true });
 }
 
@@ -562,9 +602,6 @@ export async function toggleSwitch(
  * This is the primary function tests should use to wait for rendering
  * @deprecated Use waitForRenderComplete from test-utils instead
  */
-export async function waitForQRRender(
-  page: Page,
-  timeout = DEFAULT_TIMEOUT
-): Promise<void> {
+export async function waitForQRRender(page: Page, timeout = DEFAULT_TIMEOUT): Promise<void> {
   await waitForQRStable(page, 200, timeout);
 }

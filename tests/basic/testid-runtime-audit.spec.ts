@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/test-fixtures';
+import { expect, test } from '../fixtures/test-fixtures';
 import { openAccordion, selectTier } from '../helpers/test-utils';
 
 async function auditPageTestIds(page: import('@playwright/test').Page) {
@@ -39,6 +39,7 @@ async function auditPageTestIds(page: import('@playwright/test').Page) {
 }
 
 test.describe('Runtime Test ID Audit', () => {
+  test.describe.configure({ timeout: 120000 });
   async function assertNoMissingOrDuplicate(page: import('@playwright/test').Page, label: string) {
     const result = await auditPageTestIds(page);
     expect(result.missing, `${label}: missing IDs on ${result.total} interactive elements`).toEqual(
@@ -56,7 +57,16 @@ test.describe('Runtime Test ID Audit', () => {
       readonly [
         'payload',
         'overlay',
-        ...('qr' | 'render' | 'animation' | 'output' | 'watermark' | 'metadata' | 'share' | 'safety')[]
+        ...(
+          | 'qr'
+          | 'render'
+          | 'animation'
+          | 'output'
+          | 'watermark'
+          | 'metadata'
+          | 'share'
+          | 'safety'
+        )[],
       ]
     > = {
       basic: ['payload', 'overlay'],

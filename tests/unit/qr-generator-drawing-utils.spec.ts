@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node environment (needed by transitive imports)
@@ -44,6 +50,10 @@ function createMockCtx() {
     restore: vi.fn(),
     translate: vi.fn(),
     rotate: vi.fn(),
+    stroke: vi.fn(),
+    strokeRect: vi.fn(),
+    strokeStyle: '',
+    lineWidth: 0,
     fillStyle: '',
     textAlign: '',
     textBaseline: '',
@@ -237,28 +247,36 @@ describe('getScaleFactor', () => {
 
 describe('getEffectiveIntensity', () => {
   it('uses default intensity (100) and default ECC limits', async () => {
-    const { getEffectiveIntensity } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
+    const { getEffectiveIntensity } = await import(
+      '../../src/modules/qr-generator/pixel-matrix-utils'
+    );
     const result = getEffectiveIntensity({ errorCorrection: 'M' } as never);
     // Default: intensity=1.0, M limit=50/100=0.5 → min(1.0, 0.5) = 0.5
     expect(result.effectiveIntensity).toBe(0.5);
   });
 
   it('clamps intensity to ECC limit', async () => {
-    const { getEffectiveIntensity } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
+    const { getEffectiveIntensity } = await import(
+      '../../src/modules/qr-generator/pixel-matrix-utils'
+    );
     const result = getEffectiveIntensity({ errorCorrection: 'L', overlayIntensity: 80 } as never);
     // intensity=0.8, L limit=30/100=0.3 → min(0.8, 0.3) = 0.3
     expect(result.effectiveIntensity).toBe(0.3);
   });
 
   it('preserves intensity when below limit', async () => {
-    const { getEffectiveIntensity } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
+    const { getEffectiveIntensity } = await import(
+      '../../src/modules/qr-generator/pixel-matrix-utils'
+    );
     const result = getEffectiveIntensity({ errorCorrection: 'H', overlayIntensity: 50 } as never);
     // intensity=0.5, H limit=85/100=0.85 → min(0.5, 0.85) = 0.5
     expect(result.effectiveIntensity).toBe(0.5);
   });
 
   it('uses custom ECC limits when provided', async () => {
-    const { getEffectiveIntensity } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
+    const { getEffectiveIntensity } = await import(
+      '../../src/modules/qr-generator/pixel-matrix-utils'
+    );
     const result = getEffectiveIntensity({
       errorCorrection: 'M',
       overlayIntensity: 80,
@@ -269,7 +287,9 @@ describe('getEffectiveIntensity', () => {
   });
 
   it('falls back to 50 when ECC level not in limits', async () => {
-    const { getEffectiveIntensity } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
+    const { getEffectiveIntensity } = await import(
+      '../../src/modules/qr-generator/pixel-matrix-utils'
+    );
     const result = getEffectiveIntensity({
       errorCorrection: 'X',
       overlayIntensity: 80,
@@ -279,7 +299,9 @@ describe('getEffectiveIntensity', () => {
   });
 
   it('returns effectiveConfig with updated overlayIntensity', async () => {
-    const { getEffectiveIntensity } = await import('../../src/modules/qr-generator/pixel-matrix-utils');
+    const { getEffectiveIntensity } = await import(
+      '../../src/modules/qr-generator/pixel-matrix-utils'
+    );
     const result = getEffectiveIntensity({ errorCorrection: 'M', overlayIntensity: 100 } as never);
     expect(result.effectiveConfig.overlayIntensity).toBe(50); // 0.5 * 100
   });
@@ -289,112 +311,154 @@ describe('getEffectiveIntensity', () => {
 
 describe('hasPreprocessingOptions', () => {
   it('returns false when no options are set', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({} as never)).toBe(false);
   });
 
   it('returns false for neutral values', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
-    expect(hasPreprocessingOptions({
-      filterBrightness: 0,
-      filterContrast: 0,
-      filterSaturation: 0,
-      filterHue: 0,
-      filterGamma: 1,
-      filterInvert: false,
-      filterGrayscale: false,
-      filterThreshold: 0,
-      filterBlur: 0,
-      filterSharpen: 0,
-      filterPosterize: 0,
-      colorMode: 'color',
-    } as never)).toBe(false);
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
+    expect(
+      hasPreprocessingOptions({
+        filterBrightness: 0,
+        filterContrast: 0,
+        filterSaturation: 0,
+        filterHue: 0,
+        filterGamma: 1,
+        filterInvert: false,
+        filterGrayscale: false,
+        filterThreshold: 0,
+        filterBlur: 0,
+        filterSharpen: 0,
+        filterPosterize: 0,
+        colorMode: 'color',
+      } as never)
+    ).toBe(false);
   });
 
   it('returns true for filterBrightness !== 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterBrightness: 10 } as never)).toBe(true);
   });
 
   it('returns true for filterContrast !== 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterContrast: -10 } as never)).toBe(true);
   });
 
   it('returns true for filterSaturation !== 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterSaturation: 50 } as never)).toBe(true);
   });
 
   it('returns true for filterHue !== 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterHue: 90 } as never)).toBe(true);
   });
 
   it('returns true for filterGamma !== 1', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterGamma: 0.5 } as never)).toBe(true);
   });
 
   it('returns true for filterInvert', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterInvert: true } as never)).toBe(true);
   });
 
   it('returns true for filterGrayscale', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterGrayscale: true } as never)).toBe(true);
   });
 
   it('returns true for filterThreshold > 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterThreshold: 128 } as never)).toBe(true);
   });
 
   it('returns true for filterBlur > 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterBlur: 2 } as never)).toBe(true);
   });
 
   it('returns true for filterSharpen > 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterSharpen: 50 } as never)).toBe(true);
   });
 
   it('returns true for filterPosterize > 0', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterPosterize: 4 } as never)).toBe(true);
   });
 
   it('returns true for duotone pair', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
-    expect(hasPreprocessingOptions({ filterDuotone1: '#ff0000', filterDuotone2: '#0000ff' } as never)).toBe(true);
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
+    expect(
+      hasPreprocessingOptions({ filterDuotone1: '#ff0000', filterDuotone2: '#0000ff' } as never)
+    ).toBe(true);
   });
 
   it('returns false for single duotone color', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterDuotone1: '#ff0000' } as never)).toBe(false);
   });
 
   it('returns true for filterEdgeDetect', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ filterEdgeDetect: true } as never)).toBe(true);
   });
 
   it('returns true for colorMode grayscale', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ colorMode: 'grayscale' } as never)).toBe(true);
   });
 
   it('returns true for colorMode bw', async () => {
-    const { hasPreprocessingOptions } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasPreprocessingOptions } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasPreprocessingOptions({ colorMode: 'bw' } as never)).toBe(true);
   });
 });
 
 describe('hasGeometricTransforms', () => {
   it('always returns false', async () => {
-    const { hasGeometricTransforms } = await import('../../src/modules/qr-generator/overlay-transforms');
+    const { hasGeometricTransforms } = await import(
+      '../../src/modules/qr-generator/overlay-transforms'
+    );
     expect(hasGeometricTransforms({} as never)).toBe(false);
     expect(hasGeometricTransforms({ someField: true } as never)).toBe(false);
   });
@@ -603,17 +667,30 @@ describe('createGradientFill', () => {
     expect(createGradientFill(ctx, { gradient: { type: 'none' } } as never, 100)).toBeNull();
   });
 
-  it('returns null for empty stops', async () => {
+  it('auto-populates default stops when stops array is empty', async () => {
     const { createGradientFill } = await import('../../src/modules/qr-generator/drawing-gradients');
     const ctx = createMockCtx();
-    expect(createGradientFill(ctx, { gradient: { type: 'linear', stops: [] } } as never, 100)).toBeNull();
+    const result = createGradientFill(
+      ctx,
+      { gradient: { type: 'linear', stops: [] }, fgColor: '#000', bgColor: '#fff' } as never,
+      100
+    );
+    expect(result).not.toBeNull();
+    expect(ctx.createLinearGradient).toHaveBeenCalled();
   });
 
   it('creates linear gradient with angle', async () => {
     const { createGradientFill } = await import('../../src/modules/qr-generator/drawing-gradients');
     const ctx = createMockCtx();
-    const stops = [{ pos: 0, color: '#000' }, { pos: 1, color: '#fff' }];
-    const result = createGradientFill(ctx, { gradient: { type: 'linear', angle: 45, stops } } as never, 200);
+    const stops = [
+      { pos: 0, color: '#000' },
+      { pos: 1, color: '#fff' },
+    ];
+    const result = createGradientFill(
+      ctx,
+      { gradient: { type: 'linear', angle: 45, stops } } as never,
+      200
+    );
     expect(result).not.toBeNull();
     expect(ctx.createLinearGradient).toHaveBeenCalled();
   });
@@ -621,7 +698,10 @@ describe('createGradientFill', () => {
   it('creates radial gradient', async () => {
     const { createGradientFill } = await import('../../src/modules/qr-generator/drawing-gradients');
     const ctx = createMockCtx();
-    const stops = [{ pos: 0, color: '#f00' }, { pos: 1, color: '#00f' }];
+    const stops = [
+      { pos: 0, color: '#f00' },
+      { pos: 1, color: '#00f' },
+    ];
     const result = createGradientFill(ctx, { gradient: { type: 'radial', stops } } as never, 200);
     expect(result).not.toBeNull();
     expect(ctx.createRadialGradient).toHaveBeenCalled();
@@ -630,7 +710,10 @@ describe('createGradientFill', () => {
   it('creates conic gradient (falls back to radial)', async () => {
     const { createGradientFill } = await import('../../src/modules/qr-generator/drawing-gradients');
     const ctx = createMockCtx();
-    const stops = [{ pos: 0, color: '#f00' }, { pos: 1, color: '#0f0' }];
+    const stops = [
+      { pos: 0, color: '#f00' },
+      { pos: 1, color: '#0f0' },
+    ];
     const result = createGradientFill(ctx, { gradient: { type: 'conic', stops } } as never, 200);
     expect(result).not.toBeNull();
     expect(ctx.createRadialGradient).toHaveBeenCalled();
@@ -640,18 +723,30 @@ describe('createGradientFill', () => {
     const { createGradientFill } = await import('../../src/modules/qr-generator/drawing-gradients');
     const ctx = createMockCtx();
     const stops = [{ pos: 0, color: '#000' }];
-    expect(createGradientFill(ctx, { gradient: { type: 'unknown', stops } } as never, 100)).toBeNull();
+    expect(
+      createGradientFill(ctx, { gradient: { type: 'unknown', stops } } as never, 100)
+    ).toBeNull();
   });
 
   it('adds color stops to gradient', async () => {
     const { createGradientFill } = await import('../../src/modules/qr-generator/drawing-gradients');
     const ctx = createMockCtx();
-    const stops = [{ pos: 0, color: '#000' }, { pos: 0.5, color: '#888' }, { pos: 1, color: '#fff' }];
-    const result = createGradientFill(ctx, { gradient: { type: 'linear', angle: 0, stops } } as never, 100);
+    const stops = [
+      { pos: 0, color: '#000' },
+      { pos: 0.5, color: '#888' },
+      { pos: 1, color: '#fff' },
+    ];
+    const result = createGradientFill(
+      ctx,
+      { gradient: { type: 'linear', angle: 0, stops } } as never,
+      100
+    );
     expect(result).not.toBeNull();
     // The mock gradient's addColorStop should be called 3 times
     if (result) {
-      expect((result as { addColorStop: ReturnType<typeof vi.fn> }).addColorStop).toHaveBeenCalledTimes(3);
+      expect(
+        (result as { addColorStop: ReturnType<typeof vi.fn> }).addColorStop
+      ).toHaveBeenCalledTimes(3);
     }
   });
 });
@@ -673,17 +768,25 @@ describe('drawFrameBackground', () => {
     expect(ctx.fillRect).not.toHaveBeenCalled();
   });
 
-  it('draws fillRect when no borderRadius', async () => {
+  it('draws fillRect when borderRadius is explicitly 0', async () => {
     const { drawFrameBackground } = await import('../../src/modules/qr-generator/drawing-frames');
     const ctx = createMockCtx();
-    drawFrameBackground(ctx, 200, 10, 4, { frameStyle: 'sticker', bgColor: '#fff' } as never);
+    drawFrameBackground(ctx, 200, 10, 4, {
+      frameStyle: 'sticker',
+      frameBorderRadius: 0,
+      bgColor: '#fff',
+    } as never);
     expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 200, 200);
   });
 
   it('draws roundRect when borderRadius > 0', async () => {
     const { drawFrameBackground } = await import('../../src/modules/qr-generator/drawing-frames');
     const ctx = createMockCtx();
-    drawFrameBackground(ctx, 200, 10, 4, { frameStyle: 'sticker', frameBorderRadius: 50, bgColor: '#fff' } as never);
+    drawFrameBackground(ctx, 200, 10, 4, {
+      frameStyle: 'sticker',
+      frameBorderRadius: 50,
+      bgColor: '#fff',
+    } as never);
     // roundRect calls beginPath + quadraticCurveTo
     expect(ctx.beginPath).toHaveBeenCalled();
     expect(ctx.quadraticCurveTo).toHaveBeenCalled();
@@ -705,17 +808,23 @@ describe('drawFrame', () => {
     expect(ctx.fillText).not.toHaveBeenCalled();
   });
 
-  it('returns early when no frameText', async () => {
+  it('draws border but no text when no frameText', async () => {
     const { drawFrame } = await import('../../src/modules/qr-generator/drawing-frames');
     const ctx = createMockCtx();
     drawFrame(ctx, 200, 10, 4, { frameStyle: 'sticker' } as never);
+    expect(ctx.stroke).toHaveBeenCalled();
     expect(ctx.fillText).not.toHaveBeenCalled();
   });
 
   it('draws text when frameStyle and frameText are set', async () => {
     const { drawFrame } = await import('../../src/modules/qr-generator/drawing-frames');
     const ctx = createMockCtx();
-    drawFrame(ctx, 200, 10, 4, { frameStyle: 'sticker', frameText: 'SCAN ME', fgColor: '#000' } as never);
+    drawFrame(ctx, 200, 10, 4, {
+      frameStyle: 'sticker',
+      frameText: 'SCAN ME',
+      fgColor: '#000',
+    } as never);
+    expect(ctx.stroke).toHaveBeenCalled();
     expect(ctx.fillText).toHaveBeenCalled();
   });
 });
@@ -729,13 +838,27 @@ describe('applyTrueDither', () => {
     const h = 2;
     const data = new Uint8ClampedArray(w * h * 4);
     // Pixel (0,0): black (dark)
-    data[0] = 0; data[1] = 0; data[2] = 0; data[3] = 255;
+    data[0] = 0;
+    data[1] = 0;
+    data[2] = 0;
+    data[3] = 255;
     // Pixel (1,0): white (light)
-    data[4] = 255; data[5] = 255; data[6] = 255; data[7] = 255;
+    data[4] = 255;
+    data[5] = 255;
+    data[6] = 255;
+    data[7] = 255;
     // Pixel (2,0): mid gray
-    data[8] = 128; data[9] = 128; data[10] = 128; data[11] = 255;
+    data[8] = 128;
+    data[9] = 128;
+    data[10] = 128;
+    data[11] = 255;
     // Row 2 all mid-gray
-    for (let i = 12; i < 24; i += 4) { data[i] = 100; data[i+1] = 100; data[i+2] = 100; data[i+3] = 255; }
+    for (let i = 12; i < 24; i += 4) {
+      data[i] = 100;
+      data[i + 1] = 100;
+      data[i + 2] = 100;
+      data[i + 3] = 255;
+    }
 
     const result = applyTrueDither(data, w, h, { colorMode: 'bw' } as never);
     expect(result.matrix.length).toBe(h);
@@ -755,7 +878,10 @@ describe('applyTrueDither', () => {
   it('produces RGB colors in color mode', async () => {
     const { applyTrueDither } = await import('../../src/modules/qr-generator/dithering-true');
     const data = new Uint8ClampedArray(4);
-    data[0] = 200; data[1] = 100; data[2] = 50; data[3] = 255;
+    data[0] = 200;
+    data[1] = 100;
+    data[2] = 50;
+    data[3] = 255;
     const result = applyTrueDither(data, 1, 1, { colorMode: 'color' } as never);
     expect(result.colors[0][0]).not.toBeNull();
     expect(result.colors[0][0]!.r).toBe(200);
@@ -766,7 +892,10 @@ describe('applyTrueDither', () => {
   it('handles grayscale mode (non-bw gives colors)', async () => {
     const { applyTrueDither } = await import('../../src/modules/qr-generator/dithering-true');
     const data = new Uint8ClampedArray(4);
-    data[0] = 80; data[1] = 80; data[2] = 80; data[3] = 255;
+    data[0] = 80;
+    data[1] = 80;
+    data[2] = 80;
+    data[3] = 255;
     const result = applyTrueDither(data, 1, 1, { colorMode: 'grayscale' } as never);
     expect(result.colors[0][0]).not.toBeNull();
     expect(result.matrix[0][0]).toBe(true); // dark (gray < 128)

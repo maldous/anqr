@@ -4,12 +4,10 @@
  * Uses data-testid selectors for reliability
  */
 
-import { test, expect } from '../fixtures/test-fixtures';
 import type { Page } from '@playwright/test';
+import { expect, test } from '../fixtures/test-fixtures';
 
-import {
-  waitForQRRender,
-} from '../helpers/qr-detector';
+import { waitForQRRender } from '../helpers/qr-detector';
 import {
   openAccordion,
   selectOption as selectDropdownByText,
@@ -41,7 +39,8 @@ async function selectDropdownOption(
   option: number | string,
   settle: boolean = true
 ) {
-  const label = typeof option === 'number' ? ['PNG', 'WebP', 'GIF', 'SVG'][option] ?? 'PNG' : option;
+  const label =
+    typeof option === 'number' ? (['PNG', 'WebP', 'GIF', 'SVG'][option] ?? 'PNG') : option;
   await selectDropdownByText(page, triggerTestId, label).catch(() => false);
   if (settle) {
     await waitForRenderComplete(page, 'settle');
@@ -87,11 +86,11 @@ test.describe('Output Format Selection', () => {
     const trigger = page.locator('[data-testid="output-format-trigger"]');
     await trigger.click();
     await waitForRenderComplete(page, 'settle');
-    
+
     // Count all options (should have at least 4: PNG, WebP, GIF, SVG)
     const options = page.locator('[role="option"]');
     const count = await options.count();
-    
+
     await page.keyboard.press('Escape');
     expect(count).toBeGreaterThanOrEqual(4);
   });
@@ -116,11 +115,11 @@ test.describe('Output Format Selection', () => {
     // GIF settings should be visible
     const paletteSlider = page.locator('[data-testid="output-gif-palette-slider"]');
     const quantizerTrigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
-    
+
     // At least one GIF setting should be visible
     const paletteVisible = await paletteSlider.isVisible().catch(() => false);
     const quantizerVisible = await quantizerTrigger.isVisible().catch(() => false);
-    
+
     expect(paletteVisible || quantizerVisible).toBe(true);
   });
 
@@ -130,9 +129,11 @@ test.describe('Output Format Selection', () => {
     // SVG settings should be visible
     const trueVectorSwitch = page.locator('[data-testid="output-svg-true-vector-switch"]');
     const isVisible = await trueVectorSwitch.isVisible().catch(() => false);
-    
+
     // In advanced tier, SVG settings should be visible after selecting SVG format
-    expect(isVisible, 'SVG true vector switch should be visible after selecting SVG format').toBe(true);
+    expect(isVisible, 'SVG true vector switch should be visible after selecting SVG format').toBe(
+      true
+    );
   });
 
   test('format select uses keyboard navigation', async ({ page }) => {
@@ -142,7 +143,7 @@ test.describe('Output Format Selection', () => {
     await waitForRenderComplete(page, 'settle');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    
+
     await waitForRenderComplete(page, 'settle');
     // Dropdown should be closed
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
@@ -164,7 +165,7 @@ test.describe('Output Dimensions', () => {
   test('width input is visible and accepts values', async ({ page }) => {
     const widthInput = page.locator('[data-testid="output-width-input"]');
     await expect(widthInput).toBeVisible();
-    
+
     await setInputByTestId(page, 'output-width-input', '800');
     const value = await widthInput.inputValue();
     expect(value).toBe('800');
@@ -173,7 +174,7 @@ test.describe('Output Dimensions', () => {
   test('height input is visible and accepts values', async ({ page }) => {
     const heightInput = page.locator('[data-testid="output-height-input"]');
     await expect(heightInput).toBeVisible();
-    
+
     await setInputByTestId(page, 'output-height-input', '600');
     const value = await heightInput.inputValue();
     expect(value).toBe('600');
@@ -195,7 +196,7 @@ test.describe('Output Dimensions', () => {
     const widthInput = page.locator('[data-testid="output-width-input"]');
     const min = await widthInput.getAttribute('min');
     const max = await widthInput.getAttribute('max');
-    
+
     expect(min).toBe('100');
     expect(max).toBe('2000');
   });
@@ -204,7 +205,7 @@ test.describe('Output Dimensions', () => {
     const heightInput = page.locator('[data-testid="output-height-input"]');
     const min = await heightInput.getAttribute('min');
     const max = await heightInput.getAttribute('max');
-    
+
     expect(min).toBe('100');
     expect(max).toBe('2000');
   });
@@ -212,13 +213,13 @@ test.describe('Output Dimensions', () => {
   test('dimensions can be set to different values', async ({ page }) => {
     await setInputByTestId(page, 'output-width-input', '500');
     await setInputByTestId(page, 'output-height-input', '700');
-    
+
     const widthInput = page.locator('[data-testid="output-width-input"]');
     const heightInput = page.locator('[data-testid="output-height-input"]');
-    
+
     const width = await widthInput.inputValue();
     const height = await heightInput.inputValue();
-    
+
     expect(width).toBe('500');
     expect(height).toBe('700');
   });
@@ -246,7 +247,7 @@ test.describe('Output WebP Quality', () => {
     const slider = page.locator('[data-testid="output-quality-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('0.1');
     expect(ariaMax).toBe('1');
   });
@@ -254,8 +255,8 @@ test.describe('Output WebP Quality', () => {
   test('quality slider responds to keyboard', async ({ page }) => {
     const slider = page.locator('[data-testid="output-quality-slider"] [role="slider"]');
     await slider.focus();
-    
-    const initialValue = await slider.getAttribute('aria-valuenow');
+
+    const _initialValue = await slider.getAttribute('aria-valuenow');
     await page.keyboard.press('ArrowRight');
     await waitForRenderComplete(page, 'settle');
     const newValue = await slider.getAttribute('aria-valuenow');
@@ -294,7 +295,7 @@ test.describe('Output GIF Settings', () => {
       await waitForRenderComplete(page, 'settle');
       const options = page.locator('[role="option"]');
       const count = await options.count();
-      
+
       await page.keyboard.press('Escape');
       expect(count).toBeGreaterThanOrEqual(2);
     }
@@ -307,7 +308,7 @@ test.describe('Output GIF Settings', () => {
       await waitForRenderComplete(page, 'settle');
       const options = page.locator('[role="option"]');
       const count = await options.count();
-      
+
       await page.keyboard.press('Escape');
       expect(count).toBeGreaterThanOrEqual(2);
     }
@@ -356,14 +357,14 @@ test.describe('Output SVG Settings', () => {
         await waitForRenderComplete(page, 'settle');
       }
     }
-    
+
     const trigger = page.locator('[data-testid="output-svg-precision-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
       await trigger.click();
       await waitForRenderComplete(page, 'settle');
       const options = page.locator('[role="option"]');
       const count = await options.count();
-      
+
       await page.keyboard.press('Escape');
       expect(count).toBeGreaterThanOrEqual(2);
     }
@@ -424,19 +425,28 @@ test.describe('Output Conditional Settings Visibility', () => {
     // Start with PNG
     await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.PNG);
     await waitForRenderComplete(page, 'settle');
-    let qualityVisible = await page.locator('[data-testid="output-quality-slider"]').isVisible().catch(() => false);
+    let qualityVisible = await page
+      .locator('[data-testid="output-quality-slider"]')
+      .isVisible()
+      .catch(() => false);
     expect(qualityVisible).toBe(false);
-    
+
     // Switch to WebP
     await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.WEBP);
     await waitForRenderComplete(page, 'settle');
-    qualityVisible = await page.locator('[data-testid="output-quality-slider"]').isVisible().catch(() => false);
+    qualityVisible = await page
+      .locator('[data-testid="output-quality-slider"]')
+      .isVisible()
+      .catch(() => false);
     expect(qualityVisible).toBe(true);
-    
+
     // Switch back to PNG
     await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.PNG);
     await waitForRenderComplete(page, 'settle');
-    qualityVisible = await page.locator('[data-testid="output-quality-slider"]').isVisible().catch(() => false);
+    qualityVisible = await page
+      .locator('[data-testid="output-quality-slider"]')
+      .isVisible()
+      .catch(() => false);
     expect(qualityVisible).toBe(false);
   });
 });
@@ -504,11 +514,11 @@ test.describe('Output Professional Settings (Professional Tier)', () => {
     if (await trigger.isVisible().catch(() => false)) {
       await trigger.click();
       await waitForRenderComplete(page, 'settle');
-      
+
       // Count total options (should have at least 1: none, eps, etc.)
       const options = page.locator('[role="option"]');
       const count = await options.count();
-      
+
       await page.keyboard.press('Escape');
       expect(count).toBeGreaterThanOrEqual(1);
     }
@@ -534,7 +544,7 @@ test.describe('Output Section Accessibility', () => {
   test('dimension inputs are labeled', async ({ page }) => {
     const widthInput = page.locator('[data-testid="output-width-input"]');
     const heightInput = page.locator('[data-testid="output-height-input"]');
-    
+
     // Inputs should be visible and have proper type
     await expect(widthInput).toBeVisible();
     await expect(heightInput).toBeVisible();
@@ -542,7 +552,7 @@ test.describe('Output Section Accessibility', () => {
 
   test('output section can be navigated via keyboard', async ({ page }) => {
     await page.keyboard.press('Tab');
-    
+
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
   });
@@ -569,13 +579,19 @@ test.describe('Output Edge Cases', () => {
   });
 
   test('rapid format switching works correctly', async ({ page }) => {
-    const formatIndices = [FORMAT_INDEX.PNG, FORMAT_INDEX.WEBP, FORMAT_INDEX.GIF, FORMAT_INDEX.SVG, FORMAT_INDEX.PNG];
-    
+    const formatIndices = [
+      FORMAT_INDEX.PNG,
+      FORMAT_INDEX.WEBP,
+      FORMAT_INDEX.GIF,
+      FORMAT_INDEX.SVG,
+      FORMAT_INDEX.PNG,
+    ];
+
     for (const formatIndex of formatIndices) {
       await selectDropdownOption(page, 'output-format-trigger', formatIndex, false);
     }
     await waitForRenderComplete(page, 'settle');
-    
+
     // Last format was PNG - verify it's selected
     const trigger = page.locator('[data-testid="output-format-trigger"]');
     const finalText = await trigger.textContent();
@@ -585,16 +601,18 @@ test.describe('Output Edge Cases', () => {
   test('output settings persist after section collapse/expand', async ({ page }) => {
     // Set a custom value
     await setInputByTestId(page, 'output-width-input', '999');
-    
+
     // Collapse and expand using data-testid
-    const outputTrigger = page.locator('[data-testid="accordion-output"] button[data-state]').first();
+    const outputTrigger = page
+      .locator('[data-testid="accordion-output"] button[data-state]')
+      .first();
     const trigger = outputTrigger;
-    
+
     await trigger.click();
     await waitForAccordionState(page, 'output', 'closed');
     await trigger.click();
     await waitForAccordionState(page, 'output', 'open');
-    
+
     // Verify value persisted
     const widthInput = page.locator('[data-testid="output-width-input"]');
     const value = await widthInput.inputValue();
@@ -740,10 +758,10 @@ test.describe('Output Dimension Validation', () => {
   test('dimensions can be non-square', async ({ page }) => {
     await setInputByTestId(page, 'output-width-input', '800');
     await setInputByTestId(page, 'output-height-input', '600');
-    
+
     const widthInput = page.locator('[data-testid="output-width-input"]');
     const heightInput = page.locator('[data-testid="output-height-input"]');
-    
+
     expect(await widthInput.inputValue()).toBe('800');
     expect(await heightInput.inputValue()).toBe('600');
   });
@@ -843,17 +861,19 @@ test.describe('Output WebP Quality Key Points', () => {
   test('quality slider at 25%', async ({ page }) => {
     const slider = page.locator('[data-testid="output-quality-slider"]');
     if (await slider.isVisible().catch(() => false)) {
-      const box = await slider.boundingBox();
-      if (box) {
-        const x = box.x + box.width * 0.15;
-        const y = box.y + box.height / 2;
-        await page.mouse.click(x, y);
-        await waitForRenderComplete(page, 'settle');
-        const sliderThumb = slider.locator('[role="slider"]');
-        const value = await sliderThumb.getAttribute('aria-valuenow');
-        expect(Number(value)).toBeGreaterThan(0.1);
-        expect(Number(value)).toBeLessThan(0.5);
+      const sliderThumb = slider.locator('[role="slider"]');
+      // Use keyboard: go to min, then step up ~15% of range (0.1-1.0)
+      await sliderThumb.focus();
+      await page.keyboard.press('Home');
+      await waitForRenderComplete(page, 'settle');
+      // Step up a few times from minimum to reach ~25% range
+      for (let i = 0; i < 3; i++) {
+        await page.keyboard.press('ArrowRight');
       }
+      await waitForRenderComplete(page, 'settle');
+      const value = await sliderThumb.getAttribute('aria-valuenow');
+      expect(Number(value)).toBeGreaterThan(0.1);
+      expect(Number(value)).toBeLessThan(0.5);
     }
   });
 
@@ -1047,7 +1067,7 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('Home');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Set quantizer using keyboard navigation (index 0)
     const quantizerTrigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
     if (await quantizerTrigger.isVisible().catch(() => false)) {
@@ -1056,7 +1076,7 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('Home');
       await page.keyboard.press('Enter');
     }
-    
+
     // Set dither using keyboard navigation (index 1 = floyd)
     const ditherTrigger = page.locator('[data-testid="output-gif-dither-trigger"]');
     if (await ditherTrigger.isVisible().catch(() => false)) {
@@ -1066,7 +1086,7 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
     }
-    
+
     // Verify palette was set to minimum
     if (await paletteSlider.isVisible().catch(() => false)) {
       const sliderThumb = paletteSlider.locator('[role="slider"]');
@@ -1084,7 +1104,7 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('End');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Set quantizer using keyboard navigation (index 2 = octree)
     const quantizerTrigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
     if (await quantizerTrigger.isVisible().catch(() => false)) {
@@ -1095,7 +1115,7 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Enter');
     }
-    
+
     // Set dither off using keyboard navigation (index 0 = off)
     const ditherTrigger = page.locator('[data-testid="output-gif-dither-trigger"]');
     if (await ditherTrigger.isVisible().catch(() => false)) {
@@ -1104,7 +1124,7 @@ test.describe('Output GIF Settings Combinations', () => {
       await page.keyboard.press('Home');
       await page.keyboard.press('Enter');
     }
-    
+
     // Verify palette at max
     if (await paletteSlider.isVisible().catch(() => false)) {
       const sliderThumb = paletteSlider.locator('[role="slider"]');
@@ -1142,7 +1162,7 @@ test.describe('Output SVG Settings', () => {
         await toggleSwitchByTestId(page, 'output-svg-true-vector-switch');
         await waitForRenderComplete(page, 'settle');
       }
-      
+
       // Precision trigger should be visible
       const precisionTrigger = page.locator('[data-testid="output-svg-precision-trigger"]');
       const isVisible = await precisionTrigger.isVisible().catch(() => false);
@@ -1157,7 +1177,7 @@ test.describe('Output SVG Settings', () => {
         await toggleSwitchByTestId(page, 'output-svg-true-vector-switch');
         await waitForRenderComplete(page, 'settle');
       }
-      
+
       const precisionTrigger = page.locator('[data-testid="output-svg-precision-trigger"]');
       if (await precisionTrigger.isVisible().catch(() => false)) {
         await precisionTrigger.click();
@@ -1180,7 +1200,7 @@ test.describe('Output SVG Settings', () => {
         await toggleSwitchByTestId(page, 'output-svg-true-vector-switch');
         await waitForRenderComplete(page, 'settle');
       }
-      
+
       const precisionTrigger = page.locator('[data-testid="output-svg-precision-trigger"]');
       if (await precisionTrigger.isVisible().catch(() => false)) {
         await precisionTrigger.click();
@@ -1329,7 +1349,11 @@ test.describe('Output Background Override', () => {
   });
 
   test('background override accepts hex color', async ({ page }) => {
-    const textInput = page.locator('input[type="text"][placeholder*="background" i], input[type="text"][placeholder*="color" i]').first();
+    const textInput = page
+      .locator(
+        'input[type="text"][placeholder*="background" i], input[type="text"][placeholder*="color" i]'
+      )
+      .first();
     if (await textInput.isVisible().catch(() => false)) {
       await textInput.fill('#ff0000');
       await textInput.blur();
@@ -1339,7 +1363,11 @@ test.describe('Output Background Override', () => {
   });
 
   test('background override accepts rgb notation', async ({ page }) => {
-    const textInput = page.locator('input[type="text"][placeholder*="background" i], input[type="text"][placeholder*="color" i]').first();
+    const textInput = page
+      .locator(
+        'input[type="text"][placeholder*="background" i], input[type="text"][placeholder*="color" i]'
+      )
+      .first();
     if (await textInput.isVisible().catch(() => false)) {
       await textInput.fill('rgb(255, 0, 0)');
       await textInput.blur();
@@ -1427,7 +1455,7 @@ test.describe('Output Keyboard Navigation', () => {
   test('Tab navigates through output controls', async ({ page }) => {
     const formatTrigger = page.locator('[data-testid="output-format-trigger"]');
     await formatTrigger.focus();
-    
+
     // Tab through controls
     const elements: string[] = [];
     for (let i = 0; i < 5; i++) {
@@ -1435,7 +1463,7 @@ test.describe('Output Keyboard Navigation', () => {
       const focusedTag = await page.evaluate(() => document.activeElement?.tagName);
       if (focusedTag) elements.push(focusedTag);
     }
-    
+
     expect(elements.length).toBeGreaterThan(0);
   });
 
@@ -1446,7 +1474,7 @@ test.describe('Output Keyboard Navigation', () => {
     await waitForRenderComplete(page, 'settle');
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isVisible = await dropdown.isVisible().catch(() => false);
-    
+
     // Dropdown should have opened with Enter key
     expect(isVisible, 'dropdown should open when Enter is pressed on format trigger').toBe(true);
     if (isVisible) {
@@ -1461,7 +1489,7 @@ test.describe('Output Keyboard Navigation', () => {
     await waitForRenderComplete(page, 'settle');
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isVisible = await dropdown.isVisible().catch(() => false);
-    
+
     // Dropdown should have opened with Space key
     expect(isVisible, 'dropdown should open when Space is pressed on format trigger').toBe(true);
     if (isVisible) {
@@ -1493,7 +1521,7 @@ test.describe('Output Keyboard Navigation', () => {
   test('Shift+Tab navigates backwards', async ({ page }) => {
     const heightInput = page.locator('[data-testid="output-height-input"]');
     await heightInput.focus();
-    
+
     await page.keyboard.press('Shift+Tab');
     await waitForRenderComplete(page, 'settle');
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
