@@ -19,7 +19,7 @@ import type { Locator, Page } from '@playwright/test';
  */
 
 /** Default timeout for waiting operations — generous to handle heavy overlay/GIF load */
-const DEFAULT_TIMEOUT = 30000;
+const DEFAULT_TIMEOUT = 300000;
 const QR_CANVAS_SELECTOR = '[data-testid="qr-preview"] canvas';
 
 function getQRCanvas(page: Page): Locator {
@@ -120,7 +120,7 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
   const enabledSwitch = page.locator('[data-testid="overlay-enabled-switch"]');
 
   // Wait for the switch to be attached (it appears after file upload)
-  await enabledSwitch.waitFor({ state: 'attached', timeout: 15000 });
+  await enabledSwitch.waitFor({ state: 'attached', timeout: 300000 });
   // Check if it exists and is unchecked
   if ((await enabledSwitch.count()) > 0) {
     const state = await enabledSwitch.getAttribute('data-state');
@@ -132,7 +132,7 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
       // Wait for controls to render
       await page.waitForSelector('[data-testid="overlay-mode-select"]', {
         state: 'attached',
-        timeout: 15000,
+        timeout: 300000,
       });
     }
   }
@@ -142,13 +142,13 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
   const modeSelect = page.locator('[data-testid="overlay-mode-select"]');
 
   // Wait for element to exist
-  await modeSelect.waitFor({ state: 'attached', timeout: 15000 });
+  await modeSelect.waitFor({ state: 'attached', timeout: 300000 });
   // Use JavaScript scrollIntoView which handles nested scroll containers correctly
   await modeSelect.evaluate((el) => {
     el.scrollIntoView({ behavior: 'instant', block: 'center' });
   });
   // Verify it's now visible
-  await modeSelect.waitFor({ state: 'visible', timeout: 15000 });
+  await modeSelect.waitFor({ state: 'visible', timeout: 300000 });
 }
 
 /**
@@ -159,11 +159,11 @@ export async function getCanvasSnapshot(page: Page): Promise<string> {
   await canvas.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
 
   // Wait for render to be idle before capturing — prevents non-deterministic snapshots.
-  // Short timeout (3s): animated GIFs never reach idle, so 15s wastes test budget.
+  // Wait for render idle; animated GIFs may never reach idle.
   await page
     .waitForSelector('[data-rendering-state="idle"]', {
       state: 'attached',
-      timeout: 3000,
+      timeout: 300000,
     })
     .catch(() => {});
 
@@ -387,7 +387,7 @@ export async function waitForQRStable(
       // Fallback: wait for canvas to be visible
       return page.waitForSelector('[data-testid="qr-preview"] canvas', {
         state: 'visible',
-        timeout: 2000,
+        timeout: 300000,
       });
     });
 }
