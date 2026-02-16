@@ -41,12 +41,16 @@ export async function openAccordion(page: Page, sectionId: string): Promise<void
   const accordionItem = page.locator(`[data-testid="accordion-${sectionId}"]`);
   const trigger = accordionItem.locator('[data-radix-collection-item]').first();
   
+  // Wait for trigger to be visible before reading state
+  await trigger.waitFor({ state: 'visible', timeout: 5000 });
+  
   // Check if already open
   const isExpanded = await trigger.getAttribute('data-state') === 'open';
   if (isExpanded) return;
   
-  // Scroll trigger into view within sidebar
-  await trigger.scrollIntoViewIfNeeded();
+  // Scroll trigger into view using JS evaluate to bypass Playwright's stability check
+  // (accordion CSS animations can cause scrollIntoViewIfNeeded to loop forever)
+  await trigger.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
   await trigger.click();
   
   // Wait for region to be visible
@@ -115,7 +119,7 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
   if (await enabledSwitch.count() > 0) {
     const state = await enabledSwitch.getAttribute('data-state');
     if (state === 'unchecked') {
-      await enabledSwitch.scrollIntoViewIfNeeded();
+      await enabledSwitch.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
       await enabledSwitch.click({ force: true });
       // Wait for controls to render
       await page.waitForSelector('[data-testid="overlay-mode-select"]', {
@@ -434,27 +438,10 @@ export async function clickSelectOption(
   
   if (optionIndex < 0 || optionIndex >= count) return false;
   
-  // Use keyboard navigation - more reliable than click for scrolling
-  // Press Home to go to first option, then arrow down to target
-  await page.keyboard.press('Home');
-  for (let i = 0; i < optionIndex; i++) {
-    await page.keyboard.press('ArrowDown');
-  }
-  
-  // Wait for the option to be highlighted (data-highlighted attribute)
-  // This is event-driven - we wait for the actual state change
-  await page.waitForFunction(
-    (idx: number) => {
-      const options = document.querySelectorAll('[data-radix-popper-content-wrapper] [role="option"]');
-      const target = options[idx];
-      return target && (target.getAttribute('data-highlighted') === '' || target.getAttribute('data-state') === 'checked');
-    },
-    optionIndex,
-    { timeout: 2000, polling: 16 }
-  ).catch(() => {});
-  
-  // Press Enter to select
-  await page.keyboard.press('Enter');
+  // Click the target option directly. Radix Select handles pointer events
+  // reliably; keyboard navigation (Home/ArrowDown/Enter) is fragile.
+  await allOptions.nth(optionIndex).evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+  await allOptions.nth(optionIndex).click();
   return true;
 }
 
@@ -475,7 +462,7 @@ export async function selectDropdownOption(
   
   // Wait for element to exist and scroll into view
   await select.waitFor({ state: 'visible', timeout: 5000 });
-  await select.scrollIntoViewIfNeeded();
+  await select.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   
   // Click to open dropdown
   await select.click({ force: true });
@@ -524,25 +511,10 @@ export async function selectDropdownOption(
     return false;
   }
   
-  // Use keyboard navigation for reliable scrolling and selection
-  await page.keyboard.press('Home');
-  for (let i = 0; i < targetIndex; i++) {
-    await page.keyboard.press('ArrowDown');
-  }
-  
-  // Wait for option to be highlighted
-  await page.waitForFunction(
-    (idx: number) => {
-      const options = document.querySelectorAll('[data-radix-popper-content-wrapper] [role="option"]');
-      const target = options[idx];
-      return target && (target.getAttribute('data-highlighted') === '' || target.hasAttribute('data-highlighted'));
-    },
-    targetIndex,
-    { timeout: 2000, polling: 16 }
-  ).catch(() => {});
-  
-  // Press Enter to select
-  await page.keyboard.press('Enter');
+  // Click the target option directly. Radix Select handles pointer events
+  // reliably; keyboard navigation (Home/ArrowDown/Enter) is fragile.
+  await allOptions.nth(targetIndex).evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+  await allOptions.nth(targetIndex).click();
   
   // Wait for dropdown to close
   await waitForSelectClosed(page).catch(() => {});
@@ -562,7 +534,7 @@ export async function setSliderValue(
   const slider = page.locator(`[data-testid="${sliderTestId}"]`);
   
   // Scroll into view
-  await slider.scrollIntoViewIfNeeded();
+  await slider.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   await slider.waitFor({ state: 'visible', timeout: 5000 });
   
   const box = await slider.boundingBox();
@@ -581,7 +553,7 @@ export async function toggleSwitch(
   switchTestId: string
 ): Promise<void> {
   const switchEl = page.locator(`[data-testid="${switchTestId}"]`);
-  await switchEl.scrollIntoViewIfNeeded();
+  await switchEl.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   await switchEl.click({ force: true });
 }
 

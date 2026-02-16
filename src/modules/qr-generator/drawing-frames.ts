@@ -22,7 +22,11 @@ export function drawFrameBackground(
   if (!config.frameStyle || config.frameStyle === 'none') return;
 
   const frameColor = config.frameColor || config.bgColor;
-  const borderRadius = config.frameBorderRadius ?? 0;
+  const fgColor = config.fgColor || '#000000';
+
+  // Determine border radius based on frame style
+  const defaultRadius = config.frameStyle === 'sticker' ? 12 : config.frameStyle === 'tag' ? 4 : 0;
+  const borderRadius = config.frameBorderRadius ?? defaultRadius;
 
   ctx.fillStyle = frameColor;
 
@@ -31,6 +35,14 @@ export function drawFrameBackground(
     roundRect(ctx, 0, 0, size, size, radius);
   } else {
     ctx.fillRect(0, 0, size, size);
+  }
+
+  // Draw a visible border so the frame is distinguishable even without text
+  if (config.frameStyle === 'sticker' || config.frameStyle === 'tag') {
+    ctx.strokeStyle = fgColor;
+    ctx.lineWidth = Math.max(1, Math.round(size / 200));
+    const inset = ctx.lineWidth / 2;
+    ctx.strokeRect(inset, inset, size - inset * 2, size - inset * 2);
   }
 }
 

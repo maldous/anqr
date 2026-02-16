@@ -131,7 +131,8 @@ test.describe('Render Section - Advanced Tier', () => {
     
     if (await colorInput.count() > 0) {
       await colorInput.evaluate((el: HTMLInputElement, color: string) => {
-        el.value = color;
+        const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+        s ? s.call(el, color) : (el.value = color);
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
       }, hexColor);
@@ -171,6 +172,8 @@ test.describe('Render Section - Advanced Tier', () => {
       const before = await getCanvasSnapshot(page);
       
       await selectOption(page, 'render-module-style-select', 'Rounded');
+      // cornerRadius defaults to 0 which is visually identical to square; set > 0
+      await setSlider(page, 'render-corner-radius-slider', 50);
       await waitForQRRender();
       
       const after = await getCanvasSnapshot(page);
@@ -221,6 +224,10 @@ test.describe('Render Section - Advanced Tier', () => {
       
       for (const style of styles) {
         await selectOption(page, 'render-module-style-select', style);
+        // Rounded with cornerRadius=0 is identical to Square; set radius > 0
+        if (style === 'Rounded') {
+          await setSlider(page, 'render-corner-radius-slider', 50);
+        }
         await waitForQRRender();
         snapshots.push(await getCanvasSnapshot(page));
       }
@@ -304,7 +311,8 @@ test.describe('Render Section - Advanced Tier', () => {
       const colorInput = await fgColorInput.count() > 0 ? fgColorInput : fallback;
       
       await colorInput.evaluate((el: HTMLInputElement) => {
-        el.value = '#ff0000';
+        const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+        s ? s.call(el, '#ff0000') : (el.value = '#ff0000');
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
       });
@@ -327,7 +335,8 @@ test.describe('Render Section - Advanced Tier', () => {
       
       if (await colorInput.count() > 0) {
         await colorInput.evaluate((el: HTMLInputElement) => {
-          el.value = '#ffff00';
+          const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+          s ? s.call(el, '#ffff00') : (el.value = '#ffff00');
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
         });
@@ -386,7 +395,8 @@ test.describe('Render Section - Advanced Tier', () => {
       const fgColor = page.locator('input[type="color"]').first();
       if (await fgColor.count() > 0) {
         await fgColor.evaluate((el: HTMLInputElement) => {
-          el.value = '#ff0000';
+          const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+          s ? s.call(el, '#ff0000') : (el.value = '#ff0000');
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
         });
@@ -398,7 +408,8 @@ test.describe('Render Section - Advanced Tier', () => {
       const bgColor = page.locator('input[type="color"]').nth(1);
       if (await bgColor.count() > 0) {
         await bgColor.evaluate((el: HTMLInputElement) => {
-          el.value = '#0000ff';
+          const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+          s ? s.call(el, '#0000ff') : (el.value = '#0000ff');
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
         });
@@ -484,8 +495,9 @@ test.describe('Render Section - Advanced Tier', () => {
       
       const before = await getCanvasSnapshot(page);
       
+      // Slider defaults to max (20), so ArrowLeft decreases the value
       for (let i = 0; i < 5; i++) {
-        await slider.press('ArrowRight');
+        await slider.press('ArrowLeft');
       }
       await waitForQRRender();
       
@@ -584,10 +596,10 @@ test.describe('Render Section - Advanced Tier', () => {
     test('corner radius slider changes QR appearance', async ({ page, waitForQRRender }) => {
       await expandRenderSection(page);
       
-      // Scroll to find corner radius
-      const scroller = page.locator('[role="region"][data-state="open"]').first();
-      await scroller.evaluate(el => el.scrollTop = el.scrollHeight / 2);
-      await waitForRenderComplete(page, 'settle');
+      // cornerRadius only has visible effect on "Rounded" style
+      await selectOption(page, 'render-module-style-select', 'Rounded');
+      await setSlider(page, 'render-corner-radius-slider', 10);
+      await waitForQRRender();
       const before = await getCanvasSnapshot(page);
       
       await setSlider(page, 'render-corner-radius-slider', 100);
@@ -740,7 +752,8 @@ test.describe('Render Section - Advanced Tier', () => {
       const fgColor = page.locator('input[type="color"]').first();
       if (await fgColor.count() > 0) {
         await fgColor.evaluate((el: HTMLInputElement) => {
-          el.value = '#ff0000';
+          const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+          s ? s.call(el, '#ff0000') : (el.value = '#ff0000');
           el.dispatchEvent(new Event('input', { bubbles: true }));
           el.dispatchEvent(new Event('change', { bubbles: true }));
         });

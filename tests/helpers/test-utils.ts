@@ -85,12 +85,11 @@ export const TIER_LABELS: Record<Tier, string[]> = {
 // =============================================================================
 
 /**
- * Wait for render to complete using application signaling.
+ * Wait for render to complete using state-aware detection.
  * 
- * Strategy (in order of preference):
- * 1. Listen for 'anqr:render-complete' CustomEvent (best: fully event-driven, no polling)
- * 2. Wait for data-rendering-state="idle" attribute (good: event-driven via DOM)
- * 3. Fall back to canvas stability polling (last resort)
+ * Strategy:
+ * - If state is already idle: wait past the debounce window, re-check idle, then canvas stability
+ * - If state is non-idle: wait for idle transition, then canvas stability
  * 
  * @param page - Playwright page instance
  * @param reason - Description of why we're waiting (for debugging)
@@ -101,37 +100,33 @@ export async function waitForRenderComplete(
   reason: string = 'render',
   timeout: number = RENDER_TIMEOUT
 ): Promise<void> {
-  // Ensure the canvas exists and is visible. If the app cannot render, fail fast.
+  // Ensure the canvas exists and is visible.
   await page.waitForSelector('[data-testid="qr-preview"] canvas', { state: 'visible', timeout: Math.min(timeout, 5000) });
 
-  // If already idle, allow a short window for debounce/render to begin.
-  // This avoids returning too early immediately after a user action.
-  const startsIdle = (await page.locator('[data-testid="qr-preview"]').getAttribute('data-rendering-state')) === 'idle';
-  if (startsIdle) {
-    const transitioned = await page
-      .waitForFunction(() => {
-        const el = document.querySelector('[data-testid="qr-preview"]');
-        const state = el?.getAttribute('data-rendering-state');
-        return state === 'pending' || state === 'rendering';
-      }, { timeout: 500, polling: 25 })
-      .then(() => true)
-      .catch(() => false);
+  const preview = page.locator('[data-testid="qr-preview"]');
+  const currentState = await preview.getAttribute('data-rendering-state').catch(() => 'unknown');
 
-    if (!transitioned) {
-      // No render cycle started; just ensure the preview is stable.
-      await waitForCanvasStable(page, 150, Math.min(timeout, 2000));
-      return;
-    }
+  if (currentState === 'idle') {
+    // Already idle — a debounced render may still be pending (150ms debounce in
+    // useQRGenerator.ts + React 18 scheduling). Wait past that window, then
+    // re-confirm idle and check canvas stability.
+    await page.waitForTimeout(350);
+
+    // If a render started during that window, wait for it to finish.
+    await page.waitForSelector('[data-testid="qr-preview"][data-rendering-state="idle"]', {
+      state: 'attached',
+      timeout: Math.min(timeout, 5000),
+    }).catch(() => {});
+  } else {
+    // State is pending/rendering — wait for idle (render completion).
+    await page.waitForSelector('[data-testid="qr-preview"][data-rendering-state="idle"]', {
+      state: 'attached',
+      timeout,
+    }).catch(() => {});
   }
 
-  // Wait until the app explicitly reports idle again.
-  await page.waitForSelector('[data-testid="qr-preview"][data-rendering-state="idle"]', {
-    state: 'attached',
-    timeout,
-  });
-
-  // Small stability guard for immediate post-idle reads.
-  await waitForCanvasStable(page, 100, Math.min(timeout, 1500));
+  // Canvas stability guard
+  await waitForCanvasStable(page, 250, Math.min(timeout, 3000));
 }
 
 /**
@@ -360,8 +355,9 @@ export async function openAccordion(
   // Check if already open
   const currentState = await trigger.getAttribute('data-state').catch(() => null);
   if (currentState !== 'open') {
-    // Scroll into view and click
-    await trigger.scrollIntoViewIfNeeded();
+    // Scroll into view using JS evaluate to bypass Playwright's stability check
+    // (accordion CSS animations can cause scrollIntoViewIfNeeded to loop forever)
+    await trigger.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
     await trigger.click();
     
     // Wait for accordion to open
@@ -493,7 +489,7 @@ export async function setSlider(page: Page, testId: string, percent: number): Pr
   // Slider root (track container) is the canonical click target.
   const container = page.locator(`[data-testid="${testId}"]`).first();
   await container.waitFor({ state: 'visible', timeout: 5000 });
-  await container.scrollIntoViewIfNeeded();
+  await container.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
 
   // Thumb carries aria-valuenow/min/max.
   const thumb = container.locator('[role="slider"]').first();
@@ -569,7 +565,7 @@ export async function setSlider(page: Page, testId: string, percent: number): Pr
 export async function selectOption(page: Page, testId: string, optionText: string): Promise<boolean> {
   const trigger = page.locator(`[data-testid="${testId}"]`);
   await trigger.waitFor({ state: 'visible', timeout: 5000 });
-  await trigger.scrollIntoViewIfNeeded();
+  await trigger.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   await trigger.click();
   
   // Wait for dropdown to open
@@ -610,8 +606,9 @@ export async function selectOption(page: Page, testId: string, optionText: strin
     return false;
   }
   
-  // Click the target option directly for deterministic selection.
-  await allOptions.nth(targetIndex).scrollIntoViewIfNeeded();
+  // Click the target option directly. Radix Select handles pointer events
+  // reliably; keyboard navigation (Home/ArrowDown/Enter) is fragile.
+  await allOptions.nth(targetIndex).evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   await allOptions.nth(targetIndex).click();
   
   // Wait for dropdown to close
@@ -631,7 +628,7 @@ export async function selectOption(page: Page, testId: string, optionText: strin
 export async function toggleSwitch(page: Page, testId: string, targetState?: SwitchState): Promise<void> {
   const switchEl = page.locator(`[data-testid="${testId}"]`);
   await switchEl.waitFor({ state: 'visible', timeout: 5000 });
-  await switchEl.scrollIntoViewIfNeeded();
+  await switchEl.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   
   const currentState = await switchEl.getAttribute('data-state');
   
@@ -666,7 +663,7 @@ export async function toggleSwitch(page: Page, testId: string, targetState?: Swi
 export async function setInput(page: Page, testId: string, value: string): Promise<void> {
   const input = page.locator(`[data-testid="${testId}"]`);
   await input.waitFor({ state: 'visible', timeout: 5000 });
-  await input.scrollIntoViewIfNeeded();
+  await input.evaluate(el => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
   
   await input.fill('');
   await input.fill(value);

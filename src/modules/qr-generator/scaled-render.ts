@@ -74,9 +74,7 @@ export async function generateScaledQR(
 
   // UNIFIED: Apply frame settings
   const frameExtra =
-    config.frameStyle && config.frameStyle !== 'none' && config.frameText
-      ? effectiveModuleSize * 4
-      : 0;
+    config.frameStyle && config.frameStyle !== 'none' ? effectiveModuleSize * 4 : 0;
   const marginPx = marginModules * effectiveModuleSize;
   const size = Math.round(scaledSize * subPixelSize + marginPx * 2 + frameExtra);
 
