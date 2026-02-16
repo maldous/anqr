@@ -207,13 +207,16 @@ test.describe('Render Section - Advanced Tier', () => {
     test('connected module style changes QR appearance', async ({ page, waitForQRRender }) => {
       await expandRenderSection(page);
       
-      const before = await getCanvasSnapshot(page);
+      // First set to Dots (visually distinct) then switch to Connected
+      await selectOption(page, 'render-module-style-select', 'Dots');
+      await waitForQRRender();
+      const dotsSnapshot = await getCanvasSnapshot(page);
       
       await selectOption(page, 'render-module-style-select', 'Connected');
       await waitForQRRender();
       
-      const after = await getCanvasSnapshot(page);
-      expect(snapshotsAreDifferent(before, after)).toBe(true);
+      const connectedSnapshot = await getCanvasSnapshot(page);
+      expect(snapshotsAreDifferent(dotsSnapshot, connectedSnapshot)).toBe(true);
     });
 
     test('different module styles produce different QR codes', async ({ page, waitForQRRender }) => {

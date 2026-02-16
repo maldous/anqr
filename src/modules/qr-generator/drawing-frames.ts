@@ -22,7 +22,6 @@ export function drawFrameBackground(
   if (!config.frameStyle || config.frameStyle === 'none') return;
 
   const frameColor = config.frameColor || config.bgColor;
-  const fgColor = config.fgColor || '#000000';
 
   // Determine border radius based on frame style
   const defaultRadius = config.frameStyle === 'sticker' ? 12 : config.frameStyle === 'tag' ? 4 : 0;
@@ -35,14 +34,6 @@ export function drawFrameBackground(
     roundRect(ctx, 0, 0, size, size, radius);
   } else {
     ctx.fillRect(0, 0, size, size);
-  }
-
-  // Draw a visible border so the frame is distinguishable even without text
-  if (config.frameStyle === 'sticker' || config.frameStyle === 'tag') {
-    ctx.strokeStyle = fgColor;
-    ctx.lineWidth = Math.max(1, Math.round(size / 200));
-    const inset = ctx.lineWidth / 2;
-    ctx.strokeRect(inset, inset, size - inset * 2, size - inset * 2);
   }
 }
 
@@ -57,6 +48,38 @@ export function drawFrame(
   config: QRGeneratorConfig
 ): void {
   if (!config.frameStyle || config.frameStyle === 'none') return;
+
+  const fgColor = config.fgColor || '#000000';
+
+  // Draw a visible border so the frame is distinguishable even without text.
+  // This runs after quiet zone enforcement, so the border won't be erased.
+  const defaultRadius = config.frameStyle === 'sticker' ? 12 : config.frameStyle === 'tag' ? 4 : 0;
+  const borderRadius = config.frameBorderRadius ?? defaultRadius;
+  const lineWidth = Math.max(1, Math.round(size / 200));
+  const inset = lineWidth / 2;
+
+  ctx.strokeStyle = fgColor;
+  ctx.lineWidth = lineWidth;
+
+  if (borderRadius > 0) {
+    const radius = (borderRadius / 100) * (size / 4);
+    const r = Math.min(radius, (size - inset * 2) / 2);
+    ctx.beginPath();
+    ctx.moveTo(inset + r, inset);
+    ctx.lineTo(size - inset - r, inset);
+    ctx.quadraticCurveTo(size - inset, inset, size - inset, inset + r);
+    ctx.lineTo(size - inset, size - inset - r);
+    ctx.quadraticCurveTo(size - inset, size - inset, size - inset - r, size - inset);
+    ctx.lineTo(inset + r, size - inset);
+    ctx.quadraticCurveTo(inset, size - inset, inset, size - inset - r);
+    ctx.lineTo(inset, inset + r);
+    ctx.quadraticCurveTo(inset, inset, inset + r, inset);
+    ctx.closePath();
+    ctx.stroke();
+  } else {
+    ctx.strokeRect(inset, inset, size - inset * 2, size - inset * 2);
+  }
+
   if (!config.frameText) return;
 
   const textColor = config.frameTextColor || config.fgColor;
