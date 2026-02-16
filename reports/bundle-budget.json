@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-15T21:55:21.124Z",
+  "generatedAt": "2026-02-16T06:41:24.268Z",
   "budgets": {
     "mainEntryMaxKiB": 700,
     "nonI18nMaxKiB": 2200,
@@ -7,9 +7,9 @@
     "i18nMaxKiB": 24000
   },
   "metrics": {
-    "mainEntry": "index-Q0nRhXrZ.js",
+    "mainEntry": "index-PKQFZemw.js",
     "mainEntryBytes": 536682,
-    "nonI18nBytes": 1710973,
+    "nonI18nBytes": 1711575,
     "i18nBytes": 21947841,
     "jsChunkCount": 176,
     "i18nChunkCount": 158,

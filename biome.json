@@ -132,7 +132,10 @@
       "src/**/*.js",
       "src/**/*.jsx",
       "src/**/*.json",
-      "netlify/**/*.ts"
+      "netlify/**/*.ts",
+      "tests/**/*.ts",
+      "*.ts",
+      "*.js"
     ],
     "ignoreUnknown": true
   },
@@ -210,6 +213,39 @@
         "rules": {
           "suspicious": {
             "noConsole": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["tests/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          },
+          "style": {
+            "noDefaultExport": "off",
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "playwright.config.ts",
+        "vite.config.ts",
+        "vitest.config.ts",
+        "capacitor.config.ts",
+        "postcss.config.js",
+        "tailwind.config.js",
+        "commitlint.config.cjs"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off",
+            "noCommonJs": "off"
           }
         }
       }
