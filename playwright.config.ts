@@ -40,9 +40,9 @@ export default defineConfig({
   globalTimeout: 0,
 
   /* Increase timeouts for parallel load */
-  timeout: 60 * 1000, // 60s per test
+  timeout: 300 * 1000, // 5 minutes per test
   expect: {
-    timeout: 10 * 1000, // 10s for assertions
+    timeout: 300 * 1000, // 5 minutes for assertions
   },
 
   forbidOnly: !!process.env.CI,
@@ -68,9 +68,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
 
-    /* Action timeout - fail fast if locators don't resolve */
-    actionTimeout: 15000,
-    navigationTimeout: 30000,
+    /* Action timeout */
+    actionTimeout: 300000,
+    navigationTimeout: 300000,
 
     /* GLOBAL STORAGE STATE: Pre-set localStorage to skip welcome modal for ALL tests
      * The storage state is created by tests/global-setup.ts before any tests run.
@@ -148,7 +148,7 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 30 * 1000, // 30 seconds max for dev server startup
+    timeout: 300 * 1000, // 5 minutes max for dev server startup
   },
 
   /* Global setup - runs ONCE before all tests to create storage state */

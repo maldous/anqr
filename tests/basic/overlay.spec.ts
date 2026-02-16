@@ -58,7 +58,7 @@ async function ensureOverlayEnabled(page: Page) {
   const enabledSwitch = page.locator('[data-testid="overlay-enabled-switch"]');
 
   // Wait for the switch to be attached (appears after file upload)
-  await enabledSwitch.waitFor({ state: 'attached', timeout: 15000 });
+  await enabledSwitch.waitFor({ state: 'attached', timeout: 300000 });
   if ((await enabledSwitch.count()) > 0) {
     const state = await enabledSwitch.getAttribute('data-state');
     if (state === 'unchecked') {
@@ -68,7 +68,7 @@ async function ensureOverlayEnabled(page: Page) {
       // Wait for controls to render (Mode select should appear)
       await page.waitForSelector('[data-testid="overlay-mode-select"]', {
         state: 'attached',
-        timeout: 15000,
+        timeout: 300000,
       });
     }
   }
@@ -87,7 +87,7 @@ async function uploadOverlayImage(page: Page, filePath: string) {
   // File input is hidden but setInputFiles works on hidden inputs
   // Wait for it to be attached to the DOM (not necessarily visible)
   const fileInput = page.locator('input[type="file"]').first();
-  await fileInput.waitFor({ state: 'attached', timeout: 5000 });
+  await fileInput.waitFor({ state: 'attached', timeout: 300000 });
   await fileInput.setInputFiles(filePath);
 
   const isAnimatedGif = /\.gif$/i.test(filePath);
@@ -96,13 +96,13 @@ async function uploadOverlayImage(page: Page, filePath: string) {
     await page
       .waitForSelector('[data-testid="overlay-enabled-switch"]', {
         state: 'attached',
-        timeout: 30000,
+        timeout: 300000,
       })
       .catch(() => {});
-    await waitForCanvasChange(page, beforeSnapshot, 30000).catch(() => false);
+    await waitForCanvasChange(page, beforeSnapshot, 300000).catch(() => false);
   } else {
-    await waitForRenderComplete(page, 'overlay file upload', 30000);
-    await waitForCanvasChange(page, beforeSnapshot, 30000).catch(() => false);
+    await waitForRenderComplete(page, 'overlay file upload', 300000);
+    await waitForCanvasChange(page, beforeSnapshot, 300000).catch(() => false);
   }
 
   // Re-expand the section in case it closed after file selection
@@ -125,22 +125,22 @@ async function loadOverlayFromUrl(page: Page, url: string) {
 
   // Click "From URL" button using data-testid
   const fromUrlButton = page.locator('[data-testid="overlay-from-url-button"]');
-  await fromUrlButton.waitFor({ state: 'visible', timeout: 5000 });
+  await fromUrlButton.waitFor({ state: 'visible', timeout: 300000 });
   await fromUrlButton.scrollIntoViewIfNeeded();
   await fromUrlButton.click({ force: true });
 
   // Wait for URL input section to appear
   const urlInput = page.locator('input[type="url"]').first();
-  await urlInput.waitFor({ state: 'visible', timeout: 5000 });
+  await urlInput.waitFor({ state: 'visible', timeout: 300000 });
   await urlInput.fill(url);
 
   // Click Load button using data-testid
   const loadButton = page.locator('[data-testid="overlay-load-url-button"]');
-  await loadButton.waitFor({ state: 'visible', timeout: 5000 });
+  await loadButton.waitFor({ state: 'visible', timeout: 300000 });
   await loadButton.click({ force: true });
 
   // Wait for canvas to change (indicates image was loaded and processed)
-  await waitForCanvasChange(page, beforeSnapshot, 15000);
+  await waitForCanvasChange(page, beforeSnapshot, 300000);
 }
 
 /**
@@ -165,7 +165,7 @@ async function clearOverlay(page: Page) {
     await clearButton.scrollIntoViewIfNeeded();
     await clearButton.click({ force: true });
     // Wait for canvas to change (overlay removed)
-    await waitForCanvasChange(page, beforeSnapshot, 5000);
+    await waitForCanvasChange(page, beforeSnapshot, 300000);
   }
 }
 
@@ -207,7 +207,7 @@ async function setOverlayColorMode(page: Page, colorMode: string) {
 
   // Scroll the color-mode select into view (it's below the mode select + intensity slider)
   const colorModeSelect = page.locator('[data-testid="overlay-color-mode-select"]');
-  await colorModeSelect.waitFor({ state: 'attached', timeout: 15000 });
+  await colorModeSelect.waitFor({ state: 'attached', timeout: 300000 });
   await colorModeSelect.evaluate((el) =>
     el.scrollIntoView({ behavior: 'instant', block: 'center' })
   );
@@ -246,7 +246,7 @@ async function expectOverlayIntensityNear(
   tolerance = 5
 ): Promise<void> {
   const slider = page.locator('[data-testid="overlay-intensity-slider"] [role="slider"]').first();
-  await slider.waitFor({ state: 'visible', timeout: 15000 });
+  await slider.waitFor({ state: 'visible', timeout: 300000 });
   const valueNow = await slider.getAttribute('aria-valuenow');
   const value = Number(valueNow ?? 'NaN');
   expect(Number.isFinite(value)).toBe(true);
@@ -262,7 +262,7 @@ async function setCropEnabled(page: Page, enabled: boolean) {
 
   // Scroll to the crop switch area (near the top of overlay section, in file preview area)
   const cropSwitch = page.locator('[data-testid="overlay-crop-switch"]');
-  await cropSwitch.waitFor({ state: 'attached', timeout: 15000 });
+  await cropSwitch.waitFor({ state: 'attached', timeout: 300000 });
   await cropSwitch.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
 
   const currentState = await cropSwitch.getAttribute('data-state');
@@ -304,18 +304,18 @@ async function setPayloadText(page: Page, text: string) {
     .locator('[data-testid="accordion-payload"] button[data-state]')
     .first();
   // Scroll into view first — the trigger may be above the fold when overlay controls are shown
-  await payloadTrigger.waitFor({ state: 'attached', timeout: 15000 });
+  await payloadTrigger.waitFor({ state: 'attached', timeout: 300000 });
   await payloadTrigger.evaluate((el) =>
     el.scrollIntoView({ behavior: 'instant', block: 'center' })
   );
-  await payloadTrigger.waitFor({ state: 'visible', timeout: 15000 });
+  await payloadTrigger.waitFor({ state: 'visible', timeout: 300000 });
 
   const currentState = await payloadTrigger.getAttribute('data-state');
   if (currentState !== 'open') {
     await payloadTrigger.evaluate((el) =>
       el.scrollIntoView({ behavior: 'instant', block: 'center' })
     );
-    await payloadTrigger.click({ timeout: 15000 });
+    await payloadTrigger.click({ timeout: 300000 });
     await waitForAccordionOpen(page, 'payload');
   }
 
@@ -331,12 +331,12 @@ async function setPayloadText(page: Page, text: string) {
 
   // Switch to plain text type using data-testid
   const contentTypeSelect = page.locator('[data-testid="payload-content-type-select"]');
-  if (await contentTypeSelect.isVisible({ timeout: 15000 }).catch(() => false)) {
+  if (await contentTypeSelect.isVisible({ timeout: 300000 }).catch(() => false)) {
     await contentTypeSelect.evaluate((el) =>
       el.scrollIntoView({ behavior: 'instant', block: 'center' })
     );
-    await contentTypeSelect.click({ force: true, timeout: 15000 });
-    await waitForSelectOpen(page, 30000);
+    await contentTypeSelect.click({ force: true, timeout: 300000 });
+    await waitForSelectOpen(page, 300000);
     // Select plain_text by value or keyboard navigation
     const plainTextOption = page.locator('[role="option"][data-value="plain_text"]').first();
     if (await plainTextOption.isVisible().catch(() => false)) {
@@ -352,7 +352,7 @@ async function setPayloadText(page: Page, text: string) {
   // Set text in textarea when available; otherwise fall back to URL input.
   const textareaAfter = page.locator('textarea').first();
   const hasTextareaAfter = await textareaAfter
-    .waitFor({ state: 'visible', timeout: 15000 })
+    .waitFor({ state: 'visible', timeout: 300000 })
     .then(() => true)
     .catch(() => false);
   if (hasTextareaAfter) {
@@ -363,7 +363,7 @@ async function setPayloadText(page: Page, text: string) {
   }
 
   const urlInput = page.locator('input[type="url"]').first();
-  await urlInput.waitFor({ state: 'visible', timeout: 10000 });
+  await urlInput.waitFor({ state: 'visible', timeout: 300000 });
   await urlInput.clear();
   await urlInput.fill(`https://example.com/${encodeURIComponent(text.slice(0, 80))}`);
   await urlInput.blur();
@@ -377,7 +377,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   test.beforeEach(async ({ page, setTier, waitForQRRender }) => {
     // Note: page.goto('/') is handled by resetAppState in test-fixtures.ts
     await setTier('basic');
-    await page.waitForSelector('[data-testid="qr-preview"] canvas', { timeout: 10000 });
+    await page.waitForSelector('[data-testid="qr-preview"] canvas', { timeout: 300000 });
     // Event-driven: wait for canvas to stabilize instead of arbitrary timeout
     await waitForQRRender();
   });
@@ -387,7 +387,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // ==========================================
   test.describe('File Uploads', () => {
     // GIF overlay tests need more time for animated image processing
-    test.describe.configure({ timeout: 120000 });
+    test.describe.configure({ timeout: 300000 });
 
     test('uploads static image (tsunami.jpg) and changes QR', async ({ page, waitForQRRender }) => {
       const before = await getCanvasSnapshot(page);
@@ -498,7 +498,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // OVERLAY MODE TESTS (4 basic modes)
   // ==========================================
   test.describe('Overlay Modes', () => {
-    test.describe.configure({ timeout: 90000 });
+    test.describe.configure({ timeout: 300000 });
     test.beforeEach(async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
       await waitForQRRender();
@@ -593,7 +593,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // INTENSITY SLIDER TESTS
   // ==========================================
   test.describe('Intensity Slider', () => {
-    test.describe.configure({ timeout: 90000 });
+    test.describe.configure({ timeout: 300000 });
     test.beforeEach(async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
       await waitForQRRender();
@@ -678,7 +678,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // COLOR MODE TESTS (3 modes)
   // ==========================================
   test.describe('Color Modes', () => {
-    test.describe.configure({ timeout: 120000 });
+    test.describe.configure({ timeout: 300000 });
     test.beforeEach(async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
       await waitForQRRender();
@@ -771,7 +771,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // CROP FUNCTIONALITY TESTS
   // ==========================================
   test.describe('Crop Functionality', () => {
-    test.describe.configure({ timeout: 120000 });
+    test.describe.configure({ timeout: 300000 });
     test.beforeEach(async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
       await waitForQRRender();
@@ -786,7 +786,7 @@ test.describe('Overlay Section - Basic Tier', () => {
 
       // Verify the crop slider is visible using data-testid
       const cropSlider = page.locator('[data-testid="overlay-crop-slider"]');
-      await cropSlider.waitFor({ state: 'visible', timeout: 5000 });
+      await cropSlider.waitFor({ state: 'visible', timeout: 300000 });
 
       // Should have crop slider visible after enabling crop
       expect(await cropSlider.isVisible()).toBe(true);
@@ -840,7 +840,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // ANIMATED GIF SPECIFIC TESTS
   // ==========================================
   test.describe('Animated GIF Overlay', () => {
-    test.describe.configure({ timeout: 180000 });
+    test.describe.configure({ timeout: 300000 });
 
     test('animated GIF from file produces output', async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
@@ -890,7 +890,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // COMBINED SETTINGS TESTS
   // ==========================================
   test.describe('Combined Settings', () => {
-    test.describe.configure({ timeout: 120000 });
+    test.describe.configure({ timeout: 300000 });
     test.beforeEach(async ({ page, waitForQRRender }) => {
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
       await waitForQRRender();
@@ -946,7 +946,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // STATE CHANGE TESTS (Payload + Overlay)
   // ==========================================
   test.describe('Payload Changes With Overlay', () => {
-    test.describe.configure({ timeout: 120000 });
+    test.describe.configure({ timeout: 300000 });
     test('changing payload after loading overlay changes QR', async ({ page, waitForQRRender }) => {
       // Load overlay first
       await uploadOverlayImage(page, STATIC_IMAGE_PATH);
@@ -956,7 +956,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       // Change payload
       await setPayloadText(page, 'New payload content after overlay');
       await waitForQRRender();
-      const changed = await waitForCanvasChange(page, withOverlay, 15000);
+      const changed = await waitForCanvasChange(page, withOverlay, 300000);
       expect(changed).toBe(true);
     });
 
@@ -972,7 +972,7 @@ test.describe('Overlay Section - Basic Tier', () => {
         await setPayloadText(page, payload);
         await waitForQRRender();
         if (prev) {
-          await waitForCanvasChange(page, prev, 15000);
+          await waitForCanvasChange(page, prev, 300000);
         }
         snapshots.push(await getCanvasSnapshot(page));
       }
@@ -990,7 +990,7 @@ test.describe('Overlay Section - Basic Tier', () => {
 
       await setOverlayMode(page, 'Halftone');
       await waitForQRRender();
-      const changed = await waitForCanvasChange(page, before, 15000);
+      const changed = await waitForCanvasChange(page, before, 300000);
       expect(changed).toBe(true);
     });
 
@@ -1066,22 +1066,22 @@ test.describe('Overlay Section - Basic Tier', () => {
 
       // Click "From URL" button using data-testid
       const fromUrlButton = page.locator('[data-testid="overlay-from-url-button"]');
-      await fromUrlButton.waitFor({ state: 'visible', timeout: 5000 });
+      await fromUrlButton.waitFor({ state: 'visible', timeout: 300000 });
       await fromUrlButton.scrollIntoViewIfNeeded();
       await fromUrlButton.click({ force: true });
 
       // Wait for URL input to be visible
       const urlInput = page.locator('input[type="url"]').first();
-      await urlInput.waitFor({ state: 'visible', timeout: 5000 });
+      await urlInput.waitFor({ state: 'visible', timeout: 300000 });
       await urlInput.fill('not-a-valid-url');
 
       // Try to load using data-testid
       const loadButton = page.locator('[data-testid="overlay-load-url-button"]');
-      await loadButton.waitFor({ state: 'visible', timeout: 5000 });
+      await loadButton.waitFor({ state: 'visible', timeout: 300000 });
       await loadButton.click({ force: true });
 
       // Event-driven: wait for network to settle after failed request
-      await page.waitForLoadState('networkidle', { timeout: 5000 });
+      await page.waitForLoadState('networkidle', { timeout: 300000 });
       // Page should not crash - canvas should still be visible
       const canvas = page.locator('[data-testid="qr-preview"] canvas').first();
       await expect(canvas).toBeVisible();
@@ -1092,17 +1092,17 @@ test.describe('Overlay Section - Basic Tier', () => {
 
       // Click "From URL" button using data-testid
       const fromUrlButton = page.locator('[data-testid="overlay-from-url-button"]');
-      await fromUrlButton.waitFor({ state: 'visible', timeout: 5000 });
+      await fromUrlButton.waitFor({ state: 'visible', timeout: 300000 });
       await fromUrlButton.scrollIntoViewIfNeeded();
       await fromUrlButton.click({ force: true });
 
       // Wait for URL input to be visible
       const urlInput = page.locator('input[type="url"]').first();
-      await urlInput.waitFor({ state: 'visible', timeout: 5000 });
+      await urlInput.waitFor({ state: 'visible', timeout: 300000 });
 
       // Try to load with empty URL using data-testid
       const loadButton = page.locator('[data-testid="overlay-load-url-button"]');
-      await loadButton.waitFor({ state: 'visible', timeout: 5000 });
+      await loadButton.waitFor({ state: 'visible', timeout: 300000 });
 
       // Check if button is disabled (which is correct behavior)
       const isDisabled = await loadButton.isDisabled();

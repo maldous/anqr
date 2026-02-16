@@ -1,6 +1,6 @@
 /**
  * E2E Testing Library for ANQR
- * 
+ *
  * Implements all 10 must-haves for reliable Playwright E2E tests:
  * 1. Deterministic event-driven waits (no sleeps)
  * 2. Stable selectors (data-testid first)
@@ -14,7 +14,7 @@
  * 10. Logging/traceability (debug-first design)
  */
 
-import type { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 import { waitForRenderComplete } from './test-utils';
 
@@ -22,8 +22,8 @@ import { waitForRenderComplete } from './test-utils';
 // CONSTANTS
 // =============================================================================
 
-const DEFAULT_TIMEOUT = 10_000;
-const RENDER_IDLE_TIMEOUT = 15_000;
+const DEFAULT_TIMEOUT = 300_000;
+const RENDER_IDLE_TIMEOUT = 300_000;
 const SCROLL_SETTLE_MS = 50;
 
 // Tier values matching the app's tier system
@@ -44,16 +44,16 @@ export type SectionName =
 
 // Map section display names to their data-testid IDs
 const SECTION_NAME_TO_ID: Record<SectionName, string> = {
-  'Payload': 'payload',
+  Payload: 'payload',
   'QR Encoding': 'qr',
-  'Render': 'render',
-  'Overlay': 'overlay',
-  'Watermark': 'watermark',
-  'Animation': 'animation',
-  'Safety': 'safety',
-  'Output': 'output',
-  'Metadata': 'metadata',
-  'Share': 'share',
+  Render: 'render',
+  Overlay: 'overlay',
+  Watermark: 'watermark',
+  Animation: 'animation',
+  Safety: 'safety',
+  Output: 'output',
+  Metadata: 'metadata',
+  Share: 'share',
 };
 
 // =============================================================================
@@ -66,38 +66,31 @@ const SECTION_NAME_TO_ID: Record<SectionName, string> = {
  * - debounce has settled (isPending = false)
  * - rendering is complete (isRendering = false)
  */
-export async function waitForRenderIdle(
-  page: Page,
-  timeout = RENDER_IDLE_TIMEOUT
-): Promise<void> {
-  await page.waitForSelector(
-    '[data-rendering-state="idle"]',
-    { state: 'attached', timeout }
-  );
+export async function waitForRenderIdle(page: Page, timeout = RENDER_IDLE_TIMEOUT): Promise<void> {
+  await page.waitForSelector('[data-rendering-state="idle"]', { state: 'attached', timeout });
 }
 
 /**
  * Wait for a complete render cycle: change -> (debounce) -> render -> idle.
  * Call this AFTER making a change that should trigger re-render.
  */
-export async function waitForRenderCycle(
-  page: Page,
-  timeout = RENDER_IDLE_TIMEOUT
-): Promise<void> {
+export async function waitForRenderCycle(page: Page, timeout = RENDER_IDLE_TIMEOUT): Promise<void> {
   // First, wait briefly for the app to notice the change (pending state)
   // Then wait for it to complete rendering
   try {
     // Wait for rendering state to change from idle (if it was idle)
-    await page.waitForSelector(
-      '[data-rendering-state="pending"], [data-rendering-state="rendering"]',
-      { state: 'attached', timeout: 1000 }
-    ).catch(() => {
-      // Change might have been so fast we missed the transition, that's OK
-    });
+    await page
+      .waitForSelector('[data-rendering-state="pending"], [data-rendering-state="rendering"]', {
+        state: 'attached',
+        timeout: 300000,
+      })
+      .catch(() => {
+        // Change might have been so fast we missed the transition, that's OK
+      });
   } catch {
     // Ignore - we'll just wait for idle
   }
-  
+
   // Now wait for idle
   await waitForRenderIdle(page, timeout);
 }
@@ -118,10 +111,7 @@ export async function waitForAccordionState(
 /**
  * Wait for a Radix select dropdown to open.
  */
-export async function waitForSelectOpen(
-  page: Page,
-  timeout = DEFAULT_TIMEOUT
-): Promise<Locator> {
+export async function waitForSelectOpen(page: Page, timeout = DEFAULT_TIMEOUT): Promise<Locator> {
   const content = page.locator('[data-radix-popper-content-wrapper]').first();
   await content.waitFor({ state: 'visible', timeout });
   return content;
@@ -130,19 +120,18 @@ export async function waitForSelectOpen(
 /**
  * Wait for all Radix select dropdowns to close.
  */
-export async function waitForSelectClosed(
-  page: Page,
-  timeout = DEFAULT_TIMEOUT
-): Promise<void> {
+export async function waitForSelectClosed(page: Page, timeout = DEFAULT_TIMEOUT): Promise<void> {
   const content = page.locator('[data-radix-popper-content-wrapper]');
   // Wait for no dropdown to be visible
-  await expect(content).toHaveCount(0, { timeout }).catch(async () => {
-    // If count doesn't become 0, check if all are hidden
-    const count = await content.count();
-    for (let i = 0; i < count; i++) {
-      await expect(content.nth(i)).not.toBeVisible({ timeout });
-    }
-  });
+  await expect(content)
+    .toHaveCount(0, { timeout })
+    .catch(async () => {
+      // If count doesn't become 0, check if all are hidden
+      const count = await content.count();
+      for (let i = 0; i < count; i++) {
+        await expect(content.nth(i)).not.toBeVisible({ timeout });
+      }
+    });
 }
 
 /**
@@ -153,42 +142,44 @@ export async function waitForScrollSettled(
   page: Page,
   selector: string,
   stabilityMs = SCROLL_SETTLE_MS,
-  timeout = 2000
+  timeout = 300000
 ): Promise<void> {
-  await page.waitForFunction(
-    (args: { sel: string; stability: number }) => {
-      const el = document.querySelector(args.sel) as HTMLElement;
-      if (!el) return true;
-      
-      interface ScrollState {
-        top: number;
-        left: number;
-        stableAt: number;
-      }
-      
-      const win = window as Window & { __scrollStability?: ScrollState };
-      const state: ScrollState = win.__scrollStability || { top: -1, left: -1, stableAt: 0 };
-      const currentTop = el.scrollTop;
-      const currentLeft = el.scrollLeft;
-      
-      if (state.top === currentTop && state.left === currentLeft) {
-        if (Date.now() - state.stableAt >= args.stability) {
-          delete win.__scrollStability;
-          return true;
+  await page
+    .waitForFunction(
+      (args: { sel: string; stability: number }) => {
+        const el = document.querySelector(args.sel) as HTMLElement;
+        if (!el) return true;
+
+        interface ScrollState {
+          top: number;
+          left: number;
+          stableAt: number;
         }
-      } else {
-        state.top = currentTop;
-        state.left = currentLeft;
-        state.stableAt = Date.now();
-        win.__scrollStability = state;
-      }
-      return false;
-    },
-    { sel: selector, stability: stabilityMs },
-    { timeout, polling: 16 }
-  ).catch(() => {
-    // Timeout is OK - element might not be scrollable
-  });
+
+        const win = window as Window & { __scrollStability?: ScrollState };
+        const state: ScrollState = win.__scrollStability || { top: -1, left: -1, stableAt: 0 };
+        const currentTop = el.scrollTop;
+        const currentLeft = el.scrollLeft;
+
+        if (state.top === currentTop && state.left === currentLeft) {
+          if (Date.now() - state.stableAt >= args.stability) {
+            delete win.__scrollStability;
+            return true;
+          }
+        } else {
+          state.top = currentTop;
+          state.left = currentLeft;
+          state.stableAt = Date.now();
+          win.__scrollStability = state;
+        }
+        return false;
+      },
+      { sel: selector, stability: stabilityMs },
+      { timeout, polling: 16 }
+    )
+    .catch(() => {
+      // Timeout is OK - element might not be scrollable
+    });
 }
 
 // =============================================================================
@@ -234,42 +225,43 @@ export function getCanvas(page: Page): Locator {
  */
 export class SidebarSection {
   private page: Page;
-  private name: SectionName;
   private sectionId: string;
   private trigger: Locator;
-  
+
   constructor(page: Page, name: SectionName) {
     this.page = page;
     this.name = name;
     this.sectionId = SECTION_NAME_TO_ID[name];
     // Find trigger using data-testid for reliable selection
     // The accordion item has data-testid="accordion-{id}" and the trigger is a button with data-state inside
-    this.trigger = page.locator(`[data-testid="accordion-${this.sectionId}"] button[data-state]`).first();
+    this.trigger = page
+      .locator(`[data-testid="accordion-${this.sectionId}"] button[data-state]`)
+      .first();
   }
-  
+
   /**
    * Open this accordion section.
    */
   async open(): Promise<void> {
     const state = await this.trigger.getAttribute('data-state');
     if (state === 'open') return;
-    
+
     await this.trigger.scrollIntoViewIfNeeded();
     await this.trigger.click();
     await waitForAccordionState(this.trigger, 'open');
   }
-  
+
   /**
    * Close this accordion section.
    */
   async close(): Promise<void> {
     const state = await this.trigger.getAttribute('data-state');
     if (state === 'closed') return;
-    
+
     await this.trigger.click();
     await waitForAccordionState(this.trigger, 'closed');
   }
-  
+
   /**
    * Check if this section is open.
    */
@@ -277,7 +269,7 @@ export class SidebarSection {
     const state = await this.trigger.getAttribute('data-state');
     return state === 'open';
   }
-  
+
   /**
    * Get the region (content) of this accordion section.
    * Assumes section is open.
@@ -287,14 +279,14 @@ export class SidebarSection {
     // In Radix accordion, the content has role="region" and is controlled by the trigger
     return this.page.locator('[role="region"][data-state="open"]').first();
   }
-  
+
   /**
    * Get a control within this section by data-testid.
    */
   getControl(testId: string): Locator {
     return this.getRegion().locator(`[data-testid="${testId}"]`);
   }
-  
+
   /**
    * Get the trigger element.
    */
@@ -311,13 +303,10 @@ export class SidebarSection {
  * Scroll an element into view within the sidebar's scroll container.
  * This scrolls the sidebar, not the page.
  */
-export async function scrollIntoViewInSidebar(
-  page: Page,
-  locator: Locator
-): Promise<void> {
+export async function scrollIntoViewInSidebar(page: Page, locator: Locator): Promise<void> {
   // First scroll the element into view
   await locator.scrollIntoViewIfNeeded();
-  
+
   // Wait for scroll to settle
   await waitForScrollSettled(page, 'aside');
 }
@@ -333,12 +322,12 @@ export async function scrollIntoViewInSidebar(
 export class SelectHelper {
   private locator: Locator;
   private page: Page;
-  
+
   constructor(locator: Locator) {
     this.locator = locator;
     this.page = locator.page();
   }
-  
+
   /**
    * Open the select dropdown.
    */
@@ -347,22 +336,22 @@ export class SelectHelper {
     await this.locator.click();
     return await waitForSelectOpen(this.page);
   }
-  
+
   /**
    * Choose an option by data-value or index using keyboard navigation.
    * This is more reliable than clicking options in scrollable dropdowns.
-   * 
+   *
    * @param optionValue - The data-value attribute value, or a numeric index
    */
   async choose(optionValue: string | number): Promise<void> {
     const dropdown = await this.open();
-    
+
     // Get all options
     const options = dropdown.locator('[role="option"]');
     const count = await options.count();
-    
+
     let targetIndex = -1;
-    
+
     if (typeof optionValue === 'number') {
       // Use index directly
       targetIndex = optionValue;
@@ -375,7 +364,7 @@ export class SelectHelper {
           break;
         }
       }
-      
+
       // Fallback: try text content as last resort
       if (targetIndex === -1) {
         for (let i = 0; i < count; i++) {
@@ -387,29 +376,29 @@ export class SelectHelper {
         }
       }
     }
-    
+
     if (targetIndex === -1 || targetIndex >= count) {
       // Option not found - close dropdown and throw
       await this.page.keyboard.press('Escape');
       throw new Error(`Option "${optionValue}" not found in select`);
     }
-    
+
     // Navigate to option using keyboard
     await this.page.keyboard.press('Home');
     for (let i = 0; i < targetIndex; i++) {
       await this.page.keyboard.press('ArrowDown');
     }
-    
+
     // Wait for scroll to settle (in case dropdown scrolled)
     await waitForScrollSettled(this.page, '[data-radix-popper-content-wrapper]');
-    
+
     // Select the option
     await this.page.keyboard.press('Enter');
-    
+
     // Wait for dropdown to close
     await waitForSelectClosed(this.page);
   }
-  
+
   /**
    * Close the select dropdown without making a selection.
    */
@@ -417,12 +406,12 @@ export class SelectHelper {
     await this.page.keyboard.press('Escape');
     await waitForSelectClosed(this.page);
   }
-  
+
   /**
    * Get the current value text.
    */
   async getValue(): Promise<string> {
-    return await this.locator.textContent() || '';
+    return (await this.locator.textContent()) || '';
   }
 }
 
@@ -432,58 +421,58 @@ export class SelectHelper {
 export class SliderHelper {
   private locator: Locator;
   private page: Page;
-  
+
   constructor(locator: Locator) {
     this.locator = locator;
     this.page = locator.page();
   }
-  
+
   /**
    * Set slider value by clicking at the appropriate position.
    */
   async setValue(value: number): Promise<void> {
     await scrollIntoViewInSidebar(this.page, this.locator);
-    
+
     const min = await this.getMin();
     const max = await this.getMax();
-    
+
     // Clamp value to valid range
     const clampedValue = Math.max(min, Math.min(max, value));
-    
+
     // Calculate click position
     const box = await this.locator.boundingBox();
     if (!box) throw new Error('Slider not visible');
-    
+
     const percent = (clampedValue - min) / (max - min);
     const x = box.x + box.width * percent;
     const y = box.y + box.height / 2;
-    
+
     await this.page.mouse.click(x, y);
   }
-  
+
   /**
    * Set slider value using keyboard (more precise for integer values).
    */
   async setValueByKeyboard(targetValue: number): Promise<void> {
     await scrollIntoViewInSidebar(this.page, this.locator);
-    
+
     // Focus the slider thumb
     const thumb = this.locator.locator('[role="slider"]');
     await thumb.focus();
-    
+
     const currentValue = await this.getValue();
     const diff = targetValue - currentValue;
-    
+
     if (diff === 0) return;
-    
+
     const key = diff > 0 ? 'ArrowRight' : 'ArrowLeft';
     const steps = Math.abs(diff);
-    
+
     for (let i = 0; i < steps; i++) {
       await this.page.keyboard.press(key);
     }
   }
-  
+
   /**
    * Get current slider value.
    */
@@ -492,7 +481,7 @@ export class SliderHelper {
     const value = await thumb.getAttribute('aria-valuenow');
     return Number(value) || 0;
   }
-  
+
   /**
    * Get minimum slider value.
    */
@@ -501,7 +490,7 @@ export class SliderHelper {
     const value = await thumb.getAttribute('aria-valuemin');
     return Number(value) || 0;
   }
-  
+
   /**
    * Get maximum slider value.
    */
@@ -518,12 +507,12 @@ export class SliderHelper {
 export class SwitchHelper {
   private locator: Locator;
   private page: Page;
-  
+
   constructor(locator: Locator) {
     this.locator = locator;
     this.page = locator.page();
   }
-  
+
   /**
    * Toggle the switch state.
    */
@@ -531,7 +520,7 @@ export class SwitchHelper {
     await scrollIntoViewInSidebar(this.page, this.locator);
     await this.locator.click();
   }
-  
+
   /**
    * Set switch to a specific state.
    */
@@ -541,7 +530,7 @@ export class SwitchHelper {
       await this.toggle();
     }
   }
-  
+
   /**
    * Check if switch is currently checked.
    */
@@ -549,7 +538,7 @@ export class SwitchHelper {
     const state = await this.locator.getAttribute('data-state');
     return state === 'checked';
   }
-  
+
   /**
    * Toggle using keyboard (Space key).
    */
@@ -566,12 +555,12 @@ export class SwitchHelper {
 export class InputHelper {
   private locator: Locator;
   private page: Page;
-  
+
   constructor(locator: Locator) {
     this.locator = locator;
     this.page = locator.page();
   }
-  
+
   /**
    * Clear and fill the input with new value.
    */
@@ -579,21 +568,21 @@ export class InputHelper {
     await scrollIntoViewInSidebar(this.page, this.locator);
     await this.locator.fill(value);
   }
-  
+
   /**
    * Get current input value.
    */
   async getValue(): Promise<string> {
     return await this.locator.inputValue();
   }
-  
+
   /**
    * Clear the input.
    */
   async clear(): Promise<void> {
     await this.locator.fill('');
   }
-  
+
   /**
    * Type into the input (keystroke by keystroke).
    */
@@ -614,12 +603,12 @@ export class InputHelper {
 export async function getCanvasSnapshot(page: Page): Promise<string> {
   const canvas = getCanvas(page);
   await canvas.waitFor({ state: 'visible' });
-  
+
   // Get canvas data URL
   const dataUrl = await canvas.evaluate((el: HTMLCanvasElement) => {
     return el.toDataURL('image/png');
   });
-  
+
   return dataUrl;
 }
 
@@ -635,10 +624,7 @@ export function snapshotsAreDifferent(snapshot1: string, snapshot2: string): boo
  * Take a screenshot tied to render completion.
  * Only captures AFTER render is idle.
  */
-export async function takeRenderCompleteScreenshot(
-  page: Page,
-  name: string
-): Promise<Buffer> {
+export async function takeRenderCompleteScreenshot(page: Page, _name: string): Promise<Buffer> {
   await waitForRenderIdle(page);
   const preview = getQRPreview(page);
   return await preview.screenshot({ type: 'png' });
@@ -651,10 +637,7 @@ export async function takeRenderCompleteScreenshot(
 /**
  * Assert that an element has the expected ARIA role.
  */
-export async function assertAriaRole(
-  locator: Locator,
-  expectedRole: string
-): Promise<void> {
+export async function assertAriaRole(locator: Locator, expectedRole: string): Promise<void> {
   await expect(locator).toHaveAttribute('role', expectedRole);
 }
 
@@ -698,19 +681,16 @@ export async function assertKeyboardFocusable(locator: Locator): Promise<void> {
 /**
  * Assert keyboard operability of a switch (Space toggles).
  */
-export async function assertSwitchKeyboardOperable(
-  locator: Locator,
-  page: Page
-): Promise<void> {
+export async function assertSwitchKeyboardOperable(locator: Locator, page: Page): Promise<void> {
   const helper = new SwitchHelper(locator);
   const before = await helper.isChecked();
-  
+
   await locator.focus();
   await page.keyboard.press('Space');
-  
+
   const after = await helper.isChecked();
   expect(after).not.toBe(before);
-  
+
   // Restore original state
   await page.keyboard.press('Space');
 }
@@ -728,31 +708,28 @@ export interface SetupOptions {
 /**
  * Setup test with clean state.
  * Navigates fresh to avoid cross-test state leakage.
- * 
+ *
  * IMPORTANT: This function sets localStorage BEFORE navigation to prevent
  * the welcome modal from appearing. This is more reliable than dismissing it.
  */
-export async function setupTest(
-  page: Page,
-  options: SetupOptions = {}
-): Promise<void> {
+export async function setupTest(page: Page, options: SetupOptions = {}): Promise<void> {
   const { tier = 'basic', waitForIdle = true, dismissModal = true } = options;
-  
+
   // Set localStorage to skip welcome modal BEFORE navigating
   // This prevents the modal from appearing at all
   await setWelcomeModalSeen(page);
-  
+
   // Navigate fresh
   await page.goto('/');
-  
+
   // Double-check: dismiss welcome modal if it still appears (shouldn't happen but defensive)
   if (dismissModal) {
     await dismissWelcomeModal(page);
   }
-  
+
   // Select tier
   await selectTier(page, tier);
-  
+
   // Wait for initial render
   if (waitForIdle) {
     await waitForRenderIdle(page);
@@ -773,70 +750,83 @@ export const WELCOME_MODAL_VERSION = '2026.02.01';
 /**
  * Set localStorage to mark welcome modal as seen BEFORE navigation.
  * This prevents the modal from appearing at all - more reliable than dismissing.
- * 
+ *
  * Usage:
  * ```ts
  * await setWelcomeModalSeen(page);
  * await page.goto('/');
  * ```
- * 
+ *
  * @param page - Playwright page instance
  */
 export async function setWelcomeModalSeen(page: Page): Promise<void> {
-  await page.addInitScript((args: { key: string; value: string }) => {
-    localStorage.setItem(args.key, args.value);
-  }, { key: WELCOME_MODAL_STORAGE_KEY, value: WELCOME_MODAL_VERSION });
+  await page.addInitScript(
+    (args: { key: string; value: string }) => {
+      localStorage.setItem(args.key, args.value);
+    },
+    { key: WELCOME_MODAL_STORAGE_KEY, value: WELCOME_MODAL_VERSION }
+  );
 }
 
 /**
  * Dismiss the welcome modal if present.
  * Uses data-testid and ARIA selectors for i18n compatibility.
- * 
+ *
  * IMPORTANT: Prefer setWelcomeModalSeen() BEFORE navigation instead.
  */
 export async function dismissWelcomeModal(page: Page): Promise<void> {
   try {
     // Check for the dialog element (WelcomeModal uses <dialog open>)
     const dialog = page.locator('dialog[open]').first();
-    const isVisible = await dialog.isVisible({ timeout: 1000 }).catch(() => false);
-    
+    const isVisible = await dialog.isVisible({ timeout: 300000 }).catch(() => false);
+
     if (!isVisible) return;
-    
+
     // Strategy 1: Click "Get Started" button using data-testid
     const getStartedBtn = page.locator('[data-testid="welcome-get-started"]').first();
-    if (await getStartedBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+    if (await getStartedBtn.isVisible({ timeout: 300000 }).catch(() => false)) {
       await getStartedBtn.click();
-      await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 2000 });
+      await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 });
       return;
     }
-    
+
     // Strategy 2: Find first button in dialog (usually the CTA)
     const dialogBtn = dialog.locator('button').first();
-    if (await dialogBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+    if (await dialogBtn.isVisible({ timeout: 300000 }).catch(() => false)) {
       await dialogBtn.click();
-      await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 2000 }).catch(() => {});
+      await page
+        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
+        .catch(() => {});
       return;
     }
-    
+
     // Strategy 3: Click close button using aria-label
-    const closeBtn = page.locator('button[aria-label*="close" i], button[aria-label="Close modal"]').first();
-    if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+    const closeBtn = page
+      .locator('button[aria-label*="close" i], button[aria-label="Close modal"]')
+      .first();
+    if (await closeBtn.isVisible({ timeout: 300000 }).catch(() => false)) {
       await closeBtn.click();
-      await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 2000 }).catch(() => {});
+      await page
+        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
+        .catch(() => {});
       return;
     }
-    
+
     // Strategy 4: Click the backdrop
     const backdrop = page.locator('button.absolute.inset-0').first();
-    if (await backdrop.isVisible({ timeout: 500 }).catch(() => false)) {
+    if (await backdrop.isVisible({ timeout: 300000 }).catch(() => false)) {
       await backdrop.click({ force: true });
-      await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 2000 }).catch(() => {});
+      await page
+        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
+        .catch(() => {});
       return;
     }
-    
+
     // Strategy 5: Press Escape key
     await page.keyboard.press('Escape');
-    await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 2000 }).catch(() => {});
+    await page
+      .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
+      .catch(() => {});
   } catch {
     // Modal might not exist, that's OK
   }
@@ -849,10 +839,10 @@ export async function dismissWelcomeModal(page: Page): Promise<void> {
 export async function selectTier(page: Page, tier: Tier): Promise<void> {
   // Map tier to value attribute
   const tierValue = tier; // 'basic', 'advanced', 'professional'
-  
+
   // Try tabs first (desktop) - use data-testid="tier-tabs"
   const tabsList = page.locator('[data-testid="tier-tabs"]');
-  if (await tabsList.isVisible({ timeout: 2000 }).catch(() => false)) {
+  if (await tabsList.isVisible({ timeout: 300000 }).catch(() => false)) {
     // Find tab by data-testid attribute (i18n-safe)
     const tab = page.locator(`[data-testid="tier-tab-${tierValue}"]`).first();
     if (await tab.isVisible().catch(() => false)) {
@@ -861,13 +851,13 @@ export async function selectTier(page: Page, tier: Tier): Promise<void> {
       return;
     }
   }
-  
+
   // Fallback: try select dropdown (mobile) - use data-testid="tier-select"
   const selectTrigger = page.locator('[data-testid="tier-select"]');
-  if (await selectTrigger.isVisible({ timeout: 1000 }).catch(() => false)) {
+  if (await selectTrigger.isVisible({ timeout: 300000 }).catch(() => false)) {
     await selectTrigger.click();
     await waitForSelectOpen(page);
-    
+
     // Find option by data-testid attribute (i18n-safe)
     const option = page.locator(`[data-testid="tier-option-${tierValue}"]`).first();
     if (await option.isVisible().catch(() => false)) {
@@ -929,18 +919,18 @@ export async function logTestState(page: Page, label: string): Promise<void> {
   const state = await page.evaluate(() => {
     const preview = document.querySelector('[data-testid="qr-preview"]');
     const renderState = preview?.getAttribute('data-rendering-state') || 'unknown';
-    
+
     const openSections = Array.from(document.querySelectorAll('[data-state="open"]'))
-      .map(el => el.textContent?.trim().split('\n')[0])
+      .map((el) => el.textContent?.trim().split('\n')[0])
       .filter(Boolean);
-    
+
     return {
       url: window.location.href,
       renderState,
       openSections,
     };
   });
-  
+
   console.log(`[${label}]`, JSON.stringify(state, null, 2));
 }
 

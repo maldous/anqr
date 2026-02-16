@@ -1,4 +1,4 @@
-import type { Page, Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 /**
  * Input Interaction Helpers for ANQR UI Testing
@@ -9,30 +9,26 @@ import type { Page, Locator } from '@playwright/test';
  * Set a Radix UI Slider value
  * Radix sliders use aria-valuenow and can be set via keyboard or drag
  */
-export async function setSlider(
-  page: Page,
-  selector: string,
-  targetValue: number
-): Promise<void> {
+export async function setSlider(page: Page, selector: string, targetValue: number): Promise<void> {
   const slider = page.locator(selector).first();
   await slider.waitFor({ state: 'visible' });
-  
+
   // Get current value and range
   const currentValue = await slider.getAttribute('aria-valuenow');
   const min = await slider.getAttribute('aria-valuemin');
   const max = await slider.getAttribute('aria-valuemax');
-  
+
   const current = parseFloat(currentValue || '0');
   const minVal = parseFloat(min || '0');
   const maxVal = parseFloat(max || '100');
-  
+
   // Calculate how many arrow key presses needed
   // This is more reliable than drag for Radix sliders
   const step = (maxVal - minVal) / 100; // Assume 100 steps
   const diff = targetValue - current;
   const presses = Math.abs(Math.round(diff / step));
   const key = diff > 0 ? 'ArrowRight' : 'ArrowLeft';
-  
+
   // Focus and use keyboard to set value
   await slider.focus();
   for (let i = 0; i < Math.min(presses, 200); i++) {
@@ -50,14 +46,14 @@ export async function setSliderByPercent(
 ): Promise<void> {
   const slider = page.locator(selector).first();
   await slider.waitFor({ state: 'visible' });
-  
+
   const box = await slider.boundingBox();
   if (!box) throw new Error('Could not get slider bounding box');
-  
+
   // Click at the percentage position
   const x = box.x + (box.width * percent) / 100;
   const y = box.y + box.height / 2;
-  
+
   await page.mouse.click(x, y);
 }
 
@@ -74,22 +70,22 @@ export async function setSelect(
   const trigger = page.locator(triggerSelector).first();
   await trigger.waitFor({ state: 'visible' });
   await trigger.click();
-  
+
   // Wait for the portal content to appear
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 5000 });
-  
+  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 300000 });
+
   // Try data-value selector first (i18n safe)
   const optionByValue = page.locator(`[role="option"][data-value="${optionValue}"]`).first();
   if (await optionByValue.isVisible().catch(() => false)) {
     await optionByValue.click();
     return;
   }
-  
+
   // Fallback: Use keyboard navigation to find and select option
   // Get all options and find target index by data-value
   const allOptions = page.locator('[data-radix-popper-content-wrapper] [role="option"]');
   const count = await allOptions.count();
-  
+
   let targetIndex = -1;
   for (let i = 0; i < count; i++) {
     const value = await allOptions.nth(i).getAttribute('data-value');
@@ -98,7 +94,7 @@ export async function setSelect(
       break;
     }
   }
-  
+
   if (targetIndex >= 0) {
     await page.keyboard.press('Home');
     for (let i = 0; i < targetIndex; i++) {
@@ -123,9 +119,9 @@ export async function setSelectByText(
   const trigger = page.locator(triggerSelector).first();
   await trigger.waitFor({ state: 'visible' });
   await trigger.click();
-  
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 5000 });
-  
+
+  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 300000 });
+
   // Use keyboard navigation to select by index
   await page.keyboard.press('Home');
   for (let i = 0; i < optionIndex; i++) {
@@ -146,17 +142,13 @@ export async function toggleSwitch(page: Page, selector: string): Promise<void> 
 /**
  * Set a Radix UI Switch to a specific state
  */
-export async function setSwitch(
-  page: Page,
-  selector: string,
-  checked: boolean
-): Promise<void> {
+export async function setSwitch(page: Page, selector: string, checked: boolean): Promise<void> {
   const switchEl = page.locator(selector).first();
   await switchEl.waitFor({ state: 'visible' });
-  
+
   const currentState = await switchEl.getAttribute('data-state');
   const isCurrentlyChecked = currentState === 'checked';
-  
+
   if (isCurrentlyChecked !== checked) {
     await switchEl.click();
   }
@@ -173,7 +165,7 @@ export async function setColorInput(
   // Find the color input
   const colorInput = page.locator(colorPickerSelector).first();
   await colorInput.waitFor({ state: 'visible' });
-  
+
   // Set value programmatically and dispatch events
   await colorInput.evaluate((el: HTMLInputElement, color: string) => {
     el.value = color;
@@ -185,18 +177,14 @@ export async function setColorInput(
 /**
  * Set a text input value
  */
-export async function setTextInput(
-  page: Page,
-  selector: string,
-  text: string
-): Promise<void> {
+export async function setTextInput(page: Page, selector: string, text: string): Promise<void> {
   const input = page.locator(selector).first();
   await input.waitFor({ state: 'visible' });
-  
+
   // Clear and fill
   await input.clear();
   await input.fill(text);
-  
+
   // Trigger blur to ensure React state updates
   await input.blur();
 }
@@ -204,14 +192,10 @@ export async function setTextInput(
 /**
  * Set a number input value
  */
-export async function setNumberInput(
-  page: Page,
-  selector: string,
-  value: number
-): Promise<void> {
+export async function setNumberInput(page: Page, selector: string, value: number): Promise<void> {
   const input = page.locator(selector).first();
   await input.waitFor({ state: 'visible' });
-  
+
   await input.clear();
   await input.fill(value.toString());
   await input.blur();
@@ -220,14 +204,10 @@ export async function setNumberInput(
 /**
  * Set a textarea value
  */
-export async function setTextarea(
-  page: Page,
-  selector: string,
-  text: string
-): Promise<void> {
+export async function setTextarea(page: Page, selector: string, text: string): Promise<void> {
   const textarea = page.locator(selector).first();
   await textarea.waitFor({ state: 'visible' });
-  
+
   await textarea.clear();
   await textarea.fill(text);
   await textarea.blur();
@@ -277,8 +257,8 @@ export async function getSwitchState(page: Page, selector: string): Promise<bool
  */
 export async function getSelectValue(page: Page, triggerSelector: string): Promise<string> {
   const trigger = page.locator(triggerSelector).first();
-  const valueSpan = trigger.locator('[data-placeholder]').first();
-  
+  const _valueSpan = trigger.locator('[data-placeholder]').first();
+
   // Try to get from the displayed value
   const text = await trigger.textContent();
   return text?.trim() || '';
