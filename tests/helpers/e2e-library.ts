@@ -383,17 +383,11 @@ export class SelectHelper {
       throw new Error(`Option "${optionValue}" not found in select`);
     }
 
-    // Navigate to option using keyboard
-    await this.page.keyboard.press('Home');
-    for (let i = 0; i < targetIndex; i++) {
-      await this.page.keyboard.press('ArrowDown');
-    }
-
-    // Wait for scroll to settle (in case dropdown scrolled)
-    await waitForScrollSettled(this.page, '[data-radix-popper-content-wrapper]');
-
-    // Select the option
-    await this.page.keyboard.press('Enter');
+    // Click the target option directly (more reliable than keyboard navigation)
+    await options
+      .nth(targetIndex)
+      .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+    await options.nth(targetIndex).click();
 
     // Wait for dropdown to close
     await waitForSelectClosed(this.page);

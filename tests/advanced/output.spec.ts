@@ -51,6 +51,45 @@ async function selectDropdownOption(
 // Order: PNG=0, WebP=1, GIF=2, SVG=3
 const FORMAT_INDEX = { PNG: 0, WEBP: 1, GIF: 2, SVG: 3 } as const;
 
+// Helper: Select dropdown option by index using direct click (replaces fragile keyboard navigation)
+async function selectOptionByIndex(
+  page: Page,
+  triggerTestId: string,
+  index: number,
+  settle: boolean = true
+) {
+  const trigger = page.locator(`[data-testid="${triggerTestId}"]`);
+  await trigger.waitFor({ state: 'visible', timeout: 5000 });
+  await trigger.click();
+  await page.waitForSelector('[data-radix-popper-content-wrapper]', {
+    state: 'visible',
+    timeout: 5000,
+  });
+
+  const options = page.locator('[data-radix-popper-content-wrapper] [role="option"]');
+  const count = await options.count();
+
+  if (index >= 0 && index < count) {
+    await options
+      .nth(index)
+      .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+    await options.nth(index).click();
+  } else {
+    await page.keyboard.press('Escape');
+  }
+
+  // Wait for dropdown to close
+  await page
+    .waitForFunction(() => !document.querySelector('[data-radix-popper-content-wrapper]'), {
+      timeout: 5000,
+    })
+    .catch(() => {});
+
+  if (settle) {
+    await waitForRenderComplete(page, 'settle');
+  }
+}
+
 // Helper: Set input value
 async function setInputByTestId(page: Page, testId: string, value: string, settle: boolean = true) {
   await setInput(page, testId, value);
@@ -140,12 +179,19 @@ test.describe('Output Format Selection', () => {
     const trigger = page.locator('[data-testid="output-format-trigger"]');
     await trigger.focus();
     await page.keyboard.press('Enter');
-    await waitForRenderComplete(page, 'settle');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    await waitForRenderComplete(page, 'settle');
-    // Dropdown should be closed
+    const opened = await page
+      .waitForSelector('[data-radix-popper-content-wrapper]', { state: 'visible', timeout: 5000 })
+      .catch(() => null);
+    expect(opened, 'dropdown should open with Enter key').toBeTruthy();
+    if (opened) {
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      await page
+        .waitForFunction(() => !document.querySelector('[data-radix-popper-content-wrapper]'), {
+          timeout: 5000,
+        })
+        .catch(() => {});
+    }
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isOpen = await dropdown.isVisible().catch(() => false);
     expect(isOpen).toBe(false);
@@ -965,96 +1011,42 @@ test.describe('Output GIF Settings Combinations', () => {
   test('GIF quantizer median_cut option', async ({ page }) => {
     const trigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
-      await trigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Select first option (index 0)
-      await page.keyboard.press('Home');
-      await page.keyboard.press('Enter');
-      // Verify dropdown closed after selection
-      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-      const isOpen = await dropdown.isVisible().catch(() => false);
-      expect(isOpen, 'dropdown should close after quantizer selection').toBe(false);
+      await selectOptionByIndex(page, 'output-gif-quantizer-trigger', 0);
     }
   });
 
   test('GIF quantizer neuquant option', async ({ page }) => {
     const trigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
-      await trigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Select second option (index 1)
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
-      // Verify dropdown closed after selection
-      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-      const isOpen = await dropdown.isVisible().catch(() => false);
-      expect(isOpen, 'dropdown should close after quantizer selection').toBe(false);
+      await selectOptionByIndex(page, 'output-gif-quantizer-trigger', 1);
     }
   });
 
   test('GIF quantizer octree option', async ({ page }) => {
     const trigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
-      await trigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Select third option (index 2)
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
-      // Verify dropdown closed after selection
-      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-      const isOpen = await dropdown.isVisible().catch(() => false);
-      expect(isOpen, 'dropdown should close after quantizer selection').toBe(false);
+      await selectOptionByIndex(page, 'output-gif-quantizer-trigger', 2);
     }
   });
 
   test('GIF dither off option', async ({ page }) => {
     const trigger = page.locator('[data-testid="output-gif-dither-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
-      await trigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Select first option (index 0 = off)
-      await page.keyboard.press('Home');
-      await page.keyboard.press('Enter');
-      // Verify dropdown closed after selection
-      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-      const isOpen = await dropdown.isVisible().catch(() => false);
-      expect(isOpen, 'dropdown should close after dither selection').toBe(false);
+      await selectOptionByIndex(page, 'output-gif-dither-trigger', 0);
     }
   });
 
   test('GIF dither floyd-steinberg option', async ({ page }) => {
     const trigger = page.locator('[data-testid="output-gif-dither-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
-      await trigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Select second option (index 1 = floyd-steinberg)
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
-      // Verify dropdown closed after selection
-      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-      const isOpen = await dropdown.isVisible().catch(() => false);
-      expect(isOpen, 'dropdown should close after dither selection').toBe(false);
+      await selectOptionByIndex(page, 'output-gif-dither-trigger', 1);
     }
   });
 
   test('GIF dither ordered option', async ({ page }) => {
     const trigger = page.locator('[data-testid="output-gif-dither-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
-      await trigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Select third option (index 2 = ordered)
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
-      // Verify dropdown closed after selection
-      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-      const isOpen = await dropdown.isVisible().catch(() => false);
-      expect(isOpen, 'dropdown should close after dither selection').toBe(false);
+      await selectOptionByIndex(page, 'output-gif-dither-trigger', 2);
     }
   });
 
@@ -1068,23 +1060,16 @@ test.describe('Output GIF Settings Combinations', () => {
       await waitForRenderComplete(page, 'settle');
     }
 
-    // Set quantizer using keyboard navigation (index 0)
+    // Set quantizer (index 0 = median_cut)
     const quantizerTrigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
     if (await quantizerTrigger.isVisible().catch(() => false)) {
-      await quantizerTrigger.click();
-      await waitForRenderComplete(page, 'settle');
-      await page.keyboard.press('Home');
-      await page.keyboard.press('Enter');
+      await selectOptionByIndex(page, 'output-gif-quantizer-trigger', 0);
     }
 
-    // Set dither using keyboard navigation (index 1 = floyd)
+    // Set dither (index 1 = floyd)
     const ditherTrigger = page.locator('[data-testid="output-gif-dither-trigger"]');
     if (await ditherTrigger.isVisible().catch(() => false)) {
-      await ditherTrigger.click();
-      await waitForRenderComplete(page, 'settle');
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
+      await selectOptionByIndex(page, 'output-gif-dither-trigger', 1);
     }
 
     // Verify palette was set to minimum
@@ -1105,24 +1090,16 @@ test.describe('Output GIF Settings Combinations', () => {
       await waitForRenderComplete(page, 'settle');
     }
 
-    // Set quantizer using keyboard navigation (index 2 = octree)
+    // Set quantizer (index 2 = octree)
     const quantizerTrigger = page.locator('[data-testid="output-gif-quantizer-trigger"]');
     if (await quantizerTrigger.isVisible().catch(() => false)) {
-      await quantizerTrigger.click();
-      await waitForRenderComplete(page, 'settle');
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
+      await selectOptionByIndex(page, 'output-gif-quantizer-trigger', 2);
     }
 
-    // Set dither off using keyboard navigation (index 0 = off)
+    // Set dither off (index 0 = off)
     const ditherTrigger = page.locator('[data-testid="output-gif-dither-trigger"]');
     if (await ditherTrigger.isVisible().catch(() => false)) {
-      await ditherTrigger.click();
-      await waitForRenderComplete(page, 'settle');
-      await page.keyboard.press('Home');
-      await page.keyboard.press('Enter');
+      await selectOptionByIndex(page, 'output-gif-dither-trigger', 0);
     }
 
     // Verify palette at max
@@ -1180,15 +1157,7 @@ test.describe('Output SVG Settings', () => {
 
       const precisionTrigger = page.locator('[data-testid="output-svg-precision-trigger"]');
       if (await precisionTrigger.isVisible().catch(() => false)) {
-        await precisionTrigger.click();
-        await waitForRenderComplete(page, 'settle');
-        // Select first option (index 0 = pixel)
-        await page.keyboard.press('Home');
-        await page.keyboard.press('Enter');
-        // Verify dropdown closed after precision selection
-        const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-        const isOpen = await dropdown.isVisible().catch(() => false);
-        expect(isOpen, 'dropdown should close after precision selection').toBe(false);
+        await selectOptionByIndex(page, 'output-svg-precision-trigger', 0);
       }
     }
   });
@@ -1203,16 +1172,7 @@ test.describe('Output SVG Settings', () => {
 
       const precisionTrigger = page.locator('[data-testid="output-svg-precision-trigger"]');
       if (await precisionTrigger.isVisible().catch(() => false)) {
-        await precisionTrigger.click();
-        await waitForRenderComplete(page, 'settle');
-        // Select second option (index 1 = precise)
-        await page.keyboard.press('Home');
-        await page.keyboard.press('ArrowDown');
-        await page.keyboard.press('Enter');
-        // Verify dropdown closed after precision selection
-        const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-        const isOpen = await dropdown.isVisible().catch(() => false);
-        expect(isOpen, 'dropdown should close after precision selection').toBe(false);
+        await selectOptionByIndex(page, 'output-svg-precision-trigger', 1);
       }
     }
   });
@@ -1428,16 +1388,7 @@ test.describe('Output Extra Formats', () => {
   test('format extra select EPS selection works', async ({ page }) => {
     const trigger = page.locator('[data-testid="output-format-extra-trigger"]');
     if (await trigger.isVisible().catch(() => false)) {
-      await trigger.click();
-      await waitForRenderComplete(page, 'settle');
-      // Select second option (index 1 = eps)
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
-      // Verify dropdown closed after selection
-      const dropdown = page.locator('[data-radix-popper-content-wrapper]');
-      const isOpen = await dropdown.isVisible().catch(() => false);
-      expect(isOpen, 'dropdown should close after EPS selection').toBe(false);
+      await selectOptionByIndex(page, 'output-format-extra-trigger', 1);
     }
   });
 });

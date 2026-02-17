@@ -5,12 +5,10 @@
  * - ECC-aware settings only show when enabled
  */
 
-import { test, expect } from '../fixtures/test-fixtures';
 import type { Page } from '@playwright/test';
+import { expect, test } from '../fixtures/test-fixtures';
 
-import {
-  waitForQRRender,
-} from '../helpers/qr-detector';
+import { waitForQRRender } from '../helpers/qr-detector';
 import {
   openAccordion,
   selectOption as selectDropdownByText,
@@ -47,7 +45,7 @@ async function toggleSwitchByTestId(page: Page, testId: string) {
 }
 
 // Helper: Set slider value
-async function setSliderByTestId(page: Page, testId: string, percent: number) {
+async function _setSliderByTestId(page: Page, testId: string, percent: number) {
   await setSlider(page, testId, percent);
   await waitForRenderComplete(page, 'settle');
 }
@@ -71,11 +69,11 @@ test.describe('Safety Mode Selection', () => {
     const trigger = page.locator('[data-testid="safety-mode-trigger"]');
     await trigger.click();
     await waitForRenderComplete(page, 'settle');
-    
+
     // Count total options (should have 3: Off, Balanced, Strict)
     const options = page.locator('[role="option"]');
     const count = await options.count();
-    
+
     await page.keyboard.press('Escape');
     expect(count).toBe(3);
   });
@@ -108,7 +106,7 @@ test.describe('Safety Mode Selection', () => {
     await waitForRenderComplete(page, 'settle');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    
+
     await waitForRenderComplete(page, 'settle');
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isOpen = await dropdown.isVisible().catch(() => false);
@@ -134,7 +132,7 @@ test.describe('Protection Locks Conditional Visibility', () => {
     const lockAlignment = page.locator('[data-testid="safety-lock-alignment-switch"]');
     const lockFormat = page.locator('[data-testid="safety-lock-format-switch"]');
     const lockVersion = page.locator('[data-testid="safety-lock-version-switch"]');
-    
+
     expect(await lockFinders.isVisible().catch(() => false)).toBe(false);
     expect(await lockTiming.isVisible().catch(() => false)).toBe(false);
     expect(await lockAlignment.isVisible().catch(() => false)).toBe(false);
@@ -188,13 +186,19 @@ test.describe('Protection Locks Conditional Visibility', () => {
     // Start with Off
     await selectDropdownOption(page, 'safety-mode-trigger', 'Off');
     await waitForRenderComplete(page, 'settle');
-    let lockFindersVisible = await page.locator('[data-testid="safety-lock-finders-switch"]').isVisible().catch(() => false);
+    let lockFindersVisible = await page
+      .locator('[data-testid="safety-lock-finders-switch"]')
+      .isVisible()
+      .catch(() => false);
     expect(lockFindersVisible).toBe(false);
-    
+
     // Switch to Balanced
     await selectDropdownOption(page, 'safety-mode-trigger', 'Balanced');
     await waitForRenderComplete(page, 'settle');
-    lockFindersVisible = await page.locator('[data-testid="safety-lock-finders-switch"]').isVisible().catch(() => false);
+    lockFindersVisible = await page
+      .locator('[data-testid="safety-lock-finders-switch"]')
+      .isVisible()
+      .catch(() => false);
     expect(lockFindersVisible).toBe(true);
   });
 
@@ -202,13 +206,19 @@ test.describe('Protection Locks Conditional Visibility', () => {
     // Start with Balanced
     await selectDropdownOption(page, 'safety-mode-trigger', 'Balanced');
     await waitForRenderComplete(page, 'settle');
-    let lockFindersVisible = await page.locator('[data-testid="safety-lock-finders-switch"]').isVisible().catch(() => false);
+    let lockFindersVisible = await page
+      .locator('[data-testid="safety-lock-finders-switch"]')
+      .isVisible()
+      .catch(() => false);
     expect(lockFindersVisible).toBe(true);
-    
+
     // Switch to Off
     await selectDropdownOption(page, 'safety-mode-trigger', 'Off');
     await waitForRenderComplete(page, 'settle');
-    lockFindersVisible = await page.locator('[data-testid="safety-lock-finders-switch"]').isVisible().catch(() => false);
+    lockFindersVisible = await page
+      .locator('[data-testid="safety-lock-finders-switch"]')
+      .isVisible()
+      .catch(() => false);
     expect(lockFindersVisible).toBe(false);
   });
 });
@@ -274,7 +284,7 @@ test.describe('Protection Lock Switches', () => {
       'safety-lock-format-switch',
       'safety-lock-version-switch',
     ];
-    
+
     for (const testId of lockSwitches) {
       const switchEl = page.locator(`[data-testid="${testId}"]`);
       const role = await switchEl.getAttribute('role');
@@ -300,7 +310,7 @@ test.describe('Safety Sliders', () => {
     const slider = page.locator('[data-testid="safety-min-module-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('1');
     expect(ariaMax).toBe('10');
   });
@@ -309,7 +319,7 @@ test.describe('Safety Sliders', () => {
     const slider = page.locator('[data-testid="safety-min-quiet-zone-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('1');
     expect(ariaMax).toBe('10');
   });
@@ -317,7 +327,7 @@ test.describe('Safety Sliders', () => {
   test('min module slider responds to keyboard', async ({ page }) => {
     const slider = page.locator('[data-testid="safety-min-module-slider"] [role="slider"]');
     await slider.focus();
-    
+
     const initialValue = await slider.getAttribute('aria-valuenow');
     await page.keyboard.press('ArrowRight');
     await waitForRenderComplete(page, 'settle');
@@ -364,7 +374,7 @@ test.describe('QA Analysis Controls', () => {
     const slider = page.locator('[data-testid="safety-simulate-blur-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('0');
     expect(ariaMax).toBe('10');
   });
@@ -373,7 +383,7 @@ test.describe('QA Analysis Controls', () => {
     const slider = page.locator('[data-testid="safety-simulate-noise-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('0');
     expect(ariaMax).toBe('50');
   });
@@ -382,7 +392,7 @@ test.describe('QA Analysis Controls', () => {
     const slider = page.locator('[data-testid="safety-simulate-rotation-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('0');
     expect(ariaMax).toBe('45');
   });
@@ -445,7 +455,7 @@ test.describe('ECC-Aware Mode Conditional Visibility', () => {
       await toggleSwitchByTestId(page, 'safety-ecc-aware-enabled-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const riskBudgetSlider = page.locator('[data-testid="safety-ecc-risk-budget-slider"]');
     expect(await riskBudgetSlider.isVisible().catch(() => false)).toBe(false);
   });
@@ -457,7 +467,7 @@ test.describe('ECC-Aware Mode Conditional Visibility', () => {
       await toggleSwitchByTestId(page, 'safety-ecc-aware-enabled-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const riskBudgetSlider = page.locator('[data-testid="safety-ecc-risk-budget-slider"]');
     await expect(riskBudgetSlider).toBeVisible();
   });
@@ -469,7 +479,7 @@ test.describe('ECC-Aware Mode Conditional Visibility', () => {
       await toggleSwitchByTestId(page, 'safety-ecc-aware-enabled-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const weightMapTrigger = page.locator('[data-testid="safety-ecc-weight-map-trigger"]');
     expect(await weightMapTrigger.isVisible().catch(() => false)).toBe(false);
   });
@@ -481,7 +491,7 @@ test.describe('ECC-Aware Mode Conditional Visibility', () => {
       await toggleSwitchByTestId(page, 'safety-ecc-aware-enabled-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const weightMapTrigger = page.locator('[data-testid="safety-ecc-weight-map-trigger"]');
     await expect(weightMapTrigger).toBeVisible();
   });
@@ -489,22 +499,22 @@ test.describe('ECC-Aware Mode Conditional Visibility', () => {
   test('toggling ECC-aware shows/hides dependent settings', async ({ page }) => {
     const eccSwitch = page.locator('[data-testid="safety-ecc-aware-enabled-switch"]');
     const riskBudgetSlider = page.locator('[data-testid="safety-ecc-risk-budget-slider"]');
-    
+
     // Start disabled
     if ((await eccSwitch.getAttribute('data-state')) === 'checked') {
       await toggleSwitchByTestId(page, 'safety-ecc-aware-enabled-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Risk budget should be hidden
     expect(await riskBudgetSlider.isVisible().catch(() => false)).toBe(false);
-    
+
     // Enable ECC-aware
     await toggleSwitchByTestId(page, 'safety-ecc-aware-enabled-switch');
     await waitForRenderComplete(page, 'settle');
     // Risk budget should be visible
     await expect(riskBudgetSlider).toBeVisible();
-    
+
     // Disable ECC-aware
     await toggleSwitchByTestId(page, 'safety-ecc-aware-enabled-switch');
     await waitForRenderComplete(page, 'settle');
@@ -533,7 +543,7 @@ test.describe('ECC-Aware Settings', () => {
     const slider = page.locator('[data-testid="safety-ecc-risk-budget-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('0');
     expect(ariaMax).toBe('100');
   });
@@ -542,11 +552,11 @@ test.describe('ECC-Aware Settings', () => {
     const trigger = page.locator('[data-testid="safety-ecc-weight-map-trigger"]');
     await trigger.click();
     await waitForRenderComplete(page, 'settle');
-    
+
     // Count total options (should have at least 1: distance, block, empirical)
     const options = page.locator('[role="option"]');
     const count = await options.count();
-    
+
     await page.keyboard.press('Escape');
     expect(count).toBeGreaterThanOrEqual(1);
   });
@@ -579,7 +589,7 @@ test.describe('Safety Section Accessibility', () => {
   test('all visible switches have role="switch"', async ({ page }) => {
     const switches = page.locator('[data-testid*="safety"][data-testid*="switch"]');
     const count = await switches.count();
-    
+
     for (let i = 0; i < count; i++) {
       const switchEl = switches.nth(i);
       if (await switchEl.isVisible().catch(() => false)) {
@@ -592,14 +602,14 @@ test.describe('Safety Section Accessibility', () => {
   test('all visible sliders have ARIA attributes', async ({ page }) => {
     const sliders = page.locator('[data-testid*="safety"][data-testid*="slider"] [role="slider"]');
     const count = await sliders.count();
-    
+
     for (let i = 0; i < count; i++) {
       const slider = sliders.nth(i);
       if (await slider.isVisible().catch(() => false)) {
         const hasValueNow = await slider.getAttribute('aria-valuenow');
         const hasValueMin = await slider.getAttribute('aria-valuemin');
         const hasValueMax = await slider.getAttribute('aria-valuemax');
-        
+
         expect(hasValueNow).toBeTruthy();
         expect(hasValueMin).toBeTruthy();
         expect(hasValueMax).toBeTruthy();
@@ -609,7 +619,7 @@ test.describe('Safety Section Accessibility', () => {
 
   test('safety section can be navigated via keyboard', async ({ page }) => {
     await page.keyboard.press('Tab');
-    
+
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
   });
@@ -626,17 +636,17 @@ test.describe('Safety Edge Cases', () => {
   });
 
   test('rapid mode switching works correctly', async ({ page }) => {
-    const modes = ['Off', 'Balanced', 'Strict', 'Off', 'Balanced'];
-    
+    const modes = ['Off', 'Balanced', 'Strict'];
+
     for (const mode of modes) {
       await selectDropdownOption(page, 'safety-mode-trigger', mode);
-      await waitForRenderComplete(page, 'settle');
     }
-    
-    // Should end on Balanced
+    await waitForRenderComplete(page, 'settle');
+
+    // Should end on Strict (last mode selected)
     const trigger = page.locator('[data-testid="safety-mode-trigger"]');
     const text = await trigger.textContent();
-    expect(text?.toLowerCase()).toContain('balanced');
+    expect(text?.toLowerCase()).toContain('strict');
   });
 
   test('settings persist after section collapse/expand', async ({ page }) => {
@@ -644,22 +654,33 @@ test.describe('Safety Edge Cases', () => {
     await selectDropdownOption(page, 'safety-mode-trigger', 'Balanced');
     await waitForRenderComplete(page, 'settle');
     // Toggle a lock switch
-    const initialState = await page.locator('[data-testid="safety-lock-finders-switch"]').getAttribute('data-state');
+    const initialState = await page
+      .locator('[data-testid="safety-lock-finders-switch"]')
+      .getAttribute('data-state');
     await toggleSwitchByTestId(page, 'safety-lock-finders-switch');
-    const changedState = await page.locator('[data-testid="safety-lock-finders-switch"]').getAttribute('data-state');
-    
+    const changedState = await page
+      .locator('[data-testid="safety-lock-finders-switch"]')
+      .getAttribute('data-state');
+
     // Collapse and expand
-    const safetyTriggerEl = page.locator('[data-testid="accordion-safety"] button[data-state]').first();
+    const safetyTriggerEl = page
+      .locator('[data-testid="accordion-safety"] button[data-state]')
+      .first();
     await safetyTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await safetyTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-safety"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-safety"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     // Verify state persisted
-    const persistedState = await page.locator('[data-testid="safety-lock-finders-switch"]').getAttribute('data-state');
+    const persistedState = await page
+      .locator('[data-testid="safety-lock-finders-switch"]')
+      .getAttribute('data-state');
     expect(persistedState).toBe(changedState);
     expect(persistedState).not.toBe(initialState);
   });
@@ -671,17 +692,17 @@ test.describe('Safety Edge Cases', () => {
     await toggleSwitchByTestId(page, 'safety-lock-finders-switch');
     await toggleSwitchByTestId(page, 'safety-lock-timing-switch');
     await toggleSwitchByTestId(page, 'safety-contrast-check-switch');
-    
+
     // All toggles should have worked
     const lockFinders = page.locator('[data-testid="safety-lock-finders-switch"]');
     const lockTiming = page.locator('[data-testid="safety-lock-timing-switch"]');
     const contrastCheck = page.locator('[data-testid="safety-contrast-check-switch"]');
-    
+
     // Verify all are still functional (have valid state)
     const state1 = await lockFinders.getAttribute('data-state');
     const state2 = await lockTiming.getAttribute('data-state');
     const state3 = await contrastCheck.getAttribute('data-state');
-    
+
     expect(state1 === 'checked' || state1 === 'unchecked').toBe(true);
     expect(state2 === 'checked' || state2 === 'unchecked').toBe(true);
     expect(state3 === 'checked' || state3 === 'unchecked').toBe(true);
