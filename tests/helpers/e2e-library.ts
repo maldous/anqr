@@ -855,13 +855,13 @@ export async function selectTier(page: Page, tier: Tier): Promise<void> {
     if (await option.isVisible().catch(() => false)) {
       await option.click();
     } else {
-      // Use keyboard navigation as fallback
+      // Direct click fallback by index
       const tierIndex = tier === 'basic' ? 0 : tier === 'advanced' ? 1 : 2;
-      await page.keyboard.press('Home');
-      for (let i = 0; i < tierIndex; i++) {
-        await page.keyboard.press('ArrowDown');
-      }
-      await page.keyboard.press('Enter');
+      const allOptions = page.locator('[data-radix-popper-content-wrapper] [role="option"]');
+      await allOptions
+        .nth(tierIndex)
+        .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+      await allOptions.nth(tierIndex).click();
     }
     await waitForSelectClosed(page).catch(() => {});
     await waitForRenderComplete(page, 'settle');

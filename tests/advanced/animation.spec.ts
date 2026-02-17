@@ -2,7 +2,7 @@
  * Animation Section Tests - Comprehensive Coverage
  * Tests all animation controls: speed, loop, bounce, frames, interpolation, patterns
  * Uses data-testid selectors and keyboard navigation for reliability
- * 
+ *
  * Follows Playwright E2E "must-haves":
  * - Deterministic event-driven waits (no sleeps)
  * - Stable selectors (data-testid first)
@@ -10,32 +10,25 @@
  * - Correct scrolling model
  */
 
-import { test, expect } from '../fixtures/test-fixtures';
 import type { Page } from '@playwright/test';
+import { expect, test } from '../fixtures/test-fixtures';
 
 import {
-  waitForRenderComplete,
-  waitForAccordionState,
-  waitForDropdownOpen,
-  waitForDropdownClosed,
-  waitForControlReady,
-  getCanvasSnapshot,
-  snapshotsAreDifferent,
+  navigateToApp,
   openAccordion,
-  ensureVisibleInSidebar,
+  selectOption,
+  selectTier,
+  setInput,
   setSlider,
   toggleSwitch,
-  selectOption,
-  setInput,
-  selectTier,
-  dismissWelcomeModal,
-  navigateToApp,
-  getControl,
-  type AccordionSection,
+  waitForAccordionState,
+  waitForDropdownClosed,
+  waitForDropdownOpen,
+  waitForRenderComplete,
 } from '../helpers/test-utils';
 
 // Test timeout for complex operations
-const TEST_TIMEOUT = 30000;
+const _TEST_TIMEOUT = 30000;
 
 /**
  * Navigate to the app and wait for initial load.
@@ -61,13 +54,13 @@ async function switchToAdvancedTier(page: Page) {
 async function expandAnimationSection(page: Page) {
   // First switch to advanced tier to ensure Animation section is visible
   await switchToAdvancedTier(page);
-  
+
   // Scroll sidebar to ensure Animation section is visible
   const sidebar = page.locator('aside, [role="complementary"], .sidebar').first();
-  if (await sidebar.count() > 0) {
-    await sidebar.evaluate(el => el.scrollTop = el.scrollHeight / 2);
+  if ((await sidebar.count()) > 0) {
+    await sidebar.evaluate((el) => (el.scrollTop = el.scrollHeight / 2));
   }
-  
+
   // Use centralized openAccordion helper
   await openAccordion(page, 'animation');
 }
@@ -125,7 +118,7 @@ test.describe('Animation Speed', () => {
     const slider = page.locator('[data-testid="animation-speed-slider"] [role="slider"]');
     const ariaMin = await slider.getAttribute('aria-valuemin');
     const ariaMax = await slider.getAttribute('aria-valuemax');
-    
+
     expect(ariaMin).toBe('20');
     expect(ariaMax).toBe('500');
   });
@@ -134,7 +127,7 @@ test.describe('Animation Speed', () => {
     // Set to minimum
     await setSliderByTestId(page, 'animation-speed-slider', 0);
     await waitForRenderComplete(page, 'speed slider change');
-    
+
     // Check if display shows ~20ms
     const displayText = await page.locator('text=/\\d+\\s*ms/i').first().textContent();
     expect(displayText).toBeTruthy();
@@ -143,14 +136,16 @@ test.describe('Animation Speed', () => {
   test('speed slider responds to keyboard input', async ({ page }) => {
     const slider = page.locator('[data-testid="animation-speed-slider"] [role="slider"]');
     await slider.focus();
-    
+
     const initialValue = await slider.getAttribute('aria-valuenow');
     await page.keyboard.press('ArrowRight');
-    
+
     // Wait for the value to update (event-driven)
     await page.waitForFunction(
       (initial: string) => {
-        const slider = document.querySelector('[data-testid="animation-speed-slider"] [role="slider"]');
+        const slider = document.querySelector(
+          '[data-testid="animation-speed-slider"] [role="slider"]'
+        );
         return slider && slider.getAttribute('aria-valuenow') !== initial;
       },
       initialValue || '0',
@@ -175,24 +170,24 @@ test.describe('Animation Loop', () => {
   test('loop switch is visible and toggleable', async ({ page }) => {
     const switchEl = page.locator('[data-testid="animation-loop-switch"]');
     await expect(switchEl).toBeVisible();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'animation-loop-switch');
-    
+
     const newState = await switchEl.getAttribute('data-state');
     expect(newState).not.toBe(initialState);
   });
 
   test('loop switch toggles between checked and unchecked', async ({ page }) => {
     const switchEl = page.locator('[data-testid="animation-loop-switch"]');
-    
+
     // Toggle twice to verify both states work
     await toggleSwitchByTestId(page, 'animation-loop-switch');
     const state1 = await switchEl.getAttribute('data-state');
-    
+
     await toggleSwitchByTestId(page, 'animation-loop-switch');
     const state2 = await switchEl.getAttribute('data-state');
-    
+
     expect(state1).not.toBe(state2);
   });
 
@@ -217,10 +212,10 @@ test.describe('Animation Bounce', () => {
   test('bounce switch is visible and toggleable', async ({ page }) => {
     const switchEl = page.locator('[data-testid="animation-bounce-switch"]');
     await expect(switchEl).toBeVisible();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'animation-bounce-switch');
-    
+
     const newState = await switchEl.getAttribute('data-state');
     expect(newState).not.toBe(initialState);
   });
@@ -235,7 +230,7 @@ test.describe('Animation Bounce', () => {
     // Enable both
     const loopSwitch = page.locator('[data-testid="animation-loop-switch"]');
     const bounceSwitch = page.locator('[data-testid="animation-bounce-switch"]');
-    
+
     // Get current states and toggle to ON if not already
     if ((await loopSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'animation-loop-switch');
@@ -243,7 +238,7 @@ test.describe('Animation Bounce', () => {
     if ((await bounceSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'animation-bounce-switch');
     }
-    
+
     // Verify both are checked
     expect(await loopSwitch.getAttribute('data-state')).toBe('checked');
     expect(await bounceSwitch.getAttribute('data-state')).toBe('checked');
@@ -350,14 +345,14 @@ test.describe('Animation Interpolation (Advanced Tier)', () => {
     if (await trigger.isVisible().catch(() => false)) {
       await trigger.click();
       await waitForDropdownOpen(page);
-      
+
       // Count total options (should have at least 1: none, crossfade, morph)
       const options = page.locator('[role="option"]');
       const count = await options.count();
-      
+
       await page.keyboard.press('Escape');
       await waitForDropdownClosed(page);
-      
+
       // At least some options should exist
       expect(count).toBeGreaterThanOrEqual(1);
     }
@@ -368,14 +363,19 @@ test.describe('Animation Interpolation (Advanced Tier)', () => {
     if (await trigger.isVisible().catch(() => false)) {
       await trigger.focus();
       await page.keyboard.press('Enter');
-      await waitForDropdownOpen(page);
-      
-      // Navigate with arrow keys
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
-      
-      // Verify dropdown closed (event-driven)
-      await waitForDropdownClosed(page);
+      const opened = await page
+        .waitForSelector('[data-radix-popper-content-wrapper]', { state: 'visible', timeout: 5000 })
+        .catch(() => null);
+      expect(opened).toBeTruthy();
+      if (opened) {
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Enter');
+        await page
+          .waitForFunction(() => !document.querySelector('[data-radix-popper-content-wrapper]'), {
+            timeout: 5000,
+          })
+          .catch(() => {});
+      }
       const dropdown = page.locator('[data-radix-popper-content-wrapper]');
       const isOpen = await dropdown.isVisible().catch(() => false);
       expect(isOpen).toBe(false);
@@ -399,11 +399,11 @@ test.describe('Animation Temporal Dither (Professional Tier)', () => {
     if (await trigger.isVisible().catch(() => false)) {
       await trigger.click();
       await waitForDropdownOpen(page);
-      
+
       // Count total options (should have at least 1: off, blue noise, flicker)
       const options = page.locator('[role="option"]');
       const count = await options.count();
-      
+
       await page.keyboard.press('Escape');
       await waitForDropdownClosed(page);
       expect(count).toBeGreaterThanOrEqual(1);
@@ -427,14 +427,14 @@ test.describe('Animation Pattern (Professional Tier)', () => {
     if (await trigger.isVisible().catch(() => false)) {
       await trigger.click();
       await waitForDropdownOpen(page);
-      
+
       // Count total options (should have at least some: none, pulse, wave, scanline, shimmer, drift)
       const options = page.locator('[role="option"]');
       const count = await options.count();
-      
+
       await page.keyboard.press('Escape');
       await waitForDropdownClosed(page);
-      
+
       // Should have at least some pattern options
       expect(count).toBeGreaterThan(0);
     }
@@ -446,7 +446,7 @@ test.describe('Animation Pattern (Professional Tier)', () => {
       // Select pulse pattern
       await selectDropdownOptionLocal(page, 'animation-pattern-trigger', 'pulse');
       await waitForRenderComplete(page, 'pattern selection');
-      
+
       // Verify trigger shows selected value
       const triggerText = await trigger.textContent();
       expect(triggerText?.toLowerCase()).toContain('pulse');
@@ -541,14 +541,14 @@ test.describe('Animation Section Accessibility', () => {
   test('all sliders have proper ARIA attributes', async ({ page }) => {
     const sliders = page.locator('[role="slider"]');
     const count = await sliders.count();
-    
+
     for (let i = 0; i < Math.min(count, 5); i++) {
       const slider = sliders.nth(i);
       if (await slider.isVisible().catch(() => false)) {
         const hasValueNow = await slider.getAttribute('aria-valuenow');
         const hasValueMin = await slider.getAttribute('aria-valuemin');
         const hasValueMax = await slider.getAttribute('aria-valuemax');
-        
+
         expect(hasValueNow).toBeTruthy();
         expect(hasValueMin).toBeTruthy();
         expect(hasValueMax).toBeTruthy();
@@ -562,7 +562,7 @@ test.describe('Animation Section Accessibility', () => {
       .first()
       .locator('[data-testid^="animation-"][data-testid$="-switch"]');
     const count = await switches.count();
-    
+
     for (let i = 0; i < count; i++) {
       const switchEl = switches.nth(i);
       if (await switchEl.isVisible().catch(() => false)) {
@@ -575,7 +575,7 @@ test.describe('Animation Section Accessibility', () => {
   test('select triggers have role="combobox"', async ({ page }) => {
     const triggers = page.locator('[data-testid*="trigger"]');
     const count = await triggers.count();
-    
+
     for (let i = 0; i < count; i++) {
       const trigger = triggers.nth(i);
       if (await trigger.isVisible().catch(() => false)) {
@@ -588,7 +588,7 @@ test.describe('Animation Section Accessibility', () => {
   test('animation section can be navigated via keyboard', async ({ page }) => {
     // Tab through animation controls
     await page.keyboard.press('Tab');
-    
+
     // Should be able to focus on controls
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
@@ -609,17 +609,17 @@ test.describe('Animation Combined Settings', () => {
   test('multiple animation settings can be configured together', async ({ page }) => {
     // Configure multiple settings
     await setSliderByTestId(page, 'animation-speed-slider', 30);
-    
+
     const loopSwitch = page.locator('[data-testid="animation-loop-switch"]');
     if ((await loopSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'animation-loop-switch');
     }
-    
+
     const bounceSwitch = page.locator('[data-testid="animation-bounce-switch"]');
     if ((await bounceSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'animation-bounce-switch');
     }
-    
+
     // Verify all settings persisted
     expect(await loopSwitch.getAttribute('data-state')).toBe('checked');
     expect(await bounceSwitch.getAttribute('data-state')).toBe('checked');
@@ -631,19 +631,21 @@ test.describe('Animation Combined Settings', () => {
     if ((await loopSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'animation-loop-switch');
     }
-    
+
     const stateBeforeCollapse = await loopSwitch.getAttribute('data-state');
-    
+
     // Collapse and expand
     // Use data-testid selector for accordion trigger
-    const animationTrigger = page.locator('[data-testid="accordion-animation"] button[data-state]').first();
+    const animationTrigger = page
+      .locator('[data-testid="accordion-animation"] button[data-state]')
+      .first();
     const trigger = animationTrigger;
-    
+
     await trigger.click();
     await waitForAccordionState(page, 'animation', 'closed');
     await trigger.click();
     await waitForAccordionState(page, 'animation', 'open');
-    
+
     // Verify state persisted
     const stateAfterExpand = await loopSwitch.getAttribute('data-state');
     expect(stateAfterExpand).toBe(stateBeforeCollapse);
@@ -677,13 +679,13 @@ test.describe('Animation Edge Cases', () => {
 
   test('rapid switch toggling works correctly', async ({ page }) => {
     const switchEl = page.locator('[data-testid="animation-loop-switch"]');
-    
+
     // Toggle rapidly multiple times
     // Use waitForFunction to wait for state change after each toggle
     for (let i = 0; i < 5; i++) {
       const currentState = await switchEl.getAttribute('data-state');
       await toggleSwitchByTestId(page, 'animation-loop-switch');
-      
+
       // Wait for state to change (event-driven)
       await page.waitForFunction(
         (prev: string) => {
@@ -694,7 +696,7 @@ test.describe('Animation Edge Cases', () => {
         { timeout: 1000, polling: 16 }
       );
     }
-    
+
     // Switch should still be functional
     const state = await switchEl.getAttribute('data-state');
     expect(state === 'checked' || state === 'unchecked').toBe(true);

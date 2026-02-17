@@ -197,14 +197,14 @@ SCAN_MATRIX_AUTO_SHARDS ?= $(shell \
 	echo $$shards)
 SCAN_MATRIX_SHARDS ?= $(SCAN_MATRIX_AUTO_SHARDS)
 
-# Playwright default worker pool — capped at 8 because each Chromium instance
-# is memory/CPU-heavy and >8 parallel browsers cause contention timeouts
-# during the full `make all` pipeline.
+# Playwright default worker pool — conservative to avoid thermal throttling.
+# Too many parallel Chromium instances heat the CPU, causing thermal
+# throttling that slows everything down and triggers test timeouts.
 PLAYWRIGHT_WORKERS ?= $(shell \
 	cpu=$(HOST_CPU_CORES); \
-	workers=$$((cpu / 4)); \
-	[ $$workers -lt 4 ] && workers=4; \
-	[ $$workers -gt 8 ] && workers=8; \
+	workers=$$((cpu / 8)); \
+	[ $$workers -lt 2 ] && workers=2; \
+	[ $$workers -gt 4 ] && workers=4; \
 	echo $$workers)
 
 # Vitest worker policy for heavyweight suites.
