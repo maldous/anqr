@@ -78,3 +78,5 @@ tests/.storage-state.json
 
 # Google
 play-store-key.json
+
+reports/gallery-artifacts/
