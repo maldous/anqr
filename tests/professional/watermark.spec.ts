@@ -193,13 +193,20 @@ test.describe('Watermark Kind Selection', () => {
     const trigger = page.locator('[data-testid="watermark-kind-trigger"]');
     await trigger.focus();
     await page.keyboard.press('Enter');
-    await waitForRenderComplete(page, 'settle');
-    // Navigate with arrow keys
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    // Dropdown should close
-    await waitForRenderComplete(page, 'settle');
+    // Wait for dropdown to open (targeted wait, not full render settle)
+    const opened = await page
+      .waitForSelector('[data-radix-popper-content-wrapper]', { state: 'visible', timeout: 5000 })
+      .catch(() => null);
+    expect(opened, 'dropdown should open with Enter key').toBeTruthy();
+    if (opened) {
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      await page
+        .waitForFunction(() => !document.querySelector('[data-radix-popper-content-wrapper]'), {
+          timeout: 5000,
+        })
+        .catch(() => {});
+    }
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isOpen = await dropdown.isVisible().catch(() => false);
     expect(isOpen).toBe(false);
@@ -352,12 +359,21 @@ test.describe('Watermark Position Selection', () => {
     const trigger = page.locator('[data-testid="watermark-position-trigger"]');
     await trigger.focus();
     await page.keyboard.press('Enter');
-    await waitForRenderComplete(page, 'settle');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    await waitForRenderComplete(page, 'settle');
+    // Wait for dropdown to open (targeted wait, not full render settle)
+    const opened = await page
+      .waitForSelector('[data-radix-popper-content-wrapper]', { state: 'visible', timeout: 5000 })
+      .catch(() => null);
+    expect(opened, 'dropdown should open with Enter key').toBeTruthy();
+    if (opened) {
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      await page
+        .waitForFunction(() => !document.querySelector('[data-radix-popper-content-wrapper]'), {
+          timeout: 5000,
+        })
+        .catch(() => {});
+    }
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isOpen = await dropdown.isVisible().catch(() => false);
     expect(isOpen).toBe(false);
@@ -490,11 +506,20 @@ test.describe('Watermark Blend Mode Selection', () => {
     const trigger = page.locator('[data-testid="watermark-blend-trigger"]');
     await trigger.focus();
     await page.keyboard.press('Enter');
-    await waitForRenderComplete(page, 'settle');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    await waitForRenderComplete(page, 'settle');
+    // Wait for dropdown to open (targeted wait, not full render settle)
+    const opened = await page
+      .waitForSelector('[data-radix-popper-content-wrapper]', { state: 'visible', timeout: 5000 })
+      .catch(() => null);
+    expect(opened, 'dropdown should open with Enter key').toBeTruthy();
+    if (opened) {
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      await page
+        .waitForFunction(() => !document.querySelector('[data-radix-popper-content-wrapper]'), {
+          timeout: 5000,
+        })
+        .catch(() => {});
+    }
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isOpen = await dropdown.isVisible().catch(() => false);
     expect(isOpen).toBe(false);
