@@ -38,7 +38,7 @@ async function globalSetup(config: FullConfig) {
 
   // Navigate to the app to initialize localStorage domain
   try {
-    await page.goto(baseURL, { timeout: 300000, waitUntil: 'domcontentloaded' });
+    await page.goto(baseURL, { timeout: 60000, waitUntil: 'domcontentloaded' });
   } catch {
     // If the server isn't ready yet, that's OK - we just need the context
     // The webServer config will ensure it's ready before tests run

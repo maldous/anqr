@@ -197,15 +197,14 @@ SCAN_MATRIX_AUTO_SHARDS ?= $(shell \
 	echo $$shards)
 SCAN_MATRIX_SHARDS ?= $(SCAN_MATRIX_AUTO_SHARDS)
 
-# Playwright default worker pool also follows CPU utilization controls.
+# Playwright default worker pool — capped at 8 because each Chromium instance
+# is memory/CPU-heavy and >8 parallel browsers cause contention timeouts
+# during the full `make all` pipeline.
 PLAYWRIGHT_WORKERS ?= $(shell \
 	cpu=$(HOST_CPU_CORES); \
-	util=$(RESOURCE_UTILIZATION_PCT); \
-	reserve=$(RESOURCE_RESERVED_CORES); \
-	workers=$$((cpu * util / 100)); \
-	[ $$workers -lt 1 ] && workers=1; \
-	workers=$$((workers - reserve)); \
-	[ $$workers -lt 1 ] && workers=1; \
+	workers=$$((cpu / 4)); \
+	[ $$workers -lt 4 ] && workers=4; \
+	[ $$workers -gt 8 ] && workers=8; \
 	echo $$workers)
 
 # Vitest worker policy for heavyweight suites.

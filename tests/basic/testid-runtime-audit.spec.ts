@@ -39,7 +39,7 @@ async function auditPageTestIds(page: import('@playwright/test').Page) {
 }
 
 test.describe('Runtime Test ID Audit', () => {
-  test.describe.configure({ timeout: 300000 });
+  test.describe.configure({ timeout: 180000 });
   async function assertNoMissingOrDuplicate(page: import('@playwright/test').Page, label: string) {
     const result = await auditPageTestIds(page);
     expect(result.missing, `${label}: missing IDs on ${result.total} interactive elements`).toEqual(

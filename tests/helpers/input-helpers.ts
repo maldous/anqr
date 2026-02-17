@@ -72,7 +72,7 @@ export async function setSelect(
   await trigger.click();
 
   // Wait for the portal content to appear
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 300000 });
+  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 30000 });
 
   // Try data-value selector first (i18n safe)
   const optionByValue = page.locator(`[role="option"][data-value="${optionValue}"]`).first();
@@ -120,7 +120,7 @@ export async function setSelectByText(
   await trigger.waitFor({ state: 'visible' });
   await trigger.click();
 
-  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 300000 });
+  await page.waitForSelector('[data-radix-popper-content-wrapper]', { timeout: 30000 });
 
   // Use keyboard navigation to select by index
   await page.keyboard.press('Home');
