@@ -100,13 +100,13 @@ export async function waitForAppReady(page: Page): Promise<void> {
   // Wait for canvas to be present (main app indicator)
   await page.waitForSelector('[data-testid="qr-preview"] canvas', {
     state: 'visible',
-    timeout: 300000,
+    timeout: 30000,
   });
 
   // Wait for the app to be interactive by checking for the sidebar
   await page.waitForSelector('[role="tablist"], [role="combobox"]', {
     state: 'visible',
-    timeout: 300000,
+    timeout: 30000,
   });
 }
 
@@ -114,7 +114,7 @@ export async function waitForAppReady(page: Page): Promise<void> {
  * Wait for network to be idle (no pending requests)
  * Useful after loading external resources
  */
-export async function waitForNetworkIdle(_page: Page, _timeout = 300000): Promise<void> {}
+export async function waitForNetworkIdle(_page: Page, _timeout = 30000): Promise<void> {}
 
 /**
  * Wait for a specific element to have a data-state attribute value
@@ -124,7 +124,7 @@ export async function waitForDataState(
   page: Page,
   selector: string,
   state: string,
-  timeout = 300000
+  timeout = 30000
 ): Promise<void> {
   await page.waitForSelector(`${selector}[data-state="${state}"]`, { state: 'attached', timeout });
 }
@@ -136,7 +136,7 @@ export async function waitForDataState(
 export async function waitForCanvasMutation(
   page: Page,
   previousDataUrl: string,
-  timeout = 300000
+  timeout = 30000
 ): Promise<boolean> {
   try {
     await page.waitForFunction(
@@ -159,14 +159,14 @@ export async function waitForCanvasMutation(
  * The app exposes data-rendering-state='idle' when ready
  * This is MUCH more reliable than canvas pixel comparison
  */
-export async function waitForRenderingIdle(page: Page, timeout = 300000): Promise<void> {
+export async function waitForRenderingIdle(page: Page, timeout = 30000): Promise<void> {
   await page
     .waitForSelector('[data-rendering-state="idle"]', { state: 'attached', timeout })
     .catch(() => {
       // Fallback: if attribute not found, wait for canvas to be visible
       return page.waitForSelector('[data-testid="qr-preview"] canvas', {
         state: 'visible',
-        timeout: 300000,
+        timeout: 30000,
       });
     });
 }
@@ -179,7 +179,7 @@ export async function waitForRenderingIdle(page: Page, timeout = 300000): Promis
 export async function waitForCanvasStable(
   page: Page,
   stabilityMs = 150,
-  timeout = 300000
+  timeout = 30000
 ): Promise<void> {
   // First wait for app to signal idle state
   await waitForRenderingIdle(page, timeout);
@@ -208,7 +208,7 @@ export async function waitForCanvasStable(
       return false;
     },
     stabilityMs,
-    { timeout: 300000, polling: 50 }
+    { timeout: 15000, polling: 50 }
   );
 }
 
@@ -227,7 +227,7 @@ export async function getCanvasDataUrl(page: Page): Promise<string> {
 export async function assertCanvasChangedAfter(
   page: Page,
   action: () => Promise<void>,
-  timeout = 300000
+  timeout = 30000
 ): Promise<boolean> {
   const before = await getCanvasDataUrl(page);
   await action();

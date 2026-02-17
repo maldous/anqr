@@ -54,10 +54,10 @@ export type SwitchState = 'checked' | 'unchecked';
 // =============================================================================
 
 /** Default timeout for most operations */
-export const DEFAULT_TIMEOUT = 300000;
+export const DEFAULT_TIMEOUT = 30000;
 
 /** Default timeout for render completion */
-export const RENDER_TIMEOUT = 300000;
+export const RENDER_TIMEOUT = 30000;
 
 /** Section labels for accordion items */
 export const SECTION_LABELS: Record<AccordionSection, string> = {
@@ -103,7 +103,7 @@ export async function waitForRenderComplete(
   // Ensure the canvas exists and is visible.
   await page.waitForSelector('[data-testid="qr-preview"] canvas', {
     state: 'visible',
-    timeout: Math.min(timeout, 300000),
+    timeout: Math.min(timeout, 30000),
   });
 
   const preview = page.locator('[data-testid="qr-preview"]');
@@ -139,7 +139,7 @@ export async function waitForRenderComplete(
           if (w.__anqrStateLeftIdle && state === 'idle') return true;
           return false;
         },
-        { timeout: 300000, polling: 50 }
+        { timeout: 15000, polling: 50 }
       )
       .catch(() => {
         // No render triggered — action may not have changed anything.
@@ -175,7 +175,7 @@ export async function waitForRenderComplete(
   }
 
   // Canvas stability guard — best-effort; animated overlays never fully stabilize.
-  await waitForCanvasStable(page, 250, Math.min(timeout, 300000)).catch(() => {});
+  await waitForCanvasStable(page, 250, Math.min(timeout, 15000)).catch(() => {});
 }
 
 /**
@@ -251,7 +251,10 @@ export async function waitForDropdownOpen(
  * @param page - Playwright page instance
  * @param timeout - Maximum time to wait
  */
-export async function waitForDropdownClosed(page: Page, timeout: number = 300000): Promise<void> {
+export async function waitForDropdownClosed(
+  page: Page,
+  timeout: number = DEFAULT_TIMEOUT
+): Promise<void> {
   // Radix select content may close by becoming hidden OR detaching entirely.
   await page.waitForFunction(
     () => {
@@ -432,7 +435,7 @@ export async function openAccordion(
  */
 export async function ensureVisibleInSidebar(page: Page, locator: Locator): Promise<void> {
   // First ensure the element exists
-  await locator.waitFor({ state: 'attached', timeout: 300000 });
+  await locator.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
 
   // Use JavaScript scrollIntoView which handles nested scroll containers
   await locator.evaluate((el) => {
@@ -458,7 +461,7 @@ export async function ensureVisibleInSidebar(page: Page, locator: Locator): Prom
       }
       return false;
     },
-    { timeout: 300000, polling: 16 }
+    { timeout: DEFAULT_TIMEOUT, polling: 16 }
   );
 }
 
@@ -476,7 +479,7 @@ export async function ensureVisibleInSidebar(page: Page, locator: Locator): Prom
 export async function selectTier(page: Page, tier: Tier): Promise<void> {
   // Wait for page to be ready
   await page.waitForSelector('[data-testid="tier-tabs"], [data-testid="tier-select"]', {
-    timeout: 300000,
+    timeout: DEFAULT_TIMEOUT,
   });
 
   // Try tabs first (desktop) - use data-testid="tier-tab-{tier}"
@@ -490,7 +493,7 @@ export async function selectTier(page: Page, tier: Tier): Promise<void> {
         return tabEl && tabEl.getAttribute('aria-selected') === 'true';
       },
       tier,
-      { timeout: 300000 }
+      { timeout: DEFAULT_TIMEOUT }
     );
     await dismissWelcomeModal(page);
     return;
@@ -541,12 +544,12 @@ export async function setSlider(page: Page, testId: string, percent: number): Pr
 
   // Slider root (track container) is the canonical click target.
   const container = page.locator(`[data-testid="${testId}"]`).first();
-  await container.waitFor({ state: 'visible', timeout: 300000 });
+  await container.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await container.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
 
   // Thumb carries aria-valuenow/min/max.
   const thumb = container.locator('[role="slider"]').first();
-  await thumb.waitFor({ state: 'visible', timeout: 300000 });
+  await thumb.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
 
   const initialValue = await thumb.getAttribute('aria-valuenow');
   const min = Number.parseFloat((await thumb.getAttribute('aria-valuemin')) ?? '0');
@@ -600,7 +603,7 @@ export async function setSlider(page: Page, testId: string, percent: number): Pr
           return slider && slider.getAttribute('aria-valuenow') !== args.initial;
         },
         { testId, initial: initialValue },
-        { timeout: 300000, polling: 50 }
+        { timeout: DEFAULT_TIMEOUT, polling: 50 }
       )
       .catch(() => {});
   }
@@ -621,7 +624,7 @@ export async function selectOption(
   optionText: string
 ): Promise<boolean> {
   const trigger = page.locator(`[data-testid="${testId}"]`);
-  await trigger.waitFor({ state: 'visible', timeout: 300000 });
+  await trigger.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await trigger.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
   await trigger.click();
 
@@ -690,7 +693,7 @@ export async function toggleSwitch(
   targetState?: SwitchState
 ): Promise<void> {
   const switchEl = page.locator(`[data-testid="${testId}"]`);
-  await switchEl.waitFor({ state: 'visible', timeout: 300000 });
+  await switchEl.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await switchEl.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
 
   const currentState = await switchEl.getAttribute('data-state');
@@ -711,7 +714,7 @@ export async function toggleSwitch(
       return el && el.getAttribute('data-state') === args.expected;
     },
     { testId, expected: expectedState },
-    { timeout: 300000, polling: 50 }
+    { timeout: DEFAULT_TIMEOUT, polling: 50 }
   );
 }
 
@@ -725,7 +728,7 @@ export async function toggleSwitch(
  */
 export async function setInput(page: Page, testId: string, value: string): Promise<void> {
   const input = page.locator(`[data-testid="${testId}"]`);
-  await input.waitFor({ state: 'visible', timeout: 300000 });
+  await input.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await input.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
 
   await input.fill('');
@@ -745,7 +748,7 @@ export async function setInput(page: Page, testId: string, value: string): Promi
         return el.value.length > 0;
       },
       { testId, requested: value },
-      { timeout: 300000, polling: 50 }
+      { timeout: DEFAULT_TIMEOUT, polling: 50 }
     )
     .catch(() => {});
 }
@@ -766,7 +769,7 @@ export async function uploadFile(
     ? page.locator(`[data-testid="${testId}"]`)
     : page.locator('input[type="file"]').first();
 
-  await fileInput.waitFor({ state: 'attached', timeout: 300000 });
+  await fileInput.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
   await fileInput.setInputFiles(filePath);
 
   // Wait for render to complete after file upload
@@ -885,10 +888,10 @@ export const WELCOME_MODAL_VERSION = '2026.02.01';
  * @param page - Playwright page instance
  */
 export async function dismissWelcomeModal(page: Page): Promise<void> {
-  // Check if modal is visible (short timeout is OK here - we're checking for presence)
+  // Check if modal is visible (short timeout — modal appears instantly or not at all)
   const dialog = page.locator('dialog[open]').first();
   const dialogVisible = await dialog
-    .waitFor({ state: 'visible', timeout: 300000 })
+    .waitFor({ state: 'visible', timeout: 2000 })
     .then(() => true)
     .catch(() => false);
   if (!dialogVisible) return;
@@ -897,7 +900,7 @@ export async function dismissWelcomeModal(page: Page): Promise<void> {
   const getStartedBtn = page.locator('[data-testid="welcome-get-started"]').first();
   if (await getStartedBtn.isVisible().catch(() => false)) {
     await getStartedBtn.click();
-    await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 });
+    await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 });
     return;
   }
 
@@ -905,9 +908,7 @@ export async function dismissWelcomeModal(page: Page): Promise<void> {
   const dialogBtn = dialog.locator('button').first();
   if (await dialogBtn.isVisible().catch(() => false)) {
     await dialogBtn.click();
-    await page
-      .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
-      .catch(() => {});
+    await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 }).catch(() => {});
     return;
   }
 
@@ -919,9 +920,7 @@ export async function dismissWelcomeModal(page: Page): Promise<void> {
     .first();
   if (await closeBtn.isVisible().catch(() => false)) {
     await closeBtn.click();
-    await page
-      .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
-      .catch(() => {});
+    await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 }).catch(() => {});
     return;
   }
 
@@ -929,15 +928,13 @@ export async function dismissWelcomeModal(page: Page): Promise<void> {
   const backdrop = page.locator('button.absolute.inset-0').first();
   if (await backdrop.isVisible().catch(() => false)) {
     await backdrop.click({ force: true });
-    await page
-      .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
-      .catch(() => {});
+    await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 }).catch(() => {});
     return;
   }
 
   // Strategy 5: Press Escape key
   await page.keyboard.press('Escape');
-  await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 }).catch(() => {});
+  await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 }).catch(() => {});
 }
 
 /**
@@ -1013,7 +1010,7 @@ export async function waitForAccordionOpen(page: Page, sectionId?: string): Prom
   // Wait for any accordion region to be visible
   await page.waitForSelector('[role="region"][data-state="open"]', {
     state: 'visible',
-    timeout: 300000,
+    timeout: DEFAULT_TIMEOUT,
   });
 }
 

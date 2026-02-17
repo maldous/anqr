@@ -18,8 +18,8 @@ import type { Locator, Page } from '@playwright/test';
  * - data-testid="qr-preview" - the QR canvas container
  */
 
-/** Default timeout for waiting operations — generous to handle heavy overlay/GIF load */
-const DEFAULT_TIMEOUT = 300000;
+/** Default timeout for waiting operations */
+const DEFAULT_TIMEOUT = 30000;
 const QR_CANVAS_SELECTOR = '[data-testid="qr-preview"] canvas';
 
 function getQRCanvas(page: Page): Locator {
@@ -120,7 +120,7 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
   const enabledSwitch = page.locator('[data-testid="overlay-enabled-switch"]');
 
   // Wait for the switch to be attached (it appears after file upload)
-  await enabledSwitch.waitFor({ state: 'attached', timeout: 300000 });
+  await enabledSwitch.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
   // Check if it exists and is unchecked
   if ((await enabledSwitch.count()) > 0) {
     const state = await enabledSwitch.getAttribute('data-state');
@@ -132,7 +132,7 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
       // Wait for controls to render
       await page.waitForSelector('[data-testid="overlay-mode-select"]', {
         state: 'attached',
-        timeout: 300000,
+        timeout: DEFAULT_TIMEOUT,
       });
     }
   }
@@ -142,13 +142,13 @@ export async function scrollOverlaySectionToControls(page: Page): Promise<void> 
   const modeSelect = page.locator('[data-testid="overlay-mode-select"]');
 
   // Wait for element to exist
-  await modeSelect.waitFor({ state: 'attached', timeout: 300000 });
+  await modeSelect.waitFor({ state: 'attached', timeout: DEFAULT_TIMEOUT });
   // Use JavaScript scrollIntoView which handles nested scroll containers correctly
   await modeSelect.evaluate((el) => {
     el.scrollIntoView({ behavior: 'instant', block: 'center' });
   });
   // Verify it's now visible
-  await modeSelect.waitFor({ state: 'visible', timeout: 300000 });
+  await modeSelect.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
 }
 
 /**
@@ -163,7 +163,7 @@ export async function getCanvasSnapshot(page: Page): Promise<string> {
   await page
     .waitForSelector('[data-rendering-state="idle"]', {
       state: 'attached',
-      timeout: 300000,
+      timeout: DEFAULT_TIMEOUT,
     })
     .catch(() => {});
 
@@ -387,7 +387,7 @@ export async function waitForQRStable(
       // Fallback: wait for canvas to be visible
       return page.waitForSelector('[data-testid="qr-preview"] canvas', {
         state: 'visible',
-        timeout: 300000,
+        timeout: DEFAULT_TIMEOUT,
       });
     });
 }
@@ -481,7 +481,8 @@ export async function clickSelectOption(
 export async function selectDropdownOption(
   page: Page,
   selectTestId: string,
-  optionValue: string | number
+  optionValue: string | number,
+  _attempt = 0
 ): Promise<boolean> {
   const select = page.locator(`[data-testid="${selectTestId}"]`);
 
@@ -489,9 +490,8 @@ export async function selectDropdownOption(
   await select.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await select.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
 
-  // Click to open dropdown, with retry if dropdown doesn't appear
-  // (animated overlays can cause layout shifts that swallow the first click).
-  // Use short timeouts (5s + 10s) to avoid consuming the full test budget on retries.
+  // Click to open dropdown, with retry if dropdown doesn't appear.
+  // Use short timeouts to avoid consuming the test budget on retries.
   await select.click({ force: true });
   const opened = await waitForSelectOpen(page, 5000)
     .then(() => true)
@@ -508,7 +508,7 @@ export async function selectDropdownOption(
         new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerId: 1 })
       );
     });
-    await waitForSelectOpen(page, 10000);
+    await waitForSelectOpen(page, 5000);
   }
 
   const dropdown = page.locator('[data-radix-popper-content-wrapper]').first();
@@ -559,8 +559,20 @@ export async function selectDropdownOption(
     .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
   await allOptions.nth(targetIndex).click();
 
-  // Wait for dropdown to close
-  await waitForSelectClosed(page).catch(() => {});
+  // Wait for dropdown to close — should happen almost instantly after option click.
+  // Use a short timeout (5s) to avoid accumulating 30s × 3 retries = 90s of dead wait
+  // when sequential selects interfere with each other's DOM detection.
+  await waitForSelectClosed(page, 5000).catch(() => {});
+
+  // Verify selection took effect — under heavy parallel load, Radix can
+  // swallow the option click and close the dropdown without applying it.
+  if (typeof optionValue === 'string' && _attempt < 2) {
+    const triggerText = await select.textContent().catch(() => '');
+    if (triggerText && !triggerText.toLowerCase().includes(optionValue.toLowerCase())) {
+      // Selection didn't take effect — retry
+      return selectDropdownOption(page, selectTestId, optionValue, _attempt + 1);
+    }
+  }
 
   return true;
 }

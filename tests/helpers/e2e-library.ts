@@ -22,8 +22,8 @@ import { waitForRenderComplete } from './test-utils';
 // CONSTANTS
 // =============================================================================
 
-const DEFAULT_TIMEOUT = 300_000;
-const RENDER_IDLE_TIMEOUT = 300_000;
+const DEFAULT_TIMEOUT = 30_000;
+const RENDER_IDLE_TIMEOUT = 30_000;
 const SCROLL_SETTLE_MS = 50;
 
 // Tier values matching the app's tier system
@@ -82,7 +82,7 @@ export async function waitForRenderCycle(page: Page, timeout = RENDER_IDLE_TIMEO
     await page
       .waitForSelector('[data-rendering-state="pending"], [data-rendering-state="rendering"]', {
         state: 'attached',
-        timeout: 300000,
+        timeout: 5000,
       })
       .catch(() => {
         // Change might have been so fast we missed the transition, that's OK
@@ -142,7 +142,7 @@ export async function waitForScrollSettled(
   page: Page,
   selector: string,
   stabilityMs = SCROLL_SETTLE_MS,
-  timeout = 300000
+  timeout = DEFAULT_TIMEOUT
 ): Promise<void> {
   await page
     .waitForFunction(
@@ -778,24 +778,24 @@ export async function dismissWelcomeModal(page: Page): Promise<void> {
   try {
     // Check for the dialog element (WelcomeModal uses <dialog open>)
     const dialog = page.locator('dialog[open]').first();
-    const isVisible = await dialog.isVisible({ timeout: 300000 }).catch(() => false);
+    const isVisible = await dialog.isVisible({ timeout: 2000 }).catch(() => false);
 
     if (!isVisible) return;
 
     // Strategy 1: Click "Get Started" button using data-testid
     const getStartedBtn = page.locator('[data-testid="welcome-get-started"]').first();
-    if (await getStartedBtn.isVisible({ timeout: 300000 }).catch(() => false)) {
+    if (await getStartedBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await getStartedBtn.click();
-      await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 });
+      await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 });
       return;
     }
 
     // Strategy 2: Find first button in dialog (usually the CTA)
     const dialogBtn = dialog.locator('button').first();
-    if (await dialogBtn.isVisible({ timeout: 300000 }).catch(() => false)) {
+    if (await dialogBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await dialogBtn.click();
       await page
-        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
+        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 })
         .catch(() => {});
       return;
     }
@@ -804,29 +804,27 @@ export async function dismissWelcomeModal(page: Page): Promise<void> {
     const closeBtn = page
       .locator('button[aria-label*="close" i], button[aria-label="Close modal"]')
       .first();
-    if (await closeBtn.isVisible({ timeout: 300000 }).catch(() => false)) {
+    if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await closeBtn.click();
       await page
-        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
+        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 })
         .catch(() => {});
       return;
     }
 
     // Strategy 4: Click the backdrop
     const backdrop = page.locator('button.absolute.inset-0').first();
-    if (await backdrop.isVisible({ timeout: 300000 }).catch(() => false)) {
+    if (await backdrop.isVisible({ timeout: 2000 }).catch(() => false)) {
       await backdrop.click({ force: true });
       await page
-        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
+        .waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 })
         .catch(() => {});
       return;
     }
 
     // Strategy 5: Press Escape key
     await page.keyboard.press('Escape');
-    await page
-      .waitForSelector('dialog[open]', { state: 'hidden', timeout: 300000 })
-      .catch(() => {});
+    await page.waitForSelector('dialog[open]', { state: 'hidden', timeout: 5000 }).catch(() => {});
   } catch {
     // Modal might not exist, that's OK
   }
@@ -842,7 +840,7 @@ export async function selectTier(page: Page, tier: Tier): Promise<void> {
 
   // Try tabs first (desktop) - use data-testid="tier-tabs"
   const tabsList = page.locator('[data-testid="tier-tabs"]');
-  if (await tabsList.isVisible({ timeout: 300000 }).catch(() => false)) {
+  if (await tabsList.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)) {
     // Find tab by data-testid attribute (i18n-safe)
     const tab = page.locator(`[data-testid="tier-tab-${tierValue}"]`).first();
     if (await tab.isVisible().catch(() => false)) {
@@ -854,7 +852,7 @@ export async function selectTier(page: Page, tier: Tier): Promise<void> {
 
   // Fallback: try select dropdown (mobile) - use data-testid="tier-select"
   const selectTrigger = page.locator('[data-testid="tier-select"]');
-  if (await selectTrigger.isVisible({ timeout: 300000 }).catch(() => false)) {
+  if (await selectTrigger.isVisible({ timeout: DEFAULT_TIMEOUT }).catch(() => false)) {
     await selectTrigger.click();
     await waitForSelectOpen(page);
 
