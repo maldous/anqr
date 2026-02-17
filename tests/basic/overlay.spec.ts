@@ -370,10 +370,12 @@ async function setPayloadText(page: Page, text: string) {
     if (await plainTextOption.isVisible().catch(() => false)) {
       await plainTextOption.click();
     } else {
-      // Keyboard fallback - plain_text is typically second option
-      await page.keyboard.press('Home');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Enter');
+      // Direct click fallback - plain_text is typically second option
+      const allOptions = page.locator('[data-radix-popper-content-wrapper] [role="option"]');
+      await allOptions
+        .nth(1)
+        .evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'nearest' }));
+      await allOptions.nth(1).click();
     }
   }
 

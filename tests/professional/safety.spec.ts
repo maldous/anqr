@@ -103,11 +103,19 @@ test.describe('Safety Mode Selection', () => {
     const trigger = page.locator('[data-testid="safety-mode-trigger"]');
     await trigger.focus();
     await page.keyboard.press('Enter');
-    await waitForRenderComplete(page, 'settle');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
-
-    await waitForRenderComplete(page, 'settle');
+    const opened = await page
+      .waitForSelector('[data-radix-popper-content-wrapper]', { state: 'visible', timeout: 5000 })
+      .catch(() => null);
+    expect(opened).toBeTruthy();
+    if (opened) {
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      await page
+        .waitForFunction(() => !document.querySelector('[data-radix-popper-content-wrapper]'), {
+          timeout: 5000,
+        })
+        .catch(() => {});
+    }
     const dropdown = page.locator('[data-radix-popper-content-wrapper]');
     const isOpen = await dropdown.isVisible().catch(() => false);
     expect(isOpen).toBe(false);

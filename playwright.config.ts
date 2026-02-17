@@ -16,10 +16,12 @@ const cpuCount = os.cpus().length;
 // Serving the static build is ~10x faster than Vite dev server under parallel load.
 const hasProductionBuild = existsSync(path.join(__dirname, 'dist', 'index.html'));
 
-// Aggressive parallelism for 32-core / 64GB
+// Conservative parallelism to avoid thermal throttling.
+// Too many parallel Chromium instances heat the CPU, causing thermal
+// throttling that slows everything down and triggers test timeouts.
 const WORKERS = isCI
-  ? Math.max(8, Math.floor(cpuCount * 0.4)) // ~12 on 32 cores
-  : Math.max(10, Math.floor(cpuCount * 0.5)); // ~16 on 32 cores
+  ? Math.max(4, Math.floor(cpuCount * 0.25))
+  : Math.min(4, Math.max(2, Math.floor(cpuCount * 0.25)));
 
 export default defineConfig({
   testDir: './tests',
@@ -27,11 +29,11 @@ export default defineConfig({
   workers: WORKERS,
   globalTimeout: 0,
 
-  timeout: 75_000,
+  timeout: 120_000,
   expect: { timeout: 10_000 },
 
   forbidOnly: isCI,
-  retries: 0,
+  retries: 1,
 
   reporter: [['dot']],
 
@@ -70,14 +72,14 @@ export default defineConfig({
       name: 'reports',
       testMatch: /tests\/reports\/.*\.spec\.ts/,
       timeout: 10 * 60 * 1000,
-      workers: isCI ? 4 : 6,
+      workers: isCI ? 2 : 3,
     },
     {
       name: 'permutations',
       testMatch: /tests\/permutations\/.*\.spec\.ts/,
       timeout: 4 * 60 * 60 * 1000,
       fullyParallel: true,
-      workers: isCI ? 4 : 6,
+      workers: isCI ? 2 : 3,
     },
   ],
 
