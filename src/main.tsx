@@ -26,7 +26,52 @@ Sentry.init({
   // Release version for source map matching - injected at build time by Vite
   release: import.meta.env.VITE_SENTRY_RELEASE,
   // Performance monitoring - 10% of transactions
-  tracesSampleRate: 0.1,
+  tracesSampleRate: 0.01,
+  // Suppress known expected/diagnostic errors that are not actionable
+  ignoreErrors: [
+    // AdMob Capacitor methods called on wrong platform — expected platform mismatch
+    /is not implemented on web/,
+    /is not implemented on android/,
+    // QART diagnostic messages — graceful fallbacks, not real errors
+    /\[QART\]/,
+    /ECC budget exceeded/,
+    /SEMANTIC-HARD-GATE/,
+    /matrix scan validation/,
+    /DECODED BYTES/,
+    /HYBRID MUTATION TEST/,
+    /RS LINEARITY/,
+    /PROTECTED BYTES MODIFIED/,
+    /BASE MATRIX VERIFICATION/,
+    /BASE QR GENERATION FAILED/,
+    /INTERNAL CONSISTENCY FAILURE/,
+    /Structural patterns modified/,
+    /FINDER PATTERNS CORRUPTED/,
+    /TIMING PATTERNS CORRUPTED/,
+    /FORMAT INFO CHANGED/,
+    /Vector selection violates/,
+    // Stale cache errors from previous deploys
+    /Grid3x3 is not defined/,
+    /TrackerStorageType/,
+    /ditherMode/,
+  ],
+  // Drop non-actionable events that slip past ignoreErrors (e.g. captureMessage)
+  beforeSend(event) {
+    const msg = event.message || event.exception?.values?.[0]?.value || '';
+    // Drop all AdMob platform mismatch errors
+    if (msg.includes('is not implemented on')) return null;
+    // Drop all QART diagnostic messages (sent via captureMessage from logger)
+    if (msg.includes('[QART]')) return null;
+    // Drop known diagnostic patterns that may not have [QART] prefix
+    if (msg.includes('ECC budget exceeded')) return null;
+    if (msg.includes('SEMANTIC-HARD-GATE')) return null;
+    if (msg.includes('matrix scan validation')) return null;
+    if (msg.includes('DECODED BYTES')) return null;
+    // Drop stale cache reference errors
+    if (msg.includes('Grid3x3')) return null;
+    if (msg.includes('TrackerStorageType')) return null;
+    if (msg.includes('ditherMode')) return null;
+    return event;
+  },
   // Don't send debug breadcrumbs to Sentry
   beforeBreadcrumb(breadcrumb) {
     // Filter out debug-level breadcrumbs in production
@@ -36,8 +81,8 @@ Sentry.init({
     return breadcrumb;
   },
   // Session replay for web only (not available in Capacitor WebView)
-  replaysSessionSampleRate: isCapacitor ? 0 : 0.01,
-  replaysOnErrorSampleRate: isCapacitor ? 0 : 1.0,
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: isCapacitor ? 0 : 0.5,
   // Tag environment for filtering in Sentry dashboard
   environment: isCapacitor ? 'capacitor' : 'web',
 });

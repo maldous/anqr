@@ -468,9 +468,12 @@ test.describe('Output Conditional Settings Visibility', () => {
   });
 
   test('switching formats updates visible settings', async ({ page }) => {
+    // Note: Format changes don't trigger QR re-renders (only affects export),
+    // so we skip waitForRenderComplete. selectDropdownOption already waits
+    // for the dropdown to close, and React UI updates are near-instant.
+
     // Start with PNG
-    await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.PNG);
-    await waitForRenderComplete(page, 'settle');
+    await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.PNG, false);
     let qualityVisible = await page
       .locator('[data-testid="output-quality-slider"]')
       .isVisible()
@@ -478,8 +481,7 @@ test.describe('Output Conditional Settings Visibility', () => {
     expect(qualityVisible).toBe(false);
 
     // Switch to WebP
-    await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.WEBP);
-    await waitForRenderComplete(page, 'settle');
+    await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.WEBP, false);
     qualityVisible = await page
       .locator('[data-testid="output-quality-slider"]')
       .isVisible()
@@ -487,8 +489,7 @@ test.describe('Output Conditional Settings Visibility', () => {
     expect(qualityVisible).toBe(true);
 
     // Switch back to PNG
-    await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.PNG);
-    await waitForRenderComplete(page, 'settle');
+    await selectDropdownOption(page, 'output-format-trigger', FORMAT_INDEX.PNG, false);
     qualityVisible = await page
       .locator('[data-testid="output-quality-slider"]')
       .isVisible()

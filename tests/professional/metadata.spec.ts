@@ -4,12 +4,10 @@
  * Uses data-testid selectors for reliability
  */
 
-import { test, expect } from '../fixtures/test-fixtures';
 import type { Page } from '@playwright/test';
+import { expect, test } from '../fixtures/test-fixtures';
 
-import {
-  waitForQRRender,
-} from '../helpers/qr-detector';
+import { waitForQRRender } from '../helpers/qr-detector';
 import {
   openAccordion,
   selectTier,
@@ -33,15 +31,16 @@ async function expandMetadataSection(page: Page) {
 }
 
 // Helper: Set input value using data-testid
+// Note: No waitForRenderComplete here — metadata changes don't trigger QR re-renders.
+// setInput already handles value-committed stabilization internally.
 async function setInputByTestId(page: Page, testId: string, value: string) {
   await setInput(page, testId, value);
-  await waitForRenderComplete(page, 'settle');
 }
 
 // Helper: Toggle switch using data-testid
+// Note: No waitForRenderComplete here — metadata changes don't trigger QR re-renders.
 async function toggleSwitchByTestId(page: Page, testId: string) {
   await toggleSwitch(page, testId);
-  await waitForRenderComplete(page, 'settle');
 }
 
 // ============================================================================
@@ -57,7 +56,7 @@ test.describe('Metadata Title', () => {
   test('title input is visible and accepts values', async ({ page }) => {
     const titleInput = page.locator('[data-testid="metadata-title-input"]');
     await expect(titleInput).toBeVisible();
-    
+
     await setInputByTestId(page, 'metadata-title-input', 'My QR Code');
     const value = await titleInput.inputValue();
     expect(value).toBe('My QR Code');
@@ -90,7 +89,7 @@ test.describe('Metadata Author', () => {
   test('author input is visible and accepts values', async ({ page }) => {
     const authorInput = page.locator('[data-testid="metadata-author-input"]');
     await expect(authorInput).toBeVisible();
-    
+
     await setInputByTestId(page, 'metadata-author-input', 'John Doe');
     const value = await authorInput.inputValue();
     expect(value).toBe('John Doe');
@@ -116,7 +115,7 @@ test.describe('Metadata Copyright', () => {
   test('copyright input is visible and accepts values', async ({ page }) => {
     const copyrightInput = page.locator('[data-testid="metadata-copyright-input"]');
     await expect(copyrightInput).toBeVisible();
-    
+
     await setInputByTestId(page, 'metadata-copyright-input', '© 2024 ANQR');
     const value = await copyrightInput.inputValue();
     expect(value).toBe('© 2024 ANQR');
@@ -142,7 +141,7 @@ test.describe('Metadata License', () => {
   test('license input is visible and accepts values', async ({ page }) => {
     const licenseInput = page.locator('[data-testid="metadata-license-input"]');
     await expect(licenseInput).toBeVisible();
-    
+
     await setInputByTestId(page, 'metadata-license-input', 'MIT');
     const value = await licenseInput.inputValue();
     expect(value).toBe('MIT');
@@ -168,8 +167,12 @@ test.describe('Metadata Description', () => {
   test('description textarea is visible and accepts values', async ({ page }) => {
     const descriptionTextarea = page.locator('[data-testid="metadata-description-textarea"]');
     await expect(descriptionTextarea).toBeVisible();
-    
-    await setInputByTestId(page, 'metadata-description-textarea', 'This is a test QR code with a description.');
+
+    await setInputByTestId(
+      page,
+      'metadata-description-textarea',
+      'This is a test QR code with a description.'
+    );
     const value = await descriptionTextarea.inputValue();
     expect(value).toBe('This is a test QR code with a description.');
   });
@@ -202,10 +205,10 @@ test.describe('Metadata Creation Time', () => {
   test('creation time switch is visible and toggleable', async ({ page }) => {
     const switchEl = page.locator('[data-testid="metadata-creation-time-switch"]');
     await expect(switchEl).toBeVisible();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'metadata-creation-time-switch');
-    
+
     const newState = await switchEl.getAttribute('data-state');
     expect(newState).not.toBe(initialState);
   });
@@ -218,14 +221,14 @@ test.describe('Metadata Creation Time', () => {
 
   test('creation time switch toggles between checked and unchecked', async ({ page }) => {
     const switchEl = page.locator('[data-testid="metadata-creation-time-switch"]');
-    
+
     // Toggle twice to verify both states work
     await toggleSwitchByTestId(page, 'metadata-creation-time-switch');
     const state1 = await switchEl.getAttribute('data-state');
-    
+
     await toggleSwitchByTestId(page, 'metadata-creation-time-switch');
     const state2 = await switchEl.getAttribute('data-state');
-    
+
     expect(state1).not.toBe(state2);
   });
 });
@@ -253,21 +256,21 @@ test.describe('Metadata Custom Key-Value Pairs', () => {
     // First row should now exist
     const keyInput = page.locator('[data-testid="metadata-custom-key-input-0"]');
     await expect(keyInput).toBeVisible();
-    
+
     const valueInput = page.locator('[data-testid="metadata-custom-value-input-0"]');
     await expect(valueInput).toBeVisible();
   });
 
   test('can add multiple custom key-value rows', async ({ page }) => {
     const addButton = page.locator('[data-testid="metadata-add-custom-button"]');
-    
+
     // Add 3 rows
     for (let i = 0; i < 3; i++) {
       await addButton.scrollIntoViewIfNeeded();
       await addButton.click();
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // All 3 rows should exist
     for (let i = 0; i < 3; i++) {
       const row = page.locator(`[data-testid="metadata-custom-kv-row-${i}"]`);
@@ -285,7 +288,7 @@ test.describe('Metadata Custom Key-Value Pairs', () => {
     await setInputByTestId(page, 'metadata-custom-key-input-0', 'myKey');
     const keyInput = page.locator('[data-testid="metadata-custom-key-input-0"]');
     expect(await keyInput.inputValue()).toBe('myKey');
-    
+
     // Edit the value
     await setInputByTestId(page, 'metadata-custom-value-input-0', 'myValue');
     const valueInput = page.locator('[data-testid="metadata-custom-value-input-0"]');
@@ -301,7 +304,7 @@ test.describe('Metadata Custom Key-Value Pairs', () => {
     // Verify row exists
     const row = page.locator('[data-testid="metadata-custom-kv-row-0"]');
     await expect(row).toBeVisible();
-    
+
     // Click remove button
     const removeButton = page.locator('[data-testid="metadata-custom-remove-button-0"]');
     await removeButton.click();
@@ -318,10 +321,10 @@ test.describe('Metadata Custom Key-Value Pairs', () => {
     await waitForRenderComplete(page, 'settle');
     const keyInput = page.locator('[data-testid="metadata-custom-key-input-0"]');
     const valueInput = page.locator('[data-testid="metadata-custom-value-input-0"]');
-    
+
     const keyPlaceholder = await keyInput.getAttribute('placeholder');
     const valuePlaceholder = await valueInput.getAttribute('placeholder');
-    
+
     expect(keyPlaceholder).toBeTruthy();
     expect(valuePlaceholder).toBeTruthy();
   });
@@ -339,7 +342,7 @@ test.describe('Metadata Section Accessibility', () => {
 
   test('all inputs are focusable via keyboard', async ({ page }) => {
     await page.keyboard.press('Tab');
-    
+
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
   });
@@ -377,36 +380,47 @@ test.describe('Metadata Combined Settings', () => {
     await setInputByTestId(page, 'metadata-copyright-input', '© 2024');
     await setInputByTestId(page, 'metadata-license-input', 'MIT');
     await setInputByTestId(page, 'metadata-description-textarea', 'Test description');
-    
+
     // Enable creation time
     const switchEl = page.locator('[data-testid="metadata-creation-time-switch"]');
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'metadata-creation-time-switch');
     }
-    
+
     // Verify all values
     expect(await page.locator('[data-testid="metadata-title-input"]').inputValue()).toBe('Test QR');
-    expect(await page.locator('[data-testid="metadata-author-input"]').inputValue()).toBe('Test Author');
-    expect(await page.locator('[data-testid="metadata-copyright-input"]').inputValue()).toBe('© 2024');
+    expect(await page.locator('[data-testid="metadata-author-input"]').inputValue()).toBe(
+      'Test Author'
+    );
+    expect(await page.locator('[data-testid="metadata-copyright-input"]').inputValue()).toBe(
+      '© 2024'
+    );
     expect(await page.locator('[data-testid="metadata-license-input"]').inputValue()).toBe('MIT');
-    expect(await page.locator('[data-testid="metadata-description-textarea"]').inputValue()).toBe('Test description');
+    expect(await page.locator('[data-testid="metadata-description-textarea"]').inputValue()).toBe(
+      'Test description'
+    );
     expect(await switchEl.getAttribute('data-state')).toBe('checked');
   });
 
   test('metadata settings persist after section collapse/expand', async ({ page }) => {
     // Set a value
     await setInputByTestId(page, 'metadata-title-input', 'Persistent Title');
-    
+
     // Collapse and expand
-    const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
+    const metadataTriggerEl = page
+      .locator('[data-testid="accordion-metadata"] button[data-state]')
+      .first();
     await metadataTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await metadataTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-metadata"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     // Verify value persisted
     const titleInput = page.locator('[data-testid="metadata-title-input"]');
     const value = await titleInput.inputValue();
@@ -428,7 +442,7 @@ test.describe('Metadata Edge Cases', () => {
     // Fill and then clear
     await setInputByTestId(page, 'metadata-title-input', 'Test');
     await setInputByTestId(page, 'metadata-title-input', '');
-    
+
     const titleInput = page.locator('[data-testid="metadata-title-input"]');
     const value = await titleInput.inputValue();
     expect(value).toBe('');
@@ -437,7 +451,7 @@ test.describe('Metadata Edge Cases', () => {
   test('inputs handle long text', async ({ page }) => {
     const longText = 'A'.repeat(500);
     await setInputByTestId(page, 'metadata-description-textarea', longText);
-    
+
     const descriptionTextarea = page.locator('[data-testid="metadata-description-textarea"]');
     const value = await descriptionTextarea.inputValue();
     expect(value).toBe(longText);
@@ -445,21 +459,21 @@ test.describe('Metadata Edge Cases', () => {
 
   test('rapid custom field add/remove works correctly', async ({ page }) => {
     const addButton = page.locator('[data-testid="metadata-add-custom-button"]');
-    
+
     // Add 3 rows rapidly
     for (let i = 0; i < 3; i++) {
       await addButton.scrollIntoViewIfNeeded();
       await addButton.click();
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Remove middle row
     const removeButton = page.locator('[data-testid="metadata-custom-remove-button-1"]');
     if (await removeButton.isVisible()) {
       await removeButton.click();
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Should still have at least one row visible
     const rows = page.locator('[data-testid^="metadata-custom-kv-row-"]');
     const count = await rows.count();
@@ -575,7 +589,7 @@ test.describe('Metadata Length Limits', () => {
   });
 
   test('description accepts very long multiline text', async ({ page }) => {
-    const longDesc = ('Line of text.\n').repeat(100);
+    const longDesc = 'Line of text.\n'.repeat(100);
     await setInputByTestId(page, 'metadata-description-textarea', longDesc);
     const descTextarea = page.locator('[data-testid="metadata-description-textarea"]');
     const value = await descTextarea.inputValue();
@@ -599,10 +613,10 @@ test.describe('Metadata Length Limits', () => {
   test('single character inputs are valid', async ({ page }) => {
     await setInputByTestId(page, 'metadata-title-input', 'A');
     await setInputByTestId(page, 'metadata-author-input', 'B');
-    
+
     const titleValue = await page.locator('[data-testid="metadata-title-input"]').inputValue();
     const authorValue = await page.locator('[data-testid="metadata-author-input"]').inputValue();
-    
+
     expect(titleValue).toBe('A');
     expect(authorValue).toBe('B');
   });
@@ -620,13 +634,13 @@ test.describe('Metadata Custom KV CRUD', () => {
 
   test('can add 5 custom KV rows', async ({ page }) => {
     const addButton = page.locator('[data-testid="metadata-add-custom-button"]');
-    
+
     for (let i = 0; i < 5; i++) {
       await addButton.scrollIntoViewIfNeeded();
       await addButton.click();
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Check at least 5 rows exist
     const rows = page.locator('[data-testid^="metadata-custom-kv-row-"]');
     const count = await rows.count();
@@ -640,10 +654,10 @@ test.describe('Metadata Custom KV CRUD', () => {
     await waitForRenderComplete(page, 'settle');
     // Set initial key
     await setInputByTestId(page, 'metadata-custom-key-input-0', 'originalKey');
-    
+
     // Edit key
     await setInputByTestId(page, 'metadata-custom-key-input-0', 'editedKey');
-    
+
     const keyInput = page.locator('[data-testid="metadata-custom-key-input-0"]');
     expect(await keyInput.inputValue()).toBe('editedKey');
   });
@@ -655,10 +669,10 @@ test.describe('Metadata Custom KV CRUD', () => {
     await waitForRenderComplete(page, 'settle');
     // Set initial value
     await setInputByTestId(page, 'metadata-custom-value-input-0', 'originalValue');
-    
+
     // Edit value
     await setInputByTestId(page, 'metadata-custom-value-input-0', 'editedValue');
-    
+
     const valueInput = page.locator('[data-testid="metadata-custom-value-input-0"]');
     expect(await valueInput.inputValue()).toBe('editedValue');
   });
@@ -670,7 +684,7 @@ test.describe('Metadata Custom KV CRUD', () => {
     await waitForRenderComplete(page, 'settle');
     const row = page.locator('[data-testid="metadata-custom-kv-row-0"]');
     await expect(row).toBeVisible();
-    
+
     const removeButton = page.locator('[data-testid="metadata-custom-remove-button-0"]');
     await removeButton.click();
     await waitForRenderComplete(page, 'settle');
@@ -679,26 +693,31 @@ test.describe('Metadata Custom KV CRUD', () => {
 
   test('removing middle row preserves other rows', async ({ page }) => {
     const addButton = page.locator('[data-testid="metadata-add-custom-button"]');
-    
-    // Add 3 rows
+
+    // Add 3 rows (metadata/KV changes don't trigger QR re-renders, so no render wait needed)
     for (let i = 0; i < 3; i++) {
       await addButton.scrollIntoViewIfNeeded();
       await addButton.click();
-      await waitForRenderComplete(page, 'settle');
+      await page
+        .locator(`[data-testid="metadata-custom-kv-row-${i}"]`)
+        .waitFor({ state: 'visible', timeout: 5000 });
     }
-    
+
     // Set values to identify rows
     await setInputByTestId(page, 'metadata-custom-key-input-0', 'first');
     await setInputByTestId(page, 'metadata-custom-key-input-1', 'second');
     await setInputByTestId(page, 'metadata-custom-key-input-2', 'third');
-    
+
     // Remove middle row
     const removeButton = page.locator('[data-testid="metadata-custom-remove-button-1"]');
     if (await removeButton.isVisible()) {
       await removeButton.click();
-      await waitForRenderComplete(page, 'settle');
+      await page
+        .locator('[data-testid="metadata-custom-remove-button-1"]')
+        .waitFor({ state: 'hidden', timeout: 5000 })
+        .catch(() => {});
     }
-    
+
     // Verify first and third still exist (indices may shift)
     const rows = page.locator('[data-testid^="metadata-custom-kv-row-"]');
     const count = await rows.count();
@@ -712,7 +731,7 @@ test.describe('Metadata Custom KV CRUD', () => {
     await waitForRenderComplete(page, 'settle');
     // Leave key empty, set value
     await setInputByTestId(page, 'metadata-custom-value-input-0', 'valueWithoutKey');
-    
+
     const keyInput = page.locator('[data-testid="metadata-custom-key-input-0"]');
     expect(await keyInput.inputValue()).toBe('');
   });
@@ -724,14 +743,14 @@ test.describe('Metadata Custom KV CRUD', () => {
     await waitForRenderComplete(page, 'settle');
     // Set key, leave value empty
     await setInputByTestId(page, 'metadata-custom-key-input-0', 'keyWithoutValue');
-    
+
     const valueInput = page.locator('[data-testid="metadata-custom-value-input-0"]');
     expect(await valueInput.inputValue()).toBe('');
   });
 
   test('duplicate keys are allowed', async ({ page }) => {
     const addButton = page.locator('[data-testid="metadata-add-custom-button"]');
-    
+
     // Add 2 rows
     await addButton.scrollIntoViewIfNeeded();
     await addButton.click();
@@ -741,10 +760,10 @@ test.describe('Metadata Custom KV CRUD', () => {
     // Set same key for both
     await setInputByTestId(page, 'metadata-custom-key-input-0', 'duplicateKey');
     await setInputByTestId(page, 'metadata-custom-key-input-1', 'duplicateKey');
-    
+
     const key0 = await page.locator('[data-testid="metadata-custom-key-input-0"]').inputValue();
     const key1 = await page.locator('[data-testid="metadata-custom-key-input-1"]').inputValue();
-    
+
     expect(key0).toBe('duplicateKey');
     expect(key1).toBe('duplicateKey');
   });
@@ -767,23 +786,46 @@ test.describe('Metadata Persistence', () => {
     await setInputByTestId(page, 'metadata-copyright-input', 'Persistent Copyright');
     await setInputByTestId(page, 'metadata-license-input', 'Persistent License');
     await setInputByTestId(page, 'metadata-description-textarea', 'Persistent Description');
-    
-    // Collapse and expand
-    const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
+
+    // Collapse and expand (accordion toggle doesn't trigger QR re-renders)
+    const metadataTriggerEl = page
+      .locator('[data-testid="accordion-metadata"] button[data-state]')
+      .first();
     await metadataTriggerEl.click();
-    await waitForRenderComplete(page, 'settle');
+    await page.waitForFunction(
+      () => {
+        const trigger = document.querySelector(
+          '[data-testid="accordion-metadata"] button[data-state]'
+        );
+        return trigger && trigger.getAttribute('data-state') === 'closed';
+      },
+      { timeout: 5000 }
+    );
     await metadataTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-metadata"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     // Verify all values persisted
-    expect(await page.locator('[data-testid="metadata-title-input"]').inputValue()).toBe('Persistent Title');
-    expect(await page.locator('[data-testid="metadata-author-input"]').inputValue()).toBe('Persistent Author');
-    expect(await page.locator('[data-testid="metadata-copyright-input"]').inputValue()).toBe('Persistent Copyright');
-    expect(await page.locator('[data-testid="metadata-license-input"]').inputValue()).toBe('Persistent License');
-    expect(await page.locator('[data-testid="metadata-description-textarea"]').inputValue()).toBe('Persistent Description');
+    expect(await page.locator('[data-testid="metadata-title-input"]').inputValue()).toBe(
+      'Persistent Title'
+    );
+    expect(await page.locator('[data-testid="metadata-author-input"]').inputValue()).toBe(
+      'Persistent Author'
+    );
+    expect(await page.locator('[data-testid="metadata-copyright-input"]').inputValue()).toBe(
+      'Persistent Copyright'
+    );
+    expect(await page.locator('[data-testid="metadata-license-input"]').inputValue()).toBe(
+      'Persistent License'
+    );
+    expect(await page.locator('[data-testid="metadata-description-textarea"]').inputValue()).toBe(
+      'Persistent Description'
+    );
   });
 
   test('custom KV rows persist after section collapse/expand', async ({ page }) => {
@@ -794,21 +836,26 @@ test.describe('Metadata Persistence', () => {
     await waitForRenderComplete(page, 'settle');
     await setInputByTestId(page, 'metadata-custom-key-input-0', 'persistKey');
     await setInputByTestId(page, 'metadata-custom-value-input-0', 'persistValue');
-    
+
     // Collapse and expand
-    const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
+    const metadataTriggerEl = page
+      .locator('[data-testid="accordion-metadata"] button[data-state]')
+      .first();
     await metadataTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await metadataTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-metadata"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     // Verify KV row persisted
     const keyInput = page.locator('[data-testid="metadata-custom-key-input-0"]');
     const valueInput = page.locator('[data-testid="metadata-custom-value-input-0"]');
-    
+
     if (await keyInput.isVisible()) {
       expect(await keyInput.inputValue()).toBe('persistKey');
       expect(await valueInput.inputValue()).toBe('persistValue');
@@ -817,22 +864,27 @@ test.describe('Metadata Persistence', () => {
 
   test('creation time toggle persists after collapse/expand', async ({ page }) => {
     const switchEl = page.locator('[data-testid="metadata-creation-time-switch"]');
-    
+
     // Toggle to opposite state
     const initialState = await switchEl.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'metadata-creation-time-switch');
     const toggledState = await switchEl.getAttribute('data-state');
-    
+
     // Collapse and expand
-    const metadataTriggerEl = page.locator('[data-testid="accordion-metadata"] button[data-state]').first();
+    const metadataTriggerEl = page
+      .locator('[data-testid="accordion-metadata"] button[data-state]')
+      .first();
     await metadataTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await metadataTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-metadata"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-metadata"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     // Verify state persisted
     const persistedState = await switchEl.getAttribute('data-state');
     expect(persistedState).toBe(toggledState);
@@ -841,7 +893,7 @@ test.describe('Metadata Persistence', () => {
 
   test('rapid input changes are captured', async ({ page }) => {
     const titleInput = page.locator('[data-testid="metadata-title-input"]');
-    
+
     // Type rapidly
     await titleInput.focus();
     await titleInput.fill('');
@@ -866,7 +918,7 @@ test.describe('Metadata Keyboard Accessibility', () => {
   test('Tab navigates through all metadata fields', async ({ page }) => {
     const titleInput = page.locator('[data-testid="metadata-title-input"]');
     await titleInput.focus();
-    
+
     // Tab through fields and collect focused element tags
     const focusedElements: string[] = [];
     for (let i = 0; i < 6; i++) {
@@ -874,14 +926,14 @@ test.describe('Metadata Keyboard Accessibility', () => {
       const tag = await page.evaluate(() => document.activeElement?.tagName);
       if (tag) focusedElements.push(tag);
     }
-    
+
     expect(focusedElements.length).toBeGreaterThan(0);
   });
 
   test('Shift+Tab navigates backwards', async ({ page }) => {
     const authorInput = page.locator('[data-testid="metadata-author-input"]');
     await authorInput.focus();
-    
+
     await page.keyboard.press('Shift+Tab');
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
@@ -890,7 +942,7 @@ test.describe('Metadata Keyboard Accessibility', () => {
   test('Space toggles creation time switch', async ({ page }) => {
     const switchEl = page.locator('[data-testid="metadata-creation-time-switch"]');
     await switchEl.focus();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await page.keyboard.press('Space');
     await waitForRenderComplete(page, 'settle');
@@ -910,9 +962,9 @@ test.describe('Metadata Keyboard Accessibility', () => {
   test('inputs accept keyboard text entry', async ({ page }) => {
     const titleInput = page.locator('[data-testid="metadata-title-input"]');
     await titleInput.focus();
-    
+
     await page.keyboard.type('Keyboard Entry Test');
-    
+
     const value = await titleInput.inputValue();
     expect(value).toBe('Keyboard Entry Test');
   });
@@ -920,11 +972,11 @@ test.describe('Metadata Keyboard Accessibility', () => {
   test('textarea accepts Enter for new lines', async ({ page }) => {
     const descTextarea = page.locator('[data-testid="metadata-description-textarea"]');
     await descTextarea.focus();
-    
+
     await page.keyboard.type('Line 1');
     await page.keyboard.press('Enter');
     await page.keyboard.type('Line 2');
-    
+
     const value = await descTextarea.inputValue();
     expect(value).toContain('Line 1');
     expect(value).toContain('Line 2');
@@ -938,7 +990,7 @@ test.describe('Metadata Keyboard Accessibility', () => {
     await waitForRenderComplete(page, 'settle');
     const row = page.locator('[data-testid="metadata-custom-kv-row-0"]');
     await expect(row).toBeVisible();
-    
+
     // Focus remove button and press Enter
     const removeButton = page.locator('[data-testid="metadata-custom-remove-button-0"]');
     await removeButton.focus();

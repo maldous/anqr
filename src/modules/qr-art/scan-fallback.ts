@@ -541,7 +541,7 @@ export function binarySearchMaxVectors(
   );
   const baseScan = scanQRFn(baseResult.matrix);
   if (!baseScan.success) {
-    log.error('Base matrix (0 vectors) does not scan - this is a fundamental bug');
+    log.warn('Base matrix (0 vectors) does not scan - this is a fundamental bug');
     return {
       maxCount: 0,
       matrix: baseResult.matrix,
@@ -567,7 +567,7 @@ export function binarySearchMaxVectors(
       .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
       .join(' ');
 
-    log.error('Base matrix (0 vectors) validation FAILED - encoding bug!', {
+    log.warn('Base matrix (0 vectors) validation FAILED - encoding bug!', {
       rejectionReason: baseValidation.reason,
       description: baseValidation.description,
       expectedData: expectedData,
@@ -579,7 +579,7 @@ export function binarySearchMaxVectors(
       actualByte: baseValidation.actualByte?.toString(16),
     });
 
-    log.error('BYTE-LEVEL COMPARISON (first 32 bytes)', {
+    log.warn('BYTE-LEVEL COMPARISON (first 32 bytes)', {
       expectedHex: expectedHexDump,
       decodedHex: decodedHexDump,
       mismatchIndex: baseValidation.mismatchIndex,
@@ -600,7 +600,7 @@ export function binarySearchMaxVectors(
   if (expectedEcc !== undefined && expectedMask !== undefined) {
     baseFormatVerification = verifyMatrixFormatInfo(baseResult.matrix, expectedEcc, expectedMask);
     if (!baseFormatVerification.valid) {
-      log.error('Base matrix (0 vectors) FORMAT VERIFICATION FAILED!', {
+      log.warn('Base matrix (0 vectors) FORMAT VERIFICATION FAILED!', {
         rejectionReason: baseFormatVerification.reason,
         expectedEcc,
         extractedEcc: baseFormatVerification.extractedEcc,

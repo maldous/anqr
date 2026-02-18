@@ -20,8 +20,12 @@ const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN || process.env.SENTRY_TOKE
 const sentryUploadEnabled = process.env.SENTRY_UPLOAD === 'true';
 const sentryOrg = process.env.SENTRY_ORG || 'anqr';
 const sentryProject = process.env.SENTRY_PROJECT || 'anqr-web';
-// Generate release name from package.json version or git commit
-const sentryRelease = process.env.SENTRY_RELEASE || `anqr@${process.env.npm_package_version || '1.0.0'}`;
+// Generate release name from package.json version (read directly to avoid stale fallback)
+const packageVersion = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'package.json'), 'utf-8')
+).version;
+const sentryRelease =
+  process.env.SENTRY_RELEASE || `anqr@${process.env.npm_package_version || packageVersion}`;
 
 // Bundle analysis - enable with ANALYZE=true yarn build
 const analyzeBundle = process.env.ANALYZE === 'true';
@@ -81,292 +85,296 @@ function getEnvDefines() {
 // https://vitejs.dev/config/
 export default defineConfig({
   define: getEnvDefines(),
-  plugins: [// Serve gallery files before React plugin
-  serveGalleryFiles(), react(), // Gzip compression for production builds (disabled for Android)
-  ...(!isAndroidBuild
-    ? [
-        compression({
-          verbose: false,
-          algorithm: 'gzip',
-          ext: '.gz',
-          threshold: 1024, // Only compress files > 1KB
-        }),
-        // Brotli compression for modern browsers (better compression ratio)
-        compression({
-          verbose: false,
-          algorithm: 'brotliCompress',
-          ext: '.br',
-          threshold: 1024,
-        }),
-      ]
-    : []), // Sentry source map upload plugin (only enabled when explicitly requested)
-  ...(sentryUploadEnabled
-    ? [
-        sentryVitePlugin({
-          authToken: sentryAuthToken,
-          org: sentryOrg,
-          project: 'anqr-mobile',
-          release: {
-            name: sentryRelease,
+  plugins: [
+    // Serve gallery files before React plugin
+    serveGalleryFiles(),
+    react(), // Gzip compression for production builds (disabled for Android)
+    ...(!isAndroidBuild
+      ? [
+          compression({
+            verbose: false,
+            algorithm: 'gzip',
+            ext: '.gz',
+            threshold: 1024, // Only compress files > 1KB
+          }),
+          // Brotli compression for modern browsers (better compression ratio)
+          compression({
+            verbose: false,
+            algorithm: 'brotliCompress',
+            ext: '.br',
+            threshold: 1024,
+          }),
+        ]
+      : []), // Sentry source map upload plugin (only enabled when explicitly requested)
+    ...(sentryUploadEnabled
+      ? [
+          sentryVitePlugin({
+            authToken: sentryAuthToken,
+            org: sentryOrg,
+            project: 'anqr-mobile',
+            release: {
+              name: sentryRelease,
+            },
+            sourcemaps: {
+              assets: ['./dist/**/*.js', './dist/**/*.js.map'],
+              ignore: ['node_modules/**'],
+            },
+            telemetry: false,
+          }),
+          sentryVitePlugin({
+            authToken: sentryAuthToken,
+            org: sentryOrg,
+            project: sentryProject,
+            release: {
+              name: sentryRelease,
+              deploy: {
+                env: process.env.NODE_ENV || 'production',
+              },
+            },
+            sourcemaps: {
+              assets: ['./dist/**/*.js', './dist/**/*.js.map'],
+              ignore: ['node_modules/**'],
+              filesToDeleteAfterUpload: ['./dist/**/*.js.map'],
+            },
+            telemetry: false,
+          }),
+        ]
+      : []), // Bundle analyzer (only when ANALYZE=true)
+    ...(analyzeBundle
+      ? [
+          visualizer({
+            filename: 'dist/stats.html',
+            open: true,
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : []),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'robots.txt', 'sitemap.xml'],
+      manifest: {
+        name: 'ANQR - QR Code Generator',
+        short_name: 'ANQR',
+        description:
+          'Free browser-based QR code generator with advanced styling, animations, and safety checks.',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
+        display: 'standalone',
+        orientation: 'any',
+        categories: ['utilities', 'productivity'],
+        start_url: '/',
+        scope: '/',
+        icons: [
+          {
+            src: '/icons/icon-72.png',
+            sizes: '72x72',
+            type: 'image/png',
           },
-          sourcemaps: {
-            assets: ['./dist/**/*.js', './dist/**/*.js.map'],
-            ignore: ['node_modules/**'],
+          {
+            src: '/icons/icon-96.png',
+            sizes: '96x96',
+            type: 'image/png',
           },
-          telemetry: false,
-        }),
-        sentryVitePlugin({
-          authToken: sentryAuthToken,
-          org: sentryOrg,
-          project: sentryProject,
-          release: {
-            name: sentryRelease,
-            deploy: {
-              env: process.env.NODE_ENV || 'production',
+          {
+            src: '/icons/icon-128.png',
+            sizes: '128x128',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/icon-144.png',
+            sizes: '144x144',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/icon-152.png',
+            sizes: '152x152',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/icon-384.png',
+            sizes: '384x384',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        // Increase max file size to cache (default is 2MB, we set 3MB as safeguard)
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // Cache strategies
+        runtimeCaching: [
+          {
+            // Cache locale chunks for offline language switching
+            urlPattern: /\/assets\/locale-.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'locale-chunks-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
-          sourcemaps: {
-            assets: ['./dist/**/*.js', './dist/**/*.js.map'],
-            ignore: ['node_modules/**'],
-            filesToDeleteAfterUpload: ['./dist/**/*.js.map'],
+          {
+            // Cache static content chunks for offline docs/pages
+            urlPattern: /\/assets\/static-.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'static-chunks-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
           },
-          telemetry: false,
-        }),
-      ]
-    : []), // Bundle analyzer (only when ANALYZE=true)
-  ...(analyzeBundle
-    ? [
-        visualizer({
-          filename: 'dist/stats.html',
-          open: true,
-          gzipSize: true,
-          brotliSize: true,
-        }),
-      ]
-    : []), VitePWA({
-  registerType: 'autoUpdate',
-  includeAssets: ['favicon.ico', 'robots.txt', 'sitemap.xml'],
-  manifest: {
-    name: 'ANQR - QR Code Generator',
-    short_name: 'ANQR',
-    description:
-      'Free browser-based QR code generator with advanced styling, animations, and safety checks.',
-    theme_color: '#0f172a',
-    background_color: '#0f172a',
-    display: 'standalone',
-    orientation: 'any',
-    categories: ['utilities', 'productivity'],
-    start_url: '/',
-    scope: '/',
-    icons: [
-      {
-        src: '/icons/icon-72.png',
-        sizes: '72x72',
-        type: 'image/png',
-      },
-      {
-        src: '/icons/icon-96.png',
-        sizes: '96x96',
-        type: 'image/png',
-      },
-      {
-        src: '/icons/icon-128.png',
-        sizes: '128x128',
-        type: 'image/png',
-      },
-      {
-        src: '/icons/icon-144.png',
-        sizes: '144x144',
-        type: 'image/png',
-      },
-      {
-        src: '/icons/icon-152.png',
-        sizes: '152x152',
-        type: 'image/png',
-      },
-      {
-        src: '/icons/icon-192.png',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        src: '/icons/icon-384.png',
-        sizes: '384x384',
-        type: 'image/png',
-      },
-      {
-        src: '/icons/icon-512.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'any maskable',
-      },
-    ],
-  },
-  workbox: {
-    // Increase max file size to cache (default is 2MB, we set 3MB as safeguard)
-    maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-    // Cache strategies
-    runtimeCaching: [
-      {
-        // Cache locale chunks for offline language switching
-        urlPattern: /\/assets\/locale-.*\.js$/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'locale-chunks-cache',
-          expiration: {
-            maxEntries: 30,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+          {
+            // Cache all other JS chunks (vendor, app modules)
+            urlPattern: /\/assets\/.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'js-chunks-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
           },
-          cacheableResponse: {
-            statuses: [0, 200],
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
           },
-        },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gstatic-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /\/gallery\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'gallery-images-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Cache learn/examples images on-demand (not precached due to size)
+            urlPattern: /\/images\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'content-images-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Fallback for navigation requests (SPA support)
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages-cache',
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+        // Skip waiting and claim clients immediately
+        skipWaiting: true,
+        clientsClaim: true,
+        // Precache app shell - core assets only, not language files
+        // Language/locale files are cached on-demand via runtimeCaching above
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,json}'],
+        // Exclude non-essential files from precache to reduce initial install size
+        globIgnores: [
+          '**/node_modules/**/*',
+          'sw.js',
+          'workbox-*.js',
+          // Exclude gallery images from precache (large, cached on-demand)
+          '**/gallery/**/*',
+          // Exclude learn/examples images from precache (large, cached on-demand)
+          '**/images/**/*',
+          // Exclude source maps if any slip through
+          '**/*.map',
+          // Exclude stats.html bundle analyzer output
+          '**/stats.html',
+        ],
+        // Filter manifest entries to exclude non-English locale/static chunks
+        // This keeps English in precache for offline-first, others cached on-demand
+        manifestTransforms: [
+          (entries: Array<{ url: string; revision: string | null; size: number }>) => {
+            const manifest = entries.filter((entry) => {
+              const url = entry.url;
+              // Keep English locale and static files for offline-first experience
+              if (url.includes('/assets/locale-en')) return true;
+              if (url.includes('/assets/static-en')) return true;
+              // Exclude all other locale chunks (80+ languages, ~10MB+)
+              if (url.includes('/assets/locale-')) return false;
+              // Exclude all other static content chunks (translated pages, ~80MB+)
+              if (url.includes('/assets/static-')) return false;
+              // Keep everything else
+              return true;
+            });
+            return { manifest, warnings: [] as string[] };
+          },
+        ],
       },
-      {
-        // Cache static content chunks for offline docs/pages
-        urlPattern: /\/assets\/static-.*\.js$/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'static-chunks-cache',
-          expiration: {
-            maxEntries: 30,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-      {
-        // Cache all other JS chunks (vendor, app modules)
-        urlPattern: /\/assets\/.*\.js$/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'js-chunks-cache',
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-      {
-        urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'google-fonts-cache',
-          expiration: {
-            maxEntries: 10,
-            maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-      {
-        urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'gstatic-fonts-cache',
-          expiration: {
-            maxEntries: 10,
-            maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-      {
-        urlPattern: /\/gallery\/.*/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'gallery-images-cache',
-          expiration: {
-            maxEntries: 200,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-      {
-        // Cache learn/examples images on-demand (not precached due to size)
-        urlPattern: /\/images\/.*/i,
-        handler: 'CacheFirst',
-        options: {
-          cacheName: 'content-images-cache',
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-      {
-        // Fallback for navigation requests (SPA support)
-        urlPattern: ({ request }) => request.mode === 'navigate',
-        handler: 'NetworkFirst',
-        options: {
-          cacheName: 'pages-cache',
-          networkTimeoutSeconds: 3,
-          expiration: {
-            maxEntries: 50,
-            maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-          },
-          cacheableResponse: {
-            statuses: [0, 200],
-          },
-        },
-      },
-    ],
-    // Skip waiting and claim clients immediately
-    skipWaiting: true,
-    clientsClaim: true,
-    // Precache app shell - core assets only, not language files
-    // Language/locale files are cached on-demand via runtimeCaching above
-    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf,json}'],
-    // Exclude non-essential files from precache to reduce initial install size
-    globIgnores: [
-      '**/node_modules/**/*',
-      'sw.js',
-      'workbox-*.js',
-      // Exclude gallery images from precache (large, cached on-demand)
-      '**/gallery/**/*',
-      // Exclude learn/examples images from precache (large, cached on-demand)
-      '**/images/**/*',
-      // Exclude source maps if any slip through
-      '**/*.map',
-      // Exclude stats.html bundle analyzer output
-      '**/stats.html',
-    ],
-    // Filter manifest entries to exclude non-English locale/static chunks
-    // This keeps English in precache for offline-first, others cached on-demand
-    manifestTransforms: [
-      (entries: Array<{ url: string; revision: string | null; size: number }>) => {
-        const manifest = entries.filter((entry) => {
-          const url = entry.url;
-          // Keep English locale and static files for offline-first experience
-          if (url.includes('/assets/locale-en')) return true;
-          if (url.includes('/assets/static-en')) return true;
-          // Exclude all other locale chunks (80+ languages, ~10MB+)
-          if (url.includes('/assets/locale-')) return false;
-          // Exclude all other static content chunks (translated pages, ~80MB+)
-          if (url.includes('/assets/static-')) return false;
-          // Keep everything else
-          return true;
-        });
-        return { manifest, warnings: [] as string[] };
-      },
-    ],
-  },
-  })],
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

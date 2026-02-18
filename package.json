@@ -1,6 +1,6 @@
 {
   "name": "anqr",
-  "version": "1.0.0",
+  "version": "1.0.66",
   "description": "These are my existing files for ANQR:",
   "scripts": {
     "dev": "vite",

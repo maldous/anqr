@@ -426,6 +426,7 @@ src/i18n/static/
 - `make i18n:xlate` - Translates missing lines in `en-GB.txt` to all other language `.txt` files. Automated in `make all` step 3.
 - `make i18n:fill` - Generates output files (JSON for locales, TS for static) from txt + templates. Automated in `make all` step 4.
 - `make i18n:sync` - Runs both xlate and fill
+- `make report:i18n:txt` - Checks txt files for untranslated strings, line-count mismatches, and English-heavy warnings
 
 Translation uses **Google Translate only** (`translate.googleapis.com` gtx endpoint — free, no API key required).
 
@@ -781,6 +782,46 @@ make android:upload   # Build + upload to Play Store
 
 ---
 
+## Version Management
+
+ANQR uses a unified versioning convention: **`1.0.{N}`** where `N` is the Android `versionCode` (a monotonically increasing integer required by the Play Store).
+
+### Three locations, one version
+
+| Location | Key | Example | Purpose |
+|----------|-----|---------|--------|
+| `package.json` | `"version"` | `"1.0.66"` | npm/Vite/Sentry release name (`anqr@1.0.66`) |
+| `android/app/build.gradle` | `versionName` | `"1.0.66"` | User-facing version shown in Play Store |
+| `android/app/build.gradle` | `versionCode` | `66` | Play Store upload counter (must increase each upload) |
+
+### How it stays in sync
+
+`make android:bump` is the **single command** that increments all three values in lockstep:
+1. Reads the current `versionCode` from `build.gradle`
+2. Increments it by 1
+3. Computes `NEW_VER = 1.0.{new_code}`
+4. Updates `versionCode` and `versionName` in `build.gradle`
+5. Updates `"version"` in `package.json`
+
+This runs automatically as part of `make all` step 14 (before `android:release`).
+
+### Sentry integration
+
+`vite.config.ts` reads the version from `package.json` via `process.env.npm_package_version` to generate the Sentry release name:
+```
+const sentryRelease = process.env.SENTRY_RELEASE || `anqr@${process.env.npm_package_version || '1.0.0'}`;
+```
+
+After a version bump, the next `npm run build` (or `make build` / `make deploy`) will automatically tag the Sentry release with the new version.
+
+### Rules
+
+- **Never edit version numbers manually** — always use `make android:bump`.
+- The `versionCode` must **never decrease** (Play Store rejects it).
+- Major/minor bumps (e.g. `1.0.N` → `1.1.0` or `2.0.0`) are done manually when a significant release warrants it, then `make android:bump` continues incrementing the patch from there.
+
+---
+
 ## Testing Strategy
 
 ### Fast Local Loop
@@ -825,10 +866,10 @@ make test             # Quality gates + full Playwright E2E
  8. test           — quality gates + unit + E2E (19 checks)
  9. validate       — overlay audit + scan matrix + signoff
 10. gallery:update — copy Tier A scan-validated overlays back to gallery
-11. reports        — payload matrix + i18n + coverage gap
+11. reports        — payload matrix + i18n + unit coverage + coverage gap
 12. sonar          — SonarQube code analysis (non-blocking)
 13. deploy         — rebuild with Sentry + Netlify deploy
-14. android        — release AAB + upload to Play Store
+14. android        — version bump + release AAB + upload to Play Store
 15. services       — third-party service validation (non-blocking)
 16. i18n:push      — push translations + final summary
 ```
