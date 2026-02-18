@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.2/schema.json",
 
   "vcs": {
     "enabled": true,
@@ -85,7 +85,8 @@
         "noArrayIndexKey": "off",
         "noTemplateCurlyInString": "off",
         "noAssignInExpressions": "off",
-        "noConsole": "error"
+        "noConsole": "error",
+        "noImportCycles": "error"
       },
 
       "a11y": {
@@ -93,10 +94,6 @@
         "useKeyWithMouseEvents": "warn",
         "useSemanticElements": "off",
         "noStaticElementInteractions": "off"
-      },
-
-      "nursery": {
-        "noImportCycles": "error"
       }
     }
   },

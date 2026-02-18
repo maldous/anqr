@@ -1,7 +1,7 @@
 {
   "manifestVersion": "2.0",
   "permutationSpecVersion": "1.0",
-  "generated": "2026-02-18T07:59:14.669Z",
+  "generated": "2026-02-18T22:43:45.141Z",
   "source": {
     "script": "scripts/generate-gallery.mjs",
     "devServer": "http://localhost:5173",
@@ -10,7 +10,7 @@
   "generatorConfig": {
     "imageSize": 200,
     "staticCaptureDelayMs": 500,
-    "parallelStatic": 12
+    "parallelStatic": 6
   },
   "count": 42,
   "puppeteerGenerated": 42,

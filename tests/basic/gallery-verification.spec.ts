@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/test-fixtures';
+import { expect, test } from '../fixtures/test-fixtures';
 
 /**
  * Gallery Verification Tests
@@ -21,10 +21,11 @@ const GALLERY_SECTION_TITLES = [
   'Color Processing',
   'QR Encoding',
   'Power Combos',
+  'QR Art',
 ];
 
 /** Representative gallery item IDs used for spot-check assertions */
-const SAMPLE_ITEM_IDS = [
+const _SAMPLE_ITEM_IDS = [
   'plain-basic',
   'content-vcard',
   'style-square',
@@ -44,17 +45,17 @@ test.describe('Gallery Verification', () => {
     await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15000 });
   });
 
-  test('gallery page loads with all 10 section headings visible', async ({ page }) => {
+  test('gallery page loads with all 11 section headings visible', async ({ page }) => {
     // All sections are expanded by default, so all h3 headings should be visible
     for (const title of GALLERY_SECTION_TITLES) {
       const heading = page.locator('h3', { hasText: title });
       await expect(heading).toBeVisible({ timeout: 10000 });
     }
 
-    // Verify we have at least 10 section headings
+    // Verify we have at least 11 section headings
     const allH3s = page.locator('h3');
     const h3Count = await allH3s.count();
-    expect(h3Count).toBeGreaterThanOrEqual(10);
+    expect(h3Count).toBeGreaterThanOrEqual(11);
   });
 
   test('gallery images load successfully', async ({ page }) => {
@@ -90,9 +91,7 @@ test.describe('Gallery Verification', () => {
 
     for (let i = 0; i < sampleSize; i++) {
       const img = allImages.nth(i);
-      const naturalWidth = await img.evaluate(
-        (el: HTMLImageElement) => el.naturalWidth
-      );
+      const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
       if (naturalWidth > 0) {
         loadedCount++;
       }
@@ -272,7 +271,9 @@ test.describe('Gallery Verification', () => {
 
   test('gallery sections can be collapsed and expanded', async ({ page }) => {
     // Find the first section toggle button
-    const firstSectionButton = page.locator('button', { hasText: GALLERY_SECTION_TITLES[0] }).first();
+    const firstSectionButton = page
+      .locator('button', { hasText: GALLERY_SECTION_TITLES[0] })
+      .first();
     await expect(firstSectionButton).toBeVisible();
 
     // The grid should be visible initially (sections expanded by default)

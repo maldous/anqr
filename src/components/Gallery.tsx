@@ -13,6 +13,7 @@ import {
   Grid3x3,
   Image,
   Layers,
+  Paintbrush,
   Palette,
   QrCode,
   Settings2,
@@ -44,6 +45,7 @@ const iconRegistry: Record<string, LucideIcon> = {
   Contrast,
   Settings2,
   Sparkles,
+  Paintbrush,
 };
 
 // Dynamic icon component using registry instead of namespace import
