@@ -115,5 +115,6 @@ export type {
   RGB,
   RGBWithMeta,
 } from './types';
+export { INTRINSICALLY_SCALED_OVERLAY_MODES } from './types';
 // Utility functions
 export { createSeededRandom, getContrastRatio, hashCanvasContent, hashString } from './utils';

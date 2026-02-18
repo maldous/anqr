@@ -29,6 +29,7 @@
     "test:bundle:budget": "node scripts/check-bundle-budgets.mjs",
     "report:payload:matrix": "node scripts/generate-payload-matrix.mjs",
     "validate:services": "node scripts/validate-third-party.mjs",
+    "check:sentry": "node scripts/check-sentry-regression.mjs",
     "report:i18n:txt": "node scripts/check-i18n-txt.js",
     "qr:art": "npx tsx scripts/run-qr-art.ts",
     "test:signoff": "node scripts/production-signoff-check.js"

@@ -1,4 +1,4 @@
-.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto sitemap screenshots deploy android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources validate\:services qr\:art
+.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources validate\:services check\:sentry qr\:art
 
 # ============================================
 # Help
@@ -22,7 +22,7 @@ help:
 	@echo "                        10. gallery    — copy Tier A scan-validated overlays back"
 	@echo "                        11. reports    — payload matrix + unit coverage + coverage gap"
 	@echo "                        12. sonar      — SonarQube code analysis (non-blocking)"
-	@echo "                        13. deploy     — rebuild with Sentry + Netlify deploy"
+	@echo "                        13. deploy     — rebuild with Sentry + Netlify deploy + IndexNow"
 	@echo "                        14. android    — release AAB + upload (if SDK available)"
 	@echo "                        15. services   — third-party service checks (non-blocking)"
 	@echo "                        16. i18n:push  — push translations + final summary"
@@ -52,6 +52,7 @@ help:
 	@echo ""
 	@echo "  DEPLOYMENT"
 	@echo "    make deploy         Deploy to Netlify (anqr.link)"
+	@echo "    make indexnow       Submit URLs to search engines via IndexNow (post-deploy)"
 	@echo ""
 	@echo "  ANDROID APP (Capacitor)"
 	@echo "    make android        Full production build (bump + release AAB)"
@@ -89,6 +90,7 @@ help:
 	@echo "    make dep            Generate dependency graph (deps.png)"
 	@echo "    make resources      Show auto-detected CPU/mem/disk tuning values"
 	@echo "    make validate:services  Validate all third-party services (Netlify, Sentry, Cloudflare, etc.)"
+	@echo "    make check:sentry       Check Sentry for unresolved issues (regression monitor)"
 	@echo "    make qr:art         Generate QR-Art PNG from image (IMG=path OUT=path)"
 	@echo ""
 	@echo "  CODE ANALYSIS (SonarQube)"
@@ -225,6 +227,9 @@ SCREENSHOT_PORT ?= 5173
 validate\:services:
 	node scripts/validate-third-party.mjs
 
+check\:sentry:
+	npm run check:sentry
+
 resources:
 	@echo ""
 	@echo "ANQR Resource Profile (auto-detected)"
@@ -258,7 +263,7 @@ resources:
 #  10. gallery:update — copy Tier A scan-validated overlay artifacts back to public/gallery/
 #  11. reports     — payload verification matrix + unit coverage + coverage gap report
 #  12. sonar       — SonarQube code analysis (non-blocking, requires localhost:9000)
-#  13. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy
+#  13. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy + IndexNow
 #  14. android     — release AAB + upload to Play Store (skipped if SDK/Java unavailable)
 #  15. services    — third-party service checks (non-blocking)
 #  16. i18n:push   — push translations to public repo + final status banner
@@ -327,10 +332,11 @@ all:
 	@echo "[12/16] Running SonarQube analysis..."
 	@$(MAKE) sonar || echo "⚠️  SonarQube not available (localhost:9000) — skipping"
 	@echo ""
-	@echo "[13/16] Deploying web to production (Netlify)..."
+	@echo "[13/16] Deploying web to production (Netlify) + IndexNow..."
 	# Deploy rebuilds with SENTRY_UPLOAD=true for sourcemap upload, then pushes to Netlify.
 	# This final build includes gallery images (step 7) + Tier A overlays (step 10).
 	$(MAKE) deploy
+	@$(MAKE) indexnow || echo "⚠️  IndexNow submission failed — see reports/indexnow-submission.json"
 	@echo ""
 	@echo "[14/16] Bumping version + building Android release AAB + uploading..."
 	@if [ -d android ] && command -v java >/dev/null 2>&1 && [ -n "$$ANDROID_HOME" ]; then \
@@ -348,6 +354,7 @@ all:
 	@echo ""
 	@echo "[15/16] Validating third-party services..."
 	@$(MAKE) validate:services || echo "⚠️  Some third-party validations failed — see reports/third-party-validation.json"
+	@$(MAKE) check:sentry || echo "⚠️  Sentry regression check failed — see reports/sentry-regression.json"
 	@echo ""
 	@echo "[16/16] Pushing translations + final summary"
 	@$(MAKE) i18n:push || echo "⚠️  i18n:push failed (no remote access?) — skipping"
@@ -577,6 +584,12 @@ screenshots:
 deploy:
 	SENTRY_UPLOAD=true npm run build
 	netlify deploy --prod --site anqr.link --dir=dist
+
+# Submit all canonical URLs to search engines via IndexNow protocol.
+# Notifies Bing, Yandex, Naver, DuckDuckGo, and all participating engines.
+# Run after deploy to inform search engines of updated content.
+indexnow:
+	node scripts/submit-indexnow.mjs
 
 # ============================================
 # Android App (Capacitor)

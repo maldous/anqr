@@ -1,0 +1,312 @@
+{
+  "generatedAt": "2026-02-18T10:53:14.869Z",
+  "tiers": [
+    {
+      "id": "tier-a",
+      "label": "Production",
+      "description": "Production-like settings with scan gate retry",
+      "scanGateProfile": "preview",
+      "overlayIntensity": 70,
+      "darkMinOccupancy": 0.44,
+      "lightMaxOccupancy": 0.56,
+      "optimizeIterations": 10,
+      "qrBitBiasStrength": 0.06
+    },
+    {
+      "id": "tier-b",
+      "label": "Diagnostic",
+      "description": "Intrinsic scannability without scan gate assistance",
+      "scanGateProfile": "off",
+      "overlayIntensity": 65,
+      "darkMinOccupancy": 0.48,
+      "lightMaxOccupancy": 0.52,
+      "optimizeIterations": 12,
+      "qrBitBiasStrength": 0.08
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "overlay-mosaic",
+      "title": "Mosaic",
+      "description": "Mosaic tiles — image color averaged into each QR module cell",
+      "featureGroup": "overlay",
+      "heroPriority": 84,
+      "galleryEligible": true
+    },
+    {
+      "id": "animation-blend",
+      "title": "Animation Blend",
+      "description": "Animated grayscale blend — cinematic silver-screen effect",
+      "featureGroup": "animation",
+      "heroPriority": 26,
+      "galleryEligible": true
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "tsunami",
+      "filePath": "public/tsunami.jpg",
+      "publicPath": "/tsunami.jpg",
+      "isAnimated": false
+    },
+    {
+      "id": "king",
+      "filePath": "public/king.gif",
+      "publicPath": "/king.gif",
+      "isAnimated": true
+    },
+    {
+      "id": "logo",
+      "filePath": "public/logo.png",
+      "publicPath": "/logo.png",
+      "isAnimated": false
+    },
+    {
+      "id": "test",
+      "filePath": "public/test.png",
+      "publicPath": "/test.png",
+      "isAnimated": false
+    }
+  ],
+  "totalRuns": 16,
+  "tierA": {
+    "totalRuns": 8,
+    "passRuns": 8,
+    "failRuns": 0
+  },
+  "tierB": {
+    "totalRuns": 8,
+    "passRuns": 8,
+    "failRuns": 0
+  },
+  "results": [
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "tsunami",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-mosaic__tsunami.png",
+      "durationMs": 5498
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "king",
+      "isAnimated": true,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-mosaic__king.gif",
+      "durationMs": 5804
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "logo",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-mosaic__logo.png",
+      "durationMs": 5483
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "test",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-mosaic__test.png",
+      "durationMs": 5452
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "animation-blend",
+      "fixtureId": "tsunami",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-blend__tsunami.png",
+      "durationMs": 5551
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "animation-blend",
+      "fixtureId": "king",
+      "isAnimated": true,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-blend__king.gif",
+      "durationMs": 5722
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "animation-blend",
+      "fixtureId": "logo",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-blend__logo.png",
+      "durationMs": 5574
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "animation-blend",
+      "fixtureId": "test",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-blend__test.png",
+      "durationMs": 5641
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "tsunami",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-mosaic__tsunami.png",
+      "durationMs": 4557
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "king",
+      "isAnimated": true,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-mosaic__king.gif",
+      "durationMs": 4781
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "logo",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-mosaic__logo.png",
+      "durationMs": 4626
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "overlay-mosaic",
+      "fixtureId": "test",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-mosaic__test.png",
+      "durationMs": 4569
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "animation-blend",
+      "fixtureId": "tsunami",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-blend__tsunami.png",
+      "durationMs": 4611
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "animation-blend",
+      "fixtureId": "king",
+      "isAnimated": true,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-blend__king.gif",
+      "durationMs": 4795
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "animation-blend",
+      "fixtureId": "logo",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-blend__logo.png",
+      "durationMs": 4657
+    },
+    {
+      "tier": "tier-b",
+      "scenarioId": "animation-blend",
+      "fixtureId": "test",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-blend__test.png",
+      "durationMs": 4698
+    }
+  ],
+  "galleryCandidates": [
+    {
+      "scenarioId": "overlay-mosaic",
+      "selectedFixtureId": "test",
+      "isAnimated": false,
+      "heroPriority": 84,
+      "galleryEligible": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-mosaic__test.png",
+      "status": "pass"
+    },
+    {
+      "scenarioId": "animation-blend",
+      "selectedFixtureId": "tsunami",
+      "isAnimated": false,
+      "heroPriority": 26,
+      "galleryEligible": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-blend__tsunami.png",
+      "status": "pass"
+    }
+  ]
+}

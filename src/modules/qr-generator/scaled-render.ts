@@ -20,6 +20,7 @@ import {
   drawFinderPatternComplete,
   drawFrame,
   drawFrameBackground,
+  drawModule,
   drawTimingModule,
 } from './drawing';
 import { getAlignmentPositionsCached } from './pattern-helpers';
@@ -655,6 +656,81 @@ export async function generateScaledQR(
         }
       }
     }
+  }
+
+  // Apply module-shape masking for non-square module styles.
+  // This clips the sub-pixel rendered content (dithered dots, subpixel grid, etc.)
+  // to the configured module shape (rounded, dots, diamond, star, heart) while
+  // preserving the visual overlay effects within each module boundary.
+  const moduleStyleName = config.moduleStyle || 'square';
+  if (moduleStyleName !== 'square' && moduleStyleName !== 'connected') {
+    const maskCanvas = await createCanvasFn(size, size);
+    const maskCtx = maskCanvas.getContext('2d') as CanvasRenderingContext2D;
+    maskCtx.imageSmoothingEnabled = false;
+
+    // Margin and frame areas: fully visible
+    maskCtx.fillStyle = 'white';
+    maskCtx.fillRect(0, 0, size, marginPx);
+    maskCtx.fillRect(0, marginPx, marginPx, size - marginPx);
+    const qrRight = marginPx + moduleCount * effectiveModuleSize;
+    maskCtx.fillRect(qrRight, 0, Math.max(0, size - qrRight), size);
+    maskCtx.fillRect(0, marginPx + moduleCount * effectiveModuleSize, size, size);
+
+    const cornerRadius = config.cornerRadius || 0;
+    const dotRotation = config.dotRotationDeg || 0;
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        const mx = marginPx + col * effectiveModuleSize;
+        const my = marginPx + row * effectiveModuleSize;
+
+        // Structural pattern modules: fully visible (drawn separately with their own styles)
+        if (
+          isFinderRegion(row, col) ||
+          isAlignmentPatternSpec(row, col, moduleCount, version) ||
+          isTimingPatternSpec(row, col, moduleCount) ||
+          isFormatInfoSpec(row, col, moduleCount) ||
+          isVersionInfoSpec(row, col, moduleCount, version) ||
+          _isDarkModule(row, col, moduleCount)
+        ) {
+          maskCtx.fillStyle = 'white';
+          maskCtx.fillRect(mx, my, effectiveModuleSize, effectiveModuleSize);
+          continue;
+        }
+
+        // Data modules: only dark modules get shaped; light modules stay fully visible
+        if (!qr.isDark(row, col)) {
+          maskCtx.fillStyle = 'white';
+          maskCtx.fillRect(mx, my, effectiveModuleSize, effectiveModuleSize);
+          continue;
+        }
+
+        let gap = config.moduleGap ? (effectiveModuleSize * config.moduleGap) / 100 : 0;
+        const gapMode = config.gapMode || 'none';
+        if (gapMode === 'inset') gap = Math.max(gap, effectiveModuleSize * 0.1);
+        else if (gapMode === 'negative_space') gap = Math.max(gap, effectiveModuleSize * 0.2);
+        const adjustedSize = effectiveModuleSize - gap;
+        const offset = (effectiveModuleSize - adjustedSize) / 2;
+
+        maskCtx.fillStyle = 'white';
+        drawModule(maskCtx, mx + offset, my + offset, adjustedSize, moduleStyleName, {
+          cornerRadius,
+          rotation: dotRotation,
+        });
+      }
+    }
+
+    // Apply mask: keep only pixels where mask is white
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(maskCanvas as CanvasImageSource, 0, 0);
+
+    // Fill background behind masked-out areas
+    ctx.globalCompositeOperation = 'destination-over';
+    if (!config.transparentBg) {
+      ctx.fillStyle = effectiveBgColor;
+      ctx.fillRect(0, 0, size, size);
+    }
+
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   drawPatternContrastBoostOverlay();

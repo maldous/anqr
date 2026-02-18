@@ -1,14 +1,14 @@
 {
   "title": "ANQR Third-Party Service Validation",
-  "generated": "2026-02-17T22:04:00.285Z",
-  "durationMs": 12898,
+  "generated": "2026-02-18T06:19:27.544Z",
+  "durationMs": 8581,
   "summary": {
     "critical": {
       "passed": 4,
       "total": 4
     },
-    "warnings": 1,
-    "skipped": 1,
+    "warnings": 0,
+    "skipped": 0,
     "allCriticalPassed": true
   },
   "results": [
@@ -23,18 +23,18 @@
         "custom_domain": "anqr.link",
         "url": "https://anqr.link",
         "latest_deploy_state": "ready",
-        "latest_deploy_id": "6994e51d555990c33e0b4b92",
-        "latest_deploy_created": "2026-02-17T22:01:01.406Z"
+        "latest_deploy_id": "6995598f2a06768dfeb071ac",
+        "latest_deploy_created": "2026-02-18T06:17:51.670Z"
       },
-      "timestamp": "2026-02-17T22:03:52.716Z"
+      "timestamp": "2026-02-18T06:19:23.851Z"
     },
     {
       "name": "Google Play",
       "level": "WARN",
-      "status": "WARN",
-      "summary": "play-store-key.json missing",
+      "status": "PASS",
+      "summary": "All Play Store files present",
       "details": {
-        "play_store_key": false,
+        "play_store_key": true,
         "release_keystore": true,
         "google_services": {
           "exists": true,
@@ -42,7 +42,7 @@
           "project_id": "anqr-link"
         }
       },
-      "timestamp": "2026-02-17T22:03:52.736Z"
+      "timestamp": "2026-02-18T06:19:23.870Z"
     },
     {
       "name": "Ads Config",
@@ -64,17 +64,18 @@
           "publisher_id_match": true
         }
       },
-      "timestamp": "2026-02-17T22:03:52.736Z"
+      "timestamp": "2026-02-18T06:19:23.870Z"
     },
     {
       "name": "SonarQube",
       "level": "WARN",
-      "status": "SKIP",
-      "summary": "localhost:9000 not reachable",
+      "status": "PASS",
+      "summary": "localhost:9000 reachable, status UP",
       "details": {
-        "error": "connect ECONNREFUSED 127.0.0.1:9000"
+        "statusCode": 200,
+        "status": "UP"
       },
-      "timestamp": "2026-02-17T22:03:52.739Z"
+      "timestamp": "2026-02-18T06:19:23.878Z"
     },
     {
       "name": "Snyk",
@@ -85,7 +86,26 @@
         "statusCode": 200,
         "username": "maldous"
       },
-      "timestamp": "2026-02-17T22:03:53.034Z"
+      "timestamp": "2026-02-18T06:19:24.211Z"
+    },
+    {
+      "name": "IndexNow",
+      "level": "WARN",
+      "status": "PASS",
+      "summary": "Key file valid locally and live",
+      "details": {
+        "local_file": {
+          "path": "public/da39713d0cb0b7ec43d21f259b214605.txt",
+          "exists": true,
+          "key_match": true
+        },
+        "live_url": {
+          "url": "https://anqr.link/da39713d0cb0b7ec43d21f259b214605.txt",
+          "status_code": 200,
+          "key_match": true
+        }
+      },
+      "timestamp": "2026-02-18T06:19:24.611Z"
     },
     {
       "name": "Cloudflare",
@@ -120,38 +140,7 @@
           }
         }
       },
-      "timestamp": "2026-02-17T22:03:53.809Z"
-    },
-    {
-      "name": "Sentry",
-      "level": "CRITICAL",
-      "status": "PASS",
-      "summary": "3/3 projects active (29 unresolved issues)",
-      "details": {
-        "projects": {
-          "anqr-web": {
-            "status": "active",
-            "active": true,
-            "unresolved": 0
-          },
-          "anqr-mobile": {
-            "status": "active",
-            "active": true,
-            "unresolved": 29
-          },
-          "anqr-api": {
-            "status": "active",
-            "active": true,
-            "unresolved": 0
-          }
-        },
-        "dsn_check": {
-          "expected": "https://6935e811c47169e037e31209f2d46fbd@o4510808522489856.ingest.us.sentry.io/4510808547917824",
-          "found_in_function": true,
-          "status": "match"
-        }
-      },
-      "timestamp": "2026-02-17T22:03:58.478Z"
+      "timestamp": "2026-02-18T06:19:25.236Z"
     },
     {
       "name": "Live Site",
@@ -206,7 +195,38 @@
           }
         }
       },
-      "timestamp": "2026-02-17T22:04:00.284Z"
+      "timestamp": "2026-02-18T06:19:26.958Z"
+    },
+    {
+      "name": "Sentry",
+      "level": "CRITICAL",
+      "status": "PASS",
+      "summary": "3/3 projects active",
+      "details": {
+        "projects": {
+          "anqr-web": {
+            "status": "active",
+            "active": true,
+            "unresolved": 0
+          },
+          "anqr-mobile": {
+            "status": "active",
+            "active": true,
+            "unresolved": 0
+          },
+          "anqr-api": {
+            "status": "active",
+            "active": true,
+            "unresolved": 0
+          }
+        },
+        "dsn_check": {
+          "expected": "https://6935e811c47169e037e31209f2d46fbd@o4510808522489856.ingest.us.sentry.io/4510808547917824",
+          "found_in_function": true,
+          "status": "match"
+        }
+      },
+      "timestamp": "2026-02-18T06:19:27.544Z"
     }
   ]
 }

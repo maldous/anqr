@@ -1,0 +1,22 @@
+{
+  "title": "ANQR IndexNow Submission",
+  "generated": "2026-02-18T06:18:42.289Z",
+  "durationMs": 561,
+  "status": "OK",
+  "httpStatus": 202,
+  "responseBody": "",
+  "urlCount": 9,
+  "urls": [
+    "https://anqr.link/",
+    "https://anqr.link/gallery",
+    "https://anqr.link/learn",
+    "https://anqr.link/examples",
+    "https://anqr.link/guide",
+    "https://anqr.link/about",
+    "https://anqr.link/contact",
+    "https://anqr.link/privacy",
+    "https://anqr.link/terms"
+  ],
+  "endpoint": "https://api.indexnow.org/indexnow",
+  "host": "anqr.link"
+}

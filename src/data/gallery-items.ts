@@ -1,10 +1,10 @@
 /**
- * Gallery Items - Comprehensive feature showcase for ANQR
+ * Gallery Items - Hero showcase for ANQR
  *
  * Non-overlay sections (plain, content-types, styles, colors) are hand-crafted.
- * Overlay sections are built programmatically from scan-validated Tier A scenarios
- * (GALLERY_SCAN_SCENARIOS × CANONICAL_FIXTURES) to guarantee every gallery image
- * is proven scannable.
+ * Image overlay section shows ONE fixture per scenario for maximum visual variety.
+ * Animated overlay section uses king.gif exclusively across blend modes.
+ * Other overlay-based sections use all fixtures for comprehensive coverage.
  */
 
 import { Capacitor } from '@capacitor/core';
@@ -373,6 +373,47 @@ const FEATURE_GROUP_TO_CATEGORY: Partial<Record<ScenarioFeatureGroup, GalleryCat
   watermark: 'power-combos',
 };
 
+const KING_FIXTURE = CANONICAL_FIXTURES.find((f) => f.id === 'king')!;
+
+const IMAGE_OVERLAY_FIXTURE: Record<string, CanonicalFixtureId> = {
+  'overlay-dithered': 'tsunami',
+  'overlay-blue-noise': 'logo',
+  'overlay-subpixel': 'test',
+  'overlay-halftone': 'tsunami',
+  'overlay-mosaic': 'logo',
+  'overlay-extreme': 'tsunami',
+  'overlay-duotone': 'tsunami',
+  'overlay-pixelate': 'logo',
+  'overlay-blend': 'tsunami',
+  'overlay-dithered-bayer': 'logo',
+  'overlay-dithered-atkinson': 'test',
+  'overlay-halftone-dots': 'tsunami',
+  'overlay-blend-rounded': 'logo',
+  'overlay-duotone-sunset': 'tsunami',
+  'overlay-duotone-ocean': 'logo',
+  'overlay-duotone-neon': 'test',
+  'overlay-mosaic-diamond': 'tsunami',
+  'overlay-dithered-posterized': 'logo',
+  'overlay-pixelate-grayscale': 'test',
+  'overlay-extreme-edges': 'tsunami',
+};
+
+function buildScenarioParams(
+  scenario: (typeof GALLERY_SCAN_SCENARIOS)[number],
+  fixture?: (typeof CANONICAL_FIXTURES)[number]
+): Record<string, string | number | boolean> {
+  const params: Record<string, string | number | boolean> = {
+    data: BASE_DATA,
+    ...Object.fromEntries(
+      Object.entries(scenario.galleryParams).filter(([, v]) => v !== undefined)
+    ),
+  };
+  if (fixture) {
+    params.img = fixture.publicPath;
+  }
+  return params;
+}
+
 function buildValidatedItems(): GalleryItem[] {
   const items: GalleryItem[] = [];
 
@@ -384,29 +425,57 @@ function buildValidatedItems(): GalleryItem[] {
     const category = FEATURE_GROUP_TO_CATEGORY[scenario.featureGroup];
     if (!category) continue;
 
-    const fixturesToUse = scenario.useOverlay ? CANONICAL_FIXTURES : [CANONICAL_FIXTURES[0]];
-
-    for (const fixture of fixturesToUse) {
-      const params: Record<string, string | number | boolean> = {
-        data: BASE_DATA,
-        ...Object.fromEntries(
-          Object.entries(scenario.galleryParams).filter(([, v]) => v !== undefined)
-        ),
-      };
-
-      if (scenario.useOverlay) {
-        params.img = fixture.publicPath;
-      }
-
+    // Image overlays: one fixture per scenario for maximum visual variety
+    if (category === 'image-overlay') {
+      const fixtureId = IMAGE_OVERLAY_FIXTURE[scenario.id];
+      if (!fixtureId) continue;
+      const fixture = CANONICAL_FIXTURES.find((f) => f.id === fixtureId)!;
       items.push({
-        id: scenario.useOverlay ? `${scenario.id}-${fixture.id}` : scenario.id,
-        title: scenario.useOverlay
-          ? `${scenario.title} — ${FIXTURE_DISPLAY_NAMES[fixture.id]}`
-          : scenario.title,
+        id: `${scenario.id}-${fixtureId}`,
+        title: `${scenario.title} — ${FIXTURE_DISPLAY_NAMES[fixtureId]}`,
         description: scenario.description,
         category,
-        isAnimated: scenario.useOverlay ? fixture.isAnimated : false,
-        params,
+        isAnimated: fixture.isAnimated,
+        params: buildScenarioParams(scenario, fixture),
+      });
+      continue;
+    }
+
+    // Animated overlays: king.gif only
+    if (category === 'animation-overlay') {
+      const displayTitle = scenario.title.replace(/^Animation\s+/i, '');
+      items.push({
+        id: `${scenario.id}-king`,
+        title: displayTitle,
+        description: scenario.description,
+        category,
+        isAnimated: true,
+        params: buildScenarioParams(scenario, KING_FIXTURE),
+      });
+      continue;
+    }
+
+    // Non-overlay scenarios: single item
+    if (!scenario.useOverlay) {
+      items.push({
+        id: scenario.id,
+        title: scenario.title,
+        description: scenario.description,
+        category,
+        params: buildScenarioParams(scenario),
+      });
+      continue;
+    }
+
+    // Other overlay categories (preservation, encoding, etc.): all fixtures
+    for (const fixture of CANONICAL_FIXTURES) {
+      items.push({
+        id: `${scenario.id}-${fixture.id}`,
+        title: `${scenario.title} — ${FIXTURE_DISPLAY_NAMES[fixture.id]}`,
+        description: scenario.description,
+        category,
+        isAnimated: fixture.isAnimated,
+        params: buildScenarioParams(scenario, fixture),
       });
     }
   }
@@ -458,42 +527,42 @@ export const gallerySections: GallerySection[] = [
   {
     id: 'image-overlay',
     title: 'Image Overlays',
-    description: 'Scan-validated image overlays across all fixture images',
+    description: 'Every overlay mode, dither algorithm, color treatment, and filter effect',
     icon: 'Image',
     items: imageOverlayItems,
   },
   {
     id: 'animation-overlay',
     title: 'Animated Overlays',
-    description: 'Scan-validated animated overlays across all fixture images',
+    description: 'Full-length king.gif animation in color, grayscale, B&W, and duotone',
     icon: 'Film',
     items: animationOverlayItems,
   },
   {
     id: 'blend-modes',
     title: 'Preservation Modes',
-    description: 'Scan-validated functional module preservation strategies',
+    description: 'Functional module preservation strategies',
     icon: 'Layers',
     items: blendModeItems,
   },
   {
     id: 'color-modes',
     title: 'Output Modes',
-    description: 'Scan-validated output rendering modes',
+    description: 'Output rendering modes and color treatments',
     icon: 'Contrast',
     items: colorModeItems,
   },
   {
     id: 'encoding',
     title: 'QR Encoding',
-    description: 'Scan-validated QR versions and error correction levels',
+    description: 'QR versions and error correction levels with overlays',
     icon: 'Settings2',
     items: encodingItems,
   },
   {
     id: 'power-combos',
     title: 'Power Combos',
-    description: 'Scan-validated render styles, frames, and watermark combinations',
+    description: 'Render styles, frames, and watermark combinations',
     icon: 'Sparkles',
     items: powerComboItems,
   },

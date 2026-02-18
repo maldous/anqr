@@ -2,10 +2,10 @@
 
 ## Overview
 
-- Total runs: 336 (168 per tier × 2 tiers)
-- **Tier A (Production):** 168 pass / 0 fail (100%)
-- **Tier B (Diagnostic):** 137 pass / 31 fail (82%)
-- Scan-gate-rescued: 31 scenario×fixture pairs
+- Total runs: 464 (232 per tier × 2 tiers)
+- **Tier A (Production):** 231 pass / 1 fail (100%)
+- **Tier B (Diagnostic):** 185 pass / 47 fail (80%)
+- Scan-gate-rescued: 46 scenario×fixture pairs
 
 ## Tier A — Production
 
@@ -15,14 +15,16 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 42 | 0 |
-| king | 42 | 0 |
-| logo | 42 | 0 |
-| test | 42 | 0 |
+| tsunami | 58 | 0 |
+| king | 57 | 1 |
+| logo | 58 | 0 |
+| test | 58 | 0 |
 
 ### Failing Cases
 
-_None_
+| Scenario | Fixture | Reason | Disposition |
+| --- | --- | --- | --- |
+| overlay-pixelate-coral | king | EXPORT_LOSS | fix-now |
 
 ## Tier B — Diagnostic
 
@@ -32,10 +34,10 @@ _None_
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 40 | 2 |
-| king | 18 | 24 |
-| logo | 40 | 2 |
-| test | 39 | 3 |
+| tsunami | 56 | 2 |
+| king | 18 | 40 |
+| logo | 56 | 2 |
+| test | 55 | 3 |
 
 ### Failing Cases
 
@@ -43,6 +45,9 @@ _None_
 | --- | --- | --- | --- |
 | overlay-dithered | king | CONTRAST_COLLAPSE | tunable |
 | overlay-blue-noise | king | CONTRAST_COLLAPSE | tunable |
+| overlay-halftone | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-mosaic | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-extreme | king | CONTRAST_COLLAPSE | fix-now |
 | preserve-balanced | king | CONTRAST_COLLAPSE | tunable |
 | preserve-blended | tsunami | CONTRAST_COLLAPSE | tunable |
 | preserve-blended | king | CONTRAST_COLLAPSE | tunable |
@@ -56,12 +61,25 @@ _None_
 | output-hd | king | CONTRAST_COLLAPSE | tunable |
 | output-hd | test | CONTRAST_COLLAPSE | tunable |
 | watermark-frame-tag | king | CONTRAST_COLLAPSE | tunable |
+| overlay-duotone | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-pixelate | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-blend | king | CONTRAST_COLLAPSE | fix-now |
 | render-diamond-gap | king | CONTRAST_COLLAPSE | tunable |
 | encoding-ecc-m | king | CONTRAST_COLLAPSE | tunable |
 | encoding-ecc-m | test | CONTRAST_COLLAPSE | tunable |
 | encoding-byte-v6 | king | CONTRAST_COLLAPSE | tunable |
 | watermark-text-bottom | king | CONTRAST_COLLAPSE | tunable |
 | output-grayscale | king | CONTRAST_COLLAPSE | tunable |
+| overlay-dithered-rounded | king | CONTRAST_COLLAPSE | tunable |
+| overlay-halftone-dots | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-blue-noise-ocean | king | CONTRAST_COLLAPSE | tunable |
+| overlay-duotone-sunset | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-extreme-midnight | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-blend-grayscale | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-dithered-forest | king | CONTRAST_COLLAPSE | tunable |
+| overlay-pixelate-coral | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-mosaic-connected | king | CONTRAST_COLLAPSE | fix-now |
+| overlay-dithered-gradient | king | CONTRAST_COLLAPSE | tunable |
 | preprocess-brightness | logo | CONTRAST_COLLAPSE | tunable |
 | preprocess-sharpen | tsunami | CONTRAST_COLLAPSE | tunable |
 | preprocess-sharpen | king | CONTRAST_COLLAPSE | tunable |
@@ -90,15 +108,15 @@ _None_
 | overlay-subpixel | logo | pass | pass | ✅ both pass |
 | overlay-subpixel | test | pass | pass | ✅ both pass |
 | overlay-halftone | tsunami | pass | pass | ✅ both pass |
-| overlay-halftone | king | pass | pass | ✅ both pass |
+| overlay-halftone | king | pass | fail | 🟢 rescued |
 | overlay-halftone | logo | pass | pass | ✅ both pass |
 | overlay-halftone | test | pass | pass | ✅ both pass |
 | overlay-mosaic | tsunami | pass | pass | ✅ both pass |
-| overlay-mosaic | king | pass | pass | ✅ both pass |
+| overlay-mosaic | king | pass | fail | 🟢 rescued |
 | overlay-mosaic | logo | pass | pass | ✅ both pass |
 | overlay-mosaic | test | pass | pass | ✅ both pass |
 | overlay-extreme | tsunami | pass | pass | ✅ both pass |
-| overlay-extreme | king | pass | pass | ✅ both pass |
+| overlay-extreme | king | pass | fail | 🟢 rescued |
 | overlay-extreme | logo | pass | pass | ✅ both pass |
 | overlay-extreme | test | pass | pass | ✅ both pass |
 | preserve-balanced | tsunami | pass | pass | ✅ both pass |
@@ -150,15 +168,15 @@ _None_
 | watermark-frame-tag | logo | pass | pass | ✅ both pass |
 | watermark-frame-tag | test | pass | pass | ✅ both pass |
 | overlay-duotone | tsunami | pass | pass | ✅ both pass |
-| overlay-duotone | king | pass | pass | ✅ both pass |
+| overlay-duotone | king | pass | fail | 🟢 rescued |
 | overlay-duotone | logo | pass | pass | ✅ both pass |
 | overlay-duotone | test | pass | pass | ✅ both pass |
 | overlay-pixelate | tsunami | pass | pass | ✅ both pass |
-| overlay-pixelate | king | pass | pass | ✅ both pass |
+| overlay-pixelate | king | pass | fail | 🟢 rescued |
 | overlay-pixelate | logo | pass | pass | ✅ both pass |
 | overlay-pixelate | test | pass | pass | ✅ both pass |
 | overlay-blend | tsunami | pass | pass | ✅ both pass |
-| overlay-blend | king | pass | pass | ✅ both pass |
+| overlay-blend | king | pass | fail | 🟢 rescued |
 | overlay-blend | logo | pass | pass | ✅ both pass |
 | overlay-blend | test | pass | pass | ✅ both pass |
 | render-diamond-gap | tsunami | pass | pass | ✅ both pass |
@@ -197,6 +215,70 @@ _None_
 | output-grayscale | king | pass | fail | 🟢 rescued |
 | output-grayscale | logo | pass | pass | ✅ both pass |
 | output-grayscale | test | pass | pass | ✅ both pass |
+| animation-mosaic | tsunami | pass | pass | ✅ both pass |
+| animation-mosaic | king | pass | pass | ✅ both pass |
+| animation-mosaic | logo | pass | pass | ✅ both pass |
+| animation-mosaic | test | pass | pass | ✅ both pass |
+| animation-extreme | tsunami | pass | pass | ✅ both pass |
+| animation-extreme | king | pass | pass | ✅ both pass |
+| animation-extreme | logo | pass | pass | ✅ both pass |
+| animation-extreme | test | pass | pass | ✅ both pass |
+| animation-pixelate | tsunami | pass | pass | ✅ both pass |
+| animation-pixelate | king | pass | pass | ✅ both pass |
+| animation-pixelate | logo | pass | pass | ✅ both pass |
+| animation-pixelate | test | pass | pass | ✅ both pass |
+| animation-blend | tsunami | pass | pass | ✅ both pass |
+| animation-blend | king | pass | pass | ✅ both pass |
+| animation-blend | logo | pass | pass | ✅ both pass |
+| animation-blend | test | pass | pass | ✅ both pass |
+| animation-duotone | tsunami | pass | pass | ✅ both pass |
+| animation-duotone | king | pass | pass | ✅ both pass |
+| animation-duotone | logo | pass | pass | ✅ both pass |
+| animation-duotone | test | pass | pass | ✅ both pass |
+| overlay-dithered-rounded | tsunami | pass | pass | ✅ both pass |
+| overlay-dithered-rounded | king | pass | fail | 🟢 rescued |
+| overlay-dithered-rounded | logo | pass | pass | ✅ both pass |
+| overlay-dithered-rounded | test | pass | pass | ✅ both pass |
+| overlay-halftone-dots | tsunami | pass | pass | ✅ both pass |
+| overlay-halftone-dots | king | pass | fail | 🟢 rescued |
+| overlay-halftone-dots | logo | pass | pass | ✅ both pass |
+| overlay-halftone-dots | test | pass | pass | ✅ both pass |
+| overlay-blue-noise-ocean | tsunami | pass | pass | ✅ both pass |
+| overlay-blue-noise-ocean | king | pass | fail | 🟢 rescued |
+| overlay-blue-noise-ocean | logo | pass | pass | ✅ both pass |
+| overlay-blue-noise-ocean | test | pass | pass | ✅ both pass |
+| overlay-subpixel-diamond | tsunami | pass | pass | ✅ both pass |
+| overlay-subpixel-diamond | king | pass | pass | ✅ both pass |
+| overlay-subpixel-diamond | logo | pass | pass | ✅ both pass |
+| overlay-subpixel-diamond | test | pass | pass | ✅ both pass |
+| overlay-duotone-sunset | tsunami | pass | pass | ✅ both pass |
+| overlay-duotone-sunset | king | pass | fail | 🟢 rescued |
+| overlay-duotone-sunset | logo | pass | pass | ✅ both pass |
+| overlay-duotone-sunset | test | pass | pass | ✅ both pass |
+| overlay-extreme-midnight | tsunami | pass | pass | ✅ both pass |
+| overlay-extreme-midnight | king | pass | fail | 🟢 rescued |
+| overlay-extreme-midnight | logo | pass | pass | ✅ both pass |
+| overlay-extreme-midnight | test | pass | pass | ✅ both pass |
+| overlay-blend-grayscale | tsunami | pass | pass | ✅ both pass |
+| overlay-blend-grayscale | king | pass | fail | 🟢 rescued |
+| overlay-blend-grayscale | logo | pass | pass | ✅ both pass |
+| overlay-blend-grayscale | test | pass | pass | ✅ both pass |
+| overlay-dithered-forest | tsunami | pass | pass | ✅ both pass |
+| overlay-dithered-forest | king | pass | fail | 🟢 rescued |
+| overlay-dithered-forest | logo | pass | pass | ✅ both pass |
+| overlay-dithered-forest | test | pass | pass | ✅ both pass |
+| overlay-pixelate-coral | tsunami | pass | pass | ✅ both pass |
+| overlay-pixelate-coral | king | fail | fail | ❌ both fail |
+| overlay-pixelate-coral | logo | pass | pass | ✅ both pass |
+| overlay-pixelate-coral | test | pass | pass | ✅ both pass |
+| overlay-mosaic-connected | tsunami | pass | pass | ✅ both pass |
+| overlay-mosaic-connected | king | pass | fail | 🟢 rescued |
+| overlay-mosaic-connected | logo | pass | pass | ✅ both pass |
+| overlay-mosaic-connected | test | pass | pass | ✅ both pass |
+| overlay-dithered-gradient | tsunami | pass | pass | ✅ both pass |
+| overlay-dithered-gradient | king | pass | fail | 🟢 rescued |
+| overlay-dithered-gradient | logo | pass | pass | ✅ both pass |
+| overlay-dithered-gradient | test | pass | pass | ✅ both pass |
 | preprocess-contrast | tsunami | pass | pass | ✅ both pass |
 | preprocess-contrast | king | pass | pass | ✅ both pass |
 | preprocess-contrast | logo | pass | pass | ✅ both pass |
@@ -254,6 +336,9 @@ Scenarios that pass in Tier A but fail in Tier B — the scan gate made the diff
 | --- | --- |
 | overlay-dithered | king |
 | overlay-blue-noise | king |
+| overlay-halftone | king |
+| overlay-mosaic | king |
+| overlay-extreme | king |
 | preserve-balanced | king |
 | preserve-blended | tsunami |
 | preserve-blended | king |
@@ -267,12 +352,24 @@ Scenarios that pass in Tier A but fail in Tier B — the scan gate made the diff
 | output-hd | king |
 | output-hd | test |
 | watermark-frame-tag | king |
+| overlay-duotone | king |
+| overlay-pixelate | king |
+| overlay-blend | king |
 | render-diamond-gap | king |
 | encoding-ecc-m | king |
 | encoding-ecc-m | test |
 | encoding-byte-v6 | king |
 | watermark-text-bottom | king |
 | output-grayscale | king |
+| overlay-dithered-rounded | king |
+| overlay-halftone-dots | king |
+| overlay-blue-noise-ocean | king |
+| overlay-duotone-sunset | king |
+| overlay-extreme-midnight | king |
+| overlay-blend-grayscale | king |
+| overlay-dithered-forest | king |
+| overlay-mosaic-connected | king |
+| overlay-dithered-gradient | king |
 | preprocess-brightness | logo |
 | preprocess-sharpen | tsunami |
 | preprocess-sharpen | king |

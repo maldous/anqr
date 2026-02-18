@@ -46,6 +46,10 @@ export interface QRGeneratorConfig {
   finderDitherStrength?: number;
   // When true, preservation-strength overlays use image-aware blended coloring instead of pure B/W alpha.
   blendPreservations?: boolean;
+  // When true, force non-scaled overlay modes (halftone, mosaic, blend, etc.) through the
+  // scaled rendering path. Used for animated overlays where per-pixel detail must be preserved
+  // across frames.
+  forceScaledOverlay?: boolean;
   blueNoiseSeed?: number;
   blueNoiseTileSize?: number;
   ditherMode?: 'blue_noise' | 'error_diffusion';
@@ -172,6 +176,15 @@ export interface QRGeneratorConfig {
   // When enabled, logs only the overlay/dither wiring and preservation decisions.
   debugOverlayDither?: boolean;
 }
+
+/** Overlay modes that use the scaled (per-pixel) rendering path. */
+export const INTRINSICALLY_SCALED_OVERLAY_MODES: ReadonlySet<string> = new Set([
+  'dithered',
+  'blue-noise',
+  'blue_noise',
+  'subpixel',
+  'subpixel-size',
+]);
 
 export interface RGB {
   r: number;

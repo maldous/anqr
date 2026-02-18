@@ -114,6 +114,11 @@ export default defineConfig({
             project: 'anqr-mobile',
             release: {
               name: sentryRelease,
+              finalize: true,
+              setCommits: { auto: true, ignoreMissing: true, ignoreEmpty: true },
+              deploy: {
+                env: process.env.NODE_ENV || 'production',
+              },
             },
             sourcemaps: {
               assets: ['./dist/**/*.js', './dist/**/*.js.map'],
@@ -127,6 +132,8 @@ export default defineConfig({
             project: sentryProject,
             release: {
               name: sentryRelease,
+              finalize: true,
+              setCommits: { auto: true, ignoreMissing: true, ignoreEmpty: true },
               deploy: {
                 env: process.env.NODE_ENV || 'production',
               },

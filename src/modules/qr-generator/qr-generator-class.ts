@@ -440,7 +440,10 @@ export class QRGenerator {
           ) => void
         );
 
-      if (effectiveConfig.overlayMode === 'dithered') {
+      if (
+        effectiveConfig.overlayMode === 'dithered' ||
+        effectiveConfig.forceScaledOverlay === true
+      ) {
         const decodeCanvasData = (
           c: HTMLCanvasElement | OffscreenCanvas
         ): { success: boolean; data: string | null } | null => {

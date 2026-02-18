@@ -543,7 +543,8 @@ function PlusCodeDisplay({
       // OpenLocationCode is a class that needs to be instantiated
       // Generate full Plus Code (10 character precision)
       // Full format: "4RJ65XP7+87" = area(4) + local(4) + "+" + suffix(2)
-      const fullCode = OpenLocationCode.encode(lat, lon, 10);
+      // @ts-expect-error @types/open-location-code incorrectly declares encode as static, but it is an instance method at runtime
+      const fullCode = new OpenLocationCode().encode(lat, lon, 10);
 
       // Generate SHORT Plus Code by finding the + sign and taking 4 chars before it
       // Short format: "5XP7+87" = local(4) + "+" + suffix(2)
