@@ -44,7 +44,11 @@ import {
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
 import { generateFullQArt, generateFullQArtOptimal } from '@/modules/qr-art';
-import { canvasHashCache, QRGenerator } from '@/modules/qr-generator';
+import {
+  canvasHashCache,
+  INTRINSICALLY_SCALED_OVERLAY_MODES,
+  QRGenerator,
+} from '@/modules/qr-generator';
 import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance
@@ -2300,9 +2304,14 @@ function useQRGenerator(): UseQRGeneratorResult {
         shouldGenerateStaticOverlayAnimation,
         sampleDelays: effectiveFrames.slice(0, 3).map((f) => f.delay),
       });
+      const isScaledOverlayMode = (mode: string | undefined): boolean =>
+        mode !== undefined && INTRINSICALLY_SCALED_OVERLAY_MODES.has(mode);
       const previewScanConfigBase = {
         ...debouncedConfig,
         scanGateProfile: 'preview' as const,
+        ...(hasMultiFrameOverlay && isScaledOverlayMode(debouncedConfig.overlayMode)
+          ? { forceScaledOverlay: true }
+          : {}),
       };
 
       // Generate animation frames for base QR (no overlay)

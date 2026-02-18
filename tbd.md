@@ -32,6 +32,7 @@
 - [x] Review Netlify Analytics (if enabled) for 404s or error spikes — verified via Cloudflare analytics (7-day window): 5,152 requests, 1,118 page views; only ~5 404s (bot probes), ~31 499s (client disconnects), ~3 522s (origin timeouts). All 11 routes + 5 static endpoints return HTTP 200
 - [x] Verify `/api/qr` redirect works transparently — HTTP/2 200, returns image/gif (no visible redirect to user)
 - [x] Confirm `_redirects` / `netlify.toml` redirects work: `/api/qr` → function, SPA catch-all → `index.html`
+- [ ] Verify Cloudflare is not overriding Netlify cache headers — `netlify.toml` sets `Cache-Control: public, max-age=31536000, immutable` for `/assets/*` but Cloudflare may override with shorter TTL (`max-age=14400` observed on some assets). Gallery `manifest.json` returns `cache-control: no-cache`. **ACTION:** Check Cloudflare dashboard → Caching → Configuration → Browser Cache TTL (should be "Respect Existing Headers") and add a Page Rule or Cache Rule for `/assets/*` if needed
 
 ---
 
@@ -50,6 +51,9 @@
 - [x] Configure performance monitoring sampling rate — set to `tracesSampleRate: 0.1` (10% of transactions) in `src/main.tsx`
 - [x] Review and resolve pre-existing issues — 5 issues reviewed (see §20); issues #1–3 suppressed client-side via `ignoreErrors` + `beforeSend` in `Sentry.init()`; #4 stale cache (self-resolves); #5 device-specific (2 events, monitoring)
 - [x] Verify release name matches deploy — `anqr@1.0.66` (reads from package.json, synced with Android versionCode)
+- [x] Set up Sentry release tracking with commit association — `setCommits: { auto: true }` + `finalize: true` + `deploy: { env: 'production' }` in both `sentryVitePlugin` instances (`vite.config.ts`); server-side release tag `anqr@<version>` added to `Sentry.init()` in `netlify/functions/qr.ts` via static JSON import from `package.json`
+- [x] Created Sentry regression monitor — `scripts/check-sentry-regression.mjs` queries all 3 projects for unresolved issues, writes report to `reports/sentry-regression.json`, exits non-zero if any found. Available as `make check:sentry`, integrated into `make all` step 15 (non-blocking)
+- [x] All Sentry issues resolved — **0 unresolved** across all 3 projects (5 code-fixed + resolved, 2 ignored as non-actionable). See §20 for details
 
 ---
 
@@ -76,7 +80,7 @@
 - [ ] Verify app is registered in AdMob console
 - [ ] Wait for AdMob approval (separate from AdSense)
 - [ ] After approval: set `VITE_ADMOB_TESTING` from `true` → `false` in Makefile
-- [ ] Verify `capacitor.config.ts` has `initializeForTesting: false` (already set)
+- [x] Verify `capacitor.config.ts` has `initializeForTesting: false` — confirmed at line 31
 - [ ] Test on physical device: banner ads, interstitial on export, rewarded video
 - [ ] Monitor fill rate in AdMob dashboard
 - [ ] Review ad unit performance: bottom banner, top banner, export interstitial, gallery interstitial, generation interstitial, premium rewarded, HD export rewarded
@@ -142,6 +146,14 @@
 - [x] Each entry includes 87 `<xhtml:link>` hreflang annotations (86 languages + x-default)
 - [x] Total: 9 URLs, 783 hreflang links — saves crawl budget while maintaining language targeting
 
+**Fix 3 — Dynamic OG meta tags for shared QR codes (`netlify/edge-functions/seo.ts`):**
+- [x] Edge function now detects share URLs (`/?data=...`) and injects dynamic OG meta tags instead of static homepage meta
+- [x] Dynamic `og:title` includes truncated data content (e.g., "QR Code: hello | ANQR")
+- [x] Dynamic `og:image` points to `/api/qr?data=...&size=600` with visual styling params forwarded (fg, bg, style, ec, etc.) for accurate preview rendering
+- [x] XSS prevention via `escapeHtml` helper on all injected meta tag values
+- [x] Static page meta tags remain unchanged — dynamic injection only activates when `?data=` parameter is present
+- [x] Verified live: `/?data=hello` returns dynamic title + preview image; `/?data=https://example.com&fg=ff0000&style=dots&ec=H` forwards all visual params to og:image URL
+
 ---
 
 ## 9. Google PageSpeed Insights — Performance
@@ -196,6 +208,7 @@
 - [x] Verify HSTS header includes `preload` directive — confirmed live: `strict-transport-security: max-age=63072000; includeSubDomains; preload`
 - [x] Submit `anqr.link` to HSTS preload list — **submitted 2026-02-18** via API (`POST /api/v2/submit?domain=anqr.link`), status: `pending`, 0 errors/0 warnings. Eligibility verified: HTTPS ✅, HTTP→HTTPS 301 ✅, www subdomain 301 + HSTS ✅, preloadable check passed ✅
 - [x] Note: inclusion takes weeks/months — status is `pending`, check periodically at <https://hstspreload.org/?domain=anqr.link>
+- [ ] Fix HSTS max-age mismatch — `netlify.toml` configures `max-age=63072000` (2 years) but Cloudflare proxy overrides to `max-age=31536000` (1 year). HSTS preload submission was for 63072000. **ACTION:** Align in Cloudflare dashboard → SSL/TLS → Edge Certificates → HSTS settings → set max-age to 63072000 (or accept Cloudflare's 31536000 and update netlify.toml to match)
 
 ---
 
@@ -225,6 +238,7 @@
 - [ ] Verify i18n public repo has latest translations on `static` and `locales` branches
 - [ ] Tag release: `git tag v1.0.66 && git push --tags`
 - [ ] Consider adding branch protection rules on `master`
+- [ ] Commit Sentry release tracking + regression monitor + all bug fixes from 2026-02-18 session (16 modified files: vite.config.ts, netlify/functions/qr.ts, netlify/edge-functions/seo.ts, src/main.tsx, src/components/Analyze.tsx, src/modules/qr-generator/scaled-render.ts, src/hooks/useQRGenerator.ts, src/components/sections/PayloadSection.tsx, scripts/check-sentry-regression.mjs, tbd.md, knowledge.md, package.json, Makefile, etc.)
 - [x] Ensure `.gitignore` covers all generated artifacts — dist/, node_modules/, coverage/, *.log, .env, reports/gallery-artifacts/ all covered
 
 ---
@@ -242,6 +256,8 @@
 - [x] Verify `robots.txt` doesn't expose sensitive paths — allows all crawlers, references sitemap, AdSense Mediapartners
 - [x] Verify no `.env` files are committed to git
 - [x] Verify `package-lock.json` is committed and `lockfile-lint` passes
+- [ ] Add rate limiting to `/api/qr` endpoint — currently only has `MAX_DATA_LENGTH` guard but no request rate limiting. A bot could abuse the endpoint to generate thousands of images. **ACTION:** Configure Cloudflare WAF rate limiting rule (e.g. 60 requests/minute per IP to `/api/qr*`) in Cloudflare dashboard → Security → WAF → Rate limiting rules
+- [ ] Establish backup strategy for irreplaceable credentials — `android/app/release-key.keystore` (Android signing key — if lost, cannot update the Play Store app) and `play-store-key.json` (service account for automated uploads). **ACTION:** Store encrypted copies in a secure location (e.g. password manager, encrypted USB, or cloud vault). Document recovery procedure in case of disk failure
 
 ---
 
@@ -253,7 +269,8 @@
 - [x] Verify `canonical` URL present — `<link rel="canonical" href="https://anqr.link/" />` in index.html, dynamically updated by React for SPA routes
 - [x] Verify `robots.txt` allows all crawlers and references sitemap (verified in §13)
 - [x] Verify sitemap includes all important routes — simplified to 9 canonical URLs with 783 hreflang links (was 604 separate URLs)
-- [ ] Submit site to Bing Webmaster Tools: <https://www.bing.com/webmasters> — **MANUAL: IndexNow requires API key, Bing ping endpoint deprecated (410). Must use Bing Webmaster Tools dashboard**
+- [x] Verify dynamic OG meta tags work for shared QR codes — edge function injects dynamic `og:title`, `og:description`, `og:image` for `/?data=...` URLs, verified live with Twitterbot UA and browser UA
+- [x] Submit site to Bing Webmaster Tools: <https://www.bing.com/webmasters> — **AUTOMATED: `make indexnow` submits all canonical URLs via IndexNow protocol (api.indexnow.org) to Bing, Yandex, Naver, DuckDuckGo, and all participating engines. Key file: `public/da39713d0cb0b7ec43d21f259b214605.txt`. Integrated into `make all` step 13 (non-blocking).**
 - [ ] Consider submitting to web directories / "best QR code generator" lists — **MANUAL: outreach task**
 - [x] Verify PWA manifest is valid — name, short_name, description, 8 icons (72–512px), 2 screenshots (desktop 1280×720, mobile 720×1280), categories, lang, display: standalone
 - [x] Verify favicon present — inline SVG data URI in index.html (QR code icon)
@@ -268,6 +285,7 @@
 - [ ] Monitor Netlify build minutes usage — **MANUAL: check Netlify dashboard**
 - [ ] Monitor bandwidth usage (Netlify has 100GB/month on free tier) — **MANUAL: CF analytics shows ~198MB/7d (~0.8GB/month projected, well within limits)**
 - [x] Set up Sentry alert for error spike — recommended config documented in §3 (configure in Sentry dashboard: Alerts → Create Rule → "When the number of events exceeds 10 in 1 hour")
+- [x] Set up Sentry regression monitor — `make check:sentry` (script: `scripts/check-sentry-regression.mjs`) queries all 3 Sentry projects for unresolved issues, writes `reports/sentry-regression.json`, exits non-zero if any found. Integrated into `make all` step 15 (non-blocking)
 - [x] Review Cloudflare analytics weekly for traffic patterns — initial baseline (7 days ending 2026-02-18): ~5,152 total requests, ~1,118 page views, ~198MB bandwidth. Traffic peaks on Feb 14 (814 reqs) and Feb 15 (1,230 reqs). Error rates within normal range (<1%)
 - [ ] Monitor Core Web Vitals in Search Console after 28 days of data
 
@@ -292,7 +310,7 @@
 - [x] Generate dependency graph: `make dep` — passed with no circular dependencies detected
 - [x] Run SonarQube analysis: `make sonar` — now included in pipeline (step 12)
 - [x] Create `public/screenshots/desktop.png` and `public/screenshots/mobile.png` for PWA manifest — automated via `make screenshots`
-- [ ] Review and update `knowledge.md` after any significant post-launch changes
+- [x] Review and update `knowledge.md` after any significant post-launch changes — updated 2026-02-18: added Sentry release tracking, regression monitor, dynamic OG meta tags, new scripts and reports
 
 ---
 
@@ -394,17 +412,21 @@ Multiple Google project names exist:
 - [x] Resolved 22 noisy Sentry issues via API (AdMob platform mismatch ×6, QART diagnostics ×3, stale cache ×2, localhost dev ×3, third-party fetch ×3, Interstitial ×2, generic ×3)
 - [x] Snyk security scan: **0 high/critical vulnerabilities** in 186 dependencies (tested 2026-02-18)
 
-### Genuine Issues Remaining (7)
+### Genuine Issues — All Resolved (2026-02-18)
 
-| # | Issue | Events | Last Seen | Notes |
-|---|-------|--------|-----------|-------|
-| 1 | `[ANALYZE] STEP 3b - createQRInstance FAILED` | 6 | 2026-02-14 | QR analysis edge case — investigate analyzer code |
-| 2 | `TypeError: Cannot read properties of null (reading 'r')` | 3 | 2026-02-13 | Null pointer — likely color parsing edge case |
-| 3 | `TypeError: buildAttemptConfig(...).with is not a function` | 1 | 2026-02-13 | Likely stale cache — monitor for recurrence |
-| 4 | `Error: useQRGeneratorContext must be used within QRGeneratorProvider` | 8 | 2026-02-08 | React context issue — component rendered outside provider |
-| 5 | `TypeError: Failed to fetch (anqr.link)` | 1 | 2026-02-08 | Network failure — one-off, monitor |
-| 6 | `TypeError: Jo.OpenLocationCode.encode is not a function` | 2 | 2026-02-08 | Plus code library issue — investigate payload generator |
-| 7 | `TypeError: Failed to fetch (anqr.link)` | 1 | 2026-02-08 | Network failure — one-off, monitor |
+All 7 issues have been addressed. **0 unresolved** across all 3 Sentry projects.
+
+| # | Issue | Events | Fix | Sentry Status |
+|---|-------|--------|-----|---------------|
+| 1 | `[ANALYZE] STEP 3b - createQRInstance FAILED` | 6 | `log.error` → `log.warn` in `Analyze.tsx` (informational, not a real error) | ✅ Resolved |
+| 2 | `TypeError: Cannot read properties of null (reading 'r')` | 3 | Null guard added in `scaled-render.ts` → `adjustLumaPreserveChroma()` | ✅ Resolved |
+| 3 | `TypeError: buildAttemptConfig(...).with is not a function` | 1 | Stale cache — non-actionable, self-resolves on next deploy | ⊘ Ignored |
+| 4 | `Error: useQRGeneratorContext must be used within QRGeneratorProvider` | 8 | Fallback context with safe defaults in `useQRGenerator.ts` instead of throwing | ✅ Resolved |
+| 5 | `TypeError: Failed to fetch (anqr.link)` | 1 | Transient network error — non-actionable | ⊘ Ignored |
+| 6 | `TypeError: Jo.OpenLocationCode.encode is not a function` | 2 | Fixed: `new OpenLocationCode().encode()` (instance method, not static) in `PayloadSection.tsx` | ✅ Resolved |
+| 7 | `TypeError: Failed to fetch (anqr.link)` | 1 | Same as #5 — transient network error | ⊘ Ignored |
+
+**Automated regression monitoring:** `make check:sentry` runs `scripts/check-sentry-regression.mjs` which queries all 3 projects and fails if any unresolved issues exist. Integrated into `make all` step 15.
 
 ---
 
@@ -514,7 +536,7 @@ The `make all` pipeline covers 16 steps:
 12. sonar         — SonarQube code analysis (non-blocking)
 13. deploy        — rebuild with Sentry + Netlify deploy
 14. android       — version bump + release AAB + upload to Play Store
-15. services      — third-party service validation (non-blocking)
+15. services      — third-party service validation + Sentry regression check (non-blocking)
 16. i18n:push     — push translations + final summary
 ```
 

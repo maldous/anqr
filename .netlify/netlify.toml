@@ -5,6 +5,7 @@ redirectsOrigin = "config"
 plugins = []
 
 [build]
+edge_functions = "/home/user/src/anqr/netlify/edge-functions"
 publish = "/home/user/src/anqr/dist"
 publishOrigin = "config"
 commandOrigin = "config"

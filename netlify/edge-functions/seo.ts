@@ -1,10 +1,103 @@
 import type { Context } from 'https://edge.netlify.com';
 
 const BASE_URL = 'https://anqr.link';
+const OG_IMAGE_SIZE = 600;
 
 interface PageMeta {
   title: string;
   description: string;
+  ogImageUrl?: string;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function truncate(str: string, maxLen: number): string {
+  if (str.length <= maxLen) return str;
+  return `${str.slice(0, maxLen - 1)}\u2026`;
+}
+
+const OG_PASSTHROUGH_PARAMS = [
+  'fg',
+  'bg',
+  'transparent',
+  'ec',
+  'margin',
+  'enc',
+  'v',
+  'border',
+  'modulePx',
+  'style',
+  'finder',
+  'align',
+  'timing',
+  'eyeOuter',
+  'eyeInner',
+  'eyeScale',
+  'radius',
+  'gap',
+  'gapMode',
+  'dotRot',
+  'frame',
+  'frameText',
+  'grad',
+  'gradAngle',
+  'gradStops',
+  'img',
+  'mode',
+  'intensity',
+  'colorMode',
+  'logoSize',
+  'keepFinders',
+  'keepTiming',
+  'keepAlign',
+  'brightness',
+  'contrast',
+  'gamma',
+  'saturation',
+  'ditherKind',
+  'diffusionKernel',
+  'ditherStrength',
+  'duo1',
+  'duo2',
+  'palette',
+  'paletteMode',
+  'wmEn',
+  'wmKind',
+  'wmText',
+  'wmPos',
+  'wmOpacity',
+  'wmBlend',
+  'subpixel',
+  'crisp',
+  'snap',
+  'modColor',
+  'cGuard',
+  'minContrast',
+];
+
+function buildOgImageUrl(searchParams: URLSearchParams): string {
+  const imageParams = new URLSearchParams();
+
+  const data = searchParams.get('data');
+  if (data) imageParams.set('data', data);
+
+  imageParams.set('size', OG_IMAGE_SIZE.toString());
+
+  const clientSize = searchParams.get('size');
+  if (clientSize) imageParams.set('modulePx', clientSize);
+
+  for (const key of OG_PASSTHROUGH_PARAMS) {
+    const val = searchParams.get(key);
+    if (val) imageParams.set(key, val);
+  }
+
+  return `${BASE_URL}/api/qr?${imageParams.toString()}`;
 }
 
 const PAGE_META: Record<string, PageMeta> = {
@@ -89,8 +182,26 @@ export default async function handler(request: Request, context: Context) {
     return context.next();
   }
 
-  // Look up page metadata early to skip unknown pages without calling origin
-  const meta = PAGE_META[path];
+  // Look up page metadata; for '/' with ?data= param, build dynamic share meta
+  const dataParam = url.searchParams.get('data');
+  const isShareUrl = path === '/' && dataParam;
+
+  let meta: PageMeta | undefined;
+  let canonicalUrl: string;
+
+  if (isShareUrl) {
+    const displayData = truncate(dataParam, 80);
+    meta = {
+      title: `QR Code: ${displayData} | ANQR`,
+      description: `Scan this QR code created with ANQR. Content: ${truncate(dataParam, 150)}`,
+      ogImageUrl: buildOgImageUrl(url.searchParams),
+    };
+    canonicalUrl = `${BASE_URL}/?${url.searchParams.toString()}`;
+  } else {
+    meta = PAGE_META[path];
+    canonicalUrl = path === '/' ? `${BASE_URL}/` : `${BASE_URL}${path}`;
+  }
+
   if (!meta) {
     return context.next();
   }
@@ -105,49 +216,72 @@ export default async function handler(request: Request, context: Context) {
 
   let html = await response.text();
 
-  const canonicalUrl = path === '/' ? `${BASE_URL}/` : `${BASE_URL}${path}`;
+  const safeTitle = escapeHtml(meta.title);
+  const safeDescription = escapeHtml(meta.description);
+  const safeCanonical = escapeHtml(canonicalUrl);
 
   // Replace <title>
-  html = html.replace(/<title>[^<]*<\/title>/, `<title>${meta.title}</title>`);
+  html = html.replace(/<title>[^<]*<\/title>/, `<title>${safeTitle}</title>`);
 
   // Replace meta description
   html = html.replace(
     /<meta name="description" content="[^"]*"/,
-    `<meta name="description" content="${meta.description}"`
+    `<meta name="description" content="${safeDescription}"`
   );
 
   // Replace canonical URL
   html = html.replace(
     /<link rel="canonical" href="[^"]*"/,
-    `<link rel="canonical" href="${canonicalUrl}"`
+    `<link rel="canonical" href="${safeCanonical}"`
   );
 
   // Replace Open Graph tags
   html = html.replace(
     /<meta property="og:url" content="[^"]*"/,
-    `<meta property="og:url" content="${canonicalUrl}"`
+    `<meta property="og:url" content="${safeCanonical}"`
   );
   html = html.replace(
     /<meta property="og:title" content="[^"]*"/,
-    `<meta property="og:title" content="${meta.title}"`
+    `<meta property="og:title" content="${safeTitle}"`
   );
   html = html.replace(
     /<meta property="og:description" content="[^"]*"/,
-    `<meta property="og:description" content="${meta.description}"`
+    `<meta property="og:description" content="${safeDescription}"`
   );
+
+  // Replace og:image for share URLs (dynamic QR preview via API)
+  if (meta.ogImageUrl) {
+    const safeOgImage = escapeHtml(meta.ogImageUrl);
+    html = html.replace(
+      /<meta property="og:image" content="[^"]*"/,
+      `<meta property="og:image" content="${safeOgImage}"`
+    );
+    html = html.replace(
+      /<meta property="og:image:width" content="[^"]*"/,
+      `<meta property="og:image:width" content="${OG_IMAGE_SIZE}"`
+    );
+    html = html.replace(
+      /<meta property="og:image:height" content="[^"]*"/,
+      `<meta property="og:image:height" content="${OG_IMAGE_SIZE}"`
+    );
+    html = html.replace(
+      /<meta name="twitter:image" content="[^"]*"/,
+      `<meta name="twitter:image" content="${safeOgImage}"`
+    );
+  }
 
   // Replace Twitter Card tags
   html = html.replace(
     /<meta name="twitter:url" content="[^"]*"/,
-    `<meta name="twitter:url" content="${canonicalUrl}"`
+    `<meta name="twitter:url" content="${safeCanonical}"`
   );
   html = html.replace(
     /<meta name="twitter:title" content="[^"]*"/,
-    `<meta name="twitter:title" content="${meta.title}"`
+    `<meta name="twitter:title" content="${safeTitle}"`
   );
   html = html.replace(
     /<meta name="twitter:description" content="[^"]*"/,
-    `<meta name="twitter:description" content="${meta.description}"`
+    `<meta name="twitter:description" content="${safeDescription}"`
   );
 
   // Build new response with modified HTML

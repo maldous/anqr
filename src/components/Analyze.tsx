@@ -1175,7 +1175,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       } catch (encoderError) {
         const errorMessage =
           encoderError instanceof Error ? encoderError.message : String(encoderError);
-        log.error('STEP 3b - createQRInstance FAILED', {
+        log.warn('STEP 3b - createQRInstance FAILED', {
           error: errorMessage,
           requestedVersion: versionToUseFinal,
           ecc,

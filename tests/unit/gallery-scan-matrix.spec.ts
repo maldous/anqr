@@ -4,16 +4,26 @@ import os from 'node:os';
 import path from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createGifEncoder, decodeGif, quantizeGifPalette, indexGifPixels } from '../../src/modules/animation/gif-codec';
-import { getLogLevel, setLogLevel, type LogLevel } from '../../src/lib/logger';
-import { decodeQR } from '../../src/modules/qr-decoder';
-import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
 import {
   CANONICAL_FIXTURES,
-  GALLERY_SCAN_SCENARIOS,
   type CanonicalFixtureId,
+  GALLERY_SCAN_SCENARIOS,
   type ScenarioFeatureGroup,
 } from '../../src/data/gallery-scan-scenarios';
+import { getLogLevel, type LogLevel, setLogLevel } from '../../src/lib/logger';
+import {
+  createGifEncoder,
+  decodeGif,
+  indexGifPixels,
+  quantizeGifPalette,
+} from '../../src/modules/animation/gif-codec';
+import { decodeQR } from '../../src/modules/qr-decoder';
+import {
+  type CanvasFactory,
+  INTRINSICALLY_SCALED_OVERLAY_MODES,
+  QRGenerator,
+  type QRGeneratorConfig,
+} from '../../src/modules/qr-generator';
 
 if (typeof globalThis.ImageData === 'undefined') {
   try {
@@ -96,7 +106,12 @@ const ALL_TIERS: readonly TierConfig[] = [TIER_A, TIER_B];
 
 const SUBPIXEL_DITHERED_MODES: ReadonlySet<string> = new Set(['dithered', 'blue-noise']);
 
-const MAX_ANIMATED_FRAMES = 8;
+const MAX_ANIMATED_FRAMES = 999;
+
+function isIntrinsicallyScaledOverlay(scenario: (typeof GALLERY_SCAN_SCENARIOS)[number]): boolean {
+  const mode = scenario.generatorPatch.overlayMode as string | undefined;
+  return mode !== undefined && INTRINSICALLY_SCALED_OVERLAY_MODES.has(mode);
+}
 
 const FEATURE_COVERAGE_REQUIREMENTS: Record<ScenarioFeatureGroup, number> = {
   overlay: 6,
@@ -131,12 +146,7 @@ function parseBooleanEnv(raw: string | undefined, fallback: boolean): boolean {
 // Result types
 // ---------------------------------------------------------------------------
 
-type ReasonCode =
-  | 'OK'
-  | 'CONTRAST_COLLAPSE'
-  | 'EXPORT_LOSS'
-  | 'RENDER_ERROR'
-  | 'UNKNOWN';
+type ReasonCode = 'OK' | 'CONTRAST_COLLAPSE' | 'EXPORT_LOSS' | 'RENDER_ERROR' | 'UNKNOWN';
 type Disposition = 'fix-now' | 'tunable' | 'unreasonable';
 type Status = 'pass' | 'fail';
 
@@ -179,7 +189,7 @@ function toArrayBuffer(buf: Buffer): ArrayBuffer {
 function loadGifOverlayFrames(
   filePath: string,
   size: number,
-  maxFrames: number,
+  maxFrames: number
 ): { canvases: any[]; delays: number[] } {
   const gif = decodeGif(toArrayBuffer(readFileSync(filePath)));
   const composite = createCanvas(gif.width, gif.height);
@@ -272,7 +282,7 @@ function classifyResult(
   directDecodePass: boolean,
   roundtripDecodePass: boolean,
   tier: TierConfig,
-  overlayMode: string,
+  overlayMode: string
 ): {
   status: Status;
   reasonCode: ReasonCode;
@@ -304,17 +314,21 @@ async function runTier(
   fixtures: readonly (typeof CANONICAL_FIXTURES)[number][],
   overlays: Map<CanonicalFixtureId, any>,
   animatedOverlays: Map<CanonicalFixtureId, { canvases: any[]; delays: number[] }>,
-  artifactsBaseDir: string,
+  artifactsBaseDir: string
 ): Promise<MatrixResult[]> {
   const tierDir = path.join(artifactsBaseDir, tier.id);
   await fs.mkdir(tierDir, { recursive: true });
 
   const requestedParallel = Number.parseInt(process.env.SCAN_MATRIX_MAX_PARALLEL ?? '', 10);
-  const maxParallel = Number.isFinite(requestedParallel) && requestedParallel > 0
-    ? requestedParallel
-    : Math.max(1, Math.min(os.cpus().length, 16));
+  const maxParallel =
+    Number.isFinite(requestedParallel) && requestedParallel > 0
+      ? requestedParallel
+      : Math.max(1, Math.min(os.cpus().length, 16));
 
-  const jobs: { scenario: (typeof GALLERY_SCAN_SCENARIOS)[number]; fixture: (typeof CANONICAL_FIXTURES)[number] }[] = [];
+  const jobs: {
+    scenario: (typeof GALLERY_SCAN_SCENARIOS)[number];
+    fixture: (typeof CANONICAL_FIXTURES)[number];
+  }[] = [];
   for (const scenario of scenarios) {
     for (const fixture of fixtures) {
       jobs.push({ scenario, fixture });
@@ -340,11 +354,13 @@ async function runTier(
           ...makeBaseConfig(content, tier),
           ...scenario.generatorPatch,
           content,
+          ...(fixture.isAnimated && scenario.useOverlay && isIntrinsicallyScaledOverlay(scenario)
+            ? { forceScaledOverlay: true }
+            : {}),
         };
-        const overlay = scenario.useOverlay ? overlays.get(fixture.id) ?? null : null;
-        const animFrames = fixture.isAnimated && scenario.useOverlay
-          ? animatedOverlays.get(fixture.id)
-          : undefined;
+        const overlay = scenario.useOverlay ? (overlays.get(fixture.id) ?? null) : null;
+        const animFrames =
+          fixture.isAnimated && scenario.useOverlay ? animatedOverlays.get(fixture.id) : undefined;
 
         let generated: any;
         let imageBuffer: Buffer;
@@ -379,15 +395,21 @@ async function runTier(
           0,
           0,
           roundtripCanvas.width,
-          roundtripCanvas.height,
+          roundtripCanvas.height
         );
         const roundtripDecoded = decodeQR(canvasToImageData(roundtripCanvas as any), {
           inversionAttempts: 'attemptBoth',
         });
         const roundtripDecodePass = roundtripDecoded?.data === content;
 
-        const overlayMode = (scenario.generatorPatch.overlayMode as string | undefined) ?? 'dithered';
-        const classification = classifyResult(directDecodePass, roundtripDecodePass, tier, overlayMode);
+        const overlayMode =
+          (scenario.generatorPatch.overlayMode as string | undefined) ?? 'dithered';
+        const classification = classifyResult(
+          directDecodePass,
+          roundtripDecodePass,
+          tier,
+          overlayMode
+        );
         results[jobIndex] = {
           tier: tier.id,
           scenarioId: scenario.id,
@@ -442,10 +464,7 @@ function buildTierFixtureTable(
     if (result.status === 'pass') row.pass++;
     else row.fail++;
   }
-  const lines = [
-    '| Fixture | Pass | Fail |',
-    '| --- | ---: | ---: |',
-  ];
+  const lines = ['| Fixture | Pass | Fail |', '| --- | ---: | ---: |'];
   for (const fixture of fixtures) {
     const row = byFixture.get(fixture.id)!;
     lines.push(`| ${fixture.id} | ${row.pass} | ${row.fail} |`);
@@ -456,13 +475,10 @@ function buildTierFixtureTable(
 function buildTierFailTable(tierResults: MatrixResult[]): string {
   const fails = tierResults.filter((r) => r.status === 'fail');
   if (fails.length === 0) return '_None_';
-  const lines = [
-    '| Scenario | Fixture | Reason | Disposition |',
-    '| --- | --- | --- | --- |',
-  ];
+  const lines = ['| Scenario | Fixture | Reason | Disposition |', '| --- | --- | --- | --- |'];
   for (const result of fails) {
     lines.push(
-      `| ${result.scenarioId} | ${result.fixtureId} | ${result.reasonCode} | ${result.disposition} |`,
+      `| ${result.scenarioId} | ${result.fixtureId} | ${result.reasonCode} | ${result.disposition} |`
     );
   }
   return lines.join('\n');
@@ -484,7 +500,7 @@ function buildSummaryMarkdown(
   for (const a of tierAResults) {
     if (a.status !== 'pass') continue;
     const b = tierBResults.find(
-      (r) => r.scenarioId === a.scenarioId && r.fixtureId === a.fixtureId,
+      (r) => r.scenarioId === a.scenarioId && r.fixtureId === a.fixtureId
     );
     if (b && b.status === 'fail') {
       rescued.push({ scenarioId: a.scenarioId, fixtureId: a.fixtureId });
@@ -534,10 +550,10 @@ function buildSummaryMarkdown(
   for (const scenario of scenarios) {
     for (const fixture of fixtures) {
       const a = tierAResults.find(
-        (r) => r.scenarioId === scenario.id && r.fixtureId === fixture.id,
+        (r) => r.scenarioId === scenario.id && r.fixtureId === fixture.id
       );
       const b = tierBResults.find(
-        (r) => r.scenarioId === scenario.id && r.fixtureId === fixture.id,
+        (r) => r.scenarioId === scenario.id && r.fixtureId === fixture.id
       );
       const aStatus = a?.status ?? '—';
       const bStatus = b?.status ?? '—';
@@ -546,16 +562,16 @@ function buildSummaryMarkdown(
       else if (aStatus === 'fail' && bStatus === 'pass') delta = '🔴 regression';
       else if (aStatus === 'pass' && bStatus === 'pass') delta = '✅ both pass';
       else if (aStatus === 'fail' && bStatus === 'fail') delta = '❌ both fail';
-      lines.push(
-        `| ${scenario.id} | ${fixture.id} | ${aStatus} | ${bStatus} | ${delta} |`,
-      );
+      lines.push(`| ${scenario.id} | ${fixture.id} | ${aStatus} | ${bStatus} | ${delta} |`);
     }
   }
 
   lines.push('');
   lines.push('## Scan-Gate-Rescued');
   lines.push('');
-  lines.push('Scenarios that pass in Tier A but fail in Tier B — the scan gate made the difference:');
+  lines.push(
+    'Scenarios that pass in Tier A but fail in Tier B — the scan gate made the difference:'
+  );
   lines.push('');
   if (rescued.length === 0) {
     lines.push('_None — all Tier A passes also pass in Tier B._');
@@ -586,170 +602,171 @@ describe('gallery scan matrix', () => {
     setLogLevel(previousLogLevel);
   });
 
-  it(
-    'runs canonical scenarios across all four fixtures in both tiers and writes matrix reports',
-    async () => {
-      const scenarioFilter = parseCsvFilter(process.env.SCAN_MATRIX_SCENARIOS);
-      const fixtureFilter = parseCsvFilter(process.env.SCAN_MATRIX_FIXTURES);
-      const scenarios = scenarioFilter
-        ? GALLERY_SCAN_SCENARIOS.filter((s) => scenarioFilter.has(s.id))
-        : GALLERY_SCAN_SCENARIOS;
-      const fixtures = fixtureFilter
-        ? CANONICAL_FIXTURES.filter((f) => fixtureFilter.has(f.id))
-        : CANONICAL_FIXTURES;
+  it('runs canonical scenarios across all four fixtures in both tiers and writes matrix reports', async () => {
+    const scenarioFilter = parseCsvFilter(process.env.SCAN_MATRIX_SCENARIOS);
+    const fixtureFilter = parseCsvFilter(process.env.SCAN_MATRIX_FIXTURES);
+    const scenarios = scenarioFilter
+      ? GALLERY_SCAN_SCENARIOS.filter((s) => scenarioFilter.has(s.id))
+      : GALLERY_SCAN_SCENARIOS;
+    const fixtures = fixtureFilter
+      ? CANONICAL_FIXTURES.filter((f) => fixtureFilter.has(f.id))
+      : CANONICAL_FIXTURES;
 
-      if (scenarios.length === 0) {
-        throw new Error(
-          `SCAN_MATRIX_SCENARIOS produced zero matches: ${process.env.SCAN_MATRIX_SCENARIOS ?? ''}`
+    if (scenarios.length === 0) {
+      throw new Error(
+        `SCAN_MATRIX_SCENARIOS produced zero matches: ${process.env.SCAN_MATRIX_SCENARIOS ?? ''}`
+      );
+    }
+    if (fixtures.length === 0) {
+      throw new Error(
+        `SCAN_MATRIX_FIXTURES produced zero matches: ${process.env.SCAN_MATRIX_FIXTURES ?? ''}`
+      );
+    }
+
+    const reportsDir = path.join(process.cwd(), 'reports');
+    const artifactsDir = path.join(reportsDir, 'gallery-artifacts');
+    const outputSuffix = (process.env.SCAN_MATRIX_OUTPUT_SUFFIX ?? '').trim();
+    const cleanArtifacts = parseBooleanEnv(process.env.SCAN_MATRIX_CLEAN_ARTIFACTS, true);
+    const matrixReportName = outputSuffix
+      ? `gallery-scan-matrix.${outputSuffix}.json`
+      : 'gallery-scan-matrix.json';
+    const summaryReportName = outputSuffix
+      ? `gallery-scan-summary.${outputSuffix}.md`
+      : 'gallery-scan-summary.md';
+
+    if (cleanArtifacts) {
+      await fs.rm(artifactsDir, { recursive: true, force: true });
+    }
+    await fs.mkdir(artifactsDir, { recursive: true });
+
+    const overlays = new Map<CanonicalFixtureId, any>();
+    const animatedOverlays = new Map<CanonicalFixtureId, { canvases: any[]; delays: number[] }>();
+    for (const fixture of fixtures) {
+      const overlay = await loadOverlayCanvas(path.join(process.cwd(), fixture.filePath), 240);
+      overlays.set(fixture.id, overlay);
+      if (fixture.isAnimated) {
+        animatedOverlays.set(
+          fixture.id,
+          loadGifOverlayFrames(path.join(process.cwd(), fixture.filePath), 240, MAX_ANIMATED_FRAMES)
         );
       }
-      if (fixtures.length === 0) {
-        throw new Error(
-          `SCAN_MATRIX_FIXTURES produced zero matches: ${process.env.SCAN_MATRIX_FIXTURES ?? ''}`
-        );
+    }
+
+    const tierAResults = await runTier(
+      TIER_A,
+      scenarios,
+      fixtures,
+      overlays,
+      animatedOverlays,
+      artifactsDir
+    );
+    const tierBResults = await runTier(
+      TIER_B,
+      scenarios,
+      fixtures,
+      overlays,
+      animatedOverlays,
+      artifactsDir
+    );
+    const allResults = [...tierAResults, ...tierBResults];
+
+    const byScenario = new Map<string, MatrixResult[]>();
+    for (const result of tierAResults) {
+      const arr = byScenario.get(result.scenarioId) ?? [];
+      arr.push(result);
+      byScenario.set(result.scenarioId, arr);
+    }
+
+    const scenarioMeta = new Map(scenarios.map((s) => [s.id, s]));
+
+    const galleryCandidates = Array.from(byScenario.entries())
+      .map(([scenarioId, runs]) => {
+        const passRuns = runs.filter((r) => r.status === 'pass');
+        if (passRuns.length === 0) return null;
+        passRuns.sort((a, b) => a.durationMs - b.durationMs);
+        const meta = scenarioMeta.get(scenarioId);
+        return {
+          scenarioId,
+          selectedFixtureId: passRuns[0].fixtureId,
+          isAnimated: passRuns[0].isAnimated,
+          heroPriority: meta?.heroPriority ?? 0,
+          galleryEligible: meta?.galleryEligible ?? false,
+          artifactPath: passRuns[0].artifactPath,
+          status: passRuns[0].status,
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+      .sort((a, b) => b.heroPriority - a.heroPriority);
+
+    const tierAPass = tierAResults.filter((r) => r.status === 'pass').length;
+    const tierBPass = tierBResults.filter((r) => r.status === 'pass').length;
+
+    const matrix = {
+      generatedAt: new Date().toISOString(),
+      tiers: ALL_TIERS.map((t) => ({
+        id: t.id,
+        label: t.label,
+        description: t.description,
+        scanGateProfile: t.scanGateProfile,
+        overlayIntensity: t.overlayIntensity,
+        darkMinOccupancy: t.darkMinOccupancy,
+        lightMaxOccupancy: t.lightMaxOccupancy,
+        optimizeIterations: t.optimizeIterations,
+        qrBitBiasStrength: t.qrBitBiasStrength,
+      })),
+      scenarios: scenarios.map((s) => ({
+        id: s.id,
+        title: s.title,
+        description: s.description,
+        featureGroup: s.featureGroup,
+        heroPriority: s.heroPriority,
+        galleryEligible: s.galleryEligible,
+      })),
+      fixtures: fixtures.map((f) => ({
+        id: f.id,
+        filePath: f.filePath,
+        publicPath: f.publicPath,
+        isAnimated: f.isAnimated,
+      })),
+      totalRuns: allResults.length,
+      tierA: {
+        totalRuns: tierAResults.length,
+        passRuns: tierAPass,
+        failRuns: tierAResults.length - tierAPass,
+      },
+      tierB: {
+        totalRuns: tierBResults.length,
+        passRuns: tierBPass,
+        failRuns: tierBResults.length - tierBPass,
+      },
+      results: allResults,
+      galleryCandidates,
+    };
+
+    await fs.writeFile(path.join(reportsDir, matrixReportName), JSON.stringify(matrix, null, 2));
+    await fs.writeFile(
+      path.join(reportsDir, summaryReportName),
+      buildSummaryMarkdown(allResults, scenarios, fixtures)
+    );
+
+    const runsPerTier = scenarios.length * fixtures.length;
+    expect(allResults.length).toBe(runsPerTier * ALL_TIERS.length);
+    expect(tierAPass).toBeGreaterThan(0);
+    expect(galleryCandidates.length).toBeGreaterThan(0);
+
+    if (!scenarioFilter) {
+      const groupCounts = new Map<string, number>();
+      for (const s of scenarios) {
+        groupCounts.set(s.featureGroup, (groupCounts.get(s.featureGroup) ?? 0) + 1);
       }
-
-      const reportsDir = path.join(process.cwd(), 'reports');
-      const artifactsDir = path.join(reportsDir, 'gallery-artifacts');
-      const outputSuffix = (process.env.SCAN_MATRIX_OUTPUT_SUFFIX ?? '').trim();
-      const cleanArtifacts = parseBooleanEnv(process.env.SCAN_MATRIX_CLEAN_ARTIFACTS, true);
-      const matrixReportName = outputSuffix
-        ? `gallery-scan-matrix.${outputSuffix}.json`
-        : 'gallery-scan-matrix.json';
-      const summaryReportName = outputSuffix
-        ? `gallery-scan-summary.${outputSuffix}.md`
-        : 'gallery-scan-summary.md';
-
-      if (cleanArtifacts) {
-        await fs.rm(artifactsDir, { recursive: true, force: true });
-      }
-      await fs.mkdir(artifactsDir, { recursive: true });
-
-      const overlays = new Map<CanonicalFixtureId, any>();
-      const animatedOverlays = new Map<CanonicalFixtureId, { canvases: any[]; delays: number[] }>();
-      for (const fixture of fixtures) {
-        const overlay = await loadOverlayCanvas(path.join(process.cwd(), fixture.filePath), 240);
-        overlays.set(fixture.id, overlay);
-        if (fixture.isAnimated) {
-          animatedOverlays.set(
-            fixture.id,
-            loadGifOverlayFrames(
-              path.join(process.cwd(), fixture.filePath),
-              240,
-              MAX_ANIMATED_FRAMES,
-            ),
-          );
+      const coverageGaps: string[] = [];
+      for (const [group, minCount] of Object.entries(FEATURE_COVERAGE_REQUIREMENTS)) {
+        const actual = groupCounts.get(group) ?? 0;
+        if (actual < minCount) {
+          coverageGaps.push(`${group}: ${actual}/${minCount}`);
         }
       }
-
-      const tierAResults = await runTier(TIER_A, scenarios, fixtures, overlays, animatedOverlays, artifactsDir);
-      const tierBResults = await runTier(TIER_B, scenarios, fixtures, overlays, animatedOverlays, artifactsDir);
-      const allResults = [...tierAResults, ...tierBResults];
-
-      const byScenario = new Map<string, MatrixResult[]>();
-      for (const result of tierAResults) {
-        const arr = byScenario.get(result.scenarioId) ?? [];
-        arr.push(result);
-        byScenario.set(result.scenarioId, arr);
-      }
-
-      const scenarioMeta = new Map(
-        scenarios.map((s) => [s.id, s]),
-      );
-
-      const galleryCandidates = Array.from(byScenario.entries())
-        .map(([scenarioId, runs]) => {
-          const passRuns = runs.filter((r) => r.status === 'pass');
-          if (passRuns.length === 0) return null;
-          passRuns.sort((a, b) => a.durationMs - b.durationMs);
-          const meta = scenarioMeta.get(scenarioId);
-          return {
-            scenarioId,
-            selectedFixtureId: passRuns[0].fixtureId,
-            isAnimated: passRuns[0].isAnimated,
-            heroPriority: meta?.heroPriority ?? 0,
-            galleryEligible: meta?.galleryEligible ?? false,
-            artifactPath: passRuns[0].artifactPath,
-            status: passRuns[0].status,
-          };
-        })
-        .filter((x): x is NonNullable<typeof x> => x !== null)
-        .sort((a, b) => b.heroPriority - a.heroPriority);
-
-      const tierAPass = tierAResults.filter((r) => r.status === 'pass').length;
-      const tierBPass = tierBResults.filter((r) => r.status === 'pass').length;
-
-      const matrix = {
-        generatedAt: new Date().toISOString(),
-        tiers: ALL_TIERS.map((t) => ({
-          id: t.id,
-          label: t.label,
-          description: t.description,
-          scanGateProfile: t.scanGateProfile,
-          overlayIntensity: t.overlayIntensity,
-          darkMinOccupancy: t.darkMinOccupancy,
-          lightMaxOccupancy: t.lightMaxOccupancy,
-          optimizeIterations: t.optimizeIterations,
-          qrBitBiasStrength: t.qrBitBiasStrength,
-        })),
-        scenarios: scenarios.map((s) => ({
-          id: s.id,
-          title: s.title,
-          description: s.description,
-          featureGroup: s.featureGroup,
-          heroPriority: s.heroPriority,
-          galleryEligible: s.galleryEligible,
-        })),
-        fixtures: fixtures.map((f) => ({
-          id: f.id,
-          filePath: f.filePath,
-          publicPath: f.publicPath,
-          isAnimated: f.isAnimated,
-        })),
-        totalRuns: allResults.length,
-        tierA: {
-          totalRuns: tierAResults.length,
-          passRuns: tierAPass,
-          failRuns: tierAResults.length - tierAPass,
-        },
-        tierB: {
-          totalRuns: tierBResults.length,
-          passRuns: tierBPass,
-          failRuns: tierBResults.length - tierBPass,
-        },
-        results: allResults,
-        galleryCandidates,
-      };
-
-      await fs.writeFile(
-        path.join(reportsDir, matrixReportName),
-        JSON.stringify(matrix, null, 2),
-      );
-      await fs.writeFile(
-        path.join(reportsDir, summaryReportName),
-        buildSummaryMarkdown(allResults, scenarios, fixtures),
-      );
-
-      const runsPerTier = scenarios.length * fixtures.length;
-      expect(allResults.length).toBe(runsPerTier * ALL_TIERS.length);
-      expect(tierAPass).toBeGreaterThan(0);
-      expect(galleryCandidates.length).toBeGreaterThan(0);
-
-      if (!scenarioFilter) {
-        const groupCounts = new Map<string, number>();
-        for (const s of scenarios) {
-          groupCounts.set(s.featureGroup, (groupCounts.get(s.featureGroup) ?? 0) + 1);
-        }
-        const coverageGaps: string[] = [];
-        for (const [group, minCount] of Object.entries(FEATURE_COVERAGE_REQUIREMENTS)) {
-          const actual = groupCounts.get(group) ?? 0;
-          if (actual < minCount) {
-            coverageGaps.push(`${group}: ${actual}/${minCount}`);
-          }
-        }
-        expect(coverageGaps, `Feature coverage gaps: ${coverageGaps.join(', ')}`).toHaveLength(0);
-      }
-    },
-    900000,
-  );
+      expect(coverageGaps, `Feature coverage gaps: ${coverageGaps.join(', ')}`).toHaveLength(0);
+    }
+  }, 900000);
 });

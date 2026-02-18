@@ -1,0 +1,24 @@
+{
+  "title": "ANQR Sentry Regression Monitor",
+  "generated": "2026-02-18T03:01:46.513Z",
+  "durationMs": 1196,
+  "projects": {
+    "anqr-web": {
+      "status": "ok",
+      "unresolved": 0,
+      "issues": []
+    },
+    "anqr-mobile": {
+      "status": "ok",
+      "unresolved": 0,
+      "issues": []
+    },
+    "anqr-api": {
+      "status": "ok",
+      "unresolved": 0,
+      "issues": []
+    }
+  },
+  "totalUnresolved": 0,
+  "passed": true
+}

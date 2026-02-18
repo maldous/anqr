@@ -24,7 +24,7 @@ export function getScaleFactor(overlayMode: string | undefined, config: QRGenera
     case 'subpixel-size':
       return config.subpixelGrid ?? 3;
     default:
-      return 1;
+      return config.forceScaledOverlay ? renderScale : 1;
   }
 }
 

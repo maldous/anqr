@@ -40,6 +40,7 @@ const CLOUDFLARE_ZONE_NAME = 'anqr.link';
 const EXPECTED_CNAME_TARGET = 'anqr.netlify.app';
 const PUBLISHER_ID = 'pub-2270701384951162';
 const ADMOB_APP_ID = 'ca-app-pub-2270701384951162~3067761782';
+const INDEXNOW_KEY = 'da39713d0cb0b7ec43d21f259b214605';
 const REQUEST_TIMEOUT_MS = 10_000;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -561,6 +562,51 @@ async function checkAdsConfig() {
   }
 }
 
+// ── 9. IndexNow ─────────────────────────────────────────────────────────────
+
+async function checkIndexNow() {
+  const name = 'IndexNow';
+  const keyFileName = `${INDEXNOW_KEY}.txt`;
+  const localPath = `public/${keyFileName}`;
+  const liveUrl = `https://anqr.link/${keyFileName}`;
+  const details = { local_file: {}, live_url: {} };
+
+  // Check local key file
+  const localContent = readProjectFile(localPath);
+  details.local_file.path = localPath;
+  details.local_file.exists = localContent !== null;
+  details.local_file.key_match = localContent !== null && localContent.trim() === INDEXNOW_KEY;
+
+  if (!details.local_file.exists) {
+    addResult(name, 'WARN', 'FAIL', `Local key file missing: ${localPath}`, details);
+    return;
+  }
+  if (!details.local_file.key_match) {
+    addResult(name, 'WARN', 'FAIL', `Local key file has wrong content`, details);
+    return;
+  }
+
+  // Check live URL
+  try {
+    const res = await httpsGet(liveUrl);
+    details.live_url.url = liveUrl;
+    details.live_url.status_code = res.statusCode;
+    details.live_url.key_match = res.statusCode === 200 && res.body.trim() === INDEXNOW_KEY;
+
+    if (details.live_url.key_match) {
+      addResult(name, 'WARN', 'PASS', 'Key file valid locally and live', details);
+    } else if (res.statusCode !== 200) {
+      addResult(name, 'WARN', 'WARN', `Local file OK but live URL returned HTTP ${res.statusCode}`, details);
+    } else {
+      addResult(name, 'WARN', 'WARN', 'Local file OK but live URL body does not match key (not deployed?)', details);
+    }
+  } catch (e) {
+    details.live_url.url = liveUrl;
+    details.live_url.error = e.message;
+    addResult(name, 'WARN', 'WARN', `Local file OK but live URL unreachable: ${e.message}`, details);
+  }
+}
+
 // ── Runner ──────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -582,6 +628,7 @@ async function main() {
     checkSonarQube(),
     checkSnyk(),
     checkAdsConfig(),
+    checkIndexNow(),
   ]);
 
   // ── Console output ──────────────────────────────────────────────────────
