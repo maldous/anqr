@@ -25,7 +25,8 @@ export type GalleryCategory =
   | 'blend-modes'
   | 'color-modes'
   | 'encoding'
-  | 'power-combos';
+  | 'power-combos'
+  | 'qr-art';
 
 export interface GalleryItem {
   id: string;
@@ -361,6 +362,8 @@ const FIXTURE_DISPLAY_NAMES: Record<CanonicalFixtureId, string> = {
   king: 'King',
   logo: 'Logo',
   test: 'Test',
+  trump: 'Trump',
+  dance: 'Dance',
 };
 
 const FEATURE_GROUP_TO_CATEGORY: Partial<Record<ScenarioFeatureGroup, GalleryCategory>> = {
@@ -371,9 +374,12 @@ const FEATURE_GROUP_TO_CATEGORY: Partial<Record<ScenarioFeatureGroup, GalleryCat
   encoding: 'encoding',
   render: 'power-combos',
   watermark: 'power-combos',
+  'qr-art': 'qr-art',
 };
 
 const KING_FIXTURE = CANONICAL_FIXTURES.find((f) => f.id === 'king')!;
+const DANCE_FIXTURE = CANONICAL_FIXTURES.find((f) => f.id === 'dance')!;
+const ANIMATED_FIXTURES = [KING_FIXTURE, DANCE_FIXTURE];
 
 const IMAGE_OVERLAY_FIXTURE: Record<string, CanonicalFixtureId> = {
   'overlay-dithered': 'tsunami',
@@ -396,6 +402,14 @@ const IMAGE_OVERLAY_FIXTURE: Record<string, CanonicalFixtureId> = {
   'overlay-dithered-posterized': 'logo',
   'overlay-pixelate-grayscale': 'test',
   'overlay-extreme-edges': 'tsunami',
+  'overlay-center': 'trump',
+  'overlay-halftone-dithered': 'trump',
+  'overlay-gapfill': 'dance',
+  'overlay-brightness-mode': 'trump',
+  'overlay-outline': 'dance',
+  'overlay-wave': 'trump',
+  'overlay-subpixel-size': 'dance',
+  'overlay-true-dither': 'trump',
 };
 
 function buildScenarioParams(
@@ -441,17 +455,19 @@ function buildValidatedItems(): GalleryItem[] {
       continue;
     }
 
-    // Animated overlays: king.gif only
+    // Animated overlays: king.gif and dance.gif
     if (category === 'animation-overlay') {
       const displayTitle = scenario.title.replace(/^Animation\s+/i, '');
-      items.push({
-        id: `${scenario.id}-king`,
-        title: displayTitle,
-        description: scenario.description,
-        category,
-        isAnimated: true,
-        params: buildScenarioParams(scenario, KING_FIXTURE),
-      });
+      for (const fixture of ANIMATED_FIXTURES) {
+        items.push({
+          id: `${scenario.id}-${fixture.id}`,
+          title: `${displayTitle} — ${FIXTURE_DISPLAY_NAMES[fixture.id]}`,
+          description: scenario.description,
+          category,
+          isAnimated: true,
+          params: buildScenarioParams(scenario, fixture),
+        });
+      }
       continue;
     }
 
@@ -464,6 +480,22 @@ function buildValidatedItems(): GalleryItem[] {
         category,
         params: buildScenarioParams(scenario),
       });
+      continue;
+    }
+
+    // QR Art: trump and dance fixtures only
+    if (category === 'qr-art') {
+      const qrartFixtures = CANONICAL_FIXTURES.filter((f) => f.id === 'trump' || f.id === 'dance');
+      for (const fixture of qrartFixtures) {
+        items.push({
+          id: `${scenario.id}-${fixture.id}`,
+          title: `${scenario.title} — ${FIXTURE_DISPLAY_NAMES[fixture.id]}`,
+          description: scenario.description,
+          category,
+          isAnimated: fixture.isAnimated,
+          params: buildScenarioParams(scenario, fixture),
+        });
+      }
       continue;
     }
 
@@ -491,6 +523,7 @@ const blendModeItems = validatedItems.filter((i) => i.category === 'blend-modes'
 const colorModeItems = validatedItems.filter((i) => i.category === 'color-modes');
 const encodingItems = validatedItems.filter((i) => i.category === 'encoding');
 const powerComboItems = validatedItems.filter((i) => i.category === 'power-combos');
+const qrArtItems = validatedItems.filter((i) => i.category === 'qr-art');
 
 // ============================================
 // ALL GALLERY SECTIONS
@@ -534,7 +567,8 @@ export const gallerySections: GallerySection[] = [
   {
     id: 'animation-overlay',
     title: 'Animated Overlays',
-    description: 'Full-length king.gif animation in color, grayscale, B&W, and duotone',
+    description:
+      'Animated overlays with king.gif and dance.gif in color, grayscale, B&W, and duotone',
     icon: 'Film',
     items: animationOverlayItems,
   },
@@ -565,6 +599,13 @@ export const gallerySections: GallerySection[] = [
     description: 'Render styles, frames, and watermark combinations',
     icon: 'Sparkles',
     items: powerComboItems,
+  },
+  {
+    id: 'qr-art',
+    title: 'QR Art',
+    description: 'Artistic QR codes using Reed-Solomon data shaping to embed images',
+    icon: 'Paintbrush',
+    items: qrArtItems,
   },
 ];
 

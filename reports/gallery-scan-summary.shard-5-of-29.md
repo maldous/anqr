@@ -2,9 +2,9 @@
 
 ## Overview
 
-- Total runs: 16 (8 per tier × 2 tiers)
-- **Tier A (Production):** 8 pass / 0 fail (100%)
-- **Tier B (Diagnostic):** 8 pass / 0 fail (100%)
+- Total runs: 36 (18 per tier × 2 tiers)
+- **Tier A (Production):** 18 pass / 0 fail (100%)
+- **Tier B (Diagnostic):** 18 pass / 0 fail (100%)
 - Scan-gate-rescued: 0 scenario×fixture pairs
 
 ## Tier A — Production
@@ -15,10 +15,12 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 2 | 0 |
-| king | 2 | 0 |
-| logo | 2 | 0 |
-| test | 2 | 0 |
+| tsunami | 3 | 0 |
+| king | 3 | 0 |
+| logo | 3 | 0 |
+| test | 3 | 0 |
+| trump | 3 | 0 |
+| dance | 3 | 0 |
 
 ### Failing Cases
 
@@ -32,10 +34,12 @@ _None_
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 2 | 0 |
-| king | 2 | 0 |
-| logo | 2 | 0 |
-| test | 2 | 0 |
+| tsunami | 3 | 0 |
+| king | 3 | 0 |
+| logo | 3 | 0 |
+| test | 3 | 0 |
+| trump | 3 | 0 |
+| dance | 3 | 0 |
 
 ### Failing Cases
 
@@ -49,10 +53,20 @@ _None_
 | overlay-mosaic | king | pass | pass | ✅ both pass |
 | overlay-mosaic | logo | pass | pass | ✅ both pass |
 | overlay-mosaic | test | pass | pass | ✅ both pass |
+| overlay-mosaic | trump | pass | pass | ✅ both pass |
+| overlay-mosaic | dance | pass | pass | ✅ both pass |
 | animation-blend | tsunami | pass | pass | ✅ both pass |
 | animation-blend | king | pass | pass | ✅ both pass |
 | animation-blend | logo | pass | pass | ✅ both pass |
 | animation-blend | test | pass | pass | ✅ both pass |
+| animation-blend | trump | pass | pass | ✅ both pass |
+| animation-blend | dance | pass | pass | ✅ both pass |
+| qrart-colored | tsunami | pass | pass | ✅ both pass |
+| qrart-colored | king | pass | pass | ✅ both pass |
+| qrart-colored | logo | pass | pass | ✅ both pass |
+| qrart-colored | test | pass | pass | ✅ both pass |
+| qrart-colored | trump | pass | pass | ✅ both pass |
+| qrart-colored | dance | pass | pass | ✅ both pass |
 
 ## Scan-Gate-Rescued
 

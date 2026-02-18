@@ -31,7 +31,7 @@ const DEV_SERVER_URL = `http://localhost:${process.env.GALLERY_PORT || '5173'}`;
 const IMAGE_SIZE = 200; // Half size for faster loading
 const VIEWPORT = { width: 800, height: 600 };
 const STATIC_CAPTURE_DELAY = 500; // Time to wait for static QR to render after canvas ready
-const PARALLEL_STATIC = 12; // Higher parallelism for fast static captures
+const PARALLEL_STATIC = 6; // Conservative parallelism to avoid thermal throttling
 
 // ============================================
 // NON-OVERLAY GALLERY ITEMS

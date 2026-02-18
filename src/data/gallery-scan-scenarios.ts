@@ -1,6 +1,6 @@
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 
-export type CanonicalFixtureId = 'tsunami' | 'king' | 'logo' | 'test';
+export type CanonicalFixtureId = 'tsunami' | 'king' | 'logo' | 'test' | 'trump' | 'dance';
 export type ScenarioFeatureGroup =
   | 'overlay'
   | 'preservation'
@@ -10,7 +10,8 @@ export type ScenarioFeatureGroup =
   | 'output'
   | 'watermark'
   | 'preprocessing'
-  | 'dithering';
+  | 'dithering'
+  | 'qr-art';
 
 export interface CanonicalFixture {
   id: CanonicalFixtureId;
@@ -36,6 +37,8 @@ export const CANONICAL_FIXTURES: readonly CanonicalFixture[] = [
   { id: 'king', filePath: 'public/king.gif', publicPath: '/king.gif', isAnimated: true },
   { id: 'logo', filePath: 'public/logo.png', publicPath: '/logo.png', isAnimated: false },
   { id: 'test', filePath: 'public/test.png', publicPath: '/test.png', isAnimated: false },
+  { id: 'trump', filePath: 'public/trump.png', publicPath: '/trump.png', isAnimated: false },
+  { id: 'dance', filePath: 'public/dance.gif', publicPath: '/dance.gif', isAnimated: true },
 ];
 
 export const GALLERY_SCAN_SCENARIOS: readonly GalleryScanScenario[] = [
@@ -1119,6 +1122,140 @@ export const GALLERY_SCAN_SCENARIOS: readonly GalleryScanScenario[] = [
       v: 6,
       ec: 'H',
     },
+  },
+  // --- Missing overlay modes (complete coverage) ---
+  {
+    id: 'overlay-center',
+    title: 'Center Logo',
+    description: 'Logo placed in center of QR code with high error correction',
+    featureGroup: 'overlay',
+    heroPriority: 24,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'center' },
+    galleryParams: { mode: 'center', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-halftone-dithered',
+    title: 'Halftone Dithered',
+    description: 'Combined halftone and dithering — newspaper meets stipple art',
+    featureGroup: 'overlay',
+    heroPriority: 23,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'halftone-dithered', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'halftone-dithered', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-gapfill',
+    title: 'Gap Fill',
+    description: 'Image fills the gaps between QR modules — subtle background reveal',
+    featureGroup: 'overlay',
+    heroPriority: 22,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'gapfill', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'gapfill', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-brightness-mode',
+    title: 'Brightness Map',
+    description: 'Image brightness controls module darkness — luminance-driven rendering',
+    featureGroup: 'overlay',
+    heroPriority: 21,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'brightness', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'brightness', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-outline',
+    title: 'Outline',
+    description: 'Edge-detected outline rendering — architectural blueprint aesthetic',
+    featureGroup: 'overlay',
+    heroPriority: 20,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'outline', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'outline', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-wave',
+    title: 'Wave Distortion',
+    description: 'Sinusoidal wave distortion — psychedelic ripple effect',
+    featureGroup: 'overlay',
+    heroPriority: 19,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'wave', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'wave', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-subpixel-size',
+    title: 'Subpixel Size',
+    description: 'Variable-size subpixel grid — module size reflects image brightness',
+    featureGroup: 'overlay',
+    heroPriority: 18,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'subpixel-size', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'subpixel-size', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  {
+    id: 'overlay-true-dither',
+    title: 'True Dither',
+    description: 'Ordered matrix dithering with per-pixel control — retro display look',
+    featureGroup: 'overlay',
+    heroPriority: 17,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'dither', overlayIntensity: 70, colorMode: 'color' },
+    galleryParams: { mode: 'dither', intensity: 70, colorMode: 'color', v: 6, ec: 'H' },
+  },
+  // --- QR Art scenarios (artwork mode with fragment search) ---
+  {
+    id: 'qrart-standard',
+    title: 'QR Art Standard',
+    description: 'Artistic QR code — image embedded via Reed-Solomon data manipulation',
+    featureGroup: 'qr-art',
+    heroPriority: 16,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'artwork' },
+    galleryParams: { mode: 'artwork', v: 6, ec: 'L' },
+  },
+  {
+    id: 'qrart-rounded',
+    title: 'QR Art Rounded',
+    description: 'Artistic QR code with soft rounded modules and finders',
+    featureGroup: 'qr-art',
+    heroPriority: 15,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'artwork', moduleStyle: 'rounded', finderStyle: 'rounded' },
+    galleryParams: { mode: 'artwork', style: 'rounded', finder: 'rounded', v: 6, ec: 'L' },
+  },
+  {
+    id: 'qrart-colored',
+    title: 'QR Art Colored',
+    description: 'Artistic QR code with navy-on-blue color scheme',
+    featureGroup: 'qr-art',
+    heroPriority: 14,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'artwork' },
+    galleryParams: { mode: 'artwork', fg: '1a365d', bg: 'ebf8ff', v: 6, ec: 'L' },
+  },
+  {
+    id: 'qrart-dots',
+    title: 'QR Art Dots',
+    description: 'Artistic QR code with dot matrix modules and circular finders',
+    featureGroup: 'qr-art',
+    heroPriority: 13,
+    galleryEligible: true,
+    useOverlay: true,
+    generatorPatch: { overlayMode: 'artwork', moduleStyle: 'dots', finderStyle: 'circle' },
+    galleryParams: { mode: 'artwork', style: 'dots', finder: 'circle', v: 6, ec: 'L' },
   },
   // --- Dithering algorithm scenarios (scan matrix validation only — gallery items are hand-crafted in gallery-items.ts) ---
   {

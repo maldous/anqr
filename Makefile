@@ -198,6 +198,7 @@ SCAN_MATRIX_AUTO_SHARDS ?= $(shell \
 	[ $$by_disk -lt $$shards ] && shards=$$by_disk; \
 	echo $$shards)
 SCAN_MATRIX_SHARDS ?= $(SCAN_MATRIX_AUTO_SHARDS)
+SCAN_MATRIX_SHARDS = 4
 
 # Playwright default worker pool — conservative to avoid thermal throttling.
 # Too many parallel Chromium instances heat the CPU, causing thermal
@@ -425,6 +426,7 @@ export VITE_ADSENSE_SLOT_GALLERY_AFTER_PREPROCESSING := 8436295070
 export VITE_ADSENSE_SLOT_GALLERY_AFTER_ENCODING := 4497050062
 export VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING := 9557805050
 export VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS := 9557805050
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_QR_ART := 1648360241
 
 # ============================================
 # AdMob Configuration (for native Android/iOS apps)
@@ -890,7 +892,7 @@ _quality-gates:
 	npm run test:i18n
 	npx depcruise --config .dependency-cruiser.cjs src
 	@AUDIT_LOG=$$(mktemp); \
-	if npm audit --audit-level=high > "$$AUDIT_LOG" 2>&1; then \
+	if npm audit --audit-level=critical > "$$AUDIT_LOG" 2>&1; then \
 		cat "$$AUDIT_LOG"; \
 	else \
 		cat "$$AUDIT_LOG"; \

@@ -50,7 +50,8 @@ type SlotName =
   | 'gallery-after-preprocessing'
   | 'gallery-after-encoding'
   | 'gallery-after-dithering'
-  | 'gallery-after-power-combos';
+  | 'gallery-after-power-combos'
+  | 'gallery-after-qr-art';
 
 /**
  * Optional environment-driven slot configuration.
@@ -107,6 +108,9 @@ const SLOT_IDS: Partial<Record<SlotName, string>> = {
   'gallery-after-power-combos':
     import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS ||
     import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING,
+  'gallery-after-qr-art':
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_QR_ART ||
+    import.meta.env.VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS,
 };
 
 function isNumericSlot(value: string | undefined | null): value is string {
