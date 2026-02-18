@@ -20,7 +20,7 @@ help:
 	@echo "                         8. test       — quality gates + unit + E2E (19 checks)"
 	@echo "                         9. validate   — overlay audit + scan matrix + signoff"
 	@echo "                        10. gallery    — copy Tier A scan-validated overlays back"
-	@echo "                        11. reports    — payload matrix + coverage gap"
+	@echo "                        11. reports    — payload matrix + unit coverage + coverage gap"
 	@echo "                        12. sonar      — SonarQube code analysis (non-blocking)"
 	@echo "                        13. deploy     — rebuild with Sentry + Netlify deploy"
 	@echo "                        14. android    — release AAB + upload (if SDK available)"
@@ -256,7 +256,7 @@ resources:
 #   8. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
 #   9. validate    — heavyweight overlay audit + gallery scan matrix + production signoff
 #  10. gallery:update — copy Tier A scan-validated overlay artifacts back to public/gallery/
-#  11. reports     — payload verification matrix + coverage gap report
+#  11. reports     — payload verification matrix + unit coverage + coverage gap report
 #  12. sonar       — SonarQube code analysis (non-blocking, requires localhost:9000)
 #  13. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy
 #  14. android     — release AAB + upload to Play Store (skipped if SDK/Java unavailable)
@@ -318,10 +318,11 @@ all:
 	@echo "[10/16] Copying Tier A scan-validated overlay artifacts to gallery..."
 	node scripts/update-gallery-from-scan-matrix.mjs
 	@echo ""
-	@echo "[11/16] Generating reports..."
+	@echo "[11/16] Generating reports + coverage..."
 	$(MAKE) report:payload:matrix
 	$(MAKE) report:i18n:txt
-	@if [ -d coverage ]; then $(MAKE) test:coverage:gap; else echo "Skipping coverage gap (no coverage/ data — run make test:unit:coverage first)"; fi
+	@$(MAKE) test:unit:coverage || echo "⚠️  Coverage below 100% threshold — see coverage gap report"
+	$(MAKE) test:coverage:gap
 	@echo ""
 	@echo "[12/16] Running SonarQube analysis..."
 	@$(MAKE) sonar || echo "⚠️  SonarQube not available (localhost:9000) — skipping"
@@ -331,8 +332,9 @@ all:
 	# This final build includes gallery images (step 7) + Tier A overlays (step 10).
 	$(MAKE) deploy
 	@echo ""
-	@echo "[14/16] Building Android release AAB + uploading..."
+	@echo "[14/16] Bumping version + building Android release AAB + uploading..."
 	@if [ -d android ] && command -v java >/dev/null 2>&1 && [ -n "$$ANDROID_HOME" ]; then \
+		$(MAKE) android:bump; \
 		$(MAKE) android:release; \
 		if [ -f play-store-key.json ]; then \
 			echo "Uploading to Play Store..."; \
@@ -648,16 +650,22 @@ android\:keystore:
 	@echo "Keystore generated at android/app/release-key.keystore"
 	@echo "IMPORTANT: Back up this file and remember your passwords!"
 
-# Bump version code and version name
+# Bump version across all locations: package.json + Android build.gradle
+# Versioning convention: 1.0.{versionCode} — see knowledge.md §Version Management
 android\:bump:
-	@echo "Bumping Android version..."
+	@echo "Bumping version..."
 	@CURRENT_CODE=$$(grep -oP 'versionCode \K[0-9]+' android/app/build.gradle); \
 	NEW_CODE=$$((CURRENT_CODE + 1)); \
+	NEW_VER="1.0.$$NEW_CODE"; \
 	CURRENT_NAME=$$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle); \
-	NEW_NAME="1.$$NEW_CODE"; \
+	CURRENT_PKG=$$(grep -oP '"version": "\K[^"]+' package.json); \
 	sed -i "s/versionCode $$CURRENT_CODE/versionCode $$NEW_CODE/" android/app/build.gradle; \
-	sed -i "s/versionName \"$$CURRENT_NAME\"/versionName \"$$NEW_NAME\"/" android/app/build.gradle; \
-	echo "Version bumped: $$CURRENT_NAME ($$CURRENT_CODE) -> $$NEW_NAME ($$NEW_CODE)"
+	sed -i "s/versionName \"$$CURRENT_NAME\"/versionName \"$$NEW_VER\"/" android/app/build.gradle; \
+	sed -i "s/\"version\": \"$$CURRENT_PKG\"/\"version\": \"$$NEW_VER\"/" package.json; \
+	echo "Version bumped: $$CURRENT_PKG (code $$CURRENT_CODE) -> $$NEW_VER (code $$NEW_CODE)"; \
+	echo "  package.json:    $$NEW_VER"; \
+	echo "  versionName:     $$NEW_VER"; \
+	echo "  versionCode:     $$NEW_CODE"
 
 # Full Android production build
 android: build android\:bump android\:release

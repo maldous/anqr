@@ -1,0 +1,347 @@
+{
+  "generatedAt": "2026-02-17T22:00:14.940Z",
+  "summary": {
+    "totalKinds": 41,
+    "pass": 41,
+    "review": 0,
+    "missingSelector": [],
+    "missingGeneration": [],
+    "textDrivenKinds": [
+      "epc_sepa",
+      "paynow",
+      "pix",
+      "promptpay",
+      "upi"
+    ]
+  },
+  "rows": [
+    {
+      "kind": "app_link",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 7,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "auspaynet",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 3,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "bharatqr",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "bizcard",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "calendar_subscription",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "cashapp",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "crypto",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "custom",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 8,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "duitnow",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "email",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 4,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "emv_generic",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 3,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "epc_sepa",
+      "selectorWired": true,
+      "generationPath": "ui-text-generator",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": "Generated in PayloadSection useEffect via setPayloadText."
+    },
+    {
+      "kind": "ethereum_eip681",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "event",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "event_rsvp",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 3,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "geo",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "gs1_digital_link",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 3,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "hkqr",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "jpqr",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "lightning",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "mecard",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "messaging_link",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "paynow",
+      "selectorWired": true,
+      "generationPath": "ui-text-generator",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": "Generated in PayloadSection useEffect via setPayloadText."
+    },
+    {
+      "kind": "paypal_me",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "pix",
+      "selectorWired": true,
+      "generationPath": "ui-text-generator",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": "Generated in PayloadSection useEffect via setPayloadText."
+    },
+    {
+      "kind": "plain_text",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 3,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "promptpay",
+      "selectorWired": true,
+      "generationPath": "ui-text-generator",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": "Generated in PayloadSection useEffect via setPayloadText."
+    },
+    {
+      "kind": "qris",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "qrph",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "short_link",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "sms",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 3,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "social_profile",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 1,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "swiss_qr_bill",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 3,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "tel",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "twqr",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "upi",
+      "selectorWired": true,
+      "generationPath": "ui-text-generator",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": "Generated in PayloadSection useEffect via setPayloadText."
+    },
+    {
+      "kind": "url",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 8,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "utm_link",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "vcard",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "vietqr",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 2,
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "kind": "wifi",
+      "selectorWired": true,
+      "generationPath": "store-switch",
+      "testReferences": 4,
+      "status": "PASS",
+      "note": ""
+    }
+  ]
+}

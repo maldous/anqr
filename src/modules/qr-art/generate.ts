@@ -1059,7 +1059,7 @@ function generateBaseQR(
     const testEcc = computeECC(blockDataArrays[i], blockEccCounts[i]);
     const encoderEcc = blockEccArrays[i];
     if (!arraysEqual(testEcc, encoderEcc)) {
-      log.error('ECC MISMATCH - computeECC differs from encoder!', {
+      log.warn('ECC MISMATCH - computeECC differs from encoder!', {
         blockIndex: i,
         dataCount: blockDataCounts[i],
         eccCount: blockEccCounts[i],
@@ -1156,7 +1156,7 @@ function generateBaseQR(
   }
 
   if (mismatchCount > 0) {
-    log.error('Total matrix mismatches', {
+    log.warn('Total matrix mismatches', {
       mismatchCount,
       moduleCount,
       totalModules: moduleCount * moduleCount,
@@ -2329,7 +2329,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // FAIL FAST: If base matrix generation failed (e.g., ECC/mask mismatch), return error immediately
     if (!baseResult.success) {
-      log.error('BASE QR GENERATION FAILED - FAIL FAST!', {
+      log.warn('BASE QR GENERATION FAILED - FAIL FAST!', {
         error: baseResult.error,
         rejectionReason: baseResult.rejectionReason,
         errorDetails: baseResult.errorDetails,
@@ -2428,7 +2428,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     });
 
     if (!internalConsistencyOk) {
-      log.error('INTERNAL CONSISTENCY FAILURE - encoder boundary math is wrong!', {
+      log.warn('INTERNAL CONSISTENCY FAILURE - encoder boundary math is wrong!', {
         bitsAfterOriginalData: encoderLayout.bitsAfterOriginalData,
         bitsAfterData: encoderLayout.bitsAfterData,
         bitsAfterCharCount: encoderLayout.bitsAfterCharCount,
@@ -2531,7 +2531,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           validationMethod: 'BYTE_EXACT_PREFIX',
         });
       } else {
-        log.error('BASE MATRIX VERIFICATION FAILED - byte-exact validation failed!', {
+        log.warn('BASE MATRIX VERIFICATION FAILED - byte-exact validation failed!', {
           expectedOriginal: data,
           actualDecodedData: baseVerificationScan.data,
           validationReason: baseValidation.reason,
@@ -2554,7 +2554,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         };
       }
     } else {
-      log.error('BASE MATRIX VERIFICATION FAILED - base matrix does not scan!', {
+      log.warn('BASE MATRIX VERIFICATION FAILED - base matrix does not scan!', {
         error: baseVerificationScan.error,
       });
       // FAIL FAST - if base matrix doesn't scan, something is fundamentally wrong
@@ -2668,7 +2668,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         (v) => v.violationType === 'TERMINATOR_GAP'
       );
 
-      log.error('CRITICAL: Basis vectors exist in PROTECTED region or TERMINATOR GAP!', {
+      log.warn('CRITICAL: Basis vectors exist in PROTECTED region or TERMINATOR GAP!', {
         protectedBitEnd,
         gapRange: `${gapStartBit} - ${gapEndBit}`,
         originalDataViolations: originalDataViolations.length,
@@ -2867,7 +2867,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       const testScan = scanMatrixWithJsQR(testMatrix);
 
       if (!testScan.success) {
-        log.error('HYBRID MUTATION TEST FAILED - single vector breaks scan!', {
+        log.warn('HYBRID MUTATION TEST FAILED - single vector breaks scan!', {
           vectorDataBitIndex: testVector.dataBitIndex,
           vectorBlockIndex: testVector.rsBlockIndex,
           vectorPosInBlock: testVector.posInBlock,
@@ -2901,7 +2901,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       const mutationValidation = validateOriginalDataPreserved(testScan.data, data);
 
       if (!mutationValidation.valid) {
-        log.error('HYBRID MUTATION TEST FAILED - byte-exact validation failed!', {
+        log.warn('HYBRID MUTATION TEST FAILED - byte-exact validation failed!', {
           expectedOriginal: data,
           actualData: testScan.data,
           expectedLength: originalDataLength,
@@ -3155,7 +3155,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       const actualEcc = modifiedBlockEcc[i];
       if (!arraysEqual(expectedEcc, actualEcc)) {
         rsLinearityOk = false;
-        log.error('RS LINEARITY BROKEN - modified codeword is invalid!', {
+        log.warn('RS LINEARITY BROKEN - modified codeword is invalid!', {
           blockIndex: i,
           dataCount: blockDataCounts[i],
           eccCount: blockEccCounts[i],
@@ -3171,7 +3171,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     if (rsLinearityOk) {
       log.info('RS linearity preserved - all modified codewords are valid');
     } else {
-      log.error('RS LINEARITY CHECK FAILED - QR code will likely not scan!');
+      log.warn('RS LINEARITY CHECK FAILED - QR code will likely not scan!');
       // FAIL FAST: RS linearity is fundamental - if broken, the QR will not decode
       return {
         success: false,
@@ -3224,7 +3224,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     }
 
     if (anyBlockOverBudget) {
-      log.error('ECC budget exceeded in one or more blocks - falling back to binary search', {
+      log.warn('ECC budget exceeded in one or more blocks - falling back to binary search', {
         suggestion: 'Reduce number of vectors or use higher ECC level',
         note: 'Binary search fallback will find maximum safe vector count',
       });
@@ -3333,7 +3333,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     }
 
     if (protectedBytesViolated) {
-      log.error('PROTECTED BYTES MODIFIED - HYBRID protection violation!', {
+      log.warn('PROTECTED BYTES MODIFIED - HYBRID protection violation!', {
         violationCount: violations.length,
         violations: violations.slice(0, 10),
         protectedBitEnd: encoderLayout.protectedBitEnd,
@@ -3342,7 +3342,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       });
 
       // FAIL FAST: Return base matrix since we can't trust the modified data
-      log.error('FAILING FAST - returning base matrix due to protected byte violation');
+      log.warn('FAILING FAST - returning base matrix due to protected byte violation');
       return {
         success: false,
         error: `Protected byte violation: ${violations.length} original data bytes were modified`,
@@ -3386,7 +3386,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     );
     const zeroModScan = scanMatrixWithJsQR(zeroModMatrix);
     if (!zeroModScan.success) {
-      log.error('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
+      log.warn('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
         error: zeroModScan.error,
       });
     } else {
@@ -3398,7 +3398,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           decodedData: zeroModScan.data,
         });
       } else {
-        log.error('Zero-modification test FAILED - decoded data mismatch!', {
+        log.warn('Zero-modification test FAILED - decoded data mismatch!', {
           decodedData: zeroModScan.data,
           expectedData: encodedData,
         });
@@ -3556,7 +3556,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // CRITICAL: If structural modules differ, that's a major bug
     if (structuralDiffCount > 0) {
-      log.error('CRITICAL: Structural patterns modified!', {
+      log.warn('CRITICAL: Structural patterns modified!', {
         structuralDiffCount,
         structuralDiffs: sampleDiffs.filter((d) => d.isStructural),
       });
@@ -3565,7 +3565,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // Comprehensive finder pattern validation
     const finderValidation = validateFinderPatterns(finalMatrix);
     if (!finderValidation.allValid) {
-      log.error('FINDER PATTERNS CORRUPTED', {
+      log.warn('FINDER PATTERNS CORRUPTED', {
         topLeft: finderValidation.topLeft,
         topRight: finderValidation.topRight,
         bottomLeft: finderValidation.bottomLeft,
@@ -3578,7 +3578,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // Timing pattern validation
     const timingValidation = validateTimingPatterns(finalMatrix);
     if (!timingValidation.allValid) {
-      log.error('TIMING PATTERNS CORRUPTED', {
+      log.warn('TIMING PATTERNS CORRUPTED', {
         horizontal: timingValidation.horizontal,
         vertical: timingValidation.vertical,
         errors: timingValidation.errors,
@@ -3611,7 +3611,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       baseFormatInfo.vertical !== finalFormatInfo.vertical ||
       baseFormatInfo.horizontal !== finalFormatInfo.horizontal
     ) {
-      log.error('FORMAT INFO CHANGED - This will break scanning!');
+      log.warn('FORMAT INFO CHANGED - This will break scanning!');
     }
 
     // DEBUG: Scan the final matrix to verify it's actually scannable
@@ -3669,7 +3669,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       });
     } else {
       // Semantic validation FAILED - log detailed rejection info
-      log.error('QR-Art SEMANTIC-HARD-GATE validation FAILED', {
+      log.warn('QR-Art SEMANTIC-HARD-GATE validation FAILED', {
         rejectionReason: semanticValidation.reason,
         description: semanticValidation.description,
         details: semanticValidation.details,
@@ -3694,7 +3694,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         const expectedBytes = stringToBytes(data);
         const actualBytes = stringToBytes(scanResult.data);
 
-        log.error('DECODED BYTES (hex comparison)', {
+        log.warn('DECODED BYTES (hex comparison)', {
           decodedPrefixHex: toHex(actualBytes.slice(0, originalDataLength)),
           expectedPrefixHex: toHex(expectedBytes),
           mismatchIndex: semanticValidation.details?.mismatchIndex,
@@ -3711,7 +3711,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     }
 
     if (!scanResult.success) {
-      log.error('QR-Art matrix scan validation FAILED - matrix does not scan!', {
+      log.warn('QR-Art matrix scan validation FAILED - matrix does not scan!', {
         error: scanResult.error,
         expectedData: encodedData,
         scanAttempts: scanResult.attempts,
@@ -3810,7 +3810,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           scanResult = postSearchScan;
         } else {
           const postSearchScan = scanMatrixWithJsQR(finalMatrixToUse);
-          log.error('Binary search result SEMANTIC-HARD-GATE validation FAILED!', {
+          log.warn('Binary search result SEMANTIC-HARD-GATE validation FAILED!', {
             rejectionReason: postSearchValidation.reason,
             description: postSearchValidation.description,
             details: postSearchValidation.details,

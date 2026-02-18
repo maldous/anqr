@@ -1,7 +1,7 @@
 {
   "title": "ANQR Third-Party Service Validation",
-  "generated": "2026-02-15T10:16:24.347Z",
-  "durationMs": 11481,
+  "generated": "2026-02-17T22:04:00.285Z",
+  "durationMs": 12898,
   "summary": {
     "critical": {
       "passed": 4,
@@ -23,10 +23,10 @@
         "custom_domain": "anqr.link",
         "url": "https://anqr.link",
         "latest_deploy_state": "ready",
-        "latest_deploy_id": "698feb77cf3584673b00a899",
-        "latest_deploy_created": "2026-02-14T03:26:47.230Z"
+        "latest_deploy_id": "6994e51d555990c33e0b4b92",
+        "latest_deploy_created": "2026-02-17T22:01:01.406Z"
       },
-      "timestamp": "2026-02-15T10:16:18.034Z"
+      "timestamp": "2026-02-17T22:03:52.716Z"
     },
     {
       "name": "Google Play",
@@ -42,7 +42,7 @@
           "project_id": "anqr-link"
         }
       },
-      "timestamp": "2026-02-15T10:16:18.058Z"
+      "timestamp": "2026-02-17T22:03:52.736Z"
     },
     {
       "name": "Ads Config",
@@ -64,7 +64,7 @@
           "publisher_id_match": true
         }
       },
-      "timestamp": "2026-02-15T10:16:18.059Z"
+      "timestamp": "2026-02-17T22:03:52.736Z"
     },
     {
       "name": "SonarQube",
@@ -74,7 +74,7 @@
       "details": {
         "error": "connect ECONNREFUSED 127.0.0.1:9000"
       },
-      "timestamp": "2026-02-15T10:16:18.061Z"
+      "timestamp": "2026-02-17T22:03:52.739Z"
     },
     {
       "name": "Snyk",
@@ -85,7 +85,7 @@
         "statusCode": 200,
         "username": "maldous"
       },
-      "timestamp": "2026-02-15T10:16:18.645Z"
+      "timestamp": "2026-02-17T22:03:53.034Z"
     },
     {
       "name": "Cloudflare",
@@ -120,13 +120,13 @@
           }
         }
       },
-      "timestamp": "2026-02-15T10:16:19.149Z"
+      "timestamp": "2026-02-17T22:03:53.809Z"
     },
     {
       "name": "Sentry",
       "level": "CRITICAL",
       "status": "PASS",
-      "summary": "3/3 projects active (27 unresolved issues)",
+      "summary": "3/3 projects active (29 unresolved issues)",
       "details": {
         "projects": {
           "anqr-web": {
@@ -137,7 +137,7 @@
           "anqr-mobile": {
             "status": "active",
             "active": true,
-            "unresolved": 27
+            "unresolved": 29
           },
           "anqr-api": {
             "status": "active",
@@ -151,7 +151,7 @@
           "status": "match"
         }
       },
-      "timestamp": "2026-02-15T10:16:21.599Z"
+      "timestamp": "2026-02-17T22:03:58.478Z"
     },
     {
       "name": "Live Site",
@@ -206,7 +206,7 @@
           }
         }
       },
-      "timestamp": "2026-02-15T10:16:24.346Z"
+      "timestamp": "2026-02-17T22:04:00.284Z"
     }
   ]
 }

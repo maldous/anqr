@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Sitemap Generator with hreflang support
- * Generates sitemap.xml with proper hreflang alternate links for all supported languages
+ * Generates sitemap.xml with one canonical <url> per page and hreflang alternates
+ * for all supported languages within each entry.
  */
 
 import { writeFileSync } from 'fs';
@@ -37,8 +38,10 @@ const languages = [
   'zu'
 ];
 
-// Static pages with their priorities and change frequencies
-const staticPages = [
+// All pages with their priorities and change frequencies
+const allPages = [
+  { path: '', priority: 1.0, changefreq: 'weekly' },
+  { path: 'gallery', priority: 0.9, changefreq: 'weekly' },
   { path: 'learn', priority: 0.9, changefreq: 'weekly' },
   { path: 'examples', priority: 0.9, changefreq: 'weekly' },
   { path: 'guide', priority: 0.8, changefreq: 'weekly' },
@@ -48,18 +51,11 @@ const staticPages = [
   { path: 'terms', priority: 0.4, changefreq: 'monthly' },
 ];
 
-// Non-localized pages
-const globalPages = [
-  { path: '', priority: 1.0, changefreq: 'weekly' },
-  { path: 'gallery', priority: 0.9, changefreq: 'weekly' },
-];
-
 const BASE_URL = 'https://anqr.link';
 const LASTMOD = new Date().toISOString().split('T')[0];
 
 /**
  * Convert language code to hreflang format
- * Most codes are already correct, but we need to handle some special cases
  */
 function toHreflang(lang) {
   // en-GB is the default, use 'en' for broader matching
@@ -72,49 +68,28 @@ function toHreflang(lang) {
  * Get URL for a page in a specific language
  */
 function getUrl(pagePath, lang) {
-  const base = pagePath ? `${BASE_URL}/${pagePath}` : BASE_URL + '/';
-  if (lang === 'en-GB') {
-    return base;
-  }
-  return `${base}${pagePath ? '?' : '?'}lang=${lang}`;
+  const base = pagePath ? `${BASE_URL}/${pagePath}` : `${BASE_URL}/`;
+  if (lang === 'en-GB') return base;
+  return `${base}?lang=${lang}`;
 }
 
 /**
  * Generate hreflang links for a page
  */
 function generateHreflangLinks(pagePath, indent = '    ') {
-  const links = languages.map(lang => {
+  const links = [];
+
+  // x-default pointing to English version first
+  links.push(`${indent}<xhtml:link rel="alternate" hreflang="x-default" href="${getUrl(pagePath, 'en-GB')}"/>`);
+
+  // All languages
+  for (const lang of languages) {
     const href = getUrl(pagePath, lang);
     const hreflang = toHreflang(lang);
-    return `${indent}<xhtml:link rel="alternate" hreflang="${hreflang}" href="${href}"/>`;
-  });
-  
-  // Add x-default pointing to English version
-  const defaultHref = getUrl(pagePath, 'en-GB');
-  links.push(`${indent}<xhtml:link rel="alternate" hreflang="x-default" href="${defaultHref}"/>`);
-  
-  return links.join('\n');
-}
-
-/**
- * Generate a URL entry with hreflang tags
- */
-function generateUrlEntry(pagePath, lang, priority, changefreq, includeHreflang = true) {
-  const loc = getUrl(pagePath, lang);
-  const adjustedPriority = lang === 'en-GB' ? priority : Math.max(0.3, priority - 0.1);
-  
-  let entry = `  <url>
-    <loc>${loc}</loc>
-    <lastmod>${LASTMOD}</lastmod>
-    <changefreq>${changefreq}</changefreq>
-    <priority>${adjustedPriority.toFixed(1)}</priority>`;
-  
-  if (includeHreflang) {
-    entry += '\n' + generateHreflangLinks(pagePath);
+    links.push(`${indent}<xhtml:link rel="alternate" hreflang="${hreflang}" href="${href}"/>`);
   }
-  
-  entry += '\n  </url>';
-  return entry;
+
+  return links.join('\n');
 }
 
 /**
@@ -122,43 +97,26 @@ function generateUrlEntry(pagePath, lang, priority, changefreq, includeHreflang 
  */
 function generateSitemap() {
   const entries = [];
-  
-  // Add header
+
   entries.push(`<?xml version="1.0" encoding="UTF-8"?>`);
   entries.push(`<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`);
   entries.push(`        xmlns:xhtml="http://www.w3.org/1999/xhtml">`);
   entries.push('');
-  
-  // Add global pages (no language variants)
-  entries.push('  <!-- Global Pages (no language variants) -->');
-  for (const page of globalPages) {
+
+  for (const page of allPages) {
+    const loc = page.path ? `${BASE_URL}/${page.path}` : `${BASE_URL}/`;
     entries.push(`  <url>`);
-    entries.push(`    <loc>${BASE_URL}${page.path ? '/' + page.path : '/'}</loc>`);
+    entries.push(`    <loc>${loc}</loc>`);
     entries.push(`    <lastmod>${LASTMOD}</lastmod>`);
     entries.push(`    <changefreq>${page.changefreq}</changefreq>`);
     entries.push(`    <priority>${page.priority.toFixed(1)}</priority>`);
+    entries.push(generateHreflangLinks(page.path));
     entries.push(`  </url>`);
-  }
-  entries.push('');
-  
-  // Add static pages with hreflang for each language
-  for (const page of staticPages) {
-    entries.push(`  <!-- ${page.path.toUpperCase()} page - all languages with hreflang -->`);
-    
-    // English (default) version first
-    entries.push(generateUrlEntry(page.path, 'en-GB', page.priority, page.changefreq, true));
-    
-    // All other languages
-    for (const lang of languages) {
-      if (lang === 'en-GB') continue;
-      entries.push(generateUrlEntry(page.path, lang, page.priority, page.changefreq, true));
-    }
     entries.push('');
   }
-  
-  // Close urlset
+
   entries.push('</urlset>');
-  
+
   return entries.join('\n');
 }
 
@@ -172,6 +130,6 @@ const urlCount = (sitemap.match(/<url>/g) || []).length;
 const hreflangCount = (sitemap.match(/xhtml:link/g) || []).length;
 
 console.log(`✅ Generated sitemap.xml`);
-console.log(`   - ${urlCount} URLs`);
+console.log(`   - ${urlCount} URLs (canonical pages)`);
 console.log(`   - ${hreflangCount} hreflang links`);
 console.log(`   - Output: ${outputPath}`);

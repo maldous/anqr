@@ -374,7 +374,7 @@ export function validateVectorSelection(
   }
 
   if (violations.length > 0) {
-    log.error('Vector selection violates protected bits!', {
+    log.warn('Vector selection violates protected bits!', {
       violationCount: violations.length,
       sampleViolations: violations.slice(0, 10),
     });
