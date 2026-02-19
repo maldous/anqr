@@ -39,6 +39,9 @@ const PAYLOAD = 'https://anqr.link';
 const IMAGE_SIZE = 400;
 const FETCH_TIMEOUT_MS = 60_000;
 const MAX_RETRIES = 2;
+const POLL_INTERVAL_MS = 10_000;
+const MAX_POLLS = 90;
+const IS_LOCAL = API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1');
 
 // ============================================
 // Source file parsing
@@ -159,11 +162,16 @@ function buildApiUrl(scenario, fixture) {
   // Overlay image
   if (scenario.useOverlay && fixture) {
     params.set('img', `${ASSET_BASE}${fixture.publicPath}`);
+    // Local dev: _fullRender=1 for direct rendering (blob cache unavailable)
+    // Production: omit _fullRender to use async background rendering + blob cache
+    if (IS_LOCAL) {
+      params.set('_fullRender', '1');
+    }
   }
 
-  // Always request PNG — gallery thumbnails are static images.
-  // Animated GIF generation is handled by the background function for public users.
-  params.set('format', 'png');
+  // Request GIF for animated overlays so the gallery gets animated output;
+  // static overlays and non-overlay scenarios use PNG.
+  params.set('format', fixture?.isAnimated ? 'gif' : 'png');
 
   return `${API_BASE}?${params.toString()}`;
 }
@@ -172,42 +180,32 @@ function buildApiUrl(scenario, fixture) {
 // HTTP fetch with retry
 // ============================================
 
+async function fetchOnce(url) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const response = await fetch(url, {
+    signal: controller.signal,
+    headers: { 'User-Agent': 'ANQR-Gallery-Matrix/1.0' },
+  });
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+  }
+
+  const generating = response.headers.get('X-ANQR-Status') === 'generating';
+  const buffer = Buffer.from(await response.arrayBuffer());
+  return { buffer, generating };
+}
+
 async function fetchWithRetry(url, retries = MAX_RETRIES) {
+  // Initial fetch with retries for network/server errors
+  let result;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: { 'User-Agent': 'ANQR-Gallery-Matrix/1.0' },
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const body = await response.text().catch(() => '');
-        throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
-      }
-
-      // If the API is generating the full version in the background,
-      // wait and retry until the cached version is available
-      if (response.headers.get('X-ANQR-Status') === 'generating') {
-        const buffer = Buffer.from(await response.arrayBuffer());
-        if (attempt < retries) {
-          const delay = 5000 * (attempt + 1);
-          console.warn(`  ⏳ Background generation in progress, retry in ${delay / 1000}s...`);
-          await new Promise((r) => setTimeout(r, delay));
-          continue;
-        }
-        // Last attempt — return degraded version
-        return buffer;
-      }
-
-      const buffer = Buffer.from(await response.arrayBuffer());
-      if (buffer.length < 100) {
-        throw new Error(`Response too small: ${buffer.length} bytes`);
-      }
-      return buffer;
+      result = await fetchOnce(url);
+      break;
     } catch (err) {
       if (attempt < retries) {
         const delay = 1000 * (attempt + 1);
@@ -218,6 +216,33 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
       throw err;
     }
   }
+
+  // If the background is generating the full overlay, poll until it's cached
+  if (result.generating) {
+    console.warn(`  ⏳ Background generation triggered, polling every ${POLL_INTERVAL_MS / 1000}s...`);
+    for (let poll = 1; poll <= MAX_POLLS; poll++) {
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+      try {
+        const pollResult = await fetchOnce(url);
+        if (!pollResult.generating) {
+          if (pollResult.buffer.length < 100) {
+            throw new Error(`Response too small: ${pollResult.buffer.length} bytes`);
+          }
+          return pollResult.buffer;
+        }
+        console.warn(`  ⏳ Still generating... (poll ${poll}/${MAX_POLLS})`);
+      } catch (err) {
+        console.warn(`  ⏳ Poll ${poll}/${MAX_POLLS} failed: ${err.message}`);
+      }
+    }
+    console.warn(`  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`);
+    return result.buffer;
+  }
+
+  if (result.buffer.length < 100) {
+    throw new Error(`Response too small: ${result.buffer.length} bytes`);
+  }
+  return result.buffer;
 }
 
 // ============================================
@@ -352,8 +377,8 @@ async function main() {
   // Build task list
   const tasks = runs.map(({ scenario, fixture, isNonOverlay }) => async () => {
     const start = Date.now();
-    const isAnimated = false; // Gallery artifacts are always static PNGs
-    const ext = 'png';
+    const isAnimated = !!(!isNonOverlay && fixture?.isAnimated);
+    const ext = isAnimated ? 'gif' : 'png';
     const artifactName = `tier-a__${scenario.id}__${fixture.id}.${ext}`;
     const artifactPath = path.join(TIER_A_DIR, artifactName);
     const relArtifactPath = `reports/gallery-artifacts/tier-a/${artifactName}`;
