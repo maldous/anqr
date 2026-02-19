@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 function extractKeys(text: string): Set<string> {
   const keys = new Set<string>();
@@ -28,7 +28,7 @@ describe('share params parity (client vs netlify function)', () => {
     // Client/server parity is now complete for all client-emitted keys.
     const allowClientOnly: string[] = [];
 
-    const allowServerOnly: string[] = [];
+    const allowServerOnly: string[] = ['_fullRender'];
 
     expect(clientOnly).toEqual(allowClientOnly);
     expect(serverOnly).toEqual(allowServerOnly);

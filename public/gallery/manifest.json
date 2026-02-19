@@ -1,7 +1,7 @@
 {
   "manifestVersion": "2.0",
   "permutationSpecVersion": "1.0",
-  "generated": "2026-02-19T13:37:21.995Z",
+  "generated": "2026-02-19T21:06:56.044Z",
   "source": {
     "script": "scripts/generate-gallery.mjs",
     "devServer": "http://localhost:4174",

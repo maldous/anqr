@@ -118,11 +118,7 @@ describe('netlify qr helpers', () => {
     expect(textChunk.byteLength).toBeGreaterThan(12);
     const phys = __test.createPngPhysChunk(300);
     expect(phys.byteLength).toBeGreaterThan(12);
-    const withMeta = __test.embedPngMetadataAndDpi(
-      png,
-      { title: 'ANQR', author: 'Test' },
-      300
-    );
+    const withMeta = __test.embedPngMetadataAndDpi(png, { title: 'ANQR', author: 'Test' }, 300);
     expect(withMeta.byteLength).toBeGreaterThan(png.byteLength);
     const unchanged = __test.embedPngMetadataAndDpi(png, undefined, 72);
     expect(unchanged.equals(png)).toBe(true);
@@ -148,7 +144,9 @@ describe('netlify qr helpers', () => {
     expect(__test.generatePatternFramesServer(source, 'scanline', 2, 1, 'linear')).toHaveLength(2);
     expect(__test.generatePatternFramesServer(source, 'shimmer', 2, 1, 'linear')).toHaveLength(2);
     expect(__test.generatePatternFramesServer(source, 'drift', 2, 1, 'linear')).toHaveLength(2);
-    expect(__test.generatePatternFramesServer(source, 'color_cycle', 2, 1, 'linear')).toHaveLength(2);
+    expect(__test.generatePatternFramesServer(source, 'color_cycle', 2, 1, 'linear')).toHaveLength(
+      2
+    );
     const none = __test.generatePatternFramesServer(source, 'none', 5, 1, 'linear');
     expect(none).toHaveLength(1);
   });
@@ -210,9 +208,17 @@ describe('netlify qr helpers', () => {
     const gctx = grayscale.getContext('2d');
     gctx.fillStyle = '#777777';
     gctx.fillRect(0, 0, 8, 8);
-    const out2 = __test.applyOverlayFiltersServer(grayscale, { saturation: 0, hue: 720, edge: 'canny' });
+    const out2 = __test.applyOverlayFiltersServer(grayscale, {
+      saturation: 0,
+      hue: 720,
+      edge: 'canny',
+    });
     expect(out2.height).toBe(8);
-    const out3 = __test.applyOverlayFiltersServer(grayscale, { sharpen: 0, posterize: 1, hue: -720 });
+    const out3 = __test.applyOverlayFiltersServer(grayscale, {
+      sharpen: 0,
+      posterize: 1,
+      hue: -720,
+    });
     expect(out3.width).toBe(8);
   });
 
@@ -276,13 +282,14 @@ describe('netlify qr helpers', () => {
 
   it('fetchImageWithBuffer handles timeout/abort path', async () => {
     vi.useFakeTimers();
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(
-      ((_: RequestInfo | URL, init?: RequestInit) => {
-        return new Promise((_, reject) => {
-          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
-        }) as Promise<Response>;
-      }) as typeof fetch
-    );
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(((
+      _: RequestInfo | URL,
+      init?: RequestInit
+    ) => {
+      return new Promise((_, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+      }) as Promise<Response>;
+    }) as typeof fetch);
     const promise = __test.fetchImageWithBuffer('https://anqr.link/test.png');
     await vi.advanceTimersByTimeAsync(11_000);
     await expect(promise).resolves.toBeNull();
@@ -294,9 +301,20 @@ describe('netlify qr helpers', () => {
     const notOkSpy = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response('x', { status: 500 }))
-      .mockResolvedValueOnce(
-        new Response('x', { status: 200, headers: { 'Content-Type': 'image/png' } })
-      );
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: {
+          get: (name: string) => (name.toLowerCase() === 'content-type' ? 'image/png' : null),
+        },
+        body: {
+          getReader: () => ({
+            read: async () => {
+              throw new Error('stream error');
+            },
+            cancel: () => undefined,
+          }),
+        },
+      } as unknown as Response);
     try {
       expect(await __test.fetchImageWithBuffer('https://anqr.link/test.png')).toBeNull();
       const result = await __test.fetchImageWithBuffer('https://anqr.link/test.png');
