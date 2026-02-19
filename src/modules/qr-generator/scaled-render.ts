@@ -51,7 +51,8 @@ export async function generateScaledQR(
   scale: number,
   createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
   canvasFactory: CanvasFactory,
-  storeMatrixFn: (qr: QRCodeInstance, moduleCount: number) => void
+  storeMatrixFn: (qr: QRCodeInstance, moduleCount: number) => void,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
   // Get pixel decision matrix (unified for all scaled modes)
   const pixelData = await generatePixelDecisionMatrix(
@@ -60,7 +61,8 @@ export async function generateScaledQR(
     overlayCanvas,
     moduleCount,
     createCanvasFn,
-    canvasFactory
+    canvasFactory,
+    releaseCanvasFn
   );
   const { matrix, colors } = pixelData;
   const scaledSize = matrix.length;
@@ -731,6 +733,7 @@ export async function generateScaledQR(
     }
 
     ctx.globalCompositeOperation = 'source-over';
+    if (releaseCanvasFn) releaseCanvasFn(maskCanvas);
   }
 
   drawPatternContrastBoostOverlay();

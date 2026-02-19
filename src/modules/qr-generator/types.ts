@@ -238,6 +238,8 @@ export type CreateCanvasFn = (
   height: number
 ) => Promise<HTMLCanvasElement | OffscreenCanvas>;
 
+export type ReleaseCanvasFn = (canvas: HTMLCanvasElement | OffscreenCanvas) => void;
+
 /**
  * Union type for canvas elements (browser or offscreen)
  * Used throughout the QR generator for canvas compatibility

@@ -240,6 +240,7 @@ Sentry.init({
 
 import { createHash } from 'node:crypto';
 import { type Canvas, createCanvas, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
+import { getStore } from '@netlify/blobs';
 // Import animation utilities
 import {
   type AnimationEasing,
@@ -323,6 +324,20 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+
+// ============================================
+// BLOB CACHE
+// ============================================
+
+const QR_CACHE_STORE = 'qr-cache';
+const NON_CACHE_PARAMS = new Set(['_cb', 'lang', '_fullRender']);
+
+function computeCacheKey(params: URLSearchParams): string {
+  const entries = [...params.entries()]
+    .filter(([k]) => !NON_CACHE_PARAMS.has(k))
+    .sort(([a], [b]) => a.localeCompare(b));
+  return createHash('md5').update(new URLSearchParams(entries).toString()).digest('hex');
+}
 
 /**
  * Check if an IP address is private/internal (SSRF protection)
@@ -1572,14 +1587,13 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
       if (isPrivateOrReservedIP(parsedUrl.hostname)) {
         return null;
       }
-    } catch {
+    } catch (_urlErr) {
       return null;
     }
 
     // Create AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'ANQR-QR-Generator/1.0',
@@ -1639,14 +1653,16 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     }
 
     // Combine chunks into a single buffer
-    const arrayBuffer = new Uint8Array(totalBytes);
+    const combinedBytes = new Uint8Array(totalBytes);
     let offset = 0;
     for (const chunk of chunks) {
-      arrayBuffer.set(chunk, offset);
+      combinedBytes.set(chunk, offset);
       offset += chunk.byteLength;
     }
 
-    const buffer = Buffer.from(arrayBuffer);
+    // Create a proper ArrayBuffer for APIs that require it (DataView, decodeGif)
+    const arrayBuffer = combinedBytes.buffer as ArrayBuffer;
+    const buffer = Buffer.from(combinedBytes);
 
     // Check if it's a GIF with multiple frames
     let isAnimatedGif = false;
@@ -1654,7 +1670,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
       try {
         const decoded = decodeGif(arrayBuffer);
         isAnimatedGif = decoded.frames.length > 1;
-      } catch (_e) {}
+      } catch (_gifErr) {}
     }
 
     const img = await nodeCanvasFactory.loadImage(buffer);
@@ -1673,7 +1689,6 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     const canvas = createCanvas(img.width, img.height);
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
-
     return {
       canvas,
       arrayBuffer,
@@ -2078,6 +2093,27 @@ async function handler(request: Request) {
   }
 
   try {
+    // Check blob cache for previously generated result
+    const cacheKey = computeCacheKey(params);
+    try {
+      const store = getStore(QR_CACHE_STORE);
+      const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
+      if (cached?.data) {
+        const cachedMeta = cached.metadata as Record<string, string> | undefined;
+        return new Response(new Uint8Array(cached.data as ArrayBuffer), {
+          status: 200,
+          headers: {
+            'Content-Type': cachedMeta?.contentType || 'image/png',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'X-ANQR-Cache': 'hit',
+            ...CORS_HEADERS,
+          },
+        });
+      }
+    } catch {
+      // Blob store unavailable — continue without cache
+    }
+
     // Create QRGenerator with Node.js canvas factory
     const qrGenerator = new QRGenerator(nodeCanvasFactory);
 
@@ -2299,24 +2335,28 @@ async function handler(request: Request) {
           return processed;
         };
 
-        // Auto-detect animated GIF overlay and switch output format to GIF
         if (fetchedImage.isAnimatedGif) {
-          outputFormat = 'gif';
           hasAnimatedOverlay = true;
-          // Parse frames and apply preprocessing to each
-          const rawFrames = parseGifFramesServer(
-            fetchedImage.arrayBuffer,
-            gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
-          );
-          overlayFrames = rawFrames.map((frame) => ({
-            ...frame,
-            canvas: preprocessCanvas(frame.canvas),
-          }));
-          if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
-            overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
+          if (params.get('_fullRender') === '1') {
+            // Background mode: full animated GIF generation
+            outputFormat = 'gif';
+            const rawFrames = parseGifFramesServer(
+              fetchedImage.arrayBuffer,
+              gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
+            );
+            overlayFrames = rawFrames.map((frame) => ({
+              ...frame,
+              canvas: preprocessCanvas(frame.canvas),
+            }));
+            if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
+              overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
+            }
+            overlayCanvas = overlayFrames[0]?.canvas ?? preprocessCanvas(fetchedImage.canvas);
+          } else {
+            // Sync mode: use first frame only (fast path)
+            // Full animated version is generated by background function
+            overlayCanvas = preprocessCanvas(fetchedImage.canvas);
           }
-          // For animated GIFs, use the first preprocessed frame as the static overlay
-          overlayCanvas = overlayFrames[0]?.canvas ?? preprocessCanvas(fetchedImage.canvas);
         } else {
           // Static overlay - preprocess once
           overlayCanvas = preprocessCanvas(fetchedImage.canvas);
@@ -2479,11 +2519,49 @@ async function handler(request: Request) {
     // Generate ETag from content hash (deterministic output = consistent ETag)
     const etag = `"${createHash('md5').update(outputBuffer).digest('hex')}"`;
 
+    // Detect degraded animated response (animated overlay in sync mode with GIF output)
+    const isDegradedAnimated =
+      hasAnimatedOverlay &&
+      overlayFrames.length <= 1 &&
+      outputFormat === 'gif' &&
+      params.get('_fullRender') !== '1';
+
+    // Cache non-degraded results in Netlify Blobs
+    if (!isDegradedAnimated) {
+      try {
+        const store = getStore(QR_CACHE_STORE);
+        await store.set(cacheKey, new Blob([outputBuffer]), {
+          metadata: { contentType, generatedAt: new Date().toISOString() },
+        });
+      } catch {
+        // Cache write failure is non-fatal
+      }
+    }
+
+    // Trigger background generation for degraded animated results
+    if (isDegradedAnimated) {
+      try {
+        const bgUrl = new URL(request.url);
+        bgUrl.searchParams.set('_fullRender', '1');
+        const siteUrl = process.env.URL || 'https://anqr.link';
+        fetch(`${siteUrl}/.netlify/functions/qr-render`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: bgUrl.toString() }),
+        }).catch(() => {});
+      } catch {
+        // Background trigger failure is non-fatal
+      }
+    }
+
     return new Response(new Uint8Array(outputBuffer), {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Cache-Control': isDegradedAnimated
+          ? 'no-cache, no-store, must-revalidate'
+          : 'public, max-age=31536000, immutable',
+        ...(isDegradedAnimated ? { 'X-ANQR-Status': 'generating' } : {}),
         ETag: etag,
         Vary: 'Accept-Encoding',
         ...CORS_HEADERS,

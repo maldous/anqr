@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-18T21:09:04.040Z",
+  "generatedAt": "2026-02-19T02:06:46.695Z",
   "tiers": [
     {
       "id": "tier-a",
@@ -80,31 +80,18 @@
       "isAnimated": true
     }
   ],
-  "totalRuns": 24,
+  "totalRuns": 16,
   "tierA": {
-    "totalRuns": 12,
-    "passRuns": 6,
-    "failRuns": 6
+    "totalRuns": 8,
+    "passRuns": 8,
+    "failRuns": 0
   },
   "tierB": {
-    "totalRuns": 12,
-    "passRuns": 6,
-    "failRuns": 6
+    "totalRuns": 8,
+    "passRuns": 8,
+    "failRuns": 0
   },
   "results": [
-    {
-      "tier": "tier-a",
-      "scenarioId": "animation-halftone",
-      "fixtureId": "tsunami",
-      "isAnimated": false,
-      "status": "pass",
-      "reasonCode": "OK",
-      "disposition": "tunable",
-      "directDecodePass": true,
-      "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__tsunami.png",
-      "durationMs": 18684
-    },
     {
       "tier": "tier-a",
       "scenarioId": "animation-halftone",
@@ -116,46 +103,7 @@
       "directDecodePass": true,
       "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__king.gif",
-      "durationMs": 18800
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "animation-halftone",
-      "fixtureId": "logo",
-      "isAnimated": false,
-      "status": "pass",
-      "reasonCode": "OK",
-      "disposition": "tunable",
-      "directDecodePass": true,
-      "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__logo.png",
-      "durationMs": 18675
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "animation-halftone",
-      "fixtureId": "test",
-      "isAnimated": false,
-      "status": "pass",
-      "reasonCode": "OK",
-      "disposition": "tunable",
-      "directDecodePass": true,
-      "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__test.png",
-      "durationMs": 18685
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "animation-halftone",
-      "fixtureId": "trump",
-      "isAnimated": false,
-      "status": "pass",
-      "reasonCode": "OK",
-      "disposition": "tunable",
-      "directDecodePass": true,
-      "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__trump.png",
-      "durationMs": 18660
+      "durationMs": 4520
     },
     {
       "tier": "tier-a",
@@ -168,89 +116,11 @@
       "directDecodePass": true,
       "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__dance.gif",
-      "durationMs": 18695
+      "durationMs": 4057
     },
     {
       "tier": "tier-a",
       "scenarioId": "overlay-outline",
-      "fixtureId": "tsunami",
-      "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__tsunami.png",
-      "durationMs": 18152
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "overlay-outline",
-      "fixtureId": "king",
-      "isAnimated": true,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__king.gif",
-      "durationMs": 19044
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "overlay-outline",
-      "fixtureId": "logo",
-      "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__logo.png",
-      "durationMs": 18247
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "overlay-outline",
-      "fixtureId": "test",
-      "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__test.png",
-      "durationMs": 18488
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "overlay-outline",
-      "fixtureId": "trump",
-      "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__trump.png",
-      "durationMs": 18381
-    },
-    {
-      "tier": "tier-a",
-      "scenarioId": "overlay-outline",
-      "fixtureId": "dance",
-      "isAnimated": true,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__dance.gif",
-      "durationMs": 19086
-    },
-    {
-      "tier": "tier-b",
-      "scenarioId": "animation-halftone",
       "fixtureId": "tsunami",
       "isAnimated": false,
       "status": "pass",
@@ -258,8 +128,73 @@
       "disposition": "tunable",
       "directDecodePass": true,
       "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-halftone__tsunami.png",
-      "durationMs": 9336
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__tsunami.png",
+      "durationMs": 834
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-outline",
+      "fixtureId": "king",
+      "isAnimated": true,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__king.gif",
+      "durationMs": 4122
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-outline",
+      "fixtureId": "logo",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__logo.png",
+      "durationMs": 524
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-outline",
+      "fixtureId": "test",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__test.png",
+      "durationMs": 476
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-outline",
+      "fixtureId": "trump",
+      "isAnimated": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__trump.png",
+      "durationMs": 545
+    },
+    {
+      "tier": "tier-a",
+      "scenarioId": "overlay-outline",
+      "fixtureId": "dance",
+      "isAnimated": true,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__dance.gif",
+      "durationMs": 4022
     },
     {
       "tier": "tier-b",
@@ -272,46 +207,7 @@
       "directDecodePass": true,
       "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-halftone__king.gif",
-      "durationMs": 9515
-    },
-    {
-      "tier": "tier-b",
-      "scenarioId": "animation-halftone",
-      "fixtureId": "logo",
-      "isAnimated": false,
-      "status": "pass",
-      "reasonCode": "OK",
-      "disposition": "tunable",
-      "directDecodePass": true,
-      "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-halftone__logo.png",
-      "durationMs": 9329
-    },
-    {
-      "tier": "tier-b",
-      "scenarioId": "animation-halftone",
-      "fixtureId": "test",
-      "isAnimated": false,
-      "status": "pass",
-      "reasonCode": "OK",
-      "disposition": "tunable",
-      "directDecodePass": true,
-      "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-halftone__test.png",
-      "durationMs": 9331
-    },
-    {
-      "tier": "tier-b",
-      "scenarioId": "animation-halftone",
-      "fixtureId": "trump",
-      "isAnimated": false,
-      "status": "pass",
-      "reasonCode": "OK",
-      "disposition": "tunable",
-      "directDecodePass": true,
-      "roundtripDecodePass": true,
-      "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-halftone__trump.png",
-      "durationMs": 9318
+      "durationMs": 3715
     },
     {
       "tier": "tier-b",
@@ -324,95 +220,104 @@
       "directDecodePass": true,
       "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__animation-halftone__dance.gif",
-      "durationMs": 9433
+      "durationMs": 3775
     },
     {
       "tier": "tier-b",
       "scenarioId": "overlay-outline",
       "fixtureId": "tsunami",
       "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-outline__tsunami.png",
-      "durationMs": 9033
+      "durationMs": 546
     },
     {
       "tier": "tier-b",
       "scenarioId": "overlay-outline",
       "fixtureId": "king",
       "isAnimated": true,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-outline__king.gif",
-      "durationMs": 9694
+      "durationMs": 3762
     },
     {
       "tier": "tier-b",
       "scenarioId": "overlay-outline",
       "fixtureId": "logo",
       "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-outline__logo.png",
-      "durationMs": 9149
+      "durationMs": 607
     },
     {
       "tier": "tier-b",
       "scenarioId": "overlay-outline",
       "fixtureId": "test",
       "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-outline__test.png",
-      "durationMs": 9388
+      "durationMs": 474
     },
     {
       "tier": "tier-b",
       "scenarioId": "overlay-outline",
       "fixtureId": "trump",
       "isAnimated": false,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-outline__trump.png",
-      "durationMs": 9233
+      "durationMs": 449
     },
     {
       "tier": "tier-b",
       "scenarioId": "overlay-outline",
       "fixtureId": "dance",
       "isAnimated": true,
-      "status": "fail",
-      "reasonCode": "CONTRAST_COLLAPSE",
-      "disposition": "fix-now",
-      "directDecodePass": false,
-      "roundtripDecodePass": false,
+      "status": "pass",
+      "reasonCode": "OK",
+      "disposition": "tunable",
+      "directDecodePass": true,
+      "roundtripDecodePass": true,
       "artifactPath": "reports/gallery-artifacts/tier-b/tier-b__overlay-outline__dance.gif",
-      "durationMs": 9806
+      "durationMs": 7524
     }
   ],
   "galleryCandidates": [
     {
       "scenarioId": "animation-halftone",
-      "selectedFixtureId": "trump",
-      "isAnimated": false,
+      "selectedFixtureId": "dance",
+      "isAnimated": true,
       "heroPriority": 56,
       "galleryEligible": true,
-      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__trump.png",
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__animation-halftone__dance.gif",
+      "status": "pass"
+    },
+    {
+      "scenarioId": "overlay-outline",
+      "selectedFixtureId": "test",
+      "isAnimated": false,
+      "heroPriority": 20,
+      "galleryEligible": true,
+      "artifactPath": "reports/gallery-artifacts/tier-a/tier-a__overlay-outline__test.png",
       "status": "pass"
     }
   ]

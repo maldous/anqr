@@ -2,89 +2,233 @@
 
 ## Overview
 
-- Total runs: 36 (18 per tier × 2 tiers)
-- **Tier A (Production):** 13 pass / 5 fail (72%)
-- **Tier B (Diagnostic):** 12 pass / 6 fail (67%)
-- Scan-gate-rescued: 1 scenario×fixture pairs
+- **Method:** API-based (`https://anqr.link/api/qr`)
+- **Total runs:** 410
+- **Pass:** 200 (49%)
+- **Fail:** 210
 
-## Tier A — Production
-
-> Production-like settings with scan gate retry
-
-### By Fixture
+## Results by Fixture
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 2 | 1 |
-| king | 2 | 1 |
-| logo | 3 | 0 |
-| test | 2 | 1 |
-| trump | 2 | 1 |
-| dance | 2 | 1 |
+| tsunami | 24 | 46 |
+| king | 24 | 44 |
+| logo | 51 | 17 |
+| test | 50 | 18 |
+| trump | 26 | 42 |
+| dance | 25 | 43 |
 
-### Failing Cases
+## Failing Cases
 
-| Scenario | Fixture | Reason | Disposition |
-| --- | --- | --- | --- |
-| overlay-brightness-mode | tsunami | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | king | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | test | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | trump | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | dance | CONTRAST_COLLAPSE | fix-now |
-
-## Tier B — Diagnostic
-
-> Intrinsic scannability without scan gate assistance
-
-### By Fixture
-
-| Fixture | Pass | Fail |
-| --- | ---: | ---: |
-| tsunami | 2 | 1 |
-| king | 2 | 1 |
-| logo | 2 | 1 |
-| test | 2 | 1 |
-| trump | 2 | 1 |
-| dance | 2 | 1 |
-
-### Failing Cases
-
-| Scenario | Fixture | Reason | Disposition |
-| --- | --- | --- | --- |
-| overlay-brightness-mode | tsunami | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | king | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | logo | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | test | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | trump | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | dance | CONTRAST_COLLAPSE | fix-now |
-
-## Comparison
-
-| Scenario | Fixture | Tier A | Tier B | Delta |
-| --- | --- | --- | --- | --- |
-| animation-pixelate | tsunami | pass | pass | ✅ both pass |
-| animation-pixelate | king | pass | pass | ✅ both pass |
-| animation-pixelate | logo | pass | pass | ✅ both pass |
-| animation-pixelate | test | pass | pass | ✅ both pass |
-| animation-pixelate | trump | pass | pass | ✅ both pass |
-| animation-pixelate | dance | pass | pass | ✅ both pass |
-| animation-blend | tsunami | pass | pass | ✅ both pass |
-| animation-blend | king | pass | pass | ✅ both pass |
-| animation-blend | logo | pass | pass | ✅ both pass |
-| animation-blend | test | pass | pass | ✅ both pass |
-| animation-blend | trump | pass | pass | ✅ both pass |
-| animation-blend | dance | pass | pass | ✅ both pass |
-| overlay-brightness-mode | tsunami | fail | fail | ❌ both fail |
-| overlay-brightness-mode | king | fail | fail | ❌ both fail |
-| overlay-brightness-mode | logo | pass | fail | 🟢 rescued |
-| overlay-brightness-mode | test | fail | fail | ❌ both fail |
-| overlay-brightness-mode | trump | fail | fail | ❌ both fail |
-| overlay-brightness-mode | dance | fail | fail | ❌ both fail |
-
-## Scan-Gate-Rescued
-
-Scenarios that pass in Tier A but fail in Tier B — the scan gate made the difference:
-
-| Scenario | Fixture |
-| --- | --- |
-| overlay-brightness-mode | logo |
+| Scenario | Fixture | Reason |
+| --- | --- | --- |
+| overlay-dithered | tsunami | API_ERROR |
+| overlay-dithered | king | API_ERROR |
+| overlay-dithered | trump | API_ERROR |
+| overlay-dithered | dance | API_ERROR |
+| overlay-blue-noise | king | API_ERROR |
+| overlay-blue-noise | trump | VERIFY_ERROR |
+| overlay-blue-noise | dance | API_ERROR |
+| overlay-halftone | test | API_ERROR |
+| overlay-halftone | trump | API_ERROR |
+| overlay-extreme | logo | API_ERROR |
+| overlay-extreme | test | API_ERROR |
+| preserve-balanced | tsunami | API_ERROR |
+| preserve-balanced | king | API_ERROR |
+| preserve-balanced | trump | API_ERROR |
+| preserve-balanced | dance | API_ERROR |
+| preserve-blended | tsunami | API_ERROR |
+| preserve-blended | king | API_ERROR |
+| preserve-blended | test | API_ERROR |
+| preserve-blended | trump | API_ERROR |
+| preserve-blended | dance | API_ERROR |
+| preserve-strength-100 | king | API_ERROR |
+| preserve-strength-100 | dance | API_ERROR |
+| render-rounded | tsunami | API_ERROR |
+| render-rounded | king | API_ERROR |
+| render-rounded | trump | API_ERROR |
+| render-rounded | dance | API_ERROR |
+| render-dots-circle | tsunami | API_ERROR |
+| render-dots-circle | king | API_ERROR |
+| render-dots-circle | logo | API_ERROR |
+| render-dots-circle | test | API_ERROR |
+| render-dots-circle | trump | API_ERROR |
+| render-dots-circle | dance | API_ERROR |
+| encoding-v6 | tsunami | API_ERROR |
+| encoding-v6 | king | API_ERROR |
+| encoding-v6 | trump | API_ERROR |
+| encoding-v6 | dance | API_ERROR |
+| encoding-v9 | tsunami | API_ERROR |
+| encoding-v9 | king | API_ERROR |
+| encoding-v9 | logo | API_ERROR |
+| encoding-v9 | test | API_ERROR |
+| encoding-v9 | trump | API_ERROR |
+| encoding-v9 | dance | API_ERROR |
+| encoding-ecc-q | tsunami | API_ERROR |
+| encoding-ecc-q | king | API_ERROR |
+| encoding-ecc-q | logo | API_ERROR |
+| encoding-ecc-q | test | API_ERROR |
+| encoding-ecc-q | trump | API_ERROR |
+| encoding-ecc-q | dance | API_ERROR |
+| animation-dithered | tsunami | API_ERROR |
+| animation-dithered | king | API_ERROR |
+| animation-dithered | trump | API_ERROR |
+| animation-dithered | dance | API_ERROR |
+| animation-blue-noise | tsunami | API_ERROR |
+| animation-blue-noise | logo | API_ERROR |
+| animation-blue-noise | test | API_ERROR |
+| output-hd | tsunami | API_ERROR |
+| output-hd | king | API_ERROR |
+| output-hd | logo | API_ERROR |
+| output-hd | test | VERIFY_ERROR |
+| output-hd | trump | API_ERROR |
+| output-hd | dance | API_ERROR |
+| watermark-frame-tag | tsunami | API_ERROR |
+| watermark-frame-tag | king | API_ERROR |
+| watermark-frame-tag | trump | API_ERROR |
+| watermark-frame-tag | dance | API_ERROR |
+| overlay-duotone | king | API_ERROR |
+| overlay-duotone | trump | API_ERROR |
+| overlay-duotone | dance | API_ERROR |
+| overlay-pixelate | test | API_ERROR |
+| overlay-pixelate | trump | API_ERROR |
+| overlay-blend | tsunami | API_ERROR |
+| overlay-blend | test | API_ERROR |
+| overlay-blend | trump | API_ERROR |
+| overlay-blend | dance | API_ERROR |
+| render-diamond-gap | tsunami | API_ERROR |
+| render-diamond-gap | king | API_ERROR |
+| render-diamond-gap | logo | API_ERROR |
+| render-diamond-gap | test | API_ERROR |
+| render-diamond-gap | trump | API_ERROR |
+| render-diamond-gap | dance | API_ERROR |
+| encoding-ecc-m | tsunami | API_ERROR |
+| encoding-ecc-m | king | API_ERROR |
+| encoding-ecc-m | logo | API_ERROR |
+| encoding-ecc-m | test | API_ERROR |
+| encoding-ecc-m | trump | API_ERROR |
+| encoding-ecc-m | dance | API_ERROR |
+| encoding-byte-v6 | tsunami | API_ERROR |
+| encoding-byte-v6 | king | API_ERROR |
+| encoding-byte-v6 | trump | API_ERROR |
+| encoding-byte-v6 | dance | API_ERROR |
+| animation-halftone | tsunami | API_ERROR |
+| animation-halftone | king | API_ERROR |
+| animation-halftone | dance | API_ERROR |
+| watermark-text-bottom | tsunami | API_ERROR |
+| watermark-text-bottom | king | API_ERROR |
+| watermark-text-bottom | trump | API_ERROR |
+| watermark-text-bottom | dance | API_ERROR |
+| output-grayscale | king | API_ERROR |
+| output-grayscale | logo | API_ERROR |
+| output-grayscale | dance | API_ERROR |
+| animation-mosaic | tsunami | API_ERROR |
+| animation-extreme | tsunami | API_ERROR |
+| animation-extreme | king | API_ERROR |
+| animation-extreme | trump | API_ERROR |
+| animation-extreme | dance | API_ERROR |
+| animation-pixelate | king | API_ERROR |
+| animation-pixelate | trump | API_ERROR |
+| animation-blend | tsunami | API_ERROR |
+| animation-blend | test | API_ERROR |
+| animation-blend | dance | API_ERROR |
+| animation-duotone | tsunami | API_ERROR |
+| animation-duotone | trump | API_ERROR |
+| overlay-dithered-bayer | tsunami | API_ERROR |
+| overlay-dithered-bayer | king | API_ERROR |
+| overlay-dithered-bayer | trump | API_ERROR |
+| overlay-dithered-bayer | dance | API_ERROR |
+| overlay-dithered-atkinson | tsunami | API_ERROR |
+| overlay-dithered-atkinson | king | API_ERROR |
+| overlay-dithered-atkinson | trump | API_ERROR |
+| overlay-dithered-atkinson | dance | API_ERROR |
+| overlay-halftone-dots | tsunami | API_ERROR |
+| overlay-halftone-dots | trump | API_ERROR |
+| overlay-halftone-dots | dance | API_ERROR |
+| overlay-blend-rounded | tsunami | API_ERROR |
+| overlay-blend-rounded | king | API_ERROR |
+| overlay-blend-rounded | dance | API_ERROR |
+| overlay-duotone-sunset | tsunami | API_ERROR |
+| overlay-duotone-sunset | trump | API_ERROR |
+| overlay-duotone-ocean | tsunami | API_ERROR |
+| overlay-duotone-ocean | king | API_ERROR |
+| overlay-duotone-ocean | logo | API_ERROR |
+| overlay-duotone-neon | tsunami | API_ERROR |
+| overlay-duotone-neon | king | API_ERROR |
+| overlay-duotone-neon | logo | API_ERROR |
+| overlay-mosaic-diamond | king | API_ERROR |
+| overlay-mosaic-diamond | logo | API_ERROR |
+| overlay-mosaic-diamond | trump | API_ERROR |
+| overlay-dithered-posterized | tsunami | API_ERROR |
+| overlay-dithered-posterized | king | API_ERROR |
+| overlay-dithered-posterized | logo | API_ERROR |
+| overlay-dithered-posterized | dance | API_ERROR |
+| overlay-pixelate-grayscale | tsunami | API_ERROR |
+| overlay-pixelate-grayscale | king | API_ERROR |
+| overlay-pixelate-grayscale | logo | API_ERROR |
+| overlay-pixelate-grayscale | test | API_ERROR |
+| overlay-pixelate-grayscale | trump | API_ERROR |
+| overlay-pixelate-grayscale | dance | API_ERROR |
+| overlay-extreme-edges | tsunami | API_ERROR |
+| overlay-extreme-edges | king | API_ERROR |
+| overlay-extreme-edges | logo | API_ERROR |
+| overlay-extreme-edges | test | API_ERROR |
+| preprocess-contrast | king | API_ERROR |
+| preprocess-contrast | trump | API_ERROR |
+| preprocess-contrast | dance | API_ERROR |
+| preprocess-brightness | king | API_ERROR |
+| preprocess-brightness | test | API_ERROR |
+| preprocess-brightness | dance | API_ERROR |
+| preprocess-gamma | tsunami | API_ERROR |
+| preprocess-gamma | king | API_ERROR |
+| preprocess-gamma | trump | API_ERROR |
+| preprocess-gamma | dance | API_ERROR |
+| preprocess-sharpen | tsunami | API_ERROR |
+| preprocess-sharpen | king | API_ERROR |
+| preprocess-sharpen | trump | API_ERROR |
+| preprocess-sharpen | dance | API_ERROR |
+| preprocess-posterize | king | API_ERROR |
+| preprocess-posterize | logo | API_ERROR |
+| preprocess-posterize | trump | API_ERROR |
+| preprocess-posterize | dance | API_ERROR |
+| preprocess-edge-sobel | tsunami | API_ERROR |
+| preprocess-edge-sobel | king | API_ERROR |
+| preprocess-edge-sobel | test | VERIFY_ERROR |
+| preprocess-edge-sobel | trump | VERIFY_ERROR |
+| preprocess-edge-sobel | dance | API_ERROR |
+| overlay-halftone-dithered | trump | VERIFY_ERROR |
+| overlay-gapfill | tsunami | API_ERROR |
+| overlay-gapfill | logo | API_ERROR |
+| overlay-gapfill | dance | API_ERROR |
+| overlay-brightness-mode | tsunami | API_ERROR |
+| overlay-outline | dance | API_ERROR |
+| qrart-standard | tsunami | API_ERROR |
+| qrart-rounded | tsunami | API_ERROR |
+| qrart-rounded | king | API_ERROR |
+| qrart-colored | tsunami | API_ERROR |
+| qrart-colored | trump | API_ERROR |
+| qrart-dots | test | API_ERROR |
+| dither-error-diffusion | tsunami | API_ERROR |
+| dither-error-diffusion | king | API_ERROR |
+| dither-error-diffusion | trump | API_ERROR |
+| dither-error-diffusion | dance | API_ERROR |
+| dither-ordered-bayer | tsunami | API_ERROR |
+| dither-ordered-bayer | king | API_ERROR |
+| dither-ordered-bayer | trump | API_ERROR |
+| dither-ordered-bayer | dance | API_ERROR |
+| dither-blue-noise | tsunami | API_ERROR |
+| dither-blue-noise | king | API_ERROR |
+| dither-blue-noise | trump | API_ERROR |
+| dither-blue-noise | dance | API_ERROR |
+| dither-perceptual | tsunami | API_ERROR |
+| dither-perceptual | king | API_ERROR |
+| dither-perceptual | trump | API_ERROR |
+| dither-perceptual | dance | API_ERROR |
+| dither-floyd-steinberg | tsunami | API_ERROR |
+| dither-floyd-steinberg | king | API_ERROR |
+| dither-floyd-steinberg | trump | API_ERROR |
+| dither-floyd-steinberg | dance | API_ERROR |
+| dither-atkinson | tsunami | API_ERROR |
+| dither-atkinson | king | API_ERROR |
+| dither-atkinson | trump | API_ERROR |
+| dither-atkinson | dance | API_ERROR |

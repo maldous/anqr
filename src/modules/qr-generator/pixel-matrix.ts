@@ -33,7 +33,8 @@ export async function generatePixelDecisionMatrix(
   overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
   moduleCount: number,
   createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>,
-  canvasFactory: CanvasFactory
+  canvasFactory: CanvasFactory,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<PixelDecisionResult> {
   const overlayMode = config.overlayMode;
   const scale = getScaleFactor(overlayMode, config);
@@ -72,7 +73,8 @@ export async function generatePixelDecisionMatrix(
           scale,
           effectiveIntensity,
           canvasFactory,
-          createCanvasFn
+          createCanvasFn,
+          releaseCanvasFn
         );
       }
       return generateDitheredMatrix(
@@ -83,7 +85,8 @@ export async function generatePixelDecisionMatrix(
         scale,
         effectiveIntensity,
         effectiveConfig,
-        createCanvasFn
+        createCanvasFn,
+        releaseCanvasFn
       );
 
     case 'blue-noise':
@@ -96,7 +99,8 @@ export async function generatePixelDecisionMatrix(
         scale,
         effectiveIntensity,
         canvasFactory,
-        createCanvasFn
+        createCanvasFn,
+        releaseCanvasFn
       );
 
     case 'subpixel':

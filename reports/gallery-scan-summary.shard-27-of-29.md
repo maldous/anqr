@@ -2,10 +2,10 @@
 
 ## Overview
 
-- Total runs: 24 (12 per tier × 2 tiers)
-- **Tier A (Production):** 7 pass / 5 fail (58%)
-- **Tier B (Diagnostic):** 6 pass / 6 fail (50%)
-- Scan-gate-rescued: 1 scenario×fixture pairs
+- Total runs: 16 (8 per tier × 2 tiers)
+- **Tier A (Production):** 3 pass / 5 fail (38%)
+- **Tier B (Diagnostic):** 3 pass / 5 fail (38%)
+- Scan-gate-rescued: 0 scenario×fixture pairs
 
 ## Tier A — Production
 
@@ -15,11 +15,11 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 1 | 1 |
+| tsunami | 0 | 1 |
 | king | 1 | 1 |
-| logo | 2 | 0 |
-| test | 1 | 1 |
-| trump | 1 | 1 |
+| logo | 1 | 0 |
+| test | 0 | 1 |
+| trump | 0 | 1 |
 | dance | 1 | 1 |
 
 ### Failing Cases
@@ -40,11 +40,11 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 1 | 1 |
+| tsunami | 0 | 1 |
 | king | 1 | 1 |
-| logo | 1 | 1 |
-| test | 1 | 1 |
-| trump | 1 | 1 |
+| logo | 1 | 0 |
+| test | 0 | 1 |
+| trump | 0 | 1 |
 | dance | 1 | 1 |
 
 ### Failing Cases
@@ -53,7 +53,6 @@
 | --- | --- | --- | --- |
 | overlay-brightness-mode | tsunami | CONTRAST_COLLAPSE | fix-now |
 | overlay-brightness-mode | king | CONTRAST_COLLAPSE | fix-now |
-| overlay-brightness-mode | logo | CONTRAST_COLLAPSE | fix-now |
 | overlay-brightness-mode | test | CONTRAST_COLLAPSE | fix-now |
 | overlay-brightness-mode | trump | CONTRAST_COLLAPSE | fix-now |
 | overlay-brightness-mode | dance | CONTRAST_COLLAPSE | fix-now |
@@ -62,15 +61,15 @@
 
 | Scenario | Fixture | Tier A | Tier B | Delta |
 | --- | --- | --- | --- | --- |
-| animation-subpixel | tsunami | pass | pass | ✅ both pass |
+| animation-subpixel | tsunami | — | — |  |
 | animation-subpixel | king | pass | pass | ✅ both pass |
-| animation-subpixel | logo | pass | pass | ✅ both pass |
-| animation-subpixel | test | pass | pass | ✅ both pass |
-| animation-subpixel | trump | pass | pass | ✅ both pass |
+| animation-subpixel | logo | — | — |  |
+| animation-subpixel | test | — | — |  |
+| animation-subpixel | trump | — | — |  |
 | animation-subpixel | dance | pass | pass | ✅ both pass |
 | overlay-brightness-mode | tsunami | fail | fail | ❌ both fail |
 | overlay-brightness-mode | king | fail | fail | ❌ both fail |
-| overlay-brightness-mode | logo | pass | fail | 🟢 rescued |
+| overlay-brightness-mode | logo | pass | pass | ✅ both pass |
 | overlay-brightness-mode | test | fail | fail | ❌ both fail |
 | overlay-brightness-mode | trump | fail | fail | ❌ both fail |
 | overlay-brightness-mode | dance | fail | fail | ❌ both fail |
@@ -79,6 +78,4 @@
 
 Scenarios that pass in Tier A but fail in Tier B — the scan gate made the difference:
 
-| Scenario | Fixture |
-| --- | --- |
-| overlay-brightness-mode | logo |
+_None — all Tier A passes also pass in Tier B._

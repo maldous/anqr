@@ -21,7 +21,7 @@ export {
 // Re-export CanvasFactory from canvas-factory
 export type { CanvasFactory } from './canvas-factory';
 // Canvas factory
-export { defaultBrowserCanvasFactory } from './canvas-factory';
+export { CanvasPool, defaultBrowserCanvasFactory } from './canvas-factory';
 // Color utilities
 export {
   applyPaletteColor,
@@ -112,6 +112,7 @@ export type {
   QRCodeInstance,
   QRGeneratorConfig,
   QRMatrixResult,
+  ReleaseCanvasFn,
   RGB,
   RGBWithMeta,
 } from './types';

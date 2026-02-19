@@ -61,6 +61,7 @@ function runShard({ index, total, scenarioIds }) {
   return new Promise((resolve, reject) => {
     const suffix = `shard-${index + 1}-of-${total}`;
     const startedAt = Date.now();
+    const nodeOptions = [process.env.NODE_OPTIONS, '--expose-gc'].filter(Boolean).join(' ');
     const child = spawn(
       'npx',
       ['vitest', 'run', '--maxWorkers=1', MATRIX_SPEC],
@@ -68,6 +69,7 @@ function runShard({ index, total, scenarioIds }) {
         cwd: repoRoot,
         env: {
           ...process.env,
+          NODE_OPTIONS: nodeOptions,
           ANQR_LOG_LEVEL: process.env.ANQR_LOG_LEVEL ?? 'error',
           SCAN_MATRIX_SCENARIOS: scenarioIds.join(','),
           SCAN_MATRIX_CLEAN_ARTIFACTS: '0',
@@ -275,10 +277,10 @@ async function main() {
 
   const cpuCount = Math.max(1, os.cpus().length);
   const totalMemGiB = os.totalmem() / (1024 ** 3);
-  const estimatedShardGiB = Number.parseFloat(process.env.SCAN_MATRIX_ESTIMATED_SHARD_GIB ?? '10');
+  const estimatedShardGiB = Number.parseFloat(process.env.SCAN_MATRIX_ESTIMATED_SHARD_GIB ?? '16');
   const shardMemCost = Number.isFinite(estimatedShardGiB) && estimatedShardGiB > 0
     ? estimatedShardGiB
-    : 10;
+    : 16;
   const maxByMem = Math.max(1, Math.floor(totalMemGiB / shardMemCost));
   const defaultShardCount = Math.max(
     1,

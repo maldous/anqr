@@ -2,9 +2,9 @@
 
 ## Overview
 
-- Total runs: 36 (18 per tier × 2 tiers)
-- **Tier A (Production):** 18 pass / 0 fail (100%)
-- **Tier B (Diagnostic):** 18 pass / 0 fail (100%)
+- Total runs: 28 (14 per tier × 2 tiers)
+- **Tier A (Production):** 13 pass / 1 fail (93%)
+- **Tier B (Diagnostic):** 13 pass / 1 fail (93%)
 - Scan-gate-rescued: 0 scenario×fixture pairs
 
 ## Tier A — Production
@@ -15,16 +15,18 @@
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 3 | 0 |
+| tsunami | 2 | 0 |
 | king | 3 | 0 |
-| logo | 3 | 0 |
-| test | 3 | 0 |
-| trump | 3 | 0 |
-| dance | 3 | 0 |
+| logo | 2 | 0 |
+| test | 2 | 0 |
+| trump | 2 | 0 |
+| dance | 2 | 1 |
 
 ### Failing Cases
 
-_None_
+| Scenario | Fixture | Reason | Disposition |
+| --- | --- | --- | --- |
+| animation-duotone | dance | CONTRAST_COLLAPSE | fix-now |
 
 ## Tier B — Diagnostic
 
@@ -34,16 +36,18 @@ _None_
 
 | Fixture | Pass | Fail |
 | --- | ---: | ---: |
-| tsunami | 3 | 0 |
+| tsunami | 2 | 0 |
 | king | 3 | 0 |
-| logo | 3 | 0 |
-| test | 3 | 0 |
-| trump | 3 | 0 |
-| dance | 3 | 0 |
+| logo | 2 | 0 |
+| test | 2 | 0 |
+| trump | 2 | 0 |
+| dance | 2 | 1 |
 
 ### Failing Cases
 
-_None_
+| Scenario | Fixture | Reason | Disposition |
+| --- | --- | --- | --- |
+| animation-duotone | dance | CONTRAST_COLLAPSE | fix-now |
 
 ## Comparison
 
@@ -55,12 +59,12 @@ _None_
 | overlay-extreme | test | pass | pass | ✅ both pass |
 | overlay-extreme | trump | pass | pass | ✅ both pass |
 | overlay-extreme | dance | pass | pass | ✅ both pass |
-| animation-duotone | tsunami | pass | pass | ✅ both pass |
+| animation-duotone | tsunami | — | — |  |
 | animation-duotone | king | pass | pass | ✅ both pass |
-| animation-duotone | logo | pass | pass | ✅ both pass |
-| animation-duotone | test | pass | pass | ✅ both pass |
-| animation-duotone | trump | pass | pass | ✅ both pass |
-| animation-duotone | dance | pass | pass | ✅ both pass |
+| animation-duotone | logo | — | — |  |
+| animation-duotone | test | — | — |  |
+| animation-duotone | trump | — | — |  |
+| animation-duotone | dance | fail | fail | ❌ both fail |
 | qrart-dots | tsunami | pass | pass | ✅ both pass |
 | qrart-dots | king | pass | pass | ✅ both pass |
 | qrart-dots | logo | pass | pass | ✅ both pass |
