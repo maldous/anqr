@@ -4,7 +4,7 @@ import { expect, test } from '../fixtures/test-fixtures';
  * Gallery Verification Tests
  *
  * Post-deploy smoke tests that verify the gallery page renders correctly:
- * - All 10 section headings are visible
+ * - All 11 section headings are visible
  * - Gallery images load successfully (naturalWidth > 0)
  * - Share links contain expected URL parameters
  * - Clicking a gallery item opens the editor with correct parameters
@@ -254,17 +254,18 @@ test.describe('Gallery Verification', () => {
   });
 
   test('each section has the expected number of gallery items', async ({ page }) => {
-    // Each section should have at least 1 gallery item (an <a> tag with image)
+    // Each section should have at least 1 gallery card (an <a> tag in the grid)
     for (const title of GALLERY_SECTION_TITLES) {
-      const heading = page.locator('h3', { hasText: title });
+      const heading = page.locator('h3', { hasText: title }).first();
       await expect(heading).toBeVisible();
-
-      // The section's grid of items is a sibling div after the header button
-      // Gallery cards are <a> tags containing <img> elements
-      // Find the parent section container - each section is inside a mb-8 div
-      const sectionContainer = heading.locator('..').locator('..').locator('..').locator('..');
-      const sectionImages = sectionContainer.locator('img[loading="lazy"]');
-      const itemCount = await sectionImages.count();
+      // Walk up from h3 to the section div.mb-8 container and count gallery cards
+      const itemCount = await heading.evaluate((h3) => {
+        let el: HTMLElement | null = h3.parentElement;
+        while (el && !el.classList.contains('mb-8')) el = el.parentElement;
+        if (!el) return 0;
+        const grid = el.querySelector('.grid');
+        return grid ? grid.querySelectorAll('a').length : 0;
+      });
       expect(itemCount, `Section "${title}" should have gallery items`).toBeGreaterThan(0);
     }
   });
