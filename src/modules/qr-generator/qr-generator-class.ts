@@ -17,7 +17,7 @@ import {
 } from '../qr-encoder';
 import { verifyQRStructure } from '../qr-spec';
 import { qrMatrixCache } from './cache';
-import { type CanvasFactory, defaultBrowserCanvasFactory } from './canvas-factory';
+import { type CanvasFactory, CanvasPool, defaultBrowserCanvasFactory } from './canvas-factory';
 import {
   createGradientFill,
   drawAlignmentPattern,
@@ -93,6 +93,7 @@ type DitherPatchCacheEntry = {
 export class QRGenerator {
   private qrcode: typeof qrcode;
   private canvasFactory: CanvasFactory;
+  private _canvasPool: CanvasPool;
   private _lastMatrix: boolean[][] | null = null;
   private _lastModuleCount: number = 0;
   private _ditherPatchCache: Map<string, DitherPatchCacheEntry> = new Map();
@@ -106,6 +107,16 @@ export class QRGenerator {
   constructor(canvasFactory: CanvasFactory | null = null) {
     this.qrcode = qrcode;
     this.canvasFactory = canvasFactory || defaultBrowserCanvasFactory;
+    this._canvasPool = new CanvasPool(this.canvasFactory);
+  }
+
+  /**
+   * Release all canvases held in the internal pool.
+   * Call between independent generation runs (e.g. between test jobs or
+   * animated scenarios) so native canvas memory can be reclaimed by GC.
+   */
+  clearCanvasPool(): void {
+    this._canvasPool.clear();
   }
 
   /**
@@ -425,6 +436,7 @@ export class QRGenerator {
       overlayIntensity: config.overlayIntensity,
     });
     if (scale > 1 && processedOverlayCanvas) {
+      const pool = this._canvasPool;
       const renderScaled = async (cfg: QRGeneratorConfig) =>
         await generateScaledQR(
           qr,
@@ -432,12 +444,13 @@ export class QRGenerator {
           processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
           moduleCount,
           scale,
-          this.createCanvas.bind(this),
+          pool.acquire.bind(pool),
           this.canvasFactory,
           this.storeMatrix.bind(this) as (
             qr: { isDark(row: number, col: number): boolean; getModuleCount(): number },
             moduleCount: number
-          ) => void
+          ) => void,
+          pool.release.bind(pool)
         );
 
       if (
@@ -999,6 +1012,10 @@ export class QRGenerator {
         let bestBaseDecodablePatch: DitherAttemptPatch | null = null;
         let prevEdgeImprint: number | null = null;
         for (const patch of attempts) {
+          if (lastCanvas && lastCanvas !== bestBaseDecodable) {
+            pool.release(lastCanvas);
+            lastCanvas = null;
+          }
           const attemptCanvas = await renderScaled(buildAttemptConfig(patch));
           try {
             const evaluated = await decodeScenarios(attemptCanvas, prevEdgeImprint);
@@ -1039,6 +1056,10 @@ export class QRGenerator {
         if (skipScanGateEscalation) {
           const finderRescuePatches = buildFinderRescuePatches();
           for (const patch of finderRescuePatches) {
+            if (lastCanvas && lastCanvas !== bestBaseDecodable) {
+              pool.release(lastCanvas);
+              lastCanvas = null;
+            }
             const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
             const rescueRaster = isPreviewScanGate
               ? rescueCanvas
@@ -1056,6 +1077,10 @@ export class QRGenerator {
 
         const rescuePatches = [...buildDecodeRescuePatches(), ...buildFinderRescuePatches()];
         for (const patch of rescuePatches) {
+          if (lastCanvas && lastCanvas !== bestBaseDecodable) {
+            pool.release(lastCanvas);
+            lastCanvas = null;
+          }
           const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
           const rescueRaster = isPreviewScanGate
             ? rescueCanvas
@@ -1080,6 +1105,10 @@ export class QRGenerator {
           ? [62, 54, 46, 38, 30, 22]
           : [70, 62, 54, 46, 38, 30, 22];
         for (const intensity of qrFirstIntensities) {
+          if (qrFirstLast) {
+            pool.release(qrFirstLast);
+            qrFirstLast = null;
+          }
           const qrFirstFallback = await renderScaled({
             ...buildAttemptConfig(lastPatch),
             qrFirstMode: true,

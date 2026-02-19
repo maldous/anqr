@@ -25,6 +25,7 @@ interface GifEncoderLike {
     options: Record<string, unknown>
   ) => void;
   finish: () => void;
+  bytesView: () => Uint8Array;
   bytes: () => Uint8Array;
 }
 

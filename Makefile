@@ -103,10 +103,9 @@ help:
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:qr:artifact  Run dithered scan gate and save current tsunami/king artifacts"
 	@echo "    make test:overlay:audit  Run overlay preservation wiring audit (heavyweight, ~2min)"
-	@echo "    make test:gallery:matrix Run sharded gallery scan matrix across 4 fixtures x 2 tiers"
-	@echo "                            Tunables: RESOURCE_UTILIZATION_PCT, RESOURCE_RESERVED_CORES,"
-	@echo "                                      SCAN_MATRIX_SHARDS, SCAN_MATRIX_ESTIMATED_SHARD_GIB,"
-	@echo "                                      SCAN_MATRIX_ESTIMATED_SHARD_DISK_GIB, SCAN_MATRIX_KEEP_SHARDS"
+	@echo "    make test:gallery:matrix Generate gallery images via anqr.link API for all scenarios × fixtures"
+	@echo "                            Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY,"
+	@echo "                                      SCAN_MATRIX_SCENARIOS, SCAN_MATRIX_FIXTURES"
 	@echo "    make gallery:auto        Full pipeline: scan matrix → copy approved → gallery manifest"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
 	@echo "    make test:coverage:gap  Generate coverage debt report"
@@ -168,7 +167,7 @@ RESOURCE_RESERVED_CORES ?= 1
 
 # Gallery scan matrix tuning.
 # Auto shards are bounded by CPU, memory, and free disk budgets.
-SCAN_MATRIX_ESTIMATED_SHARD_GIB ?= 2
+SCAN_MATRIX_ESTIMATED_SHARD_GIB ?= 18
 SCAN_MATRIX_ESTIMATED_SHARD_DISK_GIB ?= 1
 SCAN_MATRIX_KEEP_SHARDS ?= 0
 SCAN_MATRIX_AUTO_SHARDS ?= $(shell \
@@ -198,7 +197,6 @@ SCAN_MATRIX_AUTO_SHARDS ?= $(shell \
 	[ $$by_disk -lt $$shards ] && shards=$$by_disk; \
 	echo $$shards)
 SCAN_MATRIX_SHARDS ?= $(SCAN_MATRIX_AUTO_SHARDS)
-SCAN_MATRIX_SHARDS = 4
 
 # Playwright default worker pool — conservative to avoid thermal throttling.
 # Too many parallel Chromium instances heat the CPU, causing thermal
@@ -538,14 +536,11 @@ gallery\:gif:
 test\:overlay\:audit:
 	ANQR_LOG_LEVEL=error npx vitest run --maxWorkers=$(VITEST_MAX_WORKERS) tests/unit/overlay-preservation-mode-audit.spec.ts
 
-# Run gallery scan matrix: 30 scenarios × 4 fixtures × 2 tiers = 240 runs
-# Produces reports/gallery-scan-matrix.json and reports/gallery-scan-summary.md
+# Generate gallery images via the deployed anqr.link API.
+# Produces reports/gallery-scan-matrix.json, reports/gallery-scan-summary.md,
+# and image artifacts in reports/gallery-artifacts/tier-a/.
 test\:gallery\:matrix:
-	ANQR_LOG_LEVEL=error \
-	SCAN_MATRIX_SHARDS=$(SCAN_MATRIX_SHARDS) \
-	SCAN_MATRIX_ESTIMATED_SHARD_GIB=$(SCAN_MATRIX_ESTIMATED_SHARD_GIB) \
-	SCAN_MATRIX_KEEP_SHARDS=$(SCAN_MATRIX_KEEP_SHARDS) \
-	node scripts/run-gallery-matrix-sharded.mjs
+	npx tsx scripts/generate-gallery-matrix.mjs
 
 # Full gallery auto-generation pipeline:
 # 1. Run scan matrix test (generates reports + artifacts)

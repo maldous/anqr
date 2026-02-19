@@ -149,7 +149,8 @@ async function generateBWFirstMatrix(
   moduleCount: number,
   scale: number,
   effectiveIntensity: number,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
@@ -157,11 +158,15 @@ async function generateBWFirstMatrix(
   // Create scaled overlay canvas
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
-  if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+  if (!ctx) {
+    if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
+    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+  }
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
   const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
   const data = imageData.data;
+  if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
@@ -800,7 +805,8 @@ export async function generateDitheredMatrix(
   scale: number,
   effectiveIntensity: number,
   _effectiveConfig: QRGeneratorConfig,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
 
@@ -822,7 +828,8 @@ export async function generateDitheredMatrix(
       moduleCount,
       scale,
       effectiveIntensity,
-      createCanvasFn
+      createCanvasFn,
+      releaseCanvasFn
     );
   }
 
@@ -865,11 +872,15 @@ export async function generateDitheredMatrix(
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
-  if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+  if (!ctx) {
+    if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
+    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+  }
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
   const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
   const data = imageData.data;
+  if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
@@ -1017,7 +1028,8 @@ export async function generateBlueNoiseMatrix(
   scale: number,
   effectiveIntensity: number,
   _canvasFactory: CanvasFactory,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<PixelDecisionMatrix> {
   const scaledSize = moduleCount * scale;
 
@@ -1036,7 +1048,8 @@ export async function generateBlueNoiseMatrix(
       moduleCount,
       scale,
       effectiveIntensity,
-      createCanvasFn
+      createCanvasFn,
+      releaseCanvasFn
     );
   }
 
@@ -1045,11 +1058,15 @@ export async function generateBlueNoiseMatrix(
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
-  if (!ctx) return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+  if (!ctx) {
+    if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
+    return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
+  }
 
   ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
   const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
   const data = imageData.data;
+  if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
@@ -1157,7 +1174,8 @@ export async function generateHalftoneDitheredOverlayData(
   moduleCount: number,
   effectiveIntensity: number,
   effectiveConfig: QRGeneratorConfig,
-  createCanvasFn: CreateCanvasFn
+  createCanvasFn: CreateCanvasFn,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<{ overlayData: OverlayData; effectiveIntensity: number }> {
   const scale = 4;
 
@@ -1169,7 +1187,8 @@ export async function generateHalftoneDitheredOverlayData(
     scale,
     effectiveIntensity,
     effectiveConfig,
-    createCanvasFn
+    createCanvasFn,
+    releaseCanvasFn
   );
 
   // Also sample the original overlay at module resolution so halftone dot sizing
@@ -1183,6 +1202,7 @@ export async function generateHalftoneDitheredOverlayData(
     moduleCtx.drawImage(overlayCanvas, 0, 0, moduleCount, moduleCount);
     moduleData = moduleCtx.getImageData(0, 0, moduleCount, moduleCount).data;
   }
+  if (releaseCanvasFn) releaseCanvasFn(moduleCanvas);
 
   const overlayData: OverlayData = {};
   overlayData.colors = {};

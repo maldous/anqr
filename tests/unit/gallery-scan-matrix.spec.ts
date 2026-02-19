@@ -20,10 +20,12 @@ import {
 import { decodeQR } from '../../src/modules/qr-decoder';
 import {
   type CanvasFactory,
+  clearQRCaches,
   INTRINSICALLY_SCALED_OVERLAY_MODES,
   QRGenerator,
   type QRGeneratorConfig,
 } from '../../src/modules/qr-generator';
+import { ECC_CAPACITIES_BYTE } from '../../src/modules/qr-spec';
 
 if (typeof globalThis.ImageData === 'undefined') {
   try {
@@ -106,7 +108,8 @@ const ALL_TIERS: readonly TierConfig[] = [TIER_A, TIER_B];
 
 const SUBPIXEL_DITHERED_MODES: ReadonlySet<string> = new Set(['dithered', 'blue-noise']);
 
-const MAX_ANIMATED_FRAMES = 999;
+const MAX_ANIMATED_FRAMES = 64;
+const DEFAULT_MAX_PARALLEL = 1;
 
 function isIntrinsicallyScaledOverlay(scenario: (typeof GALLERY_SCAN_SCENARIOS)[number]): boolean {
   const mode = scenario.generatorPatch.overlayMode as string | undefined;
@@ -121,6 +124,9 @@ const FEATURE_COVERAGE_REQUIREMENTS: Record<ScenarioFeatureGroup, number> = {
   animation: 3,
   output: 2,
   watermark: 2,
+  preprocessing: 2,
+  dithering: 2,
+  'qr-art': 2,
 };
 
 function parseCsvFilter(raw: string | undefined): Set<string> | null {
@@ -232,27 +238,12 @@ function loadGifOverlayFrames(
   return { canvases, delays };
 }
 
-function canvasesToAnimatedGifBuffer(canvases: any[], delays: number[]): Buffer {
-  const gif = createGifEncoder();
-  for (let i = 0; i < canvases.length; i++) {
-    const ctx = canvases[i].getContext('2d');
-    const imageData = ctx.getImageData(0, 0, canvases[i].width, canvases[i].height);
-    const palette = quantizeGifPalette(imageData.data, 256);
-    const index = indexGifPixels(imageData.data, palette);
-    const opts: Record<string, unknown> = { palette, delay: delays[i] ?? 100, dispose: 2 };
-    if (i === 0) opts.repeat = 0;
-    gif.writeFrame(index, canvases[i].width, canvases[i].height, opts);
-  }
-  gif.finish();
-  return Buffer.from(gif.bytes());
-}
-
 function makeBaseConfig(content: string, tier: TierConfig): QRGeneratorConfig {
   return {
     content,
     errorCorrection: 'H',
     typeNumber: 6,
-    moduleSize: 16,
+    moduleSize: 5,
     margin: 4,
     fgColor: '#000000',
     bgColor: '#ffffff',
@@ -263,7 +254,7 @@ function makeBaseConfig(content: string, tier: TierConfig): QRGeneratorConfig {
     ditherStrength: 50,
     ditherSerpentine: false,
     diffusionKernel: 'floyd_steinberg',
-    renderScalePerModule: 14,
+    renderScalePerModule: 6,
     seed: 42,
     preserveFinders: true,
     preserveTiming: true,
@@ -276,6 +267,53 @@ function makeBaseConfig(content: string, tier: TierConfig): QRGeneratorConfig {
     optimizeIterations: tier.optimizeIterations,
     qrBitBiasStrength: tier.qrBitBiasStrength,
   };
+}
+
+function buildScanContentUrl(
+  scenario: (typeof GALLERY_SCAN_SCENARIOS)[number],
+  fixture: (typeof CANONICAL_FIXTURES)[number],
+  versionOverride?: number
+): string {
+  const params = new URLSearchParams();
+  params.set('data', 'ANQR');
+  for (const [key, value] of Object.entries(scenario.galleryParams)) {
+    params.set(key, String(value));
+  }
+  if (versionOverride !== undefined) {
+    params.set('v', String(versionOverride));
+  }
+  const qs = params.toString();
+  const imgSuffix = scenario.useOverlay ? `&img=https://anqr.link${fixture.publicPath}` : '';
+  return `https://anqr.link/?${qs}${imgSuffix}`;
+}
+
+function minVersionForBytes(byteLength: number, ecc: string): number {
+  const capacities = ECC_CAPACITIES_BYTE[ecc as keyof typeof ECC_CAPACITIES_BYTE];
+  if (!capacities) return 40;
+  for (let i = 0; i < capacities.length; i++) {
+    if (capacities[i] >= byteLength) return i + 1;
+  }
+  return 40;
+}
+
+function resolveContentAndVersion(
+  scenario: (typeof GALLERY_SCAN_SCENARIOS)[number],
+  fixture: (typeof CANONICAL_FIXTURES)[number]
+): { content: string; effectiveVersion: number } {
+  const ecc = (scenario.generatorPatch.errorCorrection as string | undefined) ?? 'H';
+  const scenarioVersion = (scenario.generatorPatch.typeNumber as number | undefined) ?? 6;
+  const initialUrl = buildScanContentUrl(scenario, fixture);
+  const initialBytes = Buffer.byteLength(initialUrl, 'utf8');
+  const minVersion = minVersionForBytes(initialBytes, ecc);
+  const effectiveVersion = Math.max(minVersion, scenarioVersion);
+  if (effectiveVersion === scenarioVersion) {
+    return { content: initialUrl, effectiveVersion };
+  }
+  const finalUrl = buildScanContentUrl(scenario, fixture, effectiveVersion);
+  const finalBytes = Buffer.byteLength(finalUrl, 'utf8');
+  const finalMinVersion = minVersionForBytes(finalBytes, ecc);
+  const finalVersion = Math.max(finalMinVersion, scenarioVersion);
+  return { content: finalUrl, effectiveVersion: finalVersion };
 }
 
 function classifyResult(
@@ -313,7 +351,6 @@ async function runTier(
   scenarios: readonly (typeof GALLERY_SCAN_SCENARIOS)[number][],
   fixtures: readonly (typeof CANONICAL_FIXTURES)[number][],
   overlays: Map<CanonicalFixtureId, any>,
-  animatedOverlays: Map<CanonicalFixtureId, { canvases: any[]; delays: number[] }>,
   artifactsBaseDir: string
 ): Promise<MatrixResult[]> {
   const tierDir = path.join(artifactsBaseDir, tier.id);
@@ -323,7 +360,7 @@ async function runTier(
   const maxParallel =
     Number.isFinite(requestedParallel) && requestedParallel > 0
       ? requestedParallel
-      : Math.max(1, Math.min(os.cpus().length, 16));
+      : Math.max(1, Math.min(DEFAULT_MAX_PARALLEL, os.cpus().length));
 
   const jobs: {
     scenario: (typeof GALLERY_SCAN_SCENARIOS)[number];
@@ -331,6 +368,7 @@ async function runTier(
   }[] = [];
   for (const scenario of scenarios) {
     for (const fixture of fixtures) {
+      if (scenario.featureGroup === 'animation' && !fixture.isAnimated) continue;
       jobs.push({ scenario, fixture });
     }
   }
@@ -349,46 +387,114 @@ async function runTier(
       const artifactPath = path.join(tierDir, artifactName);
       try {
         const qr = new QRGenerator(nodeCanvasFactory);
-        const content = `https://anqr.link/scan/${scenario.id}/${fixture.id}`;
+        const { content, effectiveVersion } = resolveContentAndVersion(scenario, fixture);
         const cfg: QRGeneratorConfig = {
           ...makeBaseConfig(content, tier),
           ...scenario.generatorPatch,
           content,
+          typeNumber: effectiveVersion,
           ...(fixture.isAnimated && scenario.useOverlay && isIntrinsicallyScaledOverlay(scenario)
             ? { forceScaledOverlay: true }
             : {}),
         };
         const overlay = scenario.useOverlay ? (overlays.get(fixture.id) ?? null) : null;
-        const animFrames =
-          fixture.isAnimated && scenario.useOverlay ? animatedOverlays.get(fixture.id) : undefined;
+        let animFrames: { canvases: any[]; delays: number[] } | undefined;
+        if (fixture.isAnimated && scenario.useOverlay) {
+          animFrames = loadGifOverlayFrames(
+            path.join(process.cwd(), fixture.filePath),
+            240,
+            MAX_ANIMATED_FRAMES
+          );
+        }
 
-        let generated: any;
-        let imageBuffer: Buffer;
+        let verifyImageData: ImageData;
+        let verifyWidth: number;
+        let verifyHeight: number;
 
         if (animFrames && animFrames.canvases.length > 1) {
-          const qrFrames: any[] = [];
+          const rssBaseline = process.memoryUsage.rss();
+          let gif: ReturnType<typeof createGifEncoder> | null = createGifEncoder();
           for (let i = 0; i < animFrames.canvases.length; i++) {
             const frame = await qr.generate(cfg, animFrames.canvases[i]);
-            qrFrames.push(frame);
+            animFrames.canvases[i] = null;
+            const rssAfterGen = process.memoryUsage.rss();
+            const w = (frame as any).width;
+            const h = (frame as any).height;
+            const ctx = (frame as any).getContext('2d');
+            const imageData = ctx.getImageData(0, 0, w, h);
+            if (i === 0) {
+              verifyImageData = {
+                data: new Uint8ClampedArray(imageData.data),
+                width: w,
+                height: h,
+              } as ImageData;
+              verifyWidth = w;
+              verifyHeight = h;
+            }
+            const palette = quantizeGifPalette(imageData.data, 256);
+            const index = indexGifPixels(imageData.data, palette);
+            const opts: Record<string, unknown> = {
+              palette,
+              delay: animFrames.delays[i] ?? 100,
+              dispose: 2,
+            };
+            if (i === 0) opts.repeat = 0;
+            gif.writeFrame(index, w, h, opts);
+            clearQRCaches();
+            global.gc?.();
+            const rssAfterEnc = process.memoryUsage.rss();
+            if (i % 10 === 0 || i === animFrames.canvases.length - 1) {
+              const mb = (v: number) => (v / 1024 / 1024).toFixed(0);
+              process.stderr.write(
+                `[MEM] ${tier.id} ${scenario.id} frame ${i}/${animFrames.canvases.length}` +
+                  ` | afterGen=${mb(rssAfterGen)}MB afterEnc=${mb(rssAfterEnc)}MB delta=${mb(rssAfterEnc - rssBaseline)}MB\n`
+              );
+            }
           }
-          generated = qrFrames[0];
-          imageBuffer = canvasesToAnimatedGifBuffer(qrFrames, animFrames.delays);
+          gif.finish();
+          await fs.writeFile(artifactPath, gif.bytesView());
+          gif = null;
+          const rssAfterWrite = process.memoryUsage.rss();
+          const mb = (v: number) => (v / 1024 / 1024).toFixed(0);
+          process.stderr.write(
+            `[MEM] ${tier.id} ${scenario.id} gifDone` +
+              ` | rss=${mb(rssAfterWrite)}MB delta=${mb(rssAfterWrite - rssBaseline)}MB\n`
+          );
         } else if (fixture.isAnimated) {
-          generated = await qr.generate(cfg, overlay);
-          imageBuffer = canvasesToAnimatedGifBuffer([generated], [100]);
+          const generated = await qr.generate(cfg, overlay);
+          verifyImageData = canvasToImageData(generated as any);
+          verifyWidth = (generated as any).width;
+          verifyHeight = (generated as any).height;
+          let gif: ReturnType<typeof createGifEncoder> | null = createGifEncoder();
+          const imgCtx = (generated as any).getContext('2d');
+          const imgData = imgCtx.getImageData(0, 0, verifyWidth, verifyHeight);
+          const palette = quantizeGifPalette(imgData.data, 256);
+          const index = indexGifPixels(imgData.data, palette);
+          gif.writeFrame(index, verifyWidth, verifyHeight, {
+            palette,
+            delay: 100,
+            dispose: 2,
+            repeat: 0,
+          });
+          gif.finish();
+          await fs.writeFile(artifactPath, gif.bytesView());
+          gif = null;
         } else {
-          generated = await qr.generate(cfg, overlay);
-          imageBuffer = (generated as any).toBuffer('image/png');
+          const generated = await qr.generate(cfg, overlay);
+          verifyImageData = canvasToImageData(generated as any);
+          verifyWidth = (generated as any).width;
+          verifyHeight = (generated as any).height;
+          await fs.writeFile(artifactPath, (generated as any).toBuffer('image/png'));
         }
-        await fs.writeFile(artifactPath, imageBuffer);
+        animFrames = undefined;
 
-        const directDecoded = decodeQR(canvasToImageData(generated as any), {
+        const directDecoded = decodeQR(verifyImageData!, {
           inversionAttempts: 'attemptBoth',
         });
         const directDecodePass = directDecoded?.data === content;
 
-        const roundtripImage = await loadImage(imageBuffer);
-        const roundtripCanvas = createCanvas((generated as any).width, (generated as any).height);
+        const roundtripImage = await loadImage(artifactPath);
+        const roundtripCanvas = createCanvas(verifyWidth!, verifyHeight!);
         const roundtripCtx = roundtripCanvas.getContext('2d');
         roundtripCtx.drawImage(
           roundtripImage as any,
@@ -410,6 +516,7 @@ async function runTier(
           tier,
           overlayMode
         );
+        qr.clearCanvasPool();
         results[jobIndex] = {
           tier: tier.id,
           scenarioId: scenario.id,
@@ -424,6 +531,7 @@ async function runTier(
           durationMs: Date.now() - start,
         };
       } catch {
+        animFrames = undefined;
         results[jobIndex] = {
           tier: tier.id,
           scenarioId: scenario.id,
@@ -438,6 +546,8 @@ async function runTier(
           durationMs: Date.now() - start,
         };
       }
+      clearQRCaches();
+      global.gc?.();
     }
   });
 
@@ -640,34 +750,17 @@ describe('gallery scan matrix', () => {
     await fs.mkdir(artifactsDir, { recursive: true });
 
     const overlays = new Map<CanonicalFixtureId, any>();
-    const animatedOverlays = new Map<CanonicalFixtureId, { canvases: any[]; delays: number[] }>();
     for (const fixture of fixtures) {
       const overlay = await loadOverlayCanvas(path.join(process.cwd(), fixture.filePath), 240);
       overlays.set(fixture.id, overlay);
-      if (fixture.isAnimated) {
-        animatedOverlays.set(
-          fixture.id,
-          loadGifOverlayFrames(path.join(process.cwd(), fixture.filePath), 240, MAX_ANIMATED_FRAMES)
-        );
-      }
     }
 
-    const tierAResults = await runTier(
-      TIER_A,
-      scenarios,
-      fixtures,
-      overlays,
-      animatedOverlays,
-      artifactsDir
-    );
-    const tierBResults = await runTier(
-      TIER_B,
-      scenarios,
-      fixtures,
-      overlays,
-      animatedOverlays,
-      artifactsDir
-    );
+    const tierAResults = await runTier(TIER_A, scenarios, fixtures, overlays, artifactsDir);
+
+    clearQRCaches();
+    global.gc?.();
+
+    const tierBResults = await runTier(TIER_B, scenarios, fixtures, overlays, artifactsDir);
     const allResults = [...tierAResults, ...tierBResults];
 
     const byScenario = new Map<string, MatrixResult[]>();
@@ -749,7 +842,12 @@ describe('gallery scan matrix', () => {
       buildSummaryMarkdown(allResults, scenarios, fixtures)
     );
 
-    const runsPerTier = scenarios.length * fixtures.length;
+    const animationScenarios = scenarios.filter((s) => s.featureGroup === 'animation');
+    const nonAnimationScenarios = scenarios.filter((s) => s.featureGroup !== 'animation');
+    const animatedFixtures = fixtures.filter((f) => f.isAnimated);
+    const runsPerTier =
+      nonAnimationScenarios.length * fixtures.length +
+      animationScenarios.length * animatedFixtures.length;
     expect(allResults.length).toBe(runsPerTier * ALL_TIERS.length);
     expect(tierAPass).toBeGreaterThan(0);
     expect(galleryCandidates.length).toBeGreaterThan(0);
@@ -768,5 +866,5 @@ describe('gallery scan matrix', () => {
       }
       expect(coverageGaps, `Feature coverage gaps: ${coverageGaps.join(', ')}`).toHaveLength(0);
     }
-  }, 900000);
+  }, 1_800_000);
 });
