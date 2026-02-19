@@ -80,3 +80,7 @@ tests/.storage-state.json
 play-store-key.json
 
 reports/gallery-artifacts/
+
+.gallery-server.pid
+anqr.zip
+all.txt

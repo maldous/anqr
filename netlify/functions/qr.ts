@@ -239,8 +239,20 @@ Sentry.init({
  */
 
 import { createHash } from 'node:crypto';
-import { type Canvas, createCanvas, loadImage, type SKRSContext2D } from '@napi-rs/canvas';
+import {
+  type Canvas,
+  createCanvas,
+  loadImage,
+  ImageData as NapiImageData,
+  type SKRSContext2D,
+} from '@napi-rs/canvas';
 import { getStore } from '@netlify/blobs';
+
+// Polyfill ImageData globally for shared modules that use `new ImageData()`
+if (typeof globalThis.ImageData === 'undefined') {
+  (globalThis as Record<string, unknown>).ImageData = NapiImageData;
+}
+
 // Import animation utilities
 import {
   type AnimationEasing,
@@ -331,6 +343,8 @@ const CORS_HEADERS = {
 
 const QR_CACHE_STORE = 'qr-cache';
 const NON_CACHE_PARAMS = new Set(['_cb', 'lang', '_fullRender']);
+const SENTINEL_PREFIX = 'rendering:';
+const SENTINEL_TTL_MS = 600_000;
 
 function computeCacheKey(params: URLSearchParams): string {
   const entries = [...params.entries()]
@@ -1583,8 +1597,8 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
         return null;
       }
 
-      // SSRF protection: block private/internal IP addresses
-      if (isPrivateOrReservedIP(parsedUrl.hostname)) {
+      // SSRF protection: block private/internal IP addresses (skip in local dev)
+      if (!process.env.NETLIFY_DEV && isPrivateOrReservedIP(parsedUrl.hostname)) {
         return null;
       }
     } catch (_urlErr) {
@@ -1717,6 +1731,11 @@ async function handler(request: Request) {
 
   const url = new URL(request.url);
   const params = url.searchParams;
+  const isFullRender = params.get('_fullRender') === '1';
+  // When called in-process from the background function, skip all blob operations —
+  // the deploy-scoped JWT is expired and blob calls HANG instead of failing.
+  // The background function handles caching with explicit credentials.
+  const skipCache = request.headers.get('X-ANQR-Skip-Cache') === '1';
 
   // Get required parameter
   const data = params.get('data');
@@ -1934,7 +1953,8 @@ async function handler(request: Request) {
 
   // Output format (may be overridden if overlay is animated GIF)
   // Default to GIF to align with client default (was PNG, causing embed/share mismatch)
-  let outputFormat = (params.get('format') || DEFAULT_OUTPUT_FORMAT) as OutputFormat;
+  const explicitFormat = params.get('format');
+  let outputFormat = (explicitFormat || DEFAULT_OUTPUT_FORMAT) as OutputFormat;
   const outputQuality = Math.max(0, Math.min(1, Number.parseFloat(params.get('quality') || '0.9')));
   const outputDpi = Math.max(1, Math.min(1200, Number.parseInt(params.get('dpi') || '72', 10)));
 
@@ -2095,23 +2115,31 @@ async function handler(request: Request) {
   try {
     // Check blob cache for previously generated result
     const cacheKey = computeCacheKey(params);
-    try {
-      const store = getStore(QR_CACHE_STORE);
-      const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
-      if (cached?.data) {
-        const cachedMeta = cached.metadata as Record<string, string> | undefined;
-        return new Response(new Uint8Array(cached.data as ArrayBuffer), {
-          status: 200,
-          headers: {
-            'Content-Type': cachedMeta?.contentType || 'image/png',
-            'Cache-Control': 'public, max-age=31536000, immutable',
-            'X-ANQR-Cache': 'hit',
-            ...CORS_HEADERS,
-          },
-        });
+    console.log('[BLOB] cache lookup', { cacheKey: cacheKey.slice(0, 80), skipCache });
+    if (!skipCache) {
+      try {
+        const store = getStore(QR_CACHE_STORE);
+        const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
+        if (cached?.data) {
+          const cachedMeta = cached.metadata as Record<string, string> | undefined;
+          console.log('[BLOB] cache HIT', {
+            size: (cached.data as ArrayBuffer).byteLength,
+            contentType: cachedMeta?.contentType,
+          });
+          return new Response(new Uint8Array(cached.data as ArrayBuffer), {
+            status: 200,
+            headers: {
+              'Content-Type': cachedMeta?.contentType || 'image/png',
+              'Cache-Control': 'public, max-age=31536000, immutable',
+              'X-ANQR-Cache': 'hit',
+              ...CORS_HEADERS,
+            },
+          });
+        }
+        console.log('[BLOB] cache MISS');
+      } catch (cacheReadErr) {
+        console.error('[BLOB] cache read ERROR:', cacheReadErr);
       }
-    } catch {
-      // Blob store unavailable — continue without cache
     }
 
     // Create QRGenerator with Node.js canvas factory
@@ -2271,6 +2299,8 @@ async function handler(request: Request) {
       autoPickVersion,
       autoPickEcc,
       autoReduceIntensity,
+      // Scan gate: 'preview' is lighter than 'full' and sufficient for server-side rendering
+      scanGateProfile: 'preview' as const,
       // Output extras
       bgOverride,
       formatExtra,
@@ -2287,7 +2317,7 @@ async function handler(request: Request) {
     let overlayFrames: ServerAnimationFrame[] = [];
     let hasAnimatedOverlay = false;
 
-    if (overlayUrl && overlayMode) {
+    if (overlayUrl && overlayMode && isFullRender) {
       const fetchedImage = await fetchImageWithBuffer(overlayUrl);
       if (fetchedImage) {
         // Pre-calculate filter flags once
@@ -2337,28 +2367,26 @@ async function handler(request: Request) {
 
         if (fetchedImage.isAnimatedGif) {
           hasAnimatedOverlay = true;
-          if (params.get('_fullRender') === '1') {
-            // Background mode: full animated GIF generation
+          if (!explicitFormat) {
             outputFormat = 'gif';
-            const rawFrames = parseGifFramesServer(
-              fetchedImage.arrayBuffer,
-              gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
-            );
-            overlayFrames = rawFrames.map((frame) => ({
-              ...frame,
-              canvas: preprocessCanvas(frame.canvas),
-            }));
-            if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
-              overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
-            }
-            overlayCanvas = overlayFrames[0]?.canvas ?? preprocessCanvas(fetchedImage.canvas);
-          } else {
-            // Sync mode: use first frame only (fast path)
-            // Full animated version is generated by background function
-            overlayCanvas = preprocessCanvas(fetchedImage.canvas);
           }
+          const rawFrames = parseGifFramesServer(
+            fetchedImage.arrayBuffer,
+            gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
+          );
+          overlayFrames = rawFrames.map((frame) => ({
+            ...frame,
+            canvas: preprocessCanvas(frame.canvas),
+          }));
+          if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
+            overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
+          }
+          overlayCanvas = overlayFrames[0]?.canvas ?? preprocessCanvas(fetchedImage.canvas);
         } else {
           // Static overlay - preprocess once
+          if (!explicitFormat) {
+            outputFormat = 'png';
+          }
           overlayCanvas = preprocessCanvas(fetchedImage.canvas);
         }
       }
@@ -2427,9 +2455,34 @@ async function handler(request: Request) {
 
     if (outputFormat === 'gif') {
       if (hasAnimatedOverlay && overlayFrames.length > 1) {
-        // Animated GIF overlay - generate a QR frame for each overlay frame
-        for (const overlayFrame of overlayFrames) {
-          const frameCanvas = await qrGenerator.generate(config, overlayFrame.canvas);
+        // Animated GIF overlay — render each frame at a reduced internal size
+        // (240px) for speed, then upscale to the requested output dimensions.
+        // Uses 'preview' scan gate for ALL frames (matching the web client).
+        // The scan gate patch cache means frame 0 discovers optimal dither
+        // parameters; subsequent frames try those first and succeed quickly.
+        const ANIM_RENDER_SIZE = 240;
+        const animModuleSize = Math.max(
+          1,
+          Math.floor(
+            (ANIM_RENDER_SIZE - totalMargin * 2) / (estimatedModuleCount + totalMargin * 2)
+          )
+        );
+        const animConfig = { ...config, moduleSize: animModuleSize };
+        console.log('[ANIMATION] starting animated overlay', {
+          frames: overlayFrames.length,
+          renderSize: ANIM_RENDER_SIZE,
+          animModuleSize,
+          outputSize: `${outputWidth}x${outputHeight}`,
+        });
+        for (let i = 0; i < overlayFrames.length; i++) {
+          const overlayFrame = overlayFrames[i];
+          const frameCanvas = await qrGenerator.generate(animConfig, overlayFrame.canvas);
+          if (i % 10 === 0 || i === overlayFrames.length - 1) {
+            console.log('[ANIMATION] frame progress', {
+              frame: i + 1,
+              total: overlayFrames.length,
+            });
+          }
 
           // Scale to output size if needed
           let scaledFrame = frameCanvas;
@@ -2519,38 +2572,74 @@ async function handler(request: Request) {
     // Generate ETag from content hash (deterministic output = consistent ETag)
     const etag = `"${createHash('md5').update(outputBuffer).digest('hex')}"`;
 
-    // Detect degraded animated response (animated overlay in sync mode with GIF output)
-    const isDegradedAnimated =
-      hasAnimatedOverlay &&
-      overlayFrames.length <= 1 &&
-      outputFormat === 'gif' &&
-      params.get('_fullRender') !== '1';
+    // Detect degraded response (overlay requested but rendered without overlay for speed)
+    const isDegraded = !!(overlayUrl && overlayMode) && !isFullRender;
+    console.log('[BLOB] render result', {
+      isDegraded,
+      isFullRender,
+      hasOverlay: !!(overlayUrl && overlayMode),
+      bufferSize: outputBuffer.byteLength,
+      cacheKey: cacheKey.slice(0, 80),
+    });
 
-    // Cache non-degraded results in Netlify Blobs
-    if (!isDegradedAnimated) {
+    // Cache non-degraded results in Netlify Blobs (skip when called in-process from BG function)
+    if (!(isDegraded || skipCache)) {
       try {
+        console.log('[BLOB] writing cache...', {
+          cacheKey: cacheKey.slice(0, 80),
+          size: outputBuffer.byteLength,
+          contentType,
+        });
         const store = getStore(QR_CACHE_STORE);
         await store.set(cacheKey, new Blob([outputBuffer]), {
           metadata: { contentType, generatedAt: new Date().toISOString() },
         });
-      } catch {
-        // Cache write failure is non-fatal
+        await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});
+        console.log('[BLOB] cache write OK');
+      } catch (cacheWriteErr) {
+        console.error('[BLOB] cache write FAILED:', cacheWriteErr);
       }
     }
 
-    // Trigger background generation for degraded animated results
-    if (isDegradedAnimated) {
+    // Trigger background generation for degraded overlay results (with deduplication)
+    if (isDegraded && !skipCache) {
+      let shouldTrigger = true;
       try {
-        const bgUrl = new URL(request.url);
-        bgUrl.searchParams.set('_fullRender', '1');
-        const siteUrl = process.env.URL || 'https://anqr.link';
-        fetch(`${siteUrl}/.netlify/functions/qr-render`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: bgUrl.toString() }),
-        }).catch(() => {});
-      } catch {
-        // Background trigger failure is non-fatal
+        const store = getStore(QR_CACHE_STORE);
+        const sentinelKey = SENTINEL_PREFIX + cacheKey;
+        const existing = await store.get(sentinelKey, { type: 'text' });
+        if (existing && Date.now() - Number(existing) < SENTINEL_TTL_MS) {
+          shouldTrigger = false;
+          console.log(
+            '[BLOB] sentinel: already rendering (age:',
+            Date.now() - Number(existing),
+            'ms)'
+          );
+        } else {
+          await store.set(sentinelKey, String(Date.now()));
+          console.log('[BLOB] sentinel: set new sentinel');
+        }
+      } catch (sentinelErr) {
+        console.error('[BLOB] sentinel ERROR:', sentinelErr);
+      }
+      if (shouldTrigger) {
+        try {
+          const bgUrl = new URL(request.url);
+          bgUrl.searchParams.set('_fullRender', '1');
+          const siteUrl = bgUrl.origin || process.env.URL || 'https://anqr.link';
+          console.log('[BG:TRIGGER] posting to background function', {
+            url: bgUrl.toString().slice(0, 120),
+          });
+          fetch(`${siteUrl}/.netlify/functions/qr-render-background`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: bgUrl.toString() }),
+          })
+            .then((r) => console.log('[BG:TRIGGER]', r.status))
+            .catch((err) => console.error('[BG:TRIGGER:FAIL]', err));
+        } catch {
+          // Background trigger failure is non-fatal
+        }
       }
     }
 
@@ -2558,10 +2647,10 @@ async function handler(request: Request) {
       status: 200,
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': isDegradedAnimated
+        'Cache-Control': isDegraded
           ? 'no-cache, no-store, must-revalidate'
           : 'public, max-age=31536000, immutable',
-        ...(isDegradedAnimated ? { 'X-ANQR-Status': 'generating' } : {}),
+        ...(isDegraded ? { 'X-ANQR-Status': 'generating' } : {}),
         ETag: etag,
         Vary: 'Accept-Encoding',
         ...CORS_HEADERS,

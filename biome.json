@@ -184,6 +184,9 @@
         "rules": {
           "style": {
             "noDefaultExport": "off"
+          },
+          "suspicious": {
+            "noConsole": "off"
           }
         }
       }
