@@ -67,6 +67,8 @@ export interface QRGeneratorConfig {
   ditherBackdropAlpha?: number;
   ditherBackdropWash?: number;
   renderScalePerModule?: number;
+  /** Minimum render scale per module (default: 12). Set lower for animation frames. */
+  renderScaleMinimum?: number;
   darkMinOccupancy?: number;
   lightMaxOccupancy?: number;
   edgeImprintThreshold?: number;

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { HighlightedLabel } from '@/lib/search-context';
+import { trackEvent } from '@/lib/zaraz';
 import { copyToClipboard } from '@/modules/browser-clipboard';
 import {
   generateImageEmbed,
@@ -309,6 +310,7 @@ export function ShareSection() {
     const success = await copyToClipboard(text);
     if (success) {
       setCopiedField(field);
+      trackEvent('share', { method: field });
       setTimeout(() => setCopiedField(null), 2000);
     }
   };
@@ -484,7 +486,12 @@ export function ShareSection() {
             size="sm"
             className="flex-1"
           >
-            <a href={socialUrls.twitter} target="_blank" rel="noopener noreferrer">
+            <a
+              href={socialUrls.twitter}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent('share', { method: 'twitter' })}
+            >
               {t('share.twitter')}
             </a>
           </Button>
@@ -495,7 +502,12 @@ export function ShareSection() {
             size="sm"
             className="flex-1"
           >
-            <a href={socialUrls.whatsapp} target="_blank" rel="noopener noreferrer">
+            <a
+              href={socialUrls.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent('share', { method: 'whatsapp' })}
+            >
               <MessageCircle className="h-4 w-4 mr-1" />
               {t('share.whatsapp')}
             </a>

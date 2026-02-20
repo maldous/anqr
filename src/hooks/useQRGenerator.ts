@@ -16,6 +16,7 @@ import {
   useState,
 } from 'react';
 import { createLogger } from '@/lib/logger';
+import { trackEvent } from '@/lib/zaraz';
 import {
   type AnimationFrame,
   type PatternType as AnimationPattern,
@@ -1998,6 +1999,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     try {
       // Show interstitial ad BEFORE download on native platforms
       await showInterstitial('export');
+      trackEvent('export', { format: output.format });
 
       // Scale canvas to output dimensions if different
       // Cast to HTMLCanvasElement for export - safe because we're in browser context

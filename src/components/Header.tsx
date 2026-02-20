@@ -49,6 +49,7 @@ import { type GalleryCategory, gallerySections } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { isRtlLanguage, languages, loadLocale } from '@/i18n';
 import { createLogger } from '@/lib/logger';
+import { trackEvent } from '@/lib/zaraz';
 import { copyToClipboard } from '@/modules/browser-clipboard';
 import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
 import { getShareableUrl } from '@/modules/share-links';
@@ -240,6 +241,7 @@ export function Header({
     // Pre-load locale before switching to ensure translations are available immediately
     await loadLocale(code);
     i18n.changeLanguage(code);
+    trackEvent('language_switch', { language: code });
     closeLangMenu();
   };
 
@@ -562,6 +564,7 @@ export function Header({
     const success = await copyToClipboard(url);
     if (success) {
       setCopied(true);
+      trackEvent('share', { method: 'copy_link' });
       setTimeout(() => setCopied(false), 2000);
     }
   };
