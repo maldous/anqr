@@ -239,6 +239,9 @@ Sentry.init({
  */
 
 import { createHash } from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   type Canvas,
   createCanvas,
@@ -1592,6 +1595,85 @@ interface FetchedImage {
   isAnimatedGif: boolean;
 }
 
+function isPathWithinRoot(candidatePath: string, rootPath: string): boolean {
+  const resolvedRoot = path.resolve(rootPath);
+  const resolvedCandidate = path.resolve(candidatePath);
+  if (resolvedCandidate === resolvedRoot) {
+    return true;
+  }
+  return resolvedCandidate.startsWith(`${resolvedRoot}${path.sep}`);
+}
+
+async function decodeOverlayBuffer(buffer: Buffer): Promise<FetchedImage | null> {
+  if (buffer.byteLength <= 0 || buffer.byteLength > MAX_OVERLAY_BYTES) {
+    return null;
+  }
+
+  const arrayBuffer = buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength
+  ) as ArrayBuffer;
+
+  let isAnimatedGif = false;
+  if (isGifBuffer(arrayBuffer)) {
+    try {
+      const decoded = decodeGif(arrayBuffer);
+      isAnimatedGif = decoded.frames.length > 1;
+    } catch (_gifErr) {}
+  }
+
+  const img = await nodeCanvasFactory.loadImage(buffer);
+
+  // Validate image dimensions
+  if (!(img.width && img.height) || img.width <= 0 || img.height <= 0) {
+    return null;
+  }
+
+  // Validate pixel count to prevent memory issues
+  const pixelCount = img.width * img.height;
+  if (pixelCount > MAX_OVERLAY_PIXELS) {
+    return null;
+  }
+
+  const canvas = createCanvas(img.width, img.height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  return {
+    canvas,
+    arrayBuffer,
+    isAnimatedGif,
+  };
+}
+
+async function readLocalOverlayFile(fileUrl: URL): Promise<FetchedImage | null> {
+  if (!process.env.NETLIFY_DEV) {
+    return null;
+  }
+
+  let overlayPath: string;
+  try {
+    overlayPath = fileURLToPath(fileUrl);
+  } catch (_urlErr) {
+    return null;
+  }
+
+  const localOverlayRoot = process.env.ANQR_LOCAL_OVERLAY_ROOT
+    ? path.resolve(process.env.ANQR_LOCAL_OVERLAY_ROOT)
+    : path.resolve(process.cwd(), 'public');
+
+  if (!isPathWithinRoot(overlayPath, localOverlayRoot)) {
+    return null;
+  }
+
+  try {
+    const buffer = await fs.readFile(overlayPath);
+    return decodeOverlayBuffer(buffer);
+  } catch (_fsErr) {
+    return null;
+  }
+}
+
 /**
  * Fetch an image from URL and load it into a canvas
  * Also returns the raw array buffer to detect animated GIFs
@@ -1602,6 +1684,9 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(url);
+      if (parsedUrl.protocol === 'file:') {
+        return readLocalOverlayFile(parsedUrl);
+      }
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
         return null;
       }
@@ -1683,40 +1768,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
       offset += chunk.byteLength;
     }
 
-    // Create a proper ArrayBuffer for APIs that require it (DataView, decodeGif)
-    const arrayBuffer = combinedBytes.buffer as ArrayBuffer;
-    const buffer = Buffer.from(combinedBytes);
-
-    // Check if it's a GIF with multiple frames
-    let isAnimatedGif = false;
-    if (isGifBuffer(arrayBuffer)) {
-      try {
-        const decoded = decodeGif(arrayBuffer);
-        isAnimatedGif = decoded.frames.length > 1;
-      } catch (_gifErr) {}
-    }
-
-    const img = await nodeCanvasFactory.loadImage(buffer);
-
-    // Validate image dimensions
-    if (!(img.width && img.height) || img.width <= 0 || img.height <= 0) {
-      return null;
-    }
-
-    // Validate pixel count to prevent memory issues
-    const pixelCount = img.width * img.height;
-    if (pixelCount > MAX_OVERLAY_PIXELS) {
-      return null;
-    }
-
-    const canvas = createCanvas(img.width, img.height);
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    return {
-      canvas,
-      arrayBuffer,
-      isAnimatedGif,
-    };
+    return decodeOverlayBuffer(Buffer.from(combinedBytes));
   } catch (_error) {
     return null;
   }

@@ -3,10 +3,14 @@
  * 
  * Runs the full QR-Art pipeline with a target image and exports the result to PNG.
  * 
- * Usage: npx tsx scripts/run-qr-art.ts [image-path] [output-path]
+ * Usage:
+ *   npx tsx scripts/run-qr-art.ts [image-path] [output-path] [version] [target-control-percent] [data] [suffix-mode] [strict-suffix] [ecc] [auto-suffix] [suffix]
  * 
  * Examples:
  *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg qr-art-output.png
+ *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg qr-art-v10.png 10 60
+ *   npx tsx scripts/run-qr-art.ts public/trump.png qr-art-mixed.png 6 100 "https://anqr.link" numeric 1 L
+ *   npx tsx scripts/run-qr-art.ts public/trump.png qr-art-fixed.png 9 100 "https://whitehouse.gov" numeric 1 L 0 "123456..."
  *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg
  */
 
@@ -20,6 +24,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { generateFullQArtBestMask, type FullQArtResult } from '../src/modules/qr-art/generate';
+import type { ECCLevel } from '../src/modules/qr-spec/types';
 
 // Polyfill ImageData for Node.js
 if (typeof globalThis.ImageData === 'undefined') {
@@ -49,12 +54,43 @@ async function main() {
   const args = process.argv.slice(2);
   const imagePath = args[0] || 'public/tsunami.jpg';
   const outputPath = args[1] || `qr-art-${path.basename(imagePath, path.extname(imagePath))}.png`;
+  const requestedVersionRaw = args[2];
+  const requestedVersionParsed = requestedVersionRaw ? Number.parseInt(requestedVersionRaw, 10) : 0;
+  const requestedVersion =
+    Number.isFinite(requestedVersionParsed) && requestedVersionParsed > 0 ? requestedVersionParsed : 0;
+  const targetControlRaw = args[3];
+  const targetControlParsed = targetControlRaw ? Number.parseFloat(targetControlRaw) : 60;
+  const targetControlPercent =
+    Number.isFinite(targetControlParsed) && targetControlParsed > 0 && targetControlParsed <= 100
+      ? targetControlParsed
+      : 60;
+  const data = args[4] || 'https://anqr.link';
+  const suffixModeRaw = (args[5] || 'auto').toLowerCase();
+  const suffixMode: 'auto' | 'numeric' | 'byte' =
+    suffixModeRaw === 'numeric' ? 'numeric' : suffixModeRaw === 'byte' ? 'byte' : 'auto';
+  const strictRaw = (args[6] || '1').toLowerCase();
+  const strictSuffix = !(strictRaw === '0' || strictRaw === 'false' || strictRaw === 'no');
+  const eccRaw = (args[7] || 'H').toUpperCase();
+  const ecc: ECCLevel = eccRaw === 'L' || eccRaw === 'M' || eccRaw === 'Q' || eccRaw === 'H' ? eccRaw : 'H';
+  const autoSuffixRaw = (args[8] || '1').toLowerCase();
+  const autoSuffix = !(autoSuffixRaw === '0' || autoSuffixRaw === 'false' || autoSuffixRaw === 'no');
+  const explicitSuffix = args[9] || '';
   
   console.log('='.repeat(60));
   console.log('QR-Art Generation Script');
   console.log('='.repeat(60));
   console.log(`Input image: ${imagePath}`);
   console.log(`Output path: ${outputPath}`);
+  console.log(`Requested version: ${requestedVersion > 0 ? requestedVersion : 'auto'}`);
+  console.log(`Target control: ${targetControlPercent}%`);
+  console.log(`Data: ${data}`);
+  console.log(`Suffix mode: ${suffixMode}`);
+  console.log(`Strict suffix: ${strictSuffix}`);
+  console.log(`ECC: ${ecc}`);
+  console.log(`Auto suffix: ${autoSuffix}`);
+  if (!autoSuffix && explicitSuffix) {
+    console.log(`Explicit suffix length: ${explicitSuffix.length}`);
+  }
   console.log();
 
   // Check if input image exists
@@ -78,12 +114,10 @@ async function main() {
   console.log();
 
   // Configure QR-Art generation
-  const testUrl = 'https://anqr.link';
-  
   console.log('Starting QR-Art generation...');
-  console.log(`URL: ${testUrl}`);
-  console.log(`ECC: H (high)`);
-  console.log(`Version: auto (will be calculated)`);
+  console.log(`URL: ${data}`);
+  console.log(`ECC: ${ecc}`);
+  console.log(`Version: ${requestedVersion > 0 ? requestedVersion : 'auto (will be calculated)'}`);
   console.log();
 
   const startTime = Date.now();
@@ -91,13 +125,15 @@ async function main() {
   // Run the full QR-Art pipeline with best mask selection
   // Pass the canvas directly (not ImageData) because the QR-Art code calls getContext()
   const result: FullQArtResult = await generateFullQArtBestMask({
-    data: testUrl,
+    data,
     targetImage: targetCanvas as unknown as ImageData,  // Cast needed - accepts Canvas or ImageData
-    version: 0,  // Auto-select version
-    ecc: 'H',    // High ECC for robustness
-    autoSuffix: true,  // Auto-generate suffix for maximum control
-    targetControlPercent: 60,  // Target 60% controllable pixels
-    strictSuffix: true,  // Ensure phone-safe URL-safe suffix characters
+    version: requestedVersion,
+    ecc,
+    autoSuffix,
+    suffix: !autoSuffix && explicitSuffix ? explicitSuffix : undefined,
+    targetControlPercent,
+    suffixMode,
+    strictSuffix,
     onProgress: (stage, percent) => {
       process.stdout.write(`\r  ${stage}: ${percent.toFixed(0)}%`);
     },
