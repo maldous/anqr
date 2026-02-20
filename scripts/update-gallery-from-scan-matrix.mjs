@@ -31,7 +31,7 @@ async function exists(filePath) {
 async function main() {
   if (!(await exists(TIER_A_DIR))) {
     throw new Error(
-      `Missing Tier A artifacts at ${TIER_A_DIR}. Run make test:gallery:matrix first.`
+      `Missing Tier A artifacts at ${TIER_A_DIR}. Run make gallery:overlay first.`
     );
   }
 

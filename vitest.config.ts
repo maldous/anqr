@@ -11,7 +11,7 @@ export default defineConfig({
     // Include unit test files
     include: ['tests/unit/**/*.spec.ts', 'tests/unit/**/*.test.ts'],
     // Heavyweight suites are excluded at the CLI level (see Makefile test:unit)
-    // rather than here, so `make test:gallery:matrix` and `make test:overlay:audit`
+    // rather than here, so `make gallery:overlay` and `make test:overlay:audit`
     // can still target them directly.
     // Coverage configuration
     coverage: {

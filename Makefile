@@ -1,4 +1,4 @@
-.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit test\:gallery\:matrix resources validate\:services check\:sentry qr\:art
+.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
 
 # ============================================
 # Help
@@ -47,6 +47,8 @@ help:
 	@echo "    make gallery:fresh  Clean + regenerate all gallery images from scratch"
 	@echo "    make gallery:gif    Generate gallery images (with GIFs)"
 	@echo "    make gallery:auto   Run scan matrix → copy approved artifacts to gallery"
+	@echo "    make gallery:nooverlay  Generate non-overlay gallery QR codes via API (styles, colors, gradients, frames)"
+	@echo "    make gallery:qrart     Generate QR Art gallery images via API (4 styles × 6 fixtures)"
 	@echo "    make sitemap        Generate sitemap.xml"
 	@echo "    make screenshots    Generate PWA screenshots (desktop + mobile) via Playwright"
 	@echo ""
@@ -103,9 +105,13 @@ help:
 	@echo "    make test:unit      Run all Vitest unit tests"
 	@echo "    make test:qr:artifact  Run dithered scan gate and save current tsunami/king artifacts"
 	@echo "    make test:overlay:audit  Run overlay preservation wiring audit (heavyweight, ~2min)"
-	@echo "    make test:gallery:matrix Generate gallery images via anqr.link API for all scenarios × fixtures"
+	@echo "    make gallery:overlay    Generate overlay gallery QR codes via anqr.link API for all scenarios × fixtures"
 	@echo "                            Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY,"
 	@echo "                                      SCAN_MATRIX_SCENARIOS, SCAN_MATRIX_FIXTURES"
+	@echo "    make gallery:nooverlay  Generate non-overlay QR codes via API (38 scenarios)"
+	@echo "                            Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY, NOOVERLAY_SCENARIOS"
+	@echo "    make gallery:qrart     Generate QR Art images via API (4 styles × 6 fixtures)"
+	@echo "                            Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY, QRART_SCENARIOS, QRART_FIXTURES"
 	@echo "    make gallery:auto        Full pipeline: scan matrix → copy approved → gallery manifest"
 	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
 	@echo "    make test:coverage:gap  Generate coverage debt report"
@@ -161,7 +167,7 @@ HOST_DISK_FREE_GIB ?= $(shell \
 	fi)
 
 # Global utilization strategy for heavy jobs.
-# Example: make test:gallery:matrix RESOURCE_UTILIZATION_PCT=98 RESOURCE_RESERVED_CORES=0
+# Example: make gallery:overlay RESOURCE_UTILIZATION_PCT=98 RESOURCE_RESERVED_CORES=0
 RESOURCE_UTILIZATION_PCT ?= 95
 RESOURCE_RESERVED_CORES ?= 1
 
@@ -316,7 +322,7 @@ all:
 	@echo ""
 	@echo "[9/16] Running heavyweight validation..."
 	$(MAKE) test:overlay:audit
-	$(MAKE) test:gallery:matrix
+	$(MAKE) gallery:overlay
 	$(MAKE) signoff
 	@echo ""
 	@echo "[10/16] Copying Tier A scan-validated overlay artifacts to gallery..."
@@ -536,17 +542,27 @@ gallery\:gif:
 test\:overlay\:audit:
 	ANQR_LOG_LEVEL=error npx vitest run --maxWorkers=$(VITEST_MAX_WORKERS) tests/unit/overlay-preservation-mode-audit.spec.ts
 
-# Generate gallery images via the deployed anqr.link API.
+# Generate overlay gallery images via the deployed anqr.link API.
 # Produces reports/gallery-scan-matrix.json, reports/gallery-scan-summary.md,
 # and image artifacts in reports/gallery-artifacts/tier-a/.
-test\:gallery\:matrix:
+gallery\:overlay:
 	npx tsx scripts/generate-gallery-matrix.mjs
+
+# Generate non-overlay gallery QR codes via the deployed anqr.link API.
+# Produces reports/gallery-artifacts/nooverlay/ with passed.txt/failed.txt.
+gallery\:nooverlay:
+	npx tsx scripts/generate-gallery-nooverlay.mjs
+
+# Generate QR Art gallery images via the deployed anqr.link API.
+# Produces reports/gallery-artifacts/qrart/ with passed.txt/failed.txt.
+gallery\:qrart:
+	npx tsx scripts/generate-gallery-qrart.mjs
 
 # Full gallery auto-generation pipeline:
 # 1. Run scan matrix test (generates reports + artifacts)
 # 2. Copy scan-approved artifacts to public/gallery/
 # 3. Generate scan-showcase-manifest.json
-gallery\:auto: test\:gallery\:matrix
+gallery\:auto: gallery\:overlay
 	node scripts/update-gallery-from-scan-matrix.mjs
 	@echo ""
 	@echo "Gallery auto-generation complete."
