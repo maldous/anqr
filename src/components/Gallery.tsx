@@ -31,6 +31,7 @@ import {
   gallerySections,
   getGalleryImagePath,
 } from '@/data/gallery-items';
+import { trackEvent } from '@/lib/zaraz';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 
 // Icon registry for gallery sections - only import icons actually used in gallery-items.ts
@@ -277,6 +278,11 @@ export function Gallery({ filter }: GalleryProps) {
     new Set(gallerySections.map((s) => s.id))
   );
   const [mobileFilter, setMobileFilter] = useState<GalleryCategory | 'all'>('all');
+
+  // Track gallery page view
+  useEffect(() => {
+    trackEvent('gallery_view');
+  }, []);
 
   // Show interstitial ad when Gallery opens (on native apps)
   useEffect(() => {

@@ -186,6 +186,8 @@ export const SCOPE_PREFIXES = {
   ADMOB: 'ADMOB',
   /** Media store writer (src/modules/platform/media-store.ts) */
   STORAGE: 'STORAGE',
+  /** Zaraz analytics tracking (src/lib/zaraz.ts) */
+  ZARAZ: 'ZARAZ',
 
   // -------------------------------------------------------------------------
   // Advanced Features - Specialized functionality

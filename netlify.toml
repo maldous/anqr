@@ -54,6 +54,9 @@
     # img-src allows https: for user-provided overlay image URLs (required feature)
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
     Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com https://*.sentry.io https://*.sentry-cdn.com https://static.cloudflareinsights.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com https://*.adtrafficquality.google; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
+    # Default cache: no-cache for all paths. More-specific rules below override this
+    # for assets, gallery, images, etc. (Netlify: later matching rules win for duplicate headers.)
+    Cache-Control = "no-cache"
 
 # ============================================
 # Cache Headers
@@ -152,15 +155,6 @@
   [headers.values]
     Cache-Control = "no-cache"
     Content-Type = "application/javascript"
-
-# Default - no cache for unmatched paths (SPA routes like /gallery, /about)
-# Note: Netlify applies more-specific paths (e.g. /assets/*) with higher priority,
-# so this does NOT override the immutable cache on hashed assets.
-# The 4h TTL reported by PSI for /assets/* is Netlify's CDN edge behavior, not this rule.
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cache-Control = "no-cache"
 
 # ============================================
 # Redirects

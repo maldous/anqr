@@ -3802,3 +3802,4 @@ Skipping ECC=H mask=7: Base matrix does not scan: All 4 scan attempts failed. La
   ✓  265 [advanced] › tests/advanced/output.spec.ts:1210:3 › Output DPI Settings › DPI slider visible in professional tier (37.4s)
   ✓  266 [advanced] › tests/advanced/output.spec.ts:1225:3 › Output DPI Settings › DPI slider minimum is 72 (37.5s)
   ✓  267 [advanced] › tests/advanced/output.spec.ts:1236:3 › Output DPI Settings › DPI slider maximum is 600 (37.4s)
+  ✓  268 [advanced] › tests/advanced/output.spec.ts:1247:3 › Output DPI Settings › DPI common value 150 (37.4s)

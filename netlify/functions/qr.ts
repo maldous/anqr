@@ -319,8 +319,17 @@ const MAX_OVERLAY_BYTES = 5 * 1024 * 1024;
 const MAX_OVERLAY_PIXELS = 10 * 1024 * 1024;
 
 // Maximum GIF frames and duration
-const MAX_GIF_FRAMES = 60;
+const MAX_GIF_FRAMES = 64;
 const MAX_GIF_DURATION_MS = 10000;
+
+// Server-side animation optimization: hard limit frames for animated overlays
+// to prevent timeout issues. Client can handle more frames with compositor.
+const SERVER_MAX_ANIMATION_FRAMES = 64;
+
+// Yield helper for long-running operations
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // Fetch timeout in milliseconds
 const FETCH_TIMEOUT_MS = 10000;
@@ -2318,7 +2327,13 @@ async function handler(request: Request) {
     let hasAnimatedOverlay = false;
 
     if (overlayUrl && overlayMode && isFullRender) {
+      const tOverlayFetch = Date.now();
       const fetchedImage = await fetchImageWithBuffer(overlayUrl);
+      console.log('[TIMING] overlay fetch', {
+        url: overlayUrl.slice(0, 80),
+        fetchMs: Date.now() - tOverlayFetch,
+        ok: !!fetchedImage,
+      });
       if (fetchedImage) {
         // Pre-calculate filter flags once
         const hasFilters =
@@ -2370,14 +2385,45 @@ async function handler(request: Request) {
           if (!explicitFormat) {
             outputFormat = 'gif';
           }
-          const rawFrames = parseGifFramesServer(
+          const tParse = Date.now();
+          let rawFrames = parseGifFramesServer(
             fetchedImage.arrayBuffer,
             gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
           );
+          console.log('[TIMING] GIF frame parsing', {
+            frames: rawFrames.length,
+            parseMs: Date.now() - tParse,
+          });
+
+          // AGGRESSIVE FRAME LIMITING: Always limit to max frames for server-side
+          // This prevents timeout issues. Client handles more frames with compositor.
+          if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
+            console.log('[TIMING] limiting frames', {
+              from: rawFrames.length,
+              to: SERVER_MAX_ANIMATION_FRAMES,
+            });
+            rawFrames = decimateFramesToMaxFps(
+              rawFrames,
+              Math.ceil(rawFrames.length / SERVER_MAX_ANIMATION_FRAMES) * 10
+            );
+            // If still too many, just take first N frames evenly distributed
+            if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
+              const step = Math.ceil(rawFrames.length / SERVER_MAX_ANIMATION_FRAMES);
+              rawFrames = rawFrames
+                .filter((_, i) => i % step === 0 || i === rawFrames.length - 1)
+                .slice(0, SERVER_MAX_ANIMATION_FRAMES);
+            }
+          }
+
+          const tPreprocess = Date.now();
           overlayFrames = rawFrames.map((frame) => ({
             ...frame,
             canvas: preprocessCanvas(frame.canvas),
           }));
+          console.log('[TIMING] frame preprocessing', {
+            frames: overlayFrames.length,
+            preprocessMs: Date.now() - tPreprocess,
+          });
           if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
             overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
           }
@@ -2467,20 +2513,38 @@ async function handler(request: Request) {
             (ANIM_RENDER_SIZE - totalMargin * 2) / (estimatedModuleCount + totalMargin * 2)
           )
         );
-        const animConfig = { ...config, moduleSize: animModuleSize };
+        const animRenderScale = Math.max(1, Math.round(ANIM_RENDER_SIZE / estimatedModuleCount));
+        const animConfig = {
+          ...config,
+          moduleSize: animModuleSize,
+          renderScalePerModule: animRenderScale,
+          renderScaleMinimum: 1,
+        };
+        const tAnimStart = Date.now();
         console.log('[ANIMATION] starting animated overlay', {
           frames: overlayFrames.length,
           renderSize: ANIM_RENDER_SIZE,
           animModuleSize,
+          animRenderScale,
           outputSize: `${outputWidth}x${outputHeight}`,
         });
         for (let i = 0; i < overlayFrames.length; i++) {
+          const tFrame = Date.now();
           const overlayFrame = overlayFrames[i];
           const frameCanvas = await qrGenerator.generate(animConfig, overlayFrame.canvas);
+
+          // Yield between frames to prevent timeout in long-running operations
+          // Only yield every few frames to minimize overhead
+          if (i > 0 && i % 3 === 0) {
+            await sleep(1);
+          }
+
           if (i % 10 === 0 || i === overlayFrames.length - 1) {
             console.log('[ANIMATION] frame progress', {
               frame: i + 1,
               total: overlayFrames.length,
+              frameMs: Date.now() - tFrame,
+              elapsedMs: Date.now() - tAnimStart,
             });
           }
 
@@ -2512,6 +2576,10 @@ async function handler(request: Request) {
             disposalType: overlayFrame.disposalType,
           });
         }
+        console.log('[ANIMATION] all frames rendered', {
+          frames: animatedOverlayFrames.length,
+          totalMs: Date.now() - tAnimStart,
+        });
       } else if (animationPattern !== 'none') {
         // Pattern-based animation
         animationFrameCanvases = generatePatternFramesServer(
@@ -2532,11 +2600,17 @@ async function handler(request: Request) {
       case 'gif':
         if (animatedOverlayFrames.length > 1) {
           // Animated GIF from overlay frames (preserves original frame delays)
+          const tEncode = Date.now();
           outputBuffer = encodeAnimatedGifWithDelays(
             animatedOverlayFrames,
             gifColors,
             gifDisposalCode
           );
+          console.log('[TIMING] GIF encoding', {
+            frames: animatedOverlayFrames.length,
+            encodeMs: Date.now() - tEncode,
+            size: outputBuffer.byteLength,
+          });
         } else if (animationFrameCanvases.length > 1) {
           // Animated GIF with pattern
           outputBuffer = encodeAnimatedGif(
