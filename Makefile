@@ -1,4 +1,4 @@
-.PHONY: all help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
+.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
 
 # ============================================
 # Help
@@ -6,132 +6,60 @@
 
 help:
 	@echo ""
-	@echo "ANQR Makefile - Available targets:"
+	@echo "ANQR Makefile - Sectioned Targets"
 	@echo ""
-	@echo "  FULL PIPELINE"
-	@echo "    make all            Complete fresh-to-production pipeline"
-	@echo "                         1. install    — npm install + hooks + Playwright browsers"
-	@echo "                         2. i18n:pull  — pull community translations (non-blocking)"
-	@echo "                         3. i18n:xlate — auto-translate missing strings (free Google)"
-	@echo "                         4. i18n:fill  — regenerate all i18n TS/JSON from txt"
-	@echo "                         5. assets     — PWA icons + Android icons + sitemap"
-	@echo "                         6. build      — production bundle (tsc + Vite)"
-	@echo "                         7. gallery    — gallery images + PWA screenshots (serve → Playwright)"
-	@echo "                         8. test       — quality gates + unit + E2E (19 checks)"
-	@echo "                         9. validate   — overlay audit + scan matrix + signoff"
-	@echo "                        10. gallery    — copy Tier A scan-validated overlays back"
-	@echo "                        11. reports    — payload matrix + unit coverage + coverage gap"
-	@echo "                        12. sonar      — SonarQube code analysis (non-blocking)"
-	@echo "                        13. deploy     — rebuild with Sentry + Netlify deploy + IndexNow"
-	@echo "                        14. android    — release AAB + upload (if SDK available)"
-	@echo "                        15. services   — third-party service checks (non-blocking)"
-	@echo "                        16. i18n:push  — push translations + final summary"
+	@echo "  1) Meta + Help"
+	@echo "    make help"
 	@echo ""
-	@echo "  WEB DEVELOPMENT"
-	@echo "    make install        Install npm dependencies + git hooks"
-	@echo "    make hooks          Install git hooks (lefthook + commitlint + lint-staged)"
-	@echo "    make dev            Start development server"
-	@echo "    make build          Build production bundle"
-	@echo "    make clean          Remove dist, node_modules, and Android build files"
+	@echo "  2) Global Config / Exports"
+	@echo "    Defined in this file via HOST_*, RESOURCE_*, SCAN_MATRIX_*, PLAYWRIGHT_* vars"
 	@echo ""
-	@echo "  CODE QUALITY (Biome)"
-	@echo "    make fix            Fix all: format, lint with auto-fix, organize imports"
-	@echo "    make lint           Lint only (no formatting)"
-	@echo "    make format         Format only (no linting)"
-	@echo "    make check          Check all without changes (for CI)"
+	@echo "  3) Discovery / Tool Checks"
+	@echo "    make resources"
+	@echo "    make validate:services"
+	@echo "    make check:sentry"
 	@echo ""
-	@echo "  ASSET GENERATION"
-	@echo "    make icons          Generate PWA icons"
-	@echo "    make icons:android  Generate Android launcher icons"
-	@echo "    make gallery        Generate gallery images (PNG)"
-	@echo "    make gallery:fresh  Clean + regenerate all gallery images from scratch"
-	@echo "    make gallery:gif    Generate gallery images (with GIFs)"
-	@echo "    make gallery:auto   Run scan matrix → copy approved artifacts to gallery"
-	@echo "    make gallery:nooverlay  Generate non-overlay gallery QR codes via API (styles, colors, gradients, frames)"
-	@echo "    make gallery:qrart     Generate QR Art gallery images via API (4 styles × 6 fixtures)"
-	@echo "    make sitemap        Generate sitemap.xml"
-	@echo "    make screenshots    Generate PWA screenshots (desktop + mobile) via Playwright"
+	@echo "  4) Pipeline Entry Points"
+	@echo "    make all             Full 16-step production pipeline"
+	@echo "    make ci              CI-safe gate (check + unit:ci + basic UI)"
+	@echo "    make smoke           Fast smoke (build + basic UI)"
+	@echo "    make release         Alias for make all"
 	@echo ""
-	@echo "  DEPLOYMENT"
-	@echo "    make deploy         Deploy to Netlify (anqr.link)"
-	@echo "    make indexnow       Submit URLs to search engines via IndexNow (post-deploy)"
+	@echo "  5) Setup & Housekeeping"
+	@echo "    make install hooks clean pull push zip dep"
 	@echo ""
-	@echo "  ANDROID APP (Capacitor)"
-	@echo "    make android        Full production build (bump + release AAB)"
-	@echo "    make android:init   Initialize Android platform (run once)"
-	@echo "    make android:sync   Sync web assets to Android project"
-	@echo "    make android:build  Build debug APK"
-	@echo "    make android:release Build release AAB for Play Store"
-	@echo "    make android:upload Full build + upload AAB to Play Store"
-	@echo "    make android:run    Run on connected device/emulator"
-	@echo "    make android:open   Open in Android Studio"
-	@echo "    make android:keystore Generate release keystore (run once)"
-	@echo "    make android:bump   Bump version code and name"
+	@echo "  6) Web"
+	@echo "    make dev build preview"
 	@echo ""
-	@echo "  GIT & i18n SYNC"
-	@echo "    make pull           Pull from origin + pull i18n translations"
-	@echo "    make push           Push i18n translations + push to origin"
-	@echo "    make i18n:pull      Pull translations from public anqr-i18n repo"
-	@echo "    make i18n:push      Push translations to public anqr-i18n repo"
+	@echo "  7) Quality"
+	@echo "    make quality lint format fix check"
 	@echo ""
-	@echo "  i18n TRANSLATION TOOLS"
-	@echo "    make i18n:xlate              Translate all languages (static + locales)"
-	@echo "    make i18n:xlate:static       Translate static content only"
-	@echo "    make i18n:xlate:locales      Translate UI strings only"
-	@echo "    make i18n:fill               Generate TS/JSON from all txt files"
-	@echo "    make i18n:fill:static        Generate static TS files only"
-	@echo "    make i18n:fill:locales       Generate locales JSON files only"
-	@echo "    make i18n:check              Check i18n regressions vs baseline"
+	@echo "  8) Testing"
+	@echo "    make test test:full test:unit test:ui test:report"
+	@echo "    make test:basic test:advanced test:pro test:tiers test:permutations"
+	@echo "    make test:unit:coverage test:coverage:gap test:unit:ci"
 	@echo ""
-	@echo "    Use LANGS=\"fr-FR de-DE\" to process specific languages:"
-	@echo "      make i18n:xlate LANGS=\"fr-FR de-DE\""
-	@echo "      make i18n:fill LANGS=\"en-GB fr-FR\""
+	@echo "  9) Assets"
+	@echo "    make assets icons icons:android sitemap screenshots"
 	@echo ""
-	@echo "  UTILITIES"
-	@echo "    make zip            Create git archive zip of the project"
-	@echo "    make dep            Generate dependency graph (deps.png)"
-	@echo "    make resources      Show auto-detected CPU/mem/disk tuning values"
-	@echo "    make validate:services  Validate all third-party services (Netlify, Sentry, Cloudflare, etc.)"
-	@echo "    make check:sentry       Check Sentry for unresolved issues (regression monitor)"
-	@echo "    make qr:art         Generate QR-Art PNG from image (IMG=path OUT=path)"
+	@echo " 10) Gallery"
+	@echo "    make gallery gallery:fresh gallery:gif gallery:auto"
+	@echo "    make gallery:api gallery:remote gallery:local gallery:browser gallery:all"
+	@echo "    make gallery:overlay gallery:nooverlay gallery:qrart"
+	@echo "    Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY, GALLERY_CATEGORY, GALLERY_IDS"
 	@echo ""
-	@echo "  CODE ANALYSIS (SonarQube)"
-	@echo "    make sonar          Run SonarQube analysis (requires local server)"
-	@echo "    make sonar-report   Get full issues report from SonarQube"
+	@echo " 11) i18n"
+	@echo "    make i18n:pull i18n:xlate i18n:fill i18n:check i18n:push"
 	@echo ""
-	@echo "  TESTING & QUALITY"
-	@echo "    make quality        Run comprehensive quality gate (19 checks: lint, types, coverage, deps, security, spelling, bundle)"
-	@echo "    make signoff        Run full production sign-off checker"
-	@echo "    make test:unit      Run all Vitest unit tests"
-	@echo "    make test:qr:artifact  Run dithered scan gate and save current tsunami/king artifacts"
-	@echo "    make test:overlay:audit  Run overlay preservation wiring audit (heavyweight, ~2min)"
-	@echo "    make gallery:overlay    Generate overlay gallery QR codes via anqr.link API for all scenarios × fixtures"
-	@echo "                            Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY,"
-	@echo "                                      SCAN_MATRIX_SCENARIOS, SCAN_MATRIX_FIXTURES"
-	@echo "    make gallery:nooverlay  Generate non-overlay QR codes via API (38 scenarios)"
-	@echo "                            Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY, NOOVERLAY_SCENARIOS"
-	@echo "    make gallery:qrart     Generate QR Art images via API (4 styles × 6 fixtures)"
-	@echo "                            Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY, QRART_SCENARIOS, QRART_FIXTURES"
-	@echo "    make gallery:auto        Full pipeline: scan matrix → copy approved → gallery manifest"
-	@echo "    make test:unit:coverage  Run Vitest with strict 100% coverage gate"
-	@echo "    make test:coverage:gap  Generate coverage debt report"
-	@echo "    make test:unit:ci   Run CI-safe Vitest subset (excludes missing local fixture tests)"
-	@echo "    make test:ids       Generate canonical tests/ids.txt inventory"
-	@echo "    make test:required  Generate tests/required.txt requirement matrix"
-	@echo "    make test:required:strict  Fail if requirements are not direct-id backed"
-	@echo "    make test:required:gap  Generate required mapping debt report"
-	@echo "    make test:testid:refs  Validate tests only use managed test IDs"
-	@echo "    make test:bundle:budget Build + enforce bundle budgets (main/non-i18n/i18n)"
-	@echo "    make report:payload:matrix Generate per-kind payload wiring verification report"
-	@echo "    make report:i18n:txt Check i18n txt files for untranslated strings and line-count mismatches"
-	@echo "    make test           Run ALL tests: comprehensive quality gates + full unit suite + E2E"
-	@echo "    make test:basic     Run basic tier UI tests only"
-	@echo "    make test:advanced  Run advanced tier UI tests only"
-	@echo "    make test:pro       Run professional tier UI tests only"
-	@echo "    make test:tiers     Run tier tests only (excludes permutations)"
-	@echo "    make test:ui        Open Playwright UI mode"
-	@echo "    make test:permutations  Run ONLY exhaustive permutation tests"
-	@echo "    make test:report        Show HTML test report"
+	@echo " 12) Deploy / Validation"
+	@echo "    make deploy signoff validate:services check:sentry indexnow sonar"
+	@echo ""
+	@echo " 13) Android"
+	@echo "    make android android:init android:sync android:build android:release"
+	@echo "    make android:upload android:run android:open android:keystore android:bump"
+	@echo ""
+	@echo " 14) Reports / Misc Utilities"
+	@echo "    make report:payload:matrix report:i18n:txt sonar-report qr:art resources"
 	@echo ""
 
 # ============================================
@@ -557,6 +485,31 @@ gallery\:nooverlay:
 # Produces reports/gallery-artifacts/qrart/ with passed.txt/failed.txt.
 gallery\:qrart:
 	npx tsx scripts/generate-gallery-qrart.mjs
+
+# Render all 1000 gallery permutation configs via the deployed anqr.link API.
+# Produces reports/gallery-artifacts/remote/ with passed.txt/failed.txt/report.json.
+gallery\:remote:
+	npx tsx scripts/generate-gallery-remote.mjs
+
+# Render all 1000 gallery permutation configs locally via QRGenerator + @napi-rs/canvas.
+# Produces reports/gallery-artifacts/local/ with passed.txt/failed.txt/report.json.
+gallery\:local:
+	npx tsx scripts/generate-gallery-local.mjs
+
+# Render all 1000 gallery permutation configs via Playwright browser screenshots.
+# Requires a dev server running on GALLERY_PORT (default: 5173).
+# Produces reports/gallery-artifacts/browser/ with passed.txt/failed.txt/report.json.
+gallery\:browser:
+	@curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
+		(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first, or use 'make all'." && exit 1)
+	GALLERY_PORT=$(GALLERY_PORT) npx tsx scripts/generate-gallery-browser.mjs
+
+# Run all three gallery renderers: remote API + local QRGenerator + browser screenshots.
+# Produces 3000 total images across reports/gallery-artifacts/{remote,local,browser}/.
+gallery\:all:
+	$(MAKE) gallery:remote || echo 'gallery:remote failed'
+	$(MAKE) gallery:local || echo 'gallery:local failed'
+	$(MAKE) gallery:browser || echo 'gallery:browser failed'
 
 # Full gallery auto-generation pipeline:
 # 1. Run scan matrix test (generates reports + artifacts)
