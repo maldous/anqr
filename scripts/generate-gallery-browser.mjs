@@ -273,7 +273,7 @@ function encodeAnimatedGifFromCanvases(frames, frameDelayMs = 100, colors = 256)
     const options = {
       palette,
       delay: delayMs,
-      disposal: 1,
+      dispose: 1,
       ...(i === 0 ? { repeat: 0 } : {}),
     };
     gif.writeFrame(index, width, height, options);

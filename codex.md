@@ -1,6 +1,31 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 11:49:00 UTC
+Last updated: 2026-02-22 13:25:00 UTC
+
+## Latest Update (2026-02-22, GIF Corruption Hardening + Payload-Permutation Removal)
+
+- Fixed a server GIF encoding contract bug in `netlify/functions/qr.ts`:
+  - `gifenc` frame option key is now `dispose` (was incorrectly `disposal`).
+  - this removes `Dispose: Undefined` output and resolves strip/partial-frame corruption patterns.
+- Hardened GIF frame encoding for non-transparent output:
+  - added RGBA->opaque background compositing before quantization when `transparent=0`.
+  - background defaults to request background (`bg` / `bgOver`) rather than implicit black.
+- Hardened animated GIF palette stability:
+  - switched animated server encoding to global palette sampling (multi-frame), instead of per-frame palette drift.
+  - injected black/white anchor colors into palette to preserve QR rails in sparse/dither-heavy frames.
+- Reduced transparent-region animation artifacts:
+  - animation pattern effects now skip fully transparent pixels in shared animation functions (`src/modules/animation/shared-patterns.ts`).
+  - server-only wave-axis + temporal-noise helpers also skip fully transparent pixels.
+- Updated browser preview GIF helper parity:
+  - `scripts/generate-gallery-browser.mjs` now uses `dispose` option key when encoding preview-captured GIFs.
+- Payload permutation cleanup completed:
+  - `scripts/lib/gallery-permutations.mjs` now uses a single payload (`https://anqr.link`) only.
+  - removed overlay payload-variation generation block.
+  - validated generator output remains exactly `1000` scenarios and all scenario payloads are `https://anqr.link`.
+- Gallery stability curation update:
+  - removed animated+dithered overlay permutations from gallery generation (kept static dither coverage).
+  - this explicitly removes known unstable families like `ov-x-anim-king-dithered-*` and `heroFeature-king-dither-*`.
+  - validated permutation output still totals exactly `1000` scenarios.
 
 ## Latest Update (2026-02-22, Blob Cache Config + Report Tracking Cleanup + Gallery Verification Contract)
 

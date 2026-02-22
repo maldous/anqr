@@ -910,10 +910,154 @@ async function withGifEncodeLock<T>(fn: () => T | Promise<T>): Promise<T> {
   }
 }
 
+function parseGifBackgroundColor(backgroundColor: string): [number, number, number] {
+  const normalized = String(backgroundColor || '#ffffff')
+    .trim()
+    .replace(/^#/, '');
+
+  if (/^[0-9a-fA-F]{3}$/.test(normalized)) {
+    const r = normalized[0] + normalized[0];
+    const g = normalized[1] + normalized[1];
+    const b = normalized[2] + normalized[2];
+    return [Number.parseInt(r, 16), Number.parseInt(g, 16), Number.parseInt(b, 16)];
+  }
+
+  if (/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return [
+      Number.parseInt(normalized.slice(0, 2), 16),
+      Number.parseInt(normalized.slice(2, 4), 16),
+      Number.parseInt(normalized.slice(4, 6), 16),
+    ];
+  }
+
+  return [255, 255, 255];
+}
+
+function prepareGifFramePixels(
+  rgba: Uint8ClampedArray,
+  bgRgb: [number, number, number],
+  preserveTransparency: boolean
+): Uint8ClampedArray {
+  if (preserveTransparency) {
+    return rgba;
+  }
+
+  let hasTransparency = false;
+  for (let i = 3; i < rgba.length; i += 4) {
+    if (rgba[i] !== 255) {
+      hasTransparency = true;
+      break;
+    }
+  }
+  if (!hasTransparency) {
+    return rgba;
+  }
+
+  const [bgR, bgG, bgB] = bgRgb;
+  const flattened = new Uint8ClampedArray(rgba.length);
+  for (let i = 0; i < rgba.length; i += 4) {
+    const a = rgba[i + 3];
+    if (a <= 0) {
+      flattened[i] = bgR;
+      flattened[i + 1] = bgG;
+      flattened[i + 2] = bgB;
+      flattened[i + 3] = 255;
+      continue;
+    }
+    if (a >= 255) {
+      flattened[i] = rgba[i];
+      flattened[i + 1] = rgba[i + 1];
+      flattened[i + 2] = rgba[i + 2];
+      flattened[i + 3] = 255;
+      continue;
+    }
+
+    const alpha = a / 255;
+    const invAlpha = 1 - alpha;
+    flattened[i] = Math.round(rgba[i] * alpha + bgR * invAlpha);
+    flattened[i + 1] = Math.round(rgba[i + 1] * alpha + bgG * invAlpha);
+    flattened[i + 2] = Math.round(rgba[i + 2] * alpha + bgB * invAlpha);
+    flattened[i + 3] = 255;
+  }
+
+  return flattened;
+}
+
+function hasPaletteColor(
+  palette: number[][],
+  predicate: (r: number, g: number, b: number) => boolean
+): boolean {
+  return palette.some((entry) => {
+    const [r, g, b] = entry;
+    return predicate(r ?? 0, g ?? 0, b ?? 0);
+  });
+}
+
+function ensureGifPaletteAnchors(palette: number[][], maxSize: number): number[][] {
+  const out = [...palette];
+  const hasNearBlack = hasPaletteColor(out, (r, g, b) => r <= 24 && g <= 24 && b <= 24);
+  const hasNearWhite = hasPaletteColor(out, (r, g, b) => r >= 231 && g >= 231 && b >= 231);
+
+  if (!hasNearBlack) {
+    out.push([0, 0, 0]);
+  }
+  if (!hasNearWhite) {
+    out.push([255, 255, 255]);
+  }
+
+  // Trim back to the requested palette size while keeping anchor colors.
+  while (out.length > maxSize) {
+    const dropIdx = Math.floor(out.length / 2);
+    out.splice(dropIdx, 1);
+  }
+
+  return out;
+}
+
+function buildGlobalGifPalette(
+  frameDataProvider: (frameIndex: number) => Uint8ClampedArray,
+  frameCount: number,
+  width: number,
+  height: number,
+  paletteSize: number
+): number[][] {
+  if (frameCount <= 0) {
+    return ensureGifPaletteAnchors(
+      [
+        [0, 0, 0],
+        [255, 255, 255],
+      ],
+      paletteSize
+    );
+  }
+
+  const indices =
+    frameCount > 10
+      ? [0, Math.floor(frameCount / 2), frameCount - 1]
+      : Array.from({ length: frameCount }, (_, i) => i);
+  const samplePixels = new Uint8ClampedArray(indices.length * width * height * 4);
+  let offset = 0;
+
+  for (const idx of indices) {
+    const data = frameDataProvider(idx);
+    samplePixels.set(data, offset);
+    offset += data.length;
+  }
+
+  const basePalette = quantizeGifPalette(samplePixels, paletteSize);
+  return ensureGifPaletteAnchors(basePalette, paletteSize);
+}
+
 /**
  * Encode canvas as GIF (single frame)
  */
-function encodeGif(canvas: Canvas, colors: number = 256, disposal: number = 2): Buffer {
+function encodeGif(
+  canvas: Canvas,
+  colors: number = 256,
+  disposal: number = 2,
+  backgroundColor = '#ffffff',
+  preserveTransparency = false
+): Buffer {
   if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
   }
@@ -921,17 +1065,24 @@ function encodeGif(canvas: Canvas, colors: number = 256, disposal: number = 2): 
   const height = canvas.height;
   const ctx = canvas.getContext('2d');
   const imageData = ctx.getImageData(0, 0, width, height);
-  const { data } = imageData;
+  const preparedData = prepareGifFramePixels(
+    imageData.data,
+    parseGifBackgroundColor(backgroundColor),
+    preserveTransparency
+  );
 
   const gif = createGifEncoder();
-  const palette = quantizeGifPalette(data, Math.min(256, Math.max(2, colors)));
-  const index = indexGifPixels(data, palette);
+  const palette = ensureGifPaletteAnchors(
+    quantizeGifPalette(preparedData, Math.min(256, Math.max(2, colors))),
+    Math.min(256, Math.max(2, colors))
+  );
+  const index = indexGifPixels(preparedData, palette);
 
   gif.writeFrame(index, width, height, {
     palette,
     delay: 100,
     repeat: 0,
-    disposal,
+    dispose: disposal,
   });
 
   gif.finish();
@@ -948,7 +1099,9 @@ function encodeAnimatedGif(
   frames: Canvas[],
   frameDelayMs: number = 100,
   colors: number = 256,
-  disposal: number = 1
+  disposal: number = 1,
+  backgroundColor = '#ffffff',
+  preserveTransparency = false
 ): Buffer {
   if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
@@ -961,25 +1114,38 @@ function encodeAnimatedGif(
   const height = frames[0].height;
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
+  const bgRgb = parseGifBackgroundColor(backgroundColor);
+  const frameDataCache = new Map<number, Uint8ClampedArray>();
+  const getFrameData = (i: number): Uint8ClampedArray => {
+    const cached = frameDataCache.get(i);
+    if (cached) return cached;
+    const ctx = frames[i].getContext('2d');
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const preparedData = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    frameDataCache.set(i, preparedData);
+    return preparedData;
+  };
+  const globalPalette = buildGlobalGifPalette(
+    getFrameData,
+    frames.length,
+    width,
+    height,
+    paletteSize
+  );
 
   // gifenc expects delay in milliseconds (it converts to centiseconds internally)
   // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
   const delayMs = Math.max(20, frameDelayMs);
 
   for (let i = 0; i < frames.length; i++) {
-    const frame = frames[i];
-    const ctx = frame.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const { data } = imageData;
-
-    const palette = quantizeGifPalette(data, paletteSize);
-    const index = indexGifPixels(data, palette);
+    const preparedData = getFrameData(i);
+    const index = indexGifPixels(preparedData, globalPalette);
 
     // Only set repeat on first frame
     const frameOptions: Record<string, unknown> = {
-      palette,
+      palette: globalPalette,
       delay: delayMs,
-      disposal,
+      dispose: disposal,
     };
     if (i === 0) {
       frameOptions.repeat = 0; // 0 = loop forever
@@ -1120,6 +1286,7 @@ function applyAnimationWaveWithAxisServer(
       const hueShift = axis === 'xy' ? wavePhase * 45 + (phaseX - phaseY) * 15 : wavePhase * 30;
       const waveColor = hslToRgbTupleServer(baseHue + hueShift, 72, 50);
       const i = (y * width + x) * 4;
+      if (data[i + 3] === 0) continue;
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
@@ -1410,6 +1577,7 @@ function applyTemporalNoiseToCanvasServer(
   const phi = 1.618033988749895;
 
   for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
     const x = (i / 4) % width;
     const y = Math.floor(i / 4 / width);
     const noise = ((x * phi + y * phi * phi + offset * 1000) % 1) - 0.5;
@@ -2088,7 +2256,9 @@ function decimateFramesToMaxFps(
 function encodeAnimatedGifWithDelays(
   frames: ServerAnimationFrame[],
   colors: number = 256,
-  disposal: number = 1
+  disposal: number = 1,
+  backgroundColor = '#ffffff',
+  preserveTransparency = false
 ): Buffer {
   if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
@@ -2101,24 +2271,38 @@ function encodeAnimatedGifWithDelays(
   const height = frames[0].canvas.height;
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
+  const bgRgb = parseGifBackgroundColor(backgroundColor);
+  const frameDataCache = new Map<number, Uint8ClampedArray>();
+  const getFrameData = (i: number): Uint8ClampedArray => {
+    const cached = frameDataCache.get(i);
+    if (cached) return cached;
+    const ctx = frames[i].canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const preparedData = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    frameDataCache.set(i, preparedData);
+    return preparedData;
+  };
+  const globalPalette = buildGlobalGifPalette(
+    getFrameData,
+    frames.length,
+    width,
+    height,
+    paletteSize
+  );
 
   for (let i = 0; i < frames.length; i++) {
     const frame = frames[i];
-    const ctx = frame.canvas.getContext('2d');
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const { data } = imageData;
-
-    const palette = quantizeGifPalette(data, paletteSize);
-    const index = indexGifPixels(data, palette);
+    const preparedData = getFrameData(i);
+    const index = indexGifPixels(preparedData, globalPalette);
 
     // gifenc expects delay in milliseconds (it converts to centiseconds internally)
     // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
     const delayMs = Math.max(20, frame.delay);
 
     const frameOptions: Record<string, unknown> = {
-      palette,
+      palette: globalPalette,
       delay: delayMs,
-      disposal,
+      dispose: disposal,
     };
     if (i === 0) {
       frameOptions.repeat = 0; // 0 = loop forever
@@ -3650,6 +3834,7 @@ async function handler(request: Request) {
     // Encode based on format
     let outputBuffer: Buffer;
     let contentType: string;
+    const gifBackgroundColor = bgOverride || `#${bg}`;
 
     switch (outputFormat) {
       case 'gif':
@@ -3657,7 +3842,13 @@ async function handler(request: Request) {
           // Animated GIF from overlay frames (preserves original frame delays)
           const tEncode = Date.now();
           outputBuffer = await withGifEncodeLock(() =>
-            encodeAnimatedGifWithDelays(animatedOverlayFrames, gifColors, gifDisposalCode)
+            encodeAnimatedGifWithDelays(
+              animatedOverlayFrames,
+              gifColors,
+              gifDisposalCode,
+              gifBackgroundColor,
+              transparent
+            )
           );
           qrFnLog('[TIMING] GIF encoding', {
             frames: animatedOverlayFrames.length,
@@ -3667,12 +3858,19 @@ async function handler(request: Request) {
         } else if (animationFrameCanvases.length > 1) {
           // Animated GIF with pattern
           outputBuffer = await withGifEncodeLock(() =>
-            encodeAnimatedGif(animationFrameCanvases, animationSpeed, gifColors, gifDisposalCode)
+            encodeAnimatedGif(
+              animationFrameCanvases,
+              animationSpeed,
+              gifColors,
+              gifDisposalCode,
+              gifBackgroundColor,
+              transparent
+            )
           );
         } else {
           // Single frame GIF
           outputBuffer = await withGifEncodeLock(() =>
-            encodeGif(outputCanvas, gifColors, gifDisposalCode)
+            encodeGif(outputCanvas, gifColors, gifDisposalCode, gifBackgroundColor, transparent)
           );
         }
         contentType = 'image/gif';

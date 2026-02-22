@@ -58,6 +58,7 @@ export function applyAnimationPulse(data: Uint8ClampedArray, progress: number, s
   const pulseColor = hslToRgbTuple(hue, 70, 50);
 
   for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
     const r = data[i],
       g = data[i + 1],
       b = data[i + 2];
@@ -100,6 +101,7 @@ export function applyAnimationWave(
 
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
+      if (data[i + 3] === 0) continue;
       const r = data[i],
         g = data[i + 1],
         b = data[i + 2];
@@ -142,6 +144,7 @@ export function applyAnimationScanline(
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
+      if (data[i + 3] === 0) continue;
       const pos = horizontal ? y : x;
       const linePos = horizontal ? lineY : progress * (width + lineWidth * 2) - lineWidth;
       const distance = Math.abs(pos - linePos);
@@ -187,6 +190,7 @@ export function applyAnimationShimmer(
     const x = Math.floor(random() * width);
     const y = Math.floor(random() * height);
     const i = (y * width + x) * 4;
+    if (data[i + 3] === 0) continue;
 
     const r = data[i],
       g = data[i + 1],
@@ -228,6 +232,7 @@ export function applyAnimationDrift(
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
+      if (data[i + 3] === 0) continue;
       const r = data[i],
         g = data[i + 1],
         b = data[i + 2];
@@ -269,6 +274,7 @@ export function applyAnimationColorCycle(
   const complementColor = hslToRgbTuple(complementHue, 30, 70);
 
   for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
     const r = data[i],
       g = data[i + 1],
       b = data[i + 2];
