@@ -9,7 +9,7 @@ import type { PageDefinition } from '../types';
 export const examples: PageDefinition = {
   title: 'Esempi ANQR',
   description:
-    'Cinque esempi reali, in stile produttivo, che mostrano dove i codici QR creano valore misurabile: potenziamento di un vecchio codice contatore di vendita al dettaglio, pagamenti al dettaglio con marchio e azioni di "scansione", stampa in scala dai volantini ai cartelloni pubblicitari, QR animato per la segnaletica digitale e collaborazione interlinguistica utilizzando collegamenti Anchor condivisibili. Ogni esempio include immagini, vincoli pratici e un collegamento remix al generatore.',
+    'Cinque esempi reali, in stile produttivo, che mostrano dove i codici QR creano valore misurabile: potenziamento di un vecchio codice contatore di vendita al dettaglio, pagamenti al dettaglio con marchio e azioni di \\"scansione\\", stampa in scala dai volantini ai cartelloni pubblicitari, QR animato per la segnaletica digitale e collaborazione interlinguistica utilizzando collegamenti Anchor condivisibili. Ogni esempio include immagini, vincoli pratici e un collegamento remix al generatore.',
   lastUpdated: '1 febbraio 2026',
 
   primaryLinks: [
@@ -323,7 +323,7 @@ export const examples: PageDefinition = {
       heading: 'Integrazione con il contenuto di segnaletica',
       paragraphs: [
         "Il QR animato è stato posizionato in una zona dedicata 'stabile' del layout dello schermo - un'area che rimase costante mentre il contenuto promozionale ruotava nell'area di visualizzazione principale. Questa separazione era cruciale: il QR aveva bisogno di stabilità visiva per la scansione anche attirando l'attenzione attraverso la sua animazione sottile.",
-        "Accanto al QR è stato aggiunto un chiaro invito all'azione: \"Salta la coda: scansiona per effettuare il check-in\". Il testo rimaneva statico mentre il QR pulsava, creando una gerarchia visiva che attirava l'attenzione sull'opportunità di scansione senza sopraffare il contenuto promozionale.",
+        "Accanto al QR è stato aggiunto un chiaro invito all'azione: \\\"Salta la coda: scansiona per effettuare il check-in\\\". Il testo rimaneva statico mentre il QR pulsava, creando una gerarchia visiva che attirava l'attenzione sull'opportunità di scansione senza sopraffare il contenuto promozionale.",
       ],
       images: [
         {

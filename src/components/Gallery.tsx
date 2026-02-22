@@ -24,6 +24,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
 import {
+  buildGalleryRenderImageUrl,
   buildGalleryUrl,
   type GalleryCategory,
   type GalleryItem,
@@ -69,13 +70,35 @@ function GalleryCard({ item }: GalleryCardProps) {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [fallbackStage, setFallbackStage] = useState(0);
+  const primaryImageSrc = useMemo(() => getGalleryImagePath(item), [item]);
+  const [imageSrc, setImageSrc] = useState(primaryImageSrc);
 
-  const imagePath = getGalleryImagePath(item);
   const shareUrl = buildGalleryUrl(item);
   const itemTitle = t(`gallery.items.${item.id}.title`, { defaultValue: item.title });
   const itemDescription = t(`gallery.items.${item.id}.description`, {
     defaultValue: item.description,
   });
+
+  useEffect(() => {
+    setImageError(false);
+    setFallbackStage(0);
+    setImageSrc(primaryImageSrc);
+  }, [primaryImageSrc]);
+
+  const handleImageError = () => {
+    if (fallbackStage === 0) {
+      setFallbackStage(1);
+      setImageSrc(getGalleryImagePath(item, item.isAnimated ? 'png' : 'gif'));
+      return;
+    }
+    if (fallbackStage === 1) {
+      setFallbackStage(2);
+      setImageSrc(buildGalleryRenderImageUrl(item));
+      return;
+    }
+    setImageError(true);
+  };
 
   return (
     <a
@@ -101,11 +124,11 @@ function GalleryCard({ item }: GalleryCardProps) {
             </div>
           ) : (
             <img
-              src={imagePath}
+              src={imageSrc}
               alt={itemTitle}
               className="w-full h-full object-contain"
               loading="lazy"
-              onError={() => setImageError(true)}
+              onError={handleImageError}
             />
           )}
         </div>

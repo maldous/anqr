@@ -42,7 +42,7 @@ export const translate: PageDefinition = {
         'Visita il nostro repository di traduzioni pubbliche su GitHub.',
         'Trova il file della tua lingua (o creane uno nuovo se la tua lingua non è ancora supportata).',
         "Fai clic sull'icona della matita per modificare direttamente nel tuo browser.",
-        'Apporta le modifiche e fai clic su "Proponi modifiche": GitHub creerà automaticamente una richiesta pull.',
+        'Apporta le modifiche e fai clic su \\"Proponi modifiche\\": GitHub creerà automaticamente una richiesta pull.',
         'Il tuo contributo verrà rivisto e unito, in genere entro pochi giorni.',
       ],
     },

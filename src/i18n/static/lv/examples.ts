@@ -126,7 +126,7 @@ export const examples: PageDefinition = {
       heading: 'Maksājumu pieredzes prioritāte',
       paragraphs: [
         'Veikala primārajā maksājuma veidā tika izmantots reģionālais standarts, kas prasīja stingru lietderīgās kravas atbilstību. Testēšana atklāja, ka pat neliela stils ietekmēja skenēšanas ātrumu noteiktās banku lietotnēs. Lēmums: saglabāt maksājuma QR informāciju pilnībā nemodificētu, izņemot izmēru optimizāciju un profesionālu drukāšanu uz matētas kartītes.',
-        'Šī konservatīvā pieeja nozīmēja, ka maksājuma kods izskatījās mazāk "zīmola" nekā ideāls, taču darījumu pabeigšanas rādītāji ievērojami uzlabojās. Ieskats: maksājumu momenti nav zīmola veidošanas iespējas, bet gan uzticamības momenti. Klienti novērtē ātrumu un noteiktību, nevis estētiku, ja ir iesaistīta nauda.',
+        'Šī konservatīvā pieeja nozīmēja, ka maksājuma kods izskatījās mazāk \\"zīmola\\" nekā ideāls, taču darījumu pabeigšanas rādītāji ievērojami uzlabojās. Ieskats: maksājumu momenti nav zīmola veidošanas iespējas, bet gan uzticamības momenti. Klienti novērtē ātrumu un noteiktību, nevis estētiku, ja ir iesaistīta nauda.',
       ],
       images: [
         {
@@ -426,7 +426,7 @@ export const examples: PageDefinition = {
       heading: 'Reģionālo atšķirību apstrāde',
       paragraphs: [
         'Dažiem tirgiem bija nepieciešami nelieli pielāgojumi. Ķīnas komandai sociālajai kopīgošanai bija nepieciešama versija ar WeChat optimizētu rāmi. Tā vietā, lai pārveidotu galveno, viņi izveidoja dokumentētu variantu ar savu konfigurācijas saiti, kas kampaņas līdzekļu bibliotēkā skaidri marķēta kā "CN-WeChat variants". Tas saglabāja izsekojamību, vienlaikus nodrošinot nepieciešamo lokalizāciju.',
-        'Zīmola komanda izveidoja vienkāršu noteikumu: jebkuram maģistra variantam bija nepieciešama jauna, dokumentēta konfigurācijas saite. Nekādu modifikāciju eksportētajos failos, bez "ātro labojumu" projektēšanas programmatūrā. Tas novērsa konfigurācijas novirzi, kas bija nomocījusi iepriekšējās palaišanas reizes.',
+        'Zīmola komanda izveidoja vienkāršu noteikumu: jebkuram maģistra variantam bija nepieciešama jauna, dokumentēta konfigurācijas saite. Nekādu modifikāciju eksportētajos failos, bez \\"ātro labojumu\\" projektēšanas programmatūrā. Tas novērsa konfigurācijas novirzi, kas bija nomocījusi iepriekšējās palaišanas reizes.',
       ],
       images: [
         {

@@ -60,7 +60,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: Tar emot data för att visa och mäta annonser.',
         'Analytics-leverantörer: Ta emot anonymiserad användningsdata.',
         'Netlify (hosting): Behandlar förfrågningar och kan logga IP-adresser.',
-        'Vi säljer inte dina personuppgifter. Men att dela data med annonspartners kan betraktas som en "försäljning" enligt CCPA (se nedan).',
+        'Vi säljer inte dina personuppgifter. Men att dela data med annonspartners kan betraktas som en \\"försäljning\\" enligt CCPA (se nedan).',
       ],
     },
     {
@@ -80,7 +80,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Rätt till åtkomst: Begär en kopia av personuppgifter vi har om dig.',
         'Rätt till rättelse: Begär rättelse av felaktiga uppgifter.',
-        'Rätt till radering: Begär radering av dina uppgifter ("rätten att bli glömd").',
+        'Rätt till radering: Begär radering av dina uppgifter (\\"rätten att bli glömd\\").',
         'Rätt att begränsa behandlingen: Begär begränsningar för hur vi använder dina uppgifter.',
         'Rätt till dataportabilitet: Begär dina data i ett portabelt format.',
         'Rätt till invändning: Invändning mot behandling, inklusive för direktmarknadsföring.',
@@ -100,7 +100,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Rätt att veta: Begär information om insamlade data, källor, syften och tredje part.',
         'Rätt att radera: Begär radering av dina personuppgifter.',
-        'Rätt att välja bort: Välj bort "försäljning" av personlig information (delning med annonspartners kan kvalificera sig).',
+        'Rätt att välja bort: Välj bort \\"försäljning\\" av personlig information (delning med annonspartners kan kvalificera sig).',
         'Rätt till icke-diskriminering: Vi kommer inte att diskriminera för att utöva dina rättigheter.',
       ],
     },
@@ -138,7 +138,7 @@ export const privacy: PageDefinition = {
     {
       heading: 'Ändringar av denna policy',
       paragraphs: [
-        'Vi kan uppdatera denna policy med jämna mellanrum. Datumet "Senast uppdaterad" anger den senaste versionen. Betydande förändringar kan kommuniceras via en webbplatsbanner.',
+        'Vi kan uppdatera denna policy med jämna mellanrum. Datumet \\"Senast uppdaterad\\" anger den senaste versionen. Betydande förändringar kan kommuniceras via en webbplatsbanner.',
       ],
     },
     {

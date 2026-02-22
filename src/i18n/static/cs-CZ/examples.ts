@@ -9,7 +9,7 @@ import type { PageDefinition } from '../types';
 export const examples: PageDefinition = {
   title: 'Příklady ANQR',
   description:
-    'Pět reálných příkladů produkčního stylu, které ukazují, kde QR kódy vytvářejí měřitelnou hodnotu: pozvednutí staršího maloobchodního pultového kódu, značkové maloobchodní platby a akce "scan-to", škálování tisku od letáků po billboardy, animované QR pro digitální značení a spolupráce mezi jazyky pomocí sdílených odkazů Anchor. Každý příklad obsahuje obrázky, praktická omezení a odkaz na remix zpět do generátoru.',
+    'Pět reálných příkladů produkčního stylu, které ukazují, kde QR kódy vytvářejí měřitelnou hodnotu: pozvednutí staršího maloobchodního pultového kódu, značkové maloobchodní platby a akce \\"scan-to\\", škálování tisku od letáků po billboardy, animované QR pro digitální značení a spolupráce mezi jazyky pomocí sdílených odkazů Anchor. Každý příklad obsahuje obrázky, praktická omezení a odkaz na remix zpět do generátoru.',
   lastUpdated: '1. února 2026',
 
   primaryLinks: [
@@ -68,7 +68,7 @@ export const examples: PageDefinition = {
       heading: 'Měřitelné výsledky',
       paragraphs: [
         'Po nasazení nového QR na profesionální mattelaminované kartě, kavárna sledoval výsledky v průběhu čtyř týdnů. Míra úspěšnosti skenování se zlepšila z odhadovaných 70% na téměř 100%. Průměrná doba skenování klesla z 3-4 sekund na méně než 1 sekundu. Nejvýznamnější je, že zapojení do menu vzrostlo o 40% - zákazníci, kteří se již předtím podívali na QR a vzdali se, nyní důvěrně skenovali.',
-        'Zaměstnanci hlásili méně zákaznických otázek o "jak používat QR" a žádné další případy manuálního psaní URL pro frustrované zákazníky. Značkovaný vzhled také rozdmýchával rozhovory, přičemž zákazníci pozitivně komentovali soudržný design.',
+        'Zaměstnanci hlásili méně zákaznických otázek o \\"jak používat QR\\" a žádné další případy manuálního psaní URL pro frustrované zákazníky. Značkovaný vzhled také rozdmýchával rozhovory, přičemž zákazníci pozitivně komentovali soudržný design.',
       ],
       images: [
         {
@@ -126,7 +126,7 @@ export const examples: PageDefinition = {
       heading: 'Priorizace zkušeností s platbou',
       paragraphs: [
         'Metoda primární platby v obchodě použila regionální standard, který vyžadoval přísnou shodu s užitečným zatížením. Testování ukázalo, že i menší styl ovlivňuje rychlost skenování s určitými bankovními aplikacemi. Rozhodnutí: udržujte platební QR zcela nezměněné s výjimkou optimalizace velikosti a profesionálního tisku na matném kartě.',
-        'Tento konzervativní přístup znamenal, že platební kód vypadal méně "značkově" než ideálně, ale míra dokončení transakcí se dramaticky zlepšila. Poznatek: platební momenty nejsou příležitostí k budování značky, ale momenty spolehlivosti. Zákazníci oceňují rychlost a jistotu nad estetikou, když jde o peníze.',
+        'Tento konzervativní přístup znamenal, že platební kód vypadal méně \\"značkově\\" než ideálně, ale míra dokončení transakcí se dramaticky zlepšila. Poznatek: platební momenty nejsou příležitostí k budování značky, ale momenty spolehlivosti. Zákazníci oceňují rychlost a jistotu nad estetikou, když jde o peníze.',
       ],
       images: [
         {
@@ -170,7 +170,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Provozní zlepšení',
       paragraphs: [
-        'Šest týdnů po nasazení obchod dokumentoval významná zlepšení: nulové stížnosti zákazníků na zmatek "chybného kódu", rychlejší časy transakcí a 3x zvýšení tipu podání (zákazníci mohli nyní najít a skenovat tip kód bez rozpačitě požádat zaměstnance). Recenze Google se také zvýšily, protože vyhrazené, dobře označené QR odstranil tření.',
+        'Šest týdnů po nasazení obchod dokumentoval významná zlepšení: nulové stížnosti zákazníků na zmatek \\"chybného kódu\\", rychlejší časy transakcí a 3x zvýšení tipu podání (zákazníci mohli nyní najít a skenovat tip kód bez rozpačitě požádat zaměstnance). Recenze Google se také zvýšily, protože vyhrazené, dobře označené QR odstranil tření.',
         'Školení zaměstnanců se zjednodušilo: Platební kód je velký, všechno ostatní je na panelu. Když byly aktualizovány platební aplikace a jeden krátce ukázal pomalejší skenování, konzervativní návrh platebního kódu znamenal, že stále funguje - jen okrajově pomalejší spíše než selhává úplně.',
         'Viz Příručka pro výuku QR kódů pro maloobchodní platby pro principy za tímto zobrazovacím systémem.',
       ],
@@ -426,7 +426,7 @@ export const examples: PageDefinition = {
       heading: 'Řešení regionálních rozdílů',
       paragraphs: [
         "Některé trhy vyžadovaly menší úpravy. Čínský tým potřeboval verzi s WeChat- optimalizovaným rámcem pro společenské sdílení. Spíše než modifikaci master, oni vytvořili dokumentovanou variantu s vlastním konfiguračním linkem, jasně označený jako 'CN-WeChat varianta' v knihovně majetku kampaně. To udrželo sledovatelnost a zároveň umožnilo nezbytnou lokalizaci.",
-        'Značkový tým vytvořil jednoduché pravidlo: každá změna od mistra vyžadovala nový dokumentovaný konfigurační odkaz. Žádné úpravy exportovaných souborů, žádné "rychlé opravy" v designovém softwaru. To zabránilo konfigurační drift, který sužoval předchozí starty.',
+        'Značkový tým vytvořil jednoduché pravidlo: každá změna od mistra vyžadovala nový dokumentovaný konfigurační odkaz. Žádné úpravy exportovaných souborů, žádné \\"rychlé opravy\\" v designovém softwaru. To zabránilo konfigurační drift, který sužoval předchozí starty.',
       ],
       images: [
         {

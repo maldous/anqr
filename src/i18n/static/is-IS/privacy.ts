@@ -60,7 +60,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: Tekur við gögnum til að birta og mæla auglýsingar.',
         'Greiningarveitendur: Fáðu nafnlaus notkunargögn.',
         'Netlify (hýsing): Vinnur úr beiðnum og gæti skráð IP-tölur.',
-        'Við seljum ekki persónulegar upplýsingar þínar. Hins vegar getur verið litið á það sem "sala" að deila gögnum með auglýsingaaðilum samkvæmt CCPA (sjá hér að neðan).',
+        'Við seljum ekki persónulegar upplýsingar þínar. Hins vegar getur verið litið á það sem \\"sala\\" að deila gögnum með auglýsingaaðilum samkvæmt CCPA (sjá hér að neðan).',
       ],
     },
     {
@@ -80,7 +80,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Réttur til aðgangs: Biddu um afrit af persónuupplýsingum sem við höfum um þig.',
         'Réttur til leiðréttingar: Óska eftir leiðréttingu á ónákvæmum gögnum.',
-        'Réttur til eyðingar: Biddu um eyðingu gagna þinna ("réttur til að gleymast").',
+        'Réttur til eyðingar: Biddu um eyðingu gagna þinna (\\"réttur til að gleymast\\").',
         'Réttur til að takmarka vinnslu: Biðja um takmarkanir á því hvernig við notum gögnin þín.',
         'Réttur til gagnaflutnings: Biddu um gögnin þín á færanlegu sniði.',
         'Andmælaréttur: Andmæla vinnslu, þar með talið vegna beinnar markaðssetningar.',

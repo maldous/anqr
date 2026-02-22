@@ -420,7 +420,7 @@ export const guide: PageDefinition = {
       paragraphs: ['Při použití režimu Halftone mix:'],
       bullets: [
         'Velikost buňky: jeden modul nebo N × N mřížka.',
-        'Dot Shape: Circle, Square, or Line.',
+        'Bodový tvar: Kruh, Čtverec nebo čára.',
         'Křivka jasu: lineární, S- křivka nebo Gamma.',
       ],
     },
@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'Rotace tečky: Otočit moduly diamant / tečka.',
         'Oční měřítko: Nastavení velikosti pro nálezné vzory.',
         'Styl rámu: Přidat dekorativní rámy (kulatý rám, nálepka, štítek).',
-        'Text rámu: Přidat text jako "Scan Me!" do rámů.',
+        'Text rámu: Přidat text jako \\"Scan Me!\\" do rámů.',
       ],
       links: [
         {
@@ -1204,9 +1204,9 @@ export const guide: PageDefinition = {
       heading: 'Příklad HTML',
       paragraphs: [
         'Chcete-li vložit QR kód do vašeho webu:',
-        '< img src = "https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 200" alt = "QR Code" / >',
+        '< img src = \\"https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 200\\" alt = \\"QR Code\\" / >',
         'Reagující velikost:',
-        '< img src = "https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 400" alt = "QR Code" style = "max- width: 100%; výška: auto;" / >',
+        '< img src = \\"https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 400\\" alt = \\"QR Code\\" style = \\"max- width: 100%; výška: auto;\\" / >',
         'Server uchovává odpovědi s dlouhými hlavičkami cache, takže opakované požadavky na stejné URL jsou rychlé.',
       ],
     },

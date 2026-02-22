@@ -8,7 +8,7 @@ import type { PageDefinition } from '../types';
 export const learn: PageDefinition = {
   title: 'Naučte se s ANQR',
   description:
-    'Praktické průvodce pro přeměnu QR kódů na skutečná marketingová aktiva – nejen na funkční čtverce. Naučte se upgradovat starší kódy prodejních míst, vytvořit vyhovující platební QR značení, připravit exporty připravené pro tisk, bezpečně používat animace na digitálních displejích a sdílet uzamčené konfigurace mezi vícejazyčnými týmy pomocí odkazů ANQR ("kotva").',
+    'Praktické průvodce pro přeměnu QR kódů na skutečná marketingová aktiva – nejen na funkční čtverce. Naučte se upgradovat starší kódy prodejních míst, vytvořit vyhovující platební QR značení, připravit exporty připravené pro tisk, bezpečně používat animace na digitálních displejích a sdílet uzamčené konfigurace mezi vícejazyčnými týmy pomocí odkazů ANQR (\\"kotva\\").',
   lastUpdated: '1. února 2026',
 
   primaryLinks: [
@@ -89,7 +89,7 @@ export const learn: PageDefinition = {
       heading: 'Uzamčení konfigurace pro konzistentnost',
       paragraphs: [
         'Jakmile ověříte optimální konfiguraci, uchovejte ji pomocí sdílených odkazů ANQR. To vytváří trvalý záznam o každém nastavení používaném pro generování schváleného kódu - barvy, styl modulu, opravu chyb, velikost a případné překryvy. Sdílejte tento odkaz se svým designovým týmem, tiskem prodejců, a každého, kdo by mohl v budoucnu potřebovat reprodukovat kód.',
-        'Tento konfigurační zámek zabraňuje postupnému degradaci, která postihuje mnoho QR nasazení. Bez něj si zaměstnanci vytvoří kódy z screenshotů, designéři obnoví nastavení z paměti a prodejci tisku provedou "užitečné" úpravy. Každá varianta představuje potenciální problémy. S uzamčeným konfiguračním linkem je každá reprodukce identická s testovaným, schváleným originálem.',
+        'Tento konfigurační zámek zabraňuje postupnému degradaci, která postihuje mnoho QR nasazení. Bez něj si zaměstnanci vytvoří kódy z screenshotů, designéři obnoví nastavení z paměti a prodejci tisku provedou \\"užitečné\\" úpravy. Každá varianta představuje potenciální problémy. S uzamčeným konfiguračním linkem je každá reprodukce identická s testovaným, schváleným originálem.',
       ],
       images: [
         {

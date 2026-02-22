@@ -28,7 +28,7 @@ export const examples: PageDefinition = {
       heading: 'Case Study: Retail Counter QR Uplift',
       paragraphs: [
         'Dit real-world voorbeeld volgt een klein café dat al drie jaar dezelfde QR code op hun toonbank gebruikt. De originele code werd snel gegenereerd tijdens de pandemie rush, gedrukt op standaard papier, en gleed uit in een plastic standaard. Het werkte - technisch gezien - maar klanten hadden vaak meerdere pogingen nodig om het te scannen, en het deed niets om de zorgvuldig gemaakte merkidentiteit van het café te versterken.',
-        "The transformation began with a simple audit: the existing code encoded the café's online menu URL, which they wanted to keep. The challenge was making the QR feel like part of the café experience rather than an afterthought utility from 2020.",
+        'De transformatie begon met een eenvoudige audit: de bestaande code codeerde de online menu-URL van het café, die ze wilden behouden. De uitdaging was om de QR te laten voelen als onderdeel van de café-ervaring in plaats van als een bijzaak uit 2020.',
       ],
       images: [
         {
@@ -72,7 +72,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Meetbare resultaten',
       paragraphs: [
-        'After deploying the new QR on professional matte-laminated card stock, the café tracked results over four weeks. Scan success rate improved from an estimated 70% to near-100%. Average scan time dropped from 3-4 seconds to under 1 second. Most significantly, menu engagement increased 40% - customers who previously glanced at the QR and gave up were now scanning confidently.',
+        'Nadat de nieuwe QR op professioneel, mat gelamineerd karton was geïmplementeerd, volgde het café de resultaten gedurende vier weken. Het slagingspercentage van de scan verbeterde van naar schatting 70% naar bijna 100%. De gemiddelde scantijd daalde van 3-4 seconden naar minder dan 1 seconde. Het belangrijkste was dat de menubetrokkenheid met 40% toenam: klanten die voorheen naar de QR keken en het opgaven, konden nu vol vertrouwen scannen.',
         "Het personeel meldde minder vragen van klanten over 'hoe de QR te gebruiken' en geen gevallen meer van het handmatig typen van de URL voor gefrustreerde klanten. Het merkuiterlijk leidde ook tot gesprekken, waarbij klanten positief reageerden op het samenhangende ontwerp.",
       ],
       images: [

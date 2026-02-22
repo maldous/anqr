@@ -40,7 +40,7 @@ export const privacy: PageDefinition = {
         'Ми показуємо рекламу через Google AdSense. Google та її партнери використовують файли cookie для показу оголошень на основі вашої історії веб-перегляду на цьому та інших веб-сайтах (реклама на основі інтересів).',
         'Дізнайтеся, як Google використовує вашу інформацію: https://policies.google.com/technologies/partner-sites',
         'Керуйте персоналізацією реклами: https://adssettings.google.com',
-        'Відмова через Network Advertising Initiative: https://optout.networkadvertising.org',
+        'Opt out via Network Advertising Initiative: https://optout.networkadvertising.org',
         'Відмовтеся через Digital Advertising Alliance: https://optout.aboutads.info',
       ],
     },

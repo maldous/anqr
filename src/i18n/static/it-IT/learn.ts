@@ -8,7 +8,7 @@ import type { PageDefinition } from '../types';
 export const learn: PageDefinition = {
   title: 'Scopri con ANQR',
   description:
-    'Guide pratiche e business-first per trasformare i codici QR in beni di marketing reali - non solo quadrati funzionali. Scopri come aggiornare i codici del punto di vendita legacy, creare la segnaletica QR di pagamento conforme, preparare le esportazioni di stampa pronti, utilizzare l\'animazione in modo sicuro su display digitali, e condividere le configurazioni bloccate in team multilingue utilizzando i link ANQR ("anchor").',
+    'Guide pratiche e business-first per trasformare i codici QR in beni di marketing reali - non solo quadrati funzionali. Scopri come aggiornare i codici del punto di vendita legacy, creare la segnaletica QR di pagamento conforme, preparare le esportazioni di stampa pronti, utilizzare l\'animazione in modo sicuro su display digitali, e condividere le configurazioni bloccate in team multilingue utilizzando i link ANQR (\\"anchor\\").',
   lastUpdated: '1 febbraio 2026',
 
   primaryLinks: [

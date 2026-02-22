@@ -62,7 +62,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: Tumatanggap ng datos upang magsilbi at sukatin ang mga anunsiyo.',
         'Mga tagapaglaan ng Anatomys: Tumanggap ng mga impormasyon tungkol sa paggamit ng ayonymised.',
         'Netlify (pagbabaybay): Proseso mga kahilingan at maaaring mag - log IP address.',
-        'Hindi namin ipinagbibili ang inyong personal na impormasyon. Gayunman, ang pagbabahagi ng datos sa mga kasosyo sa pag-aanunsiyo ay maaaring ituring na isang "sale" sa ilalim ng CCPA (tingnan sa ibaba).',
+        'Hindi namin ipinagbibili ang inyong personal na impormasyon. Gayunman, ang pagbabahagi ng datos sa mga kasosyo sa pag-aanunsiyo ay maaaring ituring na isang \\"sale\\" sa ilalim ng CCPA (tingnan sa ibaba).',
       ],
     },
     {
@@ -82,7 +82,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Kanang daanan: Humiling ng isang kopya ng personal na impormasyon na dala namin tungkol sa iyo.',
         'Karapatan sa muling pagpapatibay: Humingi ng pagtutuwid sa maling impormasyon.',
-        'Karapatan sa panahon: Humingi ng deleksiyon ng iyong datos ("tamang makalimutan").',
+        'Karapatan sa panahon: Humingi ng deleksiyon ng iyong datos (\\"tamang makalimutan\\").',
         'Karapatang limitahan ang pagproseso: Humingi ng limitasyon kung paano namin gagamitin ang inyong datos.',
         'Karapatan sa portable ng datos: Hilingin ang iyong impormasyon sa isang nabibitbit na format.',
         'Karapatang tumutol: Mahilig sa pagpoproseso, pati na sa tuwirang pagbebenta.',
@@ -102,7 +102,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Kanang malaman: Humingi ng impormasyon tungkol sa natipong impormasyon, mga pinagkunan, mga layunin, at ikatlong partido.',
         'Karapatang magtanggal: Humiling ng pagtanggal ng iyong personal na impormasyon.',
-        'Karapatang pumili-out: Op mula sa "sale" ng personal na impormasyon (maaring maging kuwalipikado ang pakikipag-alyansa sa mga ad partner).',
+        'Karapatang pumili-out: Op mula sa \\"sale\\" ng personal na impormasyon (maaring maging kuwalipikado ang pakikipag-alyansa sa mga ad partner).',
         "Karapatan sa hindi-diskriba: Tayo'y walang pagtatangi sa paggamit ng iyong mga karapatan.",
       ],
     },
@@ -134,13 +134,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Huwag Magmaneho',
       paragraphs: [
-        'Ating pinararangalan ang mga hudyat ng "Deaster browser " kung saan maaari, bagaman ang mga kasosyo sa pag - aanunsiyo ay maaaring hindi tumugon sa DNT.',
+        'Ating pinararangalan ang mga hudyat ng \\"Deaster browser \\" kung saan maaari, bagaman ang mga kasosyo sa pag - aanunsiyo ay maaaring hindi tumugon sa DNT.',
       ],
     },
     {
       heading: 'Mga pagbabago sa patakarang ito',
       paragraphs: [
-        'Maaari nating baguhin sa pana - panahon ang patakarang ito. Ang petsang "Huling panahon" ay nagpapahiwatig ng pinakabagong rebisyon. Mahahalagang pagbabago ang maaaring ipakipag - usap sa pamamagitan ng isang bandila sa site.',
+        'Maaari nating baguhin sa pana - panahon ang patakarang ito. Ang petsang \\"Huling panahon\\" ay nagpapahiwatig ng pinakabagong rebisyon. Mahahalagang pagbabago ang maaaring ipakipag - usap sa pamamagitan ng isang bandila sa site.',
       ],
     },
     {

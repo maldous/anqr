@@ -443,7 +443,7 @@ export const guide: PageDefinition = {
         'డాట్ రొటేషన్: డైమండ్/డాట్ మాడ్యూల్‌లను తిప్పండి.',
         'కంటి స్కేల్: ఫైండర్ నమూనాల కోసం పరిమాణ సర్దుబాటు.',
         'ఫ్రేమ్ శైలి: అలంకరణ ఫ్రేమ్‌లను జోడించండి (రౌండ్డ్ ఫ్రేమ్, స్టిక్కర్, ట్యాగ్).',
-        'ఫ్రేమ్ టెక్స్ట్: "నన్ను స్కాన్ చేయండి!" వంటి వచనాన్ని జోడించండి ఫ్రేమ్‌లకు.',
+        'ఫ్రేమ్ టెక్స్ట్: \\"నన్ను స్కాన్ చేయండి!\\" వంటి వచనాన్ని జోడించండి ఫ్రేమ్‌లకు.',
       ],
       links: [
         {
@@ -1018,7 +1018,7 @@ export const guide: PageDefinition = {
       heading: 'డిథరింగ్ పారామితులు',
       paragraphs: ['ఓవర్‌లే ప్రాసెసింగ్ కోసం డైథరింగ్ అల్గారిథమ్‌లను నియంత్రించండి:'],
       bullets: [
-        'ditherKind: Dither algorithm - error_diffusion, order_bayer, blue_noise, etc (డిఫాల్ట్: order_bayer).',
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, etc (default: ordered_bayer).',
         'diffusionKernel: ఎర్రర్ డిఫ్యూజన్ కెర్నల్ - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (డిఫాల్ట్: floyd_steinberg).',
         'ditherStrength: డైథర్ తీవ్రత 0-100 (డిఫాల్ట్: 50).',
         'సర్పెంటైన్: సర్పెంటైన్ డైథరింగ్ 0/1 (డిఫాల్ట్: 0).',
@@ -1193,9 +1193,9 @@ export const guide: PageDefinition = {
       heading: 'HTML ఉదాహరణ',
       paragraphs: [
         'మీ వెబ్‌సైట్‌లో QR కోడ్‌ను పొందుపరచడానికి:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'ప్రతిస్పందించే పరిమాణం కోసం:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR కోడ్" స్టైల్="గరిష్ట-వెడల్పు: 100%; ఎత్తు: ఆటో;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR కోడ్\\" స్టైల్=\\"గరిష్ట-వెడల్పు: 100%; ఎత్తు: ఆటో;\\" />',
         'సర్వర్ దీర్ఘ కాష్ హెడర్‌లతో ప్రతిస్పందనలను కాష్ చేస్తుంది, కాబట్టి అదే URL కోసం పదేపదే అభ్యర్థనలు వేగంగా ఉంటాయి.',
       ],
     },

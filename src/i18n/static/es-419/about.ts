@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: '¿Qué es ANQR?',
       paragraphs: [
-        'ANQR (pronunciado "anchor") es un generador gratuito de código QR que crea códigos escandalosos para URLs, texto, credenciales Wi-Fi, tarjetas de contacto, eventos calendario y más.',
+        'ANQR (pronunciado \\"anchor\\") es un generador gratuito de código QR que crea códigos escandalosos para URLs, texto, credenciales Wi-Fi, tarjetas de contacto, eventos calendario y más.',
         'Se construye para individuos, pequeñas empresas, marketers y desarrolladores que quieren poderosas herramientas de QR sin registrarse. El primer diseño del cliente significa que los códigos QR se generan localmente en su navegador por defecto, con una API de servidor opcional para la integración e integración profesional.',
       ],
     },

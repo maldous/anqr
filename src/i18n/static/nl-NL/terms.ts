@@ -107,7 +107,7 @@ export const terms: PageDefinition = {
       heading: 'Wijzigingen en beschikbaarheid',
       paragraphs: [
         'We kunnen de site (of een deel ervan) op elk moment wijzigen, opschorten of stopzetten zonder voorafgaande kennisgeving of aansprakelijkheid.',
-        'We kunnen deze Voorwaarden op elk moment bijwerken. De "Laatst bijgewerkt" datum geeft aan wanneer ze het laatst zijn herzien. Voortgezet gebruik na wijzigingen betekent acceptatie.',
+        'We kunnen deze Voorwaarden op elk moment bijwerken. De \\"Laatst bijgewerkt\\" datum geeft aan wanneer ze het laatst zijn herzien. Voortgezet gebruik na wijzigingen betekent acceptatie.',
       ],
     },
     {

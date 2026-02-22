@@ -628,7 +628,8 @@ function useQRGenerator(): UseQRGeneratorResult {
       overlayMode: resolvedOverlayMode,
       overlayIntensity: safetyAdjustedConfig.intensity,
       colorMode: overlay.colorMode,
-      maxOverlayIntensityByEcc: safety.maxOverlayIntensityByEcc,
+      // Avoid hidden ECC clamping in normal mode; only apply explicit safety policy caps.
+      maxOverlayIntensityByEcc: safety.mode === 'off' ? undefined : safety.maxOverlayIntensityByEcc,
       preserveFinders: preservation.preserveFinders,
       preserveTiming: preservation.preserveTiming,
       preserveAlignment: preservation.preserveAlignment,

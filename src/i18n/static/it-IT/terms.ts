@@ -65,7 +65,7 @@ export const terms: PageDefinition = {
     {
       heading: 'Disclaimer di garanzie',
       paragraphs: [
-        'ANQR È PROVVISTO DI UNA "AS IS" E DI UNA "DISPONIBILE" BASIS SENZA ARRIVI DI QUADRO, ESPRESS O IMPLIED, INCLUDENZA MA NON LIMITED ALL\'IMLIED WARRANTIES DI MERCHANTABILITÀ, FITNESS PER UN PURPOSE PARTICOLARE, E NON INFRING.',
+        'ANQR È PROVVISTO DI UNA \\"AS IS\\" E DI UNA \\"DISPONIBILE\\" BASIS SENZA ARRIVI DI QUADRO, ESPRESS O IMPLIED, INCLUDENZA MA NON LIMITED ALL\'IMLIED WARRANTIES DI MERCHANTABILITÀ, FITNESS PER UN PURPOSE PARTICOLARE, E NON INFRING.',
         'Non garantiamo che: (a) il sito sarà ininterrotto, sicuro o privo di errori; (b) i codici QR esegue la scansione in tutti gli ambienti, su tutti i dispositivi, o con tutte le applicazioni dello scanner; (c) il sito soddisferà le vostre esigenze.',
         'È sempre necessario testare i codici QR nelle condizioni in cui saranno utilizzati (dimensione di stampa, illuminazione, tipo di schermo, distanza, qualità della fotocamera).',
       ],
@@ -108,7 +108,7 @@ export const terms: PageDefinition = {
       heading: 'Modifiche e disponibilità',
       paragraphs: [
         'Possiamo modificare, sospendere o interrompere il sito (o qualsiasi parte di esso) in qualsiasi momento senza preavviso o responsabilità.',
-        'Possiamo aggiornare questi Termini in qualsiasi momento. La data "ultimo aggiornamento" indica quando sono stati più recentemente revisionati. L\'uso continuato dopo le modifiche costituisce l\'accettazione.',
+        'Possiamo aggiornare questi Termini in qualsiasi momento. La data \\"ultimo aggiornamento\\" indica quando sono stati più recentemente revisionati. L\'uso continuato dopo le modifiche costituisce l\'accettazione.',
       ],
     },
     {

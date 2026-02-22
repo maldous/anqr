@@ -420,7 +420,7 @@ export const guide: PageDefinition = {
       paragraphs: ['Podczas korzystania z trybu mieszania Halftone:'],
       bullets: [
         'Rozmiar komórki: dla każdego modułu lub siatki N × N.',
-        'Dot Shape: Circle, Square, or Line.',
+        'Kształt kropki: okrąg, kwadrat lub linia.',
         'Krzywa jasności: Liniowa, S- Curve lub Gamma.',
       ],
     },
@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'Rotacja kropki: Obróć moduły diamentowo-kropkowe.',
         'Skala oczu: Dostosowanie rozmiaru dla wzorców znajdowania.',
         'Styl ramki: Dodaj ramy dekoracyjne (Zaokrąglona ramka, Naklejka, Znacznik).',
-        'Tekst ramki: Dodaj tekst jak "Scan Me!" do ramek.',
+        'Tekst ramki: Dodaj tekst jak \\"Scan Me!\\" do ramek.',
       ],
       links: [
         {
@@ -1204,9 +1204,9 @@ export const guide: PageDefinition = {
       heading: 'Przykład HTML',
       paragraphs: [
         'Aby umieścić kod QR na swojej stronie internetowej:',
-        '< img src = "https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 200" alt = "QR Code" / >',
+        '< img src = \\"https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 200\\" alt = \\"QR Code\\" / >',
         'Do pomiaru reakcji:',
-        '< img src = "https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 400" alt = "QR Code" style = "max- width: 100%; height: auto;" / >',
+        '< img src = \\"https: / / anqr.link / api / qr? data = https: / / yoursite.com & size = 400\\" alt = \\"QR Code\\" style = \\"max- width: 100%; height: auto;\\" / >',
         'Serwer zapisuje odpowiedzi z długim nagłówkiem pamięci podręcznej, więc powtarzane żądania dla tego samego adresu URL są szybkie.',
       ],
     },

@@ -264,7 +264,7 @@ export const guide: PageDefinition = {
         'URL αρχείου/έγγραφο: Άμεση σύνδεση σε αρχεία που μπορούν να μεταφορτωθούν.',
         'Cloud Storage Link: Σύνδεσμοι στο Google Drive, Dropbox, OneDrive, κλπ.',
         'Κοινωνικό προφίλ: Σύνδεσμοι στο LinkedIn, Twitter, Instagram, κλπ.',
-        'Messaging Link: WhatsApp, Telegram, Signal deep links.',
+        'Σύνδεσμος ανταλλαγής μηνυμάτων: WhatsApp, Telegram, Σύνδεσμοι σε βάθος.',
       ],
       links: [
         {
@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'Περιστροφή κουκκίδας: Περιστροφή δομοστοιχείων διαμαντιών / κουκκίδων.',
         'Κλίμακα ματιών: Προσαρμογή μεγέθους για σχέδια εύρεσης.',
         'Στυλ πλαισίου: Προσθέστε διακοσμητικά πλαίσια (Rounded Frame, Sticker, Tag).',
-        'Κείμενο πλαισίου: Προσθήκη κειμένου όπως "Scan Me!" σε πλαίσια.',
+        'Κείμενο πλαισίου: Προσθήκη κειμένου όπως \\"Scan Me!\\" σε πλαίσια.',
       ],
       links: [
         {
@@ -812,7 +812,7 @@ export const guide: PageDefinition = {
       bullets: [
         'Crisp άκρα: Χρησιμοποιήστε pixellated απόδοση εικόνας για αιχμηρές άκρες αρθρωμάτων.',
         'Pixel Snap: Floor, Round, or Ceil pixel στοίχιση.',
-        'Per-Module Color Mode: Solid, By Brightness, By Position, By Overlay, By Cluster.',
+        'Λειτουργία χρώματος ανά μονάδα: Στερεά, κατά φωτεινότητα, κατά θέση, κατά επικάλυψη, κατά σύμπλεγμα.',
         'Παλέτα χρωμάτων: Καθορισμός προσαρμοσμένης παλέτας χρωμάτων για χρωματισμό ανά μονάδα.',
         'Φρουρά αντίθεσης: Εξασφάλιση ελάχιστης αναλογίας αντίθεσης μεταξύ των χρωμάτων.',
         'Ελάχιστη αναλογία αντίθεσης: απαίτηση αντίθεσης τύπου WCAG (1:1 έως 21:1).',
@@ -1212,9 +1212,9 @@ export const guide: PageDefinition = {
       heading: 'Παράδειγμα HTML',
       paragraphs: [
         'Για να ενσωματώσετε έναν κωδικό QR στην ιστοσελίδα σας:',
-        '{img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code"/>',
+        '{img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\"/>',
         'Για την απόκριση μεγέθους:',
-        '{img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; ύψος: auto;"',
+        '{img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; ύψος: auto;\\"',
         'Ο διακομιστής αποθηκεύει τις απαντήσεις με μακριές κεφαλίδες cache, έτσι επαναλαμβανόμενες αιτήσεις για το ίδιο URL είναι γρήγορη.',
       ],
     },

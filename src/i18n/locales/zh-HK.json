@@ -1,5 +1,6 @@
 {
   "animation": {
+    "auto": "汽車",
     "blueNoise": "藍色噪音",
     "bounce": "彈跳（乒乓球）",
     "colorCycle": "色彩循環",
@@ -24,13 +25,23 @@
     "randomSeed": "隨機種子",
     "rotate": "旋轉",
     "scanline": "掃描線",
+    "secondaryPattern": "Secondary Pattern",
+    "secondaryTarget": "Secondary Target",
+    "secondaryWaveAxis": "Secondary Wave Axis",
     "shimmer": "微光",
     "slideIn": "滑入",
     "speed": "幀速度",
     "startFrame": "起始幀",
+    "target": "Primary Target",
+    "targetBoth": "Both Layers",
+    "targetModules": "Module Layer",
+    "targetResult": "Result Layer",
     "temporalDither": "時間抖動",
     "wave": "波",
-    "auto": "汽車"
+    "waveAxis": "Wave Axis",
+    "waveAxisX": "X Axis",
+    "waveAxisXY": "X + Y",
+    "waveAxisY": "Y Axis"
   },
   "languages": {
     "en-GB": "英語",
@@ -390,7 +401,7 @@
         "title": "圓點+半色調金色"
       },
       "combo-dots-outline-slate": {
-        "description": "Edge detection with dot modules",
+        "description": "使用點模組進行邊緣檢測",
         "title": "點+輪廓石板"
       },
       "combo-rounded-dithered-royal": {
@@ -430,7 +441,7 @@
         "title": "電子名片聯繫方式"
       },
       "content-wifi": {
-        "description": "WiFi config with dots forest green",
+        "description": "點有森林綠的 WiFi 配置",
         "title": "無線網絡"
       },
       "dither-adaptive-threshold": {
@@ -919,7 +930,7 @@
     "cornerRadius": "圓形模塊的圓角半徑百分比 (0-100%)",
     "crispEdges": "使用像素化渲染來獲得清晰的模塊邊緣",
     "customNote": "以任何格式輸入原始數據。不會應用任何驗證或格​​式設置。",
-    "dotRotation": "Rotate dot-style modules (0-360 degrees)",
+    "dotRotation": "旋轉點式模組（0-360度）",
     "encodingMode": "數據編碼模式 - 自動選擇最有效的模式",
     "enforceMinQuietZone": "強制執行至少 4 個模塊靜區，以獲得更好的掃描可靠性",
     "enterTextContent": "輸入要編碼在二維碼中的文字內容",
@@ -948,7 +959,7 @@
     "normalizeNewlines": "將不同的換行格式轉換為標準格式",
     "outputFormat": "選擇導出的輸出文件格式",
     "paynowNote": "新加坡快速支付系統",
-    "perModuleColor": "How to assign colors to individual modules",
+    "perModuleColor": "如何為各個模組分配顏色",
     "pickBgColor": "單擊以選擇背景顏色",
     "pickFgColor": "單擊以選擇前景色",
     "pixNote": "巴西即時支付系統",
@@ -989,7 +1000,7 @@
     "cashAppNote": "現金應用 $cashtag 付款鏈接",
     "emvGenericNote": "通用 EMVCo MPM QR 碼格式",
     "maxFramesAuto": "0 = 自動（使用源幀，最大 50 以獲得性能）",
-    "paletteMode": "How colors from the palette are assigned to modules"
+    "paletteMode": "如何將調色板中的顏色指派給模組"
   },
   "language": {
     "current": "語言",
@@ -1209,7 +1220,7 @@
     "poor": "可憐",
     "protectionLocks": "防護鎖",
     "qualityAnalysis": "質量分析",
-    "quietZone": "Quiet Zone",
+    "quietZone": "安靜區",
     "safetyMode": "安全模式",
     "scanability": "可掃描性分數",
     "showHeatmap": "顯示熱圖",
@@ -1262,7 +1273,7 @@
     "blendMode": "混合模式",
     "image": "圖片",
     "type": "類型",
-    "quietZone": "Quiet Zone",
+    "quietZone": "安靜區",
     "behindQr": "二維碼背後",
     "bottomLeft": "左下角",
     "bottomRight": "右下角",
@@ -1306,12 +1317,26 @@
     "sending": "正在發送...",
     "privacyNote": "發送消息即表示您同意我們可以使用您的詳細信息進行回复。請參閱隱私政策。",
     "emailUs": "給我們發電子郵件",
-    "emailUsDesc": "Have a question, suggestion, or need help? Send us an email and we'll get back to you.",
+    "emailUsDesc": "有問題、建議或需要協助嗎？給我們發送電子郵件，我們會回覆您。",
     "redditCommunity": "紅迪社區",
     "redditCommunityDesc": "加入我們的 Reddit 社區，分享創作、提出問題並與其他用戶聯繫。",
     "joinReddit": "加入r/ANQR"
   },
   "overlay": {
+    "adaptiveThreshold": "自適應閾值",
+    "artworkMode": "藝術品",
+    "artworkModeInfo": "圖稿模式搜索使 QR 圖案與您的圖像匹配的 URL 片段。結果各不相同 - 最適合簡單、高對比度的圖像。對於復雜的圖像，其他疊加模式（例如抖動或半色調）可能會產生更好的結果。",
+    "artworkRequiresLowEcc": "圖稿模式需要低誤差校正以實現最大像素控制。",
+    "atkinson": "阿特金森",
+    "bayer2": "拜耳2×2",
+    "bayer4": "拜耳 4×4",
+    "bayer8": "拜耳8×8",
+    "blend": "混合",
+    "blendMode": "混合",
+    "blendPreservations": "Blend Preservations",
+    "blendPreservationMode": "Blend Preservation Mode",
+    "blendPreservationModeDither": "Dither In",
+    "blendPreservationModeOverlay": "Overlay Pass-Through",
     "photo": "相機",
     "blueNoise": "藍色噪音",
     "blueNoiseMode": "藍色噪音",
@@ -1320,7 +1345,6 @@
     "waveMode": "波",
     "upload": "上傳",
     "errorDiffusion": "誤差擴散",
-    "atkinson": "阿特金森",
     "burkes": "伯克斯",
     "floydSteinberg": "弗洛伊德-斯坦伯格",
     "jarvisJudiceNinke": "Jarvis-Judice-Ninke",
@@ -1350,12 +1374,6 @@
     "subpixel": "Subpixel",
     "subpixelMode": "Subpixel",
     "gifSettings": "GIF 設置",
-    "adaptiveThreshold": "自適應閾值",
-    "bayer2": "拜耳2×2",
-    "bayer4": "拜耳 4×4",
-    "bayer8": "拜耳8×8",
-    "blend": "混合",
-    "blendMode": "混合",
     "blueNoiseErrorDiffusion": "藍噪聲+誤差擴散",
     "blueNoiseThreshold": "藍色噪聲閾值",
     "blur": "模糊",
@@ -1418,6 +1436,7 @@
     "posterizeLevels": "色調分離級別",
     "preserveAlignment": "保持對齊",
     "preserveFinders": "保留查找器模式",
+    "preservationStrength": "Preservation Strength",
     "preserveTiming": "保留時機",
     "protectFormat": "保護格式信息",
     "protectFormatInfo": "保護格式信息",
@@ -1460,11 +1479,8 @@
     "canny": "精明的",
     "qrFirstMode": "QR優先模式",
     "qrFirstModeHelp": "對於高對比度黑白圖像，強制 QR 數據優先於疊加",
-    "artworkMode": "藝術品",
-    "artworkModeInfo": "圖稿模式搜索使 QR 圖案與您的圖像匹配的 URL 片段。結果各不相同 - 最適合簡單、高對比度的圖像。對於復雜的圖像，其他疊加模式（例如抖動或半色調）可能會產生更好的結果。",
     "searchIterations": "搜索迭代",
-    "searchIterationsHelp": "更多迭代=更好的匹配但生成速度更慢。對於大多數圖像，建議使用 10,000-50,000。",
-    "artworkRequiresLowEcc": "圖稿模式需要低誤差校正以實現最大像素控制。"
+    "searchIterationsHelp": "更多迭代=更好的匹配但生成速度更慢。對於大多數圖像，建議使用 10,000-50,000。"
   },
   "welcome": {
     "title": "歡迎來到ANQR",
@@ -1490,7 +1506,7 @@
     "update2": "包含案例研究和最佳實踐的真實示例",
     "update3": "現在支持 40 多種語言，並提供完整的 UI 翻譯",
     "update4": "增強的安全分析和 ECC 感知覆蓋模式",
-    "update5": "87 谷歌 使用社群翻譯支援播放語言",
+    "update5": "2026 年 1 月 30 日",
     "update6": "新增/翻譯翻譯的頁面",
     "update7": "相機抓取快速覆蓋演示 (Android)",
     "update8": "以圖示網格布局重新设计的移动導航",

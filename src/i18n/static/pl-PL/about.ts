@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'Co to jest ANQR?',
       paragraphs: [
-        'ANQR (wymawiana "kotwica") jest wolnym generatorem kodu QR, który tworzy skanowalne kody adresów URL, tekstowych, Wi- Fi, kart kontaktowych, zdarzeń kalendarzowych i wiele innych.',
+        'ANQR (wymawiana \\"kotwica\\") jest wolnym generatorem kodu QR, który tworzy skanowalne kody adresów URL, tekstowych, Wi- Fi, kart kontaktowych, zdarzeń kalendarzowych i wiele innych.',
         'Jest on zbudowany dla osób indywidualnych, małych firm, marketerów i deweloperów, którzy chcą potężnych narzędzi QR bez logowania się. Klient- pierwszy projekt oznacza kody QR są generowane lokalnie w przeglądarce domyślnie, z opcjonalnym serwerem API do profesjonalnego osadzania i integracji.',
       ],
     },

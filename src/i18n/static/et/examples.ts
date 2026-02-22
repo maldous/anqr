@@ -126,7 +126,7 @@ export const examples: PageDefinition = {
       heading: 'Maksekogemuse eelistamine',
       paragraphs: [
         'Poe peamine makseviis kasutas piirkondlikku standardit, mis nõudis kasuliku koormuse ranget järgimist. Testimine näitas, et isegi väike stiil mõjutas teatud pangarakenduste skannimise kiirust. Otsus: hoida makse QR täielikult muutmata, välja arvatud suuruse optimeerimine ja professionaalne printimine mattkaardile.',
-        'See konservatiivne lähenemine tähendas, et maksekood nägi välja vähem "kaubamärgiga" kui ideaalne, kuid tehingute lõpetamise määr paranes dramaatiliselt. Ülevaade: maksehetked ei ole brändingu võimalused – need on usaldusväärsuse hetked. Kliendid hindavad raha puhul kiirust ja kindlust esteetika asemel.',
+        'See konservatiivne lähenemine tähendas, et maksekood nägi välja vähem \\"kaubamärgiga\\" kui ideaalne, kuid tehingute lõpetamise määr paranes dramaatiliselt. Ülevaade: maksehetked ei ole brändingu võimalused – need on usaldusväärsuse hetked. Kliendid hindavad raha puhul kiirust ja kindlust esteetika asemel.',
       ],
       images: [
         {
@@ -170,8 +170,8 @@ export const examples: PageDefinition = {
     {
       heading: 'Tegevuse täiustused',
       paragraphs: [
-        'Kuus nädalat pärast kasutuselevõttu dokumenteeris pood olulisi täiustusi: klientide kaebuste puudumine "vale koodi" segaduse kohta, kiirem tehinguaeg ja 3-kordne vihjete esitamise arv (kliendid said nüüd vihjekoodi leida ja skannida ilma töötajatelt kohmakalt küsimata). Google\'i arvustused suurenesid ka, kuna spetsiaalne, hästi märgistatud QR eemaldas hõõrdumise.',
-        'Töötajate koolitus muutus lihtsamaks: "maksekood on suur, kõik muu on paneelil." Kui makserakendusi värskendati ja üks näitas korraks aeglasemat skannimist, siis konservatiivne maksekoodi kujundus tähendas, et see ikkagi töötas – pigem veidi aeglasemalt, kui täielikult ebaõnnestus.',
+        'Kuus nädalat pärast kasutuselevõttu dokumenteeris pood olulisi täiustusi: klientide kaebuste puudumine \\"vale koodi\\" segaduse kohta, kiirem tehinguaeg ja 3-kordne vihjete esitamise arv (kliendid said nüüd vihjekoodi leida ja skannida ilma töötajatelt kohmakalt küsimata). Google\'i arvustused suurenesid ka, kuna spetsiaalne, hästi märgistatud QR eemaldas hõõrdumise.',
+        'Töötajate koolitus muutus lihtsamaks: \\"maksekood on suur, kõik muu on paneelil.\\" Kui makserakendusi värskendati ja üks näitas korraks aeglasemat skannimist, siis konservatiivne maksekoodi kujundus tähendas, et see ikkagi töötas – pigem veidi aeglasemalt, kui täielikult ebaõnnestus.',
         'Selle kuvasüsteemi kujunduse põhimõtete kohta vaadake jaemaksete QR-koodide õppimise juhendit.',
       ],
       images: [
@@ -215,7 +215,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Miks oli eelmistel sündmustel probleeme?',
       paragraphs: [
-        'Nende viimasel konverentsil oli ettevõte kogenud piinlikke ebaõnnestumisi. Lavabänner QR genereeriti väikese PNG-vormingus ja suurendati disainitarkvaras – tulemus tundus eemalt vaadates vastuvõetav, kuid seda ei õnnestunud publikult usaldusväärselt skaneerida. Märgi QR-koodid olid liiga kujundatud ja liiga väikesed, tekitades kontaktide lisamisel osalejaid masendavalt. Ebajärjekindlad seaded vormingute lõikes tähendasid, et "sama" QR nägi tegelikult iga tüki puhul erinev välja.',
+        'Nende viimasel konverentsil oli ettevõte kogenud piinlikke ebaõnnestumisi. Lavabänner QR genereeriti väikese PNG-vormingus ja suurendati disainitarkvaras – tulemus tundus eemalt vaadates vastuvõetav, kuid seda ei õnnestunud publikult usaldusväärselt skaneerida. Märgi QR-koodid olid liiga kujundatud ja liiga väikesed, tekitades kontaktide lisamisel osalejaid masendavalt. Ebajärjekindlad seaded vormingute lõikes tähendasid, et \\"sama\\" QR nägi tegelikult iga tüki puhul erinev välja.',
         'Sündmusejärgne analüüs paljastas algpõhjuse: ühest tõeallikast polnud. Iga disainer oli QR-i uuesti loonud veidi erinevate sätetega ja iga prindimüüja oli faile erinevalt töötlenud. Failide üleandmise telefonimäng halvenes kvaliteeti.',
       ],
       images: [
@@ -320,7 +320,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Integreerimine märgistussisuga',
       paragraphs: [
-        'Animeeritud QR paigutati ekraanipaigutuse spetsiaalsesse "stabiilsesse tsooni" – piirkonda, mis jäi samaks, samal ajal kui reklaamsisu peamisel kuvaalal pöörles. See eraldamine oli ülioluline: QR vajas skannimiseks visuaalset stabiilsust isegi siis, kui tõmbas tähelepanu oma peene animatsiooniga.',
+        'Animeeritud QR paigutati ekraanipaigutuse spetsiaalsesse \\"stabiilsesse tsooni\\" – piirkonda, mis jäi samaks, samal ajal kui reklaamsisu peamisel kuvaalal pöörles. See eraldamine oli ülioluline: QR vajas skannimiseks visuaalset stabiilsust isegi siis, kui tõmbas tähelepanu oma peene animatsiooniga.',
         'QR-koodi kõrvale lisati selge üleskutse: „Jäta järjekord vahele – sisseregistreerimiseks skanni". Tekst jäi QR pulseerimise ajal staatiliseks, luues visuaalse hierarhia, mis tõmbas pilgu skannimisvõimalusele ilma reklaamisisu üle koormamata.',
       ],
       images: [
@@ -350,7 +350,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Mõõdetud mõju',
       paragraphs: [
-        'Pärast ühekuulist tegutsemist kasvas QR-registri kasutuselevõtt 15%-lt 24%-le – suhteline paranemine on 60%. Külaliste tagasiside küsitlused näitasid, et animeeritud QR oli "kergemini märgatav" ja "tundus kaasaegsem". Lauajärjekorraajad vähenesid mõõdetavalt tippperioodidel, kuna rohkem külalisi teenindas QR-i kaudu iseteenindust.',
+        'Pärast ühekuulist tegutsemist kasvas QR-registri kasutuselevõtt 15%-lt 24%-le – suhteline paranemine on 60%. Külaliste tagasiside küsitlused näitasid, et animeeritud QR oli \\"kergemini märgatav\\" ja \\"tundus kaasaegsem\\". Lauajärjekorraajad vähenesid mõõdetavalt tippperioodidel, kuna rohkem külalisi teenindas QR-i kaudu iseteenindust.',
         'Oluline on see, et vaatamata tuhandetele igapäevastele skannimistele ei teatatud ühtegi skannimistõrget. Konservatiivne animatsioon oli saavutanud tähelepanu eesmärgi, ohverdamata registreerimisvoo usaldusväärsust. Seejärel levitas salong sarnaseid animeeritud QR-e oma teistesse asukohtadesse.',
         'Turvalise animatsiooni kujundamise tehniliste põhimõtete kohta vaadake juhendit Learn juhendist animeeritud QR-koodide kohta digitaalsete märgistuste jaoks.',
       ],
@@ -380,7 +380,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Juhtumiuuring: globaalne toote käivitamise QR-kampaania',
       paragraphs: [
-        'See näide järgib olmeelektroonikaettevõtet, kes toob üheaegselt turule uue toote 12 turul 8 keeles. Iga piirkondlik turundusmeeskond pidi tootma pakendeid, jaemüügiväljapanekuid ja reklaammaterjale, mis sisaldasid QR-koode, mis viivad lokaliseeritud tootelehtedele. Varasemad käivitamised olid toonud kaasa ebaühtlase QR-stiili, aeg-ajalt skannimise tõrkeid ja konfiguratsiooni triivimise "telefonimängu", kuna iga meeskond lõi ekraanipiltidest koode uuesti.',
+        'See näide järgib olmeelektroonikaettevõtet, kes toob üheaegselt turule uue toote 12 turul 8 keeles. Iga piirkondlik turundusmeeskond pidi tootma pakendeid, jaemüügiväljapanekuid ja reklaammaterjale, mis sisaldasid QR-koode, mis viivad lokaliseeritud tootelehtedele. Varasemad käivitamised olid toonud kaasa ebaühtlase QR-stiili, aeg-ajalt skannimise tõrkeid ja konfiguratsiooni triivimise \\"telefonimängu\\", kuna iga meeskond lõi ekraanipiltidest koode uuesti.',
         'Lahendus kasutas ANQR-i jagatavaid konfiguratsioonilinke, et luua ühtne tõeallikas, millele pääses juurde iga piirkondlik meeskond, olenemata liidese keelest. QR-koormus kasutas nutikat ümbersuunamist, mis tuvastas kasutaja keele, nii et üks kood töötas lokaliseeritud kasutuskogemuse pakkumisel globaalselt.',
       ],
       images: [
@@ -426,7 +426,7 @@ export const examples: PageDefinition = {
       heading: 'Piirkondlike erinevuste käsitlemine',
       paragraphs: [
         'Mõned turud vajasid väiksemaid kohandusi. Hiina meeskond vajas sotsiaalseks jagamiseks WeChati jaoks optimeeritud raamiga versiooni. Põhifaili muutmise asemel lõid nad oma konfiguratsioonilingiga dokumenteeritud variandi, mis oli kampaania varade teegis selgelt märgistatud kui „CN-WeChati variant". See säilitas jälgitavuse, võimaldades samal ajal vajalikku lokaliseerimist.',
-        'Brändimeeskond kehtestas lihtsa reegli: mis tahes variatsioon meistrilt nõudis uut dokumenteeritud konfiguratsioonilinki. Eksporditud failides ei tehta muudatusi, disainitarkvaras pole "kiirparandusi". See hoidis ära konfiguratsiooni triivi, mis oli varasemaid käivitamisi vaevanud.',
+        'Brändimeeskond kehtestas lihtsa reegli: mis tahes variatsioon meistrilt nõudis uut dokumenteeritud konfiguratsioonilinki. Eksporditud failides ei tehta muudatusi, disainitarkvaras pole \\"kiirparandusi\\". See hoidis ära konfiguratsiooni triivi, mis oli varasemaid käivitamisi vaevanud.',
       ],
       images: [
         {

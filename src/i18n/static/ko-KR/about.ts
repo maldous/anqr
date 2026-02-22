@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'ANQR이란?',
       paragraphs: [
-        'ANQR (pronounced "anchor")는 URL, 텍스트, Wi-Fi 자격 증명, 연락처 카드, 캘린더 이벤트 등을 위해 스캔 가능한 코드를 생성하는 무료 QR 코드 생성기입니다.',
+        'ANQR (pronounced \\"anchor\\")는 URL, 텍스트, Wi-Fi 자격 증명, 연락처 카드, 캘린더 이벤트 등을 위해 스캔 가능한 코드를 생성하는 무료 QR 코드 생성기입니다.',
         '로그인 없이 강력한 QR 도구를 원하는 개인, 소규모 기업, 시장, 개발자를 위해 제작되었습니다. 클라이언트 첫번째 디자인은 QR 부호가 기본적으로 브라우저에서 로컬로 생성되고, 직업적인 embedding와 통합을 위한 선택적인 서버 API와 더불어.',
       ],
     },

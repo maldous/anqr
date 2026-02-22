@@ -62,7 +62,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: Odbiera dane do obsługi i pomiaru reklam.',
         'Dostawcy analityków: Otrzymuj dane dotyczące anonimowego wykorzystania.',
         'Netalify (hosting): Przetwarza wnioski i może logować adresy IP.',
-        'Nie sprzedajemy twoich danych osobowych. Jednak wymiana danych z partnerami reklamowymi może być uznana za "sprzedaż" w ramach CCPA (zob. poniżej).',
+        'Nie sprzedajemy twoich danych osobowych. Jednak wymiana danych z partnerami reklamowymi może być uznana za \\"sprzedaż\\" w ramach CCPA (zob. poniżej).',
       ],
     },
     {
@@ -82,7 +82,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Prawo dostępu: Proszę o kopię danych osobowych, które o panu mamy.',
         'Prawo do sprostowania: Proszę o skorygowanie nieprawidłowych danych.',
-        'Prawo do usunięcia: Żądaj usunięcia danych ("prawo do bycia zapomnianym").',
+        'Prawo do usunięcia: Żądaj usunięcia danych (\\"prawo do bycia zapomnianym\\").',
         'Prawo do ograniczenia przetwarzania: Prośba o ograniczenie korzystania z Państwa danych.',
         'Prawo do przenoszenia danych: Poproś o dane w przenośnym formacie.',
         'Prawo do sprzeciwu: Przedmiot przetwarzania, w tym do marketingu bezpośredniego.',
@@ -102,7 +102,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Prawo wiedzieć: Proszę o informacje dotyczące zgromadzonych danych, źródeł, celów i stron trzecich.',
         'Prawo do usunięcia: Proszę o usunięcie danych osobowych.',
-        'Prawo do opt- out: Wyłączenie z "sprzedaży" danych osobowych (wymiana z partnerami reklamowymi może się kwalifikować).',
+        'Prawo do opt- out: Wyłączenie z \\"sprzedaży\\" danych osobowych (wymiana z partnerami reklamowymi może się kwalifikować).',
         'Prawo do niedyskryminacji: Nie będziemy dyskryminować państwa praw.',
       ],
     },
@@ -134,13 +134,13 @@ export const privacy: PageDefinition = {
     {
       heading: 'Nie śledź',
       paragraphs: [
-        'Jeśli to możliwe, honorujemy sygnały przeglądarki "Nie śledź", chociaż partnerzy reklamowi mogą nie odpowiadać na DNT.',
+        'Jeśli to możliwe, honorujemy sygnały przeglądarki \\"Nie śledź\\", chociaż partnerzy reklamowi mogą nie odpowiadać na DNT.',
       ],
     },
     {
       heading: 'Zmiany w tej polityce',
       paragraphs: [
-        'Możemy okresowo aktualizować tę politykę. Data "Last updated" wskazuje najnowszą wersję. Znaczące zmiany mogą być przekazywane za pośrednictwem banera witryny.',
+        'Możemy okresowo aktualizować tę politykę. Data \\"Last updated\\" wskazuje najnowszą wersję. Znaczące zmiany mogą być przekazywane za pośrednictwem banera witryny.',
       ],
     },
     {

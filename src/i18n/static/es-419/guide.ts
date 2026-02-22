@@ -162,7 +162,7 @@ export const guide: PageDefinition = {
       ],
     },
     {
-      heading: 'Pautas de alineación "',
+      heading: 'Pautas de alineación \\"',
       paragraphs: [
         'Los patrones de alineación aparecen en códigos QR más grandes (versión 2+) para ayudar a corregir la distorsión. Los patrones de sincronización son las líneas alternantes que conectan patrones de búsqueda.',
       ],
@@ -264,7 +264,7 @@ export const guide: PageDefinition = {
         'Archivo/Document URL: Enlace directo a archivos descargables.',
         'Enlace de almacenamiento en la nube: Enlaces a Google Drive, Dropbox, OneDrive, etc.',
         'Perfil social: Enlaces a LinkedIn, Twitter, Instagram, etc.',
-        'Messaging Link: WhatsApp, Telegram, Signal deep links.',
+        'Enlace de mensajería: WhatsApp, Telegram, enlaces profundos de Signal.',
       ],
       links: [
         {
@@ -373,7 +373,7 @@ export const guide: PageDefinition = {
       bullets: [
         'Difusión de error: estilo clásico Floyd-Steinberg. Difunde error de cuantificación a píxeles vecinos.',
         'Pedido (Bayer): Usa una matriz de umbral para patrones regulares.',
-        'Clustered Dot: Simulates halftone printing.',
+        'Punto agrupado: simula la impresión de medios tonos.',
         'Void & Cluster: Optimizado orden de separación.',
         'Blue Noise: Patrón visualmente agradable al azar.',
         'Blue Noise Umbral: Colgando con textura de ruido azul.',
@@ -452,7 +452,7 @@ export const guide: PageDefinition = {
         'Rotación de puntos: Rotar los módulos de diamante / puntos.',
         'Escala de ojos: Ajuste de tamaño para los patrones del buscador.',
         'Estilo de marco: Agregue marcos decorativos (frame resonado, pegatina, etiqueta).',
-        'Texto del marco: Añadir texto como "Scan Me!" a marcos.',
+        'Texto del marco: Añadir texto como \\"Scan Me!\\" a marcos.',
       ],
       links: [
         {
@@ -575,7 +575,7 @@ export const guide: PageDefinition = {
     },
     {
       heading: 'Análisis de seguridad',
-      paragraphs: ['Ensure QR codes remain scannable:'],
+      paragraphs: ['Asegúrese de que los códigos QR sigan siendo escaneables:'],
       bullets: [
         'Modo de seguridad: Desactivados, equilibrados o estrictos requisitos de escaneo.',
         'Min Module Tamaño: Tamaño mínimo del píxel por módulo.',
@@ -1214,9 +1214,9 @@ export const guide: PageDefinition = {
       heading: 'Ejemplo de HTML',
       paragraphs: [
         'Para incrustar un código QR en su sitio web:',
-        '■img src="https://anqr.link/api/qr?data=https://yoursite.com adultsize=200" alt="QR Code" / titulado',
+        '■img src=\\"https://anqr.link/api/qr?data=https://yoursite.com adultsize=200\\" alt=\\"QR Code\\" / titulado',
         'Para el tamaño sensible:',
-        '■img src="https://anqr.link/api/qr?data=https://yoursite.com adultsize=400" alt="QR Code" style="max-width: 100%; height: auto;" / confidencial',
+        '■img src=\\"https://anqr.link/api/qr?data=https://yoursite.com adultsize=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" / confidencial',
         'Las respuestas del servidor con cabeceras de caché largas, por lo que las solicitudes repetidas para la misma URL son rápidas.',
       ],
     },
@@ -1281,7 +1281,7 @@ export const guide: PageDefinition = {
       ],
     },
     {
-      heading: 'Compartir " Embedding "',
+      heading: 'Compartir \\" Embedding \\"',
       paragraphs: [
         'En modo Profesional, haga clic en el botón Compartir para copiar una URL con la configuración actual. Los destinatarios pueden abrir esta URL para ver su configuración exacta. Nota: Las imágenes superpuestas de los archivos locales no pueden ser compartidas por URL.',
       ],

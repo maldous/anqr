@@ -42,7 +42,7 @@ export const translate: PageDefinition = {
         'Heimsæktu opinbera þýðingargagnageymsluna okkar á GitHub.',
         'Finndu tungumálaskrána þína (eða búðu til nýja ef tungumálið þitt er ekki enn stutt).',
         'Smelltu á blýantartáknið til að breyta beint í vafranum þínum.',
-        'Gerðu breytingar þínar og smelltu á "Stinga til breytinga" - GitHub mun sjálfkrafa búa til dráttarbeiðni.',
+        'Gerðu breytingar þínar og smelltu á \\"Stinga til breytinga\\" - GitHub mun sjálfkrafa búa til dráttarbeiðni.',
         'Framlag þitt verður skoðað og sameinað, venjulega innan nokkurra daga.',
       ],
     },

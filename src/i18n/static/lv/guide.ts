@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'Punktu pagriešana: pagrieziet dimanta/punktu moduļus.',
         'Eye Scale: izmēra pielāgošana meklētāja modeļiem.',
         'Rāmja stils: pievienojiet dekoratīvos rāmjus (noapaļots rāmis, uzlīme, etiķete).',
-        'Rāmja teksts: pievienojiet tekstu, piemēram, "Skenēt mani!" uz rāmjiem.',
+        'Rāmja teksts: pievienojiet tekstu, piemēram, \\"Skenēt mani!\\" uz rāmjiem.',
       ],
       links: [
         {
@@ -1204,9 +1204,9 @@ export const guide: PageDefinition = {
       heading: 'HTML piemērs',
       paragraphs: [
         'Lai savā vietnē iegultu QR kodu:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR kods" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR kods\\" />',
         'Adaptīvai izmēra noteikšanai:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR kods" style="maksimālais platums: 100%; augstums: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR kods\\" style=\\"maksimālais platums: 100%; augstums: auto;\\" />',
         'Serveris kešatmiņā saglabā atbildes ar garām kešatmiņas galvenēm, tāpēc atkārtoti pieprasījumi par vienu un to pašu URL ir ātri.',
       ],
     },

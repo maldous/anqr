@@ -34,7 +34,7 @@ export const contact: PageDefinition = {
       heading: 'Mga Panahon ng Pagtugon',
       paragraphs: [
         'Layunin naming tumugon sa mga enquiry sa loob ng 5-7 na araw ng negosyo. Pribadong-relatibong mga kahilingan ay sasagutin sa loob ng 30 araw gaya ng hinihiling ng batas.',
-        'Sa abalang mga panahon, ang panahon ng pagtugon ay maaaring mas mahaba. Para sa mga bagay na apurahan, pakisuyong ipahiwatig ang "URGENT" sa iyong paksa.',
+        'Sa abalang mga panahon, ang panahon ng pagtugon ay maaaring mas mahaba. Para sa mga bagay na apurahan, pakisuyong ipahiwatig ang \\"URGENT\\" sa iyong paksa.',
       ],
     },
     {
@@ -61,7 +61,7 @@ export const contact: PageDefinition = {
       heading: 'Pakikipag - ugnayan sa DMCA',
       paragraphs: [
         'Magpadala ng mga patalastas sa DMCA: ',
-        'Pakisuyong isama ang "DMCA Note" sa linyang pantelebisyon. Tayo\'y tutugon sa makatuwirang mga babala ayon sa kapit na batas. Pansinin na ang ANQR ay lumilikha ng QR code sa mga user device at hindi naglalaman ng user-generated nilalaman.',
+        'Pakisuyong isama ang \\"DMCA Note\\" sa linyang pantelebisyon. Tayo\'y tutugon sa makatuwirang mga babala ayon sa kapit na batas. Pansinin na ang ANQR ay lumilikha ng QR code sa mga user device at hindi naglalaman ng user-generated nilalaman.',
       ],
     },
     {

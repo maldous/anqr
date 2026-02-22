@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'Ano ba ang ANQR?',
       paragraphs: [
-        'Ang ANQR (binibigkas na "anchor") ay isang libreng QR code generator na lumilikha ng mga kodigong scannable para sa mga URL, teksto, mga kredensiyal ng Wi-Fi, mga contact card, mga kaganapan sa kalendaryo, at higit pa.',
+        'Ang ANQR (binibigkas na \\"anchor\\") ay isang libreng QR code generator na lumilikha ng mga kodigong scannable para sa mga URL, teksto, mga kredensiyal ng Wi-Fi, mga contact card, mga kaganapan sa kalendaryo, at higit pa.',
         'Ito ay itinatayo para sa mga indibiduwal, maliliit na negosyo, mga marketer, at mga developer na nagnanais ng malakas na mga kasangkapan ng QR nang hindi pumipirma. Ang client-first design ay nangangahulugang QR codes ay lokal na nalilikha sa inyong browser sa pamamagitan ng default, na may opsyonal na server API para sa propesyonal na embending at pagsasanib.',
       ],
     },

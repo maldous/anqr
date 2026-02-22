@@ -60,7 +60,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: Přijímá data pro obsluhu a měření reklam.',
         'Poskytovatelé analýz: Příjem anonymizovaných údajů o používání.',
         'Netlify (hosting): Zpracovává žádosti a může přihlásit IP adresy.',
-        'Vaše osobní údaje neprodáváme. Sdílení údajů s reklamními partnery však lze považovat za "prodej" v rámci CCPA (viz níže).',
+        'Vaše osobní údaje neprodáváme. Sdílení údajů s reklamními partnery však lze považovat za \\"prodej\\" v rámci CCPA (viz níže).',
       ],
     },
     {
@@ -80,7 +80,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Právo na přístup: Vyžádejte si kopii osobních údajů, které o vás máme.',
         'Právo na opravu: Žádost o opravu nepřesných údajů.',
-        'Právo na vymazání: Žádost o vymazání Vašich dat ("právo na zapomenutí").',
+        'Právo na vymazání: Žádost o vymazání Vašich dat (\\"právo na zapomenutí\\").',
         'Právo omezit zpracování: Požadavek omezení, jak používat vaše data.',
         'Právo na přenositelnost dat: Vyžádejte si data v přenosném formátu.',
         'Právo na námitku: Předmět zpracování, včetně přímého uvádění na trh.',
@@ -100,7 +100,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Právo vědět: Vyžádat si informace o shromážděných údajích, zdrojích, cílech a třetích stranách.',
         'Právo na vymazání: Žádám o vymazání vašich osobních údajů.',
-        'Právo opt- out: Vyloučení z "prodeje" osobních údajů (sdílení s reklamními partnery může být způsobilé).',
+        'Právo opt- out: Vyloučení z \\"prodeje\\" osobních údajů (sdílení s reklamními partnery může být způsobilé).',
         'Právo na nediskriminaci: Nebudeme diskriminovat za výkon vašich práv.',
       ],
     },
@@ -138,7 +138,7 @@ export const privacy: PageDefinition = {
     {
       heading: 'Změny této politiky',
       paragraphs: [
-        'Tuto politiku můžeme pravidelně aktualizovat. Datum "Poslední aktualizace" označuje poslední revizi. Významné změny mohou být sděleny prostřednictvím banneru.',
+        'Tuto politiku můžeme pravidelně aktualizovat. Datum \\"Poslední aktualizace\\" označuje poslední revizi. Významné změny mohou být sděleny prostřednictvím banneru.',
       ],
     },
     {

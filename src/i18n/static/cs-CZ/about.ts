@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'Co je ANQR?',
       paragraphs: [
-        'ANQR (vyslovená "kotva") je svobodný QR kód generátor, který vytváří scannable kódy pro URL, text, Wi-Fi pověření, kontaktní karty, kalendář události a další.',
+        'ANQR (vyslovená \\"kotva\\") je svobodný QR kód generátor, který vytváří scannable kódy pro URL, text, Wi-Fi pověření, kontaktní karty, kalendář události a další.',
         'Je postaven pro jednotlivce, malé podniky, obchodníci, a vývojáři, kteří chtějí výkonné QR nástroje bez přihlášení. Klient- první design znamená, že QR kódy jsou generovány lokálně ve vašem prohlížeči ve výchozím nastavení, s volitelným serverem API pro profesionální vkládání a integraci.',
       ],
     },

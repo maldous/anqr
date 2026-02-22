@@ -454,7 +454,7 @@ export const guide: PageDefinition = {
         'წერტილის როტაცია: დაატრიალეთ ალმასის/წერტილების მოდულები.',
         'თვალის სასწორი: ზომის კორექტირება მპოვნელის შაბლონებისთვის.',
         'ჩარჩოს სტილი: დაამატეთ დეკორატიული ჩარჩოები (მომრგვალებული ჩარჩო, სტიკერი, ტეგი).',
-        'ჩარჩოს ტექსტი: დაამატეთ ტექსტი, როგორიცაა "ჩემი სკანირება!" ჩარჩოებამდე.',
+        'ჩარჩოს ტექსტი: დაამატეთ ტექსტი, როგორიცაა \\"ჩემი სკანირება!\\" ჩარჩოებამდე.',
       ],
       links: [
         {
@@ -481,7 +481,7 @@ export const guide: PageDefinition = {
         'ფაილის სახელი: მორგებული ფაილის სახელი ჩამოტვირთვებისთვის.',
         'GIF პალიტრის ზომა: 2-256 ფერი GIF გამოსავალში.',
         'GIF Quantizer: Median Cut, NeuQuant ან Octree ფერის შემცირება.',
-        'GIF Dithering: Off, Floyd-Steinberg, ან Ordered.',
+        'გიფ დითერინგი: გამორთული, ფლოიდ-შტაინბერგი ან დალაგებული.',
         'GIF გამჭვირვალე ფერი: დააყენეთ ფერი გამჭვირვალედ.',
         'SVG True Vector: გამოიყენეთ ბილიკები ჩაშენებული რასტერის ნაცვლად.',
         'SVG ფორმის სიზუსტე: პიქსელი ან ზუსტი ბილიკის რენდერი.',
@@ -1212,9 +1212,9 @@ export const guide: PageDefinition = {
       heading: 'HTML მაგალითი',
       paragraphs: [
         'თქვენს ვებსაიტზე QR კოდის ჩასართავად:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR კოდი" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR კოდი\\" />',
         'საპასუხო ზომისთვის:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'სერვერი ინახავს პასუხებს გრძელი ქეშის სათაურებით, ამიტომ განმეორებითი მოთხოვნა იმავე URL-ზე სწრაფია.',
       ],
     },

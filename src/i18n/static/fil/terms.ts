@@ -64,7 +64,7 @@ export const terms: PageDefinition = {
     {
       heading: 'Hindi pag - aangkin ng mga warranty',
       paragraphs: [
-        'ANG ANQR AY NATATANDAAN SA ISANG "AS IS" AT "AS AVAILLE" BASAN MAY WALANG MGA KARUNUNGAN SA WALANG KASAMAAN, EKSPRILES O IMPLIED, INCLUDING PENTURISTA SA IMPLENYANG MGA KARUNUNGAN NG MERCHANTABILON, PAGTAPATAN PARA SA ISANG PROKUWERTO, AT NON-INFREMENTO.',
+        'ANG ANQR AY NATATANDAAN SA ISANG \\"AS IS\\" AT \\"AS AVAILLE\\" BASAN MAY WALANG MGA KARUNUNGAN SA WALANG KASAMAAN, EKSPRILES O IMPLIED, INCLUDING PENTURISTA SA IMPLENYANG MGA KARUNUNGAN NG MERCHANTABILON, PAGTAPATAN PARA SA ISANG PROKUWERTO, AT NON-INFREMENTO.',
         'Hindi natin ipinag-uutos na: (a) ang site ay hindi i-interrupted, secure, o error-free; (b) Ang mga QR code ay mag-eeksperimento sa lahat ng mga kapaligiran, sa lahat ng mga aparato, o sa lahat ng mga aplikasyon ng scanner; (c) ang site ay makatutugon sa iyong mga kahilingan.',
         'Dapat mong laging subukin ang QR codes sa mga kondisyon kung saan ito gagamitin (print sukat, lighting, screen type, distance, kalidad ng kamera).',
       ],
@@ -107,7 +107,7 @@ export const terms: PageDefinition = {
       heading: 'Mga Pagbabago at madaling makuha',
       paragraphs: [
         'Maaaring baguhin, itigil, o ihinto natin ang site (o anumang bahagi nito) sa anumang panahon nang walang abiso o pananagutan.',
-        'Maaari naming i-update ang Mga Tuntuning ito anumang oras. Ang petsa ng "Huling na-update" ay nagpapahiwatig kung kailan sila pinakahuling binago. Ang patuloy na paggamit pagkatapos ng mga pagbabago ay bumubuo ng pagtanggap.',
+        'Maaari naming i-update ang Mga Tuntuning ito anumang oras. Ang petsa ng \\"Huling na-update\\" ay nagpapahiwatig kung kailan sila pinakahuling binago. Ang patuloy na paggamit pagkatapos ng mga pagbabago ay bumubuo ng pagtanggap.',
       ],
     },
     {

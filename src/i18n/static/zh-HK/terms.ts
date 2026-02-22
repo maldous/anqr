@@ -43,7 +43,7 @@ export const terms: PageDefinition = {
       paragraphs: [
         '您保留對編碼為 QR 碼的內容的所有權。 ANQR 不主張您的數據的所有權。',
         'ANQR 名稱、徽標、界面設計和底層代碼均受版權、商標和其他知識產權法的保護。未經我們許可，您不得複制、修改、分發或創建衍生作品。',
-        'QR Code® 是 DENSO WAVE INCORPORATED 的註冊商標。 ANQR 不隸屬於 DENSO WAVE。',
+        'QR Code® is a registered trademark of DENSO WAVE INCORPORATED. ANQR is not affiliated with DENSO WAVE.',
       ],
     },
     {

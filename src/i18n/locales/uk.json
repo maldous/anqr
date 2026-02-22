@@ -1,5 +1,6 @@
 {
   "animation": {
+    "auto": "Авто",
     "blueNoise": "Синій шум",
     "bounce": "Відскок (пінг-понг)",
     "colorCycle": "Колірний цикл",
@@ -24,13 +25,23 @@
     "randomSeed": "Випадкове насіння",
     "rotate": "Обертати",
     "scanline": "Scanline",
+    "secondaryPattern": "Secondary Pattern",
+    "secondaryTarget": "Secondary Target",
+    "secondaryWaveAxis": "Secondary Wave Axis",
     "shimmer": "Мерехтіння",
     "slideIn": "Slide In",
     "speed": "Швидкість кадру",
     "startFrame": "Початковий кадр",
+    "target": "Primary Target",
+    "targetBoth": "Both Layers",
+    "targetModules": "Module Layer",
+    "targetResult": "Result Layer",
     "temporalDither": "Скроневе тремтіння",
     "wave": "Хвиля",
-    "auto": "Авто"
+    "waveAxis": "Wave Axis",
+    "waveAxisX": "X Axis",
+    "waveAxisXY": "X + Y",
+    "waveAxisY": "Y Axis"
   },
   "languages": {
     "en-GB": "англійська",
@@ -346,39 +357,39 @@
         "title": "Чирок"
       },
       "combo-anim-dots-halftone": {
-        "description": "Animated halftone with dot modules",
+        "description": "Анімовані півтони з точковими модулями",
         "title": "Анімовані точки + півтони"
       },
       "combo-anim-rounded-blue-noise": {
-        "description": "Animated blue noise with rounded",
+        "description": "Анімований синій шум із заокругленнями",
         "title": "Animated Rounded + Blue Noise"
       },
       "combo-connected-pixelate-teal": {
-        "description": "Pixelated overlay with connected modules",
+        "description": "Піксельне накладення з підключеними модулями",
         "title": "Connected + Pixelate Teal"
       },
       "combo-connected-square": {
-        "description": "Connected modules with square finders",
+        "description": "З'єднані модулі з квадратними шукачами",
         "title": "Зв'язковий + Квадрат"
       },
       "combo-connected-wave-ocean": {
-        "description": "Connected modules with wave effect",
+        "description": "З'єднані модулі з ефектом хвилі",
         "title": "Connected + Wave Ocean"
       },
       "combo-diamond-blue-noise-navy": {
-        "description": "Diamond modules with blue noise",
+        "description": "Алмазні модулі з синім шумом",
         "title": "Diamond + Blue Noise Navy"
       },
       "combo-diamond-duotone-crimson": {
-        "description": "Duotone effect with diamond modules",
+        "description": "Ефект Duotone з алмазними модулями",
         "title": "Diamond + Duotone Crimson"
       },
       "combo-diamond-rounded": {
-        "description": "Diamond modules with rounded finders",
+        "description": "Алмазні модулі із закругленими шукачами",
         "title": "Діамант + Округлення"
       },
       "combo-dots-circle": {
-        "description": "Dots modules with circle finders",
+        "description": "Модулі Dots з шукачами кіл",
         "title": "Крапки + Кружечок"
       },
       "combo-dots-extreme-forest": {
@@ -386,23 +397,23 @@
         "title": "Dots + Extreme Forest"
       },
       "combo-dots-halftone-gold": {
-        "description": "Dot modules with halftone overlay",
+        "description": "Точкові модулі з накладенням півтонів",
         "title": "Точки + напівтонове золото"
       },
       "combo-dots-outline-slate": {
-        "description": "Edge detection with dot modules",
+        "description": "Виявлення країв за допомогою точкових модулів",
         "title": "Крапки + контурна дошка"
       },
       "combo-rounded-dithered-royal": {
-        "description": "Classic dithered with rounded style",
+        "description": "Класика в поєднанні з округлим стилем",
         "title": "Rounded + Dithered Royal"
       },
       "combo-rounded-mosaic-sunset": {
-        "description": "Rounded modules with mosaic overlay",
+        "description": "Округлі модулі з мозаїчною накладкою",
         "title": "Округлий + Мозаїчний захід"
       },
       "combo-rounded-rounded": {
-        "description": "Rounded modules with rounded finders",
+        "description": "Заокруглені модулі з заокругленими шукачами",
         "title": "Закруглений + Закруглений"
       },
       "combo-rounded-subpixel-coral": {
@@ -418,19 +429,19 @@
         "title": "Подія календаря"
       },
       "content-geo": {
-        "description": "Map coords with connected gold",
+        "description": "Карта координат із з'єднаним золотом",
         "title": "Геолокація"
       },
       "content-sms": {
-        "description": "Pre-filled SMS with diamond teal",
+        "description": "Попередньо заповнене SMS із діамантовим кольором",
         "title": "СМС повідомлення"
       },
       "content-vcard": {
-        "description": "Contact card with rounded navy style",
+        "description": "Картка контакту із закругленим темно-синім стилем",
         "title": "vCard Contact"
       },
       "content-wifi": {
-        "description": "WiFi config with dots forest green",
+        "description": "Конфігурація Wi-Fi із зеленими крапками",
         "title": "Мережа WiFi"
       },
       "dither-adaptive-threshold": {
@@ -530,15 +541,15 @@
         "title": "Версія 12"
       },
       "enc-v6": {
-        "description": "Best for overlays (no center eye)",
+        "description": "Найкраще для накладання (без центрального ока)",
         "title": "Версія 6"
       },
       "enc-v6-h": {
-        "description": "Version 6 with high error correction",
+        "description": "Версія 6 з високою корекцією помилок",
         "title": "V6 + ECC High"
       },
       "enc-v6-l": {
-        "description": "Version 6 with low error correction",
+        "description": "Версія 6 з низьким виправленням помилок",
         "title": "V6 + ECC Low"
       },
       "enc-v9": {
@@ -546,11 +557,11 @@
         "title": "Версія 9"
       },
       "enc-v9-h": {
-        "description": "Version 9 with high error correction",
+        "description": "Версія 9 з високою корекцією помилок",
         "title": "V9 + ECC High"
       },
       "enc-v9-l": {
-        "description": "Version 9 with low error correction",
+        "description": "Версія 9 з низьким виправленням помилок",
         "title": "V9 + ECC Low"
       },
       "finder-circle": {
@@ -839,24 +850,24 @@
     "preprocessing": "Preprocessing",
     "sections": {
       "animation-overlay": {
-        "description": "Animated GIF overlays with different blend modes",
+        "description": "Анімовані GIF-накладки з різними режимами змішування",
         "title": "Анімовані накладки"
       },
       "blend-modes": {
         "title": "Режими змішування",
-        "description": "Different color blending with image overlays"
+        "description": "Різне змішування кольорів із накладанням зображень"
       },
       "color-modes": {
-        "description": "Color, grayscale, and black & white processing",
+        "description": "Кольорова, сіра та чорно-біла обробка",
         "title": "Обробка кольорів"
       },
       "colors": {
-        "description": "Color schemes and themed palettes",
+        "description": "Кольорові схеми та тематичні палітри",
         "title": "Кольори та теми"
       },
       "content-types": {
         "title": "Типи вмісту",
-        "description": "Different payload formats - vCard, WiFi, Email, SMS, Geo, Calendar"
+        "description": "Різні формати корисного навантаження - vCard, WiFi, електронна пошта, SMS, географічне розташування, календар"
       },
       "dithering": {
         "description": "Різні методи згладжування та ядра дифузії помилок",
@@ -867,7 +878,7 @@
         "title": "Кодування QR"
       },
       "image-overlay": {
-        "description": "Static image overlays with different blend modes",
+        "description": "Накладення статичного зображення з різними режимами накладання",
         "title": "Накладання зображень"
       },
       "plain": {
@@ -907,52 +918,52 @@
   "hints": {
     "moduleJitterWarning": "⚠️ Може вплинути на сканування",
     "alignmentStyle": "Стиль шаблонів вирівнювання (використовується у великих QR-кодах)",
-    "appLinkNote": "Opens specific content within a mobile app",
+    "appLinkNote": "Відкриває певний вміст у мобільній програмі",
     "autoDetect": "Автоматичне визначення (потрібна v{{version}}+ для поточного вмісту)",
     "autoMinVersion": "0 = Auto, min v{{version}} for current content",
     "bgColorHex": "Background color hex code",
-    "bizcardLegacy": "Legacy format - consider using vCard instead",
+    "bizcardLegacy": "Застарілий формат – подумайте про використання vCard",
     "bluetoothNote": "Примітка. Сполучення Bluetooth через QR залежить від постачальника та може працювати не на всіх пристроях",
-    "bounceAnimation": "Play animation forward then backward (ping-pong)",
-    "calendarNote": "Subscribe to a shared calendar feed",
+    "bounceAnimation": "Відтворення анімації вперед, потім назад (пінг-понг)",
+    "calendarNote": "Підпишіться на стрічку спільного календаря",
     "contrastGuard": "Забезпечте мінімальний коефіцієнт контрастності між переднім планом і фоном",
     "cornerRadius": "Відсоток радіуса кута для округлених модулів (0-100%)",
-    "crispEdges": "Use pixelated rendering for sharp module edges",
-    "customNote": "Enter raw data in any format. No validation or formatting will be applied.",
-    "dotRotation": "Rotate dot-style modules (0-360 degrees)",
+    "crispEdges": "Використовуйте піксельну візуалізацію для чітких країв модуля",
+    "customNote": "Введіть необроблені дані в будь-якому форматі. Перевірка чи форматування не застосовуватимуться.",
+    "dotRotation": "Обертання точкових модулів (0-360 градусів)",
     "encodingMode": "Режим кодування даних - Авто вибирає найефективніший режим",
     "enforceMinQuietZone": "Використовуйте мінімум 4 модулі тихої зони для кращої надійності сканування",
-    "enterTextContent": "Enter the text content to encode in the QR code",
-    "enterUrlContent": "Enter the URL to encode in the QR code",
+    "enterTextContent": "Введіть текстовий вміст для кодування в QR-коді",
+    "enterUrlContent": "Введіть URL-адресу для кодування в QR-коді",
     "epcSepaNote": "Європейська платіжна рада QR-код для кредитних переказів SEPA",
     "errorCorrection": "Рівень виправлення помилок - вищий = більша стійкість до пошкоджень, але більший QR-код",
     "extraBorder": "Додаткові прикордонні модулі за тихою зоною (0-10)",
-    "eyeInnerStyle": "Style of the inner square of finder patterns",
-    "eyeOuterStyle": "Style of the outer ring of finder patterns",
+    "eyeInnerStyle": "Стиль внутрішнього квадрата візерунків шукача",
+    "eyeOuterStyle": "Стиль зовнішнього кільця візерунків шукача",
     "eyeScale": "Змініть шаблони шукача відносно їх розміру за замовчуванням (50-150%)",
     "fgColorHex": "Foreground color hex code",
-    "finderStyle": "Style of the corner finder patterns",
-    "forceHttps": "Convert HTTP URLs to HTTPS automatically",
-    "frameStyle": "Add a decorative frame around the QR code",
+    "finderStyle": "Стиль шаблонів кутового шукача",
+    "forceHttps": "Автоматично перетворюйте URL-адреси HTTP на HTTPS",
+    "frameStyle": "Додайте декоративну рамку навколо QR-коду",
     "frameText": "Text to display on the frame",
-    "gapMode": "How gaps between modules are rendered",
-    "gradient": "Apply a gradient effect to the QR code",
+    "gapMode": "Як відображаються проміжки між модулями",
+    "gradient": "Застосуйте ефект градієнта до QR-коду",
     "gs1Note": "GS1 Digital Link для ідентифікації та відстеження продукції",
-    "higherEccLargerQr": "Higher = more damage resistance, larger QR",
+    "higherEccLargerQr": "Вища = більша стійкість до пошкоджень, більший QR",
     "loopAnimation": "Loop animation continuously",
     "maxLengthGuard": "Запобігайте кодуванню вмісту, що перевищує обсяг QR-коду",
     "minContrastRatio": "Мінімальний коефіцієнт контрастності для застосування (1-21, WCAG AA вимагає 4,5:1)",
-    "moduleGap": "Gap between modules as percentage (0-30%)",
-    "moduleSize": "Size of each QR code module in pixels (2-20px)",
-    "moduleStyle": "Visual style of QR code modules",
+    "moduleGap": "Розрив між модулями у відсотках (0-30%)",
+    "moduleSize": "Розмір кожного модуля QR-коду в пікселях (2-20 пікселів)",
+    "moduleStyle": "Візуальний стиль модулів QR-коду",
     "normalizeNewlines": "Перетворення різних форматів нового рядка на стандартний формат",
-    "outputFormat": "Select the output file format for export",
+    "outputFormat": "Виберіть формат вихідного файлу для експорту",
     "paynowNote": "Singapore fast payment system",
-    "perModuleColor": "How to assign colors to individual modules",
-    "pickBgColor": "Click to pick background color",
-    "pickFgColor": "Click to pick foreground color",
+    "perModuleColor": "Як призначити кольори окремим модулям",
+    "pickBgColor": "Натисніть, щоб вибрати колір фону",
+    "pickFgColor": "Натисніть, щоб вибрати колір переднього плану",
     "pixNote": "Brazilian instant payment system",
-    "pixelSnap": "How to snap module positions to pixel boundaries",
+    "pixelSnap": "Як прив'язати положення модулів до меж пікселів",
     "promptpayNote": "Thailand national e-payment system",
     "qrVersion": "Версія QR-коду (0=авто, 1-40 збільшує розмір і місткість)",
     "quietZone": "Поле тихої зони навколо QR-коду (0-10 модулів, рекомендовано: 4+)",
@@ -961,13 +972,13 @@
     "selectContentType": "Виберіть тип вмісту для кодування в QR-коді",
     "shortLinkNote": "Використовуйте службу скорочення URL-адрес для динамічних/відстежуваних QR-кодів",
     "timingStyle": "Стиль часових шаблонів (горизонтальні та вертикальні лінії)",
-    "transparentBg": "Make the background transparent instead of using background color",
-    "trimWhitespace": "Remove leading and trailing whitespace",
-    "upiNote": "Unified Payments Interface for India",
-    "utmCampaign": "UTM campaign parameter for campaign tracking",
-    "utmMedium": "UTM medium parameter for campaign tracking",
-    "utmSource": "UTM source parameter for campaign tracking",
-    "validateInput": "Validate input data before encoding",
+    "transparentBg": "Зробіть фон прозорим замість використання кольору фону",
+    "trimWhitespace": "Видаліть пробіли на початку та в кінці",
+    "upiNote": "Уніфікований платіжний інтерфейс для Індії",
+    "utmCampaign": "Параметр кампанії UTM для відстеження кампанії",
+    "utmMedium": "Середній параметр UTM для відстеження кампанії",
+    "utmSource": "Параметр джерела UTM для відстеження кампанії",
+    "validateInput": "Перевірте вхідні дані перед кодуванням",
     "versionTooLow": "⚠️ Версія занижена! Minimum v{{version}} required",
     "characterEncoding": "Кодування символів",
     "characterEncodingNote": "Кодування символів для байтового режиму. UTF-8 підтримує всі символи Unicode, включаючи emoji.",
@@ -975,18 +986,18 @@
     "maskPatternNote": "Малюнок маски впливає на візуальний вигляд. Автоматично вибирає оптимальний шаблон для сканування.",
     "swissQrBillNote": "Швейцарський формат QR-рахунка для платежів CH/LI відповідно до правил SIX",
     "lightningNote": "Рахунок-фактура Lightning Network BOLT11 для платежів у біткойнах",
-    "ethereumNote": "Ethereum EIP-681 transaction request format",
+    "ethereumNote": "Формат запиту на транзакцію Ethereum EIP-681",
     "qrisNote": "Індонезійський стандарт швидкого реагування для національних платежів",
-    "duitnowNote": "DuitNow QR for Malaysia PayNet payments",
+    "duitnowNote": "DuitNow QR для платежів Малайзії PayNet",
     "bharatqrNote": "BharatQR для єдиних платежів карткою та UPI в Індії",
-    "vietqrNote": "VietQR for Vietnam NAPAS bank transfers",
-    "qrphNote": "QR Ph for Philippines InstaPay/PESONet payments",
-    "twqrNote": "TWQR for Taiwan financial institution payments",
-    "hkqrNote": "HKQR for Hong Kong Faster Payment System",
-    "jpqrNote": "JPQR for Japan unified QR payments",
+    "vietqrNote": "VietQR для банківських переказів NAPAS у В'єтнамі",
+    "qrphNote": "QR Ph для платежів InstaPay/PESONet на Філіппінах",
+    "twqrNote": "TWQR для платежів фінансових установ Тайваню",
+    "hkqrNote": "HKQR для швидшої платіжної системи Гонконгу",
+    "jpqrNote": "JPQR для уніфікованих QR-платежів Японії",
     "auspaynetNote": "AusPayNet for Australian NPP PayID payments",
     "paypalMeNote": "PayPal.Me shareable payment link",
-    "cashAppNote": "Cash App $cashtag payment link",
+    "cashAppNote": "Посилання для оплати в додатку Cash $cashtag",
     "emvGenericNote": "Generic EMVCo MPM QR code format",
     "maxFramesAuto": "0 = Авто (використовує вихідні кадри, максимум 50 для продуктивності)",
     "paletteMode": "Як кольори з палітри призначаються модулям"
@@ -1003,7 +1014,7 @@
     "copyrightPlaceholder": "© 2024 Назва компанії",
     "customMetadata": "Спеціальні метадані",
     "description": "опис",
-    "descriptionPlaceholder": "Description of this QR code...",
+    "descriptionPlaceholder": "Опис цього QR-коду...",
     "includeCreationTime": "Включити час створення",
     "key": "ключ",
     "keyPlaceholder": "ключ",
@@ -1062,18 +1073,18 @@
     "transparentColor": "Прозорий колір",
     "transparentColorPlaceholder": "#ffffff або порожній",
     "trueVector": "Справжній вектор",
-    "trueVectorDesc": "Use paths instead of embedded raster",
+    "trueVectorDesc": "Використовуйте контури замість вбудованого растру",
     "webp": "WebP",
     "width": "Ширина",
     "animatedWebp": "Анімований WebP"
   },
   "preview": {
-    "qrCodePreview": "QR Code Preview - Click Export to download",
+    "qrCodePreview": "Попередній перегляд QR-коду – натисніть «Експортувати», щоб завантажити",
     "simulating": "Симуляція",
     "simulationActive": "Симуляція навколишнього середовища активна – попередній перегляд показує, як QR-код може виглядати за різних умов"
   },
   "qr": {
-    "additionalBorder": "Additional border beyond quiet zone",
+    "additionalBorder": "Додаткова межа за тихою зоною",
     "alphanumeric": "буквено-цифровий",
     "auto": "Авто",
     "autoMin": "Auto (min: {{version}})",
@@ -1133,7 +1144,7 @@
     "contrastGuard": "Contrast Guard",
     "cornerRadius": "Радіус кута",
     "crispEdges": "Чіткі краї",
-    "crispEdgesDesc": "Use image-rendering: pixelated for sharp edges",
+    "crispEdgesDesc": "Використовуйте рендеринг зображення: піксельний для гострих країв",
     "dashed": "Штриховий",
     "diamond": "діамант",
     "dotRotation": "Обертання точки",
@@ -1218,9 +1229,9 @@
     "simulateRotation": "Імітація обертання",
     "untilScannable": "До сканування",
     "eccAwareEnabled": "Увімкнути ECC-Aware",
-    "eccAwareDesc": "Intelligently preserve critical QR regions",
+    "eccAwareDesc": "Інтелектуальне збереження критичних областей QR",
     "eccAwareRiskBudget": "Бюджет ризиків",
-    "eccAwareRiskBudgetDesc": "Higher values allow more overlay coverage",
+    "eccAwareRiskBudgetDesc": "Вищі значення забезпечують більший рівень покриття",
     "eccAwareWeightMap": "Карта ваги",
     "eccMapDistanceToFinders": "Відстань до Шукачів",
     "eccMapBlockHeatmap": "Теплова карта блоку",
@@ -1288,7 +1299,7 @@
   "accessibility": {
     "toggleSettings": "Перемкнути панель налаштувань",
     "allCategories": "Всі Категорії",
-    "copyShareLink": "Copy shareable link to clipboard",
+    "copyShareLink": "Скопіюйте посилання для спільного доступу в буфер обміну",
     "exportQrCode": "Експорт QR-коду у файл",
     "openNavMenu": "Відкрити навігаційне меню",
     "openGuideSidebar": "Open documentation sidebar",
@@ -1300,18 +1311,32 @@
   },
   "contact": {
     "messageSentTitle": "Повідомлення надіслано",
-    "messageSentDesc": "Thanks - we received your message. If you do not hear back, email us at",
+    "messageSentDesc": "Дякуємо - ми отримали ваше повідомлення. Якщо ви не отримаєте відповідь, напишіть нам на адресу",
     "submitError": "We could not submit the form. Будь ласка, напишіть",
     "sendMessage": "Надіслати повідомлення",
     "sending": "Надсилання...",
     "privacyNote": "Надсилаючи повідомлення, ви погоджуєтесь, що ми можемо використовувати ваші дані для відповіді. See the Privacy Policy.",
     "emailUs": "Напишіть нам",
-    "emailUsDesc": "Have a question, suggestion, or need help? Send us an email and we'll get back to you.",
+    "emailUsDesc": "Маєте запитання, пропозицію чи потрібна допомога? Надішліть нам електронний лист, і ми зв'яжемося з вами.",
     "redditCommunity": "Спільнота Reddit",
     "redditCommunityDesc": "Приєднуйтеся до нашої спільноти Reddit, щоб ділитися творіннями, ставити запитання та спілкуватися з іншими користувачами.",
     "joinReddit": "Приєднайтеся до r/ANQR"
   },
   "overlay": {
+    "adaptiveThreshold": "Адаптивний поріг",
+    "artworkMode": "Мистецтво",
+    "artworkModeInfo": "Режим «Ілюстрація» шукає фрагменти URL-адреси, завдяки яким шаблон QR відповідає вашому зображенню. Результати відрізняються – найкраще працює з простими висококонтрастними зображеннями. Для складних зображень інші режими накладання, як-от Розмитість або Напівтони, можуть дати кращі результати.",
+    "artworkRequiresLowEcc": "Для максимального контролю пікселів у режимі ілюстрації потрібна низька корекція помилок.",
+    "atkinson": "Аткінсон",
+    "bayer2": "Баєр 2×2",
+    "bayer4": "Баєр 4×4",
+    "bayer8": "Bayer 8×8",
+    "blend": "Змішати",
+    "blendMode": "Змішати",
+    "blendPreservations": "Blend Preservations",
+    "blendPreservationMode": "Blend Preservation Mode",
+    "blendPreservationModeDither": "Dither In",
+    "blendPreservationModeOverlay": "Overlay Pass-Through",
     "photo": "Камера",
     "blueNoise": "Синій шум",
     "blueNoiseMode": "Синій шум",
@@ -1320,7 +1345,6 @@
     "waveMode": "Хвиля",
     "upload": "Завантажити",
     "errorDiffusion": "Помилка дифузії",
-    "atkinson": "Аткінсон",
     "burkes": "Беркс",
     "floydSteinberg": "Флойд-Стейнберг",
     "jarvisJudiceNinke": "Джарвіс-Джудіс-Нінке",
@@ -1350,12 +1374,6 @@
     "subpixel": "Субпіксель",
     "subpixelMode": "Субпіксель",
     "gifSettings": "Налаштування GIF",
-    "adaptiveThreshold": "Адаптивний поріг",
-    "bayer2": "Баєр 2×2",
-    "bayer4": "Баєр 4×4",
-    "bayer8": "Bayer 8×8",
-    "blend": "Змішати",
-    "blendMode": "Змішати",
     "blueNoiseErrorDiffusion": "Blue Noise + Error Diffusion",
     "blueNoiseThreshold": "Поріг синього шуму",
     "blur": "Розмиття",
@@ -1418,6 +1436,7 @@
     "posterizeLevels": "Постеризувати рівні",
     "preserveAlignment": "Зберегти вирівнювання",
     "preserveFinders": "Зберегти шаблони Finder",
+    "preservationStrength": "Preservation Strength",
     "preserveTiming": "Збережіть час",
     "protectFormat": "Захист інформації про формат",
     "protectFormatInfo": "Захист інформації про формат",
@@ -1460,11 +1479,8 @@
     "canny": "Вмілий",
     "qrFirstMode": "Режим QR-First",
     "qrFirstModeHelp": "Примусовий пріоритет даних QR над накладанням для висококонтрастних чорно-білих зображень",
-    "artworkMode": "Мистецтво",
-    "artworkModeInfo": "Режим «Ілюстрація» шукає фрагменти URL-адреси, завдяки яким шаблон QR відповідає вашому зображенню. Результати відрізняються – найкраще працює з простими висококонтрастними зображеннями. Для складних зображень інші режими накладання, як-от Розмитість або Напівтони, можуть дати кращі результати.",
     "searchIterations": "Ітерації пошуку",
-    "searchIterationsHelp": "Більше ітерацій = кращий збіг, але повільніше покоління. Для більшості зображень рекомендовано 10 000–50 000.",
-    "artworkRequiresLowEcc": "Для максимального контролю пікселів у режимі ілюстрації потрібна низька корекція помилок."
+    "searchIterationsHelp": "Більше ітерацій = кращий збіг, але повільніше покоління. Для більшості зображень рекомендовано 10 000–50 000."
   },
   "welcome": {
     "title": "Ласкаво просимо до ANQR",
@@ -1490,7 +1506,7 @@
     "update2": "Приклади з реального світу з практичними прикладами та найкращими практиками",
     "update3": "Тепер підтримується понад 40 мов із повним перекладом інтерфейсу користувача",
     "update4": "Покращений аналіз безпеки та режими накладання з урахуванням ECC",
-    "update5": "114 Google Chrome - Українська Підтримуємо переклади спільноти",
+    "update5": "30 січня 2026 р",
     "update6": "Нова сторінка для вкладів громадського перекладу",
     "update7": "Камера захоплення для швидкого накладання демо (Android)",
     "update8": "Редизайнована мобільні навігація з макетом сітки",
@@ -1686,7 +1702,7 @@
     "socialMessaging": "Соціальні мережі та обмін повідомленнями",
     "socialProfile": "Соціальний профіль",
     "ssid": "Назва мережі (SSID)",
-    "start": "Почніть",
+    "start": "старт",
     "startDate": "Дата початку",
     "state": "Штат/провінція",
     "street": "вул",
@@ -1791,7 +1807,7 @@
     "paymentNote": "Оплата замовлення",
     "pixName": "Жоао Сілва",
     "pixCity": "Сан-Паулу",
-    "pixKeyTypes": "CPF, CNPJ, Email, Phone, or Random Key",
+    "pixKeyTypes": "CPF, CNPJ, електронна пошта, телефон або випадковий ключ",
     "appName": "MyApp",
     "accountEmail": "user@anqr.link",
     "serialNumber": "ABC123",
@@ -1826,7 +1842,7 @@
     "bolt11Invoice": "BOLT11 Рахунок-фактура",
     "bolt11Placeholder": "Paste your BOLT11 encoded invoice",
     "ethereumEip681": "Ethereum (EIP-681)",
-    "ethereumNote": "Ethereum transaction request with chain and gas parameters",
+    "ethereumNote": "Запит на транзакцію Ethereum з параметрами ланцюга та газу",
     "targetAddress": "Цільова адреса",
     "chainId": "ID ланцюга",
     "chainIdHint": "1 = Mainnet, 137 = Polygon, etc.",
@@ -1838,7 +1854,7 @@
     "tokenContractHint": "For ERC-20 token transfers",
     "tokenAmount": "Сума символу",
     "qris": "QRIS (Індонезія)",
-    "qrisNote": "Quick Response Code Indonesian Standard",
+    "qrisNote": "Індонезійський стандарт коду швидкого реагування",
     "merchantId": "ID продавця",
     "nmid": "National Merchant ID (NMID)",
     "merchantCriteria": "Торгові критерії",
@@ -1846,7 +1862,7 @@
     "criteriaSmall": "Дрібний торговець",
     "criteriaMicro": "Мікро Торговець",
     "duitnow": "DuitNow (Малайзія)",
-    "duitnowNote": "Malaysian national QR payment system",
+    "duitnowNote": "Малайзійська національна платіжна система QR",
     "proxyTypeField": "Тип проксі",
     "proxyTypeNric": "НКЖД",
     "proxyTypePassport": "Паспорт",
@@ -1854,13 +1870,13 @@
     "proxyTypeBusiness": "Реєстрація бізнесу",
     "proxyValueField": "Значення проксі",
     "bharatqr": "BharatQR (Індія)",
-    "bharatqrNote": "Unified QR for card and UPI payments in India",
+    "bharatqrNote": "Уніфікований QR для платежів карткою та UPI в Індії",
     "merchantVpa": "Merchant VPA",
     "merchantPan": "Торговий ПАН",
     "gstDetails": "Інформація про податок на товари та послуги",
     "invoiceNumber": "Номер рахунку-фактури",
     "vietqr": "VietQR (В'єтнам)",
-    "vietqrNote": "Vietnam national QR payment standard",
+    "vietqrNote": "В'єтнамський національний стандарт оплати QR",
     "bankBin": "БІН банку",
     "bankBinHint": "NAPAS Bank Identification Number",
     "accountNumberField": "Номер рахунку",
@@ -1870,15 +1886,15 @@
     "serviceCodeFtta": "Interbank Transfer (24/7)",
     "serviceCodeFttc": "Interbank Transfer (Citad)",
     "qrph": "QR Ph (Філіппіни)",
-    "qrphNote": "Philippines national QR payment standard",
+    "qrphNote": "Філіппінський національний стандарт QR-платежів",
     "twqr": "TWQR (Тайвань)",
-    "twqrNote": "Taiwan national QR payment standard",
+    "twqrNote": "Тайванський національний стандарт оплати QR",
     "taxIdField": "Індивідуальний податковий номер",
     "hkqr": "HKQR (Гонконг)",
-    "hkqrNote": "Hong Kong Faster Payment System QR",
+    "hkqrNote": "Гонконгська швидша платіжна система QR",
     "fpsId": "FPS ID",
     "jpqr": "JPQR (Японія)",
-    "jpqrNote": "Japan national QR payment standard",
+    "jpqrNote": "Японський національний стандарт QR платежів",
     "storeIdField": "ID магазину",
     "auspaynet": "AusPayNet (Австралія)",
     "auspaynetNote": "Australian New Payments Platform PayID",
@@ -1891,17 +1907,17 @@
     "paypalMeNote": "PayPal personal payment link",
     "paypalUsername": "Ім'я користувача PayPal",
     "cashApp": "Додаток «Готівка».",
-    "cashAppNote": "Cash App $cashtag payment link",
+    "cashAppNote": "Посилання для оплати в додатку Cash $cashtag",
     "cashtagField": "$cashtag",
-    "cashtagPlaceholder": "Your Cash App username (without $)",
+    "cashtagPlaceholder": "Ваше ім'я користувача Cash App (без $)",
     "emvGeneric": "EMV QR (загальний)",
     "emvGenericNote": "Generic EMVCo QR code for custom payment schemes",
     "countryCodeField": "Код країни",
-    "countryCodeHint": "ISO 3166-1 alpha-2 (e.g., SG, TH, ID)",
+    "countryCodeHint": "ISO 3166-1 alpha-2 (наприклад, SG, TH, ID)",
     "currencyCodeField": "Код валюти",
-    "currencyCodeHint": "ISO 4217 numeric (e.g., 702 for SGD)",
+    "currencyCodeHint": "Цифровий стандарт ISO 4217 (наприклад, 702 для SGD)",
     "staticQr": "Статичний QR",
-    "staticQrHint": "Reusable QR code (no fixed amount)",
+    "staticQrHint": "Багаторазовий QR-код (без фіксованої суми)",
     "tipFeeIndicator": "Індикатор чайових/комісії",
     "tipPrompt": "Запит на підказку",
     "tipFixed": "Фіксована плата",
@@ -1919,7 +1935,7 @@
     "expiryDateHint": "Формат РРРРММДД",
     "billRef1": "Довідка про рахунок 1",
     "billRef2": "Довідка про рахунок 2",
-    "billRef3": "Bill Reference 3 / Terminal ID",
+    "billRef3": "Номер рахунку 3 / ідентифікатор терміналу",
     "descriptionField": "опис",
     "transactionId": "ID транзакції",
     "feeTipType": "Тип комісії/чайових",
@@ -1965,14 +1981,14 @@
     "swissQrBillHint": "Swiss QR-bill payment standard (SIX)",
     "bolt11Hint": "Paste a BOLT11 Lightning invoice",
     "eip681Hint": "EIP-681 transaction request URI",
-    "qrisHint": "Quick Response Code Indonesian Standard",
+    "qrisHint": "Індонезійський стандарт коду швидкого реагування",
     "duitnowHint": "Malaysia instant payment system",
-    "bharatqrHint": "India unified QR for UPI + card payments",
+    "bharatqrHint": "Уніфікований QR-код Індії для платежів карткою UPI +",
     "napasHint": "NAPAS bank identification number",
     "qrphHint": "Philippines QR payment standard",
     "twqrHint": "Taiwan QR payment standard",
     "fpsHint": "Faster Payment System identifier",
-    "jpqrHint": "Japan unified QR payment standard",
+    "jpqrHint": "Японський уніфікований стандарт QR-платежів",
     "auspaynetHint": "Australia NPP PayID payment",
     "paypalMeHint": "Creates paypal.me/yourname link",
     "cashappHint": "Creates cash.app/$yourname link",

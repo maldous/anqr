@@ -8,7 +8,7 @@ import type { PageDefinition } from '../types';
 export const learn: PageDefinition = {
   title: 'Aprender con ANQR',
   description:
-    'Guías prácticas para convertir códigos QR en activos reales de marketing - no sólo cuadrados funcionales. Aprenda a actualizar los códigos de puntos de venta heredados, crear un registro QR de pago fiable, preparar exportaciones de impresión, utilizar la animación de forma segura en pantallas digitales y compartir configuraciones bloqueadas en equipos multilingües usando enlaces ANQR ("anchor").',
+    'Guías prácticas para convertir códigos QR en activos reales de marketing - no sólo cuadrados funcionales. Aprenda a actualizar los códigos de puntos de venta heredados, crear un registro QR de pago fiable, preparar exportaciones de impresión, utilizar la animación de forma segura en pantallas digitales y compartir configuraciones bloqueadas en equipos multilingües usando enlaces ANQR (\\"anchor\\").',
   lastUpdated: '1 de febrero de 2026',
 
   primaryLinks: [

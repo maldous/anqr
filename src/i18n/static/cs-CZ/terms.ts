@@ -65,7 +65,7 @@ export const terms: PageDefinition = {
     {
       heading: 'Vyloučení záruk',
       paragraphs: [
-        'ANQR JE POSKYTOVÁN NA "TAK, JAK JE" A "JAK JE K DISPOZICI" BÁZE BEZ VAD JAKÉHOKOLI DRUHU, EXPRESE NEBO IMPLIKOVANÉ, VČETNĚ, ALE NENÍ OMEZEN NA IMPLIKOVANÉ VAROVNOSTI MERCHANTABILITY, ZDATNOSTI PRO ZVLÁŠTNÍ ÚČELY, A NON- PORUŠENÍ.',
+        'ANQR JE POSKYTOVÁN NA \\"TAK, JAK JE\\" A \\"JAK JE K DISPOZICI\\" BÁZE BEZ VAD JAKÉHOKOLI DRUHU, EXPRESE NEBO IMPLIKOVANÉ, VČETNĚ, ALE NENÍ OMEZEN NA IMPLIKOVANÉ VAROVNOSTI MERCHANTABILITY, ZDATNOSTI PRO ZVLÁŠTNÍ ÚČELY, A NON- PORUŠENÍ.',
         'Nezaručujeme, že: a) místo bude nepřerušené, bezpečné, nebo error-free; b) QR kódy budou skenovat ve všech prostředích, na všech zařízeních, nebo se všemi scannery aplikací; c) místo bude splňovat vaše požadavky.',
         'Vždy byste měli testovat QR kódy v podmínkách, kde budou použity (velikost tisku, osvětlení, typ obrazovky, vzdálenost, kvalita kamery).',
       ],
@@ -108,7 +108,7 @@ export const terms: PageDefinition = {
       heading: 'Změny a dostupnost',
       paragraphs: [
         'Můžeme změnit, pozastavit nebo přerušit místo (nebo jakoukoli jeho část) kdykoliv bez upozornění nebo odpovědnosti.',
-        'Tyto podmínky můžeme kdykoli aktualizovat. Datum "Poslední aktualizace" naznačuje, kdy byly naposledy revidovány. Pokračování používání po změnách představuje přijetí.',
+        'Tyto podmínky můžeme kdykoli aktualizovat. Datum \\"Poslední aktualizace\\" naznačuje, kdy byly naposledy revidovány. Pokračování používání po změnách představuje přijetí.',
       ],
     },
     {

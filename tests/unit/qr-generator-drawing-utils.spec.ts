@@ -246,22 +246,20 @@ describe('getScaleFactor', () => {
 // ========== getEffectiveIntensity ==========
 
 describe('getEffectiveIntensity', () => {
-  it('uses default intensity (100) and default ECC limits', async () => {
+  it('uses default intensity (100) without implicit ECC cap', async () => {
     const { getEffectiveIntensity } = await import(
       '../../src/modules/qr-generator/pixel-matrix-utils'
     );
     const result = getEffectiveIntensity({ errorCorrection: 'M' } as never);
-    // Default: intensity=1.0, M limit=50/100=0.5 → min(1.0, 0.5) = 0.5
-    expect(result.effectiveIntensity).toBe(0.5);
+    expect(result.effectiveIntensity).toBe(1);
   });
 
-  it('clamps intensity to ECC limit', async () => {
+  it('does not clamp intensity by ECC when no custom limits are provided', async () => {
     const { getEffectiveIntensity } = await import(
       '../../src/modules/qr-generator/pixel-matrix-utils'
     );
     const result = getEffectiveIntensity({ errorCorrection: 'L', overlayIntensity: 80 } as never);
-    // intensity=0.8, L limit=30/100=0.3 → min(0.8, 0.3) = 0.3
-    expect(result.effectiveIntensity).toBe(0.3);
+    expect(result.effectiveIntensity).toBe(0.8);
   });
 
   it('preserves intensity when below limit', async () => {
@@ -269,7 +267,7 @@ describe('getEffectiveIntensity', () => {
       '../../src/modules/qr-generator/pixel-matrix-utils'
     );
     const result = getEffectiveIntensity({ errorCorrection: 'H', overlayIntensity: 50 } as never);
-    // intensity=0.5, H limit=85/100=0.85 → min(0.5, 0.85) = 0.5
+    // No implicit cap by default; the configured intensity is preserved.
     expect(result.effectiveIntensity).toBe(0.5);
   });
 
@@ -286,7 +284,7 @@ describe('getEffectiveIntensity', () => {
     expect(result.effectiveIntensity).toBe(0.8);
   });
 
-  it('falls back to 50 when ECC level not in limits', async () => {
+  it('falls back to no cap when ECC level not in limits', async () => {
     const { getEffectiveIntensity } = await import(
       '../../src/modules/qr-generator/pixel-matrix-utils'
     );
@@ -294,8 +292,7 @@ describe('getEffectiveIntensity', () => {
       errorCorrection: 'X',
       overlayIntensity: 80,
     } as never);
-    // intensity=0.8, unknown level → 50/100=0.5 → min(0.8, 0.5) = 0.5
-    expect(result.effectiveIntensity).toBe(0.5);
+    expect(result.effectiveIntensity).toBe(0.8);
   });
 
   it('returns effectiveConfig with updated overlayIntensity', async () => {
@@ -303,7 +300,7 @@ describe('getEffectiveIntensity', () => {
       '../../src/modules/qr-generator/pixel-matrix-utils'
     );
     const result = getEffectiveIntensity({ errorCorrection: 'M', overlayIntensity: 100 } as never);
-    expect(result.effectiveConfig.overlayIntensity).toBe(50); // 0.5 * 100
+    expect(result.effectiveConfig.overlayIntensity).toBe(100);
   });
 });
 

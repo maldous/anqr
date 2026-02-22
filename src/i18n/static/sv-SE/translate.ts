@@ -42,7 +42,7 @@ export const translate: PageDefinition = {
         'Besök vårt offentliga översättningsarkiv på GitHub.',
         'Hitta din språkfil (eller skapa en ny om ditt språk ännu inte stöds).',
         'Klicka på pennikonen för att redigera direkt i din webbläsare.',
-        'Gör dina ändringar och klicka på "Föreslå ändringar" - GitHub kommer automatiskt att skapa en pull-begäran.',
+        'Gör dina ändringar och klicka på \\"Föreslå ändringar\\" - GitHub kommer automatiskt att skapa en pull-begäran.',
         'Ditt bidrag kommer att granskas och slås samman, vanligtvis inom några dagar.',
       ],
     },

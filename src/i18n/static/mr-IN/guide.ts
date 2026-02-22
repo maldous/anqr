@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'डॉट रोटेशन: डायमंड/डॉट मॉड्यूल्स फिरवा.',
         'डोळा स्केल: शोधक नमुन्यांसाठी आकार समायोजन.',
         'फ्रेम शैली: सजावटीच्या फ्रेम जोडा (गोलाकार फ्रेम, स्टिकर, टॅग).',
-        'फ्रेम मजकूर: "मला स्कॅन करा!" सारखा मजकूर जोडा. फ्रेम करण्यासाठी.',
+        'फ्रेम मजकूर: \\"मला स्कॅन करा!\\" सारखा मजकूर जोडा. फ्रेम करण्यासाठी.',
       ],
       links: [
         {
@@ -1030,7 +1030,7 @@ export const guide: PageDefinition = {
         'मॅट्रिक्स: ऑर्डर केलेले डिथर मॅट्रिक्स - bayer2, bayer4, bayer8 (डिफॉल्ट: bayer4).',
         'bnTile: निळा आवाज टाइल आकार (डीफॉल्ट: 64).',
         'bnSeed: निळा आवाज यादृच्छिक बियाणे (डिफॉल्ट: 0).',
-        'colorDither: रंग dithering - none, per_channel, perceptual (default: none).',
+        'colorDither: Color dithering - none, per_channel, perceptual (default: none).',
       ],
     },
     // Subpixel Parameters
@@ -1198,9 +1198,9 @@ export const guide: PageDefinition = {
       heading: 'HTML उदाहरण',
       paragraphs: [
         'तुमच्या वेबसाइटमध्ये QR कोड एम्बेड करण्यासाठी:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR कोड" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR कोड\\" />',
         'प्रतिसादात्मक आकारासाठी:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'सर्व्हर लांब कॅशे शीर्षलेखांसह प्रतिसाद कॅश करतो, त्यामुळे समान URL साठी वारंवार विनंत्या जलद असतात.',
       ],
     },

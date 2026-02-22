@@ -445,7 +445,7 @@ export const guide: PageDefinition = {
         'ਡਾਟ ਰੋਟੇਸ਼ਨ: ਡਾਇਮੰਡ/ਡੌਟ ਮੋਡੀਊਲ ਘੁੰਮਾਓ।',
         'ਅੱਖਾਂ ਦਾ ਪੈਮਾਨਾ: ਖੋਜੀ ਪੈਟਰਨਾਂ ਲਈ ਆਕਾਰ ਦੀ ਵਿਵਸਥਾ।',
         'ਫਰੇਮ ਸਟਾਈਲ: ਸਜਾਵਟੀ ਫਰੇਮ ਸ਼ਾਮਲ ਕਰੋ (ਗੋਲ ਫਰੇਮ, ਸਟਿੱਕਰ, ਟੈਗ)।',
-        'ਫਰੇਮ ਟੈਕਸਟ: "ਮੈਨੂੰ ਸਕੈਨ ਕਰੋ!" ਵਰਗਾ ਟੈਕਸਟ ਸ਼ਾਮਲ ਕਰੋ। ਫਰੇਮ ਨੂੰ.',
+        'ਫਰੇਮ ਟੈਕਸਟ: \\"ਮੈਨੂੰ ਸਕੈਨ ਕਰੋ!\\" ਵਰਗਾ ਟੈਕਸਟ ਸ਼ਾਮਲ ਕਰੋ। ਫਰੇਮ ਨੂੰ.',
       ],
       links: [
         {
@@ -472,7 +472,7 @@ export const guide: PageDefinition = {
         'ਫਾਈਲ ਨਾਮ: ਡਾਉਨਲੋਡਸ ਲਈ ਕਸਟਮ ਫਾਈਲ ਨਾਮ।',
         'GIF ਪੈਲੇਟ ਆਕਾਰ: GIF ਆਉਟਪੁੱਟ ਵਿੱਚ 2-256 ਰੰਗ।',
         'GIF ਕੁਆਂਟਾਇਜ਼ਰ: ਮੀਡੀਅਨ ਕੱਟ, ਨਿਊਕਵਾਂਟ, ਜਾਂ ਔਕਟਰੀ ਕਲਰ ਰਿਡਕਸ਼ਨ।',
-        'GIF Dithering: ਬੰਦ, Floyd-Steinberg, or Ordered.',
+        'GIF ਡਿਥਰਿੰਗ: ਬੰਦ, ਫਲੋਇਡ-ਸਟਾਈਨਬਰਗ, ਜਾਂ ਕ੍ਰਮਬੱਧ।',
         'GIF ਪਾਰਦਰਸ਼ੀ ਰੰਗ: ਪਾਰਦਰਸ਼ੀ ਹੋਣ ਲਈ ਇੱਕ ਰੰਗ ਸੈੱਟ ਕਰੋ।',
         'SVG ਟਰੂ ਵੈਕਟਰ: ਏਮਬੈਡਡ ਰਾਸਟਰ ਦੀ ਬਜਾਏ ਮਾਰਗਾਂ ਦੀ ਵਰਤੋਂ ਕਰੋ।',
         'SVG ਆਕਾਰ ਸ਼ੁੱਧਤਾ: ਪਿਕਸਲ ਜਾਂ ਸਟੀਕ ਮਾਰਗ ਰੈਂਡਰਿੰਗ।',
@@ -1195,9 +1195,9 @@ export const guide: PageDefinition = {
       heading: 'HTML ਉਦਾਹਰਨ',
       paragraphs: [
         'ਆਪਣੀ ਵੈੱਬਸਾਈਟ ਵਿੱਚ ਇੱਕ QR ਕੋਡ ਨੂੰ ਏਮਬੈਡ ਕਰਨ ਲਈ:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR ਕੋਡ" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR ਕੋਡ\\" />',
         'ਜਵਾਬਦੇਹ ਆਕਾਰ ਲਈ:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'ਸਰਵਰ ਲੰਬੇ ਕੈਸ਼ ਸਿਰਲੇਖਾਂ ਨਾਲ ਜਵਾਬਾਂ ਨੂੰ ਕੈਚ ਕਰਦਾ ਹੈ, ਇਸਲਈ ਇੱਕੋ URL ਲਈ ਦੁਹਰਾਈਆਂ ਗਈਆਂ ਬੇਨਤੀਆਂ ਤੇਜ਼ ਹੁੰਦੀਆਂ ਹਨ।',
       ],
     },

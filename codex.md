@@ -1,6 +1,52 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 23:15:00 UTC
+Last updated: 2026-02-23 00:50:00 UTC
+
+## Latest Update (2026-02-23, Browser Dither ECC Clamp Regression Fix)
+
+- Root cause for browser-only dithering inconsistency found:
+  - `useQRGenerator` always passed `maxOverlayIntensityByEcc` into render config.
+  - `getEffectiveIntensity()` also had implicit default ECC caps (`L:30/M:50/Q:70/H:85`) even without explicit policy.
+  - Result: switching ECC silently changed overlay intensity in normal mode (`safety.mode='off'`), causing large visual differences and parity drift vs API behavior.
+- Fixes applied:
+  - `src/hooks/useQRGenerator.ts`
+    - now only passes `maxOverlayIntensityByEcc` when safety mode is enabled (`safety.mode !== 'off'`).
+  - `src/modules/qr-generator/pixel-matrix-utils.ts`
+    - default ECC limits changed to neutral (`100` for all ECC levels),
+    - unknown ECC fallback changed to `100` (no implicit cap).
+- Regression tests updated:
+  - `tests/unit/overlay-blend-modes.spec.ts`
+  - `tests/unit/qr-generator-drawing-utils.spec.ts`
+  - defaults now assert no implicit ECC cap unless explicit `maxOverlayIntensityByEcc` is provided.
+- Verification:
+  - `npx vitest run tests/unit/overlay-blend-modes.spec.ts tests/unit/qr-generator-drawing-utils.spec.ts` passes.
+
+## Latest Update (2026-02-22, Production Gallery Availability + CDN Cache-Stale Fix)
+
+- Root cause identified for `Image unavailable` on production gallery:
+  - many `/gallery/<id>.<ext>` URLs were returning cached SPA HTML (`content-type: text/html`) instead of image bytes.
+  - this was caused by stale CDN cache entries on no-query gallery URLs that had previously fallen through to SPA fallback.
+- Implemented runtime resilience + cache-safe URLing:
+  - `src/data/gallery-items.ts`
+    - `getGalleryImagePath(...)` now:
+      - URL-encodes item IDs (safe for commas/special chars),
+      - appends a deterministic gallery cache key query (`?v=<key>`) derived from generated section IDs.
+    - added `buildGalleryRenderImageUrl(...)` for API fallback rendering.
+  - `src/components/Gallery.tsx`
+    - gallery cards now retry image load in stages before showing unavailable:
+      1. primary static CDN asset,
+      2. alternate extension (`gif`/`png` flip),
+      3. API render fallback (`/api/qr?...&_fullRender=1`).
+- Netlify config hardening:
+  - `netlify.toml`
+    - `/gallery/*` headers now explicitly allow cross-origin consumption:
+      - `Cross-Origin-Resource-Policy = "cross-origin"`
+      - `Access-Control-Allow-Origin = "*"`
+    - added explicit 404 redirect for missing gallery asset paths before SPA catch-all:
+      - prevents `/gallery/*` misses from silently becoming `index.html` routes.
+- Validation:
+  - `npm run -s typecheck` passes.
+  - `npx @biomejs/biome check src/components/Gallery.tsx src/data/gallery-items.ts` passes.
 
 ## Latest Update (2026-02-22, Gallery Verification Test Contract Refresh)
 

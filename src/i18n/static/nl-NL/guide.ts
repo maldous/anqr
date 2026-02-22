@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'Puntrotatie: Roteer diamant/punt modules.',
         'Oogschaal: maataanpassing voor zoekpatronen.',
         'Framestijl: Voeg decoratieve frames (Rounded Frame, Sticker, Tag).',
-        'Frametekst: Voeg tekst als "Scan Me!" toe aan frames.',
+        'Frametekst: Voeg tekst als \\"Scan Me!\\" toe aan frames.',
       ],
       links: [
         {
@@ -1210,9 +1210,9 @@ export const guide: PageDefinition = {
       heading: 'HTML-voorbeeld',
       paragraphs: [
         'Een QR-code insluiten in uw website:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'Voor responsieve grootte:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" stijl="max-width: 100%; hoogte: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" stijl=\\"max-width: 100%; hoogte: auto;\\" />',
         'De server caches antwoorden met lange cache headers, dus herhaalde verzoeken voor dezelfde URL zijn snel.',
       ],
     },

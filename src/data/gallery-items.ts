@@ -41,6 +41,29 @@ export interface GallerySection {
 export const gallerySections: GallerySection[] =
   generatedGallerySections as unknown as GallerySection[];
 
+function hashFnv1a(input: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function buildGalleryCacheKey(sections: GallerySection[]): string {
+  const seed = sections
+    .map(
+      (section) =>
+        `${section.id}:${section.items
+          .map((item) => `${item.id}.${item.isAnimated ? 'gif' : 'png'}`)
+          .join(',')}`
+    )
+    .join('|');
+  return hashFnv1a(seed);
+}
+
+const GALLERY_CACHE_KEY = buildGalleryCacheKey(gallerySections);
+
 // Base URL for sample QR codes / hosted gallery assets.
 export function getGalleryBaseUrl(): string {
   return 'https://anqr.link';
@@ -48,7 +71,7 @@ export function getGalleryBaseUrl(): string {
 
 export const GALLERY_IMAGE_PATH = '/gallery';
 
-export function buildGalleryUrl(item: GalleryItem): string {
+function buildGallerySearchParams(item: GalleryItem): URLSearchParams {
   const baseUrl = getGalleryBaseUrl();
   const params = new URLSearchParams();
 
@@ -63,6 +86,13 @@ export function buildGalleryUrl(item: GalleryItem): string {
     }
   }
 
+  return params;
+}
+
+export function buildGalleryUrl(item: GalleryItem): string {
+  const baseUrl = getGalleryBaseUrl();
+  const params = buildGallerySearchParams(item);
+
   const query = params.toString();
   if (Capacitor.isNativePlatform()) {
     return `${baseUrl}?${query}`;
@@ -70,12 +100,24 @@ export function buildGalleryUrl(item: GalleryItem): string {
   return `/?${query}`;
 }
 
-export function getGalleryImagePath(item: GalleryItem): string {
-  const ext = item.isAnimated ? 'gif' : 'png';
-  const relativePath = `${GALLERY_IMAGE_PATH}/${item.id}.${ext}`;
+export function buildGalleryRenderImageUrl(
+  item: GalleryItem,
+  formatOverride?: 'png' | 'gif'
+): string {
+  const baseUrl = getGalleryBaseUrl();
+  const params = buildGallerySearchParams(item);
+  params.set('format', formatOverride || (item.isAnimated ? 'gif' : 'png'));
+  params.set('_fullRender', '1');
+  return `${baseUrl}/api/qr?${params.toString()}`;
+}
+
+export function getGalleryImagePath(item: GalleryItem, formatOverride?: 'png' | 'gif'): string {
+  const ext = formatOverride || (item.isAnimated ? 'gif' : 'png');
+  const encodedId = encodeURIComponent(item.id);
+  const relativePath = `${GALLERY_IMAGE_PATH}/${encodedId}.${ext}`;
   const remotePath = `${getGalleryBaseUrl()}${relativePath}`;
 
   // Gallery images are always served from the deployed host. This keeps
   // app/web behavior identical and avoids bundling gallery artifacts locally.
-  return remotePath;
+  return `${remotePath}?v=${GALLERY_CACHE_KEY}`;
 }

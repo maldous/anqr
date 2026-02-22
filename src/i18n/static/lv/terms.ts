@@ -106,7 +106,7 @@ export const terms: PageDefinition = {
       heading: 'Izmaiņas un pieejamība',
       paragraphs: [
         'Mēs varam modificēt, apturēt vai pārtraukt vietnes (vai jebkuras tās daļas) darbību jebkurā laikā bez brīdinājuma vai atbildības.',
-        'Mēs varam atjaunināt šos Noteikumus jebkurā laikā. Datums "Pēdējā atjaunināšana" norāda, kad tie tika pēdējo reizi pārskatīti. Turpināta lietošana pēc izmaiņām nozīmē pieņemšanu.',
+        'Mēs varam atjaunināt šos Noteikumus jebkurā laikā. Datums \\"Pēdējā atjaunināšana\\" norāda, kad tie tika pēdējo reizi pārskatīti. Turpināta lietošana pēc izmaiņām nozīmē pieņemšanu.',
       ],
     },
     {

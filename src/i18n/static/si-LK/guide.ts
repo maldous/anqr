@@ -156,7 +156,7 @@ export const guide: PageDefinition = {
       bullets: [
         'වර්ග: සම්මත හතරැස් කොන්.',
         'වටකුරු: වටකුරු මොඩියුල ශෛලියට ගැලපෙන මෘදු කොන්.',
-        'Circle: dot-style codes සඳහා Circular finder රටා.',
+        'Circle: Circular finder patterns for dot-style codes.',
       ],
     },
     {
@@ -253,7 +253,7 @@ export const guide: PageDefinition = {
         'SMS: දුරකථන අංකයකට පෙර පුරවා ඇති කෙටි පණිවිඩය.',
         'vCard: නම, සංවිධානය, දුරකථනය, ඊමේල්, ලිපිනය සහිත සම්පූර්ණ සම්බන්ධතා කාඩ්පත.',
         'MeCard: ජපානයේ ජනප්‍රිය සංයුක්ත සම්බන්ධතා ආකෘතිය.',
-        'BizCard: Legacy business card ආකෘතිය.',
+        'BizCard: Legacy business card format.',
         'භූ පිහිටීම: සිතියම් තුළ විවෘත වන GPS ඛණ්ඩාංක.',
         'WiFi: ස්වයංක්රීය සම්බන්ධතාවය සඳහා ජාල අක්තපත්ර (SSID, මුරපදය, ආරක්ෂක වර්ගය).',
         'දින දර්ශන සිදුවීම: මාතෘකාව, ස්ථානය, දිනය/වේලාව සහිත iCalendar ආකෘතිය.',
@@ -372,7 +372,7 @@ export const guide: PageDefinition = {
         'දෝෂ විසරණය: සම්භාව්‍ය ෆ්ලොයිඩ්-ස්ටයින්බර්ග් විලාසිතාව. අසල්වැසි පික්සල වෙත ප්‍රමාණකරණ දෝෂය පතුරුවයි.',
         'ඇණවුම් කළ (Bayer): සාමාන්‍ය රටා සඳහා එළිපත්ත න්‍යාසයක් භාවිතා කරයි.',
         'Clustered Dot: halftone print කිරීම අනුකරණය කරයි.',
-        'Void & Cluster: Optimized order dithering.',
+        'වොයිඩ් සහ ක්ලස්ටර්: සකස් කළ අනුක්‍රමිත ඩිතරින්ග්.',
         'නිල් ශබ්දය: දෘශ්‍යමය වශයෙන් ප්‍රසන්න අහඹු ලෙස පෙනෙන රටාව.',
         'නිල් ශබ්ද එළිපත්ත: නිල් ශබ්ද වයනය සමඟ එළිපත්ත දිරාපත් වීම.',
         'සුදු ශබ්දය: අහඹු එළිපත්ත දිරායාම.',
@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'තිත් භ්‍රමණය: දියමන්ති/තිත් මොඩියුල කරකවන්න.',
         'අක්ෂි පරිමාණය: සෙවුම් රටා සඳහා ප්‍රමාණය ගැලපීම.',
         'රාමු විලාසය: අලංකාර රාමු එකතු කරන්න (වටකුරු රාමුව, ස්ටිකර්, ටැගය).',
-        'රාමු පෙළ: "මාව පරිලෝකනය කරන්න!" වැනි පෙළ එක් කරන්න රාමු වලට.',
+        'රාමු පෙළ: \\"මාව පරිලෝකනය කරන්න!\\" වැනි පෙළ එක් කරන්න රාමු වලට.',
       ],
       links: [
         {
@@ -475,7 +475,7 @@ export const guide: PageDefinition = {
         'ගොනු නාමය: බාගැනීම් සඳහා අභිරුචි ගොනු නාමය.',
         'GIF පැලට් ප්‍රමාණය: GIF ප්‍රතිදානයේ වර්ණ 2-256.',
         'GIF Quantizer: Median Cut, NeuQuant, හෝ Octree වර්ණ අඩු කිරීම.',
-        'GIF Dithering: Off, Floyd-Steinberg, හෝ Ordered.',
+        'GIF ඩිතරින්ග්: අක්‍රිය, ෆ්ලොයිඩ්-ස්ටයින්බර්ග්, හෝ අනුක්‍රමිත.',
         'GIF විනිවිද පෙනෙන වර්ණය: විනිවිද පෙනෙන ලෙස වර්ණයක් සකසන්න.',
         'SVG True Vector: කාවැද්දූ raster වෙනුවට මාර්ග භාවිතා කරන්න.',
         'SVG හැඩයේ නිරවද්‍යතාවය: පික්සෙල් හෝ නිරවද්‍ය මාර්ග විදැහුම්කරණය.',
@@ -840,7 +840,7 @@ export const guide: PageDefinition = {
       heading: 'සජීවිකරණ සැකසුම් (වෘත්තීය)',
       paragraphs: ['අතිරේක වෘත්තීය සජීවිකරණ විශේෂාංග:'],
       bullets: [
-        'Temporal Dither: Off, Blue Noise, හෝ Flicker Safe per-frame dithering.',
+        'කාලික ඩිතරින්ග්: අක්‍රිය, නිල් ශබ්දය, හෝ එක්-රාමුවකට ෆ්ලිකර්-සේෆ් ඩිතරින්ග්.',
         'රටාව: කිසිවක් නැත, ස්පන්දනය, තරංග, ස්කෑන්ලයින්, ෂිමර්, හෝ ප්ලාවිත බලපෑම්.',
       ],
       links: [
@@ -1023,7 +1023,7 @@ export const guide: PageDefinition = {
       heading: 'ඩිදරින් පරාමිතීන්',
       paragraphs: ['අතිච්ඡාදනය සැකසීම සඳහා ඩිදරින් ඇල්ගොරිතම පාලනය කරන්න:'],
       bullets: [
-        'ditherKind: Dither algorithm - error_diffusion, order_bayer, blue_noise, etc (default: order_bayer).',
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, etc (default: ordered_bayer).',
         'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
         'ditherStrength: Dither intensity 0-100 (පෙරනිමිය: 50).',
         'serpentine: Serpentine dithering 0/1 (පෙරනිමිය: 0).',
@@ -1198,9 +1198,9 @@ export const guide: PageDefinition = {
       heading: 'HTML උදාහරණය',
       paragraphs: [
         'ඔබේ වෙබ් අඩවියේ QR කේතයක් ඇතුළත් කිරීමට:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'ප්‍රතිචාරාත්මක ප්‍රමාණය සඳහා:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; උස: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; උස: auto;\\" />',
         'සේවාදායකය දිගු හැඹිලි ශීර්ෂ සමඟ ප්‍රතිචාර හැඹිලි කරයි, එබැවින් එකම URL සඳහා නැවත නැවත ඉල්ලීම් වේගවත් වේ.',
       ],
     },

@@ -42,7 +42,7 @@ export const translate: PageDefinition = {
         'Navštivte náš veřejný překlad úložiště na GitHub.',
         'Najděte svůj jazykový soubor (nebo vytvořte nový, pokud váš jazyk ještě není podporován).',
         'Kliknutím na ikonu tužky můžete editovat přímo ve svém prohlížeči.',
-        'Proveďte změny a klikněte na "Změny návrhu" - GitHub automaticky vytvoří požadavek na tahání.',
+        'Proveďte změny a klikněte na \\"Změny návrhu\\" - GitHub automaticky vytvoří požadavek na tahání.',
         'Váš příspěvek bude přezkoumán a sloučen, obvykle během několika dnů.',
       ],
     },

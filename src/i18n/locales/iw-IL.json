@@ -1,5 +1,6 @@
 {
   "animation": {
+    "auto": "אוטומטי",
     "blueNoise": "רעש כחול",
     "bounce": "הקפצה (פינג פונג)",
     "colorCycle": "מחזור צבע",
@@ -24,13 +25,23 @@
     "randomSeed": "זרע אקראי",
     "rotate": "סובב",
     "scanline": "Scanline",
+    "secondaryPattern": "Secondary Pattern",
+    "secondaryTarget": "Secondary Target",
+    "secondaryWaveAxis": "Secondary Wave Axis",
     "shimmer": "שימר",
     "slideIn": "החלק פנימה",
     "speed": "מהירות מסגרת",
     "startFrame": "התחל מסגרת",
+    "target": "Primary Target",
+    "targetBoth": "Both Layers",
+    "targetModules": "Module Layer",
+    "targetResult": "Result Layer",
     "temporalDither": "Temporal Dither",
     "wave": "גל",
-    "auto": "אוטומטי"
+    "waveAxis": "Wave Axis",
+    "waveAxisX": "X Axis",
+    "waveAxisXY": "X + Y",
+    "waveAxisY": "Y Axis"
   },
   "languages": {
     "en-GB": "אנגלית",
@@ -69,10 +80,10 @@
     "en-CA": "אנגלית (קנדה)",
     "en-IN": "אנגלית (הודו)",
     "en-SG": "אנגלית (סינגפור)",
-    "en-US": "אנגלית (ארה\"ב)",
+    "en-US": "אנגלית (ארה\\\"ב)",
     "en-ZA": "אנגלית (דרום אפריקה)",
     "es-419": "ספרדית (אמריקה הלטינית)",
-    "es-US": "ספרדית (ארה\"ב)",
+    "es-US": "ספרדית (ארה\\\"ב)",
     "et": "אסטונית",
     "eu-ES": "באסקית",
     "fa": "פרסית",
@@ -181,7 +192,7 @@
     "colors": "צבעים",
     "contentTypes": "סוגי תוכן",
     "dithering": "התרפקות",
-    "encoding": "Encoding",
+    "encoding": "קידוד",
     "expand": "הרחב",
     "imageOverlay": "Image Overlay",
     "items": {
@@ -856,14 +867,14 @@
       },
       "content-types": {
         "title": "סוגי תוכן",
-        "description": "Different payload formats - vCard, WiFi, Email, SMS, Geo, Calendar"
+        "description": "פורמטי מטען שונים - vCard, WiFi, דואר אלקטרוני, SMS, גיאוגרפי, לוח שנה"
       },
       "dithering": {
-        "description": "Different dithering methods and error diffusion kernels",
+        "description": "שיטות דיפוזיה שונות וגרעיני דיפוזיה של שגיאות",
         "title": "אלגוריתמים של דיבור"
       },
       "encoding": {
-        "description": "Different QR versions and error correction levels",
+        "description": "גרסאות QR שונות ורמות תיקון שגיאות",
         "title": "קידוד QR"
       },
       "image-overlay": {
@@ -871,7 +882,7 @@
         "title": "שכבות תמונה"
       },
       "plain": {
-        "description": "Standard QR codes without overlay - different versions and error correction",
+        "description": "קודי QR סטנדרטיים ללא שכבת-על - גרסאות שונות ותיקון שגיאות",
         "title": "קודי QR רגילים"
       },
       "power-combos": {
@@ -879,11 +890,11 @@
         "description": "Striking multi-feature combinations showcasing ANQR capabilities"
       },
       "preprocessing": {
-        "description": "Brightness, contrast, gamma, blur, sharpen, posterize, edge detection",
+        "description": "בהירות, ניגודיות, גמא, טשטוש, חידוד, פוסטרים, זיהוי קצוות",
         "title": "עיבוד מקדים של תמונה"
       },
       "styles": {
-        "description": "Different visual styles for modules and finder patterns",
+        "description": "סגנונות חזותיים שונים עבור מודולים ודפוסי מוצא",
         "title": "סגנונות מודול & Finder"
       }
     },
@@ -1018,7 +1029,7 @@
   "nav": {
     "about": "בערך",
     "contact": "צור קשר",
-    "guide": "Guide",
+    "guide": "מדריך",
     "learn": "למד",
     "examples": "דוגמאות",
     "gallery": "גלריה",
@@ -1300,18 +1311,32 @@
   },
   "contact": {
     "messageSentTitle": "הודעה נשלחה",
-    "messageSentDesc": "תודה - קיבלנו את הודעתך. אם לא תשמע חזרה, שלח לנו דוא\"ל בכתובת",
+    "messageSentDesc": "תודה - קיבלנו את הודעתך. אם לא תשמע חזרה, שלח לנו דוא\\\"ל בכתובת",
     "submitError": "לא יכולנו לשלוח את הטופס. נא לשלוח מייל",
     "sendMessage": "שלח הודעה",
     "sending": "שולח...",
     "privacyNote": "על ידי שליחת הודעה, אתה מסכים שנוכל להשתמש בפרטים שלך כדי להגיב. עיין במדיניות הפרטיות.",
-    "emailUs": "שלח לנו דוא\"ל",
+    "emailUs": "שלח לנו דוא\\\"ל",
     "emailUsDesc": "יש לך שאלה, הצעה או זקוק לעזרה? שלחו לנו מייל ונחזור אליכם.",
     "redditCommunity": "קהילת Reddit",
     "redditCommunityDesc": "הצטרף לקהילת Reddit שלנו כדי לשתף יצירות, לשאול שאלות ולהתחבר למשתמשים אחרים.",
     "joinReddit": "הצטרף ל-r/ANQR"
   },
   "overlay": {
+    "adaptiveThreshold": "סף מסתגל",
+    "artworkMode": "יצירות אמנות",
+    "artworkModeInfo": "מצב גרפיקה מחפש קטעי כתובת אתר שגורמים לתבנית ה-QR להתאים לתמונה שלך. התוצאות משתנות - עובד הכי טוב עם תמונות פשוטות עם ניגודיות גבוהה. עבור תמונות מורכבות, מצבי שכבת-על אחרים כמו Disthered או Halftone עשויים להפיק תוצאות טובות יותר.",
+    "artworkRequiresLowEcc": "מצב גרפיקה דורש תיקון שגיאה נמוך לשליטה מקסימלית בפיקסלים.",
+    "atkinson": "אטקינסון",
+    "bayer2": "באייר 2×2",
+    "bayer4": "באייר 4×4",
+    "bayer8": "באייר 8×8",
+    "blend": "תערובת",
+    "blendMode": "תערובת",
+    "blendPreservations": "Blend Preservations",
+    "blendPreservationMode": "Blend Preservation Mode",
+    "blendPreservationModeDither": "Dither In",
+    "blendPreservationModeOverlay": "Overlay Pass-Through",
     "photo": "מצלמה",
     "blueNoise": "רעש כחול",
     "blueNoiseMode": "רעש כחול",
@@ -1320,7 +1345,6 @@
     "waveMode": "גל",
     "upload": "העלה",
     "errorDiffusion": "פיזור שגיאה",
-    "atkinson": "אטקינסון",
     "burkes": "בורקס",
     "floydSteinberg": "פלויד-שטיינברג",
     "jarvisJudiceNinke": "ג'רוויס-ג'ודיס-נינקה",
@@ -1350,12 +1374,6 @@
     "subpixel": "תת-פיקסל",
     "subpixelMode": "תת-פיקסל",
     "gifSettings": "הגדרות GIF",
-    "adaptiveThreshold": "סף מסתגל",
-    "bayer2": "באייר 2×2",
-    "bayer4": "באייר 4×4",
-    "bayer8": "באייר 8×8",
-    "blend": "תערובת",
-    "blendMode": "תערובת",
     "blueNoiseErrorDiffusion": "רעש כחול + פיזור שגיאה",
     "blueNoiseThreshold": "סף רעש כחול",
     "blur": "טשטוש",
@@ -1418,6 +1436,7 @@
     "posterizeLevels": "פוסטר רמות",
     "preserveAlignment": "שמור על יישור",
     "preserveFinders": "שימור דפוסי Finder",
+    "preservationStrength": "Preservation Strength",
     "preserveTiming": "שמור על תזמון",
     "protectFormat": "הגן על פרטי פורמט",
     "protectFormatInfo": "הגן על פרטי פורמט",
@@ -1460,11 +1479,8 @@
     "canny": "קאני",
     "qrFirstMode": "מצב QR-ראשון",
     "qrFirstModeHelp": "כפה עדיפות לנתוני QR על פני שכבת-על עבור תמונות שחור-לבן עם ניגודיות גבוהה",
-    "artworkMode": "יצירות אמנות",
-    "artworkModeInfo": "מצב גרפיקה מחפש קטעי כתובת אתר שגורמים לתבנית ה-QR להתאים לתמונה שלך. התוצאות משתנות - עובד הכי טוב עם תמונות פשוטות עם ניגודיות גבוהה. עבור תמונות מורכבות, מצבי שכבת-על אחרים כמו Disthered או Halftone עשויים להפיק תוצאות טובות יותר.",
     "searchIterations": "חיפוש איטרציות",
-    "searchIterationsHelp": "יותר איטרציות = התאמה טובה יותר אבל יצירה אטית יותר. 10,000-50,000 מומלץ עבור רוב התמונות.",
-    "artworkRequiresLowEcc": "מצב גרפיקה דורש תיקון שגיאה נמוך לשליטה מקסימלית בפיקסלים."
+    "searchIterationsHelp": "יותר איטרציות = התאמה טובה יותר אבל יצירה אטית יותר. 10,000-50,000 מומלץ עבור רוב התמונות."
   },
   "welcome": {
     "title": "ברוכים הבאים ל-ANQR",
@@ -1490,7 +1506,7 @@
     "update2": "דוגמאות מהעולם האמיתי עם תיאורי מקרה ושיטות עבודה מומלצות",
     "update3": "40+ שפות נתמכות כעת עם תרגום ממשק משתמש מלא",
     "update4": "ניתוח בטיחות משופר ומצבי שכבת-על מודעים ל-ECC",
-    "update5": "87 שפות Google Play נתמכות כעת עם תרגומי קהילה",
+    "update5": "30 בינואר, 2026",
     "update6": "דף חדש / תרגום לתרומות לתרגום קהילתי",
     "update7": "לכידת מצלמה להדגמה מהירה של שכבת-על (אנדרואיד)",
     "update8": "ניווט סלולרי מעוצב מחדש עם פריסת רשת סמלים",
@@ -1582,7 +1598,7 @@
     "digits": "ספרות",
     "documentsMedia": "מסמכים ומדיה",
     "dropbox": "דרופבוקס",
-    "email": "דוא\"ל",
+    "email": "דוא\\\"ל",
     "encryption": "הצפנה",
     "end": "סוף",
     "endDate": "תאריך סיום",
@@ -1774,7 +1790,7 @@
     "firstName": "ג'ון",
     "lastName": "איילה",
     "nickname": "ג'וני",
-    "company": "חברה בע\"מ",
+    "company": "חברה בע\\\"מ",
     "jobTitle": "מהנדס תוכנה",
     "mecardName": "איילה, ג'ון",
     "address": "123 Main St, City",
@@ -1949,7 +1965,7 @@
     "armyId": "תעודת זהות של הצבא",
     "businessRegistration": "רישום עסק",
     "others": "אחרים",
-    "emailOption": "דוא\"ל",
+    "emailOption": "דוא\\\"ל",
     "mobileOption": "נייד",
     "abn": "ABN",
     "organizationId": "מזהה ארגון",

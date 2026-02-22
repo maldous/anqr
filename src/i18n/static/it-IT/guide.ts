@@ -437,7 +437,7 @@ export const guide: PageDefinition = {
       paragraphs: ['Quando si utilizzano sovrapposizioni GIF animate:'],
       bullets: [
         'Utilizzare Frame Delays: Rispettare tempistiche GIF originali.',
-        'Max FPS: Limit frame rate (1-60 fps).',
+        'FPS massimo: limite frame rate (1-60 fps).',
         'Smaltimento: Rispetto o semplificare i metodi di smaltimento dei frame.',
       ],
     },
@@ -452,7 +452,7 @@ export const guide: PageDefinition = {
         'Dot Rotation: Ruotare i moduli diamante/dot.',
         'Scala degli occhi: regolazione della dimensione per i modelli di ricerca.',
         'Stile telaio: Aggiungi cornici decorative (Rounded Frame, Sticker, Tag).',
-        'Testo della struttura: Aggiungi testo come "Scan Me!" alle cornici.',
+        'Testo della struttura: Aggiungi testo come \\"Scan Me!\\" alle cornici.',
       ],
       links: [
         {
@@ -479,7 +479,7 @@ export const guide: PageDefinition = {
         'Nome file: Nome file personalizzato per i download.',
         'GIF Palette Dimensioni: 2-256 colori in uscita GIF.',
         'GIF Quantizer: Median Cut, NeuQuant, o Octree riduzione del colore.',
-        'GIF Dithering: Off, Floyd-Steinberg, or Ordered.',
+        'Dithering GIF: disattivato, Floyd-Steinberg o ordinato.',
         'GIF Colore trasparente: Impostare un colore per essere trasparente.',
         'SVG Vero vettore: Utilizzare percorsi invece di raster incorporato.',
         'SVG Precisione della forma: rendering del percorso Pixel o Precise.',
@@ -1216,9 +1216,9 @@ export const guide: PageDefinition = {
       heading: 'Esempio HTML',
       paragraphs: [
         'Per inserire un codice QR nel tuo sito web:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'Per il dimensionamento reattivo:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; altezza: auto" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; altezza: auto\\" />',
         'Le risposte della cache del server con lunghe intestazioni della cache, così le richieste ripetute per lo stesso URL sono veloci.',
       ],
     },

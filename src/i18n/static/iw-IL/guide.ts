@@ -249,7 +249,7 @@ export const guide: PageDefinition = {
       paragraphs: ['רמה מתקדמת פותחת פורמטי מטען נוספים:'],
       bullets: [
         'מספר טלפון (טל:): יוצר קישור טלפון שניתן להתקשר אליו.',
-        'דוא"ל (mailto:): פותח לקוח דוא"ל עם נושא וגוף אופציונליים.',
+        'דוא\\"ל (mailto:): פותח לקוח דוא\\"ל עם נושא וגוף אופציונליים.',
         'SMS: הודעת טקסט מלאה מראש למספר טלפון.',
         'vCard: כרטיס איש קשר מלא עם שם, ארגון, טלפון, דואר אלקטרוני, כתובת.',
         'MeCard: פורמט קשר קומפקטי פופולרי ביפן.',
@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'סיבוב נקודות: סובב מודולי יהלום/נקודה.',
         'סולם עיניים: התאמת גודל לדפוסי מוצא.',
         'סגנון מסגרת: הוסף מסגרות דקורטיביות (מסגרת מעוגלת, מדבקה, תג).',
-        'טקסט מסגרת: הוסף טקסט כמו "סרוק אותי!" למסגרות.',
+        'טקסט מסגרת: הוסף טקסט כמו \\"סרוק אותי!\\" למסגרות.',
       ],
       links: [
         {
@@ -475,7 +475,7 @@ export const guide: PageDefinition = {
         'שם קובץ: שם קובץ מותאם אישית להורדות.',
         'גודל פלטת GIF: 2-256 צבעים בפלט GIF.',
         'GIF Quantizer: חציון חיתוך, NeuQuant או הקטנת צבע Octree.',
-        'GIF Dithering: Off, Floyd-Steinberg, או Ordered.',
+        'דיתרינג GIF: כבוי, פלויד-שטיינברג או מסודר.',
         'צבע GIF שקוף: הגדר צבע להיות שקוף.',
         'SVG True Vector: השתמש בנתיבים במקום ברסטר מוטבע.',
         'דיוק צורת SVG: עיבוד נתיב פיקסלים או מדויק.',
@@ -1198,9 +1198,9 @@ export const guide: PageDefinition = {
       heading: 'דוגמה HTML',
       paragraphs: [
         'כדי להטמיע קוד QR באתר האינטרנט שלך:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="קוד QR" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"קוד QR\\" />',
         'למידות רספונסיביות:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'השרת מאחסן תגובות עם כותרות מטמון ארוכות, כך שבקשות חוזרות לאותה כתובת הן מהירות.',
       ],
     },

@@ -60,7 +60,7 @@ export const contact: PageDefinition = {
       heading: 'DMCA tengiliður',
       paragraphs: [
         'Sendu DMCA tilkynningar á: email@anqr.link',
-        'Vinsamlegast settu "DMCA tilkynningu" inn í efnislínuna. Við munum svara gildum tilkynningum í samræmi við gildandi lög. Athugaðu að ANQR býr til QR kóða á staðnum á tækjum notenda og hýsir ekki efni sem er búið til af notendum.',
+        'Vinsamlegast settu \\"DMCA tilkynningu\\" inn í efnislínuna. Við munum svara gildum tilkynningum í samræmi við gildandi lög. Athugaðu að ANQR býr til QR kóða á staðnum á tækjum notenda og hýsir ekki efni sem er búið til af notendum.',
       ],
     },
     {

@@ -63,7 +63,7 @@ export const terms: PageDefinition = {
     {
       heading: 'Garantiidest loobumine',
       paragraphs: [
-        'ANQR PAKUTAKSE "NAGU ON" JA "NAGU SAADAVAL" PÕHISEL ILMA MINGI LIIGI OTSESELT VÕI KAUDSETE GARANTIIDETA, KAASA arvatud, KUID MITTE PIIRATUD, KAUDSED GARANTIID KAUBANDUSLIKU VÕIME, NING PARTNERI PARTNERI TASUTAMISEKS SOOVITUSE KOHTA.',
+        'ANQR PAKUTAKSE \\"NAGU ON\\" JA \\"NAGU SAADAVAL\\" PÕHISEL ILMA MINGI LIIGI OTSESELT VÕI KAUDSETE GARANTIIDETA, KAASA arvatud, KUID MITTE PIIRATUD, KAUDSED GARANTIID KAUBANDUSLIKU VÕIME, NING PARTNERI PARTNERI TASUTAMISEKS SOOVITUSE KOHTA.',
         'Me ei garanteeri, et: (a) sait on katkematu, turvaline või vigadeta; (b) QR-koode skannitakse kõigis keskkondades, kõigis seadmetes või kõigi skannerirakendustega; (c) sait vastab teie nõuetele.',
         'QR-koode tuleks alati testida tingimustes, kus neid kasutatakse (trüki suurus, valgustus, ekraani tüüp, kaugus, kaamera kvaliteet).',
       ],
@@ -106,7 +106,7 @@ export const terms: PageDefinition = {
       heading: 'Muudatused ja saadavus',
       paragraphs: [
         'Võime saiti (või selle mis tahes osa) igal ajal muuta, peatada või katkestada ilma ette teatamata või vastutuseta.',
-        'Võime neid tingimusi igal ajal värskendada. "Viimati värskendatud" kuupäev näitab, millal neid viimati muudeti. Jätkuv kasutamine pärast muudatusi loeb heakskiidu.',
+        'Võime neid tingimusi igal ajal värskendada. \\"Viimati värskendatud\\" kuupäev näitab, millal neid viimati muudeti. Jätkuv kasutamine pärast muudatusi loeb heakskiidu.',
       ],
     },
     {

@@ -923,7 +923,7 @@ export const guide: PageDefinition = {
         'ログイン フレーム:フレームの数 1-60 (デフォルト: 24)。',
         'ログイン 速度:ミリ秒10-1000のフレーム遅延(デフォルト:100)。',
         'ログイン 種:アニメーション用のランダムシード。',
-        'easing: Animation easing - リニア, easy_in, easy_out, easy_in_out, bounce.',
+        'easing: Animation easing - linear, ease_in, ease_out, ease_in_out, bounce.',
       ],
     },
     {
@@ -996,7 +996,7 @@ export const guide: PageDefinition = {
       paragraphs: ['オーバーレイ処理のディザリング アルゴリズムを制御します。'],
       bullets: [
         'ditherKind: ディザ アルゴリズム - error_diffusion、ORDER_BAYER、BLUE_NOISE など (デフォルト:ORDER_BAYER)。',
-        'diffusionKernel: 誤差拡散カーネル - floyd_steinberg、jarvis_judice_ninke、sticki、burkes、sierra、atkinson (デフォルト: floyd_steinberg)。',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
         'ditherStrength: ディザー強度 0 ～ 100 (デフォルト: 50)。',
         'serpentine: 蛇行ディザリング 0/1 (デフォルト: 0)。',
         '行列: 順序付きディザ行列 - ベイヤー 2、ベイヤー 4、ベイヤー 8 (デフォルト: ベイヤー 4)。',
@@ -1172,9 +1172,9 @@ export const guide: PageDefinition = {
       heading: 'HTML の例',
       paragraphs: [
         'ウェブサイトにQRコードを埋め込むには:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200"alt="QRコード" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\"alt=\\"QRコード\\" />',
         '敏感なサイジングのため:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400"alt="QR Code" style="max-width:100%; height: auto;"/>',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\"alt=\\"QR Code\\" style=\\"max-width:100%; height: auto;\\"/>',
         'サーバは、長いキャッシュヘッダでレスポンスをキャッシュするので、同じ URL のリクエストを繰り返します。',
       ],
     },

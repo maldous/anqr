@@ -63,7 +63,7 @@ export const terms: PageDefinition = {
     {
       heading: '책임의 부인',
       paragraphs: [
-        'ANQR은 "AS IS"와 "AS AVAILABLE" BASIS는 어떤 KIND, EXPRESS 또는 IMPLIED, INCLUDING BUT의 보증을 포함하지 않고, MERCHANTABILITY의 보증, 일부 PURPOSE 및 NON-INFRINGEMENT에 대한 FITNESS.',
+        'ANQR은 \\"AS IS\\"와 \\"AS AVAILABLE\\" BASIS는 어떤 KIND, EXPRESS 또는 IMPLIED, INCLUDING BUT의 보증을 포함하지 않고, MERCHANTABILITY의 보증, 일부 PURPOSE 및 NON-INFRINGEMENT에 대한 FITNESS.',
         '우리는 그것을 보증하지 않습니다 : (a) 사이트는 모든 장치 또는 모든 스캐너 응용 프로그램에서 모든 환경, (c), 또는 모든 스캐너 응용 프로그램으로 모든 환경에서 검사됩니다; (c) 사이트가 요구 사항을 충족 할 것입니다.',
         '항상 사용되는 조건에서 QR 코드를 테스트해야합니다 (인쇄 크기, 조명, 화면 유형, 거리, 카메라 품질).',
       ],
@@ -104,7 +104,7 @@ export const terms: PageDefinition = {
       heading: '변경 및 가용성',
       paragraphs: [
         '우리는 수정할 수 있습니다, suspend, 또는 사이트 중단 (또는 그 중 일부) 통지 또는 책임없이.',
-        '이 약관을 언제든지 업데이트 할 수 있습니다. "마지막 업데이트"일은 가장 최근 개정되었을 때 나타냅니다. 변경 후 계속 사용은 수락을 구성합니다.',
+        '이 약관을 언제든지 업데이트 할 수 있습니다. \\"마지막 업데이트\\"일은 가장 최근 개정되었을 때 나타냅니다. 변경 후 계속 사용은 수락을 구성합니다.',
       ],
     },
     {

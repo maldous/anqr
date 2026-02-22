@@ -319,7 +319,7 @@ export const guide: PageDefinition = {
       bullets: [
         'Plná farba: Zachová pôvodné farby obrazu.',
         'Grayscale: Converts to black and white tones.',
-        'Black & White: High contrast binary conversion.',
+        'Čiernobiele: Vysokokontrastná binárna konverzia.',
       ],
     },
     {
@@ -337,10 +337,10 @@ export const guide: PageDefinition = {
         'Jas (-100 až +100): Zosvetlenie alebo stmavenie obrazu.',
         'Kontrast (-100 až +100): Zvýšenie alebo zníženie tónového rozsahu.',
         'Gamma (0,2 až 3,0): Nelineárne nastavenie jasu. Hodnoty pod 1 zosvetlia stredné tóny, nad 1 ich stmavia.',
-        'Saturation (-100 to +100): Color intensity. -100 is grayscale, +100 is oversaturated.',
+        'Sýtosť (-100 až +100): Intenzita farieb. -100 je odtieň sivej, +100 je presýtené.',
         'Hue Rotate (0-360°): Posun všetkých farieb okolo farebného kolieska.',
-        'Blur (0-20px): Soften image details.',
-        'Sharpen (0-100%): Enhance edges and details.',
+        'Rozmazanie (0-20px): Zjemní detaily obrázka.',
+        'Zaostrenie (0-100%): Zvýrazní hrany a detaily.',
         'Posterizácia (0-16 úrovní): Znížte úrovne farieb pre efekt plagátu.',
         'Prahová hodnota (0-255): Prevod na binárnu čiernu/bielu v hraničnom bode.',
         'Detekcia hrán: Algoritmy Sobel alebo Canny na zobrazenie iba hrán.',
@@ -349,7 +349,7 @@ export const guide: PageDefinition = {
     },
     {
       heading: 'Režim Fit',
-      paragraphs: ['How the overlay image fits the QR code area:'],
+      paragraphs: ['Ako sa obrázok prekrytia prispôsobí oblasti QR kódu:'],
       bullets: [
         'Obálka: Obrázok vyplní celú oblasť av prípade potreby sa orezá.',
         'Contain: Entire image visible, may have margins.',
@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'Otáčanie bodov: Otáčanie diamantových/bodových modulov.',
         'Mierka očí: Úprava veľkosti vzorov vyhľadávača.',
         'Štýl rámu: Pridajte ozdobné rámy (zaoblený rám, nálepka, štítok).',
-        'Frame Text: Pridajte text ako "Scan Me!" do rámov.',
+        'Frame Text: Pridajte text ako \\"Scan Me!\\" do rámov.',
       ],
       links: [
         {
@@ -1204,9 +1204,9 @@ export const guide: PageDefinition = {
       heading: 'Príklad HTML',
       paragraphs: [
         'Ak chcete vložiť QR kód na svoj web:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="kód QR" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"kód QR\\" />',
         'Pre responzívne dimenzovanie:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="kód QR" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"kód QR\\" style=\\"max-width: 100%; height: auto;\\" />',
         'Server ukladá odpovede do vyrovnávacej pamäte s dlhými hlavičkami vyrovnávacej pamäte, takže opakované požiadavky na rovnakú adresu URL sú rýchle.',
       ],
     },

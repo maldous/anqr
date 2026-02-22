@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'Punktasnúningur: Snúðu tígul/punktaeiningum.',
         'Augnkvarði: Stærðarstilling fyrir finnaarmynstur.',
         'Rammastíll: Bættu við skrautrömmum (ávalinn rammi, límmiði, merki).',
-        'Rammatexti: Bættu við texta eins og "Skannaðu mig!" til ramma.',
+        'Rammatexti: Bættu við texta eins og \\"Skannaðu mig!\\" til ramma.',
       ],
       links: [
         {
@@ -1202,9 +1202,9 @@ export const guide: PageDefinition = {
       heading: 'HTML dæmi',
       paragraphs: [
         'Til að fella inn QR kóða á vefsíðuna þína:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'Fyrir móttækilega stærð:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'Miðlarinn vistar svör með löngum skyndiminnihausum, svo endurteknar beiðnir um sömu vefslóð eru fljótar.',
       ],
     },
