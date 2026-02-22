@@ -1,6 +1,25 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 13:25:00 UTC
+Last updated: 2026-02-22 15:10:00 UTC
+
+## Latest Update (2026-02-22, GIF Timing Preservation + Gallery Runner Strict-Mode Controls)
+
+- Fixed frame-decimation timing correctness in `netlify/functions/qr.ts`:
+  - `decimateFramesToMaxFps()` now preserves total animation duration by merging skipped-frame delays into the next kept frame.
+  - added `decimateFramesToMaxCount()` and switched server hard-cap limiting to count-based decimation with duration preservation.
+  - removed prior arbitrary target-fps heuristic (`Math.ceil(rawFrames.length / SERVER_MAX_ANIMATION_FRAMES) * 10`) and fallback striding branch.
+- Updated gallery generators to stop forcing strict overlay failures globally:
+  - `scripts/generate-gallery-local.mjs`, `scripts/generate-gallery-remote.mjs`, and `scripts/generate-gallery-browser.mjs` now set `_strictOverlay=1` only when `GALLERY_STRICT_OVERLAY=1`.
+  - `_fullRender=1` remains enforced for parity renders.
+- Improved browser preview GIF re-encode parity (`scripts/generate-gallery-browser.mjs`):
+  - switched from per-frame palettes to a global sampled palette (+ black/white anchors) to reduce palette shimmer/flicker artifacts.
+  - disposal mode now maps from scenario `gifDisp` (instead of forced `dispose: 1`).
+  - preview GIF delay handling now honors `gifMaxFps` minimum delay clamp.
+  - preview GIF palette size now follows scenario `gifColors`/`gifPal`.
+- Validation:
+  - `npm run typecheck` passes.
+  - `npm run test:unit -- tests/unit/netlify-qr-helpers.spec.ts` passes.
+  - `npm run test:unit -- tests/unit/netlify-qr-function.spec.ts` passes.
 
 ## Latest Update (2026-02-22, GIF Corruption Hardening + Payload-Permutation Removal)
 

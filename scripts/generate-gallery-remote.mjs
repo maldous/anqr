@@ -51,6 +51,7 @@ const FETCH_TIMEOUT_MS = Math.max(
     Number.parseInt(process.env.GALLERY_FETCH_TIMEOUT_MS || '120000', 10),
   ),
 );
+const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
 const SKIP_CACHE = process.env.GALLERY_SKIP_CACHE === '1';
 const ARTIFACT_EXTS = ['png', 'gif', 'webp', 'jpg', 'jpeg', 'svg'];
 const RESOLVE_FALLBACK_IPS = String(process.env.GALLERY_RESOLVE_FALLBACK_IPS || '')
@@ -121,8 +122,10 @@ function buildApiUrl(config) {
 
   // Force deterministic full render for parity comparisons.
   params.set('_fullRender', '1');
-  // Fail instead of silently degrading when overlay fetch/decode fails.
-  params.set('_strictOverlay', '1');
+  // Optional fail-fast mode for overlay fetch/decode issues.
+  if (FORCE_STRICT_OVERLAY) {
+    params.set('_strictOverlay', '1');
+  }
 
   return `${API_BASE}?${params.toString()}`;
 }

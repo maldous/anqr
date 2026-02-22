@@ -57,6 +57,7 @@ const CANVAS_SELECTOR =
   '[data-testid="qr-preview"] canvas, [data-testid="preview-canvas"], canvas[role="img"]';
 const SKIP_SERVER_CHECK = process.env.GALLERY_SKIP_SERVER_CHECK === '1';
 const CAPTURE_MODE = (process.env.GALLERY_BROWSER_CAPTURE_MODE || 'api').toLowerCase();
+const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
 const BROWSER_GIF_CAPTURE_FRAMES = Math.max(
   2,
   Number.parseInt(process.env.GALLERY_BROWSER_GIF_FRAMES || '24', 10),
@@ -157,7 +158,9 @@ function toLocalFixtureFileUrl(imgPath) {
 async function buildLocalRequest(config) {
   const params = new URLSearchParams(buildUrlParams(config));
   params.set('_fullRender', '1');
-  params.set('_strictOverlay', '1');
+  if (FORCE_STRICT_OVERLAY) {
+    params.set('_strictOverlay', '1');
+  }
 
   const headers = new Headers({
     'X-ANQR-Skip-Cache': '1',
@@ -251,7 +254,63 @@ function parseHexColor(input, fallback = 'ffffff') {
   return fallback;
 }
 
-function encodeAnimatedGifFromCanvases(frames, frameDelayMs = 100, colors = 256) {
+function parseGifDisposalCode(value) {
+  const normalized = String(value || 'restore_bg').toLowerCase();
+  if (normalized === 'none') return 0;
+  if (normalized === 'keep') return 1;
+  if (normalized === 'restore_previous') return 3;
+  return 2;
+}
+
+function hasPaletteColor(palette, predicate) {
+  return palette.some((entry) => {
+    const [r, g, b] = entry;
+    return predicate(r ?? 0, g ?? 0, b ?? 0);
+  });
+}
+
+function ensureGifPaletteAnchors(palette, maxSize) {
+  const out = [...palette];
+  const hasNearBlack = hasPaletteColor(out, (r, g, b) => r <= 24 && g <= 24 && b <= 24);
+  const hasNearWhite = hasPaletteColor(out, (r, g, b) => r >= 231 && g >= 231 && b >= 231);
+
+  if (!hasNearBlack) out.push([0, 0, 0]);
+  if (!hasNearWhite) out.push([255, 255, 255]);
+
+  while (out.length > maxSize) {
+    const dropIdx = Math.floor(out.length / 2);
+    out.splice(dropIdx, 1);
+  }
+
+  return out;
+}
+
+function buildGlobalPaletteFromFrames(frameDataList, width, height, paletteSize) {
+  const frameCount = frameDataList.length;
+  const sampleTarget = Math.min(frameCount, 12);
+  const sampleIdx = new Set([0, frameCount - 1]);
+  for (let i = 1; i < sampleTarget - 1; i++) {
+    sampleIdx.add(Math.round((i * (frameCount - 1)) / (sampleTarget - 1)));
+  }
+  const orderedIdx = Array.from(sampleIdx).sort((a, b) => a - b);
+  const samplePixels = new Uint8ClampedArray(orderedIdx.length * width * height * 4);
+  let offset = 0;
+  for (const idx of orderedIdx) {
+    const data = frameDataList[idx];
+    samplePixels.set(data, offset);
+    offset += data.length;
+  }
+  const basePalette = quantizeGifPalette(samplePixels, paletteSize);
+  return ensureGifPaletteAnchors(basePalette, paletteSize);
+}
+
+function encodeAnimatedGifFromCanvases(
+  frames,
+  frameDelayMs = 100,
+  colors = 256,
+  disposal = 1,
+  frameDelaysMs = [],
+) {
   if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
   }
@@ -263,17 +322,24 @@ function encodeAnimatedGifFromCanvases(frames, frameDelayMs = 100, colors = 256)
   const height = frames[0].height;
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
-  const delayMs = Math.max(20, frameDelayMs);
+  const defaultDelayMs = Math.max(20, frameDelayMs);
+  const frameDataList = frames.map((frame) => {
+    const ctx = frame.getContext('2d');
+    return ctx.getImageData(0, 0, width, height).data;
+  });
+  const globalPalette = buildGlobalPaletteFromFrames(frameDataList, width, height, paletteSize);
 
   for (let i = 0; i < frames.length; i++) {
-    const ctx = frames[i].getContext('2d');
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const palette = quantizeGifPalette(imageData.data, paletteSize);
-    const index = indexGifPixels(imageData.data, palette);
+    const index = indexGifPixels(frameDataList[i], globalPalette);
+    const requestedDelay = Number(frameDelaysMs[i]);
+    const delayMs =
+      Number.isFinite(requestedDelay) && requestedDelay > 0
+        ? Math.max(20, requestedDelay)
+        : defaultDelayMs;
     const options = {
-      palette,
+      palette: globalPalette,
       delay: delayMs,
-      dispose: 1,
+      dispose: disposal,
       ...(i === 0 ? { repeat: 0 } : {}),
     };
     gif.writeFrame(index, width, height, options);
@@ -290,6 +356,8 @@ async function captureAnimatedGifFromCanvas(
   targetWidth,
   targetHeight,
   backgroundHex,
+  gifColors,
+  gifDisposalCode,
 ) {
   const frames = [];
   for (let i = 0; i < frameCount; i++) {
@@ -310,7 +378,7 @@ async function captureAnimatedGifFromCanvas(
       await page.waitForTimeout(frameDelayMs);
     }
   }
-  return encodeAnimatedGifFromCanvases(frames, frameDelayMs);
+  return encodeAnimatedGifFromCanvases(frames, frameDelayMs, gifColors, gifDisposalCode);
 }
 
 // ============================================
@@ -429,6 +497,14 @@ async function main() {
       1000,
       Math.max(20, parseIntParam(config.params.animSpeed ?? config.params.speed, BROWSER_GIF_CAPTURE_DELAY_MS)),
     );
+    const gifMaxFps = parseIntParam(config.params.gifMaxFps, 0);
+    const minDelayFromGifMaxFps = gifMaxFps > 0 ? Math.ceil(1000 / gifMaxFps) : 0;
+    const resolvedAnimDelayMs = Math.max(animDelayMs, minDelayFromGifMaxFps);
+    const gifColors = Math.min(
+      256,
+      Math.max(2, parseIntParam(config.params.gifColors ?? config.params.gifPal, 256)),
+    );
+    const gifDisposalCode = parseGifDisposalCode(config.params.gifDisp);
     const backgroundHex =
       String(config.params.transparent ?? '0') === '1'
         ? null
@@ -506,10 +582,12 @@ async function main() {
           artifactBuffer = await captureAnimatedGifFromCanvas(
             page,
             animFrameCount,
-            animDelayMs,
+            resolvedAnimDelayMs,
             targetWidth,
             targetHeight,
             backgroundHex,
+            gifColors,
+            gifDisposalCode,
           );
           artifactContentType = 'image/gif';
         } else {

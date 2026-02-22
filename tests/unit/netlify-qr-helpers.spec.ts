@@ -257,12 +257,18 @@ describe('netlify qr helpers', () => {
   });
 
   it('decimates frames to target fps', () => {
-    const frame = { canvas: makeCanvas(8, 8), delay: 10, disposalType: 2 };
-    const frames = [frame, frame, frame, frame, frame];
+    const frames = [10, 20, 30, 40, 50].map((delay) => ({
+      canvas: makeCanvas(8, 8),
+      delay,
+      disposalType: 2,
+    }));
+    const totalInputDelay = frames.reduce((sum, frame) => sum + frame.delay, 0);
     const out = __test.decimateFramesToMaxFps(frames, 10);
     expect(out.length).toBeGreaterThan(0);
     expect(out.length).toBeLessThanOrEqual(frames.length);
-    expect(__test.decimateFramesToMaxFps([frame], 10)).toHaveLength(1);
+    const totalOutputDelay = out.reduce((sum, frame) => sum + frame.delay, 0);
+    expect(totalOutputDelay).toBe(totalInputDelay);
+    expect(__test.decimateFramesToMaxFps([frames[0]], 10)).toHaveLength(1);
     expect(__test.decimateFramesToMaxFps(frames, 1000)).toHaveLength(frames.length);
   });
 

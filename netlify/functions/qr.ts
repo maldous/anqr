@@ -2217,37 +2217,73 @@ function decimateFramesToMaxFps(
     return frames;
   }
 
-  const totalDelay = frames.reduce((sum, f) => sum + (f.delay || 100), 0);
-  const avgDelay = totalDelay / frames.length;
-  const sourceFps = avgDelay > 0 ? 1000 / avgDelay : 0;
+  const frameDelays = frames.map((frame) => {
+    const delay = Number.isFinite(frame.delay) ? frame.delay : 100;
+    return delay > 0 ? delay : 100;
+  });
+  const totalDelay = frameDelays.reduce((sum, delay) => sum + delay, 0);
+  const sourceFps = totalDelay > 0 ? (frames.length * 1000) / totalDelay : 0;
 
   if (!sourceFps || sourceFps <= targetFps) {
     return frames;
   }
 
-  const ratio = sourceFps / targetFps;
-  const keepIndices: number[] = [];
+  // Keep duration constant while reducing frame count based on requested FPS.
+  const targetFrameCount = Math.max(1, Math.floor((totalDelay * targetFps) / 1000));
+  return decimateFramesToMaxCount(frames, targetFrameCount);
+}
 
-  let accumulator = 0;
-  for (let i = 0; i < frames.length; i++) {
-    accumulator += 1;
-    if (accumulator >= ratio) {
-      keepIndices.push(i);
-      accumulator -= ratio;
+function decimateFramesToMaxCount(
+  frames: ServerAnimationFrame[],
+  maxFrames: number
+): ServerAnimationFrame[] {
+  if (frames.length <= 1 || maxFrames <= 0 || frames.length <= maxFrames) {
+    return frames;
+  }
+
+  const delays = frames.map((frame) => {
+    const delay = Number.isFinite(frame.delay) ? frame.delay : 100;
+    return delay > 0 ? delay : 100;
+  });
+  const totalDelay = delays.reduce((sum, delay) => sum + delay, 0);
+  if (totalDelay <= 0) {
+    return frames.slice(0, maxFrames);
+  }
+
+  const desiredFrameCount = Math.min(frames.length, Math.max(1, Math.floor(maxFrames)));
+  if (desiredFrameCount === 1) {
+    return [{ ...frames[0], delay: totalDelay }];
+  }
+
+  const keepIndices = new Set<number>([0, frames.length - 1]);
+  const intervals = desiredFrameCount - 1;
+  for (let step = 1; step < intervals; step++) {
+    const targetTime = (totalDelay * step) / intervals;
+    let idx = 0;
+    let elapsed = 0;
+    while (idx < frames.length - 1 && elapsed + delays[idx] <= targetTime) {
+      elapsed += delays[idx];
+      idx += 1;
     }
+    keepIndices.add(idx);
   }
 
-  if (keepIndices.length === 0) {
-    keepIndices.push(0);
+  const orderedKeepIndices = Array.from(keepIndices).sort((a, b) => a - b);
+  const decimated: ServerAnimationFrame[] = [];
+  for (let pos = 0; pos < orderedKeepIndices.length; pos++) {
+    const startIdx = orderedKeepIndices[pos];
+    const endExclusive =
+      pos + 1 < orderedKeepIndices.length ? orderedKeepIndices[pos + 1] : frames.length;
+    let mergedDelay = 0;
+    for (let i = startIdx; i < endExclusive; i++) {
+      mergedDelay += delays[i];
+    }
+    decimated.push({
+      ...frames[startIdx],
+      delay: mergedDelay,
+    });
   }
-  if (keepIndices[0] !== 0) {
-    keepIndices.unshift(0);
-  }
-  if (keepIndices[keepIndices.length - 1] !== frames.length - 1) {
-    keepIndices.push(frames.length - 1);
-  }
-
-  return keepIndices.map((idx) => frames[idx]).filter(Boolean);
+  return decimated;
 }
 
 /**
@@ -3324,24 +3360,13 @@ async function handler(request: Request) {
             parseMs: Date.now() - tParse,
           });
 
-          // AGGRESSIVE FRAME LIMITING: Always limit to max frames for server-side
-          // This prevents timeout issues. Client handles more frames with compositor.
+          // Hard-cap animated overlays by count while preserving total playback duration.
           if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
             qrFnLog('[TIMING] limiting frames', {
               from: rawFrames.length,
               to: SERVER_MAX_ANIMATION_FRAMES,
             });
-            rawFrames = decimateFramesToMaxFps(
-              rawFrames,
-              Math.ceil(rawFrames.length / SERVER_MAX_ANIMATION_FRAMES) * 10
-            );
-            // If still too many, just take first N frames evenly distributed
-            if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
-              const step = Math.ceil(rawFrames.length / SERVER_MAX_ANIMATION_FRAMES);
-              rawFrames = rawFrames
-                .filter((_, i) => i % step === 0 || i === rawFrames.length - 1)
-                .slice(0, SERVER_MAX_ANIMATION_FRAMES);
-            }
+            rawFrames = decimateFramesToMaxCount(rawFrames, SERVER_MAX_ANIMATION_FRAMES);
           }
 
           const tPreprocess = Date.now();
@@ -4049,6 +4074,7 @@ export const __test = {
   isGifBuffer,
   parseGifFramesServer,
   decimateFramesToMaxFps,
+  decimateFramesToMaxCount,
   encodeAnimatedGifWithDelays,
   parseGradientStops,
   fetchImageWithBuffer,
