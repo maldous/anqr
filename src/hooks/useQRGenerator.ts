@@ -814,16 +814,11 @@ function useQRGenerator(): UseQRGeneratorResult {
   // Short debounce (150ms) for style changes since content is already pre-debounced at 700ms
   const debouncedConfig = useDebounce(config, 150);
 
-  // Create stable content hashes for change detection
-  // This avoids false triggers from object reference changes on remount
-  const configHash = useMemo(() => JSON.stringify(config), [config]);
-  const debouncedConfigHash = useMemo(() => JSON.stringify(debouncedConfig), [debouncedConfig]);
-
   // Track when config changes but debounce hasn't settled yet
   // NOTE: We intentionally do NOT track content pending here - the 700ms content debounce
   // already prevents QR generation during typing, so we don't need to show a blur.
   // Only show pending blur for style/config changes (which use the fast 150ms debounce).
-  const isConfigPending = configHash !== debouncedConfigHash;
+  const isConfigPending = config !== debouncedConfig;
 
   // Show pending state for style changes only (not for content typing)
   // Use a short delay to avoid flickering on rapid style changes
@@ -1220,6 +1215,10 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     if (isStaleRequest()) return;
     setIsRendering(true);
+    const yieldForResponsiveness = async (): Promise<boolean> => {
+      await yieldToMainThread(16);
+      return isStaleRequest();
+    };
 
     try {
       // Build effective config - may be modified by QR-Art fragment search
@@ -1238,6 +1237,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
         // Try full QR-Art algorithm (RS basis manipulation)
         try {
+          if (await yieldForResponsiveness()) return;
           const useAutoMask =
             typeof debouncedConfig.maskPattern !== 'number' || debouncedConfig.maskPattern < 0;
           const qartConfig = {
@@ -1369,6 +1369,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           typeNumber: effectiveConfig.typeNumber,
           errorCorrection: effectiveConfig.errorCorrection,
         });
+        if (await yieldForResponsiveness()) return;
         result = await qrGenerator.generate(
           effectiveConfig,
           overlay.enabled ? overlayCanvas : null
@@ -1414,6 +1415,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             };
             try {
               log.debug('Trying ECC level', { ecc });
+              if (await yieldForResponsiveness()) return;
               result = await qrGenerator.generate(
                 fallbackConfig,
                 overlay.enabled ? overlayCanvas : null
@@ -1658,8 +1660,9 @@ function useQRGenerator(): UseQRGeneratorResult {
     if (candidateIndices.length > 1 && overlay.gifMaxFps > 0 && gifCompositor) {
       // Use compositor-based decimation for GIFs
       const allIndices = decimateCompositorFrames(gifCompositor, overlay.gifMaxFps);
+      const allIndexSet = new Set(allIndices);
       // Filter to only keep indices that are in our candidate set
-      candidateIndices = candidateIndices.filter((i) => allIndices.includes(i));
+      candidateIndices = candidateIndices.filter((i) => allIndexSet.has(i));
     }
 
     if (candidateIndices.length > 0) {
@@ -2308,6 +2311,43 @@ function useQRGenerator(): UseQRGeneratorResult {
       return Math.min(2.4, Math.max(0, Number(jitter.toFixed(3))));
     };
 
+    let patternScratchA: HTMLCanvasElement | null = null;
+    let patternScratchB: HTMLCanvasElement | null = null;
+    const getPatternScratchCanvas = (
+      slot: 0 | 1,
+      width: number,
+      height: number
+    ): HTMLCanvasElement => {
+      const current = slot === 0 ? patternScratchA : patternScratchB;
+      if (!current) {
+        const created = document.createElement('canvas');
+        created.width = width;
+        created.height = height;
+        if (slot === 0) {
+          patternScratchA = created;
+        } else {
+          patternScratchB = created;
+        }
+        return created;
+      }
+      if (current.width !== width) current.width = width;
+      if (current.height !== height) current.height = height;
+      return current;
+    };
+
+    const cloneCanvas = (
+      sourceCanvas: HTMLCanvasElement | OffscreenCanvas
+    ): HTMLCanvasElement | OffscreenCanvas => {
+      const cloned = document.createElement('canvas');
+      cloned.width = sourceCanvas.width;
+      cloned.height = sourceCanvas.height;
+      const clonedCtx = cloned.getContext('2d');
+      if (clonedCtx) {
+        clonedCtx.drawImage(sourceCanvas, 0, 0);
+      }
+      return cloned;
+    };
+
     const applyPatternStack = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       effects: Array<{
@@ -2316,29 +2356,52 @@ function useQRGenerator(): UseQRGeneratorResult {
         waveAxis: 'x' | 'y' | 'xy';
       }>,
       frameIndex: number,
-      totalFrames: number
+      totalFrames: number,
+      persistentOutput = false
     ): HTMLCanvasElement | OffscreenCanvas => {
+      if (effects.length === 0) return sourceCanvas;
+
       let out = sourceCanvas;
-      for (const effect of effects) {
-        out = applyAnimationPattern(out, frameIndex, totalFrames, effect.pattern, {
-          seed: effect.seed,
-          waveAxis: effect.waveAxis,
-        });
+      for (let effectIdx = 0; effectIdx < effects.length; effectIdx++) {
+        const effect = effects[effectIdx];
+        const targetCanvas = getPatternScratchCanvas(
+          (effectIdx % 2) as 0 | 1,
+          out.width,
+          out.height
+        );
+        out = applyAnimationPattern(
+          out,
+          frameIndex,
+          totalFrames,
+          effect.pattern,
+          {
+            seed: effect.seed,
+            waveAxis: effect.waveAxis,
+          },
+          targetCanvas
+        );
       }
-      return out;
+
+      return persistentOutput ? cloneCanvas(out) : out;
     };
-    const applyResultPatternStack = (
+    const applyResultPatternStackPersistent = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
       totalFrames: number
     ): HTMLCanvasElement | OffscreenCanvas =>
-      applyPatternStack(sourceCanvas, resultPatternEffects, frameIndex, totalFrames);
-    const applyModulePatternStack = (
+      applyPatternStack(sourceCanvas, resultPatternEffects, frameIndex, totalFrames, true);
+    const applyResultPatternStackEphemeral = (
       sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
       frameIndex: number,
       totalFrames: number
     ): HTMLCanvasElement | OffscreenCanvas =>
-      applyPatternStack(sourceCanvas, modulePatternEffects, frameIndex, totalFrames);
+      applyPatternStack(sourceCanvas, resultPatternEffects, frameIndex, totalFrames, false);
+    const applyModulePatternStackEphemeral = (
+      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+      frameIndex: number,
+      totalFrames: number
+    ): HTMLCanvasElement | OffscreenCanvas =>
+      applyPatternStack(sourceCanvas, modulePatternEffects, frameIndex, totalFrames, false);
 
     // Early return only if no animation is needed
     // For multi-frame overlays (animated GIFs), we need to generate frames regardless of other animation effects
@@ -2419,7 +2482,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
           if (!baseQR || isCancelled) return;
           framesToProcess = Array.from({ length: frameCount }, (_, i) => ({
-            canvas: applyResultPatternStack(baseQR, i, frameCount),
+            canvas: applyResultPatternStackPersistent(baseQR, i, frameCount),
             delay: animation.speedMs,
             disposalType: 0,
           }));
@@ -2440,7 +2503,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             };
             const jitteredQR = await qrGenerator.generate(frameConfig, null);
             if (!jitteredQR) continue;
-            combinedFrames.push(applyResultPatternStack(jitteredQR, i, frameCount));
+            combinedFrames.push(applyResultPatternStackPersistent(jitteredQR, i, frameCount));
           }
 
           framesToProcess = combinedFrames.map((canvas) => ({
@@ -2465,7 +2528,9 @@ function useQRGenerator(): UseQRGeneratorResult {
               moduleJitterPx: computePatternDrivenJitter(i, frameCount),
             };
             const qrFrame = await qrGenerator.generate(frameConfig, null);
-            if (qrFrame) jitteredFrames.push(applyResultPatternStack(qrFrame, i, frameCount));
+            if (qrFrame) {
+              jitteredFrames.push(applyResultPatternStackPersistent(qrFrame, i, frameCount));
+            }
           }
 
           framesToProcess = jitteredFrames.map((canvas) => ({
@@ -2651,7 +2716,7 @@ function useQRGenerator(): UseQRGeneratorResult {
               frame.canvas
             );
             if (modulePatternEffects.length > 0) {
-              processedOverlay = applyModulePatternStack(
+              processedOverlay = applyModulePatternStackEphemeral(
                 processedOverlay,
                 frameIdx,
                 framesToProcess.length
@@ -2697,7 +2762,11 @@ function useQRGenerator(): UseQRGeneratorResult {
           if (result) {
             let finalResult: HTMLCanvasElement | OffscreenCanvas = result;
             if (!shouldGenerateBaseAnimation && resultPatternEffects.length > 0) {
-              finalResult = applyResultPatternStack(finalResult, frameIdx, framesToProcess.length);
+              finalResult = applyResultPatternStackEphemeral(
+                finalResult,
+                frameIdx,
+                framesToProcess.length
+              );
             }
 
             // Apply color cycle as post-processing - ONLY if actually enabled

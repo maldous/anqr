@@ -35,13 +35,28 @@ function serveGalleryFiles() {
   return {
     name: 'serve-gallery-files',
     configureServer(server) {
+      const publicRoot = path.resolve(__dirname, 'public');
       server.middlewares.use((req, res, next) => {
         // Check if request is for a gallery file
         if (req.url?.startsWith('/gallery/')) {
-          const filePath = path.join(__dirname, 'public', req.url);
+          let pathname: string;
+          try {
+            pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+          } catch {
+            res.statusCode = 400;
+            res.end('Bad request');
+            return;
+          }
+
+          const filePath = path.resolve(publicRoot, `.${pathname}`);
+          if (filePath !== publicRoot && !filePath.startsWith(`${publicRoot}${path.sep}`)) {
+            res.statusCode = 403;
+            res.end('Forbidden');
+            return;
+          }
 
           // Check if file exists
-          if (fs.existsSync(filePath)) {
+          if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
             const ext = path.extname(filePath).toLowerCase();
             const mimeTypes: Record<string, string> = {
               '.png': 'image/png',

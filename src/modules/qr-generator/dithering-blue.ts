@@ -36,7 +36,7 @@ const ECC_MAP: Record<string, ECCLevel> = {
 
 // Pre-computed 64x64 blue noise tile (normalized 0-1)
 const BLUE_NOISE_TILE_SIZE = 64;
-const BLUE_NOISE_64: number[] = generateTile(BLUE_NOISE_TILE_SIZE, 0);
+const BLUE_NOISE_64 = generateTile(BLUE_NOISE_TILE_SIZE, 0);
 
 export type ColorMode = 'color' | 'grayscale' | 'bw';
 

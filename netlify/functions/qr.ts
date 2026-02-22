@@ -250,6 +250,7 @@ Sentry.init({
  */
 
 import { createHash } from 'node:crypto';
+import { lookup as dnsLookup } from 'node:dns/promises';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -362,6 +363,14 @@ const MAX_GIF_DURATION_MS = 10000;
 // Server-side animation optimization: hard limit frames for animated overlays
 // to prevent timeout issues. Client can handle more frames with compositor.
 const SERVER_MAX_ANIMATION_FRAMES = 64;
+const MAX_OVERLAY_REDIRECTS = 5;
+const OVERLAY_HOST_LOOKUP_TTL_MS = 60_000;
+const OVERLAY_HOST_LOOKUP_NEGATIVE_TTL_MS = 10_000;
+const overlayHostnameSafetyCache = new Map<string, { isPrivate: boolean; expiresAt: number }>();
+
+function _clearOverlayHostnameSafetyCache(): void {
+  overlayHostnameSafetyCache.clear();
+}
 
 // Yield helper for long-running operations
 function sleep(ms: number): Promise<void> {
@@ -517,31 +526,60 @@ function isPrivateOrReservedIP(ip: string): boolean {
  * This prevents SSRF via DNS resolution to internal IPs
  */
 async function _isPrivateHostname(hostname: string): Promise<boolean> {
+  const normalizedHostname = String(hostname || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\.+$/, '');
+
+  if (!normalizedHostname) {
+    return true;
+  }
+
   // First check if it's already a literal IP
-  if (isPrivateOrReservedIP(hostname)) {
+  if (isPrivateOrReservedIP(normalizedHostname)) {
     return true;
   }
 
   // Check for common bypass patterns
-  const lowerHost = hostname.toLowerCase();
   if (
-    lowerHost.endsWith('.local') ||
-    lowerHost.endsWith('.localhost') ||
-    lowerHost.endsWith('.internal') ||
-    lowerHost.includes('127.0.0.1') ||
-    lowerHost.includes('0.0.0.0')
+    normalizedHostname === 'localhost' ||
+    normalizedHostname.endsWith('.local') ||
+    normalizedHostname.endsWith('.localhost') ||
+    normalizedHostname.endsWith('.internal') ||
+    normalizedHostname.includes('127.0.0.1') ||
+    normalizedHostname.includes('0.0.0.0')
   ) {
     return true;
   }
 
-  // NOTE: DNS resolution IS technically possible in Node.js via the 'dns' module,
-  // but we intentionally use heuristic checks here for several reasons:
-  // 1. DNS resolution adds latency to every overlay fetch
-  // 2. Netlify's network layer provides additional SSRF protection
-  // 3. DNS rebinding attacks require attacker-controlled DNS which is rare
-  // The heuristic checks above catch the most common SSRF patterns.
-  // For higher-security deployments, consider adding actual DNS resolution checks.
-  return false;
+  // Keep tests deterministic and offline-friendly while preserving heuristic checks.
+  if (IS_TEST_RUNTIME) {
+    return false;
+  }
+
+  const now = Date.now();
+  const cached = overlayHostnameSafetyCache.get(normalizedHostname);
+  if (cached && cached.expiresAt > now) {
+    return cached.isPrivate;
+  }
+
+  try {
+    const resolved = await dnsLookup(normalizedHostname, { all: true, verbatim: true });
+    const isPrivate =
+      resolved.length === 0 || resolved.some((entry) => isPrivateOrReservedIP(entry.address));
+    overlayHostnameSafetyCache.set(normalizedHostname, {
+      isPrivate,
+      expiresAt: now + OVERLAY_HOST_LOOKUP_TTL_MS,
+    });
+    return isPrivate;
+  } catch (_dnsErr) {
+    // Fail closed when DNS lookup fails.
+    overlayHostnameSafetyCache.set(normalizedHostname, {
+      isPrivate: true,
+      expiresAt: now + OVERLAY_HOST_LOOKUP_NEGATIVE_TTL_MS,
+    });
+    return true;
+  }
 }
 
 /**
@@ -1115,15 +1153,10 @@ function encodeAnimatedGif(
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
   const bgRgb = parseGifBackgroundColor(backgroundColor);
-  const frameDataCache = new Map<number, Uint8ClampedArray>();
   const getFrameData = (i: number): Uint8ClampedArray => {
-    const cached = frameDataCache.get(i);
-    if (cached) return cached;
     const ctx = frames[i].getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
-    const preparedData = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
-    frameDataCache.set(i, preparedData);
-    return preparedData;
+    return prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
   };
   const globalPalette = buildGlobalGifPalette(
     getFrameData,
@@ -2308,15 +2341,10 @@ function encodeAnimatedGifWithDelays(
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
   const bgRgb = parseGifBackgroundColor(backgroundColor);
-  const frameDataCache = new Map<number, Uint8ClampedArray>();
   const getFrameData = (i: number): Uint8ClampedArray => {
-    const cached = frameDataCache.get(i);
-    if (cached) return cached;
     const ctx = frames[i].canvas.getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
-    const preparedData = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
-    frameDataCache.set(i, preparedData);
-    return preparedData;
+    return prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
   };
   const globalPalette = buildGlobalGifPalette(
     getFrameData,
@@ -2461,6 +2489,55 @@ async function readLocalOverlayFile(fileUrl: URL): Promise<FetchedImage | null> 
   }
 }
 
+function isRedirectStatus(status: number): boolean {
+  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+}
+
+async function fetchOverlayWithValidatedRedirects(
+  initialUrl: URL,
+  signal: AbortSignal
+): Promise<Response | null> {
+  let currentUrl = initialUrl;
+
+  for (let redirectCount = 0; redirectCount <= MAX_OVERLAY_REDIRECTS; redirectCount++) {
+    if (!process.env.NETLIFY_DEV && (await _isPrivateHostname(currentUrl.hostname))) {
+      return null;
+    }
+
+    const response = await fetch(currentUrl.toString(), {
+      headers: {
+        'User-Agent': 'ANQR-QR-Generator/1.0',
+      },
+      signal,
+      redirect: 'manual',
+    });
+
+    if (!isRedirectStatus(response.status)) {
+      return response;
+    }
+
+    const location = response.headers.get('location');
+    if (!location) {
+      return null;
+    }
+
+    let redirectedUrl: URL;
+    try {
+      redirectedUrl = new URL(location, currentUrl);
+    } catch (_urlErr) {
+      return null;
+    }
+
+    if (!['http:', 'https:'].includes(redirectedUrl.protocol)) {
+      return null;
+    }
+
+    currentUrl = redirectedUrl;
+  }
+
+  return null;
+}
+
 /**
  * Fetch an image from URL and load it into a canvas
  * Also returns the raw array buffer to detect animated GIFs
@@ -2478,8 +2555,8 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
         return null;
       }
 
-      // SSRF protection: block private/internal IP addresses (skip in local dev)
-      if (!process.env.NETLIFY_DEV && isPrivateOrReservedIP(parsedUrl.hostname)) {
+      // SSRF protection: resolve hostname and block private/internal targets
+      if (!process.env.NETLIFY_DEV && (await _isPrivateHostname(parsedUrl.hostname))) {
         return null;
       }
     } catch (_urlErr) {
@@ -2489,17 +2566,14 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     // Create AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'ANQR-QR-Generator/1.0',
-      },
-      signal: controller.signal,
-      redirect: 'follow', // Follows up to 20 redirects by default; MAX_REDIRECTS is for documentation
-    });
+    let response: Response | null = null;
+    try {
+      response = await fetchOverlayWithValidatedRedirects(parsedUrl, controller.signal);
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
+    if (!response?.ok) {
       return null;
     }
 
@@ -4048,6 +4122,7 @@ export const __test = {
   nodeCanvasFactory,
   isPrivateOrReservedIP,
   _isPrivateHostname,
+  _clearOverlayHostnameSafetyCache,
   createTextWatermark,
   getWatermarkPositions,
   applyBlendMode,

@@ -7,9 +7,22 @@ import { createRNG } from './utils';
 
 const _log = createLogger('DITHER');
 
+const BLUE_NOISE_TILE_CACHE_MAX = 64;
+const blueNoiseTileCache = new Map<string, Float32Array>();
+
+function getBlueNoiseCacheKey(size: number, seed: number): string {
+  return `${size}:${seed}`;
+}
+
 /** Generate blue noise tile using interleaved gradient noise */
-export function generateBlueNoiseTile(size: number, seed: number): number[] {
-  const tile: number[] = new Array(size * size);
+export function generateBlueNoiseTile(size: number, seed: number): Float32Array {
+  const cacheKey = getBlueNoiseCacheKey(size, seed);
+  const cached = blueNoiseTileCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const tile = new Float32Array(size * size);
   const phi = 1.618033988749895; // Golden ratio
   const rng = createRNG(seed);
   const offset = rng();
@@ -23,12 +36,29 @@ export function generateBlueNoiseTile(size: number, seed: number): number[] {
     }
   }
 
+  if (blueNoiseTileCache.size >= BLUE_NOISE_TILE_CACHE_MAX) {
+    const oldestKey = blueNoiseTileCache.keys().next().value;
+    if (oldestKey) {
+      blueNoiseTileCache.delete(oldestKey);
+    }
+  }
+  blueNoiseTileCache.set(cacheKey, tile);
+
   return tile;
 }
 
 /** Sample blue noise at position */
-export function sampleBlueNoise(x: number, y: number, tile: number[], tileSize: number): number {
+export function sampleBlueNoise(
+  x: number,
+  y: number,
+  tile: ArrayLike<number>,
+  tileSize: number
+): number {
   const tx = ((x % tileSize) + tileSize) % tileSize;
   const ty = ((y % tileSize) + tileSize) % tileSize;
   return tile[ty * tileSize + tx];
+}
+
+export function clearBlueNoiseTileCache(): void {
+  blueNoiseTileCache.clear();
 }

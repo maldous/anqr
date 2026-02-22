@@ -93,14 +93,12 @@ function parseScenarios(src) {
     const galleryEligible = block.includes('galleryEligible: true');
     const useOverlay = block.includes('useOverlay: true');
 
-    // Extract galleryParams object literal and evaluate it.
-    // Safe: this is our own trusted source file with only primitive values.
+    // Extract galleryParams object literal and parse it as JSON-like content.
     const paramsMatch = block.match(/galleryParams:\s*(\{[\s\S]*?\})/);
     let galleryParams = {};
     if (paramsMatch) {
       try {
-        // biome-ignore lint: eval of own source
-        galleryParams = new Function(`return ${paramsMatch[1]}`)();
+        galleryParams = parseGalleryParamsLiteral(paramsMatch[1]);
       } catch {
         console.warn(`  ⚠ Could not parse galleryParams for ${id}`);
       }
@@ -118,6 +116,20 @@ function parseScenarios(src) {
     });
   }
   return scenarios;
+}
+
+function parseGalleryParamsLiteral(literal) {
+  const normalized = literal
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/([{,]\s*)([A-Za-z_$][A-Za-z0-9_$]*)\s*:/g, '$1"$2":')
+    .replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_m, value) => {
+      const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      return `"${escaped}"`;
+    })
+    .replace(/,\s*}/g, '}')
+    .trim();
+
+  return JSON.parse(normalized);
 }
 
 // ============================================

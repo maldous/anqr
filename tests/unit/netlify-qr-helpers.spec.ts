@@ -356,6 +356,23 @@ describe('netlify qr helpers', () => {
     }
   });
 
+  it('blocks redirect-based SSRF to private hosts', async () => {
+    const redirectSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(null, {
+        status: 302,
+        headers: { Location: 'http://127.0.0.1/internal.png' },
+      })
+    );
+    try {
+      await expect(
+        __test.fetchImageWithBuffer('https://example.com/image.png')
+      ).resolves.toBeNull();
+      expect(redirectSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      redirectSpy.mockRestore();
+    }
+  });
+
   it('fetchImageWithBuffer handles streamed PNG/GIF payloads without throwing', async () => {
     const png = makeCanvas(14, 14).toBuffer('image/png');
     const gif = __test.encodeAnimatedGif([makeCanvas(10, 10), makeCanvas(10, 10)], 80, 32, 2);
