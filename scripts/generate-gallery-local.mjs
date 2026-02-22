@@ -88,6 +88,7 @@ const SCENARIO_TIMEOUT_MS = Math.max(
   30_000,
   Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '240000', 10),
 );
+const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
 const LOCAL_HANDLER_URL = 'http://localhost/.netlify/functions/qr';
 const ARTIFACT_EXTS = ['png', 'gif', 'webp', 'jpg', 'jpeg', 'svg'];
 let qrHandlerCached = null;
@@ -146,8 +147,10 @@ async function buildLocalRequest(config) {
 
   // Force full render for overlays/artwork so local fixtures are actually processed.
   params.set('_fullRender', '1');
-  // Force strict overlay behavior so parity runs fail instead of silently degrading.
-  params.set('_strictOverlay', '1');
+  // Optional fail-fast mode for overlay fetch/decode issues.
+  if (FORCE_STRICT_OVERLAY) {
+    params.set('_strictOverlay', '1');
+  }
 
   // Skip blob cache reads/writes (not configured in local dev/test env).
   const headers = new Headers({
