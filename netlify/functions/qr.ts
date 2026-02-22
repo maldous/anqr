@@ -930,18 +930,29 @@ function embedPngMetadataAndDpi(pngBuffer: Buffer, metadata?: PngMetadata, dpi?:
 // gifenc can produce corrupted frames when multiple encodes run concurrently
 // in the same process. Serialize encoding to keep outputs deterministic.
 let gifEncodeQueue: Promise<void> = Promise.resolve();
+let gifEncodeQueueDepth = 0;
 
 async function withGifEncodeLock<T>(fn: () => T | Promise<T>): Promise<T> {
   let release: (() => void) | null = null;
+  const queuedAt = Date.now();
+  gifEncodeQueueDepth += 1;
   const waitTurn = gifEncodeQueue;
   gifEncodeQueue = new Promise<void>((resolve) => {
     release = resolve;
   });
 
   await waitTurn;
+  const waitMs = Date.now() - queuedAt;
+  if (waitMs > 10) {
+    qrFnLog('[TIMING] GIF encode queue wait', {
+      waitMs,
+      queueDepth: Math.max(0, gifEncodeQueueDepth - 1),
+    });
+  }
   try {
     return await fn();
   } finally {
+    gifEncodeQueueDepth = Math.max(0, gifEncodeQueueDepth - 1);
     if (release) {
       release();
     }

@@ -1,6 +1,13 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 15:36:00 UTC
+Last updated: 2026-02-22 06:26:22 UTC
+
+## Latest Update (2026-02-22, Quality-Gate Cleanup: Knip Unused Export)
+
+- Resolved `knip` quality-gate failure:
+  - removed unused export `clearBlueNoiseTileCache` from `src/modules/dither-algorithms/blue-noise.ts`.
+- Verification:
+  - `npx knip --include dependencies,unlisted,exports` now passes with exit code `0`.
 
 ## Latest Update (2026-02-22, Performance Hot-Path Pass: Logger + QR-Art + Animation + GIF Memory)
 
@@ -961,3 +968,51 @@ Last updated: 2026-02-22 15:36:00 UTC
     - `overlay__mode-dithered-trump`
     - `overlay__mode-blue-noise-trump`
     - `overlay__mode-blue-noise-tsunami`
+
+## Update 2026-02-22 06:23:50 UTC (Perf/Jank P0-P2 Pass)
+
+- [x] `Analyze.tsx` matrix diagnostics moved behind explicit flag:
+  - new gate: `VITE_ANALYZE_MATRIX_DIAGNOSTICS=1` (dev only).
+  - default Analyze flow no longer runs regen-vs-original matrix diff work.
+
+- [x] `Analyze.tsx` `sampleOriginalMatrix` fixed from per-cell readback to bulk read:
+  - replaced `getImageData(x,y,1,1)` inside nested loops with single `getImageData(0,0,w,h)`.
+  - sampling now indexes into one shared pixel buffer with bounds clamping.
+
+- [x] `pixel-matrix-dithered.ts` high-allocation paths switched to typed-array working buffers:
+  - added flat buffers for per-pixel work:
+    - `matrixBits: Uint8Array`
+    - `packedColors: Uint32Array`
+    - `desire: Float32Array`
+    - `errors: Float32Array` (error-diffusion path)
+  - added helpers:
+    - `pixelIndex(...)`
+    - `packColor(...)` / `unpackColor(...)`
+    - `bitsToMatrix(...)` / `packedColorsToMatrix(...)` (return-boundary conversion only)
+  - updated hot functions to use flat indexing:
+    - `generateBWFirstMatrix(...)`
+    - `generateDitheredMatrix(...)`
+    - `generateBlueNoiseMatrix(...)`
+    - `distributeError(...)`
+    - `enforceModuleConstraints(...)`
+    - `removeIsolatedSpeckles(...)`
+    - `computeQualityMetrics(...)`
+  - result shape remains unchanged (`PixelDecisionMatrix` still returns 2D matrices).
+
+- [x] `scaled-render.ts` preservation overlay path optimized:
+  - precomputes boosted module list once (`boostedModules`) and exits early if empty.
+  - avoids repeated full module-grid scans in both blend and non-blend boost passes.
+
+- [x] `netlify/functions/qr.ts` GIF encode lock instrumentation:
+  - retained strict single-encode serialization for correctness.
+  - added queue-wait timing telemetry in `withGifEncodeLock(...)` (`[TIMING] GIF encode queue wait`) with `waitMs` and queue depth.
+
+- [x] Previously-requested P0 cache fix remains in place:
+  - no `clearBasisCache()` call from QR-Art generation path.
+
+- [x] Validation run:
+  - `npm run typecheck` passes.
+  - `npx vitest run tests/unit/qr-generator-dithered-matrix.spec.ts` passes (`35` tests).
+  - `npx vitest run tests/unit/qr-generator-artistic-guards.spec.ts tests/unit/coverage-batch-4.spec.ts` passes (`48` tests total).
+  - `npx vitest run tests/unit/netlify-qr-function.spec.ts tests/unit/netlify-qr-helpers.spec.ts` passes (`43` tests).
+  - `npx knip --include dependencies,unlisted,exports` passes.
