@@ -202,7 +202,10 @@ async function generateBWFirstMatrix(
 
   // Create scaled overlay canvas
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
+  const ctx = scaledCanvas.getContext('2d', {
+    willReadFrequently: true,
+    desynchronized: true,
+  } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
   if (!ctx) {
     if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
     return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
@@ -928,7 +931,10 @@ export async function generateDitheredMatrix(
   const temporalOffsetY = (frameIndex * 29) % tileSize;
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
+  const ctx = scaledCanvas.getContext('2d', {
+    willReadFrequently: true,
+    desynchronized: true,
+  } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
   if (!ctx) {
     if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
     return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
@@ -1115,7 +1121,10 @@ export async function generateBlueNoiseMatrix(
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d') as CanvasRenderingContext2D | null;
+  const ctx = scaledCanvas.getContext('2d', {
+    willReadFrequently: true,
+    desynchronized: true,
+  } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
   if (!ctx) {
     if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
     return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
@@ -1268,7 +1277,10 @@ export async function generateHalftoneDitheredOverlayData(
   // Also sample the original overlay at module resolution so halftone dot sizing
   // preserves the actual image luminance instead of only QR-constrained density.
   const moduleCanvas = await createCanvasFn(moduleCount, moduleCount);
-  const moduleCtx = moduleCanvas.getContext('2d') as CanvasRenderingContext2D | null;
+  const moduleCtx = moduleCanvas.getContext('2d', {
+    willReadFrequently: true,
+    desynchronized: true,
+  } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
   let moduleData: Uint8ClampedArray | null = null;
   if (moduleCtx) {
     moduleCtx.imageSmoothingEnabled = true;

@@ -38,3 +38,7 @@ export {
   type MediaStoreWriterPlugin,
   saveBase64ToDocuments,
 } from './media-store';
+
+// Platform UX helpers
+export { showNativeToast } from './native-toast';
+export { loadWebOnlyBootAssets } from './web-only-assets';

@@ -1714,50 +1714,91 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       }
 
       const image = await Camera.getPhoto({
-        quality: 90,
+        quality: 70,
         allowEditing: false,
-        resultType: CameraResultType.DataUrl,
+        resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
       });
 
-      if (image.dataUrl) {
-        setOriginalImageUrl(image.dataUrl);
+      if (!image.webPath) {
+        setError(t('analyze.cameraLoadFailed', 'Failed to load captured image'));
+        return;
+      }
 
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            setError(t('analyze.cameraProcessError', 'Could not process image'));
-            setIsLoading(false);
-            setLoadingSource(null);
-            return;
-          }
-          ctx.drawImage(img, 0, 0);
+      setOriginalImageUrl(image.webPath);
 
-          const analysisResult = analyzeQRCode(canvas);
-          setResult(analysisResult);
-          setAnalysisSource('camera');
-          if (!analysisResult.success) {
-            setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
-          }
-          setIsLoading(false);
-          setLoadingSource(null);
-        };
-        img.onerror = () => {
-          setError(t('analyze.cameraLoadFailed', 'Failed to load captured image'));
-          setIsLoading(false);
-          setLoadingSource(null);
-        };
-        img.src = image.dataUrl;
+      const response = await fetch(image.webPath);
+      if (!response.ok) {
+        throw new Error(`Camera image fetch failed: ${response.status}`);
+      }
+      const blob = await response.blob();
+
+      const maxEdge = 1600;
+      let source: ImageBitmap | HTMLImageElement;
+      let sourceWidth: number;
+      let sourceHeight: number;
+
+      if (typeof createImageBitmap === 'function') {
+        const bitmap = await createImageBitmap(blob);
+        source = bitmap;
+        sourceWidth = bitmap.width;
+        sourceHeight = bitmap.height;
+      } else {
+        const objectUrl = URL.createObjectURL(blob);
+        source = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(img);
+          };
+          img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Failed to decode camera image'));
+          };
+          img.src = objectUrl;
+        });
+        sourceWidth = source.naturalWidth;
+        sourceHeight = source.naturalHeight;
+      }
+
+      const sourceMaxEdge = Math.max(sourceWidth, sourceHeight);
+      const scale = sourceMaxEdge > maxEdge ? maxEdge / sourceMaxEdge : 1;
+      const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
+      const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d', {
+        willReadFrequently: true,
+      } as CanvasRenderingContext2DSettings | undefined);
+      if (!ctx) {
+        if ('close' in source && typeof source.close === 'function') {
+          source.close();
+        }
+        setError(t('analyze.cameraProcessError', 'Could not process image'));
+        return;
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(source, 0, 0, targetWidth, targetHeight);
+      if ('close' in source && typeof source.close === 'function') {
+        source.close();
+      }
+
+      const analysisResult = analyzeQRCode(canvas);
+      setResult(analysisResult);
+      setAnalysisSource('camera');
+      if (!analysisResult.success) {
+        setError(analysisResult.error || t('analyze.noCodeDetected', 'No QR code detected'));
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
         setError(t('analyze.cameraFailed', 'Camera capture failed'));
       }
+    } finally {
       setIsLoading(false);
       setLoadingSource(null);
     }

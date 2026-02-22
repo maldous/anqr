@@ -45,6 +45,9 @@ export const ADMOB_UTILS_API = [
 // MediaStore writer
 export const MEDIA_STORE_API = ['MediaStoreWriter', 'saveBase64ToDocuments'] as const;
 
+// Platform UX/runtime helpers
+export const PLATFORM_HELPERS_API = ['showNativeToast', 'loadWebOnlyBootAssets'] as const;
+
 // Types
 export const TYPES = ['InterstitialType', 'RewardedType', 'MediaStoreWriterPlugin'] as const;
 
@@ -56,4 +59,5 @@ export const PUBLIC_API = [
   ...ADMOB_REWARDED_API,
   ...ADMOB_UTILS_API,
   ...MEDIA_STORE_API,
+  ...PLATFORM_HELPERS_API,
 ] as const;

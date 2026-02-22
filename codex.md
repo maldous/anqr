@@ -1,6 +1,90 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 08:28:42 UTC
+Last updated: 2026-02-22 09:19:33 UTC
+
+## Latest Update (2026-02-22, GIF Frame-Buffer Copy Hardening)
+
+- Implemented strict copy semantics for GIF frame pixel buffers to prevent live `ImageData.data` reuse corruption:
+  - `netlify/functions/qr.ts`
+    - `prepareGifFramePixels(...)` now always clones input first and never returns the original view.
+    - `encodeGif(...)`, `encodeAnimatedGif(...)`, and `encodeAnimatedGifWithDelays(...)` now clone `getImageData(...).data` before further processing.
+    - sampled frame cache writes now store copied buffers (`prepared.slice()`), ensuring immutable cache entries.
+  - `scripts/generate-gallery-browser.mjs`
+    - browser preview GIF path now stores copied frame data:
+      `new Uint8ClampedArray(ctx.getImageData(...).data)`.
+- Added regression test coverage:
+  - `tests/unit/netlify-qr-helpers.spec.ts`
+    - new test confirms `prepareGifFramePixels(...)` returns detached buffers and is not affected by later source mutations.
+  - exposed helper in test surface:
+    - `netlify/functions/qr.ts` `__test.prepareGifFramePixels`.
+- Validation:
+  - `npm run -s typecheck` passes.
+  - `ANQR_LOG_LEVEL=error npx vitest run tests/unit/netlify-qr-helpers.spec.ts tests/unit/netlify-qr-gif-disposal.spec.ts tests/unit/exporter-gif.spec.ts` passes (`29/29`).
+
+## Latest Update (2026-02-22, Android UX/Perf Hardening Pass)
+
+- Camera capture moved off Data URL flow in both camera entry points:
+  - `src/components/Analyze.tsx`
+    - switched `CameraResultType.DataUrl` -> `CameraResultType.Uri`
+    - fetches `webPath` blob, decodes once with `createImageBitmap`, downsizes to max edge `1600`, draws via `2d` context with `willReadFrequently`.
+  - `src/components/sections/OverlaySection.tsx`
+    - switched `CameraResultType.DataUrl` -> `CameraResultType.Uri`
+    - fetches `webPath` blob and downsizes oversize captures to max edge `1920` before creating `File`.
+- Android legacy save path permission fixes:
+  - `android/app/src/main/java/link/anqr/app/MediaStoreWriterPlugin.java`
+    - added `WRITE_EXTERNAL_STORAGE` permission alias wiring via Capacitor permission annotations.
+    - added runtime permission request/deny handling for API `< 29` before `saveLegacy()`.
+  - `android/app/src/main/AndroidManifest.xml`
+    - added `<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />`.
+- Disabled WebView debugging in release builds:
+  - `android/app/src/main/java/link/anqr/app/MainActivity.java`
+  - now guarded behind `BuildConfig.DEBUG`.
+- Touch interaction safety improvements:
+  - `src/modules/overlay/crop-handler.ts`
+    - `touchstart`/`touchmove` listeners now explicitly use `{ passive: false }`.
+    - `touchstart` now calls `preventDefault()`.
+  - `src/components/MobileDivider.tsx`
+    - `touchstart` and document `touchmove` now call `preventDefault()` while dragging.
+- Hot image-readback contexts now request readback-friendly settings:
+  - `src/modules/qr-generator/pixel-matrix-dithered.ts`
+  - readback canvases now use `getContext('2d', { willReadFrequently: true, desynchronized: true })`.
+- Native app web-asset reduction:
+  - Added runtime web-only asset loader: `src/modules/platform/web-only-assets.ts`.
+  - `src/main.tsx` now calls it at startup.
+  - `index.html` removed static iubenda/AdSense/font external tags; those are now web-only runtime injected.
+  - `src/i18n/index.ts` now skips dynamic font script loading on native (`Capacitor.isNativePlatform()` guard).
+- Native save UX no longer uses blocking alerts:
+  - Added `src/modules/platform/native-toast.ts` (Capacitor Toast if available, DOM fallback).
+  - Updated `src/modules/browser-io/native-save.ts` to use non-blocking toast notifications and structured logs.
+- Native Android back button handling:
+  - `src/App.tsx` now wires Capacitor App `backButton` listener (if available).
+  - behavior:
+    - leaves non-editor pages back to editor first
+    - uses history back when native reports `canGoBack`
+    - requires double-back within `1.5s` to exit app (`exitApp()`), with toast prompt.
+
+- Validation:
+  - `npm run -s typecheck` passes.
+  - `ANQR_LOG_LEVEL=error npx vitest run tests/unit/i18n-runtime.spec.ts tests/unit/qr-generator-dithered-matrix.spec.ts tests/unit/qr-generator-dithered-scan-gate.spec.ts` passes (`73/73`).
+
+## Latest Update (2026-02-22, Gallery Permutation Per-Scenario Exclusion List)
+
+- Added explicit filename-level scenario denylist in `scripts/lib/gallery-permutations.mjs`:
+  - `EXCLUDED_SCENARIO_FILENAMES` now contains all user-reported failed outputs to suppress.
+  - filtering helper path added:
+    - `canonicalScenarioFilename(...)`
+    - `isExcludedScenario(...)`
+    - `filterExcludedScenarios(...)`
+- Applied exclusion filtering directly in category generators:
+  - `generateNonOverlayScenarios()`
+  - `generateOverlayScenarios()`
+  - `generateArtworkScenarios()` (during per-fixture ranking)
+- Updated `scenarioFilename(...)` to use canonical filename helper for consistency.
+- Validation:
+  - `node --check scripts/lib/gallery-permutations.mjs` passes.
+  - `generateNonOverlayScenarios()` / `generateOverlayScenarios()` / `generateArtworkScenarios()` each still produce `333`.
+  - `generateAllScenarios()` still produces `1000` total (`334 nooverlay, 333 overlay, 333 artwork` with bonus scenario).
+  - Exclusion hit check reports `0` generated filenames matching denylist.
 
 ## Latest Update (2026-02-22, Quality-Gate Cleanup: Knip Unused Export)
 
@@ -1174,6 +1258,7 @@ Last updated: 2026-02-22 08:28:42 UTC
     - write temp file
     - rename to final only on pass
     - delete temp on verify failure
+  - shared helper used per script: `finalizeTempArtifact(...)` to clean up temp files on rename/unlink errors too.
 
 - [x] Added explicit magic-byte validation before publish:
   - animated scenarios require GIF header (`GIF87a`/`GIF89a`).

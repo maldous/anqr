@@ -49,6 +49,7 @@ export function MobileDivider({ onDrag, onDragEnd }: Readonly<MobileDividerProps
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (e.touches.length === 1) {
+        e.preventDefault();
         handleDragStart(e.touches[0].clientY);
       }
     },
@@ -66,6 +67,7 @@ export function MobileDivider({ onDrag, onDragEnd }: Readonly<MobileDividerProps
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 1) {
+        e.preventDefault();
         handleDragMove(e.touches[0].clientY);
       }
     };

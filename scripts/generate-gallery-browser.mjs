@@ -168,6 +168,19 @@ function validateArtifactMagic(buffer, ext, expectAnimated = false) {
   return { pass: true };
 }
 
+async function finalizeTempArtifact(tempArtifactPath, artifactPath, keepArtifact) {
+  try {
+    if (keepArtifact) {
+      await fs.rename(tempArtifactPath, artifactPath);
+    } else {
+      await fs.unlink(tempArtifactPath).catch(() => {});
+    }
+  } catch (err) {
+    await fs.unlink(tempArtifactPath).catch(() => {});
+    throw err;
+  }
+}
+
 function extFromContentType(contentType, fallback = 'png') {
   const type = String(contentType || '').toLowerCase();
   if (type.includes('image/gif')) return 'gif';
@@ -379,7 +392,7 @@ async function encodeAnimatedGifFromCanvases(
     const defaultDelayMs = Math.max(20, frameDelayMs);
     const frameDataList = frames.map((frame) => {
       const ctx = frame.getContext('2d');
-      return ctx.getImageData(0, 0, width, height).data;
+      return new Uint8ClampedArray(ctx.getImageData(0, 0, width, height).data);
     });
     const globalPalette = buildGlobalPaletteFromFrames(frameDataList, width, height, paletteSize);
 
@@ -670,11 +683,7 @@ async function main() {
 
       tempArtifactPath = `${artifactPath}.tmp-${process.pid}-${Date.now()}`;
       await fs.writeFile(tempArtifactPath, artifactBuffer);
-      if (verify.pass) {
-        await fs.rename(tempArtifactPath, artifactPath);
-      } else {
-        await fs.unlink(tempArtifactPath).catch(() => {});
-      }
+      await finalizeTempArtifact(tempArtifactPath, artifactPath, verify.pass);
       tempArtifactPath = null;
 
       completed++;
