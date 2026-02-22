@@ -19,12 +19,12 @@ import { createLogger } from '@/lib/logger';
 import { trackEvent } from '@/lib/zaraz';
 import {
   type AnimationFrame,
-  type PatternType as AnimationPattern,
+  type AnimationPattern,
+  applyAnimationPattern,
   applyColorCycle,
   createGifCompositor,
   decimateCompositorFrames,
   type GifCompositor,
-  generateAnimationPatternFrames,
   interpolateFrames,
   parseAnimatedImage,
   resolveAnimationFrameDelay,
@@ -656,6 +656,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       ditherStrength: overlay.ditherStrength,
       finderDitherStrength: overlay.finderDitherStrength,
       blendPreservations: overlay.blendPreservations,
+      blendPreservationMode: overlay.blendPreservationMode,
       ditherSerpentine: overlay.ditherSerpentine,
       diffusionKernel: overlay.diffusionKernel,
       orderedMatrix: overlay.orderedMatrix,
@@ -770,6 +771,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     overlay.ditherStrength,
     overlay.finderDitherStrength,
     overlay.blendPreservations,
+    overlay.blendPreservationMode,
     overlay.ditherSerpentine,
     overlay.diffusionKernel,
     overlay.orderedMatrix,
@@ -2222,17 +2224,51 @@ function useQRGenerator(): UseQRGeneratorResult {
     // ANIMATION EFFECT FLAGS - only true when actually enabled
     // ==========================================
     const hasColorCycle = animation.colorCycle === true;
-    const hasPattern = animation.pattern !== 'none';
+    const primaryPatternEnabled = animation.pattern !== 'none';
+    const secondaryPatternEnabled = animation.pattern2 !== 'none';
+    const modulePatternEffects: Array<{
+      pattern: AnimationPattern;
+      seed: number;
+      waveAxis: 'x' | 'y' | 'xy';
+    }> = [];
+    const resultPatternEffects: Array<{
+      pattern: AnimationPattern;
+      seed: number;
+      waveAxis: 'x' | 'y' | 'xy';
+    }> = [];
+    if (primaryPatternEnabled) {
+      const primaryEffect = {
+        pattern: animation.pattern as AnimationPattern,
+        seed: animation.seed,
+        waveAxis: animation.waveAxis,
+      };
+      if (animation.target === 'modules' || animation.target === 'both') {
+        modulePatternEffects.push(primaryEffect);
+      }
+      if (animation.target === 'result' || animation.target === 'both') {
+        resultPatternEffects.push(primaryEffect);
+      }
+    }
+    if (secondaryPatternEnabled) {
+      const secondaryEffect = {
+        pattern: animation.pattern2 as AnimationPattern,
+        seed: animation.seed + 911,
+        waveAxis: animation.waveAxis2,
+      };
+      if (animation.target2 === 'modules' || animation.target2 === 'both') {
+        modulePatternEffects.push(secondaryEffect);
+      }
+      if (animation.target2 === 'result' || animation.target2 === 'both') {
+        resultPatternEffects.push(secondaryEffect);
+      }
+    }
+    const hasPattern = modulePatternEffects.length > 0 || resultPatternEffects.length > 0;
     const hasTemporalDither = animation.temporalDither !== 'off';
     const hasInterpolation = animation.interpolate !== 'none';
-    const hasJitter = animation.moduleJitterPx > 0;
+    const hasJitter = animation.moduleJitterPx > 0 || modulePatternEffects.length > 0;
 
     // True only if at least one animation effect is actually enabled
     const hasAnyAnimationEffect = hasColorCycle || hasPattern || hasTemporalDither || hasJitter;
-
-    // Check if we should generate pattern-based animation from static overlay image
-    const shouldGeneratePatternAnimation =
-      hasPattern && overlay.enabled && effectiveFrames.length === 1;
 
     // Check if we should generate animation from base QR (no overlay)
     // Only when at least one effect is actually enabled
@@ -2243,6 +2279,67 @@ function useQRGenerator(): UseQRGeneratorResult {
     const shouldGenerateStaticOverlayAnimation =
       hasAnyAnimationEffect && overlay.enabled && effectiveFrames.length === 1;
 
+    const computePatternDrivenJitter = (frameIndex: number, totalFrames: number): number => {
+      let jitter = animation.moduleJitterPx;
+      for (const effect of modulePatternEffects) {
+        const progress = frameIndex / Math.max(1, totalFrames - 1);
+        const phase = Math.sin(progress * Math.PI * 2 + effect.seed * 0.013);
+        const intensity = (phase + 1) / 2;
+        switch (effect.pattern) {
+          case 'pulse':
+            jitter += 0.3 + intensity * 0.7;
+            break;
+          case 'wave':
+            jitter += 0.6 + intensity * 0.65;
+            break;
+          case 'scanline':
+            jitter += intensity * 0.8;
+            break;
+          case 'shimmer':
+            jitter += (Math.sin((frameIndex + effect.seed * 3) * 1.6) + 1) * 0.35;
+            break;
+          case 'drift':
+            jitter += 0.4 + intensity * 0.75;
+            break;
+          default:
+            break;
+        }
+      }
+      return Math.min(2.4, Math.max(0, Number(jitter.toFixed(3))));
+    };
+
+    const applyPatternStack = (
+      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+      effects: Array<{
+        pattern: AnimationPattern;
+        seed: number;
+        waveAxis: 'x' | 'y' | 'xy';
+      }>,
+      frameIndex: number,
+      totalFrames: number
+    ): HTMLCanvasElement | OffscreenCanvas => {
+      let out = sourceCanvas;
+      for (const effect of effects) {
+        out = applyAnimationPattern(out, frameIndex, totalFrames, effect.pattern, {
+          seed: effect.seed,
+          waveAxis: effect.waveAxis,
+        });
+      }
+      return out;
+    };
+    const applyResultPatternStack = (
+      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+      frameIndex: number,
+      totalFrames: number
+    ): HTMLCanvasElement | OffscreenCanvas =>
+      applyPatternStack(sourceCanvas, resultPatternEffects, frameIndex, totalFrames);
+    const applyModulePatternStack = (
+      sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+      frameIndex: number,
+      totalFrames: number
+    ): HTMLCanvasElement | OffscreenCanvas =>
+      applyPatternStack(sourceCanvas, modulePatternEffects, frameIndex, totalFrames);
+
     // Early return only if no animation is needed
     // For multi-frame overlays (animated GIFs), we need to generate frames regardless of other animation effects
     const hasMultiFrameOverlay = effectiveFrames.length > 1 && overlay.enabled;
@@ -2250,12 +2347,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     // OPTIMIZATION: If we have a single static overlay with NO animation effects enabled,
     // skip batch frame generation entirely - the normal generate() path handles this
     if (
-      !(
-        hasMultiFrameOverlay ||
-        shouldGeneratePatternAnimation ||
-        shouldGenerateBaseAnimation ||
-        shouldGenerateStaticOverlayAnimation
-      )
+      !(hasMultiFrameOverlay || shouldGenerateBaseAnimation || shouldGenerateStaticOverlayAnimation)
     ) {
       setAnimationFrames([]);
       setIsAnimationCacheReady(false);
@@ -2302,7 +2394,6 @@ function useQRGenerator(): UseQRGeneratorResult {
         useCompositor: !!useCompositor,
         hasMultiFrameOverlay,
         shouldGenerateBaseAnimation,
-        shouldGeneratePatternAnimation,
         shouldGenerateStaticOverlayAnimation,
         sampleDelays: effectiveFrames.slice(0, 3).map((f) => f.delay),
       });
@@ -2324,62 +2415,32 @@ function useQRGenerator(): UseQRGeneratorResult {
         const needsPerFrameQR = hasJitter;
 
         if (hasPattern && !needsPerFrameQR) {
-          // Generate base QR once, then apply pattern animation
+          // Generate base QR once, then apply result-targeted pattern stack
           const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
           if (!baseQR || isCancelled) return;
-
-          const patternFrames = generateAnimationPatternFrames(
-            baseQR,
-            animation.pattern as AnimationPattern,
-            frameCount,
-            1.0,
-            animation.seed
-          );
-          framesToProcess = patternFrames.map((canvas) => ({
-            canvas,
+          framesToProcess = Array.from({ length: frameCount }, (_, i) => ({
+            canvas: applyResultPatternStack(baseQR, i, frameCount),
             delay: animation.speedMs,
             disposalType: 0,
           }));
         } else if (hasPattern && needsPerFrameQR) {
-          // Generate QR per frame for jitter, then apply pattern
-          // First generate all pattern frames from a base QR to get the pattern progression
-          const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
-          if (!baseQR || isCancelled) return;
-
-          const _basePatternFrames = generateAnimationPatternFrames(
-            baseQR,
-            animation.pattern as AnimationPattern,
-            frameCount,
-            1.0,
-            animation.seed
-          );
-
-          // Now generate jittered QR frames and combine with pattern effects
+          // Generate QR per frame for module-targeted effects, then layer result-targeted patterns
           const combinedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
           for (let i = 0; i < frameCount; i++) {
             if (isCancelled) return;
-
             // Time-based yielding for smoother UI
             if (await yieldCtrl.yieldIfNeeded()) {
               if (isCancelled) return;
             }
 
-            // Generate QR with jitter for this frame
-            const frameConfig = { ...previewScanConfigBase, frameIndex: i };
+            const frameConfig = {
+              ...previewScanConfigBase,
+              frameIndex: i,
+              moduleJitterPx: computePatternDrivenJitter(i, frameCount),
+            };
             const jitteredQR = await qrGenerator.generate(frameConfig, null);
             if (!jitteredQR) continue;
-
-            // Apply the same pattern effect that would be at this frame index
-            // by generating pattern frames for this specific jittered QR
-            const patternForFrame = generateAnimationPatternFrames(
-              jitteredQR,
-              animation.pattern as AnimationPattern,
-              frameCount,
-              1.0,
-              animation.seed
-            );
-            // Pick the frame at index i to match the animation progression
-            combinedFrames.push(patternForFrame[i] || jitteredQR);
+            combinedFrames.push(applyResultPatternStack(jitteredQR, i, frameCount));
           }
 
           framesToProcess = combinedFrames.map((canvas) => ({
@@ -2388,7 +2449,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             disposalType: 0,
           }));
         } else if (hasJitter) {
-          // Just moduleJitter without pattern - generate frames with jitter
+          // Module-only animation (jitter and module-targeted patterns)
           const jitteredFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
           for (let i = 0; i < frameCount; i++) {
             if (isCancelled) return;
@@ -2398,9 +2459,13 @@ function useQRGenerator(): UseQRGeneratorResult {
               if (isCancelled) return;
             }
 
-            const frameConfig = { ...previewScanConfigBase, frameIndex: i };
+            const frameConfig = {
+              ...previewScanConfigBase,
+              frameIndex: i,
+              moduleJitterPx: computePatternDrivenJitter(i, frameCount),
+            };
             const qrFrame = await qrGenerator.generate(frameConfig, null);
-            if (qrFrame) jitteredFrames.push(qrFrame);
+            if (qrFrame) jitteredFrames.push(applyResultPatternStack(qrFrame, i, frameCount));
           }
 
           framesToProcess = jitteredFrames.map((canvas) => ({
@@ -2421,32 +2486,12 @@ function useQRGenerator(): UseQRGeneratorResult {
           }));
         }
       }
-      // Generate pattern animation frames from static overlay image
-      else if (shouldGeneratePatternAnimation && effectiveFrames.length === 1) {
-        // Generate 24 frames of pattern animation from single frame
-        const patternFrameCount = 24;
-        const baseCanvas = applyGeometricTransforms(effectiveFrames[0].canvas);
-        const patternFrames = generateAnimationPatternFrames(
-          baseCanvas,
-          animation.pattern as AnimationPattern,
-          patternFrameCount,
-          1.0,
-          animation.seed
-        );
-        // Convert to AnimationFrame format
-        framesToProcess = patternFrames.map((canvas) => ({
-          canvas,
-          delay: animation.speedMs,
-          disposalType: 0,
-        }));
-      }
-      // Generate animation frames from static overlay with non-pattern effects (colorCycle, temporalDither, jitter)
+      // Generate animation frames from static overlay with effects
       else if (shouldGenerateStaticOverlayAnimation && effectiveFrames.length === 1) {
-        // Generate 24 frames of animation effects on the static overlay
         const frameCount = 24;
         const baseCanvas = applyGeometricTransforms(effectiveFrames[0].canvas);
 
-        // Create placeholder frames - the actual effects (colorCycle, temporalDither) are applied per-frame below
+        // Create placeholder frames; per-frame module/result effects are applied in the render loop.
         framesToProcess = Array.from({ length: frameCount }, () => ({
           canvas: baseCanvas,
           delay: animation.speedMs,
@@ -2602,9 +2647,16 @@ function useQRGenerator(): UseQRGeneratorResult {
             // Legacy path for WebP or pattern animation
             // NOTE: Color adjustments (brightness/contrast/etc) are now done at moduleCount
             // resolution inside qr-generator.js - we only apply geometric transforms here
-            let processedOverlay = shouldGeneratePatternAnimation
-              ? frame.canvas // Already processed for pattern animation
-              : applyGeometricTransforms(frame.canvas);
+            let processedOverlay: HTMLCanvasElement | OffscreenCanvas = applyGeometricTransforms(
+              frame.canvas
+            );
+            if (modulePatternEffects.length > 0) {
+              processedOverlay = applyModulePatternStack(
+                processedOverlay,
+                frameIdx,
+                framesToProcess.length
+              );
+            }
 
             // Apply temporal dithering offset to the overlay image
             // This varies the input slightly per frame for smoother perceived quality
@@ -2628,6 +2680,9 @@ function useQRGenerator(): UseQRGeneratorResult {
             const frameConfig = {
               ...previewScanConfigBase,
               frameIndex: frameIdx,
+              moduleJitterPx: hasJitter
+                ? computePatternDrivenJitter(frameIdx, framesToProcess.length)
+                : animation.moduleJitterPx,
               temporalOffset: useTemporalDither
                 ? calculateTemporalOffset(frameIdx, temporalMode, animation.seed)
                 : 0,
@@ -2641,6 +2696,9 @@ function useQRGenerator(): UseQRGeneratorResult {
 
           if (result) {
             let finalResult: HTMLCanvasElement | OffscreenCanvas = result;
+            if (!shouldGenerateBaseAnimation && resultPatternEffects.length > 0) {
+              finalResult = applyResultPatternStack(finalResult, frameIdx, framesToProcess.length);
+            }
 
             // Apply color cycle as post-processing - ONLY if actually enabled
             if (hasColorCycle) {
@@ -2754,6 +2812,11 @@ function useQRGenerator(): UseQRGeneratorResult {
     animation.temporalDither,
     animation.seed,
     animation.pattern,
+    animation.pattern2,
+    animation.target,
+    animation.target2,
+    animation.waveAxis,
+    animation.waveAxis2,
     animation.interpolate,
     animation.speedMs,
     animation.colorCycle,
@@ -2768,6 +2831,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   const hasAnimationEffectsEnabled =
     animation.colorCycle ||
     animation.pattern !== 'none' ||
+    animation.pattern2 !== 'none' ||
     animation.temporalDither !== 'off' ||
     animation.moduleJitterPx > 0;
 

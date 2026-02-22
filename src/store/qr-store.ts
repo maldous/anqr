@@ -233,6 +233,10 @@ export type OutputFormat = 'png' | 'webp' | 'gif' | 'svg';
 export type GifQuantizer = 'median_cut' | 'neuquant' | 'octree';
 export type GifDither = 'off' | 'floyd' | 'ordered';
 
+export type AnimationPatternType = 'none' | 'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift';
+export type AnimationTarget = 'result' | 'modules' | 'both';
+export type AnimationWaveAxis = 'x' | 'y' | 'xy';
+
 // Safety
 export type SafetyMode = 'off' | 'balanced' | 'strict';
 
@@ -724,6 +728,7 @@ export interface QRState {
     ditherStrength: number;
     finderDitherStrength: number;
     blendPreservations: boolean;
+    blendPreservationMode: 'overlay' | 'dither';
     ditherSerpentine: boolean;
     diffusionKernel: DiffusionKernel;
     orderedMatrix: OrderedMatrix;
@@ -793,7 +798,12 @@ export interface QRState {
     interpolate: 'none' | 'crossfade' | 'morph';
     temporalDither: 'off' | 'blue_noise' | 'flicker_safe';
     seed: number;
-    pattern: 'none' | 'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift';
+    pattern: AnimationPatternType;
+    target: AnimationTarget;
+    waveAxis: AnimationWaveAxis;
+    pattern2: AnimationPatternType;
+    target2: AnimationTarget;
+    waveAxis2: AnimationWaveAxis;
     moduleJitterPx: number;
     colorCycle: boolean;
   };
@@ -1231,6 +1241,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     ditherStrength: 50,
     finderDitherStrength: 65,
     blendPreservations: false,
+    blendPreservationMode: 'overlay',
     ditherSerpentine: false,
     diffusionKernel: 'floyd_steinberg',
     orderedMatrix: 'bayer4',
@@ -1341,6 +1352,11 @@ export const useQRStore = create<QRState>((set, get) => ({
     temporalDither: 'off',
     seed: 0,
     pattern: 'none',
+    target: 'result',
+    waveAxis: 'y',
+    pattern2: 'none',
+    target2: 'result',
+    waveAxis2: 'x',
     moduleJitterPx: 0,
     colorCycle: false,
   },

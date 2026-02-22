@@ -341,8 +341,16 @@ export function applyQROverlayMode(
 
       const isExtreme = overlayMode === 'extreme';
       const blendPresFunctional = config.blendPreservations === true && isFunctionalPattern;
-      const functionalExtremeBlend = isExtreme && blendPresFunctional;
-      const preserveBoost = blendPresFunctional ? 1.14 : 1;
+      const blendPreservationMode =
+        config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
+      const blendPresFunctionalOverlay = blendPresFunctional && blendPreservationMode === 'overlay';
+      const blendPresFunctionalDither = blendPresFunctional && blendPreservationMode === 'dither';
+      const functionalExtremeBlend = isExtreme && blendPresFunctionalOverlay;
+      const preserveBoost = blendPresFunctionalOverlay
+        ? 1.14
+        : blendPresFunctionalDither
+          ? 1.04
+          : 1;
       const darkBlend = isExtreme
         ? Math.min(1, effectiveIntensity * 1.18 * preserveBoost)
         : Math.min(1, effectiveIntensity * 0.82 * preserveBoost);
@@ -361,14 +369,14 @@ export function applyQROverlayMode(
         break;
       }
 
-      // When blend preservations is enabled, keep functional light cells image-aware
-      // even in non-extreme dither mode so preservations stay mode-integrated.
-      if (isExtreme || blendPresFunctional) {
+      // "overlay" mode keeps unprotected functional light cells image-forward.
+      // "dither" mode keeps them integrated but noticeably less pass-through.
+      if (isExtreme || blendPresFunctionalOverlay) {
         const lightMix = computeLightBlend(
           effectiveIntensity,
           functionalExtremeBlend
             ? 0.62
-            : blendPresFunctional
+            : blendPresFunctionalOverlay
               ? isExtreme
                 ? 0.42
                 : 0.36
@@ -391,6 +399,25 @@ export function applyQROverlayMode(
           config.bgColor,
           `rgb(${lightR},${lightG},${lightB})`,
           lightMix
+        );
+        result.shouldDrawCell = true;
+      } else if (blendPresFunctionalDither) {
+        const lightMix = computeLightBlend(effectiveIntensity, isExtreme ? 0.28 : 0.16);
+        const whiteBase = isExtreme ? 0.84 : 0.92;
+        const whitePush = isExtreme ? 0.14 : 0.06;
+        const lightR = Math.round(
+          ditherColor.r + (255 - ditherColor.r) * (whiteBase + lightMix * whitePush)
+        );
+        const lightG = Math.round(
+          ditherColor.g + (255 - ditherColor.g) * (whiteBase + lightMix * whitePush)
+        );
+        const lightB = Math.round(
+          ditherColor.b + (255 - ditherColor.b) * (whiteBase + lightMix * whitePush)
+        );
+        result.moduleColor = blendColors(
+          config.bgColor,
+          `rgb(${lightR},${lightG},${lightB})`,
+          lightMix * 0.5
         );
         result.shouldDrawCell = true;
       }

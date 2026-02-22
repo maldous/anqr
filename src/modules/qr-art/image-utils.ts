@@ -79,6 +79,8 @@ export function mapImageToTargetsSupersampled(
 
   const scaleX = imageData.width / moduleCount;
   const scaleY = imageData.height / moduleCount;
+  const maxX = Math.max(0, imageData.width - 1);
+  const maxY = Math.max(0, imageData.height - 1);
 
   // Use 2x2 supersampling for better edge detection
   const samplePoints = [
@@ -99,11 +101,13 @@ export function mapImageToTargetsSupersampled(
 
       // Sample multiple points within the module
       for (const { dx, dy } of samplePoints) {
-        const imgX = Math.floor((col + dx) * scaleX);
-        const imgY = Math.floor((row + dy) * scaleY);
+        const imgX = Math.max(0, Math.min(maxX, Math.floor((col + dx) * scaleX)));
+        const imgY = Math.max(0, Math.min(maxY, Math.floor((row + dy) * scaleY)));
         const idx = (imgY * imageData.width + imgX) * 4;
 
-        const gray = (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+        const rawGray =
+          (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+        const gray = Number.isFinite(rawGray) ? rawGray : 255;
         totalGray += gray;
         minGray = Math.min(minGray, gray);
         maxGray = Math.max(maxGray, gray);

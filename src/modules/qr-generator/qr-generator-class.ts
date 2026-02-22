@@ -412,13 +412,16 @@ export class QRGenerator {
     // =======================================================================
     const overlayModeWithDefault =
       processedOverlayCanvas && !config.overlayMode ? 'dithered' : config.overlayMode;
+    const blendPreservationMode: 'overlay' | 'dither' =
+      config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
 
     const effectiveOverlayMode = overlayModeWithDefault;
 
-    const effectiveConfig = {
+    const effectiveConfig: QRGeneratorConfig = {
       ...config,
       typeNumber,
       overlayMode: effectiveOverlayMode,
+      blendPreservationMode,
     };
 
     // =======================================================================
@@ -485,6 +488,7 @@ export class QRGenerator {
           ditherStrength: effectiveConfig.ditherStrength,
           finderDitherStrength: effectiveConfig.finderDitherStrength,
           blendPreservations: effectiveConfig.blendPreservations,
+          blendPreservationMode: effectiveConfig.blendPreservationMode,
           ditherScale: effectiveConfig.ditherScale,
           ditherSerpentine: effectiveConfig.ditherSerpentine,
           diffusionKernel: effectiveConfig.diffusionKernel,
@@ -520,6 +524,7 @@ export class QRGenerator {
             Math.round(effectiveConfig.ditherStrength ?? 50),
             Math.round(effectiveConfig.finderDitherStrength ?? 65),
             effectiveConfig.blendPreservations === true ? 1 : 0,
+            effectiveConfig.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
             effectiveConfig.ditherKind ?? 'none',
             effectiveConfig.ditherMode ?? 'none',
             Math.round(effectiveConfig.ditherScale ?? 1),
@@ -1164,9 +1169,11 @@ export class QRGenerator {
     // =======================================================================
     const moduleSize = config.moduleSize;
     const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
-    const margin = Math.max(config.margin, quietZoneMin);
-    const frameExtra = config.frameStyle && config.frameStyle !== 'none' ? moduleSize * 4 : 0;
-    const size = moduleCount * moduleSize + margin * 2 * moduleSize + frameExtra;
+    const baseMargin = Math.max(config.margin, quietZoneMin);
+    // Keep QR centered when frame text/border reserves extra canvas space.
+    const frameOffsetModules = config.frameStyle && config.frameStyle !== 'none' ? 2 : 0;
+    const margin = baseMargin + frameOffsetModules;
+    const size = moduleCount * moduleSize + margin * 2 * moduleSize;
 
     const canvas = await this.createCanvas(size, size);
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -1333,9 +1340,10 @@ export class QRGenerator {
     // =======================================================================
     const moduleSize = config.moduleSize || 10;
     const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
-    const margin = Math.max(config.margin || 4, quietZoneMin);
-    const frameExtra = config.frameStyle && config.frameStyle !== 'none' ? moduleSize * 4 : 0;
-    const size = moduleCount * moduleSize + margin * 2 * moduleSize + frameExtra;
+    const baseMargin = Math.max(config.margin || 4, quietZoneMin);
+    const frameOffsetModules = config.frameStyle && config.frameStyle !== 'none' ? 2 : 0;
+    const margin = baseMargin + frameOffsetModules;
+    const size = moduleCount * moduleSize + margin * 2 * moduleSize;
 
     const canvas = await this.createCanvas(size, size);
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;

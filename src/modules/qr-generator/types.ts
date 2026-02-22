@@ -46,6 +46,8 @@ export interface QRGeneratorConfig {
   finderDitherStrength?: number;
   // When true, preservation-strength overlays use image-aware blended coloring instead of pure B/W alpha.
   blendPreservations?: boolean;
+  // Strategy used when blendPreservations is enabled.
+  blendPreservationMode?: 'overlay' | 'dither';
   // When true, force non-scaled overlay modes (halftone, mosaic, blend, etc.) through the
   // scaled rendering path. Used for animated overlays where per-pixel detail must be preserved
   // across frames.

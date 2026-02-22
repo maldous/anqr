@@ -156,6 +156,7 @@ Sentry.init({
  * - ditherStrength: Dither strength 0-100 (default: 50)
  * - finderDither: Finder/alignment boost strength 0-100 (default: 65)
  * - blendPres: Blend preservation overlays with sampled image colors 0/1 (default: 0)
+ * - blendPresMode: Blend preservation style - overlay/dither (default: overlay)
  * - serpentine: Serpentine dithering 0/1 (default: 0)
  * - matrix: Ordered dither matrix - bayer2/bayer4/bayer8/etc
  * - bnTile: Blue noise tile size (default: 64)
@@ -190,6 +191,16 @@ Sentry.init({
  * - animSpeed: Animation frame delay in ms 10-1000 (default: 100)
  * - animSeed: Animation random seed (default: 0)
  * - easing: Animation easing function - linear/ease_in/ease_out/ease_in_out/bounce
+ * - animTarget: Apply animation to result/modules/both (default: result)
+ * - animWaveAxis: Wave direction for wave pattern - x/y/xy (default: y)
+ * - animPattern2: Secondary stacked animation pattern (default: none)
+ * - animSeed2: Secondary animation seed (default: animSeed+911)
+ * - easing2: Secondary animation easing (default: easing)
+ * - animTarget2: Secondary target - result/modules/both (default: animTarget)
+ * - animWaveAxis2: Secondary wave direction - x/y/xy (default: x when primary is y)
+ * - colorCycle2: Secondary color cycle animation 0/1 (default: 0)
+ * - reverse2: Secondary reverse animation 0/1 (default: reverse)
+ * - bounce2: Secondary bounce animation 0/1 (default: bounce)
  * - loop: Animation loop 0/1 (default: 1)
  * - bounce: Animation bounce 0/1 (default: 0)
  * - reverse: Animation reverse 0/1 (default: 0)
@@ -255,6 +266,14 @@ import { getStore } from '@netlify/blobs';
 if (typeof globalThis.ImageData === 'undefined') {
   (globalThis as Record<string, unknown>).ImageData = NapiImageData;
 }
+if (typeof (globalThis as Record<string, unknown>).HTMLCanvasElement === 'undefined') {
+  (globalThis as Record<string, unknown>).HTMLCanvasElement = createCanvas(1, 1).constructor;
+}
+if (typeof (globalThis as Record<string, unknown>).OffscreenCanvas === 'undefined') {
+  (globalThis as Record<string, unknown>).OffscreenCanvas = (
+    globalThis as Record<string, unknown>
+  ).HTMLCanvasElement;
+}
 
 // Import animation utilities
 import {
@@ -274,6 +293,7 @@ import {
   isGifSignature,
   quantizeGifPalette,
 } from '../../src/modules/animation';
+import { generateFullQArt, generateFullQArtOptimal } from '../../src/modules/qr-art';
 import { calculateOptimalVersion } from '../../src/modules/qr-encoder/encoder-api';
 // @ts-expect-error - JS module
 import { QRGenerator } from '../../src/modules/qr-generator';
@@ -286,7 +306,21 @@ type ECCLevel = 'L' | 'M' | 'Q' | 'H';
 type OutputFormat = 'png' | 'webp' | 'gif';
 type WatermarkKind = 'text' | 'image' | 'pattern';
 type WatermarkPosition = 'center' | 'corners' | 'edges' | 'behind' | 'quiet_zone';
-type WatermarkBlend = 'normal' | 'multiply' | 'screen' | 'overlay';
+type WatermarkBlend = 'normal' | 'multiply' | 'screen' | 'overlay' | 'soft-light';
+type AnimationInterpolation = 'none' | 'crossfade' | 'morph';
+type AnimationTemporalDitherMode = 'off' | 'blue_noise' | 'flicker_safe';
+type AnimationTarget = 'result' | 'modules' | 'both';
+type AnimationWaveAxis = 'x' | 'y' | 'xy';
+type AnimationEffectConfig = {
+  pattern: AnimationPattern;
+  seed: number;
+  easing: AnimationEasing;
+  colorCycle: boolean;
+  reverse: boolean;
+  bounce: boolean;
+  target: AnimationTarget;
+  waveAxis: AnimationWaveAxis;
+};
 type DitherKind =
   | 'error_diffusion'
   | 'ordered_bayer'
@@ -334,8 +368,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Fetch timeout in milliseconds
-const FETCH_TIMEOUT_MS = 10000;
+// Fetch timeout in milliseconds (allow override for slower remote environments)
+const FETCH_TIMEOUT_MS = Math.max(
+  1000,
+  Number.parseInt(process.env.ANQR_OVERLAY_FETCH_TIMEOUT_MS || '60000', 10)
+);
 
 // Default dither algorithm for server-side when none specified (fast)
 const DEFAULT_SERVER_DITHER: DitherKind = 'ordered_bayer';
@@ -349,12 +386,20 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+// Keep runtime logs minimal by default for gallery/parity runs.
+const QR_FN_DIAGNOSTICS = process.env.ANQR_QR_FN_DIAGNOSTICS === '1';
+function qrFnLog(...args: unknown[]): void {
+  if (QR_FN_DIAGNOSTICS) {
+    console.log(...args);
+  }
+}
+
 // ============================================
 // BLOB CACHE
 // ============================================
 
 const QR_CACHE_STORE = 'qr-cache';
-const NON_CACHE_PARAMS = new Set(['_cb', 'lang', '_fullRender']);
+const NON_CACHE_PARAMS = new Set(['_cb', 'lang', '_fullRender', '_strictOverlay']);
 const SENTINEL_PREFIX = 'rendering:';
 const SENTINEL_TTL_MS = 600_000;
 
@@ -557,6 +602,9 @@ function applyBlendMode(ctx: SKRSContext2D, blend: WatermarkBlend): void {
       break;
     case 'overlay':
       ctx.globalCompositeOperation = 'overlay';
+      break;
+    case 'soft-light':
+      ctx.globalCompositeOperation = 'soft-light';
       break;
     default:
       ctx.globalCompositeOperation = 'source-over';
@@ -795,6 +843,27 @@ function embedPngMetadataAndDpi(pngBuffer: Buffer, metadata?: PngMetadata, dpi?:
 // GIF ENCODING
 // ============================================
 
+// gifenc can produce corrupted frames when multiple encodes run concurrently
+// in the same process. Serialize encoding to keep outputs deterministic.
+let gifEncodeQueue: Promise<void> = Promise.resolve();
+
+async function withGifEncodeLock<T>(fn: () => T | Promise<T>): Promise<T> {
+  let release: (() => void) | null = null;
+  const waitTurn = gifEncodeQueue;
+  gifEncodeQueue = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  await waitTurn;
+  try {
+    return await fn();
+  } finally {
+    if (release) {
+      release();
+    }
+  }
+}
+
 /**
  * Encode canvas as GIF (single frame)
  */
@@ -883,6 +952,190 @@ function encodeAnimatedGif(
 
 // AnimationPattern and AnimationEasing types imported from shared module as SharedAnimationPattern and AnimationEasing
 
+function parseAnimationTarget(
+  value: string | null | undefined,
+  fallback: AnimationTarget = 'result'
+): AnimationTarget {
+  switch ((value || '').toLowerCase()) {
+    case 'modules':
+      return 'modules';
+    case 'both':
+      return 'both';
+    case 'result':
+      return 'result';
+    default:
+      return fallback;
+  }
+}
+
+function parseAnimationWaveAxis(
+  value: string | null | undefined,
+  fallback: AnimationWaveAxis = 'y'
+): AnimationWaveAxis {
+  switch ((value || '').toLowerCase()) {
+    case 'x':
+    case 'horizontal':
+    case 'left_right':
+    case 'left-right':
+      return 'x';
+    case 'xy':
+    case 'both':
+    case 'dual':
+      return 'xy';
+    case 'y':
+    case 'vertical':
+    case 'top_bottom':
+    case 'top-bottom':
+      return 'y';
+    default:
+      return fallback;
+  }
+}
+
+function hasAnimationEffect(effect: AnimationEffectConfig): boolean {
+  return effect.pattern !== 'none' || effect.colorCycle;
+}
+
+function computeAnimationProgress(
+  frameIndex: number,
+  totalFrames: number,
+  easing: AnimationEasing,
+  reverse = false,
+  bounce = false
+): number {
+  let progress = frameIndex / Math.max(1, totalFrames - 1);
+  if (reverse) {
+    progress = 1 - progress;
+  }
+  if (bounce) {
+    progress = progress <= 0.5 ? progress * 2 : (1 - progress) * 2;
+  }
+  return applyAnimationEasing(progress, easing);
+}
+
+function hslToRgbTupleServer(h: number, s: number, l: number): [number, number, number] {
+  const hue = ((h % 360) + 360) % 360;
+  const sat = Math.max(0, Math.min(100, s)) / 100;
+  const light = Math.max(0, Math.min(100, l)) / 100;
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const hp = hue / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r1 = 0;
+  let g1 = 0;
+  let b1 = 0;
+  if (hp >= 0 && hp < 1) {
+    r1 = c;
+    g1 = x;
+  } else if (hp >= 1 && hp < 2) {
+    r1 = x;
+    g1 = c;
+  } else if (hp >= 2 && hp < 3) {
+    g1 = c;
+    b1 = x;
+  } else if (hp >= 3 && hp < 4) {
+    g1 = x;
+    b1 = c;
+  } else if (hp >= 4 && hp < 5) {
+    r1 = x;
+    b1 = c;
+  } else {
+    r1 = c;
+    b1 = x;
+  }
+  const m = light - c / 2;
+  return [Math.round((r1 + m) * 255), Math.round((g1 + m) * 255), Math.round((b1 + m) * 255)];
+}
+
+function applyAnimationWaveWithAxisServer(
+  data: Uint8ClampedArray,
+  progress: number,
+  width: number,
+  height: number,
+  seed: number,
+  axis: AnimationWaveAxis = 'y'
+): void {
+  if (axis === 'y') {
+    applyAnimationWave(data, progress, width, height, seed);
+    return;
+  }
+
+  const waveFrequencyX = 3 + (seed % 5);
+  const waveFrequencyY = 2 + ((seed * 3) % 5);
+  const baseHue = (seed * 23) % 360;
+  const twoPi = Math.PI * 2;
+
+  for (let y = 0; y < height; y++) {
+    const phaseY = Math.sin((y / height) * waveFrequencyY * twoPi + progress * twoPi);
+    for (let x = 0; x < width; x++) {
+      const phaseX = Math.sin((x / width) * waveFrequencyX * twoPi + progress * twoPi);
+      const wavePhase =
+        axis === 'xy' ? Math.max(-1, Math.min(1, phaseX * 0.65 + phaseY * 0.35)) : phaseX;
+      const waveIntensity = (wavePhase + 1) / 2;
+      const hueShift = axis === 'xy' ? wavePhase * 45 + (phaseX - phaseY) * 15 : wavePhase * 30;
+      const waveColor = hslToRgbTupleServer(baseHue + hueShift, 72, 50);
+      const i = (y * width + x) * 4;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const brightness = (r + g + b) / 3;
+      const isDark = brightness < 128;
+      if (isDark) {
+        const tintAmount = waveIntensity * 0.62;
+        data[i] = Math.min(255, r + waveColor[0] * tintAmount);
+        data[i + 1] = Math.min(255, g + waveColor[1] * tintAmount);
+        data[i + 2] = Math.min(255, b + waveColor[2] * tintAmount);
+      } else {
+        const darkenAmount = waveIntensity * 0.15;
+        data[i] = Math.round(r * (1 - darkenAmount));
+        data[i + 1] = Math.round(g * (1 - darkenAmount));
+        data[i + 2] = Math.round(b * (1 - darkenAmount));
+      }
+    }
+  }
+}
+
+function applyAnimationEffectToImageDataServer(
+  frameData: Uint8ClampedArray,
+  width: number,
+  height: number,
+  progress: number,
+  effect: AnimationEffectConfig
+): void {
+  switch (effect.pattern) {
+    case 'pulse':
+      applyAnimationPulse(frameData, progress, effect.seed);
+      break;
+    case 'wave':
+      applyAnimationWaveWithAxisServer(
+        frameData,
+        progress,
+        width,
+        height,
+        effect.seed,
+        effect.waveAxis
+      );
+      break;
+    case 'scanline':
+      applyAnimationScanline(frameData, progress, width, height, effect.seed);
+      break;
+    case 'shimmer':
+      applyAnimationShimmer(frameData, progress, width, height, effect.seed);
+      break;
+    case 'drift':
+      applyAnimationDrift(frameData, progress, width, height, effect.seed);
+      break;
+    case 'color_cycle':
+      applyAnimationColorCycle(frameData, progress, effect.seed);
+      break;
+    default:
+      break;
+  }
+
+  if (effect.colorCycle && effect.pattern !== 'color_cycle') {
+    applyAnimationColorCycle(frameData, progress, effect.seed + 101);
+  }
+}
+
 /**
  * Generate animation frames using a pattern effect
  */
@@ -891,9 +1144,13 @@ function generatePatternFramesServer(
   pattern: AnimationPattern,
   frameCount: number = 24,
   seed: number = 0,
-  easing: AnimationEasing = 'linear'
+  easing: AnimationEasing = 'linear',
+  waveAxis: AnimationWaveAxis = 'y',
+  colorCycle = false,
+  reverse = false,
+  bounce = false
 ): Canvas[] {
-  if (pattern === 'none') {
+  if (pattern === 'none' && !colorCycle) {
     return [sourceCanvas];
   }
 
@@ -905,40 +1162,297 @@ function generatePatternFramesServer(
   const sourceData = sourceCtx.getImageData(0, 0, width, height);
 
   for (let i = 0; i < frameCount; i++) {
-    const linearProgress = i / frameCount;
-    const progress = applyAnimationEasing(linearProgress, easing);
+    const progress = computeAnimationProgress(i, frameCount, easing, reverse, bounce);
     const frame = createCanvas(width, height);
     const ctx = frame.getContext('2d');
 
     const frameData = ctx.createImageData(width, height);
     frameData.data.set(sourceData.data);
 
-    switch (pattern) {
-      case 'pulse':
-        applyAnimationPulse(frameData.data, progress, seed);
-        break;
-      case 'wave':
-        applyAnimationWave(frameData.data, progress, width, height, seed);
-        break;
-      case 'scanline':
-        applyAnimationScanline(frameData.data, progress, width, height, seed);
-        break;
-      case 'shimmer':
-        applyAnimationShimmer(frameData.data, progress, width, height, seed);
-        break;
-      case 'drift':
-        applyAnimationDrift(frameData.data, progress, width, height, seed);
-        break;
-      case 'color_cycle':
-        applyAnimationColorCycle(frameData.data, progress, seed);
-        break;
-    }
+    applyAnimationEffectToImageDataServer(frameData.data, width, height, progress, {
+      pattern,
+      seed,
+      easing,
+      colorCycle,
+      reverse,
+      bounce,
+      target: 'result',
+      waveAxis,
+    });
 
     ctx.putImageData(frameData, 0, 0);
     frames.push(frame);
   }
 
   return frames;
+}
+
+function applyPatternToFrameServer(
+  sourceCanvas: Canvas,
+  pattern: AnimationPattern,
+  frameIndex: number,
+  totalFrames: number,
+  seed: number,
+  easing: AnimationEasing,
+  colorCycle: boolean,
+  reverse = false,
+  bounce = false,
+  waveAxis: AnimationWaveAxis = 'y'
+): Canvas {
+  if (pattern === 'none' && !colorCycle) {
+    return sourceCanvas;
+  }
+
+  const width = sourceCanvas.width;
+  const height = sourceCanvas.height;
+  const frame = createCanvas(width, height);
+  const ctx = frame.getContext('2d');
+  ctx.drawImage(sourceCanvas, 0, 0);
+
+  const frameData = ctx.getImageData(0, 0, width, height);
+  const progress = computeAnimationProgress(frameIndex, totalFrames, easing, reverse, bounce);
+  applyAnimationEffectToImageDataServer(frameData.data, width, height, progress, {
+    pattern,
+    seed,
+    easing,
+    colorCycle,
+    reverse,
+    bounce,
+    target: 'result',
+    waveAxis,
+  });
+
+  ctx.putImageData(frameData, 0, 0);
+  return frame;
+}
+
+function applyAnimationEffectsToCanvasServer(
+  sourceCanvas: Canvas,
+  effects: AnimationEffectConfig[],
+  frameIndex: number,
+  totalFrames: number
+): Canvas {
+  if (!effects.length) {
+    return sourceCanvas;
+  }
+
+  let frame = sourceCanvas;
+  for (const effect of effects) {
+    if (!hasAnimationEffect(effect)) {
+      continue;
+    }
+    frame = applyPatternToFrameServer(
+      frame,
+      effect.pattern,
+      frameIndex,
+      totalFrames,
+      effect.seed,
+      effect.easing,
+      effect.colorCycle,
+      effect.reverse,
+      effect.bounce,
+      effect.waveAxis
+    );
+  }
+  return frame;
+}
+
+function applyModuleAnimationToConfigServer(
+  baseConfig: Record<string, unknown>,
+  effects: AnimationEffectConfig[],
+  frameIndex: number,
+  totalFrames: number,
+  baseJitter: number
+): Record<string, unknown> {
+  if (!effects.length && baseJitter <= 0) {
+    return { ...baseConfig, frameIndex, animationFrames: totalFrames };
+  }
+
+  const frameConfig: Record<string, unknown> = {
+    ...baseConfig,
+    frameIndex,
+    animationFrames: totalFrames,
+  };
+  let jitter = Math.max(0, Number.isFinite(baseJitter) ? baseJitter : 0);
+  let moduleGap = typeof frameConfig.moduleGap === 'number' ? (frameConfig.moduleGap as number) : 0;
+  let dotRotationDeg =
+    typeof frameConfig.dotRotationDeg === 'number' ? (frameConfig.dotRotationDeg as number) : 0;
+
+  for (const effect of effects) {
+    const progress = computeAnimationProgress(
+      frameIndex,
+      totalFrames,
+      effect.easing,
+      effect.reverse,
+      effect.bounce
+    );
+    const phase = Math.sin(progress * Math.PI * 2 + effect.seed * 0.013);
+    const intensity = (phase + 1) / 2;
+    switch (effect.pattern) {
+      case 'pulse':
+        jitter += 0.35 + intensity * 0.75;
+        moduleGap += intensity * 3.8;
+        break;
+      case 'wave':
+        jitter += 0.8 + intensity * 0.65;
+        dotRotationDeg += (effect.waveAxis === 'xy' ? 18 : 12) * phase;
+        moduleGap += intensity * 2.4;
+        break;
+      case 'scanline':
+        jitter += intensity * 0.9;
+        moduleGap += (1 - intensity) * 2.2;
+        break;
+      case 'shimmer':
+        jitter += (Math.sin((frameIndex + effect.seed * 3) * 1.7) + 1) * 0.42;
+        dotRotationDeg += Math.cos((frameIndex + effect.seed) * 0.5) * 6;
+        break;
+      case 'drift':
+        jitter += 0.45 + intensity * 0.95;
+        dotRotationDeg += phase * 10;
+        break;
+      case 'color_cycle':
+        jitter += 0.2 + intensity * 0.6;
+        break;
+      default:
+        break;
+    }
+    if (effect.colorCycle) {
+      jitter += 0.12;
+    }
+  }
+
+  frameConfig.moduleJitterPx = Math.min(2.4, Math.max(0, Number(jitter.toFixed(3))));
+  frameConfig.moduleGap = Math.min(35, Math.max(0, Number(moduleGap.toFixed(2))));
+  frameConfig.dotRotationDeg = Math.round(dotRotationDeg);
+  return frameConfig;
+}
+
+function calculateTemporalOffsetServer(
+  frameIndex: number,
+  mode: AnimationTemporalDitherMode,
+  seed = 0
+): number {
+  if (mode === 'off') return 0;
+  if (mode === 'blue_noise') {
+    const phi = 1.618033988749895;
+    return (frameIndex * phi + seed * 0.1) % 1;
+  }
+  // flicker_safe
+  const safeOffsets = [
+    0, 0.5, 0.25, 0.75, 0.125, 0.625, 0.375, 0.875, 0.0625, 0.5625, 0.3125, 0.8125, 0.1875, 0.6875,
+    0.4375, 0.9375,
+  ];
+  return (safeOffsets[frameIndex % safeOffsets.length] + seed * 0.01) % 1;
+}
+
+function applyTemporalNoiseToCanvasServer(
+  sourceCanvas: Canvas,
+  offset: number,
+  strength = 0.012
+): Canvas {
+  if (offset === 0 || strength <= 0) {
+    return sourceCanvas;
+  }
+
+  const width = sourceCanvas.width;
+  const height = sourceCanvas.height;
+  const output = createCanvas(width, height);
+  const ctx = output.getContext('2d');
+  ctx.drawImage(sourceCanvas, 0, 0);
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  const phi = 1.618033988749895;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const x = (i / 4) % width;
+    const y = Math.floor(i / 4 / width);
+    const noise = ((x * phi + y * phi * phi + offset * 1000) % 1) - 0.5;
+    const adjust = Math.round(noise * strength * 255);
+    data[i] = Math.max(0, Math.min(255, data[i] + adjust));
+    data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + adjust));
+    data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + adjust));
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return output;
+}
+
+function interpolateOverlayFramesServer(
+  previousFrame: Canvas,
+  currentFrame: Canvas,
+  mode: 'none' | 'crossfade' | 'morph',
+  t = 0.5
+): Canvas {
+  if (mode === 'none') return currentFrame;
+
+  const width = currentFrame.width;
+  const height = currentFrame.height;
+  const output = createCanvas(width, height);
+  const outCtx = output.getContext('2d');
+
+  if (mode === 'crossfade') {
+    outCtx.globalAlpha = Math.max(0, Math.min(1, 1 - t));
+    outCtx.drawImage(previousFrame, 0, 0);
+    outCtx.globalAlpha = Math.max(0, Math.min(1, t));
+    outCtx.drawImage(currentFrame, 0, 0);
+    outCtx.globalAlpha = 1;
+    return output;
+  }
+
+  const prevCtx = previousFrame.getContext('2d');
+  const currCtx = currentFrame.getContext('2d');
+  const prevData = prevCtx.getImageData(0, 0, width, height);
+  const currData = currCtx.getImageData(0, 0, width, height);
+  const mixed = outCtx.createImageData(width, height);
+
+  for (let i = 0; i < mixed.data.length; i++) {
+    mixed.data[i] = Math.round(prevData.data[i] * (1 - t) + currData.data[i] * t);
+  }
+
+  outCtx.putImageData(mixed, 0, 0);
+  return output;
+}
+
+function _blendOverlayEffectServer(
+  baseFrame: Canvas,
+  effectFrame: Canvas,
+  effectOpacity: number
+): Canvas {
+  const width = baseFrame.width;
+  const height = baseFrame.height;
+  const output = createCanvas(width, height);
+  const ctx = output.getContext('2d');
+  ctx.drawImage(baseFrame, 0, 0);
+  ctx.globalAlpha = Math.max(0, Math.min(1, effectOpacity));
+  ctx.drawImage(effectFrame, 0, 0);
+  ctx.globalAlpha = 1;
+  return output;
+}
+
+function _compositeArtworkOverlayServer(
+  artworkFrame: Canvas,
+  overlayFrame: Canvas,
+  opacity: number,
+  blendMode: GlobalCompositeOperation = 'soft-light'
+): Canvas {
+  const width = artworkFrame.width;
+  const height = artworkFrame.height;
+  const output = createCanvas(width, height);
+  const ctx = output.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(artworkFrame, 0, 0);
+
+  const effectiveOpacity = Math.max(0, Math.min(1, opacity));
+  if (effectiveOpacity <= 0) {
+    return output;
+  }
+
+  ctx.save();
+  ctx.globalCompositeOperation = blendMode;
+  ctx.globalAlpha = effectiveOpacity;
+  ctx.drawImage(overlayFrame, 0, 0, width, height);
+  ctx.restore();
+  return output;
 }
 
 // All pattern functions, color conversion, and seeded random are now imported from shared module
@@ -1424,6 +1938,12 @@ function parseGifFramesServer(
   // Create a persistent canvas for compositing frames
   const compositeCanvas = createCanvas(width, height);
   const compositeCtx = compositeCanvas.getContext('2d');
+  // Ensure deterministic transparent background before applying delta patches.
+  compositeCtx.clearRect(0, 0, width, height);
+
+  // Reuse a single patch canvas to avoid repeated allocations and stale buffer issues.
+  const patchCanvas = createCanvas(width, height);
+  const patchCtx = patchCanvas.getContext('2d');
 
   const animationFrames: ServerAnimationFrame[] = [];
 
@@ -1441,9 +1961,10 @@ function parseGifFramesServer(
     const imageData = compositeCtx.createImageData(dims.width, dims.height);
     imageData.data.set(new Uint8ClampedArray(patch));
 
-    // Create temporary canvas for this frame's patch
-    const patchCanvas = createCanvas(dims.width, dims.height);
-    const patchCtx = patchCanvas.getContext('2d');
+    // Draw this frame patch onto a cleared temporary patch canvas.
+    patchCanvas.width = dims.width;
+    patchCanvas.height = dims.height;
+    patchCtx.clearRect(0, 0, dims.width, dims.height);
     patchCtx.putImageData(imageData, 0, 0);
 
     // Draw patch onto composite canvas
@@ -1782,6 +2303,47 @@ async function fetchImageAsCanvas(url: string): Promise<ReturnType<typeof create
   return result?.canvas ?? null;
 }
 
+let animatedRenderQueue: Promise<void> = Promise.resolve();
+
+async function acquireAnimatedRenderLock(): Promise<() => void> {
+  let release: (() => void) | null = null;
+  const waitTurn = animatedRenderQueue;
+  animatedRenderQueue = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await waitTurn;
+  return () => {
+    if (release) {
+      release();
+      release = null;
+    }
+  };
+}
+
+function isGifLikeImageParam(value: string | null | undefined): boolean {
+  const raw = String(value || '').trim();
+  if (!raw) return false;
+  try {
+    return new URL(raw).pathname.toLowerCase().endsWith('.gif');
+  } catch {
+    return raw.toLowerCase().split('?')[0].endsWith('.gif');
+  }
+}
+
+function shouldSerializeAnimatedRender(params: URLSearchParams): boolean {
+  const format = (params.get('format') || '').toLowerCase();
+  if (format === 'gif') return true;
+
+  const overlayType = (params.get('ovType') || '').toLowerCase();
+  if (overlayType === 'gif') return true;
+
+  if (isGifLikeImageParam(params.get('img'))) return true;
+
+  const pattern1 = (params.get('animPattern') || 'none').toLowerCase();
+  const pattern2 = (params.get('animPattern2') || 'none').toLowerCase();
+  return pattern1 !== 'none' || pattern2 !== 'none';
+}
+
 async function handler(request: Request) {
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -1793,10 +2355,13 @@ async function handler(request: Request) {
   const url = new URL(request.url);
   const params = url.searchParams;
   const isFullRender = params.get('_fullRender') === '1';
+  const strictOverlay = params.get('_strictOverlay') === '1';
   // When called in-process from the background function, skip all blob operations —
   // the deploy-scoped JWT is expired and blob calls HANG instead of failing.
   // The background function handles caching with explicit credentials.
   const skipCache = request.headers.get('X-ANQR-Skip-Cache') === '1';
+  const serializeAnimatedRender = shouldSerializeAnimatedRender(params);
+  let releaseAnimatedRenderLock: (() => void) | null = null;
 
   // Get required parameter
   const data = params.get('data');
@@ -1965,6 +2530,7 @@ async function handler(request: Request) {
     Math.max(0, Number.parseInt(params.get('finderDither') || '65', 10))
   );
   const blendPreservations = params.get('blendPres') === '1';
+  const blendPreservationMode = params.get('blendPresMode') === 'dither' ? 'dither' : 'overlay';
   const ditherSerpentine = params.get('serpentine') === '1';
   const orderedMatrix = params.get('matrix') || 'bayer4';
   const blueNoiseTileSize = Number.parseInt(params.get('bnTile') || '64', 10);
@@ -2033,13 +2599,54 @@ async function handler(request: Request) {
 
   // Animation (for animated GIF output)
   // NOTE: Some animation params are client-only (moduleJitter requires per-frame QR generation)
-  const animationPattern = (params.get('animPattern') || 'none') as AnimationPattern;
+  const validAnimationPatterns: AnimationPattern[] = [
+    'none',
+    'pulse',
+    'wave',
+    'scanline',
+    'shimmer',
+    'drift',
+    'color_cycle',
+  ];
+  const validAnimationEasings: AnimationEasing[] = [
+    'linear',
+    'ease_in',
+    'ease_out',
+    'ease_in_out',
+    'bounce',
+  ];
+  const parsedAnimationPattern = (params.get('animPattern') || 'none') as AnimationPattern;
+  const animationPattern = validAnimationPatterns.includes(parsedAnimationPattern)
+    ? parsedAnimationPattern
+    : 'none';
+  const parsedAnimationPattern2 = (params.get('animPattern2') || 'none') as AnimationPattern;
+  const animationPattern2 = validAnimationPatterns.includes(parsedAnimationPattern2)
+    ? parsedAnimationPattern2
+    : 'none';
   const animationLoop = params.get('loop') !== '0';
   const animationBounce = params.get('bounce') === '1';
   const animationReverse = params.get('reverse') === '1';
   const animationColorCycle = params.get('colorCycle') === '1';
-  const animationInterpolate = params.get('interp') || 'none';
-  const animationTemporalDither = params.get('tempDither') || 'off';
+  const animationTarget = parseAnimationTarget(params.get('animTarget'));
+  const animationWaveAxis = parseAnimationWaveAxis(params.get('animWaveAxis'));
+  const animationBounce2 = params.has('bounce2') ? params.get('bounce2') === '1' : animationBounce;
+  const animationReverse2 = params.has('reverse2')
+    ? params.get('reverse2') === '1'
+    : animationReverse;
+  const animationColorCycle2 = params.has('colorCycle2')
+    ? params.get('colorCycle2') === '1'
+    : false;
+  const animationTarget2 = parseAnimationTarget(params.get('animTarget2'), animationTarget);
+  const animationWaveAxis2 = parseAnimationWaveAxis(
+    params.get('animWaveAxis2'),
+    animationWaveAxis === 'y' ? 'x' : animationWaveAxis
+  );
+  const animationInterpolate = (params.get('interp') || 'none') as AnimationInterpolation;
+  const animationTemporalDither = (
+    ['off', 'blue_noise', 'flicker_safe'].includes(params.get('tempDither') || '')
+      ? params.get('tempDither')
+      : 'off'
+  ) as AnimationTemporalDitherMode;
   const animationStartFrame = Number.parseInt(params.get('startF') || '0', 10);
   const animationMaxFrames = Number.parseInt(params.get('maxF') || '0', 10);
   const animationFrameStep = Number.parseInt(params.get('stepF') || '1', 10);
@@ -2059,8 +2666,19 @@ async function handler(request: Request) {
     1000,
     Math.max(10, Number.isNaN(animationSpeedRaw) ? 100 : animationSpeedRaw)
   );
-  const animationSeed = Number.parseInt(params.get('animSeed') || '0', 10);
-  const animationEasing = params.get('easing') || 'linear';
+  const animationSeed = Number.parseInt(params.get('animSeed') || params.get('seed') || '0', 10);
+  const animationSeed2 = Number.parseInt(
+    params.get('animSeed2') || String(animationSeed + 911),
+    10
+  );
+  const parsedAnimationEasing = (params.get('easing') || 'linear') as AnimationEasing;
+  const animationEasing = validAnimationEasings.includes(parsedAnimationEasing)
+    ? parsedAnimationEasing
+    : 'linear';
+  const parsedAnimationEasing2 = (params.get('easing2') || animationEasing) as AnimationEasing;
+  const animationEasing2 = validAnimationEasings.includes(parsedAnimationEasing2)
+    ? parsedAnimationEasing2
+    : animationEasing;
 
   // Format-specific quality params
   const webpQuality = Math.min(100, Math.max(0, Number.parseInt(params.get('webpQ') || '90', 10)));
@@ -2174,16 +2792,20 @@ async function handler(request: Request) {
   }
 
   try {
+    if (serializeAnimatedRender) {
+      releaseAnimatedRenderLock = await acquireAnimatedRenderLock();
+    }
+
     // Check blob cache for previously generated result
     const cacheKey = computeCacheKey(params);
-    console.log('[BLOB] cache lookup', { cacheKey: cacheKey.slice(0, 80), skipCache });
+    qrFnLog('[BLOB] cache lookup', { cacheKey: cacheKey.slice(0, 80), skipCache });
     if (!skipCache) {
       try {
         const store = getStore(QR_CACHE_STORE);
         const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
         if (cached?.data) {
           const cachedMeta = cached.metadata as Record<string, string> | undefined;
-          console.log('[BLOB] cache HIT', {
+          qrFnLog('[BLOB] cache HIT', {
             size: (cached.data as ArrayBuffer).byteLength,
             contentType: cachedMeta?.contentType,
           });
@@ -2197,7 +2819,7 @@ async function handler(request: Request) {
             },
           });
         }
-        console.log('[BLOB] cache MISS');
+        qrFnLog('[BLOB] cache MISS');
       } catch (cacheReadErr) {
         console.error('[BLOB] cache read ERROR:', cacheReadErr);
       }
@@ -2288,6 +2910,7 @@ async function handler(request: Request) {
       ditherStrength,
       finderDitherStrength,
       blendPreservations,
+      blendPreservationMode,
       ditherSerpentine,
       orderedMatrix,
       blueNoiseTileSize,
@@ -2323,19 +2946,28 @@ async function handler(request: Request) {
       },
       // Animation settings (pattern-based animation is supported server-side)
       animationPattern,
+      animationPattern2,
       animationFrames,
       animationSpeed,
       animationSeed,
+      animationSeed2,
       animationLoop,
       animationBounce,
+      animationBounce2,
       animationReverse,
+      animationReverse2,
       animationInterpolate,
       animationTemporalDither,
+      animationTarget,
+      animationTarget2,
+      animationWaveAxis,
+      animationWaveAxis2,
       animationStartFrame,
       animationMaxFrames,
       animationFrameStep,
       moduleJitterPx: animationModuleJitter, // Limited server-side support
       colorCycle: animationColorCycle, // Supported via color cycle pattern
+      colorCycle2: animationColorCycle2,
       // Crop settings
       cropEnabled,
       cropX,
@@ -2381,12 +3013,21 @@ async function handler(request: Request) {
     if (overlayUrl && overlayMode && isFullRender) {
       const tOverlayFetch = Date.now();
       const fetchedImage = await fetchImageWithBuffer(overlayUrl);
-      console.log('[TIMING] overlay fetch', {
+      qrFnLog('[TIMING] overlay fetch', {
         url: overlayUrl.slice(0, 80),
         fetchMs: Date.now() - tOverlayFetch,
         ok: !!fetchedImage,
       });
       if (fetchedImage) {
+        const strictAnimatedGif =
+          strictOverlay && overlayUrl.split('?')[0].toLowerCase().endsWith('.gif');
+        if (strictAnimatedGif && !fetchedImage.isAnimatedGif) {
+          return new Response('Strict overlay mode expected animated GIF frames', {
+            status: 502,
+            headers: CORS_HEADERS,
+          });
+        }
+
         // Pre-calculate filter flags once
         const hasFilters =
           overlayBrightness !== 0 ||
@@ -2442,7 +3083,7 @@ async function handler(request: Request) {
             fetchedImage.arrayBuffer,
             gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
           );
-          console.log('[TIMING] GIF frame parsing', {
+          qrFnLog('[TIMING] GIF frame parsing', {
             frames: rawFrames.length,
             parseMs: Date.now() - tParse,
           });
@@ -2450,7 +3091,7 @@ async function handler(request: Request) {
           // AGGRESSIVE FRAME LIMITING: Always limit to max frames for server-side
           // This prevents timeout issues. Client handles more frames with compositor.
           if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
-            console.log('[TIMING] limiting frames', {
+            qrFnLog('[TIMING] limiting frames', {
               from: rawFrames.length,
               to: SERVER_MAX_ANIMATION_FRAMES,
             });
@@ -2472,7 +3113,7 @@ async function handler(request: Request) {
             ...frame,
             canvas: preprocessCanvas(frame.canvas),
           }));
-          console.log('[TIMING] frame preprocessing', {
+          qrFnLog('[TIMING] frame preprocessing', {
             frames: overlayFrames.length,
             preprocessMs: Date.now() - tPreprocess,
           });
@@ -2487,11 +3128,93 @@ async function handler(request: Request) {
           }
           overlayCanvas = preprocessCanvas(fetchedImage.canvas);
         }
+      } else if (strictOverlay) {
+        return new Response('Strict overlay mode failed to fetch/decode overlay', {
+          status: 502,
+          headers: CORS_HEADERS,
+        });
       }
     }
 
-    // Generate QR code using the same method as client-side
-    let canvas = await qrGenerator.generate(config, overlayCanvas);
+    // Generate QR code using the same method as client-side.
+    // For artwork mode, use full QR-Art matrix generation (same algorithm as web app),
+    // then render that matrix through the styling pipeline.
+    const isArtworkMode = overlayMode === 'artwork';
+    let artworkLockedMask = -1;
+    let artworkLockedVersion = version;
+
+    const generateArtworkCanvas = async (
+      targetCanvas: Canvas,
+      frameIdx: number,
+      normalizeRenderStyles = false
+    ): Promise<Canvas> => {
+      const useAutoMask = typeof maskPattern !== 'number' || maskPattern < 0;
+      const qartConfig = {
+        data,
+        targetImage: targetCanvas as unknown as ImageData,
+        version: artworkLockedVersion,
+        ecc: ec,
+        strictSuffix: true,
+        targetControlPercent: 100,
+        lockVersionToMinimum: version === 0 && frameIdx === 0,
+      };
+
+      const qartResult =
+        useAutoMask && artworkLockedMask < 0
+          ? await generateFullQArtOptimal(qartConfig)
+          : await generateFullQArt({
+              ...qartConfig,
+              maskPattern: artworkLockedMask >= 0 ? artworkLockedMask : (maskPattern as number),
+            });
+
+      if (!(qartResult.success && qartResult.matrix)) {
+        throw new Error(qartResult.error || 'QR-Art generation failed');
+      }
+
+      if (frameIdx === 0) {
+        artworkLockedMask = qartResult.maskPattern;
+        artworkLockedVersion = qartResult.version;
+      }
+
+      const qrArtConfig = {
+        ...config,
+        typeNumber: qartResult.version,
+        overlayMode: undefined,
+      };
+      if (normalizeRenderStyles) {
+        Object.assign(qrArtConfig, {
+          moduleStyle: 'square',
+          finderStyle: 'square',
+          alignmentStyle: 'square',
+          timingStyle: 'square',
+          eyeOuterStyle: 'square',
+          eyeInnerStyle: 'square',
+          moduleGap: 0,
+          gapMode: 'none',
+          cornerRadius: 0,
+        });
+      }
+
+      return (await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig)) as Canvas;
+    };
+
+    let canvas: Canvas;
+    const useArtworkOverlayCompositing =
+      isArtworkMode &&
+      outputFormat === 'gif' &&
+      (hasAnimatedOverlay || animationPattern !== 'none');
+    if (isArtworkMode && overlayCanvas) {
+      try {
+        canvas = await generateArtworkCanvas(overlayCanvas, 0, useArtworkOverlayCompositing);
+      } catch (artErr) {
+        console.warn('[ARTWORK] full QR-Art failed, falling back to standard render', {
+          error: artErr instanceof Error ? artErr.message : String(artErr),
+        });
+        canvas = await qrGenerator.generate(config, overlayCanvas);
+      }
+    } else {
+      canvas = await qrGenerator.generate(config, overlayCanvas);
+    }
 
     // Load watermark image if URL provided
     let watermarkImageCanvas: Canvas | null = null;
@@ -2547,17 +3270,71 @@ async function handler(request: Request) {
           }
         : undefined;
 
+    const animationEffects: AnimationEffectConfig[] = [];
+    const primaryAnimationEffect: AnimationEffectConfig = {
+      pattern: animationPattern,
+      seed: animationSeed,
+      easing: animationEasing as AnimationEasing,
+      colorCycle: animationColorCycle,
+      reverse: animationReverse,
+      bounce: animationBounce,
+      target: animationTarget,
+      waveAxis: animationWaveAxis,
+    };
+    if (hasAnimationEffect(primaryAnimationEffect)) {
+      animationEffects.push(primaryAnimationEffect);
+    }
+    const secondaryAnimationEffect: AnimationEffectConfig = {
+      pattern: animationPattern2,
+      seed: animationSeed2,
+      easing: animationEasing2 as AnimationEasing,
+      colorCycle: animationColorCycle2,
+      reverse: animationReverse2,
+      bounce: animationBounce2,
+      target: animationTarget2,
+      waveAxis: animationWaveAxis2,
+    };
+    if (hasAnimationEffect(secondaryAnimationEffect)) {
+      animationEffects.push(secondaryAnimationEffect);
+    }
+    const moduleAnimationEffects = animationEffects.filter(
+      (effect) => effect.target === 'modules' || effect.target === 'both'
+    );
+    const resultAnimationEffects = animationEffects.filter(
+      (effect) => effect.target === 'result' || effect.target === 'both'
+    );
+    const hasAnyAnimationEffects = animationEffects.length > 0 || animationTemporalDither !== 'off';
+    const applyResultEffectsForFrame = (
+      sourceCanvas: Canvas,
+      frameIndex: number,
+      totalFrames: number
+    ): Canvas => {
+      let frame = applyAnimationEffectsToCanvasServer(
+        sourceCanvas,
+        resultAnimationEffects,
+        frameIndex,
+        totalFrames
+      );
+      if (animationTemporalDither !== 'off') {
+        const temporalOffset = calculateTemporalOffsetServer(
+          frameIndex,
+          animationTemporalDither,
+          animationSeed
+        );
+        const temporalStrength = isArtworkMode ? 0.01 : 0.012;
+        frame = applyTemporalNoiseToCanvasServer(frame, temporalOffset, temporalStrength);
+      }
+      return frame;
+    };
+
     // Generate animation frames based on source
     let animationFrameCanvases: Canvas[] = [];
     const animatedOverlayFrames: ServerAnimationFrame[] = [];
 
     if (outputFormat === 'gif') {
       if (hasAnimatedOverlay && overlayFrames.length > 1) {
-        // Animated GIF overlay — render each frame at a reduced internal size
-        // (240px) for speed, then upscale to the requested output dimensions.
-        // Uses 'preview' scan gate for ALL frames (matching the web client).
-        // The scan gate patch cache means frame 0 discovers optimal dither
-        // parameters; subsequent frames try those first and succeed quickly.
+        // Animated GIF overlay rendering. For non-artwork modes, render each frame
+        // at a reduced internal size for speed then upscale to output dimensions.
         const ANIM_RENDER_SIZE = 240;
         const animModuleSize = Math.max(
           1,
@@ -2572,18 +3349,85 @@ async function handler(request: Request) {
           renderScalePerModule: animRenderScale,
           renderScaleMinimum: 1,
         };
+        // Keep the previous *raw* module input for interpolation.
+        // Using already-interpolated outputs recursively causes cumulative smearing.
+        let previousRawModuleInput: Canvas | null = null;
+        let previousRenderedOutput: Canvas | null = null;
         const tAnimStart = Date.now();
-        console.log('[ANIMATION] starting animated overlay', {
+        qrFnLog('[ANIMATION] starting animated overlay', {
           frames: overlayFrames.length,
           renderSize: ANIM_RENDER_SIZE,
           animModuleSize,
           animRenderScale,
           outputSize: `${outputWidth}x${outputHeight}`,
+          moduleEffects: moduleAnimationEffects.length,
+          resultEffects: resultAnimationEffects.length,
         });
+
         for (let i = 0; i < overlayFrames.length; i++) {
           const tFrame = Date.now();
           const overlayFrame = overlayFrames[i];
-          const frameCanvas = await qrGenerator.generate(animConfig, overlayFrame.canvas);
+          let moduleOverlayInput = applyAnimationEffectsToCanvasServer(
+            overlayFrame.canvas,
+            moduleAnimationEffects,
+            i,
+            overlayFrames.length
+          );
+
+          const rawModuleInput = moduleOverlayInput;
+          if (
+            (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
+            previousRawModuleInput
+          ) {
+            moduleOverlayInput = interpolateOverlayFramesServer(
+              previousRawModuleInput,
+              rawModuleInput,
+              animationInterpolate,
+              0.5
+            );
+          }
+          previousRawModuleInput = rawModuleInput;
+
+          const frameConfig = applyModuleAnimationToConfigServer(
+            animConfig as Record<string, unknown>,
+            moduleAnimationEffects,
+            i,
+            overlayFrames.length,
+            animationModuleJitter
+          ) as typeof config;
+
+          let frameCanvas: Canvas;
+          if (isArtworkMode) {
+            try {
+              // Preserve artwork animation by regenerating QR-Art from each source frame.
+              frameCanvas = await generateArtworkCanvas(moduleOverlayInput, i);
+            } catch (artworkFrameErr) {
+              console.warn('[ARTWORK] frame render fallback', {
+                frame: i,
+                error:
+                  artworkFrameErr instanceof Error
+                    ? artworkFrameErr.message
+                    : String(artworkFrameErr),
+              });
+              frameCanvas = await qrGenerator.generate(frameConfig, moduleOverlayInput);
+            }
+          } else {
+            frameCanvas = await qrGenerator.generate(frameConfig, moduleOverlayInput);
+          }
+
+          frameCanvas = applyResultEffectsForFrame(frameCanvas, i, overlayFrames.length);
+          if (
+            (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
+            previousRenderedOutput
+          ) {
+            frameCanvas = interpolateOverlayFramesServer(
+              previousRenderedOutput,
+              frameCanvas,
+              animationInterpolate,
+              0.5
+            );
+          }
+          previousRenderedOutput = frameCanvas;
 
           // Yield between frames to prevent timeout in long-running operations
           // Only yield every few frames to minimize overhead
@@ -2592,7 +3436,7 @@ async function handler(request: Request) {
           }
 
           if (i % 10 === 0 || i === overlayFrames.length - 1) {
-            console.log('[ANIMATION] frame progress', {
+            qrFnLog('[ANIMATION] frame progress', {
               frame: i + 1,
               total: overlayFrames.length,
               frameMs: Date.now() - tFrame,
@@ -2628,19 +3472,126 @@ async function handler(request: Request) {
             disposalType: overlayFrame.disposalType,
           });
         }
-        console.log('[ANIMATION] all frames rendered', {
+        qrFnLog('[ANIMATION] all frames rendered', {
           frames: animatedOverlayFrames.length,
           totalMs: Date.now() - tAnimStart,
         });
-      } else if (animationPattern !== 'none') {
-        // Pattern-based animation
-        animationFrameCanvases = generatePatternFramesServer(
-          outputCanvas,
-          animationPattern,
-          animationFrames,
-          animationSeed,
-          animationEasing as AnimationEasing
-        );
+      } else if (hasAnyAnimationEffects) {
+        const totalAnimFrames = Math.max(1, animationFrames);
+        const canUseFastPatternPath =
+          moduleAnimationEffects.length === 0 &&
+          resultAnimationEffects.length === 1 &&
+          animationInterpolate === 'none' &&
+          animationTemporalDither === 'off';
+
+        if (canUseFastPatternPath) {
+          const effect = resultAnimationEffects[0];
+          animationFrameCanvases = generatePatternFramesServer(
+            outputCanvas,
+            effect.pattern,
+            totalAnimFrames,
+            effect.seed,
+            effect.easing,
+            effect.waveAxis,
+            effect.colorCycle,
+            effect.reverse,
+            effect.bounce
+          );
+        } else {
+          let previousRawModuleInput: Canvas | null = null;
+          let previousRenderedOutput: Canvas | null = null;
+          for (let i = 0; i < totalAnimFrames; i++) {
+            let moduleOverlayInput = overlayCanvas;
+            if (moduleOverlayInput && moduleAnimationEffects.length > 0) {
+              moduleOverlayInput = applyAnimationEffectsToCanvasServer(
+                moduleOverlayInput,
+                moduleAnimationEffects,
+                i,
+                totalAnimFrames
+              );
+            }
+
+            if (
+              moduleOverlayInput &&
+              (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
+              previousRawModuleInput
+            ) {
+              moduleOverlayInput = interpolateOverlayFramesServer(
+                previousRawModuleInput,
+                moduleOverlayInput,
+                animationInterpolate,
+                0.5
+              );
+            }
+            if (moduleOverlayInput) {
+              previousRawModuleInput = moduleOverlayInput;
+            }
+
+            const frameConfig = applyModuleAnimationToConfigServer(
+              config as Record<string, unknown>,
+              moduleAnimationEffects,
+              i,
+              totalAnimFrames,
+              animationModuleJitter
+            ) as typeof config;
+
+            let frameCanvas: Canvas;
+            if (isArtworkMode && (moduleOverlayInput || overlayCanvas)) {
+              const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
+              try {
+                frameCanvas = await generateArtworkCanvas(artworkTarget, i);
+              } catch (artworkFrameErr) {
+                console.warn('[ARTWORK] static frame render fallback', {
+                  frame: i,
+                  error:
+                    artworkFrameErr instanceof Error
+                      ? artworkFrameErr.message
+                      : String(artworkFrameErr),
+                });
+                frameCanvas = await qrGenerator.generate(frameConfig, artworkTarget);
+              }
+            } else {
+              frameCanvas = await qrGenerator.generate(
+                frameConfig,
+                moduleOverlayInput || overlayCanvas
+              );
+            }
+
+            frameCanvas = applyResultEffectsForFrame(frameCanvas, i, totalAnimFrames);
+            if (
+              (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
+              previousRenderedOutput
+            ) {
+              frameCanvas = interpolateOverlayFramesServer(
+                previousRenderedOutput,
+                frameCanvas,
+                animationInterpolate,
+                0.5
+              );
+            }
+            previousRenderedOutput = frameCanvas;
+
+            let scaledFrame = frameCanvas;
+            if (frameCanvas.width !== outputWidth || frameCanvas.height !== outputHeight) {
+              scaledFrame = createCanvas(outputWidth, outputHeight);
+              const ctx = scaledFrame.getContext('2d');
+              ctx.imageSmoothingEnabled = false;
+              ctx.drawImage(frameCanvas, 0, 0, outputWidth, outputHeight);
+            }
+            if (watermarkEnabled) {
+              scaledFrame = applyWatermarkServer(scaledFrame, {
+                enabled: watermarkEnabled,
+                kind: watermarkKind,
+                text: watermarkText,
+                imageCanvas: watermarkImageCanvas,
+                position: watermarkPosition,
+                opacity: watermarkOpacity,
+                blend: watermarkBlend,
+              });
+            }
+            animationFrameCanvases.push(scaledFrame);
+          }
+        }
       }
     }
 
@@ -2653,27 +3604,24 @@ async function handler(request: Request) {
         if (animatedOverlayFrames.length > 1) {
           // Animated GIF from overlay frames (preserves original frame delays)
           const tEncode = Date.now();
-          outputBuffer = encodeAnimatedGifWithDelays(
-            animatedOverlayFrames,
-            gifColors,
-            gifDisposalCode
+          outputBuffer = await withGifEncodeLock(() =>
+            encodeAnimatedGifWithDelays(animatedOverlayFrames, gifColors, gifDisposalCode)
           );
-          console.log('[TIMING] GIF encoding', {
+          qrFnLog('[TIMING] GIF encoding', {
             frames: animatedOverlayFrames.length,
             encodeMs: Date.now() - tEncode,
             size: outputBuffer.byteLength,
           });
         } else if (animationFrameCanvases.length > 1) {
           // Animated GIF with pattern
-          outputBuffer = encodeAnimatedGif(
-            animationFrameCanvases,
-            animationSpeed,
-            gifColors,
-            gifDisposalCode
+          outputBuffer = await withGifEncodeLock(() =>
+            encodeAnimatedGif(animationFrameCanvases, animationSpeed, gifColors, gifDisposalCode)
           );
         } else {
           // Single frame GIF
-          outputBuffer = encodeGif(outputCanvas, gifColors, gifDisposalCode);
+          outputBuffer = await withGifEncodeLock(() =>
+            encodeGif(outputCanvas, gifColors, gifDisposalCode)
+          );
         }
         contentType = 'image/gif';
         break;
@@ -2700,7 +3648,7 @@ async function handler(request: Request) {
 
     // Detect degraded response (overlay requested but rendered without overlay for speed)
     const isDegraded = !!(overlayUrl && overlayMode) && !isFullRender;
-    console.log('[BLOB] render result', {
+    qrFnLog('[BLOB] render result', {
       isDegraded,
       isFullRender,
       hasOverlay: !!(overlayUrl && overlayMode),
@@ -2711,7 +3659,7 @@ async function handler(request: Request) {
     // Cache non-degraded results in Netlify Blobs (skip when called in-process from BG function)
     if (!(isDegraded || skipCache)) {
       try {
-        console.log('[BLOB] writing cache...', {
+        qrFnLog('[BLOB] writing cache...', {
           cacheKey: cacheKey.slice(0, 80),
           size: outputBuffer.byteLength,
           contentType,
@@ -2721,7 +3669,7 @@ async function handler(request: Request) {
           metadata: { contentType, generatedAt: new Date().toISOString() },
         });
         await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});
-        console.log('[BLOB] cache write OK');
+        qrFnLog('[BLOB] cache write OK');
       } catch (cacheWriteErr) {
         console.error('[BLOB] cache write FAILED:', cacheWriteErr);
       }
@@ -2736,14 +3684,10 @@ async function handler(request: Request) {
         const existing = await store.get(sentinelKey, { type: 'text' });
         if (existing && Date.now() - Number(existing) < SENTINEL_TTL_MS) {
           shouldTrigger = false;
-          console.log(
-            '[BLOB] sentinel: already rendering (age:',
-            Date.now() - Number(existing),
-            'ms)'
-          );
+          qrFnLog('[BLOB] sentinel: already rendering (age:', Date.now() - Number(existing), 'ms)');
         } else {
           await store.set(sentinelKey, String(Date.now()));
-          console.log('[BLOB] sentinel: set new sentinel');
+          qrFnLog('[BLOB] sentinel: set new sentinel');
         }
       } catch (sentinelErr) {
         console.error('[BLOB] sentinel ERROR:', sentinelErr);
@@ -2753,7 +3697,7 @@ async function handler(request: Request) {
           const bgUrl = new URL(request.url);
           bgUrl.searchParams.set('_fullRender', '1');
           const siteUrl = bgUrl.origin || process.env.URL || 'https://anqr.link';
-          console.log('[BG:TRIGGER] posting to background function', {
+          qrFnLog('[BG:TRIGGER] posting to background function', {
             url: bgUrl.toString().slice(0, 120),
           });
           fetch(`${siteUrl}/.netlify/functions/qr-render-background`, {
@@ -2761,7 +3705,7 @@ async function handler(request: Request) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: bgUrl.toString() }),
           })
-            .then((r) => console.log('[BG:TRIGGER]', r.status))
+            .then((r) => qrFnLog('[BG:TRIGGER]', r.status))
             .catch((err) => console.error('[BG:TRIGGER:FAIL]', err));
         } catch {
           // Background trigger failure is non-fatal
@@ -2790,6 +3734,10 @@ async function handler(request: Request) {
       status: 500,
       headers: CORS_HEADERS,
     });
+  } finally {
+    if (releaseAnimatedRenderLock) {
+      releaseAnimatedRenderLock();
+    }
   }
 }
 

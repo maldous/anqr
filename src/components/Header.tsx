@@ -418,6 +418,12 @@ export function Header({
           : overlay.finderDitherStrength,
       blendPreservations:
         !overlay.enabled || overlay.blendPreservations !== true ? undefined : true,
+      blendPreservationMode:
+        !overlay.enabled ||
+        overlay.blendPreservations !== true ||
+        overlay.blendPreservationMode === 'overlay'
+          ? undefined
+          : overlay.blendPreservationMode,
       ditherSerpentine: overlay.enabled && overlay.ditherSerpentine ? true : undefined,
       orderedMatrix:
         !overlay.enabled || overlay.orderedMatrix === 'bayer4' ? undefined : overlay.orderedMatrix,
@@ -481,9 +487,22 @@ export function Header({
       interpolate: animation.interpolate === 'none' ? undefined : animation.interpolate,
       temporalDither: animation.temporalDither === 'off' ? undefined : animation.temporalDither,
       pattern: animation.pattern === 'none' ? undefined : animation.pattern,
+      target: animation.target === 'result' ? undefined : animation.target,
+      waveAxis:
+        animation.pattern !== 'wave' || animation.waveAxis === 'y' ? undefined : animation.waveAxis,
+      pattern2: animation.pattern2 === 'none' ? undefined : animation.pattern2,
+      target2:
+        animation.pattern2 === 'none' || animation.target2 === 'result'
+          ? undefined
+          : animation.target2,
+      waveAxis2:
+        animation.pattern2 !== 'wave' || animation.waveAxis2 === 'x'
+          ? undefined
+          : animation.waveAxis2,
       moduleJitter: animation.moduleJitterPx === 0 ? undefined : animation.moduleJitterPx,
       colorCycle: animation.colorCycle ? true : undefined,
       seed: animation.seed === 0 ? undefined : animation.seed,
+      animationSeed: animation.seed === 0 ? undefined : animation.seed,
       // Output
       width: output.widthPx === 400 ? undefined : output.widthPx,
       height: output.heightPx === 400 ? undefined : output.heightPx,

@@ -84,17 +84,23 @@ export function drawFrame(
 
   const textColor = config.frameTextColor || config.fgColor;
   const frameHeight = moduleSize * 4;
-  const textY = size - frameHeight / 2;
+  const textY = size - frameHeight * 0.55;
+  const frameText = String(config.frameText);
+  const maxTextWidth = Math.max(40, size - moduleSize * 8);
 
   ctx.fillStyle = textColor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Calculate font size based on frame height
-  const fontSize = Math.max(12, frameHeight * 0.5);
-  ctx.font = `${fontSize}px sans-serif`;
-
-  ctx.fillText(config.frameText, size / 2, textY);
+  // Use a clean sans-serif stack and size to fit the available frame width.
+  let fontSize = Math.max(14, Math.round(frameHeight * 0.72));
+  const minFontSize = Math.max(11, Math.round(frameHeight * 0.5));
+  while (fontSize > minFontSize) {
+    ctx.font = `600 ${fontSize}px "Helvetica Neue", "Segoe UI", Arial, sans-serif`;
+    if (ctx.measureText(frameText).width <= maxTextWidth) break;
+    fontSize -= 1;
+  }
+  ctx.fillText(frameText, size / 2, textY);
 }
 
 /**

@@ -1,6 +1,10 @@
 import { createCanvas } from '@napi-rs/canvas';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
+import {
+  type CanvasFactory,
+  QRGenerator,
+  type QRGeneratorConfig,
+} from '../../src/modules/qr-generator';
 import {
   isAlignmentPattern,
   isFinderPattern,
@@ -98,10 +102,11 @@ function meanModuleCenterRgbDeltaByMask(
     const yy = Math.max(0, Math.min(canvasA.height - 1, Math.round(y)));
     const idx = (yy * canvasA.width + xx) * 4;
     return (
-      Math.abs(dataA[idx] - dataB[idx]) +
-      Math.abs(dataA[idx + 1] - dataB[idx + 1]) +
-      Math.abs(dataA[idx + 2] - dataB[idx + 2])
-    ) / 3;
+      (Math.abs(dataA[idx] - dataB[idx]) +
+        Math.abs(dataA[idx + 1] - dataB[idx + 1]) +
+        Math.abs(dataA[idx + 2] - dataB[idx + 2])) /
+      3
+    );
   };
 
   let insideSum = 0;
@@ -161,12 +166,20 @@ const AUDIT_MODES = [
   'extreme',
 ] as const;
 
-const SCALED_MODES = ['dithered', 'blue-noise', 'subpixel', 'subpixel-size', 'dither', 'extreme'] as const;
+const SCALED_MODES = [
+  'dithered',
+  'blue-noise',
+  'subpixel',
+  'subpixel-size',
+  'dither',
+  'extreme',
+] as const;
 
 const TOGGLE_CASES = [
   {
     key: 'preserveFinders' as const,
-    mask: (row: number, col: number, moduleCount: number) => isFinderModuleOrSeparator(row, col, moduleCount),
+    mask: (row: number, col: number, moduleCount: number) =>
+      isFinderModuleOrSeparator(row, col, moduleCount),
   },
   {
     key: 'preserveTiming' as const,
@@ -287,12 +300,17 @@ describe('blendPreservations wiring across scaled modes', () => {
     };
   }
 
-  async function render(mode: (typeof SCALED_MODES)[number], blendPreservations: boolean) {
+  async function render(
+    mode: (typeof SCALED_MODES)[number],
+    blendPreservations: boolean,
+    blendPreservationMode: 'overlay' | 'dither' = 'overlay'
+  ) {
     const qr = new QRGenerator(nodeCanvasFactory);
     const canvas = await qr.generate(
       {
         ...configForScaledMode(mode),
         blendPreservations,
+        blendPreservationMode,
       },
       overlay
     );
@@ -321,6 +339,24 @@ describe('blendPreservations wiring across scaled modes', () => {
       );
       expect(locality.insideCount).toBeGreaterThan(0);
       expect(locality.inside).toBeGreaterThan(0.5);
+    }, 20000);
+  }
+
+  const MODE_SWITCH_CASES = ['dithered', 'blue-noise', 'dither', 'extreme'] as const;
+  for (const mode of MODE_SWITCH_CASES) {
+    it(`${mode}: blendPreservationMode changes functional-region rendering`, async () => {
+      const overlayStyled = await render(mode, true, 'overlay');
+      const ditherStyled = await render(mode, true, 'dither');
+      const locality = meanModuleCenterRgbDeltaByMask(
+        overlayStyled.canvas,
+        ditherStyled.canvas,
+        overlayStyled.moduleCount,
+        4,
+        functionalMask
+      );
+      expect(locality.insideCount).toBeGreaterThan(0);
+      expect(locality.inside).toBeGreaterThan(0.08);
+      expect(locality.inside).toBeGreaterThan(locality.outside * 1.02);
     }, 20000);
   }
 });

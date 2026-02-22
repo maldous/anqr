@@ -48,17 +48,23 @@ export function applyAnimationPattern(
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
+      const sourceData = new Uint8ClampedArray(data);
+      const axis = options.waveAxis || 'y';
 
       for (let y = 0; y < canvas.height; y++) {
-        const waveOffset = Math.sin((y + progress * canvas.height) * 0.1) * 2;
         for (let x = 0; x < canvas.width; x++) {
-          const srcX = Math.round(x + waveOffset);
-          if (srcX >= 0 && srcX < canvas.width) {
-            const srcIdx = (y * canvas.width + srcX) * 4;
+          const offsetX = Math.sin((y + progress * canvas.height) * 0.1) * 2;
+          const offsetY = Math.sin((x + progress * canvas.width) * 0.1) * 2;
+          const srcX =
+            axis === 'x' ? x : axis === 'xy' ? Math.round(x + offsetX) : Math.round(x + offsetX);
+          const srcY =
+            axis === 'x' ? Math.round(y + offsetY) : axis === 'xy' ? Math.round(y + offsetY) : y;
+          if (srcX >= 0 && srcX < canvas.width && srcY >= 0 && srcY < canvas.height) {
+            const srcIdx = (srcY * canvas.width + srcX) * 4;
             const dstIdx = (y * canvas.width + x) * 4;
-            data[dstIdx] = data[srcIdx];
-            data[dstIdx + 1] = data[srcIdx + 1];
-            data[dstIdx + 2] = data[srcIdx + 2];
+            data[dstIdx] = sourceData[srcIdx];
+            data[dstIdx + 1] = sourceData[srcIdx + 1];
+            data[dstIdx + 2] = sourceData[srcIdx + 2];
           }
         }
       }

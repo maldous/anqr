@@ -80,19 +80,17 @@ function GalleryCard({ item }: GalleryCardProps) {
   return (
     <a
       href={shareUrl}
-      target="_blank"
-      rel="noopener noreferrer"
       className="group relative block"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      title={`${itemTitle} - ${itemDescription}. Click to open in generator.`}
+      title={`${itemTitle} - ${itemDescription}. Open in generator.`}
     >
       <div
         className={`
         relative overflow-hidden rounded-lg bg-card
         border border-border shadow-md
         transition-all duration-200 ease-out origin-center
-        ${isHovered ? 'scale-[1.8] z-50 shadow-2xl border-blue-500 dark:border-blue-400' : 'z-0'}
+        ${isHovered ? 'scale-[1.28] z-50 shadow-2xl border-blue-500 dark:border-blue-400' : 'z-0'}
       `}
       >
         {/* Image */}
@@ -117,8 +115,10 @@ function GalleryCard({ item }: GalleryCardProps) {
       <div
         className={`mt-1 px-0.5 transition-opacity duration-200 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
       >
-        <h4 className="text-[10px] font-medium text-foreground truncate">{itemTitle}</h4>
-        <p className="text-[9px] text-muted-foreground truncate">{itemDescription}</p>
+        <h4 className="text-xs font-semibold text-foreground truncate">{itemTitle}</h4>
+        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">
+          {itemDescription}
+        </p>
       </div>
     </a>
   );
@@ -386,13 +386,13 @@ export function Gallery({ filter }: GalleryProps) {
 
         {/* Gallery content */}
         <div className="max-w-7xl mx-auto px-4 py-4">
-          {displaySections.map((section, _index) => (
+          {displaySections.map((section, index) => (
             <GallerySectionComponent
               key={section.id}
               section={section}
               isExpanded={expandedSections.has(section.id)}
               onToggle={() => toggleSection(section.id)}
-              showAdAfter={`gallery-after-${section.id}`}
+              showAdAfter={index % 2 === 1 ? `gallery-after-${section.id}` : undefined}
             />
           ))}
         </div>

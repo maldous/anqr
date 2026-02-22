@@ -140,6 +140,10 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     ditherStrength: parseIntParam(params.get('ditherStrength')),
     finderDitherStrength: parseIntParam(params.get('finderDither')),
     blendPreservations: params.get('blendPres') === '1',
+    blendPreservationMode:
+      params.get('blendPresMode') === 'dither' || params.get('blendPresMode') === 'overlay'
+        ? (params.get('blendPresMode') as 'overlay' | 'dither')
+        : undefined,
     ditherSerpentine: params.get('serpentine') === '1',
     orderedMatrix: params.get('matrix') || undefined,
     blueNoiseTileSize: parseIntParam(params.get('bnTile')),
@@ -167,6 +171,11 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     interpolate: params.get('interp') || undefined,
     temporalDither: params.get('tempDither') || undefined,
     pattern: params.get('animPattern') || undefined,
+    target: (params.get('animTarget') as 'result' | 'modules' | 'both' | null) || undefined,
+    waveAxis: (params.get('animWaveAxis') as 'x' | 'y' | 'xy' | null) || undefined,
+    pattern2: params.get('animPattern2') || undefined,
+    target2: (params.get('animTarget2') as 'result' | 'modules' | 'both' | null) || undefined,
+    waveAxis2: (params.get('animWaveAxis2') as 'x' | 'y' | 'xy' | null) || undefined,
     moduleJitter: parseFloatParam(params.get('jitter')),
     colorCycle: params.get('colorCycle') === '1',
     seed: parseIntParam(params.get('seed')),
@@ -225,6 +234,13 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
 
     // Animation
     animationPattern: params.get('animPattern') || undefined,
+    animationTarget:
+      (params.get('animTarget') as 'result' | 'modules' | 'both' | null) || undefined,
+    animationWaveAxis: (params.get('animWaveAxis') as 'x' | 'y' | 'xy' | null) || undefined,
+    animationPattern2: params.get('animPattern2') || undefined,
+    animationTarget2:
+      (params.get('animTarget2') as 'result' | 'modules' | 'both' | null) || undefined,
+    animationWaveAxis2: (params.get('animWaveAxis2') as 'x' | 'y' | 'xy' | null) || undefined,
     animationFrames: parseIntParam(params.get('animFrames')),
     animationSpeed: parseIntParam(params.get('animSpeed')),
     animationSeed: parseIntParam(params.get('animSeed')),
@@ -534,6 +550,13 @@ export function buildUrlParams(config: Partial<ShareConfig>): string {
   if (config.blendPreservations) {
     params.set('blendPres', '1');
   }
+  if (
+    config.blendPreservations &&
+    config.blendPreservationMode &&
+    config.blendPreservationMode !== 'overlay'
+  ) {
+    params.set('blendPresMode', config.blendPreservationMode);
+  }
   if (config.ditherSerpentine) {
     params.set('serpentine', '1');
   }
@@ -611,6 +634,21 @@ export function buildUrlParams(config: Partial<ShareConfig>): string {
   }
   if (config.pattern && config.pattern !== 'none') {
     params.set('animPattern', config.pattern);
+  }
+  if (config.target && config.target !== 'result') {
+    params.set('animTarget', config.target);
+  }
+  if (config.waveAxis && config.waveAxis !== 'y') {
+    params.set('animWaveAxis', config.waveAxis);
+  }
+  if (config.pattern2 && config.pattern2 !== 'none') {
+    params.set('animPattern2', config.pattern2);
+  }
+  if (config.target2 && config.pattern2 && config.pattern2 !== 'none') {
+    params.set('animTarget2', config.target2);
+  }
+  if (config.waveAxis2 && config.waveAxis2 !== 'x') {
+    params.set('animWaveAxis2', config.waveAxis2);
   }
   if (config.moduleJitter !== undefined && config.moduleJitter !== 0) {
     params.set('jitter', config.moduleJitter.toString());
@@ -767,6 +805,21 @@ export function buildUrlParams(config: Partial<ShareConfig>): string {
   // Animation (for animated GIF via server)
   if (config.animationPattern && config.animationPattern !== 'none') {
     params.set('animPattern', config.animationPattern);
+  }
+  if (config.animationTarget && config.animationTarget !== 'result') {
+    params.set('animTarget', config.animationTarget);
+  }
+  if (config.animationWaveAxis && config.animationWaveAxis !== 'y') {
+    params.set('animWaveAxis', config.animationWaveAxis);
+  }
+  if (config.animationPattern2 && config.animationPattern2 !== 'none') {
+    params.set('animPattern2', config.animationPattern2);
+  }
+  if (config.animationTarget2 && config.animationTarget2 !== 'result') {
+    params.set('animTarget2', config.animationTarget2);
+  }
+  if (config.animationWaveAxis2 && config.animationWaveAxis2 !== 'x') {
+    params.set('animWaveAxis2', config.animationWaveAxis2);
   }
   if (config.animationFrames !== undefined && config.animationFrames !== 24) {
     params.set('animFrames', config.animationFrames.toString());

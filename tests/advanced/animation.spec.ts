@@ -455,6 +455,52 @@ test.describe('Animation Pattern (Professional Tier)', () => {
 });
 
 // ============================================================================
+// PROFESSIONAL TIER - ANIMATION TARGET TESTS
+// ============================================================================
+
+test.describe('Animation Target (Professional Tier)', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupPage(page);
+    await selectTier(page, 'advanced');
+    await expandAnimationSection(page);
+  });
+
+  test('animation target select is visible and supports modules/result/both', async ({ page }) => {
+    const trigger = page.locator('[data-testid="animation-target-trigger"]');
+    if (await trigger.isVisible().catch(() => false)) {
+      await trigger.click();
+      await waitForDropdownOpen(page);
+      const optionCount = await page.locator('[role="option"]').count();
+      expect(optionCount).toBeGreaterThanOrEqual(3);
+      await page.keyboard.press('Escape');
+      await waitForDropdownClosed(page);
+    }
+  });
+});
+
+// ============================================================================
+// PROFESSIONAL TIER - SECONDARY PATTERN TESTS
+// ============================================================================
+
+test.describe('Animation Secondary Pattern (Professional Tier)', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupPage(page);
+    await selectTier(page, 'advanced');
+    await expandAnimationSection(page);
+  });
+
+  test('secondary pattern select can enable stacked effect controls', async ({ page }) => {
+    const trigger = page.locator('[data-testid="animation-pattern-2-trigger"]');
+    if (await trigger.isVisible().catch(() => false)) {
+      await selectDropdownOptionLocal(page, 'animation-pattern-2-trigger', 'wave');
+      await waitForRenderComplete(page, 'secondary pattern selection');
+      const target2 = page.locator('[data-testid="animation-target-2-trigger"]');
+      expect(await target2.isVisible().catch(() => false)).toBe(true);
+    }
+  });
+});
+
+// ============================================================================
 // PROFESSIONAL TIER - MODULE JITTER TESTS
 // ============================================================================
 
