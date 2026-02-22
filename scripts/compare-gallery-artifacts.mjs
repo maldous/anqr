@@ -4,8 +4,9 @@
  * Compare gallery artifacts across local/browser/remote renderers.
  *
  * Inputs:
- *   reports/gallery-artifacts/{local,browser,remote}/report.json
- *   reports/gallery-artifacts/{local,browser,remote}/*.{png,gif,webp,jpg}
+ *   reports/gallery-artifacts/{local,browser,remote}/report.merged.json (preferred)
+ *   or report.json, or report.shard-*.json
+ *   reports/gallery-artifacts/{local,browser,remote}/*.{png,gif}
  *
  * Output:
  *   reports/gallery-artifacts/consistency-report.json
@@ -24,6 +25,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const ARTIFACTS_DIR = path.join(ROOT, 'reports', 'gallery-artifacts');
 const MODES = ['local', 'browser', 'remote'];
+const STATIC_SIZE_RATIO_MAX = Math.max(
+  1,
+  Number.parseFloat(process.env.GALLERY_COMPARE_STATIC_MAX_RATIO || '2.0') || 2.0,
+);
+const ANIMATED_SIZE_RATIO_MAX = Math.max(
+  1,
+  Number.parseFloat(process.env.GALLERY_COMPARE_ANIMATED_MAX_RATIO || '4.0') || 4.0,
+);
 
 async function exists(filePath) {
   try {
@@ -37,6 +46,75 @@ async function exists(filePath) {
 async function readJson(filePath) {
   const raw = await fs.readFile(filePath, 'utf8');
   return JSON.parse(raw);
+}
+
+function mergeShardResults(reports) {
+  const latestById = new Map();
+  for (const report of reports) {
+    const generatedAt = Date.parse(String(report.generatedAt || '')) || 0;
+    for (const result of report.results || []) {
+      const previous = latestById.get(result.id);
+      if (!previous || generatedAt >= previous.generatedAt) {
+        latestById.set(result.id, { generatedAt, result });
+      }
+    }
+  }
+  return [...latestById.values()].map((entry) => entry.result);
+}
+
+async function loadModeReport(mode) {
+  const modeDir = path.join(ARTIFACTS_DIR, mode);
+  if (!(await exists(modeDir))) {
+    throw new Error(
+      `Missing artifact directory for mode "${mode}": ${modeDir}. ` +
+        `Run make gallery:${mode} first.`,
+    );
+  }
+  const mergedPath = path.join(modeDir, 'report.merged.json');
+  const singlePath = path.join(modeDir, 'report.json');
+
+  if (await exists(mergedPath)) {
+    const report = await readJson(mergedPath);
+    return {
+      report,
+      results: report.results || [],
+      source: path.relative(ROOT, mergedPath),
+    };
+  }
+
+  if (await exists(singlePath)) {
+    const report = await readJson(singlePath);
+    return {
+      report,
+      results: report.results || [],
+      source: path.relative(ROOT, singlePath),
+    };
+  }
+
+  const files = await fs.readdir(modeDir);
+  const shardFiles = files
+    .filter((name) => /^report\.shard-\d+-of-\d+\.json$/i.test(name))
+    .sort();
+  if (shardFiles.length === 0) {
+    throw new Error(`Missing report for mode "${mode}" in ${modeDir}`);
+  }
+
+  const shardReports = await Promise.all(
+    shardFiles.map(async (name) => readJson(path.join(modeDir, name))),
+  );
+  const mergedResults = mergeShardResults(shardReports);
+  const merged = {
+    generatedAt: new Date().toISOString(),
+    mode,
+    source: shardFiles.map((name) => path.relative(ROOT, path.join(modeDir, name))),
+    mergedFromShards: true,
+    results: mergedResults,
+  };
+  return {
+    report: merged,
+    results: mergedResults,
+    source: `shards(${shardFiles.length})`,
+  };
 }
 
 function extFromContentType(contentType, fallback = 'png') {
@@ -124,15 +202,14 @@ async function main() {
 
   const modeReports = {};
   const modeResultMaps = {};
+  const modeReportSources = {};
 
   for (const mode of MODES) {
-    const reportPath = path.join(ARTIFACTS_DIR, mode, 'report.json');
-    if (!(await exists(reportPath))) {
-      throw new Error(`Missing report: ${reportPath}`);
-    }
-    const report = await readJson(reportPath);
+    const loaded = await loadModeReport(mode);
+    const report = loaded.report;
     modeReports[mode] = report;
-    modeResultMaps[mode] = new Map((report.results || []).map((r) => [r.id, r]));
+    modeResultMaps[mode] = new Map((loaded.results || []).map((r) => [r.id, r]));
+    modeReportSources[mode] = loaded.source;
   }
 
   const perMode = Object.fromEntries(
@@ -146,9 +223,13 @@ async function main() {
   let allDecodedPrefixOk = 0;
   let staticExactAllThree = 0;
   let animatedExactLocalRemote = 0;
+  let allDimensionsAlignedCount = 0;
+  let allSizeParityCount = 0;
 
   const missing = [];
   const decodeIssues = [];
+  const sizeIssues = [];
+  const dimensionIssues = [];
   const rows = [];
 
   for (const config of configs) {
@@ -202,6 +283,44 @@ async function main() {
       } else if (shas.local && shas.remote && shas.local === shas.remote) {
         animatedExactLocalRemote++;
       }
+
+      const presentModes = MODES
+        .map((mode) => ({ mode, data: row.modes[mode] }))
+        .filter((entry) => entry.data?.found);
+      const dims = new Set(presentModes.map((entry) => `${entry.data.width}x${entry.data.height}`));
+      if (dims.size === 1) {
+        allDimensionsAlignedCount++;
+      } else {
+        dimensionIssues.push({
+          id: config.id,
+          isAnimated: !!config.isAnimated,
+          dimsByMode: Object.fromEntries(
+            presentModes.map((entry) => [entry.mode, `${entry.data.width}x${entry.data.height}`]),
+          ),
+        });
+      }
+
+      const bytesByMode = Object.fromEntries(
+        presentModes.map((entry) => [entry.mode, entry.data.bytes]),
+      );
+      const sizes = presentModes.map((entry) => entry.data.bytes);
+      const min = Math.min(...sizes);
+      const max = Math.max(...sizes);
+      const ratio = max / Math.max(1, min);
+      const maxRatio = config.isAnimated ? ANIMATED_SIZE_RATIO_MAX : STATIC_SIZE_RATIO_MAX;
+      if (ratio <= maxRatio) {
+        allSizeParityCount++;
+      } else {
+        sizeIssues.push({
+          id: config.id,
+          isAnimated: !!config.isAnimated,
+          ratio: Number(ratio.toFixed(3)),
+          maxRatio,
+          minBytes: min,
+          maxBytes: max,
+          bytesByMode,
+        });
+      }
     }
 
     rows.push(row);
@@ -214,12 +333,19 @@ async function main() {
     allModesDecodePrefixOkCount: allDecodedPrefixOk,
     staticExactAllThreeCount: staticExactAllThree,
     animatedExactLocalRemoteCount: animatedExactLocalRemote,
+    allDimensionsAlignedCount,
+    allSizeParityCount,
+    staticSizeRatioMax: STATIC_SIZE_RATIO_MAX,
+    animatedSizeRatioMax: ANIMATED_SIZE_RATIO_MAX,
     perMode,
     missingCount: missing.length,
     decodeIssueCount: decodeIssues.length,
+    dimensionIssueCount: dimensionIssues.length,
+    sizeIssueCount: sizeIssues.length,
+    reportSources: modeReportSources,
   };
 
-  const jsonReport = { summary, missing, decodeIssues, rows };
+  const jsonReport = { summary, missing, decodeIssues, dimensionIssues, sizeIssues, rows };
   const jsonPath = path.join(ARTIFACTS_DIR, 'consistency-report.json');
   await fs.writeFile(jsonPath, `${JSON.stringify(jsonReport, null, 2)}\n`);
 
@@ -231,6 +357,10 @@ async function main() {
     `- Total scenarios: ${summary.totalScenarios}`,
     `- All modes present: ${summary.allModesPresentCount}/${summary.totalScenarios}`,
     `- All modes decode+prefix OK: ${summary.allModesDecodePrefixOkCount}/${summary.totalScenarios}`,
+    `- All modes same dimensions: ${summary.allDimensionsAlignedCount}/${summary.totalScenarios}`,
+    `- All modes size parity (ratio <= threshold): ${summary.allSizeParityCount}/${summary.totalScenarios}`,
+    `  - Static max ratio: ${summary.staticSizeRatioMax}`,
+    `  - Animated max ratio: ${summary.animatedSizeRatioMax}`,
     `- Static exact hash (local=browser=remote): ${summary.staticExactAllThreeCount}`,
     `- Animated exact hash (local=remote): ${summary.animatedExactLocalRemoteCount}`,
     '',
@@ -243,8 +373,14 @@ async function main() {
         `| ${mode} | ${perMode[mode].present} | ${perMode[mode].missing} | ${perMode[mode].decodeFail} | ${perMode[mode].prefixMismatch} | ${perMode[mode].nonPassStatus} |`,
     ),
     '',
+    '## Report Sources',
+    '',
+    ...MODES.map((mode) => `- ${mode}: ${summary.reportSources[mode]}`),
+    '',
     `Missing entries: ${summary.missingCount}`,
     `Decode issues: ${summary.decodeIssueCount}`,
+    `Dimension issues: ${summary.dimensionIssueCount}`,
+    `Size parity issues: ${summary.sizeIssueCount}`,
     '',
     `JSON: \`reports/gallery-artifacts/consistency-report.json\``,
   ].join('\n');
@@ -258,12 +394,24 @@ async function main() {
   console.log(
     `All modes decode+prefix OK: ${summary.allModesDecodePrefixOkCount}/${summary.totalScenarios}`,
   );
+  console.log(
+    `All modes same dimensions: ${summary.allDimensionsAlignedCount}/${summary.totalScenarios}`,
+  );
+  console.log(
+    `All modes size parity: ${summary.allSizeParityCount}/${summary.totalScenarios} ` +
+      `(static<=${summary.staticSizeRatioMax}x, animated<=${summary.animatedSizeRatioMax}x)`,
+  );
   console.log(`Static exact hash (L=B=R): ${summary.staticExactAllThreeCount}`);
   console.log(`Animated exact hash (L=R): ${summary.animatedExactLocalRemoteCount}`);
   console.log(`\nJSON: ${jsonPath}`);
   console.log(`MD:   ${mdPath}\n`);
 
-  if (summary.missingCount > 0 || summary.decodeIssueCount > 0) {
+  if (
+    summary.missingCount > 0 ||
+    summary.decodeIssueCount > 0 ||
+    summary.dimensionIssueCount > 0 ||
+    summary.sizeIssueCount > 0
+  ) {
     process.exitCode = 1;
   }
 }

@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
+.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
 
 # ============================================
 # Help
@@ -44,7 +44,7 @@ help:
 	@echo ""
 	@echo " 10) Gallery"
 	@echo "    make gallery gallery:fresh gallery:gif gallery:auto"
-	@echo "    make gallery:api gallery:remote gallery:local gallery:browser gallery:all"
+	@echo "    make gallery:api gallery:remote gallery:local gallery:browser gallery:all gallery:merge"
 	@echo "    make gallery:compare gallery:parity gallery:parity:deploy gallery:publish"
 	@echo "    make gallery:overlay gallery:nooverlay gallery:qrart"
 	@echo "    Tunables: GALLERY_API_URL, GALLERY_CATEGORY, GALLERY_IDS,"
@@ -203,20 +203,19 @@ resources:
 #   4. i18n:fill   — regenerate all i18n TS/JSON from txt sources
 #   5. assets      — PWA icons + Android icons (if SDK) + sitemap.xml
 #   6. build       — production bundle (tsc + Vite + compression)
-#   7. gallery     — spin up lightweight serve, capture gallery images + PWA screenshots
-#   8. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
-#   9. validate    — heavyweight overlay audit + gallery scan matrix + production signoff
-#  10. gallery:update — copy Tier A scan-validated overlay artifacts back to public/gallery/
-#  11. reports     — payload verification matrix + unit coverage + coverage gap report
-#  12. sonar       — SonarQube code analysis (non-blocking, requires localhost:9000)
-#  13. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy + IndexNow
-#  14. android     — release AAB + upload to Play Store (skipped if SDK/Java unavailable)
-#  15. services    — third-party service checks (non-blocking)
-#  16. i18n:push   — push translations to public repo + final status banner
+#   7. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
+#   8. gallery:local — render 1000 local gallery permutations into reports/gallery-artifacts/local/
+#   9. gallery:publish — select curated 300-item showcase (10 sections × 5 rows × 6 cols)
+#  10. reports     — payload verification matrix + unit coverage + coverage gap report
+#  11. sonar       — SonarQube code analysis (non-blocking, requires localhost:9000)
+#  12. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy + IndexNow
+#  13. android     — release AAB + upload to Play Store (skipped if SDK/Java unavailable)
+#  14. services    — third-party service checks (non-blocking)
+#  15. i18n:push   — push translations to public repo
+#  16. summary     — final status banner
 #
-# Gallery capture uses `npx serve` (high-performance static server, installed as devDep)
-# instead of `vite preview` for faster startup and lower memory overhead.
-# After gallery images land in public/gallery/, the deploy step rebuilds to include them.
+# Gallery publishing is artifact-driven: it uses make gallery:local outputs and
+# regenerates src/data/gallery-showcase.generated.ts plus public/gallery manifests.
 
 all:
 	@echo ""
@@ -245,46 +244,32 @@ all:
 	@echo "[6/16] Building production bundle..."
 	$(MAKE) build
 	@echo ""
-	@echo "[7/16] Generating gallery images + PWA screenshots..."
-	@npx serve dist -l 4174 --no-clipboard --single & echo $$! > .gallery-server.pid; \
-		for i in 1 2 3 4 5 6 7 8 9 10; do \
-			curl -s -o /dev/null http://localhost:4174/ && break; \
-			sleep 1; \
-		done
-	@$(MAKE) gallery:fresh GALLERY_PORT=4174 && \
-		$(MAKE) screenshots SCREENSHOT_PORT=4174; \
-		step7_exit=$$?; \
-		kill $$(cat .gallery-server.pid) 2>/dev/null; rm -f .gallery-server.pid; \
-		[ $$step7_exit -eq 0 ] || exit $$step7_exit
-	@echo ""
-	@echo "[8/16] Running full test suite (quality gates + unit + E2E)..."
+	@echo "[7/16] Running full test suite (quality gates + unit + E2E)..."
 	# Note: test includes fix, bundle budget (which rebuilds), and Playwright (which starts its own dev server)
 	$(MAKE) test
 	@echo ""
-	@echo "[9/16] Running heavyweight validation..."
-	$(MAKE) test:overlay:audit
-	$(MAKE) gallery:overlay
-	$(MAKE) signoff
+	@echo "[8/16] Rendering local gallery permutations..."
+	$(MAKE) gallery:local
 	@echo ""
-	@echo "[10/16] Copying Tier A scan-validated overlay artifacts to gallery..."
-	node scripts/update-gallery-from-scan-matrix.mjs
+	@echo "[9/16] Publishing curated gallery from local artifacts..."
+	$(MAKE) gallery:publish GALLERY_PUBLISH_SOURCE=local
 	@echo ""
-	@echo "[11/16] Generating reports + coverage..."
+	@echo "[10/16] Generating reports + coverage..."
 	$(MAKE) report:payload:matrix
 	$(MAKE) report:i18n:txt
 	@$(MAKE) test:unit:coverage || echo "⚠️  Coverage below 100% threshold — see coverage gap report"
 	$(MAKE) test:coverage:gap
 	@echo ""
-	@echo "[12/16] Running SonarQube analysis..."
+	@echo "[11/16] Running SonarQube analysis..."
 	@$(MAKE) sonar || echo "⚠️  SonarQube not available (localhost:9000) — skipping"
 	@echo ""
-	@echo "[13/16] Deploying web to production (Netlify) + IndexNow..."
+	@echo "[12/16] Deploying web to production (Netlify) + IndexNow..."
 	# Deploy rebuilds with SENTRY_UPLOAD=true for sourcemap upload, then pushes to Netlify.
-	# This final build includes gallery images (step 7) + Tier A overlays (step 10).
+	# This final build includes curated gallery assets from step 9.
 	$(MAKE) deploy
 	@$(MAKE) indexnow || echo "⚠️  IndexNow submission failed — see reports/indexnow-submission.json"
 	@echo ""
-	@echo "[14/16] Bumping version + building Android release AAB + uploading..."
+	@echo "[13/16] Bumping version + building Android release AAB + uploading..."
 	@if [ -d android ] && command -v java >/dev/null 2>&1 && [ -n "$$ANDROID_HOME" ]; then \
 		$(MAKE) android:bump; \
 		$(MAKE) android:release; \
@@ -298,12 +283,14 @@ all:
 		echo "Skipping Android build (SDK/Java not available)"; \
 	fi
 	@echo ""
-	@echo "[15/16] Validating third-party services..."
+	@echo "[14/16] Validating third-party services..."
 	@$(MAKE) validate:services || echo "⚠️  Some third-party validations failed — see reports/third-party-validation.json"
 	@$(MAKE) check:sentry || echo "⚠️  Sentry regression check failed — see reports/sentry-regression.json"
 	@echo ""
-	@echo "[16/16] Pushing translations + final summary"
+	@echo "[15/16] Pushing translations"
 	@$(MAKE) i18n:push || echo "⚠️  i18n:push failed (no remote access?) — skipping"
+	@echo ""
+	@echo "[16/16] Final summary"
 	@echo ""
 	@echo "============================================"
 	@echo "ANQR — Production pipeline complete!"
@@ -589,13 +576,18 @@ gallery\:browser:
 	done; \
 	exit $$failed
 
-# Compare local/browser/remote artifacts for consistency.
+# Compare local/browser/remote artifacts for consistency:
+# decode validity + payload parity + dimension parity + size-ratio parity.
 gallery\:compare:
 	node --import tsx scripts/compare-gallery-artifacts.mjs
 
 # Copy curated gallery image set from reports/gallery-artifacts/* to public/gallery/.
 gallery\:publish:
 	node --import tsx scripts/publish-gallery-showcase.ts
+
+# Merge sharded gallery reports/passed/failed files into single local index files.
+gallery\:merge:
+	GALLERY_MERGE_ONLY=1 GALLERY_PUBLISH_SOURCE=$(GALLERY_PUBLISH_SOURCE) node --import tsx scripts/publish-gallery-showcase.ts
 
 # Run all three gallery renderers: remote API + local QRGenerator + browser screenshots.
 # Produces 3000 total images across reports/gallery-artifacts/{remote,local,browser}/.
@@ -619,18 +611,17 @@ gallery\:parity\:deploy:
 	$(MAKE) gallery:parity
 
 # Full gallery auto-generation pipeline:
-# 1. Run scan matrix test (generates reports + artifacts)
-# 2. Copy scan-approved artifacts to public/gallery/
-# 3. Generate scan-showcase-manifest.json
-gallery\:auto: gallery\:overlay
-	node scripts/update-gallery-from-scan-matrix.mjs
+# 1. Render all local permutation artifacts (1000 scenarios)
+# 2. Select and publish curated showcase set (300 items)
+gallery\:auto: gallery\:local
+	$(MAKE) gallery:publish GALLERY_PUBLISH_SOURCE=local
 	@echo ""
 	@echo "Gallery auto-generation complete."
-	@echo "  - Scan matrix: reports/gallery-scan-matrix.json"
-	@echo "  - Summary:     reports/gallery-scan-summary.md"
-	@echo "  - Artifacts:   reports/gallery-artifacts/"
+	@echo "  - Local artifacts: reports/gallery-artifacts/local/"
+	@echo "  - Merged report:   reports/gallery-artifacts/local/report.merged.json"
 	@echo "  - Gallery:     public/gallery/"
-	@echo "  - Manifest:    public/gallery/scan-showcase-manifest.json"
+	@echo "  - Manifest:    public/gallery/showcase-manifest.json"
+	@echo "  - Data file:   src/data/gallery-showcase.generated.ts"
 
 # ============================================
 # Sitemap Generation

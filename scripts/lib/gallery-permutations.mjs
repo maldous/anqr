@@ -9,7 +9,7 @@
 
 // ─── Fixed globals applied to every image ────────────────────────────
 export const GLOBALS = Object.freeze({
-  v: 6, align: 'match_finder', timing: 'match_module', gap: 0,
+  v: 3, align: 'match_finder', timing: 'match_module', gap: 0,
   gradAngle: 135, radius: 25, dotRot: 0, modulePx: 6,
   animSpeed: 100, jitter: 0, wmPos: 'bottom-center',
   gifPal: 256, gifMaxFps: 30, w: 294, h: 294, frameText: 'ANQR',
@@ -39,114 +39,109 @@ const ANIMATED_FIXTURES = FIXTURES.filter(f => f.isAnimated);
 // Explicit per-scenario exclusions for known-bad outputs reported from gallery runs.
 // Match is by canonical generated filename (category__label.ext).
 export const EXCLUDED_SCENARIO_FILENAMES = new Set([
-/*
+
+  'artwork__art-dance-anim-rich-pulse.gif',
+  'artwork__art-dance-anim-style-connected.gif',
+  'artwork__art-dance-anim-style-dots.gif',
+  'nooverlay__style-x-gap-connected-stroke.png',
+
+  'artwork__art-dance-anim-rich-shimmer.gif',
+  'artwork__art-tsunami-gap-stroke.png',
+  'nooverlay__style-x-gap-diamond-stroke.png',
+  'overlay__hero-motion-dance-subpixel-wave-vivid.gif',
+  'overlay__hero-motion-king-subpixel-wave-vivid.gif',
+  'overlay__mode-x-rstyle-blue-noise-diamond.png',
+  'overlay__mode-x-rstyle-blue-noise-dots.png',
+
   'artwork__art-dance-anim-easing-bounce.gif',
   'artwork__art-dance-anim-easing-ease_in.gif',
   'artwork__art-dance-anim-easing-ease_out.gif',
   'artwork__art-dance-anim-interp-crossfade.gif',
   'artwork__art-dance-anim-pulse.gif',
-  'artwork__art-dance-anim-rich-pulse.gif',
+  'artwork__art-dance-anim-rich-drift.gif',
   'artwork__art-dance-anim-rich-scanline.gif',
-  'artwork__art-dance-anim-rich-shimmer.gif',
   'artwork__art-dance-anim-scanline.gif',
   'artwork__art-dance-anim-seed-123.gif',
   'artwork__art-dance-anim-shimmer.gif',
-  'artwork__art-dance-anim-style-connected.gif',
   'artwork__art-dance-anim-style-diamond.gif',
-  'artwork__art-dance-anim-style-dots.gif',
   'artwork__art-dance-anim-style-rounded.gif',
   'artwork__art-dance-anim-tempDither-blue_noise.gif',
   'artwork__art-dance-anim-tempDither-flicker_safe.gif',
   'artwork__art-dance-anim-wave.gif',
+  'artwork__art-dance-fg-red.gif',
   'artwork__art-dance-mega-anim.gif',
   'artwork__art-dance-stack-target-both-wave-xy-drift.gif',
   'artwork__art-dance-stack-target-result-wave-y-modules-shimmer.gif',
   'artwork__art-test-anim-stack-wave-shimmer.gif',
   'artwork__art-tsunami-anim-stack-wave-shimmer.gif',
+  'artwork__art-tsunami-connected-gap-stroke.png',
+  'artwork__art-tsunami-diamond-gap-stroke.png',
+  'artwork__art-tsunami-diamond-rounded_frame.png',
+  'artwork__art-tsunami-diamond-sticker.png',
+  'artwork__art-tsunami-diamond-tag.png',
+  'artwork__art-tsunami-dots-gap-stroke.png',
+  'artwork__art-tsunami-dots-rounded_frame.png',
+  'artwork__art-tsunami-dots-sticker.png',
+  'artwork__art-tsunami-dots-tag.png',
+  'artwork__art-tsunami-extra-static-b.png',
+  'artwork__art-tsunami-rounded-gap-stroke.png',
   'nooverlay__animPattern-scanline.gif',
-  'nooverlay__filler-anim-18.gif',
   'nooverlay__mega-animated.gif',
+  'nooverlay__modC-x-pal-by_brightness-6c5ce7,a29bfe,fd79a8,fab1a0,ffeaa7.png',
+  'nooverlay__modC-x-pal-by_brightness-ff6b6b,feca57,48dbfb,ff9ff3,54a0ff.png',
+  'nooverlay__modC-x-pal-by_position-6c5ce7,a29bfe,fd79a8,fab1a0,ffeaa7.png',
+  'nooverlay__modC-x-pal-by_position-ff6b6b,feca57,48dbfb,ff9ff3,54a0ff.png',
+  'nooverlay__palette-6c5ce7,a29bfe,fd79a8,fab1a0,ffeaa7.png',
+  'nooverlay__paletteMode-diagonal.png',
+  'nooverlay__paletteMode-position.png',
+  'nooverlay__paletteMode-radial.png',
+  'nooverlay__paletteMode-random.png',
+  'nooverlay__style-x-gap-dots-stroke.png',
+  'nooverlay__style-x-gap-rounded-stroke.png',
+  'nooverlay__visual-target-stack-1.gif',
   'nooverlay__visual-target-stack-3.gif',
-  'overlay__animHero-dance-pulse.gif',
-  'overlay__animHero-dance-scanline.gif',
-  'overlay__animHero-dance-shimmer-crossfade.gif',
-  'overlay__animHero-dance-shimmer.gif',
-  'overlay__animHero-dance-wave.gif',
-  'overlay__animHero-king-pulse.gif',
-  'overlay__animHero-king-scanline.gif',
-  'overlay__animHero-king-shimmer-crossfade.gif',
-  'overlay__animHero-king-shimmer.gif',
-  'overlay__animHero-king-wave.gif',
-  'overlay__animStack-dance-dither-pulse-bounce-bayer.gif',
-  'overlay__animStack-dance-dither-scanline-reverse-errordiff.gif',
-  'overlay__animStack-dance-dither-shimmer-crossfade-adaptive.gif',
   'overlay__animStack-king-dither-pulse-bounce-bayer.gif',
   'overlay__animStack-king-dither-scanline-reverse-errordiff.gif',
   'overlay__animStack-king-dither-shimmer-crossfade-adaptive.gif',
   'overlay__animStack-king-dither-wave-morph-sbn.gif',
-  'overlay__animStack-king-subpixel-drift-crossfade-cycled.gif',
   'overlay__blendPresMode-dither-anim-king.gif',
-  'overlay__blendPresMode-dither.png',
+  'overlay__blendPresMode-overlay-anim-dance.gif',
+  'overlay__blendPresMode-overlay.png',
+  'overlay__diffKernel-floyd_steinberg.png',
   'overlay__diffKernel-jarvis_judice_ninke.png',
   'overlay__diffKernel-sierra_2.png',
-  'overlay__ditherKind-anim-error_diffusion-king.gif',
+  'overlay__diffKernel-sierra.png',
+  'overlay__ditherKind-anim-blue_noise_threshold-king.gif',
   'overlay__ditherKind-edge_aware.png',
+  'overlay__ditherKind-ordered_bayer.png',
   'overlay__ditherKind-ordered_void_cluster.png',
+  'overlay__ditherKind-perceptual.png',
   'overlay__ditherKind-triangular_noise.png',
   'overlay__ditherStr-100.png',
-  'overlay__hero-dither-dance-ordered_bayer.gif',
+  'overlay__ditherStr-75.png',
   'overlay__hero-dither-king-adaptive_threshold.gif',
   'overlay__hero-dither-king-blue_noise_threshold.gif',
   'overlay__hero-dither-king-error_diffusion.gif',
   'overlay__hero-dither-king-ordered_bayer.gif',
   'overlay__hero-dither-king-screened_blue_noise.gif',
-  'overlay__heroFeature-dance-noir-scanline.gif',
   'overlay__heroFeature-king-dither-shimmer-crystal.gif',
   'overlay__heroFeature-king-dither-wave-etched.gif',
   'overlay__heroFeature-king-neon-wave-morph.gif',
-  'overlay__heroFeature-king-noir-scanline.gif',
-  'overlay__hero-stack-dance-dither-drift-sierra2.gif',
-  'overlay__hero-stack-dance-dither-pulse-bayer-reverse.gif',
-  'overlay__hero-stack-dance-dither-shimmer-blue-noise.gif',
   'overlay__hero-stack-dance-subpixel-wave-morph-vivid.gif',
-  'overlay__hero-stack-king-blend-shimmer-reverse.gif',
-  'overlay__hero-stack-king-dither-drift-sierra2.gif',
-  'overlay__hero-stack-king-dither-pulse-bayer-reverse.gif',
   'overlay__hero-stack-king-dither-shimmer-blue-noise.gif',
-  'overlay__hero-stack-king-mosaic-drift-crossfade.gif',
   'overlay__hero-stack-king-subpixel-wave-morph-vivid.gif',
+  'overlay__mega-static-trump.png',
   'overlay__mode-blue-noise-trump.png',
   'overlay__mode-blue-noise-tsunami.png',
+  'overlay__mode-dithered-test.png',
   'overlay__mode-dithered-trump.png',
-  'overlay__mode-halftone-dithered-tsunami.png',
-  'overlay__ov-x-anim-dance-dithered-shimmer.gif',
-  'overlay__ov-x-anim-dance-dithered-wave.gif',
-  'overlay__ov-x-anim-dance-dither-wave-morph.gif',
-  'overlay__ov-x-anim-dance-mosaic-pulse.gif',
-  'overlay__ov-x-anim-dance-mosaic-wave.gif',
-  'overlay__ov-x-anim-dance-subpixel-shimmer.gif',
-  'overlay__ov-x-anim-dance-subpixel-wave.gif',
-  'overlay__ov-x-anim-dance-wave-pulse.gif',
-  'overlay__ov-x-anim-dance-wave-shimmer.gif',
-  'overlay__ov-x-anim-dance-wave-wave.gif',
   'overlay__ov-x-anim-king-dithered-shimmer.gif',
   'overlay__ov-x-anim-king-dithered-wave.gif',
   'overlay__ov-x-anim-king-dither-wave-morph.gif',
-  'overlay__ov-x-anim-king-mosaic-pulse.gif',
-  'overlay__ov-x-anim-king-mosaic-shimmer.gif',
-  'overlay__ov-x-anim-king-mosaic-wave.gif',
-  'overlay__ov-x-anim-king-subpixel-pulse.gif',
-  'overlay__ov-x-anim-king-subpixel-shimmer.gif',
-  'overlay__ov-x-anim-king-subpixel-wave.gif',
-  'overlay__ov-x-anim-king-wave-pulse.gif',
-  'overlay__ov-x-anim-king-wave-shimmer.gif',
-  'overlay__ov-x-anim-king-wave-wave.gif',
-  'overlay__target-stack-dance-modules-scanline-plus-result-wave-x.gif',
-  'overlay__target-stack-dance-result-wave-y-plus-modules-shimmer.gif',
-  'overlay__target-stack-king-both-wave-xy-plus-drift.gif',
-  'overlay__target-stack-king-modules-scanline-plus-result-wave-x.gif',
-  'overlay__target-stack-king-result-wave-y-plus-modules-shimmer.gif',
-*/
+  'overlay__target-stack-dance-both-wave-xy-plus-drift.gif',
+  'overlay__target-stack-dance-modules-wave-x-plus-result-wave-y.gif',
+  'overlay__target-stack-king-both-wave-xy-plus-drift.gif'
+
 ]);
 
 // ─── Dimension arrays ────────────────────────────────────────────────
@@ -335,6 +330,96 @@ function applyMaskVariety(configs, opts = {}) {
   }
 
   return out;
+}
+
+function applyLogVersionSampling(configs, opts = {}) {
+  const baseVersion = Number.parseInt(String(opts.baseVersion ?? GLOBALS.v), 10);
+  const buckets = Array.isArray(opts.buckets) && opts.buckets.length
+    ? opts.buckets
+    : [
+        { v: 3, weight: 0.8 },
+        { v: 4, weight: 0.12 },
+        { v: 5, weight: 0.06 },
+        { v: 7, weight: 0.02 },
+      ];
+
+  const out = configs.map((cfg) => ({
+    ...cfg,
+    params: { ...cfg.params },
+  }));
+
+  const adjustable = out
+    .filter((cfg) => {
+      const currentV = Number.parseInt(String(cfg.params?.v), 10);
+      if (!Number.isFinite(currentV) || currentV !== baseVersion) return false;
+      const label = String(cfg.id || '').toLowerCase();
+      if (label.includes('encoding-')) return false;
+      return true;
+    })
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  if (!adjustable.length) return out;
+
+  const normalized = buckets
+    .map((bucket) => ({
+      v: Number.parseInt(String(bucket.v), 10),
+      weight: Number(bucket.weight) > 0 ? Number(bucket.weight) : 0,
+    }))
+    .filter((bucket) => Number.isFinite(bucket.v) && bucket.v >= 1 && bucket.weight > 0);
+  if (!normalized.length) return out;
+
+  const weightSum = normalized.reduce((sum, bucket) => sum + bucket.weight, 0);
+  if (weightSum <= 0) return out;
+  const normalizedBuckets = normalized.map((bucket) => ({
+    v: bucket.v,
+    weight: bucket.weight / weightSum,
+  }));
+
+  const total = adjustable.length;
+  const planned = normalizedBuckets.map((bucket) => ({
+    ...bucket,
+    count: Math.floor(total * bucket.weight),
+  }));
+  let assigned = planned.reduce((sum, bucket) => sum + bucket.count, 0);
+  let idx = 0;
+  while (assigned < total) {
+    planned[idx % planned.length].count += 1;
+    assigned += 1;
+    idx += 1;
+  }
+
+  let cursor = 0;
+  for (const bucket of planned) {
+    for (let i = 0; i < bucket.count && cursor < total; i++) {
+      adjustable[cursor].params.v = bucket.v;
+      cursor += 1;
+    }
+  }
+
+  return out;
+}
+
+function enforceVersionRange(configs, opts = {}) {
+  const minVersion = Number.parseInt(String(opts.min ?? 1), 10);
+  const maxVersion = Number.parseInt(String(opts.max ?? 40), 10);
+  const fallbackVersion = Number.parseInt(String(opts.fallback ?? minVersion), 10);
+
+  const min = Number.isFinite(minVersion) ? minVersion : 1;
+  const max = Number.isFinite(maxVersion) ? maxVersion : 40;
+  const fallback = Number.isFinite(fallbackVersion) ? fallbackVersion : min;
+
+  return configs.map((cfg) => {
+    const out = {
+      ...cfg,
+      params: { ...cfg.params },
+    };
+    const parsed = Number.parseInt(String(out.params?.v), 10);
+    let nextVersion = Number.isFinite(parsed) ? parsed : fallback;
+    if (nextVersion < min) nextVersion = min;
+    if (nextVersion > max) nextVersion = max;
+    out.params.v = nextVersion;
+    return out;
+  });
 }
 
 function stableStringify(value) {
@@ -635,12 +720,12 @@ export function generateNonOverlayScenarios() {
     layer1.push(makeConfig(CAT, `visual-target-stack-${idx + 1}`, combo.params, { isAnimated: true }));
   });
 
-  // 32. Controlled version/ECC variation (cap version <= 9)
+  // 32. Controlled version/ECC variation (log-sampled through version 7)
   const versionEccShowcase = [
-    { label: 'ver-4-ec-L', params: { v: 4, ec: 'L', style: 'rounded', finder: 'rounded' } },
-    { label: 'ver-6-ec-M', params: { v: 6, ec: 'M', style: 'dots', finder: 'circle' } },
-    { label: 'ver-8-ec-Q', params: { v: 8, ec: 'Q', style: 'diamond', finder: 'rounded' } },
-    { label: 'ver-9-ec-H', params: { v: 9, ec: 'H', style: 'connected', finder: 'square' } },
+    { label: 'ver-3-ec-L', params: { v: 3, ec: 'L', style: 'rounded', finder: 'rounded' } },
+    { label: 'ver-4-ec-M', params: { v: 4, ec: 'M', style: 'dots', finder: 'circle' } },
+    { label: 'ver-5-ec-Q', params: { v: 5, ec: 'Q', style: 'diamond', finder: 'rounded' } },
+    { label: 'ver-7-ec-H', params: { v: 7, ec: 'H', style: 'connected', finder: 'square' } },
   ];
   for (const combo of versionEccShowcase) {
     layer1.push(makeConfig(CAT, `encoding-${combo.label}`, {
@@ -654,7 +739,7 @@ export function generateNonOverlayScenarios() {
   // 31. "Huge permutation" showcases: stack many options in one render.
   layer1.push(makeConfig(CAT, 'mega-static',
     {
-      v: 9,
+      v: 7,
       ec: 'Q',
       style: 'diamond',
       finder: 'rounded',
@@ -680,7 +765,7 @@ export function generateNonOverlayScenarios() {
     }));
   layer1.push(makeConfig(CAT, 'mega-animated',
     {
-      v: 9,
+      v: 7,
       ec: 'Q',
       style: 'dots',
       finder: 'circle',
@@ -927,7 +1012,16 @@ export function generateNonOverlayScenarios() {
     throw new Error(`nooverlay scenario generation produced ${all.length} unique configs; expected at least 333`);
   }
 
-  return applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 12, static: 20 });
+  const selected = applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 12, static: 20 });
+  return applyLogVersionSampling(selected, {
+    baseVersion: 3,
+    buckets: [
+      { v: 3, weight: 0.8 },
+      { v: 4, weight: 0.12 },
+      { v: 5, weight: 0.06 },
+      { v: 7, weight: 0.02 },
+    ],
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -1853,12 +1947,12 @@ export function generateOverlayScenarios() {
     }
   }
 
-  // 22. Light encoding/ECC variation in overlay mode (cap version <= 9)
+  // 22. Light encoding/ECC variation in overlay mode (log-sampled through version 7)
   {
     const overlayEncCombos = [
-      { label: 'ver-5-ec-M', v: 5, ec: 'M', mode: 'blend' },
-      { label: 'ver-7-ec-Q', v: 7, ec: 'Q', mode: 'mosaic' },
-      { label: 'ver-9-ec-H', v: 9, ec: 'H', mode: 'dithered' },
+      { label: 'ver-3-ec-M', v: 3, ec: 'M', mode: 'blend' },
+      { label: 'ver-5-ec-Q', v: 5, ec: 'Q', mode: 'mosaic' },
+      { label: 'ver-7-ec-H', v: 7, ec: 'H', mode: 'dithered' },
     ];
     for (let i = 0; i < overlayEncCombos.length; i++) {
       const combo = overlayEncCombos[i];
@@ -2335,7 +2429,16 @@ export function generateOverlayScenarios() {
   if (all.length < 333) {
     throw new Error(`overlay scenario generation produced ${all.length} unique configs; expected at least 333`);
   }
-  return applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 14, static: 18 });
+  const selected = applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 14, static: 18 });
+  return applyLogVersionSampling(selected, {
+    baseVersion: 3,
+    buckets: [
+      { v: 3, weight: 0.84 },
+      { v: 4, weight: 0.1 },
+      { v: 5, weight: 0.05 },
+      { v: 7, weight: 0.01 },
+    ],
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -2905,7 +3008,7 @@ export function generateArtworkScenarios() {
       trump: { v: 8, ec: 'M' },
       dance: { v: 7, ec: 'M' },
       test: { v: 6, ec: 'L' },
-      tsunami: { v: 5, ec: 'L' },
+      tsunami: { v: 6, ec: 'L' },
     };
     const encodingChoice = artworkVersionByFixture[fx.id] || { v: 6, ec: 'L' };
     configs.push(
@@ -3129,8 +3232,16 @@ export function generateArtworkScenarios() {
         data: DEFAULT_PAYLOAD.data,
       },
     }));
-
-  return applyMaskVariety(all, { animated: 20, static: 12 });
+  const withMaskVariety = applyMaskVariety(all, { animated: 20, static: 12 });
+  const logSampled = applyLogVersionSampling(withMaskVariety, {
+    baseVersion: 3,
+    buckets: [
+      { v: 6, weight: 0.82 },
+      { v: 7, weight: 0.13 },
+      { v: 8, weight: 0.05 },
+    ],
+  });
+  return enforceVersionRange(logSampled, { min: 6, max: 8, fallback: 6 });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
