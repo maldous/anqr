@@ -707,3 +707,177 @@ Last updated: 2026-02-22 13:25:00 UTC
   - local: [820/1000], fails=8
   - browser: [828/1000], fails=8
   - remote: [430/1000], fails=3
+
+## Update 2026-02-22 (GIF Corruption Verification)
+
+- [x] Re-verified the previously reported broken GIF combos directly against current `netlify/functions/qr.ts` handler with explicit params:
+  - `overlay__ov-x-anim-king-dithered-shimmer`
+  - `overlay__ov-x-anim-dance-wave-wave`
+  - `overlay__ov-x-anim-king-dithered-wave`
+- [x] Current renderer output for those combos is now healthy:
+  - no all-white frames (`blank_frames=0`)
+  - full frame uniqueness restored (`61/61` for king dithered variants, `20/20` for dance wave/wave)
+- [x] Root cause confirmation:
+  - old failures in `reports/gallery-artifacts/local` were stale pre-fix artifacts, not evidence of current encoder regression.
+  - stale files had signatures like `blank_frames=23` and lower frame uniqueness (e.g. `32/61`).
+- [x] Replaced stale local artifacts with fresh renders for the affected filenames.
+- [x] Added repeatable integrity check rule:
+  - run `convert <gif> -coalesce -format '%k %[mean] %[standard-deviation]\n' info:` and flag frames where `k==1 && mean>65400 && stddev<1` as blank-frame corruption.
+  - after replacement, local scan result: `FILES_WITH_BLANK_FRAMES=0`.
+
+## Update 2026-02-22 (In-Run Feedback Findings; Apply Changes After Run)
+
+- [x] User feedback captured during run:
+  - `artwork__art-dance-stack-target-modules-wave-x-result-wave-y.gif` appears to still encode animation effects into QR modules.
+  - too much static `trump` artwork in current selection.
+  - GIF corruption/noise reports on:
+    - `artwork__art-dance-anim-tempDither-blue_noise.gif`
+    - `artwork__art-dance-anim-easing-bounce.gif`
+  - `easing` and `bounce` are not visually compelling and should be removed from permutations.
+  - next iteration should run local-only with higher concurrency for faster isolation.
+  - additionally required: explicit variety of mask patterns across non-overlay, overlay, and artwork.
+
+- [x] Operational action taken immediately:
+  - stopped browser + remote generators on request.
+  - kept local generator running.
+
+- [x] Quantitative diagnostics (current code, no permutation edits yet):
+  - `artwork__art-dance-stack-target-modules-wave-x-result-wave-y`:
+    - frame integrity: `20/20` unique frame hashes, `blank_frames=0`
+    - scanability across frames: `1/20` decodable (`19/20` undecodable)
+    - interpretation: this combo is structurally too aggressive for scan stability.
+  - `artwork__art-dance-anim-tempDither-blue_noise`:
+    - batch artifact observed with low variety / occasional blank-like behavior earlier.
+    - isolated rerenders are variable but generally non-blank; frame decode remains weak.
+    - representative decode sample: `7/20` decodable (isolated), `14/20` on one local artifact rewrite.
+  - `artwork__art-dance-anim-easing-bounce`:
+    - representative decode sample: `7/20` decodable (isolated), `12/20` on one local artifact.
+    - visual utility low, consistent with user feedback.
+
+- [x] Repro insight:
+  - repeated isolated renders of the *same* scenario (`artwork__art-dance-anim-tempDither-blue_noise--763`) produce materially different frame-hash diversity (`unique` ranged `12..19` across four runs), even with same params.
+  - this indicates nondeterministic behavior still exists in the artwork animation pipeline.
+  - however, severe all-white-frame corruption was not reproduced in the isolated loop (`blank_frames=0` each run).
+
+- [x] Artwork mix audit (current permutation output):
+  - artwork total: `333`
+  - fixture distribution:
+    - `trump`: `80` (animated `0`, static `80`)
+    - `dance`: `104` (animated `104`, static `0`)
+    - `test`: `75` (static only)
+    - `tsunami`: `74` (static only)
+  - confirms user point: `trump` contributes substantial static-only volume.
+
+- [x] Mask-pattern audit (current permutation output):
+  - `mask` parameter is currently absent from all generated scenarios (`0/1000` set explicitly).
+  - all runs therefore rely on implicit auto mask selection; no explicit mask sweep coverage exists.
+
+- [x] Finder/timing/alignment dither visibility finding:
+  - current overlay baseline applies structural preservation by default:
+    - `keepFinders=1`
+    - `keepTiming=1`
+    - `keepAlign=1`
+    - `protectFmt=1`
+    - `protectVer=1`
+  - this keeps those regions solid (typically black), which matches observed behavior where dither/module patterns are not visible there.
+  - follow-up required: add explicit showcase variants that relax these protections (or use dither-preservation mode intentionally) to demonstrate dithered structural regions when desired.
+
+- [ ] Post-run change plan (do not apply until current local run completes):
+  - remove or sharply reduce `easing`/`bounce`-centric artwork animation variants.
+  - reduce/disable `tempDither` use in artwork GIF permutations where scan stability regresses.
+  - rebalance artwork toward stronger motion diversity without static-heavy `trump` dominance.
+  - constrain/replace module-target stacks in artwork where decode-per-frame is extremely low.
+  - add explicit mask-pattern variety for all categories (`nooverlay`, `overlay`, `artwork`).
+  - run local-only high-concurrency validation pass first, then expand to browser/remote once stable.
+
+## Update 2026-02-22 (Permutation Engine Correctness Pass)
+
+- [x] Fixed `sweep(...)` index propagation bug:
+  - `paramBuilder` now receives `(value, index)` so `pick(..., i)` logic works correctly.
+
+- [x] Removed contradictory easing/bounce generation flow:
+  - dropped explicit non-overlay `easing` sweep and `bounce` single-axis block.
+  - dropped non-overlay `animPattern x easing` cross-product block.
+  - removed `filterEasingBounceScenarios(...)` post-filter pass.
+  - canonicalized params in `makeConfig(...)` with `sanitizeScenarioParams(...)` to strip unsupported animation keys (`easing`, `easing2`, `bounce`, `bounce2`) at construction time.
+
+- [x] Hardened dedup semantics:
+  - `dedup(...)` now uses a stable serializer (`stableStringify`) instead of raw `JSON.stringify`.
+  - serializer now sorts object keys and ignores `undefined` properties.
+
+- [x] Simplified low-impact filtering:
+  - removed stale low-impact label pattern filtering block in non-overlay generation (patterns were not aligned with current labels and had no effective matches).
+
+- [x] Reduced mutation side effects:
+  - `assignPayloads(...)` remains immutable.
+  - `applyMaskVariety(...)` remains immutable (works on cloned configs/params).
+  - artwork payload normalization is now immutable (`map(...)`) instead of in-place mutation.
+
+- [x] Sanity check after edits:
+  - scenario counts: `333` non-overlay, `333` overlay, `333` artwork, `1000` total.
+  - emitted `easing`/`bounce` params in final scenarios: `0`.
+  - explicit mask assignments present across all categories (current total `32` per category).
+  - no `undefined` values emitted in scenario params.
+
+## Update 2026-02-22 (Review Follow-Up: Structural Consistency)
+
+- [x] Validated parser health and syntax:
+  - `node --check scripts/lib/gallery-permutations.mjs` passes.
+  - confirmed no invalid spread/object forms such as `.combo.params`, `.base`, or `selected.push(....)` in current file.
+
+- [x] Confirmed there is only one active implementation for each helper:
+  - `sanitizeScenarioParams(...)` defined once.
+  - `assignPayloads(...)` defined once (immutable form).
+  - `stableStringify(...)` defined once.
+
+- [x] Removed clone-padding risk path:
+  - deleted `trimOrPad(...)`.
+  - overlay generation now throws if unique configs are unexpectedly below `333`, then slices to `333`.
+
+- [x] Preserved scenario ID provenance:
+  - `generateAllScenarios()` no longer restamps IDs unconditionally.
+  - restamp now happens only on actual ID collision (with `sourceId` preservation), which does not occur in normal generation.
+
+- [x] Aligned extension derivation:
+  - `scenarioFilename(...)` now uses `isScenarioAnimated(...)` (instead of raw `config.isAnimated`) for consistent `.gif/.png` behavior.
+
+- [x] Reduced mode-policy ambiguity:
+  - policy changed again per user direction: animated dithered outputs are enabled.
+  - `'dithered'` restored in `ANIMATED_OVERLAY_MODES`.
+  - overlay post-merge exclusion of animated dither/ditherKind scenarios removed.
+
+- [x] Sanity checks after follow-up:
+  - `generateOverlayScenarios()` still returns `333`.
+  - `generateAllScenarios()` returns `1000` unique IDs.
+  - filename extension mismatch count: `0`.
+  - animated dithered overlay scenarios present: `50` (all `mode=dithered`).
+
+## Update 2026-02-22 (Permutation Policy Correction)
+
+- [x] Removed silent stripping of animation keys:
+  - `sanitizeScenarioParams(...)` now only removes `undefined` values.
+  - `easing`/`bounce` params are preserved again end-to-end.
+
+- [x] Overlay allowlist/blocklist adjustment:
+  - unblocked static overlay combinations:
+    - `mode=dithered` with `trump`
+    - `mode=blue-noise` with `trump`
+    - `mode=blue-noise` with `tsunami`
+
+- [x] `generateAllScenarios()` side-effect safety:
+  - ID collision fallback now clones objects into a new `output` array instead of mutating source category objects in place.
+  - verified no ID mutation side-effect when calling `generateAllScenarios()` after category generation.
+
+- [x] Minor readability cleanup:
+  - simplified non-overlay watermark-style cross-product from `['text','logo'].slice(0,1)` to explicit `['text']`.
+
+- [x] Sanity checks after correction:
+  - counts remain `333/333/333` and `1000` total.
+  - preserved animation key presence in outputs:
+    - nooverlay: `42` scenarios with easing/bounce keys
+    - overlay: `76`
+    - artwork: `20`
+  - overlay static availability confirmed:
+    - `overlay__mode-dithered-trump`
+    - `overlay__mode-blue-noise-trump`
+    - `overlay__mode-blue-noise-tsunami`
