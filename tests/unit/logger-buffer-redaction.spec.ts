@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const sentry = {
   addBreadcrumb: vi.fn(),
@@ -60,11 +60,29 @@ vi.mock('loglevel-plugin-prefix', () => ({ default: prefixMock }));
 vi.mock('loglevel', () => ({ default: loglevelMock }));
 
 describe('logger buffer redaction (security)', () => {
+  const originalCaptureConsole = process.env.ANQR_LOG_CAPTURE_CONSOLE;
+  const originalCaptureMinLevel = process.env.ANQR_LOG_CAPTURE_MIN_LEVEL;
+
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
     currentLevel = 1;
     for (const key of Object.keys(levelLoggers)) delete levelLoggers[key];
+    process.env.ANQR_LOG_CAPTURE_CONSOLE = '1';
+    process.env.ANQR_LOG_CAPTURE_MIN_LEVEL = 'trace';
+  });
+
+  afterEach(() => {
+    if (originalCaptureConsole === undefined) {
+      delete process.env.ANQR_LOG_CAPTURE_CONSOLE;
+    } else {
+      process.env.ANQR_LOG_CAPTURE_CONSOLE = originalCaptureConsole;
+    }
+    if (originalCaptureMinLevel === undefined) {
+      delete process.env.ANQR_LOG_CAPTURE_MIN_LEVEL;
+    } else {
+      process.env.ANQR_LOG_CAPTURE_MIN_LEVEL = originalCaptureMinLevel;
+    }
   });
 
   it('redacts sensitive data in structured buffer for trace level', async () => {

@@ -6,6 +6,7 @@
 import { Capacitor } from '@capacitor/core';
 import { createLogger } from '../../lib/logger';
 import { createGifEncoder, indexGifPixels, quantizeGifPalette } from '../animation';
+import { withGifEncodeLock } from '../animation/gif-lock';
 
 const log = createLogger('EXPORT');
 
@@ -50,9 +51,6 @@ export async function exportGif(
     Math.min(256, (config as { gifPaletteSize?: number }).gifPaletteSize ?? 256)
   );
 
-  // Create GIF encoder
-  const gif = createGifEncoder();
-
   // OPTIMIZATION: Reuse a single scaling canvas for all frames
   const scaledCanvas = document.createElement('canvas');
   scaledCanvas.width = width;
@@ -85,85 +83,88 @@ export async function exportGif(
     loop: opts.loopAnimation,
   });
 
-  // GLOBAL PALETTE STRATEGY: Build palette from first frame (or sample multiple frames)
-  let globalPalette: number[][] | null = null;
+  const bytes = await withGifEncodeLock(() => {
+    const gif = createGifEncoder();
 
-  if (frames.length > 0) {
-    const framesToSample =
-      frames.length > 10 ? [0, Math.floor(frames.length / 2), frames.length - 1] : [0];
+    // GLOBAL PALETTE STRATEGY: Build palette from sampled frames
+    let globalPalette: number[][] | null = null;
+    if (frames.length > 0) {
+      const framesToSample =
+        frames.length > 10 ? [0, Math.floor(frames.length / 2), frames.length - 1] : [0];
 
-    const pixelsPerFrame = width * height * 4; // RGBA
-    const totalPixels = framesToSample.length * pixelsPerFrame;
-    const sampledPixels = new Uint8ClampedArray(totalPixels);
-    let offset = 0;
+      const pixelsPerFrame = width * height * 4; // RGBA
+      const totalPixels = framesToSample.length * pixelsPerFrame;
+      const sampledPixels = new Uint8ClampedArray(totalPixels);
+      let offset = 0;
 
-    for (const frameIdx of framesToSample) {
-      const frame = frames[frameIdx];
-      if (!frame) continue;
+      for (const frameIdx of framesToSample) {
+        const frame = frames[frameIdx];
+        if (!frame) continue;
+
+        scaledCtx.clearRect(0, 0, width, height);
+        if (hasBgOverride) {
+          scaledCtx.fillStyle = opts.bgOverride;
+          scaledCtx.fillRect(0, 0, width, height);
+        }
+        scaledCtx.imageSmoothingEnabled = false;
+        scaledCtx.drawImage(frame, 0, 0, width, height);
+
+        const imageData = scaledCtx.getImageData(0, 0, width, height);
+        sampledPixels.set(imageData.data, offset);
+        offset += imageData.data.length;
+      }
+
+      globalPalette = quantizeGifPalette(sampledPixels, paletteSize);
+    }
+
+    // Encode each frame using the global palette
+    for (let i = 0; i < frames.length; i++) {
+      const frame = frames[i];
+      const frameDelay = frameDelays?.[i] ? frameDelays[i] : defaultDelay;
 
       scaledCtx.clearRect(0, 0, width, height);
+
       if (hasBgOverride) {
         scaledCtx.fillStyle = opts.bgOverride;
         scaledCtx.fillRect(0, 0, width, height);
       }
+
       scaledCtx.imageSmoothingEnabled = false;
       scaledCtx.drawImage(frame, 0, 0, width, height);
 
       const imageData = scaledCtx.getImageData(0, 0, width, height);
-      sampledPixels.set(imageData.data, offset);
-      offset += imageData.data.length;
-    }
+      const { data } = imageData;
 
-    globalPalette = quantizeGifPalette(sampledPixels, paletteSize);
-  }
+      const palette = globalPalette || quantizeGifPalette(data, paletteSize);
+      const index = indexGifPixels(data, palette);
+      const safeIndex = index.slice();
 
-  // Encode each frame using the global palette
-  for (let i = 0; i < frames.length; i++) {
-    const frame = frames[i];
-    const frameDelay = frameDelays?.[i] ? frameDelays[i] : defaultDelay;
+      // gifenc expects delay in milliseconds (it converts to centiseconds internally)
+      // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
+      const delayMs = Math.max(20, frameDelay);
 
-    scaledCtx.clearRect(0, 0, width, height);
+      const frameDisposal = frameDisposals?.[i] ?? disposal;
 
-    if (hasBgOverride) {
-      scaledCtx.fillStyle = opts.bgOverride;
-      scaledCtx.fillRect(0, 0, width, height);
-    }
+      if (i === 0 || i === frames.length - 1) {
+        log.debug('exportGif: frame', {
+          index: i,
+          delayMs,
+          disposal: frameDisposal,
+          source: frameDelays?.[i] ? 'perFrame' : 'default',
+        });
+      }
 
-    scaledCtx.imageSmoothingEnabled = false;
-    scaledCtx.drawImage(frame, 0, 0, width, height);
-
-    const imageData = scaledCtx.getImageData(0, 0, width, height);
-    const { data } = imageData;
-
-    const palette = globalPalette || quantizeGifPalette(data, paletteSize);
-    const index = indexGifPixels(data, palette);
-
-    // gifenc expects delay in milliseconds (it converts to centiseconds internally)
-    // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
-    const delayMs = Math.max(20, frameDelay);
-
-    const frameDisposal = frameDisposals?.[i] ?? disposal;
-
-    if (i === 0 || i === frames.length - 1) {
-      log.debug('exportGif: frame', {
-        index: i,
-        delayMs,
-        disposal: frameDisposal,
-        source: frameDelays?.[i] ? 'perFrame' : 'default',
+      gif.writeFrame(safeIndex, width, height, {
+        palette,
+        delay: delayMs,
+        dispose: frameDisposal,
+        ...(i === 0 && { repeat }),
       });
     }
 
-    gif.writeFrame(index, width, height, {
-      palette,
-      delay: delayMs,
-      dispose: frameDisposal,
-      ...(i === 0 && { repeat }),
-    });
-  }
-
-  gif.finish();
-
-  const bytes = gif.bytes();
+    gif.finish();
+    return gif.bytes();
+  });
 
   const totalDelayMs = frames.reduce(
     (sum, _, i) => sum + (frameDelays?.[i] ? frameDelays[i] : defaultDelay),

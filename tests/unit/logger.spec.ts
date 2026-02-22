@@ -61,6 +61,8 @@ vi.mock('loglevel', () => ({ default: loglevelMock }));
 
 describe('logger', () => {
   const originalAnqrLogLevel = process.env.ANQR_LOG_LEVEL;
+  const originalCaptureConsole = process.env.ANQR_LOG_CAPTURE_CONSOLE;
+  const originalCaptureMinLevel = process.env.ANQR_LOG_CAPTURE_MIN_LEVEL;
 
   beforeEach(() => {
     vi.resetModules();
@@ -70,6 +72,8 @@ describe('logger', () => {
     document.body.innerHTML = '';
     vi.stubGlobal('structuredClone', globalThis.structuredClone);
     delete process.env.ANQR_LOG_LEVEL;
+    process.env.ANQR_LOG_CAPTURE_CONSOLE = '1';
+    process.env.ANQR_LOG_CAPTURE_MIN_LEVEL = 'trace';
   });
 
   afterEach(() => {
@@ -77,6 +81,16 @@ describe('logger', () => {
       delete process.env.ANQR_LOG_LEVEL;
     } else {
       process.env.ANQR_LOG_LEVEL = originalAnqrLogLevel;
+    }
+    if (originalCaptureConsole === undefined) {
+      delete process.env.ANQR_LOG_CAPTURE_CONSOLE;
+    } else {
+      process.env.ANQR_LOG_CAPTURE_CONSOLE = originalCaptureConsole;
+    }
+    if (originalCaptureMinLevel === undefined) {
+      delete process.env.ANQR_LOG_CAPTURE_MIN_LEVEL;
+    } else {
+      process.env.ANQR_LOG_CAPTURE_MIN_LEVEL = originalCaptureMinLevel;
     }
   });
 
