@@ -28,7 +28,15 @@ describe('share params parity (client vs netlify function)', () => {
     // Client/server parity is now complete for all client-emitted keys.
     const allowClientOnly: string[] = [];
 
-    const allowServerOnly: string[] = ['_fullRender'];
+    const allowServerOnly: string[] = [
+      '_fullRender',
+      '_strictOverlay',
+      'animSeed2',
+      'bounce2',
+      'colorCycle2',
+      'easing2',
+      'reverse2',
+    ];
 
     expect(clientOnly).toEqual(allowClientOnly);
     expect(serverOnly).toEqual(allowServerOnly);

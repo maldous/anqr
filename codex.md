@@ -1,6 +1,29 @@
 # Codex Working Log
 
-Last updated: 2026-02-21 10:52:00 UTC
+Last updated: 2026-02-22 11:49:00 UTC
+
+## Latest Update (2026-02-22, Blob Cache Config + Report Tracking Cleanup + Gallery Verification Contract)
+
+- Netlify blob-cache handling in `netlify/functions/qr.ts` was hardened:
+  - Added explicit credential path (`SITE_ID`/`NETLIFY_SITE_ID` + `NETLIFY_API_TOKEN`/`NETLIFY_AUTH_TOKEN`) so cache operations can run when env vars are present.
+  - Added repo default `SITE_ID` fallback (`7def13e4-9486-4e9a-9ad3-87abff74ef1d`) when token exists.
+  - Added Vitest/runtime guard (`IS_TEST_RUNTIME`) to disable blob-store access in unit tests to keep deterministic fetch behavior.
+  - Added missing-env detection and one-time cache-disable path to avoid repeated noisy blob errors.
+- Fixed current quality-gate regressions found from `make test`:
+  - `src/modules/qr-generator/drawing-frames.ts`: safe fallback when `ctx.measureText` is unavailable in mocks.
+  - `tests/unit/qr-generator-dithered-scan-gate.spec.ts`: blend-preservation coverage assertion now explicitly validates `blendPreservationMode: 'dither'`.
+  - `tests/unit/required-tranche-2-visual.spec.ts` and `tests/unit/required-tranche-8-select-options.spec.ts`: synchronized explicit ID inventories with `tests/ids.txt`.
+  - `tests/unit/share-param-parity.spec.ts`: updated allowed server-only query key list (`_strictOverlay`, `animSeed2`, `easing2`, `colorCycle2`, `reverse2`, `bounce2`).
+- Updated gallery verification test contract for current web behavior:
+  - `tests/basic/gallery-verification.spec.ts` now treats gallery links as web-relative in-app navigation (`/?...`) instead of requiring canonical absolute host links.
+  - Updated URL parsing in the test to use `new URL(href, page.url())` for relative links.
+  - Updated target/rel assertion to reflect current in-app navigation (no forced `_blank`).
+- Repo hygiene cleanup for accidental generated artifacts:
+  - Untracked all generated `reports/*` artifacts except committed baselines:
+    - kept: `reports/.gitkeep`, `reports/i18n-regression-baseline.json`, `reports/param-parity.json`
+    - removed from tracking: bundle/coverage/gallery-shards/payload/testid/indexnow/sentry/third-party report outputs
+  - Untracked generated `test-report.txt` and added it to `.gitignore`.
+  - `.netlify/` remains ignored and staged for removal from tracking (generated build artifacts must not be committed).
 
 ## Latest Update (2026-02-21, Blend Preservations Mode + Gallery Wiring)
 

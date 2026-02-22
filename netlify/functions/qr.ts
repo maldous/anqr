@@ -402,12 +402,58 @@ const QR_CACHE_STORE = 'qr-cache';
 const NON_CACHE_PARAMS = new Set(['_cb', 'lang', '_fullRender', '_strictOverlay']);
 const SENTINEL_PREFIX = 'rendering:';
 const SENTINEL_TTL_MS = 600_000;
+// Primary Netlify site for this repo (used when SITE_ID is not exported locally).
+const DEFAULT_NETLIFY_SITE_ID = '7def13e4-9486-4e9a-9ad3-87abff74ef1d';
+const IS_TEST_RUNTIME = process.env.VITEST === 'true' || process.env.NODE_ENV === 'test';
+let blobStoreDisabled = false;
+let blobStoreDisabledLogged = false;
 
 function computeCacheKey(params: URLSearchParams): string {
   const entries = [...params.entries()]
     .filter(([k]) => !NON_CACHE_PARAMS.has(k))
     .sort(([a], [b]) => a.localeCompare(b));
   return createHash('md5').update(new URLSearchParams(entries).toString()).digest('hex');
+}
+
+function isMissingBlobsEnvironmentError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const maybeErr = error as { name?: string; message?: string };
+  return (
+    maybeErr.name === 'MissingBlobsEnvironmentError' ||
+    String(maybeErr.message || '').includes(
+      'The environment has not been configured to use Netlify Blobs'
+    )
+  );
+}
+
+function markBlobStoreDisabled(reason: string): void {
+  blobStoreDisabled = true;
+  if (blobStoreDisabledLogged) return;
+  blobStoreDisabledLogged = true;
+  qrFnLog('[BLOB] cache disabled', { reason });
+}
+
+function getBlobStoreOrNull() {
+  if (IS_TEST_RUNTIME) return null;
+  if (blobStoreDisabled) return null;
+  try {
+    const token = process.env.NETLIFY_API_TOKEN || process.env.NETLIFY_AUTH_TOKEN;
+    const siteID =
+      process.env.SITE_ID ||
+      process.env.NETLIFY_SITE_ID ||
+      (token ? DEFAULT_NETLIFY_SITE_ID : undefined);
+    if (siteID && token) {
+      // Explicit credentials avoid expired context tokens in some runtimes.
+      return getStore({ name: QR_CACHE_STORE, siteID, token });
+    }
+    return getStore(QR_CACHE_STORE);
+  } catch (error) {
+    if (isMissingBlobsEnvironmentError(error)) {
+      markBlobStoreDisabled('missing_blob_env');
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -2801,27 +2847,33 @@ async function handler(request: Request) {
     qrFnLog('[BLOB] cache lookup', { cacheKey: cacheKey.slice(0, 80), skipCache });
     if (!skipCache) {
       try {
-        const store = getStore(QR_CACHE_STORE);
-        const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
-        if (cached?.data) {
-          const cachedMeta = cached.metadata as Record<string, string> | undefined;
-          qrFnLog('[BLOB] cache HIT', {
-            size: (cached.data as ArrayBuffer).byteLength,
-            contentType: cachedMeta?.contentType,
-          });
-          return new Response(new Uint8Array(cached.data as ArrayBuffer), {
-            status: 200,
-            headers: {
-              'Content-Type': cachedMeta?.contentType || 'image/png',
-              'Cache-Control': 'public, max-age=31536000, immutable',
-              'X-ANQR-Cache': 'hit',
-              ...CORS_HEADERS,
-            },
-          });
+        const store = getBlobStoreOrNull();
+        if (store) {
+          const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
+          if (cached?.data) {
+            const cachedMeta = cached.metadata as Record<string, string> | undefined;
+            qrFnLog('[BLOB] cache HIT', {
+              size: (cached.data as ArrayBuffer).byteLength,
+              contentType: cachedMeta?.contentType,
+            });
+            return new Response(new Uint8Array(cached.data as ArrayBuffer), {
+              status: 200,
+              headers: {
+                'Content-Type': cachedMeta?.contentType || 'image/png',
+                'Cache-Control': 'public, max-age=31536000, immutable',
+                'X-ANQR-Cache': 'hit',
+                ...CORS_HEADERS,
+              },
+            });
+          }
+          qrFnLog('[BLOB] cache MISS');
         }
-        qrFnLog('[BLOB] cache MISS');
       } catch (cacheReadErr) {
-        console.error('[BLOB] cache read ERROR:', cacheReadErr);
+        if (isMissingBlobsEnvironmentError(cacheReadErr)) {
+          markBlobStoreDisabled('missing_blob_env');
+        } else {
+          console.error('[BLOB] cache read ERROR:', cacheReadErr);
+        }
       }
     }
 
@@ -3664,14 +3716,20 @@ async function handler(request: Request) {
           size: outputBuffer.byteLength,
           contentType,
         });
-        const store = getStore(QR_CACHE_STORE);
-        await store.set(cacheKey, new Blob([outputBuffer]), {
-          metadata: { contentType, generatedAt: new Date().toISOString() },
-        });
-        await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});
-        qrFnLog('[BLOB] cache write OK');
+        const store = getBlobStoreOrNull();
+        if (store) {
+          await store.set(cacheKey, new Blob([outputBuffer]), {
+            metadata: { contentType, generatedAt: new Date().toISOString() },
+          });
+          await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});
+          qrFnLog('[BLOB] cache write OK');
+        }
       } catch (cacheWriteErr) {
-        console.error('[BLOB] cache write FAILED:', cacheWriteErr);
+        if (isMissingBlobsEnvironmentError(cacheWriteErr)) {
+          markBlobStoreDisabled('missing_blob_env');
+        } else {
+          console.error('[BLOB] cache write FAILED:', cacheWriteErr);
+        }
       }
     }
 
@@ -3679,18 +3737,28 @@ async function handler(request: Request) {
     if (isDegraded && !skipCache) {
       let shouldTrigger = true;
       try {
-        const store = getStore(QR_CACHE_STORE);
-        const sentinelKey = SENTINEL_PREFIX + cacheKey;
-        const existing = await store.get(sentinelKey, { type: 'text' });
-        if (existing && Date.now() - Number(existing) < SENTINEL_TTL_MS) {
-          shouldTrigger = false;
-          qrFnLog('[BLOB] sentinel: already rendering (age:', Date.now() - Number(existing), 'ms)');
-        } else {
-          await store.set(sentinelKey, String(Date.now()));
-          qrFnLog('[BLOB] sentinel: set new sentinel');
+        const store = getBlobStoreOrNull();
+        if (store) {
+          const sentinelKey = SENTINEL_PREFIX + cacheKey;
+          const existing = await store.get(sentinelKey, { type: 'text' });
+          if (existing && Date.now() - Number(existing) < SENTINEL_TTL_MS) {
+            shouldTrigger = false;
+            qrFnLog(
+              '[BLOB] sentinel: already rendering (age:',
+              Date.now() - Number(existing),
+              'ms)'
+            );
+          } else {
+            await store.set(sentinelKey, String(Date.now()));
+            qrFnLog('[BLOB] sentinel: set new sentinel');
+          }
         }
       } catch (sentinelErr) {
-        console.error('[BLOB] sentinel ERROR:', sentinelErr);
+        if (isMissingBlobsEnvironmentError(sentinelErr)) {
+          markBlobStoreDisabled('missing_blob_env');
+        } else {
+          console.error('[BLOB] sentinel ERROR:', sentinelErr);
+        }
       }
       if (shouldTrigger) {
         try {

@@ -77,8 +77,13 @@ tests/.storage-state.json
 # Google
 play-store-key.json
 
-reports/gallery-artifacts/
+# Reports: generated outputs should stay local except committed baselines.
+reports/*
+!reports/.gitkeep
+!reports/i18n-regression-baseline.json
+!reports/param-parity.json
 
 .gallery-server.pid
 anqr.zip
 all.txt
+test-report.txt

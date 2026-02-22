@@ -95,9 +95,10 @@ export function drawFrame(
   // Use a clean sans-serif stack and size to fit the available frame width.
   let fontSize = Math.max(14, Math.round(frameHeight * 0.72));
   const minFontSize = Math.max(11, Math.round(frameHeight * 0.5));
+  const canMeasureText = typeof ctx.measureText === 'function';
   while (fontSize > minFontSize) {
     ctx.font = `600 ${fontSize}px "Helvetica Neue", "Segoe UI", Arial, sans-serif`;
-    if (ctx.measureText(frameText).width <= maxTextWidth) break;
+    if (!canMeasureText || ctx.measureText(frameText).width <= maxTextWidth) break;
     fontSize -= 1;
   }
   ctx.fillText(frameText, size / 2, textY);
