@@ -282,6 +282,182 @@ export function AnimationSection() {
             </Select>
           </div>
 
+          {/* Animation Target */}
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('animation.target')}</HighlightedLabel>
+            </Label>
+            <Select
+              value={animation.target}
+              onValueChange={(v) =>
+                useQRStore.setState((s) => ({
+                  animation: { ...s.animation, target: v as typeof animation.target },
+                }))
+              }
+            >
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'animation-target-trigger',
+                  'animation-target-trigger'
+                )}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                data-testid={DynamicTestId.resolve(
+                  'animation-target-content',
+                  'animation-target-content'
+                )}
+              >
+                <SelectItem value="result">{t('animation.targetResult')}</SelectItem>
+                <SelectItem value="modules">{t('animation.targetModules')}</SelectItem>
+                <SelectItem value="both">{t('animation.targetBoth')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {animation.pattern === 'wave' && (
+            <div className="space-y-2">
+              <Label>
+                <HighlightedLabel>{t('animation.waveAxis')}</HighlightedLabel>
+              </Label>
+              <Select
+                value={animation.waveAxis}
+                onValueChange={(v) =>
+                  useQRStore.setState((s) => ({
+                    animation: { ...s.animation, waveAxis: v as typeof animation.waveAxis },
+                  }))
+                }
+              >
+                <SelectTrigger
+                  data-testid={DynamicTestId.resolve(
+                    'animation-wave-axis-trigger',
+                    'animation-wave-axis-trigger'
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent
+                  data-testid={DynamicTestId.resolve(
+                    'animation-wave-axis-content',
+                    'animation-wave-axis-content'
+                  )}
+                >
+                  <SelectItem value="x">{t('animation.waveAxisX')}</SelectItem>
+                  <SelectItem value="y">{t('animation.waveAxisY')}</SelectItem>
+                  <SelectItem value="xy">{t('animation.waveAxisXY')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Secondary Animation Pattern */}
+          <div className="space-y-2">
+            <Label>
+              <HighlightedLabel>{t('animation.secondaryPattern')}</HighlightedLabel>
+            </Label>
+            <Select
+              value={animation.pattern2}
+              onValueChange={(v) =>
+                useQRStore.setState((s) => ({
+                  animation: { ...s.animation, pattern2: v as typeof animation.pattern2 },
+                }))
+              }
+            >
+              <SelectTrigger
+                data-testid={DynamicTestId.resolve(
+                  'animation-pattern-2-trigger',
+                  'animation-pattern-2-trigger'
+                )}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                data-testid={DynamicTestId.resolve(
+                  'animation-pattern-2-content',
+                  'animation-pattern-2-content'
+                )}
+              >
+                <SelectItem value="none">{t('animation.none')}</SelectItem>
+                <SelectItem value="pulse">{t('animation.pulse')}</SelectItem>
+                <SelectItem value="wave">{t('animation.wave')}</SelectItem>
+                <SelectItem value="scanline">{t('animation.scanline')}</SelectItem>
+                <SelectItem value="shimmer">{t('animation.shimmer')}</SelectItem>
+                <SelectItem value="drift">{t('animation.drift')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {animation.pattern2 !== 'none' && (
+            <div className="space-y-2">
+              <Label>
+                <HighlightedLabel>{t('animation.secondaryTarget')}</HighlightedLabel>
+              </Label>
+              <Select
+                value={animation.target2}
+                onValueChange={(v) =>
+                  useQRStore.setState((s) => ({
+                    animation: { ...s.animation, target2: v as typeof animation.target2 },
+                  }))
+                }
+              >
+                <SelectTrigger
+                  data-testid={DynamicTestId.resolve(
+                    'animation-target-2-trigger',
+                    'animation-target-2-trigger'
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent
+                  data-testid={DynamicTestId.resolve(
+                    'animation-target-2-content',
+                    'animation-target-2-content'
+                  )}
+                >
+                  <SelectItem value="result">{t('animation.targetResult')}</SelectItem>
+                  <SelectItem value="modules">{t('animation.targetModules')}</SelectItem>
+                  <SelectItem value="both">{t('animation.targetBoth')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {animation.pattern2 === 'wave' && (
+            <div className="space-y-2">
+              <Label>
+                <HighlightedLabel>{t('animation.secondaryWaveAxis')}</HighlightedLabel>
+              </Label>
+              <Select
+                value={animation.waveAxis2}
+                onValueChange={(v) =>
+                  useQRStore.setState((s) => ({
+                    animation: { ...s.animation, waveAxis2: v as typeof animation.waveAxis2 },
+                  }))
+                }
+              >
+                <SelectTrigger
+                  data-testid={DynamicTestId.resolve(
+                    'animation-wave-axis-2-trigger',
+                    'animation-wave-axis-2-trigger'
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent
+                  data-testid={DynamicTestId.resolve(
+                    'animation-wave-axis-2-content',
+                    'animation-wave-axis-2-content'
+                  )}
+                >
+                  <SelectItem value="x">{t('animation.waveAxisX')}</SelectItem>
+                  <SelectItem value="y">{t('animation.waveAxisY')}</SelectItem>
+                  <SelectItem value="xy">{t('animation.waveAxisXY')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Module Jitter */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">

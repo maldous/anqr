@@ -25,6 +25,11 @@ export interface AnimationOptions {
   colorCycle: boolean;
   temporalDither: 'off' | 'blue_noise' | 'flicker_safe';
   seed: number;
+  target: 'result' | 'modules' | 'both';
+  waveAxis: 'x' | 'y' | 'xy';
+  pattern2?: AnimationPattern;
+  target2?: 'result' | 'modules' | 'both';
+  waveAxis2?: 'x' | 'y' | 'xy';
 }
 
 export type AnimationPattern = 'none' | 'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift';

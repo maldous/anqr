@@ -1,13 +1,15 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { describe, expect, it, vi } from 'vitest';
 import { decodeQR } from '../../src/modules/qr-decoder';
 import { buildUrlParams } from '../../src/modules/share-links/url-params';
 
 vi.mock('@sentry/node', () => ({ init: vi.fn(), captureException: vi.fn() }));
 
-import handler from '../../netlify/functions/qr';
-import { __test } from '../../netlify/functions/qr';
+import handler, { __test } from '../../netlify/functions/qr';
 
 async function bufferToImageData(buffer: Buffer) {
   const img = await loadImage(buffer);
@@ -33,16 +35,28 @@ function makeOverlayPngBuffer(): Buffer {
   return canvas.toBuffer('image/png');
 }
 
-function makeAnimatedGifBuffer(): Buffer {
-  const a = createCanvas(24, 24);
-  const b = createCanvas(24, 24);
-  const ac = a.getContext('2d');
-  const bc = b.getContext('2d');
-  ac.fillStyle = '#000000';
-  ac.fillRect(0, 0, 24, 24);
-  bc.fillStyle = '#ffffff';
-  bc.fillRect(0, 0, 24, 24);
-  return __test.encodeAnimatedGif([a, b], 80, 64, 2);
+function makeAnimatedGifBuffer(frameCount = 2): Buffer {
+  const frames: ReturnType<typeof createCanvas>[] = [];
+  for (let i = 0; i < frameCount; i++) {
+    const frame = createCanvas(24, 24);
+    const ctx = frame.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 24, 24);
+    ctx.fillStyle = '#000000';
+    // Deterministic moving bar pattern to guarantee per-frame variation.
+    const barX = (i * 3) % 20;
+    ctx.fillRect(barX, 0, 4, 24);
+    frames.push(frame);
+  }
+  return __test.encodeAnimatedGif(frames, 80, 64, 2);
+}
+
+function frameCanvasHash(canvas: ReturnType<typeof createCanvas>): string {
+  const ctx = canvas.getContext('2d');
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  return createHash('sha1')
+    .update(Buffer.from(data.buffer, data.byteOffset, data.byteLength))
+    .digest('hex');
 }
 
 describe('netlify qr function', () => {
@@ -374,6 +388,55 @@ describe('netlify qr function', () => {
       expect((await res.arrayBuffer()).byteLength).toBeGreaterThan(100);
     } finally {
       fetchSpy.mockRestore();
+    }
+  });
+
+  it('applies animation effects across all frames for animated overlays', async () => {
+    const payload = 'https://anqr.link/anim-overlay-effects';
+    const overlayUrl = pathToFileURL(path.resolve('public/dance.gif')).href;
+    const prevNetlifyDev = process.env.NETLIFY_DEV;
+    const prevLocalOverlayRoot = process.env.ANQR_LOCAL_OVERLAY_ROOT;
+    process.env.NETLIFY_DEV = '1';
+    process.env.ANQR_LOCAL_OVERLAY_ROOT = path.resolve('public');
+
+    try {
+      const baseReq =
+        `https://anqr.link/api/qr?data=${encodeURIComponent(payload)}` +
+        `&img=${encodeURIComponent(overlayUrl)}&mode=blend&format=gif&gifMaxFps=30&_fullRender=1`;
+      const fxReq = `${baseReq}` + '&animPattern=wave&easing=ease_in_out&interp=morph&colorCycle=1';
+
+      const baseRes = await handler(new Request(baseReq));
+      const fxRes = await handler(new Request(fxReq));
+
+      expect(baseRes.status).toBe(200);
+      expect(fxRes.status).toBe(200);
+      expect(baseRes.headers.get('Content-Type')).toBe('image/gif');
+      expect(fxRes.headers.get('Content-Type')).toBe('image/gif');
+
+      const baseFrames = __test.parseGifFramesServer(await baseRes.arrayBuffer());
+      const fxFrames = __test.parseGifFramesServer(await fxRes.arrayBuffer());
+
+      expect(baseFrames.length).toBeGreaterThan(2);
+      expect(fxFrames.length).toBe(baseFrames.length);
+
+      const baseHashes = baseFrames.map((f) => frameCanvasHash(f.canvas));
+      const fxHashes = fxFrames.map((f) => frameCanvasHash(f.canvas));
+
+      expect(new Set(baseHashes).size).toBeGreaterThan(1);
+      expect(new Set(fxHashes).size).toBeGreaterThan(1);
+
+      const differingFrameCount = fxHashes.reduce(
+        (count, hash, index) => count + (hash !== baseHashes[index] ? 1 : 0),
+        0
+      );
+      // Allow frame 0 to occasionally match (progress=0), but all remaining
+      // frames should carry effect changes.
+      expect(differingFrameCount).toBeGreaterThanOrEqual(fxHashes.length - 1);
+    } finally {
+      if (prevNetlifyDev === undefined) delete process.env.NETLIFY_DEV;
+      else process.env.NETLIFY_DEV = prevNetlifyDev;
+      if (prevLocalOverlayRoot === undefined) delete process.env.ANQR_LOCAL_OVERLAY_ROOT;
+      else process.env.ANQR_LOCAL_OVERLAY_ROOT = prevLocalOverlayRoot;
     }
   });
 

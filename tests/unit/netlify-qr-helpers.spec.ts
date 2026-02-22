@@ -291,7 +291,8 @@ describe('netlify qr helpers', () => {
       }) as Promise<Response>;
     }) as typeof fetch);
     const promise = __test.fetchImageWithBuffer('https://anqr.link/test.png');
-    await vi.advanceTimersByTimeAsync(11_000);
+    // Default overlay fetch timeout is 60s (overridable by env).
+    await vi.advanceTimersByTimeAsync(61_000);
     await expect(promise).resolves.toBeNull();
     fetchSpy.mockRestore();
     vi.useRealTimers();

@@ -10,15 +10,20 @@
  * Environment variables:
  *   GALLERY_API_URL        API base URL (default: https://anqr.link/api/qr)
  *   GALLERY_ASSET_URL      Asset base URL for overlay images (default: https://anqr.link)
- *   GALLERY_CONCURRENCY    Parallel request count (default: 6)
+ *   GALLERY_CONCURRENCY    Parallel request count (default: 2)
+ *   GALLERY_SCENARIO_TIMEOUT_MS  Max per-scenario remote wait budget (default: 900000)
+ *   GALLERY_FETCH_TIMEOUT_MS     Per-request fetch timeout cap (default: 120000)
+ *   GALLERY_SKIP_CACHE           Set to 1 to bypass Netlify Blob cache reads/writes
  *   GALLERY_CATEGORY       Filter by category: nooverlay/overlay/artwork (default: all)
  *   GALLERY_IDS            Comma-separated config IDs to run (default: all)
  */
 
 import fs from 'node:fs/promises';
+import https from 'node:https';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { decodeGif } from '../src/modules/animation/index.ts';
 import { decodeQR } from '../src/modules/qr-decoder/index.ts';
 import {
   generateAllScenarios,
@@ -34,18 +39,33 @@ const OUTPUT_DIR = path.join(ARTIFACTS_DIR, 'remote');
 
 const API_BASE = process.env.GALLERY_API_URL || 'https://anqr.link/api/qr';
 const ASSET_BASE = process.env.GALLERY_ASSET_URL || 'https://anqr.link';
-const CONCURRENCY = Math.max(1, Number.parseInt(process.env.GALLERY_CONCURRENCY || '6', 10));
-const FETCH_TIMEOUT_MS = 120_000;
+const CONCURRENCY = Math.max(1, Number.parseInt(process.env.GALLERY_CONCURRENCY || '2', 10));
+const SCENARIO_TIMEOUT_MS = Math.max(
+  30_000,
+  Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '900000', 10),
+);
+const FETCH_TIMEOUT_MS = Math.max(
+  30_000,
+  Math.min(
+    SCENARIO_TIMEOUT_MS,
+    Number.parseInt(process.env.GALLERY_FETCH_TIMEOUT_MS || '120000', 10),
+  ),
+);
+const SKIP_CACHE = process.env.GALLERY_SKIP_CACHE === '1';
+const ARTIFACT_EXTS = ['png', 'gif', 'webp', 'jpg', 'jpeg', 'svg'];
+const RESOLVE_FALLBACK_IPS = String(process.env.GALLERY_RESOLVE_FALLBACK_IPS || '')
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean);
 const MAX_RETRIES = 2;
 const POLL_INTERVAL_MS = 10_000;
-const MAX_POLLS = 90;
-const IS_LOCAL = API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1');
+const MAX_POLLS = Math.max(1, Math.ceil(SCENARIO_TIMEOUT_MS / POLL_INTERVAL_MS));
 
 // ============================================
 // Scan verification
 // ============================================
 
-async function verifyImage(buffer, expectedPrefix) {
+async function verifyImage(buffer, expectedPrefix, expectAnimated = false) {
   try {
     const img = await loadImage(buffer);
     const canvas = createCanvas(img.width, img.height);
@@ -58,6 +78,24 @@ async function verifyImage(buffer, expectedPrefix) {
     }
     if (!result.data.startsWith(expectedPrefix)) {
       return { pass: false, reason: 'CONTENT_MISMATCH', decoded: result.data };
+    }
+    if (expectAnimated) {
+      try {
+        const arrayBuffer = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength,
+        );
+        const decoded = decodeGif(arrayBuffer);
+        if (!decoded.frames || decoded.frames.length < 2) {
+          return { pass: false, reason: 'ANIMATION_MISSING' };
+        }
+      } catch (animErr) {
+        return {
+          pass: false,
+          reason: 'ANIMATION_PARSE_ERROR',
+          message: animErr instanceof Error ? animErr.message : String(animErr),
+        };
+      }
     }
     return { pass: true, decoded: result.data };
   } catch (err) {
@@ -81,12 +119,38 @@ function buildApiUrl(config) {
     }
   }
 
-  // Local dev: _fullRender=1 for direct rendering (blob cache unavailable)
-  if (IS_LOCAL && (config.params.mode || config.params.img)) {
-    params.set('_fullRender', '1');
-  }
+  // Force deterministic full render for parity comparisons.
+  params.set('_fullRender', '1');
+  // Fail instead of silently degrading when overlay fetch/decode fails.
+  params.set('_strictOverlay', '1');
 
   return `${API_BASE}?${params.toString()}`;
+}
+
+function extFromContentType(contentType, fallback = 'png') {
+  const type = String(contentType || '').toLowerCase();
+  if (type.includes('image/gif')) return 'gif';
+  if (type.includes('image/webp')) return 'webp';
+  if (type.includes('image/jpeg')) return 'jpg';
+  if (type.includes('image/svg+xml')) return 'svg';
+  if (type.includes('image/png')) return 'png';
+  return fallback;
+}
+
+async function removeScenarioArtifacts(outputDir, config) {
+  const baseName = scenarioFilename(config).replace(/\.[^.]+$/, '');
+  await Promise.all(
+    ARTIFACT_EXTS.map(async (ext) => {
+      const artifactPath = path.join(outputDir, `${baseName}.${ext}`);
+      try {
+        await fs.unlink(artifactPath);
+      } catch (err) {
+        if (err?.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+    }),
+  );
 }
 
 // ============================================
@@ -94,13 +158,40 @@ function buildApiUrl(config) {
 // ============================================
 
 async function fetchOnce(url) {
+  const requestHeaders = {
+    'User-Agent': 'ANQR-Gallery-Remote/1.0',
+    ...(SKIP_CACHE ? { 'X-ANQR-Skip-Cache': '1' } : {}),
+  };
+
+  let response;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  const response = await fetch(url, {
-    signal: controller.signal,
-    headers: { 'User-Agent': 'ANQR-Gallery-Remote/1.0' },
-  });
-  clearTimeout(timeoutId);
+  try {
+    response = await fetch(url, {
+      signal: controller.signal,
+      headers: requestHeaders,
+    });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    const isDnsFailure =
+      err?.code === 'ENOTFOUND' || err?.cause?.code === 'ENOTFOUND';
+    if (!isDnsFailure || RESOLVE_FALLBACK_IPS.length === 0) {
+      throw err;
+    }
+
+    const parsed = new URL(url);
+    let lastResolveErr = err;
+    for (const ip of RESOLVE_FALLBACK_IPS) {
+      try {
+        return await fetchOnceWithResolvedIp(parsed, requestHeaders, ip);
+      } catch (resolveErr) {
+        lastResolveErr = resolveErr;
+      }
+    }
+    throw lastResolveErr;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!response.ok) {
     const body = await response.text().catch(() => '');
@@ -109,7 +200,56 @@ async function fetchOnce(url) {
 
   const generating = response.headers.get('X-ANQR-Status') === 'generating';
   const buffer = Buffer.from(await response.arrayBuffer());
-  return { buffer, generating };
+  const contentType = response.headers.get('Content-Type') || 'image/png';
+  return { buffer, generating, contentType };
+}
+
+function fetchOnceWithResolvedIp(parsedUrl, headers, ipAddress) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        protocol: parsedUrl.protocol,
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port ? Number(parsedUrl.port) : 443,
+        path: `${parsedUrl.pathname}${parsedUrl.search}`,
+        method: 'GET',
+        headers,
+        servername: parsedUrl.hostname,
+        lookup: (_hostname, optsOrCb, maybeCb) => {
+          const opts = typeof optsOrCb === 'object' && optsOrCb ? optsOrCb : {};
+          const cb = typeof optsOrCb === 'function' ? optsOrCb : maybeCb;
+          if (opts.all) {
+            cb(null, [{ address: ipAddress, family: 4 }]);
+            return;
+          }
+          cb(null, ipAddress, 4);
+        },
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          const buffer = Buffer.concat(chunks);
+          const status = res.statusCode ?? 0;
+          if (status < 200 || status >= 300) {
+            const body = buffer.toString('utf8', 0, Math.min(buffer.length, 200));
+            reject(new Error(`HTTP ${status}: ${body}`));
+            return;
+          }
+
+          const contentType = String(res.headers['content-type'] || 'image/png');
+          const generating = String(res.headers['x-anqr-status'] || '') === 'generating';
+          resolve({ buffer, generating, contentType });
+        });
+      },
+    );
+
+    req.setTimeout(FETCH_TIMEOUT_MS, () => {
+      req.destroy(new Error(`FETCH_TIMEOUT_${FETCH_TIMEOUT_MS}ms`));
+    });
+    req.on('error', reject);
+    req.end();
+  });
 }
 
 async function fetchWithRetry(url, retries = MAX_RETRIES) {
@@ -119,9 +259,16 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
       result = await fetchOnce(url);
       break;
     } catch (err) {
+      const detail = [
+        err?.message,
+        err?.cause?.code,
+        err?.cause?.message,
+      ]
+        .filter(Boolean)
+        .join(' | ');
       if (attempt < retries) {
         const delay = 2000 * (attempt + 1);
-        console.warn(`  ↻ Retry ${attempt + 1}/${retries} after ${delay}ms: ${err.message}`);
+        console.warn(`  ↻ Retry ${attempt + 1}/${retries} after ${delay}ms: ${detail || 'fetch failed'}`);
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }
@@ -139,7 +286,7 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
           if (pollResult.buffer.length < 100) {
             throw new Error(`Response too small: ${pollResult.buffer.length} bytes`);
           }
-          return pollResult.buffer;
+          return pollResult;
         }
         console.warn(`  ⏳ Still generating... (poll ${poll}/${MAX_POLLS})`);
       } catch (err) {
@@ -147,13 +294,13 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
       }
     }
     console.warn(`  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`);
-    return result.buffer;
+    return result;
   }
 
   if (result.buffer.length < 100) {
     throw new Error(`Response too small: ${result.buffer.length} bytes`);
   }
-  return result.buffer;
+  return result;
 }
 
 // ============================================
@@ -186,6 +333,7 @@ async function main() {
   console.log(`API:         ${API_BASE}`);
   console.log(`Assets:      ${ASSET_BASE}`);
   console.log(`Concurrency: ${CONCURRENCY}\n`);
+  console.log(`Cache mode:  ${SKIP_CACHE ? 'skip-cache' : 'allow-cache'}\n`);
 
   let configs = generateAllScenarios();
 
@@ -213,20 +361,20 @@ async function main() {
 
   const tasks = configs.map((config) => async () => {
     const start = Date.now();
-    const filename = scenarioFilename(config);
-    const artifactPath = path.join(OUTPUT_DIR, filename);
+    const fallbackName = scenarioFilename(config).replace(/\.[^.]+$/, '');
     const expectedPayload = config.params.data;
 
     try {
+      await removeScenarioArtifacts(OUTPUT_DIR, config);
       const url = buildApiUrl(config);
-      const buffer = await fetchWithRetry(url);
+      const { buffer, contentType } = await fetchWithRetry(url);
+      const ext = extFromContentType(contentType, config.isAnimated ? 'gif' : 'png');
+      const filename = `${fallbackName}.${ext}`;
+      const artifactPath = path.join(OUTPUT_DIR, filename);
       await fs.writeFile(artifactPath, buffer);
 
       // Artwork appends a #suffix, so verify prefix only
-      const isArtwork = config.category === 'artwork';
-      const verify = isArtwork
-        ? await verifyImage(buffer, expectedPayload)
-        : await verifyImage(buffer, expectedPayload);
+      const verify = await verifyImage(buffer, expectedPayload, config.isAnimated);
 
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
@@ -248,13 +396,22 @@ async function main() {
         category: config.category,
         status: verify.pass ? 'pass' : 'fail',
         reason: verify.reason || 'OK',
+        filename,
+        contentType,
         durationMs: Date.now() - start,
       };
     } catch (err) {
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
-      console.error(`  [${completed}/${configs.length}] ✗ ${config.id}: ${err.message} [${elapsed}s]`);
-      failed.push(filename);
+      const detail = [
+        err?.message,
+        err?.cause?.code,
+        err?.cause?.message,
+      ]
+        .filter(Boolean)
+        .join(' | ');
+      console.error(`  [${completed}/${configs.length}] ✗ ${config.id}: ${detail || 'API_ERROR'} [${elapsed}s]`);
+      failed.push(`${fallbackName}.${config.isAnimated ? 'gif' : 'png'}`);
       return {
         id: config.id,
         category: config.category,

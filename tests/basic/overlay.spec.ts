@@ -794,6 +794,9 @@ test.describe('Overlay Section - Basic Tier', () => {
       await expect(page.locator('[data-testid="overlay-blend-preservations-switch"]')).toHaveCount(
         0
       );
+      await expect(
+        page.locator('[data-testid="overlay-blend-preservation-mode-select"]')
+      ).toHaveCount(0);
     });
   });
 

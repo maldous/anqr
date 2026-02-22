@@ -1,6 +1,119 @@
 # Codex Working Log
 
-Last updated: 2026-02-20 13:48:00 UTC
+Last updated: 2026-02-21 10:52:00 UTC
+
+## Latest Update (2026-02-21, Blend Preservations Mode + Gallery Wiring)
+
+- Implemented explicit blend-preservation style control end-to-end:
+  - new setting: `blendPreservationMode: 'overlay' | 'dither'`
+  - default is `overlay` to preserve current behavior unless explicitly changed.
+- UI/UX updates (`src/components/sections/OverlaySection.tsx`):
+  - converted preservation labels to i18n-backed strings.
+  - added `Blend Preservation Style` selector (shown when `Blend Preservations` is enabled).
+  - added test id: `overlay-blend-preservation-mode-select`.
+- i18n updated (`src/i18n/locales/en-GB.json`) with:
+  - `overlay.preservationStrength`
+  - `overlay.blendPreservations`
+  - `overlay.blendPreservationMode`
+  - `overlay.blendPreservationModeOverlay`
+  - `overlay.blendPreservationModeDither`
+- Share-link/store/browser wiring completed:
+  - state field + defaults in `src/store/qr-store.ts`.
+  - generator config propagation in `src/hooks/useQRGenerator.ts`.
+  - URL parse/build + type support in `src/modules/share-links/url-params.ts` and `src/modules/share-links/types.ts`.
+  - hydration in `src/App.tsx`.
+  - share payloads in `src/components/sections/ShareSection.tsx` and `src/components/Header.tsx`.
+- API wiring completed (`netlify/functions/qr.ts`):
+  - parses `blendPresMode` query param.
+  - passes `blendPreservationMode` into QR generator config.
+  - docs comment updated with the new API param.
+- Renderer behavior split by mode:
+  - `src/modules/qr-generator/scaled-render.ts`:
+    - `overlay` mode = full module pass-through blending for boosted functional regions.
+    - `dither` mode = blend constrained to dither rails for “dithered-in” look.
+  - `src/modules/qr-generator/render-modes.ts`:
+    - dither/extreme functional-module light rail behavior now differs between `overlay` vs `dither`.
+  - `src/modules/qr-generator/qr-generator-class.ts`:
+    - defaults/threads `blendPreservationMode` and adds it to scan-gate cache key inputs.
+- Gallery permutations updated:
+  - `scripts/lib/gallery-permutations.mjs`: added explicit `blendPresMode=overlay` vs `blendPresMode=dither` scenarios (static + animated).
+  - `src/data/gallery-scan-scenarios.ts`: added preservation scenario pair for mode comparison.
+- Test coverage added/updated:
+  - `tests/unit/overlay-preservation-mode-audit.spec.ts`: verifies `blendPreservationMode` changes functional-region output.
+  - `tests/unit/share-links-url-params-build.spec.ts`
+  - `tests/unit/share-links-url-params-full.spec.ts`
+  - `tests/unit/share-links-roundtrip.spec.ts`
+  - `tests/basic/overlay.spec.ts`: basic-tier gating assertion for the new selector.
+- Test-id governance updated:
+  - regenerated `tests/ids.txt` and `tests/required.txt`.
+  - synchronized `tests/unit/testid-inventory-explicit.spec.ts` with generated IDs.
+- Validation run summary:
+  - `npm run typecheck` passes.
+  - unit suites above pass (including long preservation audit).
+  - `npm run test:testid` passes.
+  - targeted Playwright test passes:
+    - `tests/basic/overlay.spec.ts` (grep: `preservation controls are hidden in basic tier`)
+- Note:
+  - `npm run test:required:strict` still reports existing direct-id mapping gaps for animation target/wave-axis select content IDs (pre-existing baseline issue not introduced by this change).
+
+## Latest Update (2026-02-21, Pre-Run Readiness)
+
+- Implemented animation target stacking end-to-end:
+  - API/server: `animTarget`, `animWaveAxis`, `animPattern2`, `animTarget2`, `animWaveAxis2` wired and applied in GIF render pipeline.
+  - Client/store/UI: primary + secondary pattern target controls added (including wave-axis selectors), with i18n and test IDs.
+  - Share-link plumbing: parse/build/embed/hydration updated for new animation params.
+- Fixed preview parity gaps in `src/hooks/useQRGenerator.ts`:
+  - static-overlay animation path now applies module-target effects pre-render and result-target effects post-render.
+  - removed stale `shouldGeneratePatternAnimation` path that was applying result effects to overlay input.
+  - expanded animation effect dependency triggers (`pattern2`, target/axis fields) for reliable frame regeneration.
+- Updated gallery permutation matrix for visual separation + new feature coverage:
+  - added explicit `animTarget` + `animPattern2` stacked showcases in `nooverlay`, `overlay`, and animated `artwork`.
+  - added controlled ECC/version variety with hard cap `v <= 9`.
+  - artwork ECC remains low-only (`L`/`M`) with limited version variety.
+- Updated remote gallery runner cache behavior:
+  - `scripts/generate-gallery-remote.mjs` now allows cache by default.
+  - optional bypass via `GALLERY_SKIP_CACHE=1`.
+  - this supports expected behavior: existing scenarios can return blob-cache hits; new/changed params generate new blobs.
+- Validation completed after changes:
+  - `npm run typecheck` passes.
+  - targeted unit suite passes:
+    - `tests/unit/share-links-url-params-build.spec.ts`
+    - `tests/unit/share-links-url-params-full.spec.ts`
+    - `tests/unit/share-links-roundtrip.spec.ts`
+    - `tests/unit/netlify-qr-helpers.spec.ts`
+    - `tests/unit/animation-core.spec.ts`
+  - targeted Playwright checks pass:
+    - `tests/advanced/animation.spec.ts` full file (`35 passed`)
+    - targeted new UI blocks (`Animation Target`, `Animation Secondary Pattern`) (`2 passed`)
+  - `npm run test:i18n` and `npm run test:testid` pass.
+
+## Latest Update (2026-02-21)
+
+- Fixed artwork GIF regression in API path (`netlify/functions/qr.ts`):
+  - for animated artwork overlays, QR-Art is now regenerated from each source GIF frame (`generateArtworkCanvas(overlayFrame.canvas, i)`), restoring true artwork motion.
+  - stacked animation effects remain composited after QR-Art generation, so effect layers are not baked into QR-Art matrix generation.
+  - added per-frame QR-Art fallback logging for robustness (`[ARTWORK] frame render fallback`).
+- Fixed stacked-effect no-op behavior in animated overlay/frame pipeline (`netlify/functions/qr.ts`):
+  - `reverse` and `bounce` now modify pattern progress in `applyPatternToFrameServer(...)`.
+  - `tempDither` now applies per-frame temporal noise in server GIF animation (`calculateTemporalOffsetServer`, `applyTemporalNoiseToCanvasServer`).
+  - `interp` (`crossfade`/`morph`) now interpolates overlay inputs between consecutive frames (safe path, pre-QR render), instead of being silently ignored.
+  - widened `hasOverlayAnimationEffect` detection so artwork compositing includes interpolation/temporal-dither-only effect stacks.
+- Fixed browser gallery artifact format/dimension mismatch (`scripts/generate-gallery-browser.mjs`):
+  - browser artifacts now use `scenarioFilename(config)` extension (GIF scenarios save as `.gif`).
+  - GIF scenarios are captured as multi-frame browser-canvas sequences and encoded to animated GIF (not static PNG snapshots).
+  - browser artifacts are normalized to scenario target dimensions (`w/h`) before saving, avoiding preview-scale outputs like `980x980`.
+  - verified with `nooverlay__visual-motion-1--95`: browser now outputs `nooverlay__visual-motion-1.gif` at `294x294` and decode passes.
+- Fixed GIF animation artifacting in API overlay path:
+  - hardened GIF frame composition in `parseGifFramesServer()` with deterministic canvas clearing and patch-canvas reuse.
+  - reduced over-aggressive effect blending in animated overlay effects (`0.55 -> 0.35` for non-artwork overlays).
+  - disabled rendered-frame interpolation for animated overlay source GIFs (prevents random/glitch-looking injected frames).
+- Verified targeted fixes:
+  - `artwork__art-dance-stack-shimmer-crossfade-temporal--748` now passes in targeted local render (`15.1s`, GIF `192.1 KB`).
+  - regenerated artifact `reports/gallery-artifacts/local/artwork__art-dance-stack-shimmer-crossfade-temporal.gif` shows frame-to-frame subject motion restored.
+  - frame uniqueness check confirms motion across all frames (`20/20` unique full-frame hashes and `20/20` unique center-region hashes).
+- Execution control:
+  - stopped active local/browser/remote full-gallery runs while applying fixes, per user request.
+  - pending explicit user go-ahead before starting validation runs and deploy.
 
 ## User Requests
 
@@ -58,6 +171,53 @@ Last updated: 2026-02-20 13:48:00 UTC
 13. Correct QR-Art payload semantics:
 - Base payload is `https://whitehouse.gov`
 - QR-Art appends `#<numeric suffix>` in mixed mode (do not pre-supply full `#...` payload for this flow)
+
+14. Ensure local/API artwork actually works again:
+- `artwork__art-trump-dots-circle.png` should render correctly
+- animated GIF artwork should stay animated
+
+15. Expand permutations consistently across categories:
+- include full animation option families (wave/shimmer/etc, color-cycle, bounce/reverse, interpolation, temporal dither, easing, seed)
+- include watermark/gradient/finder-eye showcases
+- keep options real (avoid no-op values)
+
+16. Fix frame behavior and typography:
+- framed QR should stay centered when text is present
+- frame text should be cleaner, larger, sans-serif
+
+17. New critical bug report:
+- animated overlays with animation effects (`animPattern`, `interp`, `colorCycle`) only apply effect on first frame / output behavior appears wrong
+
+18. Confirm there is a deterministic mapping from encoding request options to output filename for gallery page generation.
+
+19. Deferred defect report to track (do not fix yet):
+- `overlay__ditherKind-ordered_clustered.png` and similar dither variants (e.g. `overlay__diffKernel-sierra.png`) show inconsistent vertical dither scale, with visually larger modules toward the top vs bottom.
+
+20. Deferred defect report to track (do not fix yet):
+- combo-animation overlays (example: `overlay__ov-x-anim-king-subpixel-pulse.gif`) show glitchy/unstable frame behavior.
+
+21. Additional feedback to track (do not interrupt baseline):
+- artwork on `logo` does not look good
+- exclude `logo` from artwork set (apply after baseline is complete)
+
+22. Baseline execution preference update:
+- use Netlify-max timeout for long-running artwork scenarios (`15 minutes`)
+- for local rendering, use high parallelism (resources are available)
+
+23. Additional feedback to track for future artwork curation:
+- `king.gif` artwork does not look good
+- exclude `king.gif` from future artwork showcase set (same as `logo`)
+
+24. Similarity-analysis guardrail:
+- exclude user-reported glitched GIFs from current similarity decisions
+- after glitch fix, re-render and run a second similarity pass including fixed GIFs
+
+25. Additional glitch exclusion feedback:
+- include other known glitchy GIF families in exclusions (not only artwork king range)
+
+26. Similarity strictness adjustment:
+- keep the full set ambition (1000 images)
+- if needed, relax similarity strictness (do not over-prune)
 
 ## Progress
 
@@ -127,6 +287,295 @@ Last updated: 2026-02-20 13:48:00 UTC
     - prefix `https://whitehouse.gov#...`
     - suffix length `490`
   - visual result remains degraded (same bottom-heavy pattern), confirming regression is not caused by payload input format.
+- [x] Isolated and fixed root-cause regression in QR-Art target mapping:
+  - file: `src/modules/qr-art/image-utils.ts`
+  - issue:
+    - `mapImageToTargetsSupersampled()` treated `@napi-rs/canvas` canvases as `ImageData-like` because canvases expose a `data()` method.
+    - this produced invalid `ImageData` (empty/invalid pixel buffer), collapsing targets to effectively all-light and destroying artwork fidelity.
+  - fix:
+    - detect canvas-like inputs first (`getContext` + width/height)
+    - tighten ImageData-like guard to reject function-valued `data` and require array-like pixel data length.
+- [x] Regression test added:
+  - `tests/unit/qr-art-image-utils.spec.ts`
+  - validates canvas inputs do not collapse to all-light/all-dark target maps.
+- [x] Post-fix validation with corrected payload semantics:
+  - command:
+    - `node --import tsx scripts/run-qr-art.ts public/trump.png reports/gallery-artifacts/local/qr-art-trump-v9-whitehouse-autosuffix-current-fixed.png 9 100 "https://whitehouse.gov" numeric 1 L 1`
+  - result:
+    - version `9`, ECC `L`, mask `4`
+    - match `84.7%` (`1978/2336`)
+    - output visually matches expected Feb 7 style (face rendered across full QR, not bottom-heavy)
+    - decode check passes with length `513` and suffix length `490`.
+- [x] Confirmed API/local artwork path regression:
+  - Netlify renderer was not invoking full QR-Art RS-basis generation for `mode=artwork`.
+  - This caused low-fidelity/static-looking outputs even when browser path looked better.
+- [x] Patched `netlify/functions/qr.ts` to run full QR-Art in API path:
+  - static artwork: uses `generateFullQArtOptimal`/`generateFullQArt` + `renderFromMatrix`.
+  - animated artwork overlays: renders each frame with QR-Art and preserves source frame delays.
+  - locks mask/version from frame 0 for animation consistency (browser-aligned behavior).
+- [x] Revalidated key user-reported failures:
+  - `artwork__art-trump-dots-circle.png` now passes and renders with expected artwork.
+  - `artwork__art-dance-default.gif` is animated with unique per-frame content (60 unique frames).
+- [x] Expanded permutation coverage consistency in `scripts/lib/gallery-permutations.mjs`:
+  - fixed easing token values to supported names (`ease_in`, `ease_out`, `ease_in_out`).
+  - overlay category now explicitly includes:
+    - full anim pattern family (`pulse/wave/scanline/shimmer/drift`)
+    - easing/interp/temp-dither/bounce/reverse/colorCycle/animSeed
+    - watermark kind/blend/opacity variants
+    - finder/eye style showcases
+  - artwork category now includes:
+    - watermark text/pattern variants
+    - animation option showcase flags (colorCycle, bounce, reverse, interp, tempDither, easing)
+    - drift pattern coverage on animated fixtures
+- [x] Added API support for `wmBlend=soft-light` to avoid no-op permutations.
+- [x] Verified `wmBlend=soft-light` is active (not no-op):
+  - `overlay__wmBlend-normal.png` and `overlay__wmBlend-soft-light.png` now produce different output hashes.
+- [x] Fixed frame layout + typography quality:
+  - centered QR content in framed renders (`qr-generator-class` + `scaled-render`) by applying symmetric frame margin offsets.
+  - improved frame text rendering in `drawing-frames.ts`:
+    - larger size
+    - clean sans-serif stack
+    - width-fit sizing loop for better readability.
+- [x] Revalidated framed case from user:
+  - `artwork__art-tsunami-frame-sticker.png` now shows centered QR with larger, cleaner `ANQR` text.
+- [x] Regression tests after API/frame/permutation updates:
+  - `npm run -s test:unit -- tests/unit/netlify-qr-function.spec.ts tests/unit/netlify-qr-gif-disposal.spec.ts`
+  - result: 2 files passed, 19 tests passed.
+- [x] Fixed animated-overlay + animation-effects regression in API renderer:
+  - file: `netlify/functions/qr.ts`
+  - animated overlay loop now applies animation effects per frame (not single-frame carryover):
+    - `applyPatternToFrameServer(...)`
+    - `colorCycle` overlay
+    - `crossfade` / `morph` interpolation against previous rendered frame
+  - each frame now receives frame-aware config (`frameIndex`, `animationFrames`).
+- [x] Revalidated animated-overlay effects with targeted local API-handler runs:
+  - generated:
+    - `overlay__mode-blend-anim-dance.gif` (baseline)
+    - `overlay__animHero-dance-shimmer-crossfade.gif`
+    - `overlay__ov-x-anim-dance-shimmer-morph.gif`
+  - all decode-pass, all are true 60-frame GIFs with 60 unique frame hashes.
+  - frame-wise hash comparison vs baseline differs on `60/60` frames for both effect variants.
+- [x] Re-ran Netlify QR unit tests after regression fix:
+  - `npm run -s test:unit -- tests/unit/netlify-qr-function.spec.ts tests/unit/netlify-qr-gif-disposal.spec.ts`
+  - result: 2 files passed, 20 tests passed.
+- [x] Added explicit regression test for this bug:
+  - file: `tests/unit/netlify-qr-function.spec.ts`
+  - test: `applies animation effects across all frames for animated overlays`
+  - uses local animated fixture (`public/dance.gif`) via dev-only file URL path to avoid network flake.
+  - validates:
+    - base/effects both remain multi-frame animated GIFs
+    - per-frame hashes differ from baseline across nearly all frames (allowing frame 0 equality).
+- [x] Confirmed filename ↔ request-option mapping path for gallery generation:
+  - canonical options source: `generateAllScenarios()` (`scripts/lib/gallery-permutations.mjs`)
+  - canonical filename derivation: `scenarioFilename(config)` (`scripts/lib/gallery-permutations.mjs`)
+  - canonical URL query serialization: `buildUrlParams(config)` (`scripts/lib/gallery-permutations.mjs`)
+  - run outputs preserve mapping key via `report.json` entries (`id`, `filename`) in each generator mode (`local`, `browser`, `remote`).
+- [x] Logged deferred dither defect from visual review:
+  - affected examples:
+    - `overlay__ditherKind-ordered_clustered.png`
+    - `overlay__diffKernel-sierra.png`
+  - symptom:
+    - vertical inconsistency in dither/module appearance (top appears larger/heavier than bottom).
+  - status: tracked only for now (no fix yet per request).
+- [x] Logged additional deferred combo-animation glitch defect:
+  - affected example:
+    - `overlay__ov-x-anim-king-subpixel-pulse.gif`
+  - symptom:
+    - glitchy visual output in combo animation overlays (frame instability/artifacting).
+  - status: tracked only for now (no fix yet per request).
+- [x] Began fresh sharded local baseline run (post-expansion) to avoid full-batch timeout storms:
+  - `nooverlay`: `334/334` pass, `0` fail (`/tmp/gallery-local-nooverlay-full.log`)
+  - `overlay`: `308/333` pass, `25` fail (`/tmp/gallery-local-overlay-full.log`)
+  - `artwork-static` (trump/logo/test/tsunami): `180/180` pass, `0` fail (`/tmp/gallery-local-artwork-static.log`)
+- [x] Started `artwork-animated` baseline shard with higher parallelism per feedback:
+  - `153` configs, `GALLERY_CONCURRENCY=12`, timeout `240000ms`
+  - log: `/tmp/gallery-local-artwork-animated.log`
+- [x] Adjusted animated-artwork baseline run policy to match latest feedback:
+  - terminated the in-flight `240000ms` run
+  - restarted with Netlify-max timeout and high local parallelism:
+    - `GALLERY_CONCURRENCY=20`
+    - `GALLERY_SCENARIO_TIMEOUT_MS=900000` (`15 minutes`)
+- [x] Completed animated artwork baseline via process-sharded local execution (single-id workers):
+  - scope: all `153` animated artwork IDs (`king` + `dance`)
+  - result: `123` pass / `30` fail
+  - artifacts:
+    - `/tmp/gallery-artwork-animated-sharded.status`
+    - `/tmp/gallery-artwork-animated-sharded-logs/*`
+    - `reports/gallery-artifacts/local/report-artwork-animated.json`
+    - `reports/gallery-artifacts/local/passed-artwork-animated.txt`
+    - `reports/gallery-artifacts/local/failed-artwork-animated.txt`
+- [x] Consolidated full local baseline report across shards:
+  - output:
+    - `reports/gallery-artifacts/local/report-baseline-local.json`
+    - `reports/gallery-artifacts/local/passed-baseline-local.txt`
+    - `reports/gallery-artifacts/local/failed-baseline-local.txt`
+  - totals:
+    - overall: `1000` total, `945` pass, `55` fail
+    - nooverlay: `334/334` pass
+    - overlay: `308/333` pass
+    - artwork: `303/333` pass
+- [x] Expanded similarity exclusion list to include all user-reported glitch families:
+  - file: `reports/gallery-artifacts/local/excluded-similarity-glitch.txt`
+  - exclusions now include:
+    - artwork king animated glitch range (`scanline`→`style-rounded`)
+    - `overlay__animHero-king-*`
+    - `overlay__ov-x-anim-king-*`
+  - total explicit glitch exclusions: `32`
+- [x] Re-ran filtered similarity analysis with expanded exclusions:
+  - input dir: `reports/gallery-artifacts/local-sim-input`
+  - analyzed: `938` baseline-pass artifacts
+  - output:
+    - `reports/gallery-artifacts/local-sim-input/visual-similarity-report.json`
+    - `reports/gallery-artifacts/local-sim-input/visual-similarity-report.md`
+- [x] Generated first-pass uniqueness decision artifact for hero curation:
+  - outputs:
+    - `reports/gallery-artifacts/local/visual-uniqueness-plan.json`
+    - `reports/gallery-artifacts/local/visual-uniqueness-plan.md`
+  - policy baked in:
+    - exclude failed artifacts
+    - exclude explicit glitch list
+    - exclude artwork `logo` + `king` fixtures for future showcase
+  - selected unique candidates: `127`
+- [x] Relaxed similarity strictness and regenerated decision artifacts:
+  - reran similarity with `GALLERY_VIS_THRESHOLD_BITS=1` (near-duplicate warning mode).
+  - selected unique candidates increased to `432` (vs `127` strict pass).
+- [x] Fixed animation-on-animation glitch root cause in API renderer:
+  - file: `netlify/functions/qr.ts`
+  - changes:
+    - interpolation now uses previous **raw** frame (not recursively interpolated output).
+    - animated `animPattern`/`colorCycle` are now applied to overlay input frames **before** QR render, not by post-distorting final QR frames.
+- [x] Revalidated previously glitched overlay king combo families:
+  - targeted retest IDs:
+    - `overlay__animHero-king-*`
+    - `overlay__ov-x-anim-king-*`
+  - result: `14/14` pass after fix (was heavily failing before).
+- [x] Revalidated artwork king animated glitch range:
+  - targeted retest IDs: `artwork__art-king-anim-scanline` → `artwork__art-king-anim-style-rounded` (18 IDs)
+  - result: `18/18` pass after fix.
+- [x] Updated merged baseline with glitch-fix retest outcomes:
+  - baseline now: `970` pass / `30` fail (from prior `945`/`55`)
+  - category breakdown:
+    - nooverlay: `334/334` pass
+    - overlay: `320/333` pass
+    - artwork: `316/333` pass
+- [x] Ran second similarity pass including repaired GIF families:
+  - no explicit glitch exclusions applied
+  - input: `970` pass artifacts
+  - threshold: `<=1` bit (relaxed strictness mode)
+  - summary: `970 files`, `152 clusters`, `415 standalone`
+  - updated artifacts:
+    - `reports/gallery-artifacts/local-sim-input/visual-similarity-report.json`
+    - `reports/gallery-artifacts/local-sim-input/visual-similarity-report.md`
+    - `reports/gallery-artifacts/local/visual-uniqueness-plan.json`
+    - `reports/gallery-artifacts/local/visual-uniqueness-plan.md`
+- [x] Added a visual-similarity clustering tool for hero-gallery curation:
+  - file: `scripts/analyze-gallery-visual-similarity.mjs`
+  - outputs:
+    - `reports/gallery-artifacts/local/visual-similarity-report.json`
+    - `reports/gallery-artifacts/local/visual-similarity-report.md`
+- [x] Finalized baseline retest merge:
+  - current baseline:
+    - overall: `999/1000` pass, `1` fail
+    - nooverlay: `334/334` pass
+    - overlay: `332/333` pass
+    - artwork: `333/333` pass
+  - only remaining fail:
+    - `overlay__ditherKind-ordered_clustered.png` (`DECODE_FAILED`)
+  - artifacts updated:
+    - `reports/gallery-artifacts/local/report-baseline-local.json`
+    - `reports/gallery-artifacts/local/passed-baseline-local.txt`
+    - `reports/gallery-artifacts/local/failed-baseline-local.txt`
+- [x] Regenerated similarity/uniqueness planning from latest pass set:
+  - similarity input: `999` pass artifacts
+  - output:
+    - `reports/gallery-artifacts/local-sim-input/visual-similarity-report.json`
+    - `reports/gallery-artifacts/local-sim-input/visual-similarity-report.md`
+    - `reports/gallery-artifacts/local/visual-uniqueness-plan.json`
+    - `reports/gallery-artifacts/local/visual-uniqueness-plan.md`
+  - uniqueness totals:
+    - selected: `459`
+    - dropped: `441`
+    - excluded by policy/fail: `223`
+- [x] Prepared explicit filename/params mapping manifests for gallery curation and page wiring:
+  - full matrix mapping (`1000` entries):
+    - `reports/gallery-artifacts/local/gallery-filename-param-manifest.json`
+  - selected candidate mapping (`459` entries):
+    - `reports/gallery-artifacts/local/gallery-selected-filename-param-manifest.json`
+  - matrix summary:
+    - `reports/gallery-artifacts/local/gallery-candidate-summary.json`
+  - selected summary:
+    - `reports/gallery-artifacts/local/gallery-selected-candidate-summary.json`
+- [x] Started fresh full local render after candidate confirmation:
+  - command profile:
+    - `ANQR_LOG_LEVEL=error`
+    - `GALLERY_CONCURRENCY=20`
+    - `GALLERY_SCENARIO_TIMEOUT_MS=900000`
+  - aborted by user request to update `dance.gif` before completion.
+  - progress at stop:
+    - last completed index in log: `434/1000`
+    - known fail observed during run before stop: `overlay__ditherKind-ordered_clustered.png` (`DECODE_FAILED`)
+  - log preserved:
+    - `/tmp/gallery-local-full.log`
+- [x] Investigated user-reported nooverlay visual redundancy:
+  - confirmed root causes:
+    - `25` clone-padded nooverlay scenarios (`pad-*`) from `trimOrPad(...)`.
+    - large low-visual/no-op groups (encoding/auto/gif-encoder sweeps) causing near-identical outputs.
+  - baseline nooverlay similarity snapshot (before fix, threshold `<=1`):
+    - `333` files, `47` clusters, `126` standalone, `207` clustered.
+- [x] Refactored nooverlay permutation matrix for uniqueness and scan safety:
+  - file: `scripts/lib/gallery-permutations.mjs`
+  - key changes:
+    - removed nooverlay clone-padding path; now throws if unique pool < target.
+    - removed low-impact/no-op families from nooverlay curation (payload/enc/ec/auto/gif-encoder-only style toggles).
+    - upgraded animation sweeps to include stronger geometric/gradient variation.
+    - added curated nooverlay filler generator (high-visual static + animated combos) to reach target without duplicates.
+    - tuned filler to scan-safe settings (`gapMode=inset` for filler regime, contrast guard).
+    - replaced risky anim-flag expansion with curated scan-safe anim-flag showcase set.
+- [x] Revalidated nooverlay after refactor (clean run):
+  - command:
+    - `ANQR_LOG_LEVEL=error GALLERY_CATEGORY=nooverlay GALLERY_CONCURRENCY=20 GALLERY_SCENARIO_TIMEOUT_MS=900000 node --import tsx scripts/generate-gallery-local.mjs`
+  - result:
+    - `334/334` pass, `0` fail.
+  - artifacts:
+    - `reports/gallery-artifacts/local/report.json`
+    - `reports/gallery-artifacts/local/passed.txt`
+    - `reports/gallery-artifacts/local/failed.txt`
+- [x] Re-ran nooverlay similarity on clean output:
+  - command:
+    - `GALLERY_VIS_DIR=reports/gallery-artifacts/local GALLERY_VIS_THRESHOLD_BITS=1 node --import tsx scripts/analyze-gallery-visual-similarity.mjs`
+  - latest summary:
+    - `334` files, `40` clusters, `185` standalone, `149` clustered.
+  - improvement vs pre-fix snapshot:
+    - standalone: `126 -> 185` (`+59`)
+    - clustered: `207 -> 149` (`-58`)
+    - clusters: `47 -> 40` (`-7`)
+- [x] Enforced artwork fixture exclusions in matrix generation:
+  - `king.gif` and `logo.png` are excluded from `artwork` generation.
+  - verified: `artwork=333`, no `art-*king*`/`art-*logo*` IDs.
+- [x] Reworked overlay showcase to prioritize animated hero fixtures (`king.gif` + `dance.gif`):
+  - added stacked animation+dither showcase families:
+    - `animStack-*`
+    - `hero-dither-*`
+    - `hero-stack-*`
+  - expanded animated dither coverage across both hero fixtures.
+  - reworked animation option sweeps to run on animated fixtures (not static placeholders).
+  - removed fallback dependence by ensuring curated layer coverage reaches 333 (no overlay filler IDs selected).
+- [x] Removed known unstable `ordered_clustered` dither kind from overlay dither sweeps to avoid inherited decode failures.
+- [x] Reworked artwork curation for visual impact + motion:
+  - added explicit stacked animation families for animated artwork:
+    - `art-dance-stack-*`
+  - introduced visual-impact ranking for artwork selection to deprioritize near-duplicate low-impact variants.
+  - added must-include rules to guarantee stacked dance animation showcases are in the selected 333.
+  - hardened `art-*-extra-static-b` configuration to reduce decode risk.
+- [x] Post-change scenario sanity checks:
+  - combined matrix: `1000` total (`333 nooverlay + 333 overlay + 333 artwork + bonus`)
+  - overlay fixture distribution: `king=73`, `dance=71` (`144/333` hero-heavy showcase)
+  - rich king/dance animated+dither combos: `86`
+  - artwork fixture distribution: `trump=79`, `dance=104`, `test=76`, `tsunami=74`
+  - artwork stacked animation entries present: `4` (`art-dance-stack-*`)
+- [ ] Run penultimate full local render from clean artifacts with updated matrix.
+- [ ] Run quality/suitability review on penultimate output (decode/failures + similarity/readability spot checks).
+- [ ] Run final full local render from clean artifacts after penultimate review.
 - [ ] Reorganize `Makefile` internals further (if needed) while preserving behavior.
 
 ## Notes / Findings
@@ -154,11 +603,59 @@ Last updated: 2026-02-20 13:48:00 UTC
   - Current code can generate the long payload but image fidelity is significantly worse than the Feb 7 reference image.
 - Analyzer snapshot likely confirms a mode/segment mismatch symptom:
   - decoded payload is long URL, but structural metadata reports byte-mode single segment and only 23 decoded bytes.
+- Full artwork batch run with new API QR-Art path was started and healthy (all passing in-flight),
+  then intentionally interrupted to apply expanded permutation coverage changes.
+- Existing framed rendering previously allocated extra canvas area without offsetting QR origin,
+  which made framed QRs appear top-left biased when frame text was present.
+- Netlify Blobs env is intentionally absent in local tests, so blob cache read/write warnings are expected noise in unit-test stderr but do not fail tests.
 
 ## Next Actions
 
-1. Complete commit-by-commit Feb 7 QR-Art visual reproduction to isolate first bad commit.
-2. Patch QR-Art settings/selection path to recover Feb 7-like visual fidelity while preserving payload reproducibility.
-3. Re-run local gallery generation after QR-Art fix and re-check nooverlay/overlay/artwork parity.
-4. Apply the same no-clone uniqueness strategy to `nooverlay` (eliminate `pad-*` outputs).
-5. Continue Makefile cleanup after local gallery pipeline is stable.
+1. Execute penultimate full local gallery render on the updated matrix (`1000` scenarios).
+2. Run quality/suitability pass on penultimate output:
+   - decode/failure summary
+   - visual-similarity cluster review
+   - scanability spot checks of stacked animated+dither hero sets.
+3. Apply any final small matrix tuning only if penultimate review shows regressions.
+4. Execute final full local gallery render from clean artifacts.
+5. After local final is stable, run browser/API parity renders and compare outputs/manifests.
+
+## Update 2026-02-21 (Parity Hardening)
+
+- [x] Stopped all in-flight gallery generators to prepare for a clean restart window.
+- [x] Hardened parity behavior across generators:
+  - `scripts/generate-gallery-local.mjs`
+  - `scripts/generate-gallery-browser.mjs`
+  - `scripts/generate-gallery-remote.mjs`
+- [x] Added strict overlay render flag on all generator requests:
+  - `?_fullRender=1&_strictOverlay=1`
+  - prevents silent degraded output from being treated as success when overlay fetch/decode fails.
+- [x] Added animated-output verification for animated scenarios in all three generators:
+  - decode now fails with `ANIMATION_MISSING` / `ANIMATION_PARSE_ERROR` if GIF output is not truly animated.
+- [x] Added per-scenario stale artifact cleanup in all three generators before rendering:
+  - removes old `png/gif/webp/jpg/jpeg/svg` for the scenario basename to avoid stale carry-over masking failures.
+- [x] Increased server-side overlay fetch timeout configurability in `netlify/functions/qr.ts`:
+  - `ANQR_OVERLAY_FETCH_TIMEOUT_MS` (default now `60000` ms; was `10000` ms).
+- [x] Added `_strictOverlay` to non-cache params in `netlify/functions/qr.ts` cache-key normalization.
+- [x] Set default gallery timeout in `Makefile` to 15 minutes:
+  - `GALLERY_SCENARIO_TIMEOUT_MS ?= 900000`
+- [x] Confirmed local/browser parity on targeted sample (7/7) before final stop:
+  - byte-for-byte identical hashes for all sampled outputs.
+- [ ] Await user signal after Netlify Blob cache clear, then run fresh clean local/browser/remote comparison pass.
+
+## Update 2026-02-21 (Remote Run Stability Rule)
+
+- [x] Captured operational rule for gallery parity runs:
+  - In this Codex runtime, long remote gallery generation against `https://anqr.link/api/qr` can show intermittent DNS `ENOTFOUND` when run inside sandbox networking.
+  - Stable workaround: run `scripts/generate-gallery-remote.mjs` with escalated permissions (outside sandbox) for production remote runs.
+  - Do **not** interrupt local/browser runs while recovering remote; restart remote clean and continue all three to completion.
+- [x] Added richer remote fetch error diagnostics (`cause.code` / `cause.message`) in `scripts/generate-gallery-remote.mjs` for faster root-cause detection.
+- [x] Confirmed remote resumed successfully after escalation and is progressing with zero failures in current run.
+
+## Update 2026-02-21 (Runs Stopped By User)
+
+- [x] Stopped all active gallery generation processes immediately on request.
+- Progress snapshot at stop:
+  - local: [820/1000], fails=8
+  - browser: [828/1000], fails=8
+  - remote: [430/1000], fails=3

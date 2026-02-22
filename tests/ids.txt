@@ -1,5 +1,5 @@
 1) Canonical Managed data-testid Inventory
-- Total managed IDs: 463
+- Total managed IDs: 480
 - Source: auto-generated from DynamicTestId + literal fallback scan of `src/**` and `index.html`
 - Rule: when adding/removing IDs, regenerate this file with `node scripts/generate-test-ids.js`
 
@@ -270,6 +270,8 @@
   source: src/components/sections/RenderSection.tsx
 
 6) Overlay Section
+- overlay-blend-preservation-mode-select
+  source: src/components/sections/OverlaySection.tsx
 - overlay-blend-preservations-switch
   source: src/components/sections/OverlaySection.tsx
 - overlay-color-mode-content
@@ -320,6 +322,10 @@
   source: src/components/sections/AnimationSection.tsx
 - animation-module-jitter-slider
   source: src/components/sections/AnimationSection.tsx
+- animation-pattern-2-content
+  source: src/components/sections/AnimationSection.tsx
+- animation-pattern-2-trigger
+  source: src/components/sections/AnimationSection.tsx
 - animation-pattern-content
   source: src/components/sections/AnimationSection.tsx
 - animation-pattern-trigger
@@ -330,9 +336,25 @@
   source: src/components/sections/AnimationSection.tsx
 - animation-start-frame-slider
   source: src/components/sections/AnimationSection.tsx
+- animation-target-2-content
+  source: src/components/sections/AnimationSection.tsx
+- animation-target-2-trigger
+  source: src/components/sections/AnimationSection.tsx
+- animation-target-content
+  source: src/components/sections/AnimationSection.tsx
+- animation-target-trigger
+  source: src/components/sections/AnimationSection.tsx
 - animation-temporal-dither-content
   source: src/components/sections/AnimationSection.tsx
 - animation-temporal-dither-trigger
+  source: src/components/sections/AnimationSection.tsx
+- animation-wave-axis-2-content
+  source: src/components/sections/AnimationSection.tsx
+- animation-wave-axis-2-trigger
+  source: src/components/sections/AnimationSection.tsx
+- animation-wave-axis-content
+  source: src/components/sections/AnimationSection.tsx
+- animation-wave-axis-trigger
   source: src/components/sections/AnimationSection.tsx
 
 8) Output Section
@@ -588,6 +610,8 @@
   source: src/components/sections/OverlaySection.tsx
 - select-item-option-blue-noise-threshold
   source: src/components/sections/OverlaySection.tsx
+- select-item-option-both
+  source: src/components/sections/AnimationSection.tsx
 - select-item-option-brightness
   source: src/components/sections/OverlaySection.tsx, src/components/sections/RenderSection.tsx
 - select-item-option-burkes
@@ -760,6 +784,8 @@
   source: src/components/sections/PayloadSection.tsx
 - select-item-option-mobile
   source: src/components/sections/PayloadSection.tsx
+- select-item-option-modules
+  source: src/components/sections/AnimationSection.tsx
 - select-item-option-morph
   source: src/components/sections/AnimationSection.tsx
 - select-item-option-mosaic
@@ -805,7 +831,7 @@
 - select-item-option-outline
   source: src/components/sections/OverlaySection.tsx
 - select-item-option-overlay
-  source: src/components/sections/WatermarkSection.tsx
+  source: src/components/sections/OverlaySection.tsx, src/components/sections/WatermarkSection.tsx
 - select-item-option-passport
   source: src/components/sections/PayloadSection.tsx
 - select-item-option-pattern
@@ -846,6 +872,8 @@
   source: src/components/sections/RenderSection.tsx
 - select-item-option-respect
   source: src/components/sections/OverlaySection.tsx
+- select-item-option-result
+  source: src/components/sections/AnimationSection.tsx
 - select-item-option-round
   source: src/components/sections/RenderSection.tsx
 - select-item-option-rounded
@@ -954,6 +982,12 @@
   source: src/components/sections/PayloadSection.tsx
 - select-item-option-wpa3
   source: src/components/sections/PayloadSection.tsx
+- select-item-option-x
+  source: src/components/sections/AnimationSection.tsx
+- select-item-option-xy
+  source: src/components/sections/AnimationSection.tsx
+- select-item-option-y
+  source: src/components/sections/AnimationSection.tsx
 - select-item-option-youtube
   source: src/components/sections/PayloadSection.tsx
 

@@ -532,35 +532,37 @@ export const gallerySections: GallerySection[] = [
   {
     id: 'plain',
     title: 'Plain QR Codes',
-    description: 'Standard QR codes without overlay - different versions and error correction',
+    description:
+      'Baseline QR variants for clean scan reliability, version sizing, and ECC strength',
     icon: 'QrCode',
     items: plainItems,
   },
   {
     id: 'content-types',
     title: 'Content Types',
-    description: 'Different payload formats - vCard, WiFi, Email, SMS, Geo, Calendar',
+    description: 'Real payload formats: contact cards, Wi-Fi, email, SMS, geo, and calendar links',
     icon: 'FileText',
     items: contentTypeItems,
   },
   {
     id: 'styles',
     title: 'Module & Finder Styles',
-    description: 'Different visual styles for modules and finder patterns',
+    description:
+      'Shape language across modules and finder eyes, from classic squares to expressive dots',
     icon: 'Shapes',
     items: styleItems,
   },
   {
     id: 'colors',
     title: 'Colors & Themes',
-    description: 'Color schemes and themed palettes',
+    description: 'Curated color systems, contrast-safe themes, and vivid visual identities',
     icon: 'Palette',
     items: colorItems,
   },
   {
     id: 'image-overlay',
     title: 'Image Overlays',
-    description: 'Every overlay mode, dither algorithm, color treatment, and filter effect',
+    description: 'Image blending, dither families, filters, and preservation-aware overlays',
     icon: 'Image',
     items: imageOverlayItems,
   },
@@ -568,42 +570,44 @@ export const gallerySections: GallerySection[] = [
     id: 'animation-overlay',
     title: 'Animated Overlays',
     description:
-      'Animated overlays with king.gif and dance.gif in color, grayscale, B&W, and duotone',
+      'Frame-based overlay motion with pattern effects, easing, temporal dither, and color cycling',
     icon: 'Film',
     items: animationOverlayItems,
   },
   {
     id: 'blend-modes',
     title: 'Preservation Modes',
-    description: 'Functional module preservation strategies',
+    description:
+      'Finder/timing/alignment protection strategies to balance art direction and readability',
     icon: 'Layers',
     items: blendModeItems,
   },
   {
     id: 'color-modes',
     title: 'Output Modes',
-    description: 'Output rendering modes and color treatments',
+    description: 'Render output variants tuned for readability, texture, and style coverage',
     icon: 'Contrast',
     items: colorModeItems,
   },
   {
     id: 'encoding',
     title: 'QR Encoding',
-    description: 'QR versions and error correction levels with overlays',
+    description: 'Encoding-level controls across version, ECC, and payload behaviors',
     icon: 'Settings2',
     items: encodingItems,
   },
   {
     id: 'power-combos',
     title: 'Power Combos',
-    description: 'Render styles, frames, and watermark combinations',
+    description: 'High-impact combinations that stack styles, gradients, frames, and watermarks',
     icon: 'Sparkles',
     items: powerComboItems,
   },
   {
     id: 'qr-art',
     title: 'QR Art',
-    description: 'Artistic QR codes using Reed-Solomon data shaping to embed images',
+    description:
+      'Reed-Solomon QR Art with controllable visual embedding for static and animated sources',
     icon: 'Paintbrush',
     items: qrArtItems,
   },
@@ -636,20 +640,32 @@ export function buildGalleryUrl(item: GalleryItem): string {
     }
   }
 
-  return `${baseUrl}?${params.toString()}`;
+  const query = params.toString();
+
+  // Native app always uses the hosted web app URL for reproducibility.
+  if (Capacitor.isNativePlatform()) {
+    return `${baseUrl}?${query}`;
+  }
+
+  // Web uses a relative route so navigation stays in-app.
+  return `/?${query}`;
 }
 
 export function getGalleryImagePath(item: GalleryItem): string {
   // Animated items are saved as GIF, static items as PNG
   const ext = item.isAnimated ? 'gif' : 'png';
   const relativePath = `${GALLERY_IMAGE_PATH}/${item.id}.${ext}`;
+  const remotePath = `${getGalleryBaseUrl()}${relativePath}`;
 
-  // On native apps (Android/iOS), load gallery images from the web
-  // since we don't bundle them locally to reduce APK size
-  if (Capacitor.isNativePlatform()) {
-    return `https://anqr.link${relativePath}`;
+  // Native apps always load gallery assets from the hosted site
+  // to keep app bundles slim.
+  if (Capacitor.isNativePlatform()) return remotePath;
+
+  // Local dev should use local files for faster iteration.
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return relativePath;
   }
 
-  // On web, use relative path (works on anqr.link)
-  return relativePath;
+  // Production web uses hosted static gallery assets (not API-rendered images).
+  return remotePath;
 }

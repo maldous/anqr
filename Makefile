@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
+.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
 
 # ============================================
 # Help
@@ -45,8 +45,10 @@ help:
 	@echo " 10) Gallery"
 	@echo "    make gallery gallery:fresh gallery:gif gallery:auto"
 	@echo "    make gallery:api gallery:remote gallery:local gallery:browser gallery:all"
+	@echo "    make gallery:compare gallery:parity gallery:parity:deploy gallery:publish"
 	@echo "    make gallery:overlay gallery:nooverlay gallery:qrart"
-	@echo "    Tunables: GALLERY_API_URL, GALLERY_CONCURRENCY, GALLERY_CATEGORY, GALLERY_IDS"
+	@echo "    Tunables: GALLERY_API_URL, GALLERY_CATEGORY, GALLERY_IDS,"
+	@echo "              GALLERY_LOCAL_CONCURRENCY, GALLERY_BROWSER_CONCURRENCY, GALLERY_REMOTE_CONCURRENCY"
 	@echo ""
 	@echo " 11) i18n"
 	@echo "    make i18n:pull i18n:xlate i18n:fill i18n:check i18n:push"
@@ -153,6 +155,11 @@ BUNDLE_BUDGET_I18N_MAX_KIB ?= 24000
 
 # Gallery generation server port (default matches dev server).
 GALLERY_PORT ?= 5173
+GALLERY_LOCAL_CONCURRENCY ?= 12
+GALLERY_BROWSER_CONCURRENCY ?= 3
+GALLERY_REMOTE_CONCURRENCY ?= 2
+GALLERY_SCENARIO_TIMEOUT_MS ?= 900000
+ANQR_LOG_LEVEL ?= error
 
 # PWA screenshot generation server port (default matches dev server).
 SCREENSHOT_PORT ?= 5173
@@ -489,12 +496,15 @@ gallery\:qrart:
 # Render all 1000 gallery permutation configs via the deployed anqr.link API.
 # Produces reports/gallery-artifacts/remote/ with passed.txt/failed.txt/report.json.
 gallery\:remote:
-	npx tsx scripts/generate-gallery-remote.mjs
+	ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_REMOTE_CONCURRENCY) node --import tsx scripts/generate-gallery-remote.mjs
+
+# Alias for remote API renderer target
+gallery\:api: gallery\:remote
 
 # Render all 1000 gallery permutation configs locally via QRGenerator + @napi-rs/canvas.
 # Produces reports/gallery-artifacts/local/ with passed.txt/failed.txt/report.json.
 gallery\:local:
-	npx tsx scripts/generate-gallery-local.mjs
+	ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_LOCAL_CONCURRENCY) node --import tsx scripts/generate-gallery-local.mjs
 
 # Render all 1000 gallery permutation configs via Playwright browser screenshots.
 # Requires a dev server running on GALLERY_PORT (default: 5173).
@@ -502,7 +512,15 @@ gallery\:local:
 gallery\:browser:
 	@curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
 		(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first, or use 'make all'." && exit 1)
-	GALLERY_PORT=$(GALLERY_PORT) npx tsx scripts/generate-gallery-browser.mjs
+	ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) node --import tsx scripts/generate-gallery-browser.mjs
+
+# Compare local/browser/remote artifacts for consistency.
+gallery\:compare:
+	node --import tsx scripts/compare-gallery-artifacts.mjs
+
+# Copy curated gallery image set from reports/gallery-artifacts/* to public/gallery/.
+gallery\:publish:
+	node --import tsx scripts/publish-gallery-showcase.ts
 
 # Run all three gallery renderers: remote API + local QRGenerator + browser screenshots.
 # Produces 3000 total images across reports/gallery-artifacts/{remote,local,browser}/.
@@ -510,6 +528,20 @@ gallery\:all:
 	$(MAKE) gallery:remote || echo 'gallery:remote failed'
 	$(MAKE) gallery:local || echo 'gallery:local failed'
 	$(MAKE) gallery:browser || echo 'gallery:browser failed'
+
+# Full parity run (local high parallel, browser normal, remote minimal) + consistency report.
+gallery\:parity:
+	rm -rf reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/remote
+	mkdir -p reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/remote
+	$(MAKE) gallery:local
+	$(MAKE) gallery:browser
+	$(MAKE) gallery:remote
+	$(MAKE) gallery:compare
+
+# Same as gallery:parity but deploys first so remote API run uses latest netlify/functions code.
+gallery\:parity\:deploy:
+	$(MAKE) deploy
+	$(MAKE) gallery:parity
 
 # Full gallery auto-generation pipeline:
 # 1. Run scan matrix test (generates reports + artifacts)

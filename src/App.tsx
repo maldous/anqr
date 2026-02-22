@@ -529,6 +529,13 @@ function AppContent() {
       useQRStore.setState((s) => ({
         overlay: { ...s.overlay, blendPreservations: true },
       }));
+    if (params.blendPreservationMode)
+      useQRStore.setState((s) => ({
+        overlay: {
+          ...s.overlay,
+          blendPreservationMode: params.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
+        },
+      }));
     if (params.ditherSerpentine)
       useQRStore.setState((s) => ({ overlay: { ...s.overlay, ditherSerpentine: true } }));
     if (params.orderedMatrix)
@@ -617,6 +624,26 @@ function AppContent() {
       useQRStore.setState((s) => ({
         animation: { ...s.animation, pattern: params.pattern as any },
       }));
+    if (params.target)
+      useQRStore.setState((s) => ({
+        animation: { ...s.animation, target: params.target as any },
+      }));
+    if (params.waveAxis)
+      useQRStore.setState((s) => ({
+        animation: { ...s.animation, waveAxis: params.waveAxis as any },
+      }));
+    if (params.pattern2)
+      useQRStore.setState((s) => ({
+        animation: { ...s.animation, pattern2: params.pattern2 as any },
+      }));
+    if (params.target2)
+      useQRStore.setState((s) => ({
+        animation: { ...s.animation, target2: params.target2 as any },
+      }));
+    if (params.waveAxis2)
+      useQRStore.setState((s) => ({
+        animation: { ...s.animation, waveAxis2: params.waveAxis2 as any },
+      }));
     if (params.moduleJitter !== undefined)
       useQRStore.setState((s) => ({
         animation: { ...s.animation, moduleJitterPx: params.moduleJitter! },
@@ -625,6 +652,8 @@ function AppContent() {
       useQRStore.setState((s) => ({ animation: { ...s.animation, colorCycle: true } }));
     if (params.seed !== undefined)
       useQRStore.setState((s) => ({ animation: { ...s.animation, seed: params.seed! } }));
+    if (params.animationSeed !== undefined)
+      useQRStore.setState((s) => ({ animation: { ...s.animation, seed: params.animationSeed! } }));
 
     // Output params
     if (params.format) store.setOutputFormat(params.format as 'png' | 'webp' | 'gif' | 'svg');

@@ -11,7 +11,7 @@
  * Outputs: passed.txt, failed.txt, report.json
  *
  * Environment variables:
- *   GALLERY_CONCURRENCY    Parallel render count (default: 4)
+ *   GALLERY_CONCURRENCY    Parallel render count (default: auto host-aware)
  *   GALLERY_CATEGORY       Filter by category: nooverlay/overlay/artwork (default: all)
  *   GALLERY_IDS            Comma-separated config IDs to run (default: all)
  */
@@ -42,9 +42,11 @@ if (typeof globalThis.ImageData === 'undefined') {
 // ============================================
 
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { decodeGif } from '../src/modules/animation/index.ts';
 import { decodeQR } from '../src/modules/qr-decoder/index.ts';
 import {
   generateAllScenarios,
@@ -72,8 +74,22 @@ const REPORTS_DIR = path.join(ROOT, 'reports');
 const ARTIFACTS_DIR = path.join(REPORTS_DIR, 'gallery-artifacts');
 const OUTPUT_DIR = path.join(ARTIFACTS_DIR, 'local');
 
-const CONCURRENCY = Math.max(1, Number.parseInt(process.env.GALLERY_CONCURRENCY || '4', 10));
+const AUTO_LOCAL_CONCURRENCY = Math.max(
+  4,
+  Math.min(24, (typeof os.availableParallelism === 'function'
+    ? os.availableParallelism()
+    : os.cpus().length) - 1)
+);
+const CONCURRENCY = Math.max(
+  1,
+  Number.parseInt(process.env.GALLERY_CONCURRENCY || String(AUTO_LOCAL_CONCURRENCY), 10),
+);
+const SCENARIO_TIMEOUT_MS = Math.max(
+  30_000,
+  Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '240000', 10),
+);
 const LOCAL_HANDLER_URL = 'http://localhost/.netlify/functions/qr';
+const ARTIFACT_EXTS = ['png', 'gif', 'webp', 'jpg', 'jpeg', 'svg'];
 let qrHandlerCached = null;
 
 // ============================================
@@ -130,6 +146,8 @@ async function buildLocalRequest(config) {
 
   // Force full render for overlays/artwork so local fixtures are actually processed.
   params.set('_fullRender', '1');
+  // Force strict overlay behavior so parity runs fail instead of silently degrading.
+  params.set('_strictOverlay', '1');
 
   // Skip blob cache reads/writes (not configured in local dev/test env).
   const headers = new Headers({
@@ -152,7 +170,7 @@ async function buildLocalRequest(config) {
   return new Request(url, { method: 'GET', headers });
 }
 
-async function verifyImage(buffer, expectedPrefix) {
+async function verifyImage(buffer, expectedPrefix, expectAnimated = false) {
   try {
     const img = await loadImage(buffer);
     const canvas = createCanvas(img.width, img.height);
@@ -166,10 +184,44 @@ async function verifyImage(buffer, expectedPrefix) {
     if (!result.data.startsWith(expectedPrefix)) {
       return { pass: false, reason: 'CONTENT_MISMATCH', decoded: result.data };
     }
+    if (expectAnimated) {
+      try {
+        const arrayBuffer = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength,
+        );
+        const decoded = decodeGif(arrayBuffer);
+        if (!decoded.frames || decoded.frames.length < 2) {
+          return { pass: false, reason: 'ANIMATION_MISSING' };
+        }
+      } catch (animErr) {
+        return {
+          pass: false,
+          reason: 'ANIMATION_PARSE_ERROR',
+          message: animErr instanceof Error ? animErr.message : String(animErr),
+        };
+      }
+    }
     return { pass: true, decoded: result.data };
   } catch (err) {
     return { pass: false, reason: 'VERIFY_ERROR', message: err.message };
   }
+}
+
+async function removeScenarioArtifacts(outputDir, config) {
+  const baseName = scenarioFilename(config).replace(/\.[^.]+$/, '');
+  await Promise.all(
+    ARTIFACT_EXTS.map(async (ext) => {
+      const artifactPath = path.join(outputDir, `${baseName}.${ext}`);
+      try {
+        await fs.unlink(artifactPath);
+      } catch (err) {
+        if (err?.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+    }),
+  );
 }
 
 async function runPool(tasks, concurrency) {
@@ -189,6 +241,18 @@ async function runPool(tasks, concurrency) {
   return results;
 }
 
+async function withTimeout(task, timeoutMs) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`SCENARIO_TIMEOUT_${timeoutMs}ms`)), timeoutMs);
+  });
+  try {
+    return await Promise.race([task(), timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // ============================================
 // Main
 // ============================================
@@ -196,6 +260,7 @@ async function runPool(tasks, concurrency) {
 async function main() {
   console.log('\n=== ANQR Gallery Local Generator (in-process API handler) ===\n');
   console.log(`Concurrency: ${CONCURRENCY}`);
+  console.log(`Per-case timeout: ${Math.round(SCENARIO_TIMEOUT_MS / 1000)}s`);
   console.log(`Output:      ${OUTPUT_DIR}\n`);
   console.log(`Fixtures:    ${PUBLIC_DIR}\n`);
 
@@ -229,49 +294,52 @@ async function main() {
     const fallbackFilename = scenarioFilename(config);
 
     try {
-      const request = await buildLocalRequest(config);
-      const response = await qrHandler(request);
+      return await withTimeout(async () => {
+        await removeScenarioArtifacts(OUTPUT_DIR, config);
+        const request = await buildLocalRequest(config);
+        const response = await qrHandler(request);
 
-      if (!response.ok) {
-        const body = await response.text().catch(() => '');
-        throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
-      }
+        if (!response.ok) {
+          const body = await response.text().catch(() => '');
+          throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
+        }
 
-      const contentType = response.headers.get('Content-Type') || 'image/png';
-      const resolvedExt = extFromContentType(contentType, config.isAnimated ? 'gif' : 'png');
-      const baseName = fallbackFilename.replace(/\.[^.]+$/, '');
-      const filename = `${baseName}.${resolvedExt}`;
-      const artifactPath = path.join(OUTPUT_DIR, filename);
+        const contentType = response.headers.get('Content-Type') || 'image/png';
+        const resolvedExt = extFromContentType(contentType, config.isAnimated ? 'gif' : 'png');
+        const baseName = fallbackFilename.replace(/\.[^.]+$/, '');
+        const filename = `${baseName}.${resolvedExt}`;
+        const artifactPath = path.join(OUTPUT_DIR, filename);
 
-      const buffer = Buffer.from(await response.arrayBuffer());
-      await fs.writeFile(artifactPath, buffer);
+        const buffer = Buffer.from(await response.arrayBuffer());
+        await fs.writeFile(artifactPath, buffer);
 
-      const verify = await verifyImage(buffer, expectedPayload);
+        const verify = await verifyImage(buffer, expectedPayload, config.isAnimated);
 
-      completed++;
-      const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
-      const icon = verify.pass ? '✓' : '✗';
-      const suffix = verify.pass ? '' : ` [${verify.reason}]`;
-      console.log(
-        `  [${completed}/${configs.length}] ${icon} ${config.id} ` +
-          `(${resolvedExt.toUpperCase()}, ${(buffer.length / 1024).toFixed(1)} KB, ${Date.now() - start}ms)${suffix} [${elapsed}s]`
-      );
+        completed++;
+        const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
+        const icon = verify.pass ? '✓' : '✗';
+        const suffix = verify.pass ? '' : ` [${verify.reason}]`;
+        console.log(
+          `  [${completed}/${configs.length}] ${icon} ${config.id} ` +
+            `(${resolvedExt.toUpperCase()}, ${(buffer.length / 1024).toFixed(1)} KB, ${Date.now() - start}ms)${suffix} [${elapsed}s]`
+        );
 
-      if (verify.pass) {
-        passed.push(filename);
-      } else {
-        failed.push(filename);
-      }
+        if (verify.pass) {
+          passed.push(filename);
+        } else {
+          failed.push(filename);
+        }
 
-      return {
-        id: config.id,
-        category: config.category,
-        status: verify.pass ? 'pass' : 'fail',
-        reason: verify.reason || 'OK',
-        filename,
-        contentType,
-        durationMs: Date.now() - start,
-      };
+        return {
+          id: config.id,
+          category: config.category,
+          status: verify.pass ? 'pass' : 'fail',
+          reason: verify.reason || 'OK',
+          filename,
+          contentType,
+          durationMs: Date.now() - start,
+        };
+      }, SCENARIO_TIMEOUT_MS);
     } catch (err) {
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);

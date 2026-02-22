@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node (some transitive imports may need it)
@@ -358,6 +364,7 @@ describe('share-links/url-params.ts', () => {
         ditherStrength: 75,
         finderDitherStrength: 80,
         blendPreservations: true,
+        blendPreservationMode: 'dither',
         ditherSerpentine: true,
         orderedMatrix: 'bayer8',
         blueNoiseTileSize: 128,
@@ -369,6 +376,7 @@ describe('share-links/url-params.ts', () => {
       expect(params).toContain('ditherStrength=75');
       expect(params).toContain('finderDither=80');
       expect(params).toContain('blendPres=1');
+      expect(params).toContain('blendPresMode=dither');
       expect(params).toContain('serpentine=1');
       expect(params).toContain('matrix=bayer8');
       expect(params).toContain('bnTile=128');
@@ -423,6 +431,11 @@ describe('share-links/url-params.ts', () => {
         interpolate: 'linear',
         temporalDither: 'blue_noise',
         pattern: 'wave',
+        target: 'both',
+        waveAxis: 'x',
+        pattern2: 'wave',
+        target2: 'result',
+        waveAxis2: 'y',
         moduleJitter: 0.5,
         colorCycle: true,
         seed: 1234,
@@ -438,6 +451,10 @@ describe('share-links/url-params.ts', () => {
       expect(params).toContain('interp=linear');
       expect(params).toContain('tempDither=blue_noise');
       expect(params).toContain('animPattern=wave');
+      expect(params).toContain('animTarget=both');
+      expect(params).toContain('animWaveAxis=x');
+      expect(params).toContain('animPattern2=wave');
+      expect(params).toContain('animWaveAxis2=y');
       expect(params).toContain('jitter=0.5');
       expect(params).toContain('colorCycle=1');
       expect(params).toContain('seed=1234');
@@ -857,7 +874,7 @@ describe('share-links/url-params.ts', () => {
 
     it('returns warning string for very long URL', async () => {
       const mod = await getMod();
-      const longUrl = 'https://anqr.app/?' + 'x'.repeat(10000);
+      const longUrl = `https://anqr.app/?${'x'.repeat(10000)}`;
       const result = mod.checkShareUrlLength(longUrl);
       expect(result).not.toBeNull();
       expect(typeof result).toBe('string');
@@ -871,7 +888,10 @@ describe('share-links/url-params.ts', () => {
     it('reads from globalThis.location.search', async () => {
       const mod = await getMod();
       const originalLocation = globalThis.location;
-      (globalThis as Record<string, unknown>).location = { search: '?data=hello&ec=L', origin: 'https://anqr.app' };
+      (globalThis as Record<string, unknown>).location = {
+        search: '?data=hello&ec=L',
+        origin: 'https://anqr.app',
+      };
       try {
         const parsed = mod.parseUrlParams();
         expect(parsed.data).toBe('hello');

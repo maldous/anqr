@@ -769,7 +769,7 @@ export function OverlaySection() {
                   ) && (
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between">
-                        <Label className="text-sm">Preservation Strength</Label>
+                        <Label className="text-sm">{t('overlay.preservationStrength')}</Label>
                         <span className="text-sm text-muted-foreground">
                           {t('qr.nPercent', { count: overlay.finderDitherStrength })}
                         </span>
@@ -790,7 +790,7 @@ export function OverlaySection() {
                         )}
                       />
                       <div className="flex items-center justify-between pt-1">
-                        <Label className="text-sm">Blend Preservations</Label>
+                        <Label className="text-sm">{t('overlay.blendPreservations')}</Label>
                         <Switch
                           checked={overlay.blendPreservations}
                           onCheckedChange={(checked) =>
@@ -804,6 +804,39 @@ export function OverlaySection() {
                           )}
                         />
                       </div>
+                      {overlay.blendPreservations && (
+                        <div className="space-y-2 pt-1">
+                          <Label className="text-sm">{t('overlay.blendPreservationMode')}</Label>
+                          <Select
+                            value={overlay.blendPreservationMode}
+                            onValueChange={(value) =>
+                              useQRStore.setState((s) => ({
+                                overlay: {
+                                  ...s.overlay,
+                                  blendPreservationMode: value === 'dither' ? 'dither' : 'overlay',
+                                },
+                              }))
+                            }
+                          >
+                            <SelectTrigger
+                              data-testid={DynamicTestId.resolve(
+                                'overlay-blend-preservation-mode-select',
+                                'overlay-blend-preservation-mode-select'
+                              )}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="overlay">
+                                {t('overlay.blendPreservationModeOverlay')}
+                              </SelectItem>
+                              <SelectItem value="dither">
+                                {t('overlay.blendPreservationModeDither')}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                   )}
               </div>

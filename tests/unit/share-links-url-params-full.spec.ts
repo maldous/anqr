@@ -1,7 +1,13 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 describe('share-links/url-params', () => {
@@ -43,7 +49,9 @@ describe('share-links/url-params', () => {
     });
 
     it('parses all QR settings', () => {
-      const params = new URLSearchParams('ec=M&v=5&size=30&margin=2&enc=byte&charset=utf8&border=2&qzEnforce=1');
+      const params = new URLSearchParams(
+        'ec=M&v=5&size=30&margin=2&enc=byte&charset=utf8&border=2&qzEnforce=1'
+      );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.ec).toBe('M');
       expect(result.version).toBe(5);
@@ -87,8 +95,8 @@ describe('share-links/url-params', () => {
     it('parses all render params', () => {
       const params = new URLSearchParams(
         'gap=2&gapMode=inner&radius=5&grad=linear&gradStops=ff0000,0,00ff00,1&gradAngle=45' +
-        '&eyeOuter=rounded&eyeInner=circle&eyeScale=120&frame=box&frameText=Scan+me' +
-        '&dotRot=45&crisp=1&snap=round&modColor=position&cGuard=1&minContrast=7&subpixel=1&spGridNum=4'
+          '&eyeOuter=rounded&eyeInner=circle&eyeScale=120&frame=box&frameText=Scan+me' +
+          '&dotRot=45&crisp=1&snap=round&modColor=position&cGuard=1&minContrast=7&subpixel=1&spGridNum=4'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.moduleGap).toBe(2);
@@ -118,11 +126,11 @@ describe('share-links/url-params', () => {
     it('parses all overlay params', () => {
       const params = new URLSearchParams(
         'mode=logo&intensity=80&logoSize=30&img=https://example.com/logo.png&ovType=animated&ovFramePick=first' +
-        '&cropEn=1&cropX=0.3&cropY=0.4&cropSize=0.8' +
-        '&gifDelays=0&gifMaxFps=15&gifDispH=ignore' +
-        '&fit=contain&rot=90&flipX=1&flipY=1' +
-        '&keepFinders=0&keepTiming=1&keepAlign=1&protectFmt=1&protectVer=1' +
-        '&eccAware=1&eccRisk=75&eccMap=uniform'
+          '&cropEn=1&cropX=0.3&cropY=0.4&cropSize=0.8' +
+          '&gifDelays=0&gifMaxFps=15&gifDispH=ignore' +
+          '&fit=contain&rot=90&flipX=1&flipY=1' +
+          '&keepFinders=0&keepTiming=1&keepAlign=1&protectFmt=1&protectVer=1' +
+          '&eccAware=1&eccRisk=75&eccMap=uniform'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.mode).toBe('logo');
@@ -155,7 +163,7 @@ describe('share-links/url-params', () => {
     it('parses overlay preprocessing params', () => {
       const params = new URLSearchParams(
         'colorMode=grayscale&brightness=20&contrast=30&gamma=1.5&saturation=50' +
-        '&blur=3&sharpen=2&posterize=4&threshold=100&edge=sobel&invert=1&hue=180'
+          '&blur=3&sharpen=2&posterize=4&threshold=100&edge=sobel&invert=1&hue=180'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.colorMode).toBe('grayscale');
@@ -174,8 +182,8 @@ describe('share-links/url-params', () => {
 
     it('parses dither params', () => {
       const params = new URLSearchParams(
-        'ditherKind=ordered&diffusionKernel=atkinson&ditherStrength=75&finderDither=80&blendPres=1&serpentine=1' +
-        '&matrix=bayer8&bnTile=128&bnSeed=42&colorDither=rgb'
+        'ditherKind=ordered&diffusionKernel=atkinson&ditherStrength=75&finderDither=80&blendPres=1&blendPresMode=dither&serpentine=1' +
+          '&matrix=bayer8&bnTile=128&bnSeed=42&colorDither=rgb'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.ditherKind).toBe('ordered');
@@ -183,6 +191,7 @@ describe('share-links/url-params', () => {
       expect(result.ditherStrength).toBe(75);
       expect(result.finderDitherStrength).toBe(80);
       expect(result.blendPreservations).toBe(true);
+      expect(result.blendPreservationMode).toBe('dither');
       expect(result.ditherSerpentine).toBe(true);
       expect(result.orderedMatrix).toBe('bayer8');
       expect(result.blueNoiseTileSize).toBe(128);
@@ -191,7 +200,9 @@ describe('share-links/url-params', () => {
     });
 
     it('parses subpixel params', () => {
-      const params = new URLSearchParams('spGrid=4x4&spCenter=halftone_center&spNeutral=808080&spFinder=stylized');
+      const params = new URLSearchParams(
+        'spGrid=4x4&spCenter=halftone_center&spNeutral=808080&spFinder=stylized'
+      );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.subpixelGridSize).toBe('4x4');
       expect(result.subpixelCenterRule).toBe('halftone_center');
@@ -200,7 +211,9 @@ describe('share-links/url-params', () => {
     });
 
     it('parses halftone params', () => {
-      const params = new URLSearchParams('htCell=2x2&htDot=square&htCurve=gamma&duo1=ff0000&duo2=0000ff');
+      const params = new URLSearchParams(
+        'htCell=2x2&htDot=square&htCurve=gamma&duo1=ff0000&duo2=0000ff'
+      );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.halftoneCell).toBe('2x2');
       expect(result.halftoneDotShape).toBe('square');
@@ -212,7 +225,9 @@ describe('share-links/url-params', () => {
     it('parses animation params', () => {
       const params = new URLSearchParams(
         'speed=200&loop=0&reverse=1&bounce=1&startF=5&maxF=20&stepF=2' +
-        '&interp=linear&tempDither=blue_noise&animPattern=wave&jitter=0.5&colorCycle=1&seed=42&easing=ease-in'
+          '&interp=linear&tempDither=blue_noise&animPattern=wave&animTarget=both&animWaveAxis=x' +
+          '&animPattern2=wave&animTarget2=result&animWaveAxis2=y' +
+          '&jitter=0.5&colorCycle=1&seed=42&easing=ease-in'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.speed).toBe(200);
@@ -225,6 +240,11 @@ describe('share-links/url-params', () => {
       expect(result.interpolate).toBe('linear');
       expect(result.temporalDither).toBe('blue_noise');
       expect(result.pattern).toBe('wave');
+      expect(result.target).toBe('both');
+      expect(result.waveAxis).toBe('x');
+      expect(result.pattern2).toBe('wave');
+      expect(result.target2).toBe('result');
+      expect(result.waveAxis2).toBe('y');
       expect(result.moduleJitter).toBe(0.5);
       expect(result.colorCycle).toBe(true);
       expect(result.seed).toBe(42);
@@ -234,8 +254,8 @@ describe('share-links/url-params', () => {
     it('parses output params', () => {
       const params = new URLSearchParams(
         'w=800&h=600&format=png&quality=0.95&jpegQ=85&webpQ=80&gifColors=128&fname=myqr' +
-        '&gifPal=128&gifQuant=octree&gifDith=ordered&gifDisp=none&gifTrans=ffffff' +
-        '&svgVec=1&svgPrec=module&svgEmbed=0&dpi=300&inclQz=0&bgOver=eeeeee&fmtExtra=print'
+          '&gifPal=128&gifQuant=octree&gifDith=ordered&gifDisp=none&gifTrans=ffffff' +
+          '&svgVec=1&svgPrec=module&svgEmbed=0&dpi=300&inclQz=0&bgOver=eeeeee&fmtExtra=print'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.width).toBe(800);
@@ -262,8 +282,7 @@ describe('share-links/url-params', () => {
 
     it('parses safety params', () => {
       const params = new URLSearchParams(
-        'safeMode=strict&safeMinPx=6&safeMinQz=6' +
-        '&lockF=0&lockT=0&lockA=0&lockFmt=0&lockV=0'
+        'safeMode=strict&safeMinPx=6&safeMinQz=6' + '&lockF=0&lockT=0&lockA=0&lockFmt=0&lockV=0'
       );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.safetyMode).toBe('strict');
@@ -309,9 +328,16 @@ describe('share-links/url-params', () => {
     });
 
     it('parses animation pattern params', () => {
-      const params = new URLSearchParams('animPattern=spiral&animFrames=30&animSpeed=150&animSeed=99');
+      const params = new URLSearchParams(
+        'animPattern=spiral&animTarget=modules&animWaveAxis=xy&animPattern2=wave&animTarget2=both&animWaveAxis2=x&animFrames=30&animSpeed=150&animSeed=99'
+      );
       const result = parseUrlParamsFromSearchParams(params);
       expect(result.animationPattern).toBe('spiral');
+      expect(result.animationTarget).toBe('modules');
+      expect(result.animationWaveAxis).toBe('xy');
+      expect(result.animationPattern2).toBe('wave');
+      expect(result.animationTarget2).toBe('both');
+      expect(result.animationWaveAxis2).toBe('x');
       expect(result.animationFrames).toBe(30);
       expect(result.animationSpeed).toBe(150);
       expect(result.animationSeed).toBe(99);
@@ -461,6 +487,7 @@ describe('share-links/url-params', () => {
         ditherStrength: 75,
         finderDitherStrength: 80,
         blendPreservations: true,
+        blendPreservationMode: 'dither',
         ditherSerpentine: true,
       });
       expect(result).toContain('ditherKind=ordered');
@@ -468,6 +495,7 @@ describe('share-links/url-params', () => {
       expect(result).toContain('ditherStrength=75');
       expect(result).toContain('finderDither=80');
       expect(result).toContain('blendPres=1');
+      expect(result).toContain('blendPresMode=dither');
       expect(result).toContain('serpentine=1');
     });
 
@@ -720,7 +748,11 @@ describe('share-links/url-params', () => {
       });
       const url = getShareableUrl({ data: 'test' });
       expect(url).toContain('https://anqr.link/');
-      Object.defineProperty(globalThis, 'location', { value: origLocation, writable: true, configurable: true });
+      Object.defineProperty(globalThis, 'location', {
+        value: origLocation,
+        writable: true,
+        configurable: true,
+      });
     });
 
     it('detects capacitor:// protocol', () => {
@@ -737,7 +769,11 @@ describe('share-links/url-params', () => {
       });
       const url = getShareableUrl({ data: 'test' });
       expect(url).toContain('https://anqr.link/');
-      Object.defineProperty(globalThis, 'location', { value: origLocation, writable: true, configurable: true });
+      Object.defineProperty(globalThis, 'location', {
+        value: origLocation,
+        writable: true,
+        configurable: true,
+      });
     });
 
     it('uses actual origin for production URLs', () => {
@@ -754,7 +790,11 @@ describe('share-links/url-params', () => {
       });
       const url = getShareableUrl({ data: 'test' });
       expect(url).toContain('https://anqr.link/?data=test');
-      Object.defineProperty(globalThis, 'location', { value: origLocation, writable: true, configurable: true });
+      Object.defineProperty(globalThis, 'location', {
+        value: origLocation,
+        writable: true,
+        configurable: true,
+      });
     });
   });
 
@@ -768,7 +808,7 @@ describe('share-links/url-params', () => {
     });
 
     it('returns warning for URL exceeding max length', () => {
-      const longUrl = 'https://anqr.link/?' + 'a'.repeat(2100);
+      const longUrl = `https://anqr.link/?${'a'.repeat(2100)}`;
       const result = checkShareUrlLength(longUrl);
       expect(result).not.toBeNull();
       expect(result).toContain('characters');

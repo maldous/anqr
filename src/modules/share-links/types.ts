@@ -112,6 +112,7 @@ export interface ShareConfig {
   ditherStrength?: number;
   finderDitherStrength?: number;
   blendPreservations?: boolean;
+  blendPreservationMode?: 'overlay' | 'dither';
   ditherSerpentine?: boolean;
   orderedMatrix?: string;
   blueNoiseTileSize?: number;
@@ -142,6 +143,11 @@ export interface ShareConfig {
   interpolate?: string;
   temporalDither?: string;
   pattern?: string;
+  target?: 'result' | 'modules' | 'both';
+  waveAxis?: 'x' | 'y' | 'xy';
+  pattern2?: string;
+  target2?: 'result' | 'modules' | 'both';
+  waveAxis2?: 'x' | 'y' | 'xy';
   moduleJitter?: number;
   colorCycle?: boolean;
   seed?: number;
@@ -202,6 +208,11 @@ export interface ShareConfig {
 
   // Animation
   animationPattern?: string;
+  animationTarget?: 'result' | 'modules' | 'both';
+  animationWaveAxis?: 'x' | 'y' | 'xy';
+  animationPattern2?: string;
+  animationTarget2?: 'result' | 'modules' | 'both';
+  animationWaveAxis2?: 'x' | 'y' | 'xy';
   animationFrames?: number;
   animationSpeed?: number;
   animationSeed?: number;

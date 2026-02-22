@@ -69,17 +69,17 @@ export async function generateScaledQR(
 
   // UNIFIED: Apply quietZoneMinEnforce setting
   const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
-  const marginModules = Math.max(quietZoneMin, config.margin);
+  const baseMarginModules = Math.max(quietZoneMin, config.margin);
 
   // Calculate micro-pixel size with fractional support for smoother high-density rendering.
   const subPixelSize = Math.max(0.5, config.moduleSize / scale);
   const effectiveModuleSize = subPixelSize * scale;
 
-  // UNIFIED: Apply frame settings
-  const frameExtra =
-    config.frameStyle && config.frameStyle !== 'none' ? effectiveModuleSize * 4 : 0;
+  // Keep QR centered when frame text/border reserves extra canvas area.
+  const frameOffsetModules = config.frameStyle && config.frameStyle !== 'none' ? 2 : 0;
+  const marginModules = baseMarginModules + frameOffsetModules;
   const marginPx = marginModules * effectiveModuleSize;
-  const size = Math.round(scaledSize * subPixelSize + marginPx * 2 + frameExtra);
+  const size = Math.round(scaledSize * subPixelSize + marginPx * 2);
 
   const canvas = await createCanvasFn(size, size);
   const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -351,6 +351,7 @@ export async function generateScaledQR(
   const finderDitherStrength = Math.max(0, Math.min(100, rawFinderDitherStrength));
   const finderStrengthN = finderDitherStrength / 100;
   const blendPreservations = config.blendPreservations === true;
+  const blendPreservationMode = config.blendPreservationMode === 'dither' ? 'dither' : 'overlay';
   const blendChannelToward = (src: number, target: number, t: number): number =>
     Math.round(src + (target - src) * Math.max(0, Math.min(1, t)));
   const sampleModuleOverlayColor = (row: number, col: number): PixelColor | null => {
@@ -466,14 +467,15 @@ export async function generateScaledQR(
               const pixelLuma =
                 (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]) / 255;
               const moduleDark = qr.isDark(row, col);
-              // Restrict blending to existing dither "ink" so preservation boosting does not
-              // flatten whole module rectangles into solid overlays.
+              // "dither" mode keeps preservation blending on existing dither rails.
+              // "overlay" mode allows full-module pass-through coloring.
               const rawInkContrast = paperLuma - pixelLuma;
-              const inkCoverageN = isDitheredMode
-                ? moduleDark
-                  ? Math.max(0, Math.min(1, (rawInkContrast - 0.015) / 0.28))
-                  : Math.max(0, Math.min(1, (rawInkContrast + 0.03) / 0.22))
-                : 1;
+              const inkCoverageN =
+                blendPreservationMode === 'dither' && isDitheredMode
+                  ? moduleDark
+                    ? Math.max(0, Math.min(1, (rawInkContrast - 0.015) / 0.28))
+                    : Math.max(0, Math.min(1, (rawInkContrast + 0.03) / 0.22))
+                  : 1;
               if (inkCoverageN <= 1e-3) {
                 idx += 4;
                 continue;
