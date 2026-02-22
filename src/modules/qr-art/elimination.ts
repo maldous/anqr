@@ -307,8 +307,8 @@ export function gaussJordanEliminate(
     (a, b) => a - b
   );
 
-  // Track which pixels have been assigned to a block already
-  const assignedPixels = new Set<number>();
+  // Track the still-available pixel order once and shrink it as blocks claim pivots.
+  let availablePixelOrder = [...pixelOrder];
 
   // Process each block separately
   const blockResults: BlockEliminationResult[] = [];
@@ -321,9 +321,6 @@ export function gaussJordanEliminate(
     const bVectors = blockVectors.get(blockIndex) || [];
     const bMappings = blockMappings.get(blockIndex) || [];
 
-    // Filter pixelOrder to only include pixels not yet assigned to another block
-    const availablePixelOrder = pixelOrder.filter((p) => !assignedPixels.has(p));
-
     const result = eliminateBlock(
       blockIndex,
       bVectors,
@@ -335,9 +332,10 @@ export function gaussJordanEliminate(
 
     blockResults.push(result);
 
-    // Mark controlled pixels as assigned
-    for (const pixel of result.controlledPixels) {
-      assignedPixels.add(pixel);
+    // Remove newly controlled pixels from future blocks while preserving order.
+    if (result.controlledPixels.length > 0 && availablePixelOrder.length > 0) {
+      const assignedThisBlock = new Set(result.controlledPixels);
+      availablePixelOrder = availablePixelOrder.filter((p) => !assignedThisBlock.has(p));
     }
 
     // Add vectors to combined list
@@ -545,24 +543,34 @@ export function countMatchingPixels(
   dataPixels: Set<number>,
   mappings: BitPixelMapping[]
 ): { matching: number; total: number } {
-  // Build a lookup: (rsBlockIndex, posInBlock, bitInByte) -> pixelIndex
-  // This lets us find which pixel is affected by each bit in a vector's blockBits
-  const bitToPixelMap = new Map<string, number>();
+  const maxPixelCount = moduleCount * moduleCount;
+  // Build per-block lookup: (posInBlock * 8 + bitInByte) -> pixelIndex.
+  // Using numeric keys avoids string allocations in hot loops.
+  const bitToPixelMap = new Map<number, Map<number, number>>();
   for (const m of mappings) {
-    const key = `${m.rsBlockIndex}-${m.posInBlock}-${m.bitInByte}`;
-    bitToPixelMap.set(key, m.pixelIndex);
+    let blockMap = bitToPixelMap.get(m.rsBlockIndex);
+    if (!blockMap) {
+      blockMap = new Map<number, number>();
+      bitToPixelMap.set(m.rsBlockIndex, blockMap);
+    }
+    blockMap.set(m.posInBlock * 8 + m.bitInByte, m.pixelIndex);
   }
 
-  // Track how many times each pixel is flipped (odd = flipped, even = not flipped)
-  const flipCount = new Map<number, number>();
+  // Track flip parity directly (odd = flipped, even = unchanged).
+  const flipParity = new Uint8Array(maxPixelCount);
+  const blockResultByIndex = new Map(
+    eliminationResult.blockResults.map(
+      (blockResult) => [blockResult.blockIndex, blockResult] as const
+    )
+  );
 
   // For each selected vector, iterate through ALL bits in its blockBits
   for (const sel of blockSelections) {
     const { blockIndex, selectedVectorIndices } = sel;
 
-    // Find the block result
-    const blockResult = eliminationResult.blockResults.find((br) => br.blockIndex === blockIndex);
-    if (!blockResult) continue;
+    const blockResult = blockResultByIndex.get(blockIndex);
+    const blockMap = bitToPixelMap.get(blockIndex);
+    if (!(blockResult && blockMap)) continue;
 
     for (const vectorIdx of selectedVectorIndices) {
       const vector = blockResult.vectors[vectorIdx];
@@ -577,11 +585,9 @@ export function countMatchingPixels(
         for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
           if ((byte & (1 << bitIdx)) !== 0) {
             // This bit is set - find the corresponding pixel
-            const key = `${blockIndex}-${byteIdx}-${bitIdx}`;
-            const pixelIdx = bitToPixelMap.get(key);
-            if (pixelIdx !== undefined) {
-              // Increment flip count for this pixel
-              flipCount.set(pixelIdx, (flipCount.get(pixelIdx) || 0) + 1);
+            const pixelIdx = blockMap.get(byteIdx * 8 + bitIdx);
+            if (pixelIdx !== undefined && pixelIdx >= 0 && pixelIdx < maxPixelCount) {
+              flipParity[pixelIdx] ^= 1;
             }
           }
         }
@@ -601,8 +607,7 @@ export function countMatchingPixels(
       let value = baseMatrix[row]?.[col] ?? false;
 
       // Check if this pixel is flipped (odd number of flips = flipped)
-      const flips = flipCount.get(pixelIdx) || 0;
-      if (flips % 2 === 1) {
+      if (flipParity[pixelIdx] === 1) {
         value = !value;
       }
 

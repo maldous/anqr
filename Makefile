@@ -49,6 +49,8 @@ help:
 	@echo "    make gallery:overlay gallery:nooverlay gallery:qrart"
 	@echo "    Tunables: GALLERY_API_URL, GALLERY_CATEGORY, GALLERY_IDS,"
 	@echo "              GALLERY_LOCAL_CONCURRENCY, GALLERY_BROWSER_CONCURRENCY, GALLERY_REMOTE_CONCURRENCY"
+	@echo "              GALLERY_SHARD (e.g. 2/8), GALLERY_SHARD_INDEX + GALLERY_SHARD_TOTAL,"
+	@echo "              GALLERY_SHARD_COUNT (auto-parallel shard fanout)"
 	@echo ""
 	@echo " 11) i18n"
 	@echo "    make i18n:pull i18n:xlate i18n:fill i18n:check i18n:push"
@@ -159,6 +161,10 @@ GALLERY_LOCAL_CONCURRENCY ?= 12
 GALLERY_BROWSER_CONCURRENCY ?= 3
 GALLERY_REMOTE_CONCURRENCY ?= 2
 GALLERY_SCENARIO_TIMEOUT_MS ?= 900000
+GALLERY_SHARD ?=
+GALLERY_SHARD_INDEX ?=
+GALLERY_SHARD_TOTAL ?=
+GALLERY_SHARD_COUNT ?= 1
 ANQR_LOG_LEVEL ?= error
 
 # PWA screenshot generation server port (default matches dev server).
@@ -496,7 +502,30 @@ gallery\:qrart:
 # Render all 1000 gallery permutation configs via the deployed anqr.link API.
 # Produces reports/gallery-artifacts/remote/ with passed.txt/failed.txt/report.json.
 gallery\:remote:
-	ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_REMOTE_CONCURRENCY) node --import tsx scripts/generate-gallery-remote.mjs
+	@set -e; \
+	count="$(GALLERY_SHARD_COUNT)"; \
+	if [ "$$count" -le 1 ]; then \
+		ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_REMOTE_CONCURRENCY) GALLERY_SHARD="$(GALLERY_SHARD)" GALLERY_SHARD_INDEX="$(GALLERY_SHARD_INDEX)" GALLERY_SHARD_TOTAL="$(GALLERY_SHARD_TOTAL)" node --import tsx scripts/generate-gallery-remote.mjs; \
+		exit $$?; \
+	fi; \
+	if [ -n "$(GALLERY_SHARD)" ] || [ -n "$(GALLERY_SHARD_INDEX)" ] || [ -n "$(GALLERY_SHARD_TOTAL)" ]; then \
+		echo "ERROR: GALLERY_SHARD_COUNT>1 cannot be combined with GALLERY_SHARD / GALLERY_SHARD_INDEX / GALLERY_SHARD_TOTAL."; \
+		exit 1; \
+	fi; \
+	echo "[gallery:remote] starting $$count shards in parallel"; \
+	pids=""; \
+	failed=0; \
+	i=1; \
+	while [ $$i -le $$count ]; do \
+		echo "[gallery:remote] shard $$i/$$count"; \
+		(ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_REMOTE_CONCURRENCY) GALLERY_SHARD="$$i/$$count" node --import tsx scripts/generate-gallery-remote.mjs) & \
+		pids="$$pids $$!"; \
+		i=$$((i + 1)); \
+	done; \
+	for pid in $$pids; do \
+		wait $$pid || failed=1; \
+	done; \
+	exit $$failed
 
 # Alias for remote API renderer target
 gallery\:api: gallery\:remote
@@ -504,7 +533,30 @@ gallery\:api: gallery\:remote
 # Render all 1000 gallery permutation configs locally via QRGenerator + @napi-rs/canvas.
 # Produces reports/gallery-artifacts/local/ with passed.txt/failed.txt/report.json.
 gallery\:local:
-	ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_LOCAL_CONCURRENCY) node --import tsx scripts/generate-gallery-local.mjs
+	@set -e; \
+	count="$(GALLERY_SHARD_COUNT)"; \
+	if [ "$$count" -le 1 ]; then \
+		ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_LOCAL_CONCURRENCY) GALLERY_SHARD="$(GALLERY_SHARD)" GALLERY_SHARD_INDEX="$(GALLERY_SHARD_INDEX)" GALLERY_SHARD_TOTAL="$(GALLERY_SHARD_TOTAL)" node --import tsx scripts/generate-gallery-local.mjs; \
+		exit $$?; \
+	fi; \
+	if [ -n "$(GALLERY_SHARD)" ] || [ -n "$(GALLERY_SHARD_INDEX)" ] || [ -n "$(GALLERY_SHARD_TOTAL)" ]; then \
+		echo "ERROR: GALLERY_SHARD_COUNT>1 cannot be combined with GALLERY_SHARD / GALLERY_SHARD_INDEX / GALLERY_SHARD_TOTAL."; \
+		exit 1; \
+	fi; \
+	echo "[gallery:local] starting $$count shards in parallel"; \
+	pids=""; \
+	failed=0; \
+	i=1; \
+	while [ $$i -le $$count ]; do \
+		echo "[gallery:local] shard $$i/$$count"; \
+		(ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_CONCURRENCY=$(GALLERY_LOCAL_CONCURRENCY) GALLERY_SHARD="$$i/$$count" node --import tsx scripts/generate-gallery-local.mjs) & \
+		pids="$$pids $$!"; \
+		i=$$((i + 1)); \
+	done; \
+	for pid in $$pids; do \
+		wait $$pid || failed=1; \
+	done; \
+	exit $$failed
 
 # Render all 1000 gallery permutation configs via Playwright browser screenshots.
 # Requires a dev server running on GALLERY_PORT (default: 5173).
@@ -512,7 +564,30 @@ gallery\:local:
 gallery\:browser:
 	@curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
 		(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first, or use 'make all'." && exit 1)
-	ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) node --import tsx scripts/generate-gallery-browser.mjs
+	@set -e; \
+	count="$(GALLERY_SHARD_COUNT)"; \
+	if [ "$$count" -le 1 ]; then \
+		ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$(GALLERY_SHARD)" GALLERY_SHARD_INDEX="$(GALLERY_SHARD_INDEX)" GALLERY_SHARD_TOTAL="$(GALLERY_SHARD_TOTAL)" node --import tsx scripts/generate-gallery-browser.mjs; \
+		exit $$?; \
+	fi; \
+	if [ -n "$(GALLERY_SHARD)" ] || [ -n "$(GALLERY_SHARD_INDEX)" ] || [ -n "$(GALLERY_SHARD_TOTAL)" ]; then \
+		echo "ERROR: GALLERY_SHARD_COUNT>1 cannot be combined with GALLERY_SHARD / GALLERY_SHARD_INDEX / GALLERY_SHARD_TOTAL."; \
+		exit 1; \
+	fi; \
+	echo "[gallery:browser] starting $$count shards in parallel"; \
+	pids=""; \
+	failed=0; \
+	i=1; \
+	while [ $$i -le $$count ]; do \
+		echo "[gallery:browser] shard $$i/$$count"; \
+		(ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$$i/$$count" node --import tsx scripts/generate-gallery-browser.mjs) & \
+		pids="$$pids $$!"; \
+		i=$$((i + 1)); \
+	done; \
+	for pid in $$pids; do \
+		wait $$pid || failed=1; \
+	done; \
+	exit $$failed
 
 # Compare local/browser/remote artifacts for consistency.
 gallery\:compare:

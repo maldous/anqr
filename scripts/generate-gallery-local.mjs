@@ -14,6 +14,9 @@
  *   GALLERY_CONCURRENCY    Parallel render count (default: auto host-aware)
  *   GALLERY_CATEGORY       Filter by category: nooverlay/overlay/artwork (default: all)
  *   GALLERY_IDS            Comma-separated config IDs to run (default: all)
+ *   GALLERY_SHARD          Shard selector (e.g. 2/8 or 2-of-8)
+ *   GALLERY_SHARD_INDEX    0-based shard index (used with GALLERY_SHARD_TOTAL)
+ *   GALLERY_SHARD_TOTAL    Total shard count
  */
 
 // ============================================
@@ -53,6 +56,11 @@ import {
   buildUrlParams,
   scenarioFilename,
 } from './lib/gallery-permutations.mjs';
+import {
+  resolveGalleryShard,
+  applyGalleryShard,
+  shardOutputFilename,
+} from './lib/gallery-sharding.mjs';
 
 // Several rendering branches in shared code perform instanceof checks against
 // browser canvas globals. Mirror those globals in Node to avoid runtime mismatches.
@@ -88,6 +96,7 @@ const SCENARIO_TIMEOUT_MS = Math.max(
   30_000,
   Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '240000', 10),
 );
+const SHARD = resolveGalleryShard(process.env);
 const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
 const LOCAL_HANDLER_URL = 'http://localhost/.netlify/functions/qr';
 const ARTIFACT_EXTS = ['png', 'gif', 'webp', 'jpg', 'jpeg', 'svg'];
@@ -263,6 +272,7 @@ async function withTimeout(task, timeoutMs) {
 async function main() {
   console.log('\n=== ANQR Gallery Local Generator (in-process API handler) ===\n');
   console.log(`Concurrency: ${CONCURRENCY}`);
+  console.log(`Shard:       ${SHARD.label}`);
   console.log(`Per-case timeout: ${Math.round(SCENARIO_TIMEOUT_MS / 1000)}s`);
   console.log(`Output:      ${OUTPUT_DIR}\n`);
   console.log(`Fixtures:    ${PUBLIC_DIR}\n`);
@@ -281,10 +291,15 @@ async function main() {
     const ids = new Set(idFilter.split(',').map((s) => s.trim()));
     configs = configs.filter((c) => ids.has(c.id));
   }
+  const preShardCount = configs.length;
+  configs = applyGalleryShard(configs, SHARD);
 
-  console.log(`Configs: ${configs.length}\n`);
+  console.log(`Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`);
 
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
+  const passedPath = path.join(OUTPUT_DIR, shardOutputFilename('passed.txt', SHARD));
+  const failedPath = path.join(OUTPUT_DIR, shardOutputFilename('failed.txt', SHARD));
+  const reportPath = path.join(OUTPUT_DIR, shardOutputFilename('report.json', SHARD));
 
   const globalStart = Date.now();
   let completed = 0;
@@ -361,14 +376,20 @@ async function main() {
 
   const results = await runPool(tasks, CONCURRENCY);
 
-  await fs.writeFile(path.join(OUTPUT_DIR, 'passed.txt'), passed.join('\n') + (passed.length ? '\n' : ''));
-  await fs.writeFile(path.join(OUTPUT_DIR, 'failed.txt'), failed.join('\n') + (failed.length ? '\n' : ''));
+  await fs.writeFile(passedPath, passed.join('\n') + (passed.length ? '\n' : ''));
+  await fs.writeFile(failedPath, failed.join('\n') + (failed.length ? '\n' : ''));
 
   const report = {
     generatedAt: new Date().toISOString(),
     mode: 'local',
     renderer: 'netlify/functions/qr.ts (in-process)',
     assetBaseUrl: pathToFileURL(PUBLIC_DIR).href,
+    shard: {
+      index: SHARD.index,
+      total: SHARD.total,
+      label: SHARD.label,
+      isSharded: SHARD.isSharded,
+    },
     totalRuns: results.length,
     passCount: passed.length,
     failCount: failed.length,
@@ -385,7 +406,7 @@ async function main() {
     results,
   };
 
-  await fs.writeFile(path.join(OUTPUT_DIR, 'report.json'), JSON.stringify(report, null, 2));
+  await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
 
   const totalSec = Math.round((Date.now() - globalStart) / 1000);
   console.log(`\n${'='.repeat(50)}`);
@@ -393,9 +414,9 @@ async function main() {
   console.log(`Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`);
   console.log(`Fail:  ${failed.length}`);
   console.log(`\nArtifacts: ${OUTPUT_DIR}/`);
-  console.log(`Passed:    ${OUTPUT_DIR}/passed.txt`);
-  console.log(`Failed:    ${OUTPUT_DIR}/failed.txt`);
-  console.log(`Report:    ${OUTPUT_DIR}/report.json\n`);
+  console.log(`Passed:    ${passedPath}`);
+  console.log(`Failed:    ${failedPath}`);
+  console.log(`Report:    ${reportPath}\n`);
 
   if (failed.length > 0) {
     process.exitCode = 1;

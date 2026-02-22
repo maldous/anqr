@@ -16,6 +16,9 @@
  *   GALLERY_BROWSER_CAPTURE_MODE  api (default) or preview
  *   GALLERY_CATEGORY       Filter by category: nooverlay/overlay/artwork (default: all)
  *   GALLERY_IDS            Comma-separated config IDs to run (default: all)
+ *   GALLERY_SHARD          Shard selector (e.g. 2/8 or 2-of-8)
+ *   GALLERY_SHARD_INDEX    0-based shard index (used with GALLERY_SHARD_TOTAL)
+ *   GALLERY_SHARD_TOTAL    Total shard count
  *
  * Prerequisites:
  *   - npx playwright install chromium
@@ -40,6 +43,11 @@ import {
   buildUrlParams,
   scenarioFilename,
 } from './lib/gallery-permutations.mjs';
+import {
+  resolveGalleryShard,
+  applyGalleryShard,
+  shardOutputFilename,
+} from './lib/gallery-sharding.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -57,6 +65,7 @@ const CANVAS_SELECTOR =
   '[data-testid="qr-preview"] canvas, [data-testid="preview-canvas"], canvas[role="img"]';
 const SKIP_SERVER_CHECK = process.env.GALLERY_SKIP_SERVER_CHECK === '1';
 const CAPTURE_MODE = (process.env.GALLERY_BROWSER_CAPTURE_MODE || 'api').toLowerCase();
+const SHARD = resolveGalleryShard(process.env);
 const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
 const BROWSER_GIF_CAPTURE_FRAMES = Math.max(
   2,
@@ -428,6 +437,7 @@ async function main() {
   console.log(`Mode:        ${CAPTURE_MODE}`);
   console.log(`Server:      ${BASE_URL}`);
   console.log(`Concurrency: ${CONCURRENCY}`);
+  console.log(`Shard:       ${SHARD.label}`);
   console.log(`Timeout:     ${PAGE_TIMEOUT / 1000}s per page\n`);
 
   // Check server only for preview-capture mode.
@@ -459,11 +469,16 @@ async function main() {
     const ids = new Set(idFilter.split(',').map((s) => s.trim()));
     configs = configs.filter((c) => ids.has(c.id));
   }
+  const preShardCount = configs.length;
+  configs = applyGalleryShard(configs, SHARD);
 
-  console.log(`Configs: ${configs.length}\n`);
+  console.log(`Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`);
 
   // Prepare artifact directory
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
+  const passedPath = path.join(OUTPUT_DIR, shardOutputFilename('passed.txt', SHARD));
+  const failedPath = path.join(OUTPUT_DIR, shardOutputFilename('failed.txt', SHARD));
+  const reportPath = path.join(OUTPUT_DIR, shardOutputFilename('report.json', SHARD));
 
   let browser = null;
   let qrHandler = null;
@@ -660,8 +675,8 @@ async function main() {
   }
 
   // Write passed.txt and failed.txt
-  await fs.writeFile(path.join(OUTPUT_DIR, 'passed.txt'), passed.join('\n') + (passed.length ? '\n' : ''));
-  await fs.writeFile(path.join(OUTPUT_DIR, 'failed.txt'), failed.join('\n') + (failed.length ? '\n' : ''));
+  await fs.writeFile(passedPath, passed.join('\n') + (passed.length ? '\n' : ''));
+  await fs.writeFile(failedPath, failed.join('\n') + (failed.length ? '\n' : ''));
 
   // Write JSON report
   const report = {
@@ -669,6 +684,12 @@ async function main() {
     mode: 'browser',
     serverUrl: BASE_URL,
     concurrency: CONCURRENCY,
+    shard: {
+      index: SHARD.index,
+      total: SHARD.total,
+      label: SHARD.label,
+      isSharded: SHARD.isSharded,
+    },
     totalRuns: results.length,
     passCount: passed.length,
     failCount: failed.length,
@@ -680,7 +701,7 @@ async function main() {
     ),
     results,
   };
-  await fs.writeFile(path.join(OUTPUT_DIR, 'report.json'), JSON.stringify(report, null, 2));
+  await fs.writeFile(reportPath, JSON.stringify(report, null, 2));
 
   // Print summary
   const totalSec = Math.round((Date.now() - globalStart) / 1000);
@@ -689,9 +710,9 @@ async function main() {
   console.log(`Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`);
   console.log(`Fail:  ${failed.length}`);
   console.log(`\nArtifacts: ${OUTPUT_DIR}/`);
-  console.log(`Passed:    ${OUTPUT_DIR}/passed.txt`);
-  console.log(`Failed:    ${OUTPUT_DIR}/failed.txt`);
-  console.log(`Report:    ${OUTPUT_DIR}/report.json\n`);
+  console.log(`Passed:    ${passedPath}`);
+  console.log(`Failed:    ${failedPath}`);
+  console.log(`Report:    ${reportPath}\n`);
 
   if (failed.length > 0) {
     process.exitCode = 1;

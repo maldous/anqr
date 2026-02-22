@@ -1084,16 +1084,39 @@ function buildGlobalGifPalette(
     frameCount > 10
       ? [0, Math.floor(frameCount / 2), frameCount - 1]
       : Array.from({ length: frameCount }, (_, i) => i);
-  const samplePixels = new Uint8ClampedArray(indices.length * width * height * 4);
+  const maxSamplePixels = 180_000;
+  const totalPixels = Math.max(1, indices.length * width * height);
+  const stride = Math.max(1, Math.floor(Math.sqrt(totalPixels / maxSamplePixels)));
+  const sampledWidth = Math.max(1, Math.ceil(width / stride));
+  const sampledHeight = Math.max(1, Math.ceil(height / stride));
+  const samplePixels = new Uint8ClampedArray(indices.length * sampledWidth * sampledHeight * 4);
   let offset = 0;
 
   for (const idx of indices) {
     const data = frameDataProvider(idx);
-    samplePixels.set(data, offset);
-    offset += data.length;
+    if (stride === 1) {
+      samplePixels.set(data, offset);
+      offset += data.length;
+      continue;
+    }
+
+    for (let y = 0; y < height; y += stride) {
+      const rowOffset = y * width * 4;
+      for (let x = 0; x < width; x += stride) {
+        const srcIdx = rowOffset + x * 4;
+        samplePixels[offset] = data[srcIdx];
+        samplePixels[offset + 1] = data[srcIdx + 1];
+        samplePixels[offset + 2] = data[srcIdx + 2];
+        samplePixels[offset + 3] = data[srcIdx + 3];
+        offset += 4;
+      }
+    }
   }
 
-  const basePalette = quantizeGifPalette(samplePixels, paletteSize);
+  const basePalette = quantizeGifPalette(
+    offset === samplePixels.length ? samplePixels : samplePixels.subarray(0, offset),
+    paletteSize
+  );
   return ensureGifPaletteAnchors(basePalette, paletteSize);
 }
 
@@ -1164,13 +1187,22 @@ function encodeAnimatedGif(
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
   const bgRgb = parseGifBackgroundColor(backgroundColor);
-  const getFrameData = (i: number): Uint8ClampedArray => {
+  const sampledFrameCache = new Map<number, Uint8ClampedArray>();
+  const getFrameData = (i: number, allowCache = false): Uint8ClampedArray => {
+    if (allowCache) {
+      const cached = sampledFrameCache.get(i);
+      if (cached) return cached;
+    }
     const ctx = frames[i].getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
-    return prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    const prepared = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    if (allowCache) {
+      sampledFrameCache.set(i, prepared);
+    }
+    return prepared;
   };
   const globalPalette = buildGlobalGifPalette(
-    getFrameData,
+    (i) => getFrameData(i, true),
     frames.length,
     width,
     height,
@@ -1182,7 +1214,7 @@ function encodeAnimatedGif(
   const delayMs = Math.max(20, frameDelayMs);
 
   for (let i = 0; i < frames.length; i++) {
-    const preparedData = getFrameData(i);
+    const preparedData = sampledFrameCache.get(i) ?? getFrameData(i, false);
     const index = indexGifPixels(preparedData, globalPalette);
 
     // Only set repeat on first frame
@@ -1199,6 +1231,7 @@ function encodeAnimatedGif(
   }
 
   gif.finish();
+  sampledFrameCache.clear();
   return Buffer.from(gif.bytes());
 }
 
@@ -2352,13 +2385,22 @@ function encodeAnimatedGifWithDelays(
   const gif = createGifEncoder();
   const paletteSize = Math.min(256, Math.max(2, colors));
   const bgRgb = parseGifBackgroundColor(backgroundColor);
-  const getFrameData = (i: number): Uint8ClampedArray => {
+  const sampledFrameCache = new Map<number, Uint8ClampedArray>();
+  const getFrameData = (i: number, allowCache = false): Uint8ClampedArray => {
+    if (allowCache) {
+      const cached = sampledFrameCache.get(i);
+      if (cached) return cached;
+    }
     const ctx = frames[i].canvas.getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
-    return prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    const prepared = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    if (allowCache) {
+      sampledFrameCache.set(i, prepared);
+    }
+    return prepared;
   };
   const globalPalette = buildGlobalGifPalette(
-    getFrameData,
+    (i) => getFrameData(i, true),
     frames.length,
     width,
     height,
@@ -2367,7 +2409,7 @@ function encodeAnimatedGifWithDelays(
 
   for (let i = 0; i < frames.length; i++) {
     const frame = frames[i];
-    const preparedData = getFrameData(i);
+    const preparedData = sampledFrameCache.get(i) ?? getFrameData(i, false);
     const index = indexGifPixels(preparedData, globalPalette);
 
     // gifenc expects delay in milliseconds (it converts to centiseconds internally)
@@ -2387,6 +2429,7 @@ function encodeAnimatedGifWithDelays(
   }
 
   gif.finish();
+  sampledFrameCache.clear();
   return Buffer.from(gif.bytes());
 }
 
