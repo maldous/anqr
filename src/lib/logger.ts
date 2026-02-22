@@ -212,7 +212,7 @@ export type ScopePrefix = (typeof SCOPE_PREFIXES)[keyof typeof SCOPE_PREFIXES];
 /** Maximum number of log entries to keep in buffer (oldest are dropped when exceeded) */
 const MAX_BUFFER_SIZE = 2000;
 
-/** Maximum number of structured log entries to keep (always active, for saveLogs) */
+/** Maximum number of structured log entries to keep */
 const MAX_STRUCTURED_BUFFER_SIZE = 5000;
 
 /** Maximum depth for context object serialization (prevents infinite recursion) */
@@ -226,7 +226,7 @@ let logBufferEnabled = false;
 let logBuffer: string[] = [];
 
 // ============================================================================
-// Structured Log Buffer - always active, for saveLogs() functionality
+// Structured Log Buffer - selectively captured based on level/diagnostics
 // ============================================================================
 
 /** Structured log entry with full context objects preserved */
@@ -238,7 +238,7 @@ export interface StructuredLogEntry {
   context?: unknown;
 }
 
-/** Always-active structured buffer for saveLogs() - captures last N entries */
+/** Structured buffer for saveLogs() - captures last N selected entries */
 let structuredLogBuffer: StructuredLogEntry[] = [];
 
 /**
@@ -276,7 +276,7 @@ export function getBufferSize(): number {
 }
 
 // ============================================================================
-// Structured Log Buffer Functions (always active)
+// Structured Log Buffer Functions
 // ============================================================================
 
 /**
@@ -485,33 +485,42 @@ function safeSerializeContext(context: unknown): unknown {
   return '[Unserializable]';
 }
 
+interface BufferCaptureOptions {
+  captureStructured: boolean;
+  captureString: boolean;
+}
+
 /**
- * Capture a log line to the buffer if buffering is enabled.
- * Also always captures to structured buffer for saveLogs() functionality.
- * Includes ISO 8601 timestamp and enforces buffer size limits.
+ * Capture a log line to one or both in-memory buffers.
+ * Serialization/redaction should happen before this function.
  */
-function captureToBuffer(scope: string, level: string, message: string, context?: unknown): void {
-  // ISO 8601 timestamp with milliseconds
+function captureToBuffer(
+  scope: string,
+  level: string,
+  message: string,
+  context: unknown,
+  options: BufferCaptureOptions
+): void {
+  if (!(options.captureStructured || options.captureString)) return;
+
   const timestamp = new Date().toISOString();
 
-  // Always capture to structured buffer (for saveLogs)
-  if (structuredLogBuffer.length >= MAX_STRUCTURED_BUFFER_SIZE) {
-    structuredLogBuffer.shift();
+  if (options.captureStructured) {
+    if (structuredLogBuffer.length >= MAX_STRUCTURED_BUFFER_SIZE) {
+      structuredLogBuffer.shift();
+    }
+
+    const serializedContext = context ? safeSerializeContext(context) : undefined;
+    structuredLogBuffer.push({
+      timestamp,
+      scope,
+      level,
+      message,
+      context: serializedContext,
+    });
   }
 
-  // Use robust serialization for context
-  const serializedContext = context ? safeSerializeContext(context) : undefined;
-
-  structuredLogBuffer.push({
-    timestamp,
-    scope,
-    level,
-    message,
-    context: serializedContext,
-  });
-
-  // Only capture to string buffer if explicitly enabled
-  if (!logBufferEnabled) return;
+  if (!options.captureString) return;
 
   const prefix = `${timestamp} [${scope}:${level}]`;
   let logLine: string;
@@ -608,6 +617,54 @@ const isDev =
     : process.env.NODE_ENV !== 'production';
 const defaultLevel = envLevel ?? (isDev ? 'debug' : 'error');
 loglevel.setLevel(defaultLevel);
+type RuntimeLogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'silent';
+
+const LOG_LEVEL_INDEX: Record<RuntimeLogLevel, number> = {
+  trace: 0,
+  debug: 1,
+  info: 2,
+  warn: 3,
+  error: 4,
+  silent: 5,
+};
+
+const captureMinLevelRaw =
+  typeof process !== 'undefined'
+    ? process.env.ANQR_LOG_CAPTURE_MIN_LEVEL?.toLowerCase()
+    : undefined;
+const captureMinLevel = (() => {
+  switch (captureMinLevelRaw) {
+    case 'trace':
+    case 'debug':
+    case 'info':
+    case 'warn':
+    case 'error':
+      return captureMinLevelRaw as RuntimeLogLevel;
+    default:
+      return isDev ? ('trace' as RuntimeLogLevel) : ('warn' as RuntimeLogLevel);
+  }
+})();
+const forceStructuredCaptureAll =
+  typeof process !== 'undefined' && process.env.ANQR_LOG_CAPTURE_ALL === '1';
+
+function isLevelEnabledForLogger(
+  logger: loglevel.Logger,
+  level: Exclude<RuntimeLogLevel, 'silent'>
+): boolean {
+  const maybeGetter = (logger as unknown as { getLevel?: () => number }).getLevel;
+  const loggerLevel =
+    typeof maybeGetter === 'function' ? maybeGetter.call(logger) : loglevel.getLevel();
+  return LOG_LEVEL_INDEX[level] >= loggerLevel;
+}
+
+function shouldCaptureStructured(
+  level: Exclude<RuntimeLogLevel, 'silent'>,
+  isConsoleEnabled: boolean
+): boolean {
+  if (forceStructuredCaptureAll) return true;
+  if (isConsoleEnabled) return true;
+  return LOG_LEVEL_INDEX[level] >= LOG_LEVEL_INDEX[captureMinLevel];
+}
 
 // ============================================================================
 // Redaction utilities
@@ -709,84 +766,73 @@ export function createLogger(scope: string): Logger {
   // Inherit level from root logger
   logger.setLevel(loglevel.getLevel());
 
+  const emit = (
+    level: Exclude<RuntimeLogLevel, 'silent'>,
+    message: string,
+    context?: LogContext
+  ): LogContext | undefined => {
+    const consoleEnabled = isLevelEnabledForLogger(logger, level);
+    const captureStructured = shouldCaptureStructured(level, consoleEnabled);
+    const captureString = logBufferEnabled;
+    const needsSanitizedContext =
+      !!context && (captureStructured || captureString || level === 'warn' || level === 'error');
+    const safeContext = needsSanitizedContext
+      ? (redactSensitive(context) as LogContext)
+      : undefined;
+    const contextForConsole = safeContext ?? context;
+
+    if (captureStructured || captureString) {
+      captureToBuffer(upperScope, level, message, safeContext ?? contextForConsole, {
+        captureStructured,
+        captureString,
+      });
+    }
+
+    if (consoleEnabled) {
+      const method = logger[level].bind(logger) as (msg: string, ctx?: LogContext) => void;
+      if (contextForConsole) {
+        method(message, contextForConsole);
+      } else {
+        method(message);
+      }
+    }
+
+    return safeContext;
+  };
+
   return {
     trace(message: string, context?: LogContext): void {
-      const safe = context ? redactSensitive(context) : undefined;
-
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'trace', message, safe);
-
-      if (safe) {
-        logger.trace(message, safe);
-      } else {
-        logger.trace(message);
-      }
+      emit('trace', message, context);
     },
 
     debug(message: string, context?: LogContext): void {
-      const safe = context ? redactSensitive(context) : undefined;
-
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'debug', message, safe);
-
-      if (safe) {
-        logger.debug(message, safe);
-      } else {
-        logger.debug(message);
-      }
+      emit('debug', message, context);
     },
 
     info(message: string, context?: LogContext): void {
-      const safe = context ? redactSensitive(context) : undefined;
-
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'info', message, safe);
-
-      if (safe) {
-        logger.info(message, safe);
-      } else {
-        logger.info(message);
-      }
+      emit('info', message, context);
     },
 
     warn(message: string, context?: LogContext): void {
-      const safe = context ? redactSensitive(context) : undefined;
-
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'warn', message, safe);
-
-      if (context) {
-        logger.warn(message, safe);
-      } else {
-        logger.warn(message);
-      }
+      const safeContext = emit('warn', message, context);
 
       // Record as Sentry breadcrumb
       Sentry.addBreadcrumb({
         category: upperScope,
         message,
         level: 'warning',
-        data: safe as Record<string, unknown> | undefined,
+        data: safeContext as Record<string, unknown> | undefined,
       });
     },
 
     error(message: string, context?: LogContext): void {
-      const safe = context ? (redactSensitive(context) as LogContext) : undefined;
-
-      // Capture to buffer even if console output is suppressed
-      captureToBuffer(upperScope, 'error', message, safe);
-
-      if (context) {
-        logger.error(message, safe);
-      } else {
-        logger.error(message);
-      }
+      const safeContext = emit('error', message, context);
 
       // Send to Sentry as event
       Sentry.withScope((sentryScope) => {
         sentryScope.setTag('logger.scope', upperScope);
-        if (safe) {
-          sentryScope.setExtras(safe);
+        if (safeContext) {
+          sentryScope.setExtras(safeContext);
         }
 
         // If context contains an Error, capture it; otherwise capture message

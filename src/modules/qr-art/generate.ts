@@ -41,7 +41,6 @@ import { mapImageToTargetsSupersampled } from './image-utils';
 import {
   buildFullBasis,
   calculateOptimalVersionAndSuffix,
-  clearBasisCache,
   computeECC,
   generateDeterministicNumericSuffix,
   generateDeterministicSuffix,
@@ -2304,10 +2303,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
   try {
     onProgress?.('Encoding base data', 0);
-
-    // CRITICAL: Clear basis cache to ensure fresh calculation
-    clearBasisCache();
-    log.debug('Cleared basis cache for fresh calculation');
 
     // Step 1: Generate base QR to determine version, get initial matrix, and extract per-block data/ECC
     // HYBRID MODE: Pass protectedDataLength to track protection boundaries

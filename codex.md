@@ -1,6 +1,67 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 15:10:00 UTC
+Last updated: 2026-02-22 15:36:00 UTC
+
+## Latest Update (2026-02-22, Performance Hot-Path Pass: Logger + QR-Art + Animation + GIF Memory)
+
+- Resolved logging hot-path overhead in `src/lib/logger.ts`:
+  - `createLogger()` now avoids redaction/serialization/capture work unless needed.
+  - structured capture is level-gated (`ANQR_LOG_CAPTURE_MIN_LEVEL`, default: `warn` in production).
+  - explicit full capture override added via `ANQR_LOG_CAPTURE_ALL=1`.
+  - warn/error still sanitize context and keep Sentry breadcrumb/event behavior.
+  - string-buffer capture still works when `enableLogBuffer()` is active.
+- Removed forced QR-Art basis cache invalidation in `src/modules/qr-art/generate.ts`:
+  - deleted unconditional `clearBasisCache()` call before basis build.
+  - cached RS basis now remains reusable across repeated renders.
+- Reduced animation canvas allocation churn:
+  - `src/modules/animation/apply-animation-pattern.ts` now accepts optional target canvas and supports canvas reuse.
+  - `src/hooks/useQRGenerator.ts` now uses two scratch canvases for stacked animation effects, with persistent-clone mode only when needed.
+- Fixed O(n²) frame index filtering in `src/hooks/useQRGenerator.ts`:
+  - replaced `includes` membership checks with `Set.has` for decimated compositor indices.
+- Reduced server GIF memory pressure in `netlify/functions/qr.ts`:
+  - removed per-frame RGBA `Map` caches in `encodeAnimatedGif()` and `encodeAnimatedGifWithDelays()`.
+  - frame pixel data is now generated on demand (lower peak memory, higher CPU acceptable).
+- Optimized blue-noise tile generation:
+  - `src/modules/dither-algorithms/blue-noise.ts` now memoizes tiles by `(size, seed)` with bounded cache.
+  - switched tile storage to `Float32Array` and generalized sampling to `ArrayLike<number>`.
+- Improved main-thread responsiveness (chunking path):
+  - added cooperative yield points in heavy `generate()` stages in `src/hooks/useQRGenerator.ts` using `requestIdleCallback`/timeout helper path.
+  - this improves responsiveness between expensive generation attempts without changing output behavior.
+- Removed JSON stringify hash tax in `src/hooks/useQRGenerator.ts`:
+  - replaced `JSON.stringify(config)`/`JSON.stringify(debouncedConfig)` comparison with referential comparison (`config !== debouncedConfig`) for pending-state detection.
+- Validation:
+  - `npm run typecheck` passes.
+  - targeted suites pass:
+    - logger: `tests/unit/logger.spec.ts`, `tests/unit/logger-buffer-redaction.spec.ts`, `tests/unit/logger-remote.spec.ts`
+    - animation/dither: `tests/unit/animation-core.spec.ts`, `tests/unit/dither-algorithms.spec.ts`
+    - qr-art/hook/netlify helpers: `tests/unit/qr-art-rs-basis-full.spec.ts`, `tests/unit/useQRGenerator-preserve-options.spec.ts`, `tests/unit/netlify-qr-helpers.spec.ts`
+
+## Latest Update (2026-02-22, Security Hardening: CSP + SSRF + Dev Middleware + Script Eval Removal)
+
+- Hardened production CSP in `netlify.toml`:
+  - removed `'unsafe-eval'` and `'unsafe-inline'` from `script-src`.
+  - added `script-src-attr 'none'`.
+  - kept explicit third-party script allowlist domains.
+- Hardened SSRF protections in `netlify/functions/qr.ts`:
+  - `_isPrivateHostname()` now performs real DNS lookups (`dns.lookup` with `{ all: true }`) and blocks hostnames resolving to private/reserved addresses.
+  - added short hostname safety cache (`overlayHostnameSafetyCache`) with TTL for resolved results and short negative-cache TTL.
+  - DNS lookup failure now fails closed (treated as private/blocked).
+  - added redirect-safe overlay fetch path (`fetchOverlayWithValidatedRedirects`) using `redirect: 'manual'`.
+  - each redirect hop is re-validated (scheme + hostname private check) before continuing.
+  - overlay fetch no longer relies on default redirect-follow behavior.
+- Hardened Vite dev middleware path handling in `vite.config.ts`:
+  - replaced `path.join(__dirname, 'public', req.url)` with safe URL pathname parsing + `decodeURIComponent`.
+  - resolved against fixed `public` root and enforced root-prefix guard.
+  - added explicit `400` for malformed URL and `403` for attempted traversal.
+- Removed runtime code evaluation footgun in `scripts/generate-gallery-matrix.mjs`:
+  - replaced `new Function(...)` object parsing with JSON-like literal normalization + `JSON.parse`.
+  - no dynamic code execution remains in scenario galleryParams parsing path.
+- Added regression coverage:
+  - `tests/unit/netlify-qr-helpers.spec.ts` now includes redirect-based SSRF block test (302 redirect to `127.0.0.1` must be rejected).
+- Validation:
+  - `npm run typecheck` passes.
+  - `npm run test:unit -- tests/unit/netlify-qr-helpers.spec.ts` passes.
+  - `npm run test:unit -- tests/unit/netlify-qr-function.spec.ts` passes.
 
 ## Latest Update (2026-02-22, GIF Timing Preservation + Gallery Runner Strict-Mode Controls)
 
