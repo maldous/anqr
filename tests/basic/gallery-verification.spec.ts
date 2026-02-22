@@ -7,6 +7,7 @@ import { expect, test } from '../fixtures/test-fixtures';
  * - All 11 section headings are visible
  * - Gallery images load successfully (naturalWidth > 0)
  * - Share links contain expected URL parameters
+ * - Web gallery links keep in-app navigation (no forced new tab)
  * - Clicking a gallery item opens the editor with correct parameters
  */
 
@@ -102,8 +103,8 @@ test.describe('Gallery Verification', () => {
   });
 
   test('gallery item share links contain expected URL parameters', async ({ page }) => {
-    // Gallery items are rendered as <a> tags with href containing the share URL
-    const galleryLinks = page.locator('a[href*="anqr.link"]');
+    // Gallery cards are rendered as anchors inside section grids.
+    const galleryLinks = page.locator('.grid a[href]');
     const linkCount = await galleryLinks.count();
     expect(linkCount).toBeGreaterThan(0);
 
@@ -115,12 +116,10 @@ test.describe('Gallery Verification', () => {
       const href = await link.getAttribute('href');
       expect(href).toBeTruthy();
 
-      // All gallery share URLs should point to anqr.link with query params
-      expect(href).toContain('https://anqr.link');
-
-      // Parse the URL to check for expected parameters
-      const url = new URL(href!);
+      // Parse URL relative to current origin; web gallery links are intentionally relative.
+      const url = new URL(href!, page.url());
       const params = url.searchParams;
+      expect(url.pathname).toBe('/');
 
       // Every gallery item should have 'data' and 'ec' parameters at minimum
       expect(params.has('data'), `Link ${i} missing 'data' param: ${href}`).toBe(true);
@@ -139,20 +138,20 @@ test.describe('Gallery Verification', () => {
     }
   });
 
-  test('gallery links have target="_blank" for external opening', async ({ page }) => {
-    const galleryLinks = page.locator('a[href*="anqr.link"]');
+  test('gallery links keep in-app navigation on web (no target="_blank")', async ({ page }) => {
+    const galleryLinks = page.locator('.grid a[href]');
     const linkCount = await galleryLinks.count();
     expect(linkCount).toBeGreaterThan(0);
 
-    // Check that links open in new tab
+    // Web gallery uses relative links and in-app navigation.
     const sampleSize = Math.min(10, linkCount);
     for (let i = 0; i < sampleSize; i++) {
       const link = galleryLinks.nth(i);
       const target = await link.getAttribute('target');
-      expect(target).toBe('_blank');
+      expect(target).toBeNull();
 
       const rel = await link.getAttribute('rel');
-      expect(rel).toContain('noopener');
+      expect(rel).toBeNull();
     }
   });
 
@@ -169,7 +168,7 @@ test.describe('Gallery Verification', () => {
       const href = await link.getAttribute('href');
       expect(href).toBeTruthy();
 
-      const url = new URL(href!);
+      const url = new URL(href!, page.url());
       const params = url.searchParams;
 
       // Overlay items should have 'mode' and 'img' parameters
@@ -198,7 +197,7 @@ test.describe('Gallery Verification', () => {
       const href = await link.getAttribute('href');
       expect(href).toBeTruthy();
 
-      const url = new URL(href!);
+      const url = new URL(href!, page.url());
       const params = url.searchParams;
 
       // Color items should have both fg and bg
@@ -215,23 +214,17 @@ test.describe('Gallery Verification', () => {
 
   test('clicking a gallery item opens editor with correct parameters', async ({ page }) => {
     // Find the first gallery link (should be in Plain QR Codes section)
-    const firstLink = page.locator('a[href*="anqr.link"]').first();
+    const firstLink = page.locator('.grid a[href]').first();
     const href = await firstLink.getAttribute('href');
     expect(href).toBeTruthy();
 
     // Parse the expected parameters from the share URL
-    const expectedUrl = new URL(href!);
+    const expectedUrl = new URL(href!, page.url());
     const expectedData = expectedUrl.searchParams.get('data');
     const expectedEc = expectedUrl.searchParams.get('ec');
     const expectedV = expectedUrl.searchParams.get('v');
 
-    // Validate editor routing locally to avoid production/network dependency.
-    const currentOrigin = new URL(page.url()).origin;
-    const localEditorUrl = new URL(href!);
-    localEditorUrl.protocol = new URL(currentOrigin).protocol;
-    localEditorUrl.host = new URL(currentOrigin).host;
-
-    await page.goto(`${localEditorUrl.pathname}${localEditorUrl.search}`, {
+    await page.goto(`${expectedUrl.pathname}${expectedUrl.search}`, {
       waitUntil: 'domcontentloaded',
       timeout: 15000,
     });

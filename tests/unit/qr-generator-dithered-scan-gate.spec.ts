@@ -1,9 +1,14 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { decodeGif } from '../../src/modules/animation/gif-codec';
 import { decodeQR } from '../../src/modules/qr-decoder';
+import {
+  type CanvasFactory,
+  QRGenerator,
+  type QRGeneratorConfig,
+} from '../../src/modules/qr-generator';
 import {
   isAlignmentPattern,
   isFinderPattern,
@@ -11,7 +16,6 @@ import {
   isTimingPattern,
   isVersionInfo,
 } from '../../src/modules/qr-spec/qr-patterns';
-import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
 
 if (typeof globalThis.ImageData === 'undefined') {
   try {
@@ -99,9 +103,7 @@ function meanModuleCenterLumaByBit(
     const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
     const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
     const idx = (yy * canvas.width + xx) * 4;
-    return (
-      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
-    );
+    return (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255;
   };
 
   let darkSum = 0;
@@ -145,9 +147,7 @@ function meanModuleCenterLumaByBitMasked(
     const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
     const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
     const idx = (yy * canvas.width + xx) * 4;
-    return (
-      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
-    );
+    return (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255;
   };
 
   let darkSum = 0;
@@ -196,9 +196,7 @@ function moduleCenterBinaryAgreementByMask(
     const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
     const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
     const idx = (yy * canvas.width + xx) * 4;
-    return (
-      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
-    );
+    return (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255;
   };
 
   let matches = 0;
@@ -239,9 +237,7 @@ function darkModuleInteriorLumaRangeByMask(
     const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
     const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
     const idx = (yy * canvas.width + xx) * 4;
-    return (
-      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
-    );
+    return (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255;
   };
 
   let maxLuma = 0;
@@ -283,9 +279,7 @@ function darkModuleInkCoverageByMask(
     const xx = Math.max(0, Math.min(canvas.width - 1, Math.round(x)));
     const yy = Math.max(0, Math.min(canvas.height - 1, Math.round(y)));
     const idx = (yy * canvas.width + xx) * 4;
-    return (
-      (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255
-    );
+    return (0.299 * imageData[idx] + 0.587 * imageData[idx + 1] + 0.114 * imageData[idx + 2]) / 255;
   };
 
   const fractions = [0.17, 0.33, 0.5, 0.67, 0.83];
@@ -447,7 +441,8 @@ function loadGifOverlayFrames(filePath: string, size: number, maxFrames: number)
       disposalType: number;
     };
     const { left, top, width, height } = frame.dims;
-    const restore = frame.disposalType === 3 ? compositeCtx.getImageData(left, top, width, height) : null;
+    const restore =
+      frame.disposalType === 3 ? compositeCtx.getImageData(left, top, width, height) : null;
 
     const patchCanvas = createCanvas(width, height);
     const patchCtx = patchCanvas.getContext('2d');
@@ -499,7 +494,13 @@ async function expectScanGatePass(
   const roundtripImage = await loadImage(pngBuffer);
   const roundtripCanvas = createCanvas((generated as any).width, (generated as any).height);
   const roundtripCtx = roundtripCanvas.getContext('2d');
-  roundtripCtx.drawImage(roundtripImage as any, 0, 0, roundtripCanvas.width, roundtripCanvas.height);
+  roundtripCtx.drawImage(
+    roundtripImage as any,
+    0,
+    0,
+    roundtripCanvas.width,
+    roundtripCanvas.height
+  );
 
   const decodedRoundtrip = decodeQR(canvasToImageData(roundtripCanvas as any), {
     inversionAttempts: 'attemptBoth',
@@ -532,16 +533,12 @@ function makeDefaultGalleryScanConfig(payload: string): QRGeneratorConfig {
 }
 
 describe('qr-generator dithered scan gate', { timeout: 30000 }, () => {
-  it(
-    'keeps dithered tsunami output decodable from final PNG bytes',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const payload = 'https://anqr.link';
-      const cfg = makeDefaultGalleryScanConfig(payload);
-      await expectScanGatePass(qr, cfg, 'public/tsunami.jpg', 'tsunami-generated-current.png');
-    },
-    15000
-  );
+  it('keeps dithered tsunami output decodable from final PNG bytes', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const payload = 'https://anqr.link';
+    const cfg = makeDefaultGalleryScanConfig(payload);
+    await expectScanGatePass(qr, cfg, 'public/tsunami.jpg', 'tsunami-generated-current.png');
+  }, 15000);
 
   it('keeps dithered king gif first-frame output decodable from final PNG bytes', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
@@ -626,46 +623,42 @@ describe('qr-generator dithered scan gate', { timeout: 30000 }, () => {
     await expectScanGatePass(qr, cfg, 'public/king.gif', 'king-generated-preview-current.png');
   }, 15000);
 
-  it(
-    'keeps sampled animated king gif frames decodable in preview scan-gate profile',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const payload = 'https://anqr.link';
-      const cfg: QRGeneratorConfig = {
-        content: payload,
-        errorCorrection: 'H',
-        typeNumber: 0,
-        moduleSize: 20,
-        margin: 4,
-        fgColor: '#000000',
-        bgColor: '#ffffff',
-        overlayMode: 'dithered',
-        overlayIntensity: 100,
-        colorMode: 'color',
-        ditherStrength: 50,
-        ditherSerpentine: false,
-        renderScalePerModule: 18,
-        seed: 42,
-        scanGateProfile: 'preview',
-        preserveFinders: true,
-        preserveTiming: false,
-        preserveAlignment: false,
-        protectFormatInfo: false,
-        protectVersionInfo: false,
-      };
-      const overlays = loadGifOverlayFrames(path.join(process.cwd(), 'public/king.gif'), 200, 8);
-      let decodedCount = 0;
-      for (let i = 0; i < overlays.length; i++) {
-        const generated = await qr.generate({ ...cfg, frameIndex: i }, overlays[i]);
-        const decoded = decodeQR(canvasToImageData(generated as any), {
-          inversionAttempts: 'attemptBoth',
-        });
-        if (decoded?.data === cfg.content) decodedCount++;
-      }
-      expect(decodedCount).toBe(overlays.length);
-    },
-    30000
-  );
+  it('keeps sampled animated king gif frames decodable in preview scan-gate profile', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const payload = 'https://anqr.link';
+    const cfg: QRGeneratorConfig = {
+      content: payload,
+      errorCorrection: 'H',
+      typeNumber: 0,
+      moduleSize: 20,
+      margin: 4,
+      fgColor: '#000000',
+      bgColor: '#ffffff',
+      overlayMode: 'dithered',
+      overlayIntensity: 100,
+      colorMode: 'color',
+      ditherStrength: 50,
+      ditherSerpentine: false,
+      renderScalePerModule: 18,
+      seed: 42,
+      scanGateProfile: 'preview',
+      preserveFinders: true,
+      preserveTiming: false,
+      preserveAlignment: false,
+      protectFormatInfo: false,
+      protectVersionInfo: false,
+    };
+    const overlays = loadGifOverlayFrames(path.join(process.cwd(), 'public/king.gif'), 200, 8);
+    let decodedCount = 0;
+    for (let i = 0; i < overlays.length; i++) {
+      const generated = await qr.generate({ ...cfg, frameIndex: i }, overlays[i]);
+      const decoded = decodeQR(canvasToImageData(generated as any), {
+        inversionAttempts: 'attemptBoth',
+      });
+      if (decoded?.data === cfg.content) decodedCount++;
+    }
+    expect(decodedCount).toBe(overlays.length);
+  }, 30000);
 
   it('keeps dithered bw mode decodable (regression: no null color crash)', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
@@ -856,220 +849,197 @@ describe('dither option wiring', { timeout: 30000 }, () => {
     expect(delta).toBeGreaterThan(0.05);
   });
 
-  it(
-    'finder dither strength 100 enforces canonical black/white modules in unpreserved finder/alignment areas',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const cfg: QRGeneratorConfig = {
-        ...makeWiringConfig(),
-        preserveFinders: false,
-        preserveAlignment: false,
-        finderDitherStrength: 100,
-      };
-      const render = await qr.generate(cfg, overlay);
-      const matrixData = qr.getLastMatrix();
-      expect(matrixData).not.toBeNull();
+  it('finder dither strength 100 enforces canonical black/white modules in unpreserved finder/alignment areas', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const cfg: QRGeneratorConfig = {
+      ...makeWiringConfig(),
+      preserveFinders: false,
+      preserveAlignment: false,
+      finderDitherStrength: 100,
+    };
+    const render = await qr.generate(cfg, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
 
-      const agreement = moduleCenterBinaryAgreementByMask(
-        render as any,
-        matrixData!.matrix,
-        cfg.margin,
-        (row, col, moduleCount, version) =>
-          isFinderModuleOrSeparator(row, col, moduleCount) ||
-          isAlignmentPattern(row, col, moduleCount, version)
-      );
-      expect(agreement.moduleCount).toBeGreaterThan(0);
-      expect(agreement.agreement).toBeGreaterThan(0.95);
-    },
-    30000
-  );
+    const agreement = moduleCenterBinaryAgreementByMask(
+      render as any,
+      matrixData!.matrix,
+      cfg.margin,
+      (row, col, moduleCount, version) =>
+        isFinderModuleOrSeparator(row, col, moduleCount) ||
+        isAlignmentPattern(row, col, moduleCount, version)
+    );
+    expect(agreement.moduleCount).toBeGreaterThan(0);
+    expect(agreement.agreement).toBeGreaterThan(0.95);
+  }, 30000);
 
-  it(
-    'finder dark modules are rendered as solid black at 100 strength',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const cfg: QRGeneratorConfig = {
-        ...makeWiringConfig(),
-        preserveFinders: false,
-        preserveAlignment: false,
-        finderDitherStrength: 100,
-      };
-      const render = await qr.generate(cfg, overlay);
-      const matrixData = qr.getLastMatrix();
-      expect(matrixData).not.toBeNull();
+  it('finder dark modules are rendered as solid black at 100 strength', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const cfg: QRGeneratorConfig = {
+      ...makeWiringConfig(),
+      preserveFinders: false,
+      preserveAlignment: false,
+      finderDitherStrength: 100,
+    };
+    const render = await qr.generate(cfg, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
 
-      const lumaRange = darkModuleInteriorLumaRangeByMask(
-        render as any,
-        matrixData!.matrix,
-        cfg.margin,
-        (row, col, moduleCount) => isFinderModuleOrSeparator(row, col, moduleCount)
-      );
-      expect(lumaRange.sampleCount).toBeGreaterThan(0);
-      expect(lumaRange.maxLuma).toBeLessThan(0.08);
-    },
-    30000
-  );
+    const lumaRange = darkModuleInteriorLumaRangeByMask(
+      render as any,
+      matrixData!.matrix,
+      cfg.margin,
+      (row, col, moduleCount) => isFinderModuleOrSeparator(row, col, moduleCount)
+    );
+    expect(lumaRange.sampleCount).toBeGreaterThan(0);
+    expect(lumaRange.maxLuma).toBeLessThan(0.08);
+  }, 30000);
 
-  it(
-    'preservation strength 100 renders dark timing/alignment/format modules as solid black when unprotected',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const cfg: QRGeneratorConfig = {
-        ...makeWiringConfig(),
-        preserveFinders: true,
-        preserveTiming: false,
-        preserveAlignment: false,
-        protectFormatInfo: false,
-        protectVersionInfo: false,
-        finderDitherStrength: 100,
-      };
-      const render = await qr.generate(cfg, overlay);
-      const matrixData = qr.getLastMatrix();
-      expect(matrixData).not.toBeNull();
+  it('preservation strength 100 renders dark timing/alignment/format modules as solid black when unprotected', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const cfg: QRGeneratorConfig = {
+      ...makeWiringConfig(),
+      preserveFinders: true,
+      preserveTiming: false,
+      preserveAlignment: false,
+      protectFormatInfo: false,
+      protectVersionInfo: false,
+      finderDitherStrength: 100,
+    };
+    const render = await qr.generate(cfg, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
 
-      const lumaRange = darkModuleInteriorLumaRangeByMask(
-        render as any,
-        matrixData!.matrix,
-        cfg.margin,
-        (row, col, moduleCount, version) =>
+    const lumaRange = darkModuleInteriorLumaRangeByMask(
+      render as any,
+      matrixData!.matrix,
+      cfg.margin,
+      (row, col, moduleCount, version) =>
+        isTimingPattern(row, col, moduleCount) ||
+        isAlignmentPattern(row, col, moduleCount, version) ||
+        isFormatInfo(row, col, moduleCount) ||
+        isVersionInfo(row, col, moduleCount, version)
+    );
+    expect(lumaRange.sampleCount).toBeGreaterThan(0);
+    expect(lumaRange.maxLuma).toBeLessThan(0.08);
+  }, 30000);
+
+  it('blend preservations uses image-aware coloring instead of grayscale preservation overlays', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const baseCfg: QRGeneratorConfig = {
+      ...makeWiringConfig(),
+      preserveFinders: false,
+      preserveTiming: false,
+      preserveAlignment: false,
+      protectFormatInfo: false,
+      protectVersionInfo: false,
+      finderDitherStrength: 70,
+    };
+    const flatRender = await qr.generate({ ...baseCfg, blendPreservations: false }, overlay);
+    const blendedRender = await qr.generate({ ...baseCfg, blendPreservations: true }, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
+
+    const mask = (row: number, col: number, moduleCount: number, version: number) =>
+      isFinderModuleOrSeparator(row, col, moduleCount) ||
+      isTimingPattern(row, col, moduleCount) ||
+      isAlignmentPattern(row, col, moduleCount, version) ||
+      isFormatInfo(row, col, moduleCount) ||
+      isVersionInfo(row, col, moduleCount, version);
+
+    const flatChroma = meanModuleCenterChromaByMask(
+      flatRender as any,
+      matrixData!.matrix,
+      baseCfg.margin,
+      mask
+    );
+    const blendedChroma = meanModuleCenterChromaByMask(
+      blendedRender as any,
+      matrixData!.matrix,
+      baseCfg.margin,
+      mask
+    );
+
+    expect(flatChroma.sampleCount).toBeGreaterThan(0);
+    expect(blendedChroma.sampleCount).toBe(flatChroma.sampleCount);
+    expect(blendedChroma.meanChroma).toBeGreaterThan(flatChroma.meanChroma + 1.0);
+  }, 30000);
+
+  it('blend preservations keeps preservation regions textured instead of solid fills', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const cfg: QRGeneratorConfig = {
+      ...makeWiringConfig(),
+      preserveFinders: false,
+      preserveTiming: false,
+      preserveAlignment: false,
+      protectFormatInfo: false,
+      protectVersionInfo: false,
+      finderDitherStrength: 100,
+      blendPreservations: true,
+    };
+    const render = await qr.generate(cfg, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
+
+    const textureRange = darkModuleInteriorLumaRangeByMask(
+      render as any,
+      matrixData!.matrix,
+      cfg.margin,
+      (row, col, moduleCount, version) =>
+        (isFinderModuleOrSeparator(row, col, moduleCount) ||
           isTimingPattern(row, col, moduleCount) ||
           isAlignmentPattern(row, col, moduleCount, version) ||
           isFormatInfo(row, col, moduleCount) ||
-          isVersionInfo(row, col, moduleCount, version)
-      );
-      expect(lumaRange.sampleCount).toBeGreaterThan(0);
-      expect(lumaRange.maxLuma).toBeLessThan(0.08);
-    },
-    30000
-  );
+          isVersionInfo(row, col, moduleCount, version)) &&
+        matrixData!.matrix[row][col]
+    );
+    expect(textureRange.sampleCount).toBeGreaterThan(0);
+    // Solid-black fallback keeps this near zero; textured preservations should keep variation.
+    expect(textureRange.maxLuma).toBeGreaterThan(0.12);
+  }, 30000);
 
-  it(
-    'blend preservations uses image-aware coloring instead of grayscale preservation overlays',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const baseCfg: QRGeneratorConfig = {
-        ...makeWiringConfig(),
-        preserveFinders: false,
-        preserveTiming: false,
-        preserveAlignment: false,
-        protectFormatInfo: false,
-        protectVersionInfo: false,
-        finderDitherStrength: 70,
-      };
-      const flatRender = await qr.generate({ ...baseCfg, blendPreservations: false }, overlay);
-      const blendedRender = await qr.generate({ ...baseCfg, blendPreservations: true }, overlay);
-      const matrixData = qr.getLastMatrix();
-      expect(matrixData).not.toBeNull();
+  it('blend preservations avoids module-fill overlays in boosted functional regions', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const baseCfg: QRGeneratorConfig = {
+      ...makeWiringConfig(),
+      preserveFinders: false,
+      preserveTiming: false,
+      preserveAlignment: false,
+      protectFormatInfo: false,
+      protectVersionInfo: false,
+      finderDitherStrength: 100,
+      blendPreservationMode: 'dither',
+    };
+    const flatRender = await qr.generate({ ...baseCfg, blendPreservations: false }, overlay);
+    const blendedRender = await qr.generate({ ...baseCfg, blendPreservations: true }, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
 
-      const mask = (row: number, col: number, moduleCount: number, version: number) =>
-        isFinderModuleOrSeparator(row, col, moduleCount) ||
-        isTimingPattern(row, col, moduleCount) ||
-        isAlignmentPattern(row, col, moduleCount, version) ||
-        isFormatInfo(row, col, moduleCount) ||
-        isVersionInfo(row, col, moduleCount, version);
+    const mask = (row: number, col: number, moduleCount: number, version: number) =>
+      isFinderModuleOrSeparator(row, col, moduleCount) ||
+      isTimingPattern(row, col, moduleCount) ||
+      isAlignmentPattern(row, col, moduleCount, version) ||
+      isFormatInfo(row, col, moduleCount) ||
+      isVersionInfo(row, col, moduleCount, version);
 
-      const flatChroma = meanModuleCenterChromaByMask(
-        flatRender as any,
-        matrixData!.matrix,
-        baseCfg.margin,
-        mask
-      );
-      const blendedChroma = meanModuleCenterChromaByMask(
-        blendedRender as any,
-        matrixData!.matrix,
-        baseCfg.margin,
-        mask
-      );
+    const flatCoverage = darkModuleInkCoverageByMask(
+      flatRender as any,
+      matrixData!.matrix,
+      baseCfg.margin,
+      mask
+    );
+    const blendedCoverage = darkModuleInkCoverageByMask(
+      blendedRender as any,
+      matrixData!.matrix,
+      baseCfg.margin,
+      mask
+    );
 
-      expect(flatChroma.sampleCount).toBeGreaterThan(0);
-      expect(blendedChroma.sampleCount).toBe(flatChroma.sampleCount);
-      expect(blendedChroma.meanChroma).toBeGreaterThan(flatChroma.meanChroma + 1.0);
-    },
-    30000
-  );
-
-  it(
-    'blend preservations keeps preservation regions textured instead of solid fills',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const cfg: QRGeneratorConfig = {
-        ...makeWiringConfig(),
-        preserveFinders: false,
-        preserveTiming: false,
-        preserveAlignment: false,
-        protectFormatInfo: false,
-        protectVersionInfo: false,
-        finderDitherStrength: 100,
-        blendPreservations: true,
-      };
-      const render = await qr.generate(cfg, overlay);
-      const matrixData = qr.getLastMatrix();
-      expect(matrixData).not.toBeNull();
-
-      const textureRange = darkModuleInteriorLumaRangeByMask(
-        render as any,
-        matrixData!.matrix,
-        cfg.margin,
-        (row, col, moduleCount, version) =>
-          (isFinderModuleOrSeparator(row, col, moduleCount) ||
-            isTimingPattern(row, col, moduleCount) ||
-            isAlignmentPattern(row, col, moduleCount, version) ||
-            isFormatInfo(row, col, moduleCount) ||
-            isVersionInfo(row, col, moduleCount, version)) &&
-          matrixData!.matrix[row][col]
-      );
-      expect(textureRange.sampleCount).toBeGreaterThan(0);
-      // Solid-black fallback keeps this near zero; textured preservations should keep variation.
-      expect(textureRange.maxLuma).toBeGreaterThan(0.12);
-    },
-    30000
-  );
-
-  it(
-    'blend preservations avoids module-fill overlays in boosted functional regions',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const baseCfg: QRGeneratorConfig = {
-        ...makeWiringConfig(),
-        preserveFinders: false,
-        preserveTiming: false,
-        preserveAlignment: false,
-        protectFormatInfo: false,
-        protectVersionInfo: false,
-        finderDitherStrength: 100,
-      };
-      const flatRender = await qr.generate({ ...baseCfg, blendPreservations: false }, overlay);
-      const blendedRender = await qr.generate({ ...baseCfg, blendPreservations: true }, overlay);
-      const matrixData = qr.getLastMatrix();
-      expect(matrixData).not.toBeNull();
-
-      const mask = (row: number, col: number, moduleCount: number, version: number) =>
-        isFinderModuleOrSeparator(row, col, moduleCount) ||
-        isTimingPattern(row, col, moduleCount) ||
-        isAlignmentPattern(row, col, moduleCount, version) ||
-        isFormatInfo(row, col, moduleCount) ||
-        isVersionInfo(row, col, moduleCount, version);
-
-      const flatCoverage = darkModuleInkCoverageByMask(
-        flatRender as any,
-        matrixData!.matrix,
-        baseCfg.margin,
-        mask
-      );
-      const blendedCoverage = darkModuleInkCoverageByMask(
-        blendedRender as any,
-        matrixData!.matrix,
-        baseCfg.margin,
-        mask
-      );
-
-      expect(flatCoverage.sampleCount).toBeGreaterThan(0);
-      expect(blendedCoverage.sampleCount).toBe(flatCoverage.sampleCount);
-      expect(blendedCoverage.inkCoverage).toBeLessThan(flatCoverage.inkCoverage - 0.1);
-      expect(blendedCoverage.inkCoverage).toBeLessThan(0.75);
-    },
-    30000
-  );
+    expect(flatCoverage.sampleCount).toBeGreaterThan(0);
+    expect(blendedCoverage.sampleCount).toBe(flatCoverage.sampleCount);
+    expect(blendedCoverage.inkCoverage).toBeLessThan(flatCoverage.inkCoverage - 0.1);
+    expect(blendedCoverage.inkCoverage).toBeLessThan(0.75);
+  }, 30000);
 
   it('diffusion kernel changes output in error diffusion mode', async () => {
     const base = makeWiringConfig();
@@ -1118,7 +1088,10 @@ describe('dither option wiring', { timeout: 30000 }, () => {
 
   it('qr-first toggle changes output', async () => {
     const base = makeWiringConfig();
-    const delta = await renderDelta({ ...base, qrFirstMode: false }, { ...base, qrFirstMode: true });
+    const delta = await renderDelta(
+      { ...base, qrFirstMode: false },
+      { ...base, qrFirstMode: true }
+    );
     expect(delta).toBeGreaterThan(0.2);
   });
 });
@@ -1154,7 +1127,9 @@ describe('preservation toggle locality', { timeout: 30000 }, () => {
     scanGateProfile: 'off',
   });
 
-  async function renderCanvas(cfg: QRGeneratorConfig): Promise<{ canvas: any; moduleCount: number }> {
+  async function renderCanvas(
+    cfg: QRGeneratorConfig
+  ): Promise<{ canvas: any; moduleCount: number }> {
     const qr = new QRGenerator(nodeCanvasFactory);
     const canvas = await qr.generate(cfg, overlay);
     const matrixData = qr.getLastMatrix();
@@ -1185,9 +1160,7 @@ describe('preservation toggle locality', { timeout: 30000 }, () => {
     expect(locality.outside, `${label}: outside-region drift should stay limited`).toBeLessThan(16);
   }
 
-  it(
-    'preserveFinders toggle is localized to finder regions',
-    async () => {
+  it('preserveFinders toggle is localized to finder regions', async () => {
     await expectToggleLocality(
       { preserveFinders: false },
       (row, col, moduleCount) => {
@@ -1202,145 +1175,123 @@ describe('preservation toggle locality', { timeout: 30000 }, () => {
       },
       'preserveFinders'
     );
-    },
-    30000
-  );
+  }, 30000);
 
-  it(
-    'preserveFinders=false bypasses strict scan-gate escalation (full ~= off)',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const cfgBase: QRGeneratorConfig = {
-        content: 'https://anqr.link',
-        errorCorrection: 'H',
-        typeNumber: 0,
-        moduleSize: 20,
-        margin: 4,
-        fgColor: '#000000',
-        bgColor: '#ffffff',
-        overlayMode: 'dithered',
-        overlayIntensity: 90,
-        colorMode: 'color',
-        ditherKind: 'error_diffusion',
-        ditherStrength: 50,
-        ditherSerpentine: false,
-        diffusionKernel: 'floyd_steinberg',
-        renderScalePerModule: 18,
-        seed: 42,
-        preserveFinders: false,
-        preserveTiming: true,
-        preserveAlignment: true,
-        protectFormatInfo: true,
-        protectVersionInfo: true,
-      };
+  it('preserveFinders=false bypasses strict scan-gate escalation (full ~= off)', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const cfgBase: QRGeneratorConfig = {
+      content: 'https://anqr.link',
+      errorCorrection: 'H',
+      typeNumber: 0,
+      moduleSize: 20,
+      margin: 4,
+      fgColor: '#000000',
+      bgColor: '#ffffff',
+      overlayMode: 'dithered',
+      overlayIntensity: 90,
+      colorMode: 'color',
+      ditherKind: 'error_diffusion',
+      ditherStrength: 50,
+      ditherSerpentine: false,
+      diffusionKernel: 'floyd_steinberg',
+      renderScalePerModule: 18,
+      seed: 42,
+      preserveFinders: false,
+      preserveTiming: true,
+      preserveAlignment: true,
+      protectFormatInfo: true,
+      protectVersionInfo: true,
+    };
 
-      const fullCanvas = await qr.generate({ ...cfgBase, scanGateProfile: 'full' }, overlay);
-      const offCanvas = await qr.generate({ ...cfgBase, scanGateProfile: 'off' }, overlay);
-      const delta = meanRgbDelta(canvasToImageData(fullCanvas as any), canvasToImageData(offCanvas as any));
-      expect(delta).toBeLessThan(20);
-    },
-    30000
-  );
+    const fullCanvas = await qr.generate({ ...cfgBase, scanGateProfile: 'full' }, overlay);
+    const offCanvas = await qr.generate({ ...cfgBase, scanGateProfile: 'off' }, overlay);
+    const delta = meanRgbDelta(
+      canvasToImageData(fullCanvas as any),
+      canvasToImageData(offCanvas as any)
+    );
+    expect(delta).toBeLessThan(20);
+  }, 30000);
 
-  it(
-    'preserveFinders=false keeps non-finder module data contrast in full profile',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const cfg: QRGeneratorConfig = {
-        content: 'https://anqr.link',
-        errorCorrection: 'H',
-        typeNumber: 0,
-        moduleSize: 20,
-        margin: 4,
-        fgColor: '#000000',
-        bgColor: '#ffffff',
-        overlayMode: 'dithered',
-        overlayIntensity: 90,
-        colorMode: 'color',
-        ditherKind: 'error_diffusion',
-        ditherStrength: 50,
-        ditherSerpentine: false,
-        diffusionKernel: 'floyd_steinberg',
-        renderScalePerModule: 18,
-        seed: 42,
-        preserveFinders: false,
-        preserveTiming: true,
-        preserveAlignment: true,
-        protectFormatInfo: true,
-        protectVersionInfo: true,
-        scanGateProfile: 'full',
-      };
+  it('preserveFinders=false keeps non-finder module data contrast in full profile', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const cfg: QRGeneratorConfig = {
+      content: 'https://anqr.link',
+      errorCorrection: 'H',
+      typeNumber: 0,
+      moduleSize: 20,
+      margin: 4,
+      fgColor: '#000000',
+      bgColor: '#ffffff',
+      overlayMode: 'dithered',
+      overlayIntensity: 90,
+      colorMode: 'color',
+      ditherKind: 'error_diffusion',
+      ditherStrength: 50,
+      ditherSerpentine: false,
+      diffusionKernel: 'floyd_steinberg',
+      renderScalePerModule: 18,
+      seed: 42,
+      preserveFinders: false,
+      preserveTiming: true,
+      preserveAlignment: true,
+      protectFormatInfo: true,
+      protectVersionInfo: true,
+      scanGateProfile: 'full',
+    };
 
-      const canvas = await qr.generate(cfg, overlay);
-      const matrixData = qr.getLastMatrix();
-      expect(matrixData).not.toBeNull();
+    const canvas = await qr.generate(cfg, overlay);
+    const matrixData = qr.getLastMatrix();
+    expect(matrixData).not.toBeNull();
 
-      const polarity = meanModuleCenterLumaByBitMasked(
-        canvas as any,
-        matrixData!.matrix,
-        cfg.margin,
-        (row, col, moduleCount, version) =>
-          !isFinderModuleOrSeparator(row, col, moduleCount) &&
-          !isTimingPattern(row, col, moduleCount) &&
-          !isAlignmentPattern(row, col, moduleCount, version) &&
-          !isFormatInfo(row, col, moduleCount) &&
-          !isVersionInfo(row, col, moduleCount, version) &&
-          !(row === moduleCount - 8 && col === 8)
-      );
+    const polarity = meanModuleCenterLumaByBitMasked(
+      canvas as any,
+      matrixData!.matrix,
+      cfg.margin,
+      (row, col, moduleCount, version) =>
+        !(
+          isFinderModuleOrSeparator(row, col, moduleCount) ||
+          isTimingPattern(row, col, moduleCount) ||
+          isAlignmentPattern(row, col, moduleCount, version) ||
+          isFormatInfo(row, col, moduleCount) ||
+          isVersionInfo(row, col, moduleCount, version) ||
+          (row === moduleCount - 8 && col === 8)
+        )
+    );
 
-      expect(polarity.darkCount).toBeGreaterThan(100);
-      expect(polarity.lightCount).toBeGreaterThan(100);
-      expect(polarity.darkMean).toBeLessThan(polarity.lightMean - 0.04);
-    },
-    30000
-  );
+    expect(polarity.darkCount).toBeGreaterThan(100);
+    expect(polarity.lightCount).toBeGreaterThan(100);
+    expect(polarity.darkMean).toBeLessThan(polarity.lightMean - 0.04);
+  }, 30000);
 
-  it(
-    'preserveTiming toggle is localized to timing patterns',
-    async () => {
+  it('preserveTiming toggle is localized to timing patterns', async () => {
     await expectToggleLocality(
       { preserveTiming: false },
       (row, col, moduleCount) => isTimingPattern(row, col, moduleCount),
       'preserveTiming'
     );
-    },
-    30000
-  );
+  }, 30000);
 
-  it(
-    'preserveAlignment toggle is localized to alignment patterns',
-    async () => {
+  it('preserveAlignment toggle is localized to alignment patterns', async () => {
     await expectToggleLocality(
       { preserveAlignment: false },
       (row, col, moduleCount, version) => isAlignmentPattern(row, col, moduleCount, version),
       'preserveAlignment'
     );
-    },
-    30000
-  );
+  }, 30000);
 
-  it(
-    'protectFormatInfo toggle is localized to format modules',
-    async () => {
+  it('protectFormatInfo toggle is localized to format modules', async () => {
     await expectToggleLocality(
       { protectFormatInfo: false },
       (row, col, moduleCount) => isFormatInfo(row, col, moduleCount),
       'protectFormatInfo'
     );
-    },
-    30000
-  );
+  }, 30000);
 
-  it(
-    'protectVersionInfo toggle is localized to version modules',
-    async () => {
+  it('protectVersionInfo toggle is localized to version modules', async () => {
     await expectToggleLocality(
       { protectVersionInfo: false },
       (row, col, moduleCount, version) => isVersionInfo(row, col, moduleCount, version),
       'protectVersionInfo'
     );
-    },
-    30000
-  );
-
+  }, 30000);
 });

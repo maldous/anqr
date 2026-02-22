@@ -1694,12 +1694,12 @@ ID: animation-pattern-2-content
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
 
 ID: animation-pattern-2-trigger
 - section: Animation Section
@@ -1778,12 +1778,12 @@ ID: animation-target-2-content
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
 
 ID: animation-target-2-trigger
 - section: Animation Section
@@ -1802,12 +1802,12 @@ ID: animation-target-content
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
 
 ID: animation-target-trigger
 - section: Animation Section
@@ -1850,48 +1850,48 @@ ID: animation-wave-axis-2-content
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
 
 ID: animation-wave-axis-2-trigger
 - section: Animation Section
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
 
 ID: animation-wave-axis-content
 - section: Animation Section
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
 
 ID: animation-wave-axis-trigger
 - section: Animation Section
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-2-visual.spec.ts [direct-id]
 
 ID: output-dpi-slider
 - section: Output Section
@@ -3094,12 +3094,12 @@ ID: select-item-option-both
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
 
 ID: select-item-option-brightness
 - section: Select Option IDs
@@ -4039,12 +4039,12 @@ ID: select-item-option-modules
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
 
 ID: select-item-option-morph
 - section: Select Option IDs
@@ -4512,12 +4512,12 @@ ID: select-item-option-result
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
 
 ID: select-item-option-round
 - section: Select Option IDs
@@ -5114,24 +5114,24 @@ ID: select-item-option-x
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
 
 ID: select-item-option-xy
 - section: Select Option IDs
 - source: src/components/sections/AnimationSection.tsx
 - inferred-domain: animation
 - requirements:
-  - T1 Rendering/visual change tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T5 Accessibility (a11y) tests -> tests/advanced/animation.spec.ts [domain]
-  - T6 Interaction/UX behavior tests -> tests/advanced/animation.spec.ts [domain]
-  - T8 Overlay/watermark/media tests -> tests/advanced/animation.spec.ts [domain+type]
-  - T10 Cross-section integration tests -> tests/advanced/animation.spec.ts [domain]
-  - T13 Test ID integrity/completeness tests -> tests/unit/testid-inventory-explicit.spec.ts [direct-id]
+  - T1 Rendering/visual change tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T5 Accessibility (a11y) tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T6 Interaction/UX behavior tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T8 Overlay/watermark/media tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T10 Cross-section integration tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
+  - T13 Test ID integrity/completeness tests -> tests/unit/required-tranche-8-select-options.spec.ts [direct-id]
 
 ID: select-item-option-y
 - section: Select Option IDs
