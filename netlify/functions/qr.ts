@@ -294,6 +294,7 @@ import {
   isGifSignature,
   quantizeGifPalette,
 } from '../../src/modules/animation';
+import { withGifEncodeLock as withSharedGifEncodeLock } from '../../src/modules/animation/gif-lock';
 import { generateFullQArt, generateFullQArtOptimal } from '../../src/modules/qr-art';
 import { calculateOptimalVersion } from '../../src/modules/qr-encoder/encoder-api';
 // @ts-expect-error - JS module
@@ -927,36 +928,17 @@ function embedPngMetadataAndDpi(pngBuffer: Buffer, metadata?: PngMetadata, dpi?:
 // GIF ENCODING
 // ============================================
 
-// gifenc can produce corrupted frames when multiple encodes run concurrently
-// in the same process. Serialize encoding to keep outputs deterministic.
-let gifEncodeQueue: Promise<void> = Promise.resolve();
-let gifEncodeQueueDepth = 0;
-
 async function withGifEncodeLock<T>(fn: () => T | Promise<T>): Promise<T> {
-  let release: (() => void) | null = null;
-  const queuedAt = Date.now();
-  gifEncodeQueueDepth += 1;
-  const waitTurn = gifEncodeQueue;
-  gifEncodeQueue = new Promise<void>((resolve) => {
-    release = resolve;
+  return withSharedGifEncodeLock(fn, {
+    onWait: (waitMs, queueDepth) => {
+      if (waitMs > 10) {
+        qrFnLog('[TIMING] GIF encode queue wait', {
+          waitMs,
+          queueDepth,
+        });
+      }
+    },
   });
-
-  await waitTurn;
-  const waitMs = Date.now() - queuedAt;
-  if (waitMs > 10) {
-    qrFnLog('[TIMING] GIF encode queue wait', {
-      waitMs,
-      queueDepth: Math.max(0, gifEncodeQueueDepth - 1),
-    });
-  }
-  try {
-    return await fn();
-  } finally {
-    gifEncodeQueueDepth = Math.max(0, gifEncodeQueueDepth - 1);
-    if (release) {
-      release();
-    }
-  }
 }
 
 function parseGifBackgroundColor(backgroundColor: string): [number, number, number] {
@@ -1149,8 +1131,9 @@ function encodeGif(
     Math.min(256, Math.max(2, colors))
   );
   const index = indexGifPixels(preparedData, palette);
+  const safeIndex = index.slice();
 
-  gif.writeFrame(index, width, height, {
+  gif.writeFrame(safeIndex, width, height, {
     palette,
     delay: 100,
     repeat: 0,
@@ -1216,6 +1199,7 @@ function encodeAnimatedGif(
   for (let i = 0; i < frames.length; i++) {
     const preparedData = sampledFrameCache.get(i) ?? getFrameData(i, false);
     const index = indexGifPixels(preparedData, globalPalette);
+    const safeIndex = index.slice();
 
     // Only set repeat on first frame
     const frameOptions: Record<string, unknown> = {
@@ -1227,7 +1211,7 @@ function encodeAnimatedGif(
       frameOptions.repeat = 0; // 0 = loop forever
     }
 
-    gif.writeFrame(index, width, height, frameOptions);
+    gif.writeFrame(safeIndex, width, height, frameOptions);
   }
 
   gif.finish();
@@ -2233,7 +2217,13 @@ function parseGifFramesServer(
   compositeCtx.clearRect(0, 0, width, height);
 
   // Reuse a single patch canvas to avoid repeated allocations and stale buffer issues.
-  const patchCanvas = createCanvas(width, height);
+  let maxPatchWidth = 1;
+  let maxPatchHeight = 1;
+  for (const frame of framesToProcess) {
+    maxPatchWidth = Math.max(maxPatchWidth, frame.dims.width);
+    maxPatchHeight = Math.max(maxPatchHeight, frame.dims.height);
+  }
+  const patchCanvas = createCanvas(maxPatchWidth, maxPatchHeight);
   const patchCtx = patchCanvas.getContext('2d');
 
   const animationFrames: ServerAnimationFrame[] = [];
@@ -2253,13 +2243,21 @@ function parseGifFramesServer(
     imageData.data.set(new Uint8ClampedArray(patch));
 
     // Draw this frame patch onto a cleared temporary patch canvas.
-    patchCanvas.width = dims.width;
-    patchCanvas.height = dims.height;
     patchCtx.clearRect(0, 0, dims.width, dims.height);
     patchCtx.putImageData(imageData, 0, 0);
 
     // Draw patch onto composite canvas
-    compositeCtx.drawImage(patchCanvas, dims.left, dims.top);
+    compositeCtx.drawImage(
+      patchCanvas,
+      0,
+      0,
+      dims.width,
+      dims.height,
+      dims.left,
+      dims.top,
+      dims.width,
+      dims.height
+    );
 
     // Create output canvas for this frame
     const outputCanvas = createCanvas(width, height);
@@ -2411,6 +2409,7 @@ function encodeAnimatedGifWithDelays(
     const frame = frames[i];
     const preparedData = sampledFrameCache.get(i) ?? getFrameData(i, false);
     const index = indexGifPixels(preparedData, globalPalette);
+    const safeIndex = index.slice();
 
     // gifenc expects delay in milliseconds (it converts to centiseconds internally)
     // Minimum 20ms — gifenc rounds <20ms to 0-1 centiseconds which browsers treat as 100ms
@@ -2425,7 +2424,7 @@ function encodeAnimatedGifWithDelays(
       frameOptions.repeat = 0; // 0 = loop forever
     }
 
-    gif.writeFrame(index, width, height, frameOptions);
+    gif.writeFrame(safeIndex, width, height, frameOptions);
   }
 
   gif.finish();

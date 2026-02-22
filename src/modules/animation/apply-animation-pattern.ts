@@ -160,6 +160,10 @@ export function applyAnimationPattern(
 
     case 'shimmer': {
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
+      if (typeof (ctx as CanvasRenderingContext2D).createLinearGradient !== 'function') {
+        // Test/mocked contexts may not implement gradients; fall back gracefully.
+        break;
+      }
       const bandWidth = Math.max(16, Math.floor(bounds.width * 0.2));
       const sweep =
         ((progress * 1.2 + (Math.sin(seed * 0.1234) + 1) * 0.5) % 1) *

@@ -37,6 +37,7 @@ import {
   isGifEncodingAvailable,
   quantizeGifPalette,
 } from '../src/modules/animation';
+import { withGifEncodeLock } from '../src/modules/animation/gif-lock.ts';
 import { decodeQR } from '../src/modules/qr-decoder/index.ts';
 import {
   generateAllScenarios,
@@ -122,6 +123,49 @@ async function verifyImage(buffer, expectedPrefix, expectAnimated = false) {
   } catch (err) {
     return { pass: false, reason: 'VERIFY_ERROR', message: err.message };
   }
+}
+
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const GIF87A_SIGNATURE = Buffer.from('GIF87a');
+const GIF89A_SIGNATURE = Buffer.from('GIF89a');
+
+function hasImageMagic(buffer, ext) {
+  const normalized = String(ext || '').toLowerCase().replace(/^\./, '');
+  if (normalized === 'gif') {
+    return (
+      buffer.length >= 6 &&
+      (buffer.subarray(0, 6).equals(GIF87A_SIGNATURE) ||
+        buffer.subarray(0, 6).equals(GIF89A_SIGNATURE))
+    );
+  }
+  if (normalized === 'png') {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(PNG_SIGNATURE);
+  }
+  if (normalized === 'webp') {
+    return (
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+    );
+  }
+  if (normalized === 'jpg' || normalized === 'jpeg') {
+    return buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xd8;
+  }
+  if (normalized === 'svg') {
+    const header = buffer.subarray(0, Math.min(buffer.length, 256)).toString('utf8').trimStart();
+    return header.startsWith('<svg') || header.startsWith('<?xml');
+  }
+  return true;
+}
+
+function validateArtifactMagic(buffer, ext, expectAnimated = false) {
+  if (expectAnimated && !hasImageMagic(buffer, 'gif')) {
+    return { pass: false, reason: 'ANIMATION_MAGIC_MISMATCH' };
+  }
+  if (!hasImageMagic(buffer, ext)) {
+    return { pass: false, reason: `MAGIC_BYTES_MISMATCH_${String(ext).toUpperCase()}` };
+  }
+  return { pass: true };
 }
 
 function extFromContentType(contentType, fallback = 'png') {
@@ -313,7 +357,7 @@ function buildGlobalPaletteFromFrames(frameDataList, width, height, paletteSize)
   return ensureGifPaletteAnchors(basePalette, paletteSize);
 }
 
-function encodeAnimatedGifFromCanvases(
+async function encodeAnimatedGifFromCanvases(
   frames,
   frameDelayMs = 100,
   colors = 256,
@@ -327,35 +371,38 @@ function encodeAnimatedGifFromCanvases(
     throw new Error('No frames to encode');
   }
 
-  const width = frames[0].width;
-  const height = frames[0].height;
-  const gif = createGifEncoder();
-  const paletteSize = Math.min(256, Math.max(2, colors));
-  const defaultDelayMs = Math.max(20, frameDelayMs);
-  const frameDataList = frames.map((frame) => {
-    const ctx = frame.getContext('2d');
-    return ctx.getImageData(0, 0, width, height).data;
+  return withGifEncodeLock(() => {
+    const width = frames[0].width;
+    const height = frames[0].height;
+    const gif = createGifEncoder();
+    const paletteSize = Math.min(256, Math.max(2, colors));
+    const defaultDelayMs = Math.max(20, frameDelayMs);
+    const frameDataList = frames.map((frame) => {
+      const ctx = frame.getContext('2d');
+      return ctx.getImageData(0, 0, width, height).data;
+    });
+    const globalPalette = buildGlobalPaletteFromFrames(frameDataList, width, height, paletteSize);
+
+    for (let i = 0; i < frames.length; i++) {
+      const index = indexGifPixels(frameDataList[i], globalPalette);
+      const safeIndex = index.slice();
+      const requestedDelay = Number(frameDelaysMs[i]);
+      const delayMs =
+        Number.isFinite(requestedDelay) && requestedDelay > 0
+          ? Math.max(20, requestedDelay)
+          : defaultDelayMs;
+      const options = {
+        palette: globalPalette,
+        delay: delayMs,
+        dispose: disposal,
+        ...(i === 0 ? { repeat: 0 } : {}),
+      };
+      gif.writeFrame(safeIndex, width, height, options);
+    }
+
+    gif.finish();
+    return Buffer.from(gif.bytes());
   });
-  const globalPalette = buildGlobalPaletteFromFrames(frameDataList, width, height, paletteSize);
-
-  for (let i = 0; i < frames.length; i++) {
-    const index = indexGifPixels(frameDataList[i], globalPalette);
-    const requestedDelay = Number(frameDelaysMs[i]);
-    const delayMs =
-      Number.isFinite(requestedDelay) && requestedDelay > 0
-        ? Math.max(20, requestedDelay)
-        : defaultDelayMs;
-    const options = {
-      palette: globalPalette,
-      delay: delayMs,
-      dispose: disposal,
-      ...(i === 0 ? { repeat: 0 } : {}),
-    };
-    gif.writeFrame(index, width, height, options);
-  }
-
-  gif.finish();
-  return Buffer.from(gif.bytes());
 }
 
 async function captureAnimatedGifFromCanvas(
@@ -527,6 +574,7 @@ async function main() {
 
     let context;
     let page;
+    let tempArtifactPath = null;
     try {
       await removeScenarioArtifacts(OUTPUT_DIR, config);
       let artifactBuffer;
@@ -614,11 +662,20 @@ async function main() {
         }
       }
 
-      // Save artifact
-      await fs.writeFile(artifactPath, artifactBuffer);
+      const resolvedExt = path.extname(filename).replace(/^\./, '').toLowerCase();
+      const magicCheck = validateArtifactMagic(artifactBuffer, resolvedExt, config.isAnimated);
+      const verify = magicCheck.pass
+        ? await verifyImage(artifactBuffer, expectedPayload, config.isAnimated)
+        : magicCheck;
 
-      // Verify via QR decode
-      const verify = await verifyImage(artifactBuffer, expectedPayload, config.isAnimated);
+      tempArtifactPath = `${artifactPath}.tmp-${process.pid}-${Date.now()}`;
+      await fs.writeFile(tempArtifactPath, artifactBuffer);
+      if (verify.pass) {
+        await fs.rename(tempArtifactPath, artifactPath);
+      } else {
+        await fs.unlink(tempArtifactPath).catch(() => {});
+      }
+      tempArtifactPath = null;
 
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
@@ -658,6 +715,9 @@ async function main() {
         durationMs: Date.now() - start,
       };
     } finally {
+      if (tempArtifactPath) {
+        await fs.unlink(tempArtifactPath).catch(() => {});
+      }
       // Close context (and its page) to free memory
       if (context) {
         await context.close().catch(() => {});

@@ -1,6 +1,6 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 06:50:37 UTC
+Last updated: 2026-02-22 08:28:42 UTC
 
 ## Latest Update (2026-02-22, Quality-Gate Cleanup: Knip Unused Export)
 
@@ -1080,3 +1080,111 @@ Last updated: 2026-02-22 06:50:37 UTC
     - two shards executed in parallel and produced:
       - `passed.shard-1-of-2.txt` / `report.shard-1-of-2.json`
       - `passed.shard-2-of-2.txt` / `report.shard-2-of-2.json`
+
+## Update 2026-02-22 07:02:09 UTC (Animation/GIF/QR-Art Perf Pass)
+
+- [x] `useQRGenerator` frame cache moved out of React state:
+  - heavy frame arrays now live in `animationFramesRef`.
+  - lightweight state tracks only `animationFrameCount` + `animationFramesRevision`.
+  - playback/export/global debug state switched to ref-backed access.
+  - avoids large canvas arrays in React state and reduces render churn.
+
+- [x] Frame persistence logic no longer always deep-copies:
+  - added `persistFrameCanvas(...)` in cache builder.
+  - stores direct frame references when safe.
+  - detects source-canvas reuse and retroactively detaches prior references using `cloneCanvas(...)` only when needed.
+
+- [x] `interpolateFrames(...)` optimized:
+  - supports optional reusable target canvas.
+  - adds reusable morph `ImageData` scratch buffer.
+  - large-frame morph path guarded with fast crossfade fallback (`MAX_MORPH_PIXELS`).
+
+- [x] `applyAnimationPattern(...)` hot-path optimization:
+  - `wave` now uses strip-based `drawImage` displacement instead of full `getImageData` clone/scan.
+  - `shimmer` now uses gradient overlay compositing instead of per-pixel loops.
+  - supports optional bounded effect region via `AnimationOptions.effectBounds`.
+
+- [x] `gif-compositor.ts` allocation reduction:
+  - caches per-frame patch `ImageData` and reuses on subsequent `apply(...)` calls.
+  - removes repeated `new ImageData(new Uint8ClampedArray(...))` allocations during playback.
+
+- [x] `netlify/functions/qr.ts` GIF encoder memory/CPU improvements:
+  - global palette sampling now downsamples with adaptive stride and bounded sample budget.
+  - avoids concatenating full RGBA for all sampled frames.
+  - animated encoder paths cache only palette-sampled prepared frames to avoid duplicate prep work.
+
+- [x] `qr-art/elimination.ts` inner-loop optimization:
+  - `countMatchingPixels(...)` switched from string-key map + `Map` flip counts to:
+    - per-block numeric lookup map
+    - `Uint8Array` flip parity buffer
+  - block result lookup now uses prebuilt `Map` instead of repeated `.find(...)`.
+  - `gaussJordanEliminate(...)` now shrinks available pixel order incrementally per block.
+
+- [x] Validation:
+  - `npm run -s typecheck` passes.
+  - targeted regression suite passes:
+    - `ANQR_LOG_LEVEL=error npx vitest run tests/unit/animation-core.spec.ts tests/unit/animation-patterns.spec.ts tests/unit/animation-parsing-compositor-loop.spec.ts tests/unit/animation-playback-delay.spec.ts tests/unit/exporter-gif.spec.ts tests/unit/netlify-qr-gif-disposal.spec.ts tests/unit/logger.spec.ts tests/unit/logger-buffer-redaction.spec.ts tests/unit/useQRGenerator-preserve-options.spec.ts tests/unit/qr-art-regression.spec.ts`
+    - result: `10` files passed, `51` tests passed.
+
+- [x] Logger capture policy reminder:
+  - structured capture defaults to warn+ unless explicitly enabled.
+  - tests that assert trace/debug/info structured capture now set `ANQR_LOG_CAPTURE_MIN_LEVEL=trace` in test setup.
+
+## Update 2026-02-22 07:07:41 UTC (Follow-up Stability)
+
+- [x] Added shimmer compatibility fallback in `apply-animation-pattern.ts`:
+  - when the rendering context lacks `createLinearGradient` (mock/test contexts), shimmer now no-ops safely instead of throwing.
+
+- [x] Updated logger unit test harnesses for explicit structured-capture policy:
+  - `tests/unit/logger.spec.ts`
+  - `tests/unit/logger-buffer-redaction.spec.ts`
+  - both suites now pin:
+    - `ANQR_LOG_CAPTURE_MIN_LEVEL=trace`
+    - `ANQR_LOG_CAPTURE_CONSOLE=1`
+  - and restore prior env after each test.
+
+## Update 2026-02-22 08:28:42 UTC (GIF Corruption Hardening A-D)
+
+- [x] Centralized GIF encode serialization in shared animation module:
+  - added `src/modules/animation/gif-lock.ts` with `withGifEncodeLock(...)`.
+  - Netlify function now wraps through shared lock (retains queue-wait timing logs):
+    - `netlify/functions/qr.ts`
+  - Browser preview GIF re-encode now serialized:
+    - `scripts/generate-gallery-browser.mjs`
+  - Frontend GIF export now serialized:
+    - `src/modules/exporter/gif-export.ts`
+
+- [x] Cloned indexed palette buffers before `gif.writeFrame(...)` at all active callsites:
+  - `netlify/functions/qr.ts` (`encodeGif`, `encodeAnimatedGif`, `encodeAnimatedGifWithDelays`)
+  - `scripts/generate-gallery-browser.mjs` (`encodeAnimatedGifFromCanvases`)
+  - `src/modules/exporter/gif-export.ts` (`exportGif`)
+
+- [x] Removed server-side patch-canvas resize-in-loop footgun in GIF parse/composite:
+  - `netlify/functions/qr.ts` `parseGifFramesServer(...)`
+  - patch canvas now fixed-size (max patch dimensions), no per-frame width/height resets.
+  - compositing uses bounded source/destination rect draw to apply only patch area.
+
+- [x] Gallery artifact writing now verify-gated with temp files (no final corrupt artifact on fail):
+  - `scripts/generate-gallery-local.mjs`
+  - `scripts/generate-gallery-remote.mjs`
+  - `scripts/generate-gallery-browser.mjs`
+  - flow:
+    - magic-byte check (GIF/PNG/WEBP/JPEG/SVG)
+    - QR verify
+    - write temp file
+    - rename to final only on pass
+    - delete temp on verify failure
+
+- [x] Added explicit magic-byte validation before publish:
+  - animated scenarios require GIF header (`GIF87a`/`GIF89a`).
+  - static scenarios checked against resolved output extension signature.
+
+- [x] Validation:
+  - syntax checks:
+    - `node --check scripts/generate-gallery-local.mjs`
+    - `node --check scripts/generate-gallery-remote.mjs`
+    - `node --check scripts/generate-gallery-browser.mjs`
+  - `npm run -s typecheck` passes.
+  - targeted tests pass:
+    - `ANQR_LOG_LEVEL=error npx vitest run tests/unit/exporter-gif.spec.ts tests/unit/netlify-qr-gif-disposal.spec.ts tests/unit/animation-core.spec.ts`
+    - result: `3` files passed, `11` tests passed.

@@ -113,6 +113,49 @@ async function verifyImage(buffer, expectedPrefix, expectAnimated = false) {
   }
 }
 
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const GIF87A_SIGNATURE = Buffer.from('GIF87a');
+const GIF89A_SIGNATURE = Buffer.from('GIF89a');
+
+function hasImageMagic(buffer, ext) {
+  const normalized = String(ext || '').toLowerCase().replace(/^\./, '');
+  if (normalized === 'gif') {
+    return (
+      buffer.length >= 6 &&
+      (buffer.subarray(0, 6).equals(GIF87A_SIGNATURE) ||
+        buffer.subarray(0, 6).equals(GIF89A_SIGNATURE))
+    );
+  }
+  if (normalized === 'png') {
+    return buffer.length >= 8 && buffer.subarray(0, 8).equals(PNG_SIGNATURE);
+  }
+  if (normalized === 'webp') {
+    return (
+      buffer.length >= 12 &&
+      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+    );
+  }
+  if (normalized === 'jpg' || normalized === 'jpeg') {
+    return buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xd8;
+  }
+  if (normalized === 'svg') {
+    const header = buffer.subarray(0, Math.min(buffer.length, 256)).toString('utf8').trimStart();
+    return header.startsWith('<svg') || header.startsWith('<?xml');
+  }
+  return true;
+}
+
+function validateArtifactMagic(buffer, ext, expectAnimated = false) {
+  if (expectAnimated && !hasImageMagic(buffer, 'gif')) {
+    return { pass: false, reason: 'ANIMATION_MAGIC_MISMATCH' };
+  }
+  if (!hasImageMagic(buffer, ext)) {
+    return { pass: false, reason: `MAGIC_BYTES_MISMATCH_${String(ext).toUpperCase()}` };
+  }
+  return { pass: true };
+}
+
 // ============================================
 // URL construction
 // ============================================
@@ -389,10 +432,19 @@ async function main() {
       const ext = extFromContentType(contentType, config.isAnimated ? 'gif' : 'png');
       const filename = `${fallbackName}.${ext}`;
       const artifactPath = path.join(OUTPUT_DIR, filename);
-      await fs.writeFile(artifactPath, buffer);
+      const tempArtifactPath = `${artifactPath}.tmp-${process.pid}-${Date.now()}`;
 
       // Artwork appends a #suffix, so verify prefix only
-      const verify = await verifyImage(buffer, expectedPayload, config.isAnimated);
+      const magicCheck = validateArtifactMagic(buffer, ext, config.isAnimated);
+      const verify = magicCheck.pass
+        ? await verifyImage(buffer, expectedPayload, config.isAnimated)
+        : magicCheck;
+      await fs.writeFile(tempArtifactPath, buffer);
+      if (verify.pass) {
+        await fs.rename(tempArtifactPath, artifactPath);
+      } else {
+        await fs.unlink(tempArtifactPath).catch(() => {});
+      }
 
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
