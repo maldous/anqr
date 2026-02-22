@@ -302,11 +302,24 @@ function useQRGenerator(): UseQRGeneratorResult {
   // QR matrix for vector SVG export
   const [qrMatrix, setQrMatrix] = useState<boolean[][] | null>(null);
 
-  // Store generated frames for GIF export and playback cache
-  const [animationFrames, setAnimationFrames] = useState<(HTMLCanvasElement | OffscreenCanvas)[]>(
-    []
-  );
+  // Store generated frames for GIF export/playback outside React state to avoid
+  // retaining large canvas arrays in the render tree.
+  const animationFramesRef = useRef<(HTMLCanvasElement | OffscreenCanvas)[]>([]);
+  const [animationFrameCount, setAnimationFrameCount] = useState(0);
+  const [_animationFramesRevision, setAnimationFramesRevision] = useState(0);
   const [isAnimationCacheReady, setIsAnimationCacheReady] = useState(false);
+
+  const replaceAnimationFrames = useCallback((frames: (HTMLCanvasElement | OffscreenCanvas)[]) => {
+    animationFramesRef.current = frames;
+    setAnimationFrameCount(frames.length);
+    setAnimationFramesRevision((rev) => rev + 1);
+  }, []);
+
+  const clearAnimationFrames = useCallback(() => {
+    animationFramesRef.current = [];
+    setAnimationFrameCount(0);
+    setAnimationFramesRevision((rev) => rev + 1);
+  }, []);
 
   // Get all relevant state from store
   // Subscribe to payload to trigger re-renders when payload changes
@@ -1519,7 +1532,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       // Check both cached frames (animationFrames) AND source frames (via ref) to skip
       // validation even during cache building when animationFrames is still being populated
       const isCurrentlyAnimating =
-        (animationFrames.length > 1 || hasMultipleSourceFramesRef.current) && animation.playing;
+        (animationFrameCount > 1 || hasMultipleSourceFramesRef.current) && animation.playing;
       const shouldValidate = result && effectiveConfig.content && !isCurrentlyAnimating;
       if (shouldValidate) {
         const validationRequestId = requestId;
@@ -1590,7 +1603,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     watermark.opacity,
     watermark.blend,
     animation.playing,
-    animationFrames.length,
+    animationFrameCount,
     error,
     hasOverflowError,
   ]);
@@ -1602,7 +1615,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       hasOverflowError,
       isOverflowBlocked: isOverflowBlockedRef.current,
       isAnimationCacheReady,
-      animationFramesLength: animationFrames.length,
+      animationFramesLength: animationFrameCount,
       animationPlaying: animation.playing,
     });
 
@@ -1618,7 +1631,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     }
     // If we have cached animation frames and animation is playing, don't regenerate
     // The cached frames will be displayed by the animation playback effect
-    if (isAnimationCacheReady && animationFrames.length > 1 && animation.playing) {
+    if (isAnimationCacheReady && animationFrameCount > 1 && animation.playing) {
       return;
     }
     // During cache building for multi-frame animations, skip - cache builder handles generation
@@ -1631,13 +1644,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     // the ref is synchronously updated by the rawContent useEffect, while the
     // state update (setHasOverflowError) is async and may not be flushed yet.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    generate,
-    isAnimationCacheReady,
-    animationFrames.length,
-    animation.playing,
-    hasOverflowError,
-  ]);
+  }, [generate, isAnimationCacheReady, animationFrameCount, animation.playing, hasOverflowError]);
 
   // Calculate effective frame indices based on startFrame, maxFrames, frameStep, and FPS decimation
   // Works with both GIF compositor and legacy AnimationFrame array
@@ -1733,12 +1740,12 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     globalThis.__ANQR_STATE__ = {
       isLoading,
-      isAnimationReady: isAnimationCacheReady && animationFrames.length > 1,
-      animationFrameCount: animationFrames.length,
+      isAnimationReady: isAnimationCacheReady && animationFrameCount > 1,
+      animationFrameCount,
       currentFrame,
       // Use getter function instead of direct reference to allow GC when not actively used
       get animationFrames() {
-        return animationFrames;
+        return animationFramesRef.current;
       },
       animationSpeedMs: animation.speedMs,
       frameDelays, // Original delays from source GIF
@@ -1754,7 +1761,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   }, [
     isLoading,
     isAnimationCacheReady,
-    animationFrames,
+    animationFrameCount,
     currentFrame,
     animation.speedMs,
     effectiveFrames,
@@ -1767,9 +1774,9 @@ function useQRGenerator(): UseQRGeneratorResult {
     // All animated content (multi-frame overlays, patterns, base effects) goes through
     // the cache path. Starting the tick before cache is ready causes the tick, overlay
     // frame update effect, and cache builder to fight over the shared gifCompositor.
-    if (isAnimationCacheReady && animationFrames.length > 1) return animationFrames.length;
+    if (isAnimationCacheReady && animationFrameCount > 1) return animationFrameCount;
     return 0;
-  }, [isAnimationCacheReady, animationFrames.length]);
+  }, [isAnimationCacheReady, animationFrameCount]);
 
   // Animation loop for both overlay-based and base QR animations
   useEffect(() => {
@@ -1889,7 +1896,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
   useEffect(() => {
     // If we have cached animation frames, skip - we'll draw from cache
-    if (isAnimationCacheReady && animationFrames.length > 0) {
+    if (isAnimationCacheReady && animationFrameCount > 0) {
       return;
     }
 
@@ -1948,7 +1955,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     gifCompositor,
     gifFrames,
     isAnimationCacheReady,
-    animationFrames.length,
+    animationFrameCount,
   ]);
 
   // Reset the frame tracking when compositor changes (new GIF loaded), animation cache state changes,
@@ -1968,8 +1975,9 @@ function useQRGenerator(): UseQRGeneratorResult {
     // Guard against race conditions: don't draw during active rendering
     if (isRendering) return;
 
-    if (isAnimationCacheReady && animationFrames.length > 1 && animationFrames[currentFrame]) {
-      const cachedFrame = animationFrames[currentFrame];
+    const cachedFrames = animationFramesRef.current;
+    if (isAnimationCacheReady && animationFrameCount > 1 && cachedFrames[currentFrame]) {
+      const cachedFrame = cachedFrames[currentFrame];
 
       // Draw directly to display canvas (skip setCanvas during playback to avoid re-renders)
       if (canvasRef.current) {
@@ -1985,7 +1993,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         }
       }
     }
-  }, [currentFrame, isAnimationCacheReady, animationFrames, isRendering]);
+  }, [currentFrame, isAnimationCacheReady, animationFrameCount, isRendering]);
 
   // Prepare interstitial ad on mount (so it's ready when user downloads)
   useEffect(() => {
@@ -2119,10 +2127,11 @@ function useQRGenerator(): UseQRGeneratorResult {
           // Raster SVG (embedded PNG) - preserves all styling including dithering
           await downloadSvg(exportCanvas, exportConfig);
         }
-      } else if (output.format === 'gif' && animationFrames.length > 1) {
+      } else if (output.format === 'gif' && animationFrameCount > 1) {
+        const cachedAnimationFrames = animationFramesRef.current;
         // Scale animation frames to output dimensions
         // Use canvas pool for temporary scaled frames to reduce GC pressure
-        const scaledFrames = animationFrames.map((frame) => {
+        const scaledFrames = cachedAnimationFrames.map((frame) => {
           const frameCanvas = frame as HTMLCanvasElement;
           if (frameCanvas.width === output.widthPx && frameCanvas.height === output.heightPx) {
             return frameCanvas;
@@ -2147,14 +2156,14 @@ function useQRGenerator(): UseQRGeneratorResult {
           frameDelays = effectiveFrames.map((f) =>
             Math.max(f.delay || animation.speedMs, minDelayMs)
           );
-        } else if (animationFrames.length > 1 && effectiveFrames.length === 0) {
+        } else if (animationFrameCount > 1 && effectiveFrames.length === 0) {
           // For base QR animations (no overlay), use uniform animation speed
-          frameDelays = animationFrames.map(() => animation.speedMs);
+          frameDelays = cachedAnimationFrames.map(() => animation.speedMs);
         }
 
         log.debug('download GIF: delays computed', {
           effectiveFramesLen: effectiveFrames.length,
-          animationFramesLen: animationFrames.length,
+          animationFramesLen: animationFrameCount,
           scaledFramesLen: scaledFrames.length,
           frameDelaysLen: frameDelays?.length,
           minDelay: frameDelays ? Math.min(...frameDelays) : undefined,
@@ -2208,7 +2217,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     qr.quietZoneModules,
     qr.borderModulesExtra,
     qrMatrix,
-    animationFrames,
+    animationFrameCount,
     animation.speedMs,
     animation.loop,
     metadata,
@@ -2412,7 +2421,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     if (
       !(hasMultiFrameOverlay || shouldGenerateBaseAnimation || shouldGenerateStaticOverlayAnimation)
     ) {
-      setAnimationFrames([]);
+      clearAnimationFrames();
       setIsAnimationCacheReady(false);
       return;
     }
@@ -2424,6 +2433,29 @@ function useQRGenerator(): UseQRGeneratorResult {
     // Generate QR for each frame (batch generation)
     const generateAllFrames = async () => {
       let frames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
+      const sourceFrameIndices = new Map<HTMLCanvasElement | OffscreenCanvas, number[]>();
+
+      const persistFrameCanvas = (frameCanvas: HTMLCanvasElement | OffscreenCanvas): void => {
+        const existingIndices = sourceFrameIndices.get(frameCanvas);
+        if (!existingIndices) {
+          const newIndex = frames.length;
+          frames.push(frameCanvas);
+          sourceFrameIndices.set(frameCanvas, [newIndex]);
+          return;
+        }
+
+        // If the generator reuses the same canvas instance across frames,
+        // detach previously stored references once and then store clones.
+        for (const idx of existingIndices) {
+          if (frames[idx] === frameCanvas) {
+            frames[idx] = cloneCanvas(frameCanvas);
+          }
+        }
+        const detachedFrame = cloneCanvas(frameCanvas);
+        const newIndex = frames.length;
+        frames.push(detachedFrame);
+        existingIndices.push(newIndex);
+      };
 
       // Create yield controller for time-based yielding
       const yieldCtrl = new YieldController();
@@ -2784,21 +2816,9 @@ function useQRGenerator(): UseQRGeneratorResult {
                 opacity: watermark.opacity,
                 blend: watermark.blend,
               });
-              // Always copy frames to avoid shared canvas reference issues
-              // The watermark result is already a new canvas, so we can use it directly
-              frames.push(watermarked.canvas);
+              persistFrameCanvas(watermarked.canvas);
             } else {
-              // CRITICAL: Always copy the frame to avoid shared canvas references
-              // Without this, multiple frames may share the same underlying canvas data,
-              // causing ghosting as the last compositor state appears in all frames
-              const frameCopy = document.createElement('canvas');
-              frameCopy.width = finalResult.width;
-              frameCopy.height = finalResult.height;
-              const copyCtx = frameCopy.getContext('2d');
-              if (copyCtx) {
-                copyCtx.drawImage(finalResult, 0, 0);
-              }
-              frames.push(frameCopy);
+              persistFrameCanvas(finalResult);
             }
           }
         } catch (err) {
@@ -2838,7 +2858,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         firstFrameSize: frames[0] ? { w: frames[0].width, h: frames[0].height } : null,
       });
 
-      setAnimationFrames(frames);
+      replaceAnimationFrames(frames);
       setIsAnimationCacheReady(true);
       setIsLoading(false);
       setIsLoadingOverlay(false); // Clear overlay loading state when animation cache is ready
@@ -2891,7 +2911,9 @@ function useQRGenerator(): UseQRGeneratorResult {
     animation.colorCycle,
     animation.moduleJitterPx,
     applyGeometricTransforms,
+    clearAnimationFrames,
     overlay.mode,
+    replaceAnimationFrames,
   ]);
 
   // Determine if we're still preparing animation
@@ -2913,7 +2935,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     (!isAnimationCacheReady && hasMultiFrameContent) ||
     (!isAnimationCacheReady &&
       hasAnimationEffectsEnabled &&
-      animationFrames.length === 0 &&
+      animationFrameCount === 0 &&
       isLoading);
 
   return {
@@ -2938,7 +2960,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     validation,
     isValidating,
     // Animation frames for GIF export
-    animationFrames,
+    animationFrames: animationFramesRef.current,
   };
 }
 

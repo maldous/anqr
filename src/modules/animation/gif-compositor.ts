@@ -60,6 +60,7 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   patchCanvas.width = maxPatchW;
   patchCanvas.height = maxPatchH;
   const patchCtx = patchCanvas.getContext('2d');
+  const patchImageDataCache: Array<ImageData | null> = new Array(frames.length).fill(null);
 
   let restoreData: { x: number; y: number; w: number; h: number; data: ImageData } | null = null;
 
@@ -98,7 +99,12 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
 
     if (patchCtx) {
       patchCtx.clearRect(0, 0, w, h);
-      const imageData = new ImageData(new Uint8ClampedArray(f.patch), w, h);
+      let imageData = patchImageDataCache[i];
+      if (!imageData) {
+        // Cache decoded patch pixels per frame to avoid per-apply allocations.
+        imageData = new ImageData(new Uint8ClampedArray(f.patch), w, h);
+        patchImageDataCache[i] = imageData;
+      }
       patchCtx.putImageData(imageData, 0, 0);
       ctx.drawImage(patchCanvas, 0, 0, w, h, left, top, w, h);
     }

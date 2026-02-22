@@ -632,6 +632,8 @@ const captureMinLevelRaw =
   typeof process !== 'undefined'
     ? process.env.ANQR_LOG_CAPTURE_MIN_LEVEL?.toLowerCase()
     : undefined;
+const captureWhenConsoleEnabled =
+  typeof process !== 'undefined' && process.env.ANQR_LOG_CAPTURE_CONSOLE === '1';
 const captureMinLevel = (() => {
   switch (captureMinLevelRaw) {
     case 'trace':
@@ -641,7 +643,7 @@ const captureMinLevel = (() => {
     case 'error':
       return captureMinLevelRaw as RuntimeLogLevel;
     default:
-      return isDev ? ('trace' as RuntimeLogLevel) : ('warn' as RuntimeLogLevel);
+      return 'warn' as RuntimeLogLevel;
   }
 })();
 const forceStructuredCaptureAll =
@@ -662,7 +664,7 @@ function shouldCaptureStructured(
   isConsoleEnabled: boolean
 ): boolean {
   if (forceStructuredCaptureAll) return true;
-  if (isConsoleEnabled) return true;
+  if (captureWhenConsoleEnabled && isConsoleEnabled) return true;
   return LOG_LEVEL_INDEX[level] >= LOG_LEVEL_INDEX[captureMinLevel];
 }
 

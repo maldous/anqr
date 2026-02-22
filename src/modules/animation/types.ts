@@ -30,6 +30,7 @@ export interface AnimationOptions {
   pattern2?: AnimationPattern;
   target2?: 'result' | 'modules' | 'both';
   waveAxis2?: 'x' | 'y' | 'xy';
+  effectBounds?: { x: number; y: number; width: number; height: number };
 }
 
 export type AnimationPattern = 'none' | 'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift';

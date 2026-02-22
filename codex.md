@@ -1,6 +1,6 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 06:26:22 UTC
+Last updated: 2026-02-22 06:50:37 UTC
 
 ## Latest Update (2026-02-22, Quality-Gate Cleanup: Knip Unused Export)
 
@@ -1016,3 +1016,67 @@ Last updated: 2026-02-22 06:26:22 UTC
   - `npx vitest run tests/unit/qr-generator-artistic-guards.spec.ts tests/unit/coverage-batch-4.spec.ts` passes (`48` tests total).
   - `npx vitest run tests/unit/netlify-qr-function.spec.ts tests/unit/netlify-qr-helpers.spec.ts` passes (`43` tests).
   - `npx knip --include dependencies,unlisted,exports` passes.
+
+## Update 2026-02-22 06:47:19 UTC (Gallery Sharding: Local/Browser/Remote)
+
+- [x] Added shared shard parsing/filtering helper:
+  - new file: `scripts/lib/gallery-sharding.mjs`
+  - supports:
+    - `GALLERY_SHARD=2/8` or `GALLERY_SHARD=2-of-8` (1-based)
+    - `GALLERY_SHARD_INDEX` (0-based) + `GALLERY_SHARD_TOTAL`
+  - deterministic selection uses round-robin by config order (`idx % total === shardIndex`).
+
+- [x] Wired sharding into all gallery generators:
+  - `scripts/generate-gallery-local.mjs`
+  - `scripts/generate-gallery-browser.mjs`
+  - `scripts/generate-gallery-remote.mjs`
+  - behavior:
+    - applies shard filter after `GALLERY_CATEGORY` / `GALLERY_IDS` filters
+    - logs shard metadata in startup and JSON report
+    - writes shard-safe report files to avoid collisions:
+      - `passed.shard-X-of-N.txt`
+      - `failed.shard-X-of-N.txt`
+      - `report.shard-X-of-N.json`
+    - keeps original filenames (`passed.txt`, etc.) when unsharded.
+
+- [x] Updated Makefile passthrough for all three targets:
+  - added vars:
+    - `GALLERY_SHARD`
+    - `GALLERY_SHARD_INDEX`
+    - `GALLERY_SHARD_TOTAL`
+  - `gallery:local`, `gallery:browser`, `gallery:remote` now forward shard env values.
+  - help text updated with sharding usage hints.
+
+- [x] Validation:
+  - syntax checks passed for:
+    - `scripts/lib/gallery-sharding.mjs`
+    - `scripts/generate-gallery-local.mjs`
+    - `scripts/generate-gallery-browser.mjs`
+    - `scripts/generate-gallery-remote.mjs`
+  - local shard run check:
+    - `GALLERY_IDS=nooverlay__default--1,nooverlay__style-rounded--2 GALLERY_SHARD=1/2`
+    - selected only one config and emitted shard-suffixed report files
+  - browser (api mode) shard run check:
+    - same IDs with `GALLERY_SHARD=2/2`
+    - selected complementary config and emitted shard-suffixed report files
+
+## Update 2026-02-22 06:50:37 UTC (Makefile Auto-Shard Fanout)
+
+- [x] Added `GALLERY_SHARD_COUNT` make variable (default `1`) for auto-parallel shard orchestration.
+
+- [x] `gallery:local`, `gallery:browser`, `gallery:remote` now support two modes:
+  - direct single run (`GALLERY_SHARD_COUNT<=1`) using existing explicit shard envs
+  - automatic parallel fanout (`GALLERY_SHARD_COUNT>1`) launching shard `1..N` concurrently with `GALLERY_SHARD="i/N"`.
+
+- [x] Guardrail added:
+  - when `GALLERY_SHARD_COUNT>1`, target exits with error if `GALLERY_SHARD`, `GALLERY_SHARD_INDEX`, or `GALLERY_SHARD_TOTAL` are also set explicitly.
+
+- [x] Help text updated to include `GALLERY_SHARD_COUNT` tunable.
+
+- [x] Validation:
+  - `make -n gallery:{local,remote,browser} GALLERY_SHARD_COUNT>1` shows expected parallel shard loop.
+  - real smoke run:
+    - `make gallery:local GALLERY_SHARD_COUNT=2 GALLERY_LOCAL_CONCURRENCY=1 GALLERY_IDS=nooverlay__default--1,nooverlay__style-rounded--2`
+    - two shards executed in parallel and produced:
+      - `passed.shard-1-of-2.txt` / `report.shard-1-of-2.json`
+      - `passed.shard-2-of-2.txt` / `report.shard-2-of-2.json`

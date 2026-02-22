@@ -50,6 +50,25 @@ function createCanvasLike(
   return result;
 }
 
+function resolveEffectBounds(
+  canvas: HTMLCanvasElement | OffscreenCanvas,
+  options: Partial<AnimationOptions>
+): { x: number; y: number; width: number; height: number } {
+  const raw = options.effectBounds;
+  if (!raw) {
+    return { x: 0, y: 0, width: canvas.width, height: canvas.height };
+  }
+
+  const x = Math.max(0, Math.min(canvas.width, Math.floor(raw.x)));
+  const y = Math.max(0, Math.min(canvas.height, Math.floor(raw.y)));
+  const width = Math.max(0, Math.min(canvas.width - x, Math.floor(raw.width)));
+  const height = Math.max(0, Math.min(canvas.height - y, Math.floor(raw.height)));
+  if (width === 0 || height === 0) {
+    return { x: 0, y: 0, width: canvas.width, height: canvas.height };
+  }
+  return { x, y, width, height };
+}
+
 /**
  * Apply animation pattern to a frame
  */
@@ -69,6 +88,7 @@ export function applyAnimationPattern(
 
   const progress = frameIndex / Math.max(1, totalFrames - 1);
   const seed = options.seed ?? 0;
+  const bounds = resolveEffectBounds(canvas, options);
 
   switch (pattern) {
     case 'pulse': {
@@ -86,29 +106,47 @@ export function applyAnimationPattern(
 
     case 'wave': {
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      const sourceData = new Uint8ClampedArray(data);
       const axis = options.waveAxis || 'y';
+      const amplitude = 2;
+      const waveScale = 0.1;
 
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const offsetX = Math.sin((y + progress * canvas.height) * 0.1) * 2;
-          const offsetY = Math.sin((x + progress * canvas.width) * 0.1) * 2;
-          const srcX =
-            axis === 'x' ? x : axis === 'xy' ? Math.round(x + offsetX) : Math.round(x + offsetX);
-          const srcY =
-            axis === 'x' ? Math.round(y + offsetY) : axis === 'xy' ? Math.round(y + offsetY) : y;
-          if (srcX >= 0 && srcX < canvas.width && srcY >= 0 && srcY < canvas.height) {
-            const srcIdx = (srcY * canvas.width + srcX) * 4;
-            const dstIdx = (y * canvas.width + x) * 4;
-            data[dstIdx] = sourceData[srcIdx];
-            data[dstIdx + 1] = sourceData[srcIdx + 1];
-            data[dstIdx + 2] = sourceData[srcIdx + 2];
-          }
+      if (axis === 'y' || axis === 'xy') {
+        for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
+          const offsetX = Math.round(
+            Math.sin((y + progress * canvas.height + seed) * waveScale) * amplitude
+          );
+          ctx.drawImage(
+            canvas as CanvasImageSource,
+            bounds.x,
+            y,
+            bounds.width,
+            1,
+            bounds.x + offsetX,
+            y,
+            bounds.width,
+            1
+          );
         }
       }
-      ctx.putImageData(imageData, 0, 0);
+
+      if (axis === 'x' || axis === 'xy') {
+        for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
+          const offsetY = Math.round(
+            Math.sin((x + progress * canvas.width + seed) * waveScale) * amplitude
+          );
+          ctx.drawImage(
+            canvas as CanvasImageSource,
+            x,
+            bounds.y,
+            1,
+            bounds.height,
+            x,
+            bounds.y + offsetY,
+            1,
+            bounds.height
+          );
+        }
+      }
       break;
     }
 
@@ -122,17 +160,24 @@ export function applyAnimationPattern(
 
     case 'shimmer': {
       ctx.drawImage(canvas as CanvasImageSource, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-        const x = (i / 4) % canvas.width;
-        const shimmer = Math.sin((x + progress * 100 + seed) * 0.1) * 20;
-        data[i] = Math.min(255, Math.max(0, data[i] + shimmer));
-        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + shimmer));
-        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + shimmer));
-      }
-      ctx.putImageData(imageData, 0, 0);
+      const bandWidth = Math.max(16, Math.floor(bounds.width * 0.2));
+      const sweep =
+        ((progress * 1.2 + (Math.sin(seed * 0.1234) + 1) * 0.5) % 1) *
+          (bounds.width + bandWidth * 2) -
+        bandWidth;
+      const gradient = ctx.createLinearGradient(
+        bounds.x + sweep - bandWidth,
+        bounds.y,
+        bounds.x + sweep + bandWidth,
+        bounds.y + bounds.height
+      );
+      gradient.addColorStop(0, 'rgba(255,255,255,0)');
+      gradient.addColorStop(0.5, 'rgba(255,255,255,0.24)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.globalCompositeOperation = 'screen';
+      ctx.fillStyle = gradient;
+      ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+      ctx.globalCompositeOperation = 'source-over';
       break;
     }
 
