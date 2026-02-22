@@ -253,7 +253,9 @@ export class CropHandler {
 
   private handleTouchStart(e: TouchEvent): void {
     if (e.touches.length === 1) {
-      e.preventDefault();
+      if (typeof (e as Event).preventDefault === 'function') {
+        (e as Event).preventDefault();
+      }
       const touch = e.touches[0];
       const mouseEvent = new MouseEvent('mousedown', {
         clientX: touch.clientX,
@@ -265,7 +267,9 @@ export class CropHandler {
 
   private handleTouchMove(e: TouchEvent): void {
     if (e.touches.length === 1) {
-      e.preventDefault();
+      if (typeof (e as Event).preventDefault === 'function') {
+        (e as Event).preventDefault();
+      }
       const touch = e.touches[0];
       const mouseEvent = new MouseEvent('mousemove', {
         clientX: touch.clientX,

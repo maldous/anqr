@@ -141,9 +141,9 @@ SCAN_MATRIX_SHARDS ?= $(SCAN_MATRIX_AUTO_SHARDS)
 # throttling that slows everything down and triggers test timeouts.
 PLAYWRIGHT_WORKERS ?= $(shell \
 	cpu=$(HOST_CPU_CORES); \
-	workers=$$((cpu / 8)); \
+	workers=$$((cpu / 2)); \
 	[ $$workers -lt 2 ] && workers=2; \
-	[ $$workers -gt 4 ] && workers=4; \
+	[ $$workers -gt 16 ] && workers=16; \
 	echo $$workers)
 
 # Vitest worker policy for heavyweight suites.
