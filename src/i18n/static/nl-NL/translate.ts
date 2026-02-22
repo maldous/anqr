@@ -42,7 +42,7 @@ export const translate: PageDefinition = {
         'Bezoek onze openbare vertaalopslagplaats op GitHub.',
         'Zoek uw taalbestand (of maak een nieuw bestand als uw taal nog niet wordt ondersteund).',
         'Klik op het potloodpictogram om rechtstreeks in uw browser te bewerken.',
-        'Breng uw wijzigingen aan en klik op "Wijzigingen voorstellen" - GitHub maakt automatisch een pull-verzoek.',
+        'Breng uw wijzigingen aan en klik op \\"Wijzigingen voorstellen\\" - GitHub maakt automatisch een pull-verzoek.',
         'Uw bijdrage wordt doorgaans binnen een paar dagen beoordeeld en samengevoegd.',
       ],
     },

@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'Punktide pööramine: pöörake teemant-/punktimooduleid.',
         'Silmakaal: suuruse reguleerimine leidja mustrite jaoks.',
         'Raami stiil: lisage dekoratiivsed raamid (ümarraam, kleebis, silt).',
-        'Raami tekst: lisage tekst nagu "Skanni mind!" raamidesse.',
+        'Raami tekst: lisage tekst nagu \\"Skanni mind!\\" raamidesse.',
       ],
       links: [
         {
@@ -1202,9 +1202,9 @@ export const guide: PageDefinition = {
       heading: 'HTML-i näide',
       paragraphs: [
         'QR-koodi manustamiseks veebisaidile tehke järgmist.',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR-kood" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR-kood\\" />',
         'Reageeriva suuruse määramiseks:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR-kood" style="maksimaalne laius: 100%; kõrgus: automaatne;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR-kood\\" style=\\"maksimaalne laius: 100%; kõrgus: automaatne;\\" />',
         'Server salvestab vastused vahemällu pikkade vahemälu päistega, nii et korduvad sama URL-i päringud on kiired.',
       ],
     },
@@ -1231,7 +1231,7 @@ export const guide: PageDefinition = {
       bullets: [
         'Enne printimist testige alati oma QR-koode mitme skannerirakendusega.',
         'Kasutage ülekatete lisamisel veaparandust H (kõrge).',
-        'Keep at least 4 modules of quiet zone (margin).',
+        'Hoidke vähemalt 4 vaikse tsooni moodulit (varu).',
         'Tagage esiplaani ja tausta vaheline kõrge kontrastsus.',
         'Printimiseks kasutage vähemalt 300 DPI ja testige tegeliku prindisuurusega.',
         'Lubage ülekatete kasutamisel leidja mustrite säilitamine.',

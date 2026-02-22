@@ -441,7 +441,7 @@ export const guide: PageDefinition = {
         'ការបង្វិលចំនុច៖ បង្វិលម៉ូឌុលពេជ្រ/ចំនុច។',
         'មាត្រដ្ឋានភ្នែក៖ ការកែតម្រូវទំហំសម្រាប់លំនាំអ្នកស្វែងរក។',
         'រចនាប័ទ្មស៊ុម៖ បន្ថែមស៊ុមតុបតែង (ស៊ុមរាងមូល ស្ទីគ័រ ស្លាក)។',
-        'អត្ថបទស៊ុម៖ បន្ថែមអត្ថបទដូចជា "ស្កេនខ្ញុំ!" ទៅស៊ុម។',
+        'អត្ថបទស៊ុម៖ បន្ថែមអត្ថបទដូចជា \\"ស្កេនខ្ញុំ!\\" ទៅស៊ុម។',
       ],
       links: [
         {
@@ -833,7 +833,7 @@ export const guide: PageDefinition = {
       heading: 'ការកំណត់ចលនា (វិជ្ជាជីវៈ)',
       paragraphs: ['លក្ខណៈពិសេសបន្ថែមនៃគំនូរជីវចលអាជីព៖'],
       bullets: [
-        'Temporal Dither: បិទ, Blue Noise, ឬ Flicker Safe per-frame dithering ។',
+        'ឌីធ័រតាមពេលវេលា៖ បិទ, សំឡេងរំខានពណ៌ខៀវ, ឬ របៀបកាត់បន្ថយការភ្លឺរំញ័រប្រកបដោយសុវត្ថិភាពក្នុងមួយស៊ុម។',
         'លំនាំ៖ គ្មាន, Pulse, Wave, Scanline, Shimmer, ឬ Drift effects។',
       ],
       links: [
@@ -1191,9 +1191,9 @@ export const guide: PageDefinition = {
       heading: 'ឧទាហរណ៍ HTML',
       paragraphs: [
         'ដើម្បីបង្កប់កូដ QR នៅក្នុងគេហទំព័ររបស់អ្នក៖',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'សម្រាប់ទំហំឆ្លើយតប៖',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; កម្ពស់៖ ស្វ័យប្រវត្តិ;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; កម្ពស់៖ ស្វ័យប្រវត្តិ;\\" />',
         'ម៉ាស៊ីនមេផ្ទុកការឆ្លើយតបជាមួយនឹងបឋមកថាឃ្លាំងសម្ងាត់វែង ដូច្នេះសំណើម្តងហើយម្តងទៀតសម្រាប់ URL ដូចគ្នាគឺលឿន។',
       ],
     },

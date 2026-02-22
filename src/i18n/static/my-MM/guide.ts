@@ -447,7 +447,7 @@ export const guide: PageDefinition = {
         'အစက်လှည့်ခြင်း- စိန်/အစက် မော်ဂျူးများကို လှည့်ပါ။',
         'မျက်လုံးစကေး- ရှာဖွေသူပုံစံများအတွက် အရွယ်အစား ချိန်ညှိခြင်း။',
         'ဘောင်ပုံစံ- အလှဆင်ဘောင်များ ထည့်ပါ (အဝိုင်းပတ်ထားသောဘောင်၊ စတစ်ကာ၊ တဂ်)။',
-        'Frame Text- "Scan Me!" ကဲ့သို့ စာသားထည့်ပါ။ ဘောင်များဆီသို့။',
+        'Frame Text- \\"Scan Me!\\" ကဲ့သို့ စာသားထည့်ပါ။ ဘောင်များဆီသို့။',
       ],
       links: [
         {
@@ -1009,7 +1009,7 @@ export const guide: PageDefinition = {
         'bounce- ပင်ပေါင်ကာတွန်းလမ်းညွှန်ချက် 0/1 (မူလ- 0)။',
         'ပြောင်းပြန်- ပြောင်းပြန် 0/1 (မူလ- 0) တွင် ကာတွန်းကို ဖွင့်ပါ။',
         'colorCycle- အရောင်စက်ဘီးစီးခြင်းအကျိုးသက်ရောက်မှုကို 0/1 (ပုံမှန်- 0) ကိုဖွင့်ပါ။',
-        'interp- frame interpolation - none၊ crossfade၊ morph (မူလ- none)။',
+        'interp: Frame interpolation - none, crossfade, morph (default: none).',
         'temporal dithering - ပိတ်၊ blue_noise၊ flicker_safe (မူလ- ပိတ်)။',
         'startF- အန်နီမေးရှင်း စတင်ဘောင် (မူလ- 0)။',
         'maxF- တင်ဆက်ရန် အများဆုံးဘောင်များ (မူလ- 0 = အလိုအလျောက်)။',
@@ -1022,7 +1022,7 @@ export const guide: PageDefinition = {
       heading: 'Dithering Parameters',
       paragraphs: ['ထပ်ဆင့်လုပ်ဆောင်ခြင်းအတွက် dithering algorithms ကို ထိန်းချုပ်ပါ'],
       bullets: [
-        'ditherKind- Dither algorithm - error_diffusion, order_bayer, blue_noise, etc (မူလ-order_bayer)။',
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, etc (default: ordered_bayer).',
         'diffusionKernel- ပျံ့နှံ့မှု kernel အမှား - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (မူလ- floyd_steinberg)။',
         'ditherStrength- ပြင်းထန်မှု 0-100 (ပုံမှန်- 50)။',
         'မြွေပွေး- ဆာပင်တိုင်သည် 0/1 (ပုံသေ- 0)။',
@@ -1197,9 +1197,9 @@ export const guide: PageDefinition = {
       heading: 'HTML ဥပမာ',
       paragraphs: [
         'သင့်ဝဘ်ဆိုက်တွင် QR ကုဒ်တစ်ခုကို ထည့်သွင်းရန်-',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR ကုဒ်" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR ကုဒ်\\" />',
         'တုံ့ပြန်နိုင်သောအရွယ်အစားအတွက်',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; အမြင့်- အော်တို;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; အမြင့်- အော်တို;\\" />',
         'ဆာဗာသည် ရှည်လျားသော ကက်ရှ် ခေါင်းစီးများဖြင့် တုံ့ပြန်မှုများကို ကက်ရှ်လုပ်ထားသောကြောင့် တူညီသော URL အတွက် ထပ်ခါတလဲလဲ တောင်းဆိုမှုများမှာ မြန်ဆန်ပါသည်။',
       ],
     },

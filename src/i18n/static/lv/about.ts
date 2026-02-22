@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'Kas ir ANQR?',
       paragraphs: [
-        'ANQR (izrunā "enkurs") ir bezmaksas QR koda ģenerators, kas izveido skenējamus kodus vietrāžiem URL, tekstam, Wi-Fi akreditācijas datiem, kontaktu kartēm, kalendāra pasākumiem un citam.',
+        'ANQR (izrunā \\"enkurs\\") ir bezmaksas QR koda ģenerators, kas izveido skenējamus kodus vietrāžiem URL, tekstam, Wi-Fi akreditācijas datiem, kontaktu kartēm, kalendāra pasākumiem un citam.',
         'Tas ir paredzēts privātpersonām, maziem uzņēmumiem, tirgotājiem un izstrādātājiem, kuri vēlas jaudīgus QR rīkus bez reģistrēšanās. Klientam pirmais dizains nozīmē, ka QR kodi pēc noklusējuma tiek ģenerēti lokāli jūsu pārlūkprogrammā ar papildu servera API profesionālai iegulšanai un integrācijai.',
       ],
     },

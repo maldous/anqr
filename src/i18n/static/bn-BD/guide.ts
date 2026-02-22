@@ -425,7 +425,7 @@ export const guide: PageDefinition = {
         'বিন্দু আবর্তন: ডায়মন্ড/ডোট মডিউলের দিকে ঘোরান।.',
         'আকার পরিবর্তন:.',
         'ফ্রেমের বিন্যাস: গঠনমূলক ফ্রেম যোগ করুন (ভুল ফ্রেম, স্টিকার, ট্যাগ)।.',
-        'ফ্রেম লেখা: "আমার স্ক্যান" শিরোনামের মতো টেক্সট যোগ করুন.',
+        'ফ্রেম লেখা: \\"আমার স্ক্যান\\" শিরোনামের মতো টেক্সট যোগ করুন.',
       ],
       links: [
         {
@@ -896,7 +896,7 @@ export const guide: PageDefinition = {
       paragraphs: ['কিউ-আর- এর কোড তৈরি করার জন্য জলছবি যোগ করো:'],
       bullets: [
         'সেট করুন: ১ থেকে শুরু করে পানি বের করতে.',
-        'পুরুষ:\\ t যেমনঃ জলছবি, ছবি, প্যাটার্ন।.',
+        'পুরুষ:\\\\ t যেমনঃ জলছবি, ছবি, প্যাটার্ন।.',
         'wam টেক্সট: জল-মার্ক টেক্সট (URL-কোড) ।.',
         'উমগ: জলছবির ইউআরএল।.',
         'কীবোর্ডঃ অবস্থান - কেন্দ্র, কোণ, পিছন, পেছনে, শান্ত এলাকা।.',
@@ -985,7 +985,7 @@ export const guide: PageDefinition = {
       paragraphs: ['ওভারলে প্রক্রিয়াকরণের জন্য ডিথারিং অ্যালগরিদম নিয়ন্ত্রণ করুন:'],
       bullets: [
         'ditherKind: Dither অ্যালগরিদম - error_diffusion, ordered_bayer, blue_noise, ইত্যাদি (ডিফল্ট: ordered_bayer)।',
-        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (ডিফল্ট: floyd_steinberg)।',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
         'ditherStrength: Dither এর তীব্রতা 0-100 (ডিফল্ট: 50)।',
         'সার্পেন্টাইন: সার্পেন্টাইন ডিথারিং 0/1 (ডিফল্ট: 0)।',
         'ম্যাট্রিক্স: অর্ডার করা ডিথার ম্যাট্রিক্স - bayer2, bayer4, bayer8 (ডিফল্ট: bayer4)।',
@@ -1128,7 +1128,7 @@ export const guide: PageDefinition = {
         'মৌলিক ইনপুট কোড:',
         'https://t',
         'স্বনির্ধারিত রঙ সহযোগে স্টাইল-QR কোড:',
-        'datanker / wapi/ker? data= hasap এবং nafafafafas@fafffaffa এবং wafafaf এবং ffafted',
+        'https://anqr.link/api/qr?data=Hello&size=300&fg=1e40af&bg=ffffff&style=rounded&radius=30',
         'ওভারলে ছবি সহ QROP কোড:',
         'https://www',
         'অ্যানিমেটেড GIF:',
@@ -1144,7 +1144,7 @@ export const guide: PageDefinition = {
       bullets: [
         'লিঙ্ক যোগ করো: একটি ARRP অ্যাপ্লিকেশনের সাথে আপনার সকল বৈশিষ্ট্যের লিঙ্ক যুক্ত করা হয় । প্রাপকদের তথ্য প্রদর্শন ও পরিবর্তন করতে ব্যর্থ।.',
         'চিত্র লোড করা হোক QR কোডটি সার্ভার- পাশাপাশি ব্যবহৃত হয় এবং একটি ছবি হিসাবে ব্যবহৃত হয়।.',
-        '"%s" পাঠানো হচ্ছে: ডকুমেন্ট নির্মাণ ও ফাইল পড়ার জন্য মার্ক লক করা হয়নি।.',
+        '\\"%s\\" পাঠানো হচ্ছে: ডকুমেন্ট নির্মাণ ও ফাইল পড়ার জন্য মার্ক লক করা হয়নি।.',
         'সরাসরি API-র URL: অ্যাপ্লিকেশন, স্ক্রিপ্ট অথবা অন্যান্য শেয়ারের সাথে ব্যবহারযোগ্য raw API-র URL।.',
       ],
       links: [
@@ -1159,9 +1159,9 @@ export const guide: PageDefinition = {
       heading: 'HTML উদাহরণ',
       paragraphs: [
         'আপনার ওয়েবসাইটে একটা কিউআরসি কোড যোগ করার জন্য:',
-        '<mimgsrc=" https://anker. লিংক/Ap/ker. data=https. data/s. datas এবং example= > "Qolis" কোড।',
+        '<mimgsrc=\\" https://anker. লিংক/Ap/ker. data=https. data/s. datas এবং example= > \\"Qolis\\" কোড।',
         'বিদায় জানানোর জন্য:',
-        '<mimgsrc=http://s.https/sker. লিংক/pap/ker. data. data. data. data. data. com/ data. com/ datamapert এবং example-এর ধরন "Qolux-tty" ধরন=10=50: 00:/ 00:/ 000000:/ 00',
+        '<mimgsrc=http://s.https/sker. লিংক/pap/ker. data. data. data. data. data. com/ data. com/ datamapert এবং example-এর ধরন \\"Qolux-tty\\" ধরন=10=50: 00:/ 00:/ 000000:/ 00',
         'এই সার্ভার- টি দীর্ঘ ক্যাশে হেডারের মাধ্যমে প্রতি সেকেন্ডে উত্তর দিতে ব্যবহৃত হয়, ফলে একই ইউ- আর- এল অনুরোধ করা হয়।.',
       ],
     },

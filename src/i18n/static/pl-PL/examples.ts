@@ -9,7 +9,7 @@ import type { PageDefinition } from '../types';
 export const examples: PageDefinition = {
   title: 'Przykłady ANQR',
   description:
-    'Pięć rzeczywistych przykładów w stylu produkcyjnym, które pokazują, gdzie kody QR tworzą wymierną wartość: ulepszenie starszego kodu licznika w handlu detalicznym, markowe płatności detaliczne i działania "skanuj do", skalowanie druku od ulotek do billboardów, animowany kod QR do oznakowania cyfrowego oraz współpraca międzyjęzykowa przy użyciu udostępnianych linków Anchor. Każdy przykład zawiera obrazy, ograniczenia praktyczne i link do remiksu prowadzący do generatora.',
+    'Pięć rzeczywistych przykładów w stylu produkcyjnym, które pokazują, gdzie kody QR tworzą wymierną wartość: ulepszenie starszego kodu licznika w handlu detalicznym, markowe płatności detaliczne i działania \\"skanuj do\\", skalowanie druku od ulotek do billboardów, animowany kod QR do oznakowania cyfrowego oraz współpraca międzyjęzykowa przy użyciu udostępnianych linków Anchor. Każdy przykład zawiera obrazy, ograniczenia praktyczne i link do remiksu prowadzący do generatora.',
   lastUpdated: '1 lutego 2026 r',
 
   primaryLinks: [
@@ -69,7 +69,7 @@ export const examples: PageDefinition = {
       heading: 'Wymierne wyniki',
       paragraphs: [
         'Po wdrożeniu nowego modułu QR na profesjonalnym kartonie laminowanym matowo kawiarnia monitorowała wyniki przez cztery tygodnie. Wskaźnik powodzenia skanowania wzrósł z szacunkowych 70% do prawie 100%. Średni czas skanowania spadł z 3-4 sekund do poniżej 1 sekundy. Co najważniejsze, zaangażowanie menu wzrosło o 40% – klienci, którzy wcześniej spojrzeli na kod QR i poddali się, teraz skanowali pewnie.',
-        'Pracownicy zgłosili mniej pytań o "jak korzystać z QR" i nie ma więcej przypadków ręcznego wpisywania URL dla sfrustrowanych klientów. Znakowy wygląd wywołał również rozmowy, z klientami komentując pozytywnie na spójny projekt.',
+        'Pracownicy zgłosili mniej pytań o \\"jak korzystać z QR\\" i nie ma więcej przypadków ręcznego wpisywania URL dla sfrustrowanych klientów. Znakowy wygląd wywołał również rozmowy, z klientami komentując pozytywnie na spójny projekt.',
       ],
       images: [
         {
@@ -128,7 +128,7 @@ export const examples: PageDefinition = {
       heading: 'Priorytetowe traktowanie Doświadczenia Płatności',
       paragraphs: [
         'Metoda płatności podstawowej w sklepie zastosowała normę regionalną, która wymagała ścisłej zgodności z wymaganiami dotyczącymi ładunku użytecznego. Badania wykazały, że nawet niewielka stylizacja wpływa na szybkość skanowania z niektórych aplikacji bankowych. Decyzja: zachować płatności QR całkowicie niezmienione, z wyjątkiem optymalizacji wielkości i profesjonalnego drukowania na matowe karty.',
-        'To konserwatywne podejście oznaczało, że kod płatności wyglądał mniej "markowy" niż idealny, ale wskaźniki realizacji transakcji dramatycznie się poprawiły. Zrozumienie: momenty płatności nie oznaczają możliwości - są momentami niezawodności. Klienci doceniają szybkość i pewność nad estetyką, gdy chodzi o pieniądze.',
+        'To konserwatywne podejście oznaczało, że kod płatności wyglądał mniej \\"markowy\\" niż idealny, ale wskaźniki realizacji transakcji dramatycznie się poprawiły. Zrozumienie: momenty płatności nie oznaczają możliwości - są momentami niezawodności. Klienci doceniają szybkość i pewność nad estetyką, gdy chodzi o pieniądze.',
       ],
       images: [
         {
@@ -172,7 +172,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Ulepszenia operacyjne',
       paragraphs: [
-        'Sześć tygodni po wdrożeniu, sklep udokumentował znaczne ulepszenia: zero skarg klientów na "błędne kody" zamieszanie, szybszy czas transakcji, a 3x wzrost zgłoszeń napiwków (klienci mogli teraz znaleźć i skanować kod napiwków bez niezręcznego pytania personelu). Przeglądy Google również wzrosła jako dedykowany, dobrze oznaczone QR usunięte tarcie.',
+        'Sześć tygodni po wdrożeniu, sklep udokumentował znaczne ulepszenia: zero skarg klientów na \\"błędne kody\\" zamieszanie, szybszy czas transakcji, a 3x wzrost zgłoszeń napiwków (klienci mogli teraz znaleźć i skanować kod napiwków bez niezręcznego pytania personelu). Przeglądy Google również wzrosła jako dedykowany, dobrze oznaczone QR usunięte tarcie.',
         "Szkolenie personelu stało się prostsze: 'Kod płatności jest duży, wszystko inne jest na panelu.' Kiedy uaktualnione aplikacje płatnicze i jeden krótko pokazał wolniejsze skanowanie, konserwatywny projekt kodu płatności oznaczało, że nadal działa - tylko nieznacznie wolniej niż całkowicie.",
         'Patrz przewodnik Naucz się o kodach QR dla płatności detalicznych dla zasad związanych z tym systemem wyświetlania.',
       ],
@@ -217,7 +217,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Dlaczego poprzednie zdarzenia miały problemy',
       paragraphs: [
-        'Na ostatniej konferencji firma doświadczyła żenujących porażek. Scena baner QR został wygenerowany jako mały PNG i skalowane w projektowym oprogramowania - wynik wyglądał akceptowalny z odległości, ale nie udało się wiarygodnie skanować z widowni. Odznaka QR były nadmiernie stylizowane i zbyt małe, frustrujące uczestników próbuje dodać kontakty. Niespójne ustawienia w różnych formatach oznaczały, że "ten sam" QR rzeczywiście wyglądał inaczej na każdym kawałku.',
+        'Na ostatniej konferencji firma doświadczyła żenujących porażek. Scena baner QR został wygenerowany jako mały PNG i skalowane w projektowym oprogramowania - wynik wyglądał akceptowalny z odległości, ale nie udało się wiarygodnie skanować z widowni. Odznaka QR były nadmiernie stylizowane i zbyt małe, frustrujące uczestników próbuje dodać kontakty. Niespójne ustawienia w różnych formatach oznaczały, że \\"ten sam\\" QR rzeczywiście wyglądał inaczej na każdym kawałku.',
         'Analiza post-event ujawniła przyczynę: brak jednego źródła prawdy. Każdy projektant odtworzył QR z nieco różnymi ustawieniami, a każdy sprzedawca druków inaczej przetwarzał pliki. Jakość zdegradowana przez telefoniczną grę przekazywania plików.',
       ],
       images: [
@@ -322,7 +322,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Integracja z treścią sygnału',
       paragraphs: [
-        'Animowany QR został umieszczony w specjalnej "stabilnej strefie" układu ekranu - obszarze, który pozostał stały, podczas gdy treści promocyjne obracały się w głównym obszarze wyświetlacza. Separacja ta miała kluczowe znaczenie: QR potrzebował stabilności wizualnej do skanowania nawet przy jednoczesnym przyciąganiu uwagi poprzez subtelną animację.',
+        'Animowany QR został umieszczony w specjalnej \\"stabilnej strefie\\" układu ekranu - obszarze, który pozostał stały, podczas gdy treści promocyjne obracały się w głównym obszarze wyświetlacza. Separacja ta miała kluczowe znaczenie: QR potrzebował stabilności wizualnej do skanowania nawet przy jednoczesnym przyciąganiu uwagi poprzez subtelną animację.',
         "W pobliżu QR dodano wyraźne wezwanie do działania: 'Pomiń kolejkę - skanuj, aby sprawdzić.' Tekst pozostał statyczny, podczas gdy QR pulsował, tworząc hierarchię wizualną, która przyciągnęła uwagę do możliwości skanowania bez przytłaczania treści promocyjnych.",
       ],
       images: [
@@ -352,7 +352,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Zmierzone uderzenie',
       paragraphs: [
-        'Po upływie jednego miesiąca od rozpoczęcia leczenia, kontrola QR w trakcie przyjmowania zwiększyła się z 15% do 24% - względna poprawa wynosiła 60%. Badania opinii gości wykazały, że animowany QR był "łatwiej zauważyć" i "czuł się bardziej nowoczesny". Czas w kolejce biurkowej uległ znacznemu zmniejszeniu w okresach szczytu, ponieważ więcej gości samodzielnie obsługiwało QR.',
+        'Po upływie jednego miesiąca od rozpoczęcia leczenia, kontrola QR w trakcie przyjmowania zwiększyła się z 15% do 24% - względna poprawa wynosiła 60%. Badania opinii gości wykazały, że animowany QR był \\"łatwiej zauważyć\\" i \\"czuł się bardziej nowoczesny\\". Czas w kolejce biurkowej uległ znacznemu zmniejszeniu w okresach szczytu, ponieważ więcej gości samodzielnie obsługiwało QR.',
         'Co ważne, pomimo tysięcy codziennych skanów nie zgłoszono żadnych awarii skanowania. Konserwatywne podejście animacji udało się osiągnąć cel uwagi bez poświęcania niezawodności check- in wymagane. Lounge następnie wywinął podobne animowane QR do innych miejsc.',
         'Zobacz Przewodnik Naucz się animowanych kodów QR dla cyfrowego oznakowania dla zasad technicznych za bezpiecznym projektowaniem animacji.',
       ],
@@ -382,7 +382,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Badanie przypadku: Globalna kampania inauguracji produktu QR',
       paragraphs: [
-        'Przykład ten jest następstwem wprowadzenia przez firmę zajmującą się elektroniką konsumencką nowego produktu na 12 rynkach w 8 językach. Każdy regionalny zespół marketingowy musiał produkować opakowania, wyświetlacze detaliczne i materiały promocyjne zawierające kody QR łączące się z lokalnymi stronami produktu. Poprzednie starty doprowadziły do niespójnego stylu QR, sporadycznych niepowodzeń skanowania, i "gra telefoniczna" dryfu konfiguracji, jak każdy zespół odtworzył kody z zrzutów ekranu.',
+        'Przykład ten jest następstwem wprowadzenia przez firmę zajmującą się elektroniką konsumencką nowego produktu na 12 rynkach w 8 językach. Każdy regionalny zespół marketingowy musiał produkować opakowania, wyświetlacze detaliczne i materiały promocyjne zawierające kody QR łączące się z lokalnymi stronami produktu. Poprzednie starty doprowadziły do niespójnego stylu QR, sporadycznych niepowodzeń skanowania, i \\"gra telefoniczna\\" dryfu konfiguracji, jak każdy zespół odtworzył kody z zrzutów ekranu.',
         'Rozwiązanie wykorzystało udostępniane łącza konfiguracyjne ANQR w celu ustanowienia jednego źródła prawdy, do którego miał dostęp każdy zespół regionalny, niezależnie od języka interfejsu. Ładunek QR wykorzystywał inteligentne przekierowanie, które wykrywało język użytkownika, więc jeden kod działał globalnie, dostarczając zlokalizowane doświadczenia.',
       ],
       images: [
@@ -427,7 +427,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Obsługa zmian regionalnych',
       paragraphs: [
-        'Niektóre rynki wymagały drobnych dostosowań. Chiński zespół potrzebował wersji z ramką zoptymalizowaną pod kątem WeChat do udostępniania w mediach społecznościowych. Zamiast modyfikować plik główny, utworzyli udokumentowany wariant z własnym łączem konfiguracyjnym, wyraźnie oznaczony jako "wariant CN-WeChat" w bibliotece zasobów kampanii. Pozwoliło to zachować identyfikowalność, a jednocześnie umożliwiło niezbędną lokalizację.',
+        'Niektóre rynki wymagały drobnych dostosowań. Chiński zespół potrzebował wersji z ramką zoptymalizowaną pod kątem WeChat do udostępniania w mediach społecznościowych. Zamiast modyfikować plik główny, utworzyli udokumentowany wariant z własnym łączem konfiguracyjnym, wyraźnie oznaczony jako \\"wariant CN-WeChat\\" w bibliotece zasobów kampanii. Pozwoliło to zachować identyfikowalność, a jednocześnie umożliwiło niezbędną lokalizację.',
         "Zespół marki ustanowił prostą zasadę: każda zmiana od master wymaga nowego, udokumentowanego łącza konfiguracyjnego. Żadnych modyfikacji w eksportowanych plikach, żadnych 'szybkich poprawek' w oprogramowaniu projektowym. To zapobiegło dryfowi konfiguracji, który nękał poprzednie starty.",
       ],
       images: [

@@ -264,7 +264,7 @@ export const guide: PageDefinition = {
         'URL ng File/Dokumento: Direktang link sa mga nada-download na file.',
         'Cloud Storage Link: Mga link sa Google Drive, Dropbox, One Drive, atbp.',
         'Social Profile: Mga link sa LinkedIn, Twitter, Instagram, atbp.',
-        'Messaging Link: WhatsApp, Telegram, Signal deep links.',
+        'Link sa Pagmemensahe: WhatsApp, Telegram, Mga malalim na link ng signal.',
       ],
       links: [
         {
@@ -452,7 +452,7 @@ export const guide: PageDefinition = {
         'Pag - aalis ng Dot: Rotate brilyante/dot modules.',
         'Pagkurap ng Mata: Gumawa ng pagbabago para sa mga disenyo sa paghanap.',
         'Istilo ng Frame: Idagdag ang mga pandekorasyong balangkas (Rounded Frme, Sticker, Tag).',
-        'Tekstong Frame: Magdagdag ng teksto tulad ng "Scan Me!" sa mga frames.',
+        'Tekstong Frame: Magdagdag ng teksto tulad ng \\"Scan Me!\\" sa mga frames.',
       ],
       links: [
         {
@@ -1228,9 +1228,9 @@ export const guide: PageDefinition = {
       heading: 'HTML na Halimbawa',
       paragraphs: [
         'Para mai - e - enjoy ang QR code sa inyong website:',
-        '<img src="htps://anqr.link/api/qr?data=htps://iyongsite.com&size=200" act="QR Code" />',
+        '<img src=\\"htps://anqr.link/api/qr?data=htps://iyongsite.com&size=200\\" act=\\"QR Code\\" />',
         'Para sa pagtugon:',
-        '<img src="htps://anqr.link/api/qr?data=htps://iyongsite.com&size=400" act="QR Code" estilo="max-width: 100%; taas: auto;" />',
+        '<img src=\\"htps://anqr.link/api/qr?data=htps://iyongsite.com&size=400\\" act=\\"QR Code\\" estilo=\\"max-width: 100%; taas: auto;\\" />',
         'Ang mga cache ng server ay tumutugon sa pamamagitan ng mga mahahabang cache header, kaya ang paulit-ulit na mga kahilingan para sa parehong URL ay mabilis.',
       ],
     },

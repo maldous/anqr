@@ -1136,9 +1136,9 @@ export const guide: PageDefinition = {
       heading: 'HTML 示例',
       paragraphs: [
         '要将 QR 码嵌入您的网站：',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="二维码" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"二维码\\" />',
         '对于响应式大小调整：',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR 码" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR 码\\" style=\\"max-width: 100%; height: auto;\\" />',
         '服务器缓存具有长缓存标头的响应，因此对同一 URL 的重复请求速度很快。',
       ],
     },

@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'Vad är ANQR?',
       paragraphs: [
-        'ANQR (uttalas "ankare") är en gratis QR-kodgenerator som skapar skanningsbara koder för webbadresser, text, Wi-Fi-uppgifter, kontaktkort, kalenderhändelser och mer.',
+        'ANQR (uttalas \\"ankare\\") är en gratis QR-kodgenerator som skapar skanningsbara koder för webbadresser, text, Wi-Fi-uppgifter, kontaktkort, kalenderhändelser och mer.',
         'Det är byggt för privatpersoner, småföretag, marknadsförare och utvecklare som vill ha kraftfulla QR-verktyg utan att registrera sig. Den klient-första designen innebär att QR-koder genereras lokalt i din webbläsare som standard, med ett valfritt server-API för professionell inbäddning och integration.',
       ],
     },

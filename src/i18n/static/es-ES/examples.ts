@@ -9,7 +9,7 @@ import type { PageDefinition } from '../types';
 export const examples: PageDefinition = {
   title: 'Ejemplos de ANQR',
   description:
-    'Cinco ejemplos de estilo de producción del mundo real que muestran dónde los códigos QR crean valor medible: mejora de un código de mostrador minorista heredado, pagos minoristas de marca y acciones de "escaneo", escala de impresión desde folletos hasta vallas publicitarias, QR animado para señalización digital y colaboración multilingüe mediante enlaces Anchor que se pueden compartir. Cada ejemplo incluye imágenes, restricciones prácticas y un enlace de remezcla al generador.',
+    'Cinco ejemplos de estilo de producción del mundo real que muestran dónde los códigos QR crean valor medible: mejora de un código de mostrador minorista heredado, pagos minoristas de marca y acciones de \\"escaneo\\", escala de impresión desde folletos hasta vallas publicitarias, QR animado para señalización digital y colaboración multilingüe mediante enlaces Anchor que se pueden compartir. Cada ejemplo incluye imágenes, restricciones prácticas y un enlace de remezcla al generador.',
   lastUpdated: '1 de febrero de 2026',
 
   primaryLinks: [
@@ -322,8 +322,8 @@ export const examples: PageDefinition = {
     {
       heading: 'Integración con Contenido de Signage',
       paragraphs: [
-        'El QR animado fue colocado en una "zona estable" dedicada del diseño de la pantalla - un área que permaneció constante mientras el contenido promocional giraba en el área de visualización principal. Esta separación fue crucial: el QR necesitaba estabilidad visual para escanear incluso a la vez que atraer la atención a través de su sutil animación.',
-        'Se agregó una llamada a la acción clara junto al QR: "Salta la cola - escanea para registrarte". El texto permaneció estático mientras el QR pulsaba, creando una jerarquía visual que atraía la atención hacia la oportunidad de escaneo sin abrumar el contenido promocional.',
+        'El QR animado fue colocado en una \\"zona estable\\" dedicada del diseño de la pantalla - un área que permaneció constante mientras el contenido promocional giraba en el área de visualización principal. Esta separación fue crucial: el QR necesitaba estabilidad visual para escanear incluso a la vez que atraer la atención a través de su sutil animación.',
+        'Se agregó una llamada a la acción clara junto al QR: \\"Salta la cola - escanea para registrarte\\". El texto permaneció estático mientras el QR pulsaba, creando una jerarquía visual que atraía la atención hacia la oportunidad de escaneo sin abrumar el contenido promocional.',
       ],
       images: [
         {
@@ -352,7 +352,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Impacto medido',
       paragraphs: [
-        'Después de un mes de operación, la adopción de check-in QR aumentó de 15% a 24% - un 60% de mejora relativa. Las encuestas de comentarios de los clientes indicaron que el QR animado era "más fácil de notar" y "sentirse más moderno". Los horarios de la oficina disminuyeron mediblemente durante los períodos máximos, ya que más invitados se sirvieron por vía QR.',
+        'Después de un mes de operación, la adopción de check-in QR aumentó de 15% a 24% - un 60% de mejora relativa. Las encuestas de comentarios de los clientes indicaron que el QR animado era \\"más fácil de notar\\" y \\"sentirse más moderno\\". Los horarios de la oficina disminuyeron mediblemente durante los períodos máximos, ya que más invitados se sirvieron por vía QR.',
         'Importantemente, se reportaron cero fallos de escaneo a pesar de miles de escaneos diarios. El enfoque conservador de animación había alcanzado el objetivo de atención sin sacrificar la confiabilidad que demandaba un flujo de check-in. El salón posteriormente lanzó QRs similares animados a sus otros lugares.',
         'Vea la guía Aprende sobre códigos QR animados para señalización digital para los principios técnicos detrás del diseño de animación seguro.',
       ],
@@ -382,7 +382,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Case Study: Global Product Launch QR Campaign',
       paragraphs: [
-        'Este ejemplo sigue a una empresa de electrónica de consumo lanzando un nuevo producto simultáneamente en 12 mercados a través de 8 idiomas. Cada equipo regional de marketing necesitaba producir embalaje, exhibiciones al por menor y materiales promocionales con códigos QR que se vinculan con las páginas de productos localizadas. Los lanzamientos anteriores habían resultado en un estilo QR inconsistente, fallas ocasionales de escaneo, y un "juego de teléfono" de la deriva de configuración mientras cada equipo recreaba códigos de capturas de pantalla.',
+        'Este ejemplo sigue a una empresa de electrónica de consumo lanzando un nuevo producto simultáneamente en 12 mercados a través de 8 idiomas. Cada equipo regional de marketing necesitaba producir embalaje, exhibiciones al por menor y materiales promocionales con códigos QR que se vinculan con las páginas de productos localizadas. Los lanzamientos anteriores habían resultado en un estilo QR inconsistente, fallas ocasionales de escaneo, y un \\"juego de teléfono\\" de la deriva de configuración mientras cada equipo recreaba códigos de capturas de pantalla.',
         'La solución aprovechó los enlaces de configuración compartidos de ANQR para establecer una única fuente de verdad que cada equipo regional podría acceder, independientemente de su lenguaje de interfaz. La carga útil QR utilizó una redireccion inteligente que detectó el lenguaje de usuario, por lo que un código funcionó globalmente mientras entregaba experiencias localizadas.',
       ],
       images: [
@@ -427,7 +427,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Gestión de las diferencias regionales',
       paragraphs: [
-        'Algunos mercados requerían adaptaciones menores. El equipo chino necesitaba una versión con un marco optimizado WeChat para compartir social. En lugar de modificar al maestro, crearon una variante documentada con su propio enlace de configuración, claramente etiquetada como "variante CN-WeChat" en la biblioteca de activos de la campaña. Esto mantuvo la trazabilidad permitiendo la localización necesaria.',
+        'Algunos mercados requerían adaptaciones menores. El equipo chino necesitaba una versión con un marco optimizado WeChat para compartir social. En lugar de modificar al maestro, crearon una variante documentada con su propio enlace de configuración, claramente etiquetada como \\"variante CN-WeChat\\" en la biblioteca de activos de la campaña. Esto mantuvo la trazabilidad permitiendo la localización necesaria.',
         "El equipo de marca estableció una regla simple: cualquier variación del maestro requiere un nuevo enlace de configuración documentado. No hay modificaciones en los archivos exportados, no 'quick fixes' en el software de diseño. Esto impidió la deriva de configuración que había asolado los lanzamientos anteriores.",
       ],
       images: [

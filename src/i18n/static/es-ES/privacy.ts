@@ -60,7 +60,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: Recibe datos para servir y medir anuncios.',
         'Proveedores de análisis: Recibir datos de uso anónimos.',
         'Netlify (hosting): Procesa solicitudes y puede registrar direcciones IP.',
-        'No vendemos su información personal. Sin embargo, compartir datos con socios publicitarios puede ser considerado como una "venta" bajo CCPA (ver abajo).',
+        'No vendemos su información personal. Sin embargo, compartir datos con socios publicitarios puede ser considerado como una \\"venta\\" bajo CCPA (ver abajo).',
       ],
     },
     {
@@ -80,7 +80,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Derecho de acceso: Solicite una copia de los datos personales que tenemos sobre usted.',
         'Derecho a la rectificación: Solicitar corrección de datos inexactos.',
-        'Derecho a borrar: Solicitar la eliminación de sus datos ("derecho a ser olvidado").',
+        'Derecho a borrar: Solicitar la eliminación de sus datos (\\"derecho a ser olvidado\\").',
         'Derecho a restringir el procesamiento: Solicite límites sobre cómo utilizamos sus datos.',
         'Derecho a la portabilidad de datos: Solicite sus datos en formato portátil.',
         'Derecho a oponerse: Objeto al procesamiento, incluyendo para el marketing directo.',
@@ -100,7 +100,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Derecho a saber: Solicitar información sobre datos recogidos, fuentes, propósitos y terceros.',
         'Derecho a eliminar: Solicitar la supresión de su información personal.',
-        'Derecho a excluirse: optar por no participar en la "venta" de información personal (compartirla con socios publicitarios puede calificar).',
+        'Derecho a excluirse: optar por no participar en la \\"venta\\" de información personal (compartirla con socios publicitarios puede calificar).',
         'Derecho a la no discriminación: No discriminaremos por ejercer sus derechos.',
       ],
     },
@@ -138,7 +138,7 @@ export const privacy: PageDefinition = {
     {
       heading: 'Cambios en esta política',
       paragraphs: [
-        'Podemos actualizar esta política periódicamente. La fecha "Última actualización" indica la revisión más reciente. Se pueden comunicar cambios significativos a través de una pancarta del sitio.',
+        'Podemos actualizar esta política periódicamente. La fecha \\"Última actualización\\" indica la revisión más reciente. Se pueden comunicar cambios significativos a través de una pancarta del sitio.',
       ],
     },
     {

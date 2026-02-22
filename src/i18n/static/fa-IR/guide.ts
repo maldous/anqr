@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'چرخش نقطه: ماژول های الماس/نقطه را بچرخانید.',
         'مقیاس چشم: تنظیم اندازه برای الگوهای یاب.',
         'سبک قاب: قاب های تزئینی (قاب گرد، برچسب، برچسب) را اضافه کنید.',
-        'متن فریم: متنی مانند "Scan Me!" به قاب ها',
+        'متن فریم: متنی مانند \\"Scan Me!\\" به قاب ها',
       ],
       links: [
         {
@@ -477,7 +477,7 @@ export const guide: PageDefinition = {
         'نام فایل: نام فایل سفارشی برای دانلود.',
         'اندازه پالت GIF: 2-256 رنگ در خروجی GIF.',
         'GIF Quantizer: کاهش رنگ متوسط، NeuQuant یا Octree.',
-        'GIF Dithering: Off، Floyd-Steinberg یا Ordered.',
+        'دیترینگ گیف: خاموش، فلوید-اشتاینبرگ یا مرتب‌شده.',
         'رنگ شفاف GIF: یک رنگ را شفاف کنید.',
         'SVG True Vector: از مسیرها به جای رستر تعبیه شده استفاده کنید.',
         'SVG Shape Precision: پیکسل یا رندر مسیر دقیق.',
@@ -1028,7 +1028,7 @@ export const guide: PageDefinition = {
       paragraphs: ['کنترل الگوریتم های پراکندگی برای پردازش همپوشانی:'],
       bullets: [
         'ditherKind: الگوریتم Dither - error_diffusion، ordered_bayer، blue_noise و غیره (پیش‌فرض: ordered_bayer).',
-        'diffusionKernel: خطای diffusion kernel - floyd_steinberg، jarvis_judice_ninke، stucki، burkes، sierra، atkinson (پیش‌فرض: floyd_steinberg).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
         'شدت دودی: شدت دودگی 0-100 (پیش‌فرض: 50).',
         'سرپانتین: سرپانتین پراکندگی 0/1 (پیش‌فرض: 0).',
         'ماتریس: ماتریس dither مرتب شده - Bayer2، Bayer4، Bayer8 (پیش‌فرض: bayer4).',
@@ -1204,9 +1204,9 @@ export const guide: PageDefinition = {
       heading: 'مثال HTML',
       paragraphs: [
         'برای جاسازی یک کد QR در وب سایت خود:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'برای اندازه گیری واکنشگرا:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'سرور پاسخ ها را با هدرهای کش طولانی ذخیره می کند، بنابراین درخواست های مکرر برای همان URL سریع هستند.',
       ],
     },

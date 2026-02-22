@@ -360,7 +360,7 @@ export const guide: PageDefinition = {
         'ການແຜ່ກະຈາຍຄວາມຜິດພາດ: ແບບຄລາສສິກ Floyd-Steinberg. ກະຈາຍຄວາມຜິດພາດທາງດ້ານປະລິມານໄປຫາ pixels ໃກ້ຄຽງ.',
         'Ordered (Bayer): ໃຊ້ matrix threshold ສໍາລັບຮູບແບບປົກກະຕິ.',
         'ຈຸດທີ່ເປັນກຸ່ມ: ຈຳລອງການພິມເຄິ່ງສຽງ.',
-        'Void & Cluster: Optimized ordering dithering.',
+        'ການກະຈາຍແບບຈຸດວ່າງ-ກຸ່ມ: ປັບປຸງການຮຽງລໍາດັບໃຫ້ເໝາະສົມ.',
         'ສຽງສີຟ້າ: ຮູບແບບການສຸ່ມທີ່ມີລັກສະນະເປັນຕາສຸກ.',
         'ເກນສຽງລົບກວນສີຟ້າ: ຂີດຈຳກັດການລົບກວນດ້ວຍໂຄງສ້າງສຽງສີຟ້າ.',
         'ສຽງສີຂາວ: ໃກ້ຈະເຂົ້າສູ່ແບບສຸ່ມ.',
@@ -434,7 +434,7 @@ export const guide: PageDefinition = {
         'ການໝຸນຈຸດ: ໝຸນໂມດູນເພັດ/ຈຸດ.',
         'ຕາຂະໜາດ: ການປັບຂະໜາດສຳລັບຮູບແບບຕົວຊອກຫາ.',
         'ຮູບແບບກອບ: ເພີ່ມກອບຕົກແຕ່ງ (ກອບມົນ, ສະຕິກເກີ, ແທັກ).',
-        'Frame Text: ເພີ່ມຂໍ້ຄວາມເຊັ່ນ "Scan Me!" ກັບກອບ.',
+        'Frame Text: ເພີ່ມຂໍ້ຄວາມເຊັ່ນ \\"Scan Me!\\" ກັບກອບ.',
       ],
       links: [
         {
@@ -591,7 +591,7 @@ export const guide: PageDefinition = {
         'ການເຊື່ອມໂຍງແຄມເປນກາລະຕະຫຼາດ: URL ທີ່ມີພາລາມິເຕີ UTM ເຕັມ (ແທັກການຕະຫຼາດ) ຕິດຕາມ.',
         'Short Link: ສໍາລັບໃຊ້ກັບຕົວຫຍໍ້ URL ສໍາລັບລະຫັດ QR ແບບເຄື່ອນໄຫວ/ຕິດຕາມໄດ້.',
         'GS1 Digital Link: ການກໍານົດຜະລິດຕະພັນທີ່ມີ GTIN, serial, batch, ຫມົດອາຍຸ.',
-        'App Deep Link: iOS/Android app links deep with custom schemes.',
+        'ລິ້ງເຂົ້າແອັບໂດຍກົງ: ລິ້ງເລິກສໍາລັບແອັບ iOS/Android ພ້ອມແຜນຜັງກໍານົດເອງ.',
         'ຮູບແບບກຳນົດເອງ: ຂໍ້ມູນດິບທີ່ບໍ່ມີການຈັດຮູບແບບ ຫຼື ການກວດສອບ.',
       ],
       links: [
@@ -826,7 +826,7 @@ export const guide: PageDefinition = {
       heading: 'ການຕັ້ງຄ່າອະນິເມຊັນ (ແບບມືອາຊີບ)',
       paragraphs: ['ຄຸນສົມບັດອະນິເມຊັນແບບມືອາຊີບເພີ່ມເຕີມ:'],
       bullets: [
-        'Temporal Dither: Off, Blue Noise, ຫຼື Flicker Safe per-frame dithering.',
+        'ດິດເທີຊົ່ວຄາວ: ປິດ, ສຽງລົບກວນສີຟ້າ, ຫຼື ໂໝດປອດໄພຕໍ່ການກະພິບໃນແຕ່ລະເຟຣມ.',
         'ຮູບແບບ: ບໍ່ມີ, Pulse, Wave, Scanline, Shimmer, ຫຼືຜົນກະທົບ Drift.',
       ],
       links: [
@@ -948,7 +948,7 @@ export const guide: PageDefinition = {
         'webpQ: ຄຸນນະພາບ WebP 0-100 (ຄ່າເລີ່ມຕົ້ນ: 90).',
         'gifColors: GIF palette ຂະໜາດ 2-256 (ຄ່າເລີ່ມຕົ້ນ: 256).',
         'dpi: ຜົນຜະລິດ DPI ສໍາລັບ PNG (ຄ່າເລີ່ມຕົ້ນ: 72).',
-        'metaTitle, metaAuthor, metaCopy, metaDesc: ຊ່ອງຂໍ້ມູນ metadata PNG.',
+        'ຊ່ອງຂໍ້ມູນເມຕາ PNG.',
       ],
     },
     // Crop Parameters
@@ -1132,7 +1132,7 @@ export const guide: PageDefinition = {
         'modulePx: ຂະຫນາດ pixels ຂອງໂມດູນ (ຄ່າເລີ່ມຕົ້ນ: ການຄິດໄລ່ອັດຕະໂນມັດຈາກຂະຫນາດ).',
         'ຂອບ: ໂມດູນຂອບພິເສດນອກເໜືອຈາກເຂດງຽບ (ຄ່າເລີ່ມຕົ້ນ: 0).',
         'crisp: ເປີດໃຊ້ການໃຫ້ຮູບພາບ crisp/pixelated 0/1 (ຄ່າເລີ່ມຕົ້ນ: 1).',
-        'snap: pixel snap mode - floor, round, ceil (default: floor).',
+        'snap: Pixel snap mode - floor, round, ceil (default: floor).',
       ],
     },
     // Pattern Preservation Parameters
@@ -1182,9 +1182,9 @@ export const guide: PageDefinition = {
       heading: 'ຕົວຢ່າງ HTML',
       paragraphs: [
         'ເພື່ອຝັງລະຫັດ QR ໃນເວັບໄຊທ໌ຂອງທ່ານ:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'ສໍາລັບຂະຫນາດທີ່ຕອບສະຫນອງ:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'ເຊີບເວີ cache ຕອບສະຫນອງກັບ cache headers ຍາວ, ດັ່ງນັ້ນການຮ້ອງຂໍຊ້ໍາສໍາລັບ URL ດຽວກັນແມ່ນໄວ.',
       ],
     },

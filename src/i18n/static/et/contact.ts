@@ -33,7 +33,7 @@ export const contact: PageDefinition = {
       heading: 'Reageerimisajad',
       paragraphs: [
         'Püüame päringutele vastata 5-7 tööpäeva jooksul. Privaatsusega seotud taotlused käsitletakse 30 päeva jooksul vastavalt seadusele.',
-        'Kiiretel perioodidel võivad reageerimisajad olla pikemad. Kiireloomuliste küsimuste korral märkige teemareale "KIIRE".',
+        'Kiiretel perioodidel võivad reageerimisajad olla pikemad. Kiireloomuliste küsimuste korral märkige teemareale \\"KIIRE\\".',
       ],
     },
     {
@@ -60,7 +60,7 @@ export const contact: PageDefinition = {
       heading: 'DMCA kontakt',
       paragraphs: [
         'Saatke DMCA teated aadressile email@anqr.link',
-        'Palun lisage teemareale "DMCA teatis". Vastame kehtivatele teadetele vastavalt kehtivatele seadustele. Pange tähele, et ANQR genereerib kasutaja seadmetes kohapeal QR-koode ega majuta kasutaja loodud sisu.',
+        'Palun lisage teemareale \\"DMCA teatis\\". Vastame kehtivatele teadetele vastavalt kehtivatele seadustele. Pange tähele, et ANQR genereerib kasutaja seadmetes kohapeal QR-koode ega majuta kasutaja loodud sisu.',
       ],
     },
     {

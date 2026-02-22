@@ -66,7 +66,7 @@ export const terms: PageDefinition = {
     {
       heading: 'Zwolnienie gwarancji',
       paragraphs: [
-        'ANQR JEST ZAPEWNIANY NA PODSTAWIE "AS IS" I "AS AVAILABLE", BEZ ZASTRZEŻEŃ JAKIEGOKOLWIEK RODZAJU, EKSPRESS LUB IMPLIFIED, W TYM, ALE NIE OGRANICZONY DO POPRAWY ALARMÓW DOTYCZĄCYCH MOŻLIWOŚCI WYMIANY HANDLOWEJ, ADEKWATNOŚCI DO KONKRETNEGO CELU, ORAZ NIESTOSOWANIA.',
+        'ANQR JEST ZAPEWNIANY NA PODSTAWIE \\"AS IS\\" I \\"AS AVAILABLE\\", BEZ ZASTRZEŻEŃ JAKIEGOKOLWIEK RODZAJU, EKSPRESS LUB IMPLIFIED, W TYM, ALE NIE OGRANICZONY DO POPRAWY ALARMÓW DOTYCZĄCYCH MOŻLIWOŚCI WYMIANY HANDLOWEJ, ADEKWATNOŚCI DO KONKRETNEGO CELU, ORAZ NIESTOSOWANIA.',
         'Nie gwarantujemy, że: a) strona będzie niezakłócona, bezpieczna lub wolna od błędów; b) kody QR będą skanować we wszystkich środowiskach, na wszystkich urządzeniach lub we wszystkich zastosowaniach skanerów; c) strona będzie spełniać Twoje wymagania.',
         'Należy zawsze testować kody QR w warunkach, w których będą one stosowane (rozmiar druku, oświetlenie, typ ekranu, odległość, jakość kamery).',
       ],
@@ -109,7 +109,7 @@ export const terms: PageDefinition = {
       heading: 'Zmiany i dostępność',
       paragraphs: [
         'Możemy modyfikować, zawiesić lub przerwać stronę (lub jej część) w dowolnym momencie bez wypowiedzenia lub odpowiedzialności.',
-        'W każdej chwili możemy zaktualizować niniejsze Warunki. Data "Last updated" wskazuje, kiedy zostały one ostatnio zmienione. Kontynuacja stosowania po zmianach oznacza akceptację.',
+        'W każdej chwili możemy zaktualizować niniejsze Warunki. Data \\"Last updated\\" wskazuje, kiedy zostały one ostatnio zmienione. Kontynuacja stosowania po zmianach oznacza akceptację.',
       ],
     },
     {

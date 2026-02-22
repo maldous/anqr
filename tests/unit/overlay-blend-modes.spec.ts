@@ -9,10 +9,16 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
+import {
+  getEffectiveIntensity,
+  getScaleFactor,
+} from '../../src/modules/qr-generator/pixel-matrix-utils';
 // Import from the qr-generator module
-import { computeDarkFactor, computeLightBlend, applyQROverlayMode } from '../../src/modules/qr-generator/render-modes';
-import { getEffectiveIntensity, getScaleFactor } from '../../src/modules/qr-generator/pixel-matrix-utils';
+import {
+  applyQROverlayMode,
+  computeDarkFactor,
+  computeLightBlend,
+} from '../../src/modules/qr-generator/render-modes';
 import type { OverlayData, QRGeneratorConfig } from '../../src/modules/qr-generator/types';
 
 // ---------------------------------------------------------------------------
@@ -65,7 +71,12 @@ function parseColorRgb(s: string): { r: number; g: number; b: number } | null {
   if (rgbMatch) return { r: +rgbMatch[1], g: +rgbMatch[2], b: +rgbMatch[3] };
   // #c8643a
   const hexMatch = s.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
-  if (hexMatch) return { r: parseInt(hexMatch[1], 16), g: parseInt(hexMatch[2], 16), b: parseInt(hexMatch[3], 16) };
+  if (hexMatch)
+    return {
+      r: parseInt(hexMatch[1], 16),
+      g: parseInt(hexMatch[2], 16),
+      b: parseInt(hexMatch[3], 16),
+    };
   return null;
 }
 
@@ -178,28 +189,28 @@ describe('computeLightBlend', () => {
 // ---------------------------------------------------------------------------
 
 describe('getEffectiveIntensity', () => {
-  it('caps intensity at ECC L default limit (30%)', () => {
+  it('does not cap intensity at ECC L by default', () => {
     const config = makeConfig({ errorCorrection: 'L', overlayIntensity: 100 });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    expect(effectiveIntensity).toBeCloseTo(0.3);
+    expect(effectiveIntensity).toBeCloseTo(1);
   });
 
-  it('caps intensity at ECC M default limit (50%)', () => {
+  it('does not cap intensity at ECC M by default', () => {
     const config = makeConfig({ errorCorrection: 'M', overlayIntensity: 100 });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    expect(effectiveIntensity).toBeCloseTo(0.5);
+    expect(effectiveIntensity).toBeCloseTo(1);
   });
 
-  it('caps intensity at ECC Q default limit (70%)', () => {
+  it('does not cap intensity at ECC Q by default', () => {
     const config = makeConfig({ errorCorrection: 'Q', overlayIntensity: 100 });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    expect(effectiveIntensity).toBeCloseTo(0.7);
+    expect(effectiveIntensity).toBeCloseTo(1);
   });
 
-  it('caps intensity at ECC H default limit (85%)', () => {
+  it('does not cap intensity at ECC H by default', () => {
     const config = makeConfig({ errorCorrection: 'H', overlayIntensity: 100 });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    expect(effectiveIntensity).toBeCloseTo(0.85);
+    expect(effectiveIntensity).toBeCloseTo(1);
   });
 
   it('does not cap when intensity is below limit', () => {
@@ -230,13 +241,13 @@ describe('getEffectiveIntensity', () => {
     expect(effectiveIntensity).toBeCloseTo(0.8);
   });
 
-  it('defaults to 50% cap when ECC level is unknown', () => {
+  it('defaults to no cap when ECC level is unknown', () => {
     const config = makeConfig({
       errorCorrection: 'X' as 'L',
       overlayIntensity: 100,
     });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    expect(effectiveIntensity).toBeCloseTo(0.5);
+    expect(effectiveIntensity).toBeCloseTo(1);
   });
 
   it('returns 0 when overlayIntensity is 0', () => {
@@ -245,10 +256,10 @@ describe('getEffectiveIntensity', () => {
     expect(effectiveIntensity).toBeCloseTo(0);
   });
 
-  it('sets effectiveConfig.overlayIntensity to capped value * 100', () => {
+  it('sets effectiveConfig.overlayIntensity to the effective value * 100', () => {
     const config = makeConfig({ errorCorrection: 'L', overlayIntensity: 100 });
     const { effectiveConfig } = getEffectiveIntensity(config);
-    expect(effectiveConfig.overlayIntensity).toBeCloseTo(30);
+    expect(effectiveConfig.overlayIntensity).toBeCloseTo(100);
   });
 });
 
@@ -355,10 +366,26 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'blend' });
 
       const resultHigh = applyQROverlayMode(
-        'blend', true, 0.5, overlayData, 10, 10, moduleCount, 0.8, config
+        'blend',
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.8,
+        config
       );
       const resultLow = applyQROverlayMode(
-        'blend', true, 0.5, overlayData, 10, 10, moduleCount, 0.2, config
+        'blend',
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.2,
+        config
       );
 
       // Higher intensity should produce a darker module color (more blended with overlay)
@@ -372,7 +399,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'blend' });
 
       const result = applyQROverlayMode(
-        'blend', false, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        'blend',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
       // Light modules should keep bg color
       expect(result.moduleColor).toBe(config.bgColor);
@@ -388,7 +423,15 @@ describe('applyQROverlayMode', () => {
       });
 
       const result = applyQROverlayMode(
-        'halftone', true, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        'halftone',
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
       expect(result.useHalftoneRendering).toBe(true);
     });
@@ -398,7 +441,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'halftone' });
 
       const result = applyQROverlayMode(
-        'halftone', true, 0.3, overlayData, 10, 10, moduleCount, 0.7, config
+        'halftone',
+        true,
+        0.3,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.7,
+        config
       );
       expect(result.moduleSizeModifier).toBeGreaterThan(0);
       expect(result.moduleSizeModifier).toBeLessThanOrEqual(1);
@@ -411,7 +462,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'wave' });
 
       const result = applyQROverlayMode(
-        'wave', true, 0.3, overlayData, 5, 5, moduleCount, 0.5, config
+        'wave',
+        true,
+        0.3,
+        overlayData,
+        5,
+        5,
+        moduleCount,
+        0.5,
+        config
       );
       // Wave should produce non-zero offsets when brightness < 1 and intensity > 0
       const hasOffset = result.waveOffsetX !== 0 || result.waveOffsetY !== 0;
@@ -423,7 +482,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'wave' });
 
       const result = applyQROverlayMode(
-        'wave', true, 0.5, overlayData, 5, 5, moduleCount, 0.1, config
+        'wave',
+        true,
+        0.5,
+        overlayData,
+        5,
+        5,
+        moduleCount,
+        0.1,
+        config
       );
       // Color should be applied even at 0.1 intensity (old code required > 0.3)
       expect(result.moduleColor).not.toBe(config.fgColor);
@@ -434,7 +501,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'wave' });
 
       const result = applyQROverlayMode(
-        'wave', true, 0.5, overlayData, 5, 5, moduleCount, 0, config
+        'wave',
+        true,
+        0.5,
+        overlayData,
+        5,
+        5,
+        moduleCount,
+        0,
+        config
       );
       // At zero intensity, wave should not modify color
       expect(result.moduleColor).toBe(config.fgColor);
@@ -447,10 +522,26 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'mosaic' });
 
       const darkResult = applyQROverlayMode(
-        'mosaic', true, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        'mosaic',
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
       const lightResult = applyQROverlayMode(
-        'mosaic', false, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        'mosaic',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
 
       expect(darkResult.shouldDrawCell).toBe(true);
@@ -464,7 +555,15 @@ describe('applyQROverlayMode', () => {
       const testColor = { r: 100, g: 150, b: 200 };
       for (const i of [0, 0.5, 1.0]) {
         const result = applyQROverlayMode(
-          'mosaic', false, 0.5, overlayData, 10, 10, moduleCount, i, config
+          'mosaic',
+          false,
+          0.5,
+          overlayData,
+          10,
+          10,
+          moduleCount,
+          i,
+          config
         );
         const rgb = parseColorRgb(result.moduleColor);
         expect(rgb).not.toBeNull();
@@ -485,10 +584,26 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'mosaic' });
 
       const lowResult = applyQROverlayMode(
-        'mosaic', false, 0.5, overlayData, 10, 10, moduleCount, 0.1, config
+        'mosaic',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.1,
+        config
       );
       const highResult = applyQROverlayMode(
-        'mosaic', false, 0.5, overlayData, 10, 10, moduleCount, 0.9, config
+        'mosaic',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.9,
+        config
       );
 
       const lowRgb = parseColorRgb(lowResult.moduleColor);
@@ -505,10 +620,26 @@ describe('applyQROverlayMode', () => {
 
       // At high intensity the darkFactor should be lower
       const highResult = applyQROverlayMode(
-        'mosaic', true, 0.5, overlayData, 10, 10, moduleCount, 0.9, config
+        'mosaic',
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.9,
+        config
       );
       const lowResult = applyQROverlayMode(
-        'mosaic', true, 0.5, overlayData, 10, 10, moduleCount, 0.1, config
+        'mosaic',
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.1,
+        config
       );
 
       const highRgb = parseColorRgb(highResult.moduleColor);
@@ -526,7 +657,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'gapfill' });
 
       const result = applyQROverlayMode(
-        'gapfill', false, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        'gapfill',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
       expect(result.shouldDrawCell).toBe(true);
       // Color should be different from pure white (bg) due to blending
@@ -540,10 +679,26 @@ describe('applyQROverlayMode', () => {
       // At full effectiveIntensity (1.0), the fade should be computeLightBlend(1.0, 0.75) = 0.75
       // which is higher than the old cap of 0.6
       const highResult = applyQROverlayMode(
-        'gapfill', false, 0.5, overlayData, 10, 10, moduleCount, 1.0, config
+        'gapfill',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        1.0,
+        config
       );
       const lowResult = applyQROverlayMode(
-        'gapfill', false, 0.5, overlayData, 10, 10, moduleCount, 0.1, config
+        'gapfill',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.1,
+        config
       );
 
       const highRgb = parseColorRgb(highResult.moduleColor);
@@ -564,7 +719,15 @@ describe('applyQROverlayMode', () => {
       });
 
       const result = applyQROverlayMode(
-        'duotone', true, 0.8, overlayData, 10, 10, moduleCount, 0.8, config
+        'duotone',
+        true,
+        0.8,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.8,
+        config
       );
       // Bright areas should lean toward highlight color (blue)
       expect(result.moduleColor).toMatch(/^(#|rgb)/);
@@ -577,10 +740,26 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'artwork' });
 
       const darkResult = applyQROverlayMode(
-        'artwork', true, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        'artwork',
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
       const lightResult = applyQROverlayMode(
-        'artwork', false, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        'artwork',
+        false,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
 
       // Artwork mode should not modify colors at all
@@ -596,7 +775,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'brightness' });
 
       const result = applyQROverlayMode(
-        'brightness', true, 0.9, overlayData, 10, 10, moduleCount, 0.5, config
+        'brightness',
+        true,
+        0.9,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
       // High brightness + moderate intensity should make some modules invisible
       expect(result.moduleOpacity).toBe(0);
@@ -607,7 +794,15 @@ describe('applyQROverlayMode', () => {
       const config = makeConfig({ overlayMode: 'brightness' });
 
       const result = applyQROverlayMode(
-        'brightness', true, 0.1, overlayData, 10, 10, moduleCount, 0.5, config
+        'brightness',
+        true,
+        0.1,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
       expect(result.moduleOpacity).toBe(1);
     });
@@ -640,10 +835,12 @@ describe('darkFactor scaling consistency', () => {
     const config = makeConfig({ overlayMode: 'pixelate' });
 
     const lowColor = parseColorRgb(
-      applyQROverlayMode('pixelate', true, 0.5, overlayData, 1, 1, moduleCount, 0.2, config).moduleColor
+      applyQROverlayMode('pixelate', true, 0.5, overlayData, 1, 1, moduleCount, 0.2, config)
+        .moduleColor
     );
     const highColor = parseColorRgb(
-      applyQROverlayMode('pixelate', true, 0.5, overlayData, 1, 1, moduleCount, 0.8, config).moduleColor
+      applyQROverlayMode('pixelate', true, 0.5, overlayData, 1, 1, moduleCount, 0.8, config)
+        .moduleColor
     );
 
     // Both should produce parseable colors
@@ -658,8 +855,28 @@ describe('darkFactor scaling consistency', () => {
     const overlayData = makeOverlayData(moduleCount, 0.5, { r: 200, g: 100, b: 50 });
     const config = makeConfig({ overlayMode: 'outline' });
 
-    const low = applyQROverlayMode('outline', true, 0.5, overlayData, 10, 10, moduleCount, 0.1, config);
-    const high = applyQROverlayMode('outline', true, 0.5, overlayData, 10, 10, moduleCount, 0.9, config);
+    const low = applyQROverlayMode(
+      'outline',
+      true,
+      0.5,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      0.1,
+      config
+    );
+    const high = applyQROverlayMode(
+      'outline',
+      true,
+      0.5,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      0.9,
+      config
+    );
 
     expect(low.drawOutlineOnly).toBe(true);
     expect(high.drawOutlineOnly).toBe(true);
@@ -683,7 +900,15 @@ describe('overlay modes with brightness-only data (no colors)', () => {
       const config = makeConfig({ overlayMode: mode });
 
       const result = applyQROverlayMode(
-        mode, true, 0.5, overlayData, 10, 10, moduleCount, 0.5, config
+        mode,
+        true,
+        0.5,
+        overlayData,
+        10,
+        10,
+        moduleCount,
+        0.5,
+        config
       );
 
       expect(result).toBeDefined();
@@ -711,7 +936,15 @@ describe('pixelate boundary handling', () => {
     // row=20, col=20 is the last module. Block starts at floor(20/3)*3 = 18.
     // Block covers rows 18-20, cols 18-20 → 3x3 = 9 cells, all valid.
     const result = applyQROverlayMode(
-      'pixelate', true, 0.5, overlayData, 20, 20, moduleCount, 0.5, config
+      'pixelate',
+      true,
+      0.5,
+      overlayData,
+      20,
+      20,
+      moduleCount,
+      0.5,
+      config
     );
 
     const rgb = parseColorRgb(result.moduleColor);
@@ -727,7 +960,15 @@ describe('pixelate boundary handling', () => {
     const config = makeConfig({ overlayMode: 'pixelate' });
 
     const result = applyQROverlayMode(
-      'pixelate', true, 0.5, overlayData, 0, 0, moduleCount, 0.5, config
+      'pixelate',
+      true,
+      0.5,
+      overlayData,
+      0,
+      0,
+      moduleCount,
+      0.5,
+      config
     );
 
     const rgb = parseColorRgb(result.moduleColor);
@@ -747,11 +988,19 @@ describe('duotone fallback paths', () => {
     const overlayData = makeOverlayData(moduleCount, 0.8);
     const config = makeConfig({
       overlayMode: 'duotone',
-      duotoneColors: ['#ff0000'],  // Only shadow, no highlight
+      duotoneColors: ['#ff0000'], // Only shadow, no highlight
     });
 
     const result = applyQROverlayMode(
-      'duotone', true, 0.8, overlayData, 10, 10, moduleCount, 0.8, config
+      'duotone',
+      true,
+      0.8,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      0.8,
+      config
     );
 
     const rgb = parseColorRgb(result.moduleColor);
@@ -765,11 +1014,19 @@ describe('duotone fallback paths', () => {
     const overlayData = makeOverlayData(moduleCount, 0.2);
     const config = makeConfig({
       overlayMode: 'duotone',
-      duotoneColors: ['#ff0000'],  // Only shadow, no highlight
+      duotoneColors: ['#ff0000'], // Only shadow, no highlight
     });
 
     const result = applyQROverlayMode(
-      'duotone', true, 0.2, overlayData, 10, 10, moduleCount, 0.8, config
+      'duotone',
+      true,
+      0.2,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      0.8,
+      config
     );
 
     const rgb = parseColorRgb(result.moduleColor);
@@ -782,14 +1039,30 @@ describe('duotone fallback paths', () => {
     const overlayData = makeOverlayData(moduleCount, 0.5);
     const config = makeConfig({
       overlayMode: 'duotone',
-      duotoneColors: ['#ff0000', '#0000ff'],  // Red shadow, blue highlight
+      duotoneColors: ['#ff0000', '#0000ff'], // Red shadow, blue highlight
     });
 
     const darkResult = applyQROverlayMode(
-      'duotone', true, 0.1, overlayData, 10, 10, moduleCount, 1.0, config
+      'duotone',
+      true,
+      0.1,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      1.0,
+      config
     );
     const brightResult = applyQROverlayMode(
-      'duotone', true, 0.9, overlayData, 10, 10, moduleCount, 1.0, config
+      'duotone',
+      true,
+      0.9,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      1.0,
+      config
     );
 
     const darkRgb = parseColorRgb(darkResult.moduleColor);
@@ -814,10 +1087,26 @@ describe('blend mode darkening order', () => {
     const config = makeConfig({ overlayMode: 'blend' });
 
     const lowResult = applyQROverlayMode(
-      'blend', true, 0.5, overlayData, 10, 10, moduleCount, 0.2, config
+      'blend',
+      true,
+      0.5,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      0.2,
+      config
     );
     const highResult = applyQROverlayMode(
-      'blend', true, 0.5, overlayData, 10, 10, moduleCount, 0.8, config
+      'blend',
+      true,
+      0.5,
+      overlayData,
+      10,
+      10,
+      moduleCount,
+      0.8,
+      config
     );
 
     const lowRgb = parseColorRgb(lowResult.moduleColor);

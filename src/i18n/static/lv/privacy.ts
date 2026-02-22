@@ -60,7 +60,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: saņem datus, lai rādītu un novērtētu reklāmas.',
         'Analytics pakalpojumu sniedzēji: saņemiet anonimizētus lietošanas datus.',
         'Netlify (hosting): apstrādā pieprasījumus un var reģistrēt IP adreses.',
-        'Mēs nepārdodam jūsu personisko informāciju. Tomēr datu kopīgošana ar reklamēšanas partneriem var tikt uzskatīta par "pārdošanu" saskaņā ar CCPA (skatiet tālāk).',
+        'Mēs nepārdodam jūsu personisko informāciju. Tomēr datu kopīgošana ar reklamēšanas partneriem var tikt uzskatīta par \\"pārdošanu\\" saskaņā ar CCPA (skatiet tālāk).',
       ],
     },
     {
@@ -80,7 +80,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Piekļuves tiesības: pieprasīt mūsu rīcībā esošo personas datu kopiju par jums.',
         'Tiesības uz labošanu: pieprasīt neprecīzu datu labošanu.',
-        'Tiesības uz dzēšanu: pieprasīt savu datu dzēšanu ("tiesības tikt aizmirstam").',
+        'Tiesības uz dzēšanu: pieprasīt savu datu dzēšanu (\\"tiesības tikt aizmirstam\\").',
         'Tiesības ierobežot apstrādi: pieprasīt ierobežojumus tam, kā mēs izmantojam jūsu datus.',
         'Tiesības uz datu pārnesamību: pieprasiet savus datus pārnēsājamā formātā.',
         'Tiesības iebilst: Iebilst pret apstrādi, tostarp attiecībā uz tiešo mārketingu.',
@@ -100,7 +100,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Tiesības zināt: pieprasīt informāciju par savāktajiem datiem, avotiem, mērķiem un trešajām pusēm.',
         'Tiesības dzēst: pieprasīt dzēst savu personisko informāciju.',
-        'Tiesības atteikties: atteikties no personas informācijas "pārdošanas" (var tikt piemērota kopīgošana ar reklāmas partneriem).',
+        'Tiesības atteikties: atteikties no personas informācijas \\"pārdošanas\\" (var tikt piemērota kopīgošana ar reklāmas partneriem).',
         'Tiesības uz nediskrimināciju: mēs nediskriminēsim jūsu tiesību īstenošanas dēļ.',
       ],
     },
@@ -138,7 +138,7 @@ export const privacy: PageDefinition = {
     {
       heading: 'Izmaiņas šajā politikā',
       paragraphs: [
-        'Mēs varam periodiski atjaunināt šo politiku. Datums "Pēdējā atjaunināšana" norāda jaunāko versiju. Par būtiskām izmaiņām var paziņot, izmantojot vietnes reklāmkarogu.',
+        'Mēs varam periodiski atjaunināt šo politiku. Datums \\"Pēdējā atjaunināšana\\" norāda jaunāko versiju. Par būtiskām izmaiņām var paziņot, izmantojot vietnes reklāmkarogu.',
       ],
     },
     {

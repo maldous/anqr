@@ -33,7 +33,7 @@ export const contact: PageDefinition = {
       heading: 'Responstijden',
       paragraphs: [
         'We willen binnen 5-7 werkdagen antwoorden op vragen. Privacy-gerelateerde verzoeken zullen worden behandeld binnen 30 dagen zoals vereist door de wet.',
-        'Tijdens drukke periodes kunnen de responstijden langer zijn. Voor dringende zaken, gelieve "URGENTIE" in uw onderwerplijn aan te geven.',
+        'Tijdens drukke periodes kunnen de responstijden langer zijn. Voor dringende zaken, gelieve \\"URGENTIE\\" in uw onderwerplijn aan te geven.',
       ],
     },
     {
@@ -60,7 +60,7 @@ export const contact: PageDefinition = {
       heading: 'DMCA Contact',
       paragraphs: [
         'Verzend DMCA berichten naar: email@anqr.link',
-        'Gelieve "DMCA Notice" in de onderwerpregel op te nemen. We zullen reageren op geldige kennisgevingen in overeenstemming met het toepasselijke recht. Merk op dat ANQR QR-codes lokaal genereert op gebruikersapparaten en geen door gebruikers gegenereerde inhoud host.',
+        'Gelieve \\"DMCA Notice\\" in de onderwerpregel op te nemen. We zullen reageren op geldige kennisgevingen in overeenstemming met het toepasselijke recht. Merk op dat ANQR QR-codes lokaal genereert op gebruikersapparaten en geen door gebruikers gegenereerde inhoud host.',
       ],
     },
     {

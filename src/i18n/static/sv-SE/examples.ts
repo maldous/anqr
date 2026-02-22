@@ -9,7 +9,7 @@ import type { PageDefinition } from '../types';
 export const examples: PageDefinition = {
   title: 'ANQR-exempel',
   description:
-    'Fem verkliga, produktionsliknande exempel som visar var QR-koder skapar mätbart värde: upplyftande av en äldre detaljhandelsräknekod, varumärkesbetalningar och "skanna-till"-åtgärder, tryckskalning från flygblad till skyltar, animerad QR för digital skyltning och tvärspråkigt samarbete med delbara ankarlänkar. Varje exempel innehåller bilder, praktiska begränsningar och en remixlänk tillbaka till generatorn.',
+    'Fem verkliga, produktionsliknande exempel som visar var QR-koder skapar mätbart värde: upplyftande av en äldre detaljhandelsräknekod, varumärkesbetalningar och \\"skanna-till\\"-åtgärder, tryckskalning från flygblad till skyltar, animerad QR för digital skyltning och tvärspråkigt samarbete med delbara ankarlänkar. Varje exempel innehåller bilder, praktiska begränsningar och en remixlänk tillbaka till generatorn.',
   lastUpdated: '1 februari 2026',
 
   primaryLinks: [
@@ -127,7 +127,7 @@ export const examples: PageDefinition = {
       heading: 'Prioritera betalningsupplevelsen',
       paragraphs: [
         'Butikens primära betalningsmetod använde en regional standard som krävde strikt efterlevnad av nyttolast. Tester visade att även mindre styling påverkade skanningshastigheten med vissa bankappar. Beslutet: behåll QR-betalningen helt oförändrad förutom storleksoptimering och professionellt tryck på matt kartong.',
-        'Detta konservativa tillvägagångssätt innebar att betalningskoden såg mindre "märkt" ut än idealisk, men transaktionsgenomförandet förbättrades dramatiskt. Insikten: betalningsmoment är inte varumärkesmöjligheter – de är pålitlighetsmoment. Kunder uppskattar snabbhet och säkerhet över estetik när pengar är inblandade.',
+        'Detta konservativa tillvägagångssätt innebar att betalningskoden såg mindre \\"märkt\\" ut än idealisk, men transaktionsgenomförandet förbättrades dramatiskt. Insikten: betalningsmoment är inte varumärkesmöjligheter – de är pålitlighetsmoment. Kunder uppskattar snabbhet och säkerhet över estetik när pengar är inblandade.',
       ],
       images: [
         {
@@ -149,7 +149,7 @@ export const examples: PageDefinition = {
           src: '/images/examples/payments-secondary.png',
           alt: 'En varumärkespanel som visar fyra stiliserade QR-koder för tips, recensioner, sociala medier och anställning, med tydliga etiketter',
           caption:
-            'The secondary action panel: consistent branding, clear labelling, positioned as options rather than distractions',
+            'Den sekundära åtgärdspanelen: konsekvent varumärke, tydlig märkning, placerad som alternativ snarare än distraktioner',
         },
       ],
     },
@@ -171,8 +171,8 @@ export const examples: PageDefinition = {
     {
       heading: 'Operativa förbättringar',
       paragraphs: [
-        'Sex veckor efter implementeringen dokumenterade butiken betydande förbättringar: noll kundklagomål om förvirring av "fel kod", snabbare transaktionstider och en trefaldig ökning av tipsinlämningar (kunder kunde nu hitta och skanna tipskoden utan att fråga personalen obekvämt). Googles recensioner ökade också i takt med att den dedikerade, välmärkta QR tog bort friktionen.',
-        'Personalutbildningen blev enklare: "betalningskoden är den stora, allt annat finns på panelen." När betalningsappar uppdaterades och en kort visade långsammare skanning, innebar den konservativa betalningskoddesignen att den fortfarande fungerade - bara marginellt långsammare snarare än att misslyckas helt.',
+        'Sex veckor efter implementeringen dokumenterade butiken betydande förbättringar: noll kundklagomål om förvirring av \\"fel kod\\", snabbare transaktionstider och en trefaldig ökning av tipsinlämningar (kunder kunde nu hitta och skanna tipskoden utan att fråga personalen obekvämt). Googles recensioner ökade också i takt med att den dedikerade, välmärkta QR tog bort friktionen.',
+        'Personalutbildningen blev enklare: \\"betalningskoden är den stora, allt annat finns på panelen.\\" När betalningsappar uppdaterades och en kort visade långsammare skanning, innebar den konservativa betalningskoddesignen att den fortfarande fungerade - bara marginellt långsammare snarare än att misslyckas helt.',
         'Se Learn-guiden om QR-koder för detaljhandelsbetalningar för principerna bakom denna displaysystemdesign.',
       ],
       images: [
@@ -216,13 +216,13 @@ export const examples: PageDefinition = {
     {
       heading: 'Varför tidigare evenemang hade problem',
       paragraphs: [
-        'Vid sin senaste konferens hade företaget upplevt pinsamma misslyckanden. Scenbannern QR genererades som en liten PNG och skalades upp i designprogramvara - resultatet såg acceptabelt ut på avstånd men kunde inte skanna tillförlitligt från publiken. Märkets QR:er var överstilade och för små, frustrerande deltagare som försökte lägga till kontakter. Inkonsekventa inställningar i olika format innebar att "samma" QR faktiskt såg olika ut på varje del.',
+        'Vid sin senaste konferens hade företaget upplevt pinsamma misslyckanden. Scenbannern QR genererades som en liten PNG och skalades upp i designprogramvara - resultatet såg acceptabelt ut på avstånd men kunde inte skanna tillförlitligt från publiken. Märkets QR:er var överstilade och för små, frustrerande deltagare som försökte lägga till kontakter. Inkonsekventa inställningar i olika format innebar att \\"samma\\" QR faktiskt såg olika ut på varje del.',
         'Analys efter händelsen avslöjade grundorsaken: ingen enskild källa till sanning. Varje designer hade återskapat QR:en med lite olika inställningar, och varje trycksaksleverantör hade bearbetat filer på olika sätt. Kvaliteten försämrades genom telefonspelet med filöverlämningar.',
       ],
       images: [
         {
           src: '/images/examples/print-problems.png',
-          alt: 'Close-up photographs showing scanning failures: pixelated banner modules, undersized badge codes, inconsistent styling across formats',
+          alt: 'Närbildsbilder som visar skanningsfel: pixlade bannermoduler, underdimensionerade märkeskoder, inkonsekvent stil i olika format',
           caption:
             'Forensisk analys av tidigare händelsefel: varje format hade introducerat olika kvalitetsproblem',
         },
@@ -254,7 +254,7 @@ export const examples: PageDefinition = {
           src: '/images/examples/print-sizing.png',
           alt: 'Ett diagram som visar förhållandet mellan skanningsavstånd, lägsta QR-storlek och moduldimensioner för varje händelseformat',
           caption:
-            "The sizing matrix: calculated dimensions ensuring reliable scanning at each format's expected viewing distance",
+            'Storleksmatrisen: beräknade dimensioner som säkerställer tillförlitlig skanning vid varje formats förväntade visningsavstånd',
         },
       ],
     },
@@ -321,8 +321,8 @@ export const examples: PageDefinition = {
     {
       heading: 'Integration med Signage Content',
       paragraphs: [
-        'Den animerade QR:en placerades i en dedikerad "stabil zon" i skärmlayouten - ett område som förblev konstant medan reklaminnehåll roterade i huvudvisningsområdet. Denna separation var avgörande: QR:n behövde visuell stabilitet för att skanna även när den väckte uppmärksamhet genom sin subtila animering.',
-        'En tydlig uppmaning lades till bredvid QR:en: "Hoppa över kön - skanna för att checka in." Texten förblev statisk medan QR:en pulserade, vilket skapade en visuell hierarki som drog blickarna till skanningsmöjligheten utan att överväldiga det reklaminnehållet.',
+        'Den animerade QR:en placerades i en dedikerad \\"stabil zon\\" i skärmlayouten - ett område som förblev konstant medan reklaminnehåll roterade i huvudvisningsområdet. Denna separation var avgörande: QR:n behövde visuell stabilitet för att skanna även när den väckte uppmärksamhet genom sin subtila animering.',
+        'En tydlig uppmaning lades till bredvid QR:en: \\"Hoppa över kön - skanna för att checka in.\\" Texten förblev statisk medan QR:en pulserade, vilket skapade en visuell hierarki som drog blickarna till skanningsmöjligheten utan att överväldiga det reklaminnehållet.',
       ],
       images: [
         {
@@ -351,7 +351,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Uppmätt påverkan',
       paragraphs: [
-        'Efter en månads drift ökade användningen av QR-incheckning från 15 % till 24 % – en relativ förbättring på 60 %. Gästfeedback-undersökningar visade att den animerade QR-koden var "lättare att lägga märke till" och "känndes mer modern". Kötiderna på skrivbordet minskade mätbart under högsäsong då fler gäster betjänade sig själv via QR.',
+        'Efter en månads drift ökade användningen av QR-incheckning från 15 % till 24 % – en relativ förbättring på 60 %. Gästfeedback-undersökningar visade att den animerade QR-koden var \\"lättare att lägga märke till\\" och \\"känndes mer modern\\". Kötiderna på skrivbordet minskade mätbart under högsäsong då fler gäster betjänade sig själv via QR.',
         'Viktigt är att noll skanningsfel rapporterades trots tusentals dagliga skanningar. Det konservativa animationssättet hade uppnått uppmärksamhetsmålet utan att offra den tillförlitlighet som ett incheckningsflöde krävde. Loungen rullade därefter ut liknande animerade QR:er till sina andra platser.',
         'Se Learn-guiden om animerade QR-koder för digital skyltning för de tekniska principerna bakom säker animationsdesign.',
       ],
@@ -381,7 +381,7 @@ export const examples: PageDefinition = {
     {
       heading: 'Fallstudie: Global produktlansering QR-kampanj',
       paragraphs: [
-        'Detta exempel följer ett hemelektronikföretag som lanserar en ny produkt samtidigt på 12 marknader på 8 språk. Varje regionalt marknadsföringsteam behövde producera förpackningar, detaljhandelsdisplayer och reklammaterial med QR-koder som länkar till lokaliserade produktsidor. Tidigare lanseringar hade resulterat i inkonsekvent QR-stil, enstaka skanningsfel och ett "telefonspel" med konfigurationsdrift när varje lag återskapade koder från skärmdumpar.',
+        'Detta exempel följer ett hemelektronikföretag som lanserar en ny produkt samtidigt på 12 marknader på 8 språk. Varje regionalt marknadsföringsteam behövde producera förpackningar, detaljhandelsdisplayer och reklammaterial med QR-koder som länkar till lokaliserade produktsidor. Tidigare lanseringar hade resulterat i inkonsekvent QR-stil, enstaka skanningsfel och ett \\"telefonspel\\" med konfigurationsdrift när varje lag återskapade koder från skärmdumpar.',
         'Lösningen utnyttjade ANQR:s delbara konfigurationslänkar för att etablera en enda källa till sanning som varje regionalt team kunde komma åt, oavsett deras gränssnittsspråk. QR-nyttolasten använde en smart omdirigering som upptäckte användarspråk, så en kod fungerade globalt samtidigt som den levererade lokaliserade upplevelser.',
       ],
       images: [
@@ -426,15 +426,15 @@ export const examples: PageDefinition = {
     {
       heading: 'Hantering av regionala variationer',
       paragraphs: [
-        'Vissa marknader krävde mindre anpassningar. Det kinesiska teamet behövde en version med en WeChat-optimerad ram för social delning. Istället för att modifiera mastern skapade de en dokumenterad variant med en egen konfigurationslänk, tydligt märkt som "CN-WeChat-variant" i kampanjtillgångsbiblioteket. Detta bibehöll spårbarheten samtidigt som nödvändig lokalisering möjliggjordes.',
-        'Varumärkesteamet fastställde en enkel regel: varje variation från master krävde en ny, dokumenterad konfigurationslänk. Inga ändringar av exporterade filer, inga "snabbfixar" i designprogramvara. Detta förhindrade konfigurationsdriften som hade plågat tidigare lanseringar.',
+        'Vissa marknader krävde mindre anpassningar. Det kinesiska teamet behövde en version med en WeChat-optimerad ram för social delning. Istället för att modifiera mastern skapade de en dokumenterad variant med en egen konfigurationslänk, tydligt märkt som \\"CN-WeChat-variant\\" i kampanjtillgångsbiblioteket. Detta bibehöll spårbarheten samtidigt som nödvändig lokalisering möjliggjordes.',
+        'Varumärkesteamet fastställde en enkel regel: varje variation från master krävde en ny, dokumenterad konfigurationslänk. Inga ändringar av exporterade filer, inga \\"snabbfixar\\" i designprogramvara. Detta förhindrade konfigurationsdriften som hade plågat tidigare lanseringar.',
       ],
       images: [
         {
           src: '/images/examples/collab-variants.png',
           alt: 'Ett gränssnitt för tillgångsbibliotek som visar huvudkonfigurationen och godkända regionala varianter, var och en med sin egen länk',
           caption:
-            'Campaign asset governance: master configuration plus documented variants, all traceable via configuration links',
+            'Styrning av kampanjtillgångar: huvudkonfiguration plus dokumenterade varianter, alla spårbara via konfigurationslänkar',
         },
       ],
     },

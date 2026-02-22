@@ -60,7 +60,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: saab andmeid reklaamide esitamiseks ja mõõtmiseks.',
         'Analyticsi pakkujad: saate anonüümseid kasutusandmeid.',
         'Netlify (hostimine): töötleb päringuid ja võib IP-aadresse logida.',
-        'Me ei müü teie isikuandmeid. Andmete jagamist reklaamipartneritega võib aga CCPA alusel pidada "müügiks" (vt allpool).',
+        'Me ei müü teie isikuandmeid. Andmete jagamist reklaamipartneritega võib aga CCPA alusel pidada \\"müügiks\\" (vt allpool).',
       ],
     },
     {
@@ -80,7 +80,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Juurdepääsuõigus: taotlege koopiat teie kohta säilitatavatest isikuandmetest.',
         'Õigus andmete parandamisele: taotleda ebatäpsete andmete parandamist.',
-        'Õigus kustutada: taotleda oma andmete kustutamist ("õigus olla unustatud").',
+        'Õigus kustutada: taotleda oma andmete kustutamist (\\"õigus olla unustatud\\").',
         'Õigus piirata töötlemist: taotlege piiranguid teie andmete kasutamisele.',
         'Õigus andmete teisaldatavusele: taotlege oma andmeid kaasaskantavas vormingus.',
         'Vastuväite esitamise õigus: vaidlustada töötlemist, sealhulgas otseturunduse jaoks.',
@@ -100,7 +100,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Õigus teada: taotleda teavet kogutud andmete, allikate, eesmärkide ja kolmandate isikute kohta.',
         'Kustutamisõigus: taotlege oma isikuandmete kustutamist.',
-        'Loobumisõigus: loobuge isikuandmete "müügist" (reklaamipartneritega jagamine võib kvalifitseeruda).',
+        'Loobumisõigus: loobuge isikuandmete \\"müügist\\" (reklaamipartneritega jagamine võib kvalifitseeruda).',
         'Õigus mittediskrimineerimisele: me ei diskrimineeri teie õiguste teostamise pärast.',
       ],
     },
@@ -138,7 +138,7 @@ export const privacy: PageDefinition = {
     {
       heading: 'Selle poliitika muudatused',
       paragraphs: [
-        'Võime seda poliitikat perioodiliselt värskendada. "Viimati värskendatud" kuupäev näitab viimast versiooni. Olulistest muudatustest võidakse teavitada saidi bänneri kaudu.',
+        'Võime seda poliitikat perioodiliselt värskendada. \\"Viimati värskendatud\\" kuupäev näitab viimast versiooni. Olulistest muudatustest võidakse teavitada saidi bänneri kaudu.',
       ],
     },
     {

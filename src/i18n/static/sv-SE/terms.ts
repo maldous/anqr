@@ -64,7 +64,7 @@ export const terms: PageDefinition = {
     {
       heading: 'Friskrivning från garantier',
       paragraphs: [
-        'ANQR TILLHANDAHÅLLS PÅ EN "I BEFINTLIGT SKICK" OCH "SOM TILLGÄNGLIG" UTAN GARANTIER AV NÅGOT SLAG, UTTRYCKTA ELLER UNDERFÖRSTÅDDA, INKLUSIVE MEN INTE BEGRÄNSADE TILL UNDERFÖRSTÅDDA GARANTIER OM SÄLJBARHET, LÄMPLIGHET FÖR NÅGOT PARTIKEL.',
+        'ANQR TILLHANDAHÅLLS PÅ EN \\"I BEFINTLIGT SKICK\\" OCH \\"SOM TILLGÄNGLIG\\" UTAN GARANTIER AV NÅGOT SLAG, UTTRYCKTA ELLER UNDERFÖRSTÅDDA, INKLUSIVE MEN INTE BEGRÄNSADE TILL UNDERFÖRSTÅDDA GARANTIER OM SÄLJBARHET, LÄMPLIGHET FÖR NÅGOT PARTIKEL.',
         'Vi garanterar inte att: (a) webbplatsen kommer att vara oavbruten, säker eller felfri; (b) QR-koder skannar i alla miljöer, på alla enheter eller med alla skannerapplikationer; (c) webbplatsen uppfyller dina krav.',
         'Du bör alltid testa QR-koder under de förhållanden där de kommer att användas (utskriftsstorlek, belysning, skärmtyp, avstånd, kamerakvalitet).',
       ],
@@ -107,7 +107,7 @@ export const terms: PageDefinition = {
       heading: 'Förändringar och tillgänglighet',
       paragraphs: [
         'Vi kan ändra, stänga av eller avbryta webbplatsen (eller någon del av den) när som helst utan förvarning eller ansvar.',
-        'Vi kan uppdatera dessa villkor när som helst. Datumet "Senast uppdaterad" anger när de senast reviderades. Fortsatt användning efter ändringar utgör godkännande.',
+        'Vi kan uppdatera dessa villkor när som helst. Datumet \\"Senast uppdaterad\\" anger när de senast reviderades. Fortsatt användning efter ändringar utgör godkännande.',
       ],
     },
     {

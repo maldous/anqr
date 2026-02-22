@@ -85,7 +85,7 @@ export const guide: PageDefinition = {
         },
         {
           href: '/learn?lang=${lang}#section-5',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -210,7 +210,7 @@ export const guide: PageDefinition = {
         },
         {
           href: '/learn?lang=${lang}#section-3',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -241,7 +241,7 @@ export const guide: PageDefinition = {
         },
         {
           href: '/learn?lang=${lang}#section-4',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -310,7 +310,7 @@ export const guide: PageDefinition = {
       links: [
         {
           href: '/learn?lang=${lang}#section-5',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -321,7 +321,7 @@ export const guide: PageDefinition = {
       bullets: [
         'Visos spalvos: išsaugo originalias vaizdo spalvas.',
         'Grayscale: Converts to black and white tones.',
-        'Black & White: High contrast binary conversion.',
+        'Juoda ir balta: didelio kontrasto dvejetainis konvertavimas.',
       ],
     },
     {
@@ -341,8 +341,8 @@ export const guide: PageDefinition = {
         'Gama (0,2–3,0): netiesinis ryškumo reguliavimas. Vertės, mažesnės nei 1, šviesina vidutinius tonus, o didesnės nei 1 - tamsina.',
         'Sodrumas (nuo -100 iki +100): spalvos intensyvumas. -100 is grayscale, +100 is oversaturated.',
         'Atspalvio pasukimas (0–360°): perkelkite visas spalvas aplink spalvų ratą.',
-        'Blur (0-20px): Soften image details.',
-        'Sharpen (0-100%): Enhance edges and details.',
+        'Suliejimas (0–20 piks.): sušvelninkite vaizdo detales.',
+        'Paryškinti (0–100 %): paryškinkite kraštus ir detales.',
         'Plakatas (0–16 lygių): sumažinkite spalvų lygius, kad gautumėte plakato efektą.',
         'Slenkstis (0–255): ribiniame taške konvertuoti į dvejetainę juodą/baltą.',
         'Kraštų aptikimas: „Sobel" arba „Canny" algoritmai rodo tik kraštus.',
@@ -452,7 +452,7 @@ export const guide: PageDefinition = {
         'Taško sukimas: pasukite deimantinius / taškinius modulius.',
         'Akių skalė: dydžio reguliavimas ieškiklio modeliams.',
         'Rėmo stilius: pridėkite dekoratyvinius rėmelius (apvalintą rėmelį, lipduką, žymą).',
-        'Rėmelio tekstas: pridėkite tekstą, pvz., "Nuskaityti mane!" į rėmus.',
+        'Rėmelio tekstas: pridėkite tekstą, pvz., \\"Nuskaityti mane!\\" į rėmus.',
       ],
       links: [
         {
@@ -568,7 +568,7 @@ export const guide: PageDefinition = {
         },
         {
           href: '/learn?lang=${lang}#section-7',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -591,7 +591,7 @@ export const guide: PageDefinition = {
         },
         {
           href: '/learn?lang=${lang}#section-5',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -620,7 +620,7 @@ export const guide: PageDefinition = {
         },
         {
           href: '/learn?lang=${lang}#section-2',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -857,7 +857,7 @@ export const guide: PageDefinition = {
         },
         {
           href: '/learn?lang=${lang}#section-4',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],
@@ -1210,9 +1210,9 @@ export const guide: PageDefinition = {
       heading: 'HTML pavyzdys',
       paragraphs: [
         'Norėdami įterpti QR kodą į savo svetainę:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR kodas" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR kodas\\" />',
         'Jei norite pasirinkti tinkamą dydį:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR kodas" style="maksimalus plotis: 100%; aukštis: automatinis;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR kodas\\" style=\\"maksimalus plotis: 100%; aukštis: automatinis;\\" />',
         'Serveris talpina atsakymus su ilgomis talpyklos antraštėmis, todėl pakartotinės užklausos dėl to paties URL yra greitos.',
       ],
     },
@@ -1265,7 +1265,7 @@ export const guide: PageDefinition = {
       links: [
         {
           href: '/learn?lang=${lang}#section-5',
-          label: 'See related guides and examples',
+          label: 'Žr. susijusius vadovus ir pavyzdžius',
           type: 'learn',
         },
       ],

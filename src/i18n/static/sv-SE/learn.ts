@@ -8,7 +8,7 @@ import type { PageDefinition } from '../types';
 export const learn: PageDefinition = {
   title: 'Lär dig med ANQR',
   description:
-    'Praktiska, business-first guider för att förvandla QR-koder till riktiga marknadsföringstillgångar – inte bara funktionella rutor. Lär dig hur du uppgraderar äldre kassakoder, skapar kompatibel QR-skyltning för betalningar, förbereder utskriftsklara exporter, använder animation säkert på digitala skärmar och delar inlåsta konfigurationer mellan flerspråkiga team med ANQR ("ankare") länkar.',
+    'Praktiska, business-first guider för att förvandla QR-koder till riktiga marknadsföringstillgångar – inte bara funktionella rutor. Lär dig hur du uppgraderar äldre kassakoder, skapar kompatibel QR-skyltning för betalningar, förbereder utskriftsklara exporter, använder animation säkert på digitala skärmar och delar inlåsta konfigurationer mellan flerspråkiga team med ANQR (\\"ankare\\") länkar.',
   lastUpdated: '1 februari 2026',
 
   primaryLinks: [
@@ -89,7 +89,7 @@ export const learn: PageDefinition = {
       heading: 'Låsa din konfiguration för konsekvens',
       paragraphs: [
         'När du har validerat en optimal konfiguration, bevara den med hjälp av ANQR:s delbara länkar. Detta skapar en permanent registrering av varje inställning som används för att generera din godkända kod - färger, modulstil, felkorrigering, storlek och eventuella överlagringar. Dela den här länken med ditt designteam, tryckerileverantörer och alla som kan behöva reproducera koden i framtiden.',
-        'Detta konfigurationslås förhindrar den gradvisa försämringen som plågar många QR-installationer. Utan det återskapar personalen koder från skärmdumpar, designers bygger om inställningar från minnet och tryckerileverantörer gör "nyttiga" justeringar. Varje variant introducerar potentiella problem. Med en låst konfigurationslänk är varje reproduktion identisk med ditt testade, godkända original.',
+        'Detta konfigurationslås förhindrar den gradvisa försämringen som plågar många QR-installationer. Utan det återskapar personalen koder från skärmdumpar, designers bygger om inställningar från minnet och tryckerileverantörer gör \\"nyttiga\\" justeringar. Varje variant introducerar potentiella problem. Med en låst konfigurationslänk är varje reproduktion identisk med ditt testade, godkända original.',
       ],
       images: [
         {

@@ -452,7 +452,7 @@ export const guide: PageDefinition = {
         'Цэгийг эргүүлэх: Алмаз/цэг модулиудыг эргүүлэх.',
         'Нүдний масштаб: Хайлтын загварт зориулсан хэмжээ тохируулга.',
         'Хүрээний хэв маяг: Чимэглэлийн хүрээ нэмнэ үү (Дугуй хүрээ, наалт, шошго).',
-        'Хүрээний текст: "Намайг хай!" гэх мэт текст нэмнэ үү. хүрээ рүү.',
+        'Хүрээний текст: \\"Намайг хай!\\" гэх мэт текст нэмнэ үү. хүрээ рүү.',
       ],
       links: [
         {
@@ -479,7 +479,7 @@ export const guide: PageDefinition = {
         'Файлын нэр: Татаж авах файлын нэр.',
         'GIF палитрын хэмжээ: GIF гаралтын 2-256 өнгө.',
         'GIF Quantizer: Median Cut, NeuQuant эсвэл Octree өнгөний бууралт.',
-        'GIF Dithering: Off, Floyd-Steinberg, or Ordered.',
+        'GIF дифтерлэх: Унтраах, Флойд-Штайнберг эсвэл Эрэмбэлсэн.',
         'GIF тунгалаг өнгө: Ил тод байх өнгийг тохируулна уу.',
         'SVG True Vector: Оруулсан растерын оронд замуудыг ашиглана уу.',
         'SVG хэлбэрийн нарийвчлал: Pixel эсвэл Precise path rendering.',
@@ -1204,9 +1204,9 @@ export const guide: PageDefinition = {
       heading: 'HTML жишээ',
       paragraphs: [
         'QR кодыг вэбсайтдаа оруулахын тулд:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR код" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR код\\" />',
         'Хариуцлагатай хэмжээсийн хувьд:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; өндөр: автомат;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; өндөр: автомат;\\" />',
         'Сервер нь урт кэш толгойтой хариултуудыг кэш болгодог тул ижил URL-ын давтагдах хүсэлтүүд хурдан байдаг.',
       ],
     },

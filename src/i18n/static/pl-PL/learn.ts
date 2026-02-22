@@ -8,7 +8,7 @@ import type { PageDefinition } from '../types';
 export const learn: PageDefinition = {
   title: 'Naucz się z ANQR',
   description:
-    'Praktyczne, nowatorskie w biznesie przewodniki umożliwiające zamianę kodów QR w prawdziwe aktywa marketingowe – a nie tylko funkcjonalne kwadraty. Dowiedz się, jak aktualizować starsze kody w punktach sprzedaży, tworzyć zgodne oznakowania QR dotyczące płatności, przygotowywać eksporty gotowe do druku, bezpiecznie używać animacji na wyświetlaczach cyfrowych i udostępniać zablokowane konfiguracje wielojęzycznym zespołom za pomocą łączy ANQR ("kotwicowych").',
+    'Praktyczne, nowatorskie w biznesie przewodniki umożliwiające zamianę kodów QR w prawdziwe aktywa marketingowe – a nie tylko funkcjonalne kwadraty. Dowiedz się, jak aktualizować starsze kody w punktach sprzedaży, tworzyć zgodne oznakowania QR dotyczące płatności, przygotowywać eksporty gotowe do druku, bezpiecznie używać animacji na wyświetlaczach cyfrowych i udostępniać zablokowane konfiguracje wielojęzycznym zespołom za pomocą łączy ANQR (\\"kotwicowych\\").',
   lastUpdated: '1 lutego 2026 r',
 
   primaryLinks: [
@@ -89,7 +89,7 @@ export const learn: PageDefinition = {
       heading: 'Blokowanie konfiguracji dla spójności',
       paragraphs: [
         'Po sprawdzeniu optymalnej konfiguracji zapisz ją, korzystając z łączy ANQR, które można udostępniać. Tworzy to trwały zapis wszystkich ustawień użytych do wygenerowania zatwierdzonego kodu – kolorów, stylu modułu, korekcji błędów, rozmiaru i wszelkich nakładek. Udostępnij ten link swojemu zespołowi projektowemu, dostawcom usług druku i każdemu, kto w przyszłości może potrzebować odtworzyć kod.',
-        'Ta blokada konfiguracji zapobiega stopniowej degradacji, która plaga wiele wdrożeń QR. Bez niego pracownicy odtwarzają kody ze zrzutów ekranu, projektanci odbudowują ustawienia z pamięci, a sprzedawcy druku dokonują "pomocnych" poprawek. Każda zmiana wprowadza potencjalne problemy. Z zablokowanym linkiem konfiguracyjnym, każda reprodukcja jest identyczna z testowanym, zatwierdzonym oryginałem.',
+        'Ta blokada konfiguracji zapobiega stopniowej degradacji, która plaga wiele wdrożeń QR. Bez niego pracownicy odtwarzają kody ze zrzutów ekranu, projektanci odbudowują ustawienia z pamięci, a sprzedawcy druku dokonują \\"pomocnych\\" poprawek. Każda zmiana wprowadza potencjalne problemy. Z zablokowanym linkiem konfiguracyjnym, każda reprodukcja jest identyczna z testowanym, zatwierdzonym oryginałem.',
       ],
       images: [
         {
@@ -454,7 +454,7 @@ export const learn: PageDefinition = {
       heading: 'Real- World Testing Protocols',
       paragraphs: [
         "Żadna ilość weryfikacji oprogramowania nie zastępuje testów fizycznych. Wydrukuj swój kod w zamierzonym rozmiarze na reprezentatywnym materiale. Przetestuj go w rzeczywistym środowisku rozmieszczania z warunkami oświetlenia, które pasują do rzeczywistego użycia. Skanuj z wieloma urządzeniami - nie tylko flagowym telefonem, ale również z urządzeniami z Androidem, starszymi iPhone 'ami i wszelkimi konkretnymi urządzeniami, z których korzysta publiczność.",
-        'Dokumentuj swoje testy systematycznie. Zapis, które urządzenia zostały przetestowane, w jakich warunkach, z jakich wyników. Jeśli stosujesz kody w skali, ustal kryteria akceptacji: być może 95% wskaźnik sukcesu w puli testowej urządzenia, lub pomyślne skany w ciągu 2 sekund na wszystkich badanych urządzeniach. Normy te przyczyniają się do tego, by decyzje podejmowane na zasadzie "go / no-go" były obiektywne, a nie miały nadzieję na najlepsze.',
+        'Dokumentuj swoje testy systematycznie. Zapis, które urządzenia zostały przetestowane, w jakich warunkach, z jakich wyników. Jeśli stosujesz kody w skali, ustal kryteria akceptacji: być może 95% wskaźnik sukcesu w puli testowej urządzenia, lub pomyślne skany w ciągu 2 sekund na wszystkich badanych urządzeniach. Normy te przyczyniają się do tego, by decyzje podejmowane na zasadzie \\"go / no-go\\" były obiektywne, a nie miały nadzieję na najlepsze.',
       ],
       images: [
         {

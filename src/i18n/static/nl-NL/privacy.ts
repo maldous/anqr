@@ -60,7 +60,7 @@ export const privacy: PageDefinition = {
         'Google AdSense: ontvangt gegevens om advertenties te dienen en te meten.',
         'Analyseleveranciers: Ontvang geanonimiseerde gebruiksgegevens.',
         'Netlify (hosting): Verhandelt verzoeken en kan IP-adressen loggen.',
-        'Wij verkopen uw persoonlijke gegevens niet. Het delen van gegevens met reclamepartners kan echter worden beschouwd als een "verkoop" in het kader van CCPA (zie hieronder).',
+        'Wij verkopen uw persoonlijke gegevens niet. Het delen van gegevens met reclamepartners kan echter worden beschouwd als een \\"verkoop\\" in het kader van CCPA (zie hieronder).',
       ],
     },
     {
@@ -80,7 +80,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Recht van toegang: Vraag een kopie aan van uw persoonlijke gegevens.',
         'Recht op rectificatie: Verzoek om correctie van onjuiste gegevens.',
-        'Recht op wissing: Verzoek om verwijdering van uw gegevens ("recht om te worden vergeten").',
+        'Recht op wissing: Verzoek om verwijdering van uw gegevens (\\"recht om te worden vergeten\\").',
         'Recht om verwerking te beperken: Vraag limieten aan voor het gebruik van uw gegevens.',
         'Recht op gegevensportabiliteit: Vraag uw gegevens in een draagbaar formaat aan.',
         'Recht op bezwaar: Bezwaar tegen verwerking, ook voor direct marketing.',
@@ -100,7 +100,7 @@ export const privacy: PageDefinition = {
       bullets: [
         'Recht om te weten: Vraag informatie over verzamelde gegevens, bronnen, doeleinden en derden.',
         'Recht om te verwijderen: Verzoek verwijdering van uw persoonlijke gegevens.',
-        'Recht op op opt-out: Kies uit de "verkoop" van persoonlijke informatie (delen met advertentiepartners kan in aanmerking komen).',
+        'Recht op op opt-out: Kies uit de \\"verkoop\\" van persoonlijke informatie (delen met advertentiepartners kan in aanmerking komen).',
         'Recht op non-discriminatie: We zullen niet discrimineren voor de uitoefening van uw rechten.',
       ],
     },
@@ -138,7 +138,7 @@ export const privacy: PageDefinition = {
     {
       heading: 'Wijzigingen in dit beleid',
       paragraphs: [
-        'We kunnen dit beleid regelmatig bijwerken. De "Laatst bijgewerkt" datum geeft de meest recente herziening. Belangrijke wijzigingen kunnen via een site banner worden meegedeeld.',
+        'We kunnen dit beleid regelmatig bijwerken. De \\"Laatst bijgewerkt\\" datum geeft de meest recente herziening. Belangrijke wijzigingen kunnen via een site banner worden meegedeeld.',
       ],
     },
     {

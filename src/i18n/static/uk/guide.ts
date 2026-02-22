@@ -450,7 +450,7 @@ export const guide: PageDefinition = {
         'Обертання крапок: обертання ромбових/точкових модулів.',
         'Масштаб очей: налаштування розміру для шаблонів шукача.',
         'Стиль рамки: додайте декоративні рамки (округла рамка, наклейка, тег).',
-        'Текст рамки: додайте текст, як-от "Скануйте мене!" до кадрів.',
+        'Текст рамки: додайте текст, як-от \\"Скануйте мене!\\" до кадрів.',
       ],
       links: [
         {
@@ -1210,9 +1210,9 @@ export const guide: PageDefinition = {
       heading: 'Приклад HTML',
       paragraphs: [
         'Щоб вставити QR-код на свій веб-сайт:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR-код" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR-код\\" />',
         'Для адаптивного розміру:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR-код" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR-код\\" style=\\"max-width: 100%; height: auto;\\" />',
         'Сервер кешує відповіді за допомогою довгих заголовків кешу, тому повторні запити на ту саму URL-адресу виконуються швидко.',
       ],
     },

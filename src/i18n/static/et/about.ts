@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'Mis on ANQR?',
       paragraphs: [
-        'ANQR (hääldatakse "ankur") on tasuta QR-koodi generaator, mis loob skannitavaid koode URL-ide, teksti, Wi-Fi mandaatide, kontaktikaartide, kalendrisündmuste ja muu jaoks.',
+        'ANQR (hääldatakse \\"ankur\\") on tasuta QR-koodi generaator, mis loob skannitavaid koode URL-ide, teksti, Wi-Fi mandaatide, kontaktikaartide, kalendrisündmuste ja muu jaoks.',
         'See on loodud üksikisikutele, väikeettevõtetele, turundajatele ja arendajatele, kes soovivad võimsaid QR-tööriistu ilma registreerumata. Kliendipõhine disain tähendab, et QR-koodid genereeritakse vaikimisi teie brauseris kohapeal koos valikulise serveri API-ga professionaalseks manustamiseks ja integreerimiseks.',
       ],
     },

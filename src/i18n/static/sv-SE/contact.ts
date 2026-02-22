@@ -34,7 +34,7 @@ export const contact: PageDefinition = {
       heading: 'Svarstider',
       paragraphs: [
         'Vi strävar efter att svara på förfrågningar inom 5-7 arbetsdagar. Sekretessrelaterade förfrågningar kommer att behandlas inom 30 dagar enligt lag.',
-        'Under hektiska perioder kan svarstiderna bli längre. För brådskande ärenden, vänligen ange "BRÄSKT" i ​​din ämnesrad.',
+        'Under hektiska perioder kan svarstiderna bli längre. För brådskande ärenden, vänligen ange \\"BRÄSKT\\" i ​​din ämnesrad.',
       ],
     },
     {
@@ -61,7 +61,7 @@ export const contact: PageDefinition = {
       heading: 'DMCA-kontakt',
       paragraphs: [
         'Skicka DMCA-meddelanden till: email@anqr.link',
-        'Inkludera "DMCA Notice" i ämnesraden. Vi kommer att svara på giltiga meddelanden i enlighet med tillämplig lag. Observera att ANQR genererar QR-koder lokalt på användarnas enheter och inte är värd för användargenererat innehåll.',
+        'Inkludera \\"DMCA Notice\\" i ämnesraden. Vi kommer att svara på giltiga meddelanden i enlighet med tillämplig lag. Observera att ANQR genererar QR-koder lokalt på användarnas enheter och inte är värd för användargenererat innehåll.',
       ],
     },
     {

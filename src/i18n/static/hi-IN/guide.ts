@@ -432,7 +432,7 @@ export const guide: PageDefinition = {
         'डॉट रोटेशन: रोटेट डायमंड / डॉट मॉड्यूल।.',
         'नेत्र स्केल: खोजक पैटर्न के लिए आकार समायोजन।.',
         'फ्रेम शैली: सजावटी फ्रेम (गोल फ्रेम, स्टिकर, टैग) जोड़ें।.',
-        'फ़्रेम टेक्स्ट: "Scan Me" जैसे टेक्स्ट जोड़ें।.',
+        'फ़्रेम टेक्स्ट: \\"Scan Me\\" जैसे टेक्स्ट जोड़ें।.',
       ],
       links: [
         {
@@ -919,7 +919,7 @@ export const guide: PageDefinition = {
         'एनीमेशन फ्रेम्स: फ्रेम्स की संख्या 1-60 (डिफ़ॉल्ट: 24)।.',
         'anim स्पीड: मिलीसेकेंड 10-1000 (डिफ़ॉल्ट: 100) में फ़्रेम देरी।.',
         'एनीमेशन बीज: एनीमेशन के लिए यादृच्छिक बीज।.',
-        'easing: Animation easing - रैखिक, easy_in, easy_out, easy_in_out, bounce.',
+        'easing: Animation easing - linear, ease_in, ease_out, ease_in_out, bounce.',
       ],
     },
     {
@@ -1166,9 +1166,9 @@ export const guide: PageDefinition = {
       heading: 'एचटीएमएल उदाहरण',
       paragraphs: [
         'अपनी वेबसाइट में एक QR कोड एम्बेड करने के लिए:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR कोड" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR कोड\\" />',
         'उत्तरदायी आकार के लिए:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR कोड" शैली="max-width: 100%; ऊंचाई: ऑटो;"/>',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR कोड\\" शैली=\\"max-width: 100%; ऊंचाई: ऑटो;\\"/>',
         'सर्वर लंबे कैश हेडर के साथ प्रतिक्रिया करता है, इसलिए उसी URL के लिए बार-बार अनुरोध तेजी से होते हैं।.',
       ],
     },

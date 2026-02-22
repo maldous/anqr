@@ -17,7 +17,7 @@ export const about: PageDefinition = {
     {
       heading: 'Wat is ANQR?',
       paragraphs: [
-        'ANQR (uitgesproken als "anker") is een gratis QR-codegenerator die scanbare codes maakt voor URL\'s, tekst, Wi-Fi-inloggegevens, contactkaarten, agenda-evenementen en meer.',
+        'ANQR (uitgesproken als \\"anker\\") is een gratis QR-codegenerator die scanbare codes maakt voor URL\'s, tekst, Wi-Fi-inloggegevens, contactkaarten, agenda-evenementen en meer.',
         'Het is gebouwd voor individuen, kleine bedrijven, marketeers en ontwikkelaars die krachtige QR-tools willen zonder zich aan te melden. Het klantgerichte ontwerp betekent dat QR-codes standaard lokaal in uw browser worden gegenereerd, met een optionele server-API voor professionele inbedding en integratie.',
       ],
     },

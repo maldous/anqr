@@ -34,7 +34,7 @@ export const contact: PageDefinition = {
       heading: 'Atbildes laiki',
       paragraphs: [
         'Mūsu mērķis ir atbildēt uz jautājumiem 5-7 darba dienu laikā. Ar privātumu saistītie pieprasījumi tiks izskatīti 30 dienu laikā, kā noteikts likumā.',
-        'Noslogotības periodos atbildes laiks var būt ilgāks. Steidzamos jautājumos, lūdzu, savā temata rindiņā norādiet "STEIDZAMI".',
+        'Noslogotības periodos atbildes laiks var būt ilgāks. Steidzamos jautājumos, lūdzu, savā temata rindiņā norādiet \\"STEIDZAMI\\".',
       ],
     },
     {

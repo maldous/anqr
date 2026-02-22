@@ -432,7 +432,7 @@ export const guide: PageDefinition = {
         '점 교체: 회전 다이아몬드/닷 단위.',
         '눈 가늠자: 발견자 본을 위한 크기 조정.',
         '구조 작풍: 장식 프레임 추가 (Rounded Frame, 스티커, 태그).',
-        '프레임 텍스트: "Scan Me!"와 같은 텍스트를 프레임에 추가합니다.',
+        '프레임 텍스트: \\"Scan Me!\\"와 같은 텍스트를 프레임에 추가합니다.',
       ],
       links: [
         {
@@ -919,7 +919,7 @@ export const guide: PageDefinition = {
         '이름 * 구조: 구조의 수 1-60 (과태: 24).',
         '이름 * 속도: 밀리 초에 있는 구조 지연 10-1000 (과태: 100).',
         '이름 * 씨앗 : 애니메이션을위한 무작위 씨앗.',
-        'easing: Animation easing - 선형, easy_in, easy_out, easy_in_out, Bounc.',
+        'easing: Animation easing - linear, ease_in, ease_out, ease_in_out, bounce.',
       ],
     },
     {
@@ -1031,7 +1031,7 @@ export const guide: PageDefinition = {
       bullets: [
         'eccAware: ECC 인식 모드 0/1을 활성화합니다(기본값: 0).',
         'eccRisk: 위험 예산 비율 0-100(기본값: 50)',
-        'eccMap: 가중치 맵 - distance_to_finders, block_heatmap, empirical_scan_heatmap (기본값: distance_to_finders)',
+        'eccMap: Weight map - distance_to_finders, block_heatmap, empirical_scan_heatmap (default: distance_to_finders).',
       ],
     },
     // Frame Parameters
@@ -1168,9 +1168,9 @@ export const guide: PageDefinition = {
       heading: 'HTML 예제',
       paragraphs: [
         '웹 사이트에서 QR 코드를 삽입하려면:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         '대답하는 sizing를 위해:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400"alt="QR Code" style="max-width: 100%; 고도: 자동차;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\"alt=\\"QR Code\\" style=\\"max-width: 100%; 고도: 자동차;\\" />',
         '서버 캐시는 긴 캐시 헤더와 응답을 캐시하므로 동일한 URL에 대한 반복 된 요청은 빠릅니다.',
       ],
     },

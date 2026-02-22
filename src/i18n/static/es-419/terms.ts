@@ -65,7 +65,7 @@ export const terms: PageDefinition = {
     {
       heading: 'Descargo de las garantías',
       paragraphs: [
-        'ANQR ES PROVIDADO EN UN "SAS ES" Y "SAS DISPONIBLE" BASE SIN AGUAS DE CUALQUIER CENTRO, EXPRESO O IMPLIADO, INCLUIDO PERO NO LIMITIDO A LOS AGUAS IMPLIADAS DE MERCANTABILIDAD, FITENA PARA UN PURSO PARTICULAR, Y NON-INFRACIÓN.',
+        'ANQR ES PROVIDADO EN UN \\"SAS ES\\" Y \\"SAS DISPONIBLE\\" BASE SIN AGUAS DE CUALQUIER CENTRO, EXPRESO O IMPLIADO, INCLUIDO PERO NO LIMITIDO A LOS AGUAS IMPLIADAS DE MERCANTABILIDAD, FITENA PARA UN PURSO PARTICULAR, Y NON-INFRACIÓN.',
         'No garantizamos que: (a) el sitio será ininterrumpido, seguro o libre de errores; (b) los códigos QR escanearán en todos los entornos, en todos los dispositivos, o con todas las aplicaciones del escáner; (c) el sitio cumplirá sus requisitos.',
         'Siempre debe probar códigos QR en las condiciones en las que se utilizarán (tamaño de impresión, iluminación, tipo de pantalla, distancia, calidad de cámara).',
       ],
@@ -108,7 +108,7 @@ export const terms: PageDefinition = {
       heading: 'Cambios y disponibilidad',
       paragraphs: [
         'Podemos modificar, suspender o interrumpir el sitio (o cualquier parte de él) en cualquier momento sin previo aviso o responsabilidad.',
-        'Podemos actualizar estos Términos en cualquier momento. La fecha "Última actualización" indica cuando fueron revisados más recientemente. El uso continuado después de los cambios constituye aceptación.',
+        'Podemos actualizar estos Términos en cualquier momento. La fecha \\"Última actualización\\" indica cuando fueron revisados más recientemente. El uso continuado después de los cambios constituye aceptación.',
       ],
     },
     {

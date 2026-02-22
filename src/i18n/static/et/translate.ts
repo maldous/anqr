@@ -38,7 +38,7 @@ export const translate: PageDefinition = {
         'Külastage meie avalikku tõlkehoidlat GitHubis.',
         'Otsige üles oma keelefail (või looge uus fail, kui teie keelt veel ei toetata).',
         'Otse brauseris muutmiseks klõpsake pliiatsiikoonil.',
-        'Tehke oma muudatused ja klõpsake "Paku muudatusi" – GitHub loob automaatselt tõmbetaotluse.',
+        'Tehke oma muudatused ja klõpsake \\"Paku muudatusi\\" – GitHub loob automaatselt tõmbetaotluse.',
         'Teie panus vaadatakse üle ja liidetakse, tavaliselt mõne päeva jooksul.',
       ],
     },

@@ -42,7 +42,7 @@ export const translate: PageDefinition = {
         'Bisitahin ang aming pampublikong imbakan ng pagsasalin sa GitHub.',
         'Hanapin ang iyong language file (o gumawa ng bago kung hindi pa sinusuportahan ang iyong wika).',
         'I-click ang icon na lapis upang direktang mag-edit sa iyong browser.',
-        'Gawin ang iyong mga pagbabago at i-click ang "Magmungkahi ng mga pagbabago" - Awtomatikong gagawa ng pull request ang GitHub.',
+        'Gawin ang iyong mga pagbabago at i-click ang \\"Magmungkahi ng mga pagbabago\\" - Awtomatikong gagawa ng pull request ang GitHub.',
         'Susuriin at isasama ang iyong kontribusyon, karaniwan sa loob ng ilang araw.',
       ],
     },

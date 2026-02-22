@@ -1136,9 +1136,9 @@ export const guide: PageDefinition = {
       heading: 'HTML 示例',
       paragraphs: [
         '要將 QR 碼嵌入您的網站：',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="二維碼" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"二維碼\\" />',
         '對於響應式大小調整：',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR 碼" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR 碼\\" style=\\"max-width: 100%; height: auto;\\" />',
         '服務器緩存具有長緩存標頭的響應，因此對同一 URL 的重複請求速度很快。',
       ],
     },

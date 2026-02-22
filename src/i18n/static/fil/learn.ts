@@ -8,7 +8,7 @@ import type { PageDefinition } from '../types';
 export const learn: PageDefinition = {
   title: 'Matuto sa ANQR',
   description:
-    'Praktikal, pang-negosyo na mga gabay para sa paggawa ng mga QR code sa totoong marketing asset - hindi lamang functional na mga parisukat. Matutunan kung paano mag-upgrade ng mga legacy na point-of-sale code, gumawa ng compliant na pagbabayad na QR signage, maghanda ng mga print-ready na pag-export, ligtas na gumamit ng animation sa mga digital na display, at magbahagi ng mga naka-lock na configuration sa mga multilingual na team gamit ang ANQR ("anchor") na mga link.',
+    'Praktikal, pang-negosyo na mga gabay para sa paggawa ng mga QR code sa totoong marketing asset - hindi lamang functional na mga parisukat. Matutunan kung paano mag-upgrade ng mga legacy na point-of-sale code, gumawa ng compliant na pagbabayad na QR signage, maghanda ng mga print-ready na pag-export, ligtas na gumamit ng animation sa mga digital na display, at magbahagi ng mga naka-lock na configuration sa mga multilingual na team gamit ang ANQR (\\"anchor\\") na mga link.',
   lastUpdated: '1 Pebrero 2026',
 
   primaryLinks: [

@@ -33,7 +33,7 @@ export const contact: PageDefinition = {
       heading: 'Doba odezvy',
       paragraphs: [
         'Naším cílem je reagovat na dotazy během 5-7 pracovních dnů. Žádosti týkající se priorit budou projednány do 30 dnů, jak vyžaduje zákon.',
-        'Během pracovní doby může být doba odezvy delší. Pokud jde o naléhavé záležitosti, uveďte prosím "URGENT" ve vašem předmětu.',
+        'Během pracovní doby může být doba odezvy delší. Pokud jde o naléhavé záležitosti, uveďte prosím \\"URGENT\\" ve vašem předmětu.',
       ],
     },
     {
@@ -60,7 +60,7 @@ export const contact: PageDefinition = {
       heading: 'DMCA kontakt',
       paragraphs: [
         'Poslat oznámení DMCA na: $_ _ ANQR _ PH _ 0 _ _',
-        'Do položky uveďte "DMCA Notice". Na platná oznámení budeme reagovat v souladu s platnými právními předpisy. Všimněte si, že ANQR generuje QR kódy lokálně na uživatelských zařízeních a neorganizuje uživatelsky vytvořený obsah.',
+        'Do položky uveďte \\"DMCA Notice\\". Na platná oznámení budeme reagovat v souladu s platnými právními předpisy. Všimněte si, že ANQR generuje QR kódy lokálně na uživatelských zařízeních a neorganizuje uživatelsky vytvořený obsah.',
       ],
     },
     {

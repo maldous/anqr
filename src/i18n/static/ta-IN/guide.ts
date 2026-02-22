@@ -452,7 +452,7 @@ export const guide: PageDefinition = {
         'புள்ளி சுழற்சி: வைரம்/புள்ளி தொகுதிகளை சுழற்று.',
         'கண் அளவுகோல்: கண்டுபிடிப்பான் வடிவங்களுக்கான அளவு சரிசெய்தல்.',
         'பிரேம் ஸ்டைல்: அலங்கார பிரேம்களைச் சேர்க்கவும் (வட்ட சட்டகம், ஸ்டிக்கர், டேக்).',
-        'சட்ட உரை: "என்னை ஸ்கேன் செய்!" போன்ற உரையைச் சேர்க்கவும். பிரேம்களுக்கு.',
+        'சட்ட உரை: \\"என்னை ஸ்கேன் செய்!\\" போன்ற உரையைச் சேர்க்கவும். பிரேம்களுக்கு.',
       ],
       links: [
         {
@@ -1029,8 +1029,8 @@ export const guide: PageDefinition = {
       heading: 'டித்தரிங் அளவுருக்கள்',
       paragraphs: ['மேலடுக்கு செயலாக்கத்திற்கான டித்தரிங் அல்காரிதம்களைக் கட்டுப்படுத்தவும்:'],
       bullets: [
-        'ditherKind: Dither algorithm - error_diffusion, order_bayer, blue_noise, etc (default: order_bayer).',
-        'diffusionKernel: பிழை பரவல் கர்னல் - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, etc (default: ordered_bayer).',
+        'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
         'ditherStrength: Dither intensity 0-100 (இயல்புநிலை: 50).',
         'serpentine: Serpentine dithering 0/1 (இயல்புநிலை: 0).',
         'மேட்ரிக்ஸ்: ஆர்டர் செய்யப்பட்ட டிதர் மேட்ரிக்ஸ் - பேயர்2, பேயர்4, பேயர்8 (இயல்புநிலை: பேயர்4).',
@@ -1206,9 +1206,9 @@ export const guide: PageDefinition = {
       heading: 'HTML எடுத்துக்காட்டு',
       paragraphs: [
         'உங்கள் இணையதளத்தில் QR குறியீட்டை உட்பொதிக்க:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'பதிலளிக்கக்கூடிய அளவுக்காக:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'சேவையகம் நீண்ட கேச் தலைப்புகளுடன் பதில்களைத் தேக்ககப்படுத்துகிறது, எனவே ஒரே URL க்கான மீண்டும் மீண்டும் கோரிக்கைகள் வேகமாக இருக்கும்.',
       ],
     },

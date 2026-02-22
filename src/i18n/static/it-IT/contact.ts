@@ -34,7 +34,7 @@ export const contact: PageDefinition = {
       heading: 'Tempi di risposta',
       paragraphs: [
         'Vogliamo rispondere alle richieste entro 5-7 giorni lavorativi. Le richieste relative alla privacy saranno affrontate entro 30 giorni dalla legge.',
-        'Durante i periodi occupati, i tempi di risposta possono essere più lunghi. Per questioni urgenti, si prega di indicare "URGENT" nella vostra linea di soggetto.',
+        'Durante i periodi occupati, i tempi di risposta possono essere più lunghi. Per questioni urgenti, si prega di indicare \\"URGENT\\" nella vostra linea di soggetto.',
       ],
     },
     {
@@ -61,7 +61,7 @@ export const contact: PageDefinition = {
       heading: 'DMCA Contatto',
       paragraphs: [
         'Invia comunicazioni DMCA a: ',
-        'Si prega di includere "avviso DMCA" nella riga dell\'oggetto. Risponderemo a comunicazioni valide secondo la legge applicabile. Si noti che ANQR genera codici QR localmente sui dispositivi degli utenti e non ospita contenuti generati dagli utenti.',
+        'Si prega di includere \\"avviso DMCA\\" nella riga dell\'oggetto. Risponderemo a comunicazioni valide secondo la legge applicabile. Si noti che ANQR genera codici QR localmente sui dispositivi degli utenti e non ospita contenuti generati dagli utenti.',
       ],
     },
     {

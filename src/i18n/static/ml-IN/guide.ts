@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'ഡോട്ട് റൊട്ടേഷൻ: ഡയമണ്ട്/ഡോട്ട് മൊഡ്യൂളുകൾ തിരിക്കുക.',
         'ഐ സ്കെയിൽ: ഫൈൻഡർ പാറ്റേണുകൾക്കുള്ള വലുപ്പ ക്രമീകരണം.',
         'ഫ്രെയിം ശൈലി: അലങ്കാര ഫ്രെയിമുകൾ ചേർക്കുക (വൃത്താകൃതിയിലുള്ള ഫ്രെയിം, സ്റ്റിക്കർ, ടാഗ്).',
-        'ഫ്രെയിം ടെക്സ്റ്റ്: "എന്നെ സ്കാൻ ചെയ്യുക!" പോലെയുള്ള വാചകം ചേർക്കുക. ഫ്രെയിമുകളിലേക്ക്.',
+        'ഫ്രെയിം ടെക്സ്റ്റ്: \\"എന്നെ സ്കാൻ ചെയ്യുക!\\" പോലെയുള്ള വാചകം ചേർക്കുക. ഫ്രെയിമുകളിലേക്ക്.',
       ],
       links: [
         {
@@ -1023,7 +1023,7 @@ export const guide: PageDefinition = {
       heading: 'ഡിതറിംഗ് പാരാമീറ്ററുകൾ',
       paragraphs: ['ഓവർലേ പ്രോസസ്സിംഗിനായി ഡിതറിംഗ് അൽഗോരിതങ്ങൾ നിയന്ത്രിക്കുക:'],
       bullets: [
-        'ditherKind: Dither അൽഗോരിതം - error_diffusion, order_bayer, blue_noise, etc (default: order_bayer).',
+        'ditherKind: Dither algorithm - error_diffusion, ordered_bayer, blue_noise, etc (default: ordered_bayer).',
         'diffusionKernel: Error diffusion kernel - floyd_steinberg, jarvis_judice_ninke, stucki, burkes, sierra, atkinson (default: floyd_steinberg).',
         'ditherStrength: Dither തീവ്രത 0-100 (സ്ഥിരസ്ഥിതി: 50).',
         'സർപ്പൻ്റൈൻ: സർപ്പൻ്റൈൻ ഡൈതറിംഗ് 0/1 (സ്ഥിരസ്ഥിതി: 0).',
@@ -1198,9 +1198,9 @@ export const guide: PageDefinition = {
       heading: 'HTML ഉദാഹരണം',
       paragraphs: [
         'നിങ്ങളുടെ വെബ്‌സൈറ്റിൽ ഒരു QR കോഡ് ഉൾച്ചേർക്കുന്നതിന്:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'പ്രതികരിക്കുന്ന വലുപ്പത്തിനായി:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'ദൈർഘ്യമേറിയ കാഷെ ഹെഡറുകൾ ഉപയോഗിച്ച് സെർവർ പ്രതികരണങ്ങൾ കാഷെ ചെയ്യുന്നു, അതിനാൽ ഒരേ URL-നുള്ള ആവർത്തിച്ചുള്ള അഭ്യർത്ഥനകൾ വേഗത്തിലാണ്.',
       ],
     },

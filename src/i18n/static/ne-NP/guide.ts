@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'डट रोटेशन: हीरा/डट मोड्युलहरू घुमाउनुहोस्।',
         'आँखा स्केल: खोजकर्ता ढाँचाहरूको लागि आकार समायोजन।',
         'फ्रेम शैली: सजावटी फ्रेमहरू थप्नुहोस् (गोलाकार फ्रेम, स्टिकर, ट्याग)।',
-        'फ्रेम पाठ: "मलाई स्क्यान गर्नुहोस्!" जस्तो पाठ थप्नुहोस्। फ्रेमहरूमा।',
+        'फ्रेम पाठ: \\"मलाई स्क्यान गर्नुहोस्!\\" जस्तो पाठ थप्नुहोस्। फ्रेमहरूमा।',
       ],
       links: [
         {
@@ -475,7 +475,7 @@ export const guide: PageDefinition = {
         'फाइलनाम: डाउनलोडहरूको लागि अनुकूल फाइलनाम।',
         'GIF प्यालेट साइज: GIF आउटपुटमा 2-256 रङहरू।',
         'GIF क्वान्टाइजर: Median Cut, NeuQuant, वा Octree color reduction।',
-        'GIF Dithering: बन्द, Floyd-Steinberg, or Ordered।',
+        'GIF डिथरिङ: बन्द, फ्लोइड-स्टाइनबर्ग, वा क्रमबद्ध।',
         'GIF पारदर्शी रंग: पारदर्शी हुन रङ सेट गर्नुहोस्।',
         'SVG ट्रु भेक्टर: एम्बेडेड रास्टरको सट्टा मार्गहरू प्रयोग गर्नुहोस्।',
         'SVG आकार परिशुद्धता: पिक्सेल वा सटीक पथ प्रतिपादन।',
@@ -1030,7 +1030,7 @@ export const guide: PageDefinition = {
         'म्याट्रिक्स: अर्डर गरिएको डिथर म्याट्रिक्स - bayer2, bayer4, bayer8 (पूर्वनिर्धारित: bayer4)।',
         'bnTile: नीलो आवाज टाइल आकार (पूर्वनिर्धारित: 64)।',
         'bnSeed: नीलो आवाज अनियमित बीज (पूर्वनिर्धारित: 0)।',
-        'colorDither: Color dithering - none, per_channel, perceptual (default: none)।',
+        'colorDither: Color dithering - none, per_channel, perceptual (default: none).',
       ],
     },
     // Subpixel Parameters
@@ -1198,9 +1198,9 @@ export const guide: PageDefinition = {
       heading: 'HTML उदाहरण',
       paragraphs: [
         'आफ्नो वेबसाइटमा QR कोड इम्बेड गर्न:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR Code" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR Code\\" />',
         'उत्तरदायी आकारको लागि:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR Code" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR Code\\" style=\\"max-width: 100%; height: auto;\\" />',
         'सर्भरले लामो क्यास हेडरहरूसँग प्रतिक्रियाहरू क्यास गर्छ, त्यसैले उही URL को लागि दोहोर्याइएको अनुरोधहरू छिटो हुन्छन्।',
       ],
     },

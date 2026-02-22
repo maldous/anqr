@@ -448,7 +448,7 @@ export const guide: PageDefinition = {
         'Punktrotation: Rotera diamant/punktmoduler.',
         'Ögonskala: Storleksjustering för sökmönster.',
         'Ramstil: Lägg till dekorativa ramar (rundad ram, klistermärke, tagg).',
-        'Ramtext: Lägg till text som "Skanna mig!" till ramar.',
+        'Ramtext: Lägg till text som \\"Skanna mig!\\" till ramar.',
       ],
       links: [
         {
@@ -1202,9 +1202,9 @@ export const guide: PageDefinition = {
       heading: 'HTML-exempel',
       paragraphs: [
         'Så här bäddar du in en QR-kod på din webbplats:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=200" alt="QR-kod" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=200\\" alt=\\"QR-kod\\" />',
         'För responsiv storlek:',
-        '<img src="https://anqr.link/api/qr?data=https://yoursite.com&size=400" alt="QR-kod" style="max-width: 100%; height: auto;" />',
+        '<img src=\\"https://anqr.link/api/qr?data=https://yoursite.com&size=400\\" alt=\\"QR-kod\\" style=\\"max-width: 100%; height: auto;\\" />',
         'Servern cachar svar med långa cachehuvud, så upprepade förfrågningar om samma URL går snabbt.',
       ],
     },

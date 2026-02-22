@@ -159,7 +159,8 @@ function checkDir(dir, baseLocale) {
   return results;
 }
 
-function printReport(title, result) {
+function printReport(title, result, options = {}) {
+  const showAll = options.showAll === true;
   console.log(`\n== ${title} ==`);
   console.log(`Base locale: ${result.baseLocale}`);
   console.log(`Base line count: ${result.baseCount}`);
@@ -174,10 +175,11 @@ function printReport(title, result) {
 
   if (result.exactMatches.length) {
     console.log(`\nExact English matches (non-English locales): ${result.exactMatches.length}`);
-    for (const m of result.exactMatches.slice(0, 50)) {
+    const exactRows = showAll ? result.exactMatches : result.exactMatches.slice(0, 50);
+    for (const m of exactRows) {
       console.log(`- ${m.locale} line ${m.lineNo}: ${m.text}`);
     }
-    if (result.exactMatches.length > 50) {
+    if (!showAll && result.exactMatches.length > 50) {
       console.log(`... ${result.exactMatches.length - 50} more`);
     }
   } else {
@@ -186,10 +188,11 @@ function printReport(title, result) {
 
   if (result.warnings.length) {
     console.log(`\nEnglish-heavy warnings: ${result.warnings.length}`);
-    for (const w of result.warnings.slice(0, 30)) {
+    const warningRows = showAll ? result.warnings : result.warnings.slice(0, 30);
+    for (const w of warningRows) {
       console.log(`- ${w.locale} line ${w.lineNo}: ${w.text}`);
     }
-    if (result.warnings.length > 30) {
+    if (!showAll && result.warnings.length > 30) {
       console.log(`... ${result.warnings.length - 30} more`);
     }
   } else {
@@ -198,13 +201,14 @@ function printReport(title, result) {
 }
 
 let failed = false;
+const showAll = process.argv.includes('--all');
 try {
   const localesResult = checkDir(LOCALES_DIR, BASE_LOCALE);
-  printReport('Locales', localesResult);
+  printReport('Locales', localesResult, { showAll });
   if (localesResult.mismatches.length || localesResult.exactMatches.length) failed = true;
 
   const staticResult = checkDir(STATIC_DIR, BASE_STATIC);
-  printReport('Static', staticResult);
+  printReport('Static', staticResult, { showAll });
   if (staticResult.mismatches.length || staticResult.exactMatches.length) failed = true;
 } catch (err) {
   console.error(err);
