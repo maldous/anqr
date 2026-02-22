@@ -35,6 +35,6 @@ export async function withGifEncodeLock<T>(
   }
 }
 
-export function getGifEncodeQueueDepth(): number {
+function _getGifEncodeQueueDepth(): number {
   return gifEncodeQueueDepth;
 }

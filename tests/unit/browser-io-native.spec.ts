@@ -2,11 +2,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const saveBase64ToDocuments = vi.fn();
+const showNativeToast = vi.fn();
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
-vi.mock('../../src/modules/platform', () => ({ saveBase64ToDocuments }));
+vi.mock('../../src/modules/platform', () => ({ saveBase64ToDocuments, showNativeToast }));
 
 describe('browser-io native and canvas utils', () => {
   beforeEach(() => {
@@ -18,7 +25,8 @@ describe('browser-io native and canvas utils', () => {
     const mod = await import('../../src/modules/browser-io/canvas-utils');
 
     const okCanvas = document.createElement('canvas');
-    (okCanvas as any).toBlob = (cb: (b: Blob | null) => void) => cb(new Blob(['ok'], { type: 'image/png' }));
+    (okCanvas as any).toBlob = (cb: (b: Blob | null) => void) =>
+      cb(new Blob(['ok'], { type: 'image/png' }));
     (okCanvas as any).toDataURL = vi.fn((mime: string, q: number) => `data:${mime};q=${q}`);
 
     await expect(mod.canvasToBlob(okCanvas)).resolves.toBeInstanceOf(Blob);
@@ -34,11 +42,10 @@ describe('browser-io native and canvas utils', () => {
   it('saves file natively and surfaces errors', async () => {
     const mod = await import('../../src/modules/browser-io/native-save');
 
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
-
     class MockFileReaderSuccess {
       public result: string | null = 'data:image/png;base64,AAAA';
-      public onloadend: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
+      public onloadend: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null =
+        null;
       public onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
       readAsDataURL(_blob: Blob) {
         this.onloadend?.call(this as unknown as FileReader, {} as ProgressEvent<FileReader>);
@@ -48,7 +55,9 @@ describe('browser-io native and canvas utils', () => {
     saveBase64ToDocuments.mockResolvedValue({ uri: 'content://ok' });
     vi.stubGlobal('FileReader', MockFileReaderSuccess as any);
 
-    await expect(mod.saveFileNative('test.png', new Blob(['x'], { type: 'image/png' }))).resolves.toBe(true);
+    await expect(
+      mod.saveFileNative('test.png', new Blob(['x'], { type: 'image/png' }))
+    ).resolves.toBe(true);
     await expect(mod.saveFileNative('fallback.bin', new Blob(['x']))).resolves.toBe(true);
     expect(saveBase64ToDocuments).toHaveBeenCalledWith(
       'test.png',
@@ -56,10 +65,12 @@ describe('browser-io native and canvas utils', () => {
       'image/png',
       'ANQR'
     );
+    expect(showNativeToast).toHaveBeenCalledWith('Saved to Documents/ANQR: test.png', 'short');
 
     class MockFileReaderFail {
       public result: string | null = null;
-      public onloadend: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
+      public onloadend: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null =
+        null;
       public onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => unknown) | null = null;
       readAsDataURL(_blob: Blob) {
         this.onerror?.call(this as unknown as FileReader, {} as ProgressEvent<FileReader>);
@@ -68,8 +79,6 @@ describe('browser-io native and canvas utils', () => {
 
     vi.stubGlobal('FileReader', MockFileReaderFail as any);
     await expect(mod.saveFileNative('bad.png', new Blob(['x']))).resolves.toBe(false);
-    expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to save file'));
-
-    alertSpy.mockRestore();
+    expect(showNativeToast).toHaveBeenCalledWith('Failed to save file', 'long');
   });
 });

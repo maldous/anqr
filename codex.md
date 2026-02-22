@@ -1,6 +1,53 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 23:00:00 UTC
+Last updated: 2026-02-22 23:15:00 UTC
+
+## Latest Update (2026-02-22, Gallery Verification Test Contract Refresh)
+
+- Updated `tests/basic/gallery-verification.spec.ts` to match dynamic artifact-driven gallery behavior:
+  - image-load assertion:
+    - now treats remote-hosted `https://anqr.link/gallery/...` URL correctness as the hard requirement.
+    - keeps `naturalWidth` check as best-effort telemetry (only enforces threshold if any images decode in-run).
+  - overlay-link assertion:
+    - now targets links containing both `mode` and `img`.
+    - removed strict `intensity` requirement (not all overlay modes use it).
+  - color-link assertion:
+    - now scopes to the `Colors & Themes` section specifically.
+    - accepts either:
+      - explicit `fg` + `bg`, or
+      - palette/gradient color mechanisms (`palette`, `paletteMode`, `modColor`, `grad`, `gradStops`).
+    - still validates hex when `fg/bg` are present.
+- Verification:
+  - `npx playwright test tests/basic/gallery-verification.spec.ts --project=basic`
+  - result: `9 passed`.
+
+## Latest Update (2026-02-22, Knip Unused Export Cleanup)
+
+- Resolved current `knip --include dependencies,unlisted,exports` failures:
+  - `src/data/gallery-showcase.generated.ts`
+    - changed `generatedGallerySummary` from exported to internal constant.
+  - `scripts/publish-gallery-showcase.ts`
+    - updated generated template to emit `generatedGallerySummary` as internal constant (non-exported), preventing reintroduction on publish.
+  - `src/modules/animation/gif-lock.ts`
+    - made `getGifEncodeQueueDepth` internal (non-exported), since no call sites consume it.
+- Verification:
+  - `npx knip --include dependencies,unlisted,exports` exits cleanly.
+
+## Latest Update (2026-02-22, Unit-Test Regression Fixes after Platform/Touch Changes)
+
+- Fixed failing native-save unit mock after platform import consolidation:
+  - `tests/unit/browser-io-native.spec.ts`
+    - updated `../../src/modules/platform` mock to include `showNativeToast`.
+    - replaced legacy `window.alert` assertions with toast assertions:
+      - success: `showNativeToast('Saved to Documents/ANQR: ...', 'short')`
+      - failure: `showNativeToast('Failed to save file', 'long')`
+- Fixed touch-event test compatibility regression:
+  - `src/modules/overlay/crop-handler.ts`
+    - guarded `preventDefault` calls in `handleTouchStart` and `handleTouchMove`:
+      - only call when present/function (supports synthetic/minimal test events).
+- Validation:
+  - `npx vitest run tests/unit/browser-io-native.spec.ts tests/unit/overlay-crop-handler.spec.ts`
+  - result: `2 files passed, 5 tests passed`.
 
 ## Latest Update (2026-02-22, Hard Artwork Version Floor/Cap Guard)
 

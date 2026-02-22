@@ -3,8 +3,8 @@
  * Source: scripts/publish-gallery-showcase.ts
  */
 
-export const generatedGallerySummary = {
-  generatedAt: '2026-02-22T11:44:47.868Z',
+const _generatedGallerySummary = {
+  generatedAt: '2026-02-22T12:26:40.181Z',
   sourceMode: 'local',
   totalItems: 300,
   sectionCounts: {
