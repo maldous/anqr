@@ -89,6 +89,8 @@ import {
 import { useQRStore } from '@/store/qr-store';
 
 const log = createLogger('ANALYZE');
+const ENABLE_ANALYZE_MATRIX_DIAGNOSTICS =
+  import.meta.env.DEV && import.meta.env.VITE_ANALYZE_MATRIX_DIAGNOSTICS === '1';
 
 interface AnalyzeProps {
   onNavigate?: (page: 'editor' | 'gallery' | 'analyze') => void;
@@ -1423,91 +1425,121 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       }
       renderMs = Math.round((nowMs() - renderStartMs) * 100) / 100;
 
-      // --- Debug: matrix comparisons to pinpoint mismatch source ---
-      const buildRegenMatrix = (): boolean[][] => {
-        const m: boolean[][] = new Array(moduleCount);
-        for (let r = 0; r < moduleCount; r += 1) {
-          const row: boolean[] = new Array(moduleCount);
-          for (let c = 0; c < moduleCount; c += 1) row[c] = qr.isDark(r, c);
-          m[r] = row;
-        }
-        return m;
-      };
+      // --- Optional diagnostics: matrix comparisons to pinpoint mismatch source ---
+      let regenVsDecoded: {
+        rows: number;
+        cols: number;
+        diffCount: number;
+        diffPct: number;
+        firstDiff: { row: number; col: number; a: boolean; b: boolean } | null;
+      } | null = null;
+      let regenVsOriginal: {
+        rows: number;
+        cols: number;
+        diffCount: number;
+        diffPct: number;
+        firstDiff: { row: number; col: number; a: boolean; b: boolean } | null;
+      } | null = null;
+      let bestShift: { dr: number; dc: number; diffCount: number; diffPct: number } | null = null;
 
-      const diffMatrices = (a: boolean[][], b: boolean[][]) => {
-        const rows = Math.min(a.length, b.length);
-        const cols = rows ? Math.min(a[0].length, b[0].length) : 0;
-        let diffCount = 0;
-        let firstDiff: { row: number; col: number; a: boolean; b: boolean } | null = null;
-        for (let r = 0; r < rows; r += 1) {
-          for (let c = 0; c < cols; c += 1) {
-            if (a[r][c] === b[r][c]) continue;
-            diffCount += 1;
-            if (!firstDiff) firstDiff = { row: r, col: c, a: a[r][c], b: b[r][c] };
+      if (ENABLE_ANALYZE_MATRIX_DIAGNOSTICS) {
+        const buildRegenMatrix = (): boolean[][] => {
+          const m: boolean[][] = new Array(moduleCount);
+          for (let r = 0; r < moduleCount; r += 1) {
+            const row: boolean[] = new Array(moduleCount);
+            for (let c = 0; c < moduleCount; c += 1) row[c] = qr.isDark(r, c);
+            m[r] = row;
           }
-        }
-        const total = rows * cols;
-        return { rows, cols, diffCount, diffPct: total ? diffCount / total : 0, firstDiff };
-      };
+          return m;
+        };
 
-      const regenMatrix = buildRegenMatrix();
-      const regenVsDecoded = result.moduleMatrix
-        ? diffMatrices(result.moduleMatrix, regenMatrix)
-        : null;
-
-      const sampleOriginalMatrix = (): boolean[][] | null => {
-        if (!(isGeneratorSource && generatedCanvas)) return null;
-        const gctx = generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null;
-        if (!gctx) return null;
-
-        const m: boolean[][] = new Array(moduleCount);
-        for (let r = 0; r < moduleCount; r += 1) {
-          const row: boolean[] = new Array(moduleCount);
-          for (let c = 0; c < moduleCount; c += 1) {
-            const x = Math.floor((marginModules + c + 0.5) * modulePx);
-            const y = Math.floor((marginModules + r + 0.5) * modulePx);
-            const d = gctx.getImageData(x, y, 1, 1).data;
-            const lum = (d[0] + d[1] + d[2]) / 3;
-            const dark = d[3] > 16 && lum < 128;
-            row[c] = dark;
+        const diffMatrices = (a: boolean[][], b: boolean[][]) => {
+          const rows = Math.min(a.length, b.length);
+          const cols = rows ? Math.min(a[0].length, b[0].length) : 0;
+          let diffCount = 0;
+          let firstDiff: { row: number; col: number; a: boolean; b: boolean } | null = null;
+          for (let r = 0; r < rows; r += 1) {
+            for (let c = 0; c < cols; c += 1) {
+              if (a[r][c] === b[r][c]) continue;
+              diffCount += 1;
+              if (!firstDiff) firstDiff = { row: r, col: c, a: a[r][c], b: b[r][c] };
+            }
           }
-          m[r] = row;
-        }
-        return m;
-      };
+          const total = rows * cols;
+          return { rows, cols, diffCount, diffPct: total ? diffCount / total : 0, firstDiff };
+        };
 
-      const originalMatrix = sampleOriginalMatrix();
-      const regenVsOriginal = originalMatrix ? diffMatrices(originalMatrix, regenMatrix) : null;
+        const sampleOriginalMatrix = (): boolean[][] | null => {
+          if (!(isGeneratorSource && generatedCanvas)) return null;
+          const gctx = generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null;
+          if (!gctx) return null;
 
-      const bestShift = (() => {
-        if (!originalMatrix) return null;
-        let best = { dr: 0, dc: 0, diffCount: Number.POSITIVE_INFINITY };
-        for (let dr = -2; dr <= 2; dr += 1) {
-          for (let dc = -2; dc <= 2; dc += 1) {
-            let diffCount = 0;
-            for (let r = 0; r < moduleCount; r += 1) {
-              const rr = r + dr;
-              if (rr < 0 || rr >= moduleCount) {
-                diffCount += moduleCount;
-                continue;
-              }
-              for (let c = 0; c < moduleCount; c += 1) {
-                const cc = c + dc;
-                if (cc < 0 || cc >= moduleCount) {
-                  diffCount += 1;
+          const canvasWidth = generatedCanvas.width;
+          const canvasHeight = generatedCanvas.height;
+          if (canvasWidth <= 0 || canvasHeight <= 0) return null;
+          const pixels = gctx.getImageData(0, 0, canvasWidth, canvasHeight).data;
+
+          const m: boolean[][] = new Array(moduleCount);
+          for (let r = 0; r < moduleCount; r += 1) {
+            const row: boolean[] = new Array(moduleCount);
+            for (let c = 0; c < moduleCount; c += 1) {
+              const x = Math.max(
+                0,
+                Math.min(canvasWidth - 1, Math.floor((marginModules + c + 0.5) * modulePx))
+              );
+              const y = Math.max(
+                0,
+                Math.min(canvasHeight - 1, Math.floor((marginModules + r + 0.5) * modulePx))
+              );
+              const pixelIndex = (y * canvasWidth + x) * 4;
+              const lum =
+                (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / 3;
+              const dark = pixels[pixelIndex + 3] > 16 && lum < 128;
+              row[c] = dark;
+            }
+            m[r] = row;
+          }
+          return m;
+        };
+
+        const regenMatrix = buildRegenMatrix();
+        regenVsDecoded = result.moduleMatrix
+          ? diffMatrices(result.moduleMatrix, regenMatrix)
+          : null;
+
+        const originalMatrix = sampleOriginalMatrix();
+        regenVsOriginal = originalMatrix ? diffMatrices(originalMatrix, regenMatrix) : null;
+
+        bestShift = (() => {
+          if (!originalMatrix) return null;
+          let best = { dr: 0, dc: 0, diffCount: Number.POSITIVE_INFINITY };
+          for (let dr = -2; dr <= 2; dr += 1) {
+            for (let dc = -2; dc <= 2; dc += 1) {
+              let diffCount = 0;
+              for (let r = 0; r < moduleCount; r += 1) {
+                const rr = r + dr;
+                if (rr < 0 || rr >= moduleCount) {
+                  diffCount += moduleCount;
                   continue;
                 }
-                if (originalMatrix[r][c] !== regenMatrix[rr][cc]) diffCount += 1;
+                for (let c = 0; c < moduleCount; c += 1) {
+                  const cc = c + dc;
+                  if (cc < 0 || cc >= moduleCount) {
+                    diffCount += 1;
+                    continue;
+                  }
+                  if (originalMatrix[r][c] !== regenMatrix[rr][cc]) diffCount += 1;
+                }
               }
+              if (diffCount < best.diffCount) best = { dr, dc, diffCount };
             }
-            if (diffCount < best.diffCount) best = { dr, dc, diffCount };
           }
-        }
-        return {
-          ...best,
-          diffPct: moduleCount * moduleCount ? best.diffCount / (moduleCount * moduleCount) : 0,
-        };
-      })();
+          return {
+            ...best,
+            diffPct: moduleCount * moduleCount ? best.diffCount / (moduleCount * moduleCount) : 0,
+          };
+        })();
+      }
 
       const payloadBytesHead = (() => {
         const bytes = result.payloadBytes;

@@ -58,7 +58,3 @@ export function sampleBlueNoise(
   const ty = ((y % tileSize) + tileSize) % tileSize;
   return tile[ty * tileSize + tx];
 }
-
-export function clearBlueNoiseTileCache(): void {
-  blueNoiseTileCache.clear();
-}

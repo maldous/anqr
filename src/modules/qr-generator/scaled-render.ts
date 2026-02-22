@@ -434,64 +434,65 @@ export async function generateScaledQR(
       return;
     }
 
+    const boostedModules: Array<{ row: number; col: number }> = [];
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        if (!isPatternBoostModule(row, col)) continue;
+        boostedModules.push({ row, col });
+      }
+    }
+    if (boostedModules.length === 0) return;
+
     if (blendPreservations) {
       // Blend preservation targets with the already-rendered current overlay mode output.
       // This keeps preservation behavior mode-aware (dithered/blue-noise/etc.) instead of
       // painting a separate standalone texture over the top.
       const imageData = ctx.getImageData(0, 0, size, size);
       const data = imageData.data;
-      for (let row = 0; row < moduleCount; row++) {
-        for (let col = 0; col < moduleCount; col++) {
-          if (!isPatternBoostModule(row, col)) continue;
-          const x = marginPx + col * effectiveModuleSize;
-          const y = marginPx + row * effectiveModuleSize;
-          const x0 = Math.max(0, Math.floor(x));
-          const y0 = Math.max(0, Math.floor(y));
-          const x1 = Math.min(size, Math.ceil(x + effectiveModuleSize));
-          const y1 = Math.min(size, Math.ceil(y + effectiveModuleSize));
-          for (let py = y0; py < y1; py++) {
-            let idx = (py * size + x0) * 4;
-            const scaledRow = Math.max(
+      for (const { row, col } of boostedModules) {
+        const x = marginPx + col * effectiveModuleSize;
+        const y = marginPx + row * effectiveModuleSize;
+        const x0 = Math.max(0, Math.floor(x));
+        const y0 = Math.max(0, Math.floor(y));
+        const x1 = Math.min(size, Math.ceil(x + effectiveModuleSize));
+        const y1 = Math.min(size, Math.ceil(y + effectiveModuleSize));
+        for (let py = y0; py < y1; py++) {
+          let idx = (py * size + x0) * 4;
+          const scaledRow = Math.max(
+            0,
+            Math.min(scaledSize - 1, Math.floor((py - marginPx) / Math.max(1e-6, subPixelSize)))
+          );
+          for (let px = x0; px < x1; px++) {
+            const scaledCol = Math.max(
               0,
-              Math.min(scaledSize - 1, Math.floor((py - marginPx) / Math.max(1e-6, subPixelSize)))
+              Math.min(scaledSize - 1, Math.floor((px - marginPx) / Math.max(1e-6, subPixelSize)))
             );
-            for (let px = x0; px < x1; px++) {
-              const scaledCol = Math.max(
-                0,
-                Math.min(scaledSize - 1, Math.floor((px - marginPx) / Math.max(1e-6, subPixelSize)))
-              );
-              const sampled =
-                (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
-                sampleModuleOverlayColor(row, col);
-              const paperLuma = estimatePaperLuma(sampled ?? null);
-              const pixelLuma =
-                (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]) / 255;
-              const moduleDark = qr.isDark(row, col);
-              // "dither" mode keeps preservation blending on existing dither rails.
-              // "overlay" mode allows full-module pass-through coloring.
-              const rawInkContrast = paperLuma - pixelLuma;
-              const inkCoverageN =
-                blendPreservationMode === 'dither' && isDitheredMode
-                  ? moduleDark
-                    ? Math.max(0, Math.min(1, (rawInkContrast - 0.015) / 0.28))
-                    : Math.max(0, Math.min(1, (rawInkContrast + 0.03) / 0.22))
-                  : 1;
-              if (inkCoverageN <= 1e-3) {
-                idx += 4;
-                continue;
-              }
-              const target = getPreservationBlendTargetForScaledPixel(
-                row,
-                col,
-                scaledRow,
-                scaledCol
-              );
-              const t = finderStrengthN * inkCoverageN;
-              data[idx] = blendChannelToward(data[idx], target.r, t);
-              data[idx + 1] = blendChannelToward(data[idx + 1], target.g, t);
-              data[idx + 2] = blendChannelToward(data[idx + 2], target.b, t);
+            const sampled =
+              (colors[scaledRow]?.[scaledCol] as PixelColor | undefined) ??
+              sampleModuleOverlayColor(row, col);
+            const paperLuma = estimatePaperLuma(sampled ?? null);
+            const pixelLuma =
+              (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]) / 255;
+            const moduleDark = qr.isDark(row, col);
+            // "dither" mode keeps preservation blending on existing dither rails.
+            // "overlay" mode allows full-module pass-through coloring.
+            const rawInkContrast = paperLuma - pixelLuma;
+            const inkCoverageN =
+              blendPreservationMode === 'dither' && isDitheredMode
+                ? moduleDark
+                  ? Math.max(0, Math.min(1, (rawInkContrast - 0.015) / 0.28))
+                  : Math.max(0, Math.min(1, (rawInkContrast + 0.03) / 0.22))
+                : 1;
+            if (inkCoverageN <= 1e-3) {
               idx += 4;
+              continue;
             }
+            const target = getPreservationBlendTargetForScaledPixel(row, col, scaledRow, scaledCol);
+            const t = finderStrengthN * inkCoverageN;
+            data[idx] = blendChannelToward(data[idx], target.r, t);
+            data[idx + 1] = blendChannelToward(data[idx + 1], target.g, t);
+            data[idx + 2] = blendChannelToward(data[idx + 2], target.b, t);
+            idx += 4;
           }
         }
       }
@@ -501,14 +502,11 @@ export async function generateScaledQR(
 
     ctx.save();
     ctx.globalAlpha = finderStrengthN;
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        if (!isPatternBoostModule(row, col)) continue;
-        const x = marginPx + col * effectiveModuleSize;
-        const y = marginPx + row * effectiveModuleSize;
-        ctx.fillStyle = qr.isDark(row, col) ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
-        ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
-      }
+    for (const { row, col } of boostedModules) {
+      const x = marginPx + col * effectiveModuleSize;
+      const y = marginPx + row * effectiveModuleSize;
+      ctx.fillStyle = qr.isDark(row, col) ? 'rgb(0,0,0)' : 'rgb(255,255,255)';
+      ctx.fillRect(x, y, effectiveModuleSize, effectiveModuleSize);
     }
     ctx.restore();
   };

@@ -132,6 +132,51 @@ function isThresholdOnlyDitherKind(ditherKind: string): boolean {
   }
 }
 
+const COLOR_PACKED_FLAG = 0x01000000;
+
+function pixelIndex(x: number, y: number, stride: number): number {
+  return y * stride + x;
+}
+
+function packColor(r: number, g: number, b: number): number {
+  return COLOR_PACKED_FLAG | (r << 16) | (g << 8) | b;
+}
+
+function unpackColor(value: number): RGBWithMeta | null {
+  if ((value & COLOR_PACKED_FLAG) === 0) return null;
+  return {
+    r: (value >> 16) & 0xff,
+    g: (value >> 8) & 0xff,
+    b: value & 0xff,
+  };
+}
+
+function bitsToMatrix(bits: Uint8Array, size: number): boolean[][] {
+  const matrix: boolean[][] = new Array(size);
+  for (let y = 0; y < size; y++) {
+    const row: boolean[] = new Array(size);
+    const base = y * size;
+    for (let x = 0; x < size; x++) {
+      row[x] = bits[base + x] === 1;
+    }
+    matrix[y] = row;
+  }
+  return matrix;
+}
+
+function packedColorsToMatrix(colors: Uint32Array, size: number): (RGBWithMeta | null)[][] {
+  const matrix: (RGBWithMeta | null)[][] = new Array(size);
+  for (let y = 0; y < size; y++) {
+    const row: (RGBWithMeta | null)[] = new Array(size);
+    const base = y * size;
+    for (let x = 0; x < size; x++) {
+      row[x] = unpackColor(colors[base + x]);
+    }
+    matrix[y] = row;
+  }
+  return matrix;
+}
+
 /**
  * Generate a QR-first matrix for high-contrast B&W images.
  * This mode GUARANTEES QR scannability by:
@@ -168,8 +213,9 @@ async function generateBWFirstMatrix(
   const data = imageData.data;
   if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
-  const matrix: boolean[][] = [];
-  const colors: (RGBWithMeta | null)[][] = [];
+  const pixelCount = scaledSize * scaledSize;
+  const matrixBits = new Uint8Array(pixelCount);
+  const packedColors = new Uint32Array(pixelCount);
   const clampByte = (v: number): number => Math.max(0, Math.min(255, Math.round(v)));
   const mapShadeWithSourceColor = (
     srcR: number,
@@ -203,11 +249,9 @@ async function generateBWFirstMatrix(
   const contrastPower = 1.5;
 
   for (let y = 0; y < scaledSize; y++) {
-    matrix[y] = [];
-    colors[y] = [];
-
     for (let x = 0; x < scaledSize; x++) {
-      const idx = (y * scaledSize + x) * 4;
+      const sampleIdx = pixelIndex(x, y, scaledSize);
+      const idx = sampleIdx * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
@@ -217,7 +261,7 @@ async function generateBWFirstMatrix(
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
 
       // QR-FIRST: Matrix ALWAYS matches QR data - this guarantees scannability
-      matrix[y][x] = qrIsDark;
+      matrixBits[sampleIdx] = qrIsDark ? 1 : 0;
 
       // Calculate overlay brightness (0 = black, 1 = white)
       let overlayBrightness = rgbToGray(r, g, b) / 255;
@@ -275,8 +319,10 @@ async function generateBWFirstMatrix(
         shade = qrIsDark ? 0 : 255;
       }
 
-      colors[y][x] =
-        config.colorMode !== 'bw' ? mapShadeWithSourceColor(r, g, b, shade, qrIsDark) : null;
+      if (config.colorMode !== 'bw') {
+        const mapped = mapShadeWithSourceColor(r, g, b, shade, qrIsDark);
+        packedColors[sampleIdx] = packColor(mapped.r, mapped.g, mapped.b);
+      }
     }
   }
 
@@ -289,7 +335,13 @@ async function generateBWFirstMatrix(
     mode: 'bw-first',
   });
 
-  return { matrix, colors, scale, overlayData: null, effectiveIntensity };
+  return {
+    matrix: bitsToMatrix(matrixBits, scaledSize),
+    colors: packedColorsToMatrix(packedColors, scaledSize),
+    scale,
+    overlayData: null,
+    effectiveIntensity,
+  };
 }
 
 function luma01(r: number, g: number, b: number): number {
@@ -326,7 +378,7 @@ function lerp(a: number, b: number, t: number): number {
  * Supports serpentine scanning by mirroring x-offsets when scanning right-to-left.
  */
 function distributeError(
-  errors: number[][],
+  errors: Float32Array,
   x: number,
   y: number,
   error: number,
@@ -349,7 +401,7 @@ function distributeError(
       const ny = y + ky;
 
       if (nx >= 0 && nx < scaledSize && ny < scaledSize) {
-        errors[ny][nx] += (error * weight) / divisor;
+        errors[pixelIndex(nx, ny, scaledSize)] += (error * weight) / divisor;
       }
     }
   }
@@ -477,10 +529,11 @@ function isFunctionalPatternModule(
 
 function enforceModuleConstraints(
   qr: QRCodeInstance,
-  matrix: boolean[][],
-  desire: number[][],
+  matrixBits: Uint8Array,
+  desire: Float32Array,
   moduleCount: number,
   scale: number,
+  scaledSize: number,
   version: number,
   config: QRGeneratorConfig
 ): void {
@@ -540,7 +593,7 @@ function enforceModuleConstraints(
           for (let x = 0; x < scale; x++) {
             const yy = y0 + y;
             const xx = x0 + x;
-            const dark = matrix[yy][xx];
+            const dark = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
             if (dark) darkCount++;
             if (
               dark &&
@@ -549,7 +602,7 @@ function enforceModuleConstraints(
             ) {
               centerDarkCount++;
             }
-            const d = desire[y0 + y][x0 + x];
+            const d = desire[pixelIndex(x0 + x, y0 + y, scaledSize)];
             desireSum += d;
             desireSq += d * d;
           }
@@ -656,7 +709,7 @@ function enforceModuleConstraints(
           for (let x = 0; x < scale; x++) {
             const yy = y0 + y;
             const xx = x0 + x;
-            const current = matrix[yy][xx];
+            const current = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
             if ((toDark && current) || !(toDark || current)) continue;
             const inCenter =
               Math.abs(y - moduleCenter) <= centerRadius &&
@@ -668,7 +721,7 @@ function enforceModuleConstraints(
             if (scanGain <= 0) continue;
 
             // Global energy: preserve art + avoid module-edge imprint + prioritize scan recovery.
-            const d = desire[yy][xx];
+            const d = desire[pixelIndex(xx, yy, scaledSize)];
             const beforeErr = Math.abs((current ? 1 : 0) - d);
             const afterErr = Math.abs((toDark ? 1 : 0) - d);
             const artPenalty = afterErr - beforeErr;
@@ -698,9 +751,10 @@ function enforceModuleConstraints(
     for (let i = 0; i < candidates.length && applied < maxFlips && gained < targetGain; i++) {
       const c = candidates[i];
       if (c.score < -0.2 && gained > targetGain * 0.6) break;
-      const current = matrix[c.y][c.x];
+      const idx = pixelIndex(c.x, c.y, scaledSize);
+      const current = matrixBits[idx] === 1;
       if (c.toDark === current) continue;
-      matrix[c.y][c.x] = c.toDark;
+      matrixBits[idx] = c.toDark ? 1 : 0;
       applied++;
       gained += c.scanGain;
     }
@@ -717,16 +771,16 @@ function enforceModuleConstraints(
 
 function removeIsolatedSpeckles(
   qr: QRCodeInstance,
-  matrix: boolean[][],
+  matrixBits: Uint8Array,
+  scaledSize: number,
   moduleCount: number,
   scale: number,
   version: number,
   config: QRGeneratorConfig
 ): void {
-  const size = matrix.length;
-  const copy = matrix.map((row) => row.slice());
-  for (let y = 1; y < size - 1; y++) {
-    for (let x = 1; x < size - 1; x++) {
+  const copy = matrixBits.slice();
+  for (let y = 1; y < scaledSize - 1; y++) {
+    for (let x = 1; x < scaledSize - 1; x++) {
       const mr = Math.floor(y / scale);
       const mc = Math.floor(x / scale);
       if (
@@ -738,35 +792,36 @@ function removeIsolatedSpeckles(
       ) {
         continue;
       }
-      const current = copy[y][x];
+      const currentIdx = pixelIndex(x, y, scaledSize);
+      const current = copy[currentIdx];
       let sameNeighbors = 0;
       for (let oy = -1; oy <= 1; oy++) {
         for (let ox = -1; ox <= 1; ox++) {
           if (ox === 0 && oy === 0) continue;
-          if (copy[y + oy][x + ox] === current) sameNeighbors++;
+          if (copy[pixelIndex(x + ox, y + oy, scaledSize)] === current) sameNeighbors++;
         }
       }
       if (sameNeighbors <= 1) {
-        matrix[y][x] = qr.isDark(mr, mc);
+        matrixBits[currentIdx] = qr.isDark(mr, mc) ? 1 : 0;
       }
     }
   }
 }
 
 function computeQualityMetrics(
-  matrix: boolean[][],
-  desire: number[][],
+  matrixBits: Uint8Array,
+  desire: Float32Array,
+  size: number,
   scale: number
 ): { artCorrelation: number; edgeImprint: number } {
-  const h = matrix.length;
-  const w = matrix[0]?.length ?? 0;
-  if (h === 0 || w === 0) return { artCorrelation: 0, edgeImprint: 0 };
+  if (size === 0) return { artCorrelation: 0, edgeImprint: 0 };
 
   let mae = 0;
   let count = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      mae += Math.abs((matrix[y][x] ? 1 : 0) - desire[y][x]);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const idx = pixelIndex(x, y, size);
+      mae += Math.abs(matrixBits[idx] - desire[idx]);
       count++;
     }
   }
@@ -776,9 +831,11 @@ function computeQualityMetrics(
   let nonBoundaryDiff = 0;
   let boundaryCount = 0;
   let nonBoundaryCount = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w - 1; x++) {
-      const d = Math.abs((matrix[y][x] ? 1 : 0) - (matrix[y][x + 1] ? 1 : 0));
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size - 1; x++) {
+      const d = Math.abs(
+        matrixBits[pixelIndex(x, y, size)] - matrixBits[pixelIndex(x + 1, y, size)]
+      );
       if ((x + 1) % scale === 0) {
         boundaryDiff += d;
         boundaryCount++;
@@ -882,18 +939,12 @@ export async function generateDitheredMatrix(
   const data = imageData.data;
   if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
-  const matrix: boolean[][] = [];
-  const colors: (RGBWithMeta | null)[][] = [];
-  const desire: number[][] = [];
-
-  const errors: number[][] = [];
-
-  for (let y = 0; y < scaledSize; y++) {
-    matrix[y] = [];
-    colors[y] = [];
-    desire[y] = new Array(scaledSize).fill(0.5);
-    errors[y] = new Array(scaledSize).fill(0);
-  }
+  const pixelCount = scaledSize * scaledSize;
+  const matrixBits = new Uint8Array(pixelCount);
+  const packedColors = new Uint32Array(pixelCount);
+  const desire = new Float32Array(pixelCount);
+  const errors = new Float32Array(pixelCount);
+  desire.fill(0.5);
 
   const mix = clamp01(intensity * ditherStrength * ditherScale);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
@@ -934,7 +985,8 @@ export async function generateDitheredMatrix(
     const deltaX = leftToRight ? 1 : -1;
 
     for (let x = startX; leftToRight ? x < endX : x > endX; x += deltaX) {
-      const idx = (y * scaledSize + x) * 4;
+      const sampleIdx = pixelIndex(x, y, scaledSize);
+      const idx = sampleIdx * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
@@ -961,7 +1013,7 @@ export async function generateDitheredMatrix(
         isDarkCandidate = biasedOverlayDark > threshold;
       } else {
         // Global error diffusion over artwork luminance, with dither-kind specific threshold fields.
-        const adjusted = biasedOverlayDark + errors[y][x];
+        const adjusted = biasedOverlayDark + errors[sampleIdx];
         isDarkCandidate = adjusted > threshold;
         const err = (biasedOverlayDark - (isDarkCandidate ? 1 : 0)) * mix;
         distributeError(errors, x, y, err, kernel, scaledSize, leftToRight);
@@ -969,24 +1021,19 @@ export async function generateDitheredMatrix(
 
       // Apply structural lock at the final write stage only.
       // This keeps diffusion state consistent so toggling locks doesn't re-shape the entire texture.
-      matrix[y][x] = moduleLocked ? qrIsDark : isDarkCandidate;
+      matrixBits[sampleIdx] = moduleLocked ? (qrIsDark ? 1 : 0) : isDarkCandidate ? 1 : 0;
       // Desire is artwork-driven and used later for minimal-cost correction ranking.
-      desire[y][x] = moduleLocked ? (qrIsDark ? 1 : 0) : overlayDark;
-      colors[y][x] =
-        config.colorMode !== 'bw'
-          ? ({
-              r,
-              g,
-              b,
-            } as RGBi)
-          : null;
+      desire[sampleIdx] = moduleLocked ? (qrIsDark ? 1 : 0) : overlayDark;
+      if (config.colorMode !== 'bw') {
+        packedColors[sampleIdx] = packColor(r, g, b);
+      }
     }
   }
 
   // Post-pass: enforce adaptive data-module occupancy constraints.
-  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, config);
+  enforceModuleConstraints(qr, matrixBits, desire, moduleCount, scale, scaledSize, version, config);
   if (config.cleanupSpeckle === true) {
-    removeIsolatedSpeckles(qr, matrix, moduleCount, scale, version, config);
+    removeIsolatedSpeckles(qr, matrixBits, scaledSize, moduleCount, scale, version, config);
   }
 
   // Log key stats for debugging
@@ -1008,12 +1055,23 @@ export async function generateDitheredMatrix(
     kernelName,
     sample: {
       module: { row: sampleMr, col: sampleMc, qrIsDark: qr.isDark(sampleMr, sampleMc) },
-      centerPixel: { y: sy, x: sx, isDark: matrix[sy]?.[sx], desire: desire[sy]?.[sx] },
+      centerPixel: {
+        y: sy,
+        x: sx,
+        isDark: matrixBits[pixelIndex(sx, sy, scaledSize)] === 1,
+        desire: desire[pixelIndex(sx, sy, scaledSize)],
+      },
     },
-    quality: computeQualityMetrics(matrix, desire, scale),
+    quality: computeQualityMetrics(matrixBits, desire, scaledSize, scale),
   });
 
-  return { matrix, colors, scale, overlayData: null, effectiveIntensity };
+  return {
+    matrix: bitsToMatrix(matrixBits, scaledSize),
+    colors: packedColorsToMatrix(packedColors, scaledSize),
+    scale,
+    overlayData: null,
+    effectiveIntensity,
+  };
 }
 
 /**
@@ -1068,15 +1126,11 @@ export async function generateBlueNoiseMatrix(
   const data = imageData.data;
   if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
-  const matrix: boolean[][] = [];
-  const colors: (RGBWithMeta | null)[][] = [];
-  const desire: number[][] = [];
-
-  for (let y = 0; y < scaledSize; y++) {
-    matrix[y] = [];
-    colors[y] = [];
-    desire[y] = new Array(scaledSize).fill(0.5);
-  }
+  const pixelCount = scaledSize * scaledSize;
+  const matrixBits = new Uint8Array(pixelCount);
+  const packedColors = new Uint32Array(pixelCount);
+  const desire = new Float32Array(pixelCount);
+  desire.fill(0.5);
 
   const seed = config.blueNoiseSeed ?? config.seed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
@@ -1093,7 +1147,8 @@ export async function generateBlueNoiseMatrix(
 
   for (let y = 0; y < scaledSize; y++) {
     for (let x = 0; x < scaledSize; x++) {
-      const idx = (y * scaledSize + x) * 4;
+      const sampleIdx = pixelIndex(x, y, scaledSize);
+      const idx = sampleIdx * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
@@ -1106,9 +1161,11 @@ export async function generateBlueNoiseMatrix(
         !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, moduleCount);
 
       if (moduleLocked) {
-        matrix[y][x] = qrIsDark;
-        colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
-        desire[y][x] = qrIsDark ? 1 : 0;
+        matrixBits[sampleIdx] = qrIsDark ? 1 : 0;
+        if (config.colorMode !== 'bw') {
+          packedColors[sampleIdx] = packColor(r, g, b);
+        }
+        desire[sampleIdx] = qrIsDark ? 1 : 0;
         continue;
       }
 
@@ -1123,13 +1180,15 @@ export async function generateBlueNoiseMatrix(
         : (qrIsDark ? 1 : -1) * effectiveBitBias * centerW * (0.45 + intensity * 0.8);
       const decisionGain = (0.64 + intensity * 0.44) * (scanGateActive ? 1.04 : 1);
       const d = clamp01((overlayDark + qrBias + polarityBias) * decisionGain);
-      desire[y][x] = clamp01(overlayDark + (qrIsDark ? 0.12 : -0.12));
+      desire[sampleIdx] = clamp01(overlayDark + (qrIsDark ? 0.12 : -0.12));
 
       const n = sampleBlueNoise(x, y, tile, tileSize);
       const isDark = n < d;
 
-      matrix[y][x] = isDark;
-      colors[y][x] = config.colorMode !== 'bw' ? ({ r, g, b } as RGBi) : null;
+      matrixBits[sampleIdx] = isDark ? 1 : 0;
+      if (config.colorMode !== 'bw') {
+        packedColors[sampleIdx] = packColor(r, g, b);
+      }
     }
   }
 
@@ -1145,9 +1204,18 @@ export async function generateBlueNoiseMatrix(
     ),
     optimizeIterations: Math.max(config.optimizeIterations ?? 0, scanGateActive ? 10 : 8),
   };
-  enforceModuleConstraints(qr, matrix, desire, moduleCount, scale, version, strictConstraintConfig);
+  enforceModuleConstraints(
+    qr,
+    matrixBits,
+    desire,
+    moduleCount,
+    scale,
+    scaledSize,
+    version,
+    strictConstraintConfig
+  );
   if (config.cleanupSpeckle === true) {
-    removeIsolatedSpeckles(qr, matrix, moduleCount, scale, version, config);
+    removeIsolatedSpeckles(qr, matrixBits, scaledSize, moduleCount, scale, version, config);
   }
 
   log.debug('blue-noise-matrix generated', {
@@ -1158,7 +1226,13 @@ export async function generateBlueNoiseMatrix(
     seed,
   });
 
-  return { matrix, colors, scale, overlayData: null, effectiveIntensity };
+  return {
+    matrix: bitsToMatrix(matrixBits, scaledSize),
+    colors: packedColorsToMatrix(packedColors, scaledSize),
+    scale,
+    overlayData: null,
+    effectiveIntensity,
+  };
 }
 
 /**
