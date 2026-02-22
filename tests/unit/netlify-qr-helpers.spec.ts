@@ -131,9 +131,34 @@ describe('netlify qr helpers', () => {
     const b = makeCanvas(24, 24);
     const single = __test.encodeGif(a, 64, 2);
     expect(single.byteLength).toBeGreaterThan(50);
+    const singleAb = single.buffer.slice(single.byteOffset, single.byteOffset + single.byteLength);
+    const parsedSingle = __test.parseGifFramesServer(singleAb);
+    expect(parsedSingle[0]?.disposalType).toBe(2);
     const multi = __test.encodeAnimatedGif([a, b], 80, 64, 2);
     expect(multi.byteLength).toBeGreaterThan(50);
+    const multiAb = multi.buffer.slice(multi.byteOffset, multi.byteOffset + multi.byteLength);
+    const parsedMulti = __test.parseGifFramesServer(multiAb);
+    expect(parsedMulti[0]?.disposalType).toBe(2);
     expect(() => __test.encodeAnimatedGif([], 80, 64, 2)).toThrow('No frames to encode');
+  });
+
+  it('flattens transparent GIF backgrounds for opaque output', () => {
+    const canvas = createCanvas(12, 12);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 12, 12);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, 4, 4);
+
+    const gif = __test.encodeGif(canvas, 64, 2, '#ffffff', false);
+    const ab = gif.buffer.slice(gif.byteOffset, gif.byteOffset + gif.byteLength);
+    const frames = __test.parseGifFramesServer(ab);
+    expect(frames.length).toBeGreaterThan(0);
+
+    const frameCtx = frames[0].canvas.getContext('2d');
+    const bgPixel = frameCtx.getImageData(11, 11, 1, 1).data;
+    expect(bgPixel[0]).toBeGreaterThanOrEqual(240);
+    expect(bgPixel[1]).toBeGreaterThanOrEqual(240);
+    expect(bgPixel[2]).toBeGreaterThanOrEqual(240);
   });
 
   it('generates animation pattern frames', () => {
