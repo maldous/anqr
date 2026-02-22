@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import * as Sentry from '@sentry/react';
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -8,12 +9,21 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { initAutoDynamicTestIds } from './lib/auto-testid';
 import { createLogger } from './lib/logger';
 import { initRemoteDiagnostics } from './lib/logger-remote';
-import { initializeAdMob, prepareAllAds, showBannerAd } from './modules/platform';
+import {
+  initializeAdMob,
+  loadWebOnlyBootAssets,
+  prepareAllAds,
+  showBannerAd,
+} from './modules/platform';
 
 const log = createLogger('MAIN');
 
 // Detect if running in Capacitor (native app) environment
-const isCapacitor = typeof (window as Window & { Capacitor?: unknown }).Capacitor !== 'undefined';
+const isCapacitor = Capacitor.isNativePlatform();
+
+// Load external web-only third-party assets (consent scripts, web fonts, AdSense).
+// Native builds skip these to reduce startup/network overhead.
+loadWebOnlyBootAssets();
 
 // Initialize Sentry for error tracking (must be first)
 // Web and Capacitor both use the same React SDK - native Android uses its own SDK in MainActivity.java

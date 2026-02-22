@@ -63,13 +63,14 @@ public class MainActivity extends BridgeActivity {
     // Initialize iubenda CMP SDK for consent management
     initializeConsentManager();
     
-    // Enable WebView debugging to see console.log in logcat (even in release builds)
-    // This helps diagnose AdMob and other JavaScript issues
-    try {
-      WebView.setWebContentsDebuggingEnabled(true);
-      Log.e(TAG, "WebView debugging enabled");
-    } catch (Exception e) {
-      Log.e(TAG, "Failed to enable WebView debugging", e);
+    // Enable WebView debugging only for debug builds.
+    if (BuildConfig.DEBUG) {
+      try {
+        WebView.setWebContentsDebuggingEnabled(true);
+        Log.e(TAG, "WebView debugging enabled (debug build)");
+      } catch (Exception e) {
+        Log.e(TAG, "Failed to enable WebView debugging", e);
+      }
     }
 
     // Ensure AdMob's AdActivity has sane insets handling so the close button

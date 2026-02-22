@@ -1,4 +1,3 @@
-node_modules
 .dist
 .build
 .out
@@ -6,6 +5,3 @@ node_modules
 dist
 build
 coverage
-
-# Vendor files
-src/modules/qrcode.mjs

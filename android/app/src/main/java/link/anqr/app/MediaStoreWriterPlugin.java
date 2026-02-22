@@ -1,5 +1,6 @@
 package link.anqr.app;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.net.Uri;
@@ -13,16 +14,36 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.PermissionState;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-@CapacitorPlugin(name = "MediaStoreWriter")
+@CapacitorPlugin(
+  name = "MediaStoreWriter",
+  permissions = {
+    @Permission(
+      alias = "storage",
+      strings = { Manifest.permission.WRITE_EXTERNAL_STORAGE }
+    )
+  }
+)
 public class MediaStoreWriterPlugin extends Plugin {
 
   @PluginMethod
   public void saveToDocuments(PluginCall call) {
+    saveToDocumentsInternal(call, false);
+  }
+
+  @PermissionCallback
+  private void storagePermissionCallback(PluginCall call) {
+    saveToDocumentsInternal(call, true);
+  }
+
+  private void saveToDocumentsInternal(PluginCall call, boolean fromPermissionCallback) {
     String filename = call.getString("filename");
     String mimeType = call.getString("mimeType", "application/octet-stream");
     String data = call.getString("data");
@@ -50,6 +71,15 @@ public class MediaStoreWriterPlugin extends Plugin {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         result = saveViaMediaStore(filename, mimeType, bytes, subdir);
       } else {
+        PermissionState storagePermission = getPermissionState("storage");
+        if (storagePermission != PermissionState.GRANTED) {
+          if (fromPermissionCallback) {
+            call.reject("Storage permission denied");
+            return;
+          }
+          requestPermissionForAlias("storage", call, "storagePermissionCallback");
+          return;
+        }
         result = saveLegacy(filename, bytes, subdir);
       }
       call.resolve(result);

@@ -61,9 +61,15 @@ export class CropHandler {
     this.canvas.addEventListener('mouseleave', this.handleMouseUp.bind(this));
 
     // Touch events
-    this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
-    this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
-    this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+    this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), {
+      passive: false,
+    });
+    this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), {
+      passive: false,
+    });
+    this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), {
+      passive: true,
+    });
 
     // Load image
     this.loadImage(options.imageUrl);
@@ -247,6 +253,7 @@ export class CropHandler {
 
   private handleTouchStart(e: TouchEvent): void {
     if (e.touches.length === 1) {
+      e.preventDefault();
       const touch = e.touches[0];
       const mouseEvent = new MouseEvent('mousedown', {
         clientX: touch.clientX,

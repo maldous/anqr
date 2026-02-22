@@ -156,6 +156,19 @@ function validateArtifactMagic(buffer, ext, expectAnimated = false) {
   return { pass: true };
 }
 
+async function finalizeTempArtifact(tempArtifactPath, artifactPath, keepArtifact) {
+  try {
+    if (keepArtifact) {
+      await fs.rename(tempArtifactPath, artifactPath);
+    } else {
+      await fs.unlink(tempArtifactPath).catch(() => {});
+    }
+  } catch (err) {
+    await fs.unlink(tempArtifactPath).catch(() => {});
+    throw err;
+  }
+}
+
 // ============================================
 // URL construction
 // ============================================
@@ -440,11 +453,7 @@ async function main() {
         ? await verifyImage(buffer, expectedPayload, config.isAnimated)
         : magicCheck;
       await fs.writeFile(tempArtifactPath, buffer);
-      if (verify.pass) {
-        await fs.rename(tempArtifactPath, artifactPath);
-      } else {
-        await fs.unlink(tempArtifactPath).catch(() => {});
-      }
+      await finalizeTempArtifact(tempArtifactPath, artifactPath, verify.pass);
 
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);

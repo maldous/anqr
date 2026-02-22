@@ -33,6 +33,7 @@ import type { GalleryCategory } from '@/data/gallery-items';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { QRGeneratorProvider, useQRGeneratorContext } from '@/hooks/useQRGenerator';
 import i18n, { isRtlLanguage, languages, loadLocale } from '@/i18n';
+import { showNativeToast } from '@/modules/platform';
 import { parseUrlParams } from '@/modules/share-links';
 import {
   type AlignmentStyle,
@@ -44,6 +45,14 @@ import {
 
 type PageView = 'editor' | 'gallery' | 'analyze' | StaticPageType;
 type ModuleStyleOption = 'square' | 'rounded' | 'dots' | 'diamond' | 'connected';
+type BackButtonEvent = { canGoBack?: boolean };
+type CapacitorAppPlugin = {
+  addListener?: (
+    eventName: 'backButton',
+    listener: (event: BackButtonEvent) => void | Promise<void>
+  ) => Promise<{ remove: () => Promise<void> | void }> | { remove: () => Promise<void> | void };
+  exitApp?: () => Promise<void> | void;
+};
 
 const log = createLogger('APP');
 
@@ -121,6 +130,7 @@ function AppContent() {
   // Use a ref to get the current value to avoid recreating the callback
   const mobileSplitPercentRef = useRef(mobileSplitPercent);
   mobileSplitPercentRef.current = mobileSplitPercent;
+  const lastBackPressAtRef = useRef(0);
 
   const handleMobileDividerDragEnd = useCallback(() => {
     localStorage.setItem(MOBILE_SPLIT_STORAGE_KEY, String(mobileSplitPercentRef.current));
@@ -182,6 +192,54 @@ function AppContent() {
       globalThis.removeEventListener('hashchange', handleLocationChange);
     };
   }, []);
+
+  // Native Android back button: navigate within app first, then double-back to exit.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const appPlugin = (
+      globalThis as typeof globalThis & {
+        Capacitor?: { Plugins?: { App?: CapacitorAppPlugin } };
+      }
+    ).Capacitor?.Plugins?.App;
+    if (!appPlugin?.addListener) return;
+
+    let listenerHandle: { remove: () => Promise<void> | void } | null = null;
+    let disposed = false;
+    void Promise.resolve(
+      appPlugin.addListener('backButton', async ({ canGoBack }: BackButtonEvent) => {
+        if (currentPage !== 'editor') {
+          navigateTo('editor');
+          return;
+        }
+
+        if (canGoBack) {
+          globalThis.history.back();
+          return;
+        }
+
+        const now = Date.now();
+        if (now - lastBackPressAtRef.current < 1500) {
+          await appPlugin.exitApp?.();
+          return;
+        }
+
+        lastBackPressAtRef.current = now;
+        await showNativeToast('Press back again to exit', 'short');
+      })
+    ).then((handle) => {
+      if (disposed) {
+        void handle.remove?.();
+        return;
+      }
+      listenerHandle = handle;
+    });
+
+    return () => {
+      disposed = true;
+      void listenerHandle?.remove?.();
+    };
+  }, [currentPage, navigateTo]);
 
   // Convenience booleans for view states
   const showGallery = currentPage === 'gallery';

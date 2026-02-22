@@ -161,6 +161,22 @@ describe('netlify qr helpers', () => {
     expect(bgPixel[2]).toBeGreaterThanOrEqual(240);
   });
 
+  it('returns detached GIF frame buffers for stable caching', () => {
+    const src = new Uint8ClampedArray([10, 20, 30, 255, 40, 50, 60, 255]);
+
+    const preserved = __test.prepareGifFramePixels(src, [255, 255, 255], true);
+    expect(preserved).not.toBe(src);
+    expect(Array.from(preserved)).toEqual(Array.from(src));
+    src[0] = 200;
+    expect(preserved[0]).toBe(10);
+
+    const opaque = new Uint8ClampedArray([1, 2, 3, 255, 4, 5, 6, 255]);
+    const opaquePrepared = __test.prepareGifFramePixels(opaque, [255, 255, 255], false);
+    expect(opaquePrepared).not.toBe(opaque);
+    opaque[1] = 180;
+    expect(opaquePrepared[1]).toBe(2);
+  });
+
   it('generates animation pattern frames', () => {
     const source = makeCanvas(20, 20);
     const frames = __test.generatePatternFramesServer(source, 'pulse', 5, 1, 'linear');

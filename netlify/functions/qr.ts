@@ -969,25 +969,28 @@ function prepareGifFramePixels(
   bgRgb: [number, number, number],
   preserveTransparency: boolean
 ): Uint8ClampedArray {
+  // Always copy incoming frame data so no caller can hold a mutable live ImageData view.
+  const frame = new Uint8ClampedArray(rgba);
+
   if (preserveTransparency) {
-    return rgba;
+    return frame;
   }
 
   let hasTransparency = false;
-  for (let i = 3; i < rgba.length; i += 4) {
-    if (rgba[i] !== 255) {
+  for (let i = 3; i < frame.length; i += 4) {
+    if (frame[i] !== 255) {
       hasTransparency = true;
       break;
     }
   }
   if (!hasTransparency) {
-    return rgba;
+    return frame;
   }
 
   const [bgR, bgG, bgB] = bgRgb;
-  const flattened = new Uint8ClampedArray(rgba.length);
-  for (let i = 0; i < rgba.length; i += 4) {
-    const a = rgba[i + 3];
+  const flattened = new Uint8ClampedArray(frame.length);
+  for (let i = 0; i < frame.length; i += 4) {
+    const a = frame[i + 3];
     if (a <= 0) {
       flattened[i] = bgR;
       flattened[i + 1] = bgG;
@@ -996,18 +999,18 @@ function prepareGifFramePixels(
       continue;
     }
     if (a >= 255) {
-      flattened[i] = rgba[i];
-      flattened[i + 1] = rgba[i + 1];
-      flattened[i + 2] = rgba[i + 2];
+      flattened[i] = frame[i];
+      flattened[i + 1] = frame[i + 1];
+      flattened[i + 2] = frame[i + 2];
       flattened[i + 3] = 255;
       continue;
     }
 
     const alpha = a / 255;
     const invAlpha = 1 - alpha;
-    flattened[i] = Math.round(rgba[i] * alpha + bgR * invAlpha);
-    flattened[i + 1] = Math.round(rgba[i + 1] * alpha + bgG * invAlpha);
-    flattened[i + 2] = Math.round(rgba[i + 2] * alpha + bgB * invAlpha);
+    flattened[i] = Math.round(frame[i] * alpha + bgR * invAlpha);
+    flattened[i + 1] = Math.round(frame[i + 1] * alpha + bgG * invAlpha);
+    flattened[i + 2] = Math.round(frame[i + 2] * alpha + bgB * invAlpha);
     flattened[i + 3] = 255;
   }
 
@@ -1119,8 +1122,9 @@ function encodeGif(
   const height = canvas.height;
   const ctx = canvas.getContext('2d');
   const imageData = ctx.getImageData(0, 0, width, height);
+  const rgba = new Uint8ClampedArray(imageData.data);
   const preparedData = prepareGifFramePixels(
-    imageData.data,
+    rgba,
     parseGifBackgroundColor(backgroundColor),
     preserveTransparency
   );
@@ -1178,9 +1182,10 @@ function encodeAnimatedGif(
     }
     const ctx = frames[i].getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
-    const prepared = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    const rgba = new Uint8ClampedArray(imageData.data);
+    const prepared = prepareGifFramePixels(rgba, bgRgb, preserveTransparency);
     if (allowCache) {
-      sampledFrameCache.set(i, prepared);
+      sampledFrameCache.set(i, prepared.slice());
     }
     return prepared;
   };
@@ -2391,9 +2396,10 @@ function encodeAnimatedGifWithDelays(
     }
     const ctx = frames[i].canvas.getContext('2d');
     const imageData = ctx.getImageData(0, 0, width, height);
-    const prepared = prepareGifFramePixels(imageData.data, bgRgb, preserveTransparency);
+    const rgba = new Uint8ClampedArray(imageData.data);
+    const prepared = prepareGifFramePixels(rgba, bgRgb, preserveTransparency);
     if (allowCache) {
-      sampledFrameCache.set(i, prepared);
+      sampledFrameCache.set(i, prepared.slice());
     }
     return prepared;
   };
@@ -4184,6 +4190,7 @@ export const __test = {
   createPngTextChunk,
   createPngPhysChunk,
   embedPngMetadataAndDpi,
+  prepareGifFramePixels,
   encodeGif,
   encodeAnimatedGif,
   generatePatternFramesServer,

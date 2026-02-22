@@ -199,19 +199,66 @@ export function OverlaySection() {
       }
 
       const image = await Camera.getPhoto({
-        quality: 90,
+        quality: 70,
         allowEditing: false,
-        resultType: CameraResultType.DataUrl,
+        resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
       });
 
-      if (image.dataUrl) {
-        const response = await fetch(image.dataUrl);
-        const blob = await response.blob();
-        const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        setOverlayFile(file);
-        setOverlayEnabled(true);
+      if (!image.webPath) {
+        throw new Error('No camera image path available');
       }
+
+      const response = await fetch(image.webPath);
+      if (!response.ok) {
+        throw new Error(`Camera image fetch failed: ${response.status}`);
+      }
+      let blob = await response.blob();
+
+      // Downscale high-resolution camera captures to keep Android memory use predictable.
+      if (typeof createImageBitmap === 'function') {
+        const sourceBitmap = await createImageBitmap(blob);
+        const maxEdge = 1920;
+        const sourceMaxEdge = Math.max(sourceBitmap.width, sourceBitmap.height);
+        if (sourceMaxEdge > maxEdge) {
+          const scale = maxEdge / sourceMaxEdge;
+          const targetWidth = Math.max(1, Math.round(sourceBitmap.width * scale));
+          const targetHeight = Math.max(1, Math.round(sourceBitmap.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          const ctx = canvas.getContext('2d', {
+            willReadFrequently: true,
+          } as CanvasRenderingContext2DSettings | undefined);
+          if (ctx) {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(sourceBitmap, 0, 0, targetWidth, targetHeight);
+            const resizedBlob = await new Promise<Blob>((resolve, reject) => {
+              canvas.toBlob(
+                (value) => {
+                  if (value) {
+                    resolve(value);
+                    return;
+                  }
+                  reject(new Error('Could not encode resized camera image'));
+                },
+                'image/jpeg',
+                0.88
+              );
+            });
+            blob = resizedBlob;
+          }
+        }
+        sourceBitmap.close();
+      }
+
+      const mimeType = blob.type || 'image/jpeg';
+      const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+      const file = new File([blob], `camera-${Date.now()}.${ext}`, { type: mimeType });
+      setOverlayUrl('');
+      setOverlayFile(file);
+      setOverlayEnabled(true);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (!(errorMessage.includes('cancelled') || errorMessage.includes('User cancelled'))) {
@@ -224,7 +271,7 @@ export function OverlaySection() {
     } finally {
       setCameraLoading(false);
     }
-  }, [t, setOverlayFile, setOverlayEnabled]);
+  }, [t, setOverlayEnabled, setOverlayFile, setOverlayUrl]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

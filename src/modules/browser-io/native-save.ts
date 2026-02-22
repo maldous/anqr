@@ -4,10 +4,9 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import { saveBase64ToDocuments, showNativeToast } from '../platform';
 
 const _log = createLogger('DOWNLOAD');
-
-import { saveBase64ToDocuments } from '../platform';
 
 /**
  * Save file on native platform (Android/iOS) using MediaStore API
@@ -30,12 +29,13 @@ export async function saveFileNative(filename: string, blob: Blob): Promise<bool
     // Write to Documents directory via MediaStore
     const result = await saveBase64ToDocuments(filename, base64DataUrl, mimeType, 'ANQR');
 
-    // Show a simple alert to confirm save
-    alert(`Saved to Documents/ANQR: ${filename}`);
+    await showNativeToast(`Saved to Documents/ANQR: ${filename}`, 'short');
+    _log.info('Native save complete', { filename, mimeType, hasUri: Boolean(result?.uri) });
 
     return Boolean(result);
   } catch (error) {
-    alert(`Failed to save file: ${error}`);
+    _log.error('Native save failed', { filename, error });
+    await showNativeToast('Failed to save file', 'long');
     return false;
   }
 }

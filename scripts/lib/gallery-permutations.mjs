@@ -36,6 +36,119 @@ const ARTWORK_FIXTURES = FIXTURES.filter(
 const STATIC_FIXTURES  = FIXTURES.filter(f => !f.isAnimated);
 const ANIMATED_FIXTURES = FIXTURES.filter(f => f.isAnimated);
 
+// Explicit per-scenario exclusions for known-bad outputs reported from gallery runs.
+// Match is by canonical generated filename (category__label.ext).
+export const EXCLUDED_SCENARIO_FILENAMES = new Set([
+/*
+  'artwork__art-dance-anim-easing-bounce.gif',
+  'artwork__art-dance-anim-easing-ease_in.gif',
+  'artwork__art-dance-anim-easing-ease_out.gif',
+  'artwork__art-dance-anim-interp-crossfade.gif',
+  'artwork__art-dance-anim-pulse.gif',
+  'artwork__art-dance-anim-rich-pulse.gif',
+  'artwork__art-dance-anim-rich-scanline.gif',
+  'artwork__art-dance-anim-rich-shimmer.gif',
+  'artwork__art-dance-anim-scanline.gif',
+  'artwork__art-dance-anim-seed-123.gif',
+  'artwork__art-dance-anim-shimmer.gif',
+  'artwork__art-dance-anim-style-connected.gif',
+  'artwork__art-dance-anim-style-diamond.gif',
+  'artwork__art-dance-anim-style-dots.gif',
+  'artwork__art-dance-anim-style-rounded.gif',
+  'artwork__art-dance-anim-tempDither-blue_noise.gif',
+  'artwork__art-dance-anim-tempDither-flicker_safe.gif',
+  'artwork__art-dance-anim-wave.gif',
+  'artwork__art-dance-mega-anim.gif',
+  'artwork__art-dance-stack-target-both-wave-xy-drift.gif',
+  'artwork__art-dance-stack-target-result-wave-y-modules-shimmer.gif',
+  'artwork__art-test-anim-stack-wave-shimmer.gif',
+  'artwork__art-tsunami-anim-stack-wave-shimmer.gif',
+  'nooverlay__animPattern-scanline.gif',
+  'nooverlay__filler-anim-18.gif',
+  'nooverlay__mega-animated.gif',
+  'nooverlay__visual-target-stack-3.gif',
+  'overlay__animHero-dance-pulse.gif',
+  'overlay__animHero-dance-scanline.gif',
+  'overlay__animHero-dance-shimmer-crossfade.gif',
+  'overlay__animHero-dance-shimmer.gif',
+  'overlay__animHero-dance-wave.gif',
+  'overlay__animHero-king-pulse.gif',
+  'overlay__animHero-king-scanline.gif',
+  'overlay__animHero-king-shimmer-crossfade.gif',
+  'overlay__animHero-king-shimmer.gif',
+  'overlay__animHero-king-wave.gif',
+  'overlay__animStack-dance-dither-pulse-bounce-bayer.gif',
+  'overlay__animStack-dance-dither-scanline-reverse-errordiff.gif',
+  'overlay__animStack-dance-dither-shimmer-crossfade-adaptive.gif',
+  'overlay__animStack-king-dither-pulse-bounce-bayer.gif',
+  'overlay__animStack-king-dither-scanline-reverse-errordiff.gif',
+  'overlay__animStack-king-dither-shimmer-crossfade-adaptive.gif',
+  'overlay__animStack-king-dither-wave-morph-sbn.gif',
+  'overlay__animStack-king-subpixel-drift-crossfade-cycled.gif',
+  'overlay__blendPresMode-dither-anim-king.gif',
+  'overlay__blendPresMode-dither.png',
+  'overlay__diffKernel-jarvis_judice_ninke.png',
+  'overlay__diffKernel-sierra_2.png',
+  'overlay__ditherKind-anim-error_diffusion-king.gif',
+  'overlay__ditherKind-edge_aware.png',
+  'overlay__ditherKind-ordered_void_cluster.png',
+  'overlay__ditherKind-triangular_noise.png',
+  'overlay__ditherStr-100.png',
+  'overlay__hero-dither-dance-ordered_bayer.gif',
+  'overlay__hero-dither-king-adaptive_threshold.gif',
+  'overlay__hero-dither-king-blue_noise_threshold.gif',
+  'overlay__hero-dither-king-error_diffusion.gif',
+  'overlay__hero-dither-king-ordered_bayer.gif',
+  'overlay__hero-dither-king-screened_blue_noise.gif',
+  'overlay__heroFeature-dance-noir-scanline.gif',
+  'overlay__heroFeature-king-dither-shimmer-crystal.gif',
+  'overlay__heroFeature-king-dither-wave-etched.gif',
+  'overlay__heroFeature-king-neon-wave-morph.gif',
+  'overlay__heroFeature-king-noir-scanline.gif',
+  'overlay__hero-stack-dance-dither-drift-sierra2.gif',
+  'overlay__hero-stack-dance-dither-pulse-bayer-reverse.gif',
+  'overlay__hero-stack-dance-dither-shimmer-blue-noise.gif',
+  'overlay__hero-stack-dance-subpixel-wave-morph-vivid.gif',
+  'overlay__hero-stack-king-blend-shimmer-reverse.gif',
+  'overlay__hero-stack-king-dither-drift-sierra2.gif',
+  'overlay__hero-stack-king-dither-pulse-bayer-reverse.gif',
+  'overlay__hero-stack-king-dither-shimmer-blue-noise.gif',
+  'overlay__hero-stack-king-mosaic-drift-crossfade.gif',
+  'overlay__hero-stack-king-subpixel-wave-morph-vivid.gif',
+  'overlay__mode-blue-noise-trump.png',
+  'overlay__mode-blue-noise-tsunami.png',
+  'overlay__mode-dithered-trump.png',
+  'overlay__mode-halftone-dithered-tsunami.png',
+  'overlay__ov-x-anim-dance-dithered-shimmer.gif',
+  'overlay__ov-x-anim-dance-dithered-wave.gif',
+  'overlay__ov-x-anim-dance-dither-wave-morph.gif',
+  'overlay__ov-x-anim-dance-mosaic-pulse.gif',
+  'overlay__ov-x-anim-dance-mosaic-wave.gif',
+  'overlay__ov-x-anim-dance-subpixel-shimmer.gif',
+  'overlay__ov-x-anim-dance-subpixel-wave.gif',
+  'overlay__ov-x-anim-dance-wave-pulse.gif',
+  'overlay__ov-x-anim-dance-wave-shimmer.gif',
+  'overlay__ov-x-anim-dance-wave-wave.gif',
+  'overlay__ov-x-anim-king-dithered-shimmer.gif',
+  'overlay__ov-x-anim-king-dithered-wave.gif',
+  'overlay__ov-x-anim-king-dither-wave-morph.gif',
+  'overlay__ov-x-anim-king-mosaic-pulse.gif',
+  'overlay__ov-x-anim-king-mosaic-shimmer.gif',
+  'overlay__ov-x-anim-king-mosaic-wave.gif',
+  'overlay__ov-x-anim-king-subpixel-pulse.gif',
+  'overlay__ov-x-anim-king-subpixel-shimmer.gif',
+  'overlay__ov-x-anim-king-subpixel-wave.gif',
+  'overlay__ov-x-anim-king-wave-pulse.gif',
+  'overlay__ov-x-anim-king-wave-shimmer.gif',
+  'overlay__ov-x-anim-king-wave-wave.gif',
+  'overlay__target-stack-dance-modules-scanline-plus-result-wave-x.gif',
+  'overlay__target-stack-dance-result-wave-y-plus-modules-shimmer.gif',
+  'overlay__target-stack-king-both-wave-xy-plus-drift.gif',
+  'overlay__target-stack-king-modules-scanline-plus-result-wave-x.gif',
+  'overlay__target-stack-king-result-wave-y-plus-modules-shimmer.gif',
+*/
+]);
+
 // ─── Dimension arrays ────────────────────────────────────────────────
 export const MODULE_STYLES     = ['square', 'rounded', 'dots', 'diamond', 'connected'];
 export const FINDER_STYLES     = ['square', 'rounded', 'circle'];
@@ -173,6 +286,25 @@ function isScenarioAnimated(config) {
   if (!config) return false;
   if (config.isAnimated) return true;
   return String(config.params?.format || '').toLowerCase() === 'gif';
+}
+
+function scenarioLabel(config) {
+  return String(config.id || '')
+    .replace(/^[^_]+__/, '')
+    .replace(/--\d+$/, '');
+}
+
+function canonicalScenarioFilename(config) {
+  const ext = isScenarioAnimated(config) ? 'gif' : 'png';
+  return `${config.category}__${scenarioLabel(config)}.${ext}`;
+}
+
+function isExcludedScenario(config) {
+  return EXCLUDED_SCENARIO_FILENAMES.has(canonicalScenarioFilename(config));
+}
+
+function filterExcludedScenarios(configs) {
+  return configs.filter((cfg) => !isExcludedScenario(cfg));
 }
 
 function applyMaskVariety(configs, opts = {}) {
@@ -721,7 +853,7 @@ export function generateNonOverlayScenarios() {
   }
 
   // ── Merge and dedup ─────────────────────────────────────────────────
-  let all = dedup([...layer1, ...layer2]);
+  let all = filterExcludedScenarios(dedup([...layer1, ...layer2]));
 
   // Fill to 333 with intentionally high-contrast geometry + motion combos.
   if (all.length < 333) {
@@ -788,7 +920,7 @@ export function generateNonOverlayScenarios() {
         }
       }
     }
-    all = dedup([...all, ...filler]);
+    all = filterExcludedScenarios(dedup([...all, ...filler]));
   }
 
   if (all.length < 333) {
@@ -2134,7 +2266,7 @@ export function generateOverlayScenarios() {
   }
 
   // ── Merge, dedup, and fill to 333 without clone-padding ────────────
-  let all = dedup([...layer1, ...layer2]);
+  let all = filterExcludedScenarios(dedup([...layer1, ...layer2]));
   if (all.length < 333) {
     const filler = [];
     const safeFillerModes = ['blend', 'mosaic', 'dithered', 'subpixel', 'pixelate', 'wave'];
@@ -2198,7 +2330,7 @@ export function generateOverlayScenarios() {
         }
       }
     }
-    all = dedup([...all, ...filler]);
+    all = filterExcludedScenarios(dedup([...all, ...filler]));
   }
   if (all.length < 333) {
     throw new Error(`overlay scenario generation produced ${all.length} unique configs; expected at least 333`);
@@ -2934,7 +3066,7 @@ export function generateArtworkScenarios() {
 
   const perFixtureConfigs = new Map(
     ARTWORK_FIXTURES.map((fx) => {
-      const ranked = dedup(perFixture(fx)).sort((a, b) => {
+      const ranked = filterExcludedScenarios(dedup(perFixture(fx))).sort((a, b) => {
         const scoreDelta = artworkVisualScore(b) - artworkVisualScore(a);
         if (scoreDelta !== 0) return scoreDelta;
         return a.id.localeCompare(b.id);
@@ -3064,10 +3196,5 @@ export function buildUrlParams(config) {
  * where label is the portion of id after `{category}__` and before `--{counter}`.
  */
 export function scenarioFilename(config) {
-  const ext = isScenarioAnimated(config) ? 'gif' : 'png';
-  // id format: "category__label--counter"
-  const label = config.id
-    .replace(/^[^_]+__/, '')   // strip category__
-    .replace(/--\d+$/, '');     // strip --counter
-  return `${config.category}__${label}.${ext}`;
+  return canonicalScenarioFilename(config);
 }
