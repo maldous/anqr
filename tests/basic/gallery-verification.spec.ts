@@ -4,7 +4,7 @@ import { expect, test } from '../fixtures/test-fixtures';
  * Gallery Verification Tests
  *
  * Post-deploy smoke tests that verify the gallery page renders correctly:
- * - All 11 section headings are visible
+ * - All 10 section headings are visible
  * - Gallery images load successfully (naturalWidth > 0)
  * - Share links contain expected URL parameters
  * - Web gallery links keep in-app navigation (no forced new tab)
@@ -13,7 +13,6 @@ import { expect, test } from '../fixtures/test-fixtures';
 
 const GALLERY_SECTION_TITLES = [
   'Plain QR Codes',
-  'Content Types',
   'Module & Finder Styles',
   'Colors & Themes',
   'Image Overlays',
@@ -46,17 +45,17 @@ test.describe('Gallery Verification', () => {
     await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15000 });
   });
 
-  test('gallery page loads with all 11 section headings visible', async ({ page }) => {
+  test('gallery page loads with all 10 section headings visible', async ({ page }) => {
     // All sections are expanded by default, so all h3 headings should be visible
     for (const title of GALLERY_SECTION_TITLES) {
       const heading = page.locator('h3', { hasText: title });
       await expect(heading).toBeVisible({ timeout: 10000 });
     }
 
-    // Verify we have at least 11 section headings
+    // Verify we have at least 10 section headings
     const allH3s = page.locator('h3');
     const h3Count = await allH3s.count();
-    expect(h3Count).toBeGreaterThanOrEqual(11);
+    expect(h3Count).toBeGreaterThanOrEqual(10);
   });
 
   test('gallery images load successfully', async ({ page }) => {

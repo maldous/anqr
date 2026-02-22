@@ -1,6 +1,118 @@
 # Codex Working Log
 
-Last updated: 2026-02-22 09:19:33 UTC
+Last updated: 2026-02-22 23:00:00 UTC
+
+## Latest Update (2026-02-22, Hard Artwork Version Floor/Cap Guard)
+
+- Added an explicit post-processing version-range guard to prevent artwork version regressions:
+  - `scripts/lib/gallery-permutations.mjs`
+    - new helper: `enforceVersionRange(configs, { min, max, fallback })`
+    - `generateArtworkScenarios()` now applies:
+      - `applyLogVersionSampling(...)` to drive 6/7/8 distribution
+      - then `enforceVersionRange(..., { min: 6, max: 8, fallback: 6 })`
+- Verification:
+  - `generateArtworkScenarios()` distribution remains:
+    - `{6: 272, 7: 44, 8: 17}`
+  - artwork scenarios outside `6..8`: `0`
+  - specific scenario check:
+    - `artwork__art-trump-wm-text.png` now resolves to `v=6`.
+
+## Latest Update (2026-02-22, Artwork Version Distribution Rebalance: 6..8 Log Mix)
+
+- Updated artwork permutation version policy in `scripts/lib/gallery-permutations.mjs`:
+  - Artwork scenarios now use a dedicated log-style version sampling from `v6` to `v8`.
+  - Added post-mask sampling for artwork:
+    - `baseVersion: 3` (inherited default) remapped to:
+      - `v6` weight `0.82`
+      - `v7` weight `0.13`
+      - `v8` weight `0.05`
+  - Updated fixture encoding override:
+    - `tsunami` changed from `v5` to `v6`.
+- Verified generator output:
+  - `generateArtworkScenarios()` distribution is now:
+    - `{6: 272, 7: 44, 8: 17}` (total `333`)
+  - Artwork scenarios outside `6..8`: `0`.
+
+## Latest Update (2026-02-22, Gallery Asset Hosting Policy)
+
+- Enforced hosted-gallery image loading in app/web runtime:
+  - `src/data/gallery-items.ts`
+    - removed localhost relative-path fallback in `getGalleryImagePath(...)`.
+    - gallery image URLs now always resolve to:
+      - `https://anqr.link/gallery/{id}.{png|gif}`
+- This aligns with deployment policy:
+  - gallery artifacts are published to hosted site (`public/gallery/` on deploy),
+  - gallery images are not consumed from local bundle paths at runtime.
+
+## Latest Update (2026-02-22, Version Distribution Rebalance + Gallery Duplicate Suppression)
+
+- Rebalanced permutation QR version policy for non-artwork categories:
+  - `scripts/lib/gallery-permutations.mjs`
+    - global default version changed from `v=6` to `v=3` (minimum suitable for `https://anqr.link`).
+    - non-overlay explicit encoding showcase changed to log-sampled range through `v=7`:
+      - `v3`, `v4`, `v5`, `v7` (removed `v8`/`v9` for non-overlay).
+    - overlay explicit encoding showcase changed to:
+      - `v3`, `v5`, `v7` (removed `v9`).
+    - non-overlay mega scenarios capped to `v=7` (was `v=9`).
+    - added `applyLogVersionSampling(...)` helper and applied to:
+      - `generateNonOverlayScenarios()`
+      - `generateOverlayScenarios()`
+    - resulting distributions now satisfy “mostly v3 with logarithmic tail up to v7”:
+      - non-overlay: `{3:264, 4:41, 5:20, 7:8}`
+      - overlay: `{3:279, 4:33, 5:17, 7:4}`
+      - no versions above `7` in either category.
+- Gallery duplicate quality fixes in `scripts/publish-gallery-showcase.ts`:
+  - candidate-level content hashes (`sha256`) computed from source artifacts.
+  - selection now avoids duplicate image hashes within sections and across section picks where possible.
+  - titles/descriptions now include stronger variant tokens by section.
+  - post-selection title collision handling guarantees unique titles within each section.
+  - verified post-publish per-section duplicates:
+    - hash duplicates: `0` in every section
+    - title duplicates: `0` in every section
+
+## Latest Update (2026-02-22, Artifact-Driven Gallery Publish + Shard Merge + Parity Checks)
+
+- Replaced gallery publishing flow to be artifact-driven from permutation renders (no static Puppeteer gallery capture dependency):
+  - `scripts/publish-gallery-showcase.ts`
+    - now reads `generateAllScenarios()` and local artifact outputs.
+    - merges sharded report files (`report.shard-*.json`) into:
+      - `report.merged.json`
+      - `passed.merged.txt`
+      - `failed.merged.txt`
+    - selects a curated showcase set using deterministic heuristics:
+      - 10 categories
+      - 6 columns × 5 rows
+      - 30 items per category
+      - total 300 published items
+    - outputs:
+      - `public/gallery/manifest.json`
+      - `public/gallery/showcase-manifest.json`
+      - `src/data/gallery-showcase.generated.ts`
+    - supports merge-only mode:
+      - `GALLERY_MERGE_ONLY=1 node --import tsx scripts/publish-gallery-showcase.ts`
+- Gallery data source refactor:
+  - `src/data/gallery-items.ts` is now a thin wrapper over generated data (`gallery-showcase.generated.ts`) plus URL helpers.
+  - Added generated-data placeholder file:
+    - `src/data/gallery-showcase.generated.ts`
+- `Makefile` pipeline updates:
+  - removed legacy `[7/16]` static gallery capture + screenshots from `all`.
+  - replaced old heavy validation/Tier-A copy path with:
+    - render local permutations (`gallery:local`)
+    - publish curated showcase (`gallery:publish GALLERY_PUBLISH_SOURCE=local`)
+  - updated `gallery:auto` to local-render + publish flow.
+  - added `gallery:merge` target for shard consolidation.
+- Consistency/parity test improvements:
+  - `scripts/compare-gallery-artifacts.mjs` now:
+    - supports merged/single/sharded reports per mode.
+    - validates decode + payload prefix as before.
+    - adds dimension parity checks across local/browser/remote.
+    - adds size-ratio parity checks (non-byte-identical tolerance):
+      - static threshold: `GALLERY_COMPARE_STATIC_MAX_RATIO` (default `2.0`)
+      - animated threshold: `GALLERY_COMPARE_ANIMATED_MAX_RATIO` (default `4.0`)
+- Basic gallery UI test expectations updated for 10-section layout:
+  - `tests/basic/gallery-verification.spec.ts`
+    - removed Content Types section expectation.
+    - adjusted section heading count checks from 11 to 10.
 
 ## Latest Update (2026-02-22, GIF Frame-Buffer Copy Hardening)
 
