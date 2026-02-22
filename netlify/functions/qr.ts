@@ -3557,7 +3557,9 @@ async function handler(request: Request) {
           animationTemporalDither,
           animationSeed
         );
-        const temporalStrength = isArtworkMode ? 0.01 : 0.012;
+        // Artwork mode is scan-fragile; keep temporal noise subtle to avoid
+        // frame-to-frame structural destabilization while preserving motion.
+        const temporalStrength = isArtworkMode ? 0.004 : 0.012;
         frame = applyTemporalNoiseToCanvasServer(frame, temporalOffset, temporalStrength);
       }
       return frame;
@@ -3603,12 +3605,18 @@ async function handler(request: Request) {
         for (let i = 0; i < overlayFrames.length; i++) {
           const tFrame = Date.now();
           const overlayFrame = overlayFrames[i];
-          let moduleOverlayInput = applyAnimationEffectsToCanvasServer(
-            overlayFrame.canvas,
-            moduleAnimationEffects,
-            i,
-            overlayFrames.length
-          );
+          let moduleOverlayInput = overlayFrame.canvas;
+          // In artwork mode, module-target effects should not mutate the source
+          // artwork image fed into QR-Art optimization. Keep source deterministic
+          // and apply module motion through per-frame module config instead.
+          if (!isArtworkMode) {
+            moduleOverlayInput = applyAnimationEffectsToCanvasServer(
+              overlayFrame.canvas,
+              moduleAnimationEffects,
+              i,
+              overlayFrames.length
+            );
+          }
 
           const rawModuleInput = moduleOverlayInput;
           if (
@@ -3705,7 +3713,9 @@ async function handler(request: Request) {
           animatedOverlayFrames.push({
             canvas: scaledFrame,
             delay: overlayFrame.delay,
-            disposalType: overlayFrame.disposalType,
+            // Generated frames are full-frame renders; normalize disposal to the
+            // requested output behavior to avoid inherited source-frame artifacts.
+            disposalType: gifDisposalCode,
           });
         }
         qrFnLog('[ANIMATION] all frames rendered', {
@@ -3738,7 +3748,7 @@ async function handler(request: Request) {
           let previousRenderedOutput: Canvas | null = null;
           for (let i = 0; i < totalAnimFrames; i++) {
             let moduleOverlayInput = overlayCanvas;
-            if (moduleOverlayInput && moduleAnimationEffects.length > 0) {
+            if (moduleOverlayInput && moduleAnimationEffects.length > 0 && !isArtworkMode) {
               moduleOverlayInput = applyAnimationEffectsToCanvasServer(
                 moduleOverlayInput,
                 moduleAnimationEffects,

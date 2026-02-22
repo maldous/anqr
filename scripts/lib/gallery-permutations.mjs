@@ -100,12 +100,21 @@ function uid(category, label) {
   return `${category}__${label}--${++_idCounter}`;
 }
 
+function sanitizeScenarioParams(params) {
+  const out = {};
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value === undefined) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
 function makeConfig(category, label, extraParams, opts = {}) {
   const fixtureId  = opts.fixtureId  ?? null;
   const isAnimated = opts.isAnimated  ?? false;
   const format     = isAnimated ? 'gif' : 'png';
   const defaultEc  = category === 'artwork' ? 'L' : 'H';
-  const params     = { ...GLOBALS, ec: defaultEc, format, ...extraParams };
+  const params     = sanitizeScenarioParams({ ...GLOBALS, ec: defaultEc, format, ...extraParams });
   if (!params.data) params.data = DEFAULT_PAYLOAD.data;
   return {
     id:        uid(category, label),
@@ -119,8 +128,8 @@ function makeConfig(category, label, extraParams, opts = {}) {
 
 /** Generate one config per value — single-axis sweep. */
 function sweep(category, dimension, values, paramBuilder, opts = {}) {
-  return values.map(v => {
-    const extra = typeof paramBuilder === 'function' ? paramBuilder(v) : { [dimension]: v };
+  return values.map((v, i) => {
+    const extra = typeof paramBuilder === 'function' ? paramBuilder(v, i) : { [dimension]: v };
     const label = `${dimension}-${v}`;
     return makeConfig(category, label, extra, opts);
   });
@@ -141,33 +150,73 @@ function cross(category, label, aVals, bVals, paramBuilder, opts = {}) {
 function dedup(configs) {
   const seen = new Set();
   return configs.filter(c => {
-    const key = JSON.stringify(c.params);
+    const key = stableStringify(c.params);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 }
 
-/** Trim array to exactly `n` items (remove from end) or pad by cloning with suffix. */
-function trimOrPad(configs, n, category) {
-  if (configs.length > n) return configs.slice(0, n);
-  const originalLen = configs.length || 1;
-  while (configs.length < n) {
-    const src = configs[configs.length % originalLen];
-    const clone = { ...src, id: uid(category, `pad-${configs.length}`), params: { ...src.params } };
-    configs.push(clone);
-  }
-  return configs;
-}
-
 /** Round-robin payload assignment for non-artwork categories. */
 function assignPayloads(configs) {
-  configs.forEach((c) => {
-    // Force a single payload across all scenarios for strict parity comparisons.
-    c.payloadId = DEFAULT_PAYLOAD.id;
-    c.params.data = DEFAULT_PAYLOAD.data;
-  });
-  return configs;
+  return configs.map((c) => ({
+    ...c,
+    payloadId: DEFAULT_PAYLOAD.id,
+    params: {
+      ...c.params,
+      data: DEFAULT_PAYLOAD.data,
+    },
+  }));
+}
+
+function isScenarioAnimated(config) {
+  if (!config) return false;
+  if (config.isAnimated) return true;
+  return String(config.params?.format || '').toLowerCase() === 'gif';
+}
+
+function applyMaskVariety(configs, opts = {}) {
+  const out = configs.map((cfg) => ({
+    ...cfg,
+    params: { ...cfg.params },
+  }));
+  const masks = [0, 1, 2, 3, 4, 5, 6, 7];
+  const animatedTarget = Math.max(0, Number.parseInt(String(opts.animated ?? 8), 10) || 0);
+  const staticTarget = Math.max(0, Number.parseInt(String(opts.static ?? 8), 10) || 0);
+
+  let animatedAssigned = 0;
+  for (const cfg of out) {
+    if (animatedAssigned >= animatedTarget) break;
+    if (!isScenarioAnimated(cfg)) continue;
+    if (cfg.params.mask !== undefined && cfg.params.mask !== null && cfg.params.mask !== '') continue;
+    cfg.params.mask = masks[animatedAssigned % masks.length];
+    animatedAssigned++;
+  }
+
+  let staticAssigned = 0;
+  for (const cfg of out) {
+    if (staticAssigned >= staticTarget) break;
+    if (isScenarioAnimated(cfg)) continue;
+    if (cfg.params.mask !== undefined && cfg.params.mask !== null && cfg.params.mask !== '') continue;
+    cfg.params.mask = masks[staticAssigned % masks.length];
+    staticAssigned++;
+  }
+
+  return out;
+}
+
+function stableStringify(value) {
+  if (value === null || value === undefined) return String(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(',')}]`;
+  }
+  if (typeof value === 'object') {
+    const keys = Object.keys(value)
+      .filter((k) => value[k] !== undefined)
+      .sort();
+    return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
 }
 
 // ─── Pick helper: cycle through an array deterministically ───────────
@@ -260,25 +309,7 @@ export function generateNonOverlayScenarios() {
     { isAnimated: true },
   ));
 
-  // 22. Easing sweep (4) — GIF with structure/gradient differences
-  layer1.push(...sweep(
-    CAT,
-    'easing',
-    EASINGS.slice(1),
-    (v, i) => ({
-      animPattern: 'pulse',
-      easing: v,
-      style: pick(['rounded', 'dots', 'diamond', 'connected'], i + 2),
-      finder: pick(['rounded', 'circle'], i + 3),
-      grad: pick(GRADIENT_TYPES, i),
-      gradStops: pick(GRADIENT_PRESETS, i + 1),
-      frame: pick(FRAME_STYLES, i + 4),
-      format: 'gif',
-    }),
-    { isAnimated: true },
-  ));
-
-  // 23. Interpolation: crossfade, morph (2) — GIF
+  // 22. Interpolation: crossfade, morph (2) — GIF
   layer1.push(...sweep(
     CAT,
     'interp',
@@ -295,7 +326,7 @@ export function generateNonOverlayScenarios() {
     { isAnimated: true },
   ));
 
-  // 24. TempDither: blue_noise, flicker_safe (2) — GIF
+  // 23. TempDither: blue_noise, flicker_safe (2) — GIF
   layer1.push(...sweep(
     CAT,
     'tempDither',
@@ -313,18 +344,7 @@ export function generateNonOverlayScenarios() {
     { isAnimated: true },
   ));
 
-  // 25. Bounce: 1 (1) — GIF
-  layer1.push(makeConfig(CAT, 'bounce', {
-    animPattern: 'pulse',
-    bounce: 1,
-    style: 'diamond',
-    finder: 'rounded',
-    grad: 'conic',
-    gradStops: GRADIENT_PRESETS[3],
-    format: 'gif',
-  }, { isAnimated: true }));
-
-  // 26. Reverse: 1 (1) — GIF
+  // 24. Reverse: 1 (1) — GIF
   layer1.push(makeConfig(CAT, 'reverse', {
     animPattern: 'wave',
     reverse: 1,
@@ -336,7 +356,7 @@ export function generateNonOverlayScenarios() {
     format: 'gif',
   }, { isAnimated: true }));
 
-  // 27. ColorCycle: 1 (1) — GIF
+  // 25. ColorCycle: 1 (1) — GIF
   layer1.push(makeConfig(CAT, 'colorCycle', {
     animPattern: 'shimmer',
     colorCycle: 1,
@@ -347,7 +367,7 @@ export function generateNonOverlayScenarios() {
     format: 'gif',
   }, { isAnimated: true }));
 
-  // 28. AnimSeed: 42, 123, 999 (3)
+  // 26. AnimSeed: 42, 123, 999 (3)
   layer1.push(...sweep(
     CAT,
     'animSeed',
@@ -611,12 +631,6 @@ export function generateNonOverlayScenarios() {
     layer2.push(...pool.slice(0, 10));
   }
 
-  // AnimPattern × Easing (5×4 = 20)
-  layer2.push(...cross(CAT, 'anim-x-ease',
-    ANIM_PATTERNS, EASINGS.slice(1),
-    (a, e) => ({ animPattern: a, easing: e, format: 'gif' }),
-    { isAnimated: true }));
-
   // AnimPattern × Style (5×3 = 15, take 10)
   {
     const pool = cross(CAT, 'anim-x-style',
@@ -629,14 +643,14 @@ export function generateNonOverlayScenarios() {
   // AnimPattern × flag showcase (curated scan-safe subset)
   {
     const flagShowcase = [
-      { ap: 'pulse', fl: { bounce: 1 } },
       { ap: 'pulse', fl: { reverse: 1 } },
-      { ap: 'wave', fl: { bounce: 1 } },
+      { ap: 'pulse', fl: { colorCycle: 1 } },
+      { ap: 'wave', fl: { reverse: 1 } },
       { ap: 'wave', fl: { colorCycle: 1 } },
       { ap: 'scanline', fl: { reverse: 1 } },
       { ap: 'scanline', fl: { colorCycle: 1 } },
       { ap: 'shimmer', fl: { colorCycle: 1 } },
-      { ap: 'drift', fl: { bounce: 1 } },
+      { ap: 'drift', fl: { animSeed: 123 } },
     ];
     for (let i = 0; i < flagShowcase.length; i++) {
       const { ap, fl } = flagShowcase[i];
@@ -663,10 +677,10 @@ export function generateNonOverlayScenarios() {
     layer2.push(...pool.slice(0, 10));
   }
 
-  // Watermark × Style (5×3 = 15, take 8)
+  // Watermark text × style (4×1 = 4)
   {
     const pool = cross(CAT, 'wm-x-style',
-      MODULE_STYLES.slice(1), ['text', 'logo'].slice(0, 1),
+      MODULE_STYLES.slice(1), ['text'],
       (s, k) => ({ style: s, wmEn: 1, wmKind: 'text', wmText: 'ANQR' }));
     layer2.push(...pool.slice(0, 4));
   }
@@ -706,28 +720,8 @@ export function generateNonOverlayScenarios() {
     layer2.push(makeConfig(CAT, `power-${i}`, powerCombos[i]));
   }
 
-  // ── Merge and remove low-visual/no-op families ─────────────────────
+  // ── Merge and dedup ─────────────────────────────────────────────────
   let all = dedup([...layer1, ...layer2]);
-
-  const lowImpactLabelPatterns = [
-    /^payload-/,
-    /^enc-/,
-    /^ec-/,
-    /^autoEcc$/,
-    /^autoVer$/,
-    /^qzEnforce$/,
-    /^cGuard$/,
-    /^minContrast-/,
-    /^snap-/,
-    /^gifQuant-/,
-    /^gifDith-/,
-    /^gifColors-/,
-    /^gifTrans$/,
-  ];
-  all = all.filter((cfg) => {
-    const label = cfg.id.replace(/^[^_]+__/, '').replace(/--\d+$/, '');
-    return !lowImpactLabelPatterns.some((re) => re.test(label));
-  });
 
   // Fill to 333 with intentionally high-contrast geometry + motion combos.
   if (all.length < 333) {
@@ -801,7 +795,7 @@ export function generateNonOverlayScenarios() {
     throw new Error(`nooverlay scenario generation produced ${all.length} unique configs; expected at least 333`);
   }
 
-  return assignPayloads(all.slice(0, 333));
+  return applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 12, static: 20 });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -836,9 +830,6 @@ export function generateOverlayScenarios() {
     'brightness:trump',
     'duotone:test',
     'duotone:trump',
-    'dithered:trump',
-    'blue-noise:tsunami',
-    'blue-noise:trump',
     'extreme:logo',
   ]);
   const BLOCKED_ANIM_MODE_FIXTURE = new Set([
@@ -1020,30 +1011,30 @@ export function generateOverlayScenarios() {
     {
       mode: 'dithered',
       img: STATIC_FIXTURES[2].publicPath,
+      ...overlayModeBase('dithered'),
       keepFinders: 0,
-      keepTiming: 1,
-      keepAlign: 1,
-      protectFmt: 1,
-      protectVer: 1,
+      keepTiming: 0,
+      keepAlign: 0,
+      protectFmt: 0,
+      protectVer: 0,
       finderDither: 82,
       blendPres: 1,
       blendPresMode: 'overlay',
-      ...overlayModeBase('dithered'),
     },
     { fixtureId: STATIC_FIXTURES[2].id }));
   layer1.push(makeConfig(CAT, 'blendPresMode-dither',
     {
       mode: 'dithered',
       img: STATIC_FIXTURES[3].publicPath,
+      ...overlayModeBase('dithered'),
       keepFinders: 0,
-      keepTiming: 1,
-      keepAlign: 1,
-      protectFmt: 1,
-      protectVer: 1,
+      keepTiming: 0,
+      keepAlign: 0,
+      protectFmt: 0,
+      protectVer: 0,
       finderDither: 82,
       blendPres: 1,
       blendPresMode: 'dither',
-      ...overlayModeBase('dithered'),
     },
     { fixtureId: STATIC_FIXTURES[3].id }));
   layer1.push(makeConfig(CAT, 'blendPresMode-overlay-anim-dance',
@@ -1051,11 +1042,12 @@ export function generateOverlayScenarios() {
       mode: 'dithered',
       img: '/dance.gif',
       format: 'gif',
+      ...overlayModeBase('dithered'),
       keepFinders: 0,
-      keepTiming: 1,
-      keepAlign: 1,
-      protectFmt: 1,
-      protectVer: 1,
+      keepTiming: 0,
+      keepAlign: 0,
+      protectFmt: 0,
+      protectVer: 0,
       finderDither: 84,
       blendPres: 1,
       blendPresMode: 'overlay',
@@ -1064,7 +1056,6 @@ export function generateOverlayScenarios() {
       easing: 'ease_in_out',
       tempDither: 'flicker_safe',
       colorCycle: 1,
-      ...overlayModeBase('dithered'),
     },
     { fixtureId: 'dance', isAnimated: true }));
   layer1.push(makeConfig(CAT, 'blendPresMode-dither-anim-king',
@@ -1072,11 +1063,12 @@ export function generateOverlayScenarios() {
       mode: 'dithered',
       img: '/king.gif',
       format: 'gif',
+      ...overlayModeBase('dithered'),
       keepFinders: 0,
-      keepTiming: 1,
-      keepAlign: 1,
-      protectFmt: 1,
-      protectVer: 1,
+      keepTiming: 0,
+      keepAlign: 0,
+      protectFmt: 0,
+      protectVer: 0,
       finderDither: 84,
       blendPres: 1,
       blendPresMode: 'dither',
@@ -1085,7 +1077,6 @@ export function generateOverlayScenarios() {
       easing: 'ease_out',
       tempDither: 'flicker_safe',
       colorCycle: 1,
-      ...overlayModeBase('dithered'),
     },
     { fixtureId: 'king', isAnimated: true }));
 
@@ -2144,16 +2135,6 @@ export function generateOverlayScenarios() {
 
   // ── Merge, dedup, and fill to 333 without clone-padding ────────────
   let all = dedup([...layer1, ...layer2]);
-  // Animated + dithered overlay combinations are currently unstable for scan fidelity
-  // (frequent near-empty frames / decode failures). Keep dithered coverage in static
-  // overlay scenarios, and keep animated overlays on non-dithered modes.
-  all = all.filter((cfg) => {
-    if (!cfg.isAnimated) return true;
-    const mode = String(cfg.params?.mode || '').toLowerCase();
-    if (mode === 'dithered') return false;
-    if (cfg.params?.ditherKind) return false;
-    return true;
-  });
   if (all.length < 333) {
     const filler = [];
     const safeFillerModes = ['blend', 'mosaic', 'dithered', 'subpixel', 'pixelate', 'wave'];
@@ -2219,8 +2200,10 @@ export function generateOverlayScenarios() {
     }
     all = dedup([...all, ...filler]);
   }
-  all = all.length >= 333 ? all.slice(0, 333) : trimOrPad(all, 333, CAT);
-  return assignPayloads(all);
+  if (all.length < 333) {
+    throw new Error(`overlay scenario generation produced ${all.length} unique configs; expected at least 333`);
+  }
+  return applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 14, static: 18 });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -2257,6 +2240,7 @@ export function generateArtworkScenarios() {
     if (params.wmEn) score += 1;
 
     if (params.animPattern) score += 8;
+    if (isScenarioAnimated(cfg)) score += 8;
     if (params.easing && params.easing !== 'linear') score += 2;
     if (params.interp) score += 5;
     if (params.tempDither) score += 5;
@@ -2600,6 +2584,187 @@ export function generateArtworkScenarios() {
         { ...base, style: 'connected', finder: 'rounded', grad: 'radial', gradStops: GRADIENT_PRESETS[2] }, opts));
       configs.push(makeConfig(CAT, `art-${fx.id}-combo5`,
         { ...base, style: 'rounded', finder: 'rounded', frame: 'sticker', fg: 'c41e3a', bg: 'fff5e6' }, opts));
+      // Convert static-fixture artwork into animated showcases as well so
+      // artwork coverage is not dominated by static-only outputs.
+      const animOpts = { fixtureId: fx.id, isAnimated: true };
+      const staticFixtureAnimShowcase = [
+        {
+          label: 'anim-wave',
+          params: {
+            animPattern: 'wave',
+            animTarget: 'result',
+            animWaveAxis: 'x',
+            interp: 'morph',
+            tempDither: 'flicker_safe',
+            style: 'rounded',
+            finder: 'rounded',
+            grad: 'linear',
+            gradStops: GRADIENT_PRESETS[1],
+          },
+        },
+        {
+          label: 'anim-shimmer',
+          params: {
+            animPattern: 'shimmer',
+            animTarget: 'result',
+            interp: 'crossfade',
+            tempDither: 'blue_noise',
+            colorCycle: 1,
+            style: 'dots',
+            finder: 'circle',
+            grad: 'radial',
+            gradStops: GRADIENT_PRESETS[3],
+          },
+        },
+        {
+          label: 'anim-scanline',
+          params: {
+            animPattern: 'scanline',
+            animTarget: 'result',
+            interp: 'morph',
+            reverse: 1,
+            style: 'connected',
+            finder: 'rounded',
+            grad: 'conic',
+            gradStops: GRADIENT_PRESETS[2],
+          },
+        },
+        {
+          label: 'anim-drift',
+          params: {
+            animPattern: 'drift',
+            animTarget: 'result',
+            interp: 'crossfade',
+            colorCycle: 1,
+            animSeed: 4242,
+            style: 'diamond',
+            finder: 'circle',
+            grad: 'linear',
+            gradStops: GRADIENT_PRESETS[4],
+          },
+        },
+        {
+          label: 'anim-wave-y',
+          params: {
+            animPattern: 'wave',
+            animTarget: 'result',
+            animWaveAxis: 'y',
+            interp: 'crossfade',
+            tempDither: 'flicker_safe',
+            style: 'connected',
+            finder: 'circle',
+            grad: 'radial',
+            gradStops: GRADIENT_PRESETS[0],
+          },
+        },
+        {
+          label: 'anim-wave-xy',
+          params: {
+            animPattern: 'wave',
+            animTarget: 'result',
+            animWaveAxis: 'xy',
+            interp: 'morph',
+            style: 'diamond',
+            finder: 'rounded',
+            grad: 'conic',
+            gradStops: GRADIENT_PRESETS[2],
+          },
+        },
+        {
+          label: 'anim-shimmer-cycle',
+          params: {
+            animPattern: 'shimmer',
+            animTarget: 'result',
+            tempDither: 'flicker_safe',
+            colorCycle: 1,
+            style: 'rounded',
+            finder: 'circle',
+            grad: 'linear',
+            gradStops: GRADIENT_PRESETS[4],
+          },
+        },
+        {
+          label: 'anim-drift-seedb',
+          params: {
+            animPattern: 'drift',
+            animTarget: 'result',
+            interp: 'morph',
+            animSeed: 907,
+            style: 'dots',
+            finder: 'rounded',
+            grad: 'radial',
+            gradStops: GRADIENT_PRESETS[1],
+          },
+        },
+        {
+          label: 'anim-stack-wave-shimmer',
+          params: {
+            animPattern: 'wave',
+            animTarget: 'result',
+            animPattern2: 'shimmer',
+            animTarget2: 'result',
+            animWaveAxis: 'x',
+            interp: 'morph',
+            tempDither: 'flicker_safe',
+            colorCycle: 1,
+            style: 'connected',
+            finder: 'rounded',
+            grad: 'conic',
+            gradStops: GRADIENT_PRESETS[3],
+          },
+        },
+        {
+          label: 'anim-stack-wave-drift',
+          params: {
+            animPattern: 'wave',
+            animTarget: 'result',
+            animPattern2: 'drift',
+            animTarget2: 'result',
+            animWaveAxis: 'y',
+            interp: 'crossfade',
+            tempDither: 'blue_noise',
+            animSeed: 1234,
+            style: 'diamond',
+            finder: 'circle',
+            grad: 'linear',
+            gradStops: GRADIENT_PRESETS[0],
+          },
+        },
+        {
+          label: 'anim-temp-blue-noise',
+          params: {
+            animPattern: 'scanline',
+            animTarget: 'result',
+            tempDither: 'blue_noise',
+            reverse: 1,
+            style: 'rounded',
+            finder: 'rounded',
+            grad: 'radial',
+            gradStops: GRADIENT_PRESETS[2],
+          },
+        },
+        {
+          label: 'anim-temp-flicker-safe',
+          params: {
+            animPattern: 'pulse',
+            animTarget: 'result',
+            tempDither: 'flicker_safe',
+            colorCycle: 1,
+            style: 'dots',
+            finder: 'circle',
+            grad: 'linear',
+            gradStops: GRADIENT_PRESETS[3],
+          },
+        },
+      ];
+      for (const combo of staticFixtureAnimShowcase) {
+        configs.push(makeConfig(
+          CAT,
+          `art-${fx.id}-${combo.label}`,
+          { ...base, ...combo.params, format: 'gif' },
+          animOpts
+        ));
+      }
       // total 55
     }
 
@@ -2780,15 +2945,17 @@ export function generateArtworkScenarios() {
 
   // Rebalance toward trump/dance while excluding logo/king artwork.
   const targetByFixture = {
-    trump: 84,
-    dance: 100,
-    test: 75,
-    tsunami: 74,
+    trump: 68,
+    dance: 129,
+    test: 68,
+    tsunami: 68,
   };
   const fixtureOrder = ['trump', 'dance', 'test', 'tsunami'];
   const mustIncludeByFixture = {
-    trump: ['art-trump-mega'],
+    trump: ['art-trump-mega', 'art-trump-anim-'],
     dance: ['art-dance-mega-anim', 'art-dance-stack-'],
+    test: ['art-test-anim-'],
+    tsunami: ['art-tsunami-anim-'],
   };
   const selected = [];
   for (const fixtureId of fixtureOrder) {
@@ -2820,15 +2987,18 @@ export function generateArtworkScenarios() {
     selected.push(...remainder.slice(0, 333 - selected.length));
   }
 
-  const all = dedup(selected).slice(0, 333);
+  const all = dedup(selected)
+    .slice(0, 333)
+    .map((c) => ({
+      ...c,
+      payloadId: DEFAULT_PAYLOAD.id,
+      params: {
+        ...c.params,
+        data: DEFAULT_PAYLOAD.data,
+      },
+    }));
 
-  // Ensure all artwork configs have URL payload and artwork defaults
-  for (const c of all) {
-    c.payloadId   = 'url';
-    c.params.data = DEFAULT_PAYLOAD.data;
-  }
-
-  return all;
+  return applyMaskVariety(all, { animated: 20, static: 12 });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -2840,15 +3010,23 @@ export function generateAllScenarios() {
   const ov   = generateOverlayScenarios();
   const art  = generateArtworkScenarios();
 
-  // Re-stamp unique IDs across the combined set to avoid counter collisions
-  _idCounter = 0;
   const all = [...noov, ...ov, ...art];
-  for (const c of all) {
-    c.id = uid(c.category, c.id.replace(/^[^_]+__/, '').replace(/--\d+$/, ''));
+
+  // IDs are category-qualified and already unique by construction.
+  // Re-stamp only if a collision is detected, and preserve provenance.
+  const idSet = new Set(all.map((c) => c.id));
+  let output = all;
+  if (idSet.size !== all.length) {
+    _idCounter = 0;
+    output = all.map((c) => ({
+      ...c,
+      sourceId: c.id,
+      id: uid(c.category, c.id.replace(/^[^_]+__/, '').replace(/--\d+$/, '')),
+    }));
   }
 
   // Ensure exactly 1000 (333+333+333 = 999, so add 1 bonus scenario)
-  if (all.length < 1000) {
+  if (output.length < 1000) {
     const bonus = makeConfig('nooverlay', 'bonus-full-featured', {
       style: 'rounded', finder: 'rounded', grad: 'linear',
       gradStops: '6366f1,0,ec4899,0.5,f59e0b,1',
@@ -2856,10 +3034,10 @@ export function generateAllScenarios() {
       fg: '1a365d', bg: 'faf5ff',
     });
     bonus.payloadId = 'url';
-    all.push(bonus);
+    output = [...output, bonus];
   }
 
-  return all.slice(0, 1000);
+  return output.slice(0, 1000);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -2886,7 +3064,7 @@ export function buildUrlParams(config) {
  * where label is the portion of id after `{category}__` and before `--{counter}`.
  */
 export function scenarioFilename(config) {
-  const ext = config.isAnimated ? 'gif' : 'png';
+  const ext = isScenarioAnimated(config) ? 'gif' : 'png';
   // id format: "category__label--counter"
   const label = config.id
     .replace(/^[^_]+__/, '')   // strip category__
