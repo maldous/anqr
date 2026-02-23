@@ -1,6 +1,6 @@
 import type { QRGeneratorConfig } from '@/modules/qr-generator';
 
-export type CanonicalFixtureId = 'tsunami' | 'king' | 'logo' | 'test' | 'trump' | 'dance';
+export type CanonicalFixtureId = 'tsunami' | 'king' | 'logo' | 'test' | 'santa' | 'dance';
 export type ScenarioFeatureGroup =
   | 'overlay'
   | 'preservation'
@@ -37,7 +37,7 @@ export const CANONICAL_FIXTURES: readonly CanonicalFixture[] = [
   { id: 'king', filePath: 'public/king.gif', publicPath: '/king.gif', isAnimated: true },
   { id: 'logo', filePath: 'public/logo.png', publicPath: '/logo.png', isAnimated: false },
   { id: 'test', filePath: 'public/test.png', publicPath: '/test.png', isAnimated: false },
-  { id: 'trump', filePath: 'public/trump.png', publicPath: '/trump.png', isAnimated: false },
+  { id: 'santa', filePath: 'public/santa.png', publicPath: '/santa.png', isAnimated: false },
   { id: 'dance', filePath: 'public/dance.gif', publicPath: '/dance.gif', isAnimated: true },
 ];
 

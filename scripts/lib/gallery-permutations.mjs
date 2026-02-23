@@ -37,7 +37,7 @@ export const FIXTURES = [
   { id: 'king', publicPath: '/king.gif', isAnimated: true },
   { id: 'logo', publicPath: '/logo.png', isAnimated: false },
   { id: 'test', publicPath: '/test.png', isAnimated: false },
-  { id: 'trump', publicPath: '/trump.png', isAnimated: false },
+  { id: 'santa', publicPath: '/santa.png', isAnimated: false },
   { id: 'dance', publicPath: '/dance.gif', isAnimated: true },
 ];
 const ARTWORK_FIXTURES = FIXTURES.filter((f) => f.id !== 'king' && f.id !== 'logo');
@@ -137,11 +137,11 @@ export const EXCLUDED_SCENARIO_FILENAMES = new Set([
   'overlay__hero-stack-dance-subpixel-wave-morph-vivid.gif',
   'overlay__hero-stack-king-dither-shimmer-blue-noise.gif',
   'overlay__hero-stack-king-subpixel-wave-morph-vivid.gif',
-  'overlay__mega-static-trump.png',
-  'overlay__mode-blue-noise-trump.png',
+  'overlay__mega-static-santa.png',
+  'overlay__mode-blue-noise-santa.png',
   'overlay__mode-blue-noise-tsunami.png',
   'overlay__mode-dithered-test.png',
-  'overlay__mode-dithered-trump.png',
+  'overlay__mode-dithered-santa.png',
   'overlay__ov-x-anim-king-dithered-shimmer.gif',
   'overlay__ov-x-anim-king-dithered-wave.gif',
   'overlay__ov-x-anim-king-dither-wave-morph.gif',
@@ -1455,15 +1455,15 @@ export function generateOverlayScenarios() {
     extreme: 45,
   };
   const BLOCKED_STATIC_MODE_FIXTURE = new Set([
-    'halftone-dithered:trump',
+    'halftone-dithered:santa',
     'halftone-dithered:test',
     'gapfill:test',
-    'gapfill:trump',
+    'gapfill:santa',
     'brightness:tsunami',
     'brightness:test',
-    'brightness:trump',
+    'brightness:santa',
     'duotone:test',
-    'duotone:trump',
+    'duotone:santa',
     'extreme:logo',
   ]);
   const BLOCKED_ANIM_MODE_FIXTURE = new Set(['brightness:dance', 'halftone:dance']);
@@ -2431,10 +2431,10 @@ export function generateOverlayScenarios() {
   layer1.push(
     makeConfig(
       CAT,
-      'mega-static-trump',
+      'mega-static-santa',
       {
         mode: 'dithered',
-        img: '/trump.png',
+        img: '/santa.png',
         style: 'dots',
         finder: 'circle',
         grad: 'conic',
@@ -2459,7 +2459,7 @@ export function generateOverlayScenarios() {
         wmOpacity: 55,
         ...overlayModeBase('dithered'),
       },
-      { fixtureId: 'trump' }
+      { fixtureId: 'santa' }
     )
   );
   layer1.push(
@@ -4048,7 +4048,7 @@ export function generateArtworkScenarios() {
 
     // Keep artwork ECC low while adding limited encoding variety.
     const artworkVersionByFixture = {
-      trump: { v: 8, ec: 'M' },
+      santa: { v: 8, ec: 'M' },
       dance: { v: 7, ec: 'M' },
       test: { v: 6, ec: 'L' },
       tsunami: { v: 6, ec: 'L' },
@@ -4069,7 +4069,7 @@ export function generateArtworkScenarios() {
       )
     );
 
-    if (fx.id === 'trump') {
+    if (fx.id === 'santa') {
       configs.push(
         makeConfig(
           CAT,
@@ -4275,16 +4275,16 @@ export function generateArtworkScenarios() {
     })
   );
 
-  // Rebalance toward trump/dance while excluding logo/king artwork.
+  // Rebalance toward santa/dance while excluding logo/king artwork.
   const targetByFixture = {
-    trump: 68,
+    santa: 68,
     dance: 129,
     test: 68,
     tsunami: 68,
   };
-  const fixtureOrder = ['trump', 'dance', 'test', 'tsunami'];
+  const fixtureOrder = ['santa', 'dance', 'test', 'tsunami'];
   const mustIncludeByFixture = {
-    trump: ['art-trump-mega', 'art-trump-anim-'],
+    santa: ['art-santa-mega', 'art-santa-anim-'],
     dance: ['art-dance-mega-anim', 'art-dance-stack-'],
     test: ['art-test-anim-'],
     tsunami: ['art-tsunami-anim-'],

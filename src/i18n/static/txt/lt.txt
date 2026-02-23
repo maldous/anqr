@@ -308,7 +308,7 @@
 308	"PIX (Brazilija): Brazilijos momentinis mokėjimas naudojant PIX raktą."
 309	"Kripto: Bitcoin, Ethereum, Litecoin mokėjimo adresai su pasirenkama suma."
 310	"Rinkodaros kampanijos nuoroda: URL su visu UTM parametrų (rinkodaros žymų) stebėjimu."
-311	"Trumpa nuoroda: skirta naudoti su URL sutrumpintuvais, skirtais dinaminiams / sekamiems QR kodams."
+311	"Santaa nuoroda: skirta naudoti su URL sutrumpintuvais, skirtais dinaminiams / sekamiems QR kodams."
 312	"GS1 skaitmeninė nuoroda: produkto identifikavimas su GTIN, serija, partija, galiojimo laikas."
 313	"Programos gilioji nuoroda: „iOS“ / „Android“ programų giliosios nuorodos su tinkintomis schemomis."
 314	"Pasirinktinis formatas: neapdoroti duomenys be formatavimo ar patvirtinimo."

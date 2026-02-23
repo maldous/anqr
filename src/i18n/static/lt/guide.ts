@@ -607,7 +607,7 @@ export const guide: PageDefinition = {
         'PIX (Brazilija): Brazilijos momentinis mokėjimas naudojant PIX raktą.',
         'Kripto: Bitcoin, Ethereum, Litecoin mokėjimo adresai su pasirenkama suma.',
         'Rinkodaros kampanijos nuoroda: URL su visu UTM parametrų (rinkodaros žymų) stebėjimu.',
-        'Trumpa nuoroda: skirta naudoti su URL sutrumpintuvais, skirtais dinaminiams / sekamiems QR kodams.',
+        'Santaa nuoroda: skirta naudoti su URL sutrumpintuvais, skirtais dinaminiams / sekamiems QR kodams.',
         'GS1 skaitmeninė nuoroda: produkto identifikavimas su GTIN, serija, partija, galiojimo laikas.',
         'Programos gilioji nuoroda: „iOS" / „Android" programų giliosios nuorodos su tinkintomis schemomis.',
         'Pasirinktinis formatas: neapdoroti duomenys be formatavimo ar patvirtinimo.',

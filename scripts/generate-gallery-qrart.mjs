@@ -50,7 +50,7 @@ const FIXTURES = [
   { id: 'king', publicPath: '/king.gif', isAnimated: true },
   { id: 'logo', publicPath: '/logo.png', isAnimated: false },
   { id: 'test', publicPath: '/test.png', isAnimated: false },
-  { id: 'trump', publicPath: '/trump.png', isAnimated: false },
+  { id: 'santa', publicPath: '/santa.png', isAnimated: false },
   { id: 'dance', publicPath: '/dance.gif', isAnimated: true },
 ];
 

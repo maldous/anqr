@@ -60,7 +60,7 @@ on the scenario list after generation).
 | tsunami | public/tsunami.jpg | Static   |
 | logo    | public/logo.png    | Static   |
 | test    | public/test.png    | Static   |
-| trump   | public/trump.png   | Static   |
+| santa   | public/santa.png   | Static   |
 | king    | public/king.gif    | Animated |
 | dance   | public/dance.gif   | Animated |
 
@@ -166,7 +166,7 @@ Base coverage: each overlay mode × representative fixtures.
 | Dimension                | Param             | Values                                 | Per-fixture | Count    |
 | ------------------------ | ----------------- | -------------------------------------- | ----------- | -------- |
 | OverlayMode × 3 fixtures | `mode`            | 17 modes × 3 (tsunami, logo, king)     | —           | **51**   |
-| OverlayMode × 3 fixtures | `mode`            | 17 modes × 3 (test, trump, dance)      | —           | **51**   |
+| OverlayMode × 3 fixtures | `mode`            | 17 modes × 3 (test, santa, dance)      | —           | **51**   |
 | ColorMode                | `colorMode`       | color, grayscale, bw × 2 fixtures      | —           | **6**    |
 | FitMode                  | `fit`             | cover, contain, stretch × 2 fixtures   | —           | **6**    |
 | Intensity                | `intensity`       | 30, 50, 70, 85, 100 × 1 fixture        | —           | **5**    |
@@ -277,7 +277,7 @@ Per-fixture cross-product subtotal: **~28**
 
 | Fixture Type                            | Sweeps | Cross-Products | Subtotal |
 | --------------------------------------- | ------ | -------------- | -------- |
-| Static (×4: tsunami, logo, test, trump) | 29     | 26             | **55**   |
+| Static (×4: tsunami, logo, test, santa) | 29     | 26             | **55**   |
 | Animated (×2: king, dance)              | 29     | 28\*           | **57**   |
 
 _Animated fixtures get 2 extra: animation pattern variants (shimmer, wave)_
@@ -381,7 +381,7 @@ export const FIXTURES = [
   { id: 'king',    path: '/king.gif',    animated: true },
   { id: 'logo',    path: '/logo.png',    animated: false },
   { id: 'test',    path: '/test.png',    animated: false },
-  { id: 'trump',   path: '/trump.png',   animated: false },
+  { id: 'santa',   path: '/santa.png',   animated: false },
   { id: 'dance',   path: '/dance.gif',   animated: true },
 ];
 

@@ -20,7 +20,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import type { ECCLevel } from '../qr-encoder';
+import { type ECCLevel, qrcode } from '../qr-encoder';
 
 const log = createLogger('QART');
 
@@ -602,9 +602,6 @@ export async function searchBestFragment(
     maskPattern,
     onProgress,
   } = config;
-
-  // Import qrcode encoder dynamically to avoid circular deps
-  const { qrcode } = await import('../qr-encoder');
 
   // Map target image to module targets
   // We'll determine moduleCount after first QR generation

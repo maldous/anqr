@@ -299,7 +299,7 @@ export function OverlaySection() {
     { id: 'king', name: 'King', url: '/king.gif', isAnimated: true },
     { id: 'logo', name: 'Logo', url: '/logo.png', isAnimated: false },
     { id: 'test', name: 'Test', url: '/test.png', isAnimated: false },
-    { id: 'trump', name: 'Trump', url: '/trump.png', isAnimated: false },
+    { id: 'santa', name: 'Santa', url: '/santa.png', isAnimated: false },
     { id: 'dance', name: 'Dance', url: '/dance.gif', isAnimated: true },
   ];
 
