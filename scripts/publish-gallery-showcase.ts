@@ -387,7 +387,7 @@ const FIXTURE_NAMES: Record<string, string> = {
   king: 'King GIF',
   logo: 'Logo',
   test: 'Test',
-  trump: 'Trump',
+  santa: 'Santa',
   dance: 'Dance GIF',
   none: 'No Fixture',
 };

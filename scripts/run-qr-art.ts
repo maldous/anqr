@@ -9,8 +9,8 @@
  * Examples:
  *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg qr-art-output.png
  *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg qr-art-v10.png 10 60
- *   npx tsx scripts/run-qr-art.ts public/trump.png qr-art-mixed.png 6 100 "https://anqr.link" numeric 1 L
- *   npx tsx scripts/run-qr-art.ts public/trump.png qr-art-fixed.png 9 100 "https://whitehouse.gov" numeric 1 L 0 "123456..."
+ *   npx tsx scripts/run-qr-art.ts public/santa.png qr-art-mixed.png 6 100 "https://anqr.link" numeric 1 L
+ *   npx tsx scripts/run-qr-art.ts public/santa.png qr-art-fixed.png 9 100 "https://whitehouse.gov" numeric 1 L 0 "123456..."
  *   npx tsx scripts/run-qr-art.ts public/tsunami.jpg
  */
 

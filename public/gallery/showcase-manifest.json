@@ -4134,10 +4134,10 @@
       }
     },
     {
-      "id": "overlay__mode-center-trump",
+      "id": "overlay__mode-center-santa",
       "category": "image-overlay",
-      "title": "Center · Trump · Center",
-      "description": "v3 EC H · mode Center · source Trump · variant Center",
+      "title": "Center · Santa · Center",
+      "description": "v3 EC H · mode Center · source Santa · variant Center",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -4152,7 +4152,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "keepAlign": 1,
         "keepFinders": 1,
@@ -4168,14 +4168,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mask=3&mode=center&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mask=3&mode=center&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "95f818336240caf6efcb4d2f6af13f57dc2ff69e801f1902c66eb8d357dcfb77",
       "output": {
-        "file": "overlay__mode-center-trump.png",
+        "file": "overlay__mode-center-santa.png",
         "bytes": 4409,
         "sha256": "2f5d2c1b9659f823dc4ecd92c6ae96f27f5af815580736bf3c0272ac5294e26e",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-center-trump.png"
+        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-center-santa.png"
       }
     },
     {
@@ -4316,10 +4316,10 @@
       }
     },
     {
-      "id": "overlay__mode-dither-trump",
+      "id": "overlay__mode-dither-santa",
       "category": "image-overlay",
-      "title": "Dither · Trump · Dither",
-      "description": "v3 EC H · mode Dither · source Trump · variant Dither",
+      "title": "Dither · Santa · Dither",
+      "description": "v3 EC H · mode Dither · source Santa · variant Dither",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -4334,7 +4334,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "intensity": 55,
         "jitter": 0,
         "keepAlign": 1,
@@ -4350,14 +4350,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&intensity=55&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=dither&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&intensity=55&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=dither&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "532b1b33dcd5e1626bf7af56d3e1387af02c6288818090718b8eba9ae3ecfed9",
       "output": {
-        "file": "overlay__mode-dither-trump.png",
+        "file": "overlay__mode-dither-santa.png",
         "bytes": 2129,
         "sha256": "b2e84ab6555497cd60756ad0dac8f462e5010f96a86b7f808fc46ce88744b2c1",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-dither-trump.png"
+        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-dither-santa.png"
       }
     },
     {
@@ -4498,10 +4498,10 @@
       }
     },
     {
-      "id": "overlay__mode-halftone-trump",
+      "id": "overlay__mode-halftone-santa",
       "category": "image-overlay",
-      "title": "Halftone · Trump · Halftone",
-      "description": "v3 EC H · mode Halftone · source Trump · variant Halftone",
+      "title": "Halftone · Santa · Halftone",
+      "description": "v3 EC H · mode Halftone · source Santa · variant Halftone",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -4516,7 +4516,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "intensity": 60,
         "jitter": 0,
         "keepAlign": 1,
@@ -4533,14 +4533,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&intensity=60&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mask=3&mode=halftone&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&intensity=60&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mask=3&mode=halftone&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "1e3a08e4f9eb3d43e8f9011e2407c5184e21a8b1241343a3dfef7f129c801083",
       "output": {
-        "file": "overlay__mode-halftone-trump.png",
+        "file": "overlay__mode-halftone-santa.png",
         "bytes": 4340,
         "sha256": "2c1386915fdd820beea8577577256839a42e6b4e960a3306c8ceeeeec4b3cccb",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-halftone-trump.png"
+        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-halftone-santa.png"
       }
     },
     {
@@ -4678,10 +4678,10 @@
       }
     },
     {
-      "id": "overlay__mode-pixelate-trump",
+      "id": "overlay__mode-pixelate-santa",
       "category": "image-overlay",
-      "title": "Pixelate · Trump · Pixelate",
-      "description": "v3 EC H · mode Pixelate · source Trump · variant Pixelate",
+      "title": "Pixelate · Santa · Pixelate",
+      "description": "v3 EC H · mode Pixelate · source Santa · variant Pixelate",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -4696,7 +4696,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "keepAlign": 1,
         "keepFinders": 1,
@@ -4711,14 +4711,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=pixelate&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=pixelate&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "7a37c58c9b1a9905ad206b3f6c4d9a732a6391993796464b787826b1995b51bd",
       "output": {
-        "file": "overlay__mode-pixelate-trump.png",
+        "file": "overlay__mode-pixelate-santa.png",
         "bytes": 2527,
         "sha256": "b18efeace10595cf6dc20876ced390768f5d6f050fca924a9b1ff4a61faf7796",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-pixelate-trump.png"
+        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-pixelate-santa.png"
       }
     },
     {
@@ -4857,10 +4857,10 @@
       }
     },
     {
-      "id": "overlay__mode-subpixel-trump",
+      "id": "overlay__mode-subpixel-santa",
       "category": "image-overlay",
-      "title": "Subpixel · Trump · Subpixel",
-      "description": "v3 EC H · mode Subpixel · source Trump · variant Subpixel",
+      "title": "Subpixel · Santa · Subpixel",
+      "description": "v3 EC H · mode Subpixel · source Santa · variant Subpixel",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -4875,7 +4875,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "keepAlign": 1,
         "keepFinders": 1,
@@ -4890,14 +4890,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=subpixel&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=subpixel&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "aff3c8a49a24878054801a283c8cca95732b8e31ae1edb9af0a085be784da43d",
       "output": {
-        "file": "overlay__mode-subpixel-trump.png",
+        "file": "overlay__mode-subpixel-santa.png",
         "bytes": 5006,
         "sha256": "0432b7090465efbf5d28d0af958815088551c70d52126885681bbfb45ffafc07",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-subpixel-trump.png"
+        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-subpixel-santa.png"
       }
     },
     {
@@ -5039,10 +5039,10 @@
       }
     },
     {
-      "id": "overlay__mode-extreme-trump",
+      "id": "overlay__mode-extreme-santa",
       "category": "image-overlay",
-      "title": "Extreme · Trump · Extreme",
-      "description": "v3 EC H · mode Extreme · source Trump · variant Extreme",
+      "title": "Extreme · Santa · Extreme",
+      "description": "v3 EC H · mode Extreme · source Santa · variant Extreme",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -5057,7 +5057,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "intensity": 45,
         "jitter": 0,
         "keepAlign": 1,
@@ -5073,14 +5073,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&intensity=45&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=extreme&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&intensity=45&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=extreme&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "230e08d8b78c4fd3dfdeec2cb820570876169be93af2a299906488cbe6cf64dd",
       "output": {
-        "file": "overlay__mode-extreme-trump.png",
+        "file": "overlay__mode-extreme-santa.png",
         "bytes": 2425,
         "sha256": "6c4e5617871d57a2f6e57a1a30daf7afa37618f878c3c9f7399a9768f9725ea9",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-extreme-trump.png"
+        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-extreme-santa.png"
       }
     },
     {
@@ -5219,10 +5219,10 @@
       }
     },
     {
-      "id": "overlay__mode-outline-trump",
+      "id": "overlay__mode-outline-santa",
       "category": "image-overlay",
-      "title": "Outline · Trump · Outline",
-      "description": "v3 EC H · mode Outline · source Trump · variant Outline",
+      "title": "Outline · Santa · Outline",
+      "description": "v3 EC H · mode Outline · source Santa · variant Outline",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -5237,7 +5237,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "keepAlign": 1,
         "keepFinders": 1,
@@ -5252,14 +5252,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=outline&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=outline&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "6e7152db1c95c957b92b4bc3dfa5f77ff470174ee7bf2cab85a3f276f890d04f",
       "output": {
-        "file": "overlay__mode-outline-trump.png",
+        "file": "overlay__mode-outline-santa.png",
         "bytes": 3537,
         "sha256": "0a22d3d08debb6d82b05a6747d55cdc9e32b1072591cedaf96902df8f74033aa",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-outline-trump.png"
+        "sourcePath": "reports/gallery-artifacts/local/overlay__mode-outline-santa.png"
       }
     },
     {
@@ -6971,8 +6971,8 @@
     {
       "id": "overlay__blendPresMode-dither",
       "category": "blend-modes",
-      "title": "Dither · Trump · Dither",
-      "description": "v3 EC H · mode Dithered · preservation Dither · source Trump · variant Dither",
+      "title": "Dither · Santa · Dither",
+      "description": "v3 EC H · mode Dithered · preservation Dither · source Santa · variant Dither",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -6990,7 +6990,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "intensity": 60,
         "jitter": 0,
         "keepAlign": 0,
@@ -7006,7 +7006,7 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&blendPres=1&blendPresMode=dither&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&finderDither=82&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&intensity=60&jitter=0&keepAlign=0&keepFinders=0&keepTiming=0&mode=dithered&modulePx=6&protectFmt=0&protectVer=0&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&blendPres=1&blendPresMode=dither&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&finderDither=82&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&intensity=60&jitter=0&keepAlign=0&keepFinders=0&keepTiming=0&mode=dithered&modulePx=6&protectFmt=0&protectVer=0&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "d796c707e28bd1a4ea11f727db796ad7b74be156229bd15223209c580235f04d",
       "output": {
         "file": "overlay__blendPresMode-dither.png",
@@ -7246,8 +7246,8 @@
     {
       "id": "overlay__fit-stretch",
       "category": "blend-modes",
-      "title": "Blend · Trump · Blend · Stretch",
-      "description": "v3 EC H · mode Blend · fit Stretch · source Trump · variant Blend · Stretch",
+      "title": "Blend · Santa · Blend · Stretch",
+      "description": "v3 EC H · mode Blend · fit Stretch · source Santa · variant Blend · Stretch",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -7263,7 +7263,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "intensity": 60,
         "jitter": 0,
         "keepAlign": 1,
@@ -7279,7 +7279,7 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&fit=stretch&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&intensity=60&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=blend&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&fit=stretch&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&intensity=60&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=blend&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "558cb40a1fe8aa54700d0e9e87243522828170c02d5d2c2663122f1427d9922f",
       "output": {
         "file": "overlay__fit-stretch.png",
@@ -7593,8 +7593,8 @@
     {
       "id": "overlay__cropEn",
       "category": "blend-modes",
-      "title": "Blend · Trump · Blend · Crop",
-      "description": "v3 EC H · mode Blend · source Trump · variant Blend · Crop",
+      "title": "Blend · Santa · Blend · Crop",
+      "description": "v3 EC H · mode Blend · source Santa · variant Blend · Crop",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -7610,7 +7610,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "mode": "blend",
         "modulePx": 6,
@@ -7620,7 +7620,7 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&cropEn=1&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&mode=blend&modulePx=6&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&cropEn=1&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&mode=blend&modulePx=6&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "13c04ae7e9a9dc10b6ccdb26efc2ca2ad8caa20ce96f4ef2624d04a7542a9d38",
       "output": {
         "file": "overlay__cropEn.png",
@@ -7928,8 +7928,8 @@
     {
       "id": "overlay__flipY",
       "category": "blend-modes",
-      "title": "Blend · Trump · Blend · Flip Y",
-      "description": "v3 EC H · mode Blend · source Trump · variant Blend · Flip Y",
+      "title": "Blend · Santa · Blend · Flip Y",
+      "description": "v3 EC H · mode Blend · source Santa · variant Blend · Flip Y",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -7945,7 +7945,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "mode": "blend",
         "modulePx": 6,
@@ -7955,7 +7955,7 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&flipY=1&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&mode=blend&modulePx=6&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&flipY=1&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&mode=blend&modulePx=6&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "611b4d7ef87ab63e193003ec756550be30b706b86eebf4e42041ee6fbae8447c",
       "output": {
         "file": "overlay__flipY.png",
@@ -8235,8 +8235,8 @@
     {
       "id": "overlay__keepTiming",
       "category": "blend-modes",
-      "title": "Blend · Trump · Blend · Keep Timing",
-      "description": "v3 EC H · mode Blend · source Trump · variant Blend · Keep Timing",
+      "title": "Blend · Santa · Blend · Keep Timing",
+      "description": "v3 EC H · mode Blend · source Santa · variant Blend · Keep Timing",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -8251,7 +8251,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "keepTiming": 1,
         "mode": "blend",
@@ -8262,7 +8262,7 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&keepTiming=1&mode=blend&modulePx=6&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&keepTiming=1&mode=blend&modulePx=6&radius=25&timing=match_module&v=3&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "a059fe36da367e6b8e95d82c64c5de2008dca3c47976801a841cd3e9f3afc318",
       "output": {
         "file": "overlay__keepTiming.png",
@@ -11631,8 +11631,8 @@
     {
       "id": "overlay__wm-pattern",
       "category": "power-combos",
-      "title": "Blend · Trump · Blend · Pattern",
-      "description": "v5 EC H · mode Blend · source Trump · variant Blend · Pattern",
+      "title": "Blend · Santa · Blend · Pattern",
+      "description": "v5 EC H · mode Blend · source Santa · variant Blend · Pattern",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -11647,7 +11647,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "intensity": 60,
         "jitter": 0,
         "keepAlign": 1,
@@ -11665,7 +11665,7 @@
         "wmKind": "pattern",
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&intensity=60&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=blend&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=5&w=294&wmEn=1&wmKind=pattern&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=H&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&intensity=60&jitter=0&keepAlign=1&keepFinders=1&keepTiming=1&mode=blend&modulePx=6&protectFmt=1&protectVer=1&radius=25&timing=match_module&v=5&w=294&wmEn=1&wmKind=pattern&wmPos=bottom-center",
       "paramSignatureSha256": "53687bc7ddfc01465136652db94cbcca7f4d16c26a70020dbb5a63c2a8debe17",
       "output": {
         "file": "overlay__wm-pattern.png",
@@ -12673,10 +12673,10 @@
       }
     },
     {
-      "id": "artwork__art-trump-mega",
+      "id": "artwork__art-santa-mega",
       "category": "qr-art",
-      "title": "QR Art · Trump · Diamond · Diamond · Static",
-      "description": "v6 EC M · mode Artwork · Diamond modules · source Trump · variant Diamond · Static",
+      "title": "QR Art · Santa · Diamond · Diamond · Static",
+      "description": "v6 EC M · mode Artwork · Diamond modules · source Santa · variant Diamond · Static",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -12700,7 +12700,7 @@
         "gradAngle": 135,
         "gradStops": "7c3aed,0,ec4899,0.5,f59e0b,1",
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "mask": 0,
         "mode": "artwork",
@@ -12717,14 +12717,14 @@
         "wmPos": "bottom-center",
         "wmText": "ANQR"
       },
-      "query": "align=match_finder&animSpeed=100&bg=fff5e6&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=M&eyeInner=rounded&eyeOuter=circle&fg=1a365d&finder=rounded&format=png&frame=tag&frameText=ANQR&gap=0&gapMode=inset&gifMaxFps=30&gifPal=256&grad=conic&gradAngle=135&gradStops=7c3aed%2C0%2Cec4899%2C0.5%2Cf59e0b%2C1&h=294&img=%2Ftrump.png&jitter=0&mask=0&mode=artwork&modulePx=6&radius=25&style=diamond&timing=match_module&v=6&w=294&wmBlend=soft-light&wmEn=1&wmKind=text&wmOpacity=50&wmPos=bottom-center&wmText=ANQR",
+      "query": "align=match_finder&animSpeed=100&bg=fff5e6&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=M&eyeInner=rounded&eyeOuter=circle&fg=1a365d&finder=rounded&format=png&frame=tag&frameText=ANQR&gap=0&gapMode=inset&gifMaxFps=30&gifPal=256&grad=conic&gradAngle=135&gradStops=7c3aed%2C0%2Cec4899%2C0.5%2Cf59e0b%2C1&h=294&img=%2Fsanta.png&jitter=0&mask=0&mode=artwork&modulePx=6&radius=25&style=diamond&timing=match_module&v=6&w=294&wmBlend=soft-light&wmEn=1&wmKind=text&wmOpacity=50&wmPos=bottom-center&wmText=ANQR",
       "paramSignatureSha256": "c692bbef044404d7e0f16f1532f1f9bf06954af2dd8b50174b8f801d2de5ca0d",
       "output": {
-        "file": "artwork__art-trump-mega.png",
+        "file": "artwork__art-santa-mega.png",
         "bytes": 39473,
         "sha256": "92959ef8fd5f22a73f0550fe2b1437458a215e2b7b39b66102b0dd9a1d649c8c",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/artwork__art-trump-mega.png"
+        "sourcePath": "reports/gallery-artifacts/local/artwork__art-santa-mega.png"
       }
     },
     {
@@ -12963,9 +12963,9 @@
       }
     },
     {
-      "id": "artwork__art-trump-anim-stack-wave-shimmer",
+      "id": "artwork__art-santa-anim-stack-wave-shimmer",
       "category": "qr-art",
-      "title": "QR Art · Trump · Connected · Connected · Wave",
+      "title": "QR Art · Santa · Connected · Connected · Wave",
       "description": "v6 EC L · mode Artwork · anim Wave · stack Shimmer · Connected modules",
       "isAnimated": true,
       "params": {
@@ -12990,7 +12990,7 @@
         "gradAngle": 135,
         "gradStops": "7c3aed,0,ec4899,0.5,f59e0b,1",
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "interp": "morph",
         "jitter": 0,
         "mask": 0,
@@ -13004,14 +13004,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animPattern=wave&animPattern2=shimmer&animSpeed=100&animTarget=result&animTarget2=result&animWaveAxis=x&colorCycle=1&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=rounded&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=conic&gradAngle=135&gradStops=7c3aed%2C0%2Cec4899%2C0.5%2Cf59e0b%2C1&h=294&img=%2Ftrump.png&interp=morph&jitter=0&mask=0&mode=artwork&modulePx=6&radius=25&style=connected&tempDither=flicker_safe&timing=match_module&v=6&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animPattern=wave&animPattern2=shimmer&animSpeed=100&animTarget=result&animTarget2=result&animWaveAxis=x&colorCycle=1&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=rounded&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=conic&gradAngle=135&gradStops=7c3aed%2C0%2Cec4899%2C0.5%2Cf59e0b%2C1&h=294&img=%2Fsanta.png&interp=morph&jitter=0&mask=0&mode=artwork&modulePx=6&radius=25&style=connected&tempDither=flicker_safe&timing=match_module&v=6&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "6954f50db8006e4fbf0af7ca6601f95a6aabdb0ea8298d37c497828dd8e605a8",
       "output": {
-        "file": "artwork__art-trump-anim-stack-wave-shimmer.gif",
+        "file": "artwork__art-santa-anim-stack-wave-shimmer.gif",
         "bytes": 689286,
         "sha256": "4e6658bd6f5a3f034ecb1efb5a5150eab9dfaa9b56267b2c48885d5feaa4408d",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/artwork__art-trump-anim-stack-wave-shimmer.gif"
+        "sourcePath": "reports/gallery-artifacts/local/artwork__art-santa-anim-stack-wave-shimmer.gif"
       }
     },
     {
@@ -13170,10 +13170,10 @@
       }
     },
     {
-      "id": "artwork__art-trump-encoding-v8-M",
+      "id": "artwork__art-santa-encoding-v8-M",
       "category": "qr-art",
-      "title": "QR Art · Trump · Rounded · Rounded · Static",
-      "description": "v8 EC M · mode Artwork · Rounded modules · source Trump · variant Rounded · Static",
+      "title": "QR Art · Santa · Rounded · Rounded · Static",
+      "description": "v8 EC M · mode Artwork · Rounded modules · source Santa · variant Rounded · Static",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -13189,7 +13189,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "mode": "artwork",
         "modulePx": 6,
@@ -13200,14 +13200,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=M&finder=rounded&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&mode=artwork&modulePx=6&radius=25&style=rounded&timing=match_module&v=8&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=M&finder=rounded&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&mode=artwork&modulePx=6&radius=25&style=rounded&timing=match_module&v=8&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "14ef55ce020b7055cde02dcbbd32e04aef6302ffd669e1cf5e8e75a4e2b64bf6",
       "output": {
-        "file": "artwork__art-trump-encoding-v8-M.png",
+        "file": "artwork__art-santa-encoding-v8-M.png",
         "bytes": 8015,
         "sha256": "9729d1f790160b6928c862fcbe4a1f49de75366644782f68538071f5959477c1",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/artwork__art-trump-encoding-v8-M.png"
+        "sourcePath": "reports/gallery-artifacts/local/artwork__art-santa-encoding-v8-M.png"
       }
     },
     {
@@ -13334,9 +13334,9 @@
       }
     },
     {
-      "id": "artwork__art-trump-anim-stack-wave-drift",
+      "id": "artwork__art-santa-anim-stack-wave-drift",
       "category": "qr-art",
-      "title": "QR Art · Trump · Diamond · Diamond · Wave",
+      "title": "QR Art · Santa · Diamond · Diamond · Wave",
       "description": "v6 EC L · mode Artwork · anim Wave · stack Drift · Diamond modules",
       "isAnimated": true,
       "params": {
@@ -13361,7 +13361,7 @@
         "gradAngle": 135,
         "gradStops": "1a1a2e,0,e94560,1",
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "interp": "crossfade",
         "jitter": 0,
         "mask": 1,
@@ -13375,14 +13375,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animPattern=wave&animPattern2=drift&animSeed=1234&animSpeed=100&animTarget=result&animTarget2=result&animWaveAxis=y&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=circle&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=linear&gradAngle=135&gradStops=1a1a2e%2C0%2Ce94560%2C1&h=294&img=%2Ftrump.png&interp=crossfade&jitter=0&mask=1&mode=artwork&modulePx=6&radius=25&style=diamond&tempDither=blue_noise&timing=match_module&v=6&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animPattern=wave&animPattern2=drift&animSeed=1234&animSpeed=100&animTarget=result&animTarget2=result&animWaveAxis=y&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=circle&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=linear&gradAngle=135&gradStops=1a1a2e%2C0%2Ce94560%2C1&h=294&img=%2Fsanta.png&interp=crossfade&jitter=0&mask=1&mode=artwork&modulePx=6&radius=25&style=diamond&tempDither=blue_noise&timing=match_module&v=6&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "3f32f0326be7ea64c95ddba59c2dc2d4ac70418a2eebb8ae56bd58ee035d701a",
       "output": {
-        "file": "artwork__art-trump-anim-stack-wave-drift.gif",
+        "file": "artwork__art-santa-anim-stack-wave-drift.gif",
         "bytes": 460866,
         "sha256": "4450b9f5179173d9e0337d694db18c1d3e681d7a2dbd83ca35cdcf65a3b30986",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/artwork__art-trump-anim-stack-wave-drift.gif"
+        "sourcePath": "reports/gallery-artifacts/local/artwork__art-santa-anim-stack-wave-drift.gif"
       }
     },
     {
@@ -13478,10 +13478,10 @@
       }
     },
     {
-      "id": "artwork__art-trump-ec-M",
+      "id": "artwork__art-santa-ec-M",
       "category": "qr-art",
-      "title": "QR Art · Trump · Square · Square · Static",
-      "description": "v6 EC M · mode Artwork · source Trump · variant Square · Static",
+      "title": "QR Art · Santa · Square · Square · Static",
+      "description": "v6 EC M · mode Artwork · source Santa · variant Square · Static",
       "isAnimated": false,
       "params": {
         "align": "match_finder",
@@ -13496,7 +13496,7 @@
         "gifPal": 256,
         "gradAngle": 135,
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "mode": "artwork",
         "modulePx": 6,
@@ -13506,14 +13506,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=M&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Ftrump.png&jitter=0&mode=artwork&modulePx=6&radius=25&timing=match_module&v=6&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animSpeed=100&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=M&format=png&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&gradAngle=135&h=294&img=%2Fsanta.png&jitter=0&mode=artwork&modulePx=6&radius=25&timing=match_module&v=6&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "f4ff2a30f3fad54a36799e11c0974c792d528d46b33419b9a87c3fab58948538",
       "output": {
-        "file": "artwork__art-trump-ec-M.png",
+        "file": "artwork__art-santa-ec-M.png",
         "bytes": 1969,
         "sha256": "b7efddaa4175f840c48e6d622c6ef807155172a9a9cacb29adf04d24897bcde0",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/artwork__art-trump-ec-M.png"
+        "sourcePath": "reports/gallery-artifacts/local/artwork__art-santa-ec-M.png"
       }
     },
     {
@@ -13608,10 +13608,10 @@
       }
     },
     {
-      "id": "artwork__art-trump-anim-temp-flicker-safe",
+      "id": "artwork__art-santa-anim-temp-flicker-safe",
       "category": "qr-art",
-      "title": "QR Art · Trump · Dots · Dots · Pulse",
-      "description": "v6 EC L · mode Artwork · anim Pulse · Dots modules · source Trump",
+      "title": "QR Art · Santa · Dots · Dots · Pulse",
+      "description": "v6 EC L · mode Artwork · anim Pulse · Dots modules · source Santa",
       "isAnimated": true,
       "params": {
         "align": "match_finder",
@@ -13632,7 +13632,7 @@
         "gradAngle": 135,
         "gradStops": "7c3aed,0,ec4899,0.5,f59e0b,1",
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "mask": 7,
         "mode": "artwork",
@@ -13645,14 +13645,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animPattern=pulse&animSpeed=100&animTarget=result&colorCycle=1&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=circle&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=linear&gradAngle=135&gradStops=7c3aed%2C0%2Cec4899%2C0.5%2Cf59e0b%2C1&h=294&img=%2Ftrump.png&jitter=0&mask=7&mode=artwork&modulePx=6&radius=25&style=dots&tempDither=flicker_safe&timing=match_module&v=6&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animPattern=pulse&animSpeed=100&animTarget=result&colorCycle=1&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=circle&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=linear&gradAngle=135&gradStops=7c3aed%2C0%2Cec4899%2C0.5%2Cf59e0b%2C1&h=294&img=%2Fsanta.png&jitter=0&mask=7&mode=artwork&modulePx=6&radius=25&style=dots&tempDither=flicker_safe&timing=match_module&v=6&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "70b2587cc0633bd1b7b1e36eeaed484ff9138b9f2fed4415bfc7b6101f72f400",
       "output": {
-        "file": "artwork__art-trump-anim-temp-flicker-safe.gif",
+        "file": "artwork__art-santa-anim-temp-flicker-safe.gif",
         "bytes": 348913,
         "sha256": "ae47fb9b67670f8ed78489854af213b894a1f4495b6e30b64610721cf1556d18",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/artwork__art-trump-anim-temp-flicker-safe.gif"
+        "sourcePath": "reports/gallery-artifacts/local/artwork__art-santa-anim-temp-flicker-safe.gif"
       }
     },
     {
@@ -13979,10 +13979,10 @@
       }
     },
     {
-      "id": "artwork__art-trump-anim-temp-blue-noise",
+      "id": "artwork__art-santa-anim-temp-blue-noise",
       "category": "qr-art",
-      "title": "QR Art · Trump · Rounded · Rounded · Scanline",
-      "description": "v6 EC L · mode Artwork · anim Scanline · Rounded modules · source Trump",
+      "title": "QR Art · Santa · Rounded · Rounded · Scanline",
+      "description": "v6 EC L · mode Artwork · anim Scanline · Rounded modules · source Santa",
       "isAnimated": true,
       "params": {
         "align": "match_finder",
@@ -14002,7 +14002,7 @@
         "gradAngle": 135,
         "gradStops": "dc2626,0,f97316,1",
         "h": 294,
-        "img": "/trump.png",
+        "img": "/santa.png",
         "jitter": 0,
         "mask": 1,
         "mode": "artwork",
@@ -14016,14 +14016,14 @@
         "w": 294,
         "wmPos": "bottom-center"
       },
-      "query": "align=match_finder&animPattern=scanline&animSpeed=100&animTarget=result&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=rounded&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=radial&gradAngle=135&gradStops=dc2626%2C0%2Cf97316%2C1&h=294&img=%2Ftrump.png&jitter=0&mask=1&mode=artwork&modulePx=6&radius=25&reverse=1&style=rounded&tempDither=blue_noise&timing=match_module&v=6&w=294&wmPos=bottom-center",
+      "query": "align=match_finder&animPattern=scanline&animSpeed=100&animTarget=result&data=https%3A%2F%2Fanqr.link&dotRot=0&ec=L&finder=rounded&format=gif&frameText=ANQR&gap=0&gifMaxFps=30&gifPal=256&grad=radial&gradAngle=135&gradStops=dc2626%2C0%2Cf97316%2C1&h=294&img=%2Fsanta.png&jitter=0&mask=1&mode=artwork&modulePx=6&radius=25&reverse=1&style=rounded&tempDither=blue_noise&timing=match_module&v=6&w=294&wmPos=bottom-center",
       "paramSignatureSha256": "976c828a03aeaea4a01da670c6589eb226d3efdd38eeb485465033a4600bad31",
       "output": {
-        "file": "artwork__art-trump-anim-temp-blue-noise.gif",
+        "file": "artwork__art-santa-anim-temp-blue-noise.gif",
         "bytes": 352765,
         "sha256": "17454df68e51937accb22c4e50705ff1ad1f9a0784f155beece8cf1b8e1d9742",
         "sourceMode": "local",
-        "sourcePath": "reports/gallery-artifacts/local/artwork__art-trump-anim-temp-blue-noise.gif"
+        "sourcePath": "reports/gallery-artifacts/local/artwork__art-santa-anim-temp-blue-noise.gif"
       }
     },
     {

@@ -108,7 +108,7 @@ Last updated: 2026-02-23 00:50:00 UTC
     - `{6: 272, 7: 44, 8: 17}`
   - artwork scenarios outside `6..8`: `0`
   - specific scenario check:
-    - `artwork__art-trump-wm-text.png` now resolves to `v=6`.
+    - `artwork__art-santa-wm-text.png` now resolves to `v=6`.
 
 ## Latest Update (2026-02-22, Artwork Version Distribution Rebalance: 6..8 Log Mix)
 
@@ -591,7 +591,7 @@ Last updated: 2026-02-23 00:50:00 UTC
 10. User follow-up:
 
 - artwork output quality is unacceptable
-- use existing QR-Art script and test on `public/trump.png`
+- use existing QR-Art script and test on `public/santa.png`
 
 11. Investigate QR-Art regression history:
 
@@ -608,7 +608,7 @@ Last updated: 2026-02-23 00:50:00 UTC
 
 14. Ensure local/API artwork actually works again:
 
-- `artwork__art-trump-dots-circle.png` should render correctly
+- `artwork__art-santa-dots-circle.png` should render correctly
 - animated GIF artwork should stay animated
 
 15. Expand permutations consistently across categories:
@@ -707,19 +707,19 @@ Last updated: 2026-02-23 00:50:00 UTC
 - [x] Artwork combo failures fixed (`combo5` static fixtures) and revalidated.
 - [x] Artwork full local run revalidated:
   - `333/333` pass, `0` fail
-- [x] Ran dedicated QR-Art pipeline script on `public/trump.png`:
-  - command: `node --import tsx scripts/run-qr-art.ts public/trump.png reports/gallery-artifacts/local/qr-art-trump.png`
+- [x] Ran dedicated QR-Art pipeline script on `public/santa.png`:
+  - command: `node --import tsx scripts/run-qr-art.ts public/santa.png reports/gallery-artifacts/local/qr-art-santa.png`
   - result: success, version `6`, mask `7`, match `63.2%` (`874/1383`)
   - output files:
-    - `reports/gallery-artifacts/local/qr-art-trump.png`
-    - `reports/gallery-artifacts/local/qr-art-trump-hires.png`
+    - `reports/gallery-artifacts/local/qr-art-santa.png`
+    - `reports/gallery-artifacts/local/qr-art-santa-hires.png`
   - decode check passed against generated output.
 - [x] Extended `scripts/run-qr-art.ts` for reproducible regression testing:
   - added CLI args for `data`, `suffixMode`, `strictSuffix`, `ecc`, `autoSuffix`, `suffix`.
 - [x] Reproduced mixed-mode long URL generation (`version=6`, `ecc=L`) and confirmed long payload output:
   - decoded length `289`, suffix length `271`.
 - [x] Reproduced the Feb 7-style case with explicit payload components:
-  - `trump.png`, `version=9`, `ecc=L`, numeric suffix length `490`.
+  - `santa.png`, `version=9`, `ecc=L`, numeric suffix length `490`.
   - current output decodes but visual quality is poor (bottom-heavy, weak facial structure).
 - [x] Parsed `/home/user/Downloads/qr-analysis-1771595197804.json`:
   - payload length `513`
@@ -727,7 +727,7 @@ Last updated: 2026-02-23 00:50:00 UTC
   - analyzer reports `encodingMode: byte`, `byteSegmentCount: 1`, `totalByteLength: 23` (inconsistent with payload length).
 - [x] Re-ran current QR-Art with corrected semantics (base payload only, mixed mode auto-appended suffix):
   - command:
-    - `node --import tsx scripts/run-qr-art.ts public/trump.png reports/gallery-artifacts/local/qr-art-trump-v9-whitehouse-autosuffix-current.png 9 100 "https://whitehouse.gov" numeric 1 L 1`
+    - `node --import tsx scripts/run-qr-art.ts public/santa.png reports/gallery-artifacts/local/qr-art-santa-v9-whitehouse-autosuffix-current.png 9 100 "https://whitehouse.gov" numeric 1 L 1`
   - decode verification:
     - total length `513`
     - prefix `https://whitehouse.gov#...`
@@ -746,7 +746,7 @@ Last updated: 2026-02-23 00:50:00 UTC
   - validates canvas inputs do not collapse to all-light/all-dark target maps.
 - [x] Post-fix validation with corrected payload semantics:
   - command:
-    - `node --import tsx scripts/run-qr-art.ts public/trump.png reports/gallery-artifacts/local/qr-art-trump-v9-whitehouse-autosuffix-current-fixed.png 9 100 "https://whitehouse.gov" numeric 1 L 1`
+    - `node --import tsx scripts/run-qr-art.ts public/santa.png reports/gallery-artifacts/local/qr-art-santa-v9-whitehouse-autosuffix-current-fixed.png 9 100 "https://whitehouse.gov" numeric 1 L 1`
   - result:
     - version `9`, ECC `L`, mask `4`
     - match `84.7%` (`1978/2336`)
@@ -760,7 +760,7 @@ Last updated: 2026-02-23 00:50:00 UTC
   - animated artwork overlays: renders each frame with QR-Art and preserves source frame delays.
   - locks mask/version from frame 0 for animation consistency (browser-aligned behavior).
 - [x] Revalidated key user-reported failures:
-  - `artwork__art-trump-dots-circle.png` now passes and renders with expected artwork.
+  - `artwork__art-santa-dots-circle.png` now passes and renders with expected artwork.
   - `artwork__art-dance-default.gif` is animated with unique per-frame content (60 unique frames).
 - [x] Expanded permutation coverage consistency in `scripts/lib/gallery-permutations.mjs`:
   - fixed easing token values to supported names (`ease_in`, `ease_out`, `ease_in_out`).
@@ -832,7 +832,7 @@ Last updated: 2026-02-23 00:50:00 UTC
 - [x] Began fresh sharded local baseline run (post-expansion) to avoid full-batch timeout storms:
   - `nooverlay`: `334/334` pass, `0` fail (`/tmp/gallery-local-nooverlay-full.log`)
   - `overlay`: `308/333` pass, `25` fail (`/tmp/gallery-local-overlay-full.log`)
-  - `artwork-static` (trump/logo/test/tsunami): `180/180` pass, `0` fail (`/tmp/gallery-local-artwork-static.log`)
+  - `artwork-static` (santa/logo/test/tsunami): `180/180` pass, `0` fail (`/tmp/gallery-local-artwork-static.log`)
 - [x] Started `artwork-animated` baseline shard with higher parallelism per feedback:
   - `153` configs, `GALLERY_CONCURRENCY=12`, timeout `240000ms`
   - log: `/tmp/gallery-local-artwork-animated.log`
@@ -1017,7 +1017,7 @@ Last updated: 2026-02-23 00:50:00 UTC
   - combined matrix: `1000` total (`333 nooverlay + 333 overlay + 333 artwork + bonus`)
   - overlay fixture distribution: `king=73`, `dance=71` (`144/333` hero-heavy showcase)
   - rich king/dance animated+dither combos: `86`
-  - artwork fixture distribution: `trump=79`, `dance=104`, `test=76`, `tsunami=74`
+  - artwork fixture distribution: `santa=79`, `dance=104`, `test=76`, `tsunami=74`
   - artwork stacked animation entries present: `4` (`art-dance-stack-*`)
 - [ ] Run penultimate full local render from clean artifacts with updated matrix.
 - [ ] Run quality/suitability review on penultimate output (decode/failures + similarity/readability spot checks).
@@ -1127,7 +1127,7 @@ Last updated: 2026-02-23 00:50:00 UTC
 
 - [x] User feedback captured during run:
   - `artwork__art-dance-stack-target-modules-wave-x-result-wave-y.gif` appears to still encode animation effects into QR modules.
-  - too much static `trump` artwork in current selection.
+  - too much static `santa` artwork in current selection.
   - GIF corruption/noise reports on:
     - `artwork__art-dance-anim-tempDither-blue_noise.gif`
     - `artwork__art-dance-anim-easing-bounce.gif`
@@ -1160,11 +1160,11 @@ Last updated: 2026-02-23 00:50:00 UTC
 - [x] Artwork mix audit (current permutation output):
   - artwork total: `333`
   - fixture distribution:
-    - `trump`: `80` (animated `0`, static `80`)
+    - `santa`: `80` (animated `0`, static `80`)
     - `dance`: `104` (animated `104`, static `0`)
     - `test`: `75` (static only)
     - `tsunami`: `74` (static only)
-  - confirms user point: `trump` contributes substantial static-only volume.
+  - confirms user point: `santa` contributes substantial static-only volume.
 
 - [x] Mask-pattern audit (current permutation output):
   - `mask` parameter is currently absent from all generated scenarios (`0/1000` set explicitly).
@@ -1183,7 +1183,7 @@ Last updated: 2026-02-23 00:50:00 UTC
 - [ ] Post-run change plan (do not apply until current local run completes):
   - remove or sharply reduce `easing`/`bounce`-centric artwork animation variants.
   - reduce/disable `tempDither` use in artwork GIF permutations where scan stability regresses.
-  - rebalance artwork toward stronger motion diversity without static-heavy `trump` dominance.
+  - rebalance artwork toward stronger motion diversity without static-heavy `santa` dominance.
   - constrain/replace module-target stacks in artwork where decode-per-frame is extremely low.
   - add explicit mask-pattern variety for all categories (`nooverlay`, `overlay`, `artwork`).
   - run local-only high-concurrency validation pass first, then expand to browser/remote once stable.
@@ -1258,8 +1258,8 @@ Last updated: 2026-02-23 00:50:00 UTC
 
 - [x] Overlay allowlist/blocklist adjustment:
   - unblocked static overlay combinations:
-    - `mode=dithered` with `trump`
-    - `mode=blue-noise` with `trump`
+    - `mode=dithered` with `santa`
+    - `mode=blue-noise` with `santa`
     - `mode=blue-noise` with `tsunami`
 
 - [x] `generateAllScenarios()` side-effect safety:
@@ -1276,8 +1276,8 @@ Last updated: 2026-02-23 00:50:00 UTC
     - overlay: `76`
     - artwork: `20`
   - overlay static availability confirmed:
-    - `overlay__mode-dithered-trump`
-    - `overlay__mode-blue-noise-trump`
+    - `overlay__mode-dithered-santa`
+    - `overlay__mode-blue-noise-santa`
     - `overlay__mode-blue-noise-tsunami`
 
 ## Update 2026-02-22 06:23:50 UTC (Perf/Jank P0-P2 Pass)
