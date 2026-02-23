@@ -137,7 +137,9 @@ describe('qr-store', () => {
     };
 
     const state = store.getState() as Record<string, unknown>;
-    const setterNames = Object.keys(state).filter((key) => key.startsWith('set')).sort();
+    const setterNames = Object.keys(state)
+      .filter((key) => key.startsWith('set'))
+      .sort();
     const mappedSetterNames = Object.keys(setterArgs).sort();
     expect(mappedSetterNames).toEqual(setterNames);
 
@@ -254,15 +256,24 @@ describe('qr-store', () => {
     expect(store.getState().getPayloadText()).toContain('github');
 
     store.getState().setPayloadKind('messaging_link');
-    store.getState().setPayloadMessaging({ platform: 'whatsapp', identifier: '12345', message: 'hi' });
+    store
+      .getState()
+      .setPayloadMessaging({ platform: 'whatsapp', identifier: '12345', message: 'hi' });
     expect(store.getState().getPayloadText()).toContain('12345');
 
     store.getState().setPayloadKind('app_link');
-    store.getState().setPayloadAppLink({ platform: 'universal', scheme: 'https', host: 'anqr.link', path: '/open' });
+    store.getState().setPayloadAppLink({
+      platform: 'universal',
+      scheme: 'https',
+      host: 'anqr.link',
+      path: '/open',
+    });
     expect(store.getState().getPayloadText()).toBe('https://anqr.link/open');
 
     store.getState().setPayloadKind('app_link');
-    store.getState().setPayloadAppLink({ platform: 'custom', scheme: 'anqr', host: 'open', path: '/foo' });
+    store
+      .getState()
+      .setPayloadAppLink({ platform: 'custom', scheme: 'anqr', host: 'open', path: '/foo' });
     expect(store.getState().getPayloadText()).toBe('anqr://open/foo');
 
     store.getState().setPayloadKind('url');
@@ -339,7 +350,9 @@ describe('qr-store', () => {
     expect(store.getState().getPayloadText()).toBe('');
 
     store.getState().setPayloadKind('paypal_me');
-    store.getState().setPayloadPayPalMe({ username: 'anqr-user', amount: 12.34, currencyCode: 'USD' });
+    store
+      .getState()
+      .setPayloadPayPalMe({ username: 'anqr-user', amount: 12.34, currencyCode: 'USD' });
     expect(store.getState().getPayloadText()).toContain('paypal.me');
 
     store.getState().setPayloadKind('cashapp');
@@ -414,7 +427,9 @@ describe('qr-store', () => {
     expect(store.getState().getPayloadText()).toBe('https://example.com/base');
 
     store.getState().setPayloadKind('vcard');
-    store.getState().setPayloadVCard({ fullName: 'Jane Doe', org: 'ANQR', email: 'jane@example.com' });
+    store
+      .getState()
+      .setPayloadVCard({ fullName: 'Jane Doe', org: 'ANQR', email: 'jane@example.com' });
     expect(store.getState().getPayloadText()).toContain('BEGIN:VCARD');
 
     store.getState().setPayloadKind('mecard');
@@ -541,7 +556,9 @@ describe('qr-store', () => {
     expect(store.getState().getPayloadText()).toContain('ethereum:');
 
     store.getState().setPayloadKind('qris');
-    store.getState().setPayloadQRIS({ merchantId: 'ID123', merchantName: 'ANQR', merchantCity: 'Jakarta' });
+    store
+      .getState()
+      .setPayloadQRIS({ merchantId: 'ID123', merchantName: 'ANQR', merchantCity: 'Jakarta' });
     expect(store.getState().getPayloadText()).toContain('000201');
 
     store.getState().setPayloadKind('duitnow');
@@ -561,7 +578,9 @@ describe('qr-store', () => {
     expect(store.getState().getPayloadText()).toContain('9704');
 
     store.getState().setPayloadKind('qrph');
-    store.getState().setPayloadQRPh({ accountNumber: '12345', merchantName: 'ANQR', merchantCity: 'MNL' });
+    store
+      .getState()
+      .setPayloadQRPh({ accountNumber: '12345', merchantName: 'ANQR', merchantCity: 'MNL' });
     expect(store.getState().getPayloadText()).toContain('000201');
 
     store.getState().setPayloadKind('twqr');
@@ -600,7 +619,9 @@ describe('qr-store', () => {
     });
     expect(store.getState().getPayloadText()).toContain('000201');
 
-    store.setState((s) => ({ payload: { ...s.payload, kind: '__unknown__' as any, text: ' fallback ' } }));
+    store.setState((s) => ({
+      payload: { ...s.payload, kind: '__unknown__' as any, text: ' fallback ' },
+    }));
     expect(store.getState().getPayloadText()).toBe('fallback');
   });
 

@@ -493,7 +493,8 @@ async function main() {
   // Count Tier A items already in gallery
   const allGalleryFiles = await fs.readdir(GALLERY_DIR);
   const tierACount = allGalleryFiles.filter(
-    (f) => (f.endsWith('.png') || f.endsWith('.gif')) && !items.some((item) => `${item.id}.png` === f)
+    (f) =>
+      (f.endsWith('.png') || f.endsWith('.gif')) && !items.some((item) => `${item.id}.png` === f)
   ).length;
 
   // Save manifest covering ALL gallery items (Puppeteer + Tier A)

@@ -3031,7 +3031,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // Pre-reduce selection size using ECC budget ratio (fast heuristic)
     // Disabled by default: can over-reduce and remove visible artwork.
-    let preReduceTargetCount: number | undefined;
+    const preReduceTargetCount: number | undefined = undefined;
 
     mark('flatten_start');
     let flattenedSelections = flattenAndOrderSelectionsLimited(

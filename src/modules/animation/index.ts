@@ -54,12 +54,7 @@ export { createGifCompositor } from './gif-compositor';
 // Frame interpolation
 export { interpolateFrames } from './interpolate-frames';
 // Parsing
-export {
-  getGifDelays,
-  parseAnimatedImage,
-  parseGifFrames,
-  parseWebPFrames,
-} from './parsing';
+export { getGifDelays, parseAnimatedImage, parseGifFrames, parseWebPFrames } from './parsing';
 // Playback delay resolution
 export { resolveAnimationFrameDelay } from './playback-delay';
 // Shared pixel-level pattern functions (used by client and server)
@@ -74,11 +69,7 @@ export {
   applyAnimationWave,
 } from './shared-patterns';
 // State Management
-export {
-  advanceAnimation,
-  createAnimationState,
-  getNextFrame,
-} from './state';
+export { advanceAnimation, createAnimationState, getNextFrame } from './state';
 
 // Temporal dithering (deprecated wrapper - use dither-algorithms directly)
 export { applyTemporalDither } from './temporal-dither';

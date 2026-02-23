@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 describe('core utilities', () => {
@@ -45,7 +51,11 @@ describe('core utilities', () => {
   it('interpolates gradients and creates css gradients', async () => {
     const gradient = await import('../../src/modules/core/gradient');
 
-    expect(gradient.getGradientColor({ type: 'linear', stops: [] }, 0.5)).toEqual({ r: 0, g: 0, b: 0 });
+    expect(gradient.getGradientColor({ type: 'linear', stops: [] }, 0.5)).toEqual({
+      r: 0,
+      g: 0,
+      b: 0,
+    });
     expect(
       gradient.getGradientColor({ type: 'linear', stops: [{ pos: 0, color: '#ff0000' }] }, 0.5)
     ).toMatchObject({

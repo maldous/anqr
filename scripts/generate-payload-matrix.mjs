@@ -49,9 +49,7 @@ function extractSwitchKinds(storeSource) {
 }
 
 function extractUIKinds(sectionSource) {
-  return new Set(
-    [...sectionSource.matchAll(/value: '([^']+)' as PayloadKind/g)].map((m) => m[1])
-  );
+  return new Set([...sectionSource.matchAll(/value: '([^']+)' as PayloadKind/g)].map((m) => m[1]));
 }
 
 function extractTextDrivenKinds(sectionSource) {
@@ -111,9 +109,7 @@ const summary = {
   review: rows.filter((r) => r.status === 'REVIEW').length,
   missingSelector: rows.filter((r) => !r.selectorWired).map((r) => r.kind),
   missingGeneration: rows.filter((r) => r.generationPath === 'missing').map((r) => r.kind),
-  textDrivenKinds: rows
-    .filter((r) => r.generationPath === 'ui-text-generator')
-    .map((r) => r.kind),
+  textDrivenKinds: rows.filter((r) => r.generationPath === 'ui-text-generator').map((r) => r.kind),
 };
 
 const report = {

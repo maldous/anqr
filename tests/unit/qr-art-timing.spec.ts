@@ -88,7 +88,9 @@ describe('QR-Art timing probe', () => {
     const result = await generateFullQArt(config);
 
     // eslint-disable-next-line no-console
-    console.log(`[timing] success=${result.success} version=${result.version} match=${result.matchPercentage.toFixed(1)}%`);
+    console.log(
+      `[timing] success=${result.success} version=${result.version} match=${result.matchPercentage.toFixed(1)}%`
+    );
 
     // eslint-disable-next-line no-console
     console.log('[timing] stage durations:');
@@ -126,7 +128,9 @@ describe('QR-Art timing probe', () => {
     const result = await generateFullQArt(config);
 
     // eslint-disable-next-line no-console
-    console.log(`[timing] success=${result.success} version=${result.version} match=${result.matchPercentage.toFixed(1)}%`);
+    console.log(
+      `[timing] success=${result.success} version=${result.version} match=${result.matchPercentage.toFixed(1)}%`
+    );
 
     // eslint-disable-next-line no-console
     console.log('[timing] stage durations:');

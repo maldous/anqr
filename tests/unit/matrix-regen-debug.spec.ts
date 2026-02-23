@@ -1,6 +1,6 @@
 /**
  * Matrix Regeneration Debug Test
- * 
+ *
  * This test compares the encoder's matrix output with regenerateQRFromModifiedData
  * to identify exactly where mismatches occur (finder, timing, alignment, format, version, data).
  */
@@ -39,11 +39,16 @@ if (typeof globalThis.ImageData === 'undefined') {
  */
 function eccToNumeric(ecc: 'L' | 'M' | 'Q' | 'H'): number {
   switch (ecc) {
-    case 'L': return QRErrorCorrectionLevel.L;
-    case 'M': return QRErrorCorrectionLevel.M;
-    case 'Q': return QRErrorCorrectionLevel.Q;
-    case 'H': return QRErrorCorrectionLevel.H;
-    default: return QRErrorCorrectionLevel.M;
+    case 'L':
+      return QRErrorCorrectionLevel.L;
+    case 'M':
+      return QRErrorCorrectionLevel.M;
+    case 'Q':
+      return QRErrorCorrectionLevel.Q;
+    case 'H':
+      return QRErrorCorrectionLevel.H;
+    default:
+      return QRErrorCorrectionLevel.M;
   }
 }
 
@@ -63,33 +68,33 @@ function encodeDataToBlocks(
 } {
   const eccLevel = eccToNumeric(ecc);
   const rsBlocks = getRSBlocks(version, eccLevel);
-  
+
   // Create bit buffer and encode
   const buffer = qrBitBuffer();
   const segment = qr8BitByte(data);
-  
+
   buffer.put(segment.getMode(), 4);
   buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
   segment.write(buffer);
-  
+
   // Calculate total data capacity
   let totalDataCount = 0;
   for (const block of rsBlocks) {
     totalDataCount += block.dataCount;
   }
-  
+
   // Add terminator
   const remainingBits = totalDataCount * 8 - buffer.getLengthInBits();
   const terminatorBits = Math.min(4, remainingBits);
   if (terminatorBits > 0) {
     buffer.put(0, terminatorBits);
   }
-  
+
   // Pad to byte boundary
   while (buffer.getLengthInBits() % 8 !== 0) {
     buffer.putBit(false);
   }
-  
+
   // Add padding bytes
   const PAD0 = 0xec;
   const PAD1 = 0x11;
@@ -99,15 +104,15 @@ function encodeDataToBlocks(
       buffer.put(PAD1, 8);
     }
   }
-  
+
   const bufferBytes = buffer.getBuffer();
-  
+
   // Extract per-block data and compute ECC
   const blockDataArrays: Uint8Array[] = [];
   const blockEccArrays: Uint8Array[] = [];
   const blockDataCounts: number[] = [];
   const blockEccCounts: number[] = [];
-  
+
   let offset = 0;
   for (const block of rsBlocks) {
     const blockData = new Uint8Array(block.dataCount);
@@ -116,21 +121,21 @@ function encodeDataToBlocks(
     }
     blockDataArrays.push(blockData);
     blockDataCounts.push(block.dataCount);
-    
+
     const eccCount = block.totalCount - block.dataCount;
     blockEccCounts.push(eccCount);
-    
+
     const eccBytes = computeECC(blockData, eccCount);
     blockEccArrays.push(eccBytes);
-    
+
     offset += block.dataCount;
   }
-  
+
   // Interleave data and ECC (matching encoder's createBytes logic)
   const maxDataCount = Math.max(...blockDataCounts);
   const maxEccCount = Math.max(...blockEccCounts);
   const interleaved: number[] = [];
-  
+
   for (let i = 0; i < maxDataCount; i++) {
     for (let b = 0; b < blockDataArrays.length; b++) {
       if (i < blockDataCounts[b]) {
@@ -138,7 +143,7 @@ function encodeDataToBlocks(
       }
     }
   }
-  
+
   for (let i = 0; i < maxEccCount; i++) {
     for (let b = 0; b < blockEccArrays.length; b++) {
       if (i < blockEccCounts[b]) {
@@ -146,7 +151,7 @@ function encodeDataToBlocks(
       }
     }
   }
-  
+
   return {
     blockDataArrays,
     blockEccArrays,
@@ -170,11 +175,11 @@ function regenerateQRFromModifiedData(
 ): boolean[][] {
   const moduleCount = version * 4 + 17;
   const modules: (boolean | null)[][] = [];
-  
+
   for (let row = 0; row < moduleCount; row++) {
     modules[row] = new Array(moduleCount).fill(null);
   }
-  
+
   // 1. Draw finder patterns
   const setupFinderPattern = (centerRow: number, centerCol: number) => {
     for (let r = -1; r <= 7; r++) {
@@ -193,11 +198,11 @@ function regenerateQRFromModifiedData(
       }
     }
   };
-  
+
   setupFinderPattern(0, 0);
   setupFinderPattern(moduleCount - 7, 0);
   setupFinderPattern(0, moduleCount - 7);
-  
+
   // 2. Draw alignment patterns (MUST be BEFORE timing to match encoder!)
   if (version >= 2) {
     const positions = getPatternPosition(version);
@@ -216,22 +221,22 @@ function regenerateQRFromModifiedData(
       }
     }
   }
-  
+
   // 3. Draw timing patterns (MUST be AFTER alignment to match encoder!)
   for (let i = 8; i < moduleCount - 8; i++) {
     const dark = i % 2 === 0;
     if (modules[6][i] === null) modules[6][i] = dark;
     if (modules[i][6] === null) modules[i][6] = dark;
   }
-  
+
   // 4. Draw format info
   const eccLevel = eccToNumeric(ecc);
   const formatData = (eccLevel << 3) | maskPattern;
   const formatBits = getBCHTypeInfo(formatData);
-  
+
   for (let i = 0; i < 15; i++) {
     const mod = ((formatBits >> i) & 1) === 1;
-    
+
     // Vertical
     if (i < 6) {
       modules[i][8] = mod;
@@ -240,7 +245,7 @@ function regenerateQRFromModifiedData(
     } else {
       modules[moduleCount - 15 + i][8] = mod;
     }
-    
+
     // Horizontal
     if (i < 8) {
       modules[8][moduleCount - i - 1] = mod;
@@ -250,10 +255,10 @@ function regenerateQRFromModifiedData(
       modules[8][15 - i - 1] = mod;
     }
   }
-  
+
   // Fixed dark module
   modules[moduleCount - 8][8] = true;
-  
+
   // 5. Draw version info (version >= 7)
   if (version >= 7) {
     const versionBits = getBCHTypeNumber(version);
@@ -263,7 +268,7 @@ function regenerateQRFromModifiedData(
       modules[(i % 3) + moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
     }
   }
-  
+
   // 6. Combine and interleave data + ECC
   const blockCodewords: Uint8Array[] = [];
   for (let i = 0; i < blockDataArrays.length; i++) {
@@ -274,11 +279,11 @@ function regenerateQRFromModifiedData(
     codeword.set(eccBytes, data.length);
     blockCodewords.push(codeword);
   }
-  
+
   const maxDataCount = Math.max(...blockDataCounts);
   const maxEccCount = Math.max(...blockEccCounts);
   const interleaved: number[] = [];
-  
+
   for (let i = 0; i < maxDataCount; i++) {
     for (let b = 0; b < blockCodewords.length; b++) {
       if (i < blockDataCounts[b]) {
@@ -286,7 +291,7 @@ function regenerateQRFromModifiedData(
       }
     }
   }
-  
+
   for (let i = 0; i < maxEccCount; i++) {
     for (let b = 0; b < blockCodewords.length; b++) {
       if (i < blockEccCounts[b]) {
@@ -294,44 +299,44 @@ function regenerateQRFromModifiedData(
       }
     }
   }
-  
+
   // 7. Place data using zigzag traversal
   const maskFunc = getMaskFunction(maskPattern);
   let inc = -1;
   let row = moduleCount - 1;
   let bitIndex = 7;
   let byteIndex = 0;
-  
+
   for (let col = moduleCount - 1; col > 0; col -= 2) {
     if (col === 6) col -= 1;
-    
+
     while (true) {
       for (let c = 0; c < 2; c++) {
         const currentCol = col - c;
-        
+
         if (modules[row][currentCol] === null) {
           let dark = false;
-          
+
           if (byteIndex < interleaved.length) {
             dark = ((interleaved[byteIndex] >>> bitIndex) & 1) === 1;
           }
-          
+
           if (maskFunc(row, currentCol)) {
             dark = !dark;
           }
-          
+
           modules[row][currentCol] = dark;
           bitIndex--;
-          
+
           if (bitIndex === -1) {
             byteIndex++;
             bitIndex = 7;
           }
         }
       }
-      
+
       row += inc;
-      
+
       if (row < 0 || row >= moduleCount) {
         row -= inc;
         inc = -inc;
@@ -339,7 +344,7 @@ function regenerateQRFromModifiedData(
       }
     }
   }
-  
+
   // Convert to boolean[][]
   const result: boolean[][] = [];
   for (let r = 0; r < moduleCount; r++) {
@@ -348,40 +353,35 @@ function regenerateQRFromModifiedData(
       result[r][c] = modules[r][c] === true;
     }
   }
-  
+
   return result;
 }
 
 /**
  * Classify a module position
  */
-function classifyModule(
-  row: number,
-  col: number,
-  moduleCount: number,
-  version: number
-): string {
+function classifyModule(row: number, col: number, moduleCount: number, version: number): string {
   // Finder patterns (including separators)
   if (row < 8 && col < 8) return 'finder-tl';
   if (row < 8 && col >= moduleCount - 8) return 'finder-tr';
   if (row >= moduleCount - 8 && col < 8) return 'finder-bl';
-  
+
   // Timing patterns
   if (row === 6 && col >= 8 && col < moduleCount - 8) return 'timing-h';
   if (col === 6 && row >= 8 && row < moduleCount - 8) return 'timing-v';
-  
+
   // Format info
   if (row === 8 && col < 9) return 'format-v1';
   if (row === 8 && col >= moduleCount - 8) return 'format-h';
   if (col === 8 && row < 9) return 'format-v2';
   if (col === 8 && row >= moduleCount - 8) return 'format-v3';
-  
+
   // Version info (version >= 7)
   if (version >= 7) {
     if (row < 6 && col >= moduleCount - 11 && col < moduleCount - 8) return 'version-tr';
     if (col < 6 && row >= moduleCount - 11 && row < moduleCount - 8) return 'version-bl';
   }
-  
+
   // Alignment patterns (version >= 2)
   if (version >= 2) {
     const positions = getPatternPosition(version);
@@ -391,14 +391,14 @@ function classifyModule(
         if (pr < 8 && pc < 8) continue;
         if (pr < 8 && pc >= moduleCount - 8) continue;
         if (pr >= moduleCount - 8 && pc < 8) continue;
-        
+
         if (Math.abs(row - pr) <= 2 && Math.abs(col - pc) <= 2) {
           return 'alignment';
         }
       }
     }
   }
-  
+
   return 'data';
 }
 
@@ -410,16 +410,16 @@ describe('Matrix Regeneration Debug', () => {
     { data: 'https://example.com', version: 7, ecc: 'H' as const, mask: 0 },
     { data: 'A', version: 2, ecc: 'H' as const, mask: 0 },
   ];
-  
+
   for (const tc of testCases) {
     it(`compares encoder vs regen for v${tc.version} ECC=${tc.ecc} mask=${tc.mask}`, () => {
       // Generate with encoder
       const qr = qrcode(tc.version, tc.ecc);
       qr.addData(tc.data);
       qr.make(tc.mask);
-      
+
       const moduleCount = qr.getModuleCount();
-      
+
       // Extract encoder matrix
       const encoderMatrix: boolean[][] = [];
       for (let r = 0; r < moduleCount; r++) {
@@ -428,11 +428,11 @@ describe('Matrix Regeneration Debug', () => {
           encoderMatrix[r][c] = qr.isDark(r, c);
         }
       }
-      
+
       // Encode data to blocks
       const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts, interleavedData } =
         encodeDataToBlocks(tc.data, tc.version, tc.ecc);
-      
+
       // Regenerate matrix
       const regenMatrix = regenerateQRFromModifiedData(
         blockDataArrays,
@@ -443,7 +443,7 @@ describe('Matrix Regeneration Debug', () => {
         tc.ecc,
         tc.mask
       );
-      
+
       // Compare and classify mismatches
       const mismatches: Record<string, number> = {};
       const sampleMismatches: Array<{
@@ -453,19 +453,19 @@ describe('Matrix Regeneration Debug', () => {
         encoder: boolean;
         regen: boolean;
       }> = [];
-      
+
       let totalMismatches = 0;
-      
+
       for (let r = 0; r < moduleCount; r++) {
         for (let c = 0; c < moduleCount; c++) {
           const encoderVal = encoderMatrix[r][c];
           const regenVal = regenMatrix[r][c];
-          
+
           if (encoderVal !== regenVal) {
             totalMismatches++;
             const type = classifyModule(r, c, moduleCount, tc.version);
             mismatches[type] = (mismatches[type] || 0) + 1;
-            
+
             if (sampleMismatches.length < 20) {
               sampleMismatches.push({
                 row: r,
@@ -478,22 +478,24 @@ describe('Matrix Regeneration Debug', () => {
           }
         }
       }
-      
+
       console.log(`\n=== v${tc.version} ECC=${tc.ecc} mask=${tc.mask} ===`);
       console.log(`Total modules: ${moduleCount * moduleCount}`);
-      console.log(`Total mismatches: ${totalMismatches} (${((totalMismatches / (moduleCount * moduleCount)) * 100).toFixed(2)}%)`);
+      console.log(
+        `Total mismatches: ${totalMismatches} (${((totalMismatches / (moduleCount * moduleCount)) * 100).toFixed(2)}%)`
+      );
       console.log('Mismatches by type:', mismatches);
       console.log('Sample mismatches:', sampleMismatches.slice(0, 10));
-      
+
       // The test will fail if there are mismatches - that's the point!
       // We want to see WHERE the mismatches are
       if (totalMismatches > 0) {
         console.log('\n--- DETAILED ANALYSIS ---');
-        
+
         // Check if interleaved data matches
         console.log('Interleaved data length:', interleavedData.length);
         console.log('First 20 bytes of interleaved:', interleavedData.slice(0, 20));
-        
+
         // Check structural patterns
         console.log('\nFinder pattern (top-left corner, first 8 rows/cols):');
         for (let r = 0; r < 8; r++) {
@@ -508,31 +510,36 @@ describe('Matrix Regeneration Debug', () => {
           }
         }
       }
-      
+
       expect(totalMismatches).toBe(0);
     });
   }
-  
+
   it('debug: checks ECC computation matches encoder exactly', () => {
     // Test with version 7, ECC H which was failing
     const data = 'https://example.com';
     const version = 7;
     const ecc = 'H' as const;
-    
-    const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts } =
-      encodeDataToBlocks(data, version, ecc);
-    
+
+    const { blockDataArrays, blockEccArrays, blockDataCounts, blockEccCounts } = encodeDataToBlocks(
+      data,
+      version,
+      ecc
+    );
+
     console.log('\n=== ECC Debug for v7 ECC=H ===');
     console.log('Number of blocks:', blockDataArrays.length);
-    
+
     // Get RS blocks from the encoder to compare
     const eccLevel = eccToNumeric(ecc);
     const rsBlocks = getRSBlocks(version, eccLevel);
     console.log('RS Blocks structure:');
     for (let i = 0; i < rsBlocks.length; i++) {
-      console.log(`  Block ${i}: totalCount=${rsBlocks[i].totalCount}, dataCount=${rsBlocks[i].dataCount}`);
+      console.log(
+        `  Block ${i}: totalCount=${rsBlocks[i].totalCount}, dataCount=${rsBlocks[i].dataCount}`
+      );
     }
-    
+
     for (let i = 0; i < blockDataArrays.length; i++) {
       console.log(`Block ${i}:`);
       console.log(`  Data count: ${blockDataCounts[i]}`);
@@ -540,23 +547,23 @@ describe('Matrix Regeneration Debug', () => {
       console.log(`  Data (first 10): ${Array.from(blockDataArrays[i].slice(0, 10))}`);
       console.log(`  ECC (first 10): ${Array.from(blockEccArrays[i].slice(0, 10))}`);
     }
-    
+
     // Check if blocks have different sizes (which would require special interleaving)
     const uniqueDataCounts = new Set(blockDataCounts);
     console.log('Unique data counts:', Array.from(uniqueDataCounts));
     console.log('Has mixed block sizes:', uniqueDataCounts.size > 1);
-    
+
     // Trace interleaving step by step
     const maxDataCount = Math.max(...blockDataCounts);
     const maxEccCount = Math.max(...blockEccCounts);
     console.log('\n=== Interleaving trace ===');
     console.log('Max data count:', maxDataCount);
     console.log('Max ECC count:', maxEccCount);
-    
+
     // Trace first few rounds of data interleaving
     console.log('\nData interleaving (first 3 rounds):');
     for (let i = 0; i < Math.min(3, maxDataCount); i++) {
-      let roundBytes = [];
+      const roundBytes = [];
       for (let b = 0; b < blockDataArrays.length; b++) {
         if (i < blockDataCounts[b]) {
           roundBytes.push(`B${b}[${i}]=${blockDataArrays[b][i]}`);
@@ -566,39 +573,41 @@ describe('Matrix Regeneration Debug', () => {
       }
       console.log(`  Round ${i}: ${roundBytes.join(', ')}`);
     }
-    
+
     // Show what happens at the boundary (round 13 where block 4 has extra byte)
     console.log(`\nRound 13 (boundary where block 4 has extra data):`);
     for (let b = 0; b < blockDataArrays.length; b++) {
       const hasData = 13 < blockDataCounts[b];
-      console.log(`  Block ${b}: dataCount=${blockDataCounts[b]}, has byte at index 13: ${hasData}`);
+      console.log(
+        `  Block ${b}: dataCount=${blockDataCounts[b]}, has byte at index 13: ${hasData}`
+      );
     }
-    
+
     expect(blockDataArrays.length).toBeGreaterThan(0);
   });
-  
+
   it('compares encoder createBytes output with our interleaving', () => {
     const data = 'https://example.com';
     const version = 4;
     const ecc = 'M' as const;
     const mask = 0;
-    
+
     // Our encoding
     const { interleavedData } = encodeDataToBlocks(data, version, ecc);
-    
+
     // Create encoder and get its internal data cache
     // We can't directly access _dataCache, so we compare by regenerating
     const qr = qrcode(version, ecc);
     qr.addData(data);
     qr.make(mask);
-    
+
     // The encoder's interleaved data is what mapData receives
     // We can verify by checking if our regeneration produces the same pattern
-    
+
     console.log('\nOur interleaved data (first 30 bytes):');
     console.log(interleavedData.slice(0, 30));
     console.log('Total interleaved bytes:', interleavedData.length);
-    
+
     // This test is informational - the real comparison is in the matrix test above
     expect(interleavedData.length).toBeGreaterThan(0);
   });

@@ -5,6 +5,7 @@ QR code domain knowledge - constants, patterns, and encoding rules.
 ## Purpose
 
 This module provides QR code specifications and pure math:
+
 - Alignment pattern positions
 - Pattern detection (finder, timing, alignment)
 - Mask functions
@@ -21,10 +22,10 @@ None - pure coordinate and number math only.
 ### Version and Size
 
 ```typescript
-import { 
-  getModuleCountForVersion, 
+import {
+  getModuleCountForVersion,
   getVersionFromModuleCount,
-  getAlignmentPositions 
+  getAlignmentPositions,
 } from '@/modules/qr-spec';
 
 const moduleCount = getModuleCountForVersion(5); // 37
@@ -35,13 +36,13 @@ const alignmentPositions = getAlignmentPositions(7); // [6, 22, 38]
 ### Pattern Detection
 
 ```typescript
-import { 
-  isFinderPattern, 
-  isTimingPattern, 
+import {
+  isFinderPattern,
+  isTimingPattern,
   isAlignmentPattern,
   isStructuralModule,
   isData,
-  isLocked 
+  isLocked,
 } from '@/modules/qr-spec';
 
 // Check module types
@@ -93,10 +94,10 @@ const typeNumber = getBCHTypeNumber(version); // Version info BCH
 ### Data Capacity Tables
 
 ```typescript
-import { 
+import {
   ECC_CAPACITIES_NUMERIC,
   ECC_CAPACITIES_ALPHANUMERIC,
-  ECC_CAPACITIES_BYTE 
+  ECC_CAPACITIES_BYTE,
 } from '@/modules/qr-spec';
 
 // Get capacity for version 5, ECC level M
@@ -117,7 +118,7 @@ function canModifyModule(row: number, col: number, moduleCount: number, version:
   if (isStructuralModule(row, col, moduleCount, version)) {
     return false;
   }
-  
+
   // Can modify data modules
   return isData(row, col, moduleCount, version);
 }
@@ -128,9 +129,14 @@ function canModifyModule(row: number, col: number, moduleCount: number, version:
 ```typescript
 import { getAlignmentPatternCenters } from '@/modules/qr-spec';
 
-function drawAlignmentPatterns(ctx: CanvasRenderingContext2D, version: number, moduleCount: number, moduleSize: number) {
+function drawAlignmentPatterns(
+  ctx: CanvasRenderingContext2D,
+  version: number,
+  moduleCount: number,
+  moduleSize: number
+) {
   const centers = getAlignmentPatternCenters(version, moduleCount);
-  
+
   for (const { row, col } of centers) {
     drawAlignmentPattern(ctx, col * moduleSize, row * moduleSize, moduleSize);
   }

@@ -56,7 +56,8 @@ function main() {
     if (basis === 'direct-id') typeStats.direct += 1;
     else typeStats.nonDirect += 1;
 
-    if (!byDomain.has(currentDomain)) byDomain.set(currentDomain, { total: 0, direct: 0, nonDirect: 0 });
+    if (!byDomain.has(currentDomain))
+      byDomain.set(currentDomain, { total: 0, direct: 0, nonDirect: 0 });
     const domainStats = byDomain.get(currentDomain);
     domainStats.total += 1;
     if (basis === 'direct-id') domainStats.direct += 1;
@@ -77,7 +78,9 @@ function main() {
     generatedAt: new Date().toISOString(),
     totals,
     byBasis: Object.fromEntries([...byBasis.entries()].sort((a, b) => b[1] - a[1])),
-    byType: Object.fromEntries([...byType.entries()].sort((a, b) => Number(a[0].slice(1)) - Number(b[0].slice(1)))),
+    byType: Object.fromEntries(
+      [...byType.entries()].sort((a, b) => Number(a[0].slice(1)) - Number(b[0].slice(1)))
+    ),
     byDomain: Object.fromEntries([...byDomain.entries()].sort((a, b) => a[0].localeCompare(b[0]))),
     nonDirectRows,
   };
@@ -99,7 +102,9 @@ function main() {
   }
   md.push('');
   md.push('## Type Breakdown');
-  for (const [type, stats] of [...byType.entries()].sort((a, b) => Number(a[0].slice(1)) - Number(b[0].slice(1)))) {
+  for (const [type, stats] of [...byType.entries()].sort(
+    (a, b) => Number(a[0].slice(1)) - Number(b[0].slice(1))
+  )) {
     const pct = ((stats.direct / Math.max(1, stats.total)) * 100).toFixed(1);
     md.push(`- ${type}: ${stats.direct}/${stats.total} direct (${pct}%)`);
   }

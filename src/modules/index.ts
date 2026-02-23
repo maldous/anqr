@@ -18,10 +18,7 @@ export * from './animation';
 // ============================================
 // BROWSER CLIPBOARD (canonical source for clipboard)
 // ============================================
-export {
-  copyImageToClipboard,
-  copyToClipboard,
-} from './browser-clipboard';
+export { copyImageToClipboard, copyToClipboard } from './browser-clipboard';
 // ============================================
 // BROWSER I/O (canonical source for canvas/download)
 // ============================================

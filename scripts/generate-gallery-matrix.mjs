@@ -86,10 +86,10 @@ function parseScenarios(src) {
     const block = body.slice(blockStart, blockEnd);
 
     const id = ids[i].id;
-    const title = block.match(/title:\s*'([^']*)'/)?.[ 1] || id;
-    const description = block.match(/description:\s*'([^']*)'/)?.[ 1] || '';
-    const featureGroup = block.match(/featureGroup:\s*'([^']*)'/)?.[ 1] || 'unknown';
-    const heroPriority = Number.parseInt(block.match(/heroPriority:\s*(\d+)/)?.[ 1] || '0', 10);
+    const title = block.match(/title:\s*'([^']*)'/)?.[1] || id;
+    const description = block.match(/description:\s*'([^']*)'/)?.[1] || '';
+    const featureGroup = block.match(/featureGroup:\s*'([^']*)'/)?.[1] || 'unknown';
+    const heroPriority = Number.parseInt(block.match(/heroPriority:\s*(\d+)/)?.[1] || '0', 10);
     const galleryEligible = block.includes('galleryEligible: true');
     const useOverlay = block.includes('useOverlay: true');
 
@@ -231,7 +231,9 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
 
   // If the background is generating the full overlay, poll until it's cached
   if (result.generating) {
-    console.warn(`  ⏳ Background generation triggered, polling every ${POLL_INTERVAL_MS / 1000}s...`);
+    console.warn(
+      `  ⏳ Background generation triggered, polling every ${POLL_INTERVAL_MS / 1000}s...`
+    );
     for (let poll = 1; poll <= MAX_POLLS; poll++) {
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
       try {
@@ -247,7 +249,9 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
         console.warn(`  ⏳ Poll ${poll}/${MAX_POLLS} failed: ${err.message}`);
       }
     }
-    console.warn(`  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`);
+    console.warn(
+      `  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`
+    );
     return result.buffer;
   }
 
@@ -272,9 +276,7 @@ async function runPool(tasks, concurrency) {
     }
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker())
-  );
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()));
   return results;
 }
 

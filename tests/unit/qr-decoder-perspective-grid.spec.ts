@@ -83,8 +83,22 @@ describe('PerspectiveTransform', () => {
       const { PerspectiveTransform } = await getModule();
       // Map from (0,0),(100,0),(100,100),(0,100) to (10,10),(90,10),(90,90),(10,90)
       const transform = PerspectiveTransform.quadrilateralToQuadrilateral(
-        0, 0, 100, 0, 100, 100, 0, 100, // source
-        10, 10, 90, 10, 90, 90, 10, 90 // dest
+        0,
+        0,
+        100,
+        0,
+        100,
+        100,
+        0,
+        100, // source
+        10,
+        10,
+        90,
+        10,
+        90,
+        90,
+        10,
+        90 // dest
       );
       // Center (50,50) should map to (50,50)
       const center = new Float32Array([50, 50]);
@@ -96,8 +110,22 @@ describe('PerspectiveTransform', () => {
     it('maps corners correctly', async () => {
       const { PerspectiveTransform } = await getModule();
       const transform = PerspectiveTransform.quadrilateralToQuadrilateral(
-        0, 0, 100, 0, 100, 100, 0, 100,
-        20, 20, 80, 20, 80, 80, 20, 80
+        0,
+        0,
+        100,
+        0,
+        100,
+        100,
+        0,
+        100,
+        20,
+        20,
+        80,
+        20,
+        80,
+        80,
+        20,
+        80
       );
       const corners = new Float32Array([0, 0, 100, 0, 100, 100, 0, 100]);
       transform.transformPoints(corners);
@@ -153,8 +181,22 @@ describe('DefaultGridSampler', () => {
 
     // Sample the same grid
     const transform = PerspectiveTransform.quadrilateralToQuadrilateral(
-      0.5, 0.5, 9.5, 0.5, 9.5, 9.5, 0.5, 9.5,
-      0.5, 0.5, 9.5, 0.5, 9.5, 9.5, 0.5, 9.5
+      0.5,
+      0.5,
+      9.5,
+      0.5,
+      9.5,
+      9.5,
+      0.5,
+      9.5,
+      0.5,
+      0.5,
+      9.5,
+      0.5,
+      9.5,
+      9.5,
+      0.5,
+      9.5
     );
     const result = sampler.sampleGridWithTransform(source, 10, 10, transform);
     expect(result.getWidth()).toBe(10);
@@ -188,9 +230,24 @@ describe('DefaultGridSampler', () => {
 
     const result = sampler.sampleGrid(
       source,
-      21, 21,
-      0.5, 0.5, 20.5, 0.5, 20.5, 20.5, 0.5, 20.5,
-      0.5, 0.5, 20.5, 0.5, 20.5, 20.5, 0.5, 20.5
+      21,
+      21,
+      0.5,
+      0.5,
+      20.5,
+      0.5,
+      20.5,
+      20.5,
+      0.5,
+      20.5,
+      0.5,
+      0.5,
+      20.5,
+      0.5,
+      20.5,
+      20.5,
+      0.5,
+      20.5
     );
     expect(result.getWidth()).toBe(21);
     expect(result.getHeight()).toBe(21);

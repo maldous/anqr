@@ -54,7 +54,10 @@ function httpsGet(url, extraHeaders = {}) {
     const mod = parsedUrl.protocol === 'http:' ? http : https;
     const req = mod.get(
       url,
-      { headers: { 'User-Agent': 'ANQR-Validator/1.0', ...extraHeaders }, timeout: REQUEST_TIMEOUT_MS },
+      {
+        headers: { 'User-Agent': 'ANQR-Validator/1.0', ...extraHeaders },
+        timeout: REQUEST_TIMEOUT_MS,
+      },
       (res) => {
         const chunks = [];
         res.on('data', (chunk) => chunks.push(chunk));
@@ -65,7 +68,7 @@ function httpsGet(url, extraHeaders = {}) {
             body: Buffer.concat(chunks).toString('utf-8'),
           });
         });
-      },
+      }
     );
     req.on('timeout', () => {
       req.destroy();
@@ -120,18 +123,25 @@ async function checkNetlify() {
   const details = {};
   try {
     // Use Netlify CLI to get site info
-    const siteRaw = execSync(
-      `npx netlify api getSite --data '{"site_id":"${NETLIFY_SITE_ID}"}'`,
-      { encoding: 'utf-8', timeout: 30_000, stdio: ['pipe', 'pipe', 'pipe'] },
-    );
+    const siteRaw = execSync(`npx netlify api getSite --data '{"site_id":"${NETLIFY_SITE_ID}"}'`, {
+      encoding: 'utf-8',
+      timeout: 30_000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
     const site = safeJSON(siteRaw);
     if (!site) {
-      addResult(name, 'CRITICAL', 'FAIL', 'Could not parse Netlify site response', { raw: siteRaw.slice(0, 500) });
+      addResult(name, 'CRITICAL', 'FAIL', 'Could not parse Netlify site response', {
+        raw: siteRaw.slice(0, 500),
+      });
       return;
     }
 
     details.state = site.state;
-    details.ssl = !!(site.ssl || site.force_ssl || (site.ssl_url && site.ssl_url.startsWith('https')));
+    details.ssl = !!(
+      site.ssl ||
+      site.force_ssl ||
+      (site.ssl_url && site.ssl_url.startsWith('https'))
+    );
     details.custom_domain = site.custom_domain || site.default_domain;
     details.url = site.ssl_url || site.url;
 
@@ -140,7 +150,7 @@ async function checkNetlify() {
     try {
       const deploysRaw = execSync(
         `npx netlify api listSiteDeploys --data '{"site_id":"${NETLIFY_SITE_ID}","per_page":1}'`,
-        { encoding: 'utf-8', timeout: 30_000, stdio: ['pipe', 'pipe', 'pipe'] },
+        { encoding: 'utf-8', timeout: 30_000, stdio: ['pipe', 'pipe', 'pipe'] }
       );
       const deploys = safeJSON(deploysRaw);
       if (Array.isArray(deploys) && deploys.length > 0) {
@@ -189,7 +199,10 @@ async function checkSentry() {
 
   for (const proj of SENTRY_PROJECTS) {
     try {
-      const res = await httpsGet(`https://sentry.io/api/0/projects/${SENTRY_ORG}/${proj}/`, headers);
+      const res = await httpsGet(
+        `https://sentry.io/api/0/projects/${SENTRY_ORG}/${proj}/`,
+        headers
+      );
       const data = safeJSON(res.body);
       if (res.statusCode === 200 && data) {
         const isActive = data.status === 'active';
@@ -200,7 +213,7 @@ async function checkSentry() {
         try {
           const issuesRes = await httpsGet(
             `https://sentry.io/api/0/projects/${SENTRY_ORG}/${proj}/issues/?query=is:unresolved&limit=1`,
-            headers,
+            headers
           );
           // Sentry returns the total in the Link header or X-Hits header
           unresolvedCount = Number.parseInt(issuesRes.headers['x-hits'] || '0', 10);
@@ -214,7 +227,11 @@ async function checkSentry() {
         }
 
         totalUnresolved += unresolvedCount;
-        details.projects[proj] = { status: data.status, active: isActive, unresolved: unresolvedCount };
+        details.projects[proj] = {
+          status: data.status,
+          active: isActive,
+          unresolved: unresolvedCount,
+        };
       } else {
         details.projects[proj] = { status: 'not_found', active: false, statusCode: res.statusCode };
       }
@@ -240,11 +257,29 @@ async function checkSentry() {
 
   if (allExist && dsnOk) {
     const warnSuffix = totalUnresolved > 0 ? ` (${totalUnresolved} unresolved issues)` : '';
-    addResult(name, 'CRITICAL', 'PASS', `${activeCount}/${SENTRY_PROJECTS.length} projects active${warnSuffix}`, details);
+    addResult(
+      name,
+      'CRITICAL',
+      'PASS',
+      `${activeCount}/${SENTRY_PROJECTS.length} projects active${warnSuffix}`,
+      details
+    );
   } else if (allExist) {
-    addResult(name, 'CRITICAL', 'WARN', `Projects active but DSN ${details.dsn_check.status}`, details);
+    addResult(
+      name,
+      'CRITICAL',
+      'WARN',
+      `Projects active but DSN ${details.dsn_check.status}`,
+      details
+    );
   } else {
-    addResult(name, 'CRITICAL', 'FAIL', `Only ${activeCount}/${SENTRY_PROJECTS.length} projects active`, details);
+    addResult(
+      name,
+      'CRITICAL',
+      'FAIL',
+      `Only ${activeCount}/${SENTRY_PROJECTS.length} projects active`,
+      details
+    );
   }
 }
 
@@ -265,11 +300,13 @@ async function checkCloudflare() {
     // Get zone
     const zonesRes = await httpsGet(
       `https://api.cloudflare.com/client/v4/zones?name=${CLOUDFLARE_ZONE_NAME}`,
-      headers,
+      headers
     );
     const zonesData = safeJSON(zonesRes.body);
     if (!zonesData?.success || !zonesData.result?.length) {
-      addResult(name, 'CRITICAL', 'FAIL', 'Zone not found', { response: zonesRes.body.slice(0, 500) });
+      addResult(name, 'CRITICAL', 'FAIL', 'Zone not found', {
+        response: zonesRes.body.slice(0, 500),
+      });
       return;
     }
 
@@ -283,23 +320,27 @@ async function checkCloudflare() {
     // Get DNS records
     const dnsRes = await httpsGet(
       `https://api.cloudflare.com/client/v4/zones/${zone.id}/dns_records?type=CNAME`,
-      headers,
+      headers
     );
     const dnsData = safeJSON(dnsRes.body);
     const records = dnsData?.result || [];
 
     // Check root CNAME (anqr.link → anqr.netlify.app)
     const rootCname = records.find(
-      (r) => (r.name === 'anqr.link' || r.name === '@') && r.content === EXPECTED_CNAME_TARGET,
+      (r) => (r.name === 'anqr.link' || r.name === '@') && r.content === EXPECTED_CNAME_TARGET
     );
     // Check www CNAME (www.anqr.link → anqr.netlify.app)
     const wwwCname = records.find(
-      (r) => (r.name === 'www.anqr.link' || r.name === 'www') && r.content === EXPECTED_CNAME_TARGET,
+      (r) => (r.name === 'www.anqr.link' || r.name === 'www') && r.content === EXPECTED_CNAME_TARGET
     );
 
     details.dns = {
-      root_cname: rootCname ? { found: true, content: rootCname.content, proxied: rootCname.proxied } : { found: false },
-      www_cname: wwwCname ? { found: true, content: wwwCname.content, proxied: wwwCname.proxied } : { found: false },
+      root_cname: rootCname
+        ? { found: true, content: rootCname.content, proxied: rootCname.proxied }
+        : { found: false },
+      www_cname: wwwCname
+        ? { found: true, content: wwwCname.content, proxied: wwwCname.proxied }
+        : { found: false },
       total_cname_records: records.length,
     };
 
@@ -308,7 +349,7 @@ async function checkCloudflare() {
     try {
       const sslRes = await httpsGet(
         `https://api.cloudflare.com/client/v4/zones/${zone.id}/ssl/verification`,
-        headers,
+        headers
       );
       const sslData = safeJSON(sslRes.body);
       if (sslData?.result?.length) {
@@ -407,7 +448,13 @@ async function checkLiveSite() {
     const failed = Object.entries(details.endpoints)
       .filter(([, e]) => !e.passed)
       .map(([label]) => label);
-    addResult(name, 'CRITICAL', 'FAIL', `${passedCount}/${endpointCount} passed; failed: ${failed.join(', ')}`, details);
+    addResult(
+      name,
+      'CRITICAL',
+      'FAIL',
+      `${passedCount}/${endpointCount} passed; failed: ${failed.join(', ')}`,
+      details
+    );
   }
 }
 
@@ -429,14 +476,15 @@ async function checkGooglePlay() {
     const data = safeJSON(googleServicesContent);
     details.google_services = {
       exists: true,
-      has_project_id: !!(data?.project_info?.project_id),
+      has_project_id: !!data?.project_info?.project_id,
       project_id: data?.project_info?.project_id || null,
     };
   } else {
     details.google_services = { exists: false };
   }
 
-  const allPresent = details.play_store_key && details.release_keystore && details.google_services.exists;
+  const allPresent =
+    details.play_store_key && details.release_keystore && details.google_services.exists;
 
   if (allPresent) {
     addResult(name, 'WARN', 'PASS', 'All Play Store files present', details);
@@ -490,7 +538,8 @@ async function checkSnyk() {
     const data = safeJSON(res.body);
 
     if (res.statusCode === 200 && data?.data) {
-      details.username = data.data.attributes?.username || data.data.attributes?.name || 'authenticated';
+      details.username =
+        data.data.attributes?.username || data.data.attributes?.name || 'authenticated';
       addResult(name, 'WARN', 'PASS', 'API authenticated', details);
     } else {
       details.error = data?.errors?.[0]?.detail || 'Unexpected response';
@@ -596,14 +645,32 @@ async function checkIndexNow() {
     if (details.live_url.key_match) {
       addResult(name, 'WARN', 'PASS', 'Key file valid locally and live', details);
     } else if (res.statusCode !== 200) {
-      addResult(name, 'WARN', 'WARN', `Local file OK but live URL returned HTTP ${res.statusCode}`, details);
+      addResult(
+        name,
+        'WARN',
+        'WARN',
+        `Local file OK but live URL returned HTTP ${res.statusCode}`,
+        details
+      );
     } else {
-      addResult(name, 'WARN', 'WARN', 'Local file OK but live URL body does not match key (not deployed?)', details);
+      addResult(
+        name,
+        'WARN',
+        'WARN',
+        'Local file OK but live URL body does not match key (not deployed?)',
+        details
+      );
     }
   } catch (e) {
     details.live_url.url = liveUrl;
     details.live_url.error = e.message;
-    addResult(name, 'WARN', 'WARN', `Local file OK but live URL unreachable: ${e.message}`, details);
+    addResult(
+      name,
+      'WARN',
+      'WARN',
+      `Local file OK but live URL unreachable: ${e.message}`,
+      details
+    );
   }
 }
 
@@ -637,7 +704,7 @@ async function main() {
   const statusLabel = { PASS: 'PASS', FAIL: 'FAIL', WARN: 'WARN', SKIP: 'SKIP' };
 
   for (const r of results) {
-    const icon = statusIcon[r.status] || '?';
+    const _icon = statusIcon[r.status] || '?';
     const label = statusLabel[r.status] || r.status;
     console.log(`[${label}] ${r.name} — ${r.summary}`);
   }

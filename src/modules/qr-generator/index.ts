@@ -60,12 +60,7 @@ export {
 // ECC awareness
 export { getEccWeight, isEccSafeToModify } from './ecc';
 // Image filters (re-exported from overlay module)
-export {
-  applyBoxBlur,
-  applyCannyEdge,
-  applySharpen,
-  applySobelEdge,
-} from './filters';
+export { applyBoxBlur, applyCannyEdge, applySharpen, applySobelEdge } from './filters';
 // QR-specific preprocessing
 export {
   preprocessImageData,

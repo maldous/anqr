@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node
@@ -115,7 +121,12 @@ function mockCreateCanvasFn(filler: PixelFiller) {
   };
 }
 
-function countDarkInModule(matrix: boolean[][], scale: number, moduleRow: number, moduleCol: number): number {
+function countDarkInModule(
+  matrix: boolean[][],
+  scale: number,
+  moduleRow: number,
+  moduleCol: number
+): number {
   let dark = 0;
   const y0 = moduleRow * scale;
   const x0 = moduleCol * scale;
@@ -870,10 +881,18 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
         callCount++;
         if (callCount === 1) {
           // detect canvas - null ctx (skip BW detection)
-          return { width: w, height: h, getContext: vi.fn(() => null) } as unknown as HTMLCanvasElement;
+          return {
+            width: w,
+            height: h,
+            getContext: vi.fn(() => null),
+          } as unknown as HTMLCanvasElement;
         }
         // scaled canvas - also null ctx → createEmptyMatrix
-        return { width: w, height: h, getContext: vi.fn(() => null) } as unknown as HTMLCanvasElement;
+        return {
+          width: w,
+          height: h,
+          getContext: vi.fn(() => null),
+        } as unknown as HTMLCanvasElement;
       };
 
       const result = await gen(
@@ -942,7 +961,9 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
       const config = baseConfig();
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
-      const canvasFactory = { createCanvas: mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128)) };
+      const canvasFactory = {
+        createCanvas: mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128)),
+      };
 
       const result = await gen(
         qr as never,
@@ -1019,7 +1040,11 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
       const createCanvas = async (w: number, h: number) => {
         callCount++;
         if (callCount === 1) {
-          return { width: w, height: h, getContext: vi.fn(() => null) } as unknown as HTMLCanvasElement;
+          return {
+            width: w,
+            height: h,
+            getContext: vi.fn(() => null),
+          } as unknown as HTMLCanvasElement;
         }
         const data = new Uint8ClampedArray(w * h * 4);
         fillUniform(data, 128, 128, 128);
@@ -1029,7 +1054,11 @@ describe('qr-generator/pixel-matrix-dithered.ts', () => {
           imageSmoothingEnabled: true,
           imageSmoothingQuality: 'high' as const,
         };
-        return { width: w, height: h, getContext: vi.fn(() => ctx) } as unknown as HTMLCanvasElement;
+        return {
+          width: w,
+          height: h,
+          getContext: vi.fn(() => ctx),
+        } as unknown as HTMLCanvasElement;
       };
 
       const canvasFactory = { createCanvas };

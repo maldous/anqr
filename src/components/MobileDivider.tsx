@@ -9,7 +9,7 @@ interface MobileDividerProps {
 export function MobileDivider({ onDrag, onDragEnd }: Readonly<MobileDividerProps>) {
   const [isDragging, setIsDragging] = useState(false);
   const lastY = useRef<number>(0);
-  const dividerRef = useRef<HTMLDivElement>(null);
+  const dividerRef = useRef<HTMLButtonElement>(null);
 
   // Handle mouse/touch start
   const handleDragStart = useCallback((clientY: number) => {
@@ -98,10 +98,9 @@ export function MobileDivider({ onDrag, onDragEnd }: Readonly<MobileDividerProps
   }, [isDragging, handleDragMove, handleDragEnd]);
 
   return (
-    <div
+    <button
       ref={dividerRef}
-      role="button"
-      tabIndex={0}
+      type="button"
       aria-label="Resize panels. Use arrow keys to adjust."
       className={`
         md:hidden
@@ -112,6 +111,7 @@ export function MobileDivider({ onDrag, onDragEnd }: Readonly<MobileDividerProps
         touch-none
         select-none
         transition-all duration-150
+        appearance-none p-0 rounded-none
         focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1
         ${
           isDragging
@@ -132,6 +132,6 @@ export function MobileDivider({ onDrag, onDragEnd }: Readonly<MobileDividerProps
       <GripHorizontal
         className={`h-5 w-5 transition-all duration-150 ${isDragging ? 'text-foreground scale-110' : 'text-muted-foreground'}`}
       />
-    </div>
+    </button>
   );
 }

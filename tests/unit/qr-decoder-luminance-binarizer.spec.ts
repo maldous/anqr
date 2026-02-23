@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // Polyfill ImageData for Node environment
@@ -100,7 +106,8 @@ describe('RGBALuminanceSource', () => {
   });
 
   it('invert returns an InvertedLuminanceSource', async () => {
-    const { RGBALuminanceSource, InvertedLuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { RGBALuminanceSource, InvertedLuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const source = new RGBALuminanceSource(new Uint8ClampedArray([100, 200]), 2, 1);
     const inverted = source.invert();
     expect(inverted).toBeInstanceOf(InvertedLuminanceSource);
@@ -109,7 +116,7 @@ describe('RGBALuminanceSource', () => {
   it('toString produces text representation', async () => {
     const { RGBALuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
     // Values: 0x00 (<0x40 = '#'), 0x60 (<0x80 = '+'), 0xA0 (<0xC0 = '.'), 0xF0 (>= 0xC0 = ' ')
-    const luminances = new Uint8ClampedArray([0x00, 0x60, 0xA0, 0xF0]);
+    const luminances = new Uint8ClampedArray([0x00, 0x60, 0xa0, 0xf0]);
     const source = new RGBALuminanceSource(luminances, 2, 2);
     const str = source.toString();
     expect(str).toContain('#');
@@ -136,7 +143,8 @@ describe('RGBALuminanceSource', () => {
 
 describe('InvertedLuminanceSource', () => {
   it('inverts getRow values', async () => {
-    const { RGBALuminanceSource, InvertedLuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { RGBALuminanceSource, InvertedLuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const luminances = new Uint8ClampedArray([0, 100, 200, 255]);
     const source = new RGBALuminanceSource(luminances, 2, 2);
     const inverted = new InvertedLuminanceSource(source);
@@ -146,7 +154,8 @@ describe('InvertedLuminanceSource', () => {
   });
 
   it('inverts getMatrix values', async () => {
-    const { RGBALuminanceSource, InvertedLuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { RGBALuminanceSource, InvertedLuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const luminances = new Uint8ClampedArray([0, 100, 200, 255]);
     const source = new RGBALuminanceSource(luminances, 2, 2);
     const inverted = new InvertedLuminanceSource(source);
@@ -158,7 +167,8 @@ describe('InvertedLuminanceSource', () => {
   });
 
   it('invert returns original source', async () => {
-    const { RGBALuminanceSource, InvertedLuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { RGBALuminanceSource, InvertedLuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const original = new RGBALuminanceSource(new Uint8ClampedArray([100]), 1, 1);
     const inverted = new InvertedLuminanceSource(original);
     const uninverted = inverted.invert();
@@ -166,21 +176,24 @@ describe('InvertedLuminanceSource', () => {
   });
 
   it('delegates isCropSupported', async () => {
-    const { RGBALuminanceSource, InvertedLuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { RGBALuminanceSource, InvertedLuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const source = new RGBALuminanceSource(new Uint8ClampedArray(4), 2, 2);
     const inverted = new InvertedLuminanceSource(source);
     expect(inverted.isCropSupported()).toBe(false);
   });
 
   it('delegates isRotateSupported', async () => {
-    const { RGBALuminanceSource, InvertedLuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { RGBALuminanceSource, InvertedLuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const source = new RGBALuminanceSource(new Uint8ClampedArray(4), 2, 2);
     const inverted = new InvertedLuminanceSource(source);
     expect(inverted.isRotateSupported()).toBe(false);
   });
 
   it('getWidth and getHeight return correct dimensions', async () => {
-    const { RGBALuminanceSource, InvertedLuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { RGBALuminanceSource, InvertedLuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const source = new RGBALuminanceSource(new Uint8ClampedArray(6), 3, 2);
     const inverted = new InvertedLuminanceSource(source);
     expect(inverted.getWidth()).toBe(3);
@@ -190,7 +203,8 @@ describe('InvertedLuminanceSource', () => {
 
 describe('BinaryBitmap', () => {
   it('wraps a binarizer and exposes dimensions', async () => {
-    const { BinaryBitmap, RGBALuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { BinaryBitmap, RGBALuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const { GlobalHistogramBinarizer } = await import('../../src/modules/qr-decoder/binarizer');
     const luminances = new Uint8ClampedArray(100);
     for (let i = 0; i < 100; i++) luminances[i] = i < 50 ? 0 : 255;
@@ -207,7 +221,8 @@ describe('BinaryBitmap', () => {
   });
 
   it('isCropSupported delegates to source', async () => {
-    const { BinaryBitmap, RGBALuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { BinaryBitmap, RGBALuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const { GlobalHistogramBinarizer } = await import('../../src/modules/qr-decoder/binarizer');
     const source = new RGBALuminanceSource(new Uint8ClampedArray(4), 2, 2);
     const bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(source));
@@ -215,7 +230,8 @@ describe('BinaryBitmap', () => {
   });
 
   it('isRotateSupported delegates to source', async () => {
-    const { BinaryBitmap, RGBALuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { BinaryBitmap, RGBALuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const { GlobalHistogramBinarizer } = await import('../../src/modules/qr-decoder/binarizer');
     const source = new RGBALuminanceSource(new Uint8ClampedArray(4), 2, 2);
     const bitmap = new BinaryBitmap(new GlobalHistogramBinarizer(source));
@@ -223,7 +239,8 @@ describe('BinaryBitmap', () => {
   });
 
   it('toString returns string representation', async () => {
-    const { BinaryBitmap, RGBALuminanceSource } = await import('../../src/modules/qr-decoder/luminance');
+    const { BinaryBitmap, RGBALuminanceSource } =
+      await import('../../src/modules/qr-decoder/luminance');
     const { GlobalHistogramBinarizer } = await import('../../src/modules/qr-decoder/binarizer');
     // Create a high-contrast image so histogram can find bimodal distribution
     const size = 100;
@@ -494,7 +511,8 @@ describe('qr-decoder extract.ts', () => {
 
   describe('extractModuleMatrix', () => {
     it('extracts matrix from synthetic ImageData', async () => {
-      const { extractModuleMatrix, calculateLocation } = await import('../../src/modules/qr-decoder/extract');
+      const { extractModuleMatrix, calculateLocation } =
+        await import('../../src/modules/qr-decoder/extract');
       // Create a 105x105 black image (v1, moduleSize=5)
       const w = 105;
       const h = 105;
@@ -520,7 +538,8 @@ describe('qr-decoder extract.ts', () => {
     });
 
     it('handles transparent pixels as light modules', async () => {
-      const { extractModuleMatrix, calculateLocation } = await import('../../src/modules/qr-decoder/extract');
+      const { extractModuleMatrix, calculateLocation } =
+        await import('../../src/modules/qr-decoder/extract');
       // Create a fully transparent image
       const w = 105;
       const h = 105;
@@ -577,13 +596,15 @@ describe('qr-decoder locate.ts', () => {
     it('returns null for fewer than 3 patterns', async () => {
       const { selectFinderPatterns } = await import('../../src/modules/qr-decoder/locate');
       expect(selectFinderPatterns([])).toBeNull();
-      expect(selectFinderPatterns([
-        { center: { x: 0, y: 0 }, moduleSize: 5, count: 1 },
-      ])).toBeNull();
-      expect(selectFinderPatterns([
-        { center: { x: 0, y: 0 }, moduleSize: 5, count: 1 },
-        { center: { x: 100, y: 0 }, moduleSize: 5, count: 1 },
-      ])).toBeNull();
+      expect(
+        selectFinderPatterns([{ center: { x: 0, y: 0 }, moduleSize: 5, count: 1 }])
+      ).toBeNull();
+      expect(
+        selectFinderPatterns([
+          { center: { x: 0, y: 0 }, moduleSize: 5, count: 1 },
+          { center: { x: 100, y: 0 }, moduleSize: 5, count: 1 },
+        ])
+      ).toBeNull();
     });
 
     it('selects 3 patterns that form a square', async () => {

@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 class MockImageData {
@@ -32,8 +38,22 @@ describe('PerspectiveTransform', () => {
   it('quadrilateralToQuadrilateral creates a valid transform', async () => {
     const { PerspectiveTransform } = await import('../../src/modules/qr-decoder/perspective');
     const t = PerspectiveTransform.quadrilateralToQuadrilateral(
-      0, 0, 10, 0, 10, 10, 0, 10,
-      0, 0, 10, 0, 10, 10, 0, 10
+      0,
+      0,
+      10,
+      0,
+      10,
+      10,
+      0,
+      10,
+      0,
+      0,
+      10,
+      0,
+      10,
+      10,
+      0,
+      10
     );
     expect(t).toBeInstanceOf(PerspectiveTransform);
   });
@@ -41,8 +61,22 @@ describe('PerspectiveTransform', () => {
   it('identity transform maps points to themselves', async () => {
     const { PerspectiveTransform } = await import('../../src/modules/qr-decoder/perspective');
     const t = PerspectiveTransform.quadrilateralToQuadrilateral(
-      0, 0, 100, 0, 100, 100, 0, 100,
-      0, 0, 100, 0, 100, 100, 0, 100
+      0,
+      0,
+      100,
+      0,
+      100,
+      100,
+      0,
+      100,
+      0,
+      0,
+      100,
+      0,
+      100,
+      100,
+      0,
+      100
     );
     const points = new Float32Array([50, 50]);
     t.transformPoints(points);
@@ -53,8 +87,22 @@ describe('PerspectiveTransform', () => {
   it('transforms corner points correctly', async () => {
     const { PerspectiveTransform } = await import('../../src/modules/qr-decoder/perspective');
     const t = PerspectiveTransform.quadrilateralToQuadrilateral(
-      0, 0, 10, 0, 10, 10, 0, 10,
-      0, 0, 10, 0, 10, 10, 0, 10
+      0,
+      0,
+      10,
+      0,
+      10,
+      10,
+      0,
+      10,
+      0,
+      0,
+      10,
+      0,
+      10,
+      10,
+      0,
+      10
     );
     const points = new Float32Array([0, 0, 10, 10]);
     t.transformPoints(points);
@@ -79,8 +127,22 @@ describe('PerspectiveTransform', () => {
   it('handles non-trivial quadrilateral', async () => {
     const { PerspectiveTransform } = await import('../../src/modules/qr-decoder/perspective');
     const t = PerspectiveTransform.quadrilateralToQuadrilateral(
-      0, 0, 100, 0, 100, 100, 0, 100,
-      10, 10, 90, 5, 95, 95, 5, 90
+      0,
+      0,
+      100,
+      0,
+      100,
+      100,
+      0,
+      100,
+      10,
+      10,
+      90,
+      5,
+      95,
+      95,
+      5,
+      90
     );
     const points = new Float32Array([50, 50]);
     t.transformPoints(points);
@@ -93,8 +155,22 @@ describe('PerspectiveTransform', () => {
   it('transformPoints handles multiple point pairs', async () => {
     const { PerspectiveTransform } = await import('../../src/modules/qr-decoder/perspective');
     const t = PerspectiveTransform.quadrilateralToQuadrilateral(
-      0, 0, 10, 0, 10, 10, 0, 10,
-      0, 0, 10, 0, 10, 10, 0, 10
+      0,
+      0,
+      10,
+      0,
+      10,
+      10,
+      0,
+      10,
+      0,
+      0,
+      10,
+      0,
+      10,
+      10,
+      0,
+      10
     );
     const points = new Float32Array([0, 0, 5, 5, 10, 10]);
     t.transformPoints(points);
@@ -253,7 +329,10 @@ describe('findFinderPatterns', () => {
     const { findFinderPatterns } = await import('../../src/modules/qr-decoder/locate');
     const data = new Uint8ClampedArray(100 * 100 * 4);
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 200; data[i+1] = 200; data[i+2] = 200; data[i+3] = 255;
+      data[i] = 200;
+      data[i + 1] = 200;
+      data[i + 2] = 200;
+      data[i + 3] = 255;
     }
     const imageData = new ImageData(data, 100, 100);
     const result = findFinderPatterns(imageData);
@@ -266,7 +345,10 @@ describe('findFinderPatterns', () => {
     const { findFinderPatterns } = await import('../../src/modules/qr-decoder/locate');
     const data = new Uint8ClampedArray(100 * 100 * 4);
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 255;
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+      data[i + 3] = 255;
     }
     const imageData = new ImageData(data, 100, 100);
     const result = findFinderPatterns(imageData);

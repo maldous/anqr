@@ -5,6 +5,7 @@ Payload string generators for all QR code data types.
 ## Purpose
 
 This module generates properly formatted payload strings for QR codes:
+
 - Basic types: URL, text, phone, email, SMS, WiFi, geo
 - Contact formats: vCard, MeCard, BizCard
 - Calendar events
@@ -22,7 +23,14 @@ None - pure string formatting.
 ### Core Generators
 
 ```typescript
-import { generateUrl, generateEmail, generateSms, generateTel, generateWifi, generateGeo } from '@/modules/payload-generators';
+import {
+  generateUrl,
+  generateEmail,
+  generateSms,
+  generateTel,
+  generateWifi,
+  generateGeo,
+} from '@/modules/payload-generators';
 
 const url = generateUrl('https://example.com', { utm: { source: 'qr' } });
 const email = generateEmail('hello@example.com', { subject: 'Hello', body: 'Hi there' });
@@ -66,7 +74,12 @@ const subscription = generateCalendarSubscription('https://example.com/calendar.
 ### Payment Generators
 
 ```typescript
-import { generateUPI, generatePIX, generatePayNow, generateEMVMPM } from '@/modules/payload-generators';
+import {
+  generateUPI,
+  generatePIX,
+  generatePayNow,
+  generateEMVMPM,
+} from '@/modules/payload-generators';
 
 const upi = generateUPI({ pa: 'user@upi', pn: 'User Name', am: '100' });
 const pix = generatePIX({ key: 'email@example.com', amount: 100 });
@@ -77,7 +90,11 @@ const emv = generateEMVMPM({ merchantId: '1234', amount: '100.00', currency: '84
 ### Cryptocurrency
 
 ```typescript
-import { generateCrypto, generateLightning, generateEthereumEIP681 } from '@/modules/payload-generators';
+import {
+  generateCrypto,
+  generateLightning,
+  generateEthereumEIP681,
+} from '@/modules/payload-generators';
 
 const btc = generateCrypto('bitcoin', '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', { amount: '0.001' });
 const lightning = generateLightning('lnbc1...');

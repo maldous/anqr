@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createCanvas } from '@napi-rs/canvas';
-import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
+import {
+  QRGenerator,
+  type CanvasFactory,
+  type QRGeneratorConfig,
+} from '../../src/modules/qr-generator';
 import { decodeQR } from '../../src/modules/qr-decoder';
 
 // Polyfill ImageData for Node.js
@@ -55,36 +59,32 @@ describe('qr-generator decode', () => {
     expect(decoded?.data).toBe(config.content);
   });
 
-  it(
-    'generates a scannable QR with overlay canvas',
-    async () => {
-      const qr = new QRGenerator(nodeCanvasFactory);
-      const config: QRGeneratorConfig = {
-        content: 'https://example.com/generator-overlay',
-        errorCorrection: 'H',
-        typeNumber: 0,
-        moduleSize: 6,
-        margin: 4,
-        fgColor: '#000000',
-        bgColor: '#ffffff',
-        overlayMode: 'dithered',
-        overlayIntensity: 60,
-        colorMode: 'color',
-      };
+  it('generates a scannable QR with overlay canvas', async () => {
+    const qr = new QRGenerator(nodeCanvasFactory);
+    const config: QRGeneratorConfig = {
+      content: 'https://example.com/generator-overlay',
+      errorCorrection: 'H',
+      typeNumber: 0,
+      moduleSize: 6,
+      margin: 4,
+      fgColor: '#000000',
+      bgColor: '#ffffff',
+      overlayMode: 'dithered',
+      overlayIntensity: 60,
+      colorMode: 'color',
+    };
 
-      const overlay = createCanvas(128, 128);
-      const octx = overlay.getContext('2d');
-      const grad = octx.createLinearGradient(0, 0, 128, 128);
-      grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(1, '#000000');
-      octx.fillStyle = grad;
-      octx.fillRect(0, 0, 128, 128);
+    const overlay = createCanvas(128, 128);
+    const octx = overlay.getContext('2d');
+    const grad = octx.createLinearGradient(0, 0, 128, 128);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(1, '#000000');
+    octx.fillStyle = grad;
+    octx.fillRect(0, 0, 128, 128);
 
-      const canvas = await qr.generate(config, overlay as any);
-      const imageData = getImageData(canvas as any);
-      const decoded = decodeQR(imageData);
-      expect(decoded?.data).toBe(config.content);
-    },
-    30000
-  );
+    const canvas = await qr.generate(config, overlay as any);
+    const imageData = getImageData(canvas as any);
+    const decoded = decodeQR(imageData);
+    expect(decoded?.data).toBe(config.content);
+  }, 30000);
 });

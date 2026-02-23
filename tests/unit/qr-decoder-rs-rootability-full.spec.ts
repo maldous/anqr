@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 class MockImageData {
@@ -224,8 +230,13 @@ describe('qr-data-decoder QRDecoder', () => {
 
 describe('qr-decoder exceptions', () => {
   it('exports all exception types', async () => {
-    const { NotFoundException, FormatException, ChecksumException, IllegalArgumentException, UnsupportedOperationException } =
-      await import('../../src/modules/qr-decoder/exceptions');
+    const {
+      NotFoundException,
+      FormatException,
+      ChecksumException,
+      IllegalArgumentException,
+      UnsupportedOperationException,
+    } = await import('../../src/modules/qr-decoder/exceptions');
     expect(new NotFoundException()).toBeInstanceOf(Error);
     expect(new FormatException()).toBeInstanceOf(Error);
     expect(new ChecksumException()).toBeInstanceOf(Error);
@@ -275,7 +286,8 @@ describe('qr-decoder qr-version', () => {
   });
 
   it('Version.getECBlocksForLevel returns ECC blocks', async () => {
-    const { Version, ErrorCorrectionLevel } = await import('../../src/modules/qr-decoder/qr-version');
+    const { Version, ErrorCorrectionLevel } =
+      await import('../../src/modules/qr-decoder/qr-version');
     const v1 = Version.getVersionForNumber(1);
     const ecBlocks = v1.getECBlocksForLevel(ErrorCorrectionLevel.L);
     expect(ecBlocks).toBeDefined();
@@ -293,7 +305,7 @@ describe('qr-decoder qr-version', () => {
   it('Version.decodeVersionInformation handles version bits', async () => {
     const { Version } = await import('../../src/modules/qr-decoder/qr-version');
     // Version 7 info bits (well-known test value)
-    const result = Version.decodeVersionInformation(0x07C94);
+    const result = Version.decodeVersionInformation(0x07c94);
     // May return null or a valid version depending on the encoding
     expect(result === null || result.getVersionNumber() >= 7).toBe(true);
   });
@@ -324,7 +336,7 @@ describe('qr-decoder qr-version', () => {
   });
 
   it('DataMask.unmaskBitMatrix does not throw', async () => {
-    const { DataMask, Version } = await import('../../src/modules/qr-decoder/qr-version');
+    const { DataMask } = await import('../../src/modules/qr-decoder/qr-version');
     const { BitMatrix } = await import('../../src/modules/qr-decoder/bit-matrix');
     const matrix = new BitMatrix(21, 21);
     // Should not throw for any mask pattern 0-7
@@ -364,13 +376,15 @@ describe('qr-decoder reed-solomon', () => {
   });
 
   it('ReedSolomonDecoder constructs with QR field', async () => {
-    const { GenericGF, ReedSolomonDecoder } = await import('../../src/modules/qr-decoder/reed-solomon');
+    const { GenericGF, ReedSolomonDecoder } =
+      await import('../../src/modules/qr-decoder/reed-solomon');
     const decoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
     expect(decoder).toBeDefined();
   });
 
   it('ReedSolomonDecoder.decode handles all-zero input', async () => {
-    const { GenericGF, ReedSolomonDecoder } = await import('../../src/modules/qr-decoder/reed-solomon');
+    const { GenericGF, ReedSolomonDecoder } =
+      await import('../../src/modules/qr-decoder/reed-solomon');
     const decoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
     // All zeros → no errors, syndromes are all zero
     const received = new Int32Array(26);
@@ -383,7 +397,8 @@ describe('qr-decoder reed-solomon', () => {
   });
 
   it('ReedSolomonDecoder.decode throws for uncorrectable errors', async () => {
-    const { GenericGF, ReedSolomonDecoder } = await import('../../src/modules/qr-decoder/reed-solomon');
+    const { GenericGF, ReedSolomonDecoder } =
+      await import('../../src/modules/qr-decoder/reed-solomon');
     const decoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
     // Random data with many errors → should throw
     const received = new Int32Array(26);
@@ -437,7 +452,7 @@ describe('qr-decoder result-types', () => {
   });
 
   it('Result metadata operations', async () => {
-    const { Result, ResultPoint, ResultMetadataType } = await import('../../src/modules/qr-decoder/result-types');
+    const { Result } = await import('../../src/modules/qr-decoder/result-types');
     const result = new Result('test', new Uint8Array(0), [], 0);
     const metadata = result.getResultMetadata();
     // Initially may be null or empty map

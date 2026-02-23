@@ -5,6 +5,7 @@ Handles GIF and WebP animation parsing, frame management, animation patterns, an
 ## Purpose
 
 This module provides comprehensive animation support for QR codes, including:
+
 - Parsing animated images (GIF, WebP, APNG)
 - Frame management and decimation
 - Animation patterns (pulse, wave, scanline, shimmer, drift)
@@ -20,7 +21,12 @@ This module provides comprehensive animation support for QR codes, including:
 ### Parsing
 
 ```typescript
-import { parseAnimatedImage, parseGifFrames, parseWebPFrames, getGifDelays } from '@/modules/animation';
+import {
+  parseAnimatedImage,
+  parseGifFrames,
+  parseWebPFrames,
+  getGifDelays,
+} from '@/modules/animation';
 
 // Parse any animated image format
 const frames = await parseAnimatedImage(file);

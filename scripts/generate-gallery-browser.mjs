@@ -70,11 +70,11 @@ const SHARD = resolveGalleryShard(process.env);
 const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
 const BROWSER_GIF_CAPTURE_FRAMES = Math.max(
   2,
-  Number.parseInt(process.env.GALLERY_BROWSER_GIF_FRAMES || '24', 10),
+  Number.parseInt(process.env.GALLERY_BROWSER_GIF_FRAMES || '24', 10)
 );
 const BROWSER_GIF_CAPTURE_DELAY_MS = Math.max(
   20,
-  Number.parseInt(process.env.GALLERY_BROWSER_GIF_DELAY_MS || '100', 10),
+  Number.parseInt(process.env.GALLERY_BROWSER_GIF_DELAY_MS || '100', 10)
 );
 const ARTIFACT_EXTS = ['png', 'gif', 'webp', 'jpg', 'jpeg', 'svg'];
 
@@ -105,7 +105,7 @@ async function verifyImage(buffer, expectedPrefix, expectAnimated = false) {
       try {
         const arrayBuffer = buffer.buffer.slice(
           buffer.byteOffset,
-          buffer.byteOffset + buffer.byteLength,
+          buffer.byteOffset + buffer.byteLength
         );
         const decoded = decodeGif(arrayBuffer);
         if (!decoded.frames || decoded.frames.length < 2) {
@@ -130,7 +130,9 @@ const GIF87A_SIGNATURE = Buffer.from('GIF87a');
 const GIF89A_SIGNATURE = Buffer.from('GIF89a');
 
 function hasImageMagic(buffer, ext) {
-  const normalized = String(ext || '').toLowerCase().replace(/^\./, '');
+  const normalized = String(ext || '')
+    .toLowerCase()
+    .replace(/^\./, '');
   if (normalized === 'gif') {
     return (
       buffer.length >= 6 &&
@@ -260,7 +262,7 @@ async function removeScenarioArtifacts(outputDir, config) {
           throw err;
         }
       }
-    }),
+    })
   );
 }
 
@@ -273,7 +275,7 @@ async function captureCanvasBuffer(page, mimeType = 'image/png') {
       }
       return canvasEl.toDataURL(requestedMimeType);
     },
-    mimeType,
+    mimeType
   );
   const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
   if (!match) {
@@ -307,7 +309,10 @@ function drawImageToSizedCanvas(img, width, height) {
 }
 
 function parseHexColor(input, fallback = 'ffffff') {
-  const normalized = String(input ?? '').trim().replace(/^#/, '').toLowerCase();
+  const normalized = String(input ?? '')
+    .trim()
+    .replace(/^#/, '')
+    .toLowerCase();
   if (/^[0-9a-f]{3}$/.test(normalized)) {
     return normalized
       .split('')
@@ -375,7 +380,7 @@ async function encodeAnimatedGifFromCanvases(
   frameDelayMs = 100,
   colors = 256,
   disposal = 1,
-  frameDelaysMs = [],
+  frameDelaysMs = []
 ) {
   if (!isGifEncodingAvailable()) {
     throw new Error('GIF encoder is unavailable in this runtime');
@@ -426,7 +431,7 @@ async function captureAnimatedGifFromCanvas(
   targetHeight,
   backgroundHex,
   gifColors,
-  gifDisposalCode,
+  gifDisposalCode
 ) {
   const frames = [];
   for (let i = 0; i < frameCount; i++) {
@@ -482,9 +487,7 @@ async function runPool(tasks, concurrency) {
     }
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()),
-  );
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()));
   return results;
 }
 
@@ -532,7 +535,9 @@ async function main() {
   const preShardCount = configs.length;
   configs = applyGalleryShard(configs, SHARD);
 
-  console.log(`Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`);
+  console.log(
+    `Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`
+  );
 
   // Prepare artifact directory
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -566,18 +571,21 @@ async function main() {
     const { width: targetWidth, height: targetHeight } = resolveTargetDimensions(config);
     const animFrameCount = Math.min(
       60,
-      Math.max(2, parseIntParam(config.params.animFrames, BROWSER_GIF_CAPTURE_FRAMES)),
+      Math.max(2, parseIntParam(config.params.animFrames, BROWSER_GIF_CAPTURE_FRAMES))
     );
     const animDelayMs = Math.min(
       1000,
-      Math.max(20, parseIntParam(config.params.animSpeed ?? config.params.speed, BROWSER_GIF_CAPTURE_DELAY_MS)),
+      Math.max(
+        20,
+        parseIntParam(config.params.animSpeed ?? config.params.speed, BROWSER_GIF_CAPTURE_DELAY_MS)
+      )
     );
     const gifMaxFps = parseIntParam(config.params.gifMaxFps, 0);
     const minDelayFromGifMaxFps = gifMaxFps > 0 ? Math.ceil(1000 / gifMaxFps) : 0;
     const resolvedAnimDelayMs = Math.max(animDelayMs, minDelayFromGifMaxFps);
     const gifColors = Math.min(
       256,
-      Math.max(2, parseIntParam(config.params.gifColors ?? config.params.gifPal, 256)),
+      Math.max(2, parseIntParam(config.params.gifColors ?? config.params.gifPal, 256))
     );
     const gifDisposalCode = parseGifDisposalCode(config.params.gifDisp);
     const backgroundHex =
@@ -600,7 +608,10 @@ async function main() {
           throw new Error(`HTTP ${response.status}: ${body.slice(0, 200)}`);
         }
         artifactContentType = response.headers.get('Content-Type') || 'image/png';
-        const resolvedExt = extFromContentType(artifactContentType, config.isAnimated ? 'gif' : 'png');
+        const resolvedExt = extFromContentType(
+          artifactContentType,
+          config.isAnimated ? 'gif' : 'png'
+        );
         const baseName = fallbackFilename.replace(/\.[^.]+$/, '');
         filename = `${baseName}.${resolvedExt}`;
         artifactPath = path.join(OUTPUT_DIR, filename);
@@ -616,7 +627,7 @@ async function main() {
           ({ key, value }) => {
             localStorage.setItem(key, value);
           },
-          { key: WELCOME_STORAGE_KEY, value: WELCOME_VERSION },
+          { key: WELCOME_STORAGE_KEY, value: WELCOME_VERSION }
         );
 
         page = await context.newPage();
@@ -649,7 +660,7 @@ async function main() {
             return false;
           },
           CANVAS_SELECTOR,
-          { timeout: PAGE_TIMEOUT },
+          { timeout: PAGE_TIMEOUT }
         );
 
         await page.waitForTimeout(300);
@@ -663,7 +674,7 @@ async function main() {
             targetHeight,
             backgroundHex,
             gifColors,
-            gifDisposalCode,
+            gifDisposalCode
           );
           artifactContentType = 'image/gif';
         } else {
@@ -692,7 +703,7 @@ async function main() {
       const suffix = verify.pass ? '' : ` [${verify.reason}]`;
       console.log(
         `  [${completed}/${configs.length}] ${icon} ${config.id} ` +
-          `(${(artifactBuffer.length / 1024).toFixed(1)} KB, ${Date.now() - start}ms)${suffix} [${elapsed}s]`,
+          `(${(artifactBuffer.length / 1024).toFixed(1)} KB, ${Date.now() - start}ms)${suffix} [${elapsed}s]`
       );
 
       if (verify.pass) {
@@ -713,7 +724,9 @@ async function main() {
     } catch (err) {
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
-      console.error(`  [${completed}/${configs.length}] ✗ ${config.id}: ${err.message} [${elapsed}s]`);
+      console.error(
+        `  [${completed}/${configs.length}] ✗ ${config.id}: ${err.message} [${elapsed}s]`
+      );
       failed.push(fallbackFilename);
       return {
         id: config.id,
@@ -765,8 +778,11 @@ async function main() {
     categories: Object.fromEntries(
       ['nooverlay', 'overlay', 'artwork'].map((cat) => {
         const catResults = results.filter((r) => r.category === cat);
-        return [cat, { total: catResults.length, pass: catResults.filter((r) => r.status === 'pass').length }];
-      }),
+        return [
+          cat,
+          { total: catResults.length, pass: catResults.filter((r) => r.status === 'pass').length },
+        ];
+      })
     ),
     results,
   };
@@ -776,7 +792,9 @@ async function main() {
   const totalSec = Math.round((Date.now() - globalStart) / 1000);
   console.log(`\n${'='.repeat(50)}`);
   console.log(`Total: ${results.length} runs in ${totalSec}s`);
-  console.log(`Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`);
+  console.log(
+    `Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`
+  );
   console.log(`Fail:  ${failed.length}`);
   console.log(`\nArtifacts: ${OUTPUT_DIR}/`);
   console.log(`Passed:    ${passedPath}`);

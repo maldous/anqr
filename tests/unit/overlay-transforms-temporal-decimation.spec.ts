@@ -163,9 +163,8 @@ describe('overlay-transforms.ts', () => {
 
   describe('hasGeometricTransforms', () => {
     it('always returns false', async () => {
-      const { hasGeometricTransforms } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { hasGeometricTransforms } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       expect(hasGeometricTransforms({} as Parameters<typeof hasGeometricTransforms>[0])).toBe(
         false
       );
@@ -180,15 +179,13 @@ describe('overlay-transforms.ts', () => {
 
   describe('applyGeometricTransforms', () => {
     it('returns canvas as-is when no transforms needed', async () => {
-      const { applyGeometricTransforms } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { applyGeometricTransforms } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const mockCanvas = { width: 100, height: 100 } as HTMLCanvasElement;
       const result = await applyGeometricTransforms(
         mockCanvas,
         {} as Parameters<typeof applyGeometricTransforms>[1],
-        async (w: number, h: number) =>
-          ({ width: w, height: h }) as unknown as HTMLCanvasElement
+        async (w: number, h: number) => ({ width: w, height: h }) as unknown as HTMLCanvasElement
       );
       // Since hasGeometricTransforms always returns false, original canvas is returned
       expect(result).toBe(mockCanvas);
@@ -279,18 +276,16 @@ describe('dither-algorithms temporal.ts', () => {
 
   describe('generateTemporalSequence', () => {
     it('returns array of correct length', async () => {
-      const { generateTemporalSequence } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { generateTemporalSequence } =
+        await import('../../src/modules/dither-algorithms/temporal');
       expect(generateTemporalSequence(5, 'blue_noise')).toHaveLength(5);
       expect(generateTemporalSequence(10, 'flicker_safe')).toHaveLength(10);
       expect(generateTemporalSequence(0, 'blue_noise')).toHaveLength(0);
     });
 
     it('elements match calculateTemporalOffset', async () => {
-      const { generateTemporalSequence, calculateTemporalOffset } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { generateTemporalSequence, calculateTemporalOffset } =
+        await import('../../src/modules/dither-algorithms/temporal');
       const seq = generateTemporalSequence(8, 'blue_noise', 42);
       for (let i = 0; i < 8; i++) {
         expect(seq[i]).toBe(calculateTemporalOffset(i, 'blue_noise', 42));
@@ -298,9 +293,8 @@ describe('dither-algorithms temporal.ts', () => {
     });
 
     it('all zeros for mode=off', async () => {
-      const { generateTemporalSequence } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { generateTemporalSequence } =
+        await import('../../src/modules/dither-algorithms/temporal');
       const seq = generateTemporalSequence(5, 'off');
       expect(seq).toEqual([0, 0, 0, 0, 0]);
     });
@@ -308,32 +302,28 @@ describe('dither-algorithms temporal.ts', () => {
 
   describe('isTemporalDitherActive', () => {
     it('returns false for off', async () => {
-      const { isTemporalDitherActive } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { isTemporalDitherActive } =
+        await import('../../src/modules/dither-algorithms/temporal');
       expect(isTemporalDitherActive('off')).toBe(false);
     });
 
     it('returns true for blue_noise', async () => {
-      const { isTemporalDitherActive } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { isTemporalDitherActive } =
+        await import('../../src/modules/dither-algorithms/temporal');
       expect(isTemporalDitherActive('blue_noise')).toBe(true);
     });
 
     it('returns true for flicker_safe', async () => {
-      const { isTemporalDitherActive } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { isTemporalDitherActive } =
+        await import('../../src/modules/dither-algorithms/temporal');
       expect(isTemporalDitherActive('flicker_safe')).toBe(true);
     });
   });
 
   describe('temporalBlueNoiseDither', () => {
     it('produces correctly sized output', async () => {
-      const { temporalBlueNoiseDither } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { temporalBlueNoiseDither } =
+        await import('../../src/modules/dither-algorithms/temporal');
       const width = 8;
       const height = 8;
       // Create float data: each row is Float32Array of [r,g,b, r,g,b, ...]
@@ -357,9 +347,8 @@ describe('dither-algorithms temporal.ts', () => {
     });
 
     it('uses frame offset for temporal variation', async () => {
-      const { temporalBlueNoiseDither } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { temporalBlueNoiseDither } =
+        await import('../../src/modules/dither-algorithms/temporal');
       // Input data must be in [0, 1] range (matching imageDataToFloat output).
       // Use a gradient from 0.25 to 0.75 to ensure threshold crossings differ.
       const width = 16;
@@ -391,9 +380,8 @@ describe('dither-algorithms temporal.ts', () => {
     });
 
     it('respects tileSize and seed parameters', async () => {
-      const { temporalBlueNoiseDither } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { temporalBlueNoiseDither } =
+        await import('../../src/modules/dither-algorithms/temporal');
       const width = 4;
       const height = 4;
       const imageData: Float32Array[] = [];
@@ -408,9 +396,8 @@ describe('dither-algorithms temporal.ts', () => {
     });
 
     it('produces dark/light output colors', async () => {
-      const { temporalBlueNoiseDither } = await import(
-        '../../src/modules/dither-algorithms/temporal'
-      );
+      const { temporalBlueNoiseDither } =
+        await import('../../src/modules/dither-algorithms/temporal');
       const width = 4;
       const height = 4;
       const imageData: Float32Array[] = [];

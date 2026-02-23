@@ -29,14 +29,12 @@ export interface TestFixtures {
 // Re-export dismissWelcomeModal from test-utils
 const dismissWelcomeModalHelper = dismissWelcomeModal;
 
-
-
 export const test = base.extend<TestFixtures>({
   // Auto-setup: Enable debugging (welcome modal is handled by global-setup.ts via storageState)
   page: async ({ page }, use) => {
     // Note: Welcome modal localStorage is pre-set by tests/global-setup.ts
     // which creates a storageState that all tests inherit automatically.
-    
+
     // Enable browser-side debugging (errors only, no console noise)
     enableBrowserDebug(page, { console: false, errors: true, network: false });
     // Ensure each test starts from a clean, deterministic state
@@ -85,7 +83,7 @@ export const test = base.extend<TestFixtures>({
   },
 });
 
-function getSectionLabel(sectionId: string): string {
+function _getSectionLabel(sectionId: string): string {
   return SECTION_LABELS[sectionId as AccordionSection] || sectionId;
 }
 

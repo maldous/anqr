@@ -26,7 +26,6 @@ import {
   isFinderPattern,
   isTimingPattern,
   mapImageToTargets,
-  searchBestFragment,
   evaluateQRMatch,
 } from '../../src/modules/qr-art/index';
 import type { RSBasisVector } from '../../src/modules/qr-art/rs-basis';
@@ -101,8 +100,7 @@ describe('qr-art regression coverage', () => {
 
     it('covers image mapping, URL generation and placeholder APIs', () => {
       const pixels = new Uint8ClampedArray([
-        0, 0, 0, 255, 255, 255, 255, 255,
-        120, 120, 120, 255, 200, 200, 200, 255,
+        0, 0, 0, 255, 255, 255, 255, 255, 120, 120, 120, 255, 200, 200, 200, 255,
       ]);
       const image = new ImageData(pixels, 2, 2);
       const mapped = mapImageToTargets(image, 2, 128);
@@ -376,7 +374,12 @@ describe('qr-art regression coverage', () => {
         [0, 0],
         [0, 0.9],
       ];
-      const flattened = flattenAndOrderSelections(blockSelections, eliminationResult, importance, 2);
+      const flattened = flattenAndOrderSelections(
+        blockSelections,
+        eliminationResult,
+        importance,
+        2
+      );
       expect(flattened).toHaveLength(1);
       expect(flattened[0].importance).toBe(0.9);
 
@@ -484,7 +487,9 @@ describe('qr-art regression coverage', () => {
     });
 
     it('runs binary search valid path, strict suffix rejection, and format verification path', () => {
-      const flattened = [{ blockIndex: 0, vectorIndex: 0, importance: 1, vector: makeVector(0, [0x80], 0) }];
+      const flattened = [
+        { blockIndex: 0, vectorIndex: 0, importance: 1, vector: makeVector(0, [0x80], 0) },
+      ];
       const fullResult: EliminationResult = {
         ...eliminationResult,
         blockResults: [

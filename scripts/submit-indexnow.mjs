@@ -37,17 +37,7 @@ const KEY_LOCATION = `${BASE_URL}/${INDEXNOW_KEY}.txt`;
 const REQUEST_TIMEOUT_MS = 15_000;
 
 // All canonical pages (must match scripts/generate-sitemap.mjs)
-const PAGES = [
-  '',
-  'gallery',
-  'learn',
-  'examples',
-  'guide',
-  'about',
-  'contact',
-  'privacy',
-  'terms',
-];
+const PAGES = ['', 'gallery', 'learn', 'examples', 'guide', 'about', 'contact', 'privacy', 'terms'];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

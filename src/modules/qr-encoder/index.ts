@@ -46,12 +46,7 @@ export {
   type QROptions,
 } from './encoder-api';
 export { gexp, glog, QRMath, qrPolynomial } from './math';
-export {
-  base64EncodeOutputStream,
-  byteArrayOutputStream,
-  createDataURL,
-  gifImage,
-} from './output';
+export { base64EncodeOutputStream, byteArrayOutputStream, createDataURL, gifImage } from './output';
 export { getRSBlocks, QRRSBlock } from './rs-blocks';
 // Shift-JIS encoding
 export { canEncodeAsShiftJIS, createShiftJISEncoder } from './shift-jis';
@@ -76,11 +71,7 @@ export type {
   RSBlock,
 } from './types';
 // Types
-export {
-  QRErrorCorrectionLevel,
-  QRMaskPattern,
-  QRMode,
-} from './types';
+export { QRErrorCorrectionLevel, QRMaskPattern, QRMode } from './types';
 export {
   getBCHTypeInfo,
   getBCHTypeNumber,

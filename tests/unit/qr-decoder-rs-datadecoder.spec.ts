@@ -98,8 +98,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     it('addOrSubtract is XOR', async () => {
       const { AbstractGenericGF } = await import('../../src/modules/qr-decoder/reed-solomon');
       expect(AbstractGenericGF.addOrSubtract(0, 0)).toBe(0);
-      expect(AbstractGenericGF.addOrSubtract(0xFF, 0xFF)).toBe(0);
-      expect(AbstractGenericGF.addOrSubtract(0xAA, 0x55)).toBe(0xFF);
+      expect(AbstractGenericGF.addOrSubtract(0xff, 0xff)).toBe(0);
+      expect(AbstractGenericGF.addOrSubtract(0xaa, 0x55)).toBe(0xff);
     });
 
     it('toString returns a description', async () => {
@@ -151,7 +151,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
 
   describe('GenericGFPoly', () => {
     it('constructor strips leading zeros', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const poly = new GenericGFPoly(field, Int32Array.from([0, 0, 0, 1, 2]));
       expect(poly.getDegree()).toBe(1);
@@ -160,7 +161,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('all-zeros becomes degree-0 zero poly', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const poly = new GenericGFPoly(field, Int32Array.from([0, 0, 0]));
       expect(poly.isZero()).toBe(true);
@@ -168,13 +170,15 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('empty coefficients throws', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       expect(() => new GenericGFPoly(field, Int32Array.from([]))).toThrow();
     });
 
     it('evaluateAt works correctly', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       // p(x) = 1*x + 0 = x (coefficients = [1, 0])
       const poly = new GenericGFPoly(field, Int32Array.from([1, 0]));
@@ -184,7 +188,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('evaluateAt(1) XORs all coefficients', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const poly = new GenericGFPoly(field, Int32Array.from([3, 5, 7]));
       // evaluateAt(1) = 3 XOR 5 XOR 7 = 1
@@ -192,7 +197,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('addOrSubtract works (XOR of coefficients)', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([1, 2, 3])); // x^2 + 2x + 3
       const b = new GenericGFPoly(field, Int32Array.from([4, 5])); // 4x + 5
@@ -205,7 +211,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('addOrSubtract with zero returns other', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([1, 2]));
       const zero = field.getZero();
@@ -214,7 +221,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('addOrSubtract with different field throws', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const f1 = GenericGF.QR_CODE_FIELD_256;
       const f2 = GenericGF.DATA_MATRIX_FIELD_256;
       const a = new GenericGFPoly(f1, Int32Array.from([1]));
@@ -223,7 +231,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('multiply two polynomials', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       // (x + 1) * (x + 1) in GF(256)
       const a = new GenericGFPoly(field, Int32Array.from([1, 1]));
@@ -236,7 +245,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('multiply with zero returns zero', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([1, 2, 3]));
       const result = a.multiply(field.getZero());
@@ -244,7 +254,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('multiplyScalar', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([1, 2]));
       // scalar 0 → zero
@@ -258,7 +269,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('multiplyByMonomial', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([3])); // constant 3
       const result = a.multiplyByMonomial(2, 1); // * x^2
@@ -268,21 +280,24 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('multiplyByMonomial with negative degree throws', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([1]));
       expect(() => a.multiplyByMonomial(-1, 1)).toThrow();
     });
 
     it('multiplyByMonomial with coefficient 0 returns zero', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([1, 2]));
       expect(a.multiplyByMonomial(3, 0).isZero()).toBe(true);
     });
 
     it('divide computes quotient and remainder', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       // Divide (x^2 + 1) by (x + 1)
       const dividend = new GenericGFPoly(field, Int32Array.from([1, 0, 1]));
@@ -297,14 +312,16 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('divide by zero throws', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const a = new GenericGFPoly(field, Int32Array.from([1, 2]));
       expect(() => a.divide(field.getZero())).toThrow();
     });
 
     it('toString produces readable representation', async () => {
-      const { GenericGF, GenericGFPoly } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, GenericGFPoly } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const poly = new GenericGFPoly(field, Int32Array.from([1, 0, 1]));
       const str = poly.toString();
@@ -315,7 +332,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
 
   describe('ReedSolomonDecoder', () => {
     it('no-error codeword passes through unchanged', async () => {
-      const { GenericGF, ReedSolomonDecoder } = await import('../../src/modules/qr-decoder/reed-solomon');
+      const { GenericGF, ReedSolomonDecoder } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const decoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
       // Construct a valid RS-encoded message (26 codewords, 7 EC codewords)
       // For simplicity, use all zeros which is trivially valid
@@ -329,9 +347,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('corrects a single byte error', async () => {
-      const { GenericGF, GenericGFPoly, ReedSolomonDecoder } = await import(
-        '../../src/modules/qr-decoder/reed-solomon'
-      );
+      const { GenericGF, GenericGFPoly, ReedSolomonDecoder } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const field = GenericGF.QR_CODE_FIELD_256;
       const decoder = new ReedSolomonDecoder(field);
 
@@ -377,9 +394,8 @@ describe('Reed-Solomon (reed-solomon.ts)', () => {
     });
 
     it('throws ReedSolomonException for too many errors', async () => {
-      const { GenericGF, ReedSolomonDecoder } = await import(
-        '../../src/modules/qr-decoder/reed-solomon'
-      );
+      const { GenericGF, ReedSolomonDecoder } =
+        await import('../../src/modules/qr-decoder/reed-solomon');
       const decoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
 
       // 10 codewords, 4 EC → can correct up to 2 errors

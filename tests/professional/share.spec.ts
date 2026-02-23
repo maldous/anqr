@@ -7,9 +7,7 @@
 import { test, expect } from '../fixtures/test-fixtures';
 import type { Page } from '@playwright/test';
 
-import {
-  waitForQRRender,
-} from '../helpers/qr-detector';
+import { waitForQRRender } from '../helpers/qr-detector';
 import {
   openAccordion,
   selectTier,
@@ -52,11 +50,11 @@ test.describe('Share Direct Link', () => {
   test('direct link switch is visible and toggleable', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
     await expect(switchEl).toBeVisible();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'share-direct-link-switch');
     const newState = await switchEl.getAttribute('data-state');
-    
+
     expect(newState).not.toBe(initialState);
   });
 
@@ -68,26 +66,26 @@ test.describe('Share Direct Link', () => {
 
   test('enabling direct link shows URL input', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Ensure direct link is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     await expect(urlInput).toBeVisible();
   });
 
   test('direct link URL input is readonly', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Ensure direct link is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     const isReadOnly = await urlInput.getAttribute('readonly');
     expect(isReadOnly).not.toBeNull();
@@ -95,42 +93,42 @@ test.describe('Share Direct Link', () => {
 
   test('direct link URL contains expected base URL', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Ensure direct link is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     const url = await urlInput.inputValue();
-    
+
     // URL should contain query parameters
     expect(url).toContain('?');
   });
 
   test('copy link button is visible when direct link enabled', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Ensure direct link is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const copyButton = page.locator('[data-testid="share-copy-link-button"]');
     await expect(copyButton).toBeVisible();
   });
 
   test('disabling direct link hides URL input', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Ensure direct link is disabled
     if ((await switchEl.getAttribute('data-state')) === 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     const isVisible = await urlInput.isVisible().catch(() => false);
     expect(isVisible).toBe(false);
@@ -150,93 +148,93 @@ test.describe('Share Embed HTML', () => {
   test('embed HTML switch is visible and toggleable', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
     await expect(switchEl).toBeVisible();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'share-embed-html-switch');
     const newState = await switchEl.getAttribute('data-state');
-    
+
     expect(newState).not.toBe(initialState);
   });
 
   test('enabling embed HTML shows embed code input', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Ensure embed HTML is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const embedInput = page.locator('[data-testid="share-embed-code-input"]');
     await expect(embedInput).toBeVisible();
   });
 
   test('embed code contains img tag', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Ensure embed HTML is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const embedInput = page.locator('[data-testid="share-embed-code-input"]');
     const embedCode = await embedInput.inputValue();
-    
+
     expect(embedCode.toLowerCase()).toContain('<img');
   });
 
   test('markdown embed input is visible when embed HTML enabled', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Ensure embed HTML is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const markdownInput = page.locator('[data-testid="share-markdown-input"]');
     await expect(markdownInput).toBeVisible();
   });
 
   test('markdown embed contains markdown image syntax', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Ensure embed HTML is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const markdownInput = page.locator('[data-testid="share-markdown-input"]');
     const markdownCode = await markdownInput.inputValue();
-    
+
     // Markdown image format: ![alt](url)
     expect(markdownCode).toMatch(/!\[.*\]\(.*\)/);
   });
 
   test('copy embed button is visible', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Ensure embed HTML is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const copyEmbedButton = page.locator('[data-testid="share-copy-embed-button"]');
     await expect(copyEmbedButton).toBeVisible();
   });
 
   test('copy markdown button is visible', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Ensure embed HTML is enabled
     if ((await switchEl.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const copyMarkdownButton = page.locator('[data-testid="share-copy-markdown-button"]');
     await expect(copyMarkdownButton).toBeVisible();
   });
@@ -255,11 +253,11 @@ test.describe('Share Encode More Params', () => {
   test('encode more params switch is visible and toggleable', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-encode-more-params-switch"]');
     await expect(switchEl).toBeVisible();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'share-encode-more-params-switch');
     const newState = await switchEl.getAttribute('data-state');
-    
+
     expect(newState).not.toBe(initialState);
   });
 
@@ -289,7 +287,7 @@ test.describe('Share Quick Share', () => {
     const quickCopyButton = page.locator('[data-testid="share-quick-copy-button"]');
     await quickCopyButton.scrollIntoViewIfNeeded();
     await quickCopyButton.click();
-    
+
     // Button should remain functional after click
     await waitForRenderComplete(page, 'settle');
     await expect(quickCopyButton).toBeEnabled();
@@ -342,7 +340,7 @@ test.describe('Share Section Accessibility', () => {
   test('all switches have role="switch"', async ({ page }) => {
     const switches = page.locator('[data-testid*="share"][data-testid*="switch"]');
     const count = await switches.count();
-    
+
     for (let i = 0; i < count; i++) {
       const switchEl = switches.nth(i);
       if (await switchEl.isVisible().catch(() => false)) {
@@ -354,7 +352,7 @@ test.describe('Share Section Accessibility', () => {
 
   test('share section can be navigated via keyboard', async ({ page }) => {
     await page.keyboard.press('Tab');
-    
+
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
   });
@@ -362,7 +360,7 @@ test.describe('Share Section Accessibility', () => {
   test('copy buttons are keyboard accessible', async ({ page }) => {
     const quickCopyButton = page.locator('[data-testid="share-quick-copy-button"]');
     await quickCopyButton.focus();
-    
+
     // Should be able to activate with Enter
     await page.keyboard.press('Enter');
     await waitForRenderComplete(page, 'settle');
@@ -384,7 +382,7 @@ test.describe('Share Combined Settings', () => {
   test('multiple share options can be enabled together', async ({ page }) => {
     const directLinkSwitch = page.locator('[data-testid="share-direct-link-switch"]');
     const embedHtmlSwitch = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Enable both
     if ((await directLinkSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
@@ -392,7 +390,7 @@ test.describe('Share Combined Settings', () => {
     if ((await embedHtmlSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
     }
-    
+
     // Both should be checked
     expect(await directLinkSwitch.getAttribute('data-state')).toBe('checked');
     expect(await embedHtmlSwitch.getAttribute('data-state')).toBe('checked');
@@ -400,24 +398,29 @@ test.describe('Share Combined Settings', () => {
 
   test('share settings persist after section collapse/expand', async ({ page }) => {
     const directLinkSwitch = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Enable direct link if not already
     if ((await directLinkSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
     }
-    
+
     const stateBeforeCollapse = await directLinkSwitch.getAttribute('data-state');
-    
+
     // Collapse and expand
-    const shareTriggerEl = page.locator('[data-testid="accordion-share"] button[data-state]').first();
+    const shareTriggerEl = page
+      .locator('[data-testid="accordion-share"] button[data-state]')
+      .first();
     await shareTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await shareTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-share"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-share"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     // Verify state persisted
     const stateAfterExpand = await directLinkSwitch.getAttribute('data-state');
     expect(stateAfterExpand).toBe(stateBeforeCollapse);
@@ -436,13 +439,13 @@ test.describe('Share Edge Cases', () => {
 
   test('rapid switch toggling works correctly', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Toggle rapidly multiple times
     for (let i = 0; i < 5; i++) {
       await toggleSwitchByTestId(page, 'share-direct-link-switch', false);
     }
     await waitForRenderComplete(page, 'settle');
-    
+
     // Switch should still be functional
     const state = await switchEl.getAttribute('data-state');
     expect(state === 'checked' || state === 'unchecked').toBe(true);
@@ -454,14 +457,14 @@ test.describe('Share Edge Cases', () => {
     if ((await directLinkSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
     }
-    
+
     // Click copy button multiple times
     const copyButton = page.locator('[data-testid="share-copy-link-button"]');
     for (let i = 0; i < 3; i++) {
       await copyButton.click();
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Button should still be visible and enabled
     await expect(copyButton).toBeVisible();
     await expect(copyButton).toBeEnabled();
@@ -484,7 +487,7 @@ test.describe('Share URL Verification', () => {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     const url = await urlInput.inputValue();
     expect(url).toContain('data=');
@@ -496,7 +499,7 @@ test.describe('Share URL Verification', () => {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     const url = await urlInput.inputValue();
     // URL should not contain unencoded special characters
@@ -510,17 +513,17 @@ test.describe('Share URL Verification', () => {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
-    const urlBefore = await urlInput.inputValue();
-    
+    const _urlBefore = await urlInput.inputValue();
+
     // Toggle encode more params
     const encodeMoreSwitch = page.locator('[data-testid="share-encode-more-params-switch"]');
     if ((await encodeMoreSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-encode-more-params-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlAfter = await urlInput.inputValue();
     // URL remains valid and non-empty after toggling.
     expect(urlAfter).toBeTruthy();
@@ -533,13 +536,13 @@ test.describe('Share URL Verification', () => {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
-    const urlBefore = await urlInput.inputValue();
-    
+    const _urlBefore = await urlInput.inputValue();
+
     // Change payload section to update QR
     const payloadRegion = await openAccordion(page, 'payload');
-    
+
     const textInput = payloadRegion
       .locator(
         '[data-testid="payload-text-textarea"], [data-testid="payload-url-input"], textarea, input[type="url"], input[type="text"]'
@@ -547,14 +550,16 @@ test.describe('Share URL Verification', () => {
       .first();
     if (await textInput.isVisible()) {
       const currentType = await textInput.getAttribute('type');
-      await textInput.fill(currentType === 'url' ? 'https://example.com/new-test-data' : 'New Test Data');
+      await textInput.fill(
+        currentType === 'url' ? 'https://example.com/new-test-data' : 'New Test Data'
+      );
       await textInput.blur();
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     // Re-expand share section
     await expandShareSection(page);
-    
+
     const urlAfter = await urlInput.inputValue();
     // URL may or may not change depending on implementation
     expect(urlAfter).toBeTruthy();
@@ -577,7 +582,7 @@ test.describe('Share Embed Code Verification', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const embedInput = page.locator('[data-testid="share-embed-code-input"]');
     const embedCode = await embedInput.inputValue();
     expect(embedCode.toLowerCase()).toContain('src=');
@@ -589,7 +594,7 @@ test.describe('Share Embed Code Verification', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const embedInput = page.locator('[data-testid="share-embed-code-input"]');
     const embedCode = await embedInput.inputValue();
     expect(embedCode.toLowerCase()).toContain('alt=');
@@ -601,7 +606,7 @@ test.describe('Share Embed Code Verification', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const embedInput = page.locator('[data-testid="share-embed-code-input"]');
     const embedCode = await embedInput.inputValue();
     // Should have opening < and closing >
@@ -614,7 +619,7 @@ test.describe('Share Embed Code Verification', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const markdownInput = page.locator('[data-testid="share-markdown-input"]');
     const markdown = await markdownInput.inputValue();
     // Markdown image: ![alt](url)
@@ -627,7 +632,7 @@ test.describe('Share Embed Code Verification', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const markdownInput = page.locator('[data-testid="share-markdown-input"]');
     const markdown = await markdownInput.inputValue();
     expect(markdown).toContain('http');
@@ -697,7 +702,7 @@ test.describe('Share Copy Button Behavior', () => {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const copyButton = page.locator('[data-testid="share-copy-link-button"]');
     await copyButton.click();
     await waitForRenderComplete(page, 'settle');
@@ -723,7 +728,7 @@ test.describe('Share Copy Button Behavior', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const copyEmbedButton = page.locator('[data-testid="share-copy-embed-button"]');
     await copyEmbedButton.click();
     await waitForRenderComplete(page, 'settle');
@@ -737,7 +742,7 @@ test.describe('Share Copy Button Behavior', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const copyMarkdownButton = page.locator('[data-testid="share-copy-markdown-button"]');
     await copyMarkdownButton.click();
     await waitForRenderComplete(page, 'settle');
@@ -758,21 +763,21 @@ test.describe('Share Keyboard Accessibility', () => {
   test('Tab navigates through share controls', async ({ page }) => {
     const firstSwitch = page.locator('[data-testid="share-direct-link-switch"]');
     await firstSwitch.focus();
-    
+
     const focusedElements: string[] = [];
     for (let i = 0; i < 5; i++) {
       await page.keyboard.press('Tab');
       const tag = await page.evaluate(() => document.activeElement?.tagName);
       if (tag) focusedElements.push(tag);
     }
-    
+
     expect(focusedElements.length).toBeGreaterThan(0);
   });
 
   test('Space toggles direct link switch', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-direct-link-switch"]');
     await switchEl.focus();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await page.keyboard.press('Space');
     await waitForRenderComplete(page, 'settle');
@@ -783,7 +788,7 @@ test.describe('Share Keyboard Accessibility', () => {
   test('Space toggles embed HTML switch', async ({ page }) => {
     const switchEl = page.locator('[data-testid="share-embed-html-switch"]');
     await switchEl.focus();
-    
+
     const initialState = await switchEl.getAttribute('data-state');
     await page.keyboard.press('Space');
     await waitForRenderComplete(page, 'settle');
@@ -803,7 +808,7 @@ test.describe('Share Keyboard Accessibility', () => {
   test('Shift+Tab navigates backwards', async ({ page }) => {
     const embedSwitch = page.locator('[data-testid="share-embed-html-switch"]');
     await embedSwitch.focus();
-    
+
     await page.keyboard.press('Shift+Tab');
     const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
     expect(focusedElement).toBeTruthy();
@@ -826,7 +831,7 @@ test.describe('Share Input Fields', () => {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     const isReadonly = await urlInput.getAttribute('readonly');
     expect(isReadonly).not.toBeNull();
@@ -838,7 +843,7 @@ test.describe('Share Input Fields', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const embedInput = page.locator('[data-testid="share-embed-code-input"]');
     const isReadonly = await embedInput.getAttribute('readonly');
     expect(isReadonly).not.toBeNull();
@@ -850,7 +855,7 @@ test.describe('Share Input Fields', () => {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const markdownInput = page.locator('[data-testid="share-markdown-input"]');
     const isReadonly = await markdownInput.getAttribute('readonly');
     expect(isReadonly).not.toBeNull();
@@ -862,10 +867,10 @@ test.describe('Share Input Fields', () => {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
       await waitForRenderComplete(page, 'settle');
     }
-    
+
     const urlInput = page.locator('[data-testid="share-direct-link-input"]');
     await urlInput.click();
-    
+
     // Should be able to select text even if readonly
     await page.keyboard.press('Control+a');
     // Verify the input has a value that could be copied
@@ -886,68 +891,83 @@ test.describe('Share Persistence', () => {
 
   test('direct link state persists after collapse/expand', async ({ page }) => {
     const directLinkSwitch = page.locator('[data-testid="share-direct-link-switch"]');
-    
+
     // Toggle to enabled
     if ((await directLinkSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-direct-link-switch');
     }
     const enabledState = await directLinkSwitch.getAttribute('data-state');
-    
+
     // Collapse and expand
-    const shareTriggerEl = page.locator('[data-testid="accordion-share"] button[data-state]').first();
+    const shareTriggerEl = page
+      .locator('[data-testid="accordion-share"] button[data-state]')
+      .first();
     await shareTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await shareTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-share"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-share"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     const persistedState = await directLinkSwitch.getAttribute('data-state');
     expect(persistedState).toBe(enabledState);
   });
 
   test('embed HTML state persists after collapse/expand', async ({ page }) => {
     const embedSwitch = page.locator('[data-testid="share-embed-html-switch"]');
-    
+
     // Toggle to enabled
     if ((await embedSwitch.getAttribute('data-state')) !== 'checked') {
       await toggleSwitchByTestId(page, 'share-embed-html-switch');
     }
     const enabledState = await embedSwitch.getAttribute('data-state');
-    
+
     // Collapse and expand
-    const shareTriggerEl = page.locator('[data-testid="accordion-share"] button[data-state]').first();
+    const shareTriggerEl = page
+      .locator('[data-testid="accordion-share"] button[data-state]')
+      .first();
     await shareTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await shareTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-share"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-share"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     const persistedState = await embedSwitch.getAttribute('data-state');
     expect(persistedState).toBe(enabledState);
   });
 
   test('encode more params state persists after collapse/expand', async ({ page }) => {
     const encodeMoreSwitch = page.locator('[data-testid="share-encode-more-params-switch"]');
-    
+
     // Toggle state
     const initialState = await encodeMoreSwitch.getAttribute('data-state');
     await toggleSwitchByTestId(page, 'share-encode-more-params-switch');
     const toggledState = await encodeMoreSwitch.getAttribute('data-state');
-    
+
     // Collapse and expand
-    const shareTriggerEl = page.locator('[data-testid="accordion-share"] button[data-state]').first();
+    const shareTriggerEl = page
+      .locator('[data-testid="accordion-share"] button[data-state]')
+      .first();
     await shareTriggerEl.click();
     await waitForRenderComplete(page, 'settle');
     await shareTriggerEl.click();
-    await page.waitForSelector('[data-testid="accordion-share"] [role="region"][data-state="open"]', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    
+    await page.waitForSelector(
+      '[data-testid="accordion-share"] [role="region"][data-state="open"]',
+      {
+        state: 'visible',
+        timeout: 5000,
+      }
+    );
+
     const persistedState = await encodeMoreSwitch.getAttribute('data-state');
     expect(persistedState).toBe(toggledState);
     expect(persistedState).not.toBe(initialState);

@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 describe('RS Decoder', () => {
@@ -18,7 +24,7 @@ describe('RS Decoder', () => {
       const result = correctRSBlock(codeword, dataCount, eccCount);
       expect(result).not.toBeNull();
       expect(result!.length).toBe(dataCount);
-      expect(result!.every(b => b === 0)).toBe(true);
+      expect(result!.every((b) => b === 0)).toBe(true);
     });
 
     it('corrects a single error in data region', async () => {
@@ -45,7 +51,7 @@ describe('RS Decoder', () => {
       const result = correctRSBlock(codeword, dataCount, eccCount);
       expect(result).not.toBeNull();
       expect(result!.length).toBe(dataCount);
-      expect(result!.every(b => b === 0)).toBe(true);
+      expect(result!.every((b) => b === 0)).toBe(true);
     });
 
     it('corrects multiple errors within capacity', async () => {

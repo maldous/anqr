@@ -19,10 +19,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  generateAllScenarios,
-  scenarioFilename,
-} from './lib/gallery-permutations.mjs';
+import { generateAllScenarios, scenarioFilename } from './lib/gallery-permutations.mjs';
 
 type SourceMode = 'local' | 'browser' | 'remote';
 type ScenarioCategory = 'nooverlay' | 'overlay' | 'artwork';
@@ -179,12 +176,15 @@ const SECTION_SPECS: SectionSpec[] = [
         Boolean(c.config.params.fg || c.config.params.bg || c.config.params.grad)),
     fallbackMatch: (c) =>
       c.config.category === 'nooverlay' &&
-      Boolean(c.config.params.fg || c.config.params.bg || c.config.params.palette || c.config.params.grad),
+      Boolean(
+        c.config.params.fg || c.config.params.bg || c.config.params.palette || c.config.params.grad
+      ),
   },
   {
     id: 'image-overlay',
     title: 'Image Overlays',
-    description: 'Static overlay rendering with blend modes, image transforms, and placement controls.',
+    description:
+      'Static overlay rendering with blend modes, image transforms, and placement controls.',
     icon: 'Image',
     animationPreference: 'static',
     featureKeys: ['mode', 'fixture', 'fit', 'filter', 'ditherKind', 'diffKernel'],
@@ -210,19 +210,45 @@ const SECTION_SPECS: SectionSpec[] = [
     description: 'Overlay motion, stacked animation targets, interpolation, and temporal effects.',
     icon: 'Film',
     animationPreference: 'animated',
-    featureKeys: ['fixture', 'mode', 'animPattern', 'animPattern2', 'interp', 'tempDither', 'animTarget'],
+    featureKeys: [
+      'fixture',
+      'mode',
+      'animPattern',
+      'animPattern2',
+      'interp',
+      'tempDither',
+      'animTarget',
+    ],
     primaryMatch: (c) => c.config.category === 'overlay' && c.isAnimated,
     fallbackMatch: (c) =>
       c.config.category === 'overlay' &&
-      matchesAny(c.labelLower, [/anim/, /hero/, /target-stack/, /wave/, /pulse/, /scanline/, /shimmer/, /drift/]),
+      matchesAny(c.labelLower, [
+        /anim/,
+        /hero/,
+        /target-stack/,
+        /wave/,
+        /pulse/,
+        /scanline/,
+        /shimmer/,
+        /drift/,
+      ]),
   },
   {
     id: 'blend-modes',
     title: 'Blend Modes',
-    description: 'Preservation behavior and structural safeguards for finder/timing alignment legibility.',
+    description:
+      'Preservation behavior and structural safeguards for finder/timing alignment legibility.',
     icon: 'Layers',
     animationPreference: 'mixed',
-    featureKeys: ['mode', 'blendPresMode', 'keepFinders', 'keepTiming', 'keepBoth', 'fit', 'logoSize'],
+    featureKeys: [
+      'mode',
+      'blendPresMode',
+      'keepFinders',
+      'keepTiming',
+      'keepBoth',
+      'fit',
+      'logoSize',
+    ],
     primaryMatch: (c) =>
       c.config.category === 'overlay' &&
       matchesAny(c.labelLower, [
@@ -246,7 +272,8 @@ const SECTION_SPECS: SectionSpec[] = [
   {
     id: 'color-modes',
     title: 'Color Processing',
-    description: 'Dither families, diffusion kernels, grayscale/BW outputs, and tonal processing variants.',
+    description:
+      'Dither families, diffusion kernels, grayscale/BW outputs, and tonal processing variants.',
     icon: 'Contrast',
     animationPreference: 'mixed',
     featureKeys: ['colorMode', 'ditherKind', 'diffKernel', 'ditherStrength', 'mode', 'fixture'],
@@ -266,7 +293,9 @@ const SECTION_SPECS: SectionSpec[] = [
       ]),
     fallbackMatch: (c) =>
       c.config.category === 'overlay' &&
-      Boolean(c.config.params.colorMode || c.config.params.ditherKind || c.config.params.diffKernel),
+      Boolean(
+        c.config.params.colorMode || c.config.params.ditherKind || c.config.params.diffKernel
+      ),
   },
   {
     id: 'encoding',
@@ -294,7 +323,15 @@ const SECTION_SPECS: SectionSpec[] = [
     featureKeys: ['category', 'mode', 'animPattern', 'animPattern2', 'style', 'fixture', 'wmKind'],
     primaryMatch: (c) =>
       c.config.category !== 'artwork' &&
-      (matchesAny(c.labelLower, [/power/, /mega/, /visual/, /hero/, /target-stack/, /filler/, /^wm-/]) ||
+      (matchesAny(c.labelLower, [
+        /power/,
+        /mega/,
+        /visual/,
+        /hero/,
+        /target-stack/,
+        /filler/,
+        /^wm-/,
+      ]) ||
         Boolean(c.config.params.animPattern2 || c.config.params.animTarget2)),
     fallbackMatch: (c) => c.config.category !== 'artwork',
   },
@@ -304,7 +341,16 @@ const SECTION_SPECS: SectionSpec[] = [
     description: 'Art-embedded QR outputs across static and animated source artwork fixtures.',
     icon: 'Paintbrush',
     animationPreference: 'mixed',
-    featureKeys: ['fixture', 'style', 'finder', 'animPattern', 'animPattern2', 'tempDither', 'v', 'ec'],
+    featureKeys: [
+      'fixture',
+      'style',
+      'finder',
+      'animPattern',
+      'animPattern2',
+      'tempDither',
+      'v',
+      'ec',
+    ],
     primaryMatch: (c) => c.config.category === 'artwork',
     fallbackMatch: (c) => c.config.category === 'artwork',
   },
@@ -365,7 +411,7 @@ async function clearPublishedImages(dir: string): Promise<void> {
   await Promise.all(
     files
       .filter((f) => /\.(png|gif|webp|jpg|jpeg|json)$/i.test(f))
-      .map((f) => fs.rm(path.join(dir, f), { force: true })),
+      .map((f) => fs.rm(path.join(dir, f), { force: true }))
   );
 }
 
@@ -374,7 +420,7 @@ function matchesAny(input: string, patterns: RegExp[]): boolean {
 }
 
 function toSortedParams(
-  params: Record<string, string | number | boolean | undefined>,
+  params: Record<string, string | number | boolean | undefined>
 ): Record<string, string | number | boolean> {
   const out: Record<string, string | number | boolean> = {};
   const entries = Object.entries(params || {})
@@ -387,7 +433,7 @@ function toSortedParams(
 }
 
 function deterministicParamEntries(
-  params: Record<string, string | number | boolean>,
+  params: Record<string, string | number | boolean>
 ): Array<[string, string]> {
   return Object.entries(params)
     .map(([key, value]) => [key, String(value)] as [string, string])
@@ -573,10 +619,16 @@ function variantFromCandidate(sectionId: GalleryCategory, candidate: Candidate):
           (p.rot180 ? 'rot 180' : '') ||
           (p.cropEn ? 'crop' : '') ||
           p.wmBlend ||
-          '',
+          ''
       );
       push(
-        p.keepBoth ? 'keep both' : p.keepFinders ? 'keep finders' : p.keepTiming ? 'keep timing' : '',
+        p.keepBoth
+          ? 'keep both'
+          : p.keepFinders
+            ? 'keep finders'
+            : p.keepTiming
+              ? 'keep timing'
+              : ''
       );
       break;
     case 'color-modes':
@@ -651,11 +703,14 @@ function descriptionFromCandidate(sectionId: GalleryCategory, candidate: Candida
   if (params.ditherKind) parts.push(`dither ${humanizeToken(String(params.ditherKind))}`);
   if (params.animPattern) parts.push(`anim ${humanizeToken(String(params.animPattern))}`);
   if (params.animPattern2) parts.push(`stack ${humanizeToken(String(params.animPattern2))}`);
-  if (params.style && sectionId !== 'styles') parts.push(`${humanizeToken(String(params.style))} modules`);
+  if (params.style && sectionId !== 'styles')
+    parts.push(`${humanizeToken(String(params.style))} modules`);
   if (params.fit) parts.push(`fit ${humanizeToken(String(params.fit))}`);
   if (params.filter) parts.push(`filter ${humanizeToken(String(params.filter))}`);
-  if (params.blendPresMode) parts.push(`preservation ${humanizeToken(String(params.blendPresMode))}`);
-  if (candidate.fixtureId !== 'none') parts.push(`source ${FIXTURE_NAMES[candidate.fixtureId] || candidate.fixtureId}`);
+  if (params.blendPresMode)
+    parts.push(`preservation ${humanizeToken(String(params.blendPresMode))}`);
+  if (candidate.fixtureId !== 'none')
+    parts.push(`source ${FIXTURE_NAMES[candidate.fixtureId] || candidate.fixtureId}`);
 
   const variant = variantFromCandidate(sectionId, candidate);
   if (variant) parts.push(`variant ${variant}`);
@@ -667,7 +722,7 @@ function scoreCandidate(
   section: SectionSpec,
   selected: Candidate[],
   coverage: Map<string, Map<string, number>>,
-  selectedHashes: Set<string>,
+  selectedHashes: Set<string>
 ): number {
   let score = 0;
 
@@ -711,7 +766,7 @@ function pickVariedCandidates(
   section: SectionSpec,
   pool: Candidate[],
   count: number,
-  avoidHashes: Set<string> = new Set(),
+  avoidHashes: Set<string> = new Set()
 ): Candidate[] {
   const available = [...pool].sort((a, b) => a.itemId.localeCompare(b.itemId));
   const selected: Candidate[] = [];
@@ -838,14 +893,17 @@ async function mergeShardOutputs(sourceDir: string): Promise<{
     results: mergedResults,
   };
 
-  await fs.writeFile(path.join(sourceDir, 'report.merged.json'), `${JSON.stringify(merged, null, 2)}\n`);
+  await fs.writeFile(
+    path.join(sourceDir, 'report.merged.json'),
+    `${JSON.stringify(merged, null, 2)}\n`
+  );
   await fs.writeFile(
     path.join(sourceDir, 'passed.merged.txt'),
-    `${[...passFilenames].sort().join('\n')}${passFilenames.size ? '\n' : ''}`,
+    `${[...passFilenames].sort().join('\n')}${passFilenames.size ? '\n' : ''}`
   );
   await fs.writeFile(
     path.join(sourceDir, 'failed.merged.txt'),
-    `${[...failFilenames].sort().join('\n')}${failFilenames.size ? '\n' : ''}`,
+    `${[...failFilenames].sort().join('\n')}${failFilenames.size ? '\n' : ''}`
   );
 
   return {
@@ -866,9 +924,7 @@ function toCandidateHint(candidate: Candidate): GalleryCategory | null {
   return null;
 }
 
-async function selectShowcaseItems(
-  candidates: Candidate[],
-): Promise<{
+async function selectShowcaseItems(candidates: Candidate[]): Promise<{
   sectionMap: Map<GalleryCategory, Candidate[]>;
   missingSections: Array<{ section: GalleryCategory; needed: number; found: number }>;
 }> {
@@ -883,13 +939,13 @@ async function selectShowcaseItems(
     if (!section) continue;
 
     const primaryPool = candidates.filter(
-      (candidate) => !usedScenarioIds.has(candidate.config.id) && section.primaryMatch(candidate),
+      (candidate) => !usedScenarioIds.has(candidate.config.id) && section.primaryMatch(candidate)
     );
     const fallbackPool = candidates.filter(
       (candidate) =>
         !usedScenarioIds.has(candidate.config.id) &&
         !primaryPool.some((entry) => entry.config.id === candidate.config.id) &&
-        section.fallbackMatch(candidate),
+        section.fallbackMatch(candidate)
     );
 
     const pool = [...primaryPool, ...fallbackPool];
@@ -913,9 +969,7 @@ async function selectShowcaseItems(
   return { sectionMap, missingSections };
 }
 
-async function copySelectedArtifacts(
-  selected: Candidate[],
-): Promise<
+async function copySelectedArtifacts(selected: Candidate[]): Promise<
   Array<{
     id: string;
     category: GalleryCategory;
@@ -966,7 +1020,7 @@ async function writeGeneratedGalleryData(
     icon: string;
     items: GalleryItemOut[];
   }>,
-  summary: Record<string, unknown>,
+  summary: Record<string, unknown>
 ): Promise<void> {
   const source = `/**
  * Auto-generated file. Do not edit manually.
@@ -1058,9 +1112,7 @@ async function main(): Promise<void> {
     candidate.sectionCategoryHint = toCandidateHint(candidate);
 
     const isReportPassed = reportStatus === 'pass';
-    const eligible = hasReportCoverage
-      ? isReportPassed || passByFile || allowUnreported
-      : true;
+    const eligible = hasReportCoverage ? isReportPassed || passByFile || allowUnreported : true;
 
     if (eligible) {
       candidates.push(candidate);
@@ -1071,7 +1123,7 @@ async function main(): Promise<void> {
 
   if (candidates.length < ITEMS_PER_SECTION * SECTION_SPECS.length) {
     throw new Error(
-      `Insufficient eligible artifacts (${candidates.length}) for ${SECTION_SPECS.length} sections × ${ITEMS_PER_SECTION} items`,
+      `Insufficient eligible artifacts (${candidates.length}) for ${SECTION_SPECS.length} sections × ${ITEMS_PER_SECTION} items`
     );
   }
 
@@ -1104,7 +1156,7 @@ async function main(): Promise<void> {
     const items: GalleryItemOut[] = chosen.map((candidate) => {
       selectedCandidates.push(candidate);
       let title = titleFromCandidate(sectionId, candidate);
-      let description = descriptionFromCandidate(sectionId, candidate);
+      const description = descriptionFromCandidate(sectionId, candidate);
       const key = `${title}|||${description}`;
       const count = (seenTitleDesc.get(key) || 0) + 1;
       seenTitleDesc.set(key, count);
@@ -1168,11 +1220,11 @@ async function main(): Promise<void> {
             }
           : null,
       };
-    }),
+    })
   );
 
   const sectionCounts = Object.fromEntries(
-    sectionsOut.map((section) => [section.id, section.items.length]),
+    sectionsOut.map((section) => [section.id, section.items.length])
   );
 
   const showcaseManifest = {
@@ -1214,11 +1266,11 @@ async function main(): Promise<void> {
 
   await fs.writeFile(
     path.join(PUBLIC_GALLERY_DIR, 'showcase-manifest.json'),
-    `${JSON.stringify(showcaseManifest, null, 2)}\n`,
+    `${JSON.stringify(showcaseManifest, null, 2)}\n`
   );
   await fs.writeFile(
     path.join(PUBLIC_GALLERY_DIR, 'manifest.json'),
-    `${JSON.stringify(showcaseManifest, null, 2)}\n`,
+    `${JSON.stringify(showcaseManifest, null, 2)}\n`
   );
 
   await writeGeneratedGalleryData(sectionsOut, {

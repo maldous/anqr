@@ -33,7 +33,10 @@ function httpsGet(url, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     const req = https.get(
       url,
-      { headers: { 'User-Agent': 'ANQR-SentryCheck/1.0', ...extraHeaders }, timeout: REQUEST_TIMEOUT_MS },
+      {
+        headers: { 'User-Agent': 'ANQR-SentryCheck/1.0', ...extraHeaders },
+        timeout: REQUEST_TIMEOUT_MS,
+      },
       (res) => {
         const chunks = [];
         res.on('data', (chunk) => chunks.push(chunk));
@@ -44,7 +47,7 @@ function httpsGet(url, extraHeaders = {}) {
             body: Buffer.concat(chunks).toString('utf-8'),
           });
         });
-      },
+      }
     );
     req.on('timeout', () => {
       req.destroy();
@@ -138,11 +141,17 @@ async function main() {
       if (issues.length === 0) {
         console.log(`✓ ${project}: 0 unresolved issues`);
       } else {
-        console.log(`✗ ${project}: ${issues.length} unresolved issue${issues.length === 1 ? '' : 's'}`);
+        console.log(
+          `✗ ${project}: ${issues.length} unresolved issue${issues.length === 1 ? '' : 's'}`
+        );
         for (const issue of issues) {
           console.log(`    ${issue.shortId || issue.id}  ${truncate(issue.title, 60)}`);
-          console.log(`      Events: ${issue.count}  Users: ${issue.userCount}  Level: ${issue.level}`);
-          console.log(`      First: ${formatDate(issue.firstSeen)}  Last: ${formatDate(issue.lastSeen)}`);
+          console.log(
+            `      Events: ${issue.count}  Users: ${issue.userCount}  Level: ${issue.level}`
+          );
+          console.log(
+            `      First: ${formatDate(issue.firstSeen)}  Last: ${formatDate(issue.lastSeen)}`
+          );
           if (issue.culprit) {
             console.log(`      Culprit: ${truncate(issue.culprit, 70)}`);
           }
@@ -163,7 +172,9 @@ async function main() {
   if (totalUnresolved === 0) {
     console.log('✓ Sentry regression check PASSED — 0 unresolved issues');
   } else {
-    console.log(`✗ Sentry regression check FAILED — ${totalUnresolved} unresolved issue${totalUnresolved === 1 ? '' : 's'} across ${SENTRY_PROJECTS.length} projects`);
+    console.log(
+      `✗ Sentry regression check FAILED — ${totalUnresolved} unresolved issue${totalUnresolved === 1 ? '' : 's'} across ${SENTRY_PROJECTS.length} projects`
+    );
   }
   console.log('');
 

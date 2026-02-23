@@ -1137,6 +1137,7 @@ export function PayloadSection() {
                 ? 'ring-4 ring-primary/50 ring-offset-2 ring-offset-background animate-pulse'
                 : ''
             }
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- intentional: focuses textarea on first visit to guide user
             autoFocus={showStartupHighlight}
             title={t('hints.enterTextContent')}
             data-testid={DynamicTestId.resolve('payload-text-textarea', 'payload-text-textarea')}

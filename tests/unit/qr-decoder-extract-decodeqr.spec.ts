@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node
@@ -179,8 +185,8 @@ describe('qr-decoder/extract.ts', () => {
       const img = createWhiteImageData(size, size);
 
       const location = {
-        topLeft: { x: 35, y: 35 },    // 3.5 * 10
-        topRight: { x: 175, y: 35 },   // (21-3.5) * 10
+        topLeft: { x: 35, y: 35 }, // 3.5 * 10
+        topRight: { x: 175, y: 35 }, // (21-3.5) * 10
         bottomLeft: { x: 35, y: 175 }, // 3.5, (21-3.5) * 10
         bottomRight: { x: 175, y: 175 },
         moduleSize: 10,
@@ -230,10 +236,10 @@ describe('qr-decoder/extract.ts', () => {
       const data = new Uint8ClampedArray(size * size * 4);
       // All transparent (alpha=0)
       for (let i = 0; i < data.length; i += 4) {
-        data[i] = 0;     // R
-        data[i + 1] = 0;  // G
-        data[i + 2] = 0;  // B
-        data[i + 3] = 0;  // A = transparent
+        data[i] = 0; // R
+        data[i + 1] = 0; // G
+        data[i + 2] = 0; // B
+        data[i + 3] = 0; // A = transparent
       }
       const img = new MockImageData(data, size, size);
 
@@ -291,7 +297,7 @@ describe('qr-decoder/extract.ts', () => {
 
       const location = {
         topLeft: { x: 10, y: 10 },
-        topRight: { x: 200, y: 10 },  // Way outside image
+        topRight: { x: 200, y: 10 }, // Way outside image
         bottomLeft: { x: 10, y: 200 }, // Way outside image
         bottomRight: { x: 200, y: 200 },
         moduleSize: 10,
@@ -338,8 +344,8 @@ describe('qr-decoder/extract.ts', () => {
 
       expect(matrix.length).toBe(21);
       // Should have a mix of dark and light modules
-      const hasDark = matrix.some(row => row.some(v => v));
-      const hasLight = matrix.some(row => row.some(v => !v));
+      const hasDark = matrix.some((row) => row.some((v) => v));
+      const hasLight = matrix.some((row) => row.some((v) => !v));
       expect(hasDark).toBe(true);
       expect(hasLight).toBe(true);
     });

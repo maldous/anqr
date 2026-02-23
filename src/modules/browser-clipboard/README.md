@@ -5,6 +5,7 @@ Clipboard operations for text and images in browser environments.
 ## Purpose
 
 This module provides browser-specific clipboard functionality:
+
 - Copy text to clipboard
 - Copy images (canvas/blob) to clipboard
 

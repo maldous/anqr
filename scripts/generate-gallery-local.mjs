@@ -84,17 +84,19 @@ const OUTPUT_DIR = path.join(ARTIFACTS_DIR, 'local');
 
 const AUTO_LOCAL_CONCURRENCY = Math.max(
   4,
-  Math.min(24, (typeof os.availableParallelism === 'function'
-    ? os.availableParallelism()
-    : os.cpus().length) - 1)
+  Math.min(
+    24,
+    (typeof os.availableParallelism === 'function' ? os.availableParallelism() : os.cpus().length) -
+      1
+  )
 );
 const CONCURRENCY = Math.max(
   1,
-  Number.parseInt(process.env.GALLERY_CONCURRENCY || String(AUTO_LOCAL_CONCURRENCY), 10),
+  Number.parseInt(process.env.GALLERY_CONCURRENCY || String(AUTO_LOCAL_CONCURRENCY), 10)
 );
 const SCENARIO_TIMEOUT_MS = Math.max(
   30_000,
-  Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '240000', 10),
+  Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '240000', 10)
 );
 const SHARD = resolveGalleryShard(process.env);
 const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
@@ -200,7 +202,7 @@ async function verifyImage(buffer, expectedPrefix, expectAnimated = false) {
       try {
         const arrayBuffer = buffer.buffer.slice(
           buffer.byteOffset,
-          buffer.byteOffset + buffer.byteLength,
+          buffer.byteOffset + buffer.byteLength
         );
         const decoded = decodeGif(arrayBuffer);
         if (!decoded.frames || decoded.frames.length < 2) {
@@ -225,7 +227,9 @@ const GIF87A_SIGNATURE = Buffer.from('GIF87a');
 const GIF89A_SIGNATURE = Buffer.from('GIF89a');
 
 function hasImageMagic(buffer, ext) {
-  const normalized = String(ext || '').toLowerCase().replace(/^\./, '');
+  const normalized = String(ext || '')
+    .toLowerCase()
+    .replace(/^\./, '');
   if (normalized === 'gif') {
     return (
       buffer.length >= 6 &&
@@ -288,7 +292,7 @@ async function removeScenarioArtifacts(outputDir, config) {
           throw err;
         }
       }
-    }),
+    })
   );
 }
 
@@ -303,9 +307,7 @@ async function runPool(tasks, concurrency) {
     }
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker())
-  );
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()));
   return results;
 }
 
@@ -350,7 +352,9 @@ async function main() {
   const preShardCount = configs.length;
   configs = applyGalleryShard(configs, SHARD);
 
-  console.log(`Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`);
+  console.log(
+    `Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`
+  );
 
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
   const passedPath = path.join(OUTPUT_DIR, shardOutputFilename('passed.txt', SHARD));
@@ -421,7 +425,9 @@ async function main() {
     } catch (err) {
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
-      console.error(`  [${completed}/${configs.length}] ✗ ${config.id}: ${err.message} [${elapsed}s]`);
+      console.error(
+        `  [${completed}/${configs.length}] ✗ ${config.id}: ${err.message} [${elapsed}s]`
+      );
       failed.push(fallbackFilename);
       return {
         id: config.id,
@@ -456,11 +462,14 @@ async function main() {
     categories: Object.fromEntries(
       ['nooverlay', 'overlay', 'artwork'].map((cat) => {
         const catResults = results.filter((r) => r.category === cat);
-        return [cat, {
-          total: catResults.length,
-          pass: catResults.filter((r) => r.status === 'pass').length,
-          fail: catResults.filter((r) => r.status === 'fail').length,
-        }];
+        return [
+          cat,
+          {
+            total: catResults.length,
+            pass: catResults.filter((r) => r.status === 'pass').length,
+            fail: catResults.filter((r) => r.status === 'fail').length,
+          },
+        ];
       })
     ),
     results,
@@ -471,7 +480,9 @@ async function main() {
   const totalSec = Math.round((Date.now() - globalStart) / 1000);
   console.log(`\n${'='.repeat(50)}`);
   console.log(`Total: ${results.length} runs in ${totalSec}s`);
-  console.log(`Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`);
+  console.log(
+    `Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`
+  );
   console.log(`Fail:  ${failed.length}`);
   console.log(`\nArtifacts: ${OUTPUT_DIR}/`);
   console.log(`Passed:    ${passedPath}`);

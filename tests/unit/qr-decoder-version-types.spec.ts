@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node
@@ -137,7 +143,7 @@ describe('qr-decoder/qr-version.ts', () => {
 
     it('forBits throws for unknown bits', async () => {
       const Mode = await getMode();
-      expect(() => Mode.forBits(0xFF)).toThrow();
+      expect(() => Mode.forBits(0xff)).toThrow();
     });
 
     it('getCharacterCountBits for v1 (<=9)', async () => {
@@ -348,7 +354,7 @@ describe('qr-decoder/qr-version.ts', () => {
 
     it('numBitsDiffering(0xFF,0) = 8', async () => {
       const FI = await getFI();
-      expect(FI.numBitsDiffering(0xFF, 0)).toBe(8);
+      expect(FI.numBitsDiffering(0xff, 0)).toBe(8);
     });
 
     it('numBitsDiffering(0b1010, 0b0101) = 4', async () => {
@@ -391,7 +397,7 @@ describe('qr-decoder/qr-version.ts', () => {
     it('returns null for indecipherable format info', async () => {
       const FI = await getFI();
       // A value far from any known format info
-      const fi = FI.decodeFormatInformation(0xFFFF, 0xFFFF);
+      const fi = FI.decodeFormatInformation(0xffff, 0xffff);
       // Might still decode if close enough to some pattern; if not, returns null
       // The XOR with 0x5412 gives 0xABED, also likely far from all patterns
       // This may or may not be null depending on hamming distances
@@ -531,47 +537,93 @@ describe('qr-decoder/result-types.ts', () => {
     it('getText returns text', async () => {
       const mod = await import('../../src/modules/qr-decoder/result-types');
       const { Result, ResultPoint, BarcodeFormat } = mod;
-      const r = new Result('hello', new Uint8Array([104, 101, 108, 108, 111]), undefined as never, [new ResultPoint(0, 0)], BarcodeFormat.QR_CODE);
+      const r = new Result(
+        'hello',
+        new Uint8Array([104, 101, 108, 108, 111]),
+        undefined as never,
+        [new ResultPoint(0, 0)],
+        BarcodeFormat.QR_CODE
+      );
       expect(r.getText()).toBe('hello');
       expect(r.toString()).toBe('hello');
     });
 
     it('getRawBytes returns bytes', async () => {
-      const { Result, ResultPoint, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
+      const { Result, ResultPoint, BarcodeFormat } =
+        await import('../../src/modules/qr-decoder/result-types');
       const bytes = new Uint8Array([1, 2, 3]);
-      const r = new Result('test', bytes, undefined as never, [new ResultPoint(0, 0)], BarcodeFormat.QR_CODE);
+      const r = new Result(
+        'test',
+        bytes,
+        undefined as never,
+        [new ResultPoint(0, 0)],
+        BarcodeFormat.QR_CODE
+      );
       expect(r.getRawBytes()).toBe(bytes);
     });
 
     it('getNumBits auto-calculates from rawBytes length', async () => {
-      const { Result, ResultPoint, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array([1, 2, 3]), undefined as never, [new ResultPoint(0, 0)], BarcodeFormat.QR_CODE);
+      const { Result, ResultPoint, BarcodeFormat } =
+        await import('../../src/modules/qr-decoder/result-types');
+      const r = new Result(
+        'test',
+        new Uint8Array([1, 2, 3]),
+        undefined as never,
+        [new ResultPoint(0, 0)],
+        BarcodeFormat.QR_CODE
+      );
       expect(r.getNumBits()).toBe(24);
     });
 
     it('getBarcodeFormat returns format', async () => {
-      const { Result, ResultPoint, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [], BarcodeFormat.QR_CODE);
+      const { Result, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [],
+        BarcodeFormat.QR_CODE
+      );
       expect(r.getBarcodeFormat()).toBe(BarcodeFormat.QR_CODE);
     });
 
     it('getTimestamp returns a number', async () => {
       const { Result, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [], BarcodeFormat.QR_CODE);
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [],
+        BarcodeFormat.QR_CODE
+      );
       expect(typeof r.getTimestamp()).toBe('number');
     });
 
     it('putMetadata and getResultMetadata', async () => {
-      const { Result, BarcodeFormat, ResultMetadataType } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [], BarcodeFormat.QR_CODE);
+      const { Result, BarcodeFormat, ResultMetadataType } =
+        await import('../../src/modules/qr-decoder/result-types');
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [],
+        BarcodeFormat.QR_CODE
+      );
       expect(r.getResultMetadata()).toBeNull();
       r.putMetadata(ResultMetadataType.ERROR_CORRECTION_LEVEL, 'H');
       expect(r.getResultMetadata()!.get(ResultMetadataType.ERROR_CORRECTION_LEVEL)).toBe('H');
     });
 
     it('putAllMetadata replaces metadata', async () => {
-      const { Result, BarcodeFormat, ResultMetadataType } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [], BarcodeFormat.QR_CODE);
+      const { Result, BarcodeFormat, ResultMetadataType } =
+        await import('../../src/modules/qr-decoder/result-types');
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [],
+        BarcodeFormat.QR_CODE
+      );
       const map = new Map<number, unknown>();
       map.set(ResultMetadataType.ORIENTATION, 90);
       r.putAllMetadata(map as never);
@@ -580,14 +632,27 @@ describe('qr-decoder/result-types.ts', () => {
 
     it('putAllMetadata with null is no-op', async () => {
       const { Result, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [], BarcodeFormat.QR_CODE);
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [],
+        BarcodeFormat.QR_CODE
+      );
       r.putAllMetadata(null as never);
       expect(r.getResultMetadata()).toBeNull();
     });
 
     it('putAllMetadata when metadata already exists', async () => {
-      const { Result, BarcodeFormat, ResultMetadataType } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [], BarcodeFormat.QR_CODE);
+      const { Result, BarcodeFormat, ResultMetadataType } =
+        await import('../../src/modules/qr-decoder/result-types');
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [],
+        BarcodeFormat.QR_CODE
+      );
       r.putMetadata(ResultMetadataType.ORIENTATION, 0);
       const map = new Map<number, unknown>();
       map.set(ResultMetadataType.ERROR_CORRECTION_LEVEL, 'M');
@@ -596,15 +661,29 @@ describe('qr-decoder/result-types.ts', () => {
     });
 
     it('addResultPoints appends points', async () => {
-      const { Result, ResultPoint, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [new ResultPoint(0, 0)], BarcodeFormat.QR_CODE);
+      const { Result, ResultPoint, BarcodeFormat } =
+        await import('../../src/modules/qr-decoder/result-types');
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [new ResultPoint(0, 0)],
+        BarcodeFormat.QR_CODE
+      );
       r.addResultPoints([new ResultPoint(1, 1), new ResultPoint(2, 2)]);
       expect(r.getResultPoints()).toHaveLength(3);
     });
 
     it('addResultPoints with empty array is no-op', async () => {
-      const { Result, ResultPoint, BarcodeFormat } = await import('../../src/modules/qr-decoder/result-types');
-      const r = new Result('test', new Uint8Array(0), undefined as never, [new ResultPoint(0, 0)], BarcodeFormat.QR_CODE);
+      const { Result, ResultPoint, BarcodeFormat } =
+        await import('../../src/modules/qr-decoder/result-types');
+      const r = new Result(
+        'test',
+        new Uint8Array(0),
+        undefined as never,
+        [new ResultPoint(0, 0)],
+        BarcodeFormat.QR_CODE
+      );
       r.addResultPoints([]);
       expect(r.getResultPoints()).toHaveLength(1);
     });

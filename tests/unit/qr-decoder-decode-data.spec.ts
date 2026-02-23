@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node
@@ -52,7 +58,7 @@ describe('qr-decoder/decode.ts', () => {
       const { RS_BLOCKS } = await import('../../src/modules/qr-decoder/decode');
       const v1L = RS_BLOCKS.L[0]; // [[1, 26, 19]]
       expect(v1L).toHaveLength(1);
-      expect(v1L[0][0]).toBe(1);  // 1 block
+      expect(v1L[0][0]).toBe(1); // 1 block
       expect(v1L[0][1]).toBe(26); // 26 total codewords
       expect(v1L[0][2]).toBe(19); // 19 data codewords
     });
@@ -145,7 +151,7 @@ describe('qr-decoder/decode.ts', () => {
       // Numeric mode (0001), count=5, "123" (10 bits), "45" (7 bits), terminator (0000)
       // Bits: 0001 0000000101 0001111011 0101101 0000
       // Bytes: 0x10 0x14 0x7B 0x5A 0x00
-      const result = decode([0x10, 0x14, 0x7B, 0x5A, 0x00], 1);
+      const result = decode([0x10, 0x14, 0x7b, 0x5a, 0x00], 1);
       expect(result).toBe('12345');
     });
 
@@ -153,7 +159,7 @@ describe('qr-decoder/decode.ts', () => {
       const decode = await getDecode();
       // Alphanumeric mode (0010), count=5, HE=779 (11 bits), LL=966 (11 bits), O=24 (6 bits), term
       // Bytes: 0x20 0x2B 0x0B 0x78 0xCC 0x00
-      const result = decode([0x20, 0x2B, 0x0B, 0x78, 0xCC, 0x00], 1);
+      const result = decode([0x20, 0x2b, 0x0b, 0x78, 0xcc, 0x00], 1);
       expect(result).toBe('HELLO');
     });
 
@@ -181,7 +187,7 @@ describe('qr-decoder/decode.ts', () => {
 
     it('returns detailed result for numeric data', async () => {
       const decode = await getDecodeDetailed();
-      const result = decode([0x10, 0x14, 0x7B, 0x5A, 0x00], 1);
+      const result = decode([0x10, 0x14, 0x7b, 0x5a, 0x00], 1);
       expect(result.text).toBe('12345');
       expect(result.valid).toBe(true);
       expect(result.structurallyValid).toBe(true);
@@ -191,7 +197,7 @@ describe('qr-decoder/decode.ts', () => {
 
     it('returns detailed result for alphanumeric data', async () => {
       const decode = await getDecodeDetailed();
-      const result = decode([0x20, 0x2B, 0x0B, 0x78, 0xCC, 0x00], 1);
+      const result = decode([0x20, 0x2b, 0x0b, 0x78, 0xcc, 0x00], 1);
       expect(result.text).toBe('HELLO');
       expect(result.valid).toBe(true);
       expect(result.encodingMode).toBe('alphanumeric');
@@ -211,7 +217,7 @@ describe('qr-decoder/decode.ts', () => {
       // Byte mode with count=10 but only 2 bytes of data available
       // Mode: 0100, count: 00001010 (10), then truncated
       // 0100 00001010 = byte 0: 01000000 = 0x40, byte 1: 10100000 = 0xA0
-      const result = decode([0x40, 0xA0], 1);
+      const result = decode([0x40, 0xa0], 1);
       // Should still return something, but may be invalid/truncated
       expect(result.valid).toBe(false);
     });
@@ -226,7 +232,7 @@ describe('qr-decoder/decode.ts', () => {
 
     it('segments contain expected fields', async () => {
       const decode = await getDecodeDetailed();
-      const result = decode([0x10, 0x14, 0x7B, 0x5A, 0x00], 1);
+      const result = decode([0x10, 0x14, 0x7b, 0x5a, 0x00], 1);
       const seg = result.segments[0];
       expect(seg.index).toBe(0);
       expect(seg.modeName).toBe('numeric');
@@ -238,9 +244,9 @@ describe('qr-decoder/decode.ts', () => {
 
     it('terminator segment has charCount 0', async () => {
       const decode = await getDecodeDetailed();
-      const result = decode([0x10, 0x14, 0x7B, 0x5A, 0x00], 1);
+      const result = decode([0x10, 0x14, 0x7b, 0x5a, 0x00], 1);
       // Find the terminator segment
-      const terminator = result.segments.find(s => s.modeName === 'terminator');
+      const terminator = result.segments.find((s) => s.modeName === 'terminator');
       expect(terminator).toBeDefined();
       expect(terminator!.charCount).toBe(0);
     });
@@ -250,7 +256,7 @@ describe('qr-decoder/decode.ts', () => {
       // Mode 0110 (6) is not a standard mode - this should cause an unknown mode
       // 0110 = 6, which doesn't match any standard mode
       // Actually mode 6 isn't defined. Let's use 0xF0 → mode=1111=15 which is unknown
-      const result = decode([0xF0, 0x00], 1);
+      const result = decode([0xf0, 0x00], 1);
       expect(result.valid).toBe(false);
     });
 
@@ -262,7 +268,7 @@ describe('qr-decoder/decode.ts', () => {
       // Mode: 0100, count: 1111111111111111 (65535) for v10 (16-bit count)
       // 0100 1111111111111111 = byte0: 01001111 = 0x4F, byte1: 11111111 = 0xFF, byte2: 11110000 = 0xF0...
       // Actually for v10, byte mode count is 16 bits
-      const result = decode([0x4F, 0xFF, 0xF0], 10);
+      const result = decode([0x4f, 0xff, 0xf0], 10);
       expect(result.valid).toBe(false);
     });
   });
@@ -297,7 +303,7 @@ describe('qr-decoder/decode.ts', () => {
       expect(codewords.length).toBeGreaterThan(0);
       // All data modules are true → all codeword bytes should be 0xFF
       for (const cw of codewords) {
-        expect(cw).toBe(0xFF);
+        expect(cw).toBe(0xff);
       }
     });
 

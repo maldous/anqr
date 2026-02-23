@@ -5,6 +5,7 @@ Canvas to Blob conversion and download utilities for browser environments.
 ## Purpose
 
 This module provides browser-specific I/O operations:
+
 - Canvas to Blob/DataURL conversion
 - File downloads (URL and Blob)
 - Native file saving via Capacitor (Android/iOS)

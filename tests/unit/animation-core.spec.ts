@@ -2,7 +2,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 type MockCtx = {
@@ -18,12 +24,9 @@ type MockCtx = {
 };
 
 function makeMockCanvas(width = 2, height = 2, seedPixels?: number[]): HTMLCanvasElement {
-  const pixels = new Uint8ClampedArray(seedPixels ?? [
-    10, 20, 30, 255,
-    220, 210, 200, 255,
-    30, 30, 30, 255,
-    240, 240, 240, 255,
-  ]);
+  const pixels = new Uint8ClampedArray(
+    seedPixels ?? [10, 20, 30, 255, 220, 210, 200, 255, 30, 30, 30, 255, 240, 240, 240, 255]
+  );
 
   const ctx: MockCtx = {
     drawImage: vi.fn(),
@@ -34,7 +37,11 @@ function makeMockCanvas(width = 2, height = 2, seedPixels?: number[]): HTMLCanva
       const d = (img as any).data as Uint8ClampedArray;
       ctx._pixels = new Uint8ClampedArray(d);
     }),
-    createImageData: vi.fn((w: number, h: number) => ({ data: new Uint8ClampedArray(w * h * 4), width: w, height: h })),
+    createImageData: vi.fn((w: number, h: number) => ({
+      data: new Uint8ClampedArray(w * h * 4),
+      width: w,
+      height: h,
+    })),
     globalAlpha: 1,
     fillStyle: '#000',
     _pixels: pixels,
@@ -90,17 +97,36 @@ describe('animation core modules', () => {
     expect(state.currentFrame).toBe(0);
     expect(state.direction).toBe(1);
 
-    const manyFrames = [0, 1, 2].map(() => ({ canvas: makeMockCanvas(), delay: 10, disposalType: 0 })) as any;
+    const manyFrames = [0, 1, 2].map(() => ({
+      canvas: makeMockCanvas(),
+      delay: 10,
+      disposalType: 0,
+    })) as any;
     const s1 = { ...state, frames: manyFrames, currentFrame: 2, direction: 1 as const };
-    expect(mod.getNextFrame(s1, { loop: true, bounce: false, frameStep: 1 } as any)).toEqual({ frameIndex: 0, direction: 1 });
-    expect(mod.getNextFrame(s1, { loop: false, bounce: true, frameStep: 1 } as any)).toEqual({ frameIndex: 1, direction: -1 });
+    expect(mod.getNextFrame(s1, { loop: true, bounce: false, frameStep: 1 } as any)).toEqual({
+      frameIndex: 0,
+      direction: 1,
+    });
+    expect(mod.getNextFrame(s1, { loop: false, bounce: true, frameStep: 1 } as any)).toEqual({
+      frameIndex: 1,
+      direction: -1,
+    });
 
     const s2 = { ...state, frames: manyFrames, currentFrame: 0, direction: -1 as const };
-    expect(mod.getNextFrame(s2, { loop: true, bounce: false, frameStep: 1 } as any)).toEqual({ frameIndex: 2, direction: -1 });
-    expect(mod.getNextFrame(s2, { loop: false, bounce: false, frameStep: 1 } as any)).toEqual({ frameIndex: 0, direction: -1 });
+    expect(mod.getNextFrame(s2, { loop: true, bounce: false, frameStep: 1 } as any)).toEqual({
+      frameIndex: 2,
+      direction: -1,
+    });
+    expect(mod.getNextFrame(s2, { loop: false, bounce: false, frameStep: 1 } as any)).toEqual({
+      frameIndex: 0,
+      direction: -1,
+    });
 
     const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(1234);
-    const advanced = mod.advanceAnimation({ ...s2, direction: 1 } as any, { loop: true, bounce: false, frameStep: 1 } as any);
+    const advanced = mod.advanceAnimation(
+      { ...s2, direction: 1 } as any,
+      { loop: true, bounce: false, frameStep: 1 } as any
+    );
     expect(advanced.currentFrame).toBe(1);
     expect(advanced.lastFrameTime).toBe(1234);
     nowSpy.mockRestore();
@@ -126,7 +152,9 @@ describe('animation core modules', () => {
     expect(keep[0]).toBe(0);
     expect(keep[keep.length - 1]).toBe(3);
 
-    expect(mod.decimateFramesToFps([{ delay: 50 }, { delay: 50 }, { delay: 50 }] as any, 0)).toEqual([0, 1, 2]);
+    expect(
+      mod.decimateFramesToFps([{ delay: 50 }, { delay: 50 }, { delay: 50 }] as any, 0)
+    ).toEqual([0, 1, 2]);
     expect(mod.decimateFramesToFps([{ delay: 300 }, { delay: 300 }] as any, 10)).toEqual([0, 1]);
   });
 
@@ -140,10 +168,7 @@ describe('animation core modules', () => {
     expect(mod.applyAnimationEasing(0.25, 'bounce')).toBeCloseTo(0.03125, 6);
 
     const base = new Uint8ClampedArray([
-      20, 20, 20, 255,
-      240, 240, 240, 255,
-      30, 30, 30, 255,
-      200, 200, 200, 255,
+      20, 20, 20, 255, 240, 240, 240, 255, 30, 30, 30, 255, 200, 200, 200, 255,
     ]);
 
     const pulse = new Uint8ClampedArray(base);
@@ -164,7 +189,7 @@ describe('animation core modules', () => {
 
     const shimmer = new Uint8ClampedArray(10 * 10 * 4);
     for (let i = 0; i < shimmer.length; i += 4) {
-      const v = ((i / 4) % 2) === 0 ? 40 : 220;
+      const v = (i / 4) % 2 === 0 ? 40 : 220;
       shimmer[i] = v;
       shimmer[i + 1] = v;
       shimmer[i + 2] = v;
@@ -200,7 +225,13 @@ describe('animation core modules', () => {
       return originalCreate(tag as any);
     }) as any);
 
-    const patterns: Array<'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift'> = ['pulse', 'wave', 'scanline', 'shimmer', 'drift'];
+    const patterns: Array<'pulse' | 'wave' | 'scanline' | 'shimmer' | 'drift'> = [
+      'pulse',
+      'wave',
+      'scanline',
+      'shimmer',
+      'drift',
+    ];
     for (const p of patterns) {
       const out = mod.applyAnimationPattern(source, 1, 5, p, { seed: 9 } as any);
       expect(out).not.toBe(source);

@@ -27,11 +27,11 @@ const ARTIFACTS_DIR = path.join(ROOT, 'reports', 'gallery-artifacts');
 const MODES = ['local', 'browser', 'remote'];
 const STATIC_SIZE_RATIO_MAX = Math.max(
   1,
-  Number.parseFloat(process.env.GALLERY_COMPARE_STATIC_MAX_RATIO || '2.0') || 2.0,
+  Number.parseFloat(process.env.GALLERY_COMPARE_STATIC_MAX_RATIO || '2.0') || 2.0
 );
 const ANIMATED_SIZE_RATIO_MAX = Math.max(
   1,
-  Number.parseFloat(process.env.GALLERY_COMPARE_ANIMATED_MAX_RATIO || '4.0') || 4.0,
+  Number.parseFloat(process.env.GALLERY_COMPARE_ANIMATED_MAX_RATIO || '4.0') || 4.0
 );
 
 async function exists(filePath) {
@@ -67,7 +67,7 @@ async function loadModeReport(mode) {
   if (!(await exists(modeDir))) {
     throw new Error(
       `Missing artifact directory for mode "${mode}": ${modeDir}. ` +
-        `Run make gallery:${mode} first.`,
+        `Run make gallery:${mode} first.`
     );
   }
   const mergedPath = path.join(modeDir, 'report.merged.json');
@@ -92,15 +92,13 @@ async function loadModeReport(mode) {
   }
 
   const files = await fs.readdir(modeDir);
-  const shardFiles = files
-    .filter((name) => /^report\.shard-\d+-of-\d+\.json$/i.test(name))
-    .sort();
+  const shardFiles = files.filter((name) => /^report\.shard-\d+-of-\d+\.json$/i.test(name)).sort();
   if (shardFiles.length === 0) {
     throw new Error(`Missing report for mode "${mode}" in ${modeDir}`);
   }
 
   const shardReports = await Promise.all(
-    shardFiles.map(async (name) => readJson(path.join(modeDir, name))),
+    shardFiles.map(async (name) => readJson(path.join(modeDir, name)))
   );
   const mergedResults = mergeShardResults(shardReports);
   const merged = {
@@ -216,7 +214,7 @@ async function main() {
     MODES.map((mode) => [
       mode,
       { present: 0, missing: 0, decodeFail: 0, prefixMismatch: 0, nonPassStatus: 0 },
-    ]),
+    ])
   );
 
   let allPresent = 0;
@@ -233,7 +231,12 @@ async function main() {
   const rows = [];
 
   for (const config of configs) {
-    const row = { id: config.id, category: config.category, isAnimated: !!config.isAnimated, modes: {} };
+    const row = {
+      id: config.id,
+      category: config.category,
+      isAnimated: !!config.isAnimated,
+      modes: {},
+    };
     let rowAllPresent = true;
     let rowAllDecodePrefixOk = true;
     const shas = {};
@@ -277,16 +280,22 @@ async function main() {
 
     if (rowAllPresent) {
       if (!config.isAnimated) {
-        if (shas.local && shas.browser && shas.remote && shas.local === shas.browser && shas.local === shas.remote) {
+        if (
+          shas.local &&
+          shas.browser &&
+          shas.remote &&
+          shas.local === shas.browser &&
+          shas.local === shas.remote
+        ) {
           staticExactAllThree++;
         }
       } else if (shas.local && shas.remote && shas.local === shas.remote) {
         animatedExactLocalRemote++;
       }
 
-      const presentModes = MODES
-        .map((mode) => ({ mode, data: row.modes[mode] }))
-        .filter((entry) => entry.data?.found);
+      const presentModes = MODES.map((mode) => ({ mode, data: row.modes[mode] })).filter(
+        (entry) => entry.data?.found
+      );
       const dims = new Set(presentModes.map((entry) => `${entry.data.width}x${entry.data.height}`));
       if (dims.size === 1) {
         allDimensionsAlignedCount++;
@@ -295,13 +304,13 @@ async function main() {
           id: config.id,
           isAnimated: !!config.isAnimated,
           dimsByMode: Object.fromEntries(
-            presentModes.map((entry) => [entry.mode, `${entry.data.width}x${entry.data.height}`]),
+            presentModes.map((entry) => [entry.mode, `${entry.data.width}x${entry.data.height}`])
           ),
         });
       }
 
       const bytesByMode = Object.fromEntries(
-        presentModes.map((entry) => [entry.mode, entry.data.bytes]),
+        presentModes.map((entry) => [entry.mode, entry.data.bytes])
       );
       const sizes = presentModes.map((entry) => entry.data.bytes);
       const min = Math.min(...sizes);
@@ -370,7 +379,7 @@ async function main() {
     '|---|---:|---:|---:|---:|---:|',
     ...MODES.map(
       (mode) =>
-        `| ${mode} | ${perMode[mode].present} | ${perMode[mode].missing} | ${perMode[mode].decodeFail} | ${perMode[mode].prefixMismatch} | ${perMode[mode].nonPassStatus} |`,
+        `| ${mode} | ${perMode[mode].present} | ${perMode[mode].missing} | ${perMode[mode].decodeFail} | ${perMode[mode].prefixMismatch} | ${perMode[mode].nonPassStatus} |`
     ),
     '',
     '## Report Sources',
@@ -392,14 +401,14 @@ async function main() {
   console.log(`Total scenarios: ${summary.totalScenarios}`);
   console.log(`All modes present: ${summary.allModesPresentCount}/${summary.totalScenarios}`);
   console.log(
-    `All modes decode+prefix OK: ${summary.allModesDecodePrefixOkCount}/${summary.totalScenarios}`,
+    `All modes decode+prefix OK: ${summary.allModesDecodePrefixOkCount}/${summary.totalScenarios}`
   );
   console.log(
-    `All modes same dimensions: ${summary.allDimensionsAlignedCount}/${summary.totalScenarios}`,
+    `All modes same dimensions: ${summary.allDimensionsAlignedCount}/${summary.totalScenarios}`
   );
   console.log(
     `All modes size parity: ${summary.allSizeParityCount}/${summary.totalScenarios} ` +
-      `(static<=${summary.staticSizeRatioMax}x, animated<=${summary.animatedSizeRatioMax}x)`,
+      `(static<=${summary.staticSizeRatioMax}x, animated<=${summary.animatedSizeRatioMax}x)`
   );
   console.log(`Static exact hash (L=B=R): ${summary.staticExactAllThreeCount}`);
   console.log(`Animated exact hash (L=R): ${summary.animatedExactLocalRemoteCount}`);

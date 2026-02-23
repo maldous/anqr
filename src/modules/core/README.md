@@ -5,6 +5,7 @@ Pure utilities with no dependencies - the foundation layer.
 ## Purpose
 
 This module provides fundamental utilities used throughout the codebase:
+
 - Color parsing, conversion, and manipulation
 - Math utilities (clamp, random, interpolation)
 - Basic types (RGB, RGBA, HSL)
@@ -101,10 +102,8 @@ import { getContrastRatio, adjustForContrast } from '@/modules/core';
 function getReadableTextColor(background: RGB): RGB {
   const white = { r: 255, g: 255, b: 255 };
   const black = { r: 0, g: 0, b: 0 };
-  
-  return getContrastRatio(white, background) > getContrastRatio(black, background)
-    ? white
-    : black;
+
+  return getContrastRatio(white, background) > getContrastRatio(black, background) ? white : black;
 }
 ```
 

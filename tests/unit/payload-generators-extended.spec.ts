@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ========== enterprise.ts ==========
@@ -9,13 +15,15 @@ vi.mock('../../src/lib/logger', () => ({
 describe('payload-generators enterprise', () => {
   describe('generateGS1DigitalLink', () => {
     it('generates basic GS1 link with just GTIN', async () => {
-      const { generateGS1DigitalLink } = await import('../../src/modules/payload-generators/enterprise');
+      const { generateGS1DigitalLink } =
+        await import('../../src/modules/payload-generators/enterprise');
       const result = generateGS1DigitalLink({ gtin: '01234567890128' });
       expect(result).toBe('https://id.gs1.org/01/01234567890128');
     });
 
     it('includes lot, serial, and expiry', async () => {
-      const { generateGS1DigitalLink } = await import('../../src/modules/payload-generators/enterprise');
+      const { generateGS1DigitalLink } =
+        await import('../../src/modules/payload-generators/enterprise');
       const result = generateGS1DigitalLink({
         gtin: '01234567890128',
         lot: 'LOT123',
@@ -26,7 +34,8 @@ describe('payload-generators enterprise', () => {
     });
 
     it('uses custom base URL', async () => {
-      const { generateGS1DigitalLink } = await import('../../src/modules/payload-generators/enterprise');
+      const { generateGS1DigitalLink } =
+        await import('../../src/modules/payload-generators/enterprise');
       const result = generateGS1DigitalLink({
         gtin: '01234567890128',
         baseUrl: 'https://my.resolver.com',
@@ -35,7 +44,8 @@ describe('payload-generators enterprise', () => {
     });
 
     it('includes only provided path segments', async () => {
-      const { generateGS1DigitalLink } = await import('../../src/modules/payload-generators/enterprise');
+      const { generateGS1DigitalLink } =
+        await import('../../src/modules/payload-generators/enterprise');
       const result = generateGS1DigitalLink({
         gtin: '01234567890128',
         lot: 'ABC',
@@ -258,7 +268,9 @@ describe('payload-generators social', () => {
 
     it('generates Viber link', async () => {
       const { generateMessagingLink } = await import('../../src/modules/payload-generators/social');
-      expect(generateMessagingLink('viber', '+61400123456')).toBe('viber://chat?number=61400123456');
+      expect(generateMessagingLink('viber', '+61400123456')).toBe(
+        'viber://chat?number=61400123456'
+      );
     });
 
     it('generates Line link', async () => {
@@ -584,18 +596,27 @@ describe('payload-generators calendar', () => {
 
   describe('generateCalendarSubscription', () => {
     it('converts http to webcal', async () => {
-      const { generateCalendarSubscription } = await import('../../src/modules/payload-generators/calendar');
-      expect(generateCalendarSubscription('http://example.com/cal.ics')).toBe('webcal://example.com/cal.ics');
+      const { generateCalendarSubscription } =
+        await import('../../src/modules/payload-generators/calendar');
+      expect(generateCalendarSubscription('http://example.com/cal.ics')).toBe(
+        'webcal://example.com/cal.ics'
+      );
     });
 
     it('converts https to webcal', async () => {
-      const { generateCalendarSubscription } = await import('../../src/modules/payload-generators/calendar');
-      expect(generateCalendarSubscription('https://example.com/cal.ics')).toBe('webcal://example.com/cal.ics');
+      const { generateCalendarSubscription } =
+        await import('../../src/modules/payload-generators/calendar');
+      expect(generateCalendarSubscription('https://example.com/cal.ics')).toBe(
+        'webcal://example.com/cal.ics'
+      );
     });
 
     it('prepends webcal:// for bare URLs', async () => {
-      const { generateCalendarSubscription } = await import('../../src/modules/payload-generators/calendar');
-      expect(generateCalendarSubscription('example.com/cal.ics')).toBe('webcal://example.com/cal.ics');
+      const { generateCalendarSubscription } =
+        await import('../../src/modules/payload-generators/calendar');
+      expect(generateCalendarSubscription('example.com/cal.ics')).toBe(
+        'webcal://example.com/cal.ics'
+      );
     });
   });
 });
@@ -735,13 +756,17 @@ describe('payload-generators utils', () => {
     it('validates Bitcoin addresses', async () => {
       const { isValidCryptoAddress } = await import('../../src/modules/payload-generators/utils');
       expect(isValidCryptoAddress('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa', 'bitcoin')).toBe(true);
-      expect(isValidCryptoAddress('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4', 'bitcoin')).toBe(true);
+      expect(isValidCryptoAddress('bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4', 'bitcoin')).toBe(
+        true
+      );
       expect(isValidCryptoAddress('short', 'bitcoin')).toBe(false);
     });
 
     it('validates Ethereum addresses', async () => {
       const { isValidCryptoAddress } = await import('../../src/modules/payload-generators/utils');
-      expect(isValidCryptoAddress('0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18', 'ethereum')).toBe(true);
+      expect(isValidCryptoAddress('0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18', 'ethereum')).toBe(
+        true
+      );
       expect(isValidCryptoAddress('not-eth', 'ethereum')).toBe(false);
     });
 
@@ -822,13 +847,19 @@ describe('payload-generators utils', () => {
 
   describe('isValidLightningInvoice', () => {
     it('accepts valid invoices', async () => {
-      const { isValidLightningInvoice } = await import('../../src/modules/payload-generators/utils');
-      expect(isValidLightningInvoice('lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqd')).toBe(true);
+      const { isValidLightningInvoice } =
+        await import('../../src/modules/payload-generators/utils');
+      expect(
+        isValidLightningInvoice(
+          'lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqd'
+        )
+      ).toBe(true);
       expect(isValidLightningInvoice('lntb1abc123')).toBe(true);
     });
 
     it('rejects invalid invoices', async () => {
-      const { isValidLightningInvoice } = await import('../../src/modules/payload-generators/utils');
+      const { isValidLightningInvoice } =
+        await import('../../src/modules/payload-generators/utils');
       expect(isValidLightningInvoice('nope')).toBe(false);
     });
   });

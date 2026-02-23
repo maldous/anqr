@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node
@@ -69,7 +75,10 @@ function drawFinder(data: Uint8ClampedArray, w: number, ox: number, oy: number, 
   }
 }
 
-function createQRImageData(moduleScale = 6): { imageData: InstanceType<typeof MockImageData>; size: number } {
+function createQRImageData(moduleScale = 6): {
+  imageData: InstanceType<typeof MockImageData>;
+  size: number;
+} {
   const modules = 21;
   const size = modules * moduleScale;
   const data = new Uint8ClampedArray(size * size * 4);
@@ -81,9 +90,9 @@ function createQRImageData(moduleScale = 6): { imageData: InstanceType<typeof Mo
     data[i + 3] = 255;
   }
   // Draw 3 finder patterns
-  drawFinder(data, size, 0, 0, moduleScale);                                   // top-left
-  drawFinder(data, size, (modules - 7) * moduleScale, 0, moduleScale);         // top-right
-  drawFinder(data, size, 0, (modules - 7) * moduleScale, moduleScale);         // bottom-left
+  drawFinder(data, size, 0, 0, moduleScale); // top-left
+  drawFinder(data, size, (modules - 7) * moduleScale, 0, moduleScale); // top-right
+  drawFinder(data, size, 0, (modules - 7) * moduleScale, moduleScale); // bottom-left
   const img = new MockImageData(data, size, size);
   return { imageData: img, size };
 }
@@ -120,7 +129,7 @@ describe('qr-decoder locate.ts', () => {
       const select = await getSelect();
       // Greatly differing module sizes → skip due to sizeVariance threshold
       const p1 = mkPat(0, 0, 4, 5);
-      const p2 = mkPat(100, 0, 10, 5);   // wildly different size
+      const p2 = mkPat(100, 0, 10, 5); // wildly different size
       const p3 = mkPat(0, 100, 4, 5);
       const result = select([p1, p2, p3]);
       expect(result).toBeNull();
@@ -198,7 +207,7 @@ describe('qr-decoder locate.ts', () => {
       patterns.push(mkPat(100, 0, 4, 10));
       patterns.push(mkPat(0, 100, 4, 10));
       // Should still find a valid triplet (from the first 10)
-      const result = select(patterns);
+      const _result = select(patterns);
       // May or may not find valid triplet depending on which 10 it considers
       // The key is it doesn't throw
     });
@@ -329,11 +338,15 @@ describe('qr-decoder locate.ts', () => {
       const y = 50;
       for (let x = 0; x < 35; x++) {
         let isDark = false;
-        if (x < 5) isDark = true;         // 5 black
-        else if (x < 10) isDark = false;   // 5 white
-        else if (x < 25) isDark = true;    // 15 black (3x)
-        else if (x < 30) isDark = false;   // 5 white
-        else isDark = true;                // 5 black
+        if (x < 5)
+          isDark = true; // 5 black
+        else if (x < 10)
+          isDark = false; // 5 white
+        else if (x < 25)
+          isDark = true; // 15 black (3x)
+        else if (x < 30)
+          isDark = false; // 5 white
+        else isDark = true; // 5 black
 
         const idx = (y * size + x + 30) * 4;
         const val = isDark ? 0 : 255;

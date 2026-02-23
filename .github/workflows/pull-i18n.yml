@@ -10,7 +10,7 @@ name: Pull i18n Community Contributions
 on:
   # Manual trigger from GitHub Actions UI
   workflow_dispatch:
-  
+
   # Scheduled daily check - DISABLED until community activity picks up
   # Uncomment when you start receiving community contributions:
   # schedule:
@@ -37,7 +37,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$I18N_DEPLOY_KEY" > ~/.ssh/id_ed25519_public
           chmod 600 ~/.ssh/id_ed25519_public
-          
+
           cat >> ~/.ssh/config << EOF
           Host github-public
             HostName github.com
@@ -46,7 +46,7 @@ jobs:
             IdentitiesOnly yes
             StrictHostKeyChecking no
           EOF
-          
+
           chmod 600 ~/.ssh/config
 
       - name: Configure git

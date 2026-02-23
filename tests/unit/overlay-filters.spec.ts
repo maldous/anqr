@@ -28,10 +28,7 @@ describe('overlay filters', () => {
     const mod = await import('../../src/modules/overlay/overlay-filters');
 
     const base = mkImageData([
-      10, 20, 30, 255,
-      220, 210, 200, 255,
-      40, 60, 80, 255,
-      120, 140, 160, 255,
+      10, 20, 30, 255, 220, 210, 200, 255, 40, 60, 80, 255, 120, 140, 160, 255,
     ]);
 
     const copy = mod.copyImageData(base);
@@ -56,20 +53,31 @@ describe('overlay filters', () => {
     const post = mod.posterize(mod.copyImageData(base), 3);
     expect(post.data[0] % Math.round(255 / 2)).toBeLessThanOrEqual(1);
 
-    const duo = mod.duotone(mod.copyImageData(base), { r: 255, g: 200, b: 100 }, { r: 0, g: 10, b: 20 });
+    const duo = mod.duotone(
+      mod.copyImageData(base),
+      { r: 255, g: 200, b: 100 },
+      { r: 0, g: 10, b: 20 }
+    );
     expect(duo.data[0]).toBeGreaterThanOrEqual(0);
   });
 
   it('runs convolution-based filters and edge detection', async () => {
     const mod = await import('../../src/modules/overlay/overlay-filters');
 
-    const img3 = mkImageData([
-      0, 0, 0, 255, 20, 20, 20, 255, 40, 40, 40, 255,
-      60, 60, 60, 255, 80, 80, 80, 255, 100, 100, 100, 255,
-      120, 120, 120, 255, 180, 180, 180, 255, 255, 255, 255, 255,
-    ], 3, 3);
+    const img3 = mkImageData(
+      [
+        0, 0, 0, 255, 20, 20, 20, 255, 40, 40, 40, 255, 60, 60, 60, 255, 80, 80, 80, 255, 100, 100,
+        100, 255, 120, 120, 120, 255, 180, 180, 180, 255, 255, 255, 255, 255,
+      ],
+      3,
+      3
+    );
 
-    const conv = mod.convolve(mod.copyImageData(img3), [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]]);
+    const conv = mod.convolve(mod.copyImageData(img3), [
+      [-1, 0, 1],
+      [-1, 0, 1],
+      [-1, 0, 1],
+    ]);
     expect(conv.data[0]).toBeLessThanOrEqual(255);
 
     expect(mod.sharpen(mod.copyImageData(img3), 1).data[0]).toBeLessThanOrEqual(255);
@@ -88,10 +96,7 @@ describe('overlay filters', () => {
     const mod = await import('../../src/modules/overlay/overlay-filters');
 
     const base = mkImageData([
-      10, 50, 200, 255,
-      250, 240, 230, 255,
-      30, 60, 90, 255,
-      100, 130, 160, 255,
+      10, 50, 200, 255, 250, 240, 230, 255, 30, 60, 90, 255, 100, 130, 160, 255,
     ]);
 
     const bmap = mod.getBrightnessMap(base);

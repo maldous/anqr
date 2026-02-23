@@ -10,7 +10,9 @@ import { test, expect } from '@playwright/test';
  */
 
 const BASE_URL =
-  process.env.ANQR_PRODUCTION_BASE || process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5173';
+  process.env.ANQR_PRODUCTION_BASE ||
+  process.env.PLAYWRIGHT_TEST_BASE_URL ||
+  'http://localhost:5173';
 const GALLERY_PATH = '/gallery';
 
 async function getGalleryAssets(
@@ -113,10 +115,7 @@ test.describe('Gallery Production Verification', () => {
 
   test('production overlay source images are accessible', async ({ request }) => {
     // The gallery items reference these overlay source images
-    const sourceImages = [
-      `${BASE_URL}/tsunami.jpg`,
-      `${BASE_URL}/king.gif`,
-    ];
+    const sourceImages = [`${BASE_URL}/tsunami.jpg`, `${BASE_URL}/king.gif`];
 
     for (const url of sourceImages) {
       const response = await request.get(url);

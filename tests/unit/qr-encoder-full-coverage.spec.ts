@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ========== optimizeSegments ==========
@@ -46,7 +52,7 @@ describe('optimizeSegments', () => {
     const result = optimizeSegments('hello12345678world');
     // Should have byte + numeric + byte segments
     expect(result.length).toBeGreaterThanOrEqual(2);
-    const modes = result.map(s => s.mode);
+    const modes = result.map((s) => s.mode);
     expect(modes).toContain('numeric');
     expect(modes).toContain('byte');
   });
@@ -245,7 +251,8 @@ describe('createQRInstance', () => {
 
 describe('createQRInstanceWithSegments', () => {
   it('creates QR with multiple segments', async () => {
-    const { createQRInstanceWithSegments } = await import('../../src/modules/qr-encoder/encoder-api');
+    const { createQRInstanceWithSegments } =
+      await import('../../src/modules/qr-encoder/encoder-api');
     const qr = createQRInstanceWithSegments(
       [
         { data: 'HELLO', mode: 'alphanumeric' },
@@ -257,13 +264,11 @@ describe('createQRInstanceWithSegments', () => {
   });
 
   it('creates QR with explicit version and mask', async () => {
-    const { createQRInstanceWithSegments } = await import('../../src/modules/qr-encoder/encoder-api');
-    const qr = createQRInstanceWithSegments(
-      [{ data: 'Test', mode: 'byte' }],
-      'L',
-      5,
-      { maskPattern: 2 }
-    );
+    const { createQRInstanceWithSegments } =
+      await import('../../src/modules/qr-encoder/encoder-api');
+    const qr = createQRInstanceWithSegments([{ data: 'Test', mode: 'byte' }], 'L', 5, {
+      maskPattern: 2,
+    });
     expect(qr.getModuleCount()).toBe(37);
   });
 });

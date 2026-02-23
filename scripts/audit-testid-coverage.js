@@ -146,7 +146,10 @@ function main() {
   };
 
   fs.mkdirSync(path.join(ROOT, 'reports'), { recursive: true });
-  fs.writeFileSync(path.join(ROOT, 'reports/testid-coverage.json'), JSON.stringify(report, null, 2));
+  fs.writeFileSync(
+    path.join(ROOT, 'reports/testid-coverage.json'),
+    JSON.stringify(report, null, 2)
+  );
 
   const md = [
     '# data-testid Coverage Audit',
@@ -173,7 +176,9 @@ function main() {
   fs.writeFileSync(path.join(ROOT, 'reports/testid-coverage.md'), md.join('\n'));
 
   if (literalCount > 0) {
-    console.error(`Found ${literalCount} literal data-testid assignments in source. DynamicTestId is required.`);
+    console.error(
+      `Found ${literalCount} literal data-testid assignments in source. DynamicTestId is required.`
+    );
     process.exit(1);
   }
 

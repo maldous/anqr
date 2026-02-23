@@ -30,9 +30,7 @@ async function exists(filePath) {
 
 async function main() {
   if (!(await exists(TIER_A_DIR))) {
-    throw new Error(
-      `Missing Tier A artifacts at ${TIER_A_DIR}. Run make gallery:overlay first.`
-    );
+    throw new Error(`Missing Tier A artifacts at ${TIER_A_DIR}. Run make gallery:overlay first.`);
   }
 
   await fs.mkdir(GALLERY_DIR, { recursive: true });
@@ -69,7 +67,13 @@ async function main() {
       const dst = path.join(GALLERY_DIR, galleryFilename);
       await fs.copyFile(src, dst);
       const stat = await fs.stat(dst);
-      copied.push({ scenarioId, fixtureId: 'canonical', sourceFile: filename, galleryFile: galleryFilename, bytes: stat.size });
+      copied.push({
+        scenarioId,
+        fixtureId: 'canonical',
+        sourceFile: filename,
+        galleryFile: galleryFilename,
+        bytes: stat.size,
+      });
       continue;
     }
 

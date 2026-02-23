@@ -247,34 +247,30 @@ describe('getScaleFactor', () => {
 
 describe('getEffectiveIntensity', () => {
   it('uses default intensity (100) without implicit ECC cap', async () => {
-    const { getEffectiveIntensity } = await import(
-      '../../src/modules/qr-generator/pixel-matrix-utils'
-    );
+    const { getEffectiveIntensity } =
+      await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({ errorCorrection: 'M' } as never);
     expect(result.effectiveIntensity).toBe(1);
   });
 
   it('does not clamp intensity by ECC when no custom limits are provided', async () => {
-    const { getEffectiveIntensity } = await import(
-      '../../src/modules/qr-generator/pixel-matrix-utils'
-    );
+    const { getEffectiveIntensity } =
+      await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({ errorCorrection: 'L', overlayIntensity: 80 } as never);
     expect(result.effectiveIntensity).toBe(0.8);
   });
 
   it('preserves intensity when below limit', async () => {
-    const { getEffectiveIntensity } = await import(
-      '../../src/modules/qr-generator/pixel-matrix-utils'
-    );
+    const { getEffectiveIntensity } =
+      await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({ errorCorrection: 'H', overlayIntensity: 50 } as never);
     // No implicit cap by default; the configured intensity is preserved.
     expect(result.effectiveIntensity).toBe(0.5);
   });
 
   it('uses custom ECC limits when provided', async () => {
-    const { getEffectiveIntensity } = await import(
-      '../../src/modules/qr-generator/pixel-matrix-utils'
-    );
+    const { getEffectiveIntensity } =
+      await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({
       errorCorrection: 'M',
       overlayIntensity: 80,
@@ -285,9 +281,8 @@ describe('getEffectiveIntensity', () => {
   });
 
   it('falls back to no cap when ECC level not in limits', async () => {
-    const { getEffectiveIntensity } = await import(
-      '../../src/modules/qr-generator/pixel-matrix-utils'
-    );
+    const { getEffectiveIntensity } =
+      await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({
       errorCorrection: 'X',
       overlayIntensity: 80,
@@ -296,9 +291,8 @@ describe('getEffectiveIntensity', () => {
   });
 
   it('returns effectiveConfig with updated overlayIntensity', async () => {
-    const { getEffectiveIntensity } = await import(
-      '../../src/modules/qr-generator/pixel-matrix-utils'
-    );
+    const { getEffectiveIntensity } =
+      await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({ errorCorrection: 'M', overlayIntensity: 100 } as never);
     expect(result.effectiveConfig.overlayIntensity).toBe(100);
   });
@@ -308,16 +302,14 @@ describe('getEffectiveIntensity', () => {
 
 describe('hasPreprocessingOptions', () => {
   it('returns false when no options are set', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({} as never)).toBe(false);
   });
 
   it('returns false for neutral values', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(
       hasPreprocessingOptions({
         filterBrightness: 0,
@@ -337,125 +329,108 @@ describe('hasPreprocessingOptions', () => {
   });
 
   it('returns true for filterBrightness !== 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterBrightness: 10 } as never)).toBe(true);
   });
 
   it('returns true for filterContrast !== 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterContrast: -10 } as never)).toBe(true);
   });
 
   it('returns true for filterSaturation !== 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterSaturation: 50 } as never)).toBe(true);
   });
 
   it('returns true for filterHue !== 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterHue: 90 } as never)).toBe(true);
   });
 
   it('returns true for filterGamma !== 1', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterGamma: 0.5 } as never)).toBe(true);
   });
 
   it('returns true for filterInvert', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterInvert: true } as never)).toBe(true);
   });
 
   it('returns true for filterGrayscale', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterGrayscale: true } as never)).toBe(true);
   });
 
   it('returns true for filterThreshold > 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterThreshold: 128 } as never)).toBe(true);
   });
 
   it('returns true for filterBlur > 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterBlur: 2 } as never)).toBe(true);
   });
 
   it('returns true for filterSharpen > 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterSharpen: 50 } as never)).toBe(true);
   });
 
   it('returns true for filterPosterize > 0', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterPosterize: 4 } as never)).toBe(true);
   });
 
   it('returns true for duotone pair', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(
       hasPreprocessingOptions({ filterDuotone1: '#ff0000', filterDuotone2: '#0000ff' } as never)
     ).toBe(true);
   });
 
   it('returns false for single duotone color', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterDuotone1: '#ff0000' } as never)).toBe(false);
   });
 
   it('returns true for filterEdgeDetect', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterEdgeDetect: true } as never)).toBe(true);
   });
 
   it('returns true for colorMode grayscale', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ colorMode: 'grayscale' } as never)).toBe(true);
   });
 
   it('returns true for colorMode bw', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ colorMode: 'bw' } as never)).toBe(true);
   });
 });
 
 describe('hasGeometricTransforms', () => {
   it('always returns false', async () => {
-    const { hasGeometricTransforms } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasGeometricTransforms } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasGeometricTransforms({} as never)).toBe(false);
     expect(hasGeometricTransforms({ someField: true } as never)).toBe(false);
   });

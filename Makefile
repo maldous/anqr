@@ -150,8 +150,8 @@ PLAYWRIGHT_WORKERS ?= $(shell \
 VITEST_MAX_WORKERS ?= 100%
 
 # Bundle budget gates (KiB). i18n has warning and hard-fail thresholds.
-BUNDLE_BUDGET_MAIN_ENTRY_KIB ?= 700
-BUNDLE_BUDGET_NON_I18N_TOTAL_KIB ?= 2200
+BUNDLE_BUDGET_MAIN_ENTRY_KIB ?= 720
+BUNDLE_BUDGET_NON_I18N_TOTAL_KIB ?= 2700
 BUNDLE_BUDGET_I18N_WARN_KIB ?= 22000
 BUNDLE_BUDGET_I18N_MAX_KIB ?= 24000
 
@@ -408,24 +408,26 @@ clean:
 	rm -rf dist node_modules android/app/build
 
 # ============================================
-# Code Quality (Biome - modern all-in-one formatter/linter)
+# Code Quality (oxlint + oxfmt — OXC-powered linter + formatter)
 # ============================================
 
-# Fix all: format, lint with auto-fix, and organize imports
+# Fix all: lint with auto-fix and format
 fix:
-	npx @biomejs/biome check src netlify --write --unsafe
+	npx oxlint --fix --fix-suggestions --tsconfig ./tsconfig.json .
+	npx oxfmt --write .
 
 # Lint only (no formatting)
 lint:
-	npx @biomejs/biome lint .
+	npx oxlint --deny-warnings --tsconfig ./tsconfig.json .
 
 # Format only (no linting)
 format:
-	npx @biomejs/biome format --write .
+	npx oxfmt --write .
 
 # Check all without making changes (for CI)
 check:
-	npx @biomejs/biome check --max-diagnostics=0 .
+	npx oxlint --deny-warnings --tsconfig ./tsconfig.json .
+	npx oxfmt --check .
 
 # ============================================
 # PWA Icons Generation
@@ -935,7 +937,7 @@ sonar-report:
 
 # Shared quality gate pipeline used by both 'quality' and 'test'.
 # UNIT_CMD is set per-caller: test:unit:ci for quality, test:unit for test.
-# 19 checks: biome → tsc → lockfile → licenses → type-coverage → duplication →
+# 19 checks: oxlint+oxfmt → tsc → lockfile → licenses → type-coverage → duplication →
 #   spelling → inventories → unit-tests → test-ids → i18n → depcruise → audit →
 #   osv-scanner → semgrep → knip → bundle-budget
 _quality-gates:

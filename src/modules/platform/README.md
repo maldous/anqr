@@ -5,6 +5,7 @@ Platform-specific adapters for Capacitor plugins.
 ## Purpose
 
 This module provides platform-specific functionality for mobile apps:
+
 - AdMob integration (banner, interstitial, rewarded ads)
 - MediaStore file saving (Android Documents folder)
 
@@ -18,13 +19,13 @@ This module provides platform-specific functionality for mobile apps:
 ### AdMob Service
 
 ```typescript
-import { 
-  initializeAdMob, 
+import {
+  initializeAdMob,
   isAdMobAvailable,
   showBannerAd,
   hideBannerAd,
   showInterstitial,
-  showRewardedAd 
+  showRewardedAd,
 } from '@/modules/platform';
 
 // Initialize on app start
@@ -34,10 +35,10 @@ await initializeAdMob();
 if (isAdMobAvailable()) {
   // Show banner at bottom
   await showBannerAd('bottom');
-  
+
   // Show interstitial
   await showInterstitial();
-  
+
   // Show rewarded ad
   const result = await showRewardedAd();
   if (result.rewarded) {
@@ -101,11 +102,11 @@ import { initializeAdMob, prepareAllAds, showBottomBanner } from '@/modules/plat
 
 async function initApp() {
   const available = await initializeAdMob();
-  
+
   if (available) {
     // Pre-load ads
     await prepareAllAds();
-    
+
     // Show banner
     await showBottomBanner();
   }
@@ -119,7 +120,7 @@ import { trackGenerationAndShowAd } from '@/modules/platform';
 
 async function exportQRCode() {
   // ... export logic ...
-  
+
   // Show interstitial every 3 exports
   await trackGenerationAndShowAd(3, 'interstitial');
 }

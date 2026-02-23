@@ -47,7 +47,7 @@ async function waitForCanvasReady(page, timeout = 30_000) {
       }
       return false;
     },
-    { timeout },
+    { timeout }
   );
 }
 
@@ -61,7 +61,7 @@ async function captureScreenshot(browser, target) {
     ({ key, value }) => {
       localStorage.setItem(key, value);
     },
-    { key: WELCOME_STORAGE_KEY, value: WELCOME_VERSION },
+    { key: WELCOME_STORAGE_KEY, value: WELCOME_VERSION }
   );
 
   const page = await context.newPage();

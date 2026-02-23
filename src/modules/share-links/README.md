@@ -5,6 +5,7 @@ URL parameter handling, embed code generation, and social sharing.
 ## Purpose
 
 This module handles QR code sharing functionality:
+
 - URL parameter parsing and serialization
 - Shareable URL building and length checks
 - Embed code generation (HTML, iframe, markdown, BBCode)
@@ -19,12 +20,12 @@ None - pure URL/string manipulation.
 ### URL Parameters
 
 ```typescript
-import { 
-  buildUrlParams, 
-  parseUrlParams, 
+import {
+  buildUrlParams,
+  parseUrlParams,
   getShareableUrl,
   checkShareUrlLength,
-  updateBrowserUrl 
+  updateBrowserUrl,
 } from '@/modules/share-links';
 import type { ShareConfig } from '@/modules/share-links';
 
@@ -45,12 +46,12 @@ updateBrowserUrl(qrConfig);
 ### Embed Code Generation
 
 ```typescript
-import { 
-  generateImageEmbed, 
-  generateIframeEmbed, 
+import {
+  generateImageEmbed,
+  generateIframeEmbed,
   generateMarkdownEmbed,
   generateBBCodeEmbed,
-  convertToImageApiUrl 
+  convertToImageApiUrl,
 } from '@/modules/share-links';
 import type { EmbedOptions } from '@/modules/share-links';
 
@@ -95,11 +96,11 @@ import { getShareableUrl, checkShareUrlLength, MAX_SHARE_URL_LENGTH } from '@/mo
 function createShareLink(config: QRConfig) {
   const url = getShareableUrl(config);
   const { ok, length } = checkShareUrlLength(url);
-  
+
   if (!ok) {
     console.warn(`URL too long: ${length} > ${MAX_SHARE_URL_LENGTH}`);
   }
-  
+
   return url;
 }
 ```
@@ -111,7 +112,7 @@ import { convertToImageApiUrl, generateImageEmbed } from '@/modules/share-links'
 
 function getEmbedCode(shareUrl: string) {
   const imageUrl = convertToImageApiUrl(shareUrl);
-  
+
   return generateImageEmbed(imageUrl, {
     width: 200,
     height: 200,
@@ -130,7 +131,7 @@ function openTwitterShare(qrUrl: string) {
   const urls = getSocialShareUrls(qrUrl, {
     title: 'Check out my QR code!',
   });
-  
+
   window.open(urls.twitter, '_blank');
 }
 ```

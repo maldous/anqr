@@ -1,4 +1,7 @@
 {
-  "*.{ts,tsx,js,jsx}": ["npx @biomejs/biome check --write --unsafe"],
-  "src/**/*.json": ["npx @biomejs/biome format --write"]
+  "*.{ts,tsx,js,jsx}": [
+    "npx oxlint --fix --fix-suggestions --tsconfig ./tsconfig.json",
+    "npx oxfmt --write"
+  ],
+  "src/**/*.json": ["npx oxfmt --write"]
 }

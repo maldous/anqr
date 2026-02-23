@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { alphaBlend, multiplyBlend, overlayBlend, screenBlend } from '../../src/modules/core/color';
 
-function expectRgb(actual: { r: number; g: number; b: number }, expected: { r: number; g: number; b: number }) {
+function expectRgb(
+  actual: { r: number; g: number; b: number },
+  expected: { r: number; g: number; b: number }
+) {
   expect(actual.r).toBe(expected.r);
   expect(actual.g).toBe(expected.g);
   expect(actual.b).toBe(expected.b);
@@ -45,10 +48,7 @@ describe('core blend math', () => {
   });
 
   it('alphaBlend matches straight alpha compositing', () => {
-    const out = alphaBlend(
-      { r: 0, g: 0, b: 0, a: 0.5 },
-      { r: 255, g: 255, b: 255, a: 1 }
-    );
+    const out = alphaBlend({ r: 0, g: 0, b: 0, a: 0.5 }, { r: 255, g: 255, b: 255, a: 1 });
     expect(out.a).toBeCloseTo(1);
     expectRgb(out, { r: 128, g: 128, b: 128 });
   });

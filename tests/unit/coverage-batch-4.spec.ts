@@ -324,16 +324,14 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('hasPreprocessingOptions returns false for default config', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({} as any)).toBe(false);
   });
 
   it('hasPreprocessingOptions returns true for various filter options', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterBrightness: 10 } as any)).toBe(true);
     expect(hasPreprocessingOptions({ filterContrast: 5 } as any)).toBe(true);
     expect(hasPreprocessingOptions({ filterSaturation: 10 } as any)).toBe(true);
@@ -345,18 +343,17 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
     expect(hasPreprocessingOptions({ filterBlur: 2 } as any)).toBe(true);
     expect(hasPreprocessingOptions({ filterSharpen: 1 } as any)).toBe(true);
     expect(hasPreprocessingOptions({ filterPosterize: 4 } as any)).toBe(true);
-    expect(
-      hasPreprocessingOptions({ filterDuotone1: '#000', filterDuotone2: '#fff' } as any)
-    ).toBe(true);
+    expect(hasPreprocessingOptions({ filterDuotone1: '#000', filterDuotone2: '#fff' } as any)).toBe(
+      true
+    );
     expect(hasPreprocessingOptions({ filterEdgeDetect: true } as any)).toBe(true);
     expect(hasPreprocessingOptions({ colorMode: 'grayscale' } as any)).toBe(true);
     expect(hasPreprocessingOptions({ colorMode: 'bw' } as any)).toBe(true);
   });
 
   it('hasPreprocessingOptions returns false for zero/default filter values', async () => {
-    const { hasPreprocessingOptions } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasPreprocessingOptions } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasPreprocessingOptions({ filterBrightness: 0 } as any)).toBe(false);
     expect(hasPreprocessingOptions({ filterContrast: 0 } as any)).toBe(false);
     expect(hasPreprocessingOptions({ filterSaturation: 0 } as any)).toBe(false);
@@ -372,17 +369,15 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('hasGeometricTransforms always returns false (current impl)', async () => {
-    const { hasGeometricTransforms } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { hasGeometricTransforms } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     expect(hasGeometricTransforms({} as any)).toBe(false);
     expect(hasGeometricTransforms({ filterBrightness: 10 } as any)).toBe(false);
   });
 
   it('applyGeometricTransforms returns canvas as-is when no transforms', async () => {
-    const { applyGeometricTransforms } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { applyGeometricTransforms } =
+      await import('../../src/modules/qr-generator/overlay-transforms');
     const canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 100;
@@ -393,9 +388,7 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('preprocessOverlay returns original canvas when no preprocessing needed', async () => {
-    const { preprocessOverlay } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { preprocessOverlay } = await import('../../src/modules/qr-generator/overlay-transforms');
     const canvas = document.createElement('canvas');
     canvas.width = 50;
     canvas.height = 50;
@@ -405,9 +398,7 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('preprocessOverlay applies filters when filterBrightness is set', async () => {
-    const { preprocessOverlay } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { preprocessOverlay } = await import('../../src/modules/qr-generator/overlay-transforms');
 
     const canvas = document.createElement('canvas');
     canvas.width = 10;
@@ -436,7 +427,7 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
     mockPreprocessImageData.mockReturnValue(mockImageData);
 
     const config = { filterBrightness: 10 } as any;
-    const result = await preprocessOverlay(canvas, config, createCanvasFn);
+    const _result = await preprocessOverlay(canvas, config, createCanvasFn);
 
     expect(mockCtx.getImageData).toHaveBeenCalledWith(0, 0, 10, 10);
     expect(mockPreprocessImageData).toHaveBeenCalled();
@@ -445,9 +436,7 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('preprocessOverlay returns original when source getContext returns null', async () => {
-    const { preprocessOverlay } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { preprocessOverlay } = await import('../../src/modules/qr-generator/overlay-transforms');
 
     const canvas = document.createElement('canvas');
     canvas.width = 10;
@@ -461,9 +450,7 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('preprocessOverlay returns original when result getContext returns null', async () => {
-    const { preprocessOverlay } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { preprocessOverlay } = await import('../../src/modules/qr-generator/overlay-transforms');
 
     const canvas = document.createElement('canvas');
     canvas.width = 10;
@@ -490,9 +477,7 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('preprocessOverlay with debug flag completes without error', async () => {
-    const { preprocessOverlay } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { preprocessOverlay } = await import('../../src/modules/qr-generator/overlay-transforms');
 
     const canvas = document.createElement('canvas');
     canvas.width = 10;
@@ -520,9 +505,7 @@ describe('overlay-transforms.ts — preprocessOverlay', () => {
   });
 
   it('preprocessOverlay with debug=false and no preprocessing logs skip', async () => {
-    const { preprocessOverlay } = await import(
-      '../../src/modules/qr-generator/overlay-transforms'
-    );
+    const { preprocessOverlay } = await import('../../src/modules/qr-generator/overlay-transforms');
 
     const canvas = document.createElement('canvas');
     canvas.width = 10;

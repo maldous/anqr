@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ImageData polyfill for node
@@ -76,11 +82,12 @@ function mockCreateCanvasFn(filler: PixelFiller) {
 }
 
 function mockCreateCanvasFnNullCtx() {
-  return async (w: number, h: number) => ({
-    width: w,
-    height: h,
-    getContext: vi.fn(() => null),
-  }) as unknown as HTMLCanvasElement;
+  return async (w: number, h: number) =>
+    ({
+      width: w,
+      height: h,
+      getContext: vi.fn(() => null),
+    }) as unknown as HTMLCanvasElement;
 }
 
 function createOverlayCanvas(w = 100, h = 100): HTMLCanvasElement {
@@ -212,19 +219,51 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
       // '2x2' → scale=2
-      const r2 = await fn(qr as never, subpixelConfig({ subpixelGridSize: '2x2' }) as never, overlay, 21, 2, false, createCanvas);
+      const r2 = await fn(
+        qr as never,
+        subpixelConfig({ subpixelGridSize: '2x2' }) as never,
+        overlay,
+        21,
+        2,
+        false,
+        createCanvas
+      );
       expect(r2.scale).toBe(2);
 
       // '4x4' → scale=4
-      const r4 = await fn(qr as never, subpixelConfig({ subpixelGridSize: '4x4' }) as never, overlay, 21, 4, false, createCanvas);
+      const r4 = await fn(
+        qr as never,
+        subpixelConfig({ subpixelGridSize: '4x4' }) as never,
+        overlay,
+        21,
+        4,
+        false,
+        createCanvas
+      );
       expect(r4.scale).toBe(4);
 
       // undefined → default 3
-      const rd = await fn(qr as never, subpixelConfig({ subpixelGridSize: undefined }) as never, overlay, 21, 3, false, createCanvas);
+      const rd = await fn(
+        qr as never,
+        subpixelConfig({ subpixelGridSize: undefined }) as never,
+        overlay,
+        21,
+        3,
+        false,
+        createCanvas
+      );
       expect(rd.scale).toBe(3);
 
       // invalid → default 3
-      const ri = await fn(qr as never, subpixelConfig({ subpixelGridSize: 'invalid' }) as never, overlay, 21, 3, false, createCanvas);
+      const ri = await fn(
+        qr as never,
+        subpixelConfig({ subpixelGridSize: 'invalid' }) as never,
+        overlay,
+        21,
+        3,
+        false,
+        createCanvas
+      );
       expect(ri.scale).toBe(3);
     });
 
@@ -236,19 +275,51 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 0, 0, 0, 0));
 
       // Valid hex with #
-      const r1 = await fn(qr as never, subpixelConfig({ subpixelNeutralColor: '#ff8800' }) as never, overlay, 21, 3, false, createCanvas);
+      const r1 = await fn(
+        qr as never,
+        subpixelConfig({ subpixelNeutralColor: '#ff8800' }) as never,
+        overlay,
+        21,
+        3,
+        false,
+        createCanvas
+      );
       expect(r1.matrix.length).toBe(63);
 
       // Valid hex without #
-      const r2 = await fn(qr as never, subpixelConfig({ subpixelNeutralColor: 'ff8800' }) as never, overlay, 21, 3, false, createCanvas);
+      const r2 = await fn(
+        qr as never,
+        subpixelConfig({ subpixelNeutralColor: 'ff8800' }) as never,
+        overlay,
+        21,
+        3,
+        false,
+        createCanvas
+      );
       expect(r2.matrix.length).toBe(63);
 
       // Invalid hex → null
-      const r3 = await fn(qr as never, subpixelConfig({ subpixelNeutralColor: 'xyz' }) as never, overlay, 21, 3, false, createCanvas);
+      const r3 = await fn(
+        qr as never,
+        subpixelConfig({ subpixelNeutralColor: 'xyz' }) as never,
+        overlay,
+        21,
+        3,
+        false,
+        createCanvas
+      );
       expect(r3.matrix.length).toBe(63);
 
       // undefined → null
-      const r4 = await fn(qr as never, subpixelConfig({ subpixelNeutralColor: undefined }) as never, overlay, 21, 3, false, createCanvas);
+      const r4 = await fn(
+        qr as never,
+        subpixelConfig({ subpixelNeutralColor: undefined }) as never,
+        overlay,
+        21,
+        3,
+        false,
+        createCanvas
+      );
       expect(r4.matrix.length).toBe(63);
     });
 
@@ -260,7 +331,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       // For structural modules with solid override, colors should be null
       // Finder pattern occupies (0,0)-(6,6): scaled to (0,0)-(20,20) at scale=3
@@ -275,7 +354,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 200, 100, 50));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       // With stylized, structural modules should get overlay colors
       expect(result.matrix.length).toBe(63);
@@ -292,7 +379,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       // Center pixels of dark modules should have halftone data
       const scale = 3;
@@ -320,7 +415,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
       // Pass useHalftoneCenter=true as function argument (overrides center rule)
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, true, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        true,
+        createCanvas
+      );
 
       expect(result.matrix.length).toBe(63);
     });
@@ -336,7 +439,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       // Center pixels should have overlay colors without halftone property
       const scale = 3;
@@ -361,7 +472,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       // Very dark overlay → non-center pixels should be dark
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 10, 10, 10));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       // Non-center pixel of a non-structural module should be dark (brightness < threshold)
       const scale = 3;
@@ -382,7 +501,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       // Very bright overlay → non-center pixels should be light
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 250, 250, 250));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       const scale = 3;
       const py = 10 * scale + 0;
@@ -398,7 +525,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       expect(result.matrix.length).toBe(63);
     });
@@ -411,7 +546,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       expect(result.effectiveIntensity).toBe(75);
     });
@@ -428,7 +571,15 @@ describe('qr-generator/overlay-subpixel.ts', () => {
       const overlay = createOverlayCanvas();
       const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 128, 128, 128));
 
-      const result = await fn(qr as never, config as never, overlay, moduleCount, 3, false, createCanvas);
+      const result = await fn(
+        qr as never,
+        config as never,
+        overlay,
+        moduleCount,
+        3,
+        false,
+        createCanvas
+      );
 
       // Light modules center: qrValue=false, halftone only applies to dark modules
       const scale = 3;

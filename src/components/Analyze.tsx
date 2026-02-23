@@ -700,7 +700,7 @@ function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByMode
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
                     className={`h-full transition-all ${
-                      (cap.current / cap.capacity) > 0.9
+                      cap.current / cap.capacity > 0.9
                         ? 'bg-red-500'
                         : cap.current / cap.capacity > 0.7
                           ? 'bg-amber-500'
@@ -993,7 +993,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
   const combinedTimings = useMemo(
     () => ({
-      ...(result?.timing ?? {}),
+      ...result?.timing,
       ...uiTimings,
     }),
     [result?.timing, uiTimings]
@@ -4665,7 +4665,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       {
         ...result,
         timing: {
-          ...(result.timing ?? {}),
+          ...result.timing,
           encodeMs: uiTimings.encodeMs ?? result.timing?.encodeMs ?? null,
           renderMs: uiTimings.renderMs ?? result.timing?.renderMs ?? null,
           exportMs: null,
@@ -4678,7 +4678,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     );
     const exportMs = Math.round((nowMs() - exportStartMs) * 100) / 100;
     exportData.analysis.timing = {
-      ...(exportData.analysis.timing ?? {}),
+      ...exportData.analysis.timing,
       exportMs,
     };
     exportData.diagnostics.summary.exportMs = exportMs;

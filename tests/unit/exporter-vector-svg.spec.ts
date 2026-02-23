@@ -34,7 +34,9 @@ describe('exporter vector svg', () => {
   });
 
   it('exports styled vector svg with linear gradient and rich metadata', async () => {
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => 'blob:vector');
+    const createObjectURL = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockImplementation(() => 'blob:vector');
 
     const result = exportVectorSvg(fullMatrix(25), {
       moduleSize: 8,

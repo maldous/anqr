@@ -5,6 +5,7 @@ Image processing for QR code overlays.
 ## Purpose
 
 This module handles image processing for QR code overlays:
+
 - Image loading and processing
 - Cropping and fitting
 - Image filters (blur, sharpen, contrast, etc.)
@@ -42,9 +43,17 @@ const fitted = fitOverlayImage(image, 256, 256, 'cover');
 ### Image Filters
 
 ```typescript
-import { 
-  brightness, contrast, gamma, blur, sharpen,
-  grayscale, posterize, threshold, sobelEdge, cannyEdge
+import {
+  brightness,
+  contrast,
+  gamma,
+  blur,
+  sharpen,
+  grayscale,
+  posterize,
+  threshold,
+  sobelEdge,
+  cannyEdge,
 } from '@/modules/overlay';
 
 const adjusted = brightness(imageData, 1.2);

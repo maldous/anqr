@@ -102,7 +102,9 @@ function main() {
     process.exit(1);
   }
 
-  console.log('All test data-testid references are managed (explicit or approved dynamic pattern).');
+  console.log(
+    'All test data-testid references are managed (explicit or approved dynamic pattern).'
+  );
 }
 
 main();

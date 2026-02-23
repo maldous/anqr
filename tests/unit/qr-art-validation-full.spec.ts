@@ -35,8 +35,6 @@ if (typeof globalThis.ImageData === 'undefined') {
 
 import { qrcode } from '../../src/modules/qr-encoder';
 
-type EccChar = 'L' | 'M' | 'Q' | 'H';
-
 function buildMatrixFromQR(qr: ReturnType<typeof qrcode>): boolean[][] {
   const moduleCount = qr.getModuleCount();
   const matrix: boolean[][] = [];
@@ -144,9 +142,8 @@ describe('qr-art/validation.ts', () => {
     });
 
     it('all valid suffix chars individually pass', async () => {
-      const { validateSuffixCharset, VALID_SUFFIX_CHARS } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { validateSuffixCharset, VALID_SUFFIX_CHARS } =
+        await import('../../src/modules/qr-art/validation');
       for (const char of VALID_SUFFIX_CHARS) {
         expect(validateSuffixCharset(char).valid).toBe(true);
       }
@@ -297,9 +294,8 @@ describe('qr-art/validation.ts', () => {
     });
 
     it('reads correct ECC level for all levels', async () => {
-      const { readFormatInfoFromDecoder, eccNumericToLevel } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { readFormatInfoFromDecoder, eccNumericToLevel: _eccNumericToLevel } =
+        await import('../../src/modules/qr-art/validation');
 
       for (const ecc of ['L', 'M', 'Q', 'H'] as const) {
         const qr = qrcode(3, ecc);
@@ -308,7 +304,7 @@ describe('qr-art/validation.ts', () => {
         const matrix = buildMatrixFromQR(qr);
         const result = readFormatInfoFromDecoder(matrix);
         expect(result).not.toBeNull();
-        expect(eccNumericToLevel(result!.eccLevel)).toBe(ecc);
+        expect(_eccNumericToLevel(result!.eccLevel)).toBe(ecc);
       }
     });
 
@@ -338,9 +334,8 @@ describe('qr-art/validation.ts', () => {
     });
 
     it('ECC level matches what was used to create the QR', async () => {
-      const { extractMaskFromMatrix, eccNumericToLevel } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { extractMaskFromMatrix, eccNumericToLevel } =
+        await import('../../src/modules/qr-art/validation');
 
       for (const ecc of ['L', 'M', 'Q', 'H'] as const) {
         const qr = qrcode(3, ecc);
@@ -366,9 +361,8 @@ describe('qr-art/validation.ts', () => {
 
   describe('verifyMatrixFormatInfo', () => {
     it('correct ECC and mask → valid: true', async () => {
-      const { verifyMatrixFormatInfo, extractMaskFromMatrix, eccNumericToLevel } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { verifyMatrixFormatInfo, extractMaskFromMatrix, eccNumericToLevel } =
+        await import('../../src/modules/qr-art/validation');
       const qr = qrcode(3, 'M');
       qr.addData('HELLO');
       qr.make(4);
@@ -388,9 +382,8 @@ describe('qr-art/validation.ts', () => {
     });
 
     it('wrong ECC → valid: false with ECC_MISMATCH', async () => {
-      const { verifyMatrixFormatInfo, extractMaskFromMatrix, eccNumericToLevel } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { verifyMatrixFormatInfo, extractMaskFromMatrix, eccNumericToLevel } =
+        await import('../../src/modules/qr-art/validation');
       const qr = qrcode(3, 'L');
       qr.addData('HELLO');
       qr.make(4);
@@ -408,9 +401,8 @@ describe('qr-art/validation.ts', () => {
     });
 
     it('wrong mask → valid: false with MASK_MISMATCH', async () => {
-      const { verifyMatrixFormatInfo, extractMaskFromMatrix, eccNumericToLevel } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { verifyMatrixFormatInfo, extractMaskFromMatrix, eccNumericToLevel } =
+        await import('../../src/modules/qr-art/validation');
       const qr = qrcode(3, 'M');
       qr.addData('HELLO');
       qr.make(4);
@@ -428,9 +420,8 @@ describe('qr-art/validation.ts', () => {
     });
 
     it('extractedEcc and extractedMask are returned in result', async () => {
-      const { verifyMatrixFormatInfo, extractMaskFromMatrix, eccNumericToLevel } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { verifyMatrixFormatInfo, extractMaskFromMatrix } =
+        await import('../../src/modules/qr-art/validation');
       const qr = qrcode(3, 'Q');
       qr.addData('TESTDATA');
       qr.make(4);
@@ -446,9 +437,8 @@ describe('qr-art/validation.ts', () => {
 
   describe('round-trip: encoder → extractMaskFromMatrix → verifyMatrixFormatInfo', () => {
     it('all 4 ECC levels round-trip correctly', async () => {
-      const { extractMaskFromMatrix, eccNumericToLevel, verifyMatrixFormatInfo } = await import(
-        '../../src/modules/qr-art/validation'
-      );
+      const { extractMaskFromMatrix, eccNumericToLevel, verifyMatrixFormatInfo } =
+        await import('../../src/modules/qr-art/validation');
 
       for (const ecc of ['L', 'M', 'Q', 'H'] as const) {
         const qr = qrcode(3, ecc);

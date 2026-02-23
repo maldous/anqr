@@ -148,7 +148,9 @@ function main() {
   const lines = [];
   lines.push('1) Canonical Managed data-testid Inventory');
   lines.push(`- Total managed IDs: ${ids.size}`);
-  lines.push('- Source: auto-generated from DynamicTestId + literal fallback scan of `src/**` and `index.html`');
+  lines.push(
+    '- Source: auto-generated from DynamicTestId + literal fallback scan of `src/**` and `index.html`'
+  );
   lines.push(
     '- Rule: when adding/removing IDs, regenerate this file with `node scripts/generate-test-ids.js`'
   );
@@ -168,7 +170,9 @@ function main() {
   }
 
   lines.push(`${sectionIndex}) Coverage Usage Rules`);
-  lines.push('- This file is the complete explicit ID inventory for coverage and permutation auditing.');
+  lines.push(
+    '- This file is the complete explicit ID inventory for coverage and permutation auditing.'
+  );
   lines.push('- Every test selector should map to an explicit ID listed in this file.');
   lines.push(
     '- `tests/types.txt` categories must map to at least one corresponding ID group from this file.'

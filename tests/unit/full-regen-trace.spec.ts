@@ -1,9 +1,9 @@
 /**
  * Full regeneration trace test
- * 
+ *
  * Since alignment patterns in isolation work correctly,
  * the issue must be in the full regeneration process.
- * 
+ *
  * Let's trace step by step to find where divergence occurs.
  */
 
@@ -39,11 +39,16 @@ if (typeof globalThis.ImageData === 'undefined') {
 
 function eccToNumeric(ecc: 'L' | 'M' | 'Q' | 'H'): number {
   switch (ecc) {
-    case 'L': return QRErrorCorrectionLevel.L;
-    case 'M': return QRErrorCorrectionLevel.M;
-    case 'Q': return QRErrorCorrectionLevel.Q;
-    case 'H': return QRErrorCorrectionLevel.H;
-    default: return QRErrorCorrectionLevel.M;
+    case 'L':
+      return QRErrorCorrectionLevel.L;
+    case 'M':
+      return QRErrorCorrectionLevel.M;
+    case 'Q':
+      return QRErrorCorrectionLevel.Q;
+    case 'H':
+      return QRErrorCorrectionLevel.H;
+    default:
+      return QRErrorCorrectionLevel.M;
   }
 }
 
@@ -55,12 +60,12 @@ describe('Full Regeneration Trace', () => {
     const mask = 0;
     const eccLevel = eccToNumeric(ecc);
     const moduleCount = version * 4 + 17;
-    
+
     // Get encoder's final result
     const qr = qrcode(version, ecc);
     qr.addData(data);
     qr.make(mask);
-    
+
     // ========================================
     // Step 1: Create module array
     // ========================================
@@ -68,7 +73,7 @@ describe('Full Regeneration Trace', () => {
     for (let row = 0; row < moduleCount; row++) {
       modules[row] = new Array(moduleCount).fill(null);
     }
-    
+
     // ========================================
     // Step 2: Draw finder patterns
     // ========================================
@@ -89,11 +94,11 @@ describe('Full Regeneration Trace', () => {
         }
       }
     };
-    
+
     setupFinderPattern(0, 0);
     setupFinderPattern(moduleCount - 7, 0);
     setupFinderPattern(0, moduleCount - 7);
-    
+
     // Compare finder patterns
     let finderMismatches = 0;
     for (let row = 0; row < moduleCount; row++) {
@@ -106,7 +111,7 @@ describe('Full Regeneration Trace', () => {
       }
     }
     console.log(`\nAfter finder patterns: ${finderMismatches} mismatches`);
-    
+
     // ========================================
     // Step 3: Draw alignment patterns (BEFORE timing)
     // ========================================
@@ -114,7 +119,7 @@ describe('Full Regeneration Trace', () => {
     for (const row of positions) {
       for (const col of positions) {
         if (modules[row][col] !== null) continue;
-        
+
         for (let r = -2; r <= 2; r++) {
           for (let c = -2; c <= 2; c++) {
             if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
@@ -126,7 +131,7 @@ describe('Full Regeneration Trace', () => {
         }
       }
     }
-    
+
     // Compare after alignment
     let alignmentMismatches = 0;
     for (let row = 0; row < moduleCount; row++) {
@@ -139,7 +144,7 @@ describe('Full Regeneration Trace', () => {
       }
     }
     console.log(`After alignment patterns: ${alignmentMismatches} mismatches`);
-    
+
     // ========================================
     // Step 4: Draw timing patterns (AFTER alignment)
     // ========================================
@@ -148,7 +153,7 @@ describe('Full Regeneration Trace', () => {
       if (modules[6][i] === null) modules[6][i] = dark;
       if (modules[i][6] === null) modules[i][6] = dark;
     }
-    
+
     // Compare after timing
     let timingMismatches = 0;
     for (let row = 0; row < moduleCount; row++) {
@@ -161,16 +166,16 @@ describe('Full Regeneration Trace', () => {
       }
     }
     console.log(`After timing patterns: ${timingMismatches} mismatches`);
-    
+
     // ========================================
     // Step 5: Draw format info
     // ========================================
     const formatData = (eccLevel << 3) | mask;
     const formatBits = getBCHTypeInfo(formatData);
-    
+
     for (let i = 0; i < 15; i++) {
       const mod = ((formatBits >> i) & 1) === 1;
-      
+
       if (i < 6) {
         modules[i][8] = mod;
       } else if (i < 8) {
@@ -178,7 +183,7 @@ describe('Full Regeneration Trace', () => {
       } else {
         modules[moduleCount - 15 + i][8] = mod;
       }
-      
+
       if (i < 8) {
         modules[8][moduleCount - i - 1] = mod;
       } else if (i < 9) {
@@ -187,10 +192,10 @@ describe('Full Regeneration Trace', () => {
         modules[8][15 - i - 1] = mod;
       }
     }
-    
+
     // Fixed dark module
     modules[moduleCount - 8][8] = true;
-    
+
     // Compare after format info
     let formatMismatches = 0;
     for (let row = 0; row < moduleCount; row++) {
@@ -203,18 +208,18 @@ describe('Full Regeneration Trace', () => {
       }
     }
     console.log(`After format info: ${formatMismatches} mismatches`);
-    
+
     // ========================================
     // Step 6: Draw version info (version >= 7)
     // ========================================
     const versionBits = getBCHTypeNumber(version);
-    
+
     for (let i = 0; i < 18; i++) {
       const mod = ((versionBits >> i) & 1) === 1;
       modules[Math.floor(i / 3)][(i % 3) + moduleCount - 8 - 3] = mod;
       modules[(i % 3) + moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
     }
-    
+
     // Compare after version info
     let versionMismatches = 0;
     for (let row = 0; row < moduleCount; row++) {
@@ -227,33 +232,33 @@ describe('Full Regeneration Trace', () => {
       }
     }
     console.log(`After version info: ${versionMismatches} mismatches`);
-    
+
     // ========================================
     // Step 7: Prepare data for placement
     // ========================================
     const rsBlocks = getRSBlocks(version, eccLevel);
     const buffer = qrBitBuffer();
-    
+
     const segment = qr8BitByte(data);
     buffer.put(segment.getMode(), 4);
     buffer.put(segment.getLength(), getLengthInBits(segment.getMode(), version));
     segment.write(buffer);
-    
+
     let totalDataCount = 0;
     for (const block of rsBlocks) {
       totalDataCount += block.dataCount;
     }
-    
+
     const remainingBits = totalDataCount * 8 - buffer.getLengthInBits();
     const terminatorBits = Math.min(4, remainingBits);
     if (terminatorBits > 0) {
       buffer.put(0, terminatorBits);
     }
-    
+
     while (buffer.getLengthInBits() % 8 !== 0) {
       buffer.putBit(false);
     }
-    
+
     const PAD0 = 0xec;
     const PAD1 = 0x11;
     while (buffer.getLengthInBits() < totalDataCount * 8) {
@@ -262,9 +267,9 @@ describe('Full Regeneration Trace', () => {
         buffer.put(PAD1, 8);
       }
     }
-    
+
     const bufferBytes = buffer.getBuffer();
-    
+
     // Extract per-block data and compute ECC
     const dcdata: number[][] = [];
     const ecdata: number[][] = [];
@@ -272,23 +277,23 @@ describe('Full Regeneration Trace', () => {
     let maxEcCount = 0;
     const blockDataCounts: number[] = [];
     const blockEccCounts: number[] = [];
-    
+
     let offset = 0;
     for (const block of rsBlocks) {
       const dcCount = block.dataCount;
       const ecCount = block.totalCount - dcCount;
-      
+
       maxDcCount = Math.max(maxDcCount, dcCount);
       maxEcCount = Math.max(maxEcCount, ecCount);
       blockDataCounts.push(dcCount);
       blockEccCounts.push(ecCount);
-      
+
       const blockData: number[] = [];
       for (let i = 0; i < dcCount; i++) {
         blockData.push(bufferBytes[offset + i] & 0xff);
       }
       dcdata.push(blockData);
-      
+
       const rsPoly = getErrorCorrectPolynomial(ecCount);
       const rawPoly = qrPolynomial(blockData, rsPoly.getLength() - 1);
       const modPoly = rawPoly.mod(rsPoly);
@@ -298,13 +303,13 @@ describe('Full Regeneration Trace', () => {
         eccBytes.push(modIndex >= 0 ? modPoly.getAt(modIndex) : 0);
       }
       ecdata.push(eccBytes);
-      
+
       offset += dcCount;
     }
-    
+
     // Interleave
     const interleaved: number[] = [];
-    
+
     for (let i = 0; i < maxDcCount; i++) {
       for (let r = 0; r < dcdata.length; r++) {
         if (i < dcdata[r].length) {
@@ -312,7 +317,7 @@ describe('Full Regeneration Trace', () => {
         }
       }
     }
-    
+
     for (let i = 0; i < maxEcCount; i++) {
       for (let r = 0; r < ecdata.length; r++) {
         if (i < ecdata[r].length) {
@@ -320,9 +325,9 @@ describe('Full Regeneration Trace', () => {
         }
       }
     }
-    
+
     console.log(`\nInterleaved ${interleaved.length} bytes`);
-    
+
     // ========================================
     // Step 8: Place data with mask
     // ========================================
@@ -331,37 +336,37 @@ describe('Full Regeneration Trace', () => {
     let row = moduleCount - 1;
     let bitIndex = 7;
     let byteIndex = 0;
-    
+
     for (let col = moduleCount - 1; col > 0; col -= 2) {
       if (col === 6) col -= 1;
-      
+
       while (true) {
         for (let c = 0; c < 2; c++) {
           const currentCol = col - c;
-          
+
           if (modules[row][currentCol] === null) {
             let dark = false;
-            
+
             if (byteIndex < interleaved.length) {
               dark = ((interleaved[byteIndex] >>> bitIndex) & 1) === 1;
             }
-            
+
             if (maskFunc(row, currentCol)) {
               dark = !dark;
             }
-            
+
             modules[row][currentCol] = dark;
             bitIndex--;
-            
+
             if (bitIndex === -1) {
               byteIndex++;
               bitIndex = 7;
             }
           }
         }
-        
+
         row += inc;
-        
+
         if (row < 0 || row >= moduleCount) {
           row -= inc;
           inc = -inc;
@@ -369,15 +374,16 @@ describe('Full Regeneration Trace', () => {
         }
       }
     }
-    
+
     console.log(`Placed ${byteIndex} bytes, ${7 - bitIndex} bits`);
-    
+
     // ========================================
     // Final comparison
     // ========================================
     let totalMismatches = 0;
-    const mismatchSamples: Array<{row: number, col: number, ours: boolean, encoder: boolean}> = [];
-    
+    const mismatchSamples: Array<{ row: number; col: number; ours: boolean; encoder: boolean }> =
+      [];
+
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
         const ours = modules[row][col] === true;
@@ -390,10 +396,10 @@ describe('Full Regeneration Trace', () => {
         }
       }
     }
-    
+
     console.log(`\nFinal total mismatches: ${totalMismatches}`);
     console.log('Sample mismatches:', mismatchSamples);
-    
+
     expect(totalMismatches).toBe(0);
   });
 });

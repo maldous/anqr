@@ -1,7 +1,7 @@
 /**
  * Comprehensive Settings Registry
  * Maps ALL UI controls across all sections and tiers
- * 
+ *
  * Each setting defines:
  * - section: Which accordion section it belongs to
  * - tier: Which tier level exposes this setting (basic/advanced/professional)
@@ -45,7 +45,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Content Type',
     expectsQRChange: false, // Changing type alone doesn't change QR if data is same
     testValues: ['url', 'plain_text', 'wifi', 'email', 'sms', 'geo', 'tel'],
-    notes: 'Content type change alone may not change QR - depends on actual data'
+    notes: 'Content type change alone may not change QR - depends on actual data',
   },
   'payload.text': {
     section: 'Payload',
@@ -54,7 +54,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Plain Text',
     expectsQRChange: true,
     testValues: ['Hello World', 'Test QR Code', 'ANQR Testing'],
-    conditional: 'payload.kind === plain_text'
+    conditional: 'payload.kind === plain_text',
   },
   'payload.url.href': {
     section: 'Payload',
@@ -63,7 +63,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'URL',
     expectsQRChange: true,
     testValues: ['https://example.com', 'https://test.org', 'https://anqr.link'],
-    conditional: 'payload.kind === url'
+    conditional: 'payload.kind === url',
   },
   'payload.wifi.ssid': {
     section: 'Payload',
@@ -71,7 +71,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Network Name',
     expectsQRChange: true,
-    conditional: 'payload.kind === wifi'
+    conditional: 'payload.kind === wifi',
   },
   'payload.wifi.password': {
     section: 'Payload',
@@ -79,7 +79,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Password',
     expectsQRChange: true,
-    conditional: 'payload.kind === wifi'
+    conditional: 'payload.kind === wifi',
   },
   'payload.wifi.auth': {
     section: 'Payload',
@@ -88,7 +88,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Security',
     expectsQRChange: true,
     testValues: ['WPA', 'WPA2', 'WPA3', 'WEP', 'nopass'],
-    conditional: 'payload.kind === wifi'
+    conditional: 'payload.kind === wifi',
   },
   'payload.wifi.hidden': {
     section: 'Payload',
@@ -96,7 +96,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Hidden Network',
     expectsQRChange: true,
-    conditional: 'payload.kind === wifi'
+    conditional: 'payload.kind === wifi',
   },
   'payload.email.to': {
     section: 'Payload',
@@ -104,7 +104,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'To',
     expectsQRChange: true,
-    conditional: 'payload.kind === email'
+    conditional: 'payload.kind === email',
   },
   'payload.email.subject': {
     section: 'Payload',
@@ -112,7 +112,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Subject',
     expectsQRChange: true,
-    conditional: 'payload.kind === email'
+    conditional: 'payload.kind === email',
   },
   'payload.email.body': {
     section: 'Payload',
@@ -120,7 +120,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'textarea',
     label: 'Body',
     expectsQRChange: true,
-    conditional: 'payload.kind === email'
+    conditional: 'payload.kind === email',
   },
   'payload.sms.number': {
     section: 'Payload',
@@ -128,7 +128,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Phone Number',
     expectsQRChange: true,
-    conditional: 'payload.kind === sms'
+    conditional: 'payload.kind === sms',
   },
   'payload.sms.body': {
     section: 'Payload',
@@ -136,7 +136,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'textarea',
     label: 'Message',
     expectsQRChange: true,
-    conditional: 'payload.kind === sms'
+    conditional: 'payload.kind === sms',
   },
   'payload.tel.number': {
     section: 'Payload',
@@ -144,7 +144,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Phone Number',
     expectsQRChange: true,
-    conditional: 'payload.kind === tel'
+    conditional: 'payload.kind === tel',
   },
   'payload.geo.lat': {
     section: 'Payload',
@@ -152,7 +152,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Latitude',
     expectsQRChange: true,
-    conditional: 'payload.kind === geo'
+    conditional: 'payload.kind === geo',
   },
   'payload.geo.lon': {
     section: 'Payload',
@@ -160,7 +160,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Longitude',
     expectsQRChange: true,
-    conditional: 'payload.kind === geo'
+    conditional: 'payload.kind === geo',
   },
 
   // ==========================================
@@ -172,7 +172,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Enable Overlay',
     expectsQRChange: true,
-    notes: 'Requires image to be loaded first'
+    notes: 'Requires image to be loaded first',
   },
   'overlay.mode': {
     section: 'Overlay',
@@ -180,8 +180,19 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Mode',
     expectsQRChange: true,
-    testValues: ['center', 'blend', 'halftone', 'mosaic', 'gapfill', 'brightness', 'duotone', 'subpixel', 'dithered', 'blue-noise'],
-    conditional: 'overlay.enabled && image loaded'
+    testValues: [
+      'center',
+      'blend',
+      'halftone',
+      'mosaic',
+      'gapfill',
+      'brightness',
+      'duotone',
+      'subpixel',
+      'dithered',
+      'blue-noise',
+    ],
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.intensity': {
     section: 'Overlay',
@@ -190,7 +201,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Intensity',
     expectsQRChange: true,
     testValues: [25, 50, 75, 100],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.colorMode': {
     section: 'Overlay',
@@ -199,7 +210,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Color Mode',
     expectsQRChange: true,
     testValues: ['color', 'grayscale', 'bw'],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.preserveFinders': {
     section: 'Overlay',
@@ -207,7 +218,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Preserve Finders',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.fit': {
     section: 'Overlay',
@@ -216,7 +227,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Fit Mode',
     expectsQRChange: true,
     testValues: ['cover', 'contain', 'stretch'],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.rotateDeg': {
     section: 'Overlay',
@@ -225,7 +236,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Rotation',
     expectsQRChange: true,
     testValues: [0, 45, 90, 180],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.flipX': {
     section: 'Overlay',
@@ -233,7 +244,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Flip Horizontal',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.flipY': {
     section: 'Overlay',
@@ -241,7 +252,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Flip Vertical',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.preserveTiming': {
     section: 'Overlay',
@@ -249,7 +260,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Preserve Timing',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.preserveAlignment': {
     section: 'Overlay',
@@ -257,7 +268,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Preserve Alignment',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.protectFormatInfo': {
     section: 'Overlay',
@@ -265,7 +276,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Protect Format Info',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.protectVersionInfo': {
     section: 'Overlay',
@@ -273,7 +284,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Protect Version Info',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.brightness': {
     section: 'Overlay',
@@ -282,7 +293,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Brightness',
     expectsQRChange: true,
     testValues: [-50, 0, 50],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.contrast': {
     section: 'Overlay',
@@ -291,7 +302,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Contrast',
     expectsQRChange: true,
     testValues: [-50, 0, 50],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.gamma': {
     section: 'Overlay',
@@ -300,7 +311,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Gamma',
     expectsQRChange: true,
     testValues: [0.5, 1.0, 2.0],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.saturation': {
     section: 'Overlay',
@@ -309,7 +320,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Saturation',
     expectsQRChange: true,
     testValues: [-100, 0, 100],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.hueRotateDeg': {
     section: 'Overlay',
@@ -318,7 +329,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Hue Rotation',
     expectsQRChange: true,
     testValues: [0, 90, 180],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.blurPx': {
     section: 'Overlay',
@@ -327,7 +338,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Blur',
     expectsQRChange: true,
     testValues: [0, 2, 5],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.sharpen': {
     section: 'Overlay',
@@ -336,7 +347,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Sharpen',
     expectsQRChange: true,
     testValues: [0, 50, 100],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.posterizeLevels': {
     section: 'Overlay',
@@ -345,7 +356,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Posterize',
     expectsQRChange: true,
     testValues: [0, 4, 8],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.threshold': {
     section: 'Overlay',
@@ -354,7 +365,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Threshold',
     expectsQRChange: true,
     testValues: [64, 128, 192],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.edgeDetect': {
     section: 'Overlay',
@@ -363,7 +374,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Edge Detection',
     expectsQRChange: true,
     testValues: ['off', 'sobel', 'canny'],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.invert': {
     section: 'Overlay',
@@ -371,7 +382,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Invert Colors',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   // Dithering options
   'overlay.ditherKind': {
@@ -381,7 +392,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Dither Algorithm',
     expectsQRChange: true,
     testValues: ['error_diffusion', 'ordered_bayer', 'blue_noise', 'white_noise'],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.diffusionKernel': {
     section: 'Overlay',
@@ -389,8 +400,15 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Diffusion Kernel',
     expectsQRChange: true,
-    testValues: ['floyd_steinberg', 'jarvis_judice_ninke', 'stucki', 'atkinson', 'burkes', 'sierra'],
-    conditional: 'overlay.enabled && ditherKind === error_diffusion'
+    testValues: [
+      'floyd_steinberg',
+      'jarvis_judice_ninke',
+      'stucki',
+      'atkinson',
+      'burkes',
+      'sierra',
+    ],
+    conditional: 'overlay.enabled && ditherKind === error_diffusion',
   },
   'overlay.ditherStrength': {
     section: 'Overlay',
@@ -399,7 +417,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Dither Strength',
     expectsQRChange: true,
     testValues: [25, 50, 75, 100],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   'overlay.ditherSerpentine': {
     section: 'Overlay',
@@ -407,7 +425,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Serpentine Scanning',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && ditherKind === error_diffusion'
+    conditional: 'overlay.enabled && ditherKind === error_diffusion',
   },
   'overlay.orderedMatrix': {
     section: 'Overlay',
@@ -416,7 +434,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Ordered Matrix',
     expectsQRChange: true,
     testValues: ['bayer2', 'bayer4', 'bayer8'],
-    conditional: 'overlay.enabled && ditherKind === ordered'
+    conditional: 'overlay.enabled && ditherKind === ordered',
   },
   'overlay.blueNoiseTileSize': {
     section: 'Overlay',
@@ -425,7 +443,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Blue Noise Tile Size',
     expectsQRChange: true,
     testValues: [32, 64, 128],
-    conditional: 'overlay.enabled && ditherKind === blue_noise'
+    conditional: 'overlay.enabled && ditherKind === blue_noise',
   },
   'overlay.blueNoiseSeed': {
     section: 'Overlay',
@@ -433,7 +451,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Blue Noise Seed',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && ditherKind === blue_noise'
+    conditional: 'overlay.enabled && ditherKind === blue_noise',
   },
   'overlay.colorDither': {
     section: 'Overlay',
@@ -442,7 +460,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Color Dither',
     expectsQRChange: true,
     testValues: ['none', 'per_channel', 'perceptual'],
-    conditional: 'overlay.enabled && image loaded'
+    conditional: 'overlay.enabled && image loaded',
   },
   // Subpixel options
   'overlay.subpixelGridSize': {
@@ -452,7 +470,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Subpixel Grid',
     expectsQRChange: true,
     testValues: ['2x2', '3x3', '4x4'],
-    conditional: 'overlay.enabled && mode === subpixel'
+    conditional: 'overlay.enabled && mode === subpixel',
   },
   'overlay.subpixelCenterRule': {
     section: 'Overlay',
@@ -461,7 +479,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Center Rule',
     expectsQRChange: true,
     testValues: ['strict', 'halftone_center'],
-    conditional: 'overlay.enabled && mode === subpixel'
+    conditional: 'overlay.enabled && mode === subpixel',
   },
   'overlay.subpixelNeutralColor': {
     section: 'Overlay',
@@ -469,7 +487,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'color',
     label: 'Neutral Color',
     expectsQRChange: true,
-    conditional: 'overlay.enabled && mode === subpixel'
+    conditional: 'overlay.enabled && mode === subpixel',
   },
   'overlay.subpixelFinderOverride': {
     section: 'Overlay',
@@ -478,7 +496,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Finder Override',
     expectsQRChange: true,
     testValues: ['solid', 'stylized'],
-    conditional: 'overlay.enabled && mode === subpixel'
+    conditional: 'overlay.enabled && mode === subpixel',
   },
   // Halftone options
   'overlay.halftoneCell': {
@@ -488,7 +506,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Cell Mode',
     expectsQRChange: true,
     testValues: ['per_module', 'n×n'],
-    conditional: 'overlay.enabled && mode === halftone'
+    conditional: 'overlay.enabled && mode === halftone',
   },
   'overlay.halftoneDotShape': {
     section: 'Overlay',
@@ -497,7 +515,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Dot Shape',
     expectsQRChange: true,
     testValues: ['circle', 'square', 'line'],
-    conditional: 'overlay.enabled && mode === halftone'
+    conditional: 'overlay.enabled && mode === halftone',
   },
   'overlay.brightnessCurve': {
     section: 'Overlay',
@@ -506,7 +524,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Brightness Curve',
     expectsQRChange: true,
     testValues: ['linear', 's-curve', 'gamma'],
-    conditional: 'overlay.enabled && mode === halftone'
+    conditional: 'overlay.enabled && mode === halftone',
   },
   // Duotone options - store uses duotoneColors: [string, string] array
   // Individual color controls are handled via UI that sets array elements
@@ -521,7 +539,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Version',
     expectsQRChange: true,
     testValues: [0, 1, 5, 10], // 0 = auto
-    notes: 'Higher version = more data capacity, larger QR'
+    notes: 'Higher version = more data capacity, larger QR',
   },
   'qr.ecc': {
     section: 'QR Encoding',
@@ -530,7 +548,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Error Correction',
     expectsQRChange: true,
     testValues: ['L', 'M', 'Q', 'H'],
-    notes: 'Higher ECC = more redundancy'
+    notes: 'Higher ECC = more redundancy',
   },
   'qr.encodingMode': {
     section: 'QR Encoding',
@@ -539,7 +557,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Encoding Mode',
     expectsQRChange: true,
     testValues: ['auto', 'numeric', 'alphanumeric', 'byte', 'kanji'],
-    notes: 'Auto usually picks optimal'
+    notes: 'Auto usually picks optimal',
   },
   // Note: maskPattern is not exposed in UI - QR library auto-selects optimal mask
   'qr.quietZoneModules': {
@@ -548,7 +566,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Quiet Zone',
     expectsQRChange: true,
-    testValues: [0, 2, 4, 6]
+    testValues: [0, 2, 4, 6],
   },
   'qr.borderModulesExtra': {
     section: 'QR Encoding',
@@ -556,7 +574,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Extra Border',
     expectsQRChange: true,
-    testValues: [0, 1, 2, 4]
+    testValues: [0, 1, 2, 4],
   },
   'qr.quietZoneMinEnforce': {
     section: 'QR Encoding',
@@ -564,7 +582,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Enforce Min Quiet Zone',
     expectsQRChange: false,
-    notes: 'Only affects validation warnings'
+    notes: 'Only affects validation warnings',
   },
 
   // ==========================================
@@ -576,7 +594,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Module Size',
     expectsQRChange: true,
-    testValues: [10, 15, 20, 25]
+    testValues: [10, 15, 20, 25],
   },
   'render.moduleStyle': {
     section: 'Render',
@@ -584,7 +602,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Module Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'dots', 'diamond', 'connected']
+    testValues: ['square', 'rounded', 'dots', 'diamond', 'connected'],
   },
   'render.finderStyle': {
     section: 'Render',
@@ -592,7 +610,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Finder Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'circle']
+    testValues: ['square', 'rounded', 'circle'],
   },
   'render.alignmentStyle': {
     section: 'Render',
@@ -600,7 +618,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Alignment Style',
     expectsQRChange: true,
-    testValues: ['match_finder', 'square', 'rounded', 'circle']
+    testValues: ['match_finder', 'square', 'rounded', 'circle'],
   },
   'render.timingStyle': {
     section: 'Render',
@@ -608,7 +626,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Timing Style',
     expectsQRChange: true,
-    testValues: ['match_module', 'solid', 'dashed']
+    testValues: ['match_module', 'solid', 'dashed'],
   },
   'render.eyeOuterStyle': {
     section: 'Render',
@@ -616,7 +634,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Eye Outer Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'circle']
+    testValues: ['square', 'rounded', 'circle'],
   },
   'render.eyeInnerStyle': {
     section: 'Render',
@@ -624,7 +642,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Eye Inner Style',
     expectsQRChange: true,
-    testValues: ['square', 'rounded', 'circle']
+    testValues: ['square', 'rounded', 'circle'],
   },
   'render.eyeScale': {
     section: 'Render',
@@ -632,7 +650,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Eye Scale',
     expectsQRChange: true,
-    testValues: [80, 100, 120]
+    testValues: [80, 100, 120],
   },
   'render.moduleGapPercent': {
     section: 'Render',
@@ -640,7 +658,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Module Gap',
     expectsQRChange: true,
-    testValues: [0, 10, 20, 30]
+    testValues: [0, 10, 20, 30],
   },
   'render.gapMode': {
     section: 'Render',
@@ -648,7 +666,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Gap Mode',
     expectsQRChange: true,
-    testValues: ['none', 'inset', 'stroke', 'negative_space']
+    testValues: ['none', 'inset', 'stroke', 'negative_space'],
   },
   'render.cornerRadius': {
     section: 'Render',
@@ -656,7 +674,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Corner Radius',
     expectsQRChange: true,
-    testValues: [0, 25, 50]
+    testValues: [0, 25, 50],
   },
   'render.dotRotationDeg': {
     section: 'Render',
@@ -664,7 +682,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Dot Rotation',
     expectsQRChange: true,
-    testValues: [0, 15, 45]
+    testValues: [0, 15, 45],
   },
   'render.fgColor': {
     section: 'Render',
@@ -672,7 +690,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'color',
     label: 'Foreground Color',
     expectsQRChange: true,
-    testValues: ['#000000', '#FF0000', '#0000FF']
+    testValues: ['#000000', '#FF0000', '#0000FF'],
   },
   'render.bgColor': {
     section: 'Render',
@@ -680,14 +698,14 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'color',
     label: 'Background Color',
     expectsQRChange: true,
-    testValues: ['#FFFFFF', '#FFFF00', '#00FF00']
+    testValues: ['#FFFFFF', '#FFFF00', '#00FF00'],
   },
   'render.bgTransparent': {
     section: 'Render',
     tier: 'advanced',
     type: 'switch',
     label: 'Transparent Background',
-    expectsQRChange: true
+    expectsQRChange: true,
   },
   'render.gradient.type': {
     section: 'Render',
@@ -695,7 +713,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Gradient Type',
     expectsQRChange: true,
-    testValues: ['none', 'linear', 'radial', 'conic']
+    testValues: ['none', 'linear', 'radial', 'conic'],
   },
   // Note: gradient.angle is not a separate field - gradient config uses stops array
   'render.perModuleColorMode': {
@@ -704,7 +722,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Per-Module Color',
     expectsQRChange: true,
-    testValues: ['solid', 'by_brightness', 'by_position', 'by_overlay', 'by_cluster']
+    testValues: ['solid', 'by_brightness', 'by_position', 'by_overlay', 'by_cluster'],
   },
   'render.frameStyle': {
     section: 'Render',
@@ -712,7 +730,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Frame Style',
     expectsQRChange: true,
-    testValues: ['none', 'rounded_frame', 'sticker', 'tag']
+    testValues: ['none', 'rounded_frame', 'sticker', 'tag'],
   },
   'render.frameText': {
     section: 'Render',
@@ -720,7 +738,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Frame Text',
     expectsQRChange: true,
-    conditional: 'frameStyle !== none'
+    conditional: 'frameStyle !== none',
   },
   'render.crispEdges': {
     section: 'Render',
@@ -728,7 +746,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Crisp Edges',
     expectsQRChange: true,
-    notes: 'Affects canvas rendering hint'
+    notes: 'Affects canvas rendering hint',
   },
   'render.pixelSnap': {
     section: 'Render',
@@ -736,7 +754,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Pixel Snap',
     expectsQRChange: true,
-    testValues: ['floor', 'round', 'ceil', 'none']
+    testValues: ['floor', 'round', 'ceil', 'none'],
   },
   'render.contrastGuard': {
     section: 'Render',
@@ -744,7 +762,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Contrast Guard',
     expectsQRChange: false,
-    notes: 'Affects warnings only'
+    notes: 'Affects warnings only',
   },
   'render.minContrastRatio': {
     section: 'Render',
@@ -754,7 +772,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: [3, 4.5, 7],
     conditional: 'contrastGuard enabled',
-    notes: 'Affects warnings only'
+    notes: 'Affects warnings only',
   },
 
   // ==========================================
@@ -767,7 +785,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Speed',
     expectsQRChange: false,
     testValues: [50, 100, 200],
-    notes: 'Playback speed only, does not change static QR'
+    notes: 'Playback speed only, does not change static QR',
   },
   'animation.loop': {
     section: 'Animation',
@@ -775,7 +793,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Loop',
     expectsQRChange: false,
-    notes: 'Playback setting only'
+    notes: 'Playback setting only',
   },
   'animation.bounce': {
     section: 'Animation',
@@ -783,7 +801,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Bounce',
     expectsQRChange: false,
-    notes: 'Playback setting only'
+    notes: 'Playback setting only',
   },
   'animation.startFrame': {
     section: 'Animation',
@@ -792,7 +810,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Start Frame',
     expectsQRChange: true,
     testValues: [0, 5, 10],
-    conditional: 'animated source loaded'
+    conditional: 'animated source loaded',
   },
   'animation.maxFrames': {
     section: 'Animation',
@@ -801,7 +819,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Max Frames',
     expectsQRChange: true,
     testValues: [0, 10, 50],
-    conditional: 'animated source loaded'
+    conditional: 'animated source loaded',
   },
   'animation.frameStep': {
     section: 'Animation',
@@ -810,7 +828,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Frame Step',
     expectsQRChange: true,
     testValues: [1, 2, 5],
-    conditional: 'animated source loaded'
+    conditional: 'animated source loaded',
   },
   'animation.interpolate': {
     section: 'Animation',
@@ -819,7 +837,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Interpolation',
     expectsQRChange: true,
     testValues: ['none', 'crossfade', 'morph'],
-    conditional: 'animated source loaded'
+    conditional: 'animated source loaded',
   },
   'animation.temporalDither': {
     section: 'Animation',
@@ -828,7 +846,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Temporal Dither',
     expectsQRChange: true,
     testValues: ['off', 'blue_noise', 'flicker_safe'],
-    conditional: 'animated source loaded'
+    conditional: 'animated source loaded',
   },
   'animation.pattern': {
     section: 'Animation',
@@ -836,7 +854,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'select',
     label: 'Animation Pattern',
     expectsQRChange: true,
-    testValues: ['none', 'pulse', 'wave', 'scanline', 'shimmer', 'drift']
+    testValues: ['none', 'pulse', 'wave', 'scanline', 'shimmer', 'drift'],
   },
   'animation.moduleJitterPx': {
     section: 'Animation',
@@ -844,14 +862,14 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'slider',
     label: 'Module Jitter',
     expectsQRChange: true,
-    testValues: [0, 1, 3]
+    testValues: [0, 1, 3],
   },
   'animation.colorCycle': {
     section: 'Animation',
     tier: 'professional',
     type: 'switch',
     label: 'Color Cycle',
-    expectsQRChange: true
+    expectsQRChange: true,
   },
   'animation.seed': {
     section: 'Animation',
@@ -859,7 +877,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Random Seed',
     expectsQRChange: true,
-    notes: 'Changes random-based effects'
+    notes: 'Changes random-based effects',
   },
 
   // ==========================================
@@ -872,7 +890,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Format',
     expectsQRChange: false,
     testValues: ['png', 'webp', 'gif', 'svg'],
-    notes: 'Export format only, does not affect preview'
+    notes: 'Export format only, does not affect preview',
   },
   'output.widthPx': {
     section: 'Output',
@@ -880,7 +898,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Width',
     expectsQRChange: false,
-    notes: 'Export dimension only'
+    notes: 'Export dimension only',
   },
   'output.heightPx': {
     section: 'Output',
@@ -888,7 +906,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Height',
     expectsQRChange: false,
-    notes: 'Export dimension only'
+    notes: 'Export dimension only',
   },
   'output.quality': {
     section: 'Output',
@@ -898,7 +916,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: [0.5, 0.8, 1.0],
     conditional: 'format === webp',
-    notes: 'Export quality only'
+    notes: 'Export quality only',
   },
   'output.filename': {
     section: 'Output',
@@ -906,7 +924,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Filename',
     expectsQRChange: false,
-    notes: 'Export filename only'
+    notes: 'Export filename only',
   },
   'output.gifPaletteSize': {
     section: 'Output',
@@ -916,7 +934,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: [16, 64, 256],
     conditional: 'format === gif',
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.gifQuantizer': {
     section: 'Output',
@@ -926,7 +944,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: ['median_cut', 'neuquant', 'octree'],
     conditional: 'format === gif',
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.gifDither': {
     section: 'Output',
@@ -936,7 +954,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: ['off', 'floyd', 'ordered'],
     conditional: 'format === gif',
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.svgTrueVector': {
     section: 'Output',
@@ -945,7 +963,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'True Vector SVG',
     expectsQRChange: false,
     conditional: 'format === svg',
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.svgShapePrecision': {
     section: 'Output',
@@ -955,7 +973,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: ['pixel', 'precise'],
     conditional: 'format === svg && svgTrueVector',
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.svgEmbedRasterOverlay': {
     section: 'Output',
@@ -964,7 +982,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Embed Raster Overlay',
     expectsQRChange: false,
     conditional: 'format === svg',
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.bgOverride': {
     section: 'Output',
@@ -972,7 +990,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'color',
     label: 'Background Override',
     expectsQRChange: false,
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.gifTransparentColor': {
     section: 'Output',
@@ -981,7 +999,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'GIF Transparent Color',
     expectsQRChange: false,
     conditional: 'format === gif',
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.dpi': {
     section: 'Output',
@@ -990,7 +1008,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'DPI',
     expectsQRChange: false,
     testValues: [72, 150, 300],
-    notes: 'Export metadata only'
+    notes: 'Export metadata only',
   },
   'output.includeQuietZone': {
     section: 'Output',
@@ -998,7 +1016,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Include Quiet Zone',
     expectsQRChange: false,
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
   'output.formatExtra': {
     section: 'Output',
@@ -1007,7 +1025,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Additional Format',
     expectsQRChange: false,
     testValues: ['none', 'eps', 'animated_webp'],
-    notes: 'Export setting only'
+    notes: 'Export setting only',
   },
 
   // ==========================================
@@ -1018,7 +1036,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     tier: 'professional',
     type: 'switch',
     label: 'Enable Watermark',
-    expectsQRChange: true
+    expectsQRChange: true,
   },
   'watermark.kind': {
     section: 'Watermark',
@@ -1027,7 +1045,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Watermark Type',
     expectsQRChange: true,
     testValues: ['text', 'image', 'pattern'],
-    conditional: 'watermark.enabled'
+    conditional: 'watermark.enabled',
   },
   'watermark.text': {
     section: 'Watermark',
@@ -1035,7 +1053,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Watermark Text',
     expectsQRChange: true,
-    conditional: 'watermark.enabled && kind === text'
+    conditional: 'watermark.enabled && kind === text',
   },
   'watermark.position': {
     section: 'Watermark',
@@ -1044,7 +1062,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Position',
     expectsQRChange: true,
     testValues: ['center', 'corners', 'edges', 'behind', 'quiet_zone'],
-    conditional: 'watermark.enabled'
+    conditional: 'watermark.enabled',
   },
   'watermark.opacity': {
     section: 'Watermark',
@@ -1053,7 +1071,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Opacity',
     expectsQRChange: true,
     testValues: [25, 50, 75, 100],
-    conditional: 'watermark.enabled'
+    conditional: 'watermark.enabled',
   },
   'watermark.blend': {
     section: 'Watermark',
@@ -1062,7 +1080,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Blend Mode',
     expectsQRChange: true,
     testValues: ['normal', 'multiply', 'screen', 'overlay'],
-    conditional: 'watermark.enabled'
+    conditional: 'watermark.enabled',
   },
 
   // ==========================================
@@ -1075,7 +1093,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Safety Mode',
     expectsQRChange: false,
     testValues: ['off', 'balanced', 'strict'],
-    notes: 'May trigger auto-adjustments but not direct QR change'
+    notes: 'May trigger auto-adjustments but not direct QR change',
   },
   'safety.minModulePx': {
     section: 'Safety',
@@ -1085,7 +1103,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: [1, 2, 4],
     conditional: 'safety.mode !== off',
-    notes: 'Validation threshold only'
+    notes: 'Validation threshold only',
   },
   'safety.minQuietZoneModules': {
     section: 'Safety',
@@ -1095,7 +1113,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     expectsQRChange: false,
     testValues: [2, 4, 6],
     conditional: 'safety.mode !== off',
-    notes: 'Validation threshold only'
+    notes: 'Validation threshold only',
   },
   'safety.lockFinders': {
     section: 'Safety',
@@ -1104,7 +1122,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Lock Finders',
     expectsQRChange: true,
     conditional: 'safety.mode !== off',
-    notes: 'Affects overlay behavior'
+    notes: 'Affects overlay behavior',
   },
   'safety.lockTiming': {
     section: 'Safety',
@@ -1113,7 +1131,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Lock Timing',
     expectsQRChange: true,
     conditional: 'safety.mode !== off',
-    notes: 'Affects overlay behavior'
+    notes: 'Affects overlay behavior',
   },
   'safety.lockAlign': {
     section: 'Safety',
@@ -1122,7 +1140,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Lock Alignment',
     expectsQRChange: true,
     conditional: 'safety.mode !== off',
-    notes: 'Affects overlay behavior'
+    notes: 'Affects overlay behavior',
   },
   'safety.lockFormat': {
     section: 'Safety',
@@ -1131,7 +1149,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Lock Format',
     expectsQRChange: true,
     conditional: 'safety.mode !== off',
-    notes: 'Affects overlay behavior'
+    notes: 'Affects overlay behavior',
   },
   'safety.lockVersion': {
     section: 'Safety',
@@ -1140,7 +1158,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Lock Version',
     expectsQRChange: true,
     conditional: 'safety.mode !== off',
-    notes: 'Affects overlay behavior'
+    notes: 'Affects overlay behavior',
   },
   // QA section
   'qa.contrastCheck': {
@@ -1149,7 +1167,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Contrast Check',
     expectsQRChange: false,
-    notes: 'Diagnostic only'
+    notes: 'Diagnostic only',
   },
   'qa.showHeatmap': {
     section: 'Safety',
@@ -1157,7 +1175,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Show Heatmap',
     expectsQRChange: true,
-    notes: 'Visual overlay for debugging'
+    notes: 'Visual overlay for debugging',
   },
   'qa.simulateBlurPx': {
     section: 'Safety',
@@ -1166,7 +1184,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Simulate Blur',
     expectsQRChange: true,
     testValues: [0, 2, 5],
-    notes: 'Preview simulation effect'
+    notes: 'Preview simulation effect',
   },
   'qa.simulateNoise': {
     section: 'Safety',
@@ -1175,7 +1193,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Simulate Noise',
     expectsQRChange: true,
     testValues: [0, 10, 25],
-    notes: 'Preview simulation effect'
+    notes: 'Preview simulation effect',
   },
   'qa.simulateRotationDeg': {
     section: 'Safety',
@@ -1184,7 +1202,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'Simulate Rotation',
     expectsQRChange: true,
     testValues: [0, 15, 30],
-    notes: 'Preview simulation effect'
+    notes: 'Preview simulation effect',
   },
   // Auto-tuning
   'auto.pickVersion': {
@@ -1193,7 +1211,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Auto Pick Version',
     expectsQRChange: true,
-    notes: 'May change QR if version auto-adjusted'
+    notes: 'May change QR if version auto-adjusted',
   },
   'auto.pickEcc': {
     section: 'Safety',
@@ -1201,7 +1219,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Auto Pick ECC',
     expectsQRChange: true,
-    notes: 'May change QR if ECC auto-adjusted'
+    notes: 'May change QR if ECC auto-adjusted',
   },
   'auto.reduceIntensityUntilSafe': {
     section: 'Safety',
@@ -1209,7 +1227,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Auto Reduce Intensity',
     expectsQRChange: true,
-    notes: 'May reduce overlay intensity'
+    notes: 'May reduce overlay intensity',
   },
   // ECC-Aware
   'overlay.eccAwareEnabled': {
@@ -1218,7 +1236,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'ECC-Aware Mode',
     expectsQRChange: true,
-    notes: 'Changes how overlay is applied'
+    notes: 'Changes how overlay is applied',
   },
   'overlay.eccAwareRiskBudget': {
     section: 'Safety',
@@ -1227,7 +1245,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'ECC Risk Budget',
     expectsQRChange: true,
     testValues: [25, 50, 75],
-    conditional: 'overlay.eccAwareEnabled'
+    conditional: 'overlay.eccAwareEnabled',
   },
   'overlay.eccAwareWeightMap': {
     section: 'Safety',
@@ -1236,7 +1254,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     label: 'ECC Weight Map',
     expectsQRChange: true,
     testValues: ['distance_to_finders', 'block_heatmap', 'empirical_scan_heatmap'],
-    conditional: 'overlay.eccAwareEnabled'
+    conditional: 'overlay.eccAwareEnabled',
   },
 
   // ==========================================
@@ -1248,7 +1266,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Title',
     expectsQRChange: false,
-    notes: 'Export metadata only'
+    notes: 'Export metadata only',
   },
   'metadata.author': {
     section: 'Metadata',
@@ -1256,7 +1274,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Author',
     expectsQRChange: false,
-    notes: 'Export metadata only'
+    notes: 'Export metadata only',
   },
   'metadata.copyright': {
     section: 'Metadata',
@@ -1264,7 +1282,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'Copyright',
     expectsQRChange: false,
-    notes: 'Export metadata only'
+    notes: 'Export metadata only',
   },
   'metadata.license': {
     section: 'Metadata',
@@ -1272,7 +1290,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'input',
     label: 'License',
     expectsQRChange: false,
-    notes: 'Export metadata only'
+    notes: 'Export metadata only',
   },
   'metadata.description': {
     section: 'Metadata',
@@ -1280,7 +1298,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'textarea',
     label: 'Description',
     expectsQRChange: false,
-    notes: 'Export metadata only'
+    notes: 'Export metadata only',
   },
   'metadata.creationTime': {
     section: 'Metadata',
@@ -1288,7 +1306,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Include Creation Time',
     expectsQRChange: false,
-    notes: 'Export metadata only'
+    notes: 'Export metadata only',
   },
 
   // ==========================================
@@ -1300,7 +1318,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Direct Link',
     expectsQRChange: false,
-    notes: 'URL generation only'
+    notes: 'URL generation only',
   },
   'share.embedHtml': {
     section: 'Share',
@@ -1308,7 +1326,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Embed HTML',
     expectsQRChange: false,
-    notes: 'URL generation only'
+    notes: 'URL generation only',
   },
   'share.encodeMoreParams': {
     section: 'Share',
@@ -1316,7 +1334,7 @@ export const SETTINGS_REGISTRY: SettingsRegistry = {
     type: 'switch',
     label: 'Encode All Params',
     expectsQRChange: false,
-    notes: 'URL generation only'
+    notes: 'URL generation only',
   },
 };
 
@@ -1327,7 +1345,7 @@ export function getSettingsForTier(tier: Tier): SettingsRegistry {
   const result: SettingsRegistry = {};
   const tierOrder = ['basic', 'advanced', 'professional'];
   const tierIndex = tierOrder.indexOf(tier);
-  
+
   for (const [key, setting] of Object.entries(SETTINGS_REGISTRY)) {
     const settingTierIndex = tierOrder.indexOf(setting.tier);
     if (settingTierIndex <= tierIndex) {
@@ -1406,7 +1424,7 @@ export function getRegistryStats(): {
     expectsQRChange: 0,
     noQRChange: 0,
   };
-  
+
   for (const setting of Object.values(SETTINGS_REGISTRY)) {
     stats.total++;
     stats.byTier[setting.tier]++;
@@ -1418,7 +1436,7 @@ export function getRegistryStats(): {
       stats.noQRChange++;
     }
   }
-  
+
   return stats;
 }
 

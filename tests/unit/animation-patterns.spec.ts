@@ -2,7 +2,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 type MockCtx = {
@@ -14,12 +20,7 @@ type MockCtx = {
 
 function makeCanvas(width = 2, height = 2, withCtx = true, pixels?: number[]): HTMLCanvasElement {
   const px = new Uint8ClampedArray(
-    pixels ?? [
-      20, 30, 40, 255,
-      200, 180, 160, 255,
-      50, 60, 70, 255,
-      150, 140, 130, 255,
-    ]
+    pixels ?? [20, 30, 40, 255, 200, 180, 160, 255, 50, 60, 70, 255, 150, 140, 130, 255]
   );
   const ctx: MockCtx = {
     drawImage: vi.fn(),
@@ -125,9 +126,24 @@ describe('animation-patterns', () => {
     }) as any);
 
     const frames = [
-      makeCanvas(2, 2, true, [10, 20, 30, 255, 40, 50, 60, 255, 70, 80, 90, 255, 100, 110, 120, 255]),
-      makeCanvas(2, 2, true, [120, 110, 100, 255, 90, 80, 70, 255, 60, 50, 40, 255, 30, 20, 10, 255]),
-      makeCanvas(2, 2, true, [30, 30, 30, 255, 60, 60, 60, 255, 90, 90, 90, 255, 120, 120, 120, 255]),
+      makeCanvas(
+        2,
+        2,
+        true,
+        [10, 20, 30, 255, 40, 50, 60, 255, 70, 80, 90, 255, 100, 110, 120, 255]
+      ),
+      makeCanvas(
+        2,
+        2,
+        true,
+        [120, 110, 100, 255, 90, 80, 70, 255, 60, 50, 40, 255, 30, 20, 10, 255]
+      ),
+      makeCanvas(
+        2,
+        2,
+        true,
+        [30, 30, 30, 255, 60, 60, 60, 255, 90, 90, 90, 255, 120, 120, 120, 255]
+      ),
     ];
 
     const linear = mod.interpolateAnimationFramesWithEasing(frames as any, 5, 'linear');

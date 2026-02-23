@@ -27,7 +27,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history needed for subtree
+          fetch-depth: 0 # Full history needed for subtree
 
       - name: Setup SSH for public repo
         env:
@@ -40,7 +40,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$I18N_DEPLOY_KEY" > ~/.ssh/id_ed25519_public
           chmod 600 ~/.ssh/id_ed25519_public
-          
+
           # Configure SSH to use this key for github-public host
           cat >> ~/.ssh/config << EOF
           Host github-public
@@ -50,7 +50,7 @@ jobs:
             IdentitiesOnly yes
             StrictHostKeyChecking no
           EOF
-          
+
           chmod 600 ~/.ssh/config
 
       - name: Configure git
@@ -71,7 +71,7 @@ jobs:
           # NOTE: Branch protection on static/locales branches must allow force pushes
           # from the deploy key, or be disabled. Configure at:
           # https://github.com/maldous/anqr-i18n/settings/branches
-          
+
           echo "Pushing static/txt to public repo..."
           STATIC_SHA=$(git subtree split --prefix=src/i18n/static/txt)
           if [ -n "$STATIC_SHA" ]; then
@@ -86,7 +86,7 @@ jobs:
           else
             echo "No static content to push"
           fi
-          
+
           echo "Pushing locales/txt to public repo..."
           LOCALES_SHA=$(git subtree split --prefix=src/i18n/locales/txt)
           if [ -n "$LOCALES_SHA" ]; then
@@ -101,5 +101,5 @@ jobs:
           else
             echo "No locales content to push"
           fi
-          
+
           echo "i18n sync complete!"

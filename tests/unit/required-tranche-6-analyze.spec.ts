@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const TARGET_SECTIONS = ["Analyze Section"] as const;
+const TARGET_SECTIONS = ['Analyze Section'] as const;
 
 const EXPLICIT_IDS = [
-  "analyze-original-image",
-  "analyze-reproduced-canvas",
-  "analyze-summary-bar",
+  'analyze-original-image',
+  'analyze-reproduced-canvas',
+  'analyze-summary-bar',
 ] as const;
 
 function parseSectionIds(): string[] {
@@ -40,7 +40,7 @@ function parseSectionIds(): string[] {
   return [...new Set(out)].sort();
 }
 
-describe("Required Mapping Tranche 6: Analyze explicit IDs", () => {
+describe('Required Mapping Tranche 6: Analyze explicit IDs', () => {
   it('contains non-empty unique explicit IDs', () => {
     expect(EXPLICIT_IDS.length).toBeGreaterThan(0);
     expect(new Set(EXPLICIT_IDS).size).toBe(EXPLICIT_IDS.length);

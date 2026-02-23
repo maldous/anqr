@@ -5,6 +5,7 @@ File export functionality for PNG, GIF, SVG, and vector SVG.
 ## Purpose
 
 This module handles exporting QR codes to various file formats:
+
 - Raster formats: PNG, WebP, JPEG
 - Animated formats: GIF
 - Vector formats: SVG, Vector SVG (true vector)

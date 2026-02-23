@@ -5,6 +5,7 @@ QR code analysis, scanning, validation, and safety checking.
 ## Purpose
 
 This module provides comprehensive QR code analysis:
+
 - Decoding QR codes from images
 - Content type detection
 - Safety and scannability analysis
@@ -21,11 +22,11 @@ This module provides comprehensive QR code analysis:
 ### High-Level Analysis
 
 ```typescript
-import { 
-  analyzeQRCode, 
-  analyzeQRFromCanvas, 
-  analyzeQRFromFile, 
-  analyzeQRFromUrl 
+import {
+  analyzeQRCode,
+  analyzeQRFromCanvas,
+  analyzeQRFromFile,
+  analyzeQRFromUrl,
 } from '@/modules/qr-analyzer';
 import type { QRAnalysisResult } from '@/modules/qr-analyzer';
 
@@ -58,11 +59,11 @@ const wifiType = detectContentType('WIFI:S:MyNetwork;T:WPA;P:secret;;'); // 'wif
 ### Safety Analysis
 
 ```typescript
-import { 
-  analyzeQR, 
-  validateModuleSize, 
-  validateQuietZone, 
-  validateOverlayIntensity 
+import {
+  analyzeQR,
+  validateModuleSize,
+  validateQuietZone,
+  validateOverlayIntensity,
 } from '@/modules/qr-analyzer';
 import type { SafetyOptions, AnalysisResult } from '@/modules/qr-analyzer';
 
@@ -80,11 +81,7 @@ if (analysis.warnings.length > 0) {
 ### Scanning and Validation
 
 ```typescript
-import { 
-  scanCanvas, 
-  validateQRCode, 
-  validateQRCodeRobust 
-} from '@/modules/qr-analyzer';
+import { scanCanvas, validateQRCode, validateQRCodeRobust } from '@/modules/qr-analyzer';
 
 const scanResult = await scanCanvas(canvas);
 const isValid = await validateQRCode(canvas, expectedContent);
@@ -119,18 +116,18 @@ import { validateQRCodeRobust, analyzeQR } from '@/modules/qr-analyzer';
 async function validateBeforeExport(canvas: HTMLCanvasElement, content: string) {
   // Check if QR code is scannable
   const validation = await validateQRCodeRobust(canvas, content);
-  
+
   if (!validation.valid) {
     throw new Error('QR code is not scannable');
   }
-  
+
   // Check for safety issues
   const analysis = analyzeQR(qrMatrix, { mode: 'strict' });
-  
+
   if (analysis.issues.length > 0) {
     console.warn('Safety issues:', analysis.issues);
   }
-  
+
   return true;
 }
 ```
@@ -142,7 +139,7 @@ import { analyzeQRFromFile } from '@/modules/qr-analyzer';
 
 async function handleUpload(file: File) {
   const result = await analyzeQRFromFile(file);
-  
+
   console.log('Content:', result.content);
   console.log('Type:', result.contentType);
   console.log('Version:', result.version);
