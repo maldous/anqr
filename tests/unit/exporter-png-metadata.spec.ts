@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 import {
@@ -55,7 +61,9 @@ describe('exporter png metadata', () => {
     const invalidResult = await embedPngMetadata(invalidSig, { title: 'X' });
     expect(invalidResult).toBe(invalidSig);
 
-    const noIend = new Blob([new Uint8Array(Buffer.from('89504e470d0a1a0a', 'hex'))], { type: 'image/png' });
+    const noIend = new Blob([new Uint8Array(Buffer.from('89504e470d0a1a0a', 'hex'))], {
+      type: 'image/png',
+    });
     const noIendResult = await embedPngMetadata(noIend, { title: 'X' });
     expect(noIendResult).toBe(noIend);
   });

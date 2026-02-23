@@ -9,16 +9,8 @@
     "src/modules/**/index.ts"
   ],
   "ignoreExportsUsedInFile": true,
-  "project": [
-    "src/**/*.{ts,tsx}",
-    "netlify/**/*.ts"
-  ],
-  "ignore": [
-    "android/**",
-    ".netlify/**",
-    "src/i18n/static/*/*.ts",
-    "src/i18n/locales/*.json"
-  ],
+  "project": ["src/**/*.{ts,tsx}", "netlify/**/*.ts"],
+  "ignore": ["android/**", ".netlify/**", "src/i18n/static/*/*.ts", "src/i18n/locales/*.json"],
   "ignoreDependencies": [
     "@commitlint/cli",
     "cspell",
@@ -31,6 +23,9 @@
     "serve",
     "type-coverage",
     "@capacitor/filesystem",
-    "@capacitor/splash-screen"
+    "@capacitor/splash-screen",
+    "oxc-parser",
+    "oxc-transform",
+    "oxc-resolver"
   ]
 }

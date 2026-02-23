@@ -542,22 +542,27 @@ Last updated: 2026-02-23 00:50:00 UTC
 ## User Requests
 
 1. Read `gallery-idea.md` and fix `make gallery:local` output issues:
+
 - QR codes look the same
 - some outputs have no QR code
 - animated GIF outputs are not actually animated
 
 2. Treat `gallery-idea.md` as new/untrusted:
+
 - app/api path has not been tested either
 
 3. Consider possible fundamental regressions in rendering libraries:
+
 - tests passed in the past
 - recent API rendering work may have introduced regressions
 
 4. Read project status docs:
+
 - `knowledge.md`
 - `tbd.md`
 
 5. Rework `Makefile` organization (suggested sections):
+
 - Meta/help
 - Globals/exports
 - Discovery/tool checks
@@ -580,66 +585,83 @@ Last updated: 2026-02-23 00:50:00 UTC
 8. Focus on local gallery generation first and keep `codex.md` up to date.
 
 9. Investigate visual quality issue:
+
 - nooverlay default looks non-crisp / resampled.
 
 10. User follow-up:
+
 - artwork output quality is unacceptable
 - use existing QR-Art script and test on `public/trump.png`
 
 11. Investigate QR-Art regression history:
+
 - compare behavior around Feb 7 commits where output looked better.
 
 12. Read analyzer snapshot file:
+
 - `/home/user/Downloads/qr-analysis-1771595197804.json`
 
 13. Correct QR-Art payload semantics:
+
 - Base payload is `https://whitehouse.gov`
 - QR-Art appends `#<numeric suffix>` in mixed mode (do not pre-supply full `#...` payload for this flow)
 
 14. Ensure local/API artwork actually works again:
+
 - `artwork__art-trump-dots-circle.png` should render correctly
 - animated GIF artwork should stay animated
 
 15. Expand permutations consistently across categories:
+
 - include full animation option families (wave/shimmer/etc, color-cycle, bounce/reverse, interpolation, temporal dither, easing, seed)
 - include watermark/gradient/finder-eye showcases
 - keep options real (avoid no-op values)
 
 16. Fix frame behavior and typography:
+
 - framed QR should stay centered when text is present
 - frame text should be cleaner, larger, sans-serif
 
 17. New critical bug report:
+
 - animated overlays with animation effects (`animPattern`, `interp`, `colorCycle`) only apply effect on first frame / output behavior appears wrong
 
 18. Confirm there is a deterministic mapping from encoding request options to output filename for gallery page generation.
 
 19. Deferred defect report to track (do not fix yet):
+
 - `overlay__ditherKind-ordered_clustered.png` and similar dither variants (e.g. `overlay__diffKernel-sierra.png`) show inconsistent vertical dither scale, with visually larger modules toward the top vs bottom.
 
 20. Deferred defect report to track (do not fix yet):
+
 - combo-animation overlays (example: `overlay__ov-x-anim-king-subpixel-pulse.gif`) show glitchy/unstable frame behavior.
 
 21. Additional feedback to track (do not interrupt baseline):
+
 - artwork on `logo` does not look good
 - exclude `logo` from artwork set (apply after baseline is complete)
 
 22. Baseline execution preference update:
+
 - use Netlify-max timeout for long-running artwork scenarios (`15 minutes`)
 - for local rendering, use high parallelism (resources are available)
 
 23. Additional feedback to track for future artwork curation:
+
 - `king.gif` artwork does not look good
 - exclude `king.gif` from future artwork showcase set (same as `logo`)
 
 24. Similarity-analysis guardrail:
+
 - exclude user-reported glitched GIFs from current similarity decisions
 - after glitch fix, re-render and run a second similarity pass including fixed GIFs
 
 25. Additional glitch exclusion feedback:
+
 - include other known glitchy GIF families in exclusions (not only artwork king range)
 
 26. Similarity strictness adjustment:
+
 - keep the full set ambition (1000 images)
 - if needed, relax similarity strictness (do not over-prune)
 
@@ -1131,7 +1153,7 @@ Last updated: 2026-02-23 00:50:00 UTC
     - visual utility low, consistent with user feedback.
 
 - [x] Repro insight:
-  - repeated isolated renders of the *same* scenario (`artwork__art-dance-anim-tempDither-blue_noise--763`) produce materially different frame-hash diversity (`unique` ranged `12..19` across four runs), even with same params.
+  - repeated isolated renders of the _same_ scenario (`artwork__art-dance-anim-tempDither-blue_noise--763`) produce materially different frame-hash diversity (`unique` ranged `12..19` across four runs), even with same params.
   - this indicates nondeterministic behavior still exists in the artwork animation pipeline.
   - however, severe all-white-frame corruption was not reproduced in the isolated loop (`blank_frames=0` each run).
 

@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ======================== ARRAYS ========================
@@ -456,13 +462,33 @@ describe('CharacterSetECI', () => {
   it('covers all ECI constants', async () => {
     const ECI = await getECI();
     const ecis = [
-      ECI.Cp437, ECI.ISO8859_1, ECI.ISO8859_2, ECI.ISO8859_3,
-      ECI.ISO8859_4, ECI.ISO8859_5, ECI.ISO8859_6, ECI.ISO8859_7,
-      ECI.ISO8859_8, ECI.ISO8859_9, ECI.ISO8859_10, ECI.ISO8859_11,
-      ECI.ISO8859_13, ECI.ISO8859_14, ECI.ISO8859_15, ECI.ISO8859_16,
-      ECI.SJIS, ECI.Cp1250, ECI.Cp1251, ECI.Cp1252, ECI.Cp1256,
-      ECI.UnicodeBigUnmarked, ECI.UTF8, ECI.ASCII, ECI.Big5,
-      ECI.GB18030, ECI.EUC_KR,
+      ECI.Cp437,
+      ECI.ISO8859_1,
+      ECI.ISO8859_2,
+      ECI.ISO8859_3,
+      ECI.ISO8859_4,
+      ECI.ISO8859_5,
+      ECI.ISO8859_6,
+      ECI.ISO8859_7,
+      ECI.ISO8859_8,
+      ECI.ISO8859_9,
+      ECI.ISO8859_10,
+      ECI.ISO8859_11,
+      ECI.ISO8859_13,
+      ECI.ISO8859_14,
+      ECI.ISO8859_15,
+      ECI.ISO8859_16,
+      ECI.SJIS,
+      ECI.Cp1250,
+      ECI.Cp1251,
+      ECI.Cp1252,
+      ECI.Cp1256,
+      ECI.UnicodeBigUnmarked,
+      ECI.UTF8,
+      ECI.ASCII,
+      ECI.Big5,
+      ECI.GB18030,
+      ECI.EUC_KR,
     ];
     for (const eci of ecis) {
       expect(eci.getName().length).toBeGreaterThan(0);
@@ -604,7 +630,10 @@ describe('currentTimeMillis', () => {
 describe('pointDistance', () => {
   it('calculates distance if exported', async () => {
     const mod = await import('../../src/modules/qr-decoder/util');
-    if ('pointDistance' in mod && typeof (mod as Record<string, unknown>).pointDistance === 'function') {
+    if (
+      'pointDistance' in mod &&
+      typeof (mod as Record<string, unknown>).pointDistance === 'function'
+    ) {
       const fn = (mod as Record<string, unknown>).pointDistance as (
         p1: { x: number; y: number },
         p2: { x: number; y: number }

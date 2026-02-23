@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const TARGET_SECTIONS = ["App Shell & Navigation"] as const;
+const TARGET_SECTIONS = ['App Shell & Navigation'] as const;
 
 const EXPLICIT_IDS = [
-  "export-button",
-  "qr-preview",
-  "sidebar",
-  "sidebar-scroll",
-  "welcome-get-started",
+  'export-button',
+  'qr-preview',
+  'sidebar',
+  'sidebar-scroll',
+  'welcome-get-started',
 ] as const;
 
 function parseSectionIds(): string[] {
@@ -42,7 +42,7 @@ function parseSectionIds(): string[] {
   return [...new Set(out)].sort();
 }
 
-describe("Required Mapping Tranche 4: App shell explicit IDs", () => {
+describe('Required Mapping Tranche 4: App shell explicit IDs', () => {
   it('contains non-empty unique explicit IDs', () => {
     expect(EXPLICIT_IDS.length).toBeGreaterThan(0);
     expect(new Set(EXPLICIT_IDS).size).toBe(EXPLICIT_IDS.length);

@@ -5,7 +5,13 @@ const isNativePlatform = vi.fn(() => false);
 const saveFileNative = vi.fn();
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform } }));
 vi.mock('../../src/modules/browser-io/native-save', () => ({ saveFileNative }));

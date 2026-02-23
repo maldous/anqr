@@ -30,4 +30,3 @@ describe('animation playback delay resolver', () => {
     expect(delay).toBe(50);
   });
 });
-

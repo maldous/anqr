@@ -36,30 +36,24 @@ function collectTargets(): string[] {
     if (stat.isDirectory()) files.push(...walk(abs));
     else files.push(abs);
   }
-  return [...new Set(files)]
-    .filter((f) => !f.endsWith('.d.ts'))
-    .sort((a, b) => a.localeCompare(b));
+  return [...new Set(files)].filter((f) => !f.endsWith('.d.ts')).sort((a, b) => a.localeCompare(b));
 }
 
 describe('Module import smoke', () => {
-  it(
-    'imports all covered module files without top-level runtime errors',
-    async () => {
-      const targets = collectTargets();
-      const failures: string[] = [];
+  it('imports all covered module files without top-level runtime errors', async () => {
+    const targets = collectTargets();
+    const failures: string[] = [];
 
-      for (const file of targets) {
-        try {
-          await import(pathToFileURL(file).href);
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : String(error);
-          failures.push(`${path.relative(ROOT, file)} :: ${msg}`);
-        }
+    for (const file of targets) {
+      try {
+        await import(pathToFileURL(file).href);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        failures.push(`${path.relative(ROOT, file)} :: ${msg}`);
       }
+    }
 
-      expect(failures).toEqual([]);
-      expect(targets.length).toBeGreaterThan(0);
-    },
-    120_000
-  );
+    expect(failures).toEqual([]);
+    expect(targets.length).toBeGreaterThan(0);
+  }, 120_000);
 });

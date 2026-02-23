@@ -51,23 +51,11 @@ export {
   screenBlend,
 } from './color';
 // Contrast utilities
-export {
-  adjustForContrast,
-  meetsContrastAA,
-  meetsContrastAAA,
-} from './contrast';
+export { adjustForContrast, meetsContrastAA, meetsContrastAAA } from './contrast';
 // Gradient utilities
-export {
-  createCssGradient,
-  getGradientColor,
-  getGradientColorAt,
-} from './gradient';
+export { createCssGradient, getGradientColor, getGradientColorAt } from './gradient';
 // Color harmony utilities
-export {
-  getAnalogous,
-  getComplementary,
-  getTriadic,
-} from './harmony';
+export { getAnalogous, getComplementary, getTriadic } from './harmony';
 // Math utilities
 // Alias for backwards compatibility
 export {

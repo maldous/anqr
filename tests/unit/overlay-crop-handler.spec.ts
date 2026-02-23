@@ -2,7 +2,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 type Ctx = {
@@ -162,7 +168,9 @@ describe('overlay crop-handler', () => {
     const handleY = offsetY + (reg.y + reg.size) * scale - 1;
 
     canvas.dispatchEvent(new MouseEvent('mousedown', { clientX: handleX, clientY: handleY }));
-    canvas.dispatchEvent(new MouseEvent('mousemove', { clientX: handleX + 40, clientY: handleY + 30 }));
+    canvas.dispatchEvent(
+      new MouseEvent('mousemove', { clientX: handleX + 40, clientY: handleY + 30 })
+    );
     const afterResize = handler.getRegion();
     expect(afterResize.size).toBeGreaterThanOrEqual(reg.size);
 
@@ -191,7 +199,11 @@ describe('overlay crop-handler', () => {
       toJSON: () => ({}),
     } as any);
 
-    const handler = new mod.CropHandler({ container, imageUrl: 'x', initialRegion: { x: 0, y: 0, size: 90 } });
+    const handler = new mod.CropHandler({
+      container,
+      imageUrl: 'x',
+      initialRegion: { x: 0, y: 0, size: 90 },
+    });
 
     const preventDefault = vi.fn();
     (handler as any).handleTouchStart({ touches: [{ clientX: 10, clientY: 10 }] });
@@ -207,7 +219,10 @@ describe('overlay crop-handler', () => {
     expect(handler.getRegion()).toEqual(before);
 
     // constructor failure path when getContext is null
-    const realCreateCanvas = document.createElementNS.bind(document, 'http://www.w3.org/1999/xhtml');
+    const realCreateCanvas = document.createElementNS.bind(
+      document,
+      'http://www.w3.org/1999/xhtml'
+    );
     const badCreate = vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
       if (tag === 'canvas') {
         const c = realCreateCanvas('canvas') as HTMLCanvasElement;
@@ -217,7 +232,9 @@ describe('overlay crop-handler', () => {
       return realCreateCanvas(tag as any);
     }) as any);
 
-    expect(() => new mod.CropHandler({ container, imageUrl: 'z' })).toThrow('Could not get 2D context');
+    expect(() => new mod.CropHandler({ container, imageUrl: 'z' })).toThrow(
+      'Could not get 2D context'
+    );
     badCreate.mockRestore();
   });
 });

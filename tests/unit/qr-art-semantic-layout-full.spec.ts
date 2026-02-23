@@ -122,18 +122,12 @@ describe('qr-art/semantic-layout.ts', () => {
           expect(
             layout.characterCount.endBit - layout.characterCount.startBit
           ).toBeGreaterThanOrEqual(8);
-          expect(
-            layout.dataContent.endBit - layout.dataContent.startBit
-          ).toBe(3 * 8);
-          expect(
-            layout.terminator.endBit - layout.terminator.startBit
-          ).toBeGreaterThanOrEqual(0);
-          expect(
-            layout.padToByte.endBit - layout.padToByte.startBit
-          ).toBeGreaterThanOrEqual(0);
-          expect(
-            layout.padCodewords.endBit - layout.padCodewords.startBit
-          ).toBeGreaterThanOrEqual(0);
+          expect(layout.dataContent.endBit - layout.dataContent.startBit).toBe(3 * 8);
+          expect(layout.terminator.endBit - layout.terminator.startBit).toBeGreaterThanOrEqual(0);
+          expect(layout.padToByte.endBit - layout.padToByte.startBit).toBeGreaterThanOrEqual(0);
+          expect(layout.padCodewords.endBit - layout.padCodewords.startBit).toBeGreaterThanOrEqual(
+            0
+          );
         }
       }
     });
@@ -200,44 +194,34 @@ describe('qr-art/semantic-layout.ts', () => {
 
   describe('calculateVersionForSlack', () => {
     it('finds smallest version with enough padding', async () => {
-      const { calculateVersionForSlack } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { calculateVersionForSlack } = await import('../../src/modules/qr-art/semantic-layout');
       const version = calculateVersionForSlack(5, 'M', 20);
       expect(version).toBeGreaterThanOrEqual(1);
       expect(version).toBeLessThanOrEqual(40);
     });
 
     it('higher minPadCodewords → larger version', async () => {
-      const { calculateVersionForSlack } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { calculateVersionForSlack } = await import('../../src/modules/qr-art/semantic-layout');
       const small = calculateVersionForSlack(5, 'M', 5);
       const large = calculateVersionForSlack(5, 'M', 50);
       expect(large).toBeGreaterThanOrEqual(small);
     });
 
     it('returns 40 when no version has enough slack', async () => {
-      const { calculateVersionForSlack } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { calculateVersionForSlack } = await import('../../src/modules/qr-art/semantic-layout');
       // Very long data with enormous padding requirement
       const version = calculateVersionForSlack(2900, 'H', 999999);
       expect(version).toBe(40);
     });
 
     it('short data with default minPadCodewords returns small version', async () => {
-      const { calculateVersionForSlack } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { calculateVersionForSlack } = await import('../../src/modules/qr-art/semantic-layout');
       const version = calculateVersionForSlack(3, 'L');
       expect(version).toBeLessThanOrEqual(5);
     });
 
     it('higher ECC level needs larger version for same slack', async () => {
-      const { calculateVersionForSlack } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { calculateVersionForSlack } = await import('../../src/modules/qr-art/semantic-layout');
       const vL = calculateVersionForSlack(20, 'L', 30);
       const vH = calculateVersionForSlack(20, 'H', 30);
       expect(vH).toBeGreaterThanOrEqual(vL);
@@ -246,59 +230,37 @@ describe('qr-art/semantic-layout.ts', () => {
 
   describe('mapAllowedRangesToBlocks', () => {
     it('single block: maps linear ranges directly', async () => {
-      const { mapAllowedRangesToBlocks } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { mapAllowedRangesToBlocks } = await import('../../src/modules/qr-art/semantic-layout');
       // v1-M has 1 block of 16 data bytes
-      const result = mapAllowedRangesToBlocks(
-        [{ startBit: 0, endBit: 128 }],
-        1,
-        'M'
-      );
+      const result = mapAllowedRangesToBlocks([{ startBit: 0, endBit: 128 }], 1, 'M');
       expect(result.size).toBe(1);
       expect(result.get(0)!.size).toBe(128); // all 128 bits allowed
     });
 
     it('single block with partial range', async () => {
-      const { mapAllowedRangesToBlocks } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { mapAllowedRangesToBlocks } = await import('../../src/modules/qr-art/semantic-layout');
       // v1-M: allow bits 64-128 (last 8 bytes)
-      const result = mapAllowedRangesToBlocks(
-        [{ startBit: 64, endBit: 128 }],
-        1,
-        'M'
-      );
+      const result = mapAllowedRangesToBlocks([{ startBit: 64, endBit: 128 }], 1, 'M');
       expect(result.get(0)!.size).toBe(64);
     });
 
     it('empty range produces empty allowed sets', async () => {
-      const { mapAllowedRangesToBlocks } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { mapAllowedRangesToBlocks } = await import('../../src/modules/qr-art/semantic-layout');
       const result = mapAllowedRangesToBlocks([], 1, 'M');
       expect(result.size).toBe(1);
       expect(result.get(0)!.size).toBe(0);
     });
 
     it('range beyond total buffer is clipped', async () => {
-      const { mapAllowedRangesToBlocks } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { mapAllowedRangesToBlocks } = await import('../../src/modules/qr-art/semantic-layout');
       // v1-M has 128 total data bits; range goes to 256
-      const result = mapAllowedRangesToBlocks(
-        [{ startBit: 0, endBit: 256 }],
-        1,
-        'M'
-      );
+      const result = mapAllowedRangesToBlocks([{ startBit: 0, endBit: 256 }], 1, 'M');
       // Should only map 128 bits (clipped at total buffer)
       expect(result.get(0)!.size).toBe(128);
     });
 
     it('multi-block: ranges distributed correctly across blocks', async () => {
-      const { mapAllowedRangesToBlocks } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { mapAllowedRangesToBlocks } = await import('../../src/modules/qr-art/semantic-layout');
       // v5-Q has multiple blocks; use it to test multi-block distribution
       // Don't hardcode block structure; just verify total bits match range
       const range = { startBit: 0, endBit: 80 }; // first 80 bits = 10 bytes
@@ -312,12 +274,10 @@ describe('qr-art/semantic-layout.ts', () => {
     });
 
     it('multiple non-overlapping ranges', async () => {
-      const { mapAllowedRangesToBlocks } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { mapAllowedRangesToBlocks } = await import('../../src/modules/qr-art/semantic-layout');
       const ranges = [
-        { startBit: 0, endBit: 16 },   // first 2 bytes
-        { startBit: 64, endBit: 80 },  // bytes 8-9
+        { startBit: 0, endBit: 16 }, // first 2 bytes
+        { startBit: 64, endBit: 80 }, // bytes 8-9
       ];
       const result = mapAllowedRangesToBlocks(ranges, 1, 'M');
 
@@ -365,9 +325,7 @@ describe('qr-art/semantic-layout.ts', () => {
 
   describe('validateVectorSelection', () => {
     it('valid selection with all bits allowed → valid: true', async () => {
-      const { validateVectorSelection } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { validateVectorSelection } = await import('../../src/modules/qr-art/semantic-layout');
       const blockMap = new Map<number, Set<number>>();
       blockMap.set(0, new Set([0, 1, 2, 3, 4, 5, 6, 7]));
 
@@ -380,9 +338,7 @@ describe('qr-art/semantic-layout.ts', () => {
     });
 
     it('selection with violations → valid: false', async () => {
-      const { validateVectorSelection } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { validateVectorSelection } = await import('../../src/modules/qr-art/semantic-layout');
       const blockMap = new Map<number, Set<number>>();
       blockMap.set(0, new Set([0, 1, 2]));
 
@@ -397,9 +353,7 @@ describe('qr-art/semantic-layout.ts', () => {
     });
 
     it('selection referencing unknown block → all bits are violations', async () => {
-      const { validateVectorSelection } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { validateVectorSelection } = await import('../../src/modules/qr-art/semantic-layout');
       const blockMap = new Map<number, Set<number>>();
       blockMap.set(0, new Set([0, 1]));
 
@@ -412,9 +366,7 @@ describe('qr-art/semantic-layout.ts', () => {
     });
 
     it('empty selection → valid: true', async () => {
-      const { validateVectorSelection } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { validateVectorSelection } = await import('../../src/modules/qr-art/semantic-layout');
       const blockMap = new Map<number, Set<number>>();
 
       const result = validateVectorSelection([], blockMap);
@@ -423,18 +375,16 @@ describe('qr-art/semantic-layout.ts', () => {
     });
 
     it('multiple vectors with mixed validity', async () => {
-      const { validateVectorSelection } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { validateVectorSelection } = await import('../../src/modules/qr-art/semantic-layout');
       const blockMap = new Map<number, Set<number>>();
       blockMap.set(0, new Set([0, 1, 2, 3]));
       blockMap.set(1, new Set([10, 11]));
 
       const result = validateVectorSelection(
         [
-          { blockIndex: 0, affectedLocalBits: [0, 1] },    // valid
-          { blockIndex: 0, affectedLocalBits: [2, 99] },   // 99 is invalid
-          { blockIndex: 1, affectedLocalBits: [10, 20] },  // 20 is invalid
+          { blockIndex: 0, affectedLocalBits: [0, 1] }, // valid
+          { blockIndex: 0, affectedLocalBits: [2, 99] }, // 99 is invalid
+          { blockIndex: 1, affectedLocalBits: [10, 20] }, // 20 is invalid
         ],
         blockMap
       );
@@ -445,9 +395,8 @@ describe('qr-art/semantic-layout.ts', () => {
 
   describe('integration: getSemanticBitLayout + mapAllowedRangesToBlocks', () => {
     it('padding codewords range maps correctly to block allowed bits', async () => {
-      const { getSemanticBitLayout, mapAllowedRangesToBlocks } = await import(
-        '../../src/modules/qr-art/semantic-layout'
-      );
+      const { getSemanticBitLayout, mapAllowedRangesToBlocks } =
+        await import('../../src/modules/qr-art/semantic-layout');
       const layout = getSemanticBitLayout(3, 'M', 10);
 
       // Use padding codewords as the allowed range (Strategy 2)

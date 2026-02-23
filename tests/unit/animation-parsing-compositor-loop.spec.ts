@@ -5,7 +5,13 @@ const parseGIF = vi.fn();
 const decompressFrames = vi.fn();
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 vi.mock('gifuct-js', () => ({
@@ -209,7 +215,9 @@ describe('animation gif-compositor + parsing + loop', () => {
     expect(webpStaticFrames).toHaveLength(1);
     expect(webpStaticFrames[0].canvas.width).toBe(3);
 
-    const unknownFrames = await mod.parseAnimatedImage(new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]).buffer);
+    const unknownFrames = await mod.parseAnimatedImage(
+      new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]).buffer
+    );
     expect(unknownFrames).toHaveLength(1);
     expect(unknownFrames[0].delay).toBe(100);
   });
@@ -260,18 +268,24 @@ describe('animation gif-compositor + parsing + loop', () => {
 
     // fallback image load failure
     vi.spyOn(URL, 'createObjectURL').mockReturnValueOnce('blob:fail');
-    await expect(mod.parseWebPFrames(webpBuffer(false))).rejects.toThrow('Failed to load WebP image');
+    await expect(mod.parseWebPFrames(webpBuffer(false))).rejects.toThrow(
+      'Failed to load WebP image'
+    );
   });
 
   it('runs animation loop start/stop/setFrames and frame callback timing', async () => {
     const mod = await import('../../src/modules/animation/animation-loop');
 
     let rafCb: FrameRequestCallback | null = null;
-    const rafSpy = vi.spyOn(globalThis, 'requestAnimationFrame').mockImplementation((cb: FrameRequestCallback) => {
-      rafCb = cb;
-      return 11;
-    });
-    const cancelSpy = vi.spyOn(globalThis, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    const rafSpy = vi
+      .spyOn(globalThis, 'requestAnimationFrame')
+      .mockImplementation((cb: FrameRequestCallback) => {
+        rafCb = cb;
+        return 11;
+      });
+    const cancelSpy = vi
+      .spyOn(globalThis, 'cancelAnimationFrame')
+      .mockImplementation(() => undefined);
 
     let now = 1000;
     vi.spyOn(performance, 'now').mockImplementation(() => now);

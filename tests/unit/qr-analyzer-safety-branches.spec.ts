@@ -116,7 +116,10 @@ describe('qr-analyzer/safety.ts branch coverage', () => {
 
   describe('analyzeMatrixContrast', () => {
     it('delegates to analyzeContrast', () => {
-      const matrix = [[true, false], [false, true]];
+      const matrix = [
+        [true, false],
+        [false, true],
+      ];
       const report = analyzeMatrixContrast(matrix, '#000000', '#ffffff');
       expect(report.ratio).toBeGreaterThan(10);
       expect(report.meetsAA).toBe(true);
@@ -219,10 +222,22 @@ describe('qr-analyzer/safety.ts branch coverage', () => {
         drawImage: vi.fn(),
         getImageData: vi.fn(() => ({
           data: new Uint8ClampedArray([
-            0, 0, 0, 255,         // pixel 0: dark (brightness 0)
-            255, 255, 255, 255,   // pixel 1: light (brightness 255)
-            100, 50, 50, 255,     // pixel 2: dark-ish (brightness ~67)
-            200, 200, 200, 255,   // pixel 3: light (brightness 200)
+            0,
+            0,
+            0,
+            255, // pixel 0: dark (brightness 0)
+            255,
+            255,
+            255,
+            255, // pixel 1: light (brightness 255)
+            100,
+            50,
+            50,
+            255, // pixel 2: dark-ish (brightness ~67)
+            200,
+            200,
+            200,
+            255, // pixel 3: light (brightness 200)
           ]),
           width: 2,
           height: 2,
@@ -296,8 +311,7 @@ describe('qr-analyzer/safety.ts branch coverage', () => {
         applyNoiseSimulation(input, 0.5);
         expect(mockCtx.putImageData).toHaveBeenCalledTimes(1);
 
-        const resultData = (mockCtx.putImageData as ReturnType<typeof vi.fn>).mock.calls[0][0]
-          .data;
+        const resultData = (mockCtx.putImageData as ReturnType<typeof vi.fn>).mock.calls[0][0].data;
         // Pixel 0: 250 + positive noise → clamped to 255
         expect(resultData[0]).toBe(255);
         // Pixel 1: 5 + negative noise → clamped to 0
@@ -315,8 +329,7 @@ describe('qr-analyzer/safety.ts branch coverage', () => {
         expect(result).not.toBe(input); // Returns a new canvas
 
         expect(mockCtx.putImageData).toHaveBeenCalledTimes(1);
-        const resultData = (mockCtx.putImageData as ReturnType<typeof vi.fn>).mock.calls[0][0]
-          .data;
+        const resultData = (mockCtx.putImageData as ReturnType<typeof vi.fn>).mock.calls[0][0].data;
 
         // Pixel 0 (brightness 0 < 128) → green
         expect(resultData[0]).toBe(0); // R

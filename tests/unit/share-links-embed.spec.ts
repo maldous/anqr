@@ -51,7 +51,10 @@ describe('share-links embed', () => {
     expect(image).toContain('width: 280px; height: 180px;');
     expect(image).toContain('border: 1px solid #ccc;');
 
-    const imageNoLink = generateImageEmbed(share, 'Alt2', { includeLink: false, showBorder: false });
+    const imageNoLink = generateImageEmbed(share, 'Alt2', {
+      includeLink: false,
+      showBorder: false,
+    });
     expect(imageNoLink.startsWith('<img src=')).toBe(true);
 
     const iframe = generateIframeEmbed(share, { responsive: true, showBorder: false });

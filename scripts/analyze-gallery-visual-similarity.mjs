@@ -25,12 +25,9 @@ const DEFAULT_DIR = path.join(ROOT, 'reports', 'gallery-artifacts', 'local');
 const INPUT_DIR = path.resolve(process.env.GALLERY_VIS_DIR || DEFAULT_DIR);
 const DIST_THRESHOLD = Math.max(
   0,
-  Number.parseInt(process.env.GALLERY_VIS_THRESHOLD_BITS || '6', 10),
+  Number.parseInt(process.env.GALLERY_VIS_THRESHOLD_BITS || '6', 10)
 );
-const SAMPLE_MAX = Math.max(
-  0,
-  Number.parseInt(process.env.GALLERY_VIS_SAMPLE_MAX || '0', 10),
-);
+const SAMPLE_MAX = Math.max(0, Number.parseInt(process.env.GALLERY_VIS_SAMPLE_MAX || '0', 10));
 
 const IMAGE_EXT_RE = /\.(png|gif|webp|jpg|jpeg)$/i;
 
@@ -221,7 +218,7 @@ async function main() {
 
   const n = features.length;
   const dsu = new DSU(n);
-  let edgeCount = 0;
+  let _edgeCount = 0;
 
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
@@ -230,7 +227,7 @@ async function main() {
       const d = hammingDistance(features[i].phashBits, features[j].phashBits);
       if (d <= DIST_THRESHOLD) {
         dsu.union(i, j);
-        edgeCount++;
+        _edgeCount++;
       }
     }
   }
@@ -270,12 +267,15 @@ async function main() {
         const catClustered = clusters
           .filter((c) => c.category === cat)
           .reduce((sum, c) => sum + c.size, 0);
-        return [cat, {
-          total: catFiles.length,
-          clustered: catClustered,
-          standalone: catFiles.length - catClustered,
-          clusters: clusters.filter((c) => c.category === cat).length,
-        }];
+        return [
+          cat,
+          {
+            total: catFiles.length,
+            clustered: catClustered,
+            standalone: catFiles.length - catClustered,
+            clusters: clusters.filter((c) => c.category === cat).length,
+          },
+        ];
       })
     ),
   };
@@ -304,8 +304,7 @@ async function main() {
     '| Category | Total | Clustered | Standalone | Clusters |',
     '| --- | ---: | ---: | ---: | ---: |',
     ...Object.entries(summary.categoryStats).map(
-      ([cat, s]) =>
-        `| ${cat} | ${s.total} | ${s.clustered} | ${s.standalone} | ${s.clusters} |`
+      ([cat, s]) => `| ${cat} | ${s.total} | ${s.clustered} | ${s.standalone} | ${s.clusters} |`
     ),
     '',
     '## Largest Similarity Clusters',
@@ -341,4 +340,3 @@ main().catch((err) => {
   console.error('[analyze-gallery-visual-similarity] Fatal:', err?.stack ?? err);
   process.exitCode = 1;
 });
-

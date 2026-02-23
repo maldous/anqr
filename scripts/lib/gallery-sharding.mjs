@@ -44,9 +44,7 @@ function parseShardPair(raw) {
     };
   }
 
-  throw new Error(
-    `Invalid GALLERY_SHARD format: ${trimmed}. Use "2/8" or "2-of-8".`
-  );
+  throw new Error(`Invalid GALLERY_SHARD format: ${trimmed}. Use "2/8" or "2-of-8".`);
 }
 
 export function resolveGalleryShard(env = process.env) {
@@ -54,9 +52,7 @@ export function resolveGalleryShard(env = process.env) {
   if (explicitPair) {
     const { indexOneBased, total } = explicitPair;
     if (indexOneBased > total) {
-      throw new Error(
-        `Invalid GALLERY_SHARD "${env.GALLERY_SHARD}": shard index must be <= total`
-      );
+      throw new Error(`Invalid GALLERY_SHARD "${env.GALLERY_SHARD}": shard index must be <= total`);
     }
     const index = indexOneBased - 1;
     return {

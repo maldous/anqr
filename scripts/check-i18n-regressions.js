@@ -42,17 +42,13 @@ function isIgnorable(text) {
   if (/\(default:\s*[^)]+\)/i.test(t)) return true;
   if (/\b\d+\s*=\s*[A-Za-z0-9_-]+/.test(t)) return true;
   // Product/standard names are often intentionally untranslated.
-  if (
-    /\b(ANQR|EMVCo|GTIN|BOLT11|Shift-JIS|PayID|QRIS|SEPA|Swiss QR-bill|Case Study)\b/i.test(t)
-  ) {
+  if (/\b(ANQR|EMVCo|GTIN|BOLT11|Shift-JIS|PayID|QRIS|SEPA|Swiss QR-bill|Case Study)\b/i.test(t)) {
     return true;
   }
   if (t.length < 30) return true;
   const words = t.split(/\s+/).filter(Boolean);
   if (words.length < 5) return true;
-  const stripped = t
-    .replace(/\{\{[^}]+\}\}/g, '')
-    .replace(/[\s\d\-+(){}\[\],./:#%_]/g, '');
+  const stripped = t.replace(/\{\{[^}]+\}\}/g, '').replace(/[\s\d\-+(){}[\],./:#%_]/g, '');
   if (stripped.length === 0) return true;
   if (!/[A-Za-z]/.test(t)) return true;
   return false;
@@ -70,7 +66,10 @@ function loadTxtMap(filePath) {
 }
 
 function collectStats(dir, baseLocale) {
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.txt')).sort();
+  const files = fs
+    .readdirSync(dir)
+    .filter((f) => f.endsWith('.txt'))
+    .sort();
   const basePath = path.join(dir, `${baseLocale}.txt`);
   if (!fs.existsSync(basePath)) {
     throw new Error(`Base locale missing: ${basePath}`);
@@ -133,9 +132,7 @@ function compareSection(name, current, baseline) {
     const cur = current.exactMatchesByLocale?.[locale] ?? 0;
     const base = baseline.exactMatchesByLocale?.[locale] ?? 0;
     if (cur > base) {
-      regressions.push(
-        `${name}/${locale}: exact English matches increased ${base} -> ${cur}`
-      );
+      regressions.push(`${name}/${locale}: exact English matches increased ${base} -> ${cur}`);
     }
   }
 
@@ -156,9 +153,7 @@ function compareSection(name, current, baseline) {
     }
 
     if (cur !== undefined && base !== undefined && cur !== base) {
-      regressions.push(
-        `${name}/${locale}: line-count mismatch changed ${base} -> ${cur}`
-      );
+      regressions.push(`${name}/${locale}: line-count mismatch changed ${base} -> ${cur}`);
     }
   }
 

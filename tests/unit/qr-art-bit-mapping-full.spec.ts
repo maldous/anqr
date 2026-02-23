@@ -136,9 +136,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('equals sum of dataCount across all blocks', async () => {
-      const { getTotalDataBytes, getRSBlockInfo } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { getTotalDataBytes, getRSBlockInfo } =
+        await import('../../src/modules/qr-art/bit-mapping');
       for (const ecc of ['L', 'M', 'Q', 'H'] as const) {
         const blocks = getRSBlockInfo(5, ecc);
         const sum = blocks.reduce((s, b) => s + b.dataCount, 0);
@@ -159,9 +158,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('equals sum of totalCount across all blocks', async () => {
-      const { getTotalCodewords, getRSBlockInfo } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { getTotalCodewords, getRSBlockInfo } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const blocks = getRSBlockInfo(5, 'Q');
       const sum = blocks.reduce((s, b) => s + b.totalCount, 0);
       expect(getTotalCodewords(5, 'Q')).toBe(sum);
@@ -236,9 +234,7 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('round-trip: pixelToIndex → indexToPixel', async () => {
-      const { pixelToIndex, indexToPixel } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { pixelToIndex, indexToPixel } = await import('../../src/modules/qr-art/bit-mapping');
       for (let row = 0; row < 10; row++) {
         for (let col = 0; col < 10; col++) {
           const idx = pixelToIndex(row, col, 25);
@@ -252,18 +248,16 @@ describe('qr-art/bit-mapping.ts', () => {
 
   describe('buildBitPixelMap', () => {
     it('returns array of BitPixelMapping objects for v1-M mask 0', async () => {
-      const { buildBitPixelMap, getTotalCodewords } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, getTotalCodewords } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const mappings = buildBitPixelMap(1, 'M', 0);
       expect(Array.isArray(mappings)).toBe(true);
       expect(mappings.length).toBe(getTotalCodewords(1, 'M') * 8);
     });
 
     it('all mappings have valid row/col within moduleCount', async () => {
-      const { buildBitPixelMap, getModuleCount } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, getModuleCount } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const moduleCount = getModuleCount(1);
       const mappings = buildBitPixelMap(1, 'M', 0);
       for (const m of mappings) {
@@ -275,9 +269,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('each mapping has valid rsBlockIndex and posInBlock', async () => {
-      const { buildBitPixelMap, getRSBlockInfo } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, getRSBlockInfo } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const blocks = getRSBlockInfo(1, 'M');
       const maxBlockIdx = blocks.length - 1;
       const mappings = buildBitPixelMap(1, 'M', 0);
@@ -317,9 +310,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('interleaving map distinguishes data and ECC bytes', async () => {
-      const { buildBitPixelMap, getRSBlockInfo } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, getRSBlockInfo } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const blocks = getRSBlockInfo(1, 'M');
       const totalDataBits = blocks.reduce((s, b) => s + b.dataCount, 0) * 8;
       const mappings = buildBitPixelMap(1, 'M', 0);
@@ -338,9 +330,8 @@ describe('qr-art/bit-mapping.ts', () => {
 
   describe('getDataPixelIndices', () => {
     it('v1 returns array of non-structural pixel indices', async () => {
-      const { getDataPixelIndices, getModuleCount } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { getDataPixelIndices, getModuleCount } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const indices = getDataPixelIndices(1);
       const moduleCount = getModuleCount(1);
       expect(Array.isArray(indices)).toBe(true);
@@ -360,9 +351,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('v1 has fewer data pixels than total pixels (structural are excluded)', async () => {
-      const { getDataPixelIndices, getModuleCount } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { getDataPixelIndices, getModuleCount } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const indices = getDataPixelIndices(1);
       const moduleCount = getModuleCount(1);
       const totalPixels = moduleCount * moduleCount;
@@ -383,9 +373,8 @@ describe('qr-art/bit-mapping.ts', () => {
 
   describe('buildPixelToBitMap', () => {
     it('creates Map from mappings with correct size', async () => {
-      const { buildBitPixelMap, buildPixelToBitMap } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildPixelToBitMap } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const mappings = buildBitPixelMap(1, 'M', 0);
       const map = buildPixelToBitMap(mappings);
 
@@ -394,9 +383,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('each key is a valid pixel index', async () => {
-      const { buildBitPixelMap, buildPixelToBitMap, getModuleCount } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildPixelToBitMap, getModuleCount } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const moduleCount = getModuleCount(1);
       const mappings = buildBitPixelMap(1, 'M', 0);
       const map = buildPixelToBitMap(mappings);
@@ -408,9 +396,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('values are the original BitPixelMapping objects', async () => {
-      const { buildBitPixelMap, buildPixelToBitMap } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildPixelToBitMap } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const mappings = buildBitPixelMap(1, 'M', 0);
       const map = buildPixelToBitMap(mappings);
 
@@ -429,9 +416,8 @@ describe('qr-art/bit-mapping.ts', () => {
 
   describe('buildBitToMappingMap', () => {
     it('creates Map from mappings with correct size', async () => {
-      const { buildBitPixelMap, buildBitToMappingMap } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildBitToMappingMap } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const mappings = buildBitPixelMap(1, 'M', 0);
       const map = buildBitToMappingMap(mappings);
 
@@ -440,9 +426,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('each key is a valid global bit index', async () => {
-      const { buildBitPixelMap, buildBitToMappingMap, getTotalCodewords } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildBitToMappingMap, getTotalCodewords } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const totalBits = getTotalCodewords(1, 'M') * 8;
       const mappings = buildBitPixelMap(1, 'M', 0);
       const map = buildBitToMappingMap(mappings);
@@ -454,9 +439,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('values are the original BitPixelMapping objects', async () => {
-      const { buildBitPixelMap, buildBitToMappingMap } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildBitToMappingMap } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const mappings = buildBitPixelMap(1, 'M', 0);
       const map = buildBitToMappingMap(mappings);
 
@@ -474,9 +458,8 @@ describe('qr-art/bit-mapping.ts', () => {
 
   describe('integration: buildBitPixelMap → buildPixelToBitMap → buildBitToMappingMap', () => {
     it('pixel map and bit map reference the same mapping objects', async () => {
-      const { buildBitPixelMap, buildPixelToBitMap, buildBitToMappingMap } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildPixelToBitMap, buildBitToMappingMap } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const mappings = buildBitPixelMap(2, 'M', 0);
       const pixelMap = buildPixelToBitMap(mappings);
       const bitMap = buildBitToMappingMap(mappings);
@@ -489,9 +472,8 @@ describe('qr-art/bit-mapping.ts', () => {
     });
 
     it('all 8 bits within a codeword map to consecutive global bit indices', async () => {
-      const { buildBitPixelMap, buildBitToMappingMap } = await import(
-        '../../src/modules/qr-art/bit-mapping'
-      );
+      const { buildBitPixelMap, buildBitToMappingMap } =
+        await import('../../src/modules/qr-art/bit-mapping');
       const mappings = buildBitPixelMap(1, 'M', 0);
       const bitMap = buildBitToMappingMap(mappings);
 

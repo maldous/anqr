@@ -5,6 +5,7 @@ Our own QR code decoder - zero external dependencies.
 ## Purpose
 
 This module provides QR code decoding without external dependencies:
+
 - Decode QR codes from canvas/ImageData
 - Locate QR codes in images
 - Extract and decode QR data
@@ -56,10 +57,10 @@ async function decodeFromImage(img: HTMLImageElement) {
   const canvas = document.createElement('canvas');
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
-  
+
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
-  
+
   // Decode
   return decodeFromCanvas(canvas);
 }
@@ -72,14 +73,14 @@ import { decodeFromCanvas } from '@/modules/qr-decoder';
 
 async function decodeFromFile(file: File) {
   const img = await createImageBitmap(file);
-  
+
   const canvas = document.createElement('canvas');
   canvas.width = img.width;
   canvas.height = img.height;
-  
+
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
-  
+
   return decodeFromCanvas(canvas);
 }
 ```

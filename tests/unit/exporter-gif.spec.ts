@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const isNativePlatform = vi.fn(() => false);
 const downloadUrl = vi.fn();
 
-const quantize = vi.fn(() => [[0, 0, 0], [255, 255, 255]] as number[][]);
+const quantize = vi.fn(
+  () =>
+    [
+      [0, 0, 0],
+      [255, 255, 255],
+    ] as number[][]
+);
 const applyPalette = vi.fn(() => new Uint8Array([0, 1, 0, 1]));
 const writeFrame = vi.fn();
 const finish = vi.fn();
@@ -12,7 +18,13 @@ const bytes = vi.fn(() => new Uint8Array([71, 73, 70]));
 const GIFEncoder = vi.fn(() => ({ writeFrame, finish, bytes }));
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform } }));
 vi.mock('gifenc', () => ({ quantize, applyPalette, GIFEncoder }));
@@ -34,10 +46,7 @@ describe('exporter gif', () => {
     isNativePlatform.mockReturnValue(false);
 
     const outputPixels = new Uint8ClampedArray([
-      0, 0, 0, 255,
-      255, 255, 255, 255,
-      10, 20, 30, 255,
-      40, 50, 60, 255,
+      0, 0, 0, 255, 255, 255, 255, 255, 10, 20, 30, 255, 40, 50, 60, 255,
     ]);
 
     const originalCreate = document.createElement.bind(document);
@@ -136,7 +145,9 @@ describe('exporter gif', () => {
       return originalCreate(tag as any);
     }) as any);
 
-    await expect(mod.exportGif([makeFrame(2, 2)], {})).rejects.toThrow('Could not get canvas context');
+    await expect(mod.exportGif([makeFrame(2, 2)], {})).rejects.toThrow(
+      'Could not get canvas context'
+    );
     createSpy.mockRestore();
 
     const originalCreate2 = document.createElement.bind(document);

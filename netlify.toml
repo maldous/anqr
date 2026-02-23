@@ -1,11 +1,11 @@
 [build]
-  publish = "dist"
-  command = "npm run build"
-  functions = "netlify/functions"
-  edge_functions = "netlify/edge-functions"
+publish = "dist"
+command = "npm run build"
+functions = "netlify/functions"
+edge_functions = "netlify/edge-functions"
 
 [functions]
-  node_bundler = "esbuild"
+node_bundler = "esbuild"
 
 # ===================================================================================
 # SECURITY NOTES (for ZAP/security scanner audits):
@@ -34,28 +34,28 @@
 # Security Headers (applied to all routes)
 # ============================================
 [[headers]]
-  for = "/*"
-  [headers.values]
-    # Prevent MIME type sniffing
-    X-Content-Type-Options = "nosniff"
-    # Prevent clickjacking
-    X-Frame-Options = "SAMEORIGIN"
-    # Control referrer information
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    # Restrict browser features
-    Permissions-Policy = "accelerometer=(), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
-    # Cross-Origin isolation headers for Spectre protection
-    Cross-Origin-Resource-Policy = "same-origin"
-    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
-    # Content Security Policy:
-    # - No 'unsafe-eval' or inline script execution
-    # - Third-party script domains are explicitly allowlisted
-    # - img-src allows https: for user-provided overlay image URLs (required feature)
-    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com https://*.sentry.io https://*.sentry-cdn.com https://static.cloudflareinsights.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com https://*.adtrafficquality.google; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
-    # Default cache: no-cache for all paths. More-specific rules below override this
-    # for assets, gallery, images, etc. (Netlify: later matching rules win for duplicate headers.)
-    Cache-Control = "no-cache"
+for = "/*"
+[headers.values]
+# Prevent MIME type sniffing
+X-Content-Type-Options = "nosniff"
+# Prevent clickjacking
+X-Frame-Options = "SAMEORIGIN"
+# Control referrer information
+Referrer-Policy = "strict-origin-when-cross-origin"
+# Restrict browser features
+Permissions-Policy = "accelerometer=(), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+# Cross-Origin isolation headers for Spectre protection
+Cross-Origin-Resource-Policy = "same-origin"
+Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+# Content Security Policy:
+# - No 'unsafe-eval' or inline script execution
+# - Third-party script domains are explicitly allowlisted
+# - img-src allows https: for user-provided overlay image URLs (required feature)
+Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+Content-Security-Policy = "default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.iubenda.com https://cs.iubenda.com https://embeds.iubenda.com https://*.googlesyndication.com https://*.sentry.io https://*.sentry-cdn.com https://static.cloudflareinsights.com https://*.adtrafficquality.google https://fundingchoicesmessages.google.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.iubenda.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https: wss:; frame-src 'self' https://www.google.com https://googleads.g.doubleclick.net https://*.iubenda.com https://tpc.googlesyndication.com https://*.adtrafficquality.google; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
+# Default cache: no-cache for all paths. More-specific rules below override this
+# for assets, gallery, images, etc. (Netlify: later matching rules win for duplicate headers.)
+Cache-Control = "no-cache"
 
 # ============================================
 # Cache Headers
@@ -63,99 +63,99 @@
 
 # index.html - Always fetch fresh (enables instant deploys)
 [[headers]]
-  for = "/"
-  [headers.values]
-    Cache-Control = "no-cache"
-    # Relax CORP for HTML to allow embedding in iframes where needed
-    Cross-Origin-Resource-Policy = "cross-origin"
+for = "/"
+[headers.values]
+Cache-Control = "no-cache"
+# Relax CORP for HTML to allow embedding in iframes where needed
+Cross-Origin-Resource-Policy = "cross-origin"
 
 [[headers]]
-  for = "/index.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-    Cross-Origin-Resource-Policy = "cross-origin"
+for = "/index.html"
+[headers.values]
+Cache-Control = "no-cache"
+Cross-Origin-Resource-Policy = "cross-origin"
 
 # Hashed assets from Vite build - cache forever (hash changes on content change)
 [[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+for = "/assets/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
 
 # Static files in public folder - longer caching for better performance
 [[headers]]
-  for = "/gallery/*"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
-    Cross-Origin-Resource-Policy = "cross-origin"
-    Access-Control-Allow-Origin = "*"
+for = "/gallery/*"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
 
 [[headers]]
-  for = "/*.png"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+for = "/*.png"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
-  for = "/*.ico"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+for = "/*.ico"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 [[headers]]
-  for = "/*.svg"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+for = "/*.svg"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 # Gallery sample images - allow cross-origin for Android/iOS app
 [[headers]]
-  for = "/tsunami.jpg"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
-    Cross-Origin-Resource-Policy = "cross-origin"
-    Access-Control-Allow-Origin = "*"
+for = "/tsunami.jpg"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
 
 [[headers]]
-  for = "/king.gif"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
-    Cross-Origin-Resource-Policy = "cross-origin"
-    Access-Control-Allow-Origin = "*"
+for = "/king.gif"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
 
 [[headers]]
-  for = "/logo.png"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
-    Cross-Origin-Resource-Policy = "cross-origin"
-    Access-Control-Allow-Origin = "*"
+for = "/logo.png"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
 
 [[headers]]
-  for = "/test.png"
-  [headers.values]
-    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
-    Cross-Origin-Resource-Policy = "cross-origin"
-    Access-Control-Allow-Origin = "*"
+for = "/test.png"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+Cross-Origin-Resource-Policy = "cross-origin"
+Access-Control-Allow-Origin = "*"
 
 [[headers]]
-  for = "/manifest.json"
-  [headers.values]
-    Cache-Control = "public, max-age=86400, stale-while-revalidate=3600"
+for = "/manifest.json"
+[headers.values]
+Cache-Control = "public, max-age=86400, stale-while-revalidate=3600"
 
 # Service Worker files - no cache to ensure updates propagate
 [[headers]]
-  for = "/sw.js"
-  [headers.values]
-    Cache-Control = "no-cache"
-    Content-Type = "application/javascript"
+for = "/sw.js"
+[headers.values]
+Cache-Control = "no-cache"
+Content-Type = "application/javascript"
 
 [[headers]]
-  for = "/workbox-*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-    Content-Type = "application/javascript"
+for = "/workbox-*.js"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Content-Type = "application/javascript"
 
 [[headers]]
-  for = "/registerSW.js"
-  [headers.values]
-    Cache-Control = "no-cache"
-    Content-Type = "application/javascript"
+for = "/registerSW.js"
+[headers.values]
+Cache-Control = "no-cache"
+Content-Type = "application/javascript"
 
 # ============================================
 # Redirects
@@ -165,46 +165,46 @@
 # Note: The /api/qr endpoint intentionally uses CORS: * to allow cross-origin embedding
 # This is a public API endpoint designed for <img src="..."> usage across domains
 [[redirects]]
-  from = "/api/qr"
-  to = "/.netlify/functions/qr"
-  status = 200
-  headers = { Cross-Origin-Resource-Policy = "cross-origin" }
+from = "/api/qr"
+to = "/.netlify/functions/qr"
+status = 200
+headers = { Cross-Origin-Resource-Policy = "cross-origin" }
 
 # Legacy endpoint - redirect to new path for backward compatibility
 [[redirects]]
-  from = "/api/qr.png"
-  to = "/api/qr"
-  status = 301
+from = "/api/qr.png"
+to = "/api/qr"
+status = 301
 
 # Prevent missing gallery asset paths from falling through to index.html.
 # Scope to concrete file extensions so /gallery (the SPA route) still works.
 [[redirects]]
-  from = "/gallery/*.png"
-  to = "/gallery/:splat"
-  status = 404
+from = "/gallery/*.png"
+to = "/gallery/:splat"
+status = 404
 
 [[redirects]]
-  from = "/gallery/*.gif"
-  to = "/gallery/:splat"
-  status = 404
+from = "/gallery/*.gif"
+to = "/gallery/:splat"
+status = 404
 
 [[redirects]]
-  from = "/gallery/*.webp"
-  to = "/gallery/:splat"
-  status = 404
+from = "/gallery/*.webp"
+to = "/gallery/:splat"
+status = 404
 
 [[redirects]]
-  from = "/gallery/*.jpg"
-  to = "/gallery/:splat"
-  status = 404
+from = "/gallery/*.jpg"
+to = "/gallery/:splat"
+status = 404
 
 [[redirects]]
-  from = "/gallery/*.jpeg"
-  to = "/gallery/:splat"
-  status = 404
+from = "/gallery/*.jpeg"
+to = "/gallery/:splat"
+status = 404
 
 # SPA catch-all for client-side routing
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200

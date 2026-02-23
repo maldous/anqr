@@ -96,7 +96,7 @@ function createMockCtx(canvas: HTMLCanvasElement): Record<string, unknown> {
       const data = new Uint8ClampedArray(w * h * 4);
       // Fill with non-zero data so brightness calculations produce meaningful values
       for (let i = 0; i < data.length; i += 4) {
-        data[i] = 128;     // R
+        data[i] = 128; // R
         data[i + 1] = 128; // G
         data[i + 2] = 128; // B
         data[i + 3] = 255; // A
@@ -137,10 +137,7 @@ let origGetContext: typeof HTMLCanvasElement.prototype.getContext;
 
 beforeAll(() => {
   origGetContext = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (
-    contextId: string,
-    ..._args: unknown[]
-  ) {
+  HTMLCanvasElement.prototype.getContext = function (contextId: string, ..._args: unknown[]) {
     if (contextId === '2d') {
       return createMockCtx(this) as unknown as CanvasRenderingContext2D;
     }
@@ -231,9 +228,8 @@ describe('cache.ts', () => {
   });
 
   it('clearQRCaches clears all caches', async () => {
-    const { alignmentCache, overlayDataCache, qrMatrixCache, clearQRCaches } = await import(
-      '../../src/modules/qr-generator/cache'
-    );
+    const { alignmentCache, overlayDataCache, qrMatrixCache, clearQRCaches } =
+      await import('../../src/modules/qr-generator/cache');
 
     alignmentCache.set('test', [{ row: 0, col: 0 }]);
     overlayDataCache.set('test', { 0: { 0: 0.5 } });
@@ -363,7 +359,8 @@ describe('utils.ts', () => {
       // We need to make getContext return null for that INNER canvas.
       // Temporarily override prototype to return null for ALL canvases.
       const prev = HTMLCanvasElement.prototype.getContext;
-      HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = (() =>
+        null) as typeof HTMLCanvasElement.prototype.getContext;
       try {
         const hash = await hashCanvasContent(canvas, createCanvasFn);
         expect(hash).toBe('77x33');
@@ -382,7 +379,9 @@ describe('utils.ts', () => {
         if (contextId === '2d') {
           return {
             drawImage: vi.fn(),
-            getImageData: vi.fn(() => { throw new Error('Security error'); }),
+            getImageData: vi.fn(() => {
+              throw new Error('Security error');
+            }),
           } as unknown as CanvasRenderingContext2D;
         }
         return null;
@@ -486,7 +485,9 @@ describe('overlay-data.ts', () => {
   describe('loadImageDataRGB', () => {
     it('converts ImageData to RGB array', async () => {
       const { loadImageDataRGB } = await import('../../src/modules/qr-generator/overlay-data');
-      const data = new Uint8ClampedArray([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 128, 128, 128, 255]);
+      const data = new Uint8ClampedArray([
+        255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 128, 128, 128, 255,
+      ]);
       const imageData = new ImageData(data, 2, 2);
       const result = loadImageDataRGB(imageData);
 
@@ -548,10 +549,16 @@ describe('drawing-patterns.ts', () => {
 
     it('draws rounded finder pattern', () => {
       const ctx = makeMockCtx();
-      drawFinderPatternComplete(ctx, 0, 0, 10, makeMinimalConfig({
-        eyeOuterStyle: 'rounded',
-        eyeInnerStyle: 'rounded',
-      }));
+      drawFinderPatternComplete(
+        ctx,
+        0,
+        0,
+        10,
+        makeMinimalConfig({
+          eyeOuterStyle: 'rounded',
+          eyeInnerStyle: 'rounded',
+        })
+      );
       // rounded uses roundRect → beginPath + quadraticCurveTo
       expect(ctx.beginPath).toHaveBeenCalled();
       expect(ctx.quadraticCurveTo).toHaveBeenCalled();
@@ -559,27 +566,45 @@ describe('drawing-patterns.ts', () => {
 
     it('draws circle finder pattern', () => {
       const ctx = makeMockCtx();
-      drawFinderPatternComplete(ctx, 0, 0, 10, makeMinimalConfig({
-        eyeOuterStyle: 'circle',
-        eyeInnerStyle: 'circle',
-      }));
+      drawFinderPatternComplete(
+        ctx,
+        0,
+        0,
+        10,
+        makeMinimalConfig({
+          eyeOuterStyle: 'circle',
+          eyeInnerStyle: 'circle',
+        })
+      );
       expect(ctx.arc).toHaveBeenCalled();
       expect(ctx.fill).toHaveBeenCalled();
     });
 
     it('applies eyeScale', () => {
       const ctx = makeMockCtx();
-      drawFinderPatternComplete(ctx, 0, 0, 10, makeMinimalConfig({
-        eyeScale: 80,
-      }));
+      drawFinderPatternComplete(
+        ctx,
+        0,
+        0,
+        10,
+        makeMinimalConfig({
+          eyeScale: 80,
+        })
+      );
       expect(ctx.fillRect).toHaveBeenCalled();
     });
 
     it('uses finderStyle as fallback for eye styles', () => {
       const ctx = makeMockCtx();
-      drawFinderPatternComplete(ctx, 0, 0, 10, makeMinimalConfig({
-        finderStyle: 'circle',
-      }));
+      drawFinderPatternComplete(
+        ctx,
+        0,
+        0,
+        10,
+        makeMinimalConfig({
+          finderStyle: 'circle',
+        })
+      );
       expect(ctx.arc).toHaveBeenCalled();
     });
   });
@@ -620,9 +645,16 @@ describe('drawing-patterns.ts', () => {
 
     it('match_finder resolves to finderStyle', () => {
       const ctx = makeMockCtx();
-      drawAlignmentPattern(ctx, 50, 50, 10, 'match_finder', makeMinimalConfig({
-        finderStyle: 'circle',
-      }));
+      drawAlignmentPattern(
+        ctx,
+        50,
+        50,
+        10,
+        'match_finder',
+        makeMinimalConfig({
+          finderStyle: 'circle',
+        })
+      );
       expect(ctx.arc).toHaveBeenCalled();
     });
   });
@@ -650,9 +682,16 @@ describe('drawing-patterns.ts', () => {
 
     it('draws match_module style', () => {
       const ctx = makeMockCtx();
-      drawTimingModule(ctx, 0, 0, 10, 'match_module', makeMinimalConfig({
-        moduleStyle: 'square',
-      }));
+      drawTimingModule(
+        ctx,
+        0,
+        0,
+        10,
+        'match_module',
+        makeMinimalConfig({
+          moduleStyle: 'square',
+        })
+      );
       // drawModule is called internally
       expect(ctx.fillRect).toHaveBeenCalled();
     });
@@ -721,9 +760,8 @@ describe('pixel-matrix-dither.ts', () => {
     });
 
     it('returns a PixelDecisionMatrix with correct shape', async () => {
-      const { generateDitherModeMatrix } = await import(
-        '../../src/modules/qr-generator/pixel-matrix-dither'
-      );
+      const { generateDitherModeMatrix } =
+        await import('../../src/modules/qr-generator/pixel-matrix-dither');
       const qr = mockQR(5);
       const overlay = document.createElement('canvas');
       overlay.width = 20;
@@ -761,9 +799,8 @@ describe('pixel-matrix-standard.ts', () => {
   });
 
   it('generates a standard pixel matrix', async () => {
-    const { generateStandardMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix-standard'
-    );
+    const { generateStandardMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix-standard');
 
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
@@ -771,15 +808,7 @@ describe('pixel-matrix-standard.ts', () => {
     overlay.height = 20;
 
     const config = makeMinimalConfig({ colorMode: 'bw', overlayIntensity: 50 });
-    const result = await generateStandardMatrix(
-      qr,
-      config,
-      overlay,
-      5,
-      50,
-      config,
-      createCanvasFn
-    );
+    const result = await generateStandardMatrix(qr, config, overlay, 5, 50, config, createCanvasFn);
 
     expect(result.matrix).toBeDefined();
     expect(result.matrix.length).toBe(5);
@@ -810,9 +839,8 @@ describe('pixel-matrix.ts', () => {
   };
 
   it('returns base matrix when overlay is null', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const config = makeMinimalConfig();
 
@@ -832,9 +860,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to standard mode for unknown/default overlayMode', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -855,9 +882,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to dither mode', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -878,9 +904,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to extreme mode', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -900,9 +925,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to dithered mode', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -922,9 +946,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to blue-noise mode', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -944,9 +967,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to blue_noise mode (underscore variant)', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -966,9 +988,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to subpixel mode', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -988,9 +1009,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('routes to subpixel-size mode', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -1010,9 +1030,8 @@ describe('pixel-matrix.ts', () => {
   });
 
   it('emits debug logging when debugOverlayDither is true', async () => {
-    const { generatePixelDecisionMatrix } = await import(
-      '../../src/modules/qr-generator/pixel-matrix'
-    );
+    const { generatePixelDecisionMatrix } =
+      await import('../../src/modules/qr-generator/pixel-matrix');
     const qr = mockQR(5);
     const overlay = document.createElement('canvas');
     overlay.width = 20;
@@ -1098,11 +1117,7 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig();
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     // Dark modules should be drawn
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -1116,11 +1131,7 @@ describe('render-loop.ts', () => {
       moduleGap: 2,
     });
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     // Stroke rendering for dark modules
     expect(ctx.strokeRect).toHaveBeenCalled();
@@ -1134,11 +1145,7 @@ describe('render-loop.ts', () => {
       moduleGap: 1,
     });
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1151,11 +1158,7 @@ describe('render-loop.ts', () => {
       frameIndex: 3,
     });
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1165,11 +1168,7 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig({ pixelSnap: 'round' });
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1179,11 +1178,7 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig({ pixelSnap: 'ceil' });
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1193,11 +1188,7 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig({ pixelSnap: 'none' });
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1221,9 +1212,20 @@ describe('render-loop.ts', () => {
     });
 
     renderModules(
-      ctx, qr, config, 5, 10, 1,
-      overlayData, null, 80,
-      new Set(), new Set(), 1, null, false
+      ctx,
+      qr,
+      config,
+      5,
+      10,
+      1,
+      overlayData,
+      null,
+      80,
+      new Set(),
+      new Set(),
+      1,
+      null,
+      false
     );
 
     // Halftone should call drawing functions
@@ -1238,10 +1240,20 @@ describe('render-loop.ts', () => {
     const mockGradient = { addColorStop: vi.fn() };
 
     renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1,
-      mockGradient, true
+      ctx,
+      qr,
+      config,
+      5,
+      10,
+      1,
+      null,
+      null,
+      0,
+      new Set(),
+      new Set(),
+      1,
+      mockGradient,
+      true
     );
 
     // Should use gradient for dark module fill
@@ -1263,9 +1275,20 @@ describe('render-loop.ts', () => {
     }
 
     renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, ditherPattern, 50,
-      new Set(), new Set(), 1, null, false
+      ctx,
+      qr,
+      config,
+      5,
+      10,
+      1,
+      null,
+      ditherPattern,
+      50,
+      new Set(),
+      new Set(),
+      1,
+      null,
+      false
     );
 
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -1285,9 +1308,20 @@ describe('render-loop.ts', () => {
     }
 
     renderModules(
-      ctx, qr, config, 21, 10, 1,
-      null, null, 0,
-      finderPatterns, new Set(), 1, null, false
+      ctx,
+      qr,
+      config,
+      21,
+      10,
+      1,
+      null,
+      null,
+      0,
+      finderPatterns,
+      new Set(),
+      1,
+      null,
+      false
     );
 
     // Should still render non-finder modules
@@ -1312,9 +1346,20 @@ describe('render-loop.ts', () => {
     });
 
     renderModules(
-      ctx, qr, config, 5, 10, 1,
-      overlayData, null, 60,
-      new Set(), new Set(), 1, null, false
+      ctx,
+      qr,
+      config,
+      5,
+      10,
+      1,
+      overlayData,
+      null,
+      60,
+      new Set(),
+      new Set(),
+      1,
+      null,
+      false
     );
 
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -1325,11 +1370,7 @@ describe('render-loop.ts', () => {
     const qr = mockQR(21);
     const config = makeMinimalConfig({ timingStyle: 'dashed' });
 
-    renderModules(
-      ctx, qr, config, 21, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 21, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1342,11 +1383,7 @@ describe('render-loop.ts', () => {
       dotRotationDeg: 45,
     });
 
-    renderModules(
-      ctx, qr, config, 5, 10, 1,
-      null, null, 0,
-      new Set(), new Set(), 1, null, false
-    );
+    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
 
     // dots style uses arc + fill, and save/restore for rotation
     expect(ctx.save).toHaveBeenCalled();

@@ -2,7 +2,11 @@ import { createCanvas } from '@napi-rs/canvas';
 import { describe, expect, it } from 'vitest';
 import { scanImageData, validateOverlayIntensity } from '../../src/modules/qr-analyzer';
 import { decodeQR } from '../../src/modules/qr-decoder';
-import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
+import {
+  QRGenerator,
+  type CanvasFactory,
+  type QRGeneratorConfig,
+} from '../../src/modules/qr-generator';
 
 if (typeof globalThis.ImageData === 'undefined') {
   (globalThis as Record<string, unknown>).ImageData = class ImageData {

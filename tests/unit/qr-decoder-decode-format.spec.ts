@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 describe('qr-decoder decode.ts', () => {
@@ -25,7 +31,7 @@ describe('qr-decoder decode.ts', () => {
       expect(codewords.length).toBeGreaterThan(0);
       // All true data modules → all codewords should be 0xFF
       for (const cw of codewords) {
-        expect(cw).toBe(0xFF);
+        expect(cw).toBe(0xff);
       }
     });
 
@@ -52,7 +58,7 @@ describe('qr-decoder decode.ts', () => {
       const codewords = readCodewords(matrix, 21);
       expect(codewords.length).toBe(26);
       // Should have a mix of values
-      const hasNonZero = codewords.some(c => c !== 0);
+      const hasNonZero = codewords.some((c) => c !== 0);
       expect(hasNonZero).toBe(true);
     });
   });
@@ -152,7 +158,7 @@ describe('qr-decoder decode.ts', () => {
       const { decodeDataCodewords } = await import('../../src/modules/qr-decoder/decode');
       // Byte mode (0100), count=5 (00000101), H E L L O, terminator
       // 0100 00000101 01001000 01000101 01001100 01001100 01001111 0000
-      const dataCodewords = [0x40, 0x54, 0x84, 0x54, 0xC4, 0xC4, 0xF0];
+      const dataCodewords = [0x40, 0x54, 0x84, 0x54, 0xc4, 0xc4, 0xf0];
       const result = decodeDataCodewords(dataCodewords, 1);
       expect(result).toBe('HELLO');
     });
@@ -162,7 +168,7 @@ describe('qr-decoder decode.ts', () => {
       // Numeric mode (0001), count=5 (0000000101), 123 (0001111011), 45 (0101101), terminator (0000)
       // 0001 0000000101 0001111011 0101101 0000
       // Bytes: 00010000 00010100 01111011 01011010 00000000
-      const dataCodewords = [0x10, 0x14, 0x7B, 0x5A, 0x00];
+      const dataCodewords = [0x10, 0x14, 0x7b, 0x5a, 0x00];
       const result = decodeDataCodewords(dataCodewords, 1);
       expect(result).toBe('12345');
     });
@@ -172,7 +178,7 @@ describe('qr-decoder decode.ts', () => {
       // Alphanumeric (0010), count=2 (000000010), pair AB=461 (00111001101), terminator (0000)
       // 0010 000000010 00111001101 0000
       // = 00100000 00010001 11001101 0000xxxx
-      const dataCodewords = [0x20, 0x11, 0xCD, 0x00];
+      const dataCodewords = [0x20, 0x11, 0xcd, 0x00];
       const result = decodeDataCodewords(dataCodewords, 1);
       expect(result).toBe('AB');
     });
@@ -190,7 +196,7 @@ describe('qr-decoder decode.ts', () => {
       // Numeric (0001), count=1 (0000000001), digit 7 (0111), terminator (0000)
       // 0001 0000000001 0111 0000
       // = 00010000 00000101 11000000
-      const dataCodewords = [0x10, 0x05, 0xC0];
+      const dataCodewords = [0x10, 0x05, 0xc0];
       const result = decodeDataCodewords(dataCodewords, 1);
       expect(result).toBe('7');
     });
@@ -219,7 +225,7 @@ describe('qr-decoder decode.ts', () => {
   describe('decodeDataCodewordsDetailed', () => {
     it('returns detailed result for byte mode', async () => {
       const { decodeDataCodewordsDetailed } = await import('../../src/modules/qr-decoder/decode');
-      const dataCodewords = [0x40, 0x54, 0x84, 0x54, 0xC4, 0xC4, 0xF0];
+      const dataCodewords = [0x40, 0x54, 0x84, 0x54, 0xc4, 0xc4, 0xf0];
       const result = decodeDataCodewordsDetailed(dataCodewords, 1);
       expect(result.text).toBe('HELLO');
       expect(result.valid).toBe(true);
@@ -235,7 +241,7 @@ describe('qr-decoder decode.ts', () => {
 
     it('returns detailed result for numeric mode', async () => {
       const { decodeDataCodewordsDetailed } = await import('../../src/modules/qr-decoder/decode');
-      const dataCodewords = [0x10, 0x14, 0x7B, 0x5A, 0x00];
+      const dataCodewords = [0x10, 0x14, 0x7b, 0x5a, 0x00];
       const result = decodeDataCodewordsDetailed(dataCodewords, 1);
       expect(result.text).toBe('12345');
       expect(result.encodingMode).toBe('numeric');
@@ -244,7 +250,7 @@ describe('qr-decoder decode.ts', () => {
 
     it('returns detailed result for alphanumeric mode', async () => {
       const { decodeDataCodewordsDetailed } = await import('../../src/modules/qr-decoder/decode');
-      const dataCodewords = [0x20, 0x11, 0xCD, 0x00];
+      const dataCodewords = [0x20, 0x11, 0xcd, 0x00];
       const result = decodeDataCodewordsDetailed(dataCodewords, 1);
       expect(result.text).toBe('AB');
       expect(result.encodingMode).toBe('alphanumeric');
@@ -256,7 +262,7 @@ describe('qr-decoder decode.ts', () => {
       // Byte mode (0100), count = 255 (very large for available data)
       // 0100 11111111 ...
       // = 01001111 1111xxxx
-      const dataCodewords = [0x4F, 0xF0];
+      const dataCodewords = [0x4f, 0xf0];
       const result = decodeDataCodewordsDetailed(dataCodewords, 1);
       // Should handle truncation gracefully
       expect(result).toBeDefined();
@@ -288,7 +294,7 @@ describe('qr-decoder decode.ts', () => {
       // 0x073E = 1110_0011_1110 (12 bits, but we need 13 → 0_1110_0011_1110)
       // 1000 00000001 0011100111110 0000
       // = 10000000 00010011 10011111 0000xxxx
-      const dataCodewords = [0x80, 0x13, 0x9F, 0x00];
+      const dataCodewords = [0x80, 0x13, 0x9f, 0x00];
       const result = decodeDataCodewordsDetailed(dataCodewords, 1);
       expect(result.segments.length).toBeGreaterThanOrEqual(1);
       expect(result.segments[0].modeName).toBe('kanji');
@@ -310,7 +316,7 @@ describe('qr-decoder decode.ts', () => {
       const { decodeDataCodewordsDetailed } = await import('../../src/modules/qr-decoder/decode');
       // For v27-40, byte mode char count is 16 bits (same as medium)
       // Byte mode (0100), count=1, data='Z'(01011010), terminator
-      const dataCodewords = [0x40, 0x00, 0x15, 0xA0];
+      const dataCodewords = [0x40, 0x00, 0x15, 0xa0];
       const result = decodeDataCodewordsDetailed(dataCodewords, 27);
       expect(result.text).toBe('Z');
       expect(result.valid).toBe(true);
@@ -390,7 +396,7 @@ describe('qr-decoder format.ts', () => {
       // Compute BCH: data=8, bits = 8<<10 = 0x2000
       // After BCH division and XOR with 0x5412:
       // We compute it: data=8 → encoded bits = 0x77C4
-      setFormatBits(matrix, 21, 0x77C4);
+      setFormatBits(matrix, 21, 0x77c4);
       const result = readFormatInfo(matrix, 21);
       expect(result).not.toBeNull();
       expect(result!.eccLevel).toBe(1); // L

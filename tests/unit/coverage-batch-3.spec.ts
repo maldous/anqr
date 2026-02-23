@@ -180,27 +180,35 @@ describe('extract.ts — extractModuleMatrix', () => {
     const data = new Uint8ClampedArray(size * size * 4);
     // Fill white
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 255; data[i + 1] = 255; data[i + 2] = 255; data[i + 3] = 255;
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = 255;
     }
     // Dark block (top-left 70x70)
     for (let y = 0; y < 70; y++) {
       for (let x = 0; x < 70; x++) {
         const idx = (y * size + x) * 4;
-        data[idx] = 0; data[idx + 1] = 0; data[idx + 2] = 0;
+        data[idx] = 0;
+        data[idx + 1] = 0;
+        data[idx + 2] = 0;
       }
     }
 
     const imageData = new ImageData(data, size, size);
     const location = {
-      topLeft: { x: 35, y: 35 }, topRight: { x: 175, y: 35 },
-      bottomLeft: { x: 35, y: 175 }, bottomRight: { x: 175, y: 175 },
-      moduleSize: 10, moduleCount: 21,
+      topLeft: { x: 35, y: 35 },
+      topRight: { x: 175, y: 35 },
+      bottomLeft: { x: 35, y: 175 },
+      bottomRight: { x: 175, y: 175 },
+      moduleSize: 10,
+      moduleCount: 21,
     };
 
     const matrix = extractModuleMatrix(imageData, location, 128);
     expect(matrix).toHaveLength(21);
     expect(matrix[0]).toHaveLength(21);
-    expect(matrix[0][0]).toBe(true);  // dark region
+    expect(matrix[0][0]).toBe(true); // dark region
     expect(matrix[20][20]).toBe(false); // white region
   });
 
@@ -213,9 +221,12 @@ describe('extract.ts — extractModuleMatrix', () => {
     const data = new Uint8ClampedArray(size * size * 4); // all zeros (transparent)
     const imageData = new ImageData(data, size, size);
     const location = {
-      topLeft: { x: 35, y: 35 }, topRight: { x: 175, y: 35 },
-      bottomLeft: { x: 35, y: 175 }, bottomRight: { x: 175, y: 175 },
-      moduleSize: 10, moduleCount: 21,
+      topLeft: { x: 35, y: 35 },
+      topRight: { x: 175, y: 35 },
+      bottomLeft: { x: 35, y: 175 },
+      bottomRight: { x: 175, y: 175 },
+      moduleSize: 10,
+      moduleCount: 21,
     };
 
     const matrix = extractModuleMatrix(imageData, location, 128);
@@ -331,7 +342,9 @@ describe('reader.ts — QRCodeDecoderMetaData', () => {
       typeof import('../../src/modules/qr-decoder/reader')
     >('../../src/modules/qr-decoder/reader');
     const meta = new QRCodeDecoderMetaData(false);
-    const a = {}, b = {}, c = {};
+    const a = {},
+      b = {},
+      c = {};
     const pts = [a, b, c] as any[];
     meta.applyMirroredCorrection(pts);
     expect(pts[0]).toBe(a);
@@ -343,7 +356,8 @@ describe('reader.ts — QRCodeDecoderMetaData', () => {
       typeof import('../../src/modules/qr-decoder/reader')
     >('../../src/modules/qr-decoder/reader');
     const meta = new QRCodeDecoderMetaData(true);
-    const a = {}, b = {};
+    const a = {},
+      b = {};
     const pts = [a, b] as any[];
     meta.applyMirroredCorrection(pts);
     expect(pts[0]).toBe(a);
@@ -363,9 +377,9 @@ describe('reader.ts — QRCodeDecoderMetaData', () => {
 
 describe('reader.ts — Reader.reset()', () => {
   it('reset does not throw', async () => {
-    const { Reader } = await vi.importActual<
-      typeof import('../../src/modules/qr-decoder/reader')
-    >('../../src/modules/qr-decoder/reader');
+    const { Reader } = await vi.importActual<typeof import('../../src/modules/qr-decoder/reader')>(
+      '../../src/modules/qr-decoder/reader'
+    );
     const reader = new Reader();
     expect(() => reader.reset()).not.toThrow();
   });
@@ -384,32 +398,39 @@ describe('decode-qr.ts — decodeQR', () => {
 
   function setupSuccess() {
     mockFindFinderPatterns.mockReturnValue({
-      patterns: [pat, pat, pat], threshold: 128,
+      patterns: [pat, pat, pat],
+      threshold: 128,
     });
     mockSelectFinderPatterns.mockReturnValue([pat, pat, pat]);
     mockCalculateLocation.mockReturnValue({
-      moduleCount: 21, bottomRight: { x: 200, y: 200 }, moduleSize: 10,
+      moduleCount: 21,
+      bottomRight: { x: 200, y: 200 },
+      moduleSize: 10,
     });
     mockExtractModuleMatrix.mockReturnValue(
       Array.from({ length: 21 }, () => Array(21).fill(false))
     );
     mockReadFormatInfo.mockReturnValue({ eccLevel: 1, maskPattern: 0 });
     mockGetECCLevelChar.mockReturnValue('L');
-    mockUnmaskMatrix.mockReturnValue(
-      Array.from({ length: 21 }, () => Array(21).fill(false))
-    );
+    mockUnmaskMatrix.mockReturnValue(Array.from({ length: 21 }, () => Array(21).fill(false)));
     mockReadCodewords.mockReturnValue(new Uint8Array(26));
     mockRsRootabilityFor.mockReturnValue([
       { blockIndex: 0, syndromeNonZeroCount: 0, bmDegree: 0, chienRootsFound: 0 },
     ]);
     mockCorrectRSCodewords.mockReturnValue({
-      dataCodewords: new Uint8Array([64, 84, 134, 86, 198, 16, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236]),
+      dataCodewords: new Uint8Array([
+        64, 84, 134, 86, 198, 16, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236,
+      ]),
       correctionsMade: 0,
     });
     mockDecodeDataCodewordsDetailed.mockReturnValue({
-      text: 'HELLO', bytes: new Uint8Array([72, 69, 76, 76, 79]),
-      encodingMode: 'alphanumeric', valid: true, structurallyValid: true,
-      segmentCount: 1, segments: [{ modeName: 'alphanumeric', valid: true, charCount: 5 }],
+      text: 'HELLO',
+      bytes: new Uint8Array([72, 69, 76, 76, 79]),
+      encodingMode: 'alphanumeric',
+      valid: true,
+      structurallyValid: true,
+      segmentCount: 1,
+      segments: [{ modeName: 'alphanumeric', valid: true, charCount: 5 }],
     });
   }
 
@@ -429,13 +450,21 @@ describe('decode-qr.ts — decodeQR', () => {
   it('returns null when readFormatInfo returns null', async () => {
     mockFindFinderPatterns.mockReturnValue({ patterns: [pat, pat, pat], threshold: 128 });
     mockSelectFinderPatterns.mockReturnValue([pat, pat, pat]);
-    mockCalculateLocation.mockReturnValue({ moduleCount: 21, bottomRight: { x: 200, y: 200 }, moduleSize: 10 });
-    mockExtractModuleMatrix.mockReturnValue(Array.from({ length: 21 }, () => Array(21).fill(false)));
+    mockCalculateLocation.mockReturnValue({
+      moduleCount: 21,
+      bottomRight: { x: 200, y: 200 },
+      moduleSize: 10,
+    });
+    mockExtractModuleMatrix.mockReturnValue(
+      Array.from({ length: 21 }, () => Array(21).fill(false))
+    );
     mockReadFormatInfo.mockReturnValue(null);
     mockGetECCLevelChar.mockReturnValue('L');
     mockUnmaskMatrix.mockReturnValue(Array.from({ length: 21 }, () => Array(21).fill(false)));
     mockReadCodewords.mockReturnValue(new Uint8Array(26));
-    mockRsRootabilityFor.mockReturnValue([{ blockIndex: 0, syndromeNonZeroCount: 0, bmDegree: 0, chienRootsFound: 0 }]);
+    mockRsRootabilityFor.mockReturnValue([
+      { blockIndex: 0, syndromeNonZeroCount: 0, bmDegree: 0, chienRootsFound: 0 },
+    ]);
     const { decodeQR } = await import('../../src/modules/qr-decoder/decode-qr');
     expect(decodeQR(makeImageData())).toBeNull();
   });
@@ -443,13 +472,21 @@ describe('decode-qr.ts — decodeQR', () => {
   it('returns null when RS correction fails for all masks', async () => {
     mockFindFinderPatterns.mockReturnValue({ patterns: [pat, pat, pat], threshold: 128 });
     mockSelectFinderPatterns.mockReturnValue([pat, pat, pat]);
-    mockCalculateLocation.mockReturnValue({ moduleCount: 21, bottomRight: { x: 200, y: 200 }, moduleSize: 10 });
-    mockExtractModuleMatrix.mockReturnValue(Array.from({ length: 21 }, () => Array(21).fill(false)));
+    mockCalculateLocation.mockReturnValue({
+      moduleCount: 21,
+      bottomRight: { x: 200, y: 200 },
+      moduleSize: 10,
+    });
+    mockExtractModuleMatrix.mockReturnValue(
+      Array.from({ length: 21 }, () => Array(21).fill(false))
+    );
     mockReadFormatInfo.mockReturnValue({ eccLevel: 1, maskPattern: 0 });
     mockGetECCLevelChar.mockReturnValue('L');
     mockUnmaskMatrix.mockReturnValue(Array.from({ length: 21 }, () => Array(21).fill(false)));
     mockReadCodewords.mockReturnValue(new Uint8Array(26));
-    mockRsRootabilityFor.mockReturnValue([{ blockIndex: 0, syndromeNonZeroCount: 2, bmDegree: 2, chienRootsFound: 0 }]);
+    mockRsRootabilityFor.mockReturnValue([
+      { blockIndex: 0, syndromeNonZeroCount: 2, bmDegree: 2, chienRootsFound: 0 },
+    ]);
     mockCorrectRSCodewords.mockReturnValue(null);
     const { decodeQR } = await import('../../src/modules/qr-decoder/decode-qr');
     expect(decodeQR(makeImageData())).toBeNull();
@@ -491,27 +528,41 @@ describe('decode-qr.ts — decodeQR', () => {
   it('RS mask fallback — first mask fails, next succeeds', async () => {
     mockFindFinderPatterns.mockReturnValue({ patterns: [pat, pat, pat], threshold: 128 });
     mockSelectFinderPatterns.mockReturnValue([pat, pat, pat]);
-    mockCalculateLocation.mockReturnValue({ moduleCount: 21, bottomRight: { x: 200, y: 200 }, moduleSize: 10 });
-    mockExtractModuleMatrix.mockReturnValue(Array.from({ length: 21 }, () => Array(21).fill(false)));
+    mockCalculateLocation.mockReturnValue({
+      moduleCount: 21,
+      bottomRight: { x: 200, y: 200 },
+      moduleSize: 10,
+    });
+    mockExtractModuleMatrix.mockReturnValue(
+      Array.from({ length: 21 }, () => Array(21).fill(false))
+    );
     mockReadFormatInfo.mockReturnValue({ eccLevel: 1, maskPattern: 0 });
     mockGetECCLevelChar.mockReturnValue('L');
     mockUnmaskMatrix.mockReturnValue(Array.from({ length: 21 }, () => Array(21).fill(false)));
     mockReadCodewords.mockReturnValue(new Uint8Array(26));
-    mockRsRootabilityFor.mockReturnValue([{ blockIndex: 0, syndromeNonZeroCount: 0, bmDegree: 0, chienRootsFound: 0 }]);
+    mockRsRootabilityFor.mockReturnValue([
+      { blockIndex: 0, syndromeNonZeroCount: 0, bmDegree: 0, chienRootsFound: 0 },
+    ]);
 
     let callCount = 0;
     mockCorrectRSCodewords.mockImplementation(() => {
       callCount++;
       if (callCount === 1) return null;
       return {
-        dataCodewords: new Uint8Array([64, 84, 134, 86, 198, 16, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236]),
+        dataCodewords: new Uint8Array([
+          64, 84, 134, 86, 198, 16, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236, 17, 236,
+        ]),
         correctionsMade: 1,
       };
     });
     mockDecodeDataCodewordsDetailed.mockReturnValue({
-      text: 'HELLO', bytes: new Uint8Array([72, 69, 76, 76, 79]),
-      encodingMode: 'alphanumeric', valid: true, structurallyValid: true,
-      segmentCount: 1, segments: [{ modeName: 'alphanumeric', valid: true, charCount: 5 }],
+      text: 'HELLO',
+      bytes: new Uint8Array([72, 69, 76, 76, 79]),
+      encodingMode: 'alphanumeric',
+      valid: true,
+      structurallyValid: true,
+      segmentCount: 1,
+      segments: [{ modeName: 'alphanumeric', valid: true, charCount: 5 }],
     });
 
     const { decodeQR } = await import('../../src/modules/qr-decoder/decode-qr');
@@ -523,8 +574,13 @@ describe('decode-qr.ts — decodeQR', () => {
   it('returns null when decode reports invalid data', async () => {
     setupSuccess();
     mockDecodeDataCodewordsDetailed.mockReturnValue({
-      text: '', bytes: new Uint8Array(0), encodingMode: 'byte',
-      valid: false, structurallyValid: false, segmentCount: 0, segments: [],
+      text: '',
+      bytes: new Uint8Array(0),
+      encodingMode: 'byte',
+      valid: false,
+      structurallyValid: false,
+      segmentCount: 0,
+      segments: [],
     });
     const { decodeQR } = await import('../../src/modules/qr-decoder/decode-qr');
     expect(decodeQR(makeImageData())).toBeNull();
@@ -533,15 +589,22 @@ describe('decode-qr.ts — decodeQR', () => {
   it('returns null when decoded text is empty string', async () => {
     setupSuccess();
     mockDecodeDataCodewordsDetailed.mockReturnValue({
-      text: '', bytes: new Uint8Array(0), encodingMode: 'byte',
-      valid: true, structurallyValid: true, segmentCount: 0, segments: [],
+      text: '',
+      bytes: new Uint8Array(0),
+      encodingMode: 'byte',
+      valid: true,
+      structurallyValid: true,
+      segmentCount: 0,
+      segments: [],
     });
     const { decodeQR } = await import('../../src/modules/qr-decoder/decode-qr');
     expect(decodeQR(makeImageData())).toBeNull();
   });
 
   it('returns null when an exception is thrown during decode', async () => {
-    mockFindFinderPatterns.mockImplementation(() => { throw new Error('boom'); });
+    mockFindFinderPatterns.mockImplementation(() => {
+      throw new Error('boom');
+    });
     const { decodeQR } = await import('../../src/modules/qr-decoder/decode-qr');
     expect(decodeQR(makeImageData())).toBeNull();
   });
@@ -560,7 +623,10 @@ describe('qr-art/image-utils.ts — mapImageToTargetsSupersampled', () => {
     const size = 100;
     const data = new Uint8ClampedArray(size * size * 4);
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 128; data[i + 1] = 128; data[i + 2] = 128; data[i + 3] = 255;
+      data[i] = 128;
+      data[i + 1] = 128;
+      data[i + 2] = 128;
+      data[i + 3] = 255;
     }
     const imageData = new ImageData(data, size, size);
     const { targets, importance } = mapImageToTargetsSupersampled(imageData, 10);
@@ -578,12 +644,13 @@ describe('qr-art/image-utils.ts — mapImageToTargetsSupersampled', () => {
     const size = 50;
     const data = new Uint8ClampedArray(size * size * 4);
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 0; data[i + 1] = 0; data[i + 2] = 0; data[i + 3] = 255;
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+      data[i + 3] = 255;
     }
     const { targets } = mapImageToTargetsSupersampled(new ImageData(data, size, size), 5, 128);
-    for (let r = 0; r < 5; r++)
-      for (let c = 0; c < 5; c++)
-        expect(targets[r][c]).toBe(true);
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) expect(targets[r][c]).toBe(true);
   });
 
   it('all-white pixels produce all-light targets', async () => {
@@ -594,12 +661,13 @@ describe('qr-art/image-utils.ts — mapImageToTargetsSupersampled', () => {
     const size = 50;
     const data = new Uint8ClampedArray(size * size * 4);
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 255; data[i + 1] = 255; data[i + 2] = 255; data[i + 3] = 255;
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = 255;
     }
     const { targets } = mapImageToTargetsSupersampled(new ImageData(data, size, size), 5, 128);
-    for (let r = 0; r < 5; r++)
-      for (let c = 0; c < 5; c++)
-        expect(targets[r][c]).toBe(false);
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) expect(targets[r][c]).toBe(false);
   });
 
   it('importance values are between 0 and 1', async () => {
@@ -611,7 +679,10 @@ describe('qr-art/image-utils.ts — mapImageToTargetsSupersampled', () => {
     const data = new Uint8ClampedArray(size * size * 4);
     for (let i = 0; i < data.length; i += 4) {
       const v = (i / 4) % 256;
-      data[i] = v; data[i + 1] = v; data[i + 2] = v; data[i + 3] = 255;
+      data[i] = v;
+      data[i + 1] = v;
+      data[i + 2] = v;
+      data[i + 3] = 255;
     }
     const { importance } = mapImageToTargetsSupersampled(new ImageData(data, size, size), 5);
     for (let r = 0; r < 5; r++)
@@ -627,7 +698,8 @@ describe('qr-art/image-utils.ts — mapImageToTargetsSupersampled', () => {
     >('../../src/modules/qr-art/image-utils');
 
     const canvas = document.createElement('canvas');
-    canvas.width = 50; canvas.height = 50;
+    canvas.width = 50;
+    canvas.height = 50;
     vi.spyOn(canvas, 'getContext').mockReturnValue(null);
 
     const { targets, importance } = mapImageToTargetsSupersampled(canvas, 5);
@@ -648,13 +720,14 @@ describe('qr-art/image-utils.ts — mapImageToTargetsSupersampled', () => {
     const size = 10;
     const data = new Uint8ClampedArray(size * size * 4);
     for (let i = 0; i < data.length; i += 4) {
-      data[i] = 100; data[i + 1] = 100; data[i + 2] = 100; data[i + 3] = 255;
+      data[i] = 100;
+      data[i + 1] = 100;
+      data[i + 2] = 100;
+      data[i + 3] = 255;
     }
     const { targets } = mapImageToTargetsSupersampled(new ImageData(data, size, size), 5);
     // gray=100 < 128 → dark
-    for (let r = 0; r < 5; r++)
-      for (let c = 0; c < 5; c++)
-        expect(targets[r][c]).toBe(true);
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) expect(targets[r][c]).toBe(true);
   });
 });
 
@@ -728,10 +801,15 @@ describe('bit-matrix.ts — additional coverage', () => {
 describe('exceptions.ts — exception classes', () => {
   it('all exception types have correct kind', async () => {
     const {
-      NotFoundException, FormatException, ChecksumException,
-      IllegalArgumentException, IllegalStateException,
-      ArithmeticException, ReedSolomonException,
-      UnsupportedOperationException, ArrayIndexOutOfBoundsException,
+      NotFoundException,
+      FormatException,
+      ChecksumException,
+      IllegalArgumentException,
+      IllegalStateException,
+      ArithmeticException,
+      ReedSolomonException,
+      UnsupportedOperationException,
+      ArrayIndexOutOfBoundsException,
     } = await vi.importActual<typeof import('../../src/modules/qr-decoder/exceptions')>(
       '../../src/modules/qr-decoder/exceptions'
     );

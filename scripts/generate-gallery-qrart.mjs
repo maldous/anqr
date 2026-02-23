@@ -175,7 +175,9 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
 
   // If the background is generating, poll until it's cached
   if (result.generating) {
-    console.warn(`  ⏳ Background QR-Art generation triggered, polling every ${POLL_INTERVAL_MS / 1000}s...`);
+    console.warn(
+      `  ⏳ Background QR-Art generation triggered, polling every ${POLL_INTERVAL_MS / 1000}s...`
+    );
     for (let poll = 1; poll <= MAX_POLLS; poll++) {
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
       try {
@@ -191,7 +193,9 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
         console.warn(`  ⏳ Poll ${poll}/${MAX_POLLS} failed: ${err.message}`);
       }
     }
-    console.warn(`  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`);
+    console.warn(
+      `  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`
+    );
     return result.buffer;
   }
 
@@ -216,9 +220,7 @@ async function runPool(tasks, concurrency) {
     }
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker())
-  );
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()));
   return results;
 }
 
@@ -287,7 +289,11 @@ async function main() {
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
       const icon = verify.pass ? '✓' : '✗';
       const decodedSuffix = verify.decoded ? verify.decoded.slice(PAYLOAD.length) : '';
-      const suffix = verify.pass ? (decodedSuffix ? ` [${decodedSuffix.slice(0, 30)}]` : '') : ` [${verify.reason}]`;
+      const suffix = verify.pass
+        ? decodedSuffix
+          ? ` [${decodedSuffix.slice(0, 30)}]`
+          : ''
+        : ` [${verify.reason}]`;
       console.log(
         `  [${completed}/${totalRuns}] ${icon} ${scenario.id} × ${fixture.id} ` +
           `(${(buffer.length / 1024).toFixed(1)} KB, ${Date.now() - start}ms)${suffix} [${elapsed}s]`
@@ -311,7 +317,9 @@ async function main() {
     } catch (err) {
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
-      console.error(`  [${completed}/${totalRuns}] ✗ ${scenario.id} × ${fixture.id}: ${err.message} [${elapsed}s]`);
+      console.error(
+        `  [${completed}/${totalRuns}] ✗ ${scenario.id} × ${fixture.id}: ${err.message} [${elapsed}s]`
+      );
       failed.push(artifactName);
       return {
         scenarioId: scenario.id,
@@ -327,8 +335,14 @@ async function main() {
   const results = await runPool(tasks, CONCURRENCY);
 
   // Write passed.txt and failed.txt
-  await fs.writeFile(path.join(OUTPUT_DIR, 'passed.txt'), passed.join('\n') + (passed.length ? '\n' : ''));
-  await fs.writeFile(path.join(OUTPUT_DIR, 'failed.txt'), failed.join('\n') + (failed.length ? '\n' : ''));
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, 'passed.txt'),
+    passed.join('\n') + (passed.length ? '\n' : '')
+  );
+  await fs.writeFile(
+    path.join(OUTPUT_DIR, 'failed.txt'),
+    failed.join('\n') + (failed.length ? '\n' : '')
+  );
 
   // Write JSON summary
   const report = {
@@ -348,7 +362,9 @@ async function main() {
   const totalSec = Math.round((Date.now() - globalStart) / 1000);
   console.log(`\n${'='.repeat(50)}`);
   console.log(`Total: ${results.length} runs in ${totalSec}s`);
-  console.log(`Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`);
+  console.log(
+    `Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`
+  );
   console.log(`Fail:  ${failed.length}`);
   console.log(`\nArtifacts: ${OUTPUT_DIR}/`);
   console.log(`Passed:    ${OUTPUT_DIR}/passed.txt`);

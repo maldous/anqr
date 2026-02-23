@@ -7,7 +7,13 @@ const embedPngMetadata = vi.fn(async (b: Blob) => b);
 const embedPngDpi = vi.fn(async (b: Blob) => b);
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform } }));
 vi.mock('../../src/modules/exporter/utils', async () => {
@@ -109,7 +115,12 @@ describe('exporter image + svg', () => {
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockImplementation(() => 'blob:url');
     const canvas = makeCanvas();
 
-    const jpg = await mod.exportImage(canvas, { outputFormat: 'jpeg', filename: 'pic' }, { title: 'x' }, 300);
+    const jpg = await mod.exportImage(
+      canvas,
+      { outputFormat: 'jpeg', filename: 'pic' },
+      { title: 'x' },
+      300
+    );
     expect(jpg.filename).toBe('pic.jpg');
     expect(embedPngMetadata).not.toHaveBeenCalled();
 

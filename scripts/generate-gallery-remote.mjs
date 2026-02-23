@@ -50,14 +50,14 @@ const ASSET_BASE = process.env.GALLERY_ASSET_URL || 'https://anqr.link';
 const CONCURRENCY = Math.max(1, Number.parseInt(process.env.GALLERY_CONCURRENCY || '2', 10));
 const SCENARIO_TIMEOUT_MS = Math.max(
   30_000,
-  Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '900000', 10),
+  Number.parseInt(process.env.GALLERY_SCENARIO_TIMEOUT_MS || '900000', 10)
 );
 const FETCH_TIMEOUT_MS = Math.max(
   30_000,
   Math.min(
     SCENARIO_TIMEOUT_MS,
-    Number.parseInt(process.env.GALLERY_FETCH_TIMEOUT_MS || '120000', 10),
-  ),
+    Number.parseInt(process.env.GALLERY_FETCH_TIMEOUT_MS || '120000', 10)
+  )
 );
 const FORCE_STRICT_OVERLAY = process.env.GALLERY_STRICT_OVERLAY === '1';
 const SKIP_CACHE = process.env.GALLERY_SKIP_CACHE === '1';
@@ -93,7 +93,7 @@ async function verifyImage(buffer, expectedPrefix, expectAnimated = false) {
       try {
         const arrayBuffer = buffer.buffer.slice(
           buffer.byteOffset,
-          buffer.byteOffset + buffer.byteLength,
+          buffer.byteOffset + buffer.byteLength
         );
         const decoded = decodeGif(arrayBuffer);
         if (!decoded.frames || decoded.frames.length < 2) {
@@ -118,7 +118,9 @@ const GIF87A_SIGNATURE = Buffer.from('GIF87a');
 const GIF89A_SIGNATURE = Buffer.from('GIF89a');
 
 function hasImageMagic(buffer, ext) {
-  const normalized = String(ext || '').toLowerCase().replace(/^\./, '');
+  const normalized = String(ext || '')
+    .toLowerCase()
+    .replace(/^\./, '');
   if (normalized === 'gif') {
     return (
       buffer.length >= 6 &&
@@ -217,7 +219,7 @@ async function removeScenarioArtifacts(outputDir, config) {
           throw err;
         }
       }
-    }),
+    })
   );
 }
 
@@ -241,8 +243,7 @@ async function fetchOnce(url) {
     });
   } catch (err) {
     clearTimeout(timeoutId);
-    const isDnsFailure =
-      err?.code === 'ENOTFOUND' || err?.cause?.code === 'ENOTFOUND';
+    const isDnsFailure = err?.code === 'ENOTFOUND' || err?.cause?.code === 'ENOTFOUND';
     if (!isDnsFailure || RESOLVE_FALLBACK_IPS.length === 0) {
       throw err;
     }
@@ -309,7 +310,7 @@ function fetchOnceWithResolvedIp(parsedUrl, headers, ipAddress) {
           const generating = String(res.headers['x-anqr-status'] || '') === 'generating';
           resolve({ buffer, generating, contentType });
         });
-      },
+      }
     );
 
     req.setTimeout(FETCH_TIMEOUT_MS, () => {
@@ -327,16 +328,14 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
       result = await fetchOnce(url);
       break;
     } catch (err) {
-      const detail = [
-        err?.message,
-        err?.cause?.code,
-        err?.cause?.message,
-      ]
+      const detail = [err?.message, err?.cause?.code, err?.cause?.message]
         .filter(Boolean)
         .join(' | ');
       if (attempt < retries) {
         const delay = 2000 * (attempt + 1);
-        console.warn(`  ↻ Retry ${attempt + 1}/${retries} after ${delay}ms: ${detail || 'fetch failed'}`);
+        console.warn(
+          `  ↻ Retry ${attempt + 1}/${retries} after ${delay}ms: ${detail || 'fetch failed'}`
+        );
         await new Promise((r) => setTimeout(r, delay));
         continue;
       }
@@ -345,7 +344,9 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
   }
 
   if (result.generating) {
-    console.warn(`  ⏳ Background generation triggered, polling every ${POLL_INTERVAL_MS / 1000}s...`);
+    console.warn(
+      `  ⏳ Background generation triggered, polling every ${POLL_INTERVAL_MS / 1000}s...`
+    );
     for (let poll = 1; poll <= MAX_POLLS; poll++) {
       await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
       try {
@@ -361,7 +362,9 @@ async function fetchWithRetry(url, retries = MAX_RETRIES) {
         console.warn(`  ⏳ Poll ${poll}/${MAX_POLLS} failed: ${err.message}`);
       }
     }
-    console.warn(`  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`);
+    console.warn(
+      `  ⚠ Background render did not complete after ${MAX_POLLS} polls, using degraded image`
+    );
     return result;
   }
 
@@ -386,9 +389,7 @@ async function runPool(tasks, concurrency) {
     }
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker())
-  );
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, () => worker()));
   return results;
 }
 
@@ -420,7 +421,9 @@ async function main() {
   const preShardCount = configs.length;
   configs = applyGalleryShard(configs, SHARD);
 
-  console.log(`Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`);
+  console.log(
+    `Configs: ${configs.length}${SHARD.isSharded ? ` (shard from ${preShardCount})` : ''}\n`
+  );
 
   // Prepare artifact directory
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
@@ -482,14 +485,12 @@ async function main() {
     } catch (err) {
       completed++;
       const elapsed = ((Date.now() - globalStart) / 1000).toFixed(0);
-      const detail = [
-        err?.message,
-        err?.cause?.code,
-        err?.cause?.message,
-      ]
+      const detail = [err?.message, err?.cause?.code, err?.cause?.message]
         .filter(Boolean)
         .join(' | ');
-      console.error(`  [${completed}/${configs.length}] ✗ ${config.id}: ${detail || 'API_ERROR'} [${elapsed}s]`);
+      console.error(
+        `  [${completed}/${configs.length}] ✗ ${config.id}: ${detail || 'API_ERROR'} [${elapsed}s]`
+      );
       failed.push(`${fallbackName}.${config.isAnimated ? 'gif' : 'png'}`);
       return {
         id: config.id,
@@ -524,7 +525,10 @@ async function main() {
     categories: Object.fromEntries(
       ['nooverlay', 'overlay', 'artwork'].map((cat) => {
         const catResults = results.filter((r) => r.category === cat);
-        return [cat, { total: catResults.length, pass: catResults.filter((r) => r.status === 'pass').length }];
+        return [
+          cat,
+          { total: catResults.length, pass: catResults.filter((r) => r.status === 'pass').length },
+        ];
       })
     ),
     results,
@@ -535,7 +539,9 @@ async function main() {
   const totalSec = Math.round((Date.now() - globalStart) / 1000);
   console.log(`\n${'='.repeat(50)}`);
   console.log(`Total: ${results.length} runs in ${totalSec}s`);
-  console.log(`Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`);
+  console.log(
+    `Pass:  ${passed.length} (${Math.round((passed.length * 100) / (results.length || 1))}%)`
+  );
   console.log(`Fail:  ${failed.length}`);
   console.log(`\nArtifacts: ${OUTPUT_DIR}/`);
   console.log(`Passed:    ${passedPath}`);

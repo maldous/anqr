@@ -52,7 +52,12 @@ describe('logger-remote', () => {
     const now = Date.now();
     localStorage.setItem(
       'anqr_diagnostics',
-      JSON.stringify({ enabled: true, enabledAt: now - 60000, expiresAt: now - 1, reason: 'expired' })
+      JSON.stringify({
+        enabled: true,
+        enabledAt: now - 60000,
+        expiresAt: now - 1,
+        reason: 'expired',
+      })
     );
 
     const mod = await import('../../src/lib/logger-remote');
@@ -110,7 +115,12 @@ describe('logger-remote', () => {
     const now = Date.now();
     localStorage.setItem(
       'anqr_diagnostics',
-      JSON.stringify({ enabled: true, enabledAt: now - 1000, expiresAt: now + 20 * 60000, reason: 'persist' })
+      JSON.stringify({
+        enabled: true,
+        enabledAt: now - 1000,
+        expiresAt: now + 20 * 60000,
+        reason: 'persist',
+      })
     );
 
     mod.initRemoteDiagnostics();

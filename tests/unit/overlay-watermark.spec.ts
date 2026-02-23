@@ -2,7 +2,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 type MockCtx = {
@@ -87,14 +93,35 @@ describe('overlay watermark', () => {
     const mod = await import('../../src/modules/overlay/watermark');
 
     expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'top-left', 4)).toEqual({ x: 4, y: 4 });
-    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'top-center', 4)).toEqual({ x: 40, y: 4 });
-    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'top-right', 4)).toEqual({ x: 76, y: 4 });
-    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'center-left', 4)).toEqual({ x: 4, y: 25 });
+    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'top-center', 4)).toEqual({
+      x: 40,
+      y: 4,
+    });
+    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'top-right', 4)).toEqual({
+      x: 76,
+      y: 4,
+    });
+    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'center-left', 4)).toEqual({
+      x: 4,
+      y: 25,
+    });
     expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'center', 4)).toEqual({ x: 40, y: 25 });
-    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'center-right', 4)).toEqual({ x: 76, y: 25 });
-    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'bottom-left', 4)).toEqual({ x: 4, y: 46 });
-    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'bottom-center', 4)).toEqual({ x: 40, y: 46 });
-    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'bottom-right', 4)).toEqual({ x: 76, y: 46 });
+    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'center-right', 4)).toEqual({
+      x: 76,
+      y: 25,
+    });
+    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'bottom-left', 4)).toEqual({
+      x: 4,
+      y: 46,
+    });
+    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'bottom-center', 4)).toEqual({
+      x: 40,
+      y: 46,
+    });
+    expect(mod.calculateWatermarkPositions(100, 60, 20, 10, 'bottom-right', 4)).toEqual({
+      x: 76,
+      y: 46,
+    });
   });
 
   it('renders text and pattern watermark canvases, with missing context errors', async () => {
@@ -172,8 +199,12 @@ describe('overlay watermark', () => {
       return originalCreate(tag as any);
     }) as any);
 
-    expect(() => mod.applyWatermark(makeCanvas(), { kind: 'text', text: 'x' })).toThrow('Could not get 2D context');
-    expect(() => mod.applyWatermarkCenterLogo(makeCanvas(), makeCanvas())).toThrow('Could not get 2D context');
+    expect(() => mod.applyWatermark(makeCanvas(), { kind: 'text', text: 'x' })).toThrow(
+      'Could not get 2D context'
+    );
+    expect(() => mod.applyWatermarkCenterLogo(makeCanvas(), makeCanvas())).toThrow(
+      'Could not get 2D context'
+    );
     badSpy.mockRestore();
 
     const originalCreate2 = document.createElement.bind(document);

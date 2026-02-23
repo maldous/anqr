@@ -1,0 +1,160 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "react", "jsx-a11y", "unicorn"],
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "rules": {
+    "unicorn/filename-case": ["error", { "cases": { "kebabCase": true, "pascalCase": true } }],
+    "unicorn/no-new-array": "off",
+
+    "no-console": "error",
+    "prefer-const": "error",
+    "no-template-curly-in-string": "off",
+    "no-return-assign": "off",
+
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_",
+        "ignoreRestSiblings": true
+      }
+    ],
+
+    "@typescript-eslint/consistent-type-imports": "warn",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+
+    "import/no-default-export": "error",
+    "import/no-commonjs": "error",
+    "import/no-cycle": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["./**/", "../**/", "@/**/", "~/**/"],
+            "message": "No trailing-slash imports. Import the directory, not './x/'."
+          },
+          {
+            "group": ["**/index", "**/index.ts", "**/index.js", "**/index.tsx", "**/index.jsx"],
+            "message": "No explicit index imports. Use the directory specifier."
+          },
+          {
+            "group": ["**/internal/**", "**/internal"],
+            "message": "Never import internal paths across modules. Import the module entrypoint."
+          },
+          {
+            "group": ["@modules/*/*", "src/modules/*/*", "@/modules/*/*", "~/modules/*/*"],
+            "message": "No sub-APIs. Import only the module entrypoint (one segment)."
+          }
+        ]
+      }
+    ],
+
+    "react/jsx-no-useless-fragment": "warn",
+    "react/no-array-index-key": "off",
+    "react-hooks/exhaustive-deps": "warn",
+
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "jsx-a11y/mouse-events-have-key-events": "warn",
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/label-has-associated-control": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/modules/**/*.ts",
+        "src/i18n/**/*.ts",
+        "src/App.tsx",
+        "src/components/**/*.tsx",
+        "src/hooks/**/*.ts",
+        "netlify/**/*.ts",
+        "tests/**/*.ts",
+        "scripts/**/*.js",
+        "scripts/**/*.mjs",
+        "scripts/**/*.ts",
+        "playwright.config.ts",
+        "vite.config.ts",
+        "vitest.config.ts",
+        "capacitor.config.ts",
+        "postcss.config.js",
+        "tailwind.config.js",
+        "commitlint.config.cjs"
+      ],
+      "rules": {
+        "import/no-default-export": "off"
+      }
+    },
+    {
+      "files": ["src/hooks/**/*.ts", "tests/**/*.ts"],
+      "rules": {
+        "unicorn/filename-case": "off"
+      }
+    },
+    {
+      "files": [
+        "postcss.config.js",
+        "tailwind.config.js",
+        "commitlint.config.cjs",
+        ".dependency-cruiser.cjs",
+        "scripts/**/*.js",
+        "scripts/**/*.mjs",
+        "scripts/**/*.cjs"
+      ],
+      "rules": {
+        "import/no-commonjs": "off"
+      }
+    },
+    {
+      "files": [
+        "netlify/**/*.ts",
+        "scripts/**/*.js",
+        "scripts/**/*.mjs",
+        "scripts/**/*.ts",
+        "scripts/**/*.cjs",
+        "src/lib/logger.ts",
+        "src/lib/logger-remote.ts",
+        "src/modules/qr-analyzer/logger.ts",
+        "src/modules/overlay/overlay-filters.ts",
+        "src/modules/qr-generator/**/*.ts",
+        "tests/**/*.ts",
+        ".dependency-cruiser.cjs"
+      ],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": [
+        "tests/**/*.ts",
+        "scripts/**/*.js",
+        "scripts/**/*.mjs",
+        "scripts/**/*.ts",
+        "scripts/**/*.cjs"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": [
+        "tests/**/*.ts",
+        "tests/**/*.spec.ts",
+        "scripts/**/*.js",
+        "scripts/**/*.mjs",
+        "scripts/**/*.ts"
+      ],
+      "rules": {
+        "no-unused-expressions": "off",
+        "prefer-const": "warn"
+      }
+    }
+  ],
+  "ignorePatterns": ["dist", "build", "coverage", "node_modules", ".dist", ".build", ".out"]
+}

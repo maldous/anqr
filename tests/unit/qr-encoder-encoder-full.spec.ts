@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 describe('qr-encoder/encoder.ts', () => {
@@ -710,7 +716,9 @@ describe('qr-encoder/encoder.ts', () => {
     it('throws on data overflow for small version', async () => {
       const qrcode = await getQrcode();
       const qr = qrcode(1, 'H');
-      qr.addData('This string is way too long to fit in a version 1 H QR code because it exceeds capacity');
+      qr.addData(
+        'This string is way too long to fit in a version 1 H QR code because it exceeds capacity'
+      );
       expect(() => qr.make()).toThrow('code length overflow');
     });
   });

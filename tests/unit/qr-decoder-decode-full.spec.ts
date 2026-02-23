@@ -403,13 +403,7 @@ describe('qr-decoder decode.ts', () => {
       const { decodeDataCodewordsDetailed } = await import('../../src/modules/qr-decoder/decode');
       // Use bytes that produce replacement character in UTF-8
       // 0xFF is invalid start byte in UTF-8
-      const data = packBits(
-        [MODE_BYTE, 4],
-        [2, 8],
-        [0xff, 8],
-        [0xfe, 8],
-        [MODE_TERMINATOR, 4]
-      );
+      const data = packBits([MODE_BYTE, 4], [2, 8], [0xff, 8], [0xfe, 8], [MODE_TERMINATOR, 4]);
       const result = decodeDataCodewordsDetailed(data, 1);
       // Should fall back to latin1 if UTF-8 produces replacement chars
       expect(result.text.length).toBe(2);
@@ -684,13 +678,7 @@ describe('qr-decoder decode.ts', () => {
 
     it('segments array includes all decoded segments with proper metadata', async () => {
       const { decodeDataCodewordsDetailed } = await import('../../src/modules/qr-decoder/decode');
-      const data = packBits(
-        [MODE_BYTE, 4],
-        [2, 8],
-        [0x48, 8],
-        [0x69, 8],
-        [MODE_TERMINATOR, 4]
-      );
+      const data = packBits([MODE_BYTE, 4], [2, 8], [0x48, 8], [0x69, 8], [MODE_TERMINATOR, 4]);
       const result = decodeDataCodewordsDetailed(data, 1);
       expect(result.segments).toHaveLength(2); // byte + terminator
       expect(result.segments[0].mode).toBe(MODE_BYTE);

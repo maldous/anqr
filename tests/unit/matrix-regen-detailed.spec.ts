@@ -1,24 +1,18 @@
 /**
  * Detailed Matrix Regeneration Debug Test
- * 
+ *
  * This test compares the regenerated matrix with the encoder's output
  * at a very granular level to identify exactly where the divergence occurs.
  */
 
 import { describe, it, expect } from 'vitest';
 import { qrcode } from '../../src/modules/qr-encoder';
-import { qrBitBuffer } from '../../src/modules/qr-encoder/bit-buffer';
-import { qr8BitByte } from '../../src/modules/qr-encoder/data-modes';
-import { getRSBlocks } from '../../src/modules/qr-encoder/rs-blocks';
 import { QRErrorCorrectionLevel } from '../../src/modules/qr-encoder/types';
 import {
-  getErrorCorrectPolynomial,
-  getLengthInBits,
   getPatternPosition,
   getBCHTypeInfo,
   getBCHTypeNumber,
 } from '../../src/modules/qr-encoder/utils';
-import { qrPolynomial } from '../../src/modules/qr-encoder/math';
 import { getMaskFunction } from '../../src/modules/qr-spec/masks';
 
 // Polyfill ImageData for Node environment
@@ -37,11 +31,16 @@ if (typeof globalThis.ImageData === 'undefined') {
 
 function eccToNumeric(ecc: 'L' | 'M' | 'Q' | 'H'): number {
   switch (ecc) {
-    case 'L': return QRErrorCorrectionLevel.L;
-    case 'M': return QRErrorCorrectionLevel.M;
-    case 'Q': return QRErrorCorrectionLevel.Q;
-    case 'H': return QRErrorCorrectionLevel.H;
-    default: return QRErrorCorrectionLevel.M;
+    case 'L':
+      return QRErrorCorrectionLevel.L;
+    case 'M':
+      return QRErrorCorrectionLevel.M;
+    case 'Q':
+      return QRErrorCorrectionLevel.Q;
+    case 'H':
+      return QRErrorCorrectionLevel.H;
+    default:
+      return QRErrorCorrectionLevel.M;
   }
 }
 
@@ -53,7 +52,7 @@ function getEncoderInterleavedBytes(
   version: number,
   ecc: 'L' | 'M' | 'Q' | 'H',
   mask: number
-): { interleaved: number[], moduleCount: number } {
+): { interleaved: number[]; moduleCount: number } {
   const qr = qrcode(version, ecc);
   qr.addData(data);
   qr.make(mask);
@@ -237,29 +236,29 @@ describe('Detailed Matrix Regeneration Debug', () => {
     const version = 7;
     const ecc = 'H' as const;
     const mask = 0;
-    
+
     // Get encoder's matrix
     const qr = qrcode(version, ecc);
     qr.addData(data);
     qr.make(mask);
     const moduleCount = qr.getModuleCount();
-    
+
     // Get our interleaved bytes (should match encoder's)
     const { interleaved } = getEncoderInterleavedBytes(data, version, ecc, mask);
-    
+
     // Regenerate using our function
     const regenerated = regenerateMatrix(interleaved, version, ecc, mask);
-    
+
     // Classify mismatches by region
     const mismatches = {
-      finder: [] as Array<{row: number, col: number, encoder: boolean, regen: boolean}>,
-      timing: [] as Array<{row: number, col: number, encoder: boolean, regen: boolean}>,
-      alignment: [] as Array<{row: number, col: number, encoder: boolean, regen: boolean}>,
-      format: [] as Array<{row: number, col: number, encoder: boolean, regen: boolean}>,
-      version: [] as Array<{row: number, col: number, encoder: boolean, regen: boolean}>,
-      data: [] as Array<{row: number, col: number, encoder: boolean, regen: boolean}>,
+      finder: [] as Array<{ row: number; col: number; encoder: boolean; regen: boolean }>,
+      timing: [] as Array<{ row: number; col: number; encoder: boolean; regen: boolean }>,
+      alignment: [] as Array<{ row: number; col: number; encoder: boolean; regen: boolean }>,
+      format: [] as Array<{ row: number; col: number; encoder: boolean; regen: boolean }>,
+      version: [] as Array<{ row: number; col: number; encoder: boolean; regen: boolean }>,
+      data: [] as Array<{ row: number; col: number; encoder: boolean; regen: boolean }>,
     };
-    
+
     // Get alignment positions for classification
     const alignmentPositions = new Set<string>();
     if (version >= 2) {
@@ -274,21 +273,23 @@ describe('Detailed Matrix Regeneration Debug', () => {
         }
       }
     }
-    
+
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
         const encoderVal = qr.isDark(row, col);
         const regenVal = regenerated[row][col];
-        
+
         if (encoderVal !== regenVal) {
           const key = `${row},${col}`;
           const mismatch = { row, col, encoder: encoderVal, regen: regenVal };
-          
+
           // Classify the mismatch
           // Finder patterns (7x7 at three corners)
-          if ((row < 8 && col < 8) || 
-              (row < 8 && col >= moduleCount - 8) ||
-              (row >= moduleCount - 8 && col < 8)) {
+          if (
+            (row < 8 && col < 8) ||
+            (row < 8 && col >= moduleCount - 8) ||
+            (row >= moduleCount - 8 && col < 8)
+          ) {
             mismatches.finder.push(mismatch);
           }
           // Timing patterns (row 6 and col 6)
@@ -300,15 +301,20 @@ describe('Detailed Matrix Regeneration Debug', () => {
             mismatches.alignment.push(mismatch);
           }
           // Format info (around top-left finder)
-          else if ((row === 8 && col <= 8) || (row <= 8 && col === 8) ||
-                   (row === 8 && col >= moduleCount - 8) || 
-                   (row >= moduleCount - 7 && col === 8)) {
+          else if (
+            (row === 8 && col <= 8) ||
+            (row <= 8 && col === 8) ||
+            (row === 8 && col >= moduleCount - 8) ||
+            (row >= moduleCount - 7 && col === 8)
+          ) {
             mismatches.format.push(mismatch);
           }
           // Version info (version >= 7)
-          else if (version >= 7 && 
-                   ((row < 6 && col >= moduleCount - 11 && col < moduleCount - 8) ||
-                    (col < 6 && row >= moduleCount - 11 && row < moduleCount - 8))) {
+          else if (
+            version >= 7 &&
+            ((row < 6 && col >= moduleCount - 11 && col < moduleCount - 8) ||
+              (col < 6 && row >= moduleCount - 11 && row < moduleCount - 8))
+          ) {
             mismatches.version.push(mismatch);
           }
           // Data modules
@@ -318,7 +324,7 @@ describe('Detailed Matrix Regeneration Debug', () => {
         }
       }
     }
-    
+
     console.log('\n=== Mismatch Classification ===');
     console.log('Finder patterns:', mismatches.finder.length);
     console.log('Timing patterns:', mismatches.timing.length);
@@ -326,7 +332,7 @@ describe('Detailed Matrix Regeneration Debug', () => {
     console.log('Format info:', mismatches.format.length);
     console.log('Version info:', mismatches.version.length);
     console.log('Data modules:', mismatches.data.length);
-    
+
     // Show sample mismatches from each category
     if (mismatches.finder.length > 0) {
       console.log('\nSample finder mismatches:', mismatches.finder.slice(0, 3));
@@ -337,36 +343,36 @@ describe('Detailed Matrix Regeneration Debug', () => {
     if (mismatches.data.length > 0) {
       console.log('\nSample data mismatches:', mismatches.data.slice(0, 5));
     }
-    
-    const totalMismatches = 
-      mismatches.finder.length + 
-      mismatches.timing.length + 
+
+    const totalMismatches =
+      mismatches.finder.length +
+      mismatches.timing.length +
       mismatches.alignment.length +
       mismatches.format.length +
       mismatches.version.length +
       mismatches.data.length;
-    
+
     console.log(`\nTotal mismatches: ${totalMismatches} / ${moduleCount * moduleCount}`);
-    
+
     // The test should pass if there are no mismatches
     expect(totalMismatches).toBe(0);
   });
-  
+
   it('traces data placement step by step', () => {
     // Use a smaller version for easier debugging
     const data = 'TEST';
     const version = 2;
     const ecc = 'M' as const;
     const mask = 0;
-    
+
     const qr = qrcode(version, ecc);
     qr.addData(data);
     qr.make(mask);
     const moduleCount = qr.getModuleCount();
-    
+
     const { interleaved } = getEncoderInterleavedBytes(data, version, ecc, mask);
     const regenerated = regenerateMatrix(interleaved, version, ecc, mask);
-    
+
     // Count null modules in encoder vs regenerated
     // (null means structural/reserved, shouldn't be placed)
     let mismatchCount = 0;
@@ -377,7 +383,7 @@ describe('Detailed Matrix Regeneration Debug', () => {
         }
       }
     }
-    
+
     console.log(`\nv2 ECC=M: ${mismatchCount} mismatches`);
     expect(mismatchCount).toBe(0);
   });

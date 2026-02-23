@@ -74,18 +74,14 @@ function isIgnorable(text) {
   if (/\(default:\s*[^)]+\)/i.test(t)) return true;
   if (/\b\d+\s*=\s*[A-Za-z0-9_-]+/.test(t)) return true;
   // Product/standard names are often intentionally untranslated.
-  if (
-    /\b(ANQR|EMVCo|GTIN|BOLT11|Shift-JIS|PayID|QRIS|SEPA|Swiss QR-bill|Case Study)\b/i.test(t)
-  ) {
+  if (/\b(ANQR|EMVCo|GTIN|BOLT11|Shift-JIS|PayID|QRIS|SEPA|Swiss QR-bill|Case Study)\b/i.test(t)) {
     return true;
   }
   if (t.length < 30) return true;
   const words = t.split(/\s+/).filter(Boolean);
   if (words.length < 5) return true;
   // If only placeholders + punctuation/numbers, ignore
-  const stripped = t
-    .replace(/\{\{[^}]+\}\}/g, '')
-    .replace(/[\s\d\-+(){}\[\],./:#%_]/g, '');
+  const stripped = t.replace(/\{\{[^}]+\}\}/g, '').replace(/[\s\d\-+(){}[\],./:#%_]/g, '');
   if (stripped.length === 0) return true;
   // If no letters remain (e.g., symbols), ignore
   if (!/[A-Za-z]/.test(t)) return true;

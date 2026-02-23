@@ -2,7 +2,6 @@
 
 Updated: 2026-02-18 (Australia/Melbourne)
 
-
 ## Architecture at a glance
 
 ANQR is a **React + Vite** web app (also wrapped by **Capacitor** for Android) that lets users configure and render QR codes (static or animated) with styling, overlays, watermarks, safety checks, sharing links, and exports.
@@ -47,7 +46,7 @@ flowchart TD
    - Chooses between “editor” vs static pages.
    - Parses URL params (`parseUrlParams`) to pre-load editor settings.
 3. **State** (`src/store/qr-store.ts`)
-   - Single Zustand store holds *all* editor settings: payload, encoding, render style, overlay, watermark, animation, output, safety, metadata, ads/QA, etc.
+   - Single Zustand store holds _all_ editor settings: payload, encoding, render style, overlay, watermark, animation, output, safety, metadata, ads/QA, etc.
 4. **UI** (components + sections)
    - Sidebar sections update slices of the store (e.g. Render / Overlay / Watermark).
    - Preview consumes the store and the generator hook to show render output + warnings.
@@ -75,6 +74,7 @@ flowchart TD
 ```
 
 Important implication: **URL parameter compatibility** is enforced in two places:
+
 - Client share encoder/decoder (`src/modules/share-links/url-params.ts`)
 - Server query parser (`netlify/functions/qr.ts`)
 
@@ -93,7 +93,7 @@ The store is intentionally “section-shaped”:
 - `safety` + `auto` → auto ECC choices + enforcement (min module/quiet zone, overlay intensity caps, contrast warnings).
 - `output` + `metadata` → export format, dimensions, DPI, embedded metadata.
 
-The renderer config assembled in `useQRGenerator.ts` is effectively the *canonical mapping* from those slices to the actual generation engine.
+The renderer config assembled in `useQRGenerator.ts` is effectively the _canonical mapping_ from those slices to the actual generation engine.
 
 ## Render pipeline (what actually happens)
 
@@ -112,6 +112,7 @@ flowchart LR
 ```
 
 Where:
+
 - `Payload text` comes from `qr-store.ts` via `getPayloadText()` and `payload-generators/*`.
 - Overlay preprocessing is in `src/modules/overlay/processor.ts` (+ `overlay-filters.ts` / `dither-algorithms/*`).
 - Rendering + styling + compositing is `src/modules/qr-generator/*` (backed by `qr-encoder/*` and `qr-spec/*`).
@@ -128,13 +129,16 @@ Parity is now **closed**:
 - Server-only: **0**
 
 Reference artifacts:
+
 - `reports/param-parity.json` (committed baseline, read by signoff check)
 - `tests/unit/share-param-parity.spec.ts`
 
 Compatibility note:
+
 - Both client and server accept legacy per-ECC keys (`maxOverlayIntensity*`) and canonical keys (`maxInt*`) to keep old links working.
 
 Recommended workflow:
+
 - Treat `src/modules/share-links/url-params.ts` as the canonical list of public query params.
 - Keep `tests/unit/share-param-parity.spec.ts` failing on any key-set drift (allowlists at zero).
 
@@ -181,6 +185,7 @@ This document references them when needed.
 ### 2) State: `src/store/qr-store.ts`
 
 Zustand store provides:
+
 - **Types** for all settings (enums/unions used across UI and renderer)
 - **Initial defaults** (the default “look” of the generator)
 - **Actions** to update slices (usually shallow merges for section-local updates)
@@ -188,13 +193,15 @@ Zustand store provides:
 - **QA / telemetry toggles** (e.g. debug heatmaps, blur/contrast checks)
 
 In practice:
-- UI code should *only* read/write the store.
+
+- UI code should _only_ read/write the store.
 - Rendering code should not depend on UI components; it depends on store + pure modules.
 
 ### 3) Generation: `src/hooks/useQRGenerator.ts`
 
 This is the “engine room” of the app.
 It:
+
 - reads store slices
 - computes `safetyAdjustedConfig` and the final `debouncedConfig`
 - loads/prepares overlay canvases
@@ -204,6 +211,7 @@ It:
   - `qrMatrix` (for vector SVG export)
 
 It also performs:
+
 - **Validation scan** of the generated canvas (skipped while animating for perf)
 - **Ad gating hooks** (interstitials/banner via `admob-service.ts`)
 - **Export** orchestration via `exporter.ts`
@@ -211,6 +219,7 @@ It also performs:
 ### 4) Rendering core: `src/modules/qr-generator/*`
 
 `QRGenerator`:
+
 - computes QR matrix (via `src/modules/qr-encoder/*` + `src/modules/qr-spec/*`)
 - identifies structural modules (finder/timing/alignment/format/version)
 - draws modules with style options (shapes, corners, eye styles, gaps)
@@ -224,6 +233,7 @@ The generator keeps the last matrix for vector export (`getLastMatrix()`).
 ### 5) Overlay and image preprocessing: `src/modules/overlay/processor.ts`
 
 Responsibilities:
+
 - load images from file or URL into a canvas
 - resize/crop according to fit mode
 - apply transforms (rotate/flip/scale)
@@ -253,11 +263,13 @@ Responsibilities:
 ### 8) Export: `src/modules/exporter/*` + `src/modules/platform/media-store.ts`
 
 Exports:
+
 - Raster: PNG / JPEG / WebP
 - Animated: GIF (with quantization/dither settings)
 - Vector: SVG (and “vector SVG” built from module matrix)
 
 Also:
+
 - embeds metadata (optional)
 - native Android save path uses Capacitor MediaStore with method-name compatibility (`saveBase64ToDocuments` and `saveToDocuments`) in `src/modules/platform/media-store.ts`.
 - writes to disk in browser (download) or Android Documents (MediaStore plugin)
@@ -276,6 +288,7 @@ Also:
 > This replaces the obsolete per-file list. Use `ls src/modules` or `rg` for a full file inventory.
 
 ## Core modules (runtime)
+
 - **src/modules/qr-generator/** — rendering pipeline (qr-generator-class, render-loop, scaled-render, pixel-matrix, render-modes, overlay transforms, dithering, caches).
 - **src/modules/qr-encoder/** — encoding, bit buffer, RS blocks, masks, segment optimization.
 - **src/modules/qr-spec/** — pattern detection, capacities, masks, structural verification.
@@ -283,6 +296,7 @@ Also:
 - **src/modules/qr-analyzer/** — safety checks, scan simulation, telemetry, decoder integration.
 
 ## Visual / effects
+
 - **src/modules/overlay/** — overlay processing, crop, filters, watermark, canvas blend modes.
 - **src/modules/dither-algorithms/** — ordered, error-diffusion, blue-noise, temporal dithering.
 - **src/modules/animation/** — animated sources + pattern effects.
@@ -290,11 +304,13 @@ Also:
 - **src/modules/core/** — color/contrast/gradient/harmony/math utilities.
 
 ## Output & sharing
+
 - **src/modules/exporter/** — PNG/WebP/GIF/SVG export + metadata.
 - **src/modules/share-links/** — URL params + embed + social links.
 - **src/modules/platform/** — AdMob + MediaStore integration for mobile exports.
 
 ## UI anchors
+
 - **src/components/Preview.tsx** — live canvas + warnings.
 - **src/components/Analyze.tsx** — analysis UI.
 - **src/components/sections/** — generator controls.
@@ -313,16 +329,19 @@ There are **TWO separate i18n systems** in this project:
 ### ⚠️ CRITICAL: NEVER EDIT GENERATED FILES DIRECTLY ⚠️
 
 **YOU MUST NEVER DIRECTLY EDIT:**
+
 - `src/i18n/locales/*.json` - These are GENERATED from txt + template.json
-- `src/i18n/static/<lang>/*.ts` (e.g., `en-GB/privacy.ts`) - These are GENERATED from txt + template-*.ts
+- `src/i18n/static/<lang>/*.ts` (e.g., `en-GB/privacy.ts`) - These are GENERATED from txt + template-\*.ts
 
 **YOU MUST ONLY EDIT:**
+
 - `src/i18n/locales/txt/en-GB.txt` - Master English UI strings
 - `src/i18n/locales/template.json` - Maps JSON keys to line numbers
 - `src/i18n/static/txt/en-GB.txt` - Master English static content
 - `src/i18n/static/txt/template-*.ts` - Template files with line number references
 
 Editing generated files directly will:
+
 1. Break translation detection (xlate.py won't see your changes)
 2. Get overwritten next time `make i18n:fill` runs
 3. Cause inconsistencies across languages
@@ -464,24 +483,24 @@ import { createLogger } from '@/lib/logger';
 
 const log = createLogger('SCOPE_NAME');
 
-log.trace('High-volume diagnostic', { pixels: 1000 });  // Inner loops only
+log.trace('High-volume diagnostic', { pixels: 1000 }); // Inner loops only
 log.debug('Processing step', { width: 100, height: 100 }); // Development diagnostics
-log.info('Operation complete', { duration: 150 });      // Lifecycle milestones
-log.warn('Fallback triggered', { reason: 'timeout' });  // Recoverable issues
-log.error('Operation failed', { error });               // Failures
+log.info('Operation complete', { duration: 150 }); // Lifecycle milestones
+log.warn('Fallback triggered', { reason: 'timeout' }); // Recoverable issues
+log.error('Operation failed', { error }); // Failures
 ```
 
 ### Log Levels (in order of verbosity)
 
-| Level | Purpose | Development | Production | Sentry |
-|-------|---------|-------------|------------|--------|
-| `trace` | Very high-volume diagnostics (decoder inner loops, per-pixel operations) | OFF* | OFF | None |
-| `debug` | Development diagnostics (function entry/exit, state changes, config values) | **ON (default)** | OFF | None |
-| `info` | Lifecycle milestones (initialization, export complete, mode changes) | ON | OFF | None |
-| `warn` | Unexpected but recoverable (fallback triggered, deprecated usage, low contrast) | ON | ON | Breadcrumb |
-| `error` | Failures (unrecoverable errors, failed operations, exceptions) | ON | **ON (default)** | Event |
+| Level   | Purpose                                                                         | Development      | Production       | Sentry     |
+| ------- | ------------------------------------------------------------------------------- | ---------------- | ---------------- | ---------- |
+| `trace` | Very high-volume diagnostics (decoder inner loops, per-pixel operations)        | OFF\*            | OFF              | None       |
+| `debug` | Development diagnostics (function entry/exit, state changes, config values)     | **ON (default)** | OFF              | None       |
+| `info`  | Lifecycle milestones (initialization, export complete, mode changes)            | ON               | OFF              | None       |
+| `warn`  | Unexpected but recoverable (fallback triggered, deprecated usage, low contrast) | ON               | ON               | Breadcrumb |
+| `error` | Failures (unrecoverable errors, failed operations, exceptions)                  | ON               | **ON (default)** | Event      |
 
-*trace requires explicit `setLogLevel('trace')` even in development
+\*trace requires explicit `setLogLevel('trace')` even in development
 
 ### Default Log Levels
 
@@ -492,16 +511,16 @@ log.error('Operation failed', { error });               // Failures
 
 ```javascript
 // In browser console - enable debug logging for 30 minutes
-window.anqrDiag.enable(30, 'debugging overlay issue')
+window.anqrDiag.enable(30, 'debugging overlay issue');
 
 // Disable and revert to production default
-window.anqrDiag.disable()
+window.anqrDiag.disable();
 
 // Check current status
-window.anqrDiag.status()
+window.anqrDiag.status();
 
 // Show help
-window.anqrDiag.help()
+window.anqrDiag.help();
 ```
 
 ### Log Buffer (for debugging failed operations)
@@ -509,19 +528,26 @@ window.anqrDiag.help()
 The logger supports capturing logs to a buffer for debugging failed operations (e.g., QR detection failures):
 
 ```typescript
-import { enableLogBuffer, flushLogBuffer, disableLogBuffer, getBufferSize, clearLogBuffer } from '@/lib/logger';
+import {
+  enableLogBuffer,
+  flushLogBuffer,
+  disableLogBuffer,
+  getBufferSize,
+  clearLogBuffer,
+} from '@/lib/logger';
 
-enableLogBuffer();           // Start capturing (clears existing buffer)
+enableLogBuffer(); // Start capturing (clears existing buffer)
 // ... do something that might fail ...
 const debugLog = flushLogBuffer(); // Get captured logs as string and clear
-disableLogBuffer();          // Stop capturing
+disableLogBuffer(); // Stop capturing
 
 // Utilities
-getBufferSize();  // Returns current buffer length
+getBufferSize(); // Returns current buffer length
 clearLogBuffer(); // Clears buffer without disabling
 ```
 
 **Buffer Limits:**
+
 - Maximum size: **1000 entries** (oldest entries dropped when exceeded)
 - Entries include **ISO 8601 timestamps**: `2024-01-15T10:30:45.123Z [SCOPE:level] message`
 - Buffer captures even when console output is suppressed (production mode)
@@ -531,78 +557,87 @@ clearLogBuffer(); // Clears buffer without disabling
 When creating a logger, use one of these standard scope names. **If a new scope is needed, add it to `SCOPE_PREFIXES` in `src/lib/logger.ts` first.**
 
 #### App Shell
-| Prefix | Module/File |
-|--------|-------------|
-| `MAIN` | src/main.tsx |
-| `APP` | src/App.tsx |
-| `ERROR` | src/components/ErrorBoundary.tsx |
-| `HEADER` | src/components/Header.tsx |
-| `DIAG` | src/lib/logger-remote.ts |
+
+| Prefix   | Module/File                      |
+| -------- | -------------------------------- |
+| `MAIN`   | src/main.tsx                     |
+| `APP`    | src/App.tsx                      |
+| `ERROR`  | src/components/ErrorBoundary.tsx |
+| `HEADER` | src/components/Header.tsx        |
+| `DIAG`   | src/lib/logger-remote.ts         |
 
 #### UI Components
-| Prefix | Module/File |
-|--------|-------------|
-| `ANALYZE` | src/components/Analyze.tsx |
+
+| Prefix    | Module/File                                |
+| --------- | ------------------------------------------ |
+| `ANALYZE` | src/components/Analyze.tsx                 |
 | `OVERLAY` | src/components/sections/OverlaySection.tsx |
 | `PAYLOAD` | src/components/sections/PayloadSection.tsx |
-| `HELP` | src/components/ui/help-link.tsx |
-| `GALLERY` | src/components/Gallery.tsx |
-| `SIDEBAR` | src/components/Sidebar.tsx |
-| `PREVIEW` | src/components/Preview.tsx |
-| `WELCOME` | src/components/WelcomeModal.tsx |
+| `HELP`    | src/components/ui/help-link.tsx            |
+| `GALLERY` | src/components/Gallery.tsx                 |
+| `SIDEBAR` | src/components/Sidebar.tsx                 |
+| `PREVIEW` | src/components/Preview.tsx                 |
+| `WELCOME` | src/components/WelcomeModal.tsx            |
 
 #### QR Generation Pipeline
-| Prefix | Module/File |
-|--------|-------------|
-| `QRGEN` | src/hooks/useQRGenerator.ts |
-| `GENERATE` | src/modules/qr-generator/ (all files) |
-| `DITHER` | src/modules/qr-generator/pixel-matrix-dithered.ts |
-| `ENCODER` | src/modules/qr-encoder/ |
-| `SPEC` | src/modules/qr-spec/ |
+
+| Prefix     | Module/File                                       |
+| ---------- | ------------------------------------------------- |
+| `QRGEN`    | src/hooks/useQRGenerator.ts                       |
+| `GENERATE` | src/modules/qr-generator/ (all files)             |
+| `DITHER`   | src/modules/qr-generator/pixel-matrix-dithered.ts |
+| `ENCODER`  | src/modules/qr-encoder/                           |
+| `SPEC`     | src/modules/qr-spec/                              |
 
 #### QR Analysis Pipeline
-| Prefix | Module/File |
-|--------|-------------|
-| `DECODER` | src/modules/qr-decoder/ |
-| `ANALYZER` | src/modules/qr-analyzer/ |
-| `SCANNER` | src/modules/qr-analyzer/scanner.ts |
-| `SAFETY` | src/modules/qr-analyzer/safety.ts |
+
+| Prefix     | Module/File                        |
+| ---------- | ---------------------------------- |
+| `DECODER`  | src/modules/qr-decoder/            |
+| `ANALYZER` | src/modules/qr-analyzer/           |
+| `SCANNER`  | src/modules/qr-analyzer/scanner.ts |
+| `SAFETY`   | src/modules/qr-analyzer/safety.ts  |
 
 #### Export & Sharing
-| Prefix | Module/File |
-|--------|-------------|
-| `EXPORT` | src/modules/exporter/ |
-| `SHARE` | src/modules/share-links/ |
+
+| Prefix      | Module/File                    |
+| ----------- | ------------------------------ |
+| `EXPORT`    | src/modules/exporter/          |
+| `SHARE`     | src/modules/share-links/       |
 | `CLIPBOARD` | src/modules/browser-clipboard/ |
-| `DOWNLOAD` | src/modules/browser-io/ |
+| `DOWNLOAD`  | src/modules/browser-io/        |
 
 #### Media & Effects
-| Prefix | Module/File |
-|--------|-------------|
-| `ANIMATION` | src/modules/animation/ |
-| `WATERMARK` | src/modules/overlay/watermark.ts |
-| `TELEMETRY` | src/modules/qr-analyzer/telemetry-*.ts |
+
+| Prefix      | Module/File                             |
+| ----------- | --------------------------------------- |
+| `ANIMATION` | src/modules/animation/                  |
+| `WATERMARK` | src/modules/overlay/watermark.ts        |
+| `TELEMETRY` | src/modules/qr-analyzer/telemetry-\*.ts |
 
 #### Data & Platform
-| Prefix | Module/File |
-|--------|-------------|
-| `I18N` | src/i18n/index.ts |
-| `STATIC` | src/i18n/static/index.ts |
-| `PLATFORM` | src/modules/platform/ |
-| `ADMOB` | src/modules/platform/admob.ts |
-| `STORAGE` | src/modules/platform/media-store.ts |
+
+| Prefix     | Module/File                         |
+| ---------- | ----------------------------------- |
+| `I18N`     | src/i18n/index.ts                   |
+| `STATIC`   | src/i18n/static/index.ts            |
+| `PLATFORM` | src/modules/platform/               |
+| `ADMOB`    | src/modules/platform/admob.ts       |
+| `STORAGE`  | src/modules/platform/media-store.ts |
 
 #### Advanced Features
-| Prefix | Module/File |
-|--------|-------------|
-| `QART` | src/modules/qr-art/ |
-| `CORE` | src/modules/core/ |
-| `COLOR` | src/modules/core/color.ts |
+
+| Prefix     | Module/File                  |
+| ---------- | ---------------------------- |
+| `QART`     | src/modules/qr-art/          |
+| `CORE`     | src/modules/core/            |
+| `COLOR`    | src/modules/core/color.ts    |
 | `GRADIENT` | src/modules/core/gradient.ts |
 
 ### Logging Rules for New Code
 
 1. **Import the logger**:
+
    ```typescript
    import { createLogger } from '@/lib/logger';
    // or for path aliases:
@@ -610,6 +645,7 @@ When creating a logger, use one of these standard scope names. **If a new scope 
    ```
 
 2. **Create a scoped logger** at module level:
+
    ```typescript
    const log = createLogger('SCOPE_NAME');
    ```
@@ -622,19 +658,21 @@ When creating a logger, use one of these standard scope names. **If a new scope 
    - `error`: Something failed (Sentry event)
 
 4. **Use structured context objects** (not string concatenation):
+
    ```typescript
    // GOOD
    log.debug('Processing image', { width, height, format });
-   
+
    // BAD
    log.debug(`Processing image: ${width}x${height} (${format})`);
    ```
 
 5. **Don't include scope prefix in message** (logger adds it automatically):
+
    ```typescript
    // GOOD
    log.debug('Starting decode');
-   
+
    // BAD
    log.debug('[DECODER] Starting decode');
    ```
@@ -644,13 +682,14 @@ When creating a logger, use one of these standard scope names. **If a new scope 
    try {
      // ...
    } catch (error) {
-     log.error('Operation failed', { error });  // Sentry captures the error
+     log.error('Operation failed', { error }); // Sentry captures the error
    }
    ```
 
 ### Sensitive Data Redaction
 
 The following keys are automatically redacted from log context:
+
 - `password`, `token`, `secret`, `apiKey`, `api_key`
 - `authorization`, `auth`, `credential`
 - `sessionId`, `session_id`, `accessToken`, `access_token`
@@ -658,10 +697,10 @@ The following keys are automatically redacted from log context:
 
 ### Configuration Constants
 
-| Constant | Value | Purpose |
-|----------|-------|--------|
-| `MAX_BUFFER_SIZE` | 1000 | Maximum log buffer entries before oldest are dropped |
-| `MAX_CONTEXT_DEPTH` | 10 | Maximum object nesting depth for context serialization |
+| Constant            | Value | Purpose                                                |
+| ------------------- | ----- | ------------------------------------------------------ |
+| `MAX_BUFFER_SIZE`   | 1000  | Maximum log buffer entries before oldest are dropped   |
+| `MAX_CONTEXT_DEPTH` | 10    | Maximum object nesting depth for context serialization |
 
 ---
 
@@ -715,12 +754,12 @@ Empirical findings from 46 scenarios × 4 fixtures × 2 tiers = 368 scan matrix 
 
 ### Fixture Difficulty Ranking
 
-| Fixture | Tier A | Notes |
-|---------|-------:|-------|
-| logo.png | ~96% | Easiest — simple shapes, high contrast |
-| test.png | ~90% | Synthetic, predictable geometry |
-| tsunami.jpg | ~86% | Photographic, moderate detail |
-| king.gif | ~83% | Hardest — animated, high detail, saturated |
+| Fixture     | Tier A | Notes                                      |
+| ----------- | -----: | ------------------------------------------ |
+| logo.png    |   ~96% | Easiest — simple shapes, high contrast     |
+| test.png    |   ~90% | Synthetic, predictable geometry            |
+| tsunami.jpg |   ~86% | Photographic, moderate detail              |
+| king.gif    |   ~83% | Hardest — animated, high detail, saturated |
 
 **Key insight:** king.gif drops catastrophically without scan gate assistance. Animated/high-detail fixtures are dependent on scan gate retries.
 
@@ -738,12 +777,12 @@ Empirical findings from 46 scenarios × 4 fixtures × 2 tiers = 368 scan matrix 
 
 ### Two-Tier Testing Methodology
 
-| | Tier A (Production) | Tier B (Diagnostic) |
-|---|---|---|
-| Purpose | What users see | Intrinsic scannability |
-| `scanGateProfile` | `'preview'` | `'off'` |
-| `overlayIntensity` | 70 | 65 |
-| `qrBitBiasStrength` | 0.15 | 0 |
+|                     | Tier A (Production) | Tier B (Diagnostic)    |
+| ------------------- | ------------------- | ---------------------- |
+| Purpose             | What users see      | Intrinsic scannability |
+| `scanGateProfile`   | `'preview'`         | `'off'`                |
+| `overlayIntensity`  | 70                  | 65                     |
+| `qrBitBiasStrength` | 0.15                | 0                      |
 
 ---
 
@@ -790,15 +829,16 @@ ANQR uses a unified versioning convention: **`1.0.{N}`** where `N` is the Androi
 
 ### Three locations, one version
 
-| Location | Key | Example | Purpose |
-|----------|-----|---------|--------|
-| `package.json` | `"version"` | `"1.0.66"` | npm/Vite/Sentry release name (`anqr@1.0.66`) |
-| `android/app/build.gradle` | `versionName` | `"1.0.66"` | User-facing version shown in Play Store |
-| `android/app/build.gradle` | `versionCode` | `66` | Play Store upload counter (must increase each upload) |
+| Location                   | Key           | Example    | Purpose                                               |
+| -------------------------- | ------------- | ---------- | ----------------------------------------------------- |
+| `package.json`             | `"version"`   | `"1.0.66"` | npm/Vite/Sentry release name (`anqr@1.0.66`)          |
+| `android/app/build.gradle` | `versionName` | `"1.0.66"` | User-facing version shown in Play Store               |
+| `android/app/build.gradle` | `versionCode` | `66`       | Play Store upload counter (must increase each upload) |
 
 ### How it stays in sync
 
 `make android:bump` is the **single command** that increments all three values in lockstep:
+
 1. Reads the current `versionCode` from `build.gradle`
 2. Increments it by 1
 3. Computes `NEW_VER = 1.0.{new_code}`
@@ -810,11 +850,13 @@ This runs automatically as part of `make all` step 14 (before `android:release`)
 ### Sentry integration
 
 `vite.config.ts` reads the version from `package.json` via `process.env.npm_package_version` to generate the Sentry release name:
+
 ```
 const sentryRelease = process.env.SENTRY_RELEASE || `anqr@${process.env.npm_package_version || '1.0.0'}`;
 ```
 
 Both `sentryVitePlugin` instances (anqr-web and anqr-mobile) include:
+
 - `setCommits: { auto: true, ignoreMissing: true, ignoreEmpty: true }` — associates git commits with each release (enables "suspect commits" in Sentry)
 - `finalize: true` — marks releases as finalized after deploy
 - `deploy: { env: 'production' }` — records the deployment environment
@@ -889,6 +931,7 @@ Non-blocking steps (2, 3, 12, 15, 16) use `|| echo/true` so the pipeline continu
 ### Resource Auto-Tuning
 
 The Makefile auto-detects CPU/memory/disk and scales parallelism:
+
 - `RESOURCE_UTILIZATION_PCT` (default 95%)
 - `RESOURCE_RESERVED_CORES` (default 1)
 - `SCAN_MATRIX_SHARDS` — auto-computed from CPU/mem/disk budgets
@@ -902,11 +945,11 @@ Run `make resources` to see detected values.
 
 Three files under `tests/` support the test ID coverage and requirement mapping pipeline. They **must remain in the repository** — they are actively consumed by scripts and test specs at runtime.
 
-| File | Type | Generator | Consumers |
-|------|------|-----------|----------|
-| `tests/ids.txt` | **GENERATED** | `scripts/generate-test-ids.js` (`make test:ids`) | 7+ unit test specs (`required-tranche-*.spec.ts`, `testid-inventory-explicit.spec.ts`), `generate-required-tests.js` |
-| `tests/required.txt` | **GENERATED** | `scripts/generate-required-tests.js` (`make test:required`) | `scripts/check-required-tests.js`, `scripts/report-required-gap.js` |
-| `tests/types.txt` | **HAND-WRITTEN** | Manually maintained | `scripts/generate-required-tests.js` |
+| File                 | Type             | Generator                                                   | Consumers                                                                                                            |
+| -------------------- | ---------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `tests/ids.txt`      | **GENERATED**    | `scripts/generate-test-ids.js` (`make test:ids`)            | 7+ unit test specs (`required-tranche-*.spec.ts`, `testid-inventory-explicit.spec.ts`), `generate-required-tests.js` |
+| `tests/required.txt` | **GENERATED**    | `scripts/generate-required-tests.js` (`make test:required`) | `scripts/check-required-tests.js`, `scripts/report-required-gap.js`                                                  |
+| `tests/types.txt`    | **HAND-WRITTEN** | Manually maintained                                         | `scripts/generate-required-tests.js`                                                                                 |
 
 ### How they work together
 
@@ -1124,14 +1167,14 @@ Contents of the `public/` directory.
 - Purpose: server-side image generator for `anqr.link/?...` and share embeds.
 - Canvas backend: `@napi-rs/canvas`.
 - Animated output: GIF helpers (`gifenc`, `gifuct-js`).
-- Imports the same generator: `../../src/modules/qr-generator/qr-generator-class.ts`. 
+- Imports the same generator: `../../src/modules/qr-generator/qr-generator-class.ts`.
 - Uses `src/modules/shared/index.ts` for pure helpers.
 - Includes Sentry release tag (`release: 'anqr@<version>'`) from static `package.json` import, ensuring server-side errors are tagged with the same release as client errors.
 
 ### `android/app/src/main/java/link/anqr/app/MediaStoreWriterPlugin.java`
 
 - Purpose: write exported files into Android’s MediaStore (Documents / Downloads) so users can find them without raw filesystem permissions.
-- Called by: `src/modules/platform/media-store.ts`. 
+- Called by: `src/modules/platform/media-store.ts`.
 
 ## Appendix B: full public query parameter keys (client)
 

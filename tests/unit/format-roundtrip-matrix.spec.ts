@@ -25,7 +25,6 @@ import { readFormatInfo } from '../../src/modules/qr-decoder/format';
 // Import QR-Art's format extraction
 import {
   extractMaskFromMatrix,
-  eccNumericToLevel,
   verifyMatrixFormatInfo,
   type ECCLevel,
 } from '../../src/modules/qr-art/generate';
@@ -117,10 +116,7 @@ function classifyModule(
         ) {
           continue;
         }
-        if (
-          Math.abs(row - centerRow) <= 2 &&
-          Math.abs(col - centerCol) <= 2
-        ) {
+        if (Math.abs(row - centerRow) <= 2 && Math.abs(col - centerCol) <= 2) {
           return 'alignment';
         }
       }
@@ -175,7 +171,7 @@ describe('FormatRoundTripMatrix', () => {
   describe('Exhaustive ECC × Mask Grid', () => {
     // Test all 32 combinations across multiple versions
     const testVersions = [1, 4, 7, 10];
-    
+
     // Use shorter data for small versions to avoid overflow
     const getTestData = (version: number): string => {
       if (version === 1) return 'HI'; // Version 1 has very limited capacity
@@ -242,7 +238,7 @@ describe('FormatRoundTripMatrix', () => {
           // Data format: (ECC << 3) | mask = 5 bits
           const G15_MASK = 0x5412;
           const decoded = formatBits ^ G15_MASK;
-          
+
           // Extract the 5-bit data from bits 10-14
           const dataField = (decoded >> 10) & 0x1f;
           const decodedMask = dataField & 0x07;

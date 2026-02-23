@@ -5,6 +5,7 @@ High-level QR code generation with styling, overlays, and effects.
 ## Purpose
 
 This module provides the main QR code generation functionality:
+
 - Generate styled QR codes
 - Overlay image processing
 - Multiple module styles (square, rounded, dots, diamond)
@@ -88,12 +89,12 @@ const processed = await preprocessOverlay(overlayCanvas, options);
 ### Drawing Functions
 
 ```typescript
-import { 
-  drawModule, 
-  drawFinderPatternComplete, 
+import {
+  drawModule,
+  drawFinderPatternComplete,
   drawAlignmentPattern,
   drawFrame,
-  createGradientFill 
+  createGradientFill,
 } from '@/modules/qr-generator';
 
 // Draw single module

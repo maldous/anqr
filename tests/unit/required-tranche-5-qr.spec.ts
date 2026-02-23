@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const TARGET_SECTIONS = ["QR Encoding Section"] as const;
+const TARGET_SECTIONS = ['QR Encoding Section'] as const;
 
 const EXPLICIT_IDS = [
-  "qr-character-encoding-select",
-  "qr-ecc-select",
-  "qr-encoding-mode-select",
-  "qr-mask-pattern-select",
-  "qr-quiet-zone-enforce-switch",
-  "qr-quiet-zone-slider",
-  "qr-version-slider",
+  'qr-character-encoding-select',
+  'qr-ecc-select',
+  'qr-encoding-mode-select',
+  'qr-mask-pattern-select',
+  'qr-quiet-zone-enforce-switch',
+  'qr-quiet-zone-slider',
+  'qr-version-slider',
 ] as const;
 
 function parseSectionIds(): string[] {
@@ -44,7 +44,7 @@ function parseSectionIds(): string[] {
   return [...new Set(out)].sort();
 }
 
-describe("Required Mapping Tranche 5: QR encoding explicit IDs", () => {
+describe('Required Mapping Tranche 5: QR encoding explicit IDs', () => {
   it('contains non-empty unique explicit IDs', () => {
     expect(EXPLICIT_IDS.length).toBeGreaterThan(0);
     expect(new Set(EXPLICIT_IDS).size).toBe(EXPLICIT_IDS.length);

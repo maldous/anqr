@@ -381,7 +381,7 @@ describe('dither-algorithms apply-dither.ts', () => {
   function createTestImageData(width: number, height: number): InstanceType<typeof MockImageData> {
     const data = new Uint8ClampedArray(width * height * 4);
     for (let i = 0; i < data.length; i += 4) {
-      const gray = Math.floor(((i / 4) / (width * height)) * 255);
+      const gray = Math.floor((i / 4 / (width * height)) * 255);
       data[i] = gray;
       data[i + 1] = gray;
       data[i + 2] = gray;

@@ -5,6 +5,7 @@ Comprehensive implementation of all dithering algorithms.
 ## Purpose
 
 This module provides dithering algorithms for image processing:
+
 - Error diffusion (Floyd-Steinberg, Atkinson, etc.)
 - Ordered dithering (Bayer matrices)
 - Blue noise dithering
@@ -54,7 +55,11 @@ const ordered = orderedDither(imageData, BAYER_8, { levels: 4 });
 ### Blue Noise
 
 ```typescript
-import { blueNoiseDither, generateBlueNoiseTile, sampleBlueNoise } from '@/modules/dither-algorithms';
+import {
+  blueNoiseDither,
+  generateBlueNoiseTile,
+  sampleBlueNoise,
+} from '@/modules/dither-algorithms';
 
 // Generate blue noise tile
 const tile = generateBlueNoiseTile(64, seed);
@@ -69,10 +74,10 @@ const dithered = blueNoiseDither(imageData, { tileSize: 64, seed: 12345 });
 ### Temporal Dithering
 
 ```typescript
-import { 
-  applyTemporalNoiseToCanvas, 
+import {
+  applyTemporalNoiseToCanvas,
   calculateTemporalOffset,
-  isTemporalDitherActive 
+  isTemporalDitherActive,
 } from '@/modules/dither-algorithms';
 
 if (isTemporalDitherActive(mode)) {
@@ -84,10 +89,10 @@ if (isTemporalDitherActive(mode)) {
 ### Advanced Algorithms
 
 ```typescript
-import { 
-  edgeAwareDither, 
+import {
+  edgeAwareDither,
   perceptualDither,
-  adaptiveThresholdDither 
+  adaptiveThresholdDither,
 } from '@/modules/dither-algorithms';
 
 const edgeAware = edgeAwareDither(imageData);

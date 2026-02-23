@@ -1,0 +1,8 @@
+dist
+build
+coverage
+node_modules
+.dist
+.build
+.out
+src/i18n/locales/txt/play.html

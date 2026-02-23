@@ -9,37 +9,44 @@
 
 // ─── Fixed globals applied to every image ────────────────────────────
 export const GLOBALS = Object.freeze({
-  v: 3, align: 'match_finder', timing: 'match_module', gap: 0,
-  gradAngle: 135, radius: 25, dotRot: 0, modulePx: 6,
-  animSpeed: 100, jitter: 0, wmPos: 'bottom-center',
-  gifPal: 256, gifMaxFps: 30, w: 294, h: 294, frameText: 'ANQR',
+  v: 3,
+  align: 'match_finder',
+  timing: 'match_module',
+  gap: 0,
+  gradAngle: 135,
+  radius: 25,
+  dotRot: 0,
+  modulePx: 6,
+  animSpeed: 100,
+  jitter: 0,
+  wmPos: 'bottom-center',
+  gifPal: 256,
+  gifMaxFps: 30,
+  w: 294,
+  h: 294,
+  frameText: 'ANQR',
 });
 
 // ─── Payloads ────────────────────────────────────────────────────────
-export const PAYLOADS = [
-  { id: 'url', data: 'https://anqr.link' },
-];
+export const PAYLOADS = [{ id: 'url', data: 'https://anqr.link' }];
 const DEFAULT_PAYLOAD = PAYLOADS[0];
 
 // ─── Fixtures (overlay & artwork only) ───────────────────────────────
 export const FIXTURES = [
   { id: 'tsunami', publicPath: '/tsunami.jpg', isAnimated: false },
-  { id: 'king',    publicPath: '/king.gif',     isAnimated: true  },
-  { id: 'logo',    publicPath: '/logo.png',     isAnimated: false },
-  { id: 'test',    publicPath: '/test.png',     isAnimated: false },
-  { id: 'trump',   publicPath: '/trump.png',    isAnimated: false },
-  { id: 'dance',   publicPath: '/dance.gif',    isAnimated: true  },
+  { id: 'king', publicPath: '/king.gif', isAnimated: true },
+  { id: 'logo', publicPath: '/logo.png', isAnimated: false },
+  { id: 'test', publicPath: '/test.png', isAnimated: false },
+  { id: 'trump', publicPath: '/trump.png', isAnimated: false },
+  { id: 'dance', publicPath: '/dance.gif', isAnimated: true },
 ];
-const ARTWORK_FIXTURES = FIXTURES.filter(
-  (f) => f.id !== 'king' && f.id !== 'logo',
-);
-const STATIC_FIXTURES  = FIXTURES.filter(f => !f.isAnimated);
-const ANIMATED_FIXTURES = FIXTURES.filter(f => f.isAnimated);
+const ARTWORK_FIXTURES = FIXTURES.filter((f) => f.id !== 'king' && f.id !== 'logo');
+const STATIC_FIXTURES = FIXTURES.filter((f) => !f.isAnimated);
+const ANIMATED_FIXTURES = FIXTURES.filter((f) => f.isAnimated);
 
 // Explicit per-scenario exclusions for known-bad outputs reported from gallery runs.
 // Match is by canonical generated filename (category__label.ext).
 export const EXCLUDED_SCENARIO_FILENAMES = new Set([
-
   'artwork__art-dance-anim-rich-pulse.gif',
   'artwork__art-dance-anim-style-connected.gif',
   'artwork__art-dance-anim-style-dots.gif',
@@ -140,22 +147,35 @@ export const EXCLUDED_SCENARIO_FILENAMES = new Set([
   'overlay__ov-x-anim-king-dither-wave-morph.gif',
   'overlay__target-stack-dance-both-wave-xy-plus-drift.gif',
   'overlay__target-stack-dance-modules-wave-x-plus-result-wave-y.gif',
-  'overlay__target-stack-king-both-wave-xy-plus-drift.gif'
-
+  'overlay__target-stack-king-both-wave-xy-plus-drift.gif',
 ]);
 
 // ─── Dimension arrays ────────────────────────────────────────────────
-export const MODULE_STYLES     = ['square', 'rounded', 'dots', 'diamond', 'connected'];
-export const FINDER_STYLES     = ['square', 'rounded', 'circle'];
-export const GAP_MODES         = ['none', 'inset', 'stroke', 'negative_space'];
-export const FRAME_STYLES      = ['rounded_frame', 'sticker', 'tag'];
-export const GRADIENT_TYPES    = ['linear', 'radial', 'conic'];
-export const EYE_OUTERS        = ['square', 'rounded', 'circle'];
-export const EYE_INNERS        = ['square', 'rounded', 'circle'];
-export const OVERLAY_MODES     = [
-  'center','blend','halftone','halftone-dithered','mosaic','gapfill',
-  'brightness','duotone','subpixel','dithered','blue-noise','pixelate',
-  'outline','wave','subpixel-size','dither','extreme',
+export const MODULE_STYLES = ['square', 'rounded', 'dots', 'diamond', 'connected'];
+export const FINDER_STYLES = ['square', 'rounded', 'circle'];
+export const GAP_MODES = ['none', 'inset', 'stroke', 'negative_space'];
+export const FRAME_STYLES = ['rounded_frame', 'sticker', 'tag'];
+export const GRADIENT_TYPES = ['linear', 'radial', 'conic'];
+export const EYE_OUTERS = ['square', 'rounded', 'circle'];
+export const EYE_INNERS = ['square', 'rounded', 'circle'];
+export const OVERLAY_MODES = [
+  'center',
+  'blend',
+  'halftone',
+  'halftone-dithered',
+  'mosaic',
+  'gapfill',
+  'brightness',
+  'duotone',
+  'subpixel',
+  'dithered',
+  'blue-noise',
+  'pixelate',
+  'outline',
+  'wave',
+  'subpixel-size',
+  'dither',
+  'extreme',
 ];
 const ANIMATED_OVERLAY_MODES = [
   'center',
@@ -168,21 +188,39 @@ const ANIMATED_OVERLAY_MODES = [
   'wave',
   'pixelate',
 ];
-export const DITHER_KINDS      = [
-  'error_diffusion','ordered_bayer','ordered_clustered','ordered_void_cluster',
-  'blue_noise_threshold','true_dither','blue_noise','white_noise',
-  'gaussian_noise','triangular_noise','blue_noise_error_diffusion','screened_blue_noise',
-  'perceptual','edge_aware','adaptive_threshold','temporal_blue_noise',
+export const DITHER_KINDS = [
+  'error_diffusion',
+  'ordered_bayer',
+  'ordered_clustered',
+  'ordered_void_cluster',
+  'blue_noise_threshold',
+  'true_dither',
+  'blue_noise',
+  'white_noise',
+  'gaussian_noise',
+  'triangular_noise',
+  'blue_noise_error_diffusion',
+  'screened_blue_noise',
+  'perceptual',
+  'edge_aware',
+  'adaptive_threshold',
+  'temporal_blue_noise',
 ];
 export const DIFFUSION_KERNELS = [
-  'floyd_steinberg','jarvis_judice_ninke','stucki','burkes',
-  'sierra','sierra_2','sierra_lite','atkinson',
+  'floyd_steinberg',
+  'jarvis_judice_ninke',
+  'stucki',
+  'burkes',
+  'sierra',
+  'sierra_2',
+  'sierra_lite',
+  'atkinson',
 ];
-export const ANIM_PATTERNS     = ['pulse', 'wave', 'scanline', 'shimmer', 'drift'];
-export const EASINGS           = ['linear', 'ease_in', 'ease_out', 'ease_in_out', 'bounce'];
-export const COLOR_MODES       = ['color', 'grayscale', 'bw'];
-export const FIT_MODES         = ['cover', 'contain', 'stretch'];
-export const WATERMARK_BLENDS  = ['normal', 'multiply', 'screen', 'overlay', 'soft-light'];
+export const ANIM_PATTERNS = ['pulse', 'wave', 'scanline', 'shimmer', 'drift'];
+export const EASINGS = ['linear', 'ease_in', 'ease_out', 'ease_in_out', 'bounce'];
+export const COLOR_MODES = ['color', 'grayscale', 'bw'];
+export const FIT_MODES = ['cover', 'contain', 'stretch'];
+export const WATERMARK_BLENDS = ['normal', 'multiply', 'screen', 'overlay', 'soft-light'];
 
 // ─── Preset palettes & colour helpers ────────────────────────────────
 const GRADIENT_PRESETS = [
@@ -218,14 +256,14 @@ function sanitizeScenarioParams(params) {
 }
 
 function makeConfig(category, label, extraParams, opts = {}) {
-  const fixtureId  = opts.fixtureId  ?? null;
-  const isAnimated = opts.isAnimated  ?? false;
-  const format     = isAnimated ? 'gif' : 'png';
-  const defaultEc  = category === 'artwork' ? 'L' : 'H';
-  const params     = sanitizeScenarioParams({ ...GLOBALS, ec: defaultEc, format, ...extraParams });
+  const fixtureId = opts.fixtureId ?? null;
+  const isAnimated = opts.isAnimated ?? false;
+  const format = isAnimated ? 'gif' : 'png';
+  const defaultEc = category === 'artwork' ? 'L' : 'H';
+  const params = sanitizeScenarioParams({ ...GLOBALS, ec: defaultEc, format, ...extraParams });
   if (!params.data) params.data = DEFAULT_PAYLOAD.data;
   return {
-    id:        uid(category, label),
+    id: uid(category, label),
     category,
     params,
     fixtureId,
@@ -257,7 +295,7 @@ function cross(category, label, aVals, bVals, paramBuilder, opts = {}) {
 /** Deduplicate by serialised params — keep first occurrence. */
 function dedup(configs) {
   const seen = new Set();
-  return configs.filter(c => {
+  return configs.filter((c) => {
     const key = stableStringify(c.params);
     if (seen.has(key)) return false;
     seen.add(key);
@@ -315,7 +353,8 @@ function applyMaskVariety(configs, opts = {}) {
   for (const cfg of out) {
     if (animatedAssigned >= animatedTarget) break;
     if (!isScenarioAnimated(cfg)) continue;
-    if (cfg.params.mask !== undefined && cfg.params.mask !== null && cfg.params.mask !== '') continue;
+    if (cfg.params.mask !== undefined && cfg.params.mask !== null && cfg.params.mask !== '')
+      continue;
     cfg.params.mask = masks[animatedAssigned % masks.length];
     animatedAssigned++;
   }
@@ -324,7 +363,8 @@ function applyMaskVariety(configs, opts = {}) {
   for (const cfg of out) {
     if (staticAssigned >= staticTarget) break;
     if (isScenarioAnimated(cfg)) continue;
-    if (cfg.params.mask !== undefined && cfg.params.mask !== null && cfg.params.mask !== '') continue;
+    if (cfg.params.mask !== undefined && cfg.params.mask !== null && cfg.params.mask !== '')
+      continue;
     cfg.params.mask = masks[staticAssigned % masks.length];
     staticAssigned++;
   }
@@ -334,14 +374,15 @@ function applyMaskVariety(configs, opts = {}) {
 
 function applyLogVersionSampling(configs, opts = {}) {
   const baseVersion = Number.parseInt(String(opts.baseVersion ?? GLOBALS.v), 10);
-  const buckets = Array.isArray(opts.buckets) && opts.buckets.length
-    ? opts.buckets
-    : [
-        { v: 3, weight: 0.8 },
-        { v: 4, weight: 0.12 },
-        { v: 5, weight: 0.06 },
-        { v: 7, weight: 0.02 },
-      ];
+  const buckets =
+    Array.isArray(opts.buckets) && opts.buckets.length
+      ? opts.buckets
+      : [
+          { v: 3, weight: 0.8 },
+          { v: 4, weight: 0.12 },
+          { v: 5, weight: 0.06 },
+          { v: 7, weight: 0.02 },
+        ];
 
   const out = configs.map((cfg) => ({
     ...cfg,
@@ -437,8 +478,9 @@ function stableStringify(value) {
 }
 
 // ─── Pick helper: cycle through an array deterministically ───────────
-function pick(arr, idx) { return arr[idx % arr.length]; }
-
+function pick(arr, idx) {
+  return arr[idx % arr.length];
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // NON-OVERLAY SCENARIOS (target: 333)
@@ -456,43 +498,60 @@ export function generateNonOverlayScenarios() {
   // Payload diversity is still covered by assignPayloads(...) across all configs.
 
   // 3. ModuleStyle sweep: rounded, dots, diamond, connected (4)
-  layer1.push(...sweep(CAT, 'style', MODULE_STYLES.slice(1), v => ({ style: v })));
+  layer1.push(...sweep(CAT, 'style', MODULE_STYLES.slice(1), (v) => ({ style: v })));
 
   // 4. FinderStyle sweep: rounded, circle (2)
-  layer1.push(...sweep(CAT, 'finder', FINDER_STYLES.slice(1), v => ({ finder: v })));
+  layer1.push(...sweep(CAT, 'finder', FINDER_STYLES.slice(1), (v) => ({ finder: v })));
 
   // 5. GapMode sweep: inset, stroke, negative_space (3)
-  layer1.push(...sweep(CAT, 'gapMode', GAP_MODES.slice(1), v => ({ gapMode: v })));
+  layer1.push(...sweep(CAT, 'gapMode', GAP_MODES.slice(1), (v) => ({ gapMode: v })));
 
   // 6. FrameStyle sweep: rounded_frame, sticker, tag (3)
-  layer1.push(...sweep(CAT, 'frame', FRAME_STYLES, v => ({ frame: v })));
+  layer1.push(...sweep(CAT, 'frame', FRAME_STYLES, (v) => ({ frame: v })));
 
   // 7. GradientType sweep: linear, radial, conic (3)
-  layer1.push(...sweep(CAT, 'grad', GRADIENT_TYPES, v => ({ grad: v, gradStops: GRADIENT_PRESETS[0] })));
+  layer1.push(
+    ...sweep(CAT, 'grad', GRADIENT_TYPES, (v) => ({ grad: v, gradStops: GRADIENT_PRESETS[0] }))
+  );
 
   // 8. GradientStops sweep: 5 multi-color presets (5)
-  layer1.push(...sweep(CAT, 'gradStops', GRADIENT_PRESETS, v => ({ grad: 'linear', gradStops: v })));
+  layer1.push(
+    ...sweep(CAT, 'gradStops', GRADIENT_PRESETS, (v) => ({ grad: 'linear', gradStops: v }))
+  );
 
   // 9. EyeOuter sweep: rounded, circle (2)
-  layer1.push(...sweep(CAT, 'eyeOuter', EYE_OUTERS.slice(1), v => ({ eyeOuter: v })));
+  layer1.push(...sweep(CAT, 'eyeOuter', EYE_OUTERS.slice(1), (v) => ({ eyeOuter: v })));
 
   // 10. EyeInner sweep: rounded, circle (2)
-  layer1.push(...sweep(CAT, 'eyeInner', EYE_INNERS.slice(1), v => ({ eyeInner: v })));
+  layer1.push(...sweep(CAT, 'eyeInner', EYE_INNERS.slice(1), (v) => ({ eyeInner: v })));
 
   // 11. EyeScale sweep: 95, 105 (2)
-  layer1.push(...sweep(CAT, 'eyeScale', [95, 105], v => ({ eyeScale: v })));
+  layer1.push(...sweep(CAT, 'eyeScale', [95, 105], (v) => ({ eyeScale: v })));
 
   // 12. ModColor sweep: by_brightness, by_position, by_cluster (3)
-  layer1.push(...sweep(CAT, 'modColor', ['by_brightness', 'by_position', 'by_cluster'], v => ({ modColor: v })));
+  layer1.push(
+    ...sweep(CAT, 'modColor', ['by_brightness', 'by_position', 'by_cluster'], (v) => ({
+      modColor: v,
+    }))
+  );
 
   // 13. PaletteMode sweep (7)
-  layer1.push(...sweep(CAT, 'paletteMode', ['position', 'brightness', 'diagonal', 'radial', 'random', 'row', 'column'], v => ({ paletteMode: v, palette: PALETTE_PRESETS[0] })));
+  layer1.push(
+    ...sweep(
+      CAT,
+      'paletteMode',
+      ['position', 'brightness', 'diagonal', 'radial', 'random', 'row', 'column'],
+      (v) => ({ paletteMode: v, palette: PALETTE_PRESETS[0] })
+    )
+  );
 
   // 14. Palette sweep: 5 presets (5)
-  layer1.push(...sweep(CAT, 'palette', PALETTE_PRESETS, v => ({ palette: v, paletteMode: 'position' })));
+  layer1.push(
+    ...sweep(CAT, 'palette', PALETTE_PRESETS, (v) => ({ palette: v, paletteMode: 'position' }))
+  );
 
   // 15. PixelSnap: floor, ceil (2)
-  layer1.push(...sweep(CAT, 'snap', ['floor', 'ceil'], v => ({ snap: v })));
+  layer1.push(...sweep(CAT, 'snap', ['floor', 'ceil'], (v) => ({ snap: v })));
 
   // 16. CrispEdges: 1 (1)
   layer1.push(makeConfig(CAT, 'crisp', { crisp: 1 }));
@@ -501,140 +560,321 @@ export function generateNonOverlayScenarios() {
   layer1.push(makeConfig(CAT, 'transparent', { transparent: 1 }));
 
   // 18. FgColor sweep: 5 colors (5)
-  layer1.push(...sweep(CAT, 'fg', FG_COLORS, v => ({ fg: v })));
+  layer1.push(...sweep(CAT, 'fg', FG_COLORS, (v) => ({ fg: v })));
 
   // 19. BgColor sweep: 5 colors (5)
-  layer1.push(...sweep(CAT, 'bg', BG_COLORS, v => ({ bg: v })));
+  layer1.push(...sweep(CAT, 'bg', BG_COLORS, (v) => ({ bg: v })));
 
   // 20. BorderModules: 0, 2, 4 (3)
-  layer1.push(...sweep(CAT, 'border', [0, 2, 4], v => ({ border: v })));
+  layer1.push(...sweep(CAT, 'border', [0, 2, 4], (v) => ({ border: v })));
 
   // 21. AnimPattern sweep (5) — GIF with strong visual styling
-  layer1.push(...sweep(
-    CAT,
-    'animPattern',
-    ANIM_PATTERNS,
-    (v, i) => ({
-      animPattern: v,
-      style: pick(['rounded', 'dots', 'diamond', 'connected'], i),
-      finder: pick(['rounded', 'circle'], i + 1),
-      gapMode: pick(['inset', 'stroke', 'negative_space'], i + 2),
-      grad: pick(GRADIENT_TYPES, i + 3),
-      gradStops: pick(GRADIENT_PRESETS, i + 4),
-      format: 'gif',
-    }),
-    { isAnimated: true },
-  ));
+  layer1.push(
+    ...sweep(
+      CAT,
+      'animPattern',
+      ANIM_PATTERNS,
+      (v, i) => ({
+        animPattern: v,
+        style: pick(['rounded', 'dots', 'diamond', 'connected'], i),
+        finder: pick(['rounded', 'circle'], i + 1),
+        gapMode: pick(['inset', 'stroke', 'negative_space'], i + 2),
+        grad: pick(GRADIENT_TYPES, i + 3),
+        gradStops: pick(GRADIENT_PRESETS, i + 4),
+        format: 'gif',
+      }),
+      { isAnimated: true }
+    )
+  );
 
   // 22. Interpolation: crossfade, morph (2) — GIF
-  layer1.push(...sweep(
-    CAT,
-    'interp',
-    ['crossfade', 'morph'],
-    (v, i) => ({
-      animPattern: 'wave',
-      interp: v,
-      style: pick(['rounded', 'dots', 'diamond', 'connected'], i),
-      finder: pick(['rounded', 'circle'], i + 1),
-      grad: pick(GRADIENT_TYPES, i + 2),
-      gradStops: pick(GRADIENT_PRESETS, i + 3),
-      format: 'gif',
-    }),
-    { isAnimated: true },
-  ));
+  layer1.push(
+    ...sweep(
+      CAT,
+      'interp',
+      ['crossfade', 'morph'],
+      (v, i) => ({
+        animPattern: 'wave',
+        interp: v,
+        style: pick(['rounded', 'dots', 'diamond', 'connected'], i),
+        finder: pick(['rounded', 'circle'], i + 1),
+        grad: pick(GRADIENT_TYPES, i + 2),
+        gradStops: pick(GRADIENT_PRESETS, i + 3),
+        format: 'gif',
+      }),
+      { isAnimated: true }
+    )
+  );
 
   // 23. TempDither: blue_noise, flicker_safe (2) — GIF
-  layer1.push(...sweep(
-    CAT,
-    'tempDither',
-    ['blue_noise', 'flicker_safe'],
-    (v, i) => ({
-      animPattern: 'shimmer',
-      tempDither: v,
-      style: pick(['dots', 'diamond', 'rounded'], i),
-      finder: 'circle',
-      grad: pick(GRADIENT_TYPES, i + 1),
-      gradStops: pick(GRADIENT_PRESETS, i + 2),
-      colorCycle: 1,
-      format: 'gif',
-    }),
-    { isAnimated: true },
-  ));
+  layer1.push(
+    ...sweep(
+      CAT,
+      'tempDither',
+      ['blue_noise', 'flicker_safe'],
+      (v, i) => ({
+        animPattern: 'shimmer',
+        tempDither: v,
+        style: pick(['dots', 'diamond', 'rounded'], i),
+        finder: 'circle',
+        grad: pick(GRADIENT_TYPES, i + 1),
+        gradStops: pick(GRADIENT_PRESETS, i + 2),
+        colorCycle: 1,
+        format: 'gif',
+      }),
+      { isAnimated: true }
+    )
+  );
 
   // 24. Reverse: 1 (1) — GIF
-  layer1.push(makeConfig(CAT, 'reverse', {
-    animPattern: 'wave',
-    reverse: 1,
-    style: 'connected',
-    finder: 'rounded',
-    gapMode: 'stroke',
-    grad: 'linear',
-    gradStops: GRADIENT_PRESETS[4],
-    format: 'gif',
-  }, { isAnimated: true }));
+  layer1.push(
+    makeConfig(
+      CAT,
+      'reverse',
+      {
+        animPattern: 'wave',
+        reverse: 1,
+        style: 'connected',
+        finder: 'rounded',
+        gapMode: 'stroke',
+        grad: 'linear',
+        gradStops: GRADIENT_PRESETS[4],
+        format: 'gif',
+      },
+      { isAnimated: true }
+    )
+  );
 
   // 25. ColorCycle: 1 (1) — GIF
-  layer1.push(makeConfig(CAT, 'colorCycle', {
-    animPattern: 'shimmer',
-    colorCycle: 1,
-    style: 'dots',
-    finder: 'circle',
-    grad: 'radial',
-    gradStops: GRADIENT_PRESETS[1],
-    format: 'gif',
-  }, { isAnimated: true }));
+  layer1.push(
+    makeConfig(
+      CAT,
+      'colorCycle',
+      {
+        animPattern: 'shimmer',
+        colorCycle: 1,
+        style: 'dots',
+        finder: 'circle',
+        grad: 'radial',
+        gradStops: GRADIENT_PRESETS[1],
+        format: 'gif',
+      },
+      { isAnimated: true }
+    )
+  );
 
   // 26. AnimSeed: 42, 123, 999 (3)
-  layer1.push(...sweep(
-    CAT,
-    'animSeed',
-    [42, 123, 999],
-    (v, i) => ({
-      animPattern: 'drift',
-      animSeed: v,
-      style: pick(['rounded', 'dots', 'diamond'], i),
-      finder: 'rounded',
-      grad: pick(GRADIENT_TYPES, i),
-      gradStops: pick(GRADIENT_PRESETS, i + 1),
-      format: 'gif',
-    }),
-    { isAnimated: true },
-  ));
+  layer1.push(
+    ...sweep(
+      CAT,
+      'animSeed',
+      [42, 123, 999],
+      (v, i) => ({
+        animPattern: 'drift',
+        animSeed: v,
+        style: pick(['rounded', 'dots', 'diamond'], i),
+        finder: 'rounded',
+        grad: pick(GRADIENT_TYPES, i),
+        gradStops: pick(GRADIENT_PRESETS, i + 1),
+        format: 'gif',
+      }),
+      { isAnimated: true }
+    )
+  );
 
   // 29. Watermark sweeps (13)
   layer1.push(makeConfig(CAT, 'wm-text', { wmEn: 1, wmKind: 'text', wmText: 'ANQR' }));
   layer1.push(makeConfig(CAT, 'wm-pattern', { wmEn: 1, wmKind: 'pattern' }));
-  layer1.push(...sweep(CAT, 'wmText', ['SCAN ME', 'anqr.link', 'QR CODE'], v => ({ wmEn: 1, wmKind: 'text', wmText: v })));
-  layer1.push(...sweep(CAT, 'wmBlend', WATERMARK_BLENDS, v => ({ wmEn: 1, wmKind: 'text', wmText: 'ANQR', wmBlend: v })));
-  layer1.push(...sweep(CAT, 'wmOpacity', [30, 60, 90], v => ({ wmEn: 1, wmKind: 'text', wmText: 'ANQR', wmOpacity: v })));
+  layer1.push(
+    ...sweep(CAT, 'wmText', ['SCAN ME', 'anqr.link', 'QR CODE'], (v) => ({
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: v,
+    }))
+  );
+  layer1.push(
+    ...sweep(CAT, 'wmBlend', WATERMARK_BLENDS, (v) => ({
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: 'ANQR',
+      wmBlend: v,
+    }))
+  );
+  layer1.push(
+    ...sweep(CAT, 'wmOpacity', [30, 60, 90], (v) => ({
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: 'ANQR',
+      wmOpacity: v,
+    }))
+  );
 
   // 30. Human-appeal visual heroes (bold static + motion-first non-overlay GIFs)
   const visualHeroStatic = [
-    { style: 'rounded', finder: 'rounded', grad: 'linear', gradStops: GRADIENT_PRESETS[3], frame: 'sticker', fg: '1a365d', bg: 'faf5ff' },
-    { style: 'dots', finder: 'circle', grad: 'radial', gradStops: GRADIENT_PRESETS[1], frame: 'tag', fg: 'c41e3a', bg: 'fff5e6' },
-    { style: 'diamond', finder: 'rounded', grad: 'conic', gradStops: GRADIENT_PRESETS[4], eyeOuter: 'circle', eyeInner: 'rounded', border: 2 },
-    { style: 'connected', finder: 'square', grad: 'linear', gradStops: GRADIENT_PRESETS[0], wmEn: 1, wmKind: 'pattern', wmOpacity: 45 },
-    { style: 'rounded', finder: 'circle', modColor: 'by_brightness', palette: PALETTE_PRESETS[2], paletteMode: 'radial', eyeScale: 105 },
-    { style: 'dots', finder: 'circle', gapMode: 'negative_space', grad: 'linear', gradStops: GRADIENT_PRESETS[2], cGuard: 1, minContrast: 4.5 },
+    {
+      style: 'rounded',
+      finder: 'rounded',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[3],
+      frame: 'sticker',
+      fg: '1a365d',
+      bg: 'faf5ff',
+    },
+    {
+      style: 'dots',
+      finder: 'circle',
+      grad: 'radial',
+      gradStops: GRADIENT_PRESETS[1],
+      frame: 'tag',
+      fg: 'c41e3a',
+      bg: 'fff5e6',
+    },
+    {
+      style: 'diamond',
+      finder: 'rounded',
+      grad: 'conic',
+      gradStops: GRADIENT_PRESETS[4],
+      eyeOuter: 'circle',
+      eyeInner: 'rounded',
+      border: 2,
+    },
+    {
+      style: 'connected',
+      finder: 'square',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[0],
+      wmEn: 1,
+      wmKind: 'pattern',
+      wmOpacity: 45,
+    },
+    {
+      style: 'rounded',
+      finder: 'circle',
+      modColor: 'by_brightness',
+      palette: PALETTE_PRESETS[2],
+      paletteMode: 'radial',
+      eyeScale: 105,
+    },
+    {
+      style: 'dots',
+      finder: 'circle',
+      gapMode: 'negative_space',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[2],
+      cGuard: 1,
+      minContrast: 4.5,
+    },
   ];
   visualHeroStatic.forEach((cfg, idx) => {
     layer1.push(makeConfig(CAT, `visual-static-${idx + 1}`, cfg));
   });
 
   const visualHeroMotion = [
-    { animPattern: 'wave', interp: 'morph', easing: 'ease_in_out', style: 'rounded', finder: 'rounded', grad: 'linear', gradStops: GRADIENT_PRESETS[3] },
-    { animPattern: 'shimmer', interp: 'crossfade', tempDither: 'flicker_safe', colorCycle: 1, style: 'dots', finder: 'circle', grad: 'radial', gradStops: GRADIENT_PRESETS[1] },
-    { animPattern: 'pulse', bounce: 1, easing: 'ease_out', style: 'diamond', finder: 'rounded', grad: 'conic', gradStops: GRADIENT_PRESETS[4] },
-    { animPattern: 'scanline', reverse: 1, interp: 'crossfade', style: 'connected', finder: 'square', fg: '1a365d', bg: 'ffffff' },
-    { animPattern: 'drift', animSeed: 123, interp: 'morph', style: 'rounded', finder: 'circle', grad: 'linear', gradStops: GRADIENT_PRESETS[0], frame: 'tag' },
-    { animPattern: 'wave', interp: 'crossfade', tempDither: 'blue_noise', style: 'dots', finder: 'circle', grad: 'conic', gradStops: GRADIENT_PRESETS[2] },
-    { animPattern: 'shimmer', colorCycle: 1, easing: 'ease_in', style: 'diamond', finder: 'rounded', grad: 'radial', gradStops: GRADIENT_PRESETS[4], wmEn: 1, wmKind: 'text', wmText: 'ANQR' },
-    { animPattern: 'pulse', bounce: 1, reverse: 1, easing: 'bounce', style: 'rounded', finder: 'rounded', grad: 'linear', gradStops: GRADIENT_PRESETS[1], frame: 'sticker' },
-    { animPattern: 'scanline', interp: 'morph', tempDither: 'flicker_safe', style: 'connected', finder: 'square', modColor: 'by_cluster', palette: PALETTE_PRESETS[3], paletteMode: 'diagonal' },
-    { animPattern: 'drift', colorCycle: 1, animSeed: 999, style: 'dots', finder: 'circle', grad: 'radial', gradStops: GRADIENT_PRESETS[0], eyeOuter: 'circle', eyeInner: 'circle' },
+    {
+      animPattern: 'wave',
+      interp: 'morph',
+      easing: 'ease_in_out',
+      style: 'rounded',
+      finder: 'rounded',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[3],
+    },
+    {
+      animPattern: 'shimmer',
+      interp: 'crossfade',
+      tempDither: 'flicker_safe',
+      colorCycle: 1,
+      style: 'dots',
+      finder: 'circle',
+      grad: 'radial',
+      gradStops: GRADIENT_PRESETS[1],
+    },
+    {
+      animPattern: 'pulse',
+      bounce: 1,
+      easing: 'ease_out',
+      style: 'diamond',
+      finder: 'rounded',
+      grad: 'conic',
+      gradStops: GRADIENT_PRESETS[4],
+    },
+    {
+      animPattern: 'scanline',
+      reverse: 1,
+      interp: 'crossfade',
+      style: 'connected',
+      finder: 'square',
+      fg: '1a365d',
+      bg: 'ffffff',
+    },
+    {
+      animPattern: 'drift',
+      animSeed: 123,
+      interp: 'morph',
+      style: 'rounded',
+      finder: 'circle',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[0],
+      frame: 'tag',
+    },
+    {
+      animPattern: 'wave',
+      interp: 'crossfade',
+      tempDither: 'blue_noise',
+      style: 'dots',
+      finder: 'circle',
+      grad: 'conic',
+      gradStops: GRADIENT_PRESETS[2],
+    },
+    {
+      animPattern: 'shimmer',
+      colorCycle: 1,
+      easing: 'ease_in',
+      style: 'diamond',
+      finder: 'rounded',
+      grad: 'radial',
+      gradStops: GRADIENT_PRESETS[4],
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: 'ANQR',
+    },
+    {
+      animPattern: 'pulse',
+      bounce: 1,
+      reverse: 1,
+      easing: 'bounce',
+      style: 'rounded',
+      finder: 'rounded',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[1],
+      frame: 'sticker',
+    },
+    {
+      animPattern: 'scanline',
+      interp: 'morph',
+      tempDither: 'flicker_safe',
+      style: 'connected',
+      finder: 'square',
+      modColor: 'by_cluster',
+      palette: PALETTE_PRESETS[3],
+      paletteMode: 'diagonal',
+    },
+    {
+      animPattern: 'drift',
+      colorCycle: 1,
+      animSeed: 999,
+      style: 'dots',
+      finder: 'circle',
+      grad: 'radial',
+      gradStops: GRADIENT_PRESETS[0],
+      eyeOuter: 'circle',
+      eyeInner: 'circle',
+    },
   ];
   visualHeroMotion.forEach((cfg, idx) => {
-    layer1.push(makeConfig(CAT, `visual-motion-${idx + 1}`, { ...cfg, format: 'gif' }, { isAnimated: true }));
+    layer1.push(
+      makeConfig(CAT, `visual-motion-${idx + 1}`, { ...cfg, format: 'gif' }, { isAnimated: true })
+    );
   });
 
   // 31. Targeted animation stacks (modules/result/both + secondary pattern/axis)
@@ -717,7 +957,9 @@ export function generateNonOverlayScenarios() {
     },
   ];
   visualHeroTargetStacks.forEach((combo, idx) => {
-    layer1.push(makeConfig(CAT, `visual-target-stack-${idx + 1}`, combo.params, { isAnimated: true }));
+    layer1.push(
+      makeConfig(CAT, `visual-target-stack-${idx + 1}`, combo.params, { isAnimated: true })
+    );
   });
 
   // 32. Controlled version/ECC variation (log-sampled through version 7)
@@ -728,17 +970,19 @@ export function generateNonOverlayScenarios() {
     { label: 'ver-7-ec-H', params: { v: 7, ec: 'H', style: 'connected', finder: 'square' } },
   ];
   for (const combo of versionEccShowcase) {
-    layer1.push(makeConfig(CAT, `encoding-${combo.label}`, {
-      ...combo.params,
-      grad: 'linear',
-      gradStops: GRADIENT_PRESETS[2],
-      frame: 'tag',
-    }));
+    layer1.push(
+      makeConfig(CAT, `encoding-${combo.label}`, {
+        ...combo.params,
+        grad: 'linear',
+        gradStops: GRADIENT_PRESETS[2],
+        frame: 'tag',
+      })
+    );
   }
 
   // 31. "Huge permutation" showcases: stack many options in one render.
-  layer1.push(makeConfig(CAT, 'mega-static',
-    {
+  layer1.push(
+    makeConfig(CAT, 'mega-static', {
       v: 7,
       ec: 'Q',
       style: 'diamond',
@@ -762,37 +1006,43 @@ export function generateNonOverlayScenarios() {
       wmText: 'ANQR',
       wmBlend: 'overlay',
       wmOpacity: 45,
-    }));
-  layer1.push(makeConfig(CAT, 'mega-animated',
-    {
-      v: 7,
-      ec: 'Q',
-      style: 'dots',
-      finder: 'circle',
-      frame: 'sticker',
-      grad: 'radial',
-      gradStops: GRADIENT_PRESETS[4],
-      eyeOuter: 'circle',
-      eyeInner: 'circle',
-      gapMode: 'negative_space',
-      palette: PALETTE_PRESETS[3],
-      paletteMode: 'diagonal',
-      modColor: 'by_position',
-      border: 2,
-      wmEn: 1,
-      wmKind: 'pattern',
-      wmBlend: 'soft-light',
-      wmOpacity: 50,
-      animPattern: 'wave',
-      interp: 'morph',
-      easing: 'ease_in_out',
-      tempDither: 'flicker_safe',
-      colorCycle: 1,
-      bounce: 1,
-      animSeed: 321,
-      format: 'gif',
-    },
-    { isAnimated: true }));
+    })
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'mega-animated',
+      {
+        v: 7,
+        ec: 'Q',
+        style: 'dots',
+        finder: 'circle',
+        frame: 'sticker',
+        grad: 'radial',
+        gradStops: GRADIENT_PRESETS[4],
+        eyeOuter: 'circle',
+        eyeInner: 'circle',
+        gapMode: 'negative_space',
+        palette: PALETTE_PRESETS[3],
+        paletteMode: 'diagonal',
+        modColor: 'by_position',
+        border: 2,
+        wmEn: 1,
+        wmKind: 'pattern',
+        wmBlend: 'soft-light',
+        wmOpacity: 50,
+        animPattern: 'wave',
+        interp: 'morph',
+        easing: 'ease_in_out',
+        tempDither: 'flicker_safe',
+        colorCycle: 1,
+        bounce: 1,
+        animSeed: 321,
+        format: 'gif',
+      },
+      { isAnimated: true }
+    )
+  );
 
   // Layer 1 subtotal: curated high-visual presets
 
@@ -800,39 +1050,60 @@ export function generateNonOverlayScenarios() {
   const layer2 = [];
 
   // Style × Finder (4×2 = 8)
-  layer2.push(...cross(CAT, 'style-x-finder',
-    MODULE_STYLES.slice(1), FINDER_STYLES.slice(1),
-    (s, f) => ({ style: s, finder: f })));
+  layer2.push(
+    ...cross(CAT, 'style-x-finder', MODULE_STYLES.slice(1), FINDER_STYLES.slice(1), (s, f) => ({
+      style: s,
+      finder: f,
+    }))
+  );
 
   // Style × GapMode (4×3 = 12)
-  layer2.push(...cross(CAT, 'style-x-gap',
-    MODULE_STYLES.slice(1), GAP_MODES.slice(1),
-    (s, g) => ({ style: s, gapMode: g })));
+  layer2.push(
+    ...cross(CAT, 'style-x-gap', MODULE_STYLES.slice(1), GAP_MODES.slice(1), (s, g) => ({
+      style: s,
+      gapMode: g,
+    }))
+  );
 
   // Style × Gradient (4×3 = 12)
-  layer2.push(...cross(CAT, 'style-x-grad',
-    MODULE_STYLES.slice(1), GRADIENT_TYPES,
-    (s, g) => ({ style: s, grad: g, gradStops: GRADIENT_PRESETS[0] })));
+  layer2.push(
+    ...cross(CAT, 'style-x-grad', MODULE_STYLES.slice(1), GRADIENT_TYPES, (s, g) => ({
+      style: s,
+      grad: g,
+      gradStops: GRADIENT_PRESETS[0],
+    }))
+  );
 
   // Style × Frame (4×3 = 12)
-  layer2.push(...cross(CAT, 'style-x-frame',
-    MODULE_STYLES.slice(1), FRAME_STYLES,
-    (s, f) => ({ style: s, frame: f })));
+  layer2.push(
+    ...cross(CAT, 'style-x-frame', MODULE_STYLES.slice(1), FRAME_STYLES, (s, f) => ({
+      style: s,
+      frame: f,
+    }))
+  );
 
   // Frame × Gradient (3×3 = 9)
-  layer2.push(...cross(CAT, 'frame-x-grad',
-    FRAME_STYLES, GRADIENT_TYPES,
-    (f, g) => ({ frame: f, grad: g, gradStops: GRADIENT_PRESETS[1] })));
+  layer2.push(
+    ...cross(CAT, 'frame-x-grad', FRAME_STYLES, GRADIENT_TYPES, (f, g) => ({
+      frame: f,
+      grad: g,
+      gradStops: GRADIENT_PRESETS[1],
+    }))
+  );
 
   // EyeOuter × EyeInner (3×3 = 9)
-  layer2.push(...cross(CAT, 'eyeO-x-eyeI',
-    EYE_OUTERS, EYE_INNERS,
-    (o, i) => ({ eyeOuter: o, eyeInner: i })));
+  layer2.push(
+    ...cross(CAT, 'eyeO-x-eyeI', EYE_OUTERS, EYE_INNERS, (o, i) => ({ eyeOuter: o, eyeInner: i }))
+  );
 
   // FgColor × Gradient (5×3 = 15)
-  layer2.push(...cross(CAT, 'fg-x-grad',
-    FG_COLORS, GRADIENT_TYPES,
-    (fg, g) => ({ fg, grad: g, gradStops: GRADIENT_PRESETS[2] })));
+  layer2.push(
+    ...cross(CAT, 'fg-x-grad', FG_COLORS, GRADIENT_TYPES, (fg, g) => ({
+      fg,
+      grad: g,
+      gradStops: GRADIENT_PRESETS[2],
+    }))
+  );
 
   // FgColor × BgColor (5×5 = 25, take 10)
   {
@@ -842,18 +1113,26 @@ export function generateNonOverlayScenarios() {
 
   // ModColor × Palette (3×5 = 15, take 10)
   {
-    const pool = cross(CAT, 'modC-x-pal',
-      ['by_brightness', 'by_position', 'by_cluster'], PALETTE_PRESETS,
-      (m, p) => ({ modColor: m, palette: p, paletteMode: 'position' }));
+    const pool = cross(
+      CAT,
+      'modC-x-pal',
+      ['by_brightness', 'by_position', 'by_cluster'],
+      PALETTE_PRESETS,
+      (m, p) => ({ modColor: m, palette: p, paletteMode: 'position' })
+    );
     layer2.push(...pool.slice(0, 10));
   }
 
   // AnimPattern × Style (5×3 = 15, take 10)
   {
-    const pool = cross(CAT, 'anim-x-style',
-      ANIM_PATTERNS, MODULE_STYLES.slice(1, 4),
+    const pool = cross(
+      CAT,
+      'anim-x-style',
+      ANIM_PATTERNS,
+      MODULE_STYLES.slice(1, 4),
       (a, s) => ({ animPattern: a, style: s, format: 'gif' }),
-      { isAnimated: true });
+      { isAnimated: true }
+    );
     layer2.push(...pool.slice(0, 10));
   }
 
@@ -871,67 +1150,178 @@ export function generateNonOverlayScenarios() {
     ];
     for (let i = 0; i < flagShowcase.length; i++) {
       const { ap, fl } = flagShowcase[i];
-      layer2.push(makeConfig(CAT, `anim-flag-${ap}-${Object.keys(fl)[0]}`,
-        {
-          animPattern: ap,
-          ...fl,
-          style: pick(['rounded', 'dots', 'diamond'], i),
-          finder: pick(['rounded', 'circle'], i + 1),
-          grad: pick(['linear', 'radial'], i),
-          gradStops: pick(GRADIENT_PRESETS, i + 2),
-          format: 'gif',
-        },
-        { isAnimated: true }));
+      layer2.push(
+        makeConfig(
+          CAT,
+          `anim-flag-${ap}-${Object.keys(fl)[0]}`,
+          {
+            animPattern: ap,
+            ...fl,
+            style: pick(['rounded', 'dots', 'diamond'], i),
+            finder: pick(['rounded', 'circle'], i + 1),
+            grad: pick(['linear', 'radial'], i),
+            gradStops: pick(GRADIENT_PRESETS, i + 2),
+            format: 'gif',
+          },
+          { isAnimated: true }
+        )
+      );
     }
   }
 
   // AnimPattern × Gradient (5×3 = 15, take 10)
   {
-    const pool = cross(CAT, 'anim-x-grad',
-      ANIM_PATTERNS, GRADIENT_TYPES,
+    const pool = cross(
+      CAT,
+      'anim-x-grad',
+      ANIM_PATTERNS,
+      GRADIENT_TYPES,
       (a, g) => ({ animPattern: a, grad: g, gradStops: GRADIENT_PRESETS[3], format: 'gif' }),
-      { isAnimated: true });
+      { isAnimated: true }
+    );
     layer2.push(...pool.slice(0, 10));
   }
 
   // Watermark text × style (4×1 = 4)
   {
-    const pool = cross(CAT, 'wm-x-style',
-      MODULE_STYLES.slice(1), ['text'],
-      (s, k) => ({ style: s, wmEn: 1, wmKind: 'text', wmText: 'ANQR' }));
+    const pool = cross(CAT, 'wm-x-style', MODULE_STYLES.slice(1), ['text'], (s, _k) => ({
+      style: s,
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: 'ANQR',
+    }));
     layer2.push(...pool.slice(0, 4));
   }
 
   // Watermark × Blend × Opacity combos (5×3 = 15, take 8)
   {
-    const pool = cross(CAT, 'wm-blend-x-opacity',
-      WATERMARK_BLENDS, [30, 60, 90],
-      (b, o) => ({ wmEn: 1, wmKind: 'text', wmText: 'ANQR', wmBlend: b, wmOpacity: o }));
+    const pool = cross(CAT, 'wm-blend-x-opacity', WATERMARK_BLENDS, [30, 60, 90], (b, o) => ({
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: 'ANQR',
+      wmBlend: b,
+      wmOpacity: o,
+    }));
     layer2.push(...pool.slice(0, 8));
   }
 
   // Multi-feature power combos (20)
   const powerCombos = [
-    { style: 'rounded', finder: 'rounded', grad: 'linear', gradStops: GRADIENT_PRESETS[0], frame: 'tag' },
-    { style: 'dots', finder: 'circle', grad: 'radial', gradStops: GRADIENT_PRESETS[1], gapMode: 'inset' },
-    { style: 'diamond', grad: 'conic', gradStops: GRADIENT_PRESETS[2], eyeOuter: 'rounded', eyeInner: 'circle' },
+    {
+      style: 'rounded',
+      finder: 'rounded',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[0],
+      frame: 'tag',
+    },
+    {
+      style: 'dots',
+      finder: 'circle',
+      grad: 'radial',
+      gradStops: GRADIENT_PRESETS[1],
+      gapMode: 'inset',
+    },
+    {
+      style: 'diamond',
+      grad: 'conic',
+      gradStops: GRADIENT_PRESETS[2],
+      eyeOuter: 'rounded',
+      eyeInner: 'circle',
+    },
     { style: 'connected', fg: '1a365d', bg: 'fff5e6', frame: 'sticker' },
     { style: 'rounded', finder: 'circle', gapMode: 'inset', fg: 'c41e3a', bg: 'ffffff' },
-    { style: 'dots', finder: 'circle', grad: 'linear', gradStops: GRADIENT_PRESETS[3], frame: 'rounded_frame', eyeOuter: 'circle' },
-    { style: 'diamond', gapMode: 'negative_space', grad: 'radial', gradStops: GRADIENT_PRESETS[4], fg: '166534' },
-    { style: 'rounded', finder: 'rounded', modColor: 'by_brightness', palette: PALETTE_PRESETS[0], paletteMode: 'diagonal' },
-    { style: 'dots', finder: 'circle', modColor: 'by_position', palette: PALETTE_PRESETS[1], paletteMode: 'radial' },
-    { style: 'connected', modColor: 'by_cluster', palette: PALETTE_PRESETS[2], paletteMode: 'brightness' },
-    { style: 'rounded', grad: 'linear', gradStops: GRADIENT_PRESETS[0], wmEn: 1, wmKind: 'text', wmText: 'SCAN ME' },
-    { style: 'dots', finder: 'circle', eyeOuter: 'circle', eyeInner: 'rounded', fg: '6b21a8', bg: 'faf5ff' },
-    { style: 'rounded', finder: 'rounded', frame: 'tag', grad: 'conic', gradStops: GRADIENT_PRESETS[1] },
-    { style: 'diamond', finder: 'rounded', gapMode: 'inset', eyeOuter: 'rounded', eyeInner: 'rounded' },
-    { style: 'rounded', gapMode: 'stroke', grad: 'linear', gradStops: GRADIENT_PRESETS[2], crisp: 1 },
+    {
+      style: 'dots',
+      finder: 'circle',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[3],
+      frame: 'rounded_frame',
+      eyeOuter: 'circle',
+    },
+    {
+      style: 'diamond',
+      gapMode: 'negative_space',
+      grad: 'radial',
+      gradStops: GRADIENT_PRESETS[4],
+      fg: '166534',
+    },
+    {
+      style: 'rounded',
+      finder: 'rounded',
+      modColor: 'by_brightness',
+      palette: PALETTE_PRESETS[0],
+      paletteMode: 'diagonal',
+    },
+    {
+      style: 'dots',
+      finder: 'circle',
+      modColor: 'by_position',
+      palette: PALETTE_PRESETS[1],
+      paletteMode: 'radial',
+    },
+    {
+      style: 'connected',
+      modColor: 'by_cluster',
+      palette: PALETTE_PRESETS[2],
+      paletteMode: 'brightness',
+    },
+    {
+      style: 'rounded',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[0],
+      wmEn: 1,
+      wmKind: 'text',
+      wmText: 'SCAN ME',
+    },
+    {
+      style: 'dots',
+      finder: 'circle',
+      eyeOuter: 'circle',
+      eyeInner: 'rounded',
+      fg: '6b21a8',
+      bg: 'faf5ff',
+    },
+    {
+      style: 'rounded',
+      finder: 'rounded',
+      frame: 'tag',
+      grad: 'conic',
+      gradStops: GRADIENT_PRESETS[1],
+    },
+    {
+      style: 'diamond',
+      finder: 'rounded',
+      gapMode: 'inset',
+      eyeOuter: 'rounded',
+      eyeInner: 'rounded',
+    },
+    {
+      style: 'rounded',
+      gapMode: 'stroke',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[2],
+      crisp: 1,
+    },
     { style: 'dots', finder: 'circle', grad: 'radial', gradStops: GRADIENT_PRESETS[3], border: 4 },
     { style: 'connected', frame: 'sticker', fg: 'c41e3a', bg: 'fff5e6', eyeScale: 105 },
-    { style: 'rounded', finder: 'rounded', grad: 'linear', gradStops: GRADIENT_PRESETS[4], cGuard: 1, minContrast: 4.5 },
+    {
+      style: 'rounded',
+      finder: 'rounded',
+      grad: 'linear',
+      gradStops: GRADIENT_PRESETS[4],
+      cGuard: 1,
+      minContrast: 4.5,
+    },
     { style: 'diamond', finder: 'circle', gapMode: 'negative_space', frame: 'tag', fg: '166534' },
-    { style: 'dots', finder: 'circle', grad: 'conic', gradStops: GRADIENT_PRESETS[0], eyeOuter: 'circle', eyeInner: 'circle', ec: 'Q' },
+    {
+      style: 'dots',
+      finder: 'circle',
+      grad: 'conic',
+      gradStops: GRADIENT_PRESETS[0],
+      eyeOuter: 'circle',
+      eyeInner: 'circle',
+      ec: 'Q',
+    },
   ];
   for (let i = 0; i < powerCombos.length; i++) {
     layer2.push(makeConfig(CAT, `power-${i}`, powerCombos[i]));
@@ -958,45 +1348,58 @@ export function generateNonOverlayScenarios() {
       for (const finder of fillerFinders) {
         for (const gapMode of fillerGaps) {
           for (const grad of GRADIENT_TYPES) {
-            for (const palette of PALETTE_PRESETS) {
+            for (const _palette of PALETTE_PRESETS) {
               const eye = fillerEyes[idx % fillerEyes.length];
               const frame = fillerFrames[idx % fillerFrames.length];
-              filler.push(makeConfig(CAT, `filler-static-${idx}`, {
-                style,
-                finder,
-                gapMode,
-                grad,
-                gradStops: GRADIENT_PRESETS[idx % GRADIENT_PRESETS.length],
-                fg: FG_COLORS[idx % FG_COLORS.length],
-                bg: BG_COLORS[(idx + 1) % BG_COLORS.length],
-                frame: frame || undefined,
-                eyeOuter: eye.eyeOuter,
-                eyeInner: eye.eyeInner,
-                border: [1, 2][idx % 2],
-                cGuard: 1,
-                minContrast: 4.5,
-              }));
+              filler.push(
+                makeConfig(CAT, `filler-static-${idx}`, {
+                  style,
+                  finder,
+                  gapMode,
+                  grad,
+                  gradStops: GRADIENT_PRESETS[idx % GRADIENT_PRESETS.length],
+                  fg: FG_COLORS[idx % FG_COLORS.length],
+                  bg: BG_COLORS[(idx + 1) % BG_COLORS.length],
+                  frame: frame || undefined,
+                  eyeOuter: eye.eyeOuter,
+                  eyeInner: eye.eyeInner,
+                  border: [1, 2][idx % 2],
+                  cGuard: 1,
+                  minContrast: 4.5,
+                })
+              );
 
-              filler.push(makeConfig(CAT, `filler-anim-${idx}`, {
-                style,
-                finder,
-                gapMode,
-                grad,
-                gradStops: GRADIENT_PRESETS[(idx + 2) % GRADIENT_PRESETS.length],
-                frame: frame || undefined,
-                eyeOuter: eye.eyeOuter,
-                eyeInner: eye.eyeInner,
-                animPattern: fillerAnimPatterns[idx % fillerAnimPatterns.length],
-                easing: ['ease_in', 'ease_out', 'ease_in_out'][idx % 3],
-                interp: ['crossfade', 'morph'][idx % 2],
-                tempDither: ['blue_noise', 'flicker_safe'][idx % 2],
-                colorCycle: (idx % 2 === 0 && fillerAnimPatterns[idx % fillerAnimPatterns.length] === 'shimmer') ? 1 : undefined,
-                animSeed: [42, 123, 999][idx % 3],
-                border: [1, 2][idx % 2],
-                cGuard: 1,
-                minContrast: 4.5,
-                format: 'gif',
-              }, { isAnimated: true }));
+              filler.push(
+                makeConfig(
+                  CAT,
+                  `filler-anim-${idx}`,
+                  {
+                    style,
+                    finder,
+                    gapMode,
+                    grad,
+                    gradStops: GRADIENT_PRESETS[(idx + 2) % GRADIENT_PRESETS.length],
+                    frame: frame || undefined,
+                    eyeOuter: eye.eyeOuter,
+                    eyeInner: eye.eyeInner,
+                    animPattern: fillerAnimPatterns[idx % fillerAnimPatterns.length],
+                    easing: ['ease_in', 'ease_out', 'ease_in_out'][idx % 3],
+                    interp: ['crossfade', 'morph'][idx % 2],
+                    tempDither: ['blue_noise', 'flicker_safe'][idx % 2],
+                    colorCycle:
+                      idx % 2 === 0 &&
+                      fillerAnimPatterns[idx % fillerAnimPatterns.length] === 'shimmer'
+                        ? 1
+                        : undefined,
+                    animSeed: [42, 123, 999][idx % 3],
+                    border: [1, 2][idx % 2],
+                    cGuard: 1,
+                    minContrast: 4.5,
+                    format: 'gif',
+                  },
+                  { isAnimated: true }
+                )
+              );
 
               idx++;
               if (filler.length >= 2400) break outer;
@@ -1009,10 +1412,15 @@ export function generateNonOverlayScenarios() {
   }
 
   if (all.length < 333) {
-    throw new Error(`nooverlay scenario generation produced ${all.length} unique configs; expected at least 333`);
+    throw new Error(
+      `nooverlay scenario generation produced ${all.length} unique configs; expected at least 333`
+    );
   }
 
-  const selected = applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 12, static: 20 });
+  const selected = applyMaskVariety(assignPayloads(all.slice(0, 333)), {
+    animated: 12,
+    static: 20,
+  });
   return applyLogVersionSampling(selected, {
     baseVersion: 3,
     buckets: [
@@ -1058,15 +1466,12 @@ export function generateOverlayScenarios() {
     'duotone:trump',
     'extreme:logo',
   ]);
-  const BLOCKED_ANIM_MODE_FIXTURE = new Set([
-    'brightness:dance',
-    'halftone:dance',
-  ]);
+  const BLOCKED_ANIM_MODE_FIXTURE = new Set(['brightness:dance', 'halftone:dance']);
   const HERO_ANIM_FIXTURES = ANIMATED_FIXTURES.filter(
-    (fx) => fx.id === 'king' || fx.id === 'dance',
+    (fx) => fx.id === 'king' || fx.id === 'dance'
   );
   const OVERLAY_DITHER_KINDS = DITHER_KINDS.filter(
-    (dk) => dk !== 'ordered_clustered' && dk !== 'white_noise' && dk !== 'gaussian_noise',
+    (dk) => dk !== 'ordered_clustered' && dk !== 'white_noise' && dk !== 'gaussian_noise'
   );
   const SAFE_ANIM_DITHER_KINDS = [
     'error_diffusion',
@@ -1096,9 +1501,14 @@ export function generateOverlayScenarios() {
       if (BLOCKED_STATIC_MODE_FIXTURE.has(`${mode}:${fx.id}`)) {
         continue;
       }
-      layer1.push(makeConfig(CAT, `mode-${mode}-${fx.id}`,
-        { mode, img: fx.publicPath, ...overlayModeBase(mode) },
-        { fixtureId: fx.id, isAnimated: false }));
+      layer1.push(
+        makeConfig(
+          CAT,
+          `mode-${mode}-${fx.id}`,
+          { mode, img: fx.publicPath, ...overlayModeBase(mode) },
+          { fixtureId: fx.id, isAnimated: false }
+        )
+      );
     }
   }
 
@@ -1109,9 +1519,14 @@ export function generateOverlayScenarios() {
       if (BLOCKED_ANIM_MODE_FIXTURE.has(`${mode}:${fx.id}`)) {
         continue;
       }
-      layer1.push(makeConfig(CAT, `mode-${mode}-anim-${fx.id}`,
-        { mode, img: fx.publicPath, format: 'gif', ...overlayModeBase(mode) },
-        { fixtureId: fx.id, isAnimated: true }));
+      layer1.push(
+        makeConfig(
+          CAT,
+          `mode-${mode}-anim-${fx.id}`,
+          { mode, img: fx.publicPath, format: 'gif', ...overlayModeBase(mode) },
+          { fixtureId: fx.id, isAnimated: true }
+        )
+      );
     }
   }
   // subtotal: 68 + 17 = 85
@@ -1119,58 +1534,88 @@ export function generateOverlayScenarios() {
   // 3. ColorMode sweep (3)
   COLOR_MODES.forEach((cm, idx) => {
     const fx = pick(STATIC_FIXTURES, idx);
-    layer1.push(makeConfig(CAT, `colorMode-${cm}`,
-      { mode: 'blend', img: fx.publicPath, colorMode: cm, ...overlayModeBase('blend') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `colorMode-${cm}`,
+        { mode: 'blend', img: fx.publicPath, colorMode: cm, ...overlayModeBase('blend') },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 4. FitMode sweep (3)
   FIT_MODES.forEach((fm, idx) => {
     const fx = pick(STATIC_FIXTURES, idx + 1);
-    layer1.push(makeConfig(CAT, `fit-${fm}`,
-      { mode: 'blend', img: fx.publicPath, fit: fm, ...overlayModeBase('blend') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `fit-${fm}`,
+        { mode: 'blend', img: fx.publicPath, fit: fm, ...overlayModeBase('blend') },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 5. Intensity sweep: 30, 50, 70, 85, 100 (5)
   [30, 50, 70, 85, 100].forEach((int, idx) => {
     const fx = pick(STATIC_FIXTURES, idx + 2);
-    layer1.push(makeConfig(CAT, `intensity-${int}`,
-      { mode: 'blend', img: fx.publicPath, intensity: int, ...overlayModeBase('blend') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `intensity-${int}`,
+        { mode: 'blend', img: fx.publicPath, intensity: int, ...overlayModeBase('blend') },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 6. LogoSize sweep (scanner-safe upper bound)
   [20, 30, 35].forEach((ls, idx) => {
     const fx = pick(STATIC_FIXTURES, idx);
-    layer1.push(makeConfig(CAT, `logoSize-${ls}`,
-      { mode: 'center', img: fx.publicPath, logoSize: ls, ...overlayModeBase('center') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `logoSize-${ls}`,
+        { mode: 'center', img: fx.publicPath, logoSize: ls, ...overlayModeBase('center') },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 7. DitherKind sweep (exclude known unstable ordered_clustered)
   OVERLAY_DITHER_KINDS.forEach((dk, idx) => {
     const fx = pick(STATIC_FIXTURES, idx + 1);
-    layer1.push(makeConfig(CAT, `ditherKind-${dk}`,
-      { mode: 'dithered', img: fx.publicPath, ditherKind: dk, ...overlayModeBase('dithered') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `ditherKind-${dk}`,
+        { mode: 'dithered', img: fx.publicPath, ditherKind: dk, ...overlayModeBase('dithered') },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 7b. Animated dither showcase (curated kinds, full-frame GIF source)
   {
     for (const fx of HERO_ANIM_FIXTURES) {
       for (const dk of SAFE_ANIM_DITHER_KINDS) {
-        layer1.push(makeConfig(CAT, `ditherKind-anim-${dk}-${fx.id}`,
-          {
-            mode: 'dithered',
-            img: fx.publicPath,
-            ditherKind: dk,
-            diffusionKernel: dk === 'error_diffusion' ? 'atkinson' : 'sierra_2',
-            ditherStrength: dk === 'adaptive_threshold' ? 70 : 60,
-            format: 'gif',
-            ...overlayModeBase('dithered'),
-          },
-          { fixtureId: fx.id, isAnimated: true }));
+        layer1.push(
+          makeConfig(
+            CAT,
+            `ditherKind-anim-${dk}-${fx.id}`,
+            {
+              mode: 'dithered',
+              img: fx.publicPath,
+              ditherKind: dk,
+              diffusionKernel: dk === 'error_diffusion' ? 'atkinson' : 'sierra_2',
+              ditherStrength: dk === 'adaptive_threshold' ? 70 : 60,
+              format: 'gif',
+              ...overlayModeBase('dithered'),
+            },
+            { fixtureId: fx.id, isAnimated: true }
+          )
+        );
       }
     }
   }
@@ -1178,33 +1623,74 @@ export function generateOverlayScenarios() {
   // 8. DiffusionKernel sweep (8)
   DIFFUSION_KERNELS.forEach((dk, idx) => {
     const fx = pick(STATIC_FIXTURES, idx + 2);
-    layer1.push(makeConfig(CAT, `diffKernel-${dk}`,
-      { mode: 'dithered', img: fx.publicPath, diffusionKernel: dk, ...overlayModeBase('dithered') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `diffKernel-${dk}`,
+        {
+          mode: 'dithered',
+          img: fx.publicPath,
+          diffusionKernel: dk,
+          ...overlayModeBase('dithered'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 9. DitherStrength sweep: 25, 50, 75, 100 (4)
   [25, 50, 75, 100].forEach((ds, idx) => {
     const fx = pick(STATIC_FIXTURES, idx);
-    layer1.push(makeConfig(CAT, `ditherStr-${ds}`,
-      { mode: 'dithered', img: fx.publicPath, ditherStrength: ds, ...overlayModeBase('dithered') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `ditherStr-${ds}`,
+        {
+          mode: 'dithered',
+          img: fx.publicPath,
+          ditherStrength: ds,
+          ...overlayModeBase('dithered'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 10. Subpixel grid size sweep (scanner-safe values)
   [1, 3].forEach((sp, idx) => {
     const fx = pick(STATIC_FIXTURES, idx + 1);
-    layer1.push(makeConfig(CAT, `spGridNum-${sp}`,
-      { mode: 'subpixel-size', img: fx.publicPath, spGridNum: sp, ...overlayModeBase('subpixel') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `spGridNum-${sp}`,
+        {
+          mode: 'subpixel-size',
+          img: fx.publicPath,
+          spGridNum: sp,
+          ...overlayModeBase('subpixel'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 11. Halftone dot shape sweep: circle, square (line variant is unstable for scan gate)
   ['circle', 'square'].forEach((hs, idx) => {
     const fx = pick(STATIC_FIXTURES, idx);
-    layer1.push(makeConfig(CAT, `htDot-${hs}`,
-      { mode: 'halftone', img: fx.publicPath, htDot: hs, intensity: 30, ...overlayModeBase('halftone') },
-      { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `htDot-${hs}`,
+        {
+          mode: 'halftone',
+          img: fx.publicPath,
+          htDot: hs,
+          intensity: 30,
+          ...overlayModeBase('halftone'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 12. Duotone pair sweeps removed (many pairings are intrinsically unscannable).
@@ -1213,98 +1699,187 @@ export function generateOverlayScenarios() {
   // 13. Filter sweep: sharpen, blur, edge (3)
   ['sharpen', 'blur', 'edge'].forEach((filt, idx) => {
     const fx = pick(STATIC_FIXTURES, idx + 1);
-    const filterParams = filt === 'sharpen' ? { sharpen: 100 } : filt === 'blur' ? { blur: 5 } : { edge: 'sobel' };
-    layer1.push(makeConfig(CAT, `filter-${filt}`,
-      { mode: 'blend', img: fx.publicPath, ...filterParams },
-      { fixtureId: fx.id }));
+    const filterParams =
+      filt === 'sharpen' ? { sharpen: 100 } : filt === 'blur' ? { blur: 5 } : { edge: 'sobel' };
+    layer1.push(
+      makeConfig(
+        CAT,
+        `filter-${filt}`,
+        { mode: 'blend', img: fx.publicPath, ...filterParams },
+        { fixtureId: fx.id }
+      )
+    );
   });
 
   // 14. Crop/flip/rotate (5)
-  layer1.push(makeConfig(CAT, 'flipX', { mode: 'blend', img: STATIC_FIXTURES[0].publicPath, flipX: 1 }, { fixtureId: STATIC_FIXTURES[0].id }));
-  layer1.push(makeConfig(CAT, 'flipY', { mode: 'blend', img: STATIC_FIXTURES[3].publicPath, flipY: 1 }, { fixtureId: STATIC_FIXTURES[3].id }));
-  layer1.push(makeConfig(CAT, 'rot90', { mode: 'blend', img: STATIC_FIXTURES[1].publicPath, rot: 90 }, { fixtureId: STATIC_FIXTURES[1].id }));
-  layer1.push(makeConfig(CAT, 'rot180', { mode: 'blend', img: STATIC_FIXTURES[2].publicPath, rot: 180 }, { fixtureId: STATIC_FIXTURES[2].id }));
-  layer1.push(makeConfig(CAT, 'cropEn', { mode: 'blend', img: STATIC_FIXTURES[3].publicPath, cropEn: 1 }, { fixtureId: STATIC_FIXTURES[3].id }));
+  layer1.push(
+    makeConfig(
+      CAT,
+      'flipX',
+      { mode: 'blend', img: STATIC_FIXTURES[0].publicPath, flipX: 1 },
+      { fixtureId: STATIC_FIXTURES[0].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'flipY',
+      { mode: 'blend', img: STATIC_FIXTURES[3].publicPath, flipY: 1 },
+      { fixtureId: STATIC_FIXTURES[3].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'rot90',
+      { mode: 'blend', img: STATIC_FIXTURES[1].publicPath, rot: 90 },
+      { fixtureId: STATIC_FIXTURES[1].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'rot180',
+      { mode: 'blend', img: STATIC_FIXTURES[2].publicPath, rot: 180 },
+      { fixtureId: STATIC_FIXTURES[2].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'cropEn',
+      { mode: 'blend', img: STATIC_FIXTURES[3].publicPath, cropEn: 1 },
+      { fixtureId: STATIC_FIXTURES[3].id }
+    )
+  );
 
   // 15. Preservation sweeps: keepFinders, keepTiming (4)
-  layer1.push(makeConfig(CAT, 'keepFinders', { mode: 'blend', img: STATIC_FIXTURES[0].publicPath, keepFinders: 1 }, { fixtureId: STATIC_FIXTURES[0].id }));
-  layer1.push(makeConfig(CAT, 'keepTiming', { mode: 'blend', img: STATIC_FIXTURES[3].publicPath, keepTiming: 1 }, { fixtureId: STATIC_FIXTURES[3].id }));
-  layer1.push(makeConfig(CAT, 'keepBoth', { mode: 'blend', img: STATIC_FIXTURES[1].publicPath, keepFinders: 1, keepTiming: 1 }, { fixtureId: STATIC_FIXTURES[1].id }));
-  layer1.push(makeConfig(CAT, 'eccAware', { mode: 'blend', img: STATIC_FIXTURES[2].publicPath, eccAware: 1 }, { fixtureId: STATIC_FIXTURES[2].id }));
+  layer1.push(
+    makeConfig(
+      CAT,
+      'keepFinders',
+      { mode: 'blend', img: STATIC_FIXTURES[0].publicPath, keepFinders: 1 },
+      { fixtureId: STATIC_FIXTURES[0].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'keepTiming',
+      { mode: 'blend', img: STATIC_FIXTURES[3].publicPath, keepTiming: 1 },
+      { fixtureId: STATIC_FIXTURES[3].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'keepBoth',
+      { mode: 'blend', img: STATIC_FIXTURES[1].publicPath, keepFinders: 1, keepTiming: 1 },
+      { fixtureId: STATIC_FIXTURES[1].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'eccAware',
+      { mode: 'blend', img: STATIC_FIXTURES[2].publicPath, eccAware: 1 },
+      { fixtureId: STATIC_FIXTURES[2].id }
+    )
+  );
 
   // 15b. Blend-preservation style toggle showcase (overlay pass-through vs dither-integrated)
-  layer1.push(makeConfig(CAT, 'blendPresMode-overlay',
-    {
-      mode: 'dithered',
-      img: STATIC_FIXTURES[2].publicPath,
-      ...overlayModeBase('dithered'),
-      keepFinders: 0,
-      keepTiming: 0,
-      keepAlign: 0,
-      protectFmt: 0,
-      protectVer: 0,
-      finderDither: 82,
-      blendPres: 1,
-      blendPresMode: 'overlay',
-    },
-    { fixtureId: STATIC_FIXTURES[2].id }));
-  layer1.push(makeConfig(CAT, 'blendPresMode-dither',
-    {
-      mode: 'dithered',
-      img: STATIC_FIXTURES[3].publicPath,
-      ...overlayModeBase('dithered'),
-      keepFinders: 0,
-      keepTiming: 0,
-      keepAlign: 0,
-      protectFmt: 0,
-      protectVer: 0,
-      finderDither: 82,
-      blendPres: 1,
-      blendPresMode: 'dither',
-    },
-    { fixtureId: STATIC_FIXTURES[3].id }));
-  layer1.push(makeConfig(CAT, 'blendPresMode-overlay-anim-dance',
-    {
-      mode: 'dithered',
-      img: '/dance.gif',
-      format: 'gif',
-      ...overlayModeBase('dithered'),
-      keepFinders: 0,
-      keepTiming: 0,
-      keepAlign: 0,
-      protectFmt: 0,
-      protectVer: 0,
-      finderDither: 84,
-      blendPres: 1,
-      blendPresMode: 'overlay',
-      animPattern: 'wave',
-      interp: 'morph',
-      easing: 'ease_in_out',
-      tempDither: 'flicker_safe',
-      colorCycle: 1,
-    },
-    { fixtureId: 'dance', isAnimated: true }));
-  layer1.push(makeConfig(CAT, 'blendPresMode-dither-anim-king',
-    {
-      mode: 'dithered',
-      img: '/king.gif',
-      format: 'gif',
-      ...overlayModeBase('dithered'),
-      keepFinders: 0,
-      keepTiming: 0,
-      keepAlign: 0,
-      protectFmt: 0,
-      protectVer: 0,
-      finderDither: 84,
-      blendPres: 1,
-      blendPresMode: 'dither',
-      animPattern: 'shimmer',
-      interp: 'crossfade',
-      easing: 'ease_out',
-      tempDither: 'flicker_safe',
-      colorCycle: 1,
-    },
-    { fixtureId: 'king', isAnimated: true }));
+  layer1.push(
+    makeConfig(
+      CAT,
+      'blendPresMode-overlay',
+      {
+        mode: 'dithered',
+        img: STATIC_FIXTURES[2].publicPath,
+        ...overlayModeBase('dithered'),
+        keepFinders: 0,
+        keepTiming: 0,
+        keepAlign: 0,
+        protectFmt: 0,
+        protectVer: 0,
+        finderDither: 82,
+        blendPres: 1,
+        blendPresMode: 'overlay',
+      },
+      { fixtureId: STATIC_FIXTURES[2].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'blendPresMode-dither',
+      {
+        mode: 'dithered',
+        img: STATIC_FIXTURES[3].publicPath,
+        ...overlayModeBase('dithered'),
+        keepFinders: 0,
+        keepTiming: 0,
+        keepAlign: 0,
+        protectFmt: 0,
+        protectVer: 0,
+        finderDither: 82,
+        blendPres: 1,
+        blendPresMode: 'dither',
+      },
+      { fixtureId: STATIC_FIXTURES[3].id }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'blendPresMode-overlay-anim-dance',
+      {
+        mode: 'dithered',
+        img: '/dance.gif',
+        format: 'gif',
+        ...overlayModeBase('dithered'),
+        keepFinders: 0,
+        keepTiming: 0,
+        keepAlign: 0,
+        protectFmt: 0,
+        protectVer: 0,
+        finderDither: 84,
+        blendPres: 1,
+        blendPresMode: 'overlay',
+        animPattern: 'wave',
+        interp: 'morph',
+        easing: 'ease_in_out',
+        tempDither: 'flicker_safe',
+        colorCycle: 1,
+      },
+      { fixtureId: 'dance', isAnimated: true }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'blendPresMode-dither-anim-king',
+      {
+        mode: 'dithered',
+        img: '/king.gif',
+        format: 'gif',
+        ...overlayModeBase('dithered'),
+        keepFinders: 0,
+        keepTiming: 0,
+        keepAlign: 0,
+        protectFmt: 0,
+        protectVer: 0,
+        finderDither: 84,
+        blendPres: 1,
+        blendPresMode: 'dither',
+        animPattern: 'shimmer',
+        interp: 'crossfade',
+        easing: 'ease_out',
+        tempDither: 'flicker_safe',
+        colorCycle: 1,
+      },
+      { fixtureId: 'king', isAnimated: true }
+    )
+  );
 
   const HERO_VISUAL_MODES = ['blend', 'mosaic', 'subpixel', 'wave'];
   const HERO_VISUAL_STYLES = ['rounded', 'dots', 'diamond', 'connected'];
@@ -1349,7 +1924,9 @@ export function generateOverlayScenarios() {
               animPattern: ap,
               format: 'gif',
               ...(ap === 'wave' ? { interp: 'morph', bounce: 1 } : {}),
-              ...(ap === 'shimmer' ? { interp: 'crossfade', tempDither: 'flicker_safe', colorCycle: 1 } : {}),
+              ...(ap === 'shimmer'
+                ? { interp: 'crossfade', tempDither: 'flicker_safe', colorCycle: 1 }
+                : {}),
               ...(ap === 'scanline' ? { reverse: 1 } : {}),
               ...(ap === 'drift' ? { animSeed: 300 + seed } : {}),
             },
@@ -1662,9 +2239,19 @@ export function generateOverlayScenarios() {
     ];
     for (const fx of HERO_ANIM_FIXTURES) {
       for (const combo of stackedAnimatedDitherCombos) {
-        layer1.push(makeConfig(CAT, `animStack-${fx.id}-${combo.label}`,
-          { img: fx.publicPath, format: 'gif', ...combo.params, ...overlayModeBase(combo.params.mode) },
-          { fixtureId: fx.id, isAnimated: true }));
+        layer1.push(
+          makeConfig(
+            CAT,
+            `animStack-${fx.id}-${combo.label}`,
+            {
+              img: fx.publicPath,
+              format: 'gif',
+              ...combo.params,
+              ...overlayModeBase(combo.params.mode),
+            },
+            { fixtureId: fx.id, isAnimated: true }
+          )
+        );
       }
     }
   }
@@ -1672,70 +2259,123 @@ export function generateOverlayScenarios() {
   // 17b. Animated hero matrix (striking GIF showcase across fixtures and effects)
   for (const fx of ANIMATED_FIXTURES) {
     for (const ap of ANIM_PATTERNS) {
-      layer1.push(makeConfig(
-        CAT,
-        `animHero-${fx.id}-${ap}`,
-        { mode: 'blend', img: fx.publicPath, animPattern: ap, format: 'gif', ...overlayModeBase('blend') },
-        { fixtureId: fx.id, isAnimated: true }
-      ));
+      layer1.push(
+        makeConfig(
+          CAT,
+          `animHero-${fx.id}-${ap}`,
+          {
+            mode: 'blend',
+            img: fx.publicPath,
+            animPattern: ap,
+            format: 'gif',
+            ...overlayModeBase('blend'),
+          },
+          { fixtureId: fx.id, isAnimated: true }
+        )
+      );
     }
-    layer1.push(makeConfig(
-      CAT,
-      `animHero-${fx.id}-wave-morph`,
-      {
-        mode: 'wave',
-        img: fx.publicPath,
-        animPattern: 'wave',
-        interp: 'morph',
-        easing: 'ease_in_out',
-        format: 'gif',
-        ...overlayModeBase('wave'),
-      },
-      { fixtureId: fx.id, isAnimated: true }
-    ));
-    layer1.push(makeConfig(
-      CAT,
-      `animHero-${fx.id}-shimmer-crossfade`,
-      {
-        mode: 'blend',
-        img: fx.publicPath,
-        animPattern: 'shimmer',
-        interp: 'crossfade',
-        tempDither: 'flicker_safe',
-        colorCycle: 1,
-        format: 'gif',
-        ...overlayModeBase('blend'),
-      },
-      { fixtureId: fx.id, isAnimated: true }
-    ));
+    layer1.push(
+      makeConfig(
+        CAT,
+        `animHero-${fx.id}-wave-morph`,
+        {
+          mode: 'wave',
+          img: fx.publicPath,
+          animPattern: 'wave',
+          interp: 'morph',
+          easing: 'ease_in_out',
+          format: 'gif',
+          ...overlayModeBase('wave'),
+        },
+        { fixtureId: fx.id, isAnimated: true }
+      )
+    );
+    layer1.push(
+      makeConfig(
+        CAT,
+        `animHero-${fx.id}-shimmer-crossfade`,
+        {
+          mode: 'blend',
+          img: fx.publicPath,
+          animPattern: 'shimmer',
+          interp: 'crossfade',
+          tempDither: 'flicker_safe',
+          colorCycle: 1,
+          format: 'gif',
+          ...overlayModeBase('blend'),
+        },
+        { fixtureId: fx.id, isAnimated: true }
+      )
+    );
   }
 
   // 18. Watermark showcase in overlay mode
   {
     const fx = STATIC_FIXTURES[3];
-    layer1.push(makeConfig(CAT, 'wm-text', { mode: 'blend', img: fx.publicPath, wmEn: 1, wmKind: 'text', wmText: 'ANQR', ...overlayModeBase('blend') }, { fixtureId: fx.id }));
-    layer1.push(makeConfig(CAT, 'wm-pattern', { mode: 'blend', img: fx.publicPath, wmEn: 1, wmKind: 'pattern', ...overlayModeBase('blend') }, { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        'wm-text',
+        {
+          mode: 'blend',
+          img: fx.publicPath,
+          wmEn: 1,
+          wmKind: 'text',
+          wmText: 'ANQR',
+          ...overlayModeBase('blend'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
+    layer1.push(
+      makeConfig(
+        CAT,
+        'wm-pattern',
+        {
+          mode: 'blend',
+          img: fx.publicPath,
+          wmEn: 1,
+          wmKind: 'pattern',
+          ...overlayModeBase('blend'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
     for (const wmBlend of WATERMARK_BLENDS) {
-      layer1.push(makeConfig(CAT, `wmBlend-${wmBlend}`, {
-        mode: 'blend',
-        img: fx.publicPath,
-        wmEn: 1,
-        wmKind: 'text',
-        wmText: 'ANQR',
-        wmBlend,
-        ...overlayModeBase('blend'),
-      }, { fixtureId: fx.id }));
+      layer1.push(
+        makeConfig(
+          CAT,
+          `wmBlend-${wmBlend}`,
+          {
+            mode: 'blend',
+            img: fx.publicPath,
+            wmEn: 1,
+            wmKind: 'text',
+            wmText: 'ANQR',
+            wmBlend,
+            ...overlayModeBase('blend'),
+          },
+          { fixtureId: fx.id }
+        )
+      );
     }
     for (const wmOpacity of [30, 60, 90]) {
-      layer1.push(makeConfig(CAT, `wmOpacity-${wmOpacity}`, {
-        mode: 'blend',
-        img: fx.publicPath,
-        wmEn: 1,
-        wmKind: 'text',
-        wmText: 'ANQR',
-        wmOpacity,
-        ...overlayModeBase('blend'),
-      }, { fixtureId: fx.id }));
+      layer1.push(
+        makeConfig(
+          CAT,
+          `wmOpacity-${wmOpacity}`,
+          {
+            mode: 'blend',
+            img: fx.publicPath,
+            wmEn: 1,
+            wmKind: 'text',
+            wmText: 'ANQR',
+            wmOpacity,
+            ...overlayModeBase('blend'),
+          },
+          { fixtureId: fx.id }
+        )
+      );
     }
   }
 
@@ -1743,114 +2383,150 @@ export function generateOverlayScenarios() {
   {
     const fx = STATIC_FIXTURES[2];
     for (const finder of FINDER_STYLES.slice(1)) {
-      layer1.push(makeConfig(CAT, `finder-${finder}`, {
-        mode: 'blend',
-        img: fx.publicPath,
-        finder,
-        ...overlayModeBase('blend'),
-      }, { fixtureId: fx.id }));
+      layer1.push(
+        makeConfig(
+          CAT,
+          `finder-${finder}`,
+          {
+            mode: 'blend',
+            img: fx.publicPath,
+            finder,
+            ...overlayModeBase('blend'),
+          },
+          { fixtureId: fx.id }
+        )
+      );
     }
-    layer1.push(makeConfig(CAT, 'eye-rr', {
-      mode: 'blend',
-      img: fx.publicPath,
-      eyeOuter: 'rounded',
-      eyeInner: 'rounded',
-      ...overlayModeBase('blend'),
-    }, { fixtureId: fx.id }));
-    layer1.push(makeConfig(CAT, 'eye-cc', {
-      mode: 'blend',
-      img: fx.publicPath,
-      eyeOuter: 'circle',
-      eyeInner: 'circle',
-      ...overlayModeBase('blend'),
-    }, { fixtureId: fx.id }));
+    layer1.push(
+      makeConfig(
+        CAT,
+        'eye-rr',
+        {
+          mode: 'blend',
+          img: fx.publicPath,
+          eyeOuter: 'rounded',
+          eyeInner: 'rounded',
+          ...overlayModeBase('blend'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
+    layer1.push(
+      makeConfig(
+        CAT,
+        'eye-cc',
+        {
+          mode: 'blend',
+          img: fx.publicPath,
+          eyeOuter: 'circle',
+          eyeInner: 'circle',
+          ...overlayModeBase('blend'),
+        },
+        { fixtureId: fx.id }
+      )
+    );
   }
 
   // 20. "Huge permutation" overlay showcases (stacked features)
-  layer1.push(makeConfig(CAT, 'mega-static-trump',
-    {
-      mode: 'dithered',
-      img: '/trump.png',
-      style: 'dots',
-      finder: 'circle',
-      grad: 'conic',
-      gradStops: GRADIENT_PRESETS[3],
-      colorMode: 'grayscale',
-      ditherKind: 'screened_blue_noise',
-      diffusionKernel: 'sierra_2',
-      ditherStrength: 65,
-      frame: 'tag',
-      eyeOuter: 'circle',
-      eyeInner: 'rounded',
-      keepFinders: 1,
-      keepTiming: 1,
-      keepAlign: 1,
-      protectFmt: 1,
-      protectVer: 1,
-      eccAware: 1,
-      wmEn: 1,
-      wmKind: 'text',
-      wmText: 'ANQR',
-      wmBlend: 'soft-light',
-      wmOpacity: 55,
-      ...overlayModeBase('dithered'),
-    },
-    { fixtureId: 'trump' }));
-  layer1.push(makeConfig(CAT, 'mega-anim-king',
-    {
-      mode: 'blend',
-      img: '/king.gif',
-      style: 'rounded',
-      finder: 'rounded',
-      grad: 'radial',
-      gradStops: GRADIENT_PRESETS[4],
-      colorMode: 'color',
-      fit: 'cover',
-      intensity: 60,
-      frame: 'sticker',
-      eyeOuter: 'rounded',
-      eyeInner: 'circle',
-      animPattern: 'wave',
-      interp: 'morph',
-      easing: 'ease_in_out',
-      tempDither: 'flicker_safe',
-      colorCycle: 1,
-      bounce: 1,
-      reverse: 1,
-      animSeed: 777,
-      wmEn: 1,
-      wmKind: 'pattern',
-      wmBlend: 'overlay',
-      wmOpacity: 45,
-      format: 'gif',
-      ...overlayModeBase('blend'),
-    },
-    { fixtureId: 'king', isAnimated: true }));
-  layer1.push(makeConfig(CAT, 'mega-anim-dance',
-    {
-      mode: 'wave',
-      img: '/dance.gif',
-      style: 'diamond',
-      finder: 'circle',
-      grad: 'linear',
-      gradStops: GRADIENT_PRESETS[1],
-      colorMode: 'bw',
-      fit: 'contain',
-      intensity: 55,
-      animPattern: 'shimmer',
-      interp: 'crossfade',
-      easing: 'ease_out',
-      tempDither: 'blue_noise',
-      colorCycle: 1,
-      wmEn: 1,
-      wmKind: 'text',
-      wmText: 'SCAN',
-      wmBlend: 'screen',
-      wmOpacity: 40,
-      format: 'gif',
-      ...overlayModeBase('wave'),
-    },
-    { fixtureId: 'dance', isAnimated: true }));
+  layer1.push(
+    makeConfig(
+      CAT,
+      'mega-static-trump',
+      {
+        mode: 'dithered',
+        img: '/trump.png',
+        style: 'dots',
+        finder: 'circle',
+        grad: 'conic',
+        gradStops: GRADIENT_PRESETS[3],
+        colorMode: 'grayscale',
+        ditherKind: 'screened_blue_noise',
+        diffusionKernel: 'sierra_2',
+        ditherStrength: 65,
+        frame: 'tag',
+        eyeOuter: 'circle',
+        eyeInner: 'rounded',
+        keepFinders: 1,
+        keepTiming: 1,
+        keepAlign: 1,
+        protectFmt: 1,
+        protectVer: 1,
+        eccAware: 1,
+        wmEn: 1,
+        wmKind: 'text',
+        wmText: 'ANQR',
+        wmBlend: 'soft-light',
+        wmOpacity: 55,
+        ...overlayModeBase('dithered'),
+      },
+      { fixtureId: 'trump' }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'mega-anim-king',
+      {
+        mode: 'blend',
+        img: '/king.gif',
+        style: 'rounded',
+        finder: 'rounded',
+        grad: 'radial',
+        gradStops: GRADIENT_PRESETS[4],
+        colorMode: 'color',
+        fit: 'cover',
+        intensity: 60,
+        frame: 'sticker',
+        eyeOuter: 'rounded',
+        eyeInner: 'circle',
+        animPattern: 'wave',
+        interp: 'morph',
+        easing: 'ease_in_out',
+        tempDither: 'flicker_safe',
+        colorCycle: 1,
+        bounce: 1,
+        reverse: 1,
+        animSeed: 777,
+        wmEn: 1,
+        wmKind: 'pattern',
+        wmBlend: 'overlay',
+        wmOpacity: 45,
+        format: 'gif',
+        ...overlayModeBase('blend'),
+      },
+      { fixtureId: 'king', isAnimated: true }
+    )
+  );
+  layer1.push(
+    makeConfig(
+      CAT,
+      'mega-anim-dance',
+      {
+        mode: 'wave',
+        img: '/dance.gif',
+        style: 'diamond',
+        finder: 'circle',
+        grad: 'linear',
+        gradStops: GRADIENT_PRESETS[1],
+        colorMode: 'bw',
+        fit: 'contain',
+        intensity: 55,
+        animPattern: 'shimmer',
+        interp: 'crossfade',
+        easing: 'ease_out',
+        tempDither: 'blue_noise',
+        colorCycle: 1,
+        wmEn: 1,
+        wmKind: 'text',
+        wmText: 'SCAN',
+        wmBlend: 'screen',
+        wmOpacity: 40,
+        format: 'gif',
+        ...overlayModeBase('wave'),
+      },
+      { fixtureId: 'dance', isAnimated: true }
+    )
+  );
 
   // 21. Overlay target/secondary animation stacks (king + dance)
   {
@@ -1939,7 +2615,12 @@ export function generateOverlayScenarios() {
           makeConfig(
             CAT,
             `target-stack-${fx.id}-${combo.label}`,
-            { img: fx.publicPath, format: 'gif', ...combo.params, ...overlayModeBase(combo.params.mode) },
+            {
+              img: fx.publicPath,
+              format: 'gif',
+              ...combo.params,
+              ...overlayModeBase(combo.params.mode),
+            },
             { fixtureId: fx.id, isAnimated: true }
           )
         );
@@ -1986,18 +2667,33 @@ export function generateOverlayScenarios() {
   // Mode × ColorMode (take 12)
   {
     const modes3 = ['blend', 'mosaic', 'dithered', 'subpixel'];
-    const pool = cross(CAT, 'mode-x-cm', modes3, COLOR_MODES,
-      (m, cm) => ({ mode: m, img: STATIC_FIXTURES[0].publicPath, colorMode: cm, ...overlayModeBase(m) }),
-      { fixtureId: STATIC_FIXTURES[0].id });
+    const pool = cross(
+      CAT,
+      'mode-x-cm',
+      modes3,
+      COLOR_MODES,
+      (m, cm) => ({
+        mode: m,
+        img: STATIC_FIXTURES[0].publicPath,
+        colorMode: cm,
+        ...overlayModeBase(m),
+      }),
+      { fixtureId: STATIC_FIXTURES[0].id }
+    );
     layer2.push(...pool.slice(0, 12));
   }
 
   // Mode × FitMode (take 9)
   {
     const modes3 = ['blend', 'mosaic', 'dithered'];
-    const pool = cross(CAT, 'mode-x-fm', modes3, FIT_MODES,
+    const pool = cross(
+      CAT,
+      'mode-x-fm',
+      modes3,
+      FIT_MODES,
       (m, fm) => ({ mode: m, img: STATIC_FIXTURES[1].publicPath, fit: fm, ...overlayModeBase(m) }),
-      { fixtureId: STATIC_FIXTURES[1].id });
+      { fixtureId: STATIC_FIXTURES[1].id }
+    );
     layer2.push(...pool.slice(0, 9));
   }
 
@@ -2005,26 +2701,52 @@ export function generateOverlayScenarios() {
   {
     const modes4 = ['blend', 'dithered', 'mosaic', 'blue-noise'];
     const styles3 = ['rounded', 'dots', 'diamond'];
-    const pool = cross(CAT, 'mode-x-rstyle', modes4, styles3,
+    const pool = cross(
+      CAT,
+      'mode-x-rstyle',
+      modes4,
+      styles3,
       (m, s) => ({ mode: m, img: STATIC_FIXTURES[2].publicPath, style: s, ...overlayModeBase(m) }),
-      { fixtureId: STATIC_FIXTURES[2].id });
+      { fixtureId: STATIC_FIXTURES[2].id }
+    );
     layer2.push(...pool.slice(0, 12));
   }
 
   // Mode × Gradient (take 9)
   {
     const modes3 = ['blend', 'mosaic', 'dithered'];
-    const pool = cross(CAT, 'mode-x-grad', modes3, GRADIENT_TYPES,
-      (m, g) => ({ mode: m, img: STATIC_FIXTURES[0].publicPath, grad: g, gradStops: GRADIENT_PRESETS[0], ...overlayModeBase(m) }),
-      { fixtureId: STATIC_FIXTURES[0].id });
+    const pool = cross(
+      CAT,
+      'mode-x-grad',
+      modes3,
+      GRADIENT_TYPES,
+      (m, g) => ({
+        mode: m,
+        img: STATIC_FIXTURES[0].publicPath,
+        grad: g,
+        gradStops: GRADIENT_PRESETS[0],
+        ...overlayModeBase(m),
+      }),
+      { fixtureId: STATIC_FIXTURES[0].id }
+    );
     layer2.push(...pool.slice(0, 9));
   }
 
   // Mode × DitherKind (take 10)
   {
-    const pool = cross(CAT, 'mode-x-dk', ['dithered'], OVERLAY_DITHER_KINDS.slice(0, 10),
-      (_m, dk) => ({ mode: 'dithered', img: STATIC_FIXTURES[1].publicPath, ditherKind: dk, ...overlayModeBase('dithered') }),
-      { fixtureId: STATIC_FIXTURES[1].id });
+    const pool = cross(
+      CAT,
+      'mode-x-dk',
+      ['dithered'],
+      OVERLAY_DITHER_KINDS.slice(0, 10),
+      (_m, dk) => ({
+        mode: 'dithered',
+        img: STATIC_FIXTURES[1].publicPath,
+        ditherKind: dk,
+        ...overlayModeBase('dithered'),
+      }),
+      { fixtureId: STATIC_FIXTURES[1].id }
+    );
     layer2.push(...pool.slice(0, 10));
   }
 
@@ -2047,12 +2769,12 @@ export function generateOverlayScenarios() {
                 format: 'gif',
                 ...(m === 'dithered'
                   ? {
-                    ditherKind: ap === 'wave' ? 'screened_blue_noise' : 'adaptive_threshold',
-                    diffusionKernel: ap === 'wave' ? 'sierra_2' : 'atkinson',
-                    ditherStrength: ap === 'shimmer' ? 65 : 55,
-                    tempDither: ap === 'shimmer' ? 'flicker_safe' : 'blue_noise',
-                    colorCycle: ap === 'shimmer' ? 1 : undefined,
-                  }
+                      ditherKind: ap === 'wave' ? 'screened_blue_noise' : 'adaptive_threshold',
+                      diffusionKernel: ap === 'wave' ? 'sierra_2' : 'atkinson',
+                      ditherStrength: ap === 'shimmer' ? 65 : 55,
+                      tempDither: ap === 'shimmer' ? 'flicker_safe' : 'blue_noise',
+                      colorCycle: ap === 'shimmer' ? 1 : undefined,
+                    }
                   : {}),
                 ...overlayModeBase(m),
               },
@@ -2061,35 +2783,45 @@ export function generateOverlayScenarios() {
           );
         }
       }
-      layer2.push(makeConfig(CAT, `ov-x-anim-${fx.id}-shimmer-morph`,
-        {
-          mode: 'blend',
-          img: fx.publicPath,
-          animPattern: 'shimmer',
-          interp: 'morph',
-          tempDither: 'flicker_safe',
-          colorCycle: 1,
-          format: 'gif',
-          ...overlayModeBase('blend'),
-        },
-        { fixtureId: fx.id, isAnimated: true }));
-      layer2.push(makeConfig(CAT, `ov-x-anim-${fx.id}-dither-wave-morph`,
-        {
-          mode: 'dithered',
-          img: fx.publicPath,
-          animPattern: 'wave',
-          interp: 'morph',
-          easing: 'ease_in_out',
-          ditherKind: 'screened_blue_noise',
-          diffusionKernel: 'sierra_2',
-          ditherStrength: 70,
-          tempDither: 'flicker_safe',
-          colorCycle: 1,
-          bounce: 1,
-          format: 'gif',
-          ...overlayModeBase('dithered'),
-        },
-        { fixtureId: fx.id, isAnimated: true }));
+      layer2.push(
+        makeConfig(
+          CAT,
+          `ov-x-anim-${fx.id}-shimmer-morph`,
+          {
+            mode: 'blend',
+            img: fx.publicPath,
+            animPattern: 'shimmer',
+            interp: 'morph',
+            tempDither: 'flicker_safe',
+            colorCycle: 1,
+            format: 'gif',
+            ...overlayModeBase('blend'),
+          },
+          { fixtureId: fx.id, isAnimated: true }
+        )
+      );
+      layer2.push(
+        makeConfig(
+          CAT,
+          `ov-x-anim-${fx.id}-dither-wave-morph`,
+          {
+            mode: 'dithered',
+            img: fx.publicPath,
+            animPattern: 'wave',
+            interp: 'morph',
+            easing: 'ease_in_out',
+            ditherKind: 'screened_blue_noise',
+            diffusionKernel: 'sierra_2',
+            ditherStrength: 70,
+            tempDither: 'flicker_safe',
+            colorCycle: 1,
+            bounce: 1,
+            format: 'gif',
+            ...overlayModeBase('dithered'),
+          },
+          { fixtureId: fx.id, isAnimated: true }
+        )
+      );
     }
   }
 
@@ -2098,12 +2830,28 @@ export function generateOverlayScenarios() {
     const modes4 = ['blend', 'mosaic', 'dithered', 'subpixel'];
     for (let i = 0; i < modes4.length; i++) {
       const fx = pick(STATIC_FIXTURES, i);
-      layer2.push(makeConfig(CAT, `keep-finder-${modes4[i]}`,
-        { mode: modes4[i], img: fx.publicPath, keepFinders: 1, ...overlayModeBase(modes4[i]) },
-        { fixtureId: fx.id }));
-      layer2.push(makeConfig(CAT, `keep-both-${modes4[i]}`,
-        { mode: modes4[i], img: fx.publicPath, keepFinders: 1, keepTiming: 1, ...overlayModeBase(modes4[i]) },
-        { fixtureId: fx.id }));
+      layer2.push(
+        makeConfig(
+          CAT,
+          `keep-finder-${modes4[i]}`,
+          { mode: modes4[i], img: fx.publicPath, keepFinders: 1, ...overlayModeBase(modes4[i]) },
+          { fixtureId: fx.id }
+        )
+      );
+      layer2.push(
+        makeConfig(
+          CAT,
+          `keep-both-${modes4[i]}`,
+          {
+            mode: modes4[i],
+            img: fx.publicPath,
+            keepFinders: 1,
+            keepTiming: 1,
+            ...overlayModeBase(modes4[i]),
+          },
+          { fixtureId: fx.id }
+        )
+      );
     }
   }
 
@@ -2112,9 +2860,19 @@ export function generateOverlayScenarios() {
     const filterMap = { sharpen: { sharpen: 100 }, blur: { blur: 5 }, edge: { edge: 'sobel' } };
     const filterNames = ['sharpen', 'blur', 'edge'];
     const modes2 = ['blend', 'mosaic'];
-    const pool = cross(CAT, 'filter-x-mode', modes2, filterNames,
-      (m, f) => ({ mode: m, img: STATIC_FIXTURES[2].publicPath, ...filterMap[f], ...overlayModeBase(m) }),
-      { fixtureId: STATIC_FIXTURES[2].id });
+    const pool = cross(
+      CAT,
+      'filter-x-mode',
+      modes2,
+      filterNames,
+      (m, f) => ({
+        mode: m,
+        img: STATIC_FIXTURES[2].publicPath,
+        ...filterMap[f],
+        ...overlayModeBase(m),
+      }),
+      { fixtureId: STATIC_FIXTURES[2].id }
+    );
     layer2.push(...pool.slice(0, 6));
   }
 
@@ -2122,24 +2880,29 @@ export function generateOverlayScenarios() {
   {
     for (const fx of HERO_ANIM_FIXTURES) {
       for (const dk of SAFE_ANIM_DITHER_KINDS) {
-        layer2.push(makeConfig(CAT, `hero-dither-${fx.id}-${dk}`,
-          {
-            mode: 'dithered',
-            img: fx.publicPath,
-            format: 'gif',
-            animPattern: dk.includes('blue') ? 'shimmer' : 'wave',
-            interp: dk.includes('ordered') ? 'crossfade' : 'morph',
-            easing: dk.includes('adaptive') ? 'ease_out' : 'ease_in_out',
-            tempDither: dk.includes('blue') ? 'flicker_safe' : 'blue_noise',
-            colorCycle: 1,
-            bounce: dk === 'error_diffusion' ? 1 : undefined,
-            reverse: dk === 'ordered_bayer' ? 1 : undefined,
-            ditherKind: dk,
-            diffusionKernel: dk === 'ordered_bayer' ? 'sierra_lite' : 'sierra_2',
-            ditherStrength: dk === 'adaptive_threshold' ? 75 : 60,
-            ...overlayModeBase('dithered'),
-          },
-          { fixtureId: fx.id, isAnimated: true }));
+        layer2.push(
+          makeConfig(
+            CAT,
+            `hero-dither-${fx.id}-${dk}`,
+            {
+              mode: 'dithered',
+              img: fx.publicPath,
+              format: 'gif',
+              animPattern: dk.includes('blue') ? 'shimmer' : 'wave',
+              interp: dk.includes('ordered') ? 'crossfade' : 'morph',
+              easing: dk.includes('adaptive') ? 'ease_out' : 'ease_in_out',
+              tempDither: dk.includes('blue') ? 'flicker_safe' : 'blue_noise',
+              colorCycle: 1,
+              bounce: dk === 'error_diffusion' ? 1 : undefined,
+              reverse: dk === 'ordered_bayer' ? 1 : undefined,
+              ditherKind: dk,
+              diffusionKernel: dk === 'ordered_bayer' ? 'sierra_lite' : 'sierra_2',
+              ditherStrength: dk === 'adaptive_threshold' ? 75 : 60,
+              ...overlayModeBase('dithered'),
+            },
+            { fixtureId: fx.id, isAnimated: true }
+          )
+        );
       }
     }
   }
@@ -2301,9 +3064,19 @@ export function generateOverlayScenarios() {
     ];
     for (const fx of HERO_ANIM_FIXTURES) {
       for (const combo of heroStackedShowcase) {
-        layer2.push(makeConfig(CAT, `hero-stack-${fx.id}-${combo.label}`,
-          { img: fx.publicPath, format: 'gif', ...combo.params, ...overlayModeBase(combo.params.mode) },
-          { fixtureId: fx.id, isAnimated: true }));
+        layer2.push(
+          makeConfig(
+            CAT,
+            `hero-stack-${fx.id}-${combo.label}`,
+            {
+              img: fx.publicPath,
+              format: 'gif',
+              ...combo.params,
+              ...overlayModeBase(combo.params.mode),
+            },
+            { fixtureId: fx.id, isAnimated: true }
+          )
+        );
       }
     }
   }
@@ -2311,50 +3084,120 @@ export function generateOverlayScenarios() {
     const heroMotionCombos = [
       {
         label: 'blend-pulse-easein',
-        params: { mode: 'blend', animPattern: 'pulse', easing: 'ease_in', colorCycle: 1, animSeed: 41 },
+        params: {
+          mode: 'blend',
+          animPattern: 'pulse',
+          easing: 'ease_in',
+          colorCycle: 1,
+          animSeed: 41,
+        },
       },
       {
         label: 'blend-wave-crossfade',
-        params: { mode: 'blend', animPattern: 'wave', interp: 'crossfade', easing: 'ease_out', bounce: 1 },
+        params: {
+          mode: 'blend',
+          animPattern: 'wave',
+          interp: 'crossfade',
+          easing: 'ease_out',
+          bounce: 1,
+        },
       },
       {
         label: 'blend-shimmer-morph',
-        params: { mode: 'blend', animPattern: 'shimmer', interp: 'morph', tempDither: 'flicker_safe', colorCycle: 1 },
+        params: {
+          mode: 'blend',
+          animPattern: 'shimmer',
+          interp: 'morph',
+          tempDither: 'flicker_safe',
+          colorCycle: 1,
+        },
       },
       {
         label: 'mosaic-wave-morph',
-        params: { mode: 'mosaic', animPattern: 'wave', interp: 'morph', easing: 'ease_in_out', bounce: 1 },
+        params: {
+          mode: 'mosaic',
+          animPattern: 'wave',
+          interp: 'morph',
+          easing: 'ease_in_out',
+          bounce: 1,
+        },
       },
       {
         label: 'mosaic-drift-soft',
-        params: { mode: 'mosaic', animPattern: 'drift', interp: 'crossfade', easing: 'ease_in', animSeed: 87 },
+        params: {
+          mode: 'mosaic',
+          animPattern: 'drift',
+          interp: 'crossfade',
+          easing: 'ease_in',
+          animSeed: 87,
+        },
       },
       {
         label: 'subpixel-wave-vivid',
-        params: { mode: 'subpixel', animPattern: 'wave', interp: 'morph', tempDither: 'blue_noise', colorCycle: 1 },
+        params: {
+          mode: 'subpixel',
+          animPattern: 'wave',
+          interp: 'morph',
+          tempDither: 'blue_noise',
+          colorCycle: 1,
+        },
       },
       {
         label: 'subpixel-shimmer-reverse',
-        params: { mode: 'subpixel', animPattern: 'shimmer', interp: 'crossfade', tempDither: 'flicker_safe', reverse: 1 },
+        params: {
+          mode: 'subpixel',
+          animPattern: 'shimmer',
+          interp: 'crossfade',
+          tempDither: 'flicker_safe',
+          reverse: 1,
+        },
       },
       {
         label: 'wave-scanline-bounce',
-        params: { mode: 'wave', animPattern: 'scanline', easing: 'ease_in_out', reverse: 1, bounce: 1 },
+        params: {
+          mode: 'wave',
+          animPattern: 'scanline',
+          easing: 'ease_in_out',
+          reverse: 1,
+          bounce: 1,
+        },
       },
       {
         label: 'wave-drift-cycle',
-        params: { mode: 'wave', animPattern: 'drift', easing: 'ease_out', colorCycle: 1, animSeed: 404 },
+        params: {
+          mode: 'wave',
+          animPattern: 'drift',
+          easing: 'ease_out',
+          colorCycle: 1,
+          animSeed: 404,
+        },
       },
       {
         label: 'blend-drift-crossfade',
-        params: { mode: 'blend', animPattern: 'drift', interp: 'crossfade', tempDither: 'blue_noise', animSeed: 2026 },
+        params: {
+          mode: 'blend',
+          animPattern: 'drift',
+          interp: 'crossfade',
+          tempDither: 'blue_noise',
+          animSeed: 2026,
+        },
       },
     ];
     for (const fx of HERO_ANIM_FIXTURES) {
       for (const combo of heroMotionCombos) {
-        layer2.push(makeConfig(CAT, `hero-motion-${fx.id}-${combo.label}`,
-          { img: fx.publicPath, format: 'gif', ...combo.params, ...overlayModeBase(combo.params.mode) },
-          { fixtureId: fx.id, isAnimated: true }));
+        layer2.push(
+          makeConfig(
+            CAT,
+            `hero-motion-${fx.id}-${combo.label}`,
+            {
+              img: fx.publicPath,
+              format: 'gif',
+              ...combo.params,
+              ...overlayModeBase(combo.params.mode),
+            },
+            { fixtureId: fx.id, isAnimated: true }
+          )
+        );
       }
     }
   }
@@ -2370,7 +3213,12 @@ export function generateOverlayScenarios() {
     const safeBg = ['ffffff', 'f8fafc', 'fff7ed', 'f0fdf4', 'faf5ff', 'eef2ff'];
     const safeBorders = [0, 1, 2, 3];
     const safeIntensity = [35, 45, 55, 65];
-    const safeFillerDitherKinds = ['error_diffusion', 'ordered_bayer', 'screened_blue_noise', 'adaptive_threshold'];
+    const safeFillerDitherKinds = [
+      'error_diffusion',
+      'ordered_bayer',
+      'screened_blue_noise',
+      'adaptive_threshold',
+    ];
     let fillerIndex = 0;
     outer: for (const mode of safeFillerModes) {
       for (const fx of fillerFixtures) {
@@ -2384,37 +3232,46 @@ export function generateOverlayScenarios() {
                 const i = fillerIndex++;
                 const isAnim = Boolean(fx.isAnimated);
                 const fillerAnimPattern = pick(['pulse', 'wave', 'shimmer', 'drift'], i + 9);
-                filler.push(makeConfig(CAT, `filler-${i}`,
-                  {
-                    mode,
-                    img: fx.publicPath,
-                    style,
-                    finder,
-                    grad,
-                    gradStops: pick(GRADIENT_PRESETS, i),
-                    colorMode: pick(COLOR_MODES, i + 1),
-                    fit: pick(FIT_MODES, i + 2),
-                    fg,
-                    bg: pick(safeBg, i + 3),
-                    border: pick(safeBorders, i + 4),
-                    palette: pick(PALETTE_PRESETS, i + 5),
-                    paletteMode: pick(safePaletteModes, i + 6),
-                    intensity: pick(safeIntensity, i + 7),
-                    ditherKind: mode === 'dithered' ? pick(safeFillerDitherKinds, i + 8) : undefined,
-                    diffusionKernel: mode === 'dithered' ? pick(DIFFUSION_KERNELS, i + 10) : undefined,
-                    ditherStrength: mode === 'dithered' ? pick([50, 60, 70], i + 11) : undefined,
-                    format: isAnim ? 'gif' : undefined,
-                    animPattern: isAnim ? fillerAnimPattern : undefined,
-                    easing: isAnim ? pick(['ease_in', 'ease_out', 'ease_in_out'], i + 12) : undefined,
-                    interp: isAnim ? pick(['crossfade', 'morph'], i + 13) : undefined,
-                    tempDither: isAnim ? pick(['blue_noise', 'flicker_safe'], i + 14) : undefined,
-                    colorCycle: isAnim && fillerAnimPattern === 'shimmer' ? 1 : undefined,
-                    bounce: isAnim && fillerAnimPattern === 'wave' ? 1 : undefined,
-                    reverse: isAnim && fillerAnimPattern === 'scanline' ? 1 : undefined,
-                    animSeed: isAnim ? pick([42, 123, 777, 999], i + 15) : undefined,
-                    ...overlayModeBase(mode),
-                  },
-                  { fixtureId: fx.id, isAnimated: isAnim }));
+                filler.push(
+                  makeConfig(
+                    CAT,
+                    `filler-${i}`,
+                    {
+                      mode,
+                      img: fx.publicPath,
+                      style,
+                      finder,
+                      grad,
+                      gradStops: pick(GRADIENT_PRESETS, i),
+                      colorMode: pick(COLOR_MODES, i + 1),
+                      fit: pick(FIT_MODES, i + 2),
+                      fg,
+                      bg: pick(safeBg, i + 3),
+                      border: pick(safeBorders, i + 4),
+                      palette: pick(PALETTE_PRESETS, i + 5),
+                      paletteMode: pick(safePaletteModes, i + 6),
+                      intensity: pick(safeIntensity, i + 7),
+                      ditherKind:
+                        mode === 'dithered' ? pick(safeFillerDitherKinds, i + 8) : undefined,
+                      diffusionKernel:
+                        mode === 'dithered' ? pick(DIFFUSION_KERNELS, i + 10) : undefined,
+                      ditherStrength: mode === 'dithered' ? pick([50, 60, 70], i + 11) : undefined,
+                      format: isAnim ? 'gif' : undefined,
+                      animPattern: isAnim ? fillerAnimPattern : undefined,
+                      easing: isAnim
+                        ? pick(['ease_in', 'ease_out', 'ease_in_out'], i + 12)
+                        : undefined,
+                      interp: isAnim ? pick(['crossfade', 'morph'], i + 13) : undefined,
+                      tempDither: isAnim ? pick(['blue_noise', 'flicker_safe'], i + 14) : undefined,
+                      colorCycle: isAnim && fillerAnimPattern === 'shimmer' ? 1 : undefined,
+                      bounce: isAnim && fillerAnimPattern === 'wave' ? 1 : undefined,
+                      reverse: isAnim && fillerAnimPattern === 'scanline' ? 1 : undefined,
+                      animSeed: isAnim ? pick([42, 123, 777, 999], i + 15) : undefined,
+                      ...overlayModeBase(mode),
+                    },
+                    { fixtureId: fx.id, isAnimated: isAnim }
+                  )
+                );
                 if (filler.length >= 2400) {
                   break outer;
                 }
@@ -2427,9 +3284,14 @@ export function generateOverlayScenarios() {
     all = filterExcludedScenarios(dedup([...all, ...filler]));
   }
   if (all.length < 333) {
-    throw new Error(`overlay scenario generation produced ${all.length} unique configs; expected at least 333`);
+    throw new Error(
+      `overlay scenario generation produced ${all.length} unique configs; expected at least 333`
+    );
   }
-  const selected = applyMaskVariety(assignPayloads(all.slice(0, 333)), { animated: 14, static: 18 });
+  const selected = applyMaskVariety(assignPayloads(all.slice(0, 333)), {
+    animated: 14,
+    static: 18,
+  });
   return applyLogVersionSampling(selected, {
     baseVersion: 3,
     buckets: [
@@ -2527,29 +3389,84 @@ export function generateArtworkScenarios() {
 
     // Gradient (3)
     for (const gt of GRADIENT_TYPES) {
-      configs.push(makeConfig(CAT, `art-${fx.id}-grad-${gt}`,
-        { ...base, grad: gt, gradStops: GRADIENT_PRESETS[0] }, opts));
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-grad-${gt}`,
+          { ...base, grad: gt, gradStops: GRADIENT_PRESETS[0] },
+          opts
+        )
+      );
     }
 
     // Eye combos (4)
-    configs.push(makeConfig(CAT, `art-${fx.id}-eye-rr`, { ...base, eyeOuter: 'rounded', eyeInner: 'rounded' }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-eye-cc`, { ...base, eyeOuter: 'circle',  eyeInner: 'circle'  }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-eye-rc`, { ...base, eyeOuter: 'rounded', eyeInner: 'circle'  }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-eye-cr`, { ...base, eyeOuter: 'circle',  eyeInner: 'rounded' }, opts));
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-eye-rr`,
+        { ...base, eyeOuter: 'rounded', eyeInner: 'rounded' },
+        opts
+      )
+    );
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-eye-cc`,
+        { ...base, eyeOuter: 'circle', eyeInner: 'circle' },
+        opts
+      )
+    );
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-eye-rc`,
+        { ...base, eyeOuter: 'rounded', eyeInner: 'circle' },
+        opts
+      )
+    );
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-eye-cr`,
+        { ...base, eyeOuter: 'circle', eyeInner: 'rounded' },
+        opts
+      )
+    );
 
     // Colors + watermark (4)
-    configs.push(makeConfig(CAT, `art-${fx.id}-fg-navy`,  { ...base, fg: '1a365d' }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-fg-red`, {
-      ...base,
-      fg: 'c41e3a',
-      ...(isAnim ? { animPattern: 'drift', animSeed: 123, format: 'gif' } : {}),
-    }, opts));
+    configs.push(makeConfig(CAT, `art-${fx.id}-fg-navy`, { ...base, fg: '1a365d' }, opts));
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-fg-red`,
+        {
+          ...base,
+          fg: 'c41e3a',
+          ...(isAnim ? { animPattern: 'drift', animSeed: 123, format: 'gif' } : {}),
+        },
+        opts
+      )
+    );
     configs.push(makeConfig(CAT, `art-${fx.id}-bg-cream`, { ...base, bg: 'fff5e6' }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-wm-text`,  { ...base, wmEn: 1, wmKind: 'text', wmText: 'ANQR' }, opts));
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-wm-text`,
+        { ...base, wmEn: 1, wmKind: 'text', wmText: 'ANQR' },
+        opts
+      )
+    );
 
     // ECC + watermark blend (2)
     configs.push(makeConfig(CAT, `art-${fx.id}-ec-M`, { ...base, ec: 'M' }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-wm-pattern`, { ...base, wmEn: 1, wmKind: 'pattern', wmBlend: 'overlay', wmOpacity: 60 }, opts));
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-wm-pattern`,
+        { ...base, wmEn: 1, wmKind: 'pattern', wmBlend: 'overlay', wmOpacity: 60 },
+        opts
+      )
+    );
 
     // subtotal sweeps: 1 + 4 + 2 + 3 + 3 + 3 + 4 + 4 + 2 = 26
 
@@ -2558,8 +3475,9 @@ export function generateArtworkScenarios() {
     // Style × Finder (4×2 = 8)
     for (const s of MODULE_STYLES.slice(1)) {
       for (const f of FINDER_STYLES.slice(1)) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-${s}-${f}`,
-          { ...base, style: s, finder: f }, opts));
+        configs.push(
+          makeConfig(CAT, `art-${fx.id}-${s}-${f}`, { ...base, style: s, finder: f }, opts)
+        );
       }
     }
 
@@ -2568,8 +3486,14 @@ export function generateArtworkScenarios() {
       const pool = [];
       for (const s of MODULE_STYLES.slice(1)) {
         for (const g of GRADIENT_TYPES) {
-          pool.push(makeConfig(CAT, `art-${fx.id}-${s}-${g}`,
-            { ...base, style: s, grad: g, gradStops: pick(GRADIENT_PRESETS, pool.length) }, opts));
+          pool.push(
+            makeConfig(
+              CAT,
+              `art-${fx.id}-${s}-${g}`,
+              { ...base, style: s, grad: g, gradStops: pick(GRADIENT_PRESETS, pool.length) },
+              opts
+            )
+          );
         }
       }
       configs.push(...pool);
@@ -2580,8 +3504,9 @@ export function generateArtworkScenarios() {
       const pool = [];
       for (const s of MODULE_STYLES.slice(1)) {
         for (const fr of FRAME_STYLES) {
-          pool.push(makeConfig(CAT, `art-${fx.id}-${s}-${fr}`,
-            { ...base, style: s, frame: fr }, opts));
+          pool.push(
+            makeConfig(CAT, `art-${fx.id}-${s}-${fr}`, { ...base, style: s, frame: fr }, opts)
+          );
         }
       }
       configs.push(...pool);
@@ -2592,72 +3517,157 @@ export function generateArtworkScenarios() {
       const pool = [];
       for (const s of MODULE_STYLES.slice(1)) {
         for (const g of GAP_MODES.slice(1)) {
-          pool.push(makeConfig(CAT, `art-${fx.id}-${s}-gap-${g}`,
-            { ...base, style: s, gapMode: g }, opts));
+          pool.push(
+            makeConfig(CAT, `art-${fx.id}-${s}-gap-${g}`, { ...base, style: s, gapMode: g }, opts)
+          );
         }
       }
       configs.push(...pool);
     }
 
     // Multi-feature combos (3)
-    configs.push(makeConfig(CAT, `art-${fx.id}-combo1`,
-      { ...base, style: 'rounded', finder: 'rounded', grad: 'linear', gradStops: GRADIENT_PRESETS[1] }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-combo2`,
-      { ...base, style: 'dots', finder: 'circle', frame: 'tag', fg: '6b21a8' }, opts));
-    configs.push(makeConfig(CAT, `art-${fx.id}-combo3`,
-      { ...base, style: 'diamond', gapMode: 'inset', eyeOuter: 'rounded', eyeInner: 'circle' }, opts));
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-combo1`,
+        {
+          ...base,
+          style: 'rounded',
+          finder: 'rounded',
+          grad: 'linear',
+          gradStops: GRADIENT_PRESETS[1],
+        },
+        opts
+      )
+    );
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-combo2`,
+        { ...base, style: 'dots', finder: 'circle', frame: 'tag', fg: '6b21a8' },
+        opts
+      )
+    );
+    configs.push(
+      makeConfig(
+        CAT,
+        `art-${fx.id}-combo3`,
+        { ...base, style: 'diamond', gapMode: 'inset', eyeOuter: 'rounded', eyeInner: 'circle' },
+        opts
+      )
+    );
 
     // subtotal cross: 8 + 12 + 12 + 12 + 3 = 47
     // total per static fixture: 26 + 47 = 73
 
     // Animated fixtures: include pattern + animation option showcases
     if (isAnim) {
-      configs.push(makeConfig(CAT, `art-${fx.id}-anim-pulse`,
-        { ...base, animPattern: 'pulse', colorCycle: 1, format: 'gif' }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-anim-wave`,
-        { ...base, animPattern: 'wave', bounce: 1, format: 'gif' }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-anim-scanline`,
-        { ...base, animPattern: 'scanline', reverse: 1, format: 'gif' }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-anim-shimmer`,
-        {
-          ...base,
-          animPattern: 'shimmer',
-          easing: 'ease_out',
-          interp: 'crossfade',
-          tempDither: 'blue_noise',
-          format: 'gif',
-        }, opts));
-
-      for (const ap of ANIM_PATTERNS) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-anim-rich-${ap}`,
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-anim-pulse`,
+          { ...base, animPattern: 'pulse', colorCycle: 1, format: 'gif' },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-anim-wave`,
+          { ...base, animPattern: 'wave', bounce: 1, format: 'gif' },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-anim-scanline`,
+          { ...base, animPattern: 'scanline', reverse: 1, format: 'gif' },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-anim-shimmer`,
           {
             ...base,
-            animPattern: ap,
-            easing: 'ease_in_out',
+            animPattern: 'shimmer',
+            easing: 'ease_out',
+            interp: 'crossfade',
+            tempDither: 'blue_noise',
             format: 'gif',
-            ...(ap === 'wave' ? { interp: 'morph', bounce: 1 } : {}),
-            ...(ap === 'shimmer' ? { colorCycle: 1 } : {}),
-          }, opts));
+          },
+          opts
+        )
+      );
+
+      for (const ap of ANIM_PATTERNS) {
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-anim-rich-${ap}`,
+            {
+              ...base,
+              animPattern: ap,
+              easing: 'ease_in_out',
+              format: 'gif',
+              ...(ap === 'wave' ? { interp: 'morph', bounce: 1 } : {}),
+              ...(ap === 'shimmer' ? { colorCycle: 1 } : {}),
+            },
+            opts
+          )
+        );
       }
       for (const easing of EASINGS.slice(1)) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-anim-easing-${easing}`,
-          { ...base, animPattern: 'pulse', easing, format: 'gif' }, opts));
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-anim-easing-${easing}`,
+            { ...base, animPattern: 'pulse', easing, format: 'gif' },
+            opts
+          )
+        );
       }
       for (const interp of ['crossfade', 'morph']) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-anim-interp-${interp}`,
-          { ...base, animPattern: 'wave', interp, format: 'gif' }, opts));
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-anim-interp-${interp}`,
+            { ...base, animPattern: 'wave', interp, format: 'gif' },
+            opts
+          )
+        );
       }
       for (const tempDither of ['blue_noise', 'flicker_safe']) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-anim-tempDither-${tempDither}`,
-          { ...base, animPattern: 'shimmer', tempDither, format: 'gif' }, opts));
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-anim-tempDither-${tempDither}`,
+            { ...base, animPattern: 'shimmer', tempDither, format: 'gif' },
+            opts
+          )
+        );
       }
       for (const animSeed of [123]) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-anim-seed-${animSeed}`,
-          { ...base, animPattern: 'drift', animSeed, format: 'gif' }, opts));
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-anim-seed-${animSeed}`,
+            { ...base, animPattern: 'drift', animSeed, format: 'gif' },
+            opts
+          )
+        );
       }
       for (const style of MODULE_STYLES.slice(1)) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-anim-style-${style}`,
-          { ...base, animPattern: 'wave', style, format: 'gif' }, opts));
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-anim-style-${style}`,
+            { ...base, animPattern: 'wave', style, format: 'gif' },
+            opts
+          )
+        );
       }
 
       const stackedAnimShowcase = [
@@ -2740,8 +3750,14 @@ export function generateArtworkScenarios() {
         },
       ];
       for (const combo of stackedAnimShowcase) {
-        configs.push(makeConfig(CAT, `art-${fx.id}-stack-${combo.label}`,
-          { ...base, ...combo.params, format: 'gif' }, opts));
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-stack-${combo.label}`,
+            { ...base, ...combo.params, format: 'gif' },
+            opts
+          )
+        );
       }
 
       // Explicit target-stack showcase for artwork animation:
@@ -2815,10 +3831,35 @@ export function generateArtworkScenarios() {
 
     // Static fixtures: add 2 more combos to reach 55
     if (!isAnim) {
-      configs.push(makeConfig(CAT, `art-${fx.id}-combo4`,
-        { ...base, style: 'connected', finder: 'rounded', grad: 'radial', gradStops: GRADIENT_PRESETS[2] }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-combo5`,
-        { ...base, style: 'rounded', finder: 'rounded', frame: 'sticker', fg: 'c41e3a', bg: 'fff5e6' }, opts));
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-combo4`,
+          {
+            ...base,
+            style: 'connected',
+            finder: 'rounded',
+            grad: 'radial',
+            gradStops: GRADIENT_PRESETS[2],
+          },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-combo5`,
+          {
+            ...base,
+            style: 'rounded',
+            finder: 'rounded',
+            frame: 'sticker',
+            fg: 'c41e3a',
+            bg: 'fff5e6',
+          },
+          opts
+        )
+      );
       // Convert static-fixture artwork into animated showcases as well so
       // artwork coverage is not dominated by static-only outputs.
       const animOpts = { fixtureId: fx.id, isAnimated: true };
@@ -2993,12 +4034,14 @@ export function generateArtworkScenarios() {
         },
       ];
       for (const combo of staticFixtureAnimShowcase) {
-        configs.push(makeConfig(
-          CAT,
-          `art-${fx.id}-${combo.label}`,
-          { ...base, ...combo.params, format: 'gif' },
-          animOpts
-        ));
+        configs.push(
+          makeConfig(
+            CAT,
+            `art-${fx.id}-${combo.label}`,
+            { ...base, ...combo.params, format: 'gif' },
+            animOpts
+          )
+        );
       }
       // total 55
     }
@@ -3015,153 +4058,207 @@ export function generateArtworkScenarios() {
       makeConfig(
         CAT,
         `art-${fx.id}-encoding-v${encodingChoice.v}-${encodingChoice.ec}`,
-        { ...base, v: encodingChoice.v, ec: encodingChoice.ec, style: 'rounded', finder: 'rounded' },
+        {
+          ...base,
+          v: encodingChoice.v,
+          ec: encodingChoice.ec,
+          style: 'rounded',
+          finder: 'rounded',
+        },
         opts
       )
     );
 
     if (fx.id === 'trump') {
-      configs.push(makeConfig(CAT, `art-${fx.id}-mega`,
-        {
-          ...base,
-          ec: 'M',
-          style: 'diamond',
-          finder: 'rounded',
-          frame: 'tag',
-          grad: 'conic',
-          gradStops: GRADIENT_PRESETS[3],
-          eyeOuter: 'circle',
-          eyeInner: 'rounded',
-          gapMode: 'inset',
-          fg: '1a365d',
-          bg: 'fff5e6',
-          wmEn: 1,
-          wmKind: 'text',
-          wmText: 'ANQR',
-          wmBlend: 'soft-light',
-          wmOpacity: 50,
-        }, opts));
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-mega`,
+          {
+            ...base,
+            ec: 'M',
+            style: 'diamond',
+            finder: 'rounded',
+            frame: 'tag',
+            grad: 'conic',
+            gradStops: GRADIENT_PRESETS[3],
+            eyeOuter: 'circle',
+            eyeInner: 'rounded',
+            gapMode: 'inset',
+            fg: '1a365d',
+            bg: 'fff5e6',
+            wmEn: 1,
+            wmKind: 'text',
+            wmText: 'ANQR',
+            wmBlend: 'soft-light',
+            wmOpacity: 50,
+          },
+          opts
+        )
+      );
     }
     if (isAnim) {
-      configs.push(makeConfig(CAT, `art-${fx.id}-mega-anim`,
-        {
-          ...base,
-          ec: 'M',
-          style: 'dots',
-          finder: 'circle',
-          frame: 'sticker',
-          grad: 'radial',
-          gradStops: GRADIENT_PRESETS[4],
-          eyeOuter: 'circle',
-          eyeInner: 'circle',
-          gapMode: 'negative_space',
-          animPattern: 'wave',
-          interp: 'morph',
-          easing: 'ease_in_out',
-          tempDither: 'flicker_safe',
-          colorCycle: 1,
-          bounce: 1,
-          animSeed: 888,
-          wmEn: 1,
-          wmKind: 'pattern',
-          wmBlend: 'overlay',
-          wmOpacity: 45,
-          format: 'gif',
-        }, opts));
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-mega-anim`,
+          {
+            ...base,
+            ec: 'M',
+            style: 'dots',
+            finder: 'circle',
+            frame: 'sticker',
+            grad: 'radial',
+            gradStops: GRADIENT_PRESETS[4],
+            eyeOuter: 'circle',
+            eyeInner: 'circle',
+            gapMode: 'negative_space',
+            animPattern: 'wave',
+            interp: 'morph',
+            easing: 'ease_in_out',
+            tempDither: 'flicker_safe',
+            colorCycle: 1,
+            bounce: 1,
+            animSeed: 888,
+            wmEn: 1,
+            wmKind: 'pattern',
+            wmBlend: 'overlay',
+            wmOpacity: 45,
+            format: 'gif',
+          },
+          opts
+        )
+      );
     }
 
     // Fixture-local extras to keep artwork volume at target while excluding logo/king.
     if (isAnim) {
-      configs.push(makeConfig(CAT, `art-${fx.id}-extra-anim-a`,
-        {
-          ...base,
-          style: 'rounded',
-          finder: 'rounded',
-          gapMode: 'inset',
-          grad: 'linear',
-          gradStops: GRADIENT_PRESETS[1],
-          animPattern: 'drift',
-          easing: 'ease_in_out',
-          colorCycle: 1,
-          animSeed: 2026,
-          modulePx: 5,
-          format: 'gif',
-        }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-extra-anim-b`,
-        {
-          ...base,
-          style: 'diamond',
-          finder: 'circle',
-          grad: 'conic',
-          gradStops: GRADIENT_PRESETS[3],
-          animPattern: 'wave',
-          interp: 'morph',
-          tempDither: 'flicker_safe',
-          bounce: 1,
-          modulePx: 7,
-          format: 'gif',
-        }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-extra-anim-c`,
-        {
-          ...base,
-          style: 'dots',
-          finder: 'rounded',
-          frame: 'sticker',
-          grad: 'radial',
-          gradStops: GRADIENT_PRESETS[4],
-          animPattern: 'shimmer',
-          reverse: 1,
-          wmEn: 1,
-          wmKind: 'pattern',
-          wmBlend: 'soft-light',
-          wmOpacity: 40,
-          modulePx: 5,
-          format: 'gif',
-        }, opts));
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-extra-anim-a`,
+          {
+            ...base,
+            style: 'rounded',
+            finder: 'rounded',
+            gapMode: 'inset',
+            grad: 'linear',
+            gradStops: GRADIENT_PRESETS[1],
+            animPattern: 'drift',
+            easing: 'ease_in_out',
+            colorCycle: 1,
+            animSeed: 2026,
+            modulePx: 5,
+            format: 'gif',
+          },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-extra-anim-b`,
+          {
+            ...base,
+            style: 'diamond',
+            finder: 'circle',
+            grad: 'conic',
+            gradStops: GRADIENT_PRESETS[3],
+            animPattern: 'wave',
+            interp: 'morph',
+            tempDither: 'flicker_safe',
+            bounce: 1,
+            modulePx: 7,
+            format: 'gif',
+          },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-extra-anim-c`,
+          {
+            ...base,
+            style: 'dots',
+            finder: 'rounded',
+            frame: 'sticker',
+            grad: 'radial',
+            gradStops: GRADIENT_PRESETS[4],
+            animPattern: 'shimmer',
+            reverse: 1,
+            wmEn: 1,
+            wmKind: 'pattern',
+            wmBlend: 'soft-light',
+            wmOpacity: 40,
+            modulePx: 5,
+            format: 'gif',
+          },
+          opts
+        )
+      );
     } else {
-      configs.push(makeConfig(CAT, `art-${fx.id}-extra-static-a`,
-        {
-          ...base,
-          style: 'rounded',
-          finder: 'rounded',
-          frame: 'rounded_frame',
-          grad: 'linear',
-          gradStops: GRADIENT_PRESETS[2],
-          palette: PALETTE_PRESETS[1],
-          paletteMode: 'row',
-          modulePx: 5,
-          radius: 20,
-        }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-extra-static-b`,
-        {
-          ...base,
-          style: 'diamond',
-          finder: 'rounded',
-          gapMode: 'inset',
-          grad: 'conic',
-          gradStops: GRADIENT_PRESETS[3],
-          palette: PALETTE_PRESETS[3],
-          paletteMode: 'position',
-          modulePx: 6,
-          radius: 24,
-          cGuard: 1,
-          minContrast: 4.5,
-        }, opts));
-      configs.push(makeConfig(CAT, `art-${fx.id}-extra-static-c`,
-        {
-          ...base,
-          style: 'connected',
-          finder: 'rounded',
-          frame: 'sticker',
-          wmEn: 1,
-          wmKind: 'text',
-          wmText: 'ANQR',
-          wmBlend: 'soft-light',
-          wmOpacity: 45,
-          modulePx: 5,
-          fg: '1a365d',
-          bg: 'f0fdf4',
-        }, opts));
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-extra-static-a`,
+          {
+            ...base,
+            style: 'rounded',
+            finder: 'rounded',
+            frame: 'rounded_frame',
+            grad: 'linear',
+            gradStops: GRADIENT_PRESETS[2],
+            palette: PALETTE_PRESETS[1],
+            paletteMode: 'row',
+            modulePx: 5,
+            radius: 20,
+          },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-extra-static-b`,
+          {
+            ...base,
+            style: 'diamond',
+            finder: 'rounded',
+            gapMode: 'inset',
+            grad: 'conic',
+            gradStops: GRADIENT_PRESETS[3],
+            palette: PALETTE_PRESETS[3],
+            paletteMode: 'position',
+            modulePx: 6,
+            radius: 24,
+            cGuard: 1,
+            minContrast: 4.5,
+          },
+          opts
+        )
+      );
+      configs.push(
+        makeConfig(
+          CAT,
+          `art-${fx.id}-extra-static-c`,
+          {
+            ...base,
+            style: 'connected',
+            finder: 'rounded',
+            frame: 'sticker',
+            wmEn: 1,
+            wmKind: 'text',
+            wmText: 'ANQR',
+            wmBlend: 'soft-light',
+            wmOpacity: 45,
+            modulePx: 5,
+            fg: '1a365d',
+            bg: 'f0fdf4',
+          },
+          opts
+        )
+      );
     }
 
     return configs;
@@ -3175,7 +4272,7 @@ export function generateArtworkScenarios() {
         return a.id.localeCompare(b.id);
       });
       return [fx.id, ranked];
-    }),
+    })
   );
 
   // Rebalance toward trump/dance while excluding logo/king artwork.
@@ -3250,8 +4347,8 @@ export function generateArtworkScenarios() {
 
 export function generateAllScenarios() {
   const noov = generateNonOverlayScenarios();
-  const ov   = generateOverlayScenarios();
-  const art  = generateArtworkScenarios();
+  const ov = generateOverlayScenarios();
+  const art = generateArtworkScenarios();
 
   const all = [...noov, ...ov, ...art];
 
@@ -3271,10 +4368,16 @@ export function generateAllScenarios() {
   // Ensure exactly 1000 (333+333+333 = 999, so add 1 bonus scenario)
   if (output.length < 1000) {
     const bonus = makeConfig('nooverlay', 'bonus-full-featured', {
-      style: 'rounded', finder: 'rounded', grad: 'linear',
+      style: 'rounded',
+      finder: 'rounded',
+      grad: 'linear',
       gradStops: '6366f1,0,ec4899,0.5,f59e0b,1',
-      frame: 'tag', gapMode: 'inset', eyeOuter: 'rounded', eyeInner: 'circle',
-      fg: '1a365d', bg: 'faf5ff',
+      frame: 'tag',
+      gapMode: 'inset',
+      eyeOuter: 'rounded',
+      eyeInner: 'circle',
+      fg: '1a365d',
+      bg: 'faf5ff',
     });
     bonus.payloadId = 'url';
     output = [...output, bonus];

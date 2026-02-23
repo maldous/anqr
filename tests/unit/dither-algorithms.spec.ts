@@ -37,7 +37,11 @@ function createImageData(width: number, height: number): ImageData {
   return { data, width, height } as ImageData;
 }
 
-function assertMatrixShape(result: { matrix: boolean[][]; colors: { r: number; g: number; b: number }[][] }, w: number, h: number) {
+function assertMatrixShape(
+  result: { matrix: boolean[][]; colors: { r: number; g: number; b: number }[][] },
+  w: number,
+  h: number
+) {
   expect(result.matrix.length).toBe(h);
   expect(result.colors.length).toBe(h);
   for (let y = 0; y < h; y++) {

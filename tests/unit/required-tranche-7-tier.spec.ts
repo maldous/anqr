@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const TARGET_SECTIONS = ["Tier Controls"] as const;
+const TARGET_SECTIONS = ['Tier Controls'] as const;
 
 const EXPLICIT_IDS = [
-  "tier-option-advanced",
-  "tier-option-basic",
-  "tier-option-professional",
-  "tier-select",
-  "tier-tab-advanced",
-  "tier-tab-basic",
-  "tier-tab-professional",
-  "tier-tabs",
+  'tier-option-advanced',
+  'tier-option-basic',
+  'tier-option-professional',
+  'tier-select',
+  'tier-tab-advanced',
+  'tier-tab-basic',
+  'tier-tab-professional',
+  'tier-tabs',
 ] as const;
 
 function parseSectionIds(): string[] {
@@ -45,7 +45,7 @@ function parseSectionIds(): string[] {
   return [...new Set(out)].sort();
 }
 
-describe("Required Mapping Tranche 7: Tier explicit IDs", () => {
+describe('Required Mapping Tranche 7: Tier explicit IDs', () => {
   it('contains non-empty unique explicit IDs', () => {
     expect(EXPLICIT_IDS.length).toBeGreaterThan(0);
     expect(new Set(EXPLICIT_IDS).size).toBe(EXPLICIT_IDS.length);

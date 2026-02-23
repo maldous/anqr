@@ -62,22 +62,18 @@ function runShard({ index, total, scenarioIds }) {
     const suffix = `shard-${index + 1}-of-${total}`;
     const startedAt = Date.now();
     const nodeOptions = [process.env.NODE_OPTIONS, '--expose-gc'].filter(Boolean).join(' ');
-    const child = spawn(
-      'npx',
-      ['vitest', 'run', '--maxWorkers=1', MATRIX_SPEC],
-      {
-        cwd: repoRoot,
-        env: {
-          ...process.env,
-          NODE_OPTIONS: nodeOptions,
-          ANQR_LOG_LEVEL: process.env.ANQR_LOG_LEVEL ?? 'error',
-          SCAN_MATRIX_SCENARIOS: scenarioIds.join(','),
-          SCAN_MATRIX_CLEAN_ARTIFACTS: '0',
-          SCAN_MATRIX_OUTPUT_SUFFIX: suffix,
-        },
-        stdio: ['ignore', 'pipe', 'pipe'],
-      }
-    );
+    const child = spawn('npx', ['vitest', 'run', '--maxWorkers=1', MATRIX_SPEC], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        NODE_OPTIONS: nodeOptions,
+        ANQR_LOG_LEVEL: process.env.ANQR_LOG_LEVEL ?? 'error',
+        SCAN_MATRIX_SCENARIOS: scenarioIds.join(','),
+        SCAN_MATRIX_CLEAN_ARTIFACTS: '0',
+        SCAN_MATRIX_OUTPUT_SUFFIX: suffix,
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
 
     let stdout = '';
     let stderr = '';
@@ -143,10 +139,7 @@ function buildTierFixtureTable(tierResults, fixtures) {
 function buildTierFailTable(tierResults) {
   const fails = tierResults.filter((r) => r.status === 'fail');
   if (fails.length === 0) return '_None_';
-  const lines = [
-    '| Scenario | Fixture | Reason | Disposition |',
-    '| --- | --- | --- | --- |',
-  ];
+  const lines = ['| Scenario | Fixture | Reason | Disposition |', '| --- | --- | --- | --- |'];
   for (const result of fails) {
     lines.push(
       `| ${result.scenarioId} | ${result.fixtureId} | ${result.reasonCode} | ${result.disposition} |`
@@ -247,7 +240,9 @@ function buildSummaryMarkdown(allResults, scenarios, fixtures, tiers) {
   lines.push('');
   lines.push('## Scan-Gate-Rescued');
   lines.push('');
-  lines.push('Scenarios that pass in Tier A but fail in Tier B — the scan gate made the difference:');
+  lines.push(
+    'Scenarios that pass in Tier A but fail in Tier B — the scan gate made the difference:'
+  );
   lines.push('');
   if (rescued.length === 0) {
     lines.push('_None — all Tier A passes also pass in Tier B._');
@@ -276,16 +271,12 @@ async function main() {
   const allScenarioIds = await readScenarioIds();
 
   const cpuCount = Math.max(1, os.cpus().length);
-  const totalMemGiB = os.totalmem() / (1024 ** 3);
+  const totalMemGiB = os.totalmem() / 1024 ** 3;
   const estimatedShardGiB = Number.parseFloat(process.env.SCAN_MATRIX_ESTIMATED_SHARD_GIB ?? '16');
-  const shardMemCost = Number.isFinite(estimatedShardGiB) && estimatedShardGiB > 0
-    ? estimatedShardGiB
-    : 16;
+  const shardMemCost =
+    Number.isFinite(estimatedShardGiB) && estimatedShardGiB > 0 ? estimatedShardGiB : 16;
   const maxByMem = Math.max(1, Math.floor(totalMemGiB / shardMemCost));
-  const defaultShardCount = Math.max(
-    1,
-    Math.min(cpuCount, allScenarioIds.length, maxByMem)
-  );
+  const defaultShardCount = Math.max(1, Math.min(cpuCount, allScenarioIds.length, maxByMem));
   const requestedShards = parsePositiveInt(process.env.SCAN_MATRIX_SHARDS);
   const shardCount = Math.max(
     1,
@@ -309,15 +300,11 @@ async function main() {
   }
 
   await Promise.all(
-    shards.map((scenarioIds, i) =>
-      runShard({ index: i, total: shards.length, scenarioIds })
-    )
+    shards.map((scenarioIds, i) => runShard({ index: i, total: shards.length, scenarioIds }))
   );
 
   const shardMatrices = await Promise.all(
-    suffixes.map((suffix) =>
-      readJson(path.join(reportsDir, `gallery-scan-matrix.${suffix}.json`))
-    )
+    suffixes.map((suffix) => readJson(path.join(reportsDir, `gallery-scan-matrix.${suffix}.json`)))
   );
 
   const tiers = shardMatrices[0]?.tiers ?? [];
@@ -330,9 +317,7 @@ async function main() {
     }
   }
 
-  const scenarios = allScenarioIds
-    .map((id) => scenarioMeta.get(id))
-    .filter((s) => Boolean(s));
+  const scenarios = allScenarioIds.map((id) => scenarioMeta.get(id)).filter((s) => Boolean(s));
 
   const tierOrder = new Map(tiers.map((t, i) => [t.id, i]));
   const scenarioOrder = new Map(scenarios.map((s, i) => [s.id, i]));

@@ -2,7 +2,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 describe('browser-clipboard', () => {
@@ -62,7 +68,8 @@ describe('browser-clipboard', () => {
     const mod = await import('../../src/modules/browser-clipboard/copy-image');
 
     const canvasOk = document.createElement('canvas');
-    (canvasOk as any).toBlob = (cb: (blob: Blob | null) => void) => cb(new Blob(['x'], { type: 'image/png' }));
+    (canvasOk as any).toBlob = (cb: (blob: Blob | null) => void) =>
+      cb(new Blob(['x'], { type: 'image/png' }));
     await expect(mod.copyImageToClipboard(canvasOk)).resolves.toBe(true);
     expect(navigator.clipboard.write).toHaveBeenCalledTimes(1);
 
@@ -72,7 +79,8 @@ describe('browser-clipboard', () => {
 
     (navigator.clipboard.write as any).mockRejectedValueOnce(new Error('no permission'));
     const canvasErr = document.createElement('canvas');
-    (canvasErr as any).toBlob = (cb: (blob: Blob | null) => void) => cb(new Blob(['x'], { type: 'image/png' }));
+    (canvasErr as any).toBlob = (cb: (blob: Blob | null) => void) =>
+      cb(new Blob(['x'], { type: 'image/png' }));
     await expect(mod.copyImageToClipboard(canvasErr)).resolves.toBe(false);
   });
 });

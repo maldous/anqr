@@ -27,16 +27,16 @@ function extractSwitchKinds(storeSource: string): Set<string> {
 }
 
 function extractUIKinds(sectionSource: string): Set<string> {
-  return new Set(
-    [...sectionSource.matchAll(/value: '([^']+)' as PayloadKind/g)].map((m) => m[1])
-  );
+  return new Set([...sectionSource.matchAll(/value: '([^']+)' as PayloadKind/g)].map((m) => m[1]));
 }
 
 function extractTextDrivenKinds(sectionSource: string): Set<string> {
   return new Set(
-    [...sectionSource.matchAll(/if \(payload\.kind === '([^']+)'.*?\)\s*\{[\s\S]*?setPayloadText\(/g)].map(
-      (m) => m[1]
-    )
+    [
+      ...sectionSource.matchAll(
+        /if \(payload\.kind === '([^']+)'.*?\)\s*\{[\s\S]*?setPayloadText\(/g
+      ),
+    ].map((m) => m[1])
   );
 }
 

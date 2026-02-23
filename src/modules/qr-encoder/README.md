@@ -5,6 +5,7 @@ Our own QR code generator - zero external dependencies.
 ## Purpose
 
 This module provides QR code encoding without external dependencies:
+
 - Generate QR code matrices
 - Support for all versions (1-40) and ECC levels
 - Multiple encoding modes (numeric, alphanumeric, byte, kanji)
@@ -64,11 +65,11 @@ const byteMode = getCompatibleMode('Hello!', 'auto'); // 'byte'
 ### Pattern Functions (re-exported from qr-spec)
 
 ```typescript
-import { 
-  isFinderPattern, 
-  isTimingPattern, 
+import {
+  isFinderPattern,
+  isTimingPattern,
   isAlignmentPattern,
-  isStructuralModule 
+  isStructuralModule,
 } from '@/modules/qr-encoder';
 
 if (isFinderPattern(row, col, moduleCount)) {
@@ -79,12 +80,12 @@ if (isFinderPattern(row, col, moduleCount)) {
 ### Low-Level APIs
 
 ```typescript
-import { 
-  qrBitBuffer, 
-  qr8BitByte, 
+import {
+  qrBitBuffer,
+  qr8BitByte,
   qrAlphaNum,
   getBCHTypeInfo,
-  getLostPoint 
+  getLostPoint,
 } from '@/modules/qr-encoder';
 
 // Create bit buffer

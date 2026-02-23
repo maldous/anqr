@@ -43,9 +43,9 @@ function buildMarkdown(report) {
     '# Bundle Budget Report',
     '',
     `- Generated at: ${report.generatedAt}`,
-    `- Main entry: ${(toKiB(report.metrics.mainEntryBytes)).toFixed(1)} KiB (max ${report.budgets.mainEntryMaxKiB} KiB)`,
-    `- Non-i18n total: ${(toKiB(report.metrics.nonI18nBytes)).toFixed(1)} KiB (max ${report.budgets.nonI18nMaxKiB} KiB)`,
-    `- i18n total: ${(toKiB(report.metrics.i18nBytes)).toFixed(1)} KiB (warn ${report.budgets.i18nWarnKiB} KiB, max ${report.budgets.i18nMaxKiB} KiB)`,
+    `- Main entry: ${toKiB(report.metrics.mainEntryBytes).toFixed(1)} KiB (max ${report.budgets.mainEntryMaxKiB} KiB)`,
+    `- Non-i18n total: ${toKiB(report.metrics.nonI18nBytes).toFixed(1)} KiB (max ${report.budgets.nonI18nMaxKiB} KiB)`,
+    `- i18n total: ${toKiB(report.metrics.i18nBytes).toFixed(1)} KiB (warn ${report.budgets.i18nWarnKiB} KiB, max ${report.budgets.i18nMaxKiB} KiB)`,
     '',
     '## Status',
     '',
@@ -71,7 +71,10 @@ function main() {
   }
 
   const mainEntry = mainEntryCandidates[0];
-  const i18nFiles = jsFiles.filter((name) => name.startsWith('locale-') || name.startsWith('static-'));
+  // Match i18n chunks: locale-*, static-*, and language-code-prefixed chunks
+  // (e.g. es-419-HASH.js, en-GB-HASH.js produced by Rolldown for BCP 47 codes)
+  const i18nPattern = /^(locale-|static-|[a-z]{2,3}-([A-Z]{2}|\d{3})-)/;
+  const i18nFiles = jsFiles.filter((name) => i18nPattern.test(name));
   const nonI18nFiles = jsFiles.filter((name) => !i18nFiles.includes(name));
 
   const mainEntryBytes = fs.statSync(path.join(assetsDir, mainEntry)).size;
@@ -111,8 +114,16 @@ function main() {
   fs.writeFileSync(reportJsonPath, `${JSON.stringify(report, null, 2)}\n`);
   fs.writeFileSync(reportMdPath, buildMarkdown(report));
 
-  console.log('[bundle-budget] main entry:', `${toKiB(mainEntryBytes).toFixed(1)} KiB`, `(${mainEntryStatus})`);
-  console.log('[bundle-budget] non-i18n total:', `${toKiB(nonI18nBytes).toFixed(1)} KiB`, `(${nonI18nStatus})`);
+  console.log(
+    '[bundle-budget] main entry:',
+    `${toKiB(mainEntryBytes).toFixed(1)} KiB`,
+    `(${mainEntryStatus})`
+  );
+  console.log(
+    '[bundle-budget] non-i18n total:',
+    `${toKiB(nonI18nBytes).toFixed(1)} KiB`,
+    `(${nonI18nStatus})`
+  );
   console.log('[bundle-budget] i18n total:', `${i18nKiB.toFixed(1)} KiB`, `(${i18nStatus})`);
 
   if (mainEntryStatus === 'FAIL' || nonI18nStatus === 'FAIL' || i18nStatus === 'FAIL') {

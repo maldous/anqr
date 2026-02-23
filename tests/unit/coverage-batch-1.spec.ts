@@ -297,9 +297,8 @@ describe('dither-algorithms/utils.ts', () => {
 
 describe('canvas-factory.ts', () => {
   it('createCanvas resolves with a canvas of correct size', async () => {
-    const { defaultBrowserCanvasFactory } = await import(
-      '../../src/modules/qr-generator/canvas-factory'
-    );
+    const { defaultBrowserCanvasFactory } =
+      await import('../../src/modules/qr-generator/canvas-factory');
     const canvas = await defaultBrowserCanvasFactory.createCanvas(200, 150);
     expect(canvas.width).toBe(200);
     expect(canvas.height).toBe(150);
@@ -309,9 +308,8 @@ describe('canvas-factory.ts', () => {
     const orig = globalThis.Image;
     globalThis.Image = mockImageClass(true, 20, 30);
     try {
-      const { defaultBrowserCanvasFactory } = await import(
-        '../../src/modules/qr-generator/canvas-factory'
-      );
+      const { defaultBrowserCanvasFactory } =
+        await import('../../src/modules/qr-generator/canvas-factory');
       const img = await defaultBrowserCanvasFactory.loadImage!('http://example.com/pic.png');
       expect(img).toBeDefined();
     } finally {
@@ -323,11 +321,10 @@ describe('canvas-factory.ts', () => {
     const orig = globalThis.Image;
     globalThis.Image = mockImageClass(false);
     try {
-      const { defaultBrowserCanvasFactory } = await import(
-        '../../src/modules/qr-generator/canvas-factory'
-      );
+      const { defaultBrowserCanvasFactory } =
+        await import('../../src/modules/qr-generator/canvas-factory');
       await expect(
-        defaultBrowserCanvasFactory.loadImage!('http://example.com/bad.png'),
+        defaultBrowserCanvasFactory.loadImage!('http://example.com/bad.png')
       ).rejects.toThrow('Failed to load image');
     } finally {
       globalThis.Image = orig;
@@ -770,7 +767,7 @@ describe('overlay/processor.ts', () => {
       try {
         const { loadImageFromUrl } = await import('../../src/modules/overlay/processor');
         await expect(loadImageFromUrl('http://bad')).rejects.toThrow(
-          'Failed to load image from URL',
+          'Failed to load image from URL'
         );
       } finally {
         globalThis.Image = origImg;
@@ -825,7 +822,7 @@ describe('overlay/processor.ts', () => {
       const spy = spyCanvasCtxNull();
       try {
         expect(() =>
-          cropOverlayImage(srcCanvas(10, 10), { x: 0, y: 0, width: 5, height: 5 }),
+          cropOverlayImage(srcCanvas(10, 10), { x: 0, y: 0, width: 5, height: 5 })
         ).toThrow('Could not get 2D context');
       } finally {
         spy.mockRestore();
@@ -879,7 +876,7 @@ describe('overlay/processor.ts', () => {
       const spy = spyCanvasCtxNull();
       try {
         expect(() => fitOverlayImage(srcCanvas(10, 10), 20, 20, 'fill')).toThrow(
-          'Could not get 2D context',
+          'Could not get 2D context'
         );
       } finally {
         spy.mockRestore();
@@ -901,7 +898,7 @@ describe('overlay/processor.ts', () => {
       const spy = spyCanvasCtxNull();
       try {
         expect(() => rotateOverlayCanvas(srcCanvas(10, 10), 90)).toThrow(
-          'Could not get 2D context',
+          'Could not get 2D context'
         );
       } finally {
         spy.mockRestore();
@@ -934,7 +931,7 @@ describe('overlay/processor.ts', () => {
       const spy = spyCanvasCtxNull();
       try {
         expect(() => flipOverlayCanvas(srcCanvas(10, 10), true, false)).toThrow(
-          'Could not get 2D context',
+          'Could not get 2D context'
         );
       } finally {
         spy.mockRestore();
@@ -981,7 +978,9 @@ describe('overlay/processor.ts', () => {
 
     it('processes pixels when enabled with valid kind', async () => {
       const { applyOverlayDither } = await import('../../src/modules/overlay/processor');
-      const data = new Uint8ClampedArray([128, 64, 32, 255, 200, 100, 50, 255, 10, 20, 30, 255, 240, 230, 220, 255]);
+      const data = new Uint8ClampedArray([
+        128, 64, 32, 255, 200, 100, 50, 255, 10, 20, 30, 255, 240, 230, 220, 255,
+      ]);
       const img = new ImageData(data, 2, 2);
       const result = applyOverlayDither(img, {
         enabled: true,
@@ -1034,9 +1033,7 @@ describe('overlay/processor.ts', () => {
 
   describe('extractOverlayBrightnessData', () => {
     it('returns Float32Array of expected length', async () => {
-      const { extractOverlayBrightnessData } = await import(
-        '../../src/modules/overlay/processor'
-      );
+      const { extractOverlayBrightnessData } = await import('../../src/modules/overlay/processor');
       const result = extractOverlayBrightnessData(srcCanvas(50, 50), 10);
       expect(result).toBeInstanceOf(Float32Array);
       expect(result.length).toBe(100); // 10×10
@@ -1073,9 +1070,9 @@ describe('overlay/processor.ts', () => {
       const { applyCanvasBlendMode } = await import('../../src/modules/overlay/processor');
       const spy = spyCanvasCtxNull();
       try {
-        expect(() =>
-          applyCanvasBlendMode(srcCanvas(10, 10), srcCanvas(10, 10), 'normal'),
-        ).toThrow('Could not get 2D context');
+        expect(() => applyCanvasBlendMode(srcCanvas(10, 10), srcCanvas(10, 10), 'normal')).toThrow(
+          'Could not get 2D context'
+        );
       } finally {
         spy.mockRestore();
       }
@@ -1152,9 +1149,8 @@ describe('overlay/processor.ts', () => {
 
 describe('dither-algorithms/temporal.ts — applyTemporalNoiseToCanvas', () => {
   it('returns same canvas when offset is 0', async () => {
-    const { applyTemporalNoiseToCanvas } = await import(
-      '../../src/modules/dither-algorithms/temporal'
-    );
+    const { applyTemporalNoiseToCanvas } =
+      await import('../../src/modules/dither-algorithms/temporal');
     const c = document.createElement('canvas');
     c.width = 10;
     c.height = 10;
@@ -1162,9 +1158,8 @@ describe('dither-algorithms/temporal.ts — applyTemporalNoiseToCanvas', () => {
   });
 
   it('returns same canvas when strength is 0', async () => {
-    const { applyTemporalNoiseToCanvas } = await import(
-      '../../src/modules/dither-algorithms/temporal'
-    );
+    const { applyTemporalNoiseToCanvas } =
+      await import('../../src/modules/dither-algorithms/temporal');
     const c = document.createElement('canvas');
     c.width = 10;
     c.height = 10;
@@ -1172,9 +1167,8 @@ describe('dither-algorithms/temporal.ts — applyTemporalNoiseToCanvas', () => {
   });
 
   it('returns new canvas when offset and strength are non-zero', async () => {
-    const { applyTemporalNoiseToCanvas } = await import(
-      '../../src/modules/dither-algorithms/temporal'
-    );
+    const { applyTemporalNoiseToCanvas } =
+      await import('../../src/modules/dither-algorithms/temporal');
     const c = document.createElement('canvas');
     c.width = 4;
     c.height = 4;
@@ -1185,9 +1179,8 @@ describe('dither-algorithms/temporal.ts — applyTemporalNoiseToCanvas', () => {
   });
 
   it('returns original when new canvas ctx is null', async () => {
-    const { applyTemporalNoiseToCanvas } = await import(
-      '../../src/modules/dither-algorithms/temporal'
-    );
+    const { applyTemporalNoiseToCanvas } =
+      await import('../../src/modules/dither-algorithms/temporal');
     const c = document.createElement('canvas');
     c.width = 4;
     c.height = 4;
@@ -1217,9 +1210,8 @@ describe('overlay-transforms.ts', () => {
 
   describe('applyGeometricTransforms', () => {
     it('returns original canvas (no transforms configured)', async () => {
-      const { applyGeometricTransforms } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { applyGeometricTransforms } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const c = document.createElement('canvas');
       c.width = 10;
       c.height = 10;
@@ -1230,9 +1222,8 @@ describe('overlay-transforms.ts', () => {
 
   describe('preprocessOverlay', () => {
     it('returns original canvas when no preprocessing needed', async () => {
-      const { preprocessOverlay } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { preprocessOverlay } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const c = document.createElement('canvas');
       c.width = 10;
       c.height = 10;
@@ -1241,72 +1232,59 @@ describe('overlay-transforms.ts', () => {
     });
 
     it('returns original when no preprocessing needed (debug on)', async () => {
-      const { preprocessOverlay } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { preprocessOverlay } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const c = document.createElement('canvas');
       c.width = 10;
       c.height = 10;
       const result = await preprocessOverlay(
         c,
         { debugOverlayDither: true } as never,
-        createCanvasFn,
+        createCanvasFn
       );
       expect(result).toBe(c);
     });
 
     it('applies preprocessing when filter options set', async () => {
-      const { preprocessOverlay } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { preprocessOverlay } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const c = document.createElement('canvas');
       c.width = 8;
       c.height = 8;
-      const result = await preprocessOverlay(
-        c,
-        { filterBrightness: 50 } as never,
-        createCanvasFn,
-      );
+      const result = await preprocessOverlay(c, { filterBrightness: 50 } as never, createCanvasFn);
       // preprocessOverlay creates a NEW canvas via createCanvasFn, so they differ
       expect(result).not.toBe(c);
       expect(result.width).toBe(8);
     });
 
     it('applies preprocessing with debug enabled', async () => {
-      const { preprocessOverlay } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { preprocessOverlay } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const c = document.createElement('canvas');
       c.width = 4;
       c.height = 4;
       const result = await preprocessOverlay(
         c,
         { filterContrast: 30, debugOverlayDither: true } as never,
-        createCanvasFn,
+        createCanvasFn
       );
       expect(result).not.toBe(c);
     });
 
     it('returns original when source ctx is null', async () => {
-      const { preprocessOverlay } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { preprocessOverlay } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const c = document.createElement('canvas');
       c.width = 4;
       c.height = 4;
       vi.spyOn(c, 'getContext').mockReturnValue(null);
-      const result = await preprocessOverlay(
-        c,
-        { filterBrightness: 10 } as never,
-        createCanvasFn,
-      );
+      const result = await preprocessOverlay(c, { filterBrightness: 10 } as never, createCanvasFn);
       expect(result).toBe(c);
     });
 
     it('returns original when result ctx is null', async () => {
-      const { preprocessOverlay } = await import(
-        '../../src/modules/qr-generator/overlay-transforms'
-      );
+      const { preprocessOverlay } =
+        await import('../../src/modules/qr-generator/overlay-transforms');
       const c = document.createElement('canvas');
       c.width = 4;
       c.height = 4;
@@ -1319,11 +1297,7 @@ describe('overlay-transforms.ts', () => {
         return nc as HTMLCanvasElement | OffscreenCanvas;
       };
 
-      const result = await preprocessOverlay(
-        c,
-        { filterBrightness: 10 } as never,
-        nullCtxCreate,
-      );
+      const result = await preprocessOverlay(c, { filterBrightness: 10 } as never, nullCtxCreate);
       expect(result).toBe(c);
     });
   });

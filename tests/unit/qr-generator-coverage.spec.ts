@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ======================== ECC MODULE ========================
@@ -49,7 +55,9 @@ describe('qr-generator ecc', () => {
   describe('isEccSafeToModify', () => {
     it('returns true when eccAware is disabled', async () => {
       const { isEccSafeToModify } = await import('../../src/modules/qr-generator/ecc');
-      const config = { eccAwareEnabled: false, errorCorrection: 'H' } as Parameters<typeof isEccSafeToModify>[5];
+      const config = { eccAwareEnabled: false, errorCorrection: 'H' } as Parameters<
+        typeof isEccSafeToModify
+      >[5];
       expect(isEccSafeToModify(5, 5, 21, 1, config, 0, 100)).toBe(true);
     });
 
@@ -131,7 +139,14 @@ describe('qr-generator dithering-kernels', () => {
 
   it('returns kernels for various types', async () => {
     const { getDiffusionKernel } = await import('../../src/modules/qr-generator/dithering-kernels');
-    const types = ['floyd_steinberg', 'atkinson', 'stucki', 'burkes', 'sierra', 'jarvis_judice_ninke'];
+    const types = [
+      'floyd_steinberg',
+      'atkinson',
+      'stucki',
+      'burkes',
+      'sierra',
+      'jarvis_judice_ninke',
+    ];
     for (const type of types) {
       const kernel = getDiffusionKernel(type);
       expect(kernel).toHaveProperty('offsets');
@@ -177,7 +192,10 @@ describe('qr-generator dithering-error', () => {
 
   it('does not distribute outside bounds', async () => {
     const { distributeError } = await import('../../src/modules/qr-generator/dithering-error');
-    const errors = [[0, 0], [0, 0]];
+    const errors = [
+      [0, 0],
+      [0, 0],
+    ];
     const kernel = {
       offsets: [
         { dx: 1, dy: 0, weight: 7 },
@@ -218,7 +236,12 @@ describe('qr-generator dithering-matrix', () => {
       overlayIntensity: 100,
       errorCorrection: 'H',
     };
-    const result = applyDitherToMatrix(qr, moduleCount, overlayData, config as Parameters<typeof applyDitherToMatrix>[3]);
+    const result = applyDitherToMatrix(
+      qr,
+      moduleCount,
+      overlayData,
+      config as Parameters<typeof applyDitherToMatrix>[3]
+    );
     expect(result.length).toBe(moduleCount);
     expect(result[0].length).toBe(moduleCount);
     // All values should be booleans
@@ -251,7 +274,12 @@ describe('qr-generator dithering-matrix', () => {
       overlayIntensity: 100,
       errorCorrection: 'H',
     };
-    const result = applyDitherToMatrix(qr, moduleCount, overlayData, config as Parameters<typeof applyDitherToMatrix>[3]);
+    const result = applyDitherToMatrix(
+      qr,
+      moduleCount,
+      overlayData,
+      config as Parameters<typeof applyDitherToMatrix>[3]
+    );
     // Since B&W detected, it should return exact QR matrix without dithering
     for (let r = 0; r < moduleCount; r++) {
       for (let c = 0; c < moduleCount; c++) {
@@ -286,7 +314,12 @@ describe('qr-generator dithering-matrix', () => {
       overlayIntensity: 100,
       errorCorrection: 'M',
     };
-    const result = applyDitherToMatrix(qr, moduleCount, overlayData, config as Parameters<typeof applyDitherToMatrix>[3]);
+    const result = applyDitherToMatrix(
+      qr,
+      moduleCount,
+      overlayData,
+      config as Parameters<typeof applyDitherToMatrix>[3]
+    );
     // Check that finder pattern area (top-left 7x7) is preserved
     for (let r = 0; r < 7; r++) {
       for (let c = 0; c < 7; c++) {

@@ -109,14 +109,22 @@ const REQUIRED_BY_DOMAIN = {
 };
 
 const DEFAULT_EVIDENCE = {
-  1: ['tests/basic/overlay.spec.ts', 'tests/advanced/render.spec.ts', 'tests/advanced/animation.spec.ts'],
+  1: [
+    'tests/basic/overlay.spec.ts',
+    'tests/advanced/render.spec.ts',
+    'tests/advanced/animation.spec.ts',
+  ],
   2: ['tests/basic/payload.spec.ts', 'tests/advanced/qr-encoding.spec.ts'],
   3: ['tests/advanced/output.spec.ts', 'tests/professional/safety.spec.ts'],
   4: ['tests/professional/metadata.spec.ts'],
   5: ['tests/basic/e2e-library-demo.spec.ts', 'tests/advanced/render.spec.ts'],
   6: ['tests/permutations/exhaustive.spec.ts'],
   7: ['tests/basic/payload.spec.ts', 'tests/advanced/output.spec.ts'],
-  8: ['tests/basic/overlay.spec.ts', 'tests/professional/watermark.spec.ts', 'tests/advanced/animation.spec.ts'],
+  8: [
+    'tests/basic/overlay.spec.ts',
+    'tests/professional/watermark.spec.ts',
+    'tests/advanced/animation.spec.ts',
+  ],
   9: ['tests/advanced/output.spec.ts'],
   10: ['tests/permutations/exhaustive.spec.ts'],
   11: ['tests/basic/e2e-library-demo.spec.ts'],
@@ -152,8 +160,11 @@ function pickEvidence(id, domain, cat) {
   const direct = directEvidence(id, cat);
   if (direct.length > 0) return { file: direct[0], basis: 'direct-id' };
 
-  const hinted = (DOMAIN_EVIDENCE_HINTS[domain] || []).find((f) => fs.existsSync(path.join(ROOT, f)));
-  if (hinted && (DEFAULT_EVIDENCE[cat] || []).includes(hinted)) return { file: hinted, basis: 'domain+type' };
+  const hinted = (DOMAIN_EVIDENCE_HINTS[domain] || []).find((f) =>
+    fs.existsSync(path.join(ROOT, f))
+  );
+  if (hinted && (DEFAULT_EVIDENCE[cat] || []).includes(hinted))
+    return { file: hinted, basis: 'domain+type' };
   if (hinted) return { file: hinted, basis: 'domain' };
 
   const byType = (DEFAULT_EVIDENCE[cat] || []).find((f) => fs.existsSync(path.join(ROOT, f)));

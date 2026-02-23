@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // Polyfill ImageData for Node
@@ -25,7 +31,8 @@ if (typeof globalThis.ImageData === 'undefined') {
 describe('telemetry-contrast', () => {
   describe('calculateContrastStats', () => {
     it('returns high ratio for black vs white', async () => {
-      const { calculateContrastStats } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { calculateContrastStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       const report = calculateContrastStats({ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 });
       expect(report.ratio).toBeGreaterThan(15);
       expect(report.meetsAA).toBe(true);
@@ -36,7 +43,8 @@ describe('telemetry-contrast', () => {
     });
 
     it('returns ratio ~1 for same color', async () => {
-      const { calculateContrastStats } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { calculateContrastStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       const report = calculateContrastStats({ r: 128, g: 128, b: 128 }, { r: 128, g: 128, b: 128 });
       expect(report.ratio).toBeCloseTo(1, 1);
       expect(report.meetsAA).toBe(false);
@@ -44,7 +52,8 @@ describe('telemetry-contrast', () => {
     });
 
     it('handles colored inputs', async () => {
-      const { calculateContrastStats } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { calculateContrastStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       const report = calculateContrastStats({ r: 255, g: 0, b: 0 }, { r: 0, g: 0, b: 255 });
       expect(report.ratio).toBeGreaterThan(1);
       expect(typeof report.lighterColor).toBe('string');
@@ -52,7 +61,8 @@ describe('telemetry-contrast', () => {
     });
 
     it('correctly identifies lighter and darker colors', async () => {
-      const { calculateContrastStats } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { calculateContrastStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       const report = calculateContrastStats({ r: 200, g: 200, b: 200 }, { r: 50, g: 50, b: 50 });
       expect(report.lighterColor).toBe('#c8c8c8');
       expect(report.darkerColor).toBe('#323232');
@@ -61,25 +71,29 @@ describe('telemetry-contrast', () => {
 
   describe('checkContrastCompliance', () => {
     it('returns AAA for ratio >= 7', async () => {
-      const { checkContrastCompliance } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { checkContrastCompliance } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       expect(checkContrastCompliance(7)).toEqual({ level: 'AAA', passes: true });
       expect(checkContrastCompliance(21)).toEqual({ level: 'AAA', passes: true });
     });
 
     it('returns AA for ratio >= 4.5 and < 7', async () => {
-      const { checkContrastCompliance } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { checkContrastCompliance } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       expect(checkContrastCompliance(4.5)).toEqual({ level: 'AA', passes: true });
       expect(checkContrastCompliance(6.9)).toEqual({ level: 'AA', passes: true });
     });
 
     it('returns AA-Large for ratio >= 3 and < 4.5', async () => {
-      const { checkContrastCompliance } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { checkContrastCompliance } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       expect(checkContrastCompliance(3)).toEqual({ level: 'AA-Large', passes: true });
       expect(checkContrastCompliance(4.4)).toEqual({ level: 'AA-Large', passes: true });
     });
 
     it('returns Fail for ratio < 3', async () => {
-      const { checkContrastCompliance } = await import('../../src/modules/qr-analyzer/telemetry-contrast');
+      const { checkContrastCompliance } =
+        await import('../../src/modules/qr-analyzer/telemetry-contrast');
       expect(checkContrastCompliance(2.9)).toEqual({ level: 'Fail', passes: false });
       expect(checkContrastCompliance(1)).toEqual({ level: 'Fail', passes: false });
     });
@@ -175,7 +189,8 @@ describe('telemetry-logging', () => {
 describe('telemetry-stats', () => {
   describe('calculateAnalysisStats', () => {
     it('returns zeros for empty array', async () => {
-      const { calculateAnalysisStats } = await import('../../src/modules/qr-analyzer/telemetry-stats');
+      const { calculateAnalysisStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-stats');
       const stats = calculateAnalysisStats([]);
       expect(stats.totalAnalyzed).toBe(0);
       expect(stats.successRate).toBe(0);
@@ -183,10 +198,23 @@ describe('telemetry-stats', () => {
     });
 
     it('calculates stats for all successful results', async () => {
-      const { calculateAnalysisStats } = await import('../../src/modules/qr-analyzer/telemetry-stats');
+      const { calculateAnalysisStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-stats');
       const stats = calculateAnalysisStats([
-        { success: true, confidence: 'high', version: 5, eccLevel: 'H', contentType: { type: 'url' } },
-        { success: true, confidence: 'medium', version: 5, eccLevel: 'M', contentType: { type: 'text' } },
+        {
+          success: true,
+          confidence: 'high',
+          version: 5,
+          eccLevel: 'H',
+          contentType: { type: 'url' },
+        },
+        {
+          success: true,
+          confidence: 'medium',
+          version: 5,
+          eccLevel: 'M',
+          contentType: { type: 'text' },
+        },
       ]);
       expect(stats.totalAnalyzed).toBe(2);
       expect(stats.successRate).toBe(1);
@@ -199,18 +227,17 @@ describe('telemetry-stats', () => {
     });
 
     it('calculates stats for all failed results', async () => {
-      const { calculateAnalysisStats } = await import('../../src/modules/qr-analyzer/telemetry-stats');
-      const stats = calculateAnalysisStats([
-        { success: false },
-        { success: false },
-      ]);
+      const { calculateAnalysisStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-stats');
+      const stats = calculateAnalysisStats([{ success: false }, { success: false }]);
       expect(stats.totalAnalyzed).toBe(2);
       expect(stats.successRate).toBe(0);
       expect(stats.averageConfidence).toBe(0);
     });
 
     it('calculates stats for mixed results', async () => {
-      const { calculateAnalysisStats } = await import('../../src/modules/qr-analyzer/telemetry-stats');
+      const { calculateAnalysisStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-stats');
       const stats = calculateAnalysisStats([
         { success: true, confidence: 'high', version: 3, eccLevel: 'L' },
         { success: false },
@@ -224,20 +251,18 @@ describe('telemetry-stats', () => {
     });
 
     it('handles results with null version/ecc', async () => {
-      const { calculateAnalysisStats } = await import('../../src/modules/qr-analyzer/telemetry-stats');
-      const stats = calculateAnalysisStats([
-        { success: true, version: null, eccLevel: null },
-      ]);
+      const { calculateAnalysisStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-stats');
+      const stats = calculateAnalysisStats([{ success: true, version: null, eccLevel: null }]);
       expect(stats.totalAnalyzed).toBe(1);
       expect(Object.keys(stats.versionDistribution)).toHaveLength(0);
       expect(Object.keys(stats.eccDistribution)).toHaveLength(0);
     });
 
     it('uses default confidence for results without confidence', async () => {
-      const { calculateAnalysisStats } = await import('../../src/modules/qr-analyzer/telemetry-stats');
-      const stats = calculateAnalysisStats([
-        { success: true },
-      ]);
+      const { calculateAnalysisStats } =
+        await import('../../src/modules/qr-analyzer/telemetry-stats');
+      const stats = calculateAnalysisStats([{ success: true }]);
       expect(stats.averageConfidence).toBeCloseTo(0.66, 1);
     });
   });
@@ -303,7 +328,14 @@ describe('telemetry-stats', () => {
 // ======================== ANALYZER-CONTENT ========================
 
 describe('analyzer-content', () => {
-  function makeImageData(width: number, height: number, r: number, g: number, b: number, a = 255): ImageData {
+  function makeImageData(
+    width: number,
+    height: number,
+    r: number,
+    g: number,
+    b: number,
+    a = 255
+  ): ImageData {
     const data = new Uint8ClampedArray(width * height * 4);
     for (let i = 0; i < data.length; i += 4) {
       data[i] = r;
@@ -337,13 +369,15 @@ describe('analyzer-content', () => {
 
   describe('calculateContrastRatio', () => {
     it('returns high ratio for black vs white', async () => {
-      const { calculateContrastRatio } = await import('../../src/modules/qr-analyzer/analyzer-content');
+      const { calculateContrastRatio } =
+        await import('../../src/modules/qr-analyzer/analyzer-content');
       const ratio = calculateContrastRatio({ r: 0, g: 0, b: 0 }, { r: 255, g: 255, b: 255 });
       expect(ratio).toBeGreaterThan(15);
     });
 
     it('returns ~1 for identical colors', async () => {
-      const { calculateContrastRatio } = await import('../../src/modules/qr-analyzer/analyzer-content');
+      const { calculateContrastRatio } =
+        await import('../../src/modules/qr-analyzer/analyzer-content');
       const ratio = calculateContrastRatio({ r: 128, g: 128, b: 128 }, { r: 128, g: 128, b: 128 });
       expect(ratio).toBeCloseTo(1, 1);
     });
@@ -351,7 +385,8 @@ describe('analyzer-content', () => {
 
   describe('calculateImageProperties', () => {
     it('returns correct properties', async () => {
-      const { calculateImageProperties } = await import('../../src/modules/qr-analyzer/analyzer-content');
+      const { calculateImageProperties } =
+        await import('../../src/modules/qr-analyzer/analyzer-content');
       const img = makeImageData(200, 100, 0, 0, 0);
       const props = calculateImageProperties(img);
       expect(props.width).toBe(200);
@@ -361,7 +396,8 @@ describe('analyzer-content', () => {
     });
 
     it('handles square images', async () => {
-      const { calculateImageProperties } = await import('../../src/modules/qr-analyzer/analyzer-content');
+      const { calculateImageProperties } =
+        await import('../../src/modules/qr-analyzer/analyzer-content');
       const img = makeImageData(300, 300, 0, 0, 0);
       const props = calculateImageProperties(img);
       expect(props.aspectRatio).toBe(1);
@@ -414,7 +450,9 @@ describe('analyzer-content', () => {
 
     it('detects Bitcoin', async () => {
       const { detectContentType } = await import('../../src/modules/qr-analyzer/analyzer-content');
-      expect(detectContentType('bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')).toBe('crypto_bitcoin');
+      expect(detectContentType('bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa')).toBe(
+        'crypto_bitcoin'
+      );
     });
 
     it('detects Ethereum', async () => {
@@ -468,7 +506,8 @@ describe('analyzer-content', () => {
 
   describe('extractDominantColors', () => {
     it('extracts dominant color from uniform image', async () => {
-      const { extractDominantColors } = await import('../../src/modules/qr-analyzer/analyzer-content');
+      const { extractDominantColors } =
+        await import('../../src/modules/qr-analyzer/analyzer-content');
       const img = makeImageData(4, 4, 255, 0, 0);
       const colors = extractDominantColors(img, 3);
       expect(colors.length).toBeGreaterThan(0);
@@ -476,7 +515,8 @@ describe('analyzer-content', () => {
     });
 
     it('returns at most maxColors', async () => {
-      const { extractDominantColors } = await import('../../src/modules/qr-analyzer/analyzer-content');
+      const { extractDominantColors } =
+        await import('../../src/modules/qr-analyzer/analyzer-content');
       const img = makeImageData(4, 4, 128, 128, 128);
       const colors = extractDominantColors(img, 2);
       expect(colors.length).toBeLessThanOrEqual(2);
@@ -496,7 +536,9 @@ describe('analyzer-content', () => {
 
     it('detects UTM parameters', async () => {
       const { parseUrlDetails } = await import('../../src/modules/qr-analyzer/analyzer-content');
-      const result = parseUrlDetails('https://example.com?utm_source=google&utm_medium=cpc&utm_campaign=test');
+      const result = parseUrlDetails(
+        'https://example.com?utm_source=google&utm_medium=cpc&utm_campaign=test'
+      );
       expect(result!.hasUtmParams).toBe(true);
       expect(result!.utmSource).toBe('google');
       expect(result!.utmMedium).toBe('cpc');

@@ -19,7 +19,12 @@ describe('platform media-store adapter', () => {
     });
 
     const mod = await import('../../src/modules/platform/media-store');
-    const result = await mod.saveBase64ToDocuments('file.png', 'data:image/png;base64,AAAA', 'image/png', 'ANQR');
+    const result = await mod.saveBase64ToDocuments(
+      'file.png',
+      'data:image/png;base64,AAAA',
+      'image/png',
+      'ANQR'
+    );
 
     expect(registerPluginMock).toHaveBeenCalledWith('MediaStoreWriter');
     expect(saveBase64ToDocumentsMock).toHaveBeenCalledWith({
@@ -49,4 +54,3 @@ describe('platform media-store adapter', () => {
     expect(result).toEqual({ path: '/docs/ANQR/file.png' });
   });
 });
-

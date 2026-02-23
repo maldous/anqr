@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
+import { minifySync } from 'oxc-minify';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig } from 'vite';
 import compression from 'vite-plugin-compression';
@@ -97,13 +98,48 @@ function getEnvDefines() {
   return defines;
 }
 
+function oxcMinifyPlugin() {
+  return {
+    name: 'oxc-minify',
+    apply: 'build' as const,
+    enforce: 'post' as const,
+    renderChunk(code: string, chunk: { fileName: string }) {
+      const result = minifySync(chunk.fileName, code, {
+        module: true,
+        compress: {
+          target: 'es2020',
+          dropConsole: true,
+          dropDebugger: true,
+          treeshake: {
+            manualPureFunctions: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+          },
+        },
+        mangle: true,
+        codegen: { removeWhitespace: true },
+        sourcemap: true,
+      });
+      if (result.errors.length > 0) {
+        throw new Error(
+          `oxc-minify errors in ${chunk.fileName}: ${result.errors.map((e) => e.message).join(', ')}`
+        );
+      }
+      return {
+        code: result.code,
+        map: result.map ?? null,
+      };
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig({
   define: getEnvDefines(),
   plugins: [
     // Serve gallery files before React plugin
     serveGalleryFiles(),
-    react(), // Gzip compression for production builds (disabled for Android)
+    react(),
+    // OXC-powered minification (replaces terser)
+    oxcMinifyPlugin(), // Gzip compression for production builds (disabled for Android)
     ...(!isAndroidBuild
       ? [
           compression({
@@ -411,22 +447,9 @@ export default defineConfig({
     cssCodeSplit: true,
     // Increase chunk size warning limit (we'll optimize chunks manually)
     chunkSizeWarningLimit: 700, // Icons bundle is ~566KB due to lucide-react
-    // Minification options
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.log in production
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-        passes: 2, // Multiple compression passes for better optimization
-      },
-      format: {
-        comments: false, // Remove comments
-      },
-      mangle: {
-        safari10: true, // Work around Safari 10 bugs
-      },
-    },
+    // Minification handled by oxc-minify plugin (renderChunk hook)
+    minify: false,
+    cssMinify: true,
     rollupOptions: {
       output: {
         // Manual chunk splitting for optimal caching
@@ -451,18 +474,24 @@ export default defineConfig({
           if (id.includes('node_modules/jsqr')) {
             return 'vendor-qr-scanner';
           }
+          // Date/calendar libraries (only used for calendar payload types)
+          if (
+            id.includes('node_modules/date-fns') ||
+            id.includes('node_modules/@date-fns') ||
+            id.includes('node_modules/react-day-picker')
+          ) {
+            return 'vendor-date';
+          }
+          // open-location-code (5 KiB) stays in main entry — too small for a separate chunk
           // Utility libraries
           if (
             id.includes('node_modules/clsx') ||
             id.includes('node_modules/tailwind-merge') ||
             id.includes('node_modules/class-variance-authority') ||
-            id.includes('node_modules/loglevel')
+            id.includes('node_modules/loglevel') ||
+            id.includes('node_modules/zustand')
           ) {
             return 'vendor-utils';
-          }
-          // Zustand state management
-          if (id.includes('node_modules/zustand')) {
-            return 'vendor-zustand';
           }
           // Sentry SDK (loaded early but can be separate chunk)
           if (id.includes('node_modules/@sentry')) {
@@ -477,13 +506,11 @@ export default defineConfig({
           if (id.includes('/components/Gallery')) {
             return 'app-gallery';
           }
-          if (id.includes('/components/StaticPage')) {
-            return 'app-static-page';
-          }
-          // Welcome modal - only shown on first visit
-          if (id.includes('/components/WelcomeModal')) {
-            return 'app-welcome';
-          }
+          // StaticPage is React.lazy() loaded — Rolldown auto-splits it.
+          // No manual chunk needed; this lets English content route to static-en (i18n)
+          // and shared vendors (tailwind-merge) stay in their proper chunks.
+          // WelcomeModal is React.lazy() loaded — Rolldown auto-splits it.
+          // No manual chunk needed; this avoids inlining shared vendors (tailwind-merge).
           // QR code generation library (now in src/modules)
           if (id.includes('/modules/qrcode.mjs')) {
             return 'app-qr-lib';
@@ -504,7 +531,12 @@ export default defineConfig({
           if (
             id.includes('/modules/renderer') ||
             id.includes('/modules/qr-core') ||
-            id.includes('/modules/qr-generator')
+            id.includes('/modules/qr-generator') ||
+            id.includes('/modules/qr-art') ||
+            id.includes('/modules/qr-analyzer') ||
+            id.includes('/modules/qr-decoder') ||
+            id.includes('/modules/qr-encoder') ||
+            id.includes('/modules/qr-spec')
           ) {
             return 'app-qr-core';
           }
@@ -514,7 +546,7 @@ export default defineConfig({
           }
           // Locale JSON files - split by language (match patterns like en-GB.json, ar.json, etc.)
           if (id.includes('/locales/') && id.endsWith('.json')) {
-            const match = id.match(/locales\/([a-zA-Z-]+)\.json/);
+            const match = id.match(/locales\/([a-zA-Z0-9-]+)\.json/);
             if (match) {
               const langCode = match[1].toLowerCase();
               // Keep English in main bundle, lazy load others
@@ -524,7 +556,7 @@ export default defineConfig({
           }
           // Static page content - split by language (match patterns like en-GB/, ar/, bn-BD/, etc.)
           if (id.includes('/static/') && !id.includes('/txt/') && !id.includes('/types')) {
-            const match = id.match(/static\/([a-zA-Z-]+)\//);
+            const match = id.match(/static\/([a-zA-Z0-9-]+)\//);
             if (match) {
               const langCode = match[1].toLowerCase();
               // Keep English in main bundle, lazy load others

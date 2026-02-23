@@ -11,12 +11,7 @@
 // Primary E2E library - use this for new tests
 export * from './e2e-library';
 // Input helpers
-export {
-  setColorInput,
-  setSlider,
-  setTextInput,
-  toggleSwitch,
-} from './input-helpers';
+export { setColorInput, setSlider, setTextInput, toggleSwitch } from './input-helpers';
 
 // Legacy helpers - for backward compatibility with existing tests
 export {

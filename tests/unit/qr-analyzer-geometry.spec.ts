@@ -1,7 +1,11 @@
 import { createCanvas } from '@napi-rs/canvas';
 import { describe, expect, it } from 'vitest';
 import { analyzeQRFromCanvas } from '../../src/modules/qr-analyzer';
-import { QRGenerator, type CanvasFactory, type QRGeneratorConfig } from '../../src/modules/qr-generator';
+import {
+  QRGenerator,
+  type CanvasFactory,
+  type QRGeneratorConfig,
+} from '../../src/modules/qr-generator';
 
 if (typeof globalThis.ImageData === 'undefined') {
   (globalThis as Record<string, unknown>).ImageData = class ImageData {
@@ -56,6 +60,8 @@ describe('qr-analyzer geometry diagnostics', () => {
     expect(Math.abs(analysis.geometry?.estimatedRotationDeg ?? 999)).toBeLessThan(5);
     expect(analysis.timing?.decodeMs).toBeTypeOf('number');
     expect(analysis.timing?.totalAnalysisMs).toBeTypeOf('number');
-    expect(analysis.timing?.totalAnalysisMs ?? 0).toBeGreaterThanOrEqual(analysis.timing?.decodeMs ?? 0);
+    expect(analysis.timing?.totalAnalysisMs ?? 0).toBeGreaterThanOrEqual(
+      analysis.timing?.decodeMs ?? 0
+    );
   });
 });

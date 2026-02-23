@@ -206,24 +206,21 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('generateDeterministicNumericSuffix', () => {
     it('produces correct length', async () => {
-      const { generateDeterministicNumericSuffix } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { generateDeterministicNumericSuffix } =
+        await import('../../src/modules/qr-art/rs-basis');
       expect(generateDeterministicNumericSuffix(10, 42).length).toBe(10);
     });
 
     it('uses only digits', async () => {
-      const { generateDeterministicNumericSuffix } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { generateDeterministicNumericSuffix } =
+        await import('../../src/modules/qr-art/rs-basis');
       const suffix = generateDeterministicNumericSuffix(100, 999);
       expect(suffix).toMatch(/^[0-9]*$/);
     });
 
     it('is deterministic', async () => {
-      const { generateDeterministicNumericSuffix } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { generateDeterministicNumericSuffix } =
+        await import('../../src/modules/qr-art/rs-basis');
       expect(generateDeterministicNumericSuffix(20, 42)).toBe(
         generateDeterministicNumericSuffix(20, 42)
       );
@@ -246,52 +243,36 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('calculateProtectedBitsPerBlock', () => {
     it('returns all zeros when protectedBitCount is 0', async () => {
-      const { calculateProtectedBitsPerBlock } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
-      const blocks = [
-        { blockIndex: 0, dataCount: 19, eccCount: 7, totalCount: 26 },
-      ];
+      const { calculateProtectedBitsPerBlock } = await import('../../src/modules/qr-art/rs-basis');
+      const blocks = [{ blockIndex: 0, dataCount: 19, eccCount: 7, totalCount: 26 }];
       const result = calculateProtectedBitsPerBlock(blocks, 0);
       expect(result).toEqual([0]);
     });
 
     it('returns all zeros when no blocks', async () => {
-      const { calculateProtectedBitsPerBlock } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateProtectedBitsPerBlock } = await import('../../src/modules/qr-art/rs-basis');
       const result = calculateProtectedBitsPerBlock([], 100);
       expect(result).toEqual([]);
     });
 
     it('single block: protected bits equal ceil(protectedBitCount/8)*8', async () => {
-      const { calculateProtectedBitsPerBlock } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
-      const blocks = [
-        { blockIndex: 0, dataCount: 19, eccCount: 7, totalCount: 26 },
-      ];
+      const { calculateProtectedBitsPerBlock } = await import('../../src/modules/qr-art/rs-basis');
+      const blocks = [{ blockIndex: 0, dataCount: 19, eccCount: 7, totalCount: 26 }];
       // Protect 56 bits → 7 bytes → block 0 gets 7*8=56 protected bits
       const result = calculateProtectedBitsPerBlock(blocks, 56);
       expect(result[0]).toBe(56);
     });
 
     it('single block: non-byte-aligned rounds up', async () => {
-      const { calculateProtectedBitsPerBlock } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
-      const blocks = [
-        { blockIndex: 0, dataCount: 19, eccCount: 7, totalCount: 26 },
-      ];
+      const { calculateProtectedBitsPerBlock } = await import('../../src/modules/qr-art/rs-basis');
+      const blocks = [{ blockIndex: 0, dataCount: 19, eccCount: 7, totalCount: 26 }];
       // Protect 50 bits → ceil(50/8)=7 bytes → 56 protected bits
       const result = calculateProtectedBitsPerBlock(blocks, 50);
       expect(result[0]).toBe(56);
     });
 
     it('multi-block: protection distributes across blocks via interleaving', async () => {
-      const { calculateProtectedBitsPerBlock } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateProtectedBitsPerBlock } = await import('../../src/modules/qr-art/rs-basis');
       // 2 equal blocks of 10 data bytes each
       const blocks = [
         { blockIndex: 0, dataCount: 10, eccCount: 5, totalCount: 15 },
@@ -307,9 +288,7 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('multi-block: odd number of protected bytes', async () => {
-      const { calculateProtectedBitsPerBlock } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateProtectedBitsPerBlock } = await import('../../src/modules/qr-art/rs-basis');
       const blocks = [
         { blockIndex: 0, dataCount: 10, eccCount: 5, totalCount: 15 },
         { blockIndex: 1, dataCount: 10, eccCount: 5, totalCount: 15 },
@@ -418,9 +397,7 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('buildFullBasis', () => {
     it('builds basis for v1-M without protection (legacy mode)', async () => {
-      const { buildFullBasis, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildFullBasis, clearBasisCache } = await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const basis = buildFullBasis(1, 'M');
       expect(basis.version).toBe(1);
@@ -431,9 +408,7 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('builds basis with semantic range protection', async () => {
-      const { buildFullBasis, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildFullBasis, clearBasisCache } = await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       // Protect first 32 bits, allow bits 32-127 (v1-M has 128 total data bits)
       const allowedRanges = [{ startBit: 32, endBit: 128 }];
@@ -444,9 +419,7 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('caches results (second call returns same object)', async () => {
-      const { buildFullBasis, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildFullBasis, clearBasisCache } = await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const b1 = buildFullBasis(2, 'L');
       const b2 = buildFullBasis(2, 'L');
@@ -454,9 +427,7 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('different ECC levels produce different bases', async () => {
-      const { buildFullBasis, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildFullBasis, clearBasisCache } = await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const bL = buildFullBasis(1, 'L');
       const bH = buildFullBasis(1, 'H');
@@ -466,9 +437,7 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('clearBasisCache', () => {
     it('after clearing, buildFullBasis returns a new object', async () => {
-      const { buildFullBasis, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildFullBasis, clearBasisCache } = await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const b1 = buildFullBasis(1, 'L');
       clearBasisCache();
@@ -482,9 +451,8 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('xorBasisVectors', () => {
     it('XOR of two vectors from the same block produces a valid combined vector', async () => {
-      const { buildBlockBasis, xorBasisVectors } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildBlockBasis, xorBasisVectors } =
+        await import('../../src/modules/qr-art/rs-basis');
       const blockInfo = { blockIndex: 0, dataCount: 5, eccCount: 3, totalCount: 8 };
       const vectors = buildBlockBasis(blockInfo, 0, 0);
       const combined = xorBasisVectors(vectors[0], vectors[1]);
@@ -501,9 +469,8 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('throws when XORing vectors from different blocks', async () => {
-      const { buildBlockBasis, xorBasisVectors } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildBlockBasis, xorBasisVectors } =
+        await import('../../src/modules/qr-art/rs-basis');
       const blockInfo = { blockIndex: 0, dataCount: 3, eccCount: 2, totalCount: 5 };
       const v0 = buildBlockBasis(blockInfo, 0, 0);
       const v1 = buildBlockBasis(blockInfo, 1, 24);
@@ -511,9 +478,8 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('XOR with itself produces all-zero blockBits', async () => {
-      const { buildBlockBasis, xorBasisVectors } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildBlockBasis, xorBasisVectors } =
+        await import('../../src/modules/qr-art/rs-basis');
       const blockInfo = { blockIndex: 0, dataCount: 3, eccCount: 2, totalCount: 5 };
       const vectors = buildBlockBasis(blockInfo, 0, 0);
       const selfXor = xorBasisVectors(vectors[0], vectors[0]);
@@ -525,9 +491,7 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('basisToMatrix', () => {
     it('converts vectors to boolean matrix with correct dimensions', async () => {
-      const { buildBlockBasis, basisToMatrix } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildBlockBasis, basisToMatrix } = await import('../../src/modules/qr-art/rs-basis');
       const blockInfo = { blockIndex: 0, dataCount: 3, eccCount: 2, totalCount: 5 };
       const vectors = buildBlockBasis(blockInfo, 0, 0);
       const totalBits = 5 * 8;
@@ -540,9 +504,7 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('each row has at least one true bit', async () => {
-      const { buildBlockBasis, basisToMatrix } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { buildBlockBasis, basisToMatrix } = await import('../../src/modules/qr-art/rs-basis');
       const blockInfo = { blockIndex: 0, dataCount: 3, eccCount: 2, totalCount: 5 };
       const vectors = buildBlockBasis(blockInfo, 0, 0);
       const matrix = basisToMatrix(vectors, 5 * 8);
@@ -557,7 +519,24 @@ describe('qr-art/rs-basis.ts', () => {
     it('converts boolean row back to bytes', async () => {
       const { matrixRowToBytes } = await import('../../src/modules/qr-art/rs-basis');
       // 10000001 01000010 → [0x81, 0x42]
-      const row = [true, false, false, false, false, false, false, true, false, true, false, false, false, false, true, false];
+      const row = [
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+      ];
       const bytes = matrixRowToBytes(row, 2);
       expect(bytes[0]).toBe(0x81);
       expect(bytes[1]).toBe(0x42);
@@ -589,9 +568,8 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('calculateOptimalVersionAndSuffix', () => {
     it('byte mode: returns valid version and suffix for short URL', async () => {
-      const { calculateOptimalVersionAndSuffix, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateOptimalVersionAndSuffix, clearBasisCache } =
+        await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const result = calculateOptimalVersionAndSuffix(0, 'M', 20, 50, 'byte');
       expect(result.version).toBeGreaterThanOrEqual(1);
@@ -602,9 +580,8 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('numeric mode: returns valid results', async () => {
-      const { calculateOptimalVersionAndSuffix, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateOptimalVersionAndSuffix, clearBasisCache } =
+        await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const result = calculateOptimalVersionAndSuffix(0, 'M', 20, 50, 'numeric');
       expect(result.version).toBeGreaterThanOrEqual(1);
@@ -612,9 +589,8 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('longer data requires larger version', async () => {
-      const { calculateOptimalVersionAndSuffix, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateOptimalVersionAndSuffix, clearBasisCache } =
+        await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const short = calculateOptimalVersionAndSuffix(0, 'M', 5, 50, 'byte');
       const long = calculateOptimalVersionAndSuffix(0, 'M', 100, 50, 'byte');
@@ -622,9 +598,8 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('version is upgraded when minControlPercent is not met', async () => {
-      const { calculateOptimalVersionAndSuffix, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateOptimalVersionAndSuffix, clearBasisCache } =
+        await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       // Very long data in small version → must upgrade
       const result = calculateOptimalVersionAndSuffix(1, 'H', 5, 90, 'byte');
@@ -633,18 +608,16 @@ describe('qr-art/rs-basis.ts', () => {
     });
 
     it('respects minVersion parameter', async () => {
-      const { calculateOptimalVersionAndSuffix, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateOptimalVersionAndSuffix, clearBasisCache } =
+        await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const result = calculateOptimalVersionAndSuffix(5, 'M', 5, 30, 'byte');
       expect(result.version).toBeGreaterThanOrEqual(5);
     });
 
     it('paddingBytes + suffixBits + paddingBits are all >= 0', async () => {
-      const { calculateOptimalVersionAndSuffix, clearBasisCache } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateOptimalVersionAndSuffix, clearBasisCache } =
+        await import('../../src/modules/qr-art/rs-basis');
       clearBasisCache();
       const result = calculateOptimalVersionAndSuffix(0, 'L', 10, 50, 'byte');
       expect(result.paddingBytes).toBeGreaterThanOrEqual(0);
@@ -667,9 +640,8 @@ describe('qr-art/rs-basis.ts', () => {
 
   describe('calculateHeaderBitsPerBlock (deprecated)', () => {
     it('is an alias for calculateProtectedBitsPerBlock', async () => {
-      const { calculateHeaderBitsPerBlock, calculateProtectedBitsPerBlock } = await import(
-        '../../src/modules/qr-art/rs-basis'
-      );
+      const { calculateHeaderBitsPerBlock, calculateProtectedBitsPerBlock } =
+        await import('../../src/modules/qr-art/rs-basis');
       const blocks = [
         { blockIndex: 0, dataCount: 10, eccCount: 5, totalCount: 15 },
         { blockIndex: 1, dataCount: 10, eccCount: 5, totalCount: 15 },

@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ======================== EMV QR BUILDER ========================
@@ -114,7 +120,7 @@ describe('EMVQRBuilder', () => {
       const qr = EMVQRBuilder.create()
         .setPayloadFormatIndicator()
         .setTransactionCurrency('840')
-        .setTransactionAmount(12.50)
+        .setTransactionAmount(12.5)
         .setCountryCode('US')
         .setMerchantName('Test')
         .setMerchantCity('City')
@@ -140,7 +146,7 @@ describe('EMVQRBuilder', () => {
       const qr = EMVQRBuilder.create()
         .setPayloadFormatIndicator()
         .setTransactionCurrency('840')
-        .setTipIndicator('02', 5.00)
+        .setTipIndicator('02', 5.0)
         .setCountryCode('US')
         .setMerchantName('Test')
         .setMerchantCity('City')
@@ -295,7 +301,8 @@ describe('parseEMVQR', () => {
 
 describe('validateEMVQRCRC', () => {
   it('validates correct CRC', async () => {
-    const { EMVQRBuilder, validateEMVQRCRC } = await import('../../src/modules/payload-generators/emv');
+    const { EMVQRBuilder, validateEMVQRCRC } =
+      await import('../../src/modules/payload-generators/emv');
     const qr = EMVQRBuilder.create()
       .setPayloadFormatIndicator()
       .setTransactionCurrency('840')
@@ -307,7 +314,8 @@ describe('validateEMVQRCRC', () => {
   });
 
   it('rejects tampered CRC', async () => {
-    const { EMVQRBuilder, validateEMVQRCRC } = await import('../../src/modules/payload-generators/emv');
+    const { EMVQRBuilder, validateEMVQRCRC } =
+      await import('../../src/modules/payload-generators/emv');
     const qr = EMVQRBuilder.create()
       .setPayloadFormatIndicator()
       .setTransactionCurrency('840')
@@ -334,7 +342,7 @@ describe('payment generators', () => {
       const result = generateEPCSepa({
         name: 'John Doe',
         iban: 'DE89 3704 0044 0532 0130 00',
-        amount: 100.50,
+        amount: 100.5,
       });
       expect(result).toContain('BCD');
       expect(result).toContain('SCT');
@@ -499,7 +507,7 @@ describe('payment generators', () => {
       const { generatePIX } = await import('../../src/modules/payload-generators/payments');
       const result = generatePIX({
         key: '+5511999999999',
-        amount: 25.50,
+        amount: 25.5,
         name: 'Merchant',
         city: 'Sao Paulo',
         postalCode: '01310-100',
@@ -610,7 +618,8 @@ describe('payment generators', () => {
 
   describe('generateEthereumEIP681', () => {
     it('generates basic ETH transfer', async () => {
-      const { generateEthereumEIP681 } = await import('../../src/modules/payload-generators/payments');
+      const { generateEthereumEIP681 } =
+        await import('../../src/modules/payload-generators/payments');
       const result = generateEthereumEIP681({
         targetAddress: '0x1234567890abcdef',
         value: '1000000000000000000',
@@ -620,7 +629,8 @@ describe('payment generators', () => {
     });
 
     it('generates token transfer', async () => {
-      const { generateEthereumEIP681 } = await import('../../src/modules/payload-generators/payments');
+      const { generateEthereumEIP681 } =
+        await import('../../src/modules/payload-generators/payments');
       const result = generateEthereumEIP681({
         targetAddress: '0xRecipient',
         tokenAddress: '0xToken',
@@ -633,7 +643,8 @@ describe('payment generators', () => {
     });
 
     it('includes chainId for non-mainnet', async () => {
-      const { generateEthereumEIP681 } = await import('../../src/modules/payload-generators/payments');
+      const { generateEthereumEIP681 } =
+        await import('../../src/modules/payload-generators/payments');
       const result = generateEthereumEIP681({
         targetAddress: '0xAddr',
         chainId: 137,
@@ -642,7 +653,8 @@ describe('payment generators', () => {
     });
 
     it('includes gas parameters', async () => {
-      const { generateEthereumEIP681 } = await import('../../src/modules/payload-generators/payments');
+      const { generateEthereumEIP681 } =
+        await import('../../src/modules/payload-generators/payments');
       const result = generateEthereumEIP681({
         targetAddress: '0xAddr',
         gas: 21000,
@@ -655,7 +667,8 @@ describe('payment generators', () => {
     });
 
     it('includes function name and params', async () => {
-      const { generateEthereumEIP681 } = await import('../../src/modules/payload-generators/payments');
+      const { generateEthereumEIP681 } =
+        await import('../../src/modules/payload-generators/payments');
       const result = generateEthereumEIP681({
         targetAddress: '0xContract',
         functionName: 'approve',
@@ -667,7 +680,8 @@ describe('payment generators', () => {
     });
 
     it('token transfer with chainId and gas', async () => {
-      const { generateEthereumEIP681 } = await import('../../src/modules/payload-generators/payments');
+      const { generateEthereumEIP681 } =
+        await import('../../src/modules/payload-generators/payments');
       const result = generateEthereumEIP681({
         targetAddress: '0xRecipient',
         tokenAddress: '0xToken',
@@ -688,7 +702,12 @@ describe('payment generators', () => {
 
     it('includes amount and label', async () => {
       const { generateCrypto } = await import('../../src/modules/payload-generators/payments');
-      const result = generateCrypto({ type: 'Bitcoin', address: '1A1zP1', amount: 0.5, label: 'Donation' });
+      const result = generateCrypto({
+        type: 'Bitcoin',
+        address: '1A1zP1',
+        amount: 0.5,
+        label: 'Donation',
+      });
       expect(result).toContain('amount=0.5');
       expect(result).toContain('label=Donation');
     });
@@ -702,7 +721,7 @@ describe('payment generators', () => {
 
     it('includes amount and currency', async () => {
       const { generatePayPalMe } = await import('../../src/modules/payload-generators/payments');
-      const result = generatePayPalMe({ username: 'john', amount: 25.50, currencyCode: 'USD' });
+      const result = generatePayPalMe({ username: 'john', amount: 25.5, currencyCode: 'USD' });
       expect(result).toBe('https://paypal.me/john/25.50USD');
     });
   });
@@ -869,9 +888,7 @@ describe('payment generators', () => {
     it('generateEMVMPM creates generic EMV QR', async () => {
       const { generateEMVMPM } = await import('../../src/modules/payload-generators/payments');
       const result = generateEMVMPM({
-        merchantAccounts: [
-          { tag: 26, gui: 'com.example', data: [{ tag: '01', value: 'DATA' }] },
-        ],
+        merchantAccounts: [{ tag: 26, gui: 'com.example', data: [{ tag: '01', value: 'DATA' }] }],
         currencyCode: '840',
         countryCode: 'US',
         merchantName: 'Test',

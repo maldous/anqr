@@ -31,4 +31,3 @@ describe('netlify qr gif disposal handling', () => {
     expect(simplified[0]?.disposalType).toBe(2);
   });
 });
-

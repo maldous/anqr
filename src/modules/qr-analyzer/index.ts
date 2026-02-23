@@ -84,11 +84,7 @@ export {
   type ScanStats,
 } from './telemetry-logging';
 
-export {
-  type AnalysisStats,
-  aggregateStats,
-  calculateAnalysisStats,
-} from './telemetry-stats';
+export { type AnalysisStats, aggregateStats, calculateAnalysisStats } from './telemetry-stats';
 // Types (canonical source)
 export type {
   ContentType,

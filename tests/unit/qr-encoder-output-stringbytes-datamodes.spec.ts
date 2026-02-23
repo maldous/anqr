@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../src/lib/logger', () => ({
-  createLogger: () => ({ trace: vi.fn(), debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
+  createLogger: () => ({
+    trace: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // ========== output.ts ==========
@@ -118,7 +124,8 @@ describe('qr-encoder output', () => {
 
   describe('gifImage', () => {
     it('creates a valid GIF data structure', async () => {
-      const { gifImage, byteArrayOutputStream } = await import('../../src/modules/qr-encoder/output');
+      const { gifImage, byteArrayOutputStream } =
+        await import('../../src/modules/qr-encoder/output');
       const gif = gifImage(2, 2);
       gif.setPixel(0, 0, 0); // black
       gif.setPixel(1, 0, 1); // white
@@ -136,7 +143,8 @@ describe('qr-encoder output', () => {
     });
 
     it('handles larger images', async () => {
-      const { gifImage, byteArrayOutputStream } = await import('../../src/modules/qr-encoder/output');
+      const { gifImage, byteArrayOutputStream } =
+        await import('../../src/modules/qr-encoder/output');
       const gif = gifImage(8, 8);
       for (let y = 0; y < 8; y++) {
         for (let x = 0; x < 8; x++) {
@@ -212,13 +220,15 @@ describe('qr-encoder string-bytes', () => {
     });
 
     it('sets a custom function', async () => {
-      const { setStringToBytes, stringToBytesFn } = await import('../../src/modules/qr-encoder/string-bytes');
+      const { setStringToBytes, stringToBytesFn } =
+        await import('../../src/modules/qr-encoder/string-bytes');
       setStringToBytes(() => [99, 100]);
       expect(stringToBytesFn('anything')).toEqual([99, 100]);
     });
 
     it('resets to default function', async () => {
-      const { setStringToBytes, resetStringToBytes, stringToBytesFn } = await import('../../src/modules/qr-encoder/string-bytes');
+      const { setStringToBytes, resetStringToBytes, stringToBytesFn } =
+        await import('../../src/modules/qr-encoder/string-bytes');
       setStringToBytes(() => [1, 2, 3]);
       expect(stringToBytesFn('x')).toEqual([1, 2, 3]);
       resetStringToBytes();
@@ -232,26 +242,26 @@ describe('qr-encoder string-bytes', () => {
       // Create a minimal unicode mapping: Unicode 0x3041 -> bytes 0x829F (hiragana ぁ -> Shift-JIS)
       // Format: [16bit Unicode][16bit Bytes] base64 encoded
       // 0x3041 = 0x30,0x41 and 0x829F = 0x82,0x9F
-      // So bytes: [0x30, 0x41, 0x82, 0x9F] 
+      // So bytes: [0x30, 0x41, 0x82, 0x9F]
       // Base64 of [0x30, 0x41, 0x82, 0x9F] = "MEGCAJ+f" hmm let me calculate manually
       // Actually the base64DecodeInputStream reads from a base64 string
       // Let's encode [0x30, 0x41, 0x82, 0x9F] to base64
-      // Using btoa equivalent: 
-      const bytes = [0x30, 0x41, 0x82, 0x9F];
+      // Using btoa equivalent:
+      const bytes = [0x30, 0x41, 0x82, 0x9f];
       const b64 = btoa(String.fromCharCode(...bytes));
-      
+
       const encoder = createStringToBytes(b64, 1);
       // ASCII should pass through
       expect(encoder('A')).toEqual([0x41]);
       // The mapped character should produce 2 bytes
       const result = encoder('\u3041');
-      expect(result).toEqual([0x82, 0x9F]);
+      expect(result).toEqual([0x82, 0x9f]);
     });
 
     it('uses ? for unmapped characters', async () => {
       const { createStringToBytes } = await import('../../src/modules/qr-encoder/string-bytes');
       // Create encoder with just one mapping
-      const bytes = [0x30, 0x41, 0x82, 0x9F];
+      const bytes = [0x30, 0x41, 0x82, 0x9f];
       const b64 = btoa(String.fromCharCode(...bytes));
       const encoder = createStringToBytes(b64, 1);
       // Unmapped unicode char should produce '?'
@@ -261,7 +271,7 @@ describe('qr-encoder string-bytes', () => {
 
     it('throws on count mismatch', async () => {
       const { createStringToBytes } = await import('../../src/modules/qr-encoder/string-bytes');
-      const bytes = [0x30, 0x41, 0x82, 0x9F];
+      const bytes = [0x30, 0x41, 0x82, 0x9f];
       const b64 = btoa(String.fromCharCode(...bytes));
       expect(() => createStringToBytes(b64, 2)).toThrow('1 != 2');
     });
@@ -269,11 +279,11 @@ describe('qr-encoder string-bytes', () => {
     it('handles single-byte mappings', async () => {
       const { createStringToBytes } = await import('../../src/modules/qr-encoder/string-bytes');
       // Map Unicode 0xFF61 -> byte 0x00A1 (single byte: high byte is 0)
-      const bytes = [0xFF, 0x61, 0x00, 0xA1];
+      const bytes = [0xff, 0x61, 0x00, 0xa1];
       const b64 = btoa(String.fromCharCode(...bytes));
       const encoder = createStringToBytes(b64, 1);
       const result = encoder('\uFF61');
-      expect(result).toEqual([0xA1]);
+      expect(result).toEqual([0xa1]);
     });
   });
 });
@@ -282,10 +292,15 @@ describe('qr-encoder string-bytes', () => {
 
 describe('qr-encoder data-modes', () => {
   // Mock QRBitBuffer to record put() calls
-  function createMockBuffer(): { put: (num: number, length: number) => void; calls: Array<{ num: number; length: number }> } {
+  function createMockBuffer(): {
+    put: (num: number, length: number) => void;
+    calls: Array<{ num: number; length: number }>;
+  } {
     const calls: Array<{ num: number; length: number }> = [];
     return {
-      put: (num: number, length: number) => { calls.push({ num, length }); },
+      put: (num: number, length: number) => {
+        calls.push({ num, length });
+      },
       calls,
     };
   }

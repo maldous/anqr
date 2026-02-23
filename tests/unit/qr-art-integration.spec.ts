@@ -10,7 +10,7 @@
  * that was causing "FATAL: Extracted ECC level does not match requested ECC!"
  */
 
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock import.meta.env.DEV for the logger
 vi.stubGlobal('import', { meta: { env: { DEV: true } } });
@@ -26,9 +26,7 @@ import {
 import { decodeQR } from '../../src/modules/qr-decoder';
 
 // Helper to build matrix from QR code
-function buildMatrixFromQR(
-  qr: ReturnType<typeof qrcode>
-): boolean[][] {
+function buildMatrixFromQR(qr: ReturnType<typeof qrcode>): boolean[][] {
   const moduleCount = qr.getModuleCount();
   const matrix: boolean[][] = [];
   for (let row = 0; row < moduleCount; row++) {
@@ -48,10 +46,10 @@ function createTestImage(size: number): ImageData {
       const idx = (y * size + x) * 4;
       // Create a gradient pattern - darker in top-left, lighter in bottom-right
       const gray = Math.floor(((x + y) / (2 * size)) * 255);
-      data[idx] = gray;     // R
+      data[idx] = gray; // R
       data[idx + 1] = gray; // G
       data[idx + 2] = gray; // B
-      data[idx + 3] = 255;  // A
+      data[idx + 3] = 255; // A
     }
   }
   return { data, width: size, height: size } as ImageData;
@@ -160,7 +158,9 @@ describe('QR-Art Full Integration', () => {
         expect(result.totalControllable).toBeGreaterThan(0);
 
         // Log success metrics
-        console.log(`QR-Art success: ${result.matchPercentage.toFixed(1)}% match, ${result.matchingPixels}/${result.totalControllable} controllable pixels`);
+        console.log(
+          `QR-Art success: ${result.matchPercentage.toFixed(1)}% match, ${result.matchingPixels}/${result.totalControllable} controllable pixels`
+        );
       } else {
         // If it failed, it should NOT be due to format-info mismatch (the fix)
         expect(result.error).not.toContain('FATAL');
@@ -189,7 +189,9 @@ describe('QR-Art Full Integration', () => {
 
       if (result.success) {
         expect(result.totalControllable).toBeGreaterThan(0);
-        console.log(`QR-Art success (auto-mask=${result.maskPattern}): ${result.matchPercentage.toFixed(1)}% match`);
+        console.log(
+          `QR-Art success (auto-mask=${result.maskPattern}): ${result.matchPercentage.toFixed(1)}% match`
+        );
       } else {
         // Should NOT abort due to format-info issues
         expect(result.error).not.toContain('FATAL');

@@ -14,7 +14,7 @@ function multiply(base: number, blend: number): number {
 }
 
 function screen(base: number, blend: number): number {
-  return denorm(1 - ((1 - base / 255) * (1 - blend / 255)));
+  return denorm(1 - (1 - base / 255) * (1 - blend / 255));
 }
 
 function overlay(base: number, blend: number): number {
