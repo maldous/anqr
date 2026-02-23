@@ -1,6 +1,6 @@
 {
   "manifestVersion": "4.0",
-  "generatedAt": "2026-02-22T12:26:40.181Z",
+  "generatedAt": "2026-02-23T00:10:19.710Z",
   "sourceMode": "local",
   "sourceDir": "reports/gallery-artifacts/local",
   "strictPublish": true,
@@ -18,6 +18,7 @@
     "mergedPassFile": "reports/gallery-artifacts/local/passed.merged.txt",
     "mergedFailFile": "reports/gallery-artifacts/local/failed.merged.txt",
     "reportFiles": [
+      "report.json",
       "report.shard-1-of-30.json",
       "report.shard-10-of-30.json",
       "report.shard-11-of-30.json",
@@ -79,7 +80,8 @@
       "passed.shard-6-of-30.txt",
       "passed.shard-7-of-30.txt",
       "passed.shard-8-of-30.txt",
-      "passed.shard-9-of-30.txt"
+      "passed.shard-9-of-30.txt",
+      "passed.txt"
     ],
     "failFiles": [
       "failed.shard-1-of-30.txt",
@@ -111,7 +113,8 @@
       "failed.shard-6-of-30.txt",
       "failed.shard-7-of-30.txt",
       "failed.shard-8-of-30.txt",
-      "failed.shard-9-of-30.txt"
+      "failed.shard-9-of-30.txt",
+      "failed.txt"
     ],
     "mergedResults": 1000,
     "candidates": 1000,
@@ -5391,8 +5394,8 @@
       "paramSignatureSha256": "46b11856652fae648a1b00840325e9c68c792b8004b043974ba0e48301e2c14e",
       "output": {
         "file": "overlay__animHero-dance-wave-morph.gif",
-        "bytes": 398518,
-        "sha256": "b2bac20e83ac11714bad9a60e954eb44befea524e3f652924d65986a561c9f4a",
+        "bytes": 401314,
+        "sha256": "2882d8d01564a4a3262b4f59ed10c62e2bf1b353ef40cab5853f5971b35f7117",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-dance-wave-morph.gif"
       }
@@ -5499,8 +5502,8 @@
       "paramSignatureSha256": "0cca6d1c5b7fdae4075c35e56e7214a9cdd183705ba173bc3a72c2d4b7531eb5",
       "output": {
         "file": "overlay__ov-x-anim-dance-dithered-shimmer.gif",
-        "bytes": 625155,
-        "sha256": "8aaa5c80501570610a2406704ffdb5c1f637601c2320d059b6529ea4553f76a0",
+        "bytes": 623082,
+        "sha256": "0ca01fae9300242313cedae2e3a77a65740213003bd054207a37088a25db5151",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__ov-x-anim-dance-dithered-shimmer.gif"
       }
@@ -5601,8 +5604,8 @@
       "paramSignatureSha256": "972d3b091fdb3b7705737e20a6d4673d5abfc05a775248fe6e4d62ff7c57f861",
       "output": {
         "file": "overlay__animHero-king-drift.gif",
-        "bytes": 948124,
-        "sha256": "11ba63167256b61b2f628652c5a80affee8c8e542313fd2af628b76e7e73c490",
+        "bytes": 947553,
+        "sha256": "59105ecba8813a6fd6f213c6602474f61f8716b3ea134b5fa78920e68080441d",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-king-drift.gif"
       }
@@ -5691,8 +5694,8 @@
       "paramSignatureSha256": "791023585c3c26dd359d4dd50b01950ce53ec42c2c69bc31a244ccac61f3c53f",
       "output": {
         "file": "overlay__animHero-king-pulse.gif",
-        "bytes": 730836,
-        "sha256": "a3975282c9db12af00beaa9d75d3c222225db9f50f8c858f51cdc6cac664d311",
+        "bytes": 731409,
+        "sha256": "298ca2ede6232e26c0bf62e335bc63128759cbddcaf4d51e2b528387431d2f22",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-king-pulse.gif"
       }
@@ -5790,8 +5793,8 @@
       "paramSignatureSha256": "d7a84b4a706c4aa5b1f64b380bca1b64019362949b5eefb393d5f788704b6f3f",
       "output": {
         "file": "overlay__hero-dither-dance-screened_blue_noise.gif",
-        "bytes": 594918,
-        "sha256": "bbcc8a0a4638dadc4db291e028d7d693ebf616e781f2242d1bdd55e0caae7b8d",
+        "bytes": 600326,
+        "sha256": "93f0ec83c6cdd494556e9cfc7a9e44f7b7a720e9108de556a27449dfa0f0682d",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-dither-dance-screened_blue_noise.gif"
       }
@@ -5955,8 +5958,8 @@
       "paramSignatureSha256": "9ecfd30c1730ef7723495350294d997f56e0f4f39f3f3bf9b9134df604cdd5c3",
       "output": {
         "file": "overlay__hero-stack-king-wave-scanline-reverse.gif",
-        "bytes": 1053740,
-        "sha256": "9a70cc50d00818a942b3ee01fdc3f78fd3f4593794ee4efa2796c0181def9d53",
+        "bytes": 1050428,
+        "sha256": "188e74b7bb9546e7e70b0a1783f7531879ce799cbf425b1183afd10da8371ab0",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-king-wave-scanline-reverse.gif"
       }
@@ -6013,8 +6016,8 @@
       "paramSignatureSha256": "a50a3e274585b38ca38cadfbfaf7e2cef9166dc340e09c7ed54313130e7cec54",
       "output": {
         "file": "overlay__heroFeature-dance-retro-drift.gif",
-        "bytes": 434963,
-        "sha256": "55585caad9e3959a86c7411e209e5e0270c21d218305de17d20f9d4551728ad1",
+        "bytes": 435438,
+        "sha256": "95fba3b0a0226bb835ccf38e98eacce729d8d291280fffc8b571fdf4c8ffb090",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-dance-retro-drift.gif"
       }
@@ -6069,8 +6072,8 @@
       "paramSignatureSha256": "579fda2a27ca8f327a0e2b891ade3812195256d9a9bd4ab0734846d365165a7b",
       "output": {
         "file": "overlay__heroFeature-king-aurora-pulse.gif",
-        "bytes": 880562,
-        "sha256": "647dbee2f765794cf1c054319a49e556d5c9517eec1a4108c2c9a6fe9880f726",
+        "bytes": 881122,
+        "sha256": "03b87f24ca5dec88446653d22490b3a2fbd7d7fdfc8c6a7deb4ad195d6e77702",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-king-aurora-pulse.gif"
       }
@@ -6221,8 +6224,8 @@
       "paramSignatureSha256": "5e88fcd5a32a395906042051bcd7db77ccef93f6f86da4b7552b4a4cba4367c9",
       "output": {
         "file": "overlay__hero-dither-dance-error_diffusion.gif",
-        "bytes": 610439,
-        "sha256": "999275f4fc1efeeb4c1d592bf336e1ed351e5974baed2ef13bcab9bfd48190a6",
+        "bytes": 612117,
+        "sha256": "a521ec90b512bf6a8e6b7dad658e6e60de7928b06b4e8cf6181e6dc3f60ad5f6",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-dither-dance-error_diffusion.gif"
       }
@@ -6273,8 +6276,8 @@
       "paramSignatureSha256": "5276b8af5400550b533a03afdae10349f0d00b2bb8ca32f11e188a2c5b3e5ba2",
       "output": {
         "file": "overlay__hero-stack-dance-wave-scanline-reverse.gif",
-        "bytes": 317530,
-        "sha256": "35255a8f5232e232a71fb8fd48b846a9ff20c8ca38978eb06e330ac09dc30291",
+        "bytes": 323093,
+        "sha256": "fc22e3c27b84322ff171f34dd70efcc97361414305b5d8234a82cc03b1ffeb5b",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-dance-wave-scanline-reverse.gif"
       }
@@ -6330,8 +6333,8 @@
       "paramSignatureSha256": "badeee8e24d0dfdbf02976847070ba3d09269d552e8e18d463271068fc9197f8",
       "output": {
         "file": "overlay__heroFeature-king-glass-pulse.gif",
-        "bytes": 822623,
-        "sha256": "277efbfe372cb1f5479df5bba1435b2fda49a7c504c8b55dd5655d944ab26abd",
+        "bytes": 822807,
+        "sha256": "47536853d39a086c71ea945d7752a06581143fb842d1df37448a928818301e0b",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-king-glass-pulse.gif"
       }
@@ -6487,8 +6490,8 @@
       "paramSignatureSha256": "3729bac31d9c3ec45e49b5f4f4125c5424f89c913f7a061c83278733150b0b32",
       "output": {
         "file": "overlay__target-stack-king-modules-wave-x-plus-result-wave-y.gif",
-        "bytes": 2114216,
-        "sha256": "06bf779c3acb983870b54526ae3781d9a2797ce4469873fdf903a468ed68495e",
+        "bytes": 2108687,
+        "sha256": "6fa07eb6ba8e235ffccba626143478f3b42b8f03bf59011074fca2d9d9fc94ed",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__target-stack-king-modules-wave-x-plus-result-wave-y.gif"
       }
@@ -6540,8 +6543,8 @@
       "paramSignatureSha256": "2b9293b2959cf3fdb734b9317d8080c4ee5d79ec5117df3c4b046d998e3c3e45",
       "output": {
         "file": "overlay__hero-stack-dance-dither-pulse-bayer-reverse.gif",
-        "bytes": 377395,
-        "sha256": "435bce3213e524732a8686368069beab20a3a2c5464a5a37db4a95528351077c",
+        "bytes": 378921,
+        "sha256": "a71c7525f9f06010ece7fb258efa0ec04f8a819077aeceb9212e65b58a2e9dc3",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-dance-dither-pulse-bayer-reverse.gif"
       }
@@ -6598,8 +6601,8 @@
       "paramSignatureSha256": "827308291a42e801648a579d1a7c0c3ff9431086673d9ef320a92889f8c97493",
       "output": {
         "file": "overlay__heroFeature-king-retro-drift.gif",
-        "bytes": 1341640,
-        "sha256": "4abae67cc28772c5eb3c07fd5706deed55fe54321882e88e34dcc920944597db",
+        "bytes": 1341974,
+        "sha256": "1c86bad3d1b88660a762aead0743644cadcdb4b339f39bbd61a430955372b513",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-king-retro-drift.gif"
       }
@@ -6698,8 +6701,8 @@
       "paramSignatureSha256": "51851958d2ec9aa928bc34a4d9372c3a3d5aca4b439b5f675b9e18367ca3cb69",
       "output": {
         "file": "overlay__hero-stack-dance-mosaic-wave-bounce.gif",
-        "bytes": 417907,
-        "sha256": "c9a096ff1d14cecbb1691e79fb69ebbe4f7e59fcfe3034e4246e5ef9d52a2adf",
+        "bytes": 416790,
+        "sha256": "492ee4fe25c29a0a95b887ac9b25e856e00ecf60584e937af49f7ef67aaf5d1d",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-dance-mosaic-wave-bounce.gif"
       }
@@ -6810,8 +6813,8 @@
       "paramSignatureSha256": "2b5b05d6b275484dd871e2eef292da59db6a824c1f28539d9b3438c95dafd391",
       "output": {
         "file": "overlay__heroFeature-dance-aurora-pulse.gif",
-        "bytes": 296004,
-        "sha256": "9e3c1ba44174ab1dedd051ecb64f7e0143b10854f3c3da539bc4024623335382",
+        "bytes": 295123,
+        "sha256": "1270b87faa18ff4b9178a54d6291fd6d6e15688755fe8a39ee02e3d36a7b5df8",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-dance-aurora-pulse.gif"
       }
@@ -6910,8 +6913,8 @@
       "paramSignatureSha256": "5bd868f6b8bcd15b670e852d0eed8ab33c9b19cb5abe21fbb82e73eae453c86d",
       "output": {
         "file": "overlay__hero-motion-king-wave-drift-cycle.gif",
-        "bytes": 852977,
-        "sha256": "8c7a630d1f3f0e9db60e75a091bcc7f70342644ccaeb7535953958ed5a5ed71f",
+        "bytes": 851420,
+        "sha256": "dd26633243c691c1b7c449c20392750957bd31cbd899c91f73e9d260e49f0850",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-motion-king-wave-drift-cycle.gif"
       }
@@ -7329,8 +7332,8 @@
       "paramSignatureSha256": "4ab0e731802c785feaa2e7d3ebce65a1192f6a19ab86701e41207c42bad7ef68",
       "output": {
         "file": "overlay__hero-motion-dance-blend-pulse-easein.gif",
-        "bytes": 157306,
-        "sha256": "1827d1b4a712fc3cfd6044858693a1f8d5ee420e64a08ff1740839e67065ba2f",
+        "bytes": 156267,
+        "sha256": "0d6fcb12d136d4ce78823af9dee367128e94dcaea962489ce1ba3e8586fe9f73",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-motion-dance-blend-pulse-easein.gif"
       }
@@ -7476,8 +7479,8 @@
       "paramSignatureSha256": "80454f9ff16cf1f9e9198cec384bdc4fe83674558827bbefd47f223e75521615",
       "output": {
         "file": "overlay__hero-motion-king-blend-pulse-easein.gif",
-        "bytes": 592393,
-        "sha256": "0ae8b219ca8212de8691d9ed0b93377b1487d5e6f4864c3d5058b172738cb286",
+        "bytes": 592072,
+        "sha256": "e5b51b12659fcba37299322769af48d391c69195694aaf71004ac6a3890910fd",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-motion-king-blend-pulse-easein.gif"
       }
@@ -7824,8 +7827,8 @@
       "paramSignatureSha256": "0f247284fcd25a2986a47770bcfe9b6f366fc6c1b7b86020b603a71256cd7f71",
       "output": {
         "file": "overlay__hero-stack-king-blend-drift-softlight.gif",
-        "bytes": 1243405,
-        "sha256": "7d048696bd83a85de58c840f87cc2171dea27b3ea0dfd79bfecd3c6206f2cd04",
+        "bytes": 1243421,
+        "sha256": "175b9a2c74efb455f436cd29c4a3b714e31e243083281c83ed56d12b65e2bd4b",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-king-blend-drift-softlight.gif"
       }
@@ -8559,8 +8562,8 @@
       "paramSignatureSha256": "3cd586080e35c2c1864c92754b85fc247a5f0f7b0970f91afbe8945ce52dba12",
       "output": {
         "file": "overlay__hero-dither-dance-blue_noise_threshold.gif",
-        "bytes": 594335,
-        "sha256": "61beef0f8c9327cfba3e8b2001ff4a48dc7e42c5f0af757a3a81082bbd55cccc",
+        "bytes": 590762,
+        "sha256": "564c93b02f909e6e972fedeeffaf9726a699dd73ea2a0b4ec8e32f98e60983a1",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-dither-dance-blue_noise_threshold.gif"
       }
@@ -8658,8 +8661,8 @@
       "paramSignatureSha256": "3265c997e7cd9f33b352f05daadef77f90197b1f7fb65e65cad87693c6250731",
       "output": {
         "file": "overlay__hero-stack-king-dither-scanline-adaptive.gif",
-        "bytes": 1922252,
-        "sha256": "c9188f79f8a54dcd1794ad51690c3c649aaaf9c2354de88a73f05e3fd10e3d6a",
+        "bytes": 1933273,
+        "sha256": "dd5a00335dd6fabb7e03cc1741cf88cca9a5456b1a5f0fbf155afa033a431296",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-king-dither-scanline-adaptive.gif"
       }
@@ -8954,8 +8957,8 @@
       "paramSignatureSha256": "b0167499b4a638be2145c1bc008cd37edd1618e5a853fee8a8ba04d0a10489f9",
       "output": {
         "file": "overlay__animStack-dance-dither-scanline-reverse-errordiff.gif",
-        "bytes": 372317,
-        "sha256": "8a9b8cab6b8facdb5399c540c989165e99c72f40cc2024c3dec589cf827eb45d",
+        "bytes": 372267,
+        "sha256": "cd4df4fe44216877ccb6ae5be6c593fb31cfe4b7d0c8ef0485dfee9a0ac02b60",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animStack-dance-dither-scanline-reverse-errordiff.gif"
       }
@@ -9054,8 +9057,8 @@
       "paramSignatureSha256": "e980a358633197017419715c0ffffd7bc3f64d533358744eeea6586033400eff",
       "output": {
         "file": "overlay__animStack-dance-dither-wave-morph-sbn.gif",
-        "bytes": 610302,
-        "sha256": "0f8b03d74f486b29e770a4062c3c37a54346a65f071a5f03f6d59a45a7238c2c",
+        "bytes": 608904,
+        "sha256": "89d81163ddbeb2a90c0950055ba4bd1d40ea9abe7de84f98d9981a1a17c0f0c1",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animStack-dance-dither-wave-morph-sbn.gif"
       }
@@ -9383,8 +9386,8 @@
       "paramSignatureSha256": "849001e9dde0975e82e128330f5aaee2bb5f4be4c283052b943091ccd2473ada",
       "output": {
         "file": "overlay__hero-stack-king-dither-pulse-bayer-reverse.gif",
-        "bytes": 1925853,
-        "sha256": "def85f8d3476cf84d53981d426c57d0a7beb59a5cf4986343dec1a0b05a2f459",
+        "bytes": 1926373,
+        "sha256": "15ae38e3ef4d396862b22ae27e6abb16132a9346be0f210a67af09ab3e376f02",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-king-dither-pulse-bayer-reverse.gif"
       }
@@ -9546,8 +9549,8 @@
       "paramSignatureSha256": "19798f99a05186ca1cbddef997c3ecc016997e756c104bcadbf46143ac60de5c",
       "output": {
         "file": "overlay__hero-stack-dance-dither-scanline-adaptive.gif",
-        "bytes": 368995,
-        "sha256": "6bdd6c5eb87ef8d3804c7a00e81bdc72f65fea15a7724d5c372bac3f5d5c1bd5",
+        "bytes": 399070,
+        "sha256": "0b030d7b0f3cb3707ec735c5a827e023c97ec207e6b55a0e1c8caf7f5aec5cc4",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__hero-stack-dance-dither-scanline-adaptive.gif"
       }
@@ -10522,8 +10525,8 @@
       "paramSignatureSha256": "57b100f6570c4ae0833183bf39f45b9ed79969051189d133dfffd5b2e2225ff4",
       "output": {
         "file": "overlay__mega-anim-king.gif",
-        "bytes": 1674180,
-        "sha256": "f4dd167e6304d73306cd39c0a6e9f6fe3dae70242da4b94e8af722726a97d77f",
+        "bytes": 1686247,
+        "sha256": "1cb97d223ce1c02da74024a83864df8ed854f31cc530e8fd6cf6305971e97cc0",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__mega-anim-king.gif"
       }
@@ -10704,8 +10707,8 @@
       "paramSignatureSha256": "350254a20863824d3c8198162f4c3b38f986909f21692083bb8675316cad6fce",
       "output": {
         "file": "overlay__animHero-dance-drift.gif",
-        "bytes": 251387,
-        "sha256": "7602e427f47a6de7ee2abc23b5c5f2993f4cba6b2eed5f8b1b184928087baa16",
+        "bytes": 251178,
+        "sha256": "b3e1c3290ada2cdcccad07d44a3b979672d605a1c6a7708a20d4af138fb90455",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-dance-drift.gif"
       }
@@ -10788,8 +10791,8 @@
       "paramSignatureSha256": "44865eb7b4697359895626fec8ab5de13942b50f662bb64e76be989a452bbb51",
       "output": {
         "file": "overlay__animHero-dance-pulse.gif",
-        "bytes": 161303,
-        "sha256": "9e685a48595390d9181a4f27062d1e2867706fc9f621a1d8705eeb292a499c5e",
+        "bytes": 161429,
+        "sha256": "7bbf12662244bf353826fb0d87bdd25fb8429afd1367dc14e6d4ab1896669d2c",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-dance-pulse.gif"
       }
@@ -10873,8 +10876,8 @@
       "paramSignatureSha256": "0ac10f456b775e5a27f4b9f5814333322b86105abb7f8f8443d13f55ecc2a1b9",
       "output": {
         "file": "overlay__animHero-dance-scanline.gif",
-        "bytes": 201546,
-        "sha256": "93b1f49924c0cff5230ecc5be1a2cf22fef4c4c703fe617b71273e68dec8f3de",
+        "bytes": 201542,
+        "sha256": "9be2db5f52d3f34300997ee9dd0d2dff6b9945d3f09dde8cc31018f8e0f6c0f2",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-dance-scanline.gif"
       }
@@ -10958,8 +10961,8 @@
       "paramSignatureSha256": "3946e5f93936100b10ab792bd104bee1343de16df444a8868a378d9cb94cc3c7",
       "output": {
         "file": "overlay__animHero-dance-shimmer.gif",
-        "bytes": 262543,
-        "sha256": "68e0c8989d25b25db8a125328f00bf502fdcd0fce4892a14b7845194ee198657",
+        "bytes": 262491,
+        "sha256": "6c94c53ff239ca315c350a5694d923890a2ed0df98c64f7701d6bad9131121db",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-dance-shimmer.gif"
       }
@@ -11216,8 +11219,8 @@
       "paramSignatureSha256": "17af73f982d83751154f47f41f42a413afcdd61b66f445e32b7cacf6b93532a5",
       "output": {
         "file": "overlay__animHero-king-scanline.gif",
-        "bytes": 872189,
-        "sha256": "81bff5c8fd39af09fe41b3909710bdd700a88de8b466812c9c6362fa2eaa88d9",
+        "bytes": 872067,
+        "sha256": "f1167282592f37f7c6ffab0da019c4ba3002996ec1e7e36ca07d6daa473673b2",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__animHero-king-scanline.gif"
       }
@@ -11319,8 +11322,8 @@
       "paramSignatureSha256": "b248279a9267fee195ac73d65a947a6f1db5bb5913d4e10d68acb1b3d9402332",
       "output": {
         "file": "overlay__heroFeature-dance-dither-wave-etched.gif",
-        "bytes": 532119,
-        "sha256": "18462f6faeeebb265e014d4db5988fc75a684bef32ce47eb3caed03000a91fbb",
+        "bytes": 559239,
+        "sha256": "3708fee13323f84d8c38de9e80d6740949ccfd8e70882c7165cb8ec34daf6118",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-dance-dither-wave-etched.gif"
       }
@@ -11425,8 +11428,8 @@
       "paramSignatureSha256": "149e58fcd5951c63e5b9e476fbd9d50d40d4531a28ca88da2f5513e5f81f2ae5",
       "output": {
         "file": "overlay__heroFeature-dance-heatmap-shimmer.gif",
-        "bytes": 393293,
-        "sha256": "9ad989d821b24d3c30b6f782a2ad17d45a93d6b178ce55f4e46d5949f174ce20",
+        "bytes": 394780,
+        "sha256": "7b06fe57a605f14fa327411622004414f909d8e3578d7a813685daff6ad62029",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-dance-heatmap-shimmer.gif"
       }
@@ -11619,8 +11622,8 @@
       "paramSignatureSha256": "20f982cbec3c0f4242f3b30367c84777ce76d15e606987c4e887b1119f0636e9",
       "output": {
         "file": "overlay__ov-x-anim-dance-wave-pulse.gif",
-        "bytes": 162596,
-        "sha256": "6e5c312c00b126dec092d5d5ec114c6be7ddb207a7866eced2a7b9e7e825a68d",
+        "bytes": 163138,
+        "sha256": "b5700e8cb69e3722828e1e479536a5f9abff753de78d0d4f33a0204b64acc75e",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__ov-x-anim-dance-wave-pulse.gif"
       }
@@ -12091,8 +12094,8 @@
       "paramSignatureSha256": "fa9ea72f8f816c4df8beb87fc932fe981446435a178d27b91de7897a36afae30",
       "output": {
         "file": "overlay__heroFeature-king-heatmap-shimmer.gif",
-        "bytes": 1218593,
-        "sha256": "c870b6408152b9dfc46b7fa09a703e29f37d8a7c3bb090b074fc68c302add279",
+        "bytes": 1233081,
+        "sha256": "5d40c77ad80720a72b747c6d07bcfa44faef737b1c05d74a910c5c10eb1d8681",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-king-heatmap-shimmer.gif"
       }
@@ -12148,8 +12151,8 @@
       "paramSignatureSha256": "42f44bc9e7c12903aef5f83e03af6980339d632e6d0cfa2b0547827f1907cc84",
       "output": {
         "file": "overlay__heroFeature-dance-cobalt-scanline.gif",
-        "bytes": 282215,
-        "sha256": "06ee4f70cd813d55a204a3055e18a909b893083c07834a283b9941515bc2553e",
+        "bytes": 282220,
+        "sha256": "cc46fbe43e82663e2ec63361c4f7896dddaa90061f183e5b2a833b973214c1b0",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-dance-cobalt-scanline.gif"
       }
@@ -12416,8 +12419,8 @@
       "paramSignatureSha256": "5a58257a0f64b1ddebabbf3a4802a0e4810bc97740ba36d31c247fb2f02c265a",
       "output": {
         "file": "overlay__heroFeature-king-cobalt-scanline.gif",
-        "bytes": 866716,
-        "sha256": "875c312b0fe1f16196d8658aea1612ad695634d4cd399c2349320b574989b32d",
+        "bytes": 866789,
+        "sha256": "da2b9aebfb099b0da9aac3d69b6645edc115b293fa5db156569998a9448c89c8",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-king-cobalt-scanline.gif"
       }
@@ -12514,8 +12517,8 @@
       "paramSignatureSha256": "0f76803abc3a123de0019350fcb1a31e238489274b1a973d43401587933ad880",
       "output": {
         "file": "overlay__heroFeature-dance-glass-pulse.gif",
-        "bytes": 269493,
-        "sha256": "ac218a7c8b1090725451370084ab88a32329b99da0ff24e955e2bf35bf76f11f",
+        "bytes": 269201,
+        "sha256": "091d0e5165f6d1ebb62f7431efe2098f5badd5cf1bd955f8a0e4ddecf9eb22e7",
         "sourceMode": "local",
         "sourcePath": "reports/gallery-artifacts/local/overlay__heroFeature-dance-glass-pulse.gif"
       }
