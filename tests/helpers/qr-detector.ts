@@ -398,18 +398,27 @@ export async function waitForQRStable(
 export async function waitForSelectOpen(page: Page, timeout = DEFAULT_TIMEOUT): Promise<void> {
   await page.waitForFunction(
     () => {
+      const isElementVisible = (el: Element): boolean => {
+        const node = el as HTMLElement;
+        const style = window.getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+          return false;
+        }
+        if (node.hidden || node.getAttribute('aria-hidden') === 'true') return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && node.getClientRects().length > 0;
+      };
+
+      const options = Array.from(document.querySelectorAll('[role="option"]'));
+      if (options.some(isElementVisible)) return true;
+
       const candidates = Array.from(
         document.querySelectorAll(
           '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
         )
       ) as HTMLElement[];
 
-      return candidates.some((el) => {
-        const style = window.getComputedStyle(el);
-        return (
-          style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null
-        );
-      });
+      return candidates.some(isElementVisible);
     },
     { timeout, polling: 50 }
   );
@@ -421,6 +430,20 @@ export async function waitForSelectOpen(page: Page, timeout = DEFAULT_TIMEOUT): 
 export async function waitForSelectClosed(page: Page, timeout = DEFAULT_TIMEOUT): Promise<void> {
   await page.waitForFunction(
     () => {
+      const isElementVisible = (el: Element): boolean => {
+        const node = el as HTMLElement;
+        const style = window.getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+          return false;
+        }
+        if (node.hidden || node.getAttribute('aria-hidden') === 'true') return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && node.getClientRects().length > 0;
+      };
+
+      const options = Array.from(document.querySelectorAll('[role="option"]'));
+      if (options.some(isElementVisible)) return false;
+
       const candidates = Array.from(
         document.querySelectorAll(
           '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
@@ -429,13 +452,7 @@ export async function waitForSelectClosed(page: Page, timeout = DEFAULT_TIMEOUT)
 
       if (candidates.length === 0) return true;
 
-      return !candidates.some((el) => {
-        const style = window.getComputedStyle(el);
-        if (style.display === 'none' || style.visibility === 'hidden') return false;
-        if (el.offsetParent === null) return false;
-        if (el.getAttribute('aria-hidden') === 'true') return false;
-        return true;
-      });
+      return !candidates.some(isElementVisible);
     },
     { timeout, polling: 50 }
   );
@@ -511,8 +528,7 @@ export async function selectDropdownOption(
     await waitForSelectOpen(page, 5000);
   }
 
-  const dropdown = page.locator('[data-radix-popper-content-wrapper]').first();
-  const allOptions = dropdown.locator('[role="option"]');
+  const allOptions = page.locator('[role="option"]:visible');
   const count = await allOptions.count();
 
   if (count === 0) {

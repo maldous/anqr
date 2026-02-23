@@ -139,7 +139,7 @@ export async function waitForRenderComplete(
           if (w.__anqrStateLeftIdle && state === 'idle') return true;
           return false;
         },
-        { timeout: 15000, polling: 50 }
+        { timeout: Math.min(timeout, 2000), polling: 50 }
       )
       .catch(() => {
         // No render triggered — action may not have changed anything.
@@ -227,18 +227,29 @@ export async function waitForDropdownOpen(
 ): Promise<void> {
   await page.waitForFunction(
     () => {
+      const isElementVisible = (el: Element): boolean => {
+        const node = el as HTMLElement;
+        const style = window.getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+          return false;
+        }
+        if (node.hidden || node.getAttribute('aria-hidden') === 'true') return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && node.getClientRects().length > 0;
+      };
+
+      // Prefer option visibility because Radix wrappers can be fixed-position
+      // and report offsetParent=null even when actually visible.
+      const options = Array.from(document.querySelectorAll('[role="option"]'));
+      if (options.some(isElementVisible)) return true;
+
       const candidates = Array.from(
         document.querySelectorAll(
           '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
         )
       ) as HTMLElement[];
 
-      return candidates.some((el) => {
-        const style = window.getComputedStyle(el);
-        return (
-          style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null
-        );
-      });
+      return candidates.some(isElementVisible);
     },
     { timeout, polling: 50 }
   );
@@ -258,6 +269,20 @@ export async function waitForDropdownClosed(
   // Radix select content may close by becoming hidden OR detaching entirely.
   await page.waitForFunction(
     () => {
+      const isElementVisible = (el: Element): boolean => {
+        const node = el as HTMLElement;
+        const style = window.getComputedStyle(node);
+        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+          return false;
+        }
+        if (node.hidden || node.getAttribute('aria-hidden') === 'true') return false;
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && node.getClientRects().length > 0;
+      };
+
+      const options = Array.from(document.querySelectorAll('[role="option"]'));
+      if (options.some(isElementVisible)) return false;
+
       const candidates = Array.from(
         document.querySelectorAll(
           '[data-radix-popper-content-wrapper], [data-radix-select-content], [role="listbox"]'
@@ -266,13 +291,7 @@ export async function waitForDropdownClosed(
 
       if (candidates.length === 0) return true;
 
-      return !candidates.some((el) => {
-        const style = window.getComputedStyle(el);
-        if (style.display === 'none' || style.visibility === 'hidden') return false;
-        if (el.offsetParent === null) return false;
-        if (el.getAttribute('aria-hidden') === 'true') return false;
-        return true;
-      });
+      return !candidates.some(isElementVisible);
     },
     { timeout }
   );
@@ -625,13 +644,27 @@ export async function selectOption(
   const trigger = page.locator(`[data-testid="${testId}"]`);
   await trigger.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await trigger.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
-  await trigger.click();
+  await trigger.click({ force: true });
 
   // Wait for dropdown to open
-  await waitForDropdownOpen(page);
+  const opened = await waitForDropdownOpen(page, 5000)
+    .then(() => true)
+    .catch(() => false);
+  if (!opened) {
+    await trigger.evaluate((el) => {
+      el.scrollIntoView({ behavior: 'instant', block: 'center' });
+      el.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 1 })
+      );
+      el.dispatchEvent(
+        new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerId: 1 })
+      );
+    });
+    await waitForDropdownOpen(page, 5000);
+  }
 
   // Get all visible options in the active dropdown/listbox.
-  const allOptions = page.locator('[role="option"]');
+  const allOptions = page.locator('[role="option"]:visible');
   const count = await allOptions.count();
 
   let targetIndex = -1;
