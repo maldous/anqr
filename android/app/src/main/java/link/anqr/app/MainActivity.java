@@ -29,6 +29,10 @@ public class MainActivity extends BridgeActivity {
 
   private static final String TAG = "ANQR";
   
+  // Track back gesture state to prevent duplicate handling
+  private static final long BACK_GESTURE_DEBOUNCE_MS = 500;
+  private long lastBackGestureTime = 0;
+  
   // Sentry DSN for native Android crash reporting
   private static final String SENTRY_DSN = "https://e21ce35eef457e8b07408316ee9cb262@o4510808522489856.ingest.us.sentry.io/4510808544247808";
   
@@ -96,6 +100,69 @@ public class MainActivity extends BridgeActivity {
         @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
         @Override public void onActivityDestroyed(Activity activity) {}
       });
+    }
+    
+    // Enable back swipe gesture handling to navigate within app instead of exiting
+    setupBackGestureHandling();
+  }
+  
+  /**
+   * Set up onBackPressed callback to handle both hardware back button and swipe-back gesture.
+   * This ensures the app navigates internally first before exiting.
+   */
+  private void setupBackGestureHandling() {
+    // Override back press to intercept both hardware back button and swipe-back gesture
+    getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+      @Override
+      public void handleOnBackPressed() {
+        // Debounce to prevent multiple rapid back presses
+        long now = System.currentTimeMillis();
+        if (now - lastBackGestureTime < BACK_GESTURE_DEBOUNCE_MS) {
+          Log.d(TAG, "Back gesture debounced");
+          return;
+        }
+        lastBackGestureTime = now;
+        
+        // Try to notify the web view to handle back navigation
+        if (!notifyWebViewOfBackPress()) {
+          // If web view couldn't handle it, finish the activity (exit app)
+          Log.d(TAG, "Web view couldn't handle back, finishing activity");
+          finish();
+        }
+      }
+    });
+  }
+  
+  /**
+   * Send a back press event to the web view via JavaScript.
+   * The web app handles all navigation logic including exit.
+   * Returns true if the event was dispatched, false otherwise.
+   */
+  private boolean notifyWebViewOfBackPress() {
+    try {
+      WebView webView = this.getBridge().getWebView();
+      if (webView == null) {
+        Log.w(TAG, "WebView not available for back press handling");
+        return false;
+      }
+      
+      webView.post(new Runnable() {
+        @Override
+        public void run() {
+          String jsCode = "(function() {" +
+            "  var event = new CustomEvent('androidBackPress', { bubbles: true, cancelable: true });" +
+            "  document.dispatchEvent(event);" +
+            "})();";
+          webView.evaluateJavascript(jsCode, null);
+        }
+      });
+      
+      Log.d(TAG, "Back press event sent to web view");
+      return true;
+      
+    } catch (Exception e) {
+      Log.e(TAG, "Failed to notify web view of back press", e);
+      return false;
     }
   }
   

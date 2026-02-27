@@ -126,6 +126,10 @@ export interface QRGeneratorConfig {
   pixelSnap?: 'none' | 'floor' | 'round' | 'ceil';
   frameIndex?: number;
 
+  /** When true, skip expensive rendering features (halftone, gradient, jitter, scan gate)
+   *  for responsive interaction on Android. Full quality re-render follows after idle. */
+  fastPreview?: boolean;
+
   // Halftone settings
   htDot?: number;
   htCurve?: number;

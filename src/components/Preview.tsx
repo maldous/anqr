@@ -1,4 +1,4 @@
-import { AlertTriangle, Eye, Sparkles, Thermometer } from 'lucide-react';
+import { AlertTriangle, Eye, Sparkles, Thermometer, Zap } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DynamicTestId } from '@/components/ui/dynamic-testid';
 
@@ -28,6 +28,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     safetyWarnings,
     canvas,
     isPreparingAnimation,
+    isFastPreview,
   } = useQRGeneratorContext();
 
   // Show busy overlay while loading OR while preparing multi-frame animation OR during active rendering
@@ -369,6 +370,18 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                 data-rendering-state={renderingState}
                 data-testid={DynamicTestId.resolve('qr-preview', 'qr-preview')}
               >
+                {/* Fast-preview indicator badge (Android: during live interaction) */}
+                {isFastPreview && (
+                  <div
+                    className="absolute -bottom-2 -right-2 z-20 bg-amber-500/80 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm animate-in fade-in duration-150"
+                    title={t('preview.fastPreview', 'Fast preview')}
+                    role="status"
+                    aria-label={t('preview.fastPreview', 'Fast preview')}
+                  >
+                    <Zap className="h-2.5 w-2.5" aria-hidden="true" />
+                    <span>{t('preview.draft', 'Draft')}</span>
+                  </div>
+                )}
                 {/* Simulation indicator badge */}
                 {hasActiveSimulation && (
                   <div

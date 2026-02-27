@@ -45,12 +45,7 @@ import {
 
 type PageView = 'editor' | 'gallery' | 'analyze' | StaticPageType;
 type ModuleStyleOption = 'square' | 'rounded' | 'dots' | 'diamond' | 'connected';
-type BackButtonEvent = { canGoBack?: boolean };
 type CapacitorAppPlugin = {
-  addListener?: (
-    eventName: 'backButton',
-    listener: (event: BackButtonEvent) => void | Promise<void>
-  ) => Promise<{ remove: () => Promise<void> | void }> | { remove: () => Promise<void> | void };
   exitApp?: () => Promise<void> | void;
 };
 
@@ -193,51 +188,45 @@ function AppContent() {
     };
   }, []);
 
-  // Native Android back button: navigate within app first, then double-back to exit.
+  // Handle Android back press (hardware button + swipe-back gesture)
+  // OnBackPressedDispatcher in MainActivity.java intercepts all back presses
+  // and dispatches a custom 'androidBackPress' event to the web view.
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    const appPlugin = (
-      globalThis as typeof globalThis & {
-        Capacitor?: { Plugins?: { App?: CapacitorAppPlugin } };
-      }
-    ).Capacitor?.Plugins?.App;
-    if (!appPlugin?.addListener) return;
-
-    let listenerHandle: { remove: () => Promise<void> | void } | null = null;
-    let disposed = false;
-    void Promise.resolve(
-      appPlugin.addListener('backButton', async ({ canGoBack }: BackButtonEvent) => {
-        if (currentPage !== 'editor') {
-          navigateTo('editor');
-          return;
-        }
-
-        if (canGoBack) {
-          globalThis.history.back();
-          return;
-        }
-
-        const now = Date.now();
-        if (now - lastBackPressAtRef.current < 1500) {
-          await appPlugin.exitApp?.();
-          return;
-        }
-
-        lastBackPressAtRef.current = now;
-        await showNativeToast('Press back again to exit', 'short');
-      })
-    ).then((handle) => {
-      if (disposed) {
-        void handle.remove?.();
+    const handleAndroidBackPress = async () => {
+      // Navigate internally: gallery/analyze/static -> editor
+      if (currentPage !== 'editor') {
+        navigateTo('editor');
         return;
       }
-      listenerHandle = handle;
-    });
+
+      // In editor, try to go back in browser history
+      if (globalThis.history.length > 1) {
+        globalThis.history.back();
+        return;
+      }
+
+      // On editor with no history: double-back-to-exit (reuse same ref as hardware back handler)
+      const now = Date.now();
+      if (now - lastBackPressAtRef.current < 1500) {
+        const appPlugin = (
+          globalThis as typeof globalThis & {
+            Capacitor?: { Plugins?: { App?: CapacitorAppPlugin } };
+          }
+        ).Capacitor?.Plugins?.App;
+        await appPlugin?.exitApp?.();
+        return;
+      }
+      lastBackPressAtRef.current = now;
+      await showNativeToast('Press back again to exit', 'short');
+    };
+
+    // Listen for the custom event dispatched from native Android
+    document.addEventListener('androidBackPress', handleAndroidBackPress);
 
     return () => {
-      disposed = true;
-      void listenerHandle?.remove?.();
+      document.removeEventListener('androidBackPress', handleAndroidBackPress);
     };
   }, [currentPage, navigateTo]);
 
@@ -332,9 +321,18 @@ function AppContent() {
   // Takes store reference to avoid subscribing component to store changes
   const loadOverlayFromUrl = useCallback(
     async (url: string, store: ReturnType<typeof useQRStore.getState>) => {
+      // On native platforms, bundled assets (public/) are available locally.
+      // Convert remote anqr.link URLs to local paths to avoid cross-origin issues.
+      let fetchUrl = url;
+      if (Capacitor.isNativePlatform() && url.startsWith('https://anqr.link/')) {
+        const localPath = url.replace('https://anqr.link', '');
+        fetchUrl = `${globalThis.location.origin}${localPath}`;
+        log.debug('Resolved overlay to local path', { original: url, local: fetchUrl });
+      }
+
       // Validate that it's a proper URL
       try {
-        const parsed = new URL(url);
+        const parsed = new URL(fetchUrl);
         if (!parsed.protocol.startsWith('http')) {
           log.warn('Invalid overlay URL', { url, reason: 'must be http/https' });
           return;
@@ -345,8 +343,8 @@ function AppContent() {
       }
 
       try {
-        log.debug('Loading overlay from URL', { url });
-        const response = await fetch(url, { mode: 'cors' });
+        log.debug('Loading overlay from URL', { url: fetchUrl });
+        const response = await fetch(fetchUrl);
         if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
 
         const blob = await response.blob();

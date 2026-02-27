@@ -5,7 +5,6 @@
  * scripts/publish-gallery-showcase.ts -> src/data/gallery-showcase.generated.ts
  */
 
-import { Capacitor } from '@capacitor/core';
 import { generatedGallerySections } from '@/data/gallery-showcase.generated';
 
 export type GalleryCategory =
@@ -90,13 +89,8 @@ function buildGallerySearchParams(item: GalleryItem): URLSearchParams {
 }
 
 export function buildGalleryUrl(item: GalleryItem): string {
-  const baseUrl = getGalleryBaseUrl();
   const params = buildGallerySearchParams(item);
-
   const query = params.toString();
-  if (Capacitor.isNativePlatform()) {
-    return `${baseUrl}?${query}`;
-  }
   return `/?${query}`;
 }
 

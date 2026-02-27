@@ -51,10 +51,9 @@ export function drawModule(
 ): void {
   const { cornerRadius = 0, rotation = 0 } = options;
 
-  ctx.save();
-
-  // Apply rotation around module center if specified
+  // Only save/restore when rotation is non-zero (expensive on Android WebView)
   if (rotation !== 0) {
+    ctx.save();
     const centerX = x + size / 2;
     const centerY = y + size / 2;
     ctx.translate(centerX, centerY);
@@ -130,7 +129,9 @@ export function drawModule(
       break;
   }
 
-  ctx.restore();
+  if (rotation !== 0) {
+    ctx.restore();
+  }
 }
 
 /**

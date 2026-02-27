@@ -1817,3 +1817,5 @@
 1817	"Dither In"
 1818	"Overlay Pass-Through"
 1819	"Preservation Strength"
+1820	"Fast Preview"
+1821	"Draft"

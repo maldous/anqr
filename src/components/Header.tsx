@@ -51,7 +51,7 @@ import { isRtlLanguage, languages, loadLocale } from '@/i18n';
 import { createLogger } from '@/lib/logger';
 import { trackEvent } from '@/lib/zaraz';
 import { copyToClipboard } from '@/modules/browser-clipboard';
-import { prepareRewardedAd, showRewardedAd } from '@/modules/platform';
+import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { getShareableUrl } from '@/modules/share-links';
 import { type Tier, useQRStore } from '@/store/qr-store';
 
@@ -275,10 +275,10 @@ export function Header({
     document.documentElement.classList.toggle('dark', isDark);
   }, []);
 
-  // Prepare premium rewarded ad on mount (for native platforms)
+  // Prepare premium interstitial ad on mount (for native platforms)
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      prepareRewardedAd('premium');
+      prepareInterstitial('generation');
     }
   }, []);
 
@@ -292,23 +292,27 @@ export function Header({
         return;
       }
 
-      // Show rewarded ad
+      // Show interstitial ad (once) to unlock Pro
       setLoadingAd(true);
       try {
-        await prepareRewardedAd('premium');
-        const reward = await showRewardedAd('premium');
-        if (reward.rewarded) {
-          // User watched the ad, grant premium access
-          activatePremiumAccess();
-          setTier('professional');
-        }
-        // If reward is null, user didn't complete the ad - don't change tier
+        await prepareInterstitial('generation');
+        await showInterstitial('generation');
+        // Interstitial shown (user can dismiss immediately)
+        trackEvent('premium_interstitial_shown', { tier: 'professional' });
+        // Grant premium access after ad is shown (once)
+        activatePremiumAccess();
+        trackEvent('premium_activated', { tier: 'professional', source: 'interstitial' });
+        setTier('professional');
+        // Prepare next interstitial for future use
+        prepareInterstitial('generation');
       } catch (error) {
-        log.error('Failed to show rewarded ad', { error });
+        log.error('Failed to show interstitial ad', { error });
+        // Still grant access even if ad fails (fail open for UX)
+        activatePremiumAccess();
+        trackEvent('premium_activated', { tier: 'professional', source: 'fallback' });
+        setTier('professional');
       } finally {
         setLoadingAd(false);
-        // Prepare next ad
-        prepareRewardedAd('premium');
       }
     } else {
       // Web or non-professional tier - allow direct change

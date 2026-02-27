@@ -69,6 +69,8 @@ export {
   validateQRCode,
   validateQRCodeRobust,
 } from './scanner';
+// Worker-based validation (off main thread)
+export { terminateValidationWorker, validateInWorker } from './validation-worker-client';
 
 // Telemetry and statistics
 export {

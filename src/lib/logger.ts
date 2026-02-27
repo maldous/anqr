@@ -74,9 +74,22 @@
  *     QART, CORE, COLOR, GRADIENT
  */
 
-import * as Sentry from '@sentry/react';
 import loglevel from 'loglevel';
 import prefix from 'loglevel-plugin-prefix';
+
+// Sentry is only functional in the main browser thread (not in Web Workers).
+// Workers lack document/DOM; guard all Sentry calls behind this flag.
+const _isMainThread = typeof document !== 'undefined';
+
+// Lazy-loaded Sentry reference — null in Worker context to avoid importing
+// @sentry/react (which depends on DOM/React internals) into Worker bundles.
+// biome-ignore lint/suspicious/noExplicitAny: Sentry module shape varies across versions
+let _Sentry: any = null;
+if (_isMainThread) {
+  void import('@sentry/react').then((m) => {
+    _Sentry = m;
+  });
+}
 
 // ============================================================================
 // Standard Scope Prefixes - canonical list for all modules
@@ -341,6 +354,8 @@ export function filterLogsByLevel(levels: string[]): StructuredLogEntry[] {
  * @param filename - Optional filename (default: anqr-logs-{timestamp}.json)
  */
 export function saveLogs(filename?: string): void {
+  if (!_isMainThread) return;
+
   const logs = getStructuredLogs();
 
   if (logs.length === 0) {
@@ -373,6 +388,8 @@ export function saveLogs(filename?: string): void {
  * @param filename - Optional filename
  */
 export function saveFilteredLogs(scope: string, filename?: string): void {
+  if (!_isMainThread) return;
+
   const logs = filterLogs(scope);
 
   if (logs.length === 0) {
@@ -818,34 +835,43 @@ export function createLogger(scope: string): Logger {
     warn(message: string, context?: LogContext): void {
       const safeContext = emit('warn', message, context);
 
-      // Record as Sentry breadcrumb
-      Sentry.addBreadcrumb({
-        category: upperScope,
-        message,
-        level: 'warning',
-        data: safeContext as Record<string, unknown> | undefined,
-      });
+      // Record as Sentry breadcrumb (main thread only)
+      if (_Sentry) {
+        _Sentry.addBreadcrumb({
+          category: upperScope,
+          message,
+          level: 'warning',
+          data: safeContext as Record<string, unknown> | undefined,
+        });
+      }
     },
 
     error(message: string, context?: LogContext): void {
       const safeContext = emit('error', message, context);
 
-      // Send to Sentry as event
-      Sentry.withScope((sentryScope) => {
-        sentryScope.setTag('logger.scope', upperScope);
-        if (safeContext) {
-          sentryScope.setExtras(safeContext);
-        }
+      // Send to Sentry as event (main thread only)
+      if (_Sentry) {
+        _Sentry.withScope(
+          (sentryScope: {
+            setTag: (k: string, v: string) => void;
+            setExtra: (k: string, v: unknown) => void;
+            setExtras: (e: Record<string, unknown>) => void;
+          }) => {
+            sentryScope.setTag('logger.scope', upperScope);
+            if (safeContext) {
+              sentryScope.setExtras(safeContext);
+            }
 
-        // If context contains an Error, capture it; otherwise capture message
-        const errorObj = context?.error;
-        if (errorObj instanceof Error) {
-          sentryScope.setExtra('originalMessage', message);
-          Sentry.captureException(errorObj);
-        } else {
-          Sentry.captureMessage(`[${upperScope}] ${message}`, 'error');
-        }
-      });
+            const errorObj = context?.error;
+            if (errorObj instanceof Error) {
+              sentryScope.setExtra('originalMessage', message);
+              _Sentry.captureException(errorObj);
+            } else {
+              _Sentry.captureMessage(`[${upperScope}] ${message}`, 'error');
+            }
+          }
+        );
+      }
     },
   };
 }

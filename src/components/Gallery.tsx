@@ -35,6 +35,25 @@ import {
 import { trackEvent } from '@/lib/zaraz';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 
+// Session-level flag: show gallery interstitial only once per app session.
+// Module-level boolean provides a synchronous guard against race conditions
+// (e.g. rapid mount/unmount before the async showInterstitial resolves).
+// sessionStorage adds persistence across page navigations and hot reloads.
+let galleryInterstitialGuard = false;
+try {
+  galleryInterstitialGuard = sessionStorage.getItem('galleryInterstitialShown') === 'true';
+} catch {
+  // sessionStorage unavailable (e.g. some WebView configs)
+}
+const markGalleryInterstitialShown = () => {
+  galleryInterstitialGuard = true;
+  try {
+    sessionStorage.setItem('galleryInterstitialShown', 'true');
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 // Icon registry for gallery sections - only import icons actually used in gallery-items.ts
 const iconRegistry: Record<string, LucideIcon> = {
   QrCode,
@@ -307,18 +326,35 @@ export function Gallery({ filter }: GalleryProps) {
     trackEvent('gallery_view');
   }, []);
 
-  // Show interstitial ad when Gallery opens (on native apps)
+  // Show interstitial ad once per session when Gallery opens (on native apps)
   useEffect(() => {
+    if (galleryInterstitialGuard) return;
+    // Set the guard synchronously to prevent duplicate triggers on rapid remounts
+    galleryInterstitialGuard = true;
     let cancelled = false;
     const showGalleryInterstitial = async () => {
       await prepareInterstitial('gallery');
       if (!cancelled) {
-        await showInterstitial('gallery');
+        const shown = await showInterstitial('gallery');
+        if (shown) {
+          markGalleryInterstitialShown();
+        } else if (!cancelled) {
+          // Ad failed to show — allow retry on next mount
+          galleryInterstitialGuard = false;
+        }
       }
     };
     void showGalleryInterstitial();
     return () => {
       cancelled = true;
+      // If ad wasn't successfully shown, reset guard so next mount can retry
+      try {
+        if (sessionStorage.getItem('galleryInterstitialShown') !== 'true') {
+          galleryInterstitialGuard = false;
+        }
+      } catch {
+        galleryInterstitialGuard = false;
+      }
     };
   }, []);
 
