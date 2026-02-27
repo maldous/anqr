@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { createLogger } from '@/lib/logger';
 import { trackEvent } from '@/lib/zaraz';
 import {
@@ -43,7 +44,7 @@ import {
   type WatermarkPosition,
 } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
-import { type ValidationResult, validateQRCodeRobust } from '@/modules/qr-analyzer';
+import { type ValidationResult, validateInWorker } from '@/modules/qr-analyzer';
 import { generateFullQArt, generateFullQArtOptimal } from '@/modules/qr-art';
 import {
   canvasHashCache,
@@ -54,6 +55,9 @@ import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance
 const qrGenerator = new QRGenerator();
+
+// Native platform detection (cached at module level)
+const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 // Scoped logger for QR generation
 const log = createLogger('QRGEN');
@@ -178,6 +182,8 @@ interface UseQRGeneratorResult {
   // Validation
   validation: ValidationResult | null;
   isValidating: boolean;
+  // True when fast-preview mode is active (Android: during live interaction)
+  isFastPreview: boolean;
   // Animation frames for GIF export
   animationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
 }
@@ -824,15 +830,29 @@ function useQRGenerator(): UseQRGeneratorResult {
     safety.maxOverlayIntensityByEcc,
   ]);
 
-  // Debounce config changes to prevent excessive regeneration
-  // Short debounce (150ms) for style changes since content is already pre-debounced at 700ms
-  const debouncedConfig = useDebounce(config, 150);
+  // Debounce config changes to prevent excessive regeneration.
+  // On native (Android), use a two-tier debounce:
+  //  - Short debounce (50ms) for responsive fast-preview renders during interaction
+  //  - Longer debounce (300ms) to detect when interaction stops for full-quality re-render
+  // On web, both use 150ms (same reference once settled, no fast preview)
+  const primaryDebouncedConfig = useDebounce(config, IS_NATIVE_PLATFORM ? 50 : 150);
+  const settledConfig = useDebounce(config, IS_NATIVE_PLATFORM ? 300 : 150);
 
-  // Track when config changes but debounce hasn't settled yet
-  // NOTE: We intentionally do NOT track content pending here - the 700ms content debounce
-  // already prevents QR generation during typing, so we don't need to show a blur.
-  // Only show pending blur for style/config changes (which use the fast 150ms debounce).
-  const isConfigPending = config !== debouncedConfig;
+  // During active interaction on native, enable fast preview mode which skips
+  // expensive rendering features (halftone, gradient, jitter, scan gate retries).
+  // Once interaction stops and settledConfig catches up, fast preview is removed
+  // and a full-quality re-render is triggered automatically.
+  const debouncedConfig = useMemo(() => {
+    if (IS_NATIVE_PLATFORM && primaryDebouncedConfig !== settledConfig) {
+      return { ...primaryDebouncedConfig, fastPreview: true as const };
+    }
+    return primaryDebouncedConfig;
+  }, [primaryDebouncedConfig, settledConfig]);
+
+  // Track when config changes but debounce hasn't settled yet.
+  // Compare against primaryDebouncedConfig (not debouncedConfig which may have fastPreview added)
+  // so that fast-preview renders on native don't trigger the pending blur overlay.
+  const isConfigPending = config !== primaryDebouncedConfig;
 
   // Show pending state for style changes only (not for content typing)
   // Use a short delay to avoid flickering on rapid style changes
@@ -1538,21 +1558,30 @@ function useQRGenerator(): UseQRGeneratorResult {
       if (shouldValidate) {
         const validationRequestId = requestId;
         setIsValidating(true);
-        // Use setTimeout to not block the main thread
+        // Run validation in a Web Worker to keep the main thread free (especially on Android).
+        // Short delay lets the render paint before kicking off the decode.
+        const validationDelay = IS_NATIVE_PLATFORM ? 500 : 50;
         setTimeout(() => {
           if (generationRequestIdRef.current !== validationRequestId) {
+            setIsValidating(false);
             return;
           }
-          try {
-            const validationResult = validateQRCodeRobust(result!, effectiveConfig.content);
-            setValidation(validationResult);
-          } catch (err) {
-            log.error('Validation error', { error: err });
-            setValidation(null);
-          } finally {
-            setIsValidating(false);
-          }
-        }, 50);
+          validateInWorker(result!, effectiveConfig.content, IS_NATIVE_PLATFORM ? 1 : 3)
+            .then((validationResult) => {
+              if (generationRequestIdRef.current === validationRequestId) {
+                setValidation(validationResult);
+              }
+            })
+            .catch((err) => {
+              log.error('Validation error', { error: err });
+              if (generationRequestIdRef.current === validationRequestId) {
+                setValidation(null);
+              }
+            })
+            .finally(() => {
+              setIsValidating(false);
+            });
+        }, validationDelay);
       }
     } catch (err) {
       if (isStaleRequest()) return;
@@ -2917,6 +2946,10 @@ function useQRGenerator(): UseQRGeneratorResult {
     replaceAnimationFrames,
   ]);
 
+  // Fast-preview is active when the short debounce has fired but the settled
+  // debounce hasn't caught up yet (Android only).
+  const isFastPreview = IS_NATIVE_PLATFORM && primaryDebouncedConfig !== settledConfig;
+
   // Determine if we're still preparing animation
   // This covers: GIF overlays, static overlays with animation effects, and base QR animation effects
   const hasMultiFrameContent = (gifCompositor?.frameCount || 0) > 1 || gifFrames.length > 1;
@@ -2960,6 +2993,8 @@ function useQRGenerator(): UseQRGeneratorResult {
     // Validation
     validation,
     isValidating,
+    // Fast preview
+    isFastPreview,
     // Animation frames for GIF export
     animationFrames: animationFramesRef.current,
   };

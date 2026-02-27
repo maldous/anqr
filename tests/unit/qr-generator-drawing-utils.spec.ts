@@ -465,9 +465,10 @@ describe('drawModule', () => {
     const { drawModule } = await import('../../src/modules/qr-generator/drawing-primitives');
     const ctx = createMockCtx();
     drawModule(ctx, 0, 0, 10);
-    expect(ctx.save).toHaveBeenCalled();
+    // save/restore are skipped when rotation is 0 (performance optimisation)
+    expect(ctx.save).not.toHaveBeenCalled();
     expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 10, 10);
-    expect(ctx.restore).toHaveBeenCalled();
+    expect(ctx.restore).not.toHaveBeenCalled();
   });
 
   it('draws square for unknown style', async () => {

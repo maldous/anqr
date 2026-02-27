@@ -84,9 +84,23 @@ export const canvasHashCache = new WeakMap<HTMLCanvasElement, string>();
  * Clear all QR generator caches
  * Useful for testing or memory management
  */
+// Additional cache-clearing callbacks registered by other modules
+// (avoids circular imports: render-loop → color → utils → cache → render-loop)
+const _registeredCleanups: Array<() => void> = [];
+
+/**
+ * Register an additional cache-clearing callback.
+ * Called by modules that own private caches (render-loop, pixel-matrix-utils)
+ * to participate in clearQRCaches() without creating circular imports.
+ */
+export function registerCacheCleanup(fn: () => void): void {
+  _registeredCleanups.push(fn);
+}
+
 export function clearQRCaches(): void {
   alignmentCache.clear();
   overlayDataCache.clear();
   qrMatrixCache.clear();
+  for (const fn of _registeredCleanups) fn();
   // Note: canvasHashCache is a WeakMap, no need to clear - GC handles it
 }

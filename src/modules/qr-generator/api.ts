@@ -53,8 +53,10 @@ export const OVERLAY_API = [
 
 // Pixel matrix
 export const PIXEL_MATRIX_API = [
+  'clearBaseMatrixCache',
   'generatePixelDecisionMatrix',
   'getScaleFactor',
+  'clearFunctionalMapCache',
   'prepareUnifiedOverlayData',
 ] as const;
 

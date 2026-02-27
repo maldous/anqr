@@ -85,10 +85,11 @@ export {
   getScaleFactor,
   prepareUnifiedOverlayData,
 } from './pixel-matrix';
+export { clearBaseMatrixCache } from './pixel-matrix-utils';
 // Main QRGenerator class
 export { QRGenerator } from './qr-generator-class';
 // Module render loop
-export { renderModules } from './render-loop';
+export { clearFunctionalMapCache, renderModules } from './render-loop';
 export type { OverlayModeResult } from './render-modes';
 // Overlay mode rendering
 export { applyQROverlayMode, computeDarkFactor, computeLightBlend } from './render-modes';

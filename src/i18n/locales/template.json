@@ -1079,6 +1079,8 @@
     "animatedWebp": "1398"
   },
   "preview": {
+    "draft": "1821",
+    "fastPreview": "1820",
     "qrCodePreview": "867",
     "simulating": "868",
     "simulationActive": "869"

@@ -4,10 +4,29 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import { registerCacheCleanup } from './cache';
 import type { QRCodeObject } from './cache';
 import type { QRGeneratorConfig, RGBWithMeta } from './types';
 
 const _log = createLogger('GENERATE');
+
+// Last-value cache for the base QR matrix at a given scale.
+// During animation the QR content and scale stay constant across frames,
+// so this avoids re-allocating and re-filling large 2D arrays every frame.
+let _bmCachedQr: QRCodeObject | null = null;
+let _bmCachedScaledSize = 0;
+let _bmCachedScale = 0;
+let _bmCachedResult: { matrix: boolean[][]; colors: (RGBWithMeta | null)[][] } | null = null;
+
+export function clearBaseMatrixCache(): void {
+  _bmCachedQr = null;
+  _bmCachedScaledSize = 0;
+  _bmCachedScale = 0;
+  _bmCachedResult = null;
+}
+
+// Register with central cache clearer (avoids circular import from cache.ts)
+registerCacheCleanup(clearBaseMatrixCache);
 
 /**
  * Get scale factor based on overlay mode
@@ -70,14 +89,24 @@ export function getEffectiveIntensity(config: QRGeneratorConfig): {
 }
 
 /**
- * Generate base QR matrix at specified scale
+ * Generate base QR matrix at specified scale.
+ * Result is cached across calls with the same QR object and scale
+ * (avoids re-allocating large 2D arrays on every animation frame).
  */
 export function generateBaseMatrix(
   qr: QRCodeObject,
   scaledSize: number,
   scale: number
 ): { matrix: boolean[][]; colors: (RGBWithMeta | null)[][] } {
-  const _moduleCount = scaledSize / scale;
+  if (
+    _bmCachedResult !== null &&
+    qr === _bmCachedQr &&
+    scaledSize === _bmCachedScaledSize &&
+    scale === _bmCachedScale
+  ) {
+    return _bmCachedResult;
+  }
+
   const matrix: boolean[][] = [];
   const colors: (RGBWithMeta | null)[][] = [];
 
@@ -94,5 +123,10 @@ export function generateBaseMatrix(
     }
   }
 
-  return { matrix, colors };
+  const result = { matrix, colors };
+  _bmCachedQr = qr;
+  _bmCachedScaledSize = scaledSize;
+  _bmCachedScale = scale;
+  _bmCachedResult = result;
+  return result;
 }

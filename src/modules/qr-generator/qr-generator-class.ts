@@ -231,7 +231,8 @@ export class QRGenerator {
   }
 
   /**
-   * Draw finder and alignment patterns
+   * Draw finder and alignment patterns, returning a flat skip mask.
+   * The Uint8Array is indexed by (row * moduleCount + col); non-zero = already drawn.
    */
   private drawStructuralPatterns(
     ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -241,9 +242,8 @@ export class QRGenerator {
     margin: number,
     overlayData: unknown,
     version: number
-  ): { drawnFinderPatterns: Set<string>; drawnAlignmentPatterns: Set<string> } {
-    const drawnFinderPatterns = new Set<string>();
-    const drawnAlignmentPatterns = new Set<string>();
+  ): Uint8Array {
+    const skipMask = new Uint8Array(moduleCount * moduleCount);
 
     // Only draw finder patterns separately if preserveFinders is true OR there's no overlay
     const shouldDrawFindersFirst = config.preserveFinders !== false || !overlayData;
@@ -263,7 +263,7 @@ export class QRGenerator {
         // Mark all modules in this finder pattern as drawn
         for (let r = pos.row; r < pos.row + 7; r++) {
           for (let c = pos.col; c < pos.col + 7; c++) {
-            drawnFinderPatterns.add(`${r},${c}`);
+            skipMask[r * moduleCount + c] = 1;
           }
         }
       }
@@ -290,13 +290,13 @@ export class QRGenerator {
         // Mark all modules in this alignment pattern as drawn
         for (let r = pos.row - 2; r <= pos.row + 2; r++) {
           for (let c = pos.col - 2; c <= pos.col + 2; c++) {
-            drawnAlignmentPatterns.add(`${r},${c}`);
+            skipMask[r * moduleCount + c] = 1;
           }
         }
       }
     }
 
-    return { drawnFinderPatterns, drawnAlignmentPatterns };
+    return skipMask;
   }
 
   async generate(
@@ -347,7 +347,7 @@ export class QRGenerator {
       filterContrast: config.filterContrast,
     });
 
-    if (processedOverlayCanvas && needsPreprocessing) {
+    if (processedOverlayCanvas && needsPreprocessing && !config.fastPreview) {
       log.trace('Preprocessing overlay', {
         overlayMode: config.overlayMode,
         colorMode: config.colorMode,
@@ -455,6 +455,11 @@ export class QRGenerator {
           ) => void,
           pool.release.bind(pool)
         );
+
+      // Fast preview: single render attempt, skip scan gate retry loop entirely
+      if (effectiveConfig.fastPreview) {
+        return await renderScaled(effectiveConfig);
+      }
 
       if (
         effectiveConfig.overlayMode === 'dithered' ||
@@ -1194,15 +1199,15 @@ export class QRGenerator {
     // Get version for pattern detection
     const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-    // Create gradient fill if configured
-    const gradientFill = createGradientFill(ctx, config, size);
-    const useGradient = config.gradient && config.gradient.type !== 'none';
+    // Create gradient fill if configured (skipped in fast preview for performance)
+    const gradientFill = config.fastPreview ? null : createGradientFill(ctx, config, size);
+    const useGradient = !config.fastPreview && config.gradient && config.gradient.type !== 'none';
 
     // =======================================================================
     // STAGE 4: DRAW STRUCTURAL PATTERNS
     // =======================================================================
 
-    const { drawnFinderPatterns, drawnAlignmentPatterns } = this.drawStructuralPatterns(
+    const skipMask = this.drawStructuralPatterns(
       ctx,
       config,
       moduleCount,
@@ -1225,8 +1230,7 @@ export class QRGenerator {
       overlayData,
       ditherPattern,
       effectiveIntensity,
-      drawnFinderPatterns,
-      drawnAlignmentPatterns,
+      skipMask,
       version,
       gradientFill,
       useGradient ?? false
@@ -1359,14 +1363,14 @@ export class QRGenerator {
     // Draw frame background
     drawFrameBackground(ctx, size, moduleSize, margin, effectiveConfig);
 
-    // Create gradient fill if configured
-    const gradientFill = createGradientFill(ctx, effectiveConfig, size);
-    const useGradient = config.gradient && config.gradient.type !== 'none';
+    // Create gradient fill if configured (skipped in fast preview for performance)
+    const gradientFill = config.fastPreview ? null : createGradientFill(ctx, effectiveConfig, size);
+    const useGradient = !config.fastPreview && config.gradient && config.gradient.type !== 'none';
 
     // =======================================================================
     // STAGE 4: DRAW STRUCTURAL PATTERNS
     // =======================================================================
-    const { drawnFinderPatterns, drawnAlignmentPatterns } = this.drawStructuralPatterns(
+    const skipMask = this.drawStructuralPatterns(
       ctx,
       effectiveConfig,
       moduleCount,
@@ -1389,8 +1393,7 @@ export class QRGenerator {
       null, // No overlay data
       null, // No dither pattern - use qr.isDark() which reads from our matrix
       0, // No effective intensity
-      drawnFinderPatterns,
-      drawnAlignmentPatterns,
+      skipMask,
       version,
       gradientFill,
       useGradient ?? false
