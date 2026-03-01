@@ -294,3 +294,15 @@
   - `npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "king gif"` ✅
   - `npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "santa output"` ✅
   - `npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "dance gif first-frame"` ✅
+- GIF render performance optimization (quality-preserving):
+  - `src/modules/qr-generator/qr-generator-class.ts` now uses a compact attempt ladder for animated preview frames (keep cached patch + first three base attempts only, deduplicated).
+  - Animated preview frames now cap rescue patch evaluation to the first 4 patches instead of sweeping the full rescue list.
+  - Decode validation is still executed per frame; only fallback breadth was reduced.
+  - Measured on `keeps sampled animated king gif frames decodable in preview scan-gate profile`:
+    - Before: `elapsed=0:17.16` (`tests 15.85s`)
+    - After: `elapsed=0:10.92` (`tests 9.60s`)
+    - Improvement: ~36% faster wall time.
+- Verification run for GIF regression safety after optimization:
+  - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps sampled animated king gif frames decodable in preview scan-gate profile"` ✅
+  - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps dithered king gif first-frame decodable in preview scan-gate profile"` ✅
+  - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps dithered dance gif first-frame decodable in preview scan-gate profile"` ✅
