@@ -41,7 +41,7 @@ export async function generateStandardMatrix(
   }
 
   // Normalize colors
-  const colors = normalizeColors(overlayData.colors, moduleCount);
+  const colors = normalizeColors(overlayData, moduleCount);
 
   return {
     matrix,

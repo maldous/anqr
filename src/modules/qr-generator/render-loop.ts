@@ -12,6 +12,7 @@
 import { registerCacheCleanup } from './cache';
 import { applyPaletteColor, applyPerModuleColor, ensureContrast } from './color';
 import { drawHalftoneModule, drawModule, drawTimingModule } from './drawing';
+import { getOverlayBrightness, getOverlayColorPacked } from './overlay-data-packed';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { applyQROverlayMode } from './render-modes';
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig } from './types';
@@ -388,13 +389,13 @@ export function renderModules(
       let halftoneBrightness = 0.5;
       // Draw dark modules always; draw light modules only when background is transparent
       let shouldDrawCell = isDark || needsExplicitLightModules;
+      const overlayBrightness = hasOverlayData ? getOverlayBrightness(overlayData, row, col) : 0.5;
 
       if (applyOverlay) {
-        const brightness = (overlayData as number[][])[row][col];
         const modeResult = applyQROverlayMode(
           config.overlayMode,
           isDark,
-          brightness,
+          overlayBrightness,
           overlayData!,
           row,
           col,
@@ -438,13 +439,12 @@ export function renderModules(
         }
 
         // Apply palette coloring if palette is provided
-        const paletteBrightness = (overlayData as number[][])?.[row]?.[col] ?? 0.5;
         if (isDark && hasPalette) {
           finalModuleColor = applyPaletteColor(
             row,
             col,
             moduleCount,
-            paletteBrightness,
+            overlayBrightness,
             config.palette!,
             config
           );
@@ -505,21 +505,24 @@ export function renderModules(
           // In halftone-dithered mode, paint a color backdrop first so the
           // source image remains visible behind variable-size dots.
           if (overlayModeIsHalftoneDithered) {
-            const cellColor = (overlayData as OverlayData | null)?.colors?.[row]?.[col];
+            const cellColor = getOverlayColorPacked(overlayData, row, col);
             if (cellColor) {
+              const cellR = (cellColor >> 16) & 0xff;
+              const cellG = (cellColor >> 8) & 0xff;
+              const cellB = cellColor & 0xff;
               if (isDark) {
                 // Dark QR modules: keep backdrop moderately dark for contrast.
                 const darkBackdrop = 0.5;
-                const backR = Math.round(cellColor.r * darkBackdrop);
-                const backG = Math.round(cellColor.g * darkBackdrop);
-                const backB = Math.round(cellColor.b * darkBackdrop);
+                const backR = Math.round(cellR * darkBackdrop);
+                const backG = Math.round(cellG * darkBackdrop);
+                const backB = Math.round(cellB * darkBackdrop);
                 setFillStyle(`rgb(${backR},${backG},${backB})`);
               } else {
                 // Light QR modules: brighten backdrop to preserve scan-safe separation.
                 const lightBlend = 0.46;
-                const backR = Math.round(cellColor.r + (255 - cellColor.r) * lightBlend);
-                const backG = Math.round(cellColor.g + (255 - cellColor.g) * lightBlend);
-                const backB = Math.round(cellColor.b + (255 - cellColor.b) * lightBlend);
+                const backR = Math.round(cellR + (255 - cellR) * lightBlend);
+                const backG = Math.round(cellG + (255 - cellG) * lightBlend);
+                const backB = Math.round(cellB + (255 - cellB) * lightBlend);
                 setFillStyle(`rgb(${backR},${backG},${backB})`);
               }
               ctx.fillRect(drawX, drawY, adjustedSize, adjustedSize);

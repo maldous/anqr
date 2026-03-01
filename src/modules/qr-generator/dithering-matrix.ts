@@ -27,6 +27,7 @@ import {
 } from './dithering-constants';
 import { distributeError } from './dithering-error';
 import { getDiffusionKernel } from './dithering-kernels';
+import { getOverlayBrightness } from './overlay-data-packed';
 import type { OverlayData, QRGeneratorConfig } from './types';
 
 const log = createLogger('GENERATE');
@@ -40,7 +41,7 @@ function detectBWFromOverlayData(overlayData: OverlayData, moduleCount: number):
 
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
-      const brightness = overlayData[row]?.[col] ?? 0.5;
+      const brightness = getOverlayBrightness(overlayData, row, col);
       // brightness is 0-1, convert to 0-255 for histogram
       const gray = Math.floor(brightness * 255);
       const bucket = Math.min(HISTOGRAM_BUCKETS - 1, gray >> BUCKET_SHIFT);
@@ -197,7 +198,7 @@ export function applyDitherToMatrix(
         continue;
       }
 
-      const brightness = overlayData[row]?.[col] ?? 0.5;
+      const brightness = getOverlayBrightness(overlayData, row, col);
       const originalValue = qrIsDark ? 1 : 0;
       const error = errors[row][col] || 0;
 
