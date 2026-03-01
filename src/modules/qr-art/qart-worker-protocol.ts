@@ -2,7 +2,7 @@ import type { ECCLevel } from './bit-mapping';
 
 export type QArtWorkerPerformanceProfile = 'quality' | 'balanced';
 
-export interface QArtWorkerGeneratePayload {
+interface QArtWorkerBasePayload {
   data: string;
   ecc: ECCLevel;
   version: number;
@@ -15,7 +15,16 @@ export interface QArtWorkerGeneratePayload {
   performanceProfile?: QArtWorkerPerformanceProfile;
   renderConfig?: Record<string, unknown>;
   renderInWorker?: boolean;
+}
+
+export interface QArtWorkerGenerateInput extends QArtWorkerBasePayload {
   targetImage: ImageData;
+}
+
+export interface QArtWorkerGeneratePayload extends QArtWorkerBasePayload {
+  targetImageWidth: number;
+  targetImageHeight: number;
+  targetImagePixels: Uint8ClampedArray;
 }
 
 export interface QArtWorkerResultPayload {

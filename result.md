@@ -13,3 +13,7 @@
 - Implemented item 5 direction (`[HUGE][CPU+MEM]` packed matrix retention): removed per-generation unpack for worker-rendered QR-Art previews and now keep packed worker matrix in `qrPackedMatrixRef`.
 - Packed matrix is expanded only on demand during true-vector SVG export, avoiding immediate `Uint8Array -> boolean[][]` expansion in the preview hot path.
 - Implemented item 22 (`[BIG][CPU]`): replaced `sanitizeQArtRenderConfig` structuredClone/JSON fallback with a manual plain-data copier to avoid JSON stringify/parse overhead on Android WebView.
+- Implemented item 8 (`[HUGE][CPU+MEM]` transferable worker payloads):
+  - Validation worker now receives `{ width, height, pixels }` instead of cloned `ImageData` objects; reconstructs `ImageData` in worker.
+  - QR-Art worker protocol now receives raw transferable pixel payload (`targetImageWidth/Height/Pixels`) and reconstructs `ImageData` in worker.
+  - Goal: reduce structured-clone overhead and GC churn in worker messaging paths.

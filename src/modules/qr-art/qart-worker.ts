@@ -91,9 +91,19 @@ async function handleGenerate(message: QArtWorkerGenerateRequest): Promise<void>
   };
 
   try {
+    const targetImagePixels = new Uint8ClampedArray(
+      payload.targetImagePixels.buffer as ArrayBuffer,
+      payload.targetImagePixels.byteOffset,
+      payload.targetImagePixels.byteLength
+    );
+    const targetImage = new ImageData(
+      targetImagePixels,
+      payload.targetImageWidth,
+      payload.targetImageHeight
+    );
     const sharedConfig = {
       data: payload.data,
-      targetImage: payload.targetImage,
+      targetImage,
       version: payload.version,
       ecc: payload.ecc,
       strictSuffix: payload.strictSuffix ?? true,
