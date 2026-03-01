@@ -2833,6 +2833,8 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     let patternScratchA: HTMLCanvasElement | null = null;
     let patternScratchB: HTMLCanvasElement | null = null;
+    let temporalScratchA: HTMLCanvasElement | null = null;
+    let temporalScratchB: HTMLCanvasElement | null = null;
     const getPatternScratchCanvas = (
       slot: 0 | 1,
       width: number,
@@ -2847,6 +2849,27 @@ function useQRGenerator(): UseQRGeneratorResult {
           patternScratchA = created;
         } else {
           patternScratchB = created;
+        }
+        return created;
+      }
+      if (current.width !== width) current.width = width;
+      if (current.height !== height) current.height = height;
+      return current;
+    };
+    const getTemporalScratchCanvas = (
+      slot: 0 | 1,
+      width: number,
+      height: number
+    ): HTMLCanvasElement => {
+      const current = slot === 0 ? temporalScratchA : temporalScratchB;
+      if (!current) {
+        const created = document.createElement('canvas');
+        created.width = width;
+        created.height = height;
+        if (slot === 0) {
+          temporalScratchA = created;
+        } else {
+          temporalScratchB = created;
         }
         return created;
       }
@@ -3462,7 +3485,12 @@ function useQRGenerator(): UseQRGeneratorResult {
                 animation.seed
               );
               // applyTemporalNoiseToCanvas accepts union type and returns union type
-              overlayToUse = applyTemporalNoiseToCanvas(processedOverlay, temporalOffset, 0.008);
+              overlayToUse = applyTemporalNoiseToCanvas(
+                processedOverlay,
+                temporalOffset,
+                0.008,
+                getTemporalScratchCanvas((frameIdx % 2) as 0 | 1, processedOverlay.width, processedOverlay.height)
+              );
             }
 
             const frameConfig = {
@@ -3504,7 +3532,8 @@ function useQRGenerator(): UseQRGeneratorResult {
               processedOverlay = applyTemporalNoiseToCanvas(
                 processedOverlay,
                 temporalOffset,
-                0.008
+                0.008,
+                getTemporalScratchCanvas((frameIdx % 2) as 0 | 1, processedOverlay.width, processedOverlay.height)
               );
             }
 

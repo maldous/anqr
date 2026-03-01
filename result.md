@@ -61,3 +61,6 @@
 - Implemented item 16 direction (`[HUGE][CPU+MEM]` reuse animation ImageData buffers):
   - `src/modules/animation/animation-patterns.ts` now reuses a single frame `ImageData` buffer when generating pattern frames instead of allocating `new ImageData(new Uint8ClampedArray(...))` per frame.
   - Interpolation now preloads frame pixel buffers once and reuses a shared blend `ImageData` output buffer, removing repeated per-output-frame `getImageData` allocations in the blend path.
+- Implemented item 10/16 direction (`[HUGE][CPU+MEM]` temporal dithering canvas reuse):
+  - Extended `applyTemporalNoiseToCanvas` (`src/modules/dither-algorithms/temporal.ts`) with an optional target canvas so callers can reuse a preallocated surface.
+  - Updated `useQRGenerator` animation generation to keep two reusable temporal scratch canvases and alternate them across frames, removing per-frame temporary canvas allocation in both compositor and non-compositor temporal-dither paths.
