@@ -105,3 +105,11 @@
 - Implemented item 23 direction (`[BIG][CPU]` animation worker bitmap canvas reuse):
   - In artwork animation generation (`useQRGenerator`), worker-returned `ImageBitmap` frames now draw into alternating reusable scratch canvases instead of allocating a new canvas per frame.
   - Added `getArtworkBitmapScratchCanvas(...)` helper and wired it into `imageBitmapToCanvas(...)` for worker bitmap results.
+- Implemented item 32 direction (`[BIG][CPU]` cached functional map usage in scaled render):
+  - Added cached per-configuration functional pattern map in `src/modules/qr-generator/scaled-render.ts`.
+  - Replaced repeated structural pattern function checks in hot loops with bit-flag lookups for:
+    - force-binary function module handling,
+    - pattern contrast boost selection,
+    - module-style masking structural skip path,
+    - format/version preservation pass.
+  - Removed repeated per-cell `isLocked(...)` checks in this path by using precomputed flags.
