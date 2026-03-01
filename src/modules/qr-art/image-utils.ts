@@ -4,12 +4,13 @@
  * Utilities for mapping target images to QR module values.
  * Extracted to its own file to avoid circular imports.
  */
+import { rgbToLumaLinear } from '../core';
 
 /**
  * Map an image to target pixel values with supersampling for better accuracy
  */
 export interface MapImageToTargetsOptions {
-  supersampleLevel?: 1 | 2;
+  supersampleLevel?: 1 | 2 | 3;
   cleanupSpeckles?: boolean;
   maxDarkSpeckleArea?: number;
   maxLightHoleArea?: number;
@@ -200,7 +201,8 @@ export function mapImageToTargetsSupersampled(
   const maxX = Math.max(0, imageData.width - 1);
   const maxY = Math.max(0, imageData.height - 1);
 
-  const supersampleLevel = options?.supersampleLevel === 1 ? 1 : 2;
+  const supersampleLevel =
+    options?.supersampleLevel === 1 ? 1 : options?.supersampleLevel === 3 ? 3 : 2;
   const cleanupSpeckles = options?.cleanupSpeckles !== false;
   const maxDarkSpeckleArea =
     typeof options?.maxDarkSpeckleArea === 'number'
@@ -213,12 +215,24 @@ export function mapImageToTargetsSupersampled(
   const samplePoints =
     supersampleLevel === 1
       ? [{ dx: 0.5, dy: 0.5 }]
-      : [
-          { dx: 0.25, dy: 0.25 },
-          { dx: 0.75, dy: 0.25 },
-          { dx: 0.25, dy: 0.75 },
-          { dx: 0.75, dy: 0.75 },
-        ];
+      : supersampleLevel === 3
+        ? [
+            { dx: 1 / 6, dy: 1 / 6 },
+            { dx: 0.5, dy: 1 / 6 },
+            { dx: 5 / 6, dy: 1 / 6 },
+            { dx: 1 / 6, dy: 0.5 },
+            { dx: 0.5, dy: 0.5 },
+            { dx: 5 / 6, dy: 0.5 },
+            { dx: 1 / 6, dy: 5 / 6 },
+            { dx: 0.5, dy: 5 / 6 },
+            { dx: 5 / 6, dy: 5 / 6 },
+          ]
+        : [
+            { dx: 0.25, dy: 0.25 },
+            { dx: 0.75, dy: 0.25 },
+            { dx: 0.25, dy: 0.75 },
+            { dx: 0.75, dy: 0.75 },
+          ];
 
   for (let row = 0; row < moduleCount; row++) {
     targets[row] = [];
@@ -228,6 +242,8 @@ export function mapImageToTargetsSupersampled(
       let totalGray = 0;
       let minGray = 255;
       let maxGray = 0;
+      let sobelX = 0;
+      let sobelY = 0;
 
       // Sample multiple points within the module
       for (const { dx, dy } of samplePoints) {
@@ -236,15 +252,58 @@ export function mapImageToTargetsSupersampled(
         const idx = (imgY * imageData.width + imgX) * 4;
 
         const rawGray =
-          (imageData.data[idx] + imageData.data[idx + 1] + imageData.data[idx + 2]) / 3;
+          rgbToLumaLinear(imageData.data[idx], imageData.data[idx + 1], imageData.data[idx + 2]) *
+          255;
         const gray = Number.isFinite(rawGray) ? rawGray : 255;
         totalGray += gray;
         minGray = Math.min(minGray, gray);
         maxGray = Math.max(maxGray, gray);
+
+        // Accumulate Sobel-style edge proxy directly at module sampling points.
+        if (supersampleLevel >= 2) {
+          const nx = Math.max(0, Math.min(maxX, imgX + 1));
+          const px = Math.max(0, Math.min(maxX, imgX - 1));
+          const ny = Math.max(0, Math.min(maxY, imgY + 1));
+          const py = Math.max(0, Math.min(maxY, imgY - 1));
+
+          const idxPx = (imgY * imageData.width + px) * 4;
+          const idxNx = (imgY * imageData.width + nx) * 4;
+          const idxPy = (py * imageData.width + imgX) * 4;
+          const idxNy = (ny * imageData.width + imgX) * 4;
+
+          const lPx =
+            rgbToLumaLinear(
+              imageData.data[idxPx],
+              imageData.data[idxPx + 1],
+              imageData.data[idxPx + 2]
+            ) * 255;
+          const lNx =
+            rgbToLumaLinear(
+              imageData.data[idxNx],
+              imageData.data[idxNx + 1],
+              imageData.data[idxNx + 2]
+            ) * 255;
+          const lPy =
+            rgbToLumaLinear(
+              imageData.data[idxPy],
+              imageData.data[idxPy + 1],
+              imageData.data[idxPy + 2]
+            ) * 255;
+          const lNy =
+            rgbToLumaLinear(
+              imageData.data[idxNy],
+              imageData.data[idxNy + 1],
+              imageData.data[idxNy + 2]
+            ) * 255;
+
+          sobelX += lNx - lPx;
+          sobelY += lNy - lPy;
+        }
       }
 
       const avgGray = totalGray / samplePoints.length;
       const contrast = maxGray - minGray;
+      const edgeMagnitude = Math.min(255, Math.hypot(sobelX, sobelY));
 
       // Target is dark if average gray is below threshold
       targets[row][col] = avgGray < threshold;
@@ -253,7 +312,11 @@ export function mapImageToTargetsSupersampled(
       // High contrast areas and areas far from threshold are more important
       const distanceFromThreshold = Math.abs(avgGray - threshold) / 128;
       const contrastBoost = Math.min(1, contrast / 100);
-      importance[row][col] = Math.min(1, distanceFromThreshold + contrastBoost * 0.3);
+      const edgeBoost = Math.min(1, edgeMagnitude / 220);
+      importance[row][col] = Math.min(
+        1,
+        distanceFromThreshold * 0.72 + contrastBoost * 0.18 + edgeBoost * 0.36
+      );
     }
   }
 

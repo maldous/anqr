@@ -23,8 +23,10 @@ const _log = createLogger('CORE');
 export {
   alphaBlend,
   blendColors,
+  blendColorsLinear,
   // Blending
   blendRgb,
+  blendRgbLinear,
   getContrastRatio,
   // Contrast
   getRelativeLuminance,
@@ -47,8 +49,11 @@ export {
   rgbToHex,
   rgbToHsl,
   rgbToHslTuple,
+  rgbToLumaLinear,
   rgbToString,
   screenBlend,
+  srgbToLinear01,
+  linearToSrgb8,
 } from './color';
 // Contrast utilities
 export { adjustForContrast, meetsContrastAA, meetsContrastAAA } from './contrast';

@@ -5,7 +5,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { parseColor, rgbToGray } from '../core';
+import { parseColor, rgbToLumaLinear } from '../core';
 import {
   applyFilters,
   type ColorMode,
@@ -48,7 +48,7 @@ export function detectBimodalBW(imageData: ImageData): boolean {
   const histogram = new Int32Array(HISTOGRAM_BUCKETS);
 
   for (let i = 0; i < data.length; i += 4) {
-    const gray = rgbToGray(data[i], data[i + 1], data[i + 2]);
+    const gray = Math.floor(rgbToLumaLinear(data[i], data[i + 1], data[i + 2]) * 255);
     const bucket = Math.min(HISTOGRAM_BUCKETS - 1, gray >> BUCKET_SHIFT);
     histogram[bucket]++;
   }

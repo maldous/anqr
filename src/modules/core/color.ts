@@ -147,6 +147,27 @@ export function rgbToGray(r: number, g: number, b: number): number {
   return r * 0.299 + g * 0.587 + b * 0.114;
 }
 
+/** Convert 8-bit sRGB channel to linear-light 0..1 channel */
+export function srgbToLinear01(channel: number): number {
+  const normalized = Math.max(0, Math.min(1, channel / 255));
+  return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+}
+
+/** Convert linear-light 0..1 channel to 8-bit sRGB channel */
+export function linearToSrgb8(linear: number): number {
+  const clamped = Math.max(0, Math.min(1, linear));
+  const encoded = clamped <= 0.0031308 ? clamped * 12.92 : 1.055 * clamped ** (1 / 2.4) - 0.055;
+  return Math.round(encoded * 255);
+}
+
+/** Convert sRGB RGB to linear-light relative luminance in 0..1 */
+export function rgbToLumaLinear(r: number, g: number, b: number): number {
+  const lr = srgbToLinear01(r);
+  const lg = srgbToLinear01(g);
+  const lb = srgbToLinear01(b);
+  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+}
+
 /** Convert RGB to HSL */
 export function rgbToHsl(r: number, g: number, b: number): HSL {
   r /= 255;
@@ -244,6 +265,23 @@ export function blendRgb(c1: RGB, c2: RGB, ratio: number): RGB {
   };
 }
 
+/** Blend RGB values in linear-light space with ratio (0 = c1, 1 = c2) */
+export function blendRgbLinear(c1: RGB, c2: RGB, ratio: number): RGB {
+  const t = Math.max(0, Math.min(1, ratio));
+  const l1r = srgbToLinear01(c1.r);
+  const l1g = srgbToLinear01(c1.g);
+  const l1b = srgbToLinear01(c1.b);
+  const l2r = srgbToLinear01(c2.r);
+  const l2g = srgbToLinear01(c2.g);
+  const l2b = srgbToLinear01(c2.b);
+
+  return {
+    r: linearToSrgb8(l1r + (l2r - l1r) * t),
+    g: linearToSrgb8(l1g + (l2g - l1g) * t),
+    b: linearToSrgb8(l1b + (l2b - l1b) * t),
+  };
+}
+
 /** Blend two color strings with given ratio */
 export function blendColors(color1: string, color2: string, ratio: number): string {
   const c1 = parseColor(color1) ?? BLACK;
@@ -258,6 +296,19 @@ export function blendColors(color1: string, color2: string, ratio: number): stri
     return rgbaToString(r, g, b, a);
   }
   return rgbToHex(r, g, b);
+}
+
+/** Blend two color strings in linear-light space with given ratio */
+export function blendColorsLinear(color1: string, color2: string, ratio: number): string {
+  const c1 = parseColor(color1) ?? BLACK;
+  const c2 = parseColor(color2) ?? BLACK;
+  const t = Math.max(0, Math.min(1, ratio));
+  const rgb = blendRgbLinear(c1, c2, t);
+  const a = c1.a + (c2.a - c1.a) * t;
+  if (a < 1) {
+    return rgbaToString(rgb.r, rgb.g, rgb.b, a);
+  }
+  return rgbToHex(rgb.r, rgb.g, rgb.b);
 }
 
 /** Apply alpha over blending (c1 over c2) */
@@ -314,16 +365,7 @@ export function overlayBlend(c1: RGB, c2: RGB): RGB {
 /** Calculate relative luminance for WCAG contrast */
 export function getRelativeLuminance(color: RGB | string): number {
   const c = typeof color === 'string' ? (parseColor(color) ?? BLACK) : color;
-
-  const rsRGB = c.r / 255;
-  const gsRGB = c.g / 255;
-  const bsRGB = c.b / 255;
-
-  const r = rsRGB <= 0.03928 ? rsRGB / 12.92 : ((rsRGB + 0.055) / 1.055) ** 2.4;
-  const g = gsRGB <= 0.03928 ? gsRGB / 12.92 : ((gsRGB + 0.055) / 1.055) ** 2.4;
-  const b = bsRGB <= 0.03928 ? bsRGB / 12.92 : ((bsRGB + 0.055) / 1.055) ** 2.4;
-
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return rgbToLumaLinear(c.r, c.g, c.b);
 }
 
 /** Calculate WCAG contrast ratio between two colors */

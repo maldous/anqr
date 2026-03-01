@@ -14,7 +14,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { rgbToGray } from '../core';
+import { rgbToLumaLinear } from '../core';
 import {
   createRNG,
   generateBlueNoiseTile,
@@ -232,7 +232,7 @@ async function generateBWFirstMatrix(
     let rOut = gray + (srcR - gray) * chromaScale;
     let gOut = gray + (srcG - gray) * chromaScale;
     let bOut = gray + (srcB - gray) * chromaScale;
-    const currentShade = rgbToGray(clampByte(rOut), clampByte(gOut), clampByte(bOut));
+    const currentShade = rgbToLumaLinear(clampByte(rOut), clampByte(gOut), clampByte(bOut)) * 255;
     const delta = shade - currentShade;
     rOut += delta;
     gOut += delta;
@@ -267,7 +267,7 @@ async function generateBWFirstMatrix(
       matrixBits[sampleIdx] = qrIsDark ? 1 : 0;
 
       // Calculate overlay brightness (0 = black, 1 = white)
-      let overlayBrightness = rgbToGray(r, g, b) / 255;
+      let overlayBrightness = rgbToLumaLinear(r, g, b);
 
       // Apply contrast curve to enhance spiral visibility
       // For dark overlay regions, make them darker; for bright regions, make them brighter
@@ -348,7 +348,7 @@ async function generateBWFirstMatrix(
 }
 
 function luma01(r: number, g: number, b: number): number {
-  return rgbToGray(r, g, b) / 255;
+  return rgbToLumaLinear(r, g, b);
 }
 
 function clamp01(x: number): number {

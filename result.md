@@ -137,3 +137,22 @@
 - Implemented item 37 direction (`[BIG][SERVER CPU]` avoid O(n) ETag hashing in `/api/qr`):
   - Updated `netlify/functions/qr.ts` to derive response ETag from deterministic render identity (`cacheKey`, `contentType`, degraded/full state, output byte length) instead of hashing full output buffers.
   - Preserves deterministic cache semantics while removing per-response buffer hash cost on large images/GIFs.
+- Started quality-focused rendering fidelity batch from `quality.txt` (safe baseline checkpoint):
+  - Added linear-light color primitives in `src/modules/core/color.ts` and exports in `src/modules/core/index.ts`:
+    - `srgbToLinear01`, `linearToSrgb8`, `rgbToLumaLinear`
+    - `blendRgbLinear`, `blendColorsLinear` (kept existing sRGB blend helpers intact)
+  - Switched artifact luminance sampling to linear-light in key preprocessing paths:
+    - `src/modules/qr-generator/overlay-data.ts` (overlay brightness map generation)
+    - `src/modules/qr-generator/filters-preprocess.ts` (bimodal B&W histogram detection)
+    - `src/modules/qr-generator/pixel-matrix-dithered.ts` (`luma01` and related luminance shaping)
+  - Improved QR-Art target extraction quality in `src/modules/qr-art/image-utils.ts`:
+    - Switched target gray sampling to linear-light luminance.
+    - Added `supersampleLevel: 3` support (3x3 taps).
+    - Added edge-aware importance boost using local Sobel-style gradients.
+  - Increased QR-Art quality profile sampling in `src/modules/qr-art/generate.ts`:
+    - `performanceProfile: 'quality'` now uses `supersampleLevel: 3` (was 2).
+  - Applied scaled-render backdrop quality fix in `src/modules/qr-generator/scaled-render.ts`:
+    - For overlay backdrop `drawImage`, temporarily enable smoothing (`imageSmoothingEnabled=true`, `imageSmoothingQuality='high'`) and restore previous settings before module rendering.
+  - Added config surface fields in `src/modules/qr-generator/types.ts` for future quality controls:
+    - `blendSpace?: 'srgb' | 'linear'`
+    - `halftoneBackdropStrength?: number`

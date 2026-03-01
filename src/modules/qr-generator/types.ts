@@ -48,6 +48,10 @@ export interface QRGeneratorConfig {
   blendPreservations?: boolean;
   // Strategy used when blendPreservations is enabled.
   blendPreservationMode?: 'overlay' | 'dither';
+  // Color blending space for artifact pipeline.
+  blendSpace?: 'srgb' | 'linear';
+  // Strength used for halftone-dithered backdrop tinting of preserved modules.
+  halftoneBackdropStrength?: number;
   // When true, force non-scaled overlay modes (halftone, mosaic, blend, etc.) through the
   // scaled rendering path. Used for animated overlays where per-pixel detail must be preserved
   // across frames.
