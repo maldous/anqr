@@ -88,3 +88,6 @@
 - Implemented item 69 direction (`[MED][UI]` defer export analytics to idle):
   - Added `scheduleTrackEvent(...)` helper in `useQRGenerator` using `requestIdleCallback` (with timeout + `setTimeout` fallback).
   - Export tracking event is now scheduled out of the critical export path instead of firing synchronously.
+- Implemented item 40 direction (`[BIG][UI]` content-visibility on heavy settings panels):
+  - Added `contentVisibility: 'auto'` and `containIntrinsicSize: 'auto 520px'` to sidebar accordion section content in `src/components/Sidebar.tsx`.
+  - Offscreen section bodies are now eligible for deferred layout/paint work while preserving stable scroll geometry.
