@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - 수출을 클릭하여 다운로드",
     "simulating": "관련 기사",
-    "simulationActive": "환경 시뮬레이션 활성 - 미리보기는 QR 코드가 다른 조건에서 나타날 수있는 방법을 보여줍니다"
+    "simulationActive": "환경 시뮬레이션 활성 - 미리보기는 QR 코드가 다른 조건에서 나타날 수있는 방법을 보여줍니다",
+    "busy": {
+      "workingOnIt": "작업 중...",
+      "waitingForThingsToSettle": "상황이 해결되기를 기다리고 있습니다.",
+      "gettingAnimationPreviewReady": "애니메이션 미리보기를 준비하는 중...",
+      "generatingPreview": "미리보기 생성 중...",
+      "preparingPreview": "미리보기 준비 중...",
+      "buildingQrStructure": "QR 구조 구축 중...",
+      "preparingQrArtComputation": "QR-Art 계산 준비 중...",
+      "stillRenderingDetailedOverlay": "아직 상세한 오버레이를 렌더링하고 있습니다...",
+      "renderingQrPreview": "QR 미리보기 렌더링 중...",
+      "checkingScanability": "제대로 스캔되는지 확인 중...",
+      "finalizingPreview": "미리보기를 마무리하는 중...",
+      "preparingAnimationFrames": "애니메이션 프레임 준비 중...",
+      "renderingAnimationFrames": "애니메이션 프레임 렌더링 중...",
+      "smoothingAnimationFrames": "애니메이션 프레임을 매끄럽게 만드는 중...",
+      "finalizingFirstAnimationFrame": "첫 번째 애니메이션 프레임을 마무리하는 중...",
+      "qrArt": {
+        "encodingBaseData": "기본 데이터 인코딩 중...",
+        "analyzingLayout": "레이아웃을 분석하는 중...",
+        "buildingErrorCorrectionFoundation": "오류 수정 기반 구축 중...",
+        "mappingBitsToPixels": "비트를 픽셀로 매핑 중...",
+        "processingImage": "이미지 처리 중...",
+        "rankingPixelsByImportance": "중요도에 따라 픽셀 순위 지정...",
+        "solvingMatrix": "매트릭스를 푸는 중...",
+        "selectingBestBasisVectors": "최상의 기저 벡터를 선택하는 중...",
+        "countingPredictedMatches": "예상 일치 항목 계산 중...",
+        "adjustingDataBytes": "데이터 바이트 조정 중...",
+        "reEncodingQrCode": "QR 코드를 다시 인코딩합니다...",
+        "validatingResult": "결과를 확인하는 중...",
+        "complete": "완료...",
+        "maskStage": "마스크 {{mask}}: {{stage}}...",
+        "attemptStage": "{{current}}/{{total}} 시도: {{stage}}...",
+        "attemptMaskStage": "{{current}}/{{total}} 시도: 마스크 {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "빠른 미리보기",
+    "draft": "초안"
   },
   "qr": {
     "additionalBorder": "조용한 지역을 넘어 추가 경계",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "이미지 unavailable",
     "messageSent": "메시지 전송",
     "lastUpdated": "최근 업데이트",
-    "scanMePlaceholder": "나를 스캔!"
+    "scanMePlaceholder": "나를 스캔!",
+    "skipToMainContent": "주요 콘텐츠로 건너뛰기"
   },
   "contact": {
     "messageSentTitle": "메시지 전송",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT 자산",
     "xTwitter": "X (터치)",
     "pdfDocument": "PDF 파일 회사연혁"
+  },
+  "analyze": {
+    "confidence": "자신감",
+    "exportJson": "JSON 내보내기",
+    "formatInformation": "형식 정보",
+    "imageProperties": "이미지 속성",
+    "processingTimings": "처리 타이밍",
+    "spatialAnalysis": "공간분석",
+    "noCodeDetectedInImage": "이미지에서 QR 코드가 감지되지 않습니다."
+  },
+  "errors": {
+    "failedToGenerateQr": "QR 코드를 생성하지 못했습니다.",
+    "contentTooLongForQr": "QR 코드에 비해 콘텐츠가 너무 깁니다. 콘텐츠를 단축하거나 URL 단축기를 사용하세요."
   }
 }

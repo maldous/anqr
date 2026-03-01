@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "پیش نمایش کود QR - کلیک صادرات برای دانلود",
     "simulating": "شبیه سازی",
-    "simulationActive": "شبیه سازی محیطی فعال - پیش نمایش نشان میدهد که چگونه کود QR ممکن تحت شرایط مختلف ظاهر گردد"
+    "simulationActive": "شبیه سازی محیطی فعال - پیش نمایش نشان میدهد که چگونه کود QR ممکن تحت شرایط مختلف ظاهر گردد",
+    "busy": {
+      "workingOnIt": "کار روی آن...",
+      "waitingForThingsToSettle": "منتظر حل شدن اوضاع...",
+      "gettingAnimationPreviewReady": "آماده کردن پیش نمایش انیمیشن...",
+      "generatingPreview": "تولید پیش نمایش تان...",
+      "preparingPreview": "آماده کردن پیش نمایش تان...",
+      "buildingQrStructure": "ساختن ساختار QR...",
+      "preparingQrArtComputation": "آماده سازی محاسبه QR-Art...",
+      "stillRenderingDetailedOverlay": "هنوز هم پوشش مفصل را ارائه میکند...",
+      "renderingQrPreview": "ارائه پیش نمایش QR شما...",
+      "checkingScanability": "چک کردن اینکه این به درستی اسکن میکند...",
+      "finalizingPreview": "نهایی کردن پیش نمایش...",
+      "preparingAnimationFrames": "تهیه قاب های انیمیشن...",
+      "renderingAnimationFrames": "ارائه فریم های انیمیشن...",
+      "smoothingAnimationFrames": "هموار کردن قاب های انیمیشن...",
+      "finalizingFirstAnimationFrame": "نهایی کردن اولین فریم انیمیشن...",
+      "qrArt": {
+        "encodingBaseData": "کودگذاری معلومات اساسی...",
+        "analyzingLayout": "تحلیل طرح...",
+        "buildingErrorCorrectionFoundation": "ساختن پایه اصلاح خطا...",
+        "mappingBitsToPixels": "نقشه کشی بیت ها به پیکسل ها...",
+        "processingImage": "پردازش تصویر شما...",
+        "rankingPixelsByImportance": "رتبه بندی پیکسل ها بر اساس اهمیت...",
+        "solvingMatrix": "حل کردن ماتریکس...",
+        "selectingBestBasisVectors": "انتخاب بهترین وکتورهای اساسی...",
+        "countingPredictedMatches": "شمارش مسابقات پیش بینی شده...",
+        "adjustingDataBytes": "تنظیم بایت های معلومات...",
+        "reEncodingQrCode": "رمزگذاری مجدد کود QR...",
+        "validatingResult": "اعتبار سنجی نتیجه...",
+        "complete": "تکمیل...",
+        "maskStage": "ماسک {{mask}}: {{stage}}...",
+        "attemptStage": "تلاش {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "تلاش {{current}}/{{total}}: ماسک {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "پیش نمایش سریع",
+    "draft": "متن"
   },
   "qr": {
     "additionalBorder": "مرز اضافی فراتر از زون آرام",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "تصویر موجود نیست",
     "messageSent": "پیام ارسالی",
     "lastUpdated": "آخرین به روز رسانی",
-    "scanMePlaceholder": "من را اسکن کنید!"
+    "scanMePlaceholder": "من را اسکن کنید!",
+    "skipToMainContent": "به محتوای اصلی بروید"
   },
   "contact": {
     "messageSentTitle": "پیام ارسالی",
@@ -2035,5 +2073,18 @@
     "itAsset": "دارایی IT",
     "xTwitter": "X (تویتر)",
     "pdfDocument": "سند PDF"
+  },
+  "analyze": {
+    "confidence": "اعتماد",
+    "exportJson": "صادرات JSON",
+    "formatInformation": "معلومات فارمت",
+    "imageProperties": "املاک تصویر",
+    "processingTimings": "زمان بندی پروسس کردن",
+    "spatialAnalysis": "تحلیل فضایی",
+    "noCodeDetectedInImage": "هیچ کود QR در تصویر تشخیص نشده است"
+  },
+  "errors": {
+    "failedToGenerateQr": "تولید کود QR ناکام شد",
+    "contentTooLongForQr": "محتوا برای کود QR خیلی طولانی است. لطفاً محتوای خود را کوتاه کنید یا از یک کوتاه کننده URL استفاده کنید."
   }
 }

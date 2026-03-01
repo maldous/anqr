@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR кодын алдын ала қарау - Жүктеп алу үшін Экспорттау түймесін басыңыз",
     "simulating": "Модельдеу",
-    "simulationActive": "Экологиялық модельдеу белсенді - Алдын ала қарау QR кодының әртүрлі жағдайларда қалай көрінетінін көрсетеді"
+    "simulationActive": "Экологиялық модельдеу белсенді - Алдын ала қарау QR кодының әртүрлі жағдайларда қалай көрінетінін көрсетеді",
+    "busy": {
+      "workingOnIt": "Онымен жұмыс істеу...",
+      "waitingForThingsToSettle": "Істің шешілуін күту...",
+      "gettingAnimationPreviewReady": "Анимацияны алдын ала қарау дайындалуда...",
+      "generatingPreview": "Алдын ала қарау жасалуда...",
+      "preparingPreview": "Алдын ала қарау дайындалуда...",
+      "buildingQrStructure": "QR құрылымын құру...",
+      "preparingQrArtComputation": "QR-Art есептеуі дайындалуда...",
+      "stillRenderingDetailedOverlay": "Егжей-тегжейлі қабаттасуды әлі де көрсетуде...",
+      "renderingQrPreview": "QR алдын ала қарауыңыз көрсетілуде...",
+      "checkingScanability": "Оның дұрыс сканерленгені тексерілуде...",
+      "finalizingPreview": "Алдын ала қарау аяқталуда...",
+      "preparingAnimationFrames": "Анимациялық кадрлар дайындалуда...",
+      "renderingAnimationFrames": "Анимациялық кадрларды көрсету...",
+      "smoothingAnimationFrames": "Анимация кадрлары тегістелуде...",
+      "finalizingFirstAnimationFrame": "Бірінші анимациялық кадр аяқталуда...",
+      "qrArt": {
+        "encodingBaseData": "Негізгі деректер кодталуда...",
+        "analyzingLayout": "Орналасу талдауда...",
+        "buildingErrorCorrectionFoundation": "Қатені түзету негізін құру...",
+        "mappingBitsToPixels": "Биттерді пикселдерге салыстыру...",
+        "processingImage": "Суретіңіз өңделуде...",
+        "rankingPixelsByImportance": "Маңыздылығы бойынша пиксельдерді сұрыптау...",
+        "solvingMatrix": "Матрицаны шешу...",
+        "selectingBestBasisVectors": "Ең жақсы базистік векторларды таңдау...",
+        "countingPredictedMatches": "Болжалды матчтарды санау...",
+        "adjustingDataBytes": "Деректер байттары реттелуде...",
+        "reEncodingQrCode": "QR коды қайта кодталуда...",
+        "validatingResult": "Нәтижені растау...",
+        "complete": "Аяқталды...",
+        "maskStage": "Маска {{mask}}: {{stage}}...",
+        "attemptStage": "{{current}}/{{total}} әрекеті: {{stage}}...",
+        "attemptMaskStage": "Әрекет {{current}}/{{total}}: маска {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Жылдам алдын ала қарау",
+    "draft": "Жоба"
   },
   "qr": {
     "additionalBorder": "Тыныш аймақтан тыс қосымша шекара",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Сурет қолжетімді емес",
     "messageSent": "Хабар жіберілді",
     "lastUpdated": "Соңғы жаңартылған",
-    "scanMePlaceholder": "Мені сканерлеңіз!"
+    "scanMePlaceholder": "Мені сканерлеңіз!",
+    "skipToMainContent": "Негізгі мазмұнға өту"
   },
   "contact": {
     "messageSentTitle": "Хабар жіберілді",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT активі",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF құжаты"
+  },
+  "analyze": {
+    "confidence": "Сенім",
+    "exportJson": "JSON экспорттау",
+    "formatInformation": "Формат ақпараты",
+    "imageProperties": "Кескін сипаттары",
+    "processingTimings": "Өңдеу уақыттары",
+    "spatialAnalysis": "Кеңістіктік талдау",
+    "noCodeDetectedInImage": "Кескінде QR коды анықталмады"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR кодын жасау мүмкін болмады",
+    "contentTooLongForQr": "QR коды үшін мазмұн тым ұзын. Мазмұныңызды қысқартыңыз немесе URL қысқартқышын пайдаланыңыз."
   }
 }

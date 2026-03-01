@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR кодун алдын ала көрүү - Жүктөп алуу үчүн Экспортту басыңыз",
     "simulating": "Симуляциялоо",
-    "simulationActive": "Экологиялык симуляция активдүү - Алдын ала көрүү QR коду ар кандай шарттарда кантип пайда болоорун көрсөтөт"
+    "simulationActive": "Экологиялык симуляция активдүү - Алдын ала көрүү QR коду ар кандай шарттарда кантип пайда болоорун көрсөтөт",
+    "busy": {
+      "workingOnIt": "Анын үстүндө иштөө...",
+      "waitingForThingsToSettle": "Иштин чечилишин күтүүдө...",
+      "gettingAnimationPreviewReady": "Анимацияны алдын ала көрүү даярдалууда...",
+      "generatingPreview": "Алдын ала көрүү түзүлүүдө...",
+      "preparingPreview": "Алдын ала көрүүңүз даярдалууда...",
+      "buildingQrStructure": "QR структурасын куруу...",
+      "preparingQrArtComputation": "QR-Art эсептөө даярдалууда...",
+      "stillRenderingDetailedOverlay": "Детальдуу катмар дагы эле көрсөтүлүүдө...",
+      "renderingQrPreview": "QR алдын ала көрүнүшүңүз көрсөтүлүүдө...",
+      "checkingScanability": "Анын туура сканерленгени текшерилүүдө...",
+      "finalizingPreview": "Алдын ала көрүү аякталууда...",
+      "preparingAnimationFrames": "Анимация кадрлары даярдалууда...",
+      "renderingAnimationFrames": "Анимация кадрлары көрсөтүлүүдө...",
+      "smoothingAnimationFrames": "Анимация алкактары тегизделүүдө...",
+      "finalizingFirstAnimationFrame": "Биринчи анимация кадры бүткөрүлүүдө...",
+      "qrArt": {
+        "encodingBaseData": "Негизги дайындар коддолууда...",
+        "analyzingLayout": "Макет талдоодо...",
+        "buildingErrorCorrectionFoundation": "Каталарды оңдоо үчүн негиз түзүлүүдө...",
+        "mappingBitsToPixels": "Биттерди пикселдерге салыштыруу...",
+        "processingImage": "Сүрөтүңүз иштетилүүдө...",
+        "rankingPixelsByImportance": "Маанилүүлүгү боюнча пикселдерди иреттөө...",
+        "solvingMatrix": "Матрицаны чечүү...",
+        "selectingBestBasisVectors": "Эң жакшы базис векторлор тандалууда...",
+        "countingPredictedMatches": "Болжолдонгон матчтар саналууда...",
+        "adjustingDataBytes": "Дайындардын байттары туураланууда...",
+        "reEncodingQrCode": "QR коду кайра коддолууда...",
+        "validatingResult": "Натыйжа текшерилүүдө...",
+        "complete": "Толук...",
+        "maskStage": "Маска {{mask}}: {{stage}}...",
+        "attemptStage": "Аракет {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Аракет {{current}}/{{total}}: Маска {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Ыкчам алдын ала көрүү",
+    "draft": "Долбоор"
   },
   "qr": {
     "additionalBorder": "Тынч зонадан тышкары кошумча чек ара",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Сүрөт жеткиликтүү эмес",
     "messageSent": "Билдирүү жөнөтүлдү",
     "lastUpdated": "Акыркы жаңыртылган",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Негизги мазмунга өтүү"
   },
   "contact": {
     "messageSentTitle": "Билдирүү жөнөтүлдү",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT Asset",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF документ"
+  },
+  "analyze": {
+    "confidence": "ишеним",
+    "exportJson": "JSON экспорттоо",
+    "formatInformation": "Формат маалыматы",
+    "imageProperties": "Image Properties",
+    "processingTimings": "Иштетүү убакыттары",
+    "spatialAnalysis": "Мейкиндиктик анализ",
+    "noCodeDetectedInImage": "Сүрөттө QR коду табылган жок"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR коду түзүлбөй калды",
+    "contentTooLongForQr": "QR коду үчүн мазмун өтө узун. Сураныч, мазмунуңузду кыскартыңыз же URL кыскарткычты колдонуңуз."
   }
 }

@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Попередній перегляд QR-коду – натисніть «Експортувати», щоб завантажити",
     "simulating": "Симуляція",
-    "simulationActive": "Симуляція навколишнього середовища активна – попередній перегляд показує, як QR-код може виглядати за різних умов"
+    "simulationActive": "Симуляція навколишнього середовища активна – попередній перегляд показує, як QR-код може виглядати за різних умов",
+    "busy": {
+      "workingOnIt": "Працюю над цим...",
+      "waitingForThingsToSettle": "Чекаю, поки все владнається...",
+      "gettingAnimationPreviewReady": "Підготовка попереднього перегляду анімації...",
+      "generatingPreview": "Створення попереднього перегляду...",
+      "preparingPreview": "Підготовка попереднього перегляду...",
+      "buildingQrStructure": "Побудова структури QR...",
+      "preparingQrArtComputation": "Підготовка обчислення QR-Art...",
+      "stillRenderingDetailedOverlay": "Триває візуалізація детального накладання...",
+      "renderingQrPreview": "Відтворення попереднього перегляду QR-коду...",
+      "checkingScanability": "Перевірка правильності сканування...",
+      "finalizingPreview": "Завершення попереднього перегляду...",
+      "preparingAnimationFrames": "Підготовка кадрів анімації...",
+      "renderingAnimationFrames": "Відтворення кадрів анімації...",
+      "smoothingAnimationFrames": "Згладжування кадрів анімації...",
+      "finalizingFirstAnimationFrame": "Завершення першого кадру анімації...",
+      "qrArt": {
+        "encodingBaseData": "Кодування базових даних...",
+        "analyzingLayout": "Аналіз макета...",
+        "buildingErrorCorrectionFoundation": "Створення основи для виправлення помилок...",
+        "mappingBitsToPixels": "Відображення бітів у пікселі...",
+        "processingImage": "Обробка вашого зображення...",
+        "rankingPixelsByImportance": "Ранжування пікселів за важливістю...",
+        "solvingMatrix": "Розв'язання матриці...",
+        "selectingBestBasisVectors": "Вибір найкращих базисних векторів...",
+        "countingPredictedMatches": "Підрахунок прогнозованих матчів...",
+        "adjustingDataBytes": "Коригування байтів даних...",
+        "reEncodingQrCode": "Повторне кодування QR-коду...",
+        "validatingResult": "Перевірка результату...",
+        "complete": "Повний...",
+        "maskStage": "Маска {{mask}}: {{stage}}...",
+        "attemptStage": "Спроба {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Спроба {{current}}/{{total}}: Маска {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Швидкий попередній перегляд",
+    "draft": "Чернетка"
   },
   "qr": {
     "additionalBorder": "Додаткова межа за тихою зоною",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Зображення недоступне",
     "messageSent": "Повідомлення надіслано",
     "lastUpdated": "Останнє оновлення",
-    "scanMePlaceholder": "Скануйте мене!"
+    "scanMePlaceholder": "Скануйте мене!",
+    "skipToMainContent": "Перейти до основного вмісту"
   },
   "contact": {
     "messageSentTitle": "Повідомлення надіслано",
@@ -2035,5 +2073,18 @@
     "itAsset": "ІТ актив",
     "xTwitter": "X (Твіттер)",
     "pdfDocument": "PDF-документ"
+  },
+  "analyze": {
+    "confidence": "впевненість",
+    "exportJson": "Експорт JSON",
+    "formatInformation": "Інформація про формат",
+    "imageProperties": "Властивості зображення",
+    "processingTimings": "Час обробки",
+    "spatialAnalysis": "Просторовий аналіз",
+    "noCodeDetectedInImage": "На зображенні не виявлено QR-коду"
+  },
+  "errors": {
+    "failedToGenerateQr": "Не вдалося створити QR-код",
+    "contentTooLongForQr": "Вміст задовгий для QR-коду. Будь ласка, скоротіть вміст або скористайтеся програмою скорочення URL-адрес."
   }
 }

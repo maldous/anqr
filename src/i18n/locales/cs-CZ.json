@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Náhled QR kódu – kliknutím na Export stáhněte",
     "simulating": "Simulování",
-    "simulationActive": "Simulace prostředí aktivní – Náhled ukazuje, jak se QR kód může objevit za různých podmínek"
+    "simulationActive": "Simulace prostředí aktivní – Náhled ukazuje, jak se QR kód může objevit za různých podmínek",
+    "busy": {
+      "workingOnIt": "Pracuje se na tom...",
+      "waitingForThingsToSettle": "Čekání, až se věci vyřeší...",
+      "gettingAnimationPreviewReady": "Příprava náhledu animace...",
+      "generatingPreview": "Generování náhledu...",
+      "preparingPreview": "Příprava náhledu...",
+      "buildingQrStructure": "Vytváření QR struktury...",
+      "preparingQrArtComputation": "Příprava výpočtu QR-Art...",
+      "stillRenderingDetailedOverlay": "Stále se vykresluje detailní překrytí...",
+      "renderingQrPreview": "Vykreslování náhledu QR kódu...",
+      "checkingScanability": "Kontrola, zda skenuje správně...",
+      "finalizingPreview": "Dokončování náhledu...",
+      "preparingAnimationFrames": "Příprava snímků animace...",
+      "renderingAnimationFrames": "Vykreslování snímků animace...",
+      "smoothingAnimationFrames": "Vyhlazení snímků animace...",
+      "finalizingFirstAnimationFrame": "Dokončování prvního snímku animace...",
+      "qrArt": {
+        "encodingBaseData": "Kódování základních dat...",
+        "analyzingLayout": "Analýza rozložení...",
+        "buildingErrorCorrectionFoundation": "Budování základu opravy chyb...",
+        "mappingBitsToPixels": "Mapování bitů na pixely...",
+        "processingImage": "Zpracovává se váš obrázek...",
+        "rankingPixelsByImportance": "Pořadí pixelů podle důležitosti...",
+        "solvingMatrix": "Řešení matice...",
+        "selectingBestBasisVectors": "Výběr nejlepších základních vektorů...",
+        "countingPredictedMatches": "Počítání předpokládaných zápasů...",
+        "adjustingDataBytes": "Úprava datových bajtů...",
+        "reEncodingQrCode": "Překódování QR kódu...",
+        "validatingResult": "Ověřování výsledku...",
+        "complete": "Kompletní...",
+        "maskStage": "Maska {{mask}}: {{stage}}...",
+        "attemptStage": "Pokus {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Pokus {{current}}/{{total}}: Maska {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Rychlý náhled",
+    "draft": "Koncept"
   },
   "qr": {
     "additionalBorder": "Další hranice za klidovou zónou",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Obrázek není k dispozici",
     "messageSent": "Zpráva odeslána",
     "lastUpdated": "Poslední aktualizace",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Přejít na hlavní obsah"
   },
   "contact": {
     "messageSentTitle": "Zpráva odeslána",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT aktiva",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Dokument PDF"
+  },
+  "analyze": {
+    "confidence": "důvěra",
+    "exportJson": "Exportujte JSON",
+    "formatInformation": "Informace o formátu",
+    "imageProperties": "Vlastnosti obrázku",
+    "processingTimings": "Časování zpracování",
+    "spatialAnalysis": "Prostorová analýza",
+    "noCodeDetectedInImage": "Na obrázku nebyl zjištěn žádný QR kód"
+  },
+  "errors": {
+    "failedToGenerateQr": "Vygenerování QR kódu se nezdařilo",
+    "contentTooLongForQr": "Obsah je pro QR kód příliš dlouhý. Zkraťte prosím svůj obsah nebo použijte zkracovač adres URL."
   }
 }

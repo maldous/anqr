@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "የQR ኮድ ቅድመ እይታ - ለማውረድ ወደ ውጪ ላክ የሚለውን ጠቅ ያድርጉ",
     "simulating": "ማስመሰል",
-    "simulationActive": "የአካባቢ ማስመሰል ገባሪ - ቅድመ እይታ የQR ኮድ በተለያዩ ሁኔታዎች እንዴት እንደሚታይ ያሳያል"
+    "simulationActive": "የአካባቢ ማስመሰል ገባሪ - ቅድመ እይታ የQR ኮድ በተለያዩ ሁኔታዎች እንዴት እንደሚታይ ያሳያል",
+    "busy": {
+      "workingOnIt": "በሱ ላይ በመስራት ላይ...",
+      "waitingForThingsToSettle": "ነገሮች እንዲፈቱ በመጠበቅ ላይ...",
+      "gettingAnimationPreviewReady": "የአኒሜሽን ቅድመ እይታን በማዘጋጀት ላይ...",
+      "generatingPreview": "ቅድመ እይታዎን በማመንጨት ላይ...",
+      "preparingPreview": "ቅድመ እይታዎን በማዘጋጀት ላይ...",
+      "buildingQrStructure": "የQR መዋቅርን በመገንባት ላይ...",
+      "preparingQrArtComputation": "የQR-ጥበብ ስሌትን በማዘጋጀት ላይ...",
+      "stillRenderingDetailedOverlay": "አሁንም ዝርዝር ተደራቢውን በማቅረብ ላይ...",
+      "renderingQrPreview": "የእርስዎን የQR ቅድመ እይታ በማቅረብ ላይ...",
+      "checkingScanability": "በትክክል መቃኘቱን በማጣራት ላይ...",
+      "finalizingPreview": "ቅድመ እይታውን በማጠናቀቅ ላይ...",
+      "preparingAnimationFrames": "የአኒሜሽን ፍሬሞችን በማዘጋጀት ላይ...",
+      "renderingAnimationFrames": "የአኒሜሽን ፍሬሞችን በመስራት ላይ...",
+      "smoothingAnimationFrames": "የአኒሜሽን ፍሬሞችን በማለስለስ ላይ...",
+      "finalizingFirstAnimationFrame": "የመጀመሪያውን አኒሜሽን ፍሬም በማጠናቀቅ ላይ...",
+      "qrArt": {
+        "encodingBaseData": "የመሠረት ውሂቡን በኮድ በማድረግ ላይ...",
+        "analyzingLayout": "አቀማመጡን በመተንተን ላይ...",
+        "buildingErrorCorrectionFoundation": "የስህተት ማስተካከያ ፋውንዴሽን በመገንባት ላይ...",
+        "mappingBitsToPixels": "ቢት ወደ ፒክስል በማሳየት ላይ...",
+        "processingImage": "ምስልዎን በመስራት ላይ...",
+        "rankingPixelsByImportance": "ፒክስሎችን በአስፈላጊነት ደረጃ መስጠት...",
+        "solvingMatrix": "ማትሪክስ በመፍታት ላይ...",
+        "selectingBestBasisVectors": "በጣም ጥሩውን መሠረት ቬክተሮችን በመምረጥ ላይ…",
+        "countingPredictedMatches": "የተገመቱ ግጥሚያዎችን በመቁጠር ላይ...",
+        "adjustingDataBytes": "የውሂብ ባይት በማስተካከል ላይ...",
+        "reEncodingQrCode": "የQR ኮድን እንደገና በመቀየስ ላይ...",
+        "validatingResult": "ውጤቱን በማረጋገጥ ላይ...",
+        "complete": "ተጠናቀቀ...",
+        "maskStage": "ማስክ {{mask}}: {{stage}}...",
+        "attemptStage": "ሙከራ {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "ሙከራ {{current}}/{{total}}፡ ጭንብል {{mask}}፡ {{stage}}..."
+      }
+    },
+    "fastPreview": "ፈጣን ቅድመ እይታ",
+    "draft": "ረቂቅ"
   },
   "qr": {
     "additionalBorder": "ከፀጥታ ዞን ባሻገር ተጨማሪ ድንበር",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "ምስል አይገኝም",
     "messageSent": "መልእክት ተልኳል።",
     "lastUpdated": "መጨረሻ የዘመነው",
-    "scanMePlaceholder": "ቃኝኝ!"
+    "scanMePlaceholder": "ቃኝኝ!",
+    "skipToMainContent": "ወደ ዋናው ይዘት ዝለል"
   },
   "contact": {
     "messageSentTitle": "መልእክት ተልኳል።",
@@ -2035,5 +2073,18 @@
     "itAsset": "የአይቲ ንብረት",
     "xTwitter": "X (ትዊተር)",
     "pdfDocument": "ፒዲኤፍ ሰነድ"
+  },
+  "analyze": {
+    "confidence": "በራስ መተማመን",
+    "exportJson": "JSON ወደ ውጪ ላክ",
+    "formatInformation": "የቅርጸት መረጃ",
+    "imageProperties": "የምስል ባህሪያት",
+    "processingTimings": "የሂደት ጊዜዎች",
+    "spatialAnalysis": "የቦታ ትንተና",
+    "noCodeDetectedInImage": "በምስሉ ላይ ምንም የQR ኮድ አልተገኘም።"
+  },
+  "errors": {
+    "failedToGenerateQr": "የQR ኮድ መፍጠር አልተሳካም።",
+    "contentTooLongForQr": "ይዘት ለQR ኮድ በጣም ረጅም ነው። እባክዎን ይዘትዎን ያሳጥሩ ወይም የዩአርኤል ማሳጠሪያ ይጠቀሙ።"
   }
 }

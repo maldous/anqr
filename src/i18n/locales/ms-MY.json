@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Pratonton Kod QR - Klik Eksport untuk memuat turun",
     "simulating": "Mensimulasikan",
-    "simulationActive": "Simulasi alam sekitar aktif - Pratonton menunjukkan cara kod QR mungkin muncul dalam keadaan berbeza"
+    "simulationActive": "Simulasi alam sekitar aktif - Pratonton menunjukkan cara kod QR mungkin muncul dalam keadaan berbeza",
+    "busy": {
+      "workingOnIt": "Mengusahakannya...",
+      "waitingForThingsToSettle": "Menunggu perkara selesai...",
+      "gettingAnimationPreviewReady": "Menyediakan pratonton animasi...",
+      "generatingPreview": "Menjana pratonton anda...",
+      "preparingPreview": "Menyediakan pratonton anda...",
+      "buildingQrStructure": "Membina struktur QR...",
+      "preparingQrArtComputation": "Menyediakan pengiraan Seni QR...",
+      "stillRenderingDetailedOverlay": "Masih memaparkan tindanan terperinci...",
+      "renderingQrPreview": "Memaparkan pratonton QR anda...",
+      "checkingScanability": "Memeriksa sama ada ia mengimbas dengan betul...",
+      "finalizingPreview": "Memuktamadkan pratonton...",
+      "preparingAnimationFrames": "Menyediakan bingkai animasi...",
+      "renderingAnimationFrames": "Memaparkan bingkai animasi...",
+      "smoothingAnimationFrames": "Melicinkan bingkai animasi...",
+      "finalizingFirstAnimationFrame": "Memuktamadkan bingkai animasi pertama...",
+      "qrArt": {
+        "encodingBaseData": "Pengekodan data asas...",
+        "analyzingLayout": "Menganalisis reka letak...",
+        "buildingErrorCorrectionFoundation": "Membina asas pembetulan ralat...",
+        "mappingBitsToPixels": "Memetakan bit kepada piksel...",
+        "processingImage": "Memproses imej anda...",
+        "rankingPixelsByImportance": "Kedudukan piksel mengikut kepentingan...",
+        "solvingMatrix": "Menyelesaikan matriks...",
+        "selectingBestBasisVectors": "Memilih vektor asas terbaik...",
+        "countingPredictedMatches": "Mengira perlawanan yang diramalkan...",
+        "adjustingDataBytes": "Melaraskan bait data...",
+        "reEncodingQrCode": "Pengekodan semula kod QR...",
+        "validatingResult": "Mengesahkan keputusan...",
+        "complete": "lengkap...",
+        "maskStage": "Topeng {{mask}}: {{stage}}...",
+        "attemptStage": "Percubaan {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Percubaan {{current}}/{{total}}: Topeng {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Pratonton Pantas",
+    "draft": "Draf"
   },
   "qr": {
     "additionalBorder": "Sempadan tambahan di luar zon tenang",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Imej tidak tersedia",
     "messageSent": "Mesej dihantar",
     "lastUpdated": "Kemas Kini Terakhir",
-    "scanMePlaceholder": "Imbas Saya!"
+    "scanMePlaceholder": "Imbas Saya!",
+    "skipToMainContent": "Langkau ke kandungan utama"
   },
   "contact": {
     "messageSentTitle": "Mesej dihantar",
@@ -2035,5 +2073,18 @@
     "itAsset": "Aset IT",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Dokumen PDF"
+  },
+  "analyze": {
+    "confidence": "Keyakinan",
+    "exportJson": "Eksport JSON",
+    "formatInformation": "Maklumat Format",
+    "imageProperties": "Sifat Imej",
+    "processingTimings": "Masa Pemprosesan",
+    "spatialAnalysis": "Analisis Ruang",
+    "noCodeDetectedInImage": "Tiada kod QR dikesan dalam imej"
+  },
+  "errors": {
+    "failedToGenerateQr": "Gagal menjana kod QR",
+    "contentTooLongForQr": "Kandungan terlalu panjang untuk kod QR. Sila pendekkan kandungan anda atau gunakan pemendek URL."
   }
 }

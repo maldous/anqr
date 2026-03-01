@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR குறியீடு முன்னோட்டம் - பதிவிறக்க ஏற்றுமதி என்பதைக் கிளிக் செய்யவும்",
     "simulating": "உருவகப்படுத்துதல்",
-    "simulationActive": "சுற்றுச்சூழல் உருவகப்படுத்துதல் செயலில் உள்ளது - வெவ்வேறு நிலைமைகளின் கீழ் QR குறியீடு எவ்வாறு தோன்றும் என்பதை முன்னோட்டம் காட்டுகிறது"
+    "simulationActive": "சுற்றுச்சூழல் உருவகப்படுத்துதல் செயலில் உள்ளது - வெவ்வேறு நிலைமைகளின் கீழ் QR குறியீடு எவ்வாறு தோன்றும் என்பதை முன்னோட்டம் காட்டுகிறது",
+    "busy": {
+      "workingOnIt": "அதில் வேலை...",
+      "waitingForThingsToSettle": "விஷயங்கள் தீர்க்கப்படும் வரை காத்திருக்கிறது...",
+      "gettingAnimationPreviewReady": "அனிமேஷன் முன்னோட்டத்தை தயார் செய்கிறது...",
+      "generatingPreview": "உங்கள் மாதிரிக்காட்சியை உருவாக்குகிறது...",
+      "preparingPreview": "உங்கள் முன்னோட்டத்தை தயார் செய்கிறது...",
+      "buildingQrStructure": "QR கட்டமைப்பை உருவாக்குகிறது...",
+      "preparingQrArtComputation": "QR-கலைக் கணக்கீட்டைத் தயாரிக்கிறது...",
+      "stillRenderingDetailedOverlay": "இன்னும் விரிவான மேலடுக்கை ரெண்டரிங் செய்கிறது...",
+      "renderingQrPreview": "உங்கள் QR மாதிரிக்காட்சியை வழங்குகிறது...",
+      "checkingScanability": "அது சரியாக ஸ்கேன் செய்கிறதா என்று சரிபார்க்கிறது...",
+      "finalizingPreview": "முன்னோட்டத்தை முடிக்கிறது...",
+      "preparingAnimationFrames": "அனிமேஷன் பிரேம்களை தயார் செய்கிறது...",
+      "renderingAnimationFrames": "அனிமேஷன் பிரேம்களை ரெண்டரிங் செய்கிறது...",
+      "smoothingAnimationFrames": "அனிமேஷன் பிரேம்களை மென்மையாக்குகிறது...",
+      "finalizingFirstAnimationFrame": "முதல் அனிமேஷன் சட்டத்தை முடிக்கிறது...",
+      "qrArt": {
+        "encodingBaseData": "அடிப்படைத் தரவை குறியாக்கம் செய்கிறது...",
+        "analyzingLayout": "தளவமைப்பை பகுப்பாய்வு செய்கிறது...",
+        "buildingErrorCorrectionFoundation": "பிழை திருத்த அடித்தளத்தை உருவாக்குதல்...",
+        "mappingBitsToPixels": "பிட்களை பிக்சல்களுக்கு மேப்பிங் செய்கிறது...",
+        "processingImage": "உங்கள் படத்தைச் செயலாக்குகிறது...",
+        "rankingPixelsByImportance": "முக்கியத்துவத்தின் அடிப்படையில் பிக்சல்களை வரிசைப்படுத்துதல்...",
+        "solvingMatrix": "மேட்ரிக்ஸைத் தீர்க்கிறது...",
+        "selectingBestBasisVectors": "சிறந்த அடிப்படை திசையன்களைத் தேர்ந்தெடுக்கிறது...",
+        "countingPredictedMatches": "கணிக்கப்பட்ட போட்டிகளை எண்ணுகிறது...",
+        "adjustingDataBytes": "தரவு பைட்டுகளை சரிசெய்கிறது...",
+        "reEncodingQrCode": "QR குறியீட்டை மீண்டும் குறியாக்கம் செய்கிறது...",
+        "validatingResult": "முடிவைச் சரிபார்க்கிறது...",
+        "complete": "முழுமையான...",
+        "maskStage": "முகமூடி {{mask}}: {{stage}}...",
+        "attemptStage": "முயற்சி {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "முயற்சி {{current}}/{{total}}: முகமூடி {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "வேகமான முன்னோட்டம்",
+    "draft": "வரைவு"
   },
   "qr": {
     "additionalBorder": "அமைதியான பகுதிக்கு அப்பால் கூடுதல் எல்லை",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "படம் கிடைக்கவில்லை",
     "messageSent": "செய்தி அனுப்பப்பட்டது",
     "lastUpdated": "கடைசியாக புதுப்பிக்கப்பட்டது",
-    "scanMePlaceholder": "என்னை ஸ்கேன் செய்!"
+    "scanMePlaceholder": "என்னை ஸ்கேன் செய்!",
+    "skipToMainContent": "முக்கிய உள்ளடக்கத்திற்கு செல்க"
   },
   "contact": {
     "messageSentTitle": "செய்தி அனுப்பப்பட்டது",
@@ -2035,5 +2073,18 @@
     "itAsset": "ஐடி சொத்து",
     "xTwitter": "எக்ஸ் (ட்விட்டர்)",
     "pdfDocument": "PDF ஆவணம்"
+  },
+  "analyze": {
+    "confidence": "நம்பிக்கை",
+    "exportJson": "JSON ஐ ஏற்றுமதி செய்யவும்",
+    "formatInformation": "வடிவ தகவல்",
+    "imageProperties": "பட பண்புகள்",
+    "processingTimings": "செயலாக்க நேரங்கள்",
+    "spatialAnalysis": "இடஞ்சார்ந்த பகுப்பாய்வு",
+    "noCodeDetectedInImage": "படத்தில் QR குறியீடு எதுவும் கண்டறியப்படவில்லை"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR குறியீட்டை உருவாக்க முடியவில்லை",
+    "contentTooLongForQr": "QR குறியீட்டிற்கு உள்ளடக்கம் மிக நீளமாக உள்ளது. உங்கள் உள்ளடக்கத்தைச் சுருக்கவும் அல்லது URL சுருக்கியைப் பயன்படுத்தவும்."
   }
 }

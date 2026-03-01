@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "معاينة رمز الاستجابة السريعة - انقر فوق \"تصدير\" للتنزيل",
     "simulating": "محاكاة",
-    "simulationActive": "المحاكاة البيئية نشطة - تعرض المعاينة كيف قد يظهر رمز الاستجابة السريعة في ظل ظروف مختلفة"
+    "simulationActive": "المحاكاة البيئية نشطة - تعرض المعاينة كيف قد يظهر رمز الاستجابة السريعة في ظل ظروف مختلفة",
+    "busy": {
+      "workingOnIt": "العمل على ذلك...",
+      "waitingForThingsToSettle": "في انتظار أن تستقر الأمور..",
+      "gettingAnimationPreviewReady": "جارٍ تحضير معاينة الرسوم المتحركة...",
+      "generatingPreview": "جارٍ إنشاء المعاينة...",
+      "preparingPreview": "جارٍ تحضير المعاينة...",
+      "buildingQrStructure": "بناء هيكل QR...",
+      "preparingQrArtComputation": "تحضير حساب QR-Art...",
+      "stillRenderingDetailedOverlay": "لا يزال يتم عرض التراكب التفصيلي...",
+      "renderingQrPreview": "جارٍ عرض معاينة QR الخاصة بك...",
+      "checkingScanability": "التحقق من أنه يقوم بالمسح بشكل صحيح ...",
+      "finalizingPreview": "الانتهاء من المعاينة...",
+      "preparingAnimationFrames": "تحضير إطارات الرسوم المتحركة...",
+      "renderingAnimationFrames": "عرض إطارات الرسوم المتحركة...",
+      "smoothingAnimationFrames": "تجانس إطارات الرسوم المتحركة ...",
+      "finalizingFirstAnimationFrame": "الانتهاء من أول إطار للرسوم المتحركة...",
+      "qrArt": {
+        "encodingBaseData": "ترميز البيانات الأساسية...",
+        "analyzingLayout": "تحليل التخطيط...",
+        "buildingErrorCorrectionFoundation": "بناء أسس تصحيح الأخطاء...",
+        "mappingBitsToPixels": "تعيين البتات إلى وحدات البكسل...",
+        "processingImage": "معالجة صورتك...",
+        "rankingPixelsByImportance": "ترتيب البكسلات حسب الأهمية...",
+        "solvingMatrix": "حل المصفوفة...",
+        "selectingBestBasisVectors": "اختيار أفضل المتجهات الأساسية...",
+        "countingPredictedMatches": "إحصاء المباريات المتوقعة...",
+        "adjustingDataBytes": "ضبط بايت البيانات...",
+        "reEncodingQrCode": "إعادة ترميز رمز QR...",
+        "validatingResult": "التحقق من النتيجة...",
+        "complete": "كامل...",
+        "maskStage": "القناع {{mask}}: {{stage}}...",
+        "attemptStage": "محاولة {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "محاولة {{current}}/{{total}}: القناع {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "معاينة سريعة",
+    "draft": "مسودة"
   },
   "qr": {
     "additionalBorder": "حدود إضافية خارج المنطقة الهادئة",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "الصورة غير متاحة",
     "messageSent": "تم إرسال الرسالة",
     "lastUpdated": "آخر تحديث",
-    "scanMePlaceholder": "مسح لي!"
+    "scanMePlaceholder": "مسح لي!",
+    "skipToMainContent": "انتقل إلى المحتوى الرئيسي"
   },
   "contact": {
     "messageSentTitle": "تم إرسال الرسالة",
@@ -2035,5 +2073,18 @@
     "itAsset": "أصول تكنولوجيا المعلومات",
     "xTwitter": "اكس (تويتر)",
     "pdfDocument": "وثيقة PDF"
+  },
+  "analyze": {
+    "confidence": "الثقة",
+    "exportJson": "تصدير JSON",
+    "formatInformation": "معلومات التنسيق",
+    "imageProperties": "خصائص الصورة",
+    "processingTimings": "مواعيد المعالجة",
+    "spatialAnalysis": "التحليل المكاني",
+    "noCodeDetectedInImage": "لم يتم اكتشاف رمز الاستجابة السريعة في الصورة"
+  },
+  "errors": {
+    "failedToGenerateQr": "فشل في إنشاء رمز الاستجابة السريعة",
+    "contentTooLongForQr": "المحتوى طويل جدًا بالنسبة لرمز الاستجابة السريعة. يرجى اختصار المحتوى الخاص بك أو استخدام أداة تقصير عناوين URL."
   }
 }

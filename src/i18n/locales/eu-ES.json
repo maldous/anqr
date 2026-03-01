@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR kodearen aurrebista - Sakatu Esportatu deskargatzeko",
     "simulating": "Simulazioa",
-    "simulationActive": "Ingurumenaren simulazioa aktiboa - Aurrebistak baldintza ezberdinetan QR kodea nola ager daitekeen erakusten du"
+    "simulationActive": "Ingurumenaren simulazioa aktiboa - Aurrebistak baldintza ezberdinetan QR kodea nola ager daitekeen erakusten du",
+    "busy": {
+      "workingOnIt": "Horretan lanean...",
+      "waitingForThingsToSettle": "Gauzak konpontzeko zain...",
+      "gettingAnimationPreviewReady": "Animazioaren aurrebista prestatzen...",
+      "generatingPreview": "Zure aurrebista sortzen...",
+      "preparingPreview": "Aurrebista prestatzen...",
+      "buildingQrStructure": "QR egitura eraikitzen...",
+      "preparingQrArtComputation": "QR-Art konputazioa prestatzen...",
+      "stillRenderingDetailedOverlay": "Gainjarri zehatza errendatzen jarraitzen...",
+      "renderingQrPreview": "Zure QR aurrebista errendatzen...",
+      "checkingScanability": "Ondo eskaneatzen duela egiaztatzen...",
+      "finalizingPreview": "Aurrebista amaitzen...",
+      "preparingAnimationFrames": "Animazio fotogramak prestatzen...",
+      "renderingAnimationFrames": "Animazio-koadroak errendatzen...",
+      "smoothingAnimationFrames": "Animazio-koadroak leuntzen...",
+      "finalizingFirstAnimationFrame": "Lehenengo animazio fotograma amaitzen...",
+      "qrArt": {
+        "encodingBaseData": "Oinarrizko datuak kodetzen...",
+        "analyzingLayout": "Diseinua aztertzen...",
+        "buildingErrorCorrectionFoundation": "Erroreak zuzentzeko oinarria eraikitzen...",
+        "mappingBitsToPixels": "Bitak pixelekin mapatzen...",
+        "processingImage": "Zure irudia prozesatzen...",
+        "rankingPixelsByImportance": "Pixelak garrantziaren arabera sailkatzen...",
+        "solvingMatrix": "Matrizea ebazten...",
+        "selectingBestBasisVectors": "Oinarrizko bektore onenak hautatzea...",
+        "countingPredictedMatches": "Aurreikusitako partidak zenbatzen...",
+        "adjustingDataBytes": "Datu-byteak doitzen...",
+        "reEncodingQrCode": "QR kodea berriro kodetzen...",
+        "validatingResult": "Emaitza balioztatzen...",
+        "complete": "Osatu...",
+        "maskStage": "Maskara {{mask}}: {{stage}}...",
+        "attemptStage": "Saiakera {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Saiakera {{current}}/{{total}}: Maskara {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Aurrebista azkarra",
+    "draft": "Zirriborroa"
   },
   "qr": {
     "additionalBorder": "Muga gehigarria gune lasaitik haratago",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Irudia ez dago erabilgarri",
     "messageSent": "Mezua bidali da",
     "lastUpdated": "Azken eguneratua",
-    "scanMePlaceholder": "Eskaneatu nazazu!"
+    "scanMePlaceholder": "Eskaneatu nazazu!",
+    "skipToMainContent": "Saltatu eduki nagusira"
   },
   "contact": {
     "messageSentTitle": "Mezua bidali da",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT Aktiboa",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF dokumentua"
+  },
+  "analyze": {
+    "confidence": "Konfiantza",
+    "exportJson": "Esportatu JSON",
+    "formatInformation": "Formatu informazioa",
+    "imageProperties": "Irudiaren propietateak",
+    "processingTimings": "Prozesatzeko Denborak",
+    "spatialAnalysis": "Analisi espaziala",
+    "noCodeDetectedInImage": "Ez da QR koderik hauteman irudian"
+  },
+  "errors": {
+    "failedToGenerateQr": "Ezin izan da sortu QR kodea",
+    "contentTooLongForQr": "Edukia luzeegia QR koderako. Mesedez, laburtu zure edukia edo erabili URL laburtzaile bat."
   }
 }

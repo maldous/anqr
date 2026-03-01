@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR кодыг урьдчилан харах - Экспорт дээр дарж татаж авна уу",
     "simulating": "Дуурайж байна",
-    "simulationActive": "Байгаль орчны симуляци идэвхтэй - Урьдчилан харах нь QR код өөр нөхцөлд хэрхэн гарч ирж болохыг харуулдаг"
+    "simulationActive": "Байгаль орчны симуляци идэвхтэй - Урьдчилан харах нь QR код өөр нөхцөлд хэрхэн гарч ирж болохыг харуулдаг",
+    "busy": {
+      "workingOnIt": "Үүн дээр ажиллаж байна ...",
+      "waitingForThingsToSettle": "Бүх зүйл шийдэгдэхийг хүлээж байна ...",
+      "gettingAnimationPreviewReady": "Хөдөлгөөнт дүрсийг урьдчилан харж байна...",
+      "generatingPreview": "Таны урьдчилж харахыг үүсгэж байна...",
+      "preparingPreview": "Таныг урьдчилан үзэхийг бэлдэж байна...",
+      "buildingQrStructure": "QR бүтцийг бий болгож байна...",
+      "preparingQrArtComputation": "QR-Art тооцооллыг бэлтгэж байна...",
+      "stillRenderingDetailedOverlay": "Нарийвчилсан давхаргыг үзүүлсээр байна...",
+      "renderingQrPreview": "Таны QR-г урьдчилан харж байна...",
+      "checkingScanability": "Үүнийг зөв скан хийж байгаа эсэхийг шалгаж байна...",
+      "finalizingPreview": "Урьдчилан үзэхийг дуусгаж байна...",
+      "preparingAnimationFrames": "Хөдөлгөөнт дүрсийг бэлтгэж байна...",
+      "renderingAnimationFrames": "Хөдөлгөөнт дүрсийг үзүүлж байна...",
+      "smoothingAnimationFrames": "Хөдөлгөөнт зургийн хүрээг жигдрүүлж байна...",
+      "finalizingFirstAnimationFrame": "Эхний анимэйшн хүрээг дуусгаж байна...",
+      "qrArt": {
+        "encodingBaseData": "Үндсэн өгөгдлийг кодчилж байна...",
+        "analyzingLayout": "Зохион байгуулалтад дүн шинжилгээ хийж байна...",
+        "buildingErrorCorrectionFoundation": "Алдаа засах суурийг барьж байна...",
+        "mappingBitsToPixels": "Битүүдийг пикселээр буулгаж байна...",
+        "processingImage": "Таны зургийг боловсруулж байна...",
+        "rankingPixelsByImportance": "Пикселүүдийг ач холбогдлоор нь эрэмбэлж байна...",
+        "solvingMatrix": "Матрицыг шийдэж байна...",
+        "selectingBestBasisVectors": "Хамгийн сайн суурь векторуудыг сонгож байна...",
+        "countingPredictedMatches": "Урьдчилан таамагласан тоглолтуудыг тоолж байна...",
+        "adjustingDataBytes": "Өгөгдлийн байтыг тохируулж байна...",
+        "reEncodingQrCode": "QR кодыг дахин кодчилж байна...",
+        "validatingResult": "Үр дүнг баталгаажуулж байна...",
+        "complete": "Бүрэн...",
+        "maskStage": "Маск {{mask}}: {{stage}}...",
+        "attemptStage": "{{current}}/{{total}} оролдлого: {{stage}}...",
+        "attemptMaskStage": "{{current}}/{{total}} оролдлого: Маск {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Хурдан урьдчилан харах",
+    "draft": "Ноорог"
   },
   "qr": {
     "additionalBorder": "Чимээгүй бүсээс гадна нэмэлт хил",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Зураг боломжгүй",
     "messageSent": "Мессеж илгээсэн",
     "lastUpdated": "Сүүлд шинэчлэгдсэн",
-    "scanMePlaceholder": "Намайг хай!"
+    "scanMePlaceholder": "Намайг хай!",
+    "skipToMainContent": "Үндсэн агуулга руу шилжих"
   },
   "contact": {
     "messageSentTitle": "Мессеж илгээсэн",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT хөрөнгө",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF баримт"
+  },
+  "analyze": {
+    "confidence": "Итгэл",
+    "exportJson": "JSON экспортлох",
+    "formatInformation": "Формат мэдээлэл",
+    "imageProperties": "Зургийн шинж чанарууд",
+    "processingTimings": "Боловсруулах хугацаа",
+    "spatialAnalysis": "Орон зайн шинжилгээ",
+    "noCodeDetectedInImage": "Зураг дээр QR код илэрсэнгүй"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR код үүсгэж чадсангүй",
+    "contentTooLongForQr": "QR кодын хувьд хэт урт контент байна. Агуулгаа богиносгож эсвэл URL богиносгогч ашиглана уу."
   }
 }

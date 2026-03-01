@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR koda priekšskatījums — noklikšķiniet uz Eksportēt, lai lejupielādētu",
     "simulating": "Simulēšana",
-    "simulationActive": "Vides simulācija ir aktīva — priekšskatījums parāda, kā QR kods var parādīties dažādos apstākļos"
+    "simulationActive": "Vides simulācija ir aktīva — priekšskatījums parāda, kā QR kods var parādīties dažādos apstākļos",
+    "busy": {
+      "workingOnIt": "Strādājot pie tā...",
+      "waitingForThingsToSettle": "Gaida, kad lietas nokārtosies...",
+      "gettingAnimationPreviewReady": "Notiek animācijas priekšskatījuma sagatavošana...",
+      "generatingPreview": "Notiek priekšskatījuma ģenerēšana...",
+      "preparingPreview": "Notiek priekšskatījuma sagatavošana...",
+      "buildingQrStructure": "QR struktūras izveide...",
+      "preparingQrArtComputation": "Notiek QR-Art aprēķina sagatavošana...",
+      "stillRenderingDetailedOverlay": "Joprojām tiek renderēts detalizēts pārklājums...",
+      "renderingQrPreview": "Notiek jūsu QR priekšskatījuma renderēšana...",
+      "checkingScanability": "Notiek pareiza skenēšanas pārbaude...",
+      "finalizingPreview": "Notiek priekšskatījuma pabeigšana...",
+      "preparingAnimationFrames": "Notiek animācijas kadru sagatavošana...",
+      "renderingAnimationFrames": "Notiek animācijas kadru renderēšana...",
+      "smoothingAnimationFrames": "Animācijas kadru izlīdzināšana...",
+      "finalizingFirstAnimationFrame": "Notiek pirmā animācijas kadra pabeigšana...",
+      "qrArt": {
+        "encodingBaseData": "Notiek bāzes datu kodēšana...",
+        "analyzingLayout": "Notiek izkārtojuma analīze...",
+        "buildingErrorCorrectionFoundation": "Kļūdu labošanas pamatu veidošana...",
+        "mappingBitsToPixels": "Notiek bitu kartēšana pikseļos...",
+        "processingImage": "Notiek attēla apstrāde...",
+        "rankingPixelsByImportance": "Pikseļu ranžēšana pēc svarīguma...",
+        "solvingMatrix": "Matricas atrisināšana...",
+        "selectingBestBasisVectors": "Labāko bāzes vektoru atlase...",
+        "countingPredictedMatches": "Tiek skaitītas paredzētās spēles...",
+        "adjustingDataBytes": "Notiek datu baitu pielāgošana...",
+        "reEncodingQrCode": "Notiek QR koda atkārtota kodēšana...",
+        "validatingResult": "Notiek rezultāta apstiprināšana...",
+        "complete": "Pabeigt...",
+        "maskStage": "Maska {{mask}}: {{stage}}...",
+        "attemptStage": "Mēģinājums {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Mēģinājums {{current}}/{{total}}: Maska {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Ātrs priekšskatījums",
+    "draft": "Melnraksts"
   },
   "qr": {
     "additionalBorder": "Papildu robeža aiz klusās zonas",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Attēls nav pieejams",
     "messageSent": "Ziņa nosūtīta",
     "lastUpdated": "Pēdējo reizi atjaunināts",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Pāriet uz galveno saturu"
   },
   "contact": {
     "messageSentTitle": "Ziņa nosūtīta",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT aktīvs",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF dokuments"
+  },
+  "analyze": {
+    "confidence": "Pārliecība",
+    "exportJson": "Eksportēt JSON",
+    "formatInformation": "Informācija par formātu",
+    "imageProperties": "Attēla rekvizīti",
+    "processingTimings": "Apstrādes laiki",
+    "spatialAnalysis": "Telpiskā analīze",
+    "noCodeDetectedInImage": "Attēlā nav atrasts QR kods"
+  },
+  "errors": {
+    "failedToGenerateQr": "Neizdevās ģenerēt QR kodu",
+    "contentTooLongForQr": "Saturs ir pārāk garš QR kodam. Lūdzu, saīsiniet saturu vai izmantojiet URL saīsinātāju."
   }
 }

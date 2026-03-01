@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR-koodin esikatselu - Napsauta Vie ladataksesi",
     "simulating": "Simuloidaan",
-    "simulationActive": "Ympäristösimulaatio aktiivinen - esikatselu osoittaa, miten QR-koodi voi näkyä eri olosuhteissa"
+    "simulationActive": "Ympäristösimulaatio aktiivinen - esikatselu osoittaa, miten QR-koodi voi näkyä eri olosuhteissa",
+    "busy": {
+      "workingOnIt": "Työskentelee sen parissa...",
+      "waitingForThingsToSettle": "Odotellaan asioiden ratkeamista...",
+      "gettingAnimationPreviewReady": "Valmistetaan animaation esikatselua...",
+      "generatingPreview": "Luodaan esikatseluasi...",
+      "preparingPreview": "Valmistellaan esikatselua...",
+      "buildingQrStructure": "QR-rakenteen rakentaminen...",
+      "preparingQrArtComputation": "Valmistellaan QR-Art-laskentaa...",
+      "stillRenderingDetailedOverlay": "Yksityiskohtaista peittokuvaa piirretään edelleen...",
+      "renderingQrPreview": "Renderöidään QR-esikatselua...",
+      "checkingScanability": "Tarkistetaan, että se skannaa oikein...",
+      "finalizingPreview": "Esikatselua viimeistellään...",
+      "preparingAnimationFrames": "Valmistellaan animaatiokehyksiä...",
+      "renderingAnimationFrames": "Renderöidään animaatiokehyksiä...",
+      "smoothingAnimationFrames": "Animaatiokehysten tasoitus...",
+      "finalizingFirstAnimationFrame": "Ensimmäistä animaatiokehystä viimeistellään...",
+      "qrArt": {
+        "encodingBaseData": "Koodataan perustietoja...",
+        "analyzingLayout": "Analysoidaan asettelua...",
+        "buildingErrorCorrectionFoundation": "Virheenkorjauspohjan rakentaminen...",
+        "mappingBitsToPixels": "Yhdistetään bittejä pikseleiksi...",
+        "processingImage": "Käsitellään kuvaasi...",
+        "rankingPixelsByImportance": "Pikselien järjestys tärkeyden mukaan...",
+        "solvingMatrix": "Matriisin ratkaiseminen...",
+        "selectingBestBasisVectors": "Parhaiden kantavektorien valinta...",
+        "countingPredictedMatches": "Ennustettuja otteluita lasketaan...",
+        "adjustingDataBytes": "Säädellään datatavuja...",
+        "reEncodingQrCode": "Koodataan QR-koodia uudelleen...",
+        "validatingResult": "Vahvistetaan tulosta...",
+        "complete": "Valmis...",
+        "maskStage": "Mask {{mask}}: {{stage}}...",
+        "attemptStage": "Yritys {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Yritys {{current}}/{{total}}: Maski {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Nopea esikatselu",
+    "draft": "Luonnos"
   },
   "qr": {
     "additionalBorder": "Lisäraja rauhallisen vyöhykkeen ulkopuolella",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Kuvaa ei saatavilla",
     "messageSent": "Viesti lähetetty",
     "lastUpdated": "Viimeksi päivitetty",
-    "scanMePlaceholder": "Skannaa minut!"
+    "scanMePlaceholder": "Skannaa minut!",
+    "skipToMainContent": "Siirry pääsisältöön"
   },
   "contact": {
     "messageSentTitle": "Viesti lähetetty",
@@ -2035,5 +2073,18 @@
     "itAsset": "Tietotekninen omaisuus",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Asiakirja"
+  },
+  "analyze": {
+    "confidence": "Luottamus",
+    "exportJson": "Vie JSON",
+    "formatInformation": "Muototiedot",
+    "imageProperties": "Kuvan ominaisuudet",
+    "processingTimings": "Käsittelyajat",
+    "spatialAnalysis": "Spatiaalinen analyysi",
+    "noCodeDetectedInImage": "Kuvasta ei löytynyt QR-koodia"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR-koodin luominen epäonnistui",
+    "contentTooLongForQr": "Sisältö liian pitkä QR-koodille. Lyhennä sisältöä tai käytä URL-lyhennystä."
   }
 }

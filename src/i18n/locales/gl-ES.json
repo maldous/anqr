@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Vista previa do código QR: fai clic en Exportar para descargar",
     "simulating": "Simulando",
-    "simulationActive": "Simulación ambiental activa: a vista previa mostra como pode aparecer o código QR en diferentes condicións"
+    "simulationActive": "Simulación ambiental activa: a vista previa mostra como pode aparecer o código QR en diferentes condicións",
+    "busy": {
+      "workingOnIt": "Traballando niso...",
+      "waitingForThingsToSettle": "Agardando que as cousas se resolvan...",
+      "gettingAnimationPreviewReady": "Preparando a vista previa da animación...",
+      "generatingPreview": "Xerando a túa vista previa...",
+      "preparingPreview": "Preparando a túa vista previa...",
+      "buildingQrStructure": "Construíndo a estrutura QR...",
+      "preparingQrArtComputation": "Preparando cálculo QR-Art...",
+      "stillRenderingDetailedOverlay": "Aínda renderizando a superposición detallada...",
+      "renderingQrPreview": "Mostrando a túa vista previa de QR...",
+      "checkingScanability": "Comprobando que escanea correctamente...",
+      "finalizingPreview": "Finalizando a vista previa...",
+      "preparingAnimationFrames": "Preparando os fotogramas de animación...",
+      "renderingAnimationFrames": "Renderizando os fotogramas de animación...",
+      "smoothingAnimationFrames": "Suavizando os fotogramas de animación...",
+      "finalizingFirstAnimationFrame": "Finalizando o primeiro fotograma de animación...",
+      "qrArt": {
+        "encodingBaseData": "Codificando os datos base...",
+        "analyzingLayout": "Analizando o esquema...",
+        "buildingErrorCorrectionFoundation": "Creando a base de corrección de erros...",
+        "mappingBitsToPixels": "Asignando bits a píxeles...",
+        "processingImage": "Procesando a túa imaxe...",
+        "rankingPixelsByImportance": "Clasificación de píxeles por importancia...",
+        "solvingMatrix": "Resolvendo a matriz...",
+        "selectingBestBasisVectors": "Seleccionando os mellores vectores de base...",
+        "countingPredictedMatches": "Contando os partidos previstos...",
+        "adjustingDataBytes": "Axustando bytes de datos...",
+        "reEncodingQrCode": "Volve codificar o código QR...",
+        "validatingResult": "Validando o resultado...",
+        "complete": "Completar...",
+        "maskStage": "Máscara {{mask}}: {{stage}}...",
+        "attemptStage": "Intento {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Intento {{current}}/{{total}}: máscara {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Vista previa rápida",
+    "draft": "Borrador"
   },
   "qr": {
     "additionalBorder": "Borde adicional máis aló da zona tranquila",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Imaxe non dispoñible",
     "messageSent": "Mensaxe enviada",
     "lastUpdated": "Última actualización",
-    "scanMePlaceholder": "Escaneo!"
+    "scanMePlaceholder": "Escaneo!",
+    "skipToMainContent": "Ir ao contido principal"
   },
   "contact": {
     "messageSentTitle": "Mensaxe enviada",
@@ -2035,5 +2073,18 @@
     "itAsset": "Activo de TI",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Documento PDF"
+  },
+  "analyze": {
+    "confidence": "Confianza",
+    "exportJson": "Exportar JSON",
+    "formatInformation": "Formato de información",
+    "imageProperties": "Propiedades da imaxe",
+    "processingTimings": "Tempos de procesamento",
+    "spatialAnalysis": "Análise espacial",
+    "noCodeDetectedInImage": "Non se detectou ningún código QR na imaxe"
+  },
+  "errors": {
+    "failedToGenerateQr": "Produciuse un erro ao xerar o código QR",
+    "contentTooLongForQr": "Contido demasiado longo para o código QR. Acurta o teu contido ou utiliza un acurtador de URL."
   }
 }

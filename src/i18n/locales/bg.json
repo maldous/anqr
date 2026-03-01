@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Визуализация на QR кода - Щракнете върху Експортиране, за да изтеглите",
     "simulating": "Симулиране",
-    "simulationActive": "Активна симулация на околната среда - Визуализацията показва как QR кодът може да изглежда при различни условия"
+    "simulationActive": "Активна симулация на околната среда - Визуализацията показва как QR кодът може да изглежда при различни условия",
+    "busy": {
+      "workingOnIt": "Работя по него...",
+      "waitingForThingsToSettle": "В очакване нещата да се наредят...",
+      "gettingAnimationPreviewReady": "Подготвя се визуализацията на анимацията...",
+      "generatingPreview": "Визуализацията се генерира...",
+      "preparingPreview": "Визуализацията се подготвя...",
+      "buildingQrStructure": "Изграждане на QR структура...",
+      "preparingQrArtComputation": "Подготвя се изчисление на QR-Art...",
+      "stillRenderingDetailedOverlay": "Все още се изобразява детайлното наслагване...",
+      "renderingQrPreview": "Изобразява се вашият QR преглед...",
+      "checkingScanability": "Проверява се дали сканира правилно...",
+      "finalizingPreview": "Завършване на визуализацията...",
+      "preparingAnimationFrames": "Подготвят се рамки за анимация...",
+      "renderingAnimationFrames": "Изобразяване на рамки на анимация...",
+      "smoothingAnimationFrames": "Изглаждане на рамките на анимацията...",
+      "finalizingFirstAnimationFrame": "Финализиране на първия анимационен кадър...",
+      "qrArt": {
+        "encodingBaseData": "Базовите данни се кодират...",
+        "analyzingLayout": "Анализиране на оформлението...",
+        "buildingErrorCorrectionFoundation": "Изграждане на основата за коригиране на грешки...",
+        "mappingBitsToPixels": "Преобразуване на битове в пиксели...",
+        "processingImage": "Вашето изображение се обработва...",
+        "rankingPixelsByImportance": "Класиране на пикселите по важност...",
+        "solvingMatrix": "Решаване на матрицата...",
+        "selectingBestBasisVectors": "Избор на най-добрите базисни вектори...",
+        "countingPredictedMatches": "Преброяване на прогнозираните мачове...",
+        "adjustingDataBytes": "Коригиране на байтовете данни...",
+        "reEncodingQrCode": "Прекодиране на QR кода...",
+        "validatingResult": "Потвърждаване на резултата...",
+        "complete": "Пълен...",
+        "maskStage": "Маска {{mask}}: {{stage}}...",
+        "attemptStage": "Опит {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Опит {{current}}/{{total}}: Маска {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Бърз преглед",
+    "draft": "Чернова"
   },
   "qr": {
     "additionalBorder": "Допълнителна граница извън тихата зона",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Изображението не е налично",
     "messageSent": "Съобщението е изпратено",
     "lastUpdated": "Последна актуализация",
-    "scanMePlaceholder": "Сканирай ме!"
+    "scanMePlaceholder": "Сканирай ме!",
+    "skipToMainContent": "Преминете към основното съдържание"
   },
   "contact": {
     "messageSentTitle": "Съобщението е изпратено",
@@ -2035,5 +2073,18 @@
     "itAsset": "ИТ актив",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF документ"
+  },
+  "analyze": {
+    "confidence": "Увереност",
+    "exportJson": "Експортирайте JSON",
+    "formatInformation": "Информация за формата",
+    "imageProperties": "Свойства на изображението",
+    "processingTimings": "Времена за обработка",
+    "spatialAnalysis": "Пространствен анализ",
+    "noCodeDetectedInImage": "В изображението не е открит QR код"
+  },
+  "errors": {
+    "failedToGenerateQr": "Неуспешно генериране на QR код",
+    "contentTooLongForQr": "Съдържанието е твърде дълго за QR код. Моля, съкратете съдържанието си или използвайте програма за съкращаване на URL адреси."
   }
 }

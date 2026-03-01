@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - ກົດ Export ເພື່ອດາວໂຫລດ",
     "simulating": "ການຈຳລອງ",
-    "simulationActive": "ການຈຳລອງສິ່ງແວດລ້ອມມີການເຄື່ອນໄຫວ - ການສະແດງຕົວຢ່າງສະແດງໃຫ້ເຫັນວ່າລະຫັດ QR ອາດຈະປາກົດພາຍໃຕ້ເງື່ອນໄຂທີ່ແຕກຕ່າງກັນແນວໃດ"
+    "simulationActive": "ການຈຳລອງສິ່ງແວດລ້ອມມີການເຄື່ອນໄຫວ - ການສະແດງຕົວຢ່າງສະແດງໃຫ້ເຫັນວ່າລະຫັດ QR ອາດຈະປາກົດພາຍໃຕ້ເງື່ອນໄຂທີ່ແຕກຕ່າງກັນແນວໃດ",
+    "busy": {
+      "workingOnIt": "ກຳລັງເຮັດວຽກຢູ່...",
+      "waitingForThingsToSettle": "ລໍຖ້າໃຫ້ສິ່ງຕ່າງໆຕົກລົງ...",
+      "gettingAnimationPreviewReady": "ກຳລັງກຽມຕົວຕົວຢ່າງອະນິເມຊັນ...",
+      "generatingPreview": "ກຳລັງສ້າງຕົວຢ່າງຂອງທ່ານ...",
+      "preparingPreview": "ກຳລັງກະກຽມຕົວຢ່າງຂອງທ່ານ...",
+      "buildingQrStructure": "ການສ້າງໂຄງສ້າງ QR...",
+      "preparingQrArtComputation": "ກຳລັງກະກຽມການຄຳນວນ QR-Art...",
+      "stillRenderingDetailedOverlay": "ຍັງສະແດງລາຍລະອຽດຊ້ອນກັນຢູ່...",
+      "renderingQrPreview": "ກຳລັງສະແດງຕົວຢ່າງ QR ຂອງທ່ານ...",
+      "checkingScanability": "ກຳລັງກວດເບິ່ງວ່າມັນສະແກນຢ່າງຖືກຕ້ອງ...",
+      "finalizingPreview": "ກຳລັງສິ້ນສຸດການສະແດງຕົວຢ່າງ...",
+      "preparingAnimationFrames": "ກຳລັງກະກຽມກອບອະນິເມຊັນ...",
+      "renderingAnimationFrames": "ກຳລັງສະແດງເຟຣມອະນິເມຊັນ...",
+      "smoothingAnimationFrames": "ກຳລັງເຮັດໃຫ້ເຟຣມອະນິເມຊັນກ້ຽງ...",
+      "finalizingFirstAnimationFrame": "ກຳລັງສຳເລັດຮູບອະນິເມຊັນທຳອິດ...",
+      "qrArt": {
+        "encodingBaseData": "ກຳລັງເຂົ້າລະຫັດຂໍ້ມູນພື້ນຖານ...",
+        "analyzingLayout": "ກຳລັງວິເຄາະຮູບແບບ...",
+        "buildingErrorCorrectionFoundation": "ການ​ສ້າງ​ພື້ນ​ຖານ​ການ​ແກ້​ໄຂ​ຄວາມ​ຜິດ​ພາດ ...",
+        "mappingBitsToPixels": "ການສ້າງແຜນທີ່ບິດເປັນ pixels...",
+        "processingImage": "ກຳລັງປະມວນຜົນຮູບຂອງເຈົ້າ...",
+        "rankingPixelsByImportance": "ການຈັດລໍາດັບ pixels ຕາມຄວາມສໍາຄັນ...",
+        "solvingMatrix": "ການ​ແກ້​ໄຂ​ມາ​ຕຣິກ​ເບື້ອງ...",
+        "selectingBestBasisVectors": "ການເລືອກ vectors ພື້ນຖານທີ່ດີທີ່ສຸດ ...",
+        "countingPredictedMatches": "ການນັບການແຂ່ງຂັນທີ່ຄາດຄະເນ...",
+        "adjustingDataBytes": "ກຳລັງປັບໄບຕ໌ຂໍ້ມູນ...",
+        "reEncodingQrCode": "ການເຂົ້າລະຫັດ QR ຄືນໃໝ່...",
+        "validatingResult": "ກຳລັງກວດສອບຜົນໄດ້ຮັບ...",
+        "complete": "ສຳເລັດ...",
+        "maskStage": "ໜ້າກາກ {{mask}}: {{stage}}...",
+        "attemptStage": "ພະຍາຍາມ {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "ຄວາມພະຍາຍາມ {{current}}/{{total}}: Mask {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "ຕົວຢ່າງໄວ",
+    "draft": "ຮ່າງ"
   },
   "qr": {
     "additionalBorder": "ຊາຍແດນເພີ່ມເຕີມນອກເຫນືອເຂດງຽບ",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "ບໍ່ມີຮູບພາບ",
     "messageSent": "ຂໍ້ຄວາມຖືກສົ່ງ",
     "lastUpdated": "ອັບເດດຫຼ້າສຸດ",
-    "scanMePlaceholder": "ສະແກນຂ້ອຍ!"
+    "scanMePlaceholder": "ສະແກນຂ້ອຍ!",
+    "skipToMainContent": "ຂ້າມໄປຫາເນື້ອຫາຕົ້ນຕໍ"
   },
   "contact": {
     "messageSentTitle": "ຂໍ້ຄວາມຖືກສົ່ງ",
@@ -2035,5 +2073,18 @@
     "itAsset": "ຊັບສິນໄອທີ",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "ເອກະສານ PDF"
+  },
+  "analyze": {
+    "confidence": "ຄວາມຫມັ້ນໃຈ",
+    "exportJson": "ສົ່ງອອກ JSON",
+    "formatInformation": "ຂໍ້ມູນຮູບແບບ",
+    "imageProperties": "ຄຸນສົມບັດຮູບພາບ",
+    "processingTimings": "ເວລາປະມວນຜົນ",
+    "spatialAnalysis": "ການວິເຄາະພື້ນທີ່",
+    "noCodeDetectedInImage": "ບໍ່ພົບລະຫັດ QR ໃນຮູບ"
+  },
+  "errors": {
+    "failedToGenerateQr": "ລົ້ມເຫລວໃນການສ້າງລະຫັດ QR",
+    "contentTooLongForQr": "ເນື້ອຫາຍາວເກີນໄປສໍາລັບລະຫັດ QR. ກະລຸນາຫຍໍ້ເນື້ອຫາຂອງທ່ານ ຫຼືໃຊ້ຕົວຫຍໍ້ URL."
   }
 }

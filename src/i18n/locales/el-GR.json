@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Προεπισκόπηση κώδικα QR - Κάντε κλικ στην Εξαγωγή για λήψη",
     "simulating": "Simulating",
-    "simulationActive": "Ενεργή προσομοίωση περιβάλλοντος - Η προεπισκόπηση δείχνει πώς μπορεί να εμφανίζεται ο κώδικας QR υπό διαφορετικές συνθήκες"
+    "simulationActive": "Ενεργή προσομοίωση περιβάλλοντος - Η προεπισκόπηση δείχνει πώς μπορεί να εμφανίζεται ο κώδικας QR υπό διαφορετικές συνθήκες",
+    "busy": {
+      "workingOnIt": "Δουλεύοντας σε αυτό...",
+      "waitingForThingsToSettle": "Περιμένοντας να διευθετηθούν τα πράγματα...",
+      "gettingAnimationPreviewReady": "Προετοιμασία της προεπισκόπησης κινούμενων εικόνων...",
+      "generatingPreview": "Δημιουργία προεπισκόπησης...",
+      "preparingPreview": "Προετοιμασία της προεπισκόπησης σας...",
+      "buildingQrStructure": "Δημιουργία της δομής QR...",
+      "preparingQrArtComputation": "Προετοιμασία υπολογισμού QR-Art...",
+      "stillRenderingDetailedOverlay": "Εξακολουθεί να αποδίδεται η λεπτομερής επικάλυψη...",
+      "renderingQrPreview": "Απόδοση της προεπισκόπησης QR...",
+      "checkingScanability": "Έλεγχος ότι σαρώνει σωστά...",
+      "finalizingPreview": "Ολοκλήρωση της προεπισκόπησης...",
+      "preparingAnimationFrames": "Προετοιμασία των καρέ κινουμένων σχεδίων...",
+      "renderingAnimationFrames": "Απόδοση των καρέ κινουμένων σχεδίων...",
+      "smoothingAnimationFrames": "Εξομάλυνση των καρέ κινουμένων σχεδίων...",
+      "finalizingFirstAnimationFrame": "Ολοκλήρωση του πρώτου καρέ κινουμένων σχεδίων...",
+      "qrArt": {
+        "encodingBaseData": "Κωδικοποίηση των δεδομένων βάσης...",
+        "analyzingLayout": "Αναλύοντας τη διάταξη...",
+        "buildingErrorCorrectionFoundation": "Δημιουργία της βάσης διόρθωσης σφαλμάτων...",
+        "mappingBitsToPixels": "Αντιστοίχιση bits σε pixel...",
+        "processingImage": "Επεξεργασία της εικόνας σας...",
+        "rankingPixelsByImportance": "Κατάταξη εικονοστοιχείων κατά σημασία...",
+        "solvingMatrix": "Επίλυση του πίνακα...",
+        "selectingBestBasisVectors": "Επιλέγοντας τα καλύτερα διανύσματα βάσης...",
+        "countingPredictedMatches": "Καταμέτρηση προβλεπόμενων αγώνων...",
+        "adjustingDataBytes": "Προσαρμογή byte δεδομένων...",
+        "reEncodingQrCode": "Εκ νέου κωδικοποίηση του κωδικού QR...",
+        "validatingResult": "Επικύρωση του αποτελέσματος...",
+        "complete": "Ολοκληρώστε...",
+        "maskStage": "Μάσκα {{mask}}: {{stage}}...",
+        "attemptStage": "Προσπάθεια {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Προσπάθεια {{current}}/{{total}}: Μάσκα {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Γρήγορη προεπισκόπηση",
+    "draft": "Σχέδιο"
   },
   "qr": {
     "additionalBorder": "Πρόσθετα σύνορα πέρα από την ήσυχη ζώνη",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Δεν είναι διαθέσιμη η εικόνα",
     "messageSent": "Αποστολή μηνύματος",
     "lastUpdated": "Τελευταία ενημέρωση",
-    "scanMePlaceholder": "Σκανάρισέ με!"
+    "scanMePlaceholder": "Σκανάρισέ με!",
+    "skipToMainContent": "Μετάβαση στο κύριο περιεχόμενο"
   },
   "contact": {
     "messageSentTitle": "Αποστολή μηνύματος",
@@ -2035,5 +2073,18 @@
     "itAsset": "Στοιχεία ενεργητικού ΤΠ",
     "xTwitter": "Χ (Twitter)",
     "pdfDocument": "PDF Έγγραφο"
+  },
+  "analyze": {
+    "confidence": "Αυτοπεποίθηση",
+    "exportJson": "Εξαγωγή JSON",
+    "formatInformation": "Πληροφορίες Μορφής",
+    "imageProperties": "Ιδιότητες εικόνας",
+    "processingTimings": "Χρονισμοί επεξεργασίας",
+    "spatialAnalysis": "Χωρική Ανάλυση",
+    "noCodeDetectedInImage": "Δεν εντοπίστηκε κωδικός QR στην εικόνα"
+  },
+  "errors": {
+    "failedToGenerateQr": "Αποτυχία δημιουργίας κωδικού QR",
+    "contentTooLongForQr": "Το περιεχόμενο είναι πολύ μεγάλο για τον κωδικό QR. Συντομεύστε το περιεχόμενό σας ή χρησιμοποιήστε συντομευτικό URL."
   }
 }

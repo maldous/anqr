@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - Нажмите Экспорт для загрузки",
     "simulating": "Моделирование",
-    "simulationActive": "Активное моделирование окружающей среды - предварительный просмотр показывает, как QR-код может появиться в разных условиях"
+    "simulationActive": "Активное моделирование окружающей среды - предварительный просмотр показывает, как QR-код может появиться в разных условиях",
+    "busy": {
+      "workingOnIt": "Работаю над этим...",
+      "waitingForThingsToSettle": "Ждём, пока всё уладится...",
+      "gettingAnimationPreviewReady": "Готовим предварительный просмотр анимации...",
+      "generatingPreview": "Создание предварительного просмотра...",
+      "preparingPreview": "Подготовка предварительного просмотра...",
+      "buildingQrStructure": "Построение QR-структуры...",
+      "preparingQrArtComputation": "Подготовка вычислений QR-Art...",
+      "stillRenderingDetailedOverlay": "Все еще рендеринг подробного наложения...",
+      "renderingQrPreview": "Предварительный просмотр QR-кода...",
+      "checkingScanability": "Проверяем правильность сканирования...",
+      "finalizingPreview": "Завершение предварительного просмотра...",
+      "preparingAnimationFrames": "Подготовка кадров анимации...",
+      "renderingAnimationFrames": "Рендеринг кадров анимации...",
+      "smoothingAnimationFrames": "Сглаживание кадров анимации...",
+      "finalizingFirstAnimationFrame": "Завершение первого кадра анимации...",
+      "qrArt": {
+        "encodingBaseData": "Кодирование базовых данных...",
+        "analyzingLayout": "Анализируем макет...",
+        "buildingErrorCorrectionFoundation": "Создание основы исправления ошибок...",
+        "mappingBitsToPixels": "Преобразование битов в пиксели...",
+        "processingImage": "Обработка изображения...",
+        "rankingPixelsByImportance": "Ранжирование пикселей по важности...",
+        "solvingMatrix": "Решение матрицы...",
+        "selectingBestBasisVectors": "Выбор лучших базисных векторов...",
+        "countingPredictedMatches": "Подсчет прогнозируемых матчей...",
+        "adjustingDataBytes": "Корректировка байтов данных...",
+        "reEncodingQrCode": "Перекодирование QR-кода...",
+        "validatingResult": "Подтверждаем результат...",
+        "complete": "Полный...",
+        "maskStage": "Маска {{mask}}: {{stage}}...",
+        "attemptStage": "Попытка {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Попытка {{current}}/{{total}}: Маска {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Быстрый просмотр",
+    "draft": "Черновик"
   },
   "qr": {
     "additionalBorder": "Дополнительная граница за пределами тихой зоны",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Изображение отсутствует",
     "messageSent": "Послание",
     "lastUpdated": "Последнее обновление",
-    "scanMePlaceholder": "Сканируйте меня!"
+    "scanMePlaceholder": "Сканируйте меня!",
+    "skipToMainContent": "Перейти к основному содержанию"
   },
   "contact": {
     "messageSentTitle": "Послание",
@@ -2035,5 +2073,18 @@
     "itAsset": "ИТ-актив",
     "xTwitter": "X (Твиттер)",
     "pdfDocument": "PDF Документация"
+  },
+  "analyze": {
+    "confidence": "Уверенность",
+    "exportJson": "Экспорт JSON",
+    "formatInformation": "Информация о формате",
+    "imageProperties": "Свойства изображения",
+    "processingTimings": "Время обработки",
+    "spatialAnalysis": "Пространственный анализ",
+    "noCodeDetectedInImage": "На изображении не обнаружен QR-код"
+  },
+  "errors": {
+    "failedToGenerateQr": "Не удалось сгенерировать QR-код.",
+    "contentTooLongForQr": "Содержимое слишком длинное для QR-кода. Пожалуйста, сократите свой контент или используйте сокращатель URL-адресов."
   }
 }

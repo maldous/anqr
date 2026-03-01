@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR ಕೋಡ್ ಪೂರ್ವವೀಕ್ಷಣೆ - ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ರಫ್ತು ಕ್ಲಿಕ್ ಮಾಡಿ",
     "simulating": "ಅನುಕರಿಸುವ",
-    "simulationActive": "ಎನ್ವಿರಾನ್ಮೆಂಟಲ್ ಸಿಮ್ಯುಲೇಶನ್ ಸಕ್ರಿಯವಾಗಿದೆ - ವಿಭಿನ್ನ ಪರಿಸ್ಥಿತಿಗಳಲ್ಲಿ QR ಕೋಡ್ ಹೇಗೆ ಕಾಣಿಸಿಕೊಳ್ಳಬಹುದು ಎಂಬುದನ್ನು ಪೂರ್ವವೀಕ್ಷಣೆ ತೋರಿಸುತ್ತದೆ"
+    "simulationActive": "ಎನ್ವಿರಾನ್ಮೆಂಟಲ್ ಸಿಮ್ಯುಲೇಶನ್ ಸಕ್ರಿಯವಾಗಿದೆ - ವಿಭಿನ್ನ ಪರಿಸ್ಥಿತಿಗಳಲ್ಲಿ QR ಕೋಡ್ ಹೇಗೆ ಕಾಣಿಸಿಕೊಳ್ಳಬಹುದು ಎಂಬುದನ್ನು ಪೂರ್ವವೀಕ್ಷಣೆ ತೋರಿಸುತ್ತದೆ",
+    "busy": {
+      "workingOnIt": "ಅದರ ಮೇಲೆ ಕೆಲಸ ಮಾಡುತ್ತಿದೆ...",
+      "waitingForThingsToSettle": "ವಿಷಯಗಳು ಇತ್ಯರ್ಥವಾಗಲು ಕಾಯಲಾಗುತ್ತಿದೆ...",
+      "gettingAnimationPreviewReady": "ಅನಿಮೇಷನ್ ಪೂರ್ವವೀಕ್ಷಣೆಯನ್ನು ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ...",
+      "generatingPreview": "ನಿಮ್ಮ ಪೂರ್ವವೀಕ್ಷಣೆಯನ್ನು ರಚಿಸಲಾಗುತ್ತಿದೆ...",
+      "preparingPreview": "ನಿಮ್ಮ ಪೂರ್ವವೀಕ್ಷಣೆಯನ್ನು ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ...",
+      "buildingQrStructure": "QR ರಚನೆಯನ್ನು ನಿರ್ಮಿಸಲಾಗುತ್ತಿದೆ...",
+      "preparingQrArtComputation": "QR-ಆರ್ಟ್ ಲೆಕ್ಕಾಚಾರವನ್ನು ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ...",
+      "stillRenderingDetailedOverlay": "ಇನ್ನೂ ವಿವರವಾದ ಓವರ್‌ಲೇ ಅನ್ನು ನೀಡಲಾಗುತ್ತಿದೆ...",
+      "renderingQrPreview": "ನಿಮ್ಮ QR ಪೂರ್ವವೀಕ್ಷಣೆಯನ್ನು ಸಲ್ಲಿಸಲಾಗುತ್ತಿದೆ...",
+      "checkingScanability": "ಅದು ಸರಿಯಾಗಿ ಸ್ಕ್ಯಾನ್ ಆಗಿದೆಯೇ ಎಂದು ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ...",
+      "finalizingPreview": "ಪೂರ್ವವೀಕ್ಷಣೆಯನ್ನು ಅಂತಿಮಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
+      "preparingAnimationFrames": "ಅನಿಮೇಷನ್ ಫ್ರೇಮ್‌ಗಳನ್ನು ಸಿದ್ಧಪಡಿಸಲಾಗುತ್ತಿದೆ...",
+      "renderingAnimationFrames": "ಅನಿಮೇಷನ್ ಫ್ರೇಮ್‌ಗಳನ್ನು ರೆಂಡರಿಂಗ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+      "smoothingAnimationFrames": "ಅನಿಮೇಷನ್ ಫ್ರೇಮ್‌ಗಳನ್ನು ಸುಗಮಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
+      "finalizingFirstAnimationFrame": "ಮೊದಲ ಅನಿಮೇಷನ್ ಫ್ರೇಮ್ ಅನ್ನು ಅಂತಿಮಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
+      "qrArt": {
+        "encodingBaseData": "ಮೂಲ ಡೇಟಾವನ್ನು ಎನ್ಕೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+        "analyzingLayout": "ಲೇಔಟ್ ಅನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...",
+        "buildingErrorCorrectionFoundation": "ದೋಷ ತಿದ್ದುಪಡಿ ಅಡಿಪಾಯವನ್ನು ನಿರ್ಮಿಸಲಾಗುತ್ತಿದೆ...",
+        "mappingBitsToPixels": "ಪಿಕ್ಸೆಲ್‌ಗಳಿಗೆ ಬಿಟ್‌ಗಳನ್ನು ಮ್ಯಾಪಿಂಗ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+        "processingImage": "ನಿಮ್ಮ ಚಿತ್ರವನ್ನು ಪ್ರಕ್ರಿಯೆಗೊಳಿಸಲಾಗುತ್ತಿದೆ...",
+        "rankingPixelsByImportance": "ಪ್ರಾಮುಖ್ಯತೆಯಿಂದ ಪಿಕ್ಸೆಲ್‌ಗಳನ್ನು ಶ್ರೇಣೀಕರಿಸಲಾಗುತ್ತಿದೆ...",
+        "solvingMatrix": "ಮ್ಯಾಟ್ರಿಕ್ಸ್ ಅನ್ನು ಪರಿಹರಿಸಲಾಗುತ್ತಿದೆ...",
+        "selectingBestBasisVectors": "ಉತ್ತಮ ಆಧಾರ ವಾಹಕಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+        "countingPredictedMatches": "ಭವಿಷ್ಯ ನುಡಿದ ಪಂದ್ಯಗಳ ಎಣಿಕೆ...",
+        "adjustingDataBytes": "ಡೇಟಾ ಬೈಟ್‌ಗಳನ್ನು ಹೊಂದಿಸಲಾಗುತ್ತಿದೆ...",
+        "reEncodingQrCode": "QR ಕೋಡ್ ಅನ್ನು ಮರು-ಎನ್ಕೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...",
+        "validatingResult": "ಫಲಿತಾಂಶವನ್ನು ಮೌಲ್ಯೀಕರಿಸಲಾಗುತ್ತಿದೆ...",
+        "complete": "ಸಂಪೂರ್ಣ...",
+        "maskStage": "ಮಾಸ್ಕ್ {{mask}}: {{stage}}...",
+        "attemptStage": "ಪ್ರಯತ್ನ {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "ಪ್ರಯತ್ನ {{current}}/{{total}}: ಮಾಸ್ಕ್ {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "ವೇಗದ ಪೂರ್ವವೀಕ್ಷಣೆ",
+    "draft": "ಕರಡು"
   },
   "qr": {
     "additionalBorder": "ನಿಶ್ಯಬ್ದ ವಲಯವನ್ನು ಮೀರಿದ ಹೆಚ್ಚುವರಿ ಗಡಿ",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "ಚಿತ್ರ ಲಭ್ಯವಿಲ್ಲ",
     "messageSent": "ಸಂದೇಶ ಕಳುಹಿಸಲಾಗಿದೆ",
     "lastUpdated": "ಕೊನೆಯದಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ",
-    "scanMePlaceholder": "ನನ್ನನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ!"
+    "scanMePlaceholder": "ನನ್ನನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ!",
+    "skipToMainContent": "ಮುಖ್ಯ ವಿಷಯಕ್ಕೆ ತೆರಳಿ"
   },
   "contact": {
     "messageSentTitle": "ಸಂದೇಶ ಕಳುಹಿಸಲಾಗಿದೆ",
@@ -2035,5 +2073,18 @@
     "itAsset": "ಐಟಿ ಆಸ್ತಿ",
     "xTwitter": "X (ಟ್ವಿಟರ್)",
     "pdfDocument": "PDF ಡಾಕ್ಯುಮೆಂಟ್"
+  },
+  "analyze": {
+    "confidence": "ವಿಶ್ವಾಸ",
+    "exportJson": "JSON ರಫ್ತು ಮಾಡಿ",
+    "formatInformation": "ಫಾರ್ಮ್ಯಾಟ್ ಮಾಹಿತಿ",
+    "imageProperties": "ಚಿತ್ರದ ಗುಣಲಕ್ಷಣಗಳು",
+    "processingTimings": "ಸಂಸ್ಕರಣಾ ಸಮಯಗಳು",
+    "spatialAnalysis": "ಪ್ರಾದೇಶಿಕ ವಿಶ್ಲೇಷಣೆ",
+    "noCodeDetectedInImage": "ಚಿತ್ರದಲ್ಲಿ ಯಾವುದೇ QR ಕೋಡ್ ಪತ್ತೆಯಾಗಿಲ್ಲ"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR ಕೋಡ್ ರಚಿಸಲು ವಿಫಲವಾಗಿದೆ",
+    "contentTooLongForQr": "QR ಕೋಡ್‌ಗಾಗಿ ವಿಷಯವು ತುಂಬಾ ಉದ್ದವಾಗಿದೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ವಿಷಯವನ್ನು ಕಡಿಮೆ ಮಾಡಿ ಅಥವಾ URL ಶಾರ್ಟ್‌ನರ್ ಅನ್ನು ಬಳಸಿ."
   }
 }

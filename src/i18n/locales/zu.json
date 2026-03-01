@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Ukuhlola kuqala Ikhodi ye-QR - Chofoza okuthi Thumela ukuze ulande",
     "simulating": "Ukulingisa",
-    "simulationActive": "Ukulingisa kwemvelo kuyasebenza - Ukuhlola kuqala kubonisa ukuthi ikhodi ye-QR ingase ivele kanjani ngaphansi kwezimo ezihlukene"
+    "simulationActive": "Ukulingisa kwemvelo kuyasebenza - Ukuhlola kuqala kubonisa ukuthi ikhodi ye-QR ingase ivele kanjani ngaphansi kwezimo ezihlukene",
+    "busy": {
+      "workingOnIt": "Ukusebenza kukho...",
+      "waitingForThingsToSettle": "Ilinde ukuthi izinto zilunge...",
+      "gettingAnimationPreviewReady": "Ilungiselela ukubuka kuqala kopopayi...",
+      "generatingPreview": "Ikhiqiza ukubuka kuqala kwakho...",
+      "preparingPreview": "Ilungiselela ukubuka kuqala kwakho...",
+      "buildingQrStructure": "Yakha isakhiwo se-QR...",
+      "preparingQrArtComputation": "Ilungiselela ukubala kwe-QR-Art...",
+      "stillRenderingDetailedOverlay": "Isanikeza imbondela enemininingwane...",
+      "renderingQrPreview": "Inikeza ukubuka kuqala kwakho kwe-QR...",
+      "checkingScanability": "Ihlola ukuthi iskena kahle...",
+      "finalizingPreview": "Iqedela ukubuka kuqala...",
+      "preparingAnimationFrames": "Ilungiselela ozimele bopopayi...",
+      "renderingAnimationFrames": "Inikezela ngozimele bopopayi...",
+      "smoothingAnimationFrames": "Ukusheshisa ozimele bopopayi...",
+      "finalizingFirstAnimationFrame": "Iqedela uhlaka lokuqala lokugqwayiza...",
+      "qrArt": {
+        "encodingBaseData": "Ibhala ngekhodi idatha yesisekelo...",
+        "analyzingLayout": "Ihlaziya isakhiwo...",
+        "buildingErrorCorrectionFoundation": "Yakha isisekelo sokulungisa iphutha...",
+        "mappingBitsToPixels": "Imepha izingcezu zibe amaphikseli...",
+        "processingImage": "Icubungula isithombe sakho...",
+        "rankingPixelsByImportance": "Ilinganisa amaphikseli ngokubaluleka...",
+        "solvingMatrix": "Ixazulula i-matrix...",
+        "selectingBestBasisVectors": "Ukukhetha amavekhtha ayisisekelo angcono kakhulu...",
+        "countingPredictedMatches": "Ibala okufanayo okubikezelwe...",
+        "adjustingDataBytes": "Ilungisa amabhayithi edatha...",
+        "reEncodingQrCode": "Ifaka kabusha ikhodi ye-QR...",
+        "validatingResult": "Iqinisekisa umphumela...",
+        "complete": "Qedela...",
+        "maskStage": "Imaski {{mask}}: {{stage}}...",
+        "attemptStage": "Umzamo {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Umzamo {{current}}/{{total}}: Imaski {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Ukubuka kuqala Okusheshayo",
+    "draft": "Okusalungiswa"
   },
   "qr": {
     "additionalBorder": "Umngcele owengeziwe ngale kwendawo ethulile",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Isithombe asitholakali",
     "messageSent": "Umlayezo uthunyelwe",
     "lastUpdated": "Igcine Ukubuyekezwa",
-    "scanMePlaceholder": "Skena Mina!"
+    "scanMePlaceholder": "Skena Mina!",
+    "skipToMainContent": "Yeqela kokuqukethwe okuyinhloko"
   },
   "contact": {
     "messageSentTitle": "Umlayezo uthunyelwe",
@@ -2035,5 +2073,18 @@
     "itAsset": "Ifa le-IT",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Idokhumenti ye-PDF"
+  },
+  "analyze": {
+    "confidence": "Ukuzethemba",
+    "exportJson": "Khipha i-JSON",
+    "formatInformation": "Ulwazi Lwefomethi",
+    "imageProperties": "Izakhiwo zesithombe",
+    "processingTimings": "Icubungula izikhathi",
+    "spatialAnalysis": "Ukuhlaziywa Kwendawo",
+    "noCodeDetectedInImage": "Ayikho ikhodi ye-QR etholiwe esithombeni"
+  },
+  "errors": {
+    "failedToGenerateQr": "Yehlulekile ukukhiqiza ikhodi ye-QR",
+    "contentTooLongForQr": "Okuqukethwe kude kakhulu ngekhodi ye-QR. Sicela ufinyeze okuqukethwe kwakho noma usebenzise isifinyezi se-URL."
   }
 }

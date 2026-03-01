@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Kód Előnézet - Kattintson az Export gombra a letöltéshez",
     "simulating": "Szimuláció",
-    "simulationActive": "Környezeti szimuláció aktív - Az előnézet megmutatja, hogyan jelenhet meg QR kód különböző körülmények között"
+    "simulationActive": "Környezeti szimuláció aktív - Az előnézet megmutatja, hogyan jelenhet meg QR kód különböző körülmények között",
+    "busy": {
+      "workingOnIt": "Dolgozunk rajta...",
+      "waitingForThingsToSettle": "Várom, hogy rendeződjenek a dolgok...",
+      "gettingAnimationPreviewReady": "Az animáció előnézetének előkészítése...",
+      "generatingPreview": "Előnézet generálása...",
+      "preparingPreview": "Az előnézet előkészítése...",
+      "buildingQrStructure": "A QR-struktúra felépítése...",
+      "preparingQrArtComputation": "QR-Art számítás előkészítése...",
+      "stillRenderingDetailedOverlay": "Még mindig a részletes fedvény megjelenítése...",
+      "renderingQrPreview": "QR-előnézet megjelenítése...",
+      "checkingScanability": "Ellenőrzi, hogy megfelelően szkennel...",
+      "finalizingPreview": "Az előnézet véglegesítése...",
+      "preparingAnimationFrames": "Animációs képkockák előkészítése...",
+      "renderingAnimationFrames": "Az animációs keretek renderelése...",
+      "smoothingAnimationFrames": "Az animációs keretek simítása...",
+      "finalizingFirstAnimationFrame": "Az első animációs képkocka befejezése...",
+      "qrArt": {
+        "encodingBaseData": "Az alapadatok kódolása...",
+        "analyzingLayout": "Az elrendezés elemzése...",
+        "buildingErrorCorrectionFoundation": "A hibajavító alap felépítése...",
+        "mappingBitsToPixels": "Bitek leképezése képpontokra...",
+        "processingImage": "A kép feldolgozása...",
+        "rankingPixelsByImportance": "A képpontok rangsorolása fontosság szerint...",
+        "solvingMatrix": "A mátrix megoldása...",
+        "selectingBestBasisVectors": "A legjobb bázisvektorok kiválasztása...",
+        "countingPredictedMatches": "A megjósolt meccsek számolása...",
+        "adjustingDataBytes": "Adatbájtok beállítása...",
+        "reEncodingQrCode": "A QR-kód újrakódolása...",
+        "validatingResult": "Az eredmény ellenőrzése...",
+        "complete": "Teljes...",
+        "maskStage": "Maszk {{mask}}: {{stage}}...",
+        "attemptStage": "{{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "{{current}}/{{total}}: Maszk {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Gyors előnézet",
+    "draft": "Piszkozat"
   },
   "qr": {
     "additionalBorder": "További határ a csendes zónán túl",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "A kép nem található",
     "messageSent": "Üzenet elküldve",
     "lastUpdated": "Módosítás",
-    "scanMePlaceholder": "Keressen meg!"
+    "scanMePlaceholder": "Keressen meg!",
+    "skipToMainContent": "Ugrás a fő tartalomhoz"
   },
   "contact": {
     "messageSentTitle": "Üzenet elküldve",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT-eszköz",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Dokumentum"
+  },
+  "analyze": {
+    "confidence": "Bizalom",
+    "exportJson": "JSON exportálása",
+    "formatInformation": "Formátuminformáció",
+    "imageProperties": "Kép tulajdonságai",
+    "processingTimings": "Feldolgozási időzítések",
+    "spatialAnalysis": "Térbeli elemzés",
+    "noCodeDetectedInImage": "Nem található QR-kód a képen"
+  },
+  "errors": {
+    "failedToGenerateQr": "Nem sikerült létrehozni a QR-kódot",
+    "contentTooLongForQr": "A tartalom túl hosszú a QR-kódhoz. Kérjük, rövidítse le a tartalmat, vagy használjon URL-rövidítőt."
   }
 }

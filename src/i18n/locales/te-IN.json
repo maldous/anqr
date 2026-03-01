@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR కోడ్ ప్రివ్యూ - డౌన్‌లోడ్ చేయడానికి ఎగుమతి క్లిక్ చేయండి",
     "simulating": "అనుకరించడం",
-    "simulationActive": "ఎన్విరాన్‌మెంటల్ సిమ్యులేషన్ సక్రియం - వివిధ పరిస్థితులలో QR కోడ్ ఎలా కనిపించవచ్చో ప్రివ్యూ చూపుతుంది"
+    "simulationActive": "ఎన్విరాన్‌మెంటల్ సిమ్యులేషన్ సక్రియం - వివిధ పరిస్థితులలో QR కోడ్ ఎలా కనిపించవచ్చో ప్రివ్యూ చూపుతుంది",
+    "busy": {
+      "workingOnIt": "దానిపై పనిచేస్తున్న...",
+      "waitingForThingsToSettle": "విషయాలు పరిష్కారం కోసం వేచి ఉంది...",
+      "gettingAnimationPreviewReady": "యానిమేషన్ ప్రివ్యూను సిద్ధం చేస్తోంది...",
+      "generatingPreview": "మీ ప్రివ్యూని రూపొందిస్తోంది...",
+      "preparingPreview": "మీ ప్రివ్యూని సిద్ధం చేస్తోంది...",
+      "buildingQrStructure": "QR నిర్మాణాన్ని నిర్మిస్తోంది...",
+      "preparingQrArtComputation": "QR-ఆర్ట్ గణనను సిద్ధం చేస్తోంది...",
+      "stillRenderingDetailedOverlay": "ఇంకా వివరణాత్మక ఓవర్‌లేని అందిస్తోంది...",
+      "renderingQrPreview": "మీ QR ప్రివ్యూని అందిస్తోంది...",
+      "checkingScanability": "ఇది సరిగ్గా స్కాన్ చేస్తుందో లేదో తనిఖీ చేస్తోంది...",
+      "finalizingPreview": "ప్రివ్యూని ఖరారు చేస్తోంది...",
+      "preparingAnimationFrames": "యానిమేషన్ ఫ్రేమ్‌లను సిద్ధం చేస్తోంది...",
+      "renderingAnimationFrames": "యానిమేషన్ ఫ్రేమ్‌లను రెండరింగ్ చేస్తోంది...",
+      "smoothingAnimationFrames": "యానిమేషన్ ఫ్రేమ్‌లను స్మూత్ చేస్తోంది...",
+      "finalizingFirstAnimationFrame": "మొదటి యానిమేషన్ ఫ్రేమ్‌ని ఖరారు చేస్తోంది...",
+      "qrArt": {
+        "encodingBaseData": "బేస్ డేటాను ఎన్‌కోడ్ చేస్తోంది...",
+        "analyzingLayout": "లేఅవుట్‌ని విశ్లేషిస్తోంది...",
+        "buildingErrorCorrectionFoundation": "లోపం దిద్దుబాటు పునాదిని నిర్మిస్తోంది...",
+        "mappingBitsToPixels": "బిట్‌లను పిక్సెల్‌లకు మ్యాపింగ్ చేస్తోంది...",
+        "processingImage": "మీ చిత్రాన్ని ప్రాసెస్ చేస్తోంది...",
+        "rankingPixelsByImportance": "ప్రాముఖ్యత ఆధారంగా పిక్సెల్‌లను ర్యాంక్ చేస్తోంది...",
+        "solvingMatrix": "మాతృకను పరిష్కరిస్తోంది...",
+        "selectingBestBasisVectors": "ఉత్తమ ప్రాతిపదిక వెక్టర్‌లను ఎంచుకోవడం...",
+        "countingPredictedMatches": "అంచనా వేసిన మ్యాచ్‌ల లెక్కింపు...",
+        "adjustingDataBytes": "డేటా బైట్‌లను సర్దుబాటు చేస్తోంది...",
+        "reEncodingQrCode": "QR కోడ్‌ని మళ్లీ ఎన్‌కోడ్ చేస్తోంది...",
+        "validatingResult": "ఫలితాన్ని ధృవీకరిస్తోంది...",
+        "complete": "పూర్తి...",
+        "maskStage": "మాస్క్ {{mask}}: {{stage}}...",
+        "attemptStage": "ప్రయత్నం {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "ప్రయత్నం {{current}}/{{total}}: మాస్క్ {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "ఫాస్ట్ ప్రివ్యూ",
+    "draft": "డ్రాఫ్ట్"
   },
   "qr": {
     "additionalBorder": "నిశ్శబ్ద ప్రాంతం దాటి అదనపు సరిహద్దు",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "చిత్రం అందుబాటులో లేదు",
     "messageSent": "సందేశం పంపబడింది",
     "lastUpdated": "చివరిగా నవీకరించబడింది",
-    "scanMePlaceholder": "నన్ను స్కాన్ చేయండి!"
+    "scanMePlaceholder": "నన్ను స్కాన్ చేయండి!",
+    "skipToMainContent": "ప్రధాన కంటెంట్‌కి దాటవేయండి"
   },
   "contact": {
     "messageSentTitle": "సందేశం పంపబడింది",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT ఆస్తి",
     "xTwitter": "X (ట్విట్టర్)",
     "pdfDocument": "PDF పత్రం"
+  },
+  "analyze": {
+    "confidence": "విశ్వాసం",
+    "exportJson": "JSONని ఎగుమతి చేయండి",
+    "formatInformation": "ఫార్మాట్ సమాచారం",
+    "imageProperties": "చిత్ర లక్షణాలు",
+    "processingTimings": "ప్రాసెసింగ్ సమయాలు",
+    "spatialAnalysis": "ప్రాదేశిక విశ్లేషణ",
+    "noCodeDetectedInImage": "చిత్రంలో QR కోడ్ కనుగొనబడలేదు"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR కోడ్‌ని రూపొందించడంలో విఫలమైంది",
+    "contentTooLongForQr": "QR కోడ్ కోసం కంటెంట్ చాలా పొడవుగా ఉంది. దయచేసి మీ కంటెంట్‌ను తగ్గించండి లేదా URL షార్ట్‌నర్‌ని ఉపయోగించండి."
   }
 }

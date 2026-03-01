@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "二維碼預覽 - 點擊導出下載",
     "simulating": "模擬",
-    "simulationActive": "環境模擬已激活 - 預覽顯示 QR 碼在不同條件下的顯示方式"
+    "simulationActive": "環境模擬已激活 - 預覽顯示 QR 碼在不同條件下的顯示方式",
+    "busy": {
+      "workingOnIt": "正在努力...",
+      "waitingForThingsToSettle": "等待事情解決...",
+      "gettingAnimationPreviewReady": "正在准备动画预览...",
+      "generatingPreview": "正在生成預覽...",
+      "preparingPreview": "正在準備預覽...",
+      "buildingQrStructure": "建構 QR 結構...",
+      "preparingQrArtComputation": "正在准备 QR-Art 计算...",
+      "stillRenderingDetailedOverlay": "仍在渲染详细的叠加...",
+      "renderingQrPreview": "正在渲染您的 QR 预览...",
+      "checkingScanability": "检查它是否正确扫描...",
+      "finalizingPreview": "正在完成預覽...",
+      "preparingAnimationFrames": "準備動畫影格...",
+      "renderingAnimationFrames": "渲染動畫幀...",
+      "smoothingAnimationFrames": "平滑動畫幀...",
+      "finalizingFirstAnimationFrame": "完成第一个动画帧...",
+      "qrArt": {
+        "encodingBaseData": "對基礎資料進行編碼...",
+        "analyzingLayout": "分析佈局...",
+        "buildingErrorCorrectionFoundation": "建立糾錯基礎...",
+        "mappingBitsToPixels": "將位元映射到像素...",
+        "processingImage": "正在處理您的圖像...",
+        "rankingPixelsByImportance": "按重要性对像素进行排名...",
+        "solvingMatrix": "求解矩陣...",
+        "selectingBestBasisVectors": "選擇最佳基底向量...",
+        "countingPredictedMatches": "計算預測的比賽...",
+        "adjustingDataBytes": "調整資料位元組...",
+        "reEncodingQrCode": "重新編碼 QR 碼...",
+        "validatingResult": "正在驗證結果...",
+        "complete": "完成...",
+        "maskStage": "掩碼 {{mask}}: {{stage}}...",
+        "attemptStage": "試 {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "嘗試 {{current}}/{{total}}：掩碼 {{mask}}：{{stage}}..."
+      }
+    },
+    "fastPreview": "快速預覽",
+    "draft": "吃水"
   },
   "qr": {
     "additionalBorder": "安靜區之外的額外邊界",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "圖片不可用",
     "messageSent": "消息已發送",
     "lastUpdated": "最後更新",
-    "scanMePlaceholder": "掃描我！"
+    "scanMePlaceholder": "掃描我！",
+    "skipToMainContent": "跳至主要內容"
   },
   "contact": {
     "messageSentTitle": "消息已發送",
@@ -2035,5 +2073,18 @@
     "itAsset": "信息技術資產",
     "xTwitter": "X（推特）",
     "pdfDocument": "PDF文檔"
+  },
+  "analyze": {
+    "confidence": "信心",
+    "exportJson": "導出 JSON",
+    "formatInformation": "格式信息",
+    "imageProperties": "圖像屬性",
+    "processingTimings": "處理時間",
+    "spatialAnalysis": "空間分析",
+    "noCodeDetectedInImage": "影像中未偵測到二維碼"
+  },
+  "errors": {
+    "failedToGenerateQr": "產生二維碼失敗",
+    "contentTooLongForQr": "內容對於二維碼來說太長。請縮短您的內容或使用網址縮短器。"
   }
 }

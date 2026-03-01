@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Папярэдні прагляд QR-кода - націсніце \"Экспарт\", каб спампаваць",
     "simulating": "Імітацыя",
-    "simulationActive": "Актыўнае мадэляванне навакольнага асяроддзя - папярэдні прагляд паказвае, як можа выглядаць QR-код у розных умовах"
+    "simulationActive": "Актыўнае мадэляванне навакольнага асяроддзя - папярэдні прагляд паказвае, як можа выглядаць QR-код у розных умовах",
+    "busy": {
+      "workingOnIt": "Працуем над гэтым...",
+      "waitingForThingsToSettle": "Чакаю, пакуль усё ўладзіцца...",
+      "gettingAnimationPreviewReady": "Падрыхтоўка папярэдняга прагляду анімацыі...",
+      "generatingPreview": "Стварэнне папярэдняга прагляду...",
+      "preparingPreview": "Падрыхтоўка папярэдняга прагляду...",
+      "buildingQrStructure": "Стварэнне структуры QR...",
+      "preparingQrArtComputation": "Падрыхтоўка вылічэння QR-Art...",
+      "stillRenderingDetailedOverlay": "Працягваецца візуалізацыя падрабязнага накладання...",
+      "renderingQrPreview": "Ідзе візуалізацыя вашага QR-прагляду...",
+      "checkingScanability": "Праверка правільнасці сканавання...",
+      "finalizingPreview": "Завяршэнне папярэдняга прагляду...",
+      "preparingAnimationFrames": "Падрыхтоўка кадраў анімацыі...",
+      "renderingAnimationFrames": "Візуалізацыя кадраў анімацыі...",
+      "smoothingAnimationFrames": "Згладжванне кадраў анімацыі...",
+      "finalizingFirstAnimationFrame": "Завяршэнне першага кадра анімацыі...",
+      "qrArt": {
+        "encodingBaseData": "Кадзіраванне базавых дадзеных...",
+        "analyzingLayout": "Аналіз макета...",
+        "buildingErrorCorrectionFoundation": "Стварэнне асновы для выпраўлення памылак...",
+        "mappingBitsToPixels": "Адлюстраванне бітаў у пікселі...",
+        "processingImage": "Ідзе апрацоўка выявы...",
+        "rankingPixelsByImportance": "Ранжыраванне пікселяў па важнасці...",
+        "solvingMatrix": "Рашэнне матрыцы...",
+        "selectingBestBasisVectors": "Выбар найлепшых базісных вектараў...",
+        "countingPredictedMatches": "Падлік прагназаваных супадзенняў...",
+        "adjustingDataBytes": "Наладжванне байтаў даных...",
+        "reEncodingQrCode": "Паўторнае кадзіраванне QR-кода...",
+        "validatingResult": "Праверка выніку...",
+        "complete": "Поўны...",
+        "maskStage": "Маска {{mask}}: {{stage}}...",
+        "attemptStage": "Спроба {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Спроба {{current}}/{{total}}: Маска {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Хуткі папярэдні прагляд",
+    "draft": "Чарнавік"
   },
   "qr": {
     "additionalBorder": "Дадатковая мяжа за ціхай зонай",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Відарыс недаступны",
     "messageSent": "Паведамленне адпраўлена",
     "lastUpdated": "Апошняе абнаўленне",
-    "scanMePlaceholder": "Сканіруйце мяне!"
+    "scanMePlaceholder": "Сканіруйце мяне!",
+    "skipToMainContent": "Перайсці да асноўнага зместу"
   },
   "contact": {
     "messageSentTitle": "Паведамленне адпраўлена",
@@ -2035,5 +2073,18 @@
     "itAsset": "ІТ-актыў",
     "xTwitter": "X (Твітэр)",
     "pdfDocument": "PDF дакумент"
+  },
+  "analyze": {
+    "confidence": "Упэўненасць",
+    "exportJson": "Экспарт JSON",
+    "formatInformation": "Інфармацыя пра фармат",
+    "imageProperties": "Уласцівасці выявы",
+    "processingTimings": "Тэрміны апрацоўкі",
+    "spatialAnalysis": "Прасторавы аналіз",
+    "noCodeDetectedInImage": "QR-код на выяве не выяўлены"
+  },
+  "errors": {
+    "failedToGenerateQr": "Не ўдалося стварыць QR-код",
+    "contentTooLongForQr": "Змесціва занадта доўгае для QR-кода. Калі ласка, скароціце свой кантэнт або выкарыстоўвайце праграму для скарачэння URL."
   }
 }

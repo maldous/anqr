@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Preview ng QR Code - I-click ang I-export para mag-download",
     "simulating": "Pagpapainit",
-    "simulationActive": "Ipinakikita ng Environmental revisionactive - Preview kung paanong ang QR code ay maaaring lumitaw sa ilalim ng iba't ibang kalagayan"
+    "simulationActive": "Ipinakikita ng Environmental revisionactive - Preview kung paanong ang QR code ay maaaring lumitaw sa ilalim ng iba't ibang kalagayan",
+    "busy": {
+      "workingOnIt": "Ginagawa ito...",
+      "waitingForThingsToSettle": "Naghihintay para sa mga bagay na maayos...",
+      "gettingAnimationPreviewReady": "Inihahanda ang animation preview...",
+      "generatingPreview": "Binubuo ang iyong preview...",
+      "preparingPreview": "Inihahanda ang iyong preview...",
+      "buildingQrStructure": "Pagbuo ng istraktura ng QR...",
+      "preparingQrArtComputation": "Inihahanda ang QR-Art computation...",
+      "stillRenderingDetailedOverlay": "Nire-render pa rin ang detalyadong overlay...",
+      "renderingQrPreview": "Nire-render ang iyong QR preview...",
+      "checkingScanability": "Sinusuri kung nag-scan ito nang maayos...",
+      "finalizingPreview": "Tinatapos ang preview...",
+      "preparingAnimationFrames": "Inihahanda ang mga animation frame...",
+      "renderingAnimationFrames": "Nire-render ang mga animation frame...",
+      "smoothingAnimationFrames": "Pinapakinis ang mga animation frame...",
+      "finalizingFirstAnimationFrame": "Tinatapos ang unang frame ng animation...",
+      "qrArt": {
+        "encodingBaseData": "Pag-encode ng base data...",
+        "analyzingLayout": "Sinusuri ang layout...",
+        "buildingErrorCorrectionFoundation": "Pagbuo ng pundasyon sa pagwawasto ng error...",
+        "mappingBitsToPixels": "Pagma-map ng mga bit sa mga pixel...",
+        "processingImage": "Pinoproseso ang iyong larawan...",
+        "rankingPixelsByImportance": "Pagraranggo ng mga pixel ayon sa kahalagahan...",
+        "solvingMatrix": "Paglutas ng matrix...",
+        "selectingBestBasisVectors": "Pagpili ng pinakamahusay na batayan ng mga vector...",
+        "countingPredictedMatches": "Nagbibilang ng mga hinulaang laban...",
+        "adjustingDataBytes": "Pagsasaayos ng mga byte ng data...",
+        "reEncodingQrCode": "Muling pag-encode ng QR code...",
+        "validatingResult": "Pinapatunayan ang resulta...",
+        "complete": "Kumpleto...",
+        "maskStage": "Mask {{mask}}: {{stage}}...",
+        "attemptStage": "Pagsubok {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Pagtatangka {{current}}/{{total}}: Mask {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Mabilis na Preview",
+    "draft": "Draft"
   },
   "qr": {
     "additionalBorder": "Karagdagang hangganan sa labas ng tahimik na sona",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Walang Larawan",
     "messageSent": "Nagpadala ng Mensahe",
     "lastUpdated": "Huling Update",
-    "scanMePlaceholder": "Ang Scan Me!"
+    "scanMePlaceholder": "Ang Scan Me!",
+    "skipToMainContent": "Lumaktaw sa pangunahing nilalaman"
   },
   "contact": {
     "messageSentTitle": "Nagpadala ng Mensahe",
@@ -2035,5 +2073,18 @@
     "itAsset": "TINATAG ITO",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF dokumento"
+  },
+  "analyze": {
+    "confidence": "Kumpiyansa",
+    "exportJson": "I-export ang JSON",
+    "formatInformation": "Impormasyon sa Format",
+    "imageProperties": "Mga Katangian ng Larawan",
+    "processingTimings": "Mga Timing ng Pagproseso",
+    "spatialAnalysis": "Pagsusuri sa Spatial",
+    "noCodeDetectedInImage": "Walang nakitang QR code sa larawan"
+  },
+  "errors": {
+    "failedToGenerateQr": "Nabigong bumuo ng QR code",
+    "contentTooLongForQr": "Masyadong mahaba ang content para sa QR code. Mangyaring paikliin ang iyong nilalaman o gumamit ng URL shortener."
   }
 }
