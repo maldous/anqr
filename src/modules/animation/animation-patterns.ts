@@ -176,6 +176,172 @@ function applyEasing(t: number, mode: InterpolationMode): number {
   }
 }
 
+type PatternFrameApplier = (data: Uint8ClampedArray) => void;
+
+const TAU = Math.PI * 2;
+const PI4 = Math.PI * 4;
+
+function clampToByte(value: number): number {
+  if (value <= 0) return 0;
+  if (value >= 255) return 255;
+  return (value + 0.5) | 0;
+}
+
+function applyUniformBrightness(data: Uint8ClampedArray, factor: number): void {
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = clampToByte(data[i] * factor);
+    data[i + 1] = clampToByte(data[i + 1] * factor);
+    data[i + 2] = clampToByte(data[i + 2] * factor);
+  }
+}
+
+function buildPatternFrameApplier(
+  pattern: AnimationPattern,
+  progress: number,
+  speed: number,
+  seed: number,
+  width: number,
+  height: number
+): PatternFrameApplier {
+  const time = progress * speed * TAU;
+
+  switch (pattern) {
+    case 'pulse': {
+      const factor = 0.7 + 0.3 * Math.sin(time);
+      return (data) => {
+        applyUniformBrightness(data, factor);
+      };
+    }
+
+    case 'wave': {
+      const waveFactors = new Float32Array(width);
+      const waveScale = PI4 / Math.max(1, width);
+      for (let x = 0; x < width; x++) {
+        waveFactors[x] = 0.7 + 0.3 * Math.sin(time + x * waveScale);
+      }
+      return (data) => {
+        for (let y = 0; y < height; y++) {
+          let i = y * width * 4;
+          for (let x = 0; x < width; x++, i += 4) {
+            const factor = waveFactors[x];
+            data[i] = clampToByte(data[i] * factor);
+            data[i + 1] = clampToByte(data[i + 1] * factor);
+            data[i + 2] = clampToByte(data[i + 2] * factor);
+          }
+        }
+      };
+    }
+
+    case 'scanline': {
+      const scanY = ((progress * speed) % 1) * height;
+      const rowFactors = new Float32Array(height);
+      for (let y = 0; y < height; y++) {
+        rowFactors[y] = Math.abs(y - scanY) < 20 ? 1.3 : 1.0;
+      }
+      return (data) => {
+        for (let y = 0; y < height; y++) {
+          const factor = rowFactors[y];
+          let i = y * width * 4;
+          for (let x = 0; x < width; x++, i += 4) {
+            data[i] = clampToByte(data[i] * factor);
+            data[i + 1] = clampToByte(data[i + 1] * factor);
+            data[i + 2] = clampToByte(data[i + 2] * factor);
+          }
+        }
+      };
+    }
+
+    case 'shimmer': {
+      const denom = Math.max(1, width + height);
+      const shimmerScale = PI4 / denom;
+      const base = time + seed;
+      const colSin = new Float32Array(width);
+      const colCos = new Float32Array(width);
+      const rowSin = new Float32Array(height);
+      const rowCos = new Float32Array(height);
+      for (let x = 0; x < width; x++) {
+        const angle = base + x * shimmerScale;
+        colSin[x] = Math.sin(angle);
+        colCos[x] = Math.cos(angle);
+      }
+      for (let y = 0; y < height; y++) {
+        const angle = y * shimmerScale;
+        rowSin[y] = Math.sin(angle);
+        rowCos[y] = Math.cos(angle);
+      }
+      return (data) => {
+        for (let y = 0; y < height; y++) {
+          const rs = rowSin[y];
+          const rc = rowCos[y];
+          let i = y * width * 4;
+          for (let x = 0; x < width; x++, i += 4) {
+            const shimmer = colSin[x] * rc + colCos[x] * rs;
+            const factor = 0.8 + 0.2 * shimmer;
+            data[i] = clampToByte(data[i] * factor);
+            data[i + 1] = clampToByte(data[i + 1] * factor);
+            data[i + 2] = clampToByte(data[i + 2] * factor);
+          }
+        }
+      };
+    }
+
+    case 'drift': {
+      const driftX = Math.sin(time + seed) * 0.1;
+      const driftY = Math.cos(time + seed) * 0.1;
+      const phase = (driftX + driftY) * TAU;
+      const colSin = new Float32Array(width);
+      const colCos = new Float32Array(width);
+      const rowSin = new Float32Array(height);
+      const rowCos = new Float32Array(height);
+      const invWidth = width > 0 ? 1 / width : 0;
+      const invHeight = height > 0 ? 1 / height : 0;
+      for (let x = 0; x < width; x++) {
+        const angle = x * invWidth * TAU + phase;
+        colSin[x] = Math.sin(angle);
+        colCos[x] = Math.cos(angle);
+      }
+      for (let y = 0; y < height; y++) {
+        const angle = y * invHeight * TAU;
+        rowSin[y] = Math.sin(angle);
+        rowCos[y] = Math.cos(angle);
+      }
+      return (data) => {
+        for (let y = 0; y < height; y++) {
+          const rs = rowSin[y];
+          const rc = rowCos[y];
+          let i = y * width * 4;
+          for (let x = 0; x < width; x++, i += 4) {
+            const drift = colSin[x] * rc + colCos[x] * rs;
+            const factor = 0.9 + 0.1 * drift;
+            data[i] = clampToByte(data[i] * factor);
+            data[i + 1] = clampToByte(data[i + 1] * factor);
+            data[i + 2] = clampToByte(data[i + 2] * factor);
+          }
+        }
+      };
+    }
+
+    case 'color_cycle': {
+      const angle = progress * speed * TAU;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      return (data) => {
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          data[i] = clampToByte(r * cos + g * sin);
+          data[i + 1] = clampToByte(g * cos + b * sin);
+          data[i + 2] = clampToByte(b * cos + r * sin);
+        }
+      };
+    }
+
+    default:
+      return () => {};
+  }
+}
+
 function applyPatternToImageData(
   imageData: ImageData,
   pattern: AnimationPattern,
@@ -184,73 +350,8 @@ function applyPatternToImageData(
   seed: number
 ): void {
   const { data, width, height } = imageData;
-  const time = progress * speed * Math.PI * 2;
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const i = (y * width + x) * 4;
-      let factor = 1.0;
-
-      switch (pattern) {
-        case 'pulse': {
-          // Global brightness pulse
-          factor = 0.7 + 0.3 * Math.sin(time);
-          break;
-        }
-        case 'wave': {
-          // Horizontal wave
-          const waveOffset = (x / width) * Math.PI * 4;
-          factor = 0.7 + 0.3 * Math.sin(time + waveOffset);
-          break;
-        }
-        case 'scanline': {
-          // Vertical scanline
-          const scanY = ((progress * speed) % 1) * height;
-          const dist = Math.abs(y - scanY);
-          factor = dist < 20 ? 1.3 : 1.0;
-          break;
-        }
-        case 'shimmer': {
-          // Diagonal shimmer
-          const shimmerOffset = ((x + y) / (width + height)) * Math.PI * 4;
-          factor = 0.8 + 0.2 * Math.sin(time + shimmerOffset + seed);
-          break;
-        }
-        case 'drift': {
-          // Subtle color drift
-          const driftX = Math.sin(time + seed) * 0.1;
-          const driftY = Math.cos(time + seed) * 0.1;
-          factor =
-            0.9 +
-            0.1 *
-              Math.sin((x / width + driftX) * Math.PI * 2 + (y / height + driftY) * Math.PI * 2);
-          break;
-        }
-        case 'color_cycle': {
-          // Hue rotation effect (simplified - just shifts RGB channels)
-          const hueShift = progress * speed;
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-
-          // Simple RGB rotation
-          const angle = hueShift * Math.PI * 2;
-          const cos = Math.cos(angle);
-          const sin = Math.sin(angle);
-
-          data[i] = Math.max(0, Math.min(255, r * cos + g * sin));
-          data[i + 1] = Math.max(0, Math.min(255, g * cos + b * sin));
-          data[i + 2] = Math.max(0, Math.min(255, b * cos + r * sin));
-          continue; // Skip normal factor application
-        }
-      }
-
-      // Apply brightness factor
-      data[i] = Math.max(0, Math.min(255, Math.round(data[i] * factor)));
-      data[i + 1] = Math.max(0, Math.min(255, Math.round(data[i + 1] * factor)));
-      data[i + 2] = Math.max(0, Math.min(255, Math.round(data[i + 2] * factor)));
-    }
-  }
+  const applyForFrame = buildPatternFrameApplier(pattern, progress, speed, seed, width, height);
+  applyForFrame(data);
 }
 
 // Default export for the module

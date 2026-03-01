@@ -180,6 +180,237 @@ function packedColorsToMatrix(colors: Uint32Array, size: number): (RGBWithMeta |
   return matrix;
 }
 
+type ReadbackCtx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+
+type SharedReadbackEntry = {
+  canvas: HTMLCanvasElement | OffscreenCanvas;
+  ctx: ReadbackCtx;
+  inUse: boolean;
+  lastUsedAt: number;
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void;
+};
+
+type SharedReadbackLease = {
+  canvas: HTMLCanvasElement | OffscreenCanvas;
+  ctx: ReadbackCtx;
+  release: () => void;
+};
+
+const MAX_SHARED_READBACK_CANVASES = 4;
+const sharedReadbackCache = new Map<number, SharedReadbackEntry>();
+
+type DitherStaticState = {
+  key: string;
+  kernelName: DiffusionKernel;
+  kernel: DiffusionKernelDef;
+  noiseTile: ReturnType<typeof generateBlueNoiseTile>;
+  orderedMatrix: number[][];
+  orderedH: number;
+  orderedW: number;
+  orderedDivisor: number;
+  whiteNoiseField: Float32Array;
+  gaussianNoiseField: Float32Array;
+  triangularNoiseField: Float32Array;
+};
+
+const MAX_DITHER_STATIC_STATES = 24;
+const ditherStaticStateCache = new Map<string, DitherStaticState>();
+const blueNoiseTileCache = new Map<string, ReturnType<typeof generateBlueNoiseTile>>();
+
+function get2DContext(canvas: HTMLCanvasElement | OffscreenCanvas): ReadbackCtx | null {
+  return (
+    (canvas.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings | undefined) as ReadbackCtx | null) ??
+    (canvas.getContext('2d') as ReadbackCtx | null)
+  );
+}
+
+function trimSharedReadbackCache(): void {
+  if (sharedReadbackCache.size <= MAX_SHARED_READBACK_CANVASES) return;
+  const entries = [...sharedReadbackCache.entries()]
+    .filter(([, entry]) => !entry.inUse)
+    .sort((a, b) => a[1].lastUsedAt - b[1].lastUsedAt);
+  while (sharedReadbackCache.size > MAX_SHARED_READBACK_CANVASES && entries.length > 0) {
+    const [size, entry] = entries.shift()!;
+    sharedReadbackCache.delete(size);
+    entry.releaseCanvasFn?.(entry.canvas);
+  }
+}
+
+async function acquireSharedReadbackCanvas(
+  scaledSize: number,
+  createCanvasFn: CreateCanvasFn,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+): Promise<SharedReadbackLease | null> {
+  const existing = sharedReadbackCache.get(scaledSize);
+  if (existing && !existing.inUse) {
+    existing.inUse = true;
+    existing.lastUsedAt = Date.now();
+    return {
+      canvas: existing.canvas,
+      ctx: existing.ctx,
+      release: () => {
+        existing.inUse = false;
+        existing.lastUsedAt = Date.now();
+      },
+    };
+  }
+
+  const canvas = await createCanvasFn(scaledSize, scaledSize);
+  const ctx = get2DContext(canvas);
+  if (!ctx) {
+    releaseCanvasFn?.(canvas);
+    return null;
+  }
+
+  if (!existing) {
+    const entry: SharedReadbackEntry = {
+      canvas,
+      ctx,
+      inUse: true,
+      lastUsedAt: Date.now(),
+      releaseCanvasFn,
+    };
+    sharedReadbackCache.set(scaledSize, entry);
+    trimSharedReadbackCache();
+    return {
+      canvas: entry.canvas,
+      ctx: entry.ctx,
+      release: () => {
+        entry.inUse = false;
+        entry.lastUsedAt = Date.now();
+      },
+    };
+  }
+
+  // Shared canvas for this size is busy; use a temporary canvas.
+  return {
+    canvas,
+    ctx,
+    release: () => {
+      releaseCanvasFn?.(canvas);
+    },
+  };
+}
+
+async function readOverlayPixelsAtSize(
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas,
+  scaledSize: number,
+  createCanvasFn: CreateCanvasFn,
+  releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
+): Promise<Uint8ClampedArray | null> {
+  if (overlayCanvas.width === scaledSize && overlayCanvas.height === scaledSize) {
+    const directCtx = get2DContext(overlayCanvas);
+    if (directCtx) {
+      return directCtx.getImageData(0, 0, scaledSize, scaledSize).data;
+    }
+  }
+
+  const lease = await acquireSharedReadbackCanvas(scaledSize, createCanvasFn, releaseCanvasFn);
+  if (!lease) return null;
+  try {
+    lease.ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
+    return lease.ctx.getImageData(0, 0, scaledSize, scaledSize).data;
+  } finally {
+    lease.release();
+  }
+}
+
+function getBlueNoiseTileCached(
+  tileSize: number,
+  seed: number
+): ReturnType<typeof generateBlueNoiseTile> {
+  const key = `${tileSize}:${seed}`;
+  const existing = blueNoiseTileCache.get(key);
+  if (existing) return existing;
+  const tile = generateBlueNoiseTile(tileSize, seed);
+  blueNoiseTileCache.set(key, tile);
+  if (blueNoiseTileCache.size > MAX_DITHER_STATIC_STATES) {
+    const oldestKey = blueNoiseTileCache.keys().next().value;
+    if (oldestKey) blueNoiseTileCache.delete(oldestKey);
+  }
+  return tile;
+}
+
+function buildDitherStaticStateKey(args: {
+  ditherKind: string;
+  tileSize: number;
+  seed: number;
+  orderedMatrixName: OrderedMatrix;
+  kernelName: DiffusionKernel;
+  colorDitherMode: string;
+  scaledSize: number;
+}): string {
+  return [
+    args.ditherKind,
+    args.tileSize,
+    args.seed,
+    args.orderedMatrixName,
+    args.kernelName,
+    args.colorDitherMode,
+    args.scaledSize,
+  ].join('|');
+}
+
+function getDitherStaticState(args: {
+  ditherKind: string;
+  tileSize: number;
+  seed: number;
+  orderedMatrixName: OrderedMatrix;
+  kernelName: DiffusionKernel;
+  colorDitherMode: string;
+  scaledSize: number;
+}): DitherStaticState {
+  const key = buildDitherStaticStateKey(args);
+  const existing = ditherStaticStateCache.get(key);
+  if (existing) return existing;
+
+  const kernel = DIFFUSION_KERNELS[args.kernelName] ?? DIFFUSION_KERNELS.floyd_steinberg;
+  const noiseTile = getBlueNoiseTileCached(args.tileSize, args.seed);
+  const orderedMatrix = getOrderedMatrix(args.orderedMatrixName);
+  const orderedH = orderedMatrix.length;
+  const orderedW = orderedMatrix[0]?.length ?? orderedH;
+  const orderedDivisor = Math.max(1, orderedH * orderedW);
+
+  const pixelCount = args.scaledSize * args.scaledSize;
+  const whiteNoiseField = new Float32Array(pixelCount);
+  const gaussianNoiseField = new Float32Array(pixelCount);
+  const triangularNoiseField = new Float32Array(pixelCount);
+  const whiteNoiseRng = createRNG((args.seed ^ 0x9e3779b9) >>> 0);
+  const gaussianNoiseRng = createRNG((args.seed ^ 0x7f4a7c15) >>> 0);
+  const triangularNoiseRng = createRNG((args.seed ^ 0x94d049bb) >>> 0);
+  for (let i = 0; i < pixelCount; i++) {
+    whiteNoiseField[i] = whiteNoiseRng();
+    const u1 = Math.max(1e-6, gaussianNoiseRng());
+    const u2 = gaussianNoiseRng();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    gaussianNoiseField[i] = clamp01(0.5 + z * 0.18);
+    triangularNoiseField[i] = (triangularNoiseRng() + triangularNoiseRng()) * 0.5;
+  }
+
+  const created: DitherStaticState = {
+    key,
+    kernelName: args.kernelName,
+    kernel,
+    noiseTile,
+    orderedMatrix,
+    orderedH,
+    orderedW,
+    orderedDivisor,
+    whiteNoiseField,
+    gaussianNoiseField,
+    triangularNoiseField,
+  };
+  ditherStaticStateCache.set(key, created);
+  if (ditherStaticStateCache.size > MAX_DITHER_STATIC_STATES) {
+    const oldestKey = ditherStaticStateCache.keys().next().value;
+    if (oldestKey) ditherStaticStateCache.delete(oldestKey);
+  }
+  return created;
+}
+
 /**
  * Generate a QR-first matrix for high-contrast B&W images.
  * This mode GUARANTEES QR scannability by:
@@ -203,21 +434,15 @@ async function generateBWFirstMatrix(
   const scaledSize = moduleCount * scale;
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  // Create scaled overlay canvas
-  const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d', {
-    willReadFrequently: true,
-    desynchronized: true,
-  } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
-  if (!ctx) {
-    if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
+  const data = await readOverlayPixelsAtSize(
+    overlayCanvas,
+    scaledSize,
+    createCanvasFn,
+    releaseCanvasFn
+  );
+  if (!data) {
     return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
   }
-
-  ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
-  const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
-  const data = imageData.data;
-  if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
   const pixelCount = scaledSize * scaledSize;
   const matrixBits = new Uint8Array(pixelCount);
@@ -249,7 +474,7 @@ async function generateBWFirstMatrix(
   // Generate blue noise tile for dithering texture
   const seed = config.blueNoiseSeed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
-  const blueNoiseTile = generateBlueNoiseTile(tileSize, seed);
+  const blueNoiseTile = getBlueNoiseTileCached(tileSize, seed);
 
   // Contrast curve power - higher values increase contrast of the spiral
   const contrastPower = 1.5;
@@ -936,43 +1161,40 @@ export async function generateDitheredMatrix(
   const thresholdPattern = resolveThresholdPattern(ditherKind);
   const thresholdOnly = isThresholdOnlyDitherKind(ditherKind);
   const kernelName = resolveDiffusionKernel(config.diffusionKernel, ditherKind);
-  const kernel = DIFFUSION_KERNELS[kernelName] ?? DIFFUSION_KERNELS.floyd_steinberg;
   const seed = config.blueNoiseSeed ?? config.seed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
-  const noiseTile = generateBlueNoiseTile(tileSize, seed);
   const orderedMatrixName = resolveOrderedMatrixName(ditherKind, config.orderedMatrix);
-  const orderedMatrix = getOrderedMatrix(orderedMatrixName);
-  const orderedH = orderedMatrix.length;
-  const orderedW = orderedMatrix[0]?.length ?? orderedH;
-  const orderedDivisor = Math.max(1, orderedH * orderedW);
-  const whiteNoiseRng = createRNG((seed ^ 0x9e3779b9) >>> 0);
-  const gaussianNoiseRng = createRNG((seed ^ 0x7f4a7c15) >>> 0);
-  const triangularNoiseRng = createRNG((seed ^ 0x94d049bb) >>> 0);
-  const gaussian01 = (): number => {
-    const u1 = Math.max(1e-6, gaussianNoiseRng());
-    const u2 = gaussianNoiseRng();
-    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    return clamp01(0.5 + z * 0.18);
-  };
-  const triangular01 = (): number => (triangularNoiseRng() + triangularNoiseRng()) * 0.5;
+  const staticState = getDitherStaticState({
+    ditherKind,
+    tileSize,
+    seed,
+    orderedMatrixName,
+    kernelName,
+    colorDitherMode,
+    scaledSize,
+  });
+  const kernel = staticState.kernel;
+  const noiseTile = staticState.noiseTile;
+  const orderedMatrix = staticState.orderedMatrix;
+  const orderedH = staticState.orderedH;
+  const orderedW = staticState.orderedW;
+  const orderedDivisor = staticState.orderedDivisor;
+  const whiteNoiseField = staticState.whiteNoiseField;
+  const gaussianNoiseField = staticState.gaussianNoiseField;
+  const triangularNoiseField = staticState.triangularNoiseField;
   const frameIndex = config.frameIndex ?? 0;
   const temporalOffsetX = (frameIndex * 17) % tileSize;
   const temporalOffsetY = (frameIndex * 29) % tileSize;
 
-  const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d', {
-    willReadFrequently: true,
-    desynchronized: true,
-  } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
-  if (!ctx) {
-    if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
+  const data = await readOverlayPixelsAtSize(
+    overlayCanvas,
+    scaledSize,
+    createCanvasFn,
+    releaseCanvasFn
+  );
+  if (!data) {
     return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
   }
-
-  ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
-  const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
-  const data = imageData.data;
-  if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
   const pixelCount = scaledSize * scaledSize;
   const matrixBits = new Uint8Array(pixelCount);
@@ -983,15 +1205,15 @@ export async function generateDitheredMatrix(
 
   const mix = clamp01(intensity * ditherStrength * ditherScale);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
-  const sampleThreshold = (x: number, y: number, overlayDark: number): number => {
+  const sampleThreshold = (x: number, y: number, sampleIdx: number, overlayDark: number): number => {
     const centered = (value01: number): number => clamp01(0.5 + (value01 - 0.5) * mix);
     switch (thresholdPattern) {
       case 'white_noise':
-        return centered(whiteNoiseRng());
+        return centered(whiteNoiseField[sampleIdx]);
       case 'gaussian_noise':
-        return centered(gaussian01());
+        return centered(gaussianNoiseField[sampleIdx]);
       case 'triangular_noise':
-        return centered(triangular01());
+        return centered(triangularNoiseField[sampleIdx]);
       case 'ordered': {
         const rank = orderedMatrix[y % orderedH]?.[x % orderedW] ?? 0;
         return centered((rank + 0.5) / orderedDivisor);
@@ -1041,7 +1263,7 @@ export async function generateDitheredMatrix(
         ? 0
         : (qrIsDark ? 1 : -1) * qrBitBiasStrength * centerW * (0.45 + mix * 0.8);
       const biasedOverlayDark = clamp01(overlayDark + qrBias);
-      const threshold = sampleThreshold(x, y, overlayDark);
+      const threshold = sampleThreshold(x, y, sampleIdx, overlayDark);
 
       let isDarkCandidate: boolean;
       if (thresholdOnly && !useColorDither) {
@@ -1152,20 +1374,15 @@ export async function generateBlueNoiseMatrix(
   const intensity = clamp01(rawIntensity);
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
-  const ctx = scaledCanvas.getContext('2d', {
-    willReadFrequently: true,
-    desynchronized: true,
-  } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null;
-  if (!ctx) {
-    if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
+  const data = await readOverlayPixelsAtSize(
+    overlayCanvas,
+    scaledSize,
+    createCanvasFn,
+    releaseCanvasFn
+  );
+  if (!data) {
     return createEmptyMatrix(scaledSize, scale, effectiveIntensity);
   }
-
-  ctx.drawImage(overlayCanvas, 0, 0, scaledSize, scaledSize);
-  const imageData = ctx.getImageData(0, 0, scaledSize, scaledSize);
-  const data = imageData.data;
-  if (releaseCanvasFn) releaseCanvasFn(scaledCanvas);
 
   const pixelCount = scaledSize * scaledSize;
   const matrixBits = new Uint8Array(pixelCount);
@@ -1175,7 +1392,7 @@ export async function generateBlueNoiseMatrix(
 
   const seed = config.blueNoiseSeed ?? config.seed ?? 1337;
   const tileSize = config.blueNoiseTileSize ?? 64;
-  const tile = generateBlueNoiseTile(tileSize, seed);
+  const tile = getBlueNoiseTileCached(tileSize, seed);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
   const scanGateProfile = config.scanGateProfile ?? 'full';
   const scanGateActive = scanGateProfile !== 'off';

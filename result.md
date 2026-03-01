@@ -306,3 +306,37 @@
   - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps sampled animated king gif frames decodable in preview scan-gate profile"` ✅
   - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps dithered king gif first-frame decodable in preview scan-gate profile"` ✅
   - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps dithered dance gif first-frame decodable in preview scan-gate profile"` ✅
+- Fixed cancel + overlay source interaction:
+  - `src/hooks/useQRGenerator.ts` now tracks a stable overlay source key (file/url signature) and clears cancel suppression when the overlay source changes.
+  - This resolves the bug where canceling an animation could block regeneration when selecting a new overlay image/GIF.
+- Removed dev QArt perf HUD from the bottom-right corner:
+  - `src/hooks/useQRGenerator.ts` now disables the `QArt perf: waiting...` overlay (`ENABLE_QART_PERF_OVERLAY = false`).
+- Animation hot-loop optimization in pattern generation:
+  - `src/modules/animation/animation-patterns.ts` refactored to choose a per-frame applier once (no per-pixel pattern switch).
+  - Hoisted trig to per-frame/per-row/per-column precompute for `wave`, `scanline`, `shimmer`, `drift`, and `color_cycle`.
+  - Added fast byte clamp helper to avoid repeated `Math.max/Math.min/Math.round` in inner loops.
+- Color-cycle hot-loop optimization:
+  - `src/modules/animation/color-cycle.ts` now uses precomputed tint deltas and fast byte clamp in the per-pixel loop.
+  - Added OffscreenCanvas preference when no target canvas is supplied.
+- GIF compositor patch-path optimization:
+  - `src/modules/animation/gif-compositor.ts` now caches per-frame patch `ImageBitmap` objects (lazy creation) and uses `drawImage(bitmap, ...)` on reuse.
+  - Keeps existing `putImageData` fallback for environments without `createImageBitmap`.
+- GIF export canvas optimization:
+  - `src/modules/exporter/gif-export.ts` now prefers `OffscreenCanvas` for scaling/readback before indexing when available.
+- QR dither/blue-noise hot path optimization:
+  - `src/modules/qr-generator/pixel-matrix-dithered.ts` now caches static dither state keyed by:
+    - `ditherKind + tileSize + seed + orderedMatrixName + kernelName + colorDitherMode + scaledSize`
+  - Cached state includes:
+    - blue-noise tile,
+    - ordered matrix metadata,
+    - diffusion kernel selection,
+    - precomputed white/gaussian/triangular noise fields.
+  - Added shared scaled readback canvas leasing to avoid per-frame canvas creation.
+  - Added direct readback fast-path when overlay frame already matches target scaled size (skip drawImage copy).
+  - Applied readback/tile caching to `generateDitheredMatrix`, `generateBlueNoiseMatrix`, and `generateBWFirstMatrix`.
+- Verification run after these changes:
+  - `npx tsc -p tsconfig.json --noEmit` ✅
+  - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps sampled animated king gif frames decodable in preview scan-gate profile"` ✅
+  - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps dithered king gif first-frame decodable in preview scan-gate profile"` ✅
+  - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "keeps dithered dance gif first-frame decodable in preview scan-gate profile"` ✅
+  - `env ANQR_LOG_LEVEL=error npx vitest run tests/unit/animation-patterns.spec.ts tests/unit/animation-core.spec.ts tests/unit/animation-parsing-compositor-loop.spec.ts tests/unit/exporter-gif.spec.ts` ✅

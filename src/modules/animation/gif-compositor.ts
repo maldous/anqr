@@ -82,6 +82,9 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
     } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
     (patchCanvas.getContext('2d') as CanvasRenderingContext2D | null);
   const patchImageDataCache: Array<ImageData | null> = new Array(frames.length).fill(null);
+  const patchBitmapCache: Array<ImageBitmap | null> = new Array(frames.length).fill(null);
+  const patchBitmapPromiseCache: Array<Promise<void> | null> = new Array(frames.length).fill(null);
+  const canCreateBitmap = typeof createImageBitmap === 'function';
 
   let restoreData: { x: number; y: number; w: number; h: number; data: ImageData } | null = null;
 
@@ -116,6 +119,28 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
       };
     } else {
       restoreData = null;
+    }
+
+    if (canCreateBitmap) {
+      const bitmap = patchBitmapCache[i];
+      if (bitmap) {
+        ctx.drawImage(bitmap, left, top, w, h);
+        return;
+      }
+      if (!patchBitmapPromiseCache[i]) {
+        let imageData = patchImageDataCache[i];
+        if (!imageData) {
+          imageData = new ImageData(asClampedRgbaView(f.patch), w, h);
+          patchImageDataCache[i] = imageData;
+        }
+        patchBitmapPromiseCache[i] = createImageBitmap(imageData)
+          .then((created) => {
+            patchBitmapCache[i] = created;
+          })
+          .catch(() => {
+            patchBitmapCache[i] = null;
+          });
+      }
     }
 
     if (patchCtx) {
