@@ -10,6 +10,119 @@
  */
 export interface MapImageToTargetsOptions {
   supersampleLevel?: 1 | 2;
+  cleanupSpeckles?: boolean;
+  maxDarkSpeckleArea?: number;
+  maxLightHoleArea?: number;
+}
+
+const EIGHT_CONNECTED_OFFSETS: ReadonlyArray<[number, number]> = [
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
+];
+
+type BinaryComponent = {
+  cells: number[];
+  touchesBoundary: boolean;
+};
+
+function collectComponent(
+  grid: boolean[][],
+  moduleCount: number,
+  startRow: number,
+  startCol: number,
+  targetValue: boolean,
+  visited: Uint8Array
+): BinaryComponent {
+  const queue: number[] = [];
+  const cells: number[] = [];
+  let touchesBoundary = false;
+
+  const startIdx = startRow * moduleCount + startCol;
+  visited[startIdx] = 1;
+  queue.push(startIdx);
+
+  for (let head = 0; head < queue.length; head++) {
+    const cellIndex = queue[head];
+    cells.push(cellIndex);
+    const row = Math.floor(cellIndex / moduleCount);
+    const col = cellIndex % moduleCount;
+
+    if (row === 0 || col === 0 || row === moduleCount - 1 || col === moduleCount - 1) {
+      touchesBoundary = true;
+    }
+
+    for (const [dr, dc] of EIGHT_CONNECTED_OFFSETS) {
+      const nextRow = row + dr;
+      const nextCol = col + dc;
+      if (nextRow < 0 || nextCol < 0 || nextRow >= moduleCount || nextCol >= moduleCount) continue;
+
+      const nextIdx = nextRow * moduleCount + nextCol;
+      if (visited[nextIdx] === 1) continue;
+      if ((grid[nextRow]?.[nextCol] ?? false) !== targetValue) continue;
+
+      visited[nextIdx] = 1;
+      queue.push(nextIdx);
+    }
+  }
+
+  return { cells, touchesBoundary };
+}
+
+function cleanupBinaryTargets(
+  targets: boolean[][],
+  moduleCount: number,
+  maxDarkSpeckleArea: number,
+  maxLightHoleArea: number
+): boolean[][] {
+  const cleaned = targets.map((row) => row.slice());
+  if (moduleCount <= 0) return cleaned;
+
+  if (maxDarkSpeckleArea > 0) {
+    const visited = new Uint8Array(moduleCount * moduleCount);
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        const cellIdx = row * moduleCount + col;
+        if (visited[cellIdx] === 1 || !(cleaned[row]?.[col] ?? false)) continue;
+
+        const component = collectComponent(cleaned, moduleCount, row, col, true, visited);
+        if (component.cells.length <= maxDarkSpeckleArea) {
+          for (const idx of component.cells) {
+            const r = Math.floor(idx / moduleCount);
+            const c = idx % moduleCount;
+            if (cleaned[r]) cleaned[r][c] = false;
+          }
+        }
+      }
+    }
+  }
+
+  if (maxLightHoleArea > 0) {
+    const visited = new Uint8Array(moduleCount * moduleCount);
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        const cellIdx = row * moduleCount + col;
+        if (visited[cellIdx] === 1 || (cleaned[row]?.[col] ?? false)) continue;
+
+        const component = collectComponent(cleaned, moduleCount, row, col, false, visited);
+        if (component.touchesBoundary) continue;
+        if (component.cells.length <= maxLightHoleArea) {
+          for (const idx of component.cells) {
+            const r = Math.floor(idx / moduleCount);
+            const c = idx % moduleCount;
+            if (cleaned[r]) cleaned[r][c] = true;
+          }
+        }
+      }
+    }
+  }
+
+  return cleaned;
 }
 
 export function mapImageToTargetsSupersampled(
@@ -88,6 +201,15 @@ export function mapImageToTargetsSupersampled(
   const maxY = Math.max(0, imageData.height - 1);
 
   const supersampleLevel = options?.supersampleLevel === 1 ? 1 : 2;
+  const cleanupSpeckles = options?.cleanupSpeckles !== false;
+  const maxDarkSpeckleArea =
+    typeof options?.maxDarkSpeckleArea === 'number'
+      ? Math.max(0, Math.floor(options.maxDarkSpeckleArea))
+      : 2;
+  const maxLightHoleArea =
+    typeof options?.maxLightHoleArea === 'number'
+      ? Math.max(0, Math.floor(options.maxLightHoleArea))
+      : 2;
   const samplePoints =
     supersampleLevel === 1
       ? [{ dx: 0.5, dy: 0.5 }]
@@ -135,5 +257,9 @@ export function mapImageToTargetsSupersampled(
     }
   }
 
-  return { targets, importance };
+  const cleanedTargets = cleanupSpeckles
+    ? cleanupBinaryTargets(targets, moduleCount, maxDarkSpeckleArea, maxLightHoleArea)
+    : targets;
+
+  return { targets: cleanedTargets, importance };
 }

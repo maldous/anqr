@@ -31,6 +31,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     isFastPreview,
     busyStage,
     busyProgress,
+    cancelGeneration,
   } = useQRGeneratorContext();
 
   // Show busy overlay while loading OR while preparing multi-frame animation OR during active rendering
@@ -63,6 +64,7 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
           : isRendering || isLoading
             ? 48
             : null;
+  const canCancelBusyWork = isLoading || isRendering || isPreparingAnimation;
 
   // Track previous rendering state to dispatch lifecycle events
   const prevRenderingStateRef = useRef<RenderState | null>(null);
@@ -314,6 +316,8 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                   fullScreen={true}
                   stage={busyStageLabel}
                   progress={busyPercent}
+                  onCancel={canCancelBusyWork ? cancelGeneration : undefined}
+                  cancelLabel={t('common.cancel', 'Cancel')}
                 />
               )}
               {error && (

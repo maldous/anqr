@@ -68,6 +68,7 @@ import {
   validateSuffixCharset,
   verifyMatrixFormatInfo,
 } from './validation';
+import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
 
 // Re-export BitRange for use in EncoderDerivedLayout
 export type { BitRange };
@@ -119,6 +120,35 @@ function toHex(bytes: Uint8Array, maxBytes: number = 32): string {
     .map((b) => b.toString(16).padStart(2, '0'))
     .join(' ');
   return bytes.length > maxBytes ? `${hex}...` : hex;
+}
+
+const BALANCED_MASK_EARLY_EXIT_THRESHOLD = 92;
+const BALANCED_MASK_STALL_WINDOW = 3;
+const BALANCED_MASK_STALL_DELTA = 0.35;
+
+type QArtPerformanceSettings = {
+  supersampleLevel: 1 | 2;
+  maxCandidateFraction: number;
+  maxDarkSpeckleArea: number;
+  maxLightHoleArea: number;
+};
+
+function resolvePerformanceSettings(profile: QArtPerformanceProfile): QArtPerformanceSettings {
+  if (profile === 'quality') {
+    return {
+      supersampleLevel: 2,
+      maxCandidateFraction: 1,
+      maxDarkSpeckleArea: 2,
+      maxLightHoleArea: 2,
+    };
+  }
+
+  return {
+    supersampleLevel: 1,
+    maxCandidateFraction: 0.25,
+    maxDarkSpeckleArea: 2,
+    maxLightHoleArea: 2,
+  };
 }
 
 /**
@@ -764,6 +794,8 @@ function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
  *
  * This ensures the BASE URL is always preserved, while maximizing QR-Art control.
  */
+export type QArtPerformanceProfile = 'quality' | 'balanced';
+
 export interface FullQArtConfig {
   /** The data to encode (URL or text) - the original content that will be protected */
   data: string;
@@ -821,6 +853,16 @@ export interface FullQArtConfig {
    */
   targetControlPercent?: number;
   /**
+   * Number of full search attempts (different deterministic suffix seeds).
+   * Higher values improve chances of cleaner artwork at higher compute cost.
+   */
+  searchAttempts?: number;
+  /**
+   * Base seed used when exploring multiple search attempts.
+   * Keeps results deterministic for same inputs.
+   */
+  searchSeed?: number;
+  /**
    * If true and version=0, lock to the minimum version that fits the payload
    * and only adjust suffix length within that version (no auto-upgrade).
    */
@@ -840,10 +882,10 @@ export interface FullQArtConfig {
   strictSuffix?: boolean;
   /**
    * Performance profile for QR-Art compute.
-   * - "desktop": quality-first defaults
-   * - "android": lower-cost defaults for mobile responsiveness
+   * - "quality": maximize visual matching (higher compute cost)
+   * - "balanced": reduce compute for faster previews with stable scan quality
    */
-  performanceProfile?: 'desktop' | 'android';
+  performanceProfile?: QArtPerformanceProfile;
 }
 
 /**
@@ -2125,8 +2167,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     targetControlPercent = 100,
     strictSuffix = true, // Default to true for real-world scannability
     lockVersionToMinimum = false,
-    performanceProfile = 'desktop',
+    performanceProfile = 'quality',
   } = config;
+  const performanceSettings = resolvePerformanceSettings(performanceProfile);
 
   // Resolve suffix mode (prefer numeric for URLs when auto)
   const isUrlLike = /^https?:\/\//i.test(data);
@@ -2968,9 +3011,11 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     onProgress?.('Processing target image', 30);
 
     // Step 4: Map target image to module targets
-    const imageSupersampleLevel = performanceProfile === 'android' ? 1 : 2;
     const { targets, importance } = mapImageToTargetsSupersampled(targetImage, moduleCount, 128, {
-      supersampleLevel: imageSupersampleLevel,
+      supersampleLevel: performanceSettings.supersampleLevel,
+      cleanupSpeckles: true,
+      maxDarkSpeckleArea: performanceSettings.maxDarkSpeckleArea,
+      maxLightHoleArea: performanceSettings.maxLightHoleArea,
     });
 
     // Get set of data pixels
@@ -2982,14 +3027,18 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // Step 5: Rank pixels by importance
     const rankedPixelOrder = rankPixelsByImportance(targets, importance, moduleCount, dataPixels);
     let eliminationPixelOrder = rankedPixelOrder;
-    if (performanceProfile === 'android') {
-      const androidCandidateCap = Math.max(64, Math.floor(moduleCount * moduleCount * 0.25));
-      const cappedLength = Math.min(rankedPixelOrder.length, androidCandidateCap);
+    if (performanceSettings.maxCandidateFraction < 1) {
+      const candidateCap = Math.max(
+        64,
+        Math.floor(moduleCount * moduleCount * performanceSettings.maxCandidateFraction)
+      );
+      const cappedLength = Math.min(rankedPixelOrder.length, candidateCap);
       eliminationPixelOrder = rankedPixelOrder.slice(0, cappedLength);
-      log.info('Android QR-Art candidate cap applied', {
+      log.info('QR-Art candidate cap applied', {
         originalCandidates: rankedPixelOrder.length,
         cappedCandidates: eliminationPixelOrder.length,
         moduleCount,
+        performanceProfile,
       });
     }
 
@@ -3024,24 +3073,29 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       if (timingEnabled) timingMarks[label] = performance.now();
     };
 
-    const pixelDiff = new Uint8Array(moduleCount * moduleCount);
-    for (const pixelIdx of dataPixelIndices) {
-      const row = Math.floor(pixelIdx / moduleCount);
-      const col = pixelIdx % moduleCount;
-      const target = targets[row]?.[col] ?? false;
-      const base = baseMatrix[row]?.[col] ?? false;
-      if (target !== base) pixelDiff[pixelIdx] = 1;
-    }
+    const pixelDiff = acquireUint8Buffer(moduleCount * moduleCount);
+    let blockSelections: BlockSelectionResult[] = [];
+    try {
+      for (const pixelIdx of dataPixelIndices) {
+        const row = Math.floor(pixelIdx / moduleCount);
+        const col = pixelIdx % moduleCount;
+        const target = targets[row]?.[col] ?? false;
+        const base = baseMatrix[row]?.[col] ?? false;
+        if (target !== base) pixelDiff[pixelIdx] = 1;
+      }
 
-    mark('select_start');
-    let blockSelections = selectBasisVectorsForTarget(
-      elimination,
-      targets,
-      baseMatrix,
-      moduleCount,
-      pixelDiff
-    );
-    mark('select_done');
+      mark('select_start');
+      blockSelections = selectBasisVectorsForTarget(
+        elimination,
+        targets,
+        baseMatrix,
+        moduleCount,
+        pixelDiff
+      );
+      mark('select_done');
+    } finally {
+      releaseUint8Buffer(pixelDiff);
+    }
 
     let totalSelected = blockSelections.reduce((sum, s) => sum + s.selectedVectorIndices.length, 0);
     log.debug('Vectors selected', {
@@ -3966,6 +4020,9 @@ export async function generateFullQArtBestMask(
   config: Omit<FullQArtConfig, 'maskPattern'>
 ): Promise<FullQArtResult> {
   let bestResult: FullQArtResult | null = null;
+  const performanceProfile = config.performanceProfile ?? 'quality';
+  let masksWithoutMeaningfulGain = 0;
+  let lastBestMatch = -1;
 
   // Pre-calculate optimal version and suffix for all mask comparisons
   // This ensures consistent encoding across all mask attempts
@@ -3998,7 +4055,9 @@ export async function generateFullQArtBestMask(
   if (config.suffix !== undefined) {
     sharedSuffix = config.suffix;
   } else if (config.autoSuffix !== false) {
-    const seed = hashStringToSeed(config.data + sharedVersion.toString() + config.ecc);
+    const baseSeed = hashStringToSeed(config.data + sharedVersion.toString() + config.ecc);
+    const searchSeedOffset = config.searchSeed ?? 0;
+    const seed = (baseSeed ^ searchSeedOffset) >>> 0;
     if (resolvedSuffixMode === 'numeric') {
       const suffixDigits = Math.max(0, optimalConfig.suffixLength);
       sharedSuffix = generateDeterministicNumericSuffix(suffixDigits, seed);
@@ -4039,6 +4098,34 @@ export async function generateFullQArtBestMask(
     if (result.success) {
       if (!bestResult || result.matchPercentage > bestResult.matchPercentage) {
         bestResult = result;
+      }
+    }
+
+    if (performanceProfile === 'balanced' && bestResult) {
+      if (bestResult.matchPercentage >= BALANCED_MASK_EARLY_EXIT_THRESHOLD) {
+        log.info('Balanced profile: ending mask search early after reaching target match', {
+          maskEvaluated: mask + 1,
+          matchPercentage: `${bestResult.matchPercentage.toFixed(1)}%`,
+          threshold: `${BALANCED_MASK_EARLY_EXIT_THRESHOLD}%`,
+        });
+        break;
+      }
+
+      if (lastBestMatch >= 0 && bestResult.matchPercentage - lastBestMatch < BALANCED_MASK_STALL_DELTA) {
+        masksWithoutMeaningfulGain += 1;
+      } else {
+        masksWithoutMeaningfulGain = 0;
+      }
+      lastBestMatch = bestResult.matchPercentage;
+
+      if (masksWithoutMeaningfulGain >= BALANCED_MASK_STALL_WINDOW && mask >= 3) {
+        log.info('Balanced profile: stopping mask search due to stalled improvement', {
+          maskEvaluated: mask + 1,
+          bestMatchPercentage: `${bestResult.matchPercentage.toFixed(1)}%`,
+          stallWindow: BALANCED_MASK_STALL_WINDOW,
+          minGain: BALANCED_MASK_STALL_DELTA,
+        });
+        break;
       }
     }
   }
@@ -4088,6 +4175,55 @@ export async function generateFullQArtBestRotation(
 export async function generateFullQArtOptimal(
   config: Omit<FullQArtConfig, 'maskPattern'>
 ): Promise<FullQArtResult> {
-  // Use best mask selection
-  return generateFullQArtBestMask(config);
+  const attempts = Math.max(1, Math.min(8, Math.floor(config.searchAttempts ?? 1)));
+  if (attempts === 1) {
+    return generateFullQArtBestMask(config);
+  }
+
+  let bestResult: FullQArtResult | null = null;
+  let lastFailure: FullQArtResult | null = null;
+  const baseSearchSeed = config.searchSeed ?? 0;
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const attemptSeed = (baseSearchSeed + Math.imul(attempt + 1, 0x9e3779b1)) >>> 0;
+    const result = await generateFullQArtBestMask({
+      ...config,
+      searchAttempts: 1,
+      searchSeed: attemptSeed,
+      onProgress: (stage, percent) => {
+        const scaledPercent = ((attempt * 100 + percent) / attempts) | 0;
+        config.onProgress?.(`Attempt ${attempt + 1}/${attempts}: ${stage}`, scaledPercent);
+      },
+    });
+
+    if (result.success) {
+      if (!bestResult || result.matchPercentage > bestResult.matchPercentage) {
+        bestResult = result;
+      }
+    } else {
+      lastFailure = result;
+    }
+  }
+
+  if (bestResult) {
+    config.onProgress?.('Complete', 100);
+    return bestResult;
+  }
+
+  return (
+    lastFailure ?? {
+      success: false,
+      error: 'All search attempts failed',
+      matrix: [],
+      moduleCount: 0,
+      version: 0,
+      maskPattern: 0,
+      matchingPixels: 0,
+      totalControllable: 0,
+      matchPercentage: 0,
+      encodedData: config.data,
+      originalData: config.data,
+      suffix: '',
+    }
+  );
 }

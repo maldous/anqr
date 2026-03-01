@@ -19,6 +19,7 @@
 
 import { createLogger } from '../../lib/logger';
 import { type BitPixelMapping, indexToPixel } from './bit-mapping';
+import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
 import type { RSBasisVector } from './rs-basis';
 
 const log = createLogger('QART');
@@ -557,66 +558,70 @@ export function countMatchingPixels(
   }
 
   // Track flip parity directly (odd = flipped, even = unchanged).
-  const flipParity = new Uint8Array(maxPixelCount);
-  const blockResultByIndex = new Map(
-    eliminationResult.blockResults.map(
-      (blockResult) => [blockResult.blockIndex, blockResult] as const
-    )
-  );
+  const flipParity = acquireUint8Buffer(maxPixelCount);
+  try {
+    const blockResultByIndex = new Map(
+      eliminationResult.blockResults.map(
+        (blockResult) => [blockResult.blockIndex, blockResult] as const
+      )
+    );
 
-  // For each selected vector, iterate through ALL bits in its blockBits
-  for (const sel of blockSelections) {
-    const { blockIndex, selectedVectorIndices } = sel;
+    // For each selected vector, iterate through ALL bits in its blockBits
+    for (const sel of blockSelections) {
+      const { blockIndex, selectedVectorIndices } = sel;
 
-    const blockResult = blockResultByIndex.get(blockIndex);
-    const blockMap = bitToPixelMap.get(blockIndex);
-    if (!(blockResult && blockMap)) continue;
+      const blockResult = blockResultByIndex.get(blockIndex);
+      const blockMap = bitToPixelMap.get(blockIndex);
+      if (!(blockResult && blockMap)) continue;
 
-    for (const vectorIdx of selectedVectorIndices) {
-      const vector = blockResult.vectors[vectorIdx];
-      if (!vector) continue;
+      for (const vectorIdx of selectedVectorIndices) {
+        const vector = blockResult.vectors[vectorIdx];
+        if (!vector) continue;
 
-      // Iterate through each byte in blockBits
-      for (let byteIdx = 0; byteIdx < vector.blockBits.length; byteIdx++) {
-        const byte = vector.blockBits[byteIdx];
-        if (byte === 0) continue; // Skip zero bytes for efficiency
+        // Iterate through each byte in blockBits
+        for (let byteIdx = 0; byteIdx < vector.blockBits.length; byteIdx++) {
+          const byte = vector.blockBits[byteIdx];
+          if (byte === 0) continue; // Skip zero bytes for efficiency
 
-        // Check each bit in this byte
-        for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
-          if ((byte & (1 << bitIdx)) !== 0) {
-            // This bit is set - find the corresponding pixel
-            const pixelIdx = blockMap.get(byteIdx * 8 + bitIdx);
-            if (pixelIdx !== undefined && pixelIdx >= 0 && pixelIdx < maxPixelCount) {
-              flipParity[pixelIdx] ^= 1;
+          // Check each bit in this byte
+          for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
+            if ((byte & (1 << bitIdx)) !== 0) {
+              // This bit is set - find the corresponding pixel
+              const pixelIdx = blockMap.get(byteIdx * 8 + bitIdx);
+              if (pixelIdx !== undefined && pixelIdx >= 0 && pixelIdx < maxPixelCount) {
+                flipParity[pixelIdx] ^= 1;
+              }
             }
           }
         }
       }
     }
-  }
 
-  let matching = 0;
-  let total = 0;
+    let matching = 0;
+    let total = 0;
 
-  for (let row = 0; row < moduleCount; row++) {
-    for (let col = 0; col < moduleCount; col++) {
-      const pixelIdx = row * moduleCount + col;
-      if (!dataPixels.has(pixelIdx)) continue;
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        const pixelIdx = row * moduleCount + col;
+        if (!dataPixels.has(pixelIdx)) continue;
 
-      total++;
-      let value = baseMatrix[row]?.[col] ?? false;
+        total++;
+        let value = baseMatrix[row]?.[col] ?? false;
 
-      // Check if this pixel is flipped (odd number of flips = flipped)
-      if (flipParity[pixelIdx] === 1) {
-        value = !value;
-      }
+        // Check if this pixel is flipped (odd number of flips = flipped)
+        if (flipParity[pixelIdx] === 1) {
+          value = !value;
+        }
 
-      const target = targets[row]?.[col] ?? false;
-      if (value === target) {
-        matching++;
+        const target = targets[row]?.[col] ?? false;
+        if (value === target) {
+          matching++;
+        }
       }
     }
-  }
 
-  return { matching, total };
+    return { matching, total };
+  } finally {
+    releaseUint8Buffer(flipParity);
+  }
 }

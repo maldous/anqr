@@ -21,6 +21,20 @@ import {
 } from '../qr-spec/qr-patterns';
 
 const log = createLogger('QART');
+const BIT_PIXEL_MAP_CACHE_LIMIT = 48;
+const DATA_PIXEL_INDICES_CACHE_LIMIT = 24;
+const bitPixelMapCache = new Map<string, BitPixelMapping[]>();
+const dataPixelIndicesCache = new Map<number, number[]>();
+
+function updateLruCache<K, V>(cache: Map<K, V>, key: K, value: V, limit: number): void {
+  cache.delete(key);
+  cache.set(key, value);
+  if (cache.size <= limit) return;
+  const oldestKey = cache.keys().next().value as K | undefined;
+  if (oldestKey !== undefined) {
+    cache.delete(oldestKey);
+  }
+}
 
 /**
  * Represents the mapping of a single bit to its pixel position
@@ -173,6 +187,13 @@ export function buildBitPixelMap(
   ecc: ECCLevel,
   maskPattern: number
 ): BitPixelMapping[] {
+  const cacheKey = `${version}:${ecc}:${maskPattern}`;
+  const cached = bitPixelMapCache.get(cacheKey);
+  if (cached) {
+    updateLruCache(bitPixelMapCache, cacheKey, cached, BIT_PIXEL_MAP_CACHE_LIMIT);
+    return cached;
+  }
+
   const moduleCount = getModuleCount(version);
   const rsBlockInfo = getRSBlockInfo(version, ecc);
   const totalCodewords = getTotalCodewords(version, ecc);
@@ -278,6 +299,7 @@ export function buildBitPixelMap(
     totalCodewords,
   });
 
+  updateLruCache(bitPixelMapCache, cacheKey, mappings, BIT_PIXEL_MAP_CACHE_LIMIT);
   return mappings;
 }
 
@@ -285,6 +307,12 @@ export function buildBitPixelMap(
  * Get all data pixel indices (non-structural modules)
  */
 export function getDataPixelIndices(version: number): number[] {
+  const cached = dataPixelIndicesCache.get(version);
+  if (cached) {
+    updateLruCache(dataPixelIndicesCache, version, cached, DATA_PIXEL_INDICES_CACHE_LIMIT);
+    return cached;
+  }
+
   const moduleCount = getModuleCount(version);
   const indices: number[] = [];
 
@@ -296,6 +324,7 @@ export function getDataPixelIndices(version: number): number[] {
     }
   }
 
+  updateLruCache(dataPixelIndicesCache, version, indices, DATA_PIXEL_INDICES_CACHE_LIMIT);
   return indices;
 }
 
@@ -319,4 +348,9 @@ export function buildBitToMappingMap(mappings: BitPixelMapping[]): Map<number, B
     map.set(m.globalBitIndex, m);
   }
   return map;
+}
+
+export function clearBitMappingCache(): void {
+  bitPixelMapCache.clear();
+  dataPixelIndicesCache.clear();
 }

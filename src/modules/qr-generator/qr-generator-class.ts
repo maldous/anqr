@@ -6,7 +6,6 @@
 import { createLogger } from '../../lib/logger';
 import type { GradientConfig } from '../core';
 import { decodeQR } from '../qr-decoder';
-import type { QRCodeInstance } from '../qr-encoder';
 import {
   calculateOptimalVersion,
   createShiftJISEncoder,
@@ -36,7 +35,7 @@ import { getAlignmentPositionsCached } from './pattern-helpers';
 import { getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 import { renderModules } from './render-loop';
 import { generateScaledQR } from './scaled-render';
-import type { OverlayData, QRGeneratorConfig, QRMatrixResult } from './types';
+import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from './types';
 import { validateColor } from './utils';
 
 const log = createLogger('GENERATE');
@@ -72,6 +71,37 @@ class MatrixWrapper {
 
   isDark(row: number, col: number): boolean {
     return this.matrix[row]?.[col] ?? false;
+  }
+}
+
+/**
+ * Wrapper class that exposes a packed 0/1 matrix as QRCodeInstance.
+ * Used to avoid expanding worker-returned QR-Art matrices before rendering.
+ */
+class PackedMatrixWrapper {
+  private packed: Uint8Array;
+  private moduleCount: number;
+
+  constructor(packed: Uint8Array, moduleCount: number) {
+    this.packed = packed;
+    this.moduleCount = moduleCount;
+  }
+
+  addData(_data: string, _mode?: string): void {
+    // No-op: matrix is already computed
+  }
+
+  make(_maskPattern?: number): void {
+    // No-op: matrix is already computed
+  }
+
+  getModuleCount(): number {
+    return this.moduleCount;
+  }
+
+  isDark(row: number, col: number): boolean {
+    if (row < 0 || col < 0 || row >= this.moduleCount || col >= this.moduleCount) return false;
+    return this.packed[row * this.moduleCount + col] === 1;
   }
 }
 
@@ -1278,28 +1308,17 @@ export class QRGenerator {
   }
 
   /**
-   * Render a pre-computed boolean matrix with full styling.
-   * Used by QR-Art to render matrices that were modified via RS basis manipulation.
-   *
-   * This method bypasses the encoding stage and directly renders the provided matrix
-   * using the same styling pipeline as generate() (structural patterns, module styles,
-   * gradients, frames, etc.).
-   *
-   * @param matrix - Pre-computed boolean matrix (true = dark module)
-   * @param config - Rendering configuration (same as generate())
-   * @returns Rendered canvas with proper styling
+   * Shared renderer used by QR-Art matrix render methods.
    */
-  async renderFromMatrix(
-    matrix: boolean[][],
-    config: QRGeneratorConfig
+  private async renderFromPreparedMatrix(
+    qr: QRCodeInstance,
+    moduleCount: number,
+    config: QRGeneratorConfig,
+    storeMatrix: () => void
   ): Promise<HTMLCanvasElement | OffscreenCanvas> {
-    const moduleCount = matrix.length;
     if (moduleCount === 0) {
       throw new Error('Empty matrix provided to renderFromMatrix');
     }
-
-    // Create a wrapper that implements QRCodeInstance interface
-    const qr = new MatrixWrapper(matrix);
 
     // Calculate version from module count: moduleCount = version * 4 + 17
     const version = Math.ceil((moduleCount - 17) / 4);
@@ -1406,7 +1425,7 @@ export class QRGenerator {
     drawFrame(ctx, size, moduleSize, margin, effectiveConfig);
 
     // Store the matrix for vector SVG export
-    this.storeMatrixDirect(matrix, moduleCount);
+    storeMatrix();
 
     log.debug('renderFromMatrix complete', {
       moduleCount,
@@ -1417,5 +1436,52 @@ export class QRGenerator {
     });
 
     return canvas;
+  }
+
+  /**
+   * Render a pre-computed boolean matrix with full styling.
+   * Used by QR-Art to render matrices that were modified via RS basis manipulation.
+   *
+   * This method bypasses the encoding stage and directly renders the provided matrix
+   * using the same styling pipeline as generate() (structural patterns, module styles,
+   * gradients, frames, etc.).
+   *
+   * @param matrix - Pre-computed boolean matrix (true = dark module)
+   * @param config - Rendering configuration (same as generate())
+   * @returns Rendered canvas with proper styling
+   */
+  async renderFromMatrix(
+    matrix: boolean[][],
+    config: QRGeneratorConfig
+  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+    const moduleCount = matrix.length;
+    const qr = new MatrixWrapper(matrix);
+    return this.renderFromPreparedMatrix(qr, moduleCount, config, () => {
+      this.storeMatrixDirect(matrix, moduleCount);
+    });
+  }
+
+  /**
+   * Render a packed 0/1 QR matrix without first expanding to boolean[][].
+   */
+  async renderFromPackedMatrix(
+    packedMatrix: Uint8Array,
+    moduleCount: number,
+    config: QRGeneratorConfig
+  ): Promise<HTMLCanvasElement | OffscreenCanvas> {
+    if (moduleCount <= 0) {
+      throw new Error('Invalid module count provided to renderFromPackedMatrix');
+    }
+    const expectedLength = moduleCount * moduleCount;
+    if (packedMatrix.length !== expectedLength) {
+      throw new Error(
+        `Invalid packed matrix length ${packedMatrix.length}, expected ${expectedLength}`
+      );
+    }
+
+    const qr = new PackedMatrixWrapper(packedMatrix, moduleCount);
+    return this.renderFromPreparedMatrix(qr, moduleCount, config, () => {
+      this.storeMatrix(qr, moduleCount);
+    });
   }
 }
