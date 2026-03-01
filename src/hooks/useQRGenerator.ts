@@ -233,6 +233,20 @@ function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unk
     : {}) as Record<string, unknown>;
 }
 
+function scheduleTrackEvent(
+  eventName: string,
+  payload?: Record<string, string | number | boolean>
+): void {
+  const run = () => {
+    trackEvent(eventName, payload);
+  };
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(() => run(), { timeout: 1200 });
+    return;
+  }
+  setTimeout(run, 0);
+}
+
 function imageBitmapToCanvas(
   bitmap: ImageBitmap,
   targetCanvas?: HTMLCanvasElement
@@ -2531,7 +2545,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     try {
       // Show interstitial ad BEFORE download on native platforms
       await showInterstitial('export');
-      trackEvent('export', { format: output.format });
+      scheduleTrackEvent('export', { format: output.format });
       const exporter = await loadExporterModule();
 
       // Scale canvas to output dimensions if different
