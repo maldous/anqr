@@ -566,6 +566,7 @@ export class QRGenerator {
           typeof effectiveConfig.frameIndex === 'number' &&
           Number.isFinite(effectiveConfig.frameIndex);
         const isFirstAnimatedFrame = isAnimatedFrame && effectiveConfig.frameIndex === 0;
+        const isAnimatedPreviewFrame = isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame;
         const overlayFamilyKey = processedOverlayCanvas
           ? [
               processedOverlayCanvas.width,
@@ -988,7 +989,7 @@ export class QRGenerator {
                 },
               ];
 
-        const attempts: DitherAttemptPatch[] = [];
+        let attempts: DitherAttemptPatch[] = [];
         const seenAttemptSignatures = new Set<string>();
         const pushUniqueAttempt = (patch: DitherAttemptPatch): void => {
           const sig = patchSignature(patch);
@@ -1013,6 +1014,27 @@ export class QRGenerator {
           } else {
             pushUniqueAttempt(cachedPatch);
           }
+        }
+        if (isAnimatedPreviewFrame) {
+          // Animated preview fast path: keep a compact attempt ladder so each frame
+          // still validates/recovers decode, but avoids running the full fallback stack.
+          const compact: DitherAttemptPatch[] = [];
+          const compactSeen = new Set<string>();
+          const pushCompact = (patch: DitherAttemptPatch | undefined): void => {
+            if (!patch) return;
+            const sig = patchSignature(patch);
+            if (compactSeen.has(sig)) return;
+            compactSeen.add(sig);
+            compact.push(patch);
+          };
+          pushCompact(cachedPatch ?? undefined);
+          pushCompact(baseAttempts[0]);
+          pushCompact(baseAttempts[1]);
+          pushCompact(baseAttempts[2]);
+          if (compact.length === 0 && attempts[0]) {
+            pushCompact(attempts[0]);
+          }
+          attempts = compact;
         }
 
         const buildAttemptConfig = (patch: DitherAttemptPatch): QRGeneratorConfig => ({
@@ -1474,7 +1496,10 @@ export class QRGenerator {
           return fallback;
         }
 
-        const rescuePatches = [...buildDecodeRescuePatches(), ...buildFinderRescuePatches()];
+        let rescuePatches = [...buildDecodeRescuePatches(), ...buildFinderRescuePatches()];
+        if (isAnimatedPreviewFrame) {
+          rescuePatches = rescuePatches.slice(0, 4);
+        }
         for (const patch of rescuePatches) {
           if (lastCanvas && lastCanvas !== bestBaseDecodable) {
             pool.release(lastCanvas);
