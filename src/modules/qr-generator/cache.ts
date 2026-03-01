@@ -4,6 +4,7 @@
  */
 
 import { createLogger } from '../../lib/logger';
+import type { OverlayData } from './types';
 
 const _log = createLogger('GENERATE');
 
@@ -66,16 +67,7 @@ export const alignmentCache = new MemoCache<Array<{ row: number; col: number }>>
 export const overlayDataCache = new MemoCache<OverlayDataMatrix>(20);
 export const qrMatrixCache = new MemoCache<QRMatrixCacheEntry>(30);
 
-export interface OverlayDataMatrix {
-  [row: number]: {
-    [col: number]: number;
-  };
-  colors?: {
-    [row: number]: {
-      [col: number]: { r: number; g: number; b: number };
-    };
-  };
-}
+export type OverlayDataMatrix = OverlayData;
 
 // WeakMap for canvas hash caching (avoids re-hashing same canvas)
 export const canvasHashCache = new WeakMap<HTMLCanvasElement, string>();

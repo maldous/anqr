@@ -5,6 +5,7 @@
 
 import { createLogger } from '../../lib/logger';
 import { blendColors, parseColor } from '../core';
+import { getOverlayColorPacked } from './overlay-data-packed';
 import type { OverlayData, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');
@@ -81,12 +82,6 @@ export function applyQROverlayMode(
     shouldDrawCell: isDark,
   };
 
-  // Type guard for overlayData with colors
-  // OverlayData.colors uses object indexing: colors[row][col] = { r, g, b }
-  const overlayWithColors = overlayData as {
-    colors?: { [row: number]: { [col: number]: { r: number; g: number; b: number } } };
-  };
-
   switch (overlayMode) {
     case 'halftone':
       if (isDark) {
@@ -114,15 +109,18 @@ export function applyQROverlayMode(
     case 'halftone-dithered': {
       result.useHalftoneRendering = true;
       result.shouldDrawCell = true;
-      const htdColor = overlayWithColors.colors?.[row]?.[col];
+      const htdColor = getOverlayColorPacked(overlayData, row, col);
       const htdTransformed = applyBrightnessCurve(brightness, config.brightnessCurve);
 
       if (isDark) {
         result.halftoneBrightness = 0.5 + (htdTransformed - 0.5) * effectiveIntensity;
         if (htdColor) {
+          const htdR = (htdColor >> 16) & 0xff;
+          const htdG = (htdColor >> 8) & 0xff;
+          const htdB = htdColor & 0xff;
           // Keep dark-module dots clearly dark for scanner contrast.
           const dkF = computeDarkFactor(effectiveIntensity, 0.35);
-          result.moduleColor = `rgb(${Math.round(htdColor.r * dkF)},${Math.round(htdColor.g * dkF)},${Math.round(htdColor.b * dkF)})`;
+          result.moduleColor = `rgb(${Math.round(htdR * dkF)},${Math.round(htdG * dkF)},${Math.round(htdB * dkF)})`;
         }
       } else {
         // Keep light-module dots small/subtle so background image remains visible.
@@ -131,10 +129,13 @@ export function applyQROverlayMode(
           0.5 + (htdTransformed - 0.5) * effectiveIntensity
         );
         if (htdColor) {
+          const htdR = (htdColor >> 16) & 0xff;
+          const htdG = (htdColor >> 8) & 0xff;
+          const htdB = htdColor & 0xff;
           const ltBlend = computeLightBlend(effectiveIntensity, 0.72);
-          const lightR = Math.round(htdColor.r + (255 - htdColor.r) * ltBlend);
-          const lightG = Math.round(htdColor.g + (255 - htdColor.g) * ltBlend);
-          const lightB = Math.round(htdColor.b + (255 - htdColor.b) * ltBlend);
+          const lightR = Math.round(htdR + (255 - htdR) * ltBlend);
+          const lightG = Math.round(htdG + (255 - htdG) * ltBlend);
+          const lightB = Math.round(htdB + (255 - htdB) * ltBlend);
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         }
       }
@@ -143,13 +144,16 @@ export function applyQROverlayMode(
 
     case 'blend':
       if (isDark) {
-        const blendColor = overlayWithColors.colors?.[row]?.[col];
+        const blendColor = getOverlayColorPacked(overlayData, row, col);
         if (blendColor) {
+          const blendR = (blendColor >> 16) & 0xff;
+          const blendG = (blendColor >> 8) & 0xff;
+          const blendB = blendColor & 0xff;
           const blendAmount = effectiveIntensity; // 0..1
           const darkFactor = computeDarkFactor(blendAmount, 0.75);
-          const darkR = Math.round(blendColor.r * darkFactor);
-          const darkG = Math.round(blendColor.g * darkFactor);
-          const darkB = Math.round(blendColor.b * darkFactor);
+          const darkR = Math.round(blendR * darkFactor);
+          const darkG = Math.round(blendG * darkFactor);
+          const darkB = Math.round(blendB * darkFactor);
           result.moduleColor = blendColors(
             config.fgColor,
             `rgb(${darkR},${darkG},${darkB})`,
@@ -173,11 +177,14 @@ export function applyQROverlayMode(
       if (isDark) {
         result.moduleColor = config.fgColor;
       } else {
-        const gapColor = overlayWithColors.colors?.[row]?.[col];
+        const gapColor = getOverlayColorPacked(overlayData, row, col);
         if (gapColor) {
+          const gapR = (gapColor >> 16) & 0xff;
+          const gapG = (gapColor >> 8) & 0xff;
+          const gapB = gapColor & 0xff;
           // Fade amount derived from intensity (already ECC-capped)
           const fadeAmount = computeLightBlend(effectiveIntensity, 0.75);
-          const colorStr = `rgb(${gapColor.r},${gapColor.g},${gapColor.b})`;
+          const colorStr = `rgb(${gapR},${gapG},${gapB})`;
           result.moduleColor = blendColors(config.bgColor, colorStr, fadeAmount);
           result.shouldDrawCell = true;
         }
@@ -196,11 +203,11 @@ export function applyQROverlayMode(
           pixCount = 0;
         for (let br = 0; br < blockSize && blockRow + br < moduleCount; br++) {
           for (let bc = 0; bc < blockSize && blockCol + bc < moduleCount; bc++) {
-            const c = overlayWithColors.colors?.[blockRow + br]?.[blockCol + bc];
+            const c = getOverlayColorPacked(overlayData, blockRow + br, blockCol + bc);
             if (c) {
-              avgR += c.r;
-              avgG += c.g;
-              avgB += c.b;
+              avgR += (c >> 16) & 0xff;
+              avgG += (c >> 8) & 0xff;
+              avgB += c & 0xff;
               pixCount++;
             }
           }
@@ -281,13 +288,16 @@ export function applyQROverlayMode(
     case 'outline':
       if (isDark) {
         result.drawOutlineOnly = true;
-        const outlineColor = overlayWithColors.colors?.[row]?.[col];
+        const outlineColor = getOverlayColorPacked(overlayData, row, col);
         if (outlineColor) {
+          const outR = (outlineColor >> 16) & 0xff;
+          const outG = (outlineColor >> 8) & 0xff;
+          const outB = outlineColor & 0xff;
           const outlineBlend = effectiveIntensity;
           const darkFactor = computeDarkFactor(outlineBlend, 0.75);
-          const darkR = Math.round(outlineColor.r * darkFactor);
-          const darkG = Math.round(outlineColor.g * darkFactor);
-          const darkB = Math.round(outlineColor.b * darkFactor);
+          const darkR = Math.round(outR * darkFactor);
+          const darkG = Math.round(outG * darkFactor);
+          const darkB = Math.round(outB * darkFactor);
           const colorStr = `rgb(${darkR},${darkG},${darkB})`;
           result.moduleColor = blendColors(config.fgColor, colorStr, outlineBlend);
         }
@@ -301,10 +311,13 @@ export function applyQROverlayMode(
         result.waveOffsetX = Math.sin(row * 0.5 + col * 0.15) * waveStrength;
         result.waveOffsetY = Math.cos(col * 0.5 + row * 0.15) * waveStrength;
 
-        const waveColor = overlayWithColors.colors?.[row]?.[col];
+        const waveColor = getOverlayColorPacked(overlayData, row, col);
         if (waveColor && waveIntensity > 0) {
+          const waveR = (waveColor >> 16) & 0xff;
+          const waveG = (waveColor >> 8) & 0xff;
+          const waveB = waveColor & 0xff;
           const darkFactor = computeDarkFactor(waveIntensity, 0.7);
-          const colorStr = `rgb(${Math.round(waveColor.r * darkFactor)},${Math.round(waveColor.g * darkFactor)},${Math.round(waveColor.b * darkFactor)})`;
+          const colorStr = `rgb(${Math.round(waveR * darkFactor)},${Math.round(waveG * darkFactor)},${Math.round(waveB * darkFactor)})`;
           result.moduleColor = blendColors(config.fgColor, colorStr, waveIntensity);
         }
       }
@@ -314,20 +327,23 @@ export function applyQROverlayMode(
       // Mosaic fills every cell with image colors.
       // Keep a strict dark/light luminance split so module boundaries stay scannable.
       result.shouldDrawCell = true;
-      const mosaicColor = overlayWithColors.colors?.[row]?.[col];
+      const mosaicColor = getOverlayColorPacked(overlayData, row, col);
       if (mosaicColor) {
+        const mosaicR = (mosaicColor >> 16) & 0xff;
+        const mosaicG = (mosaicColor >> 8) & 0xff;
+        const mosaicB = mosaicColor & 0xff;
         const mosaicIntensity = effectiveIntensity; // 0..1
         if (isDark) {
           // High floor contrast for dark modules:
           // at full intensity, dark rails stay near-black instead of midtones.
           const darkFactor = computeDarkFactor(mosaicIntensity, 0.08);
-          result.moduleColor = `rgb(${Math.round(mosaicColor.r * darkFactor)},${Math.round(mosaicColor.g * darkFactor)},${Math.round(mosaicColor.b * darkFactor)})`;
+          result.moduleColor = `rgb(${Math.round(mosaicR * darkFactor)},${Math.round(mosaicG * darkFactor)},${Math.round(mosaicB * darkFactor)})`;
         } else {
           // Light modules stay close to paper-white so the scanner sees clear separation.
           const blendToWhite = 0.72 + computeLightBlend(mosaicIntensity, 0.24);
-          const lightR = Math.round(mosaicColor.r + (255 - mosaicColor.r) * blendToWhite);
-          const lightG = Math.round(mosaicColor.g + (255 - mosaicColor.g) * blendToWhite);
-          const lightB = Math.round(mosaicColor.b + (255 - mosaicColor.b) * blendToWhite);
+          const lightR = Math.round(mosaicR + (255 - mosaicR) * blendToWhite);
+          const lightG = Math.round(mosaicG + (255 - mosaicG) * blendToWhite);
+          const lightB = Math.round(mosaicB + (255 - mosaicB) * blendToWhite);
           result.moduleColor = `rgb(${lightR},${lightG},${lightB})`;
         }
       }
@@ -336,8 +352,11 @@ export function applyQROverlayMode(
 
     case 'dither':
     case 'extreme': {
-      const ditherColor = overlayWithColors.colors?.[row]?.[col];
+      const ditherColor = getOverlayColorPacked(overlayData, row, col);
       if (!ditherColor) break;
+      const ditherR = (ditherColor >> 16) & 0xff;
+      const ditherG = (ditherColor >> 8) & 0xff;
+      const ditherB = ditherColor & 0xff;
 
       const isExtreme = overlayMode === 'extreme';
       const blendPresFunctional = config.blendPreservations === true && isFunctionalPattern;
@@ -359,9 +378,9 @@ export function applyQROverlayMode(
         darkBlend,
         functionalExtremeBlend ? 0.22 : isExtreme ? 0.44 : 0.68
       );
-      const darkR = Math.round(ditherColor.r * darkFactor);
-      const darkG = Math.round(ditherColor.g * darkFactor);
-      const darkB = Math.round(ditherColor.b * darkFactor);
+      const darkR = Math.round(ditherR * darkFactor);
+      const darkG = Math.round(ditherG * darkFactor);
+      const darkB = Math.round(ditherB * darkFactor);
       const darkColor = `rgb(${darkR},${darkG},${darkB})`;
 
       if (isDark) {
@@ -386,15 +405,9 @@ export function applyQROverlayMode(
         );
         const whiteBase = functionalExtremeBlend ? 0.58 : isExtreme ? 0.82 : 0.7;
         const whitePush = functionalExtremeBlend ? 0.32 : isExtreme ? 0.18 : 0.3;
-        const lightR = Math.round(
-          ditherColor.r + (255 - ditherColor.r) * (whiteBase + lightMix * whitePush)
-        );
-        const lightG = Math.round(
-          ditherColor.g + (255 - ditherColor.g) * (whiteBase + lightMix * whitePush)
-        );
-        const lightB = Math.round(
-          ditherColor.b + (255 - ditherColor.b) * (whiteBase + lightMix * whitePush)
-        );
+        const lightR = Math.round(ditherR + (255 - ditherR) * (whiteBase + lightMix * whitePush));
+        const lightG = Math.round(ditherG + (255 - ditherG) * (whiteBase + lightMix * whitePush));
+        const lightB = Math.round(ditherB + (255 - ditherB) * (whiteBase + lightMix * whitePush));
         result.moduleColor = blendColors(
           config.bgColor,
           `rgb(${lightR},${lightG},${lightB})`,
@@ -405,15 +418,9 @@ export function applyQROverlayMode(
         const lightMix = computeLightBlend(effectiveIntensity, isExtreme ? 0.28 : 0.16);
         const whiteBase = isExtreme ? 0.84 : 0.92;
         const whitePush = isExtreme ? 0.14 : 0.06;
-        const lightR = Math.round(
-          ditherColor.r + (255 - ditherColor.r) * (whiteBase + lightMix * whitePush)
-        );
-        const lightG = Math.round(
-          ditherColor.g + (255 - ditherColor.g) * (whiteBase + lightMix * whitePush)
-        );
-        const lightB = Math.round(
-          ditherColor.b + (255 - ditherColor.b) * (whiteBase + lightMix * whitePush)
-        );
+        const lightR = Math.round(ditherR + (255 - ditherR) * (whiteBase + lightMix * whitePush));
+        const lightG = Math.round(ditherG + (255 - ditherG) * (whiteBase + lightMix * whitePush));
+        const lightB = Math.round(ditherB + (255 - ditherB) * (whiteBase + lightMix * whitePush));
         result.moduleColor = blendColors(
           config.bgColor,
           `rgb(${lightR},${lightG},${lightB})`,

@@ -214,6 +214,16 @@ export interface PixelDecisionMatrix {
 }
 
 export interface OverlayData {
+  /** Module-space width/height. */
+  size: number;
+  /** Packed per-module brightness values in [0..1], row-major. */
+  brightness: Float32Array;
+  /** Optional packed per-module RGB colors (0x01RRGGBB), row-major. */
+  colorsPacked?: Uint32Array;
+  /**
+   * Legacy sparse object fallback kept for compatibility with transitional paths.
+   * New code should use packed helpers in `overlay-data-packed.ts`.
+   */
   [row: number]: {
     [col: number]: number;
   };

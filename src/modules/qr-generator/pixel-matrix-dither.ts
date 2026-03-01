@@ -6,17 +6,24 @@
 import { createLogger } from '../../lib/logger';
 import type { QRCodeObject } from './cache';
 import { applyDitherToMatrix } from './dithering-matrix';
+import { getOverlayColor } from './overlay-data-packed';
 import { getOverlayData } from './overlay-data';
-import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
+import type {
+  CreateCanvasFn,
+  OverlayData,
+  PixelDecisionMatrix,
+  QRGeneratorConfig,
+  RGBWithMeta,
+} from './types';
 
 const _log = createLogger('GENERATE');
 
 /**
  * Normalize colors to RGB format
- * Colors are now stored as {r, g, b} objects directly in OverlayData
+ * Supports packed overlay colors (with legacy sparse fallback via helper).
  */
 export function normalizeColors(
-  colors: Record<number, Record<number, { r: number; g: number; b: number }>> | undefined,
+  overlayData: OverlayData | null | undefined,
   moduleCount: number
 ): (RGBWithMeta | null)[][] {
   const result: (RGBWithMeta | null)[][] = [];
@@ -24,7 +31,7 @@ export function normalizeColors(
   for (let row = 0; row < moduleCount; row++) {
     result[row] = [];
     for (let col = 0; col < moduleCount; col++) {
-      const color = colors?.[row]?.[col];
+      const color = getOverlayColor(overlayData, row, col);
       if (color) {
         // Color is already {r, g, b} object
         result[row][col] = {
@@ -66,7 +73,7 @@ export async function generateDitherModeMatrix(
   const matrix = applyDitherToMatrix(qr, moduleCount, overlayData, effectiveConfig);
 
   // Normalize colors
-  const colors = normalizeColors(overlayData.colors, moduleCount);
+  const colors = normalizeColors(overlayData, moduleCount);
 
   return {
     matrix,

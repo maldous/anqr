@@ -4061,11 +4061,12 @@ async function handler(request: Request) {
         break;
     }
 
-    // Generate ETag from content hash (deterministic output = consistent ETag)
-    const etag = `"${createHash('md5').update(outputBuffer).digest('hex')}"`;
-
     // Detect degraded response (overlay requested but rendered without overlay for speed)
     const isDegraded = !!(overlayUrl && overlayMode) && !isFullRender;
+    // Generate ETag from deterministic render identity to avoid O(n) output-buffer hashing.
+    // _fullRender is intentionally omitted from cacheKey, so include degradation state explicitly.
+    const etagSource = `${cacheKey}:${contentType}:${isDegraded ? 'degraded' : 'full'}:${outputBuffer.byteLength}`;
+    const etag = `"${createHash('md5').update(etagSource).digest('hex')}"`;
     qrFnLog('[BLOB] render result', {
       isDegraded,
       isFullRender,

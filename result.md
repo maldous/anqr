@@ -121,3 +121,19 @@
   - `src/modules/animation/parsing.ts`: single-frame WebP/static decode now prefers `createImageBitmap(blob)` path before image-element fallback.
   - `src/modules/animation/parsing.ts`: GIF patch ImageData creation now reuses clamped views over patch buffers instead of cloning patch bytes.
   - `src/modules/animation/gif-compositor.ts`: per-frame patch ImageData cache now uses clamped views over source patch buffers (no extra `Uint8ClampedArray` copy during cache fill).
+- Implemented combined items 2 + 18 direction (`[HUGE][CPU+MEM]` packed overlay data and object-churn reduction in hot loops):
+  - Added packed overlay helpers in `src/modules/qr-generator/overlay-data-packed.ts`:
+    - `Float32Array` brightness accessor with legacy sparse fallback.
+    - Packed RGB color helpers (`0x01RRGGBB`) with unpack/accessors.
+  - `src/modules/qr-generator/overlay-data.ts` now emits packed overlay payloads (`size`, `brightness`, optional `colorsPacked`) instead of eagerly building nested `{[row][col]}` objects.
+  - Migrated overlay readers in hot paths to packed accessors:
+    - `render-loop.ts` (overlay brightness + halftone backdrop color lookup)
+    - `render-modes.ts` (all mode color lookups now packed integer reads)
+    - `color.ts` (per-module color mode brightness/color reads)
+    - `dithering-matrix.ts` + `dithering-advanced.ts` (brightness reads)
+  - Updated matrix color normalization in `pixel-matrix-dither.ts` / `pixel-matrix-standard.ts` to read through packed/fallback accessors.
+  - Updated `generateHalftoneDitheredOverlayData` in `pixel-matrix-dithered.ts` to return packed overlay arrays (module-level brightness + packed colors) to avoid building nested objects.
+  - Kept legacy sparse-field compatibility path in helper accessors to reduce migration risk for any non-migrated consumer.
+- Implemented item 37 direction (`[BIG][SERVER CPU]` avoid O(n) ETag hashing in `/api/qr`):
+  - Updated `netlify/functions/qr.ts` to derive response ETag from deterministic render identity (`cacheKey`, `contentType`, degraded/full state, output byte length) instead of hashing full output buffers.
+  - Preserves deterministic cache semantics while removing per-response buffer hash cost on large images/GIFs.

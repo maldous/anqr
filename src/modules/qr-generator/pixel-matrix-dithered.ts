@@ -1284,17 +1284,14 @@ export async function generateHalftoneDitheredOverlayData(
   }
   if (releaseCanvasFn) releaseCanvasFn(moduleCanvas);
 
-  const overlayData: OverlayData = {};
-  overlayData.colors = {};
+  const overlayBrightness = new Float32Array(moduleCount * moduleCount);
+  const overlayColorsPacked = new Uint32Array(moduleCount * moduleCount);
   const total = scale * scale;
   // 0 => pure original overlay luminance, 1 => pure dither density.
   // Keep original image dominant so backdrop remains clearly visible.
   const densityInfluence = clamp01(0.15 + effectiveIntensity * 0.15);
 
   for (let mr = 0; mr < moduleCount; mr++) {
-    overlayData[mr] = {};
-    overlayData.colors[mr] = {};
-
     for (let mc = 0; mc < moduleCount; mc++) {
       let darkCount = 0;
       let sumR = 0;
@@ -1331,7 +1328,10 @@ export async function generateHalftoneDitheredOverlayData(
 
       const density = darkCount / total;
       const densityBrightness = 1 - density;
-      overlayData[mr][mc] = clamp01(lerp(srcBrightness, densityBrightness, densityInfluence));
+      const overlayIndex = mr * moduleCount + mc;
+      overlayBrightness[overlayIndex] = clamp01(
+        lerp(srcBrightness, densityBrightness, densityInfluence)
+      );
 
       if (colorCount > 0) {
         // Blend true source color with dither-aggregated color so the backdrop
@@ -1340,13 +1340,13 @@ export async function generateHalftoneDitheredOverlayData(
         const ditherG = Math.round(sumG / colorCount);
         const ditherB = Math.round(sumB / colorCount);
         const colorMix = clamp01(0.2 + effectiveIntensity * 0.25);
-        overlayData.colors[mr][mc] = {
-          r: Math.round(lerp(srcR, ditherR, colorMix)),
-          g: Math.round(lerp(srcG, ditherG, colorMix)),
-          b: Math.round(lerp(srcB, ditherB, colorMix)),
-        };
+        overlayColorsPacked[overlayIndex] = packColor(
+          Math.round(lerp(srcR, ditherR, colorMix)),
+          Math.round(lerp(srcG, ditherG, colorMix)),
+          Math.round(lerp(srcB, ditherB, colorMix))
+        );
       } else {
-        overlayData.colors[mr][mc] = { r: srcR, g: srcG, b: srcB };
+        overlayColorsPacked[overlayIndex] = packColor(srcR, srcG, srcB);
       }
     }
   }
@@ -1357,5 +1357,12 @@ export async function generateHalftoneDitheredOverlayData(
     effectiveIntensity,
   });
 
-  return { overlayData, effectiveIntensity };
+  return {
+    overlayData: {
+      size: moduleCount,
+      brightness: overlayBrightness,
+      colorsPacked: overlayColorsPacked,
+    } as OverlayData,
+    effectiveIntensity,
+  };
 }

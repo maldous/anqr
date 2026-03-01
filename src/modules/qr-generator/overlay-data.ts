@@ -6,6 +6,7 @@
 import { createLogger } from '../../lib/logger';
 import { rgbToGray } from '../core';
 import { overlayDataCache } from './cache';
+import { packOverlayColor } from './overlay-data-packed';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 import { hashCanvasContent } from './utils';
 
@@ -20,8 +21,9 @@ export async function getOverlayData(
   config: QRGeneratorConfig,
   createCanvasFn: CreateCanvasFn
 ): Promise<OverlayData> {
+  const emptyData: OverlayData = { size: 0, brightness: new Float32Array(0) } as OverlayData;
   if (!overlayCanvas) {
-    return {} as OverlayData;
+    return emptyData;
   }
   // Generate cache key
   const canvasHash = await hashCanvasContent(overlayCanvas, createCanvasFn);
@@ -48,12 +50,10 @@ export async function getOverlayData(
       | OffscreenCanvasRenderingContext2D
       | null);
   if (!ctx) {
-    return {} as OverlayData;
+    return emptyData;
   }
 
-  const readCtx = ctx as
-    | CanvasRenderingContext2D
-    | OffscreenCanvasRenderingContext2D;
+  const readCtx = ctx as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
   readCtx.imageSmoothingEnabled = true;
   readCtx.imageSmoothingQuality = 'high';
@@ -63,36 +63,25 @@ export async function getOverlayData(
   const imageData = readCtx.getImageData(0, 0, moduleCount, moduleCount);
   const data = imageData.data;
 
-  const result: OverlayData = {};
+  const pixelCount = moduleCount * moduleCount;
+  const brightness = new Float32Array(pixelCount);
   const includeColors = config.colorMode !== 'bw';
-
-  if (includeColors) {
-    result.colors = {};
-  }
-
-  for (let row = 0; row < moduleCount; row++) {
-    result[row] = {};
-    if (includeColors) {
-      if (!result.colors) result.colors = {};
-      result.colors[row] = {};
-    }
-
-    for (let col = 0; col < moduleCount; col++) {
-      const idx = (row * moduleCount + col) * 4;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-
-      // Calculate brightness
-      const brightness = rgbToGray(r, g, b) / 255;
-      result[row][col] = brightness;
-
-      // Store color if needed
-      if (includeColors && result.colors) {
-        result.colors[row][col] = { r, g, b };
-      }
+  const colorsPacked = includeColors ? new Uint32Array(pixelCount) : undefined;
+  for (let i = 0, src = 0; i < pixelCount; i++, src += 4) {
+    const r = data[src];
+    const g = data[src + 1];
+    const b = data[src + 2];
+    brightness[i] = rgbToGray(r, g, b) / 255;
+    if (colorsPacked) {
+      colorsPacked[i] = packOverlayColor(r, g, b);
     }
   }
+
+  const result: OverlayData = {
+    size: moduleCount,
+    brightness,
+    colorsPacked,
+  } as OverlayData;
 
   // Cache result
   overlayDataCache.set(cacheKey, result);

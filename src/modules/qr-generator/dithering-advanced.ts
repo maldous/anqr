@@ -6,6 +6,7 @@
 import { createLogger } from '../../lib/logger';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
 import type { QRCodeObject } from './cache';
+import { getOverlayBrightness } from './overlay-data-packed';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');
@@ -33,7 +34,7 @@ export async function applyAdvancedDither(
   for (let row = 0; row < moduleCount; row++) {
     result[row] = [];
     for (let col = 0; col < moduleCount; col++) {
-      const brightness = overlayData[row]?.[col] ?? 0.5;
+      const brightness = getOverlayBrightness(overlayData, row, col);
       const originalValue = qr.isDark(row, col);
 
       // Sample blue noise using canonical sampleBlueNoise from dither-algorithms

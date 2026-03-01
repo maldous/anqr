@@ -5,8 +5,9 @@
 
 import { createLogger } from '../../lib/logger';
 import { blendColors, getRelativeLuminance, parseColor } from '../core';
-import type { OverlayDataMatrix } from './cache';
+import { getOverlayBrightness, getOverlayColor } from './overlay-data-packed';
 import type { QRGeneratorConfig } from './types';
+import type { OverlayData } from './types';
 import { getContrastRatio } from './utils';
 
 const log = createLogger('GENERATE');
@@ -45,14 +46,14 @@ export function lightenColor(color: string, factor: number): string {
 export function applyPerModuleColor(
   mode: string,
   baseColor: string,
-  overlayData: OverlayDataMatrix,
+  overlayData: OverlayData,
   row: number,
   col: number,
   moduleCount: number,
   config: QRGeneratorConfig
 ): string {
-  const brightness = overlayData[row]?.[col] ?? 0.5;
-  const overlayColor = overlayData.colors?.[row]?.[col];
+  const brightness = getOverlayBrightness(overlayData, row, col);
+  const overlayColor = getOverlayColor(overlayData, row, col);
   const intensity = (config.overlayIntensity || 100) / 100;
 
   switch (mode) {
