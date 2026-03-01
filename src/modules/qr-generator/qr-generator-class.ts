@@ -770,7 +770,6 @@ export class QRGenerator {
           requestedOverlayIntensity
         );
         const isAggressivePatch = (patch: DitherAttemptPatch): boolean => {
-          if (patch.qrFirstMode === true) return true;
           if (effectiveConfig.preserveFinders === false && patch.preserveFinders === true)
             return true;
           const patchIntensity = patch.overlayIntensity ?? requestedOverlayIntensity;
@@ -1002,7 +1001,19 @@ export class QRGenerator {
           for (const patch of baseAttempts.slice(1)) pushUniqueAttempt(patch);
         }
         const cachedPatch = getCachedPatch();
-        if (cachedPatch) pushUniqueAttempt(cachedPatch);
+        if (cachedPatch) {
+          if (isAnimatedFrame && !isFirstAnimatedFrame) {
+            // Prioritize cached patch for animation frames after the first so they
+            // reuse frame 0's validated result instead of the base config.
+            const sig = patchSignature(cachedPatch);
+            if (!seenAttemptSignatures.has(sig)) {
+              seenAttemptSignatures.add(sig);
+              attempts.unshift(cachedPatch);
+            }
+          } else {
+            pushUniqueAttempt(cachedPatch);
+          }
+        }
 
         const buildAttemptConfig = (patch: DitherAttemptPatch): QRGeneratorConfig => ({
           ...effectiveConfig,
