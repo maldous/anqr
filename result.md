@@ -260,3 +260,24 @@
     - preview static: `min(base*0.58, 0.4)`
     - full profile (images/final render): `min(base*0.66, 0.48)`
   - Goal: keep slider values (notably around 50%) in a safer scan/render range for both images and GIFs, while leaving B&W behavior unchanged.
+- Fixed generator/analyze mismatch for animated overlays (e.g., `dance.gif`):
+  - Root cause: Analyze decoded whichever frame happened to be on canvas (non-deterministic for animations), while validation expectations are based on a stable frame.
+  - `src/components/Analyze.tsx` now uses a deterministic fast path:
+    - if animation cache exists, Analyze decodes frame `1/N` (first cached frame) only,
+    - otherwise it decodes the current canvas once.
+  - This removes slow multi-frame analysis and aligns Analyze with a consistent reference frame.
+- Added first-frame decodability promotion for multi-frame overlay animations:
+  - Root cause for remaining mismatch: generation did not guarantee frame `1/N` was decodable even when later frames scanned.
+  - `src/hooks/useQRGenerator.ts` now runs a small fixed validation pass after animation cache generation (multi-frame overlay only):
+    - validate frame 1 once,
+    - if invalid, validate a small candidate set (`~25%`, `~50%`, `~75%`, last),
+    - copy the first decodable candidate into frame 1.
+  - This keeps runtime bounded (no full-frame sweep) while aligning generator output with Analyze’s frame-1 check.
+- Fixed Analyze race on animated generator source:
+  - `src/components/Analyze.tsx` now avoids immediate failure while animation cache is still settling.
+  - New order:
+    - decode current live frame first,
+    - if animated cache is not ready, wait briefly (bounded),
+    - decode frame `1/N` when cache is ready,
+    - one final live-frame retry for moving animations.
+  - This restores fast behavior while reducing false `No QR code` results for animated previews.

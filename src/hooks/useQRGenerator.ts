@@ -42,7 +42,11 @@ import {
   type WatermarkPosition,
 } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
-import { type ValidationResult, terminateValidationWorker, validateInWorker } from '@/modules/qr-analyzer';
+import {
+  type ValidationResult,
+  terminateValidationWorker,
+  validateInWorker,
+} from '@/modules/qr-analyzer';
 import {
   canvasHashCache,
   INTRINSICALLY_SCALED_OVERLAY_MODES,
@@ -239,9 +243,7 @@ function clonePlainSerializable(value: unknown): unknown {
 
 function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unknown> {
   const sanitized = clonePlainSerializable(config);
-  return (sanitized && typeof sanitized === 'object'
-    ? sanitized
-    : {}) as Record<string, unknown>;
+  return (sanitized && typeof sanitized === 'object' ? sanitized : {}) as Record<string, unknown>;
 }
 
 function scheduleTrackEvent(
@@ -1769,7 +1771,8 @@ function useQRGenerator(): UseQRGeneratorResult {
               workerResult.success && workerResult.matrix && workerResult.moduleCount > 0
                 ? workerResult.matrix
                 : null;
-            workerRenderedBitmap = workerResult.success && workerResult.bitmap ? workerResult.bitmap : null;
+            workerRenderedBitmap =
+              workerResult.success && workerResult.bitmap ? workerResult.bitmap : null;
             fullQArtResult = {
               success: workerResult.success,
               error: workerResult.error,
@@ -3074,6 +3077,44 @@ function useQRGenerator(): UseQRGeneratorResult {
         existingIndices.push(newIndex);
       };
 
+      const ensureDecodableFirstFrame = async (): Promise<void> => {
+        if (frames.length <= 1) return;
+        const expectedContent = debouncedConfig.content;
+        if (!expectedContent) return;
+
+        const firstFrameValidation = await validateInWorker(frames[0], expectedContent, 1);
+        if (firstFrameValidation.valid) return;
+
+        const candidates: number[] = [];
+        const pushCandidate = (index: number) => {
+          if (!Number.isFinite(index)) return;
+          const normalized = Math.max(1, Math.min(frames.length - 1, Math.floor(index)));
+          if (!candidates.includes(normalized)) {
+            candidates.push(normalized);
+          }
+        };
+
+        pushCandidate(Math.floor(frames.length * 0.25));
+        pushCandidate(Math.floor(frames.length * 0.5));
+        pushCandidate(Math.floor(frames.length * 0.75));
+        pushCandidate(frames.length - 1);
+
+        for (const frameIdx of candidates) {
+          const validation = await validateInWorker(frames[frameIdx], expectedContent, 1);
+          if (!validation.valid) continue;
+          frames[0] = cloneCanvasFrame(frames[frameIdx], null);
+          log.info('animation cache: promoted decodable start frame', {
+            sourceFrame: frameIdx,
+            frameCount: frames.length,
+          });
+          return;
+        }
+
+        log.warn('animation cache: no decodable frame found for start frame promotion', {
+          frameCount: frames.length,
+        });
+      };
+
       // Create yield controller for time-based yielding
       const yieldCtrl = new YieldController();
       yieldCtrl.reset();
@@ -3601,7 +3642,11 @@ function useQRGenerator(): UseQRGeneratorResult {
                 processedOverlay,
                 temporalOffset,
                 0.008,
-                getTemporalScratchCanvas((frameIdx % 2) as 0 | 1, processedOverlay.width, processedOverlay.height)
+                getTemporalScratchCanvas(
+                  (frameIdx % 2) as 0 | 1,
+                  processedOverlay.width,
+                  processedOverlay.height
+                )
               );
             }
 
@@ -3645,7 +3690,11 @@ function useQRGenerator(): UseQRGeneratorResult {
                 processedOverlay,
                 temporalOffset,
                 0.008,
-                getTemporalScratchCanvas((frameIdx % 2) as 0 | 1, processedOverlay.width, processedOverlay.height)
+                getTemporalScratchCanvas(
+                  (frameIdx % 2) as 0 | 1,
+                  processedOverlay.width,
+                  processedOverlay.height
+                )
               );
             }
 
@@ -3739,6 +3788,11 @@ function useQRGenerator(): UseQRGeneratorResult {
         // Add the last frame
         interpolatedFrames.push(frames[frames.length - 1]);
         frames = interpolatedFrames;
+      }
+
+      if (frames.length > 1 && debouncedConfig.content) {
+        updateGenerationProgress('Finalizing animation startup frame', 96);
+        await ensureDecodableFirstFrame();
       }
 
       // Only update state if not cancelled
