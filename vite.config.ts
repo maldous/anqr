@@ -528,19 +528,27 @@ export default defineConfig({
           ) {
             return 'app-media-pipeline';
           }
+          // Keep QR-Art logic isolated from core editor runtime.
+          if (id.includes('/modules/qr-art')) {
+            return 'app-qr-art';
+          }
+          // Keep analyzer/decoder tooling isolated from generation core.
+          if (id.includes('/modules/qr-analyzer') || id.includes('/modules/qr-decoder')) {
+            return 'app-qr-analyzer';
+          }
           if (
             id.includes('/modules/renderer') ||
             id.includes('/modules/qr-core') ||
             id.includes('/modules/qr-generator') ||
-            id.includes('/modules/qr-art') ||
-            id.includes('/modules/qr-analyzer') ||
-            id.includes('/modules/qr-decoder') ||
             id.includes('/modules/qr-encoder') ||
             id.includes('/modules/qr-spec')
           ) {
             return 'app-qr-core';
           }
           // Gallery data
+          if (id.includes('/data/gallery-showcase.generated')) {
+            return 'app-gallery-generated';
+          }
           if (id.includes('/data/gallery-items')) {
             return 'app-gallery-data';
           }
