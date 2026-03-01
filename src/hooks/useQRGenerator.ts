@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createLogger } from '@/lib/logger';
 import { trackEvent } from '@/lib/zaraz';
 import {
@@ -491,6 +492,7 @@ declare global {
 }
 
 function useQRGenerator(): UseQRGeneratorResult {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | OffscreenCanvas | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -590,6 +592,51 @@ function useQRGenerator(): UseQRGeneratorResult {
   const clearGenerationProgress = useCallback(() => {
     setGenerationProgress(null);
   }, []);
+
+  const translateQArtStage = useCallback(
+    (stage: string): string => {
+      switch (stage) {
+        case 'Encoding base data':
+          return t('preview.busy.qrArt.encodingBaseData', 'Encoding the base data...');
+        case 'Analyzing semantic layout':
+          return t('preview.busy.qrArt.analyzingLayout', 'Analyzing the layout...');
+        case 'Building RS basis':
+          return t(
+            'preview.busy.qrArt.buildingErrorCorrectionFoundation',
+            'Building the error correction foundation...'
+          );
+        case 'Mapping bits to pixels':
+          return t('preview.busy.qrArt.mappingBitsToPixels', 'Mapping bits to pixels...');
+        case 'Processing target image':
+          return t('preview.busy.qrArt.processingImage', 'Processing your image...');
+        case 'Ranking pixels by importance':
+          return t(
+            'preview.busy.qrArt.rankingPixelsByImportance',
+            'Ranking pixels by importance...'
+          );
+        case 'Performing Gauss-Jordan elimination':
+          return t('preview.busy.qrArt.solvingMatrix', 'Solving the matrix...');
+        case 'Selecting basis vectors':
+          return t(
+            'preview.busy.qrArt.selectingBestBasisVectors',
+            'Selecting the best basis vectors...'
+          );
+        case 'Counting predicted matches':
+          return t('preview.busy.qrArt.countingPredictedMatches', 'Counting predicted matches...');
+        case 'Modifying data bytes':
+          return t('preview.busy.qrArt.adjustingDataBytes', 'Adjusting data bytes...');
+        case 'Re-encoding QR code':
+          return t('preview.busy.qrArt.reEncodingQrCode', 'Re-encoding the QR code...');
+        case 'Validating result':
+          return t('preview.busy.qrArt.validatingResult', 'Validating the result...');
+        case 'Complete':
+          return t('preview.busy.qrArt.complete', 'Complete...');
+        default:
+          return stage;
+      }
+    },
+    [t]
+  );
 
   const cancelGeneration = useCallback(() => {
     generationRequestIdRef.current += 1;
@@ -1263,7 +1310,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     setHasOverflowError(false);
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only react to rawContent changes, not state changes
-  }, [rawContent, hasOverflowError]);
+  }, [rawContent]);
 
   // Clear error and overflow tracking when debounced content, version, or ECC changes
   // This is a secondary safety net - the rawContent effect above handles the critical path
@@ -1273,12 +1320,9 @@ function useQRGenerator(): UseQRGeneratorResult {
     lastOverflowContentRef.current = null;
     isOverflowBlockedRef.current = false;
 
-    if (error || hasOverflowError) {
-      setError(null);
-      setHasOverflowError(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only clear error on config change, not when error/hasOverflowError state itself changes
-  }, [error, hasOverflowError]);
+    setError(null);
+    setHasOverflowError(false);
+  }, [debouncedConfig.content, debouncedConfig.typeNumber, debouncedConfig.errorCorrection]);
 
   /**
    * Apply only geometric transforms (crop, fit, rotate, flip) to a canvas.
@@ -1629,7 +1673,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     setIsLoading(true);
     setError(null);
-    updateGenerationProgress('Preparing preview', 6);
+    updateGenerationProgress(t('preview.busy.preparingPreview', 'Preparing your preview...'), 6);
 
     // CRITICAL: Yield to browser to allow React to render the loading state
     // before starting expensive QR generation. Without this, the busy overlay
@@ -1643,7 +1687,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     if (isStaleRequest()) return;
     setIsRendering(true);
-    updateGenerationProgress('Generating QR modules', 14);
+    updateGenerationProgress(t('preview.busy.buildingQrStructure', 'Building the QR structure...'), 14);
     const yieldForResponsiveness = async (): Promise<boolean> => {
       await yieldToMainThread(16);
       return isStaleRequest();
@@ -1697,7 +1741,13 @@ function useQRGenerator(): UseQRGeneratorResult {
         let slowRenderTimer: ReturnType<typeof setTimeout> | null = null;
         slowRenderTimer = setTimeout(() => {
           if (!isStaleRequest()) {
-            updateGenerationProgress('Still rendering complex overlay', 72);
+            updateGenerationProgress(
+              t(
+                'preview.busy.stillRenderingDetailedOverlay',
+                'Still rendering the detailed overlay...'
+              ),
+              72
+            );
           }
         }, 900);
         try {
@@ -1713,7 +1763,10 @@ function useQRGenerator(): UseQRGeneratorResult {
       if (overlay.enabled && overlay.mode === 'artwork' && overlayCanvas) {
         const qartModule = await loadQArtModule();
         if (isStaleRequest()) return;
-        updateGenerationProgress('Preparing QR-Art computation', 18);
+        updateGenerationProgress(
+          t('preview.busy.preparingQrArtComputation', 'Preparing QR-Art computation...'),
+          18
+        );
         log.info('Starting QR-Art generation', {
           content: debouncedConfig.content?.substring(0, 50),
           version: debouncedConfig.typeNumber,
@@ -1750,8 +1803,40 @@ function useQRGenerator(): UseQRGeneratorResult {
             lockVersionToMinimum: debouncedConfig.typeNumber === 0,
             performanceProfile: 'quality' as const,
             onProgress: (stage: string, percent: number) => {
-              updateGenerationProgress(`QR-Art: ${stage}`, 18 + percent * 0.64);
-              log.debug('QR-Art progress', { stage, percent: `${percent}%` });
+              let localizedStage = translateQArtStage(stage);
+              const maskMatch = /^Mask (\d+): (.+)$/.exec(stage);
+              if (maskMatch) {
+                const translatedInner = translateQArtStage(maskMatch[2]);
+                localizedStage = t('preview.busy.qrArt.maskStage', {
+                  defaultValue: 'Mask {{mask}}: {{stage}}...',
+                  mask: Number(maskMatch[1]),
+                  stage: translatedInner.replace(/\.\.\.$/, ''),
+                });
+              }
+              const attemptMaskMatch = /^Attempt (\d+)\/(\d+): Mask (\d+): (.+)$/.exec(stage);
+              if (attemptMaskMatch) {
+                const translatedInner = translateQArtStage(attemptMaskMatch[4]);
+                localizedStage = t('preview.busy.qrArt.attemptMaskStage', {
+                  defaultValue: 'Attempt {{current}}/{{total}}: Mask {{mask}}: {{stage}}...',
+                  current: Number(attemptMaskMatch[1]),
+                  total: Number(attemptMaskMatch[2]),
+                  mask: Number(attemptMaskMatch[3]),
+                  stage: translatedInner.replace(/\.\.\.$/, ''),
+                });
+              } else {
+                const attemptMatch = /^Attempt (\d+)\/(\d+): (.+)$/.exec(stage);
+                if (attemptMatch) {
+                  const translatedInner = translateQArtStage(attemptMatch[3]);
+                  localizedStage = t('preview.busy.qrArt.attemptStage', {
+                    defaultValue: 'Attempt {{current}}/{{total}}: {{stage}}...',
+                    current: Number(attemptMatch[1]),
+                    total: Number(attemptMatch[2]),
+                    stage: translatedInner.replace(/\.\.\.$/, ''),
+                  });
+                }
+              }
+              updateGenerationProgress(localizedStage, 18 + percent * 0.64);
+              log.debug('QR-Art progress', { stage: localizedStage, percent: `${percent}%` });
             },
           };
 
@@ -1872,7 +1957,10 @@ function useQRGenerator(): UseQRGeneratorResult {
             };
 
             try {
-              updateGenerationProgress('Rendering QR-Art preview', 86);
+              updateGenerationProgress(
+                t('preview.busy.renderingQrPreview', 'Rendering your QR preview...'),
+                86
+              );
               if (workerRenderedBitmap) {
                 fullQArtCanvas = imageBitmapToCanvas(
                   workerRenderedBitmap,
@@ -1938,7 +2026,10 @@ function useQRGenerator(): UseQRGeneratorResult {
 
           if (isStaleRequest()) return;
           setCanvas(resultCanvas);
-          updateGenerationProgress('Finalizing preview', 96);
+          updateGenerationProgress(
+            t('preview.busy.finalizingPreview', 'Finalizing the preview...'),
+            96
+          );
           if (canvasRef.current) {
             drawToDisplayCanvas(canvasRef.current, resultCanvas);
           }
@@ -2007,7 +2098,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           typeNumber: effectiveConfig.typeNumber,
           errorCorrection: effectiveConfig.errorCorrection,
         });
-        updateGenerationProgress('Rendering QR preview', 58);
+        updateGenerationProgress(t('preview.busy.renderingQrPreview', 'Rendering your QR preview...'), 58);
         if (await yieldForResponsiveness()) return;
         result = await runGeneratorWithStatus(
           effectiveConfig,
@@ -2092,7 +2183,10 @@ function useQRGenerator(): UseQRGeneratorResult {
             // Don't throw - just set error and return to avoid triggering catch handlers
             // that might cause additional state changes leading to re-renders
             setError(
-              'Content too long for QR code. Please shorten your content or use a URL shortener.'
+              t(
+                'errors.contentTooLongForQr',
+                'Content too long for QR code. Please shorten your content or use a URL shortener.'
+              )
             );
             setIsRendering(false);
             setIsLoading(false);
@@ -2133,7 +2227,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       if (isStaleRequest()) return;
       setCanvas(result);
-      updateGenerationProgress('Finalizing preview', 92);
+      updateGenerationProgress(t('preview.busy.finalizingPreview', 'Finalizing the preview...'), 92);
 
       // Capture the QR matrix for vector SVG export
       const matrixData = qrGenerator.getLastMatrix();
@@ -2148,13 +2242,19 @@ function useQRGenerator(): UseQRGeneratorResult {
       }
 
       if (result) {
-        updateGenerationProgress('Validating scan', 98);
+        updateGenerationProgress(
+          t('preview.busy.checkingScanability', 'Checking that it scans properly...'),
+          98
+        );
         runValidationIfNeeded(result, effectiveConfig.content);
       }
     } catch (err) {
       if (isStaleRequest()) return;
       log.error('QR generation error', { error: err });
-      const rawMessage = err instanceof Error ? err.message : 'Failed to generate QR code';
+      const rawMessage =
+        err instanceof Error
+          ? err.message
+          : t('errors.failedToGenerateQr', 'Failed to generate QR code');
 
       // Provide user-friendly error messages for common issues
       let errorMessage = rawMessage;
@@ -2162,8 +2262,10 @@ function useQRGenerator(): UseQRGeneratorResult {
         rawMessage.includes('code length overflow') ||
         rawMessage.includes('maximum QR code capacity')
       ) {
-        errorMessage =
-          'Content too long for QR code. Please shorten your content or use a URL shortener.';
+        errorMessage = t(
+          'errors.contentTooLongForQr',
+          'Content too long for QR code. Please shorten your content or use a URL shortener.'
+        );
       }
 
       setError(errorMessage);
@@ -3071,33 +3173,18 @@ function useQRGenerator(): UseQRGeneratorResult {
     // Mark cache as not ready while generating
     setIsAnimationCacheReady(false);
     setIsLoading(true);
-    updateGenerationProgress('Preparing animation frames', 8);
+    updateGenerationProgress(
+      t('preview.busy.preparingAnimationFrames', 'Preparing the animation frames...'),
+      8
+    );
 
     // Generate QR for each frame (batch generation)
     const generateAllFrames = async () => {
       let frames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
-      const sourceFrameIndices = new Map<HTMLCanvasElement | OffscreenCanvas, number[]>();
 
       const persistFrameCanvas = (frameCanvas: HTMLCanvasElement | OffscreenCanvas): void => {
-        const existingIndices = sourceFrameIndices.get(frameCanvas);
-        if (!existingIndices) {
-          const newIndex = frames.length;
-          frames.push(frameCanvas);
-          sourceFrameIndices.set(frameCanvas, [newIndex]);
-          return;
-        }
-
-        // If the generator reuses the same canvas instance across frames,
-        // detach previously stored references once and then store clones.
-        for (const idx of existingIndices) {
-          if (frames[idx] === frameCanvas) {
-            frames[idx] = cloneCanvas(frameCanvas);
-          }
-        }
-        const detachedFrame = cloneCanvas(frameCanvas);
-        const newIndex = frames.length;
-        frames.push(detachedFrame);
-        existingIndices.push(newIndex);
+        // Snapshot on insert. Scratch/compositor canvases are reused and mutated per-frame.
+        frames.push(cloneCanvas(frameCanvas));
       };
 
       const ensureDecodableFirstFrame = async (): Promise<void> => {
@@ -3298,7 +3385,8 @@ function useQRGenerator(): UseQRGeneratorResult {
           cached &&
           cached.frameIdx === frameIdx &&
           cached.width === sourceCanvas.width &&
-          cached.height === sourceCanvas.height
+          cached.height === sourceCanvas.height &&
+          cached.imageData.data.byteLength > 0
         ) {
           return cached.imageData;
         }
@@ -3592,7 +3680,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       for (let frameIdx = 0; frameIdx < framesToProcess.length; frameIdx++) {
         const frame = framesToProcess[frameIdx];
         updateGenerationProgress(
-          'Rendering animation frames',
+          t('preview.busy.renderingAnimationFrames', 'Rendering the animation frames...'),
           10 + ((frameIdx + 1) / Math.max(1, framesToProcess.length)) * 78
         );
         // Check if cancelled before each expensive operation
@@ -3751,11 +3839,12 @@ function useQRGenerator(): UseQRGeneratorResult {
 
             // Apply color cycle as post-processing - ONLY if actually enabled
             if (hasColorCycle) {
+              const colorCycleTarget = cloneCanvas(finalResult);
               finalResult = applyColorCycle(
                 finalResult,
                 frameIdx,
                 framesToProcess.length,
-                finalResult
+                colorCycleTarget
               );
             }
 
@@ -3791,7 +3880,10 @@ function useQRGenerator(): UseQRGeneratorResult {
       // Apply interpolation - ONLY if actually enabled
       // Note: interpolateFrames works on pairs of frames, so we interpolate between consecutive frames
       if (hasInterpolation && frames.length > 1) {
-        updateGenerationProgress('Interpolating animation frames', 92);
+        updateGenerationProgress(
+          t('preview.busy.smoothingAnimationFrames', 'Smoothing the animation frames...'),
+          92
+        );
         const interpolatedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
         const interpolationSteps = 2; // Number of intermediate frames to generate
         for (let i = 0; i < frames.length - 1; i++) {
@@ -3814,7 +3906,13 @@ function useQRGenerator(): UseQRGeneratorResult {
       }
 
       if (frames.length > 1 && debouncedConfig.content) {
-        updateGenerationProgress('Finalizing animation startup frame', 96);
+        updateGenerationProgress(
+          t(
+            'preview.busy.finalizingFirstAnimationFrame',
+            'Finalizing the first animation frame...'
+          ),
+          96
+        );
         await ensureDecodableFirstFrame();
       }
 
@@ -3881,6 +3979,8 @@ function useQRGenerator(): UseQRGeneratorResult {
     replaceAnimationFrames,
     clearGenerationProgress,
     updateGenerationProgress,
+    t,
+    translateQArtStage,
   ]);
 
   // Fast-preview is active when the short debounce has fired but the settled

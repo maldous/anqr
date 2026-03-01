@@ -936,13 +936,17 @@ function AppContent() {
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none"
-        aria-label="Skip to main content"
+        aria-label={t('accessibility.skipToMainContent', 'Skip to main content')}
       >
-        Skip to main content
+        {t('accessibility.skipToMainContent', 'Skip to main content')}
       </a>
       <div className="h-screen bg-background flex flex-col overflow-hidden relative">
         {/* Global busy overlay for export operations */}
-        <BusyOverlay visible={isExporting} />
+        <BusyOverlay
+          visible={isExporting}
+          stage={t('preview.busy.workingOnIt', 'Working on it...')}
+          cancelLabel={t('common.cancel', 'Cancel')}
+        />
         {/* Welcome modal for first-time visitors (web only) */}
         <Suspense fallback={null}>
           <WelcomeModal />

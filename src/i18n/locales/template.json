@@ -1079,11 +1079,46 @@
     "animatedWebp": "1398"
   },
   "preview": {
-    "draft": "1821",
-    "fastPreview": "1820",
     "qrCodePreview": "867",
     "simulating": "868",
-    "simulationActive": "869"
+    "simulationActive": "869",
+    "busy": {
+      "workingOnIt": "1823",
+      "waitingForThingsToSettle": "1824",
+      "gettingAnimationPreviewReady": "1825",
+      "generatingPreview": "1826",
+      "preparingPreview": "1827",
+      "buildingQrStructure": "1828",
+      "preparingQrArtComputation": "1829",
+      "stillRenderingDetailedOverlay": "1830",
+      "renderingQrPreview": "1831",
+      "checkingScanability": "1832",
+      "finalizingPreview": "1833",
+      "preparingAnimationFrames": "1834",
+      "renderingAnimationFrames": "1835",
+      "smoothingAnimationFrames": "1836",
+      "finalizingFirstAnimationFrame": "1837",
+      "qrArt": {
+        "encodingBaseData": "1838",
+        "analyzingLayout": "1839",
+        "buildingErrorCorrectionFoundation": "1840",
+        "mappingBitsToPixels": "1841",
+        "processingImage": "1842",
+        "rankingPixelsByImportance": "1843",
+        "solvingMatrix": "1844",
+        "selectingBestBasisVectors": "1845",
+        "countingPredictedMatches": "1846",
+        "adjustingDataBytes": "1847",
+        "reEncodingQrCode": "1848",
+        "validatingResult": "1849",
+        "complete": "1850",
+        "maskStage": "1851",
+        "attemptStage": "1852",
+        "attemptMaskStage": "1853"
+      }
+    },
+    "fastPreview": "1820",
+    "draft": "1821"
   },
   "qr": {
     "additionalBorder": "870",
@@ -1309,7 +1344,8 @@
     "imageUnavailable": "1030",
     "messageSent": "1046",
     "lastUpdated": "1032",
-    "scanMePlaceholder": "1033"
+    "scanMePlaceholder": "1033",
+    "skipToMainContent": "1822"
   },
   "contact": {
     "messageSentTitle": "1046",
@@ -2037,5 +2073,18 @@
     "itAsset": "1378",
     "xTwitter": "1379",
     "pdfDocument": "1380"
+  },
+  "analyze": {
+    "confidence": "1538",
+    "exportJson": "1539",
+    "formatInformation": "1599",
+    "imageProperties": "1602",
+    "processingTimings": "1854",
+    "spatialAnalysis": "1614",
+    "noCodeDetectedInImage": "1855"
+  },
+  "errors": {
+    "failedToGenerateQr": "1856",
+    "contentTooLongForQr": "1857"
   }
 }

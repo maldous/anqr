@@ -3,6 +3,7 @@
  */
 
 import { createLogger, disableLogBuffer, enableLogBuffer, flushLogBuffer } from '../../lib/logger';
+import i18n from '@/i18n';
 import { decodeQR } from '../qr-decoder';
 import { detectContentType, extractDominantColors } from './analyzer-content';
 import type { ContentType, DecoderMetadata, QRAnalysisResult } from './types';
@@ -142,7 +143,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       disableLogBuffer();
       return {
         success: false,
-        error: 'No QR code detected in image',
+        error: i18n.t('analyze.noCodeDetectedInImage', 'No QR code detected in image'),
         errorType: 'no_qr_detected',
         version: null,
         moduleCount: 0,

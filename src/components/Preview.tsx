@@ -50,10 +50,10 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
   const busyStageLabel = busyStage
     ? busyStage
     : isPending
-      ? t('preview.waitingForInput', 'Waiting for input to settle...')
+      ? t('preview.busy.waitingForThingsToSettle', 'Waiting for things to settle...')
       : isPreparingAnimation
-        ? t('preview.preparingAnimation', 'Preparing animation preview...')
-        : t('preview.generatingPreview', 'Generating preview...');
+        ? t('preview.busy.gettingAnimationPreviewReady', 'Getting the animation preview ready...')
+        : t('preview.busy.generatingPreview', 'Generating your preview...');
   const busyPercent =
     typeof busyProgress === 'number'
       ? busyProgress
@@ -409,9 +409,9 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                 {isFastPreview && (
                   <div
                     className="absolute -bottom-2 -right-2 z-20 bg-amber-500/80 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm animate-in fade-in duration-150"
-                    title={t('preview.fastPreview', 'Fast preview')}
+                    title={t('preview.fastPreview', 'Fast Preview')}
                     role="status"
-                    aria-label={t('preview.fastPreview', 'Fast preview')}
+                    aria-label={t('preview.fastPreview', 'Fast Preview')}
                   >
                     <Zap className="h-2.5 w-2.5" aria-hidden="true" />
                     <span>{t('preview.draft', 'Draft')}</span>
