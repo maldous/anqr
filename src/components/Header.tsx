@@ -19,6 +19,7 @@ import {
   Mail,
   Menu,
   Moon,
+  Paintbrush,
   Palette,
   PanelLeft,
   Play,
@@ -45,7 +46,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type GalleryCategory, gallerySections } from '@/data/gallery-items';
+import { type GalleryCategory, gallerySectionManifest } from '@/data/gallery-manifest';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { isRtlLanguage, languages, loadLocale } from '@/i18n';
 import { createLogger } from '@/lib/logger';
@@ -69,6 +70,7 @@ const GALLERY_ICON_MAP: Record<string, LucideIcon> = {
   Settings2,
   Grid3x3,
   Sparkles,
+  Paintbrush,
 };
 
 // Dynamic icon component for gallery filters - uses explicit map instead of barrel import
@@ -731,7 +733,7 @@ export function Header({
                   >
                     <Grid3x3 className="w-4 h-4" aria-hidden="true" />
                   </button>
-                  {gallerySections.map((section) => (
+                  {gallerySectionManifest.map((section) => (
                     <button
                       type="button"
                       key={section.id}

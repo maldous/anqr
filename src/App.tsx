@@ -29,7 +29,7 @@ function LazyLoadFallback() {
   );
 }
 
-import type { GalleryCategory } from '@/data/gallery-items';
+import type { GalleryCategory } from '@/data/gallery-manifest';
 import { useBannerHeight } from '@/hooks/useBannerHeight';
 import { QRGeneratorProvider, useQRGeneratorContext } from '@/hooks/useQRGenerator';
 import i18n, { isRtlLanguage, languages, loadLocale } from '@/i18n';
