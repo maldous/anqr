@@ -1037,6 +1037,13 @@ export class QRGenerator {
           const baseDark = clamp(effectiveConfig.darkMinOccupancy ?? 0.56, 0.5, 0.62);
           const baseLight = clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.38, 0.5);
           const baseBias = clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
+          const previewMinIntensity = Math.max(8, Math.round(requestedOverlayIntensity * 0.42));
+          const previewMaxDrop = Math.max(0, requestedOverlayIntensity - previewMinIntensity);
+          const previewDropCap = clamp(
+            Math.round(requestedOverlayIntensity * (0.58 - overlayComplexity * 0.12)),
+            18,
+            58
+          );
           const rescueStep = isPreviewScanGate
             ? overlayComplexity >= 0.65
               ? 4
@@ -1045,12 +1052,12 @@ export class QRGenerator {
               ? 4
               : 5;
           const rescueMaxDrop = isPreviewScanGate
-            ? clamp(20 - overlayComplexity * 6, 10, 20)
+            ? Math.min(previewMaxDrop, previewDropCap)
             : clamp(46 - overlayComplexity * 10, 24, 46);
           const intensities: number[] = [];
           for (let drop = rescueStep; drop <= rescueMaxDrop; drop += rescueStep) {
             const intensity = resolveOverlayIntensity(drop, {
-              minIntensity: isPreviewScanGate ? 16 : 10,
+              minIntensity: isPreviewScanGate ? previewMinIntensity : 10,
               maxDrop: rescueMaxDrop,
             });
             if (intensity < requestedOverlayIntensity && !intensities.includes(intensity)) {
@@ -1075,6 +1082,13 @@ export class QRGenerator {
           const baseDark = clamp(effectiveConfig.darkMinOccupancy ?? 0.56, 0.52, 0.66);
           const baseLight = clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.34, 0.48);
           const baseBias = clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
+          const previewMinIntensity = Math.max(6, Math.round(requestedOverlayIntensity * 0.32));
+          const previewMaxDrop = Math.max(0, requestedOverlayIntensity - previewMinIntensity);
+          const previewDropCap = clamp(
+            Math.round(requestedOverlayIntensity * (0.66 - overlayComplexity * 0.12)),
+            22,
+            64
+          );
           const rescueStep = isPreviewScanGate
             ? overlayComplexity >= 0.65
               ? 4
@@ -1083,12 +1097,12 @@ export class QRGenerator {
               ? 4
               : 5;
           const rescueMaxDrop = isPreviewScanGate
-            ? clamp(26 - overlayComplexity * 7, 12, 26)
+            ? Math.min(previewMaxDrop, previewDropCap)
             : clamp(52 - overlayComplexity * 12, 26, 52);
           const intensities: number[] = [];
           for (let drop = rescueStep; drop <= rescueMaxDrop; drop += rescueStep) {
             const intensity = resolveOverlayIntensity(drop, {
-              minIntensity: 8,
+              minIntensity: isPreviewScanGate ? previewMinIntensity : 8,
               maxDrop: rescueMaxDrop,
             });
             if (intensity < requestedOverlayIntensity && !intensities.includes(intensity)) {
@@ -1246,11 +1260,6 @@ export class QRGenerator {
           evaluatedCanvas: HTMLCanvasElement | OffscreenCanvas;
         }> => {
           if (isScanGateDisabled) {
-            return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
-          }
-          if (isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame) {
-            // Animation preview path: skip per-frame decode for frames after the first.
-            // Frame 0 goes through full validation so Analyze always has a decodable frame.
             return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
           }
           // Preview mode prioritizes generation throughput and checks decode on the render canvas.

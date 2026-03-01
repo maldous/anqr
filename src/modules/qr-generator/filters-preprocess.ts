@@ -28,6 +28,133 @@ import type { QRGeneratorConfig } from './types';
 
 const log = createLogger('GENERATE');
 
+type OverlayToneStats = {
+  lumaMean: number;
+  lumaStd: number;
+  saturationMean: number;
+  clippedDarkRatio: number;
+  clippedLightRatio: number;
+};
+
+function clamp01(v: number): number {
+  if (v <= 0) return 0;
+  if (v >= 1) return 1;
+  return v;
+}
+
+function clampByte(v: number): number {
+  if (v <= 0) return 0;
+  if (v >= 255) return 255;
+  return Math.round(v);
+}
+
+function computeOverlayToneStats(imageData: ImageData): OverlayToneStats {
+  const data = imageData.data;
+  const totalPixels = data.length / 4;
+  if (totalPixels <= 0) {
+    return {
+      lumaMean: 0.5,
+      lumaStd: 0,
+      saturationMean: 0,
+      clippedDarkRatio: 0,
+      clippedLightRatio: 0,
+    };
+  }
+
+  const targetSamples = 65536;
+  const stride = Math.max(1, Math.floor(Math.sqrt(totalPixels / targetSamples)));
+  let sampleCount = 0;
+  let sumLuma = 0;
+  let sumLumaSq = 0;
+  let sumSat = 0;
+  let clippedDark = 0;
+  let clippedLight = 0;
+
+  const pixelStride = stride * 4;
+  for (let i = 0; i < data.length; i += pixelStride) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const maxCh = Math.max(r, g, b);
+    const minCh = Math.min(r, g, b);
+    const sat = maxCh <= 0 ? 0 : (maxCh - minCh) / maxCh;
+    const luma = rgbToLumaLinear(r, g, b);
+    sumLuma += luma;
+    sumLumaSq += luma * luma;
+    sumSat += sat;
+    if (luma <= 0.08) clippedDark++;
+    if (luma >= 0.92) clippedLight++;
+    sampleCount++;
+  }
+
+  if (sampleCount <= 0) {
+    return {
+      lumaMean: 0.5,
+      lumaStd: 0,
+      saturationMean: 0,
+      clippedDarkRatio: 0,
+      clippedLightRatio: 0,
+    };
+  }
+
+  const lumaMean = sumLuma / sampleCount;
+  const lumaStd = Math.sqrt(Math.max(0, sumLumaSq / sampleCount - lumaMean * lumaMean));
+
+  return {
+    lumaMean,
+    lumaStd,
+    saturationMean: sumSat / sampleCount,
+    clippedDarkRatio: clippedDark / sampleCount,
+    clippedLightRatio: clippedLight / sampleCount,
+  };
+}
+
+function applyAdaptiveColorNormalization(
+  imageData: ImageData,
+  stats: OverlayToneStats,
+  strength: number
+): ImageData {
+  const normalizedStrength = clamp01(strength);
+  if (normalizedStrength <= 0.001) return imageData;
+
+  const data = imageData.data;
+  const meanLuma = stats.lumaMean;
+  const contrastScale = 1 - normalizedStrength * 0.3;
+  const satScale = 1 - normalizedStrength * 0.22;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    const luma = rgbToLumaLinear(r, g, b);
+    const gray = (r + g + b) / 3;
+    let rAdj = gray + (r - gray) * satScale;
+    let gAdj = gray + (g - gray) * satScale;
+    let bAdj = gray + (b - gray) * satScale;
+
+    // Compress toward image mean luma to keep frame-to-frame decode stability.
+    let targetLuma = meanLuma + (luma - meanLuma) * contrastScale;
+    if (targetLuma > 0.5) {
+      targetLuma = 0.5 + (targetLuma - 0.5) * (1 - normalizedStrength * 0.18);
+    } else {
+      targetLuma = 0.5 - (0.5 - targetLuma) * (1 - normalizedStrength * 0.14);
+    }
+
+    const adjustedLuma = rgbToLumaLinear(clampByte(rAdj), clampByte(gAdj), clampByte(bAdj));
+    const delta = (targetLuma - adjustedLuma) * 255;
+    rAdj += delta;
+    gAdj += delta;
+    bAdj += delta;
+
+    data[i] = clampByte(rAdj);
+    data[i + 1] = clampByte(gAdj);
+    data[i + 2] = clampByte(bAdj);
+  }
+
+  return imageData;
+}
+
 /**
  * Detect if an image is high-contrast B&W (bimodal histogram).
  * Uses histogram analysis similar to GlobalHistogramBinarizer from QR decoder.
@@ -304,6 +431,55 @@ export function preprocessImageData(
     log.debug('preprocessImageData - applying filters');
   }
   let out = applyFilters(workingData, filterOptions);
+
+  // Adaptive color normalization for scan stability on complex color overlays.
+  // This is intentionally conservative and only applies when color overlays are active.
+  const overlayMode = (config.overlayMode || '').toLowerCase();
+  const scanGateProfile = config.scanGateProfile ?? 'full';
+  const shouldAutoNormalizeColor =
+    !config.disableAutoSoften &&
+    !config.qrFirstMode &&
+    scanGateProfile !== 'off' &&
+    config.colorMode === 'color' &&
+    (overlayMode === 'dithered' ||
+      overlayMode === 'blue-noise' ||
+      overlayMode === 'blue_noise' ||
+      overlayMode === 'artwork');
+
+  if (shouldAutoNormalizeColor) {
+    const stats = computeOverlayToneStats(out);
+    const overlayIntensity = Math.max(0, Math.min(100, config.overlayIntensity ?? 100)) / 100;
+    const clipRisk = clamp01(
+      (stats.clippedDarkRatio + stats.clippedLightRatio - 0.12) / 0.28
+    );
+    const contrastRisk = clamp01((stats.lumaStd - 0.2) / 0.18);
+    const saturationRisk = clamp01((stats.saturationMean - 0.24) / 0.32);
+    const intensityRisk = clamp01((overlayIntensity - 0.45) / 0.45);
+    const normalizationStrength = clamp01(
+      contrastRisk * 0.38 + saturationRisk * 0.28 + clipRisk * 0.24 + intensityRisk * 0.2
+    );
+
+    if (normalizationStrength > 0.08) {
+      if (debug) {
+        log.debug('preprocessImageData - adaptive color normalization', {
+          strength: normalizationStrength.toFixed(3),
+          lumaStd: stats.lumaStd.toFixed(3),
+          saturationMean: stats.saturationMean.toFixed(3),
+          clippedDarkRatio: stats.clippedDarkRatio.toFixed(3),
+          clippedLightRatio: stats.clippedLightRatio.toFixed(3),
+          overlayIntensity: (overlayIntensity * 100).toFixed(1),
+        });
+      }
+      out = applyAdaptiveColorNormalization(out, stats, normalizationStrength);
+    } else if (debug) {
+      log.debug('preprocessImageData - adaptive normalization skipped (low risk)', {
+        lumaStd: stats.lumaStd.toFixed(3),
+        saturationMean: stats.saturationMean.toFixed(3),
+        clippedDarkRatio: stats.clippedDarkRatio.toFixed(3),
+        clippedLightRatio: stats.clippedLightRatio.toFixed(3),
+      });
+    }
+  }
 
   // Optional edge-detect post-pass.
   if (config.filterEdgeDetect) {
