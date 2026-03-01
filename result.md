@@ -85,3 +85,6 @@
   - Removed eager `@/modules/exporter` import from `useQRGenerator`.
   - Added cached dynamic importer (`loadExporterModule`) and moved exporter loading into the download path.
   - Export helpers (`downloadSvg`, `downloadVectorSvg`, `downloadGif`, `downloadImage`) are now resolved only when export is actually triggered.
+- Implemented item 69 direction (`[MED][UI]` defer export analytics to idle):
+  - Added `scheduleTrackEvent(...)` helper in `useQRGenerator` using `requestIdleCallback` (with timeout + `setTimeout` fallback).
+  - Export tracking event is now scheduled out of the critical export path instead of firing synchronously.
