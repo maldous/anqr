@@ -9,6 +9,12 @@ const _log = createLogger('ANIMATION');
 
 import { hslToRgb } from '../core';
 
+function clampToByte(value: number): number {
+  if (value <= 0) return 0;
+  if (value >= 255) return 255;
+  return (value + 0.5) | 0;
+}
+
 /**
  * Apply color cycling effect to a frame
  */
@@ -24,9 +30,13 @@ export function applyColorCycle(
     if (result.width !== canvas.width) result.width = canvas.width;
     if (result.height !== canvas.height) result.height = canvas.height;
   } else {
-    result = document.createElement('canvas');
-    result.width = canvas.width;
-    result.height = canvas.height;
+    if (typeof OffscreenCanvas !== 'undefined') {
+      result = new OffscreenCanvas(canvas.width, canvas.height);
+    } else {
+      result = document.createElement('canvas');
+      result.width = canvas.width;
+      result.height = canvas.height;
+    }
   }
 
   const ctx =
@@ -55,6 +65,12 @@ export function applyColorCycle(
   const tintColor = hslToRgb(baseHue, 80, 50);
   const complementHue = (baseHue + 180) % 360;
   const complementColor = hslToRgb(complementHue, 30, 70);
+  const darkTintR = tintColor.r * 0.7;
+  const darkTintG = tintColor.g * 0.7;
+  const darkTintB = tintColor.b * 0.7;
+  const lightTintR = (255 - complementColor.r) * 0.15;
+  const lightTintG = (255 - complementColor.g) * 0.15;
+  const lightTintB = (255 - complementColor.b) * 0.15;
 
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
@@ -64,15 +80,13 @@ export function applyColorCycle(
     const isDark = brightness < 128;
 
     if (isDark) {
-      const tintAmount = 0.7;
-      data[i] = Math.min(255, r + tintColor.r * tintAmount);
-      data[i + 1] = Math.min(255, g + tintColor.g * tintAmount);
-      data[i + 2] = Math.min(255, b + tintColor.b * tintAmount);
+      data[i] = clampToByte(r + darkTintR);
+      data[i + 1] = clampToByte(g + darkTintG);
+      data[i + 2] = clampToByte(b + darkTintB);
     } else {
-      const tintAmount = 0.15;
-      data[i] = Math.max(0, Math.round(r - (255 - complementColor.r) * tintAmount));
-      data[i + 1] = Math.max(0, Math.round(g - (255 - complementColor.g) * tintAmount));
-      data[i + 2] = Math.max(0, Math.round(b - (255 - complementColor.b) * tintAmount));
+      data[i] = clampToByte(r - lightTintR);
+      data[i + 1] = clampToByte(g - lightTintG);
+      data[i + 2] = clampToByte(b - lightTintB);
     }
   }
 

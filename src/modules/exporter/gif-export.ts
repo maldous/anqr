@@ -51,11 +51,29 @@ export async function exportGif(
     Math.min(256, (config as { gifPaletteSize?: number }).gifPaletteSize ?? 256)
   );
 
-  // OPTIMIZATION: Reuse a single scaling canvas for all frames
-  const scaledCanvas = document.createElement('canvas');
-  scaledCanvas.width = width;
-  scaledCanvas.height = height;
-  const scaledCtx = scaledCanvas.getContext('2d');
+  // OPTIMIZATION: Reuse a single scaling canvas for all frames.
+  // Prefer OffscreenCanvas where available to reduce main-thread canvas overhead.
+  const scaledCanvas: HTMLCanvasElement | OffscreenCanvas =
+    typeof OffscreenCanvas !== 'undefined'
+      ? new OffscreenCanvas(width, height)
+      : (() => {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          return canvas;
+        })();
+  const scaledCtx =
+    (scaledCanvas.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings | undefined) as
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D
+      | null) ??
+    (scaledCanvas.getContext('2d') as
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D
+      | null);
   if (!scaledCtx) throw new Error('Could not get canvas context');
 
   // Pre-compute disposal code once (not per-frame)

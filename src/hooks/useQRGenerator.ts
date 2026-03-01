@@ -69,7 +69,7 @@ const YIELD_INTERVAL_MS = 16; // ~60fps frame budget
 const CONFIG_DEBOUNCE_MS = 150;
 const CONFIG_SETTLE_DEBOUNCE_MS = 300;
 const QART_PERF_OVERLAY_ELEMENT_ID = 'anqr-qart-perf-overlay';
-const ENABLE_QART_PERF_OVERLAY = import.meta.env.DEV;
+const ENABLE_QART_PERF_OVERLAY = false;
 
 function getQArtSearchAttempts(iterations: number | undefined): number {
   if (typeof iterations !== 'number' || !Number.isFinite(iterations)) return 1;
@@ -525,6 +525,8 @@ function useQRGenerator(): UseQRGeneratorResult {
   const autoGenerateSuppressedRef = useRef(false);
   const currentPrimaryDebouncedConfigRef = useRef<object | null>(null);
   const cancelledPrimaryDebouncedConfigRef = useRef<object | null>(null);
+  const currentOverlaySourceKeyRef = useRef<string | null>(null);
+  const cancelledOverlaySourceKeyRef = useRef<string | null>(null);
   const qartPerfOverlayRef = useRef<HTMLDivElement | null>(null);
 
   // State to block generate() calls when we're in an overflow error state
@@ -593,6 +595,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     generationRequestIdRef.current += 1;
     autoGenerateSuppressedRef.current = true;
     cancelledPrimaryDebouncedConfigRef.current = currentPrimaryDebouncedConfigRef.current;
+    cancelledOverlaySourceKeyRef.current = currentOverlaySourceKeyRef.current;
     activeQArtRequestAbortRef.current?.abort();
     activeQArtRequestAbortRef.current = null;
     activeAnimationRequestAbortRef.current?.abort();
@@ -1175,6 +1178,12 @@ function useQRGenerator(): UseQRGeneratorResult {
   // We keep a fast-preview stage for live interaction, then settle to full quality.
   const primaryDebouncedConfig = useDebounce(config, CONFIG_DEBOUNCE_MS);
   const settledConfig = useDebounce(config, CONFIG_SETTLE_DEBOUNCE_MS);
+  const overlaySourceKey = useMemo(() => {
+    const file = overlay.file;
+    if (!file) return `url:${overlay.url || ''}`;
+    return `file:${file.name}:${file.size}:${file.lastModified}:${file.type}:${overlay.url || ''}`;
+  }, [overlay.file, overlay.url]);
+  currentOverlaySourceKeyRef.current = overlaySourceKey;
 
   useEffect(() => {
     const currentPrimary = primaryDebouncedConfig as object;
@@ -1185,9 +1194,22 @@ function useQRGenerator(): UseQRGeneratorResult {
     ) {
       autoGenerateSuppressedRef.current = false;
       cancelledPrimaryDebouncedConfigRef.current = null;
+      cancelledOverlaySourceKeyRef.current = null;
     }
     currentPrimaryDebouncedConfigRef.current = currentPrimary;
   }, [primaryDebouncedConfig]);
+
+  useEffect(() => {
+    if (!autoGenerateSuppressedRef.current) return;
+    if (
+      cancelledOverlaySourceKeyRef.current &&
+      cancelledOverlaySourceKeyRef.current !== overlaySourceKey
+    ) {
+      autoGenerateSuppressedRef.current = false;
+      cancelledPrimaryDebouncedConfigRef.current = null;
+      cancelledOverlaySourceKeyRef.current = null;
+    }
+  }, [overlaySourceKey]);
 
   // During active interaction, enable fast preview mode which skips
   // expensive rendering features. Once interaction stops and settledConfig catches up,
@@ -2194,6 +2216,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   const regenerate = useCallback(async () => {
     autoGenerateSuppressedRef.current = false;
     cancelledPrimaryDebouncedConfigRef.current = null;
+    cancelledOverlaySourceKeyRef.current = null;
     await generate();
   }, [generate]);
 
