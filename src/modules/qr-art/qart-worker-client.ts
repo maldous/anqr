@@ -1,5 +1,6 @@
 import { createLogger } from '../../lib/logger';
 import type {
+  QArtWorkerGenerateInput,
   QArtWorkerGeneratePayload,
   QArtWorkerMessage,
   QArtWorkerResultPayload,
@@ -20,6 +21,26 @@ let worker: Worker | null = null;
 let workerFailed = false;
 let nextId = 0;
 const pending = new Map<number, PendingRequest>();
+
+function toWorkerPayload(input: QArtWorkerGenerateInput): QArtWorkerGeneratePayload {
+  return {
+    data: input.data,
+    ecc: input.ecc,
+    version: input.version,
+    maskPattern: input.maskPattern,
+    lockVersionToMinimum: input.lockVersionToMinimum,
+    strictSuffix: input.strictSuffix,
+    targetControlPercent: input.targetControlPercent,
+    searchAttempts: input.searchAttempts,
+    searchSeed: input.searchSeed,
+    performanceProfile: input.performanceProfile,
+    renderConfig: input.renderConfig,
+    renderInWorker: input.renderInWorker,
+    targetImageWidth: input.targetImage.width,
+    targetImageHeight: input.targetImage.height,
+    targetImagePixels: input.targetImage.data,
+  };
+}
 
 function failAllPending(error: Error): void {
   for (const [id, request] of pending.entries()) {
@@ -76,7 +97,7 @@ function ensureWorker(): Worker | null {
 }
 
 export async function generateQArtInWorker(
-  payload: QArtWorkerGeneratePayload,
+  payload: QArtWorkerGenerateInput,
   options?: {
     timeoutMs?: number;
     onProgress?: (stage: string, percent: number) => void;
@@ -135,8 +156,9 @@ export async function generateQArtInWorker(
         : undefined,
     });
 
-    const transferables: Transferable[] = [payload.targetImage.data.buffer as ArrayBuffer];
-    w.postMessage({ type: 'generate', id, payload }, transferables);
+    const workerPayload = toWorkerPayload(payload);
+    const transferables: Transferable[] = [workerPayload.targetImagePixels.buffer as ArrayBuffer];
+    w.postMessage({ type: 'generate', id, payload: workerPayload }, transferables);
   });
 }
 

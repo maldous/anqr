@@ -3,7 +3,7 @@
  * Runs QR code decoding off the main thread to keep Android WebView responsive.
  *
  * Protocol:
- *   Main → Worker: { id, imageData, expectedContent?, attempts }
+ *   Main → Worker: { id, width, height, pixels, expectedContent?, attempts }
  *   Worker → Main: { id, result: ValidationResult }
  */
 
@@ -11,7 +11,9 @@ import { decodeQR } from '../qr-decoder';
 
 interface ValidateRequest {
   id: number;
-  imageData: ImageData;
+  width: number;
+  height: number;
+  pixels: Uint8ClampedArray;
   expectedContent?: string;
   attempts: number;
 }
@@ -24,7 +26,13 @@ interface ValidationResult {
 }
 
 self.onmessage = (e: MessageEvent<ValidateRequest>) => {
-  const { id, imageData, expectedContent, attempts } = e.data;
+  const { id, width, height, pixels, expectedContent, attempts } = e.data;
+  const pixelView = new Uint8ClampedArray(
+    pixels.buffer as ArrayBuffer,
+    pixels.byteOffset,
+    pixels.byteLength
+  );
+  const imageData = new ImageData(pixelView, width, height);
   const result = validate(imageData, expectedContent, attempts);
   self.postMessage({ id, result });
 };

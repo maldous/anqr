@@ -98,7 +98,17 @@ export function validateInWorker(
       resolve(result);
     });
     // Transfer the underlying ArrayBuffer for zero-copy messaging
-    w.postMessage({ id, imageData, expectedContent, attempts }, [imageData.data.buffer]);
+    w.postMessage(
+      {
+        id,
+        width: imageData.width,
+        height: imageData.height,
+        pixels: imageData.data,
+        expectedContent,
+        attempts,
+      },
+      [imageData.data.buffer]
+    );
   });
 }
 
