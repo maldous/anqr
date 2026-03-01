@@ -8,6 +8,42 @@ import { createRNG, getContrastRatio as getContrastRatioFromCore } from '../core
 import { canvasHashCache } from './cache';
 
 const log = createLogger('GENERATE');
+const HASH_CANVAS_SIZE = 32;
+let sharedHashCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
+let sharedHashCanvasInUse = false;
+
+async function createHashCanvas(
+  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
+): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    canvas.width = HASH_CANVAS_SIZE;
+    canvas.height = HASH_CANVAS_SIZE;
+    return canvas;
+  }
+  return await createCanvasFn(HASH_CANVAS_SIZE, HASH_CANVAS_SIZE);
+}
+
+async function acquireHashCanvas(
+  createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
+): Promise<{ canvas: HTMLCanvasElement | OffscreenCanvas; release: () => void }> {
+  if (!sharedHashCanvas) {
+    sharedHashCanvas = await createHashCanvas(createCanvasFn);
+  }
+
+  if (!sharedHashCanvasInUse) {
+    sharedHashCanvasInUse = true;
+    return {
+      canvas: sharedHashCanvas,
+      release: () => {
+        sharedHashCanvasInUse = false;
+      },
+    };
+  }
+
+  const fallbackCanvas = await createHashCanvas(createCanvasFn);
+  return { canvas: fallbackCanvas, release: () => {} };
+}
 
 /**
  * Validate and normalize a color string.
@@ -87,35 +123,36 @@ export async function hashCanvasContent(
     return cachedHash;
   }
 
+  const { canvas: hashCanvas, release } = await acquireHashCanvas(createCanvasFn);
   try {
     // Downscale to a tiny 32x32 canvas for fast hashing
-    const hashSize = 32;
-    // Use DOM API directly for browser (faster, avoids async overhead)
-    const hashCanvas =
-      typeof document !== 'undefined'
-        ? (() => {
-            const c = document.createElement('canvas');
-            c.width = hashSize;
-            c.height = hashSize;
-            return c;
-          })()
-        : await createCanvasFn(hashSize, hashSize);
+    if (hashCanvas.width !== HASH_CANVAS_SIZE || hashCanvas.height !== HASH_CANVAS_SIZE) {
+      hashCanvas.width = HASH_CANVAS_SIZE;
+      hashCanvas.height = HASH_CANVAS_SIZE;
+    }
     const hashCtx =
       (hashCanvas.getContext('2d', {
         willReadFrequently: true,
         desynchronized: true,
-      } as CanvasRenderingContext2DSettings) as CanvasRenderingContext2D | null) ??
-      (hashCanvas.getContext('2d') as CanvasRenderingContext2D | null);
+      } as CanvasRenderingContext2DSettings) as
+        | CanvasRenderingContext2D
+        | OffscreenCanvasRenderingContext2D
+        | null) ??
+      (hashCanvas.getContext('2d') as
+        | CanvasRenderingContext2D
+        | OffscreenCanvasRenderingContext2D
+        | null);
     if (!hashCtx) {
       return `${canvas.width}x${canvas.height}`;
     }
 
     // Draw downscaled version
     // Cast to CanvasImageSource for compatibility with both HTMLCanvasElement and OffscreenCanvas
-    hashCtx.drawImage(canvas as CanvasImageSource, 0, 0, hashSize, hashSize);
+    hashCtx.clearRect(0, 0, HASH_CANVAS_SIZE, HASH_CANVAS_SIZE);
+    hashCtx.drawImage(canvas as CanvasImageSource, 0, 0, HASH_CANVAS_SIZE, HASH_CANVAS_SIZE);
 
     // Get pixel data from the small canvas
-    const imageData = hashCtx.getImageData(0, 0, hashSize, hashSize);
+    const imageData = hashCtx.getImageData(0, 0, HASH_CANVAS_SIZE, HASH_CANVAS_SIZE);
     const data = imageData.data;
 
     // Hash all pixels in the small canvas (32x32 = 1024 pixels = 4096 bytes)
@@ -141,5 +178,7 @@ export async function hashCanvasContent(
     // Fallback to dimensions-only if getImageData fails
     log.warn('Canvas hashing failed', { error });
     return `${canvas.width}x${canvas.height}`;
+  } finally {
+    release();
   }
 }

@@ -23,3 +23,6 @@
     - `src/modules/qr-generator/utils.ts` (`hashCanvasContent`)
     - `src/modules/qr-generator/scaled-render.ts`
   - Includes fallback to plain `getContext('2d')` for compatibility.
+- Implemented item 9/36 direction (`[HUGE/BIG][CPU]` hash canvas allocation reduction):
+  - `hashCanvasContent` now reuses a shared 32x32 hash canvas with an in-use guard and fallback canvas when contended.
+  - Removed per-call DOM canvas creation in the common path, while keeping compatibility for non-DOM canvas factories.
