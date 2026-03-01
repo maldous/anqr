@@ -5009,7 +5009,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                     </p>
                     {result.confidence && (
                       <p className="text-xs opacity-80">
-                        Confidence:{' '}
+                        {t('analyze.confidence', 'Confidence')}:{' '}
                         <span className="font-medium capitalize">{result.confidence}</span>
                       </p>
                     )}
@@ -5022,7 +5022,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                   >
                     <Download className="w-4 h-4" />
                     <span className={Capacitor.isNativePlatform() ? 'inline' : 'hidden sm:inline'}>
-                      Export JSON
+                      {t('analyze.exportJson', 'Export JSON')}
                     </span>
                   </Button>
                 </div>
@@ -5600,7 +5600,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       {/* Format Info + Image Properties stacked */}
                       <div className="space-y-4">
                         <CollapsibleSection
-                          title="Format Information"
+                          title={t('analyze.formatInformation', 'Format Information')}
                           icon={<Info className="w-4 h-4" />}
                         >
                           <div className="space-y-2">
@@ -5628,10 +5628,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
                         {/* Image Properties - below Format Info */}
                         {result.imageProperties && (
-                          <CollapsibleSection
-                            title="Image Properties"
-                            icon={<FileImage className="w-4 h-4" />}
-                          >
+                        <CollapsibleSection
+                          title={t('analyze.imageProperties', 'Image Properties')}
+                          icon={<FileImage className="w-4 h-4" />}
+                        >
                             <div className="space-y-2">
                               <DetailRow
                                 label="Image Size"
@@ -5682,7 +5682,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                       (combinedTimings.exportMs !== null &&
                         combinedTimings.exportMs !== undefined) ? (
                         <CollapsibleSection
-                          title="Processing Timings"
+                          title={t('analyze.processingTimings', 'Processing Timings')}
                           icon={<Timer className="w-4 h-4" />}
                           testId="analyze-section-processing-timings"
                         >
@@ -5829,7 +5829,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
                       {/* Spatial Analysis */}
                       <CollapsibleSection
-                        title="Spatial Analysis"
+                        title={t('analyze.spatialAnalysis', 'Spatial Analysis')}
                         icon={<Ruler className="w-4 h-4" />}
                         testId="analyze-section-spatial-analysis"
                       >
@@ -5871,7 +5871,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           {result.quietZone && (
                             <>
                               <DetailRow
-                                label="Quiet Zone"
+                                label={t('safety.quietZone', 'Quiet Zone')}
                                 value={
                                   <StatusBadge
                                     status={result.quietZone.adequate}

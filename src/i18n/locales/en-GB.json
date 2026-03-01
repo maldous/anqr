@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - Click Export to download",
     "simulating": "Simulating",
-    "simulationActive": "Environmental simulation active - Preview shows how QR code may appear under different conditions"
+    "simulationActive": "Environmental simulation active - Preview shows how QR code may appear under different conditions",
+    "busy": {
+      "workingOnIt": "Working on it...",
+      "waitingForThingsToSettle": "Waiting for things to settle...",
+      "gettingAnimationPreviewReady": "Getting the animation preview ready...",
+      "generatingPreview": "Generating your preview...",
+      "preparingPreview": "Preparing your preview...",
+      "buildingQrStructure": "Building the QR structure...",
+      "preparingQrArtComputation": "Preparing QR-Art computation...",
+      "stillRenderingDetailedOverlay": "Still rendering the detailed overlay...",
+      "renderingQrPreview": "Rendering your QR preview...",
+      "checkingScanability": "Checking that it scans properly...",
+      "finalizingPreview": "Finalizing the preview...",
+      "preparingAnimationFrames": "Preparing the animation frames...",
+      "renderingAnimationFrames": "Rendering the animation frames...",
+      "smoothingAnimationFrames": "Smoothing the animation frames...",
+      "finalizingFirstAnimationFrame": "Finalizing the first animation frame...",
+      "qrArt": {
+        "encodingBaseData": "Encoding the base data...",
+        "analyzingLayout": "Analyzing the layout...",
+        "buildingErrorCorrectionFoundation": "Building the error correction foundation...",
+        "mappingBitsToPixels": "Mapping bits to pixels...",
+        "processingImage": "Processing your image...",
+        "rankingPixelsByImportance": "Ranking pixels by importance...",
+        "solvingMatrix": "Solving the matrix...",
+        "selectingBestBasisVectors": "Selecting the best basis vectors...",
+        "countingPredictedMatches": "Counting predicted matches...",
+        "adjustingDataBytes": "Adjusting data bytes...",
+        "reEncodingQrCode": "Re-encoding the QR code...",
+        "validatingResult": "Validating the result...",
+        "complete": "Complete...",
+        "maskStage": "Mask {{mask}}: {{stage}}...",
+        "attemptStage": "Attempt {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Attempt {{current}}/{{total}}: Mask {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Fast Preview",
+    "draft": "Draft"
   },
   "qr": {
     "additionalBorder": "Additional border beyond quiet zone",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Image unavailable",
     "messageSent": "Message sent",
     "lastUpdated": "Last Updated",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Skip to main content"
   },
   "contact": {
     "messageSentTitle": "Message sent",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT Asset",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Document"
+  },
+  "analyze": {
+    "confidence": "Confidence",
+    "exportJson": "Export JSON",
+    "formatInformation": "Format Information",
+    "imageProperties": "Image Properties",
+    "processingTimings": "Processing Timings",
+    "spatialAnalysis": "Spatial Analysis",
+    "noCodeDetectedInImage": "No QR code detected in image"
+  },
+  "errors": {
+    "failedToGenerateQr": "Failed to generate QR code",
+    "contentTooLongForQr": "Content too long for QR code. Please shorten your content or use a URL shortener."
   }
 }

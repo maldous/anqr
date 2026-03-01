@@ -23,6 +23,8 @@ let nextId = 0;
 const pending = new Map<number, PendingRequest>();
 
 function toWorkerPayload(input: QArtWorkerGenerateInput): QArtWorkerGeneratePayload {
+  // Copy pixels before transfer so callers can safely re-read/reuse source ImageData.
+  const pixelsCopy = new Uint8ClampedArray(input.targetImage.data);
   return {
     data: input.data,
     ecc: input.ecc,
@@ -38,7 +40,7 @@ function toWorkerPayload(input: QArtWorkerGenerateInput): QArtWorkerGeneratePayl
     renderInWorker: input.renderInWorker,
     targetImageWidth: input.targetImage.width,
     targetImageHeight: input.targetImage.height,
-    targetImagePixels: input.targetImage.data,
+    targetImagePixels: pixelsCopy,
   };
 }
 

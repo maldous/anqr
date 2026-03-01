@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * BusyOverlay Component
@@ -51,13 +52,16 @@ const BusySpinner = memo(function BusySpinner() {
 
 export function BusyOverlay({
   visible,
-  stage = 'Working...',
+  stage,
   progress = null,
   fullScreen = true,
   onCancel,
-  cancelLabel = 'Cancel',
+  cancelLabel,
 }: Readonly<BusyOverlayProps>) {
+  const { t } = useTranslation();
   if (!visible) return null;
+  const resolvedStage = stage ?? t('preview.busy.workingOnIt', 'Working on it...');
+  const resolvedCancelLabel = cancelLabel ?? t('common.cancel', 'Cancel');
 
   const hasProgress = typeof progress === 'number' && Number.isFinite(progress);
   const normalizedProgress = clampProgress(progress);
@@ -84,9 +88,9 @@ export function BusyOverlay({
               WebkitBoxOrient: 'vertical',
               wordBreak: 'break-word',
             }}
-            title={stage}
+            title={resolvedStage}
           >
-            {stage}
+            {resolvedStage}
           </div>
         </div>
         {hasProgress && (
@@ -108,9 +112,9 @@ export function BusyOverlay({
               type="button"
               onClick={onCancel}
               className="rounded border border-rose-200/70 bg-rose-500/75 px-2 py-1 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200/90 active:bg-rose-300"
-              aria-label={cancelLabel}
+              aria-label={resolvedCancelLabel}
             >
-              {cancelLabel}
+              {resolvedCancelLabel}
             </button>
           </div>
         )}
