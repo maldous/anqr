@@ -28,6 +28,25 @@ export function clearBaseMatrixCache(): void {
 // Register with central cache clearer (avoids circular import from cache.ts)
 registerCacheCleanup(clearBaseMatrixCache);
 
+function detectDeviceRenderScaleCap(): number {
+  if (typeof navigator === 'undefined') return 24;
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  const memoryGb = typeof nav.deviceMemory === 'number' ? nav.deviceMemory : undefined;
+  const cores =
+    typeof navigator.hardwareConcurrency === 'number' ? navigator.hardwareConcurrency : 0;
+
+  // Unified device-class cap (not platform-specific): lower density on constrained devices.
+  if ((typeof memoryGb === 'number' && memoryGb <= 4) || (cores > 0 && cores <= 4)) {
+    return 16;
+  }
+  if ((typeof memoryGb === 'number' && memoryGb <= 8) || (cores > 0 && cores <= 6)) {
+    return 20;
+  }
+  return 24;
+}
+
+const DEVICE_RENDER_SCALE_CAP = detectDeviceRenderScaleCap();
+
 /**
  * Get scale factor based on overlay mode
  */
@@ -38,8 +57,13 @@ export function getScaleFactor(overlayMode: string | undefined, config: QRGenera
 
   // Adaptive preview quality: during interactive fast-preview, reduce scaled render density
   // significantly, then allow full-quality density once config settles.
-  const minScale = isFastPreview ? Math.min(configuredMinScale, 8) : configuredMinScale;
-  const maxScale = isFastPreview ? 12 : 24;
+  const requestedMinScale = isFastPreview ? Math.min(configuredMinScale, 8) : configuredMinScale;
+  const requestedMaxScale = isFastPreview ? 12 : 24;
+  const deviceMaxScale = isFastPreview
+    ? Math.min(DEVICE_RENDER_SCALE_CAP, requestedMaxScale)
+    : DEVICE_RENDER_SCALE_CAP;
+  const maxScale = Math.max(1, Math.min(requestedMaxScale, deviceMaxScale));
+  const minScale = Math.max(1, Math.min(requestedMinScale, maxScale));
   const targetScale = isFastPreview
     ? Math.round((configuredRenderScale + minScale) * 0.58)
     : configuredRenderScale;
