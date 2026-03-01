@@ -225,8 +225,11 @@ function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unk
     : {}) as Record<string, unknown>;
 }
 
-function imageBitmapToCanvas(bitmap: ImageBitmap): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
+function imageBitmapToCanvas(
+  bitmap: ImageBitmap,
+  targetCanvas?: HTMLCanvasElement
+): HTMLCanvasElement {
+  const canvas = targetCanvas ?? document.createElement('canvas');
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
   const ctx = canvas.getContext('2d');
@@ -238,8 +241,11 @@ function imageBitmapToCanvas(bitmap: ImageBitmap): HTMLCanvasElement {
   return canvas;
 }
 
-function cloneCanvasFrame(source: HTMLCanvasElement | OffscreenCanvas): HTMLCanvasElement {
-  const cloned = document.createElement('canvas');
+function cloneCanvasFrame(
+  source: HTMLCanvasElement | OffscreenCanvas,
+  targetCanvas?: HTMLCanvasElement | null
+): HTMLCanvasElement {
+  const cloned = targetCanvas ?? document.createElement('canvas');
   cloned.width = source.width;
   cloned.height = source.height;
   const ctx = cloned.getContext('2d');
@@ -3186,7 +3192,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           frame: HTMLCanvasElement | OffscreenCanvas,
           matchPercentage: number
         ): void => {
-          lastSuccessfulArtworkFrame = cloneCanvasFrame(frame);
+          lastSuccessfulArtworkFrame = cloneCanvasFrame(frame, lastSuccessfulArtworkFrame);
           if (Number.isFinite(matchPercentage)) {
             lastSuccessfulArtworkMatchPercentage = matchPercentage;
           }

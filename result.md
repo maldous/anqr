@@ -75,3 +75,6 @@
   - Updated scan-gate simulation and downscale canvases in `src/modules/qr-generator/qr-generator-class.ts` to use `CanvasPool.acquire/release` instead of fresh canvas creation.
   - Updated final-raster roundtrip path (`toFinalRasterCanvas`) to acquire output canvas from pool and release it on failure paths.
   - Added explicit `try/finally` releases for all per-scenario temporary canvases to avoid accumulation across retry loops.
+- Implemented item 24 direction (`[BIG][CPU+MEM]` reuse artwork-frame clone target):
+  - Updated `cloneCanvasFrame` in `src/hooks/useQRGenerator.ts` to support writing into an existing target canvas.
+  - Artwork animation now reuses the previously stored `lastSuccessfulArtworkFrame` canvas as the clone destination instead of allocating a new clone on every successful frame.
