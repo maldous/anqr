@@ -1633,8 +1633,8 @@ export function OverlaySection() {
                       <Label className="text-sm">
                         <HighlightedLabel>{t('overlay.searchIterations')}</HighlightedLabel>
                       </Label>
-                      <span className="text-sm text-muted-foreground">
-                        {overlay.qrartIterations.toLocaleString()}
+                      <span className="text-sm text-muted-foreground tabular-nums">
+                        {`${Math.max(1, Math.min(5, Math.round(overlay.qrartIterations / 10000)))}x`}
                       </span>
                     </div>
                     <Slider
@@ -1644,12 +1644,13 @@ export function OverlaySection() {
                           overlay: { ...s.overlay, qrartIterations: v },
                         }))
                       }
-                      min={1000}
-                      max={100000}
-                      step={1000}
+                      min={10000}
+                      max={50000}
+                      step={10000}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('overlay.searchIterationsHelp')}
+                      {t('overlay.searchIterationsHelp')} {' '}
+                      {`(${Math.max(1, Math.min(5, Math.round(overlay.qrartIterations / 10000)))} full attempts)`}
                     </p>
                   </div>
                 </div>

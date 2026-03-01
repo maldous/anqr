@@ -718,6 +718,7 @@ export {
   buildBitPixelMap,
   buildBitToMappingMap,
   buildPixelToBitMap,
+  clearBitMappingCache,
   getDataPixelIndices,
   getModuleCount as getBitMappingModuleCount,
   getRSBlockInfo,
@@ -738,6 +739,7 @@ export {
   rankPixelsByImportance,
   selectBasisVectorsForTarget,
 } from './elimination';
+export { clearQArtBufferPool } from './buffer-pool';
 export {
   eccNumericToLevel,
   // Format info utilities
@@ -745,6 +747,7 @@ export {
   extractMaskFromMatrix,
   type FormatVerificationResult,
   type FullQArtConfig,
+  type QArtPerformanceProfile,
   type FullQArtResult,
   generateFullQArt,
   generateFullQArtBestMask,

@@ -16,6 +16,10 @@ interface BusyOverlayProps {
   progress?: number | null;
   /** Full viewport overlay when true, container-scoped when false */
   fullScreen?: boolean;
+  /** Optional cancel action for in-progress work */
+  onCancel?: () => void;
+  /** Optional label for the cancel button */
+  cancelLabel?: string;
 }
 
 function clampProgress(progress: number | null | undefined): number {
@@ -50,6 +54,8 @@ export function BusyOverlay({
   stage = 'Working...',
   progress = null,
   fullScreen = true,
+  onCancel,
+  cancelLabel = 'Cancel',
 }: Readonly<BusyOverlayProps>) {
   if (!visible) return null;
 
@@ -67,20 +73,45 @@ export function BusyOverlay({
         backdropFilter: fullScreen ? 'blur(4px)' : 'blur(1.5px)',
       }}
     >
-      <div className="w-[240px] max-w-[88%] rounded-md bg-black/72 px-3 py-2.5 text-white shadow-lg">
-        <div className="flex items-center gap-2">
+      <div className="w-[288px] max-w-[90%] rounded-md bg-black/72 px-3 py-2.5 text-white shadow-lg">
+        <div className="grid grid-cols-[16px_1fr] items-start gap-x-2">
           <BusySpinner />
-          <div className="min-w-0 text-xs font-medium leading-tight">{stage}</div>
+          <div
+            className="min-w-0 h-[2.4rem] overflow-hidden text-xs font-medium leading-[1.2] text-white/95"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              wordBreak: 'break-word',
+            }}
+            title={stage}
+          >
+            {stage}
+          </div>
         </div>
         {hasProgress && (
-          <div className="mt-2">
+          <div className="mt-2 h-[1.9rem]">
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20">
               <div
                 className="h-full rounded-full bg-emerald-300 transition-[width] duration-200"
                 style={{ width: `${normalizedProgress}%` }}
               />
             </div>
-            <div className="mt-1 text-right text-[10px] text-white/80">{normalizedProgress}%</div>
+            <div className="mt-1 h-[0.8rem] text-right text-[10px] leading-[0.8rem] text-white/80">
+              {normalizedProgress}%
+            </div>
+          </div>
+        )}
+        {onCancel && (
+          <div className="mt-2.5 flex h-7 justify-end">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded border border-rose-200/70 bg-rose-500/75 px-2 py-1 text-[11px] font-semibold text-white transition-colors duration-150 hover:bg-rose-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-200/90 active:bg-rose-300"
+              aria-label={cancelLabel}
+            >
+              {cancelLabel}
+            </button>
           </div>
         )}
       </div>

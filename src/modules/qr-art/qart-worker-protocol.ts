@@ -1,5 +1,7 @@
 import type { ECCLevel } from './bit-mapping';
 
+export type QArtWorkerPerformanceProfile = 'quality' | 'balanced';
+
 export interface QArtWorkerGeneratePayload {
   data: string;
   ecc: ECCLevel;
@@ -8,7 +10,11 @@ export interface QArtWorkerGeneratePayload {
   lockVersionToMinimum?: boolean;
   strictSuffix?: boolean;
   targetControlPercent?: number;
-  performanceProfile?: 'desktop' | 'android';
+  searchAttempts?: number;
+  searchSeed?: number;
+  performanceProfile?: QArtWorkerPerformanceProfile;
+  renderConfig?: Record<string, unknown>;
+  renderInWorker?: boolean;
   targetImage: ImageData;
 }
 
@@ -16,6 +22,7 @@ export interface QArtWorkerResultPayload {
   success: boolean;
   error?: string;
   matrix?: Uint8Array;
+  bitmap?: ImageBitmap;
   moduleCount: number;
   version: number;
   maskPattern: number;

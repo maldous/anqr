@@ -48,18 +48,23 @@ public class MainActivity extends BridgeActivity {
       "IT", "JA", "LT", "LV", "NL", "NO", "PL", "PT", "RO", "RU", "SK", "SL", "SV", "ZH"
   ));
 
+  private static void debugLog(String message) {
+    if (BuildConfig.DEBUG) {
+      Log.d(TAG, message);
+    }
+  }
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    // Use Log.e instead of Log.d because ProGuard strips debug logs in release builds
-    Log.e(TAG, "MainActivity.onCreate starting");
+    debugLog("MainActivity.onCreate starting");
     
     // Register local Capacitor plugins BEFORE super.onCreate()
     // This is required for Capacitor to properly initialize the plugin
     registerPlugin(MediaStoreWriterPlugin.class);
-    Log.e(TAG, "MediaStoreWriterPlugin registered");
+    debugLog("MediaStoreWriterPlugin registered");
     
     super.onCreate(savedInstanceState);
-    Log.e(TAG, "Capacitor bridge initialized");
+    debugLog("Capacitor bridge initialized");
     
     // Initialize Sentry for crash reporting (must be before other initializations)
     initializeSentry();
@@ -71,7 +76,7 @@ public class MainActivity extends BridgeActivity {
     if (BuildConfig.DEBUG) {
       try {
         WebView.setWebContentsDebuggingEnabled(true);
-        Log.e(TAG, "WebView debugging enabled (debug build)");
+        debugLog("WebView debugging enabled (debug build)");
       } catch (Exception e) {
         Log.e(TAG, "Failed to enable WebView debugging", e);
       }
@@ -172,12 +177,12 @@ public class MainActivity extends BridgeActivity {
    */
   private void initializeSentry() {
     if (sentryInitialized) {
-      Log.e(TAG, "Sentry already initialized, skipping");
+      debugLog("Sentry already initialized, skipping");
       return;
     }
     
     try {
-      Log.e(TAG, "Initializing Sentry SDK");
+      debugLog("Initializing Sentry SDK");
       
       SentryAndroid.init(this, options -> {
         options.setDsn(SENTRY_DSN);
@@ -193,7 +198,7 @@ public class MainActivity extends BridgeActivity {
       Sentry.addBreadcrumb("Sentry SDK initialized successfully");
       
       sentryInitialized = true;
-      Log.e(TAG, "Sentry SDK initialized successfully");
+      debugLog("Sentry SDK initialized successfully");
       
     } catch (Exception e) {
       Log.e(TAG, "Failed to initialize Sentry SDK", e);
@@ -209,12 +214,12 @@ public class MainActivity extends BridgeActivity {
     
     // Check if the device language is supported by iubenda
     if (IUBENDA_SUPPORTED_LANGUAGES.contains(deviceLanguage)) {
-      Log.e(TAG, "Using device language for CMP: " + deviceLanguage);
+      debugLog("Using device language for CMP: " + deviceLanguage);
       return deviceLanguage;
     }
     
     // Fall back to English for unsupported languages
-    Log.e(TAG, "Device language " + deviceLanguage + " not supported by iubenda, falling back to EN");
+    debugLog("Device language " + deviceLanguage + " not supported by iubenda, falling back to EN");
     return "EN";
   }
   
@@ -227,12 +232,12 @@ public class MainActivity extends BridgeActivity {
    */
   private void initializeConsentManager() {
     if (cmpInitialized) {
-      Log.e(TAG, "CMP already initialized, skipping");
+      debugLog("CMP already initialized, skipping");
       return;
     }
     
     try {
-      Log.e(TAG, "Initializing iubenda CMP SDK");
+      debugLog("Initializing iubenda CMP SDK");
       
       // Get the appropriate language for the consent banner
       String language = getConsentLanguage();
@@ -311,7 +316,7 @@ public class MainActivity extends BridgeActivity {
       }
       
       cmpInitialized = true;
-      Log.e(TAG, "iubenda CMP SDK initialized successfully with language: " + language);
+      debugLog("iubenda CMP SDK initialized successfully with language: " + language);
       
     } catch (ClassNotFoundException e) {
       Log.e(TAG, "iubenda CMP SDK not found - consent management disabled", e);

@@ -13,6 +13,7 @@ type PendingRequest = {
   reject: (error: Error) => void;
   onProgress?: (stage: string, percent: number) => void;
   timeoutId: ReturnType<typeof setTimeout>;
+  removeAbortListener?: () => void;
 };
 
 let worker: Worker | null = null;
@@ -24,6 +25,7 @@ function failAllPending(error: Error): void {
   for (const [id, request] of pending.entries()) {
     pending.delete(id);
     clearTimeout(request.timeoutId);
+    request.removeAbortListener?.();
     request.reject(error);
   }
 }
@@ -50,6 +52,7 @@ function ensureWorker(): Worker | null {
 
         pending.delete(message.id);
         clearTimeout(request.timeoutId);
+        request.removeAbortListener?.();
         request.resolve(message.result);
       }
     };
@@ -77,6 +80,7 @@ export async function generateQArtInWorker(
   options?: {
     timeoutMs?: number;
     onProgress?: (stage: string, percent: number) => void;
+    signal?: AbortSignal;
   }
 ): Promise<QArtWorkerResultPayload> {
   const w = ensureWorker();
@@ -97,11 +101,38 @@ export async function generateQArtInWorker(
       reject(new Error(`QArt worker timed out after ${timeoutMs}ms`));
     }, timeoutMs);
 
+    const signal = options?.signal;
+    if (signal?.aborted) {
+      clearTimeout(timeoutId);
+      w.postMessage({ type: 'cancel', id });
+      reject(new Error('QArt worker request aborted'));
+      return;
+    }
+
+    const onAbort = () => {
+      const request = pending.get(id);
+      if (!request) return;
+      pending.delete(id);
+      clearTimeout(request.timeoutId);
+      request.removeAbortListener?.();
+      w.postMessage({ type: 'cancel', id });
+      reject(new Error('QArt worker request aborted'));
+    };
+
+    if (signal) {
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+
     pending.set(id, {
       resolve,
       reject,
       timeoutId,
       onProgress: options?.onProgress,
+      removeAbortListener: signal
+        ? () => {
+            signal.removeEventListener('abort', onAbort);
+          }
+        : undefined,
     });
 
     const transferables: Transferable[] = [payload.targetImage.data.buffer as ArrayBuffer];

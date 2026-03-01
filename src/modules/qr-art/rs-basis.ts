@@ -80,6 +80,17 @@ export interface RSBasis {
 
 // Cache for computed bases (expensive to compute)
 const basisCache = new Map<string, RSBasis>();
+const BASIS_CACHE_LIMIT = 32;
+
+function updateBasisCacheLru(key: string, basis: RSBasis): void {
+  basisCache.delete(key);
+  basisCache.set(key, basis);
+  if (basisCache.size <= BASIS_CACHE_LIMIT) return;
+  const oldestKey = basisCache.keys().next().value;
+  if (oldestKey !== undefined) {
+    basisCache.delete(oldestKey);
+  }
+}
 
 /**
  * Convert ECC level to numeric
@@ -476,7 +487,10 @@ export function buildFullBasis(
     : 'all';
   const cacheKey = `${version}-${ecc}-${rangesKey}`;
   const cached = basisCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    updateBasisCacheLru(cacheKey, cached);
+    return cached;
+  }
 
   const blocks = getRSBlockInfo(version, ecc);
   const vectors: RSBasisVector[] = [];
@@ -581,7 +595,7 @@ export function buildFullBasis(
     expectedControllable: controllableBits,
   });
 
-  basisCache.set(cacheKey, basis);
+  updateBasisCacheLru(cacheKey, basis);
   return basis;
 }
 

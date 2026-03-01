@@ -15,7 +15,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { createLogger } from '@/lib/logger';
 import { trackEvent } from '@/lib/zaraz';
 import {
@@ -50,14 +49,12 @@ import {
   canvasHashCache,
   INTRINSICALLY_SCALED_OVERLAY_MODES,
   QRGenerator,
+  type QRGeneratorConfig,
 } from '@/modules/qr-generator';
 import { useQRStore } from '@/store/qr-store';
 
 // Singleton QR generator instance
 const qrGenerator = new QRGenerator();
-
-// Native platform detection (cached at module level)
-const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 // Scoped logger for QR generation
 const log = createLogger('QRGEN');
@@ -67,8 +64,15 @@ const _PREVIEW_TARGET_FPS = 15;
 
 // Yield interval: yield after this many ms of processing to keep UI responsive
 const YIELD_INTERVAL_MS = 16; // ~60fps frame budget
-const QART_PERF_OVERLAY_ELEMENT_ID = 'anqr-android-qart-perf-overlay';
-const ENABLE_ANDROID_QART_PERF_OVERLAY = import.meta.env.DEV && IS_NATIVE_PLATFORM;
+const CONFIG_DEBOUNCE_MS = 150;
+const CONFIG_SETTLE_DEBOUNCE_MS = 300;
+const QART_PERF_OVERLAY_ELEMENT_ID = 'anqr-qart-perf-overlay';
+const ENABLE_QART_PERF_OVERLAY = import.meta.env.DEV;
+
+function getQArtSearchAttempts(iterations: number | undefined): number {
+  if (typeof iterations !== 'number' || !Number.isFinite(iterations)) return 1;
+  return Math.max(1, Math.min(5, Math.round(iterations / 10000)));
+}
 
 /**
  * Yield to main thread to prevent UI blocking during heavy computation
@@ -156,6 +160,40 @@ function unpackQArtMatrix(packed: Uint8Array, moduleCount: number): boolean[][] 
   return matrix;
 }
 
+function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unknown> {
+  try {
+    return structuredClone(config) as unknown as Record<string, unknown>;
+  } catch {
+    return JSON.parse(JSON.stringify(config)) as Record<string, unknown>;
+  }
+}
+
+function imageBitmapToCanvas(bitmap: ImageBitmap): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Unable to create drawing context for worker-rendered QR-Art bitmap');
+  }
+  ctx.clearRect(0, 0, bitmap.width, bitmap.height);
+  ctx.drawImage(bitmap, 0, 0);
+  return canvas;
+}
+
+function cloneCanvasFrame(source: HTMLCanvasElement | OffscreenCanvas): HTMLCanvasElement {
+  const cloned = document.createElement('canvas');
+  cloned.width = source.width;
+  cloned.height = source.height;
+  const ctx = cloned.getContext('2d');
+  if (!ctx) {
+    throw new Error('Unable to clone generated artwork frame');
+  }
+  ctx.clearRect(0, 0, cloned.width, cloned.height);
+  ctx.drawImage(source, 0, 0);
+  return cloned;
+}
+
 function safeMark(name: string): void {
   if (typeof performance === 'undefined') return;
   try {
@@ -236,6 +274,7 @@ interface UseQRGeneratorResult {
   isPending: boolean; // True when config has changed but debounce hasn't settled yet
   error: string | null;
   regenerate: () => Promise<void>;
+  cancelGeneration: () => void;
   download: () => Promise<void>;
   // Animation state
   isAnimating: boolean;
@@ -251,7 +290,7 @@ interface UseQRGeneratorResult {
   // Busy overlay feedback
   busyStage: string | null;
   busyProgress: number | null;
-  // True when fast-preview mode is active (Android: during live interaction)
+  // True when fast-preview mode is active during live interaction
   isFastPreview: boolean;
   // Animation frames for GIF export
   animationFrames: (HTMLCanvasElement | OffscreenCanvas)[];
@@ -353,6 +392,11 @@ function useQRGenerator(): UseQRGeneratorResult {
   const isOverflowBlockedRef = useRef(false);
   // Monotonic generation id to prevent stale async renders from overwriting latest preview.
   const generationRequestIdRef = useRef(0);
+  const activeQArtRequestAbortRef = useRef<AbortController | null>(null);
+  const activeAnimationRequestAbortRef = useRef<AbortController | null>(null);
+  const autoGenerateSuppressedRef = useRef(false);
+  const currentPrimaryDebouncedConfigRef = useRef<object | null>(null);
+  const cancelledPrimaryDebouncedConfigRef = useRef<object | null>(null);
   const qartPerfOverlayRef = useRef<HTMLDivElement | null>(null);
 
   // State to block generate() calls when we're in an overflow error state
@@ -415,8 +459,34 @@ function useQRGenerator(): UseQRGeneratorResult {
     setGenerationProgress(null);
   }, []);
 
+  const cancelGeneration = useCallback(() => {
+    generationRequestIdRef.current += 1;
+    autoGenerateSuppressedRef.current = true;
+    cancelledPrimaryDebouncedConfigRef.current = currentPrimaryDebouncedConfigRef.current;
+    activeQArtRequestAbortRef.current?.abort();
+    activeQArtRequestAbortRef.current = null;
+    activeAnimationRequestAbortRef.current?.abort();
+    activeAnimationRequestAbortRef.current = null;
+    setIsLoading(false);
+    setIsRendering(false);
+    setIsLoadingOverlay(false);
+    setIsAnimationCacheReady(true);
+    setPendingVisible(false);
+    setIsValidating(false);
+    clearGenerationProgress();
+  }, [clearGenerationProgress]);
+
   useEffect(() => {
-    if (!ENABLE_ANDROID_QART_PERF_OVERLAY || typeof document === 'undefined') return;
+    return () => {
+      activeQArtRequestAbortRef.current?.abort();
+      activeQArtRequestAbortRef.current = null;
+      activeAnimationRequestAbortRef.current?.abort();
+      activeAnimationRequestAbortRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ENABLE_QART_PERF_OVERLAY || typeof document === 'undefined') return;
 
     let overlayEl = document.getElementById(QART_PERF_OVERLAY_ELEMENT_ID) as HTMLDivElement | null;
     if (!overlayEl) {
@@ -449,7 +519,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   }, []);
 
   useEffect(() => {
-    if (!ENABLE_ANDROID_QART_PERF_OVERLAY) return;
+    if (!ENABLE_QART_PERF_OVERLAY) return;
     const overlayEl = qartPerfOverlayRef.current;
     if (!overlayEl || !qartPerfSnapshot) return;
 
@@ -970,19 +1040,28 @@ function useQRGenerator(): UseQRGeneratorResult {
   ]);
 
   // Debounce config changes to prevent excessive regeneration.
-  // On native (Android), use a two-tier debounce:
-  //  - Short debounce (50ms) for responsive fast-preview renders during interaction
-  //  - Longer debounce (300ms) to detect when interaction stops for full-quality re-render
-  // On web, both use 150ms (same reference once settled, no fast preview)
-  const primaryDebouncedConfig = useDebounce(config, IS_NATIVE_PLATFORM ? 50 : 150);
-  const settledConfig = useDebounce(config, IS_NATIVE_PLATFORM ? 300 : 150);
+  // We keep a fast-preview stage for live interaction, then settle to full quality.
+  const primaryDebouncedConfig = useDebounce(config, CONFIG_DEBOUNCE_MS);
+  const settledConfig = useDebounce(config, CONFIG_SETTLE_DEBOUNCE_MS);
 
-  // During active interaction on native, enable fast preview mode which skips
-  // expensive rendering features (halftone, gradient, jitter, scan gate retries).
-  // Once interaction stops and settledConfig catches up, fast preview is removed
-  // and a full-quality re-render is triggered automatically.
+  useEffect(() => {
+    const currentPrimary = primaryDebouncedConfig as object;
+    if (
+      autoGenerateSuppressedRef.current &&
+      cancelledPrimaryDebouncedConfigRef.current &&
+      cancelledPrimaryDebouncedConfigRef.current !== currentPrimary
+    ) {
+      autoGenerateSuppressedRef.current = false;
+      cancelledPrimaryDebouncedConfigRef.current = null;
+    }
+    currentPrimaryDebouncedConfigRef.current = currentPrimary;
+  }, [primaryDebouncedConfig]);
+
+  // During active interaction, enable fast preview mode which skips
+  // expensive rendering features. Once interaction stops and settledConfig catches up,
+  // fast preview is removed and a full-quality re-render is triggered automatically.
   const debouncedConfig = useMemo(() => {
-    if (IS_NATIVE_PLATFORM && primaryDebouncedConfig !== settledConfig) {
+    if (primaryDebouncedConfig !== settledConfig) {
       return { ...primaryDebouncedConfig, fastPreview: true as const };
     }
     return primaryDebouncedConfig;
@@ -990,7 +1069,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
   // Track when config changes but debounce hasn't settled yet.
   // Compare against primaryDebouncedConfig (not debouncedConfig which may have fastPreview added)
-  // so that fast-preview renders on native don't trigger the pending blur overlay.
+  // so that fast-preview renders don't trigger the pending blur overlay.
   const isConfigPending = config !== primaryDebouncedConfig;
 
   // Show pending state for style changes only (not for content typing)
@@ -1351,6 +1430,10 @@ function useQRGenerator(): UseQRGeneratorResult {
       return;
     }
 
+    activeQArtRequestAbortRef.current?.abort();
+    const qartAbortController = new AbortController();
+    activeQArtRequestAbortRef.current = qartAbortController;
+
     const requestId = ++generationRequestIdRef.current;
     const isStaleRequest = (): boolean => generationRequestIdRef.current !== requestId;
 
@@ -1411,13 +1494,13 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       const validationRequestId = requestId;
       setIsValidating(true);
-      const validationDelay = IS_NATIVE_PLATFORM ? 500 : 50;
+      const validationDelay = 120;
       setTimeout(() => {
         if (generationRequestIdRef.current !== validationRequestId) {
           setIsValidating(false);
           return;
         }
-        validateInWorker(renderedCanvas, expectedContent, IS_NATIVE_PLATFORM ? 1 : 3)
+        validateInWorker(renderedCanvas, expectedContent, 2)
           .then((validationResult) => {
             if (generationRequestIdRef.current === validationRequestId) {
               setValidation(validationResult);
@@ -1452,9 +1535,13 @@ function useQRGenerator(): UseQRGeneratorResult {
         let fullQArtCanvas: HTMLCanvasElement | null = null;
         let qartResultVersion = 0;
         let qartResultMaskPattern = 0;
+        let qartResultModuleCount = 0;
         let qartResultSource: 'worker' | 'main' = 'main';
         let qartComputeMs: number | null = null;
         let qartRequestMarked = false;
+        let workerPackedMatrix: Uint8Array | null = null;
+        let workerRenderedBitmap: ImageBitmap | null = null;
+        let usedWorkerBitmapRender = false;
 
         // Try full QR-Art algorithm (RS basis manipulation)
         try {
@@ -1469,8 +1556,10 @@ function useQRGenerator(): UseQRGeneratorResult {
             strictSuffix: true,
             // QArt: start at 100% control and reduce until scannable (handled in generator)
             targetControlPercent: 100,
+            searchAttempts: getQArtSearchAttempts(debouncedConfig.qrartIterations),
+            searchSeed: debouncedConfig.qrartSeed ?? 0,
             lockVersionToMinimum: debouncedConfig.typeNumber === 0,
-            performanceProfile: IS_NATIVE_PLATFORM ? ('android' as const) : ('desktop' as const),
+            performanceProfile: 'quality' as const,
             onProgress: (stage: string, percent: number) => {
               updateGenerationProgress(`QR-Art: ${stage}`, 18 + percent * 0.64);
               log.debug('QR-Art progress', { stage, percent: `${percent}%` });
@@ -1481,58 +1570,61 @@ function useQRGenerator(): UseQRGeneratorResult {
           qartRequestMarked = true;
 
           let fullQArtResult: Awaited<ReturnType<typeof generateFullQArtOptimal>>;
-          if (IS_NATIVE_PLATFORM) {
-            try {
-              const targetImage = readCanvasImageData(overlayCanvas);
-              const workerResult = await generateQArtInWorker(
-                {
-                  data: qartConfig.data,
-                  targetImage,
-                  version: qartConfig.version,
-                  ecc: qartConfig.ecc,
-                  strictSuffix: qartConfig.strictSuffix,
-                  targetControlPercent: qartConfig.targetControlPercent,
-                  lockVersionToMinimum: qartConfig.lockVersionToMinimum,
-                  maskPattern: useAutoMask ? undefined : (debouncedConfig.maskPattern as number),
-                  performanceProfile: IS_NATIVE_PLATFORM ? 'android' : 'desktop',
-                },
-                {
-                  onProgress: qartConfig.onProgress,
-                }
-              );
+          try {
+            const targetImage = readCanvasImageData(overlayCanvas);
+            const workerRenderConfig = sanitizeQArtRenderConfig({
+              ...debouncedConfig,
+              typeNumber: qartConfig.version,
+              overlayMode: undefined,
+            } as QRGeneratorConfig);
+            const workerResult = await generateQArtInWorker(
+              {
+                data: qartConfig.data,
+                targetImage,
+                version: qartConfig.version,
+                ecc: qartConfig.ecc,
+                strictSuffix: qartConfig.strictSuffix,
+                targetControlPercent: qartConfig.targetControlPercent,
+                searchAttempts: qartConfig.searchAttempts,
+                searchSeed: qartConfig.searchSeed,
+                lockVersionToMinimum: qartConfig.lockVersionToMinimum,
+                maskPattern: useAutoMask ? undefined : (debouncedConfig.maskPattern as number),
+                performanceProfile: qartConfig.performanceProfile,
+                renderConfig: workerRenderConfig,
+                renderInWorker: true,
+              },
+              {
+                onProgress: qartConfig.onProgress,
+                signal: qartAbortController.signal,
+              }
+            );
 
-              qartResultSource = 'worker';
-              fullQArtResult = {
-                success: workerResult.success,
-                error: workerResult.error,
-                matrix:
-                  workerResult.success && workerResult.matrix && workerResult.moduleCount > 0
-                    ? unpackQArtMatrix(workerResult.matrix, workerResult.moduleCount)
-                    : [],
-                moduleCount: workerResult.moduleCount,
-                version: workerResult.version,
-                maskPattern: workerResult.maskPattern,
-                matchingPixels: workerResult.matchingPixels,
-                totalControllable: workerResult.totalControllable,
-                matchPercentage: workerResult.matchPercentage,
-                encodedData: workerResult.encodedData ?? '',
-              };
-            } catch (workerErr) {
-              log.warn('QArt worker failed, falling back to main thread generation', {
-                error: workerErr,
-              });
-              fullQArtResult = useAutoMask
-                ? await generateFullQArtOptimal({
-                    ...qartConfig,
-                    targetImage: overlayCanvas,
-                  })
-                : await generateFullQArt({
-                    ...qartConfig,
-                    targetImage: overlayCanvas,
-                    maskPattern: debouncedConfig.maskPattern as number,
-                  });
+            qartResultSource = 'worker';
+            workerPackedMatrix =
+              workerResult.success && workerResult.matrix && workerResult.moduleCount > 0
+                ? workerResult.matrix
+                : null;
+            workerRenderedBitmap = workerResult.success && workerResult.bitmap ? workerResult.bitmap : null;
+            fullQArtResult = {
+              success: workerResult.success,
+              error: workerResult.error,
+              matrix: [],
+              moduleCount: workerResult.moduleCount,
+              version: workerResult.version,
+              maskPattern: workerResult.maskPattern,
+              matchingPixels: workerResult.matchingPixels,
+              totalControllable: workerResult.totalControllable,
+              matchPercentage: workerResult.matchPercentage,
+              encodedData: workerResult.encodedData ?? '',
+            };
+          } catch (workerErr) {
+            if (qartAbortController.signal.aborted || isStaleRequest()) {
+              return;
             }
-          } else {
+            log.warn('QArt worker failed, falling back to main thread generation', {
+              error: workerErr,
+            });
+            qartResultSource = 'main';
             fullQArtResult = useAutoMask
               ? await generateFullQArtOptimal({
                   ...qartConfig,
@@ -1555,6 +1647,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           }
           qartResultVersion = fullQArtResult.version;
           qartResultMaskPattern = fullQArtResult.maskPattern;
+          qartResultModuleCount = fullQArtResult.moduleCount;
 
           // Use full QR-Art result if successful, regardless of match percentage
           // The RS basis manipulation algorithm is mathematically correct and produces valid QR codes
@@ -1590,10 +1683,25 @@ function useQRGenerator(): UseQRGeneratorResult {
 
             try {
               updateGenerationProgress('Rendering QR-Art preview', 86);
-              fullQArtCanvas = (await qrGenerator.renderFromMatrix(
-                fullQArtResult.matrix,
-                qrArtConfig
-              )) as HTMLCanvasElement;
+              if (workerRenderedBitmap) {
+                fullQArtCanvas = imageBitmapToCanvas(workerRenderedBitmap);
+                usedWorkerBitmapRender = true;
+                if (typeof workerRenderedBitmap.close === 'function') {
+                  workerRenderedBitmap.close();
+                }
+                workerRenderedBitmap = null;
+              } else if (workerPackedMatrix && fullQArtResult.moduleCount > 0) {
+                fullQArtCanvas = (await qrGenerator.renderFromPackedMatrix(
+                  workerPackedMatrix,
+                  fullQArtResult.moduleCount,
+                  qrArtConfig
+                )) as HTMLCanvasElement;
+              } else {
+                fullQArtCanvas = (await qrGenerator.renderFromMatrix(
+                  fullQArtResult.matrix,
+                  qrArtConfig
+                )) as HTMLCanvasElement;
+              }
               useFullQArt = true;
             } catch (renderErr) {
               log.error('Failed to render QR-Art matrix', { error: renderErr });
@@ -1662,20 +1770,27 @@ function useQRGenerator(): UseQRGeneratorResult {
             renderMs: qartRenderMs !== null ? Math.round(qartRenderMs) : null,
             previewMs: qartPreviewMs !== null ? Math.round(qartPreviewMs) : null,
           });
-          if (IS_NATIVE_PLATFORM) {
-            setQArtPerfSnapshot({
-              source: qartResultSource,
-              computeMs: qartComputeMs,
-              renderMs: qartRenderMs,
-              previewMs: qartPreviewMs,
-              version: qartResultVersion,
-              maskPattern: qartResultMaskPattern,
-            });
-          }
+          setQArtPerfSnapshot({
+            source: qartResultSource,
+            computeMs: qartComputeMs,
+            renderMs: qartRenderMs,
+            previewMs: qartPreviewMs,
+            version: qartResultVersion,
+            maskPattern: qartResultMaskPattern,
+          });
 
-          const matrixData = qrGenerator.getLastMatrix();
-          if (matrixData) {
-            setQrMatrix(matrixData.matrix);
+          if (
+            usedWorkerBitmapRender &&
+            workerPackedMatrix &&
+            qartResultSource === 'worker' &&
+            qartResultModuleCount > 0
+          ) {
+            setQrMatrix(unpackQArtMatrix(workerPackedMatrix, qartResultModuleCount));
+          } else {
+            const matrixData = qrGenerator.getLastMatrix();
+            if (matrixData) {
+              setQrMatrix(matrixData.matrix);
+            }
           }
 
           runValidationIfNeeded(resultCanvas, effectiveConfig.content);
@@ -1878,6 +1993,9 @@ function useQRGenerator(): UseQRGeneratorResult {
         })
       );
     } finally {
+      if (activeQArtRequestAbortRef.current === qartAbortController) {
+        activeQArtRequestAbortRef.current = null;
+      }
       if (!isStaleRequest()) {
         setIsRendering(false);
         setIsLoading(false);
@@ -1912,6 +2030,12 @@ function useQRGenerator(): UseQRGeneratorResult {
     updateGenerationProgress,
   ]);
 
+  const regenerate = useCallback(async () => {
+    autoGenerateSuppressedRef.current = false;
+    cancelledPrimaryDebouncedConfigRef.current = null;
+    await generate();
+  }, [generate]);
+
   // Regenerate when config changes
   // Skip if we're playing from cached animation frames or if we have an overflow error
   useEffect(() => {
@@ -1931,6 +2055,10 @@ function useQRGenerator(): UseQRGeneratorResult {
     // The ref is always up-to-date because it's synchronous.
     if (isOverflowBlockedRef.current) {
       log.debug('regenerate BLOCKED by overflow ref');
+      return;
+    }
+    if (autoGenerateSuppressedRef.current) {
+      log.debug('regenerate BLOCKED by user cancel');
       return;
     }
     // If we have cached animation frames and animation is playing, don't regenerate
@@ -2535,6 +2663,11 @@ function useQRGenerator(): UseQRGeneratorResult {
   useEffect(() => {
     // Track if this effect is still current (for cleanup/cancellation)
     let isCancelled = false;
+    const animationQArtAbortController = new AbortController();
+    activeAnimationRequestAbortRef.current?.abort();
+    activeAnimationRequestAbortRef.current = animationQArtAbortController;
+    const isRunCancelled = (): boolean =>
+      isCancelled || animationQArtAbortController.signal.aborted;
 
     // ==========================================
     // ANIMATION EFFECT FLAGS - only true when actually enabled
@@ -2817,7 +2950,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         if (hasPattern && !needsPerFrameQR) {
           // Generate base QR once, then apply result-targeted pattern stack
           const baseQR = await qrGenerator.generate(previewScanConfigBase, null);
-          if (!baseQR || isCancelled) return;
+          if (!baseQR || isRunCancelled()) return;
           framesToProcess = Array.from({ length: frameCount }, (_, i) => ({
             canvas: applyResultPatternStackPersistent(baseQR, i, frameCount),
             delay: animation.speedMs,
@@ -2827,10 +2960,10 @@ function useQRGenerator(): UseQRGeneratorResult {
           // Generate QR per frame for module-targeted effects, then layer result-targeted patterns
           const combinedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
           for (let i = 0; i < frameCount; i++) {
-            if (isCancelled) return;
+            if (isRunCancelled()) return;
             // Time-based yielding for smoother UI
             if (await yieldCtrl.yieldIfNeeded()) {
-              if (isCancelled) return;
+              if (isRunCancelled()) return;
             }
 
             const frameConfig = {
@@ -2852,11 +2985,11 @@ function useQRGenerator(): UseQRGeneratorResult {
           // Module-only animation (jitter and module-targeted patterns)
           const jitteredFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
           for (let i = 0; i < frameCount; i++) {
-            if (isCancelled) return;
+            if (isRunCancelled()) return;
 
             // Time-based yielding for smoother UI
             if (await yieldCtrl.yieldIfNeeded()) {
-              if (isCancelled) return;
+              if (isRunCancelled()) return;
             }
 
             const frameConfig = {
@@ -2879,7 +3012,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           // For colorCycle/temporalDither without pattern or jitter
           // Generate base QR once, then create placeholder frames for post-processing
           const staticBaseQR = await qrGenerator.generate(previewScanConfigBase, null);
-          if (!staticBaseQR || isCancelled) return;
+          if (!staticBaseQR || isRunCancelled()) return;
 
           framesToProcess = Array.from({ length: frameCount }, () => ({
             canvas: staticBaseQR,
@@ -2910,37 +3043,122 @@ function useQRGenerator(): UseQRGeneratorResult {
       const isArtworkMode = overlay.enabled && overlay.mode === 'artwork';
       let artworkLockedMask = -1;
       let artworkLockedVersion = debouncedConfig.typeNumber || 0;
+      let lastSuccessfulArtworkFrame: HTMLCanvasElement | null = null;
+      let lastSuccessfulArtworkMatchPercentage = -1;
+      const artworkRenderConfigTemplate = sanitizeQArtRenderConfig({
+        ...debouncedConfig,
+        overlayMode: undefined,
+      } as QRGeneratorConfig);
 
       const generateArtworkFrame = async (
         frameOverlayCanvas: HTMLCanvasElement | OffscreenCanvas,
         frameIdx: number
       ): Promise<HTMLCanvasElement | OffscreenCanvas | null> => {
+        const minOutlierMatchPercent = 58;
+        const maxAllowedMatchDrop = 12;
+        const reuseLastSuccessfulFrame = (): HTMLCanvasElement | null =>
+          lastSuccessfulArtworkFrame ? cloneCanvasFrame(lastSuccessfulArtworkFrame) : null;
+        const rememberSuccessfulFrame = (
+          frame: HTMLCanvasElement | OffscreenCanvas,
+          matchPercentage: number
+        ): void => {
+          lastSuccessfulArtworkFrame = cloneCanvasFrame(frame);
+          if (Number.isFinite(matchPercentage)) {
+            lastSuccessfulArtworkMatchPercentage = matchPercentage;
+          }
+        };
+        const isNoisyOutlierMatch = (matchPercentage: number): boolean => {
+          if (!Number.isFinite(matchPercentage)) return true;
+          if (frameIdx === 0) return false;
+          if (lastSuccessfulArtworkMatchPercentage < 0) {
+            return matchPercentage < minOutlierMatchPercent;
+          }
+          const dynamicFloor = Math.max(
+            minOutlierMatchPercent,
+            lastSuccessfulArtworkMatchPercentage - maxAllowedMatchDrop
+          );
+          return matchPercentage < dynamicFloor;
+        };
+
         try {
           const useAutoMask =
             typeof debouncedConfig.maskPattern !== 'number' || debouncedConfig.maskPattern < 0;
           const qartConfig = {
-            data: debouncedConfig.content,
-            targetImage: frameOverlayCanvas,
+            data: debouncedConfig.content ?? '',
             version: artworkLockedVersion,
             ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
             strictSuffix: true,
             targetControlPercent: 100,
+            searchAttempts: getQArtSearchAttempts(debouncedConfig.qrartIterations),
+            searchSeed: debouncedConfig.qrartSeed ?? 0,
             lockVersionToMinimum: debouncedConfig.typeNumber === 0 && frameIdx === 0,
-            performanceProfile: IS_NATIVE_PLATFORM ? ('android' as const) : ('desktop' as const),
+            performanceProfile: 'quality' as const,
           };
 
-          const qartResult =
-            useAutoMask && artworkLockedMask < 0
-              ? await generateFullQArtOptimal(qartConfig)
-              : await generateFullQArt({
-                  ...qartConfig,
-                  maskPattern:
-                    artworkLockedMask >= 0
+          const workerRenderConfig: Record<string, unknown> = {
+            ...artworkRenderConfigTemplate,
+            typeNumber: artworkLockedVersion,
+          };
+
+          let workerResult: Awaited<ReturnType<typeof generateQArtInWorker>>;
+          try {
+            const targetImage = readCanvasImageData(frameOverlayCanvas);
+            workerResult = await generateQArtInWorker(
+              {
+                data: qartConfig.data,
+                targetImage,
+                version: qartConfig.version,
+                ecc: qartConfig.ecc,
+                strictSuffix: qartConfig.strictSuffix,
+                targetControlPercent: qartConfig.targetControlPercent,
+                searchAttempts: qartConfig.searchAttempts,
+                searchSeed: qartConfig.searchSeed,
+                lockVersionToMinimum: qartConfig.lockVersionToMinimum,
+                maskPattern:
+                  useAutoMask && artworkLockedMask < 0
+                    ? undefined
+                    : artworkLockedMask >= 0
                       ? artworkLockedMask
                       : (debouncedConfig.maskPattern as number),
-                });
+                performanceProfile: qartConfig.performanceProfile,
+                renderConfig: workerRenderConfig,
+                renderInWorker: true,
+              },
+              { signal: animationQArtAbortController.signal }
+            );
+          } catch (workerErr) {
+            if (isRunCancelled()) {
+              return null;
+            }
+            log.warn('QR-Art animation frame worker failed; falling back to main thread', {
+              frameIdx,
+              error: workerErr,
+            });
+            const qartResult =
+              useAutoMask && artworkLockedMask < 0
+                ? await generateFullQArtOptimal({
+                    ...qartConfig,
+                    targetImage: frameOverlayCanvas,
+                  })
+                : await generateFullQArt({
+                    ...qartConfig,
+                    targetImage: frameOverlayCanvas,
+                    maskPattern:
+                      artworkLockedMask >= 0
+                        ? artworkLockedMask
+                        : (debouncedConfig.maskPattern as number),
+                  });
 
-          if (qartResult.success && qartResult.matrix) {
+            if (!qartResult.success || !qartResult.matrix) {
+              log.warn('QR-Art failed for animation frame', { frameIdx });
+              const preserved = reuseLastSuccessfulFrame();
+              if (preserved) return preserved;
+              return await qrGenerator.generate(
+                { ...previewScanConfigBase, frameIndex: frameIdx, overlayMode: 'dithered' },
+                frameOverlayCanvas
+              );
+            }
+
             if (frameIdx === 0) {
               artworkLockedMask = qartResult.maskPattern;
               artworkLockedVersion = qartResult.version;
@@ -2950,14 +3168,113 @@ function useQRGenerator(): UseQRGeneratorResult {
               typeNumber: qartResult.version,
               overlayMode: undefined,
             };
-            return await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig);
+            const rendered = await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig);
+            rememberSuccessfulFrame(rendered, qartResult.matchPercentage);
+            return rendered;
           }
-          log.warn('QR-Art failed for animation frame', { frameIdx });
+
+          if (workerResult.success) {
+            let effectiveWorkerResult = workerResult;
+            if (isNoisyOutlierMatch(workerResult.matchPercentage)) {
+              const rescueAttempts = Math.min(8, Math.max(qartConfig.searchAttempts + 2, 4));
+              const rescueSeed =
+                ((qartConfig.searchSeed ?? 0) ^ Math.imul(frameIdx + 1, 0x85ebca6b)) >>> 0;
+              log.warn('QR-Art frame quality outlier detected; retrying frame', {
+                frameIdx,
+                previousMatch: lastSuccessfulArtworkMatchPercentage,
+                currentMatch: workerResult.matchPercentage,
+                rescueAttempts,
+              });
+              try {
+                const rescueResult = await generateQArtInWorker(
+                  {
+                    data: qartConfig.data,
+                    targetImage: readCanvasImageData(frameOverlayCanvas),
+                    version: qartConfig.version,
+                    ecc: qartConfig.ecc,
+                    strictSuffix: qartConfig.strictSuffix,
+                    targetControlPercent: qartConfig.targetControlPercent,
+                    searchAttempts: rescueAttempts,
+                    searchSeed: rescueSeed,
+                    lockVersionToMinimum: qartConfig.lockVersionToMinimum,
+                    maskPattern:
+                      useAutoMask && artworkLockedMask < 0
+                        ? undefined
+                        : artworkLockedMask >= 0
+                          ? artworkLockedMask
+                          : (debouncedConfig.maskPattern as number),
+                    performanceProfile: 'quality',
+                    renderConfig: workerRenderConfig,
+                    renderInWorker: true,
+                  },
+                  { signal: animationQArtAbortController.signal }
+                );
+
+                if (
+                  rescueResult.success &&
+                  rescueResult.matchPercentage > workerResult.matchPercentage + 0.75
+                ) {
+                  if (workerResult.bitmap && typeof workerResult.bitmap.close === 'function') {
+                    workerResult.bitmap.close();
+                  }
+                  effectiveWorkerResult = rescueResult;
+                  log.info('QR-Art frame quality rescue accepted', {
+                    frameIdx,
+                    initialMatch: workerResult.matchPercentage,
+                    rescuedMatch: rescueResult.matchPercentage,
+                  });
+                } else if (rescueResult.bitmap && typeof rescueResult.bitmap.close === 'function') {
+                  rescueResult.bitmap.close();
+                }
+              } catch (rescueErr) {
+                if (isRunCancelled()) return null;
+                log.warn('QR-Art frame quality rescue failed; keeping initial frame result', {
+                  frameIdx,
+                  error: rescueErr,
+                });
+              }
+            }
+
+            if (frameIdx === 0) {
+              artworkLockedMask = effectiveWorkerResult.maskPattern;
+              artworkLockedVersion = effectiveWorkerResult.version;
+            }
+
+            if (effectiveWorkerResult.bitmap) {
+              const rendered = imageBitmapToCanvas(effectiveWorkerResult.bitmap);
+              if (typeof effectiveWorkerResult.bitmap.close === 'function') {
+                effectiveWorkerResult.bitmap.close();
+              }
+              rememberSuccessfulFrame(rendered, effectiveWorkerResult.matchPercentage);
+              return rendered;
+            }
+
+            if (effectiveWorkerResult.matrix && effectiveWorkerResult.moduleCount > 0) {
+              const qrArtConfig = {
+                ...debouncedConfig,
+                typeNumber: effectiveWorkerResult.version,
+                overlayMode: undefined,
+              };
+              const rendered = await qrGenerator.renderFromPackedMatrix(
+                effectiveWorkerResult.matrix,
+                effectiveWorkerResult.moduleCount,
+                qrArtConfig
+              );
+              rememberSuccessfulFrame(rendered, effectiveWorkerResult.matchPercentage);
+              return rendered;
+            }
+          } else {
+            log.warn('QR-Art failed for animation frame', { frameIdx, error: workerResult.error });
+            const preserved = reuseLastSuccessfulFrame();
+            if (preserved) return preserved;
+          }
         } catch (err) {
           log.warn('QR-Art frame generation failed, falling back to standard', {
             frameIdx,
             error: err,
           });
+          const preserved = reuseLastSuccessfulFrame();
+          if (preserved) return preserved;
         }
         return await qrGenerator.generate(
           { ...previewScanConfigBase, frameIndex: frameIdx, overlayMode: 'dithered' },
@@ -2972,7 +3289,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           10 + ((frameIdx + 1) / Math.max(1, framesToProcess.length)) * 78
         );
         // Check if cancelled before each expensive operation
-        if (isCancelled) return;
+        if (isRunCancelled()) return;
 
         // Invalidate canvas hash cache to prevent stale overlay data
         // when the compositor reuses the same canvas object across frames
@@ -2983,7 +3300,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         // Time-based yielding: yield when we've used up our frame budget
         // This is more efficient than fixed-interval yielding
         if (await yieldCtrl.yieldIfNeeded()) {
-          if (isCancelled) return;
+          if (isRunCancelled()) return;
         }
 
         try {
@@ -3099,7 +3416,7 @@ function useQRGenerator(): UseQRGeneratorResult {
               : await qrGenerator.generate(frameConfig, processedOverlay);
           }
 
-          if (isCancelled) return;
+          if (isRunCancelled()) return;
 
           if (result) {
             let finalResult: HTMLCanvasElement | OffscreenCanvas = result;
@@ -3131,7 +3448,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             }
 
             persistFrameCanvas(previewFrame);
-            if (isCancelled) return;
+            if (isRunCancelled()) return;
 
             // Stream latest rendered frame while cache builds to avoid frozen-feel on long runs.
             setCanvas(previewFrame);
@@ -3176,7 +3493,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       }
 
       // Only update state if not cancelled
-      if (isCancelled) return;
+      if (isRunCancelled()) return;
 
       log.debug('animation cache: complete', {
         totalFrames: frames.length,
@@ -3213,6 +3530,10 @@ function useQRGenerator(): UseQRGeneratorResult {
     // IMPORTANT: Reset loading states to prevent stuck spinner when navigating away and back
     return () => {
       isCancelled = true;
+      animationQArtAbortController.abort();
+      if (activeAnimationRequestAbortRef.current === animationQArtAbortController) {
+        activeAnimationRequestAbortRef.current = null;
+      }
       setIsLoading(false);
       setIsLoadingOverlay(false);
       clearGenerationProgress();
@@ -3246,8 +3567,8 @@ function useQRGenerator(): UseQRGeneratorResult {
   ]);
 
   // Fast-preview is active when the short debounce has fired but the settled
-  // debounce hasn't caught up yet (Android only).
-  const isFastPreview = IS_NATIVE_PLATFORM && primaryDebouncedConfig !== settledConfig;
+  // debounce hasn't caught up yet.
+  const isFastPreview = primaryDebouncedConfig !== settledConfig;
 
   // Determine if we're still preparing animation
   // This covers: GIF overlays, static overlays with animation effects, and base QR animation effects
@@ -3279,7 +3600,8 @@ function useQRGenerator(): UseQRGeneratorResult {
     isRendering,
     isPending: pendingVisible, // Use delayed version to avoid immediate blur while typing
     error,
-    regenerate: generate,
+    regenerate,
+    cancelGeneration,
     download,
     // Animation state
     isAnimating,
