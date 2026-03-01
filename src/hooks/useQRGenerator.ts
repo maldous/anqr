@@ -43,7 +43,7 @@ import {
   type WatermarkPosition,
 } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
-import { type ValidationResult, validateInWorker } from '@/modules/qr-analyzer';
+import { type ValidationResult, terminateValidationWorker, validateInWorker } from '@/modules/qr-analyzer';
 import {
   canvasHashCache,
   INTRINSICALLY_SCALED_OVERLAY_MODES,
@@ -142,6 +142,18 @@ function loadQArtModule(): Promise<QArtModule> {
     qartModulePromise = import('@/modules/qr-art');
   }
   return qartModulePromise;
+}
+
+function terminateQArtWorkerIfLoaded(): void {
+  const qartPromise = qartModulePromise;
+  if (!qartPromise) return;
+  void qartPromise
+    .then((qartModule) => {
+      qartModule.terminateQArtWorker();
+    })
+    .catch(() => {
+      // Ignore termination errors during teardown.
+    });
 }
 
 function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas): ImageData {
@@ -528,6 +540,8 @@ function useQRGenerator(): UseQRGeneratorResult {
       activeQArtRequestAbortRef.current = null;
       activeAnimationRequestAbortRef.current?.abort();
       activeAnimationRequestAbortRef.current = null;
+      terminateValidationWorker();
+      terminateQArtWorkerIfLoaded();
     };
   }, []);
 
