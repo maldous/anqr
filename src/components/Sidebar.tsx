@@ -1319,7 +1319,13 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
                       )}
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="pb-4 pt-3 px-4 mt-1 bg-card rounded-md shadow-sm border">
+                  <AccordionContent
+                    className="pb-4 pt-3 px-4 mt-1 bg-card rounded-md shadow-sm border"
+                    style={{
+                      contentVisibility: 'auto',
+                      containIntrinsicSize: 'auto 520px',
+                    }}
+                  >
                     <SearchProvider searchQuery={searchQuery}>
                       <Suspense fallback={<SectionLoadFallback />}>
                         {renderSection(section.id)}
