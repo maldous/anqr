@@ -49,3 +49,8 @@
 - Implemented item 15 direction (`[HUGE][CPU]` reduce redundant image reads in animation):
   - Added frame-scoped `ImageData` cache in `useQRGenerator` artwork animation path.
   - Reuses the same `ImageData` for repeated worker attempts (initial + rescue) within a frame, avoiding duplicate `getImageData` reads on identical frame input.
+- Implemented items 12 + 13 direction (`[HUGE][CPU]` QR-Art elimination hot-path simplification):
+  - `src/modules/qr-art/elimination.ts` now uses per-row bitset matrices (`Uint32Array`) during Gauss-Jordan elimination instead of `boolean[][]`, reducing XOR/elimination work from per-pixel boolean ops to per-word bitwise ops.
+  - Replaced per-block `Set` filtering of available pixel order with a reusable typed mask buffer to reduce allocation churn across RS blocks.
+  - `attachNonZeroBytes` now uses a 2-pass typed allocation (count then fill) instead of JS `number[]` staging arrays.
+  - `countMatchingPixels` now builds per-block typed lookup tables (`Int32Array`) for bit→pixel mapping and iterates only set bits per byte, avoiding nested `Map` lookups in the inner loop.
