@@ -45,7 +45,7 @@ import {
 } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { type ValidationResult, validateInWorker } from '@/modules/qr-analyzer';
-import { generateFullQArt, generateFullQArtOptimal } from '@/modules/qr-art';
+import { generateFullQArt, generateFullQArtOptimal, generateQArtInWorker } from '@/modules/qr-art';
 import {
   canvasHashCache,
   INTRINSICALLY_SCALED_OVERLAY_MODES,
@@ -67,6 +67,8 @@ const _PREVIEW_TARGET_FPS = 15;
 
 // Yield interval: yield after this many ms of processing to keep UI responsive
 const YIELD_INTERVAL_MS = 16; // ~60fps frame budget
+const QART_PERF_OVERLAY_ELEMENT_ID = 'anqr-android-qart-perf-overlay';
+const ENABLE_ANDROID_QART_PERF_OVERLAY = import.meta.env.DEV && IS_NATIVE_PLATFORM;
 
 /**
  * Yield to main thread to prevent UI blocking during heavy computation
@@ -109,6 +111,65 @@ class YieldController {
       return true;
     }
     return false;
+  }
+}
+
+type QArtPerfSnapshot = {
+  source: 'worker' | 'main';
+  computeMs: number | null;
+  renderMs: number | null;
+  previewMs: number | null;
+  version: number;
+  maskPattern: number;
+};
+
+function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas): ImageData {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Unable to read overlay pixels for QR-Art worker');
+  }
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+}
+
+function unpackQArtMatrix(packed: Uint8Array, moduleCount: number): boolean[][] {
+  const expectedLength = moduleCount * moduleCount;
+  if (packed.length !== expectedLength) {
+    throw new Error(
+      `Invalid packed matrix length ${packed.length}, expected ${expectedLength} for ${moduleCount}x${moduleCount}`
+    );
+  }
+
+  const matrix: boolean[][] = new Array(moduleCount);
+  let idx = 0;
+  for (let row = 0; row < moduleCount; row++) {
+    const rowData = new Array<boolean>(moduleCount);
+    for (let col = 0; col < moduleCount; col++) {
+      rowData[col] = packed[idx++] === 1;
+    }
+    matrix[row] = rowData;
+  }
+  return matrix;
+}
+
+function safeMark(name: string): void {
+  if (typeof performance === 'undefined') return;
+  try {
+    performance.mark(name);
+  } catch {
+    // Ignore performance API failures
+  }
+}
+
+function safeMeasure(name: string, startMark: string, endMark: string): number | null {
+  if (typeof performance === 'undefined') return null;
+  try {
+    performance.measure(name, startMark, endMark);
+    const entries = performance.getEntriesByName(name, 'measure');
+    const duration = entries[entries.length - 1]?.duration ?? null;
+    performance.clearMeasures(name);
+    return duration;
+  } catch {
+    return null;
   }
 }
 
@@ -284,6 +345,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   const isOverflowBlockedRef = useRef(false);
   // Monotonic generation id to prevent stale async renders from overwriting latest preview.
   const generationRequestIdRef = useRef(0);
+  const qartPerfOverlayRef = useRef<HTMLDivElement | null>(null);
 
   // State to block generate() calls when we're in an overflow error state
   // This prevents the blur loop by stopping the useEffect from calling generate()
@@ -304,6 +366,7 @@ function useQRGenerator(): UseQRGeneratorResult {
   // Validation state
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [qartPerfSnapshot, setQArtPerfSnapshot] = useState<QArtPerfSnapshot | null>(null);
 
   // QR matrix for vector SVG export
   const [qrMatrix, setQrMatrix] = useState<boolean[][] | null>(null);
@@ -326,6 +389,57 @@ function useQRGenerator(): UseQRGeneratorResult {
     setAnimationFrameCount(0);
     setAnimationFramesRevision((rev) => rev + 1);
   }, []);
+
+  useEffect(() => {
+    if (!ENABLE_ANDROID_QART_PERF_OVERLAY || typeof document === 'undefined') return;
+
+    let overlayEl = document.getElementById(QART_PERF_OVERLAY_ELEMENT_ID) as HTMLDivElement | null;
+    if (!overlayEl) {
+      overlayEl = document.createElement('div');
+      overlayEl.id = QART_PERF_OVERLAY_ELEMENT_ID;
+      overlayEl.style.position = 'fixed';
+      overlayEl.style.right = '12px';
+      overlayEl.style.bottom = '12px';
+      overlayEl.style.zIndex = '2147483646';
+      overlayEl.style.maxWidth = '72vw';
+      overlayEl.style.padding = '6px 10px';
+      overlayEl.style.borderRadius = '8px';
+      overlayEl.style.background = 'rgba(0, 0, 0, 0.82)';
+      overlayEl.style.color = '#7CFFBE';
+      overlayEl.style.font = '11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace';
+      overlayEl.style.pointerEvents = 'none';
+      overlayEl.style.whiteSpace = 'pre';
+      overlayEl.textContent = 'QArt perf: waiting...';
+      document.body.appendChild(overlayEl);
+    }
+
+    qartPerfOverlayRef.current = overlayEl;
+
+    return () => {
+      if (overlayEl?.parentNode) {
+        overlayEl.parentNode.removeChild(overlayEl);
+      }
+      qartPerfOverlayRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ENABLE_ANDROID_QART_PERF_OVERLAY) return;
+    const overlayEl = qartPerfOverlayRef.current;
+    if (!overlayEl || !qartPerfSnapshot) return;
+
+    const computeMs =
+      qartPerfSnapshot.computeMs !== null ? Math.round(qartPerfSnapshot.computeMs) : null;
+    const renderMs =
+      qartPerfSnapshot.renderMs !== null ? Math.round(qartPerfSnapshot.renderMs) : null;
+    const previewMs =
+      qartPerfSnapshot.previewMs !== null ? Math.round(qartPerfSnapshot.previewMs) : null;
+
+    overlayEl.textContent = [
+      `QArt ${qartPerfSnapshot.source} v${qartPerfSnapshot.version} m${qartPerfSnapshot.maskPattern}`,
+      `compute=${computeMs ?? '-'}ms render=${renderMs ?? '-'}ms preview=${previewMs ?? '-'}ms`,
+    ].join('\n');
+  }, [qartPerfSnapshot]);
 
   // Get all relevant state from store
   // Subscribe to payload to trigger re-renders when payload changes
@@ -1253,6 +1367,44 @@ function useQRGenerator(): UseQRGeneratorResult {
       await yieldToMainThread(16);
       return isStaleRequest();
     };
+    const qartPerfMarkPrefix = `anqr:qart:${requestId}`;
+    const qartRequestMark = `${qartPerfMarkPrefix}:request`;
+    const qartResultMark = `${qartPerfMarkPrefix}:result`;
+    const qartRenderMark = `${qartPerfMarkPrefix}:render`;
+    const runValidationIfNeeded = (
+      renderedCanvas: HTMLCanvasElement | OffscreenCanvas,
+      expectedContent: string | undefined
+    ): void => {
+      const isCurrentlyAnimating =
+        (animationFrameCount > 1 || hasMultipleSourceFramesRef.current) && animation.playing;
+      const shouldValidate = Boolean(expectedContent) && !isCurrentlyAnimating;
+      if (!shouldValidate) return;
+
+      const validationRequestId = requestId;
+      setIsValidating(true);
+      const validationDelay = IS_NATIVE_PLATFORM ? 500 : 50;
+      setTimeout(() => {
+        if (generationRequestIdRef.current !== validationRequestId) {
+          setIsValidating(false);
+          return;
+        }
+        validateInWorker(renderedCanvas, expectedContent, IS_NATIVE_PLATFORM ? 1 : 3)
+          .then((validationResult) => {
+            if (generationRequestIdRef.current === validationRequestId) {
+              setValidation(validationResult);
+            }
+          })
+          .catch((err) => {
+            log.error('Validation error', { error: err });
+            if (generationRequestIdRef.current === validationRequestId) {
+              setValidation(null);
+            }
+          })
+          .finally(() => {
+            setIsValidating(false);
+          });
+      }, validationDelay);
+    };
 
     try {
       // Build effective config - may be modified by QR-Art fragment search
@@ -1268,6 +1420,11 @@ function useQRGenerator(): UseQRGeneratorResult {
 
         let useFullQArt = false;
         let fullQArtCanvas: HTMLCanvasElement | null = null;
+        let qartResultVersion = 0;
+        let qartResultMaskPattern = 0;
+        let qartResultSource: 'worker' | 'main' = 'main';
+        let qartComputeMs: number | null = null;
+        let qartRequestMarked = false;
 
         // Try full QR-Art algorithm (RS basis manipulation)
         try {
@@ -1276,7 +1433,6 @@ function useQRGenerator(): UseQRGeneratorResult {
             typeof debouncedConfig.maskPattern !== 'number' || debouncedConfig.maskPattern < 0;
           const qartConfig = {
             data: debouncedConfig.content,
-            targetImage: overlayCanvas,
             version: debouncedConfig.typeNumber || 0,
             // QArt: honor user-selected ECC (default to M if unset)
             ecc: (debouncedConfig.errorCorrection || 'M') as 'L' | 'M' | 'Q' | 'H',
@@ -1289,12 +1445,84 @@ function useQRGenerator(): UseQRGeneratorResult {
             },
           };
 
-          const fullQArtResult = useAutoMask
-            ? await generateFullQArtOptimal(qartConfig)
-            : await generateFullQArt({
-                ...qartConfig,
-                maskPattern: debouncedConfig.maskPattern as number,
+          safeMark(qartRequestMark);
+          qartRequestMarked = true;
+
+          let fullQArtResult: Awaited<ReturnType<typeof generateFullQArtOptimal>>;
+          if (IS_NATIVE_PLATFORM) {
+            try {
+              const targetImage = readCanvasImageData(overlayCanvas);
+              const workerResult = await generateQArtInWorker(
+                {
+                  data: qartConfig.data,
+                  targetImage,
+                  version: qartConfig.version,
+                  ecc: qartConfig.ecc,
+                  strictSuffix: qartConfig.strictSuffix,
+                  targetControlPercent: qartConfig.targetControlPercent,
+                  lockVersionToMinimum: qartConfig.lockVersionToMinimum,
+                  maskPattern: useAutoMask ? undefined : (debouncedConfig.maskPattern as number),
+                  performanceProfile: IS_NATIVE_PLATFORM ? 'android' : 'desktop',
+                },
+                {
+                  onProgress: qartConfig.onProgress,
+                }
+              );
+
+              qartResultSource = 'worker';
+              fullQArtResult = {
+                success: workerResult.success,
+                error: workerResult.error,
+                matrix:
+                  workerResult.success && workerResult.matrix && workerResult.moduleCount > 0
+                    ? unpackQArtMatrix(workerResult.matrix, workerResult.moduleCount)
+                    : [],
+                moduleCount: workerResult.moduleCount,
+                version: workerResult.version,
+                maskPattern: workerResult.maskPattern,
+                matchingPixels: workerResult.matchingPixels,
+                totalControllable: workerResult.totalControllable,
+                matchPercentage: workerResult.matchPercentage,
+                encodedData: workerResult.encodedData ?? '',
+              };
+            } catch (workerErr) {
+              log.warn('QArt worker failed, falling back to main thread generation', {
+                error: workerErr,
               });
+              fullQArtResult = useAutoMask
+                ? await generateFullQArtOptimal({
+                    ...qartConfig,
+                    targetImage: overlayCanvas,
+                  })
+                : await generateFullQArt({
+                    ...qartConfig,
+                    targetImage: overlayCanvas,
+                    maskPattern: debouncedConfig.maskPattern as number,
+                  });
+            }
+          } else {
+            fullQArtResult = useAutoMask
+              ? await generateFullQArtOptimal({
+                  ...qartConfig,
+                  targetImage: overlayCanvas,
+                })
+              : await generateFullQArt({
+                  ...qartConfig,
+                  targetImage: overlayCanvas,
+                  maskPattern: debouncedConfig.maskPattern as number,
+                });
+          }
+
+          safeMark(qartResultMark);
+          if (qartRequestMarked) {
+            qartComputeMs = safeMeasure(
+              `${qartPerfMarkPrefix}:compute`,
+              qartRequestMark,
+              qartResultMark
+            );
+          }
+          qartResultVersion = fullQArtResult.version;
+          qartResultMaskPattern = fullQArtResult.maskPattern;
 
           // Use full QR-Art result if successful, regardless of match percentage
           // The RS basis manipulation algorithm is mathematically correct and produces valid QR codes
@@ -1307,6 +1535,8 @@ function useQRGenerator(): UseQRGeneratorResult {
               version: fullQArtResult.version,
               maskPattern: fullQArtResult.maskPattern,
               encodedData: fullQArtResult.encodedData,
+              source: qartResultSource,
+              computeMs: qartComputeMs !== null ? Math.round(qartComputeMs) : null,
             });
 
             // CRITICAL: Use renderFromMatrix() to render the QR-Art matrix with proper styling.
@@ -1339,7 +1569,10 @@ function useQRGenerator(): UseQRGeneratorResult {
           } else if (fullQArtResult.success) {
             log.warn('QR-Art succeeded but encodedData is missing');
           } else {
-            log.warn('Full QR-Art generation failed', { error: fullQArtResult.error });
+            log.warn('Full QR-Art generation failed', {
+              error: fullQArtResult.error,
+              source: qartResultSource,
+            });
           }
         } catch (err) {
           log.warn('Full QR-Art generation threw error, falling back to fragment search', {
@@ -1382,6 +1615,36 @@ function useQRGenerator(): UseQRGeneratorResult {
             }
           }
 
+          safeMark(qartRenderMark);
+          const qartRenderMs = qartRequestMarked
+            ? safeMeasure(`${qartPerfMarkPrefix}:render`, qartResultMark, qartRenderMark)
+            : null;
+          const qartPreviewMs = qartRequestMarked
+            ? safeMeasure(`${qartPerfMarkPrefix}:preview`, qartRequestMark, qartRenderMark)
+            : null;
+          log.info('QR-Art timing', {
+            source: qartResultSource,
+            computeMs: qartComputeMs !== null ? Math.round(qartComputeMs) : null,
+            renderMs: qartRenderMs !== null ? Math.round(qartRenderMs) : null,
+            previewMs: qartPreviewMs !== null ? Math.round(qartPreviewMs) : null,
+          });
+          if (IS_NATIVE_PLATFORM) {
+            setQArtPerfSnapshot({
+              source: qartResultSource,
+              computeMs: qartComputeMs,
+              renderMs: qartRenderMs,
+              previewMs: qartPreviewMs,
+              version: qartResultVersion,
+              maskPattern: qartResultMaskPattern,
+            });
+          }
+
+          const matrixData = qrGenerator.getLastMatrix();
+          if (matrixData) {
+            setQrMatrix(matrixData.matrix);
+          }
+
+          runValidationIfNeeded(resultCanvas, effectiveConfig.content);
           setIsRendering(false);
           setIsLoading(false);
           return;
@@ -1548,40 +1811,8 @@ function useQRGenerator(): UseQRGeneratorResult {
         }
       }
 
-      // Validate the generated QR code (skip during animation playback for performance)
-      // Validation will run when animation is paused or for static QR codes
-      // Check both cached frames (animationFrames) AND source frames (via ref) to skip
-      // validation even during cache building when animationFrames is still being populated
-      const isCurrentlyAnimating =
-        (animationFrameCount > 1 || hasMultipleSourceFramesRef.current) && animation.playing;
-      const shouldValidate = result && effectiveConfig.content && !isCurrentlyAnimating;
-      if (shouldValidate) {
-        const validationRequestId = requestId;
-        setIsValidating(true);
-        // Run validation in a Web Worker to keep the main thread free (especially on Android).
-        // Short delay lets the render paint before kicking off the decode.
-        const validationDelay = IS_NATIVE_PLATFORM ? 500 : 50;
-        setTimeout(() => {
-          if (generationRequestIdRef.current !== validationRequestId) {
-            setIsValidating(false);
-            return;
-          }
-          validateInWorker(result!, effectiveConfig.content, IS_NATIVE_PLATFORM ? 1 : 3)
-            .then((validationResult) => {
-              if (generationRequestIdRef.current === validationRequestId) {
-                setValidation(validationResult);
-              }
-            })
-            .catch((err) => {
-              log.error('Validation error', { error: err });
-              if (generationRequestIdRef.current === validationRequestId) {
-                setValidation(null);
-              }
-            })
-            .finally(() => {
-              setIsValidating(false);
-            });
-        }, validationDelay);
+      if (result) {
+        runValidationIfNeeded(result, effectiveConfig.content);
       }
     } catch (err) {
       if (isStaleRequest()) return;
