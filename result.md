@@ -240,3 +240,10 @@
 - Prevented harsh emergency fallback in preview mode:
   - When in preview scan gate and `qrFirstMode` is not explicitly enabled, generator now returns the best preview attempt instead of forcing deep QR-first fallback.
   - QR-first emergency sequence remains for non-preview/explicit QR-first flows.
+- Performance follow-up for slowed animations (per-frame overhead reduction):
+  - `src/modules/qr-generator/qr-generator-class.ts` now avoids per-frame overlay pixel hashing in animated runs by using an `anim-family` signature key derived from stable overlay characteristics.
+  - Added generator-level overlay complexity cache (`_overlayComplexityCache`) with TTL/LRU bounds, so complexity analysis is reused across animation frames instead of recalculated every frame.
+  - Static runs still use exact hashed overlay signatures; animated runs now use global family-level profiling to reduce frame-time overhead while preserving scan-gate behavior.
+- Additional animation performance fix for color overlays:
+  - In `src/modules/qr-generator/qr-generator-class.ts`, preview animated frames now skip per-frame decode scenario validation (`decodeScenarios`) and return the preview render directly.
+  - This removes repeated decoder/simulation work on every animation frame while keeping full decode gates for non-preview/settled paths.
