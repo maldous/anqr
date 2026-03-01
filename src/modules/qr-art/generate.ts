@@ -127,7 +127,7 @@ const BALANCED_MASK_STALL_WINDOW = 3;
 const BALANCED_MASK_STALL_DELTA = 0.35;
 
 type QArtPerformanceSettings = {
-  supersampleLevel: 1 | 2;
+  supersampleLevel: 1 | 2 | 3;
   maxCandidateFraction: number;
   maxDarkSpeckleArea: number;
   maxLightHoleArea: number;
@@ -136,7 +136,7 @@ type QArtPerformanceSettings = {
 function resolvePerformanceSettings(profile: QArtPerformanceProfile): QArtPerformanceSettings {
   if (profile === 'quality') {
     return {
-      supersampleLevel: 2,
+      supersampleLevel: 3,
       maxCandidateFraction: 1,
       maxDarkSpeckleArea: 2,
       maxLightHoleArea: 2,
@@ -4111,7 +4111,10 @@ export async function generateFullQArtBestMask(
         break;
       }
 
-      if (lastBestMatch >= 0 && bestResult.matchPercentage - lastBestMatch < BALANCED_MASK_STALL_DELTA) {
+      if (
+        lastBestMatch >= 0 &&
+        bestResult.matchPercentage - lastBestMatch < BALANCED_MASK_STALL_DELTA
+      ) {
         masksWithoutMeaningfulGain += 1;
       } else {
         masksWithoutMeaningfulGain = 0;

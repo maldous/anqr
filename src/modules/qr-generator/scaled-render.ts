@@ -213,7 +213,8 @@ export async function generateScaledQR(
   const functionalMap = getScaledFunctionalMap(moduleCount, version);
   const isFinderRegionFlag = (flags: number): boolean =>
     (flags & (PATTERN_FINDER | PATTERN_FINDER_SEPARATOR)) !== 0;
-  const getPatternFlags = (row: number, col: number): number => functionalMap[row * moduleCount + col];
+  const getPatternFlags = (row: number, col: number): number =>
+    functionalMap[row * moduleCount + col];
   const qrDrawSize = scaledSize * subPixelSize;
   const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
   const ditherBackdropWash = Math.max(0, Math.min(1, config.ditherBackdropWash ?? 0.18));
@@ -247,6 +248,11 @@ export async function generateScaledQR(
   }
 
   if (isDitheredMode && overlayCanvas && useColorRendering) {
+    const prevSmoothingEnabled = ctx.imageSmoothingEnabled;
+    const prevSmoothingQuality = ctx.imageSmoothingQuality;
+    // Overlay backdrop must be sampled smoothly; module rendering stays crisp below.
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.save();
     ctx.globalAlpha = ditherBackdropAlpha;
     ctx.drawImage(overlayCanvas as CanvasImageSource, marginPx, marginPx, qrDrawSize, qrDrawSize);
@@ -258,6 +264,8 @@ export async function generateScaledQR(
       ctx.globalCompositeOperation = 'source-over';
     }
     ctx.restore();
+    ctx.imageSmoothingEnabled = prevSmoothingEnabled;
+    ctx.imageSmoothingQuality = prevSmoothingQuality;
   }
 
   const adjustLumaPreserveChroma = (
