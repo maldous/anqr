@@ -97,6 +97,24 @@ interface AnalyzeProps {
   generatedCanvas?: HTMLCanvasElement | OffscreenCanvas | null;
 }
 
+function cloneCanvasLike(source: HTMLCanvasElement | OffscreenCanvas): HTMLCanvasElement {
+  const snapshot = document.createElement('canvas');
+  snapshot.width = source.width;
+  snapshot.height = source.height;
+  const ctx = snapshot.getContext('2d');
+  if (!ctx) {
+    throw new Error('Failed to create canvas snapshot for analysis');
+  }
+  ctx.drawImage(source as CanvasImageSource, 0, 0);
+  return snapshot;
+}
+
+function waitMs(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 // Content type icons mapping
 const CONTENT_TYPE_ICONS: Record<ContentType, React.ReactNode> = {
   url: <Globe className="w-4 h-4" />,
@@ -1475,7 +1493,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             (generatedCanvas.getContext('2d', {
               willReadFrequently: true,
               desynchronized: true,
-            } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+            } as
+              | CanvasRenderingContext2DSettings
+              | undefined) as CanvasRenderingContext2D | null) ??
             (generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null);
           if (!gctx) return null;
 
@@ -1905,6 +1925,74 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setOriginalImageUrl(null);
   }, [originalImageUrl]);
 
+  const analyzeGeneratorCanvasRobust = useCallback(
+    async (sourceCanvas: HTMLCanvasElement | OffscreenCanvas): Promise<QRAnalysisResult> => {
+      const currentFrameResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
+      if (currentFrameResult.success) {
+        return currentFrameResult;
+      }
+
+      let animationState = globalThis.__ANQR_STATE__;
+      const isAnimatedSource = (animationState?.animationFrameCount ?? 0) > 1;
+      if (isAnimatedSource && !animationState?.isAnimationReady) {
+        // Avoid failing early while animation cache is still settling.
+        for (let i = 0; i < 8; i++) {
+          await waitMs(75);
+          animationState = globalThis.__ANQR_STATE__;
+          if (animationState?.isAnimationReady) break;
+        }
+      }
+
+      const cachedFrames =
+        animationState?.isAnimationReady && Array.isArray(animationState.animationFrames)
+          ? animationState.animationFrames
+          : [];
+
+      if (cachedFrames.length > 1) {
+        // Build candidate frame indices: current playing frame, then spread.
+        // Skip frame 0 — sourceCanvas (generatedCanvas) is typically frames[0]
+        // and was already tried above.
+        const candidateIndices: number[] = [];
+        const pushUnique = (idx: number) => {
+          const clamped = Math.max(0, Math.min(cachedFrames.length - 1, Math.floor(idx)));
+          if (!candidateIndices.includes(clamped)) candidateIndices.push(clamped);
+        };
+
+        const currentIdx = animationState?.currentFrame ?? 0;
+        pushUnique(currentIdx);
+        pushUnique(Math.floor(cachedFrames.length * 0.25));
+        pushUnique(Math.floor(cachedFrames.length * 0.5));
+        pushUnique(Math.floor(cachedFrames.length * 0.75));
+        pushUnique(cachedFrames.length - 1);
+
+        for (const frameIdx of candidateIndices) {
+          const frame = cachedFrames[frameIdx];
+          if (!frame) continue;
+          const frameResult = analyzeQRCode(cloneCanvasLike(frame));
+          if (frameResult.success) {
+            const warnings = [...(frameResult.warnings ?? [])];
+            warnings.push(`Analyzed using animation frame ${frameIdx + 1}/${cachedFrames.length}`);
+            return { ...frameResult, warnings };
+          }
+        }
+      }
+
+      if (isAnimatedSource) {
+        // One fast retry on the live canvas to catch frame updates.
+        await waitMs(90);
+        const retryResult = analyzeQRCode(cloneCanvasLike(sourceCanvas));
+        if (retryResult.success) {
+          const warnings = [...(retryResult.warnings ?? [])];
+          warnings.push('Analyzed using live animation frame retry');
+          return { ...retryResult, warnings };
+        }
+      }
+
+      return currentFrameResult;
+    },
+    []
+  );
+
   // Handle analyzing the current generator canvas
   const handleAnalyzeGenerator = useCallback(async () => {
     if (!generatedCanvas) return;
@@ -1918,10 +2006,13 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
     try {
       // Capture source image for display using async blob path when available.
-      const canvas = generatedCanvas as HTMLCanvasElement;
-      if (typeof canvas.toBlob === 'function') {
+      const canvasForDisplay =
+        generatedCanvas instanceof HTMLCanvasElement
+          ? generatedCanvas
+          : cloneCanvasLike(generatedCanvas);
+      if (typeof canvasForDisplay.toBlob === 'function') {
         const blob = await new Promise<Blob | null>((resolve) => {
-          canvas.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+          canvasForDisplay.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
         });
         if (blob) {
           const objectUrl = URL.createObjectURL(blob);
@@ -1932,14 +2023,14 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             return objectUrl;
           });
         } else {
-          setOriginalImageUrl(canvas.toDataURL('image/png'));
+          setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
         }
       } else {
-        setOriginalImageUrl(canvas.toDataURL('image/png'));
+        setOriginalImageUrl(canvasForDisplay.toDataURL('image/png'));
       }
 
-      // Analyze the canvas directly
-      const analysisResult = analyzeQRCode(canvas);
+      // Analyze current frame, then sample animation frames/retries before failing.
+      const analysisResult = await analyzeGeneratorCanvasRobust(generatedCanvas);
       setResult(analysisResult);
       setAnalysisSource('generator');
       if (!analysisResult.success) {
@@ -1953,7 +2044,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       setIsLoading(false);
       setLoadingSource(null);
     }
-  }, [generatedCanvas, t]);
+  }, [generatedCanvas, t, analyzeGeneratorCanvasRobust]);
 
   // Reset hasAutoAnalyzed when generatedCanvas changes so re-navigating triggers auto-analysis
   useEffect(() => {
