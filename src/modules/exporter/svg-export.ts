@@ -10,6 +10,32 @@ import { downloadUrl, escapeXml } from './utils';
 
 const _log = createLogger('EXPORT');
 
+async function canvasToPngDataUrl(canvas: HTMLCanvasElement): Promise<string> {
+  if (typeof canvas.toBlob !== 'function') {
+    return canvas.toDataURL('image/png');
+  }
+
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+  });
+  if (!blob) {
+    return canvas.toDataURL('image/png');
+  }
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error('Failed to read PNG data URL'));
+    };
+    reader.onerror = () => reject(new Error('Failed to encode PNG data URL'));
+    reader.readAsDataURL(blob);
+  });
+}
+
 /**
  * Export canvas as SVG (embedded raster)
  */
@@ -34,7 +60,7 @@ export async function exportSvg(
     metadata: config.metadata,
   };
 
-  const dataUrl = canvas.toDataURL('image/png');
+  const dataUrl = await canvasToPngDataUrl(canvas);
 
   let metadata = '';
   if (opts.includeMetadata && opts.metadata) {

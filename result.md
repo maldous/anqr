@@ -113,3 +113,7 @@
     - module-style masking structural skip path,
     - format/version preservation pass.
   - Removed repeated per-cell `isLocked(...)` checks in this path by using precomputed flags.
+- Implemented combined item 47 direction (`[BIG][CPU]` move canvas PNG encoding off sync path):
+  - `src/modules/exporter/svg-export.ts`: replaced direct `canvas.toDataURL('image/png')` with async blob-based encoding (`toBlob` + `FileReader`) and fallback.
+  - `src/components/Analyze.tsx`: generator-canvas preview capture now uses `toBlob` + `URL.createObjectURL` when available (with blob URL cleanup on replacement).
+  - `src/modules/qr-generator/qr-generator-class.ts`: scan-gate final-raster roundtrip now prefers async `toBlob` + `createImageBitmap` decode path, with existing data URL path as fallback.

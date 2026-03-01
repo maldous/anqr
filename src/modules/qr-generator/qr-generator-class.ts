@@ -878,21 +878,34 @@ export class QRGenerator {
           if (
             typeof document === 'undefined' ||
             typeof HTMLCanvasElement === 'undefined' ||
-            typeof Image === 'undefined' ||
             !(src instanceof HTMLCanvasElement) ||
-            typeof src.toDataURL !== 'function'
+            (typeof src.toBlob !== 'function' && typeof src.toDataURL !== 'function')
           ) {
             return src;
           }
           let out: HTMLCanvasElement | OffscreenCanvas | null = null;
+          let bitmap: ImageBitmap | null = null;
           try {
-            const pngDataUrl = src.toDataURL('image/png');
-            const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-              const img = new Image();
-              img.onload = () => resolve(img);
-              img.onerror = () => reject(new Error('final-raster roundtrip failed'));
-              img.src = pngDataUrl;
-            });
+            let imageSource: CanvasImageSource;
+            if (typeof createImageBitmap === 'function' && typeof src.toBlob === 'function') {
+              const blob = await new Promise<Blob | null>((resolve) => {
+                src.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+              });
+              if (!blob) throw new Error('final-raster blob encode failed');
+              bitmap = await createImageBitmap(blob);
+              imageSource = bitmap;
+            } else if (typeof Image !== 'undefined' && typeof src.toDataURL === 'function') {
+              const pngDataUrl = src.toDataURL('image/png');
+              imageSource = await new Promise<HTMLImageElement>((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('final-raster roundtrip failed'));
+                img.src = pngDataUrl;
+              });
+            } else {
+              return src;
+            }
+
             out = await pool.acquire(src.width, src.height);
             out.width = src.width;
             out.height = src.height;
@@ -902,11 +915,17 @@ export class QRGenerator {
               return src;
             }
             outCtx.imageSmoothingEnabled = false;
-            outCtx.drawImage(image, 0, 0, out.width, out.height);
+            outCtx.drawImage(imageSource, 0, 0, out.width, out.height);
+            if (bitmap && typeof bitmap.close === 'function') {
+              bitmap.close();
+            }
             return out;
           } catch {
             if (out) {
               pool.release(out);
+            }
+            if (bitmap && typeof bitmap.close === 'function') {
+              bitmap.close();
             }
             return src;
           }
