@@ -128,6 +128,11 @@ type DitherPatchCacheEntry = {
   updatedAt: number;
 };
 
+type OverlayComplexityCacheEntry = {
+  complexity: number;
+  updatedAt: number;
+};
+
 export class QRGenerator {
   private qrcode: typeof qrcode;
   private canvasFactory: CanvasFactory;
@@ -135,8 +140,11 @@ export class QRGenerator {
   private _lastMatrix: boolean[][] | null = null;
   private _lastModuleCount: number = 0;
   private _ditherPatchCache: Map<string, DitherPatchCacheEntry> = new Map();
+  private _overlayComplexityCache: Map<string, OverlayComplexityCacheEntry> = new Map();
   private static readonly DITHER_PATCH_CACHE_MAX_ENTRIES = 64;
   private static readonly DITHER_PATCH_CACHE_TTL_MS = 5 * 60 * 1000;
+  private static readonly OVERLAY_COMPLEXITY_CACHE_MAX_ENTRIES = 96;
+  private static readonly OVERLAY_COMPLEXITY_CACHE_TTL_MS = 2 * 60 * 1000;
 
   /**
    * Create a QR generator instance
@@ -554,6 +562,50 @@ export class QRGenerator {
         };
 
         const requestedOverlayIntensity = clamp(effectiveConfig.overlayIntensity ?? 100, 0, 100);
+        const isAnimatedFrame =
+          typeof effectiveConfig.frameIndex === 'number' && Number.isFinite(effectiveConfig.frameIndex);
+        const overlayFamilyKey = processedOverlayCanvas
+          ? [
+              processedOverlayCanvas.width,
+              processedOverlayCanvas.height,
+              effectiveConfig.overlayMode ?? 'none',
+              effectiveConfig.colorMode ?? 'color',
+              Math.round(effectiveConfig.overlayIntensity ?? 100),
+              Math.round(effectiveConfig.ditherStrength ?? 50),
+              Math.round(effectiveConfig.finderDitherStrength ?? 65),
+              effectiveConfig.ditherKind ?? 'none',
+              effectiveConfig.ditherMode ?? 'none',
+              Math.round(effectiveConfig.renderScalePerModule ?? 18),
+              effectiveConfig.blendPreservations === true ? 1 : 0,
+              effectiveConfig.blendPreservationMode === 'dither' ? 'dither' : 'overlay',
+            ].join('|')
+          : 'overlay:none';
+        const readOverlayComplexityCache = (key: string): number | null => {
+          const entry = this._overlayComplexityCache.get(key);
+          if (!entry) return null;
+          if (Date.now() - entry.updatedAt > QRGenerator.OVERLAY_COMPLEXITY_CACHE_TTL_MS) {
+            this._overlayComplexityCache.delete(key);
+            return null;
+          }
+          return entry.complexity;
+        };
+        const writeOverlayComplexityCache = (key: string, complexity: number): void => {
+          this._overlayComplexityCache.set(key, { complexity, updatedAt: Date.now() });
+          if (
+            this._overlayComplexityCache.size <= QRGenerator.OVERLAY_COMPLEXITY_CACHE_MAX_ENTRIES
+          ) {
+            return;
+          }
+          let oldestKey: string | null = null;
+          let oldestAt = Number.POSITIVE_INFINITY;
+          for (const [k, v] of this._overlayComplexityCache.entries()) {
+            if (v.updatedAt < oldestAt) {
+              oldestAt = v.updatedAt;
+              oldestKey = k;
+            }
+          }
+          if (oldestKey) this._overlayComplexityCache.delete(oldestKey);
+        };
         const analysisSampleSize = 48;
         const analyzeOverlayComplexity = async (): Promise<number> => {
           if (!processedOverlayCanvas) return 0;
@@ -628,13 +680,21 @@ export class QRGenerator {
           }
         };
 
-        const overlayComplexity = await analyzeOverlayComplexity();
         const overlaySignature = processedOverlayCanvas
-          ? `${processedOverlayCanvas.width}x${processedOverlayCanvas.height}:${await hashCanvasContent(
-              processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
-              this.createCanvas.bind(this)
-            )}`
+          ? isAnimatedFrame
+            ? `anim-family:${overlayFamilyKey}`
+            : `${processedOverlayCanvas.width}x${processedOverlayCanvas.height}:${await hashCanvasContent(
+                processedOverlayCanvas as HTMLCanvasElement | OffscreenCanvas,
+                this.createCanvas.bind(this)
+              )}`
           : 'overlay:none';
+        const overlayComplexityCacheKey = `${isAnimatedFrame ? 'anim' : 'static'}:${overlaySignature}`;
+        const cachedOverlayComplexity = readOverlayComplexityCache(overlayComplexityCacheKey);
+        const overlayComplexity =
+          cachedOverlayComplexity !== null ? cachedOverlayComplexity : await analyzeOverlayComplexity();
+        if (cachedOverlayComplexity === null) {
+          writeOverlayComplexityCache(overlayComplexityCacheKey, overlayComplexity);
+        }
         const adaptiveEdgeImprintThreshold = clamp(
           edgeImprintThreshold + overlayComplexity * 0.08 + (requestedOverlayIntensity / 100) * 0.03,
           0.05,
@@ -1150,6 +1210,11 @@ export class QRGenerator {
           evaluatedCanvas: HTMLCanvasElement | OffscreenCanvas;
         }> => {
           if (isScanGateDisabled) {
+            return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
+          }
+          if (isPreviewScanGate && isAnimatedFrame) {
+            // Animation preview path: skip per-frame decode simulation/validation.
+            // The decode/scannability gate remains on settled/non-preview flows.
             return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
           }
           // Preview mode prioritizes generation throughput and checks decode on the render canvas.
