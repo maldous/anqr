@@ -57,6 +57,9 @@ export function generateAnimationPatternFrames(
     throw new Error('Could not get 2D context from source canvas');
   }
   const sourceData = sourceCtx.getImageData(0, 0, width, height);
+  const sourcePixels = sourceData.data;
+  const framePixels = new Uint8ClampedArray(sourcePixels.length);
+  const reusableFrameData = new ImageData(framePixels, width, height);
 
   for (let f = 0; f < frameCount; f++) {
     const canvas = document.createElement('canvas');
@@ -64,14 +67,14 @@ export function generateAnimationPatternFrames(
     canvas.height = height;
     const ctx = canvas.getContext('2d')!;
 
-    // Copy source data
-    const frameData = new ImageData(new Uint8ClampedArray(sourceData.data), width, height);
+    // Copy source data into a reusable frame buffer.
+    framePixels.set(sourcePixels);
 
     // Apply pattern effect based on frame number
     const progress = f / frameCount;
-    applyPatternToImageData(frameData, pattern, progress, speed, seed);
+    applyPatternToImageData(reusableFrameData, pattern, progress, speed, seed);
 
-    ctx.putImageData(frameData, 0, 0);
+    ctx.putImageData(reusableFrameData, 0, 0);
     frames.push(canvas);
   }
 
@@ -94,6 +97,14 @@ export function interpolateAnimationFramesWithEasing(
   const result: HTMLCanvasElement[] = [];
   const width = frames[0].width;
   const height = frames[0].height;
+  const framePixels = new Array<Uint8ClampedArray | null>(frames.length);
+  for (let i = 0; i < frames.length; i++) {
+    const frameCtx = frames[i]?.getContext('2d');
+    framePixels[i] = frameCtx ? frameCtx.getImageData(0, 0, width, height).data : null;
+  }
+
+  const blendPixels = new Uint8ClampedArray(width * height * 4);
+  const reusableBlendData = new ImageData(blendPixels, width, height);
 
   for (let i = 0; i < targetCount; i++) {
     const t = i / (targetCount - 1);
@@ -112,19 +123,22 @@ export function interpolateAnimationFramesWithEasing(
       ctx.drawImage(frames[frameA], 0, 0);
     } else {
       // Blend between frames
-      const ctxA = frames[frameA].getContext('2d')!;
-      const ctxB = frames[frameB].getContext('2d')!;
-      const dataA = ctxA.getImageData(0, 0, width, height);
-      const dataB = ctxB.getImageData(0, 0, width, height);
-
-      for (let p = 0; p < dataA.data.length; p += 4) {
-        dataA.data[p] = Math.round(dataA.data[p] * (1 - blend) + dataB.data[p] * blend);
-        dataA.data[p + 1] = Math.round(dataA.data[p + 1] * (1 - blend) + dataB.data[p + 1] * blend);
-        dataA.data[p + 2] = Math.round(dataA.data[p + 2] * (1 - blend) + dataB.data[p + 2] * blend);
-        dataA.data[p + 3] = Math.round(dataA.data[p + 3] * (1 - blend) + dataB.data[p + 3] * blend);
+      const sourceA = framePixels[frameA];
+      const sourceB = framePixels[frameB];
+      if (!(sourceA && sourceB)) {
+        ctx.drawImage(frames[frameA], 0, 0);
+        result.push(canvas);
+        continue;
       }
 
-      ctx.putImageData(dataA, 0, 0);
+      for (let p = 0; p < sourceA.length; p += 4) {
+        blendPixels[p] = Math.round(sourceA[p] * (1 - blend) + sourceB[p] * blend);
+        blendPixels[p + 1] = Math.round(sourceA[p + 1] * (1 - blend) + sourceB[p + 1] * blend);
+        blendPixels[p + 2] = Math.round(sourceA[p + 2] * (1 - blend) + sourceB[p + 2] * blend);
+        blendPixels[p + 3] = Math.round(sourceA[p + 3] * (1 - blend) + sourceB[p + 3] * blend);
+      }
+
+      ctx.putImageData(reusableBlendData, 0, 0);
     }
 
     result.push(canvas);
