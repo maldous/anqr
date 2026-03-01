@@ -82,7 +82,15 @@ export async function generateScaledQR(
   const size = Math.round(scaledSize * subPixelSize + marginPx * 2);
 
   const canvas = await createCanvasFn(size, size);
-  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+  const ctx =
+    (canvas.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings) as CanvasRenderingContext2D | null) ??
+    (canvas.getContext('2d') as CanvasRenderingContext2D | null);
+  if (!ctx) {
+    throw new Error('Failed to acquire scaled render context');
+  }
   ctx.imageSmoothingEnabled = false;
 
   // IMPORTANT: Ensure bgColor has a fallback - undefined fillStyle becomes black

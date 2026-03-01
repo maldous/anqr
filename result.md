@@ -17,3 +17,9 @@
   - Validation worker now receives `{ width, height, pixels }` instead of cloned `ImageData` objects; reconstructs `ImageData` in worker.
   - QR-Art worker protocol now receives raw transferable pixel payload (`targetImageWidth/Height/Pixels`) and reconstructs `ImageData` in worker.
   - Goal: reduce structured-clone overhead and GC churn in worker messaging paths.
+- Implemented item 33 (`[BIG][CPU]` canvas context read hints):
+  - Added `willReadFrequently: true` + `desynchronized: true` where hot `getImageData` paths acquire 2D contexts in:
+    - `src/modules/qr-generator/overlay-data.ts`
+    - `src/modules/qr-generator/utils.ts` (`hashCanvasContent`)
+    - `src/modules/qr-generator/scaled-render.ts`
+  - Includes fallback to plain `getContext('2d')` for compatibility.
