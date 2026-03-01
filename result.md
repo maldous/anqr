@@ -81,3 +81,7 @@
 - Implemented item 23 direction (`[BIG][CPU]` reuse bitmap-to-canvas target for QR-Art preview):
   - Added a persistent `qartPreviewBitmapCanvasRef` in `useQRGenerator`.
   - Non-animation worker bitmap rendering now writes into that reusable canvas target via `imageBitmapToCanvas(bitmap, targetCanvas)` instead of allocating a fresh canvas each generation.
+- Implemented item 67 direction (`[MED][STARTUP]` lazy-load exporter module):
+  - Removed eager `@/modules/exporter` import from `useQRGenerator`.
+  - Added cached dynamic importer (`loadExporterModule`) and moved exporter loading into the download path.
+  - Export helpers (`downloadSvg`, `downloadVectorSvg`, `downloadGif`, `downloadImage`) are now resolved only when export is actually triggered.

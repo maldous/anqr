@@ -35,7 +35,6 @@ import {
   isTemporalDitherActive,
   type TemporalDitherMode,
 } from '@/modules/dither-algorithms';
-import { downloadGif, downloadImage, downloadSvg, downloadVectorSvg } from '@/modules/exporter';
 import {
   applyWatermark,
   getOverlayDitherKind,
@@ -134,14 +133,23 @@ type GenerationProgressState = {
 type QArtModule = typeof import('@/modules/qr-art');
 type QArtResult = Awaited<ReturnType<QArtModule['generateFullQArtOptimal']>>;
 type QArtWorkerResult = Awaited<ReturnType<QArtModule['generateQArtInWorker']>>;
+type ExporterModule = typeof import('@/modules/exporter');
 
 let qartModulePromise: Promise<QArtModule> | null = null;
+let exporterModulePromise: Promise<ExporterModule> | null = null;
 
 function loadQArtModule(): Promise<QArtModule> {
   if (!qartModulePromise) {
     qartModulePromise = import('@/modules/qr-art');
   }
   return qartModulePromise;
+}
+
+function loadExporterModule(): Promise<ExporterModule> {
+  if (!exporterModulePromise) {
+    exporterModulePromise = import('@/modules/exporter');
+  }
+  return exporterModulePromise;
 }
 
 function terminateQArtWorkerIfLoaded(): void {
@@ -2524,6 +2532,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       // Show interstitial ad BEFORE download on native platforms
       await showInterstitial('export');
       trackEvent('export', { format: output.format });
+      const exporter = await loadExporterModule();
 
       // Scale canvas to output dimensions if different
       // Cast to HTMLCanvasElement for export - safe because we're in browser context
@@ -2600,7 +2609,7 @@ function useQRGenerator(): UseQRGeneratorResult {
               'Vector SVG export requested but QR matrix is unavailable. ' +
                 'Falling back to raster SVG. This can happen with special render modes.'
             );
-            await downloadSvg(exportCanvas, exportConfig);
+            await exporter.downloadSvg(exportCanvas, exportConfig);
             return;
           }
           // Calculate module size to match desired output dimensions
@@ -2612,7 +2621,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           const svgModuleSize = Math.floor(output.widthPx / (moduleCount + totalMargin * 2)) || 10;
 
           // True vector SVG - uses styled path elements
-          downloadVectorSvg(vectorMatrix, {
+          exporter.downloadVectorSvg(vectorMatrix, {
             moduleSize: svgModuleSize,
             margin: totalMargin,
             fgColor: render.fgColor,
@@ -2642,7 +2651,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           });
         } else {
           // Raster SVG (embedded PNG) - preserves all styling including dithering
-          await downloadSvg(exportCanvas, exportConfig);
+          await exporter.downloadSvg(exportCanvas, exportConfig);
         }
       } else if (output.format === 'gif' && animationFrameCount > 1) {
         const cachedAnimationFrames = animationFramesRef.current;
@@ -2692,7 +2701,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         });
 
         // Export animated GIF with all frames
-        await downloadGif(
+        await exporter.downloadGif(
           scaledFrames,
           {
             ...exportConfig,
@@ -2707,9 +2716,9 @@ function useQRGenerator(): UseQRGeneratorResult {
         // The canvases will be garbage collected naturally after export completes.
       } else if (output.format === 'gif') {
         // Single frame GIF
-        await downloadGif([exportCanvas], exportConfig);
+        await exporter.downloadGif([exportCanvas], exportConfig);
       } else {
-        await downloadImage(exportCanvas, exportConfig, pngMetadata, output.dpi);
+        await exporter.downloadImage(exportCanvas, exportConfig, pngMetadata, output.dpi);
       }
     } catch (err) {
       log.error('Download error', { error: err });
