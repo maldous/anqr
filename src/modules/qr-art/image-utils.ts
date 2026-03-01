@@ -8,10 +8,15 @@
 /**
  * Map an image to target pixel values with supersampling for better accuracy
  */
+export interface MapImageToTargetsOptions {
+  supersampleLevel?: 1 | 2;
+}
+
 export function mapImageToTargetsSupersampled(
   image: ImageData | HTMLCanvasElement | OffscreenCanvas,
   moduleCount: number,
-  threshold: number = 128
+  threshold: number = 128,
+  options?: MapImageToTargetsOptions
 ): { targets: boolean[][]; importance: number[][] } {
   const isCanvasLike = (value: unknown): value is HTMLCanvasElement | OffscreenCanvas =>
     !!value &&
@@ -82,13 +87,16 @@ export function mapImageToTargetsSupersampled(
   const maxX = Math.max(0, imageData.width - 1);
   const maxY = Math.max(0, imageData.height - 1);
 
-  // Use 2x2 supersampling for better edge detection
-  const samplePoints = [
-    { dx: 0.25, dy: 0.25 },
-    { dx: 0.75, dy: 0.25 },
-    { dx: 0.25, dy: 0.75 },
-    { dx: 0.75, dy: 0.75 },
-  ];
+  const supersampleLevel = options?.supersampleLevel === 1 ? 1 : 2;
+  const samplePoints =
+    supersampleLevel === 1
+      ? [{ dx: 0.5, dy: 0.5 }]
+      : [
+          { dx: 0.25, dy: 0.25 },
+          { dx: 0.75, dy: 0.25 },
+          { dx: 0.25, dy: 0.75 },
+          { dx: 0.75, dy: 0.75 },
+        ];
 
   for (let row = 0; row < moduleCount; row++) {
     targets[row] = [];

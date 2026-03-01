@@ -90,6 +90,7 @@ async function handleGenerate(message: QArtWorkerGenerateRequest): Promise<void>
       strictSuffix: payload.strictSuffix ?? true,
       targetControlPercent: payload.targetControlPercent ?? 100,
       lockVersionToMinimum: payload.lockVersionToMinimum ?? false,
+      performanceProfile: payload.performanceProfile ?? 'desktop',
       onProgress: postProgress,
     };
 

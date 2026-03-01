@@ -1470,6 +1470,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             // QArt: start at 100% control and reduce until scannable (handled in generator)
             targetControlPercent: 100,
             lockVersionToMinimum: debouncedConfig.typeNumber === 0,
+            performanceProfile: IS_NATIVE_PLATFORM ? ('android' as const) : ('desktop' as const),
             onProgress: (stage: string, percent: number) => {
               updateGenerationProgress(`QR-Art: ${stage}`, 18 + percent * 0.64);
               log.debug('QR-Art progress', { stage, percent: `${percent}%` });
@@ -2925,6 +2926,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             strictSuffix: true,
             targetControlPercent: 100,
             lockVersionToMinimum: debouncedConfig.typeNumber === 0 && frameIdx === 0,
+            performanceProfile: IS_NATIVE_PLATFORM ? ('android' as const) : ('desktop' as const),
           };
 
           const qartResult =
