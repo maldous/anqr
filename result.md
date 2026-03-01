@@ -281,3 +281,16 @@
     - decode frame `1/N` when cache is ready,
     - one final live-frame retry for moving animations.
   - This restores fast behavior while reducing false `No QR code` results for animated previews.
+- Tuned overlay color preprocessing for scan stability (addressing brightness/contrast/saturation drift across images/GIF frames):
+  - `src/modules/qr-generator/filters-preprocess.ts` now computes per-frame tone/chroma clipping stats (`lumaStd`, mean saturation, dark/light clipping ratios).
+  - Added conservative adaptive normalization for color overlays in scan-gated dither pipelines (`dithered`, `blue-noise`, `artwork`): slight dynamic contrast/chroma compression only when risk is high.
+  - Normalization is disabled for `qrFirstMode`, `scanGateProfile='off'`, non-color modes, and low-risk frames.
+- Expanded dithered scan regression coverage to include additional real-world assets:
+  - Added `santa.png` decode regression check.
+  - Added `dance.gif` first-frame decode regression check in preview profile.
+  - Both new checks are decode-focused (`minChromaDistance: 0`) to avoid false failures on intentionally low-chroma frames.
+- Verification run after tuning:
+  - `npx vitest run tests/unit/qr-generator-filters-safety.spec.ts` ✅
+  - `npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "king gif"` ✅
+  - `npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "santa output"` ✅
+  - `npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts -t "dance gif first-frame"` ✅
