@@ -37,3 +37,6 @@
 - Implemented item 51 direction (`[MED][CPU]` QR math fast path):
   - Switched `EXP_TABLE` / `LOG_TABLE` in `src/modules/qr-encoder/math.ts` to typed arrays.
   - Replaced loop-based exponent normalization in `gexp` with modulus-based normalization while preserving existing index semantics for positive multiples.
+- Implemented item 30 direction (`[BIG][CPU]` dither kernel flattening):
+  - Precomputed flat typed-array kernel offsets/weights in `src/modules/dither-algorithms/kernels.ts` (`xOffsetsLtr/xOffsetsRtl/yOffsets/normalizedWeights`).
+  - Updated `distributeError` in `src/modules/qr-generator/pixel-matrix-dithered.ts` to use prepared arrays instead of nested matrix/offset loops and per-cell divisor math.
