@@ -9,7 +9,6 @@ import {
   isAlignmentPattern as isAlignmentPatternSpec,
   isFinderPattern as isFinderPatternSpec,
   isFormatInfo as isFormatInfoSpec,
-  isLocked as isLockedSpec,
   isTimingPattern as isTimingPatternSpec,
   isVersionInfo as isVersionInfoSpec,
 } from '../qr-spec';
@@ -29,11 +28,75 @@ import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
 import { validateColor } from './utils';
 
 const log = createLogger('GENERATE');
+const PATTERN_FINDER = 1;
+const PATTERN_FINDER_SEPARATOR = 2;
+const PATTERN_TIMING = 4;
+const PATTERN_ALIGNMENT = 8;
+const PATTERN_FORMAT = 16;
+const PATTERN_VERSION = 32;
+const PATTERN_FIXED_DARK = 64;
+const scaledFunctionalMapCache = new Map<string, Uint8Array>();
 
 function _isDarkModule(row: number, col: number, moduleCount: number): boolean {
   // Fixed dark module (always dark) per ISO/IEC 18004.
   // For any version, this is at (moduleCount - 8, 8).
   return row === moduleCount - 8 && col === 8;
+}
+
+function isFinderSeparator(row: number, col: number, moduleCount: number): boolean {
+  return (
+    (row === 7 && col <= 7) ||
+    (col === 7 && row <= 7) ||
+    (row === 7 && col >= moduleCount - 8) ||
+    (col === moduleCount - 8 && row <= 7) ||
+    (row === moduleCount - 8 && col <= 7) ||
+    (col === 7 && row >= moduleCount - 8)
+  );
+}
+
+function buildScaledFunctionalMap(moduleCount: number, version: number): Uint8Array {
+  const map = new Uint8Array(moduleCount * moduleCount);
+  for (let row = 0; row < moduleCount; row++) {
+    const rowBase = row * moduleCount;
+    for (let col = 0; col < moduleCount; col++) {
+      const idx = rowBase + col;
+      if (isFinderPatternSpec(row, col, moduleCount)) {
+        map[idx] |= PATTERN_FINDER;
+      }
+      if (isFinderSeparator(row, col, moduleCount)) {
+        map[idx] |= PATTERN_FINDER_SEPARATOR;
+      }
+      if (isTimingPatternSpec(row, col, moduleCount)) {
+        map[idx] |= PATTERN_TIMING;
+      }
+      if (isAlignmentPatternSpec(row, col, moduleCount, version)) {
+        map[idx] |= PATTERN_ALIGNMENT;
+      }
+      if (isFormatInfoSpec(row, col, moduleCount)) {
+        map[idx] |= PATTERN_FORMAT;
+      }
+      if (isVersionInfoSpec(row, col, moduleCount, version)) {
+        map[idx] |= PATTERN_VERSION;
+      }
+      if (_isDarkModule(row, col, moduleCount)) {
+        map[idx] |= PATTERN_FIXED_DARK;
+      }
+    }
+  }
+  return map;
+}
+
+function getScaledFunctionalMap(moduleCount: number, version: number): Uint8Array {
+  const key = `${moduleCount}:${version}`;
+  const cached = scaledFunctionalMapCache.get(key);
+  if (cached) return cached;
+  const map = buildScaledFunctionalMap(moduleCount, version);
+  scaledFunctionalMapCache.set(key, map);
+  if (scaledFunctionalMapCache.size > 24) {
+    const oldestKey = scaledFunctionalMapCache.keys().next().value;
+    if (oldestKey !== undefined) scaledFunctionalMapCache.delete(oldestKey);
+  }
+  return map;
 }
 
 type PixelColor = RGB;
@@ -147,6 +210,10 @@ export async function generateScaledQR(
     ? config.protectVersionInfo !== false
     : config.protectVersionInfo === true;
   const preserveFixedDark = preserveFunctional;
+  const functionalMap = getScaledFunctionalMap(moduleCount, version);
+  const isFinderRegionFlag = (flags: number): boolean =>
+    (flags & (PATTERN_FINDER | PATTERN_FINDER_SEPARATOR)) !== 0;
+  const getPatternFlags = (row: number, col: number): number => functionalMap[row * moduleCount + col];
   const qrDrawSize = scaledSize * subPixelSize;
   const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
   const ditherBackdropWash = Math.max(0, Math.min(1, config.ditherBackdropWash ?? 0.18));
@@ -288,28 +355,19 @@ export async function generateScaledQR(
     ctx.fill();
   };
 
-  const isFinderSeparator = (row: number, col: number): boolean =>
-    (row === 7 && col <= 7) ||
-    (col === 7 && row <= 7) ||
-    (row === 7 && col >= moduleCount - 8) ||
-    (col === moduleCount - 8 && row <= 7) ||
-    (row === moduleCount - 8 && col <= 7) ||
-    (col === 7 && row >= moduleCount - 8);
-  const isFinderRegion = (row: number, col: number): boolean =>
-    isFinderPatternSpec(row, col, moduleCount) || isFinderSeparator(row, col);
-
   const shouldForceBinaryModule = (row: number, col: number): boolean => {
-    if (!isLockedSpec(row, col, moduleCount, version)) return false;
+    const flags = getPatternFlags(row, col);
+    if (flags === 0) return false;
     // Fixed dark module follows preserve/protect policy.
-    if (row === moduleCount - 8 && col === 8) return preserveFixedDark;
+    if ((flags & PATTERN_FIXED_DARK) !== 0) return preserveFixedDark;
     // Finder regions/separators follow preserveFinders explicitly.
-    if (isFinderPatternSpec(row, col, moduleCount) || isFinderSeparator(row, col)) {
+    if (isFinderRegionFlag(flags)) {
       return preserveFinders;
     }
-    if (isTimingPatternSpec(row, col, moduleCount)) return preserveTiming;
-    if (isAlignmentPatternSpec(row, col, moduleCount, version)) return preserveAlignment;
-    if (isFormatInfoSpec(row, col, moduleCount)) return protectFormat;
-    if (isVersionInfoSpec(row, col, moduleCount, version)) return protectVersion;
+    if ((flags & PATTERN_TIMING) !== 0) return preserveTiming;
+    if ((flags & PATTERN_ALIGNMENT) !== 0) return preserveAlignment;
+    if ((flags & PATTERN_FORMAT) !== 0) return protectFormat;
+    if ((flags & PATTERN_VERSION) !== 0) return protectVersion;
     return false;
   };
 
@@ -410,14 +468,13 @@ export async function generateScaledQR(
       : adjustLumaPreserveChroma(sampled, 0.97, 0.84);
   };
   const isPatternBoostModule = (row: number, col: number): boolean => {
-    const isFinderBoostModule = finderContrastBoost && isFinderRegion(row, col);
-    const isAlignmentBoostModule =
-      alignmentContrastBoost && isAlignmentPatternSpec(row, col, moduleCount, version);
-    const isTimingBoostModule = timingContrastBoost && isTimingPatternSpec(row, col, moduleCount);
-    const isFormatBoostModule = formatContrastBoost && isFormatInfoSpec(row, col, moduleCount);
-    const isVersionBoostModule =
-      versionContrastBoost && isVersionInfoSpec(row, col, moduleCount, version);
-    const isFixedDarkBoostModule = fixedDarkContrastBoost && row === moduleCount - 8 && col === 8;
+    const flags = getPatternFlags(row, col);
+    const isFinderBoostModule = finderContrastBoost && isFinderRegionFlag(flags);
+    const isAlignmentBoostModule = alignmentContrastBoost && (flags & PATTERN_ALIGNMENT) !== 0;
+    const isTimingBoostModule = timingContrastBoost && (flags & PATTERN_TIMING) !== 0;
+    const isFormatBoostModule = formatContrastBoost && (flags & PATTERN_FORMAT) !== 0;
+    const isVersionBoostModule = versionContrastBoost && (flags & PATTERN_VERSION) !== 0;
+    const isFixedDarkBoostModule = fixedDarkContrastBoost && (flags & PATTERN_FIXED_DARK) !== 0;
     return (
       isFinderBoostModule ||
       isAlignmentBoostModule ||
@@ -692,15 +749,16 @@ export async function generateScaledQR(
       for (let col = 0; col < moduleCount; col++) {
         const mx = marginPx + col * effectiveModuleSize;
         const my = marginPx + row * effectiveModuleSize;
+        const flags = getPatternFlags(row, col);
 
         // Structural pattern modules: fully visible (drawn separately with their own styles)
         if (
-          isFinderRegion(row, col) ||
-          isAlignmentPatternSpec(row, col, moduleCount, version) ||
-          isTimingPatternSpec(row, col, moduleCount) ||
-          isFormatInfoSpec(row, col, moduleCount) ||
-          isVersionInfoSpec(row, col, moduleCount, version) ||
-          _isDarkModule(row, col, moduleCount)
+          isFinderRegionFlag(flags) ||
+          (flags & PATTERN_ALIGNMENT) !== 0 ||
+          (flags & PATTERN_TIMING) !== 0 ||
+          (flags & PATTERN_FORMAT) !== 0 ||
+          (flags & PATTERN_VERSION) !== 0 ||
+          (flags & PATTERN_FIXED_DARK) !== 0
         ) {
           maskCtx.fillStyle = 'white';
           maskCtx.fillRect(mx, my, effectiveModuleSize, effectiveModuleSize);
@@ -860,9 +918,9 @@ export async function generateScaledQR(
     let versionCount = 0;
     for (let row = 0; row < moduleCount; row++) {
       for (let col = 0; col < moduleCount; col++) {
-        const isFormat = shouldProtectFormatInfo && isFormatInfoSpec(row, col, moduleCount);
-        const isVersion =
-          shouldProtectVersionInfo && isVersionInfoSpec(row, col, moduleCount, version);
+        const flags = getPatternFlags(row, col);
+        const isFormat = shouldProtectFormatInfo && (flags & PATTERN_FORMAT) !== 0;
+        const isVersion = shouldProtectVersionInfo && (flags & PATTERN_VERSION) !== 0;
         if (!(isFormat || isVersion)) continue;
 
         const isDark = qr.isDark(row, col);
