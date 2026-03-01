@@ -2980,10 +2980,22 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     onProgress?.('Ranking pixels by importance', 40);
 
     // Step 5: Rank pixels by importance
-    const pixelOrder = rankPixelsByImportance(targets, importance, moduleCount, dataPixels);
+    const rankedPixelOrder = rankPixelsByImportance(targets, importance, moduleCount, dataPixels);
+    let eliminationPixelOrder = rankedPixelOrder;
+    if (performanceProfile === 'android') {
+      const androidCandidateCap = Math.max(64, Math.floor(moduleCount * moduleCount * 0.25));
+      const cappedLength = Math.min(rankedPixelOrder.length, androidCandidateCap);
+      eliminationPixelOrder = rankedPixelOrder.slice(0, cappedLength);
+      log.info('Android QR-Art candidate cap applied', {
+        originalCandidates: rankedPixelOrder.length,
+        cappedCandidates: eliminationPixelOrder.length,
+        moduleCount,
+      });
+    }
 
     log.debug('Pixels ranked', {
-      totalDataPixels: pixelOrder.length,
+      totalDataPixels: rankedPixelOrder.length,
+      eliminationCandidates: eliminationPixelOrder.length,
     });
 
     onProgress?.('Performing Gauss-Jordan elimination', 50);
@@ -2994,13 +3006,13 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       mappings,
       moduleCount,
       actualMask,
-      pixelOrder
+      eliminationPixelOrder
     );
 
     log.info('Gauss-Jordan elimination complete', {
       controllablePixels: elimination.controllablePixels,
-      totalDataPixels: pixelOrder.length,
-      controlPercentage: `${((elimination.controllablePixels / pixelOrder.length) * 100).toFixed(1)}%`,
+      totalDataPixels: eliminationPixelOrder.length,
+      controlPercentage: `${((elimination.controllablePixels / Math.max(1, eliminationPixelOrder.length)) * 100).toFixed(1)}%`,
     });
 
     onProgress?.('Selecting basis vectors', 70);
