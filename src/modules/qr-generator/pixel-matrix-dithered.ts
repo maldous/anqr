@@ -358,33 +358,6 @@ function clamp01(x: number): number {
   return x < 0 ? 0 : x > 1 ? 1 : x;
 }
 
-function resolveColorOverlayIntensity(
-  baseIntensity: number,
-  config: QRGeneratorConfig
-): number {
-  const scanGateProfile = config.scanGateProfile ?? 'full';
-  const isColorAnimation = config.colorMode !== 'bw';
-  if (!isColorAnimation) {
-    return clamp01(baseIntensity);
-  }
-  const isPreview = scanGateProfile === 'preview';
-  const isAnimatedFrame =
-    typeof config.frameIndex === 'number' && Number.isFinite(config.frameIndex);
-
-  // Apply intensity compression for color overlays so slider values around 50%
-  // stay in a scan-stable operating range for both images and GIFs.
-  if (isPreview && isAnimatedFrame) {
-    return clamp01(Math.min(baseIntensity * 0.5, 0.35));
-  }
-  if (isPreview) {
-    return clamp01(Math.min(baseIntensity * 0.58, 0.4));
-  }
-  if (scanGateProfile === 'full') {
-    return clamp01(Math.min(baseIntensity * 0.66, 0.48));
-  }
-  return clamp01(Math.min(baseIntensity * 0.7, 0.52));
-}
-
 function shapeOverlayDarkness(overlayDark: number): number {
   const t = clamp01(overlayDark);
   // Preserve shadow anchor while lifting mids so subject structure survives dithering.
@@ -783,7 +756,10 @@ function enforceModuleConstraints(
             const edgePenalty = edgeBand ? edgeBandPenalty : 0;
             const centerBonus = inCenter ? centerPixelBonus : 0;
             const score =
-              scanGain * scanScoreWeight - artPenalty * artPenaltyWeight - edgePenalty + centerBonus;
+              scanGain * scanScoreWeight -
+              artPenalty * artPenaltyWeight -
+              edgePenalty +
+              centerBonus;
             candidates.push({ y: yy, x: xx, score, toDark, scanGain });
           }
         }
@@ -946,7 +922,7 @@ export async function generateDitheredMatrix(
   }
 
   const rawIntensity = effectiveIntensity; // 0..1
-  const intensity = resolveColorOverlayIntensity(rawIntensity, config);
+  const intensity = clamp01(rawIntensity);
   const rawStrength = config.ditherStrength ?? 0.85;
   const ditherStrength = rawStrength > 1 ? rawStrength / 100 : rawStrength;
   const ditherScale = Math.max(0, config.ditherScale ?? 1);
@@ -1173,7 +1149,7 @@ export async function generateBlueNoiseMatrix(
   }
 
   const rawIntensity = effectiveIntensity; // 0..1
-  const intensity = resolveColorOverlayIntensity(rawIntensity, config);
+  const intensity = clamp01(rawIntensity);
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
   const scaledCanvas = await createCanvasFn(scaledSize, scaledSize);
