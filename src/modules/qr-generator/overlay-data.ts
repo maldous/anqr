@@ -35,20 +35,32 @@ export async function getOverlayData(
 
   // Scale overlay to module count
   const scaledCanvas = await createCanvasFn(moduleCount, moduleCount);
-  const ctx = scaledCanvas.getContext('2d') as
-    | CanvasRenderingContext2D
-    | OffscreenCanvasRenderingContext2D
-    | null;
+  const ctx =
+    (scaledCanvas.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings) as
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D
+      | null) ??
+    (scaledCanvas.getContext('2d') as
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D
+      | null);
   if (!ctx) {
     return {} as OverlayData;
   }
 
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  // Cast to CanvasImageSource for drawImage compatibility with both HTMLCanvasElement and OffscreenCanvas
-  ctx.drawImage(overlayCanvas as CanvasImageSource, 0, 0, moduleCount, moduleCount);
+  const readCtx = ctx as
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D;
 
-  const imageData = ctx.getImageData(0, 0, moduleCount, moduleCount);
+  readCtx.imageSmoothingEnabled = true;
+  readCtx.imageSmoothingQuality = 'high';
+  // Cast to CanvasImageSource for drawImage compatibility with both HTMLCanvasElement and OffscreenCanvas
+  readCtx.drawImage(overlayCanvas as CanvasImageSource, 0, 0, moduleCount, moduleCount);
+
+  const imageData = readCtx.getImageData(0, 0, moduleCount, moduleCount);
   const data = imageData.data;
 
   const result: OverlayData = {};
