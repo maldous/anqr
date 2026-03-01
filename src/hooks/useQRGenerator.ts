@@ -485,6 +485,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     null
   );
   const [qartPerfSnapshot, setQArtPerfSnapshot] = useState<QArtPerfSnapshot | null>(null);
+  const qartPreviewBitmapCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // QR matrix for vector SVG export
   const [qrMatrix, setQrMatrix] = useState<boolean[][] | null>(null);
@@ -1752,7 +1753,11 @@ function useQRGenerator(): UseQRGeneratorResult {
             try {
               updateGenerationProgress('Rendering QR-Art preview', 86);
               if (workerRenderedBitmap) {
-                fullQArtCanvas = imageBitmapToCanvas(workerRenderedBitmap);
+                fullQArtCanvas = imageBitmapToCanvas(
+                  workerRenderedBitmap,
+                  qartPreviewBitmapCanvasRef.current ?? undefined
+                );
+                qartPreviewBitmapCanvasRef.current = fullQArtCanvas as HTMLCanvasElement;
                 usedWorkerBitmapRender = true;
                 if (typeof workerRenderedBitmap.close === 'function') {
                   workerRenderedBitmap.close();

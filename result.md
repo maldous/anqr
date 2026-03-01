@@ -78,3 +78,6 @@
 - Implemented item 24 direction (`[BIG][CPU+MEM]` reuse artwork-frame clone target):
   - Updated `cloneCanvasFrame` in `src/hooks/useQRGenerator.ts` to support writing into an existing target canvas.
   - Artwork animation now reuses the previously stored `lastSuccessfulArtworkFrame` canvas as the clone destination instead of allocating a new clone on every successful frame.
+- Implemented item 23 direction (`[BIG][CPU]` reuse bitmap-to-canvas target for QR-Art preview):
+  - Added a persistent `qartPreviewBitmapCanvasRef` in `useQRGenerator`.
+  - Non-animation worker bitmap rendering now writes into that reusable canvas target via `imageBitmapToCanvas(bitmap, targetCanvas)` instead of allocating a fresh canvas each generation.
