@@ -152,7 +152,7 @@ function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas): Image
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-function unpackQArtMatrix(packed: Uint8Array, moduleCount: number): boolean[][] {
+function expandPackedQArtMatrix(packed: Uint8Array, moduleCount: number): boolean[][] {
   const expectedLength = moduleCount * moduleCount;
   if (packed.length !== expectedLength) {
     throw new Error(
@@ -172,12 +172,45 @@ function unpackQArtMatrix(packed: Uint8Array, moduleCount: number): boolean[][] 
   return matrix;
 }
 
-function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unknown> {
-  try {
-    return structuredClone(config) as unknown as Record<string, unknown>;
-  } catch {
-    return JSON.parse(JSON.stringify(config)) as Record<string, unknown>;
+function clonePlainSerializable(value: unknown): unknown {
+  if (
+    value == null ||
+    typeof value === 'string' ||
+    typeof value === 'boolean' ||
+    typeof value === 'number'
+  ) {
+    return value;
   }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => clonePlainSerializable(entry));
+  }
+
+  if (typeof value !== 'object') {
+    return undefined;
+  }
+
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) {
+    return undefined;
+  }
+
+  const source = value as Record<string, unknown>;
+  const target: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(source)) {
+    const cloned = clonePlainSerializable(entry);
+    if (cloned !== undefined) {
+      target[key] = cloned;
+    }
+  }
+  return target;
+}
+
+function sanitizeQArtRenderConfig(config: QRGeneratorConfig): Record<string, unknown> {
+  const sanitized = clonePlainSerializable(config);
+  return (sanitized && typeof sanitized === 'object'
+    ? sanitized
+    : {}) as Record<string, unknown>;
 }
 
 function imageBitmapToCanvas(bitmap: ImageBitmap): HTMLCanvasElement {
@@ -437,6 +470,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
   // QR matrix for vector SVG export
   const [qrMatrix, setQrMatrix] = useState<boolean[][] | null>(null);
+  const qrPackedMatrixRef = useRef<{ packed: Uint8Array; moduleCount: number } | null>(null);
 
   // Store generated frames for GIF export/playback outside React state to avoid
   // retaining large canvas arrays in the render tree.
@@ -1799,10 +1833,15 @@ function useQRGenerator(): UseQRGeneratorResult {
             qartResultSource === 'worker' &&
             qartResultModuleCount > 0
           ) {
-            setQrMatrix(unpackQArtMatrix(workerPackedMatrix, qartResultModuleCount));
+            qrPackedMatrixRef.current = {
+              packed: workerPackedMatrix,
+              moduleCount: qartResultModuleCount,
+            };
+            setQrMatrix(null);
           } else {
             const matrixData = qrGenerator.getLastMatrix();
             if (matrixData) {
+              qrPackedMatrixRef.current = null;
               setQrMatrix(matrixData.matrix);
             }
           }
@@ -1961,6 +2000,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       // Capture the QR matrix for vector SVG export
       const matrixData = qrGenerator.getLastMatrix();
       if (matrixData) {
+        qrPackedMatrixRef.current = null;
         setQrMatrix(matrixData.matrix);
       }
 
@@ -2524,7 +2564,13 @@ function useQRGenerator(): UseQRGeneratorResult {
       if (output.format === 'svg') {
         // Use true vector SVG export if enabled and matrix is available
         if (output.svgTrueVector) {
-          if (!qrMatrix) {
+          let vectorMatrix = qrMatrix;
+          if (!vectorMatrix && qrPackedMatrixRef.current) {
+            const { packed, moduleCount } = qrPackedMatrixRef.current;
+            vectorMatrix = expandPackedQArtMatrix(packed, moduleCount);
+          }
+
+          if (!vectorMatrix) {
             log.warn(
               'Vector SVG export requested but QR matrix is unavailable. ' +
                 'Falling back to raster SVG. This can happen with special render modes.'
@@ -2533,7 +2579,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             return;
           }
           // Calculate module size to match desired output dimensions
-          const moduleCount = qrMatrix.length;
+          const moduleCount = vectorMatrix.length;
           // Use the same margin calculation as generate() in qr-generator.js
           // config.margin = safetyAdjustedConfig.quietZone + qr.borderModulesExtra
           const totalMargin = qr.quietZoneModules + qr.borderModulesExtra;
@@ -2541,7 +2587,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           const svgModuleSize = Math.floor(output.widthPx / (moduleCount + totalMargin * 2)) || 10;
 
           // True vector SVG - uses styled path elements
-          downloadVectorSvg(qrMatrix, {
+          downloadVectorSvg(vectorMatrix, {
             moduleSize: svgModuleSize,
             margin: totalMargin,
             fgColor: render.fgColor,

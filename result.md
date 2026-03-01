@@ -10,3 +10,6 @@
 - Decision: prioritized this optimization before deeper render-pipeline changes because it is high impact for startup and low risk to QR correctness.
 - Implemented item 4 (`[HUGE][STARTUP]` lazy QR-Art core loading): removed static `@/modules/qr-art` import from `useQRGenerator` and added cached dynamic import (`loadQArtModule()`).
 - QR-Art functions are now loaded only when artwork generation paths execute (single preview generation and animation frame generation), avoiding eager RS/elimination code in the editor path.
+- Implemented item 5 direction (`[HUGE][CPU+MEM]` packed matrix retention): removed per-generation unpack for worker-rendered QR-Art previews and now keep packed worker matrix in `qrPackedMatrixRef`.
+- Packed matrix is expanded only on demand during true-vector SVG export, avoiding immediate `Uint8Array -> boolean[][]` expansion in the preview hot path.
+- Implemented item 22 (`[BIG][CPU]`): replaced `sanitizeQArtRenderConfig` structuredClone/JSON fallback with a manual plain-data copier to avoid JSON stringify/parse overhead on Android WebView.
