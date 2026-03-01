@@ -3214,6 +3214,29 @@ function useQRGenerator(): UseQRGeneratorResult {
       let artworkLockedVersion = debouncedConfig.typeNumber || 0;
       let lastSuccessfulArtworkFrame: HTMLCanvasElement | null = null;
       let lastSuccessfulArtworkMatchPercentage = -1;
+      let artworkBitmapScratchA: HTMLCanvasElement | null = null;
+      let artworkBitmapScratchB: HTMLCanvasElement | null = null;
+      const getArtworkBitmapScratchCanvas = (
+        slot: 0 | 1,
+        width: number,
+        height: number
+      ): HTMLCanvasElement => {
+        const current = slot === 0 ? artworkBitmapScratchA : artworkBitmapScratchB;
+        if (!current) {
+          const created = document.createElement('canvas');
+          created.width = width;
+          created.height = height;
+          if (slot === 0) {
+            artworkBitmapScratchA = created;
+          } else {
+            artworkBitmapScratchB = created;
+          }
+          return created;
+        }
+        if (current.width !== width) current.width = width;
+        if (current.height !== height) current.height = height;
+        return current;
+      };
       const artworkRenderConfigTemplate = sanitizeQArtRenderConfig({
         ...debouncedConfig,
         overlayMode: undefined,
@@ -3417,7 +3440,14 @@ function useQRGenerator(): UseQRGeneratorResult {
             }
 
             if (effectiveWorkerResult.bitmap) {
-              const rendered = imageBitmapToCanvas(effectiveWorkerResult.bitmap);
+              const rendered = imageBitmapToCanvas(
+                effectiveWorkerResult.bitmap,
+                getArtworkBitmapScratchCanvas(
+                  (frameIdx % 2) as 0 | 1,
+                  effectiveWorkerResult.bitmap.width,
+                  effectiveWorkerResult.bitmap.height
+                )
+              );
               if (typeof effectiveWorkerResult.bitmap.close === 'function') {
                 effectiveWorkerResult.bitmap.close();
               }
