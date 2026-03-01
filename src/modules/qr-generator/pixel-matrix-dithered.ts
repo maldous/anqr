@@ -389,23 +389,17 @@ function distributeError(
   scaledSize: number,
   leftToRight: boolean
 ): void {
-  const { matrix, divisor, offset } = kernel;
-  for (let ky = 0; ky < matrix.length; ky++) {
-    for (let kx = 0; kx < matrix[ky].length; kx++) {
-      const weight = matrix[ky][kx];
-      if (weight === 0) continue;
+  const prepared = kernel.prepared;
+  if (!prepared) return;
 
-      // Calculate offset from current position
-      let offsetX = kx - offset;
-      // Mirror x-offset for right-to-left scanning
-      if (!leftToRight) offsetX = -offsetX;
-
-      const nx = x + offsetX;
-      const ny = y + ky;
-
-      if (nx >= 0 && nx < scaledSize && ny < scaledSize) {
-        errors[pixelIndex(nx, ny, scaledSize)] += (error * weight) / divisor;
-      }
+  const xOffsets = leftToRight ? prepared.xOffsetsLtr : prepared.xOffsetsRtl;
+  const yOffsets = prepared.yOffsets;
+  const normalizedWeights = prepared.normalizedWeights;
+  for (let i = 0; i < xOffsets.length; i++) {
+    const nx = x + xOffsets[i];
+    const ny = y + yOffsets[i];
+    if (nx >= 0 && nx < scaledSize && ny < scaledSize) {
+      errors[pixelIndex(nx, ny, scaledSize)] += error * normalizedWeights[i];
     }
   }
 }
