@@ -884,6 +884,7 @@ export class QRGenerator {
           ) {
             return src;
           }
+          let out: HTMLCanvasElement | OffscreenCanvas | null = null;
           try {
             const pngDataUrl = src.toDataURL('image/png');
             const image = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -892,15 +893,21 @@ export class QRGenerator {
               img.onerror = () => reject(new Error('final-raster roundtrip failed'));
               img.src = pngDataUrl;
             });
-            const out = document.createElement('canvas');
+            out = await pool.acquire(src.width, src.height);
             out.width = src.width;
             out.height = src.height;
             const outCtx = out.getContext('2d');
-            if (!outCtx) return src;
+            if (!outCtx) {
+              pool.release(out);
+              return src;
+            }
             outCtx.imageSmoothingEnabled = false;
             outCtx.drawImage(image, 0, 0, out.width, out.height);
             return out;
           } catch {
+            if (out) {
+              pool.release(out);
+            }
             return src;
           }
         };
@@ -992,67 +999,75 @@ export class QRGenerator {
           ];
 
           for (const s of scenarios) {
-            const sim = await this.createCanvas(finalRaster.width, finalRaster.height);
-            const simCtx = sim.getContext('2d') as CanvasRenderingContext2D | null;
-            if (!simCtx)
-              return {
-                ok: false,
-                baseDecodeOk: true,
-                metrics: baseMetrics,
-                evaluatedCanvas: finalRaster,
-              };
+            const sim = await pool.acquire(finalRaster.width, finalRaster.height);
+            try {
+              const simCtx = sim.getContext('2d') as CanvasRenderingContext2D | null;
+              if (!simCtx)
+                return {
+                  ok: false,
+                  baseDecodeOk: true,
+                  metrics: baseMetrics,
+                  evaluatedCanvas: finalRaster,
+                };
 
-            const dsW = Math.max(1, Math.round(finalRaster.width * s.downscale));
-            const dsH = Math.max(1, Math.round(finalRaster.height * s.downscale));
-            const ds = await this.createCanvas(dsW, dsH);
-            const dsCtx = ds.getContext('2d') as CanvasRenderingContext2D | null;
-            if (!dsCtx)
-              return {
-                ok: false,
-                baseDecodeOk: true,
-                metrics: baseMetrics,
-                evaluatedCanvas: finalRaster,
-              };
-            dsCtx.imageSmoothingEnabled = true;
-            dsCtx.drawImage(finalRaster as CanvasImageSource, 0, 0, dsW, dsH);
+              const dsW = Math.max(1, Math.round(finalRaster.width * s.downscale));
+              const dsH = Math.max(1, Math.round(finalRaster.height * s.downscale));
+              const ds = await pool.acquire(dsW, dsH);
+              try {
+                const dsCtx = ds.getContext('2d') as CanvasRenderingContext2D | null;
+                if (!dsCtx)
+                  return {
+                    ok: false,
+                    baseDecodeOk: true,
+                    metrics: baseMetrics,
+                    evaluatedCanvas: finalRaster,
+                  };
+                dsCtx.imageSmoothingEnabled = true;
+                dsCtx.drawImage(finalRaster as CanvasImageSource, 0, 0, dsW, dsH);
 
-            if ('filter' in simCtx) {
-              simCtx.filter = `blur(${s.blur}px)`;
-            }
-            simCtx.setTransform(1, -s.skewY / sim.height, s.skewX / sim.width, 1, 0, 0);
-            simCtx.drawImage(
-              ds as CanvasImageSource,
-              0,
-              0,
-              dsW,
-              dsH,
-              0,
-              0,
-              Math.max(1, sim.width - Math.abs(s.skewX)),
-              Math.max(1, sim.height - Math.abs(s.skewY))
-            );
-            simCtx.setTransform(1, 0, 0, 1, 0, 0);
-            if ('filter' in simCtx) {
-              simCtx.filter = 'none';
-            }
-            if (s.exposure !== 0) {
-              simCtx.globalCompositeOperation = 'source-atop';
-              if (s.exposure > 0) {
-                simCtx.fillStyle = `rgba(255,255,255,${Math.min(0.35, s.exposure)})`;
-              } else {
-                simCtx.fillStyle = `rgba(0,0,0,${Math.min(0.35, Math.abs(s.exposure))})`;
+                if ('filter' in simCtx) {
+                  simCtx.filter = `blur(${s.blur}px)`;
+                }
+                simCtx.setTransform(1, -s.skewY / sim.height, s.skewX / sim.width, 1, 0, 0);
+                simCtx.drawImage(
+                  ds as CanvasImageSource,
+                  0,
+                  0,
+                  dsW,
+                  dsH,
+                  0,
+                  0,
+                  Math.max(1, sim.width - Math.abs(s.skewX)),
+                  Math.max(1, sim.height - Math.abs(s.skewY))
+                );
+                simCtx.setTransform(1, 0, 0, 1, 0, 0);
+                if ('filter' in simCtx) {
+                  simCtx.filter = 'none';
+                }
+                if (s.exposure !== 0) {
+                  simCtx.globalCompositeOperation = 'source-atop';
+                  if (s.exposure > 0) {
+                    simCtx.fillStyle = `rgba(255,255,255,${Math.min(0.35, s.exposure)})`;
+                  } else {
+                    simCtx.fillStyle = `rgba(0,0,0,${Math.min(0.35, Math.abs(s.exposure))})`;
+                  }
+                  simCtx.fillRect(0, 0, sim.width, sim.height);
+                  simCtx.globalCompositeOperation = 'source-over';
+                }
+
+                if (!(await runDecode(sim))) {
+                  return {
+                    ok: false,
+                    baseDecodeOk: true,
+                    metrics: baseMetrics,
+                    evaluatedCanvas: finalRaster,
+                  };
+                }
+              } finally {
+                pool.release(ds);
               }
-              simCtx.fillRect(0, 0, sim.width, sim.height);
-              simCtx.globalCompositeOperation = 'source-over';
-            }
-
-            if (!(await runDecode(sim))) {
-              return {
-                ok: false,
-                baseDecodeOk: true,
-                metrics: baseMetrics,
-                evaluatedCanvas: finalRaster,
-              };
+            } finally {
+              pool.release(sim);
             }
           }
 
