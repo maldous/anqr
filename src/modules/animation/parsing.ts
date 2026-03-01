@@ -12,6 +12,40 @@ import type { AnimationFrame } from './types';
 
 const log = createLogger('ANIMATION');
 
+function asClampedRgbaView(pixels: Uint8Array): Uint8ClampedArray<ArrayBuffer> {
+  if (pixels instanceof Uint8ClampedArray) {
+    return pixels as Uint8ClampedArray<ArrayBuffer>;
+  }
+  return new Uint8ClampedArray(
+    pixels.buffer as ArrayBuffer,
+    pixels.byteOffset,
+    pixels.byteLength
+  ) as Uint8ClampedArray<ArrayBuffer>;
+}
+
+async function decodeBlobToCanvasViaBitmap(blob: Blob): Promise<HTMLCanvasElement | null> {
+  if (typeof createImageBitmap !== 'function') {
+    return null;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(bitmap, 0, 0);
+    }
+    if (typeof bitmap.close === 'function') {
+      bitmap.close();
+    }
+    return canvas;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parse animated WebP using ImageDecoder API
  */
@@ -63,8 +97,19 @@ export async function parseWebPFrames(source: ArrayBuffer): Promise<AnimationFra
  * Parse WebP as a single frame (fallback)
  */
 async function parseWebPAsSingleFrame(source: ArrayBuffer): Promise<AnimationFrame[]> {
+  const blob = new Blob([source], { type: 'image/webp' });
+  const bitmapCanvas = await decodeBlobToCanvasViaBitmap(blob);
+  if (bitmapCanvas) {
+    return [
+      {
+        canvas: bitmapCanvas,
+        delay: 100,
+        disposalType: 0,
+      },
+    ];
+  }
+
   return new Promise((resolve, reject) => {
-    const blob = new Blob([source], { type: 'image/webp' });
     const url = URL.createObjectURL(blob);
     const img = new Image();
 
@@ -100,8 +145,19 @@ async function parseWebPAsSingleFrame(source: ArrayBuffer): Promise<AnimationFra
  * Parse any static image as a single animation frame
  */
 async function parseStaticImageAsFrame(source: ArrayBuffer): Promise<AnimationFrame[]> {
+  const blob = new Blob([source]);
+  const bitmapCanvas = await decodeBlobToCanvasViaBitmap(blob);
+  if (bitmapCanvas) {
+    return [
+      {
+        canvas: bitmapCanvas,
+        delay: 100,
+        disposalType: 0,
+      },
+    ];
+  }
+
   return new Promise((resolve, reject) => {
-    const blob = new Blob([source]);
     const url = URL.createObjectURL(blob);
     const img = new Image();
 
@@ -255,7 +311,7 @@ export async function parseGifFrames(source: string | ArrayBuffer): Promise<Anim
       restoreData = compositeCtx.getImageData(dims.left, dims.top, dims.width, dims.height);
     }
 
-    const imageData = new ImageData(new Uint8ClampedArray(patch), dims.width, dims.height);
+    const imageData = new ImageData(asClampedRgbaView(patch), dims.width, dims.height);
 
     const patchCanvas = document.createElement('canvas');
     patchCanvas.width = dims.width;
