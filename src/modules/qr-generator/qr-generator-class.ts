@@ -565,6 +565,7 @@ export class QRGenerator {
         const isAnimatedFrame =
           typeof effectiveConfig.frameIndex === 'number' &&
           Number.isFinite(effectiveConfig.frameIndex);
+        const isFirstAnimatedFrame = isAnimatedFrame && effectiveConfig.frameIndex === 0;
         const overlayFamilyKey = processedOverlayCanvas
           ? [
               processedOverlayCanvas.width,
@@ -1236,16 +1237,10 @@ export class QRGenerator {
           if (isScanGateDisabled) {
             return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
           }
-          if (isPreviewScanGate && isAnimatedFrame) {
-            // Animation preview path: run lightweight decode check but skip expensive
-            // metrics computation and scenario simulation for throughput.
-            const animDecodeOk = await runDecode(canvas);
-            return {
-              ok: animDecodeOk,
-              baseDecodeOk: animDecodeOk,
-              metrics: null,
-              evaluatedCanvas: canvas,
-            };
+          if (isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame) {
+            // Animation preview path: skip per-frame decode for frames after the first.
+            // Frame 0 goes through full validation so Analyze always has a decodable frame.
+            return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
           }
           // Preview mode prioritizes generation throughput and checks decode on the render canvas.
           // Full mode validates on an export-equivalent raster roundtrip.
@@ -1482,8 +1477,9 @@ export class QRGenerator {
           return lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
         }
 
-        if (isPreviewScanGate && effectiveConfig.qrFirstMode !== true) {
+        if (isPreviewScanGate && effectiveConfig.qrFirstMode !== true && !isFirstAnimatedFrame) {
           // Keep preview visuals stable; defer harsh QR-first fallback to settled/full validation paths.
+          // Exception: animation frame 0 must reach QR-first to guarantee Analyze decodability.
           return lastCanvas || (await renderScaled(buildAttemptConfig(lastPatch)));
         }
 
