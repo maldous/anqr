@@ -10,9 +10,8 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { generateBlueNoiseTile } from './blue-noise';
 import type { ColorMode, DitherResult } from './types';
-import { rgbToGray } from './utils';
+import { generateBlueNoiseTile, rgbToGray } from './utils';
 
 const _log = createLogger('DITHER');
 
