@@ -4,13 +4,16 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { rgbToLumaLinear } from '../core';
 import { overlayDataCache } from './cache';
 import { packOverlayColor } from './overlay-data-packed';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 import { hashCanvasContent } from './utils';
 
 const _log = createLogger('GENERATE');
+
+function rgbToLumaSrgb(r: number, g: number, b: number): number {
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
 
 /**
  * Get overlay data (brightness and colors) from canvas
@@ -71,7 +74,7 @@ export async function getOverlayData(
     const r = data[src];
     const g = data[src + 1];
     const b = data[src + 2];
-    brightness[i] = rgbToLumaLinear(r, g, b);
+    brightness[i] = rgbToLumaSrgb(r, g, b);
     if (colorsPacked) {
       colorsPacked[i] = packOverlayColor(r, g, b);
     }
