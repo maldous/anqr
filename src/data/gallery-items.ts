@@ -5,19 +5,10 @@
  * scripts/publish-gallery-showcase.ts -> src/data/gallery-showcase.generated.ts
  */
 
+import type { GalleryCategory } from '@/data/gallery-manifest';
 import { generatedGallerySections } from '@/data/gallery-showcase.generated';
 
-export type GalleryCategory =
-  | 'plain'
-  | 'styles'
-  | 'colors'
-  | 'image-overlay'
-  | 'animation-overlay'
-  | 'blend-modes'
-  | 'color-modes'
-  | 'encoding'
-  | 'power-combos'
-  | 'qr-art';
+export type { GalleryCategory } from '@/data/gallery-manifest';
 
 export interface GalleryItem {
   id: string;
