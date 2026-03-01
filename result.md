@@ -117,3 +117,7 @@
   - `src/modules/exporter/svg-export.ts`: replaced direct `canvas.toDataURL('image/png')` with async blob-based encoding (`toBlob` + `FileReader`) and fallback.
   - `src/components/Analyze.tsx`: generator-canvas preview capture now uses `toBlob` + `URL.createObjectURL` when available (with blob URL cleanup on replacement).
   - `src/modules/qr-generator/qr-generator-class.ts`: scan-gate final-raster roundtrip now prefers async `toBlob` + `createImageBitmap` decode path, with existing data URL path as fallback.
+- Implemented combined item 16/17/45 direction (`[BIG/HUGE][CPU+MEM]` animation decode + patch-copy reductions):
+  - `src/modules/animation/parsing.ts`: single-frame WebP/static decode now prefers `createImageBitmap(blob)` path before image-element fallback.
+  - `src/modules/animation/parsing.ts`: GIF patch ImageData creation now reuses clamped views over patch buffers instead of cloning patch bytes.
+  - `src/modules/animation/gif-compositor.ts`: per-frame patch ImageData cache now uses clamped views over source patch buffers (no extra `Uint8ClampedArray` copy during cache fill).
