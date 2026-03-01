@@ -44,7 +44,6 @@ import {
 } from '@/modules/overlay';
 import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { type ValidationResult, validateInWorker } from '@/modules/qr-analyzer';
-import { generateFullQArt, generateFullQArtOptimal, generateQArtInWorker } from '@/modules/qr-art';
 import {
   canvasHashCache,
   INTRINSICALLY_SCALED_OVERLAY_MODES,
@@ -131,6 +130,19 @@ type GenerationProgressState = {
   stage: string;
   percent: number;
 };
+
+type QArtModule = typeof import('@/modules/qr-art');
+type QArtResult = Awaited<ReturnType<QArtModule['generateFullQArtOptimal']>>;
+type QArtWorkerResult = Awaited<ReturnType<QArtModule['generateQArtInWorker']>>;
+
+let qartModulePromise: Promise<QArtModule> | null = null;
+
+function loadQArtModule(): Promise<QArtModule> {
+  if (!qartModulePromise) {
+    qartModulePromise = import('@/modules/qr-art');
+  }
+  return qartModulePromise;
+}
 
 function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas): ImageData {
   const ctx = canvas.getContext('2d');
@@ -1524,6 +1536,8 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       // QR-Art: if artwork mode is selected, try full RS basis manipulation first, then fall back to fragment search
       if (overlay.enabled && overlay.mode === 'artwork' && overlayCanvas) {
+        const qartModule = await loadQArtModule();
+        if (isStaleRequest()) return;
         updateGenerationProgress('Preparing QR-Art computation', 18);
         log.info('Starting QR-Art generation', {
           content: debouncedConfig.content?.substring(0, 50),
@@ -1569,7 +1583,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           safeMark(qartRequestMark);
           qartRequestMarked = true;
 
-          let fullQArtResult: Awaited<ReturnType<typeof generateFullQArtOptimal>>;
+          let fullQArtResult: QArtResult;
           try {
             const targetImage = readCanvasImageData(overlayCanvas);
             const workerRenderConfig = sanitizeQArtRenderConfig({
@@ -1577,7 +1591,7 @@ function useQRGenerator(): UseQRGeneratorResult {
               typeNumber: qartConfig.version,
               overlayMode: undefined,
             } as QRGeneratorConfig);
-            const workerResult = await generateQArtInWorker(
+            const workerResult = await qartModule.generateQArtInWorker(
               {
                 data: qartConfig.data,
                 targetImage,
@@ -1626,11 +1640,11 @@ function useQRGenerator(): UseQRGeneratorResult {
             });
             qartResultSource = 'main';
             fullQArtResult = useAutoMask
-              ? await generateFullQArtOptimal({
+              ? await qartModule.generateFullQArtOptimal({
                   ...qartConfig,
                   targetImage: overlayCanvas,
                 })
-              : await generateFullQArt({
+              : await qartModule.generateFullQArt({
                   ...qartConfig,
                   targetImage: overlayCanvas,
                   maskPattern: debouncedConfig.maskPattern as number,
@@ -3041,6 +3055,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       // Artwork mode: lock mask pattern and version after first frame for visual consistency
       const isArtworkMode = overlay.enabled && overlay.mode === 'artwork';
+      const qartModule = isArtworkMode ? await loadQArtModule() : null;
       let artworkLockedMask = -1;
       let artworkLockedVersion = debouncedConfig.typeNumber || 0;
       let lastSuccessfulArtworkFrame: HTMLCanvasElement | null = null;
@@ -3100,10 +3115,17 @@ function useQRGenerator(): UseQRGeneratorResult {
             typeNumber: artworkLockedVersion,
           };
 
-          let workerResult: Awaited<ReturnType<typeof generateQArtInWorker>>;
+          if (!qartModule) {
+            return await qrGenerator.generate(
+              { ...previewScanConfigBase, frameIndex: frameIdx, overlayMode: 'dithered' },
+              frameOverlayCanvas
+            );
+          }
+
+          let workerResult: QArtWorkerResult;
           try {
             const targetImage = readCanvasImageData(frameOverlayCanvas);
-            workerResult = await generateQArtInWorker(
+            workerResult = await qartModule.generateQArtInWorker(
               {
                 data: qartConfig.data,
                 targetImage,
@@ -3136,11 +3158,11 @@ function useQRGenerator(): UseQRGeneratorResult {
             });
             const qartResult =
               useAutoMask && artworkLockedMask < 0
-                ? await generateFullQArtOptimal({
+                ? await qartModule.generateFullQArtOptimal({
                     ...qartConfig,
                     targetImage: frameOverlayCanvas,
                   })
-                : await generateFullQArt({
+                : await qartModule.generateFullQArt({
                     ...qartConfig,
                     targetImage: frameOverlayCanvas,
                     maskPattern:
@@ -3186,7 +3208,7 @@ function useQRGenerator(): UseQRGeneratorResult {
                 rescueAttempts,
               });
               try {
-                const rescueResult = await generateQArtInWorker(
+                const rescueResult = await qartModule.generateQArtInWorker(
                   {
                     data: qartConfig.data,
                     targetImage: readCanvasImageData(frameOverlayCanvas),
