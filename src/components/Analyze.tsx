@@ -1917,10 +1917,26 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     setUiTimings({});
 
     try {
-      // Create a data URL from the canvas for original image display
+      // Capture source image for display using async blob path when available.
       const canvas = generatedCanvas as HTMLCanvasElement;
-      const dataUrl = canvas.toDataURL('image/png');
-      setOriginalImageUrl(dataUrl);
+      if (typeof canvas.toBlob === 'function') {
+        const blob = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+        });
+        if (blob) {
+          const objectUrl = URL.createObjectURL(blob);
+          setOriginalImageUrl((previous) => {
+            if (previous?.startsWith('blob:')) {
+              URL.revokeObjectURL(previous);
+            }
+            return objectUrl;
+          });
+        } else {
+          setOriginalImageUrl(canvas.toDataURL('image/png'));
+        }
+      } else {
+        setOriginalImageUrl(canvas.toDataURL('image/png'));
+      }
 
       // Analyze the canvas directly
       const analysisResult = analyzeQRCode(canvas);
