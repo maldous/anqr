@@ -14,7 +14,6 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { rgbToLumaLinear } from '../core';
 import {
   createRNG,
   generateBlueNoiseTile,
@@ -41,6 +40,10 @@ import type {
 } from './types';
 
 const log = createLogger('DITHER');
+
+function rgbToLumaSrgb(r: number, g: number, b: number): number {
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
 
 type RGBi = { r: number; g: number; b: number };
 type DitherThresholdPattern =
@@ -232,7 +235,7 @@ async function generateBWFirstMatrix(
     let rOut = gray + (srcR - gray) * chromaScale;
     let gOut = gray + (srcG - gray) * chromaScale;
     let bOut = gray + (srcB - gray) * chromaScale;
-    const currentShade = rgbToLumaLinear(clampByte(rOut), clampByte(gOut), clampByte(bOut)) * 255;
+    const currentShade = rgbToLumaSrgb(clampByte(rOut), clampByte(gOut), clampByte(bOut)) * 255;
     const delta = shade - currentShade;
     rOut += delta;
     gOut += delta;
@@ -267,7 +270,7 @@ async function generateBWFirstMatrix(
       matrixBits[sampleIdx] = qrIsDark ? 1 : 0;
 
       // Calculate overlay brightness (0 = black, 1 = white)
-      let overlayBrightness = rgbToLumaLinear(r, g, b);
+      let overlayBrightness = rgbToLumaSrgb(r, g, b);
 
       // Apply contrast curve to enhance spiral visibility
       // For dark overlay regions, make them darker; for bright regions, make them brighter
@@ -348,7 +351,7 @@ async function generateBWFirstMatrix(
 }
 
 function luma01(r: number, g: number, b: number): number {
-  return rgbToLumaLinear(r, g, b);
+  return rgbToLumaSrgb(r, g, b);
 }
 
 function clamp01(x: number): number {

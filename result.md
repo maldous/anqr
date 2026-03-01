@@ -156,3 +156,87 @@
   - Added config surface fields in `src/modules/qr-generator/types.ts` for future quality controls:
     - `blendSpace?: 'srgb' | 'linear'`
     - `halftoneBackdropStrength?: number`
+- Continued quality pass with DPR-aware preview rasterization:
+  - Added `drawToDisplayCanvas(...)` in `src/hooks/useQRGenerator.ts` to render preview canvases at device-pixel-ratio backing resolution while preserving CSS dimensions.
+  - Replaced all primary preview draw sites (single-frame result, QR-Art result, cached animation playback, streaming frame updates, initial animation frame paint) to use the DPR-aware helper.
+  - This change is display-only (no QR bit/pipeline change): generation output is unchanged, but preview sharpness should be improved on high-DPI displays.
+- Fixed non-square overlay crop alignment and distortion in `src/components/sections/OverlaySection.tsx`:
+  - Crop drag/touch mapping now resolves pointer coordinates inside the actual `object-contain` image rectangle (not the full square preview container).
+  - Crop overlay box now renders using image-space dimensions for non-square media, so top/bottom and left/right match the real sampled region.
+  - Crop center clamping is now axis-aware for square source crops (`min(width,height) * size`) to keep region bounds correct on wide/tall images.
+  - Crop size slider now re-clamps center coordinates after size changes to avoid out-of-bounds crop state.
+- Updated crop interaction in `src/components/sections/OverlaySection.tsx` to avoid mid-drag regeneration:
+  - Crop drag now uses a local draft region while dragging (mouse/touch), with QR store updates committed only on drag end (`mouseup`/`mouseleave`/`touchend`).
+  - Added unchanged-value guard on commit to avoid no-op crop updates triggering extra generation.
+  - Crop overlay visuals continue to update live during drag using the draft region, so UX remains responsive without forcing render-per-move.
+- Enhanced crop interaction in `src/components/sections/OverlaySection.tsx` with explicit drag modes:
+  - Added corner-hit resize mode (thresholded by pointer distance to crop corners) and separate center move mode.
+  - Corner drag now updates `cropRegion.size` in draft state during drag; crop size text/slider binding now reflects the live draft size.
+  - Drag begins only when interacting inside the crop area or near a corner, reducing accidental crop jumps.
+- Improved overlay preview stability for crop-position-sensitive outputs:
+  - `src/modules/qr-generator/overlay-data.ts` now uses supersampled module extraction (`sampleScale=2` for settled renders, `1` for fast preview) with area averaging before module brightness/color mapping.
+  - This reduces aliasing sensitivity where tiny crop shifts could produce disproportionately blocky module mappings.
+- Reduced long-running preview rescue/degrade behavior in editor path:
+  - `src/hooks/useQRGenerator.ts` now sets `scanGateProfile: 'preview'` in interactive config so preview generation avoids full heavy scan-gate escalation loops.
+  - Added delayed progress stage update (`Still rendering complex overlay`) when a render pass exceeds ~900ms to improve user feedback during expensive overlay positions.
+- Adjusted scaled-render preview scan-gate behavior in `src/modules/qr-generator/qr-generator-class.ts`:
+  - For `scanGateProfile: 'preview'`, generator now performs a single high-fidelity attempt and returns immediately.
+  - Removed preview-mode escalation through rescue/fallback chains that could both increase render time and produce visibly blocky artifacts.
+  - Decode check still runs for that preview attempt and seeds patch cache when successful.
+- Fixed preview regression where modules could disappear under heavy overlay:
+  - Updated preview single-attempt patch in `src/modules/qr-generator/qr-generator-class.ts` to use constrained occupancy/bias defaults (`darkMinOccupancy`, `lightMaxOccupancy`, `qrBitBiasStrength`) and capped preview overlay intensity.
+  - Keeps preview path fast (single attempt) while preventing overly permissive output that looked like image-only texture with weak module structure.
+- Fixed decode regression caused by preview scan-gate being applied to settled renders:
+  - `src/hooks/useQRGenerator.ts` now applies `scanGateProfile: 'preview'` only during fast-interaction (`fastPreview` phase).
+  - Settled renders now use `scanGateProfile: 'full'` so final output regains strict scan-gate validation before display.
+- Refined scan-gate strategy for quality vs decodability in `src/hooks/useQRGenerator.ts`:
+  - Settled editor renders now keep `scanGateProfile: 'preview'` for visual fidelity (avoids automatic blocky degradation).
+  - Added decode verification pass (`validateInWorker`, 1 attempt) for settled preview outputs.
+  - If verification fails, generation automatically re-runs once with `scanGateProfile: 'full'` to recover scan reliability.
+- Reverted overlay module supersampling in `src/modules/qr-generator/overlay-data.ts`:
+  - Rolled back the 2x area-averaged sampling path and restored direct moduleCount sampling.
+  - Reason: supersampling introduced over-smoothed/blocky behavior in blend-mode outputs at normal/high intensity levels.
+- Removed constrained single-attempt preview shortcut in `src/modules/qr-generator/qr-generator-class.ts`:
+  - The shortcut was unintentionally affecting settled renders (fast-preview path already exits earlier), causing over-constrained/blocky results at normal intensities.
+  - Settled preview now uses the standard preview attempt flow again.
+- Fixed scan-recovery replacement logic in `src/hooks/useQRGenerator.ts`:
+  - After a settled preview fails quick validation, full scan-gate rerender is now adopted only if that rerender validates successfully.
+  - If full rerender is also non-decodable, generator now keeps the original high-fidelity preview result instead of replacing it with degraded/blocky output.
+- Identified root cause of blocky high-intensity output: scan-gate rescue mutations in scaled dither path were rewriting render attempts toward conservative/QR-first outcomes.
+- Updated `src/hooks/useQRGenerator.ts` to use `scanGateProfile: 'off'` for live generator renders (both fast and settled phases), so visual output is no longer auto-mutated by scan-gate fallback loops.
+- Decode/scannability is still surfaced via validation/analyze rather than silently altering artwork output.
+- Reverted `scanGateProfile: 'off'` override in `src/hooks/useQRGenerator.ts`.
+  - Root cause: disabling scan gate removed occupancy/decode constraints in scaled dither rendering, which allowed image-dominant outputs with very weak/absent QR modules.
+  - `debouncedConfig` restored to original behavior (`fastPreview` only during interaction, no forced scanGateProfile override).
+- Investigated low usable dither intensity headroom after quality pass and applied targeted rollback in dither pipeline:
+  - `src/modules/qr-generator/overlay-data.ts`: switched overlay brightness extraction back to legacy sRGB luminance (`0.299/0.587/0.114`).
+  - `src/modules/qr-generator/pixel-matrix-dithered.ts`: switched dither shade/luma computations back to sRGB luminance for module shading and source-color mapping.
+  - Rationale: linear-light luminance increased effective overlay pressure in dithered/scaled modes, triggering scan-gate rescue/degradation at much lower slider intensities.
+- Dialed back over-aggressive first-pass artwork pressure in scan-gate attempts (`src/modules/qr-generator/qr-generator-class.ts`):
+  - Updated first attempt defaults from ultra-permissive occupancy (`darkMin=0.0`, `lightMax=1.0`) to moderate bounds (`darkMin=0.42`, `lightMax=0.58`, clamped ranges preserved).
+  - Applied to both preview and full scan-gate attempt sequences.
+  - Goal: reduce early decode failures that immediately trigger harsh/blocky rescue patches while keeping dither character.
+- Added dynamic scan-gate tuning for scaled overlay generation (`src/modules/qr-generator/qr-generator-class.ts`) to reduce unnecessary degrade/rescue:
+  - Scan patch cache key now includes overlay/frame content signature (`hashCanvasContent` + dimensions + `frameIndex`) so patches are not incorrectly reused across different crop positions or animation frames.
+  - Added lightweight overlay complexity analysis (48x48 luma + edge density) per run to drive adaptive thresholds and fallback scheduling.
+  - Edge/tone acceptance thresholds are now adaptive (`adaptiveEdgeImprintThreshold`, `adaptiveToneStdThreshold`, `adaptiveEdgeWorsenLimit`) instead of fixed values.
+- Reworked patch caching policy to avoid quality regressions:
+  - Cached patches are no longer tried before base attempts (quality-first ordering).
+  - Aggressive rescue patches (too-low intensity, high QR bias, QR-first, forced finder preservation) are no longer cached/reused.
+  - Added intensity floor guard so cached patches stay near the requested look unless no other path works.
+- Reworked fallback intensity ladders from fixed absolute values to dynamic relative drops:
+  - Base attempts now use `resolveOverlayIntensity(...)` (relative to current user-selected intensity, with complexity-aware drop caps).
+  - Decode rescue and finder rescue sequences now derive intensities from the current intensity using small incremental drops.
+  - QR-first emergency fallback now also uses relative intensity schedule, preventing abrupt jumps to overly blocky output.
+- Fixed low-intensity clamp edge case introduced by adaptive logic:
+  - Adaptive min floors are now clamped to the user-requested intensity to avoid accidental upward intensity forcing when slider is low.
+- Tuned preview/animation stability after `king.gif` regression (blocky frames):
+  - Added scan-patch fallback cache family key (`overlay-family:<complexity bucket>`) alongside exact overlay signature key.
+  - This allows safer cross-frame/cross-position reuse of non-aggressive successful patches, reducing per-frame over-rescue churn.
+  - Removed `frameIndex` from cache keying to avoid hard partitioning patch reuse by frame number.
+- Softened preview (`scanGateProfile: 'preview'`) attempt pressure:
+  - Replaced the two-step harsh preview ladder with a gentler multi-step sequence (smaller occupancy/bias/intensity deltas).
+  - Reduced preview rescue max drops and step size so fallback stays closer to requested intensity.
+- Prevented harsh emergency fallback in preview mode:
+  - When in preview scan gate and `qrFirstMode` is not explicitly enabled, generator now returns the best preview attempt instead of forcing deep QR-first fallback.
+  - QR-first emergency sequence remains for non-preview/explicit QR-first flows.

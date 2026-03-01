@@ -290,6 +290,31 @@ function cloneCanvasFrame(
   return cloned;
 }
 
+function drawToDisplayCanvas(
+  displayCanvas: HTMLCanvasElement,
+  source: HTMLCanvasElement | OffscreenCanvas
+): void {
+  const dpr = Math.max(1, globalThis.devicePixelRatio || 1);
+  const cssWidth = Math.max(1, source.width);
+  const cssHeight = Math.max(1, source.height);
+  const backingWidth = Math.max(1, Math.round(cssWidth * dpr));
+  const backingHeight = Math.max(1, Math.round(cssHeight * dpr));
+
+  if (displayCanvas.width !== backingWidth) displayCanvas.width = backingWidth;
+  if (displayCanvas.height !== backingHeight) displayCanvas.height = backingHeight;
+  displayCanvas.style.width = `${cssWidth}px`;
+  displayCanvas.style.height = `${cssHeight}px`;
+
+  const ctx = displayCanvas.getContext('2d');
+  if (!ctx) return;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, backingWidth, backingHeight);
+  ctx.imageSmoothingEnabled = false;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.drawImage(source as CanvasImageSource, 0, 0, cssWidth, cssHeight);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
 function safeMark(name: string): void {
   if (typeof performance === 'undefined') return;
   try {
@@ -1264,16 +1289,31 @@ function useQRGenerator(): UseQRGeneratorResult {
 
         const srcWidth = sourceCanvas.width;
         const srcHeight = sourceCanvas.height;
-        const cropW = srcWidth * size;
-        const cropH = srcHeight * size;
-        const cropX = Math.max(0, (x - size / 2) * srcWidth);
-        const cropY = Math.max(0, (y - size / 2) * srcHeight);
+        // Crop must use a square source region to avoid aspect distortion.
+        // `size` scales against the shorter edge so 100% means a max square crop.
+        const minEdge = Math.min(srcWidth, srcHeight);
+        const cropSizePx = Math.max(1, Math.round(minEdge * size));
+        const halfCrop = cropSizePx / 2;
 
-        const outputSize = Math.min(cropW, cropH);
-        cropCanvas.width = outputSize;
-        cropCanvas.height = outputSize;
+        const centerX = x * srcWidth;
+        const centerY = y * srcHeight;
+        const cropX = Math.max(0, Math.min(srcWidth - cropSizePx, centerX - halfCrop));
+        const cropY = Math.max(0, Math.min(srcHeight - cropSizePx, centerY - halfCrop));
 
-        cropCtx.drawImage(sourceCanvas, cropX, cropY, cropW, cropH, 0, 0, outputSize, outputSize);
+        cropCanvas.width = cropSizePx;
+        cropCanvas.height = cropSizePx;
+
+        cropCtx.drawImage(
+          sourceCanvas,
+          cropX,
+          cropY,
+          cropSizePx,
+          cropSizePx,
+          0,
+          0,
+          cropSizePx,
+          cropSizePx
+        );
         workingCanvas = cropCanvas;
       }
 
@@ -1621,6 +1661,24 @@ function useQRGenerator(): UseQRGeneratorResult {
     try {
       // Build effective config - may be modified by QR-Art fragment search
       const effectiveConfig = { ...debouncedConfig };
+      const runGeneratorWithStatus = async (
+        cfg: QRGeneratorConfig,
+        overlaySource: HTMLCanvasElement | OffscreenCanvas | null
+      ): Promise<HTMLCanvasElement | OffscreenCanvas | null> => {
+        let slowRenderTimer: ReturnType<typeof setTimeout> | null = null;
+        slowRenderTimer = setTimeout(() => {
+          if (!isStaleRequest()) {
+            updateGenerationProgress('Still rendering complex overlay', 72);
+          }
+        }, 900);
+        try {
+          return await qrGenerator.generate(cfg, overlaySource);
+        } finally {
+          if (slowRenderTimer) {
+            clearTimeout(slowRenderTimer);
+          }
+        }
+      };
 
       // QR-Art: if artwork mode is selected, try full RS basis manipulation first, then fall back to fragment search
       if (overlay.enabled && overlay.mode === 'artwork' && overlayCanvas) {
@@ -1852,15 +1910,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           setCanvas(resultCanvas);
           updateGenerationProgress('Finalizing preview', 96);
           if (canvasRef.current) {
-            // Set dimensions first to ensure proper canvas state
-            canvasRef.current.width = resultCanvas.width;
-            canvasRef.current.height = resultCanvas.height;
-            // Get context AFTER setting dimensions to avoid stale context issues
-            const displayCtx = canvasRef.current.getContext('2d');
-            if (displayCtx) {
-              displayCtx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
-              displayCtx.drawImage(resultCanvas, 0, 0);
-            }
+            drawToDisplayCanvas(canvasRef.current, resultCanvas);
           }
 
           safeMark(qartRenderMark);
@@ -1929,7 +1979,7 @@ function useQRGenerator(): UseQRGeneratorResult {
         });
         updateGenerationProgress('Rendering QR preview', 58);
         if (await yieldForResponsiveness()) return;
-        result = await qrGenerator.generate(
+        result = await runGeneratorWithStatus(
           effectiveConfig,
           overlay.enabled ? overlayCanvas : null
         );
@@ -1975,7 +2025,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             try {
               log.debug('Trying ECC level', { ecc });
               if (await yieldForResponsiveness()) return;
-              result = await qrGenerator.generate(
+              result = await runGeneratorWithStatus(
                 fallbackConfig,
                 overlay.enabled ? overlayCanvas : null
               );
@@ -2064,16 +2114,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       // Copy to display canvas if ref exists
       if (canvasRef.current && result) {
-        // Set dimensions first to ensure proper canvas state
-        canvasRef.current.width = result.width;
-        canvasRef.current.height = result.height;
-        // Get context AFTER setting dimensions to avoid stale context issues
-        const ctx = canvasRef.current.getContext('2d');
-        if (ctx) {
-          // Explicitly clear canvas to prevent ghosting
-          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-          ctx.drawImage(result, 0, 0);
-        }
+        drawToDisplayCanvas(canvasRef.current, result);
       }
 
       if (result) {
@@ -2525,16 +2566,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       // Draw directly to display canvas (skip setCanvas during playback to avoid re-renders)
       if (canvasRef.current) {
-        // Set dimensions first to ensure proper canvas state
-        canvasRef.current.width = cachedFrame.width;
-        canvasRef.current.height = cachedFrame.height;
-        // Get context AFTER setting dimensions to avoid stale context issues
-        const ctx = canvasRef.current.getContext('2d');
-        if (ctx) {
-          // Explicitly clear canvas to prevent ghosting from previous frames
-          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-          ctx.drawImage(cachedFrame, 0, 0);
-        }
+        drawToDisplayCanvas(canvasRef.current, cachedFrame);
       }
     }
   }, [currentFrame, isAnimationCacheReady, animationFrameCount, isRendering]);
@@ -3670,13 +3702,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             // Stream latest rendered frame while cache builds to avoid frozen-feel on long runs.
             setCanvas(previewFrame);
             if (canvasRef.current) {
-              canvasRef.current.width = previewFrame.width;
-              canvasRef.current.height = previewFrame.height;
-              const previewCtx = canvasRef.current.getContext('2d');
-              if (previewCtx) {
-                previewCtx.clearRect(0, 0, previewFrame.width, previewFrame.height);
-                previewCtx.drawImage(previewFrame, 0, 0);
-              }
+              drawToDisplayCanvas(canvasRef.current, previewFrame);
             }
           }
         } catch (err) {
@@ -3727,16 +3753,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       if (frames.length > 0) {
         setCanvas(frames[0]);
         if (canvasRef.current) {
-          // Set dimensions first to ensure proper canvas state
-          canvasRef.current.width = frames[0].width;
-          canvasRef.current.height = frames[0].height;
-          // Get context AFTER setting dimensions to avoid stale context issues
-          const finalCtx = canvasRef.current.getContext('2d');
-          if (finalCtx) {
-            // Explicitly clear canvas to prevent ghosting
-            finalCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-            finalCtx.drawImage(frames[0], 0, 0);
-          }
+          drawToDisplayCanvas(canvasRef.current, frames[0]);
         }
       }
     };
