@@ -46,3 +46,6 @@
 - Implemented item 20 direction (`[HUGE][CPU]` device-class render-scale caps):
   - Added hardware-based scale cap detection (`navigator.hardwareConcurrency` / `deviceMemory`) in `pixel-matrix-utils`.
   - Applies unified (cross-platform) max render-scale caps by device class, with additional cap during `fastPreview`.
+- Implemented item 15 direction (`[HUGE][CPU]` reduce redundant image reads in animation):
+  - Added frame-scoped `ImageData` cache in `useQRGenerator` artwork animation path.
+  - Reuses the same `ImageData` for repeated worker attempts (initial + rescue) within a frame, avoiding duplicate `getImageData` reads on identical frame input.

@@ -3116,6 +3116,32 @@ function useQRGenerator(): UseQRGeneratorResult {
       // Artwork mode: lock mask pattern and version after first frame for visual consistency
       const isArtworkMode = overlay.enabled && overlay.mode === 'artwork';
       const qartModule = isArtworkMode ? await loadQArtModule() : null;
+      const artworkFrameImageDataCache = new WeakMap<
+        HTMLCanvasElement | OffscreenCanvas,
+        { frameIdx: number; width: number; height: number; imageData: ImageData }
+      >();
+      const getArtworkFrameTargetImage = (
+        sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
+        frameIdx: number
+      ): ImageData => {
+        const cached = artworkFrameImageDataCache.get(sourceCanvas);
+        if (
+          cached &&
+          cached.frameIdx === frameIdx &&
+          cached.width === sourceCanvas.width &&
+          cached.height === sourceCanvas.height
+        ) {
+          return cached.imageData;
+        }
+        const imageData = readCanvasImageData(sourceCanvas);
+        artworkFrameImageDataCache.set(sourceCanvas, {
+          frameIdx,
+          width: sourceCanvas.width,
+          height: sourceCanvas.height,
+          imageData,
+        });
+        return imageData;
+      };
       let artworkLockedMask = -1;
       let artworkLockedVersion = debouncedConfig.typeNumber || 0;
       let lastSuccessfulArtworkFrame: HTMLCanvasElement | null = null;
@@ -3184,7 +3210,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
           let workerResult: QArtWorkerResult;
           try {
-            const targetImage = readCanvasImageData(frameOverlayCanvas);
+            const targetImage = getArtworkFrameTargetImage(frameOverlayCanvas, frameIdx);
             workerResult = await qartModule.generateQArtInWorker(
               {
                 data: qartConfig.data,
@@ -3271,7 +3297,7 @@ function useQRGenerator(): UseQRGeneratorResult {
                 const rescueResult = await qartModule.generateQArtInWorker(
                   {
                     data: qartConfig.data,
-                    targetImage: readCanvasImageData(frameOverlayCanvas),
+                    targetImage: getArtworkFrameTargetImage(frameOverlayCanvas, frameIdx),
                     version: qartConfig.version,
                     ecc: qartConfig.ecc,
                     strictSuffix: qartConfig.strictSuffix,
