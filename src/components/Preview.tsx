@@ -29,6 +29,8 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     canvas,
     isPreparingAnimation,
     isFastPreview,
+    busyStage,
+    busyProgress,
   } = useQRGeneratorContext();
 
   // Show busy overlay while loading OR while preparing multi-frame animation OR during active rendering
@@ -44,6 +46,23 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     : isRendering || isLoading || isPreparingAnimation
       ? 'rendering'
       : 'idle';
+  const busyStageLabel = busyStage
+    ? busyStage
+    : isPending
+      ? t('preview.waitingForInput', 'Waiting for input to settle...')
+      : isPreparingAnimation
+        ? t('preview.preparingAnimation', 'Preparing animation preview...')
+        : t('preview.generatingPreview', 'Generating preview...');
+  const busyPercent =
+    typeof busyProgress === 'number'
+      ? busyProgress
+      : isPending
+        ? 12
+        : isPreparingAnimation
+          ? 24
+          : isRendering || isLoading
+            ? 48
+            : null;
 
   // Track previous rendering state to dispatch lifecycle events
   const prevRenderingStateRef = useRef<RenderState | null>(null);
@@ -289,7 +308,14 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
           <div className="qr-preview-container transition-all duration-300 w-full max-w-[280px] sm:max-w-md md:max-w-xl lg:max-w-2xl mx-auto">
             {/* QR Code Canvas */}
             <div className="bg-white rounded-lg shadow-xl flex items-center justify-center p-4 relative">
-              {showBusy && <BusyOverlay visible={true} />}
+              {showBusy && (
+                <BusyOverlay
+                  visible={true}
+                  fullScreen={true}
+                  stage={busyStageLabel}
+                  progress={busyPercent}
+                />
+              )}
               {error && (
                 <div className="absolute inset-0 bg-red-50 flex items-center justify-center rounded-lg z-10 p-4">
                   <p className="text-red-600 text-sm text-center">{error}</p>

@@ -123,6 +123,11 @@ type QArtPerfSnapshot = {
   maskPattern: number;
 };
 
+type GenerationProgressState = {
+  stage: string;
+  percent: number;
+};
+
 function readCanvasImageData(canvas: HTMLCanvasElement | OffscreenCanvas): ImageData {
   const ctx = canvas.getContext('2d');
   if (!ctx) {
@@ -243,6 +248,9 @@ interface UseQRGeneratorResult {
   // Validation
   validation: ValidationResult | null;
   isValidating: boolean;
+  // Busy overlay feedback
+  busyStage: string | null;
+  busyProgress: number | null;
   // True when fast-preview mode is active (Android: during live interaction)
   isFastPreview: boolean;
   // Animation frames for GIF export
@@ -366,6 +374,9 @@ function useQRGenerator(): UseQRGeneratorResult {
   // Validation state
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgressState | null>(
+    null
+  );
   const [qartPerfSnapshot, setQArtPerfSnapshot] = useState<QArtPerfSnapshot | null>(null);
 
   // QR matrix for vector SVG export
@@ -388,6 +399,20 @@ function useQRGenerator(): UseQRGeneratorResult {
     animationFramesRef.current = [];
     setAnimationFrameCount(0);
     setAnimationFramesRevision((rev) => rev + 1);
+  }, []);
+
+  const updateGenerationProgress = useCallback((stage: string, percent: number) => {
+    const normalizedPercent = Math.max(0, Math.min(100, Math.round(percent)));
+    setGenerationProgress((prev) => {
+      if (prev && prev.stage === stage && prev.percent === normalizedPercent) {
+        return prev;
+      }
+      return { stage, percent: normalizedPercent };
+    });
+  }, []);
+
+  const clearGenerationProgress = useCallback(() => {
+    setGenerationProgress(null);
   }, []);
 
   useEffect(() => {
@@ -1322,6 +1347,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     // Now check if we're still blocked (same content that previously failed)
     if (isOverflowBlockedRef.current) {
       log.debug('generate BLOCKED by overflow ref');
+      clearGenerationProgress();
       return;
     }
 
@@ -1338,6 +1364,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       setError(null); // No error message - just blank
       setIsLoading(false);
       setIsRendering(false);
+      clearGenerationProgress();
       // Clear the display canvas if it exists
       if (canvasRef.current) {
         const ctx = canvasRef.current.getContext('2d');
@@ -1350,6 +1377,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     setIsLoading(true);
     setError(null);
+    updateGenerationProgress('Preparing preview', 6);
 
     // CRITICAL: Yield to browser to allow React to render the loading state
     // before starting expensive QR generation. Without this, the busy overlay
@@ -1363,6 +1391,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     if (isStaleRequest()) return;
     setIsRendering(true);
+    updateGenerationProgress('Generating QR modules', 14);
     const yieldForResponsiveness = async (): Promise<boolean> => {
       await yieldToMainThread(16);
       return isStaleRequest();
@@ -1412,6 +1441,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       // QR-Art: if artwork mode is selected, try full RS basis manipulation first, then fall back to fragment search
       if (overlay.enabled && overlay.mode === 'artwork' && overlayCanvas) {
+        updateGenerationProgress('Preparing QR-Art computation', 18);
         log.info('Starting QR-Art generation', {
           content: debouncedConfig.content?.substring(0, 50),
           version: debouncedConfig.typeNumber,
@@ -1441,6 +1471,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             targetControlPercent: 100,
             lockVersionToMinimum: debouncedConfig.typeNumber === 0,
             onProgress: (stage: string, percent: number) => {
+              updateGenerationProgress(`QR-Art: ${stage}`, 18 + percent * 0.64);
               log.debug('QR-Art progress', { stage, percent: `${percent}%` });
             },
           };
@@ -1557,6 +1588,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             };
 
             try {
+              updateGenerationProgress('Rendering QR-Art preview', 86);
               fullQArtCanvas = (await qrGenerator.renderFromMatrix(
                 fullQArtResult.matrix,
                 qrArtConfig
@@ -1603,6 +1635,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
           if (isStaleRequest()) return;
           setCanvas(resultCanvas);
+          updateGenerationProgress('Finalizing preview', 96);
           if (canvasRef.current) {
             // Set dimensions first to ensure proper canvas state
             canvasRef.current.width = resultCanvas.width;
@@ -1647,6 +1680,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           runValidationIfNeeded(resultCanvas, effectiveConfig.content);
           setIsRendering(false);
           setIsLoading(false);
+          clearGenerationProgress();
           return;
         }
 
@@ -1666,6 +1700,7 @@ function useQRGenerator(): UseQRGeneratorResult {
           typeNumber: effectiveConfig.typeNumber,
           errorCorrection: effectiveConfig.errorCorrection,
         });
+        updateGenerationProgress('Rendering QR preview', 58);
         if (await yieldForResponsiveness()) return;
         result = await qrGenerator.generate(
           effectiveConfig,
@@ -1754,6 +1789,7 @@ function useQRGenerator(): UseQRGeneratorResult {
             );
             setIsRendering(false);
             setIsLoading(false);
+            clearGenerationProgress();
             return;
           }
         } else {
@@ -1790,6 +1826,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       if (isStaleRequest()) return;
       setCanvas(result);
+      updateGenerationProgress('Finalizing preview', 92);
 
       // Capture the QR matrix for vector SVG export
       const matrixData = qrGenerator.getLastMatrix();
@@ -1812,6 +1849,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       }
 
       if (result) {
+        updateGenerationProgress('Validating scan', 98);
         runValidationIfNeeded(result, effectiveConfig.content);
       }
     } catch (err) {
@@ -1830,6 +1868,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       }
 
       setError(errorMessage);
+      clearGenerationProgress();
       // Don't clear the canvas - keep showing the last valid QR code
       // Dispatch render-complete event with error
       document.dispatchEvent(
@@ -1841,6 +1880,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       if (!isStaleRequest()) {
         setIsRendering(false);
         setIsLoading(false);
+        clearGenerationProgress();
         // Dispatch render-complete event on success (no error was thrown)
         if (!error) {
           document.dispatchEvent(
@@ -1867,6 +1907,8 @@ function useQRGenerator(): UseQRGeneratorResult {
     animationFrameCount,
     error,
     hasOverflowError,
+    clearGenerationProgress,
+    updateGenerationProgress,
   ]);
 
   // Regenerate when config changes
@@ -2690,6 +2732,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     // Mark cache as not ready while generating
     setIsAnimationCacheReady(false);
     setIsLoading(true);
+    updateGenerationProgress('Preparing animation frames', 8);
 
     // Generate QR for each frame (batch generation)
     const generateAllFrames = async () => {
@@ -2922,6 +2965,10 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       for (let frameIdx = 0; frameIdx < framesToProcess.length; frameIdx++) {
         const frame = framesToProcess[frameIdx];
+        updateGenerationProgress(
+          'Rendering animation frames',
+          10 + ((frameIdx + 1) / Math.max(1, framesToProcess.length)) * 78
+        );
         // Check if cancelled before each expensive operation
         if (isCancelled) return;
 
@@ -3067,6 +3114,7 @@ function useQRGenerator(): UseQRGeneratorResult {
               finalResult = applyColorCycle(finalResult, frameIdx, framesToProcess.length);
             }
 
+            let previewFrame: HTMLCanvasElement | OffscreenCanvas = finalResult;
             // Apply watermark if enabled
             if (watermark.enabled) {
               const watermarked = await applyWatermark(finalResult as HTMLCanvasElement, {
@@ -3077,9 +3125,22 @@ function useQRGenerator(): UseQRGeneratorResult {
                 opacity: watermark.opacity,
                 blend: watermark.blend,
               });
-              persistFrameCanvas(watermarked.canvas);
-            } else {
-              persistFrameCanvas(finalResult);
+              previewFrame = watermarked.canvas;
+            }
+
+            persistFrameCanvas(previewFrame);
+            if (isCancelled) return;
+
+            // Stream latest rendered frame while cache builds to avoid frozen-feel on long runs.
+            setCanvas(previewFrame);
+            if (canvasRef.current) {
+              canvasRef.current.width = previewFrame.width;
+              canvasRef.current.height = previewFrame.height;
+              const previewCtx = canvasRef.current.getContext('2d');
+              if (previewCtx) {
+                previewCtx.clearRect(0, 0, previewFrame.width, previewFrame.height);
+                previewCtx.drawImage(previewFrame, 0, 0);
+              }
             }
           }
         } catch (err) {
@@ -3090,6 +3151,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       // Apply interpolation - ONLY if actually enabled
       // Note: interpolateFrames works on pairs of frames, so we interpolate between consecutive frames
       if (hasInterpolation && frames.length > 1) {
+        updateGenerationProgress('Interpolating animation frames', 92);
         const interpolatedFrames: (HTMLCanvasElement | OffscreenCanvas)[] = [];
         const interpolationSteps = 2; // Number of intermediate frames to generate
         for (let i = 0; i < frames.length - 1; i++) {
@@ -3123,6 +3185,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       setIsAnimationCacheReady(true);
       setIsLoading(false);
       setIsLoadingOverlay(false); // Clear overlay loading state when animation cache is ready
+      clearGenerationProgress();
 
       // Set the first frame as current canvas
       if (frames.length > 0) {
@@ -3150,6 +3213,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       isCancelled = true;
       setIsLoading(false);
       setIsLoadingOverlay(false);
+      clearGenerationProgress();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -3175,6 +3239,8 @@ function useQRGenerator(): UseQRGeneratorResult {
     clearAnimationFrames,
     overlay.mode,
     replaceAnimationFrames,
+    clearGenerationProgress,
+    updateGenerationProgress,
   ]);
 
   // Fast-preview is active when the short debounce has fired but the settled
@@ -3224,6 +3290,9 @@ function useQRGenerator(): UseQRGeneratorResult {
     // Validation
     validation,
     isValidating,
+    // Busy feedback
+    busyStage: generationProgress?.stage ?? null,
+    busyProgress: generationProgress?.percent ?? null,
     // Fast preview
     isFastPreview,
     // Animation frames for GIF export
