@@ -54,3 +54,7 @@
   - Replaced per-block `Set` filtering of available pixel order with a reusable typed mask buffer to reduce allocation churn across RS blocks.
   - `attachNonZeroBytes` now uses a 2-pass typed allocation (count then fill) instead of JS `number[]` staging arrays.
   - `countMatchingPixels` now builds per-block typed lookup tables (`Int32Array`) for bit→pixel mapping and iterates only set bits per byte, avoiding nested `Map` lookups in the inner loop.
+- Implemented item 14 direction (`[HUGE][STARTUP]` section-level lazy loading in editor sidebar):
+  - `src/components/Sidebar.tsx` no longer statically imports all section components at startup.
+  - Converted Payload/Overlay/QR/Render/Animation/Output/Watermark/Metadata/Share/Safety sections to `React.lazy(...)` imports so section bundles load on demand.
+  - Wrapped section rendering in `Suspense` with a lightweight inline fallback to keep UX stable while individual section chunks load.

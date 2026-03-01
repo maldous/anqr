@@ -13,19 +13,9 @@ import {
   Type,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdUnit } from '@/components/AdUnit';
-import { AnimationSection } from '@/components/sections/AnimationSection';
-import { MetadataSection } from '@/components/sections/MetadataSection';
-import { OutputSection } from '@/components/sections/OutputSection';
-import { OverlaySection } from '@/components/sections/OverlaySection';
-import { PayloadSection } from '@/components/sections/PayloadSection';
-import { QREncodingSection } from '@/components/sections/qr-encoding-section';
-import { RenderSection } from '@/components/sections/RenderSection';
-import { SafetySection } from '@/components/sections/SafetySection';
-import { ShareSection } from '@/components/sections/ShareSection';
-import { WatermarkSection } from '@/components/sections/WatermarkSection';
 import {
   Accordion,
   AccordionContent,
@@ -35,6 +25,39 @@ import {
 import { DynamicTestId } from '@/components/ui/dynamic-testid';
 import { HighlightedLabel, SearchProvider } from '@/lib/search-context';
 import { useQRStore } from '@/store/qr-store';
+
+const PayloadSection = lazy(() =>
+  import('@/components/sections/PayloadSection').then((m) => ({ default: m.PayloadSection }))
+);
+const OverlaySection = lazy(() =>
+  import('@/components/sections/OverlaySection').then((m) => ({ default: m.OverlaySection }))
+);
+const QREncodingSection = lazy(() =>
+  import('@/components/sections/qr-encoding-section').then((m) => ({
+    default: m.QREncodingSection,
+  }))
+);
+const RenderSection = lazy(() =>
+  import('@/components/sections/RenderSection').then((m) => ({ default: m.RenderSection }))
+);
+const AnimationSection = lazy(() =>
+  import('@/components/sections/AnimationSection').then((m) => ({ default: m.AnimationSection }))
+);
+const OutputSection = lazy(() =>
+  import('@/components/sections/OutputSection').then((m) => ({ default: m.OutputSection }))
+);
+const WatermarkSection = lazy(() =>
+  import('@/components/sections/WatermarkSection').then((m) => ({ default: m.WatermarkSection }))
+);
+const MetadataSection = lazy(() =>
+  import('@/components/sections/MetadataSection').then((m) => ({ default: m.MetadataSection }))
+);
+const ShareSection = lazy(() =>
+  import('@/components/sections/ShareSection').then((m) => ({ default: m.ShareSection }))
+);
+const SafetySection = lazy(() =>
+  import('@/components/sections/SafetySection').then((m) => ({ default: m.SafetySection }))
+);
 
 const SECTIONS = [
   { id: 'payload', labelKey: 'sections.payload', icon: Type, tier: 'basic' as const },
@@ -57,6 +80,14 @@ const SECTIONS = [
 const OPEN_SECTIONS_STORAGE_KEY = 'anqr:ui:open-sections';
 const DEFAULT_OPEN_SECTIONS = ['payload', 'render'];
 const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
+
+function SectionLoadFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[120px] text-sm text-muted-foreground">
+      Loading settings...
+    </div>
+  );
+}
 
 function loadStoredOpenSections(): string[] {
   if (!('sessionStorage' in globalThis)) {
@@ -1290,7 +1321,9 @@ export function Sidebar({ isOpen, onClose, mobileHeightPercent = 45 }: SidebarPr
                   </AccordionTrigger>
                   <AccordionContent className="pb-4 pt-3 px-4 mt-1 bg-card rounded-md shadow-sm border">
                     <SearchProvider searchQuery={searchQuery}>
-                      {renderSection(section.id)}
+                      <Suspense fallback={<SectionLoadFallback />}>
+                        {renderSection(section.id)}
+                      </Suspense>
                     </SearchProvider>
                   </AccordionContent>
                 </AccordionItem>
