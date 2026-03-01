@@ -43,3 +43,6 @@
 - Implemented item 7 direction (`[HUGE][CPU]` adaptive preview quality):
   - Updated `getScaleFactor` in `src/modules/qr-generator/pixel-matrix-utils.ts` to aggressively reduce scaled render density when `fastPreview` is active.
   - Keeps full-quality scale range for settled renders, so interaction path is cheaper while final preview remains high quality.
+- Implemented item 20 direction (`[HUGE][CPU]` device-class render-scale caps):
+  - Added hardware-based scale cap detection (`navigator.hardwareConcurrency` / `deviceMemory`) in `pixel-matrix-utils`.
+  - Applies unified (cross-platform) max render-scale caps by device class, with additional cap during `fastPreview`.
