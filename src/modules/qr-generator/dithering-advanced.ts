@@ -7,6 +7,7 @@ import { createLogger } from '../../lib/logger';
 import { generateBlueNoiseTile, sampleBlueNoise } from '../dither-algorithms';
 import type { QRCodeObject } from './cache';
 import { getOverlayBrightness } from './overlay-data-packed';
+import { curveIntensity } from './pixel-matrix-utils';
 import type { CreateCanvasFn, OverlayData, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');
@@ -24,7 +25,7 @@ export async function applyAdvancedDither(
   const seed = config.blueNoiseSeed ?? 42;
   const tileSize = config.blueNoiseTileSize ?? 64;
   const strength = (config.ditherStrength ?? 50) / 100;
-  const intensity = (config.overlayIntensity ?? 100) / 100;
+  const intensity = curveIntensity(config.overlayIntensity ?? 100);
 
   // Generate blue noise tile using canonical source from dither-algorithms
   const blueNoiseTile = generateBlueNoiseTile(tileSize, seed);

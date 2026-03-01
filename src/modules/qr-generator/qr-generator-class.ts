@@ -31,7 +31,7 @@ import {
   preprocessOverlay,
 } from './overlay';
 import { getAlignmentPositionsCached } from './pattern-helpers';
-import { getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
+import { curveIntensity, getScaleFactor, prepareUnifiedOverlayData } from './pixel-matrix';
 import { renderModules } from './render-loop';
 import { generateScaledQR } from './scaled-render';
 import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } from './types';
@@ -702,7 +702,7 @@ export class QRGenerator {
         const adaptiveEdgeImprintThreshold = clamp(
           edgeImprintThreshold +
             overlayComplexity * 0.08 +
-            (requestedOverlayIntensity / 100) * 0.03,
+            curveIntensity(requestedOverlayIntensity) * 0.03,
           0.05,
           0.6
         );

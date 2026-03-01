@@ -24,6 +24,7 @@ import {
 } from './drawing';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { generatePixelDecisionMatrix } from './pixel-matrix';
+import { curveIntensity } from './pixel-matrix-utils';
 import type { QRCodeInstance, QRGeneratorConfig, RGB } from './types';
 import { validateColor } from './utils';
 
@@ -187,7 +188,7 @@ export async function generateScaledQR(
   const isSubpixelMode =
     config.overlayMode === 'subpixel' || config.overlayMode === 'subpixel-size';
   const needsBothDarkAndLightColors = isSubpixelMode;
-  const subpixelToneStrength = Math.max(0, Math.min(1, (config.overlayIntensity ?? 100) / 100));
+  const subpixelToneStrength = curveIntensity(config.overlayIntensity ?? 100);
   // Subpixel needs explicit dark/light tonal rails; otherwise both rails collapse to
   // near-identical image color and QR structure disappears.
   const subpixelDarkTargetLuma = 0.2 - subpixelToneStrength * 0.1;
