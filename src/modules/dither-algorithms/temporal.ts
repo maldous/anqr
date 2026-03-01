@@ -87,19 +87,38 @@ export function calculateTemporalOffset(
 export function applyTemporalNoiseToCanvas(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   offset: number,
-  strength: number = 0.02
+  strength: number = 0.02,
+  targetCanvas?: HTMLCanvasElement | OffscreenCanvas
 ): HTMLCanvasElement | OffscreenCanvas {
   if (offset === 0 || strength === 0) {
     return canvas;
   }
 
-  const result = document.createElement('canvas');
-  result.width = canvas.width;
-  result.height = canvas.height;
+  let result: HTMLCanvasElement | OffscreenCanvas;
+  if (targetCanvas) {
+    result = targetCanvas;
+    if (result.width !== canvas.width) result.width = canvas.width;
+    if (result.height !== canvas.height) result.height = canvas.height;
+  } else {
+    result = document.createElement('canvas');
+    result.width = canvas.width;
+    result.height = canvas.height;
+  }
+
   const ctx = result.getContext('2d');
   if (!ctx) {
     return canvas as HTMLCanvasElement;
   }
+
+  if ('setTransform' in ctx && typeof ctx.setTransform === 'function') {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  if ('filter' in ctx) {
+    (ctx as CanvasRenderingContext2D).filter = 'none';
+  }
+  ctx.clearRect(0, 0, result.width, result.height);
 
   // Draw original
   ctx.drawImage(canvas, 0, 0);
