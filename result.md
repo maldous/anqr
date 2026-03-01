@@ -34,3 +34,6 @@
   - Split analyzer/decoder tooling into `app-qr-analyzer`.
   - Split generated gallery payload into `app-gallery-generated`.
   - Kept generation core in `app-qr-core` without folding in rare-path chunks.
+- Implemented item 51 direction (`[MED][CPU]` QR math fast path):
+  - Switched `EXP_TABLE` / `LOG_TABLE` in `src/modules/qr-encoder/math.ts` to typed arrays.
+  - Replaced loop-based exponent normalization in `gexp` with modulus-based normalization while preserving existing index semantics for positive multiples.
