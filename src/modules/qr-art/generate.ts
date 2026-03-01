@@ -838,6 +838,12 @@ export interface FullQArtConfig {
    * - Risk of binary garbage in the decoded URL suffix
    */
   strictSuffix?: boolean;
+  /**
+   * Performance profile for QR-Art compute.
+   * - "desktop": quality-first defaults
+   * - "android": lower-cost defaults for mobile responsiveness
+   */
+  performanceProfile?: 'desktop' | 'android';
 }
 
 /**
@@ -2119,6 +2125,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     targetControlPercent = 100,
     strictSuffix = true, // Default to true for real-world scannability
     lockVersionToMinimum = false,
+    performanceProfile = 'desktop',
   } = config;
 
   // Resolve suffix mode (prefer numeric for URLs when auto)
@@ -2961,7 +2968,10 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     onProgress?.('Processing target image', 30);
 
     // Step 4: Map target image to module targets
-    const { targets, importance } = mapImageToTargetsSupersampled(targetImage, moduleCount);
+    const imageSupersampleLevel = performanceProfile === 'android' ? 1 : 2;
+    const { targets, importance } = mapImageToTargetsSupersampled(targetImage, moduleCount, 128, {
+      supersampleLevel: imageSupersampleLevel,
+    });
 
     // Get set of data pixels
     const dataPixelIndices = getDataPixelIndices(actualVersion);
