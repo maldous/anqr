@@ -68,3 +68,6 @@
   - Removed static `qr-decoder` import from `src/modules/qr-generator/qr-generator-class.ts`.
   - Added cached dynamic loader (`loadQRDecoderModule`) and deferred decoder resolution until scan-gate decode is actually needed.
   - Updated scan-gate decode path to use async decode calls without changing decode decision logic.
+- Implemented item 24/16 direction (`[BIG/HUGE][CPU+MEM]` color-cycle in-place processing):
+  - `src/modules/animation/color-cycle.ts` now accepts an optional target canvas and can process directly in-place.
+  - `useQRGenerator` now applies color-cycle onto the already-rendered frame canvas (`targetCanvas = sourceCanvas`) to avoid allocating an extra canvas per animation frame in the preview generation loop.

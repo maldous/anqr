@@ -15,16 +15,27 @@ import { hslToRgb } from '../core';
 export function applyColorCycle(
   canvas: HTMLCanvasElement | OffscreenCanvas,
   frameIndex: number,
-  totalFrames: number
-): HTMLCanvasElement {
-  const result = document.createElement('canvas');
-  result.width = canvas.width;
-  result.height = canvas.height;
-  const ctx = result.getContext('2d');
-  if (!ctx) return canvas as HTMLCanvasElement;
+  totalFrames: number,
+  targetCanvas?: HTMLCanvasElement | OffscreenCanvas
+): HTMLCanvasElement | OffscreenCanvas {
+  let result: HTMLCanvasElement | OffscreenCanvas;
+  if (targetCanvas) {
+    result = targetCanvas;
+    if (result.width !== canvas.width) result.width = canvas.width;
+    if (result.height !== canvas.height) result.height = canvas.height;
+  } else {
+    result = document.createElement('canvas');
+    result.width = canvas.width;
+    result.height = canvas.height;
+  }
 
-  ctx.drawImage(canvas as CanvasImageSource, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const ctx = result.getContext('2d');
+  if (!ctx) return canvas;
+
+  if (result !== canvas) {
+    ctx.drawImage(canvas as CanvasImageSource, 0, 0);
+  }
+  const imageData = ctx.getImageData(0, 0, result.width, result.height);
   const data = imageData.data;
 
   const progress = frameIndex / Math.max(1, totalFrames);

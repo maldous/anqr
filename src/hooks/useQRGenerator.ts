@@ -3567,7 +3567,12 @@ function useQRGenerator(): UseQRGeneratorResult {
 
             // Apply color cycle as post-processing - ONLY if actually enabled
             if (hasColorCycle) {
-              finalResult = applyColorCycle(finalResult, frameIdx, framesToProcess.length);
+              finalResult = applyColorCycle(
+                finalResult,
+                frameIdx,
+                framesToProcess.length,
+                finalResult
+              );
             }
 
             let previewFrame: HTMLCanvasElement | OffscreenCanvas = finalResult;
