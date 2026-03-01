@@ -32,11 +32,18 @@ registerCacheCleanup(clearBaseMatrixCache);
  * Get scale factor based on overlay mode
  */
 export function getScaleFactor(overlayMode: string | undefined, config: QRGeneratorConfig): number {
-  const minScale = config.renderScaleMinimum ?? 12;
-  const renderScale = Math.max(
-    minScale,
-    Math.min(24, Math.round(config.renderScalePerModule ?? 18))
-  );
+  const isFastPreview = config.fastPreview === true;
+  const configuredMinScale = config.renderScaleMinimum ?? 12;
+  const configuredRenderScale = Math.round(config.renderScalePerModule ?? 18);
+
+  // Adaptive preview quality: during interactive fast-preview, reduce scaled render density
+  // significantly, then allow full-quality density once config settles.
+  const minScale = isFastPreview ? Math.min(configuredMinScale, 8) : configuredMinScale;
+  const maxScale = isFastPreview ? 12 : 24;
+  const targetScale = isFastPreview
+    ? Math.round((configuredRenderScale + minScale) * 0.58)
+    : configuredRenderScale;
+  const renderScale = Math.max(minScale, Math.min(maxScale, targetScale));
   switch (overlayMode) {
     case 'dithered':
       return renderScale;

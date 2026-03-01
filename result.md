@@ -40,3 +40,6 @@
 - Implemented item 30 direction (`[BIG][CPU]` dither kernel flattening):
   - Precomputed flat typed-array kernel offsets/weights in `src/modules/dither-algorithms/kernels.ts` (`xOffsetsLtr/xOffsetsRtl/yOffsets/normalizedWeights`).
   - Updated `distributeError` in `src/modules/qr-generator/pixel-matrix-dithered.ts` to use prepared arrays instead of nested matrix/offset loops and per-cell divisor math.
+- Implemented item 7 direction (`[HUGE][CPU]` adaptive preview quality):
+  - Updated `getScaleFactor` in `src/modules/qr-generator/pixel-matrix-utils.ts` to aggressively reduce scaled render density when `fastPreview` is active.
+  - Keeps full-quality scale range for settled renders, so interaction path is cheaper while final preview remains high quality.
