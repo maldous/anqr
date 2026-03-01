@@ -339,6 +339,12 @@ export function renderModules(
 
   // Tracked canvas state (replaces per-module ctx.save/restore)
   let currentAlpha = ctx.globalAlpha;
+  let currentFillStyle: string | CanvasGradient | null = null;
+  const setFillStyle = (fillStyle: string | CanvasGradient): void => {
+    if (currentFillStyle === fillStyle) return;
+    ctx.fillStyle = fillStyle;
+    currentFillStyle = fillStyle;
+  };
 
   // Draw QR modules
   for (let row = 0; row < moduleCount; row++) {
@@ -454,11 +460,9 @@ export function renderModules(
         }
 
         // Use gradient for dark modules if configured (skipped in fast preview)
-        if (isDark && !isFastPreview && useGradient && gradientFill) {
-          ctx.fillStyle = gradientFill;
-        } else {
-          ctx.fillStyle = finalModuleColor;
-        }
+        const moduleFillStyle: string | CanvasGradient =
+          isDark && !isFastPreview && useGradient && gradientFill ? gradientFill : finalModuleColor;
+        setFillStyle(moduleFillStyle);
 
         const adjustedSize = (moduleSize - gap) * moduleSizeModifier;
         const offset = (moduleSize - adjustedSize) / 2;
@@ -509,18 +513,18 @@ export function renderModules(
                 const backR = Math.round(cellColor.r * darkBackdrop);
                 const backG = Math.round(cellColor.g * darkBackdrop);
                 const backB = Math.round(cellColor.b * darkBackdrop);
-                ctx.fillStyle = `rgb(${backR},${backG},${backB})`;
+                setFillStyle(`rgb(${backR},${backG},${backB})`);
               } else {
                 // Light QR modules: brighten backdrop to preserve scan-safe separation.
                 const lightBlend = 0.46;
                 const backR = Math.round(cellColor.r + (255 - cellColor.r) * lightBlend);
                 const backG = Math.round(cellColor.g + (255 - cellColor.g) * lightBlend);
                 const backB = Math.round(cellColor.b + (255 - cellColor.b) * lightBlend);
-                ctx.fillStyle = `rgb(${backR},${backG},${backB})`;
+                setFillStyle(`rgb(${backR},${backG},${backB})`);
               }
               ctx.fillRect(drawX, drawY, adjustedSize, adjustedSize);
               // Restore dot fill after backdrop pass.
-              ctx.fillStyle = finalModuleColor;
+              setFillStyle(moduleFillStyle);
             }
           }
 
