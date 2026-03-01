@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Previzualizare Cod QR - Faceți clic pe Export pentru descărcare",
     "simulating": "Simulare",
-    "simulationActive": "Simulare de mediu activă - Previzualizare arată modul în care codul QR poate apărea în condiții diferite"
+    "simulationActive": "Simulare de mediu activă - Previzualizare arată modul în care codul QR poate apărea în condiții diferite",
+    "busy": {
+      "workingOnIt": "Lucrând la el...",
+      "waitingForThingsToSettle": "Așteptând ca lucrurile să se rezolve...",
+      "gettingAnimationPreviewReady": "Se pregătește previzualizarea animației...",
+      "generatingPreview": "Se generează previzualizarea...",
+      "preparingPreview": "Se pregătește previzualizarea...",
+      "buildingQrStructure": "Construirea structurii QR...",
+      "preparingQrArtComputation": "Se pregătește calculul QR-Art...",
+      "stillRenderingDetailedOverlay": "Încă se redă suprapunerea detaliată...",
+      "renderingQrPreview": "Se redă previzualizarea QR...",
+      "checkingScanability": "Se verifică dacă scanează corect...",
+      "finalizingPreview": "Se finalizează previzualizarea...",
+      "preparingAnimationFrames": "Se pregătesc cadrele de animație...",
+      "renderingAnimationFrames": "Se redă cadrele de animație...",
+      "smoothingAnimationFrames": "Se netezesc cadrele de animație...",
+      "finalizingFirstAnimationFrame": "Se finalizează primul cadru de animație...",
+      "qrArt": {
+        "encodingBaseData": "Se codifică datele de bază...",
+        "analyzingLayout": "Se analizează aspectul...",
+        "buildingErrorCorrectionFoundation": "Construirea bazei de corectare a erorilor...",
+        "mappingBitsToPixels": "Maparea biților în pixeli...",
+        "processingImage": "Se prelucrează imaginea...",
+        "rankingPixelsByImportance": "Clasificarea pixelilor după importanță...",
+        "solvingMatrix": "Rezolvarea matricei...",
+        "selectingBestBasisVectors": "Selectarea celor mai buni vectori de bază...",
+        "countingPredictedMatches": "Se numără meciurile prezise...",
+        "adjustingDataBytes": "Se ajustează octeții de date...",
+        "reEncodingQrCode": "Re-codificarea codului QR...",
+        "validatingResult": "Se validează rezultatul...",
+        "complete": "Complet...",
+        "maskStage": "Mască {{mask}}: {{stage}}...",
+        "attemptStage": "Încercare {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Încercare {{current}}/{{total}}: Mască {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Previzualizare rapidă",
+    "draft": "Proiect"
   },
   "qr": {
     "additionalBorder": "Frontieră suplimentară dincolo de zona liniștită",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Imagine indisponibilă",
     "messageSent": "Mesaj trimis",
     "lastUpdated": "Ultima actualizare",
-    "scanMePlaceholder": "Scanează-mă!"
+    "scanMePlaceholder": "Scanează-mă!",
+    "skipToMainContent": "Treci la conținutul principal"
   },
   "contact": {
     "messageSentTitle": "Mesaj trimis",
@@ -2035,5 +2073,18 @@
     "itAsset": "Active IT",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Document"
+  },
+  "analyze": {
+    "confidence": "Încredere",
+    "exportJson": "Exportați JSON",
+    "formatInformation": "Format Informații",
+    "imageProperties": "Proprietăți imagine",
+    "processingTimings": "Timpurile de procesare",
+    "spatialAnalysis": "Analiza spatiala",
+    "noCodeDetectedInImage": "Nu a fost detectat niciun cod QR în imagine"
+  },
+  "errors": {
+    "failedToGenerateQr": "Nu s-a generat codul QR",
+    "contentTooLongForQr": "Conținut prea lung pentru codul QR. Vă rugăm să vă scurtați conținutul sau să utilizați un dispozitiv de scurtare a adreselor URL."
   }
 }

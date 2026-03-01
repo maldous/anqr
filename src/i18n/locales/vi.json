@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Xem thử mã QR - Nhấn vào Xuất để tải về",
     "simulating": "Sự đồng dạng",
-    "simulationActive": "Mô phỏng môi trường hoạt động - Xem thử cho thấy mã QR có thể xuất hiện như thế nào trong điều kiện khác nhau"
+    "simulationActive": "Mô phỏng môi trường hoạt động - Xem thử cho thấy mã QR có thể xuất hiện như thế nào trong điều kiện khác nhau",
+    "busy": {
+      "workingOnIt": "Đang làm việc trên nó...",
+      "waitingForThingsToSettle": "Chờ đợi mọi chuyện ổn thỏa...",
+      "gettingAnimationPreviewReady": "Đang chuẩn bị xem trước hoạt ảnh...",
+      "generatingPreview": "Đang tạo bản xem trước của bạn...",
+      "preparingPreview": "Đang chuẩn bị bản xem trước của bạn...",
+      "buildingQrStructure": "Xây dựng cấu trúc QR...",
+      "preparingQrArtComputation": "Đang chuẩn bị tính toán QR-Art...",
+      "stillRenderingDetailedOverlay": "Vẫn hiển thị lớp phủ chi tiết...",
+      "renderingQrPreview": "Đang hiển thị bản xem trước QR của bạn...",
+      "checkingScanability": "Kiểm tra xem nó có quét đúng không...",
+      "finalizingPreview": "Đang hoàn tất bản xem trước...",
+      "preparingAnimationFrames": "Đang chuẩn bị khung hình động...",
+      "renderingAnimationFrames": "Hiển thị các khung hình động...",
+      "smoothingAnimationFrames": "Làm mịn các khung hình hoạt hình...",
+      "finalizingFirstAnimationFrame": "Đang hoàn thiện khung hình động đầu tiên...",
+      "qrArt": {
+        "encodingBaseData": "Mã hóa dữ liệu cơ sở...",
+        "analyzingLayout": "Phân tích bố cục...",
+        "buildingErrorCorrectionFoundation": "Xây dựng nền tảng sửa lỗi...",
+        "mappingBitsToPixels": "Ánh xạ bit thành pixel...",
+        "processingImage": "Đang xử lý hình ảnh của bạn...",
+        "rankingPixelsByImportance": "Xếp hạng pixel theo tầm quan trọng...",
+        "solvingMatrix": "Giải ma trận...",
+        "selectingBestBasisVectors": "Lựa chọn các vectơ cơ sở tốt nhất...",
+        "countingPredictedMatches": "Đếm các trận đấu được dự đoán...",
+        "adjustingDataBytes": "Điều chỉnh byte dữ liệu...",
+        "reEncodingQrCode": "Mã hóa lại mã QR...",
+        "validatingResult": "Đang xác thực kết quả...",
+        "complete": "Hoàn thành...",
+        "maskStage": "Mặt nạ {{mask}}: {{stage}}...",
+        "attemptStage": "Hãy thử {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Cố gắng {{current}}/{{total}}: Mặt nạ {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Xem trước nhanh",
+    "draft": "bản nháp"
   },
   "qr": {
     "additionalBorder": "Biên ngoài vùng yên tĩnh",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Không có ảnh",
     "messageSent": "Comment",
     "lastUpdated": "Cập nhật cuối",
-    "scanMePlaceholder": "Quét tôi đi!"
+    "scanMePlaceholder": "Quét tôi đi!",
+    "skipToMainContent": "Chuyển đến nội dung chính"
   },
   "contact": {
     "messageSentTitle": "Comment",
@@ -2035,5 +2073,18 @@
     "itAsset": "Bộ tài trợ IT",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Tài liệu"
+  },
+  "analyze": {
+    "confidence": "sự tự tin",
+    "exportJson": "Xuất JSON",
+    "formatInformation": "Thông tin định dạng",
+    "imageProperties": "Thuộc tính hình ảnh",
+    "processingTimings": "Thời gian xử lý",
+    "spatialAnalysis": "Phân tích không gian",
+    "noCodeDetectedInImage": "Không phát hiện thấy mã QR nào trong hình ảnh"
+  },
+  "errors": {
+    "failedToGenerateQr": "Không tạo được mã QR",
+    "contentTooLongForQr": "Nội dung quá dài cho mã QR. Vui lòng rút ngắn nội dung của bạn hoặc sử dụng công cụ rút ngắn URL."
   }
 }

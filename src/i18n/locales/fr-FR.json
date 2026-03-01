@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Aperçu du code QR - Cliquez sur Exporter pour télécharger",
     "simulating": "Simulation",
-    "simulationActive": "Simulation environnementale active - Aperçu montre comment le code QR peut apparaître dans différentes conditions"
+    "simulationActive": "Simulation environnementale active - Aperçu montre comment le code QR peut apparaître dans différentes conditions",
+    "busy": {
+      "workingOnIt": "J'y travaille...",
+      "waitingForThingsToSettle": "En attendant que les choses s'arrangent...",
+      "gettingAnimationPreviewReady": "Préparation de l'aperçu de l'animation...",
+      "generatingPreview": "Génération de votre aperçu...",
+      "preparingPreview": "Préparation de votre aperçu...",
+      "buildingQrStructure": "Construire la structure QR...",
+      "preparingQrArtComputation": "Préparation du calcul QR-Art...",
+      "stillRenderingDetailedOverlay": "Toujours en train de rendre la superposition détaillée...",
+      "renderingQrPreview": "Rendu de votre aperçu QR...",
+      "checkingScanability": "Vérifier qu'il scanne correctement...",
+      "finalizingPreview": "Finalisation de l'aperçu...",
+      "preparingAnimationFrames": "Préparation des images d'animation...",
+      "renderingAnimationFrames": "Rendu des images d'animation...",
+      "smoothingAnimationFrames": "Lissage des images d'animation...",
+      "finalizingFirstAnimationFrame": "Finalisation de la première image d'animation...",
+      "qrArt": {
+        "encodingBaseData": "Encodage des données de base...",
+        "analyzingLayout": "Analyse de la mise en page...",
+        "buildingErrorCorrectionFoundation": "Construire les bases de la correction d'erreurs...",
+        "mappingBitsToPixels": "Mappage de bits en pixels...",
+        "processingImage": "Traitement de votre image...",
+        "rankingPixelsByImportance": "Classement des pixels par importance...",
+        "solvingMatrix": "Résoudre la matrice...",
+        "selectingBestBasisVectors": "Sélection des meilleurs vecteurs de base...",
+        "countingPredictedMatches": "Compter les matchs prédits...",
+        "adjustingDataBytes": "Ajustement des octets de données...",
+        "reEncodingQrCode": "Ré-encodage du QR code...",
+        "validatingResult": "Validation du résultat...",
+        "complete": "Terminé...",
+        "maskStage": "Masque {{mask}} : {{stage}}...",
+        "attemptStage": "Tentative {{current}}/{{total}} : {{stage}}...",
+        "attemptMaskStage": "Tentative {{current}}/{{total}} : Masque {{mask}} : {{stage}}..."
+      }
+    },
+    "fastPreview": "Aperçu rapide",
+    "draft": "Brouillon"
   },
   "qr": {
     "additionalBorder": "Frontière supplémentaire au-delà de la zone tranquille",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Image non disponible",
     "messageSent": "Message envoyé",
     "lastUpdated": "Dernière mise à jour",
-    "scanMePlaceholder": "Scannez-moi !"
+    "scanMePlaceholder": "Scannez-moi !",
+    "skipToMainContent": "Passer au contenu principal"
   },
   "contact": {
     "messageSentTitle": "Message envoyé",
@@ -2035,5 +2073,18 @@
     "itAsset": "Actifs informatiques",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Numéro"
+  },
+  "analyze": {
+    "confidence": "Confiance",
+    "exportJson": "Exporter JSON",
+    "formatInformation": "Informations sur le format",
+    "imageProperties": "Propriétés de l'image",
+    "processingTimings": "Délais de traitement",
+    "spatialAnalysis": "Analyse spatiale",
+    "noCodeDetectedInImage": "Aucun code QR détecté dans l'image"
+  },
+  "errors": {
+    "failedToGenerateQr": "Échec de la génération du code QR",
+    "contentTooLongForQr": "Contenu trop long pour le code QR. Veuillez raccourcir votre contenu ou utiliser un raccourcisseur d'URL."
   }
 }

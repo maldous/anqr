@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Преглед КР кода - Кликните на Извези за преузимање",
     "simulating": "Симулирање",
-    "simulationActive": "Симулација животне средине је активна – Преглед показује како се КР код може појавити под различитим условима"
+    "simulationActive": "Симулација животне средине је активна – Преглед показује како се КР код може појавити под различитим условима",
+    "busy": {
+      "workingOnIt": "Радим на томе...",
+      "waitingForThingsToSettle": "Чека се да се ствари слегну...",
+      "gettingAnimationPreviewReady": "Припрема се преглед анимације...",
+      "generatingPreview": "Генерисање прегледа...",
+      "preparingPreview": "Припрема се преглед...",
+      "buildingQrStructure": "Изградња КР структуре...",
+      "preparingQrArtComputation": "Припрема КР-Арт прорачуна...",
+      "stillRenderingDetailedOverlay": "Још увек се приказује детаљни преклапање...",
+      "renderingQrPreview": "Приказивање КР прегледа...",
+      "checkingScanability": "Проверавам да ли скенира исправно...",
+      "finalizingPreview": "Завршава се преглед...",
+      "preparingAnimationFrames": "Припрема оквира анимације...",
+      "renderingAnimationFrames": "Рендеровање оквира анимације...",
+      "smoothingAnimationFrames": "Изглађивање оквира анимације...",
+      "finalizingFirstAnimationFrame": "Завршавање првог кадра анимације...",
+      "qrArt": {
+        "encodingBaseData": "Кодирање основних података...",
+        "analyzingLayout": "Анализирајући изглед...",
+        "buildingErrorCorrectionFoundation": "Изградња темеља за исправљање грешака...",
+        "mappingBitsToPixels": "Пресликавање битова у пикселе...",
+        "processingImage": "Обрада слике...",
+        "rankingPixelsByImportance": "Рангирање пиксела по важности...",
+        "solvingMatrix": "Решавање матрице...",
+        "selectingBestBasisVectors": "Избор најбољих базних вектора...",
+        "countingPredictedMatches": "Бројање предвиђених мечева...",
+        "adjustingDataBytes": "Подешавање бајтова података...",
+        "reEncodingQrCode": "Поновно кодирање КР кода...",
+        "validatingResult": "Потврђивање резултата...",
+        "complete": "Заврши...",
+        "maskStage": "Маска __АНКР_ПХ_0__: __АНКР_ПХ_1__...",
+        "attemptStage": "Покушај __АНКР_ПХ_0__/__АНКР_ПХ_1__: __АНКР_ПХ_2__...",
+        "attemptMaskStage": "Покушај __АНКР_ПХ_0__/__АНКР_ПХ_1__: Маска __АНКР_ПХ_2__: __АНКР_ПХ_3__..."
+      }
+    },
+    "fastPreview": "Брзи преглед",
+    "draft": "Нацрт"
   },
   "qr": {
     "additionalBorder": "Додатна граница изван мирне зоне",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Слика није доступна",
     "messageSent": "Порука послата",
     "lastUpdated": "Последње ажурирано",
-    "scanMePlaceholder": "Сцан Ме!"
+    "scanMePlaceholder": "Сцан Ме!",
+    "skipToMainContent": "Пређи на главни садржај"
   },
   "contact": {
     "messageSentTitle": "Порука послата",
@@ -2035,5 +2073,18 @@
     "itAsset": "ИТ Ассет",
     "xTwitter": "Кс (Твитер)",
     "pdfDocument": "ПДФ документ"
+  },
+  "analyze": {
+    "confidence": "Самопоуздање",
+    "exportJson": "Извези ЈСОН",
+    "formatInformation": "Информације о формату",
+    "imageProperties": "Својства слике",
+    "processingTimings": "Времена обраде",
+    "spatialAnalysis": "Спатиал Аналисис",
+    "noCodeDetectedInImage": "На слици није откривен КР код"
+  },
+  "errors": {
+    "failedToGenerateQr": "Генерисање КР кода није успело",
+    "contentTooLongForQr": "Садржај је предугачак за КР код. Скратите садржај или користите скраћивач УРЛ-ова."
   }
 }

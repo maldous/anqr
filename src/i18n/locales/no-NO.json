@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Forhåndsvisning av QR-kode - Klikk på Eksporter for å laste ned",
     "simulating": "Simulatoring",
-    "simulationActive": "Miljøsimulering aktiv - Forhåndsvisning viser hvordan QR-kode kan vises under ulike forhold"
+    "simulationActive": "Miljøsimulering aktiv - Forhåndsvisning viser hvordan QR-kode kan vises under ulike forhold",
+    "busy": {
+      "workingOnIt": "Jobber med det...",
+      "waitingForThingsToSettle": "Venter på at ting skal ordne seg...",
+      "gettingAnimationPreviewReady": "Klargjør forhåndsvisningen av animasjonen ...",
+      "generatingPreview": "Genererer forhåndsvisningen din ...",
+      "preparingPreview": "Forbereder forhåndsvisningen ...",
+      "buildingQrStructure": "Bygger QR-strukturen...",
+      "preparingQrArtComputation": "Forbereder QR-Art-beregning ...",
+      "stillRenderingDetailedOverlay": "Gjengir fortsatt det detaljerte overlegget...",
+      "renderingQrPreview": "Gjengir QR-forhåndsvisningen din...",
+      "checkingScanability": "Sjekker at den skanner riktig...",
+      "finalizingPreview": "Fullfører forhåndsvisningen...",
+      "preparingAnimationFrames": "Forbereder animasjonsrammene...",
+      "renderingAnimationFrames": "Gjengir animasjonsrammene...",
+      "smoothingAnimationFrames": "Utjevner animasjonsrammene...",
+      "finalizingFirstAnimationFrame": "Fullfører den første animasjonsrammen...",
+      "qrArt": {
+        "encodingBaseData": "Koder basisdataene ...",
+        "analyzingLayout": "Analyserer oppsettet...",
+        "buildingErrorCorrectionFoundation": "Bygger grunnlaget for feilretting...",
+        "mappingBitsToPixels": "Tilordner biter til piksler...",
+        "processingImage": "Behandler bildet ditt ...",
+        "rankingPixelsByImportance": "Ranger piksler etter viktighet...",
+        "solvingMatrix": "Løser matrisen...",
+        "selectingBestBasisVectors": "Velger de beste basisvektorene...",
+        "countingPredictedMatches": "Teller spådde kamper...",
+        "adjustingDataBytes": "Justerer databyte ...",
+        "reEncodingQrCode": "Koder QR-koden på nytt...",
+        "validatingResult": "Validerer resultatet...",
+        "complete": "Fullfør...",
+        "maskStage": "Maske {{mask}}: {{stage}}...",
+        "attemptStage": "Forsøk {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Forsøk {{current}}/{{total}}: Maske {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Rask forhåndsvisning",
+    "draft": "Utkast"
   },
   "qr": {
     "additionalBorder": "Ytterligere grense utenfor stille sone",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Bildet er utilgjengelig",
     "messageSent": "Melding sendt",
     "lastUpdated": "Sist oppdatert",
-    "scanMePlaceholder": "Skann meg!"
+    "scanMePlaceholder": "Skann meg!",
+    "skipToMainContent": "Gå til hovedinnhold"
   },
   "contact": {
     "messageSentTitle": "Melding sendt",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT Asset",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Dokument"
+  },
+  "analyze": {
+    "confidence": "Selvtillit",
+    "exportJson": "Eksporter JSON",
+    "formatInformation": "Formatinformasjon",
+    "imageProperties": "Bildeegenskaper",
+    "processingTimings": "Behandlingstidspunkter",
+    "spatialAnalysis": "Romlig analyse",
+    "noCodeDetectedInImage": "Ingen QR-kode oppdaget i bildet"
+  },
+  "errors": {
+    "failedToGenerateQr": "Kunne ikke generere QR-kode",
+    "contentTooLongForQr": "Innholdet er for langt for QR-kode. Forkort innholdet ditt eller bruk en URL-forkorter."
   }
 }

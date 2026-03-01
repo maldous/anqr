@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - Սեղմեք Արտահանել՝ ներբեռնելու համար",
     "simulating": "Մոդելավորում",
-    "simulationActive": "Շրջակա միջավայրի սիմուլյացիա ակտիվ - Նախադիտումը ցույց է տալիս, թե ինչպես կարող է հայտնվել QR կոդը տարբեր պայմաններում"
+    "simulationActive": "Շրջակա միջավայրի սիմուլյացիա ակտիվ - Նախադիտումը ցույց է տալիս, թե ինչպես կարող է հայտնվել QR կոդը տարբեր պայմաններում",
+    "busy": {
+      "workingOnIt": "Աշխատելով դրա վրա...",
+      "waitingForThingsToSettle": "Սպասում ենք, որ ամեն ինչ կարգավորվի...",
+      "gettingAnimationPreviewReady": "Անիմացիայի նախադիտումը պատրաստվում է...",
+      "generatingPreview": "Ձեր նախադիտումը ստեղծվում է...",
+      "preparingPreview": "Նախադիտումը պատրաստվում է...",
+      "buildingQrStructure": "QR կառուցվածքի կառուցում...",
+      "preparingQrArtComputation": "QR-Art հաշվարկի նախապատրաստում...",
+      "stillRenderingDetailedOverlay": "Մանրամասն ծածկույթը դեռ ցուցադրվում է...",
+      "renderingQrPreview": "Ձեր QR նախադիտումը կատարվում է...",
+      "checkingScanability": "Ստուգվում է, որ այն ճիշտ է սկանավորում...",
+      "finalizingPreview": "Նախադիտումն ավարտվում է...",
+      "preparingAnimationFrames": "Անիմացիոն շրջանակների պատրաստում...",
+      "renderingAnimationFrames": "Շարժապատկերների ցուցադրում...",
+      "smoothingAnimationFrames": "Անիմացիայի շրջանակների հարթեցում...",
+      "finalizingFirstAnimationFrame": "Առաջին անիմացիոն կադրի ավարտը...",
+      "qrArt": {
+        "encodingBaseData": "Բազային տվյալների կոդավորումը...",
+        "analyzingLayout": "Վերլուծելով դասավորությունը...",
+        "buildingErrorCorrectionFoundation": "Սխալների ուղղման հիմքի ստեղծում...",
+        "mappingBitsToPixels": "Բիթերի պիքսելների քարտեզագրում...",
+        "processingImage": "Ձեր պատկերը մշակվում է...",
+        "rankingPixelsByImportance": "Պիքսելների դասակարգում ըստ կարևորության...",
+        "solvingMatrix": "Մատրիցայի լուծում...",
+        "selectingBestBasisVectors": "Ընտրելով լավագույն հիմքի վեկտորները...",
+        "countingPredictedMatches": "Կանխատեսված հանդիպումների հաշվում...",
+        "adjustingDataBytes": "Տվյալների բայթերի կարգավորում...",
+        "reEncodingQrCode": "QR կոդի վերակոդավորում...",
+        "validatingResult": "Արդյունքի վավերացում...",
+        "complete": "Ամբողջական...",
+        "maskStage": "Դիմակ {{mask}}՝ {{stage}}...",
+        "attemptStage": "Փորձ {{current}}/{{total}}՝ {{stage}}...",
+        "attemptMaskStage": "Փորձ {{current}}/{{total}}՝ Դիմակ {{mask}}՝ {{stage}}..."
+      }
+    },
+    "fastPreview": "Արագ նախադիտում",
+    "draft": "Նախագիծ"
   },
   "qr": {
     "additionalBorder": "Լրացուցիչ սահման՝ հանգիստ գոտուց դուրս",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Պատկերն անհասանելի է",
     "messageSent": "Ուղարկված հաղորդագրություն",
     "lastUpdated": "Վերջին թարմացումը",
-    "scanMePlaceholder": "Սկան ինձ!"
+    "scanMePlaceholder": "Սկան ինձ!",
+    "skipToMainContent": "Անցեք հիմնական բովանդակությանը"
   },
   "contact": {
     "messageSentTitle": "Ուղարկված հաղորդագրություն",
@@ -2035,5 +2073,18 @@
     "itAsset": "ՏՏ ակտիվ",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF փաստաթուղթ"
+  },
+  "analyze": {
+    "confidence": "Վստահություն",
+    "exportJson": "Արտահանել JSON",
+    "formatInformation": "Ձևաչափի տեղեկատվություն",
+    "imageProperties": "Պատկերի հատկություններ",
+    "processingTimings": "Մշակման ժամկետներ",
+    "spatialAnalysis": "Տարածական վերլուծություն",
+    "noCodeDetectedInImage": "Պատկերում QR կոդ չի հայտնաբերվել"
+  },
+  "errors": {
+    "failedToGenerateQr": "Չհաջողվեց ստեղծել QR կոդը",
+    "contentTooLongForQr": "Բովանդակությունը չափազանց երկար է QR կոդի համար: Խնդրում ենք կրճատել ձեր բովանդակությունը կամ օգտագործել URL կրճատիչ:"
   }
 }

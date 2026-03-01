@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - დააწკაპუნეთ ექსპორტზე ჩამოსატვირთად",
     "simulating": "სიმულაცია",
-    "simulationActive": "გარემოს სიმულაცია აქტიური - გადახედვა აჩვენებს, თუ როგორ შეიძლება გამოჩნდეს QR კოდი სხვადასხვა პირობებში"
+    "simulationActive": "გარემოს სიმულაცია აქტიური - გადახედვა აჩვენებს, თუ როგორ შეიძლება გამოჩნდეს QR კოდი სხვადასხვა პირობებში",
+    "busy": {
+      "workingOnIt": "მასზე მუშაობა...",
+      "waitingForThingsToSettle": "ველოდები მოწესრიგებას...",
+      "gettingAnimationPreviewReady": "მიმდინარეობს ანიმაციის წინასწარი გადახედვის მომზადება...",
+      "generatingPreview": "მიმდინარეობს თქვენი გადახედვის გენერირება...",
+      "preparingPreview": "წინასწარი გადახედვის მომზადება...",
+      "buildingQrStructure": "QR სტრუქტურის აგება...",
+      "preparingQrArtComputation": "მიმდინარეობს QR-Art გამოთვლის მომზადება...",
+      "stillRenderingDetailedOverlay": "ჯერ კიდევ მიმდინარეობს დეტალური გადაფარვის რენდერი...",
+      "renderingQrPreview": "მიმდინარეობს თქვენი QR გადახედვის რენდერი...",
+      "checkingScanability": "შემოწმება ხდება თუ არა სწორად სკანირება...",
+      "finalizingPreview": "წინასწარი გადახედვის დასრულება...",
+      "preparingAnimationFrames": "ანიმაციური კადრების მომზადება...",
+      "renderingAnimationFrames": "ანიმაციური კადრების რენდერი...",
+      "smoothingAnimationFrames": "ანიმაციის ჩარჩოების გასწორება...",
+      "finalizingFirstAnimationFrame": "პირველი ანიმაციური კადრის დასრულება...",
+      "qrArt": {
+        "encodingBaseData": "ბაზის მონაცემების კოდირება...",
+        "analyzingLayout": "განლაგების ანალიზი...",
+        "buildingErrorCorrectionFoundation": "შეცდომის გამოსწორების საფუძვლის შექმნა...",
+        "mappingBitsToPixels": "ბიტების პიქსელებად დახატვა...",
+        "processingImage": "მიმდინარეობს თქვენი სურათის დამუშავება...",
+        "rankingPixelsByImportance": "პიქსელების რანჟირება მნიშვნელობის მიხედვით...",
+        "solvingMatrix": "მატრიცის ამოხსნა...",
+        "selectingBestBasisVectors": "საუკეთესო საბაზისო ვექტორების შერჩევა...",
+        "countingPredictedMatches": "წინასწარმეტყველური მატჩების დათვლა...",
+        "adjustingDataBytes": "მიმდინარეობს მონაცემთა ბაიტების კორექტირება...",
+        "reEncodingQrCode": "QR კოდის ხელახლა დაშიფვრა...",
+        "validatingResult": "შედეგის დადასტურება...",
+        "complete": "სრული...",
+        "maskStage": "ნიღაბი {{mask}}: {{stage}}...",
+        "attemptStage": "მცდელობა {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "მცდელობა {{current}}/{{total}}: ნიღაბი {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "სწრაფი გადახედვა",
+    "draft": "პროექტი"
   },
   "qr": {
     "additionalBorder": "დამატებითი საზღვარი წყნარ ზონას მიღმა",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "სურათი მიუწვდომელია",
     "messageSent": "შეტყობინება გაიგზავნა",
     "lastUpdated": "ბოლო განახლება",
-    "scanMePlaceholder": "სკანირება მე!"
+    "scanMePlaceholder": "სკანირება მე!",
+    "skipToMainContent": "გადადით მთავარ შინაარსზე"
   },
   "contact": {
     "messageSentTitle": "შეტყობინება გაიგზავნა",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT აქტივი",
     "xTwitter": "X (ტვიტერი)",
     "pdfDocument": "PDF დოკუმენტი"
+  },
+  "analyze": {
+    "confidence": "ნდობა",
+    "exportJson": "JSON-ის ექსპორტი",
+    "formatInformation": "ფორმატის ინფორმაცია",
+    "imageProperties": "გამოსახულების თვისებები",
+    "processingTimings": "დამუშავების ვადები",
+    "spatialAnalysis": "სივრცითი ანალიზი",
+    "noCodeDetectedInImage": "სურათზე QR კოდი არ არის აღმოჩენილი"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR კოდის გენერირება ვერ მოხერხდა",
+    "contentTooLongForQr": "კონტენტი ძალიან გრძელია QR კოდისთვის. გთხოვთ, შეამციროთ თქვენი შინაარსი ან გამოიყენოთ URL-ის შემოკლება."
   }
 }

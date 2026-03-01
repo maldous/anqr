@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "תצוגה מקדימה של קוד QR - לחץ על ייצוא להורדה",
     "simulating": "סימולציה",
-    "simulationActive": "הדמיית סביבה פעילה - תצוגה מקדימה מראה כיצד קוד QR עשוי להופיע בתנאים שונים"
+    "simulationActive": "הדמיית סביבה פעילה - תצוגה מקדימה מראה כיצד קוד QR עשוי להופיע בתנאים שונים",
+    "busy": {
+      "workingOnIt": "עובדים על זה...",
+      "waitingForThingsToSettle": "מחכה שהעניינים יסתדרו...",
+      "gettingAnimationPreviewReady": "מכין את התצוגה המקדימה של האנימציה...",
+      "generatingPreview": "יוצר את התצוגה המקדימה שלך...",
+      "preparingPreview": "מכין את התצוגה המקדימה שלך...",
+      "buildingQrStructure": "בניית מבנה QR...",
+      "preparingQrArtComputation": "מכין חישוב QR-Art...",
+      "stillRenderingDetailedOverlay": "עדיין מעבד את שכבת העל המפורטת...",
+      "renderingQrPreview": "מעבד את התצוגה המקדימה של ה-QR...",
+      "checkingScanability": "בודק שהוא סורק כמו שצריך...",
+      "finalizingPreview": "מסיים את התצוגה המקדימה...",
+      "preparingAnimationFrames": "הכנת מסגרות האנימציה...",
+      "renderingAnimationFrames": "עיבוד מסגרות האנימציה...",
+      "smoothingAnimationFrames": "החלקת מסגרות האנימציה...",
+      "finalizingFirstAnimationFrame": "מסיים את מסגרת האנימציה הראשונה...",
+      "qrArt": {
+        "encodingBaseData": "קידוד נתוני הבסיס...",
+        "analyzingLayout": "מנתח את הפריסה...",
+        "buildingErrorCorrectionFoundation": "בניית הבסיס לתיקון השגיאות...",
+        "mappingBitsToPixels": "מיפוי ביטים לפיקסלים...",
+        "processingImage": "מעבד את התמונה שלך...",
+        "rankingPixelsByImportance": "דירוג פיקסלים לפי חשיבות...",
+        "solvingMatrix": "פותרים את המטריצה...",
+        "selectingBestBasisVectors": "בחירת וקטורי הבסיס הטובים ביותר...",
+        "countingPredictedMatches": "סופר משחקים חזויים...",
+        "adjustingDataBytes": "מתאמת בתים של נתונים...",
+        "reEncodingQrCode": "קידוד מחדש של קוד ה-QR...",
+        "validatingResult": "מאמת את התוצאה...",
+        "complete": "השלם...",
+        "maskStage": "מסכה {{mask}}: {{stage}}...",
+        "attemptStage": "ניסיון {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "ניסיון {{current}}/{{total}}: מסכה {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "תצוגה מקדימה מהירה",
+    "draft": "טיוטה"
   },
   "qr": {
     "additionalBorder": "גבול נוסף מעבר לאזור השקט",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "התמונה לא זמינה",
     "messageSent": "הודעה נשלחה",
     "lastUpdated": "עודכן לאחרונה",
-    "scanMePlaceholder": "סרוק אותי!"
+    "scanMePlaceholder": "סרוק אותי!",
+    "skipToMainContent": "דלג לתוכן הראשי"
   },
   "contact": {
     "messageSentTitle": "הודעה נשלחה",
@@ -2035,5 +2073,18 @@
     "itAsset": "נכס IT",
     "xTwitter": "X (טוויטר)",
     "pdfDocument": "מסמך PDF"
+  },
+  "analyze": {
+    "confidence": "ביטחון עצמי",
+    "exportJson": "ייצא JSON",
+    "formatInformation": "פורמט מידע",
+    "imageProperties": "מאפייני תמונה",
+    "processingTimings": "תזמוני עיבוד",
+    "spatialAnalysis": "ניתוח מרחבי",
+    "noCodeDetectedInImage": "לא זוהה קוד QR בתמונה"
+  },
+  "errors": {
+    "failedToGenerateQr": "יצירת קוד QR נכשלה",
+    "contentTooLongForQr": "תוכן ארוך מדי עבור קוד QR. אנא קצר את התוכן שלך או השתמש במקצר כתובות אתרים."
   }
 }

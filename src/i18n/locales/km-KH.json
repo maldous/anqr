@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - ចុច Export ដើម្បីទាញយក",
     "simulating": "ការក្លែងធ្វើ",
-    "simulationActive": "ការក្លែងធ្វើបរិស្ថានសកម្ម - ការមើលជាមុនបង្ហាញពីរបៀបដែលកូដ QR អាចបង្ហាញនៅក្រោមលក្ខខណ្ឌផ្សេងៗ"
+    "simulationActive": "ការក្លែងធ្វើបរិស្ថានសកម្ម - ការមើលជាមុនបង្ហាញពីរបៀបដែលកូដ QR អាចបង្ហាញនៅក្រោមលក្ខខណ្ឌផ្សេងៗ",
+    "busy": {
+      "workingOnIt": "ធ្វើការលើវា...",
+      "waitingForThingsToSettle": "រង់ចាំដោះស្រាយរឿង...",
+      "gettingAnimationPreviewReady": "កំពុងរៀបចំការមើលគំនូរជីវចលជាមុន...",
+      "generatingPreview": "កំពុងបង្កើតការមើលជាមុនរបស់អ្នក...",
+      "preparingPreview": "កំពុងរៀបចំការមើលជាមុនរបស់អ្នក...",
+      "buildingQrStructure": "ការកសាងរចនាសម្ព័ន្ធ QR...",
+      "preparingQrArtComputation": "កំពុងរៀបចំ QR-Art គណនា...",
+      "stillRenderingDetailedOverlay": "នៅ​តែ​បង្ហាញ​ការ​ត្រួត​ពិនិត្យ​លម្អិត...",
+      "renderingQrPreview": "កំពុងបង្ហាញការមើល QR របស់អ្នកជាមុន...",
+      "checkingScanability": "ពិនិត្យ​មើល​ថា​វា​ស្កែន​ត្រឹមត្រូវ...",
+      "finalizingPreview": "កំពុងបញ្ចប់ការមើលជាមុន...",
+      "preparingAnimationFrames": "កំពុងរៀបចំស៊ុមគំនូរជីវចល...",
+      "renderingAnimationFrames": "កំពុង​បង្ហាញ​ស៊ុម​ចលនា...",
+      "smoothingAnimationFrames": "ធ្វើឱ្យស៊ុមចលនារលោង...",
+      "finalizingFirstAnimationFrame": "កំពុង​បញ្ចប់​ស៊ុម​ចលនា​ដំបូង...",
+      "qrArt": {
+        "encodingBaseData": "ការអ៊ិនកូដទិន្នន័យមូលដ្ឋាន...",
+        "analyzingLayout": "ការ​វិភាគ​ប្លង់...",
+        "buildingErrorCorrectionFoundation": "កសាង​មូលដ្ឋាន​គ្រឹះ​កែ​កំហុស...",
+        "mappingBitsToPixels": "ការគូសផែនទីប៊ីតទៅជាភីកសែល...",
+        "processingImage": "កំពុងដំណើរការរូបភាពរបស់អ្នក...",
+        "rankingPixelsByImportance": "ចំណាត់ថ្នាក់ភីកសែលតាមសារៈសំខាន់...",
+        "solvingMatrix": "ការ​ដោះស្រាយ​ម៉ាទ្រីស...",
+        "selectingBestBasisVectors": "ការជ្រើសរើសវ៉ិចទ័រមូលដ្ឋានល្អបំផុត...",
+        "countingPredictedMatches": "ការ​រាប់​ការ​ប្រកួត​ដែល​បាន​ព្យាករ...",
+        "adjustingDataBytes": "កំពុងកែតម្រូវបៃទិន្នន័យ...",
+        "reEncodingQrCode": "បញ្ចូលកូដ QR ឡើងវិញ...",
+        "validatingResult": "បញ្ជាក់លទ្ធផល...",
+        "complete": "បញ្ចប់...",
+        "maskStage": "របាំង {{mask}}៖ {{stage}}...",
+        "attemptStage": "ការព្យាយាម {{current}}/{{total}}៖ {{stage}}...",
+        "attemptMaskStage": "ការព្យាយាម {{current}}/{{total}}៖ របាំង {{mask}}៖ {{stage}}..."
+      }
+    },
+    "fastPreview": "ការមើលជាមុនរហ័ស",
+    "draft": "សេចក្តីព្រាង"
   },
   "qr": {
     "additionalBorder": "ព្រំដែនបន្ថែមលើសពីតំបន់ស្ងប់ស្ងាត់",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "រូបភាពមិនអាចប្រើបានទេ។",
     "messageSent": "សារ​បាន​ផ្ញើ",
     "lastUpdated": "ធ្វើបច្ចុប្បន្នភាពចុងក្រោយ",
-    "scanMePlaceholder": "ស្កេនខ្ញុំ!"
+    "scanMePlaceholder": "ស្កេនខ្ញុំ!",
+    "skipToMainContent": "រំលងទៅមាតិកាសំខាន់"
   },
   "contact": {
     "messageSentTitle": "សារ​បាន​ផ្ញើ",
@@ -2035,5 +2073,18 @@
     "itAsset": "ទ្រព្យសកម្ម IT",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "ឯកសារ PDF"
+  },
+  "analyze": {
+    "confidence": "ទំនុកចិត្ត",
+    "exportJson": "នាំចេញ JSON",
+    "formatInformation": "ព័ត៌មានទម្រង់",
+    "imageProperties": "លក្ខណៈសម្បត្តិរូបភាព",
+    "processingTimings": "ពេលវេលាដំណើរការ",
+    "spatialAnalysis": "ការវិភាគលំហ",
+    "noCodeDetectedInImage": "រកមិនឃើញកូដ QR នៅក្នុងរូបភាពទេ។"
+  },
+  "errors": {
+    "failedToGenerateQr": "បរាជ័យក្នុងការបង្កើតកូដ QR",
+    "contentTooLongForQr": "មាតិកាវែងពេកសម្រាប់កូដ QR ។ សូម​បង្រួម​មាតិកា​របស់​អ្នក​ឱ្យ​ខ្លី ឬ​ប្រើ​កម្មវិធី​ខ្លី URL ។"
   }
 }

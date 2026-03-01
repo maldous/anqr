@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR-koodi eelvaade – allalaadimiseks klõpsake nuppu Ekspordi",
     "simulating": "Simuleerimine",
-    "simulationActive": "Keskkonnasimulatsioon aktiivne – eelvaade näitab, kuidas QR-kood võib erinevates tingimustes ilmuda"
+    "simulationActive": "Keskkonnasimulatsioon aktiivne – eelvaade näitab, kuidas QR-kood võib erinevates tingimustes ilmuda",
+    "busy": {
+      "workingOnIt": "Selle kallal töötamine...",
+      "waitingForThingsToSettle": "Ootan, kuni asjad lahenevad...",
+      "gettingAnimationPreviewReady": "Animatsiooni eelvaate ettevalmistamine...",
+      "generatingPreview": "Teie eelvaate genereerimine...",
+      "preparingPreview": "Eelvaate ettevalmistamine...",
+      "buildingQrStructure": "QR-struktuuri ehitamine...",
+      "preparingQrArtComputation": "QR-Art arvutuse ettevalmistamine...",
+      "stillRenderingDetailedOverlay": "Üksikasjaliku ülekatte renderdamine ikka veel...",
+      "renderingQrPreview": "Teie QR-i eelvaate renderdamine...",
+      "checkingScanability": "Kontrollitakse, kas see skannib õigesti...",
+      "finalizingPreview": "Eelvaate lõpetamine...",
+      "preparingAnimationFrames": "Animatsioonikaadrite ettevalmistamine...",
+      "renderingAnimationFrames": "Animatsiooniraamide renderdamine...",
+      "smoothingAnimationFrames": "Animatsiooniraamide silumine...",
+      "finalizingFirstAnimationFrame": "Esimese animatsioonikaadri lõpetamine...",
+      "qrArt": {
+        "encodingBaseData": "Alusandmete kodeerimine...",
+        "analyzingLayout": "Paigutuse analüüsimine...",
+        "buildingErrorCorrectionFoundation": "Vigade parandamise aluse ehitamine...",
+        "mappingBitsToPixels": "Bittide vastendamine piksliteks...",
+        "processingImage": "Teie pildi töötlemine...",
+        "rankingPixelsByImportance": "Pikslite järjestamine tähtsuse järgi...",
+        "solvingMatrix": "Maatriksi lahendamine...",
+        "selectingBestBasisVectors": "Parimate baasvektorite valimine...",
+        "countingPredictedMatches": "Ennustatud matšide loendamine...",
+        "adjustingDataBytes": "Andmebaitide reguleerimine...",
+        "reEncodingQrCode": "QR-koodi uuesti kodeerimine...",
+        "validatingResult": "Tulemuse kinnitamine...",
+        "complete": "Lõpeta...",
+        "maskStage": "Mask {{mask}}: {{stage}}...",
+        "attemptStage": "Katse {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Katse {{current}}/{{total}}: Mask {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Kiire eelvaade",
+    "draft": "Mustand"
   },
   "qr": {
     "additionalBorder": "Täiendav piir vaikse tsooni taga",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Pilt pole saadaval",
     "messageSent": "Sõnum saadetud",
     "lastUpdated": "Viimati uuendatud",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Mine põhisisu juurde"
   },
   "contact": {
     "messageSentTitle": "Sõnum saadetud",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT-vara",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF-dokument"
+  },
+  "analyze": {
+    "confidence": "Usaldus",
+    "exportJson": "Ekspordi JSON",
+    "formatInformation": "Vormingu teave",
+    "imageProperties": "Pildi omadused",
+    "processingTimings": "Töötlemise ajastused",
+    "spatialAnalysis": "Ruumiline analüüs",
+    "noCodeDetectedInImage": "Pildil ei tuvastatud QR-koodi"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR-koodi genereerimine ebaõnnestus",
+    "contentTooLongForQr": "Sisu on QR-koodi jaoks liiga pikk. Lühendage oma sisu või kasutage URL-i lühendajat."
   }
 }

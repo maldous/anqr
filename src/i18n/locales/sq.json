@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Pamja paraprake e kodit QR - Kliko Eksporto për ta shkarkuar",
     "simulating": "Simulimi",
-    "simulationActive": "Simulimi mjedisor aktiv - Paraafishimi tregon se si mund të shfaqet kodi QR në kushte të ndryshme"
+    "simulationActive": "Simulimi mjedisor aktiv - Paraafishimi tregon se si mund të shfaqet kodi QR në kushte të ndryshme",
+    "busy": {
+      "workingOnIt": "Duke punuar në të...",
+      "waitingForThingsToSettle": "Në pritje që gjërat të zgjidhen...",
+      "gettingAnimationPreviewReady": "Po përgatit pamjen paraprake të animacionit...",
+      "generatingPreview": "Po krijon pamjen tuaj paraprake...",
+      "preparingPreview": "Po përgatit pamjen tuaj paraprake...",
+      "buildingQrStructure": "Ndërtimi i strukturës QR...",
+      "preparingQrArtComputation": "Po përgatit llogaritjen QR-Art...",
+      "stillRenderingDetailedOverlay": "Ende po jepet mbivendosja e detajuar...",
+      "renderingQrPreview": "Po jep pamjen tuaj paraprake të QR...",
+      "checkingScanability": "Po kontrollon nëse skanon siç duhet...",
+      "finalizingPreview": "Duke përfunduar pamjen paraprake...",
+      "preparingAnimationFrames": "Përgatitja e kornizave të animacionit...",
+      "renderingAnimationFrames": "Po jep kornizat e animacionit...",
+      "smoothingAnimationFrames": "Zbutja e kornizave të animacionit...",
+      "finalizingFirstAnimationFrame": "Përfundimi i kornizës së parë të animacionit...",
+      "qrArt": {
+        "encodingBaseData": "Kodimi i të dhënave bazë...",
+        "analyzingLayout": "Duke analizuar paraqitjen...",
+        "buildingErrorCorrectionFoundation": "Ndërtimi i bazës së korrigjimit të gabimeve...",
+        "mappingBitsToPixels": "Hartëzimi i biteve në piksel...",
+        "processingImage": "Po përpunohet imazhi juaj...",
+        "rankingPixelsByImportance": "Renditja e pikselëve sipas rëndësisë...",
+        "solvingMatrix": "Zgjidhja e matricës...",
+        "selectingBestBasisVectors": "Zgjedhja e vektorëve bazë më të mirë...",
+        "countingPredictedMatches": "Po numërohen ndeshjet e parashikuara...",
+        "adjustingDataBytes": "Po rregullon bajtët e të dhënave...",
+        "reEncodingQrCode": "Ri-kodimi i kodit QR...",
+        "validatingResult": "Po verifikon rezultatin...",
+        "complete": "Plotësoni...",
+        "maskStage": "Maska {{mask}}: {{stage}}...",
+        "attemptStage": "Përpjekje {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Përpjekja {{current}}/{{total}}: Maska {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Pamje e shpejtë",
+    "draft": "Drafti"
   },
   "qr": {
     "additionalBorder": "Kufiri shtesë përtej zonës së qetë",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Imazhi i padisponueshëm",
     "messageSent": "Mesazhi u dërgua",
     "lastUpdated": "Përditësimi i fundit",
-    "scanMePlaceholder": "Më skanoni!"
+    "scanMePlaceholder": "Më skanoni!",
+    "skipToMainContent": "Kalo te përmbajtja kryesore"
   },
   "contact": {
     "messageSentTitle": "Mesazhi u dërgua",
@@ -2035,5 +2073,18 @@
     "itAsset": "Aset IT",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Dokument PDF"
+  },
+  "analyze": {
+    "confidence": "besimin",
+    "exportJson": "Eksporto JSON",
+    "formatInformation": "Informacioni i formatit",
+    "imageProperties": "Vetitë e imazhit",
+    "processingTimings": "Kohët e përpunimit",
+    "spatialAnalysis": "Analiza Hapësinore",
+    "noCodeDetectedInImage": "Nuk u zbulua asnjë kod QR në imazh"
+  },
+  "errors": {
+    "failedToGenerateQr": "Krijimi i kodit QR dështoi",
+    "contentTooLongForQr": "Përmbajtja shumë e gjatë për kodin QR. Ju lutemi shkurtoni përmbajtjen tuaj ose përdorni një shkurtues URL."
   }
 }

@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Forskoðun QR kóða - Smelltu á Flytja út til að hlaða niður",
     "simulating": "Hermir eftir",
-    "simulationActive": "Umhverfishermi virk - Forskoðun sýnir hvernig QR kóða getur birst við mismunandi aðstæður"
+    "simulationActive": "Umhverfishermi virk - Forskoðun sýnir hvernig QR kóða getur birst við mismunandi aðstæður",
+    "busy": {
+      "workingOnIt": "Er að vinna í því...",
+      "waitingForThingsToSettle": "Bíð eftir að hlutirnir leysist...",
+      "gettingAnimationPreviewReady": "Er að undirbúa forskoðun hreyfimynda...",
+      "generatingPreview": "Býr til forskoðun...",
+      "preparingPreview": "Undirbýr forskoðun...",
+      "buildingQrStructure": "Að byggja upp QR uppbyggingu...",
+      "preparingQrArtComputation": "Undirbýr QR-Art útreikning...",
+      "stillRenderingDetailedOverlay": "Er enn að skila ítarlegu yfirlaginu...",
+      "renderingQrPreview": "Gerir QR forskoðun...",
+      "checkingScanability": "Er að athuga hvort það skannar rétt...",
+      "finalizingPreview": "Er að klára forskoðun...",
+      "preparingAnimationFrames": "Undirbýr teiknimyndarammana...",
+      "renderingAnimationFrames": "Gerir hreyfimyndarammana...",
+      "smoothingAnimationFrames": "Sléttir teiknimyndarammana...",
+      "finalizingFirstAnimationFrame": "Er að leggja lokahönd á fyrsta hreyfimyndarrammann...",
+      "qrArt": {
+        "encodingBaseData": "Kóðar grunngögnin...",
+        "analyzingLayout": "Er að greina skipulagið...",
+        "buildingErrorCorrectionFoundation": "Að byggja upp villuleiðréttingargrunninn...",
+        "mappingBitsToPixels": "Kortleggur bita í pixla...",
+        "processingImage": "Vinnur myndina þína...",
+        "rankingPixelsByImportance": "Raða punktum eftir mikilvægi...",
+        "solvingMatrix": "Að leysa fylkið...",
+        "selectingBestBasisVectors": "Selecting the best basis vectors...",
+        "countingPredictedMatches": "Counting predicted matches...",
+        "adjustingDataBytes": "Stillir gagnabæt...",
+        "reEncodingQrCode": "Re-encoding the QR code...",
+        "validatingResult": "Staðfestir niðurstöðuna...",
+        "complete": "Ljúktu...",
+        "maskStage": "Mask {{mask}}: {{stage}}...",
+        "attemptStage": "Tilraun {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Tilraun {{current}}/{{total}}: Gríma {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Hröð forskoðun",
+    "draft": "Drög"
   },
   "qr": {
     "additionalBorder": "Viðbótarmörk handan kyrrláts svæðis",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Mynd ekki tiltæk",
     "messageSent": "Skilaboð send",
     "lastUpdated": "Síðast uppfært",
-    "scanMePlaceholder": "Skannaðu mig!"
+    "scanMePlaceholder": "Skannaðu mig!",
+    "skipToMainContent": "Fara í aðalefni"
   },
   "contact": {
     "messageSentTitle": "Skilaboð send",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT eign",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF skjal"
+  },
+  "analyze": {
+    "confidence": "Sjálfstraust",
+    "exportJson": "Flytja út JSON",
+    "formatInformation": "Snið Upplýsingar",
+    "imageProperties": "Myndareiginleikar",
+    "processingTimings": "Vinnslutímar",
+    "spatialAnalysis": "Staðbundin greining",
+    "noCodeDetectedInImage": "No QR code detected in image"
+  },
+  "errors": {
+    "failedToGenerateQr": "Failed to generate QR code",
+    "contentTooLongForQr": "Content too long for QR code. Vinsamlega styttu efnið þitt eða notaðu vefslóð styttingu."
   }
 }

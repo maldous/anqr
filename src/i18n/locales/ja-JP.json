@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QRコードプレビュー - エクスポートをクリックしてダウンロード",
     "simulating": "シミュレーション",
-    "simulationActive": "環境シミュレーションアクティブ - QRコードが異なる条件下で表示される方法のプレビュー"
+    "simulationActive": "環境シミュレーションアクティブ - QRコードが異なる条件下で表示される方法のプレビュー",
+    "busy": {
+      "workingOnIt": "取り組んでいます...",
+      "waitingForThingsToSettle": "事態が落ち着くのを待っています...",
+      "gettingAnimationPreviewReady": "アニメーション プレビューの準備中...",
+      "generatingPreview": "プレビューを生成しています...",
+      "preparingPreview": "プレビューを準備しています...",
+      "buildingQrStructure": "QR 構造を構築しています...",
+      "preparingQrArtComputation": "QR アートの計算を準備しています...",
+      "stillRenderingDetailedOverlay": "まだ詳細なオーバーレイをレンダリング中です...",
+      "renderingQrPreview": "QR プレビューをレンダリングしています...",
+      "checkingScanability": "正しくスキャンできるか確認中...",
+      "finalizingPreview": "プレビューを終了しています...",
+      "preparingAnimationFrames": "アニメーション フレームを準備しています...",
+      "renderingAnimationFrames": "アニメーション フレームをレンダリングしています...",
+      "smoothingAnimationFrames": "アニメーション フレームをスムージングしています...",
+      "finalizingFirstAnimationFrame": "最初のアニメーション フレームを終了しています...",
+      "qrArt": {
+        "encodingBaseData": "基本データをエンコードしています...",
+        "analyzingLayout": "レイアウトを分析中...",
+        "buildingErrorCorrectionFoundation": "エラー訂正基盤を構築しています...",
+        "mappingBitsToPixels": "ビットをピクセルにマッピングしています...",
+        "processingImage": "画像を処理しています...",
+        "rankingPixelsByImportance": "重要度に基づいてピクセルをランク付けします...",
+        "solvingMatrix": "マトリックスを解いています...",
+        "selectingBestBasisVectors": "最適な基底ベクトルを選択しています...",
+        "countingPredictedMatches": "予測された一致をカウントしています...",
+        "adjustingDataBytes": "データバイトを調整しています...",
+        "reEncodingQrCode": "QRコードを再エンコードします...",
+        "validatingResult": "結果を検証中...",
+        "complete": "完了...",
+        "maskStage": "マスク {{mask}}: {{stage}}...",
+        "attemptStage": "{{current}}/{{total}} を試行します: {{stage}}...",
+        "attemptMaskStage": "{{current}}/{{total}} を試行: マスク {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "高速プレビュー",
+    "draft": "草案"
   },
   "qr": {
     "additionalBorder": "静かなゾーンを超えた追加の境界",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "画像利用不可",
     "messageSent": "メッセージ送信",
     "lastUpdated": "更新履歴",
-    "scanMePlaceholder": "スキャンミー!"
+    "scanMePlaceholder": "スキャンミー!",
+    "skipToMainContent": "メインコンテンツにスキップ"
   },
   "contact": {
     "messageSentTitle": "メッセージ送信",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT資産",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "サイトマップ ドキュメント"
+  },
+  "analyze": {
+    "confidence": "自信",
+    "exportJson": "JSONのエクスポート",
+    "formatInformation": "フォーマット情報",
+    "imageProperties": "画像のプロパティ",
+    "processingTimings": "処理タイミング",
+    "spatialAnalysis": "空間分析",
+    "noCodeDetectedInImage": "画像内に QR コードが検出されませんでした"
+  },
+  "errors": {
+    "failedToGenerateQr": "QRコードの生成に失敗しました",
+    "contentTooLongForQr": "コンテンツが QR コードとして長すぎます。コンテンツを短くするか、短縮 URL を使用してください。"
   }
 }

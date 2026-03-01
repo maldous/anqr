@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Ukážka QR kódu – kliknutím na Exportovať stiahnite",
     "simulating": "Simulovanie",
-    "simulationActive": "Simulácia prostredia je aktívna – Náhľad ukazuje, ako sa QR kód môže zobraziť za rôznych podmienok"
+    "simulationActive": "Simulácia prostredia je aktívna – Náhľad ukazuje, ako sa QR kód môže zobraziť za rôznych podmienok",
+    "busy": {
+      "workingOnIt": "Pracuje sa na tom...",
+      "waitingForThingsToSettle": "Čakanie, kým sa veci vyrovnajú...",
+      "gettingAnimationPreviewReady": "Pripravuje sa ukážka animácie...",
+      "generatingPreview": "Generuje sa váš náhľad...",
+      "preparingPreview": "Pripravuje sa ukážka...",
+      "buildingQrStructure": "Vytváranie QR štruktúry...",
+      "preparingQrArtComputation": "Pripravuje sa výpočet QR-Art...",
+      "stillRenderingDetailedOverlay": "Stále sa vykresľuje podrobné prekrytie...",
+      "renderingQrPreview": "Vykresľuje sa ukážka vášho QR kódu...",
+      "checkingScanability": "Kontrola, či skenuje správne...",
+      "finalizingPreview": "Dokončuje sa ukážka...",
+      "preparingAnimationFrames": "Pripravujú sa snímky animácie...",
+      "renderingAnimationFrames": "Vykresľovanie snímok animácie...",
+      "smoothingAnimationFrames": "Vyhladzovanie snímok animácie...",
+      "finalizingFirstAnimationFrame": "Dokončuje sa prvá snímka animácie...",
+      "qrArt": {
+        "encodingBaseData": "Kódovanie základných údajov...",
+        "analyzingLayout": "Prebieha analýza rozloženia...",
+        "buildingErrorCorrectionFoundation": "Budovanie základov na opravu chýb...",
+        "mappingBitsToPixels": "Mapovanie bitov na pixely...",
+        "processingImage": "Spracúva sa váš obrázok...",
+        "rankingPixelsByImportance": "Poradie pixelov podľa dôležitosti...",
+        "solvingMatrix": "Riešenie matice...",
+        "selectingBestBasisVectors": "Výber najlepších základných vektorov...",
+        "countingPredictedMatches": "Počítajú sa predpokladané zápasy...",
+        "adjustingDataBytes": "Úprava dátových bajtov...",
+        "reEncodingQrCode": "Opätovné kódovanie QR kódu...",
+        "validatingResult": "Overuje sa výsledok...",
+        "complete": "Kompletné...",
+        "maskStage": "Maska {{mask}}: {{stage}}...",
+        "attemptStage": "Pokus {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Pokus {{current}}/{{total}}: Maska {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Rýchly náhľad",
+    "draft": "Návrh"
   },
   "qr": {
     "additionalBorder": "Ďalšia hranica za pokojnou zónou",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Obrázok nie je k dispozícii",
     "messageSent": "Správa odoslaná",
     "lastUpdated": "Posledná aktualizácia",
-    "scanMePlaceholder": "Naskenujte ma!"
+    "scanMePlaceholder": "Naskenujte ma!",
+    "skipToMainContent": "Preskočiť na hlavný obsah"
   },
   "contact": {
     "messageSentTitle": "Správa odoslaná",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT aktívum",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Dokument PDF"
+  },
+  "analyze": {
+    "confidence": "Dôvera",
+    "exportJson": "Exportujte JSON",
+    "formatInformation": "Informácie o formáte",
+    "imageProperties": "Vlastnosti obrázka",
+    "processingTimings": "Časovanie spracovania",
+    "spatialAnalysis": "Priestorová analýza",
+    "noCodeDetectedInImage": "Na obrázku nebol zistený žiadny QR kód"
+  },
+  "errors": {
+    "failedToGenerateQr": "Nepodarilo sa vygenerovať QR kód",
+    "contentTooLongForQr": "Obsah je príliš dlhý na QR kód. Skráťte obsah alebo použite skracovač adries URL."
   }
 }

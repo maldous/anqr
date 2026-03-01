@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - Klik op Exporteren om te downloaden",
     "simulating": "Simuleren",
-    "simulationActive": "Milieusimulatie actief - Preview toont hoe QR-code onder verschillende omstandigheden kan verschijnen"
+    "simulationActive": "Milieusimulatie actief - Preview toont hoe QR-code onder verschillende omstandigheden kan verschijnen",
+    "busy": {
+      "workingOnIt": "Er aan werken...",
+      "waitingForThingsToSettle": "Wachten tot alles geregeld is...",
+      "gettingAnimationPreviewReady": "Het animatievoorbeeld voorbereiden...",
+      "generatingPreview": "Uw voorbeeld genereren...",
+      "preparingPreview": "Uw voorbeeld voorbereiden...",
+      "buildingQrStructure": "De QR-structuur bouwen...",
+      "preparingQrArtComputation": "QR-Art-berekening voorbereiden...",
+      "stillRenderingDetailedOverlay": "De gedetailleerde overlay wordt nog steeds weergegeven...",
+      "renderingQrPreview": "Uw QR-voorbeeld weergeven...",
+      "checkingScanability": "Controleren of het goed scant...",
+      "finalizingPreview": "Het voorbeeld voltooien...",
+      "preparingAnimationFrames": "De animatieframes voorbereiden...",
+      "renderingAnimationFrames": "De animatieframes renderen...",
+      "smoothingAnimationFrames": "De animatieframes vloeiend maken...",
+      "finalizingFirstAnimationFrame": "Het eerste animatieframe voltooien...",
+      "qrArt": {
+        "encodingBaseData": "Het coderen van de basisgegevens...",
+        "analyzingLayout": "Analyse van de lay-out...",
+        "buildingErrorCorrectionFoundation": "Het bouwen van de basis voor foutcorrectie...",
+        "mappingBitsToPixels": "Bits toewijzen aan pixels...",
+        "processingImage": "Je afbeelding verwerken...",
+        "rankingPixelsByImportance": "Pixels rangschikken op belangrijkheid...",
+        "solvingMatrix": "De matrix oplossen...",
+        "selectingBestBasisVectors": "De beste basisvectoren selecteren...",
+        "countingPredictedMatches": "Voorspelde wedstrijden tellen...",
+        "adjustingDataBytes": "Databytes aanpassen...",
+        "reEncodingQrCode": "De QR-code opnieuw coderen...",
+        "validatingResult": "Het resultaat valideren...",
+        "complete": "Compleet...",
+        "maskStage": "Masker {{mask}}: {{stage}}...",
+        "attemptStage": "Poging {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Poging {{current}}/{{total}}: Masker {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Snel voorbeeld",
+    "draft": "Diepgang"
   },
   "qr": {
     "additionalBorder": "Extra grens buiten rustige zone",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Afbeelding niet beschikbaar",
     "messageSent": "Bericht verzonden",
     "lastUpdated": "Laatst bijgewerkt",
-    "scanMePlaceholder": "Scan me!"
+    "scanMePlaceholder": "Scan me!",
+    "skipToMainContent": "Ga naar de hoofdinhoud"
   },
   "contact": {
     "messageSentTitle": "Bericht verzonden",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT-vermogen",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Document"
+  },
+  "analyze": {
+    "confidence": "Vertrouwen",
+    "exportJson": "JSON exporteren",
+    "formatInformation": "Formaatinformatie",
+    "imageProperties": "Afbeeldingseigenschappen",
+    "processingTimings": "Verwerkingstijden",
+    "spatialAnalysis": "Ruimtelijke analyse",
+    "noCodeDetectedInImage": "Geen QR-code gedetecteerd in afbeelding"
+  },
+  "errors": {
+    "failedToGenerateQr": "Kan QR-code niet genereren",
+    "contentTooLongForQr": "Inhoud te lang voor QR-code. Kort uw inhoud in of gebruik een URL-verkorter."
   }
 }

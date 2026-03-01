@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "แสดงตัวอย่างรหัส QR - คลิ้กที่ส่งออกเพื่อดาวน์โหลด",
     "simulating": "จําลอง",
-    "simulationActive": "การจําลองสภาพแวดล้อม - แสดงตัวอย่างแสดงวิธี QR รหัสอาจปรากฏภายใต้เงื่อนไขที่แตกต่างกัน"
+    "simulationActive": "การจําลองสภาพแวดล้อม - แสดงตัวอย่างแสดงวิธี QR รหัสอาจปรากฏภายใต้เงื่อนไขที่แตกต่างกัน",
+    "busy": {
+      "workingOnIt": "กำลังดำเนินการอยู่...",
+      "waitingForThingsToSettle": "รอให้เรื่องต่างๆ คลี่คลาย...",
+      "gettingAnimationPreviewReady": "กำลังเตรียมตัวอย่างภาพเคลื่อนไหวให้พร้อม...",
+      "generatingPreview": "กำลังสร้างหน้าตัวอย่างของคุณ...",
+      "preparingPreview": "กำลังเตรียมการแสดงตัวอย่างของคุณ...",
+      "buildingQrStructure": "การสร้างโครงสร้าง QR...",
+      "preparingQrArtComputation": "กำลังเตรียมการคำนวณ QR-Art...",
+      "stillRenderingDetailedOverlay": "ยังคงแสดงภาพซ้อนทับโดยละเอียด...",
+      "renderingQrPreview": "กำลังแสดงตัวอย่าง QR ของคุณ...",
+      "checkingScanability": "กำลังตรวจสอบว่าสแกนอย่างถูกต้อง...",
+      "finalizingPreview": "กำลังสิ้นสุดการแสดงตัวอย่าง...",
+      "preparingAnimationFrames": "กำลังเตรียมเฟรมภาพเคลื่อนไหว...",
+      "renderingAnimationFrames": "กำลังแสดงเฟรมภาพเคลื่อนไหว...",
+      "smoothingAnimationFrames": "กำลังปรับเฟรมภาพเคลื่อนไหวให้เรียบ...",
+      "finalizingFirstAnimationFrame": "กำลังสรุปเฟรมแอนิเมชั่นแรก...",
+      "qrArt": {
+        "encodingBaseData": "กำลังเข้ารหัสข้อมูลฐาน...",
+        "analyzingLayout": "กำลังวิเคราะห์เค้าโครง...",
+        "buildingErrorCorrectionFoundation": "สร้างรากฐานแก้ไขข้อผิดพลาด...",
+        "mappingBitsToPixels": "กำลังแมปบิตเป็นพิกเซล...",
+        "processingImage": "กำลังประมวลผลภาพของคุณ...",
+        "rankingPixelsByImportance": "จัดอันดับพิกเซลตามความสำคัญ...",
+        "solvingMatrix": "การแก้เมทริกซ์...",
+        "selectingBestBasisVectors": "การเลือกเวกเตอร์พื้นฐานที่ดีที่สุด...",
+        "countingPredictedMatches": "กำลังนับผลการแข่งขันที่คาดการณ์ไว้...",
+        "adjustingDataBytes": "กำลังปรับไบต์ข้อมูล...",
+        "reEncodingQrCode": "เข้ารหัสโค้ด QR อีกครั้ง...",
+        "validatingResult": "กำลังตรวจสอบผลลัพธ์...",
+        "complete": "เสร็จสิ้น...",
+        "maskStage": "หน้ากาก {{mask}}: {{stage}}...",
+        "attemptStage": "พยายาม {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "พยายาม {{current}}/{{total}}: มาสก์ {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "ดูตัวอย่างอย่างรวดเร็ว",
+    "draft": "ร่าง"
   },
   "qr": {
     "additionalBorder": "เพิ่มกรอบนอกพื้นที่ที่เงียบสงบ",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "ไม่มีข้อมูลภาพ",
     "messageSent": "จดหมายที่ส่งแล้ว",
     "lastUpdated": "ปรับปรุงล่าสุด",
-    "scanMePlaceholder": "สแกนฉัน!"
+    "scanMePlaceholder": "สแกนฉัน!",
+    "skipToMainContent": "ข้ามไปที่เนื้อหาหลัก"
   },
   "contact": {
     "messageSentTitle": "จดหมายที่ส่งแล้ว",
@@ -2035,5 +2073,18 @@
     "itAsset": "มันเป็นชุด",
     "xTwitter": "X (ทวีต)",
     "pdfDocument": "PDF เอกสาร"
+  },
+  "analyze": {
+    "confidence": "ความมั่นใจ",
+    "exportJson": "ส่งออก JSON",
+    "formatInformation": "ข้อมูลรูปแบบ",
+    "imageProperties": "คุณสมบัติของภาพ",
+    "processingTimings": "กำหนดเวลาการประมวลผล",
+    "spatialAnalysis": "การวิเคราะห์เชิงพื้นที่",
+    "noCodeDetectedInImage": "ไม่พบรหัส QR ในรูปภาพ"
+  },
+  "errors": {
+    "failedToGenerateQr": "ไม่สามารถสร้างโค้ด QR",
+    "contentTooLongForQr": "เนื้อหายาวเกินไปสำหรับโค้ด QR โปรดย่อเนื้อหาของคุณให้สั้นลงหรือใช้ตัวย่อ URL"
   }
 }

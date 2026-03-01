@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR කේත පෙරදසුන - බාගත කිරීමට අපනයන ක්ලික් කරන්න",
     "simulating": "අනුකරණය කිරීම",
-    "simulationActive": "පාරිසරික අනුකරණය සක්‍රිය - පෙරදසුන මඟින් විවිධ තත්ව යටතේ QR කේතය දිස්වන ආකාරය පෙන්වයි"
+    "simulationActive": "පාරිසරික අනුකරණය සක්‍රිය - පෙරදසුන මඟින් විවිධ තත්ව යටතේ QR කේතය දිස්වන ආකාරය පෙන්වයි",
+    "busy": {
+      "workingOnIt": "එහි වැඩ කරමින්...",
+      "waitingForThingsToSettle": "දේවල් සමථයකට පත් වන තෙක් බලා සිටීම...",
+      "gettingAnimationPreviewReady": "සජීවිකරණ පෙරදසුන සූදානම් කරමින්...",
+      "generatingPreview": "ඔබගේ පෙරදසුන ජනනය කරමින්...",
+      "preparingPreview": "ඔබේ පෙරදසුන සූදානම් කරමින්...",
+      "buildingQrStructure": "QR ව්‍යුහය ගොඩනැගීම...",
+      "preparingQrArtComputation": "QR-Art ගණනය කිරීම සූදානම් කරමින්...",
+      "stillRenderingDetailedOverlay": "තවමත් සවිස්තරාත්මක ආවරණයක් ලබාදෙමින්...",
+      "renderingQrPreview": "ඔබගේ QR පෙරදසුන විදැහුම් කරමින්...",
+      "checkingScanability": "එය නිවැරදිව පරිලෝකනය කරන්නේ දැයි පරීක්ෂා කරමින්...",
+      "finalizingPreview": "පෙරදසුන අවසන් කරමින්...",
+      "preparingAnimationFrames": "සජීවිකරණ රාමු සූදානම් කරමින්...",
+      "renderingAnimationFrames": "සජීවිකරණ රාමු නිරූපණය කරමින්...",
+      "smoothingAnimationFrames": "සජීවිකරණ රාමු සුමට කිරීම...",
+      "finalizingFirstAnimationFrame": "පළමු සජීවිකරණ රාමුව අවසන් කරමින්...",
+      "qrArt": {
+        "encodingBaseData": "මූලික දත්ත කේතනය කරමින්...",
+        "analyzingLayout": "පිරිසැලසුම විශ්ලේෂණය කරමින්...",
+        "buildingErrorCorrectionFoundation": "දෝෂ නිවැරදි කිරීමේ පදනම ගොඩනැගීම...",
+        "mappingBitsToPixels": "බිටු පික්සල වෙත සිතියම්ගත කිරීම...",
+        "processingImage": "ඔබගේ රූපය සකසමින්...",
+        "rankingPixelsByImportance": "වැදගත්කම අනුව පික්සල ශ්‍රේණිගත කිරීම...",
+        "solvingMatrix": "අනුකෘතිය විසඳමින්...",
+        "selectingBestBasisVectors": "හොඳම පාදක දෛශික තේරීම...",
+        "countingPredictedMatches": "පුරෝකථනය කළ තරඟ ගණන් කරමින්...",
+        "adjustingDataBytes": "දත්ත බයිට් සීරුමාරු කරමින්...",
+        "reEncodingQrCode": "QR කේතය නැවත කේතනය කරමින්...",
+        "validatingResult": "ප්‍රතිඵලය තහවුරු කරමින්...",
+        "complete": "සම්පූර්ණ...",
+        "maskStage": "වෙස්මුහුණ {{mask}}: {{stage}}...",
+        "attemptStage": "උත්සාහය {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "උත්සාහය {{current}}/{{total}}: වෙස් මුහුණ {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "වේගවත් පෙරදසුන",
+    "draft": "කෙටුම්පත"
   },
   "qr": {
     "additionalBorder": "නිස්කලංක කලාපයෙන් ඔබ්බට අමතර මායිම",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "රූපය නොමැත",
     "messageSent": "පණිවිඩය යවා ඇත",
     "lastUpdated": "අවසන් වරට යාවත්කාලීන කරන ලදී",
-    "scanMePlaceholder": "මාව පරිලෝකනය කරන්න!"
+    "scanMePlaceholder": "මාව පරිලෝකනය කරන්න!",
+    "skipToMainContent": "ප්‍රධාන අන්තර්ගතය වෙත යන්න"
   },
   "contact": {
     "messageSentTitle": "පණිවිඩය යවා ඇත",
@@ -2035,5 +2073,18 @@
     "itAsset": "තොරතුරු තාක්ෂණ වත්කම",
     "xTwitter": "X (ට්විටර්)",
     "pdfDocument": "PDF ලේඛනය"
+  },
+  "analyze": {
+    "confidence": "විශ්වාසය",
+    "exportJson": "JSON අපනයනය කරන්න",
+    "formatInformation": "ආකෘති තොරතුරු",
+    "imageProperties": "රූප ගුණාංග",
+    "processingTimings": "සැකසුම් වේලාවන්",
+    "spatialAnalysis": "අවකාශීය විශ්ලේෂණය",
+    "noCodeDetectedInImage": "රූපයේ QR කේතයක් අනාවරණය කර ගෙන නොමැත"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR කේතය උත්පාදනය කිරීමට අසමත් විය",
+    "contentTooLongForQr": "QR කේතය සඳහා අන්තර්ගතය දිගු වැඩිය. කරුණාකර ඔබේ අන්තර්ගතය කෙටි කරන්න හෝ URL කෙටි කරන්නක් භාවිතා කරන්න."
   }
 }

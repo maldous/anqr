@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Vista prèvia del codi QR: feu clic a Exporta per baixar-lo",
     "simulating": "Simulant",
-    "simulationActive": "Simulació ambiental activa: la vista prèvia mostra com pot aparèixer el codi QR en diferents condicions"
+    "simulationActive": "Simulació ambiental activa: la vista prèvia mostra com pot aparèixer el codi QR en diferents condicions",
+    "busy": {
+      "workingOnIt": "Treballant-hi...",
+      "waitingForThingsToSettle": "Esperant que les coses s'arreglin...",
+      "gettingAnimationPreviewReady": "Preparant la previsualització de l'animació...",
+      "generatingPreview": "S'està generant la vista prèvia...",
+      "preparingPreview": "S'està preparant la vista prèvia...",
+      "buildingQrStructure": "Construint l'estructura QR...",
+      "preparingQrArtComputation": "S'està preparant el càlcul de QR-Art...",
+      "stillRenderingDetailedOverlay": "Encara s'està mostrant la superposició detallada...",
+      "renderingQrPreview": "S'està mostrant la previsualització QR...",
+      "checkingScanability": "Comprovant que escaneja correctament...",
+      "finalizingPreview": "S'està acabant la previsualització...",
+      "preparingAnimationFrames": "Preparant els fotogrames d'animació...",
+      "renderingAnimationFrames": "Representant els fotogrames d'animació...",
+      "smoothingAnimationFrames": "Suavitzant els fotogrames d'animació...",
+      "finalizingFirstAnimationFrame": "S'està finalitzant el primer fotograma d'animació...",
+      "qrArt": {
+        "encodingBaseData": "Codificant les dades base...",
+        "analyzingLayout": "S'està analitzant el disseny...",
+        "buildingErrorCorrectionFoundation": "Construint la base de correcció d'errors...",
+        "mappingBitsToPixels": "Mapeig de bits a píxels...",
+        "processingImage": "S'està processant la teva imatge...",
+        "rankingPixelsByImportance": "Classificació dels píxels per importància...",
+        "solvingMatrix": "Resolució de la matriu...",
+        "selectingBestBasisVectors": "Selecció dels millors vectors de base...",
+        "countingPredictedMatches": "Comptant els partits previstos...",
+        "adjustingDataBytes": "S'estan ajustant els bytes de dades...",
+        "reEncodingQrCode": "Tornant a codificar el codi QR...",
+        "validatingResult": "Validació del resultat...",
+        "complete": "Completa...",
+        "maskStage": "Màscara {{mask}}: {{stage}}...",
+        "attemptStage": "Intent {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Intent {{current}}/{{total}}: màscara {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Vista prèvia ràpida",
+    "draft": "Esborrany"
   },
   "qr": {
     "additionalBorder": "Frontera addicional més enllà de la zona tranquil·la",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Imatge no disponible",
     "messageSent": "Missatge enviat",
     "lastUpdated": "Última actualització",
-    "scanMePlaceholder": "Escaneja'm!"
+    "scanMePlaceholder": "Escaneja'm!",
+    "skipToMainContent": "Saltar al contingut principal"
   },
   "contact": {
     "messageSentTitle": "Missatge enviat",
@@ -2035,5 +2073,18 @@
     "itAsset": "Actius informàtics",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Document PDF"
+  },
+  "analyze": {
+    "confidence": "Confiança",
+    "exportJson": "Exporta JSON",
+    "formatInformation": "Format d'informació",
+    "imageProperties": "Propietats de la imatge",
+    "processingTimings": "Temps de processament",
+    "spatialAnalysis": "Anàlisi espacial",
+    "noCodeDetectedInImage": "No s'ha detectat cap codi QR a la imatge"
+  },
+  "errors": {
+    "failedToGenerateQr": "No s'ha pogut generar el codi QR",
+    "contentTooLongForQr": "El contingut és massa llarg per al codi QR. Escurceu el vostre contingut o utilitzeu un escurçador d'URL."
   }
 }

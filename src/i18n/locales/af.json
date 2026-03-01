@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR-kodevoorskou - Klik Uitvoer om af te laai",
     "simulating": "Simuleer",
-    "simulationActive": "Omgewingssimulasie aktief - Voorskou wys hoe QR-kode onder verskillende toestande kan verskyn"
+    "simulationActive": "Omgewingssimulasie aktief - Voorskou wys hoe QR-kode onder verskillende toestande kan verskyn",
+    "busy": {
+      "workingOnIt": "Werk daaraan...",
+      "waitingForThingsToSettle": "Wag vir dinge om af te handel...",
+      "gettingAnimationPreviewReady": "Kry tans die animasievoorskou gereed...",
+      "generatingPreview": "Genereer tans jou voorskou …",
+      "preparingPreview": "Berei tans jou voorskou voor...",
+      "buildingQrStructure": "Bou die QR-struktuur...",
+      "preparingQrArtComputation": "Berei tans QR-Art-berekening voor...",
+      "stillRenderingDetailedOverlay": "Gee steeds die gedetailleerde oorleg...",
+      "renderingQrPreview": "Gee tans jou QR-voorskou...",
+      "checkingScanability": "Kontroleer tans dat dit behoorlik skandeer...",
+      "finalizingPreview": "Finaliseer tans die voorskou...",
+      "preparingAnimationFrames": "Berei tans die animasierame voor...",
+      "renderingAnimationFrames": "Verskaf tans die animasierame …",
+      "smoothingAnimationFrames": "Maak die animasierame glad...",
+      "finalizingFirstAnimationFrame": "Finaliseer tans die eerste animasieraam...",
+      "qrArt": {
+        "encodingBaseData": "Enkodeer tans die basisdata...",
+        "analyzingLayout": "Ontleed tans die uitleg...",
+        "buildingErrorCorrectionFoundation": "Bou die foutkorreksie-grondslag...",
+        "mappingBitsToPixels": "Karteer stukkies na pieksels...",
+        "processingImage": "Verwerk tans jou prent …",
+        "rankingPixelsByImportance": "Rangskik pixels volgens belangrikheid...",
+        "solvingMatrix": "Los tans die matriks op...",
+        "selectingBestBasisVectors": "Kies tans die beste basisvektore...",
+        "countingPredictedMatches": "Tel tans voorspelde wedstryde...",
+        "adjustingDataBytes": "Pas tans datagrepe aan...",
+        "reEncodingQrCode": "Herkodeer die QR-kode...",
+        "validatingResult": "Valideer tans die resultaat...",
+        "complete": "Voltooi...",
+        "maskStage": "Masker {{mask}}: {{stage}}...",
+        "attemptStage": "Poging {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Poging {{current}}/{{total}}: Masker {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Vinnige voorskou",
+    "draft": "Konsep"
   },
   "qr": {
     "additionalBorder": "Bykomende grens buite stil sone",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Prent is nie beskikbaar nie",
     "messageSent": "Boodskap gestuur",
     "lastUpdated": "Laas opgedateer",
-    "scanMePlaceholder": "Skandeer my!"
+    "scanMePlaceholder": "Skandeer my!",
+    "skipToMainContent": "Slaan oor na hoofinhoud"
   },
   "contact": {
     "messageSentTitle": "Boodskap gestuur",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT Bate",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF-dokument"
+  },
+  "analyze": {
+    "confidence": "Vertroue",
+    "exportJson": "Voer JSON uit",
+    "formatInformation": "Formateer inligting",
+    "imageProperties": "Beeld eienskappe",
+    "processingTimings": "Verwerking Tydsberekeninge",
+    "spatialAnalysis": "Ruimtelike Analise",
+    "noCodeDetectedInImage": "Geen QR-kode in beeld bespeur nie"
+  },
+  "errors": {
+    "failedToGenerateQr": "Kon nie QR-kode genereer nie",
+    "contentTooLongForQr": "Inhoud te lank vir QR-kode. Verkort asseblief jou inhoud of gebruik 'n URL-verkorter."
   }
 }

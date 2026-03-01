@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR 代码预览 - 单击导出以下载",
     "simulating": "模拟",
-    "simulationActive": "环境模拟活动 - 预览显示 QR 代码可能在不同条件下出现"
+    "simulationActive": "环境模拟活动 - 预览显示 QR 代码可能在不同条件下出现",
+    "busy": {
+      "workingOnIt": "正在努力...",
+      "waitingForThingsToSettle": "等待事情解决...",
+      "gettingAnimationPreviewReady": "正在准备动画预览...",
+      "generatingPreview": "正在生成预览...",
+      "preparingPreview": "正在准备预览...",
+      "buildingQrStructure": "构建 QR 结构...",
+      "preparingQrArtComputation": "正在准备 QR-Art 计算...",
+      "stillRenderingDetailedOverlay": "仍在渲染详细的叠加...",
+      "renderingQrPreview": "正在渲染您的 QR 预览...",
+      "checkingScanability": "检查它是否正确扫描...",
+      "finalizingPreview": "正在完成预览...",
+      "preparingAnimationFrames": "准备动画帧...",
+      "renderingAnimationFrames": "渲染动画帧...",
+      "smoothingAnimationFrames": "平滑动画帧...",
+      "finalizingFirstAnimationFrame": "完成第一个动画帧...",
+      "qrArt": {
+        "encodingBaseData": "对基础数据进行编码...",
+        "analyzingLayout": "分析布局...",
+        "buildingErrorCorrectionFoundation": "建立纠错基础...",
+        "mappingBitsToPixels": "将位映射到像素...",
+        "processingImage": "正在处理您的图像...",
+        "rankingPixelsByImportance": "按重要性对像素进行排名...",
+        "solvingMatrix": "求解矩阵...",
+        "selectingBestBasisVectors": "选择最佳基向量...",
+        "countingPredictedMatches": "计算预测的比赛...",
+        "adjustingDataBytes": "调整数据字节...",
+        "reEncodingQrCode": "重新编码 QR 码...",
+        "validatingResult": "正在验证结果...",
+        "complete": "完成...",
+        "maskStage": "掩码 {{mask}}: {{stage}}...",
+        "attemptStage": "尝试 {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "尝试 {{current}}/{{total}}：掩码 {{mask}}：{{stage}}..."
+      }
+    },
+    "fastPreview": "快速预览",
+    "draft": "吃水"
   },
   "qr": {
     "additionalBorder": "宁静区以外的边界",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "无图像",
     "messageSent": "发送信件",
     "lastUpdated": "上次更新",
-    "scanMePlaceholder": "扫描我!"
+    "scanMePlaceholder": "扫描我!",
+    "skipToMainContent": "跳至主要内容"
   },
   "contact": {
     "messageSentTitle": "发送信件",
@@ -2035,5 +2073,18 @@
     "itAsset": "信息技术资产",
     "xTwitter": "X (转动)",
     "pdfDocument": "专题报告 文档"
+  },
+  "analyze": {
+    "confidence": "信心",
+    "exportJson": "导出 JSON",
+    "formatInformation": "格式信息",
+    "imageProperties": "图像属性",
+    "processingTimings": "处理时间",
+    "spatialAnalysis": "空间分析",
+    "noCodeDetectedInImage": "图像中未检测到二维码"
+  },
+  "errors": {
+    "failedToGenerateQr": "生成二维码失败",
+    "contentTooLongForQr": "内容对于二维码来说太长。请缩短您的内容或使用网址缩短器。"
   }
 }

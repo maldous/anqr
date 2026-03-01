@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR कोड पूर्वावलोकन - डाउनलोड गर्न निर्यात क्लिक गर्नुहोस्",
     "simulating": "अनुकरण गर्दै",
-    "simulationActive": "वातावरणीय सिमुलेशन सक्रिय - पूर्वावलोकनले QR कोड विभिन्न परिस्थितिहरूमा कसरी देखा पर्न सक्छ भनेर देखाउँछ"
+    "simulationActive": "वातावरणीय सिमुलेशन सक्रिय - पूर्वावलोकनले QR कोड विभिन्न परिस्थितिहरूमा कसरी देखा पर्न सक्छ भनेर देखाउँछ",
+    "busy": {
+      "workingOnIt": "यसमा काम...",
+      "waitingForThingsToSettle": "कुरा मिल्ने पर्खाइमा...",
+      "gettingAnimationPreviewReady": "एनिमेसन पूर्वावलोकन तयार गर्दै...",
+      "generatingPreview": "तपाईंको पूर्वावलोकन उत्पन्न गर्दै...",
+      "preparingPreview": "तपाईंको पूर्वावलोकन तयार गर्दै...",
+      "buildingQrStructure": "QR संरचना निर्माण गर्दै...",
+      "preparingQrArtComputation": "QR-कला गणना तयारी गर्दै...",
+      "stillRenderingDetailedOverlay": "अझै विस्तृत ओभरले रेन्डर गर्दै...",
+      "renderingQrPreview": "तपाईंको QR पूर्वावलोकन रेन्डर गर्दै...",
+      "checkingScanability": "यो ठीकसँग स्क्यान गरिएको छ भनेर जाँच गर्दै...",
+      "finalizingPreview": "पूर्वावलोकनलाई अन्तिम रूप दिँदै...",
+      "preparingAnimationFrames": "एनिमेसन फ्रेमहरू तयार गर्दै...",
+      "renderingAnimationFrames": "एनिमेसन फ्रेमहरू रेन्डर गर्दै...",
+      "smoothingAnimationFrames": "एनिमेसन फ्रेमहरू स्मूथ गर्दै...",
+      "finalizingFirstAnimationFrame": "पहिलो एनिमेसन फ्रेमलाई अन्तिम रूप दिँदै...",
+      "qrArt": {
+        "encodingBaseData": "आधार डाटा इन्कोड गर्दै...",
+        "analyzingLayout": "लेआउट विश्लेषण गर्दै...",
+        "buildingErrorCorrectionFoundation": "त्रुटि सुधारको आधार निर्माण गर्दै...",
+        "mappingBitsToPixels": "पिक्सेलमा बिट्स म्याप गर्दै...",
+        "processingImage": "तपाईंको छवि प्रशोधन गर्दै...",
+        "rankingPixelsByImportance": "महत्व अनुसार पिक्सेल को श्रेणीकरण...",
+        "solvingMatrix": "म्याट्रिक्स समाधान गर्दै...",
+        "selectingBestBasisVectors": "उत्तम आधार भेक्टरहरू चयन गर्दै...",
+        "countingPredictedMatches": "भविष्यवाणी गरिएका खेलहरू गणना गर्दै...",
+        "adjustingDataBytes": "डेटा बाइटहरू समायोजन गर्दै...",
+        "reEncodingQrCode": "QR कोड पुन: एन्कोड गर्दै...",
+        "validatingResult": "नतिजा प्रमाणित गर्दै...",
+        "complete": "पूरा...",
+        "maskStage": "मास्क {{mask}}: {{stage}}...",
+        "attemptStage": "प्रयास {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "प्रयास {{current}}/{{total}}: मास्क {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "द्रुत पूर्वावलोकन",
+    "draft": "मस्यौदा"
   },
   "qr": {
     "additionalBorder": "शान्त क्षेत्र बाहिर अतिरिक्त सीमाना",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "छवि उपलब्ध छैन",
     "messageSent": "सन्देश पठाइयो",
     "lastUpdated": "पछिल्लो अपडेट",
-    "scanMePlaceholder": "मलाई स्क्यान गर्नुहोस्!"
+    "scanMePlaceholder": "मलाई स्क्यान गर्नुहोस्!",
+    "skipToMainContent": "मुख्य सामग्रीमा जानुहोस्"
   },
   "contact": {
     "messageSentTitle": "सन्देश पठाइयो",
@@ -2035,5 +2073,18 @@
     "itAsset": "आईटी सम्पत्ति",
     "xTwitter": "एक्स (ट्विटर)",
     "pdfDocument": "PDF कागजात"
+  },
+  "analyze": {
+    "confidence": "आत्मविश्वास",
+    "exportJson": "JSON निर्यात गर्नुहोस्",
+    "formatInformation": "ढाँचा जानकारी",
+    "imageProperties": "छवि गुणहरू",
+    "processingTimings": "प्रशोधन समय",
+    "spatialAnalysis": "स्थानिय विश्लेषण",
+    "noCodeDetectedInImage": "छविमा कुनै QR कोड फेला परेन"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR कोड उत्पन्न गर्न असफल भयो",
+    "contentTooLongForQr": "QR कोडको लागि सामग्री धेरै लामो छ। कृपया आफ्नो सामग्री छोटो पार्नुहोस् वा URL सर्टनर प्रयोग गर्नुहोस्।"
   }
 }

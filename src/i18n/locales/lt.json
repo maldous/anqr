@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR kodo peržiūra – spustelėkite Eksportuoti, kad atsisiųstumėte",
     "simulating": "Imituojant",
-    "simulationActive": "Aplinkos modeliavimas aktyvus – peržiūra rodo, kaip QR kodas gali būti rodomas skirtingomis sąlygomis"
+    "simulationActive": "Aplinkos modeliavimas aktyvus – peržiūra rodo, kaip QR kodas gali būti rodomas skirtingomis sąlygomis",
+    "busy": {
+      "workingOnIt": "Dirbama su juo...",
+      "waitingForThingsToSettle": "Laukiam kol viskas susitvarkys...",
+      "gettingAnimationPreviewReady": "Paruošiama animacijos peržiūra...",
+      "generatingPreview": "Generuojama jūsų peržiūra...",
+      "preparingPreview": "Ruošiama peržiūra...",
+      "buildingQrStructure": "QR struktūros kūrimas...",
+      "preparingQrArtComputation": "Ruošiamas QR-Art skaičiavimas...",
+      "stillRenderingDetailedOverlay": "Vis dar pateikiama išsami perdanga...",
+      "renderingQrPreview": "Pateikiama QR peržiūra...",
+      "checkingScanability": "Tikrinama, ar tinkamai nuskaitoma...",
+      "finalizingPreview": "Baigiama peržiūra...",
+      "preparingAnimationFrames": "Ruošiami animacijos kadrai...",
+      "renderingAnimationFrames": "Atvaizduojami animacijos kadrai...",
+      "smoothingAnimationFrames": "Animacijos kadrų švelninimas...",
+      "finalizingFirstAnimationFrame": "Baigiamas pirmasis animacijos kadras...",
+      "qrArt": {
+        "encodingBaseData": "Koduojami baziniai duomenys...",
+        "analyzingLayout": "Analizuojamas išdėstymas...",
+        "buildingErrorCorrectionFoundation": "Klaidų taisymo pagrindo kūrimas...",
+        "mappingBitsToPixels": "Bitai susiejami su pikseliais...",
+        "processingImage": "Apdorojamas vaizdas...",
+        "rankingPixelsByImportance": "Pikselių reitingavimas pagal svarbą...",
+        "solvingMatrix": "Spręsti matricą...",
+        "selectingBestBasisVectors": "Renkantis geriausius bazinius vektorius...",
+        "countingPredictedMatches": "Skaičiuojamos prognozuojamos rungtynės...",
+        "adjustingDataBytes": "Koreguojami duomenų baitai...",
+        "reEncodingQrCode": "Iš naujo koduojamas QR kodas...",
+        "validatingResult": "Tikrinamas rezultatas...",
+        "complete": "Užbaigti...",
+        "maskStage": "Kaukė {{mask}}: {{stage}}...",
+        "attemptStage": "Bandymas {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Bandymas {{current}}/{{total}}: Kaukė {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Greita peržiūra",
+    "draft": "Juodraštis"
   },
   "qr": {
     "additionalBorder": "Papildoma riba už ramios zonos",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Vaizdas nepasiekiamas",
     "messageSent": "Pranešimas išsiųstas",
     "lastUpdated": "Paskutinį kartą atnaujinta",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Pereiti prie pagrindinio turinio"
   },
   "contact": {
     "messageSentTitle": "Pranešimas išsiųstas",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT turtas",
     "xTwitter": "X („Twitter\")",
     "pdfDocument": "PDF dokumentas"
+  },
+  "analyze": {
+    "confidence": "Pasitikėjimas",
+    "exportJson": "Eksportuoti JSON",
+    "formatInformation": "Formato informacija",
+    "imageProperties": "Vaizdo ypatybės",
+    "processingTimings": "Apdorojimo laikas",
+    "spatialAnalysis": "Erdvinė analizė",
+    "noCodeDetectedInImage": "Vaizde neaptiktas QR kodas"
+  },
+  "errors": {
+    "failedToGenerateQr": "Nepavyko sugeneruoti QR kodo",
+    "contentTooLongForQr": "Turinys per ilgas QR kodui. Sutrumpinkite turinį arba naudokite URL sutrumpinimo priemonę."
   }
 }

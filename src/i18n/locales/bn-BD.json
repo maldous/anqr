@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR কোড প্রিভিউ - ডাউনলোড করতে এক্সপোর্টে ক্লিক করুন",
     "simulating": "অনুকরণ",
-    "simulationActive": "এনভায়রনমেন্টাল সিমুলেশন সক্রিয় - প্রিভিউ দেখায় কিভাবে QR কোড বিভিন্ন পরিস্থিতিতে প্রদর্শিত হতে পারে"
+    "simulationActive": "এনভায়রনমেন্টাল সিমুলেশন সক্রিয় - প্রিভিউ দেখায় কিভাবে QR কোড বিভিন্ন পরিস্থিতিতে প্রদর্শিত হতে পারে",
+    "busy": {
+      "workingOnIt": "এটা নিয়ে কাজ করছে...",
+      "waitingForThingsToSettle": "জিনিসগুলি স্থির হওয়ার জন্য অপেক্ষা করছি...",
+      "gettingAnimationPreviewReady": "অ্যানিমেশন প্রিভিউ প্রস্তুত হচ্ছে...",
+      "generatingPreview": "আপনার পূর্বরূপ তৈরি করা হচ্ছে...",
+      "preparingPreview": "আপনার পূর্বরূপ প্রস্তুত করা হচ্ছে...",
+      "buildingQrStructure": "QR কাঠামো তৈরি করা হচ্ছে...",
+      "preparingQrArtComputation": "QR-আর্ট গণনা প্রস্তুত করা হচ্ছে...",
+      "stillRenderingDetailedOverlay": "এখনও বিস্তারিত ওভারলে রেন্ডার করা হচ্ছে...",
+      "renderingQrPreview": "আপনার QR প্রিভিউ রেন্ডার করা হচ্ছে...",
+      "checkingScanability": "এটি সঠিকভাবে স্ক্যান করছে কিনা তা পরীক্ষা করা হচ্ছে...",
+      "finalizingPreview": "পূর্বরূপ চূড়ান্ত করা হচ্ছে...",
+      "preparingAnimationFrames": "অ্যানিমেশন ফ্রেম প্রস্তুত করা হচ্ছে...",
+      "renderingAnimationFrames": "অ্যানিমেশন ফ্রেম রেন্ডার করা হচ্ছে...",
+      "smoothingAnimationFrames": "অ্যানিমেশন ফ্রেমগুলিকে মসৃণ করা হচ্ছে...",
+      "finalizingFirstAnimationFrame": "প্রথম অ্যানিমেশন ফ্রেম চূড়ান্ত করা হচ্ছে...",
+      "qrArt": {
+        "encodingBaseData": "বেস ডেটা এনকোডিং...",
+        "analyzingLayout": "লেআউট বিশ্লেষণ করা হচ্ছে...",
+        "buildingErrorCorrectionFoundation": "ত্রুটি সংশোধন ভিত্তি তৈরি করা হচ্ছে...",
+        "mappingBitsToPixels": "পিক্সেলে বিট ম্যাপিং...",
+        "processingImage": "আপনার ছবি প্রক্রিয়া করা হচ্ছে...",
+        "rankingPixelsByImportance": "গুরুত্ব অনুসারে পিক্সেল র‌্যাঙ্কিং...",
+        "solvingMatrix": "ম্যাট্রিক্স সমাধান করা হচ্ছে...",
+        "selectingBestBasisVectors": "সেরা ভিত্তি ভেক্টর নির্বাচন করা হচ্ছে...",
+        "countingPredictedMatches": "ভবিষ্যদ্বাণী করা ম্যাচগুলি গণনা করা হচ্ছে...",
+        "adjustingDataBytes": "ডেটা বাইট সামঞ্জস্য করা হচ্ছে...",
+        "reEncodingQrCode": "QR কোড পুনরায় এনকোড করা হচ্ছে...",
+        "validatingResult": "ফলাফল যাচাই করা হচ্ছে...",
+        "complete": "সম্পূর্ণ...",
+        "maskStage": "মাস্ক {{mask}}: {{stage}}...",
+        "attemptStage": "প্রচেষ্টা {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "প্রচেষ্টা {{current}}/{{total}}: মাস্ক {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "দ্রুত প্রিভিউ",
+    "draft": "খসড়া"
   },
   "qr": {
     "additionalBorder": "শান্ত অঞ্চলের বাইরে অতিরিক্ত সীমানা",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "ছবি অনুপলব্ধ",
     "messageSent": "বার্তা পাঠানো হয়েছে",
     "lastUpdated": "সর্বশেষ আপডেট",
-    "scanMePlaceholder": "আমাকে স্ক্যান করুন!"
+    "scanMePlaceholder": "আমাকে স্ক্যান করুন!",
+    "skipToMainContent": "প্রধান বিষয়বস্তু এড়িয়ে যান"
   },
   "contact": {
     "messageSentTitle": "বার্তা পাঠানো হয়েছে",
@@ -2035,5 +2073,18 @@
     "itAsset": "আইটি সম্পদ",
     "xTwitter": "এক্স (টুইটার)",
     "pdfDocument": "পিডিএফ ডকুমেন্ট"
+  },
+  "analyze": {
+    "confidence": "আত্মবিশ্বাস",
+    "exportJson": "JSON রপ্তানি করুন",
+    "formatInformation": "ফরম্যাট তথ্য",
+    "imageProperties": "ইমেজ বৈশিষ্ট্য",
+    "processingTimings": "প্রক্রিয়াকরণের সময়",
+    "spatialAnalysis": "স্থানিক বিশ্লেষণ",
+    "noCodeDetectedInImage": "ছবিতে কোন QR কোড শনাক্ত হয়নি"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR কোড তৈরি করা যায়নি",
+    "contentTooLongForQr": "QR কোডের জন্য কন্টেন্ট অনেক বড়। অনুগ্রহ করে আপনার বিষয়বস্তু সংক্ষিপ্ত করুন বা একটি URL সংক্ষিপ্তকারী ব্যবহার করুন।"
   }
 }

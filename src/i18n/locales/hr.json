@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Pregled QR koda - Kliknite Izvezi za preuzimanje",
     "simulating": "Simuliranje",
-    "simulationActive": "Aktivna je simulacija okoliša - Pregled pokazuje kako QR kod može izgledati u različitim uvjetima"
+    "simulationActive": "Aktivna je simulacija okoliša - Pregled pokazuje kako QR kod može izgledati u različitim uvjetima",
+    "busy": {
+      "workingOnIt": "Radim na tome...",
+      "waitingForThingsToSettle": "Čekajući da se stvari riješe...",
+      "gettingAnimationPreviewReady": "Priprema pregleda animacije...",
+      "generatingPreview": "Generiranje vašeg pregleda...",
+      "preparingPreview": "Priprema vašeg pregleda...",
+      "buildingQrStructure": "Izgradnja QR strukture...",
+      "preparingQrArtComputation": "Priprema QR-Art izračuna...",
+      "stillRenderingDetailedOverlay": "Još uvijek se prikazuje detaljni sloj...",
+      "renderingQrPreview": "Renderiranje vašeg QR pregleda...",
+      "checkingScanability": "Provjeravam skenira li ispravno...",
+      "finalizingPreview": "Dovršavanje pregleda...",
+      "preparingAnimationFrames": "Priprema okvira animacije...",
+      "renderingAnimationFrames": "Renderiranje okvira animacije...",
+      "smoothingAnimationFrames": "Izglađivanje okvira animacije...",
+      "finalizingFirstAnimationFrame": "Dovršavanje prvog kadra animacije...",
+      "qrArt": {
+        "encodingBaseData": "Kodiranje osnovnih podataka...",
+        "analyzingLayout": "Analiza izgleda...",
+        "buildingErrorCorrectionFoundation": "Izgradnja temelja za ispravljanje pogrešaka...",
+        "mappingBitsToPixels": "Preslikavanje bitova u piksele...",
+        "processingImage": "Obrada vaše slike...",
+        "rankingPixelsByImportance": "Rangiranje piksela po važnosti...",
+        "solvingMatrix": "Rješavanje matrice...",
+        "selectingBestBasisVectors": "Odabir najboljih baznih vektora...",
+        "countingPredictedMatches": "Broje se predviđene utakmice...",
+        "adjustingDataBytes": "Podešavanje bajtova podataka...",
+        "reEncodingQrCode": "Ponovno kodiranje QR koda...",
+        "validatingResult": "Potvrđivanje rezultata...",
+        "complete": "Kompletan...",
+        "maskStage": "Maska {{mask}}: {{stage}}...",
+        "attemptStage": "Pokušaj {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Pokušaj {{current}}/{{total}}: Maska {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Brzi pregled",
+    "draft": "Nacrt"
   },
   "qr": {
     "additionalBorder": "Dodatna granica izvan mirne zone",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Slika nije dostupna",
     "messageSent": "Poruka poslana",
     "lastUpdated": "Zadnje ažurirano",
-    "scanMePlaceholder": "Skeniraj me!"
+    "scanMePlaceholder": "Skeniraj me!",
+    "skipToMainContent": "Prijeđi na glavni sadržaj"
   },
   "contact": {
     "messageSentTitle": "Poruka poslana",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT imovina",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF dokument"
+  },
+  "analyze": {
+    "confidence": "Povjerenje",
+    "exportJson": "Izvezi JSON",
+    "formatInformation": "Format informacija",
+    "imageProperties": "Svojstva slike",
+    "processingTimings": "Vremena obrade",
+    "spatialAnalysis": "Prostorna analiza",
+    "noCodeDetectedInImage": "Na slici nije otkriven QR kod"
+  },
+  "errors": {
+    "failedToGenerateQr": "Generiranje QR koda nije uspjelo",
+    "contentTooLongForQr": "Sadržaj je predug za QR kod. Skratite sadržaj ili upotrijebite skraćivač URL-ova."
   }
 }

@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "Onyesho la Kuchungulia la Msimbo wa QR - Bofya Hamisha ili kupakua",
     "simulating": "Kuiga",
-    "simulationActive": "Uigaji wa mazingira unatumika - Onyesho la kukagua linaonyesha jinsi msimbo wa QR unavyoweza kuonekana katika hali tofauti"
+    "simulationActive": "Uigaji wa mazingira unatumika - Onyesho la kukagua linaonyesha jinsi msimbo wa QR unavyoweza kuonekana katika hali tofauti",
+    "busy": {
+      "workingOnIt": "Kuifanyia kazi...",
+      "waitingForThingsToSettle": "Inasubiri mambo yawe sawa...",
+      "gettingAnimationPreviewReady": "Inatayarisha onyesho la kukagua uhuishaji...",
+      "generatingPreview": "Inazalisha onyesho lako la kuchungulia...",
+      "preparingPreview": "Inatayarisha onyesho lako la kuchungulia...",
+      "buildingQrStructure": "Kujenga muundo wa QR...",
+      "preparingQrArtComputation": "Inatayarisha hesabu ya Sanaa ya QR...",
+      "stillRenderingDetailedOverlay": "Bado inatoa mwekeleo wa kina...",
+      "renderingQrPreview": "Inatoa onyesho lako la kuchungulia la QR...",
+      "checkingScanability": "Inakagua kuwa inachanganua vizuri...",
+      "finalizingPreview": "Inakamilisha onyesho la kukagua...",
+      "preparingAnimationFrames": "Inatayarisha viunzi vya uhuishaji...",
+      "renderingAnimationFrames": "Inatoa fremu za uhuishaji...",
+      "smoothingAnimationFrames": "Inalainisha fremu za uhuishaji...",
+      "finalizingFirstAnimationFrame": "Inakamilisha fremu ya kwanza ya uhuishaji...",
+      "qrArt": {
+        "encodingBaseData": "Inasimba data ya msingi...",
+        "analyzingLayout": "Inachanganua mpangilio...",
+        "buildingErrorCorrectionFoundation": "Kujenga msingi wa kurekebisha makosa...",
+        "mappingBitsToPixels": "Kuweka ramani kwa pikseli...",
+        "processingImage": "Inachakata picha yako...",
+        "rankingPixelsByImportance": "Kupanga pikseli kwa umuhimu...",
+        "solvingMatrix": "Inasuluhisha matrix...",
+        "selectingBestBasisVectors": "Inachagua vekta bora za msingi...",
+        "countingPredictedMatches": "Inahesabu mechi zilizotabiriwa...",
+        "adjustingDataBytes": "Inarekebisha baiti za data...",
+        "reEncodingQrCode": "Inasimba upya msimbo wa QR...",
+        "validatingResult": "Inathibitisha matokeo...",
+        "complete": "Kamilisha...",
+        "maskStage": "Kinyago {{mask}}: {{stage}}...",
+        "attemptStage": "Jaribio {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Jaribio {{current}}/{{total}}: Barakoa {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Hakiki ya Haraka",
+    "draft": "Rasimu"
   },
   "qr": {
     "additionalBorder": "Mpaka wa ziada zaidi ya eneo tulivu",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Picha haipatikani",
     "messageSent": "Ujumbe umetumwa",
     "lastUpdated": "Ilisasishwa Mwisho",
-    "scanMePlaceholder": "Scan Me!"
+    "scanMePlaceholder": "Scan Me!",
+    "skipToMainContent": "Ruka hadi kwa yaliyomo kuu"
   },
   "contact": {
     "messageSentTitle": "Ujumbe umetumwa",
@@ -2035,5 +2073,18 @@
     "itAsset": "Mali ya IT",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "Hati ya PDF"
+  },
+  "analyze": {
+    "confidence": "Kujiamini",
+    "exportJson": "Hamisha JSON",
+    "formatInformation": "Maelezo ya Umbizo",
+    "imageProperties": "Sifa za Picha",
+    "processingTimings": "Usindikaji Majira",
+    "spatialAnalysis": "Uchambuzi wa Nafasi",
+    "noCodeDetectedInImage": "Hakuna msimbo wa QR uliogunduliwa kwenye picha"
+  },
+  "errors": {
+    "failedToGenerateQr": "Imeshindwa kuzalisha msimbo wa QR",
+    "contentTooLongForQr": "Maudhui ni marefu sana kwa msimbo wa QR. Tafadhali fupisha maudhui yako au utumie kifupisho cha URL."
   }
 }

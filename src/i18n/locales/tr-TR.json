@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Kod Önizlemesi - İndirmek için Dışa Aktar'a tıklayın",
     "simulating": "Simülasyon",
-    "simulationActive": "Çevresel simülasyon etkin - Önizleme, QR kodunun farklı koşullar altında nasıl görünebileceğini gösterir"
+    "simulationActive": "Çevresel simülasyon etkin - Önizleme, QR kodunun farklı koşullar altında nasıl görünebileceğini gösterir",
+    "busy": {
+      "workingOnIt": "Üzerinde çalışıyorum...",
+      "waitingForThingsToSettle": "İşlerin düzelmesini bekliyorum...",
+      "gettingAnimationPreviewReady": "Animasyon önizlemesi hazırlanıyor...",
+      "generatingPreview": "Önizlemeniz oluşturuluyor...",
+      "preparingPreview": "Önizlemeniz hazırlanıyor...",
+      "buildingQrStructure": "QR yapısı oluşturuluyor...",
+      "preparingQrArtComputation": "QR-Art hesaplaması hazırlanıyor...",
+      "stillRenderingDetailedOverlay": "Ayrıntılı kaplama hâlâ işleniyor...",
+      "renderingQrPreview": "QR önizlemeniz oluşturuluyor...",
+      "checkingScanability": "Düzgün taranıp taranmadığı kontrol ediliyor...",
+      "finalizingPreview": "Önizleme sonlandırılıyor...",
+      "preparingAnimationFrames": "Animasyon kareleri hazırlanıyor...",
+      "renderingAnimationFrames": "Animasyon kareleri oluşturuluyor...",
+      "smoothingAnimationFrames": "Animasyon kareleri yumuşatılıyor...",
+      "finalizingFirstAnimationFrame": "İlk animasyon karesi sonlandırılıyor...",
+      "qrArt": {
+        "encodingBaseData": "Temel veriler kodlanıyor...",
+        "analyzingLayout": "Düzen analiz ediliyor...",
+        "buildingErrorCorrectionFoundation": "Hata düzeltme temelini oluşturmak...",
+        "mappingBitsToPixels": "Bitleri piksellerle eşleme...",
+        "processingImage": "Resminiz işleniyor...",
+        "rankingPixelsByImportance": "Pikseller önem sırasına göre sıralanıyor...",
+        "solvingMatrix": "Matris çözülüyor...",
+        "selectingBestBasisVectors": "En iyi temel vektörleri seçmek...",
+        "countingPredictedMatches": "Tahmin edilen maçlar sayılıyor...",
+        "adjustingDataBytes": "Veri baytları ayarlanıyor...",
+        "reEncodingQrCode": "QR kodunu yeniden kodlamak...",
+        "validatingResult": "Sonuç doğrulanıyor...",
+        "complete": "Tamamlandı...",
+        "maskStage": "Maske {{mask}}: {{stage}}...",
+        "attemptStage": "Şunu deneyin: {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "{{current}}/{{total}} denemesi: Maske {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Hızlı Önizleme",
+    "draft": "Taslak"
   },
   "qr": {
     "additionalBorder": "Sessiz bölgenin ötesinde ek sınır",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Resim kullanılamıyor",
     "messageSent": "Mesaj gönderildi",
     "lastUpdated": "Son Güncelleme",
-    "scanMePlaceholder": "Beni Tara!"
+    "scanMePlaceholder": "Beni Tara!",
+    "skipToMainContent": "Ana içeriğe atla"
   },
   "contact": {
     "messageSentTitle": "Mesaj gönderildi",
@@ -2035,5 +2073,18 @@
     "itAsset": "BT Varlığı",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF Belgesi"
+  },
+  "analyze": {
+    "confidence": "Güven",
+    "exportJson": "JSON'u dışa aktar",
+    "formatInformation": "Format Bilgisi",
+    "imageProperties": "Görüntü Özellikleri",
+    "processingTimings": "İşleme Zamanlamaları",
+    "spatialAnalysis": "Mekansal Analiz",
+    "noCodeDetectedInImage": "Resimde QR kodu algılanmadı"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR kodu oluşturulamadı",
+    "contentTooLongForQr": "İçerik QR kodu için çok uzun. Lütfen içeriğinizi kısaltın veya bir URL kısaltıcı kullanın."
   }
 }

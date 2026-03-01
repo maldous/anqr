@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR Code Preview - Klicka på Export för nedladdning",
     "simulating": "Simulera",
-    "simulationActive": "Miljösimulering aktiv - Förhandsvisning visar hur QR-kod kan förekomma under olika förhållanden"
+    "simulationActive": "Miljösimulering aktiv - Förhandsvisning visar hur QR-kod kan förekomma under olika förhållanden",
+    "busy": {
+      "workingOnIt": "Jobbar på det...",
+      "waitingForThingsToSettle": "Väntar på att saker ska lösa sig...",
+      "gettingAnimationPreviewReady": "Förbereder förhandsvisningen av animationen...",
+      "generatingPreview": "Genererar din förhandsvisning...",
+      "preparingPreview": "Förbereder din förhandsvisning...",
+      "buildingQrStructure": "Bygger QR-strukturen...",
+      "preparingQrArtComputation": "Förbereder QR-Art-beräkning...",
+      "stillRenderingDetailedOverlay": "Den detaljerade överlagringen återges fortfarande...",
+      "renderingQrPreview": "Återger din QR-förhandsgranskning...",
+      "checkingScanability": "Kontrollera att den skannar ordentligt...",
+      "finalizingPreview": "Slutför förhandsvisningen...",
+      "preparingAnimationFrames": "Förbereder animationsramarna...",
+      "renderingAnimationFrames": "Återger animationsramarna...",
+      "smoothingAnimationFrames": "Jämnar ut animationsramarna...",
+      "finalizingFirstAnimationFrame": "Slutför den första animeringsramen...",
+      "qrArt": {
+        "encodingBaseData": "Kodar basdata...",
+        "analyzingLayout": "Analyserar layouten...",
+        "buildingErrorCorrectionFoundation": "Bygger grunden för felkorrigering...",
+        "mappingBitsToPixels": "Mappar bitar till pixlar...",
+        "processingImage": "Bearbetar din bild...",
+        "rankingPixelsByImportance": "Rangordna pixlar efter betydelse...",
+        "solvingMatrix": "Löser matrisen...",
+        "selectingBestBasisVectors": "Väljer de bästa grundvektorerna...",
+        "countingPredictedMatches": "Räknar förväntade matcher...",
+        "adjustingDataBytes": "Justerar databyte...",
+        "reEncodingQrCode": "Omkodar QR-koden...",
+        "validatingResult": "Validerar resultatet...",
+        "complete": "Komplett...",
+        "maskStage": "Mask {{mask}}: {{stage}}...",
+        "attemptStage": "Försök {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "Försök {{current}}/{{total}}: Mask {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "Snabb förhandsgranskning",
+    "draft": "Utkast"
   },
   "qr": {
     "additionalBorder": "Ytterligare gräns utanför tyst zon",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "Bild otillgänglig",
     "messageSent": "Meddelande skickat",
     "lastUpdated": "Senast uppdaterad",
-    "scanMePlaceholder": "Skanna mig!"
+    "scanMePlaceholder": "Skanna mig!",
+    "skipToMainContent": "Hoppa till huvudinnehållet"
   },
   "contact": {
     "messageSentTitle": "Meddelande skickat",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT Asset",
     "xTwitter": "X (Twitter)",
     "pdfDocument": "PDF PDF Dokument"
+  },
+  "analyze": {
+    "confidence": "Förtroende",
+    "exportJson": "Exportera JSON",
+    "formatInformation": "Formatinformation",
+    "imageProperties": "Bildegenskaper",
+    "processingTimings": "Bearbetningstider",
+    "spatialAnalysis": "Rumslig analys",
+    "noCodeDetectedInImage": "Ingen QR-kod upptäcktes i bilden"
+  },
+  "errors": {
+    "failedToGenerateQr": "Det gick inte att generera QR-kod",
+    "contentTooLongForQr": "Innehållet är för långt för QR-koden. Förkorta ditt innehåll eller använd en URL-förkortare."
   }
 }

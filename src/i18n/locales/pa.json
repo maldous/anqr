@@ -1081,7 +1081,44 @@
   "preview": {
     "qrCodePreview": "QR ਕੋਡ ਪ੍ਰੀਵਿਊ - ਡਾਊਨਲੋਡ ਕਰਨ ਲਈ ਐਕਸਪੋਰਟ 'ਤੇ ਕਲਿੱਕ ਕਰੋ",
     "simulating": "ਸਿਮੂਲੇਟਿੰਗ",
-    "simulationActive": "ਐਨਵਾਇਰਮੈਂਟਲ ਸਿਮੂਲੇਸ਼ਨ ਐਕਟਿਵ - ਪੂਰਵਦਰਸ਼ਨ ਦਿਖਾਉਂਦਾ ਹੈ ਕਿ QR ਕੋਡ ਵੱਖ-ਵੱਖ ਸਥਿਤੀਆਂ ਵਿੱਚ ਕਿਵੇਂ ਦਿਖਾਈ ਦੇ ਸਕਦਾ ਹੈ"
+    "simulationActive": "ਐਨਵਾਇਰਮੈਂਟਲ ਸਿਮੂਲੇਸ਼ਨ ਐਕਟਿਵ - ਪੂਰਵਦਰਸ਼ਨ ਦਿਖਾਉਂਦਾ ਹੈ ਕਿ QR ਕੋਡ ਵੱਖ-ਵੱਖ ਸਥਿਤੀਆਂ ਵਿੱਚ ਕਿਵੇਂ ਦਿਖਾਈ ਦੇ ਸਕਦਾ ਹੈ",
+    "busy": {
+      "workingOnIt": "ਇਸ 'ਤੇ ਕੰਮ ਕਰ ਰਿਹਾ ਹੈ...",
+      "waitingForThingsToSettle": "ਚੀਜ਼ਾਂ ਦੇ ਠੀਕ ਹੋਣ ਦੀ ਉਡੀਕ ਕਰ ਰਿਹਾ ਹੈ...",
+      "gettingAnimationPreviewReady": "ਐਨੀਮੇਸ਼ਨ ਪ੍ਰੀਵਿਊ ਤਿਆਰ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "generatingPreview": "ਤੁਹਾਡੀ ਪੂਰਵ-ਝਲਕ ਤਿਆਰ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ...",
+      "preparingPreview": "ਤੁਹਾਡੀ ਝਲਕ ਨੂੰ ਤਿਆਰ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "buildingQrStructure": "QR ਬਣਤਰ ਦਾ ਨਿਰਮਾਣ...",
+      "preparingQrArtComputation": "QR-ਆਰਟ ਗਣਨਾ ਤਿਆਰ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ...",
+      "stillRenderingDetailedOverlay": "ਅਜੇ ਵੀ ਵਿਸਤ੍ਰਿਤ ਓਵਰਲੇ ਨੂੰ ਪੇਸ਼ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "renderingQrPreview": "ਤੁਹਾਡੇ QR ਪੂਰਵਦਰਸ਼ਨ ਨੂੰ ਪੇਸ਼ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "checkingScanability": "ਜਾਂਚ ਕਰ ਰਿਹਾ ਹੈ ਕਿ ਇਹ ਸਹੀ ਢੰਗ ਨਾਲ ਸਕੈਨ ਕਰਦਾ ਹੈ...",
+      "finalizingPreview": "ਪ੍ਰੀਵਿਊ ਨੂੰ ਅੰਤਿਮ ਰੂਪ ਦਿੱਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "preparingAnimationFrames": "ਐਨੀਮੇਸ਼ਨ ਫਰੇਮਾਂ ਨੂੰ ਤਿਆਰ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "renderingAnimationFrames": "ਐਨੀਮੇਸ਼ਨ ਫਰੇਮਾਂ ਨੂੰ ਰੈਂਡਰ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "smoothingAnimationFrames": "ਐਨੀਮੇਸ਼ਨ ਫਰੇਮਾਂ ਨੂੰ ਸਮੂਥ ਕਰਨਾ...",
+      "finalizingFirstAnimationFrame": "ਪਹਿਲੇ ਐਨੀਮੇਸ਼ਨ ਫਰੇਮ ਨੂੰ ਅੰਤਿਮ ਰੂਪ ਦਿੱਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+      "qrArt": {
+        "encodingBaseData": "ਅਧਾਰ ਡੇਟਾ ਨੂੰ ਏਨਕੋਡ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+        "analyzingLayout": "ਖਾਕੇ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+        "buildingErrorCorrectionFoundation": "ਗਲਤੀ ਸੁਧਾਰ ਫਾਊਂਡੇਸ਼ਨ ਬਣਾਉਣਾ...",
+        "mappingBitsToPixels": "ਬਿੱਟਾਂ ਨੂੰ ਪਿਕਸਲ ਵਿੱਚ ਮੈਪ ਕਰਨਾ...",
+        "processingImage": "ਤੁਹਾਡੇ ਚਿੱਤਰ 'ਤੇ ਪ੍ਰਕਿਰਿਆ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ...",
+        "rankingPixelsByImportance": "ਮਹੱਤਤਾ ਦੁਆਰਾ ਪਿਕਸਲ ਰੈਂਕਿੰਗ...",
+        "solvingMatrix": "ਮੈਟ੍ਰਿਕਸ ਨੂੰ ਹੱਲ ਕਰਨਾ...",
+        "selectingBestBasisVectors": "ਸਭ ਤੋਂ ਵਧੀਆ ਆਧਾਰ ਵੈਕਟਰ ਚੁਣਨਾ...",
+        "countingPredictedMatches": "ਅਨੁਮਾਨਿਤ ਮੈਚਾਂ ਦੀ ਗਿਣਤੀ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ...",
+        "adjustingDataBytes": "ਡਾਟਾ ਬਾਈਟਾਂ ਨੂੰ ਵਿਵਸਥਿਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+        "reEncodingQrCode": "QR ਕੋਡ ਨੂੰ ਮੁੜ-ਇੰਕੋਡਿੰਗ...",
+        "validatingResult": "ਨਤੀਜਾ ਪ੍ਰਮਾਣਿਤ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+        "complete": "ਸੰਪੂਰਨ...",
+        "maskStage": "ਮਾਸਕ {{mask}}: {{stage}}...",
+        "attemptStage": "ਕੋਸ਼ਿਸ਼ {{current}}/{{total}}: {{stage}}...",
+        "attemptMaskStage": "ਕੋਸ਼ਿਸ਼ {{current}}/{{total}}: ਮਾਸਕ {{mask}}: {{stage}}..."
+      }
+    },
+    "fastPreview": "ਤੇਜ਼ ਝਲਕ",
+    "draft": "ਡਰਾਫਟ"
   },
   "qr": {
     "additionalBorder": "ਸ਼ਾਂਤ ਜ਼ੋਨ ਤੋਂ ਪਰੇ ਵਾਧੂ ਸਰਹੱਦ",
@@ -1307,7 +1344,8 @@
     "imageUnavailable": "ਚਿੱਤਰ ਉਪਲਬਧ ਨਹੀਂ ਹੈ",
     "messageSent": "ਸੁਨੇਹਾ ਭੇਜਿਆ ਗਿਆ",
     "lastUpdated": "ਆਖਰੀ ਵਾਰ ਅੱਪਡੇਟ ਕੀਤਾ",
-    "scanMePlaceholder": "ਮੈਨੂੰ ਸਕੈਨ ਕਰੋ!"
+    "scanMePlaceholder": "ਮੈਨੂੰ ਸਕੈਨ ਕਰੋ!",
+    "skipToMainContent": "ਮੁੱਖ ਸਮੱਗਰੀ 'ਤੇ ਜਾਓ"
   },
   "contact": {
     "messageSentTitle": "ਸੁਨੇਹਾ ਭੇਜਿਆ ਗਿਆ",
@@ -2035,5 +2073,18 @@
     "itAsset": "IT ਸੰਪਤੀ",
     "xTwitter": "ਐਕਸ (ਟਵਿੱਟਰ)",
     "pdfDocument": "PDF ਦਸਤਾਵੇਜ਼"
+  },
+  "analyze": {
+    "confidence": "ਭਰੋਸਾ",
+    "exportJson": "JSON ਨੂੰ ਨਿਰਯਾਤ ਕਰੋ",
+    "formatInformation": "ਫਾਰਮੈਟ ਜਾਣਕਾਰੀ",
+    "imageProperties": "ਚਿੱਤਰ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ",
+    "processingTimings": "ਪ੍ਰਕਿਰਿਆ ਕਰਨ ਦੇ ਸਮੇਂ",
+    "spatialAnalysis": "ਸਥਾਨਿਕ ਵਿਸ਼ਲੇਸ਼ਣ",
+    "noCodeDetectedInImage": "ਚਿੱਤਰ ਵਿੱਚ ਕੋਈ QR ਕੋਡ ਨਹੀਂ ਮਿਲਿਆ"
+  },
+  "errors": {
+    "failedToGenerateQr": "QR ਕੋਡ ਬਣਾਉਣ ਵਿੱਚ ਅਸਫਲ",
+    "contentTooLongForQr": "QR ਕੋਡ ਲਈ ਸਮੱਗਰੀ ਬਹੁਤ ਲੰਬੀ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੀ ਸਮੱਗਰੀ ਨੂੰ ਛੋਟਾ ਕਰੋ ਜਾਂ URL ਸ਼ਾਰਟਨਰ ਦੀ ਵਰਤੋਂ ਕਰੋ।"
   }
 }
