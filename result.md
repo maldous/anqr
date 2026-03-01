@@ -28,3 +28,4 @@
   - Removed per-call DOM canvas creation in the common path, while keeping compatibility for non-DOM canvas factories.
 - Implemented item 82 (`[LOW][CPU]`): switched `hashString` from `codePointAt` to `charCodeAt` in `src/modules/qr-generator/utils.ts` for UTF-16 unit hashing fast-path.
 - Implemented item 52 direction (`[MED][CPU]`): added fill-style state tracking in `render-loop` to avoid redundant `ctx.fillStyle` assignments in the per-module full render path.
+- Implemented item 103 direction (`[LOW][CLEANUP]`): terminate validation and QR-Art workers on `useQRGenerator` teardown to avoid lingering worker lifetimes when navigating away from editor context.
