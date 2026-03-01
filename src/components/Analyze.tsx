@@ -1471,7 +1471,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
         const sampleOriginalMatrix = (): boolean[][] | null => {
           if (!(isGeneratorSource && generatedCanvas)) return null;
-          const gctx = generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null;
+          const gctx =
+            (generatedCanvas.getContext('2d', {
+              willReadFrequently: true,
+              desynchronized: true,
+            } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+            (generatedCanvas.getContext('2d') as CanvasRenderingContext2D | null);
           if (!gctx) return null;
 
           const canvasWidth = generatedCanvas.width;

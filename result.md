@@ -91,3 +91,14 @@
 - Implemented item 40 direction (`[BIG][UI]` content-visibility on heavy settings panels):
   - Added `contentVisibility: 'auto'` and `containIntrinsicSize: 'auto 520px'` to sidebar accordion section content in `src/components/Sidebar.tsx`.
   - Offscreen section bodies are now eligible for deferred layout/paint work while preserving stable scroll geometry.
+- Implemented item 33 direction (`[BIG][CPU]` broader read-optimized 2D context hints):
+  - Added `willReadFrequently: true` + `desynchronized: true` context acquisition (with fallback) at additional hot `getImageData` call sites across:
+    - `src/hooks/useQRGenerator.ts`
+    - `src/components/Preview.tsx`
+    - `src/components/Analyze.tsx`
+    - `src/modules/animation/interpolate-frames.ts`
+    - `src/modules/animation/gif-compositor.ts`
+    - `src/modules/animation/parsing.ts`
+    - `src/modules/animation/color-cycle.ts`
+    - `src/modules/animation/animation-patterns.ts`
+    - `src/modules/dither-algorithms/temporal.ts`

@@ -52,7 +52,12 @@ export function generateAnimationPatternFrames(
   const height = sourceCanvas.height;
 
   // Get source image data
-  const sourceCtx = (sourceCanvas as HTMLCanvasElement).getContext('2d');
+  const sourceCtx =
+    ((sourceCanvas as HTMLCanvasElement).getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+    ((sourceCanvas as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D | null);
   if (!sourceCtx) {
     throw new Error('Could not get 2D context from source canvas');
   }
@@ -99,7 +104,12 @@ export function interpolateAnimationFramesWithEasing(
   const height = frames[0].height;
   const framePixels = new Array<Uint8ClampedArray | null>(frames.length);
   for (let i = 0; i < frames.length; i++) {
-    const frameCtx = frames[i]?.getContext('2d');
+    const frameCtx =
+      (frames[i]?.getContext('2d', {
+        willReadFrequently: true,
+        desynchronized: true,
+      } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+      (frames[i]?.getContext('2d') as CanvasRenderingContext2D | null);
     framePixels[i] = frameCtx ? frameCtx.getImageData(0, 0, width, height).data : null;
   }
 

@@ -44,7 +44,12 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const _ctx = canvas.getContext('2d');
+  const _ctx =
+    (canvas.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+    (canvas.getContext('2d') as CanvasRenderingContext2D | null);
   if (!_ctx) {
     throw new Error('Failed to get 2D context for GIF compositor canvas');
   }
@@ -59,7 +64,12 @@ export function createGifCompositor(arrayBuffer: ArrayBuffer): GifCompositor {
   const patchCanvas = document.createElement('canvas');
   patchCanvas.width = maxPatchW;
   patchCanvas.height = maxPatchH;
-  const patchCtx = patchCanvas.getContext('2d');
+  const patchCtx =
+    (patchCanvas.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings | undefined) as CanvasRenderingContext2D | null) ??
+    (patchCanvas.getContext('2d') as CanvasRenderingContext2D | null);
   const patchImageDataCache: Array<ImageData | null> = new Array(frames.length).fill(null);
 
   let restoreData: { x: number; y: number; w: number; h: number; data: ImageData } | null = null;

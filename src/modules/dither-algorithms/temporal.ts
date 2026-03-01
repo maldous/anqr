@@ -105,7 +105,18 @@ export function applyTemporalNoiseToCanvas(
     result.height = canvas.height;
   }
 
-  const ctx = result.getContext('2d');
+  const ctx =
+    (result.getContext('2d', {
+      willReadFrequently: true,
+      desynchronized: true,
+    } as CanvasRenderingContext2DSettings | undefined) as
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D
+      | null) ??
+    (result.getContext('2d') as
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D
+      | null);
   if (!ctx) {
     return canvas as HTMLCanvasElement;
   }
