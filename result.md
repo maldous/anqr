@@ -71,3 +71,7 @@
 - Implemented item 24/16 direction (`[BIG/HUGE][CPU+MEM]` color-cycle in-place processing):
   - `src/modules/animation/color-cycle.ts` now accepts an optional target canvas and can process directly in-place.
   - `useQRGenerator` now applies color-cycle onto the already-rendered frame canvas (`targetCanvas = sourceCanvas`) to avoid allocating an extra canvas per animation frame in the preview generation loop.
+- Implemented item 10 direction (`[HUGE][CPU]` CanvasPool enforcement in scan-gate temporaries):
+  - Updated scan-gate simulation and downscale canvases in `src/modules/qr-generator/qr-generator-class.ts` to use `CanvasPool.acquire/release` instead of fresh canvas creation.
+  - Updated final-raster roundtrip path (`toFinalRasterCanvas`) to acquire output canvas from pool and release it on failure paths.
+  - Added explicit `try/finally` releases for all per-scenario temporary canvases to avoid accumulation across retry loops.
