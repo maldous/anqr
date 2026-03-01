@@ -102,3 +102,6 @@
     - `src/modules/animation/color-cycle.ts`
     - `src/modules/animation/animation-patterns.ts`
     - `src/modules/dither-algorithms/temporal.ts`
+- Implemented item 23 direction (`[BIG][CPU]` animation worker bitmap canvas reuse):
+  - In artwork animation generation (`useQRGenerator`), worker-returned `ImageBitmap` frames now draw into alternating reusable scratch canvases instead of allocating a new canvas per frame.
+  - Added `getArtworkBitmapScratchCanvas(...)` helper and wired it into `imageBitmapToCanvas(...)` for worker bitmap results.
