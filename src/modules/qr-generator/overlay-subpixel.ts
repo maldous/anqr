@@ -13,6 +13,7 @@ import {
   isVersionInfo,
 } from '../qr-spec/qr-patterns';
 import type { QRCodeObject } from './cache';
+import { curveIntensity } from './pixel-matrix-utils';
 import type { CreateCanvasFn, PixelDecisionMatrix, QRGeneratorConfig, RGBWithMeta } from './types';
 
 const log = createLogger('GENERATE');
@@ -157,7 +158,7 @@ export async function generateSubpixelMatrix(
   const gridScale = parseGridSize(config.subpixelGridSize) || scale;
   const actualScale = gridScale; // Use parsed grid size as scale
   const scaledSize = moduleCount * actualScale;
-  const intensity = (config.overlayIntensity ?? 100) / 100;
+  const intensity = curveIntensity(config.overlayIntensity ?? 100);
 
   // Get subpixel overlay data with the actual scale
   const { brightness, colors } = await getSubpixelOverlayData(

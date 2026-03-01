@@ -83,6 +83,16 @@ export function getScaleFactor(overlayMode: string | undefined, config: QRGenera
 }
 
 /**
+ * Apply a power-curve to the overlay intensity slider (0-100) so that
+ * the midpoint (50%) maps to a moderate effective intensity (~0.06).
+ * This keeps the usable range of the slider in a scan-safe zone.
+ */
+export function curveIntensity(pct: number): number {
+  const t = Math.max(0, Math.min(1, (pct ?? 100) / 100));
+  return t * t * t * t;
+}
+
+/**
  * Default per-ECC intensity limits (0-100).
  *
  * Keep these neutral by default so overlay intensity is only capped when an
@@ -105,17 +115,17 @@ export function getEffectiveIntensity(config: QRGeneratorConfig): {
   effectiveIntensity: number;
   effectiveConfig: QRGeneratorConfig;
 } {
-  const intensity = (config.overlayIntensity ?? 100) / 100;
+  const rawPct = config.overlayIntensity ?? 100;
 
   // Use config-provided ECC limits (0-100 scale) or a neutral fallback.
   const eccLimits = config.maxOverlayIntensityByEcc ?? DEFAULT_ECC_LIMITS;
   const maxIntensityPct = eccLimits[config.errorCorrection] ?? 100;
-  const maxIntensity = maxIntensityPct / 100;
-  const effectiveIntensity = Math.min(intensity, maxIntensity);
+  const cappedPct = Math.min(rawPct, maxIntensityPct);
+  const effectiveIntensity = curveIntensity(cappedPct);
 
   return {
     effectiveIntensity,
-    effectiveConfig: { ...config, overlayIntensity: effectiveIntensity * 100 },
+    effectiveConfig: { ...config, overlayIntensity: cappedPct },
   };
 }
 

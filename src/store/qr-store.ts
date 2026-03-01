@@ -1227,7 +1227,7 @@ export const useQRStore = create<QRState>((set, get) => ({
     threshold: 0,
     edgeDetect: 'off',
     mode: 'dithered',
-    intensity: 35,
+    intensity: 50,
     preserveFinders: true,
     preserveTiming: true,
     preserveAlignment: true,

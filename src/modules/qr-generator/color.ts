@@ -6,6 +6,7 @@
 import { createLogger } from '../../lib/logger';
 import { blendColors, getRelativeLuminance, parseColor } from '../core';
 import { getOverlayBrightness, getOverlayColor } from './overlay-data-packed';
+import { curveIntensity } from './pixel-matrix-utils';
 import type { QRGeneratorConfig } from './types';
 import type { OverlayData } from './types';
 import { getContrastRatio } from './utils';
@@ -54,7 +55,7 @@ export function applyPerModuleColor(
 ): string {
   const brightness = getOverlayBrightness(overlayData, row, col);
   const overlayColor = getOverlayColor(overlayData, row, col);
-  const intensity = (config.overlayIntensity || 100) / 100;
+  const intensity = curveIntensity(config.overlayIntensity ?? 100);
 
   switch (mode) {
     case 'by_brightness': {

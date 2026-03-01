@@ -28,6 +28,7 @@ import {
 import { distributeError } from './dithering-error';
 import { getDiffusionKernel } from './dithering-kernels';
 import { getOverlayBrightness } from './overlay-data-packed';
+import { curveIntensity } from './pixel-matrix-utils';
 import type { OverlayData, QRGeneratorConfig } from './types';
 
 const log = createLogger('GENERATE');
@@ -170,7 +171,7 @@ export function applyDitherToMatrix(
 
   const kernel = getDiffusionKernel(config.ditherKind || 'floyd_steinberg');
   const strength = (config.ditherStrength ?? 50) / 100;
-  const intensity = (config.overlayIntensity ?? 100) / 100;
+  const intensity = curveIntensity(config.overlayIntensity ?? 100);
 
   // Initialize result matrix with original QR values
   const result: boolean[][] = [];

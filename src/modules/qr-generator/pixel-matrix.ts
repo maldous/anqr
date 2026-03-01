@@ -18,7 +18,12 @@ export { generateBlueNoiseMatrix, generateDitheredMatrix } from './pixel-matrix-
 export { prepareUnifiedOverlayData } from './pixel-matrix-overlay';
 export { generateStandardMatrix } from './pixel-matrix-standard';
 // Re-export utilities
-export { generateBaseMatrix, getEffectiveIntensity, getScaleFactor } from './pixel-matrix-utils';
+export {
+  curveIntensity,
+  generateBaseMatrix,
+  getEffectiveIntensity,
+  getScaleFactor,
+} from './pixel-matrix-utils';
 
 const log = createLogger('GENERATE');
 
