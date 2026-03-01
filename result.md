@@ -64,3 +64,7 @@
 - Implemented item 10/16 direction (`[HUGE][CPU+MEM]` temporal dithering canvas reuse):
   - Extended `applyTemporalNoiseToCanvas` (`src/modules/dither-algorithms/temporal.ts`) with an optional target canvas so callers can reuse a preallocated surface.
   - Updated `useQRGenerator` animation generation to keep two reusable temporal scratch canvases and alternate them across frames, removing per-frame temporary canvas allocation in both compositor and non-compositor temporal-dither paths.
+- Implemented item 21 direction (`[BIG][STARTUP]` lazy decoder loading from generator path):
+  - Removed static `qr-decoder` import from `src/modules/qr-generator/qr-generator-class.ts`.
+  - Added cached dynamic loader (`loadQRDecoderModule`) and deferred decoder resolution until scan-gate decode is actually needed.
+  - Updated scan-gate decode path to use async decode calls without changing decode decision logic.

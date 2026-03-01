@@ -5,7 +5,6 @@
 
 import { createLogger } from '../../lib/logger';
 import type { GradientConfig } from '../core';
-import { decodeQR } from '../qr-decoder';
 import {
   calculateOptimalVersion,
   createShiftJISEncoder,
@@ -39,6 +38,15 @@ import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } f
 import { validateColor } from './utils';
 
 const log = createLogger('GENERATE');
+type QRDecoderModule = typeof import('../qr-decoder');
+let qrDecoderModulePromise: Promise<QRDecoderModule> | null = null;
+
+function loadQRDecoderModule(): Promise<QRDecoderModule> {
+  if (!qrDecoderModulePromise) {
+    qrDecoderModulePromise = import('../qr-decoder');
+  }
+  return qrDecoderModulePromise;
+}
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
@@ -495,12 +503,21 @@ export class QRGenerator {
         effectiveConfig.overlayMode === 'dithered' ||
         effectiveConfig.forceScaledOverlay === true
       ) {
-        const decodeCanvasData = (
+        let decodeFnPromise: Promise<QRDecoderModule['decodeQR']> | null = null;
+        const getDecodeFn = async (): Promise<QRDecoderModule['decodeQR']> => {
+          if (!decodeFnPromise) {
+            decodeFnPromise = loadQRDecoderModule().then((mod) => mod.decodeQR);
+          }
+          return await decodeFnPromise;
+        };
+
+        const decodeCanvasData = async (
           c: HTMLCanvasElement | OffscreenCanvas
-        ): { success: boolean; data: string | null } | null => {
+        ): Promise<{ success: boolean; data: string | null } | null> => {
           const ctx = c.getContext('2d') as CanvasRenderingContext2D | null;
           if (!ctx) return null;
           const imageData = ctx.getImageData(0, 0, c.width, c.height);
+          const decodeQR = await getDecodeFn();
           return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
         };
 
@@ -888,8 +905,8 @@ export class QRGenerator {
           }
         };
 
-        const runDecode = (src: HTMLCanvasElement | OffscreenCanvas): boolean => {
-          const decoded = decodeCanvasData(src);
+        const runDecode = async (src: HTMLCanvasElement | OffscreenCanvas): Promise<boolean> => {
+          const decoded = await decodeCanvasData(src);
           return decoded?.success === true && decoded?.data === effectiveConfig.content;
         };
 
@@ -914,7 +931,7 @@ export class QRGenerator {
           // Preview mode prioritizes generation throughput and checks decode on the render canvas.
           // Full mode validates on an export-equivalent raster roundtrip.
           const finalRaster = isPreviewScanGate ? canvas : await toFinalRasterCanvas(canvas);
-          if (!runDecode(finalRaster)) {
+          if (!(await runDecode(finalRaster))) {
             return { ok: false, baseDecodeOk: false, metrics: null, evaluatedCanvas: finalRaster };
           }
 
@@ -1029,7 +1046,7 @@ export class QRGenerator {
               simCtx.globalCompositeOperation = 'source-over';
             }
 
-            if (!runDecode(sim)) {
+            if (!(await runDecode(sim))) {
               return {
                 ok: false,
                 baseDecodeOk: true,
@@ -1104,7 +1121,7 @@ export class QRGenerator {
             const rescueRaster = isPreviewScanGate
               ? rescueCanvas
               : await toFinalRasterCanvas(rescueCanvas);
-            if (runDecode(rescueRaster)) {
+            if (await runDecode(rescueRaster)) {
               rememberPatch(patch);
               return rescueRaster;
             }
@@ -1125,7 +1142,7 @@ export class QRGenerator {
           const rescueRaster = isPreviewScanGate
             ? rescueCanvas
             : await toFinalRasterCanvas(rescueCanvas);
-          if (runDecode(rescueRaster)) {
+          if (await runDecode(rescueRaster)) {
             rememberPatch(patch);
             return rescueRaster;
           }
@@ -1158,7 +1175,7 @@ export class QRGenerator {
             ? qrFirstFallback
             : await toFinalRasterCanvas(qrFirstFallback);
           qrFirstLast = fallbackRaster;
-          if (runDecode(fallbackRaster)) {
+          if (await runDecode(fallbackRaster)) {
             if (effectiveConfig.qrFirstMode === true) {
               rememberPatch({
                 ...lastPatch,
