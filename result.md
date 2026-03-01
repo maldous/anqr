@@ -58,3 +58,6 @@
   - `src/components/Sidebar.tsx` no longer statically imports all section components at startup.
   - Converted Payload/Overlay/QR/Render/Animation/Output/Watermark/Metadata/Share/Safety sections to `React.lazy(...)` imports so section bundles load on demand.
   - Wrapped section rendering in `Suspense` with a lightweight inline fallback to keep UX stable while individual section chunks load.
+- Implemented item 16 direction (`[HUGE][CPU+MEM]` reuse animation ImageData buffers):
+  - `src/modules/animation/animation-patterns.ts` now reuses a single frame `ImageData` buffer when generating pattern frames instead of allocating `new ImageData(new Uint8ClampedArray(...))` per frame.
+  - Interpolation now preloads frame pixel buffers once and reuses a shared blend `ImageData` output buffer, removing repeated per-output-frame `getImageData` allocations in the blend path.
