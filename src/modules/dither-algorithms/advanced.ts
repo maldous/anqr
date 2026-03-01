@@ -6,11 +6,10 @@ import { createLogger } from '../../lib/logger';
 
 const _log = createLogger('DITHER');
 
-import { generateBlueNoiseTile, sampleBlueNoise } from './blue-noise';
 import { distributeErrorWithKernel } from './error-diffusion';
 import { DIFFUSION_KERNELS } from './kernels';
 import type { ColorMode, DiffusionKernel, DitherResult, RGB } from './types';
-import { clamp01, rgbToGray } from './utils';
+import { clamp01, generateBlueNoiseTile, rgbToGray, sampleBlueNoise } from './utils';
 
 /** Options for blue noise dithering */
 interface BlueNoiseOptions {

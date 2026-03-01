@@ -62,21 +62,6 @@ const nodeFactory: CanvasFactory = {
 };
 ```
 
-### Blue Noise Dithering
-
-```typescript
-import { generateBlueNoiseDithered } from '@/modules/qr-generator';
-
-const result = await generateBlueNoiseDithered({
-  text: 'Hello',
-  ecc: 'M',
-  scale: 4,
-  overlayCanvas: imageCanvas,
-  overlayIntensity: 50,
-  colorMode: 'color',
-});
-```
-
 ### Overlay Processing
 
 ```typescript

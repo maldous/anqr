@@ -279,8 +279,6 @@ export {
   drawModule,
   drawTimingModule,
   ensureContrast,
-  // Blue noise
-  generateBlueNoiseDithered,
   // Pixel matrix
   generatePixelDecisionMatrix,
   generateScaledQR,

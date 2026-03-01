@@ -18,9 +18,6 @@ export const CANVAS_FACTORY_API = [
   'blueNoiseCanvasFactory',
 ] as const;
 
-// Blue noise dithering
-export const BLUE_NOISE_API = ['generateBlueNoiseDithered'] as const;
-
 // Drawing functions
 export const DRAWING_API = [
   'createGradientFill',
@@ -140,7 +137,6 @@ export const TYPES = [
 export const PUBLIC_API = [
   ...GENERATOR_API,
   ...CANVAS_FACTORY_API,
-  ...BLUE_NOISE_API,
   ...DRAWING_API,
   ...OVERLAY_API,
   ...PIXEL_MATRIX_API,

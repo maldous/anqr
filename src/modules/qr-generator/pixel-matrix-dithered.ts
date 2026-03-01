@@ -564,15 +564,23 @@ function enforceModuleConstraints(
   version: number,
   config: QRGeneratorConfig
 ): void {
+  const scanGateProfile = config.scanGateProfile ?? 'full';
+  const strictScanGate = scanGateProfile === 'full';
   const baseDarkMin = clamp01(config.darkMinOccupancy ?? 0.38);
   const baseLightMax = clamp01(config.lightMaxOccupancy ?? 0.62);
   if (baseDarkMin <= 0.001 && baseLightMax >= 0.999) return;
 
   const total = scale * scale;
   const maxIters = Math.max(1, Math.min(16, config.optimizeIterations ?? 8));
-  const centerRadius = Math.max(1, Math.floor(scale * 0.18));
+  const centerRadius = Math.max(1, Math.floor(scale * (strictScanGate ? 0.18 : 0.1)));
   const centerArea = (centerRadius * 2 + 1) * (centerRadius * 2 + 1);
   const moduleCenter = (scale - 1) / 2;
+  const occViolationWeight = strictScanGate ? 0.35 : 0.55;
+  const centerViolationWeight = strictScanGate ? 1.8 : 0.9;
+  const scanScoreWeight = strictScanGate ? 12.5 : 8.8;
+  const artPenaltyWeight = strictScanGate ? 1.7 : 2.4;
+  const edgeBandPenalty = strictScanGate ? 0.44 : 0.14;
+  const centerPixelBonus = strictScanGate ? 0.07 : 0.01;
   const occupancies: number[][] = Array.from({ length: moduleCount }, () =>
     new Array(moduleCount).fill(0)
   );
@@ -644,18 +652,33 @@ function enforceModuleConstraints(
         lightMaxMap[mr][mc] = clamp01(
           Math.max(0.5, Math.min(0.66, baseLightMax + contrast * 0.02))
         );
-        darkCenterMinMap[mr][mc] = clamp01(
-          Math.max(
-            darkMinMap[mr][mc] + 0.12,
-            Math.min(0.68, darkMinMap[mr][mc] + 0.2 - contrast * 0.04)
-          )
-        );
-        lightCenterMaxMap[mr][mc] = clamp01(
-          Math.min(
-            lightMaxMap[mr][mc] - 0.12,
-            Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
-          )
-        );
+        if (strictScanGate) {
+          darkCenterMinMap[mr][mc] = clamp01(
+            Math.max(
+              darkMinMap[mr][mc] + 0.12,
+              Math.min(0.68, darkMinMap[mr][mc] + 0.2 - contrast * 0.04)
+            )
+          );
+          lightCenterMaxMap[mr][mc] = clamp01(
+            Math.min(
+              lightMaxMap[mr][mc] - 0.12,
+              Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
+            )
+          );
+        } else {
+          darkCenterMinMap[mr][mc] = clamp01(
+            Math.max(
+              darkMinMap[mr][mc] + 0.06,
+              Math.min(0.56, darkMinMap[mr][mc] + 0.12 - contrast * 0.03)
+            )
+          );
+          lightCenterMaxMap[mr][mc] = clamp01(
+            Math.min(
+              lightMaxMap[mr][mc] - 0.06,
+              Math.max(0.44, lightMaxMap[mr][mc] - 0.12 + contrast * 0.03)
+            )
+          );
+        }
         if (finderBlendGuidance && isFunctionalPatternModule(mr, mc, moduleCount, version)) {
           if (qr.isDark(mr, mc)) {
             darkMinMap[mr][mc] = Math.max(darkMinMap[mr][mc], 0.58);
@@ -679,11 +702,11 @@ function enforceModuleConstraints(
         if (qrIsDark) {
           const occViolation = Math.max(0, darkMinMap[mr][mc] - occupancies[mr][mc]);
           const centerViolation = Math.max(0, darkCenterMinMap[mr][mc] - centerOcc[mr][mc]);
-          energy += occViolation * 0.35 + centerViolation * 1.8;
+          energy += occViolation * occViolationWeight + centerViolation * centerViolationWeight;
         } else {
           const occViolation = Math.max(0, occupancies[mr][mc] - lightMaxMap[mr][mc]);
           const centerViolation = Math.max(0, centerOcc[mr][mc] - lightCenterMaxMap[mr][mc]);
-          energy += occViolation * 0.35 + centerViolation * 1.8;
+          energy += occViolation * occViolationWeight + centerViolation * centerViolationWeight;
         }
       }
     }
@@ -728,7 +751,8 @@ function enforceModuleConstraints(
           toDark = false;
         }
         if (occViolation <= 0 && centerViolation <= 0) continue;
-        totalViolationEnergy += occViolation * 0.35 + centerViolation * 1.8;
+        totalViolationEnergy +=
+          occViolation * occViolationWeight + centerViolation * centerViolationWeight;
 
         const y0 = mr * scale;
         const x0 = mc * scale;
@@ -741,9 +765,12 @@ function enforceModuleConstraints(
             const inCenter =
               Math.abs(y - moduleCenter) <= centerRadius &&
               Math.abs(x - moduleCenter) <= centerRadius;
-            const occGain = occViolation > 0 ? Math.min(occViolation, 1 / total) * 0.35 : 0;
+            const occGain =
+              occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;
             const centerGain =
-              inCenter && centerViolation > 0 ? Math.min(centerViolation, 1 / centerArea) * 1.8 : 0;
+              inCenter && centerViolation > 0
+                ? Math.min(centerViolation, 1 / centerArea) * centerViolationWeight
+                : 0;
             const scanGain = occGain + centerGain;
             if (scanGain <= 0) continue;
 
@@ -753,9 +780,10 @@ function enforceModuleConstraints(
             const afterErr = Math.abs((toDark ? 1 : 0) - d);
             const artPenalty = afterErr - beforeErr;
             const edgeBand = x <= 1 || y <= 1 || x >= scale - 2 || y >= scale - 2;
-            const edgePenalty = edgeBand ? 0.44 : 0;
-            const centerBonus = inCenter ? 0.07 : 0;
-            const score = scanGain * 12.5 - artPenalty * 1.7 - edgePenalty + centerBonus;
+            const edgePenalty = edgeBand ? edgeBandPenalty : 0;
+            const centerBonus = inCenter ? centerPixelBonus : 0;
+            const score =
+              scanGain * scanScoreWeight - artPenalty * artPenaltyWeight - edgePenalty + centerBonus;
             candidates.push({ y: yy, x: xx, score, toDark, scanGain });
           }
         }

@@ -38,11 +38,8 @@ export {
   distributeError,
   getDiffusionKernel,
 } from './dithering';
-// Blue noise dithering for QR codes
-export {
-  defaultBrowserCanvasFactory as blueNoiseCanvasFactory,
-  generateBlueNoiseDithered,
-} from './dithering-blue';
+// Backward-compatible alias for callers that imported blueNoiseCanvasFactory
+export { defaultBrowserCanvasFactory as blueNoiseCanvasFactory } from './canvas-factory';
 // Drawing functions
 export {
   createGradientFill,

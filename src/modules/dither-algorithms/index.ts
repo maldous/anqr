@@ -19,8 +19,6 @@ export {
 } from './advanced';
 // Main apply dither function
 export { applyDither } from './apply-dither';
-// Blue noise
-export { generateBlueNoiseTile, sampleBlueNoise } from './blue-noise';
 // Error diffusion
 export { distributeErrorWithKernel, errorDiffusion } from './error-diffusion';
 // Kernels
@@ -51,4 +49,12 @@ export type {
   RGB,
 } from './types';
 // Utilities
-export { clamp01, createRNG, getOrderedMatrix, imageDataToFloat, rgbToGray } from './utils';
+export {
+  clamp01,
+  createRNG,
+  generateBlueNoiseTile,
+  getOrderedMatrix,
+  imageDataToFloat,
+  rgbToGray,
+  sampleBlueNoise,
+} from './utils';
