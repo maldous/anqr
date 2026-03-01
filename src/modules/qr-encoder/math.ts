@@ -10,9 +10,9 @@ const _log = createLogger('ENCODER');
 import type { QRPolynomial } from './types';
 
 // Galois field exponent table
-const EXP_TABLE = new Array<number>(256);
+const EXP_TABLE = new Uint16Array(256);
 // Galois field log table
-const LOG_TABLE = new Array<number>(256);
+const LOG_TABLE = new Uint16Array(256);
 
 // Initialize Galois field tables
 // Using polynomial x^8 + x^4 + x^3 + x^2 + 1 (0x11d)
@@ -40,12 +40,16 @@ export function glog(n: number): number {
  * Galois field exponentiation
  */
 export function gexp(n: number): number {
-  let exp = n;
-  while (exp < 0) {
-    exp += 255;
-  }
-  while (exp >= 256) {
-    exp -= 255;
+  let exp: number;
+  if (n === 0) {
+    exp = 0;
+  } else if (n > 0) {
+    // Keep 255 as a stable index (matching existing table semantics),
+    // while still normalizing all higher exponents with GF period 255.
+    exp = ((n - 1) % 255) + 1;
+  } else {
+    exp = n % 255;
+    if (exp < 0) exp += 255;
   }
   return EXP_TABLE[exp];
 }
