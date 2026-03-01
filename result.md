@@ -247,3 +247,16 @@
 - Additional animation performance fix for color overlays:
   - In `src/modules/qr-generator/qr-generator-class.ts`, preview animated frames now skip per-frame decode scenario validation (`decodeScenarios`) and return the preview render directly.
   - This removes repeated decoder/simulation work on every animation frame while keeping full decode gates for non-preview/settled paths.
+- Default overlay intensity updated to 50%:
+  - `src/store/qr-store.ts` default `overlay.intensity` changed from `90` to `50`.
+- Tuned animation color intensity behavior for stability at higher slider values:
+  - `src/modules/qr-generator/pixel-matrix-dithered.ts` now applies an animation-preview intensity compression for color frames (`scanGateProfile='preview'` + `frameIndex` + `colorMode!='bw'`).
+  - Effective dither pressure is compressed (`min(base*0.5, 0.35)`), so UI intensity around 50% no longer pushes frame generation into unstable/blocky output as easily.
+  - Static renders and B&W paths are unchanged.
+- Extended color intensity compression to images as well:
+  - `src/modules/qr-generator/pixel-matrix-dithered.ts` now applies color-overlay intensity compression across preview/full scan profiles, not only animation preview.
+  - Compression tiers:
+    - preview+animated: `min(base*0.5, 0.35)`
+    - preview static: `min(base*0.58, 0.4)`
+    - full profile (images/final render): `min(base*0.66, 0.48)`
+  - Goal: keep slider values (notably around 50%) in a safer scan/render range for both images and GIFs, while leaving B&W behavior unchanged.
