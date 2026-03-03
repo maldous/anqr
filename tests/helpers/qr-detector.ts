@@ -420,6 +420,7 @@ export async function waitForSelectOpen(page: Page, timeout = DEFAULT_TIMEOUT): 
 
       return candidates.some(isElementVisible);
     },
+    undefined,
     { timeout, polling: 50 }
   );
 }
@@ -454,6 +455,7 @@ export async function waitForSelectClosed(page: Page, timeout = DEFAULT_TIMEOUT)
 
       return !candidates.some(isElementVisible);
     },
+    undefined,
     { timeout, polling: 50 }
   );
 }
@@ -503,29 +505,48 @@ export async function selectDropdownOption(
 ): Promise<boolean> {
   const select = page.locator(`[data-testid="${selectTestId}"]`);
 
+  const waitForTriggerExpanded = async (open: boolean, timeoutMs: number): Promise<void> => {
+    await page.waitForFunction(
+      ({ testId, targetOpen }) => {
+        const trigger = document.querySelector(`[data-testid="${testId}"]`) as HTMLElement | null;
+        if (!trigger) return false;
+        const expanded = trigger.getAttribute('aria-expanded') === 'true';
+        return targetOpen ? expanded : !expanded;
+      },
+      { testId: selectTestId, targetOpen: open },
+      { timeout: timeoutMs, polling: 50 }
+    );
+  };
+
   // Wait for element to exist and scroll into view
   await select.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await select.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
 
-  // Click to open dropdown, with retry if dropdown doesn't appear.
-  // Use short timeouts to avoid consuming the test budget on retries.
-  await select.click({ force: true });
-  const opened = await waitForSelectOpen(page, 5000)
+  // Clear stale dropdown state from prior interactions.
+  await waitForSelectClosed(page, 3000).catch(() => {});
+
+  // Open dropdown via synthetic pointer gesture on the trigger element.
+  // This avoids viewport strictness and mirrors how Radix listens for pointer events.
+  await select.evaluate((el) => {
+    el.scrollIntoView({ behavior: 'instant', block: 'center' });
+    el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  });
+
+  const opened = await Promise.race([
+    waitForTriggerExpanded(true, 5000).then(() => true),
+    waitForSelectOpen(page, 5000).then(() => true),
+  ])
     .then(() => true)
     .catch(() => false);
   if (!opened) {
-    // Retry: dispatch pointerdown (what Radix Select actually listens to)
-    // because el.click() only fires a click event which Radix ignores for triggers.
-    await select.evaluate((el) => {
-      el.scrollIntoView({ behavior: 'instant', block: 'center' });
-      el.dispatchEvent(
-        new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 1 })
-      );
-      el.dispatchEvent(
-        new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerId: 1 })
-      );
-    });
-    await waitForSelectOpen(page, 5000);
+    // Fallback: keyboard-open from focused trigger.
+    await select.focus();
+    await page.keyboard.press('Enter');
+    await Promise.race([waitForTriggerExpanded(true, 5000), waitForSelectOpen(page, 5000)]);
   }
 
   const allOptions = page.locator('[role="option"]:visible');
@@ -578,7 +599,9 @@ export async function selectDropdownOption(
   // Wait for dropdown to close — should happen almost instantly after option click.
   // Use a short timeout (5s) to avoid accumulating 30s × 3 retries = 90s of dead wait
   // when sequential selects interfere with each other's DOM detection.
-  await waitForSelectClosed(page, 5000).catch(() => {});
+  await Promise.race([waitForTriggerExpanded(false, 5000), waitForSelectClosed(page, 5000)]).catch(
+    () => {}
+  );
 
   // Verify selection took effect — under heavy parallel load, Radix can
   // swallow the option click and close the dropdown without applying it.

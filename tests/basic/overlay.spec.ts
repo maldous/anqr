@@ -429,7 +429,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(snapshotsAreDifferent(before, after)).toBe(true);
     });
 
-    test('uploads animated GIF (king.gif) and changes QR', async ({ page, waitForQRRender }) => {
+    test('uploads animated GIF (king.gif) and changes QR', async ({ page }) => {
       const before = await getCanvasSnapshot(page);
 
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
@@ -453,7 +453,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(hasPreview || hasCanvas).toBe(true);
     });
 
-    test('animated GIF shows preview', async ({ page, waitForQRRender }) => {
+    test('animated GIF shows preview', async ({ page }) => {
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
 
       // Verify canvas is present (overlay was applied)
@@ -639,7 +639,9 @@ test.describe('Overlay Section - Basic Tier', () => {
       expect(snapshotsAreDifferent(before, after)).toBe(true);
     });
 
-    test('intensity 50% changes QR', async ({ page, waitForQRRender }) => {
+    test('intensity 50% changes QR from 25%', async ({ page, waitForQRRender }) => {
+      await setOverlayIntensity(page, 25);
+      await waitForQRRender();
       const before = await getCanvasSnapshot(page);
 
       await setOverlayIntensity(page, 50);
@@ -875,7 +877,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   test.describe('Animated GIF Overlay', () => {
     test.describe.configure({ timeout: 300000 });
 
-    test('animated GIF from file produces output', async ({ page, waitForQRRender }) => {
+    test('animated GIF from file produces output', async ({ page }) => {
       await uploadOverlayImage(page, ANIMATED_IMAGE_PATH);
 
       const snapshot = await getCanvasSnapshot(page);
@@ -1098,7 +1100,7 @@ test.describe('Overlay Section - Basic Tier', () => {
   // ERROR HANDLING TESTS
   // ==========================================
   test.describe('Error Handling', () => {
-    test('invalid URL shows error or handles gracefully', async ({ page, waitForQRRender }) => {
+    test('invalid URL shows error or handles gracefully', async ({ page }) => {
       await expandOverlaySection(page);
 
       // Click "From URL" button using data-testid
@@ -1124,7 +1126,7 @@ test.describe('Overlay Section - Basic Tier', () => {
       await expect(canvas).toBeVisible();
     });
 
-    test('empty URL load attempt handles gracefully', async ({ page, waitForQRRender }) => {
+    test('empty URL load attempt handles gracefully', async ({ page }) => {
       await expandOverlaySection(page);
 
       // Click "From URL" button using data-testid
