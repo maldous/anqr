@@ -251,6 +251,7 @@ export async function waitForDropdownOpen(
 
       return candidates.some(isElementVisible);
     },
+    undefined,
     { timeout, polling: 50 }
   );
 }
@@ -293,7 +294,8 @@ export async function waitForDropdownClosed(
 
       return !candidates.some(isElementVisible);
     },
-    { timeout }
+    undefined,
+    { timeout, polling: 50 }
   );
 }
 

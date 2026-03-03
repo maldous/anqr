@@ -257,11 +257,16 @@ test.describe('Animation Start Frame (Advanced Tier)', () => {
   });
 
   test('start frame slider is visible in advanced tier', async ({ page }) => {
+    // Animation section content is lazy-loaded; wait for baseline controls to mount first.
+    await page.waitForSelector('[data-testid="animation-speed-slider"] [role="slider"]', {
+      state: 'visible',
+      timeout: 30000,
+    });
+
     const slider = page.locator('[data-testid="animation-start-frame-slider"]');
-    // May or may not be visible depending on tier implementation
-    const isVisible = await slider.isVisible().catch(() => false);
-    const exists = (await slider.count()) > 0;
-    expect(isVisible || exists, 'start frame slider should be present in advanced tier').toBe(true);
+    await expect(slider, 'start frame slider should be present in advanced tier').toBeVisible({
+      timeout: 30000,
+    });
   });
 
   test('start frame slider has correct range (0-100)', async ({ page }) => {
