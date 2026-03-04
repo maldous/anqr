@@ -154,9 +154,10 @@ export function OverlaySection() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [previewImageSize, setPreviewImageSize] = useState<{ width: number; height: number } | null>(
-    null
-  );
+  const [previewImageSize, setPreviewImageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<CropDragMode>(null);
   const [draftCropRegion, setDraftCropRegion] = useState<{
@@ -527,7 +528,8 @@ export function OverlaySection() {
       const right = currentRegion.x + halfX;
       const top = currentRegion.y - halfY;
       const bottom = currentRegion.y + halfY;
-      const insideCrop = mapped.x >= left && mapped.x <= right && mapped.y >= top && mapped.y <= bottom;
+      const insideCrop =
+        mapped.x >= left && mapped.x <= right && mapped.y >= top && mapped.y <= bottom;
 
       const corners = [
         { x: left, y: top },
@@ -564,7 +566,10 @@ export function OverlaySection() {
     }
 
     const containerWidth = Math.max(1, previewContainerRef.current?.clientWidth ?? 1);
-    const containerHeight = Math.max(1, previewContainerRef.current?.clientHeight ?? containerWidth);
+    const containerHeight = Math.max(
+      1,
+      previewContainerRef.current?.clientHeight ?? containerWidth
+    );
     const imageRect = getContainedImageRect(
       containerWidth,
       containerHeight,
@@ -2013,7 +2018,7 @@ export function OverlaySection() {
                       step={10000}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('overlay.searchIterationsHelp')} {' '}
+                      {t('overlay.searchIterationsHelp')}{' '}
                       {`(${Math.max(1, Math.min(5, Math.round(overlay.qrartIterations / 10000)))} full attempts)`}
                     </p>
                   </div>

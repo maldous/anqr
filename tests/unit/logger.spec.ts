@@ -55,6 +55,28 @@ const loglevelMock = {
   getLoggers: vi.fn(() => levelLoggers),
 };
 
+async function waitForSentryLoggerReady(log: { warn: (message: string, context?: any) => void }) {
+  const probeMessage = '__sentry-ready-probe__';
+  await vi.waitFor(
+    () => {
+      log.warn(probeMessage, { ready: true });
+      expect(sentry.addBreadcrumb).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: 'DIAG',
+          message: probeMessage,
+          level: 'warning',
+        })
+      );
+    },
+    { timeout: 5000, interval: 20 }
+  );
+
+  // Clear probe traffic so assertions only validate the test log events.
+  sentry.addBreadcrumb.mockClear();
+  const diagLogger = levelLoggers.DIAG;
+  diagLogger?.warn.mockClear();
+}
+
 vi.mock('@sentry/react', () => sentry);
 vi.mock('loglevel-plugin-prefix', () => ({ default: prefix }));
 vi.mock('loglevel', () => ({ default: loglevelMock }));
@@ -97,6 +119,7 @@ describe('logger', () => {
   it('creates scoped logger, redacts sensitive context and reports to sentry', async () => {
     const mod = await import('../../src/lib/logger');
     const log = mod.createLogger('diag');
+    await waitForSentryLoggerReady(log);
 
     const err = new Error('boom');
     log.warn('warn-msg', { token: 'abc', safe: 1 });

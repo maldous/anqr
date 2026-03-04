@@ -161,6 +161,7 @@ const isNativePlatform = Capacitor.isNativePlatform();
 const localeModules = import.meta.glob<Record<string, unknown>>(
   [
     './locales/*.json',
+    '!./locales/en-GB.json',
     '!./locales/rm.json',
     '!./locales/en-AU.json',
     '!./locales/en-CA.json',

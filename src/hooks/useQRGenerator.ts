@@ -1687,7 +1687,10 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     if (isStaleRequest()) return;
     setIsRendering(true);
-    updateGenerationProgress(t('preview.busy.buildingQrStructure', 'Building the QR structure...'), 14);
+    updateGenerationProgress(
+      t('preview.busy.buildingQrStructure', 'Building the QR structure...'),
+      14
+    );
     const yieldForResponsiveness = async (): Promise<boolean> => {
       await yieldToMainThread(16);
       return isStaleRequest();
@@ -2098,7 +2101,10 @@ function useQRGenerator(): UseQRGeneratorResult {
           typeNumber: effectiveConfig.typeNumber,
           errorCorrection: effectiveConfig.errorCorrection,
         });
-        updateGenerationProgress(t('preview.busy.renderingQrPreview', 'Rendering your QR preview...'), 58);
+        updateGenerationProgress(
+          t('preview.busy.renderingQrPreview', 'Rendering your QR preview...'),
+          58
+        );
         if (await yieldForResponsiveness()) return;
         result = await runGeneratorWithStatus(
           effectiveConfig,
@@ -2227,7 +2233,10 @@ function useQRGenerator(): UseQRGeneratorResult {
 
       if (isStaleRequest()) return;
       setCanvas(result);
-      updateGenerationProgress(t('preview.busy.finalizingPreview', 'Finalizing the preview...'), 92);
+      updateGenerationProgress(
+        t('preview.busy.finalizingPreview', 'Finalizing the preview...'),
+        92
+      );
 
       // Capture the QR matrix for vector SVG export
       const matrixData = qrGenerator.getLastMatrix();
@@ -2313,6 +2322,8 @@ function useQRGenerator(): UseQRGeneratorResult {
     hasOverflowError,
     clearGenerationProgress,
     updateGenerationProgress,
+    t,
+    translateQArtStage,
   ]);
 
   const regenerate = useCallback(async () => {

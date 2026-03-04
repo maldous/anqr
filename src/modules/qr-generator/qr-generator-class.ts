@@ -13,6 +13,7 @@ import {
   resetStringToBytes,
   setStringToBytes,
 } from '../qr-encoder';
+import { decodeQR } from '../qr-decoder';
 import { verifyQRStructure } from '../qr-spec';
 import { qrMatrixCache } from './cache';
 import { type CanvasFactory, CanvasPool, defaultBrowserCanvasFactory } from './canvas-factory';
@@ -38,15 +39,6 @@ import type { OverlayData, QRCodeInstance, QRGeneratorConfig, QRMatrixResult } f
 import { hashCanvasContent, validateColor } from './utils';
 
 const log = createLogger('GENERATE');
-type QRDecoderModule = typeof import('../qr-decoder');
-let qrDecoderModulePromise: Promise<QRDecoderModule> | null = null;
-
-function loadQRDecoderModule(): Promise<QRDecoderModule> {
-  if (!qrDecoderModulePromise) {
-    qrDecoderModulePromise = import('../qr-decoder');
-  }
-  return qrDecoderModulePromise;
-}
 
 // Note: stringToBytes management is now handled via qr-encoder/string-bytes.ts
 
@@ -511,21 +503,12 @@ export class QRGenerator {
         effectiveConfig.overlayMode === 'dithered' ||
         effectiveConfig.forceScaledOverlay === true
       ) {
-        let decodeFnPromise: Promise<QRDecoderModule['decodeQR']> | null = null;
-        const getDecodeFn = async (): Promise<QRDecoderModule['decodeQR']> => {
-          if (!decodeFnPromise) {
-            decodeFnPromise = loadQRDecoderModule().then((mod) => mod.decodeQR);
-          }
-          return await decodeFnPromise;
-        };
-
         const decodeCanvasData = async (
           c: HTMLCanvasElement | OffscreenCanvas
         ): Promise<{ success: boolean; data: string | null } | null> => {
           const ctx = c.getContext('2d') as CanvasRenderingContext2D | null;
           if (!ctx) return null;
           const imageData = ctx.getImageData(0, 0, c.width, c.height);
-          const decodeQR = await getDecodeFn();
           return decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
         };
 
@@ -566,7 +549,8 @@ export class QRGenerator {
           typeof effectiveConfig.frameIndex === 'number' &&
           Number.isFinite(effectiveConfig.frameIndex);
         const isFirstAnimatedFrame = isAnimatedFrame && effectiveConfig.frameIndex === 0;
-        const isAnimatedPreviewFrame = isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame;
+        const isAnimatedPreviewFrame =
+          isPreviewScanGate && isAnimatedFrame && !isFirstAnimatedFrame;
         const overlayFamilyKey = processedOverlayCanvas
           ? [
               processedOverlayCanvas.width,

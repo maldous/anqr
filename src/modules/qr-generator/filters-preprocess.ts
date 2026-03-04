@@ -449,9 +449,7 @@ export function preprocessImageData(
   if (shouldAutoNormalizeColor) {
     const stats = computeOverlayToneStats(out);
     const overlayIntensity = Math.max(0, Math.min(100, config.overlayIntensity ?? 100)) / 100;
-    const clipRisk = clamp01(
-      (stats.clippedDarkRatio + stats.clippedLightRatio - 0.12) / 0.28
-    );
+    const clipRisk = clamp01((stats.clippedDarkRatio + stats.clippedLightRatio - 0.12) / 0.28);
     const contrastRisk = clamp01((stats.lumaStd - 0.2) / 0.18);
     const saturationRisk = clamp01((stats.saturationMean - 0.24) / 0.32);
     const intensityRisk = clamp01((overlayIntensity - 0.45) / 0.45);

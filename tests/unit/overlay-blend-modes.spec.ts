@@ -216,7 +216,7 @@ describe('getEffectiveIntensity', () => {
   it('does not cap when intensity is below limit', () => {
     const config = makeConfig({ errorCorrection: 'H', overlayIntensity: 50 });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    expect(effectiveIntensity).toBeCloseTo(0.5);
+    expect(effectiveIntensity).toBeCloseTo(0.0625);
   });
 
   it('uses config-provided ECC limits when present', () => {
@@ -226,8 +226,8 @@ describe('getEffectiveIntensity', () => {
       maxOverlayIntensityByEcc: { L: 10, M: 20, Q: 30, H: 40 },
     });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    // 20% limit for M → 0.2
-    expect(effectiveIntensity).toBeCloseTo(0.2);
+    // 20% limit for M, then curveIntensity(0.2) = 0.0016
+    expect(effectiveIntensity).toBeCloseTo(0.0016);
   });
 
   it('config-provided limits override defaults', () => {
@@ -238,7 +238,7 @@ describe('getEffectiveIntensity', () => {
       maxOverlayIntensityByEcc: { L: 80, M: 80, Q: 80, H: 80 },
     });
     const { effectiveIntensity } = getEffectiveIntensity(config);
-    expect(effectiveIntensity).toBeCloseTo(0.8);
+    expect(effectiveIntensity).toBeCloseTo(0.4096);
   });
 
   it('defaults to no cap when ECC level is unknown', () => {

@@ -257,15 +257,15 @@ describe('getEffectiveIntensity', () => {
     const { getEffectiveIntensity } =
       await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({ errorCorrection: 'L', overlayIntensity: 80 } as never);
-    expect(result.effectiveIntensity).toBe(0.8);
+    expect(result.effectiveIntensity).toBeCloseTo(0.4096);
   });
 
   it('preserves intensity when below limit', async () => {
     const { getEffectiveIntensity } =
       await import('../../src/modules/qr-generator/pixel-matrix-utils');
     const result = getEffectiveIntensity({ errorCorrection: 'H', overlayIntensity: 50 } as never);
-    // No implicit cap by default; the configured intensity is preserved.
-    expect(result.effectiveIntensity).toBe(0.5);
+    // Intensity is normalized through curveIntensity (t^4).
+    expect(result.effectiveIntensity).toBeCloseTo(0.0625);
   });
 
   it('uses custom ECC limits when provided', async () => {
@@ -276,8 +276,8 @@ describe('getEffectiveIntensity', () => {
       overlayIntensity: 80,
       maxOverlayIntensityByEcc: { M: 90 },
     } as never);
-    // intensity=0.8, M custom=90/100=0.9 → min(0.8, 0.9) = 0.8
-    expect(result.effectiveIntensity).toBe(0.8);
+    // min(80, 90) = 80, then curveIntensity(80) = 0.4096
+    expect(result.effectiveIntensity).toBeCloseTo(0.4096);
   });
 
   it('falls back to no cap when ECC level not in limits', async () => {
@@ -287,7 +287,7 @@ describe('getEffectiveIntensity', () => {
       errorCorrection: 'X',
       overlayIntensity: 80,
     } as never);
-    expect(result.effectiveIntensity).toBe(0.8);
+    expect(result.effectiveIntensity).toBeCloseTo(0.4096);
   });
 
   it('returns effectiveConfig with updated overlayIntensity', async () => {
@@ -892,11 +892,15 @@ describe('normalizeColors', () => {
 
   it('maps existing colors to RGB objects', async () => {
     const { normalizeColors } = await import('../../src/modules/qr-generator/pixel-matrix-dither');
-    const colors: Record<number, Record<number, { r: number; g: number; b: number }>> = {
-      0: { 0: { r: 255, g: 0, b: 0 }, 1: { r: 0, g: 255, b: 0 } },
-      1: { 0: { r: 0, g: 0, b: 255 } },
+    const overlayData = {
+      size: 0,
+      brightness: new Float32Array(0),
+      colors: {
+        0: { 0: { r: 255, g: 0, b: 0 }, 1: { r: 0, g: 255, b: 0 } },
+        1: { 0: { r: 0, g: 0, b: 255 } },
+      },
     };
-    const result = normalizeColors(colors, 2);
+    const result = normalizeColors(overlayData, 2);
     expect(result[0][0]).toEqual({ r: 255, g: 0, b: 0 });
     expect(result[0][1]).toEqual({ r: 0, g: 255, b: 0 });
     expect(result[1][0]).toEqual({ r: 0, g: 0, b: 255 });
