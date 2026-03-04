@@ -219,10 +219,7 @@ export async function generateScaledQR(
   const qrDrawSize = scaledSize * subPixelSize;
   const ditherBackdropAlpha = Math.max(0, Math.min(0.75, config.ditherBackdropAlpha ?? 0.4));
   const overlayTone = curveIntensity(config.overlayIntensity ?? 100);
-  const adaptiveBackdropWash = Math.max(
-    0.06,
-    Math.min(0.22, 0.06 + overlayTone * 0.14)
-  );
+  const adaptiveBackdropWash = Math.max(0.06, Math.min(0.22, 0.06 + overlayTone * 0.14));
   const ditherBackdropWash = Math.max(
     0,
     Math.min(1, config.ditherBackdropWash ?? adaptiveBackdropWash)

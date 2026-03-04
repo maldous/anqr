@@ -410,8 +410,10 @@ describe('overlay-data.ts', () => {
     it('returns empty object for null overlay', async () => {
       const { getOverlayData } = await import('../../src/modules/qr-generator/overlay-data');
       const result = await getOverlayData(null, 5, makeMinimalConfig(), createCanvasFn);
-      // null overlay → return {} as OverlayData (line 24)
-      expect(result).toEqual({});
+      expect(result.size).toBe(0);
+      expect(result.brightness).toBeInstanceOf(Float32Array);
+      expect(result.brightness.length).toBe(0);
+      expect(result.colorsPacked).toBeUndefined();
     });
 
     it('extracts brightness data in bw mode', async () => {
@@ -423,11 +425,10 @@ describe('overlay-data.ts', () => {
       const config = makeMinimalConfig({ colorMode: 'bw' });
       const result = await getOverlayData(overlay, 3, config, createCanvasFn);
 
-      // Should have brightness data for each module
-      expect(result[0]).toBeDefined();
-      expect(typeof result[0][0]).toBe('number');
-      // In bw mode, colors should not be present
-      expect(result.colors).toBeUndefined();
+      expect(result.size).toBe(3);
+      expect(result.brightness.length).toBe(9);
+      expect(Number.isFinite(result.brightness[0])).toBe(true);
+      expect(result.colorsPacked).toBeUndefined();
     });
 
     it('extracts color data when colorMode is not bw', async () => {
@@ -439,12 +440,11 @@ describe('overlay-data.ts', () => {
       const config = makeMinimalConfig({ colorMode: 'color' });
       const result = await getOverlayData(overlay, 3, config, createCanvasFn);
 
-      // Should have both brightness and color data (lines 95-110)
-      expect(result[0]).toBeDefined();
-      expect(result.colors).toBeDefined();
-      expect(result.colors![0][0]).toHaveProperty('r');
-      expect(result.colors![0][0]).toHaveProperty('g');
-      expect(result.colors![0][0]).toHaveProperty('b');
+      expect(result.size).toBe(3);
+      expect(result.brightness.length).toBe(9);
+      expect(result.colorsPacked).toBeDefined();
+      expect(result.colorsPacked!.length).toBe(9);
+      expect(typeof result.colorsPacked![0]).toBe('number');
     });
 
     it('returns cached result on second call', async () => {
@@ -478,7 +478,9 @@ describe('overlay-data.ts', () => {
 
       const config = makeMinimalConfig({ colorMode: 'bw' });
       const result = await getOverlayData(overlay, 3, config, nullCtxCanvasFn);
-      expect(result).toEqual({});
+      expect(result.size).toBe(0);
+      expect(result.brightness.length).toBe(0);
+      expect(result.colorsPacked).toBeUndefined();
     });
   });
 
@@ -731,11 +733,15 @@ describe('pixel-matrix-dither.ts', () => {
     });
 
     it('converts color objects to RGBWithMeta', () => {
-      const colors = {
-        0: { 0: { r: 255, g: 0, b: 0 }, 1: { r: 0, g: 255, b: 0 } },
-        1: { 0: { r: 0, g: 0, b: 255 }, 1: { r: 128, g: 128, b: 128 } },
+      const overlayData = {
+        size: 0,
+        brightness: new Float32Array(0),
+        colors: {
+          0: { 0: { r: 255, g: 0, b: 0 }, 1: { r: 0, g: 255, b: 0 } },
+          1: { 0: { r: 0, g: 0, b: 255 }, 1: { r: 128, g: 128, b: 128 } },
+        },
       };
-      const result = normalizeColors(colors, 2);
+      const result = normalizeColors(overlayData, 2);
       expect(result[0][0]).toEqual({ r: 255, g: 0, b: 0 });
       expect(result[0][1]).toEqual({ r: 0, g: 255, b: 0 });
       expect(result[1][0]).toEqual({ r: 0, g: 0, b: 255 });
@@ -743,10 +749,14 @@ describe('pixel-matrix-dither.ts', () => {
     });
 
     it('handles sparse color data', () => {
-      const colors = {
-        0: { 0: { r: 255, g: 0, b: 0 } },
+      const overlayData = {
+        size: 0,
+        brightness: new Float32Array(0),
+        colors: {
+          0: { 0: { r: 255, g: 0, b: 0 } },
+        },
       };
-      const result = normalizeColors(colors, 2);
+      const result = normalizeColors(overlayData, 2);
       expect(result[0][0]).toEqual({ r: 255, g: 0, b: 0 });
       expect(result[0][1]).toBeNull();
       expect(result[1][0]).toBeNull();

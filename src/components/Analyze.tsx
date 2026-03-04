@@ -5628,10 +5628,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
                         {/* Image Properties - below Format Info */}
                         {result.imageProperties && (
-                        <CollapsibleSection
-                          title={t('analyze.imageProperties', 'Image Properties')}
-                          icon={<FileImage className="w-4 h-4" />}
-                        >
+                          <CollapsibleSection
+                            title={t('analyze.imageProperties', 'Image Properties')}
+                            icon={<FileImage className="w-4 h-4" />}
+                          >
                             <div className="space-y-2">
                               <DetailRow
                                 label="Image Size"

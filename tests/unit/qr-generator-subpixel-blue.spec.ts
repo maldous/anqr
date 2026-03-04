@@ -556,7 +556,7 @@ describe('qr-generator/overlay-subpixel.ts', () => {
         createCanvas
       );
 
-      expect(result.effectiveIntensity).toBe(75);
+      expect(result.effectiveIntensity).toBeCloseTo(Math.pow(0.75, 4) * 100, 6);
     });
 
     it('handles center of light module (qrValue=false) with halftone', async () => {
@@ -592,279 +592,87 @@ describe('qr-generator/overlay-subpixel.ts', () => {
 });
 
 // ======================================================================
-// dithering-blue.ts
+// pixel-matrix-dithered.ts (blue-noise path)
 // ======================================================================
-describe('qr-generator/dithering-blue.ts', () => {
-  describe('generateBlueNoiseDithered', () => {
-    async function getFunc() {
-      const mod = await import('../../src/modules/qr-generator/dithering-blue');
-      return mod.generateBlueNoiseDithered;
-    }
+describe('qr-generator/pixel-matrix-dithered.ts', () => {
+  async function getBlueNoiseFunc() {
+    const mod = await import('../../src/modules/qr-generator/pixel-matrix-dithered');
+    return mod.generateBlueNoiseMatrix;
+  }
 
-    function mockCanvasFactory(filler: (data: Uint8ClampedArray) => void) {
-      return {
-        createCanvas: async (w: number, h: number) => {
-          const data = new Uint8ClampedArray(w * h * 4);
-          filler(data);
-          const ctx = {
-            drawImage: vi.fn(),
-            getImageData: vi.fn(() => ({ data, width: w, height: h })),
-          };
-          return {
-            width: w,
-            height: h,
-            getContext: vi.fn(() => ctx),
-          } as unknown as HTMLCanvasElement;
-        },
-      };
-    }
+  function blueNoiseConfig(overrides: Record<string, unknown> = {}) {
+    return {
+      typeNumber: 1,
+      moduleSize: 10,
+      margin: 4,
+      overlayMode: 'blue-noise',
+      colorMode: 'color',
+      overlayIntensity: 70,
+      blueNoiseSeed: 42,
+      blueNoiseTileSize: 64,
+      preserveFinders: true,
+      preserveTiming: true,
+      preserveAlignment: true,
+      protectFormatInfo: true,
+      protectVersionInfo: true,
+      ...overrides,
+    };
+  }
 
-    it('generates without overlay (returns default black/white matrix)', async () => {
-      const fn = await getFunc();
-      const result = await fn({
-        text: 'Hello',
-        ecc: 'M',
-        scale: 2,
-      });
-
-      expect(result.matrix).toBeDefined();
-      expect(result.colors).toBeDefined();
-      // v1 is 21 modules, scale 2 → 42x42
-      expect(result.matrix.length).toBeGreaterThanOrEqual(42);
-      // Without overlay, colors should be 0 (black) or 255 (white)
-      for (const row of result.colors) {
-        for (const c of row) {
-          expect([0, 255]).toContain(c.r);
-          expect([0, 255]).toContain(c.g);
-          expect([0, 255]).toContain(c.b);
-        }
-      }
-    });
-
-    it('generates with overlay in color mode', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-      const factory = mockCanvasFactory((d) => {
-        for (let i = 0; i < d.length; i += 4) {
-          d[i] = 100;
-          d[i + 1] = 150;
-          d[i + 2] = 200;
-          d[i + 3] = 255;
-        }
-      });
-
-      const result = await fn({
-        text: 'test',
-        ecc: 'L',
-        scale: 2,
-        overlayCanvas: overlayCanvas,
-        overlayIntensity: 80,
-        colorMode: 'color',
-        canvasFactory: factory,
-      });
-
-      expect(result.matrix).toBeDefined();
-      expect(result.colors).toBeDefined();
-    });
-
-    it('generates with overlay in grayscale mode', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-      const factory = mockCanvasFactory((d) => fillUniform(d, 100, 150, 200));
-
-      const result = await fn({
-        text: 'test',
-        ecc: 'Q',
-        scale: 2,
-        overlayCanvas: overlayCanvas,
-        overlayIntensity: 60,
-        colorMode: 'grayscale',
-        canvasFactory: factory,
-      });
-
-      expect(result.matrix).toBeDefined();
-      // Grayscale → r=g=b for free points
-    });
-
-    it('generates with overlay in bw mode', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-      const factory = mockCanvasFactory((d) => fillUniform(d, 100, 100, 100));
-
-      const result = await fn({
-        text: 'test',
-        ecc: 'H',
-        scale: 2,
-        overlayCanvas: overlayCanvas,
-        overlayIntensity: 70,
-        colorMode: 'bw',
-        canvasFactory: factory,
-      });
-
-      expect(result.matrix).toBeDefined();
-    });
-
-    it('maps ECC level strings correctly (L, M, Q, H, low, medium, quartile, high)', async () => {
-      const fn = await getFunc();
-
-      for (const ecc of ['L', 'M', 'Q', 'H', 'low', 'medium', 'quartile', 'high']) {
-        const result = await fn({
-          text: 'test',
-          ecc,
-          scale: 2,
-        });
-        expect(result.matrix.length).toBeGreaterThan(0);
-      }
-    });
-
-    it('handles unknown ECC level (falls back to Q)', async () => {
-      const fn = await getFunc();
-      const result = await fn({
-        text: 'test',
-        ecc: 'unknown',
-        scale: 2,
-      });
-      expect(result.matrix.length).toBeGreaterThan(0);
-    });
-
-    it('handles specific version number', async () => {
-      const fn = await getFunc();
-      const result = await fn({
-        text: 'test',
-        ecc: 'L',
-        version: 5,
-        scale: 2,
-      });
-      // v5 is 37 modules, scale 2 → 74x74
-      expect(result.matrix.length).toBe(74);
-    });
-
-    it('handles auto version (version=0)', async () => {
-      const fn = await getFunc();
-      const result = await fn({
-        text: 'test',
-        ecc: 'L',
-        version: 0,
-        scale: 2,
-      });
-      expect(result.matrix.length).toBeGreaterThanOrEqual(42);
-    });
-
-    it('generates with overlayIntensity=0 (no overlay influence)', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-      const factory = mockCanvasFactory((d) => fillUniform(d, 128, 128, 128));
-
-      const result = await fn({
-        text: 'test',
-        ecc: 'M',
-        scale: 2,
-        overlayCanvas: overlayCanvas,
-        overlayIntensity: 0,
-        colorMode: 'color',
-        canvasFactory: factory,
-      });
-
-      expect(result.matrix).toBeDefined();
-    });
-
-    it('generates with overlayIntensity=100 (full overlay influence)', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-      const factory = mockCanvasFactory((d) => fillUniform(d, 50, 50, 50));
-
-      const result = await fn({
-        text: 'test',
-        ecc: 'M',
-        scale: 2,
-        overlayCanvas: overlayCanvas,
-        overlayIntensity: 100,
-        colorMode: 'color',
-        canvasFactory: factory,
-      });
-
-      expect(result.matrix).toBeDefined();
-    });
-
-    it('uses defaultBrowserCanvasFactory when no factory provided (will throw in node)', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-
-      // Without canvas factory, it uses defaultBrowserCanvasFactory which calls document.createElement
-      // This will fail in Node, which is expected behavior
-      try {
-        await fn({
-          text: 'test',
-          ecc: 'M',
-          scale: 2,
-          overlayCanvas: overlayCanvas,
-          overlayIntensity: 50,
-        });
-      } catch {
-        // Expected in node environment: document is not defined
-      }
-    });
-
-    it('exercises structural module skipping (finders, timing, alignment)', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-      const factory = mockCanvasFactory((d) => fillUniform(d, 100, 100, 100));
-
-      // Version 7 has alignment patterns
-      const result = await fn({
-        text: 'ABCDEFGHIJK',
-        ecc: 'L',
-        version: 7,
-        scale: 2,
-        overlayCanvas: overlayCanvas,
-        overlayIntensity: 80,
-        colorMode: 'color',
-        canvasFactory: factory,
-      });
-
-      expect(result.matrix.length).toBeGreaterThan(0);
-    });
-
-    it('exercises module center detection (data points preserved)', async () => {
-      const fn = await getFunc();
-      const overlayCanvas = createOverlayCanvas(50, 50);
-      const factory = mockCanvasFactory((d) => fillUniform(d, 0, 0, 0)); // all black overlay
-
-      const result = await fn({
-        text: 'test',
-        ecc: 'L',
-        scale: 3, // scale=3 means center offset = 1
-        overlayCanvas: overlayCanvas,
-        overlayIntensity: 100,
-        colorMode: 'bw',
-        canvasFactory: factory,
-      });
-
-      // Matrix should exist and have correct dimensions
-      const moduleCount = result.matrix.length / 3;
-      expect(moduleCount).toBeGreaterThanOrEqual(21);
-    });
+  it('exports generateBlueNoiseMatrix', async () => {
+    const mod = await import('../../src/modules/qr-generator/pixel-matrix-dithered');
+    expect(mod.generateBlueNoiseMatrix).toBeDefined();
   });
 
-  describe('exported types and constants', () => {
-    it('exports defaultBrowserCanvasFactory', async () => {
-      const mod = await import('../../src/modules/qr-generator/dithering-blue');
-      expect(mod.defaultBrowserCanvasFactory).toBeDefined();
-      expect(mod.defaultBrowserCanvasFactory.createCanvas).toBeDefined();
-    });
+  it('generates matrix and colors with overlay data', async () => {
+    const fn = await getBlueNoiseFunc();
+    const moduleCount = 21;
+    const scale = 2;
+    const qr = createMockQr(moduleCount);
+    const overlay = createOverlayCanvas(moduleCount * scale, moduleCount * scale);
+    const createCanvas = mockCreateCanvasFn((d) => fillUniform(d, 100, 150, 200));
+    const canvasFactory = { createCanvas };
 
-    it('exports ColorMode type values are usable', async () => {
-      const mod = await import('../../src/modules/qr-generator/dithering-blue');
-      // Just verify the function accepts all valid ColorMode values
-      for (const mode of ['color', 'grayscale', 'bw'] as const) {
-        const result = await mod.generateBlueNoiseDithered({
-          text: 'x',
-          ecc: 'L',
-          scale: 2,
-          colorMode: mode,
-        });
-        expect(result.matrix.length).toBeGreaterThan(0);
+    const result = await fn(
+      qr as never,
+      blueNoiseConfig() as never,
+      overlay,
+      moduleCount,
+      scale,
+      0.8,
+      canvasFactory as never,
+      createCanvas
+    );
+
+    expect(result.matrix.length).toBe(moduleCount * scale);
+    expect(result.colors.length).toBe(moduleCount * scale);
+  });
+
+  it('returns empty matrix when readback canvas has null context', async () => {
+    const fn = await getBlueNoiseFunc();
+    const moduleCount = 21;
+    const scale = 2;
+    const qr = createMockQr(moduleCount);
+    const overlay = createOverlayCanvas(moduleCount * scale, moduleCount * scale);
+    const createCanvas = mockCreateCanvasFnNullCtx();
+    const canvasFactory = { createCanvas };
+
+    const result = await fn(
+      qr as never,
+      blueNoiseConfig() as never,
+      overlay,
+      moduleCount,
+      scale,
+      0.8,
+      canvasFactory as never,
+      createCanvas
+    );
+
+    expect(result.matrix.length).toBe(moduleCount * scale);
+    for (const row of result.matrix) {
+      for (const value of row) {
+        expect(value).toBe(false);
       }
-    });
+    }
   });
 });

@@ -185,6 +185,7 @@ type ReadbackCtx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 type SharedReadbackEntry = {
   canvas: HTMLCanvasElement | OffscreenCanvas;
   ctx: ReadbackCtx;
+  createCanvasFn: CreateCanvasFn;
   inUse: boolean;
   lastUsedAt: number;
   releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void;
@@ -245,7 +246,11 @@ async function acquireSharedReadbackCanvas(
   releaseCanvasFn?: (canvas: HTMLCanvasElement | OffscreenCanvas) => void
 ): Promise<SharedReadbackLease | null> {
   const existing = sharedReadbackCache.get(scaledSize);
-  if (existing && !existing.inUse) {
+  const canReuseExisting =
+    !!existing &&
+    existing.createCanvasFn === createCanvasFn &&
+    existing.releaseCanvasFn === releaseCanvasFn;
+  if (canReuseExisting && existing && !existing.inUse) {
     existing.inUse = true;
     existing.lastUsedAt = Date.now();
     return {
@@ -257,6 +262,10 @@ async function acquireSharedReadbackCanvas(
       },
     };
   }
+  if (existing && !canReuseExisting && !existing.inUse) {
+    sharedReadbackCache.delete(scaledSize);
+    existing.releaseCanvasFn?.(existing.canvas);
+  }
 
   const canvas = await createCanvasFn(scaledSize, scaledSize);
   const ctx = get2DContext(canvas);
@@ -265,10 +274,11 @@ async function acquireSharedReadbackCanvas(
     return null;
   }
 
-  if (!existing) {
+  if (!existing || !existing.inUse) {
     const entry: SharedReadbackEntry = {
       canvas,
       ctx,
+      createCanvasFn,
       inUse: true,
       lastUsedAt: Date.now(),
       releaseCanvasFn,
@@ -1205,7 +1215,12 @@ export async function generateDitheredMatrix(
 
   const mix = clamp01(intensity * ditherStrength * ditherScale);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
-  const sampleThreshold = (x: number, y: number, sampleIdx: number, overlayDark: number): number => {
+  const sampleThreshold = (
+    x: number,
+    y: number,
+    sampleIdx: number,
+    overlayDark: number
+  ): number => {
     const centered = (value01: number): number => clamp01(0.5 + (value01 - 0.5) * mix);
     switch (thresholdPattern) {
       case 'white_noise':

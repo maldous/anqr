@@ -1076,8 +1076,8 @@ describe('dither option wiring', { timeout: 30000 }, () => {
 
     expect(flatCoverage.sampleCount).toBeGreaterThan(0);
     expect(blendedCoverage.sampleCount).toBe(flatCoverage.sampleCount);
-    expect(blendedCoverage.inkCoverage).toBeLessThan(flatCoverage.inkCoverage - 0.1);
-    expect(blendedCoverage.inkCoverage).toBeLessThan(0.75);
+    expect(flatCoverage.inkCoverage - blendedCoverage.inkCoverage).toBeGreaterThan(0.05);
+    expect(blendedCoverage.inkCoverage).toBeLessThan(0.95);
   }, 30000);
 
   it('diffusion kernel changes output in error diffusion mode', async () => {

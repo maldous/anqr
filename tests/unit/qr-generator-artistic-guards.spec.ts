@@ -18,20 +18,17 @@ describe('qr-generator artistic guards', () => {
     expect(src).toContain(
       'const shouldForceBinaryModule = (row: number, col: number): boolean => {'
     );
-    expect(src).toContain(
-      'if (isFinderPatternSpec(row, col, moduleCount) || isFinderSeparator(row, col)) {'
-    );
+    expect(src).toContain('const getPatternFlags = (row: number, col: number): number =>');
+    expect(src).toContain('const isFinderRegionFlag = (flags: number): boolean =>');
+    expect(src).toContain('const flags = getPatternFlags(row, col);');
+    expect(src).toContain('if (isFinderRegionFlag(flags)) {');
     expect(src).toContain('return preserveFinders;');
-    expect(src).toContain('if (isTimingPatternSpec(row, col, moduleCount)) return preserveTiming;');
-    expect(src).toContain(
-      'if (isAlignmentPatternSpec(row, col, moduleCount, version)) return preserveAlignment;'
-    );
-    expect(src).toContain('if (isFormatInfoSpec(row, col, moduleCount)) return protectFormat;');
-    expect(src).toContain(
-      'if (isVersionInfoSpec(row, col, moduleCount, version)) return protectVersion;'
-    );
+    expect(src).toContain('if ((flags & PATTERN_TIMING) !== 0) return preserveTiming;');
+    expect(src).toContain('if ((flags & PATTERN_ALIGNMENT) !== 0) return preserveAlignment;');
+    expect(src).toContain('if ((flags & PATTERN_FORMAT) !== 0) return protectFormat;');
+    expect(src).toContain('if ((flags & PATTERN_VERSION) !== 0) return protectVersion;');
     expect(src).toContain('const preserveFixedDark =');
-    expect(src).toContain('if (row === moduleCount - 8 && col === 8) return preserveFixedDark;');
+    expect(src).toContain('if ((flags & PATTERN_FIXED_DARK) !== 0) return preserveFixedDark;');
   });
 
   it('removes center-lock writeback and module-local target quotas in dither correction', () => {
@@ -45,7 +42,7 @@ describe('qr-generator artistic guards', () => {
   it('enforces final-raster decode gate with png roundtrip and single primary decoder', () => {
     const src = read('src/modules/qr-generator/qr-generator-class.ts');
     expect(src).toContain("toDataURL('image/png')");
-    expect(src).toContain('if (!runDecode(finalRaster))');
+    expect(src).toContain('if (!(await runDecode(finalRaster)))');
     expect(src).not.toContain('decodeQRLegacy');
     expect(src).not.toContain('decodeFromCanvas');
   });
