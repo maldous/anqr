@@ -150,6 +150,31 @@ export const EXCLUDED_SCENARIO_FILENAMES = new Set([
   'overlay__target-stack-king-both-wave-xy-plus-drift.gif',
 ]);
 
+// Canonical overlay defaults used by the browser store.
+// Gallery scenarios serialize these explicitly so local/browser/remote rendering
+// uses identical params instead of inheriting environment-specific API defaults.
+const OVERLAY_CANONICAL_DEFAULTS = Object.freeze({
+  intensity: 50,
+  colorMode: 'color',
+  fit: 'cover',
+  keepFinders: 1,
+  keepTiming: 1,
+  keepAlign: 1,
+  protectFmt: 1,
+  protectVer: 1,
+  ditherKind: 'error_diffusion',
+  ditherStrength: 50,
+  finderDither: 65,
+  blendPres: 0,
+  blendPresMode: 'overlay',
+  serpentine: 0,
+  diffusionKernel: 'floyd_steinberg',
+  matrix: 'bayer4',
+  bnTile: 64,
+  bnSeed: 0,
+  colorDither: 'none',
+});
+
 // ─── Dimension arrays ────────────────────────────────────────────────
 export const MODULE_STYLES = ['square', 'rounded', 'dots', 'diamond', 'connected'];
 export const FINDER_STYLES = ['square', 'rounded', 'circle'];
@@ -255,12 +280,32 @@ function sanitizeScenarioParams(params) {
   return out;
 }
 
+function hasOverlaySemantics(category, params) {
+  if (category === 'overlay' || category === 'artwork') return true;
+  return params?.img !== undefined || params?.mode !== undefined;
+}
+
+function applyCanonicalOverlayDefaults(category, params) {
+  if (!hasOverlaySemantics(category, params)) {
+    return params;
+  }
+  return {
+    ...OVERLAY_CANONICAL_DEFAULTS,
+    ...params,
+  };
+}
+
 function makeConfig(category, label, extraParams, opts = {}) {
   const fixtureId = opts.fixtureId ?? null;
   const isAnimated = opts.isAnimated ?? false;
   const format = isAnimated ? 'gif' : 'png';
   const defaultEc = category === 'artwork' ? 'L' : 'H';
-  const params = sanitizeScenarioParams({ ...GLOBALS, ec: defaultEc, format, ...extraParams });
+  const params = sanitizeScenarioParams({
+    ...GLOBALS,
+    ec: defaultEc,
+    format,
+    ...applyCanonicalOverlayDefaults(category, extraParams),
+  });
   if (!params.data) params.data = DEFAULT_PAYLOAD.data;
   return {
     id: uid(category, label),
@@ -1442,17 +1487,17 @@ export function generateOverlayScenarios() {
   const layer1 = [];
 
   const MODE_INTENSITY_DEFAULTS = {
-    halftone: 60,
+    halftone: 50,
     'halftone-dithered': 50,
-    gapfill: 55,
-    brightness: 30,
+    gapfill: 50,
+    brightness: 50,
     duotone: 50,
-    dithered: 60,
+    dithered: 50,
     'blue-noise': 50,
-    blend: 60,
+    blend: 50,
     wave: 50,
-    dither: 55,
-    extreme: 45,
+    dither: 50,
+    extreme: 50,
   };
   const BLOCKED_STATIC_MODE_FIXTURE = new Set([
     'halftone-dithered:santa',
@@ -1484,12 +1529,7 @@ export function generateOverlayScenarios() {
   function overlayModeBase(mode) {
     const intensity = MODE_INTENSITY_DEFAULTS[mode];
     return {
-      keepFinders: 1,
-      keepTiming: 1,
-      keepAlign: 1,
-      protectFmt: 1,
-      protectVer: 1,
-      ...(intensity ? { intensity } : {}),
+      intensity: intensity ?? OVERLAY_CANONICAL_DEFAULTS.intensity,
     };
   }
 

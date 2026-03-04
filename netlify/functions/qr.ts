@@ -3397,8 +3397,9 @@ async function handler(request: Request) {
       autoPickVersion,
       autoPickEcc,
       autoReduceIntensity,
-      // Scan gate: 'preview' is lighter than 'full' and sufficient for server-side rendering
-      scanGateProfile: 'preview' as const,
+      // Use full scan-gate parity with browser generation to minimize
+      // local/browser rendering drift on dithered overlay scenarios.
+      scanGateProfile: 'full' as const,
       // Output extras
       bgOverride,
       formatExtra,
