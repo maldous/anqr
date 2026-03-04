@@ -287,9 +287,80 @@ async function captureCanvasBuffer(page, mimeType = 'image/png') {
   };
 }
 
+async function waitForCanvasStabilization(page, selector, timeoutMs = 6000) {
+  const started = Date.now();
+  let lastHash = '';
+  let stableSamples = 0;
+
+  while (Date.now() - started < timeoutMs) {
+    const hash = await page.$eval(selector, (canvasEl) => {
+      if (!(canvasEl instanceof HTMLCanvasElement)) return '';
+      if (canvasEl.width === 0 || canvasEl.height === 0) return '';
+      const ctx = canvasEl.getContext('2d');
+      if (!ctx) return '';
+      const { data, width, height } = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
+      const total = width * height;
+      const step = Math.max(1, Math.floor(total / 4096));
+      let h = 2166136261 >>> 0;
+      for (let px = 0; px < total; px += step) {
+        const i = px * 4;
+        h ^= data[i];
+        h = Math.imul(h, 16777619);
+        h ^= data[i + 1];
+        h = Math.imul(h, 16777619);
+        h ^= data[i + 2];
+        h = Math.imul(h, 16777619);
+      }
+      return String(h >>> 0);
+    });
+
+    if (hash && hash === lastHash) {
+      stableSamples += 1;
+      if (stableSamples >= 3) return true;
+    } else {
+      stableSamples = 0;
+    }
+    lastHash = hash;
+    await page.waitForTimeout(200);
+  }
+
+  return false;
+}
+
 function parseIntParam(value, fallback) {
   const parsed = Number.parseInt(String(value ?? ''), 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function startOverlayFetchWaitInPreview(page, config, timeoutMs) {
+  const raw = String(config?.params?.img || '').trim();
+  if (!raw) return Promise.resolve(false);
+  const expectedUrl = new URL(raw, BASE_URL).href;
+
+  // URL overlays are loaded asynchronously in App.tsx (fetch -> File -> store).
+  // Start waiting before navigation so we don't miss early responses.
+  return page
+    .waitForResponse(
+      (resp) => {
+        const got = resp.url().split('#')[0];
+        const want = expectedUrl.split('#')[0];
+        return got === want;
+      },
+      { timeout: Math.min(timeoutMs, 15000) }
+    )
+    .then(() => true)
+    .catch(() => false);
+}
+
+function buildPreviewScenarioUrl(config) {
+  const params = new URLSearchParams(buildUrlParams(config));
+  if (params.has('img')) {
+    const raw = String(params.get('img') || '').trim();
+    if (raw) {
+      params.set('img', new URL(raw, BASE_URL).href);
+    }
+  }
+  return `${BASE_URL}/?${params.toString()}`;
 }
 
 function resolveTargetDimensions(config) {
@@ -631,10 +702,10 @@ async function main() {
         );
 
         page = await context.newPage();
+        const overlayFetchWait = startOverlayFetchWaitInPreview(page, config, PAGE_TIMEOUT);
 
         // Build the app URL with query params
-        const qs = buildUrlParams(config);
-        const url = `${BASE_URL}/?${qs}`;
+        const url = buildPreviewScenarioUrl(config);
 
         // Navigate to the page
         await page.goto(url, { waitUntil: 'networkidle', timeout: PAGE_TIMEOUT });
@@ -662,6 +733,13 @@ async function main() {
           CANVAS_SELECTOR,
           { timeout: PAGE_TIMEOUT }
         );
+
+        const overlayFetched = await overlayFetchWait;
+        if (overlayFetched) {
+          await page.waitForTimeout(400);
+        }
+
+        await waitForCanvasStabilization(page, CANVAS_SELECTOR, 6000).catch(() => {});
 
         await page.waitForTimeout(300);
 

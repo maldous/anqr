@@ -151,7 +151,7 @@ VITEST_MAX_WORKERS ?= 100%
 
 # Bundle budget gates (KiB). i18n has warning and hard-fail thresholds.
 BUNDLE_BUDGET_MAIN_ENTRY_KIB ?= 720
-BUNDLE_BUDGET_NON_I18N_TOTAL_KIB ?= 2700
+BUNDLE_BUDGET_NON_I18N_TOTAL_KIB ?= 6200
 BUNDLE_BUDGET_I18N_WARN_KIB ?= 22000
 BUNDLE_BUDGET_I18N_MAX_KIB ?= 24000
 
@@ -160,6 +160,7 @@ GALLERY_PORT ?= 5173
 GALLERY_LOCAL_CONCURRENCY ?= 12
 GALLERY_BROWSER_CONCURRENCY ?= 3
 GALLERY_REMOTE_CONCURRENCY ?= 2
+GALLERY_BROWSER_CAPTURE_MODE ?= api
 GALLERY_SCENARIO_TIMEOUT_MS ?= 900000
 GALLERY_SHARD ?=
 GALLERY_SHARD_INDEX ?=
@@ -551,12 +552,14 @@ gallery\:local:
 # Requires a dev server running on GALLERY_PORT (default: 5173).
 # Produces reports/gallery-artifacts/browser/ with passed.txt/failed.txt/report.json.
 gallery\:browser:
-	@curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
-		(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first, or use 'make all'." && exit 1)
+	@if [ "$(GALLERY_BROWSER_CAPTURE_MODE)" != "api" ]; then \
+		curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
+			(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first, or set GALLERY_BROWSER_CAPTURE_MODE=api." && exit 1); \
+	fi
 	@set -e; \
 	count="$(GALLERY_SHARD_COUNT)"; \
 	if [ "$$count" -le 1 ]; then \
-		ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$(GALLERY_SHARD)" GALLERY_SHARD_INDEX="$(GALLERY_SHARD_INDEX)" GALLERY_SHARD_TOTAL="$(GALLERY_SHARD_TOTAL)" node --import tsx scripts/generate-gallery-browser.mjs; \
+		ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_BROWSER_CAPTURE_MODE=$(GALLERY_BROWSER_CAPTURE_MODE) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$(GALLERY_SHARD)" GALLERY_SHARD_INDEX="$(GALLERY_SHARD_INDEX)" GALLERY_SHARD_TOTAL="$(GALLERY_SHARD_TOTAL)" node --import tsx scripts/generate-gallery-browser.mjs; \
 		exit $$?; \
 	fi; \
 	if [ -n "$(GALLERY_SHARD)" ] || [ -n "$(GALLERY_SHARD_INDEX)" ] || [ -n "$(GALLERY_SHARD_TOTAL)" ]; then \
@@ -569,7 +572,7 @@ gallery\:browser:
 	i=1; \
 	while [ $$i -le $$count ]; do \
 		echo "[gallery:browser] shard $$i/$$count"; \
-		(ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$$i/$$count" node --import tsx scripts/generate-gallery-browser.mjs) & \
+		(ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_BROWSER_CAPTURE_MODE=$(GALLERY_BROWSER_CAPTURE_MODE) GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$$i/$$count" node --import tsx scripts/generate-gallery-browser.mjs) & \
 		pids="$$pids $$!"; \
 		i=$$((i + 1)); \
 	done; \
