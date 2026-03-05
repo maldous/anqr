@@ -15,5 +15,4 @@ Canonical report definitions and ownership live here.
 
 ## Generated Artifact Directory
 
-The `reports/` directory contains generated artifacts (JSON and compatibility markdown stubs). Use this folder for machine outputs and compatibility links.
-
+The `reports/` directory contains generated artifacts. The markdown reports listed above are generated into `reports/*.md` on demand and are intentionally gitignored.
