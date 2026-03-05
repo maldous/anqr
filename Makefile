@@ -20,10 +20,10 @@ help:
 	@echo "    make check:sentry"
 	@echo ""
 	@echo "  4) Pipeline Entry Points"
-	@echo "    make all             Full 16-step production pipeline"
+	@echo "    make all             CI-safe gate (alias for make ci)"
 	@echo "    make ci              CI-safe gate (check + unit:ci + basic UI)"
 	@echo "    make smoke           Fast smoke (build + basic UI)"
-	@echo "    make release         Alias for make all"
+	@echo "    make release         Full 16-step production orchestration"
 	@echo ""
 	@echo "  5) Setup & Housekeeping"
 	@echo "    make install hooks clean pull push zip dep"
@@ -193,9 +193,40 @@ resources:
 	@echo ""
 
 # ============================================
-# Full Production Pipeline
+# Pipeline Entry Points
 # ============================================
-# Complete pipeline from fresh git checkout to production-ready deploy.
+# Default and CI-safe target: no deploy/upload/push side effects.
+all: ci
+
+# CI-safe gate for pull requests and pre-release verification.
+ci:
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — CI Gate"
+	@echo "============================================"
+	@echo ""
+	@echo "[1/3] Running lint/format checks..."
+	$(MAKE) check
+	@echo ""
+	@echo "[2/3] Running unit tests (CI mode)..."
+	$(MAKE) test:unit:ci
+	@echo ""
+	@echo "[3/3] Running basic Playwright smoke tests..."
+	$(MAKE) test:basic
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — CI gate complete!"
+	@echo "============================================"
+
+# Fast non-prod smoke for build + basic UI test.
+smoke:
+	$(MAKE) build
+	$(MAKE) test:basic
+
+# ============================================
+# Release Orchestration (explicit production actions)
+# ============================================
+# Full 16-step production flow with deploy/upload side effects.
 #
 # Steps:
 #   1. install     — npm install + lefthook git hooks + Playwright browsers
@@ -217,11 +248,12 @@ resources:
 #
 # Gallery publishing is artifact-driven: it uses make gallery:local outputs and
 # regenerates src/data/gallery-showcase.generated.ts plus public/gallery manifests.
-
-all:
+#
+# Intentionally explicit: use `make release` for deploy/upload workflows.
+release:
 	@echo ""
 	@echo "============================================"
-	@echo "ANQR — Full Production Pipeline"
+	@echo "ANQR — Release Orchestration"
 	@echo "============================================"
 	@echo ""
 	@echo "[1/16] Installing dependencies..."
@@ -294,7 +326,7 @@ all:
 	@echo "[16/16] Final summary"
 	@echo ""
 	@echo "============================================"
-	@echo "ANQR — Production pipeline complete!"
+	@echo "ANQR — Release orchestration complete!"
 	@echo "============================================"
 	@echo ""
 	@echo "Post-deploy manual checklist: see tbd.md"
