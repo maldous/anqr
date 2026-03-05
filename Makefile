@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art
+.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push push\:release i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art _require_paid_approval
 
 # ============================================
 # Help
@@ -20,13 +20,13 @@ help:
 	@echo "    make check:sentry"
 	@echo ""
 	@echo "  4) Pipeline Entry Points"
-	@echo "    make all             Full 16-step production pipeline"
-	@echo "    make ci              CI-safe gate (check + unit:ci + basic UI)"
-	@echo "    make smoke           Fast smoke (build + basic UI)"
-	@echo "    make release         Alias for make all"
+	@echo "    make all             Default no-cost pipeline (no deploy/publish/upload)"
+	@echo "    make ci              CI-safe gate (typecheck + unit:ci + i18n guard)"
+	@echo "    make smoke           Fast smoke (build + unit:ci)"
+	@echo "    make release         Runs paid/external release steps (explicit unlock required)"
 	@echo ""
 	@echo "  5) Setup & Housekeeping"
-	@echo "    make install hooks clean pull push zip dep"
+	@echo "    make install hooks clean pull push push:release zip dep"
 	@echo ""
 	@echo "  6) Web"
 	@echo "    make dev build preview"
@@ -53,23 +53,29 @@ help:
 	@echo "              GALLERY_SHARD_COUNT (auto-parallel shard fanout)"
 	@echo ""
 	@echo " 11) i18n"
-	@echo "    make i18n:pull i18n:xlate i18n:fill i18n:check i18n:push"
+	@echo "    make i18n:pull i18n:xlate i18n:fill i18n:check i18n:push (gated)"
 	@echo ""
 	@echo " 12) Deploy / Validation"
-	@echo "    make deploy signoff validate:services check:sentry indexnow sonar"
+	@echo "    make deploy signoff validate:services check:sentry indexnow sonar (deploy/indexnow gated)"
 	@echo ""
 	@echo " 13) Android"
-	@echo "    make android android:init android:sync android:build android:release"
-	@echo "    make android:upload android:run android:open android:keystore android:bump"
+	@echo "    make android android:init android:sync android:build android:release (release gated)"
+	@echo "    make android:upload android:run android:open android:keystore android:bump (upload gated)"
 	@echo ""
 	@echo " 14) Reports / Misc Utilities"
 	@echo "    make report:payload:matrix report:i18n:txt sonar-report qr:art resources"
+	@echo ""
+	@echo "  Governance unlock (required for paid/external release actions):"
+	@echo "    ALLOW_PAID_ACTIONS=1 PAID_ACTION_APPROVED_BY='<human approval ref>' make release"
 	@echo ""
 
 # ============================================
 # Environment variables
 # ============================================
 export ENV := PROD
+ALLOW_PAID_ACTIONS ?= 0
+PAID_ACTION_APPROVED_BY ?=
+PAID_ACTION_CONTEXT ?=
 
 # Host resource autodetection used for reusable max-utilization defaults.
 # Override any value on invocation when needed.
@@ -171,6 +177,20 @@ ANQR_LOG_LEVEL ?= error
 # PWA screenshot generation server port (default matches dev server).
 SCREENSHOT_PORT ?= 5173
 
+# Enforce explicit human approval before any paid/external-release side effects.
+_require_paid_approval:
+	@APPROVER="$(PAID_ACTION_APPROVED_BY)"; \
+	CONTEXT="$(PAID_ACTION_CONTEXT)"; \
+	if [ "$(ALLOW_PAID_ACTIONS)" != "1" ] || [ -z "$$APPROVER" ]; then \
+		echo "ERROR: Paid/external-release action blocked by default."; \
+		echo "Set ALLOW_PAID_ACTIONS=1 and PAID_ACTION_APPROVED_BY='<human approval ref>' to continue."; \
+		echo "Optional: set PAID_ACTION_CONTEXT='<issue/comment URL>' for audit traceability."; \
+		exit 1; \
+	fi; \
+	echo "Governance unlock: ALLOW_PAID_ACTIONS=1"; \
+	echo "Human approval: $$APPROVER"; \
+	if [ -n "$$CONTEXT" ]; then echo "Approval context: $$CONTEXT"; fi
+
 validate\:services:
 	node scripts/validate-third-party.mjs
 
@@ -193,27 +213,25 @@ resources:
 	@echo ""
 
 # ============================================
-# Full Production Pipeline
+# Full Pipeline (No-Cost Default)
 # ============================================
-# Complete pipeline from fresh git checkout to production-ready deploy.
+# Default pipeline from fresh git checkout to validated local artifacts.
+# Paid/external release side effects are intentionally excluded by default.
 #
 # Steps:
-#   1. install     — npm install + lefthook git hooks + Playwright browsers
-#   2. i18n:pull   — pull community translations from anqr-i18n (non-blocking)
-#   3. i18n:xlate  — auto-translate missing strings (free Google Translate, no API key)
-#   4. i18n:fill   — regenerate all i18n TS/JSON from txt sources
-#   5. assets      — PWA icons + Android icons (if SDK) + sitemap.xml
-#   6. build       — production bundle (tsc + Vite + compression)
-#   7. test        — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
-#   8. gallery:local — render 1000 local gallery permutations into reports/gallery-artifacts/local/
-#   9. gallery:publish — select curated 300-item showcase (10 sections × 5 rows × 6 cols)
-#  10. reports     — payload verification matrix + unit coverage + coverage gap report
-#  11. sonar       — SonarQube code analysis (non-blocking, requires localhost:9000)
-#  12. deploy      — rebuild with Sentry sourcemap upload + Netlify production deploy + IndexNow
-#  13. android     — release AAB + upload to Play Store (skipped if SDK/Java unavailable)
-#  14. services    — third-party service checks (non-blocking)
-#  15. i18n:push   — push translations to public repo
-#  16. summary     — final status banner
+#   1. install       — npm install + lefthook git hooks + Playwright browsers
+#   2. i18n:pull     — pull community translations from anqr-i18n (non-blocking)
+#   3. i18n:xlate    — auto-translate missing strings (free Google Translate, no API key)
+#   4. i18n:fill     — regenerate all i18n TS/JSON from txt sources
+#   5. assets        — PWA icons + Android icons (if SDK) + sitemap.xml
+#   6. build         — production bundle (tsc + Vite + compression)
+#   7. test          — full quality gates (19 checks, incl. fix) + Vitest unit + Playwright E2E
+#   8. gallery:local — render local gallery permutations into reports/gallery-artifacts/local/
+#   9. gallery:publish — select curated showcase from local artifacts
+#  10. reports       — payload verification matrix + unit coverage + coverage gap report
+#  11. sonar         — SonarQube code analysis (non-blocking, requires localhost:9000)
+#  12. services      — third-party service checks (non-blocking)
+#  13. summary       — final status banner + release unlock reminder
 #
 # Gallery publishing is artifact-driven: it uses make gallery:local outputs and
 # regenerates src/data/gallery-showcase.generated.ts plus public/gallery manifests.
@@ -221,62 +239,93 @@ resources:
 all:
 	@echo ""
 	@echo "============================================"
-	@echo "ANQR — Full Production Pipeline"
+	@echo "ANQR — No-Cost Default Pipeline"
 	@echo "============================================"
 	@echo ""
-	@echo "[1/16] Installing dependencies..."
+	@echo "[1/13] Installing dependencies..."
 	$(MAKE) install
 	npx playwright install chromium
 	@echo ""
-	@echo "[2/16] Pulling community translations..."
+	@echo "[2/13] Pulling community translations..."
 	@$(MAKE) i18n:pull || echo "⚠️  i18n:pull failed (no remote access?) — continuing with local translations"
 	@echo ""
-	@echo "[3/16] Auto-translating missing strings (free Google Translate)..."
+	@echo "[3/13] Auto-translating missing strings (free Google Translate)..."
 	@$(MAKE) i18n:xlate || echo "⚠️  i18n:xlate failed — continuing with existing translations"
 	@echo ""
-	@echo "[4/16] Regenerating i18n output files..."
+	@echo "[4/13] Regenerating i18n output files..."
 	$(MAKE) i18n:fill
 	@echo ""
-	@echo "[5/16] Generating assets (icons + sitemap)..."
+	@echo "[5/13] Generating assets (icons + sitemap)..."
 	$(MAKE) icons
 	@if [ -d android ]; then $(MAKE) icons:android; fi
 	$(MAKE) sitemap
 	@echo ""
-	@echo "[6/16] Building production bundle..."
+	@echo "[6/13] Building production bundle..."
 	$(MAKE) build
 	@echo ""
-	@echo "[7/16] Running full test suite (quality gates + unit + E2E)..."
+	@echo "[7/13] Running full test suite (quality gates + unit + E2E)..."
 	# Note: test includes fix, bundle budget (which rebuilds), and Playwright (which starts its own dev server)
 	$(MAKE) test
 	@echo ""
-	@echo "[8/16] Rendering local gallery permutations..."
+	@echo "[8/13] Rendering local gallery permutations..."
 	$(MAKE) gallery:local
 	@echo ""
-	@echo "[9/16] Publishing curated gallery from local artifacts..."
+	@echo "[9/13] Publishing curated gallery from local artifacts..."
 	$(MAKE) gallery:publish GALLERY_PUBLISH_SOURCE=local
 	@echo ""
-	@echo "[10/16] Generating reports + coverage..."
+	@echo "[10/13] Generating reports + coverage..."
 	$(MAKE) report:payload:matrix
 	$(MAKE) report:i18n:txt
 	@$(MAKE) test:unit:coverage || echo "⚠️  Coverage below 100% threshold — see coverage gap report"
 	$(MAKE) test:coverage:gap
 	@echo ""
-	@echo "[11/16] Running SonarQube analysis..."
+	@echo "[11/13] Running SonarQube analysis..."
 	@$(MAKE) sonar || echo "⚠️  SonarQube not available (localhost:9000) — skipping"
 	@echo ""
-	@echo "[12/16] Deploying web to production (Netlify) + IndexNow..."
-	# Deploy rebuilds with SENTRY_UPLOAD=true for sourcemap upload, then pushes to Netlify.
-	# This final build includes curated gallery assets from step 9.
+	@echo "[12/13] Validating third-party services..."
+	@$(MAKE) validate:services || echo "⚠️  Some third-party validations failed — see reports/third-party-validation.json"
+	@$(MAKE) check:sentry || echo "⚠️  Sentry regression check failed — see reports/sentry-regression.json"
+	@echo ""
+	@echo "[13/13] Final summary"
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — No-cost pipeline complete!"
+	@echo "============================================"
+	@echo ""
+	@echo "Paid/external release actions are blocked by default."
+	@echo "To run release steps explicitly:"
+	@echo "  ALLOW_PAID_ACTIONS=1 PAID_ACTION_APPROVED_BY='<human approval ref>' make release"
+	@echo "Reports generated in: reports/"
+
+# CI-safe quality gates (no paid/external-release actions).
+ci:
+	npm run typecheck
+	npm run test:unit:ci
+	npm run test:i18n
+
+# Fast local smoke check (no paid/external-release actions).
+smoke:
+	npm run build
+	npm run test:unit:ci
+
+# Explicit release pipeline (requires prior human approval + unlock env).
+release: _require_paid_approval all
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — Explicit Release Extensions"
+	@echo "============================================"
+	@echo ""
+	@echo "[R1/4] Deploying web to production (Netlify) + IndexNow..."
 	$(MAKE) deploy
 	@$(MAKE) indexnow || echo "⚠️  IndexNow submission failed — see reports/indexnow-submission.json"
 	@echo ""
-	@echo "[13/16] Bumping version + building Android release AAB + uploading..."
+	@echo "[R2/4] Bumping version + building Android release AAB + uploading..."
 	@if [ -d android ] && command -v java >/dev/null 2>&1 && [ -n "$$ANDROID_HOME" ]; then \
 		$(MAKE) android:bump; \
 		$(MAKE) android:release; \
 		if [ -f play-store-key.json ]; then \
 			echo "Uploading to Play Store..."; \
-			python3 scripts/upload-to-play-store.py || echo "⚠️  Play Store upload failed"; \
+			$(MAKE) android:upload || echo "⚠️  Play Store upload failed"; \
 		else \
 			echo "Skipping Play Store upload (play-store-key.json not found)"; \
 		fi; \
@@ -284,17 +333,13 @@ all:
 		echo "Skipping Android build (SDK/Java not available)"; \
 	fi
 	@echo ""
-	@echo "[14/16] Validating third-party services..."
-	@$(MAKE) validate:services || echo "⚠️  Some third-party validations failed — see reports/third-party-validation.json"
-	@$(MAKE) check:sentry || echo "⚠️  Sentry regression check failed — see reports/sentry-regression.json"
-	@echo ""
-	@echo "[15/16] Pushing translations"
+	@echo "[R3/4] Pushing i18n translations to public repo..."
 	@$(MAKE) i18n:push || echo "⚠️  i18n:push failed (no remote access?) — skipping"
 	@echo ""
-	@echo "[16/16] Final summary"
+	@echo "[R4/4] Release summary"
 	@echo ""
 	@echo "============================================"
-	@echo "ANQR — Production pipeline complete!"
+	@echo "ANQR — Explicit release pipeline complete!"
 	@echo "============================================"
 	@echo ""
 	@echo "Post-deploy manual checklist: see tbd.md"
@@ -650,14 +695,14 @@ screenshots:
 
 # Deploy rebuilds with SENTRY_UPLOAD=true to upload sourcemaps.
 # This is intentionally separate from the earlier build steps.
-deploy:
+deploy: _require_paid_approval
 	SENTRY_UPLOAD=true npm run build
 	netlify deploy --prod --site anqr.link --dir=dist
 
 # Submit all canonical URLs to search engines via IndexNow protocol.
 # Notifies Bing, Yandex, Naver, DuckDuckGo, and all participating engines.
 # Run after deploy to inform search engines of updated content.
-indexnow:
+indexnow: _require_paid_approval
 	node scripts/submit-indexnow.mjs
 
 # ============================================
@@ -701,7 +746,7 @@ android\:build:
 	@echo "Debug APK: android/app/build/outputs/apk/debug/app-debug.apk"
 
 # Build release AAB for Play Store
-android\:release:
+android\:release: _require_paid_approval
 	SENTRY_UPLOAD=true CAPACITOR_PLATFORM=android npm run build
 	# Remove pre-compressed files that cause Android asset merger conflicts
 	find dist -name '*.gz' -delete 2>/dev/null || true
@@ -760,7 +805,7 @@ android: build android\:bump android\:release
 	@echo "============================================"
 
 # Full build + upload to Google Play Store
-android\:upload: android
+android\:upload: _require_paid_approval
 	python3 scripts/upload-to-play-store.py
 
 # ============================================
@@ -798,7 +843,7 @@ i18n\:pull:
 	@echo "i18n pull complete."
 
 # Push translation updates to public repo (uses force push to handle diverged histories)
-i18n\:push:
+i18n\:push: _require_paid_approval
 	@echo "Pushing i18n translations to public repo..."
 	@echo "  Splitting static subtree (this may take a moment)..."
 	@STATIC_SHA=$$(git subtree split --prefix=src/i18n/static/txt); \
@@ -822,8 +867,14 @@ pull:
 	$(MAKE) i18n:pull
 	@echo "All pulls complete."
 
-# Full push: push i18n first, then push to origin
+# Full push: push only current branch to origin (no external release side effects)
 push:
+	@echo "Pushing to origin..."
+	git push
+	@echo "Push complete."
+
+# Explicit external-release push flow (requires unlock via i18n:push guard).
+push\:release:
 	@echo "Pushing i18n translations..."
 	$(MAKE) i18n:push
 	@echo "Pushing to origin..."

@@ -8,7 +8,7 @@
 // search engines (Bing, Yandex, Naver, DuckDuckGo, Seznam.cz, etc.).
 //
 // Usage:
-//   node scripts/submit-indexnow.mjs
+//   ALLOW_PAID_ACTIONS=1 PAID_ACTION_APPROVED_BY="linear:ANQ-41" node scripts/submit-indexnow.mjs
 //
 // Prerequisites:
 //   - Key verification file must be deployed at https://anqr.link/{KEY}.txt
@@ -43,6 +43,27 @@ const PAGES = ['', 'gallery', 'learn', 'examples', 'guide', 'about', 'contact', 
 
 function buildUrlList() {
   return PAGES.map((p) => (p ? `${BASE_URL}/${p}` : `${BASE_URL}/`));
+}
+
+function requirePaidActionApproval(actionName) {
+  const allowPaidActions = process.env.ALLOW_PAID_ACTIONS;
+  const approvedBy = (process.env.PAID_ACTION_APPROVED_BY || '').trim();
+  const approvalContext = (process.env.PAID_ACTION_CONTEXT || '').trim();
+
+  if (allowPaidActions !== '1' || !approvedBy) {
+    console.error(`ERROR: ${actionName} blocked by default.`);
+    console.error(
+      "Set ALLOW_PAID_ACTIONS=1 and PAID_ACTION_APPROVED_BY='<human approval ref>' to continue."
+    );
+    console.error(
+      "Optional: set PAID_ACTION_CONTEXT='<issue/comment URL>' for audit traceability."
+    );
+    process.exit(1);
+  }
+
+  console.log(
+    `[governance] approved by ${approvedBy}${approvalContext ? ` (${approvalContext})` : ''}`
+  );
 }
 
 function httpsPost(url, body) {
@@ -86,6 +107,7 @@ function httpsPost(url, body) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
+  requirePaidActionApproval('IndexNow submission');
   const startTime = Date.now();
 
   console.log('');

@@ -901,11 +901,12 @@ make gallery:overlay     # Scan matrix 36×4×2 = 288 runs (sharded)
 ### Complete Pipeline
 
 ```bash
-make all              # Full 16-step production pipeline (see below)
+make all              # Default no-cost pipeline (no deploy/publish/upload)
+make release          # Explicit release pipeline (requires approval env)
 make test             # Quality gates + full Playwright E2E
 ```
 
-`make all` runs the following 16 steps end-to-end:
+`make all` runs the following 13 no-cost steps end-to-end:
 
 ```
  1. install        — npm install + hooks + Playwright browsers
@@ -914,19 +915,25 @@ make test             # Quality gates + full Playwright E2E
  4. i18n:fill      — regenerate all i18n TS/JSON from txt
  5. assets         — PWA icons + Android icons + sitemap
  6. build          — production bundle (tsc + Vite)
- 7. gallery        — gallery images + PWA screenshots (serve → Playwright)
- 8. test           — quality gates + unit + E2E (19 checks)
- 9. validate       — overlay audit + scan matrix + signoff
-10. gallery:update — copy Tier A scan-validated overlays back to gallery
-11. reports        — payload matrix + i18n + unit coverage + coverage gap
-12. sonar          — SonarQube code analysis (non-blocking)
-13. deploy         — rebuild with Sentry + Netlify deploy + IndexNow submission (non-blocking)
-14. android        — version bump + release AAB + upload to Play Store
-15. services       — third-party service validation + Sentry regression check (non-blocking)
-16. i18n:push      — push translations + final summary
+ 7. test           — quality gates + unit + E2E (19 checks)
+ 8. gallery:local  — render local gallery permutations
+ 9. gallery:publish — curate and publish showcase from local artifacts
+10. reports        — payload matrix + i18n + unit coverage + coverage gap
+11. sonar          — SonarQube code analysis (non-blocking)
+12. services       — third-party service validation + Sentry regression check (non-blocking)
+13. summary        — final banner and explicit release unlock reminder
 ```
 
-Non-blocking steps (2, 3, 12, 15, 16) use `|| echo/true` so the pipeline continues if a service is temporarily unavailable.
+`make release` adds external-release steps (`deploy`, `indexnow`, Android upload, `i18n:push`) and is blocked by default unless both of these are set:
+
+- `ALLOW_PAID_ACTIONS=1`
+- `PAID_ACTION_APPROVED_BY=<human approval reference>`
+
+Optional audit context:
+
+- `PAID_ACTION_CONTEXT=<issue/comment URL>`
+
+Non-blocking steps in `make all` (2, 3, 11, 12) use `|| echo/true` so the pipeline continues if a service is temporarily unavailable.
 
 ### Resource Auto-Tuning
 
@@ -986,7 +993,7 @@ The `reports/` directory contains a mix of **committed baselines** and **auto-ge
 
 ## Outstanding Items
 
-See `tbd.md` for the consolidated launch checklist including: pre-deploy smoke test, service-specific checklists (Netlify, Sentry, AdSense, AdMob, Cloudflare, Search Console, etc.), third-party tokens & access status, Google project verification, Sentry issues, ad revenue readiness, and environment variable reference. The `make all` pipeline is now fully automated (16 steps) with no known gaps.
+See `tbd.md` for the consolidated launch checklist including: pre-deploy smoke test, service-specific checklists (Netlify, Sentry, AdSense, AdMob, Cloudflare, Search Console, etc.), third-party tokens & access status, Google project verification, Sentry issues, ad revenue readiness, and environment variable reference. Release-side actions are now explicitly gated: `make all` is no-cost by default, while `make release` requires explicit approval env variables.
 
 ---
 

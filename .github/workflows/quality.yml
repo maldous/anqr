@@ -9,6 +9,8 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ALLOW_PAID_ACTIONS: '0'
 
     steps:
       - name: Checkout
@@ -22,6 +24,15 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Enforce no-cost default pipeline policy
+        run: |
+          set -euo pipefail
+          PLAN="$(make -n all)"
+          if echo "$PLAN" | grep -E "make deploy|netlify deploy --prod|make indexnow|submit-indexnow|upload-to-play-store.py|make i18n:push"; then
+            echo "No-cost policy violation: make all includes paid/external-release actions."
+            exit 1
+          fi
 
       - name: Typecheck
         run: npm run typecheck

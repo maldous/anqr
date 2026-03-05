@@ -24,7 +24,25 @@ AAB_FILE = 'android/app/build/outputs/bundle/release/app-release.aab'
 KEY_FILE = 'play-store-key.json'
 TRACK = 'internal'  # Options: internal, alpha, beta, production
 
+def require_paid_action_approval(action_name):
+    allow_paid_actions = os.getenv('ALLOW_PAID_ACTIONS')
+    approved_by = (os.getenv('PAID_ACTION_APPROVED_BY') or '').strip()
+    approval_context = (os.getenv('PAID_ACTION_CONTEXT') or '').strip()
+
+    if allow_paid_actions != '1' or not approved_by:
+        print(f"Error: {action_name} is blocked by default.")
+        print("Set ALLOW_PAID_ACTIONS=1 and PAID_ACTION_APPROVED_BY='<human approval ref>' to continue.")
+        print("Optional: set PAID_ACTION_CONTEXT='<issue/comment URL>' for audit traceability.")
+        sys.exit(1)
+
+    summary = f"[governance] approved by {approved_by}"
+    if approval_context:
+        summary += f" ({approval_context})"
+    print(summary)
+
 def main():
+    require_paid_action_approval('Play Store upload')
+
     # Check if AAB file exists
     if not os.path.exists(AAB_FILE):
         print(f"Error: AAB file not found at {AAB_FILE}")
