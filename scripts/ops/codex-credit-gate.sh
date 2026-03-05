@@ -104,7 +104,7 @@ gemini_available() {
   export GEMINI_API_KEY="${GEMINI_API_KEY:-$GEMINI_TOKEN}"
   curl -sf --max-time 5 \
     -H "x-goog-api-key: $GEMINI_API_KEY" \
-    "https://generativelanguage.googleapis.com/v1beta/openai/models" >/dev/null 2>&1
+    "https://generativelanguage.googleapis.com/v1beta/models" >/dev/null 2>&1
 }
 
 # ---------------------------------------------------------------------------
