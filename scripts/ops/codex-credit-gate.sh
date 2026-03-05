@@ -1,35 +1,33 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Codex Credit Gate — resilient credit-aware wrapper for Symphony
+# Codex Credit Gate — credit-aware wrapper for Symphony
 # ============================================================================
 #
 # Symphony calls this script instead of codex directly.
 #
 # Behavior:
 #   1. Check the Symphony dashboard for Codex credit status.
-#   2. If credits available → run codex with the full cloud model.
-#   3. If credits exhausted → cascade through free/cheap providers:
+#   2. If credits available → exec codex with the full cloud model.
+#   3. If credits exhausted → probe fallback providers in order:
 #        a) OpenRouter (requires OPENROUTER_TOKEN env var) — has budget, most reliable
 #        b) Gemini     (requires GEMINI_TOKEN env var) — free tier, daily quota limits
 #        c) Groq       (requires GROQ_TOKEN env var) — free tier, 12K TPM limit
 #        d) Ollama local (requires Ollama on localhost:11434)
-#   4. If a provider fails (rate limit, crash, etc) → try the next one.
-#   5. If ALL providers fail in a cycle → exponential backoff, then retry
-#      from the top. Credits are re-checked each cycle.
-#   6. Runs indefinitely. Symphony manages the lifecycle via SIGTERM.
+#   4. exec codex with the first available provider.
+#   5. If ALL providers unavailable → exit 1 (Symphony handles retry/backoff).
 #
-# Rate-limit resilience:
-#   - Probes pass but session fails quickly (<30s) → treated as rate limit,
-#     move to next provider immediately.
-#   - All providers fast-fail → backoff (30s → 60s → 120s → 300s cap).
-#   - Any provider runs ≥30s → backoff resets (something was working).
-#   - Credits re-checked every cycle, so cloud model resumes automatically.
+# IMPORTANT: This script uses `exec` to replace itself with codex. This is
+# required because Symphony communicates with Codex via JSON-RPC over the
+# spawned port's stdin/stdout. Running codex as a background child would
+# break this stdio pipe.
+#
+# Provider probes do real lightweight generation tests (not just model listing)
+# to detect rate-limited or quota-exhausted providers before selecting them.
 #
 # All paths are configurable via environment variables (see defaults below).
 # ============================================================================
 
-set -uo pipefail
-# NOTE: -e intentionally omitted — we capture exit codes from child processes.
+set -euo pipefail
 
 # Source symphony env file to ensure all API tokens are available.
 SYMPHONY_ENV="${SYMPHONY_ENV:-$HOME/.config/symphony/anqr.env}"
@@ -53,34 +51,9 @@ OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
 PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b qwen2.5-coder:3b llama3.1:8b"
 DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b"
 
-# Resilience tuning
-FAST_FAIL_THRESHOLD=30    # seconds — exits faster than this are "rate limit"
-BACKOFF_INITIAL=30        # seconds — first backoff sleep
-BACKOFF_MAX=300           # seconds — cap (5 minutes)
-BACKOFF_MULTIPLIER=2      # exponential multiplier
-
-# Provider cascade order (OpenRouter first — has budget; free tiers last)
-PROVIDERS="cloud openrouter gemini groq ollama"
-
-codex_pid=""
-backoff=$BACKOFF_INITIAL
-
 log() {
   echo "[credit-gate $(date -Iseconds)] $*" >&2
 }
-
-# ---------------------------------------------------------------------------
-# Signal handling — forward SIGTERM/SIGINT to child codex process
-# ---------------------------------------------------------------------------
-cleanup() {
-  log "Signal received — forwarding to codex (pid=${codex_pid:-none})"
-  if [ -n "${codex_pid:-}" ]; then
-    kill "$codex_pid" 2>/dev/null || true
-    wait "$codex_pid" 2>/dev/null || true
-  fi
-  exit 130
-}
-trap cleanup SIGTERM SIGINT
 
 # ---------------------------------------------------------------------------
 # Check whether Codex credits are available via the Symphony dashboard.
@@ -103,6 +76,8 @@ credits_available() {
     return 2
   fi
 
+  # Positive match: only return "credits available" if we can confirm has_credits=true.
+  # This avoids a race where the dashboard is up but hasn't loaded credit info yet.
   if echo "$html" | grep -q '&quot;has_credits&quot; =&gt; true'; then
     return 0
   fi
@@ -112,14 +87,13 @@ credits_available() {
 }
 
 # ---------------------------------------------------------------------------
-# Provider availability probes
+# Provider availability probes — real generation tests, not just model listing
 # ---------------------------------------------------------------------------
 groq_available() {
   if [ -z "${GROQ_TOKEN:-}" ] && [ -z "${GROQ_API_KEY:-}" ]; then
     return 1
   fi
   export GROQ_API_KEY="${GROQ_API_KEY:-$GROQ_TOKEN}"
-  # Real generation test — model listing succeeds even when rate-limited
   local resp
   resp=$(curl -sf --max-time 8 \
     -H "Authorization: Bearer $GROQ_API_KEY" \
@@ -134,7 +108,6 @@ gemini_available() {
     return 1
   fi
   export GEMINI_API_KEY="${GEMINI_API_KEY:-$GEMINI_TOKEN}"
-  # Real generation test — model listing succeeds even when quota exhausted
   local resp
   resp=$(curl -sf --max-time 8 \
     -H "Content-Type: application/json" \
@@ -191,151 +164,79 @@ except Exception:
 }
 
 # ---------------------------------------------------------------------------
-# Probe a provider's availability.
-# Returns 0 if the provider can be tried, 1 if it should be skipped.
-# $1 = provider name, $2 = credit_rc (for cloud check)
+# Main — probe providers in order, exec the first available one
 # ---------------------------------------------------------------------------
-probe_provider() {
-  local provider="$1"
-  local credit_rc="${2:-1}"
 
-  case "$provider" in
-    cloud)
-      [ "$credit_rc" -eq 0 ] && return 0
-      return 1
-      ;;
-    groq)       groq_available ;;
-    gemini)     gemini_available ;;
-    openrouter) openrouter_available ;;
-    ollama)     ollama_available ;;
-    *)          return 1 ;;
-  esac
-}
+credits_available && credit_rc=0 || credit_rc=$?
 
-# ---------------------------------------------------------------------------
-# Run codex with a specific provider. Runs as a foreground child process
-# (NOT exec) so we can capture the exit code and fall back.
-# ---------------------------------------------------------------------------
-run_codex_for_provider() {
-  local provider="$1"
+# --- Cloud model (if credits available) ---
+if [ "$credit_rc" -eq 0 ]; then
+  log "Codex credits available — using cloud model (${CODEX_MODEL})"
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_reasoning_effort=medium \
+    -c "model=$CODEX_MODEL" \
+    app-server
+fi
 
-  case "$provider" in
-    cloud)
-      "$CODEX_BIN" \
-        --dangerously-bypass-approvals-and-sandbox \
-        -c shell_environment_policy.inherit=all \
-        -c model_reasoning_effort=medium \
-        -c "model=$CODEX_MODEL" \
-        app-server
-      ;;
-    groq)
-      "$CODEX_BIN" \
-        --dangerously-bypass-approvals-and-sandbox \
-        -c shell_environment_policy.inherit=all \
-        -c model_provider=groq \
-        -c "model=$GROQ_MODEL" \
-        app-server
-      ;;
-    gemini)
-      "$CODEX_BIN" \
-        --dangerously-bypass-approvals-and-sandbox \
-        -c shell_environment_policy.inherit=all \
-        -c model_provider=gemini \
-        -c "model=$GEMINI_MODEL" \
-        app-server
-      ;;
-    openrouter)
-      "$CODEX_BIN" \
-        --dangerously-bypass-approvals-and-sandbox \
-        -c shell_environment_policy.inherit=all \
-        -c model_provider=openrouter \
-        -c "model=$OPENROUTER_MODEL" \
-        app-server
-      ;;
-    ollama)
-      if [ -z "$OLLAMA_MODEL" ]; then
-        OLLAMA_MODEL=$(select_ollama_model)
-        log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
-      fi
-      "$CODEX_BIN" \
-        --dangerously-bypass-approvals-and-sandbox \
-        -c shell_environment_policy.inherit=all \
-        -c model_provider=ollama \
-        -c "model=$OLLAMA_MODEL" \
-        app-server
-      ;;
-  esac
-}
+if [ "$credit_rc" -eq 2 ]; then
+  log "Credit status unknown — falling back to free providers"
+else
+  log "Codex credits exhausted — probing fallback providers"
+fi
 
-# ---------------------------------------------------------------------------
-# Main loop — cascade through providers, backoff, retry indefinitely
-# ---------------------------------------------------------------------------
-cycle=0
+# --- Fallback 1: OpenRouter (has budget, most reliable) ---
+if openrouter_available; then
+  log "OpenRouter reachable — using model ${OPENROUTER_MODEL}"
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=openrouter \
+    -c "model=$OPENROUTER_MODEL" \
+    app-server
+fi
+log "OpenRouter unavailable (no token or API unreachable)"
 
-while true; do
-  cycle=$((cycle + 1))
-  any_ran_long=false
+# --- Fallback 2: Gemini (free tier) ---
+if gemini_available; then
+  log "Gemini reachable — using model ${GEMINI_MODEL}"
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=gemini \
+    -c "model=$GEMINI_MODEL" \
+    app-server
+fi
+log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
 
-  log "=== Provider cycle ${cycle} (backoff=${backoff}s) ==="
+# --- Fallback 3: Groq (free tier, 12K TPM) ---
+if groq_available; then
+  log "Groq reachable — using model ${GROQ_MODEL}"
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=groq \
+    -c "model=$GROQ_MODEL" \
+    app-server
+fi
+log "Groq unavailable (no token or API unreachable)"
 
-  # Re-check credits every cycle — they may have reset
-  credits_available && credit_rc=0 || credit_rc=$?
-
-  if [ "$credit_rc" -eq 0 ]; then
-    log "Credits available"
-  elif [ "$credit_rc" -eq 2 ]; then
-    log "Credit status unknown — will try free providers"
-  else
-    log "Credits exhausted — will try free providers"
+# --- Fallback 4: Ollama local ---
+if ollama_available; then
+  if [ -z "$OLLAMA_MODEL" ]; then
+    OLLAMA_MODEL=$(select_ollama_model)
+    log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
   fi
+  log "Ollama reachable — using model ${OLLAMA_MODEL}"
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=ollama \
+    -c "model=$OLLAMA_MODEL" \
+    app-server
+fi
+log "Ollama unavailable at ${OLLAMA_HOST}"
 
-  for provider in $PROVIDERS; do
-    # Probe availability
-    if ! probe_provider "$provider" "$credit_rc"; then
-      log "Skipping ${provider} (unavailable or no credentials)"
-      continue
-    fi
-
-    log "Starting codex via ${provider}"
-    start_time=$(date +%s)
-
-    # Run codex as a background child so we can trap signals
-    run_codex_for_provider "$provider" &
-    codex_pid=$!
-    wait "$codex_pid" 2>/dev/null
-    exit_code=$?
-    codex_pid=""
-
-    end_time=$(date +%s)
-    elapsed=$((end_time - start_time))
-
-    # Exit 0 = turn completed successfully
-    if [ "$exit_code" -eq 0 ]; then
-      log "Turn completed successfully via ${provider} (${elapsed}s)"
-      exit 0
-    fi
-
-    # Determine if this was a fast-fail (rate limit) or slow-fail (did work)
-    if [ "$elapsed" -ge "$FAST_FAIL_THRESHOLD" ]; then
-      log "Provider ${provider} exited ${exit_code} after ${elapsed}s (did work — will reset backoff)"
-      any_ran_long=true
-    else
-      log "Provider ${provider} exited ${exit_code} after ${elapsed}s (fast-fail — likely rate limited)"
-    fi
-  done
-
-  # All providers exhausted for this cycle
-  if $any_ran_long; then
-    # At least one provider did real work — reset backoff and retry quickly
-    backoff=$BACKOFF_INITIAL
-    log "Provider(s) did work this cycle — resetting backoff, retrying in 5s"
-    sleep 5
-  else
-    log "All providers fast-failed — backing off ${backoff}s before next cycle"
-    sleep "$backoff"
-    backoff=$((backoff * BACKOFF_MULTIPLIER))
-    if [ "$backoff" -gt "$BACKOFF_MAX" ]; then
-      backoff=$BACKOFF_MAX
-    fi
-  fi
-done
+log "ERROR: all providers exhausted (credits, OpenRouter, Gemini, Groq, Ollama)"
+exit 1
