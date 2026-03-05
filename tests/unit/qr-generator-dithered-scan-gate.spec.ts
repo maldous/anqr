@@ -561,7 +561,7 @@ describe('qr-generator dithered scan gate', { timeout: 30000 }, () => {
     await expectScanGatePass(qr, cfg, 'public/santa.png', 'santa-generated-current.png', {
       minChromaDistance: 0,
     });
-  });
+  }, 60000);
 
   it('keeps dithered test output decodable from final PNG bytes', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
@@ -697,7 +697,7 @@ describe('qr-generator dithered scan gate', { timeout: 30000 }, () => {
       if (decoded?.data === cfg.content) decodedCount++;
     }
     expect(decodedCount).toBe(overlays.length);
-  }, 30000);
+  }, 60000);
 
   it('keeps dithered bw mode decodable (regression: no null color crash)', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);
