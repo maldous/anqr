@@ -22,7 +22,7 @@ Routing conventions:
 
 ## 2. Active Project Queue Policy (Audit: 2026-03-05)
 
-Active project definition used for this audit: a project with at least one issue in `Todo` or `In Progress`.
+Active project definition used for this audit: a project with at least one issue in `Todo`, `In Progress`, or `Rework`.
 
 | Project | Active signal | Queue owner | Required issue hygiene | Audit result |
 | --- | --- | --- | --- | --- |
