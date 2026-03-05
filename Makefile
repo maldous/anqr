@@ -179,7 +179,8 @@ SCREENSHOT_PORT ?= 5173
 
 # Enforce explicit human approval before any paid/external-release side effects.
 _require_paid_approval:
-	@APPROVER="$(PAID_ACTION_APPROVED_BY)"; \
+	@APPROVER_RAW="$(PAID_ACTION_APPROVED_BY)"; \
+	APPROVER="$$(printf '%s' "$$APPROVER_RAW" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$$//')"; \
 	CONTEXT="$(PAID_ACTION_CONTEXT)"; \
 	if [ "$(ALLOW_PAID_ACTIONS)" != "1" ] || [ -z "$$APPROVER" ]; then \
 		echo "ERROR: Paid/external-release action blocked by default."; \
@@ -805,7 +806,7 @@ android: build android\:bump android\:release
 	@echo "============================================"
 
 # Full build + upload to Google Play Store
-android\:upload: _require_paid_approval
+android\:upload: _require_paid_approval android
 	python3 scripts/upload-to-play-store.py
 
 # ============================================
