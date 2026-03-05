@@ -211,8 +211,8 @@ ci:
 	@echo "[2/3] Running unit tests (CI mode)..."
 	$(MAKE) test:unit:ci
 	@echo ""
-	@echo "[3/3] Running basic Playwright smoke tests..."
-	$(MAKE) test:basic
+	@echo "[3/3] Building app + running basic Playwright smoke tests..."
+	$(MAKE) smoke
 	@echo ""
 	@echo "============================================"
 	@echo "ANQR — CI gate complete!"
