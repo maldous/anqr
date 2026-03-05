@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createGql } from './lib/linear-client.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -22,27 +23,7 @@ const GUARDIAN_SKIP_LEAD = process.env.GUARDIAN_SKIP_LEAD === '1';
 
 const APPLY = process.argv.includes('--apply');
 
-async function gql(query, variables = {}) {
-  if (!LINEAR_API_KEY) {
-    throw new Error('LINEAR_API_KEY is not set');
-  }
-  const res = await fetch('https://api.linear.app/graphql', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: LINEAR_API_KEY,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-
-  const data = await res.json();
-  if (Array.isArray(data.errors) && data.errors.length > 0) {
-    const msg = data.errors.map((e) => e.message).join('; ');
-    throw new Error(`Linear GraphQL error: ${msg}`);
-  }
-
-  return data.data;
-}
+const gql = createGql(LINEAR_API_KEY);
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {

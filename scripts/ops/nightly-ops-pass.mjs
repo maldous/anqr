@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createGql } from './lib/linear-client.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -60,21 +61,7 @@ function runStep(step, runDir) {
 async function postLinearComment(issueKey, body) {
   if (!LINEAR_API_KEY) return { posted: false, reason: 'LINEAR_API_KEY not set' };
 
-  const gql = async (query, variables = {}) => {
-    const res = await fetch('https://api.linear.app/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: LINEAR_API_KEY,
-      },
-      body: JSON.stringify({ query, variables }),
-    });
-    const data = await res.json();
-    if (Array.isArray(data.errors) && data.errors.length > 0) {
-      throw new Error(data.errors.map((e) => e.message).join('; '));
-    }
-    return data.data;
-  };
+  const gql = createGql(LINEAR_API_KEY);
 
   const issueRes = await gql(
     `query($id: String!) { issue(id: $id) { id identifier } }`,
