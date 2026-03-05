@@ -124,6 +124,7 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
 1. Fetch the issue by explicit ticket ID.
 2. Read the current state.
 3. Route to the matching flow:
+   - If issue title starts with `[SENTINEL]`, skip normal execution and follow the **Sentinel issue pattern** section instead.
    - `Backlog` -> treat as `Todo`; move to `In Progress` and begin execution flow.
    - `Todo` -> immediately move to `In Progress`, then ensure bootstrap workpad comment exists (create if missing), then start execution flow.
      - If PR is already attached, start by reviewing all open PR comments and deciding required changes vs explicit pushback responses.
@@ -302,6 +303,19 @@ Use this only when completion is blocked by missing required tools or missing au
 - Do not run paid/external-release commands (`make deploy`, `make indexnow`, `make android:upload`, store submission, paid API scans) unless explicit approval is documented and `ALLOW_PAID_ACTIONS=1` is set.
 - If using Codebuff for auxiliary work, use `codebuff --free` only; do not use paid modes.
 - When Codex credits are exhausted, the credit gate wrapper (`scripts/ops/codex-credit-gate.sh`) cascades through fallback providers: first OpenRouter (`google/gemini-2.0-flash-001` via the Responses API — cheap, high quality), then local Ollama (`qwen2.5-coder:7b` — free, zero cost). The Linear guardian skips lead enforcement (credit-aware via Symphony dashboard check). Systemd-driven free-tier ops (Groq, Gemini, Hugging Face, Ollama, typechecks, tests) also continue indefinitely. When credits reset, the credit gate automatically switches back to the full cloud model.
+
+## Sentinel issue pattern
+
+A **sentinel issue** is a special self-replicating issue with the title prefix `[SENTINEL]`. When an agent picks up a sentinel issue, it must follow this flow instead of the normal execution flow:
+
+1. **Review all issues**: Query Linear for every issue in the project. Summarize progress across all states (Backlog, Todo, In Progress, Human Review, Done, etc.).
+2. **Audit quality**: Check for stale issues (In Progress for too long without updates), duplicate work, issues that should be closed, and gaps in coverage.
+3. **Create new issues**: Based on the audit and project goals (world-class QR code generator — see `knowledge.md`), create new Backlog issues for any identified gaps, improvements, or maintenance tasks. Each new issue must have a clear title, description, and acceptance criteria.
+4. **Update workpad**: Record the audit summary, issues created, and any recommendations in the workpad comment.
+5. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title and description. This ensures the cycle continues indefinitely.
+6. **Complete**: Move the current sentinel issue to `Done`.
+
+Sentinel issues do **not** create PRs or branches. They are pure orchestration/audit tasks.
 
 ## Workpad template
 
