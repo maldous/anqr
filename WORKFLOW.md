@@ -17,7 +17,7 @@ tracker:
     - Duplicate
     - Done
 polling:
-  interval_ms: 5000
+  interval_ms: 60000
 workspace:
   root: ~/code/anqr-workspaces
 hooks:
@@ -30,7 +30,7 @@ hooks:
       npm ci
     fi
 agent:
-  max_concurrent_agents: 1
+  max_concurrent_agents: 2
   max_turns: 40
   max_retry_backoff_ms: 600000
 codex:
@@ -74,6 +74,10 @@ Instructions:
 4. Cost-control policy is strict: avoid any paid/external-release actions by default. Only run cost-incurring actions when explicit human approval is present in the issue context and `ALLOW_PAID_ACTIONS=1` is set.
 
 Work only in the provided repository copy. Do not touch any other path.
+
+## CRITICAL INFRASTRUCTURE GUARDRAIL
+
+Never modify the YAML front-matter of this file (WORKFLOW.md). This includes polling intervals, max_concurrent_agents, max_turns, max_retry_backoff_ms, hooks, workspace config, codex command, and sandbox settings. These are operator-managed infrastructure settings. If you believe a config change would help, file a Linear issue describing the problem and proposed change instead of editing WORKFLOW.md directly. This guardrail section itself must not be removed or weakened.
 
 ## Prerequisite: Linear MCP or `linear_graphql` tool is available
 
