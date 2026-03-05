@@ -5,6 +5,7 @@ This `docs/` directory is the canonical source of project knowledge.
 ## Start Here
 
 - [Harness model](harness/agent-first.md)
+- [Codebuff configuration](harness/codebuff-config.md)
 - [Execution workflow](workflow/execution-workflow.md)
 - [Architecture overview](architecture/overview.md)
 - [Module catalog](modules/index.md)
@@ -13,10 +14,10 @@ This `docs/` directory is the canonical source of project knowledge.
 
 ## Documentation Sections
 
-- `harness/`: agent-first operating model and documentation policy.
+- `harness/`: agent-first operating model, Codebuff configuration, and documentation policy.
 - `workflow/`: implementation and review workflow.
 - `architecture/`: verified system architecture and runtime flows.
-- `modules/`: module-level reference moved from `src/modules/**/README.md`.
+- `modules/`: module-level reference (formerly `src/modules/**/README.md`, now removed).
 - `reports/`: report definitions, generation commands, and status docs.
 - `operations/`: launch and operational checklists.
 - `roadmap/`: forward-looking plans and option coverage plans.
@@ -27,6 +28,6 @@ This `docs/` directory is the canonical source of project knowledge.
 ## Rules
 
 - Update canonical docs in `docs/` first.
-- Keep legacy markdown files outside `docs/` as short compatibility stubs.
+- Legacy markdown stubs outside `docs/` have been removed. Do not create new ones.
 - Preserve [`ISO_IEC_18004_2015.md`](../ISO_IEC_18004_2015.md) unchanged.
 - Prefer verifiable docs over narrative logs.

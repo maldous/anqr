@@ -302,7 +302,7 @@ all:
 	@echo "ANQR — Production pipeline complete!"
 	@echo "============================================"
 	@echo ""
-	@echo "Post-deploy manual checklist: see tbd.md"
+	@echo "Post-deploy manual checklist: see docs/operations/launch-checklist.md"
 	@echo "Reports generated in: reports/"
 
 # ============================================

@@ -1,0 +1,72 @@
+# =============================================================================
+# .codebuffignore — Maximize useful context by excluding noise
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Binary & media assets (Codebuff cannot usefully read these)
+# -----------------------------------------------------------------------------
+public/gallery/
+public/images/
+public/screenshots/
+public/icons/
+public/*.gif
+public/*.jpg
+public/*.png
+
+# -----------------------------------------------------------------------------
+# 2. Generated code & data (machine output, not hand-authored)
+# -----------------------------------------------------------------------------
+src/data/gallery-showcase.generated.ts
+src/data/gallery-scan-scenarios.ts
+tests/required.txt
+tests/ids.txt
+package-lock.json
+deno.lock
+
+# -----------------------------------------------------------------------------
+# 3. i18n translations (40+ locales × 2 sets = 700K+ lines)
+# -----------------------------------------------------------------------------
+src/i18n/static/
+src/i18n/locales/
+
+# -----------------------------------------------------------------------------
+# 4. Gallery & asset generation scripts (large, repetitive, rarely edited)
+# -----------------------------------------------------------------------------
+scripts/generate-gallery*.mjs
+scripts/compare-gallery*.mjs
+scripts/publish-gallery-showcase.ts
+scripts/update-gallery*.mjs
+scripts/run-gallery*.mjs
+scripts/analyze-gallery*.mjs
+scripts/lib/gallery-permutations.mjs
+scripts/generate-pwa-*.mjs
+scripts/generate-android-*.mjs
+scripts/upload-to-play-store.py
+
+# -----------------------------------------------------------------------------
+# 5. Ops automation (systemd-driven, rarely edited interactively)
+# -----------------------------------------------------------------------------
+scripts/ops/
+
+# -----------------------------------------------------------------------------
+# 6. Operator-managed infrastructure (must not be edited)
+# -----------------------------------------------------------------------------
+WORKFLOW.md
+
+# -----------------------------------------------------------------------------
+# 7. Reference & archive docs (large, rarely needed during coding)
+# -----------------------------------------------------------------------------
+ISO_IEC_18004_2015.md
+docs/archive/
+
+# -----------------------------------------------------------------------------
+# 8. Android platform (Capacitor shell, mostly Gradle boilerplate)
+# -----------------------------------------------------------------------------
+android/
+
+# -----------------------------------------------------------------------------
+# 9. Reports, config, and other noise
+# -----------------------------------------------------------------------------
+reports/
+cspell.json
+sonar-project.properties

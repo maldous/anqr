@@ -23,5 +23,5 @@ This directory contains the core feature modules for ANQR. Each module is docume
 
 ## Notes
 
-- Each module has its own `README.md` for detailed API docs and examples.
+- Each module is documented in `docs/modules/` (legacy `README.md` files in source directories have been removed).
 - The root `index.ts` re-exports curated symbols; use direct module imports for full APIs.

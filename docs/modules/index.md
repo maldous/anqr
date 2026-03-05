@@ -1,6 +1,6 @@
 # Module Catalog
 
-Module-level reference pages were migrated from `src/modules/**/README.md` into this directory.
+Module-level reference pages live in this directory (formerly `src/modules/**/README.md`, now removed).
 
 ## Overview
 

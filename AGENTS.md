@@ -6,7 +6,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 
 - Use this file as the first hop when working in the repository.
 - Treat `docs/` as the system of record for project knowledge.
-- Treat legacy markdown files outside `docs/` as compatibility stubs only.
+- Legacy markdown stubs outside `docs/` have been removed. Do not create new ones.
 
 ## Start Here
 
@@ -40,7 +40,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 - `docs/harness/`: agent-first operating model and documentation policy.
 - `docs/workflow/`: implementation and review workflow.
 - `docs/architecture/`: verified system architecture and runtime flows.
-- `docs/modules/`: module-level documentation moved from `src/modules/**/README.md`.
+- `docs/modules/`: module-level documentation (formerly `src/modules/**/README.md`, now removed).
 - `docs/reports/`: report definitions, generation commands, and status docs.
 - `docs/operations/`: launch and operational checklists.
 - `docs/roadmap/`: forward-looking plans and option coverage plans.

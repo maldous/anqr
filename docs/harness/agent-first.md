@@ -20,3 +20,8 @@ This repository follows an agent-first harness model:
 - New durable knowledge belongs in `docs/`.
 - Historical logs belong in `docs/archive/`.
 - Do not duplicate canonical content across multiple legacy files.
+
+## Agent-Specific Configuration
+
+- Codebuff: [`codebuff-config.md`](codebuff-config.md) — `knowledge.md` and `.codebuffignore` conventions.
+- Codex: `.codex/skills/` — Linear, commit, push, pull, and land skills.
