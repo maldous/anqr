@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push push\:release i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art _require_paid_approval
+.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push push\:release i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval _require_paid_approval
 
 # ============================================
 # Help
@@ -56,7 +56,8 @@ help:
 	@echo "    make i18n:pull i18n:xlate i18n:fill i18n:check i18n:push (gated)"
 	@echo ""
 	@echo " 12) Deploy / Validation"
-	@echo "    make deploy signoff validate:services check:sentry indexnow sonar (deploy/indexnow gated)"
+	@echo "    make deploy signoff validate:services check:sentry indexnow sonar"
+	@echo "    NOTE: deploy/indexnow/android:upload require ALLOW_PAID_ACTIONS=1"
 	@echo ""
 	@echo " 13) Android"
 	@echo "    make android android:init android:sync android:build android:release (release gated)"
@@ -64,6 +65,9 @@ help:
 	@echo ""
 	@echo " 14) Reports / Misc Utilities"
 	@echo "    make report:payload:matrix report:i18n:txt sonar-report qr:art resources"
+	@echo ""
+	@echo " 15) Automation Ops"
+	@echo "    make ops:guardian ops:continuous ops:nightly ops:groq ops:gemini ops:hugging"
 	@echo ""
 	@echo "  Governance unlock (required for paid/external release actions):"
 	@echo "    ALLOW_PAID_ACTIONS=1 PAID_ACTION_APPROVED_BY='<human approval ref>' make release"
@@ -694,16 +698,18 @@ screenshots:
 # Deployment
 # ============================================
 
+paid\:approval: _require_paid_approval
+
 # Deploy rebuilds with SENTRY_UPLOAD=true to upload sourcemaps.
 # This is intentionally separate from the earlier build steps.
-deploy: _require_paid_approval
+deploy: paid\:approval
 	SENTRY_UPLOAD=true npm run build
 	netlify deploy --prod --site anqr.link --dir=dist
 
 # Submit all canonical URLs to search engines via IndexNow protocol.
 # Notifies Bing, Yandex, Naver, DuckDuckGo, and all participating engines.
 # Run after deploy to inform search engines of updated content.
-indexnow: _require_paid_approval
+indexnow: paid\:approval
 	node scripts/submit-indexnow.mjs
 
 # ============================================
@@ -806,7 +812,7 @@ android: build android\:bump android\:release
 	@echo "============================================"
 
 # Full build + upload to Google Play Store
-android\:upload: _require_paid_approval android
+android\:upload: paid\:approval android
 	python3 scripts/upload-to-play-store.py
 
 # ============================================
@@ -828,6 +834,24 @@ IMG ?= public/tsunami.jpg
 OUT ?= qr-art-output.png
 qr\:art:
 	npx tsx scripts/run-qr-art.ts $(IMG) $(OUT)
+
+ops\:guardian:
+	node scripts/ops/linear-guardian.mjs --apply
+
+ops\:continuous:
+	node scripts/ops/nightly-ops-pass.mjs --profile=continuous
+
+ops\:nightly:
+	node scripts/ops/nightly-ops-pass.mjs --profile=full
+
+ops\:groq:
+	node scripts/ops/groq-free-audit.mjs
+
+ops\:gemini:
+	node scripts/ops/gemini-free-audit.mjs
+
+ops\:hugging:
+	node scripts/ops/hugging-free-audit.mjs
 
 # ============================================
 # i18n Public Repo Sync (anqr-i18n)
