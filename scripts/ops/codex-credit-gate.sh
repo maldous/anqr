@@ -51,6 +51,16 @@ OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
 PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b qwen2.5-coder:3b llama3.1:8b"
 DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b"
 
+# Provider failure memory: skip providers that failed recently.
+# When the credit-gate selects a provider and the process exits quickly
+# (Symphony retries), the next invocation skips that provider.
+# NOTE: With max_concurrent_agents > 1, concurrent invocations share the
+# same state file. A slow-starting provider for Agent A could be mistaken
+# for a failure by Agent B. Worst case: Agent B skips to Ollama early.
+STATE_FILE="/tmp/credit-gate-state"
+SKIP_FILE="/tmp/credit-gate-skip"
+FAILURE_WINDOW_SECS=120
+
 log() {
   echo "[credit-gate $(date -Iseconds)] $*" >&2
 }
@@ -168,6 +178,47 @@ except Exception:
 }
 
 # ---------------------------------------------------------------------------
+# Provider failure memory — skip providers that failed on recent invocations
+# ---------------------------------------------------------------------------
+load_skip_list() {
+  SKIP_PROVIDERS=""
+  if [ -f "$STATE_FILE" ]; then
+    local last_ts last_provider now age
+    last_ts=$(head -1 "$STATE_FILE" 2>/dev/null) || return
+    last_provider=$(sed -n '2p' "$STATE_FILE" 2>/dev/null) || return
+    now=$(date +%s)
+    age=$((now - last_ts))
+    if [ "$age" -lt "$FAILURE_WINDOW_SECS" ]; then
+      # Previous invocation exited quickly — that provider likely failed.
+      # Load accumulated skip list and add this provider.
+      if [ -f "$SKIP_FILE" ]; then
+        SKIP_PROVIDERS=$(cat "$SKIP_FILE")
+      fi
+      if ! echo "$SKIP_PROVIDERS" | grep -qw "$last_provider"; then
+        SKIP_PROVIDERS="${SKIP_PROVIDERS:+$SKIP_PROVIDERS }$last_provider"
+      fi
+      echo "$SKIP_PROVIDERS" > "$SKIP_FILE"
+      log "Recent failure detected (${age}s ago): skipping providers: $SKIP_PROVIDERS"
+    else
+      # Previous invocation ran long enough — reset skip list.
+      rm -f "$SKIP_FILE"
+    fi
+  fi
+}
+
+is_skipped() {
+  echo "$SKIP_PROVIDERS" | grep -qw "$1" 2>/dev/null
+}
+
+# Record which provider we're about to use. If the process exits quickly,
+# the next invocation will see this and skip it.
+record_provider() {
+  printf '%s\n%s\n' "$(date +%s)" "$1" > "$STATE_FILE"
+}
+
+load_skip_list
+
+# ---------------------------------------------------------------------------
 # Main — probe providers in order, exec the first available one
 # ---------------------------------------------------------------------------
 
@@ -191,48 +242,61 @@ else
 fi
 
 # --- Fallback 1: OpenRouter (has budget, most reliable) ---
-if openrouter_available; then
+if is_skipped openrouter; then
+  log "OpenRouter skipped (recently failed)"
+elif openrouter_available; then
   log "OpenRouter reachable — using model ${OPENROUTER_MODEL}"
+  record_provider openrouter
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
     -c model_provider=openrouter \
     -c "model=$OPENROUTER_MODEL" \
     app-server
+else
+  log "OpenRouter unavailable (no token or API unreachable)"
 fi
-log "OpenRouter unavailable (no token or API unreachable)"
 
 # --- Fallback 2: Gemini (free tier) ---
-if gemini_available; then
+if is_skipped gemini; then
+  log "Gemini skipped (recently failed)"
+elif gemini_available; then
   log "Gemini reachable — using model ${GEMINI_MODEL}"
+  record_provider gemini
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
     -c model_provider=gemini \
     -c "model=$GEMINI_MODEL" \
     app-server
+else
+  log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
 fi
-log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
 
 # --- Fallback 3: Groq (free tier, 12K TPM) ---
-if groq_available; then
+if is_skipped groq; then
+  log "Groq skipped (recently failed)"
+elif groq_available; then
   log "Groq reachable — using model ${GROQ_MODEL}"
+  record_provider groq
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
     -c model_provider=groq \
     -c "model=$GROQ_MODEL" \
     app-server
+else
+  log "Groq unavailable (no token or API unreachable)"
 fi
-log "Groq unavailable (no token or API unreachable)"
 
-# --- Fallback 4: Ollama local ---
+# --- Fallback 4: Ollama local (always last resort, never skipped) ---
 if ollama_available; then
   if [ -z "$OLLAMA_MODEL" ]; then
     OLLAMA_MODEL=$(select_ollama_model)
     log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
   fi
   log "Ollama reachable — using model ${OLLAMA_MODEL}"
+  record_provider ollama
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
