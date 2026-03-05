@@ -30,7 +30,7 @@ hooks:
       npm ci
     fi
 agent:
-  max_concurrent_agents: 8
+  max_concurrent_agents: 1
   max_turns: 40
   max_retry_backoff_ms: 600000
 codex:
