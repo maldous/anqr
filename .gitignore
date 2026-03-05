@@ -82,6 +82,10 @@ reports/*
 !reports/.gitkeep
 !reports/i18n-regression-baseline.json
 !reports/param-parity.json
+!reports/payload-verification-matrix.md
+!reports/coverage-gap.md
+!reports/testid-coverage.md
+!reports/bundle-budget.md
 
 .gallery-server.pid
 anqr.zip
