@@ -28,9 +28,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
       - name: Run Snyk and classify result
         id: snyk
         env:
@@ -45,8 +42,9 @@ jobs:
             exit 0
           fi
 
-          npx --yes snyk@latest test --all-projects --severity-threshold=high
-          code=$?
+          output_file="$(mktemp)"
+          npx --yes snyk@latest test --all-projects --severity-threshold=high 2>&1 | tee "$output_file"
+          code=${PIPESTATUS[0]}
 
           if [ "$code" -eq 0 ]; then
             echo "result=pass" >> "$GITHUB_OUTPUT"
@@ -57,6 +55,12 @@ jobs:
           if [ "$code" -eq 1 ]; then
             echo "result=vulns" >> "$GITHUB_OUTPUT"
             echo "message=Blocking vulnerabilities detected by Snyk" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if grep -qi "used your limit of private tests" "$output_file"; then
+            echo "result=quota_exceeded" >> "$GITHUB_OUTPUT"
+            echo "message=Snyk private test quota exceeded" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -88,6 +92,10 @@ jobs:
                 state: 'failure',
                 description: 'SNYK_TOKEN secret is missing.',
               },
+              quota_exceeded: {
+                state: 'failure',
+                description: 'Snyk private test quota exceeded.',
+              },
               cli_error: {
                 state: 'failure',
                 description: 'Snyk execution failed; see workflow logs.',
@@ -112,7 +120,12 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ "${{ steps.snyk.outputs.result }}" != "pass" ]; then
-            echo "Snyk check failed with result: ${{ steps.snyk.outputs.result }}"
+          result="${{ steps.snyk.outputs.result }}"
+          if [ -z "$result" ]; then
+            result="cli_error"
+          fi
+
+          if [ "$result" != "pass" ]; then
+            echo "Snyk check failed with result: $result"
             exit 1
           fi
