@@ -1,0 +1,118 @@
+name: Snyk PR Status
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: snyk-pr-status-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snyk-pr-status:
+    name: snyk-pr-status-publisher
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run Snyk and classify result
+        id: snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        shell: bash
+        run: |
+          set +e
+
+          if [ -z "${SNYK_TOKEN:-}" ]; then
+            echo "result=missing_token" >> "$GITHUB_OUTPUT"
+            echo "message=SNYK_TOKEN secret is missing" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          npx --yes snyk@latest test --all-projects --severity-threshold=high
+          code=$?
+
+          if [ "$code" -eq 0 ]; then
+            echo "result=pass" >> "$GITHUB_OUTPUT"
+            echo "message=No blocking vulnerabilities (threshold: high)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$code" -eq 1 ]; then
+            echo "result=vulns" >> "$GITHUB_OUTPUT"
+            echo "message=Blocking vulnerabilities detected by Snyk" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "result=cli_error" >> "$GITHUB_OUTPUT"
+          echo "message=Snyk CLI/integration execution error" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publish deterministic GitHub status context
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          SNYK_RESULT: ${{ steps.snyk.outputs.result }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        with:
+          script: |
+            const result = process.env.SNYK_RESULT || 'cli_error';
+            const mapping = {
+              pass: {
+                state: 'success',
+                description: 'No blocking Snyk vulnerabilities (>= high).',
+              },
+              vulns: {
+                state: 'failure',
+                description: 'Blocking Snyk vulnerabilities found.',
+              },
+              missing_token: {
+                state: 'failure',
+                description: 'SNYK_TOKEN secret is missing.',
+              },
+              cli_error: {
+                state: 'failure',
+                description: 'Snyk execution failed; see workflow logs.',
+              },
+            };
+
+            const status = mapping[result] || mapping.cli_error;
+            const sha = context.payload.pull_request?.head?.sha || context.sha;
+            const targetUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha,
+              state: status.state,
+              context: 'security/snyk (maldous)',
+              description: status.description,
+              target_url: targetUrl,
+            });
+
+      - name: Enforce Snyk gate outcome
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ steps.snyk.outputs.result }}" != "pass" ]; then
+            echo "Snyk check failed with result: ${{ steps.snyk.outputs.result }}"
+            exit 1
+          fi
