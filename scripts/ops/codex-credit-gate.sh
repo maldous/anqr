@@ -121,9 +121,13 @@ openrouter_available() {
     return 1
   fi
   export OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-$OPENROUTER_TOKEN}"
-  curl -sf --max-time 5 \
+  local resp
+  resp=$(curl -sf --max-time 8 \
     -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-    "https://openrouter.ai/api/v1/models" >/dev/null 2>&1
+    -H "Content-Type: application/json" \
+    -X POST "https://openrouter.ai/api/v1/chat/completions" \
+    -d '{"model":"'"$OPENROUTER_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
+  echo "$resp" | grep -q '"choices"' 2>/dev/null
 }
 
 ollama_available() {
