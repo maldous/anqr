@@ -175,9 +175,9 @@ if [ "$credit_rc" -eq 0 ]; then
   log "Codex credits available — using cloud model (${CODEX_MODEL})"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
-    --config shell_environment_policy.inherit=all \
-    --config model_reasoning_effort=medium \
-    --model "$CODEX_MODEL" \
+    -c shell_environment_policy.inherit=all \
+    -c model_reasoning_effort=medium \
+    -c "model=$CODEX_MODEL" \
     app-server
 fi
 
@@ -192,9 +192,9 @@ if groq_available; then
   log "Groq reachable — using model ${GROQ_MODEL}"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
-    --config shell_environment_policy.inherit=all \
-    --config model_provider=groq \
-    --model "$GROQ_MODEL" \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=groq \
+    -c "model=$GROQ_MODEL" \
     app-server
 fi
 log "Groq unavailable (no token or API unreachable)"
@@ -204,9 +204,9 @@ if gemini_available; then
   log "Gemini reachable — using model ${GEMINI_MODEL}"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
-    --config shell_environment_policy.inherit=all \
-    --config model_provider=gemini \
-    --model "$GEMINI_MODEL" \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=gemini \
+    -c "model=$GEMINI_MODEL" \
     app-server
 fi
 log "Gemini unavailable (no token or API unreachable)"
@@ -216,9 +216,9 @@ if openrouter_available; then
   log "OpenRouter reachable — using model ${OPENROUTER_MODEL}"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
-    --config shell_environment_policy.inherit=all \
-    --config model_provider=openrouter \
-    --model "$OPENROUTER_MODEL" \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=openrouter \
+    -c "model=$OPENROUTER_MODEL" \
     app-server
 fi
 log "OpenRouter unavailable (no token or API unreachable)"
@@ -232,9 +232,9 @@ if ollama_available; then
   log "Ollama reachable — using model ${OLLAMA_MODEL}"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
-    --config shell_environment_policy.inherit=all \
-    --config model_provider=ollama \
-    --model "$OLLAMA_MODEL" \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=ollama \
+    -c "model=$OLLAMA_MODEL" \
     app-server
 fi
 log "Ollama unavailable at ${OLLAMA_HOST}"
