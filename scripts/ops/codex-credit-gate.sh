@@ -9,9 +9,9 @@
 #   1. Check the Symphony dashboard for Codex credit status.
 #   2. If credits available → run codex with the full cloud model.
 #   3. If credits exhausted → cascade through free/cheap providers:
-#        a) Gemini   (requires GEMINI_TOKEN env var)
-#        b) Groq     (requires GROQ_TOKEN env var)
-#        c) OpenRouter (requires OPENROUTER_TOKEN env var)
+#        a) OpenRouter (requires OPENROUTER_TOKEN env var) — has budget, most reliable
+#        b) Gemini     (requires GEMINI_TOKEN env var) — free tier, daily quota limits
+#        c) Groq       (requires GROQ_TOKEN env var) — free tier, 12K TPM limit
 #        d) Ollama local (requires Ollama on localhost:11434)
 #   4. If a provider fails (rate limit, crash, etc) → try the next one.
 #   5. If ALL providers fail in a cycle → exponential backoff, then retry
@@ -59,8 +59,8 @@ BACKOFF_INITIAL=30        # seconds — first backoff sleep
 BACKOFF_MAX=300           # seconds — cap (5 minutes)
 BACKOFF_MULTIPLIER=2      # exponential multiplier
 
-# Provider cascade order
-PROVIDERS="cloud gemini groq openrouter ollama"
+# Provider cascade order (OpenRouter first — has budget; free tiers last)
+PROVIDERS="cloud openrouter gemini groq ollama"
 
 codex_pid=""
 backoff=$BACKOFF_INITIAL
@@ -119,9 +119,14 @@ groq_available() {
     return 1
   fi
   export GROQ_API_KEY="${GROQ_API_KEY:-$GROQ_TOKEN}"
-  curl -sf --max-time 5 \
+  # Real generation test — model listing succeeds even when rate-limited
+  local resp
+  resp=$(curl -sf --max-time 8 \
     -H "Authorization: Bearer $GROQ_API_KEY" \
-    "https://api.groq.com/openai/v1/models" >/dev/null 2>&1
+    -H "Content-Type: application/json" \
+    -X POST "https://api.groq.com/openai/v1/chat/completions" \
+    -d '{"model":"'"$GROQ_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
+  echo "$resp" | grep -q '"choices"' 2>/dev/null
 }
 
 gemini_available() {
@@ -129,9 +134,13 @@ gemini_available() {
     return 1
   fi
   export GEMINI_API_KEY="${GEMINI_API_KEY:-$GEMINI_TOKEN}"
-  curl -sf --max-time 5 \
-    -H "x-goog-api-key: $GEMINI_API_KEY" \
-    "https://generativelanguage.googleapis.com/v1beta/models" >/dev/null 2>&1
+  # Real generation test — model listing succeeds even when quota exhausted
+  local resp
+  resp=$(curl -sf --max-time 8 \
+    -H "Content-Type: application/json" \
+    -X POST "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}" \
+    -d '{"contents":[{"parts":[{"text":"hi"}]}],"generationConfig":{"maxOutputTokens":1}}' 2>/dev/null) || return 1
+  echo "$resp" | grep -q '"candidates"' 2>/dev/null
 }
 
 openrouter_available() {
