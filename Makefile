@@ -954,9 +954,13 @@ SONAR_TOKEN := sqa_d92be6588fb7576a7de0014b7ddc05911d9afc6b
 # Run SonarQube analysis (uses sonar-project.properties)
 sonar:
 	@echo "Running SonarQube analysis..."
-	npx sonar-scanner
-	@echo ""
-	@echo "Analysis complete! View results at: $(SONAR_HOST_URL)/dashboard?id=anqr"
+	@if curl -fsS --max-time 2 "$(SONAR_HOST_URL)/api/system/status" >/dev/null 2>&1; then \
+		npx sonar-scanner && \
+		echo "" && \
+		echo "Analysis complete! View results at: $(SONAR_HOST_URL)/dashboard?id=anqr"; \
+	else \
+		echo "WARNING: SonarQube unavailable at $(SONAR_HOST_URL) — skipping (non-blocking)."; \
+	fi
 
 sonar-report:
 	@./scripts/sonar-export.sh
