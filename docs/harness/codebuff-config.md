@@ -4,10 +4,10 @@ Codebuff reads two project-level files to optimise its context window and unders
 
 ## Files
 
-| File | Purpose |
-|---|---|
-| `knowledge.md` | Project context loaded automatically at session start |
-| `.codebuffignore` | Excludes files from Codebuff's context window |
+| File              | Purpose                                               |
+| ----------------- | ----------------------------------------------------- |
+| `knowledge.md`    | Project context loaded automatically at session start |
+| `.codebuffignore` | Excludes files from Codebuff's context window         |
 
 Both files live at the repository root.
 
@@ -33,17 +33,17 @@ Works like `.gitignore` but controls what Codebuff reads during a session. Every
 
 ### Current exclusion categories
 
-| # | Category | Rationale |
-|---|---|---|
-| 1 | Binary & media assets (`public/gallery/`, `public/images/`, etc.) | Codebuff cannot usefully read binary files |
-| 2 | Generated code (`*.generated.ts`, `tests/required.txt`, lock files) | Machine output, not hand-authored |
-| 3 | i18n translations (`src/i18n/static/`, `src/i18n/locales/`) | 700K+ lines across 40+ locales |
-| 4 | Gallery & asset scripts (`scripts/generate-gallery*.mjs`, etc.) | Large, repetitive, rarely edited interactively |
-| 5 | Ops automation (`scripts/ops/`) | Systemd-driven, rarely edited via Codebuff |
-| 6 | Operator infrastructure (`WORKFLOW.md`) | Must not be edited — operator-managed |
-| 7 | Reference & archive (`ISO_IEC_18004_2015.md`, `docs/archive/`) | Large, rarely needed during coding |
-| 8 | Android platform (`android/`) | Capacitor/Gradle boilerplate |
-| 9 | Reports & config noise (`reports/`, `cspell.json`, etc.) | Generated outputs or large config |
+| #   | Category                                                            | Rationale                                      |
+| --- | ------------------------------------------------------------------- | ---------------------------------------------- |
+| 1   | Binary & media assets (`public/gallery/`, `public/images/`, etc.)   | Codebuff cannot usefully read binary files     |
+| 2   | Generated code (`*.generated.ts`, `tests/required.txt`, lock files) | Machine output, not hand-authored              |
+| 3   | i18n translations (`src/i18n/static/`, `src/i18n/locales/`)         | 700K+ lines across 40+ locales                 |
+| 4   | Gallery & asset scripts (`scripts/generate-gallery*.mjs`, etc.)     | Large, repetitive, rarely edited interactively |
+| 5   | Ops automation (`scripts/ops/`)                                     | Systemd-driven, rarely edited via Codebuff     |
+| 6   | Operator infrastructure (`WORKFLOW.md`)                             | Must not be edited — operator-managed          |
+| 7   | Reference & archive (`ISO_IEC_18004_2015.md`, `docs/archive/`)      | Large, rarely needed during coding             |
+| 8   | Android platform (`android/`)                                       | Capacitor/Gradle boilerplate                   |
+| 9   | Reports & config noise (`reports/`, `cspell.json`, etc.)            | Generated outputs or large config              |
 
 ### Rules
 

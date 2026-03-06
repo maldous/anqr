@@ -2,8 +2,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { gitSummary } from './lib/git-summary.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -13,21 +13,6 @@ const GROQ_TOKEN = process.env.GROQ_TOKEN || process.env.GROQ_API_KEY || '';
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-function gitSummary() {
-  let branch = 'unknown';
-  let head = 'unknown';
-  let status = 'clean';
-  try {
-    branch = execSync('git branch --show-current', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
-    head = execSync('git rev-parse --short HEAD', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
-    const porcelain = execSync('git status --short', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
-    status = porcelain ? `dirty (${porcelain.split('\n').length} files changed)` : 'clean';
-  } catch {
-    // noop
-  }
-  return { branch, head, status };
 }
 
 async function callGroq(prompt) {
@@ -76,7 +61,7 @@ async function main() {
     return;
   }
 
-  const { branch, head, status } = gitSummary();
+  const { branch, head, status } = gitSummary(PROJECT_ROOT);
   const prompt = [
     'Project: ANQR QR app/web/API.',
     'Constraint: no additional costs; prefer free-tier or local-only improvements.',

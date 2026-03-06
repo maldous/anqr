@@ -55,11 +55,16 @@ DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b"
 # When the credit-gate selects a provider and the process exits quickly
 # (Symphony retries), the next invocation skips that provider.
 # NOTE: With max_concurrent_agents > 1, concurrent invocations share the
-# same state file. A slow-starting provider for Agent A could be mistaken
+# same state dir. A slow-starting provider for Agent A could be mistaken
 # for a failure by Agent B. Worst case: Agent B skips to Ollama early.
-STATE_FILE="/tmp/credit-gate-state"
-SKIP_FILE="/tmp/credit-gate-skip"
-FAILURE_WINDOW_SECS=120
+# State files live in a user-private directory (mode 700) to avoid /tmp
+# symlink attacks. Writes use atomic temp+mv to prevent corruption under
+# concurrent invocations.
+STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/credit-gate"
+if mkdir -p "$STATE_DIR" 2>/dev/null; then chmod 700 "$STATE_DIR" 2>/dev/null; fi
+STATE_FILE="$STATE_DIR/state"
+SKIP_FILE="$STATE_DIR/skip"
+FAILURE_WINDOW_SECS=30  # typical rate-limit crashes exit in <10s
 
 log() {
   echo "[credit-gate $(date -Iseconds)] $*" >&2
@@ -141,7 +146,13 @@ openrouter_available() {
 }
 
 ollama_available() {
-  curl -sf --max-time 3 "${OLLAMA_HOST}/api/tags" >/dev/null 2>&1
+  local probe_model="${OLLAMA_MODEL:-$DEFAULT_OLLAMA_MODEL}"
+  local resp
+  resp=$(curl -sf --max-time 10 \
+    -H "Content-Type: application/json" \
+    -X POST "${OLLAMA_HOST}/v1/chat/completions" \
+    -d '{"model":"'"$probe_model"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
+  echo "$resp" | grep -q '"choices"' 2>/dev/null
 }
 
 # ---------------------------------------------------------------------------
@@ -197,7 +208,8 @@ load_skip_list() {
       if ! echo "$SKIP_PROVIDERS" | grep -qw "$last_provider"; then
         SKIP_PROVIDERS="${SKIP_PROVIDERS:+$SKIP_PROVIDERS }$last_provider"
       fi
-      echo "$SKIP_PROVIDERS" > "$SKIP_FILE"
+      local skip_tmp="${SKIP_FILE}.$$"
+      if echo "$SKIP_PROVIDERS" > "$skip_tmp"; then mv -f "$skip_tmp" "$SKIP_FILE" 2>/dev/null; fi
       log "Recent failure detected (${age}s ago): skipping providers: $SKIP_PROVIDERS"
     else
       # Previous invocation ran long enough — reset skip list.
@@ -212,8 +224,11 @@ is_skipped() {
 
 # Record which provider we're about to use. If the process exits quickly,
 # the next invocation will see this and skip it.
+# Uses atomic temp+mv to avoid corruption under concurrent agents.
+# Best-effort: failure here must not prevent exec codex from running.
 record_provider() {
-  printf '%s\n%s\n' "$(date +%s)" "$1" > "$STATE_FILE"
+  local tmp="${STATE_FILE}.$$"
+  if printf '%s\n%s\n' "$(date +%s)" "$1" > "$tmp"; then mv -f "$tmp" "$STATE_FILE" 2>/dev/null; fi
 }
 
 load_skip_list

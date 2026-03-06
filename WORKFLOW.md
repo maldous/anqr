@@ -1,7 +1,7 @@
 ---
 tracker:
   kind: linear
-  project_slug: "symphony-c7a7906a4fa6"
+  project_slug: 'symphony-c7a7906a4fa6'
   active_states:
     - Backlog
     - Todo
@@ -138,8 +138,10 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
    - `Rework` -> run rework flow.
    - `Done` -> do nothing and shut down.
 4. Check whether a PR already exists for the current branch and whether it is closed.
-  - If a branch PR exists and is `CLOSED` or `MERGED`, treat prior branch work as non-reusable for this run.
-  - Create a fresh branch from `origin/master` and restart execution flow as a new attempt.
+
+- If a branch PR exists and is `CLOSED` or `MERGED`, treat prior branch work as non-reusable for this run.
+- Create a fresh branch from `origin/master` and restart execution flow as a new attempt.
+
 5. For `Todo` tickets, do startup sequencing in this exact order:
    - `update_issue(..., state: "In Progress")`
    - find/create `## Codex Workpad` bootstrap comment

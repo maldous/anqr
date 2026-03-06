@@ -22,7 +22,10 @@ function gitSummary() {
   try {
     branch = execSync('git branch --show-current', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
     head = execSync('git rev-parse --short HEAD', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
-    const porcelain = execSync('git status --short', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
+    const porcelain = execSync('git status --short', {
+      cwd: PROJECT_ROOT,
+      encoding: 'utf8',
+    }).trim();
     status = porcelain ? `dirty (${porcelain.split('\n').length} files changed)` : 'clean';
   } catch {
     // noop
@@ -46,10 +49,10 @@ async function callGemini(prompt) {
       systemInstruction: {
         parts: [
           {
-            text: 'You are a strict engineering auditor. Output only a short prioritized checklist with measurable acceptance criteria. Focus on free/no-cost improvements.'
-          }
-        ]
-      }
+            text: 'You are a strict engineering auditor. Output only a short prioritized checklist with measurable acceptance criteria. Focus on free/no-cost improvements.',
+          },
+        ],
+      },
     }),
   });
 
@@ -59,7 +62,10 @@ async function callGemini(prompt) {
     throw new Error(`Gemini API error: ${msg}`);
   }
 
-  const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('\n').trim();
+  const text = data?.candidates?.[0]?.content?.parts
+    ?.map((p) => p.text || '')
+    .join('\n')
+    .trim();
   return text || '';
 }
 

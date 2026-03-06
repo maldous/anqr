@@ -11,7 +11,7 @@
 // Environment variables (optional — checks gracefully skip if not set):
 //   SENTRY_TOKEN           — Sentry API bearer token
 //   CLOUDFLARE_TOKEN_READALL — Cloudflare API bearer token (read-all)
-//   SNYK_TOKEN             — Snyk API token
+//   SNYK_TOKEN             — Snyk API token (DISABLED — private test quota exhausted)
 //   SONAR_TOKEN            — SonarQube token (local)
 //
 // Exit codes:
@@ -520,35 +520,36 @@ async function checkSonarQube() {
 }
 
 // ── 7. Snyk ─────────────────────────────────────────────────────────────────
-
-async function checkSnyk() {
-  const name = 'Snyk';
-  const token = process.env.SNYK_TOKEN;
-  if (!token) {
-    addResult(name, 'WARN', 'SKIP', 'SNYK_TOKEN not set', {});
-    return;
-  }
-
-  const details = {};
-  try {
-    const res = await httpsGet('https://api.snyk.io/rest/self?version=2024-04-29', {
-      Authorization: `token ${token}`,
-    });
-    details.statusCode = res.statusCode;
-    const data = safeJSON(res.body);
-
-    if (res.statusCode === 200 && data?.data) {
-      details.username =
-        data.data.attributes?.username || data.data.attributes?.name || 'authenticated';
-      addResult(name, 'WARN', 'PASS', 'API authenticated', details);
-    } else {
-      details.error = data?.errors?.[0]?.detail || 'Unexpected response';
-      addResult(name, 'WARN', 'WARN', `Auth failed: ${details.error}`, details);
-    }
-  } catch (e) {
-    addResult(name, 'WARN', 'FAIL', `Snyk API error: ${e.message}`, { error: e.message });
-  }
-}
+// DISABLED: Snyk private test quota exhausted — re-enable when quota resets
+//
+// async function checkSnyk() {
+//   const name = 'Snyk';
+//   const token = process.env.SNYK_TOKEN;
+//   if (!token) {
+//     addResult(name, 'WARN', 'SKIP', 'SNYK_TOKEN not set', {});
+//     return;
+//   }
+//
+//   const details = {};
+//   try {
+//     const res = await httpsGet('https://api.snyk.io/rest/self?version=2024-04-29', {
+//       Authorization: `token ${token}`,
+//     });
+//     details.statusCode = res.statusCode;
+//     const data = safeJSON(res.body);
+//
+//     if (res.statusCode === 200 && data?.data) {
+//       details.username =
+//         data.data.attributes?.username || data.data.attributes?.name || 'authenticated';
+//       addResult(name, 'WARN', 'PASS', 'API authenticated', details);
+//     } else {
+//       details.error = data?.errors?.[0]?.detail || 'Unexpected response';
+//       addResult(name, 'WARN', 'WARN', `Auth failed: ${details.error}`, details);
+//     }
+//   } catch (e) {
+//     addResult(name, 'WARN', 'FAIL', `Snyk API error: ${e.message}`, { error: e.message });
+//   }
+// }
 
 // ── 8. Ads Configuration ────────────────────────────────────────────────────
 
@@ -693,7 +694,7 @@ async function main() {
     checkLiveSite(),
     checkGooglePlay(),
     checkSonarQube(),
-    checkSnyk(),
+    // checkSnyk(), // DISABLED: Snyk private test quota exhausted — re-enable when quota resets
     checkAdsConfig(),
     checkIndexNow(),
   ]);

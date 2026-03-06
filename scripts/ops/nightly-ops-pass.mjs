@@ -63,10 +63,9 @@ async function postLinearComment(issueKey, body) {
 
   const gql = createGql(LINEAR_API_KEY);
 
-  const issueRes = await gql(
-    `query($id: String!) { issue(id: $id) { id identifier } }`,
-    { id: issueKey }
-  );
+  const issueRes = await gql(`query($id: String!) { issue(id: $id) { id identifier } }`, {
+    id: issueKey,
+  });
   if (!issueRes.issue?.id) {
     return { posted: false, reason: `issue ${issueKey} not found` };
   }
@@ -182,7 +181,9 @@ async function main() {
   fs.writeFileSync(summaryJsonPath, JSON.stringify(summary, null, 2) + '\n');
 
   const lines = [];
-  lines.push(PROFILE === 'continuous' ? '# ANQR Continuous Ops Summary' : '# ANQR Nightly Ops Summary');
+  lines.push(
+    PROFILE === 'continuous' ? '# ANQR Continuous Ops Summary' : '# ANQR Nightly Ops Summary'
+  );
   lines.push('');
   lines.push(`- Started: ${startedAt}`);
   lines.push(`- Finished: ${finishedAt}`);

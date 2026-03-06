@@ -2,8 +2,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { gitSummary } from './lib/git-summary.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -14,21 +14,6 @@ const MODEL = process.env.HUGGING_MODEL || 'meta-llama/Llama-3.1-8B-Instruct';
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-function gitSummary() {
-  let branch = 'unknown';
-  let head = 'unknown';
-  let status = 'clean';
-  try {
-    branch = execSync('git branch --show-current', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
-    head = execSync('git rev-parse --short HEAD', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
-    const porcelain = execSync('git status --short', { cwd: PROJECT_ROOT, encoding: 'utf8' }).trim();
-    status = porcelain ? `dirty (${porcelain.split('\n').length} files changed)` : 'clean';
-  } catch {
-    // noop
-  }
-  return { branch, head, status };
 }
 
 async function callHugging(prompt) {
@@ -88,7 +73,7 @@ async function main() {
     return;
   }
 
-  const { branch, head, status } = gitSummary();
+  const { branch, head, status } = gitSummary(PROJECT_ROOT);
   const prompt = [
     'Give a concise prioritized checklist with measurable acceptance criteria.',
     'Context: ANQR QR app/web/API. No additional costs allowed; free-tier/local-only improvements.',
@@ -107,9 +92,10 @@ async function main() {
 main().catch((err) => {
   ensureDir(REPORTS_DIR);
   const stamp = new Date().toISOString().replace(/[:]/g, '-');
-  const quotaLike = /quota|rate[- ]?limit|billing|payment|required|too many requests|exceeded|no longer supported|unsupported/i.test(
-    err.message || ''
-  );
+  const quotaLike =
+    /quota|rate[- ]?limit|billing|payment|required|too many requests|exceeded|no longer supported|unsupported/i.test(
+      err.message || ''
+    );
   const body = quotaLike
     ? `# Hugging Free Audit\n\nSKIP: free-tier unavailable right now (${err.message}).\n`
     : `# Hugging Free Audit\n\nERROR: ${err.message}\n`;

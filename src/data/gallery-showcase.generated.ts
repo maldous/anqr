@@ -3,7 +3,7 @@
  * Source: scripts/publish-gallery-showcase.ts
  */
 
-const generatedGallerySummary = {
+const _generatedGallerySummary = {
   generatedAt: '2026-03-04T10:08:47.261Z',
   sourceMode: 'local',
   totalItems: 300,

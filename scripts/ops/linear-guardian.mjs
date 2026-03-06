@@ -12,8 +12,10 @@ const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports', 'linear-guardian');
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 const TEAM_KEY = process.env.LINEAR_TEAM_KEY || 'ANQ';
 const CODEX_USER_NAME = process.env.LINEAR_CODEX_USER_NAME || 'Codex';
-const REQUIRED_LABELS = (process.env.LINEAR_REQUIRED_LABELS ||
-  'web,android,ios,api,ads,analytics,security,perf,reliability,p0,p1')
+const REQUIRED_LABELS = (
+  process.env.LINEAR_REQUIRED_LABELS ||
+  'web,android,ios,api,ads,analytics,security,perf,reliability,p0,p1'
+)
   .split(',')
   .map((v) => v.trim())
   .filter(Boolean);

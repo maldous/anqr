@@ -15,14 +15,14 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 
 ### Key docs
 
-| Topic | Path |
-|---|---|
-| Architecture | `docs/architecture/overview.md` |
-| Module catalog | `docs/modules/index.md` |
+| Topic              | Path                                  |
+| ------------------ | ------------------------------------- |
+| Architecture       | `docs/architecture/overview.md`       |
+| Module catalog     | `docs/modules/index.md`               |
 | Execution workflow | `docs/workflow/execution-workflow.md` |
-| Reports catalog | `docs/reports/README.md` |
-| Launch checklist | `docs/operations/launch-checklist.md` |
-| Ops autopilot | `docs/ops-autopilot.md` |
+| Reports catalog    | `docs/reports/README.md`              |
+| Launch checklist   | `docs/operations/launch-checklist.md` |
+| Ops autopilot      | `docs/ops-autopilot.md`               |
 
 ## Architecture
 
@@ -63,23 +63,24 @@ Share URL params must stay aligned between the client-side encoder/decoder and t
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | React 19, TypeScript 5.9 (strict) |
-| Build | Vite 8 (beta), ESM-only (`"type": "module"`) |
-| Styling | Tailwind CSS v4 (`@tailwindcss/postcss`) |
-| Components | Radix UI primitives (Select, Slider, Tabs, Accordion, etc.) |
-| State | Zustand 5 |
-| i18n | i18next + react-i18next (40+ locales, static guides) |
-| Testing | Vitest 4 (unit), Playwright 1.58 (E2E) |
-| Linting | oxlint + oxfmt (OXC-powered, not ESLint) |
-| Quality | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, type-coverage, dependency-cruiser |
-| Hosting | Netlify (web + functions), Google Play Store (Android) |
-| Monitoring | Sentry (React + Node SDKs) |
+| Layer      | Technology                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| Framework  | React 19, TypeScript 5.9 (strict)                                                                       |
+| Build      | Vite 8 (beta), ESM-only (`"type": "module"`)                                                            |
+| Styling    | Tailwind CSS v4 (`@tailwindcss/postcss`)                                                                |
+| Components | Radix UI primitives (Select, Slider, Tabs, Accordion, etc.)                                             |
+| State      | Zustand 5                                                                                               |
+| i18n       | i18next + react-i18next (40+ locales, static guides)                                                    |
+| Testing    | Vitest 4 (unit), Playwright 1.58 (E2E)                                                                  |
+| Linting    | oxlint + oxfmt (OXC-powered, not ESLint)                                                                |
+| Quality    | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, type-coverage, dependency-cruiser |
+| Hosting    | Netlify (web + functions), Google Play Store (Android)                                                  |
+| Monitoring | Sentry (React + Node SDKs)                                                                              |
 
 ## Essential Commands
 
 ### Development
+
 ```bash
 make dev          # Vite dev server (:5173)
 make build        # tsc + vite build
@@ -87,6 +88,7 @@ npm run typecheck # tsc --noEmit
 ```
 
 ### Quality & Linting
+
 ```bash
 make fix          # oxlint --fix + oxfmt --write
 make lint         # oxlint only (no write)
@@ -95,6 +97,7 @@ make quality      # Full 19-check quality gate pipeline
 ```
 
 ### Testing
+
 ```bash
 npm run test:unit      # Vitest unit tests
 npm run test:unit:ci   # Same (CI alias)
@@ -104,6 +107,7 @@ make test:tiers        # All Playwright tiers (no permutations)
 ```
 
 ### Validation
+
 ```bash
 npm run typecheck           # TypeScript
 npm run test:i18n           # i18n regression check
@@ -113,6 +117,7 @@ npm run test:required:strict # Required test matrix validation
 ```
 
 ### Deploy (requires ALLOW_PAID_ACTIONS=1)
+
 ```bash
 make deploy       # Netlify production deploy with Sentry sourcemaps
 make android      # Full Android AAB build
@@ -133,17 +138,17 @@ make all          # Complete 16-step production pipeline
 
 ## Key File Locations
 
-| File | Purpose |
-|---|---|
-| `src/stores/` | Zustand stores (app state) |
-| `vite.config.ts` | Build config, chunk splitting, plugins |
-| `vitest.config.ts` | Unit test config |
-| `playwright.config.ts` | E2E test config |
-| `.oxlintrc.json` | Linter rules |
-| `.oxfmtrc.json` | Formatter config |
-| `.dependency-cruiser.cjs` | Architectural boundary rules |
-| `knip.json` | Unused dependency/export detection |
-| `Makefile` | Orchestration entry point for all tasks |
+| File                      | Purpose                                 |
+| ------------------------- | --------------------------------------- |
+| `src/stores/`             | Zustand stores (app state)              |
+| `vite.config.ts`          | Build config, chunk splitting, plugins  |
+| `vitest.config.ts`        | Unit test config                        |
+| `playwright.config.ts`    | E2E test config                         |
+| `.oxlintrc.json`          | Linter rules                            |
+| `.oxfmtrc.json`           | Formatter config                        |
+| `.dependency-cruiser.cjs` | Architectural boundary rules            |
+| `knip.json`               | Unused dependency/export detection      |
+| `Makefile`                | Orchestration entry point for all tasks |
 
 ## Things to Avoid
 

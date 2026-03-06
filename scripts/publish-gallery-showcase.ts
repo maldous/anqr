@@ -1027,7 +1027,7 @@ async function writeGeneratedGalleryData(
  * Source: scripts/publish-gallery-showcase.ts
  */
 
-const generatedGallerySummary = ${JSON.stringify(summary, null, 2)} as const;
+const _generatedGallerySummary = ${JSON.stringify(summary, null, 2)} as const;
 
 export const generatedGallerySections = ${JSON.stringify(sections, null, 2)} as const;
 `;

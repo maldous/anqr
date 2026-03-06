@@ -17,15 +17,9 @@
     "mergedReportFile": "reports/gallery-artifacts/local/report.merged.json",
     "mergedPassFile": "reports/gallery-artifacts/local/passed.merged.txt",
     "mergedFailFile": "reports/gallery-artifacts/local/failed.merged.txt",
-    "reportFiles": [
-      "report.json"
-    ],
-    "passFiles": [
-      "passed.txt"
-    ],
-    "failFiles": [
-      "failed.txt"
-    ],
+    "reportFiles": ["report.json"],
+    "passFiles": ["passed.txt"],
+    "failFiles": ["failed.txt"],
     "mergedResults": 1000,
     "candidates": 1000,
     "skippedUnreported": 0
