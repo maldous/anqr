@@ -56,7 +56,7 @@ OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
 # for tool calling (Responses API ↔ Chat Completions mismatch).
 LITELLM_HOST="${LITELLM_HOST:-http://127.0.0.1:4010}"
 LITELLM_API_KEY="${LITELLM_API_KEY:-}"  # empty — no auth needed for local proxy
-LITELLM_MODEL="${LITELLM_MODEL:-llama3.1-8b}"
+LITELLM_MODEL="${LITELLM_MODEL:-qwen2.5-coder-3b}"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
 PREFERRED_OLLAMA_MODELS="llama3.1:8b-32k llama3.1:8b qwen2.5-coder:7b"
