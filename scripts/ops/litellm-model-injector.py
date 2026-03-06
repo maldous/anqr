@@ -99,6 +99,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
+    allow_reuse_address = True
+    allow_reuse_port = True
 
 
 if __name__ == "__main__":
