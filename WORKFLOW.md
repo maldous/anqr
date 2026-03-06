@@ -118,8 +118,8 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
 
 ## Status map
 
-- `Backlog` -> treat as `Todo`; immediately transition to `In Progress` and begin work.
-- `Todo` -> queued; immediately transition to `In Progress` before active work.
+- `Backlog` -> treat as `Todo`; **Step 0 transitions to `In Progress` as the absolute first action**.
+- `Todo` -> **Step 0 transitions to `In Progress` as the absolute first action**.
   - Special case: if a PR is already attached, treat as feedback/rework loop (run full PR feedback sweep, address or explicitly push back, revalidate, advance to `Merging`).
 - `In Progress` -> implementation actively underway.
 - `Human Review` -> reserved for payment/billing issues only. PR is attached and validated; waiting on human approval before spending money. Non-payment issues should never be in this state.
@@ -132,36 +132,34 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
 
 1. Fetch the issue by explicit ticket ID.
 2. Read the current state.
-3. Route to the matching flow:
-   - If issue title starts with `[SENTINEL]`, skip normal execution and follow the **Sentinel issue pattern** section instead.
-   - `Backlog` -> treat as `Todo`; move to `In Progress` and begin execution flow.
-   - `Todo` -> immediately move to `In Progress`, then ensure bootstrap workpad comment exists (create if missing), then start execution flow.
+3. **IMMEDIATELY move to In Progress** — this is the absolute first action before anything else:
+   - If state is `Backlog`, `Todo`, or `In Progress`: call `update_issue(..., state: "In Progress")` **right now**, before reading the description, before creating a workpad, before any planning or analysis. This ensures the issue is visible as active in Linear even if the agent errors on a later step.
+   - If state is `Done`, `Cancelled`, or `Closed`: do nothing and shut down.
+   - If state is `Rework`, `Human Review`, `In Review`, or `Merging`: do NOT move to `In Progress`; skip directly to routing in step 4.
+   - If issue title starts with `[SENTINEL]`: move to `In Progress` first, then follow the **Sentinel issue pattern** section instead of normal execution.
+4. Route to the matching flow (issue is already `In Progress` at this point):
+   - `Backlog` / `Todo` -> ensure bootstrap workpad comment exists (create if missing), then start execution flow.
      - If PR is already attached, start by reviewing all open PR comments and deciding required changes vs explicit pushback responses.
    - `In Progress` -> continue execution flow from current scratchpad comment.
    - `Human Review` or `In Review` -> if issue has a payment/billing label (`payment`, `billing`, or `paid`), wait and poll for human decision. Otherwise, treat as mis-routed: move to `Merging` and execute the land skill.
    - `Merging` -> on entry, open and follow `.codex/skills/land/SKILL.md`; do not call `gh pr merge` directly.
    - `Rework` -> run rework flow.
-   - `Done` -> do nothing and shut down.
-4. Check whether a PR already exists for the current branch and whether it is closed.
+5. Check whether a PR already exists for the current branch and whether it is closed.
 
 - If a branch PR exists and is `CLOSED` or `MERGED`, treat prior branch work as non-reusable for this run.
 - Create a fresh branch from `origin/master` and restart execution flow as a new attempt.
 
-5. For `Todo` tickets, do startup sequencing in this exact order:
-   - `update_issue(..., state: "In Progress")`
-   - find/create `## Codex Workpad` bootstrap comment
-   - only then begin analysis/planning/implementation work.
 6. Add a short comment if state and issue content are inconsistent, then proceed with the safest flow.
 
 ## Step 1: Start/continue execution (Todo or In Progress)
 
-1.  Find or create a single persistent scratchpad comment for the issue:
+1.  The issue must already be `In Progress` before this step begins (Step 0 handles this).
+2.  Find or create a single persistent scratchpad comment for the issue:
     - Search existing comments for a marker header: `## Codex Workpad`.
     - Ignore resolved comments while searching; only active/unresolved comments are eligible to be reused as the live workpad.
     - If found, reuse that comment; do not create a new workpad comment.
     - If not found, create one workpad comment and use it for all updates.
     - Persist the workpad comment ID and only write progress updates to that ID.
-2.  If arriving from `Todo`, do not delay on additional status transitions: the issue should already be `In Progress` before this step begins.
 3.  Immediately reconcile the workpad before new edits:
     - Check off items that are already done.
     - Expand/fix the plan so it is comprehensive for current scope.
@@ -216,7 +214,7 @@ Use this only when completion is blocked by missing required tools or missing au
 ## Step 2: Execution phase (Todo -> In Progress -> Merging)
 
 1.  Determine current repo state (`branch`, `git status`, `HEAD`) and verify the kickoff `pull` sync result is already recorded in the workpad before implementation continues.
-2.  If current issue state is `Todo`, move it to `In Progress`; otherwise leave the current state unchanged.
+2.  The issue must already be `In Progress` at this point (Step 0 handles the transition). Do not re-check or re-transition.
 3.  Load the existing workpad comment and treat it as the active execution checklist.
     - Edit it liberally whenever reality changes (scope, risks, validation approach, discovered tasks).
 4.  Implement against the hierarchical TODOs and keep the comment current:
