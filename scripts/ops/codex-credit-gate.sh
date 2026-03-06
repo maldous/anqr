@@ -293,8 +293,16 @@ fi
 # --- Helper: exec codex through LiteLLM proxy ---
 # All non-Codex-credits providers are routed through LiteLLM because Codex
 # CLI's native providers use Responses API format which third-party APIs reject.
+# Codex CLI v0.110.0 has a bug where -c model=X isn't forwarded to the
+# /v1/responses request (sends model=None). The model-injector proxy on
+# port 4011 reads the model from a state file and injects it into the request.
 exec_via_litellm() {
   local model="$1"
+  # Write desired model to state file for the model-injector proxy to read.
+  local model_file="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/credit-gate/current-model"
+  local model_tmp="${model_file}.$$"
+  if printf '%s\n' "$model" > "$model_tmp"; then mv -f "$model_tmp" "$model_file" 2>/dev/null; fi
+  log "Wrote model=$model to state file for model-injector proxy"
   export OPENAI_BASE_URL="$LITELLM_HOST"
   export OPENAI_API_KEY="${LITELLM_API_KEY:-sk-unused}"
   exec "$CODEX_BIN" \
