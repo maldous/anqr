@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createGql } from './lib/linear-client.mjs';
+import { buildOrphanChildReport, computeChildHygiene } from './lib/child-hygiene.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -103,6 +104,25 @@ async function main() {
   const team = teamData.teams.nodes[0];
   if (!team) {
     throw new Error(`Team ${TEAM_KEY} not found`);
+  }
+
+  const childIssueData = await gql(
+    `query OpenIssueSnapshot($key: String!) {
+      issues(filter: { team: { key: { eq: $key } } }, first: 250) {
+        nodes {
+          identifier
+          title
+          url
+          state { name type }
+          parent { id }
+        }
+      }
+    }`,
+    { key: TEAM_KEY }
+  );
+  summary.childHygiene = computeChildHygiene(childIssueData.issues.nodes);
+  for (const line of buildOrphanChildReport(summary.childHygiene)) {
+    console.error(line);
   }
 
   const existingLabels = new Set(team.labels.nodes.map((l) => l.name.toLowerCase()));
@@ -317,10 +337,12 @@ async function main() {
   summary.projectsScanned = team.projects.nodes.length;
   summary.projectsUpdated = summary.updates.length;
   summary.labelsMissingCount = summary.missingLabels.length;
+  summary.ok = summary.childHygiene.ok;
 
   ensureDir(REPORTS_DIR);
   fs.writeFileSync(path.join(REPORTS_DIR, 'latest.json'), JSON.stringify(summary, null, 2) + '\n');
   console.log(JSON.stringify(summary, null, 2));
+  process.exit(summary.ok ? 0 : 1);
 }
 
 main().catch((err) => {
