@@ -95,10 +95,13 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
 - Treat any ticket-authored `Validation`, `Test Plan`, or `Testing` section as non-negotiable acceptance input: mirror it in the workpad and execute it before considering the work complete.
 - When meaningful out-of-scope improvements are discovered during execution,
   file a separate Linear issue instead of expanding scope. The follow-up issue
-  must include a clear title, description, and acceptance criteria, be placed in
-  `Backlog`, be assigned to the same project as the current issue, link the
-  current issue as `related`, and use `blockedBy` when the follow-up depends on
-  the current issue.
+  must include a clear title, description, acceptance criteria, and **at least
+  one label** (from the team label set: `web`, `android`, `ios`, `api`, `ads`,
+  `analytics`, `security`, `perf`, `reliability`, `p0`, `p1`, `payment`,
+  `billing`, `paid`, `Bug`, `Feature`, `Improvement`), be placed in `Backlog`,
+  be assigned to the same project as the current issue, link the current issue
+  as `related`, and use `blockedBy` when the follow-up depends on the current
+  issue.
 - Move status only when the matching quality bar is met.
 - Operate autonomously end-to-end unless blocked by missing requirements, secrets, or permissions.
 - Use the blocked-access escape hatch only for true external blockers (missing required tools/auth) after exhausting documented fallbacks.
@@ -310,9 +313,9 @@ This path applies **only** to issues with a label matching `payment`, `billing`,
 - Temporary proof edits are allowed only for local verification and must be reverted before commit.
 - If out-of-scope improvements are found, create a separate Backlog issue rather
   than expanding current scope, and include a clear
-  title/description/acceptance criteria, same-project assignment, a `related`
-  link to the current issue, and `blockedBy` when the follow-up depends on the
-  current issue.
+  title/description/acceptance criteria, **at least one label**, same-project
+  assignment, a `related` link to the current issue, and `blockedBy` when the
+  follow-up depends on the current issue.
 - Do not advance to `Merging` unless the `Completion bar before Merging` is satisfied.
 - For payment issues in `Human Review`, do not make changes; wait and poll.
 - If state is terminal (`Done`), do nothing and shut down.
@@ -329,9 +332,9 @@ A **sentinel issue** is a special self-replicating issue with the title prefix `
 
 1. **Review all issues**: Query Linear for every issue in the project. Summarize progress across all states (Backlog, Todo, In Progress, Human Review, Done, etc.).
 2. **Audit quality**: Check for stale issues (In Progress for too long without updates), duplicate work, issues that should be closed, and gaps in coverage.
-3. **Create new issues**: Based on the audit and project goals (world-class QR code generator — see `knowledge.md`), create new Backlog issues for any identified gaps, improvements, or maintenance tasks. Each new issue must have a clear title, description, and acceptance criteria.
+3. **Create new issues**: Based on the audit and project goals (world-class QR code generator — see `knowledge.md`), create new Backlog issues for any identified gaps, improvements, or maintenance tasks. Each new issue must have a clear title, description, acceptance criteria, and **at least one label** from the team label set.
 4. **Update workpad**: Record the audit summary, issues created, and any recommendations in the workpad comment.
-5. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title and description. This ensures the cycle continues indefinitely.
+5. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title, description, **and labels**. This ensures the cycle continues indefinitely.
 6. **Complete**: Move the current sentinel issue to `Done`.
 
 Sentinel issues do **not** create PRs or branches. They are pure orchestration/audit tasks.
