@@ -13,7 +13,7 @@
 #        b) OpenRouter (requires OPENROUTER_TOKEN) — paid budget, via LiteLLM
 #        c) Gemini     (requires GEMINI_TOKEN) — free cloud tier, via LiteLLM
 #        d) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
-#        e) Ollama direct (localhost:11434) — local, broken tool calling
+#        e) Ollama direct (localhost:11434) — local, broken tool calling (opt-in)
 #      On each invocation the cascade always starts from (a). Providers that
 #      failed within the last 30s are skipped; after the window expires the
 #      full list is retried from the top.
@@ -48,9 +48,12 @@ fi
 
 CODEX_BIN="${CODEX_BIN:-/home/user/.nvm/versions/node/v22.18.0/bin/codex}"
 CODEX_MODEL="${CODEX_MODEL:-gpt-5.3-codex}"
+CODEX_REASONING_EFFORT_CLOUD="${CODEX_REASONING_EFFORT_CLOUD:-medium}"
+CODEX_REASONING_EFFORT_LOCAL="${CODEX_REASONING_EFFORT_LOCAL:-low}"
 SYMPHONY_DASHBOARD_URL="${SYMPHONY_DASHBOARD_URL:-http://127.0.0.1:4040}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-}"
+ENABLE_OLLAMA_DIRECT_FALLBACK="${ENABLE_OLLAMA_DIRECT_FALLBACK:-0}"
 # Real provider model names (used only for availability probes)
 GROQ_MODEL="${GROQ_MODEL:-llama-3.3-70b-versatile}"
 GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
@@ -70,11 +73,15 @@ LITELLM_API_KEY="${LITELLM_API_KEY:-}"  # empty — no auth needed for local pro
 LITELLM_GROQ_MODEL="groq-llama-70b"
 LITELLM_GEMINI_MODEL="gemini-flash"
 LITELLM_OPENROUTER_MODEL="openrouter-gemini"
-LITELLM_OLLAMA_MODEL="llama3.1-8b"
+LITELLM_OLLAMA_MODEL="${LITELLM_OLLAMA_MODEL:-}"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
-PREFERRED_OLLAMA_MODELS="llama3.1:8b-32k llama3.1:8b qwen2.5-coder:7b"
-DEFAULT_OLLAMA_MODEL="llama3.1:8b-32k"
+PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b qwen2.5-coder:3b llama3.1:8b-32k llama3.1:8b"
+DEFAULT_OLLAMA_MODEL="qwen2.5-coder:3b"
+
+# LiteLLM aliases (must exist in litellm-config.yaml)
+PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b qwen2.5-coder-3b llama3.1-8b llama3.1-8b-base"
+DEFAULT_LITELLM_OLLAMA_MODEL="qwen2.5-coder-3b"
 
 # Provider failure memory: skip providers that failed recently.
 # When the credit-gate selects a provider and the process exits quickly
@@ -99,7 +106,7 @@ log() {
 # Check whether Codex credits are available via the Symphony dashboard.
 # Returns 0 if credits are available.
 # Returns 1 if credits are definitively exhausted.
-# Returns 2 if dashboard is unreachable after retries (unknown → fail-closed).
+# Returns 2 if credit status is unknown (dashboard unreachable or no credit signal).
 # ---------------------------------------------------------------------------
 credits_available() {
   local html attempt
@@ -117,13 +124,24 @@ credits_available() {
   fi
 
   # Positive match: only return "credits available" if we can confirm has_credits=true.
-  # This avoids a race where the dashboard is up but hasn't loaded credit info yet.
   if echo "$html" | grep -q '&quot;has_credits&quot; =&gt; true'; then
     return 0
   fi
 
-  log "Credits not confirmed available (dashboard up but has_credits != true)"
-  return 1
+  # Negative match: explicitly exhausted.
+  if echo "$html" | grep -q '&quot;has_credits&quot; =&gt; false'; then
+    log "Dashboard confirms Codex credits exhausted (has_credits=false)"
+    return 1
+  fi
+
+  # Legacy/alternate dashboard shape can expose raw credits without has_credits.
+  if echo "$html" | grep -q '&quot;credits&quot; =&gt; 0'; then
+    log "Dashboard reports credits=0"
+    return 1
+  fi
+
+  log "Credit status unknown (dashboard reachable but no explicit credit signal)"
+  return 2
 }
 
 # ---------------------------------------------------------------------------
@@ -171,7 +189,8 @@ openrouter_available() {
 }
 
 ollama_available() {
-  local probe_model="${OLLAMA_MODEL:-$DEFAULT_OLLAMA_MODEL}"
+  local probe_model
+  probe_model="${OLLAMA_MODEL:-$(select_ollama_model)}"
   local resp
   resp=$(curl -sf --max-time 10 \
     -H "Content-Type: application/json" \
@@ -220,6 +239,45 @@ except Exception:
   done
 
   echo "$DEFAULT_OLLAMA_MODEL"
+}
+
+select_litellm_ollama_model() {
+  local model tags_json
+  # Explicit override wins.
+  if [ -n "${LITELLM_OLLAMA_MODEL:-}" ]; then
+    echo "$LITELLM_OLLAMA_MODEL"
+    return
+  fi
+
+  tags_json=$(curl -sf --max-time 3 "${OLLAMA_HOST}/api/tags" 2>/dev/null || true)
+
+  # Map available local Ollama tags to LiteLLM aliases.
+  for model in $PREFERRED_LITELLM_OLLAMA_MODELS; do
+    case "$model" in
+      qwen2.5-coder-7b)
+        if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b"' ; then
+          echo "$model"; return
+        fi
+        ;;
+      qwen2.5-coder-3b)
+        if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:3b"' ; then
+          echo "$model"; return
+        fi
+        ;;
+      llama3.1-8b)
+        if echo "$tags_json" | grep -q '"name":"llama3.1:8b-32k"' ; then
+          echo "$model"; return
+        fi
+        ;;
+      llama3.1-8b-base)
+        if echo "$tags_json" | grep -q '"name":"llama3.1:8b"' ; then
+          echo "$model"; return
+        fi
+        ;;
+    esac
+  done
+
+  echo "$DEFAULT_LITELLM_OLLAMA_MODEL"
 }
 
 # ---------------------------------------------------------------------------
@@ -276,16 +334,31 @@ credits_available && credit_rc=0 || credit_rc=$?
 # --- Cloud model (if credits available) ---
 if [ "$credit_rc" -eq 0 ]; then
   log "Codex credits available — using cloud model (${CODEX_MODEL})"
+  export ANQR_CONTEXT_MODE="cloud-full"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
-    -c model_reasoning_effort=medium \
+    -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_CLOUD" \
     -c "model=$CODEX_MODEL" \
     app-server
 fi
 
 if [ "$credit_rc" -eq 2 ]; then
-  log "Credit status unknown — falling back to free providers"
+  # Prefer best model first when status is unknown, but avoid retry loops:
+  # if Codex failed quickly on the previous invocation, it will be in SKIP_PROVIDERS.
+  if is_skipped codex; then
+    log "Credit status unknown and Codex recently failed — using fallback providers"
+  else
+    log "Credit status unknown — trying cloud model (${CODEX_MODEL}) before fallbacks"
+    record_provider codex
+    export ANQR_CONTEXT_MODE="cloud-full"
+    exec "$CODEX_BIN" \
+      --dangerously-bypass-approvals-and-sandbox \
+      -c shell_environment_policy.inherit=all \
+      -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_CLOUD" \
+      -c "model=$CODEX_MODEL" \
+      app-server
+  fi
 else
   log "Codex credits exhausted — probing fallback providers"
 fi
@@ -303,11 +376,13 @@ exec_via_litellm() {
   local model_tmp="${model_file}.$$"
   if printf '%s\n' "$model" > "$model_tmp"; then mv -f "$model_tmp" "$model_file" 2>/dev/null; fi
   log "Wrote model=$model to state file for model-injector proxy"
+  export ANQR_CONTEXT_MODE="local-small"
   export OPENAI_BASE_URL="$LITELLM_HOST"
   export OPENAI_API_KEY="${LITELLM_API_KEY:-sk-unused}"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
+    -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_LOCAL" \
     -c model_provider=openai \
     -c "model=$model" \
     app-server
@@ -365,33 +440,44 @@ if [ "$LITELLM_UP" = true ]; then
   if is_skipped litellm-ollama; then
     log "LiteLLM/Ollama skipped (recently failed)"
   elif ollama_available; then
-    log "Ollama reachable — using ${LITELLM_OLLAMA_MODEL} via LiteLLM"
+    litellm_ollama_model="$(select_litellm_ollama_model)"
+    log "Ollama reachable — using ${litellm_ollama_model} via LiteLLM"
     record_provider litellm-ollama
-    exec_via_litellm "$LITELLM_OLLAMA_MODEL"
+    exec_via_litellm "$litellm_ollama_model"
   else
     log "Ollama unavailable at ${OLLAMA_HOST}"
   fi
 fi
 
-# --- Fallback 5: Ollama direct (broken tool calling — absolute last resort) ---
-if is_skipped ollama-direct; then
-  log "Ollama direct skipped (recently failed)"
-elif ollama_available; then
-  if [ -z "$OLLAMA_MODEL" ]; then
-    OLLAMA_MODEL=$(select_ollama_model)
-    log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
+# --- Fallback 5: Ollama direct (broken tool calling — disabled by default) ---
+if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
+  if is_skipped ollama-direct; then
+    log "Ollama direct skipped (recently failed)"
+  elif ollama_available; then
+    if [ -z "$OLLAMA_MODEL" ]; then
+      OLLAMA_MODEL=$(select_ollama_model)
+      log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
+    fi
+    log "Ollama direct — using model ${OLLAMA_MODEL} (tool calling may not work)"
+    record_provider ollama-direct
+    export ANQR_CONTEXT_MODE="local-small"
+    exec "$CODEX_BIN" \
+      --dangerously-bypass-approvals-and-sandbox \
+      -c shell_environment_policy.inherit=all \
+      -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_LOCAL" \
+      -c model_provider=ollama \
+      -c "model=$OLLAMA_MODEL" \
+      app-server
+  else
+    log "Ollama direct unavailable at ${OLLAMA_HOST}"
   fi
-  log "Ollama direct — using model ${OLLAMA_MODEL} (tool calling may not work)"
-  record_provider ollama-direct
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=ollama \
-    -c "model=$OLLAMA_MODEL" \
-    app-server
 else
-  log "Ollama direct unavailable at ${OLLAMA_HOST}"
+  log "Ollama direct fallback disabled (set ENABLE_OLLAMA_DIRECT_FALLBACK=1 to enable)"
 fi
 
-log "ERROR: all providers exhausted (credits, Groq, OpenRouter, Gemini, LiteLLM/Ollama, Ollama direct)"
+if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
+  log "ERROR: all providers exhausted (credits, Groq, OpenRouter, Gemini, LiteLLM/Ollama, Ollama direct)"
+else
+  log "ERROR: all providers exhausted (credits, Groq, OpenRouter, Gemini, LiteLLM/Ollama)"
+fi
 exit 1

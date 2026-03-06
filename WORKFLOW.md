@@ -30,8 +30,8 @@ hooks:
       npm ci
     fi
 agent:
-  max_concurrent_agents: 1
-  max_turns: 40
+  max_concurrent_agents: 2
+  max_turns: 20
   max_retry_backoff_ms: 600000
 codex:
   command: bash /home/user/src/anqr/scripts/ops/codex-credit-gate.sh
@@ -66,9 +66,10 @@ No description.
 2. Move this issue to state `In Progress` right now.
 
 3. If the title starts with `[SENTINEL]`:
-   a. Create a new issue with title `[SENTINEL] Review progress, create issues, and continue`, state `Backlog`, same labels and same project as this issue, with this description: `Self-replicating heartbeat. Steps: (1) create a copy of this issue in Backlog, (2) post a workpad comment, (3) move this issue to Done. Do NOT create PRs, do NOT run paid actions, do NOT query/audit issues.`
-   b. Add a comment on this issue: `Sentinel heartbeat complete.`
-   c. Move this issue to `Done`. Stop here.
+   a. Do NOT create any new sentinel issue.
+   b. Do NOT add comments.
+   c. Do NOT scan/query other issues.
+   d. Move this issue to `Backlog`. Stop here.
 
 4. If this is a regular issue (not sentinel):
    a. The description above contains exact file paths and exact code changes. Follow them exactly.

@@ -32,8 +32,8 @@ hooks:
       npm ci
     fi
 agent:
-  max_concurrent_agents: 1
-  max_turns: 40
+  max_concurrent_agents: 2
+  max_turns: 20
   max_retry_backoff_ms: 600000
 codex:
   command: bash /home/user/src/anqr/scripts/ops/codex-credit-gate.sh
@@ -54,10 +54,12 @@ You are a code editor. Follow these steps exactly.
 
 ## Step 1: Execute the task
 
-1. Read the issue description carefully. It contains exact file paths, exact code changes, and a validation command.
-2. Apply the code changes described using `apply_patch`.
-3. Run the validation command from the description.
-4. If validation passes, commit and push: `git add -A && git commit -m "fix: <short summary>" && git push origin HEAD`.
+1. If the issue requires guaranteed human-only actions (no API available, portal click-through, account/token creation, CAPTCHA, billing/credits purchase), move it to `Pending`, comment the exact required human steps and required validation evidence, then stop.
+2. Enforce one simple task per issue. If the issue contains multiple independent tasks, create Backlog child issues for remaining tasks and execute only one atomic task in this issue.
+3. Read the issue description carefully. It contains exact file paths, exact code changes, and a validation command.
+4. Apply the code changes described using `apply_patch`.
+5. Run the validation command from the description.
+6. If validation passes, commit and push: `git add -A && git commit -m "fix: <short summary>" && git push origin HEAD`.
 
 ## Step 2: Complete
 
@@ -67,7 +69,9 @@ You are a code editor. Follow these steps exactly.
 
 If the issue title starts with `[SENTINEL]`:
 
-1. Call `linear_graphql` to create a NEW issue with the exact same title and description in Backlog state, assigned to the Symphony project (slug: `symphony-c7a7906a4fa6`).
-2. Call `linear_graphql` to move THIS issue to "Done" state.
+1. Do NOT create any new sentinel issue.
+2. Do NOT add comments.
+3. Do NOT scan/query other issues.
+4. Call `linear_graphql` to move THIS issue to "Backlog" state immediately.
 
 That's it. Do not do anything else.
