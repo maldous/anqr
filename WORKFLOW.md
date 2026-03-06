@@ -304,6 +304,7 @@ This path applies **only** to issues with a label matching `payment`, `billing`,
 
 ## Guardrails
 
+- If a task consistently times out or fails (e.g., provider response timeout, agent run timeout), break it into smaller, manageable subtasks. Create separate Linear issues for each subtask with clear, independent acceptance criteria. Link subtasks with `blockedBy` if dependencies exist. Do not keep retrying a failing task without decomposition.
 - If the branch PR is already closed/merged, do not reuse that branch or prior implementation state for continuation.
 - For closed/merged branch PRs, create a new branch from `origin/master` and restart from reproduction/planning as if starting fresh.
 - If issue state is `Backlog`, treat it as `Todo` and move to `In Progress` before beginning work.
