@@ -9,10 +9,10 @@
 #   1. Check the Symphony dashboard for Codex credit status.
 #   2. If credits available → exec codex with the full cloud model.
 #   3. If credits exhausted → probe fallback providers best-to-worst:
-#        a) OpenRouter (requires OPENROUTER_TOKEN env var) — paid budget, most reliable
-#        b) Gemini     (requires GEMINI_TOKEN env var) — free cloud tier, daily quota
-#        c) Groq       (requires GROQ_TOKEN env var) — free cloud tier, known issues
-#        d) LiteLLM proxy → Ollama (port 4010) — local, proper tool calling
+#        a) Groq       (requires GROQ_TOKEN) — free cloud tier, via LiteLLM
+#        b) OpenRouter (requires OPENROUTER_TOKEN) — paid budget, via LiteLLM
+#        c) Gemini     (requires GEMINI_TOKEN) — free cloud tier, via LiteLLM
+#        d) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
 #        e) Ollama direct (localhost:11434) — local, broken tool calling
 #      On each invocation the cascade always starts from (a). Providers that
 #      failed within the last 30s are skipped; after the window expires the
@@ -25,8 +25,12 @@
 # spawned port's stdin/stdout. Running codex as a background child would
 # break this stdio pipe.
 #
-# Provider probes do real lightweight generation tests (not just model listing)
-# to detect rate-limited or quota-exhausted providers before selecting them.
+# All fallback providers are routed through the LiteLLM proxy (port 4010)
+# because Codex CLI v0.110.0's native providers (groq, gemini, openrouter)
+# use the Responses API format which these providers don't support.
+# LiteLLM translates Responses API → Chat Completions with proper structured
+# tool_calls. Provider probes still hit the real APIs directly to check
+# availability/quota before selecting.
 #
 # All paths are configurable via environment variables (see defaults below).
 # ============================================================================
@@ -47,16 +51,23 @@ CODEX_MODEL="${CODEX_MODEL:-gpt-5.3-codex}"
 SYMPHONY_DASHBOARD_URL="${SYMPHONY_DASHBOARD_URL:-http://127.0.0.1:4040}"
 OLLAMA_HOST="${OLLAMA_HOST:-http://127.0.0.1:11434}"
 OLLAMA_MODEL="${OLLAMA_MODEL:-}"
+# Real provider model names (used only for availability probes)
 GROQ_MODEL="${GROQ_MODEL:-llama-3.3-70b-versatile}"
 GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
 OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
 
-# LiteLLM proxy translates Codex Responses API → Ollama Chat Completions
-# with proper structured tool_calls. Codex's native Ollama provider is broken
-# for tool calling (Responses API ↔ Chat Completions mismatch).
+# LiteLLM proxy translates Codex Responses API → provider Chat Completions
+# with proper structured tool_calls. Codex CLI v0.110.0's native providers
+# are broken: they use Responses API format which third-party APIs reject.
+# All fallback providers are routed through LiteLLM as model_provider=openai.
 LITELLM_HOST="${LITELLM_HOST:-http://127.0.0.1:4010}"
 LITELLM_API_KEY="${LITELLM_API_KEY:-}"  # empty — no auth needed for local proxy
-LITELLM_MODEL="${LITELLM_MODEL:-qwen2.5-coder-3b}"
+
+# LiteLLM model aliases (must match model_name entries in litellm-config.yaml)
+LITELLM_GROQ_MODEL="groq-llama-70b"
+LITELLM_GEMINI_MODEL="gemini-flash"
+LITELLM_OPENROUTER_MODEL="openrouter-gemini"
+LITELLM_OLLAMA_MODEL="llama3.1-8b"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
 PREFERRED_OLLAMA_MODELS="llama3.1:8b-32k llama3.1:8b qwen2.5-coder:7b"
@@ -166,18 +177,11 @@ ollama_available() {
   echo "$resp" | grep -q '"choices"' 2>/dev/null
 }
 
-litellm_available() {
-  local auth_header=""
-  if [ -n "$LITELLM_API_KEY" ]; then
-    auth_header="Authorization: Bearer $LITELLM_API_KEY"
-  fi
-  local resp
-  resp=$(curl -sf --max-time 15 \
-    -H "Content-Type: application/json" \
-    ${auth_header:+-H "$auth_header"} \
-    -X POST "${LITELLM_HOST}/v1/chat/completions" \
-    -d '{"model":"'"$LITELLM_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
-  echo "$resp" | grep -q '"choices"' 2>/dev/null
+# Check if LiteLLM proxy is reachable (required for all non-Codex fallbacks).
+# This is a lightweight health check — individual provider probes still hit
+# the real APIs to verify tokens/quotas.
+litellm_reachable() {
+  curl -sf --max-time 3 "${LITELLM_HOST}/health" >/dev/null 2>&1
 }
 
 # ---------------------------------------------------------------------------
@@ -281,82 +285,91 @@ else
   log "Codex credits exhausted — probing fallback providers"
 fi
 
-# --- Fallback 1: OpenRouter (paid budget, most reliable cloud) ---
-if is_skipped openrouter; then
-  log "OpenRouter skipped (recently failed)"
-elif openrouter_available; then
-  log "OpenRouter reachable — using model ${OPENROUTER_MODEL}"
-  record_provider openrouter
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=openrouter \
-    -c "model=$OPENROUTER_MODEL" \
-    app-server
-else
-  log "OpenRouter unavailable (no token or API unreachable)"
-fi
-
-# --- Fallback 2: Gemini (free cloud tier) ---
-if is_skipped gemini; then
-  log "Gemini skipped (recently failed)"
-elif gemini_available; then
-  log "Gemini reachable — using model ${GEMINI_MODEL}"
-  record_provider gemini
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=gemini \
-    -c "model=$GEMINI_MODEL" \
-    app-server
-else
-  log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
-fi
-
-# --- Fallback 3: Groq (free cloud tier, 12K TPM — known Codex integration issues) ---
-if is_skipped groq; then
-  log "Groq skipped (recently failed)"
-elif groq_available; then
-  log "Groq reachable — using model ${GROQ_MODEL}"
-  record_provider groq
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=groq \
-    -c "model=$GROQ_MODEL" \
-    app-server
-else
-  log "Groq unavailable (no token or API unreachable)"
-fi
-
-# --- Fallback 4: LiteLLM proxy → Ollama (local, proper tool-calling) ---
-if is_skipped litellm; then
-  log "LiteLLM skipped (recently failed)"
-elif litellm_available; then
-  log "LiteLLM proxy reachable — using model ${LITELLM_MODEL} via ${LITELLM_HOST}"
-  record_provider litellm
+# --- Helper: exec codex through LiteLLM proxy ---
+# All non-Codex-credits providers are routed through LiteLLM because Codex
+# CLI's native providers use Responses API format which third-party APIs reject.
+exec_via_litellm() {
+  local model="$1"
   export OPENAI_BASE_URL="$LITELLM_HOST"
   export OPENAI_API_KEY="${LITELLM_API_KEY:-sk-unused}"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
     -c model_provider=openai \
-    -c "model=$LITELLM_MODEL" \
+    -c "model=$model" \
     app-server
+}
+
+# --- Pre-check: LiteLLM proxy must be up for all fallback providers ---
+if ! litellm_reachable; then
+  log "WARNING: LiteLLM proxy not reachable at ${LITELLM_HOST} — cloud fallbacks will be skipped"
+  LITELLM_UP=false
 else
-  log "LiteLLM proxy unavailable at ${LITELLM_HOST}"
+  LITELLM_UP=true
 fi
 
-# --- Fallback 5: Ollama direct (local, broken tool calling — last resort) ---
-if is_skipped ollama; then
-  log "Ollama skipped (recently failed)"
+# --- Fallback 1: Groq via LiteLLM (free cloud, fast, working tool calls) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_skipped groq; then
+    log "Groq skipped (recently failed)"
+  elif groq_available; then
+    log "Groq reachable — using ${LITELLM_GROQ_MODEL} via LiteLLM"
+    record_provider groq
+    exec_via_litellm "$LITELLM_GROQ_MODEL"
+  else
+    log "Groq unavailable (no token or API unreachable)"
+  fi
+fi
+
+# --- Fallback 2: OpenRouter via LiteLLM (paid budget, most reliable cloud) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_skipped openrouter; then
+    log "OpenRouter skipped (recently failed)"
+  elif openrouter_available; then
+    log "OpenRouter reachable — using ${LITELLM_OPENROUTER_MODEL} via LiteLLM"
+    record_provider openrouter
+    exec_via_litellm "$LITELLM_OPENROUTER_MODEL"
+  else
+    log "OpenRouter unavailable (no token or API unreachable)"
+  fi
+fi
+
+# --- Fallback 3: Gemini via LiteLLM (free cloud tier) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_skipped gemini; then
+    log "Gemini skipped (recently failed)"
+  elif gemini_available; then
+    log "Gemini reachable — using ${LITELLM_GEMINI_MODEL} via LiteLLM"
+    record_provider gemini
+    exec_via_litellm "$LITELLM_GEMINI_MODEL"
+  else
+    log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
+  fi
+fi
+
+# --- Fallback 4: Ollama via LiteLLM (local, proper tool-calling) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_skipped litellm-ollama; then
+    log "LiteLLM/Ollama skipped (recently failed)"
+  elif ollama_available; then
+    log "Ollama reachable — using ${LITELLM_OLLAMA_MODEL} via LiteLLM"
+    record_provider litellm-ollama
+    exec_via_litellm "$LITELLM_OLLAMA_MODEL"
+  else
+    log "Ollama unavailable at ${OLLAMA_HOST}"
+  fi
+fi
+
+# --- Fallback 5: Ollama direct (broken tool calling — absolute last resort) ---
+if is_skipped ollama-direct; then
+  log "Ollama direct skipped (recently failed)"
 elif ollama_available; then
   if [ -z "$OLLAMA_MODEL" ]; then
     OLLAMA_MODEL=$(select_ollama_model)
     log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
   fi
   log "Ollama direct — using model ${OLLAMA_MODEL} (tool calling may not work)"
-  record_provider ollama
+  record_provider ollama-direct
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
@@ -364,8 +377,8 @@ elif ollama_available; then
     -c "model=$OLLAMA_MODEL" \
     app-server
 else
-  log "Ollama unavailable at ${OLLAMA_HOST}"
+  log "Ollama direct unavailable at ${OLLAMA_HOST}"
 fi
 
-log "ERROR: all providers exhausted (credits, OpenRouter, Gemini, Groq, LiteLLM, Ollama)"
+log "ERROR: all providers exhausted (credits, Groq, OpenRouter, Gemini, LiteLLM/Ollama, Ollama direct)"
 exit 1
