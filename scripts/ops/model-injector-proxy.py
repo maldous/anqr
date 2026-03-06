@@ -20,6 +20,7 @@ Environment variables:
     DEFAULT_MODEL   Fallback model if state file is missing (default: groq-llama-70b)
 """
 
+import gzip
 import http.client
 import http.server
 import json
@@ -87,22 +88,36 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length) if content_length > 0 else b""
 
+        body_rewritten = False
         if body and "/responses" in self.path and self.command == "POST":
             try:
-                data = json.loads(body)
+                # Codex CLI may send gzip-compressed request bodies.
+                content_encoding = self.headers.get("Content-Encoding", "")
+                raw = body
+                if "gzip" in content_encoding:
+                    raw = gzip.decompress(body)
+
+                data = json.loads(raw)
                 model_val = data.get("model")
                 if not model_val or str(model_val) in ("None", "null", ""):
                     injected = read_model()
                     data["model"] = injected
-                    body = json.dumps(data).encode()
                     self.log_message("Injected model=%s", injected)
-            except (json.JSONDecodeError, KeyError, TypeError):
+
+                # Always forward uncompressed — simpler and LiteLLM handles it fine.
+                body = json.dumps(data).encode()
+                body_rewritten = True
+            except (json.JSONDecodeError, KeyError, TypeError, UnicodeDecodeError, OSError):
                 pass
 
         headers = {}
         for key, val in self.headers.items():
-            if key.lower() not in ("host",):
-                headers[key] = val
+            lk = key.lower()
+            if lk in ("host", "content-length"):
+                continue
+            if lk == "content-encoding" and body_rewritten:
+                continue
+            headers[key] = val
         headers["Content-Length"] = str(len(body))
         headers["Host"] = f"{UPSTREAM_HOST}:{UPSTREAM_PORT}"
 
