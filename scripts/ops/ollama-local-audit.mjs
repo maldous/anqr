@@ -30,7 +30,7 @@ async function generate(prompt) {
         num_ctx: 1024,
         num_predict: 200,
         temperature: 0.2,
-        num_thread: 2,
+        num_thread: 1,
         num_gpu: 99,
       },
     }),
