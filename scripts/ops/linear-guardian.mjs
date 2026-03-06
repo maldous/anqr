@@ -14,7 +14,7 @@ const TEAM_KEY = process.env.LINEAR_TEAM_KEY || 'ANQ';
 const CODEX_USER_NAME = process.env.LINEAR_CODEX_USER_NAME || 'Codex';
 const REQUIRED_LABELS = (
   process.env.LINEAR_REQUIRED_LABELS ||
-  'web,android,ios,api,ads,analytics,security,perf,reliability,p0,p1'
+  'web,android,ios,api,ads,analytics,security,perf,reliability,p0,p1,payment,billing,paid'
 )
   .split(',')
   .map((v) => v.trim())

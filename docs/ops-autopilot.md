@@ -30,6 +30,8 @@ The Linear guardian checks the Symphony dashboard (`http://127.0.0.1:4040`) for 
 
 This prevents the review-loop problem where Symphony spawns Codex sessions for tickets in `Human Review` / `In Review` but Codex cannot work due to exhausted credits.
 
+> **Note:** The workflow is fully autonomous — issues advance directly from execution to `Merging` → `Done` without stopping for human review. The only exception is payment/billing issues (labels: `payment`, `billing`, `paid`), which still require human approval via `Human Review`.
+
 The `creditStatus` and `leadSkipReason` fields in `reports/linear-guardian/latest.json` report the decision made each run.
 
 ## Free-Tier Fallback Chain

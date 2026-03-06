@@ -115,11 +115,11 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
 
 - `Backlog` -> treat as `Todo`; immediately transition to `In Progress` and begin work.
 - `Todo` -> queued; immediately transition to `In Progress` before active work.
-  - Special case: if a PR is already attached, treat as feedback/rework loop (run full PR feedback sweep, address or explicitly push back, revalidate, return to `Human Review`).
+  - Special case: if a PR is already attached, treat as feedback/rework loop (run full PR feedback sweep, address or explicitly push back, revalidate, advance to `Merging`).
 - `In Progress` -> implementation actively underway.
-- `Human Review` -> PR is attached and validated; waiting on human approval.
+- `Human Review` -> reserved for payment/billing issues only. PR is attached and validated; waiting on human approval before spending money. Non-payment issues should never be in this state.
 - `In Review` -> equivalent to `Human Review` for teams using this state name.
-- `Merging` -> approved by human; execute the `land` skill flow (do not call `gh pr merge` directly).
+- `Merging` -> PR validated and ready to land; execute the `land` skill flow (do not call `gh pr merge` directly). This is the default target state after execution for all non-payment issues.
 - `Rework` -> reviewer requested changes; planning + implementation required.
 - `Done` -> terminal state; no further action required.
 
@@ -133,7 +133,7 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
    - `Todo` -> immediately move to `In Progress`, then ensure bootstrap workpad comment exists (create if missing), then start execution flow.
      - If PR is already attached, start by reviewing all open PR comments and deciding required changes vs explicit pushback responses.
    - `In Progress` -> continue execution flow from current scratchpad comment.
-   - `Human Review` or `In Review` -> wait and poll for decision/review updates.
+   - `Human Review` or `In Review` -> if issue has a payment/billing label (`payment`, `billing`, or `paid`), wait and poll for human decision. Otherwise, treat as mis-routed: move to `Merging` and execute the land skill.
    - `Merging` -> on entry, open and follow `.codex/skills/land/SKILL.md`; do not call `gh pr merge` directly.
    - `Rework` -> run rework flow.
    - `Done` -> do nothing and shut down.
@@ -181,7 +181,7 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
 
 ## PR feedback sweep protocol (required)
 
-When a ticket has an attached PR, run this protocol before moving to `Human Review`:
+When a ticket has an attached PR, run this protocol before advancing to `Merging` (or `Human Review` for payment issues):
 
 1. Identify the PR number from issue links/attachments.
 2. Gather feedback from all channels:
@@ -200,14 +200,15 @@ When a ticket has an attached PR, run this protocol before moving to `Human Revi
 Use this only when completion is blocked by missing required tools or missing auth/permissions that cannot be resolved in-session.
 
 - GitHub is **not** a valid blocker by default. Always try fallback strategies first (alternate remote/auth mode, then continue publish/review flow).
-- Do not move to `Human Review` for GitHub access/auth until all fallback strategies have been attempted and documented in the workpad.
+- Do not stop progress for GitHub access/auth until all fallback strategies have been attempted and documented in the workpad.
 - If a non-GitHub required tool is missing, or required non-GitHub auth is unavailable, move the ticket to `Human Review` with a short blocker brief in the workpad that includes:
   - what is missing,
   - why it blocks required acceptance/validation,
   - exact human action needed to unblock.
+- This is the only non-payment reason an issue should enter `Human Review`.
 - Keep the brief concise and action-oriented; do not add extra top-level comments outside the workpad.
 
-## Step 2: Execution phase (Todo -> In Progress -> Human Review)
+## Step 2: Execution phase (Todo -> In Progress -> Merging)
 
 1.  Determine current repo state (`branch`, `git status`, `HEAD`) and verify the kickoff `pull` sync result is already recorded in the workpad before implementation continues.
 2.  If current issue state is `Todo`, move it to `In Progress`; otherwise leave the current state unchanged.
@@ -238,21 +239,33 @@ Use this only when completion is blocked by missing required tools or missing au
     - Do not include PR URL in the workpad comment; keep PR linkage on the issue via attachment/link fields.
     - Add a short `### Confusions` section at the bottom when any part of task execution was unclear/confusing, with concise bullets.
     - Do not post any additional completion summary comment.
-11. Before moving to `Human Review`, poll PR feedback and checks:
+11. Before advancing, poll PR feedback and checks:
     - Read the PR `Manual QA Plan` comment (when present) and use it to sharpen UI/runtime test coverage for the current change.
     - Run the full PR feedback sweep protocol.
     - Confirm PR checks are passing (green) after the latest changes.
     - Confirm every required ticket-provided validation/test-plan item is explicitly marked complete in the workpad.
     - Repeat this check-address-verify loop until no outstanding comments remain and checks are fully passing.
     - Re-open and refresh the workpad before state transition so `Plan`, `Acceptance Criteria`, and `Validation` exactly match completed work.
-12. Only then move issue to `Human Review`.
-    - Exception: if blocked by missing required non-GitHub tools/auth per the blocked-access escape hatch, move to `Human Review` with the blocker brief and explicit unblock actions.
+12. Determine the target state and advance:
+    - **Payment issues** (issue has a label matching `payment`, `billing`, or `paid`, case-insensitive): move to `Human Review` and wait for human approval before any cost-incurring action.
+    - **All other issues** (default): move directly to `Merging` and proceed to Step 3 (autonomous path) to land the PR.
+    - **Blocked exception**: if blocked by missing required non-GitHub tools/auth per the blocked-access escape hatch, move to `Human Review` with the blocker brief and explicit unblock actions.
 13. For `Todo` tickets that already had a PR attached at kickoff:
     - Ensure all existing PR feedback was reviewed and resolved, including inline review comments (code changes or explicit, justified pushback response).
     - Ensure branch was pushed with any required updates.
-    - Then move to `Human Review`.
+    - Then advance per the target-state rule in step 12.
 
-## Step 3: Human Review and merge handling
+## Step 3: Merge handling (autonomous) and Human Review (payment issues only)
+
+### Autonomous path (default for all non-payment issues)
+
+1. When the issue reaches `Merging`, open and follow `.codex/skills/land/SKILL.md`, then run the `land` skill in a loop until the PR is merged. Do not call `gh pr merge` directly.
+2. After merge is complete, move the issue to `Done`.
+3. If the land skill encounters rework-worthy feedback (CI failures, review comments), address it inline — fix, commit, push, and continue the land loop. Do not move back to `In Progress`.
+
+### Payment issue path (Human Review)
+
+This path applies **only** to issues with a label matching `payment`, `billing`, or `paid`.
 
 1. When the issue is in `Human Review` or `In Review`, do not code or change ticket content.
 2. Poll for updates as needed, including GitHub PR review comments from humans and bots.
@@ -262,8 +275,7 @@ Use this only when completion is blocked by missing required tools or missing au
    - Start rework execution without waiting for additional human instruction.
 4. Only keep the issue in `Human Review`/`In Review` when comments are informational-only or explicitly approving.
 5. If approved, human moves the issue to `Merging`.
-6. When the issue is in `Merging`, open and follow `.codex/skills/land/SKILL.md`, then run the `land` skill in a loop until the PR is merged. Do not call `gh pr merge` directly.
-7. After merge is complete, move the issue to `Done`.
+6. When the issue reaches `Merging`, follow the autonomous path above (land skill loop → `Done`).
 
 ## Step 4: Rework handling
 
@@ -277,7 +289,7 @@ Use this only when completion is blocked by missing required tools or missing au
    - Create a new bootstrap `## Codex Workpad` comment.
    - Build a fresh plan/checklist and execute end-to-end.
 
-## Completion bar before Human Review
+## Completion bar before Merging
 
 - Step 1/2 checklist is fully complete and accurately reflected in the single workpad comment.
 - Acceptance criteria and required ticket-provided validation items are complete.
@@ -301,12 +313,13 @@ Use this only when completion is blocked by missing required tools or missing au
   title/description/acceptance criteria, same-project assignment, a `related`
   link to the current issue, and `blockedBy` when the follow-up depends on the
   current issue.
-- Do not move to `Human Review` unless the `Completion bar before Human Review` is satisfied.
-- In `Human Review`, do not make changes; wait and poll.
+- Do not advance to `Merging` unless the `Completion bar before Merging` is satisfied.
+- For payment issues in `Human Review`, do not make changes; wait and poll.
 - If state is terminal (`Done`), do nothing and shut down.
 - Keep issue text concise, specific, and reviewer-oriented.
 - If blocked and no workpad exists yet, add one blocker comment describing blocker, impact, and next unblock action.
 - Do not run paid/external-release commands (`make deploy`, `make indexnow`, `make android:upload`, store submission, paid API scans) unless explicit approval is documented and `ALLOW_PAID_ACTIONS=1` is set.
+- Issues involving cost-incurring actions must have a `payment`, `billing`, or `paid` label to trigger Human Review. All other issues are merged autonomously.
 - If using Codebuff for auxiliary work, use `codebuff --free` only; do not use paid modes.
 - When Codex credits are exhausted, the credit gate wrapper (`scripts/ops/codex-credit-gate.sh`) cascades through fallback providers: first OpenRouter (`google/gemini-2.0-flash-001` via the Responses API — cheap, high quality), then local Ollama (`qwen2.5-coder:7b` — free, zero cost). The Linear guardian skips lead enforcement (credit-aware via Symphony dashboard check). Systemd-driven free-tier ops (Groq, Gemini, Hugging Face, Ollama, typechecks, tests) also continue indefinitely. When credits reset, the credit gate automatically switches back to the full cloud model.
 
