@@ -184,7 +184,9 @@ ollama_available() {
 # This is a lightweight health check — individual provider probes still hit
 # the real APIs to verify tokens/quotas.
 litellm_reachable() {
-  curl -sf --max-time 3 "${LITELLM_HOST}/health" >/dev/null 2>&1
+  # Probe /v1/models instead of /health — the model-injector proxy
+  # forwards GET requests but may not handle /health specially.
+  curl -sf --max-time 3 "${LITELLM_HOST}/v1/models" >/dev/null 2>&1
 }
 
 # ---------------------------------------------------------------------------
