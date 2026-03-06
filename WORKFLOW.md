@@ -61,21 +61,25 @@ No description.
 
 **Do these steps in order:**
 
-1. Move this issue to state `In Progress` right now.
+1. If the status is `Done`, `Cancelled`, or `Closed`, do nothing and stop.
 
-2. If the title starts with `[SENTINEL]`:
+2. Move this issue to state `In Progress` right now.
+
+3. If the title starts with `[SENTINEL]`:
    a. Create a new issue with title `[SENTINEL] Review progress, create issues, and continue`, state `Backlog`, same labels and same project as this issue, with this description: `Self-replicating heartbeat. Steps: (1) create a copy of this issue in Backlog, (2) post a workpad comment, (3) move this issue to Done. Do NOT create PRs, do NOT run paid actions, do NOT query/audit issues.`
    b. Add a comment on this issue: `Sentinel heartbeat complete.`
    c. Move this issue to `Done`. Stop here.
 
-3. If this is a regular issue (not sentinel):
+4. If this is a regular issue (not sentinel):
    a. The description above contains exact file paths and exact code changes. Follow them exactly.
    b. After making the changes, run the validation command from the description.
-   c. If validation passes, commit your changes with a short message starting with `fix:` or `feat:`.
-   d. Add a comment on this issue: `Done. Changes committed.`
-   e. Move this issue to `Done`.
+   c. If validation passes, commit your changes: `git add -A && git commit -m "fix: <short summary>"`
+   d. Push your changes: `git push origin master`
+   e. Add a comment on this issue: `Done. Changes committed and pushed.`
+   f. Move this issue to `Done`.
 
 **Rules:**
+
 - Never edit WORKFLOW.md
 - Never run `make deploy`, `make android`, or `make indexnow`
 - Never create pull requests or branches
