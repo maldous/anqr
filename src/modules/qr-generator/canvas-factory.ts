@@ -63,6 +63,10 @@ export class CanvasPool {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
+        ctx.imageSmoothingEnabled = false;
+        if ('imageSmoothingQuality' in ctx) {
+          (ctx as CanvasRenderingContext2D).imageSmoothingQuality = 'low';
+        }
         if ('filter' in ctx) (ctx as CanvasRenderingContext2D).filter = 'none';
         ctx.clearRect(0, 0, width, height);
       }

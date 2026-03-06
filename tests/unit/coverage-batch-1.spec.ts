@@ -330,6 +330,32 @@ describe('canvas-factory.ts', () => {
       globalThis.Image = orig;
     }
   });
+
+  it('CanvasPool resets smoothing state when reusing a canvas', async () => {
+    const { CanvasPool, defaultBrowserCanvasFactory } =
+      await import('../../src/modules/qr-generator/canvas-factory');
+    const pool = new CanvasPool(defaultBrowserCanvasFactory);
+    const canvas = await pool.acquire(32, 32);
+    const ctx = canvas.getContext('2d');
+    expect(ctx).not.toBeNull();
+    if (!ctx) return;
+
+    ctx.imageSmoothingEnabled = true;
+    if ('imageSmoothingQuality' in ctx) {
+      (ctx as CanvasRenderingContext2D).imageSmoothingQuality = 'high';
+    }
+
+    pool.release(canvas);
+    const reused = await pool.acquire(32, 32);
+    const reusedCtx = reused.getContext('2d');
+    expect(reusedCtx).not.toBeNull();
+    if (!reusedCtx) return;
+
+    expect(reusedCtx.imageSmoothingEnabled).toBe(false);
+    if ('imageSmoothingQuality' in reusedCtx) {
+      expect((reusedCtx as CanvasRenderingContext2D).imageSmoothingQuality).toBe('low');
+    }
+  });
 });
 
 // ############################################################################
