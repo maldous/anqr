@@ -50,8 +50,8 @@ GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
 OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
-PREFERRED_OLLAMA_MODELS="llama3.1:8b qwen2.5-coder:7b qwen2.5-coder:3b"
-DEFAULT_OLLAMA_MODEL="llama3.1:8b"
+PREFERRED_OLLAMA_MODELS="llama3.1:8b-32k llama3.1:8b qwen2.5-coder:7b"
+DEFAULT_OLLAMA_MODEL="llama3.1:8b-32k"
 
 # Provider failure memory: skip providers that failed recently.
 # When the credit-gate selects a provider and the process exits quickly
