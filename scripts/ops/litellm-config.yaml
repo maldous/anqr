@@ -1,0 +1,34 @@
+# LiteLLM Proxy Configuration for Symphony
+# Translates OpenAI Responses API → Ollama Chat Completions
+# with proper structured tool_calls support.
+#
+# Start: litellm --config scripts/ops/litellm-config.yaml --port 4010
+# Codex talks to http://localhost:4010 as an OpenAI-compatible endpoint.
+
+model_list:
+  - model_name: llama3.1-8b
+    litellm_params:
+      model: ollama/llama3.1:8b-32k
+      api_base: http://localhost:11434
+      num_ctx: 32768
+      supports_function_calling: true
+
+  - model_name: llama3.1-8b-base
+    litellm_params:
+      model: ollama/llama3.1:8b
+      api_base: http://localhost:11434
+      supports_function_calling: true
+
+  - model_name: qwen2.5-coder-7b
+    litellm_params:
+      model: ollama/qwen2.5-coder:7b
+      api_base: http://localhost:11434
+      supports_function_calling: true
+
+general_settings:
+  master_key: sk-symphony-local-dev
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  num_retries: 0
