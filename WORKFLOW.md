@@ -349,8 +349,33 @@ A **sentinel issue** is a special self-replicating issue with the title prefix `
 5. **Feed the Symphony project**: Symphony only picks up issues from its own project (`symphony-c7a7906a4fa6`). Review all open Ollama-sized issues across all projects and move the highest-priority automatable ones into the Symphony project. Ensure there are always at least 5–10 open issues in the Symphony project so Symphony never runs idle. Do not move issues that require human action (account setup, external services, legal review).
 6. **Create new issues**: Based on the audit and project goals (world-class QR code generator — see `knowledge.md`), create new Backlog issues for any identified gaps, improvements, or maintenance tasks. Each new issue must have a clear title, description, acceptance criteria, **at least one label** from the team label set, and be **assigned to the correct project**. All new issues must be Ollama-sized.
 7. **Update workpad**: Record the audit summary, issues created, issues moved to Symphony, project health updates, and any recommendations in the workpad comment.
-8. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title, description, **and labels**. This ensures the cycle continues indefinitely.
+8. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title, **same description** (use the canonical sentinel description below), **and labels**. Assign it to the Symphony project. This ensures the cycle continues indefinitely.
 9. **Complete**: Move the current sentinel issue to `Done`.
+
+### Sentinel dead man's switch
+
+The `linear-guardian.mjs` script (runs every 15 minutes via systemd timer) checks the Symphony project for an open `[SENTINEL]` issue. If none exists (e.g., the sentinel failed before self-replicating), the guardian automatically creates a new one. This ensures the autonomous loop never dies permanently.
+
+### Canonical sentinel description
+
+When self-replicating (step 8) or when the dead man's switch creates a sentinel, use this exact description:
+
+```
+## Purpose
+
+This is a **sentinel issue** — a self-replicating orchestration task that ensures the ANQR project has a continuous pipeline of high-quality, Ollama-sized work.
+
+## Instructions
+
+Follow the `Sentinel issue pattern` section in WORKFLOW.md exactly. Do not deviate from the steps defined there.
+
+## Constraints
+
+- Do NOT create PRs or branches. This is a pure audit/orchestration task.
+- Do NOT run paid actions.
+- WORKFLOW.md is the single source of truth for the sentinel pattern.
+- When self-replicating, use this exact title and description.
+```
 
 Sentinel issues do **not** create PRs or branches. They are pure orchestration/audit tasks.
 

@@ -158,6 +158,76 @@ async function main() {
     }
   }
 
+  // -----------------------------------------------------------------------
+  // Sentinel dead man's switch: ensure a [SENTINEL] issue always exists
+  // in the Symphony project. If the sentinel fails before self-replicating,
+  // this guarantees a new one is created within 15 minutes.
+  // -----------------------------------------------------------------------
+  const symphonyProject = team.projects.nodes.find((p) => p.name === 'Symphony');
+  summary.sentinelCheck = { checked: false, exists: false, created: false };
+
+  if (symphonyProject) {
+    const sentinelQuery = await gql(
+      `query($projectId: ID!) {
+        issues(filter: {
+          team: { key: { eq: "ANQ" } },
+          project: { id: { eq: $projectId } },
+          state: { name: { in: ["Backlog", "Todo", "In Progress"] } }
+        }, first: 50) {
+          nodes { identifier title }
+        }
+      }`,
+      { projectId: symphonyProject.id }
+    );
+
+    summary.sentinelCheck.checked = true;
+    const hasSentinel = sentinelQuery.issues.nodes.some((i) => i.title.startsWith('[SENTINEL]'));
+    summary.sentinelCheck.exists = hasSentinel;
+
+    if (!hasSentinel && APPLY) {
+      const sentinelDescription = [
+        '## Purpose',
+        '',
+        'This is a **sentinel issue** — a self-replicating orchestration task that ensures the ANQR project has a continuous pipeline of high-quality, Ollama-sized work.',
+        '',
+        '## Instructions',
+        '',
+        'Follow the `Sentinel issue pattern` section in WORKFLOW.md exactly. Do not deviate from the steps defined there.',
+        '',
+        '## Constraints',
+        '',
+        '- Do NOT create PRs or branches. This is a pure audit/orchestration task.',
+        '- Do NOT run paid actions.',
+        '- WORKFLOW.md is the single source of truth for the sentinel pattern.',
+        '- When self-replicating, use this exact title and description.',
+      ].join('\n');
+
+      const reliabilityLabel = team.labels.nodes.find(
+        (l) => l.name.toLowerCase() === 'reliability'
+      );
+
+      await gql(
+        `mutation($input: IssueCreateInput!) {
+          issueCreate(input: $input) { success issue { identifier title } }
+        }`,
+        {
+          input: {
+            teamId: team.id,
+            title: '[SENTINEL] Review progress, create issues, and continue',
+            description: sentinelDescription,
+            projectId: symphonyProject.id,
+            priority: 1,
+            ...(reliabilityLabel ? { labelIds: [reliabilityLabel.id] } : {}),
+          },
+        }
+      );
+      summary.sentinelCheck.created = true;
+      console.error("Sentinel dead man's switch: created new sentinel issue");
+    } else if (!hasSentinel) {
+      console.error("Sentinel dead man's switch: no sentinel found (dry-run, would create)");
+    }
+  }
+
   summary.finishedAt = new Date().toISOString();
   summary.projectsScanned = team.projects.nodes.length;
   summary.projectsUpdated = summary.updates.length;
