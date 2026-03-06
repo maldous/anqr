@@ -67,13 +67,24 @@ Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-
 3. **Credits exhausted + OpenRouter reachable** → `exec codex -c model_provider=openrouter -m google/gemini-2.0-flash-001 app-server` (has budget, most reliable fallback).
 4. **Credits exhausted + Gemini reachable** → `exec codex -c model_provider=gemini -m gemini-2.0-flash app-server` (free tier, Google cloud).
 5. **Credits exhausted + Groq reachable** → `exec codex -c model_provider=groq -m llama-3.3-70b-versatile app-server` (free tier, 12K TPM limit).
-6. **Credits exhausted + Ollama reachable** → auto-select the best available local model, then `exec codex -c model_provider=ollama -m <best> app-server` (free local model).
-7. **All providers exhausted** → exit 1 (Symphony will retry with backoff).
-8. **Dashboard unreachable** → fall through to free providers (fail-closed).
+6. **Credits exhausted + Ollama reachable** → `exec codex -c model_provider=openai -m <litellm-ollama-alias> app-server` via the model-injector proxy + LiteLLM (free local model with tool-call compatibility).
+7. **Optional last resort** (`ENABLE_OLLAMA_DIRECT_FALLBACK=1`) → `exec codex -c model_provider=ollama -m <best> app-server` (direct Ollama; tool calling may break).
+8. **All providers exhausted** → exit 1 (Symphony will retry with backoff).
+9. **Dashboard unreachable** → fall through to free providers (fail-closed).
 
 **Provider requirements:**
 
 All fallback providers are configured in `~/.codex/config.toml` via `[model_providers.*]` sections. The credit gate uses `--config model_provider=X` to select the active provider at runtime.
+
+### Injector Proxy Topology
+
+- `litellm-proxy.service` listens on `127.0.0.1:4010`.
+- `model-injector-proxy.service` listens on `127.0.0.1:4011` and forwards to `4010`.
+- Credit gate points Codex to `http://127.0.0.1:4011`.
+- `model-injector-proxy.service` reads `/run/user/<uid>/credit-gate/current-model`, written by `codex-credit-gate.sh`.
+- `model-injector-proxy.service` strips `supports_function_calling` and `web_search_options` from `/v1/responses` payloads for provider compatibility.
+
+Do not run `litellm-model-injector.service` at the same time as `model-injector-proxy.service` — both bind `4011` and will flap/restart.
 
 | Provider       | API           | Endpoint                                           | Requirement                |
 | -------------- | ------------- | -------------------------------------------------- | -------------------------- |
@@ -98,6 +109,7 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 | `OPENROUTER_MODEL`       | `google/gemini-2.0-flash-001`                      | Model to use via OpenRouter                                                                 |
 | `OLLAMA_HOST`            | `http://127.0.0.1:11434`                           | Ollama API base URL                                                                         |
 | `OLLAMA_MODEL`           | _(auto-selected)_                                  | Model to use in Ollama fallback; if unset, the best available model is chosen automatically |
+| `ENABLE_OLLAMA_DIRECT_FALLBACK` | `0`                                       | Set to `1` only to allow direct `model_provider=ollama` fallback (known tool-calling risk) |
 
 **Ollama auto-model selection** (when `OLLAMA_MODEL` is not set):
 

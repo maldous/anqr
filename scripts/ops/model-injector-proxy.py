@@ -26,6 +26,7 @@ import http.server
 import json
 import os
 import socketserver
+import subprocess
 import sys
 
 UPSTREAM_HOST = os.environ.get("UPSTREAM_HOST", "127.0.0.1")
@@ -41,6 +42,42 @@ MODEL_FILE = os.environ.get(
     ),
 )
 
+ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
+GZIP_MAGIC = b"\x1f\x8b"
+UNSUPPORTED_RESPONSE_FIELDS = {
+    "supports_function_calling",
+    "web_search_options",
+}
+
+
+def decompress_body(body: bytes, content_encoding: str) -> bytes:
+    """Decompress request body for zstd/gzip payloads from Codex CLI."""
+    if not body:
+        return body
+
+    encoding = (content_encoding or "").lower()
+
+    if encoding == "zstd" or body[:4] == ZSTD_MAGIC:
+        try:
+            result = subprocess.run(
+                ["zstd", "-d", "--stdout"],
+                input=body,
+                capture_output=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return result.stdout
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
+
+    if encoding == "gzip" or body[:2] == GZIP_MAGIC:
+        try:
+            return gzip.decompress(body)
+        except OSError:
+            pass
+
+    return body
+
 
 def read_model() -> str:
     try:
@@ -51,6 +88,26 @@ def read_model() -> str:
     except OSError:
         pass
     return DEFAULT_MODEL
+
+
+def strip_unsupported_fields(value):
+    """Recursively strip known provider-incompatible request fields."""
+    removed = set()
+
+    def _walk(node):
+        if isinstance(node, dict):
+            cleaned = {}
+            for key, subval in node.items():
+                if key in UNSUPPORTED_RESPONSE_FIELDS:
+                    removed.add(key)
+                    continue
+                cleaned[key] = _walk(subval)
+            return cleaned
+        if isinstance(node, list):
+            return [_walk(item) for item in node]
+        return node
+
+    return _walk(value), removed
 
 
 class ProxyHandler(http.server.BaseHTTPRequestHandler):
@@ -91,18 +148,19 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         body_rewritten = False
         if body and "/responses" in self.path and self.command == "POST":
             try:
-                # Codex CLI may send gzip-compressed request bodies.
                 content_encoding = self.headers.get("Content-Encoding", "")
-                raw = body
-                if "gzip" in content_encoding:
-                    raw = gzip.decompress(body)
-
+                raw = decompress_body(body, content_encoding)
                 data = json.loads(raw)
                 model_val = data.get("model")
                 if not model_val or str(model_val) in ("None", "null", ""):
                     injected = read_model()
                     data["model"] = injected
                     self.log_message("Injected model=%s", injected)
+
+                data, removed = strip_unsupported_fields(data)
+                if removed:
+                    removed_keys = ",".join(sorted(removed))
+                    self.log_message("Stripped unsupported fields=%s", removed_keys)
 
                 # Always forward uncompressed — simpler and LiteLLM handles it fine.
                 body = json.dumps(data).encode()
@@ -166,6 +224,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
 class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     daemon_threads = True
     allow_reuse_address = True
+    allow_reuse_port = True
 
 
 def main():
