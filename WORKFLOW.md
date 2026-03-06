@@ -305,6 +305,7 @@ This path applies **only** to issues with a label matching `payment`, `billing`,
 ## Guardrails
 
 - If a task consistently times out or fails (e.g., provider response timeout, agent run timeout), break it into smaller, manageable subtasks. Create separate Linear issues for each subtask with clear, independent acceptance criteria. Link subtasks with `blockedBy` if dependencies exist. Do not keep retrying a failing task without decomposition.
+- **Ollama-sized issue requirements**: All issues must be sized for the smallest available model (Ollama/qwen2.5-coder:7b). Each issue should target 1–2 files, have 1–3 explicit acceptance criteria checkboxes, require no complex architectural decisions, and be completable in a single agent run (<5 minutes). If an issue is too large, decompose it into subtasks before work begins. Issues requiring human/external action (account setup, legal review, physical devices) should be clearly marked as non-automatable in the description.
 - If the branch PR is already closed/merged, do not reuse that branch or prior implementation state for continuation.
 - For closed/merged branch PRs, create a new branch from `origin/master` and restart from reproduction/planning as if starting fresh.
 - If issue state is `Backlog`, treat it as `Todo` and move to `In Progress` before beginning work.
