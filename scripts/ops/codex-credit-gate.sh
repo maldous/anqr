@@ -60,7 +60,10 @@ OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
 # with proper structured tool_calls. Codex CLI v0.110.0's native providers
 # are broken: they use Responses API format which third-party APIs reject.
 # All fallback providers are routed through LiteLLM as model_provider=openai.
-LITELLM_HOST="${LITELLM_HOST:-http://127.0.0.1:4010}"
+# Model injector proxy sits on 4011, forwards to LiteLLM on 4010.
+# It injects the default model name into requests where Codex sends model=None
+# (Codex CLI v0.110.0 bug: model name not forwarded to Responses API).
+LITELLM_HOST="${LITELLM_HOST:-http://127.0.0.1:4011}"
 LITELLM_API_KEY="${LITELLM_API_KEY:-}"  # empty — no auth needed for local proxy
 
 # LiteLLM model aliases (must match model_name entries in litellm-config.yaml)
