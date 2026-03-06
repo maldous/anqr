@@ -102,8 +102,8 @@ The agent should be able to talk to Linear, either via a configured Linear MCP s
   be assigned to the correct project (same as current issue or the most
   appropriate existing project), link the current issue as `related`, use
   `blockedBy` when the follow-up depends on the current issue, and **must be
-  Ollama-sized** (1–2 files, 1–3 acceptance criteria, completable in <5 min).
-  If the follow-up is too large, split it into multiple Ollama-sized issues.
+  3B-ready** (see the 3B-ready issue description format section below).
+  If the follow-up is too large, split it into multiple 3B-ready issues.
 - Move status only when the matching quality bar is met.
 - Operate autonomously end-to-end unless blocked by missing requirements, secrets, or permissions.
 - Use the blocked-access escape hatch only for true external blockers (missing required tools/auth) after exhausting documented fallbacks.
@@ -305,7 +305,7 @@ This path applies **only** to issues with a label matching `payment`, `billing`,
 ## Guardrails
 
 - If a task consistently times out or fails (e.g., provider response timeout, agent run timeout), break it into smaller, manageable subtasks. Create separate Linear issues for each subtask with clear, independent acceptance criteria. Link subtasks with `blockedBy` if dependencies exist. Do not keep retrying a failing task without decomposition.
-- **Ollama-sized issue requirements**: All issues must be sized for the smallest available model (Ollama/qwen2.5-coder:7b). Each issue should target 1–2 files, have 1–3 explicit acceptance criteria checkboxes, require no complex architectural decisions, and be completable in a single agent run (<5 minutes). If an issue is too large, decompose it into subtasks before work begins. Issues requiring human/external action (account setup, legal review, physical devices) should be clearly marked as non-automatable in the description.
+- **3B-ready issue requirements**: All issues must be executable by the smallest available model (`qwen2.5-coder:3b`). A 3B model is a code typist — it can apply explicit, spelled-out changes but cannot design solutions, reason about architecture, or make judgment calls. Every issue description must follow the **3B-ready format** (see below). Issues requiring design, multi-file reasoning, or judgment must be marked `[NEEDS-PRECOMPUTE]` in the title and are not eligible for Symphony until a human or larger model pre-computes the exact changes and rewrites the description.
 - If the branch PR is already closed/merged, do not reuse that branch or prior implementation state for continuation.
 - For closed/merged branch PRs, create a new branch from `origin/master` and restart from reproduction/planning as if starting fresh.
 - If issue state is `Backlog`, treat it as `Todo` and move to `In Progress` before beginning work.
@@ -317,8 +317,8 @@ This path applies **only** to issues with a label matching `payment`, `billing`,
   than expanding current scope, and include a clear
   title/description/acceptance criteria, **at least one label**, correct project
   assignment, a `related` link to the current issue, `blockedBy` when the
-  follow-up depends on the current issue, and **must be Ollama-sized** (1–2
-  files, 1–3 acceptance criteria, completable in <5 min).
+  follow-up depends on the current issue, and **must be 3B-ready** (see format
+  section below).
 - Do not advance to `Merging` unless the `Completion bar before Merging` is satisfied.
 - For payment issues in `Human Review`, do not make changes; wait and poll.
 - If state is terminal (`Done`), do nothing and shut down.
@@ -360,6 +360,40 @@ Self-replicating heartbeat. Steps: (1) create a copy of this issue in Backlog, (
 ```
 
 Sentinel issues do **not** create PRs or branches. They are trivial heartbeat tasks.
+
+## 3B-ready issue description format
+
+Every issue in the Symphony project must have a description that a `qwen2.5-coder:3b` model can execute without judgment. The description must contain:
+
+1. **Exact file path(s)** — not "find the file that does X"
+2. **Exact change** — literal before→after code, or exact code to insert at a specific location
+3. **Single validation command** — e.g., `npx vitest run tests/unit/specific-test.spec.ts` or `make check`
+4. **No verbs requiring judgment** — no "design", "choose", "identify", "determine", "figure out", "improve", "audit"
+
+### Example 3B-ready description
+
+```
+File: `tests/unit/qr-generator-dithered-scan-gate.spec.ts`
+
+Find this line (around line 557):
+  it('keeps dithered santa output decodable from final PNG bytes', async () => {
+
+Change the closing of that test block (around line 662) from:
+  }, 15000);
+To:
+  }, 30000);
+
+Validate: npx vitest run tests/unit/qr-generator-dithered-scan-gate.spec.ts
+```
+
+### Issues that CANNOT be 3B-ready
+
+Some issues require design decisions, multi-file reasoning, or understanding complex systems (e.g., Makefile refactoring, architectural changes). These must:
+
+- Have `[NEEDS-PRECOMPUTE]` prefix in the title
+- NOT be moved into the Symphony project by the guardian
+- Wait for a human or larger model (Codebuff/GPT) to pre-compute the exact changes and rewrite the description into 3B-ready format
+- The `linear-guardian.mjs` auto-feed logic skips issues with `[NEEDS-PRECOMPUTE]` in the title
 
 ## Workpad template
 

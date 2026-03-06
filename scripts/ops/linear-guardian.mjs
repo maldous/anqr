@@ -271,6 +271,7 @@ async function main() {
         const movable = candidates.issues.nodes.filter((i) => {
           if (i.project?.id === symphonyProject.id) return false;
           if (i.title.startsWith('[SENTINEL]')) return false;
+          if (i.title.startsWith('[NEEDS-PRECOMPUTE]')) return false;
           const labelNames = i.labels.nodes.map((l) => l.name.toLowerCase());
           if (labelNames.some((l) => HUMAN_LABELS.has(l))) return false;
           return true;
