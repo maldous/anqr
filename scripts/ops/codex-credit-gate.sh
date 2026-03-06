@@ -8,14 +8,15 @@
 # Behavior:
 #   1. Check the Symphony dashboard for Codex credit status.
 #   2. If credits available → exec codex with the full cloud model.
-#   3. If credits exhausted → probe fallback providers in order:
-#        a) OpenRouter (requires OPENROUTER_TOKEN env var) — has budget, most reliable
-#        b) LiteLLM proxy → Ollama (port 4010) — translates Codex Responses API
-#           to Ollama Chat Completions with proper structured tool_calls
-#        c) Ollama direct (localhost:11434) — fallback, tool calling broken
-#        d) Gemini     (requires GEMINI_TOKEN env var) — free tier, daily quota limits
-#        e) Groq       (requires GROQ_TOKEN env var) — free tier, known Codex
-#           integration issues ("invalid JSON body" errors)
+#   3. If credits exhausted → probe fallback providers best-to-worst:
+#        a) OpenRouter (requires OPENROUTER_TOKEN env var) — paid budget, most reliable
+#        b) Gemini     (requires GEMINI_TOKEN env var) — free cloud tier, daily quota
+#        c) Groq       (requires GROQ_TOKEN env var) — free cloud tier, known issues
+#        d) LiteLLM proxy → Ollama (port 4010) — local, proper tool calling
+#        e) Ollama direct (localhost:11434) — local, broken tool calling
+#      On each invocation the cascade always starts from (a). Providers that
+#      failed within the last 30s are skipped; after the window expires the
+#      full list is retried from the top.
 #   4. exec codex with the first available provider.
 #   5. If ALL providers unavailable → exit 1 (Symphony handles retry/backoff).
 #
@@ -54,7 +55,7 @@ OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
 # with proper structured tool_calls. Codex's native Ollama provider is broken
 # for tool calling (Responses API ↔ Chat Completions mismatch).
 LITELLM_HOST="${LITELLM_HOST:-http://127.0.0.1:4010}"
-LITELLM_API_KEY="${LITELLM_API_KEY:-sk-symphony-local-dev}"
+LITELLM_API_KEY="${LITELLM_API_KEY:-}"  # empty — no auth needed for local proxy
 LITELLM_MODEL="${LITELLM_MODEL:-llama3.1-8b}"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
@@ -166,10 +167,14 @@ ollama_available() {
 }
 
 litellm_available() {
+  local auth_header=""
+  if [ -n "$LITELLM_API_KEY" ]; then
+    auth_header="Authorization: Bearer $LITELLM_API_KEY"
+  fi
   local resp
   resp=$(curl -sf --max-time 15 \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer $LITELLM_API_KEY" \
+    ${auth_header:+-H "$auth_header"} \
     -X POST "${LITELLM_HOST}/v1/chat/completions" \
     -d '{"model":"'"$LITELLM_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
   echo "$resp" | grep -q '"choices"' 2>/dev/null
@@ -276,7 +281,7 @@ else
   log "Codex credits exhausted — probing fallback providers"
 fi
 
-# --- Fallback 1: OpenRouter (has budget, most reliable) ---
+# --- Fallback 1: OpenRouter (paid budget, most reliable cloud) ---
 if is_skipped openrouter; then
   log "OpenRouter skipped (recently failed)"
 elif openrouter_available; then
@@ -292,39 +297,7 @@ else
   log "OpenRouter unavailable (no token or API unreachable)"
 fi
 
-# --- Fallback 2: LiteLLM proxy → Ollama (proper tool-calling translation) ---
-if litellm_available; then
-  log "LiteLLM proxy reachable — using model ${LITELLM_MODEL} via ${LITELLM_HOST}"
-  record_provider litellm
-  export OPENAI_BASE_URL="$LITELLM_HOST"
-  export OPENAI_API_KEY="$LITELLM_API_KEY"
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=openai \
-    -c "model=$LITELLM_MODEL" \
-    app-server
-fi
-log "LiteLLM proxy unavailable at ${LITELLM_HOST}"
-
-# --- Fallback 3: Ollama direct (broken tool calling, last resort for local) ---
-if ollama_available; then
-  if [ -z "$OLLAMA_MODEL" ]; then
-    OLLAMA_MODEL=$(select_ollama_model)
-    log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
-  fi
-  log "Ollama direct reachable — using model ${OLLAMA_MODEL} (tool calling may not work)"
-  record_provider ollama
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=ollama \
-    -c "model=$OLLAMA_MODEL" \
-    app-server
-fi
-log "Ollama unavailable at ${OLLAMA_HOST}"
-
-# --- Fallback 4: Gemini (free tier) ---
+# --- Fallback 2: Gemini (free cloud tier) ---
 if is_skipped gemini; then
   log "Gemini skipped (recently failed)"
 elif gemini_available; then
@@ -340,7 +313,7 @@ else
   log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
 fi
 
-# --- Fallback 5: Groq (free tier, 12K TPM — known Codex integration issues) ---
+# --- Fallback 3: Groq (free cloud tier, 12K TPM — known Codex integration issues) ---
 if is_skipped groq; then
   log "Groq skipped (recently failed)"
 elif groq_available; then
@@ -356,5 +329,43 @@ else
   log "Groq unavailable (no token or API unreachable)"
 fi
 
-log "ERROR: all providers exhausted (credits, OpenRouter, LiteLLM, Ollama, Gemini, Groq)"
+# --- Fallback 4: LiteLLM proxy → Ollama (local, proper tool-calling) ---
+if is_skipped litellm; then
+  log "LiteLLM skipped (recently failed)"
+elif litellm_available; then
+  log "LiteLLM proxy reachable — using model ${LITELLM_MODEL} via ${LITELLM_HOST}"
+  record_provider litellm
+  export OPENAI_BASE_URL="$LITELLM_HOST"
+  export OPENAI_API_KEY="${LITELLM_API_KEY:-sk-unused}"
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=openai \
+    -c "model=$LITELLM_MODEL" \
+    app-server
+else
+  log "LiteLLM proxy unavailable at ${LITELLM_HOST}"
+fi
+
+# --- Fallback 5: Ollama direct (local, broken tool calling — last resort) ---
+if is_skipped ollama; then
+  log "Ollama skipped (recently failed)"
+elif ollama_available; then
+  if [ -z "$OLLAMA_MODEL" ]; then
+    OLLAMA_MODEL=$(select_ollama_model)
+    log "Auto-selected Ollama model: ${OLLAMA_MODEL}"
+  fi
+  log "Ollama direct — using model ${OLLAMA_MODEL} (tool calling may not work)"
+  record_provider ollama
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=ollama \
+    -c "model=$OLLAMA_MODEL" \
+    app-server
+else
+  log "Ollama unavailable at ${OLLAMA_HOST}"
+fi
+
+log "ERROR: all providers exhausted (credits, OpenRouter, Gemini, Groq, LiteLLM, Ollama)"
 exit 1

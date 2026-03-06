@@ -25,9 +25,6 @@ model_list:
       api_base: http://localhost:11434
       supports_function_calling: true
 
-general_settings:
-  master_key: sk-symphony-local-dev
-
 litellm_settings:
   drop_params: true
   set_verbose: false
