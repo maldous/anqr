@@ -329,7 +329,8 @@ This path applies **only** to issues with a label matching `payment`, `billing`,
 - Do not run paid/external-release commands (`make deploy`, `make indexnow`, `make android:upload`, store submission, paid API scans) unless explicit approval is documented and `ALLOW_PAID_ACTIONS=1` is set.
 - Issues involving cost-incurring actions must have a `payment`, `billing`, or `paid` label to trigger Human Review. All other issues are merged autonomously.
 - If using Codebuff for auxiliary work, use `codebuff --free` only; do not use paid modes.
-- When Codex credits are exhausted, the credit gate wrapper (`scripts/ops/codex-credit-gate.sh`) cascades through fallback providers: first OpenRouter (`google/gemini-2.0-flash-001` via the Responses API — cheap, high quality), then local Ollama (`qwen2.5-coder:7b` — free, zero cost). The Linear guardian skips lead enforcement (credit-aware via Symphony dashboard check). Systemd-driven free-tier ops (Groq, Gemini, Hugging Face, Ollama, typechecks, tests) also continue indefinitely. When credits reset, the credit gate automatically switches back to the full cloud model.
+- When Codex credits are exhausted, the credit gate wrapper (`scripts/ops/codex-credit-gate.sh`) cascades through fallback providers: first OpenRouter (`google/gemini-2.0-flash-001` via the Responses API — cheap, high quality), then local Ollama (`qwen2.5-coder:7b` — free, zero cost, preferred because all tasks are Ollama-sized), then Gemini free tier, then Groq free tier (last resort due to known Codex integration issues). The Linear guardian skips lead enforcement (credit-aware via Symphony dashboard check). Systemd-driven free-tier ops (Groq, Gemini, Hugging Face, Ollama, typechecks, tests) also continue indefinitely. When credits reset, the credit gate automatically switches back to the full cloud model.
+- **Symphony project feeding**: Symphony only picks up issues from its own Linear project. The sentinel issue pattern is responsible for keeping the Symphony project stocked with 5–10 open automatable issues at all times. If Symphony has no open issues, it will idle. Issues must be moved into the Symphony project to be picked up for autonomous work.
 
 ## Sentinel issue pattern
 
@@ -345,10 +346,11 @@ A **sentinel issue** is a special self-replicating issue with the title prefix `
    - Determine if new projects are needed for emerging work areas.
    - Ensure project descriptions accurately reflect current scope.
    - Verify issue priorities are consistent with project goals.
-5. **Create new issues**: Based on the audit and project goals (world-class QR code generator — see `knowledge.md`), create new Backlog issues for any identified gaps, improvements, or maintenance tasks. Each new issue must have a clear title, description, acceptance criteria, **at least one label** from the team label set, and be **assigned to the correct project**. All new issues must be Ollama-sized.
-6. **Update workpad**: Record the audit summary, issues created, project health updates, and any recommendations in the workpad comment.
-7. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title, description, **and labels**. This ensures the cycle continues indefinitely.
-8. **Complete**: Move the current sentinel issue to `Done`.
+5. **Feed the Symphony project**: Symphony only picks up issues from its own project (`symphony-c7a7906a4fa6`). Review all open Ollama-sized issues across all projects and move the highest-priority automatable ones into the Symphony project. Ensure there are always at least 5–10 open issues in the Symphony project so Symphony never runs idle. Do not move issues that require human action (account setup, external services, legal review).
+6. **Create new issues**: Based on the audit and project goals (world-class QR code generator — see `knowledge.md`), create new Backlog issues for any identified gaps, improvements, or maintenance tasks. Each new issue must have a clear title, description, acceptance criteria, **at least one label** from the team label set, and be **assigned to the correct project**. All new issues must be Ollama-sized.
+7. **Update workpad**: Record the audit summary, issues created, issues moved to Symphony, project health updates, and any recommendations in the workpad comment.
+8. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title, description, **and labels**. This ensures the cycle continues indefinitely.
+9. **Complete**: Move the current sentinel issue to `Done`.
 
 Sentinel issues do **not** create PRs or branches. They are pure orchestration/audit tasks.
 

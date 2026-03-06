@@ -10,9 +10,11 @@
 #   2. If credits available → exec codex with the full cloud model.
 #   3. If credits exhausted → probe fallback providers in order:
 #        a) OpenRouter (requires OPENROUTER_TOKEN env var) — has budget, most reliable
-#        b) Gemini     (requires GEMINI_TOKEN env var) — free tier, daily quota limits
-#        c) Groq       (requires GROQ_TOKEN env var) — free tier, 12K TPM limit
-#        d) Ollama local (requires Ollama on localhost:11434)
+#        b) Ollama local (requires Ollama on localhost:11434) — free, always-on,
+#           all tasks are Ollama-sized so this is the preferred free fallback
+#        c) Gemini     (requires GEMINI_TOKEN env var) — free tier, daily quota limits
+#        d) Groq       (requires GROQ_TOKEN env var) — free tier, known Codex
+#           integration issues ("invalid JSON body" errors)
 #   4. exec codex with the first available provider.
 #   5. If ALL providers unavailable → exit 1 (Symphony handles retry/backoff).
 #
@@ -272,39 +274,7 @@ else
   log "OpenRouter unavailable (no token or API unreachable)"
 fi
 
-# --- Fallback 2: Gemini (free tier) ---
-if is_skipped gemini; then
-  log "Gemini skipped (recently failed)"
-elif gemini_available; then
-  log "Gemini reachable — using model ${GEMINI_MODEL}"
-  record_provider gemini
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=gemini \
-    -c "model=$GEMINI_MODEL" \
-    app-server
-else
-  log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
-fi
-
-# --- Fallback 3: Groq (free tier, 12K TPM) ---
-if is_skipped groq; then
-  log "Groq skipped (recently failed)"
-elif groq_available; then
-  log "Groq reachable — using model ${GROQ_MODEL}"
-  record_provider groq
-  exec "$CODEX_BIN" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -c shell_environment_policy.inherit=all \
-    -c model_provider=groq \
-    -c "model=$GROQ_MODEL" \
-    app-server
-else
-  log "Groq unavailable (no token or API unreachable)"
-fi
-
-# --- Fallback 4: Ollama local (always last resort, never skipped) ---
+# --- Fallback 2: Ollama local (preferred free fallback — all tasks are Ollama-sized) ---
 if ollama_available; then
   if [ -z "$OLLAMA_MODEL" ]; then
     OLLAMA_MODEL=$(select_ollama_model)
@@ -321,5 +291,37 @@ if ollama_available; then
 fi
 log "Ollama unavailable at ${OLLAMA_HOST}"
 
-log "ERROR: all providers exhausted (credits, OpenRouter, Gemini, Groq, Ollama)"
+# --- Fallback 3: Gemini (free tier) ---
+if is_skipped gemini; then
+  log "Gemini skipped (recently failed)"
+elif gemini_available; then
+  log "Gemini reachable — using model ${GEMINI_MODEL}"
+  record_provider gemini
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=gemini \
+    -c "model=$GEMINI_MODEL" \
+    app-server
+else
+  log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
+fi
+
+# --- Fallback 4: Groq (free tier, 12K TPM — known Codex integration issues) ---
+if is_skipped groq; then
+  log "Groq skipped (recently failed)"
+elif groq_available; then
+  log "Groq reachable — using model ${GROQ_MODEL}"
+  record_provider groq
+  exec "$CODEX_BIN" \
+    --dangerously-bypass-approvals-and-sandbox \
+    -c shell_environment_policy.inherit=all \
+    -c model_provider=groq \
+    -c "model=$GROQ_MODEL" \
+    app-server
+else
+  log "Groq unavailable (no token or API unreachable)"
+fi
+
+log "ERROR: all providers exhausted (credits, OpenRouter, Ollama, Gemini, Groq)"
 exit 1
