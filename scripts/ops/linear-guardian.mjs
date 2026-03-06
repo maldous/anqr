@@ -185,22 +185,8 @@ async function main() {
     summary.sentinelCheck.exists = hasSentinel;
 
     if (!hasSentinel && APPLY) {
-      const sentinelDescription = [
-        '## Purpose',
-        '',
-        'This is a **sentinel issue** — a self-replicating orchestration task that ensures the ANQR project has a continuous pipeline of high-quality, Ollama-sized work.',
-        '',
-        '## Instructions',
-        '',
-        'Follow the `Sentinel issue pattern` section in WORKFLOW.md exactly. Do not deviate from the steps defined there.',
-        '',
-        '## Constraints',
-        '',
-        '- Do NOT create PRs or branches. This is a pure audit/orchestration task.',
-        '- Do NOT run paid actions.',
-        '- WORKFLOW.md is the single source of truth for the sentinel pattern.',
-        '- When self-replicating, use this exact title and description.',
-      ].join('\n');
+      const sentinelDescription =
+        'Self-replicating heartbeat. Steps: (1) create a copy of this issue in Backlog, (2) post a workpad comment, (3) move this issue to Done. Do NOT create PRs, do NOT run paid actions, do NOT query/audit issues.';
 
       const reliabilityLabel = team.labels.nodes.find(
         (l) => l.name.toLowerCase() === 'reliability'
@@ -226,6 +212,104 @@ async function main() {
     } else if (!hasSentinel) {
       console.error("Sentinel dead man's switch: no sentinel found (dry-run, would create)");
     }
+  }
+
+  // -----------------------------------------------------------------------
+  // Auto-feed Symphony: keep 5-10 open issues in the Symphony project.
+  // Moves highest-priority automatable issues from other projects.
+  // This replaces the old sentinel-driven feeding (too complex for small models).
+  // Wrapped in try/catch so a failure here doesn't break the entire guardian.
+  // -----------------------------------------------------------------------
+  summary.symphonyFeed = { checked: false, openCount: 0, moved: [] };
+
+  try {
+    if (symphonyProject) {
+      const symphonyIssues = await gql(
+        `query($projectId: ID!) {
+        issues(filter: {
+          team: { key: { eq: "ANQ" } },
+          project: { id: { eq: $projectId } },
+          state: { name: { in: ["Backlog", "Todo", "In Progress"] } }
+        }, first: 50) {
+          nodes { identifier title labels { nodes { name } } }
+        }
+      }`,
+        { projectId: symphonyProject.id }
+      );
+
+      const openNonSentinel = symphonyIssues.issues.nodes.filter(
+        (i) => !i.title.startsWith('[SENTINEL]')
+      );
+      summary.symphonyFeed.checked = true;
+      summary.symphonyFeed.openCount = openNonSentinel.length;
+
+      const TARGET_MIN = 5;
+      const TARGET_MAX = 10;
+
+      if (openNonSentinel.length < TARGET_MIN) {
+        const needed = TARGET_MAX - openNonSentinel.length;
+
+        const candidates = await gql(
+          `query {
+          issues(filter: {
+            team: { key: { eq: "ANQ" } },
+            state: { name: { in: ["Backlog", "Todo"] } }
+          }, first: 100) {
+            nodes {
+              id
+              identifier
+              title
+              priority
+              project { id name }
+              labels { nodes { name } }
+            }
+          }
+        }`
+        );
+
+        const HUMAN_LABELS = new Set(['payment', 'billing', 'paid']);
+        const movable = candidates.issues.nodes.filter((i) => {
+          if (i.project?.id === symphonyProject.id) return false;
+          if (i.title.startsWith('[SENTINEL]')) return false;
+          const labelNames = i.labels.nodes.map((l) => l.name.toLowerCase());
+          if (labelNames.some((l) => HUMAN_LABELS.has(l))) return false;
+          return true;
+        });
+
+        movable.sort((a, b) => a.priority - b.priority);
+        const toMove = movable.slice(0, needed);
+
+        for (const issue of toMove) {
+          const entry = {
+            identifier: issue.identifier,
+            title: issue.title,
+            fromProject: issue.project?.name || '(none)',
+            moved: false,
+          };
+
+          if (APPLY) {
+            await gql(
+              `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+              { id: issue.id, input: { projectId: symphonyProject.id } }
+            );
+            entry.moved = true;
+          }
+
+          summary.symphonyFeed.moved.push(entry);
+        }
+
+        if (toMove.length > 0) {
+          console.error(
+            `Symphony feed: ${APPLY ? 'moved' : 'would move'} ${toMove.length} issues into Symphony project`
+          );
+        }
+      }
+    }
+  } catch (feedErr) {
+    console.error(`Symphony feed error (non-fatal): ${feedErr.message}`);
+    summary.symphonyFeed.error = feedErr.message;
   }
 
   summary.finishedAt = new Date().toISOString();

@@ -328,54 +328,38 @@ This path applies **only** to issues with a label matching `payment`, `billing`,
 - Issues involving cost-incurring actions must have a `payment`, `billing`, or `paid` label to trigger Human Review. All other issues are merged autonomously.
 - If using Codebuff for auxiliary work, use `codebuff --free` only; do not use paid modes.
 - When Codex credits are exhausted, the credit gate wrapper (`scripts/ops/codex-credit-gate.sh`) cascades through fallback providers: first OpenRouter (`google/gemini-2.0-flash-001` via the Responses API — cheap, high quality), then local Ollama (`qwen2.5-coder:7b` — free, zero cost, preferred because all tasks are Ollama-sized), then Gemini free tier, then Groq free tier (last resort due to known Codex integration issues). The Linear guardian skips lead enforcement (credit-aware via Symphony dashboard check). Systemd-driven free-tier ops (Groq, Gemini, Hugging Face, Ollama, typechecks, tests) also continue indefinitely. When credits reset, the credit gate automatically switches back to the full cloud model.
-- **Symphony project feeding**: Symphony only picks up issues from its own Linear project. The sentinel issue pattern is responsible for keeping the Symphony project stocked with 5–10 open automatable issues at all times. If Symphony has no open issues, it will idle. Issues must be moved into the Symphony project to be picked up for autonomous work.
+- **Symphony project feeding**: Symphony only picks up issues from its own Linear project. The `linear-guardian.mjs` script (every 15 min) automatically moves the highest-priority automatable issues into the Symphony project, maintaining 5–10 open issues at all times. No agent action is needed for this.
 
 ## Sentinel issue pattern
 
-A **sentinel issue** is a special self-replicating issue with the title prefix `[SENTINEL]`. When an agent picks up a sentinel issue, it must follow this flow instead of the normal execution flow:
+A **sentinel issue** is a special self-replicating heartbeat with the title prefix `[SENTINEL]`. It exists to prove the agent loop is alive. All complex orchestration (feeding Symphony, project hygiene) is handled by `linear-guardian.mjs` automatically — the sentinel does NOT need to do any of that.
 
-1. **Review all issues**: Query Linear for every issue in the project. Summarize progress across all states (Backlog, Todo, In Progress, Human Review, Done, etc.).
-2. **Audit quality**: Check for stale issues (In Progress for too long without updates), duplicate work, issues that should be closed, and gaps in coverage.
-3. **Enforce Ollama sizing**: Review every open issue (Backlog, Todo, In Progress) and verify it meets Ollama-sized requirements (1–2 files, 1–3 acceptance criteria, completable in <5 minutes). Decompose any issue that is too complex into smaller subtasks. Close the oversized parent and create focused child issues.
-4. **Project hygiene**: Audit all Linear projects for health and accuracy:
-   - Verify every open issue is assigned to the correct project.
-   - Update project health status (`onTrack`, `atRisk`, `offTrack`) based on issue progress.
-   - Check if any project should be split (too many issues or mixed concerns) or merged (overlapping scope).
-   - Determine if new projects are needed for emerging work areas.
-   - Ensure project descriptions accurately reflect current scope.
-   - Verify issue priorities are consistent with project goals.
-5. **Feed the Symphony project**: Symphony only picks up issues from its own project (`symphony-c7a7906a4fa6`). Review all open Ollama-sized issues across all projects and move the highest-priority automatable ones into the Symphony project. Ensure there are always at least 5–10 open issues in the Symphony project so Symphony never runs idle. Do not move issues that require human action (account setup, external services, legal review).
-6. **Create new issues**: Based on the audit and project goals (world-class QR code generator — see `knowledge.md`), create new Backlog issues for any identified gaps, improvements, or maintenance tasks. Each new issue must have a clear title, description, acceptance criteria, **at least one label** from the team label set, and be **assigned to the correct project**. All new issues must be Ollama-sized.
-7. **Update workpad**: Record the audit summary, issues created, issues moved to Symphony, project health updates, and any recommendations in the workpad comment.
-8. **Self-replicate**: Before completing, create a **new copy** of this sentinel issue in `Backlog` with the same title, **same description** (use the canonical sentinel description below), **and labels**. Assign it to the Symphony project. This ensures the cycle continues indefinitely.
-9. **Complete**: Move the current sentinel issue to `Done`.
+When an agent picks up a sentinel issue, it must follow these **3 simple steps** instead of the normal execution flow:
+
+1. **Self-replicate**: Create a **new** sentinel issue in `Backlog` with the exact same title, description (use the canonical sentinel description below), and labels. Assign it to the Symphony project. This is the most important step — do it first.
+2. **Post a workpad comment**: Create a single `## Codex Workpad` comment with a one-line note: `Sentinel heartbeat — self-replicated, moving to Done.`
+3. **Complete**: Move the current sentinel issue to `Done`.
+
+That's it. Do NOT query all issues, do NOT audit projects, do NOT create new issues, do NOT attempt complex orchestration. Just self-replicate and complete.
 
 ### Sentinel dead man's switch
 
-The `linear-guardian.mjs` script (runs every 15 minutes via systemd timer) checks the Symphony project for an open `[SENTINEL]` issue. If none exists (e.g., the sentinel failed before self-replicating), the guardian automatically creates a new one. This ensures the autonomous loop never dies permanently.
+The `linear-guardian.mjs` script (runs every 15 minutes via systemd timer) handles two critical functions:
+
+1. **Checks for an open `[SENTINEL]` issue** in the Symphony project. If none exists (e.g., the sentinel failed before self-replicating), the guardian automatically creates a new one.
+2. **Feeds the Symphony project** with 5–10 open automatable issues by moving the highest-priority issues from other projects.
+
+This ensures the autonomous loop never dies permanently, even if the sentinel agent fails.
 
 ### Canonical sentinel description
 
-When self-replicating (step 8) or when the dead man's switch creates a sentinel, use this exact description:
+When self-replicating (step 1) or when the dead man's switch creates a sentinel, use this exact description:
 
 ```
-## Purpose
-
-This is a **sentinel issue** — a self-replicating orchestration task that ensures the ANQR project has a continuous pipeline of high-quality, Ollama-sized work.
-
-## Instructions
-
-Follow the `Sentinel issue pattern` section in WORKFLOW.md exactly. Do not deviate from the steps defined there.
-
-## Constraints
-
-- Do NOT create PRs or branches. This is a pure audit/orchestration task.
-- Do NOT run paid actions.
-- WORKFLOW.md is the single source of truth for the sentinel pattern.
-- When self-replicating, use this exact title and description.
+Self-replicating heartbeat. Steps: (1) create a copy of this issue in Backlog, (2) post a workpad comment, (3) move this issue to Done. Do NOT create PRs, do NOT run paid actions, do NOT query/audit issues.
 ```
 
-Sentinel issues do **not** create PRs or branches. They are pure orchestration/audit tasks.
+Sentinel issues do **not** create PRs or branches. They are trivial heartbeat tasks.
 
 ## Workpad template
 
