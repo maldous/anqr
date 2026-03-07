@@ -13,16 +13,20 @@ model_list:
       api_key: os.environ/GROQ_TOKEN
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
+  # Gemini routed via OpenAI-compatible endpoint to avoid LiteLLM's broken
+  # native convert_to_gemini_tool_call_result (4,628 errors / 74% failure rate).
   - model_name: gemini-flash
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: openai/gemini-2.5-flash
       api_key: os.environ/GEMINI_TOKEN
+      api_base: https://generativelanguage.googleapis.com/v1beta/openai
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
   - model_name: gemini-flash-lite
     litellm_params:
-      model: gemini/gemini-2.5-flash-lite
+      model: openai/gemini-2.5-flash-lite
       api_key: os.environ/GEMINI_TOKEN
+      api_base: https://generativelanguage.googleapis.com/v1beta/openai
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
   - model_name: cerebras-llama-8b
