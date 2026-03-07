@@ -11,12 +11,12 @@ This repository runs autonomous operational checks via user-level systemd timers
 
 - `anqr-ops-continuous.timer`
   - cadence: every 1 hour
-  - action: run continuous ops profile (including Groq + Gemini + Hugging Face + Ollama free-tier audits) and post summary to `ANQ-39`
+  - action: run continuous ops profile (including Groq + Gemini + Hugging Face + Ollama free-tier audits); results saved to `reports/nightly/`
   - command: `node scripts/ops/nightly-ops-pass.mjs --profile=continuous`
 
 - `anqr-ops-nightly.timer`
   - cadence: daily at 02:30
-  - action: run deep ops profile (includes unit tests + all free-tier audits) and post summary to `ANQ-39`
+  - action: run deep ops profile (includes unit tests + all free-tier audits); results saved to `reports/nightly/`
   - command: `node scripts/ops/nightly-ops-pass.mjs --profile=full`
 
 ## Credit-Aware Lead Enforcement
