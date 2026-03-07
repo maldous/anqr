@@ -19,7 +19,7 @@
 #        h) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
 #        i) Ollama direct (localhost:11434) — local, broken tool calling (opt-in)
 #      On each invocation the cascade always starts from (a). Providers that
-#      failed within the last 30s are skipped; after the window expires the
+#      failed within the last 360s are skipped; after the window expires the
 #      full list is retried from the top.
 #   4. exec codex with the first available provider.
 #   5. If ALL providers rate-limited → wait for earliest cooldown to expire
@@ -91,11 +91,11 @@ LITELLM_GITHUB_MODEL="github-llama-8b"
 LITELLM_OLLAMA_MODEL="${LITELLM_OLLAMA_MODEL:-}"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
-PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t qwen2.5-coder:7b qwen2.5-coder:3b llama3.1:8b-32k llama3.1:8b"
+PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t qwen2.5-coder:7b llama3.1:8b-32k llama3.1:8b"
 DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b-32t"
 
 # LiteLLM aliases (must exist in litellm-config.yaml)
-PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t qwen2.5-coder-7b qwen2.5-coder-3b llama3.1-8b llama3.1-8b-base"
+PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t qwen2.5-coder-7b llama3.1-8b llama3.1-8b-base"
 DEFAULT_LITELLM_OLLAMA_MODEL="qwen2.5-coder-7b-32t"
 
 # Provider failure memory: skip providers that failed recently.
@@ -111,7 +111,7 @@ STATE_DIR="${XDG_RUNTIME_DIR:-/tmp}/credit-gate"
 if mkdir -p "$STATE_DIR" 2>/dev/null; then chmod 700 "$STATE_DIR" 2>/dev/null; fi
 STATE_FILE="$STATE_DIR/state"
 SKIP_FILE="$STATE_DIR/skip"
-FAILURE_WINDOW_SECS=30  # typical rate-limit crashes exit in <10s
+FAILURE_WINDOW_SECS=360  # must exceed Symphony's max retry backoff (320s at attempt 6)
 
 # Rate-limit backoff: when all providers are rate-limited, wait for the
 # earliest cooldown to expire instead of exiting and burning empty turns.
@@ -341,11 +341,6 @@ select_litellm_ollama_model() {
         ;;
       qwen2.5-coder-7b)
         if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b"' ; then
-          echo "$model"; return
-        fi
-        ;;
-      qwen2.5-coder-3b)
-        if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:3b"' ; then
           echo "$model"; return
         fi
         ;;

@@ -318,12 +318,69 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         self.send_header(key, val)
                 self.end_headers()
 
+                # Detect rate-limit errors hidden in streaming response
+                # bodies.  LiteLLM may return HTTP 200 for SSE streams,
+                # then disconnect when the upstream provider returns 429.
+                # Codex sees "stream disconnected" — invisible to the
+                # HTTP-status check above.  Scanning chunks catches these.
+                _stream_provider = ""
+                _rl_detected = False
+                if (
+                    body
+                    and self.command == "POST"
+                    and "/responses" in self.path
+                ):
+                    try:
+                        _req_data = json.loads(body)
+                        _stream_provider = _model_to_provider(
+                            str(_req_data.get("model", ""))
+                        )
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
+                _stream_start = time.monotonic()
+                _stream_bytes = 0
+
                 while True:
                     chunk = resp.read1(8192)
                     if not chunk:
                         break
+                    _stream_bytes += len(chunk)
+
+                    if _stream_provider and not _rl_detected and b"429" in chunk:
+                        chunk_lower = chunk.lower()
+                        if (
+                            b"rate" in chunk_lower
+                            or b"quota" in chunk_lower
+                            or b"resource_exhausted" in chunk_lower
+                        ):
+                            _rl_detected = True
+                            _record_ratelimit(_stream_provider)
+                            self.log_message(
+                                "Rate-limit in stream body for %s — tracking",
+                                _stream_provider,
+                            )
+
                     self.wfile.write(chunk)
                     self.wfile.flush()
+
+                # Short-lived /v1/responses streams are almost certainly
+                # upstream failures (quota exhaustion, rate-limits).
+                # Successful generation streams take several seconds.
+                _elapsed = time.monotonic() - _stream_start
+                if (
+                    _stream_provider
+                    and not _rl_detected
+                    and _elapsed < 2.0
+                    and _stream_bytes < 500
+                ):
+                    _record_ratelimit(_stream_provider)
+                    self.log_message(
+                        "Short stream for %s (%.1fs, %d bytes) — treating as rate-limit",
+                        _stream_provider,
+                        _elapsed,
+                        _stream_bytes,
+                    )
 
                 conn.close()
         except (ConnectionRefusedError, OSError) as exc:
