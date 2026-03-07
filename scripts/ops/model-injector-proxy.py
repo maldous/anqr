@@ -57,6 +57,9 @@ UNSUPPORTED_RESPONSE_FIELDS = {
     "web_search_options",
 }
 
+# Max provider switches per request for in-session failover.
+MAX_FAILOVER_ATTEMPTS = 3
+
 # ---------------------------------------------------------------------------
 # Cooldown durations (seconds) — one per HTTP error class.
 # The model-injector writes cooldown files; the credit-gate reads them to
@@ -119,7 +122,25 @@ _MODEL_PROVIDER_MAP = {
     "mistral-codestral": "mistral",
     "mistral-small": "mistral",
     "github-llama-8b": "github",
+    "qwen2.5-coder-7b-32t": "litellm-ollama",
+    "qwen2.5-coder-7b": "litellm-ollama",
+    "llama3.1-8b-base": "litellm-ollama",
 }
+
+# Ordered list of (litellm_model_alias, provider_name) matching credit-gate priority.
+_PROVIDER_FALLBACK_CHAIN: list[tuple[str, str]] = [
+    ("groq-llama-70b", "groq"),
+    ("mistral-codestral", "mistral"),
+    ("gemini-flash", "gemini"),
+    ("gemini-flash-lite", "gemini-lite"),
+    ("openrouter-free", "openrouter-free"),
+    ("sambanova-llama-70b", "sambanova"),
+    ("cerebras-llama-8b", "cerebras"),
+    ("github-llama-8b", "github"),
+    ("qwen2.5-coder-7b-32t", "litellm-ollama"),
+    ("qwen2.5-coder-7b", "litellm-ollama"),
+    ("llama3.1-8b-base", "litellm-ollama"),
+]
 
 
 def _model_to_provider(model: str) -> str:
@@ -142,6 +163,10 @@ def _model_to_provider(model: str) -> str:
         return "mistral"
     if model.startswith("github"):
         return "github"
+    if model.startswith("qwen2.5-coder"):
+        return "litellm-ollama"
+    if model.startswith("llama3.1"):
+        return "litellm-ollama"
     return ""
 
 
@@ -197,6 +222,33 @@ def _is_provider_cooled_down(provider: str) -> bool:
         return time.time() < expiry
     except (OSError, ValueError):
         return False
+
+
+def _select_next_provider(exclude: set[str]) -> tuple[str, str] | None:
+    """Select next healthy provider from the fallback chain.
+
+    Walks from index 0, skipping providers in *exclude* or with active
+    cooldown.  Returns (model, provider) or None if all exhausted.
+    """
+    for model, provider in _PROVIDER_FALLBACK_CHAIN:
+        if provider in exclude:
+            continue
+        if _is_provider_cooled_down(provider):
+            continue
+        return model, provider
+    return None
+
+
+def _update_current_model(model: str) -> None:
+    """Atomically update MODEL_FILE so subsequent requests use the new model."""
+    tmp = f"{MODEL_FILE}.{os.getpid()}-{threading.get_ident()}"
+    try:
+        os.makedirs(os.path.dirname(MODEL_FILE), mode=0o700, exist_ok=True)
+        with open(tmp, "w") as f:
+            f.write(f"{model}\n")
+        os.replace(tmp, MODEL_FILE)
+    except OSError:
+        pass
 
 
 def _is_models_endpoint(path: str) -> bool:
@@ -300,31 +352,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length) if content_length > 0 else b""
 
-        # Circuit breaker: refuse to proxy generation requests to providers
-        # that are already in cooldown.  This prevents the rapid-fire
-        # hammering pattern where Codex retries 30+ times against a dead
-        # provider within a single session.
-        if self.command == "POST" and "/responses" in self.path:
-            _cb_model = read_model()
-            _cb_provider = _model_to_provider(_cb_model)
-            if _cb_provider and _is_provider_cooled_down(_cb_provider):
-                error = json.dumps({
-                    "error": {
-                        "message": f"Provider {_cb_provider} is in cooldown — request blocked by circuit breaker",
-                        "code": "503",
-                    }
-                }).encode()
-                self.log_message(
-                    "Circuit breaker: blocked request to cooled-down provider %s (model=%s)",
-                    _cb_provider, _cb_model,
-                )
-                time.sleep(2)  # Throttle Codex retry loops
-                self.send_response_only(503)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(error)))
-                self.end_headers()
-                self.wfile.write(error)
-                return
+        _is_responses_post = (self.command == "POST" and "/responses" in self.path)
 
         body_rewritten = False
         if body and "/responses" in self.path and self.command == "POST":
@@ -361,14 +389,131 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         headers["Host"] = f"{UPSTREAM_HOST}:{UPSTREAM_PORT}"
 
         try:
-            conn = http.client.HTTPConnection(
-                UPSTREAM_HOST, UPSTREAM_PORT, timeout=CONNECT_TIMEOUT
-            )
-            conn.request(self.command, self.path, body=body, headers=headers)
-            # Bump socket timeout for potentially long streaming reads.
-            if conn.sock:
-                conn.sock.settimeout(READ_TIMEOUT)
-            resp = conn.getresponse()
+            if _is_responses_post:
+                _tried_providers: set[str] = set()
+                _raw_body = body  # save for re-injection
+
+                for _failover_attempt in range(MAX_FAILOVER_ATTEMPTS + 1):
+                    _fo_model = read_model()
+                    _fo_provider = _model_to_provider(_fo_model)
+
+                    # POINT A: Provider already cooled down or already tried
+                    if _fo_provider and (
+                        _is_provider_cooled_down(_fo_provider)
+                        or _fo_provider in _tried_providers
+                    ):
+                        _exclude = set(_tried_providers)
+                        _exclude.add(_fo_provider)
+                        _next = _select_next_provider(_exclude)
+                        if _next and _failover_attempt < MAX_FAILOVER_ATTEMPTS:
+                            _update_current_model(_next[0])
+                            self.log_message(
+                                "Failover A: %s cooled/tried → switching to %s",
+                                _fo_provider,
+                                _next[1],
+                            )
+                            _tried_providers.add(_fo_provider)
+                            continue
+
+                        error = json.dumps({
+                            "error": {
+                                "message": "All providers exhausted or in cooldown — request blocked by circuit breaker",
+                                "code": "503",
+                            }
+                        }).encode()
+                        self.log_message(
+                            "Failover A: exhausted providers (last=%s model=%s)",
+                            _fo_provider,
+                            _fo_model,
+                        )
+                        time.sleep(2)  # Throttle Codex retry loops
+                        self.send_response_only(503)
+                        self.send_header("Content-Type", "application/json")
+                        self.send_header("Content-Length", str(len(error)))
+                        self.end_headers()
+                        self.wfile.write(error)
+                        return
+
+                    if _fo_provider:
+                        _tried_providers.add(_fo_provider)
+
+                    # Re-inject current model into request body
+                    if _raw_body:
+                        try:
+                            _fo_data = json.loads(_raw_body)
+                            if isinstance(_fo_data, dict):
+                                _fo_data["model"] = _fo_model
+                                body = json.dumps(_fo_data).encode()
+                        except (json.JSONDecodeError, TypeError):
+                            body = _raw_body
+                    else:
+                        body = _raw_body
+                    headers["Content-Length"] = str(len(body))
+
+                    conn = http.client.HTTPConnection(
+                        UPSTREAM_HOST, UPSTREAM_PORT, timeout=CONNECT_TIMEOUT
+                    )
+                    conn.request(self.command, self.path, body=body, headers=headers)
+                    # Bump socket timeout for potentially long streaming reads.
+                    if conn.sock:
+                        conn.sock.settimeout(READ_TIMEOUT)
+                    resp = conn.getresponse()
+
+                    # POINT B: HTTP error → failover
+                    if resp.status in _STATUS_COOLDOWN_MAP or resp.status == 429:
+                        _next = _select_next_provider(_tried_providers)
+                        if _next and _failover_attempt < MAX_FAILOVER_ATTEMPTS:
+                            # Write cooldown (existing logic)
+                            try:
+                                req_data = json.loads(body) if body else {}
+                                model_name = req_data.get("model", "")
+                                provider = _model_to_provider(str(model_name))
+                                if provider:
+                                    if resp.status == 429:
+                                        retry_after = _parse_retry_after(
+                                            resp.getheader("Retry-After")
+                                        )
+                                        _record_ratelimit(provider, retry_after)
+                                        self.log_message(
+                                            "429 from %s (model=%s) — cooldown %ds (Retry-After: %s)",
+                                            provider, model_name,
+                                            max(RATELIMIT_COOLDOWN, retry_after),
+                                            resp.getheader("Retry-After", "none"),
+                                        )
+                                    elif resp.status in _STATUS_COOLDOWN_MAP:
+                                        cooldown, label = _STATUS_COOLDOWN_MAP[resp.status]
+                                        _write_cooldown(
+                                            provider,
+                                            int(time.time()) + cooldown,
+                                        )
+                                        self.log_message(
+                                            "%s from %s (model=%s) — cooldown %ds",
+                                            label, provider, model_name, cooldown,
+                                        )
+                            except (json.JSONDecodeError, TypeError):
+                                pass
+
+                            resp.read()
+                            conn.close()
+                            _update_current_model(_next[0])
+                            self.log_message(
+                                "Failover B: %s returned %d → switching to %s",
+                                _fo_provider,
+                                resp.status,
+                                _next[1],
+                            )
+                            continue
+
+                    break
+            else:
+                conn = http.client.HTTPConnection(
+                    UPSTREAM_HOST, UPSTREAM_PORT, timeout=CONNECT_TIMEOUT
+                )
+                conn.request(self.command, self.path, body=body, headers=headers)
+                # Bump socket timeout for potentially long streaming reads.
+                if conn.sock:
+                    conn.sock.settimeout(READ_TIMEOUT)
+                resp = conn.getresponse()
 
             # Track error responses per provider — all 13 HTTP error classes.
             _http_cooldown_written = False

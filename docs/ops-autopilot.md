@@ -208,25 +208,42 @@ buffer for cross-chunk detection) for:
 - **Gemini free-tier 24hr cooldown**: detects `free_tier` quota exhaustion and writes 86400s cooldown (vs 120s for normal 429s)
 - **Deduplicated logging**: HTTP status cooldowns suppress redundant stream-body scanning for the same request
 
-#### Request-Level Circuit Breaker
+#### In-Session Provider Failover (ANQ-194)
 
-The model-injector implements a **request-level circuit breaker** that refuses
-to proxy generation requests (`POST /v1/responses`) to providers that are
-already in cooldown. This prevents the "30x rapid-fire hammering" pattern
-where Codex keeps retrying through the same dead provider within a session:
+The model-injector implements **transparent mid-session provider failover**.
+When a provider fails during a `POST /v1/responses` request, the proxy
+automatically switches to the next healthy provider without Codex knowing:
 
-1. Before proxying each `/v1/responses` request, read `current-model` and
-   check if the provider has an active cooldown file
-2. If cooled down → return **HTTP 503 immediately** without connecting upstream
-3. Codex receives the 503, the session eventually fails, and Symphony starts
-   a new session with a new credit-gate invocation that selects a different provider
+**Failover points:**
 
-**Impact:** Reduces 30+ wasted upstream requests per error to exactly 1.
-The first request triggers the cooldown; all subsequent requests are blocked
-locally in ~0ms.
+- **Point A (pre-request):** Provider is already in cooldown or was already
+  tried this request → select next provider from the fallback chain, update
+  `current-model`, and retry immediately
+- **Point B (HTTP error):** Upstream returned 4xx/5xx → write cooldown for
+  the failed provider, drain the error response, select next provider, retry
+
+**Constraints:**
+- `MAX_FAILOVER_ATTEMPTS = 3` — at most 3 provider switches per request
+- Stream-embedded errors (Point C) **cannot** fail over — response headers
+  already sent to Codex; cooldowns are written for the next request
+- Non-`/responses` requests (GET /models, etc.) skip the failover loop
+
+**Fallback chain** (matches credit-gate priority):
 
 ```
-[model-injector] Circuit breaker: blocked request to cooled-down provider github (model=github-llama-8b)
+groq → mistral → gemini → gemini-lite → openrouter-free → sambanova → cerebras → github → ollama
+```
+
+When all providers in the chain are cooled down or tried, returns 503 with
+a 2s throttle (same as the old circuit breaker behavior).
+
+**Impact:** A single Codex session can survive multiple provider failures
+without Symphony needing to restart the session. Prevents the death spiral
+where rapid session cycling burns through all provider quotas in minutes.
+
+```
+[model-injector] Failover A: groq cooled/tried → switching to mistral
+[model-injector] Failover B: mistral returned 429 → switching to gemini
 ```
 
 #### Configuration
@@ -237,6 +254,7 @@ locally in ~0ms.
 | `READ_TIMEOUT` | 600s | `model-injector-proxy.py` |
 | `RATELIMIT_WINDOW` | 60s | `model-injector-proxy.py` |
 | `RATELIMIT_THRESHOLD` | 1 | `model-injector-proxy.py` |
+| `MAX_FAILOVER_ATTEMPTS` | 3 | `model-injector-proxy.py` |
 
 Cooldown files auto-expire: the credit-gate deletes them once the expiry
 timestamp has passed, so providers are automatically retried after the
