@@ -759,9 +759,10 @@ async function main() {
     if (!hasSentinel && APPLY) {
       const sentinelDescription =
         'Single-instance heartbeat. Do NOT create any new [SENTINEL] issues.\n\n' +
-        '## Log Review & Self-Healing\n\n' +
-        'Review recent Symphony logs for errors that need code fixes:\n' +
-        '```bash\ngrep -aE "error|warning|Linear GraphQL request failed" ~/.local/state/symphony-anqr/log/log/symphony.log ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200\n```\n\n' +
+        '## Harness Report & Self-Healing\n\n' +
+        'Review the harness report and recent Symphony logs:\n' +
+        '```bash\ncat reports/harness/latest.json 2>/dev/null | head -500\ngrep -aE "error|warning|Linear GraphQL request failed" ~/.local/state/symphony-anqr/log/log/symphony.log ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200\n```\n\n' +
+        'The harness report covers 22 check domains (typecheck, lint, security, dependencies, bundle, tests, etc). Create corrective issues for FAIL statuses, regressions, and high-severity findings.\n\n' +
         'Before creating issues, query existing open issues in the Symphony project to avoid duplicates.\n\n' +
         'For each distinct error class requiring a code fix (skip transient/retryable errors):\n' +
         '1. Create a `[PARENT]` issue describing the error category.\n' +

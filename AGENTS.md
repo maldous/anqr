@@ -12,6 +12,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 
 - Docs index: [`docs/README.md`](docs/README.md)
 - Harness model: [`docs/harness/agent-first.md`](docs/harness/agent-first.md)
+- **Autonomous framework**: [`docs/harness/autonomous-framework.md`](docs/harness/autonomous-framework.md)
 - Execution workflow: [`docs/workflow/execution-workflow.md`](docs/workflow/execution-workflow.md)
 - Architecture overview: [`docs/architecture/overview.md`](docs/architecture/overview.md)
 - Module catalog: [`docs/modules/index.md`](docs/modules/index.md)
@@ -58,6 +59,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 - Need architecture context: open `docs/architecture/overview.md`.
 - Need module API context: open `docs/modules/index.md`, then the module page.
 - Need report expectations: open `docs/reports/README.md`.
+- Need harness/ops context: open `docs/harness/autonomous-framework.md`.
 - Need historical context: open `docs/archive/*` only after checking canonical docs.
 
 ## Maintenance Expectations

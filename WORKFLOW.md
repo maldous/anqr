@@ -67,10 +67,12 @@ No description.
 
 3. If the title starts with `[SENTINEL]`:
    a. Do NOT create any new `[SENTINEL]` issue.
-   b. Review recent Symphony logs for errors that need code fixes:
+   b. Review the harness report and recent Symphony logs for errors that need code fixes:
       ```bash
+      cat reports/harness/latest.json 2>/dev/null | head -500
       grep -aE 'error|warning|Linear GraphQL request failed' ~/.local/state/symphony-anqr/log/log/symphony.log ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200
       ```
+      The harness report contains automated check results across 22 domains (typecheck, lint, security, dependencies, bundle size, test coverage, etc). For each FAIL or regression in the harness report, create corrective issues.
    c. For each distinct error class that requires a code fix (not transient/retryable errors):
       - Create a `[PARENT]` issue describing the error category.
       - Create one or more `[CHILD]` issues for each specific atomic fix. Each child description MUST contain:

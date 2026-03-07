@@ -23,6 +23,7 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 | Reports catalog    | `docs/reports/README.md`              |
 | Launch checklist   | `docs/operations/launch-checklist.md` |
 | Ops autopilot      | `docs/ops-autopilot.md`               |
+| Autonomous harness | `docs/harness/autonomous-framework.md`|
 
 ## Architecture
 
@@ -94,6 +95,8 @@ make fix          # oxlint --fix + oxfmt --write
 make lint         # oxlint only (no write)
 make check        # oxlint + oxfmt --check (CI mode)
 make quality      # Full 19-check quality gate pipeline
+make harness      # Full 22-domain harness report (FACE-BPH)
+make harness:quick # Quick 4-check smoke test
 ```
 
 ### Testing

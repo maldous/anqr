@@ -144,6 +144,13 @@ async function main() {
       critical: false,
       timeoutMs: 3 * 60_000,
     },
+    {
+      id: 'harness_continuous',
+      title: 'Harness report (continuous profile)',
+      cmd: ['node', 'scripts/ops/harness-report.mjs', '--profile=continuous'],
+      critical: false,
+      timeoutMs: 10 * 60_000,
+    },
   ];
 
   const fullOnlySteps = [
@@ -153,6 +160,13 @@ async function main() {
       cmd: ['npm', 'run', '-s', 'test:unit:ci'],
       critical: true,
       timeoutMs: 45 * 60_000,
+    },
+    {
+      id: 'harness_full',
+      title: 'Harness report (full profile)',
+      cmd: ['node', 'scripts/ops/harness-report.mjs', '--profile=full'],
+      critical: false,
+      timeoutMs: 30 * 60_000,
     },
   ];
 

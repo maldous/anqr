@@ -196,8 +196,19 @@ With a GTX 1650 (4 GB VRAM), the `qwen2.5-coder:7b-32t` model runs at roughly **
 
 **Important:** Do not set `CUDA_VISIBLE_DEVICES=-1` or `OLLAMA_LLM_LIBRARY=cpu_avx2` — these disable GPU offload entirely and were removed to enable hybrid inference.
 
+## Harness Report (FACE-BPH)
+
+The harness report is a unified health check across 22 domains — see [`docs/harness/autonomous-framework.md`](harness/autonomous-framework.md) for full details.
+
+- **Quick** (4 checks, ~30s): `make harness:quick`
+- **Continuous** (8 checks, ~3min): runs hourly via `nightly-ops-pass.mjs --profile=continuous`
+- **Full** (22 checks, ~15min): runs nightly via `nightly-ops-pass.mjs --profile=full`
+
+The sentinel (ANQ-105) reads `reports/harness/latest.json` and creates corrective PARENT/CHILD issues for failures and regressions. This closes the autonomous feedback loop: checks detect problems → sentinel creates issues → agents fix them → next check confirms the fix.
+
 ## Reports
 
+- Harness report: `reports/harness/latest.json` (+ timestamped history)
 - Continuous/nightly reports: `reports/nightly/<timestamp>/summary.{json,md}`
 - Latest run summary: `reports/nightly/latest.json`
 - Linear guardian snapshot: `reports/linear-guardian/latest.json`
