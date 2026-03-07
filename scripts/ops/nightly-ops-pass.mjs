@@ -60,7 +60,7 @@ function toMinutes(ms) {
   return Math.round((ms / 60000) * 10) / 10;
 }
 
-async function main() {
+function main() {
   const stamp = new Date().toISOString().replace(/[:]/g, '-');
   const runDir = path.join(REPORTS_ROOT, stamp);
   ensureDir(runDir);
@@ -224,7 +224,9 @@ async function main() {
   process.exit(summary.ok ? 0 : 1);
 }
 
-main().catch((err) => {
+try {
+  main();
+} catch (err) {
   console.error(err.stack || err.message);
   process.exit(1);
-});
+}
