@@ -4,17 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { createGql } from './lib/linear-client.mjs';
 import { sendNotification } from './lib/notify.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const REPORTS_ROOT = path.join(PROJECT_ROOT, 'reports', 'nightly');
 
-const NIGHTLY_LINEAR_ISSUE = process.env.NIGHTLY_LINEAR_ISSUE || 'ANQ-39';
 const PROFILE_ARG = process.argv.find((arg) => arg.startsWith('--profile=')) || '';
 const PROFILE = PROFILE_ARG.split('=')[1] || 'full';
-const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -57,26 +54,6 @@ function runStep(step, runDir) {
     durationMs,
     logPath: path.relative(PROJECT_ROOT, logPath),
   };
-}
-
-async function postLinearComment(issueKey, body) {
-  if (!LINEAR_API_KEY) return { posted: false, reason: 'LINEAR_API_KEY not set' };
-
-  const gql = createGql(LINEAR_API_KEY);
-
-  const issueRes = await gql(`query($id: String!) { issue(id: $id) { id identifier } }`, {
-    id: issueKey,
-  });
-  if (!issueRes.issue?.id) {
-    return { posted: false, reason: `issue ${issueKey} not found` };
-  }
-
-  await gql(
-    `mutation($input: CommentCreateInput!) { commentCreate(input: $input) { success comment { id } } }`,
-    { input: { issueId: issueRes.issue.id, body } }
-  );
-
-  return { posted: true, issue: issueRes.issue.identifier };
 }
 
 function toMinutes(ms) {
@@ -225,30 +202,8 @@ async function main() {
 
   fs.writeFileSync(summaryMdPath, lines.join('\n'));
 
-  const linearBody = [
-    PROFILE === 'continuous' ? '## Continuous Ops Pass' : '## Nightly Ops Pass',
-    '',
-    `- Run: ${stamp}`,
-    `- Profile: ${PROFILE}`,
-    `- Critical: ${summary.ok ? 'PASS' : 'FAIL'}`,
-    `- Report dir: \`${summary.reportDir}\``,
-    '',
-    '### Steps',
-    ...results.map((r) => `- ${r.id}: ${r.status} (${r.critical ? 'critical' : 'non-critical'})`),
-  ].join('\n');
-
-  let linearResult = { posted: false, reason: 'disabled' };
-  try {
-    linearResult = await postLinearComment(NIGHTLY_LINEAR_ISSUE, linearBody);
-  } catch (err) {
-    linearResult = { posted: false, reason: err.message };
-  }
-
   const latestPath = path.join(REPORTS_ROOT, 'latest.json');
-  fs.writeFileSync(
-    latestPath,
-    JSON.stringify({ ...summary, linearComment: linearResult }, null, 2) + '\n'
-  );
+  fs.writeFileSync(latestPath, JSON.stringify(summary, null, 2) + '\n');
 
   // Email notification for notable events
   if (!summary.ok) {
@@ -265,7 +220,7 @@ async function main() {
     });
   }
 
-  console.log(JSON.stringify({ ...summary, linearComment: linearResult }, null, 2));
+  console.log(JSON.stringify(summary, null, 2));
   process.exit(summary.ok ? 0 : 1);
 }
 
