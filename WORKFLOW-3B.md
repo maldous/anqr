@@ -35,6 +35,8 @@ agent:
   max_concurrent_agents: 1
   max_turns: 20
   max_retry_backoff_ms: 600000
+  retry_base_ms: 15000
+  slot_contention_delay_ms: 30000
 codex:
   command: bash /home/user/src/anqr/scripts/ops/codex-credit-gate.sh
   approval_policy: never
