@@ -15,8 +15,9 @@
 #        d) OpenRouter FREE (requires OPENROUTER_TOKEN) — free :free models, via LiteLLM
 #        e) SambaNova       (requires SAMBANOVA_TOKEN) — free cloud, 20 req/day, via LiteLLM
 #        f) Cerebras        (requires CEREBRAS_TOKEN) — free cloud, 1M tok/day, 8K context limit, via LiteLLM
-#        g) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
-#        h) Ollama direct (localhost:11434) — local, broken tool calling (opt-in)
+#        g) GitHub Models   (requires GITHUB_MODELS_TOKEN) — free, via LiteLLM
+#        h) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
+#        i) Ollama direct (localhost:11434) — local, broken tool calling (opt-in)
 #      On each invocation the cascade always starts from (a). Providers that
 #      failed within the last 360s are skipped; after the window expires the
 #      full list is retried from the top.
@@ -66,6 +67,7 @@ CEREBRAS_MODEL="${CEREBRAS_MODEL:-llama3.1-8b}"
 SAMBANOVA_MODEL="${SAMBANOVA_MODEL:-Meta-Llama-3.3-70B-Instruct}"
 OPENROUTER_FREE_MODEL="${OPENROUTER_FREE_MODEL:-meta-llama/llama-3.3-70b-instruct:free}"
 MISTRAL_MODEL="${MISTRAL_MODEL:-devstral-small-2507}"
+GITHUB_MODELS_MODEL="${GITHUB_MODELS_MODEL:-gpt-4.1-mini}"
 
 # LiteLLM proxy translates Codex Responses API → provider Chat Completions
 # with proper structured tool_calls. Codex CLI v0.110.0's native providers
@@ -85,6 +87,7 @@ LITELLM_CEREBRAS_MODEL="cerebras-llama-8b"
 LITELLM_OPENROUTER_FREE_MODEL="openrouter-free"
 LITELLM_SAMBANOVA_MODEL="sambanova-llama-70b"
 LITELLM_MISTRAL_MODEL="mistral-codestral"
+LITELLM_GITHUB_MODEL="github-gpt41-mini"
 LITELLM_OLLAMA_MODEL="${LITELLM_OLLAMA_MODEL:-}"
 
 # Single optimised local model: qwen2.5-coder:7b-32t
@@ -251,6 +254,21 @@ mistral_available() {
     -H "Authorization: Bearer $MISTRAL_API_KEY" \
     "https://api.mistral.ai/v1/models" 2>/dev/null) || return 1
   echo "$resp" | grep -q "$MISTRAL_MODEL" 2>/dev/null
+}
+
+github_models_available() {
+  if [ -z "${GITHUB_MODELS_TOKEN:-}" ]; then
+    return 1
+  fi
+  # Use catalog listing instead of a generation request to avoid
+  # burning free-tier quota on mere availability probes.
+  local resp
+  resp=$(curl -sf --max-time 5 \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer $GITHUB_MODELS_TOKEN" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://models.github.ai/catalog/models" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$GITHUB_MODELS_MODEL" 2>/dev/null
 }
 
 ollama_available() {
@@ -584,7 +602,22 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 7: Ollama via LiteLLM (local, proper tool-calling) ---
+# --- Fallback 7: GitHub Models via LiteLLM (free, rate-limited per model) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited github; then
+    log "GitHub Models skipped (rate-limited — falling back)"
+  elif is_skipped github; then
+    log "GitHub Models skipped (recently failed)"
+  elif github_models_available; then
+    log "GitHub Models reachable — using ${LITELLM_GITHUB_MODEL} (GPT-4.1-mini, 1M context) via LiteLLM"
+    record_provider github
+    exec_via_litellm "$LITELLM_GITHUB_MODEL"
+  else
+    log "GitHub Models unavailable (no token, missing permissions, or API unreachable)"
+  fi
+fi
+
+# --- Fallback 8: Ollama via LiteLLM (local, proper tool-calling) ---
 if [ "$LITELLM_UP" = true ]; then
   if is_skipped litellm-ollama; then
     log "LiteLLM/Ollama skipped (recently failed)"
@@ -598,7 +631,7 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 8: Ollama direct (broken tool calling — disabled by default) ---
+# --- Fallback 9: Ollama direct (broken tool calling — disabled by default) ---
 if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
   if is_skipped ollama-direct; then
     log "Ollama direct skipped (recently failed)"
@@ -640,9 +673,9 @@ if [ -n "$earliest_expiry" ] && [ "$_ratelimit_wait_count" -lt "$MAX_RATELIMIT_W
 fi
 
 if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
-  log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, LiteLLM/Ollama, Ollama direct)"
+  log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama, Ollama direct)"
 else
-  log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, LiteLLM/Ollama)"
+  log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama)"
 fi
 exit 1
 

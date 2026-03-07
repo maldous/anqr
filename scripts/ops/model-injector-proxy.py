@@ -121,6 +121,7 @@ _MODEL_PROVIDER_MAP = {
     "sambanova-llama-70b": "sambanova",
     "mistral-codestral": "mistral",
     "mistral-small": "mistral",
+    "github-gpt41-mini": "github",
     "qwen2.5-coder-7b-32t": "litellm-ollama",
 }
 
@@ -133,6 +134,7 @@ _PROVIDER_FALLBACK_CHAIN: list[tuple[str, str]] = [
     ("openrouter-free", "openrouter-free"),
     ("sambanova-llama-70b", "sambanova"),
     ("cerebras-llama-8b", "cerebras"),
+    ("github-gpt41-mini", "github"),
     ("qwen2.5-coder-7b-32t", "litellm-ollama"),
 ]
 
@@ -155,6 +157,8 @@ def _model_to_provider(model: str) -> str:
         return "sambanova"
     if model.startswith("mistral"):
         return "mistral"
+    if model.startswith("github"):
+        return "github"
     if model.startswith("qwen2.5-coder"):
         return "litellm-ollama"
     if model.startswith("llama3.1"):
