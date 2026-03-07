@@ -99,17 +99,19 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 
 Do not run `litellm-model-injector.service` at the same time as `model-injector-proxy.service` — both bind `4011` and will flap/restart.
 
-| Provider            | API           | Endpoint                                           | Requirement                     | Free Tier Limits      |
-| ------------------- | ------------- | -------------------------------------------------- | ------------------------------- | --------------------- |
-| OpenAI (Codex)      | Responses     | `api.openai.com/v1`                                | Codex credits                   | Paid                  |
-| Groq                | OpenAI-compat | `api.groq.com/openai/v1`                           | `GROQ_TOKEN` env var            | 12K TPM               |
-| Cerebras            | OpenAI-compat | `api.cerebras.ai/v1`                               | `CEREBRAS_TOKEN` env var        | 1M tokens/day         |
-| Gemini              | Native gemini/ | `generativelanguage.googleapis.com/v1beta` (via LiteLLM) | `GEMINI_TOKEN` env var          | ~10 RPM, ~1,500 RPD  |
-| OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    |
-| SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            |
-| Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     |
-| GitHub Models       | OpenAI-compat | `models.github.ai`                                 | `GITHUB_MODELS_TOKEN` env var   | FREE tier (GPT-4.1-mini) |
-| Ollama              | Responses     | `localhost:11434/v1`                               | Ollama running locally          | Unlimited (local)     |
+| Provider            | API           | Endpoint                                           | Requirement                     | Free Tier Limits      | Context (in/out) |
+| ------------------- | ------------- | -------------------------------------------------- | ------------------------------- | --------------------- | ---------------- |
+| OpenAI (Codex)      | Responses     | `api.openai.com/v1`                                | Codex credits                   | Paid                  | 1M / 32K |
+| Groq                | OpenAI-compat | `api.groq.com/openai/v1`                           | `GROQ_TOKEN` env var            | 12K TPM               | 128K / 32K |
+| Cerebras            | OpenAI-compat | `api.cerebras.ai/v1`                               | `CEREBRAS_TOKEN` env var        | 1M tokens/day         | 8K / 8K (⚠️) |
+| Gemini              | Native gemini/ | `generativelanguage.googleapis.com/v1beta` (via LiteLLM) | `GEMINI_TOKEN` env var          | ~10 RPM, ~1,500 RPD  | 1M / 65K |
+| OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    | 128K / 32K |
+| SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            | 128K / 32K |
+| Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     | 128K / 32K |
+| GitHub Models       | OpenAI-compat | `models.github.ai`                                 | `GITHUB_MODELS_TOKEN` env var   | FREE tier (GPT-4.1-mini) | 1M / 32K |
+| Ollama              | Responses     | `localhost:11434/v1`                               | Ollama running locally          | Unlimited (local)     | 32K / 32K |
+
+> **Context window requirement:** All providers must support ≥32K input context for reliable long agent sessions. Cerebras (8K) is deprioritised to position 6 in the cascade. See [`docs/harness/provider-operations.md`](harness/provider-operations.md) for the full verified provider matrix and operational procedures.
 
 **Environment variables:**
 
@@ -288,6 +290,14 @@ Ollama is configured for hybrid CPU/GPU inference via `/etc/systemd/system/ollam
 With a GTX 1650 (4 GB VRAM), the `qwen2.5-coder:7b-32t` model runs at roughly **51% CPU / 49% GPU** split (~2.5 GB VRAM used, GPU at 100%). `OLLAMA_NUM_PARALLEL=1` ensures each request gets the full 32K KV cache — with `NUM_PARALLEL=2` the doubled KV allocation (2×32K=64K tokens) starves VRAM. The tradeoff is sequential request processing, but a slow result is better than no result.
 
 **Important:** Do not set `CUDA_VISIBLE_DEVICES=-1` or `OLLAMA_LLM_LIBRARY=cpu_avx2` — these disable GPU offload entirely and were removed to enable hybrid inference.
+
+## Provider Operations Knowledge Base
+
+Comprehensive provider configuration, verified capabilities, LiteLLM routing workarounds, VRAM tuning rationale, error handling architecture, and continuous evolution procedures are documented in:
+
+→ **[`docs/harness/provider-operations.md`](harness/provider-operations.md)**
+
+This includes the verified provider context window matrix, operational lessons learned, known gaps / risk register, and step-by-step procedures for adding, upgrading, or removing providers.
 
 ## Harness Report (FACE-BPH)
 

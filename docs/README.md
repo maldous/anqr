@@ -10,6 +10,7 @@ This `docs/` directory is the canonical source of project knowledge.
 - [Architecture overview](architecture/overview.md)
 - [Module catalog](modules/index.md)
 - [Reports catalog](reports/README.md)
+- [Provider operations](harness/provider-operations.md)
 - [Markdown reconciliation matrix](inventory/markdown-reconciliation.md)
 
 ## Documentation Sections
