@@ -58,13 +58,20 @@ You are a code editor. Follow these steps exactly.
 
 ## Step 1: Execute the task
 
-1. If the issue requires guaranteed human-only actions (no API available, portal click-through, account/token creation, CAPTCHA, billing/credits purchase), run:
+1. If the issue title starts with `[PARENT]`, this is a tracking issue — do not execute it. Run:
+   ```bash
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Pending"
+   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "[PARENT] tracking issue — not directly executable by automation."
+   ```
+   Then stop.
+2. If the issue requires guaranteed human-only actions (no API available, portal click-through, account/token creation, CAPTCHA, billing/credits purchase), run:
    ```bash
    node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Pending"
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Requires human action: <describe exact steps and validation evidence needed>"
    ```
    Then stop.
-2. Enforce one simple task per issue. If the issue contains multiple independent tasks, create Backlog child issues for remaining tasks and execute only one atomic task in this issue.
+3. If the task requires subjective judgment, strategy, UX design, or document writing (no concrete code changes possible), escalate to Pending the same way as step 2.
+4. Enforce one simple task per issue. If the issue contains multiple independent tasks, create Backlog child issues for remaining tasks and execute only one atomic task in this issue.
    **To create child issues, use the CLI helper instead of raw GraphQL:**
    ```bash
    node scripts/ops/create-child-issue.mjs \
@@ -75,11 +82,32 @@ You are a code editor. Follow these steps exactly.
      --label reliability
    ```
    The script prints the new issue identifier on success. Use this for any issue creation/linking tasks.
-3. Read the issue description carefully. It contains exact file paths, exact code changes, and a validation command.
-4. Apply the code changes described using `apply_patch`.
-5. Run the validation command from the description.
-6. If validation passes, update `CHANGELOG.md`: prepend a line under today's date heading with `- <type>: <short summary>`. If today's date heading does not exist, add it after the preamble. Example: `- fix: reset canvas smoothing state`.
-7. Commit and push: `git add -A && git commit -m "fix: <short summary>" && git pull --rebase origin master && git push origin master`.
+5. Check the issue description to determine task type:
+   - **Code change** (description contains specific file paths and code changes): continue to step 6.
+   - **Audit/analysis task** (description asks to query issues, check metadata, produce a report): use the CLI toolkit:
+     ```bash
+     node scripts/ops/linear-list-issues.mjs --open --format json > /tmp/issues.json
+     # Analyze the JSON output, then update issues as needed:
+     node scripts/ops/linear-update-issue.mjs --issue ANQ-<N> --title "..."
+     ```
+     After completing the analysis, skip to step 9 (commit and push).
+6. Read the issue description carefully. Apply the code changes described using `apply_patch`.
+7. Run the validation command from the description.
+8. If validation passes, update `CHANGELOG.md`: prepend a line under today's date heading with `- <type>: <short summary>`. If today's date heading does not exist, add it after the preamble. Example: `- fix: reset canvas smoothing state`.
+9. Commit and push: `git add -A && git commit -m "fix: <short summary>" && git pull --rebase origin master && git push origin master`.
+
+## Error handling
+
+If any command exits with a non-zero status or produces an error:
+1. Post the error as a comment:
+   ```bash
+   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed: <paste the error output>"
+   ```
+2. Move to Pending:
+   ```bash
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Pending"
+   ```
+3. Stop — do not retry the failed command.
 
 ## Step 2: Post evidence and complete
 

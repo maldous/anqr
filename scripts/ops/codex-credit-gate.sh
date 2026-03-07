@@ -321,6 +321,12 @@ except Exception:
     fi
   done
 
+  # No preferred model found — warn so 0-token crashes are diagnosable
+  if [ -n "$available_models" ]; then
+    echo "WARNING: No preferred Ollama model found. Expected: $PREFERRED_OLLAMA_MODELS" >&2
+    echo "Available: $(echo "$available_models" | tr '\n' ' ')" >&2
+    echo "Pull with: ollama pull $DEFAULT_OLLAMA_MODEL" >&2
+  fi
   echo "$DEFAULT_OLLAMA_MODEL"
 }
 
@@ -338,6 +344,10 @@ select_litellm_ollama_model() {
     echo "$DEFAULT_LITELLM_OLLAMA_MODEL"; return
   fi
 
+  # Model not found in Ollama tags — warn so 0-token crashes are diagnosable
+  if [ -n "$tags_json" ]; then
+    echo "WARNING: qwen2.5-coder:7b-32t not found in Ollama. Pull with: ollama pull qwen2.5-coder:7b-32t" >&2
+  fi
   echo "$DEFAULT_LITELLM_OLLAMA_MODEL"
 }
 

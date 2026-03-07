@@ -641,13 +641,16 @@ async function main() {
           summary.priorityStateSync.updates.push(update);
         }
 
-        // Enforce concurrency: keep live-running sessions in In Progress,
-        // demote stale In Progress issues outside that allow-list.
-        if (runningSet.size > 0) {
+        // Demote ALL In Progress issues not associated with a live running
+        // session. This runs unconditionally (not just when sessions exist)
+        // to handle the edge case where an agent crash leaves an issue stuck
+        // In Progress with no active session to complete it (F7).
+        {
           const allowedInProgress = new Set(runningSet);
           for (const issue of actionable) {
             if (issue.state.name !== 'In Progress') continue;
             if (allowedInProgress.has(issue.identifier)) continue;
+            if (issue.identifier === target.identifier) continue;
             const update = {
               identifier: issue.identifier,
               from: issue.state.name,
@@ -666,7 +669,10 @@ async function main() {
             }
             summary.priorityStateSync.updates.push(update);
           }
-        } else if (target.state.name !== 'In Progress') {
+        }
+
+        // When no sessions are running, promote highest-priority target.
+        if (runningSet.size === 0 && target.state.name !== 'In Progress') {
           // Fallback when dashboard has no live running session.
           const update = {
             identifier: target.identifier,
@@ -962,6 +968,29 @@ async function main() {
       summary.symphonyFeed.checked = true;
       summary.symphonyFeed.openCount = openIssues.length;
 
+      // [PARENT] invariant: drain tracking/coordination issues from Symphony
+      // project. These are not executable and would burn all retries (F1).
+      summary.symphonyFeed.parentDrained = [];
+      const parentInSymphony = openIssues.filter((i) => i.title.startsWith('[PARENT]'));
+      for (const issue of parentInSymphony) {
+        const entry = { identifier: issue.identifier, title: issue.title, drained: false };
+        if (APPLY) {
+          await gql(
+            `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+            { id: issue.id, input: { projectId: null } }
+          );
+          entry.drained = true;
+        }
+        summary.symphonyFeed.parentDrained.push(entry);
+      }
+      if (parentInSymphony.length > 0) {
+        console.error(
+          `[PARENT] drain: ${APPLY ? 'removed' : 'would remove'} ${parentInSymphony.length} tracking issues from Symphony project`
+        );
+      }
+
       const TARGET_MIN = 2;
       const TARGET_MAX = 3;
 
@@ -1250,6 +1279,117 @@ async function main() {
   } catch (retryErr) {
     console.error(`Retry queue health error (non-fatal): ${retryErr.message}`);
     summary.retryQueueHealth.error = retryErr.message;
+  }
+
+  // -----------------------------------------------------------------------
+  // Retry escalation: if an issue has been stuck in the retry queue across
+  // multiple guardian passes (>30 min), auto-escalate to [HUMAN] Pending.
+  // Prevents infinite retry loops that block the queue (F2).
+  // -----------------------------------------------------------------------
+  summary.retryEscalation = { checked: false, escalated: [], tracked: 0 };
+  const retryEscalationStatePath = path.join(REPORTS_DIR, 'retry-escalation-state.json');
+  try {
+    let retryState = {};
+    if (fs.existsSync(retryEscalationStatePath)) {
+      retryState = JSON.parse(fs.readFileSync(retryEscalationStatePath, 'utf-8'));
+    }
+
+    const retryQueueForEscalation = await getSymphonyRetryQueue();
+    const nowMs = Date.now();
+    const ESCALATION_THRESHOLD_MS = 30 * 60 * 1000;
+
+    const currentRetrySet = new Set(retryQueueForEscalation);
+    for (const id of Object.keys(retryState)) {
+      if (!currentRetrySet.has(id)) {
+        delete retryState[id];
+      }
+    }
+    for (const id of retryQueueForEscalation) {
+      if (!retryState[id]) {
+        retryState[id] = { firstSeen: nowMs, passes: 0 };
+      }
+      retryState[id].passes += 1;
+      retryState[id].lastSeen = nowMs;
+    }
+
+    summary.retryEscalation.tracked = Object.keys(retryState).length;
+
+    if (pendingForHuman) {
+      for (const [id, tracked] of Object.entries(retryState)) {
+        const elapsed = nowMs - tracked.firstSeen;
+        if (elapsed < ESCALATION_THRESHOLD_MS) continue;
+
+        const issueData = await gql(
+          `query($id: String!) { issue(id: $id) { id identifier title state { name } } }`,
+          { id }
+        );
+        const issue = issueData.issue;
+        if (!issue) continue;
+        if (issue.state.name === 'Pending' || issue.state.name === 'Human Review') continue;
+        if (issue.title.startsWith('[HUMAN]')) continue;
+
+        const entry = {
+          identifier: issue.identifier,
+          title: issue.title,
+          minutesInRetry: Math.round(elapsed / 60000),
+          passes: tracked.passes,
+          escalated: false,
+        };
+
+        if (APPLY) {
+          const newTitle = `[HUMAN] ${issue.title}`;
+          await gql(
+            `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+            {
+              id: issue.id,
+              input: { title: newTitle, stateId: pendingForHuman.id },
+            }
+          );
+          await gql(
+            `mutation($input: CommentCreateInput!) {
+              commentCreate(input: $input) { success }
+            }`,
+            {
+              input: {
+                issueId: issue.id,
+                body: [
+                  `Auto-escalated by guardian after ${entry.minutesInRetry} minutes in retry queue (${tracked.passes} passes).`,
+                  '',
+                  'The AI agent could not complete this task after multiple attempts.',
+                  'Possible causes: model capability mismatch, missing CLI tooling, or infrastructure issue.',
+                  '',
+                  'To retry: remove the [HUMAN] prefix and move back to Backlog.',
+                ].join('\n'),
+              },
+            }
+          );
+          entry.escalated = true;
+          delete retryState[id];
+        }
+
+        summary.retryEscalation.escalated.push(entry);
+      }
+    }
+
+    summary.retryEscalation.checked = true;
+    ensureDir(REPORTS_DIR);
+    fs.writeFileSync(retryEscalationStatePath, JSON.stringify(retryState, null, 2) + '\n');
+
+    if (summary.retryEscalation.escalated.length > 0) {
+      console.error(
+        `Retry escalation: ${APPLY ? 'escalated' : 'would escalate'} ${summary.retryEscalation.escalated.length} stuck issues to [HUMAN] Pending`
+      );
+      sendNotification({
+        subject: `Symphony retry escalation: ${summary.retryEscalation.escalated.length} issues auto-escalated`,
+        body: `Issues stuck in retry queue for >30 min:\n${summary.retryEscalation.escalated.map((e) => `${e.identifier}: ${e.title} (${e.minutesInRetry}m, ${e.passes} passes)`).join('\n')}`,
+        severity: 'warning',
+      });
+    }
+  } catch (escalationErr) {
+    console.error(`Retry escalation error (non-fatal): ${escalationErr.message}`);
+    summary.retryEscalation.error = escalationErr.message;
   }
 
   // -----------------------------------------------------------------------
