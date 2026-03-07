@@ -50,7 +50,6 @@ You are a code editor. Follow these steps exactly.
 ## Step 0: Move to In Progress
 
 1. Call `linear_graphql` to move this issue to "In Progress" state immediately.
-2. If the issue title starts with `[SENTINEL]`, skip to the Sentinel section below.
 
 ## Step 1: Execute the task
 
@@ -83,13 +82,3 @@ You are a code editor. Follow these steps exactly.
    ```
 3. Call `linear_graphql` to move this issue to "Done" state.
 
-## Sentinel
-
-If the issue title starts with `[SENTINEL]`:
-
-1. Do NOT create any new sentinel issue.
-2. Do NOT add comments.
-3. Do NOT scan/query other issues.
-4. Call `linear_graphql` to move THIS issue to "Backlog" state immediately.
-
-That's it. Do not do anything else.

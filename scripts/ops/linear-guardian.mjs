@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 import { createGql } from './lib/linear-client.mjs';
 import { sendNotification } from './lib/notify.mjs';
 
@@ -23,7 +24,6 @@ const REQUIRED_LABELS = (
   .filter(Boolean);
 
 const SYMPHONY_DASHBOARD_URL = process.env.SYMPHONY_DASHBOARD_URL || 'http://127.0.0.1:4040';
-const CANONICAL_SENTINEL_ID = process.env.CANONICAL_SENTINEL_ID || 'ANQ-105';
 const GUARDIAN_SKIP_LEAD = process.env.GUARDIAN_SKIP_LEAD === '1';
 const GUARDIAN_TASK_DESC_MAX = Number(process.env.GUARDIAN_TASK_DESC_MAX || 1200);
 const GUARDIAN_TASK_CHECKLIST_MAX = Number(process.env.GUARDIAN_TASK_CHECKLIST_MAX || 1);
@@ -88,7 +88,6 @@ function isHumanOnlyIssue(issue) {
 
 function classifyIssueLabel(issue) {
   const title = issue.title || '';
-  if (title.startsWith('[SENTINEL]')) return 'reliability';
   if (title.startsWith('[PARENT]')) return 'reliability';
   if (title.startsWith('[CHILD]')) return 'reliability';
   const text = `${title}\n${issue.description || ''}`;
@@ -111,7 +110,6 @@ function normalizeDescriptorTitle(title, desiredPrefix) {
 function desiredDescriptor(issue) {
   const title = issue.title || '';
   const description = issue.description || '';
-  if (title.startsWith('[SENTINEL]')) return '[SENTINEL]';
   if (isHumanOnlyIssue(issue)) return '[HUMAN]';
   if (/\bpart of anq-\d+\b/i.test(description)) return '[CHILD]';
   return null;
@@ -426,9 +424,7 @@ async function main() {
   summary.priorityBackfill.checked = true;
   for (const issue of openIssuesForPriority.issues.nodes) {
     let targetPriority = 3; // default medium
-    if (issue.title.startsWith('[SENTINEL]')) {
-      targetPriority = 1;
-    } else if (/\burgent\b/i.test(issue.title)) {
+    if (/\burgent\b/i.test(issue.title)) {
       targetPriority = 2;
     } else if (issue.title.startsWith('[PARENT]')) {
       targetPriority = 2;
@@ -449,38 +445,6 @@ async function main() {
       update.updated = true;
     }
     summary.priorityBackfill.updated.push(update);
-  }
-
-  // -----------------------------------------------------------------------
-  // Sentinel priority invariant: only [SENTINEL] issues may be P0 (priority=1).
-  // -----------------------------------------------------------------------
-  summary.sentinelPrioritySync = { checked: false, updated: [] };
-  const p0Issues = await gql(
-    `query {
-      issues(filter: { team: { key: { eq: "ANQ" } }, priority: { eq: 1 } }, first: 250) {
-        nodes { id identifier title state { name } priority }
-      }
-    }`
-  );
-  summary.sentinelPrioritySync.checked = true;
-  for (const issue of p0Issues.issues.nodes) {
-    if (issue.title.startsWith('[SENTINEL]')) continue;
-    const update = {
-      identifier: issue.identifier,
-      fromPriority: issue.priority,
-      toPriority: 2,
-      updated: false,
-    };
-    if (APPLY) {
-      await gql(
-        `mutation($id: String!, $input: IssueUpdateInput!) {
-          issueUpdate(id: $id, input: $input) { success }
-        }`,
-        { id: issue.id, input: { priority: 2 } }
-      );
-      update.updated = true;
-    }
-    summary.sentinelPrioritySync.updated.push(update);
   }
 
   // -----------------------------------------------------------------------
@@ -604,8 +568,8 @@ async function main() {
 
   // -----------------------------------------------------------------------
   // Priority/state hygiene: with max_concurrent_agents=1, keep In Progress
-  // aligned to live Symphony running sessions while reserving one slot for
-  // [SENTINEL]. If no live sessions exist, promote highest-priority work.
+  // aligned to live Symphony running sessions.
+  // If no live sessions exist, promote highest-priority work.
   // -----------------------------------------------------------------------
   summary.priorityStateSync = { checked: false, target: null, updates: [] };
   const symphonyProjectForSync = team.projects.nodes.find((p) => p.name === 'Symphony');
@@ -653,11 +617,6 @@ async function main() {
       if (target) {
         const byIdentifier = new Map(symphonyOpen.issues.nodes.map((i) => [i.identifier, i]));
         const runningSet = new Set(runningIssueIds);
-        const sentinelIssue =
-          actionable.find((i) => i.title.startsWith('[SENTINEL]') && i.state.name === 'In Progress') ||
-          actionable.find((i) => i.title.startsWith('[SENTINEL]')) ||
-          null;
-
         // Promote every live running issue to In Progress.
         for (const issueId of runningIssueIds) {
           const issue = byIdentifier.get(issueId);
@@ -682,11 +641,10 @@ async function main() {
           summary.priorityStateSync.updates.push(update);
         }
 
-        // Enforce concurrency=2: keep live-running sessions plus sentinel,
+        // Enforce concurrency: keep live-running sessions in In Progress,
         // demote stale In Progress issues outside that allow-list.
         if (runningSet.size > 0) {
           const allowedInProgress = new Set(runningSet);
-          if (sentinelIssue) allowedInProgress.add(sentinelIssue.identifier);
           for (const issue of actionable) {
             if (issue.state.name !== 'In Progress') continue;
             if (allowedInProgress.has(issue.identifier)) continue;
@@ -767,166 +725,153 @@ async function main() {
     }
   }
 
-  // -----------------------------------------------------------------------
-  // Sentinel dead man's switch: ensure a [SENTINEL] issue always exists
-  // in the Symphony project. If the sentinel fails before self-replicating,
-  // this guarantees a new one is created within 15 minutes.
-  // -----------------------------------------------------------------------
   const symphonyProject = team.projects.nodes.find((p) => p.name === 'Symphony');
-  summary.sentinelCheck = {
-    checked: false,
-    exists: false,
-    created: false,
-    promotedToInProgress: false,
-    canonical: CANONICAL_SENTINEL_ID,
-    duplicatesCanceled: [],
-  };
 
-  if (symphonyProject) {
-    const sentinelQuery = await gql(
-      `query($projectId: ID!) {
-        issues(filter: {
-          team: { key: { eq: "ANQ" } },
-          project: { id: { eq: $projectId } },
-          title: { startsWith: "[SENTINEL]" },
-          state: { name: { in: ["Backlog", "Todo", "In Progress", "Pending", "Human Review", "Rework", "In Review"] } }
-        }, first: 25) {
-          nodes { id identifier title state { name } }
-        }
-      }`,
-      { projectId: symphonyProject.id }
-    );
+  // -----------------------------------------------------------------------
+  // Symphony liveness: verify the Symphony orchestrator is running.
+  // This replaces the old AI-powered sentinel heartbeat with a deterministic
+  // check that cannot enter retry queues or consume AI credits.
+  // -----------------------------------------------------------------------
+  summary.symphonyLiveness = { checked: false, serviceActive: false, dashboardReachable: false, healthy: false };
+  try {
+    const serviceCheck = spawnSync('systemctl', ['--user', 'is-active', 'symphony-anqr.service'], {
+      encoding: 'utf-8',
+      timeout: 5000,
+    });
+    summary.symphonyLiveness.serviceActive = serviceCheck.status === 0;
+    summary.symphonyLiveness.dashboardReachable = creditStatus.reachable;
+    summary.symphonyLiveness.healthy =
+      summary.symphonyLiveness.serviceActive && creditStatus.reachable;
+    summary.symphonyLiveness.checked = true;
 
-    summary.sentinelCheck.checked = true;
-    const sentinelIssues = sentinelQuery.issues.nodes;
-    const canonicalSentinel = sentinelIssues.find((i) => i.identifier === CANONICAL_SENTINEL_ID) || null;
-    const chosenSentinel =
-      canonicalSentinel ||
-      sentinelIssues.slice().sort((a, b) => a.identifier.localeCompare(b.identifier))[0] ||
-      null;
-    const duplicateSentinels = chosenSentinel
-      ? sentinelIssues.filter((i) => i.id !== chosenSentinel.id)
-      : [];
-
-    for (const dup of duplicateSentinels) {
-      const archivedTitle = dup.title.startsWith('[SENTINEL]')
-        ? dup.title.replace(/^\[SENTINEL\]\s*/, '[ARCHIVED] Duplicate sentinel: ')
-        : `[ARCHIVED] Duplicate sentinel: ${dup.title || ''}`.trim();
-      const update = {
-        identifier: dup.identifier,
-        from: dup.state?.name || null,
-        to: 'Canceled',
-        updated: false,
-      };
-      if (APPLY) {
-        const cancelState = await gql(
-          `query($teamId: ID!) {
-            workflowStates(filter: { team: { id: { eq: $teamId } }, name: { eq: "Canceled" } }, first: 1) {
-              nodes { id }
-            }
-          }`,
-          { teamId: team.id }
-        );
-        const cancelStateId = cancelState.workflowStates.nodes[0]?.id;
-        if (cancelStateId) {
-          await gql(
-            `mutation($id: String!, $input: IssueUpdateInput!) {
-              issueUpdate(id: $id, input: $input) { success }
-            }`,
-            { id: dup.id, input: { stateId: cancelStateId, title: archivedTitle } }
-          );
-          update.updated = true;
-        }
-      }
-      summary.sentinelCheck.duplicatesCanceled.push(update);
+    if (!summary.symphonyLiveness.healthy) {
+      const reason = !summary.symphonyLiveness.serviceActive
+        ? 'systemd service inactive'
+        : 'dashboard unreachable';
+      console.error(`Symphony liveness: UNHEALTHY (${reason})`);
+      sendNotification({
+        subject: 'Symphony liveness check failed',
+        body: [
+          `The Symphony orchestrator is unhealthy: ${reason}.`,
+          '',
+          `Service active: ${summary.symphonyLiveness.serviceActive}`,
+          `Dashboard reachable: ${creditStatus.reachable}`,
+          '',
+          'Check with: systemctl --user status symphony-anqr.service',
+        ].join('\n'),
+        severity: 'critical',
+      });
     }
+  } catch (livenessErr) {
+    console.error(`Symphony liveness error (non-fatal): ${livenessErr.message}`);
+    summary.symphonyLiveness.error = livenessErr.message;
+  }
 
-    const hasSentinel = Boolean(chosenSentinel);
-    summary.sentinelCheck.exists = hasSentinel;
+  // -----------------------------------------------------------------------
+  // Harness-driven issue creation: read the latest harness report and create
+  // Linear issues for FAIL/ERROR checks. Tracks state to avoid duplicates.
+  // This replaces the old AI sentinel's job of reviewing harness reports.
+  // -----------------------------------------------------------------------
+  summary.harnessIssueCreation = { checked: false, created: [], alreadyTracked: [] };
+  const harnessStatePath = path.join(REPORTS_DIR, 'harness-issue-state.json');
+  try {
+    const harnessReportPath = path.join(PROJECT_ROOT, 'reports', 'harness', 'latest.json');
+    if (fs.existsSync(harnessReportPath)) {
+      const harnessReport = JSON.parse(fs.readFileSync(harnessReportPath, 'utf-8'));
 
-    if (!hasSentinel && APPLY) {
-      const sentinelDescription =
-        'Single-instance heartbeat. Do NOT create any new [SENTINEL] issues.\n\n' +
-        '## Harness Report & Self-Healing\n\n' +
-        'Review the harness report and recent Symphony logs:\n' +
-        '```bash\ncat reports/harness/latest.json 2>/dev/null | head -500\ngrep -aE "error|warning|Linear GraphQL request failed" ~/.local/state/symphony-anqr/log/log/symphony.log ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200\n```\n\n' +
-        'The harness report covers 22 check domains (typecheck, lint, security, dependencies, bundle, tests, etc). Create corrective issues for FAIL statuses, regressions, and high-severity findings.\n\n' +
-        'Before creating issues, query existing open issues in the Symphony project to avoid duplicates.\n\n' +
-        'For each distinct error class requiring a code fix (skip transient/retryable errors):\n' +
-        '1. Create a `[PARENT]` issue describing the error category.\n' +
-        '2. Create `[CHILD]` issues for each specific atomic fix — each child description must contain exact file paths, exact code changes (before/after), and a validation command.\n' +
-        '3. Link every `[CHILD]` to its `[PARENT]` using the `parentId` field in `issueCreate`.\n' +
-        '4. Set explicit priority on every issue (2 = high, 3 = medium).\n' +
-        '5. Place all issues in the Symphony project.\n' +
-        '6. Include the `reliability` label on every created issue (query team labels to get its ID).\n\n' +
-        'After log review and issue creation, move this sentinel issue to Backlog.\n\n' +
-        'Do NOT create PRs, do NOT run paid actions.';
+      let harnessState = {};
+      if (fs.existsSync(harnessStatePath)) {
+        harnessState = JSON.parse(fs.readFileSync(harnessStatePath, 'utf-8'));
+      }
 
       const reliabilityLabel = team.labels.nodes.find(
         (l) => l.name.toLowerCase() === 'reliability'
       );
 
-      await gql(
-        `mutation($input: IssueCreateInput!) {
-          issueCreate(input: $input) { success issue { identifier title } }
-        }`,
-        {
-          input: {
-            teamId: team.id,
-            title: '[SENTINEL] Review progress, create issues, and continue',
-            description: sentinelDescription,
-            projectId: symphonyProject.id,
-            priority: 1,
-            ...(reliabilityLabel ? { labelIds: [reliabilityLabel.id] } : {}),
-          },
-        }
-      );
-      summary.sentinelCheck.created = true;
-      console.error("Sentinel dead man's switch: created new sentinel issue");
-      sendNotification({
-        subject: "Sentinel dead man's switch triggered",
-        body: 'A new [SENTINEL] issue was created because no active sentinel was found.\n\nThis indicates the previous sentinel may have failed or been canceled.\nThe guardian creates a replacement every 15 minutes when this happens.',
-        severity: 'critical',
-      });
-    } else if (!hasSentinel) {
-      console.error("Sentinel dead man's switch: no sentinel found (dry-run, would create)");
-    }
-
-    // Ensure sentinel always has a live slot: if no sentinel is In Progress,
-    // promote a Backlog/Todo sentinel even when another issue is running.
-    if (hasSentinel && chosenSentinel) {
-      const sentinelInProgress = chosenSentinel.state?.name === 'In Progress';
-      const sentinelBacklog =
-        chosenSentinel.state?.name === 'Backlog' || chosenSentinel.state?.name === 'Todo'
-          ? chosenSentinel
-          : null;
-
-      if (!sentinelInProgress && sentinelBacklog) {
-        const workflowStates = await gql(
-          `query($teamId: ID!) {
-            workflowStates(filter: { team: { id: { eq: $teamId } }, name: { eq: "In Progress" } }, first: 1) {
-              nodes { id name }
-            }
-          }`,
-          { teamId: team.id }
-        );
-        const inProgressStateId = workflowStates.workflowStates.nodes[0]?.id;
-        if (inProgressStateId) {
-          if (APPLY) {
-            await gql(
-              `mutation($id: String!, $input: IssueUpdateInput!) {
-                issueUpdate(id: $id, input: $input) { success }
-              }`,
-              { id: sentinelBacklog.id, input: { stateId: inProgressStateId } }
-            );
+      for (const [checkId, check] of Object.entries(harnessReport.checks || {})) {
+        if (check.status !== 'FAIL' && check.status !== 'ERROR') {
+          if (harnessState[checkId]?.status === 'open') {
+            harnessState[checkId].status = 'resolved';
+            harnessState[checkId].resolvedAt = new Date().toISOString();
           }
-          summary.sentinelCheck.promotedToInProgress = true;
-          console.error(
-            `Sentinel dead man's switch: ${APPLY ? 'promoted' : 'would promote'} ${sentinelBacklog.identifier} to In Progress`
-          );
+          continue;
         }
+
+        if (harnessState[checkId]?.status === 'open') {
+          summary.harnessIssueCreation.alreadyTracked.push(checkId);
+          continue;
+        }
+
+        const findings = (check.findings || [])
+          .map((f) => `- ${f.severity}: ${f.message}`)
+          .join('\n');
+        const metrics = Object.entries(check.metrics || {})
+          .map(([k, v]) => `- ${k}: ${v}`)
+          .join('\n');
+
+        const issueTitle = `[HARNESS] ${checkId}: ${check.status}`;
+        const issueDescription = [
+          `Harness check \`${checkId}\` reported **${check.status}** at ${harnessReport.timestamp}.`,
+          '',
+          '## Metrics',
+          metrics || '(none)',
+          '',
+          '## Findings',
+          findings || '(none)',
+          '',
+          '## Action Required',
+          'Investigate and fix the failing check. Run the harness to verify:',
+          '```bash',
+          'node scripts/ops/harness-report.mjs --profile=continuous',
+          '```',
+          '',
+          'The guardian will automatically mark this resolved when the check passes.',
+        ].join('\n');
+
+        const entry = { checkId, title: issueTitle, created: false };
+
+        if (APPLY && symphonyProject) {
+          const created = await gql(
+            `mutation($input: IssueCreateInput!) {
+              issueCreate(input: $input) { success issue { identifier } }
+            }`,
+            {
+              input: {
+                teamId: team.id,
+                projectId: symphonyProject.id,
+                title: issueTitle,
+                description: issueDescription,
+                priority: 2,
+                ...(reliabilityLabel ? { labelIds: [reliabilityLabel.id] } : {}),
+              },
+            }
+          );
+          entry.created = true;
+          entry.identifier = created.issueCreate?.issue?.identifier || null;
+          harnessState[checkId] = {
+            status: 'open',
+            issueIdentifier: entry.identifier,
+            createdAt: new Date().toISOString(),
+            checkStatus: check.status,
+          };
+        }
+
+        summary.harnessIssueCreation.created.push(entry);
+      }
+
+      summary.harnessIssueCreation.checked = true;
+      ensureDir(REPORTS_DIR);
+      fs.writeFileSync(harnessStatePath, JSON.stringify(harnessState, null, 2) + '\n');
+
+      if (summary.harnessIssueCreation.created.length > 0) {
+        console.error(
+          `Harness issues: ${APPLY ? 'created' : 'would create'} ${summary.harnessIssueCreation.created.length} issues for failing checks`
+        );
       }
     }
+  } catch (harnessErr) {
+    console.error(`Harness issue creation error (non-fatal): ${harnessErr.message}`);
+    summary.harnessIssueCreation.error = harnessErr.message;
   }
 
   // -----------------------------------------------------------------------
@@ -1013,17 +958,15 @@ async function main() {
         { projectId: symphonyProject.id }
       );
 
-      const openNonSentinel = symphonyIssues.issues.nodes.filter(
-        (i) => !i.title.startsWith('[SENTINEL]')
-      );
+      const openIssues = symphonyIssues.issues.nodes;
       summary.symphonyFeed.checked = true;
-      summary.symphonyFeed.openCount = openNonSentinel.length;
+      summary.symphonyFeed.openCount = openIssues.length;
 
       const TARGET_MIN = 2;
       const TARGET_MAX = 3;
 
-      if (openNonSentinel.length < TARGET_MIN) {
-        const needed = TARGET_MAX - openNonSentinel.length;
+      if (openIssues.length < TARGET_MIN) {
+        const needed = TARGET_MAX - openIssues.length;
 
         const candidates = await gql(
           `query {
@@ -1081,7 +1024,6 @@ async function main() {
         const movable = candidates.issues.nodes.filter((i) => {
           if (isHumanOnlyIssue(i)) return false;
           if (i.project?.id === symphonyProject.id) return false;
-          if (i.title.startsWith('[SENTINEL]')) return false;
           if (i.title.startsWith('[PARENT]')) return false;
           const labelNames = i.labels.nodes.map((l) => l.name.toLowerCase());
           if (labelNames.some((l) => HUMAN_LABELS.has(l))) return false;
@@ -1210,13 +1152,13 @@ async function main() {
       }
 
       // Overflow drain: if too many issues in Symphony, move lowest-priority back out.
-      if (openNonSentinel.length > TARGET_MAX) {
+      if (openIssues.length > TARGET_MAX) {
         summary.symphonyFeed.drained = [];
         const runningSet = new Set(runningIssueIds);
-        const drainCandidates = openNonSentinel
+        const drainCandidates = openIssues
           .filter((i) => !runningSet.has(i.identifier))
           .sort((a, b) => b.priority - a.priority || b.identifier.localeCompare(a.identifier));
-        const excess = openNonSentinel.length - TARGET_MAX;
+        const excess = openIssues.length - TARGET_MAX;
         for (const issue of drainCandidates.slice(0, excess)) {
           const entry = { identifier: issue.identifier, title: issue.title, drained: false };
           if (APPLY) {
@@ -1272,7 +1214,6 @@ async function main() {
       );
 
       const drainCandidates = symphonyBacklog.issues.nodes.filter((i) =>
-        !i.title.startsWith('[SENTINEL]') &&
         !runningSet.has(i.identifier) &&
         retrySet.has(i.identifier)
       );

@@ -33,7 +33,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 2. Reference the relevant Linear issue in every git commit where appropriate (e.g., `fix(ops): add provider failover (ANQ-194)`).
 3. Never send emails autonomously. Inbound emails are read, reviewed, and turned into NEW actionable issues that quote the original email.
 4. Use `AI Hint:` comments on Linear issues to course-correct agents when instructions are unclear, context is stale, or comments are bloated. Periodically suggest a board sanity check when failure patterns indicate issues are too complex or confusing for agents.
-5. `[HUMAN]`/`[EMAIL]` issues → matthewaldous. All other issues are left unassigned — the credit-gate handles AI provider routing independently. Do NOT assign automatable issues to any user. The guardian enforces this every 15 minutes and updates project health.
+5. `[HUMAN]`/`[EMAIL]` issues → matthewaldous. All other issues are left unassigned — the credit-gate handles AI provider routing independently. Do NOT assign automatable issues to any user. The guardian enforces this every 15 minutes, monitors Symphony liveness, creates `[HARNESS]` issues for failing checks, and updates project health.
 6. Capture reproduction evidence before code or docs changes.
 7. Sync with latest `origin/master` before edits.
 8. Implement against an explicit checklist.

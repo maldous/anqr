@@ -148,6 +148,8 @@ make all          # Complete 16-step production pipeline
 - **Email handling**: Symphony NEVER sends emails autonomously. Inbound emails are ingested, read, and reviewed — then a NEW actionable issue is created that quotes the original email. The raw email does not become the issue itself.
 - **Issue assignment**: `[HUMAN]` and `[EMAIL]` issues are assigned to matthewaldous. All other issues are left unassigned — the credit-gate handles AI provider routing independently of Linear assignee. Do NOT assign automatable issues to any specific user. The guardian enforces this every 15 minutes and removes stale Codex assignments.
 - **Project health**: The guardian computes project health (`onTrack`/`atRisk`/`offTrack`) from issue completion ratios and posts Linear project updates when health changes.
+- **Symphony liveness**: The guardian verifies Symphony is running every 15 minutes via a deterministic systemd + dashboard check. This replaces the old AI-powered sentinel heartbeat — no AI credits consumed, cannot enter retry queues.
+- **Harness-driven issues**: The guardian reads the latest harness report and automatically creates `[HARNESS]` issues for FAIL/ERROR checks. It tracks state to avoid duplicates and marks issues resolved when checks pass.
 - **AI Hints**: When a Linear issue needs course-correction for AI agents (unclear instructions, legacy context, excessive comments, or stale state), add a comment starting with `AI Hint:` that gives the next agent concise, actionable guidance. Use AI Hints proactively when issues are at risk of blowing out or getting stuck. Periodically run a board sanity check to identify issues needing hints.
 
 ## Key File Locations
