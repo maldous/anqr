@@ -56,6 +56,7 @@ UNSUPPORTED_RESPONSE_FIELDS = {
 RATELIMIT_WINDOW = 60       # count 429s within this many seconds
 RATELIMIT_THRESHOLD = 1     # immediate cooldown on first 429 — providers don't accidentally return 429
 RATELIMIT_COOLDOWN = 120    # skip provider for this many seconds
+BAD_REQUEST_COOLDOWN = 300    # 400 Bad Request — provider rejects message format, persistent for conversation
 CONTEXT_LIMIT_COOLDOWN = 600  # 413 Payload Too Large — conversation won't shrink, skip longer
 NOT_FOUND_COOLDOWN = 300      # 404 Not Found — model config broken, needs manual fix
 SERVER_ERROR_COOLDOWN = 180   # 500 Internal Server Error — LiteLLM translation bugs (e.g. missing tool call)
@@ -274,13 +275,22 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             resp = conn.getresponse()
 
             # Track error responses per provider.
-            if resp.status in (429, 413, 404, 500) and body:
+            if resp.status in (400, 429, 413, 404, 500) and body:
                 try:
                     req_data = json.loads(body)
                     model_name = req_data.get("model", "")
                     provider = _model_to_provider(str(model_name))
                     if provider:
-                        if resp.status == 429:
+                        if resp.status == 400:
+                            _write_cooldown(
+                                provider,
+                                int(time.time()) + BAD_REQUEST_COOLDOWN,
+                            )
+                            self.log_message(
+                                "400 Bad Request from %s (model=%s) — cooldown %ds",
+                                provider, model_name, BAD_REQUEST_COOLDOWN,
+                            )
+                        elif resp.status == 429:
                             _record_ratelimit(provider)
                             self.log_message(
                                 "429 from %s (model=%s) — tracking rate limit",
@@ -448,6 +458,27 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             self.log_message(
                                 "500 in stream body for %s — cooldown %ds",
                                 _stream_provider, SERVER_ERROR_COOLDOWN,
+                            )
+
+                        # 400 Bad Request detection in stream body
+                        # Catches provider validation errors like
+                        # OpenRouter "Provider returned error" that
+                        # persist for the conversation's message format.
+                        elif b"400" in chunk and (
+                            b"bad request" in chunk_lower
+                            or b"badrequesterror" in chunk_lower
+                            or b"provider returned error" in chunk_lower
+                            or b"openrouterexception" in chunk_lower
+                            or b"validation" in chunk_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + BAD_REQUEST_COOLDOWN,
+                            )
+                            self.log_message(
+                                "400 in stream body for %s — cooldown %ds",
+                                _stream_provider, BAD_REQUEST_COOLDOWN,
                             )
 
                         # Service overload detection — no HTTP status code
