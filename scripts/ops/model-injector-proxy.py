@@ -58,6 +58,7 @@ RATELIMIT_THRESHOLD = 1     # immediate cooldown on first 429 — providers don'
 RATELIMIT_COOLDOWN = 120    # skip provider for this many seconds
 CONTEXT_LIMIT_COOLDOWN = 600  # 413 Payload Too Large — conversation won't shrink, skip longer
 NOT_FOUND_COOLDOWN = 300      # 404 Not Found — model config broken, needs manual fix
+SERVER_ERROR_COOLDOWN = 180   # 500 Internal Server Error — LiteLLM translation bugs (e.g. missing tool call)
 STATE_DIR = os.path.join(
     os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"),
     "credit-gate",
@@ -272,7 +273,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             resp = conn.getresponse()
 
             # Track error responses per provider.
-            if resp.status in (429, 413, 404) and body:
+            if resp.status in (429, 413, 404, 500) and body:
                 try:
                     req_data = json.loads(body)
                     model_name = req_data.get("model", "")
@@ -301,6 +302,15 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             self.log_message(
                                 "404 Not Found from %s (model=%s) — cooldown %ds",
                                 provider, model_name, NOT_FOUND_COOLDOWN,
+                            )
+                        elif resp.status == 500:
+                            _write_cooldown(
+                                provider,
+                                int(time.time()) + SERVER_ERROR_COOLDOWN,
+                            )
+                            self.log_message(
+                                "500 Internal Server Error from %s (model=%s) — cooldown %ds",
+                                provider, model_name, SERVER_ERROR_COOLDOWN,
                             )
                 except (json.JSONDecodeError, TypeError):
                     pass
@@ -418,6 +428,25 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             self.log_message(
                                 "404 in stream body for %s — cooldown %ds",
                                 _stream_provider, NOT_FOUND_COOLDOWN,
+                            )
+
+                        # 500 Internal Server Error detection in stream body
+                        # Catches LiteLLM translation bugs like "Missing
+                        # corresponding tool call" that persist for the
+                        # duration of a conversation.
+                        elif b"500" in chunk and (
+                            b"internal server error" in chunk_lower
+                            or b"missing corresponding tool call" in chunk_lower
+                            or b"apiconnectionerror" in chunk_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + SERVER_ERROR_COOLDOWN,
+                            )
+                            self.log_message(
+                                "500 in stream body for %s — cooldown %ds",
+                                _stream_provider, SERVER_ERROR_COOLDOWN,
                             )
 
                     self.wfile.write(chunk)
