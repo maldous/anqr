@@ -123,8 +123,6 @@ _MODEL_PROVIDER_MAP = {
     "mistral-small": "mistral",
     "github-llama-8b": "github",
     "qwen2.5-coder-7b-32t": "litellm-ollama",
-    "qwen2.5-coder-7b": "litellm-ollama",
-    "llama3.1-8b-base": "litellm-ollama",
 }
 
 # Ordered list of (litellm_model_alias, provider_name) matching credit-gate priority.
@@ -138,8 +136,6 @@ _PROVIDER_FALLBACK_CHAIN: list[tuple[str, str]] = [
     ("cerebras-llama-8b", "cerebras"),
     ("github-llama-8b", "github"),
     ("qwen2.5-coder-7b-32t", "litellm-ollama"),
-    ("qwen2.5-coder-7b", "litellm-ollama"),
-    ("llama3.1-8b-base", "litellm-ollama"),
 ]
 
 

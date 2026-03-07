@@ -90,12 +90,13 @@ LITELLM_MISTRAL_MODEL="mistral-codestral"
 LITELLM_GITHUB_MODEL="github-llama-8b"
 LITELLM_OLLAMA_MODEL="${LITELLM_OLLAMA_MODEL:-}"
 
-# Preferred Ollama models in descending quality order (tool-calling capable only).
-PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t qwen2.5-coder:7b llama3.1:8b"
+# Single optimised local model: qwen2.5-coder:7b-32t
+# (32K context, tool-calling, 32 threads for i9-13900K, partial GPU offload on 4GB VRAM)
+PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t"
 DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b-32t"
 
-# LiteLLM aliases (must exist in litellm-config.yaml)
-PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t qwen2.5-coder-7b llama3.1-8b-base"
+# LiteLLM alias (must exist in litellm-config.yaml)
+PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t"
 DEFAULT_LITELLM_OLLAMA_MODEL="qwen2.5-coder-7b-32t"
 
 # Provider failure memory: skip providers that failed recently.
@@ -322,7 +323,7 @@ except Exception:
 }
 
 select_litellm_ollama_model() {
-  local model tags_json
+  local tags_json
   # Explicit override wins.
   if [ -n "${LITELLM_OLLAMA_MODEL:-}" ]; then
     echo "$LITELLM_OLLAMA_MODEL"
@@ -331,26 +332,9 @@ select_litellm_ollama_model() {
 
   tags_json=$(curl -sf --max-time 3 "${OLLAMA_HOST}/api/tags" 2>/dev/null || true)
 
-  # Map available local Ollama tags to LiteLLM aliases.
-  for model in $PREFERRED_LITELLM_OLLAMA_MODELS; do
-    case "$model" in
-      qwen2.5-coder-7b-32t)
-        if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b-32t"' ; then
-          echo "$model"; return
-        fi
-        ;;
-      qwen2.5-coder-7b)
-        if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b"' ; then
-          echo "$model"; return
-        fi
-        ;;
-      llama3.1-8b-base)
-        if echo "$tags_json" | grep -q '"name":"llama3.1:8b"' ; then
-          echo "$model"; return
-        fi
-        ;;
-    esac
-  done
+  if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b-32t"' ; then
+    echo "$DEFAULT_LITELLM_OLLAMA_MODEL"; return
+  fi
 
   echo "$DEFAULT_LITELLM_OLLAMA_MODEL"
 }
