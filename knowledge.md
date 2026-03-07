@@ -24,6 +24,7 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 | Launch checklist   | `docs/operations/launch-checklist.md` |
 | Ops autopilot      | `docs/ops-autopilot.md`               |
 | Autonomous harness | `docs/harness/autonomous-framework.md`|
+| Error handling     | `docs/ops-autopilot.md` §Error-Aware  |
 
 ## Architecture
 

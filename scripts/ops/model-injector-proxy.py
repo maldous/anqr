@@ -9,6 +9,12 @@ model name from a state file and injecting it into the request body.
 The credit-gate writes the model name to the state file before exec'ing
 Codex, so each session gets the correct model routed through LiteLLM.
 
+Error handling: Detects all 13 HTTP error classes (400-504) plus 15+
+stream-embedded error patterns. Writes per-provider cooldown files so
+the credit-gate skips failing providers and cascades to the next one.
+Supports Retry-After header parsing for 429 responses. Uses cross-chunk
+sliding buffer for stream error detection.
+
 Usage:
     python3 model-injector-proxy.py
 
@@ -51,16 +57,48 @@ UNSUPPORTED_RESPONSE_FIELDS = {
     "web_search_options",
 }
 
-# Rate-limit tracking: when upstream returns 429s too frequently for a
-# provider, write a cooldown signal file so the credit-gate skips it.
+# ---------------------------------------------------------------------------
+# Cooldown durations (seconds) — one per HTTP error class.
+# The model-injector writes cooldown files; the credit-gate reads them to
+# skip providers that cannot serve the current conversation.
+# ---------------------------------------------------------------------------
 RATELIMIT_WINDOW = 60       # count 429s within this many seconds
 RATELIMIT_THRESHOLD = 1     # immediate cooldown on first 429 — providers don't accidentally return 429
-RATELIMIT_COOLDOWN = 120    # skip provider for this many seconds
+RATELIMIT_COOLDOWN = 120    # 429 Too Many Requests — transient, moderate skip
 BAD_REQUEST_COOLDOWN = 300    # 400 Bad Request — provider rejects message format, persistent for conversation
-CONTEXT_LIMIT_COOLDOWN = 600  # 413 Payload Too Large — conversation won't shrink, skip longer
+AUTH_FAILURE_COOLDOWN = 1800  # 401 Unauthorized — API key invalid/expired, won't self-heal
+PAYMENT_REQUIRED_COOLDOWN = 3600  # 402 Payment Required — credits exhausted, very persistent
+FORBIDDEN_COOLDOWN = 600      # 403 Forbidden — moderation/access denied, persistent for content
 NOT_FOUND_COOLDOWN = 300      # 404 Not Found — model config broken, needs manual fix
+TIMEOUT_COOLDOWN = 60         # 408 Request Timeout — transient, brief skip
+CONTEXT_LIMIT_COOLDOWN = 600  # 413 Payload Too Large — conversation won't shrink, skip longer
+UNPROCESSABLE_COOLDOWN = 300  # 422 Unprocessable Entity — request format rejected, same as 400
 SERVER_ERROR_COOLDOWN = 180   # 500 Internal Server Error — LiteLLM translation bugs (e.g. missing tool call)
+BAD_GATEWAY_COOLDOWN = 120    # 502 Bad Gateway — transient upstream failure
+SERVICE_UNAVAILABLE_COOLDOWN = 180  # 503 Service Unavailable — service down, moderate
+GATEWAY_TIMEOUT_COOLDOWN = 120  # 504 Gateway Timeout — upstream timeout, transient
 SERVICE_OVERLOAD_COOLDOWN = 120  # "high demand" / stream-embedded overload — no HTTP status code
+QUOTA_EXHAUSTED_COOLDOWN = 1800  # insufficient_quota in stream — persistent, same as auth failure
+
+# Dispatch table: HTTP status → (cooldown_seconds, human_label).
+# 429 is handled separately via _record_ratelimit (with Retry-After support).
+_STATUS_COOLDOWN_MAP: dict[int, tuple[int, str]] = {
+    400: (BAD_REQUEST_COOLDOWN, "400 Bad Request"),
+    401: (AUTH_FAILURE_COOLDOWN, "401 Unauthorized"),
+    402: (PAYMENT_REQUIRED_COOLDOWN, "402 Payment Required"),
+    403: (FORBIDDEN_COOLDOWN, "403 Forbidden"),
+    404: (NOT_FOUND_COOLDOWN, "404 Not Found"),
+    408: (TIMEOUT_COOLDOWN, "408 Request Timeout"),
+    413: (CONTEXT_LIMIT_COOLDOWN, "413 Payload Too Large"),
+    422: (UNPROCESSABLE_COOLDOWN, "422 Unprocessable Entity"),
+    500: (SERVER_ERROR_COOLDOWN, "500 Internal Server Error"),
+    502: (BAD_GATEWAY_COOLDOWN, "502 Bad Gateway"),
+    503: (SERVICE_UNAVAILABLE_COOLDOWN, "503 Service Unavailable"),
+    504: (GATEWAY_TIMEOUT_COOLDOWN, "504 Gateway Timeout"),
+}
+
+CONNECT_TIMEOUT = 60   # seconds — covers TCP connect + sending request body
+READ_TIMEOUT = 600      # seconds — generous for long streaming generations
 STATE_DIR = os.path.join(
     os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"),
     "credit-gate",
@@ -106,8 +144,23 @@ def _model_to_provider(model: str) -> str:
     return ""
 
 
-def _record_ratelimit(provider: str) -> None:
-    """Record a 429 hit and write cooldown file if threshold exceeded."""
+def _parse_retry_after(header_value: str | None) -> int:
+    """Parse Retry-After header to seconds. Returns 0 if absent or unparseable."""
+    if not header_value:
+        return 0
+    try:
+        return max(0, int(header_value))
+    except ValueError:
+        return 0
+
+
+def _record_ratelimit(provider: str, retry_after_secs: int = 0) -> None:
+    """Record a 429 hit and write cooldown file if threshold exceeded.
+
+    If retry_after_secs is provided (from Retry-After header), use the
+    larger of that value and RATELIMIT_COOLDOWN.
+    """
+    cooldown = max(RATELIMIT_COOLDOWN, retry_after_secs) if retry_after_secs else RATELIMIT_COOLDOWN
     now = time.time()
     with _ratelimit_lock:
         hits = _ratelimit_hits.setdefault(provider, [])
@@ -115,14 +168,14 @@ def _record_ratelimit(provider: str) -> None:
         cutoff = now - RATELIMIT_WINDOW
         _ratelimit_hits[provider] = [t for t in hits if t > cutoff]
         if len(_ratelimit_hits[provider]) >= RATELIMIT_THRESHOLD:
-            _write_cooldown(provider, int(now) + RATELIMIT_COOLDOWN)
+            _write_cooldown(provider, int(now) + cooldown)
             _ratelimit_hits[provider] = []
 
 
 def _write_cooldown(provider: str, expiry: int) -> None:
     """Atomically write a cooldown expiry file for the credit-gate to read."""
     rl_file = os.path.join(STATE_DIR, f"ratelimit-{provider}")
-    tmp = f"{rl_file}.{os.getpid()}"
+    tmp = f"{rl_file}.{os.getpid()}-{threading.get_ident()}"
     try:
         os.makedirs(STATE_DIR, mode=0o700, exist_ok=True)
         with open(tmp, "w") as f:
@@ -269,59 +322,41 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
 
         try:
             conn = http.client.HTTPConnection(
-                UPSTREAM_HOST, UPSTREAM_PORT, timeout=600
+                UPSTREAM_HOST, UPSTREAM_PORT, timeout=CONNECT_TIMEOUT
             )
             conn.request(self.command, self.path, body=body, headers=headers)
+            # Bump socket timeout for potentially long streaming reads.
+            if conn.sock:
+                conn.sock.settimeout(READ_TIMEOUT)
             resp = conn.getresponse()
 
-            # Track error responses per provider.
-            if resp.status in (400, 429, 413, 404, 500) and body:
+            # Track error responses per provider — all 13 HTTP error classes.
+            if resp.status in _STATUS_COOLDOWN_MAP or resp.status == 429:
                 try:
-                    req_data = json.loads(body)
+                    req_data = json.loads(body) if body else {}
                     model_name = req_data.get("model", "")
                     provider = _model_to_provider(str(model_name))
                     if provider:
-                        if resp.status == 400:
-                            _write_cooldown(
-                                provider,
-                                int(time.time()) + BAD_REQUEST_COOLDOWN,
+                        if resp.status == 429:
+                            retry_after = _parse_retry_after(
+                                resp.getheader("Retry-After")
                             )
+                            _record_ratelimit(provider, retry_after)
                             self.log_message(
-                                "400 Bad Request from %s (model=%s) — cooldown %ds",
-                                provider, model_name, BAD_REQUEST_COOLDOWN,
-                            )
-                        elif resp.status == 429:
-                            _record_ratelimit(provider)
-                            self.log_message(
-                                "429 from %s (model=%s) — tracking rate limit",
+                                "429 from %s (model=%s) — cooldown %ds (Retry-After: %s)",
                                 provider, model_name,
+                                max(RATELIMIT_COOLDOWN, retry_after),
+                                resp.getheader("Retry-After", "none"),
                             )
-                        elif resp.status == 413:
+                        elif resp.status in _STATUS_COOLDOWN_MAP:
+                            cooldown, label = _STATUS_COOLDOWN_MAP[resp.status]
                             _write_cooldown(
                                 provider,
-                                int(time.time()) + CONTEXT_LIMIT_COOLDOWN,
+                                int(time.time()) + cooldown,
                             )
                             self.log_message(
-                                "413 Payload Too Large from %s (model=%s) — cooldown %ds",
-                                provider, model_name, CONTEXT_LIMIT_COOLDOWN,
-                            )
-                        elif resp.status == 404:
-                            _write_cooldown(
-                                provider,
-                                int(time.time()) + NOT_FOUND_COOLDOWN,
-                            )
-                            self.log_message(
-                                "404 Not Found from %s (model=%s) — cooldown %ds",
-                                provider, model_name, NOT_FOUND_COOLDOWN,
-                            )
-                        elif resp.status == 500:
-                            _write_cooldown(
-                                provider,
-                                int(time.time()) + SERVER_ERROR_COOLDOWN,
-                            )
-                            self.log_message(
-                                "500 Internal Server Error from %s (model=%s) — cooldown %ds",
-                                provider, model_name, SERVER_ERROR_COOLDOWN,
+                                "%s from %s (model=%s) — cooldown %ds",
+                                label, provider, model_name, cooldown,
                             )
                 except (json.JSONDecodeError, TypeError):
                     pass
@@ -382,6 +417,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
 
                 _stream_start = time.monotonic()
                 _stream_bytes = 0
+                _tail_buf = b""  # sliding tail for cross-chunk detection
 
                 while True:
                     chunk = resp.read1(8192)
@@ -390,30 +426,90 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     _stream_bytes += len(chunk)
 
                     if _stream_provider and not _error_detected:
-                        chunk_lower = chunk.lower()
+                        # Combine tail of previous chunk to catch errors
+                        # split across chunk boundaries.
+                        scan_buf = _tail_buf + chunk
+                        scan_lower = scan_buf.lower()
+                        _tail_buf = chunk[-256:] if len(chunk) >= 256 else chunk
 
-                        # 429 rate-limit detection in stream body
-                        if b"429" in chunk and (
-                            b"rate" in chunk_lower
-                            or b"quota" in chunk_lower
-                            or b"resource_exhausted" in chunk_lower
-                            or b"too many" in chunk_lower
-                            or b"limit" in chunk_lower
-                            or b"exceeded" in chunk_lower
+                        # -----------------------------------------------
+                        # Status-code-anchored stream error patterns
+                        # -----------------------------------------------
+
+                        # 429 rate-limit
+                        if b"429" in scan_buf and (
+                            b"rate" in scan_lower
+                            or b"quota" in scan_lower
+                            or b"resource_exhausted" in scan_lower
+                            or b"too many" in scan_lower
+                            or b"limit" in scan_lower
+                            or b"exceeded" in scan_lower
                         ):
                             _error_detected = True
                             _record_ratelimit(_stream_provider)
                             self.log_message(
-                                "Rate-limit in stream body for %s — tracking",
+                                "429 in stream for %s — tracking",
                                 _stream_provider,
                             )
 
-                        # 413 Payload Too Large detection in stream body
-                        elif b"413" in chunk and (
-                            b"too large" in chunk_lower
-                            or b"payload" in chunk_lower
-                            or b"max size" in chunk_lower
-                            or b"content length" in chunk_lower
+                        # 401 Unauthorized
+                        elif b"401" in scan_buf and (
+                            b"unauthorized" in scan_lower
+                            or b"invalid_api_key" in scan_lower
+                            or b"invalid api key" in scan_lower
+                            or b"authentication" in scan_lower
+                            or b"autherror" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + AUTH_FAILURE_COOLDOWN,
+                            )
+                            self.log_message(
+                                "401 in stream for %s — cooldown %ds",
+                                _stream_provider, AUTH_FAILURE_COOLDOWN,
+                            )
+
+                        # 402 Payment Required
+                        elif b"402" in scan_buf and (
+                            b"payment" in scan_lower
+                            or b"insufficient_credits" in scan_lower
+                            or b"no credits" in scan_lower
+                            or b"billing" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + PAYMENT_REQUIRED_COOLDOWN,
+                            )
+                            self.log_message(
+                                "402 in stream for %s — cooldown %ds",
+                                _stream_provider, PAYMENT_REQUIRED_COOLDOWN,
+                            )
+
+                        # 403 Forbidden
+                        elif b"403" in scan_buf and (
+                            b"forbidden" in scan_lower
+                            or b"access_denied" in scan_lower
+                            or b"content_policy" in scan_lower
+                            or b"moderation" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + FORBIDDEN_COOLDOWN,
+                            )
+                            self.log_message(
+                                "403 in stream for %s — cooldown %ds",
+                                _stream_provider, FORBIDDEN_COOLDOWN,
+                            )
+
+                        # 413 Payload Too Large
+                        elif b"413" in scan_buf and (
+                            b"too large" in scan_lower
+                            or b"payload" in scan_lower
+                            or b"max size" in scan_lower
+                            or b"content length" in scan_lower
                         ):
                             _error_detected = True
                             _write_cooldown(
@@ -421,15 +517,15 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 int(time.time()) + CONTEXT_LIMIT_COOLDOWN,
                             )
                             self.log_message(
-                                "413 in stream body for %s — cooldown %ds",
+                                "413 in stream for %s — cooldown %ds",
                                 _stream_provider, CONTEXT_LIMIT_COOLDOWN,
                             )
 
-                        # 404 Not Found detection in stream body
-                        elif b"404" in chunk and (
-                            b"not found" in chunk_lower
-                            or b"notfounderror" in chunk_lower
-                            or b"model group" in chunk_lower
+                        # 404 Not Found
+                        elif b"404" in scan_buf and (
+                            b"not found" in scan_lower
+                            or b"notfounderror" in scan_lower
+                            or b"model group" in scan_lower
                         ):
                             _error_detected = True
                             _write_cooldown(
@@ -437,18 +533,15 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 int(time.time()) + NOT_FOUND_COOLDOWN,
                             )
                             self.log_message(
-                                "404 in stream body for %s — cooldown %ds",
+                                "404 in stream for %s — cooldown %ds",
                                 _stream_provider, NOT_FOUND_COOLDOWN,
                             )
 
-                        # 500 Internal Server Error detection in stream body
-                        # Catches LiteLLM translation bugs like "Missing
-                        # corresponding tool call" that persist for the
-                        # duration of a conversation.
-                        elif b"500" in chunk and (
-                            b"internal server error" in chunk_lower
-                            or b"missing corresponding tool call" in chunk_lower
-                            or b"apiconnectionerror" in chunk_lower
+                        # 500 Internal Server Error
+                        elif b"500" in scan_buf and (
+                            b"internal server error" in scan_lower
+                            or b"missing corresponding tool call" in scan_lower
+                            or b"apiconnectionerror" in scan_lower
                         ):
                             _error_detected = True
                             _write_cooldown(
@@ -456,20 +549,17 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 int(time.time()) + SERVER_ERROR_COOLDOWN,
                             )
                             self.log_message(
-                                "500 in stream body for %s — cooldown %ds",
+                                "500 in stream for %s — cooldown %ds",
                                 _stream_provider, SERVER_ERROR_COOLDOWN,
                             )
 
-                        # 400 Bad Request detection in stream body
-                        # Catches provider validation errors like
-                        # OpenRouter "Provider returned error" that
-                        # persist for the conversation's message format.
-                        elif b"400" in chunk and (
-                            b"bad request" in chunk_lower
-                            or b"badrequesterror" in chunk_lower
-                            or b"provider returned error" in chunk_lower
-                            or b"openrouterexception" in chunk_lower
-                            or b"validation_failed" in chunk_lower
+                        # 400 Bad Request
+                        elif b"400" in scan_buf and (
+                            b"bad request" in scan_lower
+                            or b"badrequesterror" in scan_lower
+                            or b"provider returned error" in scan_lower
+                            or b"openrouterexception" in scan_lower
+                            or b"validation_failed" in scan_lower
                         ):
                             _error_detected = True
                             _write_cooldown(
@@ -477,15 +567,134 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 int(time.time()) + BAD_REQUEST_COOLDOWN,
                             )
                             self.log_message(
-                                "400 in stream body for %s — cooldown %ds",
+                                "400 in stream for %s — cooldown %ds",
                                 _stream_provider, BAD_REQUEST_COOLDOWN,
                             )
 
-                        # Service overload detection — no HTTP status code
-                        # needed.  Catches "We're currently experiencing
-                        # high demand" and similar stream-embedded errors
-                        # where Codex sees http_status_code=null.
-                        elif b"high demand" in chunk_lower:
+                        # 502 Bad Gateway
+                        elif b"502" in scan_buf and (
+                            b"bad gateway" in scan_lower
+                            or b"invalid response" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + BAD_GATEWAY_COOLDOWN,
+                            )
+                            self.log_message(
+                                "502 in stream for %s — cooldown %ds",
+                                _stream_provider, BAD_GATEWAY_COOLDOWN,
+                            )
+
+                        # 503 Service Unavailable
+                        elif b"503" in scan_buf and (
+                            b"service unavailable" in scan_lower
+                            or b"temporarily unavailable" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + SERVICE_UNAVAILABLE_COOLDOWN,
+                            )
+                            self.log_message(
+                                "503 in stream for %s — cooldown %ds",
+                                _stream_provider, SERVICE_UNAVAILABLE_COOLDOWN,
+                            )
+
+                        # 504 Gateway Timeout
+                        elif b"504" in scan_buf and (
+                            b"gateway timeout" in scan_lower
+                            or b"timed out" in scan_lower
+                            or b"deadline exceeded" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + GATEWAY_TIMEOUT_COOLDOWN,
+                            )
+                            self.log_message(
+                                "504 in stream for %s — cooldown %ds",
+                                _stream_provider, GATEWAY_TIMEOUT_COOLDOWN,
+                            )
+
+                        # -----------------------------------------------
+                        # Keyword-only patterns (no HTTP status code needed)
+                        # These error strings are definitive on their own.
+                        # -----------------------------------------------
+
+                        # Context length exceeded (distinct from 413)
+                        elif (
+                            b"context_length_exceeded" in scan_lower
+                            or b"maximum context length" in scan_lower
+                            or b"token limit exceeded" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + CONTEXT_LIMIT_COOLDOWN,
+                            )
+                            self.log_message(
+                                "Context length exceeded in stream for %s — cooldown %ds",
+                                _stream_provider, CONTEXT_LIMIT_COOLDOWN,
+                            )
+
+                        # Quota/credits exhausted
+                        elif (
+                            b"insufficient_quota" in scan_lower
+                            or b"quota_exceeded" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + QUOTA_EXHAUSTED_COOLDOWN,
+                            )
+                            self.log_message(
+                                "Quota exhausted in stream for %s — cooldown %ds",
+                                _stream_provider, QUOTA_EXHAUSTED_COOLDOWN,
+                            )
+
+                        # Content policy violation
+                        elif (
+                            b"content_policy_violation" in scan_lower
+                            or b"content_filter" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + FORBIDDEN_COOLDOWN,
+                            )
+                            self.log_message(
+                                "Content policy violation in stream for %s — cooldown %ds",
+                                _stream_provider, FORBIDDEN_COOLDOWN,
+                            )
+
+                        # Model not found (keyword-only)
+                        elif (
+                            b"model_not_found" in scan_lower
+                            or b"model does not exist" in scan_lower
+                            or b"model not available" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + NOT_FOUND_COOLDOWN,
+                            )
+                            self.log_message(
+                                "Model not found in stream for %s — cooldown %ds",
+                                _stream_provider, NOT_FOUND_COOLDOWN,
+                            )
+
+                        # Service overload ("high demand" / capacity)
+                        # "high demand" is specific enough standalone;
+                        # "overloaded"/"at capacity" need an "error" anchor
+                        # to avoid false positives from model response text.
+                        elif (
+                            b"high demand" in scan_lower
+                            or (b"error" in scan_lower and (
+                                b"overloaded" in scan_lower
+                                or b"at capacity" in scan_lower
+                            ))
+                        ):
                             _error_detected = True
                             _write_cooldown(
                                 _stream_provider,

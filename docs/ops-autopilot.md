@@ -152,30 +152,78 @@ To override the auto-selection:
 export OLLAMA_MODEL=qwen2.5-coder:7b-32t
 ```
 
-### Rate-Limit Aware Fallback
+### Comprehensive Error-Aware Provider Fallback
 
-The model-injector proxy tracks HTTP 429 (rate limit) responses per cloud
-provider. When a provider returns ≥ 3 rate-limit errors within 60 seconds,
-the proxy writes a cooldown file (`$STATE_DIR/ratelimit-<provider>`) with
-an expiry timestamp 120 seconds in the future.
+The model-injector proxy detects **all 13 HTTP error classes** (400–504)
+plus **15+ stream-embedded error patterns** per provider. When an error is
+detected, the proxy writes a cooldown file (`$STATE_DIR/ratelimit-<provider>`)
+with an expiry timestamp. The credit-gate reads these to skip failing
+providers and cascade to the next one.
 
-On the next agent spawn the credit-gate reads the file. If the cooldown
-has not expired the provider is skipped and the cascade falls through to
-the next option (typically Ollama via LiteLLM).
+#### HTTP Status Code Handling
 
-| Parameter           | Value | Location                       |
-| ------------------- | ----- | ------------------------------ |
-| `RATELIMIT_WINDOW`  | 60 s  | `model-injector-proxy.py`      |
-| `RATELIMIT_THRESHOLD` | 3   | `model-injector-proxy.py`      |
-| `RATELIMIT_COOLDOWN`  | 120 s | `model-injector-proxy.py`     |
+| Code | Error | Cooldown | Rationale |
+| ---- | ----- | -------- | --------- |
+| 400 | Bad Request | 300s | Provider rejects message format — persistent for conversation |
+| 401 | Unauthorized | 1800s | API key invalid/expired — won't self-heal |
+| 402 | Payment Required | 3600s | Credits exhausted — very persistent |
+| 403 | Forbidden | 600s | Moderation/access denied — persistent for content |
+| 404 | Not Found | 300s | Model config broken — needs manual fix |
+| 408 | Request Timeout | 60s | Transient — brief skip |
+| 413 | Payload Too Large | 600s | Conversation won't shrink — skip longer |
+| 422 | Unprocessable Entity | 300s | Request format rejected — same as 400 |
+| 429 | Too Many Requests | 120s+ | Rate limit — respects Retry-After header |
+| 500 | Internal Server Error | 180s | LiteLLM translation bugs |
+| 502 | Bad Gateway | 120s | Transient upstream failure |
+| 503 | Service Unavailable | 180s | Service down — moderate |
+| 504 | Gateway Timeout | 120s | Upstream timeout — transient |
+
+#### Stream-Embedded Error Detection
+
+LiteLLM may return HTTP 200 for SSE streams, then embed errors in the
+stream body. The proxy scans stream chunks (with a 256-byte sliding tail
+buffer for cross-chunk detection) for:
+
+- **Status-code-anchored patterns**: `429`+rate/quota, `401`+unauthorized,
+  `402`+payment/credits, `403`+forbidden/moderation, `413`+too large,
+  `404`+not found, `500`+internal error, `400`+bad request/openrouterexception,
+  `502`+bad gateway, `503`+service unavailable, `504`+gateway timeout
+- **Keyword-only patterns** (no status code needed): `context_length_exceeded`,
+  `maximum context length`, `token limit exceeded`, `insufficient_quota`,
+  `quota_exceeded`, `content_policy_violation`, `content_filter`,
+  `model_not_found`, `model does not exist`, `model not available`,
+  `high demand`, `overloaded`, `at capacity`
+- **Short stream heuristic**: streams < 5s and < 2000 bytes treated as failures
+
+#### Additional Robustness Features
+
+- **Retry-After header parsing**: 429 responses use `max(Retry-After, 120s)` as cooldown
+- **Split timeouts**: 30s connect timeout, 600s read timeout
+- **Thread-safe cooldown writes**: atomic temp+mv with PID+thread-ID uniqueness
+- **Connection refused → 502**: immediate upstream-unavailable response
+- **Generic exception → 500**: catch-all for unexpected proxy errors
+
+#### Configuration
+
+| Parameter | Value | Location |
+| --------- | ----- | -------- |
+| `CONNECT_TIMEOUT` | 60s | `model-injector-proxy.py` |
+| `READ_TIMEOUT` | 600s | `model-injector-proxy.py` |
+| `RATELIMIT_WINDOW` | 60s | `model-injector-proxy.py` |
+| `RATELIMIT_THRESHOLD` | 1 | `model-injector-proxy.py` |
 
 Cooldown files auto-expire: the credit-gate deletes them once the expiry
 timestamp has passed, so providers are automatically retried after the
 cooldown window.
 
-To manually clear a rate-limit cooldown:
+To manually clear a cooldown:
 ```bash
 rm -f /run/user/$(id -u)/credit-gate/ratelimit-groq
+```
+
+To clear all cooldowns:
+```bash
+rm -f /run/user/$(id -u)/credit-gate/ratelimit-*
 ```
 
 ### Ollama GPU Configuration
