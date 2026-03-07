@@ -59,6 +59,7 @@ RATELIMIT_COOLDOWN = 120    # skip provider for this many seconds
 CONTEXT_LIMIT_COOLDOWN = 600  # 413 Payload Too Large — conversation won't shrink, skip longer
 NOT_FOUND_COOLDOWN = 300      # 404 Not Found — model config broken, needs manual fix
 SERVER_ERROR_COOLDOWN = 180   # 500 Internal Server Error — LiteLLM translation bugs (e.g. missing tool call)
+SERVICE_OVERLOAD_COOLDOWN = 120  # "high demand" / stream-embedded overload — no HTTP status code
 STATE_DIR = os.path.join(
     os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"),
     "credit-gate",
@@ -447,6 +448,21 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             self.log_message(
                                 "500 in stream body for %s — cooldown %ds",
                                 _stream_provider, SERVER_ERROR_COOLDOWN,
+                            )
+
+                        # Service overload detection — no HTTP status code
+                        # needed.  Catches "We're currently experiencing
+                        # high demand" and similar stream-embedded errors
+                        # where Codex sees http_status_code=null.
+                        elif b"high demand" in chunk_lower:
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + SERVICE_OVERLOAD_COOLDOWN,
+                            )
+                            self.log_message(
+                                "Service overload in stream for %s — cooldown %ds",
+                                _stream_provider, SERVICE_OVERLOAD_COOLDOWN,
                             )
 
                     self.wfile.write(chunk)
