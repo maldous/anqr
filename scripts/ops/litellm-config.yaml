@@ -13,20 +13,21 @@ model_list:
       api_key: os.environ/GROQ_TOKEN
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
-  # Gemini routed via OpenAI-compatible endpoint to avoid LiteLLM's broken
-  # native convert_to_gemini_tool_call_result (4,628 errors / 74% failure rate).
+  # Gemini uses native gemini/ prefix so LiteLLM's /v1/responses handler
+  # can route requests correctly. The earlier openai/ prefix workaround
+  # (for convert_to_gemini_tool_call_result bugs on /v1/chat/completions)
+  # broke /v1/responses with 404. Codex uses /v1/responses exclusively,
+  # which is a separate LiteLLM code path that handles Gemini natively.
   - model_name: gemini-flash
     litellm_params:
-      model: openai/gemini-2.5-flash
+      model: gemini/gemini-2.5-flash
       api_key: os.environ/GEMINI_TOKEN
-      api_base: https://generativelanguage.googleapis.com/v1beta/openai
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
   - model_name: gemini-flash-lite
     litellm_params:
-      model: openai/gemini-2.5-flash-lite
+      model: gemini/gemini-2.5-flash-lite
       api_key: os.environ/GEMINI_TOKEN
-      api_base: https://generativelanguage.googleapis.com/v1beta/openai
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
   - model_name: cerebras-llama-8b
