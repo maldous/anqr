@@ -27,6 +27,7 @@ const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports', 'email-ingest');
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 const TEAM_KEY = process.env.LINEAR_TEAM_KEY || 'ANQ';
 const INGEST_EMAIL = process.env.ANQR_INGEST_EMAIL || 'email@anqr.link';
+const CODEX_USER_NAME = 'Codex';
 const ALLOWED_SENDERS = ['matthew.aldous@gmail.com', 'alexander.emmalyn.thomas@gmail.com'];
 const DRY_RUN = process.argv.includes('--dry-run');
 const NOTMUCH_QUERY = `(from:${INGEST_EMAIL} OR to:${INGEST_EMAIL}) AND tag:inbox AND NOT tag:anqr-processed`;
@@ -144,7 +145,7 @@ function tagAsProcessed(messageId) {
   run('notmuch', ['tag', '+anqr-processed', '-inbox', '--', messageId]);
 }
 
-async function createLinearIssue(gql, teamId, email) {
+async function createLinearIssue(gql, teamId, email, assigneeId) {
   const title = email.subject
     ? `[EMAIL] ${email.subject}`
     : '[EMAIL] Untitled email issue';
@@ -166,6 +167,7 @@ async function createLinearIssue(gql, teamId, email) {
         title,
         description,
         priority: 2,
+        ...(assigneeId ? { assigneeId } : {}),
       },
     }
   );
@@ -213,18 +215,23 @@ async function main() {
   // Step 4: Process each email
   let gql = null;
   let teamId = null;
+  let codexAssigneeId = null;
 
   if (LINEAR_API_KEY && !DRY_RUN) {
     gql = createGql(LINEAR_API_KEY);
     const teamData = await gql(
       `query($key: String!) {
         teams(filter: { key: { eq: $key } }, first: 1) {
-          nodes { id }
+          nodes { id members(first: 50) { nodes { id name active } } }
         }
       }`,
       { key: TEAM_KEY }
     );
     teamId = teamData.teams.nodes[0]?.id;
+    const codexMember = teamData.teams.nodes[0]?.members?.nodes?.find(
+      (m) => m.active && m.name === CODEX_USER_NAME
+    );
+    codexAssigneeId = codexMember?.id || null;
     if (!teamId) {
       summary.errors.push(`Team ${TEAM_KEY} not found`);
       writeReport(summary);
@@ -270,7 +277,7 @@ async function main() {
     }
 
     try {
-      const issue = await createLinearIssue(gql, teamId, email);
+      const issue = await createLinearIssue(gql, teamId, email, codexAssigneeId);
       if (issue) {
         summary.issuesCreated.push({
           messageId: email.id,

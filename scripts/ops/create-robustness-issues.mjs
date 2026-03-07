@@ -17,6 +17,7 @@ if (!LINEAR_API_KEY) {
   process.exit(1);
 }
 
+const CODEX_USER_NAME = 'Codex';
 const gql = createGql(LINEAR_API_KEY);
 
 const ISSUES = [
@@ -174,6 +175,7 @@ async function main() {
       teams(filter: { key: { eq: $key } }, first: 1) {
         nodes {
           id
+          members(first: 50) { nodes { id name active } }
           projects(first: 100) { nodes { id name } }
           labels(first: 200) { nodes { id name } }
         }
@@ -187,6 +189,9 @@ async function main() {
     console.error('Team ANQ not found');
     process.exit(1);
   }
+
+  const codexMember = team.members.nodes.find((m) => m.active && m.name === CODEX_USER_NAME);
+  const codexAssigneeId = codexMember?.id || null;
 
   const symphonyProject = team.projects.nodes.find((p) => p.name === 'Symphony');
   if (!symphonyProject) {
@@ -216,6 +221,7 @@ async function main() {
           projectId: symphonyProject.id,
           priority: issue.priority,
           ...(reliabilityLabel ? { labelIds: [reliabilityLabel.id] } : {}),
+          ...(codexAssigneeId ? { assigneeId: codexAssigneeId } : {}),
         },
       },
     );

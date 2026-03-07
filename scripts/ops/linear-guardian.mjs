@@ -266,6 +266,9 @@ async function main() {
     throw new Error(`Team ${TEAM_KEY} not found`);
   }
 
+  const codexMember = team.members.nodes.find((m) => m.active && m.name === CODEX_USER_NAME);
+  const codexAssigneeId = codexMember?.id || null;
+
   const existingLabels = new Set(team.labels.nodes.map((l) => l.name.toLowerCase()));
   const labelByName = new Map(team.labels.nodes.map((l) => [l.name.toLowerCase(), l]));
   for (const name of REQUIRED_LABELS) {
@@ -453,6 +456,48 @@ async function main() {
       update.updated = true;
     }
     summary.sentinelPrioritySync.updated.push(update);
+  }
+
+  // -----------------------------------------------------------------------
+  // Assignee backfill: every issue must be assigned to Codex.
+  // -----------------------------------------------------------------------
+  summary.assigneeBackfill = { checked: false, updated: [] };
+  if (codexAssigneeId) {
+    const unassignedIssues = await gql(
+      `query {
+        issues(
+          filter: {
+            team: { key: { eq: "ANQ" } },
+            assignee: { null: true }
+          },
+          first: 250
+        ) {
+          nodes { id identifier title }
+        }
+      }`
+    );
+    summary.assigneeBackfill.checked = true;
+    for (const issue of unassignedIssues.issues.nodes) {
+      const update = {
+        identifier: issue.identifier,
+        updated: false,
+      };
+      if (APPLY) {
+        await gql(
+          `mutation($id: String!, $input: IssueUpdateInput!) {
+            issueUpdate(id: $id, input: $input) { success }
+          }`,
+          { id: issue.id, input: { assigneeId: codexAssigneeId } }
+        );
+        update.updated = true;
+      }
+      summary.assigneeBackfill.updated.push(update);
+    }
+    if (summary.assigneeBackfill.updated.length > 0) {
+      console.error(
+        `Assignee backfill: ${APPLY ? 'assigned' : 'would assign'} ${summary.assigneeBackfill.updated.length} issues to ${CODEX_USER_NAME}`
+      );
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -791,6 +836,7 @@ async function main() {
             projectId: symphonyProject.id,
             priority: 1,
             ...(reliabilityLabel ? { labelIds: [reliabilityLabel.id] } : {}),
+            ...(codexAssigneeId ? { assigneeId: codexAssigneeId } : {}),
           },
         }
       );
@@ -1093,6 +1139,7 @@ async function main() {
                     title: sliceTitle,
                     description: sliceDescription,
                     priority: issue.priority,
+                    ...(codexAssigneeId ? { assigneeId: codexAssigneeId } : {}),
                   },
                 }
               );
