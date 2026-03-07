@@ -139,12 +139,14 @@ make all          # Complete 16-step production pipeline
 - **TypeScript**: Strict mode. Do not use `any` casts. Maintain ≥95% type-coverage.
 - **Formatting**: oxfmt (not Prettier). Run `make fix` or `npx oxfmt --write .`.
 - **Linting**: oxlint (not ESLint). Config in `.oxlintrc.json`.
-- **Commits**: Conventional commits enforced by commitlint (`feat:`, `fix:`, `docs:`, `chore:`, etc.).
+- **Commits**: Conventional commits enforced by commitlint (`feat:`, `fix:`, `docs:`, `chore:`, etc.). Reference the relevant Linear issue where appropriate (e.g., `fix(ops): add provider failover (ANQ-194)`).
 - **Git hooks**: lefthook runs lint-staged + typecheck on pre-commit, commitlint on commit-msg.
 - **New docs**: Always add to `docs/`, never to root-level markdown.
 - **Test IDs**: Managed inventory in `tests/ids.txt`; audited by `npm run test:testid`.
 - **Bundle budgets**: Main entry ≤720 KiB, non-i18n total ≤6200 KiB.
 - **Issue evidence**: Every Done issue requires a comment with commit hashes, validation output, and pass/fail verdict. See `docs/workflow/execution-workflow.md` §Evidence Policy.
+- **Email handling**: Symphony NEVER sends emails autonomously. Inbound emails are ingested, read, and reviewed — then a NEW actionable issue is created that quotes the original email. The raw email does not become the issue itself.
+- **AI Hints**: When a Linear issue needs course-correction for AI agents (unclear instructions, legacy context, excessive comments, or stale state), add a comment starting with `AI Hint:` that gives the next agent concise, actionable guidance. Use AI Hints proactively when issues are at risk of blowing out or getting stuck. Periodically run a board sanity check to identify issues needing hints.
 
 ## Key File Locations
 

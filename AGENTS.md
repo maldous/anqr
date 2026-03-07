@@ -30,12 +30,15 @@ This file is intentionally short. It is a map, not the full knowledge base.
 ## Working Contract
 
 1. Confirm ticket state and update tracking before implementation.
-2. Capture reproduction evidence before code or docs changes.
-3. Sync with latest `origin/master` before edits.
-4. Implement against an explicit checklist.
-5. Validate with deterministic commands and record outputs.
-6. Keep issue metadata and workpad in sync with reality.
-7. Post evidence to the Linear issue before marking Done (see [`docs/workflow/execution-workflow.md` §Evidence Policy](docs/workflow/execution-workflow.md#evidence-policy)).
+2. Reference the relevant Linear issue in every git commit where appropriate (e.g., `fix(ops): add provider failover (ANQ-194)`).
+3. Never send emails autonomously. Inbound emails are read, reviewed, and turned into NEW actionable issues that quote the original email.
+4. Use `AI Hint:` comments on Linear issues to course-correct agents when instructions are unclear, context is stale, or comments are bloated. Periodically suggest a board sanity check when failure patterns indicate issues are too complex or confusing for agents.
+5. Capture reproduction evidence before code or docs changes.
+6. Sync with latest `origin/master` before edits.
+7. Implement against an explicit checklist.
+8. Validate with deterministic commands and record outputs.
+9. Keep issue metadata and workpad in sync with reality.
+10. Post evidence to the Linear issue before marking Done (see [`docs/workflow/execution-workflow.md` §Evidence Policy](docs/workflow/execution-workflow.md#evidence-policy)).
 
 ## Documentation Structure
 

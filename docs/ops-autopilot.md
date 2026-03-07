@@ -331,14 +331,17 @@ Library: `scripts/ops/lib/notify.mjs` — import `sendNotification({ subject, bo
 
 ### Inbound Issue Creation (Operator → ANQR)
 
-Emails sent from/to `email@anqr.link` (arriving in the Gmail inbox) are automatically processed into Linear issues:
+Emails sent from/to `email@anqr.link` (arriving in the Gmail inbox) are ingested and turned into actionable Linear issues:
 
 1. `anqr-email-ingest.timer` runs every 5 minutes
 2. `mbsync gmail` syncs mail, `notmuch new` indexes
 3. Searches: `(from:email@anqr.link OR to:email@anqr.link) AND tag:inbox AND NOT tag:anqr-processed`
-4. For each match: creates a Linear issue (`[EMAIL] Subject`, priority 2/high)
+4. For each match: creates a raw `[EMAIL]` Linear issue for initial capture
 5. Tags processed emails with `anqr-processed`, removes `inbox` tag
-6. Sends confirmation notification listing created issues
+6. Sends confirmation notification listing created `[EMAIL]` issues
+7. Symphony reads the `[EMAIL]` issue, interprets the request, and creates a NEW properly-titled actionable issue that **quotes the original email** in the description
+
+> **Critical convention:** Symphony NEVER sends emails autonomously. Outbound email is operator-only. When an email requests a response (e.g. "send me a summary"), Symphony generates the content and posts it to the Linear issue. A human operator can then forward it via email if needed.
 
 **Setup:**
 ```bash
@@ -347,9 +350,9 @@ make notify:test         # Test outbound email delivery
 make email:ingest        # Run ingest manually
 ```
 
-**To create an issue via email:** Send an email from `matthew.aldous@gmail.com` to `email@anqr.link`. The subject becomes the issue title, the body becomes the description. The issue is created with high priority in the ANQ team.
+**To create an issue via email:** Send an email from an allowed address to `email@anqr.link`. The email is ingested as a raw `[EMAIL]` issue, then Symphony interprets it into a properly-scoped actionable issue quoting the original email.
 
-**Sender whitelist:** Only emails from addresses in the `ALLOWED_SENDERS` list (currently `matthew.aldous@gmail.com`) are processed. Emails from unauthorized senders are tagged as processed and silently skipped to prevent spam or arbitrary issue creation.
+**Sender whitelist:** Only emails from addresses in the `ALLOWED_SENDERS` list (currently `matthew.aldous@gmail.com`, `alexander.emmalyn.thomas@gmail.com`) are processed. Emails from unauthorized senders are tagged as processed and silently skipped to prevent spam or arbitrary issue creation.
 
 - `anqr-email-ingest.timer`
   - cadence: every 5 minutes
