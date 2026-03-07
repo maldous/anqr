@@ -238,13 +238,13 @@ mistral_available() {
     return 1
   fi
   export MISTRAL_API_KEY="${MISTRAL_API_KEY:-$MISTRAL_TOKEN}"
+  # Use /v1/models listing instead of a generation request to avoid
+  # burning free-tier quota on mere availability probes.
   local resp
-  resp=$(curl -sf --max-time 8 \
+  resp=$(curl -sf --max-time 5 \
     -H "Authorization: Bearer $MISTRAL_API_KEY" \
-    -H "Content-Type: application/json" \
-    -X POST "https://api.mistral.ai/v1/chat/completions" \
-    -d '{"model":"'"$MISTRAL_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
-  echo "$resp" | grep -q '"choices"' 2>/dev/null
+    "https://api.mistral.ai/v1/models" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$MISTRAL_MODEL" 2>/dev/null
 }
 
 github_models_available() {
