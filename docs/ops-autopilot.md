@@ -43,9 +43,9 @@ When Codex credits are exhausted, the following services continue running at zer
 | **Symphony ticket work (Groq fallback)**             | **Continuous** | **Free**  | **1st fallback; requires `GROQ_TOKEN`**                 |
 | **Symphony ticket work (Cerebras fallback)**         | **Continuous** | **Free**  | **2nd fallback; requires `CEREBRAS_TOKEN`; 1M tok/day** |
 | **Symphony ticket work (Gemini fallback)**           | **Continuous** | **Free**  | **3rd fallback; requires `GEMINI_TOKEN`**               |
-| **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **4th fallback; requires `OPENROUTER_TOKEN`; :free models** |
-| **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **5th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
-| **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free**  | **6th fallback; requires `MISTRAL_TOKEN`; Codestral code model** |
+| **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free**  | **4th fallback; requires `MISTRAL_TOKEN`; Codestral code model (~600ms)** |
+| **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **5th fallback; requires `OPENROUTER_TOKEN`; :free models** |
+| **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **6th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
 | **Symphony ticket work (GitHub Models fallback)**    | **Continuous** | **Free**  | **7th fallback; requires `GITHUB_MODELS_TOKEN`** |
 | **Symphony ticket work (Ollama fallback)**           | **Continuous** | **Free**  | **8th fallback; requires Ollama on `localhost:11434`**  |
 | Linear guardian (labels only)                  | 15 min         | Free      | Always runs                                             |
@@ -60,7 +60,7 @@ When Codex credits are exhausted, the following services continue running at zer
 
 When Codex credits reset (5-hour primary window, weekly secondary window), the credit gate automatically switches back to the full cloud model and the guardian resumes lead enforcement.
 
-## Codex Credit Gate (Codex → Groq → Cerebras → Gemini → OpenRouter FREE → SambaNova → Mistral → GitHub Models → Ollama Fallback)
+## Codex Credit Gate (Codex → Groq → Cerebras → Gemini → Mistral Codestral → OpenRouter FREE → SambaNova → GitHub Models → Ollama Fallback)
 
 Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-gate.sh` — a wrapper that cascades through providers to ensure ticket work continues even when Codex cloud credits are exhausted.
 
@@ -71,9 +71,9 @@ Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-
 3. **Credits exhausted + Groq reachable** → `groq-llama-70b` via LiteLLM (free tier, 12K TPM, fastest cloud).
 4. **Credits exhausted + Cerebras reachable** → `cerebras-llama-8b` via LiteLLM (free tier, 1M tok/day, fast inference).
 5. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, Google cloud, reliable).
-6. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
-7. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
-8. **Credits exhausted + Mistral reachable** → `mistral-codestral` via LiteLLM (free experimental tier, Codestral code-optimised model).
+6. **Credits exhausted + Mistral reachable** → `mistral-codestral` via LiteLLM (free experimental tier, Codestral code-optimised, ~600ms).
+7. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
+8. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
 9. **Credits exhausted + GitHub Models reachable** → `github-llama-8b` via LiteLLM (free tier, rate-limited per model).
 10. **Credits exhausted + Ollama reachable** → `<litellm-ollama-alias>` via model-injector + LiteLLM (free local model).
 11. **Optional last resort** (`ENABLE_OLLAMA_DIRECT_FALLBACK=1`) → direct Ollama (tool calling may break).
@@ -92,7 +92,7 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 - `model-injector-proxy.service` reads `/run/user/<uid>/credit-gate/current-model`, written by `codex-credit-gate.sh`.
 - `model-injector-proxy.service` strips `supports_function_calling` and `web_search_options` from `/v1/responses` payloads for provider compatibility.
 - `model-injector-proxy.service` transforms `/v1/models` GET responses: adds a `"models"` key mirroring LiteLLM's `"data"` array so Codex CLI's `models_manager` can parse the model list (Codex expects `{"models": [...]}`, LiteLLM returns `{"data": [...]}`).
-- `litellm-config.yaml` sets `additional_drop_params: ["web_search_options", "supports_function_calling"]` on all cloud models (Groq, Gemini, OpenRouter, Cerebras, SambaNova, Mistral, GitHub) as defense-in-depth — if the model-injector fails to strip these fields (e.g. body decompression failure), LiteLLM itself drops them before forwarding to the provider.
+- `litellm-config.yaml` sets `additional_drop_params: ["web_search_options", "supports_function_calling"]` on all cloud models (Groq, Cerebras, Gemini, Mistral, OpenRouter, SambaNova, GitHub) as defense-in-depth — if the model-injector fails to strip these fields (e.g. body decompression failure), LiteLLM itself drops them before forwarding to the provider.
 
 Do not run `litellm-model-injector.service` at the same time as `model-injector-proxy.service` — both bind `4011` and will flap/restart.
 

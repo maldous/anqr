@@ -12,9 +12,9 @@
 #        a) Groq            (requires GROQ_TOKEN) — free cloud, fast, via LiteLLM
 #        b) Cerebras        (requires CEREBRAS_TOKEN) — free cloud, 1M tok/day, via LiteLLM
 #        c) Gemini          (requires GEMINI_TOKEN) — free cloud tier, via LiteLLM
-#        d) OpenRouter FREE (requires OPENROUTER_TOKEN) — free :free models, via LiteLLM
-#        e) SambaNova       (requires SAMBANOVA_TOKEN) — free cloud, 20 req/day, via LiteLLM
-#        f) Mistral         (requires MISTRAL_TOKEN) — free experimental tier, Codestral code model, via LiteLLM
+#        d) Mistral         (requires MISTRAL_TOKEN) — free experimental tier, Codestral code model (~600ms), via LiteLLM
+#        e) OpenRouter FREE (requires OPENROUTER_TOKEN) — free :free models, via LiteLLM
+#        f) SambaNova       (requires SAMBANOVA_TOKEN) — free cloud, 20 req/day, via LiteLLM
 #        g) GitHub Models   (requires GITHUB_MODELS_TOKEN) — free, via LiteLLM
 #        h) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
 #        i) Ollama direct (localhost:11434) — local, broken tool calling (opt-in)
@@ -534,7 +534,22 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 4: OpenRouter FREE via LiteLLM (free :free models, intermittent) ---
+# --- Fallback 4: Mistral Codestral via LiteLLM (free experimental tier, code-optimised, ~600ms) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited mistral; then
+    log "Mistral skipped (rate-limited — falling back)"
+  elif is_skipped mistral; then
+    log "Mistral skipped (recently failed)"
+  elif mistral_available; then
+    log "Mistral Codestral reachable — using ${LITELLM_MISTRAL_MODEL} via LiteLLM"
+    record_provider mistral
+    exec_via_litellm "$LITELLM_MISTRAL_MODEL"
+  else
+    log "Mistral unavailable (no token or API unreachable)"
+  fi
+fi
+
+# --- Fallback 5: OpenRouter FREE via LiteLLM (free :free models, intermittent) ---
 if [ "$LITELLM_UP" = true ]; then
   if is_rate_limited openrouter-free; then
     log "OpenRouter FREE skipped (rate-limited — falling back)"
@@ -549,7 +564,7 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 5: SambaNova via LiteLLM (free cloud, 70B model, 20 req/day) ---
+# --- Fallback 6: SambaNova via LiteLLM (free cloud, 70B model, 20 req/day) ---
 if [ "$LITELLM_UP" = true ]; then
   if is_rate_limited sambanova; then
     log "SambaNova skipped (rate-limited — falling back)"
@@ -561,21 +576,6 @@ if [ "$LITELLM_UP" = true ]; then
     exec_via_litellm "$LITELLM_SAMBANOVA_MODEL"
   else
     log "SambaNova unavailable (no token or API unreachable)"
-  fi
-fi
-
-# --- Fallback 6: Mistral Codestral via LiteLLM (free experimental tier, code-optimised) ---
-if [ "$LITELLM_UP" = true ]; then
-  if is_rate_limited mistral; then
-    log "Mistral skipped (rate-limited — falling back)"
-  elif is_skipped mistral; then
-    log "Mistral skipped (recently failed)"
-  elif mistral_available; then
-    log "Mistral Codestral reachable — using ${LITELLM_MISTRAL_MODEL} via LiteLLM"
-    record_provider mistral
-    exec_via_litellm "$LITELLM_MISTRAL_MODEL"
-  else
-    log "Mistral unavailable (no token or API unreachable)"
   fi
 fi
 
@@ -635,8 +635,8 @@ else
 fi
 
 if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
-  log "ERROR: all providers exhausted (credits, Groq, Cerebras, Gemini, OpenRouter FREE, SambaNova, Mistral, GitHub Models, LiteLLM/Ollama, Ollama direct)"
+  log "ERROR: all providers exhausted (credits, Groq, Cerebras, Gemini, Mistral, OpenRouter FREE, SambaNova, GitHub Models, LiteLLM/Ollama, Ollama direct)"
 else
-  log "ERROR: all providers exhausted (credits, Groq, Cerebras, Gemini, OpenRouter FREE, SambaNova, Mistral, GitHub Models, LiteLLM/Ollama)"
+  log "ERROR: all providers exhausted (credits, Groq, Cerebras, Gemini, Mistral, OpenRouter FREE, SambaNova, GitHub Models, LiteLLM/Ollama)"
 fi
 exit 1
