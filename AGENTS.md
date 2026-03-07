@@ -35,6 +35,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 4. Implement against an explicit checklist.
 5. Validate with deterministic commands and record outputs.
 6. Keep issue metadata and workpad in sync with reality.
+7. Post evidence to the Linear issue before marking Done (see [`docs/workflow/execution-workflow.md` §Evidence Policy](docs/workflow/execution-workflow.md#evidence-policy)).
 
 ## Documentation Structure
 

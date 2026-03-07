@@ -14,6 +14,7 @@ This repository follows an agent-first harness model:
 4. Execute against an explicit checklist.
 5. Validate with deterministic commands and record outcomes.
 6. Keep issue metadata and workpad aligned with actual state.
+7. Post evidence to the Linear issue before marking Done (see [Evidence Policy](../workflow/execution-workflow.md#evidence-policy)).
 
 ## Documentation Policy
 
@@ -41,6 +42,7 @@ Treat operator feedback and production incidents as harness inputs, not ad-hoc n
 - Priority must be explicit for every actionable issue.
 - There must always be at least one issue in `In Progress`.
 - With two-slot orchestration, keep exactly two `In Progress` issues: one `[SENTINEL]` plus one highest-priority actionable work issue.
+- **Done requires proof.** Every issue moved to Done must have a comment with commit hashes, validation command output, and explicit pass/fail verdict. Evidence of failure, workarounds, or dismissive one-liners do not qualify. See [Evidence Policy](../workflow/execution-workflow.md#evidence-policy).
 
 ### Request Triage Default
 

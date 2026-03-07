@@ -144,6 +144,7 @@ make all          # Complete 16-step production pipeline
 - **New docs**: Always add to `docs/`, never to root-level markdown.
 - **Test IDs**: Managed inventory in `tests/ids.txt`; audited by `npm run test:testid`.
 - **Bundle budgets**: Main entry ≤720 KiB, non-i18n total ≤6200 KiB.
+- **Issue evidence**: Every Done issue requires a comment with commit hashes, validation output, and pass/fail verdict. See `docs/workflow/execution-workflow.md` §Evidence Policy.
 
 ## Key File Locations
 
