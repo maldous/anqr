@@ -35,7 +35,7 @@ Context windows verified where provider API catalog is available; remainder base
 | 4 | OpenRouter | `openrouter-free` | `llama-3.3-70b-instruct:free` | 128K | 32K | 20 req/min | ✅ Token SET |
 | 5 | SambaNova | `sambanova-llama-70b` | `Meta-Llama-3.3-70B-Instruct` | 128K | 32K | 20 req/day | ✅ Active |
 | 6 | Cerebras | `cerebras-llama-8b` | `llama3.1-8b` | 8K (unverified) | 8K | 1M tok/day | ⚠️ Low context |
-| 7 | GitHub Models | `github-gpt41-mini` | `gpt-4.1-mini` | **1M** | **32K** | FREE tier | ✅ Active |
+| 7 | GitHub Models | `github-gpt41-mini` | `gpt-4.1-mini` | **1M** | **32K** | FREE tier | ⚠️ /chat only (no /responses) |
 | 8 | Ollama | `qwen2.5-coder-7b-32t` | `qwen2.5-coder:7b-32t` | 32K | 32K | Unlimited (local) | ✅ Active |
 
 ### Context Window Requirements
@@ -107,6 +107,12 @@ LiteLLM's built-in `github/` provider has a hardcoded model registry that doesn'
 ```
 
 LiteLLM strips the `openai/` prefix and sends `gpt-4.1-mini` to the GitHub API endpoint. This works because GitHub Models uses an OpenAI-compatible API format.
+
+**Known limitation: `/v1/responses` endpoint returns 404.**
+
+The `openai/` prefix + `api_base` workaround only works for `/v1/chat/completions`. When Codex uses `/v1/responses` (its default API), LiteLLM tries to call the OpenAI responses API directly on `models.github.ai/inference` — but GitHub's endpoint doesn't have a `/v1/responses` path, causing a 404.
+
+The model-injector handles this by pre-excluding `github` from the failover chain for `/v1/responses` requests (see `_RESPONSES_INCOMPATIBLE_PROVIDERS` in `model-injector-proxy.py`). GitHub Models is still available for `/v1/chat/completions` testing.
 
 ### Gemini Routing Requirement
 
@@ -226,6 +232,7 @@ Linear parent issues were marked Done with incomplete children. This masks remai
 | 4 | No provider routing smoke test | LiteLLM prefix breaks on upgrade | Add startup test for all 9 provider aliases |
 | 5 | No cumulative quota tracking | Can't predict when providers will exhaust | Read cooldown files in harness report (ANQ-198) |
 | 6 | `OPENROUTER_API_KEY` env var missing | `OPENROUTER_TOKEN` is set but variable naming inconsistency | Credit-gate handles both; document the mapping |
+| 7 | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix |
 
 ## Continuous Evolution Procedures
 

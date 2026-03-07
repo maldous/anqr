@@ -97,8 +97,6 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 - `litellm-config.yaml` sets `additional_drop_params: ["web_search_options", "supports_function_calling"]` on all cloud models (Groq, Cerebras, Gemini, Mistral, OpenRouter, SambaNova, GitHub) as defense-in-depth — if the model-injector fails to strip these fields (e.g. body decompression failure), LiteLLM itself drops them before forwarding to the provider.
 - GitHub Models uses `openai/` prefix with `api_base: https://models.github.ai/inference` in LiteLLM config (not `github/` prefix) because LiteLLM's built-in GitHub provider doesn't recognise GPT-4.1-mini yet. LiteLLM strips `openai/` and sends `gpt-4.1-mini` to the GitHub API.
 
-Do not run `litellm-model-injector.service` at the same time as `model-injector-proxy.service` — both bind `4011` and will flap/restart.
-
 | Provider            | API           | Endpoint                                           | Requirement                     | Free Tier Limits      | Context (in/out) |
 | ------------------- | ------------- | -------------------------------------------------- | ------------------------------- | --------------------- | ---------------- |
 | OpenAI (Codex)      | Responses     | `api.openai.com/v1`                                | Codex credits                   | Paid                  | 1M / 32K |
@@ -108,7 +106,7 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 | OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    | 128K / 32K |
 | SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            | 128K / 32K |
 | Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     | 128K / 32K |
-| GitHub Models       | OpenAI-compat | `models.github.ai`                                 | `GITHUB_MODELS_TOKEN` env var   | FREE tier (GPT-4.1-mini) | 1M / 32K |
+| GitHub Models       | OpenAI-compat | `models.github.ai`                                 | `GITHUB_MODELS_TOKEN` env var   | FREE tier (GPT-4.1-mini); `/chat` only, no `/responses` | 1M / 32K |
 | Ollama              | Responses     | `localhost:11434/v1`                               | Ollama running locally          | Unlimited (local)     | 32K / 32K |
 
 > **Context window requirement:** All providers must support ≥32K input context for reliable long agent sessions. Cerebras (8K) is deprioritised to position 6 in the cascade. See [`docs/harness/provider-operations.md`](harness/provider-operations.md) for the full verified provider matrix and operational procedures.

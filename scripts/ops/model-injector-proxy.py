@@ -60,6 +60,13 @@ UNSUPPORTED_RESPONSE_FIELDS = {
 # Max provider switches per request for in-session failover.
 MAX_FAILOVER_ATTEMPTS = 3
 
+# Providers that don't support /v1/responses (LiteLLM can't translate).
+# These are pre-excluded from the failover chain for /responses requests.
+# GitHub Models uses openai/ prefix + api_base in LiteLLM, which tries to
+# call the OpenAI responses API directly on models.github.ai — but that
+# endpoint only has /chat/completions, causing 404s on every attempt.
+_RESPONSES_INCOMPATIBLE_PROVIDERS: set[str] = {"github"}
+
 # ---------------------------------------------------------------------------
 # Cooldown durations (seconds) — one per HTTP error class.
 # The model-injector writes cooldown files; the credit-gate reads them to
@@ -386,7 +393,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
 
         try:
             if _is_responses_post:
-                _tried_providers: set[str] = set()
+                _tried_providers: set[str] = set(_RESPONSES_INCOMPATIBLE_PROVIDERS)
                 _raw_body = body  # save for re-injection
 
                 for _failover_attempt in range(MAX_FAILOVER_ATTEMPTS + 1):
