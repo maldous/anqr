@@ -26,7 +26,7 @@ const REQUIRED_LABELS = (
 const SYMPHONY_DASHBOARD_URL = process.env.SYMPHONY_DASHBOARD_URL || 'http://127.0.0.1:4040';
 const GUARDIAN_SKIP_LEAD = process.env.GUARDIAN_SKIP_LEAD === '1';
 const GUARDIAN_TASK_DESC_MAX = Number(process.env.GUARDIAN_TASK_DESC_MAX || 1200);
-const GUARDIAN_TASK_CHECKLIST_MAX = Number(process.env.GUARDIAN_TASK_CHECKLIST_MAX || 1);
+const GUARDIAN_TASK_CHECKLIST_MAX = Number(process.env.GUARDIAN_TASK_CHECKLIST_MAX || 4);
 const HUMAN_REQUIRED_PATTERNS = [
   /\bcreate\b.{0,24}\b(api key|api token|credential|secret)\b/i,
   /\bmanual\b.{0,24}\b(step|action|intervention)\b/i,
