@@ -27,7 +27,7 @@ const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports', 'email-ingest');
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 const TEAM_KEY = process.env.LINEAR_TEAM_KEY || 'ANQ';
 const INGEST_EMAIL = process.env.ANQR_INGEST_EMAIL || 'email@anqr.link';
-const CODEX_USER_NAME = 'Codex';
+const HUMAN_USER_NAME = 'Matthew Aldous';
 const ALLOWED_SENDERS = ['matthew.aldous@gmail.com', 'alexander.emmalyn.thomas@gmail.com'];
 const DRY_RUN = process.argv.includes('--dry-run');
 const NOTMUCH_QUERY = `(from:${INGEST_EMAIL} OR to:${INGEST_EMAIL}) AND tag:inbox AND NOT tag:anqr-processed`;
@@ -215,7 +215,7 @@ async function main() {
   // Step 4: Process each email
   let gql = null;
   let teamId = null;
-  let codexAssigneeId = null;
+  let humanAssigneeId = null;
 
   if (LINEAR_API_KEY && !DRY_RUN) {
     gql = createGql(LINEAR_API_KEY);
@@ -228,10 +228,10 @@ async function main() {
       { key: TEAM_KEY }
     );
     teamId = teamData.teams.nodes[0]?.id;
-    const codexMember = teamData.teams.nodes[0]?.members?.nodes?.find(
-      (m) => m.active && m.name === CODEX_USER_NAME
+    const humanMember = teamData.teams.nodes[0]?.members?.nodes?.find(
+      (m) => m.active && m.name === HUMAN_USER_NAME
     );
-    codexAssigneeId = codexMember?.id || null;
+    humanAssigneeId = humanMember?.id || null;
     if (!teamId) {
       summary.errors.push(`Team ${TEAM_KEY} not found`);
       writeReport(summary);
@@ -277,7 +277,7 @@ async function main() {
     }
 
     try {
-      const issue = await createLinearIssue(gql, teamId, email, codexAssigneeId);
+      const issue = await createLinearIssue(gql, teamId, email, humanAssigneeId);
       if (issue) {
         summary.issuesCreated.push({
           messageId: email.id,

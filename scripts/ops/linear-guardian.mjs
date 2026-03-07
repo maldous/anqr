@@ -13,6 +13,7 @@ const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports', 'linear-guardian');
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 const TEAM_KEY = process.env.LINEAR_TEAM_KEY || 'ANQ';
 const CODEX_USER_NAME = process.env.LINEAR_CODEX_USER_NAME || 'Codex';
+const HUMAN_USER_NAME = process.env.LINEAR_HUMAN_USER_NAME || 'Matthew Aldous';
 const REQUIRED_LABELS = (
   process.env.LINEAR_REQUIRED_LABELS ||
   'web,android,ios,api,ads,analytics,security,perf,reliability,p0,p1,payment,billing,paid'
@@ -268,6 +269,8 @@ async function main() {
 
   const codexMember = team.members.nodes.find((m) => m.active && m.name === CODEX_USER_NAME);
   const codexAssigneeId = codexMember?.id || null;
+  const humanMember = team.members.nodes.find((m) => m.active && m.name === HUMAN_USER_NAME);
+  const humanAssigneeId = humanMember?.id || null;
 
   const existingLabels = new Set(team.labels.nodes.map((l) => l.name.toLowerCase()));
   const labelByName = new Map(team.labels.nodes.map((l) => [l.name.toLowerCase(), l]));
@@ -459,43 +462,51 @@ async function main() {
   }
 
   // -----------------------------------------------------------------------
-  // Assignee backfill: every issue must be assigned to Codex.
+  // Assignee backfill: [HUMAN]/[EMAIL] issues → matthewaldous, all others → Codex.
   // -----------------------------------------------------------------------
-  summary.assigneeBackfill = { checked: false, updated: [] };
+  summary.assigneeBackfill = { checked: false, assignedCodex: [], assignedHuman: [] };
   if (codexAssigneeId) {
-    const unassignedIssues = await gql(
+    const allIssues = await gql(
       `query {
         issues(
           filter: {
             team: { key: { eq: "ANQ" } },
-            assignee: { null: true }
+            state: { type: { in: ["backlog", "unstarted", "started", "completed"] } }
           },
           first: 250
         ) {
-          nodes { id identifier title }
+          nodes { id identifier title assignee { id } }
         }
       }`
     );
     summary.assigneeBackfill.checked = true;
-    for (const issue of unassignedIssues.issues.nodes) {
-      const update = {
-        identifier: issue.identifier,
-        updated: false,
-      };
+    for (const issue of allIssues.issues.nodes) {
+      const title = issue.title || '';
+      const isHuman = title.startsWith('[HUMAN]') || title.startsWith('[EMAIL]');
+      const targetId = isHuman && humanAssigneeId ? humanAssigneeId : codexAssigneeId;
+      const currentId = issue.assignee?.id || null;
+      if (currentId === targetId) continue;
+
+      const update = { identifier: issue.identifier, assignee: isHuman ? HUMAN_USER_NAME : CODEX_USER_NAME, updated: false };
       if (APPLY) {
         await gql(
           `mutation($id: String!, $input: IssueUpdateInput!) {
             issueUpdate(id: $id, input: $input) { success }
           }`,
-          { id: issue.id, input: { assigneeId: codexAssigneeId } }
+          { id: issue.id, input: { assigneeId: targetId } }
         );
         update.updated = true;
       }
-      summary.assigneeBackfill.updated.push(update);
+      if (isHuman) {
+        summary.assigneeBackfill.assignedHuman.push(update);
+      } else {
+        summary.assigneeBackfill.assignedCodex.push(update);
+      }
     }
-    if (summary.assigneeBackfill.updated.length > 0) {
+    const totalFixed = summary.assigneeBackfill.assignedCodex.length + summary.assigneeBackfill.assignedHuman.length;
+    if (totalFixed > 0) {
       console.error(
-        `Assignee backfill: ${APPLY ? 'assigned' : 'would assign'} ${summary.assigneeBackfill.updated.length} issues to ${CODEX_USER_NAME}`
+        `Assignee backfill: ${APPLY ? 'fixed' : 'would fix'} ${totalFixed} issues (${summary.assigneeBackfill.assignedHuman.length} → ${HUMAN_USER_NAME}, ${summary.assigneeBackfill.assignedCodex.length} → ${CODEX_USER_NAME})`
       );
     }
   }
@@ -1172,6 +1183,98 @@ async function main() {
   } catch (feedErr) {
     console.error(`Symphony feed error (non-fatal): ${feedErr.message}`);
     summary.symphonyFeed.error = feedErr.message;
+  }
+
+  // -----------------------------------------------------------------------
+  // Project health: compute and update health for each project.
+  // Health is derived from issue completion ratios and active work.
+  // Only posts a Linear project update when health changes.
+  // -----------------------------------------------------------------------
+  summary.projectHealth = { checked: false, projects: [] };
+  const healthStatePath = path.join(REPORTS_DIR, 'project-health-state.json');
+  try {
+    let previousHealth = {};
+    if (fs.existsSync(healthStatePath)) {
+      previousHealth = JSON.parse(fs.readFileSync(healthStatePath, 'utf-8'));
+    }
+
+    for (const project of team.projects.nodes) {
+      const projectIssues = await gql(
+        `query($projectId: ID!) {
+          issues(filter: {
+            team: { key: { eq: "ANQ" } },
+            project: { id: { eq: $projectId } }
+          }, first: 250) {
+            nodes { state { name type } }
+          }
+        }`,
+        { projectId: project.id }
+      );
+
+      const issues = projectIssues.issues.nodes;
+      if (issues.length === 0) continue;
+
+      const done = issues.filter((i) => i.state.type === 'completed').length;
+      const inProgress = issues.filter((i) => i.state.name === 'In Progress').length;
+      const canceled = issues.filter((i) => i.state.type === 'canceled').length;
+      const active = issues.length - canceled;
+      if (active === 0) continue;
+
+      const doneRatio = done / active;
+      let health;
+      if (doneRatio >= 0.3 || (inProgress > 0 && doneRatio >= 0.15)) {
+        health = 'onTrack';
+      } else if (doneRatio >= 0.05 || inProgress > 0) {
+        health = 'atRisk';
+      } else {
+        health = 'offTrack';
+      }
+
+      const entry = {
+        name: project.name,
+        total: active,
+        done,
+        inProgress,
+        health,
+        previousHealth: previousHealth[project.id] || null,
+        updated: false,
+      };
+
+      if (health !== previousHealth[project.id] && APPLY) {
+        await gql(
+          `mutation($input: ProjectUpdateCreateInput!) {
+            projectUpdateCreate(input: $input) { success }
+          }`,
+          {
+            input: {
+              projectId: project.id,
+              health,
+              body: `Guardian health update: ${done}/${active} done, ${inProgress} in progress → ${health}`,
+            },
+          }
+        );
+        entry.updated = true;
+        previousHealth[project.id] = health;
+      } else {
+        previousHealth[project.id] = health;
+      }
+
+      summary.projectHealth.projects.push(entry);
+    }
+
+    summary.projectHealth.checked = true;
+    ensureDir(REPORTS_DIR);
+    fs.writeFileSync(healthStatePath, JSON.stringify(previousHealth, null, 2) + '\n');
+
+    const healthUpdated = summary.projectHealth.projects.filter((p) => p.updated).length;
+    if (healthUpdated > 0) {
+      console.error(
+        `Project health: ${APPLY ? 'updated' : 'would update'} ${healthUpdated} project(s)`
+      );
+    }
+  } catch (healthErr) {
+    console.error(`Project health error (non-fatal): ${healthErr.message}`);
+    summary.projectHealth.error = healthErr.message;
   }
 
   summary.finishedAt = new Date().toISOString();
