@@ -248,11 +248,6 @@ async function main() {
   let skipLead = GUARDIAN_SKIP_LEAD;
   let leadSkipReason = GUARDIAN_SKIP_LEAD ? 'GUARDIAN_SKIP_LEAD=1' : null;
 
-  if (!skipLead && creditStatus.reachable && creditStatus.hasCredits === false) {
-    skipLead = true;
-    leadSkipReason = `Codex credits exhausted (balance=${creditStatus.balance})`;
-  }
-
   if (skipLead) {
     console.error(`Lead enforcement skipped: ${leadSkipReason}`);
   }
@@ -260,7 +255,7 @@ async function main() {
   const summary = {
     startedAt,
     teamKey: TEAM_KEY,
-    codexUser: CODEX_USER_NAME,
+    leadUser: HUMAN_USER_NAME,
     apply: APPLY,
     creditStatus,
     runningIssueIds,
@@ -739,15 +734,13 @@ async function main() {
 
   if (skipLead) {
     summary.skippedProjects = team.projects.nodes.map((p) => p.name);
+  } else if (!humanAssigneeId) {
+    console.error(`Lead enforcement skipped: '${HUMAN_USER_NAME}' not found in team`);
+    summary.skippedProjects = team.projects.nodes.map((p) => p.name);
   } else {
-    const codex = team.members.nodes.find((m) => m.active && m.name === CODEX_USER_NAME);
-    if (!codex) {
-      throw new Error(`Active member '${CODEX_USER_NAME}' not found in team ${TEAM_KEY}`);
-    }
-
     for (const project of team.projects.nodes) {
       const currentLeadId = project.lead?.id || null;
-      if (currentLeadId === codex.id) {
+      if (currentLeadId === humanAssigneeId) {
         summary.unchangedProjects.push(project.name);
         continue;
       }
@@ -756,7 +749,7 @@ async function main() {
         projectId: project.id,
         projectName: project.name,
         fromLead: project.lead?.name || null,
-        toLead: CODEX_USER_NAME,
+        toLead: HUMAN_USER_NAME,
         changed: false,
       };
 
@@ -765,7 +758,7 @@ async function main() {
           `mutation ProjectLeadUpdate($id: String!, $input: ProjectUpdateInput!) {
             projectUpdate(id: $id, input: $input) { success project { id name lead { id name } } }
           }`,
-          { id: project.id, input: { leadId: codex.id } }
+          { id: project.id, input: { leadId: humanAssigneeId } }
         );
         update.changed = true;
       }
