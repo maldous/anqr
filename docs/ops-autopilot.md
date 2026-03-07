@@ -66,11 +66,13 @@ Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-
 
 **Flow:**
 
+> **Probe strategy:** All provider availability probes use lightweight `GET /v1/models` listings instead of generation requests. This preserves free-tier quotas by never burning a generation request on a mere availability check.
+
 1. Check Symphony dashboard (`http://127.0.0.1:4040`) for credit status.
 2. **Credits available** → `exec codex --model gpt-5.3-codex app-server` (full cloud model).
 3. **Credits exhausted + Groq reachable** → `groq-llama-70b` via LiteLLM (free tier, 12K TPM, fastest cloud).
 4. **Credits exhausted + Mistral reachable** → `mistral-codestral` via LiteLLM (free experimental tier, Codestral code-optimised, ~600ms).
-5. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, gemini-2.5-flash, ~1,500 RPD; lightweight `/models` probe preserves daily quota).
+5. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, gemini-2.5-flash, ~1,500 RPD).
 6. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
 7. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
 8. **Credits exhausted + Cerebras reachable** → `cerebras-llama-8b` via LiteLLM (free tier, 1M tok/day, 8K context limit — deprioritised for longer sessions).
