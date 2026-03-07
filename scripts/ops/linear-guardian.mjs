@@ -707,7 +707,8 @@ async function main() {
         'Single-instance heartbeat. Do NOT create any new [SENTINEL] issues.\n\n' +
         '## Log Review & Self-Healing\n\n' +
         'Review recent Symphony logs for errors that need code fixes:\n' +
-        '```bash\ngrep -aE "error|warning|Linear GraphQL request failed" ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200\n```\n\n' +
+        '```bash\ngrep -aE "error|warning|Linear GraphQL request failed" ~/.local/state/symphony-anqr/log/log/symphony.log ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200\n```\n\n' +
+        'Before creating issues, query existing open issues in the Symphony project to avoid duplicates.\n\n' +
         'For each distinct error class requiring a code fix (skip transient/retryable errors):\n' +
         '1. Create a `[PARENT]` issue describing the error category.\n' +
         '2. Create `[CHILD]` issues for each specific atomic fix — each child description must contain exact file paths, exact code changes (before/after), and a validation command.\n' +

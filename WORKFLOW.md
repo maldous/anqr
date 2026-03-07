@@ -69,7 +69,7 @@ No description.
    a. Do NOT create any new `[SENTINEL]` issue.
    b. Review recent Symphony logs for errors that need code fixes:
       ```bash
-      grep -aE 'error|warning|Linear GraphQL request failed' ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200
+      grep -aE 'error|warning|Linear GraphQL request failed' ~/.local/state/symphony-anqr/log/log/symphony.log ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200
       ```
    c. For each distinct error class that requires a code fix (not transient/retryable errors):
       - Create a `[PARENT]` issue describing the error category.
@@ -102,8 +102,21 @@ No description.
           }
         }
         ```
-   d. Skip errors that are already handled (e.g. transient rate limits, reconnections) or that already have open issues.
-   e. Move this sentinel issue to `Backlog`. Stop here.
+   d. Before creating any issues, query existing open issues in the Symphony project to avoid duplicates:
+      ```graphql
+      query($projectId: ID!) {
+        issues(filter: {
+          team: { key: { eq: "ANQ" } },
+          project: { id: { eq: $projectId } },
+          state: { name: { in: ["Backlog", "Todo", "In Progress", "In Review", "Human Review", "Rework"] } }
+        }, first: 50) {
+          nodes { identifier title state { name } }
+        }
+      }
+      ```
+      Skip creating issues for error classes that already have a matching open issue.
+   e. Skip errors that are transient/retryable (e.g. rate limits, reconnections, timeouts).
+   f. Move this sentinel issue to `Backlog`. Stop here.
 
 4. If this is a regular issue (not sentinel):
    a. The description above contains exact file paths and exact code changes. Follow them exactly.
