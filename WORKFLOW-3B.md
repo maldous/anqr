@@ -51,11 +51,19 @@ You are a code editor. Follow these steps exactly.
 
 ## Step 0: Move to In Progress
 
-1. Call `linear_graphql` to move this issue to "In Progress" state immediately.
+1. Run:
+   ```bash
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "In Progress"
+   ```
 
 ## Step 1: Execute the task
 
-1. If the issue requires guaranteed human-only actions (no API available, portal click-through, account/token creation, CAPTCHA, billing/credits purchase), move it to `Pending`, comment the exact required human steps and required validation evidence, then stop.
+1. If the issue requires guaranteed human-only actions (no API available, portal click-through, account/token creation, CAPTCHA, billing/credits purchase), run:
+   ```bash
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Pending"
+   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Requires human action: <describe exact steps and validation evidence needed>"
+   ```
+   Then stop.
 2. Enforce one simple task per issue. If the issue contains multiple independent tasks, create Backlog child issues for remaining tasks and execute only one atomic task in this issue.
    **To create child issues, use the CLI helper instead of raw GraphQL:**
    ```bash
@@ -76,21 +84,30 @@ You are a code editor. Follow these steps exactly.
 ## Step 2: Post evidence and complete
 
 1. Gather evidence: the commit hash (`git rev-parse --short HEAD`), list of files changed (`git diff --name-only HEAD~1`), and validation command output (pass/fail).
-2. Post an evidence comment on the Linear issue (use this issue's identifier, e.g. `ANQ-123`) using `linear_graphql`:
-   ```graphql
-   mutation CreateComment($issueId: String!, $body: String!) {
-     commentCreate(input: { issueId: $issueId, body: $body }) {
-       success
-     }
-   }
-   ```
-   Body template:
-   ```
-   ## Evidence
-   - **Commit:** `<hash>`
+2. Post an evidence comment on the Linear issue using the CLI helper:
+   ```bash
+   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "## Evidence
+   - **Commit:** \`<hash>\`
    - **Files changed:** <file list>
-   - **Validation:** `<command>` → passed
-   - **CHANGELOG:** updated
+   - **Validation:** \`<command>\` → passed
+   - **CHANGELOG:** updated"
    ```
-3. Call `linear_graphql` to move this issue to "Done" state.
+3. Move the issue to Done:
+   ```bash
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Done"
+   ```
+
+## Linear CLI Reference
+
+Use these CLI helpers instead of raw `linear_graphql` calls. They resolve all IDs automatically from human-readable names.
+
+| Script | Purpose | Example |
+|---|---|---|
+| `linear-update-state.mjs` | Move issue to a state | `--issue ANQ-106 --state "In Progress"` |
+| `linear-comment.mjs` | Post a comment | `--issue ANQ-106 --body "Evidence..."` |
+| `linear-list-issues.mjs` | Query issues (JSON output) | `--open --format json` or `--state Backlog,Todo` |
+| `linear-update-issue.mjs` | Update title/priority/labels | `--issue ANQ-106 --title "New title" --priority 2` |
+| `create-child-issue.mjs` | Create a child issue | `--parent ANQ-151 --title "[CHILD] ..."` |
+
+All scripts live in `scripts/ops/` and require `LINEAR_API_KEY`. For audit/hygiene tasks, pipe `linear-list-issues.mjs` output to process issues, then call `linear-update-issue.mjs` for each fix.
 
