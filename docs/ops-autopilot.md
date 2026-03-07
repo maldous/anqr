@@ -103,7 +103,7 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 | OpenAI (Codex)      | Responses     | `api.openai.com/v1`                                | Codex credits                   | Paid                  |
 | Groq                | OpenAI-compat | `api.groq.com/openai/v1`                           | `GROQ_TOKEN` env var            | 12K TPM               |
 | Cerebras            | OpenAI-compat | `api.cerebras.ai/v1`                               | `CEREBRAS_TOKEN` env var        | 1M tokens/day         |
-| Gemini              | OpenAI-compat | `generativelanguage.googleapis.com/v1beta/openai/` | `GEMINI_TOKEN` env var          | ~10 RPM, ~1,500 RPD  |
+| Gemini              | Native gemini/ | `generativelanguage.googleapis.com/v1beta` (via LiteLLM) | `GEMINI_TOKEN` env var          | ~10 RPM, ~1,500 RPD  |
 | OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    |
 | SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            |
 | Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     |
