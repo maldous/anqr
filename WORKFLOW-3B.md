@@ -55,6 +55,16 @@ You are a code editor. Follow these steps exactly.
 
 1. If the issue requires guaranteed human-only actions (no API available, portal click-through, account/token creation, CAPTCHA, billing/credits purchase), move it to `Pending`, comment the exact required human steps and required validation evidence, then stop.
 2. Enforce one simple task per issue. If the issue contains multiple independent tasks, create Backlog child issues for remaining tasks and execute only one atomic task in this issue.
+   **To create child issues, use the CLI helper instead of raw GraphQL:**
+   ```bash
+   node scripts/ops/create-child-issue.mjs \
+     --parent ANQ-<N> \
+     --title "[CHILD] <short title>" \
+     --description "<description>" \
+     --priority 2 \
+     --label reliability
+   ```
+   The script prints the new issue identifier on success. Use this for any issue creation/linking tasks.
 3. Read the issue description carefully. It contains exact file paths, exact code changes, and a validation command.
 4. Apply the code changes described using `apply_patch`.
 5. Run the validation command from the description.
