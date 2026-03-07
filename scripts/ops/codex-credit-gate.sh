@@ -111,6 +111,11 @@ STATE_FILE="$STATE_DIR/state"
 SKIP_FILE="$STATE_DIR/skip"
 FAILURE_WINDOW_SECS=30  # typical rate-limit crashes exit in <10s
 
+# Rate-limit backoff: when all providers are rate-limited, wait for the
+# earliest cooldown to expire instead of exiting and burning empty turns.
+MAX_RATELIMIT_WAITS=${MAX_RATELIMIT_WAITS:-5}   # max wait cycles before giving up
+MAX_RATELIMIT_WAIT_SECS=300                       # cap individual waits at 5 minutes
+
 # Rate-limit cooldown: model-injector-proxy writes expiry files when a
 # provider returns too many 429s. The credit-gate reads these to skip
 # rate-limited providers and fall through to the next one.
@@ -409,6 +414,25 @@ is_rate_limited() {
   return 1
 }
 
+# Find the earliest rate-limit cooldown expiry across all providers.
+# Outputs the expiry timestamp (epoch seconds) if any active cooldowns exist.
+find_earliest_cooldown() {
+  local earliest="" now expiry rl_file
+  now=$(date +%s)
+  for rl_file in "$STATE_DIR"/ratelimit-*; do
+    [ -f "$rl_file" ] || continue
+    expiry=$(cat "$rl_file" 2>/dev/null) || continue
+    if [ "$now" -lt "$expiry" ]; then
+      if [ -z "$earliest" ] || [ "$expiry" -lt "$earliest" ]; then
+        earliest="$expiry"
+      fi
+    fi
+  done
+  if [ -n "$earliest" ]; then
+    echo "$earliest"
+  fi
+}
+
 # Record which provider we're about to use. If the process exits quickly,
 # the next invocation will see this and skip it.
 # Uses atomic temp+mv to avoid corruption under concurrent agents.
@@ -482,6 +506,10 @@ exec_via_litellm() {
     -c "model=$model" \
     app-server
 }
+
+# --- Rate-limit backoff loop: retry cascade when providers have active cooldowns ---
+_ratelimit_wait_count=0
+while true; do
 
 # --- Pre-check: LiteLLM proxy must be up for all fallback providers ---
 if ! litellm_reachable; then
@@ -651,9 +679,26 @@ else
   log "Ollama direct fallback disabled (set ENABLE_OLLAMA_DIRECT_FALLBACK=1 to enable)"
 fi
 
+# --- Rate-limit backoff: wait for cooldowns instead of burning empty turns ---
+earliest_expiry=$(find_earliest_cooldown)
+if [ -n "$earliest_expiry" ] && [ "$_ratelimit_wait_count" -lt "$MAX_RATELIMIT_WAITS" ]; then
+  _now=$(date +%s)
+  _wait_secs=$((earliest_expiry - _now))
+  if [ "$_wait_secs" -gt 0 ] && [ "$_wait_secs" -le "$MAX_RATELIMIT_WAIT_SECS" ]; then
+    _ratelimit_wait_count=$((_ratelimit_wait_count + 1))
+    log "All providers rate-limited — waiting ${_wait_secs}s for earliest cooldown to expire (attempt ${_ratelimit_wait_count}/${MAX_RATELIMIT_WAITS})"
+    sleep "$_wait_secs"
+    # Re-evaluate skip list after sleeping (failure window may have expired).
+    load_skip_list
+    continue
+  fi
+fi
+
 if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
   log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama, Ollama direct)"
 else
   log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama)"
 fi
 exit 1
+
+done  # end rate-limit backoff loop
