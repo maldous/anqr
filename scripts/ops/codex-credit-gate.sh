@@ -162,20 +162,21 @@ credits_available() {
 }
 
 # ---------------------------------------------------------------------------
-# Provider availability probes — real generation tests, not just model listing
+# Provider availability probes — lightweight /v1/models listings (not generation requests)
+# This preserves free-tier quotas by never burning a generation request on a mere probe.
 # ---------------------------------------------------------------------------
 groq_available() {
   if [ -z "${GROQ_TOKEN:-}" ] && [ -z "${GROQ_API_KEY:-}" ]; then
     return 1
   fi
   export GROQ_API_KEY="${GROQ_API_KEY:-$GROQ_TOKEN}"
+  # Use /v1/models listing instead of a generation request to avoid
+  # burning free-tier quota on mere availability probes.
   local resp
-  resp=$(curl -sf --max-time 8 \
+  resp=$(curl -sf --max-time 5 \
     -H "Authorization: Bearer $GROQ_API_KEY" \
-    -H "Content-Type: application/json" \
-    -X POST "https://api.groq.com/openai/v1/chat/completions" \
-    -d '{"model":"'"$GROQ_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
-  echo "$resp" | grep -q '"choices"' 2>/dev/null
+    "https://api.groq.com/openai/v1/models" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$GROQ_MODEL" 2>/dev/null
 }
 
 gemini_available() {
@@ -196,13 +197,13 @@ cerebras_available() {
     return 1
   fi
   export CEREBRAS_API_KEY="${CEREBRAS_API_KEY:-$CEREBRAS_TOKEN}"
+  # Use /v1/models listing instead of a generation request to avoid
+  # burning free-tier quota on mere availability probes.
   local resp
-  resp=$(curl -sf --max-time 8 \
+  resp=$(curl -sf --max-time 5 \
     -H "Authorization: Bearer $CEREBRAS_API_KEY" \
-    -H "Content-Type: application/json" \
-    -X POST "https://api.cerebras.ai/v1/chat/completions" \
-    -d '{"model":"'"$CEREBRAS_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
-  echo "$resp" | grep -q '"choices"' 2>/dev/null
+    "https://api.cerebras.ai/v1/models" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$CEREBRAS_MODEL" 2>/dev/null
 }
 
 openrouter_free_available() {
@@ -210,13 +211,13 @@ openrouter_free_available() {
     return 1
   fi
   export OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-$OPENROUTER_TOKEN}"
+  # Use /v1/models listing instead of a generation request to avoid
+  # burning free-tier quota on mere availability probes.
   local resp
-  resp=$(curl -sf --max-time 8 \
+  resp=$(curl -sf --max-time 5 \
     -H "Authorization: Bearer $OPENROUTER_API_KEY" \
-    -H "Content-Type: application/json" \
-    -X POST "https://openrouter.ai/api/v1/chat/completions" \
-    -d '{"model":"'"$OPENROUTER_FREE_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
-  echo "$resp" | grep -q '"choices"' 2>/dev/null
+    "https://openrouter.ai/api/v1/models" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$OPENROUTER_FREE_MODEL" 2>/dev/null
 }
 
 sambanova_available() {
@@ -251,13 +252,13 @@ github_models_available() {
   if [ -z "${GITHUB_MODELS_TOKEN:-}" ]; then
     return 1
   fi
+  # Use /models listing instead of a generation request to avoid
+  # burning free-tier quota on mere availability probes.
   local resp
-  resp=$(curl -sf --max-time 8 \
+  resp=$(curl -sf --max-time 5 \
     -H "Authorization: Bearer $GITHUB_MODELS_TOKEN" \
-    -H "Content-Type: application/json" \
-    -X POST "https://models.inference.ai.azure.com/chat/completions" \
-    -d '{"model":"'"$GITHUB_MODELS_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
-  echo "$resp" | grep -q '"choices"' 2>/dev/null
+    "https://models.inference.ai.azure.com/models" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$GITHUB_MODELS_MODEL" 2>/dev/null
 }
 
 ollama_available() {
