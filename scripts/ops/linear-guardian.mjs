@@ -462,10 +462,13 @@ async function main() {
   }
 
   // -----------------------------------------------------------------------
-  // Assignee backfill: [HUMAN]/[EMAIL] issues → matthewaldous, all others → Codex.
+  // Assignee backfill: [HUMAN]/[EMAIL] issues → matthewaldous.
+  // Non-human issues must NOT be assigned to any specific user — the
+  // credit-gate handles AI provider routing independently of Linear assignee.
+  // If any issue is still assigned to Codex (legacy), unassign it.
   // -----------------------------------------------------------------------
-  summary.assigneeBackfill = { checked: false, assignedCodex: [], assignedHuman: [] };
-  if (codexAssigneeId) {
+  summary.assigneeBackfill = { checked: false, assignedHuman: [], unassignedFromCodex: [] };
+  if (humanAssigneeId) {
     const allIssues = await gql(
       `query {
         issues(
@@ -483,30 +486,38 @@ async function main() {
     for (const issue of allIssues.issues.nodes) {
       const title = issue.title || '';
       const isHuman = title.startsWith('[HUMAN]') || title.startsWith('[EMAIL]');
-      const targetId = isHuman && humanAssigneeId ? humanAssigneeId : codexAssigneeId;
       const currentId = issue.assignee?.id || null;
-      if (currentId === targetId) continue;
 
-      const update = { identifier: issue.identifier, assignee: isHuman ? HUMAN_USER_NAME : CODEX_USER_NAME, updated: false };
-      if (APPLY) {
-        await gql(
-          `mutation($id: String!, $input: IssueUpdateInput!) {
-            issueUpdate(id: $id, input: $input) { success }
-          }`,
-          { id: issue.id, input: { assigneeId: targetId } }
-        );
-        update.updated = true;
-      }
-      if (isHuman) {
+      if (isHuman && currentId !== humanAssigneeId) {
+        const update = { identifier: issue.identifier, assignee: HUMAN_USER_NAME, updated: false };
+        if (APPLY) {
+          await gql(
+            `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+            { id: issue.id, input: { assigneeId: humanAssigneeId } }
+          );
+          update.updated = true;
+        }
         summary.assigneeBackfill.assignedHuman.push(update);
-      } else {
-        summary.assigneeBackfill.assignedCodex.push(update);
+      } else if (!isHuman && codexAssigneeId && currentId === codexAssigneeId) {
+        const update = { identifier: issue.identifier, updated: false };
+        if (APPLY) {
+          await gql(
+            `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+            { id: issue.id, input: { assigneeId: null } }
+          );
+          update.updated = true;
+        }
+        summary.assigneeBackfill.unassignedFromCodex.push(update);
       }
     }
-    const totalFixed = summary.assigneeBackfill.assignedCodex.length + summary.assigneeBackfill.assignedHuman.length;
+    const totalFixed = summary.assigneeBackfill.assignedHuman.length + summary.assigneeBackfill.unassignedFromCodex.length;
     if (totalFixed > 0) {
       console.error(
-        `Assignee backfill: ${APPLY ? 'fixed' : 'would fix'} ${totalFixed} issues (${summary.assigneeBackfill.assignedHuman.length} → ${HUMAN_USER_NAME}, ${summary.assigneeBackfill.assignedCodex.length} → ${CODEX_USER_NAME})`
+        `Assignee backfill: ${APPLY ? 'fixed' : 'would fix'} ${totalFixed} issues (${summary.assigneeBackfill.assignedHuman.length} → ${HUMAN_USER_NAME}, ${summary.assigneeBackfill.unassignedFromCodex.length} unassigned from ${CODEX_USER_NAME})`
       );
     }
   }
@@ -847,7 +858,6 @@ async function main() {
             projectId: symphonyProject.id,
             priority: 1,
             ...(reliabilityLabel ? { labelIds: [reliabilityLabel.id] } : {}),
-            ...(codexAssigneeId ? { assigneeId: codexAssigneeId } : {}),
           },
         }
       );
@@ -1150,7 +1160,6 @@ async function main() {
                     title: sliceTitle,
                     description: sliceDescription,
                     priority: issue.priority,
-                    ...(codexAssigneeId ? { assigneeId: codexAssigneeId } : {}),
                   },
                 }
               );

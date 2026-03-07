@@ -146,7 +146,7 @@ make all          # Complete 16-step production pipeline
 - **Bundle budgets**: Main entry ≤720 KiB, non-i18n total ≤6200 KiB.
 - **Issue evidence**: Every Done issue requires a comment with commit hashes, validation output, and pass/fail verdict. See `docs/workflow/execution-workflow.md` §Evidence Policy.
 - **Email handling**: Symphony NEVER sends emails autonomously. Inbound emails are ingested, read, and reviewed — then a NEW actionable issue is created that quotes the original email. The raw email does not become the issue itself.
-- **Issue assignment**: Every Linear issue must be assigned. Automatable issues are assigned to Codex; `[HUMAN]` and `[EMAIL]` issues are assigned to matthewaldous. The guardian enforces this split every 15 minutes. Scripts that create issues must include the appropriate `assigneeId`.
+- **Issue assignment**: `[HUMAN]` and `[EMAIL]` issues are assigned to matthewaldous. All other issues are left unassigned — the credit-gate handles AI provider routing independently of Linear assignee. Do NOT assign automatable issues to any specific user. The guardian enforces this every 15 minutes and removes stale Codex assignments.
 - **Project health**: The guardian computes project health (`onTrack`/`atRisk`/`offTrack`) from issue completion ratios and posts Linear project updates when health changes.
 - **AI Hints**: When a Linear issue needs course-correction for AI agents (unclear instructions, legacy context, excessive comments, or stale state), add a comment starting with `AI Hint:` that gives the next agent concise, actionable guidance. Use AI Hints proactively when issues are at risk of blowing out or getting stuck. Periodically run a board sanity check to identify issues needing hints.
 
