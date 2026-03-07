@@ -358,6 +358,40 @@ mutation FileUpload($filename: String!, $contentType: String!, $size: Int!, $mak
 }
 ```
 
+## Common mistakes to avoid
+
+**NEVER query `state` without subfields.** Linear's `state` field returns a
+`WorkflowState` object, not a string. Always select subfields:
+
+```graphql
+# WRONG — causes "must have a selection of subfields" error:
+issue(id: $id) {
+  state
+}
+
+# CORRECT:
+issue(id: $id) {
+  state { id name type }
+}
+```
+
+**NEVER put `id` inside `IssueUpdateInput`.** The issue `id` is a separate
+argument to `issueUpdate`, not part of the input object:
+
+```graphql
+# WRONG — causes '"id" is not defined by type "IssueUpdateInput"' error:
+mutation($input: IssueUpdateInput!) {
+  issueUpdate(input: $input) { success }
+}
+# with variables: { "input": { "id": "...", "stateId": "..." } }
+
+# CORRECT — id is a separate argument:
+mutation($id: String!, $input: IssueUpdateInput!) {
+  issueUpdate(id: $id, input: $input) { success }
+}
+# with variables: { "id": "...", "input": { "stateId": "..." } }
+```
+
 ## Usage rules
 
 - Use `linear_graphql` for comment edits, uploads, and ad-hoc Linear API
