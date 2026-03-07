@@ -60,12 +60,6 @@ model_list:
       api_key: os.environ/MISTRAL_TOKEN
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
-  - model_name: github-llama-8b
-    litellm_params:
-      model: github/Meta-Llama-3.1-8B-Instruct
-      api_key: os.environ/GITHUB_MODELS_TOKEN
-      additional_drop_params: ["web_search_options", "supports_function_calling"]
-
   # --- Local Ollama model (single optimised model for i9-13900K + 4GB VRAM) ---
   - model_name: qwen2.5-coder-7b-32t
     litellm_params:

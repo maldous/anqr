@@ -46,8 +46,7 @@ When Codex credits are exhausted, the following services continue running at zer
 | **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **4th fallback; requires `OPENROUTER_TOKEN`; :free models** |
 | **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **5th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
 | **Symphony ticket work (Cerebras fallback)**         | **Continuous** | **Free**  | **6th fallback; requires `CEREBRAS_TOKEN`; 1M tok/day, 8K context** |
-| **Symphony ticket work (GitHub Models fallback)**    | **Continuous** | **Free**  | **7th fallback; requires `GITHUB_MODELS_TOKEN`** |
-| **Symphony ticket work (Ollama fallback)**           | **Continuous** | **Free**  | **8th fallback; requires Ollama on `localhost:11434`**  |
+| **Symphony ticket work (Ollama fallback)**           | **Continuous** | **Free**  | **7th fallback; requires Ollama on `localhost:11434`**  |
 | Linear guardian (labels only)                  | 15 min         | Free      | Always runs                                             |
 | TypeScript typecheck                           | Hourly         | Free      | Always runs                                             |
 | Sentry regression check                        | Hourly         | Free      | Always runs                                             |
@@ -60,7 +59,7 @@ When Codex credits are exhausted, the following services continue running at zer
 
 When Codex credits reset (5-hour primary window, weekly secondary window), the credit gate automatically switches back to the full cloud model and the guardian resumes lead enforcement.
 
-## Codex Credit Gate (Codex → Groq → Mistral Codestral → Gemini → OpenRouter FREE → SambaNova → Cerebras → GitHub Models → Ollama Fallback)
+## Codex Credit Gate (Codex → Groq → Mistral Codestral → Gemini → OpenRouter FREE → SambaNova → Cerebras → Ollama Fallback)
 
 Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-gate.sh` — a wrapper that cascades through providers to ensure ticket work continues even when Codex cloud credits are exhausted.
 
@@ -76,11 +75,10 @@ Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-
 6. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
 7. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
 8. **Credits exhausted + Cerebras reachable** → `cerebras-llama-8b` via LiteLLM (free tier, 1M tok/day, 8K context limit — deprioritised for longer sessions).
-9. **Credits exhausted + GitHub Models reachable** → `github-llama-8b` via LiteLLM (free tier, rate-limited per model).
-10. **Credits exhausted + Ollama reachable** → `<litellm-ollama-alias>` via model-injector + LiteLLM (free local model).
-11. **Optional last resort** (`ENABLE_OLLAMA_DIRECT_FALLBACK=1`) → direct Ollama (tool calling may break).
-12. **All providers exhausted** → exit 1 (Symphony will retry with backoff).
-13. **Dashboard unreachable** → fall through to free providers (fail-closed).
+9. **Credits exhausted + Ollama reachable** → `<litellm-ollama-alias>` via model-injector + LiteLLM (free local model).
+10. **Optional last resort** (`ENABLE_OLLAMA_DIRECT_FALLBACK=1`) → direct Ollama (tool calling may break).
+11. **All providers exhausted** → exit 1 (Symphony will retry with backoff).
+12. **Dashboard unreachable** → fall through to free providers (fail-closed).
 
 **Provider requirements:**
 
@@ -94,7 +92,7 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 - `model-injector-proxy.service` reads `/run/user/<uid>/credit-gate/current-model`, written by `codex-credit-gate.sh`.
 - `model-injector-proxy.service` strips `supports_function_calling` and `web_search_options` from `/v1/responses` payloads for provider compatibility.
 - `model-injector-proxy.service` transforms `/v1/models` GET responses: adds a `"models"` key mirroring LiteLLM's `"data"` array so Codex CLI's `models_manager` can parse the model list (Codex expects `{"models": [...]}`, LiteLLM returns `{"data": [...]}`).
-- `litellm-config.yaml` sets `additional_drop_params: ["web_search_options", "supports_function_calling"]` on all cloud models (Groq, Cerebras, Gemini, Mistral, OpenRouter, SambaNova, GitHub) as defense-in-depth — if the model-injector fails to strip these fields (e.g. body decompression failure), LiteLLM itself drops them before forwarding to the provider.
+- `litellm-config.yaml` sets `additional_drop_params: ["web_search_options", "supports_function_calling"]` on all cloud models (Groq, Cerebras, Gemini, Mistral, OpenRouter, SambaNova) as defense-in-depth — if the model-injector fails to strip these fields (e.g. body decompression failure), LiteLLM itself drops them before forwarding to the provider.
 
 Do not run `litellm-model-injector.service` at the same time as `model-injector-proxy.service` — both bind `4011` and will flap/restart.
 
@@ -107,7 +105,6 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 | OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    |
 | SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            |
 | Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     |
-| GitHub Models       | OpenAI-compat | `models.inference.ai.azure.com`                    | `GITHUB_MODELS_TOKEN` env var   | ~150 req/day          |
 | Ollama              | Responses     | `localhost:11434/v1`                               | Ollama running locally          | Unlimited (local)     |
 
 **Environment variables:**
@@ -125,8 +122,6 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 | `OPENROUTER_FREE_MODEL`  | `meta-llama/llama-3.3-70b-instruct:free`           | Free model to use via OpenRouter `:free` tier                                               |
 | `MISTRAL_TOKEN`          | _(from symphony env)_                              | Mistral API key; exported as `MISTRAL_API_KEY`                                              |
 | `MISTRAL_MODEL`          | `devstral-small-2507`                              | Model to use via Mistral (Codestral code model; fallback: `mistral-small-latest`)           |
-| `GITHUB_MODELS_TOKEN`    | _(from symphony env)_                              | GitHub personal access token with `models` permission (separate from `GITHUB_TOKEN`)        |
-| `GITHUB_MODELS_MODEL`    | `Meta-Llama-3.1-8B-Instruct`                      | Model to use via GitHub Models                                                              |
 | `CEREBRAS_TOKEN`         | _(from symphony env)_                              | Cerebras API key; exported as `CEREBRAS_API_KEY`                                            |
 | `CEREBRAS_MODEL`         | `llama3.1-8b`                                      | Model to use via Cerebras                                                                   |
 | `SAMBANOVA_TOKEN`        | _(from symphony env)_                              | SambaNova API key; exported as `SAMBANOVA_API_KEY`                                          |
@@ -231,7 +226,7 @@ automatically switches to the next healthy provider without Codex knowing:
 **Fallback chain** (matches credit-gate priority):
 
 ```
-groq → mistral → gemini → gemini-lite → openrouter-free → sambanova → cerebras → github → ollama
+groq → mistral → gemini → gemini-lite → openrouter-free → sambanova → cerebras → ollama
 ```
 
 When all providers in the chain are cooled down or tried, returns 503 with
@@ -279,7 +274,7 @@ Ollama is configured for hybrid CPU/GPU inference via `/etc/systemd/system/ollam
 | `OLLAMA_NUM_PARALLEL`      | `2`     | Allow two concurrent requests (matches `max_concurrent_agents`)|
 | `OLLAMA_MAX_LOADED_MODELS` | `1`     | Keep one model in memory to avoid RAM thrashing               |
 | `OLLAMA_KEEP_ALIVE`        | `30m`   | Keep model warm between agent turns                           |
-| `OLLAMA_CONTEXT_LENGTH`    | `8192`  | 8K context (32K was too large for 4GB VRAM — starved GPU layers)|
+| `OLLAMA_CONTEXT_LENGTH`    | `32768` | 32K context for long agent sessions                             |
 | `OLLAMA_KV_CACHE_TYPE`     | `q8_0`  | Quantised KV cache to save VRAM                               |
 | `OLLAMA_FLASH_ATTENTION`   | `1`     | Enable flash attention for faster inference                   |
 | `OLLAMA_GPU_OVERHEAD`      | `0`     | Maximise VRAM allocated to model layers                       |
