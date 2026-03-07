@@ -38,12 +38,16 @@ The `creditStatus` and `leadSkipReason` fields in `reports/linear-guardian/lates
 
 When Codex credits are exhausted, the following services continue running at zero or near-zero cost:
 
-| Service                                        | Cadence        | Cost      | Status                                                  |
-| ---------------------------------------------- | -------------- | --------- | ------------------------------------------------------- |
-| **Symphony ticket work (OpenRouter fallback)** | **Continuous** | **~Free** | **1st fallback; requires `OPENROUTER_TOKEN`**           |
-| **Symphony ticket work (Gemini fallback)**     | **Continuous** | **Free**  | **2nd fallback; requires `GEMINI_TOKEN`**               |
-| **Symphony ticket work (Groq fallback)**       | **Continuous** | **Free**  | **3rd fallback; requires `GROQ_TOKEN`**                 |
-| **Symphony ticket work (Ollama fallback)**     | **Continuous** | **Free**  | **4th fallback; requires Ollama on `localhost:11434`**  |
+| Service                                              | Cadence        | Cost      | Status                                                  |
+| ---------------------------------------------------- | -------------- | --------- | ------------------------------------------------------- |
+| **Symphony ticket work (Groq fallback)**             | **Continuous** | **Free**  | **1st fallback; requires `GROQ_TOKEN`**                 |
+| **Symphony ticket work (Cerebras fallback)**         | **Continuous** | **Free**  | **2nd fallback; requires `CEREBRAS_TOKEN`; 1M tok/day** |
+| **Symphony ticket work (Gemini fallback)**           | **Continuous** | **Free**  | **3rd fallback; requires `GEMINI_TOKEN`**               |
+| **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **4th fallback; requires `OPENROUTER_TOKEN`; :free models** |
+| **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **5th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
+| **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free**  | **6th fallback; requires `MISTRAL_TOKEN`; Codestral code model** |
+| **Symphony ticket work (GitHub Models fallback)**    | **Continuous** | **Free**  | **7th fallback; requires `GITHUB_MODELS_TOKEN`** |
+| **Symphony ticket work (Ollama fallback)**           | **Continuous** | **Free**  | **8th fallback; requires Ollama on `localhost:11434`**  |
 | Linear guardian (labels only)                  | 15 min         | Free      | Always runs                                             |
 | TypeScript typecheck                           | Hourly         | Free      | Always runs                                             |
 | Sentry regression check                        | Hourly         | Free      | Always runs                                             |
@@ -56,7 +60,7 @@ When Codex credits are exhausted, the following services continue running at zer
 
 When Codex credits reset (5-hour primary window, weekly secondary window), the credit gate automatically switches back to the full cloud model and the guardian resumes lead enforcement.
 
-## Codex Credit Gate (Codex → OpenRouter → Gemini → Groq → Ollama Fallback)
+## Codex Credit Gate (Codex → Groq → Cerebras → Gemini → OpenRouter FREE → SambaNova → Mistral → GitHub Models → Ollama Fallback)
 
 Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-gate.sh` — a wrapper that cascades through providers to ensure ticket work continues even when Codex cloud credits are exhausted.
 
@@ -64,13 +68,17 @@ Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-
 
 1. Check Symphony dashboard (`http://127.0.0.1:4040`) for credit status.
 2. **Credits available** → `exec codex --model gpt-5.3-codex app-server` (full cloud model).
-3. **Credits exhausted + OpenRouter reachable** → `exec codex -c model_provider=openrouter -m google/gemini-2.0-flash-001 app-server` (has budget, most reliable fallback).
-4. **Credits exhausted + Gemini reachable** → `exec codex -c model_provider=gemini -m gemini-2.0-flash app-server` (free tier, Google cloud).
-5. **Credits exhausted + Groq reachable** → `exec codex -c model_provider=groq -m llama-3.3-70b-versatile app-server` (free tier, 12K TPM limit).
-6. **Credits exhausted + Ollama reachable** → `exec codex -c model_provider=openai -m <litellm-ollama-alias> app-server` via the model-injector proxy + LiteLLM (free local model with tool-call compatibility).
-7. **Optional last resort** (`ENABLE_OLLAMA_DIRECT_FALLBACK=1`) → `exec codex -c model_provider=ollama -m <best> app-server` (direct Ollama; tool calling may break).
-8. **All providers exhausted** → exit 1 (Symphony will retry with backoff).
-9. **Dashboard unreachable** → fall through to free providers (fail-closed).
+3. **Credits exhausted + Groq reachable** → `groq-llama-70b` via LiteLLM (free tier, 12K TPM, fastest cloud).
+4. **Credits exhausted + Cerebras reachable** → `cerebras-llama-8b` via LiteLLM (free tier, 1M tok/day, fast inference).
+5. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, Google cloud, reliable).
+6. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
+7. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
+8. **Credits exhausted + Mistral reachable** → `mistral-codestral` via LiteLLM (free experimental tier, Codestral code-optimised model).
+9. **Credits exhausted + GitHub Models reachable** → `github-llama-8b` via LiteLLM (free tier, rate-limited per model).
+10. **Credits exhausted + Ollama reachable** → `<litellm-ollama-alias>` via model-injector + LiteLLM (free local model).
+11. **Optional last resort** (`ENABLE_OLLAMA_DIRECT_FALLBACK=1`) → direct Ollama (tool calling may break).
+12. **All providers exhausted** → exit 1 (Symphony will retry with backoff).
+13. **Dashboard unreachable** → fall through to free providers (fail-closed).
 
 **Provider requirements:**
 
@@ -83,16 +91,22 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 - Credit gate points Codex to `http://127.0.0.1:4011`.
 - `model-injector-proxy.service` reads `/run/user/<uid>/credit-gate/current-model`, written by `codex-credit-gate.sh`.
 - `model-injector-proxy.service` strips `supports_function_calling` and `web_search_options` from `/v1/responses` payloads for provider compatibility.
+- `model-injector-proxy.service` transforms `/v1/models` GET responses: adds a `"models"` key mirroring LiteLLM's `"data"` array so Codex CLI's `models_manager` can parse the model list (Codex expects `{"models": [...]}`, LiteLLM returns `{"data": [...]}`).
+- `litellm-config.yaml` sets `additional_drop_params: ["web_search_options", "supports_function_calling"]` on all cloud models (Groq, Gemini, OpenRouter, Cerebras, SambaNova, Mistral, GitHub) as defense-in-depth — if the model-injector fails to strip these fields (e.g. body decompression failure), LiteLLM itself drops them before forwarding to the provider.
 
 Do not run `litellm-model-injector.service` at the same time as `model-injector-proxy.service` — both bind `4011` and will flap/restart.
 
-| Provider       | API           | Endpoint                                           | Requirement                |
-| -------------- | ------------- | -------------------------------------------------- | -------------------------- |
-| OpenAI (Codex) | Responses     | `api.openai.com/v1`                                | Codex credits              |
-| OpenRouter     | Responses     | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var |
-| Gemini         | OpenAI-compat | `generativelanguage.googleapis.com/v1beta/openai/` | `GEMINI_TOKEN` env var     |
-| Groq           | OpenAI-compat | `api.groq.com/openai/v1`                           | `GROQ_TOKEN` env var       |
-| Ollama         | Responses     | `localhost:11434/v1`                               | Ollama running locally     |
+| Provider            | API           | Endpoint                                           | Requirement                     | Free Tier Limits      |
+| ------------------- | ------------- | -------------------------------------------------- | ------------------------------- | --------------------- |
+| OpenAI (Codex)      | Responses     | `api.openai.com/v1`                                | Codex credits                   | Paid                  |
+| Groq                | OpenAI-compat | `api.groq.com/openai/v1`                           | `GROQ_TOKEN` env var            | 12K TPM               |
+| Cerebras            | OpenAI-compat | `api.cerebras.ai/v1`                               | `CEREBRAS_TOKEN` env var        | 1M tokens/day         |
+| Gemini              | OpenAI-compat | `generativelanguage.googleapis.com/v1beta/openai/` | `GEMINI_TOKEN` env var          | Generous              |
+| OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    |
+| SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            |
+| Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     |
+| GitHub Models       | OpenAI-compat | `models.inference.ai.azure.com`                    | `GITHUB_MODELS_TOKEN` env var   | ~150 req/day          |
+| Ollama              | Responses     | `localhost:11434/v1`                               | Ollama running locally          | Unlimited (local)     |
 
 **Environment variables:**
 
@@ -106,7 +120,15 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 | `GEMINI_TOKEN`           | _(from symphony env)_                              | Gemini API key; exported as `GEMINI_API_KEY` for Codex                                      |
 | `GEMINI_MODEL`           | `gemini-2.0-flash`                                 | Model to use via Gemini                                                                     |
 | `OPENROUTER_TOKEN`       | _(from symphony env)_                              | OpenRouter API key; exported as `OPENROUTER_API_KEY` for Codex                              |
-| `OPENROUTER_MODEL`       | `google/gemini-2.0-flash-001`                      | Model to use via OpenRouter                                                                 |
+| `OPENROUTER_FREE_MODEL`  | `meta-llama/llama-3.3-70b-instruct:free`           | Free model to use via OpenRouter `:free` tier                                               |
+| `MISTRAL_TOKEN`          | _(from symphony env)_                              | Mistral API key; exported as `MISTRAL_API_KEY`                                              |
+| `MISTRAL_MODEL`          | `devstral-small-2507`                              | Model to use via Mistral (Codestral code model; fallback: `mistral-small-latest`)           |
+| `GITHUB_MODELS_TOKEN`    | _(from symphony env)_                              | GitHub personal access token with `models` permission (separate from `GITHUB_TOKEN`)        |
+| `GITHUB_MODELS_MODEL`    | `Meta-Llama-3.1-8B-Instruct`                      | Model to use via GitHub Models                                                              |
+| `CEREBRAS_TOKEN`         | _(from symphony env)_                              | Cerebras API key; exported as `CEREBRAS_API_KEY`                                            |
+| `CEREBRAS_MODEL`         | `llama3.1-8b`                                      | Model to use via Cerebras                                                                   |
+| `SAMBANOVA_TOKEN`        | _(from symphony env)_                              | SambaNova API key; exported as `SAMBANOVA_API_KEY`                                          |
+| `SAMBANOVA_MODEL`        | `Meta-Llama-3.3-70B-Instruct`                     | Model to use via SambaNova                                                                  |
 | `OLLAMA_HOST`            | `http://127.0.0.1:11434`                           | Ollama API base URL                                                                         |
 | `OLLAMA_MODEL`           | _(auto-selected)_                                  | Model to use in Ollama fallback; if unset, the best available model is chosen automatically |
 | `ENABLE_OLLAMA_DIRECT_FALLBACK` | `0`                                       | Set to `1` only to allow direct `model_provider=ollama` fallback (known tool-calling risk) |
@@ -115,17 +137,62 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 
 The credit gate queries Ollama's `/api/tags` endpoint and picks the best available model that supports tool calling, in this priority order:
 
-1. `qwen2.5-coder:7b` — best quality for tool-calling tasks (4.7 GB)
-2. `qwen2.5-coder:3b` — faster, lighter (2 GB)
-3. `llama3.1:8b` — general-purpose with tool support (4.7 GB)
+1. `qwen2.5-coder:7b-32t` — custom variant with `num_thread 32` for max CPU utilisation (created via `Modelfile`)
+2. `qwen2.5-coder:7b` — base 7B quality for tool-calling tasks (4.7 GB)
+3. `qwen2.5-coder:3b` — faster, lighter (2 GB)
+4. `llama3.1:8b` — general-purpose with tool support (4.7 GB)
 
 Models without tool-calling support (e.g. `deepseek-coder:*`) are excluded because Codex requires function/tool calling.
 
 To override the auto-selection:
 
 ```bash
-export OLLAMA_MODEL=qwen2.5-coder:7b
+export OLLAMA_MODEL=qwen2.5-coder:7b-32t
 ```
+
+### Rate-Limit Aware Fallback
+
+The model-injector proxy tracks HTTP 429 (rate limit) responses per cloud
+provider. When a provider returns ≥ 3 rate-limit errors within 60 seconds,
+the proxy writes a cooldown file (`$STATE_DIR/ratelimit-<provider>`) with
+an expiry timestamp 120 seconds in the future.
+
+On the next agent spawn the credit-gate reads the file. If the cooldown
+has not expired the provider is skipped and the cascade falls through to
+the next option (typically Ollama via LiteLLM).
+
+| Parameter           | Value | Location                       |
+| ------------------- | ----- | ------------------------------ |
+| `RATELIMIT_WINDOW`  | 60 s  | `model-injector-proxy.py`      |
+| `RATELIMIT_THRESHOLD` | 3   | `model-injector-proxy.py`      |
+| `RATELIMIT_COOLDOWN`  | 120 s | `model-injector-proxy.py`     |
+
+Cooldown files auto-expire: the credit-gate deletes them once the expiry
+timestamp has passed, so providers are automatically retried after the
+cooldown window.
+
+To manually clear a rate-limit cooldown:
+```bash
+rm -f /run/user/$(id -u)/credit-gate/ratelimit-groq
+```
+
+### Ollama GPU Configuration
+
+Ollama is configured for hybrid CPU/GPU inference via `/etc/systemd/system/ollama.service.d/override.conf`:
+
+| Setting                    | Value   | Purpose                                                       |
+| -------------------------- | ------- | ------------------------------------------------------------- |
+| `OLLAMA_NUM_PARALLEL`      | `2`     | Allow two concurrent requests (matches `max_concurrent_agents`)|
+| `OLLAMA_MAX_LOADED_MODELS` | `1`     | Keep one model in memory to avoid RAM thrashing               |
+| `OLLAMA_KEEP_ALIVE`        | `30m`   | Keep model warm between agent turns                           |
+| `OLLAMA_CONTEXT_LENGTH`    | `8192`  | 8K context (32K was too large for 4GB VRAM — starved GPU layers)|
+| `OLLAMA_KV_CACHE_TYPE`     | `q8_0`  | Quantised KV cache to save VRAM                               |
+| `OLLAMA_FLASH_ATTENTION`   | `1`     | Enable flash attention for faster inference                   |
+| `OLLAMA_GPU_OVERHEAD`      | `0`     | Maximise VRAM allocated to model layers                       |
+
+With a GTX 1650 (4 GB VRAM), the `qwen2.5-coder:7b-32t` model runs at roughly **51% CPU / 49% GPU** split (~2.5 GB VRAM used, GPU at 100%). Warm inference completes in ~2–4 seconds per turn vs 2+ minutes on CPU-only.
+
+**Important:** Do not set `CUDA_VISIBLE_DEVICES=-1` or `OLLAMA_LLM_LIBRARY=cpu_avx2` — these disable GPU offload entirely and were removed to enable hybrid inference.
 
 ## Reports
 

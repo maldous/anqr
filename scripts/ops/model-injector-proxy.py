@@ -28,6 +28,8 @@ import os
 import socketserver
 import subprocess
 import sys
+import threading
+import time
 
 UPSTREAM_HOST = os.environ.get("UPSTREAM_HOST", "127.0.0.1")
 UPSTREAM_PORT = int(os.environ.get("UPSTREAM_PORT", "4010"))
@@ -48,6 +50,86 @@ UNSUPPORTED_RESPONSE_FIELDS = {
     "supports_function_calling",
     "web_search_options",
 }
+
+# Rate-limit tracking: when upstream returns 429s too frequently for a
+# provider, write a cooldown signal file so the credit-gate skips it.
+RATELIMIT_WINDOW = 60       # count 429s within this many seconds
+RATELIMIT_THRESHOLD = 3     # this many 429s triggers cooldown
+RATELIMIT_COOLDOWN = 120    # skip provider for this many seconds
+STATE_DIR = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"),
+    "credit-gate",
+)
+
+_ratelimit_lock = threading.Lock()
+_ratelimit_hits: dict[str, list[float]] = {}
+
+# Map LiteLLM model aliases to provider names used by the credit-gate.
+_MODEL_PROVIDER_MAP = {
+    "groq-llama-70b": "groq",
+    "gemini-flash": "gemini",
+    "cerebras-llama-8b": "cerebras",
+    "openrouter-free": "openrouter-free",
+    "sambanova-llama-70b": "sambanova",
+    "mistral-codestral": "mistral",
+    "mistral-small": "mistral",
+    "github-llama-8b": "github",
+}
+
+
+def _model_to_provider(model: str) -> str:
+    """Map a LiteLLM model alias to a credit-gate provider name."""
+    if model in _MODEL_PROVIDER_MAP:
+        return _MODEL_PROVIDER_MAP[model]
+    if model.startswith("groq"):
+        return "groq"
+    if model.startswith("gemini"):
+        return "gemini"
+    if model.startswith("openrouter-free"):
+        return "openrouter-free"
+    if model.startswith("openrouter"):
+        return "openrouter-free"
+    if model.startswith("cerebras"):
+        return "cerebras"
+    if model.startswith("sambanova"):
+        return "sambanova"
+    if model.startswith("mistral"):
+        return "mistral"
+    if model.startswith("github"):
+        return "github"
+    return ""
+
+
+def _record_ratelimit(provider: str) -> None:
+    """Record a 429 hit and write cooldown file if threshold exceeded."""
+    now = time.time()
+    with _ratelimit_lock:
+        hits = _ratelimit_hits.setdefault(provider, [])
+        hits.append(now)
+        cutoff = now - RATELIMIT_WINDOW
+        _ratelimit_hits[provider] = [t for t in hits if t > cutoff]
+        if len(_ratelimit_hits[provider]) >= RATELIMIT_THRESHOLD:
+            _write_cooldown(provider, int(now) + RATELIMIT_COOLDOWN)
+            _ratelimit_hits[provider] = []
+
+
+def _write_cooldown(provider: str, expiry: int) -> None:
+    """Atomically write a cooldown expiry file for the credit-gate to read."""
+    rl_file = os.path.join(STATE_DIR, f"ratelimit-{provider}")
+    tmp = f"{rl_file}.{os.getpid()}"
+    try:
+        os.makedirs(STATE_DIR, mode=0o700, exist_ok=True)
+        with open(tmp, "w") as f:
+            f.write(f"{expiry}\n")
+        os.replace(tmp, rl_file)
+    except OSError:
+        pass
+
+
+def _is_models_endpoint(path: str) -> bool:
+    """True for GET /models or /v1/models (list endpoints, not detail)."""
+    clean = path.split("?")[0].rstrip("/")
+    return clean.endswith("/models")
 
 
 def decompress_body(body: bytes, content_encoding: str) -> bytes:
@@ -186,21 +268,63 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             conn.request(self.command, self.path, body=body, headers=headers)
             resp = conn.getresponse()
 
-            self.send_response_only(resp.status)
-            for key, val in resp.getheaders():
-                lk = key.lower()
-                if lk not in ("transfer-encoding", "connection"):
-                    self.send_header(key, val)
-            self.end_headers()
+            # Track 429 rate-limit responses per provider.
+            if resp.status == 429 and body:
+                try:
+                    req_data = json.loads(body)
+                    model_name = req_data.get("model", "")
+                    provider = _model_to_provider(str(model_name))
+                    if provider:
+                        _record_ratelimit(provider)
+                        self.log_message(
+                            "429 from %s (model=%s) — tracking rate limit",
+                            provider, model_name,
+                        )
+                except (json.JSONDecodeError, TypeError):
+                    pass
 
-            while True:
-                chunk = resp.read1(8192)
-                if not chunk:
-                    break
-                self.wfile.write(chunk)
+            # For /models GET responses, buffer and transform so Codex CLI
+            # can find the "models" field it expects (LiteLLM returns "data").
+            if (
+                self.command == "GET"
+                and _is_models_endpoint(self.path)
+                and resp.status == 200
+            ):
+                resp_body = resp.read()
+                conn.close()
+                try:
+                    data = json.loads(resp_body)
+                    if "data" in data and "models" not in data:
+                        data["models"] = data["data"]
+                        resp_body = json.dumps(data).encode()
+                        self.log_message("Transformed /models response: added 'models' key")
+                except (json.JSONDecodeError, TypeError):
+                    pass
+                self.send_response_only(resp.status)
+                for key, val in resp.getheaders():
+                    lk = key.lower()
+                    if lk not in ("transfer-encoding", "connection", "content-length"):
+                        self.send_header(key, val)
+                self.send_header("Content-Length", str(len(resp_body)))
+                self.end_headers()
+                self.wfile.write(resp_body)
                 self.wfile.flush()
+            else:
+                self.send_response_only(resp.status)
+                for key, val in resp.getheaders():
+                    lk = key.lower()
+                    if lk not in ("transfer-encoding", "connection"):
+                        self.send_header(key, val)
+                self.end_headers()
 
-            conn.close()
+                while True:
+                    chunk = resp.read1(8192)
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
+
+                conn.close()
         except (ConnectionRefusedError, OSError) as exc:
             error = json.dumps(
                 {"error": {"message": f"Upstream unavailable: {exc}", "code": "502"}}

@@ -59,11 +59,29 @@ You are a code editor. Follow these steps exactly.
 3. Read the issue description carefully. It contains exact file paths, exact code changes, and a validation command.
 4. Apply the code changes described using `apply_patch`.
 5. Run the validation command from the description.
-6. If validation passes, commit and push: `git add -A && git commit -m "fix: <short summary>" && git push origin HEAD`.
+6. If validation passes, update `CHANGELOG.md`: prepend a line under today's date heading with `- <type>: <short summary>`. If today's date heading does not exist, add it after the preamble. Example: `- fix: reset canvas smoothing state`.
+7. Commit and push: `git add -A && git commit -m "fix: <short summary>" && git pull --rebase origin master && git push origin master`.
 
-## Step 2: Complete
+## Step 2: Post evidence and complete
 
-1. Call `linear_graphql` to move this issue to "Done" state.
+1. Gather evidence: the commit hash (`git rev-parse --short HEAD`), list of files changed (`git diff --name-only HEAD~1`), and validation command output (pass/fail).
+2. Post an evidence comment on the Linear issue (use this issue's identifier, e.g. `ANQ-123`) using `linear_graphql`:
+   ```graphql
+   mutation CreateComment($issueId: String!, $body: String!) {
+     commentCreate(input: { issueId: $issueId, body: $body }) {
+       success
+     }
+   }
+   ```
+   Body template:
+   ```
+   ## Evidence
+   - **Commit:** `<hash>`
+   - **Files changed:** <file list>
+   - **Validation:** `<command>` → passed
+   - **CHANGELOG:** updated
+   ```
+3. Call `linear_graphql` to move this issue to "Done" state.
 
 ## Sentinel
 

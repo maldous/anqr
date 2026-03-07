@@ -9,11 +9,15 @@
 #   1. Check the Symphony dashboard for Codex credit status.
 #   2. If credits available → exec codex with the full cloud model.
 #   3. If credits exhausted → probe fallback providers best-to-worst:
-#        a) Groq       (requires GROQ_TOKEN) — free cloud tier, via LiteLLM
-#        b) OpenRouter (requires OPENROUTER_TOKEN) — paid budget, via LiteLLM
-#        c) Gemini     (requires GEMINI_TOKEN) — free cloud tier, via LiteLLM
-#        d) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
-#        e) Ollama direct (localhost:11434) — local, broken tool calling (opt-in)
+#        a) Groq            (requires GROQ_TOKEN) — free cloud, fast, via LiteLLM
+#        b) Cerebras        (requires CEREBRAS_TOKEN) — free cloud, 1M tok/day, via LiteLLM
+#        c) Gemini          (requires GEMINI_TOKEN) — free cloud tier, via LiteLLM
+#        d) OpenRouter FREE (requires OPENROUTER_TOKEN) — free :free models, via LiteLLM
+#        e) SambaNova       (requires SAMBANOVA_TOKEN) — free cloud, 20 req/day, via LiteLLM
+#        f) Mistral         (requires MISTRAL_TOKEN) — free experimental tier, Codestral code model, via LiteLLM
+#        g) GitHub Models   (requires GITHUB_MODELS_TOKEN) — free, via LiteLLM
+#        h) LiteLLM proxy → Ollama (port 4010) — local, via LiteLLM
+#        i) Ollama direct (localhost:11434) — local, broken tool calling (opt-in)
 #      On each invocation the cascade always starts from (a). Providers that
 #      failed within the last 30s are skipped; after the window expires the
 #      full list is retried from the top.
@@ -57,7 +61,11 @@ ENABLE_OLLAMA_DIRECT_FALLBACK="${ENABLE_OLLAMA_DIRECT_FALLBACK:-0}"
 # Real provider model names (used only for availability probes)
 GROQ_MODEL="${GROQ_MODEL:-llama-3.3-70b-versatile}"
 GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
-OPENROUTER_MODEL="${OPENROUTER_MODEL:-google/gemini-2.0-flash-001}"
+CEREBRAS_MODEL="${CEREBRAS_MODEL:-llama3.1-8b}"
+SAMBANOVA_MODEL="${SAMBANOVA_MODEL:-Meta-Llama-3.3-70B-Instruct}"
+OPENROUTER_FREE_MODEL="${OPENROUTER_FREE_MODEL:-meta-llama/llama-3.3-70b-instruct:free}"
+MISTRAL_MODEL="${MISTRAL_MODEL:-devstral-small-2507}"
+GITHUB_MODELS_MODEL="${GITHUB_MODELS_MODEL:-Meta-Llama-3.1-8B-Instruct}"
 
 # LiteLLM proxy translates Codex Responses API → provider Chat Completions
 # with proper structured tool_calls. Codex CLI v0.110.0's native providers
@@ -72,16 +80,20 @@ LITELLM_API_KEY="${LITELLM_API_KEY:-}"  # empty — no auth needed for local pro
 # LiteLLM model aliases (must match model_name entries in litellm-config.yaml)
 LITELLM_GROQ_MODEL="groq-llama-70b"
 LITELLM_GEMINI_MODEL="gemini-flash"
-LITELLM_OPENROUTER_MODEL="openrouter-gemini"
+LITELLM_CEREBRAS_MODEL="cerebras-llama-8b"
+LITELLM_OPENROUTER_FREE_MODEL="openrouter-free"
+LITELLM_SAMBANOVA_MODEL="sambanova-llama-70b"
+LITELLM_MISTRAL_MODEL="mistral-codestral"
+LITELLM_GITHUB_MODEL="github-llama-8b"
 LITELLM_OLLAMA_MODEL="${LITELLM_OLLAMA_MODEL:-}"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
-PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b qwen2.5-coder:3b llama3.1:8b-32k llama3.1:8b"
-DEFAULT_OLLAMA_MODEL="qwen2.5-coder:3b"
+PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t qwen2.5-coder:7b qwen2.5-coder:3b llama3.1:8b-32k llama3.1:8b"
+DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b-32t"
 
 # LiteLLM aliases (must exist in litellm-config.yaml)
-PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b qwen2.5-coder-3b llama3.1-8b llama3.1-8b-base"
-DEFAULT_LITELLM_OLLAMA_MODEL="qwen2.5-coder-3b"
+PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t qwen2.5-coder-7b qwen2.5-coder-3b llama3.1-8b llama3.1-8b-base"
+DEFAULT_LITELLM_OLLAMA_MODEL="qwen2.5-coder-7b-32t"
 
 # Provider failure memory: skip providers that failed recently.
 # When the credit-gate selects a provider and the process exits quickly
@@ -97,6 +109,10 @@ if mkdir -p "$STATE_DIR" 2>/dev/null; then chmod 700 "$STATE_DIR" 2>/dev/null; f
 STATE_FILE="$STATE_DIR/state"
 SKIP_FILE="$STATE_DIR/skip"
 FAILURE_WINDOW_SECS=30  # typical rate-limit crashes exit in <10s
+
+# Rate-limit cooldown: model-injector-proxy writes expiry files when a
+# provider returns too many 429s. The credit-gate reads these to skip
+# rate-limited providers and fall through to the next one.
 
 log() {
   echo "[credit-gate $(date -Iseconds)] $*" >&2
@@ -174,7 +190,21 @@ gemini_available() {
   echo "$resp" | grep -q '"candidates"' 2>/dev/null
 }
 
-openrouter_available() {
+cerebras_available() {
+  if [ -z "${CEREBRAS_TOKEN:-}" ] && [ -z "${CEREBRAS_API_KEY:-}" ]; then
+    return 1
+  fi
+  export CEREBRAS_API_KEY="${CEREBRAS_API_KEY:-$CEREBRAS_TOKEN}"
+  local resp
+  resp=$(curl -sf --max-time 8 \
+    -H "Authorization: Bearer $CEREBRAS_API_KEY" \
+    -H "Content-Type: application/json" \
+    -X POST "https://api.cerebras.ai/v1/chat/completions" \
+    -d '{"model":"'"$CEREBRAS_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
+  echo "$resp" | grep -q '"choices"' 2>/dev/null
+}
+
+openrouter_free_available() {
   if [ -z "${OPENROUTER_TOKEN:-}" ] && [ -z "${OPENROUTER_API_KEY:-}" ]; then
     return 1
   fi
@@ -184,7 +214,48 @@ openrouter_available() {
     -H "Authorization: Bearer $OPENROUTER_API_KEY" \
     -H "Content-Type: application/json" \
     -X POST "https://openrouter.ai/api/v1/chat/completions" \
-    -d '{"model":"'"$OPENROUTER_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
+    -d '{"model":"'"$OPENROUTER_FREE_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
+  echo "$resp" | grep -q '"choices"' 2>/dev/null
+}
+
+sambanova_available() {
+  if [ -z "${SAMBANOVA_TOKEN:-}" ] && [ -z "${SAMBANOVA_API_KEY:-}" ]; then
+    return 1
+  fi
+  export SAMBANOVA_API_KEY="${SAMBANOVA_API_KEY:-$SAMBANOVA_TOKEN}"
+  # Use /v1/models instead of a generation request to avoid burning one of
+  # the 20 daily free-tier requests on a mere availability probe.
+  local resp
+  resp=$(curl -sf --max-time 5 \
+    -H "Authorization: Bearer $SAMBANOVA_API_KEY" \
+    "https://api.sambanova.ai/v1/models" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$SAMBANOVA_MODEL" 2>/dev/null
+}
+
+mistral_available() {
+  if [ -z "${MISTRAL_TOKEN:-}" ] && [ -z "${MISTRAL_API_KEY:-}" ]; then
+    return 1
+  fi
+  export MISTRAL_API_KEY="${MISTRAL_API_KEY:-$MISTRAL_TOKEN}"
+  local resp
+  resp=$(curl -sf --max-time 8 \
+    -H "Authorization: Bearer $MISTRAL_API_KEY" \
+    -H "Content-Type: application/json" \
+    -X POST "https://api.mistral.ai/v1/chat/completions" \
+    -d '{"model":"'"$MISTRAL_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
+  echo "$resp" | grep -q '"choices"' 2>/dev/null
+}
+
+github_models_available() {
+  if [ -z "${GITHUB_MODELS_TOKEN:-}" ]; then
+    return 1
+  fi
+  local resp
+  resp=$(curl -sf --max-time 8 \
+    -H "Authorization: Bearer $GITHUB_MODELS_TOKEN" \
+    -H "Content-Type: application/json" \
+    -X POST "https://models.inference.ai.azure.com/chat/completions" \
+    -d '{"model":"'"$GITHUB_MODELS_MODEL"'","messages":[{"role":"user","content":"hi"}],"max_tokens":1}' 2>/dev/null) || return 1
   echo "$resp" | grep -q '"choices"' 2>/dev/null
 }
 
@@ -254,6 +325,11 @@ select_litellm_ollama_model() {
   # Map available local Ollama tags to LiteLLM aliases.
   for model in $PREFERRED_LITELLM_OLLAMA_MODELS; do
     case "$model" in
+      qwen2.5-coder-7b-32t)
+        if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b-32t"' ; then
+          echo "$model"; return
+        fi
+        ;;
       qwen2.5-coder-7b)
         if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b"' ; then
           echo "$model"; return
@@ -312,6 +388,23 @@ load_skip_list() {
 
 is_skipped() {
   echo "$SKIP_PROVIDERS" | grep -qw "$1" 2>/dev/null
+}
+
+# Check if a provider is rate-limited (429 cooldown written by model-injector).
+is_rate_limited() {
+  local rl_file="$STATE_DIR/ratelimit-$1"
+  [ -f "$rl_file" ] || return 1
+  local expiry now
+  expiry=$(cat "$rl_file" 2>/dev/null) || return 1
+  now=$(date +%s)
+  if [ "$now" -lt "$expiry" ]; then
+    local remaining=$((expiry - now))
+    log "Provider $1 rate-limited (cooldown ${remaining}s remaining)"
+    return 0
+  fi
+  # Cooldown expired — clean up and allow retry.
+  rm -f "$rl_file"
+  return 1
 }
 
 # Record which provider we're about to use. If the process exits quickly,
@@ -398,7 +491,9 @@ fi
 
 # --- Fallback 1: Groq via LiteLLM (free cloud, fast, working tool calls) ---
 if [ "$LITELLM_UP" = true ]; then
-  if is_skipped groq; then
+  if is_rate_limited groq; then
+    log "Groq skipped (rate-limited — falling back)"
+  elif is_skipped groq; then
     log "Groq skipped (recently failed)"
   elif groq_available; then
     log "Groq reachable — using ${LITELLM_GROQ_MODEL} via LiteLLM"
@@ -409,22 +504,26 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 2: OpenRouter via LiteLLM (paid budget, most reliable cloud) ---
+# --- Fallback 2: Cerebras via LiteLLM (free cloud, fast inference, 1M tok/day) ---
 if [ "$LITELLM_UP" = true ]; then
-  if is_skipped openrouter; then
-    log "OpenRouter skipped (recently failed)"
-  elif openrouter_available; then
-    log "OpenRouter reachable — using ${LITELLM_OPENROUTER_MODEL} via LiteLLM"
-    record_provider openrouter
-    exec_via_litellm "$LITELLM_OPENROUTER_MODEL"
+  if is_rate_limited cerebras; then
+    log "Cerebras skipped (rate-limited — falling back)"
+  elif is_skipped cerebras; then
+    log "Cerebras skipped (recently failed)"
+  elif cerebras_available; then
+    log "Cerebras reachable — using ${LITELLM_CEREBRAS_MODEL} via LiteLLM"
+    record_provider cerebras
+    exec_via_litellm "$LITELLM_CEREBRAS_MODEL"
   else
-    log "OpenRouter unavailable (no token or API unreachable)"
+    log "Cerebras unavailable (no token or API unreachable)"
   fi
 fi
 
 # --- Fallback 3: Gemini via LiteLLM (free cloud tier) ---
 if [ "$LITELLM_UP" = true ]; then
-  if is_skipped gemini; then
+  if is_rate_limited gemini; then
+    log "Gemini skipped (rate-limited — falling back)"
+  elif is_skipped gemini; then
     log "Gemini skipped (recently failed)"
   elif gemini_available; then
     log "Gemini reachable — using ${LITELLM_GEMINI_MODEL} via LiteLLM"
@@ -435,7 +534,67 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 4: Ollama via LiteLLM (local, proper tool-calling) ---
+# --- Fallback 4: OpenRouter FREE via LiteLLM (free :free models, intermittent) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited openrouter-free; then
+    log "OpenRouter FREE skipped (rate-limited — falling back)"
+  elif is_skipped openrouter-free; then
+    log "OpenRouter FREE skipped (recently failed)"
+  elif openrouter_free_available; then
+    log "OpenRouter FREE reachable — using ${LITELLM_OPENROUTER_FREE_MODEL} via LiteLLM"
+    record_provider openrouter-free
+    exec_via_litellm "$LITELLM_OPENROUTER_FREE_MODEL"
+  else
+    log "OpenRouter FREE unavailable (no token or model unreachable)"
+  fi
+fi
+
+# --- Fallback 5: SambaNova via LiteLLM (free cloud, 70B model, 20 req/day) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited sambanova; then
+    log "SambaNova skipped (rate-limited — falling back)"
+  elif is_skipped sambanova; then
+    log "SambaNova skipped (recently failed)"
+  elif sambanova_available; then
+    log "SambaNova reachable — using ${LITELLM_SAMBANOVA_MODEL} via LiteLLM"
+    record_provider sambanova
+    exec_via_litellm "$LITELLM_SAMBANOVA_MODEL"
+  else
+    log "SambaNova unavailable (no token or API unreachable)"
+  fi
+fi
+
+# --- Fallback 6: Mistral Codestral via LiteLLM (free experimental tier, code-optimised) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited mistral; then
+    log "Mistral skipped (rate-limited — falling back)"
+  elif is_skipped mistral; then
+    log "Mistral skipped (recently failed)"
+  elif mistral_available; then
+    log "Mistral Codestral reachable — using ${LITELLM_MISTRAL_MODEL} via LiteLLM"
+    record_provider mistral
+    exec_via_litellm "$LITELLM_MISTRAL_MODEL"
+  else
+    log "Mistral unavailable (no token or API unreachable)"
+  fi
+fi
+
+# --- Fallback 7: GitHub Models via LiteLLM (free, rate-limited per model) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited github; then
+    log "GitHub Models skipped (rate-limited — falling back)"
+  elif is_skipped github; then
+    log "GitHub Models skipped (recently failed)"
+  elif github_models_available; then
+    log "GitHub Models reachable — using ${LITELLM_GITHUB_MODEL} via LiteLLM"
+    record_provider github
+    exec_via_litellm "$LITELLM_GITHUB_MODEL"
+  else
+    log "GitHub Models unavailable (no token, missing permissions, or API unreachable)"
+  fi
+fi
+
+# --- Fallback 8: Ollama via LiteLLM (local, proper tool-calling) ---
 if [ "$LITELLM_UP" = true ]; then
   if is_skipped litellm-ollama; then
     log "LiteLLM/Ollama skipped (recently failed)"
@@ -449,7 +608,7 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 5: Ollama direct (broken tool calling — disabled by default) ---
+# --- Fallback 9: Ollama direct (broken tool calling — disabled by default) ---
 if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
   if is_skipped ollama-direct; then
     log "Ollama direct skipped (recently failed)"
@@ -476,8 +635,8 @@ else
 fi
 
 if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
-  log "ERROR: all providers exhausted (credits, Groq, OpenRouter, Gemini, LiteLLM/Ollama, Ollama direct)"
+  log "ERROR: all providers exhausted (credits, Groq, Cerebras, Gemini, OpenRouter FREE, SambaNova, Mistral, GitHub Models, LiteLLM/Ollama, Ollama direct)"
 else
-  log "ERROR: all providers exhausted (credits, Groq, OpenRouter, Gemini, LiteLLM/Ollama)"
+  log "ERROR: all providers exhausted (credits, Groq, Cerebras, Gemini, OpenRouter FREE, SambaNova, Mistral, GitHub Models, LiteLLM/Ollama)"
 fi
 exit 1
