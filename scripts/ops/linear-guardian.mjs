@@ -213,6 +213,33 @@ async function getSymphonyRunningIssueIds() {
   }
 }
 
+async function getSymphonyRetryQueue() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(SYMPHONY_DASHBOARD_URL, { signal: controller.signal });
+    clearTimeout(timeout);
+    const html = await res.text();
+    const start = html.indexOf('Retry queue');
+    if (start === -1) return [];
+    const retrySection = html.slice(start);
+    const seen = new Set();
+    const entries = [];
+    const idRe = /ANQ-\d+/g;
+    let match;
+    while ((match = idRe.exec(retrySection)) !== null) {
+      const id = match[0];
+      if (!seen.has(id)) {
+        seen.add(id);
+        entries.push(id);
+      }
+    }
+    return entries;
+  } catch {
+    return [];
+  }
+}
+
 async function main() {
   const startedAt = new Date().toISOString();
 
@@ -581,7 +608,7 @@ async function main() {
   }
 
   // -----------------------------------------------------------------------
-  // Priority/state hygiene: with max_concurrent_agents=2, keep In Progress
+  // Priority/state hygiene: with max_concurrent_agents=1, keep In Progress
   // aligned to live Symphony running sessions while reserving one slot for
   // [SENTINEL]. If no live sessions exist, promote highest-priority work.
   // -----------------------------------------------------------------------
@@ -941,7 +968,7 @@ async function main() {
   }
 
   // -----------------------------------------------------------------------
-  // Auto-feed Symphony: keep 5-10 open issues in the Symphony project.
+  // Auto-feed Symphony: keep 2-3 open issues in the Symphony project.
   // Moves highest-priority automatable issues from other projects.
   // This replaces the old sentinel-driven feeding (too complex for small models).
   // Wrapped in try/catch so a failure here doesn't break the entire guardian.
@@ -987,7 +1014,7 @@ async function main() {
           project: { id: { eq: $projectId } },
           state: { name: { in: ["Backlog", "Todo", "In Progress"] } }
         }, first: 50) {
-          nodes { id identifier title labels { nodes { name } } }
+          nodes { id identifier title priority labels { nodes { name } } }
         }
       }`,
         { projectId: symphonyProject.id }
@@ -999,8 +1026,8 @@ async function main() {
       summary.symphonyFeed.checked = true;
       summary.symphonyFeed.openCount = openNonSentinel.length;
 
-      const TARGET_MIN = 5;
-      const TARGET_MAX = 10;
+      const TARGET_MIN = 2;
+      const TARGET_MAX = 3;
 
       if (openNonSentinel.length < TARGET_MIN) {
         const needed = TARGET_MAX - openNonSentinel.length;
@@ -1188,10 +1215,107 @@ async function main() {
           );
         }
       }
+
+      // Overflow drain: if too many issues in Symphony, move lowest-priority back out.
+      if (openNonSentinel.length > TARGET_MAX) {
+        summary.symphonyFeed.drained = [];
+        const runningSet = new Set(runningIssueIds);
+        const drainCandidates = openNonSentinel
+          .filter((i) => !runningSet.has(i.identifier))
+          .sort((a, b) => b.priority - a.priority || b.identifier.localeCompare(a.identifier));
+        const excess = openNonSentinel.length - TARGET_MAX;
+        for (const issue of drainCandidates.slice(0, excess)) {
+          const entry = { identifier: issue.identifier, title: issue.title, drained: false };
+          if (APPLY) {
+            await gql(
+              `mutation($id: String!, $input: IssueUpdateInput!) {
+                issueUpdate(id: $id, input: $input) { success }
+              }`,
+              { id: issue.id, input: { projectId: null } }
+            );
+            entry.drained = true;
+          }
+          summary.symphonyFeed.drained.push(entry);
+        }
+        if (summary.symphonyFeed.drained.length > 0) {
+          console.error(
+            `Symphony overflow: ${APPLY ? 'drained' : 'would drain'} ${summary.symphonyFeed.drained.length} excess issues from Symphony project`
+          );
+        }
+      }
     }
   } catch (feedErr) {
     console.error(`Symphony feed error (non-fatal): ${feedErr.message}`);
     summary.symphonyFeed.error = feedErr.message;
+  }
+
+  // -----------------------------------------------------------------------
+  // Retry queue health: if 2+ issues are queued for orchestrator slots,
+  // the Symphony project is overfed. Drain retry-queued issues back out
+  // so they stop burning retry attempts on structural slot contention.
+  // -----------------------------------------------------------------------
+  summary.retryQueueHealth = { checked: false, retryCount: 0, drained: [] };
+  try {
+    const retryQueueIds = await getSymphonyRetryQueue();
+    summary.retryQueueHealth.checked = true;
+    summary.retryQueueHealth.retryCount = retryQueueIds.length;
+    summary.retryQueueHealth.retryIds = retryQueueIds;
+
+    if (retryQueueIds.length >= 2 && symphonyProject) {
+      const retrySet = new Set(retryQueueIds);
+      const runningSet = new Set(runningIssueIds);
+
+      const symphonyBacklog = await gql(
+        `query($projectId: ID!) {
+          issues(filter: {
+            team: { key: { eq: "ANQ" } },
+            project: { id: { eq: $projectId } },
+            state: { name: { in: ["Backlog", "Todo"] } }
+          }, first: 50) {
+            nodes { id identifier title priority }
+          }
+        }`,
+        { projectId: symphonyProject.id }
+      );
+
+      const drainCandidates = symphonyBacklog.issues.nodes.filter((i) =>
+        !i.title.startsWith('[SENTINEL]') &&
+        !runningSet.has(i.identifier) &&
+        retrySet.has(i.identifier)
+      );
+
+      for (const issue of drainCandidates) {
+        const entry = {
+          identifier: issue.identifier,
+          title: issue.title,
+          drained: false,
+        };
+        if (APPLY) {
+          await gql(
+            `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+            { id: issue.id, input: { projectId: null } }
+          );
+          entry.drained = true;
+        }
+        summary.retryQueueHealth.drained.push(entry);
+      }
+
+      if (summary.retryQueueHealth.drained.length > 0) {
+        console.error(
+          `Retry queue health: ${APPLY ? 'drained' : 'would drain'} ${summary.retryQueueHealth.drained.length} retry-queued issues from Symphony project`
+        );
+        sendNotification({
+          subject: `Symphony retry queue overflow: drained ${summary.retryQueueHealth.drained.length} issues`,
+          body: `${retryQueueIds.length} issues were stuck in the retry queue competing for orchestrator slots.\n\nDrained: ${summary.retryQueueHealth.drained.map((d) => d.identifier).join(', ')}\n\nThese issues will be re-fed by the guardian when slots free up.`,
+          severity: 'warning',
+        });
+      }
+    }
+  } catch (retryErr) {
+    console.error(`Retry queue health error (non-fatal): ${retryErr.message}`);
+    summary.retryQueueHealth.error = retryErr.message;
   }
 
   // -----------------------------------------------------------------------
