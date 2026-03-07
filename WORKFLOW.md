@@ -80,6 +80,7 @@ No description.
       - Link every `[CHILD]` to its `[PARENT]` using the `parentId` field in `issueCreate`.
       - Set explicit priority on every issue (2 = high, 3 = medium).
       - Place all created issues in the Symphony project.
+      - Include the `reliability` label on every created issue (look up its ID from the team labels query below).
       - Use `linear_graphql` for all issue creation:
         ```graphql
         mutation CreateParent($input: IssueCreateInput!) {
@@ -92,16 +93,17 @@ No description.
           issueCreate(input: $input) { success issue { id identifier title } }
         }
         ```
-        Variables for parent: `{ "input": { "teamId": "<team-id>", "projectId": "<symphony-project-id>", "title": "[PARENT] <error category>", "description": "<summary of errors observed>", "priority": 2 } }`
-        Variables for child: `{ "input": { "teamId": "<team-id>", "projectId": "<symphony-project-id>", "parentId": "<parent-issue-id>", "title": "[CHILD] <specific fix>", "description": "<exact file paths, code changes, validation command>", "priority": 3 } }`
-      - To get the team ID and Symphony project ID, query:
+        Variables for parent: `{ "input": { "teamId": "<team-id>", "projectId": "<symphony-project-id>", "title": "[PARENT] <error category>", "description": "<summary of errors observed>", "priority": 2, "labelIds": ["<reliability-label-id>"] } }`
+        Variables for child: `{ "input": { "teamId": "<team-id>", "projectId": "<symphony-project-id>", "parentId": "<parent-issue-id>", "title": "[CHILD] <specific fix>", "description": "<exact file paths, code changes, validation command>", "priority": 3, "labelIds": ["<reliability-label-id>"] } }`
+      - To get the team ID, Symphony project ID, and reliability label ID, query:
         ```graphql
         query {
           teams(filter: { key: { eq: "ANQ" } }) {
-            nodes { id projects { nodes { id name } } }
+            nodes { id projects { nodes { id name } } labels(first: 50) { nodes { id name } } }
           }
         }
         ```
+        Find the label with `name: "reliability"` and use its `id` as `<reliability-label-id>` in the issue creation variables above.
    d. Before creating any issues, query existing open issues in the Symphony project to avoid duplicates:
       ```graphql
       query($projectId: ID!) {

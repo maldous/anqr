@@ -37,6 +37,21 @@ const HUMAN_REQUIRED_PATTERNS = [
   /\bpurchase\b.{0,24}\b(credit|subscription|plan)\b/i,
 ];
 
+const LABEL_CLASSIFICATION_RULES = [
+  { label: 'reliability', patterns: [/\breliability\b/i, /\bsentinel\b/i, /\bguardian\b/i, /\bmodel[\s-]?injector\b/i, /\bcredit[\s-]?gate\b/i, /\bsymphony\b/i, /\bself[\s-]?heal/i, /\bops\b/i] },
+  { label: 'android', patterns: [/\bandroid\b/i, /\bcapacitor\b/i, /\baab\b/i, /\bapk\b/i, /\bgoogle play\b/i] },
+  { label: 'ios', patterns: [/\bios\b/i, /\bswift\b/i, /\bxcode\b/i, /\bapp store\b/i] },
+  { label: 'api', patterns: [/\bapi\b/i, /\bserverless\b/i, /\bnetlify func/i, /\bendpoint\b/i] },
+  { label: 'ads', patterns: [/\badmob\b/i, /\badsense\b/i, /\bad[\s-]?unit\b/i, /\bad[\s-]?slot\b/i] },
+  { label: 'analytics', patterns: [/\banalytics\b/i, /\btelemetry\b/i] },
+  { label: 'security', patterns: [/\bsecurity\b/i, /\bxss\b/i, /\bcsp\b/i, /\bcors\b/i] },
+  { label: 'perf', patterns: [/\bperf(ormance)?\b/i, /\bbundle[\s-]?size\b/i, /\blighthouse\b/i] },
+  { label: 'payment', patterns: [/\bpayment\b/i, /\bstripe\b/i] },
+  { label: 'billing', patterns: [/\bbilling\b/i, /\binvoice\b/i] },
+  { label: 'paid', patterns: [/\bpaid\b/i, /\bsubscription\b/i, /\bpremium\b/i] },
+];
+const SEMANTIC_LABELS = new Set(['p0', 'p1', 'finished']);
+
 const APPLY = process.argv.includes('--apply');
 
 const gql = createGql(LINEAR_API_KEY);
@@ -67,6 +82,18 @@ function oneTaskBudget() {
 function isHumanOnlyIssue(issue) {
   const text = `${issue.title || ''}\n${issue.description || ''}`;
   return HUMAN_REQUIRED_PATTERNS.some((re) => re.test(text));
+}
+
+function classifyIssueLabel(issue) {
+  const title = issue.title || '';
+  if (title.startsWith('[SENTINEL]')) return 'reliability';
+  if (title.startsWith('[PARENT]')) return 'reliability';
+  if (title.startsWith('[CHILD]')) return 'reliability';
+  const text = `${title}\n${issue.description || ''}`;
+  for (const rule of LABEL_CLASSIFICATION_RULES) {
+    if (rule.patterns.some((re) => re.test(text))) return rule.label;
+  }
+  return 'web';
 }
 
 function normalizeDescriptorTitle(title, desiredPrefix) {
@@ -262,6 +289,7 @@ async function main() {
   // - Remove Finished label from non-Done issues
   // -----------------------------------------------------------------------
   summary.labelHygiene = { checked: false, updated: [] };
+  summary.unlabeledAudit = { checked: false, classified: [] };
   const p0Label = labelByName.get('p0');
   const p1Label = labelByName.get('p1');
   const finishedLabel = labelByName.get('finished');
@@ -278,6 +306,7 @@ async function main() {
           id
           identifier
           title
+          description
           priority
           state { name }
           labels(first: 50) { nodes { id name } }
@@ -286,6 +315,7 @@ async function main() {
     }`
   );
   summary.labelHygiene.checked = true;
+  summary.unlabeledAudit.checked = true;
 
   for (const issue of openIssuesForHygiene.issues.nodes) {
     const currentLabelIds = issue.labels.nodes.map((l) => l.id);
@@ -298,6 +328,18 @@ async function main() {
     }
     if (issue.priority === 1 && p0Label) nextLabelIds.push(p0Label.id);
     if (issue.priority === 2 && p1Label) nextLabelIds.push(p1Label.id);
+
+    const hasDomainLabel = issue.labels.nodes.some(
+      (l) => !SEMANTIC_LABELS.has(l.name.toLowerCase())
+    );
+    let classifiedAs = null;
+    if (!hasDomainLabel) {
+      classifiedAs = classifyIssueLabel(issue);
+      const classifiedLabel = labelByName.get(classifiedAs);
+      if (classifiedLabel) {
+        nextLabelIds.push(classifiedLabel.id);
+      }
+    }
 
     const nextUniqueSorted = [...new Set(nextLabelIds)].sort();
     const currentSorted = [...currentLabelIds].sort();
@@ -320,6 +362,18 @@ async function main() {
       update.updated = true;
     }
     summary.labelHygiene.updated.push(update);
+    if (classifiedAs) {
+      summary.unlabeledAudit.classified.push({
+        identifier: issue.identifier,
+        assignedLabel: classifiedAs,
+        updated: update.updated,
+      });
+    }
+  }
+  if (summary.unlabeledAudit.classified.length > 0) {
+    console.error(
+      `Unlabeled audit: ${APPLY ? 'assigned' : 'would assign'} domain labels to ${summary.unlabeledAudit.classified.length} issues`
+    );
   }
 
   // -----------------------------------------------------------------------
@@ -714,7 +768,8 @@ async function main() {
         '2. Create `[CHILD]` issues for each specific atomic fix — each child description must contain exact file paths, exact code changes (before/after), and a validation command.\n' +
         '3. Link every `[CHILD]` to its `[PARENT]` using the `parentId` field in `issueCreate`.\n' +
         '4. Set explicit priority on every issue (2 = high, 3 = medium).\n' +
-        '5. Place all issues in the Symphony project.\n\n' +
+        '5. Place all issues in the Symphony project.\n' +
+        '6. Include the `reliability` label on every created issue (query team labels to get its ID).\n\n' +
         'After log review and issue creation, move this sentinel issue to Backlog.\n\n' +
         'Do NOT create PRs, do NOT run paid actions.';
 
