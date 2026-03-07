@@ -469,7 +469,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             or b"badrequesterror" in chunk_lower
                             or b"provider returned error" in chunk_lower
                             or b"openrouterexception" in chunk_lower
-                            or b"validation" in chunk_lower
+                            or b"validation_failed" in chunk_lower
                         ):
                             _error_detected = True
                             _write_cooldown(
