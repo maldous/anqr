@@ -995,7 +995,7 @@ dep:
 # Run `make sonar` to perform analysis, `make sonar-report` to view issues
 
 SONAR_HOST_URL := http://localhost:9000
-SONAR_TOKEN := sqa_d92be6588fb7576a7de0014b7ddc05911d9afc6b
+SONAR_TOKEN ?= $(SONAR_TOKEN)
 
 # Run SonarQube analysis (uses sonar-project.properties)
 sonar:

@@ -84,6 +84,7 @@ reports/*
 !reports/.gitkeep
 !reports/i18n-regression-baseline.json
 !reports/param-parity.json
+!reports/secrets-inventory.txt
 
 .gallery-server.pid
 anqr.zip
