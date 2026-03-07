@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval
+.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install
 
 # ============================================
 # Help
@@ -71,6 +71,11 @@ help:
 	@echo ""
 	@echo " 16) Harness (Autonomous Best Practice Framework)"
 	@echo "    make harness harness:quick harness:continuous"
+	@echo ""
+	@echo " 17) Email Notifications & Ingest"
+	@echo "    make notify:test       Send a test notification email"
+	@echo "    make email:ingest      Process inbound emails → Linear issues"
+	@echo "    make ops:email:install  Install systemd timer for email ingest (every 5 min)"
 	@echo ""
 
 # ============================================
@@ -831,6 +836,28 @@ ops\:gemini:
 
 ops\:hugging:
 	node scripts/ops/hugging-free-audit.mjs
+
+# ============================================
+# Email Notifications & Ingest
+# ============================================
+# Bidirectional email interface:
+#   Outbound: ops scripts send notifications on failures/milestones
+#   Inbound:  emails from/to email@anqr.link → Linear issues
+
+notify\:test:
+	@printf 'To: matthew.aldous@gmail.com\nFrom: matthew.aldous@gmail.com\nSubject: [ANQR] Notification system test\nContent-Type: text/plain; charset=utf-8\n\nThis is a test notification from the ANQR ops notification system.\nTimestamp: %s\n\nIf you receive this, outbound email notifications are working.\n' "$$(date -Iseconds)" | msmtp matthew.aldous@gmail.com
+	@echo "✅ Test notification sent to matthew.aldous@gmail.com"
+
+email\:ingest:
+	node scripts/ops/email-ingest.mjs
+
+ops\:email\:install:
+	@mkdir -p ~/.config/systemd/user
+	@printf '[Unit]\nDescription=ANQR Email Ingest (mbsync + notmuch → Linear issues)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/email-ingest.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-email-ingest.service
+	@printf '[Unit]\nDescription=ANQR Email Ingest Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=2min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-email-ingest.timer
+	systemctl --user daemon-reload
+	systemctl --user enable --now anqr-email-ingest.timer
+	@echo "✅ Email ingest timer installed and enabled (every 5 minutes)"
 
 # ============================================
 # i18n Public Repo Sync (anqr-i18n)

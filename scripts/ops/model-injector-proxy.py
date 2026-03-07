@@ -79,6 +79,7 @@ SERVICE_UNAVAILABLE_COOLDOWN = 180  # 503 Service Unavailable — service down, 
 GATEWAY_TIMEOUT_COOLDOWN = 120  # 504 Gateway Timeout — upstream timeout, transient
 SERVICE_OVERLOAD_COOLDOWN = 120  # "high demand" / stream-embedded overload — no HTTP status code
 QUOTA_EXHAUSTED_COOLDOWN = 1800  # insufficient_quota in stream — persistent, same as auth failure
+GEMINI_FREE_TIER_COOLDOWN = 86400  # Gemini free-tier daily limit — 20 req/day, resets after 24hr
 
 # Dispatch table: HTTP status → (cooldown_seconds, human_label).
 # 429 is handled separately via _record_ratelimit (with Retry-After support).
@@ -185,6 +186,19 @@ def _write_cooldown(provider: str, expiry: int) -> None:
         pass
 
 
+def _is_provider_cooled_down(provider: str) -> bool:
+    """Check if a provider has an active cooldown file (expiry in the future)."""
+    if not provider:
+        return False
+    rl_file = os.path.join(STATE_DIR, f"ratelimit-{provider}")
+    try:
+        with open(rl_file) as f:
+            expiry = int(f.read().strip())
+        return time.time() < expiry
+    except (OSError, ValueError):
+        return False
+
+
 def _is_models_endpoint(path: str) -> bool:
     """True for GET /models or /v1/models (list endpoints, not detail)."""
     clean = path.split("?")[0].rstrip("/")
@@ -286,6 +300,32 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         body = self.rfile.read(content_length) if content_length > 0 else b""
 
+        # Circuit breaker: refuse to proxy generation requests to providers
+        # that are already in cooldown.  This prevents the rapid-fire
+        # hammering pattern where Codex retries 30+ times against a dead
+        # provider within a single session.
+        if self.command == "POST" and "/responses" in self.path:
+            _cb_model = read_model()
+            _cb_provider = _model_to_provider(_cb_model)
+            if _cb_provider and _is_provider_cooled_down(_cb_provider):
+                error = json.dumps({
+                    "error": {
+                        "message": f"Provider {_cb_provider} is in cooldown — request blocked by circuit breaker",
+                        "code": "503",
+                    }
+                }).encode()
+                self.log_message(
+                    "Circuit breaker: blocked request to cooled-down provider %s (model=%s)",
+                    _cb_provider, _cb_model,
+                )
+                time.sleep(2)  # Throttle Codex retry loops
+                self.send_response_only(503)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(error)))
+                self.end_headers()
+                self.wfile.write(error)
+                return
+
         body_rewritten = False
         if body and "/responses" in self.path and self.command == "POST":
             try:
@@ -331,12 +371,14 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             resp = conn.getresponse()
 
             # Track error responses per provider — all 13 HTTP error classes.
+            _http_cooldown_written = False
             if resp.status in _STATUS_COOLDOWN_MAP or resp.status == 429:
                 try:
                     req_data = json.loads(body) if body else {}
                     model_name = req_data.get("model", "")
                     provider = _model_to_provider(str(model_name))
                     if provider:
+                        _http_cooldown_written = True
                         if resp.status == 429:
                             retry_after = _parse_retry_after(
                                 resp.getheader("Retry-After")
@@ -401,7 +443,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 # Codex sees "stream disconnected" — invisible to the
                 # HTTP-status check above.  Scanning chunks catches these.
                 _stream_provider = ""
-                _error_detected = False
+                _error_detected = _http_cooldown_written
                 if (
                     body
                     and self.command == "POST"
@@ -436,8 +478,25 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         # Status-code-anchored stream error patterns
                         # -----------------------------------------------
 
+                        # Gemini free-tier daily quota exhaustion (24hr)
+                        # Must be checked before the general 429 pattern.
+                        if b"free_tier" in scan_lower and (
+                            b"quota" in scan_lower
+                            or b"exceeded" in scan_lower
+                            or b"resource_exhausted" in scan_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + GEMINI_FREE_TIER_COOLDOWN,
+                            )
+                            self.log_message(
+                                "Gemini free-tier quota exhausted for %s — cooldown %ds (24hr)",
+                                _stream_provider, GEMINI_FREE_TIER_COOLDOWN,
+                            )
+
                         # 429 rate-limit
-                        if b"429" in scan_buf and (
+                        elif b"429" in scan_buf and (
                             b"rate" in scan_lower
                             or b"quota" in scan_lower
                             or b"resource_exhausted" in scan_lower

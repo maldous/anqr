@@ -141,8 +141,11 @@ The credit gate queries Ollama's `/api/tags` endpoint and picks the best availab
 
 1. `qwen2.5-coder:7b-32t` — custom variant with `num_thread 32` for max CPU utilisation (created via `Modelfile`)
 2. `qwen2.5-coder:7b` — base 7B quality for tool-calling tasks (4.7 GB)
-3. `qwen2.5-coder:3b` — faster, lighter (2 GB)
-4. `llama3.1:8b` — general-purpose with tool support (4.7 GB)
+3. `llama3.1:8b` — general-purpose with tool support (4.7 GB)
+
+> **Note:** `qwen2.5-coder:3b` and `llama3.1:8b-32k` were removed from the
+> preferred lists and LiteLLM config — they are not installed on the current
+> system and caused 404 errors on every selection attempt.
 
 Models without tool-calling support (e.g. `deepseek-coder:*`) are excluded because Codex requires function/tool calling.
 
@@ -198,10 +201,33 @@ buffer for cross-chunk detection) for:
 #### Additional Robustness Features
 
 - **Retry-After header parsing**: 429 responses use `max(Retry-After, 120s)` as cooldown
-- **Split timeouts**: 30s connect timeout, 600s read timeout
+- **Split timeouts**: 60s connect timeout, 600s read timeout
 - **Thread-safe cooldown writes**: atomic temp+mv with PID+thread-ID uniqueness
 - **Connection refused → 502**: immediate upstream-unavailable response
 - **Generic exception → 500**: catch-all for unexpected proxy errors
+- **Gemini free-tier 24hr cooldown**: detects `free_tier` quota exhaustion and writes 86400s cooldown (vs 120s for normal 429s)
+- **Deduplicated logging**: HTTP status cooldowns suppress redundant stream-body scanning for the same request
+
+#### Request-Level Circuit Breaker
+
+The model-injector implements a **request-level circuit breaker** that refuses
+to proxy generation requests (`POST /v1/responses`) to providers that are
+already in cooldown. This prevents the "30x rapid-fire hammering" pattern
+where Codex keeps retrying through the same dead provider within a session:
+
+1. Before proxying each `/v1/responses` request, read `current-model` and
+   check if the provider has an active cooldown file
+2. If cooled down → return **HTTP 503 immediately** without connecting upstream
+3. Codex receives the 503, the session eventually fails, and Symphony starts
+   a new session with a new credit-gate invocation that selects a different provider
+
+**Impact:** Reduces 30+ wasted upstream requests per error to exactly 1.
+The first request triggers the cooldown; all subsequent requests are blocked
+locally in ~0ms.
+
+```
+[model-injector] Circuit breaker: blocked request to cooled-down provider github (model=github-llama-8b)
+```
 
 #### Configuration
 
@@ -254,11 +280,60 @@ The harness report is a unified health check across 22 domains — see [`docs/ha
 
 The sentinel (ANQ-105) reads `reports/harness/latest.json` and creates corrective PARENT/CHILD issues for failures and regressions. This closes the autonomous feedback loop: checks detect problems → sentinel creates issues → agents fix them → next check confirms the fix.
 
+## Email Notification System (Bidirectional)
+
+ANQR has a bidirectional email interface for operator communication:
+
+### Outbound Notifications (ANQR → Operator)
+
+Ops scripts send email notifications via `msmtp` to `matthew.aldous@gmail.com` on notable events:
+
+| Source | Event | Severity |
+| ------ | ----- | -------- |
+| `nightly-ops-pass.mjs` | Critical step failure (any profile) | critical |
+| `nightly-ops-pass.mjs` | All checks passed (full profile, daily) | info |
+| `linear-guardian.mjs` | Sentinel dead man's switch triggered | critical |
+| `email-ingest.mjs` | Issues created from inbound emails | info |
+
+**Rate limiting** (per `reports/notify/state.json`):
+- Max 10 emails per hour
+- Max 30 emails per day
+- Same-subject deduplication within 1 hour
+
+Library: `scripts/ops/lib/notify.mjs` — import `sendNotification({ subject, body, severity })`.
+
+### Inbound Issue Creation (Operator → ANQR)
+
+Emails sent from/to `email@anqr.link` (arriving in the Gmail inbox) are automatically processed into Linear issues:
+
+1. `anqr-email-ingest.timer` runs every 5 minutes
+2. `mbsync gmail` syncs mail, `notmuch new` indexes
+3. Searches: `(from:email@anqr.link OR to:email@anqr.link) AND tag:inbox AND NOT tag:anqr-processed`
+4. For each match: creates a Linear issue (`[EMAIL] Subject`, priority 2/high)
+5. Tags processed emails with `anqr-processed`, removes `inbox` tag
+6. Sends confirmation notification listing created issues
+
+**Setup:**
+```bash
+make ops:email:install   # Install and enable systemd timer
+make notify:test         # Test outbound email delivery
+make email:ingest        # Run ingest manually
+```
+
+**To create an issue via email:** Send an email from/to `email@anqr.link`. The subject becomes the issue title, the body becomes the description. The issue is created with high priority in the ANQ team.
+
+- `anqr-email-ingest.timer`
+  - cadence: every 5 minutes
+  - action: sync mail via mbsync, process inbound emails from email@anqr.link → Linear issues
+  - command: `node scripts/ops/email-ingest.mjs`
+
 ## Reports
 
 - Harness report: `reports/harness/latest.json` (+ timestamped history)
 - Continuous/nightly reports: `reports/nightly/<timestamp>/summary.{json,md}`
 - Latest run summary: `reports/nightly/latest.json`
+- Email ingest report: `reports/email-ingest/latest.json`
+- Notification state: `reports/notify/state.json`
 - Linear guardian snapshot: `reports/linear-guardian/latest.json`
 - Groq free audit output: `reports/groq-free/latest.md`
 - Gemini free audit output: `reports/gemini-free/latest.md`
@@ -287,6 +362,9 @@ ALLOW_PAID_ACTIONS=1 make deploy
 - `make ops:groq`
 - `make ops:gemini`
 - `make ops:hugging`
+- `make notify:test` — test outbound email delivery
+- `make email:ingest` — process inbound emails → Linear issues
+- `make ops:email:install` — install email ingest systemd timer
 
 ## Timer Administration
 
@@ -295,4 +373,5 @@ systemctl --user list-timers --all | rg 'anqr-(linear-guardian|ops-continuous|op
 systemctl --user status anqr-linear-guardian.service
 systemctl --user status anqr-ops-continuous.service
 systemctl --user status anqr-ops-nightly.service
+systemctl --user status anqr-email-ingest.service
 ```

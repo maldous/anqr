@@ -91,11 +91,11 @@ LITELLM_GITHUB_MODEL="github-llama-8b"
 LITELLM_OLLAMA_MODEL="${LITELLM_OLLAMA_MODEL:-}"
 
 # Preferred Ollama models in descending quality order (tool-calling capable only).
-PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t qwen2.5-coder:7b llama3.1:8b-32k llama3.1:8b"
+PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t qwen2.5-coder:7b llama3.1:8b"
 DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b-32t"
 
 # LiteLLM aliases (must exist in litellm-config.yaml)
-PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t qwen2.5-coder-7b llama3.1-8b llama3.1-8b-base"
+PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t qwen2.5-coder-7b llama3.1-8b-base"
 DEFAULT_LITELLM_OLLAMA_MODEL="qwen2.5-coder-7b-32t"
 
 # Provider failure memory: skip providers that failed recently.
@@ -341,11 +341,6 @@ select_litellm_ollama_model() {
         ;;
       qwen2.5-coder-7b)
         if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b"' ; then
-          echo "$model"; return
-        fi
-        ;;
-      llama3.1-8b)
-        if echo "$tags_json" | grep -q '"name":"llama3.1:8b-32k"' ; then
           echo "$model"; return
         fi
         ;;

@@ -25,6 +25,8 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 | Ops autopilot      | `docs/ops-autopilot.md`               |
 | Autonomous harness | `docs/harness/autonomous-framework.md`|
 | Error handling     | `docs/ops-autopilot.md` §Error-Aware  |
+| Circuit breaker    | `docs/ops-autopilot.md` §Circuit-Breaker |
+| Email notifications| `docs/ops-autopilot.md` §Email        |
 
 ## Architecture
 
@@ -98,6 +100,8 @@ make check        # oxlint + oxfmt --check (CI mode)
 make quality      # Full 19-check quality gate pipeline
 make harness      # Full 22-domain harness report (FACE-BPH)
 make harness:quick # Quick 4-check smoke test
+make notify:test  # Test outbound email notification
+make email:ingest # Process inbound emails → Linear issues
 ```
 
 ### Testing

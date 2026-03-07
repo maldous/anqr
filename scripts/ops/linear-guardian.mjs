@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createGql } from './lib/linear-client.mjs';
+import { sendNotification } from './lib/notify.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -795,6 +796,11 @@ async function main() {
       );
       summary.sentinelCheck.created = true;
       console.error("Sentinel dead man's switch: created new sentinel issue");
+      sendNotification({
+        subject: "Sentinel dead man's switch triggered",
+        body: 'A new [SENTINEL] issue was created because no active sentinel was found.\n\nThis indicates the previous sentinel may have failed or been canceled.\nThe guardian creates a replacement every 15 minutes when this happens.',
+        severity: 'critical',
+      });
     } else if (!hasSentinel) {
       console.error("Sentinel dead man's switch: no sentinel found (dry-run, would create)");
     }

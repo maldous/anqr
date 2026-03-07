@@ -5,6 +5,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createGql } from './lib/linear-client.mjs';
+import { sendNotification } from './lib/notify.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -248,6 +249,21 @@ async function main() {
     latestPath,
     JSON.stringify({ ...summary, linearComment: linearResult }, null, 2) + '\n'
   );
+
+  // Email notification for notable events
+  if (!summary.ok) {
+    sendNotification({
+      subject: `${PROFILE} ops failed: ${criticalFailed.map((r) => r.id).join(', ')}`,
+      body: lines.join('\n'),
+      severity: 'critical',
+    });
+  } else if (PROFILE === 'full') {
+    sendNotification({
+      subject: 'Nightly ops passed — all checks green',
+      body: lines.join('\n'),
+      severity: 'info',
+    });
+  }
 
   console.log(JSON.stringify({ ...summary, linearComment: linearResult }, null, 2));
   process.exit(summary.ok ? 0 : 1);

@@ -67,12 +67,6 @@ model_list:
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
   # --- Local Ollama models ---
-  - model_name: llama3.1-8b
-    litellm_params:
-      model: ollama/llama3.1:8b-32k
-      api_base: http://localhost:11434
-      num_ctx: 32768
-
   - model_name: llama3.1-8b-base
     litellm_params:
       model: ollama/llama3.1:8b
@@ -86,11 +80,6 @@ model_list:
   - model_name: qwen2.5-coder-7b
     litellm_params:
       model: ollama/qwen2.5-coder:7b
-      api_base: http://localhost:11434
-
-  - model_name: qwen2.5-coder-3b
-    litellm_params:
-      model: ollama/qwen2.5-coder:3b
       api_base: http://localhost:11434
 
 general_settings:
