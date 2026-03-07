@@ -704,7 +704,18 @@ async function main() {
 
     if (!hasSentinel && APPLY) {
       const sentinelDescription =
-        'Single-instance heartbeat. Do NOT create any new [SENTINEL] issues. If duplicates exist, move duplicates to Canceled and remove [SENTINEL] from duplicate titles. Then move this issue to Backlog. Do NOT create PRs, do NOT run paid actions, do NOT query/audit issues.';
+        'Single-instance heartbeat. Do NOT create any new [SENTINEL] issues.\n\n' +
+        '## Log Review & Self-Healing\n\n' +
+        'Review recent Symphony logs for errors that need code fixes:\n' +
+        '```bash\ngrep -aE "error|warning|Linear GraphQL request failed" ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200\n```\n\n' +
+        'For each distinct error class requiring a code fix (skip transient/retryable errors):\n' +
+        '1. Create a `[PARENT]` issue describing the error category.\n' +
+        '2. Create `[CHILD]` issues for each specific atomic fix — each child description must contain exact file paths, exact code changes (before/after), and a validation command.\n' +
+        '3. Link every `[CHILD]` to its `[PARENT]` using the `parentId` field in `issueCreate`.\n' +
+        '4. Set explicit priority on every issue (2 = high, 3 = medium).\n' +
+        '5. Place all issues in the Symphony project.\n\n' +
+        'After log review and issue creation, move this sentinel issue to Backlog.\n\n' +
+        'Do NOT create PRs, do NOT run paid actions.';
 
       const reliabilityLabel = team.labels.nodes.find(
         (l) => l.name.toLowerCase() === 'reliability'

@@ -66,10 +66,44 @@ No description.
 2. Move this issue to state `In Progress` right now.
 
 3. If the title starts with `[SENTINEL]`:
-   a. Do NOT create any new sentinel issue.
-   b. Do NOT add comments.
-   c. Do NOT scan/query other issues.
-   d. Move this issue to `Backlog`. Stop here.
+   a. Do NOT create any new `[SENTINEL]` issue.
+   b. Review recent Symphony logs for errors that need code fixes:
+      ```bash
+      grep -aE 'error|warning|Linear GraphQL request failed' ~/.local/state/symphony-anqr/log/log/symphony.log.1 2>/dev/null | tail -200
+      ```
+   c. For each distinct error class that requires a code fix (not transient/retryable errors):
+      - Create a `[PARENT]` issue describing the error category.
+      - Create one or more `[CHILD]` issues for each specific atomic fix. Each child description MUST contain:
+        - Exact file path(s) to change
+        - Exact code changes (before/after)
+        - A validation command to verify the fix
+      - Link every `[CHILD]` to its `[PARENT]` using the `parentId` field in `issueCreate`.
+      - Set explicit priority on every issue (2 = high, 3 = medium).
+      - Place all created issues in the Symphony project.
+      - Use `linear_graphql` for all issue creation:
+        ```graphql
+        mutation CreateParent($input: IssueCreateInput!) {
+          issueCreate(input: $input) { success issue { id identifier title } }
+        }
+        ```
+        Then for each child, use the parent's returned `id` as `parentId`:
+        ```graphql
+        mutation CreateChild($input: IssueCreateInput!) {
+          issueCreate(input: $input) { success issue { id identifier title } }
+        }
+        ```
+        Variables for parent: `{ "input": { "teamId": "<team-id>", "projectId": "<symphony-project-id>", "title": "[PARENT] <error category>", "description": "<summary of errors observed>", "priority": 2 } }`
+        Variables for child: `{ "input": { "teamId": "<team-id>", "projectId": "<symphony-project-id>", "parentId": "<parent-issue-id>", "title": "[CHILD] <specific fix>", "description": "<exact file paths, code changes, validation command>", "priority": 3 } }`
+      - To get the team ID and Symphony project ID, query:
+        ```graphql
+        query {
+          teams(filter: { key: { eq: "ANQ" } }) {
+            nodes { id projects { nodes { id name } } }
+          }
+        }
+        ```
+   d. Skip errors that are already handled (e.g. transient rate limits, reconnections) or that already have open issues.
+   e. Move this sentinel issue to `Backlog`. Stop here.
 
 4. If this is a regular issue (not sentinel):
    a. The description above contains exact file paths and exact code changes. Follow them exactly.
