@@ -66,21 +66,24 @@ model_list:
       api_key: os.environ/GITHUB_MODELS_TOKEN
       additional_drop_params: ["web_search_options", "supports_function_calling"]
 
-  # --- Local Ollama models ---
+  # --- Local Ollama models (all set to 32K context for long agent sessions) ---
   - model_name: llama3.1-8b-base
     litellm_params:
       model: ollama/llama3.1:8b
       api_base: http://localhost:11434
+      num_ctx: 32768
 
   - model_name: qwen2.5-coder-7b-32t
     litellm_params:
       model: ollama/qwen2.5-coder:7b-32t
       api_base: http://localhost:11434
+      num_ctx: 32768
 
   - model_name: qwen2.5-coder-7b
     litellm_params:
       model: ollama/qwen2.5-coder:7b
       api_base: http://localhost:11434
+      num_ctx: 32768
 
 general_settings:
   default_model: qwen2.5-coder-7b-32t
