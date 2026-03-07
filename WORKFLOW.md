@@ -108,7 +108,7 @@ No description.
         issues(filter: {
           team: { key: { eq: "ANQ" } },
           project: { id: { eq: $projectId } },
-          state: { name: { in: ["Backlog", "Todo", "In Progress", "In Review", "Human Review", "Rework"] } }
+          state: { name: { in: ["Backlog", "Todo", "In Progress", "Pending", "In Review", "Human Review", "Rework"] } }
         }, first: 50) {
           nodes { identifier title state { name } }
         }
