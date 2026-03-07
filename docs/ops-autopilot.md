@@ -41,11 +41,11 @@ When Codex credits are exhausted, the following services continue running at zer
 | Service                                              | Cadence        | Cost      | Status                                                  |
 | ---------------------------------------------------- | -------------- | --------- | ------------------------------------------------------- |
 | **Symphony ticket work (Groq fallback)**             | **Continuous** | **Free**  | **1st fallback; requires `GROQ_TOKEN`**                 |
-| **Symphony ticket work (Cerebras fallback)**         | **Continuous** | **Free**  | **2nd fallback; requires `CEREBRAS_TOKEN`; 1M tok/day** |
-| **Symphony ticket work (Gemini fallback)**           | **Continuous** | **Free**  | **3rd fallback; requires `GEMINI_TOKEN`; gemini-2.5-flash (~1,500 RPD)** |
-| **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free**  | **4th fallback; requires `MISTRAL_TOKEN`; Codestral code model (~600ms)** |
-| **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **5th fallback; requires `OPENROUTER_TOKEN`; :free models** |
-| **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **6th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
+| **Symphony ticket work (Gemini fallback)**           | **Continuous** | **Free**  | **2nd fallback; requires `GEMINI_TOKEN`; gemini-2.5-flash (~1,500 RPD)** |
+| **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free**  | **3rd fallback; requires `MISTRAL_TOKEN`; Codestral code model (~600ms)** |
+| **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **4th fallback; requires `OPENROUTER_TOKEN`; :free models** |
+| **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **5th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
+| **Symphony ticket work (Cerebras fallback)**         | **Continuous** | **Free**  | **6th fallback; requires `CEREBRAS_TOKEN`; 1M tok/day, 8K context** |
 | **Symphony ticket work (GitHub Models fallback)**    | **Continuous** | **Free**  | **7th fallback; requires `GITHUB_MODELS_TOKEN`** |
 | **Symphony ticket work (Ollama fallback)**           | **Continuous** | **Free**  | **8th fallback; requires Ollama on `localhost:11434`**  |
 | Linear guardian (labels only)                  | 15 min         | Free      | Always runs                                             |
@@ -60,7 +60,7 @@ When Codex credits are exhausted, the following services continue running at zer
 
 When Codex credits reset (5-hour primary window, weekly secondary window), the credit gate automatically switches back to the full cloud model and the guardian resumes lead enforcement.
 
-## Codex Credit Gate (Codex → Groq → Cerebras → Gemini → Mistral Codestral → OpenRouter FREE → SambaNova → GitHub Models → Ollama Fallback)
+## Codex Credit Gate (Codex → Groq → Gemini → Mistral Codestral → OpenRouter FREE → SambaNova → Cerebras → GitHub Models → Ollama Fallback)
 
 Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-gate.sh` — a wrapper that cascades through providers to ensure ticket work continues even when Codex cloud credits are exhausted.
 
@@ -69,11 +69,11 @@ Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-
 1. Check Symphony dashboard (`http://127.0.0.1:4040`) for credit status.
 2. **Credits available** → `exec codex --model gpt-5.3-codex app-server` (full cloud model).
 3. **Credits exhausted + Groq reachable** → `groq-llama-70b` via LiteLLM (free tier, 12K TPM, fastest cloud).
-4. **Credits exhausted + Cerebras reachable** → `cerebras-llama-8b` via LiteLLM (free tier, 1M tok/day, fast inference).
-5. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, gemini-2.5-flash, ~1,500 RPD; lightweight `/models` probe preserves daily quota).
-6. **Credits exhausted + Mistral reachable** → `mistral-codestral` via LiteLLM (free experimental tier, Codestral code-optimised, ~600ms).
-7. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
-8. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
+4. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, gemini-2.5-flash, ~1,500 RPD; lightweight `/models` probe preserves daily quota).
+5. **Credits exhausted + Mistral reachable** → `mistral-codestral` via LiteLLM (free experimental tier, Codestral code-optimised, ~600ms).
+6. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
+7. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
+8. **Credits exhausted + Cerebras reachable** → `cerebras-llama-8b` via LiteLLM (free tier, 1M tok/day, 8K context limit — deprioritised for longer sessions).
 9. **Credits exhausted + GitHub Models reachable** → `github-llama-8b` via LiteLLM (free tier, rate-limited per model).
 10. **Credits exhausted + Ollama reachable** → `<litellm-ollama-alias>` via model-injector + LiteLLM (free local model).
 11. **Optional last resort** (`ENABLE_OLLAMA_DIRECT_FALLBACK=1`) → direct Ollama (tool calling may break).
