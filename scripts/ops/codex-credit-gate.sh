@@ -22,7 +22,9 @@
 #      failed within the last 30s are skipped; after the window expires the
 #      full list is retried from the top.
 #   4. exec codex with the first available provider.
-#   5. If ALL providers unavailable → exit 1 (Symphony handles retry/backoff).
+#   5. If ALL providers rate-limited → wait for earliest cooldown to expire
+#      (up to 5 cycles / 5 min cap), then retry the cascade.
+#   6. If ALL providers genuinely unavailable → exit 1 (Symphony handles retry).
 #
 # IMPORTANT: This script uses `exec` to replace itself with codex. This is
 # required because Symphony communicates with Codex via JSON-RPC over the
@@ -682,12 +684,12 @@ fi
 # --- Rate-limit backoff: wait for cooldowns instead of burning empty turns ---
 earliest_expiry=$(find_earliest_cooldown)
 if [ -n "$earliest_expiry" ] && [ "$_ratelimit_wait_count" -lt "$MAX_RATELIMIT_WAITS" ]; then
-  _now=$(date +%s)
-  _wait_secs=$((earliest_expiry - _now))
-  if [ "$_wait_secs" -gt 0 ] && [ "$_wait_secs" -le "$MAX_RATELIMIT_WAIT_SECS" ]; then
+  now=$(date +%s)
+  wait_secs=$((earliest_expiry - now))
+  if [ "$wait_secs" -gt 0 ] && [ "$wait_secs" -le "$MAX_RATELIMIT_WAIT_SECS" ]; then
     _ratelimit_wait_count=$((_ratelimit_wait_count + 1))
-    log "All providers rate-limited — waiting ${_wait_secs}s for earliest cooldown to expire (attempt ${_ratelimit_wait_count}/${MAX_RATELIMIT_WAITS})"
-    sleep "$_wait_secs"
+    log "All providers rate-limited — waiting ${wait_secs}s for earliest cooldown to expire (attempt ${_ratelimit_wait_count}/${MAX_RATELIMIT_WAITS})"
+    sleep "$wait_secs"
     # Re-evaluate skip list after sleeping (failure window may have expired).
     load_skip_list
     continue
