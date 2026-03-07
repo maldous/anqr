@@ -11,7 +11,7 @@
 #   3. If credits exhausted → probe fallback providers best-to-worst:
 #        a) Groq            (requires GROQ_TOKEN) — free cloud, fast, via LiteLLM
 #        b) Cerebras        (requires CEREBRAS_TOKEN) — free cloud, 1M tok/day, via LiteLLM
-#        c) Gemini          (requires GEMINI_TOKEN) — free cloud tier, via LiteLLM
+#        c) Gemini          (requires GEMINI_TOKEN) — free cloud tier, gemini-2.5-flash, via LiteLLM
 #        d) Mistral         (requires MISTRAL_TOKEN) — free experimental tier, Codestral code model (~600ms), via LiteLLM
 #        e) OpenRouter FREE (requires OPENROUTER_TOKEN) — free :free models, via LiteLLM
 #        f) SambaNova       (requires SAMBANOVA_TOKEN) — free cloud, 20 req/day, via LiteLLM
@@ -60,7 +60,7 @@ OLLAMA_MODEL="${OLLAMA_MODEL:-}"
 ENABLE_OLLAMA_DIRECT_FALLBACK="${ENABLE_OLLAMA_DIRECT_FALLBACK:-0}"
 # Real provider model names (used only for availability probes)
 GROQ_MODEL="${GROQ_MODEL:-llama-3.3-70b-versatile}"
-GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
+GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.5-flash}"
 CEREBRAS_MODEL="${CEREBRAS_MODEL:-llama3.1-8b}"
 SAMBANOVA_MODEL="${SAMBANOVA_MODEL:-Meta-Llama-3.3-70B-Instruct}"
 OPENROUTER_FREE_MODEL="${OPENROUTER_FREE_MODEL:-meta-llama/llama-3.3-70b-instruct:free}"
@@ -80,6 +80,7 @@ LITELLM_API_KEY="${LITELLM_API_KEY:-}"  # empty — no auth needed for local pro
 # LiteLLM model aliases (must match model_name entries in litellm-config.yaml)
 LITELLM_GROQ_MODEL="groq-llama-70b"
 LITELLM_GEMINI_MODEL="gemini-flash"
+LITELLM_GEMINI_LITE_MODEL="gemini-flash-lite"
 LITELLM_CEREBRAS_MODEL="cerebras-llama-8b"
 LITELLM_OPENROUTER_FREE_MODEL="openrouter-free"
 LITELLM_SAMBANOVA_MODEL="sambanova-llama-70b"
@@ -182,12 +183,12 @@ gemini_available() {
     return 1
   fi
   export GEMINI_API_KEY="${GEMINI_API_KEY:-$GEMINI_TOKEN}"
+  # Use /v1beta/models listing instead of a generation request to avoid
+  # burning daily free-tier quota (~1,500 RPD) on mere availability probes.
   local resp
-  resp=$(curl -sf --max-time 8 \
-    -H "Content-Type: application/json" \
-    -X POST "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}" \
-    -d '{"contents":[{"parts":[{"text":"hi"}]}],"generationConfig":{"maxOutputTokens":1}}' 2>/dev/null) || return 1
-  echo "$resp" | grep -q '"candidates"' 2>/dev/null
+  resp=$(curl -sf --max-time 5 \
+    "https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}" 2>/dev/null) || return 1
+  echo "$resp" | grep -q "$GEMINI_MODEL" 2>/dev/null
 }
 
 cerebras_available() {
@@ -519,7 +520,7 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 3: Gemini via LiteLLM (free cloud tier) ---
+# --- Fallback 3: Gemini via LiteLLM (free cloud tier, gemini-2.5-flash, lightweight probe) ---
 if [ "$LITELLM_UP" = true ]; then
   if is_rate_limited gemini; then
     log "Gemini skipped (rate-limited — falling back)"
@@ -531,6 +532,21 @@ if [ "$LITELLM_UP" = true ]; then
     exec_via_litellm "$LITELLM_GEMINI_MODEL"
   else
     log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
+  fi
+fi
+
+# --- Fallback 3b: Gemini Lite via LiteLLM (separate per-model quota from 2.5-flash) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited gemini-lite; then
+    log "Gemini Lite skipped (rate-limited — falling back)"
+  elif is_skipped gemini-lite; then
+    log "Gemini Lite skipped (recently failed)"
+  elif gemini_available; then
+    log "Gemini Lite reachable — using ${LITELLM_GEMINI_LITE_MODEL} via LiteLLM"
+    record_provider gemini-lite
+    exec_via_litellm "$LITELLM_GEMINI_LITE_MODEL"
+  else
+    log "Gemini Lite unavailable"
   fi
 fi
 

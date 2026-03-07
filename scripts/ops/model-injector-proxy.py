@@ -68,6 +68,7 @@ _ratelimit_hits: dict[str, list[float]] = {}
 _MODEL_PROVIDER_MAP = {
     "groq-llama-70b": "groq",
     "gemini-flash": "gemini",
+    "gemini-flash-lite": "gemini-lite",
     "cerebras-llama-8b": "cerebras",
     "openrouter-free": "openrouter-free",
     "sambanova-llama-70b": "sambanova",

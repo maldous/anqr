@@ -42,7 +42,7 @@ When Codex credits are exhausted, the following services continue running at zer
 | ---------------------------------------------------- | -------------- | --------- | ------------------------------------------------------- |
 | **Symphony ticket work (Groq fallback)**             | **Continuous** | **Free**  | **1st fallback; requires `GROQ_TOKEN`**                 |
 | **Symphony ticket work (Cerebras fallback)**         | **Continuous** | **Free**  | **2nd fallback; requires `CEREBRAS_TOKEN`; 1M tok/day** |
-| **Symphony ticket work (Gemini fallback)**           | **Continuous** | **Free**  | **3rd fallback; requires `GEMINI_TOKEN`**               |
+| **Symphony ticket work (Gemini fallback)**           | **Continuous** | **Free**  | **3rd fallback; requires `GEMINI_TOKEN`; gemini-2.5-flash (~1,500 RPD)** |
 | **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free**  | **4th fallback; requires `MISTRAL_TOKEN`; Codestral code model (~600ms)** |
 | **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **5th fallback; requires `OPENROUTER_TOKEN`; :free models** |
 | **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **6th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
@@ -70,7 +70,7 @@ Symphony's `codex.command` in `WORKFLOW.md` points to `scripts/ops/codex-credit-
 2. **Credits available** → `exec codex --model gpt-5.3-codex app-server` (full cloud model).
 3. **Credits exhausted + Groq reachable** → `groq-llama-70b` via LiteLLM (free tier, 12K TPM, fastest cloud).
 4. **Credits exhausted + Cerebras reachable** → `cerebras-llama-8b` via LiteLLM (free tier, 1M tok/day, fast inference).
-5. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, Google cloud, reliable).
+5. **Credits exhausted + Gemini reachable** → `gemini-flash` via LiteLLM (free tier, gemini-2.5-flash, ~1,500 RPD; lightweight `/models` probe preserves daily quota).
 6. **Credits exhausted + Mistral reachable** → `mistral-codestral` via LiteLLM (free experimental tier, Codestral code-optimised, ~600ms).
 7. **Credits exhausted + OpenRouter FREE reachable** → `openrouter-free` via LiteLLM (free `:free` models, intermittent availability).
 8. **Credits exhausted + SambaNova reachable** → `sambanova-llama-70b` via LiteLLM (free tier, 70B model, 20 req/day).
@@ -101,7 +101,7 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 | OpenAI (Codex)      | Responses     | `api.openai.com/v1`                                | Codex credits                   | Paid                  |
 | Groq                | OpenAI-compat | `api.groq.com/openai/v1`                           | `GROQ_TOKEN` env var            | 12K TPM               |
 | Cerebras            | OpenAI-compat | `api.cerebras.ai/v1`                               | `CEREBRAS_TOKEN` env var        | 1M tokens/day         |
-| Gemini              | OpenAI-compat | `generativelanguage.googleapis.com/v1beta/openai/` | `GEMINI_TOKEN` env var          | Generous              |
+| Gemini              | OpenAI-compat | `generativelanguage.googleapis.com/v1beta/openai/` | `GEMINI_TOKEN` env var          | ~10 RPM, ~1,500 RPD  |
 | OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    |
 | SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            |
 | Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     |
@@ -118,7 +118,7 @@ Do not run `litellm-model-injector.service` at the same time as `model-injector-
 | `GROQ_TOKEN`             | _(from symphony env)_                              | Groq API key; exported as `GROQ_API_KEY` for Codex                                          |
 | `GROQ_MODEL`             | `llama-3.3-70b-versatile`                          | Model to use via Groq                                                                       |
 | `GEMINI_TOKEN`           | _(from symphony env)_                              | Gemini API key; exported as `GEMINI_API_KEY` for Codex                                      |
-| `GEMINI_MODEL`           | `gemini-2.0-flash`                                 | Model to use via Gemini                                                                     |
+| `GEMINI_MODEL`           | `gemini-2.5-flash`                                 | Model to use via Gemini (upgraded from deprecated 2.0-flash; lite variant also registered)   |
 | `OPENROUTER_TOKEN`       | _(from symphony env)_                              | OpenRouter API key; exported as `OPENROUTER_API_KEY` for Codex                              |
 | `OPENROUTER_FREE_MODEL`  | `meta-llama/llama-3.3-70b-instruct:free`           | Free model to use via OpenRouter `:free` tier                                               |
 | `MISTRAL_TOKEN`          | _(from symphony env)_                              | Mistral API key; exported as `MISTRAL_API_KEY`                                              |
