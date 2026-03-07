@@ -54,7 +54,7 @@ UNSUPPORTED_RESPONSE_FIELDS = {
 # Rate-limit tracking: when upstream returns 429s too frequently for a
 # provider, write a cooldown signal file so the credit-gate skips it.
 RATELIMIT_WINDOW = 60       # count 429s within this many seconds
-RATELIMIT_THRESHOLD = 3     # this many 429s triggers cooldown
+RATELIMIT_THRESHOLD = 1     # immediate cooldown on first 429 — providers don't accidentally return 429
 RATELIMIT_COOLDOWN = 120    # skip provider for this many seconds
 STATE_DIR = os.path.join(
     os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"),
@@ -353,6 +353,9 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             b"rate" in chunk_lower
                             or b"quota" in chunk_lower
                             or b"resource_exhausted" in chunk_lower
+                            or b"too many" in chunk_lower
+                            or b"limit" in chunk_lower
+                            or b"exceeded" in chunk_lower
                         ):
                             _rl_detected = True
                             _record_ratelimit(_stream_provider)
