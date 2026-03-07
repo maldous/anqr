@@ -277,7 +277,7 @@ Ollama is configured for hybrid CPU/GPU inference via `/etc/systemd/system/ollam
 
 | Setting                    | Value   | Purpose                                                       |
 | -------------------------- | ------- | ------------------------------------------------------------- |
-| `OLLAMA_NUM_PARALLEL`      | `2`     | Allow two concurrent requests (matches `max_concurrent_agents`)|
+| `OLLAMA_NUM_PARALLEL`      | `1`     | Single slot — guarantees full 32K context per request on 4GB VRAM |
 | `OLLAMA_MAX_LOADED_MODELS` | `1`     | Keep one model in memory to avoid RAM thrashing               |
 | `OLLAMA_KEEP_ALIVE`        | `30m`   | Keep model warm between agent turns                           |
 | `OLLAMA_CONTEXT_LENGTH`    | `32768` | 32K context for long agent sessions                             |
@@ -285,7 +285,7 @@ Ollama is configured for hybrid CPU/GPU inference via `/etc/systemd/system/ollam
 | `OLLAMA_FLASH_ATTENTION`   | `1`     | Enable flash attention for faster inference                   |
 | `OLLAMA_GPU_OVERHEAD`      | `0`     | Maximise VRAM allocated to model layers                       |
 
-With a GTX 1650 (4 GB VRAM), the `qwen2.5-coder:7b-32t` model runs at roughly **51% CPU / 49% GPU** split (~2.5 GB VRAM used, GPU at 100%). Warm inference completes in ~2–4 seconds per turn vs 2+ minutes on CPU-only.
+With a GTX 1650 (4 GB VRAM), the `qwen2.5-coder:7b-32t` model runs at roughly **51% CPU / 49% GPU** split (~2.5 GB VRAM used, GPU at 100%). `OLLAMA_NUM_PARALLEL=1` ensures each request gets the full 32K KV cache — with `NUM_PARALLEL=2` the doubled KV allocation (2×32K=64K tokens) starves VRAM. The tradeoff is sequential request processing, but a slow result is better than no result.
 
 **Important:** Do not set `CUDA_VISIBLE_DEVICES=-1` or `OLLAMA_LLM_LIBRARY=cpu_avx2` — these disable GPU offload entirely and were removed to enable hybrid inference.
 
