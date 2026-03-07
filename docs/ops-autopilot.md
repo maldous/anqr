@@ -338,7 +338,9 @@ make notify:test         # Test outbound email delivery
 make email:ingest        # Run ingest manually
 ```
 
-**To create an issue via email:** Send an email from/to `email@anqr.link`. The subject becomes the issue title, the body becomes the description. The issue is created with high priority in the ANQ team.
+**To create an issue via email:** Send an email from `matthew.aldous@gmail.com` to `email@anqr.link`. The subject becomes the issue title, the body becomes the description. The issue is created with high priority in the ANQ team.
+
+**Sender whitelist:** Only emails from addresses in the `ALLOWED_SENDERS` list (currently `matthew.aldous@gmail.com`) are processed. Emails from unauthorized senders are tagged as processed and silently skipped to prevent spam or arbitrary issue creation.
 
 - `anqr-email-ingest.timer`
   - cadence: every 5 minutes

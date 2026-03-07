@@ -27,6 +27,7 @@ const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports', 'email-ingest');
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 const TEAM_KEY = process.env.LINEAR_TEAM_KEY || 'ANQ';
 const INGEST_EMAIL = process.env.ANQR_INGEST_EMAIL || 'email@anqr.link';
+const ALLOWED_SENDERS = ['matthew.aldous@gmail.com'];
 const DRY_RUN = process.argv.includes('--dry-run');
 const NOTMUCH_QUERY = `(from:${INGEST_EMAIL} OR to:${INGEST_EMAIL}) AND tag:inbox AND NOT tag:anqr-processed`;
 
@@ -235,6 +236,18 @@ async function main() {
     const email = getMessageContent(messageId);
     if (!email) {
       summary.errors.push(`Failed to parse message: ${messageId}`);
+      continue;
+    }
+
+    const senderAddr = (email.from.match(/<([^>]+)>/)?.[1] || email.from).trim().toLowerCase();
+    const senderAllowed = ALLOWED_SENDERS.some(
+      (addr) => senderAddr === addr.toLowerCase()
+    );
+    if (!senderAllowed) {
+      console.error(
+        `[email-ingest] Skipping unauthorized sender: ${email.from} (subject: ${email.subject || '(no subject)'})`
+      );
+      tagAsProcessed(messageId);
       continue;
     }
 
