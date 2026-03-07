@@ -10,8 +10,8 @@
 #   2. If credits available → exec codex with the full cloud model.
 #   3. If credits exhausted → probe fallback providers best-to-worst:
 #        a) Groq            (requires GROQ_TOKEN) — free cloud, fast, via LiteLLM
-#        b) Gemini          (requires GEMINI_TOKEN) — free cloud tier, gemini-2.5-flash, via LiteLLM
-#        c) Mistral         (requires MISTRAL_TOKEN) — free experimental tier, Codestral code model (~600ms), via LiteLLM
+#        b) Mistral         (requires MISTRAL_TOKEN) — free experimental tier, Codestral code model (~600ms), via LiteLLM
+#        c) Gemini          (requires GEMINI_TOKEN) — free cloud tier, gemini-2.5-flash, via LiteLLM
 #        d) OpenRouter FREE (requires OPENROUTER_TOKEN) — free :free models, via LiteLLM
 #        e) SambaNova       (requires SAMBANOVA_TOKEN) — free cloud, 20 req/day, via LiteLLM
 #        f) Cerebras        (requires CEREBRAS_TOKEN) — free cloud, 1M tok/day, 8K context limit, via LiteLLM
@@ -505,7 +505,22 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 2: Gemini via LiteLLM (free cloud tier, gemini-2.5-flash, lightweight probe) ---
+# --- Fallback 2: Mistral Codestral via LiteLLM (free experimental tier, code-optimised, ~600ms) ---
+if [ "$LITELLM_UP" = true ]; then
+  if is_rate_limited mistral; then
+    log "Mistral skipped (rate-limited — falling back)"
+  elif is_skipped mistral; then
+    log "Mistral skipped (recently failed)"
+  elif mistral_available; then
+    log "Mistral Codestral reachable — using ${LITELLM_MISTRAL_MODEL} via LiteLLM"
+    record_provider mistral
+    exec_via_litellm "$LITELLM_MISTRAL_MODEL"
+  else
+    log "Mistral unavailable (no token or API unreachable)"
+  fi
+fi
+
+# --- Fallback 3: Gemini via LiteLLM (free cloud tier, gemini-2.5-flash, lightweight probe) ---
 if [ "$LITELLM_UP" = true ]; then
   if is_rate_limited gemini; then
     log "Gemini skipped (rate-limited — falling back)"
@@ -520,7 +535,7 @@ if [ "$LITELLM_UP" = true ]; then
   fi
 fi
 
-# --- Fallback 2b: Gemini Lite via LiteLLM (separate per-model quota from 2.5-flash) ---
+# --- Fallback 3b: Gemini Lite via LiteLLM (separate per-model quota from 2.5-flash) ---
 if [ "$LITELLM_UP" = true ]; then
   if is_rate_limited gemini-lite; then
     log "Gemini Lite skipped (rate-limited — falling back)"
@@ -532,21 +547,6 @@ if [ "$LITELLM_UP" = true ]; then
     exec_via_litellm "$LITELLM_GEMINI_LITE_MODEL"
   else
     log "Gemini Lite unavailable"
-  fi
-fi
-
-# --- Fallback 3: Mistral Codestral via LiteLLM (free experimental tier, code-optimised, ~600ms) ---
-if [ "$LITELLM_UP" = true ]; then
-  if is_rate_limited mistral; then
-    log "Mistral skipped (rate-limited — falling back)"
-  elif is_skipped mistral; then
-    log "Mistral skipped (recently failed)"
-  elif mistral_available; then
-    log "Mistral Codestral reachable — using ${LITELLM_MISTRAL_MODEL} via LiteLLM"
-    record_provider mistral
-    exec_via_litellm "$LITELLM_MISTRAL_MODEL"
-  else
-    log "Mistral unavailable (no token or API unreachable)"
   fi
 fi
 
@@ -651,8 +651,8 @@ else
 fi
 
 if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
-  log "ERROR: all providers exhausted (credits, Groq, Gemini, Mistral, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama, Ollama direct)"
+  log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama, Ollama direct)"
 else
-  log "ERROR: all providers exhausted (credits, Groq, Gemini, Mistral, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama)"
+  log "ERROR: all providers exhausted (credits, Groq, Mistral, Gemini, OpenRouter FREE, SambaNova, Cerebras, GitHub Models, LiteLLM/Ollama)"
 fi
 exit 1
