@@ -56,6 +56,8 @@ UNSUPPORTED_RESPONSE_FIELDS = {
 RATELIMIT_WINDOW = 60       # count 429s within this many seconds
 RATELIMIT_THRESHOLD = 1     # immediate cooldown on first 429 — providers don't accidentally return 429
 RATELIMIT_COOLDOWN = 120    # skip provider for this many seconds
+CONTEXT_LIMIT_COOLDOWN = 600  # 413 Payload Too Large — conversation won't shrink, skip longer
+NOT_FOUND_COOLDOWN = 300      # 404 Not Found — model config broken, needs manual fix
 STATE_DIR = os.path.join(
     os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"),
     "credit-gate",
@@ -269,18 +271,37 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             conn.request(self.command, self.path, body=body, headers=headers)
             resp = conn.getresponse()
 
-            # Track 429 rate-limit responses per provider.
-            if resp.status == 429 and body:
+            # Track error responses per provider.
+            if resp.status in (429, 413, 404) and body:
                 try:
                     req_data = json.loads(body)
                     model_name = req_data.get("model", "")
                     provider = _model_to_provider(str(model_name))
                     if provider:
-                        _record_ratelimit(provider)
-                        self.log_message(
-                            "429 from %s (model=%s) — tracking rate limit",
-                            provider, model_name,
-                        )
+                        if resp.status == 429:
+                            _record_ratelimit(provider)
+                            self.log_message(
+                                "429 from %s (model=%s) — tracking rate limit",
+                                provider, model_name,
+                            )
+                        elif resp.status == 413:
+                            _write_cooldown(
+                                provider,
+                                int(time.time()) + CONTEXT_LIMIT_COOLDOWN,
+                            )
+                            self.log_message(
+                                "413 Payload Too Large from %s (model=%s) — cooldown %ds",
+                                provider, model_name, CONTEXT_LIMIT_COOLDOWN,
+                            )
+                        elif resp.status == 404:
+                            _write_cooldown(
+                                provider,
+                                int(time.time()) + NOT_FOUND_COOLDOWN,
+                            )
+                            self.log_message(
+                                "404 Not Found from %s (model=%s) — cooldown %ds",
+                                provider, model_name, NOT_FOUND_COOLDOWN,
+                            )
                 except (json.JSONDecodeError, TypeError):
                     pass
 
@@ -324,7 +345,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 # Codex sees "stream disconnected" — invisible to the
                 # HTTP-status check above.  Scanning chunks catches these.
                 _stream_provider = ""
-                _rl_detected = False
+                _error_detected = False
                 if (
                     body
                     and self.command == "POST"
@@ -347,9 +368,11 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         break
                     _stream_bytes += len(chunk)
 
-                    if _stream_provider and not _rl_detected and b"429" in chunk:
+                    if _stream_provider and not _error_detected:
                         chunk_lower = chunk.lower()
-                        if (
+
+                        # 429 rate-limit detection in stream body
+                        if b"429" in chunk and (
                             b"rate" in chunk_lower
                             or b"quota" in chunk_lower
                             or b"resource_exhausted" in chunk_lower
@@ -357,11 +380,44 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             or b"limit" in chunk_lower
                             or b"exceeded" in chunk_lower
                         ):
-                            _rl_detected = True
+                            _error_detected = True
                             _record_ratelimit(_stream_provider)
                             self.log_message(
                                 "Rate-limit in stream body for %s — tracking",
                                 _stream_provider,
+                            )
+
+                        # 413 Payload Too Large detection in stream body
+                        elif b"413" in chunk and (
+                            b"too large" in chunk_lower
+                            or b"payload" in chunk_lower
+                            or b"max size" in chunk_lower
+                            or b"content length" in chunk_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + CONTEXT_LIMIT_COOLDOWN,
+                            )
+                            self.log_message(
+                                "413 in stream body for %s — cooldown %ds",
+                                _stream_provider, CONTEXT_LIMIT_COOLDOWN,
+                            )
+
+                        # 404 Not Found detection in stream body
+                        elif b"404" in chunk and (
+                            b"not found" in chunk_lower
+                            or b"notfounderror" in chunk_lower
+                            or b"model group" in chunk_lower
+                        ):
+                            _error_detected = True
+                            _write_cooldown(
+                                _stream_provider,
+                                int(time.time()) + NOT_FOUND_COOLDOWN,
+                            )
+                            self.log_message(
+                                "404 in stream body for %s — cooldown %ds",
+                                _stream_provider, NOT_FOUND_COOLDOWN,
                             )
 
                     self.wfile.write(chunk)
@@ -373,9 +429,9 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 _elapsed = time.monotonic() - _stream_start
                 if (
                     _stream_provider
-                    and not _rl_detected
-                    and _elapsed < 2.0
-                    and _stream_bytes < 500
+                    and not _error_detected
+                    and _elapsed < 5.0
+                    and _stream_bytes < 2000
                 ):
                     _record_ratelimit(_stream_provider)
                     self.log_message(
