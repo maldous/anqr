@@ -34,6 +34,7 @@
     "test:testid": "node scripts/audit-testid-coverage.js",
     "test:testid:refs": "node scripts/check-testid-references.js",
     "test:i18n": "node scripts/check-i18n-regressions.js",
+    "check:parity": "node scripts/check-share-param-parity.mjs",
     "test:bundle:budget": "node scripts/check-bundle-budgets.mjs",
     "test:perf:budget": "npm run build && node scripts/check-performance-budgets.mjs",
     "report:payload:matrix": "node scripts/generate-payload-matrix.mjs",

@@ -36,6 +36,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Share Param Parity Guardrail
+        run: npm run check:parity
       - name: i18n Regression Guard
         run: npm run test:i18n
 

@@ -81,6 +81,13 @@ function main() {
       timeoutMs: 20 * 60_000,
     },
     {
+      id: 'share_param_parity',
+      title: 'Share parameter parity guardrail report',
+      cmd: ['npm', 'run', '-s', 'check:parity'],
+      critical: true,
+      timeoutMs: 5 * 60_000,
+    },
+    {
       id: 'services_validate',
       title: 'External services validation',
       cmd: ['npm', 'run', '-s', 'validate:services'],
