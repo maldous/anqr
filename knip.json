@@ -23,7 +23,6 @@
     "lint-staged",
     "serve",
     "type-coverage",
-    "@capacitor/android",
     "@capacitor/ios",
     "@capacitor/filesystem",
     "@capacitor/splash-screen",
