@@ -63,7 +63,7 @@ describe('ANQR — Native Feature Tests', () => {
       const before = await getCanvasSnapshot();
 
       // Try to find and interact with the module style select
-      const moduleStyleSelect = await $('[data-testid="module-style-select"]');
+      const moduleStyleSelect = await $('[data-testid="render-module-style-select"]');
       if (await moduleStyleSelect.isDisplayed()) {
         await moduleStyleSelect.scrollIntoView();
         await moduleStyleSelect.click();
