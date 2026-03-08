@@ -23,11 +23,15 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>202603081737</string>
+	<string>202603081823</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save your generated QR codes to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Save your generated QR codes to your photo library.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>Your data will be used to show you ads that are more relevant to you.</string>
 	<key>SKAdNetworkItems</key>

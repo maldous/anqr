@@ -117,13 +117,19 @@ platform :ios do
       attrs[key] = File.read(path).strip if File.exist?(path)
     end
 
+    release_notes_path = File.join(metadata_path, "release_notes.txt")
+    if File.exist?(release_notes_path)
+      attrs[:whats_new] = File.read(release_notes_path).strip
+    end
+
     UI.message("Updating version localization: #{attrs.keys.join(', ')}")
     loc.update(attributes: {
       description: attrs[:description],
       keywords: attrs[:keywords],
       supportUrl: attrs[:support_url],
       marketingUrl: attrs[:marketing_url],
-      promotionalText: attrs[:promotional_text]
+      promotionalText: attrs[:promotional_text],
+      whatsNew: attrs[:whats_new]
     }.compact)
     UI.success("Version localization updated for en-US")
 
