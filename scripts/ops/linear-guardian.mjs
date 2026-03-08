@@ -1370,7 +1370,8 @@ async function main() {
 
   // -----------------------------------------------------------------------
   // Retry escalation: if an issue has been stuck in the retry queue across
-  // multiple guardian passes (>30 min), auto-escalate to [HUMAN] Pending.
+  // multiple guardian passes (>30 min), auto-route it to Todo for later
+  // AI retry instead of polluting the human-only Pending lane.
   // Prevents infinite retry loops that block the queue (F2).
   // -----------------------------------------------------------------------
   summary.retryEscalation = { checked: false, escalated: [], tracked: 0 };
@@ -1401,7 +1402,23 @@ async function main() {
 
     summary.retryEscalation.tracked = Object.keys(retryState).length;
 
-    if (pendingForHuman) {
+    const retryTargetStates = await gql(
+      `query($teamId: ID!) {
+        workflowStates(
+          filter: { team: { id: { eq: $teamId } }, name: { in: ["Todo", "Backlog"] } }
+          first: 10
+        ) {
+          nodes { id name }
+        }
+      }`,
+      { teamId: team.id }
+    );
+    const retryTodoState =
+      retryTargetStates.workflowStates.nodes.find((s) => s.name === 'Todo') ||
+      retryTargetStates.workflowStates.nodes.find((s) => s.name === 'Backlog') ||
+      null;
+
+    if (retryTodoState) {
       for (const [id, tracked] of Object.entries(retryState)) {
         const elapsed = nowMs - tracked.firstSeen;
         if (elapsed < ESCALATION_THRESHOLD_MS) continue;
@@ -1412,7 +1429,7 @@ async function main() {
         );
         const issue = issueData.issue;
         if (!issue) continue;
-        if (issue.state.name === 'Pending' || issue.state.name === 'Human Review') continue;
+        if (issue.state.name === retryTodoState.name) continue;
         if (issue.title.startsWith('[HUMAN]')) continue;
 
         const entry = {
@@ -1424,14 +1441,13 @@ async function main() {
         };
 
         if (APPLY) {
-          const newTitle = `[HUMAN] ${issue.title}`;
           await gql(
             `mutation($id: String!, $input: IssueUpdateInput!) {
               issueUpdate(id: $id, input: $input) { success }
             }`,
             {
               id: issue.id,
-              input: { title: newTitle, stateId: pendingForHuman.id },
+              input: { stateId: retryTodoState.id },
             }
           );
           await gql(
@@ -1447,7 +1463,7 @@ async function main() {
                   'The AI agent could not complete this task after multiple attempts.',
                   'Possible causes: model capability mismatch, missing CLI tooling, or infrastructure issue.',
                   '',
-                  'To retry: remove the [HUMAN] prefix and move back to Backlog.',
+                  `Moved to ${retryTodoState.name} for later AI retry when stronger models/capacity are available.`,
                 ].join('\n'),
               },
             }
@@ -1466,12 +1482,12 @@ async function main() {
 
     if (summary.retryEscalation.escalated.length > 0) {
       console.error(
-        `Retry escalation: ${APPLY ? 'escalated' : 'would escalate'} ${summary.retryEscalation.escalated.length} stuck issues to [HUMAN] Pending`
+        `Retry escalation: ${APPLY ? 'escalated' : 'would escalate'} ${summary.retryEscalation.escalated.length} stuck issues to ${retryTodoState?.name || 'Todo'}`
       );
       sendNotification({
         subject: `Symphony retry escalation: ${summary.retryEscalation.escalated.length} issues auto-escalated`,
         body: [
-          'Issues stuck in retry queue for >30 min and auto-escalated to [HUMAN] Pending:',
+          `Issues stuck in retry queue for >30 min and auto-escalated to ${retryTodoState?.name || 'Todo'}:`,
           '',
           ...summary.retryEscalation.escalated.map((e) =>
             [
@@ -1481,7 +1497,7 @@ async function main() {
             ].join('\n')
           ),
           '',
-          'To retry: remove the [HUMAN] prefix and move back to Backlog.',
+          'These remain AI-owned and should be retried from Todo when stronger models/capacity are available.',
         ].join('\n'),
         severity: 'warning',
       });

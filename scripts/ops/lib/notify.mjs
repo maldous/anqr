@@ -76,19 +76,23 @@ export function linearIssueUrl(identifier) {
 }
 
 /**
- * Format a single issue line for inclusion in notification emails.
- * Includes identifier, title, optional content snippet, and a clickable URL.
+ * Format a single issue block for notification emails.
+ * Includes identifier, title, optional metadata lines, snippet, and URL.
  *
- * @param {{ identifier: string, title?: string, snippet?: string }} opts
+ * @param {{ identifier: string, title?: string, snippet?: string, meta?: string[] }} opts
  */
-export function formatIssueLine({ identifier, title, snippet }) {
+export function formatIssueLine({ identifier, title, snippet, meta = [] }) {
   const url = linearIssueUrl(identifier);
   const parts = [`• ${identifier}`];
   if (title) parts[0] += `: ${title}`;
+  for (const line of meta) {
+    const text = String(line || '').trim();
+    if (text) parts.push(`  ${text}`);
+  }
   parts.push(`  ${url}`);
   if (snippet) {
     const trimmed = snippet.replace(/\s+/g, ' ').trim();
-    const preview = trimmed.length > 200 ? `${trimmed.slice(0, 197)}...` : trimmed;
+    const preview = trimmed.length > 600 ? `${trimmed.slice(0, 597)}...` : trimmed;
     if (preview) parts.push(`  > ${preview}`);
   }
   return parts.join('\n');

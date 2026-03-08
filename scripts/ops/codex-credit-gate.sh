@@ -368,9 +368,14 @@ load_skip_list() {
       if [ -f "$SKIP_FILE" ]; then
         SKIP_PROVIDERS=$(cat "$SKIP_FILE")
       fi
-      if ! echo "$SKIP_PROVIDERS" | grep -qw "$last_provider"; then
+      # Do not persistently skip the cloud Codex provider. When credit status
+      # is unknown we must keep retrying gpt-5.3-codex so sessions can recover
+      # as soon as credits become available again.
+      if [ "$last_provider" != "codex" ] && ! echo "$SKIP_PROVIDERS" | grep -qw "$last_provider"; then
         SKIP_PROVIDERS="${SKIP_PROVIDERS:+$SKIP_PROVIDERS }$last_provider"
       fi
+      # Strip any stale codex skip entries left by previous versions.
+      SKIP_PROVIDERS=$(echo "$SKIP_PROVIDERS" | tr ' ' '\n' | grep -v '^codex$' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
       local skip_tmp="${SKIP_FILE}.$$"
       if echo "$SKIP_PROVIDERS" > "$skip_tmp"; then mv -f "$skip_tmp" "$SKIP_FILE" 2>/dev/null; fi
       log "Recent failure detected (${age}s ago): skipping providers: $SKIP_PROVIDERS"

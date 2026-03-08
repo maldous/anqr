@@ -17,7 +17,8 @@
 4. Re-run validation before every push.
 5. Update `CHANGELOG.md` with an entry for this change before committing.
 6. Enforce one-task scope; split oversized work into child issues before execution.
-7. Route human-only work to `Pending` with unblock steps and test evidence requirements.
+7. Route true human-only work to `Pending` with unblock steps and test evidence requirements.
+8. Route catastrophic AI retry/escalation failures to `Todo` (not `Pending`) so they stay in the AI queue for future retry when model capacity improves.
 
 ## Review Readiness
 

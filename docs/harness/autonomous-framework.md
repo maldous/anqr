@@ -111,6 +111,7 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
    - `Run failed: <workflow>` → creates a `[CI]` issue (one per unique workflow, deduplicates)
    - `Run succeeded: <workflow>` → auto-closes the matching `[CI]` issue
 4. **Guardian** (15min) manages issue labels, priority, and state; classifies `[CI]` issues as `reliability`
+   - Retry-escalated catastrophic runs are routed to `Todo` for later AI retry (not `Pending`)
 5. **Symphony** picks up issues and agents implement fixes
 6. Next harness run / CI run detects improvements → closes the feedback loop
 
