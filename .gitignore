@@ -93,3 +93,9 @@ public/gallery/*.gif
 anqr.zip
 all.txt
 test-report.txt
+
+# Fastlane
+ios/App/fastlane/report.xml
+ios/App/fastlane/README.md
+ios/App/fastlane/api_key.json
+*.p8

@@ -1,0 +1,98 @@
+default_platform(:ios)
+
+BUILD_OUTPUT = "build"
+PROJECT_ROOT = File.expand_path("../../..", __dir__)
+API_KEY_PATH = File.join(__dir__, "api_key.json")
+
+platform :ios do
+  before_all do
+    setup_ci if ENV["CI"]
+  end
+
+  desc "Sync Capacitor web assets to the iOS project"
+  lane :sync do
+    sh("cd #{PROJECT_ROOT} && npm run build")
+    sh("cd #{PROJECT_ROOT} && npx cap sync ios")
+  end
+
+  desc "Build debug app for simulator"
+  lane :build do
+    sync
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Debug",
+      destination: "generic/platform=iOS Simulator",
+      skip_codesigning: true,
+      skip_archive: true,
+      derived_data_path: "#{BUILD_OUTPUT}/DerivedData"
+    )
+  end
+
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    sync
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M"),
+      xcodeproj: "App.xcodeproj"
+    )
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: BUILD_OUTPUT,
+      output_name: "ANQR.ipa",
+      clean: true
+    )
+    api_key = app_store_connect_api_key(api_key_path: API_KEY_PATH)
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Push a new release build to the App Store"
+  lane :release do
+    sync
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M"),
+      xcodeproj: "App.xcodeproj"
+    )
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: BUILD_OUTPUT,
+      output_name: "ANQR.ipa",
+      clean: true
+    )
+    api_key = app_store_connect_api_key(api_key_path: API_KEY_PATH)
+    upload_to_app_store(
+      api_key: api_key,
+      submit_for_review: false,
+      force: true,
+      skip_screenshots: true,
+      skip_metadata: true
+    )
+  end
+
+  desc "Build a signed release archive (no upload)"
+  lane :archive do
+    sync
+    increment_build_number(
+      build_number: Time.now.strftime("%Y%m%d%H%M"),
+      xcodeproj: "App.xcodeproj"
+    )
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: BUILD_OUTPUT,
+      output_name: "ANQR.ipa",
+      clean: true
+    )
+  end
+end

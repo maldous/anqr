@@ -1,0 +1,9 @@
+app_identifier("link.anqr.app")
+apple_id("matthew.aldous@gmail.com")
+team_id("5NXZ72D7LF")
+
+# App Store Connect API Key (set via environment for CI)
+# See: https://docs.fastlane.tools/app-store-connect-api/
+# ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] = "your_key_id"
+# ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"] = "your_issuer_id"
+# ENV["APP_STORE_CONNECT_API_KEY_KEY"] = "-----BEGIN EC PRIVATE KEY-----\n..."
