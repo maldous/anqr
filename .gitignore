@@ -86,6 +86,9 @@ reports/*
 !reports/param-parity.json
 !reports/secrets-inventory.txt
 
+# Gallery GIFs — hosted externally, not tracked in git (saves ~1GB history)
+public/gallery/*.gif
+
 .gallery-server.pid
 anqr.zip
 all.txt
