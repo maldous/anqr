@@ -39,6 +39,7 @@ const NOTMUCH_QUERY =
 
 // Parse subject: "[maldous/anqr] Run failed: Quality Checks - master (aa6adb2)"
 const SUBJECT_RE = /\[([^\]]+)\]\s+Run (failed|succeeded):\s+(.+?)\s+-\s+(\S+)\s+\(([a-f0-9]+)\)/;
+const ATTEMPT_SUFFIX_RE = /,\s*Attempt\s*#\d+\s*$/i;
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -121,13 +122,20 @@ function getMessageContent(messageId) {
 function parseSubject(subject) {
   const match = subject.match(SUBJECT_RE);
   if (!match) return null;
+  const rawWorkflow = match[3];
+  const workflow = normalizeWorkflowName(rawWorkflow);
   return {
     repo: match[1],
     status: match[2], // 'failed' or 'succeeded'
-    workflow: match[3], // e.g. 'Quality Checks'
+    workflow, // normalized key for dedupe (e.g. 'Quality Checks')
+    workflowRaw: rawWorkflow, // original workflow label from email subject
     branch: match[4], // e.g. 'master'
     commit: match[5], // e.g. 'aa6adb2'
   };
+}
+
+function normalizeWorkflowName(workflow) {
+  return workflow.replace(ATTEMPT_SUFFIX_RE, '').trim();
 }
 
 function tagAsProcessed(messageId) {
@@ -330,7 +338,11 @@ async function main() {
 
   // Step 6: Process each email
   for (const { messageId, content, parsed } of emails) {
-    const logPrefix = `[ci-monitor] ${parsed.status}: ${parsed.workflow} (${parsed.commit})`;
+    const workflowLabel =
+      parsed.workflowRaw && parsed.workflowRaw !== parsed.workflow
+        ? `${parsed.workflowRaw} → ${parsed.workflow}`
+        : parsed.workflow;
+    const logPrefix = `[ci-monitor] ${parsed.status}: ${workflowLabel} (${parsed.commit})`;
 
     if (parsed.status === 'failed') {
       summary.failures.push({
