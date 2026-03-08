@@ -372,7 +372,7 @@ describe('ANQR — Android Platform Tests', () => {
   describe('Tier Switching (Android)', () => {
     it('should switch to Advanced and render a different QR', async () => {
       await selectTier('basic');
-      const basicSnapshot = await getCanvasSnapshot();
+      await getCanvasSnapshot();
 
       await selectTier('advanced');
       await waitForRenderIdle();
