@@ -8,6 +8,7 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ops): clean Linear noise by hardening CI monitor workflow matching/repo filtering and auto-resolving harness issues in guardian
 - fix(ci): shorten GitHub quality gate to static quality checks; move runtime app tests under `make test`
 - fix(workflow): route catastrophic retry escalations to `Todo` (AI retry lane) and normalize human-only queue in `Pending`
+- fix(ops): add `--help` / `-h` support to Linear list CLI and improve unknown-flag guidance
 
 ## 2026-03-07
 

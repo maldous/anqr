@@ -30,6 +30,20 @@ const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 
 const TERMINAL_STATES = new Set(['done', 'closed', 'cancelled', 'canceled', 'duplicate']);
 
+const HELP_TEXT = `List Linear issues with optional filters.
+
+Usage:
+  node scripts/ops/linear-list-issues.mjs [options]
+
+Options:
+  --team <key>     Team key (default: ANQ)
+  --state <names>  Comma-separated state names to include (default: all)
+  --label <name>   Filter by label name (repeatable)
+  --open           Include only non-terminal states
+  --format <fmt>   Output format: json (default) or table
+  -h, --help       Show this help text
+`;
+
 function parseArgs(argv) {
   const args = { labels: [], team: 'ANQ', format: 'json' };
   let i = 2;
@@ -57,8 +71,14 @@ function parseArgs(argv) {
         args.format = value;
         i += 2;
         break;
+      case '--help':
+      case '-h':
+        args.help = true;
+        i += 1;
+        break;
       default:
         console.error(`Unknown flag: ${flag}`);
+        console.error('Use --help to view available options.');
         process.exit(1);
     }
   }
@@ -66,12 +86,16 @@ function parseArgs(argv) {
 }
 
 async function main() {
+  const args = parseArgs(process.argv);
+  if (args.help) {
+    console.log(HELP_TEXT);
+    return;
+  }
+
   if (!LINEAR_API_KEY) {
     console.error('ERROR: LINEAR_API_KEY environment variable is required');
     process.exit(1);
   }
-
-  const args = parseArgs(process.argv);
   const gql = createGql(LINEAR_API_KEY);
 
   // Fetch all issues for the team (paginated)
