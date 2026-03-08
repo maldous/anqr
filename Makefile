@@ -934,19 +934,30 @@ i18n\:pull:
 	@echo "i18n pull complete."
 
 # Push translation updates to public repo (uses force push to handle diverged histories)
+# Stashes any working-tree changes first because git-subtree requires a clean tree.
 i18n\:push:
 	@echo "Pushing i18n translations to public repo..."
-	@echo "  Splitting static subtree (this may take a moment)..."
-	@STATIC_SHA=$$(git subtree split --prefix=src/i18n/static/txt); \
+	@STASHED=0; \
+	if ! git diff --quiet || ! git diff --cached --quiet; then \
+		echo "  Stashing uncommitted changes before subtree split/push..."; \
+		git stash push -m "i18n:push auto-stash" --include-untracked; \
+		STASHED=1; \
+	fi; \
+	echo "  Splitting static subtree (this may take a moment)..."; \
+	STATIC_SHA=$$(git subtree split --prefix=src/i18n/static/txt); \
 	if [ -n "$$STATIC_SHA" ]; then \
 		echo "  Pushing static branch..."; \
 		git push anqr-i18n "$$STATIC_SHA":static 2>/dev/null || git push anqr-i18n "$$STATIC_SHA":static --force; \
-	fi
-	@echo "  Splitting locales subtree (this may take a moment)..."
-	@LOCALES_SHA=$$(git subtree split --prefix=src/i18n/locales/txt); \
+	fi; \
+	echo "  Splitting locales subtree (this may take a moment)..."; \
+	LOCALES_SHA=$$(git subtree split --prefix=src/i18n/locales/txt); \
 	if [ -n "$$LOCALES_SHA" ]; then \
 		echo "  Pushing locales branch..."; \
 		git push anqr-i18n "$$LOCALES_SHA":locales 2>/dev/null || git push anqr-i18n "$$LOCALES_SHA":locales --force; \
+	fi; \
+	if [ $$STASHED -eq 1 ]; then \
+		echo "  Restoring stashed changes..."; \
+		git stash pop; \
 	fi
 	@echo "i18n push complete."
 
