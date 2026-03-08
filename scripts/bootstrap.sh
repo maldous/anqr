@@ -125,9 +125,10 @@ fi
 step "Installing Symphony config"
 safe_cp "$TMP/config/symphony/anqr.env" "$HOME/.config/symphony/anqr.env"
 
-# --- Play Store & Android signing -------------------------------------------
-step "Installing Play Store & Android signing keys"
+# --- Play Store, Apple & Android signing ------------------------------------
+step "Installing Play Store, Apple & Android signing keys"
 safe_cp "$TMP/play-store-key.json" "$REPO_ROOT/play-store-key.json"
+safe_cp "$TMP/AuthKey_8YFT9FMAHW.p8" "$REPO_ROOT/AuthKey_8YFT9FMAHW.p8"
 
 if [[ -d "$REPO_ROOT/android/app" ]]; then
   safe_cp "$TMP/release-key.keystore" "$REPO_ROOT/android/app/release-key.keystore"
