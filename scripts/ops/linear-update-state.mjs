@@ -66,7 +66,7 @@ async function main() {
   // Resolve issue and its team
   const issueData = await gql(
     `query($id: String!) { issue(id: $id) { id identifier team { id } } }`,
-    { id: args.issue },
+    { id: args.issue }
   );
   if (!issueData.issue) {
     console.error(`ERROR: Issue ${args.issue} not found`);
@@ -78,10 +78,10 @@ async function main() {
   // Resolve state by name
   const teamData = await gql(
     `query($teamId: String!) { team(id: $teamId) { states(first: 50) { nodes { id name } } } }`,
-    { teamId },
+    { teamId }
   );
   const state = teamData.team.states.nodes.find(
-    (s) => s.name.toLowerCase() === args.state.toLowerCase(),
+    (s) => s.name.toLowerCase() === args.state.toLowerCase()
   );
   if (!state) {
     const available = teamData.team.states.nodes.map((s) => s.name).join(', ');
@@ -94,7 +94,7 @@ async function main() {
     `mutation($id: String!, $input: IssueUpdateInput!) {
       issueUpdate(id: $id, input: $input) { success issue { identifier state { name } } }
     }`,
-    { id: issue.id, input: { stateId: state.id } },
+    { id: issue.id, input: { stateId: state.id } }
   );
 
   const updated = result.issueUpdate?.issue;

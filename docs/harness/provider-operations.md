@@ -14,29 +14,29 @@ Symphony orchestrator
 
 **Key files:**
 
-| File | Purpose |
-| ---- | ------- |
-| `scripts/ops/codex-credit-gate.sh` | Provider cascade, availability probes, rate-limit backoff |
-| `scripts/ops/model-injector-proxy.py` | Request injection, in-session failover, error detection, cooldowns |
-| `scripts/ops/litellm-config.yaml` | LiteLLM model aliases, provider routing, API keys |
-| `Modelfile` | Custom Ollama model definition (qwen2.5-coder:7b-32t) |
-| `/etc/systemd/system/ollama.service.d/override.conf` | Ollama GPU/VRAM/context tuning |
+| File                                                 | Purpose                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------ |
+| `scripts/ops/codex-credit-gate.sh`                   | Provider cascade, availability probes, rate-limit backoff          |
+| `scripts/ops/model-injector-proxy.py`                | Request injection, in-session failover, error detection, cooldowns |
+| `scripts/ops/litellm-config.yaml`                    | LiteLLM model aliases, provider routing, API keys                  |
+| `Modelfile`                                          | Custom Ollama model definition (qwen2.5-coder:7b-32t)              |
+| `/etc/systemd/system/ollama.service.d/override.conf` | Ollama GPU/VRAM/context tuning                                     |
 
 ## Verified Provider Matrix
 
 Context windows verified where provider API catalog is available; remainder based on published documentation. Providers marked ⚠️ have unverified limits.
 
-| # | Provider | LiteLLM Alias | Model | Context (input) | Context (output) | Free Tier Limits | Status |
-|---|----------|---------------|-------|-----------------|------------------|------------------|--------|
-| 1 | Groq | `groq-llama-70b` | `llama-3.3-70b-versatile` | 128K | 32K | 12K TPM | ✅ Active |
-| 2 | Mistral | `mistral-codestral` | `devstral-small-2507` | 128K | 32K | Free experimental | ✅ Active |
-| 3 | Gemini | `gemini-flash` | `gemini-2.5-flash` | 1M | 65K | ~1,500 RPD | ✅ Active |
-| 3b | Gemini Lite | `gemini-flash-lite` | `gemini-2.5-flash-lite` | 1M | 65K | Separate quota | ✅ Active |
-| 4 | OpenRouter | `openrouter-free` | `llama-3.3-70b-instruct:free` | 128K | 32K | 20 req/min | ✅ Token SET |
-| 5 | SambaNova | `sambanova-llama-70b` | `Meta-Llama-3.3-70B-Instruct` | 128K | 32K | 20 req/day | ✅ Active |
-| 6 | Cerebras | `cerebras-llama-8b` | `llama3.1-8b` | 8K (unverified) | 8K | 1M tok/day | ⚠️ Low context |
-| 7 | GitHub Models | `github-gpt41-mini` | `gpt-4.1-mini` | **1M** | **32K** | FREE tier | ⚠️ /chat only (no /responses) |
-| 8 | Ollama | `qwen2.5-coder-7b-32t` | `qwen2.5-coder:7b-32t` | 32K | 32K | Unlimited (local) | ✅ Active |
+| #   | Provider      | LiteLLM Alias          | Model                         | Context (input) | Context (output) | Free Tier Limits  | Status                        |
+| --- | ------------- | ---------------------- | ----------------------------- | --------------- | ---------------- | ----------------- | ----------------------------- |
+| 1   | Groq          | `groq-llama-70b`       | `llama-3.3-70b-versatile`     | 128K            | 32K              | 12K TPM           | ✅ Active                     |
+| 2   | Mistral       | `mistral-codestral`    | `devstral-small-2507`         | 128K            | 32K              | Free experimental | ✅ Active                     |
+| 3   | Gemini        | `gemini-flash`         | `gemini-2.5-flash`            | 1M              | 65K              | ~1,500 RPD        | ✅ Active                     |
+| 3b  | Gemini Lite   | `gemini-flash-lite`    | `gemini-2.5-flash-lite`       | 1M              | 65K              | Separate quota    | ✅ Active                     |
+| 4   | OpenRouter    | `openrouter-free`      | `llama-3.3-70b-instruct:free` | 128K            | 32K              | 20 req/min        | ✅ Token SET                  |
+| 5   | SambaNova     | `sambanova-llama-70b`  | `Meta-Llama-3.3-70B-Instruct` | 128K            | 32K              | 20 req/day        | ✅ Active                     |
+| 6   | Cerebras      | `cerebras-llama-8b`    | `llama3.1-8b`                 | 8K (unverified) | 8K               | 1M tok/day        | ⚠️ Low context                |
+| 7   | GitHub Models | `github-gpt41-mini`    | `gpt-4.1-mini`                | **1M**          | **32K**          | FREE tier         | ⚠️ /chat only (no /responses) |
+| 8   | Ollama        | `qwen2.5-coder-7b-32t` | `qwen2.5-coder:7b-32t`        | 32K             | 32K              | Unlimited (local) | ✅ Active                     |
 
 ### Context Window Requirements
 
@@ -47,6 +47,7 @@ All providers must support **≥32K input context** to handle long agent session
 Before adding, removing, or changing any provider:
 
 1. **Query the provider's model catalog** to verify actual context limits:
+
    ```bash
    # GitHub Models
    curl -sL -H 'Accept: application/vnd.github+json' \
@@ -63,6 +64,7 @@ Before adding, removing, or changing any provider:
    ```
 
 2. **Test through LiteLLM** after config change:
+
    ```bash
    systemctl --user restart litellm-proxy.service && sleep 6
    curl -s http://localhost:4010/v1/chat/completions \
@@ -82,17 +84,17 @@ Before adding, removing, or changing any provider:
 
 LiteLLM uses provider prefixes to route requests. Not all prefixes work for all models:
 
-| Provider | Prefix | Works? | Notes |
-|----------|--------|--------|-------|
-| Groq | `groq/` | ✅ | Standard |
-| Gemini | `gemini/` | ✅ | Required for `/v1/responses` (not `openai/`) |
-| Cerebras | `cerebras/` | ✅ | Standard |
-| OpenRouter | `openrouter/` | ✅ | Standard |
-| SambaNova | `sambanova/` | ✅ | Standard |
-| Mistral | `mistral/` | ✅ | Standard |
-| GitHub Models | `github/` | ❌ | LiteLLM doesn't recognise GPT-4.1-mini |
-| GitHub Models | `openai/` + `api_base` | ✅ | **Workaround**: use `openai/gpt-4.1-mini` with `api_base: https://models.github.ai/inference` |
-| Ollama | `ollama/` | ✅ | Standard |
+| Provider      | Prefix                 | Works? | Notes                                                                                         |
+| ------------- | ---------------------- | ------ | --------------------------------------------------------------------------------------------- |
+| Groq          | `groq/`                | ✅     | Standard                                                                                      |
+| Gemini        | `gemini/`              | ✅     | Required for `/v1/responses` (not `openai/`)                                                  |
+| Cerebras      | `cerebras/`            | ✅     | Standard                                                                                      |
+| OpenRouter    | `openrouter/`          | ✅     | Standard                                                                                      |
+| SambaNova     | `sambanova/`           | ✅     | Standard                                                                                      |
+| Mistral       | `mistral/`             | ✅     | Standard                                                                                      |
+| GitHub Models | `github/`              | ❌     | LiteLLM doesn't recognise GPT-4.1-mini                                                        |
+| GitHub Models | `openai/` + `api_base` | ✅     | **Workaround**: use `openai/gpt-4.1-mini` with `api_base: https://models.github.ai/inference` |
+| Ollama        | `ollama/`              | ✅     | Standard                                                                                      |
 
 ### GitHub Models Routing Workaround
 
@@ -122,21 +124,22 @@ Gemini **must** use the `gemini/` prefix (not `openai/`) because Codex uses the 
 
 ### Hardware: GTX 1650 (4 GB VRAM) + i9-13900K
 
-| Setting | Value | Rationale |
-|---------|-------|-----------|
-| `OLLAMA_NUM_PARALLEL` | **1** | Single slot guarantees full 32K KV cache. With `=2`, Ollama allocates 2×32K=64K tokens of KV cache, starving GPU layers on 4GB VRAM. |
-| `OLLAMA_MAX_LOADED_MODELS` | 1 | Prevents RAM thrashing between models |
-| `OLLAMA_KEEP_ALIVE` | 30m | Keeps model warm between agent turns |
-| `OLLAMA_CONTEXT_LENGTH` | 32768 | Full 32K context for long sessions |
-| `OLLAMA_KV_CACHE_TYPE` | q8_0 | Quantised KV cache — ~50% VRAM savings vs f16 |
-| `OLLAMA_FLASH_ATTENTION` | 1 | Faster inference with reduced memory |
-| `OLLAMA_GPU_OVERHEAD` | 0 | Maximise VRAM allocated to model layers |
+| Setting                    | Value | Rationale                                                                                                                            |
+| -------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `OLLAMA_NUM_PARALLEL`      | **1** | Single slot guarantees full 32K KV cache. With `=2`, Ollama allocates 2×32K=64K tokens of KV cache, starving GPU layers on 4GB VRAM. |
+| `OLLAMA_MAX_LOADED_MODELS` | 1     | Prevents RAM thrashing between models                                                                                                |
+| `OLLAMA_KEEP_ALIVE`        | 30m   | Keeps model warm between agent turns                                                                                                 |
+| `OLLAMA_CONTEXT_LENGTH`    | 32768 | Full 32K context for long sessions                                                                                                   |
+| `OLLAMA_KV_CACHE_TYPE`     | q8_0  | Quantised KV cache — ~50% VRAM savings vs f16                                                                                        |
+| `OLLAMA_FLASH_ATTENTION`   | 1     | Faster inference with reduced memory                                                                                                 |
+| `OLLAMA_GPU_OVERHEAD`      | 0     | Maximise VRAM allocated to model layers                                                                                              |
 
 ### Critical VRAM Rule
 
 **`OLLAMA_NUM_PARALLEL` must equal 1 on 4GB VRAM for reliable 32K context.**
 
 With `NUM_PARALLEL=2`, Ollama allocates KV cache for **both slots simultaneously** (2×32K = 64K tokens). On 4GB VRAM this causes:
+
 - GPU layer starvation (fewer layers offloaded)
 - KV cache thrashing to system RAM
 - Silent context truncation or OOM on long conversations
@@ -147,6 +150,7 @@ Tradeoff: sequential request processing (one agent at a time). A slow result is 
 ### Custom Model: `qwen2.5-coder:7b-32t`
 
 Built from `Modelfile` in project root:
+
 ```
 FROM qwen2.5-coder:7b
 PARAMETER num_thread 32
@@ -155,6 +159,7 @@ PARAMETER num_thread 32
 Sets `num_thread=32` to maximise CPU utilisation on the 24-thread i9-13900K (hyperthreading gives 32 logical cores). The base `qwen2.5-coder:7b` defaults to fewer threads.
 
 To rebuild after changes:
+
 ```bash
 ollama create qwen2.5-coder:7b-32t -f Modelfile
 ```
@@ -172,6 +177,7 @@ ollama create qwen2.5-coder:7b-32t -f Modelfile
 ### In-Session Failover (ANQ-194)
 
 The model-injector implements transparent mid-session provider switching:
+
 - **Point A:** Provider already cooled/tried → select next, retry immediately
 - **Point B:** HTTP error from upstream → write cooldown, drain response, select next, retry
 - **Max 3 failover attempts** per request
@@ -181,16 +187,16 @@ The model-injector implements transparent mid-session provider switching:
 
 Cooldowns are proportional to error persistence:
 
-| Duration | Errors | Rationale |
-|----------|--------|-----------|
-| 60s | 408 Timeout | Transient — brief skip |
-| 120s | 429, 502, 504, service overload | Rate limit / transient upstream |
-| 180s | 500, 503 | LiteLLM bugs, service down |
-| 300s | 400, 404, 422 | Config/format errors |
-| 600s | 403, 413, context_length_exceeded | Content/size persistent |
-| 1800s | 401, insufficient_quota | Auth/quota — won't self-heal |
-| 3600s | 402 Payment Required | Credits exhausted |
-| 86400s | Gemini free_tier quota | Daily limit — 24hr reset |
+| Duration | Errors                            | Rationale                       |
+| -------- | --------------------------------- | ------------------------------- |
+| 60s      | 408 Timeout                       | Transient — brief skip          |
+| 120s     | 429, 502, 504, service overload   | Rate limit / transient upstream |
+| 180s     | 500, 503                          | LiteLLM bugs, service down      |
+| 300s     | 400, 404, 422                     | Config/format errors            |
+| 600s     | 403, 413, context_length_exceeded | Content/size persistent         |
+| 1800s    | 401, insufficient_quota           | Auth/quota — won't self-heal    |
+| 3600s    | 402 Payment Required              | Credits exhausted               |
+| 86400s   | Gemini free_tier quota            | Daily limit — 24hr reset        |
 
 ## Operational Lessons Learned
 
@@ -224,15 +230,15 @@ Linear parent issues were marked Done with incomplete children. This masks remai
 
 ## Known Gaps & Risk Register
 
-| # | Gap | Risk | Mitigation |
-|---|-----|------|------------|
-| 1 | No automated cascade integration test | Provider failover regression invisible | Create test that simulates provider failure |
-| 2 | Cerebras 8K context unverified | Long conversations silently fail on Cerebras | Cerebras is position 6 (deprioritised); verify via API |
-| 3 | No VRAM utilization health check | KV cache overflow invisible | Add `nvidia-smi` VRAM check to harness report |
-| 4 | No provider routing smoke test | LiteLLM prefix breaks on upgrade | Add startup test for all 9 provider aliases |
-| 5 | No cumulative quota tracking | Can't predict when providers will exhaust | Read cooldown files in harness report (ANQ-198) |
-| 6 | `OPENROUTER_API_KEY` env var missing | `OPENROUTER_TOKEN` is set but variable naming inconsistency | Credit-gate handles both; document the mapping |
-| 7 | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix |
+| #   | Gap                                             | Risk                                                                         | Mitigation                                                                       |
+| --- | ----------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | No automated cascade integration test           | Provider failover regression invisible                                       | Create test that simulates provider failure                                      |
+| 2   | Cerebras 8K context unverified                  | Long conversations silently fail on Cerebras                                 | Cerebras is position 6 (deprioritised); verify via API                           |
+| 3   | No VRAM utilization health check                | KV cache overflow invisible                                                  | Add `nvidia-smi` VRAM check to harness report                                    |
+| 4   | No provider routing smoke test                  | LiteLLM prefix breaks on upgrade                                             | Add startup test for all 9 provider aliases                                      |
+| 5   | No cumulative quota tracking                    | Can't predict when providers will exhaust                                    | Read cooldown files in harness report (ANQ-198)                                  |
+| 6   | `OPENROUTER_API_KEY` env var missing            | `OPENROUTER_TOKEN` is set but variable naming inconsistency                  | Credit-gate handles both; document the mapping                                   |
+| 7   | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix |
 
 ## Continuous Evolution Procedures
 

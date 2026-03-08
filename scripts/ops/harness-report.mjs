@@ -365,11 +365,7 @@ function checkTestRequiredGap() {
 }
 
 function checkDuplication() {
-  run(
-    'npx',
-    ['jscpd', 'src', '--reporters', 'json', '--output', '/tmp/jscpd-harness'],
-    120_000
-  );
+  run('npx', ['jscpd', 'src', '--reporters', 'json', '--output', '/tmp/jscpd-harness'], 120_000);
   let cloneCount = 0;
   let pctDuplicated = 0;
   try {

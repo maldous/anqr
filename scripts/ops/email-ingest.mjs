@@ -68,10 +68,7 @@ function indexMail() {
 function searchUnprocessed() {
   const proc = run('notmuch', ['search', '--output=messages', '--', NOTMUCH_QUERY]);
   if (proc.status !== 0) return [];
-  return (proc.stdout || '')
-    .trim()
-    .split('\n')
-    .filter(Boolean);
+  return (proc.stdout || '').trim().split('\n').filter(Boolean);
 }
 
 function extractMessages(data) {
@@ -101,12 +98,18 @@ function extractTextContent(bodyParts) {
   }
   for (const part of bodyParts) {
     if (part['content-type'] === 'text/html' && typeof part.content === 'string') {
-      return part.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      return part.content
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     }
     if (Array.isArray(part.content)) {
       for (const sub of part.content) {
         if (sub['content-type'] === 'text/html' && typeof sub.content === 'string') {
-          return sub.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          return sub.content
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
         }
       }
     }
@@ -146,9 +149,7 @@ function tagAsProcessed(messageId) {
 }
 
 async function createLinearIssue(gql, teamId, email, assigneeId) {
-  const title = email.subject
-    ? `[EMAIL] ${email.subject}`
-    : '[EMAIL] Untitled email issue';
+  const title = email.subject ? `[EMAIL] ${email.subject}` : '[EMAIL] Untitled email issue';
 
   const description = [
     `From: ${email.from}`,
@@ -247,9 +248,7 @@ async function main() {
     }
 
     const senderAddr = (email.from.match(/<([^>]+)>/)?.[1] || email.from).trim().toLowerCase();
-    const senderAllowed = ALLOWED_SENDERS.some(
-      (addr) => senderAddr === addr.toLowerCase()
-    );
+    const senderAllowed = ALLOWED_SENDERS.some((addr) => senderAddr === addr.toLowerCase());
     if (!senderAllowed) {
       console.error(
         `[email-ingest] Skipping unauthorized sender: ${email.from} (subject: ${email.subject || '(no subject)'})`
@@ -321,19 +320,13 @@ async function main() {
 
 function writeReport(summary) {
   ensureDir(REPORTS_DIR);
-  fs.writeFileSync(
-    path.join(REPORTS_DIR, 'latest.json'),
-    JSON.stringify(summary, null, 2) + '\n'
-  );
+  fs.writeFileSync(path.join(REPORTS_DIR, 'latest.json'), JSON.stringify(summary, null, 2) + '\n');
 }
 
 main().catch((err) => {
   console.error(`[email-ingest] Fatal: ${err.message}`);
   const failure = { ok: false, error: err.message, at: new Date().toISOString() };
   ensureDir(REPORTS_DIR);
-  fs.writeFileSync(
-    path.join(REPORTS_DIR, 'latest.json'),
-    JSON.stringify(failure, null, 2) + '\n'
-  );
+  fs.writeFileSync(path.join(REPORTS_DIR, 'latest.json'), JSON.stringify(failure, null, 2) + '\n');
   process.exit(1);
 });

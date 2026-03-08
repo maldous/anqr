@@ -96,7 +96,9 @@ async function main() {
     args.state !== undefined;
 
   if (!hasUpdate) {
-    console.error('ERROR: At least one field flag is required (--title, --description, --priority, --label, --add-label, --state)');
+    console.error(
+      'ERROR: At least one field flag is required (--title, --description, --priority, --label, --add-label, --state)'
+    );
     process.exit(1);
   }
 
@@ -111,7 +113,7 @@ async function main() {
         labels { nodes { id name } }
       }
     }`,
-    { id: args.issue },
+    { id: args.issue }
   );
   if (!issueData.issue) {
     console.error(`ERROR: Issue ${args.issue} not found`);
@@ -143,10 +145,10 @@ async function main() {
   if (args.state !== undefined) {
     const teamData = await gql(
       `query($teamId: String!) { team(id: $teamId) { states(first: 50) { nodes { id name } } } }`,
-      { teamId },
+      { teamId }
     );
     const state = teamData.team.states.nodes.find(
-      (s) => s.name.toLowerCase() === args.state.toLowerCase(),
+      (s) => s.name.toLowerCase() === args.state.toLowerCase()
     );
     if (!state) {
       const available = teamData.team.states.nodes.map((s) => s.name).join(', ');
@@ -161,7 +163,7 @@ async function main() {
   if (args.labels.length > 0 || args.addLabels.length > 0) {
     const teamData = await gql(
       `query($teamId: String!) { team(id: $teamId) { labels(first: 200) { nodes { id name } } } }`,
-      { teamId },
+      { teamId }
     );
     const allLabels = teamData.team.labels.nodes;
 
@@ -200,7 +202,7 @@ async function main() {
     `mutation($id: String!, $input: IssueUpdateInput!) {
       issueUpdate(id: $id, input: $input) { success issue { identifier title state { name } } }
     }`,
-    { id: issue.id, input },
+    { id: issue.id, input }
   );
 
   const updated = result.issueUpdate?.issue;

@@ -380,14 +380,18 @@ argument to `issueUpdate`, not part of the input object:
 
 ```graphql
 # WRONG — causes '"id" is not defined by type "IssueUpdateInput"' error:
-mutation($input: IssueUpdateInput!) {
-  issueUpdate(input: $input) { success }
+mutation ($input: IssueUpdateInput!) {
+  issueUpdate(input: $input) {
+    success
+  }
 }
 # with variables: { "input": { "id": "...", "stateId": "..." } }
 
 # CORRECT — id is a separate argument:
-mutation($id: String!, $input: IssueUpdateInput!) {
-  issueUpdate(id: $id, input: $input) { success }
+mutation ($id: String!, $input: IssueUpdateInput!) {
+  issueUpdate(id: $id, input: $input) {
+    success
+  }
 }
 # with variables: { "id": "...", "input": { "stateId": "..." } }
 ```

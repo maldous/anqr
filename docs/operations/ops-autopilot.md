@@ -38,25 +38,25 @@ The `creditStatus` and `leadSkipReason` fields in `reports/linear-guardian/lates
 
 When Codex credits are exhausted, the following services continue running at zero or near-zero cost:
 
-| Service                                              | Cadence        | Cost      | Status                                                  |
-| ---------------------------------------------------- | -------------- | --------- | ------------------------------------------------------- |
-| **Symphony ticket work (Groq fallback)**             | **Continuous** | **Free**  | **1st fallback; requires `GROQ_TOKEN`**                 |
-| **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free**  | **2nd fallback; requires `MISTRAL_TOKEN`; Codestral code model (~600ms)** |
-| **Symphony ticket work (Gemini fallback)**           | **Continuous** | **Free**  | **3rd fallback; requires `GEMINI_TOKEN`; gemini-2.5-flash (~1,500 RPD)** |
-| **Symphony ticket work (OpenRouter FREE fallback)**  | **Continuous** | **Free**  | **4th fallback; requires `OPENROUTER_TOKEN`; :free models** |
-| **Symphony ticket work (SambaNova fallback)**        | **Continuous** | **Free**  | **5th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day** |
-| **Symphony ticket work (Cerebras fallback)**         | **Continuous** | **Free**  | **6th fallback; requires `CEREBRAS_TOKEN`; 1M tok/day, 8K context** |
-| **Symphony ticket work (GitHub Models fallback)**    | **Continuous** | **Free**  | **7th fallback; requires `GITHUB_MODELS_TOKEN`; GPT-4.1-mini (1M context)** |
-| **Symphony ticket work (Ollama fallback)**           | **Continuous** | **Free**  | **8th fallback; requires Ollama on `localhost:11434`**  |
-| Linear guardian (labels only)                  | 15 min         | Free      | Always runs                                             |
-| TypeScript typecheck                           | Hourly         | Free      | Always runs                                             |
-| Sentry regression check                        | Hourly         | Free      | Always runs                                             |
-| External services validation                   | Hourly         | Free      | Always runs                                             |
-| Groq free-tier audit                           | Hourly         | Free      | Requires `GROQ_TOKEN`                                   |
-| Gemini free-tier audit                         | Hourly         | Free      | Requires `GEMINI_TOKEN`; auto-skips on quota exhaustion |
-| Hugging Face free-tier audit                   | Hourly         | Free      | Requires `HUGGING_TOKEN`                                |
-| Ollama local GPU audit                         | Hourly         | Free      | Requires Ollama running on `localhost:11434`            |
-| Unit test suite                                | Daily 02:30    | Free      | Always runs                                             |
+| Service                                               | Cadence        | Cost     | Status                                                                      |
+| ----------------------------------------------------- | -------------- | -------- | --------------------------------------------------------------------------- |
+| **Symphony ticket work (Groq fallback)**              | **Continuous** | **Free** | **1st fallback; requires `GROQ_TOKEN`**                                     |
+| **Symphony ticket work (Mistral Codestral fallback)** | **Continuous** | **Free** | **2nd fallback; requires `MISTRAL_TOKEN`; Codestral code model (~600ms)**   |
+| **Symphony ticket work (Gemini fallback)**            | **Continuous** | **Free** | **3rd fallback; requires `GEMINI_TOKEN`; gemini-2.5-flash (~1,500 RPD)**    |
+| **Symphony ticket work (OpenRouter FREE fallback)**   | **Continuous** | **Free** | **4th fallback; requires `OPENROUTER_TOKEN`; :free models**                 |
+| **Symphony ticket work (SambaNova fallback)**         | **Continuous** | **Free** | **5th fallback; requires `SAMBANOVA_TOKEN`; 20 req/day**                    |
+| **Symphony ticket work (Cerebras fallback)**          | **Continuous** | **Free** | **6th fallback; requires `CEREBRAS_TOKEN`; 1M tok/day, 8K context**         |
+| **Symphony ticket work (GitHub Models fallback)**     | **Continuous** | **Free** | **7th fallback; requires `GITHUB_MODELS_TOKEN`; GPT-4.1-mini (1M context)** |
+| **Symphony ticket work (Ollama fallback)**            | **Continuous** | **Free** | **8th fallback; requires Ollama on `localhost:11434`**                      |
+| Linear guardian (labels only)                         | 15 min         | Free     | Always runs                                                                 |
+| TypeScript typecheck                                  | Hourly         | Free     | Always runs                                                                 |
+| Sentry regression check                               | Hourly         | Free     | Always runs                                                                 |
+| External services validation                          | Hourly         | Free     | Always runs                                                                 |
+| Groq free-tier audit                                  | Hourly         | Free     | Requires `GROQ_TOKEN`                                                       |
+| Gemini free-tier audit                                | Hourly         | Free     | Requires `GEMINI_TOKEN`; auto-skips on quota exhaustion                     |
+| Hugging Face free-tier audit                          | Hourly         | Free     | Requires `HUGGING_TOKEN`                                                    |
+| Ollama local GPU audit                                | Hourly         | Free     | Requires Ollama running on `localhost:11434`                                |
+| Unit test suite                                       | Daily 02:30    | Free     | Always runs                                                                 |
 
 When Codex credits reset (5-hour primary window, weekly secondary window), the credit gate automatically switches back to the full cloud model and the guardian resumes lead enforcement.
 
@@ -97,44 +97,44 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 - `litellm-config.yaml` sets `additional_drop_params: ["web_search_options", "supports_function_calling"]` on all cloud models (Groq, Cerebras, Gemini, Mistral, OpenRouter, SambaNova, GitHub) as defense-in-depth — if the model-injector fails to strip these fields (e.g. body decompression failure), LiteLLM itself drops them before forwarding to the provider.
 - GitHub Models uses `openai/` prefix with `api_base: https://models.github.ai/inference` in LiteLLM config (not `github/` prefix) because LiteLLM's built-in GitHub provider doesn't recognise GPT-4.1-mini yet. LiteLLM strips `openai/` and sends `gpt-4.1-mini` to the GitHub API.
 
-| Provider            | API           | Endpoint                                           | Requirement                     | Free Tier Limits      | Context (in/out) |
-| ------------------- | ------------- | -------------------------------------------------- | ------------------------------- | --------------------- | ---------------- |
-| OpenAI (Codex)      | Responses     | `api.openai.com/v1`                                | Codex credits                   | Paid                  | 1M / 32K |
-| Groq                | OpenAI-compat | `api.groq.com/openai/v1`                           | `GROQ_TOKEN` env var            | 12K TPM               | 128K / 32K |
-| Cerebras            | OpenAI-compat | `api.cerebras.ai/v1`                               | `CEREBRAS_TOKEN` env var        | 1M tokens/day         | 8K / 8K (⚠️) |
-| Gemini              | Native gemini/ | `generativelanguage.googleapis.com/v1beta` (via LiteLLM) | `GEMINI_TOKEN` env var          | ~10 RPM, ~1,500 RPD  | 1M / 65K |
-| OpenRouter (FREE)   | OpenAI-compat | `openrouter.ai/api/v1`                             | `OPENROUTER_TOKEN` env var      | 20 req/min (:free)    | 128K / 32K |
-| SambaNova           | OpenAI-compat | `api.sambanova.ai/v1`                              | `SAMBANOVA_TOKEN` env var       | 20 req/day            | 128K / 32K |
-| Mistral (Codestral) | OpenAI-compat | `api.mistral.ai/v1`                                | `MISTRAL_TOKEN` env var         | Free experimental     | 128K / 32K |
-| GitHub Models       | OpenAI-compat | `models.github.ai`                                 | `GITHUB_MODELS_TOKEN` env var   | FREE tier (GPT-4.1-mini); `/chat` only, no `/responses` | 1M / 32K |
-| Ollama              | Responses     | `localhost:11434/v1`                               | Ollama running locally          | Unlimited (local)     | 32K / 32K |
+| Provider            | API            | Endpoint                                                 | Requirement                   | Free Tier Limits                                        | Context (in/out) |
+| ------------------- | -------------- | -------------------------------------------------------- | ----------------------------- | ------------------------------------------------------- | ---------------- |
+| OpenAI (Codex)      | Responses      | `api.openai.com/v1`                                      | Codex credits                 | Paid                                                    | 1M / 32K         |
+| Groq                | OpenAI-compat  | `api.groq.com/openai/v1`                                 | `GROQ_TOKEN` env var          | 12K TPM                                                 | 128K / 32K       |
+| Cerebras            | OpenAI-compat  | `api.cerebras.ai/v1`                                     | `CEREBRAS_TOKEN` env var      | 1M tokens/day                                           | 8K / 8K (⚠️)     |
+| Gemini              | Native gemini/ | `generativelanguage.googleapis.com/v1beta` (via LiteLLM) | `GEMINI_TOKEN` env var        | ~10 RPM, ~1,500 RPD                                     | 1M / 65K         |
+| OpenRouter (FREE)   | OpenAI-compat  | `openrouter.ai/api/v1`                                   | `OPENROUTER_TOKEN` env var    | 20 req/min (:free)                                      | 128K / 32K       |
+| SambaNova           | OpenAI-compat  | `api.sambanova.ai/v1`                                    | `SAMBANOVA_TOKEN` env var     | 20 req/day                                              | 128K / 32K       |
+| Mistral (Codestral) | OpenAI-compat  | `api.mistral.ai/v1`                                      | `MISTRAL_TOKEN` env var       | Free experimental                                       | 128K / 32K       |
+| GitHub Models       | OpenAI-compat  | `models.github.ai`                                       | `GITHUB_MODELS_TOKEN` env var | FREE tier (GPT-4.1-mini); `/chat` only, no `/responses` | 1M / 32K         |
+| Ollama              | Responses      | `localhost:11434/v1`                                     | Ollama running locally        | Unlimited (local)                                       | 32K / 32K        |
 
 > **Context window requirement:** All providers must support ≥32K input context for reliable long agent sessions. Cerebras (8K) is deprioritised to position 6 in the cascade. See [`docs/harness/provider-operations.md`](harness/provider-operations.md) for the full verified provider matrix and operational procedures.
 
 **Environment variables:**
 
-| Variable                 | Default                                            | Purpose                                                                                     |
-| ------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `CODEX_BIN`              | `/home/user/.nvm/versions/node/v22.18.0/bin/codex` | Path to the codex CLI binary                                                                |
-| `CODEX_MODEL`            | `gpt-5.3-codex`                                    | Cloud model to use when credits are available                                               |
-| `SYMPHONY_DASHBOARD_URL` | `http://127.0.0.1:4040`                            | Symphony observability dashboard                                                            |
-| `GROQ_TOKEN`             | _(from symphony env)_                              | Groq API key; exported as `GROQ_API_KEY` for Codex                                          |
-| `GROQ_MODEL`             | `llama-3.3-70b-versatile`                          | Model to use via Groq                                                                       |
-| `GEMINI_TOKEN`           | _(from symphony env)_                              | Gemini API key; exported as `GEMINI_API_KEY` for Codex                                      |
-| `GEMINI_MODEL`           | `gemini-2.5-flash`                                 | Model to use via Gemini (upgraded from deprecated 2.0-flash; lite variant also registered)   |
-| `OPENROUTER_TOKEN`       | _(from symphony env)_                              | OpenRouter API key; exported as `OPENROUTER_API_KEY` for Codex                              |
-| `OPENROUTER_FREE_MODEL`  | `meta-llama/llama-3.3-70b-instruct:free`           | Free model to use via OpenRouter `:free` tier                                               |
-| `MISTRAL_TOKEN`          | _(from symphony env)_                              | Mistral API key; exported as `MISTRAL_API_KEY`                                              |
-| `MISTRAL_MODEL`          | `devstral-small-2507`                              | Model to use via Mistral (Codestral code model; fallback: `mistral-small-latest`)           |
-| `GITHUB_MODELS_TOKEN`    | _(from symphony env)_                              | GitHub personal access token with `models` permission (separate from `GITHUB_TOKEN`)        |
-| `GITHUB_MODELS_MODEL`    | `gpt-4.1-mini`                                     | Model to use via GitHub Models (1M input, 32K output, FREE tier)                            |
-| `CEREBRAS_TOKEN`         | _(from symphony env)_                              | Cerebras API key; exported as `CEREBRAS_API_KEY`                                            |
-| `CEREBRAS_MODEL`         | `llama3.1-8b`                                      | Model to use via Cerebras                                                                   |
-| `SAMBANOVA_TOKEN`        | _(from symphony env)_                              | SambaNova API key; exported as `SAMBANOVA_API_KEY`                                          |
-| `SAMBANOVA_MODEL`        | `Meta-Llama-3.3-70B-Instruct`                     | Model to use via SambaNova                                                                  |
-| `OLLAMA_HOST`            | `http://127.0.0.1:11434`                           | Ollama API base URL                                                                         |
-| `OLLAMA_MODEL`           | _(auto-selected)_                                  | Model to use in Ollama fallback; if unset, the best available model is chosen automatically |
-| `ENABLE_OLLAMA_DIRECT_FALLBACK` | `0`                                       | Set to `1` only to allow direct `model_provider=ollama` fallback (known tool-calling risk) |
+| Variable                        | Default                                            | Purpose                                                                                     |
+| ------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `CODEX_BIN`                     | `/home/user/.nvm/versions/node/v22.18.0/bin/codex` | Path to the codex CLI binary                                                                |
+| `CODEX_MODEL`                   | `gpt-5.3-codex`                                    | Cloud model to use when credits are available                                               |
+| `SYMPHONY_DASHBOARD_URL`        | `http://127.0.0.1:4040`                            | Symphony observability dashboard                                                            |
+| `GROQ_TOKEN`                    | _(from symphony env)_                              | Groq API key; exported as `GROQ_API_KEY` for Codex                                          |
+| `GROQ_MODEL`                    | `llama-3.3-70b-versatile`                          | Model to use via Groq                                                                       |
+| `GEMINI_TOKEN`                  | _(from symphony env)_                              | Gemini API key; exported as `GEMINI_API_KEY` for Codex                                      |
+| `GEMINI_MODEL`                  | `gemini-2.5-flash`                                 | Model to use via Gemini (upgraded from deprecated 2.0-flash; lite variant also registered)  |
+| `OPENROUTER_TOKEN`              | _(from symphony env)_                              | OpenRouter API key; exported as `OPENROUTER_API_KEY` for Codex                              |
+| `OPENROUTER_FREE_MODEL`         | `meta-llama/llama-3.3-70b-instruct:free`           | Free model to use via OpenRouter `:free` tier                                               |
+| `MISTRAL_TOKEN`                 | _(from symphony env)_                              | Mistral API key; exported as `MISTRAL_API_KEY`                                              |
+| `MISTRAL_MODEL`                 | `devstral-small-2507`                              | Model to use via Mistral (Codestral code model; fallback: `mistral-small-latest`)           |
+| `GITHUB_MODELS_TOKEN`           | _(from symphony env)_                              | GitHub personal access token with `models` permission (separate from `GITHUB_TOKEN`)        |
+| `GITHUB_MODELS_MODEL`           | `gpt-4.1-mini`                                     | Model to use via GitHub Models (1M input, 32K output, FREE tier)                            |
+| `CEREBRAS_TOKEN`                | _(from symphony env)_                              | Cerebras API key; exported as `CEREBRAS_API_KEY`                                            |
+| `CEREBRAS_MODEL`                | `llama3.1-8b`                                      | Model to use via Cerebras                                                                   |
+| `SAMBANOVA_TOKEN`               | _(from symphony env)_                              | SambaNova API key; exported as `SAMBANOVA_API_KEY`                                          |
+| `SAMBANOVA_MODEL`               | `Meta-Llama-3.3-70B-Instruct`                      | Model to use via SambaNova                                                                  |
+| `OLLAMA_HOST`                   | `http://127.0.0.1:11434`                           | Ollama API base URL                                                                         |
+| `OLLAMA_MODEL`                  | _(auto-selected)_                                  | Model to use in Ollama fallback; if unset, the best available model is chosen automatically |
+| `ENABLE_OLLAMA_DIRECT_FALLBACK` | `0`                                                | Set to `1` only to allow direct `model_provider=ollama` fallback (known tool-calling risk)  |
 
 **Ollama auto-model selection** (when `OLLAMA_MODEL` is not set):
 
@@ -166,21 +166,21 @@ providers and cascade to the next one.
 
 #### HTTP Status Code Handling
 
-| Code | Error | Cooldown | Rationale |
-| ---- | ----- | -------- | --------- |
-| 400 | Bad Request | 300s | Provider rejects message format — persistent for conversation |
-| 401 | Unauthorized | 1800s | API key invalid/expired — won't self-heal |
-| 402 | Payment Required | 3600s | Credits exhausted — very persistent |
-| 403 | Forbidden | 600s | Moderation/access denied — persistent for content |
-| 404 | Not Found | 300s | Model config broken — needs manual fix |
-| 408 | Request Timeout | 60s | Transient — brief skip |
-| 413 | Payload Too Large | 600s | Conversation won't shrink — skip longer |
-| 422 | Unprocessable Entity | 300s | Request format rejected — same as 400 |
-| 429 | Too Many Requests | 120s+ | Rate limit — respects Retry-After header |
-| 500 | Internal Server Error | 180s | LiteLLM translation bugs |
-| 502 | Bad Gateway | 120s | Transient upstream failure |
-| 503 | Service Unavailable | 180s | Service down — moderate |
-| 504 | Gateway Timeout | 120s | Upstream timeout — transient |
+| Code | Error                 | Cooldown | Rationale                                                     |
+| ---- | --------------------- | -------- | ------------------------------------------------------------- |
+| 400  | Bad Request           | 300s     | Provider rejects message format — persistent for conversation |
+| 401  | Unauthorized          | 1800s    | API key invalid/expired — won't self-heal                     |
+| 402  | Payment Required      | 3600s    | Credits exhausted — very persistent                           |
+| 403  | Forbidden             | 600s     | Moderation/access denied — persistent for content             |
+| 404  | Not Found             | 300s     | Model config broken — needs manual fix                        |
+| 408  | Request Timeout       | 60s      | Transient — brief skip                                        |
+| 413  | Payload Too Large     | 600s     | Conversation won't shrink — skip longer                       |
+| 422  | Unprocessable Entity  | 300s     | Request format rejected — same as 400                         |
+| 429  | Too Many Requests     | 120s+    | Rate limit — respects Retry-After header                      |
+| 500  | Internal Server Error | 180s     | LiteLLM translation bugs                                      |
+| 502  | Bad Gateway           | 120s     | Transient upstream failure                                    |
+| 503  | Service Unavailable   | 180s     | Service down — moderate                                       |
+| 504  | Gateway Timeout       | 120s     | Upstream timeout — transient                                  |
 
 #### Stream-Embedded Error Detection
 
@@ -224,6 +224,7 @@ automatically switches to the next healthy provider without Codex knowing:
   the failed provider, drain the error response, select next provider, retry
 
 **Constraints:**
+
 - `MAX_FAILOVER_ATTEMPTS = 3` — at most 3 provider switches per request
 - Stream-embedded errors (Point C) **cannot** fail over — response headers
   already sent to Codex; cooldowns are written for the next request
@@ -249,24 +250,26 @@ where rapid session cycling burns through all provider quotas in minutes.
 
 #### Configuration
 
-| Parameter | Value | Location |
-| --------- | ----- | -------- |
-| `CONNECT_TIMEOUT` | 60s | `model-injector-proxy.py` |
-| `READ_TIMEOUT` | 600s | `model-injector-proxy.py` |
-| `RATELIMIT_WINDOW` | 60s | `model-injector-proxy.py` |
-| `RATELIMIT_THRESHOLD` | 1 | `model-injector-proxy.py` |
-| `MAX_FAILOVER_ATTEMPTS` | 3 | `model-injector-proxy.py` |
+| Parameter               | Value | Location                  |
+| ----------------------- | ----- | ------------------------- |
+| `CONNECT_TIMEOUT`       | 60s   | `model-injector-proxy.py` |
+| `READ_TIMEOUT`          | 600s  | `model-injector-proxy.py` |
+| `RATELIMIT_WINDOW`      | 60s   | `model-injector-proxy.py` |
+| `RATELIMIT_THRESHOLD`   | 1     | `model-injector-proxy.py` |
+| `MAX_FAILOVER_ATTEMPTS` | 3     | `model-injector-proxy.py` |
 
 Cooldown files auto-expire: the credit-gate deletes them once the expiry
 timestamp has passed, so providers are automatically retried after the
 cooldown window.
 
 To manually clear a cooldown:
+
 ```bash
 rm -f /run/user/$(id -u)/credit-gate/ratelimit-groq
 ```
 
 To clear all cooldowns:
+
 ```bash
 rm -f /run/user/$(id -u)/credit-gate/ratelimit-*
 ```
@@ -275,15 +278,15 @@ rm -f /run/user/$(id -u)/credit-gate/ratelimit-*
 
 Ollama is configured for hybrid CPU/GPU inference via `/etc/systemd/system/ollama.service.d/override.conf`:
 
-| Setting                    | Value   | Purpose                                                       |
-| -------------------------- | ------- | ------------------------------------------------------------- |
+| Setting                    | Value   | Purpose                                                           |
+| -------------------------- | ------- | ----------------------------------------------------------------- |
 | `OLLAMA_NUM_PARALLEL`      | `1`     | Single slot — guarantees full 32K context per request on 4GB VRAM |
-| `OLLAMA_MAX_LOADED_MODELS` | `1`     | Keep one model in memory to avoid RAM thrashing               |
-| `OLLAMA_KEEP_ALIVE`        | `30m`   | Keep model warm between agent turns                           |
-| `OLLAMA_CONTEXT_LENGTH`    | `32768` | 32K context for long agent sessions                             |
-| `OLLAMA_KV_CACHE_TYPE`     | `q8_0`  | Quantised KV cache to save VRAM                               |
-| `OLLAMA_FLASH_ATTENTION`   | `1`     | Enable flash attention for faster inference                   |
-| `OLLAMA_GPU_OVERHEAD`      | `0`     | Maximise VRAM allocated to model layers                       |
+| `OLLAMA_MAX_LOADED_MODELS` | `1`     | Keep one model in memory to avoid RAM thrashing                   |
+| `OLLAMA_KEEP_ALIVE`        | `30m`   | Keep model warm between agent turns                               |
+| `OLLAMA_CONTEXT_LENGTH`    | `32768` | 32K context for long agent sessions                               |
+| `OLLAMA_KV_CACHE_TYPE`     | `q8_0`  | Quantised KV cache to save VRAM                                   |
+| `OLLAMA_FLASH_ATTENTION`   | `1`     | Enable flash attention for faster inference                       |
+| `OLLAMA_GPU_OVERHEAD`      | `0`     | Maximise VRAM allocated to model layers                           |
 
 With a GTX 1650 (4 GB VRAM), the `qwen2.5-coder:7b-32t` model runs at roughly **51% CPU / 49% GPU** split (~2.5 GB VRAM used, GPU at 100%). `OLLAMA_NUM_PARALLEL=1` ensures each request gets the full 32K KV cache — with `NUM_PARALLEL=2` the doubled KV allocation (2×32K=64K tokens) starves VRAM. The tradeoff is sequential request processing, but a slow result is better than no result.
 
@@ -315,14 +318,15 @@ ANQR has a bidirectional email interface for operator communication:
 
 Ops scripts send email notifications via `msmtp` to `matthew.aldous@gmail.com` on notable events:
 
-| Source | Event | Severity |
-| ------ | ----- | -------- |
-| `nightly-ops-pass.mjs` | Critical step failure (any profile) | critical |
-| `nightly-ops-pass.mjs` | All checks passed (full profile, daily) | info |
-| `linear-guardian.mjs` | Sentinel dead man's switch triggered | critical |
-| `email-ingest.mjs` | Issues created from inbound emails | info |
+| Source                 | Event                                   | Severity |
+| ---------------------- | --------------------------------------- | -------- |
+| `nightly-ops-pass.mjs` | Critical step failure (any profile)     | critical |
+| `nightly-ops-pass.mjs` | All checks passed (full profile, daily) | info     |
+| `linear-guardian.mjs`  | Sentinel dead man's switch triggered    | critical |
+| `email-ingest.mjs`     | Issues created from inbound emails      | info     |
 
 **Rate limiting** (per `reports/notify/state.json`):
+
 - Max 10 emails per hour
 - Max 30 emails per day
 - Same-subject deduplication within 1 hour
@@ -344,6 +348,7 @@ Emails sent from/to `email@anqr.link` (arriving in the Gmail inbox) are ingested
 > **Critical convention:** Symphony NEVER sends emails autonomously. Outbound email is operator-only. When an email requests a response (e.g. "send me a summary"), Symphony generates the content and posts it to the Linear issue. A human operator can then forward it via email if needed.
 
 **Setup:**
+
 ```bash
 make ops:email:install   # Install and enable systemd timer
 make notify:test         # Test outbound email delivery

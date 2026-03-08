@@ -97,7 +97,7 @@ async function main() {
           }
         }
       }`,
-      { teamKey: args.team, after: cursor },
+      { teamKey: args.team, after: cursor }
     );
 
     if (!result.team) {
@@ -115,22 +115,18 @@ async function main() {
   let filtered = allIssues;
 
   if (args.open) {
-    filtered = filtered.filter(
-      (i) => !TERMINAL_STATES.has(i.state.name.toLowerCase()),
-    );
+    filtered = filtered.filter((i) => !TERMINAL_STATES.has(i.state.name.toLowerCase()));
   }
 
   if (args.states) {
     const stateSet = new Set(args.states.map((s) => s.toLowerCase()));
-    filtered = filtered.filter(
-      (i) => stateSet.has(i.state.name.toLowerCase()),
-    );
+    filtered = filtered.filter((i) => stateSet.has(i.state.name.toLowerCase()));
   }
 
   if (args.labels.length > 0) {
     const labelSet = new Set(args.labels.map((l) => l.toLowerCase()));
     filtered = filtered.filter((i) =>
-      i.labels.nodes.some((l) => labelSet.has(l.name.toLowerCase())),
+      i.labels.nodes.some((l) => labelSet.has(l.name.toLowerCase()))
     );
   }
 
@@ -146,12 +142,14 @@ async function main() {
   }));
 
   if (args.format === 'table') {
-    console.log(`${'ID'.padEnd(10)} ${'State'.padEnd(14)} ${'Pri'.padEnd(4)} ${'Labels'.padEnd(20)} Title`);
+    console.log(
+      `${'ID'.padEnd(10)} ${'State'.padEnd(14)} ${'Pri'.padEnd(4)} ${'Labels'.padEnd(20)} Title`
+    );
     console.log('-'.repeat(90));
     for (const issue of output) {
       const labels = issue.labels.join(', ') || '-';
       console.log(
-        `${issue.identifier.padEnd(10)} ${issue.state.padEnd(14)} ${String(issue.priority).padEnd(4)} ${labels.padEnd(20)} ${issue.title}`,
+        `${issue.identifier.padEnd(10)} ${issue.state.padEnd(14)} ${String(issue.priority).padEnd(4)} ${labels.padEnd(20)} ${issue.title}`
       );
     }
     console.log(`\n${output.length} issues`);

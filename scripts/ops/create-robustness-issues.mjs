@@ -99,7 +99,7 @@ const ISSUES = [
       '- The credit-gate already has `find_earliest_cooldown()` and rate-limit wait logic',
       '- But currently it waits at the END of the cascade, after already trying all providers',
       '- Move the "all exhausted" wait to the TOP of the loop, before attempting any provider',
-      '- Needs integration testing with Symphony\'s own retry/backoff logic to avoid double-sleeping',
+      "- Needs integration testing with Symphony's own retry/backoff logic to avoid double-sleeping",
       '',
       '## Validation',
       '',
@@ -119,7 +119,7 @@ const ISSUES = [
       '## Desired Behaviour',
       '',
       '"No available orchestrator slots" is structural, not transient — the issue was never attempted. Either:',
-      '1. Don\'t count slot-contention as a retry attempt',
+      "1. Don't count slot-contention as a retry attempt",
       '2. Use a separate, gentler backoff for slot-contention (e.g., fixed 60s instead of exponential)',
       '3. Increase `max_retry_backoff_ms` to give slot-bound issues more time',
       '',
@@ -179,7 +179,7 @@ async function main() {
         }
       }
     }`,
-    { key: 'ANQ' },
+    { key: 'ANQ' }
   );
 
   const team = teamData.teams.nodes[0];
@@ -194,9 +194,7 @@ async function main() {
     process.exit(1);
   }
 
-  const reliabilityLabel = team.labels.nodes.find(
-    (l) => l.name.toLowerCase() === 'reliability',
-  );
+  const reliabilityLabel = team.labels.nodes.find((l) => l.name.toLowerCase() === 'reliability');
 
   console.log(`Team: ${team.id}`);
   console.log(`Project: ${symphonyProject.name} (${symphonyProject.id})`);
@@ -217,7 +215,7 @@ async function main() {
           priority: issue.priority,
           ...(reliabilityLabel ? { labelIds: [reliabilityLabel.id] } : {}),
         },
-      },
+      }
     );
 
     const created = result.issueCreate?.issue;

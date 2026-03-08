@@ -46,9 +46,7 @@ function checkRateLimit(state, subject) {
   state.sends = state.sends.filter((s) => s.ts > oneDayAgo);
 
   // Check deduplication: same subject within window
-  const duplicate = state.sends.find(
-    (s) => s.subject === subject && s.ts > now - DEDUP_WINDOW_MS
-  );
+  const duplicate = state.sends.find((s) => s.subject === subject && s.ts > now - DEDUP_WINDOW_MS);
   if (duplicate) {
     return { allowed: false, reason: `duplicate subject within ${DEDUP_WINDOW_MS / 60000}min` };
   }
@@ -80,11 +78,7 @@ export function sendNotification({ subject, body, severity = 'info' }) {
   }
 
   const severityTag =
-    severity === 'critical'
-      ? '[CRITICAL] '
-      : severity === 'warn'
-        ? '[WARN] '
-        : '';
+    severity === 'critical' ? '[CRITICAL] ' : severity === 'warn' ? '[WARN] ' : '';
   const formattedSubject = `[ANQR] ${severityTag}${subject}`;
 
   const state = loadState();

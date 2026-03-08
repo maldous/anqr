@@ -64,10 +64,9 @@ async function main() {
   const gql = createGql(LINEAR_API_KEY);
 
   // Resolve issue ID from identifier
-  const issueData = await gql(
-    `query($id: String!) { issue(id: $id) { id identifier } }`,
-    { id: args.issue },
-  );
+  const issueData = await gql(`query($id: String!) { issue(id: $id) { id identifier } }`, {
+    id: args.issue,
+  });
   if (!issueData.issue) {
     console.error(`ERROR: Issue ${args.issue} not found`);
     process.exit(1);
@@ -78,7 +77,7 @@ async function main() {
     `mutation($input: CommentCreateInput!) {
       commentCreate(input: $input) { success }
     }`,
-    { input: { issueId: issueData.issue.id, body: args.body } },
+    { input: { issueId: issueData.issue.id, body: args.body } }
   );
 
   if (result.commentCreate?.success) {

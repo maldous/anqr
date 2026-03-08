@@ -43,13 +43,13 @@ Every Done issue comment must include:
 
 ### Evidence That Does NOT Qualify
 
-| Anti-pattern | Example | Why it fails |
-|---|---|---|
-| Dismissive one-liner | "Resolved. Continue" | No proof of what was done or that it works |
-| Evidence of failure | "Exit code: 2", "Terminated at 435/1000" | Proves the task FAILED, not succeeded |
-| Workaround instead of fix | "Snyk was commented out. Close this ticket." | Disabling a feature ≠ fixing it |
-| Description without output | "Implemented circuit breaker with cooldowns" | Describes intent, not verified result |
-| Unchecked workpad | Plan items all `[ ]` with "Resolved" | Plan shows no work was actually completed |
+| Anti-pattern               | Example                                      | Why it fails                               |
+| -------------------------- | -------------------------------------------- | ------------------------------------------ |
+| Dismissive one-liner       | "Resolved. Continue"                         | No proof of what was done or that it works |
+| Evidence of failure        | "Exit code: 2", "Terminated at 435/1000"     | Proves the task FAILED, not succeeded      |
+| Workaround instead of fix  | "Snyk was commented out. Close this ticket." | Disabling a feature ≠ fixing it            |
+| Description without output | "Implemented circuit breaker with cooldowns" | Describes intent, not verified result      |
+| Unchecked workpad          | Plan items all `[ ]` with "Resolved"         | Plan shows no work was actually completed  |
 
 ### Rules
 

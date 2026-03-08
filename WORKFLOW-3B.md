@@ -99,6 +99,7 @@ You are a code editor. Follow these steps exactly.
 ## Error handling
 
 If any command exits with a non-zero status or produces an error:
+
 1. Post the error as a comment:
    ```bash
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed: <paste the error output>"
@@ -129,13 +130,12 @@ If any command exits with a non-zero status or produces an error:
 
 Use these CLI helpers instead of raw `linear_graphql` calls. They resolve all IDs automatically from human-readable names.
 
-| Script | Purpose | Example |
-|---|---|---|
-| `linear-update-state.mjs` | Move issue to a state | `--issue ANQ-106 --state "In Progress"` |
-| `linear-comment.mjs` | Post a comment | `--issue ANQ-106 --body "Evidence..."` |
-| `linear-list-issues.mjs` | Query issues (JSON output) | `--open --format json` or `--state Backlog,Todo` |
+| Script                    | Purpose                      | Example                                            |
+| ------------------------- | ---------------------------- | -------------------------------------------------- |
+| `linear-update-state.mjs` | Move issue to a state        | `--issue ANQ-106 --state "In Progress"`            |
+| `linear-comment.mjs`      | Post a comment               | `--issue ANQ-106 --body "Evidence..."`             |
+| `linear-list-issues.mjs`  | Query issues (JSON output)   | `--open --format json` or `--state Backlog,Todo`   |
 | `linear-update-issue.mjs` | Update title/priority/labels | `--issue ANQ-106 --title "New title" --priority 2` |
-| `create-child-issue.mjs` | Create a child issue | `--parent ANQ-151 --title "[CHILD] ..."` |
+| `create-child-issue.mjs`  | Create a child issue         | `--parent ANQ-151 --title "[CHILD] ..."`           |
 
 All scripts live in `scripts/ops/` and require `LINEAR_API_KEY`. For audit/hygiene tasks, pipe `linear-list-issues.mjs` output to process issues, then call `linear-update-issue.mjs` for each fix.
-

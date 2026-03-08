@@ -15,19 +15,19 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 
 ### Key docs
 
-| Topic              | Path                                  |
-| ------------------ | ------------------------------------- |
-| Architecture       | `docs/architecture/overview.md`       |
-| Module catalog     | `docs/modules/index.md`               |
-| Execution workflow | `docs/workflow/execution-workflow.md` |
-| Reports catalog    | `docs/reports/README.md`              |
-| Launch checklist   | `docs/operations/launch-checklist.md` |
-| Ops autopilot      | `docs/operations/ops-autopilot.md`    |
-| Provider operations | `docs/harness/provider-operations.md` |
-| Autonomous harness | `docs/harness/autonomous-framework.md`|
-| Error handling     | `docs/operations/ops-autopilot.md` §Error-Aware  |
-| Circuit breaker    | `docs/operations/ops-autopilot.md` §Circuit-Breaker |
-| Email notifications| `docs/operations/ops-autopilot.md` §Email        |
+| Topic               | Path                                                |
+| ------------------- | --------------------------------------------------- |
+| Architecture        | `docs/architecture/overview.md`                     |
+| Module catalog      | `docs/modules/index.md`                             |
+| Execution workflow  | `docs/workflow/execution-workflow.md`               |
+| Reports catalog     | `docs/reports/README.md`                            |
+| Launch checklist    | `docs/operations/launch-checklist.md`               |
+| Ops autopilot       | `docs/operations/ops-autopilot.md`                  |
+| Provider operations | `docs/harness/provider-operations.md`               |
+| Autonomous harness  | `docs/harness/autonomous-framework.md`              |
+| Error handling      | `docs/operations/ops-autopilot.md` §Error-Aware     |
+| Circuit breaker     | `docs/operations/ops-autopilot.md` §Circuit-Breaker |
+| Email notifications | `docs/operations/ops-autopilot.md` §Email           |
 
 ## Architecture
 

@@ -102,7 +102,7 @@ async function main() {
   // Resolve parent issue
   const parentData = await gql(
     `query($id: String!) { issue(id: $id) { id identifier team { id } } }`,
-    { id: args.parent },
+    { id: args.parent }
   );
   if (!parentData.issue) {
     console.error(`ERROR: Parent issue ${args.parent} not found`);
@@ -120,16 +120,14 @@ async function main() {
         projects(first: 50) { nodes { id name } }
       }
     }`,
-    { teamId },
+    { teamId }
   );
   const team = teamData.team;
 
   // Resolve label IDs
   const labelIds = [];
   for (const labelName of args.labels) {
-    const label = team.labels.nodes.find(
-      (l) => l.name.toLowerCase() === labelName.toLowerCase(),
-    );
+    const label = team.labels.nodes.find((l) => l.name.toLowerCase() === labelName.toLowerCase());
     if (label) {
       labelIds.push(label.id);
     } else {
@@ -138,9 +136,7 @@ async function main() {
   }
 
   // Resolve state ID
-  const state = team.states.nodes.find(
-    (s) => s.name.toLowerCase() === stateName.toLowerCase(),
-  );
+  const state = team.states.nodes.find((s) => s.name.toLowerCase() === stateName.toLowerCase());
   if (!state) {
     console.error(`ERROR: State '${stateName}' not found`);
     process.exit(1);
@@ -150,7 +146,7 @@ async function main() {
   let projectId = undefined;
   if (args.project) {
     const project = team.projects.nodes.find(
-      (p) => p.name.toLowerCase() === args.project.toLowerCase(),
+      (p) => p.name.toLowerCase() === args.project.toLowerCase()
     );
     if (project) {
       projectId = project.id;
@@ -175,7 +171,7 @@ async function main() {
     `mutation($input: IssueCreateInput!) {
       issueCreate(input: $input) { success issue { identifier title } }
     }`,
-    { input },
+    { input }
   );
 
   const created = result.issueCreate?.issue;

@@ -7,7 +7,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures/test-fixtures';
 
-import { waitForQRRender } from '../helpers/qr-detector';
 import {
   openAccordion,
   selectOption as selectDropdownByText,
@@ -18,11 +17,8 @@ import {
   waitForRenderComplete,
 } from '../helpers/test-utils';
 
-// Helper: Wait for initial load and set tier (page.goto is handled by fixture)
+// Helper: Set tier (navigation and initial render are handled by the test fixture)
 async function setupPage(page: Page) {
-  await page.waitForLoadState('networkidle');
-  await waitForQRRender(page);
-  // Select professional tier for Watermark section tests
   await selectTier(page, 'professional');
 }
 
@@ -62,8 +58,8 @@ async function setSliderByTestId(page: Page, testId: string, percent: number) {
 async function enableWatermark(page: Page) {
   const switchEl = page.locator('[data-testid="watermark-enabled-switch"]');
   if ((await switchEl.getAttribute('data-state')) !== 'checked') {
+    // toggleSwitchByTestId already calls waitForRenderComplete
     await toggleSwitchByTestId(page, 'watermark-enabled-switch');
-    await waitForRenderComplete(page, 'settle');
   }
 }
 
