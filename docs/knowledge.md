@@ -84,6 +84,13 @@ Share URL params must stay aligned between the client-side encoder/decoder and t
 
 ## Essential Commands
 
+### Setup
+
+```bash
+make bootstrap    # Full env setup: secrets from bootstrap.zip + npm install + git hooks + Playwright
+make pristine     # Nuclear reset: git clean -xfd + make bootstrap (fresh clone equivalent)
+```
+
 ### Development
 
 ```bash

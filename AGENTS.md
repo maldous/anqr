@@ -53,6 +53,19 @@ This file is intentionally short. It is a map, not the full knowledge base.
 - `docs/archive/`: historical working logs and superseded snapshots.
 - `docs/inventory/`: reconciliation and ownership matrices.
 
+## New Host Setup
+
+```bash
+git clone git@github-private:maldous/anqr.git && cd anqr
+make bootstrap    # secrets from bootstrap.zip + npm install + git hooks + Playwright
+source env        # load environment variables
+make build        # verify build works
+```
+
+For a nuclear reset (equivalent to fresh clone): `make pristine`
+
+Full bootstrap details: `scripts/bootstrap.sh` and `BOOTSTRAP-README.md` inside `bootstrap.zip`.
+
 ## Frequently Used Commands
 
 - List markdown files: `rg --files -g '*.md'`
