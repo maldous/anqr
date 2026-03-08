@@ -50,7 +50,7 @@ All Playwright tests run against `netlify dev` (port 8888) so both the Vite app 
 - Oversized issues must be split into child issues before execution.
 - Every `[CHILD]` issue must be linked to a `[PARENT]` issue via Linear parent/child relationship (title prefix alone is not sufficient).
 - Human-only work (no API, external portal/manual click-through, token/account creation) must move to `Pending` with explicit unblock steps and required validation evidence.
-- Descriptor prefixes must be explicit and consistent (`[SENTINEL]`, `[PARENT]`, `[CHILD]`, `[HUMAN]`).
+- Descriptor prefixes must be explicit and consistent (`[SENTINEL]`, `[PARENT]`, `[CHILD]`, `[HUMAN]`, `[EMAIL]`, `[CI]`, `[HARNESS]`).
 - Priority must be explicit for every actionable issue.
 - There must always be at least one issue in `In Progress`.
 - With two-slot orchestration, keep exactly two `In Progress` issues: one `[SENTINEL]` plus one highest-priority actionable work issue.
@@ -63,6 +63,16 @@ When an operator asks for action, decide using this default:
 1. Create/route a Linear task by default.
 2. Execute immediately only when deferring would be harmful or inappropriate for task routing (for example: production outage mitigation, live misconfiguration correction, broken scheduler/service health, or urgent metadata hygiene blocking execution).
 3. After immediate execution, still create/update a tracking issue if follow-up work remains.
+
+## Linear Issue CLI Tools
+
+Standalone CLI scripts for creating Linear issues without writing raw GraphQL:
+
+- **Create issue:** `node scripts/ops/create-issue.mjs --title "..." [--priority 1-4] [--label name] [--team ANQ]`
+- **Create child:** `node scripts/ops/create-child-issue.mjs --parent ANQ-123 --title "..."`
+- **Show usage:** `make issue:create` / `make issue:create:child`
+
+Both require `LINEAR_API_KEY`. The standalone script also accepts `--parent` for optional parent linking.
 
 ## Agent-Specific Configuration
 

@@ -28,6 +28,8 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 | Error handling      | `docs/operations/ops-autopilot.md` §Error-Aware     |
 | Circuit breaker     | `docs/operations/ops-autopilot.md` §Circuit-Breaker |
 | Email notifications | `docs/operations/ops-autopilot.md` §Email           |
+| CI failure monitor  | `docs/operations/ops-autopilot.md` §CI Failure Monitor |
+| Linear issue CLI    | `docs/operations/ops-autopilot.md` §Linear Issue Management CLI |
 
 ## Architecture
 
@@ -115,6 +117,9 @@ make harness      # Full 22-domain harness report (FACE-BPH)
 make harness:quick # Quick 4-check smoke test
 make notify:test  # Test outbound email notification
 make email:ingest # Process inbound emails → Linear issues
+make monitor:ci   # GitHub CI failure monitor → create/close Linear issues
+make issue:create # Show usage for standalone Linear issue creation
+make issue:create:child # Show usage for child issue creation
 ```
 
 ### Testing
@@ -180,6 +185,7 @@ make all          # Complete 16-step production pipeline
 - **Bundle budgets**: Main entry ≤720 KiB, non-i18n total ≤6200 KiB.
 - **Issue evidence**: Every Done issue requires a comment with commit hashes, validation output, and pass/fail verdict. See `docs/workflow/execution-workflow.md` §Evidence Policy.
 - **Email handling**: Symphony NEVER sends emails autonomously. Inbound emails are ingested, read, and reviewed — then a NEW actionable issue is created that quotes the original email. The raw email does not become the issue itself.
+- **CI failure monitoring**: The CI monitor (`scripts/ops/ci-failure-monitor.mjs`) watches for GitHub Actions notification emails. "Run failed:" creates a `[CI]` Linear issue per unique workflow; "Run succeeded:" auto-closes it. Deduplicates repeat failures. Run via `make monitor:ci`.
 - **Issue assignment**: `[HUMAN]` and `[EMAIL]` issues are assigned to matthewaldous. All other issues are left unassigned — the credit-gate handles AI provider routing independently of Linear assignee. Do NOT assign automatable issues to any specific user. The guardian enforces this every 15 minutes and removes stale Codex assignments.
 - **Project health**: The guardian computes project health (`onTrack`/`atRisk`/`offTrack`) from issue completion ratios and posts Linear project updates when health changes.
 - **Symphony liveness**: The guardian verifies Symphony is running every 15 minutes via a deterministic systemd + dashboard check. This replaces the old AI-powered sentinel heartbeat — no AI credits consumed, cannot enter retry queues.
@@ -200,6 +206,8 @@ make all          # Complete 16-step production pipeline
 | `.dependency-cruiser.cjs` | Architectural boundary rules            |
 | `knip.json`               | Unused dependency/export detection      |
 | `Makefile`                | Orchestration entry point for all tasks |
+| `scripts/ops/create-issue.mjs` | CLI: create standalone Linear issues |
+| `scripts/ops/ci-failure-monitor.mjs` | GitHub CI → Linear issue bridge |
 
 ## Things to Avoid
 

@@ -27,6 +27,14 @@ This file is the primary context Codebuff uses to understand the project. It con
 - Update when the tech stack, commands, or conventions change.
 - Keep the "Things to Avoid" section current with active guardrails.
 
+### Recent Additions (March 2026)
+
+- **Appium mobile E2E**: testing commands (`make test:appium`), `wdio.conf.ts`, `tests/appium/` in architecture diagram.
+- **CI failure monitor**: convention entry for `make monitor:ci` and `[CI]` issue lifecycle.
+- **Linear issue CLI tools**: `make issue:create` / `make issue:create:child` in essential commands.
+- **Issue assignment rules**: `[HUMAN]`/`[EMAIL]` assigned to matthewaldous; all others unassigned.
+- **AI Hints**: guidance on using `AI Hint:` comments on Linear issues.
+
 ## .codebuffignore
 
 Works like `.gitignore` but controls what Codebuff reads during a session. Every excluded file saves context tokens for actual source code.

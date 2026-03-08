@@ -51,6 +51,7 @@ const LABEL_CLASSIFICATION_RULES = [
       /\bsymphony\b/i,
       /\bself[\s-]?heal/i,
       /\bops\b/i,
+      /^\[CI\]/,
     ],
   },
   {

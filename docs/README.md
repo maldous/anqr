@@ -20,7 +20,7 @@ This `docs/` directory is the canonical source of project knowledge.
 - `architecture/`: verified system architecture, runtime flows, and cross-platform QR rendering parity.
 - `modules/`: module-level reference (formerly `src/modules/**/README.md`, now removed).
 - `reports/`: report definitions, generation commands, and status docs.
-- `operations/`: launch and operational checklists (web, iOS, Android).
+- `operations/`: launch checklist, ops autopilot (CI monitor, email ingest, Linear CLI tools, provider cascade, web/iOS/Android checklists).
 - `roadmap/`: forward-looking plans and option coverage plans.
 - `archive/`: historical logs and superseded snapshots.
 - `inventory/`: reconciliation and ownership matrices.

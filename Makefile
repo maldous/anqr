@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
 
 # ============================================
 # Help
@@ -77,7 +77,13 @@ help:
 	@echo " 17) Email Notifications & Ingest"
 	@echo "    make notify:test       Send a test notification email"
 	@echo "    make email:ingest      Process inbound emails → Linear issues"
+	@echo "    make monitor:ci        Monitor GitHub CI emails → create/close Linear issues"
 	@echo "    make ops:email:install  Install systemd timer for email ingest (every 5 min)"
+	@echo ""
+	@echo " 18) Linear Issue Management"
+	@echo "    make issue:create      Show usage for standalone issue creation"
+	@echo "    make issue:create:child Show usage for child issue creation"
+	@echo "    node scripts/ops/create-issue.mjs --title 'Fix bug' --priority 2 --label reliability"
 	@echo ""
 
 # ============================================
@@ -888,6 +894,12 @@ notify\:test:
 email\:ingest:
 	node scripts/ops/email-ingest.mjs
 
+# Monitor GitHub Actions CI notification emails.
+# Creates Linear issues for "Run failed:" and auto-closes them on "Run succeeded:".
+# One unique issue per workflow name — deduplicates repeat failures.
+monitor\:ci:
+	node scripts/ops/ci-failure-monitor.mjs
+
 ops\:email\:install:
 	@mkdir -p ~/.config/systemd/user
 	@printf '[Unit]\nDescription=ANQR Email Ingest (mbsync + notmuch → Linear issues)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/email-ingest.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-email-ingest.service
@@ -1259,6 +1271,24 @@ test\:appium\:ios:
 		exit 1; \
 	fi
 	APPIUM_PLATFORM=ios npx wdio run wdio.conf.ts
+
+# ============================================
+# Linear Issue Management
+# ============================================
+# CLI scripts for creating Linear issues without writing raw GraphQL.
+# Usage: node scripts/ops/create-issue.mjs --title "Fix bug" --priority 2 --label reliability
+
+issue\:create:
+	@echo "Usage: node scripts/ops/create-issue.mjs --title 'Title' [--description '...'] [--priority 1-4] [--label name] [--state Backlog] [--team ANQ] [--parent ANQ-123]"
+	@echo ""
+	@echo "Example:"
+	@echo "  node scripts/ops/create-issue.mjs --title 'Fix CI flake' --priority 2 --label reliability"
+
+issue\:create\:child:
+	@echo "Usage: node scripts/ops/create-child-issue.mjs --parent ANQ-123 --title 'Title' [--description '...'] [--priority 1-4] [--label name] [--state Backlog]"
+	@echo ""
+	@echo "Example:"
+	@echo "  node scripts/ops/create-child-issue.mjs --parent ANQ-151 --title 'Subtask' --priority 3"
 
 # ============================================
 # iOS App (Capacitor + Fastlane)

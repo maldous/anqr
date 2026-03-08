@@ -14,7 +14,9 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 ┌──────────────────────┴──────────────────────────────────┐
 │  TIER 2: SCHEDULED AUTOMATION                           │
 │  Guardian (15m) · Continuous (1h) · Nightly (02:30)     │
+│  CI Monitor (5m) · Email Ingest (5m)                    │
 │  nightly-ops-pass.mjs runs harness-report.mjs           │
+│  ci-failure-monitor.mjs bridges GitHub CI → Linear      │
 └──────────────────────┬──────────────────────────────────┘
                        │ executes
 ┌──────────────────────┴──────────────────────────────────┐
@@ -108,9 +110,12 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 3. For each FAIL status or regression, sentinel creates:
    - `[PARENT]` issue describing the check domain failure
    - `[CHILD]` issues for each specific finding with fix instructions
-4. **Guardian** (15min) manages issue labels, priority, and state
-5. **Symphony** picks up issues and agents implement fixes
-6. Next harness run detects improvements → closes the feedback loop
+4. **CI failure monitor** (every 5 min) scans GitHub Actions notification emails:
+   - `Run failed: <workflow>` → creates a `[CI]` issue (one per unique workflow, deduplicates)
+   - `Run succeeded: <workflow>` → auto-closes the matching `[CI]` issue
+5. **Guardian** (15min) manages issue labels, priority, and state; classifies `[CI]` issues as `reliability`
+6. **Symphony** picks up issues and agents implement fixes
+7. Next harness run / CI run detects improvements → closes the feedback loop
 
 ## Commands
 
@@ -118,6 +123,7 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 make harness            # Full 22-check report
 make harness:quick      # Quick 4-check smoke test
 make harness:continuous # Continuous 9-check pass
+make monitor:ci         # GitHub CI failure monitor (create/close [CI] issues)
 ```
 
 ## Scheduled Integration
@@ -158,6 +164,15 @@ OS gates enforce platform isolation:
 
 All Playwright tests (browser + API + parity) run against `netlify dev` on port 8888, giving full access to both the Vite app and Netlify Functions.
 
+## Issue Types Created by Automation
+
+| Prefix | Source | Lifecycle |
+| --- | --- | --- |
+| `[HARNESS]` | Guardian reads harness report | Created on FAIL/ERROR; resolved when check passes |
+| `[CI]` | CI failure monitor reads GitHub emails | Created on "Run failed:"; closed on "Run succeeded:" |
+| `[EMAIL]` | Email ingest reads inbound mail | Created from email; Symphony interprets into actionable issue |
+| `[SENTINEL]` | Sentinel (ANQ-105) reviews harness | Created for regressions/failures; manual or auto-close |
+
 ## Future Domains (Linear Issues)
 
 These require AI analysis or broader implementation and are tracked as Linear issues:
@@ -175,3 +190,4 @@ These require AI analysis or broader implementation and are tracked as Linear is
 - Gallery showcase freshness
 - PWA audit & enhancement
 - Netlify function performance monitoring
+- Expand Appium mobile E2E test coverage (ANQ-244)

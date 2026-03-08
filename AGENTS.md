@@ -43,12 +43,12 @@ This file is intentionally short. It is a map, not the full knowledge base.
 
 ## Documentation Structure
 
-- `docs/harness/`: agent-first operating model and documentation policy.
-- `docs/workflow/`: implementation and review workflow.
+- `docs/harness/`: agent-first operating model, autonomous framework, provider operations, and documentation policy.
+- `docs/workflow/`: implementation and review workflow, evidence policy.
 - `docs/architecture/`: verified system architecture and runtime flows.
 - `docs/modules/`: module-level documentation (formerly `src/modules/**/README.md`, now removed).
 - `docs/reports/`: report definitions, generation commands, and status docs.
-- `docs/operations/`: launch and operational checklists.
+- `docs/operations/`: launch checklist, ops autopilot (CI monitor, email ingest, Linear CLI tools).
 - `docs/roadmap/`: forward-looking plans and option coverage plans.
 - `docs/archive/`: historical working logs and superseded snapshots.
 - `docs/inventory/`: reconciliation and ownership matrices.
@@ -90,6 +90,10 @@ See `docs/knowledge.md` §Testing for full details.
 - Need harness/ops context: open `docs/harness/autonomous-framework.md`.
 - Need provider/pipeline context: open `docs/harness/provider-operations.md`.
 - Need email/notification context: open `docs/operations/ops-autopilot.md` §Email Notification System.
+- Need CI failure monitoring context: open `docs/operations/ops-autopilot.md` §CI Failure Monitor.
+- Need to create a Linear issue: use `scripts/ops/create-issue.mjs` (see `make issue:create` for usage).
+- Need to create a child issue: use `scripts/ops/create-child-issue.mjs` (see `make issue:create:child`).
+- Need mobile testing context: see `tests/appium/` and `wdio.conf.ts`; run `make test:appium`.
 - Need historical context: open `docs/archive/*` only after checking canonical docs.
 
 ## Maintenance Expectations

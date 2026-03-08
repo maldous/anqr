@@ -104,3 +104,4 @@ ios/App/fastlane/api_key.json
 # Appium
 appium-logs/
 wdio-logs/
+reports/ci-monitor/

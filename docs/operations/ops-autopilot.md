@@ -364,12 +364,18 @@ make email:ingest        # Run ingest manually
   - action: sync mail via mbsync, process inbound emails from email@anqr.link → Linear issues
   - command: `node scripts/ops/email-ingest.mjs`
 
+- `anqr-ci-monitor.timer` _(recommended — not yet installed)_
+  - cadence: every 5 minutes
+  - action: sync mail via mbsync, scan for GitHub Actions CI failure/success notifications, create/close `[CI]` Linear issues per unique workflow
+  - command: `node scripts/ops/ci-failure-monitor.mjs`
+
 ## Reports
 
 - Harness report: `reports/harness/latest.json` (+ timestamped history)
 - Continuous/nightly reports: `reports/nightly/<timestamp>/summary.{json,md}`
 - Latest run summary: `reports/nightly/latest.json`
 - Email ingest report: `reports/email-ingest/latest.json`
+- CI failure monitor report: `reports/ci-monitor/latest.json`
 - Notification state: `reports/notify/state.json`
 - Linear guardian snapshot: `reports/linear-guardian/latest.json`
 - Groq free audit output: `reports/groq-free/latest.md`
@@ -391,6 +397,49 @@ To explicitly allow one of these (human-approved only):
 ALLOW_PAID_ACTIONS=1 make deploy
 ```
 
+## CI Failure Monitor (GitHub Actions → Linear)
+
+The CI failure monitor bridges GitHub Actions notification emails to Linear issues:
+
+1. `mbsync gmail` syncs mail, `notmuch new` indexes
+2. Searches for unprocessed emails from `notifications@github.com` matching `Run failed:` or `Run succeeded:`
+3. Parses subjects like `[maldous/anqr] Run failed: Quality Checks - master (aa6adb2)`
+4. **"Run failed:"** → creates a `[CI] Run failed: <workflow>` Linear issue (priority: urgent). If an open issue already exists for that workflow, adds a comment instead.
+5. **"Run succeeded:"** → finds the matching open `[CI]` issue and closes it (moves to Done with a resolution comment)
+6. Tags processed emails with `ci-monitor-processed`, removes `inbox` tag
+7. Sends notifications for new CI failures and resolved workflows
+
+**Deduplication:** Only one open issue per unique workflow name at a time. Repeat failures add comments; they don't create duplicate issues.
+
+**Dry-run mode:** `node scripts/ops/ci-failure-monitor.mjs --dry-run` previews actions without creating/closing issues or tagging emails.
+
+**Guardian integration:** The Linear guardian classifies `[CI]` issues with the `reliability` label automatically.
+
+## Linear Issue Management CLI
+
+CLI scripts for creating Linear issues without writing raw GraphQL mutations. Designed for use by AI agents (Symphony, Codex, Codebuff) and human operators.
+
+| Script | Purpose | Key flags |
+| --- | --- | --- |
+| `scripts/ops/create-issue.mjs` | Create a standalone issue | `--title`, `--description`, `--priority`, `--label`, `--state`, `--team`, `--parent` |
+| `scripts/ops/create-child-issue.mjs` | Create a child issue under a parent | `--parent` (required), `--title`, `--description`, `--priority`, `--label` |
+
+**Usage examples:**
+
+```bash
+# Standalone issue
+node scripts/ops/create-issue.mjs --title "Fix CI flake" --priority 2 --label reliability
+
+# Child issue
+node scripts/ops/create-child-issue.mjs --parent ANQ-151 --title "Subtask" --priority 3
+
+# Show usage via Make
+make issue:create
+make issue:create:child
+```
+
+Both scripts require `LINEAR_API_KEY` environment variable. The standalone script resolves the team by key (default: `ANQ`).
+
 ## Manual Commands
 
 - `make ops:guardian`
@@ -401,12 +450,15 @@ ALLOW_PAID_ACTIONS=1 make deploy
 - `make ops:hugging`
 - `make notify:test` — test outbound email delivery
 - `make email:ingest` — process inbound emails → Linear issues
+- `make monitor:ci` — scan GitHub CI emails → create/close Linear issues
+- `make issue:create` — show usage for standalone Linear issue creation
+- `make issue:create:child` — show usage for child issue creation
 - `make ops:email:install` — install email ingest systemd timer
 
 ## Timer Administration
 
 ```bash
-systemctl --user list-timers --all | rg 'anqr-(linear-guardian|ops-continuous|ops-nightly)'
+systemctl --user list-timers --all | rg 'anqr-(linear-guardian|ops-continuous|ops-nightly|email-ingest|ci-monitor)'
 systemctl --user status anqr-linear-guardian.service
 systemctl --user status anqr-ops-continuous.service
 systemctl --user status anqr-ops-nightly.service
