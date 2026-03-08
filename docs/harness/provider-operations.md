@@ -94,7 +94,9 @@ LiteLLM uses provider prefixes to route requests. Not all prefixes work for all 
 | Mistral       | `mistral/`             | ✅     | Standard                                                                                      |
 | GitHub Models | `github/`              | ❌     | LiteLLM doesn't recognise GPT-4.1-mini                                                        |
 | GitHub Models | `openai/` + `api_base` | ✅     | **Workaround**: use `openai/gpt-4.1-mini` with `api_base: https://models.github.ai/inference` |
-| Ollama        | `ollama/`              | ✅     | Standard                                                                                      |
+| Ollama        | `ollama/`              | ⚠️     | Drops `tool_calls` from responses (known upstream bug, verified LiteLLM 1.82.0)               |
+| Ollama        | `ollama_chat/`         | ✅     | Tool calls work; supports `num_ctx` for context windowing                                     |
+| Ollama        | `openai/` + `api_base` | ✅     | **Recommended**: treats Ollama as generic OpenAI-compat API; tool calls pass through correctly |
 
 ### GitHub Models Routing Workaround
 
@@ -115,6 +117,42 @@ LiteLLM strips the `openai/` prefix and sends `gpt-4.1-mini` to the GitHub API e
 The `openai/` prefix + `api_base` workaround only works for `/v1/chat/completions`. When Codex uses `/v1/responses` (its default API), LiteLLM tries to call the OpenAI responses API directly on `models.github.ai/inference` — but GitHub's endpoint doesn't have a `/v1/responses` path, causing a 404.
 
 The model-injector handles this by pre-excluding `github` from the failover chain for `/v1/responses` requests (see `_RESPONSES_INCOMPATIBLE_PROVIDERS` in `model-injector-proxy.py`). GitHub Models is still available for `/v1/chat/completions` testing.
+
+### Ollama Tool-Call Fix: `openai/` Prefix
+
+LiteLLM's `ollama/` provider handler (as of v1.82.0) silently drops `tool_calls` from Ollama responses. The model generates correct tool calls — Ollama's `/v1/chat/completions` endpoint returns them in standard OpenAI format — but LiteLLM's Ollama-specific response parser strips them.
+
+**Root cause:** LiteLLM's `ollama/` prefix routes through a custom Ollama handler that doesn't properly map the `tool_calls` field from Ollama's response. The `openai/` prefix bypasses this handler entirely, treating Ollama as a generic OpenAI-compatible API.
+
+**Fix (applied):**
+
+```yaml
+# Instead of:
+- model_name: qwen3.5-35b-a3b-32t
+  litellm_params:
+    model: ollama/qwen3.5:35b-a3b-32t
+    api_base: http://localhost:11434
+
+# Use:
+- model_name: qwen3.5-35b-a3b-32t
+  litellm_params:
+    model: openai/qwen3.5:35b-a3b-32t
+    api_base: http://localhost:11434/v1
+    api_key: ollama  # required by openai/ prefix; value ignored by Ollama
+```
+
+Key differences:
+- `api_base` must include `/v1` (Ollama's OpenAI-compat endpoint path)
+- `api_key` is required by the `openai/` prefix but Ollama ignores the value
+- `num_ctx` is not supported via `openai/` — context is set via `OLLAMA_CONTEXT_LENGTH` env or Modelfile instead
+
+A fallback `ollama_chat/` entry (`qwen3.5-35b-a3b-32t-ollama`) is kept for workloads that need Ollama-native context windowing.
+
+**Verified endpoints (all ✅):**
+- `/v1/chat/completions` — tool calls with `finish_reason: "tool_calls"`
+- `/v1/chat/completions` — basic chat with reasoning content
+- `/v1/responses` — tool calls as `function_call` output items
+- `/v1/responses` — basic text responses
 
 ### Gemini Routing Requirement
 
@@ -240,6 +278,7 @@ Linear parent issues were marked Done with incomplete children. This masks remai
 | 5   | No cumulative quota tracking                    | Can't predict when providers will exhaust                                    | Read cooldown files in harness report (ANQ-198)                                  |
 | 6   | `OPENROUTER_API_KEY` env var missing            | `OPENROUTER_TOKEN` is set but variable naming inconsistency                  | Credit-gate handles both; document the mapping                                   |
 | 7   | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix |
+| 8   | LiteLLM `ollama/` prefix drops tool_calls       | Ollama fallback silently fails function calling if using wrong prefix        | Fixed: use `openai/` prefix with `/v1` api_base (see Ollama Tool-Call Fix)       |
 
 ## Continuous Evolution Procedures
 

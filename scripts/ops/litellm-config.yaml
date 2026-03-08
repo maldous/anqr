@@ -68,9 +68,23 @@ model_list:
       additional_drop_params: ['web_search_options', 'supports_function_calling']
 
   # --- Local Ollama model (MoE 35B/3B active, optimised for i9-13900K) ---
+  # Use openai/ prefix so LiteLLM treats Ollama as a generic OpenAI-compat
+  # API. The ollama/ prefix uses LiteLLM's Ollama-specific handler which
+  # drops tool_calls from responses (known upstream issue, verified 1.82.0).
+  # Ollama's /v1/ endpoint returns proper OpenAI-format tool_calls natively.
   - model_name: qwen3.5-35b-a3b-32t
     litellm_params:
-      model: ollama/qwen3.5:35b-a3b-32t
+      model: openai/qwen3.5:35b-a3b-32t
+      api_base: http://localhost:11434/v1
+      api_key: ollama  # required by openai/ prefix; value ignored by Ollama
+      # Context length governed by OLLAMA_CONTEXT_LENGTH=32768 in systemd override
+      # (num_ctx only works with ollama/ prefix, not openai/)
+
+  # Fallback entry using ollama_chat/ prefix (for non-tool-call workloads
+  # that benefit from Ollama-native context windowing).
+  - model_name: qwen3.5-35b-a3b-32t-ollama
+    litellm_params:
+      model: ollama_chat/qwen3.5:35b-a3b-32t
       api_base: http://localhost:11434
       num_ctx: 32768
 
