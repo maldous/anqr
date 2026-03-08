@@ -140,20 +140,21 @@ All fallback providers are configured in `~/.codex/config.toml` via `[model_prov
 
 The credit gate queries Ollama's `/api/tags` endpoint and picks the best available model that supports tool calling, in this priority order:
 
-1. `qwen2.5-coder:7b-32t` — custom variant with `num_thread 32` for max CPU utilisation (created via `Modelfile`)
-2. `qwen2.5-coder:7b` — base 7B quality for tool-calling tasks (4.7 GB)
+1. `qwen3.5:35b-a3b-32t` — custom MoE variant (35B/3B active) with `num_thread 32` for max CPU utilisation (created via `Modelfile`)
+2. `qwen3.5:35b-a3b` — base MoE model for tool-calling tasks (23 GB)
 3. `llama3.1:8b` — general-purpose with tool support (4.7 GB)
 
-> **Note:** `qwen2.5-coder:3b` and `llama3.1:8b-32k` were removed from the
-> preferred lists and LiteLLM config — they are not installed on the current
-> system and caused 404 errors on every selection attempt.
+> **Note:** The local model was upgraded from `qwen2.5-coder:7b` to
+> `qwen3.5:35b-a3b` (MoE, 35B total / 3B active per token). Earlier models
+> (`qwen2.5-coder:3b`, `llama3.1:8b-32k`) were removed from the preferred
+> lists — they are not installed on the current system.
 
 Models without tool-calling support (e.g. `deepseek-coder:*`) are excluded because Codex requires function/tool calling.
 
 To override the auto-selection:
 
 ```bash
-export OLLAMA_MODEL=qwen2.5-coder:7b-32t
+export OLLAMA_MODEL=qwen3.5:35b-a3b-32t
 ```
 
 ### Comprehensive Error-Aware Provider Fallback
@@ -288,7 +289,7 @@ Ollama is configured for hybrid CPU/GPU inference via `/etc/systemd/system/ollam
 | `OLLAMA_FLASH_ATTENTION`   | `1`     | Enable flash attention for faster inference                       |
 | `OLLAMA_GPU_OVERHEAD`      | `0`     | Maximise VRAM allocated to model layers                           |
 
-With a GTX 1650 (4 GB VRAM), the `qwen2.5-coder:7b-32t` model runs at roughly **51% CPU / 49% GPU** split (~2.5 GB VRAM used, GPU at 100%). `OLLAMA_NUM_PARALLEL=1` ensures each request gets the full 32K KV cache — with `NUM_PARALLEL=2` the doubled KV allocation (2×32K=64K tokens) starves VRAM. The tradeoff is sequential request processing, but a slow result is better than no result.
+With a GTX 1650 (4 GB VRAM), the `qwen3.5:35b-a3b-32t` MoE model (35B total, 3B active per token) runs with partial GPU offload. `OLLAMA_NUM_PARALLEL=1` ensures each request gets the full 32K KV cache — with `NUM_PARALLEL=2` the doubled KV allocation (2×32K=64K tokens) starves VRAM. The tradeoff is sequential request processing, but a slow result is better than no result.
 
 **Important:** Do not set `CUDA_VISIBLE_DEVICES=-1` or `OLLAMA_LLM_LIBRARY=cpu_avx2` — these disable GPU offload entirely and were removed to enable hybrid inference.
 

@@ -90,14 +90,14 @@ LITELLM_MISTRAL_MODEL="mistral-codestral"
 LITELLM_GITHUB_MODEL="github-gpt41-mini"
 LITELLM_OLLAMA_MODEL="${LITELLM_OLLAMA_MODEL:-}"
 
-# Single optimised local model: qwen2.5-coder:7b-32t
-# (32K context, tool-calling, 32 threads for i9-13900K, partial GPU offload on 4GB VRAM)
-PREFERRED_OLLAMA_MODELS="qwen2.5-coder:7b-32t"
-DEFAULT_OLLAMA_MODEL="qwen2.5-coder:7b-32t"
+# Single optimised local model: qwen3.5:35b-a3b-32t
+# (MoE 35B/3B active, 32K context, tool-calling, 32 threads for i9-13900K)
+PREFERRED_OLLAMA_MODELS="qwen3.5:35b-a3b-32t"
+DEFAULT_OLLAMA_MODEL="qwen3.5:35b-a3b-32t"
 
 # LiteLLM alias (must exist in litellm-config.yaml)
-PREFERRED_LITELLM_OLLAMA_MODELS="qwen2.5-coder-7b-32t"
-DEFAULT_LITELLM_OLLAMA_MODEL="qwen2.5-coder-7b-32t"
+PREFERRED_LITELLM_OLLAMA_MODELS="qwen3.5-35b-a3b-32t"
+DEFAULT_LITELLM_OLLAMA_MODEL="qwen3.5-35b-a3b-32t"
 
 # Provider failure memory: skip providers that failed recently.
 # When the credit-gate selects a provider and the process exits quickly
@@ -340,13 +340,13 @@ select_litellm_ollama_model() {
 
   tags_json=$(curl -sf --max-time 3 "${OLLAMA_HOST}/api/tags" 2>/dev/null || true)
 
-  if echo "$tags_json" | grep -q '"name":"qwen2.5-coder:7b-32t"' ; then
+  if echo "$tags_json" | grep -q '"name":"qwen3.5:35b-a3b-32t"' ; then
     echo "$DEFAULT_LITELLM_OLLAMA_MODEL"; return
   fi
 
   # Model not found in Ollama tags — warn so 0-token crashes are diagnosable
   if [ -n "$tags_json" ]; then
-    echo "WARNING: qwen2.5-coder:7b-32t not found in Ollama. Pull with: ollama pull qwen2.5-coder:7b-32t" >&2
+    echo "WARNING: qwen3.5:35b-a3b-32t not found in Ollama. Pull with: ollama pull qwen3.5:35b-a3b && ollama create qwen3.5:35b-a3b-32t -f Modelfile" >&2
   fi
   echo "$DEFAULT_LITELLM_OLLAMA_MODEL"
 }

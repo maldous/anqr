@@ -10,7 +10,7 @@ const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports', 'ollama-local');
 
 const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://127.0.0.1:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5-coder:3b';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen3.5:35b-a3b-32t';
 const FETCH_TIMEOUT_MS = 120_000;
 
 function ensureDir(dir) {

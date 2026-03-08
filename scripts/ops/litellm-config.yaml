@@ -67,15 +67,15 @@ model_list:
       api_key: os.environ/GITHUB_MODELS_TOKEN
       additional_drop_params: ['web_search_options', 'supports_function_calling']
 
-  # --- Local Ollama model (single optimised model for i9-13900K + 4GB VRAM) ---
-  - model_name: qwen2.5-coder-7b-32t
+  # --- Local Ollama model (MoE 35B/3B active, optimised for i9-13900K) ---
+  - model_name: qwen3.5-35b-a3b-32t
     litellm_params:
-      model: ollama/qwen2.5-coder:7b-32t
+      model: ollama/qwen3.5:35b-a3b-32t
       api_base: http://localhost:11434
       num_ctx: 32768
 
 general_settings:
-  default_model: qwen2.5-coder-7b-32t
+  default_model: qwen3.5-35b-a3b-32t
 
 litellm_settings:
   drop_params: true

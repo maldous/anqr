@@ -19,7 +19,7 @@ Symphony orchestrator
 | `scripts/ops/codex-credit-gate.sh`                   | Provider cascade, availability probes, rate-limit backoff          |
 | `scripts/ops/model-injector-proxy.py`                | Request injection, in-session failover, error detection, cooldowns |
 | `scripts/ops/litellm-config.yaml`                    | LiteLLM model aliases, provider routing, API keys                  |
-| `Modelfile`                                          | Custom Ollama model definition (qwen2.5-coder:7b-32t)              |
+| `Modelfile`                                          | Custom Ollama model definition (qwen3.5:35b-a3b-32t)               |
 | `/etc/systemd/system/ollama.service.d/override.conf` | Ollama GPU/VRAM/context tuning                                     |
 
 ## Verified Provider Matrix
@@ -36,7 +36,7 @@ Context windows verified where provider API catalog is available; remainder base
 | 5   | SambaNova     | `sambanova-llama-70b`  | `Meta-Llama-3.3-70B-Instruct` | 128K            | 32K              | 20 req/day        | ✅ Active                     |
 | 6   | Cerebras      | `cerebras-llama-8b`    | `llama3.1-8b`                 | 8K (unverified) | 8K               | 1M tok/day        | ⚠️ Low context                |
 | 7   | GitHub Models | `github-gpt41-mini`    | `gpt-4.1-mini`                | **1M**          | **32K**          | FREE tier         | ⚠️ /chat only (no /responses) |
-| 8   | Ollama        | `qwen2.5-coder-7b-32t` | `qwen2.5-coder:7b-32t`        | 32K             | 32K              | Unlimited (local) | ✅ Active                     |
+| 8   | Ollama        | `qwen3.5-35b-a3b-32t`  | `qwen3.5:35b-a3b-32t`         | 32K             | 32K              | Unlimited (local) | ✅ Active                     |
 
 ### Context Window Requirements
 
@@ -147,24 +147,25 @@ With `NUM_PARALLEL=2`, Ollama allocates KV cache for **both slots simultaneously
 
 Tradeoff: sequential request processing (one agent at a time). A slow result is better than no result.
 
-### Custom Model: `qwen2.5-coder:7b-32t`
+### Custom Model: `qwen3.5:35b-a3b-32t`
 
 Built from `Modelfile` in project root:
 
 ```
-FROM qwen2.5-coder:7b
+FROM qwen3.5:35b-a3b
 PARAMETER num_thread 32
 ```
 
-Sets `num_thread=32` to maximise CPU utilisation on the 24-thread i9-13900K (hyperthreading gives 32 logical cores). The base `qwen2.5-coder:7b` defaults to fewer threads.
+Qwen 3.5 35B-A3B is a Mixture-of-Experts model (35B total parameters, 3B active per token). Sets `num_thread=32` to maximise CPU utilisation on the 24-thread i9-13900K (hyperthreading gives 32 logical cores).
 
 To rebuild after changes:
 
 ```bash
-ollama create qwen2.5-coder:7b-32t -f Modelfile
+ollama pull qwen3.5:35b-a3b
+ollama create qwen3.5:35b-a3b-32t -f Modelfile
 ```
 
-> The `Modelfile` is tracked in git at the project root. If `qwen2.5-coder:7b-32t` needs recreating on a new machine, this file provides the complete definition.
+> The `Modelfile` is tracked in git at the project root. If `qwen3.5:35b-a3b-32t` needs recreating on a new machine, this file provides the complete definition.
 
 ## Error Handling Architecture
 
