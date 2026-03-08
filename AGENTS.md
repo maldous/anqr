@@ -66,6 +66,16 @@ For a nuclear reset (equivalent to fresh clone): `make pristine`
 
 Full bootstrap details: `scripts/bootstrap.sh` and `BOOTSTRAP-README.md` inside `bootstrap.zip`.
 
+## Mobile Testing (Appium)
+
+```bash
+make android:build     # build debug APK
+make test:appium       # run Appium tests (needs emulator or device)
+```
+
+Tests are in `tests/appium/` using WebdriverIO + Mocha. Config: `wdio.conf.ts`.
+See `docs/knowledge.md` §Testing for full details.
+
 ## Frequently Used Commands
 
 - List markdown files: `rg --files -g '*.md'`

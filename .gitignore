@@ -100,3 +100,7 @@ ios/App/fastlane/report.xml
 ios/App/fastlane/README.md
 ios/App/fastlane/api_key.json
 *.p8
+
+# Appium
+appium-logs/
+wdio-logs/

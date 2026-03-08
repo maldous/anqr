@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios
 
 # ============================================
 # Help
@@ -38,6 +38,7 @@ help:
 	@echo "    make test test:full test:unit test:ui test:report"
 	@echo "    make test:basic test:advanced test:pro test:tiers test:permutations"
 	@echo "    make test:unit:coverage test:coverage:gap test:unit:ci"
+	@echo "    make test:appium test:appium:android test:appium:ios"
 	@echo ""
 	@echo "  9) Assets"
 	@echo "    make assets icons icons:android sitemap screenshots"
@@ -1186,6 +1187,33 @@ test\:report\:settings:
 # Show test report
 test\:report:
 	npx playwright show-report
+
+# ============================================
+# Mobile Testing (Appium + WebdriverIO)
+# ============================================
+# Runs native E2E tests against a real device or emulator via Appium.
+# Tests are in tests/appium/ and use WebdriverIO with Mocha.
+#
+# Prerequisites:
+#   - Android: `make android:build` (debug APK), emulator or device connected
+#   - iOS:     Xcode + simulator (macOS only)
+#
+# Tunables:
+#   APPIUM_PLATFORM=android|ios   (default: android)
+#   APPIUM_DEVICE=emulator-5554   (default: emulator-5554)
+#   APPIUM_APP=/path/to/app.apk   (default: android/app/build/outputs/apk/debug/app-debug.apk)
+
+# Run Appium tests (auto-detects platform, defaults to Android)
+test\:appium:
+	npx wdio run wdio.conf.ts
+
+# Run Appium tests explicitly on Android
+test\:appium\:android:
+	APPIUM_PLATFORM=android npx wdio run wdio.conf.ts
+
+# Run Appium tests explicitly on iOS (requires macOS + Xcode)
+test\:appium\:ios:
+	APPIUM_PLATFORM=ios npx wdio run wdio.conf.ts
 
 # ============================================
 # iOS App (Capacitor + Fastlane)

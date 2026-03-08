@@ -6,6 +6,8 @@
     "tests/**/*.spec.ts",
     "tests/helpers/**/*.ts",
     "tests/fixtures/**/*.ts",
+    "tests/appium/**/*.ts",
+    "wdio.conf.ts",
     "src/modules/**/index.ts"
   ],
   "ignoreExportsUsedInFile": true,
@@ -28,6 +30,16 @@
     "@capacitor/splash-screen",
     "oxc-parser",
     "oxc-transform",
-    "oxc-resolver"
+    "oxc-resolver",
+    "appium",
+    "appium-uiautomator2-driver",
+    "appium-xcuitest-driver",
+    "@wdio/appium-service",
+    "@wdio/cli",
+    "@wdio/local-runner",
+    "@wdio/mocha-framework",
+    "@wdio/spec-reporter",
+    "@wdio/types",
+    "webdriverio"
   ]
 }

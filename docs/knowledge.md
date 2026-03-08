@@ -40,6 +40,7 @@ docs/                   Canonical project knowledge
 scripts/                Build, gallery, ops, and report tooling
 tests/unit/             Vitest unit tests
 tests/                  Playwright E2E tests (basic/advanced/professional/permutations)
+tests/appium/           Appium mobile E2E tests (WebdriverIO + Mocha)
 ```
 
 ### Module dependency graph
@@ -76,7 +77,7 @@ Share URL params must stay aligned between the client-side encoder/decoder and t
 | Components | Radix UI primitives (Select, Slider, Tabs, Accordion, etc.)                                             |
 | State      | Zustand 5                                                                                               |
 | i18n       | i18next + react-i18next (40+ locales, static guides)                                                    |
-| Testing    | Vitest 4 (unit), Playwright 1.58 (E2E)                                                                  |
+| Testing    | Vitest 4 (unit), Playwright 1.58 (E2E web), Appium 3 + WebdriverIO 9 (E2E mobile)                       |
 | Linting    | oxlint + oxfmt (OXC-powered, not ESLint)                                                                |
 | Quality    | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, type-coverage, dependency-cruiser |
 | Hosting    | Netlify (web + functions), Google Play Store (Android)                                                  |
@@ -120,6 +121,9 @@ npm run test:unit:ci   # Same (CI alias)
 make test:basic        # Playwright basic tier
 make test              # Full quality gates + unit + E2E
 make test:tiers        # All Playwright tiers (no permutations)
+make test:appium       # Appium mobile E2E (requires APK + emulator/device)
+make test:appium:android # Appium Android explicitly
+make test:appium:ios   # Appium iOS (requires macOS + Xcode)
 ```
 
 ### Validation
@@ -166,7 +170,8 @@ make all          # Complete 16-step production pipeline
 | `src/stores/`             | Zustand stores (app state)              |
 | `vite.config.ts`          | Build config, chunk splitting, plugins  |
 | `vitest.config.ts`        | Unit test config                        |
-| `playwright.config.ts`    | E2E test config                         |
+| `playwright.config.ts`    | E2E test config (web)                   |
+| `wdio.conf.ts`            | E2E test config (mobile/Appium)         |
 | `.oxlintrc.json`          | Linter rules                            |
 | `.oxfmtrc.json`           | Formatter config                        |
 | `.dependency-cruiser.cjs` | Architectural boundary rules            |
