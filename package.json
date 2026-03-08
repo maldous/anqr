@@ -117,7 +117,7 @@
     "license-checker": "^25.0.1",
     "lint-staged": "^16.2.7",
     "lockfile-lint": "^5.0.0",
-    "netlify-cli": "^23.15.1",
+    "netlify-cli": "^24.0.1",
     "oxc-minify": "^0.114.0",
     "oxc-parser": "^0.114.0",
     "oxc-resolver": "^11.18.0",
@@ -142,7 +142,12 @@
   },
   "overrides": {
     "ajv": ">=8.18.0",
+    "axios": ">=1.13.5",
+    "fastify": ">=5.8.1",
+    "minimatch": ">=5.1.8",
     "qs": ">=6.14.2",
-    "tar": ">=7.5.8"
+    "serialize-javascript": ">=7.0.3",
+    "svgo": ">=4.0.1",
+    "tar": ">=7.5.10"
   }
 }
