@@ -138,16 +138,39 @@ To add a new check domain:
 5. Add regression detection in `detectRegressions` if applicable
 6. Update this doc's check table
 
+## Cross-Platform Testing Infrastructure
+
+The harness now covers four rendering paths with deterministic tests:
+
+| Path | Runner | Tests | Gate |
+| -------- | ---------- | ------------------------------------ | ------------- |
+| Browser  | Playwright | `tests/basic\|advanced\|professional/` | `make test:tiers` |
+| API      | Playwright | `tests/api/qr-api.spec.ts` (30+ tests) | `make test:api` |
+| Parity   | Playwright | `tests/api/cross-platform-parity.spec.ts` (pixelmatch) | `make test:parity` |
+| iOS      | Appium     | `tests/appium/specs/ios-platform.spec.ts` (25+ tests) | `make test:appium:ios` (macOS only) |
+| Android  | Appium     | `tests/appium/specs/android-platform.spec.ts` (27+ tests) | `make test:appium:android` (Linux only) |
+
+OS gates enforce platform isolation:
+- `make test:appium:ios` errors on non-macOS
+- `make test:appium:android` errors on non-Linux, auto-sets `ANQR_BASE_URL=http://10.0.2.2:8888`
+- `make test:appium` auto-detects the OS and selects the correct platform
+- `wdio.conf.ts` excludes `ios-platform.spec.ts` on Android and `android-platform.spec.ts` on iOS
+
+All Playwright tests (browser + API + parity) run against `netlify dev` on port 8888, giving full access to both the Vite app and Netlify Functions.
+
 ## Future Domains (Linear Issues)
 
 These require AI analysis or broader implementation and are tracked as Linear issues:
 
+- Cross-platform parity as an automated harness check (compare API vs browser snapshots nightly)
+- Appium device-to-API parity (compare iOS/Android canvas captures against `/api/qr` baseline)
 - Accessibility compliance (axe-core integration)
 - Lighthouse CI (performance, SEO, best practices scores)
 - Competitive analysis & UX evolution
 - React 19 / Vite 8 feature adoption audit
 - ISO 18004 full compliance validation
 - Android build health automation
+- iOS build health automation
 - SEO & sitemap automation
 - Gallery showcase freshness
 - PWA audit & enhancement

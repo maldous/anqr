@@ -32,6 +32,18 @@ Treat operator feedback and production incidents as harness inputs, not ad-hoc n
 4. Keep state/priority/labels synchronized continuously via scheduled hygiene jobs.
 5. Prefer system-level prevention over one-off manual correction.
 
+### Cross-Platform Testing Feedback Loop
+
+QR rendering parity across browser, API, iOS, and Android is enforced by layered testing:
+
+1. **Unit tests** (Vitest) validate platform-specific logic in isolation (AdMob, native toast, web-only assets, banner height, deep links).
+2. **Playwright API tests** verify the `/api/qr` Netlify Function produces correct images for all parameter combinations.
+3. **Playwright parity tests** compare browser canvas output against API output pixel-by-pixel using `pixelmatch`.
+4. **Appium E2E tests** verify iOS and Android native apps render correctly in their respective WebView contexts.
+5. **OS gates** in the Makefile prevent running iOS tests on Linux or Android tests on macOS.
+
+All Playwright tests run against `netlify dev` (port 8888) so both the Vite app and Netlify Functions are available in the same test run.
+
 ### Operational Invariants
 
 - One simple task per issue.

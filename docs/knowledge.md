@@ -2,7 +2,7 @@
 
 ## Identity
 
-ANQR is a production QR code generator shipped as a Vite/React web app (anqr.link), a Netlify serverless API, and an Android app (Capacitor). It supports rich styling (gradients, overlays, dithering, animation), 25+ payload types, share-link round-tripping, i18n (40+ languages), and monetisation via AdSense/AdMob.
+ANQR is a production QR code generator shipped as a Vite/React web app (anqr.link), a Netlify serverless API, an Android app, and an iOS app (both via Capacitor). It supports rich styling (gradients, overlays, dithering, animation), 25+ payload types, share-link round-tripping, i18n (40+ languages), and monetisation via AdSense (web) and AdMob (native).
 
 ## Documentation Model
 
@@ -32,15 +32,19 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 ## Architecture
 
 ```
-src/                    Client React app (Vite dev server on :5173)
+src/                    Client React app (Vite dev server on :5173, proxied via netlify dev on :8888)
 src/modules/            15 domain modules with explicit dependency graph
 netlify/functions/qr.ts Serverless QR renderer — shares modules with client
 android/                Capacitor Android shell
+ios/                    Capacitor iOS shell (Xcode project + Fastlane)
 docs/                   Canonical project knowledge
 scripts/                Build, gallery, ops, and report tooling
 tests/unit/             Vitest unit tests
-tests/                  Playwright E2E tests (basic/advanced/professional/permutations)
-tests/appium/           Appium mobile E2E tests (WebdriverIO + Mocha)
+tests/basic|advanced|professional/ Playwright E2E tests by tier
+tests/api/              Playwright API tests (/api/qr) + cross-platform visual parity
+tests/appium/           Appium native E2E tests (WebdriverIO + Mocha, iOS + Android)
+tests/helpers/          Shared utilities (visual-compare via pixelmatch+pngjs, e2e-library, etc.)
+tests/permutations/     Exhaustive settings combination tests (overnight CI)
 ```
 
 ### Module dependency graph
@@ -77,10 +81,10 @@ Share URL params must stay aligned between the client-side encoder/decoder and t
 | Components | Radix UI primitives (Select, Slider, Tabs, Accordion, etc.)                                             |
 | State      | Zustand 5                                                                                               |
 | i18n       | i18next + react-i18next (40+ locales, static guides)                                                    |
-| Testing    | Vitest 4 (unit), Playwright 1.58 (E2E web), Appium 3 + WebdriverIO 9 (E2E mobile)                       |
+| Testing    | Vitest 4 (unit), Playwright 1.58 (E2E web + API), Appium 3 + WebdriverIO 9 (E2E iOS/Android), pixelmatch + pngjs (visual parity) |
 | Linting    | oxlint + oxfmt (OXC-powered, not ESLint)                                                                |
 | Quality    | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, type-coverage, dependency-cruiser |
-| Hosting    | Netlify (web + functions), Google Play Store (Android)                                                  |
+| Hosting    | Netlify (web + functions), Google Play Store (Android), Apple App Store (iOS)                            |
 | Monitoring | Sentry (React + Node SDKs)                                                                              |
 
 ## Essential Commands
@@ -116,15 +120,34 @@ make email:ingest # Process inbound emails → Linear issues
 ### Testing
 
 ```bash
-npm run test:unit      # Vitest unit tests
-npm run test:unit:ci   # Same (CI alias)
-make test:basic        # Playwright basic tier
-make test              # Full quality gates + unit + E2E
-make test:tiers        # All Playwright tiers (no permutations)
-make test:appium       # Appium mobile E2E (requires APK + emulator/device)
-make test:appium:android # Appium Android explicitly
-make test:appium:ios   # Appium iOS (requires macOS + Xcode)
+npm run test:unit        # Vitest unit tests
+npm run test:unit:ci     # Same (CI alias)
+make test:basic          # Playwright basic tier
+make test                # Full quality gates + unit + E2E + API (uses netlify dev)
+make test:tiers          # All Playwright tiers + API (no permutations)
+make test:api            # Playwright API tests (/api/qr endpoint + browser↔API parity)
+make test:parity         # Alias for test:api (cross-platform visual comparison)
+make test:appium         # Appium native E2E (auto-detects OS: macOS→iOS, Linux→Android)
+make test:appium:ios     # Appium iOS explicitly (macOS only, requires Xcode + Simulator)
+make test:appium:android # Appium Android explicitly (Linux only, requires emulator/device)
 ```
+
+### Cross-Platform Testing Strategy
+
+QR codes must be visually consistent across all rendering paths. The test matrix:
+
+| Platform | Runner | QR Renderer | Test Location |
+| -------- | ---------- | ----------------------- | ------------------------------ |
+| Browser  | Playwright | Client canvas           | `tests/basic\|advanced\|professional/` |
+| API      | Playwright | `@napi-rs/canvas` (Node)| `tests/api/qr-api.spec.ts` |
+| Parity   | Playwright | Both (pixel comparison) | `tests/api/cross-platform-parity.spec.ts` |
+| iOS      | Appium     | WebView canvas          | `tests/appium/specs/ios-platform.spec.ts` |
+| Android  | Appium     | WebView canvas          | `tests/appium/specs/android-platform.spec.ts` |
+
+OS gates enforce platform correctness:
+- **macOS** runs iOS Appium tests (`make test:appium:ios`)
+- **Linux** runs Android Appium tests (`make test:appium:android`), auto-sets `ANQR_BASE_URL=http://10.0.2.2:8888`
+- **Both** run Playwright browser + API tests via `netlify dev` on port 8888
 
 ### Validation
 
@@ -170,8 +193,8 @@ make all          # Complete 16-step production pipeline
 | `src/stores/`             | Zustand stores (app state)              |
 | `vite.config.ts`          | Build config, chunk splitting, plugins  |
 | `vitest.config.ts`        | Unit test config                        |
-| `playwright.config.ts`    | E2E test config (web)                   |
-| `wdio.conf.ts`            | E2E test config (mobile/Appium)         |
+| `playwright.config.ts`    | E2E test config (web + API, uses netlify dev on :8888) |
+| `wdio.conf.ts`            | E2E test config (mobile/Appium, iOS + Android)         |
 | `.oxlintrc.json`          | Linter rules                            |
 | `.oxfmtrc.json`           | Formatter config                        |
 | `.dependency-cruiser.cjs` | Architectural boundary rules            |
