@@ -1,5 +1,4 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
 
 /**
  * Template for the Examples page.
@@ -10,7 +9,7 @@ import { LAST_UPDATED } from '../types';
 export const examples: PageDefinition = {
   title: '671',
   description: '672',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1794',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '684', type: 'generator' },

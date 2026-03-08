@@ -1,10 +1,9 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
 
 export const contact: PageDefinition = {
   title: '30',
   description: '31',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1794',
   sections: [
     {
       heading: '32',

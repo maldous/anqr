@@ -1,5 +1,4 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
 
 /**
  * Template for the Learn page.
@@ -9,7 +8,7 @@ import { LAST_UPDATED } from '../types';
 export const learn: PageDefinition = {
   title: '640',
   description: '641',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1794',
 
   primaryLinks: [
     { href: '/?lang=${lang}', label: '684', type: 'generator' },

@@ -1,10 +1,9 @@
 import type { PageDefinition } from '../types';
-import { LAST_UPDATED } from '../types';
 
 export const about: PageDefinition = {
   title: '1',
   description: '2',
-  lastUpdated: LAST_UPDATED,
+  lastUpdated: '1794',
   primaryLinks: [
     { href: '/?lang=${lang}', label: '684', type: 'generator' },
     { href: '/learn?lang=${lang}', label: '682', type: 'learn' },
