@@ -39,7 +39,8 @@ const SENTRY_API_DSN =
 const CLOUDFLARE_ZONE_NAME = 'anqr.link';
 const EXPECTED_CNAME_TARGET = 'anqr.netlify.app';
 const PUBLISHER_ID = 'pub-2270701384951162';
-const ADMOB_APP_ID = 'ca-app-pub-2270701384951162~3067761782';
+const ADMOB_APP_ID_ANDROID = 'ca-app-pub-2270701384951162~3067761782';
+const ADMOB_APP_ID_IOS = 'ca-app-pub-2270701384951162~2718285064';
 const INDEXNOW_KEY = 'da39713d0cb0b7ec43d21f259b214605';
 const REQUEST_TIMEOUT_MS = 10_000;
 
@@ -574,16 +575,32 @@ async function checkAdsConfig() {
   // Check AdMob App ID in capacitor.config.ts
   const capConfig = readProjectFile('capacitor.config.ts');
   if (capConfig) {
-    const admobMatch = capConfig.includes(ADMOB_APP_ID);
+    const androidMatch = capConfig.includes(ADMOB_APP_ID_ANDROID);
+    const iosMatch = capConfig.includes(ADMOB_APP_ID_IOS);
     details.capacitor_admob = {
       exists: true,
-      admob_app_id_match: admobMatch,
-      expected: ADMOB_APP_ID,
+      admob_app_id_match: androidMatch && iosMatch,
+      android: { expected: ADMOB_APP_ID_ANDROID, found: androidMatch },
+      ios: { expected: ADMOB_APP_ID_IOS, found: iosMatch },
     };
-    if (!admobMatch) consistent = false;
+    if (!androidMatch || !iosMatch) consistent = false;
   } else {
     details.capacitor_admob = { exists: false };
     consistent = false;
+  }
+
+  // Check GADApplicationIdentifier in iOS Info.plist
+  const infoPlist = readProjectFile('ios/App/App/Info.plist');
+  if (infoPlist) {
+    const gadMatch = infoPlist.includes(ADMOB_APP_ID_IOS);
+    details.ios_info_plist = {
+      exists: true,
+      gad_app_id_match: gadMatch,
+      expected: ADMOB_APP_ID_IOS,
+    };
+    if (!gadMatch) consistent = false;
+  } else {
+    details.ios_info_plist = { exists: false };
   }
 
   // Check AdSense publisher ID in Makefile
@@ -607,6 +624,7 @@ async function checkAdsConfig() {
     const issues = [];
     if (!details.ads_txt?.contains_publisher_id) issues.push('ads.txt publisher ID');
     if (!details.capacitor_admob?.admob_app_id_match) issues.push('AdMob App ID');
+    if (!details.ios_info_plist?.gad_app_id_match) issues.push('iOS GADApplicationIdentifier');
     if (!details.makefile_adsense?.publisher_id_match) issues.push('Makefile AdSense');
     addResult(name, 'WARN', 'WARN', `Inconsistencies: ${issues.join(', ')}`, details);
   }

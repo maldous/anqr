@@ -377,7 +377,8 @@ export VITE_ADSENSE_SLOT_GALLERY_AFTER_QR_ART := 1648360241
 # ============================================
 # AdMob Configuration (for native Android/iOS apps)
 # ============================================
-# App ID: ca-app-pub-2270701384951162~3067761782
+# Android App ID: ca-app-pub-2270701384951162~3067761782
+# iOS App ID:     ca-app-pub-2270701384951162~2718285064
 # Ad units: https://admob.google.com -> Apps -> ANQR -> Ad units
 #
 # Banner Ads
