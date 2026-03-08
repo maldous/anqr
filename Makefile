@@ -1210,10 +1210,16 @@ ios\:screenshots:
 		echo "Using production build (vite preview)..."; \
 		npx vite preview --port 5173 --strictPort & \
 		SERVER_PID=$$!; \
+		SERVER_READY=0; \
 		for i in $$(seq 1 30); do \
-			curl -sf -o /dev/null http://localhost:5173/ && break; \
+			if curl -sf -o /dev/null http://localhost:5173/; then SERVER_READY=1; break; fi; \
 			sleep 1; \
 		done; \
+		if [ $$SERVER_READY -eq 0 ]; then \
+			echo "ERROR: vite preview did not start within 30s"; \
+			kill $$SERVER_PID 2>/dev/null; \
+			exit 1; \
+		fi; \
 		node scripts/generate-appstore-screenshots.mjs; \
 		RET=$$?; \
 		kill $$SERVER_PID 2>/dev/null; wait $$SERVER_PID 2>/dev/null; \

@@ -33,6 +33,7 @@ const WELCOME_VERSION = '2026.02.01';
  * the exact pixel dimensions Apple requires.
  */
 const DEVICES = [
+  { id: '6.9', label: '6.9" iPhone', viewport: { width: 440, height: 956 }, dpr: 3, pixels: '1320x2868' },
   { id: '6.7', label: '6.7" iPhone', viewport: { width: 430, height: 932 }, dpr: 3, pixels: '1290x2796' },
   { id: '6.5', label: '6.5" iPhone', viewport: { width: 414, height: 896 }, dpr: 3, pixels: '1242x2688' },
   { id: '5.5', label: '5.5" iPhone', viewport: { width: 414, height: 736 }, dpr: 3, pixels: '1242x2208' },
@@ -95,6 +96,26 @@ const SCENES = [
       await page.waitForTimeout(1500);
     },
   },
+  {
+    name: '06_analyze',
+    title: 'Scan Safety',
+    setup: async (page) => {
+      await page.goto(`${BASE_URL}/analyze`, { waitUntil: 'networkidle', timeout: 60_000 });
+      await page.waitForTimeout(2000);
+    },
+  },
+  {
+    name: '07_gradient',
+    title: 'Gradient QR Code',
+    setup: async (page) => {
+      await page.goto(
+        `${BASE_URL}/?fg=%232563eb&bg=%23f8fafc&eye=rounded&module=dots&grad=linear&gs=0%3A%232563eb%2C1%3A%239333ea&ga=135`,
+        { waitUntil: 'networkidle', timeout: 60_000 }
+      );
+      await waitForCanvasReady(page);
+      await page.waitForTimeout(1500);
+    },
+  },
 ];
 
 async function waitForCanvasReady(page, timeout = 30_000) {
@@ -113,8 +134,8 @@ async function waitForCanvasReady(page, timeout = 30_000) {
       },
       { timeout }
     );
-  } catch {
-    console.log('    ⚠️  Canvas not found on this page, capturing as-is');
+  } catch (err) {
+    console.log(`    ⚠️  Canvas not ready (${err.name}), capturing as-is`);
   }
 }
 
@@ -124,7 +145,7 @@ async function captureScene(browser, device, scene) {
     deviceScaleFactor: device.dpr,
     isMobile: device.id !== 'ipad',
     hasTouch: true,
-    colorScheme: 'dark',
+    colorScheme: 'light',
   });
 
   await context.addInitScript(
