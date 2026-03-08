@@ -50,10 +50,10 @@ All Playwright tests run against `netlify dev` (port 8888) so both the Vite app 
 - Oversized issues must be split into child issues before execution.
 - Every `[CHILD]` issue must be linked to a `[PARENT]` issue via Linear parent/child relationship (title prefix alone is not sufficient).
 - Human-only work (no API, external portal/manual click-through, token/account creation) must move to `Pending` with explicit unblock steps and required validation evidence.
-- Descriptor prefixes must be explicit and consistent (`[SENTINEL]`, `[PARENT]`, `[CHILD]`, `[HUMAN]`, `[EMAIL]`, `[CI]`, `[HARNESS]`).
+- Descriptor prefixes must be explicit and consistent (`[PARENT]`, `[CHILD]`, `[HUMAN]`, `[EMAIL]`, `[CI]`, `[HARNESS]`).
 - Priority must be explicit for every actionable issue.
 - There must always be at least one issue in `In Progress`.
-- With two-slot orchestration, keep exactly two `In Progress` issues: one `[SENTINEL]` plus one highest-priority actionable work issue.
+- Ensure there is always at least one `In Progress` issue aligned with the highest-priority actionable work.
 - **Done requires proof.** Every issue moved to Done must have a comment with commit hashes, validation command output, and explicit pass/fail verdict. Evidence of failure, workarounds, or dismissive one-liners do not qualify. See [Evidence Policy](../workflow/execution-workflow.md#evidence-policy).
 
 ### Request Triage Default

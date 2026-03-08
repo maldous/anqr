@@ -308,7 +308,7 @@ The harness report is a unified health check across 22 domains — see [`docs/ha
 - **Continuous** (8 checks, ~3min): runs hourly via `nightly-ops-pass.mjs --profile=continuous`
 - **Full** (22 checks, ~15min): runs nightly via `nightly-ops-pass.mjs --profile=full`
 
-The sentinel (ANQ-105) reads `reports/harness/latest.json` and creates corrective PARENT/CHILD issues for failures and regressions. This closes the autonomous feedback loop: checks detect problems → sentinel creates issues → agents fix them → next check confirms the fix.
+The guardian reads `reports/harness/latest.json` and creates `[HARNESS]` issues for FAIL/ERROR checks (deduplicates via state file). This closes the autonomous feedback loop: checks detect problems → guardian creates issues → agents fix them → next check confirms the fix.
 
 ## Email Notification System (Bidirectional)
 
@@ -322,7 +322,7 @@ Ops scripts send email notifications via `msmtp` to `matthew.aldous@gmail.com` o
 | ---------------------- | --------------------------------------- | -------- |
 | `nightly-ops-pass.mjs` | Critical step failure (any profile)     | critical |
 | `nightly-ops-pass.mjs` | All checks passed (full profile, daily) | info     |
-| `linear-guardian.mjs`  | Sentinel dead man's switch triggered    | critical |
+| `linear-guardian.mjs`  | Symphony liveness check failed          | critical |
 | `email-ingest.mjs`     | Issues created from inbound emails      | info     |
 
 **Rate limiting** (per `reports/notify/state.json`):

@@ -7,7 +7,7 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  TIER 3: AI-DRIVEN CORRECTION                           │
-│  Sentinel reviews reports → creates PARENT/CHILD issues │
+│  Guardian + CI Monitor → create/close Linear issues     │
 │  WORKFLOW.md + linear_graphql tool                       │
 └──────────────────────┬──────────────────────────────────┘
                        │ reads reports/harness/latest.json
@@ -106,16 +106,13 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 ## Corrective Flow
 
 1. **Nightly ops** runs `harness-report.mjs --profile=full` → writes `reports/harness/latest.json`
-2. **Sentinel** (ANQ-105) reads the report during its next cycle
-3. For each FAIL status or regression, sentinel creates:
-   - `[PARENT]` issue describing the check domain failure
-   - `[CHILD]` issues for each specific finding with fix instructions
-4. **CI failure monitor** (every 5 min) scans GitHub Actions notification emails:
+2. **Guardian** reads the report and creates `[HARNESS]` issues for FAIL/ERROR checks (deduplicates via state file)
+3. **CI failure monitor** (every 5 min) scans GitHub Actions notification emails:
    - `Run failed: <workflow>` → creates a `[CI]` issue (one per unique workflow, deduplicates)
    - `Run succeeded: <workflow>` → auto-closes the matching `[CI]` issue
-5. **Guardian** (15min) manages issue labels, priority, and state; classifies `[CI]` issues as `reliability`
-6. **Symphony** picks up issues and agents implement fixes
-7. Next harness run / CI run detects improvements → closes the feedback loop
+4. **Guardian** (15min) manages issue labels, priority, and state; classifies `[CI]` issues as `reliability`
+5. **Symphony** picks up issues and agents implement fixes
+6. Next harness run / CI run detects improvements → closes the feedback loop
 
 ## Commands
 
@@ -171,7 +168,6 @@ All Playwright tests (browser + API + parity) run against `netlify dev` on port 
 | `[HARNESS]` | Guardian reads harness report | Created on FAIL/ERROR; resolved when check passes |
 | `[CI]` | CI failure monitor reads GitHub emails | Created on "Run failed:"; closed on "Run succeeded:" |
 | `[EMAIL]` | Email ingest reads inbound mail | Created from email; Symphony interprets into actionable issue |
-| `[SENTINEL]` | Sentinel (ANQ-105) reviews harness | Created for regressions/failures; manual or auto-close |
 
 ## Future Domains (Linear Issues)
 

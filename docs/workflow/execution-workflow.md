@@ -73,8 +73,8 @@ During scheduled hygiene passes, for every Done issue:
 - **Evidence audit**: every Done issue must pass the evidence policy above. Issues failing audit are moved back to Backlog.
 - `CHANGELOG.md` must be kept up to date — every resolved issue adds an entry.
 - Run scheduled issue hygiene (priority/state/label reconciliation) continuously.
-- Keep descriptor prefixes consistent across open work (`[PARENT]`, `[CHILD]`, `[HUMAN]`, `[SENTINEL]`, `[EMAIL]`, `[CI]`, `[HARNESS]`).
+- Keep descriptor prefixes consistent across open work (`[PARENT]`, `[CHILD]`, `[HUMAN]`, `[EMAIL]`, `[CI]`, `[HARNESS]`).
 - Ensure every `[CHILD]` issue has a true Linear parent link to a `[PARENT]` issue.
 - Ensure all actionable issues have explicit priority (no priority `0` on open work).
 - For same-priority issue selection, process oldest issues first (lowest ANQ identifier first).
-- Ensure there is always at least one `In Progress` issue; under two-slot mode keep `[SENTINEL]` plus one top actionable work issue in `In Progress`.
+- Ensure there is always at least one `In Progress` issue aligned with the highest-priority actionable work.

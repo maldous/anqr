@@ -65,9 +65,7 @@ No description.
 
 2. Move this issue to state `In Progress` right now.
 
-3. If the title starts with `[SENTINEL]`:
-   a. Do NOT create any new `[SENTINEL]` issue.
-   b. Review the harness report and recent Symphony logs for errors that need code fixes:
+3. Review the harness report and recent Symphony logs for errors that need code fixes:
 
    ```bash
    cat reports/harness/latest.json 2>/dev/null | head -500

@@ -44,7 +44,6 @@ const LABEL_CLASSIFICATION_RULES = [
     label: 'reliability',
     patterns: [
       /\breliability\b/i,
-      /\bsentinel\b/i,
       /\bguardian\b/i,
       /\bmodel[\s-]?injector\b/i,
       /\bcredit[\s-]?gate\b/i,

@@ -226,7 +226,7 @@ All provider probes use lightweight `/v1/models` GET listings (not generation re
 
 Linear parent issues were marked Done with incomplete children. This masks remaining work and breaks the feedback loop.
 
-**Prevention:** The sentinel (ANQ-105) should validate parent/child completion consistency on every cycle.
+**Prevention:** The guardian validates parent/child completion consistency on every cycle (child-parent linkage audit).
 
 ## Known Gaps & Risk Register
 
