@@ -1188,22 +1188,14 @@ ios\:archive:
 	cd ios/App && bundle exec fastlane archive
 	@echo "Release archive: ios/App/build/ANQR.ipa"
 
-# Push beta build to TestFlight via Fastlane
-ios\:beta: paid\:approval ios\:archive
-	@test -n "$${APPLE_APP_SPECIFIC_PASSWORD}" || { echo "ERROR: APPLE_APP_SPECIFIC_PASSWORD not set. Source env.txt first."; exit 1; }
-	xcrun altool --upload-app --type ios --file ios/App/build/ANQR.ipa \
-		--username matthew.aldous@gmail.com \
-		--password "$${APPLE_APP_SPECIFIC_PASSWORD}" \
-		--team-id 5NXZ72D7LF
+# Push beta build to TestFlight via Fastlane (API key auth)
+ios\:beta: paid\:approval
+	cd ios/App && bundle exec fastlane beta
 	@echo "Beta uploaded to TestFlight."
 
-# Push release build to App Store via Fastlane
-ios\:release: paid\:approval ios\:archive
-	@test -n "$${APPLE_APP_SPECIFIC_PASSWORD}" || { echo "ERROR: APPLE_APP_SPECIFIC_PASSWORD not set. Source env.txt first."; exit 1; }
-	xcrun altool --upload-app --type ios --file ios/App/build/ANQR.ipa \
-		--username matthew.aldous@gmail.com \
-		--password "$${APPLE_APP_SPECIFIC_PASSWORD}" \
-		--team-id 5NXZ72D7LF
+# Push release build to App Store via Fastlane (API key auth)
+ios\:release: paid\:approval
+	cd ios/App && bundle exec fastlane release
 	@echo "Release uploaded to App Store Connect."
 
 # Full iOS production build (archive only — upload separately)
