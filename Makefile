@@ -448,7 +448,7 @@ pristine:
 	$(MAKE) bootstrap
 
 install:
-	npm install
+	npm install --include=optional
 	$(MAKE) hooks
 
 hooks:

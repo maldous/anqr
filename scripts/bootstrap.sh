@@ -175,8 +175,8 @@ else
     ok "Node $(node --version)"
 
     cd "$REPO_ROOT"
-    npm install
-    ok "npm install complete"
+    npm install --include=optional
+    ok "npm install complete (including optional dependencies)"
   fi
 fi
 
