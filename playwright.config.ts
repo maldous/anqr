@@ -93,7 +93,7 @@ export default defineConfig({
   webServer: hasProductionBuild
     ? {
         command:
-          'npx netlify dev --command "npx vite preview --port 3000 --strictPort" --targetPort 3000',
+          'npx netlify dev --command "npx vite preview --port 3000 --strictPort" --target-port 3000',
         url: 'http://localhost:8888',
         reuseExistingServer: !isCI,
         timeout: 60_000,
