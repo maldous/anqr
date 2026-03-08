@@ -6,18 +6,18 @@
 
 ## Prerequisites
 
-| Requirement | Minimum | Verified |
-|---|---|---|
-| macOS | Sequoia (15.x) | ✅ |
-| Xcode | 26.x (full IDE, not just CLT) | ✅ 26.3 (Build 17C529) |
-| Xcode CLT | Installed | ✅ `/Applications/Xcode.app/Contents/Developer` |
-| Node.js | 25.8.0 (via nvm) | ✅ |
-| Ruby | 3.x+ (Homebrew, not system) | ✅ 4.0.1 |
-| CocoaPods | 1.16+ | ✅ 1.16.2 |
-| Bundler | 2.x+ | ✅ 4.0.3 |
-| Fastlane | 2.220+ | ✅ 2.232.2 |
-| Apple Developer account | Active membership | ✅ matthew.aldous@gmail.com |
-| App Store Connect access | Admin role | ⏳ Pending verification |
+| Requirement              | Minimum                       | Verified                                        |
+| ------------------------ | ----------------------------- | ----------------------------------------------- |
+| macOS                    | Sequoia (15.x)                | ✅                                              |
+| Xcode                    | 26.x (full IDE, not just CLT) | ✅ 26.3 (Build 17C529)                          |
+| Xcode CLT                | Installed                     | ✅ `/Applications/Xcode.app/Contents/Developer` |
+| Node.js                  | 25.8.0 (via nvm)              | ✅                                              |
+| Ruby                     | 3.x+ (Homebrew, not system)   | ✅ 4.0.1                                        |
+| CocoaPods                | 1.16+                         | ✅ 1.16.2                                       |
+| Bundler                  | 2.x+                          | ✅ 4.0.3                                        |
+| Fastlane                 | 2.220+                        | ✅ 2.232.2                                      |
+| Apple Developer account  | Active membership             | ✅ matthew.aldous@gmail.com                     |
+| App Store Connect access | Admin role                    | ⏳ Pending verification                         |
 
 ## Step 1 — Verify Toolchain
 
@@ -96,6 +96,7 @@ fastlane --version
 4. Verify the team appears under "Teams" in the account panel
 
 **Validation evidence required:**
+
 - Screenshot of Xcode Accounts showing team membership
 - `security find-identity -v -p codesigning` shows ≥1 valid identity
 
@@ -189,13 +190,13 @@ xcrun simctl list devices available | grep iPhone
 
 ### 5.2 Build Settings Verification
 
-| Setting | Expected Value |
-|---|---|
-| Bundle Identifier | `link.anqr.app` |
-| Deployment Target | iOS 15.0 (or as set in `capacitor.config.ts`) |
-| Signing Team | ANQR team |
-| Signing Certificate | Apple Distribution |
-| Provisioning Profile | Automatic |
+| Setting              | Expected Value                                |
+| -------------------- | --------------------------------------------- |
+| Bundle Identifier    | `link.anqr.app`                               |
+| Deployment Target    | iOS 15.0 (or as set in `capacitor.config.ts`) |
+| Signing Team         | ANQR team                                     |
+| Signing Certificate  | Apple Distribution                            |
+| Provisioning Profile | Automatic                                     |
 
 ## Step 6 — Simulator Smoke Tests
 
@@ -323,15 +324,15 @@ export PATH="/opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/4.0.0/bin:$P
 
 ## Version Reference (as of 2026-03-08)
 
-| Tool | Version | Install Method |
-|---|---|---|
-| macOS | Sequoia | — |
-| Xcode | 26.3 (Build 17C529) | Mac App Store |
-| Node.js | 25.8.0 | nvm (Homebrew) |
-| Ruby | 4.0.1 | `brew install ruby` |
-| CocoaPods | 1.16.2 | `brew install cocoapods` |
-| Bundler | 4.0.3 | Ships with Ruby |
-| Fastlane | 2.232.2 | `brew install fastlane` |
-| @capacitor/ios | 8.2.0 | `npm install @capacitor/ios` |
-| iOS SDK | 26.2 (Build 23C57) | Bundled with Xcode |
-| iOS Simulator | 26.3.1 (Build 23D8133) | `xcodebuild -downloadPlatform iOS` |
+| Tool           | Version                | Install Method                     |
+| -------------- | ---------------------- | ---------------------------------- |
+| macOS          | Sequoia                | —                                  |
+| Xcode          | 26.3 (Build 17C529)    | Mac App Store                      |
+| Node.js        | 25.8.0                 | nvm (Homebrew)                     |
+| Ruby           | 4.0.1                  | `brew install ruby`                |
+| CocoaPods      | 1.16.2                 | `brew install cocoapods`           |
+| Bundler        | 4.0.3                  | Ships with Ruby                    |
+| Fastlane       | 2.232.2                | `brew install fastlane`            |
+| @capacitor/ios | 8.2.0                  | `npm install @capacitor/ios`       |
+| iOS SDK        | 26.2 (Build 23C57)     | Bundled with Xcode                 |
+| iOS Simulator  | 26.3.1 (Build 23D8133) | `xcodebuild -downloadPlatform iOS` |

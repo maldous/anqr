@@ -7,7 +7,6 @@
  * OPTIMIZATION: Only English is bundled. Other locales are lazy-loaded on demand.
  */
 
-import { Capacitor } from '@capacitor/core';
 import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { initReactI18next } from 'react-i18next';
@@ -155,7 +154,6 @@ const loadedLocales = new Set<string>(['en-GB']);
 
 // Track which font scripts have been loaded (to avoid duplicate link tags)
 const loadedFontScripts = new Set<string>(['latin']);
-const isNativePlatform = Capacitor.isNativePlatform();
 
 // Use Vite glob loading so unsupported locales can be excluded from emitted chunks.
 const localeModules = import.meta.glob<Record<string, unknown>>(
@@ -241,8 +239,6 @@ const LANGUAGE_FONT_MAP: Record<string, string> = {
  * This reduces initial page load by ~110KB for most users
  */
 function loadFontForLanguage(lang: string): void {
-  if (isNativePlatform) return;
-
   const fontFamily = LANGUAGE_FONT_MAP[lang];
   if (!fontFamily) return; // Latin-based language, no extra font needed
 

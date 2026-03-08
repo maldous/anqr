@@ -33,11 +33,41 @@ const WELCOME_VERSION = '2026.02.01';
  * the exact pixel dimensions Apple requires.
  */
 const DEVICES = [
-  { id: '6.9', label: '6.9" iPhone', viewport: { width: 440, height: 956 }, dpr: 3, pixels: '1320x2868' },
-  { id: '6.7', label: '6.7" iPhone', viewport: { width: 430, height: 932 }, dpr: 3, pixels: '1290x2796' },
-  { id: '6.5', label: '6.5" iPhone', viewport: { width: 414, height: 896 }, dpr: 3, pixels: '1242x2688' },
-  { id: '5.5', label: '5.5" iPhone', viewport: { width: 414, height: 736 }, dpr: 3, pixels: '1242x2208' },
-  { id: 'ipad', label: '12.9" iPad', viewport: { width: 1024, height: 1366 }, dpr: 2, pixels: '2048x2732' },
+  {
+    id: '6.9',
+    label: '6.9" iPhone',
+    viewport: { width: 440, height: 956 },
+    dpr: 3,
+    pixels: '1320x2868',
+  },
+  {
+    id: '6.7',
+    label: '6.7" iPhone',
+    viewport: { width: 430, height: 932 },
+    dpr: 3,
+    pixels: '1290x2796',
+  },
+  {
+    id: '6.5',
+    label: '6.5" iPhone',
+    viewport: { width: 414, height: 896 },
+    dpr: 3,
+    pixels: '1242x2688',
+  },
+  {
+    id: '5.5',
+    label: '5.5" iPhone',
+    viewport: { width: 414, height: 736 },
+    dpr: 3,
+    pixels: '1242x2208',
+  },
+  {
+    id: 'ipad',
+    label: '12.9" iPad',
+    viewport: { width: 1024, height: 1366 },
+    dpr: 2,
+    pixels: '2048x2732',
+  },
 ];
 
 /**

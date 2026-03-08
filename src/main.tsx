@@ -105,13 +105,17 @@ log.info('App starting', { environment: isCapacitor ? 'capacitor' : 'web' });
 // This is more reliable than calling at module load time
 const initAds = async () => {
   try {
-    // Small delay to ensure Capacitor bridge is fully initialized
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Delay to ensure Capacitor bridge is fully initialized and WebView has stabilized.
+    // Longer delay in dev/test to reduce memory pressure on resource-constrained simulators.
+    const initDelay = import.meta.env.DEV ? 3000 : 1000;
+    await new Promise((resolve) => setTimeout(resolve, initDelay));
     const initialized = await initializeAdMob();
     if (initialized) {
-      // Preload ad inventory so first user action can show an interstitial/rewarded ad.
       await prepareAllAds();
-      // Show banner ad at bottom of screen on native apps
+      // Delay before showing the banner ad — the banner spawns a separate
+      // WebContent process; give the main view time to finish first paint.
+      const bannerDelay = import.meta.env.DEV ? 5000 : 2000;
+      await new Promise((resolve) => setTimeout(resolve, bannerDelay));
       await showBannerAd('bottom');
     }
   } catch (error) {

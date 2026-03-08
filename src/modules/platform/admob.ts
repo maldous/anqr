@@ -138,12 +138,9 @@ export async function initializeAdMob(): Promise<boolean> {
 
     // Initialize AdMob
     await AdMob.initialize({
-      // Request tracking authorization on iOS
       requestTrackingAuthorization: true,
-      // Test device IDs for development
       testingDevices: [],
-      // Initialize even without consent (GDPR handled separately)
-      initializeForTesting: false,
+      initializeForTesting: isTestMode,
     });
 
     // Listen for banner size changes

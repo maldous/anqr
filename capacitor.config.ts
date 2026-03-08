@@ -24,7 +24,7 @@ const config: CapacitorConfig = {
       // AdMob App IDs — https://admob.google.com
       androidAppId: 'ca-app-pub-2270701384951162~3067761782',
       iosAppId: 'ca-app-pub-2270701384951162~2718285064',
-      initializeForTesting: false,
+      initializeForTesting: true,
     },
   },
 };
