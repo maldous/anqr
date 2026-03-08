@@ -145,15 +145,16 @@ To add a new check domain:
 
 The harness now covers four rendering paths with deterministic tests:
 
-| Path | Runner | Tests | Gate |
-| -------- | ---------- | ------------------------------------ | ------------- |
-| Browser  | Playwright | `tests/basic\|advanced\|professional/` | `make test:tiers` |
-| API      | Playwright | `tests/api/qr-api.spec.ts` (30+ tests) | `make test:api` |
-| Parity   | Playwright | `tests/api/cross-platform-parity.spec.ts` (pixelmatch) | `make test:parity` |
-| iOS      | Appium     | `tests/appium/specs/ios-platform.spec.ts` (25+ tests) | `make test:appium:ios` (macOS only) |
-| Android  | Appium     | `tests/appium/specs/android-platform.spec.ts` (27+ tests) | `make test:appium:android` (Linux only) |
+| Path    | Runner     | Tests                                                     | Gate                                    |
+| ------- | ---------- | --------------------------------------------------------- | --------------------------------------- |
+| Browser | Playwright | `tests/basic\|advanced\|professional/`                    | `make test:tiers`                       |
+| API     | Playwright | `tests/api/qr-api.spec.ts` (30+ tests)                    | `make test:api`                         |
+| Parity  | Playwright | `tests/api/cross-platform-parity.spec.ts` (pixelmatch)    | `make test:parity`                      |
+| iOS     | Appium     | `tests/appium/specs/ios-platform.spec.ts` (25+ tests)     | `make test:appium:ios` (macOS only)     |
+| Android | Appium     | `tests/appium/specs/android-platform.spec.ts` (27+ tests) | `make test:appium:android` (Linux only) |
 
 OS gates enforce platform isolation:
+
 - `make test:appium:ios` errors on non-macOS
 - `make test:appium:android` errors on non-Linux, auto-sets `ANQR_BASE_URL=http://10.0.2.2:8888`
 - `make test:appium` auto-detects the OS and selects the correct platform

@@ -162,11 +162,11 @@ function MyComponent() {
 
 ## Test Coverage
 
-| Component | Unit Tests | E2E (iOS) | E2E (Android) |
-| --- | --- | --- | --- |
-| AdMob init/banner/interstitial/rewarded | `platform-admob.spec.ts` | `ios-platform.spec.ts` | `android-platform.spec.ts` |
-| MediaStore file saving | `platform-media-store.spec.ts` | — | `android-platform.spec.ts` |
-| Native toast | `platform-native-toast.spec.ts` | — | — |
-| Web-only asset gating | `platform-web-only-assets.spec.ts` | `ios-platform.spec.ts` | `android-platform.spec.ts` |
-| Banner height hook | `use-banner-height.spec.ts` | `ios-platform.spec.ts` | `android-platform.spec.ts` |
-| Deep link handling | `app-deep-link.spec.ts` | `ios-platform.spec.ts` | `android-platform.spec.ts` |
+| Component                               | Unit Tests                         | E2E (iOS)              | E2E (Android)              |
+| --------------------------------------- | ---------------------------------- | ---------------------- | -------------------------- |
+| AdMob init/banner/interstitial/rewarded | `platform-admob.spec.ts`           | `ios-platform.spec.ts` | `android-platform.spec.ts` |
+| MediaStore file saving                  | `platform-media-store.spec.ts`     | —                      | `android-platform.spec.ts` |
+| Native toast                            | `platform-native-toast.spec.ts`    | —                      | —                          |
+| Web-only asset gating                   | `platform-web-only-assets.spec.ts` | `ios-platform.spec.ts` | `android-platform.spec.ts` |
+| Banner height hook                      | `use-banner-height.spec.ts`        | `ios-platform.spec.ts` | `android-platform.spec.ts` |
+| Deep link handling                      | `app-deep-link.spec.ts`            | `ios-platform.spec.ts` | `android-platform.spec.ts` |

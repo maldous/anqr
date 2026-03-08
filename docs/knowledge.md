@@ -75,19 +75,19 @@ Share URL params must stay aligned between the client-side encoder/decoder and t
 
 ## Tech Stack
 
-| Layer      | Technology                                                                                              |
-| ---------- | ------------------------------------------------------------------------------------------------------- |
-| Framework  | React 19, TypeScript 5.9 (strict)                                                                       |
-| Build      | Vite 8 (beta), ESM-only (`"type": "module"`)                                                            |
-| Styling    | Tailwind CSS v4 (`@tailwindcss/postcss`)                                                                |
-| Components | Radix UI primitives (Select, Slider, Tabs, Accordion, etc.)                                             |
-| State      | Zustand 5                                                                                               |
-| i18n       | i18next + react-i18next (40+ locales, static guides)                                                    |
+| Layer      | Technology                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Framework  | React 19, TypeScript 5.9 (strict)                                                                                                |
+| Build      | Vite 8 (beta), ESM-only (`"type": "module"`)                                                                                     |
+| Styling    | Tailwind CSS v4 (`@tailwindcss/postcss`)                                                                                         |
+| Components | Radix UI primitives (Select, Slider, Tabs, Accordion, etc.)                                                                      |
+| State      | Zustand 5                                                                                                                        |
+| i18n       | i18next + react-i18next (40+ locales, static guides)                                                                             |
 | Testing    | Vitest 4 (unit), Playwright 1.58 (E2E web + API), Appium 3 + WebdriverIO 9 (E2E iOS/Android), pixelmatch + pngjs (visual parity) |
-| Linting    | oxlint + oxfmt (OXC-powered, not ESLint)                                                                |
-| Quality    | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, type-coverage, dependency-cruiser |
-| Hosting    | Netlify (web + functions), Google Play Store (Android), Apple App Store (iOS)                            |
-| Monitoring | Sentry (React + Node SDKs)                                                                              |
+| Linting    | oxlint + oxfmt (OXC-powered, not ESLint)                                                                                         |
+| Quality    | commitlint (conventional commits), lefthook (git hooks), knip, jscpd, type-coverage, dependency-cruiser                          |
+| Hosting    | Netlify (web + functions), Google Play Store (Android), Apple App Store (iOS)                                                    |
+| Monitoring | Sentry (React + Node SDKs)                                                                                                       |
 
 ## Essential Commands
 
@@ -141,15 +141,16 @@ make test:appium:android # Appium Android explicitly (Linux only, requires emula
 
 QR codes must be visually consistent across all rendering paths. The test matrix:
 
-| Platform | Runner | QR Renderer | Test Location |
-| -------- | ---------- | ----------------------- | ------------------------------ |
-| Browser  | Playwright | Client canvas           | `tests/basic\|advanced\|professional/` |
-| API      | Playwright | `@napi-rs/canvas` (Node)| `tests/api/qr-api.spec.ts` |
-| Parity   | Playwright | Both (pixel comparison) | `tests/api/cross-platform-parity.spec.ts` |
-| iOS      | Appium     | WebView canvas          | `tests/appium/specs/ios-platform.spec.ts` |
-| Android  | Appium     | WebView canvas          | `tests/appium/specs/android-platform.spec.ts` |
+| Platform | Runner     | QR Renderer              | Test Location                                 |
+| -------- | ---------- | ------------------------ | --------------------------------------------- |
+| Browser  | Playwright | Client canvas            | `tests/basic\|advanced\|professional/`        |
+| API      | Playwright | `@napi-rs/canvas` (Node) | `tests/api/qr-api.spec.ts`                    |
+| Parity   | Playwright | Both (pixel comparison)  | `tests/api/cross-platform-parity.spec.ts`     |
+| iOS      | Appium     | WebView canvas           | `tests/appium/specs/ios-platform.spec.ts`     |
+| Android  | Appium     | WebView canvas           | `tests/appium/specs/android-platform.spec.ts` |
 
 OS gates enforce platform correctness:
+
 - **macOS** runs iOS Appium tests (`make test:appium:ios`)
 - **Linux** runs Android Appium tests (`make test:appium:android`), auto-sets `ANQR_BASE_URL=http://10.0.2.2:8888`
 - **Both** run Playwright browser + API tests via `netlify dev` on port 8888
@@ -194,20 +195,20 @@ make all          # Complete 16-step production pipeline
 
 ## Key File Locations
 
-| File                      | Purpose                                 |
-| ------------------------- | --------------------------------------- |
-| `src/stores/`             | Zustand stores (app state)              |
-| `vite.config.ts`          | Build config, chunk splitting, plugins  |
-| `vitest.config.ts`        | Unit test config                        |
+| File                      | Purpose                                                |
+| ------------------------- | ------------------------------------------------------ |
+| `src/stores/`             | Zustand stores (app state)                             |
+| `vite.config.ts`          | Build config, chunk splitting, plugins                 |
+| `vitest.config.ts`        | Unit test config                                       |
 | `playwright.config.ts`    | E2E test config (web + API, uses netlify dev on :8888) |
 | `wdio.conf.ts`            | E2E test config (mobile/Appium, iOS + Android)         |
-| `.oxlintrc.json`          | Linter rules                            |
-| `.oxfmtrc.json`           | Formatter config                        |
-| `.dependency-cruiser.cjs` | Architectural boundary rules            |
-| `knip.json`               | Unused dependency/export detection      |
-| `Makefile`                | Orchestration entry point for all tasks |
-| `scripts/ops/create-issue.mjs` | CLI: create standalone Linear issues |
-| `scripts/ops/ci-failure-monitor.mjs` | GitHub CI → Linear issue bridge |
+| `.oxlintrc.json`          | Linter rules                                           |
+| `.oxfmtrc.json`           | Formatter config                                       |
+| `.dependency-cruiser.cjs` | Architectural boundary rules                           |
+| `knip.json`               | Unused dependency/export detection                     |
+| `Makefile`                | Orchestration entry point for all tasks                |
+| `scripts/ops/create-issue.mjs` | CLI: create standalone Linear issues              |
+| `scripts/ops/ci-failure-monitor.mjs` | GitHub CI → Linear issue bridge             |
 
 ## Things to Avoid
 

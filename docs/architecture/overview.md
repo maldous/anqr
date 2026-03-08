@@ -22,12 +22,12 @@ ANQR is a Vite/React QR generation application with shared rendering logic used 
 
 The same QR configuration must produce visually consistent output across all rendering paths:
 
-| Path | Canvas Implementation | Test Coverage |
-| -------- | ----------------------- | ------------------------------------------- |
-| Browser  | HTML5 `<canvas>`        | Playwright E2E (`tests/basic\|advanced\|professional/`) |
-| API      | `@napi-rs/canvas` (Node)| Playwright API tests (`tests/api/qr-api.spec.ts`) |
-| iOS      | WKWebView `<canvas>`    | Appium E2E (`tests/appium/specs/ios-platform.spec.ts`) |
-| Android  | WebView `<canvas>`      | Appium E2E (`tests/appium/specs/android-platform.spec.ts`) |
+| Path    | Canvas Implementation    | Test Coverage                                              |
+| ------- | ------------------------ | ---------------------------------------------------------- |
+| Browser | HTML5 `<canvas>`         | Playwright E2E (`tests/basic\|advanced\|professional/`)    |
+| API     | `@napi-rs/canvas` (Node) | Playwright API tests (`tests/api/qr-api.spec.ts`)          |
+| iOS     | WKWebView `<canvas>`     | Appium E2E (`tests/appium/specs/ios-platform.spec.ts`)     |
+| Android | WebView `<canvas>`       | Appium E2E (`tests/appium/specs/android-platform.spec.ts`) |
 
 Pixel-level parity between browser and API is verified by `tests/api/cross-platform-parity.spec.ts` using `pixelmatch` + `pngjs` (tolerance: 15% diff threshold).
 

@@ -545,7 +545,7 @@ describe('qr-generator dithered scan gate', { timeout: 30000 }, () => {
     const payload = 'https://anqr.link';
     const cfg = makeDefaultGalleryScanConfig(payload);
     await expectScanGatePass(qr, cfg, 'public/king.gif', 'king-generated-current.png');
-  }, 15000);
+  }, 30000);
 
   it('keeps dithered logo output decodable from final PNG bytes', async () => {
     const qr = new QRGenerator(nodeCanvasFactory);

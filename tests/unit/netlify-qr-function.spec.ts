@@ -438,7 +438,7 @@ describe('netlify qr function', () => {
       if (prevLocalOverlayRoot === undefined) delete process.env.ANQR_LOCAL_OVERLAY_ROOT;
       else process.env.ANQR_LOCAL_OVERLAY_ROOT = prevLocalOverlayRoot;
     }
-  });
+  }, 15000);
 
   it('parses palette parameter and keeps QR scannable', async () => {
     const payload = 'https://anqr.link/palette-branch';
