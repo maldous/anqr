@@ -38,8 +38,7 @@ const NOTMUCH_QUERY =
   'from:notifications@github.com AND (subject:"Run failed:" OR subject:"Run succeeded:") AND tag:inbox AND NOT tag:ci-monitor-processed';
 
 // Parse subject: "[maldous/anqr] Run failed: Quality Checks - master (aa6adb2)"
-const SUBJECT_RE =
-  /\[([^\]]+)\]\s+Run (failed|succeeded):\s+(.+?)\s+-\s+(\S+)\s+\(([a-f0-9]+)\)/;
+const SUBJECT_RE = /\[([^\]]+)\]\s+Run (failed|succeeded):\s+(.+?)\s+-\s+(\S+)\s+\(([a-f0-9]+)\)/;
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -124,10 +123,10 @@ function parseSubject(subject) {
   if (!match) return null;
   return {
     repo: match[1],
-    status: match[2],       // 'failed' or 'succeeded'
-    workflow: match[3],     // e.g. 'Quality Checks'
-    branch: match[4],       // e.g. 'master'
-    commit: match[5],       // e.g. 'aa6adb2'
+    status: match[2], // 'failed' or 'succeeded'
+    workflow: match[3], // e.g. 'Quality Checks'
+    branch: match[4], // e.g. 'master'
+    commit: match[5], // e.g. 'aa6adb2'
   };
 }
 
@@ -433,8 +432,8 @@ async function main() {
 
   // Step 7: Send notification if issues were created
   if (summary.issuesCreated.length > 0 && !DRY_RUN) {
-    const detailLines = summary.issuesCreated.map(
-      (i) => [
+    const detailLines = summary.issuesCreated.map((i) =>
+      [
         `• ${i.identifier}: ${i.workflow}`,
         `  Commit: ${i.commit}`,
         `  ${linearIssueUrl(i.identifier)}`,
@@ -459,8 +458,8 @@ async function main() {
       body: [
         `Closed ${summary.issuesClosed.length} CI failure issue(s):`,
         '',
-        ...summary.issuesClosed.map(
-          (i) => [
+        ...summary.issuesClosed.map((i) =>
+          [
             `• ${i.identifier}: ${i.workflow} now passing`,
             `  Commit: ${i.commit}`,
             `  ${linearIssueUrl(i.identifier)}`,

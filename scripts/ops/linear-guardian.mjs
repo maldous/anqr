@@ -1409,8 +1409,8 @@ async function main() {
         body: [
           'Issues stuck in retry queue for >30 min and auto-escalated to [HUMAN] Pending:',
           '',
-          ...summary.retryEscalation.escalated.map(
-            (e) => [
+          ...summary.retryEscalation.escalated.map((e) =>
+            [
               `• ${e.identifier}: ${e.title}`,
               `  Stuck for ${e.minutesInRetry} min (${e.passes} guardian passes)`,
               `  ${linearIssueUrl(e.identifier)}`,

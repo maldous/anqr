@@ -162,10 +162,9 @@ async function main() {
   // Resolve parent issue ID (optional)
   let parentId = undefined;
   if (args.parent) {
-    const parentData = await gql(
-      `query($id: String!) { issue(id: $id) { id identifier } }`,
-      { id: args.parent }
-    );
+    const parentData = await gql(`query($id: String!) { issue(id: $id) { id identifier } }`, {
+      id: args.parent,
+    });
     if (!parentData.issue) {
       console.error(`ERROR: Parent issue '${args.parent}' not found`);
       process.exit(1);

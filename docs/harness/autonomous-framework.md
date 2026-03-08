@@ -164,11 +164,11 @@ All Playwright tests (browser + API + parity) run against `netlify dev` on port 
 
 ## Issue Types Created by Automation
 
-| Prefix | Source | Lifecycle |
-| --- | --- | --- |
-| `[HARNESS]` | Guardian reads harness report | Created on FAIL/ERROR; resolved when check passes |
-| `[CI]` | CI failure monitor reads GitHub emails | Created on "Run failed:"; closed on "Run succeeded:" |
-| `[EMAIL]` | Email ingest reads inbound mail | Created from email; Symphony interprets into actionable issue |
+| Prefix      | Source                                 | Lifecycle                                                     |
+| ----------- | -------------------------------------- | ------------------------------------------------------------- |
+| `[HARNESS]` | Guardian reads harness report          | Created on FAIL/ERROR; resolved when check passes             |
+| `[CI]`      | CI failure monitor reads GitHub emails | Created on "Run failed:"; closed on "Run succeeded:"          |
+| `[EMAIL]`   | Email ingest reads inbound mail        | Created from email; Symphony interprets into actionable issue |
 
 ## Future Domains (Linear Issues)
 

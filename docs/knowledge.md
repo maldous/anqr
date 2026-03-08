@@ -15,20 +15,20 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 
 ### Key docs
 
-| Topic               | Path                                                |
-| ------------------- | --------------------------------------------------- |
-| Architecture        | `docs/architecture/overview.md`                     |
-| Module catalog      | `docs/modules/index.md`                             |
-| Execution workflow  | `docs/workflow/execution-workflow.md`               |
-| Reports catalog     | `docs/reports/README.md`                            |
-| Launch checklist    | `docs/operations/launch-checklist.md`               |
-| Ops autopilot       | `docs/operations/ops-autopilot.md`                  |
-| Provider operations | `docs/harness/provider-operations.md`               |
-| Autonomous harness  | `docs/harness/autonomous-framework.md`              |
-| Error handling      | `docs/operations/ops-autopilot.md` §Error-Aware     |
-| Circuit breaker     | `docs/operations/ops-autopilot.md` §Circuit-Breaker |
-| Email notifications | `docs/operations/ops-autopilot.md` §Email           |
-| CI failure monitor  | `docs/operations/ops-autopilot.md` §CI Failure Monitor |
+| Topic               | Path                                                            |
+| ------------------- | --------------------------------------------------------------- |
+| Architecture        | `docs/architecture/overview.md`                                 |
+| Module catalog      | `docs/modules/index.md`                                         |
+| Execution workflow  | `docs/workflow/execution-workflow.md`                           |
+| Reports catalog     | `docs/reports/README.md`                                        |
+| Launch checklist    | `docs/operations/launch-checklist.md`                           |
+| Ops autopilot       | `docs/operations/ops-autopilot.md`                              |
+| Provider operations | `docs/harness/provider-operations.md`                           |
+| Autonomous harness  | `docs/harness/autonomous-framework.md`                          |
+| Error handling      | `docs/operations/ops-autopilot.md` §Error-Aware                 |
+| Circuit breaker     | `docs/operations/ops-autopilot.md` §Circuit-Breaker             |
+| Email notifications | `docs/operations/ops-autopilot.md` §Email                       |
+| CI failure monitor  | `docs/operations/ops-autopilot.md` §CI Failure Monitor          |
 | Linear issue CLI    | `docs/operations/ops-autopilot.md` §Linear Issue Management CLI |
 
 ## Architecture
@@ -195,20 +195,20 @@ make all          # Complete 16-step production pipeline
 
 ## Key File Locations
 
-| File                      | Purpose                                                |
-| ------------------------- | ------------------------------------------------------ |
-| `src/stores/`             | Zustand stores (app state)                             |
-| `vite.config.ts`          | Build config, chunk splitting, plugins                 |
-| `vitest.config.ts`        | Unit test config                                       |
-| `playwright.config.ts`    | E2E test config (web + API, uses netlify dev on :8888) |
-| `wdio.conf.ts`            | E2E test config (mobile/Appium, iOS + Android)         |
-| `.oxlintrc.json`          | Linter rules                                           |
-| `.oxfmtrc.json`           | Formatter config                                       |
-| `.dependency-cruiser.cjs` | Architectural boundary rules                           |
-| `knip.json`               | Unused dependency/export detection                     |
-| `Makefile`                | Orchestration entry point for all tasks                |
-| `scripts/ops/create-issue.mjs` | CLI: create standalone Linear issues              |
-| `scripts/ops/ci-failure-monitor.mjs` | GitHub CI → Linear issue bridge             |
+| File                                 | Purpose                                                |
+| ------------------------------------ | ------------------------------------------------------ |
+| `src/stores/`                        | Zustand stores (app state)                             |
+| `vite.config.ts`                     | Build config, chunk splitting, plugins                 |
+| `vitest.config.ts`                   | Unit test config                                       |
+| `playwright.config.ts`               | E2E test config (web + API, uses netlify dev on :8888) |
+| `wdio.conf.ts`                       | E2E test config (mobile/Appium, iOS + Android)         |
+| `.oxlintrc.json`                     | Linter rules                                           |
+| `.oxfmtrc.json`                      | Formatter config                                       |
+| `.dependency-cruiser.cjs`            | Architectural boundary rules                           |
+| `knip.json`                          | Unused dependency/export detection                     |
+| `Makefile`                           | Orchestration entry point for all tasks                |
+| `scripts/ops/create-issue.mjs`       | CLI: create standalone Linear issues                   |
+| `scripts/ops/ci-failure-monitor.mjs` | GitHub CI → Linear issue bridge                        |
 
 ## Things to Avoid
 

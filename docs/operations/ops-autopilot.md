@@ -420,10 +420,10 @@ The CI failure monitor bridges GitHub Actions notification emails to Linear issu
 
 CLI scripts for creating Linear issues without writing raw GraphQL mutations. Designed for use by AI agents (Symphony, Codex, Codebuff) and human operators.
 
-| Script | Purpose | Key flags |
-| --- | --- | --- |
-| `scripts/ops/create-issue.mjs` | Create a standalone issue | `--title`, `--description`, `--priority`, `--label`, `--state`, `--team`, `--parent` |
-| `scripts/ops/create-child-issue.mjs` | Create a child issue under a parent | `--parent` (required), `--title`, `--description`, `--priority`, `--label` |
+| Script                               | Purpose                             | Key flags                                                                            |
+| ------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------ |
+| `scripts/ops/create-issue.mjs`       | Create a standalone issue           | `--title`, `--description`, `--priority`, `--label`, `--state`, `--team`, `--parent` |
+| `scripts/ops/create-child-issue.mjs` | Create a child issue under a parent | `--parent` (required), `--title`, `--description`, `--priority`, `--label`           |
 
 **Usage examples:**
 

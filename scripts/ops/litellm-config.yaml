@@ -76,7 +76,7 @@ model_list:
     litellm_params:
       model: openai/qwen3.5:35b-a3b-32t
       api_base: http://localhost:11434/v1
-      api_key: ollama  # required by openai/ prefix; value ignored by Ollama
+      api_key: ollama # required by openai/ prefix; value ignored by Ollama
       # Context length governed by OLLAMA_CONTEXT_LENGTH=32768 in systemd override
       # (num_ctx only works with ollama/ prefix, not openai/)
 

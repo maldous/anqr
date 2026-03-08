@@ -26,17 +26,17 @@ Symphony orchestrator
 
 Context windows verified where provider API catalog is available; remainder based on published documentation. Providers marked ⚠️ have unverified limits.
 
-| #   | Provider      | LiteLLM Alias          | Model                         | Context (input) | Context (output) | Free Tier Limits  | Status                        |
-| --- | ------------- | ---------------------- | ----------------------------- | --------------- | ---------------- | ----------------- | ----------------------------- |
-| 1   | Groq          | `groq-llama-70b`       | `llama-3.3-70b-versatile`     | 128K            | 32K              | 12K TPM           | ✅ Active                     |
-| 2   | Mistral       | `mistral-codestral`    | `devstral-small-2507`         | 128K            | 32K              | Free experimental | ✅ Active                     |
-| 3   | Gemini        | `gemini-flash`         | `gemini-2.5-flash`            | 1M              | 65K              | ~1,500 RPD        | ✅ Active                     |
-| 3b  | Gemini Lite   | `gemini-flash-lite`    | `gemini-2.5-flash-lite`       | 1M              | 65K              | Separate quota    | ✅ Active                     |
-| 4   | OpenRouter    | `openrouter-free`      | `llama-3.3-70b-instruct:free` | 128K            | 32K              | 20 req/min        | ✅ Token SET                  |
-| 5   | SambaNova     | `sambanova-llama-70b`  | `Meta-Llama-3.3-70B-Instruct` | 128K            | 32K              | 20 req/day        | ✅ Active                     |
-| 6   | Cerebras      | `cerebras-llama-8b`    | `llama3.1-8b`                 | 8K (unverified) | 8K               | 1M tok/day        | ⚠️ Low context                |
-| 7   | GitHub Models | `github-gpt41-mini`    | `gpt-4.1-mini`                | **1M**          | **32K**          | FREE tier         | ⚠️ /chat only (no /responses) |
-| 8   | Ollama        | `qwen3.5-35b-a3b-32t`  | `qwen3.5:35b-a3b-32t`         | 32K             | 32K              | Unlimited (local) | ✅ Active                     |
+| #   | Provider      | LiteLLM Alias         | Model                         | Context (input) | Context (output) | Free Tier Limits  | Status                        |
+| --- | ------------- | --------------------- | ----------------------------- | --------------- | ---------------- | ----------------- | ----------------------------- |
+| 1   | Groq          | `groq-llama-70b`      | `llama-3.3-70b-versatile`     | 128K            | 32K              | 12K TPM           | ✅ Active                     |
+| 2   | Mistral       | `mistral-codestral`   | `devstral-small-2507`         | 128K            | 32K              | Free experimental | ✅ Active                     |
+| 3   | Gemini        | `gemini-flash`        | `gemini-2.5-flash`            | 1M              | 65K              | ~1,500 RPD        | ✅ Active                     |
+| 3b  | Gemini Lite   | `gemini-flash-lite`   | `gemini-2.5-flash-lite`       | 1M              | 65K              | Separate quota    | ✅ Active                     |
+| 4   | OpenRouter    | `openrouter-free`     | `llama-3.3-70b-instruct:free` | 128K            | 32K              | 20 req/min        | ✅ Token SET                  |
+| 5   | SambaNova     | `sambanova-llama-70b` | `Meta-Llama-3.3-70B-Instruct` | 128K            | 32K              | 20 req/day        | ✅ Active                     |
+| 6   | Cerebras      | `cerebras-llama-8b`   | `llama3.1-8b`                 | 8K (unverified) | 8K               | 1M tok/day        | ⚠️ Low context                |
+| 7   | GitHub Models | `github-gpt41-mini`   | `gpt-4.1-mini`                | **1M**          | **32K**          | FREE tier         | ⚠️ /chat only (no /responses) |
+| 8   | Ollama        | `qwen3.5-35b-a3b-32t` | `qwen3.5:35b-a3b-32t`         | 32K             | 32K              | Unlimited (local) | ✅ Active                     |
 
 ### Context Window Requirements
 
@@ -84,18 +84,18 @@ Before adding, removing, or changing any provider:
 
 LiteLLM uses provider prefixes to route requests. Not all prefixes work for all models:
 
-| Provider      | Prefix                 | Works? | Notes                                                                                         |
-| ------------- | ---------------------- | ------ | --------------------------------------------------------------------------------------------- |
-| Groq          | `groq/`                | ✅     | Standard                                                                                      |
-| Gemini        | `gemini/`              | ✅     | Required for `/v1/responses` (not `openai/`)                                                  |
-| Cerebras      | `cerebras/`            | ✅     | Standard                                                                                      |
-| OpenRouter    | `openrouter/`          | ✅     | Standard                                                                                      |
-| SambaNova     | `sambanova/`           | ✅     | Standard                                                                                      |
-| Mistral       | `mistral/`             | ✅     | Standard                                                                                      |
-| GitHub Models | `github/`              | ❌     | LiteLLM doesn't recognise GPT-4.1-mini                                                        |
-| GitHub Models | `openai/` + `api_base` | ✅     | **Workaround**: use `openai/gpt-4.1-mini` with `api_base: https://models.github.ai/inference` |
-| Ollama        | `ollama/`              | ⚠️     | Drops `tool_calls` from responses (known upstream bug, verified LiteLLM 1.82.0)               |
-| Ollama        | `ollama_chat/`         | ✅     | Tool calls work; supports `num_ctx` for context windowing                                     |
+| Provider      | Prefix                 | Works? | Notes                                                                                          |
+| ------------- | ---------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| Groq          | `groq/`                | ✅     | Standard                                                                                       |
+| Gemini        | `gemini/`              | ✅     | Required for `/v1/responses` (not `openai/`)                                                   |
+| Cerebras      | `cerebras/`            | ✅     | Standard                                                                                       |
+| OpenRouter    | `openrouter/`          | ✅     | Standard                                                                                       |
+| SambaNova     | `sambanova/`           | ✅     | Standard                                                                                       |
+| Mistral       | `mistral/`             | ✅     | Standard                                                                                       |
+| GitHub Models | `github/`              | ❌     | LiteLLM doesn't recognise GPT-4.1-mini                                                         |
+| GitHub Models | `openai/` + `api_base` | ✅     | **Workaround**: use `openai/gpt-4.1-mini` with `api_base: https://models.github.ai/inference`  |
+| Ollama        | `ollama/`              | ⚠️     | Drops `tool_calls` from responses (known upstream bug, verified LiteLLM 1.82.0)                |
+| Ollama        | `ollama_chat/`         | ✅     | Tool calls work; supports `num_ctx` for context windowing                                      |
 | Ollama        | `openai/` + `api_base` | ✅     | **Recommended**: treats Ollama as generic OpenAI-compat API; tool calls pass through correctly |
 
 ### GitHub Models Routing Workaround
@@ -138,10 +138,11 @@ LiteLLM's `ollama/` provider handler (as of v1.82.0) silently drops `tool_calls`
   litellm_params:
     model: openai/qwen3.5:35b-a3b-32t
     api_base: http://localhost:11434/v1
-    api_key: ollama  # required by openai/ prefix; value ignored by Ollama
+    api_key: ollama # required by openai/ prefix; value ignored by Ollama
 ```
 
 Key differences:
+
 - `api_base` must include `/v1` (Ollama's OpenAI-compat endpoint path)
 - `api_key` is required by the `openai/` prefix but Ollama ignores the value
 - `num_ctx` is not supported via `openai/` — context is set via `OLLAMA_CONTEXT_LENGTH` env or Modelfile instead
@@ -149,6 +150,7 @@ Key differences:
 A fallback `ollama_chat/` entry (`qwen3.5-35b-a3b-32t-ollama`) is kept for workloads that need Ollama-native context windowing.
 
 **Verified endpoints (all ✅):**
+
 - `/v1/chat/completions` — tool calls with `finish_reason: "tool_calls"`
 - `/v1/chat/completions` — basic chat with reasoning content
 - `/v1/responses` — tool calls as `function_call` output items
