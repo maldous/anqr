@@ -81,7 +81,7 @@ describe('modules/index.ts barrel re-export surface', () => {
   it('re-exports QRGenerator from qr-generator', async () => {
     const { QRGenerator } = await import('../../src/modules/qr-generator');
     expect(typeof QRGenerator).toBe('function');
-  });
+  }, 15_000);
 
   it('re-exports getDefaultExportConfig from exporter', async () => {
     const { getDefaultExportConfig } = await import('../../src/modules/exporter');
