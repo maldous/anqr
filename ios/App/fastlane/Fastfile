@@ -92,6 +92,18 @@ platform :ios do
     )
   end
 
+  desc "Upload metadata to App Store Connect (no binary)"
+  lane :metadata do
+    api_key = load_api_key
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
   desc "Build a signed release archive (no upload)"
   lane :archive do
     sync
