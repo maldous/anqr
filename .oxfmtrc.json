@@ -1,5 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["src/i18n/locales/txt/play.html"],
   "printWidth": 100,
   "tabWidth": 2,
   "useTabs": false,
