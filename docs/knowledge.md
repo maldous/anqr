@@ -22,12 +22,12 @@ This repo follows an **agent-first harness model** defined in `docs/harness/agen
 | Execution workflow | `docs/workflow/execution-workflow.md` |
 | Reports catalog    | `docs/reports/README.md`              |
 | Launch checklist   | `docs/operations/launch-checklist.md` |
-| Ops autopilot      | `docs/ops-autopilot.md`               |
+| Ops autopilot      | `docs/operations/ops-autopilot.md`    |
 | Provider operations | `docs/harness/provider-operations.md` |
 | Autonomous harness | `docs/harness/autonomous-framework.md`|
-| Error handling     | `docs/ops-autopilot.md` §Error-Aware  |
-| Circuit breaker    | `docs/ops-autopilot.md` §Circuit-Breaker |
-| Email notifications| `docs/ops-autopilot.md` §Email        |
+| Error handling     | `docs/operations/ops-autopilot.md` §Error-Aware  |
+| Circuit breaker    | `docs/operations/ops-autopilot.md` §Circuit-Breaker |
+| Email notifications| `docs/operations/ops-autopilot.md` §Email        |
 
 ## Architecture
 

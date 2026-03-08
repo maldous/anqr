@@ -72,7 +72,7 @@ Before adding, removing, or changing any provider:
 
 3. **Verify tool-calling support** — Codex requires function/tool calling. Models without it (e.g. `deepseek-coder:*`) will silently fail.
 
-4. **Document the change** in this file, `docs/ops-autopilot.md`, and `litellm-config.yaml`.
+4. **Document the change** in this file, `docs/operations/ops-autopilot.md`, and `litellm-config.yaml`.
 
 > **Rule: Never remove a provider without first querying its actual API catalog.** The GitHub Models removal incident proved that assumptions about provider limits ("8K context") can be wrong — the actual limit was 131K.
 
@@ -244,7 +244,7 @@ Linear parent issues were marked Done with incomplete children. This masks remai
 4. Add fallback block to credit-gate cascade (position based on quality/speed)
 5. Add to `_MODEL_PROVIDER_MAP` and `_PROVIDER_FALLBACK_CHAIN` in `model-injector-proxy.py`
 6. Restart LiteLLM and test through the proxy
-7. Update this doc, `docs/ops-autopilot.md`, and provider matrix
+7. Update this doc, `docs/operations/ops-autopilot.md`, and provider matrix
 8. Create Linear issue to track if needed
 
 ### Upgrading a Model

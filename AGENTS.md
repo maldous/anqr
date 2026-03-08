@@ -66,7 +66,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 - Need report expectations: open `docs/reports/README.md`.
 - Need harness/ops context: open `docs/harness/autonomous-framework.md`.
 - Need provider/pipeline context: open `docs/harness/provider-operations.md`.
-- Need email/notification context: open `docs/ops-autopilot.md` §Email Notification System.
+- Need email/notification context: open `docs/operations/ops-autopilot.md` §Email Notification System.
 - Need historical context: open `docs/archive/*` only after checking canonical docs.
 
 ## Maintenance Expectations
