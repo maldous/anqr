@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots
 
 # ============================================
 # Help
@@ -26,7 +26,7 @@ help:
 	@echo "    make release         Alias for make all"
 	@echo ""
 	@echo "  5) Setup & Housekeeping"
-	@echo "    make install hooks clean pull push zip dep"
+	@echo "    make bootstrap pristine install hooks clean pull push zip dep"
 	@echo ""
 	@echo "  6) Web"
 	@echo "    make dev build preview"
@@ -403,6 +403,40 @@ export PATH := $(ANDROID_HOME)/tools:$(ANDROID_HOME)/platform-tools:$(PATH)
 # ============================================
 # Web Development
 # ============================================
+
+# Password for bootstrap.zip (override: make bootstrap BOOTSTRAP_PASSWORD=xxx)
+BOOTSTRAP_PASSWORD ?= anqr
+
+# Full environment setup from scratch (run after git clone or git clean -xfd).
+# Extracts secrets from bootstrap.zip, installs Node.js + npm deps,
+# sets up git hooks, and installs Playwright browsers for E2E testing.
+bootstrap:
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — Full Environment Bootstrap"
+	@echo "============================================"
+	@echo ""
+	scripts/bootstrap.sh -p $(BOOTSTRAP_PASSWORD)
+	$(MAKE) hooks
+	npx playwright install chromium
+	@echo ""
+	@echo "============================================"
+	@echo "✅ Bootstrap complete!"
+	@echo "============================================"
+	@echo ""
+	@echo "  Run:  source env"
+	@echo "  Then: make build"
+	@echo ""
+
+# Nuclear reset: wipe everything not tracked by git, then fully bootstrap.
+# Equivalent to a fresh clone + make bootstrap.
+pristine:
+	@echo "⚠️  This will remove ALL untracked and ignored files (git clean -xfd)."
+	@echo "   Only bootstrap.zip and git-tracked files will survive."
+	@echo ""
+	@read -p "Press Enter to continue or Ctrl+C to abort... " _
+	git clean -xfd
+	$(MAKE) bootstrap
 
 install:
 	npm install
