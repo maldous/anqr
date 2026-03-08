@@ -916,10 +916,21 @@ ops\:email\:install:
 # Branches: 'static' (static/txt files), 'locales' (locales/txt files)
 
 # Pull translation updates from public repo (run this after git pull)
+# Stashes any working-tree changes first because git-subtree requires a clean tree.
 i18n\:pull:
 	@echo "Pulling i18n translations from public repo..."
-	git subtree pull --prefix=src/i18n/static/txt anqr-i18n static --squash -m "Merge i18n static translations" || true
-	git subtree pull --prefix=src/i18n/locales/txt anqr-i18n locales --squash -m "Merge i18n locales translations" || true
+	@STASHED=0; \
+	if ! git diff --quiet || ! git diff --cached --quiet; then \
+		echo "  Stashing uncommitted changes before subtree pull..."; \
+		git stash push -m "i18n:pull auto-stash" --include-untracked; \
+		STASHED=1; \
+	fi; \
+	git subtree pull --prefix=src/i18n/static/txt anqr-i18n static --squash -m "Merge i18n static translations" || true; \
+	git subtree pull --prefix=src/i18n/locales/txt anqr-i18n locales --squash -m "Merge i18n locales translations" || true; \
+	if [ $$STASHED -eq 1 ]; then \
+		echo "  Restoring stashed changes..."; \
+		git stash pop; \
+	fi
 	@echo "i18n pull complete."
 
 # Push translation updates to public repo (uses force push to handle diverged histories)
