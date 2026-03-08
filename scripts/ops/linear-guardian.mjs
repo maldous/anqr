@@ -40,11 +40,29 @@ const HUMAN_REQUIRED_PATTERNS = [
 ];
 
 const LABEL_CLASSIFICATION_RULES = [
-  { label: 'reliability', patterns: [/\breliability\b/i, /\bsentinel\b/i, /\bguardian\b/i, /\bmodel[\s-]?injector\b/i, /\bcredit[\s-]?gate\b/i, /\bsymphony\b/i, /\bself[\s-]?heal/i, /\bops\b/i] },
-  { label: 'android', patterns: [/\bandroid\b/i, /\bcapacitor\b/i, /\baab\b/i, /\bapk\b/i, /\bgoogle play\b/i] },
+  {
+    label: 'reliability',
+    patterns: [
+      /\breliability\b/i,
+      /\bsentinel\b/i,
+      /\bguardian\b/i,
+      /\bmodel[\s-]?injector\b/i,
+      /\bcredit[\s-]?gate\b/i,
+      /\bsymphony\b/i,
+      /\bself[\s-]?heal/i,
+      /\bops\b/i,
+    ],
+  },
+  {
+    label: 'android',
+    patterns: [/\bandroid\b/i, /\bcapacitor\b/i, /\baab\b/i, /\bapk\b/i, /\bgoogle play\b/i],
+  },
   { label: 'ios', patterns: [/\bios\b/i, /\bswift\b/i, /\bxcode\b/i, /\bapp store\b/i] },
   { label: 'api', patterns: [/\bapi\b/i, /\bserverless\b/i, /\bnetlify func/i, /\bendpoint\b/i] },
-  { label: 'ads', patterns: [/\badmob\b/i, /\badsense\b/i, /\bad[\s-]?unit\b/i, /\bad[\s-]?slot\b/i] },
+  {
+    label: 'ads',
+    patterns: [/\badmob\b/i, /\badsense\b/i, /\bad[\s-]?unit\b/i, /\bad[\s-]?slot\b/i],
+  },
   { label: 'analytics', patterns: [/\banalytics\b/i, /\btelemetry\b/i] },
   { label: 'security', patterns: [/\bsecurity\b/i, /\bxss\b/i, /\bcsp\b/i, /\bcors\b/i] },
   { label: 'perf', patterns: [/\bperf(ormance)?\b/i, /\bbundle[\s-]?size\b/i, /\blighthouse\b/i] },
@@ -97,26 +115,9 @@ function classifyIssueLabel(issue) {
   return 'web';
 }
 
-function normalizeDescriptorTitle(title, desiredPrefix) {
-  const trimmed = (title || '').trim();
-  if (!desiredPrefix || !trimmed) return trimmed;
-  if (trimmed.startsWith(`${desiredPrefix} `) || trimmed === desiredPrefix) return trimmed;
-  if (/^\[[^\]]+\]\s+/.test(trimmed)) {
-    return trimmed.replace(/^\[[^\]]+\]\s+/, `${desiredPrefix} `);
-  }
-  return `${desiredPrefix} ${trimmed}`;
-}
-
-function desiredDescriptor(issue) {
-  const title = issue.title || '';
-  const description = issue.description || '';
-  if (isHumanOnlyIssue(issue)) return '[HUMAN]';
-  if (/\bpart of anq-\d+\b/i.test(description)) return '[CHILD]';
-  return null;
-}
-
 function extractValidationHint(description) {
-  if (!description) return 'Run the smallest deterministic validation command that covers the change.';
+  if (!description)
+    return 'Run the smallest deterministic validation command that covers the change.';
   const lines = description.split('\n');
   const validationLine = lines.find((line) => /validation|test/i.test(line));
   if (validationLine) return compactText(validationLine, 220);
@@ -162,7 +163,7 @@ function buildLocalSliceDescription(issue, maxDescriptionChars) {
   lines.push(
     '',
     `Validation requirement: ${extractValidationHint(description)}`,
-    'When complete: post a short comment on the parent issue with what was done and what remains.',
+    'When complete: post a short comment on the parent issue with what was done and what remains.'
   );
   return lines.join('\n');
 }
@@ -243,8 +244,8 @@ async function main() {
 
   const creditStatus = await checkSymphonyCreditStatus();
   const runningIssueIds = await getSymphonyRunningIssueIds();
-  let skipLead = GUARDIAN_SKIP_LEAD;
-  let leadSkipReason = GUARDIAN_SKIP_LEAD ? 'GUARDIAN_SKIP_LEAD=1' : null;
+  const skipLead = GUARDIAN_SKIP_LEAD;
+  const leadSkipReason = GUARDIAN_SKIP_LEAD ? 'GUARDIAN_SKIP_LEAD=1' : null;
 
   if (skipLead) {
     console.error(`Lead enforcement skipped: ${leadSkipReason}`);
@@ -319,7 +320,6 @@ async function main() {
   summary.unlabeledAudit = { checked: false, classified: [] };
   const p0Label = labelByName.get('p0');
   const p1Label = labelByName.get('p1');
-  const finishedLabel = labelByName.get('finished');
   const openIssuesForHygiene = await gql(
     `query {
       issues(
@@ -500,7 +500,9 @@ async function main() {
         summary.assigneeBackfill.unassignedFromCodex.push(update);
       }
     }
-    const totalFixed = summary.assigneeBackfill.assignedHuman.length + summary.assigneeBackfill.unassignedFromCodex.length;
+    const totalFixed =
+      summary.assigneeBackfill.assignedHuman.length +
+      summary.assigneeBackfill.unassignedFromCodex.length;
     if (totalFixed > 0) {
       console.error(
         `Assignee backfill: ${APPLY ? 'fixed' : 'would fix'} ${totalFixed} issues (${summary.assigneeBackfill.assignedHuman.length} → ${HUMAN_USER_NAME}, ${summary.assigneeBackfill.unassignedFromCodex.length} unassigned from ${CODEX_USER_NAME})`
@@ -609,7 +611,9 @@ async function main() {
       const actionable = symphonyOpen.issues.nodes.filter(
         (i) => !isHumanOnlyIssue(i) && !i.title.startsWith('[HUMAN]')
       );
-      actionable.sort((a, b) => a.priority - b.priority || a.identifier.localeCompare(b.identifier));
+      actionable.sort(
+        (a, b) => a.priority - b.priority || a.identifier.localeCompare(b.identifier)
+      );
       const target = actionable[0] || null;
       summary.priorityStateSync.checked = true;
       summary.priorityStateSync.target = target ? target.identifier : null;
@@ -738,7 +742,12 @@ async function main() {
   // This replaces the old AI-powered sentinel heartbeat with a deterministic
   // check that cannot enter retry queues or consume AI credits.
   // -----------------------------------------------------------------------
-  summary.symphonyLiveness = { checked: false, serviceActive: false, dashboardReachable: false, healthy: false };
+  summary.symphonyLiveness = {
+    checked: false,
+    serviceActive: false,
+    dashboardReachable: false,
+    healthy: false,
+  };
   try {
     const serviceCheck = spawnSync('systemctl', ['--user', 'is-active', 'symphony-anqr.service'], {
       encoding: 'utf-8',
@@ -1242,9 +1251,8 @@ async function main() {
         { projectId: symphonyProject.id }
       );
 
-      const drainCandidates = symphonyBacklog.issues.nodes.filter((i) =>
-        !runningSet.has(i.identifier) &&
-        retrySet.has(i.identifier)
+      const drainCandidates = symphonyBacklog.issues.nodes.filter(
+        (i) => !runningSet.has(i.identifier) && retrySet.has(i.identifier)
       );
 
       for (const issue of drainCandidates) {
