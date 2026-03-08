@@ -925,8 +925,8 @@ i18n\:pull:
 		git stash push -m "i18n:pull auto-stash" --include-untracked; \
 		STASHED=1; \
 	fi; \
-	git subtree pull --prefix=src/i18n/static/txt anqr-i18n static --squash -m "Merge i18n static translations" || true; \
-	git subtree pull --prefix=src/i18n/locales/txt anqr-i18n locales --squash -m "Merge i18n locales translations" || true; \
+	LEFTHOOK=0 git subtree pull --prefix=src/i18n/static/txt anqr-i18n static --squash -m "Merge i18n static translations" || true; \
+	LEFTHOOK=0 git subtree pull --prefix=src/i18n/locales/txt anqr-i18n locales --squash -m "Merge i18n locales translations" || true; \
 	if [ $$STASHED -eq 1 ]; then \
 		echo "  Restoring stashed changes..."; \
 		git stash pop; \
@@ -944,13 +944,13 @@ i18n\:push:
 		STASHED=1; \
 	fi; \
 	echo "  Splitting static subtree (this may take a moment)..."; \
-	STATIC_SHA=$$(git subtree split --prefix=src/i18n/static/txt); \
+	STATIC_SHA=$$(LEFTHOOK=0 git subtree split --prefix=src/i18n/static/txt); \
 	if [ -n "$$STATIC_SHA" ]; then \
 		echo "  Pushing static branch..."; \
 		git push anqr-i18n "$$STATIC_SHA":static 2>/dev/null || git push anqr-i18n "$$STATIC_SHA":static --force; \
 	fi; \
 	echo "  Splitting locales subtree (this may take a moment)..."; \
-	LOCALES_SHA=$$(git subtree split --prefix=src/i18n/locales/txt); \
+	LOCALES_SHA=$$(LEFTHOOK=0 git subtree split --prefix=src/i18n/locales/txt); \
 	if [ -n "$$LOCALES_SHA" ]; then \
 		echo "  Pushing locales branch..."; \
 		git push anqr-i18n "$$LOCALES_SHA":locales 2>/dev/null || git push anqr-i18n "$$LOCALES_SHA":locales --force; \
