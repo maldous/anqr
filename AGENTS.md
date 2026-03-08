@@ -23,7 +23,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 
 - Update canonical docs in `docs/` first.
 - Keep this file concise and link-driven.
-- Preserve `ISO_IEC_18004_2015.md` as an unchanged reference source.
+- Preserve `docs/reference/iso-iec-18004-2015.md` as an unchanged reference source.
 - When a legacy path must stay for compatibility, keep only a short pointer in that path.
 - Prefer verifiable docs over narrative logs.
 
@@ -73,4 +73,4 @@ This file is intentionally short. It is a map, not the full knowledge base.
 
 - Keep links valid and relative.
 - Keep `AGENTS.md` around 100 lines and avoid deep implementation detail.
-- If new knowledge appears outside `docs/`, move it into `docs/` and leave a stub.
+- All project knowledge lives in `docs/`. Do not create markdown outside `docs/`.

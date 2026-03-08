@@ -30,5 +30,5 @@ This `docs/` directory is the canonical source of project knowledge.
 
 - Update canonical docs in `docs/` first.
 - Legacy markdown stubs outside `docs/` have been removed. Do not create new ones.
-- Preserve [`ISO_IEC_18004_2015.md`](../ISO_IEC_18004_2015.md) unchanged.
+- Preserve [`iso-iec-18004-2015.md`](reference/iso-iec-18004-2015.md) unchanged.
 - Prefer verifiable docs over narrative logs.

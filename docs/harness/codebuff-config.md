@@ -6,10 +6,10 @@ Codebuff reads two project-level files to optimise its context window and unders
 
 | File              | Purpose                                               |
 | ----------------- | ----------------------------------------------------- |
-| `knowledge.md`    | Project context loaded automatically at session start |
+| `docs/knowledge.md` | Project context loaded automatically at session start |
 | `.codebuffignore` | Excludes files from Codebuff's context window         |
 
-Both files live at the repository root.
+`docs/knowledge.md` lives in `docs/`; `.codebuffignore` lives at the repository root.
 
 ## knowledge.md
 
@@ -41,7 +41,7 @@ Works like `.gitignore` but controls what Codebuff reads during a session. Every
 | 4   | Gallery & asset scripts (`scripts/generate-gallery*.mjs`, etc.)     | Large, repetitive, rarely edited interactively |
 | 5   | Ops automation (`scripts/ops/`)                                     | Systemd-driven, rarely edited via Codebuff     |
 | 6   | Operator infrastructure (`WORKFLOW.md`)                             | Must not be edited — operator-managed          |
-| 7   | Reference & archive (`ISO_IEC_18004_2015.md`, `docs/archive/`)      | Large, rarely needed during coding             |
+| 7   | Reference & archive (`docs/reference/`, `docs/archive/`)             | Large, rarely needed during coding             |
 | 8   | Android platform (`android/`)                                       | Capacitor/Gradle boilerplate                   |
 | 9   | Reports & config noise (`reports/`, `cspell.json`, etc.)            | Generated outputs or large config              |
 

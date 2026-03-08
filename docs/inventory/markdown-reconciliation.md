@@ -11,7 +11,7 @@ This matrix records ownership for legacy markdown paths and their canonical dest
 | `reports/coverage-gap.md`                  | `docs/reports/coverage-gap.md`                                           | removed (generated output path retained in scripts) |
 | `reports/testid-coverage.md`               | `docs/reports/testid-coverage.md`                                        | removed (generated output path retained in scripts) |
 | `reports/bundle-budget.md`                 | `docs/reports/bundle-budget.md`                                          | removed (generated output path retained in scripts) |
-| `knowledge.md`                             | `docs/architecture/overview.md` + `docs/archive/knowledge-2026-02-18.md` | Codebuff context file (repurposed)                  |
+| `knowledge.md`                             | `docs/knowledge.md`                                                      | moved to docs/ (was Codebuff context file)          |
 | `src/modules/README.md`                    | `docs/modules/index.md` + `docs/modules/overview.md`                     | removed                                             |
 | `src/modules/qr-generator/README.md`       | `docs/modules/qr-generator.md`                                           | removed                                             |
 | `src/modules/browser-clipboard/README.md`  | `docs/modules/browser-clipboard.md`                                      | removed                                             |
@@ -29,8 +29,8 @@ This matrix records ownership for legacy markdown paths and their canonical dest
 | `src/modules/animation/README.md`          | `docs/modules/animation.md`                                              | removed                                             |
 | `src/modules/qr-decoder/README.md`         | `docs/modules/qr-decoder.md`                                             | removed                                             |
 | `src/payload.md`                           | `docs/reports/payload-integrity.md` + archive snapshot                   | removed                                             |
-| `ISO_IEC_18004_2015.md`                    | `ISO_IEC_18004_2015.md`                                                  | immutable reference (unchanged)                     |
-| `quality.md`                               | `docs/reports/quality.md`                                                | removed                                             |
-| `gallery-idea.md`                          | `docs/roadmap/gallery-generation.md` + archive snapshot                  | removed                                             |
-| `tbd.md`                                   | `docs/operations/launch-checklist.md` + archive snapshot                 | removed                                             |
-| `optimise.md`                              | `docs/reports/optimization-roadmap.md`                                   | removed                                             |
+| `ISO_IEC_18004_2015.md`                    | `docs/reference/iso-iec-18004-2015.md`                                   | moved to docs/reference/ (immutable reference)      |
+| `quality.md`                               | `docs/reports/quality.md`                                                | deleted                                             |
+| `gallery-idea.md`                          | `docs/roadmap/gallery-generation.md` + archive snapshot                  | deleted                                             |
+| `tbd.md`                                   | `docs/operations/launch-checklist.md` + archive snapshot                 | deleted                                             |
+| `optimise.md`                              | `docs/reports/optimization-roadmap.md`                                   | deleted                                             |
