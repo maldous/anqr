@@ -31,6 +31,17 @@ export {
   SETTINGS_REGISTRY,
 } from './settings-registry';
 
+// Visual comparison (pixelmatch + pngjs) for cross-platform parity
+export {
+  comparePngBuffers,
+  dataUrlToPngBuffer,
+  detectImageFormat,
+  getPngDimensions,
+  isValidPng,
+  type CompareOptions,
+  type CompareResult,
+} from './visual-compare';
+
 // Test setup
 export {
   enableBrowserDebug,

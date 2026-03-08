@@ -39,7 +39,7 @@ export default defineConfig({
 
   use: {
     ...devices['Desktop Chrome'],
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:8888',
     viewport: { width: 1920, height: 1080 },
 
     trace: 'off',
@@ -69,6 +69,11 @@ export default defineConfig({
     { name: 'advanced', testMatch: /tests\/advanced\/.*\.spec\.ts/ },
     { name: 'professional', testMatch: /tests\/professional\/.*\.spec\.ts/ },
     {
+      name: 'api',
+      testMatch: /tests\/api\/.*\.spec\.ts/,
+      timeout: 120_000,
+    },
+    {
       name: 'reports',
       testMatch: /tests\/reports\/.*\.spec\.ts/,
       timeout: 10 * 60 * 1000,
@@ -83,16 +88,19 @@ export default defineConfig({
     },
   ],
 
+  // Use netlify dev so Netlify Functions (e.g. /api/qr) are available
+  // alongside the Vite app — required for API and cross-platform parity tests.
   webServer: hasProductionBuild
     ? {
-        command: 'npx vite preview --port 5173 --strictPort',
-        url: 'http://localhost:5173',
+        command:
+          'npx netlify dev --command "npx vite preview --port 3000 --strictPort" --targetPort 3000',
+        url: 'http://localhost:8888',
         reuseExistingServer: !isCI,
-        timeout: 20_000,
+        timeout: 60_000,
       }
     : {
-        command: 'npm run dev',
-        url: 'http://localhost:5173',
+        command: 'npx netlify dev',
+        url: 'http://localhost:8888',
         reuseExistingServer: !isCI,
         timeout: 180_000,
       },

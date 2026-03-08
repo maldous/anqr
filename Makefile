@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
 
 # ============================================
 # Help
@@ -38,6 +38,7 @@ help:
 	@echo "    make test test:full test:unit test:ui test:report"
 	@echo "    make test:basic test:advanced test:pro test:tiers test:permutations"
 	@echo "    make test:unit:coverage test:coverage:gap test:unit:ci"
+	@echo "    make test:api test:parity (Playwright API + cross-platform parity)"
 	@echo "    make test:appium test:appium:android test:appium:ios"
 	@echo ""
 	@echo "  9) Assets"
@@ -1148,7 +1149,7 @@ report\:i18n\:txt:
 # Outputs E2E results to test-report.txt for text-based review
 test: UNIT_CMD = test:unit
 test: _quality-gates
-	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --workers=$(PLAYWRIGHT_WORKERS) --reporter=list 2>&1 | tee test-report.txt'
+	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=api --workers=$(PLAYWRIGHT_WORKERS) --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)
 test\:basic:
@@ -1162,10 +1163,10 @@ test\:advanced:
 test\:pro:
 	npx playwright test --project=professional --workers=$(PLAYWRIGHT_WORKERS)
 
-# Run all tier tests (basic + advanced + professional) but NOT permutations
+# Run all tier tests (basic + advanced + professional + api) but NOT permutations
 # Use this for faster feedback during development
 test\:tiers:
-	npx playwright test --project=basic --project=advanced --project=professional --workers=$(PLAYWRIGHT_WORKERS)
+	npx playwright test --project=basic --project=advanced --project=professional --project=api --workers=$(PLAYWRIGHT_WORKERS)
 
 # Open Playwright UI mode for interactive debugging
 test\:ui:
@@ -1194,25 +1195,69 @@ test\:report:
 # Runs native E2E tests against a real device or emulator via Appium.
 # Tests are in tests/appium/ and use WebdriverIO with Mocha.
 #
+# OS Gates:
+#   - macOS (Darwin): runs iOS tests only   → make test:appium:ios
+#   - Linux:          runs Android tests only → make test:appium:android
+#   - make test:appium auto-detects the OS and picks the right platform.
+#
 # Prerequisites:
-#   - Android: `make android:build` (debug APK), emulator or device connected
-#   - iOS:     Xcode + simulator (macOS only)
+#   - Android (Linux): `make android:build` (debug APK), emulator or device connected
+#   - iOS (macOS):     `make ios:build`, Xcode + simulator
 #
 # Tunables:
-#   APPIUM_PLATFORM=android|ios   (default: android)
+#   APPIUM_PLATFORM=android|ios   (auto-detected from OS by default)
 #   APPIUM_DEVICE=emulator-5554   (default: emulator-5554)
 #   APPIUM_APP=/path/to/app.apk   (default: android/app/build/outputs/apk/debug/app-debug.apk)
 
-# Run Appium tests (auto-detects platform, defaults to Android)
+# Run Appium tests (auto-detects platform based on OS: macOS→iOS, Linux→Android)
 test\:appium:
-	npx wdio run wdio.conf.ts
+	@OS=$$(uname -s); \
+	if [ "$$OS" = "Darwin" ]; then \
+		echo "[appium] Detected macOS — running iOS tests"; \
+		APPIUM_PLATFORM=ios npx wdio run wdio.conf.ts; \
+	elif [ "$$OS" = "Linux" ]; then \
+		echo "[appium] Detected Linux — running Android tests"; \
+		ANQR_BASE_URL=http://10.0.2.2:8888 APPIUM_PLATFORM=android npx wdio run wdio.conf.ts; \
+	else \
+		echo "ERROR: Unsupported OS '$$OS'. Appium tests require macOS (iOS) or Linux (Android)."; \
+		exit 1; \
+	fi
 
-# Run Appium tests explicitly on Android
+# Run Appium tests explicitly on Android (Linux only)
 test\:appium\:android:
-	APPIUM_PLATFORM=android npx wdio run wdio.conf.ts
+	@OS=$$(uname -s); \
+	if [ "$$OS" != "Linux" ]; then \
+		echo "ERROR: Android Appium tests must run on Linux (detected $$OS)."; \
+		echo "       Use 'make test:appium:ios' on macOS."; \
+		exit 1; \
+	fi
+	ANQR_BASE_URL=http://10.0.2.2:8888 APPIUM_PLATFORM=android npx wdio run wdio.conf.ts
 
-# Run Appium tests explicitly on iOS (requires macOS + Xcode)
+# ============================================
+# API Testing (Playwright + netlify dev)
+# ============================================
+# Tests the /api/qr Netlify Function endpoint and cross-platform QR parity.
+# Uses `netlify dev` (port 8888) — started automatically by Playwright webServer.
+#
+# Targets:
+#   test:api    — QR API endpoint tests + browser↔API parity tests
+#   test:parity — Alias for test:api (parity tests live in tests/api/)
+
+# Run Playwright API + parity tests (tests/api/*.spec.ts)
+test\:api:
+	npx playwright test --project=api --workers=$(PLAYWRIGHT_WORKERS)
+
+# Alias: cross-platform parity tests (browser ↔ API visual comparison)
+test\:parity: test\:api
+
+# Run Appium tests explicitly on iOS (macOS only — requires Xcode)
 test\:appium\:ios:
+	@OS=$$(uname -s); \
+	if [ "$$OS" != "Darwin" ]; then \
+		echo "ERROR: iOS Appium tests must run on macOS (detected $$OS)."; \
+		echo "       Use 'make test:appium:android' on Linux."; \
+		exit 1; \
+	fi
 	APPIUM_PLATFORM=ios npx wdio run wdio.conf.ts
 
 # ============================================

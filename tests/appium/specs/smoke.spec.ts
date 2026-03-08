@@ -5,8 +5,8 @@
  * the WebView loads, and basic QR generation works.
  *
  * Prerequisites:
- *   - Debug APK built: `make android:build`
- *   - Emulator running or device connected: `adb devices`
+ *   - Android (Linux only): Debug APK built via `make android:build`, emulator running (`adb devices`)
+ *   - iOS (macOS only): Simulator app built via `make ios:build`
  *   - Appium server or managed by @wdio/appium-service
  */
 

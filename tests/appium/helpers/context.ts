@@ -58,3 +58,17 @@ export async function isInWebView(): Promise<boolean> {
   const ctx = await getCurrentContext();
   return ctx.startsWith(WEBVIEW_PREFIX);
 }
+
+/**
+ * Check if the device under test is iOS.
+ */
+export function isIOSDevice(): boolean {
+  return driver.isIOS;
+}
+
+/**
+ * Check if the device under test is Android.
+ */
+export function isAndroidDevice(): boolean {
+  return driver.isAndroid;
+}

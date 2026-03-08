@@ -12,6 +12,18 @@ export {
   getCanvasSnapshot,
   selectTier,
   openAccordion,
+  getComputedCSS,
+  headElementExists,
+  isCapacitorNative,
+  getBaseUrl,
+  getApiQrUrl,
 } from './app-setup.js';
 
-export { switchToWebView, switchToNative, getCurrentContext, isInWebView } from './context.js';
+export {
+  switchToWebView,
+  switchToNative,
+  getCurrentContext,
+  isInWebView,
+  isIOSDevice,
+  isAndroidDevice,
+} from './context.js';

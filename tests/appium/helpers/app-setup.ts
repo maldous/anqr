@@ -2,7 +2,8 @@
  * App Setup Helpers for ANQR Appium Tests
  *
  * Handles splash screen waiting, welcome modal dismissal,
- * and initial app readiness checks.
+ * initial app readiness checks, and API URL construction
+ * for cross-platform parity testing.
  */
 
 import { switchToWebView } from './context.js';
@@ -101,4 +102,66 @@ export async function openAccordion(sectionId: string): Promise<void> {
     );
     await region.waitForDisplayed({ timeout: 10_000 });
   }
+}
+
+/**
+ * Get a computed CSS property value for an element matched by selector.
+ */
+export async function getComputedCSS(selector: string, property: string): Promise<string> {
+  return browser.execute(
+    (sel: string, prop: string) => {
+      const el = document.querySelector(sel) as HTMLElement | null;
+      if (!el) return '';
+      return window.getComputedStyle(el).getPropertyValue(prop);
+    },
+    selector,
+    property
+  );
+}
+
+/**
+ * Check whether a <script> or <link> element with the given ID exists in <head>.
+ */
+export async function headElementExists(id: string): Promise<boolean> {
+  return browser.execute((elId: string) => {
+    return document.getElementById(elId) !== null;
+  }, id);
+}
+
+/**
+ * Check whether Capacitor reports native platform.
+ */
+export async function isCapacitorNative(): Promise<boolean> {
+  return browser.execute(() => {
+    try {
+      const win = window as Window & { Capacitor?: { isNativePlatform?: () => boolean } };
+      return win.Capacitor?.isNativePlatform?.() ?? false;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/**
+ * Get the base URL for the ANQR web server (netlify dev).
+ *
+ * For cross-platform parity tests, this URL is used to call the /api/qr
+ * endpoint from the device/emulator context. Override with ANQR_BASE_URL.
+ *
+ * - iOS Simulator: localhost reaches the host machine.
+ * - Android Emulator: use ANQR_BASE_URL=http://10.0.2.2:8888
+ * - Production: use ANQR_BASE_URL=https://anqr.link
+ */
+export function getBaseUrl(): string {
+  return process.env.ANQR_BASE_URL || 'http://localhost:8888';
+}
+
+/**
+ * Build a full /api/qr URL with the given query parameters.
+ * Uses getBaseUrl() for the origin.
+ */
+export function getApiQrUrl(params: Record<string, string>): string {
+  const base = getBaseUrl();
+  const search = new URLSearchParams(params).toString();
+  return `${base}/api/qr?${search}`;
 }

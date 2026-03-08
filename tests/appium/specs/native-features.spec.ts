@@ -5,8 +5,8 @@
  * the Capacitor bridge and platform-specific functionality.
  *
  * Prerequisites:
- *   - Debug APK built: `make android:build`
- *   - Emulator running or device connected: `adb devices`
+ *   - Android (Linux only): Debug APK built via `make android:build`, emulator running (`adb devices`)
+ *   - iOS (macOS only): Simulator app built via `make ios:build`
  */
 
 import {
@@ -107,6 +107,12 @@ describe('ANQR — Native Feature Tests', () => {
       if (driver.isAndroid) {
         const activity = await browser.getCurrentActivity();
         expect(activity).toBeTruthy();
+      }
+
+      if (driver.isIOS) {
+        // On iOS, verify we can access the native context successfully
+        const contexts = await browser.getContexts();
+        expect(contexts).toContain('NATIVE_APP');
       }
 
       await switchToWebView();
