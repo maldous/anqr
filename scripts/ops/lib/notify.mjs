@@ -65,6 +65,35 @@ function checkRateLimit(state, subject) {
   return { allowed: true };
 }
 
+const LINEAR_WORKSPACE = process.env.LINEAR_WORKSPACE || 'anqr';
+
+/**
+ * Return a direct URL to a Linear issue.
+ * @param {string} identifier — e.g. "ANQ-245"
+ */
+export function linearIssueUrl(identifier) {
+  return `https://linear.app/${LINEAR_WORKSPACE}/issue/${identifier}`;
+}
+
+/**
+ * Format a single issue line for inclusion in notification emails.
+ * Includes identifier, title, optional content snippet, and a clickable URL.
+ *
+ * @param {{ identifier: string, title?: string, snippet?: string }} opts
+ */
+export function formatIssueLine({ identifier, title, snippet }) {
+  const url = linearIssueUrl(identifier);
+  const parts = [`• ${identifier}`];
+  if (title) parts[0] += `: ${title}`;
+  parts.push(`  ${url}`);
+  if (snippet) {
+    const trimmed = snippet.replace(/\s+/g, ' ').trim();
+    const preview = trimmed.length > 200 ? `${trimmed.slice(0, 197)}...` : trimmed;
+    if (preview) parts.push(`  > ${preview}`);
+  }
+  return parts.join('\n');
+}
+
 /**
  * Send an email notification via msmtp.
  *

@@ -18,7 +18,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createGql } from './lib/linear-client.mjs';
-import { sendNotification } from './lib/notify.mjs';
+import { sendNotification, formatIssueLine } from './lib/notify.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -284,6 +284,7 @@ async function main() {
           from: email.from,
           identifier: issue.identifier,
           title: issue.title,
+          bodySnippet: (email.body || '').slice(0, 300),
         });
         tagAsProcessed(messageId);
         console.error(`[email-ingest] Created ${issue.identifier}: ${issue.title}`);
@@ -298,8 +299,12 @@ async function main() {
 
   // Step 5: Send confirmation notification
   if (summary.issuesCreated.length > 0 && !DRY_RUN) {
-    const lines = summary.issuesCreated.map(
-      (i) => `- ${i.identifier}: ${i.subject || '(no subject)'}`
+    const issueBlocks = summary.issuesCreated.map((i) =>
+      formatIssueLine({
+        identifier: i.identifier,
+        title: i.subject || '(no subject)',
+        snippet: i.bodySnippet,
+      })
     );
     sendNotification({
       subject: `Created ${summary.issuesCreated.length} issue(s) from email`,
@@ -307,7 +312,8 @@ async function main() {
         `Processed ${summary.messagesFound} email(s) from ${INGEST_EMAIL}.`,
         '',
         'Issues created:',
-        ...lines,
+        '',
+        ...issueBlocks,
       ].join('\n'),
       severity: 'info',
     });

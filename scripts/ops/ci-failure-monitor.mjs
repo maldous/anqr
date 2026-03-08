@@ -24,7 +24,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createGql } from './lib/linear-client.mjs';
-import { sendNotification } from './lib/notify.mjs';
+import { sendNotification, linearIssueUrl } from './lib/notify.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -433,15 +433,19 @@ async function main() {
 
   // Step 7: Send notification if issues were created
   if (summary.issuesCreated.length > 0 && !DRY_RUN) {
-    const lines = summary.issuesCreated.map(
-      (i) => `- ${i.identifier}: ${i.workflow} (${i.commit})`
+    const detailLines = summary.issuesCreated.map(
+      (i) => [
+        `• ${i.identifier}: ${i.workflow}`,
+        `  Commit: ${i.commit}`,
+        `  ${linearIssueUrl(i.identifier)}`,
+      ].join('\n')
     );
     sendNotification({
       subject: `CI failure: ${summary.issuesCreated.map((i) => i.workflow).join(', ')}`,
       body: [
         `Created ${summary.issuesCreated.length} CI failure issue(s):`,
         '',
-        ...lines,
+        ...detailLines,
         '',
         'These will auto-close when the workflow passes.',
       ].join('\n'),
@@ -456,7 +460,11 @@ async function main() {
         `Closed ${summary.issuesClosed.length} CI failure issue(s):`,
         '',
         ...summary.issuesClosed.map(
-          (i) => `- ${i.identifier}: ${i.workflow} now passing (${i.commit})`
+          (i) => [
+            `• ${i.identifier}: ${i.workflow} now passing`,
+            `  Commit: ${i.commit}`,
+            `  ${linearIssueUrl(i.identifier)}`,
+          ].join('\n')
         ),
       ].join('\n'),
       severity: 'info',

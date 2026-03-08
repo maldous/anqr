@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createGql } from './lib/linear-client.mjs';
-import { sendNotification } from './lib/notify.mjs';
+import { sendNotification, linearIssueUrl } from './lib/notify.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
@@ -771,8 +771,13 @@ async function main() {
           '',
           `Service active: ${summary.symphonyLiveness.serviceActive}`,
           `Dashboard reachable: ${creditStatus.reachable}`,
+          `Credit status: ${creditStatus.hasCredits === null ? 'unknown' : creditStatus.hasCredits ? 'available' : 'exhausted'}`,
+          `Balance: ${creditStatus.balance ?? 'unknown'}`,
           '',
-          'Check with: systemctl --user status symphony-anqr.service',
+          'Diagnostic commands:',
+          '  systemctl --user status symphony-anqr.service',
+          '  journalctl --user -u symphony-anqr.service --since "10 min ago" --no-pager',
+          '  curl -sf http://127.0.0.1:4040 | head -20',
         ].join('\n'),
         severity: 'critical',
       });
@@ -1279,7 +1284,17 @@ async function main() {
         );
         sendNotification({
           subject: `Symphony retry queue overflow: drained ${summary.retryQueueHealth.drained.length} issues`,
-          body: `${retryQueueIds.length} issues were stuck in the retry queue competing for orchestrator slots.\n\nDrained: ${summary.retryQueueHealth.drained.map((d) => d.identifier).join(', ')}\n\nThese issues will be re-fed by the guardian when slots free up.`,
+          body: [
+            `${retryQueueIds.length} issues were stuck in the retry queue competing for orchestrator slots.`,
+            '',
+            'Drained issues:',
+            '',
+            ...summary.retryQueueHealth.drained.map(
+              (d) => `• ${d.identifier}: ${d.title}\n  ${linearIssueUrl(d.identifier)}`
+            ),
+            '',
+            'These issues will be re-fed by the guardian when slots free up.',
+          ].join('\n'),
           severity: 'warning',
         });
       }
@@ -1391,7 +1406,19 @@ async function main() {
       );
       sendNotification({
         subject: `Symphony retry escalation: ${summary.retryEscalation.escalated.length} issues auto-escalated`,
-        body: `Issues stuck in retry queue for >30 min:\n${summary.retryEscalation.escalated.map((e) => `${e.identifier}: ${e.title} (${e.minutesInRetry}m, ${e.passes} passes)`).join('\n')}`,
+        body: [
+          'Issues stuck in retry queue for >30 min and auto-escalated to [HUMAN] Pending:',
+          '',
+          ...summary.retryEscalation.escalated.map(
+            (e) => [
+              `• ${e.identifier}: ${e.title}`,
+              `  Stuck for ${e.minutesInRetry} min (${e.passes} guardian passes)`,
+              `  ${linearIssueUrl(e.identifier)}`,
+            ].join('\n')
+          ),
+          '',
+          'To retry: remove the [HUMAN] prefix and move back to Backlog.',
+        ].join('\n'),
         severity: 'warning',
       });
     }
