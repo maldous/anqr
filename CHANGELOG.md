@@ -3,6 +3,11 @@
 All notable changes to ANQR are documented here.
 Each resolved issue should add an entry under the current date heading.
 
+## 2026-03-09
+
+- fix(ops): clean Linear noise by hardening CI monitor workflow matching/repo filtering and auto-resolving harness issues in guardian
+- fix(ci): shorten GitHub quality gate to static quality checks; move runtime app tests under `make test`
+
 ## 2026-03-07
 
 - fix(ops): add `additional_drop_params` defense-in-depth for Groq/Gemini/OpenRouter cloud models (`litellm-config.yaml`)

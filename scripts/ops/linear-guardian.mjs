@@ -792,7 +792,12 @@ async function main() {
   // Linear issues for FAIL/ERROR checks. Tracks state to avoid duplicates.
   // This replaces the old AI sentinel's job of reviewing harness reports.
   // -----------------------------------------------------------------------
-  summary.harnessIssueCreation = { checked: false, created: [], alreadyTracked: [] };
+  summary.harnessIssueCreation = {
+    checked: false,
+    created: [],
+    alreadyTracked: [],
+    resolved: [],
+  };
   const harnessStatePath = path.join(REPORTS_DIR, 'harness-issue-state.json');
   try {
     const harnessReportPath = path.join(PROJECT_ROOT, 'reports', 'harness', 'latest.json');
@@ -807,12 +812,71 @@ async function main() {
       const reliabilityLabel = team.labels.nodes.find(
         (l) => l.name.toLowerCase() === 'reliability'
       );
+      let doneStateId = null;
+      if (APPLY) {
+        const doneStateData = await gql(
+          `query($teamId: ID!) {
+            workflowStates(
+              filter: { team: { id: { eq: $teamId } }, name: { eq: "Done" } }
+              first: 1
+            ) {
+              nodes { id }
+            }
+          }`,
+          { teamId: team.id }
+        );
+        doneStateId = doneStateData.workflowStates.nodes[0]?.id || null;
+      }
 
       for (const [checkId, check] of Object.entries(harnessReport.checks || {})) {
         if (check.status !== 'FAIL' && check.status !== 'ERROR') {
           if (harnessState[checkId]?.status === 'open') {
             harnessState[checkId].status = 'resolved';
             harnessState[checkId].resolvedAt = new Date().toISOString();
+            if (APPLY && doneStateId) {
+              const openHarnessIssues = await gql(
+                `query($teamId: ID!, $titlePrefix: String!) {
+                  issues(
+                    filter: {
+                      team: { id: { eq: $teamId } },
+                      title: { startsWith: $titlePrefix },
+                      state: { type: { in: ["backlog", "unstarted", "started"] } }
+                    },
+                    first: 20
+                  ) {
+                    nodes { id identifier title }
+                  }
+                }`,
+                { teamId: team.id, titlePrefix: `[HARNESS] ${checkId}:` }
+              );
+              for (const issue of openHarnessIssues.issues.nodes || []) {
+                await gql(
+                  `mutation($input: CommentCreateInput!) {
+                    commentCreate(input: $input) { success }
+                  }`,
+                  {
+                    input: {
+                      issueId: issue.id,
+                      body: [
+                        `Auto-resolved by guardian: harness check \`${checkId}\` now reports **${check.status}**.`,
+                        '',
+                        `Evidence source: reports/harness/latest.json at ${harnessReport.timestamp}.`,
+                      ].join('\n'),
+                    },
+                  }
+                );
+                await gql(
+                  `mutation($id: String!, $input: IssueUpdateInput!) {
+                    issueUpdate(id: $id, input: $input) { success }
+                  }`,
+                  { id: issue.id, input: { stateId: doneStateId } }
+                );
+                summary.harnessIssueCreation.resolved.push({
+                  checkId,
+                  identifier: issue.identifier,
+                });
+              }
+            }
           }
           continue;
         }

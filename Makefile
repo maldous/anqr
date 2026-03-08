@@ -904,9 +904,12 @@ ops\:email\:install:
 	@mkdir -p ~/.config/systemd/user
 	@printf '[Unit]\nDescription=ANQR Email Ingest (mbsync + notmuch → Linear issues)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/email-ingest.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-email-ingest.service
 	@printf '[Unit]\nDescription=ANQR Email Ingest Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=2min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-email-ingest.timer
+	@printf '[Unit]\nDescription=ANQR CI Monitor (GitHub CI email → Linear)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/ci-failure-monitor.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-ci-monitor.service
+	@printf '[Unit]\nDescription=ANQR CI Monitor Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=3min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-ci-monitor.timer
 	systemctl --user daemon-reload
 	systemctl --user enable --now anqr-email-ingest.timer
-	@echo "✅ Email ingest timer installed and enabled (every 5 minutes)"
+	systemctl --user enable --now anqr-ci-monitor.timer
+	@echo "✅ Email ingest + CI monitor timers installed and enabled (every 5 minutes)"
 
 # ============================================
 # i18n Public Repo Sync (anqr-i18n)
@@ -1085,10 +1088,9 @@ sonar-report:
 # Tests are organized by tier: basic, advanced, professional
 # Permutation tests run exhaustive setting combinations (very long!)
 
-# Shared quality gate pipeline used by both 'quality' and 'test'.
-# UNIT_CMD is set per-caller: test:unit:ci for quality, test:unit for test.
-# 19 checks: oxlint+oxfmt → tsc → lockfile → licenses → type-coverage → duplication →
-#   spelling → inventories → unit-tests → test-ids → i18n → depcruise → audit →
+# Shared static quality gate pipeline used by both 'quality' and 'test'.
+# 17 checks: oxlint+oxfmt → tsc → lockfile → licenses → type-coverage → duplication →
+#   spelling → inventories → test-ids → depcruise → audit →
 #   osv-scanner → semgrep → knip → bundle-budget
 _quality-gates:
 	$(MAKE) fix
@@ -1100,10 +1102,8 @@ _quality-gates:
 	npx cspell 'src/**/*.{ts,tsx}' '!src/i18n/**' --no-progress
 	npm run test:ids
 	npm run test:required
-	npm run $(UNIT_CMD)
 	npm run test:testid
 	npm run test:testid:refs
-	npm run test:i18n
 	npx depcruise --config .dependency-cruiser.cjs src
 	@AUDIT_LOG=$$(mktemp); \
 	if npm audit --audit-level=critical > "$$AUDIT_LOG" 2>&1; then \
@@ -1123,7 +1123,6 @@ _quality-gates:
 	npx knip --include dependencies,unlisted,exports
 	$(MAKE) test:bundle:budget
 
-quality: UNIT_CMD = test:unit:ci
 quality: _quality-gates
 
 signoff:
@@ -1177,12 +1176,13 @@ report\:payload\:matrix:
 report\:i18n\:txt:
 	npm run report:i18n:txt || true
 
-# Run ALL tests: quality gates + full unit suite + E2E
+# Run ALL tests: quality gates + full unit suite + i18n + E2E
 # This is the comprehensive test target - use for full CI validation
 # Order: fix → audits → typecheck → full vitest → test-id checks → i18n → Playwright E2E
 # Outputs E2E results to test-report.txt for text-based review
-test: UNIT_CMD = test:unit
 test: _quality-gates
+	npm run test:unit
+	npm run test:i18n
 	bash -o pipefail -c 'npx playwright test --project=basic --project=advanced --project=professional --project=api --workers=$(PLAYWRIGHT_WORKERS) --reporter=list 2>&1 | tee test-report.txt'
 
 # Run basic tier tests only (tests/basic/*.spec.ts)

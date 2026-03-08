@@ -33,9 +33,10 @@ const REPORTS_DIR = path.join(PROJECT_ROOT, 'reports', 'ci-monitor');
 const LINEAR_API_KEY = process.env.LINEAR_API_KEY || '';
 const TEAM_KEY = process.env.LINEAR_TEAM_KEY || 'ANQ';
 const DRY_RUN = process.argv.includes('--dry-run');
+const TARGET_REPO = (process.env.CI_MONITOR_TARGET_REPO || 'maldous/anqr').trim().toLowerCase();
 
 const NOTMUCH_QUERY =
-  'from:notifications@github.com AND (subject:"Run failed:" OR subject:"Run succeeded:") AND tag:inbox AND NOT tag:ci-monitor-processed';
+  'from:notifications@github.com AND (subject:"Run failed:" OR subject:"Run succeeded:") AND NOT subject:"Re:" AND tag:inbox AND NOT tag:ci-monitor-processed';
 
 // Parse subject: "[maldous/anqr] Run failed: Quality Checks - master (aa6adb2)"
 const SUBJECT_RE = /\[([^\]]+)\]\s+Run (failed|succeeded):\s+(.+?)\s+-\s+(\S+)\s+\(([a-f0-9]+)\)/;
@@ -146,24 +147,33 @@ function issueTitle(workflow) {
   return `[CI] Run failed: ${workflow}`;
 }
 
-async function findOpenCIIssue(gql, teamId, workflow) {
-  const title = issueTitle(workflow);
+function extractWorkflowFromIssueTitle(title) {
+  const prefix = '[CI] Run failed:';
+  if (!title || !title.startsWith(prefix)) return '';
+  return title.slice(prefix.length).trim();
+}
+
+async function findOpenCIIssues(gql, teamId, workflow) {
+  const normalized = normalizeWorkflowName(workflow);
   const result = await gql(
-    `query($teamId: ID!, $title: String!) {
+    `query($teamId: ID!) {
       issues(
         filter: {
           team: { id: { eq: $teamId } },
-          title: { eq: $title },
+          title: { startsWith: "[CI] Run failed:" },
           state: { type: { in: ["backlog", "unstarted", "started"] } }
         },
-        first: 5
+        first: 250
       ) {
         nodes { id identifier title state { name } }
       }
     }`,
-    { teamId, title }
+    { teamId }
   );
-  return result.issues.nodes[0] || null;
+  return (result.issues.nodes || []).filter((issue) => {
+    const issueWorkflow = normalizeWorkflowName(extractWorkflowFromIssueTitle(issue.title));
+    return issueWorkflow === normalized;
+  });
 }
 
 async function createCIIssue(gql, teamId, parsed, emailDate) {
@@ -338,6 +348,17 @@ async function main() {
 
   // Step 6: Process each email
   for (const { messageId, content, parsed } of emails) {
+    const parsedRepo = parsed.repo.trim().toLowerCase();
+    if (TARGET_REPO && parsedRepo !== TARGET_REPO) {
+      summary.skipped.push({
+        messageId,
+        subject: content.subject,
+        reason: `repo mismatch (${parsed.repo} != ${TARGET_REPO})`,
+      });
+      if (!DRY_RUN) tagAsProcessed(messageId);
+      continue;
+    }
+
     const workflowLabel =
       parsed.workflowRaw && parsed.workflowRaw !== parsed.workflow
         ? `${parsed.workflowRaw} → ${parsed.workflow}`
@@ -364,24 +385,25 @@ async function main() {
       }
 
       try {
-        const existing = await findOpenCIIssue(gql, teamId, parsed.workflow);
+        const existing = await findOpenCIIssues(gql, teamId, parsed.workflow);
 
-        if (existing) {
+        if (existing.length > 0) {
+          const primary = existing[0];
           // Issue already open — add a comment with the new failure
           await commentOnIssue(
             gql,
-            existing.id,
+            primary.id,
             [
               `Another failure on \`${parsed.branch}\` at commit \`${parsed.commit}\`.`,
               `Date: ${content.date}`,
             ].join('\n')
           );
           summary.issuesCommented.push({
-            identifier: existing.identifier,
+            identifier: primary.identifier,
             workflow: parsed.workflow,
             commit: parsed.commit,
           });
-          console.error(`${logPrefix} — commented on ${existing.identifier}`);
+          console.error(`${logPrefix} — commented on ${primary.identifier}`);
         } else {
           // No open issue — create one
           const issue = await createCIIssue(gql, teamId, parsed, content.date);
@@ -420,17 +442,19 @@ async function main() {
       }
 
       try {
-        const existing = await findOpenCIIssue(gql, teamId, parsed.workflow);
+        const existing = await findOpenCIIssues(gql, teamId, parsed.workflow);
 
-        if (existing) {
-          const closed = await closeIssue(gql, existing, teamId, parsed, content.date);
-          if (closed) {
-            summary.issuesClosed.push({
-              identifier: existing.identifier,
-              workflow: parsed.workflow,
-              commit: parsed.commit,
-            });
-            console.error(`${logPrefix} — closed ${existing.identifier}`);
+        if (existing.length > 0) {
+          for (const issue of existing) {
+            const closed = await closeIssue(gql, issue, teamId, parsed, content.date);
+            if (closed) {
+              summary.issuesClosed.push({
+                identifier: issue.identifier,
+                workflow: parsed.workflow,
+                commit: parsed.commit,
+              });
+              console.error(`${logPrefix} — closed ${issue.identifier}`);
+            }
           }
         }
         // No open issue to close — that's fine, just mark processed

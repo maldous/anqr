@@ -365,7 +365,7 @@ make email:ingest        # Run ingest manually
   - action: sync mail via mbsync, process inbound emails from email@anqr.link → Linear issues
   - command: `node scripts/ops/email-ingest.mjs`
 
-- `anqr-ci-monitor.timer` _(recommended — not yet installed)_
+- `anqr-ci-monitor.timer`
   - cadence: every 5 minutes
   - action: sync mail via mbsync, scan for GitHub Actions CI failure/success notifications, create/close `[CI]` Linear issues per unique workflow
   - command: `node scripts/ops/ci-failure-monitor.mjs`
