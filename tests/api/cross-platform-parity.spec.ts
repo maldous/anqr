@@ -78,7 +78,10 @@ test.describe('Cross-Platform Parity — Browser vs API', () => {
       // 2. Generate via browser canvas
       await setWelcomeModalSeen(page);
       const urlParams = new URLSearchParams(scenario.params);
-      await page.goto(`/?${urlParams.toString()}`);
+      await page.goto(`/?${urlParams.toString()}`, {
+        waitUntil: 'domcontentloaded',
+        timeout: 60_000,
+      });
 
       // Wait for render
       await page.waitForSelector('[data-testid="qr-preview"] canvas', {

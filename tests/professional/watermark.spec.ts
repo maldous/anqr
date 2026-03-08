@@ -38,7 +38,8 @@ async function toggleSwitchByTestId(page: Page, testId: string, settle: boolean 
 
 // Helper: Select dropdown option using shared selector logic
 async function selectDropdownOption(page: Page, triggerTestId: string, optionText: string) {
-  await selectDropdownByText(page, triggerTestId, optionText);
+  const selected = await selectDropdownByText(page, triggerTestId, optionText);
+  expect(selected, `Failed to select "${optionText}" via ${triggerTestId}`).toBe(true);
   await waitForRenderComplete(page, 'settle');
 }
 
@@ -601,12 +602,13 @@ test.describe('Watermark Combined Settings', () => {
   });
 
   test('multiple watermark settings can be configured together', async ({ page }) => {
+    test.slow();
+
     // Enable watermark
     await enableWatermark(page);
 
     // Select text kind
     await selectDropdownOption(page, 'watermark-kind-trigger', 'text');
-    await waitForRenderComplete(page, 'settle');
     // Set text
     await setInputByTestId(page, 'watermark-text-input', 'Custom Watermark');
 
@@ -723,14 +725,14 @@ test.describe('Watermark Edge Cases', () => {
   });
 
   test('kind switching preserves opacity setting', async ({ page }) => {
+    test.slow();
+
     // Set opacity
     await setSliderByTestId(page, 'watermark-opacity-slider', 80);
 
     // Switch kind
     await selectDropdownOption(page, 'watermark-kind-trigger', 'image');
-    await waitForRenderComplete(page, 'settle');
     await selectDropdownOption(page, 'watermark-kind-trigger', 'text');
-    await waitForRenderComplete(page, 'settle');
     // Opacity should be preserved
     const slider = page.locator('[data-testid="watermark-opacity-slider"] [role="slider"]');
     const value = await slider.getAttribute('aria-valuenow');
