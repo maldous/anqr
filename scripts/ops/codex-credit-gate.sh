@@ -155,6 +155,13 @@ credits_available() {
 
   # Negative match: explicitly exhausted.
   if echo "$html" | grep -q '&quot;has_credits&quot; =&gt; false'; then
+    # Dashboard may emit has_credits=false with credits=nil when upstream
+    # credit telemetry is unavailable. Treat this as unknown so we still
+    # attempt Codex cloud first instead of forcing fallback providers.
+    if echo "$html" | grep -q '&quot;credits&quot; =&gt; nil\|&quot;balance&quot; =&gt; nil'; then
+      log "Dashboard has_credits=false but credit balance is nil — treating as unknown"
+      return 2
+    fi
     log "Dashboard confirms Codex credits exhausted (has_credits=false)"
     return 1
   fi
@@ -356,38 +363,68 @@ select_litellm_ollama_model() {
 # ---------------------------------------------------------------------------
 load_skip_list() {
   SKIP_PROVIDERS=""
+  local now active_lines active_list provider expiry
+  now=$(date +%s)
+  active_lines=""
+  active_list=""
+
+  # Keep only non-expired entries from SKIP_FILE.
+  # Format: "<provider> <expiry_epoch>" (legacy one-token lines are discarded).
+  if [ -f "$SKIP_FILE" ]; then
+    while read -r provider expiry _; do
+      [ -n "${provider:-}" ] || continue
+      # Never persistently skip Codex cloud.
+      [ "$provider" = "codex" ] && continue
+      # Drop malformed/legacy entries.
+      [ -n "${expiry:-}" ] || continue
+      case "$expiry" in
+        ''|*[!0-9]*) continue ;;
+      esac
+      if [ "$now" -lt "$expiry" ]; then
+        active_lines="${active_lines}${provider} ${expiry}"$'\n'
+        active_list="${active_list}${provider}"$'\n'
+      fi
+    done < "$SKIP_FILE"
+  fi
+
+  # Infer a quick-failure skip from the last selected provider only when that
+  # provider process is no longer running. This prevents concurrent agents from
+  # poisoning each other's provider state.
   if [ -f "$STATE_FILE" ]; then
-    local last_ts last_provider now age
-    last_ts=$(head -1 "$STATE_FILE" 2>/dev/null) || return
-    last_provider=$(sed -n '2p' "$STATE_FILE" 2>/dev/null) || return
-    now=$(date +%s)
-    age=$((now - last_ts))
-    if [ "$age" -lt "$FAILURE_WINDOW_SECS" ]; then
-      # Previous invocation exited quickly — that provider likely failed.
-      # Load accumulated skip list and add this provider.
-      if [ -f "$SKIP_FILE" ]; then
-        SKIP_PROVIDERS=$(cat "$SKIP_FILE")
+    local last_ts last_provider last_pid age
+    last_ts=$(head -1 "$STATE_FILE" 2>/dev/null) || last_ts=""
+    last_provider=$(sed -n '2p' "$STATE_FILE" 2>/dev/null) || last_provider=""
+    last_pid=$(sed -n '3p' "$STATE_FILE" 2>/dev/null) || last_pid=""
+    if [ -n "$last_ts" ] && [ -n "$last_provider" ]; then
+      age=$((now - last_ts))
+      if [ "$age" -lt "$FAILURE_WINDOW_SECS" ]; then
+        if [ -n "$last_pid" ] && kill -0 "$last_pid" 2>/dev/null; then
+          log "Previous provider ${last_provider} still running (pid=${last_pid}) — not marking as failed"
+        else
+          if [ "$last_provider" != "codex" ] && ! echo "$active_list" | grep -Fxq "$last_provider"; then
+            expiry=$((now + FAILURE_WINDOW_SECS))
+            active_lines="${active_lines}${last_provider} ${expiry}"$'\n'
+            active_list="${active_list}${last_provider}"$'\n'
+            log "Recent provider failure detected (${age}s ago): ${last_provider} skipped until ${expiry}"
+          fi
+        fi
       fi
-      # Do not persistently skip the cloud Codex provider. When credit status
-      # is unknown we must keep retrying gpt-5.3-codex so sessions can recover
-      # as soon as credits become available again.
-      if [ "$last_provider" != "codex" ] && ! echo "$SKIP_PROVIDERS" | grep -qw "$last_provider"; then
-        SKIP_PROVIDERS="${SKIP_PROVIDERS:+$SKIP_PROVIDERS }$last_provider"
-      fi
-      # Strip any stale codex skip entries left by previous versions.
-      SKIP_PROVIDERS=$(echo "$SKIP_PROVIDERS" | tr ' ' '\n' | grep -v '^codex$' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-      local skip_tmp="${SKIP_FILE}.$$"
-      if echo "$SKIP_PROVIDERS" > "$skip_tmp"; then mv -f "$skip_tmp" "$SKIP_FILE" 2>/dev/null; fi
-      log "Recent failure detected (${age}s ago): skipping providers: $SKIP_PROVIDERS"
-    else
-      # Previous invocation ran long enough — reset skip list.
-      rm -f "$SKIP_FILE"
     fi
   fi
+
+  # Persist cleaned active entries atomically.
+  if [ -n "$active_lines" ]; then
+    local skip_tmp="${SKIP_FILE}.$$"
+    if printf '%s' "$active_lines" > "$skip_tmp"; then mv -f "$skip_tmp" "$SKIP_FILE" 2>/dev/null; fi
+  else
+    rm -f "$SKIP_FILE"
+  fi
+
+  SKIP_PROVIDERS="$active_list"
 }
 
 is_skipped() {
-  echo "$SKIP_PROVIDERS" | grep -qw "$1" 2>/dev/null
+  echo "$SKIP_PROVIDERS" | grep -Fxq "$1" 2>/dev/null
 }
 
 # Check if a provider is rate-limited (429 cooldown written by model-injector).
@@ -432,7 +469,7 @@ find_earliest_cooldown() {
 # Best-effort: failure here must not prevent exec codex from running.
 record_provider() {
   local tmp="${STATE_FILE}.$$"
-  if printf '%s\n%s\n' "$(date +%s)" "$1" > "$tmp"; then mv -f "$tmp" "$STATE_FILE" 2>/dev/null; fi
+  if printf '%s\n%s\n%s\n' "$(date +%s)" "$1" "$$" > "$tmp"; then mv -f "$tmp" "$STATE_FILE" 2>/dev/null; fi
 }
 
 record_current_model() {
