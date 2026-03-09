@@ -13,7 +13,7 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
                        │ reads reports/harness/latest.json
 ┌──────────────────────┴──────────────────────────────────┐
 │  TIER 2: SCHEDULED AUTOMATION                           │
-│  Guardian (15m) · Continuous (1h) · Nightly (02:30)     │
+│  Guardian (5m) · Continuous (1h) · Nightly (02:30)      │
 │  CI Monitor (5m) · Email Ingest (5m)                    │
 │  nightly-ops-pass.mjs runs harness-report.mjs           │
 │  ci-failure-monitor.mjs bridges GitHub CI → Linear      │
@@ -110,7 +110,7 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 3. **CI failure monitor** (every 5 min) scans GitHub Actions notification emails:
    - `Run failed: <workflow>` → creates a `[CI]` issue (one per unique workflow, deduplicates)
    - `Run succeeded: <workflow>` → auto-closes the matching `[CI]` issue
-4. **Guardian** (15min) manages issue labels, priority, and state; classifies `[CI]` issues as `reliability`
+4. **Guardian** (5min) manages issue labels, priority, and state; classifies `[CI]` issues as `reliability`
    - Retry-escalated catastrophic runs are routed to `Todo` for later AI retry (not `Pending`)
 5. **Symphony** picks up issues and agents implement fixes
 6. Next harness run / CI run detects improvements → closes the feedback loop

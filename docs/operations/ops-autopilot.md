@@ -5,7 +5,7 @@ This repository runs autonomous operational checks via user-level systemd timers
 ## Services
 
 - `anqr-linear-guardian.timer`
-  - cadence: every 15 minutes
+  - cadence: every 5 minutes
   - action: enforce required labels across ANQ projects; enforce `Codex` as project lead **only when Codex credits are available** (checked via Symphony dashboard)
   - command: `node scripts/ops/linear-guardian.mjs --apply`
 
@@ -48,7 +48,7 @@ When Codex credits are exhausted, the following services continue running at zer
 | **Symphony ticket work (Cerebras fallback)**          | **Continuous** | **Free** | **6th fallback; requires `CEREBRAS_TOKEN`; 1M tok/day, 8K context**         |
 | **Symphony ticket work (GitHub Models fallback)**     | **Continuous** | **Free** | **7th fallback; requires `GITHUB_MODELS_TOKEN`; GPT-4.1-mini (1M context)** |
 | **Symphony ticket work (Ollama fallback)**            | **Continuous** | **Free** | **8th fallback; requires Ollama on `localhost:11434`**                      |
-| Linear guardian (labels only)                         | 15 min         | Free     | Always runs                                                                 |
+| Linear guardian (labels only)                         | 5 min          | Free     | Always runs                                                                 |
 | TypeScript typecheck                                  | Hourly         | Free     | Always runs                                                                 |
 | Sentry regression check                               | Hourly         | Free     | Always runs                                                                 |
 | External services validation                          | Hourly         | Free     | Always runs                                                                 |
