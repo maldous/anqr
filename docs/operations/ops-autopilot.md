@@ -29,6 +29,22 @@ Environment=PATH=/home/user/.nvm/versions/node/v22.18.0/bin:/usr/local/sbin:/usr
 
 This was the root cause of nightly run failures where all `npm`/`npx` commands failed with ENOENT (exit code -1) in 1–2ms while `node` commands succeeded.
 
+### Unified Service Installer
+
+Run `make ops:install` to create and enable all systemd user services and timers from repo definitions:
+
+| Timer                        | Service                        | Cadence        |
+| ---------------------------- | ------------------------------ | -------------- |
+| `anqr-linear-guardian.timer` | `anqr-linear-guardian.service` | Every 5 min    |
+| `anqr-ops-continuous.timer`  | `anqr-ops-continuous.service`  | Every 1 hour   |
+| `anqr-ops-nightly.timer`     | `anqr-ops-nightly.service`     | Daily at 02:30 |
+| `anqr-email-ingest.timer`    | `anqr-email-ingest.service`    | Every 5 min    |
+| `anqr-ci-monitor.timer`      | `anqr-ci-monitor.service`      | Every 5 min    |
+
+This is the single source of truth for the runtime platform. Re-run after changing service commands, cadences, or environment. All generated services include explicit `Environment=PATH=` for nvm-managed Node.js binaries.
+
+`make ops:email:install` is a legacy convenience that installs only the email ingest and CI monitor timers.
+
 ## Credit-Aware Lead Enforcement
 
 The Linear guardian checks the Symphony dashboard (`http://127.0.0.1:4040`) for Codex credit status before enforcing project lead assignment:
@@ -404,11 +420,11 @@ Before creating slice/child issues, the guardian queries the count of non-archiv
 
 This prevents runaway issue creation from consuming the Linear workspace.
 
-| Guard | Env Override | Default |
-| --- | --- | --- |
-| Retry escalation timeout | — | 60 min |
-| Max Sonar findings per issue | `GUARDIAN_SONAR_FINDINGS_MAX` | 20 |
-| Max non-archive issues | `GUARDIAN_MAX_NON_ARCHIVE_ISSUES` | 250 |
+| Guard                        | Env Override                      | Default |
+| ---------------------------- | --------------------------------- | ------- |
+| Retry escalation timeout     | —                                 | 60 min  |
+| Max Sonar findings per issue | `GUARDIAN_SONAR_FINDINGS_MAX`     | 20      |
+| Max non-archive issues       | `GUARDIAN_MAX_NON_ARCHIVE_ISSUES` | 250     |
 
 ## Reports
 
@@ -494,7 +510,8 @@ Both scripts require `LINEAR_API_KEY` environment variable. The standalone scrip
 - `make monitor:ci` — scan GitHub CI emails → create/close Linear issues
 - `make issue:create` — show usage for standalone Linear issue creation
 - `make issue:create:child` — show usage for child issue creation
-- `make ops:email:install` — install email ingest systemd timer
+- `make ops:install` — install all systemd timers from repo definitions
+- `make ops:email:install` — install email ingest + CI monitor timers only
 
 ## Timer Administration
 

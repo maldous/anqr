@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
 
 # ============================================
 # Help
@@ -70,6 +70,7 @@ help:
 	@echo ""
 	@echo " 15) Automation Ops"
 	@echo "    make ops:guardian ops:continuous ops:nightly ops:groq ops:gemini ops:hugging"
+	@echo "    make ops:install   Install all systemd timers from repo definitions"
 	@echo ""
 	@echo " 16) Harness (Autonomous Best Practice Framework)"
 	@echo "    make harness harness:quick harness:continuous"
@@ -91,6 +92,9 @@ help:
 # ============================================
 export ENV := PROD
 ALLOW_PAID_ACTIONS ?= 0
+
+# Node binary directory (auto-detected from nvm). Used for systemd service PATH.
+NVM_NODE_BIN ?= $(shell dirname "$$(command -v node)" 2>/dev/null)
 
 # Host resource autodetection used for reusable max-utilization defaults.
 # Override any value on invocation when needed.
@@ -484,6 +488,7 @@ format:
 # Check all without making changes (for CI)
 check:
 	npx oxlint --deny-warnings --tsconfig ./tsconfig.json .
+	npx oxfmt .
 	npx oxfmt --check .
 
 # ============================================
@@ -888,6 +893,50 @@ ops\:hugging:
 	node scripts/ops/hugging-free-audit.mjs
 
 # ============================================
+# Ops Service Installation (all timers)
+# ============================================
+# Installs all systemd user services and timers from repo definitions.
+# This is the single source of truth for the runtime platform.
+# Re-run after changing service commands, cadences, or environment.
+
+ops\:install:
+	@mkdir -p ~/.config/systemd/user
+	@echo ""
+	@echo "Installing ANQR systemd services and timers..."
+	@echo "  Node binary dir: $(NVM_NODE_BIN)"
+	@echo "  Working dir:     $(CURDIR)"
+	@echo ""
+	@# --- Guardian (every 5 min) ---
+	@printf '[Unit]\nDescription=ANQR Linear Guardian\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nEnvironment=PATH=$(NVM_NODE_BIN):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/linear-guardian.mjs --apply'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-linear-guardian.service
+	@printf '[Unit]\nDescription=ANQR Linear Guardian Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=1min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-linear-guardian.timer
+	@# --- Ops Continuous (every 1 hour) ---
+	@printf '[Unit]\nDescription=ANQR Ops Continuous\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nEnvironment=PATH=$(NVM_NODE_BIN):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/nightly-ops-pass.mjs --profile=continuous'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-ops-continuous.service
+	@printf '[Unit]\nDescription=ANQR Ops Continuous Timer (every 1 hour)\n\n[Timer]\nOnBootSec=5min\nOnUnitActiveSec=1h\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-ops-continuous.timer
+	@# --- Ops Nightly (daily at 02:30) ---
+	@printf '[Unit]\nDescription=ANQR Ops Nightly\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nEnvironment=PATH=$(NVM_NODE_BIN):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/nightly-ops-pass.mjs --profile=full'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-ops-nightly.service
+	@printf '[Unit]\nDescription=ANQR Ops Nightly Timer (daily at 02:30)\n\n[Timer]\nOnCalendar=*-*-* 02:30:00\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-ops-nightly.timer
+	@# --- Email Ingest (every 5 min) ---
+	@printf '[Unit]\nDescription=ANQR Email Ingest\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nEnvironment=PATH=$(NVM_NODE_BIN):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/email-ingest.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-email-ingest.service
+	@printf '[Unit]\nDescription=ANQR Email Ingest Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=2min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-email-ingest.timer
+	@# --- CI Monitor (every 5 min) ---
+	@printf '[Unit]\nDescription=ANQR CI Monitor\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nEnvironment=PATH=$(NVM_NODE_BIN):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/ci-failure-monitor.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-ci-monitor.service
+	@printf '[Unit]\nDescription=ANQR CI Monitor Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=3min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-ci-monitor.timer
+	@# --- Enable all timers ---
+	systemctl --user daemon-reload
+	systemctl --user enable --now anqr-linear-guardian.timer
+	systemctl --user enable --now anqr-ops-continuous.timer
+	systemctl --user enable --now anqr-ops-nightly.timer
+	systemctl --user enable --now anqr-email-ingest.timer
+	systemctl --user enable --now anqr-ci-monitor.timer
+	@echo ""
+	@echo "✅ All ANQR timers installed and enabled:"
+	@echo "  - anqr-linear-guardian.timer  (every 5 min)"
+	@echo "  - anqr-ops-continuous.timer   (every 1 hour)"
+	@echo "  - anqr-ops-nightly.timer      (daily at 02:30)"
+	@echo "  - anqr-email-ingest.timer     (every 5 min)"
+	@echo "  - anqr-ci-monitor.timer       (every 5 min)"
+
+# ============================================
 # Email Notifications & Ingest
 # ============================================
 # Bidirectional email interface:
@@ -909,9 +958,9 @@ monitor\:ci:
 
 ops\:email\:install:
 	@mkdir -p ~/.config/systemd/user
-	@printf '[Unit]\nDescription=ANQR Email Ingest (mbsync + notmuch → Linear issues)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/email-ingest.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-email-ingest.service
+	@printf '[Unit]\nDescription=ANQR Email Ingest (mbsync + notmuch → Linear issues)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nEnvironment=PATH=$(NVM_NODE_BIN):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/email-ingest.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-email-ingest.service
 	@printf '[Unit]\nDescription=ANQR Email Ingest Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=2min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-email-ingest.timer
-	@printf '[Unit]\nDescription=ANQR CI Monitor (GitHub CI email → Linear)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/ci-failure-monitor.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-ci-monitor.service
+	@printf '[Unit]\nDescription=ANQR CI Monitor (GitHub CI email → Linear)\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=oneshot\nEnvironment=PATH=$(NVM_NODE_BIN):/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash -lc '"'"'set -a; [ -f "$$HOME/.config/symphony/anqr.env" ] && source "$$HOME/.config/symphony/anqr.env"; set +a; cd %s && node scripts/ops/ci-failure-monitor.mjs'"'"'\nStandardOutput=journal\nStandardError=journal\n' "$(CURDIR)" "$(CURDIR)" > ~/.config/systemd/user/anqr-ci-monitor.service
 	@printf '[Unit]\nDescription=ANQR CI Monitor Timer (every 5 minutes)\n\n[Timer]\nOnBootSec=3min\nOnUnitActiveSec=5min\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n' > ~/.config/systemd/user/anqr-ci-monitor.timer
 	systemctl --user daemon-reload
 	systemctl --user enable --now anqr-email-ingest.timer

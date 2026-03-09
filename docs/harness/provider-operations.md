@@ -231,15 +231,15 @@ The model-injector implements transparent mid-session provider switching:
 
 Cooldowns are proportional to error persistence:
 
-| Duration | Errors                            | Rationale                       |
-| -------- | --------------------------------- | ------------------------------- |
-| 60s      | 408 Timeout                       | Transient — brief skip          |
-| 120s     | 429, 502, 504, service overload   | Rate limit / transient upstream |
-| 180s     | 500, 503                          | LiteLLM bugs, service down      |
-| 300s     | 400, 404, 422                     | Config/format errors            |
-| 600s     | 403, 413, context_length_exceeded | Content/size persistent         |
-| 1800s    | 401, insufficient_quota           | Auth/quota — won't self-heal    |
-| 3600s    | 402 Payment Required              | Credits exhausted               |
+| Duration | Errors                            | Rationale                                                                                |
+| -------- | --------------------------------- | ---------------------------------------------------------------------------------------- |
+| 60s      | 408 Timeout                       | Transient — brief skip                                                                   |
+| 120s     | 429, 502, 504, service overload   | Rate limit / transient upstream                                                          |
+| 180s     | 500, 503                          | LiteLLM bugs, service down                                                               |
+| 300s     | 400, 404, 422                     | Config/format errors                                                                     |
+| 600s     | 403, 413, context_length_exceeded | Content/size persistent                                                                  |
+| 1800s    | 401, insufficient_quota           | Auth/quota — won't self-heal                                                             |
+| 3600s    | 402 Payment Required              | Credits exhausted                                                                        |
 | 14400s   | Gemini free_tier quota            | Daily limit — capped at 4hr (was 24hr; reduced to prevent prolonged provider starvation) |
 
 ## Rate-Limit Cooldown Cap
@@ -338,7 +338,7 @@ Linear parent issues were marked Done with incomplete children. This masks remai
 | 7   | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix |
 | 8   | LiteLLM `ollama/` prefix drops tool_calls       | Ollama fallback silently fails function calling if using wrong prefix        | Fixed: use `openai/` prefix with `/v1` api_base (see Ollama Tool-Call Fix)       |
 | 9   | Rate-limit cooldown staleness (RESOLVED)        | Providers blocked for 24hr+ after daily limits                               | Fixed: 4hr cap in credit-gate + reduced Gemini cooldown at source                |
-| 10  | Ollama false-positive rate-limiting (RESOLVED)   | Short Ollama responses triggered cooldowns on last-resort fallback           | Fixed: exempted `litellm-ollama` from short-stream heuristic                     |
+| 10  | Ollama false-positive rate-limiting (RESOLVED)  | Short Ollama responses triggered cooldowns on last-resort fallback           | Fixed: exempted `litellm-ollama` from short-stream heuristic                     |
 | 11  | No LiteLLM proxy liveness check in harness      | Proxy death blocks all Ollama routing silently                               | Add LiteLLM health probe to continuous harness profile                           |
 
 ## Continuous Evolution Procedures
