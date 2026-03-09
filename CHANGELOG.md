@@ -24,6 +24,7 @@ Each resolved issue should add an entry under the current date heading.
 ## 2026-03-09
 
 - fix(sonar): use globalThis instead of self in worker contexts (ANQ-284)
+- fix: reset pooled canvas smoothing quality/state for cross-environment render parity
 - fix(sonar): remove unused catch parameters in server function (ANQ-284)
 - fix(sonar): use element.remove() instead of parentNode.removeChild (ANQ-280)
 - fix(sonar): prefer Math.trunc/Math.round over bitwise OR zero truncation (ANQ-282)
