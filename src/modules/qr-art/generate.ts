@@ -4194,7 +4194,7 @@ export async function generateFullQArtOptimal(
       searchAttempts: 1,
       searchSeed: attemptSeed,
       onProgress: (stage, percent) => {
-        const scaledPercent = ((attempt * 100 + percent) / attempts) | 0;
+        const scaledPercent = Math.trunc((attempt * 100 + percent) / attempts);
         config.onProgress?.(`Attempt ${attempt + 1}/${attempts}: ${stage}`, scaledPercent);
       },
     });

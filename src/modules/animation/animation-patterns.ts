@@ -184,7 +184,7 @@ const PI4 = Math.PI * 4;
 function clampToByte(value: number): number {
   if (value <= 0) return 0;
   if (value >= 255) return 255;
-  return (value + 0.5) | 0;
+  return Math.round(value);
 }
 
 function applyUniformBrightness(data: Uint8ClampedArray, factor: number): void {

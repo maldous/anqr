@@ -367,7 +367,7 @@ export class ReedSolomonDecoder {
     let tLast = this.field.getZero();
     let t = this.field.getOne();
 
-    while (r.getDegree() >= ((R / 2) | 0)) {
+    while (r.getDegree() >= Math.trunc(R / 2)) {
       const rLastLast = rLast;
       const tLastLast = tLast;
       rLast = r;

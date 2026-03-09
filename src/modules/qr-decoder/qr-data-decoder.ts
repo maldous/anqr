@@ -489,7 +489,7 @@ export class QRDecoder {
     const buffer: number[] = [];
     for (let i = 0; i < count; i++) {
       const twoBytes = bits.readBits(13);
-      let assembledTwoBytes = (((twoBytes / 0xc0) | 0) << 8) | (twoBytes % 0xc0);
+      let assembledTwoBytes = (Math.trunc(twoBytes / 0xc0) << 8) | (twoBytes % 0xc0);
       if (assembledTwoBytes < 0x1f00) {
         assembledTwoBytes += 0x8140;
       } else {
@@ -506,7 +506,7 @@ export class QRDecoder {
     const buffer: number[] = [];
     for (let i = 0; i < count; i++) {
       const twoBytes = bits.readBits(13);
-      let assembledTwoBytes = (((twoBytes / 0x060) | 0) << 8) | (twoBytes % 0x060);
+      let assembledTwoBytes = (Math.trunc(twoBytes / 0x060) << 8) | (twoBytes % 0x060);
       if (assembledTwoBytes < 0x00a00) {
         assembledTwoBytes += 0x0a1a1;
       } else {
