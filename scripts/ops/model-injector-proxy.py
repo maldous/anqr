@@ -89,7 +89,7 @@ SERVICE_UNAVAILABLE_COOLDOWN = 180  # 503 Service Unavailable — service down, 
 GATEWAY_TIMEOUT_COOLDOWN = 120  # 504 Gateway Timeout — upstream timeout, transient
 SERVICE_OVERLOAD_COOLDOWN = 120  # "high demand" / stream-embedded overload — no HTTP status code
 QUOTA_EXHAUSTED_COOLDOWN = 1800  # insufficient_quota in stream — persistent, same as auth failure
-GEMINI_FREE_TIER_COOLDOWN = 86400  # Gemini free-tier daily limit — 20 req/day, resets after 24hr
+GEMINI_FREE_TIER_COOLDOWN = 14400  # Gemini free-tier daily limit — 20 req/day, cap at 4hr for retry
 
 # Dispatch table: HTTP status → (cooldown_seconds, human_label).
 # 429 is handled separately via _record_ratelimit (with Retry-After support).
@@ -924,6 +924,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     and not _error_detected
                     and _elapsed < 5.0
                     and _stream_bytes < 2000
+                    and _stream_provider != "litellm-ollama"
                 ):
                     _record_ratelimit(_stream_provider)
                     self.log_message(

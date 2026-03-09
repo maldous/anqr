@@ -27,6 +27,8 @@ const SYMPHONY_DASHBOARD_URL = process.env.SYMPHONY_DASHBOARD_URL || 'http://127
 const GUARDIAN_SKIP_LEAD = process.env.GUARDIAN_SKIP_LEAD === '1';
 const GUARDIAN_TASK_DESC_MAX = Number(process.env.GUARDIAN_TASK_DESC_MAX || 1200);
 const GUARDIAN_TASK_CHECKLIST_MAX = Number(process.env.GUARDIAN_TASK_CHECKLIST_MAX || 4);
+const GUARDIAN_SONAR_FINDINGS_MAX = Number(process.env.GUARDIAN_SONAR_FINDINGS_MAX || 20);
+const GUARDIAN_MAX_NON_ARCHIVE_ISSUES = Number(process.env.GUARDIAN_MAX_NON_ARCHIVE_ISSUES || 250);
 const HUMAN_REQUIRED_PATTERNS = [
   /\bcreate\b.{0,24}\b(api key|api token|credential|secret)\b/i,
   /\bmanual\b.{0,24}\b(step|action|intervention)\b/i,
@@ -97,6 +99,14 @@ function compactText(text, maxChars) {
 
 function oneTaskBudget() {
   return { profile: 'always-small', maxDescriptionChars: GUARDIAN_TASK_DESC_MAX };
+}
+
+function extractSonarFindingCount(title) {
+  const findingsMatch = title.match(/(\d+)\s*findings/i);
+  if (findingsMatch) return Number(findingsMatch[1]);
+  const totalMatch = title.match(/\(total\s+(\d+)/i);
+  if (totalMatch) return Number(totalMatch[1]);
+  return 0;
 }
 
 function isHumanOnlyIssue(issue) {
@@ -1183,11 +1193,13 @@ async function main() {
         for (const issue of movable) {
           const descriptionLen = (issue.description || '').trim().length;
           const checklistCount = countUncheckedChecklistItems(issue.description || '');
+          const sonarFindings = extractSonarFindingCount(issue.title || '');
           const oversized =
             descriptionLen > contextBudget.maxDescriptionChars ||
-            checklistCount > GUARDIAN_TASK_CHECKLIST_MAX;
+            checklistCount > GUARDIAN_TASK_CHECKLIST_MAX ||
+            sonarFindings > GUARDIAN_SONAR_FINDINGS_MAX;
           if (oversized) {
-            movableOversized.push({ ...issue, descriptionLen, checklistCount });
+            movableOversized.push({ ...issue, descriptionLen, checklistCount, sonarFindings });
           } else {
             movableSmall.push(issue);
           }
@@ -1232,10 +1244,33 @@ async function main() {
             title: issue.title,
             descriptionLen: issue.descriptionLen,
             checklistCount: issue.checklistCount,
+            sonarFindings: issue.sonarFindings,
           });
         }
 
+        const nonArchiveCountQuery = await gql(
+          `query {
+            issues(filter: {
+              team: { key: { eq: "ANQ" } },
+              state: { type: { nin: ["completed", "canceled"] } }
+            }, first: 250) {
+              nodes { id }
+            }
+          }`
+        );
+        const nonArchiveCount = nonArchiveCountQuery.issues.nodes.length;
+        summary.symphonyFeed.nonArchiveCount = nonArchiveCount;
+
         let remaining = needed - toMove.length;
+        if (nonArchiveCount >= GUARDIAN_MAX_NON_ARCHIVE_ISSUES) {
+          console.error(
+            `Issue cap: ${nonArchiveCount} non-archive issues (max ${GUARDIAN_MAX_NON_ARCHIVE_ISSUES}) — skipping slice creation`
+          );
+          summary.symphonyFeed.issueCapReached = true;
+          remaining = 0;
+        } else {
+          remaining = Math.min(remaining, GUARDIAN_MAX_NON_ARCHIVE_ISSUES - nonArchiveCount);
+        }
         if (remaining > 0) {
           for (const issue of movableOversized) {
             if (remaining <= 0) break;
@@ -1425,7 +1460,7 @@ async function main() {
 
     const retryQueueForEscalation = await getSymphonyRetryQueue();
     const nowMs = Date.now();
-    const ESCALATION_THRESHOLD_MS = 30 * 60 * 1000;
+    const ESCALATION_THRESHOLD_MS = 60 * 60 * 1000;
 
     const currentRetrySet = new Set(retryQueueForEscalation);
     for (const id of Object.keys(retryState)) {
@@ -1528,7 +1563,7 @@ async function main() {
       sendNotification({
         subject: `Symphony retry escalation: ${summary.retryEscalation.escalated.length} issues auto-escalated`,
         body: [
-          `Issues stuck in retry queue for >30 min and auto-escalated to ${retryTodoState?.name || 'Todo'}:`,
+          `Issues stuck in retry queue for >60 min and auto-escalated to ${retryTodoState?.name || 'Todo'}:`,
           '',
           ...summary.retryEscalation.escalated.map((e) =>
             [

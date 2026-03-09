@@ -112,8 +112,12 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
    - `Run succeeded: <workflow>` → auto-closes the matching `[CI]` issue
 4. **Guardian** (5min) manages issue labels, priority, and state; classifies `[CI]` issues as `reliability`
    - Retry-escalated catastrophic runs are routed to `Todo` for later AI retry (not `Pending`)
-5. **Symphony** picks up issues and agents implement fixes
-6. Next harness run / CI run detects improvements → closes the feedback loop
+   - Retry escalation threshold: **60 minutes** (issues stuck in retry queue longer than this are auto-escalated)
+5. **Guardian issue guards** prevent pipeline congestion:
+   - **Sonar finding count guard**: issues with >20 findings (`GUARDIAN_SONAR_FINDINGS_MAX`) are treated as oversized and not fed into Symphony
+   - **Non-archive issue cap**: slice/child issue creation is blocked when non-archive issues ≥250 (`GUARDIAN_MAX_NON_ARCHIVE_ISSUES`)
+6. **Symphony** picks up issues and agents implement fixes
+7. Next harness run / CI run detects improvements → closes the feedback loop
 
 ## Commands
 

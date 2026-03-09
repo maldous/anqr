@@ -19,6 +19,16 @@ This repository runs autonomous operational checks via user-level systemd timers
   - action: run deep ops profile (includes unit tests + all free-tier audits); results saved to `reports/nightly/`
   - command: `node scripts/ops/nightly-ops-pass.mjs --profile=full`
 
+### Systemd Service PATH Requirement
+
+All systemd services that spawn `npm`/`npx` child processes **must** include an explicit `Environment=PATH=` line pointing to the nvm bin directory. Systemd's default PATH does not include nvm-managed binaries. While `bash -lc` loads nvm for the initial shell, child processes spawned via `spawnSync` inherit the systemd-provided environment.
+
+```ini
+Environment=PATH=/home/user/.nvm/versions/node/v22.18.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+```
+
+This was the root cause of nightly run failures where all `npm`/`npx` commands failed with ENOENT (exit code -1) in 1–2ms while `node` commands succeeded.
+
 ## Credit-Aware Lead Enforcement
 
 The Linear guardian checks the Symphony dashboard (`http://127.0.0.1:4040`) for Codex credit status before enforcing project lead assignment:
@@ -207,7 +217,9 @@ buffer for cross-chunk detection) for:
 - **Thread-safe cooldown writes**: atomic temp+mv with PID+thread-ID uniqueness
 - **Connection refused → 502**: immediate upstream-unavailable response
 - **Generic exception → 500**: catch-all for unexpected proxy errors
-- **Gemini free-tier 24hr cooldown**: detects `free_tier` quota exhaustion and writes 86400s cooldown (vs 120s for normal 429s)
+- **Gemini free-tier cooldown**: detects `free_tier` quota exhaustion and writes 14400s (4hr) cooldown (vs 120s for normal 429s). Reduced from 24hr to prevent prolonged provider starvation.
+- **Rate-limit cooldown cap**: the credit-gate enforces a max cooldown of 4 hours (`MAX_COOLDOWN_CAP_SECS=14400`). Any cooldown exceeding `now + 4hr` is rewritten using atomic temp+mv. This prevents stale cooldowns from blocking providers overnight.
+- **Ollama short-stream exemption**: local Ollama (`litellm-ollama`) is excluded from the short-stream heuristic (< 5s, < 2000 bytes = failure). Local models may legitimately produce short responses without indicating rate-limit errors.
 - **Deduplicated logging**: HTTP status cooldowns suppress redundant stream-body scanning for the same request
 
 #### In-Session Provider Failover (ANQ-194)
@@ -261,7 +273,9 @@ where rapid session cycling burns through all provider quotas in minutes.
 
 Cooldown files auto-expire: the credit-gate deletes them once the expiry
 timestamp has passed, so providers are automatically retried after the
-cooldown window.
+cooldown window. Additionally, cooldowns are capped at 4 hours — if a
+cooldown file contains an expiry more than 4 hours in the future, the
+credit-gate rewrites it to `now + 4hr` on the next check.
 
 To manually clear a cooldown:
 
@@ -369,6 +383,32 @@ make email:ingest        # Run ingest manually
   - cadence: every 5 minutes
   - action: sync mail via mbsync, scan for GitHub Actions CI failure/success notifications, create/close `[CI]` Linear issues per unique workflow
   - command: `node scripts/ops/ci-failure-monitor.mjs`
+
+## Guardian: Retry Escalation & Issue Guards
+
+The Linear guardian manages Symphony's retry queue with the following safeguards:
+
+### Retry Escalation Threshold
+
+Issues stuck in the retry queue for **>60 minutes** are auto-escalated back to `Todo` (increased from 30 min to reduce churn during provider exhaustion events). The guardian checks every 5 minutes, so issues may be escalated after 60–65 minutes.
+
+### Sonar Finding Count Guard
+
+The guardian extracts finding counts from issue titles (patterns: `N findings`, `total N`) and treats issues with **>20 findings** as oversized (`GUARDIAN_SONAR_FINDINGS_MAX`). Oversized issues are not fed into Symphony — they must first be broken into smaller file-scoped or rule-scoped child issues.
+
+This prevents large Sonar batches (e.g. S3776 with 182 findings) from repeatedly failing on small/free-tier models and clogging the retry pipeline.
+
+### Non-Archive Issue Cap
+
+Before creating slice/child issues, the guardian queries the count of non-archive issues (excluding `completed` and `canceled` states). If the count is **≥250** (`GUARDIAN_MAX_NON_ARCHIVE_ISSUES`), slice creation is skipped entirely. If below the cap, the remaining budget is clamped to `250 - currentCount`.
+
+This prevents runaway issue creation from consuming the Linear workspace.
+
+| Guard | Env Override | Default |
+| --- | --- | --- |
+| Retry escalation timeout | — | 60 min |
+| Max Sonar findings per issue | `GUARDIAN_SONAR_FINDINGS_MAX` | 20 |
+| Max non-archive issues | `GUARDIAN_MAX_NON_ARCHIVE_ISSUES` | 250 |
 
 ## Reports
 

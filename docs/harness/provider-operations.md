@@ -240,7 +240,22 @@ Cooldowns are proportional to error persistence:
 | 600s     | 403, 413, context_length_exceeded | Content/size persistent         |
 | 1800s    | 401, insufficient_quota           | Auth/quota — won't self-heal    |
 | 3600s    | 402 Payment Required              | Credits exhausted               |
-| 86400s   | Gemini free_tier quota            | Daily limit — 24hr reset        |
+| 14400s   | Gemini free_tier quota            | Daily limit — capped at 4hr (was 24hr; reduced to prevent prolonged provider starvation) |
+
+## Rate-Limit Cooldown Cap
+
+The credit-gate's `is_rate_limited()` enforces a **maximum cooldown cap of 4 hours** (`MAX_COOLDOWN_CAP_SECS=14400`). When a provider's cooldown expiry exceeds `now + 4hr`, the credit-gate rewrites the cooldown file to `now + 4hr` using atomic temp+mv writes.
+
+This prevents stale or excessively long cooldowns (e.g. Gemini's original 24hr daily-limit cooldown) from blocking providers indefinitely. The cap was introduced after observing that all 7 cloud providers could become simultaneously rate-limited overnight, creating a death spiral where:
+
+1. Aggressive cooldowns (especially Gemini at 24hr) blocked providers long after they recovered
+2. LiteLLM proxy became unresponsive, blocking the local Ollama fallback
+3. Every Symphony retry hit `exit 1` → guardian drained → re-fed → repeat
+4. The retry loop generated email storms (10+ notifications over 8 hours)
+
+## Ollama Short-Stream Exemption
+
+The model-injector's short-stream heuristic (streams < 5s and < 2000 bytes treated as silent failures) now **exempts the local Ollama provider** (`litellm-ollama`). Local models may legitimately produce short responses (e.g. single-line fixes) without indicating a rate-limit or provider error. Without this exemption, successful Ollama completions were being falsely flagged as failures, writing cooldowns that blocked the last-resort fallback.
 
 ## Operational Lessons Learned
 
@@ -266,7 +281,45 @@ LiteLLM's `github/` provider has a hardcoded model registry that doesn't update 
 
 All provider probes use lightweight `/v1/models` GET listings (not generation requests). This preserves free-tier quotas — burning a generation request on a probe wastes 1/20 of SambaNova's daily quota.
 
-### 5. Parent Issue Hygiene
+### 5. Systemd Services Need Explicit PATH for nvm
+
+Systemd user services inherit a minimal default PATH that does **not** include nvm-managed Node.js binaries. If a service's `ExecStart` runs through `bash -lc`, the initial shell loads nvm, but child processes spawned via `spawnSync` inherit the systemd environment — not the shell's.
+
+**Symptom:** `npm`/`npx` commands fail in 1–2ms with exit code -1 (ENOENT) while `node` commands succeed.
+
+**Fix:** Every systemd service that needs npm/npx must include an explicit `Environment=PATH=` line pointing to the nvm bin directory:
+
+```ini
+[Service]
+Environment=PATH=/home/user/.nvm/versions/node/v22.18.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+```
+
+**Prevention:** When creating new systemd services, always copy the `PATH` environment from an existing working service (e.g. `anqr-ops-continuous.service`).
+
+### 6. LiteLLM Proxy Liveness Is Critical for Ollama Fallback
+
+The entire provider cascade depends on LiteLLM proxy (`:4010`) being reachable. When it becomes unresponsive, the credit-gate cannot route to the local Ollama model — even though Ollama itself is running fine. This turns a "cloud providers exhausted" situation into a "zero available providers" situation.
+
+**Prevention:** Monitor LiteLLM proxy health as part of the harness. If the proxy is unreachable, restart it before attempting provider cascade.
+
+### 7. Provider Exhaustion Death Spiral
+
+When all cloud providers are rate-limited AND the local fallback path is broken (LiteLLM down), Symphony enters a death spiral:
+
+1. Guardian feeds issue → Symphony picks up → credit-gate exhausts all providers → exit 1
+2. Issue enters retry queue → guardian drains after overflow → re-feeds
+3. Each cycle generates escalation/drain email notifications
+4. 10+ emails over 8 hours with zero productive work
+
+**Prevention:** The escalation threshold was increased from 30 min to 60 min, and rate-limit cooldowns are now capped at 4 hours to ensure providers recover faster.
+
+### 8. Sonar Batch Issues Must Be Right-Sized for the Model
+
+Large Sonar batches (e.g. S3776 with 182 findings, or hotspot batches with 136 findings) exceed the cognitive capacity of small/free-tier models. These issues repeatedly fail, enter retry, get escalated, and clog the pipeline.
+
+**Prevention:** The guardian now extracts finding counts from issue titles (patterns like `N findings` or `total N`) and treats issues with >20 findings as oversized. Oversized issues are not fed into Symphony — they must be broken into file-scoped or rule-scoped child issues first.
+
+### 9. Parent Issue Hygiene
 
 Linear parent issues were marked Done with incomplete children. This masks remaining work and breaks the feedback loop.
 
@@ -284,6 +337,9 @@ Linear parent issues were marked Done with incomplete children. This masks remai
 | 6   | `OPENROUTER_API_KEY` env var missing            | `OPENROUTER_TOKEN` is set but variable naming inconsistency                  | Credit-gate handles both; document the mapping                                   |
 | 7   | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix |
 | 8   | LiteLLM `ollama/` prefix drops tool_calls       | Ollama fallback silently fails function calling if using wrong prefix        | Fixed: use `openai/` prefix with `/v1` api_base (see Ollama Tool-Call Fix)       |
+| 9   | Rate-limit cooldown staleness (RESOLVED)        | Providers blocked for 24hr+ after daily limits                               | Fixed: 4hr cap in credit-gate + reduced Gemini cooldown at source                |
+| 10  | Ollama false-positive rate-limiting (RESOLVED)   | Short Ollama responses triggered cooldowns on last-resort fallback           | Fixed: exempted `litellm-ollama` from short-stream heuristic                     |
+| 11  | No LiteLLM proxy liveness check in harness      | Proxy death blocks all Ollama routing silently                               | Add LiteLLM health probe to continuous harness profile                           |
 
 ## Continuous Evolution Procedures
 

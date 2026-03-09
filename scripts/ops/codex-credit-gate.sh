@@ -113,6 +113,7 @@ if mkdir -p "$STATE_DIR" 2>/dev/null; then chmod 700 "$STATE_DIR" 2>/dev/null; f
 STATE_FILE="$STATE_DIR/state"
 SKIP_FILE="$STATE_DIR/skip"
 FAILURE_WINDOW_SECS=360  # must exceed Symphony's max retry backoff (320s at attempt 6)
+MAX_COOLDOWN_CAP_SECS=14400  # 4 hours — no provider blocked longer than this
 
 # Rate-limit backoff: when all providers are rate-limited, wait for the
 # earliest cooldown to expire instead of exiting and burning empty turns.
@@ -428,12 +429,21 @@ is_skipped() {
 }
 
 # Check if a provider is rate-limited (429 cooldown written by model-injector).
+# Caps excessively long cooldowns (e.g. 24hr Gemini free-tier) to MAX_COOLDOWN_CAP_SECS.
 is_rate_limited() {
   local rl_file="$STATE_DIR/ratelimit-$1"
   [ -f "$rl_file" ] || return 1
-  local expiry now
+  local expiry now max_expiry
   expiry=$(cat "$rl_file" 2>/dev/null) || return 1
   now=$(date +%s)
+  # Cap excessively long cooldowns so providers aren't blocked for days.
+  max_expiry=$((now + MAX_COOLDOWN_CAP_SECS))
+  if [ "$expiry" -gt "$max_expiry" ]; then
+    log "Provider $1 cooldown capped from $((expiry - now))s to ${MAX_COOLDOWN_CAP_SECS}s"
+    local cap_tmp="${rl_file}.$$"
+    if printf '%s\n' "$max_expiry" > "$cap_tmp"; then mv -f "$cap_tmp" "$rl_file" 2>/dev/null; fi
+    expiry=$max_expiry
+  fi
   if [ "$now" -lt "$expiry" ]; then
     local remaining=$((expiry - now))
     log "Provider $1 rate-limited (cooldown ${remaining}s remaining)"
