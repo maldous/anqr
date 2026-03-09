@@ -15,6 +15,7 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ops): propagate `SONAR_*` into Symphony EnvironmentFile and bootstrap archive so agent runs can query Sonar APIs
 - fix(ops): make credit-gate failure memory PID-aware with expiring skip entries to prevent stale cross-agent provider poisoning
 - fix(ops): treat dashboard `has_credits=false` with `balance=nil` as unknown telemetry and retry `gpt-5.3-codex` first
+- fix(ops): make `sonar-report` robust to script execute-bit drift by invoking export script via `bash`
 
 ## 2026-03-07
 

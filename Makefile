@@ -1083,7 +1083,7 @@ sonar:
 	@echo "Analysis complete! View results at: $(SONAR_HOST_URL)/dashboard?id=anqr"
 
 sonar-report:
-	@./scripts/sonar-export.sh
+	@bash ./scripts/sonar-export.sh
 
 # ============================================
 # UI Testing (Playwright)
