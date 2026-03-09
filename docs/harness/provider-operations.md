@@ -194,9 +194,12 @@ Built from `Modelfile` in project root:
 ```
 FROM qwen3.5:35b-a3b
 PARAMETER num_thread 32
+PARAMETER num_gpu 3
 ```
 
 Qwen 3.5 35B-A3B is a Mixture-of-Experts model (35B total parameters, 3B active per token). Sets `num_thread=32` to maximise CPU utilisation on the 24-thread i9-13900K (hyperthreading gives 32 logical cores).
+
+`num_gpu=3` pins exactly 3 of 41 model layers to the GPU (layers 37–39), matching the GTX 1650's 4 GB VRAM capacity at 32K context. Without this pin, Ollama's scheduler defaults to `num_gpu=99` ("try all layers"), which OOM-kills the runner when VRAM is insufficient. The 90%/10% CPU/GPU split is the stable equilibrium for this hardware.
 
 To rebuild after changes:
 
