@@ -5,19 +5,14 @@
 
 import { createLogger } from '../../lib/logger';
 import { rgbToGray } from '../core';
-import type {
-  DiffusionKernel,
-  DitherKind as DitherAlgKind,
-  OrderedMatrix,
-} from '../dither-algorithms';
+import type { DiffusionKernel, DitherKind, OrderedMatrix } from '../dither-algorithms';
 import { applyDither } from '../dither-algorithms';
 import { applyFilters, type FilterOptions } from './overlay-filters';
 
 const _log = createLogger('OVERLAY');
 
 // Re-export types from dither-algorithms for convenience
-export type DitherKind = DitherAlgKind;
-export type { DiffusionKernel, OrderedMatrix };
+export type { DiffusionKernel, DitherKind, OrderedMatrix } from '../dither-algorithms';
 
 // ============================================
 // TYPES

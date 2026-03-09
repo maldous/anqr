@@ -4,7 +4,6 @@
  */
 
 import { createLogger } from '../../lib/logger';
-import { createRNG, getContrastRatio as getContrastRatioFromCore } from '../core';
 import { canvasHashCache } from './cache';
 
 const log = createLogger('GENERATE');
@@ -87,13 +86,13 @@ export function validateColor(color: unknown, fallback: string): string {
  * Calculate contrast ratio between two colors (WCAG formula)
  * Re-exported from core for backward compatibility
  */
-export const getContrastRatio = getContrastRatioFromCore;
+export { getContrastRatio } from '../core';
 
 /**
  * Create a simple seeded PRNG (mulberry32)
  * Re-exported from core for backward compatibility
  */
-export const createSeededRandom = createRNG;
+export { createRNG as createSeededRandom } from '../core';
 
 /**
  * Simple string hash function (djb2)

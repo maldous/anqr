@@ -4,20 +4,14 @@
 
 import { createLogger } from '../../lib/logger';
 // Import core utilities from canonical source
-import {
-  clamp01 as clamp01FromCore,
-  createRNG as createRNGFromCore,
-  rgbToGray as rgbToGrayFromCore,
-} from '../core';
+import { clamp01, createRNG, rgbToGray } from '../core';
 import { BAYER_2, BAYER_4, BAYER_8, CLUSTERED_DOT, VOID_CLUSTER } from './matrices';
 import type { OrderedMatrix } from './types';
 
 const _log = createLogger('DITHER');
 
 // Re-export from core for backward compatibility within dither-algorithms
-export const clamp01 = clamp01FromCore;
-export const rgbToGray = rgbToGrayFromCore;
-export const createRNG = createRNGFromCore;
+export { clamp01, createRNG, rgbToGray } from '../core';
 
 const BLUE_NOISE_TILE_CACHE_MAX = 64;
 const blueNoiseTileCache = new Map<string, Float32Array>();

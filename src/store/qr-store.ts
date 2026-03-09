@@ -56,21 +56,20 @@ import {
 
 // Re-export types for backward compatibility
 export type {
-  UrlHelper,
-  TelHelper,
+  CryptoHelper,
   EmailHelper,
-  SmsHelper,
+  EventHelper,
   GeoHelper,
-  WifiHelper,
-  WifiAuth,
+  MeCardHelper,
+  SmsHelper,
+  TelHelper,
+  UrlHelper,
   VCardHelper,
   VCardVersion,
-  MeCardHelper,
-  EventHelper,
-  CryptoHelper,
-  GradientStop,
-  GradientType,
-};
+  WifiAuth,
+  WifiHelper,
+} from '@/modules/payload-generators';
+export type { GradientStop, GradientType } from '@/modules/core';
 
 // Tier levels
 export type Tier = 'basic' | 'advanced' | 'professional';

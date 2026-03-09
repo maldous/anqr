@@ -5,12 +5,9 @@
 
 import { createLogger } from '../../lib/logger';
 
-// Main encoder
-import { qrcode } from './encoder';
-
 const _log = createLogger('ENCODER');
 
-export { qrcode };
+export { qrcode } from './encoder';
 
 // Pattern functions - re-exported from qr-spec (canonical source)
 export {

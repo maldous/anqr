@@ -71,7 +71,7 @@ import {
 import { acquireUint8Buffer, releaseUint8Buffer } from './buffer-pool';
 
 // Re-export BitRange for use in EncoderDerivedLayout
-export type { BitRange };
+export type { BitRange } from './semantic-layout';
 
 // Re-export validation utilities for backwards compatibility
 export {

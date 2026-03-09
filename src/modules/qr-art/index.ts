@@ -516,7 +516,7 @@ export function getBaseUrl(url: string): string {
 
 // Import and re-export mapImageToTargetsSupersampled from image-utils to avoid circular imports
 import { mapImageToTargetsSupersampled } from './image-utils';
-export { mapImageToTargetsSupersampled };
+export { mapImageToTargetsSupersampled } from './image-utils';
 
 /**
  * Evaluate how well a QR code matches the target image

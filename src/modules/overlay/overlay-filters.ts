@@ -53,7 +53,7 @@ export interface FilterOptions {
 import { clamp, clamp01, hslToRgb, rgbToGray, rgbToHsl } from '../core';
 
 // Re-export core functions for backwards compatibility
-export { clamp, clamp01, rgbToGray, hslToRgb, rgbToHsl };
+export { clamp, clamp01, hslToRgb, rgbToGray, rgbToHsl } from '../core';
 
 export function copyImageData(imageData: ImageData): ImageData {
   return new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);

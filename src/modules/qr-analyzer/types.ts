@@ -121,7 +121,7 @@ export type ErrorType = 'no_qr_detected' | 'cors_blocked' | 'decode_error' | 'un
 
 // Import and re-export DecoderMetadata from qr-decoder to avoid duplicate type definition
 import type { DecoderMetadata } from '../qr-decoder/types';
-export type { DecoderMetadata };
+export type { DecoderMetadata } from '../qr-decoder/types';
 
 export interface QRAnalysisResult {
   success: boolean;
