@@ -11,10 +11,10 @@ interface PageMeta {
 
 function escapeHtml(str: string): string {
   return str
-    .replaceAll(/&/g, '&amp;')
-    .replaceAll(/"/g, '&quot;')
-    .replaceAll(/</g, '&lt;')
-    .replaceAll(/>/g, '&gt;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }
 
 function truncate(str: string, maxLen: number): string {

@@ -2164,10 +2164,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             result.fullName = value;
             break;
           case 'N':
-            result.name = value.replaceAll(/;/g, ' ').trim();
+            result.name = value.replaceAll(';', ' ').trim();
             break;
           case 'ORG':
-            result.organization = value.replaceAll(/;/g, ', ');
+            result.organization = value.replaceAll(';', ', ');
             break;
           case 'TITLE':
             result.title = value;
@@ -2255,7 +2255,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           result.email = value;
           break;
         case 'ADR':
-          result.address = value.replaceAll(/,/g, ', ');
+          result.address = value.replaceAll(',', ', ');
           break;
         case 'BDAY':
           result.birthday = value;
@@ -2755,10 +2755,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             result.summary = value;
             break;
           case 'DESCRIPTION':
-            result.description = value.replaceAll(/\\n/g, '\n').replaceAll(/\\,/g, ',');
+            result.description = value.replaceAll('\\n', '\n').replaceAll('\\,', ',');
             break;
           case 'LOCATION':
-            result.location = value.replaceAll(/\\,/g, ',');
+            result.location = value.replaceAll('\\,', ',');
             break;
           case 'DTSTART': {
             result.startDate = value;
