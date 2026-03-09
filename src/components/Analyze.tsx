@@ -2243,7 +2243,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
       switch (key) {
         case 'N':
-          result.name = value.replace(',', ' ');
+          result.name = value.replaceAll(',', ' ');
           break;
         case 'ORG':
           result.organization = value;
@@ -2690,7 +2690,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       const formatRecurrence = (rrule: string): string => {
         const parts: Record<string, string> = {};
         rrule
-          .replace('RRULE:', '')
+          .replaceAll('RRULE:', '')
           .split(';')
           .forEach((p) => {
             const [k, v] = p.split('=');
@@ -2762,7 +2762,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             break;
           case 'DTSTART': {
             result.startDate = value;
-            result.startFormatted = formatDateTime(value.replace('Z', ''));
+            result.startFormatted = formatDateTime(value.replaceAll('Z', ''));
             result.isAllDay = value.length === 8;
             const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
             if (tzMatch) result.timezone = tzMatch[1];
@@ -2770,7 +2770,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           }
           case 'DTEND': {
             result.endDate = value;
-            result.endFormatted = formatDateTime(value.replace('Z', ''));
+            result.endFormatted = formatDateTime(value.replaceAll('Z', ''));
             break;
           }
           case 'DURATION':
@@ -2778,7 +2778,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             break;
           case 'ORGANIZER': {
             const cnMatch = value.match(/CN=([^:;]+)/i) || keyPart.match(/CN=([^:;]+)/i);
-            result.organizer = cnMatch ? cnMatch[1] : value.replace('mailto:', '');
+            result.organizer = cnMatch ? cnMatch[1] : value.replaceAll('mailto:', '');
             break;
           }
           case 'ATTENDEE':
@@ -2891,7 +2891,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
     try {
       const url = new URL(payload);
-      result.protocol = url.protocol.replace(':', '');
+      result.protocol = url.protocol.replaceAll(':', '');
       result.hostname = url.hostname;
       result.port = url.port || null;
       result.path = url.pathname !== '/' ? url.pathname : null;
