@@ -32,7 +32,7 @@ hooks:
       npm ci
     fi
 agent:
-  max_concurrent_agents: 2
+  max_concurrent_agents: 1
   max_turns: 20
   max_retry_backoff_ms: 600000
   retry_base_ms: 15000
@@ -101,20 +101,22 @@ You are a code editor. Follow these steps exactly.
 If any command exits with a non-zero status or produces an error:
 
 1. **First failure — retry once.** Reset the workspace and try the failed command again:
+
    ```bash
    git rebase --abort 2>/dev/null; git checkout . && git clean -fd
    ```
+
    Then re-run the failed command. If it succeeds, continue with the workflow.
 
 2. **Second failure — give up.** If the command fails again after the retry:
    a. Post the error as a comment:
-      ```bash
-      node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed (after retry): <paste the error output>"
-      ```
+   ```bash
+   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed (after retry): <paste the error output>"
+   ```
    b. Move to **Rework** (not Pending — Rework allows Symphony to retry later):
-      ```bash
-      node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Rework"
-      ```
+   ```bash
+   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Rework"
+   ```
    c. Stop.
 
 > **Important:** Only use `Pending` for genuinely non-automatable tasks (Steps 1.1–1.3 above).
@@ -178,14 +180,30 @@ node scripts/ops/linear-list-issues.mjs --state Backlog,Todo --format json > /tm
 ```
 
 **JSON output is a top-level array, NOT an object.** Example:
+
 ```json
 [
-  { "identifier": "ANQ-106", "title": "...", "state": "Backlog", "priority": 3, "labels": ["reliability"], "parent": "ANQ-100" },
-  { "identifier": "ANQ-107", "title": "...", "state": "Todo", "priority": 2, "labels": ["web"], "parent": null }
+  {
+    "identifier": "ANQ-106",
+    "title": "...",
+    "state": "Backlog",
+    "priority": 3,
+    "labels": ["reliability"],
+    "parent": "ANQ-100"
+  },
+  {
+    "identifier": "ANQ-107",
+    "title": "...",
+    "state": "Todo",
+    "priority": 2,
+    "labels": ["web"],
+    "parent": null
+  }
 ]
 ```
 
 **Correct jq patterns** (the output is an array, so use `.[]` not `.issues`):
+
 ```bash
 # List all identifiers:
 jq -r '.[].identifier' /tmp/issues.json
