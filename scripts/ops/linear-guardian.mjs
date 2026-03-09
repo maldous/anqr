@@ -32,12 +32,8 @@ const GUARDIAN_MAX_NON_ARCHIVE_ISSUES = Number(process.env.GUARDIAN_MAX_NON_ARCH
 const GUARDIAN_REFEED_COOLDOWN_MS = Number(
   process.env.GUARDIAN_REFEED_COOLDOWN_MS || 30 * 60 * 1000
 );
-const GUARDIAN_DRAIN_CIRCUIT_BREAKER = Number(
-  process.env.GUARDIAN_DRAIN_CIRCUIT_BREAKER || 3
-);
-const GUARDIAN_DRAIN_WINDOW_MS = Number(
-  process.env.GUARDIAN_DRAIN_WINDOW_MS || 6 * 60 * 60 * 1000
-);
+const GUARDIAN_DRAIN_CIRCUIT_BREAKER = Number(process.env.GUARDIAN_DRAIN_CIRCUIT_BREAKER || 3);
+const GUARDIAN_DRAIN_WINDOW_MS = Number(process.env.GUARDIAN_DRAIN_WINDOW_MS || 6 * 60 * 60 * 1000);
 const HUMAN_REQUIRED_PATTERNS = [
   /\bcreate\b.{0,24}\b(api key|api token|credential|secret)\b/i,
   /\bmanual\b.{0,24}\b(step|action|intervention)\b/i,

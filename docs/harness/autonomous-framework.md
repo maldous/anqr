@@ -116,6 +116,8 @@ Fully Autonomous Corrective Evolving Best Practice Harness Engineering framework
 5. **Guardian issue guards** prevent pipeline congestion:
    - **Sonar finding count guard**: issues with >20 findings (`GUARDIAN_SONAR_FINDINGS_MAX`) are treated as oversized and not fed into Symphony
    - **Non-archive issue cap**: slice/child issue creation is blocked when non-archive issues ≥250 (`GUARDIAN_MAX_NON_ARCHIVE_ISSUES`)
+   - **Re-feed cooldown**: issues drained within the last 30 min (`GUARDIAN_REFEED_COOLDOWN_MS`) are filtered out of feed candidates — prevents tight drain/re-feed loops
+   - **Drain circuit breaker**: issues drained 3+ times in 6 hours (`GUARDIAN_DRAIN_CIRCUIT_BREAKER`) are parked in Pending with an AI Hint — stops chronic retry loops
 6. **Symphony** picks up issues and agents implement fixes
 7. Next harness run / CI run detects improvements → closes the feedback loop
 

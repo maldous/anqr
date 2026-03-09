@@ -319,7 +319,18 @@ Large Sonar batches (e.g. S3776 with 182 findings, or hotspot batches with 136 f
 
 **Prevention:** The guardian now extracts finding counts from issue titles (patterns like `N findings` or `total N`) and treats issues with >20 findings as oversized. Oversized issues are not fed into Symphony — they must be broken into file-scoped or rule-scoped child issues first.
 
-### 9. Parent Issue Hygiene
+### 9. Drain/Re-Feed Loop Is a Death Spiral Amplifier
+
+Without per-issue drain tracking, the guardian creates a tight 5-minute drain/re-feed loop during provider exhaustion:
+
+1. Guardian feeds issue into Symphony → provider fails → issue enters retry queue
+2. Guardian drains issue from Symphony (overflow or retry-queue health)
+3. Next guardian pass (5 min later) re-feeds the same issue → repeat
+4. Each cycle generates escalation and drain email notifications
+
+**Prevention:** Per-issue drain tracking (`drain-tracking-state.json`) records every drain event with timestamp and reason. A 30-minute re-feed cooldown (`GUARDIAN_REFEED_COOLDOWN_MS`) prevents recently-drained issues from being re-fed. A circuit breaker (`GUARDIAN_DRAIN_CIRCUIT_BREAKER=3`) parks issues in Pending after 3+ drains in 6 hours, with an AI Hint comment explaining the pattern.
+
+### 10. Parent Issue Hygiene
 
 Linear parent issues were marked Done with incomplete children. This masks remaining work and breaks the feedback loop.
 
@@ -327,19 +338,20 @@ Linear parent issues were marked Done with incomplete children. This masks remai
 
 ## Known Gaps & Risk Register
 
-| #   | Gap                                             | Risk                                                                         | Mitigation                                                                       |
-| --- | ----------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| 1   | No automated cascade integration test           | Provider failover regression invisible                                       | Create test that simulates provider failure                                      |
-| 2   | Cerebras 8K context unverified                  | Long conversations silently fail on Cerebras                                 | Cerebras is position 6 (deprioritised); verify via API                           |
-| 3   | No VRAM utilization health check                | KV cache overflow invisible                                                  | Add `nvidia-smi` VRAM check to harness report                                    |
-| 4   | No provider routing smoke test                  | LiteLLM prefix breaks on upgrade                                             | Add startup test for all 9 provider aliases                                      |
-| 5   | No cumulative quota tracking                    | Can't predict when providers will exhaust                                    | Read cooldown files in harness report (ANQ-198)                                  |
-| 6   | `OPENROUTER_API_KEY` env var missing            | `OPENROUTER_TOKEN` is set but variable naming inconsistency                  | Credit-gate handles both; document the mapping                                   |
-| 7   | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix |
-| 8   | LiteLLM `ollama/` prefix drops tool_calls       | Ollama fallback silently fails function calling if using wrong prefix        | Fixed: use `openai/` prefix with `/v1` api_base (see Ollama Tool-Call Fix)       |
-| 9   | Rate-limit cooldown staleness (RESOLVED)        | Providers blocked for 24hr+ after daily limits                               | Fixed: 4hr cap in credit-gate + reduced Gemini cooldown at source                |
-| 10  | Ollama false-positive rate-limiting (RESOLVED)  | Short Ollama responses triggered cooldowns on last-resort fallback           | Fixed: exempted `litellm-ollama` from short-stream heuristic                     |
-| 11  | No LiteLLM proxy liveness check in harness      | Proxy death blocks all Ollama routing silently                               | Add LiteLLM health probe to continuous harness profile                           |
+| #   | Gap                                             | Risk                                                                         | Mitigation                                                                        |
+| --- | ----------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1   | No automated cascade integration test           | Provider failover regression invisible                                       | Create test that simulates provider failure                                       |
+| 2   | Cerebras 8K context unverified                  | Long conversations silently fail on Cerebras                                 | Cerebras is position 6 (deprioritised); verify via API                            |
+| 3   | No VRAM utilization health check                | KV cache overflow invisible                                                  | Add `nvidia-smi` VRAM check to harness report                                     |
+| 4   | No provider routing smoke test                  | LiteLLM prefix breaks on upgrade                                             | Add startup test for all 9 provider aliases                                       |
+| 5   | No cumulative quota tracking                    | Can't predict when providers will exhaust                                    | Read cooldown files in harness report (ANQ-198)                                   |
+| 6   | `OPENROUTER_API_KEY` env var missing            | `OPENROUTER_TOKEN` is set but variable naming inconsistency                  | Credit-gate handles both; document the mapping                                    |
+| 7   | GitHub Models incompatible with `/v1/responses` | Provider skipped on every Codex request, only usable for `/chat/completions` | Pre-excluded via `_RESPONSES_INCOMPATIBLE_PROVIDERS`; track upstream LiteLLM fix  |
+| 8   | LiteLLM `ollama/` prefix drops tool_calls       | Ollama fallback silently fails function calling if using wrong prefix        | Fixed: use `openai/` prefix with `/v1` api_base (see Ollama Tool-Call Fix)        |
+| 9   | Rate-limit cooldown staleness (RESOLVED)        | Providers blocked for 24hr+ after daily limits                               | Fixed: 4hr cap in credit-gate + reduced Gemini cooldown at source                 |
+| 10  | Ollama false-positive rate-limiting (RESOLVED)  | Short Ollama responses triggered cooldowns on last-resort fallback           | Fixed: exempted `litellm-ollama` from short-stream heuristic                      |
+| 11  | No LiteLLM proxy liveness check in harness      | Proxy death blocks all Ollama routing silently                               | Add LiteLLM health probe to continuous harness profile                            |
+| 12  | Drain/re-feed loop amplification (RESOLVED)     | Issues drained and re-fed every 5 min during provider exhaustion             | Fixed: per-issue drain tracking, 30-min re-feed cooldown, 3-drain circuit breaker |
 
 ## Continuous Evolution Procedures
 

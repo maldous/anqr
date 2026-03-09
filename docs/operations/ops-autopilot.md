@@ -420,11 +420,33 @@ Before creating slice/child issues, the guardian queries the count of non-archiv
 
 This prevents runaway issue creation from consuming the Linear workspace.
 
-| Guard                        | Env Override                      | Default |
-| ---------------------------- | --------------------------------- | ------- |
-| Retry escalation timeout     | —                                 | 60 min  |
-| Max Sonar findings per issue | `GUARDIAN_SONAR_FINDINGS_MAX`     | 20      |
-| Max non-archive issues       | `GUARDIAN_MAX_NON_ARCHIVE_ISSUES` | 250     |
+### Drain Tracking & Re-Feed Cooldown
+
+The guardian tracks every drain event (overflow, pending, retry-queue, parent-invariant) per issue in `reports/linear-guardian/drain-tracking-state.json`. This prevents the tight drain/re-feed loop where an issue is drained from Symphony on one guardian pass and immediately re-fed on the next (5 min later).
+
+**Re-feed cooldown:** Issues drained within the last **30 minutes** (`GUARDIAN_REFEED_COOLDOWN_MS`) are filtered out of the feed candidate list. This gives providers time to recover and prevents wasting cycles on issues that just failed.
+
+**Circuit breaker:** Issues drained **3+ times in 6 hours** (`GUARDIAN_DRAIN_CIRCUIT_BREAKER` / `GUARDIAN_DRAIN_WINDOW_MS`) are parked in `Pending` with an `AI Hint:` comment explaining the pattern. This stops chronic retry loops caused by model capability mismatch, provider pressure, or oversized tasks.
+
+Drain events are recorded at all four drain sites:
+
+| Drain Site         | Reason Tag         | Circuit Breaker?    |
+| ------------------ | ------------------ | ------------------- |
+| Parent invariant   | `parent-invariant` | No (always correct) |
+| Pending drain      | `pending-drain`    | No (cleanup action) |
+| Overflow drain     | `overflow`         | Yes                 |
+| Retry queue health | `retry-queue`      | Yes                 |
+
+The `applyCircuitBreaker()` helper is shared across all sites that support it, avoiding code duplication. Circuit breaker is skipped for `[HUMAN]`, `[EMAIL]`, and `[PARENT]` issues since they have their own handling.
+
+| Guard                        | Env Override                      | Default  |
+| ---------------------------- | --------------------------------- | -------- |
+| Retry escalation timeout     | —                                 | 60 min   |
+| Max Sonar findings per issue | `GUARDIAN_SONAR_FINDINGS_MAX`     | 20       |
+| Max non-archive issues       | `GUARDIAN_MAX_NON_ARCHIVE_ISSUES` | 250      |
+| Re-feed cooldown             | `GUARDIAN_REFEED_COOLDOWN_MS`     | 30 min   |
+| Drain circuit breaker        | `GUARDIAN_DRAIN_CIRCUIT_BREAKER`  | 3 drains |
+| Drain tracking window        | `GUARDIAN_DRAIN_WINDOW_MS`        | 6 hours  |
 
 ## Reports
 
@@ -435,6 +457,7 @@ This prevents runaway issue creation from consuming the Linear workspace.
 - CI failure monitor report: `reports/ci-monitor/latest.json`
 - Notification state: `reports/notify/state.json`
 - Linear guardian snapshot: `reports/linear-guardian/latest.json`
+- Drain tracking state: `reports/linear-guardian/drain-tracking-state.json`
 - Groq free audit output: `reports/groq-free/latest.md`
 - Gemini free audit output: `reports/gemini-free/latest.md`
 - Hugging free audit output: `reports/hugging-free/latest.md`
