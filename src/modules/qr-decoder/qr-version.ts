@@ -26,10 +26,10 @@ export enum ErrorCorrectionLevelValue {
 export class ErrorCorrectionLevel {
   private static FOR_BITS = new Map<number, ErrorCorrectionLevel>();
 
-  static L = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.L, 'L', 0x01);
-  static M = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.M, 'M', 0x00);
-  static Q = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.Q, 'Q', 0x03);
-  static H = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.H, 'H', 0x02);
+  static readonly L = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.L, 'L', 0x01);
+  static readonly M = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.M, 'M', 0x00);
+  static readonly Q = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.Q, 'Q', 0x03);
+  static readonly H = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.H, 'H', 0x02);
 
   private constructor(
     private value: ErrorCorrectionLevelValue,
@@ -101,41 +101,46 @@ export enum ModeValue {
 export class Mode {
   private static FOR_BITS = new Map<number, Mode>();
 
-  static TERMINATOR = new Mode(
+  static readonly TERMINATOR = new Mode(
     ModeValue.TERMINATOR,
     'TERMINATOR',
     Int32Array.from([0, 0, 0]),
     0x00
   );
-  static NUMERIC = new Mode(ModeValue.NUMERIC, 'NUMERIC', Int32Array.from([10, 12, 14]), 0x01);
-  static ALPHANUMERIC = new Mode(
+  static readonly NUMERIC = new Mode(
+    ModeValue.NUMERIC,
+    'NUMERIC',
+    Int32Array.from([10, 12, 14]),
+    0x01
+  );
+  static readonly ALPHANUMERIC = new Mode(
     ModeValue.ALPHANUMERIC,
     'ALPHANUMERIC',
     Int32Array.from([9, 11, 13]),
     0x02
   );
-  static STRUCTURED_APPEND = new Mode(
+  static readonly STRUCTURED_APPEND = new Mode(
     ModeValue.STRUCTURED_APPEND,
     'STRUCTURED_APPEND',
     Int32Array.from([0, 0, 0]),
     0x03
   );
-  static BYTE = new Mode(ModeValue.BYTE, 'BYTE', Int32Array.from([8, 16, 16]), 0x04);
-  static ECI = new Mode(ModeValue.ECI, 'ECI', Int32Array.from([0, 0, 0]), 0x07);
-  static KANJI = new Mode(ModeValue.KANJI, 'KANJI', Int32Array.from([8, 10, 12]), 0x08);
-  static FNC1_FIRST_POSITION = new Mode(
+  static readonly BYTE = new Mode(ModeValue.BYTE, 'BYTE', Int32Array.from([8, 16, 16]), 0x04);
+  static readonly ECI = new Mode(ModeValue.ECI, 'ECI', Int32Array.from([0, 0, 0]), 0x07);
+  static readonly KANJI = new Mode(ModeValue.KANJI, 'KANJI', Int32Array.from([8, 10, 12]), 0x08);
+  static readonly FNC1_FIRST_POSITION = new Mode(
     ModeValue.FNC1_FIRST_POSITION,
     'FNC1_FIRST_POSITION',
     Int32Array.from([0, 0, 0]),
     0x05
   );
-  static FNC1_SECOND_POSITION = new Mode(
+  static readonly FNC1_SECOND_POSITION = new Mode(
     ModeValue.FNC1_SECOND_POSITION,
     'FNC1_SECOND_POSITION',
     Int32Array.from([0, 0, 0]),
     0x09
   );
-  static HANZI = new Mode(ModeValue.HANZI, 'HANZI', Int32Array.from([8, 10, 12]), 0x0d);
+  static readonly HANZI = new Mode(ModeValue.HANZI, 'HANZI', Int32Array.from([8, 10, 12]), 0x0d);
 
   private constructor(
     private value: ModeValue,

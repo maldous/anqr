@@ -238,14 +238,14 @@ export class GenericGFPoly {
  * Generic Galois Field implementation
  */
 export class GenericGF extends AbstractGenericGF {
-  static AZTEC_DATA_12 = new GenericGF(0x1069, 4096, 1);
-  static AZTEC_DATA_10 = new GenericGF(0x409, 1024, 1);
-  static AZTEC_DATA_6 = new GenericGF(0x43, 64, 1);
-  static AZTEC_PARAM = new GenericGF(0x13, 16, 1);
-  static QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0);
-  static DATA_MATRIX_FIELD_256 = new GenericGF(0x012d, 256, 1);
-  static AZTEC_DATA_8 = GenericGF.DATA_MATRIX_FIELD_256;
-  static MAXICODE_FIELD_64 = GenericGF.AZTEC_DATA_6;
+  static readonly AZTEC_DATA_12 = new GenericGF(0x1069, 4096, 1);
+  static readonly AZTEC_DATA_10 = new GenericGF(0x409, 1024, 1);
+  static readonly AZTEC_DATA_6 = new GenericGF(0x43, 64, 1);
+  static readonly AZTEC_PARAM = new GenericGF(0x13, 16, 1);
+  static readonly QR_CODE_FIELD_256 = new GenericGF(0x011d, 256, 0);
+  static readonly DATA_MATRIX_FIELD_256 = new GenericGF(0x012d, 256, 1);
+  static readonly AZTEC_DATA_8 = GenericGF.DATA_MATRIX_FIELD_256;
+  static readonly MAXICODE_FIELD_64 = GenericGF.AZTEC_DATA_6;
 
   private zero: GenericGFPoly;
   private one: GenericGFPoly;

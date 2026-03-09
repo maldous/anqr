@@ -175,8 +175,8 @@ export function arraycopy(
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class Integer {
-  static MIN_VALUE_32_BITS = -2147483648;
-  static MAX_VALUE = Number.MAX_SAFE_INTEGER;
+  static readonly MIN_VALUE_32_BITS = -2147483648;
+  static readonly MAX_VALUE = Number.MAX_SAFE_INTEGER;
 
   /**
    * Count trailing zeros
@@ -272,7 +272,7 @@ export class Integer {
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class Float {
-  static MAX_VALUE = Number.MAX_SAFE_INTEGER;
+  static readonly MAX_VALUE = Number.MAX_SAFE_INTEGER;
 
   static floatToIntBits(f: number): number {
     return f;
@@ -438,8 +438,9 @@ export class CharacterSetECI {
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class StringEncoding {
-  static customDecoder: ((bytes: Uint8Array, encodingName: string) => string) | null = null;
-  static customEncoder: ((s: string, encodingName: string) => Uint8Array) | null = null;
+  static readonly customDecoder: ((bytes: Uint8Array, encodingName: string) => string) | null =
+    null;
+  static readonly customEncoder: ((s: string, encodingName: string) => Uint8Array) | null = null;
 
   static decode(bytes: Uint8Array, encoding: string | CharacterSetECI): string {
     const encodingName = StringEncoding.encodingName(encoding);
