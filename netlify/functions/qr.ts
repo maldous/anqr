@@ -573,7 +573,7 @@ async function _isPrivateHostname(hostname: string): Promise<boolean> {
       expiresAt: now + OVERLAY_HOST_LOOKUP_TTL_MS,
     });
     return isPrivate;
-  } catch (_dnsErr) {
+  } catch {
     // Fail closed when DNS lookup fails.
     overlayHostnameSafetyCache.set(normalizedHostname, {
       isPrivate: true,
@@ -2493,7 +2493,7 @@ async function decodeOverlayBuffer(buffer: Buffer): Promise<FetchedImage | null>
     try {
       const decoded = decodeGif(arrayBuffer);
       isAnimatedGif = decoded.frames.length > 1;
-    } catch (_gifErr) {}
+    } catch {}
   }
 
   const img = await nodeCanvasFactory.loadImage(buffer);
@@ -2528,7 +2528,7 @@ async function readLocalOverlayFile(fileUrl: URL): Promise<FetchedImage | null> 
   let overlayPath: string;
   try {
     overlayPath = fileURLToPath(fileUrl);
-  } catch (_urlErr) {
+  } catch {
     return null;
   }
 
@@ -2543,7 +2543,7 @@ async function readLocalOverlayFile(fileUrl: URL): Promise<FetchedImage | null> 
   try {
     const buffer = await fs.readFile(overlayPath);
     return decodeOverlayBuffer(buffer);
-  } catch (_fsErr) {
+  } catch {
     return null;
   }
 }
@@ -2583,7 +2583,7 @@ async function fetchOverlayWithValidatedRedirects(
     let redirectedUrl: URL;
     try {
       redirectedUrl = new URL(location, currentUrl);
-    } catch (_urlErr) {
+    } catch {
       return null;
     }
 
@@ -2618,7 +2618,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
       if (!process.env.NETLIFY_DEV && (await _isPrivateHostname(parsedUrl.hostname))) {
         return null;
       }
-    } catch (_urlErr) {
+    } catch {
       return null;
     }
 
@@ -2676,7 +2676,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
 
         chunks.push(value);
       }
-    } catch (_streamError) {
+    } catch {
       return null;
     }
 
@@ -2689,7 +2689,7 @@ async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
     }
 
     return decodeOverlayBuffer(Buffer.from(combinedBytes));
-  } catch (_error) {
+  } catch {
     return null;
   }
 }

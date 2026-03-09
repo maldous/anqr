@@ -693,9 +693,7 @@ function useQRGenerator(): UseQRGeneratorResult {
     qartPerfOverlayRef.current = overlayEl;
 
     return () => {
-      if (overlayEl?.parentNode) {
-        overlayEl.parentNode.removeChild(overlayEl);
-      }
+      overlayEl?.remove();
       qartPerfOverlayRef.current = null;
     };
   }, []);
