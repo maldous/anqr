@@ -34,7 +34,7 @@ export function generateAnimationPatternFrames(
   sourceCanvas: HTMLCanvasElement | OffscreenCanvas,
   pattern: AnimationPattern,
   frameCount: number,
-  speed: number = 1.0,
+  speed: number = 1,
   seed: number = 0
 ): HTMLCanvasElement[] {
   if (pattern === 'none' || frameCount <= 1) {
@@ -236,7 +236,7 @@ function buildPatternFrameApplier(
       const scanY = ((progress * speed) % 1) * height;
       const rowFactors = new Float32Array(height);
       for (let y = 0; y < height; y++) {
-        rowFactors[y] = Math.abs(y - scanY) < 20 ? 1.3 : 1.0;
+        rowFactors[y] = Math.abs(y - scanY) < 20 ? 1.3 : 1;
       }
       return (data) => {
         for (let y = 0; y < height; y++) {

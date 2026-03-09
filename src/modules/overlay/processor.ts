@@ -83,7 +83,7 @@ export const DEFAULT_MOBILE_DITHER: OverlayDitherOptions = {
 export const STORE_DEFAULT_DITHER: OverlayDitherOptions = {
   enabled: false,
   kind: 'none',
-  strength: 1.0,
+  strength: 1,
   levels: 2,
   serpentine: false,
 };
@@ -278,7 +278,7 @@ export function applyOverlayDither(imageData: ImageData, options: OverlayDitherO
 
   const result = applyDither(imageData, {
     kind: options.kind ?? 'floyd_steinberg',
-    strength: options.strength ?? 1.0,
+    strength: options.strength ?? 1,
     levels: options.levels ?? 2,
     serpentine: options.serpentine ?? false,
     colorMode: 'color',

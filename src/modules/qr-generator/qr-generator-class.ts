@@ -1323,7 +1323,7 @@ export class QRGenerator {
               downscale: 0.9,
             },
             {
-              blur: 1.0 + seeded01(17) * 0.5,
+              blur: 1 + seeded01(17) * 0.5,
               exposure: 0.18 + seeded01(19) * 0.12,
               skewX: finalRaster.width * 0.028,
               skewY: finalRaster.height * 0.018,

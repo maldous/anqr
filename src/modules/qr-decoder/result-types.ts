@@ -125,7 +125,7 @@ export class ResultPoint {
       pointC = patterns[1];
     }
 
-    if (ResultPoint.crossProductZ(pointA, pointB, pointC) < 0.0) {
+    if (ResultPoint.crossProductZ(pointA, pointB, pointC) < 0) {
       const temp = pointA;
       pointA = pointC;
       pointC = temp;

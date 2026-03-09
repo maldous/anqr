@@ -347,7 +347,7 @@ export async function generateScaledQR(
       sum += d * d;
       n++;
     }
-    return n > 0 ? Math.min(1, Math.sqrt(sum / n) * 3.0) : 0;
+    return n > 0 ? Math.min(1, Math.sqrt(sum / n) * 3) : 0;
   };
 
   const drawDitherDot = (x: number, y: number, radius: number, jitterN: number): void => {

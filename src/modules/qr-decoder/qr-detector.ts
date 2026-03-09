@@ -60,7 +60,7 @@ export class Detector {
     const bottomLeft = info.getBottomLeft();
 
     const moduleSize = this.calculateModuleSize(topLeft, topRight, bottomLeft);
-    if (moduleSize < 1.0) {
+    if (moduleSize < 1) {
       throw new NotFoundException();
     }
     const dimension = Detector.computeDimension(topLeft, topRight, bottomLeft, moduleSize);
@@ -71,7 +71,7 @@ export class Detector {
     if (provisionalVersion.getAlignmentPatternCenters().length > 0) {
       const bottomRightX = topRight.getX() - topLeft.getX() + bottomLeft.getX();
       const bottomRightY = topRight.getY() - topLeft.getY() + bottomLeft.getY();
-      const correctionToTopLeft = 1.0 - 3.0 / modulesBetweenFPCenters;
+      const correctionToTopLeft = 1 - 3 / modulesBetweenFPCenters;
       const estAlignmentX = Math.floor(
         topLeft.getX() + correctionToTopLeft * (bottomRightX - topLeft.getX())
       );
@@ -127,7 +127,7 @@ export class Detector {
     if (alignmentPattern !== null) {
       bottomRightX = alignmentPattern.getX();
       bottomRightY = alignmentPattern.getY();
-      sourceBottomRightX = dimMinusThree - 3.0;
+      sourceBottomRightX = dimMinusThree - 3;
       sourceBottomRightY = sourceBottomRightX;
     } else {
       bottomRightX = topRight.getX() - topLeft.getX() + bottomLeft.getX();
@@ -199,7 +199,7 @@ export class Detector {
     return (
       (this.calculateModuleSizeOneWay(topLeft, topRight) +
         this.calculateModuleSizeOneWay(topLeft, bottomLeft)) /
-      2.0
+      2
     );
   }
 
@@ -216,9 +216,9 @@ export class Detector {
       Math.floor(pattern.getX()),
       Math.floor(pattern.getY())
     );
-    if (Number.isNaN(moduleSizeEst1)) return moduleSizeEst2 / 7.0;
-    if (Number.isNaN(moduleSizeEst2)) return moduleSizeEst1 / 7.0;
-    return (moduleSizeEst1 + moduleSizeEst2) / 14.0;
+    if (Number.isNaN(moduleSizeEst1)) return moduleSizeEst2 / 7;
+    if (Number.isNaN(moduleSizeEst2)) return moduleSizeEst1 / 7;
+    return (moduleSizeEst1 + moduleSizeEst2) / 14;
   }
 
   private sizeOfBlackWhiteBlackRunBothWays(
@@ -228,7 +228,7 @@ export class Detector {
     toY: number
   ): number {
     let result = this.sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
-    let scale = 1.0;
+    let scale = 1;
     let otherToX = fromX - (toX - fromX);
     if (otherToX < 0) {
       scale = fromX / (fromX - otherToX);
@@ -239,7 +239,7 @@ export class Detector {
     }
     let otherToY = Math.floor(fromY - (toY - fromY) * scale);
 
-    scale = 1.0;
+    scale = 1;
     if (otherToY < 0) {
       scale = fromY / (fromY - otherToY);
       otherToY = 0;
@@ -250,7 +250,7 @@ export class Detector {
     otherToX = Math.floor(fromX + (otherToX - fromX) * scale);
 
     result += this.sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
-    return result - 1.0;
+    return result - 1;
   }
 
   private sizeOfBlackWhiteBlackRun(fromX: number, fromY: number, toX: number, toY: number): number {

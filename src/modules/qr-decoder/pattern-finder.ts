@@ -39,7 +39,7 @@ export class FinderPattern extends ResultPoint {
   aboutEquals(moduleSize: number, i: number, j: number): boolean {
     if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
       const moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
-      return moduleSizeDiff <= 1.0 || moduleSizeDiff <= this.estimatedModuleSize;
+      return moduleSizeDiff <= 1 || moduleSizeDiff <= this.estimatedModuleSize;
     }
     return false;
   }
@@ -92,15 +92,15 @@ export class AlignmentPattern extends ResultPoint {
   aboutEquals(moduleSize: number, i: number, j: number): boolean {
     if (Math.abs(i - this.getY()) <= moduleSize && Math.abs(j - this.getX()) <= moduleSize) {
       const moduleSizeDiff = Math.abs(moduleSize - this.estimatedModuleSize);
-      return moduleSizeDiff <= 1.0 || moduleSizeDiff <= this.estimatedModuleSize;
+      return moduleSizeDiff <= 1 || moduleSizeDiff <= this.estimatedModuleSize;
     }
     return false;
   }
 
   combineEstimate(i: number, j: number, newModuleSize: number): AlignmentPattern {
-    const combinedX = (this.getX() + j) / 2.0;
-    const combinedY = (this.getY() + i) / 2.0;
-    const combinedModuleSize = (this.estimatedModuleSize + newModuleSize) / 2.0;
+    const combinedX = (this.getX() + j) / 2;
+    const combinedY = (this.getY() + i) / 2;
+    const combinedModuleSize = (this.estimatedModuleSize + newModuleSize) / 2;
     return new AlignmentPattern(combinedX, combinedY, combinedModuleSize);
   }
 }
@@ -213,12 +213,12 @@ export class FinderPatternFinder {
       totalModuleSize += count;
     }
     if (totalModuleSize < 7) return false;
-    const moduleSize = totalModuleSize / 7.0;
-    const maxVariance = moduleSize / 2.0;
+    const moduleSize = totalModuleSize / 7;
+    const maxVariance = moduleSize / 2;
     return (
       Math.abs(moduleSize - stateCount[0]) < maxVariance &&
       Math.abs(moduleSize - stateCount[1]) < maxVariance &&
-      Math.abs(3.0 * moduleSize - stateCount[2]) < 3 * maxVariance &&
+      Math.abs(3 * moduleSize - stateCount[2]) < 3 * maxVariance &&
       Math.abs(moduleSize - stateCount[3]) < maxVariance &&
       Math.abs(moduleSize - stateCount[4]) < maxVariance
     );
@@ -348,7 +348,7 @@ export class FinderPatternFinder {
         stateCountTotal
       );
       if (!Number.isNaN(centerJ)) {
-        const estimatedModuleSize = stateCountTotal / 7.0;
+        const estimatedModuleSize = stateCountTotal / 7;
         let found = false;
         for (let index = 0; index < this.possibleCenters.length; index++) {
           const center = this.possibleCenters[index];
@@ -376,7 +376,7 @@ export class FinderPatternFinder {
   }
 
   private static centerFromEnd(stateCount: Int32Array, end: number): number {
-    return end - stateCount[4] - stateCount[3] - stateCount[2] / 2.0;
+    return end - stateCount[4] - stateCount[3] - stateCount[2] / 2;
   }
 
   private findRowSkip(): number {
@@ -550,7 +550,7 @@ export class AlignmentPatternFinder {
 
   private foundPatternCross(stateCount: Int32Array): boolean {
     const moduleSize = this.moduleSize;
-    const maxVariance = moduleSize / 2.0;
+    const maxVariance = moduleSize / 2;
     for (let i = 0; i < 3; i++) {
       if (Math.abs(moduleSize - stateCount[i]) >= maxVariance) return false;
     }
@@ -597,7 +597,7 @@ export class AlignmentPatternFinder {
     const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
     if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal)
       return NaN;
-    return this.foundPatternCross(stateCount) ? i - stateCount[2] - stateCount[1] / 2.0 : NaN;
+    return this.foundPatternCross(stateCount) ? i - stateCount[2] - stateCount[1] / 2 : NaN;
   }
 
   private handlePossibleCenter(
@@ -606,7 +606,7 @@ export class AlignmentPatternFinder {
     j: number
   ): AlignmentPattern | null {
     const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
-    const centerJ = j - stateCount[2] - stateCount[1] / 2.0;
+    const centerJ = j - stateCount[2] - stateCount[1] / 2;
     const centerI = this.crossCheckVertical(
       i,
       Math.floor(centerJ),
@@ -614,7 +614,7 @@ export class AlignmentPatternFinder {
       stateCountTotal
     );
     if (!Number.isNaN(centerI)) {
-      const estimatedModuleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3.0;
+      const estimatedModuleSize = (stateCount[0] + stateCount[1] + stateCount[2]) / 3;
       for (const center of this.possibleCenters) {
         if (center.aboutEquals(estimatedModuleSize, centerI, centerJ)) {
           return center.combineEstimate(centerI, centerJ, estimatedModuleSize);

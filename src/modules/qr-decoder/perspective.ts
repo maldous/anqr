@@ -85,8 +85,8 @@ export class PerspectiveTransform {
     const dx3 = x0 - x1 + x2 - x3;
     const dy3 = y0 - y1 + y2 - y3;
 
-    if (dx3 === 0.0 && dy3 === 0.0) {
-      return new PerspectiveTransform(x1 - x0, x2 - x1, x0, y1 - y0, y2 - y1, y0, 0.0, 0.0, 1.0);
+    if (dx3 === 0 && dy3 === 0) {
+      return new PerspectiveTransform(x1 - x0, x2 - x1, x0, y1 - y0, y2 - y1, y0, 0, 0, 1);
     } else {
       const dx1 = x1 - x2;
       const dx2 = x3 - x2;
@@ -104,7 +104,7 @@ export class PerspectiveTransform {
         y0,
         a13,
         a23,
-        1.0
+        1
       );
     }
   }
@@ -206,14 +206,14 @@ export abstract class GridSampler {
       }
       nudged = false;
       if (x === -1) {
-        points[offset] = 0.0;
+        points[offset] = 0;
         nudged = true;
       } else if (x === width) {
         points[offset] = width - 1;
         nudged = true;
       }
       if (y === -1) {
-        points[offset + 1] = 0.0;
+        points[offset + 1] = 0;
         nudged = true;
       } else if (y === height) {
         points[offset + 1] = height - 1;
@@ -230,14 +230,14 @@ export abstract class GridSampler {
       }
       nudged = false;
       if (x === -1) {
-        points[offset] = 0.0;
+        points[offset] = 0;
         nudged = true;
       } else if (x === width) {
         points[offset] = width - 1;
         nudged = true;
       }
       if (y === -1) {
-        points[offset + 1] = 0.0;
+        points[offset + 1] = 0;
         nudged = true;
       } else if (y === height) {
         points[offset + 1] = height - 1;

@@ -12,12 +12,12 @@ const _log = createLogger('GENERATE');
 
 /**
  * Compute darkening factor for overlay colors on dark QR modules.
- * Scales linearly: at intensity 0 → 1.0 (no darkening), at intensity 1 → minFactor.
+ * Scales linearly: at intensity 0 → 1 (no darkening), at intensity 1 → minFactor.
  * Each overlay mode can pass its own minFactor to set the maximum darkening at full intensity.
  */
 export function computeDarkFactor(intensity: number, minFactor: number = 0.55): number {
   const i = Math.max(0, Math.min(1, intensity));
-  return 1.0 - (1.0 - minFactor) * i;
+  return 1 - (1 - minFactor) * i;
 }
 
 /**
@@ -97,7 +97,7 @@ export function applyQROverlayMode(
           // Min size scales with intensity: higher intensity allows smaller dots for more detail
           // At intensity 0: 0.25 (visible base size), at intensity 1: 0.15 (finer detail)
           const minSize = 0.15 + 0.1 * (1 - intensity);
-          const maxSize = 1.0;
+          const maxSize = 1;
           const sizeRange = maxSize - minSize;
           const darknessInfluence = (1 - brightness) * intensity;
           const baseSize = minSize + sizeRange * (1 - intensity) * 0.5;
