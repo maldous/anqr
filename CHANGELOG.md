@@ -16,6 +16,7 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ops): make credit-gate failure memory PID-aware with expiring skip entries to prevent stale cross-agent provider poisoning
 - fix(ops): treat dashboard `has_credits=false` with `balance=nil` as unknown telemetry and retry `gpt-5.3-codex` first
 - fix(ops): make `sonar-report` robust to script execute-bit drift by invoking export script via `bash`
+- fix(sonar): report only unresolved Sonar issues in exports and exclude localized static docs from source analysis noise
 
 ## 2026-03-07
 

@@ -19,11 +19,17 @@ req() {
 paginate_issues() {
   local query="$1"
   local out="$2"
+  local filter_base="resolved=false"
+  local filter
 
   : > "$out"
   p=1
   while true; do
-    json="$(req "/api/issues/search?componentKeys=$PROJECT&ps=$PS&p=$p&additionalFields=_all&$query")"
+    filter="$filter_base"
+    if [ -n "$query" ]; then
+      filter="$filter&$query"
+    fi
+    json="$(req "/api/issues/search?componentKeys=$PROJECT&ps=$PS&p=$p&additionalFields=_all&$filter")"
     n="$(echo "$json" | jq '.issues | length // 0')"
     echo "$json" | jq -c '.issues[]?' >> "$out"
     [ "$n" -lt "$PS" ] && break
@@ -91,4 +97,3 @@ jq -n \
 
 rm -rf "$TMP"
 echo "Written $OUT"
-
