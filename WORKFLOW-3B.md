@@ -100,15 +100,25 @@ You are a code editor. Follow these steps exactly.
 
 If any command exits with a non-zero status or produces an error:
 
-1. Post the error as a comment:
+1. **First failure — retry once.** Reset the workspace and try the failed command again:
    ```bash
-   node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed: <paste the error output>"
+   git rebase --abort 2>/dev/null; git checkout . && git clean -fd
    ```
-2. Move to Pending:
-   ```bash
-   node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Pending"
-   ```
-3. Stop — do not retry the failed command.
+   Then re-run the failed command. If it succeeds, continue with the workflow.
+
+2. **Second failure — give up.** If the command fails again after the retry:
+   a. Post the error as a comment:
+      ```bash
+      node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed (after retry): <paste the error output>"
+      ```
+   b. Move to **Rework** (not Pending — Rework allows Symphony to retry later):
+      ```bash
+      node scripts/ops/linear-update-state.mjs --issue <THIS_ISSUE_IDENTIFIER> --state "Rework"
+      ```
+   c. Stop.
+
+> **Important:** Only use `Pending` for genuinely non-automatable tasks (Steps 1.1–1.3 above).
+> Use `Rework` for all recoverable failures so Symphony can retry the issue.
 
 ## Step 2: Post evidence and complete
 
@@ -130,12 +140,90 @@ If any command exits with a non-zero status or produces an error:
 
 Use these CLI helpers instead of raw `linear_graphql` calls. They resolve all IDs automatically from human-readable names.
 
-| Script                    | Purpose                      | Example                                            |
-| ------------------------- | ---------------------------- | -------------------------------------------------- |
-| `linear-update-state.mjs` | Move issue to a state        | `--issue ANQ-106 --state "In Progress"`            |
-| `linear-comment.mjs`      | Post a comment               | `--issue ANQ-106 --body "Evidence..."`             |
-| `linear-list-issues.mjs`  | Query issues (JSON output)   | `--open --format json` or `--state Backlog,Todo`   |
-| `linear-update-issue.mjs` | Update title/priority/labels | `--issue ANQ-106 --title "New title" --priority 2` |
-| `create-child-issue.mjs`  | Create a child issue         | `--parent ANQ-151 --title "[CHILD] ..."`           |
+All scripts live in `scripts/ops/` and require `LINEAR_API_KEY`.
 
-All scripts live in `scripts/ops/` and require `LINEAR_API_KEY`. For audit/hygiene tasks, pipe `linear-list-issues.mjs` output to process issues, then call `linear-update-issue.mjs` for each fix.
+> **Do NOT pass `--help` or `--all` to any script except `linear-list-issues.mjs`.** The other scripts will exit with "Unknown flag" errors.
+
+### `linear-update-state.mjs`
+
+Move an issue to a new workflow state.
+
+Flags: `--issue <ID>` (required), `--state <name>` (required)
+
+```bash
+node scripts/ops/linear-update-state.mjs --issue ANQ-106 --state "In Progress"
+node scripts/ops/linear-update-state.mjs --issue ANQ-106 --state "Done"
+node scripts/ops/linear-update-state.mjs --issue ANQ-106 --state "Rework"
+```
+
+### `linear-comment.mjs`
+
+Post a comment on an issue.
+
+Flags: `--issue <ID>` (required), `--body <text>` (required)
+
+```bash
+node scripts/ops/linear-comment.mjs --issue ANQ-106 --body "Command failed: <error output>"
+```
+
+### `linear-list-issues.mjs`
+
+Query issues. Supports `-h` for help.
+
+Flags: `--team <key>`, `--state <names>` (comma-separated), `--label <name>` (repeatable), `--open`, `--format <json|table>`
+
+```bash
+node scripts/ops/linear-list-issues.mjs --open --format json > /tmp/issues.json
+node scripts/ops/linear-list-issues.mjs --state Backlog,Todo --format json > /tmp/issues.json
+```
+
+**JSON output is a top-level array, NOT an object.** Example:
+```json
+[
+  { "identifier": "ANQ-106", "title": "...", "state": "Backlog", "priority": 3, "labels": ["reliability"], "parent": "ANQ-100" },
+  { "identifier": "ANQ-107", "title": "...", "state": "Todo", "priority": 2, "labels": ["web"], "parent": null }
+]
+```
+
+**Correct jq patterns** (the output is an array, so use `.[]` not `.issues`):
+```bash
+# List all identifiers:
+jq -r '.[].identifier' /tmp/issues.json
+
+# Filter by state:
+jq -r '.[] | select(.state == "Backlog") | .identifier' /tmp/issues.json
+
+# Count issues:
+jq 'length' /tmp/issues.json
+
+# Get title for a specific issue:
+jq -r '.[] | select(.identifier == "ANQ-106") | .title' /tmp/issues.json
+```
+
+> **WRONG** (will error with `Cannot index array with string`): `jq '.issues'`, `jq '.issues[]'`, `jq '.data.issues'`
+
+### `linear-update-issue.mjs`
+
+Update issue metadata.
+
+Flags: `--issue <ID>` (required), `--title <text>`, `--description <text>`, `--priority <1-4>`, `--label <name>` (repeatable, replaces all), `--add-label <name>` (repeatable, additive), `--state <name>`
+
+```bash
+node scripts/ops/linear-update-issue.mjs --issue ANQ-106 --title "[PARENT] New title"
+node scripts/ops/linear-update-issue.mjs --issue ANQ-106 --priority 2 --add-label reliability
+```
+
+### `create-child-issue.mjs`
+
+Create a child issue under a parent.
+
+Flags: `--parent <ID>` (required), `--title <text>` (required), `--description <text>`, `--priority <1-4>`, `--label <name>` (repeatable), `--project <name>`, `--state <name>`
+
+```bash
+node scripts/ops/create-child-issue.mjs \
+  --parent ANQ-151 \
+  --title "[CHILD] Fix validation" \
+  --description "Apply fix to src/foo.ts" \
+  --priority 3 \
+  --label reliability
+```

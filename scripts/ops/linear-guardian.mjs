@@ -1002,6 +1002,7 @@ async function main() {
     sliced: [],
     skippedOversized: [],
     pendingMoved: [],
+    pendingDrained: [],
   };
 
   try {
@@ -1010,10 +1011,10 @@ async function main() {
       summary.symphonyFeed.contextProfile = contextBudget.profile;
       summary.symphonyFeed.maxDescriptionChars = contextBudget.maxDescriptionChars;
 
-      const pendingStates = await gql(
+      const feedStates = await gql(
         `query($teamId: ID!) {
           workflowStates(
-            filter: { team: { id: { eq: $teamId } }, name: { in: ["Pending", "Human Review"] } }
+            filter: { team: { id: { eq: $teamId } }, name: { in: ["Pending", "Human Review", "Backlog"] } }
             first: 10
           ) {
             nodes { id name }
@@ -1022,9 +1023,11 @@ async function main() {
         { teamId: team.id }
       );
       const pendingState =
-        pendingStates.workflowStates.nodes.find((s) => s.name === 'Pending') ||
-        pendingStates.workflowStates.nodes.find((s) => s.name === 'Human Review') ||
+        feedStates.workflowStates.nodes.find((s) => s.name === 'Pending') ||
+        feedStates.workflowStates.nodes.find((s) => s.name === 'Human Review') ||
         null;
+      const backlogDrainId =
+        feedStates.workflowStates.nodes.find((s) => s.name === 'Backlog')?.id || null;
       if (!pendingState) {
         summary.symphonyFeed.pendingStateMissing = true;
       }
@@ -1066,6 +1069,44 @@ async function main() {
       if (parentInSymphony.length > 0) {
         console.error(
           `[PARENT] drain: ${APPLY ? 'removed' : 'would remove'} ${parentInSymphony.length} tracking issues from Symphony project`
+        );
+      }
+
+      // Pending drain: non-HUMAN issues stuck in Pending inside Symphony are
+      // invisible to the orchestrator (Pending is not an active_state) and
+      // accumulate as dead weight. Reset them to Backlog and remove from the
+      // project so the feed can replenish with fresh candidates (F8).
+      const pendingInSymphony = await gql(
+        `query($projectId: ID!) {
+          issues(filter: {
+            team: { key: { eq: "ANQ" } },
+            project: { id: { eq: $projectId } },
+            state: { name: { eq: "Pending" } }
+          }, first: 200) {
+            nodes { id identifier title }
+          }
+        }`,
+        { projectId: symphonyProject.id }
+      );
+      const nonHumanPending = pendingInSymphony.issues.nodes.filter(
+        (i) => !i.title.startsWith('[HUMAN]') && !i.title.startsWith('[EMAIL]')
+      );
+      for (const issue of nonHumanPending) {
+        const entry = { identifier: issue.identifier, title: issue.title, drained: false };
+        if (APPLY && backlogDrainId) {
+          await gql(
+            `mutation($id: String!, $input: IssueUpdateInput!) {
+              issueUpdate(id: $id, input: $input) { success }
+            }`,
+            { id: issue.id, input: { stateId: backlogDrainId, projectId: null } }
+          );
+          entry.drained = true;
+        }
+        summary.symphonyFeed.pendingDrained.push(entry);
+      }
+      if (nonHumanPending.length > 0) {
+        console.error(
+          `Pending drain: ${APPLY ? 'drained' : 'would drain'} ${nonHumanPending.length} non-human Pending issues from Symphony to Backlog`
         );
       }
 
