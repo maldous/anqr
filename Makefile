@@ -841,8 +841,10 @@ zip:
 		:\(exclude\)ios \
 		:\(exclude\)android \
 		:\(exclude\)package-lock.json \
+		:\(exclude\)src/i18n/static/txt \
+		:\(exclude\)src/i18n/locales/txt \
 		-o anqr.zip
-	@echo "anqr.zip: $$(du -h anqr.zip | cut -f1) (excludes public/images, ios, android, package-lock.json)"
+	@echo "anqr.zip: $$(du -h anqr.zip | cut -f1) (excludes images, ios, android, lockfile, i18n txt)"
 
 # Generate QR-Art PNG from a target image
 # Usage: make qr:art IMG=public/tsunami.jpg OUT=qr-art.png
