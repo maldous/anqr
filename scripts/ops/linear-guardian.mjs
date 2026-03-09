@@ -29,6 +29,15 @@ const GUARDIAN_TASK_DESC_MAX = Number(process.env.GUARDIAN_TASK_DESC_MAX || 1200
 const GUARDIAN_TASK_CHECKLIST_MAX = Number(process.env.GUARDIAN_TASK_CHECKLIST_MAX || 4);
 const GUARDIAN_SONAR_FINDINGS_MAX = Number(process.env.GUARDIAN_SONAR_FINDINGS_MAX || 20);
 const GUARDIAN_MAX_NON_ARCHIVE_ISSUES = Number(process.env.GUARDIAN_MAX_NON_ARCHIVE_ISSUES || 250);
+const GUARDIAN_REFEED_COOLDOWN_MS = Number(
+  process.env.GUARDIAN_REFEED_COOLDOWN_MS || 30 * 60 * 1000
+);
+const GUARDIAN_DRAIN_CIRCUIT_BREAKER = Number(
+  process.env.GUARDIAN_DRAIN_CIRCUIT_BREAKER || 3
+);
+const GUARDIAN_DRAIN_WINDOW_MS = Number(
+  process.env.GUARDIAN_DRAIN_WINDOW_MS || 6 * 60 * 60 * 1000
+);
 const HUMAN_REQUIRED_PATTERNS = [
   /\bcreate\b.{0,24}\b(api key|api token|credential|secret)\b/i,
   /\bmanual\b.{0,24}\b(step|action|intervention)\b/i,
@@ -107,6 +116,67 @@ function extractSonarFindingCount(title) {
   const totalMatch = title.match(/\(total\s+(\d+)/i);
   if (totalMatch) return Number(totalMatch[1]);
   return 0;
+}
+
+function cleanupStaleDrainEntries(drainState) {
+  const windowStart = Date.now() - GUARDIAN_DRAIN_WINDOW_MS;
+  for (const [id, entry] of Object.entries(drainState)) {
+    entry.drains = entry.drains.filter((d) => d.at >= windowStart);
+    if (entry.drains.length === 0) delete drainState[id];
+  }
+}
+
+function recordDrain(identifier, reason, drainState) {
+  if (!drainState[identifier]) drainState[identifier] = { drains: [] };
+  drainState[identifier].drains.push({ at: Date.now(), reason });
+  const windowStart = Date.now() - GUARDIAN_DRAIN_WINDOW_MS;
+  return drainState[identifier].drains.filter((d) => d.at >= windowStart).length;
+}
+
+function isDrainCoolingDown(identifier, drainState) {
+  const entry = drainState[identifier];
+  if (!entry || entry.drains.length === 0) return false;
+  const lastDrain = entry.drains[entry.drains.length - 1];
+  return Date.now() - lastDrain.at < GUARDIAN_REFEED_COOLDOWN_MS;
+}
+
+async function applyCircuitBreaker(issue, drainCount, drainState, pendingStateId) {
+  if (!APPLY || !pendingStateId) return false;
+  const title = issue.title || '';
+  if (title.startsWith('[HUMAN]') || title.startsWith('[EMAIL]') || title.startsWith('[PARENT]')) {
+    return false;
+  }
+  if (drainCount < GUARDIAN_DRAIN_CIRCUIT_BREAKER) return false;
+
+  await gql(
+    `mutation($id: String!, $input: IssueUpdateInput!) {
+      issueUpdate(id: $id, input: $input) { success }
+    }`,
+    { id: issue.id, input: { stateId: pendingStateId } }
+  );
+  const recentDrains = (drainState[issue.identifier]?.drains || []).filter(
+    (d) => d.at >= Date.now() - GUARDIAN_DRAIN_WINDOW_MS
+  );
+  await gql(
+    `mutation($input: CommentCreateInput!) {
+      commentCreate(input: $input) { success }
+    }`,
+    {
+      input: {
+        issueId: issue.id,
+        body: [
+          `AI Hint: Circuit breaker triggered \u2014 drained ${drainCount} times in 6 hours.`,
+          '',
+          `Drain reasons: ${recentDrains.map((d) => d.reason).join(', ')}`,
+          '',
+          'Parked in Pending to stop the retry loop.',
+          'Possible causes: model capability mismatch, provider pressure, or oversized task.',
+          'Move back to Backlog once the underlying cause is addressed.',
+        ].join('\n'),
+      },
+    }
+  );
+  return true;
 }
 
 function isHumanOnlyIssue(issue) {
@@ -1005,6 +1075,22 @@ async function main() {
   // This replaces the old sentinel-driven feeding (too complex for small models).
   // Wrapped in try/catch so a failure here doesn't break the entire guardian.
   // -----------------------------------------------------------------------
+  const drainStatePath = path.join(REPORTS_DIR, 'drain-tracking-state.json');
+  let drainState = {};
+  try {
+    if (fs.existsSync(drainStatePath)) {
+      drainState = JSON.parse(fs.readFileSync(drainStatePath, 'utf-8'));
+    }
+  } catch {
+    drainState = {};
+  }
+  cleanupStaleDrainEntries(drainState);
+  summary.drainTracking = {
+    cooledDown: [],
+    circuitBroken: [],
+    totalTracked: Object.keys(drainState).length,
+  };
+
   summary.symphonyFeed = {
     checked: false,
     openCount: 0,
@@ -1073,6 +1159,7 @@ async function main() {
             { id: issue.id, input: { projectId: null } }
           );
           entry.drained = true;
+          recordDrain(issue.identifier, 'parent-invariant', drainState);
         }
         summary.symphonyFeed.parentDrained.push(entry);
       }
@@ -1111,6 +1198,7 @@ async function main() {
             { id: issue.id, input: { stateId: backlogDrainId, projectId: null } }
           );
           entry.drained = true;
+          recordDrain(issue.identifier, 'pending-drain', drainState);
         }
         summary.symphonyFeed.pendingDrained.push(entry);
       }
@@ -1185,6 +1273,13 @@ async function main() {
           if (i.title.startsWith('[PARENT]')) return false;
           const labelNames = i.labels.nodes.map((l) => l.name.toLowerCase());
           if (labelNames.some((l) => HUMAN_LABELS.has(l))) return false;
+          if (isDrainCoolingDown(i.identifier, drainState)) {
+            summary.drainTracking.cooledDown.push({
+              identifier: i.identifier,
+              title: i.title,
+            });
+            return false;
+          }
           return true;
         });
 
@@ -1352,6 +1447,20 @@ async function main() {
               { id: issue.id, input: { projectId: null } }
             );
             entry.drained = true;
+            const drainCount = recordDrain(issue.identifier, 'overflow', drainState);
+            const broke = await applyCircuitBreaker(
+              issue,
+              drainCount,
+              drainState,
+              pendingForHuman?.id
+            );
+            if (broke) {
+              summary.drainTracking.circuitBroken.push({
+                identifier: issue.identifier,
+                title: issue.title,
+                drainCount,
+              });
+            }
           }
           summary.symphonyFeed.drained.push(entry);
         }
@@ -1414,6 +1523,20 @@ async function main() {
             { id: issue.id, input: { projectId: null } }
           );
           entry.drained = true;
+          const drainCount = recordDrain(issue.identifier, 'retry-queue', drainState);
+          const broke = await applyCircuitBreaker(
+            issue,
+            drainCount,
+            drainState,
+            pendingForHuman?.id
+          );
+          if (broke) {
+            summary.drainTracking.circuitBroken.push({
+              identifier: issue.identifier,
+              title: issue.title,
+              drainCount,
+            });
+          }
         }
         summary.retryQueueHealth.drained.push(entry);
       }
@@ -1442,6 +1565,38 @@ async function main() {
   } catch (retryErr) {
     console.error(`Retry queue health error (non-fatal): ${retryErr.message}`);
     summary.retryQueueHealth.error = retryErr.message;
+  }
+
+  // -----------------------------------------------------------------------
+  // Drain tracking: persist state and report circuit breaker / cooldown stats.
+  // -----------------------------------------------------------------------
+  summary.drainTracking.totalTracked = Object.keys(drainState).length;
+  ensureDir(REPORTS_DIR);
+  fs.writeFileSync(drainStatePath, JSON.stringify(drainState, null, 2) + '\n');
+
+  if (summary.drainTracking.circuitBroken.length > 0) {
+    console.error(
+      `Drain circuit breaker: ${APPLY ? 'parked' : 'would park'} ${summary.drainTracking.circuitBroken.length} issues in Pending`
+    );
+    sendNotification({
+      subject: `Drain circuit breaker: ${summary.drainTracking.circuitBroken.length} issues parked`,
+      body: [
+        `${summary.drainTracking.circuitBroken.length} issues hit the drain circuit breaker (${GUARDIAN_DRAIN_CIRCUIT_BREAKER}+ drains in 6h):`,
+        '',
+        ...summary.drainTracking.circuitBroken.map(
+          (e) =>
+            `\u2022 ${e.identifier}: ${e.title} (${e.drainCount} drains)\n  ${linearIssueUrl(e.identifier)}`
+        ),
+        '',
+        'These issues are parked in Pending. Investigate the root cause before moving back to Backlog.',
+      ].join('\n'),
+      severity: 'warning',
+    });
+  }
+  if (summary.drainTracking.cooledDown.length > 0) {
+    console.error(
+      `Re-feed cooldown: skipped ${summary.drainTracking.cooledDown.length} recently-drained issues`
+    );
   }
 
   // -----------------------------------------------------------------------
