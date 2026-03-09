@@ -244,42 +244,42 @@ export class FinderPatternFinder {
       stateCount[2]++;
       i--;
     }
-    if (i < 0) return NaN;
+    if (i < 0) return Number.NaN;
     while (i >= 0 && !image.get(centerJ, i) && stateCount[1] <= maxCount) {
       stateCount[1]++;
       i--;
     }
-    if (i < 0 || stateCount[1] > maxCount) return NaN;
+    if (i < 0 || stateCount[1] > maxCount) return Number.NaN;
     while (i >= 0 && image.get(centerJ, i) && stateCount[0] <= maxCount) {
       stateCount[0]++;
       i--;
     }
-    if (stateCount[0] > maxCount) return NaN;
+    if (stateCount[0] > maxCount) return Number.NaN;
 
     i = startI + 1;
     while (i < maxI && image.get(centerJ, i)) {
       stateCount[2]++;
       i++;
     }
-    if (i === maxI) return NaN;
+    if (i === maxI) return Number.NaN;
     while (i < maxI && !image.get(centerJ, i) && stateCount[3] < maxCount) {
       stateCount[3]++;
       i++;
     }
-    if (i === maxI || stateCount[3] >= maxCount) return NaN;
+    if (i === maxI || stateCount[3] >= maxCount) return Number.NaN;
     while (i < maxI && image.get(centerJ, i) && stateCount[4] < maxCount) {
       stateCount[4]++;
       i++;
     }
-    if (stateCount[4] >= maxCount) return NaN;
+    if (stateCount[4] >= maxCount) return Number.NaN;
 
     const stateCountTotal =
       stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
     if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal)
-      return NaN;
+      return Number.NaN;
     return FinderPatternFinder.foundPatternCross(stateCount)
       ? FinderPatternFinder.centerFromEnd(stateCount, i)
-      : NaN;
+      : Number.NaN;
   }
 
   private crossCheckHorizontal(
@@ -297,42 +297,42 @@ export class FinderPatternFinder {
       stateCount[2]++;
       j--;
     }
-    if (j < 0) return NaN;
+    if (j < 0) return Number.NaN;
     while (j >= 0 && !image.get(j, centerI) && stateCount[1] <= maxCount) {
       stateCount[1]++;
       j--;
     }
-    if (j < 0 || stateCount[1] > maxCount) return NaN;
+    if (j < 0 || stateCount[1] > maxCount) return Number.NaN;
     while (j >= 0 && image.get(j, centerI) && stateCount[0] <= maxCount) {
       stateCount[0]++;
       j--;
     }
-    if (stateCount[0] > maxCount) return NaN;
+    if (stateCount[0] > maxCount) return Number.NaN;
 
     j = startJ + 1;
     while (j < maxJ && image.get(j, centerI)) {
       stateCount[2]++;
       j++;
     }
-    if (j === maxJ) return NaN;
+    if (j === maxJ) return Number.NaN;
     while (j < maxJ && !image.get(j, centerI) && stateCount[3] < maxCount) {
       stateCount[3]++;
       j++;
     }
-    if (j === maxJ || stateCount[3] >= maxCount) return NaN;
+    if (j === maxJ || stateCount[3] >= maxCount) return Number.NaN;
     while (j < maxJ && image.get(j, centerI) && stateCount[4] < maxCount) {
       stateCount[4]++;
       j++;
     }
-    if (stateCount[4] >= maxCount) return NaN;
+    if (stateCount[4] >= maxCount) return Number.NaN;
 
     const stateCountTotal =
       stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
     if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= originalStateCountTotal)
-      return NaN;
+      return Number.NaN;
     return FinderPatternFinder.foundPatternCross(stateCount)
       ? FinderPatternFinder.centerFromEnd(stateCount, j)
-      : NaN;
+      : Number.NaN;
   }
 
   private handlePossibleCenter(stateCount: Int32Array, i: number, j: number): boolean {
@@ -575,29 +575,29 @@ export class AlignmentPatternFinder {
       stateCount[1]++;
       i--;
     }
-    if (i < 0 || stateCount[1] > maxCount) return NaN;
+    if (i < 0 || stateCount[1] > maxCount) return Number.NaN;
     while (i >= 0 && !image.get(centerJ, i) && stateCount[0] <= maxCount) {
       stateCount[0]++;
       i--;
     }
-    if (stateCount[0] > maxCount) return NaN;
+    if (stateCount[0] > maxCount) return Number.NaN;
 
     i = startI + 1;
     while (i < maxI && image.get(centerJ, i) && stateCount[1] <= maxCount) {
       stateCount[1]++;
       i++;
     }
-    if (i === maxI || stateCount[1] > maxCount) return NaN;
+    if (i === maxI || stateCount[1] > maxCount) return Number.NaN;
     while (i < maxI && !image.get(centerJ, i) && stateCount[2] <= maxCount) {
       stateCount[2]++;
       i++;
     }
-    if (stateCount[2] > maxCount) return NaN;
+    if (stateCount[2] > maxCount) return Number.NaN;
 
     const stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2];
     if (5 * Math.abs(stateCountTotal - originalStateCountTotal) >= 2 * originalStateCountTotal)
-      return NaN;
-    return this.foundPatternCross(stateCount) ? i - stateCount[2] - stateCount[1] / 2 : NaN;
+      return Number.NaN;
+    return this.foundPatternCross(stateCount) ? i - stateCount[2] - stateCount[1] / 2 : Number.NaN;
   }
 
   private handlePossibleCenter(

@@ -2807,7 +2807,7 @@ async function handler(request: Request) {
 
   // Mask pattern: 'auto' or 0-7
   const maskPatternParam = params.get('mask');
-  const parsedMask = maskPatternParam ? Number.parseInt(maskPatternParam, 10) : NaN;
+  const parsedMask = maskPatternParam ? Number.parseInt(maskPatternParam, 10) : Number.NaN;
   const maskPattern: 'auto' | number =
     maskPatternParam === 'auto' || !maskPatternParam || Number.isNaN(parsedMask)
       ? 'auto'

@@ -20,7 +20,7 @@ function parseHalftoneCell(cellConfig: number | string | undefined): number {
   // Parse 'n×n' or 'nxn' format
   const match = String(cellConfig).match(/^(\d+)[x×](\d+)$/i);
   if (match) {
-    return Math.max(1, parseInt(match[1], 10));
+    return Math.max(1, Number.parseInt(match[1], 10));
   }
 
   return 1; // Default to single dot per module

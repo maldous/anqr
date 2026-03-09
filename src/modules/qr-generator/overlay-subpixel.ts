@@ -26,7 +26,7 @@ function parseGridSize(gridSize: string | undefined): number {
   if (!gridSize) return 3; // default
   const match = gridSize.match(/^(\d+)x\d+$/);
   if (match) {
-    return parseInt(match[1], 10);
+    return Number.parseInt(match[1], 10);
   }
   return 3; // default fallback
 }
@@ -39,9 +39,9 @@ function parseHexColor(hex: string | undefined): { r: number; g: number; b: numb
   const match = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
   if (match) {
     return {
-      r: parseInt(match[1], 16),
-      g: parseInt(match[2], 16),
-      b: parseInt(match[3], 16),
+      r: Number.parseInt(match[1], 16),
+      g: Number.parseInt(match[2], 16),
+      b: Number.parseInt(match[3], 16),
     };
   }
   return null;

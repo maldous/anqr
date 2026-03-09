@@ -300,7 +300,7 @@ export class Detector {
       const diffY = toY - fromY;
       return Math.sqrt(diffX * diffX + diffY * diffY);
     }
-    return NaN;
+    return Number.NaN;
   }
 
   protected findAlignmentInRegion(

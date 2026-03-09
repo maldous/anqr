@@ -263,7 +263,7 @@ export class Integer {
    * Parse integer
    */
   static parseInt(num: string, radix?: number): number {
-    return parseInt(num, radix);
+    return Number.parseInt(num, radix);
   }
 }
 
@@ -285,7 +285,7 @@ export class Float {
 // biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class Long {
   static parseLong(num: string, radix?: number): number {
-    return parseInt(num, radix);
+    return Number.parseInt(num, radix);
   }
 }
 

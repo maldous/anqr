@@ -136,7 +136,7 @@ export function renderTextWatermark(
 
   ctx.font = font;
   const metrics = ctx.measureText(text);
-  const height = parseInt(font, 10) || 16;
+  const height = Number.parseInt(font, 10) || 16;
 
   canvas.width = Math.ceil(metrics.width) + 4;
   canvas.height = height + 4;
@@ -164,7 +164,7 @@ export function renderPatternWatermark(
   ctx.font = font;
   const metrics = ctx.measureText(text);
   const textWidth = metrics.width;
-  const _textHeight = parseInt(font, 10) || 12;
+  const _textHeight = Number.parseInt(font, 10) || 12;
 
   // Calculate tile size based on angle and spacing
   const tileSize = Math.max(spacing, textWidth + 20);

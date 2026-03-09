@@ -2438,12 +2438,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     const match = payload.match(/^geo:([\d.-]+),([\d.-]+)(?:,([\d.-]+))?(?:\?.*u=([\d.]+))?/i);
     if (!match) return result;
 
-    const lat = parseFloat(match[1]);
-    const lon = parseFloat(match[2]);
+    const lat = Number.parseFloat(match[1]);
+    const lon = Number.parseFloat(match[2]);
     result.latitude = lat;
     result.longitude = lon;
-    result.altitude = match[3] ? parseFloat(match[3]) : null;
-    result.uncertainty = match[4] ? parseFloat(match[4]) : null;
+    result.altitude = match[3] ? Number.parseFloat(match[3]) : null;
+    result.uncertainty = match[4] ? Number.parseFloat(match[4]) : null;
 
     // Determine hemispheres
     result.latHemisphere = lat >= 0 ? 'N' : 'S';
@@ -2652,16 +2652,16 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
         // Parse iCal datetime format: YYYYMMDDTHHMMSS or YYYYMMDD
         try {
           const isAllDay = dt.length === 8;
-          const year = parseInt(dt.slice(0, 4), 10);
-          const month = parseInt(dt.slice(4, 6), 10) - 1;
-          const day = parseInt(dt.slice(6, 8), 10);
+          const year = Number.parseInt(dt.slice(0, 4), 10);
+          const month = Number.parseInt(dt.slice(4, 6), 10) - 1;
+          const day = Number.parseInt(dt.slice(6, 8), 10);
           let hours = 0,
             minutes = 0;
 
           if (!isAllDay && dt.includes('T')) {
             const timePart = dt.split('T')[1];
-            hours = parseInt(timePart.slice(0, 2), 10);
-            minutes = parseInt(timePart.slice(2, 4), 10);
+            hours = Number.parseInt(timePart.slice(0, 2), 10);
+            minutes = Number.parseInt(timePart.slice(2, 4), 10);
           }
 
           const date = new Date(year, month, day, hours, minutes);
@@ -2698,7 +2698,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           });
 
         const freq = parts.FREQ;
-        const interval = parts.INTERVAL ? parseInt(parts.INTERVAL, 10) : 1;
+        const interval = parts.INTERVAL ? Number.parseInt(parts.INTERVAL, 10) : 1;
         const byday = parts.BYDAY;
         const until = parts.UNTIL;
         const count = parts.COUNT;
@@ -4745,8 +4745,8 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
   const _renderGeoDetails = (payload: string) => {
     const geoMatch = payload.match(/^geo:([\d.-]+),([\d.-]+)/i);
     if (!geoMatch) return null;
-    const lat = parseFloat(geoMatch[1]);
-    const lng = parseFloat(geoMatch[2]);
+    const lat = Number.parseFloat(geoMatch[1]);
+    const lng = Number.parseFloat(geoMatch[2]);
     const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
     return (
       <div className="mt-2 p-2 rounded-lg bg-muted/50">
