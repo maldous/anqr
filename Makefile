@@ -1074,7 +1074,11 @@ SONAR_TOKEN ?= $(SONAR_TOKEN)
 # Run SonarQube analysis (uses sonar-project.properties)
 sonar:
 	@echo "Running SonarQube analysis..."
-	npx sonar-scanner
+	@if ! curl -fsS --max-time 5 "$(SONAR_HOST_URL)/api/system/status" >/dev/null; then \
+		echo "SKIP: SonarQube server unavailable at $(SONAR_HOST_URL); skipping non-blocking local analysis."; \
+	else \
+		npx sonar-scanner; \
+	fi
 	@echo ""
 	@echo "Analysis complete! View results at: $(SONAR_HOST_URL)/dashboard?id=anqr"
 

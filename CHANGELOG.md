@@ -9,6 +9,9 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ci): shorten GitHub quality gate to static quality checks; move runtime app tests under `make test`
 - fix(workflow): route catastrophic retry escalations to `Todo` (AI retry lane) and normalize human-only queue in `Pending`
 - fix(ops): add `--help` / `-h` support to Linear list CLI and improve unknown-flag guidance
+- fix(build): make `make sonar` non-blocking when local SonarQube is unavailable
+- fix(ops): record cloud `gpt-5.3-codex` selection in credit-gate model state to prevent stale fallback model markers
+- docs(harness): codify Sonar triage loop and bootstrap token refresh requirements
 
 ## 2026-03-07
 

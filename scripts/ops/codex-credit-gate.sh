@@ -435,6 +435,12 @@ record_provider() {
   if printf '%s\n%s\n' "$(date +%s)" "$1" > "$tmp"; then mv -f "$tmp" "$STATE_FILE" 2>/dev/null; fi
 }
 
+record_current_model() {
+  local model_file="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/credit-gate/current-model"
+  local model_tmp="${model_file}.$$"
+  if printf '%s\n' "$1" > "$model_tmp"; then mv -f "$model_tmp" "$model_file" 2>/dev/null; fi
+}
+
 load_skip_list
 
 # ---------------------------------------------------------------------------
@@ -446,6 +452,8 @@ credits_available && credit_rc=0 || credit_rc=$?
 # --- Cloud model (if credits available) ---
 if [ "$credit_rc" -eq 0 ]; then
   log "Codex credits available — using cloud model (${CODEX_MODEL})"
+  record_provider codex
+  record_current_model "$CODEX_MODEL"
   export ANQR_CONTEXT_MODE="cloud-full"
   exec "$CODEX_BIN" \
     --dangerously-bypass-approvals-and-sandbox \
@@ -463,6 +471,7 @@ if [ "$credit_rc" -eq 2 ]; then
   else
     log "Credit status unknown — trying cloud model (${CODEX_MODEL}) before fallbacks"
     record_provider codex
+    record_current_model "$CODEX_MODEL"
     export ANQR_CONTEXT_MODE="cloud-full"
     exec "$CODEX_BIN" \
       --dangerously-bypass-approvals-and-sandbox \
@@ -484,9 +493,7 @@ fi
 exec_via_litellm() {
   local model="$1"
   # Write desired model to state file for the model-injector proxy to read.
-  local model_file="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/credit-gate/current-model"
-  local model_tmp="${model_file}.$$"
-  if printf '%s\n' "$model" > "$model_tmp"; then mv -f "$model_tmp" "$model_file" 2>/dev/null; fi
+  record_current_model "$model"
   log "Wrote model=$model to state file for model-injector proxy"
   export ANQR_CONTEXT_MODE="local-small"
   export OPENAI_BASE_URL="$LITELLM_HOST"
