@@ -191,6 +191,7 @@ make all          # Complete 16-step production pipeline
 - **State routing**: true human-only tasks stay in `Pending`; catastrophic AI retry escalations are routed to `Todo` so they remain in the AI retry queue.
 - **Sonar contract**: `make sonar` is non-blocking when local SonarQube is down; when SonarQube is running it must execute a real scan and results should be triaged into actionable issues (ongoing parent: `ANQ-266`).
 - **Bootstrap secrets hygiene**: whenever `env` / `env.txt` secrets change (including `SONAR_TOKEN`, `SONARQUBE_TOKEN`, `SONAR_HOST_URL`), refresh `bootstrap.zip` so `make bootstrap` restores the same working token set on new hosts.
+- **Symphony env parity**: keep `~/.config/symphony/anqr.env` aligned with required automation secrets (including `SONAR_TOKEN` and `SONAR_HOST_URL`) so agent workspaces inherit the same access as local shell runs.
 - **Project health**: The guardian computes project health (`onTrack`/`atRisk`/`offTrack`) from issue completion ratios and posts Linear project updates when health changes.
 - **Symphony liveness**: The guardian verifies Symphony is running every 15 minutes via a deterministic systemd + dashboard check. This replaces the old AI-powered sentinel heartbeat — no AI credits consumed, cannot enter retry queues.
 - **Harness-driven issues**: The guardian reads the latest harness report and automatically creates `[HARNESS]` issues for FAIL/ERROR checks. It tracks state to avoid duplicates and marks issues resolved when checks pass.

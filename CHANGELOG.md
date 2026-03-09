@@ -12,6 +12,7 @@ Each resolved issue should add an entry under the current date heading.
 - fix(build): make `make sonar` non-blocking when local SonarQube is unavailable
 - fix(ops): record cloud `gpt-5.3-codex` selection in credit-gate model state to prevent stale fallback model markers
 - docs(harness): codify Sonar triage loop and bootstrap token refresh requirements
+- fix(ops): propagate `SONAR_*` into Symphony EnvironmentFile and bootstrap archive so agent runs can query Sonar APIs
 
 ## 2026-03-07
 
