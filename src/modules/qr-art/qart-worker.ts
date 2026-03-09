@@ -14,7 +14,7 @@ type WorkerContext = {
   onmessage: ((event: MessageEvent<QArtWorkerRequest>) => void) | null;
 };
 
-const workerContext = self as unknown as WorkerContext;
+const workerContext = globalThis as unknown as WorkerContext;
 const workerCanvasFactory: CanvasFactory = {
   createCanvas: async (width: number, height: number) => new OffscreenCanvas(width, height),
 };

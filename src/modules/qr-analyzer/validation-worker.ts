@@ -25,7 +25,7 @@ interface ValidationResult {
   confidence: 'high' | 'medium' | 'low';
 }
 
-self.onmessage = (e: MessageEvent<ValidateRequest>) => {
+globalThis.onmessage = (e: MessageEvent<ValidateRequest>) => {
   const { id, width, height, pixels, expectedContent, attempts } = e.data;
   const pixelView = new Uint8ClampedArray(
     pixels.buffer as ArrayBuffer,
@@ -34,7 +34,7 @@ self.onmessage = (e: MessageEvent<ValidateRequest>) => {
   );
   const imageData = new ImageData(pixelView, width, height);
   const result = validate(imageData, expectedContent, attempts);
-  self.postMessage({ id, result });
+  globalThis.postMessage({ id, result });
 };
 
 function validate(
