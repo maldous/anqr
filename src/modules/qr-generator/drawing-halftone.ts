@@ -18,7 +18,7 @@ function parseHalftoneCell(cellConfig: number | string | undefined): number {
   if (typeof cellConfig === 'number') return Math.max(1, Math.round(cellConfig));
 
   // Parse 'n×n' or 'nxn' format
-  const match = String(cellConfig).match(/^(\d+)[x×](\d+)$/i);
+  const match = /^(\d+)[x×](\d+)$/i.exec(String(cellConfig));
   if (match) {
     return Math.max(1, Number.parseInt(match[1], 10));
   }

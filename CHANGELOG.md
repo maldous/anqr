@@ -5,6 +5,11 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-09
 
+- fix(sonar): use globalThis instead of self in worker contexts (ANQ-284)
+- fix(sonar): remove unused catch parameters in server function (ANQ-284)
+- fix(sonar): use element.remove() instead of parentNode.removeChild (ANQ-280)
+- fix(sonar): prefer Math.trunc/Math.round over bitwise OR zero truncation (ANQ-282)
+- fix(sonar): use RegExp.exec instead of String.match for simple patterns (ANQ-287)
 - fix(ops): clean Linear noise by hardening CI monitor workflow matching/repo filtering and auto-resolving harness issues in guardian
 - fix(ci): shorten GitHub quality gate to static quality checks; move runtime app tests under `make test`
 - fix(workflow): route catastrophic retry escalations to `Todo` (AI retry lane) and normalize human-only queue in `Pending`
