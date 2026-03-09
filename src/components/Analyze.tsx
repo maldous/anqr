@@ -2164,10 +2164,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             result.fullName = value;
             break;
           case 'N':
-            result.name = value.replace(/;/g, ' ').trim();
+            result.name = value.replaceAll(/;/g, ' ').trim();
             break;
           case 'ORG':
-            result.organization = value.replace(/;/g, ', ');
+            result.organization = value.replaceAll(/;/g, ', ');
             break;
           case 'TITLE':
             result.title = value;
@@ -2255,7 +2255,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           result.email = value;
           break;
         case 'ADR':
-          result.address = value.replace(/,/g, ', ');
+          result.address = value.replaceAll(/,/g, ', ');
           break;
         case 'BDAY':
           result.birthday = value;
@@ -2336,7 +2336,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
     };
 
     let number = payload.toLowerCase().startsWith('tel:') ? payload.slice(4) : payload;
-    number = number.replace(/[^+\d]/g, '');
+    number = number.replaceAll(/[^+\d]/g, '');
     result.number = number;
     result.formatted = number;
 
@@ -2575,7 +2575,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
 
     // Format IBAN with spaces
     if (result.iban) {
-      result.iban = result.iban.replace(/(.{4})/g, '$1 ').trim();
+      result.iban = result.iban.replaceAll(/(.{4})/g, '$1 ').trim();
     }
 
     return result;
@@ -2755,10 +2755,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             result.summary = value;
             break;
           case 'DESCRIPTION':
-            result.description = value.replace(/\\n/g, '\n').replace(/\\,/g, ',');
+            result.description = value.replaceAll(/\\n/g, '\n').replaceAll(/\\,/g, ',');
             break;
           case 'LOCATION':
-            result.location = value.replace(/\\,/g, ',');
+            result.location = value.replaceAll(/\\,/g, ',');
             break;
           case 'DTSTART': {
             result.startDate = value;
@@ -3677,7 +3677,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               label: type,
               value: (
                 <a
-                  href={`tel:${number.replace(/[^+\d]/g, '')}`}
+                  href={`tel:${number.replaceAll(/[^+\d]/g, '')}`}
                   className="font-mono text-xs text-primary hover:underline"
                 >
                   {number}
@@ -3794,7 +3794,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             label: 'Phone',
             value: (
               <a
-                href={`tel:${String(mecardData.phone).replace(/[^+\d]/g, '')}`}
+                href={`tel:${String(mecardData.phone).replaceAll(/[^+\d]/g, '')}`}
                 className="font-mono text-xs text-primary hover:underline"
               >
                 {mecardData.phone}
@@ -4015,7 +4015,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             label: 'Recipient',
             value: (
               <a
-                href={`tel:${String(smsData.number).replace(/[^+\d]/g, '')}`}
+                href={`tel:${String(smsData.number).replaceAll(/[^+\d]/g, '')}`}
                 className="font-mono text-xs text-primary hover:underline"
               >
                 {smsData.number}
@@ -4319,7 +4319,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             value: (
               <div className="flex items-center gap-1">
                 <span className="font-mono text-xs">{epcData.iban}</span>
-                <CopyButton text={String(epcData.iban).replace(/\s/g, '')} />
+                <CopyButton text={String(epcData.iban).replaceAll(/\s/g, '')} />
               </div>
             ),
             icon: <CreditCard className="w-3 h-3" />,

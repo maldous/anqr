@@ -31,9 +31,9 @@ function normalizeToken(value: string): string {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/--+/g, '-');
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '')
+    .replaceAll(/--+/g, '-');
 }
 
 function baseFromProps(props: TestIdProps, fallbackPrefix: string, reactId: string): string {
@@ -45,7 +45,7 @@ function baseFromProps(props: TestIdProps, fallbackPrefix: string, reactId: stri
   if (typeof props.placeholder === 'string' && props.placeholder.trim().length > 0) {
     return `${fallbackPrefix}-${normalizeToken(props.placeholder)}`;
   }
-  return `${fallbackPrefix}-${normalizeToken(reactId.replace(/[:]/g, '-'))}`;
+  return `${fallbackPrefix}-${normalizeToken(reactId.replaceAll(/[:]/g, '-'))}`;
 }
 
 function allocateUniqueId(base: string, sourceKey: string): string {

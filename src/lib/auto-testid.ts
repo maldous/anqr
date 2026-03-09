@@ -20,9 +20,9 @@ function normalizeToken(value: string): string {
   return value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/--+/g, '-');
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '')
+    .replaceAll(/--+/g, '-');
 }
 
 function getElementToken(el: Element): string {

@@ -12,7 +12,7 @@ const _log = createLogger('PAYLOAD');
  */
 export function isValidPhone(tel: string): boolean {
   // Must have at least 3 digits to be considered a valid phone number
-  const digits = tel.replace(/\D/g, '');
+  const digits = tel.replaceAll(/\D/g, '');
   return digits.length >= 3;
 }
 
@@ -73,7 +73,7 @@ export function isValidSSID(ssid: string): boolean {
  * Basic format check only - does not validate checksum
  */
 export function isValidIBAN(iban: string): boolean {
-  const cleaned = iban.replace(/\s/g, '').toUpperCase();
+  const cleaned = iban.replaceAll(/\s/g, '').toUpperCase();
   return /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(cleaned);
 }
 
@@ -107,7 +107,7 @@ export function isValidCryptoAddress(address: string, type: string): boolean {
  * Validate GTIN (8, 12, 13, or 14 digits)
  */
 export function isValidGTIN(gtin: string): boolean {
-  const cleaned = gtin.replace(/\s/g, '');
+  const cleaned = gtin.replaceAll(/\s/g, '');
   return /^\d{8}$|^\d{12,14}$/.test(cleaned);
 }
 
@@ -174,7 +174,7 @@ export function isValidAmount(amount: string): boolean {
  * Validate Australian BSB (6 digits, often formatted as XXX-XXX)
  */
 export function isValidBSB(bsb: string): boolean {
-  const cleaned = bsb.replace(/[-\s]/g, '');
+  const cleaned = bsb.replaceAll(/[-\s]/g, '');
   return /^\d{6}$/.test(cleaned);
 }
 
@@ -182,7 +182,7 @@ export function isValidBSB(bsb: string): boolean {
  * Validate Hong Kong FPS ID (7-9 digits)
  */
 export function isValidFpsId(fpsId: string): boolean {
-  const cleaned = fpsId.replace(/\s/g, '');
+  const cleaned = fpsId.replaceAll(/\s/g, '');
   return /^\d{7,9}$/.test(cleaned);
 }
 
@@ -190,7 +190,7 @@ export function isValidFpsId(fpsId: string): boolean {
  * Validate Vietnam bank BIN (6-8 digits)
  */
 export function isValidBankBin(bin: string): boolean {
-  const cleaned = bin.replace(/\s/g, '');
+  const cleaned = bin.replaceAll(/\s/g, '');
   return /^\d{6,8}$/.test(cleaned);
 }
 
@@ -205,7 +205,7 @@ export function isValidMerchantId(id: string): boolean {
  * Validate generic account number (at least 4 digits)
  */
 export function isValidAccountNumber(accNum: string): boolean {
-  const digits = accNum.replace(/\D/g, '');
+  const digits = accNum.replaceAll(/\D/g, '');
   return digits.length >= 4;
 }
 
@@ -220,7 +220,7 @@ export function isValidStoreId(storeId: string): boolean {
  * Validate Australian Business Number (ABN - exactly 11 digits)
  */
 export function isValidABN(abn: string): boolean {
-  const cleaned = abn.replace(/[\s-]/g, '');
+  const cleaned = abn.replaceAll(/[\s-]/g, '');
   return /^\d{11}$/.test(cleaned);
 }
 
@@ -242,7 +242,7 @@ export function isValidProxyValue(value: string, proxyType: string): boolean {
       return isValidPhone(value);
     case 'NRIC':
       // Malaysian NRIC is 12 digits (without dashes)
-      return /^\d{12}$/.test(value.replace(/[-\s]/g, ''));
+      return /^\d{12}$/.test(value.replaceAll(/[-\s]/g, ''));
     default:
       // Just needs to be non-empty
       return value.trim().length >= 1;

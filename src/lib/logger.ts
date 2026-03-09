@@ -363,7 +363,7 @@ export function saveLogs(filename?: string): void {
     return;
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
   const name = filename || `anqr-logs-${timestamp}.json`;
 
   const json = JSON.stringify(logs, null, 2);
@@ -399,7 +399,7 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
     return;
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replaceAll(/[:.]/g, '-');
   const name = filename || `anqr-${scope.toLowerCase()}-logs-${timestamp}.json`;
 
   const json = JSON.stringify(logs, null, 2);
