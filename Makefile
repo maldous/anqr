@@ -836,8 +836,13 @@ zip:
 		--format=zip \
 		--prefix=anqr/ \
 		HEAD \
+		:\(exclude\)public/images \
 		:\(exclude\)public/sitemap.xml \
+		:\(exclude\)ios \
+		:\(exclude\)android \
+		:\(exclude\)package-lock.json \
 		-o anqr.zip
+	@echo "anqr.zip: $$(du -h anqr.zip | cut -f1) (excludes public/images, ios, android, package-lock.json)"
 
 # Generate QR-Art PNG from a target image
 # Usage: make qr:art IMG=public/tsunami.jpg OUT=qr-art.png
