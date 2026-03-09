@@ -64,6 +64,7 @@ const CONCURRENCY = Math.max(1, Number.parseInt(process.env.GALLERY_CONCURRENCY 
 const PAGE_TIMEOUT = 30_000;
 const CANVAS_SELECTOR =
   '[data-testid="qr-preview"] canvas, [data-testid="preview-canvas"], canvas[role="img"]';
+const RENDER_IDLE_SELECTOR = '[data-testid="qr-preview"][data-rendering-state="idle"]';
 const SKIP_SERVER_CHECK = process.env.GALLERY_SKIP_SERVER_CHECK === '1';
 const CAPTURE_MODE = (process.env.GALLERY_BROWSER_CAPTURE_MODE || 'api').toLowerCase();
 const SHARD = resolveGalleryShard(process.env);
@@ -325,6 +326,15 @@ async function waitForCanvasStabilization(page, selector, timeoutMs = 6000) {
   }
 
   return false;
+}
+
+async function waitForPreviewIdle(page, timeoutMs) {
+  try {
+    await page.waitForSelector(RENDER_IDLE_SELECTOR, { timeout: timeoutMs, state: 'attached' });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function parseIntParam(value, fallback) {
@@ -739,6 +749,9 @@ async function main() {
           await page.waitForTimeout(400);
         }
 
+        // Wait for app-level render lifecycle completion. This avoids capturing
+        // draft/degraded preview frames before settled rendering is done.
+        await waitForPreviewIdle(page, PAGE_TIMEOUT);
         await waitForCanvasStabilization(page, CANVAS_SELECTOR, 6000).catch(() => {});
 
         await page.waitForTimeout(300);
