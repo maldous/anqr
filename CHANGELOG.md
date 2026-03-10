@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-11
 
+- fix(platform): enforce monetization guardrails with telemetry and auto kill-switch for violating ad variants
 - fix(ops): harden `make all` with deterministic stage contracts and explicit skip/failure behavior
 
 ## 2026-03-10
