@@ -1568,9 +1568,8 @@ export class QRGenerator {
     const overlayComplexityCacheKey = `${isAnimatedFrame ? 'anim' : 'static'}:${overlaySignature}`;
     const cachedOverlayComplexity = readOverlayComplexityCache(overlayComplexityCacheKey);
     const overlayComplexity =
-      cachedOverlayComplexity !== null
-        ? cachedOverlayComplexity
-        : await computeOverlayComplexity(pool, processedOverlayCanvas, analysisSampleSize);
+      cachedOverlayComplexity ??
+      (await computeOverlayComplexity(pool, processedOverlayCanvas, analysisSampleSize));
     if (cachedOverlayComplexity === null) {
       writeOverlayComplexityCache(overlayComplexityCacheKey, overlayComplexity);
     }
@@ -1710,10 +1709,7 @@ export class QRGenerator {
       ...effectiveConfig,
       ...fixedVisualPolicy,
       preserveFunctionalPatterns: effectiveConfig.preserveFunctionalPatterns,
-      preserveFinders:
-        patch.preserveFinders !== undefined
-          ? patch.preserveFinders
-          : effectiveConfig.preserveFinders,
+      preserveFinders: patch.preserveFinders ?? effectiveConfig.preserveFinders,
       forceCenterLock: false,
       cleanupSpeckle: false,
       darkMinOccupancy: patch.darkMinOccupancy,

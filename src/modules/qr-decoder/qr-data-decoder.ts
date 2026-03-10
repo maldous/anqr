@@ -430,7 +430,8 @@ export class QRDecoder {
     }
   }
 
-  private static ALPHANUMERIC_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:'.split('');
+  private static readonly ALPHANUMERIC_CHARS =
+    '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:'.split('');
 
   private decodeAlphanumericSegment(
     bits: BitSource,

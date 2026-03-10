@@ -126,9 +126,7 @@ export class Arrays {
     el: number,
     comparator?: (a: number, b: number) => number
   ): number {
-    if (comparator === undefined) {
-      comparator = (a, b) => a - b;
-    }
+    comparator ??= (a, b) => a - b;
     let m = 0;
     let n = ar.length - 1;
     while (m <= n) {

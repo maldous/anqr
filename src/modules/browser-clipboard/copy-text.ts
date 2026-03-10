@@ -29,6 +29,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
       document.execCommand('copy');
       return true;
     } catch (_fallbackError) {
+      // Both clipboard methods failed
       return false;
     } finally {
       textarea.remove();

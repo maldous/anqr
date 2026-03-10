@@ -73,7 +73,7 @@ export function HelpLink({
               setLoadingAd(true);
               try {
                 const reward = await showRewardedAd('premium');
-                if (!reward.rewarded) {
+                if (!reward) {
                   // User didn't complete the ad - don't navigate or change tier
                   setLoadingAd(false);
                   return;

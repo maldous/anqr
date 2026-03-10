@@ -1491,7 +1491,7 @@ function encodeDataToBytes(
     let localIndex = 0;
 
     while (remaining > 0) {
-      const groupDigits = remaining >= 3 ? 3 : remaining;
+      const groupDigits = Math.min(3, remaining);
       const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
 
       let value = 0;
@@ -1850,7 +1850,7 @@ function filterSelectionsForNumericSuffix(
   let bitCursor = 0;
   let groupIndex = 0;
   while (remainingDigits > 0) {
-    const groupDigits = remainingDigits >= 3 ? 3 : remainingDigits;
+    const groupDigits = Math.min(3, remainingDigits);
     const bitsPerGroup = groupDigits === 3 ? 10 : groupDigits === 2 ? 7 : 4;
     const maxVal = getNumericGroupMax(bitsPerGroup);
 
@@ -2021,8 +2021,8 @@ function drawAlignmentPatterns(
 function drawTimingPatterns(modules: (boolean | null)[][], moduleCount: number): void {
   for (let i = 8; i < moduleCount - 8; i++) {
     const dark = i % 2 === 0;
-    if (modules[6][i] === null) modules[6][i] = dark;
-    if (modules[i][6] === null) modules[i][6] = dark;
+    modules[6][i] ??= dark;
+    modules[i][6] ??= dark;
   }
 }
 
@@ -4138,7 +4138,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
       finalMatrixToUse = fallbackResult.matrix;
       actualVectorsApplied = fallbackResult.vectorsApplied;
-      scanResult = fallbackResult.scanResult;
+      // scanResult from fallback not used further
     }
 
     // Also scan the base matrix to confirm it was valid

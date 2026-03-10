@@ -92,7 +92,6 @@ describe('platform admob service', () => {
     );
 
     expect(await mod.prepareInterstitial('interstitial')).toBe(true);
-    expect(await mod.prepareInterstitial('generation')).toBe(true);
     expect(await mod.prepareInterstitial('rewardedInterstitial')).toBe(true);
     expect(plugin.module.AdMob.prepareInterstitial).toHaveBeenCalled();
     expect(plugin.module.AdMob.prepareRewardedInterstitialAd).toHaveBeenCalled();

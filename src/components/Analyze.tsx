@@ -1481,7 +1481,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
             for (let c = 0; c < cols; c += 1) {
               if (a[r][c] === b[r][c]) continue;
               diffCount += 1;
-              if (!firstDiff) firstDiff = { row: r, col: c, a: a[r][c], b: b[r][c] };
+              firstDiff ??= { row: r, col: c, a: a[r][c], b: b[r][c] };
             }
           }
           const total = rows * cols;
@@ -2798,9 +2798,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <DetailRow
                               label="ECC Level"
                               value={
-                                result.decoderMetadata.eccLevel !== null ? (
-                                  result.decoderMetadata.eccLevel
-                                ) : (
+                                result.decoderMetadata.eccLevel ?? (
                                   <span className="text-amber-500">— (not detected)</span>
                                 )
                               }

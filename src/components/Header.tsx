@@ -52,11 +52,7 @@ import { isRtlLanguage, languages, loadLocale } from '@/i18n';
 import { createLogger } from '@/lib/logger';
 import { trackEvent } from '@/lib/zaraz';
 import { copyToClipboard } from '@/modules/browser-clipboard';
-import {
-  getMonetizationGuardrailTelemetry,
-  prepareInterstitial,
-  showInterstitial,
-} from '@/modules/platform';
+import { prepareInterstitial, showInterstitial } from '@/modules/platform';
 import { getShareableUrl } from '@/modules/share-links';
 import { type Tier, useQRStore } from '@/store/qr-store';
 
@@ -302,22 +298,12 @@ export function Header({
       setLoadingAd(true);
       try {
         await prepareInterstitial('generation');
-        const shown = await showInterstitial('generation');
-        if (shown) {
-          trackEvent('premium_interstitial_shown', { tier: 'professional' });
-        } else {
-          const telemetry = getMonetizationGuardrailTelemetry();
-          trackEvent('premium_interstitial_blocked', {
-            tier: 'professional',
-            reason: telemetry.lastViolationReason ?? 'unknown',
-          });
-        }
+        await showInterstitial('generation');
+        // Interstitial shown (user can dismiss immediately)
+        trackEvent('premium_interstitial_shown', { tier: 'professional' });
         // Grant premium access after ad is shown (once)
         activatePremiumAccess();
-        trackEvent('premium_activated', {
-          tier: 'professional',
-          source: shown ? 'interstitial' : 'guardrail_fallback',
-        });
+        trackEvent('premium_activated', { tier: 'professional', source: 'interstitial' });
         setTier('professional');
         // Prepare next interstitial for future use
         prepareInterstitial('generation');

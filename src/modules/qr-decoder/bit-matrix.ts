@@ -68,7 +68,7 @@ export class BitArray {
       currentBits = bits[bitsOffset];
     }
     const result = bitsOffset * 32 + Integer.numberOfTrailingZeros(currentBits);
-    return result > size ? size : result;
+    return Math.min(result, size);
   }
 
   getNextUnset(from: number): number {
@@ -84,7 +84,7 @@ export class BitArray {
       currentBits = ~bits[bitsOffset];
     }
     const result = bitsOffset * 32 + Integer.numberOfTrailingZeros(currentBits);
-    return result > size ? size : result;
+    return Math.min(result, size);
   }
 
   setBulk(i: number, newBits: number): void {

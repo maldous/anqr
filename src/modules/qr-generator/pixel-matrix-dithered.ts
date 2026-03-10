@@ -565,7 +565,7 @@ function luma01(r: number, g: number, b: number): number {
 }
 
 function clamp01(x: number): number {
-  return x < 0 ? 0 : x > 1 ? 1 : x;
+  return Math.max(0, Math.min(1, x));
 }
 
 function shapeOverlayDarkness(overlayDark: number): number {
@@ -1991,7 +1991,7 @@ export async function generateHalftoneDitheredOverlayData(
 
   const overlayBrightness = new Float32Array(moduleCount * moduleCount);
   const overlayColorsPacked = new Uint32Array(moduleCount * moduleCount);
-  const total = scale * scale;
+  // scale * scale — computed inline where needed
   // 0 => pure original overlay luminance, 1 => pure dither density.
   // Keep original image dominant so backdrop remains clearly visible.
   const densityInfluence = clamp01(0.15 + effectiveIntensity * 0.15);

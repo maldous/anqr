@@ -248,8 +248,8 @@ export class DecoderResult {
   private maskPattern: number | null = null;
 
   constructor(
-    private rawBytes: Uint8Array,
-    private text: string,
+    private readonly rawBytes: Uint8Array,
+    private readonly text: string,
     private readonly byteSegments: Uint8Array[] | null,
     private readonly ecLevel: string | null,
     numBits?: number
