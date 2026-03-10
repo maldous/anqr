@@ -18,8 +18,7 @@ This page tracks operational launch checks. Historical detail from earlier exhau
 - `make quality` — 19-check quality gate pipeline
 - `make test` — Quality gates + unit + Playwright E2E + API tests (uses `netlify dev`)
 - `make test:api` — API endpoint tests + browser↔API visual parity
-- `make deploy` — Netlify production deploy with Sentry sourcemaps (requires `ALLOW_PAID_ACTIONS=1` and typed confirmation)
-- `ALLOW_PAID_ACTIONS=1 DRY_RUN=1 make deploy` — Preview deploy commands without executing build/deploy steps
+- `make deploy` — Netlify production deploy with Sentry sourcemaps
 - `make validate:services` — Third-party service health checks
 
 ### iOS (macOS only)

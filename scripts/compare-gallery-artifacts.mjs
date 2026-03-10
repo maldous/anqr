@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Compare gallery artifacts across local/browser/app/remote renderers.
+ * Compare gallery artifacts across local/browser/remote renderers.
  *
  * Inputs:
- *   reports/gallery-artifacts/{local,browser,app,remote}/report.merged.json (preferred)
+ *   reports/gallery-artifacts/{local,browser,remote}/report.merged.json (preferred)
  *   or report.json, or report.shard-*.json
- *   reports/gallery-artifacts/{local,browser,app,remote}/*.{png,gif}
+ *   reports/gallery-artifacts/{local,browser,remote}/*.{png,gif}
  *
  * Output:
  *   reports/gallery-artifacts/consistency-report.json
@@ -24,7 +24,7 @@ import { generateAllScenarios, scenarioFilename } from './lib/gallery-permutatio
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const ARTIFACTS_DIR = path.join(ROOT, 'reports', 'gallery-artifacts');
-const MODES = ['local', 'browser', 'app', 'remote'];
+const MODES = ['local', 'browser', 'remote'];
 const STATIC_SIZE_RATIO_MAX = Math.max(
   1,
   Number.parseFloat(process.env.GALLERY_COMPARE_STATIC_MAX_RATIO || '2.0') || 2.0
@@ -33,11 +33,6 @@ const ANIMATED_SIZE_RATIO_MAX = Math.max(
   1,
   Number.parseFloat(process.env.GALLERY_COMPARE_ANIMATED_MAX_RATIO || '4.0') || 4.0
 );
-
-function parseScenarioFilterIds(raw) {
-  if (!raw || !String(raw).trim()) return [];
-  return [...new Set(String(raw).split(',').map((id) => id.trim()).filter(Boolean))];
-}
 
 async function exists(filePath) {
   try {
@@ -201,29 +196,7 @@ async function findArtifactPath(modeDir, filenames) {
 }
 
 async function main() {
-  const allConfigs = generateAllScenarios();
-  const categoryFilter = process.env.GALLERY_CATEGORY;
-  const categorySet = categoryFilter
-    ? new Set(
-        String(categoryFilter)
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      )
-    : null;
-  const categoryScopedConfigs =
-    categorySet && categorySet.size > 0
-      ? allConfigs.filter((config) => categorySet.has(config.category))
-      : allConfigs;
-  const selectedIds = parseScenarioFilterIds(process.env.GALLERY_IDS);
-  const selectedIdSet = new Set(selectedIds);
-  const configs =
-    selectedIds.length > 0
-      ? categoryScopedConfigs.filter((config) => selectedIdSet.has(config.id))
-      : categoryScopedConfigs;
-  const configIdSet = new Set(configs.map((config) => config.id));
-  const requestedIdsMissingCount =
-    selectedIds.length > 0 ? selectedIds.filter((id) => !configIdSet.has(id)).length : 0;
+  const configs = generateAllScenarios();
 
   const modeReports = {};
   const modeResultMaps = {};
@@ -246,8 +219,8 @@ async function main() {
 
   let allPresent = 0;
   let allDecodedPrefixOk = 0;
-  let staticExactAllFour = 0;
-  let animatedExactLocalAppRemote = 0;
+  let staticExactAllThree = 0;
+  let animatedExactLocalRemote = 0;
   let allDimensionsAlignedCount = 0;
   let allSizeParityCount = 0;
 
@@ -310,22 +283,14 @@ async function main() {
         if (
           shas.local &&
           shas.browser &&
-          shas.app &&
           shas.remote &&
           shas.local === shas.browser &&
-          shas.local === shas.app &&
           shas.local === shas.remote
         ) {
-          staticExactAllFour++;
+          staticExactAllThree++;
         }
-      } else if (
-        shas.local &&
-        shas.app &&
-        shas.remote &&
-        shas.local === shas.app &&
-        shas.local === shas.remote
-      ) {
-        animatedExactLocalAppRemote++;
+      } else if (shas.local && shas.remote && shas.local === shas.remote) {
+        animatedExactLocalRemote++;
       }
 
       const presentModes = MODES.map((mode) => ({ mode, data: row.modes[mode] })).filter(
@@ -373,13 +338,10 @@ async function main() {
   const summary = {
     generatedAt: new Date().toISOString(),
     totalScenarios: configs.length,
-    scopedByIds: selectedIds.length > 0,
-    requestedIdsCount: selectedIds.length,
-    requestedIdsMissingCount,
     allModesPresentCount: allPresent,
     allModesDecodePrefixOkCount: allDecodedPrefixOk,
-    staticExactAllFourCount: staticExactAllFour,
-    animatedExactLocalAppRemoteCount: animatedExactLocalAppRemote,
+    staticExactAllThreeCount: staticExactAllThree,
+    animatedExactLocalRemoteCount: animatedExactLocalRemote,
     allDimensionsAlignedCount,
     allSizeParityCount,
     staticSizeRatioMax: STATIC_SIZE_RATIO_MAX,
@@ -408,8 +370,8 @@ async function main() {
     `- All modes size parity (ratio <= threshold): ${summary.allSizeParityCount}/${summary.totalScenarios}`,
     `  - Static max ratio: ${summary.staticSizeRatioMax}`,
     `  - Animated max ratio: ${summary.animatedSizeRatioMax}`,
-    `- Static exact hash (local=browser=app=remote): ${summary.staticExactAllFourCount}`,
-    `- Animated exact hash (local=app=remote): ${summary.animatedExactLocalAppRemoteCount}`,
+    `- Static exact hash (local=browser=remote): ${summary.staticExactAllThreeCount}`,
+    `- Animated exact hash (local=remote): ${summary.animatedExactLocalRemoteCount}`,
     '',
     '## Per Mode',
     '',
@@ -448,8 +410,8 @@ async function main() {
     `All modes size parity: ${summary.allSizeParityCount}/${summary.totalScenarios} ` +
       `(static<=${summary.staticSizeRatioMax}x, animated<=${summary.animatedSizeRatioMax}x)`
   );
-  console.log(`Static exact hash (L=B=A=R): ${summary.staticExactAllFourCount}`);
-  console.log(`Animated exact hash (L=A=R): ${summary.animatedExactLocalAppRemoteCount}`);
+  console.log(`Static exact hash (L=B=R): ${summary.staticExactAllThreeCount}`);
+  console.log(`Animated exact hash (L=R): ${summary.animatedExactLocalRemoteCount}`);
   console.log(`\nJSON: ${jsonPath}`);
   console.log(`MD:   ${mdPath}\n`);
 

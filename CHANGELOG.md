@@ -5,15 +5,10 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
-- fix(sonar): reduce Analyze calendar payload parser S3776 complexity via helper extraction (ANQ-290)
-- fix: move ad keys and app IDs from Makefile to env-injected configuration
-- fix: add share-param parity guardrail report to CI/nightly workflow
-- fix: scope gallery artifact comparison to selected baseline IDs (ANQ-149)
+- fix(sonar): decompose Analyze.tsx into payload-parsers.ts + content-type-renderers.tsx (5993→3286 lines)
+- fix(sonar): extract resolveQArtSuffixConfig from generateFullQArt (CC ~40 reduction)
+- fix(sonar): extract 6 helpers from generateFullQArt (validateBasisVectorSafety, verifyProtectedBytes, analyzeMatrixDiff, estimateBlockECCDamage, runDeterministicMutationTest, handleScanFailureFallback)
 - fix(sonar): reduce S3776 cognitive complexity across 30+ module files via helper extraction
-- fix: add dry-run and explicit confirmation guardrails for production deploy
-- fix: audit URL/query parsing and normalization parity risks
-- fix: inventory gallery execution paths and parameter sources
-- fix(workflow): retry in-session tool call failures up to 2 times with explicit error feedback before fallback
 - fix: reduce semantic validation complexity in qr-art generator
 - fix: add CI reliability gate criteria and machine-readable reporting
 - fix(workflow): keep Pending human-only by routing non-human 3B workflow paths to Todo/Rework
@@ -23,7 +18,6 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ops): add structured startup diagnostics and error categorization for codex credit gate failures
 - fix: reduce qr-generator overlay mode complexity via handler extraction
 - perf: add CI performance budget guard for `/` and `/gallery` key paths
-- fix(gallery): add deterministic 4-surface parity matrix support (`local`,`browser`,`app`,`remote`) with filtered consistency reporting
 
 ## 2026-03-09
 

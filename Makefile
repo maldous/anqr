@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:app gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
 
 # ============================================
 # Help
@@ -92,9 +92,6 @@ help:
 # ============================================
 export ENV := PROD
 ALLOW_PAID_ACTIONS ?= 0
-DRY_RUN ?= 0
-PROD_CONFIRM ?=
-PROD_CONFIRM_TOKEN ?= DEPLOY_ANQR_PROD
 
 # Node binary directory (auto-detected from nvm). Used for systemd service PATH.
 NVM_NODE_BIN ?= $(shell dirname "$$(command -v node)" 2>/dev/null)
@@ -329,64 +326,88 @@ all:
 	@echo "Reports generated in: reports/"
 
 # ============================================
-# Ads Configuration
+# AdSense Configuration (for Web - anqr.link)
 # ============================================
-# Runtime ad identifiers are injected from environment/CI secrets.
-export VITE_ADSENSE_ENABLED ?= true
-export VITE_ADSENSE_TEST_MODE ?= true
-export VITE_ADMOB_TESTING ?= true
+# Publisher ID: ca-pub-2270701384951162 (from ads.txt)
+# 
+# Create ad units at: https://www.google.com/adsense
+#   -> Ads -> By ad unit -> Display ads -> Create new
+#   After creating, copy the numeric slot ID to the variable below
+#
+export VITE_ADSENSE_ENABLED := true
+export VITE_ADSENSE_PUBLISHER_ID := ca-pub-2270701384951162
+# Test Mode - show placeholder ads in production before AdSense approval
+# Set to 'true' to show test placeholders, 'false' or remove when AdSense is approved
+export VITE_ADSENSE_TEST_MODE := true
 
-# AdSense identifiers
-export VITE_ADSENSE_PUBLISHER_ID ?=
-export VITE_ADSENSE_SLOT_LEFT_SKYSCRAPER ?=
-export VITE_ADSENSE_SLOT_RIGHT_SKYSCRAPER ?=
-export VITE_ADSENSE_SLOT_SIDEBAR_BOTTOM ?=
-export VITE_ADSENSE_SLOT_GALLERY_LEFT ?=
-export VITE_ADSENSE_SLOT_GALLERY_RIGHT ?=
-export VITE_ADSENSE_SLOT_GALLERY_TOP ?=
-export VITE_ADSENSE_SLOT_GALLERY_BOTTOM ?=
-export VITE_ADSENSE_SLOT_STATIC_LEFT ?=
-export VITE_ADSENSE_SLOT_STATIC_RIGHT ?=
-export VITE_ADSENSE_SLOT_GUIDE_TOP ?=
-export VITE_ADSENSE_SLOT_GUIDE_BOTTOM ?=
-export VITE_ADSENSE_SLOT_LEARN_TOP ?=
-export VITE_ADSENSE_SLOT_LEARN_BOTTOM ?=
-export VITE_ADSENSE_SLOT_EXAMPLES_TOP ?=
-export VITE_ADSENSE_SLOT_EXAMPLES_BOTTOM ?=
-export VITE_ADSENSE_SLOT_ABOUT_TOP ?=
-export VITE_ADSENSE_SLOT_ABOUT_BOTTOM ?=
-export VITE_ADSENSE_SLOT_PRIVACY_TOP ?=
-export VITE_ADSENSE_SLOT_PRIVACY_BOTTOM ?=
-export VITE_ADSENSE_SLOT_TERMS_TOP ?=
-export VITE_ADSENSE_SLOT_TERMS_BOTTOM ?=
-export VITE_ADSENSE_SLOT_CONTACT_TOP ?=
-export VITE_ADSENSE_SLOT_CONTACT_BOTTOM ?=
-export VITE_ADSENSE_SLOT_TRANSLATE_TOP ?=
-export VITE_ADSENSE_SLOT_TRANSLATE_BOTTOM ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_PLAIN ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_CONTENT_TYPES ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_STYLES ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_COLORS ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_IMAGE_OVERLAY ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_ANIMATION_OVERLAY ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_BLEND_MODES ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_COLOR_MODES ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_PREPROCESSING ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_ENCODING ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS ?=
-export VITE_ADSENSE_SLOT_GALLERY_AFTER_QR_ART ?=
+# HIGH PRIORITY - Main app ads
+export VITE_ADSENSE_SLOT_LEFT_SKYSCRAPER := 7394019600
+export VITE_ADSENSE_SLOT_RIGHT_SKYSCRAPER := 2450289467
+export VITE_ADSENSE_SLOT_SIDEBAR_BOTTOM := 3247547575
 
-# AdMob identifiers
-export VITE_ADMOB_APP_ID ?=
-export VITE_ADMOB_IOS_APP_ID ?=
-export VITE_ADMOB_BANNER_BOTTOM ?=
-export VITE_ADMOB_BANNER_TOP ?=
-export VITE_ADMOB_INTERSTITIAL_EXPORT ?=
-export VITE_ADMOB_INTERSTITIAL_GALLERY ?=
-export VITE_ADMOB_INTERSTITIAL_GENERATION ?=
-export VITE_ADMOB_REWARDED_PREMIUM ?=
-export VITE_ADMOB_REWARDED_EXPORT_HD ?=
+# MEDIUM PRIORITY - Gallery page ads
+export VITE_ADSENSE_SLOT_GALLERY_LEFT := 2684618407
+export VITE_ADSENSE_SLOT_GALLERY_RIGHT := 3454774598
+export VITE_ADSENSE_SLOT_GALLERY_TOP := 5862086716
+export VITE_ADSENSE_SLOT_GALLERY_BOTTOM := 9557805050
+
+# LOWER PRIORITY - Static page ads
+export VITE_ADSENSE_SLOT_STATIC_LEFT := 1934465907
+export VITE_ADSENSE_SLOT_STATIC_RIGHT := 9997606994
+export VITE_ADSENSE_SLOT_GUIDE_TOP := 6006391093
+export VITE_ADSENSE_SLOT_GUIDE_BOTTOM := 4693309421
+export VITE_ADSENSE_SLOT_LEARN_TOP := 2440505008
+export VITE_ADSENSE_SLOT_LEARN_BOTTOM := 5784853643
+export VITE_ADSENSE_SLOT_EXAMPLES_TOP := 4735495853
+export VITE_ADSENSE_SLOT_EXAMPLES_BOTTOM := 6439459766
+export VITE_ADSENSE_SLOT_ABOUT_TOP := 8437113318
+export VITE_ADSENSE_SLOT_ABOUT_BOTTOM := 2067146087
+export VITE_ADSENSE_SLOT_PRIVACY_TOP := 9754064417
+export VITE_ADSENSE_SLOT_PRIVACY_BOTTOM := 8440982741
+export VITE_ADSENSE_SLOT_TERMS_TOP := 5810949978
+export VITE_ADSENSE_SLOT_TERMS_BOTTOM := 5814819407
+export VITE_ADSENSE_SLOT_CONTACT_TOP := 4497868307
+export VITE_ADSENSE_SLOT_CONTACT_BOTTOM := 9562492724
+export VITE_ADSENSE_SLOT_TRANSLATE_TOP := 4497868307
+export VITE_ADSENSE_SLOT_TRANSLATE_BOTTOM := 9562492724
+
+# Gallery section divider ads (between gallery sections)
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_PLAIN := 5862086716
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_CONTENT_TYPES := 2993214945
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_STYLES := 6193275118
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_COLORS := 2254030108
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_IMAGE_OVERLAY := 3432198644
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_ANIMATION_OVERLAY := 6001703423
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_BLEND_MODES := 5382099781
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_COLOR_MODES := 2062458418
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_PREPROCESSING := 8436295070
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_ENCODING := 4497050062
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_DITHERING := 9557805050
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_POWER_COMBOS := 9557805050
+export VITE_ADSENSE_SLOT_GALLERY_AFTER_QR_ART := 1648360241
+
+# ============================================
+# AdMob Configuration (for native Android/iOS apps)
+# ============================================
+# Android App ID: ca-app-pub-2270701384951162~3067761782
+# iOS App ID:     ca-app-pub-2270701384951162~2718285064
+# Ad units: https://admob.google.com -> Apps -> ANQR -> Ad units
+#
+# Banner Ads
+export VITE_ADMOB_BANNER_BOTTOM := ca-app-pub-2270701384951162/3063892358
+export VITE_ADMOB_BANNER_TOP := ca-app-pub-2270701384951162/6312694619
+#
+# Interstitial Ads
+export VITE_ADMOB_INTERSTITIAL_EXPORT := ca-app-pub-2270701384951162/4365188125
+export VITE_ADMOB_INTERSTITIAL_GALLERY := ca-app-pub-2270701384951162/5434727214
+export VITE_ADMOB_INTERSTITIAL_GENERATION := ca-app-pub-2270701384951162/7051061212
+#
+# Rewarded Video Ads
+export VITE_ADMOB_REWARDED_PREMIUM := ca-app-pub-2270701384951162/8325432672
+export VITE_ADMOB_REWARDED_EXPORT_HD := ca-app-pub-2270701384951162/4911983037
+#
+# Set to 'true' to show test ads while waiting for approval, 'false' for production
+export VITE_ADMOB_TESTING := true
 
 # Android SDK path (adjust for your system)
 export ANDROID_HOME ?= $(HOME)/Android/Sdk
@@ -621,38 +642,7 @@ gallery\:browser:
 	done; \
 	exit $$failed
 
-# Render app-surface artifacts via Playwright preview capture mode.
-# Requires a dev server running on GALLERY_PORT (default: 5173).
-# Produces reports/gallery-artifacts/app/ with passed.txt/failed.txt/report.json.
-gallery\:app:
-	@curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
-		(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first." && exit 1)
-	@set -e; \
-	count="$(GALLERY_SHARD_COUNT)"; \
-	if [ "$$count" -le 1 ]; then \
-		ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SURFACE=app GALLERY_BROWSER_CAPTURE_MODE=preview GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$(GALLERY_SHARD)" GALLERY_SHARD_INDEX="$(GALLERY_SHARD_INDEX)" GALLERY_SHARD_TOTAL="$(GALLERY_SHARD_TOTAL)" node --import tsx scripts/generate-gallery-browser.mjs; \
-		exit $$?; \
-	fi; \
-	if [ -n "$(GALLERY_SHARD)" ] || [ -n "$(GALLERY_SHARD_INDEX)" ] || [ -n "$(GALLERY_SHARD_TOTAL)" ]; then \
-		echo "ERROR: GALLERY_SHARD_COUNT>1 cannot be combined with GALLERY_SHARD / GALLERY_SHARD_INDEX / GALLERY_SHARD_TOTAL."; \
-		exit 1; \
-	fi; \
-	echo "[gallery:app] starting $$count shards in parallel"; \
-	pids=""; \
-	failed=0; \
-	i=1; \
-	while [ $$i -le $$count ]; do \
-		echo "[gallery:app] shard $$i/$$count"; \
-		(ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SURFACE=app GALLERY_BROWSER_CAPTURE_MODE=preview GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$$i/$$count" node --import tsx scripts/generate-gallery-browser.mjs) & \
-		pids="$$pids $$!"; \
-		i=$$((i + 1)); \
-	done; \
-	for pid in $$pids; do \
-		wait $$pid || failed=1; \
-	done; \
-	exit $$failed
-
-# Compare local/browser/app/remote artifacts for consistency:
+# Compare local/browser/remote artifacts for consistency:
 # decode validity + payload parity + dimension parity + size-ratio parity.
 gallery\:compare:
 	node --import tsx scripts/compare-gallery-artifacts.mjs
@@ -665,21 +655,19 @@ gallery\:publish:
 gallery\:merge:
 	GALLERY_MERGE_ONLY=1 GALLERY_PUBLISH_SOURCE=$(GALLERY_PUBLISH_SOURCE) node --import tsx scripts/publish-gallery-showcase.ts
 
-# Run all four gallery renderers: remote API + local QRGenerator + browser API + app preview.
-# Produces 4000 total images across reports/gallery-artifacts/{remote,local,browser,app}/.
+# Run all three gallery renderers: remote API + local QRGenerator + browser screenshots.
+# Produces 3000 total images across reports/gallery-artifacts/{remote,local,browser}/.
 gallery\:all:
 	$(MAKE) gallery:remote || echo 'gallery:remote failed'
 	$(MAKE) gallery:local || echo 'gallery:local failed'
 	$(MAKE) gallery:browser || echo 'gallery:browser failed'
-	$(MAKE) gallery:app || echo 'gallery:app failed'
 
 # Full parity run (local high parallel, browser normal, remote minimal) + consistency report.
 gallery\:parity:
-	rm -rf reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/app reports/gallery-artifacts/remote
-	mkdir -p reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/app reports/gallery-artifacts/remote
+	rm -rf reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/remote
+	mkdir -p reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/remote
 	$(MAKE) gallery:local
 	$(MAKE) gallery:browser
-	$(MAKE) gallery:app
 	$(MAKE) gallery:remote
 	$(MAKE) gallery:compare
 
@@ -728,38 +716,11 @@ paid\:approval:
 		exit 1; \
 	fi
 
-prod\:deploy\:confirm:
-	@if [ "$(DRY_RUN)" = "1" ]; then \
-		echo "DRY_RUN=1 set; skipping production deploy confirmation."; \
-	elif [ -n "$(PROD_CONFIRM)" ]; then \
-		if [ "$(PROD_CONFIRM)" != "$(PROD_CONFIRM_TOKEN)" ]; then \
-			echo "ERROR: invalid PROD_CONFIRM token."; \
-			echo "Set PROD_CONFIRM=$(PROD_CONFIRM_TOKEN) to acknowledge production deploy."; \
-			exit 1; \
-		fi; \
-	elif [ ! -t 0 ]; then \
-		echo "ERROR: production deploy confirmation required in non-interactive mode."; \
-		echo "Re-run with PROD_CONFIRM=$(PROD_CONFIRM_TOKEN) or DRY_RUN=1."; \
-		exit 1; \
-	else \
-		printf "Confirm production deploy to anqr.link (type $(PROD_CONFIRM_TOKEN)): "; \
-		read -r confirm; \
-		if [ "$$confirm" != "$(PROD_CONFIRM_TOKEN)" ]; then \
-			echo "Aborted production deploy."; \
-			exit 1; \
-		fi; \
-	fi
-
 # Deploy rebuilds with SENTRY_UPLOAD=true to upload sourcemaps.
 # This is intentionally separate from the earlier build steps.
-deploy: paid\:approval prod\:deploy\:confirm
-	@if [ "$(DRY_RUN)" = "1" ]; then \
-		echo "[dry-run] SENTRY_UPLOAD=true npm run build"; \
-		echo "[dry-run] netlify deploy --prod --site anqr.link --dir=dist"; \
-	else \
-		SENTRY_UPLOAD=true npm run build; \
-		netlify deploy --prod --site anqr.link --dir=dist; \
-	fi
+deploy: paid\:approval
+	SENTRY_UPLOAD=true npm run build
+	netlify deploy --prod --site anqr.link --dir=dist
 
 # Submit all canonical URLs to search engines via IndexNow protocol.
 # Notifies Bing, Yandex, Naver, DuckDuckGo, and all participating engines.

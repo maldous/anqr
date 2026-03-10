@@ -19,6 +19,68 @@ const BLOCK_SIZE_MASK = BLOCK_SIZE - 1; // 7
 const MIN_DYNAMIC_RANGE = 24; // Minimum contrast to consider a block as having real data
 
 /**
+ * Convert a single RGBA pixel to grayscale, compositing over white for transparent pixels.
+ *
+ * @param pixels - RGBA pixel data
+ * @param idx - Index into the pixel data (start of the 4-byte RGBA group)
+ * @returns Grayscale value 0–255
+ */
+function computeGrayscale(pixels: Uint8ClampedArray, idx: number): number {
+  const a = pixels[idx + 3] / 255;
+  if (a <= 0) {
+    return 255;
+  }
+  if (a >= 1) {
+    return (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
+  }
+  const inv = 1 - a;
+  const r = pixels[idx] * a + 255 * inv;
+  const g = pixels[idx + 1] * a + 255 * inv;
+  const b = pixels[idx + 2] * a + 255 * inv;
+  return (r + g + b) / 3;
+}
+
+/**
+ * Compute the adaptive threshold for a single block given its aggregate statistics.
+ *
+ * @param sum - Sum of grayscale values in the block
+ * @param min - Minimum grayscale value in the block
+ * @param max - Maximum grayscale value in the block
+ * @param y - Block row index
+ * @param x - Block column index
+ * @param blackPoints - Previously computed thresholds (used for neighbor averaging)
+ * @returns Threshold value for this block
+ */
+function computeBlockThreshold(
+  sum: number,
+  min: number,
+  max: number,
+  y: number,
+  x: number,
+  blackPoints: number[][]
+): number {
+  let average = sum / (BLOCK_SIZE * BLOCK_SIZE);
+
+  if (max - min <= MIN_DYNAMIC_RANGE) {
+    // Low contrast block - assume it's background (light)
+    // Use half the min as threshold, so it classifies as light
+    average = min / 2;
+
+    if (y > 0 && x > 0) {
+      // Use neighbor info to correct if this might actually be dark region
+      const averageNeighborBlackPoint =
+        (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
+
+      if (min < averageNeighborBlackPoint) {
+        average = averageNeighborBlackPoint;
+      }
+    }
+  }
+
+  return average;
+}
+
+/**
  * Calculate per-block black point thresholds for the entire image.
  * This is the core of the HybridBinarizer algorithm.
  *
@@ -65,20 +127,7 @@ function _calculateBlackPoints(
           const py = yoffset + yy;
           const idx = (py * width + px) * 4;
 
-          // Convert to grayscale, compositing over white for transparent pixels
-          const a = pixels[idx + 3] / 255;
-          let gray: number;
-          if (a <= 0) {
-            gray = 255;
-          } else if (a >= 1) {
-            gray = (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
-          } else {
-            const inv = 1 - a;
-            const r = pixels[idx] * a + 255 * inv;
-            const g = pixels[idx + 1] * a + 255 * inv;
-            const b = pixels[idx + 2] * a + 255 * inv;
-            gray = (r + g + b) / 3;
-          }
+          const gray = computeGrayscale(pixels, idx);
 
           sum += gray;
           if (gray < min) min = gray;
@@ -87,25 +136,7 @@ function _calculateBlackPoints(
       }
 
       // Calculate threshold for this block
-      let average = sum / (BLOCK_SIZE * BLOCK_SIZE);
-
-      if (max - min <= MIN_DYNAMIC_RANGE) {
-        // Low contrast block - assume it's background (light)
-        // Use half the min as threshold, so it classifies as light
-        average = min / 2;
-
-        if (y > 0 && x > 0) {
-          // Use neighbor info to correct if this might actually be dark region
-          const averageNeighborBlackPoint =
-            (blackPoints[y - 1][x] + 2 * blackPoints[y][x - 1] + blackPoints[y - 1][x - 1]) / 4;
-
-          if (min < averageNeighborBlackPoint) {
-            average = averageNeighborBlackPoint;
-          }
-        }
-      }
-
-      blackPoints[y][x] = average;
+      blackPoints[y][x] = computeBlockThreshold(sum, min, max, y, x, blackPoints);
     }
   }
 
@@ -233,15 +264,7 @@ function sampleSinglePixel(
   const idx = (iy * width + ix) * 4;
 
   // Composite over white so transparent pixels are treated as light modules.
-  const a = pixels[idx + 3] / 255;
-  if (a <= 0) return 255;
-  if (a >= 1) return (pixels[idx] + pixels[idx + 1] + pixels[idx + 2]) / 3;
-
-  const inv = 1 - a;
-  const r = pixels[idx] * a + 255 * inv;
-  const g = pixels[idx + 1] * a + 255 * inv;
-  const b = pixels[idx + 2] * a + 255 * inv;
-  return (r + g + b) / 3;
+  return computeGrayscale(pixels, idx);
 }
 
 /**
@@ -508,6 +531,34 @@ export function extractModuleMatrix(
   return matrix;
 }
 
+/**
+ * Compare a single module in the matrix against the expected finder pattern value
+ * and record the result.
+ *
+ * @returns true if the module matched, false otherwise
+ */
+function compareFinderModule(
+  matrix: boolean[][],
+  finderPattern: number[][],
+  row: number,
+  col: number,
+  rowOffset: number,
+  colOffset: number,
+  errors: string[]
+): boolean {
+  const expected = finderPattern[row][col] === 1;
+  const actual = matrix[rowOffset + row]?.[colOffset + col] ?? false;
+  if (expected === actual) {
+    return true;
+  }
+  if (errors.length < 5) {
+    errors.push(
+      `(${rowOffset + row},${colOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
+    );
+  }
+  return false;
+}
+
 function validateFinderRegion(
   matrix: boolean[][],
   finderPattern: number[][],
@@ -519,17 +570,10 @@ function validateFinderRegion(
   const errors: string[] = [];
   for (let row = 0; row < 7; row++) {
     for (let col = 0; col < 7; col++) {
-      const expected = finderPattern[row][col] === 1;
-      const actual = matrix[rowOffset + row]?.[colOffset + col] ?? false;
-      if (expected === actual) {
+      if (compareFinderModule(matrix, finderPattern, row, col, rowOffset, colOffset, errors)) {
         matches++;
       } else {
         mismatches++;
-        if (errors.length < 5) {
-          errors.push(
-            `(${rowOffset + row},${colOffset + col}): expected ${expected ? 'dark' : 'light'}, got ${actual ? 'dark' : 'light'}`
-          );
-        }
       }
     }
   }

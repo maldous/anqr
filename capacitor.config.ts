@@ -1,8 +1,5 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-const androidAdmobAppId = process.env.VITE_ADMOB_APP_ID || '';
-const iosAdmobAppId = process.env.VITE_ADMOB_IOS_APP_ID || '';
-
 const config: CapacitorConfig = {
   appId: 'link.anqr.app',
   appName: 'ANQR',
@@ -24,9 +21,9 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     AdMob: {
-      // App IDs are injected via env/CI secrets.
-      androidAppId: androidAdmobAppId,
-      iosAppId: iosAdmobAppId,
+      // AdMob App IDs — https://admob.google.com
+      androidAppId: 'ca-app-pub-2270701384951162~3067761782',
+      iosAppId: 'ca-app-pub-2270701384951162~2718285064',
       initializeForTesting: true,
     },
   },

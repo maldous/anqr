@@ -62,6 +62,60 @@ function isFinderPatternRatio(counts: number[]): boolean {
 }
 
 /**
+ * Handle a dark pixel during row scanning, advancing the state machine.
+ * Returns the new state.
+ */
+function handleDarkPixel(state: number, counts: number[]): number {
+  if (state === 1 || state === 3) {
+    // Was in white, transition to next dark
+    state++;
+  }
+  counts[state]++;
+  return state;
+}
+
+/**
+ * Handle a light pixel during row scanning, advancing the state machine.
+ * If a complete pattern is found (state 4 → light), it is checked and
+ * potentially pushed to results. Returns the new state.
+ */
+function handleLightPixel(
+  state: number,
+  counts: number[],
+  x: number,
+  results: ScanResult[]
+): number {
+  if (state === 0 || state === 2 || state === 4) {
+    // Was in dark, transition to next light
+    if (state === 4) {
+      // Check if we have a valid pattern
+      if (isFinderPatternRatio(counts)) {
+        const total = counts.reduce((a, b) => a + b, 0);
+        const center = x - total / 2;
+        results.push({
+          center,
+          moduleSize: total / 7,
+        });
+      }
+      // Shift counts and continue looking
+      counts[0] = counts[2];
+      counts[1] = counts[3];
+      counts[2] = counts[4];
+      counts[3] = 1;
+      counts[4] = 0;
+      return 3;
+    } else {
+      state++;
+      counts[state]++;
+      return state;
+    }
+  } else {
+    counts[state]++;
+    return state;
+  }
+}
+
+/**
  * Scan a row for potential finder patterns
  */
 function scanRow(
@@ -80,40 +134,9 @@ function scanRow(
     const isDark = gray < threshold;
 
     if (isDark) {
-      // We're in a dark pixel
-      if (state === 1 || state === 3) {
-        // Was in white, transition to next dark
-        state++;
-      }
-      counts[state]++;
+      state = handleDarkPixel(state, counts);
     } else {
-      // We're in a light pixel
-      if (state === 0 || state === 2 || state === 4) {
-        // Was in dark, transition to next light
-        if (state === 4) {
-          // Check if we have a valid pattern
-          if (isFinderPatternRatio(counts)) {
-            const total = counts.reduce((a, b) => a + b, 0);
-            const center = x - total / 2;
-            results.push({
-              center,
-              moduleSize: total / 7,
-            });
-          }
-          // Shift counts and continue looking
-          counts[0] = counts[2];
-          counts[1] = counts[3];
-          counts[2] = counts[4];
-          counts[3] = 1;
-          counts[4] = 0;
-          state = 3;
-        } else {
-          state++;
-          counts[state]++;
-        }
-      } else {
-        counts[state]++;
-      }
+      state = handleLightPixel(state, counts, x, results);
     }
   }
 
@@ -131,22 +154,20 @@ function scanRow(
 }
 
 /**
- * Verify a potential finder pattern by checking vertically
+ * Scan upward from startY, populating counts[2], counts[1], counts[0].
+ * Scans the center dark region, then the white ring, then the outer dark border.
  */
-function verifyVertical(
+function scanUpward(
   pixels: Uint8ClampedArray,
   width: number,
-  height: number,
   x: number,
-  y: number,
-  expectedModuleSize: number,
-  threshold: number
-): { valid: boolean; center: number; moduleSize: number } {
-  const counts = [0, 0, 0, 0, 0];
+  startY: number,
+  threshold: number,
+  counts: number[]
+): void {
   let state = 2; // Start at center (black)
 
-  // Scan up from center
-  for (let row = Math.floor(y); row >= 0; row--) {
+  for (let row = startY; row >= 0; row--) {
     const idx = (row * width + Math.floor(x)) * 4;
     const gray = grayAt(pixels, idx);
     const isDark = gray < threshold;
@@ -168,11 +189,24 @@ function verifyVertical(
       else break;
     }
   }
+}
 
-  state = 2;
+/**
+ * Scan downward from startY, populating counts[2], counts[3], counts[4].
+ * Scans the center dark region, then the white ring, then the outer dark border.
+ */
+function scanDownward(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  x: number,
+  startY: number,
+  threshold: number,
+  counts: number[]
+): void {
+  let state = 2; // Start at center (black)
 
-  // Scan down from center
-  for (let row = Math.floor(y) + 1; row < height; row++) {
+  for (let row = startY; row < height; row++) {
     const idx = (row * width + Math.floor(x)) * 4;
     const gray = grayAt(pixels, idx);
     const isDark = gray < threshold;
@@ -194,6 +228,27 @@ function verifyVertical(
       else break;
     }
   }
+}
+
+/**
+ * Verify a potential finder pattern by checking vertically
+ */
+function verifyVertical(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  x: number,
+  y: number,
+  expectedModuleSize: number,
+  threshold: number
+): { valid: boolean; center: number; moduleSize: number } {
+  const counts = [0, 0, 0, 0, 0];
+
+  // Scan up from center
+  scanUpward(pixels, width, x, Math.floor(y), threshold, counts);
+
+  // Scan down from center (start one row below to avoid double-counting the center row)
+  scanDownward(pixels, width, height, x, Math.floor(y) + 1, threshold, counts);
 
   if (!isFinderPatternRatio(counts)) {
     return { valid: false, center: y, moduleSize: expectedModuleSize };
@@ -448,6 +503,42 @@ function scoreFinderCenter(
 }
 
 /**
+ * Search a grid of candidate positions around a center point, scoring each one.
+ * Returns the best position and score found within the grid.
+ */
+function searchGrid(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  moduleSize: number,
+  threshold: number,
+  radius: number,
+  step: number
+): { bestX: number; bestY: number; bestScore: number } {
+  let bestX = centerX;
+  let bestY = centerY;
+  let bestScore = -Infinity;
+
+  for (let dy = -radius; dy <= radius; dy += step) {
+    for (let dx = -radius; dx <= radius; dx += step) {
+      const testX = centerX + dx;
+      const testY = centerY + dy;
+      const score = scoreFinderCenter(pixels, width, height, testX, testY, moduleSize, threshold);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestX = testX;
+        bestY = testY;
+      }
+    }
+  }
+
+  return { bestX, bestY, bestScore };
+}
+
+/**
  * Refine a finder pattern center by sampling the expected finder pattern structure
  * and finding the offset that maximizes correlation.
  *
@@ -476,8 +567,6 @@ function refineFinderPatternCenter(
   const searchRadius = Math.ceil(moduleSize * 2.5);
   const step = Math.max(1, Math.floor(moduleSize / 4));
 
-  let bestX = centerX;
-  let bestY = centerY;
   const initialScore = scoreFinderCenter(
     pixels,
     width,
@@ -487,21 +576,25 @@ function refineFinderPatternCenter(
     moduleSize,
     threshold
   );
-  let bestScore = initialScore;
 
   // Coarse pass: search the area around the detected center
-  for (let dy = -searchRadius; dy <= searchRadius; dy += step) {
-    for (let dx = -searchRadius; dx <= searchRadius; dx += step) {
-      const testX = centerX + dx;
-      const testY = centerY + dy;
-      const score = scoreFinderCenter(pixels, width, height, testX, testY, moduleSize, threshold);
+  let { bestX, bestY, bestScore } = searchGrid(
+    pixels,
+    width,
+    height,
+    centerX,
+    centerY,
+    moduleSize,
+    threshold,
+    searchRadius,
+    step
+  );
 
-      if (score > bestScore) {
-        bestScore = score;
-        bestX = testX;
-        bestY = testY;
-      }
-    }
+  // Use the initial score if the grid search didn't beat it
+  if (initialScore > bestScore) {
+    bestScore = initialScore;
+    bestX = centerX;
+    bestY = centerY;
   }
 
   // Fine pass: refine with smaller steps around best position (skip if step is already 1)
@@ -509,18 +602,22 @@ function refineFinderPatternCenter(
     const fineStep = Math.max(1, Math.floor(step / 2));
     const fineRadius = step * 2;
 
-    for (let dy = -fineRadius; dy <= fineRadius; dy += fineStep) {
-      for (let dx = -fineRadius; dx <= fineRadius; dx += fineStep) {
-        const testX = bestX + dx;
-        const testY = bestY + dy;
-        const score = scoreFinderCenter(pixels, width, height, testX, testY, moduleSize, threshold);
+    const fineResult = searchGrid(
+      pixels,
+      width,
+      height,
+      bestX,
+      bestY,
+      moduleSize,
+      threshold,
+      fineRadius,
+      fineStep
+    );
 
-        if (score > bestScore) {
-          bestScore = score;
-          bestX = testX;
-          bestY = testY;
-        }
-      }
+    if (fineResult.bestScore > bestScore) {
+      bestScore = fineResult.bestScore;
+      bestX = fineResult.bestX;
+      bestY = fineResult.bestY;
     }
   }
 

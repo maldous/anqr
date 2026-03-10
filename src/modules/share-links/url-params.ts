@@ -38,8 +38,7 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     // QR settings
     ec: params.get('ec') || undefined,
     version: parseIntParam(params.get('v')),
-    // Accept API-style alias used by gallery parity scenarios.
-    size: parseIntParam(params.get('size') || params.get('modulePx')),
+    size: parseIntParam(params.get('size')),
     margin: parseIntParam(params.get('margin')),
     encodingMode: params.get('enc') || undefined,
     maskPattern: params.has('mask')
@@ -162,8 +161,7 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     duotoneColor1: prefixHash(params.get('duo1')),
     duotoneColor2: prefixHash(params.get('duo2')),
     // Animation
-    // Accept API-style alias used by gallery parity scenarios.
-    speed: parseIntParam(params.get('speed') || params.get('animSpeed')),
+    speed: parseIntParam(params.get('speed')),
     loop: params.has('loop') ? params.get('loop') !== '0' : undefined,
     reverse: params.get('reverse') === '1',
     bounce: params.get('bounce') === '1',

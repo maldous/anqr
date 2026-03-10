@@ -32,6 +32,28 @@ function appendVCardName(lines: string[], params: VCardHelper): void {
   }
 }
 
+function formatTelLine(tel: string, version: string): string {
+  if (version === '4.0') {
+    return `TEL;TYPE=voice:${tel}`;
+  } else if (version === '2.1') {
+    // vCard 2.1: use CELL for mobile compatibility
+    return `TEL;CELL:${tel}`;
+  } else {
+    return `TEL:${tel}`;
+  }
+}
+
+function formatEmailLine(email: string, version: string): string {
+  if (version === '4.0') {
+    return `EMAIL:${email}`;
+  } else if (version === '2.1') {
+    // vCard 2.1: use INTERNET without TYPE=
+    return `EMAIL;INTERNET:${email}`;
+  } else {
+    return `EMAIL;TYPE=INTERNET:${email}`;
+  }
+}
+
 function appendVCardContactInfo(lines: string[], params: VCardHelper): void {
   if (params.org) {
     lines.push(`ORG:${escapeValue(params.org)}`);
@@ -47,14 +69,7 @@ function appendVCardContactInfo(lines: string[], params: VCardHelper): void {
   if (params.tel) {
     for (const tel of params.tel) {
       if (isValidPhone(tel)) {
-        if (params.version === '4.0') {
-          lines.push(`TEL;TYPE=voice:${tel}`);
-        } else if (params.version === '2.1') {
-          // vCard 2.1: use CELL for mobile compatibility
-          lines.push(`TEL;CELL:${tel}`);
-        } else {
-          lines.push(`TEL:${tel}`);
-        }
+        lines.push(formatTelLine(tel, params.version));
       }
     }
   }
@@ -62,14 +77,7 @@ function appendVCardContactInfo(lines: string[], params: VCardHelper): void {
   if (params.email) {
     for (const email of params.email) {
       if (isValidEmail(email)) {
-        if (params.version === '4.0') {
-          lines.push(`EMAIL:${email}`);
-        } else if (params.version === '2.1') {
-          // vCard 2.1: use INTERNET without TYPE=
-          lines.push(`EMAIL;INTERNET:${email}`);
-        } else {
-          lines.push(`EMAIL;TYPE=INTERNET:${email}`);
-        }
+        lines.push(formatEmailLine(email, params.version));
       }
     }
   }

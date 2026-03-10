@@ -61,7 +61,7 @@
         <!-- AdMob App ID - Required for AdMob to work -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="${ADMOB_APP_ID}"/>
+            android:value="ca-app-pub-2270701384951162~3067761782"/>
         
         <!-- Disable Sentry auto-initialization - we initialize manually in MainActivity -->
         <meta-data

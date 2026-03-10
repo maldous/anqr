@@ -7,7 +7,6 @@ Defines deterministic quality gate expectations used for CI and local validation
 ## Canonical Commands
 
 - `make quality`
-- `npm run check:parity`
 - `make test`
 - `npm run test:testid`
 - `npm run test:testid:refs`

@@ -7,7 +7,7 @@
  * Chromium browser, navigating to the running dev server with URL params,
  * and capturing the rendered output.
  *
- * Saves artifacts to reports/gallery-artifacts/<surface>/
+ * Saves artifacts to reports/gallery-artifacts/browser/
  * with passed.txt/failed.txt/report.json for inspection.
  *
  * Environment variables:
@@ -55,8 +55,7 @@ const ROOT = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const REPORTS_DIR = path.join(ROOT, 'reports');
 const ARTIFACTS_DIR = path.join(REPORTS_DIR, 'gallery-artifacts');
-const SURFACE = (process.env.GALLERY_SURFACE || 'browser').trim().toLowerCase();
-const OUTPUT_DIR = path.join(ARTIFACTS_DIR, SURFACE);
+const OUTPUT_DIR = path.join(ARTIFACTS_DIR, 'browser');
 const LOCAL_HANDLER_URL = 'http://localhost/.netlify/functions/qr';
 
 const PORT = process.env.GALLERY_PORT || '5173';
@@ -65,7 +64,6 @@ const CONCURRENCY = Math.max(1, Number.parseInt(process.env.GALLERY_CONCURRENCY 
 const PAGE_TIMEOUT = 30_000;
 const CANVAS_SELECTOR =
   '[data-testid="qr-preview"] canvas, [data-testid="preview-canvas"], canvas[role="img"]';
-const RENDER_IDLE_SELECTOR = '[data-testid="qr-preview"][data-rendering-state="idle"]';
 const SKIP_SERVER_CHECK = process.env.GALLERY_SKIP_SERVER_CHECK === '1';
 const CAPTURE_MODE = (process.env.GALLERY_BROWSER_CAPTURE_MODE || 'api').toLowerCase();
 const SHARD = resolveGalleryShard(process.env);
@@ -329,15 +327,6 @@ async function waitForCanvasStabilization(page, selector, timeoutMs = 6000) {
   return false;
 }
 
-async function waitForPreviewIdle(page, timeoutMs) {
-  try {
-    await page.waitForSelector(RENDER_IDLE_SELECTOR, { timeout: timeoutMs, state: 'attached' });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function parseIntParam(value, fallback) {
   const parsed = Number.parseInt(String(value ?? ''), 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -579,7 +568,6 @@ async function runPool(tasks, concurrency) {
 
 async function main() {
   console.log('\n=== ANQR Gallery Browser Generator (Playwright) ===\n');
-  console.log(`Surface:     ${SURFACE}`);
   console.log(`Mode:        ${CAPTURE_MODE}`);
   console.log(`Server:      ${BASE_URL}`);
   console.log(`Concurrency: ${CONCURRENCY}`);
@@ -751,9 +739,6 @@ async function main() {
           await page.waitForTimeout(400);
         }
 
-        // Wait for app-level render lifecycle completion. This avoids capturing
-        // draft/degraded preview frames before settled rendering is done.
-        await waitForPreviewIdle(page, PAGE_TIMEOUT);
         await waitForCanvasStabilization(page, CANVAS_SELECTOR, 6000).catch(() => {});
 
         await page.waitForTimeout(300);
@@ -856,7 +841,7 @@ async function main() {
   // Write JSON report
   const report = {
     generatedAt: new Date().toISOString(),
-    mode: SURFACE,
+    mode: 'browser',
     serverUrl: BASE_URL,
     concurrency: CONCURRENCY,
     shard: {

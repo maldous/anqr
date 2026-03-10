@@ -36,6 +36,7 @@ import {
   gaussJordanEliminate,
   rankPixelsByImportance,
   selectBasisVectorsForTarget,
+  type EliminationResult,
 } from './elimination';
 import { mapImageToTargetsSupersampled } from './image-utils';
 import {
@@ -696,6 +697,55 @@ interface ScanResult {
  * When terminator bits get flipped to fake mode indicators (like 0x8 = Kanji),
  * structurallyValid will be false even if data was extracted.
  */
+function renderMatrixToImageData(
+  matrix: boolean[][],
+  moduleCount: number,
+  scale: number,
+  quietZone: number,
+  invert: boolean
+): ImageData {
+  const size = (moduleCount + quietZone * 2) * scale;
+  const data = new Uint8ClampedArray(size * size * 4);
+
+  const bgColor = invert ? 0 : 255;
+  const fgColor = invert ? 255 : 0;
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = bgColor;
+    data[i + 1] = bgColor;
+    data[i + 2] = bgColor;
+    data[i + 3] = 255;
+  }
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const isDark = matrix[row]?.[col] ?? false;
+      if (isDark) {
+        const startX = (col + quietZone) * scale;
+        const startY = (row + quietZone) * scale;
+
+        for (let py = 0; py < scale; py++) {
+          for (let px = 0; px < scale; px++) {
+            const idx = ((startY + py) * size + (startX + px)) * 4;
+            data[idx] = fgColor;
+            data[idx + 1] = fgColor;
+            data[idx + 2] = fgColor;
+          }
+        }
+      }
+    }
+  }
+
+  return new ImageData(data, size, size);
+}
+
+function hasExtraInvalidSegments(segments: DecodedSegmentInfo[]): boolean {
+  return segments.some((seg, idx) => {
+    if (idx === 0) return false;
+    if (seg.modeName === 'terminator') return false;
+    return !seg.valid || seg.modeName === 'unknown';
+  });
+}
+
 function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
   const moduleCount = matrix.length;
   if (moduleCount === 0) {
@@ -716,43 +766,9 @@ function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
   for (const config of configs) {
     attempts++;
     const { scale, quietZone, invert } = config;
-    const size = (moduleCount + quietZone * 2) * scale;
-
-    // Create ImageData manually (white background)
-    const data = new Uint8ClampedArray(size * size * 4);
-
-    // Fill with white (or black if inverted)
-    const bgColor = invert ? 0 : 255;
-    const fgColor = invert ? 255 : 0;
-    for (let i = 0; i < data.length; i += 4) {
-      data[i] = bgColor;
-      data[i + 1] = bgColor;
-      data[i + 2] = bgColor;
-      data[i + 3] = 255;
-    }
-
-    // Draw the QR modules
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        const isDark = matrix[row]?.[col] ?? false;
-        if (isDark) {
-          const startX = (col + quietZone) * scale;
-          const startY = (row + quietZone) * scale;
-
-          for (let py = 0; py < scale; py++) {
-            for (let px = 0; px < scale; px++) {
-              const idx = ((startY + py) * size + (startX + px)) * 4;
-              data[idx] = fgColor;
-              data[idx + 1] = fgColor;
-              data[idx + 2] = fgColor;
-            }
-          }
-        }
-      }
-    }
 
     try {
-      const imageData = new ImageData(data, size, size);
+      const imageData = renderMatrixToImageData(matrix, moduleCount, scale, quietZone, invert);
       const result = decodeQR(imageData, {
         inversionAttempts: 'attemptBoth',
       });
@@ -770,19 +786,9 @@ function scanMatrixWithJsQR(matrix: boolean[][]): ScanResult {
             bitOffset: s.bitOffset,
           })) ?? [];
 
-        // Check for fake/extra segments after primary data
-        // This catches the "byte segment ok, then fake Kanji" pattern
-        const hasExtraInvalidSegment = segments.some((seg, idx) => {
-          // Skip first segment (primary data)
-          if (idx === 0) return false;
-          // Terminator is fine
-          if (seg.modeName === 'terminator') return false;
-          // Any non-terminator segment after primary that is invalid indicates fake segment
-          return !seg.valid || seg.modeName === 'unknown';
-        });
-
         // structurallyValid = decoder said valid AND no extra invalid segments detected
-        const structurallyValid = (result.structurallyValid ?? true) && !hasExtraInvalidSegment;
+        const structurallyValid =
+          (result.structurallyValid ?? true) && !hasExtraInvalidSegments(segments);
 
         return {
           success: true,
@@ -1012,12 +1018,80 @@ interface BaseQRResult {
  * HYBRID MODE: The originalDataLength parameter tells us where the original
  * data ends and the suffix begins. This is critical for protection boundaries.
  */
+function createQREncoderForGenerate(
+  data: string,
+  originalDataLength: number,
+  suffixMode: 'byte' | 'numeric',
+  ecc: ECCLevel,
+  version: number,
+  mask: number | undefined
+): { getModuleCount: () => number; isDark: (row: number, col: number) => boolean } {
+  if (suffixMode === 'numeric') {
+    return createQRInstanceWithSegments(
+      [
+        { data: data.slice(0, originalDataLength), mode: 'byte' as const },
+        ...(data.slice(originalDataLength).length > 0
+          ? [{ data: data.slice(originalDataLength), mode: 'numeric' as const }]
+          : []),
+      ],
+      ecc,
+      version,
+      { maskPattern: mask as MaskPattern }
+    );
+  }
+  const instance = qrcode(version, ecc);
+  instance.addData(data);
+  instance.make(mask);
+  return instance;
+}
+
+function extractActualMaskPattern(
+  qr: { isDark: (row: number, col: number) => boolean },
+  moduleCount: number,
+  ecc: ECCLevel,
+  maskPattern: number
+): number {
+  if (maskPattern >= 0) return maskPattern;
+
+  const tempMatrix: boolean[][] = [];
+  for (let r = 0; r < moduleCount; r++) {
+    tempMatrix[r] = [];
+    for (let c = 0; c < moduleCount; c++) {
+      tempMatrix[r][c] = qr.isDark(r, c);
+    }
+  }
+
+  const extracted = extractMaskFromMatrix(tempMatrix);
+  const actualMask = extracted.mask;
+
+  const extractedEccLevel = eccNumericToLevel(extracted.eccLevel);
+  if (extractedEccLevel !== ecc) {
+    log.warn('FORMAT_PARSER_DISAGREEMENT: Decoder extracted different ECC than requested', {
+      requested: ecc,
+      extracted: extractedEccLevel,
+      extractedNumeric: extracted.eccLevel,
+      action: 'CONTINUE_WITH_ENCODER_ECC',
+      note: 'Encoder-requested ECC is authoritative. Final scan validates correctness.',
+    });
+  }
+
+  log.info('Extracted actual mask from encoder (auto-mask mode)', {
+    extractedMask: actualMask,
+    extractedEcc: extractedEccLevel,
+    formatInfoValid: extracted.isValid,
+    formatInfoMatch: extracted.formatInfoMatch,
+    eccParserAgreement: extractedEccLevel === ecc,
+  });
+
+  return actualMask;
+}
+
 function generateBaseQR(
   data: string,
   version: number,
   ecc: ECCLevel,
   maskPattern: number,
-  originalDataLength: number, // Length of original data (without suffix)
+  originalDataLength: number,
   suffixMode: 'byte' | 'numeric'
 ): BaseQRResult {
   // Log the exact data being encoded for debugging
@@ -1034,79 +1108,20 @@ function generateBaseQR(
   });
 
   // First, use the encoder to determine the actual version if auto-detecting
-  // Mixed-mode support: use a byte prefix + numeric suffix when requested.
-  // This matches the encoder-derived bit layout used for protection boundaries.
   const useMask = maskPattern >= 0 ? maskPattern : undefined;
-  const qr =
-    suffixMode === 'numeric'
-      ? createQRInstanceWithSegments(
-          [
-            { data: data.slice(0, originalDataLength), mode: 'byte' as const },
-            ...(data.slice(originalDataLength).length > 0
-              ? [{ data: data.slice(originalDataLength), mode: 'numeric' as const }]
-              : []),
-          ],
-          ecc,
-          version,
-          { maskPattern: useMask as MaskPattern }
-        )
-      : (() => {
-          const instance = qrcode(version, ecc);
-          instance.addData(data);
-          instance.make(useMask);
-          return instance;
-        })();
+  const qr = createQREncoderForGenerate(
+    data,
+    originalDataLength,
+    suffixMode,
+    ecc,
+    version,
+    useMask
+  );
 
   const moduleCount = qr.getModuleCount();
   const actualVersion = version > 0 ? version : Math.ceil((moduleCount - 17) / 4);
 
-  // CRITICAL: Extract the ACTUAL mask pattern from the encoder's matrix
-  // When maskPattern=-1 (auto), the encoder picks the best mask internally
-  // via getBestMaskPattern(), but doesn't expose which mask it chose.
-  // We MUST extract it from the format info bits to use throughout the pipeline.
-  let actualMask: number;
-  if (maskPattern >= 0) {
-    // User specified a mask, use it directly
-    actualMask = maskPattern;
-  } else {
-    // Auto-mask mode: extract the actual mask the encoder chose
-    // Build a temporary matrix from the encoder to read format info
-    const tempMatrix: boolean[][] = [];
-    for (let r = 0; r < moduleCount; r++) {
-      tempMatrix[r] = [];
-      for (let c = 0; c < moduleCount; c++) {
-        tempMatrix[r][c] = qr.isDark(r, c);
-      }
-    }
-
-    const extracted = extractMaskFromMatrix(tempMatrix);
-    actualMask = extracted.mask;
-
-    // Check if extracted ECC matches what we requested
-    // The encoder is the SOURCE OF TRUTH - it knows what it wrote.
-    // If the decoder parser disagrees, it's likely a parser bug, not an encoder bug.
-    const extractedEccLevel = eccNumericToLevel(extracted.eccLevel);
-    if (extractedEccLevel !== ecc) {
-      // FORMAT_PARSER_DISAGREEMENT: Log as WARNING, not ERROR
-      // The encoder wrote the correct format info - decoder parser may have bugs.
-      // We continue with encoder-requested values; final scan validates correctness.
-      log.warn('FORMAT_PARSER_DISAGREEMENT: Decoder extracted different ECC than requested', {
-        requested: ecc,
-        extracted: extractedEccLevel,
-        extractedNumeric: extracted.eccLevel,
-        action: 'CONTINUE_WITH_ENCODER_ECC',
-        note: 'Encoder-requested ECC is authoritative. Final scan validates correctness.',
-      });
-    }
-
-    log.info('Extracted actual mask from encoder (auto-mask mode)', {
-      extractedMask: actualMask,
-      extractedEcc: extractedEccLevel,
-      formatInfoValid: extracted.isValid,
-      formatInfoMatch: extracted.formatInfoMatch,
-      eccParserAgreement: extractedEccLevel === ecc,
-    });
-  }
+  const actualMask = extractActualMaskPattern(qr, moduleCount, ecc, maskPattern);
 
   // Get the actual encoded data bytes and compute ECC using the encoder's bit buffer
   // This is critical - we need the real data bytes AND their ECC for RS linearity
@@ -1192,25 +1207,14 @@ function generateBaseQR(
   }
 
   // DEBUG: Compare regenerated matrix with encoder's matrix to find discrepancies
-  const debugQr =
-    suffixMode === 'numeric'
-      ? createQRInstanceWithSegments(
-          [
-            { data: data.slice(0, originalDataLength), mode: 'byte' as const },
-            ...(data.slice(originalDataLength).length > 0
-              ? [{ data: data.slice(originalDataLength), mode: 'numeric' as const }]
-              : []),
-          ],
-          ecc,
-          actualVersion,
-          { maskPattern: actualMask as MaskPattern }
-        )
-      : (() => {
-          const instance = qrcode(actualVersion, ecc);
-          instance.addData(data);
-          instance.make(actualMask);
-          return instance;
-        })();
+  const debugQr = createQREncoderForGenerate(
+    data,
+    originalDataLength,
+    suffixMode,
+    ecc,
+    actualVersion,
+    actualMask
+  );
 
   let mismatchCount = 0;
   const maxMismatches = 10;
@@ -1729,6 +1733,87 @@ function buildBlockSelectionsFromFlattened(
     .sort((a, b) => a.blockIndex - b.blockIndex);
 }
 
+function accumulateByteGroupMasks(
+  byteValue: number,
+  linearByteOffset: number,
+  numericDataStart: number,
+  numericDataBits: number,
+  groupIndexForBit: Int32Array,
+  bitMaskForBit: Int32Array,
+  groupMasks: Int32Array,
+  touched: Int32Array,
+  touchedCount: number
+): number {
+  for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
+    if ((byteValue & (1 << bitInByte)) === 0) continue;
+    const linearBit = linearByteOffset * 8 + (7 - bitInByte);
+    if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) continue;
+    const local = linearBit - numericDataStart;
+    const g = groupIndexForBit[local];
+    if (g < 0) continue;
+    if (groupMasks[g] === 0) {
+      touched[touchedCount++] = g;
+    }
+    groupMasks[g] ^= bitMaskForBit[local];
+  }
+  return touchedCount;
+}
+
+type NumericSelectionMask = {
+  entry: FlattenedSelection;
+  groups: Int32Array;
+  masks: Int32Array;
+};
+
+function greedyRemoveInvalidSelections(
+  selections: NumericSelectionMask[],
+  currentValues: number[],
+  groupMax: number[],
+  groupCount: number
+): boolean[] {
+  const invalid = new Uint8Array(groupCount);
+  const markInvalid = (): number => {
+    let count = 0;
+    for (let g = 0; g < groupCount; g++) {
+      const bad = currentValues[g] > (groupMax[g] ?? 0);
+      invalid[g] = bad ? 1 : 0;
+      if (bad) count++;
+    }
+    return count;
+  };
+
+  let invalidCount = markInvalid();
+  const keep = new Array<boolean>(selections.length).fill(true);
+
+  while (invalidCount > 0) {
+    let removed = false;
+    for (let i = selections.length - 1; i >= 0; i--) {
+      if (!keep[i]) continue;
+      const sel = selections[i];
+      let touchesInvalid = false;
+      for (let j = 0; j < sel.groups.length; j++) {
+        if (invalid[sel.groups[j]]) {
+          touchesInvalid = true;
+          break;
+        }
+      }
+      if (!touchesInvalid) continue;
+
+      keep[i] = false;
+      for (let j = 0; j < sel.groups.length; j++) {
+        const g = sel.groups[j];
+        currentValues[g] = (currentValues[g] ?? 0) ^ sel.masks[j];
+      }
+      removed = true;
+      invalidCount = markInvalid();
+      break;
+    }
+    if (!removed) break;
+  }
+
+  return keep;
+}
+
 function filterSelectionsForNumericSuffix(
   flattened: FlattenedSelection[],
   blockDataArrays: Uint8Array[],
@@ -1793,13 +1878,7 @@ function filterSelectionsForNumericSuffix(
     offset += count;
   }
 
-  type SelectionMask = {
-    entry: FlattenedSelection;
-    groups: Int32Array;
-    masks: Int32Array;
-  };
-
-  const selections: SelectionMask[] = [];
+  const selections: NumericSelectionMask[] = [];
   const groupCount = groupMax.length;
   const groupMasks = new Int32Array(groupCount);
   const touched = new Int32Array(groupCount);
@@ -1821,41 +1900,34 @@ function filterSelectionsForNumericSuffix(
         for (let k = 0; k < nzIdx.length; k++) {
           const byteIdx = nzIdx[k];
           if (byteIdx >= dataCount) continue;
-          const byte = nzVals[k];
-          for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
-            if ((byte & (1 << bitInByte)) === 0) continue;
-            const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
-            if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
-              continue;
-            }
-            const local = linearBit - numericDataStart;
-            const g = groupIndexForBit[local];
-            if (g < 0) continue;
-            if (groupMasks[g] === 0) {
-              touched[touchedCount++] = g;
-            }
-            groupMasks[g] ^= bitMaskForBit[local];
-          }
+          touchedCount = accumulateByteGroupMasks(
+            nzVals[k],
+            blockStart + byteIdx,
+            numericDataStart,
+            numericDataBits,
+            groupIndexForBit,
+            bitMaskForBit,
+            groupMasks,
+            touched,
+            touchedCount
+          );
         }
       }
     } else {
       for (let byteIdx = 0; byteIdx < dataCount; byteIdx++) {
         const byte = vector.blockBits[byteIdx];
         if (!byte) continue;
-        for (let bitInByte = 7; bitInByte >= 0; bitInByte--) {
-          if ((byte & (1 << bitInByte)) === 0) continue;
-          const linearBit = (blockStart + byteIdx) * 8 + (7 - bitInByte);
-          if (linearBit < numericDataStart || linearBit >= numericDataStart + numericDataBits) {
-            continue;
-          }
-          const local = linearBit - numericDataStart;
-          const g = groupIndexForBit[local];
-          if (g < 0) continue;
-          if (groupMasks[g] === 0) {
-            touched[touchedCount++] = g;
-          }
-          groupMasks[g] ^= bitMaskForBit[local];
-        }
+        touchedCount = accumulateByteGroupMasks(
+          byte,
+          blockStart + byteIdx,
+          numericDataStart,
+          numericDataBits,
+          groupIndexForBit,
+          bitMaskForBit,
+          groupMasks,
+          touched,
+          touchedCount
+        );
       }
     }
 
@@ -1882,46 +1954,7 @@ function filterSelectionsForNumericSuffix(
     }
   }
 
-  const invalid = new Uint8Array(groupCount);
-  const markInvalid = (): number => {
-    let count = 0;
-    for (let g = 0; g < groupCount; g++) {
-      const bad = currentValues[g] > (groupMax[g] ?? 0);
-      invalid[g] = bad ? 1 : 0;
-      if (bad) count++;
-    }
-    return count;
-  };
-
-  let invalidCount = markInvalid();
-  const keep = new Array(selections.length).fill(true);
-
-  while (invalidCount > 0) {
-    let removed = false;
-    for (let i = selections.length - 1; i >= 0; i--) {
-      if (!keep[i]) continue;
-      const sel = selections[i];
-      let touchesInvalid = false;
-      for (let j = 0; j < sel.groups.length; j++) {
-        if (invalid[sel.groups[j]]) {
-          touchesInvalid = true;
-          break;
-        }
-      }
-      if (!touchesInvalid) continue;
-
-      // remove this (lowest-importance) selection
-      keep[i] = false;
-      for (let j = 0; j < sel.groups.length; j++) {
-        const g = sel.groups[j];
-        currentValues[g] = (currentValues[g] ?? 0) ^ sel.masks[j];
-      }
-      removed = true;
-      invalidCount = markInvalid();
-      break;
-    }
-    if (!removed) break;
-  }
+  const keep = greedyRemoveInvalidSelections(selections, currentValues, groupMax, groupCount);
 
   const accepted: FlattenedSelection[] = [];
   for (let i = 0; i < selections.length; i++) {
@@ -1939,102 +1972,73 @@ function filterSelectionsForNumericSuffix(
   return accepted;
 }
 
-/**
- * Regenerate a QR code from modified per-block data and ECC
- * This directly constructs a valid QR matrix with all structural patterns
- * and the modified data codewords placed via zigzag traversal.
- *
- * IMPORTANT: The ECC arrays must be pre-computed to preserve RS linearity.
- * When XORing basis vectors, we XOR both data AND ECC, so the combined
- * result remains a valid RS codeword. We must NOT recompute ECC here.
- *
- * VERIFICATION: After regeneration, we verify the format info matches
- * expected ECC and mask. If not, this indicates a critical bug.
- */
-function regenerateQRFromModifiedData(
-  blockDataArrays: Uint8Array[],
-  blockEccArrays: Uint8Array[],
-  blockDataCounts: number[],
-  blockEccCounts: number[],
-  version: number,
-  ecc: ECCLevel,
-  maskPattern: number
-): boolean[][] {
-  const moduleCount = version * 4 + 17;
-
-  // Create module array initialized to null (will be filled in)
-  const modules: (boolean | null)[][] = [];
-  for (let row = 0; row < moduleCount; row++) {
-    modules[row] = new Array(moduleCount).fill(null);
-  }
-
-  // 1. Draw finder patterns (7x7 at three corners)
-  const setupFinderPattern = (centerRow: number, centerCol: number) => {
-    for (let r = -1; r <= 7; r++) {
-      if (centerRow + r < 0 || centerRow + r >= moduleCount) continue;
-      for (let c = -1; c <= 7; c++) {
-        if (centerCol + c < 0 || centerCol + c >= moduleCount) continue;
-        if (
-          (0 <= r && r <= 6 && (c === 0 || c === 6)) ||
-          (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
-          (2 <= r && r <= 4 && 2 <= c && c <= 4)
-        ) {
-          modules[centerRow + r][centerCol + c] = true;
-        } else {
-          modules[centerRow + r][centerCol + c] = false;
-        }
+function drawFinderPattern(
+  modules: (boolean | null)[][],
+  moduleCount: number,
+  centerRow: number,
+  centerCol: number
+): void {
+  for (let r = -1; r <= 7; r++) {
+    if (centerRow + r < 0 || centerRow + r >= moduleCount) continue;
+    for (let c = -1; c <= 7; c++) {
+      if (centerCol + c < 0 || centerCol + c >= moduleCount) continue;
+      if (
+        (0 <= r && r <= 6 && (c === 0 || c === 6)) ||
+        (0 <= c && c <= 6 && (r === 0 || r === 6)) ||
+        (2 <= r && r <= 4 && 2 <= c && c <= 4)
+      ) {
+        modules[centerRow + r][centerCol + c] = true;
+      } else {
+        modules[centerRow + r][centerCol + c] = false;
       }
     }
-  };
+  }
+}
 
-  setupFinderPattern(0, 0); // Top-left
-  setupFinderPattern(moduleCount - 7, 0); // Bottom-left
-  setupFinderPattern(0, moduleCount - 7); // Top-right
-
-  // 2. Draw alignment patterns (5x5, version >= 2)
-  // IMPORTANT: Must be placed BEFORE timing patterns to match encoder order!
-  // The encoder does: Finders -> Alignment -> Timing
-  // Timing has null check and won't overwrite alignment patterns.
-  if (version >= 2) {
-    const positions = getPatternPosition(version);
-    for (const row of positions) {
-      for (const col of positions) {
-        // Skip if overlapping with finder patterns
-        if (modules[row][col] !== null) continue;
-
-        for (let r = -2; r <= 2; r++) {
-          for (let c = -2; c <= 2; c++) {
-            if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
-              modules[row + r][col + c] = true;
-            } else {
-              modules[row + r][col + c] = false;
-            }
+function drawAlignmentPatterns(
+  modules: (boolean | null)[][],
+  version: number,
+  moduleCount: number
+): void {
+  if (version < 2) return;
+  const positions = getPatternPosition(version);
+  for (const row of positions) {
+    for (const col of positions) {
+      if (modules[row][col] !== null) continue;
+      for (let r = -2; r <= 2; r++) {
+        for (let c = -2; c <= 2; c++) {
+          if (r === -2 || r === 2 || c === -2 || c === 2 || (r === 0 && c === 0)) {
+            modules[row + r][col + c] = true;
+          } else {
+            modules[row + r][col + c] = false;
           }
         }
       }
     }
   }
+}
 
-  // 3. Draw timing patterns (alternating dark/light at row 6 and col 6)
-  // IMPORTANT: Must be placed AFTER alignment patterns to match encoder order!
-  // This ensures timing doesn't overwrite alignment pattern centers on row/col 6.
+function drawTimingPatterns(modules: (boolean | null)[][], moduleCount: number): void {
   for (let i = 8; i < moduleCount - 8; i++) {
     const dark = i % 2 === 0;
-    if (modules[6][i] === null) modules[6][i] = dark; // Horizontal
-    if (modules[i][6] === null) modules[i][6] = dark; // Vertical
+    if (modules[6][i] === null) modules[6][i] = dark;
+    if (modules[i][6] === null) modules[i][6] = dark;
   }
+}
 
-  // 4. Reserve format information areas (will be filled later)
-  // These are around the top-left finder and extend to other finders
+function writeFormatInfo(
+  modules: (boolean | null)[][],
+  ecc: ECCLevel,
+  maskPattern: number,
+  moduleCount: number
+): void {
   const eccLevel = eccToNumericForEncoder(ecc);
   const formatData = (eccLevel << 3) | maskPattern;
   const formatBits = getBCHTypeInfo(formatData);
 
-  // Draw format info (vertical part near top-left finder)
   for (let i = 0; i < 15; i++) {
     const mod = ((formatBits >> i) & 1) === 1;
 
-    // Vertical (left side)
     if (i < 6) {
       modules[i][8] = mod;
     } else if (i < 8) {
@@ -2043,7 +2047,6 @@ function regenerateQRFromModifiedData(
       modules[moduleCount - 15 + i][8] = mod;
     }
 
-    // Horizontal (top side)
     if (i < 8) {
       modules[8][moduleCount - i - 1] = mod;
     } else if (i < 9) {
@@ -2053,37 +2056,28 @@ function regenerateQRFromModifiedData(
     }
   }
 
-  // Fixed dark module
   modules[moduleCount - 8][8] = true;
+}
 
-  // 5. Draw version information (version >= 7)
-  if (version >= 7) {
-    const versionBits = getBCHTypeNumber(version);
-
-    for (let i = 0; i < 18; i++) {
-      const mod = ((versionBits >> i) & 1) === 1;
-      // Bottom-left of top-right finder
-      modules[Math.floor(i / 3)][(i % 3) + moduleCount - 8 - 3] = mod;
-      // Right of bottom-left finder
-      modules[(i % 3) + moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
-    }
+function writeVersionInfo(
+  modules: (boolean | null)[][],
+  version: number,
+  moduleCount: number
+): void {
+  if (version < 7) return;
+  const versionBits = getBCHTypeNumber(version);
+  for (let i = 0; i < 18; i++) {
+    const mod = ((versionBits >> i) & 1) === 1;
+    modules[Math.floor(i / 3)][(i % 3) + moduleCount - 8 - 3] = mod;
+    modules[(i % 3) + moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
   }
+}
 
-  // 6. Combine data and pre-computed ECC for each block (DO NOT recompute ECC!)
-  // RS codes are linear: XOR of valid codewords is valid. Since we XORed both
-  // data and ECC portions of basis vectors, the result is already valid.
-  const blockCodewords: Uint8Array[] = [];
-  for (let i = 0; i < blockDataArrays.length; i++) {
-    const data = blockDataArrays[i];
-    const eccBytes = blockEccArrays[i]; // Use pre-computed/XORed ECC
-
-    const codeword = new Uint8Array(data.length + eccBytes.length);
-    codeword.set(data, 0);
-    codeword.set(eccBytes, data.length);
-    blockCodewords.push(codeword);
-  }
-
-  // Interleave codewords (data first, then ECC)
+function interleaveBlockCodewords(
+  blockCodewords: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[]
+): number[] {
   const maxDataCount = Math.max(...blockDataCounts);
   const maxEccCount = Math.max(...blockEccCounts);
   const interleaved: number[] = [];
@@ -2104,7 +2098,15 @@ function regenerateQRFromModifiedData(
     }
   }
 
-  // 7. Place data using zigzag traversal with mask
+  return interleaved;
+}
+
+function placeDataWithZigzag(
+  modules: (boolean | null)[][],
+  interleaved: number[],
+  maskPattern: number,
+  moduleCount: number
+): void {
   const maskFunc = getMaskFunction(maskPattern);
   let inc = -1;
   let row = moduleCount - 1;
@@ -2112,14 +2114,12 @@ function regenerateQRFromModifiedData(
   let byteIndex = 0;
 
   for (let col = moduleCount - 1; col > 0; col -= 2) {
-    // Skip timing column
     if (col === 6) col -= 1;
 
     while (true) {
       for (let c = 0; c < 2; c++) {
         const currentCol = col - c;
 
-        // Only place data in empty modules
         if (modules[row][currentCol] === null) {
           let dark = false;
 
@@ -2127,7 +2127,6 @@ function regenerateQRFromModifiedData(
             dark = ((interleaved[byteIndex] >>> bitIndex) & 1) === 1;
           }
 
-          // Apply mask
           if (maskFunc(row, currentCol)) {
             dark = !dark;
           }
@@ -2151,6 +2150,61 @@ function regenerateQRFromModifiedData(
       }
     }
   }
+}
+
+/**
+ * Regenerate a QR code from modified per-block data and ECC.
+ * Uses extracted helpers for structural pattern drawing, interleaving,
+ * and zigzag data placement.
+ */
+function regenerateQRFromModifiedData(
+  blockDataArrays: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[],
+  version: number,
+  ecc: ECCLevel,
+  maskPattern: number
+): boolean[][] {
+  const moduleCount = version * 4 + 17;
+
+  // Create module array initialized to null (will be filled in)
+  const modules: (boolean | null)[][] = [];
+  for (let row = 0; row < moduleCount; row++) {
+    modules[row] = new Array(moduleCount).fill(null);
+  }
+
+  // 1. Draw finder patterns (7x7 at three corners)
+  drawFinderPattern(modules, moduleCount, 0, 0);
+  drawFinderPattern(modules, moduleCount, moduleCount - 7, 0);
+  drawFinderPattern(modules, moduleCount, 0, moduleCount - 7);
+
+  // 2. Draw alignment patterns (must be BEFORE timing to match encoder order)
+  drawAlignmentPatterns(modules, version, moduleCount);
+
+  // 3. Draw timing patterns (must be AFTER alignment to match encoder order)
+  drawTimingPatterns(modules, moduleCount);
+
+  // 4. Write format information
+  writeFormatInfo(modules, ecc, maskPattern, moduleCount);
+
+  // 5. Write version information
+  writeVersionInfo(modules, version, moduleCount);
+
+  // 6. Combine data and pre-computed ECC for each block (DO NOT recompute ECC!)
+  const blockCodewords: Uint8Array[] = [];
+  for (let i = 0; i < blockDataArrays.length; i++) {
+    const data = blockDataArrays[i];
+    const eccBytes = blockEccArrays[i];
+    const codeword = new Uint8Array(data.length + eccBytes.length);
+    codeword.set(data, 0);
+    codeword.set(eccBytes, data.length);
+    blockCodewords.push(codeword);
+  }
+
+  // 7. Interleave and place data using zigzag traversal
+  const interleaved = interleaveBlockCodewords(blockCodewords, blockDataCounts, blockEccCounts);
+  placeDataWithZigzag(modules, interleaved, maskPattern, moduleCount);
 
   // Convert to boolean[][] (null -> false)
   const result: boolean[][] = [];
@@ -2181,35 +2235,554 @@ function regenerateQRFromModifiedData(
  * 5. Select vectors to flip pixels toward target
  * 6. Regenerate QR with modified data
  */
-export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArtResult> {
+
+type BasisVectorViolation = {
+  vectorIndex: number;
+  dataBitIndex: number;
+  blockIndex: number;
+  localBitIndex: number;
+  linearBit: number;
+  violationType: 'ORIGINAL_DATA' | 'TERMINATOR_GAP';
+};
+
+function validateBasisVectorSafety(
+  vectors: Array<{
+    rsBlockIndex: number;
+    posInBlock: number;
+    bitInByte: number;
+    dataBitIndex: number;
+  }>,
+  blockDataCounts: number[],
+  protectedBitEnd: number,
+  gapStartBit: number,
+  gapEndBit: number
+): BasisVectorViolation[] {
+  const violations: BasisVectorViolation[] = [];
+
+  for (let i = 0; i < vectors.length; i++) {
+    const vector = vectors[i];
+    let linearByteOffset = 0;
+    for (let b = 0; b < vector.rsBlockIndex; b++) {
+      linearByteOffset += blockDataCounts[b];
+    }
+    const linearByte = linearByteOffset + vector.posInBlock;
+    const linearBit = linearByte * 8 + (7 - vector.bitInByte);
+
+    if (linearBit < protectedBitEnd) {
+      violations.push({
+        vectorIndex: i,
+        dataBitIndex: vector.dataBitIndex,
+        blockIndex: vector.rsBlockIndex,
+        localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
+        linearBit,
+        violationType: 'ORIGINAL_DATA',
+      });
+    } else if (linearBit >= gapStartBit && linearBit < gapEndBit) {
+      violations.push({
+        vectorIndex: i,
+        dataBitIndex: vector.dataBitIndex,
+        blockIndex: vector.rsBlockIndex,
+        localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
+        linearBit,
+        violationType: 'TERMINATOR_GAP',
+      });
+    }
+  }
+
+  return violations;
+}
+
+function verifyProtectedBytes(
+  blockDataArrays: Uint8Array[],
+  modifiedBlockData: Uint8Array[],
+  blockAllowedBits: Map<number, Set<number>>
+): {
+  valid: boolean;
+  violations: Array<{
+    blockIdx: number;
+    byteIdx: number;
+    original: number;
+    modified: number;
+    localBitStart: number;
+  }>;
+} {
+  const violations: Array<{
+    blockIdx: number;
+    byteIdx: number;
+    original: number;
+    modified: number;
+    localBitStart: number;
+  }> = [];
+
+  for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
+    const originalData = blockDataArrays[blockIdx];
+    const modifiedData = modifiedBlockData[blockIdx];
+    const allowedBitsInBlock = blockAllowedBits.get(blockIdx) || new Set<number>();
+
+    for (let byteIdx = 0; byteIdx < originalData.length; byteIdx++) {
+      const originalByte = originalData[byteIdx];
+      const modifiedByte = modifiedData[byteIdx];
+
+      if (originalByte === modifiedByte) continue;
+
+      for (let bitIdx = 0; bitIdx < 8; bitIdx++) {
+        const localBitIndex = byteIdx * 8 + bitIdx;
+
+        if (!allowedBitsInBlock.has(localBitIndex)) {
+          const originalBit = (originalByte >> (7 - bitIdx)) & 1;
+          const modifiedBit = (modifiedByte >> (7 - bitIdx)) & 1;
+
+          if (originalBit !== modifiedBit) {
+            violations.push({
+              blockIdx,
+              byteIdx,
+              original: originalData[byteIdx],
+              modified: modifiedData[byteIdx],
+              localBitStart: byteIdx * 8,
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    const firstProtectedBytes = Math.min(24, originalData.length);
+    log.debug('BLOCK HEAD BYTES (orig vs mod)', {
+      blockIdx,
+      blockDataBytes: originalData.length,
+      allowedBitsCount: allowedBitsInBlock.size,
+      origHead: Array.from(originalData.slice(0, firstProtectedBytes)),
+      modHead: Array.from(modifiedData.slice(0, firstProtectedBytes)),
+    });
+  }
+
+  return { valid: violations.length === 0, violations };
+}
+
+function analyzeMatrixDiff(
+  baseMatrix: boolean[][],
+  finalMatrix: boolean[][],
+  moduleCount: number
+): {
+  diffCount: number;
+  structuralDiffCount: number;
+  dataDiffCount: number;
+  sampleDiffs: Array<{
+    row: number;
+    col: number;
+    base: boolean;
+    final: boolean;
+    isStructural: boolean;
+  }>;
+} {
+  let diffCount = 0;
+  let structuralDiffCount = 0;
+  let dataDiffCount = 0;
+  const sampleDiffs: Array<{
+    row: number;
+    col: number;
+    base: boolean;
+    final: boolean;
+    isStructural: boolean;
+  }> = [];
+
+  const structuralPositions = new Set<string>();
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      structuralPositions.add(`${r},${c}`);
+      structuralPositions.add(`${r},${moduleCount - 8 + c}`);
+      structuralPositions.add(`${moduleCount - 8 + r},${c}`);
+    }
+  }
+  for (let i = 0; i < moduleCount; i++) {
+    structuralPositions.add(`6,${i}`);
+    structuralPositions.add(`${i},6`);
+  }
+  for (let i = 0; i < 9; i++) {
+    structuralPositions.add(`${i},8`);
+    structuralPositions.add(`8,${i}`);
+    structuralPositions.add(`${moduleCount - 8 + i},8`);
+    structuralPositions.add(`8,${moduleCount - 8 + i}`);
+  }
+
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      const baseVal = baseMatrix[row]?.[col] ?? false;
+      const finalVal = finalMatrix[row]?.[col] ?? false;
+      if (baseVal !== finalVal) {
+        diffCount++;
+        const isStructural = structuralPositions.has(`${row},${col}`);
+        if (isStructural) {
+          structuralDiffCount++;
+        } else {
+          dataDiffCount++;
+        }
+        if (sampleDiffs.length < 10) {
+          sampleDiffs.push({ row, col, base: baseVal, final: finalVal, isStructural });
+        }
+      }
+    }
+  }
+
+  return { diffCount, structuralDiffCount, dataDiffCount, sampleDiffs };
+}
+
+function runDeterministicMutationTest(
+  testVector: {
+    rsBlockIndex: number;
+    posInBlock: number;
+    bitInByte: number;
+    dataBitIndex: number;
+    blockBits: Uint8Array;
+  },
+  blockDataArrays: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[],
+  encoderLayout: EncoderDerivedLayout,
+  actualVersion: number,
+  ecc: ECCLevel,
+  actualMask: number,
+  data: string,
+  originalDataLength: number,
+  actualSuffix: string
+): { passed: boolean; error?: string } {
+  const testLocalBitIndex = testVector.posInBlock * 8 + (7 - testVector.bitInByte);
+
+  let linearByteOffset = 0;
+  for (let b = 0; b < testVector.rsBlockIndex; b++) {
+    linearByteOffset += blockDataCounts[b];
+  }
+  const linearByte = linearByteOffset + testVector.posInBlock;
+  const linearBit = linearByte * 8 + (7 - testVector.bitInByte);
+
+  const isInSuffixInterval =
+    linearBit >= encoderLayout.suffixSafeStartBit && linearBit < encoderLayout.suffixSafeEndBit;
+  const isInPaddingInterval =
+    linearBit >= encoderLayout.paddingSafeStartBit && linearBit < encoderLayout.paddingSafeEndBit;
+  const isInGap = linearBit >= encoderLayout.gapStartBit && linearBit < encoderLayout.gapEndBit;
+  const isInProtected = linearBit < encoderLayout.protectedBitEnd;
+
+  log.info('Test vector details (TWO-INTERVAL)', {
+    vectorDataBitIndex: testVector.dataBitIndex,
+    vectorBlockIndex: testVector.rsBlockIndex,
+    vectorPosInBlock: testVector.posInBlock,
+    vectorBitInByte: testVector.bitInByte,
+    localBitIndex: testLocalBitIndex,
+    linearByte,
+    linearBit,
+    twoIntervalAnalysis: {
+      isInSuffixInterval,
+      isInPaddingInterval,
+      isInGap,
+      isInProtected,
+      suffixRange: `${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
+      paddingRange: `${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
+      gapRange: `${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit}`,
+    },
+    status: isInSuffixInterval
+      ? 'Vector is in SUFFIX safe interval (EXPECTED)'
+      : isInPaddingInterval
+        ? 'Vector is in PADDING safe interval (EXPECTED)'
+        : isInGap
+          ? 'Vector is in TERMINATOR GAP - BUG!'
+          : isInProtected
+            ? 'Vector is in PROTECTED region - BUG!'
+            : 'Vector is in UNKNOWN region - BUG!',
+  });
+
+  const testBlockData = blockDataArrays.map((arr) => new Uint8Array(arr));
+  const testBlockEcc = blockEccArrays.map((arr) => new Uint8Array(arr));
+
+  const blockIdx = testVector.rsBlockIndex;
+  for (let byteIdx = 0; byteIdx < testBlockData[blockIdx].length; byteIdx++) {
+    testBlockData[blockIdx][byteIdx] ^= testVector.blockBits[byteIdx];
+  }
+  for (let byteIdx = 0; byteIdx < testBlockEcc[blockIdx].length; byteIdx++) {
+    testBlockEcc[blockIdx][byteIdx] ^= testVector.blockBits[blockDataCounts[blockIdx] + byteIdx];
+  }
+
+  const testMatrix = regenerateQRFromModifiedData(
+    testBlockData,
+    testBlockEcc,
+    blockDataCounts,
+    blockEccCounts,
+    actualVersion,
+    ecc,
+    actualMask
+  );
+
+  const testScan = scanMatrixWithJsQR(testMatrix);
+
+  if (!testScan.success) {
+    log.warn('HYBRID MUTATION TEST FAILED - single vector breaks scan!', {
+      vectorDataBitIndex: testVector.dataBitIndex,
+      vectorBlockIndex: testVector.rsBlockIndex,
+      vectorPosInBlock: testVector.posInBlock,
+      vectorBitInByte: testVector.bitInByte,
+      localBitIndex: testLocalBitIndex,
+      linearByte,
+      linearBit,
+      paddingStartByte: encoderLayout.paddingStartByte,
+      allowedBitStart: encoderLayout.allowedBitStart,
+      scanError: testScan.error,
+    });
+    return {
+      passed: false,
+      error: 'HYBRID mutation test failed: single vector application broke QR scan',
+    };
+  }
+
+  const mutationValidation = validateOriginalDataPreserved(testScan.data, data);
+
+  if (!mutationValidation.valid) {
+    log.warn('HYBRID MUTATION TEST FAILED - byte-exact validation failed!', {
+      expectedOriginal: data,
+      actualData: testScan.data,
+      expectedLength: originalDataLength,
+      actualLength: testScan.data?.length,
+      validationReason: mutationValidation.reason,
+      mismatchDetails: mutationValidation.mismatch,
+      vectorDataBitIndex: testVector.dataBitIndex,
+      vectorBlockIndex: testVector.rsBlockIndex,
+      localBitIndex: testLocalBitIndex,
+      linearByte,
+      linearBit,
+      paddingStartByte: encoderLayout.paddingStartByte,
+      allowedBitStart: encoderLayout.allowedBitStart,
+      protectedBitEnd: encoderLayout.protectedBitEnd,
+      note: 'This means our "controllable" bits include protected original data!',
+    });
+    return { passed: false, error: `HYBRID mutation test failed: ${mutationValidation.reason}` };
+  }
+
+  const decodedSuffix = testScan.data?.slice(originalDataLength) || '';
+  const suffixWasModified = decodedSuffix !== actualSuffix;
+
+  log.info('HYBRID MUTATION TEST PASSED (TWO-INTERVAL byte-exact)', {
+    vectorDataBitIndex: testVector.dataBitIndex,
+    vectorBlockIndex: testVector.rsBlockIndex,
+    localBitIndex: testLocalBitIndex,
+    linearByte,
+    linearBit,
+    vectorInterval: isInSuffixInterval ? 'SUFFIX' : isInPaddingInterval ? 'PADDING' : 'UNKNOWN',
+    gapProtected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits)`,
+    originalDataPreserved: true,
+    validationMethod: 'BYTE_EXACT_PREFIX',
+    suffixWasModified,
+    matrixScansCorrectly: true,
+  });
+
+  return { passed: true };
+}
+
+function handleScanFailureFallback(
+  blockSelections: BlockSelectionResult[],
+  elimination: EliminationResult,
+  importance: number[][],
+  moduleCount: number,
+  blockDataArrays: Uint8Array[],
+  blockEccArrays: Uint8Array[],
+  blockDataCounts: number[],
+  blockEccCounts: number[],
+  actualVersion: number,
+  ecc: ECCLevel,
+  actualMask: number,
+  data: string,
+  actualSuffix: string,
+  strictSuffix: boolean,
+  totalSelected: number,
+  baseMatrix: boolean[][]
+): { matrix: boolean[][]; vectorsApplied: number; scanResult: ScanResult } {
+  log.info('Attempting binary search fallback to find scannable configuration');
+
+  const flattenedSelections = flattenAndOrderSelections(
+    blockSelections,
+    elimination,
+    importance,
+    moduleCount
+  );
+
+  const regenerateFn = (
+    blockData: Uint8Array[],
+    blockEcc: Uint8Array[],
+    dataCounts: number[],
+    eccCounts: number[]
+  ) =>
+    regenerateQRFromModifiedData(
+      blockData,
+      blockEcc,
+      dataCounts,
+      eccCounts,
+      actualVersion,
+      ecc,
+      actualMask
+    );
+
+  const binarySearchResult = binarySearchMaxVectors(
+    flattenedSelections,
+    blockDataArrays,
+    blockEccArrays,
+    blockDataCounts,
+    blockEccCounts,
+    elimination,
+    regenerateFn,
+    scanMatrixWithJsQR,
+    data,
+    ecc,
+    actualMask,
+    strictSuffix
+  );
+
+  if (binarySearchResult.maxCount > 0) {
+    log.info('Binary search fallback successful', {
+      originalVectors: totalSelected,
+      usableVectors: binarySearchResult.maxCount,
+      reductionPercent: `${((1 - binarySearchResult.maxCount / totalSelected) * 100).toFixed(1)}%`,
+      iterations: binarySearchResult.iterations,
+    });
+
+    const resultMatrix = binarySearchResult.matrix;
+    const vectorsApplied = binarySearchResult.maxCount;
+
+    const postSearchValidation = performSemanticValidation(
+      resultMatrix,
+      data,
+      ecc,
+      actualMask,
+      actualSuffix,
+      scanMatrixWithJsQR,
+      strictSuffix
+    );
+
+    if (postSearchValidation.valid) {
+      const postSearchScan = scanMatrixWithJsQR(resultMatrix);
+      log.info('Binary search result SEMANTIC-HARD-GATE validation PASSED', {
+        originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
+        ecc,
+        mask: actualMask,
+        structurallyValid: postSearchScan.structurallyValid,
+        segmentCount: postSearchScan.segmentCount,
+        segmentModes: postSearchScan.segments?.map((s) => s.modeName),
+        validationMethod: 'SEMANTIC_HARD_GATE',
+      });
+      return { matrix: resultMatrix, vectorsApplied, scanResult: postSearchScan };
+    } else {
+      const postSearchScan = scanMatrixWithJsQR(resultMatrix);
+      log.warn('Binary search result SEMANTIC-HARD-GATE validation FAILED!', {
+        rejectionReason: postSearchValidation.reason,
+        description: postSearchValidation.description,
+        details: postSearchValidation.details,
+        expectedOriginal: data,
+        structurallyValid: postSearchScan.structurallyValid,
+        segmentCount: postSearchScan.segmentCount,
+        segmentModes: postSearchScan.segments?.map((s) => s.modeName),
+        segments: postSearchScan.segments?.map((s) => ({
+          mode: s.modeName,
+          charCount: s.charCount,
+          valid: s.valid,
+          bitOffset: s.bitOffset,
+        })),
+      });
+      return {
+        matrix: resultMatrix,
+        vectorsApplied,
+        scanResult: {
+          success: false,
+          error: `Post-search semantic validation failed: ${postSearchValidation.reason}`,
+        },
+      };
+    }
+  } else {
+    log.warn('Binary search found 0 usable vectors - returning base matrix', {
+      iterations: binarySearchResult.iterations,
+    });
+    return { matrix: baseMatrix, vectorsApplied: 0, scanResult: scanMatrixWithJsQR(baseMatrix) };
+  }
+}
+
+function estimateBlockECCDamage(
+  blockDataArrays: Uint8Array[],
+  modifiedBlockData: Uint8Array[],
+  blockEccCounts: number[]
+): { anyBlockOverBudget: boolean; blockDamage: Array<{ changed: number; safeLimit: number }> } {
+  let anyBlockOverBudget = false;
+  const blockDamage: Array<{ changed: number; safeLimit: number }> = [];
+
+  for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
+    const eccDamage = calculateECCDamage(
+      blockDataArrays[blockIdx],
+      modifiedBlockData[blockIdx],
+      blockEccCounts[blockIdx]
+    );
+
+    blockDamage.push({ changed: eccDamage.changedCodewords, safeLimit: eccDamage.safeLimit });
+
+    if (eccDamage.isOverBudget) {
+      anyBlockOverBudget = true;
+    }
+
+    log.info('ECC DAMAGE ESTIMATE', {
+      blockIndex: blockIdx,
+      eccCount: blockEccCounts[blockIdx],
+      changedDataCodewords: eccDamage.changedCodewords,
+      changedTotalCodewords: eccDamage.changedCodewords,
+      safeLimit: eccDamage.safeLimit,
+      isOverBudget: eccDamage.isOverBudget,
+      percentOfBudget:
+        eccDamage.safeLimit > 0
+          ? `${((eccDamage.changedCodewords / eccDamage.safeLimit) * 100).toFixed(1)}%`
+          : 'N/A',
+    });
+  }
+
+  return { anyBlockOverBudget, blockDamage };
+}
+
+/**
+ * Resolve suffix mode, version, and encoded data for QR-Art generation.
+ * Extracts the complex branching logic for suffix/version configuration.
+ */
+function resolveQArtSuffixConfig(config: {
+  data: string;
+  version: number;
+  ecc: ECCLevel;
+  suffix?: string;
+  suffixMode: 'auto' | 'numeric' | 'byte';
+  autoSuffix: boolean;
+  minPadCodewords: number;
+  forceVersion?: number;
+  targetControlPercent: number;
+  lockVersionToMinimum: boolean;
+}): {
+  resolvedSuffixMode: 'numeric' | 'byte';
+  encodingSuffixMode: 'numeric' | 'byte';
+  encodedData: string;
+  actualSuffix: string;
+  originalData: string;
+  originalDataLength: number;
+  versionToUse: number;
+  versionWasUpgradedForQArt: boolean;
+} {
   const {
     data,
-    targetImage,
     version,
     ecc,
-    maskPattern,
-    onProgress,
     suffix,
-    suffixMode = 'auto',
-    autoSuffix = true, // Default to auto-generating suffix for better control
-    minPadCodewords = 10, // Lower default since suffix provides most control
+    suffixMode,
+    autoSuffix,
+    minPadCodewords,
     forceVersion,
-    targetControlPercent = 100,
-    strictSuffix = true, // Default to true for real-world scannability
-    lockVersionToMinimum = false,
-    performanceProfile = 'quality',
+    targetControlPercent,
+    lockVersionToMinimum,
   } = config;
-  const performanceSettings = resolvePerformanceSettings(performanceProfile);
 
-  // Resolve suffix mode (prefer numeric for URLs when auto)
   const isUrlLike = /^https?:\/\//i.test(data);
   let resolvedSuffixMode: 'numeric' | 'byte' =
     suffixMode === 'auto' ? (isUrlLike ? 'numeric' : 'byte') : suffixMode;
 
-  // Encode using the resolved suffix mode (mixed-mode when numeric).
   const encodingSuffixMode: 'numeric' | 'byte' = resolvedSuffixMode;
 
-  // Base URL handling for numeric mode (we control the fragment)
   const hashIndex = data.indexOf('#');
   const baseUrl = hashIndex >= 0 ? data.slice(0, hashIndex) : data;
   if (resolvedSuffixMode === 'numeric' && hashIndex >= 0) {
@@ -2222,17 +2795,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
   let originalData = prefix;
   let originalDataLength = originalData.length;
 
-  // Track if version was auto-upgraded for QR-Art
   let versionWasUpgradedForQArt = false;
-
-  // HYBRID STRATEGY: Add suffix for more controllable bits
-  // The suffix can be modified freely while original data is protected
   let encodedData = '';
   let actualSuffix = '';
   let versionToUse: number;
 
-  // First, determine the version to use (needed for suffix calculation)
-  // QR-Art requires minimum version for reliable real-world scanning
+  // Determine the version to use
   if (forceVersion && forceVersion > 0) {
     if (forceVersion < MIN_QART_VERSION) {
       log.warn('Forced version is below MIN_QART_VERSION, upgrading for reliable scanning', {
@@ -2256,8 +2824,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       wasUpgraded: versionWasUpgradedForQArt,
     });
   } else {
-    // Will be calculated after suffix determination
-    // calculateOptimalVersionAndSuffix enforces MIN_QART_VERSION internally
     versionToUse = 0;
   }
 
@@ -2293,10 +2859,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       });
     }
   } else if (autoSuffix) {
-    // Auto-generate suffix to fill capacity
     const controlTarget = lockVersionToMinimum || versionToUse > 0 ? 0 : targetControlPercent;
     const optimalConfig = calculateOptimalVersionAndSuffix(
-      versionToUse, // 0 for auto, or user-specified minimum
+      versionToUse,
       ecc,
       originalDataLength,
       controlTarget,
@@ -2315,7 +2880,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       encodedData = data + actualSuffix;
     }
 
-    // Use the optimal version calculated
     if (versionToUse === 0) {
       versionToUse = optimalConfig.version;
     }
@@ -2340,14 +2904,12 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       lockVersionToMinimum,
     });
   } else {
-    // No suffix - only padding codewords will be controllable (limited)
     actualSuffix = '';
     encodedData = data;
     resolvedSuffixMode = 'byte';
     originalData = data;
     originalDataLength = data.length;
 
-    // If version is auto, calculate with padding slack
     if (versionToUse === 0) {
       versionToUse = calculateVersionForSlack(data.length, ecc, minPadCodewords);
     }
@@ -2359,6 +2921,62 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       note: 'Set autoSuffix=true for better image quality',
     });
   }
+
+  return {
+    resolvedSuffixMode,
+    encodingSuffixMode,
+    encodedData,
+    actualSuffix,
+    originalData,
+    originalDataLength,
+    versionToUse,
+    versionWasUpgradedForQArt,
+  };
+}
+
+export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArtResult> {
+  const {
+    data,
+    targetImage,
+    version,
+    ecc,
+    maskPattern,
+    onProgress,
+    suffix,
+    suffixMode = 'auto',
+    autoSuffix = true, // Default to auto-generating suffix for better control
+    minPadCodewords = 10, // Lower default since suffix provides most control
+    forceVersion,
+    targetControlPercent = 100,
+    strictSuffix = true, // Default to true for real-world scannability
+    lockVersionToMinimum = false,
+    performanceProfile = 'quality',
+  } = config;
+  const performanceSettings = resolvePerformanceSettings(performanceProfile);
+
+  const suffixConfig = resolveQArtSuffixConfig({
+    data,
+    version,
+    ecc,
+    suffix,
+    suffixMode,
+    autoSuffix,
+    minPadCodewords,
+    forceVersion,
+    targetControlPercent,
+    lockVersionToMinimum,
+  });
+
+  const {
+    resolvedSuffixMode,
+    encodingSuffixMode,
+    encodedData,
+    actualSuffix,
+    originalData,
+    originalDataLength,
+    versionToUse,
+    versionWasUpgradedForQArt,
+  } = suffixConfig;
 
   // Log the encoding target (HYBRID mode)
   log.info('QR-Art encoding target (HYBRID STRATEGY)', {
@@ -2680,60 +3298,17 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     const basis = buildFullBasis(actualVersion, ecc, allowedBitRanges);
 
-    // =========================================================================
-    // GUARD: Verify no basis vector touches protected bits OR the terminator gap
-    // =========================================================================
-    // This is a sanity check - if any vector's linear bit is:
-    // 1. Below protectedBitEnd (in original data region), OR
-    // 2. In the GAP between suffix safe end and padding safe start (terminator region)
-    // Then something is wrong with our allowed range calculation.
     const protectedBitEnd = encoderLayout.protectedBitEnd;
     const gapStartBit = encoderLayout.gapStartBit;
     const gapEndBit = encoderLayout.gapEndBit;
 
-    const vectorsInProtectedRegion: Array<{
-      vectorIndex: number;
-      dataBitIndex: number;
-      blockIndex: number;
-      localBitIndex: number;
-      linearBit: number;
-      violationType: 'ORIGINAL_DATA' | 'TERMINATOR_GAP';
-    }> = [];
-
-    for (let i = 0; i < basis.vectors.length; i++) {
-      const vector = basis.vectors[i];
-      // Calculate the LINEAR buffer bit index for this vector
-      // First, find the linear byte offset for this block
-      let linearByteOffset = 0;
-      for (let b = 0; b < vector.rsBlockIndex; b++) {
-        linearByteOffset += blockDataCounts[b];
-      }
-      const linearByte = linearByteOffset + vector.posInBlock;
-      const linearBit = linearByte * 8 + (7 - vector.bitInByte);
-
-      // Check if this linear bit is in the protected region (original data)
-      if (linearBit < protectedBitEnd) {
-        vectorsInProtectedRegion.push({
-          vectorIndex: i,
-          dataBitIndex: vector.dataBitIndex,
-          blockIndex: vector.rsBlockIndex,
-          localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
-          linearBit,
-          violationType: 'ORIGINAL_DATA',
-        });
-      }
-      // Check if this linear bit is in the GAP (terminator + pad-to-byte)
-      else if (linearBit >= gapStartBit && linearBit < gapEndBit) {
-        vectorsInProtectedRegion.push({
-          vectorIndex: i,
-          dataBitIndex: vector.dataBitIndex,
-          blockIndex: vector.rsBlockIndex,
-          localBitIndex: vector.posInBlock * 8 + (7 - vector.bitInByte),
-          linearBit,
-          violationType: 'TERMINATOR_GAP',
-        });
-      }
-    }
+    const vectorsInProtectedRegion = validateBasisVectorSafety(
+      basis.vectors,
+      blockDataCounts,
+      protectedBitEnd,
+      gapStartBit,
+      gapEndBit
+    );
 
     if (vectorsInProtectedRegion.length > 0) {
       const originalDataViolations = vectorsInProtectedRegion.filter(
@@ -2846,119 +3421,27 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     }
 
     // =========================================================================
-    // DETERMINISTIC HYBRID MUTATION TEST
-    // =========================================================================
-    // Before running the full solver, verify that applying a single controllable
-    // vector actually works and doesn't corrupt the ORIGINAL DATA.
-    //
-    // HYBRID MODE: The suffix CAN be modified - we only verify original data is preserved.
-    //
-    // This catches issues where:
-    // - Our "controllable" region includes protected original data
-    // - The bit mapping doesn't match regeneration
-    // - Interleaving assumptions are wrong
-    //
     if (basis.vectors.length > 0) {
       log.info('Running deterministic HYBRID mutation test...');
-
-      // Pick the first controllable vector
-      const testVector = basis.vectors[0];
-
-      // Calculate the local bit index for this vector (for debugging)
-      const testLocalBitIndex = testVector.posInBlock * 8 + (7 - testVector.bitInByte);
-
-      // Calculate what linear buffer byte this corresponds to
-      // (sum of previous blocks' data counts + local byte position)
-      let linearByteOffset = 0;
-      for (let b = 0; b < testVector.rsBlockIndex; b++) {
-        linearByteOffset += blockDataCounts[b];
-      }
-      const linearByte = linearByteOffset + testVector.posInBlock;
-      const linearBit = linearByte * 8 + (7 - testVector.bitInByte);
-
-      // Determine which interval this vector is in
-      const isInSuffixInterval =
-        linearBit >= encoderLayout.suffixSafeStartBit && linearBit < encoderLayout.suffixSafeEndBit;
-      const isInPaddingInterval =
-        linearBit >= encoderLayout.paddingSafeStartBit &&
-        linearBit < encoderLayout.paddingSafeEndBit;
-      const isInGap = linearBit >= encoderLayout.gapStartBit && linearBit < encoderLayout.gapEndBit;
-      const isInProtected = linearBit < encoderLayout.protectedBitEnd;
-
-      log.info('Test vector details (TWO-INTERVAL)', {
-        vectorDataBitIndex: testVector.dataBitIndex,
-        vectorBlockIndex: testVector.rsBlockIndex,
-        vectorPosInBlock: testVector.posInBlock,
-        vectorBitInByte: testVector.bitInByte,
-        localBitIndex: testLocalBitIndex,
-        linearByte,
-        linearBit,
-        twoIntervalAnalysis: {
-          isInSuffixInterval,
-          isInPaddingInterval,
-          isInGap,
-          isInProtected,
-          suffixRange: `${encoderLayout.suffixSafeStartBit} - ${encoderLayout.suffixSafeEndBit}`,
-          paddingRange: `${encoderLayout.paddingSafeStartBit} - ${encoderLayout.paddingSafeEndBit}`,
-          gapRange: `${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit}`,
-        },
-        status: isInSuffixInterval
-          ? 'Vector is in SUFFIX safe interval (EXPECTED)'
-          : isInPaddingInterval
-            ? 'Vector is in PADDING safe interval (EXPECTED)'
-            : isInGap
-              ? 'Vector is in TERMINATOR GAP - BUG!'
-              : isInProtected
-                ? 'Vector is in PROTECTED region - BUG!'
-                : 'Vector is in UNKNOWN region - BUG!',
-      });
-
-      // Clone original data/ECC
-      const testBlockData = blockDataArrays.map((arr) => new Uint8Array(arr));
-      const testBlockEcc = blockEccArrays.map((arr) => new Uint8Array(arr));
-
-      // Apply just this one vector (XOR it into the block)
-      const blockIdx = testVector.rsBlockIndex;
-      for (let byteIdx = 0; byteIdx < testBlockData[blockIdx].length; byteIdx++) {
-        testBlockData[blockIdx][byteIdx] ^= testVector.blockBits[byteIdx];
-      }
-      for (let byteIdx = 0; byteIdx < testBlockEcc[blockIdx].length; byteIdx++) {
-        testBlockEcc[blockIdx][byteIdx] ^=
-          testVector.blockBits[blockDataCounts[blockIdx] + byteIdx];
-      }
-
-      // Regenerate matrix
-      const testMatrix = regenerateQRFromModifiedData(
-        testBlockData,
-        testBlockEcc,
+      const mutationTestResult = runDeterministicMutationTest(
+        basis.vectors[0],
+        blockDataArrays,
+        blockEccArrays,
         blockDataCounts,
         blockEccCounts,
+        encoderLayout,
         actualVersion,
         ecc,
-        actualMask
+        actualMask,
+        data,
+        originalDataLength,
+        actualSuffix
       );
 
-      // Scan and verify
-      const testScan = scanMatrixWithJsQR(testMatrix);
-
-      if (!testScan.success) {
-        log.warn('HYBRID MUTATION TEST FAILED - single vector breaks scan!', {
-          vectorDataBitIndex: testVector.dataBitIndex,
-          vectorBlockIndex: testVector.rsBlockIndex,
-          vectorPosInBlock: testVector.posInBlock,
-          vectorBitInByte: testVector.bitInByte,
-          localBitIndex: testLocalBitIndex,
-          linearByte,
-          linearBit,
-          paddingStartByte: encoderLayout.paddingStartByte,
-          allowedBitStart: encoderLayout.allowedBitStart,
-          scanError: testScan.error,
-        });
-
-        // This is a critical failure - our "controllable" region is not actually safe
+      if (!mutationTestResult.passed) {
         return {
           success: false,
-          error: 'HYBRID mutation test failed: single vector application broke QR scan',
+          error: mutationTestResult.error ?? 'HYBRID mutation test failed',
           matrix: baseMatrix,
           moduleCount,
           version: actualVersion,
@@ -2971,62 +3454,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           suffix: actualSuffix,
         };
       }
-
-      // HYBRID: Check that ORIGINAL DATA is preserved using STRICT byte-exact validation
-      const mutationValidation = validateOriginalDataPreserved(testScan.data, data);
-
-      if (!mutationValidation.valid) {
-        log.warn('HYBRID MUTATION TEST FAILED - byte-exact validation failed!', {
-          expectedOriginal: data,
-          actualData: testScan.data,
-          expectedLength: originalDataLength,
-          actualLength: testScan.data?.length,
-          validationReason: mutationValidation.reason,
-          mismatchDetails: mutationValidation.mismatch,
-          vectorDataBitIndex: testVector.dataBitIndex,
-          vectorBlockIndex: testVector.rsBlockIndex,
-          localBitIndex: testLocalBitIndex,
-          linearByte,
-          linearBit,
-          paddingStartByte: encoderLayout.paddingStartByte,
-          allowedBitStart: encoderLayout.allowedBitStart,
-          protectedBitEnd: encoderLayout.protectedBitEnd,
-          note: 'This means our "controllable" bits include protected original data!',
-        });
-
-        return {
-          success: false,
-          error: `HYBRID mutation test failed: ${mutationValidation.reason}`,
-          matrix: baseMatrix,
-          moduleCount,
-          version: actualVersion,
-          maskPattern: actualMask,
-          matchingPixels: 0,
-          totalControllable: 0,
-          matchPercentage: 0,
-          encodedData: encodedData,
-          originalData: data,
-          suffix: actualSuffix,
-        };
-      }
-
-      // Log whether suffix was modified (expected in HYBRID mode)
-      const decodedSuffix = testScan.data?.slice(originalDataLength) || '';
-      const suffixWasModified = decodedSuffix !== actualSuffix;
-
-      log.info('HYBRID MUTATION TEST PASSED (TWO-INTERVAL byte-exact)', {
-        vectorDataBitIndex: testVector.dataBitIndex,
-        vectorBlockIndex: testVector.rsBlockIndex,
-        localBitIndex: testLocalBitIndex,
-        linearByte,
-        linearBit,
-        vectorInterval: isInSuffixInterval ? 'SUFFIX' : isInPaddingInterval ? 'PADDING' : 'UNKNOWN',
-        gapProtected: `bits ${encoderLayout.gapStartBit} - ${encoderLayout.gapEndBit} (${encoderLayout.gapBitCount} bits)`,
-        originalDataPreserved: true,
-        validationMethod: 'BYTE_EXACT_PREFIX',
-        suffixWasModified,
-        matrixScansCorrectly: true,
-      });
     }
 
     onProgress?.('Mapping bits to pixels', 20);
@@ -3290,48 +3717,17 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       };
     }
 
-    // =========================================================================
-    // ECC DAMAGE ESTIMATION
-    // =========================================================================
-    // Track how many codewords changed per block vs ECC budget
-    // This helps diagnose "scans but corrupted" issues
-    let anyBlockOverBudget = false;
-    const blockDamage: Array<{ changed: number; safeLimit: number }> = [];
-    for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
-      const eccDamage = calculateECCDamage(
-        blockDataArrays[blockIdx],
-        modifiedBlockData[blockIdx],
-        blockEccCounts[blockIdx]
-      );
-
-      blockDamage.push({ changed: eccDamage.changedCodewords, safeLimit: eccDamage.safeLimit });
-
-      if (eccDamage.isOverBudget) {
-        anyBlockOverBudget = true;
-      }
-
-      log.info('ECC DAMAGE ESTIMATE', {
-        blockIndex: blockIdx,
-        eccCount: blockEccCounts[blockIdx],
-        changedDataCodewords: eccDamage.changedCodewords,
-        changedTotalCodewords: eccDamage.changedCodewords, // Data only, ECC is XORed
-        safeLimit: eccDamage.safeLimit,
-        isOverBudget: eccDamage.isOverBudget,
-        percentOfBudget:
-          eccDamage.safeLimit > 0
-            ? `${((eccDamage.changedCodewords / eccDamage.safeLimit) * 100).toFixed(1)}%`
-            : 'N/A',
-      });
-    }
+    const { anyBlockOverBudget } = estimateBlockECCDamage(
+      blockDataArrays,
+      modifiedBlockData,
+      blockEccCounts
+    );
 
     if (anyBlockOverBudget) {
       log.warn('ECC budget exceeded in one or more blocks - falling back to binary search', {
         suggestion: 'Reduce number of vectors or use higher ECC level',
         note: 'Binary search fallback will find maximum safe vector count',
       });
-      // Note: We don't fail fast here because the binary search fallback
-      // will find the maximum safe number of vectors. The full solution
-      // may still work if we're only slightly over budget.
     }
 
     // =========================================================================
@@ -3373,70 +3769,16 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // Get per-block allowed bits using encoder-derived ranges
     const blockAllowedBits = mapAllowedRangesToBlocks(allowedBitRanges, actualVersion, ecc);
 
-    let protectedBytesViolated = false;
-    const violations: Array<{
-      blockIdx: number;
-      byteIdx: number;
-      original: number;
-      modified: number;
-      localBitStart: number;
-    }> = [];
+    const protectedCheck = verifyProtectedBytes(
+      blockDataArrays,
+      modifiedBlockData,
+      blockAllowedBits
+    );
 
-    for (let blockIdx = 0; blockIdx < modifiedBlockData.length; blockIdx++) {
-      const originalData = blockDataArrays[blockIdx];
-      const modifiedData = modifiedBlockData[blockIdx];
-      const allowedBitsInBlock = blockAllowedBits.get(blockIdx) || new Set<number>();
-
-      // Check EACH BIT individually - not just whole bytes
-      // This catches boundary bytes that have both protected and allowed bits
-      for (let byteIdx = 0; byteIdx < originalData.length; byteIdx++) {
-        const originalByte = originalData[byteIdx];
-        const modifiedByte = modifiedData[byteIdx];
-
-        // Skip if byte is unchanged
-        if (originalByte === modifiedByte) continue;
-
-        // Check each bit in this byte
-        for (let bitIdx = 0; bitIdx < 8; bitIdx++) {
-          const localBitIndex = byteIdx * 8 + bitIdx;
-
-          // If this bit is NOT allowed (i.e., it's protected), check if it changed
-          if (!allowedBitsInBlock.has(localBitIndex)) {
-            // Extract the bit values (MSB first, so bit 0 is most significant)
-            const originalBit = (originalByte >> (7 - bitIdx)) & 1;
-            const modifiedBit = (modifiedByte >> (7 - bitIdx)) & 1;
-
-            if (originalBit !== modifiedBit) {
-              protectedBytesViolated = true;
-              violations.push({
-                blockIdx,
-                byteIdx,
-                original: originalData[byteIdx],
-                modified: modifiedData[byteIdx],
-                localBitStart: byteIdx * 8,
-              });
-              // Only record one violation per byte (to avoid spam)
-              break;
-            }
-          }
-        }
-      }
-
-      // Log block comparison for debugging
-      const firstProtectedBytes = Math.min(24, originalData.length);
-      log.debug('BLOCK HEAD BYTES (orig vs mod)', {
-        blockIdx,
-        blockDataBytes: originalData.length,
-        allowedBitsCount: allowedBitsInBlock.size,
-        origHead: Array.from(originalData.slice(0, firstProtectedBytes)),
-        modHead: Array.from(modifiedData.slice(0, firstProtectedBytes)),
-      });
-    }
-
-    if (protectedBytesViolated) {
+    if (!protectedCheck.valid) {
       log.warn('PROTECTED BYTES MODIFIED - HYBRID protection violation!', {
-        violationCount: violations.length,
-        violations: violations.slice(0, 10),
+        violationCount: protectedCheck.violations.length,
+        violations: protectedCheck.violations.slice(0, 10),
         protectedBitEnd: encoderLayout.protectedBitEnd,
         originalDataLength: encoderLayout.originalDataLength,
         note: 'Vectors modified original data bytes - algorithm bug!',
@@ -3446,7 +3788,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       log.warn('FAILING FAST - returning base matrix due to protected byte violation');
       return {
         success: false,
-        error: `Protected byte violation: ${violations.length} original data bytes were modified`,
+        error: `Protected byte violation: ${protectedCheck.violations.length} original data bytes were modified`,
         matrix: baseMatrix,
         moduleCount,
         version: actualVersion,
@@ -3591,59 +3933,8 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       });
     }
 
-    // DEBUG: Log differences between base matrix and final matrix
-    let diffCount = 0;
-    let structuralDiffCount = 0;
-    let dataDiffCount = 0;
-    const sampleDiffs: Array<{
-      row: number;
-      col: number;
-      base: boolean;
-      final: boolean;
-      isStructural: boolean;
-    }> = [];
-
-    // Build set of structural positions for quick lookup
-    const structuralPositions = new Set<string>();
-    // Finder patterns (7x7 at three corners + separators)
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        structuralPositions.add(`${r},${c}`); // Top-left
-        structuralPositions.add(`${r},${moduleCount - 8 + c}`); // Top-right
-        structuralPositions.add(`${moduleCount - 8 + r},${c}`); // Bottom-left
-      }
-    }
-    // Timing patterns
-    for (let i = 0; i < moduleCount; i++) {
-      structuralPositions.add(`6,${i}`);
-      structuralPositions.add(`${i},6`);
-    }
-    // Format info
-    for (let i = 0; i < 9; i++) {
-      structuralPositions.add(`${i},8`);
-      structuralPositions.add(`8,${i}`);
-      structuralPositions.add(`${moduleCount - 8 + i},8`);
-      structuralPositions.add(`8,${moduleCount - 8 + i}`);
-    }
-
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount; col++) {
-        const baseVal = baseMatrix[row]?.[col] ?? false;
-        const finalVal = finalMatrix[row]?.[col] ?? false;
-        if (baseVal !== finalVal) {
-          diffCount++;
-          const isStructural = structuralPositions.has(`${row},${col}`);
-          if (isStructural) {
-            structuralDiffCount++;
-          } else {
-            dataDiffCount++;
-          }
-          if (sampleDiffs.length < 10) {
-            sampleDiffs.push({ row, col, base: baseVal, final: finalVal, isStructural });
-          }
-        }
-      }
-    }
+    const matrixDiff = analyzeMatrixDiff(baseMatrix, finalMatrix, moduleCount);
+    const { diffCount, structuralDiffCount, dataDiffCount, sampleDiffs } = matrixDiff;
 
     log.info('Matrix diff between base and final', {
       diffCount,
@@ -3655,7 +3946,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       sampleDiffs: sampleDiffs.slice(0, 5),
     });
 
-    // CRITICAL: If structural modules differ, that's a major bug
     if (structuralDiffCount > 0) {
       log.warn('CRITICAL: Structural patterns modified!', {
         structuralDiffCount,
@@ -3825,121 +4115,28 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         controlPercentage: `${actualControlPercentage.toFixed(1)}%`,
       });
 
-      // FALLBACK: Use binary search to find the maximum number of vectors
-      // that still produces a scannable QR code
-      log.info('Attempting binary search fallback to find scannable configuration');
-
-      // Flatten selections and sort by importance (most important pixels first)
-      const flattenedSelections = flattenAndOrderSelections(
+      const fallbackResult = handleScanFailureFallback(
         blockSelections,
         elimination,
         importance,
-        moduleCount
-      );
-
-      // Create a regeneration function that captures the necessary parameters
-      const regenerateFn = (
-        blockData: Uint8Array[],
-        blockEcc: Uint8Array[],
-        dataCounts: number[],
-        eccCounts: number[]
-      ) =>
-        regenerateQRFromModifiedData(
-          blockData,
-          blockEcc,
-          dataCounts,
-          eccCounts,
-          actualVersion,
-          ecc,
-          actualMask
-        );
-
-      // Run binary search - pass original data for PREFIX match validation (HYBRID mode)
-      // HYBRID: We can modify suffix, so decoded data should START WITH original data
-      // SEMANTIC-HARD-GATE: Also pass ECC and mask for format info verification
-      // strictSuffix: Controls whether suffix charset violations cause rejection
-      const binarySearchResult = binarySearchMaxVectors(
-        flattenedSelections,
-        blockDataArrays, // Original, unmodified data
-        blockEccArrays, // Original, unmodified ECC
+        moduleCount,
+        blockDataArrays,
+        blockEccArrays,
         blockDataCounts,
         blockEccCounts,
-        elimination,
-        regenerateFn,
-        scanMatrixWithJsQR,
-        data, // HYBRID: prefix match validation (original data only)
-        ecc, // SEMANTIC-HARD-GATE: verify format info ECC
-        actualMask, // SEMANTIC-HARD-GATE: verify format info mask
-        strictSuffix // Controls suffix charset rejection (default: false for max QArt control)
+        actualVersion,
+        ecc,
+        actualMask,
+        data,
+        actualSuffix,
+        strictSuffix,
+        totalSelected,
+        baseMatrix
       );
 
-      if (binarySearchResult.maxCount > 0) {
-        log.info('Binary search fallback successful', {
-          originalVectors: totalSelected,
-          usableVectors: binarySearchResult.maxCount,
-          reductionPercent: `${((1 - binarySearchResult.maxCount / totalSelected) * 100).toFixed(1)}%`,
-          iterations: binarySearchResult.iterations,
-        });
-
-        // Use the optimized matrix from binary search
-        finalMatrixToUse = binarySearchResult.matrix;
-        actualVectorsApplied = binarySearchResult.maxCount;
-
-        // Re-validate using SEMANTIC-HARD-GATE
-        const postSearchValidation = performSemanticValidation(
-          finalMatrixToUse,
-          data,
-          ecc,
-          actualMask,
-          actualSuffix,
-          scanMatrixWithJsQR,
-          strictSuffix
-        );
-
-        if (postSearchValidation.valid) {
-          const postSearchScan = scanMatrixWithJsQR(finalMatrixToUse);
-          log.info('Binary search result SEMANTIC-HARD-GATE validation PASSED', {
-            originalData: data.length > 50 ? `${data.slice(0, 50)}...` : data,
-            ecc,
-            mask: actualMask,
-            structurallyValid: postSearchScan.structurallyValid,
-            segmentCount: postSearchScan.segmentCount,
-            segmentModes: postSearchScan.segments?.map((s) => s.modeName),
-            validationMethod: 'SEMANTIC_HARD_GATE',
-          });
-          // Update scanResult for downstream logic
-          scanResult = postSearchScan;
-        } else {
-          const postSearchScan = scanMatrixWithJsQR(finalMatrixToUse);
-          log.warn('Binary search result SEMANTIC-HARD-GATE validation FAILED!', {
-            rejectionReason: postSearchValidation.reason,
-            description: postSearchValidation.description,
-            details: postSearchValidation.details,
-            expectedOriginal: data,
-            structurallyValid: postSearchScan.structurallyValid,
-            segmentCount: postSearchScan.segmentCount,
-            segmentModes: postSearchScan.segments?.map((s) => s.modeName),
-            segments: postSearchScan.segments?.map((s) => ({
-              mode: s.modeName,
-              charCount: s.charCount,
-              valid: s.valid,
-              bitOffset: s.bitOffset,
-            })),
-          });
-          // Mark as failed
-          scanResult = {
-            success: false,
-            error: `Post-search semantic validation failed: ${postSearchValidation.reason}`,
-          };
-        }
-      } else {
-        // Even 0 vectors didn't help - return base matrix
-        log.warn('Binary search found 0 usable vectors - returning base matrix', {
-          iterations: binarySearchResult.iterations,
-        });
-        finalMatrixToUse = baseMatrix;
-        actualVectorsApplied = 0;
-      }
+      finalMatrixToUse = fallbackResult.matrix;
+      actualVectorsApplied = fallbackResult.vectorsApplied;
+      scanResult = fallbackResult.scanResult;
     }
 
     // Also scan the base matrix to confirm it was valid
@@ -4046,6 +4243,25 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
  * Generate QR-Art trying all 8 mask patterns and selecting the best
  * Uses encoder-derived semantic layout for HYBRID protection.
  */
+function resolveSharedSuffix(
+  config: Omit<FullQArtConfig, 'maskPattern'>,
+  resolvedSuffixMode: 'numeric' | 'byte',
+  suffixLength: number,
+  sharedVersion: number
+): string {
+  if (config.suffix !== undefined) return config.suffix;
+  if (config.autoSuffix !== false) {
+    const baseSeed = hashStringToSeed(config.data + sharedVersion.toString() + config.ecc);
+    const searchSeedOffset = config.searchSeed ?? 0;
+    const seed = (baseSeed ^ searchSeedOffset) >>> 0;
+    if (resolvedSuffixMode === 'numeric') {
+      return generateDeterministicNumericSuffix(Math.max(0, suffixLength), seed);
+    }
+    return `#${generateDeterministicSuffix(Math.max(0, suffixLength - 1), seed)}`;
+  }
+  return '';
+}
+
 export async function generateFullQArtBestMask(
   config: Omit<FullQArtConfig, 'maskPattern'>
 ): Promise<FullQArtResult> {
@@ -4078,26 +4294,13 @@ export async function generateFullQArtBestMask(
     resolvedSuffixMode
   );
 
-  // Generate DETERMINISTIC suffix once for all masks (ensures consistent comparison)
-  // Using deterministic generation ensures same suffix across runs for same input
   const sharedVersion = config.forceVersion ?? optimalConfig.version;
-  let sharedSuffix: string;
-  if (config.suffix !== undefined) {
-    sharedSuffix = config.suffix;
-  } else if (config.autoSuffix !== false) {
-    const baseSeed = hashStringToSeed(config.data + sharedVersion.toString() + config.ecc);
-    const searchSeedOffset = config.searchSeed ?? 0;
-    const seed = (baseSeed ^ searchSeedOffset) >>> 0;
-    if (resolvedSuffixMode === 'numeric') {
-      const suffixDigits = Math.max(0, optimalConfig.suffixLength);
-      sharedSuffix = generateDeterministicNumericSuffix(suffixDigits, seed);
-    } else {
-      const suffixCharCount = Math.max(0, optimalConfig.suffixLength - 1);
-      sharedSuffix = `#${generateDeterministicSuffix(suffixCharCount, seed)}`;
-    }
-  } else {
-    sharedSuffix = '';
-  }
+  const sharedSuffix = resolveSharedSuffix(
+    config,
+    resolvedSuffixMode,
+    optimalConfig.suffixLength,
+    sharedVersion
+  );
 
   log.info('Pre-selected version and DETERMINISTIC suffix for mask comparison (HYBRID mode)', {
     sharedVersion,
