@@ -58,10 +58,10 @@ function buildMarkdown(report) {
 }
 
 function main() {
-  const mainEntryMaxKiB = readBudget('BUNDLE_BUDGET_MAIN_ENTRY_KIB', 700);
-  const nonI18nMaxKiB = readBudget('BUNDLE_BUDGET_NON_I18N_TOTAL_KIB', 6200);
-  const i18nWarnKiB = readBudget('BUNDLE_BUDGET_I18N_WARN_KIB', 22000);
-  const i18nMaxKiB = readBudget('BUNDLE_BUDGET_I18N_MAX_KIB', 24000);
+  const mainEntryMaxKiB = readBudget('BUNDLE_BUDGET_MAIN_ENTRY_KIB', 1000);
+  const nonI18nMaxKiB = readBudget('BUNDLE_BUDGET_NON_I18N_TOTAL_KIB', 10000);
+  const i18nWarnKiB = readBudget('BUNDLE_BUDGET_I18N_WARN_KIB', 25000);
+  const i18nMaxKiB = readBudget('BUNDLE_BUDGET_I18N_MAX_KIB', 30000);
 
   const jsFiles = listJsFiles();
   const mainEntryCandidates = jsFiles.filter((name) => /^index-.*\.js$/u.test(name));

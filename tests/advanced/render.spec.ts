@@ -186,6 +186,7 @@ test.describe('Render Section - Advanced Tier', () => {
       const before = await getCanvasSnapshot(page);
 
       await selectOption(page, 'render-module-style-select', 'Rounded');
+      await waitForRenderComplete(page, 'settle');
       // cornerRadius defaults to 0 which is visually identical to square; set > 0
       await setSlider(page, 'render-corner-radius-slider', 50);
       await waitForQRRender();
@@ -244,6 +245,7 @@ test.describe('Render Section - Advanced Tier', () => {
 
       for (const style of styles) {
         await selectOption(page, 'render-module-style-select', style);
+        await waitForRenderComplete(page, 'settle');
         // Rounded with cornerRadius=0 is identical to Square; set radius > 0
         if (style === 'Rounded') {
           await setSlider(page, 'render-corner-radius-slider', 50);

@@ -13,8 +13,8 @@ const _log = createLogger('GENERATE');
  * Used for memoizing expensive computations
  */
 export class MemoCache<T> {
-  private cache: Map<string, T>;
-  private maxSize: number;
+  private readonly cache: Map<string, T>;
+  private readonly maxSize: number;
 
   constructor(maxSize = 100) {
     this.cache = new Map();

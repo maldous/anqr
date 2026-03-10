@@ -15,7 +15,7 @@ import { drawHalftoneModule, drawModule, drawTimingModule } from './drawing';
 import { getOverlayBrightness, getOverlayColorPacked } from './overlay-data-packed';
 import { getAlignmentPositionsCached } from './pattern-helpers';
 import { applyQROverlayMode } from './render-modes';
-import type { OverlayData, QRCodeInstance, QRGeneratorConfig } from './types';
+import type { OverlayData, QRCodeInstance, QRGeneratorConfig, RenderModulesOptions } from './types';
 import { validateColor } from './utils';
 
 type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
@@ -179,7 +179,7 @@ function canUseFastPath(config: QRGeneratorConfig, hasOverlayData: boolean, gap:
  *
  * Typically reduces draw calls from O(moduleCount²) to O(moduleCount × runs).
  */
-function renderModulesFastPath(
+function renderRunLengthPass(
   ctx: CanvasContext,
   qr: QRCodeInstance,
   moduleCount: number,
@@ -187,25 +187,20 @@ function renderModulesFastPath(
   margin: number,
   ditherPattern: boolean[][] | null,
   skipMask: Uint8Array,
-  fgFill: string | CanvasGradient,
-  bgColor: string,
-  needsExplicitLightModules: boolean
+  isDarkPass: boolean
 ): void {
-  // Dark modules — one fillStyle set, then batch fillRect per row
-  ctx.fillStyle = fgFill;
-
   for (let row = 0; row < moduleCount; row++) {
     const rowBase = row * moduleCount;
     const y = (row + margin) * moduleSize;
     let runStart = -1;
 
     for (let col = 0; col <= moduleCount; col++) {
-      const dark =
-        col < moduleCount &&
-        !skipMask[rowBase + col] &&
-        (ditherPattern ? ditherPattern[row][col] : qr.isDark(row, col));
+      const inBounds = col < moduleCount && !skipMask[rowBase + col];
+      const cellIsDark =
+        inBounds && (ditherPattern ? ditherPattern[row][col] : qr.isDark(row, col));
+      const match = inBounds && (isDarkPass ? cellIsDark : !cellIsDark);
 
-      if (dark) {
+      if (match) {
         if (runStart === -1) runStart = col;
       } else if (runStart !== -1) {
         ctx.fillRect(
@@ -218,56 +213,185 @@ function renderModulesFastPath(
       }
     }
   }
+}
 
-  // Light modules — only needed when background is transparent
+function renderModulesFastPath(
+  ctx: CanvasContext,
+  qr: QRCodeInstance,
+  moduleCount: number,
+  moduleSize: number,
+  margin: number,
+  ditherPattern: boolean[][] | null,
+  skipMask: Uint8Array,
+  fgFill: string | CanvasGradient,
+  bgColor: string,
+  needsExplicitLightModules: boolean
+): void {
+  ctx.fillStyle = fgFill;
+  renderRunLengthPass(ctx, qr, moduleCount, moduleSize, margin, ditherPattern, skipMask, true);
+
   if (needsExplicitLightModules) {
     ctx.fillStyle = bgColor;
+    renderRunLengthPass(ctx, qr, moduleCount, moduleSize, margin, ditherPattern, skipMask, false);
+  }
+}
 
-    for (let row = 0; row < moduleCount; row++) {
-      const rowBase = row * moduleCount;
-      const y = (row + margin) * moduleSize;
-      let runStart = -1;
+interface ModuleDrawContext {
+  ctx: CanvasContext;
+  config: QRGeneratorConfig;
+  isFastPreview: boolean;
+  cornerRadius: number;
+  dotRotation: number;
+  timingStyle: string;
+  isStrokeGapMode: boolean;
+  strokeWidth: number;
+  overlayModeIsHalftoneDithered: boolean;
+  overlayData: OverlayData | null;
+  setFillStyle: (fill: string | CanvasGradient) => void;
+}
 
-      for (let col = 0; col <= moduleCount; col++) {
-        const light =
-          col < moduleCount &&
-          !skipMask[rowBase + col] &&
-          !(ditherPattern ? ditherPattern[row][col] : qr.isDark(row, col));
+function computeFinalModuleColor(
+  baseColor: string,
+  isDark: boolean,
+  overlayBrightness: number,
+  overlayData: OverlayData | null,
+  row: number,
+  col: number,
+  moduleCount: number,
+  config: QRGeneratorConfig,
+  hasPerModuleColor: boolean,
+  hasPalette: boolean,
+  hasContrastGuard: boolean
+): string {
+  let finalColor = baseColor;
+  if (isDark && hasPerModuleColor && overlayData) {
+    finalColor = applyPerModuleColor(
+      config.perModuleColorMode!,
+      finalColor,
+      overlayData,
+      row,
+      col,
+      moduleCount,
+      config
+    );
+  }
+  if (isDark && hasPalette) {
+    finalColor = applyPaletteColor(
+      row,
+      col,
+      moduleCount,
+      overlayBrightness,
+      config.palette!,
+      config
+    );
+  }
+  if (isDark && hasContrastGuard) {
+    finalColor = ensureContrast(finalColor, config.bgColor, config.minContrastRatio!);
+  }
+  return finalColor;
+}
 
-        if (light) {
-          if (runStart === -1) runStart = col;
-        } else if (runStart !== -1) {
-          ctx.fillRect(
-            (runStart + margin) * moduleSize,
-            y,
-            (col - runStart) * moduleSize,
-            moduleSize
-          );
-          runStart = -1;
+function drawStyledModule(
+  dctx: ModuleDrawContext,
+  drawX: number,
+  drawY: number,
+  adjustedSize: number,
+  isDark: boolean,
+  isTiming: boolean,
+  drawOutlineOnly: boolean,
+  useHalftoneRendering: boolean,
+  halftoneBrightness: number,
+  finalModuleColor: string,
+  moduleFillStyle: string | CanvasGradient,
+  row: number,
+  col: number
+): void {
+  if (drawOutlineOnly || (dctx.isStrokeGapMode && isDark)) {
+    dctx.ctx.strokeStyle = finalModuleColor;
+    dctx.ctx.lineWidth = dctx.strokeWidth || 1;
+    dctx.ctx.strokeRect(
+      drawX + dctx.ctx.lineWidth / 2,
+      drawY + dctx.ctx.lineWidth / 2,
+      adjustedSize - dctx.ctx.lineWidth,
+      adjustedSize - dctx.ctx.lineWidth
+    );
+  } else if (useHalftoneRendering && !dctx.isFastPreview) {
+    if (dctx.overlayModeIsHalftoneDithered) {
+      const cellColor = getOverlayColorPacked(dctx.overlayData, row, col);
+      if (cellColor) {
+        const cellR = (cellColor >> 16) & 0xff;
+        const cellG = (cellColor >> 8) & 0xff;
+        const cellB = cellColor & 0xff;
+        if (isDark) {
+          const darkBackdrop = 0.5;
+          const backR = Math.round(cellR * darkBackdrop);
+          const backG = Math.round(cellG * darkBackdrop);
+          const backB = Math.round(cellB * darkBackdrop);
+          dctx.setFillStyle(`rgb(${backR},${backG},${backB})`);
+        } else {
+          const lightBlend = 0.46;
+          const backR = Math.round(cellR + (255 - cellR) * lightBlend);
+          const backG = Math.round(cellG + (255 - cellG) * lightBlend);
+          const backB = Math.round(cellB + (255 - cellB) * lightBlend);
+          dctx.setFillStyle(`rgb(${backR},${backG},${backB})`);
         }
+        dctx.ctx.fillRect(drawX, drawY, adjustedSize, adjustedSize);
+        dctx.setFillStyle(moduleFillStyle);
       }
     }
+    drawHalftoneModule(
+      dctx.ctx as CanvasRenderingContext2D,
+      drawX,
+      drawY,
+      adjustedSize,
+      halftoneBrightness,
+      dctx.config,
+      row,
+      col
+    );
+  } else if (isTiming) {
+    drawTimingModule(
+      dctx.ctx as CanvasRenderingContext2D,
+      drawX,
+      drawY,
+      adjustedSize,
+      dctx.timingStyle,
+      dctx.config
+    );
+  } else {
+    drawModule(
+      dctx.ctx as CanvasRenderingContext2D,
+      drawX,
+      drawY,
+      adjustedSize,
+      dctx.config.moduleStyle,
+      {
+        cornerRadius: dctx.cornerRadius,
+        rotation: dctx.dotRotation,
+      }
+    );
   }
 }
 
 /**
  * Render all QR modules with styling and overlay effects
  */
-export function renderModules(
-  ctx: CanvasContext,
-  qr: QRCodeInstance,
-  config: QRGeneratorConfig,
-  moduleCount: number,
-  moduleSize: number,
-  margin: number,
-  overlayData: OverlayData | null,
-  ditherPattern: boolean[][] | null,
-  effectiveIntensity: number,
-  skipMask: Uint8Array,
-  version: number,
-  gradientFill: CanvasGradient | null,
-  useGradient: boolean
-): void {
+export function renderModules(options: RenderModulesOptions): void {
+  const {
+    ctx,
+    qr,
+    config,
+    moduleCount,
+    moduleSize,
+    margin,
+    overlayData,
+    ditherPattern,
+    effectiveIntensity,
+    skipMask,
+    version,
+    gradientFill,
+    useGradient,
+  } = options;
   // === HOISTED LOOP-INVARIANT COMPUTATIONS ===
   const isFastPreview = config.fastPreview === true;
   const cornerRadius = config.cornerRadius || 0;
@@ -347,6 +471,21 @@ export function renderModules(
     currentFillStyle = fillStyle;
   };
 
+  // Pre-built context object for drawStyledModule (zero per-cell allocation)
+  const moduleDrawCtx: ModuleDrawContext = {
+    ctx,
+    config,
+    isFastPreview,
+    cornerRadius,
+    dotRotation,
+    timingStyle,
+    isStrokeGapMode,
+    strokeWidth,
+    overlayModeIsHalftoneDithered,
+    overlayData,
+    setFillStyle,
+  };
+
   // Draw QR modules
   for (let row = 0; row < moduleCount; row++) {
     const rowBase = row * moduleCount;
@@ -392,18 +531,18 @@ export function renderModules(
       const overlayBrightness = hasOverlayData ? getOverlayBrightness(overlayData, row, col) : 0.5;
 
       if (applyOverlay) {
-        const modeResult = applyQROverlayMode(
-          config.overlayMode,
+        const modeResult = applyQROverlayMode({
+          overlayMode: config.overlayMode,
           isDark,
-          overlayBrightness,
-          overlayData!,
+          brightness: overlayBrightness,
+          overlayData: overlayData!,
           row,
           col,
           moduleCount,
           effectiveIntensity,
           config,
-          isFunctionalPattern
-        );
+          isFunctionalPattern,
+        });
 
         moduleColor = modeResult.moduleColor;
         moduleSizeModifier = modeResult.moduleSizeModifier;
@@ -424,40 +563,22 @@ export function renderModules(
           currentAlpha = moduleOpacity;
         }
 
-        // Apply per-module color mode
-        let finalModuleColor = moduleColor;
-        if (isDark && hasPerModuleColor) {
-          finalModuleColor = applyPerModuleColor(
-            config.perModuleColorMode!,
-            moduleColor,
-            overlayData!,
-            row,
-            col,
-            moduleCount,
-            config
-          );
-        }
-
-        // Apply palette coloring if palette is provided
-        if (isDark && hasPalette) {
-          finalModuleColor = applyPaletteColor(
-            row,
-            col,
-            moduleCount,
-            overlayBrightness,
-            config.palette!,
-            config
-          );
-        }
-
-        // Apply contrast guard if enabled
-        if (isDark && hasContrastGuard) {
-          finalModuleColor = ensureContrast(
-            finalModuleColor,
-            config.bgColor,
-            config.minContrastRatio!
-          );
-        }
+        const finalModuleColor =
+          hasPerModuleColor || hasPalette || hasContrastGuard
+            ? computeFinalModuleColor(
+                moduleColor,
+                isDark,
+                overlayBrightness,
+                overlayData,
+                row,
+                col,
+                moduleCount,
+                config,
+                hasPerModuleColor,
+                hasPalette,
+                hasContrastGuard
+              )
+            : moduleColor;
 
         // Use gradient for dark modules if configured (skipped in fast preview)
         const moduleFillStyle: string | CanvasGradient =
@@ -491,82 +612,21 @@ export function renderModules(
           drawY = Math.ceil(drawY);
         }
 
-        // In fast preview, skip halftone rendering — fall through to simple module drawing
-        if (drawOutlineOnly || (isStrokeGapMode && isDark)) {
-          ctx.strokeStyle = finalModuleColor;
-          ctx.lineWidth = strokeWidth || 1;
-          ctx.strokeRect(
-            drawX + ctx.lineWidth / 2,
-            drawY + ctx.lineWidth / 2,
-            adjustedSize - ctx.lineWidth,
-            adjustedSize - ctx.lineWidth
-          );
-        } else if (useHalftoneRendering && !isFastPreview) {
-          // In halftone-dithered mode, paint a color backdrop first so the
-          // source image remains visible behind variable-size dots.
-          if (overlayModeIsHalftoneDithered) {
-            const cellColor = getOverlayColorPacked(overlayData, row, col);
-            if (cellColor) {
-              const cellR = (cellColor >> 16) & 0xff;
-              const cellG = (cellColor >> 8) & 0xff;
-              const cellB = cellColor & 0xff;
-              if (isDark) {
-                // Dark QR modules: keep backdrop moderately dark for contrast.
-                const darkBackdrop = 0.5;
-                const backR = Math.round(cellR * darkBackdrop);
-                const backG = Math.round(cellG * darkBackdrop);
-                const backB = Math.round(cellB * darkBackdrop);
-                setFillStyle(`rgb(${backR},${backG},${backB})`);
-              } else {
-                // Light QR modules: brighten backdrop to preserve scan-safe separation.
-                const lightBlend = 0.46;
-                const backR = Math.round(cellR + (255 - cellR) * lightBlend);
-                const backG = Math.round(cellG + (255 - cellG) * lightBlend);
-                const backB = Math.round(cellB + (255 - cellB) * lightBlend);
-                setFillStyle(`rgb(${backR},${backG},${backB})`);
-              }
-              ctx.fillRect(drawX, drawY, adjustedSize, adjustedSize);
-              // Restore dot fill after backdrop pass.
-              setFillStyle(moduleFillStyle);
-            }
-          }
-
-          // Use advanced halftone rendering with htDot/htCurve params
-          // Cast to CanvasRenderingContext2D for drawing functions (safe because we only use common 2D methods)
-          // Pass row and col for line shape rotation variation
-          drawHalftoneModule(
-            ctx as CanvasRenderingContext2D,
-            drawX,
-            drawY,
-            adjustedSize,
-            halftoneBrightness,
-            config,
-            row,
-            col
-          );
-        } else if (isTiming) {
-          // Draw timing pattern module with timing style
-          drawTimingModule(
-            ctx as CanvasRenderingContext2D,
-            drawX,
-            drawY,
-            adjustedSize,
-            timingStyle,
-            config
-          );
-        } else {
-          drawModule(
-            ctx as CanvasRenderingContext2D,
-            drawX,
-            drawY,
-            adjustedSize,
-            config.moduleStyle,
-            {
-              cornerRadius,
-              rotation: dotRotation,
-            }
-          );
-        }
+        drawStyledModule(
+          moduleDrawCtx,
+          drawX,
+          drawY,
+          adjustedSize,
+          isDark,
+          isTiming,
+          drawOutlineOnly,
+          useHalftoneRendering,
+          halftoneBrightness,
+          finalModuleColor,
+          moduleFillStyle,
+          row,
+          col
+        );
       }
     }
   }

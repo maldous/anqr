@@ -189,6 +189,35 @@ export interface QRGeneratorConfig {
   debugOverlayDither?: boolean;
 }
 
+export interface RenderModulesOptions {
+  ctx: Canvas2DContext;
+  qr: QRCodeInstance;
+  config: QRGeneratorConfig;
+  moduleCount: number;
+  moduleSize: number;
+  margin: number;
+  overlayData: OverlayData | null;
+  ditherPattern: boolean[][] | null;
+  effectiveIntensity: number;
+  skipMask: Uint8Array;
+  version: number;
+  gradientFill: CanvasGradient | null;
+  useGradient: boolean;
+}
+
+export interface ApplyOverlayModeOptions {
+  overlayMode: string | undefined;
+  isDark: boolean;
+  brightness: number;
+  overlayData: OverlayData;
+  row: number;
+  col: number;
+  moduleCount: number;
+  effectiveIntensity: number;
+  config: QRGeneratorConfig;
+  isFunctionalPattern?: boolean;
+}
+
 /** Overlay modes that use the scaled (per-pixel) rendering path. */
 export const INTRINSICALLY_SCALED_OVERLAY_MODES: ReadonlySet<string> = new Set([
   'dithered',

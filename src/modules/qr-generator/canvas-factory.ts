@@ -46,8 +46,8 @@ export const defaultBrowserCanvasFactory: CanvasFactory = {
  * scan gate loops and animated frame generation.
  */
 export class CanvasPool {
-  private pool = new Map<string, (HTMLCanvasElement | OffscreenCanvas)[]>();
-  private factory: CanvasFactory;
+  private readonly pool = new Map<string, (HTMLCanvasElement | OffscreenCanvas)[]>();
+  private readonly factory: CanvasFactory;
 
   constructor(factory: CanvasFactory) {
     this.factory = factory;

@@ -421,6 +421,26 @@ function getDitherStaticState(args: {
   return created;
 }
 
+function computeBWFirstShade(
+  overlayBrightness: number,
+  textureAmount: number,
+  noiseVariation: number,
+  qrIsDark: boolean
+): number {
+  if (qrIsDark) {
+    const darkRange = 100;
+    let normalizedShade = (1 - overlayBrightness) * textureAmount;
+    normalizedShade = clamp01(normalizedShade + noiseVariation * textureAmount);
+    return Math.floor((1 - normalizedShade) * darkRange);
+  }
+  const lightMin = 155;
+  const lightRange = 100;
+  let normalizedShade = overlayBrightness * textureAmount;
+  normalizedShade = clamp01(normalizedShade + noiseVariation * textureAmount);
+  if (textureAmount === 0) return 255;
+  return lightMin + Math.floor(normalizedShade * lightRange);
+}
+
 /**
  * Generate a QR-first matrix for high-contrast B&W images.
  * This mode GUARANTEES QR scannability by:
@@ -501,61 +521,16 @@ async function generateBWFirstMatrix(
       const moduleCol = Math.floor(x / scale);
       const qrIsDark = qr.isDark(moduleRow, moduleCol);
 
-      // QR-FIRST: Matrix ALWAYS matches QR data - this guarantees scannability
       matrixBits[sampleIdx] = qrIsDark ? 1 : 0;
 
-      // Calculate overlay brightness (0 = black, 1 = white)
       let overlayBrightness = rgbToLumaSrgb(r, g, b);
-
-      // Apply contrast curve to enhance spiral visibility
-      // For dark overlay regions, make them darker; for bright regions, make them brighter
       overlayBrightness = overlayBrightness ** contrastPower;
 
-      // Sample blue noise for dithering texture (0-1)
       const noise = sampleBlueNoise(x, y, blueNoiseTile, tileSize);
-      // Noise variation: adds subtle texture variation within modules
-      const noiseVariation = (noise - 0.5) * 0.3; // ±15% variation
+      const noiseVariation = (noise - 0.5) * 0.3;
 
-      // Calculate shade with texture from overlay + blue noise dithering
-      let shade: number;
+      let shade = computeBWFirstShade(overlayBrightness, textureAmount, noiseVariation, qrIsDark);
 
-      if (qrIsDark) {
-        // Dark module: shade ranges from 0 (black) to 100 (expanded for more visible texture)
-        // Dark overlay areas -> DARK shade (near 0) to show the dark parts of spiral
-        // Bright overlay areas -> lighter dark (up to 100) to show contrast
-        const darkMin = 0;
-        const darkMax = 100;
-        const darkRange = darkMax - darkMin;
-
-        // INVERTED: (1 - brightness) so dark overlay = dark shade, bright overlay = lighter shade
-        // This correctly shows the spiral pattern
-        let normalizedShade = (1 - overlayBrightness) * textureAmount;
-        // Add blue noise dithering for texture
-        normalizedShade = clamp01(normalizedShade + noiseVariation * textureAmount);
-
-        // Invert again: we want dark overlay -> low shade (dark), bright overlay -> high shade (lighter)
-        // So: dark overlay (brightness=0) -> normalizedShade=1 -> shade=0 (black) ✓
-        //     bright overlay (brightness=1) -> normalizedShade=0 -> shade=100 (gray) ✓
-        shade = darkMin + Math.floor((1 - normalizedShade) * darkRange);
-      } else {
-        // Light module: shade ranges from 155 (expanded for more visible texture) to 255 (white)
-        // Bright overlay areas -> BRIGHT shade (near 255) to show the bright parts
-        // Dark overlay areas -> darker light (down to 155) to show contrast
-        const lightMin = 155;
-        const lightMax = 255;
-        const lightRange = lightMax - lightMin;
-
-        // Direct mapping: bright overlay = bright shade, dark overlay = darker shade
-        let normalizedShade = overlayBrightness * textureAmount;
-        // Add blue noise dithering for texture
-        normalizedShade = clamp01(normalizedShade + noiseVariation * textureAmount);
-
-        shade = lightMin + Math.floor(normalizedShade * lightRange);
-        // If no texture, default to white
-        if (textureAmount === 0) shade = 255;
-      }
-
-      // For structural modules, use pure black/white for maximum clarity
       if (shouldLockModule(moduleRow, moduleCol, moduleCount, version, config)) {
         shade = qrIsDark ? 0 : 255;
       }
@@ -762,6 +737,252 @@ function isFunctionalPatternModule(
   );
 }
 
+type ConstraintCandidate = {
+  y: number;
+  x: number;
+  score: number;
+  toDark: boolean;
+  scanGain: number;
+};
+
+interface ConstraintCtx {
+  qr: QRCodeInstance;
+  matrixBits: Uint8Array;
+  desire: Float32Array;
+  moduleCount: number;
+  scale: number;
+  scaledSize: number;
+  version: number;
+  config: QRGeneratorConfig;
+  total: number;
+  centerRadius: number;
+  centerArea: number;
+  moduleCenter: number;
+  baseDarkMin: number;
+  baseLightMax: number;
+  strictScanGate: boolean;
+  finderBlendGuidance: boolean;
+  occViolationWeight: number;
+  centerViolationWeight: number;
+  scanScoreWeight: number;
+  artPenaltyWeight: number;
+  edgeBandPenalty: number;
+  centerPixelBonus: number;
+  occupancies: number[][];
+  centerOcc: number[][];
+  darkMinMap: number[][];
+  lightMaxMap: number[][];
+  darkCenterMinMap: number[][];
+  lightCenterMaxMap: number[][];
+  locked: boolean[][];
+}
+
+function recomputeConstraintStats(ctx: ConstraintCtx): void {
+  for (let mr = 0; mr < ctx.moduleCount; mr++) {
+    for (let mc = 0; mc < ctx.moduleCount; mc++) {
+      const y0 = mr * ctx.scale;
+      const x0 = mc * ctx.scale;
+      let darkCount = 0;
+      let centerDarkCount = 0;
+      let desireSum = 0;
+      let desireSq = 0;
+      for (let y = 0; y < ctx.scale; y++) {
+        for (let x = 0; x < ctx.scale; x++) {
+          const yy = y0 + y;
+          const xx = x0 + x;
+          const dark = ctx.matrixBits[pixelIndex(xx, yy, ctx.scaledSize)] === 1;
+          if (dark) darkCount++;
+          if (
+            dark &&
+            Math.abs(y - ctx.moduleCenter) <= ctx.centerRadius &&
+            Math.abs(x - ctx.moduleCenter) <= ctx.centerRadius
+          ) {
+            centerDarkCount++;
+          }
+          const d = ctx.desire[pixelIndex(x0 + x, y0 + y, ctx.scaledSize)];
+          desireSum += d;
+          desireSq += d * d;
+        }
+      }
+      ctx.occupancies[mr][mc] = darkCount / ctx.total;
+      ctx.centerOcc[mr][mc] = centerDarkCount / Math.max(1, ctx.centerArea);
+      const mean = desireSum / ctx.total;
+      const variance = Math.max(0, desireSq / ctx.total - mean * mean);
+      const contrast = clamp01(Math.sqrt(variance) * 3.2);
+      ctx.darkMinMap[mr][mc] = clamp01(
+        Math.max(0.34, Math.min(0.5, ctx.baseDarkMin - contrast * 0.02))
+      );
+      ctx.lightMaxMap[mr][mc] = clamp01(
+        Math.max(0.5, Math.min(0.66, ctx.baseLightMax + contrast * 0.02))
+      );
+      if (ctx.strictScanGate) {
+        ctx.darkCenterMinMap[mr][mc] = clamp01(
+          Math.max(
+            ctx.darkMinMap[mr][mc] + 0.12,
+            Math.min(0.68, ctx.darkMinMap[mr][mc] + 0.2 - contrast * 0.04)
+          )
+        );
+        ctx.lightCenterMaxMap[mr][mc] = clamp01(
+          Math.min(
+            ctx.lightMaxMap[mr][mc] - 0.12,
+            Math.max(0.34, ctx.lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
+          )
+        );
+      } else {
+        ctx.darkCenterMinMap[mr][mc] = clamp01(
+          Math.max(
+            ctx.darkMinMap[mr][mc] + 0.06,
+            Math.min(0.56, ctx.darkMinMap[mr][mc] + 0.12 - contrast * 0.03)
+          )
+        );
+        ctx.lightCenterMaxMap[mr][mc] = clamp01(
+          Math.min(
+            ctx.lightMaxMap[mr][mc] - 0.06,
+            Math.max(0.44, ctx.lightMaxMap[mr][mc] - 0.12 + contrast * 0.03)
+          )
+        );
+      }
+      if (
+        ctx.finderBlendGuidance &&
+        isFunctionalPatternModule(mr, mc, ctx.moduleCount, ctx.version)
+      ) {
+        if (ctx.qr.isDark(mr, mc)) {
+          ctx.darkMinMap[mr][mc] = Math.max(ctx.darkMinMap[mr][mc], 0.58);
+          ctx.darkCenterMinMap[mr][mc] = Math.max(ctx.darkCenterMinMap[mr][mc], 0.74);
+        } else {
+          ctx.lightMaxMap[mr][mc] = Math.min(ctx.lightMaxMap[mr][mc], 0.26);
+          ctx.lightCenterMaxMap[mr][mc] = Math.min(ctx.lightCenterMaxMap[mr][mc], 0.14);
+        }
+      }
+    }
+  }
+}
+
+function buildConstraintCandidates(ctx: ConstraintCtx): {
+  candidates: ConstraintCandidate[];
+  totalViolationEnergy: number;
+} {
+  const {
+    qr,
+    matrixBits,
+    desire,
+    moduleCount,
+    scale,
+    scaledSize,
+    total,
+    centerRadius,
+    centerArea,
+    moduleCenter,
+    occViolationWeight,
+    centerViolationWeight,
+    scanScoreWeight,
+    artPenaltyWeight,
+    edgeBandPenalty,
+    centerPixelBonus,
+    occupancies,
+    centerOcc,
+    darkMinMap,
+    lightMaxMap,
+    darkCenterMinMap,
+    lightCenterMaxMap,
+    locked,
+  } = ctx;
+  const candidates: ConstraintCandidate[] = [];
+  let totalViolationEnergy = 0;
+
+  for (let mr = 0; mr < moduleCount; mr++) {
+    for (let mc = 0; mc < moduleCount; mc++) {
+      if (locked[mr][mc]) continue;
+      if (isFixedDarkModule(mr, mc, moduleCount)) continue;
+      const qrIsDark = qr.isDark(mr, mc);
+      const occ = occupancies[mr][mc];
+      const cOcc = centerOcc[mr][mc];
+      const darkMin = darkMinMap[mr][mc];
+      const lightMax = lightMaxMap[mr][mc];
+      const darkCenterMin = darkCenterMinMap[mr][mc];
+      const lightCenterMax = lightCenterMaxMap[mr][mc];
+
+      let occViolation = 0;
+      let centerViolation = 0;
+      let toDark = false;
+      if (qrIsDark && occ < darkMin) {
+        occViolation = darkMin - occ;
+        toDark = true;
+      } else if (!qrIsDark && occ > lightMax) {
+        occViolation = occ - lightMax;
+        toDark = false;
+      }
+      if (qrIsDark && cOcc < darkCenterMin) {
+        centerViolation = darkCenterMin - cOcc;
+        toDark = true;
+      } else if (!qrIsDark && cOcc > lightCenterMax) {
+        centerViolation = cOcc - lightCenterMax;
+        toDark = false;
+      }
+      if (occViolation <= 0 && centerViolation <= 0) continue;
+      totalViolationEnergy +=
+        occViolation * occViolationWeight + centerViolation * centerViolationWeight;
+
+      const y0 = mr * scale;
+      const x0 = mc * scale;
+      for (let y = 0; y < scale; y++) {
+        for (let x = 0; x < scale; x++) {
+          const yy = y0 + y;
+          const xx = x0 + x;
+          const current = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
+          if ((toDark && current) || !(toDark || current)) continue;
+          const inCenter =
+            Math.abs(y - moduleCenter) <= centerRadius &&
+            Math.abs(x - moduleCenter) <= centerRadius;
+          const occGain =
+            occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;
+          const centerGain =
+            inCenter && centerViolation > 0
+              ? Math.min(centerViolation, 1 / centerArea) * centerViolationWeight
+              : 0;
+          const scanGain = occGain + centerGain;
+          if (scanGain <= 0) continue;
+
+          const d = desire[pixelIndex(xx, yy, scaledSize)];
+          const beforeErr = Math.abs((current ? 1 : 0) - d);
+          const afterErr = Math.abs((toDark ? 1 : 0) - d);
+          const artPenalty = afterErr - beforeErr;
+          const edgeBand = x <= 1 || y <= 1 || x >= scale - 2 || y >= scale - 2;
+          const edgePen = edgeBand ? edgeBandPenalty : 0;
+          const centerBonus = inCenter ? centerPixelBonus : 0;
+          const score =
+            scanGain * scanScoreWeight - artPenalty * artPenaltyWeight - edgePen + centerBonus;
+          candidates.push({ y: yy, x: xx, score, toDark, scanGain });
+        }
+      }
+    }
+  }
+  return { candidates, totalViolationEnergy };
+}
+
+function computeConstraintViolationEnergy(ctx: ConstraintCtx): number {
+  let energy = 0;
+  for (let mr = 0; mr < ctx.moduleCount; mr++) {
+    for (let mc = 0; mc < ctx.moduleCount; mc++) {
+      if (ctx.locked[mr][mc]) continue;
+      if (isFixedDarkModule(mr, mc, ctx.moduleCount)) continue;
+      const qrIsDark = ctx.qr.isDark(mr, mc);
+      if (qrIsDark) {
+        const occViolation = Math.max(0, ctx.darkMinMap[mr][mc] - ctx.occupancies[mr][mc]);
+        const centerViolation = Math.max(0, ctx.darkCenterMinMap[mr][mc] - ctx.centerOcc[mr][mc]);
+        energy +=
+          occViolation * ctx.occViolationWeight + centerViolation * ctx.centerViolationWeight;
+      } else {
+        const occViolation = Math.max(0, ctx.occupancies[mr][mc] - ctx.lightMaxMap[mr][mc]);
+        const centerViolation = Math.max(0, ctx.centerOcc[mr][mc] - ctx.lightCenterMaxMap[mr][mc]);
+        energy +=
+          occViolation * ctx.occViolationWeight + centerViolation * ctx.centerViolationWeight;
+      }
+    }
+  }
+  return energy;
+}
+
 function enforceModuleConstraints(
   qr: QRCodeInstance,
   matrixBits: Uint8Array,
@@ -823,183 +1044,43 @@ function enforceModuleConstraints(
     }
   }
 
-  const recomputeModuleStats = (): void => {
-    for (let mr = 0; mr < moduleCount; mr++) {
-      for (let mc = 0; mc < moduleCount; mc++) {
-        const y0 = mr * scale;
-        const x0 = mc * scale;
-        let darkCount = 0;
-        let centerDarkCount = 0;
-        let desireSum = 0;
-        let desireSq = 0;
-        for (let y = 0; y < scale; y++) {
-          for (let x = 0; x < scale; x++) {
-            const yy = y0 + y;
-            const xx = x0 + x;
-            const dark = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
-            if (dark) darkCount++;
-            if (
-              dark &&
-              Math.abs(y - moduleCenter) <= centerRadius &&
-              Math.abs(x - moduleCenter) <= centerRadius
-            ) {
-              centerDarkCount++;
-            }
-            const d = desire[pixelIndex(x0 + x, y0 + y, scaledSize)];
-            desireSum += d;
-            desireSq += d * d;
-          }
-        }
-        occupancies[mr][mc] = darkCount / total;
-        centerOcc[mr][mc] = centerDarkCount / Math.max(1, centerArea);
-        const mean = desireSum / total;
-        const variance = Math.max(0, desireSq / total - mean * mean);
-        const contrast = clamp01(Math.sqrt(variance) * 3.2);
-        // Keep module-wide occupancy loose; center-zone carries most decode pressure.
-        darkMinMap[mr][mc] = clamp01(Math.max(0.34, Math.min(0.5, baseDarkMin - contrast * 0.02)));
-        lightMaxMap[mr][mc] = clamp01(
-          Math.max(0.5, Math.min(0.66, baseLightMax + contrast * 0.02))
-        );
-        if (strictScanGate) {
-          darkCenterMinMap[mr][mc] = clamp01(
-            Math.max(
-              darkMinMap[mr][mc] + 0.12,
-              Math.min(0.68, darkMinMap[mr][mc] + 0.2 - contrast * 0.04)
-            )
-          );
-          lightCenterMaxMap[mr][mc] = clamp01(
-            Math.min(
-              lightMaxMap[mr][mc] - 0.12,
-              Math.max(0.34, lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
-            )
-          );
-        } else {
-          darkCenterMinMap[mr][mc] = clamp01(
-            Math.max(
-              darkMinMap[mr][mc] + 0.06,
-              Math.min(0.56, darkMinMap[mr][mc] + 0.12 - contrast * 0.03)
-            )
-          );
-          lightCenterMaxMap[mr][mc] = clamp01(
-            Math.min(
-              lightMaxMap[mr][mc] - 0.06,
-              Math.max(0.44, lightMaxMap[mr][mc] - 0.12 + contrast * 0.03)
-            )
-          );
-        }
-        if (finderBlendGuidance && isFunctionalPatternModule(mr, mc, moduleCount, version)) {
-          if (qr.isDark(mr, mc)) {
-            darkMinMap[mr][mc] = Math.max(darkMinMap[mr][mc], 0.58);
-            darkCenterMinMap[mr][mc] = Math.max(darkCenterMinMap[mr][mc], 0.74);
-          } else {
-            lightMaxMap[mr][mc] = Math.min(lightMaxMap[mr][mc], 0.26);
-            lightCenterMaxMap[mr][mc] = Math.min(lightCenterMaxMap[mr][mc], 0.14);
-          }
-        }
-      }
-    }
+  const cctx: ConstraintCtx = {
+    qr,
+    matrixBits,
+    desire,
+    moduleCount,
+    scale,
+    scaledSize,
+    version,
+    config,
+    total,
+    centerRadius,
+    centerArea,
+    moduleCenter,
+    baseDarkMin,
+    baseLightMax,
+    strictScanGate,
+    finderBlendGuidance,
+    occViolationWeight,
+    centerViolationWeight,
+    scanScoreWeight,
+    artPenaltyWeight,
+    edgeBandPenalty,
+    centerPixelBonus,
+    occupancies,
+    centerOcc,
+    darkMinMap,
+    lightMaxMap,
+    darkCenterMinMap,
+    lightCenterMaxMap,
+    locked,
   };
 
-  const computeViolationEnergy = (): number => {
-    let energy = 0;
-    for (let mr = 0; mr < moduleCount; mr++) {
-      for (let mc = 0; mc < moduleCount; mc++) {
-        if (locked[mr][mc]) continue;
-        if (isFixedDarkModule(mr, mc, moduleCount)) continue;
-        const qrIsDark = qr.isDark(mr, mc);
-        if (qrIsDark) {
-          const occViolation = Math.max(0, darkMinMap[mr][mc] - occupancies[mr][mc]);
-          const centerViolation = Math.max(0, darkCenterMinMap[mr][mc] - centerOcc[mr][mc]);
-          energy += occViolation * occViolationWeight + centerViolation * centerViolationWeight;
-        } else {
-          const occViolation = Math.max(0, occupancies[mr][mc] - lightMaxMap[mr][mc]);
-          const centerViolation = Math.max(0, centerOcc[mr][mc] - lightCenterMaxMap[mr][mc]);
-          energy += occViolation * occViolationWeight + centerViolation * centerViolationWeight;
-        }
-      }
-    }
-    return energy;
-  };
-
-  recomputeModuleStats();
-  let prevViolationEnergy = computeViolationEnergy();
+  recomputeConstraintStats(cctx);
+  let prevViolationEnergy = computeConstraintViolationEnergy(cctx);
 
   for (let iter = 0; iter < maxIters; iter++) {
-    type Candidate = { y: number; x: number; score: number; toDark: boolean; scanGain: number };
-    const candidates: Candidate[] = [];
-    let totalViolationEnergy = 0;
-
-    for (let mr = 0; mr < moduleCount; mr++) {
-      for (let mc = 0; mc < moduleCount; mc++) {
-        if (locked[mr][mc]) continue;
-        if (isFixedDarkModule(mr, mc, moduleCount)) continue;
-        const qrIsDark = qr.isDark(mr, mc);
-        const occ = occupancies[mr][mc];
-        const cOcc = centerOcc[mr][mc];
-        const darkMin = darkMinMap[mr][mc];
-        const lightMax = lightMaxMap[mr][mc];
-        const darkCenterMin = darkCenterMinMap[mr][mc];
-        const lightCenterMax = lightCenterMaxMap[mr][mc];
-
-        let occViolation = 0;
-        let centerViolation = 0;
-        let toDark = false;
-        if (qrIsDark && occ < darkMin) {
-          occViolation = darkMin - occ;
-          toDark = true;
-        } else if (!qrIsDark && occ > lightMax) {
-          occViolation = occ - lightMax;
-          toDark = false;
-        }
-        if (qrIsDark && cOcc < darkCenterMin) {
-          centerViolation = darkCenterMin - cOcc;
-          toDark = true;
-        } else if (!qrIsDark && cOcc > lightCenterMax) {
-          centerViolation = cOcc - lightCenterMax;
-          toDark = false;
-        }
-        if (occViolation <= 0 && centerViolation <= 0) continue;
-        totalViolationEnergy +=
-          occViolation * occViolationWeight + centerViolation * centerViolationWeight;
-
-        const y0 = mr * scale;
-        const x0 = mc * scale;
-        for (let y = 0; y < scale; y++) {
-          for (let x = 0; x < scale; x++) {
-            const yy = y0 + y;
-            const xx = x0 + x;
-            const current = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
-            if ((toDark && current) || !(toDark || current)) continue;
-            const inCenter =
-              Math.abs(y - moduleCenter) <= centerRadius &&
-              Math.abs(x - moduleCenter) <= centerRadius;
-            const occGain =
-              occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;
-            const centerGain =
-              inCenter && centerViolation > 0
-                ? Math.min(centerViolation, 1 / centerArea) * centerViolationWeight
-                : 0;
-            const scanGain = occGain + centerGain;
-            if (scanGain <= 0) continue;
-
-            // Global energy: preserve art + avoid module-edge imprint + prioritize scan recovery.
-            const d = desire[pixelIndex(xx, yy, scaledSize)];
-            const beforeErr = Math.abs((current ? 1 : 0) - d);
-            const afterErr = Math.abs((toDark ? 1 : 0) - d);
-            const artPenalty = afterErr - beforeErr;
-            const edgeBand = x <= 1 || y <= 1 || x >= scale - 2 || y >= scale - 2;
-            const edgePenalty = edgeBand ? edgeBandPenalty : 0;
-            const centerBonus = inCenter ? centerPixelBonus : 0;
-            const score =
-              scanGain * scanScoreWeight -
-              artPenalty * artPenaltyWeight -
-              edgePenalty +
-              centerBonus;
-            candidates.push({ y: yy, x: xx, score, toDark, scanGain });
-          }
-        }
-      }
-    }
+    const { candidates, totalViolationEnergy } = buildConstraintCandidates(cctx);
 
     if (totalViolationEnergy <= 1e-5) break;
     if (candidates.length === 0) break;
@@ -1026,13 +1107,30 @@ function enforceModuleConstraints(
     }
 
     if (applied === 0) break;
-    recomputeModuleStats();
-    const newViolationEnergy = computeViolationEnergy();
+    recomputeConstraintStats(cctx);
+    const newViolationEnergy = computeConstraintViolationEnergy(cctx);
     if (prevViolationEnergy - newViolationEnergy < 1e-4) break;
     prevViolationEnergy = newViolationEnergy;
   }
 
   // Do not add a post-center-lock pass; it re-imprints module structure.
+}
+
+function countSameNeighbors(
+  copy: Uint8Array,
+  x: number,
+  y: number,
+  scaledSize: number,
+  current: number
+): number {
+  let count = 0;
+  for (let oy = -1; oy <= 1; oy++) {
+    for (let ox = -1; ox <= 1; ox++) {
+      if (ox === 0 && oy === 0) continue;
+      if (copy[pixelIndex(x + ox, y + oy, scaledSize)] === current) count++;
+    }
+  }
+  return count;
 }
 
 function removeIsolatedSpeckles(
@@ -1060,14 +1158,7 @@ function removeIsolatedSpeckles(
       }
       const currentIdx = pixelIndex(x, y, scaledSize);
       const current = copy[currentIdx];
-      let sameNeighbors = 0;
-      for (let oy = -1; oy <= 1; oy++) {
-        for (let ox = -1; ox <= 1; ox++) {
-          if (ox === 0 && oy === 0) continue;
-          if (copy[pixelIndex(x + ox, y + oy, scaledSize)] === current) sameNeighbors++;
-        }
-      }
-      if (sameNeighbors <= 1) {
+      if (countSameNeighbors(copy, x, y, scaledSize, current) <= 1) {
         matrixBits[currentIdx] = qr.isDark(mr, mc) ? 1 : 0;
       }
     }
@@ -1114,6 +1205,48 @@ function computeQualityMetrics(
   const b = boundaryDiff / Math.max(1, boundaryCount);
   const n = nonBoundaryDiff / Math.max(1, nonBoundaryCount);
   return { artCorrelation: clamp01(artCorrelation), edgeImprint: b - n };
+}
+
+function computeDitherThreshold(
+  x: number,
+  y: number,
+  sampleIdx: number,
+  overlayDark: number,
+  mix: number,
+  thresholdPattern: DitherThresholdPattern,
+  staticState: DitherStaticState,
+  noiseTile: ReturnType<typeof generateBlueNoiseTile>,
+  tileSize: number,
+  temporalOffsetX: number,
+  temporalOffsetY: number
+): number {
+  const centered = (value01: number): number => clamp01(0.5 + (value01 - 0.5) * mix);
+  switch (thresholdPattern) {
+    case 'white_noise':
+      return centered(staticState.whiteNoiseField[sampleIdx]);
+    case 'gaussian_noise':
+      return centered(staticState.gaussianNoiseField[sampleIdx]);
+    case 'triangular_noise':
+      return centered(staticState.triangularNoiseField[sampleIdx]);
+    case 'ordered': {
+      const rank =
+        staticState.orderedMatrix[y % staticState.orderedH]?.[x % staticState.orderedW] ?? 0;
+      return centered((rank + 0.5) / staticState.orderedDivisor);
+    }
+    case 'screened_blue_noise': {
+      const blue = sampleBlueNoise(x, y, noiseTile, tileSize);
+      const screen = clamp01(0.5 + 0.5 * Math.sin(x * 0.37 + y * 0.29));
+      return centered(blue * 0.72 + screen * 0.28);
+    }
+    case 'temporal_blue_noise':
+      return centered(
+        sampleBlueNoise(x + temporalOffsetX, y + temporalOffsetY, noiseTile, tileSize)
+      );
+    case 'adaptive_threshold':
+      return centered(clamp01(0.55 - (overlayDark - 0.5) * 0.9));
+    default:
+      return centered(sampleBlueNoise(x, y, noiseTile, tileSize));
+  }
 }
 
 /**
@@ -1215,39 +1348,20 @@ export async function generateDitheredMatrix(
 
   const mix = clamp01(intensity * ditherStrength * ditherScale);
   const qrBitBiasStrength = clamp01(config.qrBitBiasStrength ?? 0);
-  const sampleThreshold = (
-    x: number,
-    y: number,
-    sampleIdx: number,
-    overlayDark: number
-  ): number => {
-    const centered = (value01: number): number => clamp01(0.5 + (value01 - 0.5) * mix);
-    switch (thresholdPattern) {
-      case 'white_noise':
-        return centered(whiteNoiseField[sampleIdx]);
-      case 'gaussian_noise':
-        return centered(gaussianNoiseField[sampleIdx]);
-      case 'triangular_noise':
-        return centered(triangularNoiseField[sampleIdx]);
-      case 'ordered': {
-        const rank = orderedMatrix[y % orderedH]?.[x % orderedW] ?? 0;
-        return centered((rank + 0.5) / orderedDivisor);
-      }
-      case 'screened_blue_noise': {
-        const blue = sampleBlueNoise(x, y, noiseTile, tileSize);
-        const screen = clamp01(0.5 + 0.5 * Math.sin(x * 0.37 + y * 0.29));
-        return centered(blue * 0.72 + screen * 0.28);
-      }
-      case 'temporal_blue_noise':
-        return centered(
-          sampleBlueNoise(x + temporalOffsetX, y + temporalOffsetY, noiseTile, tileSize)
-        );
-      case 'adaptive_threshold':
-        return centered(clamp01(0.55 - (overlayDark - 0.5) * 0.9));
-      default:
-        return centered(sampleBlueNoise(x, y, noiseTile, tileSize));
-    }
-  };
+  const sampleThreshold = (x: number, y: number, sampleIdx: number, overlayDark: number): number =>
+    computeDitherThreshold(
+      x,
+      y,
+      sampleIdx,
+      overlayDark,
+      mix,
+      thresholdPattern,
+      staticState,
+      noiseTile,
+      tileSize,
+      temporalOffsetX,
+      temporalOffsetY
+    );
 
   for (let y = 0; y < scaledSize; y++) {
     // Serpentine: alternate scan direction per row
@@ -1510,6 +1624,74 @@ export async function generateBlueNoiseMatrix(
   };
 }
 
+function aggregateModuleHalftoneData(
+  ditheredResult: PixelDecisionMatrix,
+  moduleData: Uint8ClampedArray | null,
+  mr: number,
+  mc: number,
+  scale: number,
+  moduleCount: number,
+  effectiveIntensity: number,
+  densityInfluence: number,
+  overlayBrightness: Float32Array,
+  overlayColorsPacked: Uint32Array
+): void {
+  const total = scale * scale;
+  let darkCount = 0;
+  let sumR = 0;
+  let sumG = 0;
+  let sumB = 0;
+  let colorCount = 0;
+  let srcR = 127;
+  let srcG = 127;
+  let srcB = 127;
+  let srcBrightness = 0.5;
+
+  if (moduleData) {
+    const srcIdx = (mr * moduleCount + mc) * 4;
+    srcR = moduleData[srcIdx];
+    srcG = moduleData[srcIdx + 1];
+    srcB = moduleData[srcIdx + 2];
+    srcBrightness = luma01(srcR, srcG, srcB);
+  }
+
+  for (let sy = 0; sy < scale; sy++) {
+    for (let sx = 0; sx < scale; sx++) {
+      const y = mr * scale + sy;
+      const x = mc * scale + sx;
+      if (ditheredResult.matrix[y]?.[x]) darkCount++;
+      const c = ditheredResult.colors[y]?.[x];
+      if (c) {
+        sumR += c.r;
+        sumG += c.g;
+        sumB += c.b;
+        colorCount++;
+      }
+    }
+  }
+
+  const density = darkCount / total;
+  const densityBrightness = 1 - density;
+  const overlayIndex = mr * moduleCount + mc;
+  overlayBrightness[overlayIndex] = clamp01(
+    lerp(srcBrightness, densityBrightness, densityInfluence)
+  );
+
+  if (colorCount > 0) {
+    const ditherR = Math.round(sumR / colorCount);
+    const ditherG = Math.round(sumG / colorCount);
+    const ditherB = Math.round(sumB / colorCount);
+    const colorMix = clamp01(0.2 + effectiveIntensity * 0.25);
+    overlayColorsPacked[overlayIndex] = packColor(
+      Math.round(lerp(srcR, ditherR, colorMix)),
+      Math.round(lerp(srcG, ditherG, colorMix)),
+      Math.round(lerp(srcB, ditherB, colorMix))
+    );
+  } else {
+    overlayColorsPacked[overlayIndex] = packColor(srcR, srcG, srcB);
+  }
+}
+
 /**
  * Generate halftone-dithered overlay data.
  * Runs error diffusion at sub-pixel level (scale=4), then aggregates per-module
@@ -1565,61 +1747,18 @@ export async function generateHalftoneDitheredOverlayData(
 
   for (let mr = 0; mr < moduleCount; mr++) {
     for (let mc = 0; mc < moduleCount; mc++) {
-      let darkCount = 0;
-      let sumR = 0;
-      let sumG = 0;
-      let sumB = 0;
-      let colorCount = 0;
-      let srcR = 127;
-      let srcG = 127;
-      let srcB = 127;
-      let srcBrightness = 0.5;
-
-      if (moduleData) {
-        const srcIdx = (mr * moduleCount + mc) * 4;
-        srcR = moduleData[srcIdx];
-        srcG = moduleData[srcIdx + 1];
-        srcB = moduleData[srcIdx + 2];
-        srcBrightness = luma01(srcR, srcG, srcB);
-      }
-
-      for (let sy = 0; sy < scale; sy++) {
-        for (let sx = 0; sx < scale; sx++) {
-          const y = mr * scale + sy;
-          const x = mc * scale + sx;
-          if (ditheredResult.matrix[y]?.[x]) darkCount++;
-          const c = ditheredResult.colors[y]?.[x];
-          if (c) {
-            sumR += c.r;
-            sumG += c.g;
-            sumB += c.b;
-            colorCount++;
-          }
-        }
-      }
-
-      const density = darkCount / total;
-      const densityBrightness = 1 - density;
-      const overlayIndex = mr * moduleCount + mc;
-      overlayBrightness[overlayIndex] = clamp01(
-        lerp(srcBrightness, densityBrightness, densityInfluence)
+      aggregateModuleHalftoneData(
+        ditheredResult,
+        moduleData,
+        mr,
+        mc,
+        scale,
+        moduleCount,
+        effectiveIntensity,
+        densityInfluence,
+        overlayBrightness,
+        overlayColorsPacked
       );
-
-      if (colorCount > 0) {
-        // Blend true source color with dither-aggregated color so the backdrop
-        // reads as the actual image while retaining dither texture character.
-        const ditherR = Math.round(sumR / colorCount);
-        const ditherG = Math.round(sumG / colorCount);
-        const ditherB = Math.round(sumB / colorCount);
-        const colorMix = clamp01(0.2 + effectiveIntensity * 0.25);
-        overlayColorsPacked[overlayIndex] = packColor(
-          Math.round(lerp(srcR, ditherR, colorMix)),
-          Math.round(lerp(srcG, ditherG, colorMix)),
-          Math.round(lerp(srcB, ditherB, colorMix))
-        );
-      } else {
-        overlayColorsPacked[overlayIndex] = packColor(srcR, srcG, srcB);
-      }
     }
   }
 

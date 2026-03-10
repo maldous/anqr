@@ -6,7 +6,7 @@
 import { createLogger } from '../../lib/logger';
 import { blendColors, parseColor } from '../core';
 import { getOverlayColorPacked } from './overlay-data-packed';
-import type { OverlayData, QRGeneratorConfig } from './types';
+import type { ApplyOverlayModeOptions, OverlayData, QRGeneratorConfig } from './types';
 
 const _log = createLogger('GENERATE');
 
@@ -58,18 +58,19 @@ export interface OverlayModeResult {
  * Apply overlay mode effects to a module
  * Returns modified rendering parameters based on overlay mode and brightness
  */
-export function applyQROverlayMode(
-  overlayMode: string | undefined,
-  isDark: boolean,
-  brightness: number,
-  overlayData: OverlayData,
-  row: number,
-  col: number,
-  moduleCount: number,
-  effectiveIntensity: number,
-  config: QRGeneratorConfig,
-  isFunctionalPattern: boolean = false
-): OverlayModeResult {
+export function applyQROverlayMode(options: ApplyOverlayModeOptions): OverlayModeResult {
+  const {
+    overlayMode,
+    isDark,
+    brightness,
+    overlayData,
+    row,
+    col,
+    moduleCount,
+    effectiveIntensity,
+    config,
+    isFunctionalPattern = false,
+  } = options;
   const result: OverlayModeResult = {
     moduleColor: isDark ? config.fgColor : config.bgColor,
     moduleSizeModifier: 1,

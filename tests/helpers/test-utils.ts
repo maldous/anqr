@@ -646,7 +646,24 @@ export async function selectOption(
   const trigger = page.locator(`[data-testid="${testId}"]`);
   await trigger.waitFor({ state: 'visible', timeout: DEFAULT_TIMEOUT });
   await trigger.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
-  await trigger.click({ force: true });
+
+  // Click the trigger — fall back to JS-dispatched pointer events when the
+  // element is technically outside the viewport (nested scroll containers).
+  const clickedNatively = await trigger
+    .click({ force: true })
+    .then(() => true)
+    .catch(() => false);
+
+  if (!clickedNatively) {
+    await trigger.evaluate((el) => {
+      el.dispatchEvent(
+        new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 1 })
+      );
+      el.dispatchEvent(
+        new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerId: 1 })
+      );
+    });
+  }
 
   // Wait for dropdown to open
   const opened = await waitForDropdownOpen(page, 5000)

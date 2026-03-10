@@ -43,10 +43,10 @@ export function applyTrueDither(
 
       matrix[y][x] = isDark;
 
-      if (colorMode !== 'bw') {
-        colors[y][x] = { r, g, b };
-      } else {
+      if (colorMode === 'bw') {
         colors[y][x] = null;
+      } else {
+        colors[y][x] = { r, g, b };
       }
     }
   }

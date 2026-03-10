@@ -1127,7 +1127,21 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig();
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     // Dark modules should be drawn
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -1141,7 +1155,21 @@ describe('render-loop.ts', () => {
       moduleGap: 2,
     });
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     // Stroke rendering for dark modules
     expect(ctx.strokeRect).toHaveBeenCalled();
@@ -1155,7 +1183,21 @@ describe('render-loop.ts', () => {
       moduleGap: 1,
     });
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1168,7 +1210,21 @@ describe('render-loop.ts', () => {
       frameIndex: 3,
     });
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1178,7 +1234,21 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig({ pixelSnap: 'round' });
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1188,7 +1258,21 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig({ pixelSnap: 'ceil' });
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1198,7 +1282,21 @@ describe('render-loop.ts', () => {
     const qr = mockQR(5);
     const config = makeMinimalConfig({ pixelSnap: 'none' });
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1221,22 +1319,21 @@ describe('render-loop.ts', () => {
       overlayIntensity: 80,
     });
 
-    renderModules(
-      ctx,
-      qr,
-      config,
-      5,
-      10,
-      1,
-      overlayData,
-      null,
-      80,
-      new Set(),
-      new Set(),
-      1,
-      null,
-      false
-    );
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: overlayData,
+      ditherPattern: null,
+      effectiveIntensity: 80,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     // Halftone should call drawing functions
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -1249,22 +1346,21 @@ describe('render-loop.ts', () => {
 
     const mockGradient = { addColorStop: vi.fn() };
 
-    renderModules(
-      ctx,
-      qr,
-      config,
-      5,
-      10,
-      1,
-      null,
-      null,
-      0,
-      new Set(),
-      new Set(),
-      1,
-      mockGradient,
-      true
-    );
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: mockGradient,
+      useGradient: true,
+    });
 
     // Should use gradient for dark module fill
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -1284,22 +1380,21 @@ describe('render-loop.ts', () => {
       }
     }
 
-    renderModules(
-      ctx,
-      qr,
-      config,
-      5,
-      10,
-      1,
-      null,
-      ditherPattern,
-      50,
-      new Set(),
-      new Set(),
-      1,
-      null,
-      false
-    );
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: ditherPattern,
+      effectiveIntensity: 50,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1317,22 +1412,21 @@ describe('render-loop.ts', () => {
       }
     }
 
-    renderModules(
-      ctx,
-      qr,
-      config,
-      21,
-      10,
-      1,
-      null,
-      null,
-      0,
-      finderPatterns,
-      new Set(),
-      1,
-      null,
-      false
-    );
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 21,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: finderPatterns,
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     // Should still render non-finder modules
     expect(ctx.fillRect).toHaveBeenCalled();
@@ -1355,22 +1449,21 @@ describe('render-loop.ts', () => {
       overlayIntensity: 60,
     });
 
-    renderModules(
-      ctx,
-      qr,
-      config,
-      5,
-      10,
-      1,
-      overlayData,
-      null,
-      60,
-      new Set(),
-      new Set(),
-      1,
-      null,
-      false
-    );
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: overlayData,
+      ditherPattern: null,
+      effectiveIntensity: 60,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1380,7 +1473,21 @@ describe('render-loop.ts', () => {
     const qr = mockQR(21);
     const config = makeMinimalConfig({ timingStyle: 'dashed' });
 
-    renderModules(ctx, qr, config, 21, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 21,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(21 * 21),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     expect(ctx.fillRect).toHaveBeenCalled();
   });
@@ -1393,7 +1500,21 @@ describe('render-loop.ts', () => {
       dotRotationDeg: 45,
     });
 
-    renderModules(ctx, qr, config, 5, 10, 1, null, null, 0, new Set(), new Set(), 1, null, false);
+    renderModules({
+      ctx: ctx,
+      qr: qr,
+      config: config,
+      moduleCount: 5,
+      moduleSize: 10,
+      margin: 1,
+      overlayData: null,
+      ditherPattern: null,
+      effectiveIntensity: 0,
+      skipMask: new Uint8Array(5 * 5),
+      version: 1,
+      gradientFill: null,
+      useGradient: false,
+    });
 
     // dots style uses arc + fill, and save/restore for rotation
     expect(ctx.save).toHaveBeenCalled();
