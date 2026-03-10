@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
+- fix: scope gallery artifact comparison to selected baseline IDs (ANQ-149)
 - fix(sonar): reduce S3776 cognitive complexity across 30+ module files via helper extraction
 - fix: reduce semantic validation complexity in qr-art generator
 - fix: add CI reliability gate criteria and machine-readable reporting

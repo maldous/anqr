@@ -34,6 +34,11 @@ const ANIMATED_SIZE_RATIO_MAX = Math.max(
   Number.parseFloat(process.env.GALLERY_COMPARE_ANIMATED_MAX_RATIO || '4.0') || 4.0
 );
 
+function parseScenarioFilterIds(raw) {
+  if (!raw || !String(raw).trim()) return [];
+  return [...new Set(String(raw).split(',').map((id) => id.trim()).filter(Boolean))];
+}
+
 async function exists(filePath) {
   try {
     await fs.access(filePath);
@@ -196,7 +201,16 @@ async function findArtifactPath(modeDir, filenames) {
 }
 
 async function main() {
-  const configs = generateAllScenarios();
+  const allConfigs = generateAllScenarios();
+  const selectedIds = parseScenarioFilterIds(process.env.GALLERY_IDS);
+  const selectedIdSet = new Set(selectedIds);
+  const configs =
+    selectedIds.length > 0
+      ? allConfigs.filter((config) => selectedIdSet.has(config.id))
+      : allConfigs;
+  const configIdSet = new Set(configs.map((config) => config.id));
+  const requestedIdsMissingCount =
+    selectedIds.length > 0 ? selectedIds.filter((id) => !configIdSet.has(id)).length : 0;
 
   const modeReports = {};
   const modeResultMaps = {};
@@ -338,6 +352,9 @@ async function main() {
   const summary = {
     generatedAt: new Date().toISOString(),
     totalScenarios: configs.length,
+    scopedByIds: selectedIds.length > 0,
+    requestedIdsCount: selectedIds.length,
+    requestedIdsMissingCount,
     allModesPresentCount: allPresent,
     allModesDecodePrefixOkCount: allDecodedPrefixOk,
     staticExactAllThreeCount: staticExactAllThree,

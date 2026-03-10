@@ -12,7 +12,7 @@ GALLERY_IDS="$IDS" GALLERY_CONCURRENCY=4 node --import tsx scripts/generate-gall
 GALLERY_IDS="$IDS" GALLERY_CONCURRENCY=2 node --import tsx scripts/generate-gallery-remote.mjs
 GALLERY_IDS="$IDS" GALLERY_BROWSER_CAPTURE_MODE=preview GALLERY_PORT=5174 GALLERY_CONCURRENCY=2 node --import tsx scripts/generate-gallery-browser.mjs
 
-node --import tsx scripts/compare-gallery-artifacts.mjs
+GALLERY_IDS="$IDS" node --import tsx scripts/compare-gallery-artifacts.mjs
 npx vitest run tests/unit/share-param-parity.spec.ts
 ```
 
@@ -37,6 +37,10 @@ npx vitest run tests/unit/share-param-parity.spec.ts
 3. Remaining non-exact byte parity exists for part of the corpus, but decode/payload and dimensions are aligned for all 12/12 scenarios across local/browser/remote.
    - Local/remote stayed byte-equal for 11/12 sampled scenarios.
    - Browser preview parity improved after the parser fix (e.g., `nooverlay__style-rounded--2` is now exact across all three surfaces).
+
+4. Consistency comparison originally evaluated the full 1000-scenario matrix even when `GALLERY_IDS` subset generation was used.
+   - Root cause: `scripts/compare-gallery-artifacts.mjs` always compared `generateAllScenarios()` without honoring `GALLERY_IDS`.
+   - Fix: compare script now scopes to `GALLERY_IDS` when provided, so subset validation is assessed against the intended corpus.
 
 ## pass/fail verdict
 
