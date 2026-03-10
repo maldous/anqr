@@ -75,8 +75,8 @@ export enum DecodeHintType {
  */
 export class ResultPoint {
   constructor(
-    private x: number,
-    private y: number
+    private readonly x: number,
+    private readonly y: number
   ) {}
 
   getX(): number {
@@ -158,12 +158,12 @@ export class Result {
   private resultMetadata: Map<ResultMetadataType, any> | null = null;
 
   constructor(
-    private text: string,
-    private rawBytes: Uint8Array,
-    private numBits: number = rawBytes == null ? 0 : 8 * rawBytes.length,
+    private readonly text: string,
+    private readonly rawBytes: Uint8Array,
+    private readonly numBits: number = rawBytes == null ? 0 : 8 * rawBytes.length,
     private resultPoints: ResultPoint[],
-    private format: BarcodeFormat,
-    private timestamp: number = currentTimeMillis()
+    private readonly format: BarcodeFormat,
+    private readonly timestamp: number = currentTimeMillis()
   ) {
     if (numBits === undefined || numBits === null) {
       this.numBits = rawBytes === null || rawBytes === undefined ? 0 : 8 * rawBytes.length;
@@ -250,8 +250,8 @@ export class DecoderResult {
   constructor(
     private rawBytes: Uint8Array,
     private text: string,
-    private byteSegments: Uint8Array[] | null,
-    private ecLevel: string | null,
+    private readonly byteSegments: Uint8Array[] | null,
+    private readonly ecLevel: string | null,
     numBits?: number
   ) {
     this.numBits = numBits ?? (rawBytes == null ? 0 : 8 * rawBytes.length);

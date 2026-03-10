@@ -22,13 +22,13 @@ export interface CropHandlerOptions {
 }
 
 export class CropHandler {
-  private container: HTMLElement;
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
+  private readonly container: HTMLElement;
+  private readonly canvas: HTMLCanvasElement;
+  private readonly ctx: CanvasRenderingContext2D;
   private image: HTMLImageElement | null = null;
   private region: CropRegion;
-  private minSize: number;
-  private onCropChange?: (region: CropRegion) => void;
+  private readonly minSize: number;
+  private readonly onCropChange?: (region: CropRegion) => void;
   private isDragging = false;
   private isResizing = false;
   private dragStart = { x: 0, y: 0 };

@@ -25,7 +25,7 @@ import {
  * QR Code Reader - main decoder class
  */
 export class Reader {
-  private decoder = new QRDecoder();
+  private readonly decoder = new QRDecoder();
 
   /**
    * Decode a QR code from a BinaryBitmap
@@ -198,7 +198,7 @@ export class Reader {
  * Metadata holder for QR code decoder information
  */
 export class QRCodeDecoderMetaData {
-  constructor(private mirrored: boolean) {}
+  constructor(private readonly mirrored: boolean) {}
 
   isMirrored(): boolean {
     return this.mirrored;

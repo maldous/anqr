@@ -397,8 +397,8 @@ export class CharacterSetECI {
   static readonly EUC_KR = new CharacterSetECI([30], 'EUC-KR', 'EUC_KR');
 
   private constructor(
-    private values: number[],
-    private name: string,
+    private readonly values: number[],
+    private readonly name: string,
     ...otherNames: string[]
   ) {
     for (const value of values) {

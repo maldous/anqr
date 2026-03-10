@@ -15,13 +15,13 @@ import { Binarizer, type LuminanceSource } from './luminance';
  * Global histogram binarizer using image-wide threshold
  */
 export class GlobalHistogramBinarizer extends Binarizer {
-  private static LUMINANCE_BITS = 5;
-  private static LUMINANCE_SHIFT = 8 - GlobalHistogramBinarizer.LUMINANCE_BITS;
-  private static LUMINANCE_BUCKETS = 1 << GlobalHistogramBinarizer.LUMINANCE_BITS;
-  private static EMPTY = Uint8ClampedArray.from([0]);
+  private static readonly LUMINANCE_BITS = 5;
+  private static readonly LUMINANCE_SHIFT = 8 - GlobalHistogramBinarizer.LUMINANCE_BITS;
+  private static readonly LUMINANCE_BUCKETS = 1 << GlobalHistogramBinarizer.LUMINANCE_BITS;
+  private static readonly EMPTY = Uint8ClampedArray.from([0]);
 
   private luminances: Uint8ClampedArray;
-  private buckets: Int32Array;
+  private readonly buckets: Int32Array;
 
   constructor(source: LuminanceSource) {
     super(source);
@@ -167,11 +167,11 @@ export class GlobalHistogramBinarizer extends Binarizer {
  * Hybrid binarizer using local thresholding for better results
  */
 export class HybridBinarizer extends GlobalHistogramBinarizer {
-  private static BLOCK_SIZE_POWER = 3;
-  private static BLOCK_SIZE = 1 << HybridBinarizer.BLOCK_SIZE_POWER;
-  private static BLOCK_SIZE_MASK = HybridBinarizer.BLOCK_SIZE - 1;
-  private static MINIMUM_DIMENSION = HybridBinarizer.BLOCK_SIZE * 5;
-  private static MIN_DYNAMIC_RANGE = 24;
+  private static readonly BLOCK_SIZE_POWER = 3;
+  private static readonly BLOCK_SIZE = 1 << HybridBinarizer.BLOCK_SIZE_POWER;
+  private static readonly BLOCK_SIZE_MASK = HybridBinarizer.BLOCK_SIZE - 1;
+  private static readonly MINIMUM_DIMENSION = HybridBinarizer.BLOCK_SIZE * 5;
+  private static readonly MIN_DYNAMIC_RANGE = 24;
 
   private matrix: BitMatrix | null = null;
 

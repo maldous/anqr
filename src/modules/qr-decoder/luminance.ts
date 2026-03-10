@@ -16,8 +16,8 @@ import { StringBuilder } from './util';
  */
 export abstract class LuminanceSource {
   protected constructor(
-    private width: number,
-    private height: number
+    private readonly width: number,
+    private readonly height: number
   ) {}
 
   abstract getRow(y: number, row?: Uint8ClampedArray): Uint8ClampedArray;
@@ -80,7 +80,7 @@ export abstract class LuminanceSource {
  * Inverted luminance source wrapper
  */
 export class InvertedLuminanceSource extends LuminanceSource {
-  constructor(private delegate: LuminanceSource) {
+  constructor(private readonly delegate: LuminanceSource) {
     super(delegate.getWidth(), delegate.getHeight());
   }
 
@@ -132,7 +132,7 @@ export class InvertedLuminanceSource extends LuminanceSource {
  * RGBA luminance source from canvas/ImageData
  */
 export class RGBALuminanceSource extends LuminanceSource {
-  private luminances: Uint8ClampedArray;
+  private readonly luminances: Uint8ClampedArray;
 
   constructor(luminances: Uint8ClampedArray, width: number, height: number) {
     super(width, height);
@@ -180,7 +180,7 @@ export class RGBALuminanceSource extends LuminanceSource {
  * Abstract binarizer for converting luminance to bits
  */
 export abstract class Binarizer {
-  protected constructor(private source: LuminanceSource) {}
+  protected constructor(private readonly source: LuminanceSource) {}
 
   getLuminanceSource(): LuminanceSource {
     return this.source;
@@ -205,7 +205,7 @@ export abstract class Binarizer {
 export class BinaryBitmap {
   private matrix: BitMatrix | null = null;
 
-  constructor(private binarizer: Binarizer) {
+  constructor(private readonly binarizer: Binarizer) {
     if (binarizer === null) {
       throw new IllegalArgumentException('Binarizer must be non-null.');
     }

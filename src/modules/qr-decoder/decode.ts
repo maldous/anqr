@@ -1384,7 +1384,7 @@ function _decodeKanji(bits: BitStream, count: number): string {
  * Simple bit stream reader
  */
 class BitStream {
-  private bytes: number[];
+  private readonly bytes: number[];
   private byteIndex: number = 0;
   private bitIndex: number = 0;
 

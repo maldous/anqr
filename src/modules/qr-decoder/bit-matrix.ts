@@ -253,9 +253,9 @@ export class BitArray {
  * Represents a 2D matrix of bits.
  */
 export class BitMatrix {
-  private width: number;
-  private height: number;
-  private rowSize: number;
+  private readonly width: number;
+  private readonly height: number;
+  private readonly rowSize: number;
   private bits: Int32Array;
 
   constructor(width: number, height?: number, rowSize?: number, bits?: Int32Array) {

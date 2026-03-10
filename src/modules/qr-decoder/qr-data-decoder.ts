@@ -28,7 +28,7 @@ export class BitMatrixParser {
   private parsedFormatInfo: FormatInformation | null = null;
   private mirror = false;
 
-  constructor(private bitMatrix: BitMatrix) {
+  constructor(private readonly bitMatrix: BitMatrix) {
     const dimension = bitMatrix.getHeight();
     if (dimension < 21 || (dimension & 0x03) !== 1) {
       throw new FormatException();
@@ -185,7 +185,7 @@ export class BitMatrixParser {
  * Main QR code decoder
  */
 export class QRDecoder {
-  private rsDecoder: ReedSolomonDecoder;
+  private readonly rsDecoder: ReedSolomonDecoder;
 
   constructor() {
     this.rsDecoder = new ReedSolomonDecoder(GenericGF.QR_CODE_FIELD_256);
@@ -533,7 +533,7 @@ class BitSource {
   private bitOffset = 0;
   private totalBitsRead = 0;
 
-  constructor(private bytes: Uint8Array) {}
+  constructor(private readonly bytes: Uint8Array) {}
 
   available(): number {
     return 8 * (this.bytes.length - this.byteOffset) - this.bitOffset;

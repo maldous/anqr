@@ -24,7 +24,7 @@ export enum ErrorCorrectionLevelValue {
  * Error correction level (L, M, Q, H)
  */
 export class ErrorCorrectionLevel {
-  private static FOR_BITS = new Map<number, ErrorCorrectionLevel>();
+  private static readonly FOR_BITS = new Map<number, ErrorCorrectionLevel>();
 
   static readonly L = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.L, 'L', 0x01);
   static readonly M = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.M, 'M', 0x00);
@@ -32,9 +32,9 @@ export class ErrorCorrectionLevel {
   static readonly H = new ErrorCorrectionLevel(ErrorCorrectionLevelValue.H, 'H', 0x02);
 
   private constructor(
-    private value: ErrorCorrectionLevelValue,
-    private stringValue: string,
-    private bits: number
+    private readonly value: ErrorCorrectionLevelValue,
+    private readonly stringValue: string,
+    private readonly bits: number
   ) {
     ErrorCorrectionLevel.FOR_BITS.set(bits, this);
   }
@@ -99,7 +99,7 @@ export enum ModeValue {
  * QR Code encoding mode
  */
 export class Mode {
-  private static FOR_BITS = new Map<number, Mode>();
+  private static readonly FOR_BITS = new Map<number, Mode>();
 
   static readonly TERMINATOR = new Mode(
     ModeValue.TERMINATOR,
@@ -143,10 +143,10 @@ export class Mode {
   static readonly HANZI = new Mode(ModeValue.HANZI, 'HANZI', Int32Array.from([8, 10, 12]), 0x0d);
 
   private constructor(
-    private value: ModeValue,
-    private stringValue: string,
-    private characterCountBitsForVersions: Int32Array,
-    private bits: number
+    private readonly value: ModeValue,
+    private readonly stringValue: string,
+    private readonly characterCountBitsForVersions: Int32Array,
+    private readonly bits: number
   ) {
     Mode.FOR_BITS.set(bits, this);
   }
@@ -189,8 +189,8 @@ export class Mode {
  */
 export class ECB {
   constructor(
-    private count: number,
-    private dataCodewords: number
+    private readonly count: number,
+    private readonly dataCodewords: number
   ) {}
 
   getCount(): number {
@@ -206,10 +206,10 @@ export class ECB {
  * Error correction blocks for a version/level
  */
 export class ECBlocks {
-  private ecBlocks: ECB[];
+  private readonly ecBlocks: ECB[];
 
   constructor(
-    private ecCodewordsPerBlock: number,
+    private readonly ecCodewordsPerBlock: number,
     ...ecBlocks: ECB[]
   ) {
     this.ecBlocks = ecBlocks;
@@ -240,20 +240,20 @@ export class ECBlocks {
  * QR Code version information
  */
 export class Version {
-  private static VERSION_DECODE_INFO = Int32Array.from([
+  private static readonly VERSION_DECODE_INFO = Int32Array.from([
     0x07c94, 0x085bc, 0x09a99, 0x0a4d3, 0x0bbf6, 0x0c762, 0x0d847, 0x0e60d, 0x0f928, 0x10b78,
     0x1145d, 0x12a17, 0x13532, 0x149a6, 0x15683, 0x168c9, 0x177ec, 0x18ec4, 0x191e1, 0x1afab,
     0x1b08e, 0x1cc1a, 0x1d33f, 0x1ed75, 0x1f250, 0x209d5, 0x216f0, 0x228ba, 0x2379f, 0x24b0b,
     0x2542e, 0x26a64, 0x27541, 0x28c69,
   ]);
 
-  private static VERSIONS: Version[] = Version.buildVersions();
-  private ecBlocks: ECBlocks[];
-  private totalCodewords: number;
+  private static readonly VERSIONS: Version[] = Version.buildVersions();
+  private readonly ecBlocks: ECBlocks[];
+  private readonly totalCodewords: number;
 
   private constructor(
-    private versionNumber: number,
-    private alignmentPatternCenters: Int32Array,
+    private readonly versionNumber: number,
+    private readonly alignmentPatternCenters: Int32Array,
     ...ecBlocks: ECBlocks[]
   ) {
     this.ecBlocks = ecBlocks;
@@ -674,7 +674,7 @@ export class Version {
  * Format information (error correction level and mask pattern)
  */
 export class FormatInformation {
-  private static FORMAT_INFO_DECODE_LOOKUP = [
+  private static readonly FORMAT_INFO_DECODE_LOOKUP = [
     [0x5412, 0x00],
     [0x5125, 0x01],
     [0x5e7c, 0x02],
@@ -710,8 +710,8 @@ export class FormatInformation {
   ];
 
   private constructor(
-    private errorCorrectionLevel: ErrorCorrectionLevel,
-    private dataMask: number
+    private readonly errorCorrectionLevel: ErrorCorrectionLevel,
+    private readonly dataMask: number
   ) {}
 
   static numBitsDiffering(a: number, b: number): number {
@@ -798,7 +798,7 @@ export class FormatInformation {
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: Ported from ZXing Java library, maintaining original structure
 export class DataMask {
-  private static DATA_MASKS: ((i: number, j: number) => boolean)[] = [
+  private static readonly DATA_MASKS: ((i: number, j: number) => boolean)[] = [
     (i, j) => ((i + j) & 0x01) === 0,
     (i, _j) => (i & 0x01) === 0,
     (_i, j) => j % 3 === 0,

@@ -49,8 +49,8 @@ export abstract class AbstractGenericGF {
  * Polynomial over a Galois Field
  */
 export class GenericGFPoly {
-  private field: AbstractGenericGF;
-  private coefficients: Int32Array;
+  private readonly field: AbstractGenericGF;
+  private readonly coefficients: Int32Array;
 
   constructor(field: AbstractGenericGF, coefficients: Int32Array) {
     if (coefficients.length === 0) throw new IllegalArgumentException();
@@ -247,13 +247,13 @@ export class GenericGF extends AbstractGenericGF {
   static readonly AZTEC_DATA_8 = GenericGF.DATA_MATRIX_FIELD_256;
   static readonly MAXICODE_FIELD_64 = GenericGF.AZTEC_DATA_6;
 
-  private zero: GenericGFPoly;
-  private one: GenericGFPoly;
+  private readonly zero: GenericGFPoly;
+  private readonly one: GenericGFPoly;
 
   constructor(
-    private primitive: number,
-    private size: number,
-    private generatorBase: number
+    private readonly primitive: number,
+    private readonly size: number,
+    private readonly generatorBase: number
   ) {
     super();
     const expTable = new Int32Array(size);
@@ -325,7 +325,7 @@ export class GenericGF extends AbstractGenericGF {
  * Reed-Solomon decoder
  */
 export class ReedSolomonDecoder {
-  constructor(private field: GenericGF) {}
+  constructor(private readonly field: GenericGF) {}
 
   decode(received: Int32Array, twoS: number): void {
     const poly = new GenericGFPoly(this.field, received);

@@ -18,7 +18,7 @@ export class FinderPattern extends ResultPoint {
   constructor(
     posX: number,
     posY: number,
-    private estimatedModuleSize: number,
+    private readonly estimatedModuleSize: number,
     private count: number = 1
   ) {
     super(posX, posY);
@@ -59,9 +59,9 @@ export class FinderPattern extends ResultPoint {
  */
 export class FinderPatternInfo {
   constructor(
-    private bottomLeft: FinderPattern,
-    private topLeft: FinderPattern,
-    private topRight: FinderPattern
+    private readonly bottomLeft: FinderPattern,
+    private readonly topLeft: FinderPattern,
+    private readonly topRight: FinderPattern
   ) {}
 
   getBottomLeft(): FinderPattern {
@@ -84,7 +84,7 @@ export class AlignmentPattern extends ResultPoint {
   constructor(
     posX: number,
     posY: number,
-    private estimatedModuleSize: number
+    private readonly estimatedModuleSize: number
   ) {
     super(posX, posY);
   }
@@ -109,17 +109,17 @@ export class AlignmentPattern extends ResultPoint {
  * Finds the three finder patterns in a QR code image
  */
 export class FinderPatternFinder {
-  private static CENTER_QUORUM = 2;
-  private static MIN_SKIP = 3;
-  private static MAX_MODULES = 97;
+  private static readonly CENTER_QUORUM = 2;
+  private static readonly MIN_SKIP = 3;
+  private static readonly MAX_MODULES = 97;
 
   private possibleCenters: FinderPattern[] = [];
   private hasSkipped = false;
-  private crossCheckStateCount = new Int32Array(5);
+  private readonly crossCheckStateCount = new Int32Array(5);
 
   constructor(
-    private image: BitMatrix,
-    private resultPointCallback?: (point: ResultPoint) => void
+    private readonly image: BitMatrix,
+    private readonly resultPointCallback?: (point: ResultPoint) => void
   ) {}
 
   find(hints?: Map<number, any>): FinderPatternInfo {
@@ -515,17 +515,17 @@ export class FinderPatternFinder {
  * Finds alignment patterns in QR codes version 2+
  */
 export class AlignmentPatternFinder {
-  private possibleCenters: AlignmentPattern[] = [];
-  private crossCheckStateCount = new Int32Array(3);
+  private readonly possibleCenters: AlignmentPattern[] = [];
+  private readonly crossCheckStateCount = new Int32Array(3);
 
   constructor(
-    private image: BitMatrix,
-    private startX: number,
-    private startY: number,
-    private width: number,
-    private height: number,
-    private moduleSize: number,
-    private resultPointCallback?: (point: ResultPoint) => void
+    private readonly image: BitMatrix,
+    private readonly startX: number,
+    private readonly startY: number,
+    private readonly width: number,
+    private readonly height: number,
+    private readonly moduleSize: number,
+    private readonly resultPointCallback?: (point: ResultPoint) => void
   ) {}
 
   find(): AlignmentPattern {

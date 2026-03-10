@@ -15,15 +15,15 @@ import { NotFoundException } from './exceptions';
  */
 export class PerspectiveTransform {
   private constructor(
-    private a11: number,
-    private a21: number,
-    private a31: number,
-    private a12: number,
-    private a22: number,
-    private a32: number,
-    private a13: number,
-    private a23: number,
-    private a33: number
+    private readonly a11: number,
+    private readonly a21: number,
+    private readonly a31: number,
+    private readonly a12: number,
+    private readonly a22: number,
+    private readonly a32: number,
+    private readonly a13: number,
+    private readonly a23: number,
+    private readonly a33: number
   ) {}
 
   static quadrilateralToQuadrilateral(

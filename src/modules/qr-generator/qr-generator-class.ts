@@ -47,8 +47,8 @@ const log = createLogger('GENERATE');
  * Used by renderFromMatrix() to render QR-Art matrices with the full styling pipeline.
  */
 class MatrixWrapper {
-  private matrix: boolean[][];
-  private moduleCount: number;
+  private readonly matrix: boolean[][];
+  private readonly moduleCount: number;
 
   constructor(matrix: boolean[][]) {
     this.matrix = matrix;
@@ -79,8 +79,8 @@ class MatrixWrapper {
  * Used to avoid expanding worker-returned QR-Art matrices before rendering.
  */
 class PackedMatrixWrapper {
-  private packed: Uint8Array;
-  private moduleCount: number;
+  private readonly packed: Uint8Array;
+  private readonly moduleCount: number;
 
   constructor(packed: Uint8Array, moduleCount: number) {
     this.packed = packed;
@@ -951,13 +951,13 @@ async function runScanGateQRFirstFallback(
 }
 
 export class QRGenerator {
-  private qrcode: typeof qrcode;
-  private canvasFactory: CanvasFactory;
-  private _canvasPool: CanvasPool;
+  private readonly qrcode: typeof qrcode;
+  private readonly canvasFactory: CanvasFactory;
+  private readonly _canvasPool: CanvasPool;
   private _lastMatrix: boolean[][] | null = null;
   private _lastModuleCount: number = 0;
-  private _ditherPatchCache: Map<string, DitherPatchCacheEntry> = new Map();
-  private _overlayComplexityCache: Map<string, OverlayComplexityCacheEntry> = new Map();
+  private readonly _ditherPatchCache: Map<string, DitherPatchCacheEntry> = new Map();
+  private readonly _overlayComplexityCache: Map<string, OverlayComplexityCacheEntry> = new Map();
   private static readonly DITHER_PATCH_CACHE_MAX_ENTRIES = 64;
   private static readonly DITHER_PATCH_CACHE_TTL_MS = 5 * 60 * 1000;
   private static readonly OVERLAY_COMPLEXITY_CACHE_MAX_ENTRIES = 96;

@@ -24,8 +24,8 @@ import { ResultPoint } from './result-types';
  */
 export class DetectorResult {
   constructor(
-    private bits: BitMatrix,
-    private points: ResultPoint[]
+    private readonly bits: BitMatrix,
+    private readonly points: ResultPoint[]
   ) {}
 
   getBits(): BitMatrix {
@@ -43,7 +43,7 @@ export class DetectorResult {
 export class Detector {
   private resultPointCallback?: (point: ResultPoint) => void;
 
-  constructor(private image: BitMatrix) {}
+  constructor(private readonly image: BitMatrix) {}
 
   detect(hints?: Map<number, any>): DetectorResult {
     this.resultPointCallback = hints?.get(9); // DecodeHintType.NEED_RESULT_POINT_CALLBACK
