@@ -39,7 +39,7 @@ export const ECC_LEVEL_MAP: Record<number, ECCLevel> = {
 
 /** QR encoding mode indicators (4-bit) */
 export const QRMode = {
-  MODE_NUMBER: 1 << 0, // 0001 - Numeric
+  MODE_NUMBER: 1, // 0001 - Numeric
   MODE_ALPHA_NUM: 1 << 1, // 0010 - Alphanumeric
   MODE_8BIT_BYTE: 1 << 2, // 0100 - Byte
   MODE_KANJI: 1 << 3, // 1000 - Kanji

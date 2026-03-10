@@ -435,7 +435,6 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
                   style={simulationStyles}
                   title={t('preview.qrCodePreview')}
                   aria-label={t('preview.qrCodePreview', 'QR code preview')}
-                  role="img"
                 />
                 {/* Noise overlay canvas - positioned over the QR canvas */}
                 {qa.simulateNoise > 0 && (

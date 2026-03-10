@@ -252,9 +252,7 @@ export function sharpen(imageData: ImageData, amount: number = 1): ImageData {
 
 export function blur(imageData: ImageData, radius: number = 1): ImageData {
   const size = 2 * radius + 1;
-  const kernel = Array(size)
-    .fill(null)
-    .map(() => Array(size).fill(1));
+  const kernel = new Array(size).fill(null).map(() => new Array(size).fill(1));
   return convolve(imageData, kernel);
 }
 

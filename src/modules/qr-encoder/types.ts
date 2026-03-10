@@ -9,7 +9,7 @@ const _log = createLogger('ENCODER');
 
 // Mode indicators (4-bit)
 export const QRMode = {
-  MODE_NUMBER: 1 << 0, // 0001
+  MODE_NUMBER: 1, // 0001
   MODE_ALPHA_NUM: 1 << 1, // 0010
   MODE_8BIT_BYTE: 1 << 2, // 0100
   MODE_KANJI: 1 << 3, // 1000

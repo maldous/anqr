@@ -901,7 +901,7 @@ function useQRGenerator(): UseQRGeneratorResult {
 
     // Check each character in the content
     for (let i = 0; i < rawContent.length; i++) {
-      const charCode = rawContent.charCodeAt(i);
+      const charCode = rawContent.codePointAt(i)!;
 
       // Skip characters within Latin-1 range (0-255)
       if (charCode <= 255) continue;

@@ -914,7 +914,7 @@ export const MIN_ECC_HEADROOM_BYTES = 2;
 export function hashStringToSeed(str: string): number {
   let hash = 5381;
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+    hash = ((hash << 5) + hash) ^ str.codePointAt(i)!;
   }
   return hash >>> 0; // Convert to unsigned 32-bit
 }

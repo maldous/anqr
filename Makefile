@@ -1142,6 +1142,14 @@ sonar:
 sonar-report:
 	@bash ./scripts/sonar-export.sh
 
+SONAR_CLI := /home/user/.local/share/sonarqube-cli/bin/sonar
+
+sonar\:issues:
+	@$(SONAR_CLI) list issues -p anqr --page-size 500
+
+sonar\:issues\:reliability:
+	@curl -sS -u "$(SONAR_TOKEN):" '$(SONAR_HOST_URL)/api/issues/search?componentKeys=anqr&resolved=false&impactSoftwareQualities=RELIABILITY&ps=500' | jq '{total, issues: [.issues[] | {rule, severity: (.impacts[] | select(.softwareQuality=="RELIABILITY") | .severity), file: (.component | split(":")[1]), line, message}]}'
+
 # ============================================
 # UI Testing (Playwright)
 # ============================================

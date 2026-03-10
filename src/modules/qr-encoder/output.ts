@@ -32,7 +32,7 @@ export function byteArrayOutputStream() {
 
     writeString: (s: string): void => {
       for (let i = 0; i < s.length; i += 1) {
-        _bytes.push(s.charCodeAt(i) & 0xff);
+        _bytes.push(s.codePointAt(i)! & 0xff);
       }
     },
 
@@ -78,7 +78,7 @@ export function base64EncodeOutputStream() {
   };
 
   const writeEncoded = (b: number): void => {
-    _base64 += String.fromCharCode(encode(b & 0x3f));
+    _base64 += String.fromCodePoint(encode(b & 0x3f));
   };
 
   return {
@@ -176,10 +176,10 @@ export function gifImage(width: number, height: number) {
     const table = lzwTable();
 
     for (let i = 0; i < clearCode; i += 1) {
-      table.add(String.fromCharCode(i));
+      table.add(String.fromCodePoint(i));
     }
-    table.add(String.fromCharCode(clearCode));
-    table.add(String.fromCharCode(endCode));
+    table.add(String.fromCodePoint(clearCode));
+    table.add(String.fromCodePoint(endCode));
 
     const byteOut = byteArrayOutputStream();
     const bitOut = bitOutputStream(byteOut);
@@ -189,11 +189,11 @@ export function gifImage(width: number, height: number) {
 
     let dataIndex = 0;
 
-    let s = String.fromCharCode(_data[dataIndex]);
+    let s = String.fromCodePoint(_data[dataIndex]);
     dataIndex += 1;
 
     while (dataIndex < _data.length) {
-      const c = String.fromCharCode(_data[dataIndex]);
+      const c = String.fromCodePoint(_data[dataIndex]);
       dataIndex += 1;
 
       if (table.contains(s + c)) {

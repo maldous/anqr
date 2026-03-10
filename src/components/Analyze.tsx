@@ -427,7 +427,7 @@ function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join(' ');
       const ascii = Array.from(slice)
-        .map((b) => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.'))
+        .map((b) => (b >= 32 && b <= 126 ? String.fromCodePoint(b) : '.'))
         .join('');
       rows.push({
         offset: i.toString(16).padStart(4, '0'),
@@ -450,7 +450,7 @@ function HexDumpView({ bytes, maxRows = 16 }: HexDumpViewProps) {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join(' ');
       const ascii = Array.from(slice)
-        .map((b) => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.'))
+        .map((b) => (b >= 32 && b <= 126 ? String.fromCodePoint(b) : '.'))
         .join('');
       rows.push({
         offset: i.toString(16).padStart(4, '0'),
@@ -1090,7 +1090,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           const chunk = 0x8000;
           for (let i = 0; i < bytes.length; i += chunk) {
             const part = bytes.slice(i, i + chunk);
-            s += String.fromCharCode(...Array.from(part));
+            s += String.fromCodePoint(...Array.from(part));
           }
           return { kind: 'bytes' as const, data: s };
         }
@@ -1103,7 +1103,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
           ? `[bytes] len=${encoderInput.data.length}, first32codes=[${encoderInput.data
               .slice(0, 32)
               .split('')
-              .map((c) => c.charCodeAt(0))
+              .map((c) => c.codePointAt(0)!)
               .join(',')}]`
           : `[string] len=${encoderInput.data.length}, first32="${encoderInput.data.slice(0, 32)}"`;
       log.debug('STEP 2 - Encoder input', {
@@ -1148,7 +1148,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
       if (needsIdentityBytes) {
         setStringToBytes((s: string) => {
           const out: number[] = new Array(s.length);
-          for (let i = 0; i < s.length; i += 1) out[i] = s.charCodeAt(i) & 0xff;
+          for (let i = 0; i < s.length; i += 1) out[i] = s.codePointAt(i)! & 0xff;
           return out;
         });
       }

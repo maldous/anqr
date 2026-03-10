@@ -124,8 +124,8 @@ function validateByteExactPrefix(
 
   // Byte-exact comparison for the protected prefix - THIS IS THE HARD GATE
   for (let i = 0; i < originalData.length; i++) {
-    const expectedByte = originalData.charCodeAt(i);
-    const actualByte = decoded.charCodeAt(i);
+    const expectedByte = originalData.codePointAt(i)!;
+    const actualByte = decoded.codePointAt(i)!;
 
     if (expectedByte !== actualByte) {
       return {
@@ -151,7 +151,7 @@ function validateByteExactPrefix(
       let invalidCount = 0;
       for (let i = 0; i < suffix.length; i++) {
         const char = suffix[i];
-        const charCode = suffix.charCodeAt(i);
+        const charCode = suffix.codePointAt(i)!;
         // Check if character is outside printable ASCII or not URL-safe
         if (
           charCode < 32 ||
@@ -612,10 +612,10 @@ export function binarySearchMaxVectors(
     // Generate hex dump of first 32 bytes for comparison
     const decoded = baseScan.data || '';
     const expectedHexDump = Array.from(expectedData.slice(0, 32))
-      .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
+      .map((c) => c.codePointAt(0)!.toString(16).padStart(2, '0'))
       .join(' ');
     const decodedHexDump = Array.from(decoded.slice(0, 32))
-      .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
+      .map((c) => c.codePointAt(0)!.toString(16).padStart(2, '0'))
       .join(' ');
 
     log.warn('Base matrix (0 vectors) validation FAILED - encoding bug!', {

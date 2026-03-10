@@ -124,7 +124,8 @@ export class BitMatrixParser {
     let bitsRead = 0;
     const dimension = this.bitMatrix.getHeight();
 
-    for (let j = dimension - 1; j > 0; j -= 2) {
+    let j = dimension - 1;
+    while (j > 0) {
       if (j === 6) j--;
       for (let count = 0; count < dimension; count++) {
         const i = readingUp ? dimension - 1 - count : count;
@@ -144,6 +145,7 @@ export class BitMatrixParser {
         }
       }
       readingUp = !readingUp;
+      j -= 2;
     }
     if (resultOffset !== version.getTotalCodewords()) {
       throw new FormatException();
@@ -409,22 +411,22 @@ export class QRDecoder {
       if (bits.available() < 10) throw new FormatException();
       const threeDigitsBits = bits.readBits(10);
       if (threeDigitsBits >= 1000) throw new FormatException();
-      result.append(String.fromCharCode(48 + Math.floor(threeDigitsBits / 100)));
-      result.append(String.fromCharCode(48 + Math.floor((threeDigitsBits / 10) % 10)));
-      result.append(String.fromCharCode(48 + (threeDigitsBits % 10)));
+      result.append(String.fromCodePoint(48 + Math.floor(threeDigitsBits / 100)));
+      result.append(String.fromCodePoint(48 + Math.floor((threeDigitsBits / 10) % 10)));
+      result.append(String.fromCodePoint(48 + (threeDigitsBits % 10)));
       count -= 3;
     }
     if (count === 2) {
       if (bits.available() < 7) throw new FormatException();
       const twoDigitsBits = bits.readBits(7);
       if (twoDigitsBits >= 100) throw new FormatException();
-      result.append(String.fromCharCode(48 + Math.floor(twoDigitsBits / 10)));
-      result.append(String.fromCharCode(48 + (twoDigitsBits % 10)));
+      result.append(String.fromCodePoint(48 + Math.floor(twoDigitsBits / 10)));
+      result.append(String.fromCodePoint(48 + (twoDigitsBits % 10)));
     } else if (count === 1) {
       if (bits.available() < 4) throw new FormatException();
       const digitBits = bits.readBits(4);
       if (digitBits >= 10) throw new FormatException();
-      result.append(String.fromCharCode(48 + digitBits));
+      result.append(String.fromCodePoint(48 + digitBits));
     }
   }
 
@@ -454,7 +456,7 @@ export class QRDecoder {
           if (i < result.length() - 1 && result.charAt(i + 1) === '%') {
             result.deleteCharAt(i + 1);
           } else {
-            result.setCharAt(i, String.fromCharCode(0x1d));
+            result.setCharAt(i, String.fromCodePoint(0x1d));
           }
         }
       }

@@ -311,7 +311,7 @@ export class StringBuilder {
     } else if (this.encoding) {
       this.value += StringUtils.castAsNonUtf8Char(s, this.encoding);
     } else {
-      this.value += String.fromCharCode(s);
+      this.value += String.fromCodePoint(s);
     }
     return this;
   }
@@ -522,7 +522,7 @@ export class StringEncoding {
     const charList = encodedURIstring.split('');
     const uintArray: number[] = [];
     for (let i = 0; i < charList.length; i++) {
-      uintArray.push(charList[i].charCodeAt(0));
+      uintArray.push(charList[i].codePointAt(0)!);
     }
     return new Uint8Array(uintArray);
   }

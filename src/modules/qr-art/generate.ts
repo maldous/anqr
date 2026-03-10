@@ -107,7 +107,7 @@ function arraysEqual(a: Uint8Array, b: Uint8Array): boolean {
 function stringToBytes(str: string): Uint8Array {
   const bytes = new Uint8Array(str.length);
   for (let i = 0; i < str.length; i++) {
-    bytes[i] = str.charCodeAt(i) & 0xff;
+    bytes[i] = str.codePointAt(i)! & 0xff;
   }
   return bytes;
 }
@@ -162,11 +162,11 @@ function _findFirstMismatch(
 ): { index: number; expected: number; actual: number } | null {
   const len = Math.min(protectedLength, expected.length, actual.length);
   for (let i = 0; i < len; i++) {
-    if (expected.charCodeAt(i) !== actual.charCodeAt(i)) {
+    if (expected.codePointAt(i) !== actual.codePointAt(i)!) {
       return {
         index: i,
-        expected: expected.charCodeAt(i),
-        actual: actual.charCodeAt(i),
+        expected: expected.codePointAt(i)!,
+        actual: actual.codePointAt(i)!,
       };
     }
   }
@@ -174,7 +174,7 @@ function _findFirstMismatch(
   if (actual.length < protectedLength) {
     return {
       index: actual.length,
-      expected: expected.charCodeAt(actual.length) || 0,
+      expected: expected.codePointAt(actual.length)! || 0,
       actual: -1, // Missing byte
     };
   }
@@ -221,8 +221,8 @@ function validateOriginalDataPreserved(
 
   // Byte-exact comparison for the protected prefix
   for (let i = 0; i < originalData.length; i++) {
-    const expectedByte = originalData.charCodeAt(i);
-    const actualByte = decoded.charCodeAt(i);
+    const expectedByte = originalData.codePointAt(i)!;
+    const actualByte = decoded.codePointAt(i)!;
 
     if (expectedByte !== actualByte) {
       return {
@@ -232,8 +232,8 @@ function validateOriginalDataPreserved(
           index: i,
           expectedByte,
           actualByte,
-          expectedChar: String.fromCharCode(expectedByte),
-          actualChar: String.fromCharCode(actualByte),
+          expectedChar: String.fromCodePoint(expectedByte),
+          actualChar: String.fromCodePoint(actualByte),
         },
       };
     }
@@ -271,8 +271,8 @@ function validateDecodedPrefix(
   }
 
   for (let i = 0; i < originalData.length; i++) {
-    const expectedByte = originalData.charCodeAt(i);
-    const actualByte = decoded.charCodeAt(i);
+    const expectedByte = originalData.codePointAt(i)!;
+    const actualByte = decoded.codePointAt(i)!;
     if (expectedByte !== actualByte) {
       return semanticFailure(
         'BYTE_MISMATCH',
@@ -1100,7 +1100,7 @@ function generateBaseQR(
     dataPreview: data.length > 80 ? `${data.slice(0, 80)}...` : data,
     dataHash: data
       .split('')
-      .reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0)
+      .reduce((a, c) => Math.trunc((a << 5) - a + (c.codePointAt(0) ?? 0)), 0)
       .toString(16),
     version,
     ecc,
@@ -2113,7 +2113,8 @@ function placeDataWithZigzag(
   let bitIndex = 7;
   let byteIndex = 0;
 
-  for (let col = moduleCount - 1; col > 0; col -= 2) {
+  let col = moduleCount - 1;
+  while (col > 0) {
     if (col === 6) col -= 1;
 
     while (true) {
@@ -2149,6 +2150,7 @@ function placeDataWithZigzag(
         break;
       }
     }
+    col -= 2;
   }
 }
 

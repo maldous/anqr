@@ -135,13 +135,15 @@ export class FinderPatternFinder {
 
     let done = false;
     const stateCount = new Int32Array(5);
-    for (let i = iSkip - 1; i < maxI && !done; i += iSkip) {
+    let i = iSkip - 1;
+    while (i < maxI && !done) {
       const rowResult = this.processFinderRow(image, i, maxJ, stateCount, iSkip);
       iSkip = rowResult.iSkip;
       done = rowResult.done;
       if (rowResult.rowJump > 0) {
         i += rowResult.rowJump;
       }
+      i += iSkip;
     }
 
     const patternInfo = this.selectBestPatterns();
@@ -160,7 +162,8 @@ export class FinderPatternFinder {
     let currentState = 0;
     let done = false;
     let rowJump = 0;
-    for (let j = 0; j < maxJ; j++) {
+    let j = 0;
+    while (j < maxJ) {
       if (image.get(j, i)) {
         if ((currentState & 1) === 1) currentState++;
         stateCount[currentState]++;
@@ -183,6 +186,7 @@ export class FinderPatternFinder {
               } else {
                 FinderPatternFinder.doShiftCounts2(stateCount);
                 currentState = 3;
+                j++;
                 continue;
               }
               currentState = 0;
@@ -198,6 +202,7 @@ export class FinderPatternFinder {
           stateCount[currentState]++;
         }
       }
+      j++;
     }
     if (FinderPatternFinder.foundPatternCross(stateCount)) {
       const confirmed = this.handlePossibleCenter(stateCount, i, maxJ);

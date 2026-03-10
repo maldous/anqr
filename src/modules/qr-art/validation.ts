@@ -63,7 +63,7 @@ export function validateSuffixCharset(suffix: string): {
 
   for (let i = 0; i < toValidate.length; i++) {
     const char = toValidate[i];
-    const charCode = toValidate.charCodeAt(i);
+    const charCode = toValidate.codePointAt(i)!;
 
     // Check if character is in valid set
     if (!VALID_SUFFIX_CHARS.has(char)) {
@@ -93,7 +93,7 @@ export function validateNumericSuffix(suffix: string): {
 
   for (let i = 0; i < toValidate.length; i++) {
     const char = toValidate[i];
-    const charCode = toValidate.charCodeAt(i);
+    const charCode = toValidate.codePointAt(i)!;
     if (char < '0' || char > '9') {
       return {
         valid: false,

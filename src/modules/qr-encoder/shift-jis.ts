@@ -529,13 +529,17 @@ export function createShiftJISEncoder(): (s: string) => number[] {
   return (s: string): number[] => {
     const bytes: number[] = [];
 
-    for (let i = 0; i < s.length; i++) {
+    let i = 0;
+    while (i < s.length) {
       const codePoint = s.codePointAt(i);
-      if (codePoint === undefined) continue;
+      if (codePoint === undefined) {
+        i++;
+        continue;
+      }
 
       // Handle surrogate pairs for characters outside BMP
       if (codePoint > 0xffff) {
-        i++; // Skip the low surrogate
+        i += 2; // Skip the surrogate pair
         // Most Shift-JIS characters are in BMP, use replacement for others
         bytes.push(0x3f);
         continue;
@@ -543,6 +547,7 @@ export function createShiftJISEncoder(): (s: string) => number[] {
 
       const sjisBytes = unicodeToShiftJIS(codePoint);
       bytes.push(...sjisBytes);
+      i++;
     }
 
     return bytes;
@@ -555,14 +560,18 @@ export function createShiftJISEncoder(): (s: string) => number[] {
  * @returns true if all characters have Shift-JIS mappings
  */
 export function canEncodeAsShiftJIS(s: string): boolean {
-  for (let i = 0; i < s.length; i++) {
+  let i = 0;
+  while (i < s.length) {
     const codePoint = s.codePointAt(i);
-    if (codePoint === undefined) continue;
-    if (codePoint > 0xffff) {
+    if (codePoint === undefined) {
       i++;
+      continue;
+    }
+    if (codePoint > 0xffff) {
       return false;
     }
     if (lookupShiftJIS(codePoint) === null) return false;
+    i++;
   }
   return true;
 }

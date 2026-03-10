@@ -89,12 +89,15 @@ export function parseVCardPayload(payload: string): Record<string, string | stri
   const emails: string[] = [];
   const addresses: string[] = [];
 
-  for (let i = 0; i < lines.length; i++) {
+  let i = 0;
+  while (i < lines.length) {
     let line = lines[i];
     // Handle line folding (continuation lines start with space or tab)
     while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
-      line += lines[++i].slice(1);
+      i++;
+      line += lines[i].slice(1);
     }
+    i++;
 
     const colonIdx = line.indexOf(':');
     if (colonIdx === -1) continue;
@@ -697,12 +700,15 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
     return text;
   };
 
-  for (let i = 0; i < lines.length; i++) {
+  let i = 0;
+  while (i < lines.length) {
     let line = lines[i];
     // Handle line folding
     while (i + 1 < lines.length && /^[ \t]/.test(lines[i + 1])) {
-      line += lines[++i].slice(1);
+      i++;
+      line += lines[i].slice(1);
     }
+    i++;
 
     const colonIdx = line.indexOf(':');
     if (colonIdx === -1) continue;

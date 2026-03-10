@@ -29,7 +29,7 @@ export function qrNumber(data: string): QRDataSegment {
 
   const charToNum = (c: string): number => {
     if ('0' <= c && c <= '9') {
-      return c.charCodeAt(0) - '0'.charCodeAt(0);
+      return c.codePointAt(0)! - '0'.codePointAt(0)!;
     }
     throw new Error(`illegal char :${c}`);
   };
@@ -65,9 +65,9 @@ export function qrAlphaNum(data: string): QRDataSegment {
 
   const getCode = (c: string): number => {
     if ('0' <= c && c <= '9') {
-      return c.charCodeAt(0) - '0'.charCodeAt(0);
+      return c.codePointAt(0)! - '0'.codePointAt(0)!;
     } else if ('A' <= c && c <= 'Z') {
-      return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      return c.codePointAt(0)! - 'A'.codePointAt(0)! + 10;
     } else {
       switch (c) {
         case '\u0020':
@@ -147,7 +147,7 @@ export function qrKanji(data: string): QRDataSegment {
 
   return {
     getMode: () => _mode,
-    getLength: () => ~~(_bytes.length / 2),
+    getLength: () => Math.trunc(_bytes.length / 2),
     write: (buffer: QRBitBuffer): void => {
       let i = 0;
 

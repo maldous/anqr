@@ -166,8 +166,8 @@ export function mapImageToTargetsSupersampled(
     if (!ctx) {
       // Return empty targets if we can't get context
       return {
-        targets: Array.from({ length: moduleCount }, () => Array(moduleCount).fill(false)),
-        importance: Array.from({ length: moduleCount }, () => Array(moduleCount).fill(0)),
+        targets: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(false)),
+        importance: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0)),
       };
     }
     imageData = ctx.getImageData(0, 0, image.width, image.height);
@@ -184,8 +184,8 @@ export function mapImageToTargetsSupersampled(
   } else {
     // Return empty targets if input is neither canvas-like nor imageData-like.
     return {
-      targets: Array.from({ length: moduleCount }, () => Array(moduleCount).fill(false)),
-      importance: Array.from({ length: moduleCount }, () => Array(moduleCount).fill(0)),
+      targets: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(false)),
+      importance: Array.from({ length: moduleCount }, () => new Array(moduleCount).fill(0)),
     };
   }
 

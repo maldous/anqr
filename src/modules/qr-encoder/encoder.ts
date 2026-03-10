@@ -245,7 +245,8 @@ export function qrcode(
     let byteIndex = 0;
     const maskFunc = getMaskFunction(maskPattern);
 
-    for (let col = _moduleCount - 1; col > 0; col -= 2) {
+    let col = _moduleCount - 1;
+    while (col > 0) {
       if (col === 6) col -= 1;
 
       while (true) {
@@ -281,6 +282,7 @@ export function qrcode(
           break;
         }
       }
+      col -= 2;
     }
   };
 
@@ -485,7 +487,7 @@ export function qrcode(
     }
 
     if (size % 2 && marginVal > 0) {
-      return ascii.substring(0, ascii.length - size - 1) + Array(size + 1).join('▀');
+      return ascii.substring(0, ascii.length - size - 1) + new Array(size + 1).join('▀');
     }
 
     return ascii.substring(0, ascii.length - 1);
@@ -711,8 +713,8 @@ export function qrcode(
       const min = marginVal;
       const max = size - marginVal;
 
-      const white = Array(cs + 1).join('██');
-      const black = Array(cs + 1).join('  ');
+      const white = new Array(cs + 1).join('██');
+      const black = new Array(cs + 1).join('  ');
 
       let ascii = '';
       for (let y = 0; y < size; y += 1) {

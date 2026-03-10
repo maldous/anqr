@@ -286,11 +286,9 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     let sum = 0;
     let min = 0xff;
     let max = 0;
-    for (
-      let yy = 0, offset = yoffset * width + xoffset;
-      yy < HybridBinarizer.BLOCK_SIZE;
-      yy++, offset += width
-    ) {
+    let yy = 0;
+    let offset = yoffset * width + xoffset;
+    while (yy < HybridBinarizer.BLOCK_SIZE) {
       for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
         const pixel = luminances[offset + xx] & 0xff;
         sum += pixel;
@@ -298,12 +296,19 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
         if (pixel > max) max = pixel;
       }
       if (max - min > HybridBinarizer.MIN_DYNAMIC_RANGE) {
-        for (yy++, offset += width; yy < HybridBinarizer.BLOCK_SIZE; yy++, offset += width) {
+        yy++;
+        offset += width;
+        while (yy < HybridBinarizer.BLOCK_SIZE) {
           for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
             sum += luminances[offset + xx] & 0xff;
           }
+          yy++;
+          offset += width;
         }
+        break;
       }
+      yy++;
+      offset += width;
     }
     return { sum, min, max };
   }

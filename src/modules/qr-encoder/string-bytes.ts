@@ -11,7 +11,7 @@ const _log = createLogger('ENCODER');
 let _stringToBytes = (s: string): number[] => {
   const bytes: number[] = [];
   for (let i = 0; i < s.length; i += 1) {
-    const c = s.charCodeAt(i);
+    const c = s.codePointAt(i)!;
     bytes.push(c & 0xff);
   }
   return bytes;
@@ -46,7 +46,7 @@ export function resetStringToBytes(): void {
   _stringToBytes = (s: string): number[] => {
     const bytes: number[] = [];
     for (let i = 0; i < s.length; i += 1) {
-      const c = s.charCodeAt(i);
+      const c = s.codePointAt(i)!;
       bytes.push(c & 0xff);
     }
     return bytes;
@@ -98,7 +98,7 @@ function base64DecodeInputStream(str: string) {
           continue;
         }
 
-        _buffer = (_buffer << 6) | decode(c.charCodeAt(0));
+        _buffer = (_buffer << 6) | decode(c.codePointAt(0)!);
         _buflen += 6;
       }
 
@@ -137,7 +137,7 @@ export function createStringToBytes(
     const b1 = read();
     const b2 = read();
     const b3 = read();
-    const k = String.fromCharCode((b0 << 8) | b1);
+    const k = String.fromCodePoint((b0 << 8) | b1);
     const v = (b2 << 8) | b3;
     unicodeMap[k] = v;
     count += 1;
@@ -147,12 +147,12 @@ export function createStringToBytes(
     throw new Error(`${count} != ${numChars}`);
   }
 
-  const unknownChar = '?'.charCodeAt(0);
+  const unknownChar = '?'.codePointAt(0)!;
 
   return (s: string): number[] => {
     const bytes: number[] = [];
     for (let i = 0; i < s.length; i += 1) {
-      const c = s.charCodeAt(i);
+      const c = s.codePointAt(i)!;
       if (c < 128) {
         bytes.push(c);
       } else {
@@ -181,7 +181,7 @@ export function createStringToBytes(
 export function stringToBytes(s: string): number[] {
   const bytes: number[] = [];
   for (let i = 0; i < s.length; i += 1) {
-    const c = s.charCodeAt(i);
+    const c = s.codePointAt(i)!;
     bytes.push(c & 0xff);
   }
   return bytes;

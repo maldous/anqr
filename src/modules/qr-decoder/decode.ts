@@ -616,7 +616,8 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
 
   // Start from bottom-right, move up in two-column pairs
   let up = true;
-  for (let col = moduleCount - 1; col >= 1; col -= 2) {
+  let col = moduleCount - 1;
+  while (col >= 1) {
     // Skip the timing pattern column
     if (col === 6) col = 5;
 
@@ -645,6 +646,7 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
       }
     }
     up = !up;
+    col -= 2;
   }
 
   qrDecoderLog.trace('codewords: Extracted codewords', {
@@ -876,7 +878,7 @@ function decodeSegmentData(bits: BitStream, mode: number, charCount: number): Se
         });
       }
       const outBytes: number[] = [];
-      for (let i = 0; i < text.length; i++) outBytes.push(text.charCodeAt(i) & 0xff);
+      for (let i = 0; i < text.length; i++) outBytes.push(text.codePointAt(i)! & 0xff);
       return { text, rawBytes: [], outBytes, modeTag: 'numeric', valid: text.length === charCount };
     }
     case MODE_ALPHANUMERIC: {
@@ -888,7 +890,7 @@ function decodeSegmentData(bits: BitStream, mode: number, charCount: number): Se
         });
       }
       const outBytes: number[] = [];
-      for (let i = 0; i < text.length; i++) outBytes.push(text.charCodeAt(i) & 0xff);
+      for (let i = 0; i < text.length; i++) outBytes.push(text.codePointAt(i)! & 0xff);
       return {
         text,
         rawBytes: [],
@@ -1280,14 +1282,14 @@ function decodeByteDetailed(bits: BitStream, count: number): { text: string; byt
 
   // If decoder had to replace invalid sequences, prefer a raw latin1 view.
   if (utf8Text.includes('�')) {
-    const latin1 = String.fromCharCode(...bytes);
+    const latin1 = String.fromCodePoint(...bytes);
     return { text: latin1, bytes };
   }
 
   if (utf8Text.length > 0) return { text: utf8Text, bytes };
 
   // Fall back to ISO-8859-1
-  return { text: String.fromCharCode(...bytes), bytes };
+  return { text: String.fromCodePoint(...bytes), bytes };
 }
 
 /**
@@ -1341,7 +1343,7 @@ function _decodeByte(bits: BitStream, count: number): string {
     return new TextDecoder('utf-8').decode(new Uint8Array(bytes));
   } catch {
     // Fall back to ISO-8859-1
-    return String.fromCharCode(...bytes);
+    return String.fromCodePoint(...bytes);
   }
 }
 

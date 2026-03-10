@@ -243,7 +243,8 @@ export function buildBitPixelMap(
   let inc = -1; // -1 = moving up, +1 = moving down
   let row = moduleCount - 1;
 
-  for (let col = moduleCount - 1; col > 0; col -= 2) {
+  let col = moduleCount - 1;
+  while (col > 0) {
     // Skip column 6 (timing pattern)
     if (col === 6) col -= 1;
 
@@ -287,6 +288,7 @@ export function buildBitPixelMap(
         break;
       }
     }
+    col -= 2;
   }
 
   log.debug('Built bit-pixel map', {

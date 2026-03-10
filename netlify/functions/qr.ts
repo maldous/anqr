@@ -1832,9 +1832,7 @@ function blurServer(
 ): Uint8ClampedArray {
   if (radius <= 0) return data;
   const size = 2 * Math.min(radius, 10) + 1; // Cap radius at 10 for performance
-  const kernel = Array(size)
-    .fill(null)
-    .map(() => Array(size).fill(1));
+  const kernel = new Array(size).fill(null).map(() => new Array(size).fill(1));
   return convolveServer(data, width, height, kernel);
 }
 
