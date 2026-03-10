@@ -784,19 +784,18 @@ export function OverlaySection() {
                 }
                 {...(overlay.cropEnabled && {
                   tabIndex: 0,
+                  onMouseDown: (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    beginDragAtPoint(e.clientX, e.clientY);
+                  },
+                  onMouseUp: finishDrag,
+                  onMouseLeave: finishDrag,
+                  onMouseMove: handleCropDrag,
+                  onTouchStart: handleTouchStart,
+                  onTouchMove: handleTouchMove,
+                  onTouchEnd: handleTouchEnd,
                 })}
                 className="relative w-full aspect-square bg-muted/30 rounded-lg overflow-hidden border cursor-crosshair touch-none focus:outline-none focus:ring-2 focus:ring-ring"
-                onMouseDown={(e) => {
-                  if (!overlay.cropEnabled) return;
-                  e.preventDefault();
-                  beginDragAtPoint(e.clientX, e.clientY);
-                }}
-                onMouseUp={finishDrag}
-                onMouseLeave={finishDrag}
-                onMouseMove={handleCropDrag}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
               >
                 <img
                   src={imagePreview}
