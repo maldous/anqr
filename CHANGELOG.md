@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
+- fix: reduce semantic validation complexity in qr-art generator
 - fix: add CI reliability gate criteria and machine-readable reporting
 - fix(workflow): keep Pending human-only by routing non-human 3B workflow paths to Todo/Rework
 - fix(ops): include explicit process exit reasons in structured codex startup failure diagnostics

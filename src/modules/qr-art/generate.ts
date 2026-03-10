@@ -241,6 +241,94 @@ function validateOriginalDataPreserved(
   return { valid: true };
 }
 
+function semanticFailure(
+  reason: RejectionReason,
+  description: string,
+  details?: SemanticValidationResult['details']
+): SemanticValidationResult {
+  return {
+    valid: false,
+    reason,
+    description,
+    details,
+  };
+}
+
+function validateDecodedPrefix(
+  decoded: string,
+  originalData: string
+): SemanticValidationResult | null {
+  if (decoded.length < originalData.length) {
+    return semanticFailure(
+      'LENGTH_TOO_SHORT',
+      `Decoded length ${decoded.length} < original length ${originalData.length}`,
+      {
+        expectedLength: originalData.length,
+        actualLength: decoded.length,
+      }
+    );
+  }
+
+  for (let i = 0; i < originalData.length; i++) {
+    const expectedByte = originalData.charCodeAt(i);
+    const actualByte = decoded.charCodeAt(i);
+    if (expectedByte !== actualByte) {
+      return semanticFailure(
+        'BYTE_MISMATCH',
+        `Byte mismatch at index ${i}: expected 0x${expectedByte.toString(16)}, got 0x${actualByte.toString(16)}`,
+        {
+          mismatchIndex: i,
+          expectedByte,
+          actualByte,
+        }
+      );
+    }
+  }
+
+  return null;
+}
+
+function validateSuffixForSemanticGate(
+  decoded: string,
+  originalDataLength: number,
+  expectedSuffix: string | undefined,
+  strictSuffix: boolean,
+  suffixMode: 'byte' | 'numeric'
+): SemanticValidationResult | null {
+  if (expectedSuffix === undefined || decoded.length <= originalDataLength) {
+    return null;
+  }
+
+  const actualSuffix = decoded.slice(originalDataLength);
+  const charsetValidation =
+    suffixMode === 'numeric'
+      ? validateNumericSuffix(actualSuffix)
+      : validateSuffixCharset(actualSuffix);
+
+  if (charsetValidation.valid) {
+    return null;
+  }
+
+  if (strictSuffix) {
+    return semanticFailure(
+      'SUFFIX_CHARSET_INVALID',
+      `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
+      {
+        mismatchIndex: originalDataLength + (charsetValidation.invalidCharIndex ?? 0),
+        actualByte: charsetValidation.invalidCharCode,
+      }
+    );
+  }
+
+  log.debug('Suffix charset violation (accepted - strictSuffix=false)', {
+    invalidCharIndex: charsetValidation.invalidCharIndex,
+    invalidChar: charsetValidation.invalidChar,
+    invalidCharCode: charsetValidation.invalidCharCode,
+    suffixPreview: actualSuffix.slice(0, 30),
+  });
+  return null;
+}
+
 /**
  * SEMANTIC-HARD-GATE VALIDATION
  *
@@ -288,53 +376,19 @@ function performSemanticValidation(
   const scanResult = scanFn(matrix);
 
   if (!scanResult.success) {
-    return {
-      valid: false,
-      reason: 'SCAN_FAILED',
-      description: `Scan failed: ${scanResult.error}`,
-    };
+    return semanticFailure('SCAN_FAILED', `Scan failed: ${scanResult.error}`);
   }
 
   const decoded = scanResult.data;
 
   // Step 2: Check decoded data exists and has sufficient length
   if (decoded === undefined || decoded === null) {
-    return {
-      valid: false,
-      reason: 'SCAN_FAILED',
-      description: 'Decoded data is null/undefined',
-    };
+    return semanticFailure('SCAN_FAILED', 'Decoded data is null/undefined');
   }
 
-  if (decoded.length < originalData.length) {
-    return {
-      valid: false,
-      reason: 'LENGTH_TOO_SHORT',
-      description: `Decoded length ${decoded.length} < original length ${originalData.length}`,
-      details: {
-        expectedLength: originalData.length,
-        actualLength: decoded.length,
-      },
-    };
-  }
-
-  // Step 3: Byte-exact prefix comparison
-  for (let i = 0; i < originalData.length; i++) {
-    const expectedByte = originalData.charCodeAt(i);
-    const actualByte = decoded.charCodeAt(i);
-
-    if (expectedByte !== actualByte) {
-      return {
-        valid: false,
-        reason: 'BYTE_MISMATCH',
-        description: `Byte mismatch at index ${i}: expected 0x${expectedByte.toString(16)}, got 0x${actualByte.toString(16)}`,
-        details: {
-          mismatchIndex: i,
-          expectedByte,
-          actualByte,
-        },
-      };
-    }
+  const prefixValidationError = validateDecodedPrefix(decoded, originalData);
+  if (prefixValidationError) {
+    return prefixValidationError;
   }
 
   // Step 4: Verify format info (ECC and mask)
@@ -342,60 +396,37 @@ function performSemanticValidation(
   const actualEccLevel = eccNumericToLevel(formatInfo.eccLevel);
 
   if (actualEccLevel !== expectedEcc) {
-    return {
-      valid: false,
-      reason: 'ECC_MISMATCH',
-      description: `Format ECC mismatch: expected ${expectedEcc}, got ${actualEccLevel}`,
-      details: {
+    return semanticFailure(
+      'ECC_MISMATCH',
+      `Format ECC mismatch: expected ${expectedEcc}, got ${actualEccLevel}`,
+      {
         expectedEcc,
         actualEcc: actualEccLevel,
-      },
-    };
+      }
+    );
   }
 
   if (formatInfo.mask !== expectedMask) {
-    return {
-      valid: false,
-      reason: 'MASK_MISMATCH',
-      description: `Format mask mismatch: expected ${expectedMask}, got ${formatInfo.mask}`,
-      details: {
+    return semanticFailure(
+      'MASK_MISMATCH',
+      `Format mask mismatch: expected ${expectedMask}, got ${formatInfo.mask}`,
+      {
         expectedMask,
         actualMask: formatInfo.mask,
-      },
-    };
+      }
+    );
   }
 
-  // Step 5: If suffix is expected, validate suffix charset (SOFT PENALTY unless strictSuffix=true)
-  // The suffix CAN be modified by QR-Art - that's the whole point of HYBRID mode!
-  // Non-URL-safe bytes in the suffix are expected when maximizing pixel control.
-  if (expectedSuffix !== undefined && decoded.length > originalData.length) {
-    const actualSuffix = decoded.slice(originalData.length);
-    const charsetValidation =
-      suffixMode === 'numeric'
-        ? validateNumericSuffix(actualSuffix)
-        : validateSuffixCharset(actualSuffix);
-
-    if (!charsetValidation.valid) {
-      // Only reject if strictSuffix is enabled
-      if (strictSuffix) {
-        return {
-          valid: false,
-          reason: 'SUFFIX_CHARSET_INVALID',
-          description: `Suffix contains invalid character at index ${charsetValidation.invalidCharIndex}: ${charsetValidation.invalidChar} (0x${charsetValidation.invalidCharCode?.toString(16)})`,
-          details: {
-            mismatchIndex: originalData.length + (charsetValidation.invalidCharIndex ?? 0),
-            actualByte: charsetValidation.invalidCharCode,
-          },
-        };
-      }
-      // With strictSuffix=false, we log the violation but don't reject
-      log.debug('Suffix charset violation (accepted - strictSuffix=false)', {
-        invalidCharIndex: charsetValidation.invalidCharIndex,
-        invalidChar: charsetValidation.invalidChar,
-        invalidCharCode: charsetValidation.invalidCharCode,
-        suffixPreview: actualSuffix.slice(0, 30),
-      });
-    }
+  // Step 5: Validate suffix charset (soft penalty unless strictSuffix=true).
+  const suffixValidationError = validateSuffixForSemanticGate(
+    decoded,
+    originalData.length,
+    expectedSuffix,
+    strictSuffix,
+    suffixMode
+  );
+  if (suffixValidationError) {
+    return suffixValidationError;
   }
 
   // Step 6: Verify structural validity (no extra fake segments after primary data)
@@ -406,14 +437,13 @@ function performSemanticValidation(
     const segmentModes = scanResult.segments?.map((s) => s.modeName) ?? [];
     const _invalidSegments = scanResult.segments?.filter((s) => !s.valid) ?? [];
 
-    return {
-      valid: false,
-      reason: 'EXTRA_SEGMENT',
-      description: `Extra/fake segment(s) detected after primary data (modes: ${segmentModes.join(', ')})`,
-      details: {
+    return semanticFailure(
+      'EXTRA_SEGMENT',
+      `Extra/fake segment(s) detected after primary data (modes: ${segmentModes.join(', ')})`,
+      {
         segmentCount: scanResult.segmentCount,
-      },
-    };
+      }
+    );
   }
 
   // All checks passed!
