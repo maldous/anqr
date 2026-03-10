@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+def admobAppId = System.getenv('VITE_ADMOB_APP_ID') ?: ''
+
 android {
     namespace = "link.anqr.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -29,6 +31,7 @@ android {
         
         // Resource configuration - only include necessary densities and languages
         resConfigs "en", "ar", "bn", "es", "gu", "hi", "id", "ja", "kn", "ko", "ml", "mr", "ms", "pa", "pt", "ru", "ta", "te", "th", "tl", "vi", "zh"
+        manifestPlaceholders = [ADMOB_APP_ID: admobAppId]
     }
     signingConfigs {
         release {

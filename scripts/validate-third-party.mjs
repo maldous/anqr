@@ -39,8 +39,8 @@ const SENTRY_API_DSN =
 const CLOUDFLARE_ZONE_NAME = 'anqr.link';
 const EXPECTED_CNAME_TARGET = 'anqr.netlify.app';
 const PUBLISHER_ID = 'pub-2270701384951162';
-const ADMOB_APP_ID_ANDROID = 'ca-app-pub-2270701384951162~3067761782';
-const ADMOB_APP_ID_IOS = 'ca-app-pub-2270701384951162~2718285064';
+const ADMOB_APP_ID_ANDROID = process.env.VITE_ADMOB_APP_ID || '';
+const ADMOB_APP_ID_IOS = process.env.VITE_ADMOB_IOS_APP_ID || '';
 const INDEXNOW_KEY = 'da39713d0cb0b7ec43d21f259b214605';
 const REQUEST_TIMEOUT_MS = 10_000;
 
@@ -575,13 +575,13 @@ async function checkAdsConfig() {
   // Check AdMob App ID in capacitor.config.ts
   const capConfig = readProjectFile('capacitor.config.ts');
   if (capConfig) {
-    const androidMatch = capConfig.includes(ADMOB_APP_ID_ANDROID);
-    const iosMatch = capConfig.includes(ADMOB_APP_ID_IOS);
+    const androidMatch = ADMOB_APP_ID_ANDROID ? capConfig.includes(ADMOB_APP_ID_ANDROID) : false;
+    const iosMatch = ADMOB_APP_ID_IOS ? capConfig.includes(ADMOB_APP_ID_IOS) : false;
     details.capacitor_admob = {
       exists: true,
       admob_app_id_match: androidMatch && iosMatch,
-      android: { expected: ADMOB_APP_ID_ANDROID, found: androidMatch },
-      ios: { expected: ADMOB_APP_ID_IOS, found: iosMatch },
+      android: { expected: ADMOB_APP_ID_ANDROID || '[missing VITE_ADMOB_APP_ID env]', found: androidMatch },
+      ios: { expected: ADMOB_APP_ID_IOS || '[missing VITE_ADMOB_IOS_APP_ID env]', found: iosMatch },
     };
     if (!androidMatch || !iosMatch) consistent = false;
   } else {
@@ -592,11 +592,11 @@ async function checkAdsConfig() {
   // Check GADApplicationIdentifier in iOS Info.plist
   const infoPlist = readProjectFile('ios/App/App/Info.plist');
   if (infoPlist) {
-    const gadMatch = infoPlist.includes(ADMOB_APP_ID_IOS);
+    const gadMatch = ADMOB_APP_ID_IOS ? infoPlist.includes(ADMOB_APP_ID_IOS) : false;
     details.ios_info_plist = {
       exists: true,
       gad_app_id_match: gadMatch,
-      expected: ADMOB_APP_ID_IOS,
+      expected: ADMOB_APP_ID_IOS || '[missing VITE_ADMOB_IOS_APP_ID env]',
     };
     if (!gadMatch) consistent = false;
   } else {
