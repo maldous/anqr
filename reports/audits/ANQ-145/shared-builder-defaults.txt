@@ -1,0 +1,496 @@
+   285	  return parseUrlParamsFromSearchParams(new URLSearchParams(globalThis.location.search));
+   286	}
+   287	
+   288	/**
+   289	 * Build URL parameters from a config object
+   290	 */
+   291	export function buildUrlParams(config: Partial<ShareConfig>): string {
+   292	  const params = new URLSearchParams();
+   293	
+   294	  // Required
+   295	  if (config.data) {
+   296	    params.set('data', config.data);
+   297	  }
+   298	
+   299	  // Language
+   300	  if (config.lang && config.lang !== 'en') {
+   301	    params.set('lang', config.lang);
+   302	  }
+   303	
+   304	  // QR settings
+   305	  if (config.ec && config.ec !== 'H') {
+   306	    params.set('ec', config.ec);
+   307	  }
+   308	  if (config.version && config.version !== 0) {
+   309	    params.set('v', config.version.toString());
+   310	  }
+   311	  if (config.size && config.size !== 20) {
+   312	    params.set('size', config.size.toString());
+   313	  }
+   314	  if (config.margin !== undefined && config.margin !== 4) {
+   315	    params.set('margin', config.margin.toString());
+   316	  }
+   317	  if (config.encodingMode && config.encodingMode !== 'auto') {
+   318	    params.set('enc', config.encodingMode);
+   319	  }
+   320	  if (config.maskPattern !== undefined && config.maskPattern !== 'auto') {
+   321	    params.set('mask', String(config.maskPattern));
+   322	  }
+   323	  if (config.characterEncoding && config.characterEncoding !== 'default') {
+   324	    params.set('charset', config.characterEncoding);
+   325	  }
+   326	  if (config.borderModulesExtra && config.borderModulesExtra !== 0) {
+   327	    params.set('border', config.borderModulesExtra.toString());
+   328	  }
+   329	  if (config.quietZoneMinEnforce === false) {
+   330	    params.set('qzEnforce', '0');
+   331	  }
+   332	
+   333	  // Colors
+   334	  if (config.fg && config.fg !== '#000000') {
+   335	    params.set('fg', config.fg.replace('#', ''));
+   336	  }
+   337	  if (config.bg && config.bg !== '#ffffff') {
+   338	    params.set('bg', config.bg.replace('#', ''));
+   339	  }
+   340	  if (config.transparent) {
+   341	    params.set('transparent', '1');
+   342	  }
+   343	
+   344	  // Styles
+   345	  if (config.style && config.style !== 'square') {
+   346	    params.set('style', config.style);
+   347	  }
+   348	  if (config.finder && config.finder !== 'square') {
+   349	    params.set('finder', config.finder);
+   350	  }
+   351	  if (config.alignmentStyle && config.alignmentStyle !== 'match_finder') {
+   352	    params.set('align', config.alignmentStyle);
+   353	  }
+   354	  if (config.timingStyle && config.timingStyle !== 'match_module') {
+   355	    params.set('timing', config.timingStyle);
+   356	  }
+   357	
+   358	  // Render settings
+   359	  if (config.moduleGap !== undefined && config.moduleGap !== 0) {
+   360	    params.set('gap', config.moduleGap.toString());
+   361	  }
+   362	  if (config.gapMode && config.gapMode !== 'none') {
+   363	    params.set('gapMode', config.gapMode);
+   364	  }
+   365	  if (config.cornerRadius !== undefined && config.cornerRadius !== 0) {
+   366	    params.set('radius', config.cornerRadius.toString());
+   367	  }
+   368	  if (config.gradientType && config.gradientType !== 'none') {
+   369	    params.set('grad', config.gradientType);
+   370	    if (config.gradientStops && config.gradientStops.length > 0) {
+   371	      const stopsStr = config.gradientStops
+   372	        .map((s) => `${s.color.replace('#', '')},${s.pos}`)
+   373	        .join(',');
+   374	      params.set('gradStops', stopsStr);
+   375	    }
+   376	    if (config.gradientAngle !== undefined && config.gradientAngle !== 0) {
+   377	      params.set('gradAngle', config.gradientAngle.toString());
+   378	    }
+   379	  }
+   380	  if (config.eyeOuterStyle && config.eyeOuterStyle !== 'square') {
+   381	    params.set('eyeOuter', config.eyeOuterStyle);
+   382	  }
+   383	  if (config.eyeInnerStyle && config.eyeInnerStyle !== 'square') {
+   384	    params.set('eyeInner', config.eyeInnerStyle);
+   385	  }
+   386	  if (config.eyeScale !== undefined && config.eyeScale !== 100) {
+   387	    params.set('eyeScale', config.eyeScale.toString());
+   388	  }
+   389	  if (config.frameStyle && config.frameStyle !== 'none') {
+   390	    params.set('frame', config.frameStyle);
+   391	  }
+   392	  if (config.frameText) {
+   393	    params.set('frameText', config.frameText);
+   394	  }
+   395	  if (config.dotRotation !== undefined && config.dotRotation !== 0) {
+   396	    params.set('dotRot', config.dotRotation.toString());
+   397	  }
+   398	  if (config.crispEdges === false) {
+   399	    params.set('crisp', '0');
+   400	  }
+   401	  if (config.pixelSnap && config.pixelSnap !== 'floor') {
+   402	    params.set('snap', config.pixelSnap);
+   403	  }
+   404	  if (config.perModuleColorMode && config.perModuleColorMode !== 'solid') {
+   405	    params.set('modColor', config.perModuleColorMode);
+   406	  }
+   407	  if (config.contrastGuard) {
+   408	    params.set('cGuard', '1');
+   409	  }
+   410	  if (config.minContrastRatio !== undefined && config.minContrastRatio !== 4.5) {
+   411	    params.set('minContrast', config.minContrastRatio.toString());
+   412	  }
+   413	  if (config.subpixelMode) {
+   414	    params.set('subpixel', '1');
+   415	  }
+   416	  if (config.subpixelGrid !== undefined && config.subpixelGrid !== 3) {
+   417	    params.set('spGridNum', config.subpixelGrid.toString());
+   418	  }
+   419	
+   420	  // Overlay
+   421	  if (config.overlayUrl) {
+   422	    params.set('mode', config.mode || 'dithered');
+   423	  } else if (config.mode && config.mode !== 'dithered') {
+   424	    params.set('mode', config.mode);
+   425	  }
+   426	  if (config.intensity !== undefined && config.intensity !== 100) {
+   427	    params.set('intensity', config.intensity.toString());
+   428	  }
+   429	  if (config.logoSize !== undefined && config.logoSize !== 25) {
+   430	    params.set('logoSize', config.logoSize.toString());
+   431	  }
+   432	  if (config.overlayUrl) {
+   433	    params.set('img', config.overlayUrl);
+   434	  }
+   435	  if (config.overlayType && config.overlayType !== 'static') {
+   436	    params.set('ovType', config.overlayType);
+   437	  }
+   438	  if (config.overlayFramePick && config.overlayFramePick !== 'all') {
+   439	    params.set('ovFramePick', config.overlayFramePick);
+   440	  }
+   441	  if (config.cropEnabled) {
+   442	    params.set('cropEn', '1');
+   443	  }
+   444	  if (config.cropX !== undefined && config.cropX !== 0.5) {
+   445	    params.set('cropX', config.cropX.toString());
+   446	  }
+   447	  if (config.cropY !== undefined && config.cropY !== 0.5) {
+   448	    params.set('cropY', config.cropY.toString());
+   449	  }
+   450	  if (config.cropSize !== undefined && config.cropSize !== 1) {
+   451	    params.set('cropSize', config.cropSize.toString());
+   452	  }
+   453	  if (config.gifUseFrameDelays === false) {
+   454	    params.set('gifDelays', '0');
+   455	  }
+   456	  if (config.gifMaxFps !== undefined && config.gifMaxFps !== 30) {
+   457	    params.set('gifMaxFps', config.gifMaxFps.toString());
+   458	  }
+   459	  if (config.gifDisposalHandling && config.gifDisposalHandling !== 'respect') {
+   460	    params.set('gifDispH', config.gifDisposalHandling);
+   461	  }
+   462	  if (config.fit && config.fit !== 'cover') {
+   463	    params.set('fit', config.fit);
+   464	  }
+   465	  if (config.rotate !== undefined && config.rotate !== 0) {
+   466	    params.set('rot', config.rotate.toString());
+   467	  }
+   468	  if (config.flipX) {
+   469	    params.set('flipX', '1');
+   470	  }
+   471	  if (config.flipY) {
+   472	    params.set('flipY', '1');
+   473	  }
+   474	  if (config.preserveFinders === false) {
+   475	    params.set('keepFinders', '0');
+   476	  }
+   477	  if (config.preserveTiming) {
+   478	    params.set('keepTiming', '1');
+   479	  }
+   480	  if (config.preserveAlignment) {
+   481	    params.set('keepAlign', '1');
+   482	  }
+   483	  if (config.protectFormatInfo) {
+   484	    params.set('protectFmt', '1');
+   485	  }
+   486	  if (config.protectVersionInfo) {
+   487	    params.set('protectVer', '1');
+   488	  }
+   489	  if (config.eccAwareEnabled) {
+   490	    params.set('eccAware', '1');
+   491	  }
+   492	  if (config.eccAwareRiskBudget !== undefined && config.eccAwareRiskBudget !== 50) {
+   493	    params.set('eccRisk', config.eccAwareRiskBudget.toString());
+   494	  }
+   495	  if (config.eccAwareWeightMap && config.eccAwareWeightMap !== 'distance_to_finders') {
+   496	    params.set('eccMap', config.eccAwareWeightMap);
+   497	  }
+   498	
+   499	  // Overlay preprocessing
+   500	  if (config.colorMode && config.colorMode !== 'color') {
+   501	    params.set('colorMode', config.colorMode);
+   502	  }
+   503	  if (config.brightness !== undefined && config.brightness !== 0) {
+   504	    params.set('brightness', config.brightness.toString());
+   505	  }
+   506	  if (config.contrast !== undefined && config.contrast !== 0) {
+   507	    params.set('contrast', config.contrast.toString());
+   508	  }
+   509	  if (config.gamma !== undefined && config.gamma !== 1) {
+   510	    params.set('gamma', config.gamma.toString());
+   511	  }
+   512	  if (config.saturation !== undefined && config.saturation !== 0) {
+   513	    params.set('saturation', config.saturation.toString());
+   514	  }
+   515	  if (config.hue !== undefined && config.hue !== 0) {
+   516	    params.set('hue', config.hue.toString());
+   517	  }
+   518	  if (config.blur !== undefined && config.blur !== 0) {
+   519	    params.set('blur', config.blur.toString());
+   520	  }
+   521	  if (config.sharpen !== undefined && config.sharpen !== 0) {
+   522	    params.set('sharpen', config.sharpen.toString());
+   523	  }
+   524	  if (config.posterize !== undefined && config.posterize !== 0) {
+   525	    params.set('posterize', config.posterize.toString());
+   526	  }
+   527	  if (config.threshold !== undefined && config.threshold !== 128) {
+   528	    params.set('threshold', config.threshold.toString());
+   529	  }
+   530	  if (config.edge && config.edge !== 'off') {
+   531	    params.set('edge', config.edge);
+   532	  }
+   533	  if (config.invert) {
+   534	    params.set('invert', '1');
+   535	  }
+   536	
+   537	  // Dithering
+   538	  if (config.ditherKind && config.ditherKind !== 'error_diffusion') {
+   539	    params.set('ditherKind', config.ditherKind);
+   540	  }
+   541	  if (config.diffusionKernel && config.diffusionKernel !== 'floyd_steinberg') {
+   542	    params.set('diffusionKernel', config.diffusionKernel);
+   543	  }
+   544	  if (config.ditherStrength !== undefined && config.ditherStrength !== 50) {
+   545	    params.set('ditherStrength', config.ditherStrength.toString());
+   546	  }
+   547	  if (config.finderDitherStrength !== undefined && config.finderDitherStrength !== 65) {
+   548	    params.set('finderDither', config.finderDitherStrength.toString());
+   549	  }
+   550	  if (config.blendPreservations) {
+   551	    params.set('blendPres', '1');
+   552	  }
+   553	  if (
+   554	    config.blendPreservations &&
+   555	    config.blendPreservationMode &&
+   556	    config.blendPreservationMode !== 'overlay'
+   557	  ) {
+   558	    params.set('blendPresMode', config.blendPreservationMode);
+   559	  }
+   560	  if (config.ditherSerpentine) {
+   561	    params.set('serpentine', '1');
+   562	  }
+   563	  if (config.orderedMatrix && config.orderedMatrix !== 'bayer4') {
+   564	    params.set('matrix', config.orderedMatrix);
+   565	  }
+   566	  if (config.blueNoiseTileSize !== undefined && config.blueNoiseTileSize !== 64) {
+   567	    params.set('bnTile', config.blueNoiseTileSize.toString());
+   568	  }
+   569	  if (config.blueNoiseSeed !== undefined && config.blueNoiseSeed !== 0) {
+   570	    params.set('bnSeed', config.blueNoiseSeed.toString());
+   571	  }
+   572	  if (config.colorDither && config.colorDither !== 'none') {
+   573	    params.set('colorDither', config.colorDither);
+   574	  }
+   575	
+   576	  // Subpixel
+   577	  if (config.subpixelGridSize && config.subpixelGridSize !== '3x3') {
+   578	    params.set('spGrid', config.subpixelGridSize);
+   579	  }
+   580	  if (config.subpixelCenterRule && config.subpixelCenterRule !== 'strict') {
+   581	    params.set('spCenter', config.subpixelCenterRule);
+   582	  }
+   583	  if (config.subpixelNeutralColor && config.subpixelNeutralColor !== '#808080') {
+   584	    params.set('spNeutral', config.subpixelNeutralColor.replace('#', ''));
+   585	  }
+   586	  if (config.subpixelFinderOverride && config.subpixelFinderOverride !== 'solid') {
+   587	    params.set('spFinder', config.subpixelFinderOverride);
+   588	  }
+   589	
+   590	  // Halftone
+   591	  if (config.halftoneCell && config.halftoneCell !== 'per_module') {
+   592	    params.set('htCell', config.halftoneCell);
+   593	  }
+   594	  if (config.halftoneDotShape && config.halftoneDotShape !== 'circle') {
+   595	    params.set('htDot', config.halftoneDotShape);
+   596	  }
+   597	  if (config.brightnessCurve && config.brightnessCurve !== 'linear') {
+   598	    params.set('htCurve', config.brightnessCurve);
+   599	  }
+   600	  if (config.duotoneColor1 && config.duotoneColor1 !== '#000000') {
+   601	    params.set('duo1', config.duotoneColor1.replace('#', ''));
+   602	  }
+   603	  if (config.duotoneColor2 && config.duotoneColor2 !== '#ffffff') {
+   604	    params.set('duo2', config.duotoneColor2.replace('#', ''));
+   605	  }
+   606	
+   607	  // Animation
+   608	  if (config.speed !== undefined && config.speed !== 100) {
+   609	    params.set('speed', config.speed.toString());
+   610	  }
+   611	  if (config.loop === false) {
+   612	    params.set('loop', '0');
+   613	  }
+   614	  if (config.reverse) {
+   615	    params.set('reverse', '1');
+   616	  }
+   617	  if (config.bounce) {
+   618	    params.set('bounce', '1');
+   619	  }
+   620	  if (config.startFrame !== undefined && config.startFrame !== 0) {
+   621	    params.set('startF', config.startFrame.toString());
+   622	  }
+   623	  if (config.maxFrames !== undefined && config.maxFrames !== 0) {
+   624	    params.set('maxF', config.maxFrames.toString());
+   625	  }
+   626	  if (config.frameStep !== undefined && config.frameStep !== 1) {
+   627	    params.set('stepF', config.frameStep.toString());
+   628	  }
+   629	  if (config.interpolate && config.interpolate !== 'none') {
+   630	    params.set('interp', config.interpolate);
+   631	  }
+   632	  if (config.temporalDither && config.temporalDither !== 'off') {
+   633	    params.set('tempDither', config.temporalDither);
+   634	  }
+   635	  if (config.pattern && config.pattern !== 'none') {
+   636	    params.set('animPattern', config.pattern);
+   637	  }
+   638	  if (config.target && config.target !== 'result') {
+   639	    params.set('animTarget', config.target);
+   640	  }
+   641	  if (config.waveAxis && config.waveAxis !== 'y') {
+   642	    params.set('animWaveAxis', config.waveAxis);
+   643	  }
+   644	  if (config.pattern2 && config.pattern2 !== 'none') {
+   645	    params.set('animPattern2', config.pattern2);
+   646	  }
+   647	  if (config.target2 && config.pattern2 && config.pattern2 !== 'none') {
+   648	    params.set('animTarget2', config.target2);
+   649	  }
+   650	  if (config.waveAxis2 && config.waveAxis2 !== 'x') {
+   651	    params.set('animWaveAxis2', config.waveAxis2);
+   652	  }
+   653	  if (config.moduleJitter !== undefined && config.moduleJitter !== 0) {
+   654	    params.set('jitter', config.moduleJitter.toString());
+   655	  }
+   656	  if (config.colorCycle) {
+   657	    params.set('colorCycle', '1');
+   658	  }
+   659	  if (config.seed !== undefined && config.seed !== 0) {
+   660	    params.set('seed', config.seed.toString());
+   661	  }
+   662	  if (config.easing && config.easing !== 'linear') {
+   663	    params.set('easing', config.easing);
+   664	  }
+   665	
+   666	  // Output
+   667	  if (config.width && config.width !== 400) {
+   668	    params.set('w', config.width.toString());
+   669	  }
+   670	  if (config.height && config.height !== 400) {
+   671	    params.set('h', config.height.toString());
+   672	  }
+   673	  if (config.format && config.format !== 'gif') {
+   674	    params.set('format', config.format);
+   675	  }
+   676	  if (config.quality !== undefined && config.quality !== 0.9) {
+   677	    params.set('quality', config.quality.toString());
+   678	  }
+   679	  if (config.jpegQuality !== undefined && config.jpegQuality !== 92) {
+   680	    params.set('jpegQ', config.jpegQuality.toString());
+   681	  }
+   682	  if (config.webpQuality !== undefined && config.webpQuality !== 90) {
+   683	    params.set('webpQ', config.webpQuality.toString());
+   684	  }
+   685	  if (config.gifColors !== undefined && config.gifColors !== 256) {
+   686	    params.set('gifColors', config.gifColors.toString());
+   687	  }
+   688	  if (config.filename && config.filename !== 'anqr-qrcode') {
+   689	    params.set('fname', config.filename);
+   690	  }
+   691	  if (config.gifPaletteSize !== undefined && config.gifPaletteSize !== 256) {
+   692	    params.set('gifPal', config.gifPaletteSize.toString());
+   693	  }
+   694	  if (config.gifQuantizer && config.gifQuantizer !== 'median_cut') {
+   695	    params.set('gifQuant', config.gifQuantizer);
+   696	  }
+   697	  if (config.gifDither && config.gifDither !== 'floyd') {
+   698	    params.set('gifDith', config.gifDither);
+   699	  }
+   700	  if (config.gifDisposal && config.gifDisposal !== 'restore_background') {
+   701	    params.set('gifDisp', config.gifDisposal);
+   702	  }
+   703	  if (config.svgTrueVector) {
+   704	    params.set('svgVec', '1');
+   705	  }
+   706	  if (config.dpi !== undefined && config.dpi !== 72) {
+   707	    params.set('dpi', config.dpi.toString());
+   708	  }
+   709	  if (config.includeQuietZone === false) {
+   710	    params.set('inclQz', '0');
+   711	  }
+   712	  if (config.bgOverride && config.bgOverride !== '') {
+   713	    params.set('bgOver', config.bgOverride.replace('#', ''));
+   714	  }
+   715	  if (config.gifTransparentColor && config.gifTransparentColor !== '') {
+   716	    params.set('gifTrans', config.gifTransparentColor.replace('#', ''));
+   717	  }
+   718	  if (config.svgShapePrecision && config.svgShapePrecision !== 'pixel') {
+   719	    params.set('svgPrec', config.svgShapePrecision);
+   720	  }
+   721	  if (config.svgEmbedRasterOverlay === false) {
+   722	    params.set('svgEmbed', '0');
+   723	  }
+   724	  if (config.formatExtra && config.formatExtra !== 'none') {
+   725	    params.set('fmtExtra', config.formatExtra);
+   726	  }
+   727	
+   728	  // Safety
+   729	  if (config.safetyMode && config.safetyMode !== 'off') {
+   730	    params.set('safeMode', config.safetyMode);
+   731	  }
+   732	  if (config.safetyMinModulePx !== undefined && config.safetyMinModulePx !== 2) {
+   733	    params.set('safeMinPx', config.safetyMinModulePx.toString());
+   734	  }
+   735	  if (config.safetyMinQuietZone !== undefined && config.safetyMinQuietZone !== 4) {
+   736	    params.set('safeMinQz', config.safetyMinQuietZone.toString());
+   737	  }
+   738	  if (config.lockFinders === false) {
+   739	    params.set('lockF', '0');
+   740	  }
+   741	  if (config.lockTiming === false) {
+   742	    params.set('lockT', '0');
+   743	  }
+   744	  if (config.lockAlign === false) {
+   745	    params.set('lockA', '0');
+   746	  }
+   747	  if (config.lockFormat === false) {
+   748	    params.set('lockFmt', '0');
+   749	  }
+   750	  if (config.lockVersion === false) {
+   751	    params.set('lockV', '0');
+   752	  }
+   753	
+   754	  // QA
+   755	  if (config.qaContrastCheck) {
+   756	    params.set('qaContrast', '1');
+   757	  }
+   758	  if (config.qaSimulateBlur && config.qaSimulateBlur !== 0) {
+   759	    params.set('qaBlur', config.qaSimulateBlur.toString());
+   760	  }
+   761	  if (config.qaSimulateNoise && config.qaSimulateNoise !== 0) {
+   762	    params.set('qaNoise', config.qaSimulateNoise.toString());
+   763	  }
+   764	  if (config.qaSimulateRotation && config.qaSimulateRotation !== 0) {
+   765	    params.set('qaRot', config.qaSimulateRotation.toString());
+   766	  }
+   767	  if (config.qaShowHeatmap) {
+   768	    params.set('qaHeatmap', '1');
+   769	  }
+   770	
+   771	  // Auto-tuning
+   772	  if (config.autoPickVersion === false) {
+   773	    params.set('autoVer', '0');
+   774	  }
+   775	  if (config.autoPickEcc) {
+   776	    params.set('autoEcc', '1');
+   777	  }
+   778	  if (config.autoReduceIntensity) {
+   779	    params.set('autoReduce', '1');
+   780	  }

@@ -1,0 +1,390 @@
+  2786	  // Parse all parameters with defaults
+  2787	  const sizeParam = Number.parseInt(params.get('size') || '400', 10);
+  2788	  const modulePxParam = params.get('modulePx')
+  2789	    ? Number.parseInt(params.get('modulePx')!, 10)
+  2790	    : null;
+  2791	  const widthParam = params.get('w') ? Number.parseInt(params.get('w')!, 10) : null;
+  2792	  const heightParam = params.get('h') ? Number.parseInt(params.get('h')!, 10) : null;
+  2793	
+  2794	  // Use w/h if provided, otherwise fall back to size
+  2795	  // Cap at MAX_SERVER_IMAGE_SIZE for server-side performance
+  2796	  const outputWidth = Math.min(MAX_SERVER_IMAGE_SIZE, Math.max(50, widthParam ?? sizeParam));
+  2797	  const outputHeight = Math.min(MAX_SERVER_IMAGE_SIZE, Math.max(50, heightParam ?? sizeParam));
+  2798	  // For QR generation, use the larger dimension to ensure quality
+  2799	  const size = Math.max(outputWidth, outputHeight);
+  2800	  const fg = params.get('fg') || '000000';
+  2801	  const bg = params.get('bg') || 'ffffff';
+  2802	  const ec = (params.get('ec')?.toUpperCase() || 'H') as ECCLevel;
+  2803	  const margin = Math.min(20, Math.max(0, Number.parseInt(params.get('margin') || '4', 10)));
+  2804	  const transparent = params.get('transparent') === '1';
+  2805	  const encodingMode = params.get('enc') || 'auto';
+  2806	  const version = params.get('v') ? Number.parseInt(params.get('v')!, 10) : 0;
+  2807	
+  2808	  // Mask pattern: 'auto' or 0-7
+  2809	  const maskPatternParam = params.get('mask');
+  2810	  const parsedMask = maskPatternParam ? Number.parseInt(maskPatternParam, 10) : NaN;
+  2811	  const maskPattern: 'auto' | number =
+  2812	    maskPatternParam === 'auto' || !maskPatternParam || Number.isNaN(parsedMask)
+  2813	      ? 'auto'
+  2814	      : Math.min(7, Math.max(0, parsedMask));
+  2815	
+  2816	  // Character encoding: 'default', 'utf8', or 'shift-jis'
+  2817	  const charsetParam = params.get('charset') || 'default';
+  2818	  const characterEncoding = ['default', 'utf8', 'shift-jis'].includes(charsetParam)
+  2819	    ? charsetParam
+  2820	    : 'default';
+  2821	  const borderModulesExtra = Math.min(
+  2822	    10,
+  2823	    Math.max(0, Number.parseInt(params.get('border') || '0', 10))
+  2824	  );
+  2825	  const quietZoneMinEnforce = params.has('qzEnforce') ? params.get('qzEnforce') !== '0' : undefined;
+  2826	  const crispEdges = params.get('crisp') !== '0';
+  2827	  const pixelSnap = params.get('snap') || 'floor';
+  2828	  const perModuleColorMode = params.get('modColor') || 'solid';
+  2829	  const contrastGuard = params.get('cGuard') === '1';
+  2830	  const minContrastRatio = Number.parseFloat(params.get('minContrast') || '4.5');
+  2831	  const renderSeed = params.get('seed')
+  2832	    ? Number.parseInt(params.get('seed') || '0', 10)
+  2833	    : undefined;
+  2834	
+  2835	  // Module styling
+  2836	  const moduleStyle = params.get('style') || 'square';
+  2837	  const finderStyle = params.get('finder') || 'square';
+  2838	  const eyeOuterStyle = params.get('eyeOuter') || finderStyle;
+  2839	  const eyeInnerStyle = params.get('eyeInner') || finderStyle;
+  2840	  const eyeScale = Math.min(
+  2841	    150,
+  2842	    Math.max(50, Number.parseInt(params.get('eyeScale') || '100', 10))
+  2843	  );
+  2844	  const cornerRadius = Math.min(100, Math.max(0, Number.parseInt(params.get('radius') || '0', 10)));
+  2845	  const moduleGap = Math.min(50, Math.max(0, Number.parseInt(params.get('gap') || '0', 10)));
+  2846	  const gapMode = params.get('gapMode') || 'none';
+  2847	  const dotRotationDeg = Number.parseInt(params.get('dotRot') || '0', 10);
+  2848	
+  2849	  // Frame
+  2850	  const frameStyle = params.get('frame') || 'none';
+  2851	  const frameText = params.get('frameText') || '';
+  2852	
+  2853	  // Gradient
+  2854	  const gradientType = params.get('grad') || 'none';
+  2855	  const gradientAngle = Number.parseInt(params.get('gradAngle') || '0', 10);
+  2856	  const gradientStopsParam = params.get('gradStops');
+  2857	  const gradientStops = gradientStopsParam ? parseGradientStops(gradientStopsParam) : undefined;
+  2858	
+  2859	  // Additional styling
+  2860	  const alignmentStyle = params.get('align') || 'match_finder';
+  2861	  const timingStyle = params.get('timing') || 'match_module';
+  2862	
+  2863	  // Protection settings
+  2864	  const preserveFinders = params.get('keepFinders') !== '0';
+  2865	  const preserveTiming = params.get('keepTiming') === '1';
+  2866	  const preserveAlignment = params.get('keepAlign') === '1';
+  2867	  const protectFormatInfo = params.get('protectFmt') === '1';
+  2868	  const protectVersionInfo = params.get('protectVer') === '1';
+  2869	  const eccAwareEnabled = params.get('eccAware') === '1';
+  2870	  const eccAwareRiskBudget = Math.min(
+  2871	    100,
+  2872	    Math.max(0, Number.parseInt(params.get('eccRisk') || '50', 10))
+  2873	  );
+  2874	  const eccAwareWeightMap = params.get('eccMap') || 'distance_to_finders';
+  2875	
+  2876	  // Overlay
+  2877	  const overlayUrl = params.get('img');
+  2878	  // Default to 'dithered' mode when overlay URL is provided but mode is not specified
+  2879	  // This matches the client-side default in qr-store.ts
+  2880	  const legacySubpixel = params.get('subpixel') === '1';
+  2881	  const overlayMode =
+  2882	    params.get('mode') || (legacySubpixel ? 'subpixel' : overlayUrl ? 'dithered' : undefined);
+  2883	  const overlayIntensity = Math.min(
+  2884	    100,
+  2885	    Math.max(0, Number.parseInt(params.get('intensity') || '100', 10))
+  2886	  );
+  2887	  const colorMode = params.get('colorMode') || 'color';
+  2888	  const logoSize = Math.min(50, Math.max(5, Number.parseInt(params.get('logoSize') || '25', 10)));
+  2889	
+  2890	  // Overlay preprocessing
+  2891	  const overlayBrightness = Math.min(
+  2892	    100,
+  2893	    Math.max(-100, Number.parseInt(params.get('brightness') || '0', 10))
+  2894	  );
+  2895	  const overlayContrast = Math.min(
+  2896	    100,
+  2897	    Math.max(-100, Number.parseInt(params.get('contrast') || '0', 10))
+  2898	  );
+  2899	  const overlayGamma = Math.max(0.1, Math.min(3, Number.parseFloat(params.get('gamma') || '1')));
+  2900	  const overlaySaturation = Math.min(
+  2901	    100,
+  2902	    Math.max(-100, Number.parseInt(params.get('saturation') || '0', 10))
+  2903	  );
+  2904	  const overlayHueRotate = Number.parseInt(params.get('hue') || '0', 10);
+  2905	  const overlayInvert = params.get('invert') === '1';
+  2906	  const overlayBlur = Math.max(0, Number.parseInt(params.get('blur') || '0', 10));
+  2907	  const overlaySharpen = Math.max(0, Number.parseInt(params.get('sharpen') || '0', 10));
+  2908	  const overlayPosterize = Math.max(0, Number.parseInt(params.get('posterize') || '0', 10));
+  2909	  const overlayThresholdParam = params.get('threshold');
+  2910	  const overlayThreshold = overlayThresholdParam
+  2911	    ? Math.min(255, Math.max(0, Number.parseInt(overlayThresholdParam, 10)))
+  2912	    : undefined; // Only apply if explicitly specified
+  2913	  const overlayEdgeDetect = params.get('edge') || 'off';
+  2914	  const overlayFit = params.get('fit') || 'cover';
+  2915	  const overlayRotate = Number.parseInt(params.get('rot') || '0', 10);
+  2916	  const overlayFlipX = params.get('flipX') === '1';
+  2917	  const overlayFlipY = params.get('flipY') === '1';
+  2918	
+  2919	  // Dithering options - use cheap default if not specified, otherwise honor user's choice
+  2920	  const ditherKindParam = params.get('ditherKind');
+  2921	  const ditherKind = (ditherKindParam || DEFAULT_SERVER_DITHER) as DitherKind;
+  2922	  const diffusionKernel = params.get('diffusionKernel') || 'floyd_steinberg';
+  2923	  const ditherStrength = Math.min(
+  2924	    100,
+  2925	    Math.max(0, Number.parseInt(params.get('ditherStrength') || '50', 10))
+  2926	  );
+  2927	  const finderDitherStrength = Math.min(
+  2928	    100,
+  2929	    Math.max(0, Number.parseInt(params.get('finderDither') || '65', 10))
+  2930	  );
+  2931	  const blendPreservations = params.get('blendPres') === '1';
+  2932	  const blendPreservationMode = params.get('blendPresMode') === 'dither' ? 'dither' : 'overlay';
+  2933	  const ditherSerpentine = params.get('serpentine') === '1';
+  2934	  const orderedMatrix = params.get('matrix') || 'bayer4';
+  2935	  const blueNoiseTileSize = Number.parseInt(params.get('bnTile') || '64', 10);
+  2936	  const blueNoiseSeed = Number.parseInt(params.get('bnSeed') || '0', 10);
+  2937	  const colorDither = params.get('colorDither') || 'none';
+  2938	
+  2939	  // Subpixel options
+  2940	  const subpixelGridSize = params.get('spGrid') || '3x3';
+  2941	  const subpixelGridNum = params.get('spGridNum')
+  2942	    ? Number.parseInt(params.get('spGridNum') || '3', 10)
+  2943	    : undefined;
+  2944	  const subpixelCenterRule = params.get('spCenter') || 'strict';
+  2945	  const subpixelNeutralColor = params.get('spNeutral') ? `#${params.get('spNeutral')}` : '#808080';
+  2946	  const subpixelFinderOverride = params.get('spFinder') || 'solid';
+  2947	
+  2948	  // Halftone options
+  2949	  const halftoneCell = params.get('htCell') || 'per_module';
+  2950	  const halftoneDotShape = params.get('htDot') || 'circle';
+  2951	  const brightnessCurve = params.get('htCurve') || 'linear';
+  2952	  const duotoneColor1 = params.get('duo1') ? `#${params.get('duo1')}` : '#000000';
+  2953	  const duotoneColor2 = params.get('duo2') ? `#${params.get('duo2')}` : '#ffffff';
+  2954	
+  2955	  // Render palette
+  2956	  const paletteParam = params.get('palette');
+  2957	  const palette = paletteParam
+  2958	    ? paletteParam.split(',').map((c) => (c.startsWith('#') ? c : `#${c}`))
+  2959	    : undefined;
+  2960	  // paletteMode is parsed below in the "Render palette" section
+  2961	
+  2962	  // Safety per-ECC limits (support both short and long param names)
+  2963	  const maxOverlayIntensityL = Number.parseInt(
+  2964	    params.get('maxIntL') || params.get('maxOverlayIntensityL') || '100',
+  2965	    10
+  2966	  );
+  2967	  const maxOverlayIntensityM = Number.parseInt(
+  2968	    params.get('maxIntM') || params.get('maxOverlayIntensityM') || '100',
+  2969	    10
+  2970	  );
+  2971	  const maxOverlayIntensityQ = Number.parseInt(
+  2972	    params.get('maxIntQ') || params.get('maxOverlayIntensityQ') || '100',
+  2973	    10
+  2974	  );
+  2975	  const maxOverlayIntensityH = Number.parseInt(
+  2976	    params.get('maxIntH') || params.get('maxOverlayIntensityH') || '100',
+  2977	    10
+  2978	  );
+  2979	
+  2980	  // Output format (may be overridden if overlay is animated GIF)
+  2981	  // Default to GIF to align with client default (was PNG, causing embed/share mismatch)
+  2982	  const explicitFormat = params.get('format');
+  2983	  let outputFormat = (explicitFormat || DEFAULT_OUTPUT_FORMAT) as OutputFormat;
+  2984	  const outputQuality = Math.max(0, Math.min(1, Number.parseFloat(params.get('quality') || '0.9')));
+  2985	  const outputDpi = Math.max(1, Math.min(1200, Number.parseInt(params.get('dpi') || '72', 10)));
+  2986	
+  2987	  // Watermark
+  2988	  const watermarkEnabled = params.get('wmEn') === '1';
+  2989	  const watermarkKind = (params.get('wmKind') || 'text') as WatermarkKind;
+  2990	  const watermarkText = params.get('wmText') || '';
+  2991	  const watermarkImageUrl = params.get('wmImg') || undefined;
+  2992	  const watermarkPosition = (params.get('wmPos') || 'center') as WatermarkPosition;
+  2993	  const watermarkOpacity = Math.min(
+  2994	    100,
+  2995	    Math.max(0, Number.parseInt(params.get('wmOpacity') || '50', 10))
+  2996	  );
+  2997	  const watermarkBlend = (params.get('wmBlend') || 'normal') as WatermarkBlend;
+  2998	
+  2999	  // Animation (for animated GIF output)
+  3000	  // NOTE: Some animation params are client-only (moduleJitter requires per-frame QR generation)
+  3001	  const validAnimationPatterns: AnimationPattern[] = [
+  3002	    'none',
+  3003	    'pulse',
+  3004	    'wave',
+  3005	    'scanline',
+  3006	    'shimmer',
+  3007	    'drift',
+  3008	    'color_cycle',
+  3009	  ];
+  3010	  const validAnimationEasings: AnimationEasing[] = [
+  3011	    'linear',
+  3012	    'ease_in',
+  3013	    'ease_out',
+  3014	    'ease_in_out',
+  3015	    'bounce',
+  3016	  ];
+  3017	  const parsedAnimationPattern = (params.get('animPattern') || 'none') as AnimationPattern;
+  3018	  const animationPattern = validAnimationPatterns.includes(parsedAnimationPattern)
+  3019	    ? parsedAnimationPattern
+  3020	    : 'none';
+  3021	  const parsedAnimationPattern2 = (params.get('animPattern2') || 'none') as AnimationPattern;
+  3022	  const animationPattern2 = validAnimationPatterns.includes(parsedAnimationPattern2)
+  3023	    ? parsedAnimationPattern2
+  3024	    : 'none';
+  3025	  const animationLoop = params.get('loop') !== '0';
+  3026	  const animationBounce = params.get('bounce') === '1';
+  3027	  const animationReverse = params.get('reverse') === '1';
+  3028	  const animationColorCycle = params.get('colorCycle') === '1';
+  3029	  const animationTarget = parseAnimationTarget(params.get('animTarget'));
+  3030	  const animationWaveAxis = parseAnimationWaveAxis(params.get('animWaveAxis'));
+  3031	  const animationBounce2 = params.has('bounce2') ? params.get('bounce2') === '1' : animationBounce;
+  3032	  const animationReverse2 = params.has('reverse2')
+  3033	    ? params.get('reverse2') === '1'
+  3034	    : animationReverse;
+  3035	  const animationColorCycle2 = params.has('colorCycle2')
+  3036	    ? params.get('colorCycle2') === '1'
+  3037	    : false;
+  3038	  const animationTarget2 = parseAnimationTarget(params.get('animTarget2'), animationTarget);
+  3039	  const animationWaveAxis2 = parseAnimationWaveAxis(
+  3040	    params.get('animWaveAxis2'),
+  3041	    animationWaveAxis === 'y' ? 'x' : animationWaveAxis
+  3042	  );
+  3043	  const animationInterpolate = (params.get('interp') || 'none') as AnimationInterpolation;
+  3044	  const animationTemporalDither = (
+  3045	    ['off', 'blue_noise', 'flicker_safe'].includes(params.get('tempDither') || '')
+  3046	      ? params.get('tempDither')
+  3047	      : 'off'
+  3048	  ) as AnimationTemporalDitherMode;
+  3049	  const animationStartFrame = Number.parseInt(params.get('startF') || '0', 10);
+  3050	  const animationMaxFrames = Number.parseInt(params.get('maxF') || '0', 10);
+  3051	  const animationFrameStep = Number.parseInt(params.get('stepF') || '1', 10);
+  3052	  const animationModuleJitter = Number.parseFloat(params.get('jitter') || '0');
+  3053	  // Ensure frame count is at least 1 to prevent empty animation loops
+  3054	  const animationFramesRaw = Number.parseInt(params.get('animFrames') || '24', 10);
+  3055	  const animationFrames = Math.min(
+  3056	    60,
+  3057	    Math.max(1, Number.isNaN(animationFramesRaw) ? 24 : animationFramesRaw)
+  3058	  );
+  3059	  // Ensure speed is valid to prevent division issues
+  3060	  const animationSpeedRaw = Number.parseInt(
+  3061	    params.get('animSpeed') || params.get('speed') || '100',
+  3062	    10
+  3063	  );
+  3064	  const animationSpeed = Math.min(
+  3065	    1000,
+  3066	    Math.max(10, Number.isNaN(animationSpeedRaw) ? 100 : animationSpeedRaw)
+  3067	  );
+  3068	  const animationSeed = Number.parseInt(params.get('animSeed') || params.get('seed') || '0', 10);
+  3069	  const animationSeed2 = Number.parseInt(
+  3070	    params.get('animSeed2') || String(animationSeed + 911),
+  3071	    10
+  3072	  );
+  3073	  const parsedAnimationEasing = (params.get('easing') || 'linear') as AnimationEasing;
+  3074	  const animationEasing = validAnimationEasings.includes(parsedAnimationEasing)
+  3075	    ? parsedAnimationEasing
+  3076	    : 'linear';
+  3077	  const parsedAnimationEasing2 = (params.get('easing2') || animationEasing) as AnimationEasing;
+  3078	  const animationEasing2 = validAnimationEasings.includes(parsedAnimationEasing2)
+  3079	    ? parsedAnimationEasing2
+  3080	    : animationEasing;
+  3081	
+  3082	  // Format-specific quality params
+  3083	  const webpQuality = Math.min(100, Math.max(0, Number.parseInt(params.get('webpQ') || '90', 10)));
+  3084	  const _jpegQuality = Math.min(100, Math.max(0, Number.parseInt(params.get('jpegQ') || '92', 10)));
+  3085	  const gifPaletteSize = params.get('gifPal');
+  3086	  const gifColors = Math.min(
+  3087	    256,
+  3088	    Math.max(2, Number.parseInt(params.get('gifColors') || gifPaletteSize || '256', 10))
+  3089	  );
+  3090	  const gifQuantizer = params.get('gifQuant') || undefined;
+  3091	  const gifDither = params.get('gifDith') || undefined;
+  3092	  const gifTransparentColor = params.get('gifTrans') ? `#${params.get('gifTrans')}` : undefined;
+  3093	  void gifQuantizer;
+  3094	  void gifDither;
+  3095	  void gifTransparentColor;
+  3096	
+  3097	  // Metadata
+  3098	  const metaTitle = params.get('metaTitle') || undefined;
+  3099	  const metaAuthor = params.get('metaAuthor') || undefined;
+  3100	  const metaCopyright = params.get('metaCopy') || undefined;
+  3101	  const metaDescription = params.get('metaDesc') || undefined;
+  3102	  const metaLicense = params.get('metaLic') || undefined;
+  3103	  const metaCreationTime = params.get('metaTime') === '1';
+  3104	  const metaCustomKv = params.get('metaKv') || undefined;
+  3105	
+  3106	  // Crop parameters (missing from server previously)
+  3107	  const cropEnabled = params.get('cropEn') === '1';
+  3108	  const cropX = Number.parseFloat(params.get('cropX') || '0.5');
+  3109	  const cropY = Number.parseFloat(params.get('cropY') || '0.5');
+  3110	  const cropSize = Number.parseFloat(params.get('cropSize') || '1');
+  3111	
+  3112	  // Overlay type and frame picking (missing from server previously)
+  3113	  const overlayType = params.get('ovType') || 'static';
+  3114	  const overlayFramePick = params.get('ovFramePick') || 'all';
+  3115	
+  3116	  // GIF-specific overlay parameters
+  3117	  const gifUseFrameDelays = params.get('gifDelays') !== '0';
+  3118	  const gifDisposalHandling = params.get('gifDispH') || 'respect';
+  3119	  const gifMaxFps = Number.parseInt(params.get('gifMaxFps') || '0', 10);
+  3120	
+  3121	  // Safety locks (missing from server previously)
+  3122	  const lockFinders = params.get('lockF') !== '0';
+  3123	  const lockTiming = params.get('lockT') !== '0';
+  3124	  const lockAlign = params.get('lockA') !== '0';
+  3125	  const lockFormat = params.get('lockFmt') !== '0';
+  3126	  const lockVersion = params.get('lockV') !== '0';
+  3127	  const safetyMode = params.get('safeMode') || 'off';
+  3128	  const safetyMinModulePx = Number.parseInt(params.get('safeMinPx') || '2', 10);
+  3129	  const safetyMinQuietZone = Number.parseInt(params.get('safeMinQz') || '4', 10);
+  3130	
+  3131	  // Auto-tuning (missing from server previously - these are hints)
+  3132	  const autoPickVersion = params.get('autoVer') !== '0';
+  3133	  const autoPickEcc = params.get('autoEcc') === '1';
+  3134	  const autoReduceIntensity = params.get('autoReduce') === '1';
+  3135	
+  3136	  // QA parameters - CLIENT-ONLY: These require interactive canvas manipulation
+  3137	  // and scan validation loops that aren't feasible server-side.
+  3138	  // Parsed for URL compatibility but not applied.
+  3139	  const qaContrastCheckClientOnly = params.get('qaContrast') === '1';
+  3140	  const qaSimulateBlurClientOnly = Number.parseFloat(params.get('qaBlur') || '0');
+  3141	  const qaSimulateNoiseClientOnly = Number.parseInt(params.get('qaNoise') || '0', 10);
+  3142	  const qaSimulateRotationClientOnly = Number.parseInt(params.get('qaRot') || '0', 10);
+  3143	  const qaShowHeatmapClientOnly = params.get('qaHeatmap') === '1';
+  3144	  // Log if QA params are requested but can't be applied
+  3145	  if (
+  3146	    qaContrastCheckClientOnly ||
+  3147	    qaSimulateBlurClientOnly ||
+  3148	    qaSimulateNoiseClientOnly ||
+  3149	    qaSimulateRotationClientOnly ||
+  3150	    qaShowHeatmapClientOnly
+  3151	  ) {
+  3152	  }
+  3153	
+  3154	  // Output extras (missing from server previously)
+  3155	  const bgOverride = params.get('bgOver') ? `#${params.get('bgOver')}` : undefined;
+  3156	  const formatExtra = params.get('fmtExtra') || 'none';
+  3157	  const filename = params.get('fname') || 'anqr-qrcode';
+  3158	  const includeQuietZone = params.get('inclQz') !== '0';
+  3159	  const gifDisposal = params.get('gifDisp') || 'restore_bg';
+  3160	  const gifDisposalCode =
+  3161	    gifDisposal === 'none'
+  3162	      ? 0
+  3163	      : gifDisposal === 'keep'
+  3164	        ? 1
+  3165	        : gifDisposal === 'restore_previous'
+  3166	          ? 3
+  3167	          : 2;
+  3168	  const svgTrueVector = params.get('svgVec') === '1';
+  3169	  const svgShapePrecision = params.get('svgPrec') || 'pixel';
+  3170	  const svgEmbedRasterOverlay = params.get('svgEmbed') !== '0';
+  3171	  void svgTrueVector;
+  3172	
+  3173	  // Render palette (missing from server previously)
+  3174	  const paletteMode = params.get('paletteMode') || 'position';
+  3175	
