@@ -17,6 +17,7 @@ Each resolved issue should add an entry under the current date heading.
 - perf: add CI performance budget guard for `/` and `/gallery` key paths
 - refactor: extract `useQRGenerator` character encoding detection helper and add focused tests
 - fix: add gallery execution path and parameter source matrix
+- fix(ops): retry failed workflow commands once and route repeat failures to `Rework`
 
 ## 2026-03-09
 

@@ -1,7 +1,7 @@
 ---
 tracker:
   kind: linear
-  project_slug: 'symphony-c7a7906a4fa6'
+  project_slug: "symphony-c7a7906a4fa6"
   active_states:
     - Backlog
     - Todo
