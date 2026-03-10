@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
+- fix(ops): include explicit process exit reasons in structured codex startup failure diagnostics
 - fix(ops): add Ollama VRAM/KV cache pressure health check to harness report
 - test(ops): add provider cascade integration harness check for model-injector failover
 - fix(ops): add structured startup diagnostics and error categorization for codex credit gate failures

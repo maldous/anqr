@@ -132,6 +132,7 @@ log() {
 
 classify_startup_error() {
   local text="$1"
+  local exit_code="${2:-0}"
   local lowered
   lowered=$(printf '%s' "$text" | tr '[:upper:]' '[:lower:]')
 
@@ -155,7 +156,31 @@ classify_startup_error() {
     echo "model_unreachable"
     return
   fi
+  case "$exit_code" in
+    124) echo "timeout"; return ;;
+    137) echo "oom"; return ;;
+  esac
   echo "unknown"
+}
+
+derive_exit_reason() {
+  local exit_code="$1"
+  case "$exit_code" in
+    0) echo "success" ;;
+    124) echo "timeout_command" ;;
+    126) echo "command_not_executable" ;;
+    127) echo "command_not_found" ;;
+    130) echo "signal_sigint" ;;
+    137) echo "signal_sigkill" ;;
+    143) echo "signal_sigterm" ;;
+    *)
+      if [ "$exit_code" -gt 128 ]; then
+        echo "signal_$((exit_code - 128))"
+      else
+        echo "exit_code_${exit_code}"
+      fi
+      ;;
+  esac
 }
 
 emit_startup_diagnostic() {
@@ -168,7 +193,7 @@ emit_startup_diagnostic() {
   local stderr_file="$7"
   local issue_identifier="${LINEAR_ISSUE_ID:-${ISSUE_ID:-${SYMPHONY_ISSUE_ID:-unknown}}}"
   local phase="runtime"
-  local stderr_content stdout_tail combined category litellm_status cwd_exists
+  local stderr_content stdout_tail combined category litellm_status cwd_exists exit_reason
 
   [ "$runtime_secs" -le "$STARTUP_FAILURE_MAX_SECS" ] && phase="startup"
   [ -d "$PWD" ] && cwd_exists=true || cwd_exists=false
@@ -181,9 +206,10 @@ emit_startup_diagnostic() {
   stdout_tail="$(tail -n "$DIAGNOSTIC_TAIL_LINES" "$stdout_file" 2>/dev/null || true)"
   combined="${stderr_content}
 ${stdout_tail}"
-  category="$(classify_startup_error "$combined")"
+  category="$(classify_startup_error "$combined" "$exit_code")"
+  exit_reason="$(derive_exit_reason "$exit_code")"
 
-  python3 - "$provider" "$model" "$context_mode" "$issue_identifier" "$exit_code" "$runtime_secs" "$phase" "$category" "$cwd_exists" "$litellm_status" "$LITELLM_HOST" "$PWD" "$stderr_file" "$stdout_file" "$DIAGNOSTIC_TAIL_LINES" <<'PY' >&2
+  python3 - "$provider" "$model" "$context_mode" "$issue_identifier" "$exit_code" "$runtime_secs" "$phase" "$category" "$exit_reason" "$cwd_exists" "$litellm_status" "$LITELLM_HOST" "$PWD" "$stderr_file" "$stdout_file" "$DIAGNOSTIC_TAIL_LINES" <<'PY' >&2
 import json
 import pathlib
 import sys
@@ -196,13 +222,14 @@ exit_code = int(sys.argv[5])
 runtime_secs = int(sys.argv[6])
 phase = sys.argv[7]
 category = sys.argv[8]
-cwd_exists = sys.argv[9] == "true"
-litellm_status = sys.argv[10]
-litellm_host = sys.argv[11]
-cwd = sys.argv[12]
-stderr_file = pathlib.Path(sys.argv[13])
-stdout_file = pathlib.Path(sys.argv[14])
-tail_lines = int(sys.argv[15])
+exit_reason = sys.argv[9]
+cwd_exists = sys.argv[10] == "true"
+litellm_status = sys.argv[11]
+litellm_host = sys.argv[12]
+cwd = sys.argv[13]
+stderr_file = pathlib.Path(sys.argv[14])
+stdout_file = pathlib.Path(sys.argv[15])
+tail_lines = int(sys.argv[16])
 
 stderr_output = stderr_file.read_text(encoding="utf-8", errors="replace") if stderr_file.exists() else ""
 stdout_lines = []
@@ -216,6 +243,7 @@ record = {
     "phase": phase,
     "diagnostic": {
         "exit_code": exit_code,
+        "exit_reason": exit_reason,
         "runtime_seconds": runtime_secs,
         "stderr_output": stderr_output,
         "stdout_tail": stdout_lines,
