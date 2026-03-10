@@ -657,9 +657,62 @@ function renderDitheredDarkPixel(
   drawDitherDot(dx, dy, radius, jitterN);
 }
 
-function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
+function renderNonDitheredDarkPixel(
+  pgctx: PixelGridCtx,
+  dx: number,
+  dy: number,
+  color: PixelColor | null
+): void {
   const {
     ctx,
+    subPixelSize,
+    useColorRendering,
+    needsBothDarkAndLightColors,
+    useGradient,
+    gradientFill,
+    effectiveFgColor,
+    subpixelDarkTargetLuma,
+    subpixelDarkChroma,
+  } = pgctx;
+  if (useColorRendering && color) {
+    if (needsBothDarkAndLightColors) {
+      const dark = adjustLumaPreserveChroma(color, subpixelDarkTargetLuma, subpixelDarkChroma);
+      ctx.fillStyle = `rgb(${dark.r},${dark.g},${dark.b})`;
+    } else {
+      ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
+    }
+  } else {
+    ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
+  }
+  ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+}
+
+function renderNonDitheredLightPixel(
+  pgctx: PixelGridCtx,
+  dx: number,
+  dy: number,
+  color: PixelColor | null
+): void {
+  const {
+    ctx,
+    subPixelSize,
+    useColorRendering,
+    needsBothDarkAndLightColors,
+    effectiveBgColor,
+    subpixelLightTargetLuma,
+    subpixelLightChroma,
+  } = pgctx;
+  if (needsBothDarkAndLightColors && useColorRendering && color) {
+    const light = adjustLumaPreserveChroma(color, subpixelLightTargetLuma, subpixelLightChroma);
+    ctx.fillStyle = `rgb(${light.r},${light.g},${light.b})`;
+  } else {
+    ctx.fillStyle = effectiveBgColor;
+  }
+  ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+}
+
+function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
+  const {
     marginPx,
     subPixelSize,
     scale,
@@ -670,24 +723,7 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
     needsBothDarkAndLightColors,
     needsExplicitLightModules,
     useColorRendering,
-    useGradient,
-    qrFirstMode,
     debug,
-    effectiveFgColor,
-    effectiveBgColor,
-    gradientFill,
-    subpixelDarkTargetLuma,
-    subpixelDarkChroma,
-    subpixelLightTargetLuma,
-    subpixelLightChroma,
-    seed,
-    dotMinRadiusPx,
-    dotMaxRadiusPx,
-    lightGrainDensity,
-    lightGrainAlpha,
-    quantizeRadius,
-    localVariance,
-    drawDitherDot,
     shouldForceBinaryModule,
   } = pgctx;
 
@@ -730,35 +766,11 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
       if (isDark) {
         if (isDitheredMode) {
           renderDitheredDarkPixel(pgctx, x, y, dx, dy, color, moduleLocked);
-        } else if (useColorRendering && color) {
-          if (needsBothDarkAndLightColors) {
-            const dark = adjustLumaPreserveChroma(
-              color,
-              subpixelDarkTargetLuma,
-              subpixelDarkChroma
-            );
-            ctx.fillStyle = `rgb(${dark.r},${dark.g},${dark.b})`;
-          } else {
-            ctx.fillStyle = `rgb(${color.r},${color.g},${color.b})`;
-          }
-          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
         } else {
-          ctx.fillStyle = useGradient && gradientFill ? gradientFill : effectiveFgColor;
-          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
+          renderNonDitheredDarkPixel(pgctx, dx, dy, color);
         }
       } else {
-        if (needsBothDarkAndLightColors && useColorRendering && color) {
-          const light = adjustLumaPreserveChroma(
-            color,
-            subpixelLightTargetLuma,
-            subpixelLightChroma
-          );
-          ctx.fillStyle = `rgb(${light.r},${light.g},${light.b})`;
-          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-        } else {
-          ctx.fillStyle = effectiveBgColor;
-          ctx.fillRect(dx, dy, subPixelSize, subPixelSize);
-        }
+        renderNonDitheredLightPixel(pgctx, dx, dy, color);
       }
     }
   }

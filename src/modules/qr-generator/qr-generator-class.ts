@@ -383,6 +383,367 @@ type OverlayComplexityCacheEntry = {
   updatedAt: number;
 };
 
+interface ScanGateCtx {
+  effectiveConfig: QRGeneratorConfig;
+  overlayComplexity: number;
+  requestedOverlayIntensity: number;
+  isPreviewScanGate: boolean;
+  isScanGateDisabled: boolean;
+  skipScanGateEscalation: boolean;
+}
+
+function resolveScanGateIntensity(
+  ctx: ScanGateCtx,
+  rawDrop: number,
+  options?: { minIntensity?: number; maxDrop?: number }
+): number {
+  const { overlayComplexity, requestedOverlayIntensity, isPreviewScanGate } = ctx;
+  const complexityScale = overlayComplexity >= 0.65 ? 0.75 : 1;
+  const scaledDrop = Math.round(rawDrop * complexityScale);
+  const defaultMaxDrop = isPreviewScanGate
+    ? clampN(22 - overlayComplexity * 6, 14, 22)
+    : clampN(36 - overlayComplexity * 10, 22, 36);
+  const maxDrop = options?.maxDrop ?? defaultMaxDrop;
+  const upperBound = requestedOverlayIntensity;
+  const minIntensityRaw = options?.minIntensity ?? (isPreviewScanGate ? 16 : 12);
+  const minIntensity = Math.min(minIntensityRaw, upperBound);
+  const boundedDrop = Math.min(scaledDrop, maxDrop);
+  return clampN(requestedOverlayIntensity - boundedDrop, minIntensity, upperBound);
+}
+
+function isAggressiveScanPatch(
+  ctx: ScanGateCtx,
+  patch: DitherAttemptPatch,
+  cacheIntensityFloor: number
+): boolean {
+  const { effectiveConfig, requestedOverlayIntensity, overlayComplexity } = ctx;
+  if (effectiveConfig.preserveFinders === false && patch.preserveFinders === true) return true;
+  const patchIntensity = patch.overlayIntensity ?? requestedOverlayIntensity;
+  if (patchIntensity < cacheIntensityFloor) return true;
+  const patchBias = patch.qrBitBiasStrength ?? effectiveConfig.qrBitBiasStrength ?? 0.04;
+  if (patchBias > 0.34 + overlayComplexity * 0.02) return true;
+  if ((patch.darkMinOccupancy ?? 0) > 0.64) return true;
+  if ((patch.lightMaxOccupancy ?? 1) < 0.36) return true;
+  return false;
+}
+
+function buildScanGateBaseAttempts(ctx: ScanGateCtx): DitherAttemptPatch[] {
+  const {
+    effectiveConfig,
+    overlayComplexity,
+    skipScanGateEscalation,
+    isScanGateDisabled,
+    isPreviewScanGate,
+  } = ctx;
+  const useFinderRelaxedAttempts = skipScanGateEscalation && !isScanGateDisabled;
+
+  if (useFinderRelaxedAttempts) {
+    return [
+      {
+        darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.46, 0.4, 0.56),
+        lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.54, 0.44, 0.6),
+        optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
+        overlayIntensity: resolveScanGateIntensity(ctx, 8, { minIntensity: 18, maxDrop: 24 }),
+        qrBitBiasStrength: clampN(
+          (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03 + overlayComplexity * 0.01,
+          0,
+          0.24
+        ),
+      },
+      {
+        darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.5, 0.46, 0.58),
+        lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.5, 0.42, 0.54),
+        optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
+        overlayIntensity: resolveScanGateIntensity(ctx, 16, { minIntensity: 16, maxDrop: 26 }),
+        qrBitBiasStrength: clampN(
+          (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.05 + overlayComplexity * 0.015,
+          0,
+          0.24
+        ),
+      },
+      {
+        darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.54, 0.5, 0.6),
+        lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.46, 0.4, 0.5),
+        optimizeIterations: Math.max(7, effectiveConfig.optimizeIterations ?? 6),
+        overlayIntensity: resolveScanGateIntensity(ctx, 24, { minIntensity: 14, maxDrop: 30 }),
+        qrBitBiasStrength: clampN(
+          (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.07 + overlayComplexity * 0.02,
+          0,
+          0.24
+        ),
+      },
+    ];
+  }
+
+  if (isPreviewScanGate) {
+    return [
+      {
+        darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.42, 0.36, 0.56),
+        lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.58, 0.44, 0.64),
+        optimizeIterations: Math.max(2, effectiveConfig.optimizeIterations ?? 6),
+        overlayIntensity: resolveScanGateIntensity(ctx, 0, { minIntensity: 24, maxDrop: 0 }),
+        qrBitBiasStrength: clampN(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.24),
+      },
+      {
+        darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.48, 0.44, 0.56),
+        lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.52, 0.44, 0.56),
+        optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
+        overlayIntensity: resolveScanGateIntensity(ctx, 10, { minIntensity: 20, maxDrop: 14 }),
+        qrBitBiasStrength: clampN(
+          (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.04 + overlayComplexity * 0.01,
+          0,
+          0.28
+        ),
+      },
+      {
+        darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.52, 0.48, 0.58),
+        lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.48, 0.42, 0.52),
+        optimizeIterations: Math.max(5, effectiveConfig.optimizeIterations ?? 6),
+        overlayIntensity: resolveScanGateIntensity(ctx, 16, { minIntensity: 16, maxDrop: 18 }),
+        qrBitBiasStrength: clampN(
+          (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.07 + overlayComplexity * 0.015,
+          0,
+          0.28
+        ),
+      },
+      {
+        darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.55, 0.5, 0.6),
+        lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.45, 0.4, 0.5),
+        optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
+        overlayIntensity: resolveScanGateIntensity(ctx, 22, { minIntensity: 12, maxDrop: 22 }),
+        qrBitBiasStrength: clampN(
+          (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.1 + overlayComplexity * 0.02,
+          0,
+          0.3
+        ),
+      },
+    ];
+  }
+
+  return [
+    {
+      darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.42, 0.36, 0.56),
+      lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.58, 0.44, 0.64),
+      optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
+      overlayIntensity: resolveScanGateIntensity(ctx, 0, { minIntensity: 20, maxDrop: 0 }),
+      qrBitBiasStrength: clampN(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.24),
+    },
+    {
+      darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.5, 0.5, 0.56),
+      lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.5, 0.44, 0.5),
+      optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
+      overlayIntensity: resolveScanGateIntensity(ctx, 18, { minIntensity: 16, maxDrop: 26 }),
+      qrBitBiasStrength: clampN(
+        (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03 + overlayComplexity * 0.01,
+        0,
+        0.24
+      ),
+    },
+    {
+      darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.53, 0.51, 0.56),
+      lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.47, 0.44, 0.49),
+      optimizeIterations: Math.max(7, effectiveConfig.optimizeIterations ?? 6),
+      overlayIntensity: resolveScanGateIntensity(ctx, 26, { minIntensity: 14, maxDrop: 30 }),
+      qrBitBiasStrength: clampN(
+        (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.06 + overlayComplexity * 0.015,
+        0,
+        0.24
+      ),
+    },
+    {
+      darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.55, 0.53, 0.58),
+      lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.45, 0.42, 0.47),
+      optimizeIterations: Math.max(8, effectiveConfig.optimizeIterations ?? 6),
+      overlayIntensity: resolveScanGateIntensity(ctx, 34, { minIntensity: 12, maxDrop: 32 }),
+      qrBitBiasStrength: clampN(
+        (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.09 + overlayComplexity * 0.02,
+        0,
+        0.24
+      ),
+    },
+    {
+      darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.57, 0.55, 0.6),
+      lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.43, 0.4, 0.45),
+      optimizeIterations: Math.max(9, effectiveConfig.optimizeIterations ?? 6),
+      overlayIntensity: resolveScanGateIntensity(ctx, 42, { minIntensity: 10, maxDrop: 34 }),
+      qrBitBiasStrength: clampN(
+        (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.12 + overlayComplexity * 0.025,
+        0,
+        0.24
+      ),
+    },
+    {
+      darkMinOccupancy: clampN(effectiveConfig.darkMinOccupancy ?? 0.58, 0.56, 0.62),
+      lightMaxOccupancy: clampN(effectiveConfig.lightMaxOccupancy ?? 0.42, 0.38, 0.44),
+      optimizeIterations: Math.max(10, effectiveConfig.optimizeIterations ?? 6),
+      overlayIntensity: resolveScanGateIntensity(ctx, 50, { minIntensity: 8, maxDrop: 36 }),
+      qrBitBiasStrength: clampN(
+        (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.16 + overlayComplexity * 0.03,
+        0,
+        0.28
+      ),
+    },
+  ];
+}
+
+function buildScanGateDecodeRescuePatches(ctx: ScanGateCtx): DitherAttemptPatch[] {
+  const { effectiveConfig, overlayComplexity, requestedOverlayIntensity, isPreviewScanGate } = ctx;
+  const baseDark = clampN(effectiveConfig.darkMinOccupancy ?? 0.56, 0.5, 0.62);
+  const baseLight = clampN(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.38, 0.5);
+  const baseBias = clampN(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
+  const previewMinIntensity = Math.max(8, Math.round(requestedOverlayIntensity * 0.42));
+  const previewMaxDrop = Math.max(0, requestedOverlayIntensity - previewMinIntensity);
+  const previewDropCap = clampN(
+    Math.round(requestedOverlayIntensity * (0.58 - overlayComplexity * 0.12)),
+    18,
+    58
+  );
+  const rescueStep = overlayComplexity >= 0.65 ? 4 : 5;
+  const rescueMaxDrop = isPreviewScanGate
+    ? Math.min(previewMaxDrop, previewDropCap)
+    : clampN(46 - overlayComplexity * 10, 24, 46);
+  const intensities: number[] = [];
+  for (let drop = rescueStep; drop <= rescueMaxDrop; drop += rescueStep) {
+    const intensity = resolveScanGateIntensity(ctx, drop, {
+      minIntensity: isPreviewScanGate ? previewMinIntensity : 10,
+      maxDrop: rescueMaxDrop,
+    });
+    if (intensity < requestedOverlayIntensity && !intensities.includes(intensity)) {
+      intensities.push(intensity);
+    }
+  }
+  return intensities.map((overlayIntensity, idx) => ({
+    darkMinOccupancy: clampN(baseDark + idx * 0.01, 0.5, 0.64),
+    lightMaxOccupancy: clampN(baseLight - idx * 0.01, 0.36, 0.5),
+    optimizeIterations: Math.max(4 + idx, effectiveConfig.optimizeIterations ?? 6),
+    overlayIntensity,
+    qrBitBiasStrength: clampN(baseBias + 0.1 + idx * 0.03 + overlayComplexity * 0.02, 0, 0.34),
+  }));
+}
+
+function buildScanGateFinderRescuePatches(ctx: ScanGateCtx): DitherAttemptPatch[] {
+  const {
+    effectiveConfig,
+    overlayComplexity,
+    requestedOverlayIntensity,
+    isPreviewScanGate,
+    isScanGateDisabled,
+  } = ctx;
+  if (effectiveConfig.preserveFinders !== false || isScanGateDisabled) return [];
+  const baseDark = clampN(effectiveConfig.darkMinOccupancy ?? 0.56, 0.52, 0.66);
+  const baseLight = clampN(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.34, 0.48);
+  const baseBias = clampN(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
+  const previewMinIntensity = Math.max(6, Math.round(requestedOverlayIntensity * 0.32));
+  const previewMaxDrop = Math.max(0, requestedOverlayIntensity - previewMinIntensity);
+  const previewDropCap = clampN(
+    Math.round(requestedOverlayIntensity * (0.66 - overlayComplexity * 0.12)),
+    22,
+    64
+  );
+  const rescueStep = overlayComplexity >= 0.65 ? 4 : 5;
+  const rescueMaxDrop = isPreviewScanGate
+    ? Math.min(previewMaxDrop, previewDropCap)
+    : clampN(52 - overlayComplexity * 12, 26, 52);
+  const intensities: number[] = [];
+  for (let drop = rescueStep; drop <= rescueMaxDrop; drop += rescueStep) {
+    const intensity = resolveScanGateIntensity(ctx, drop, {
+      minIntensity: isPreviewScanGate ? previewMinIntensity : 8,
+      maxDrop: rescueMaxDrop,
+    });
+    if (intensity < requestedOverlayIntensity && !intensities.includes(intensity)) {
+      intensities.push(intensity);
+    }
+  }
+  return intensities.map((overlayIntensity, idx) => ({
+    preserveFinders: true,
+    darkMinOccupancy: clampN(baseDark + idx * 0.01, 0.52, 0.7),
+    lightMaxOccupancy: clampN(baseLight - idx * 0.01, 0.3, 0.48),
+    optimizeIterations: Math.max(6 + idx, effectiveConfig.optimizeIterations ?? 6),
+    overlayIntensity,
+    qrBitBiasStrength: clampN(baseBias + 0.12 + idx * 0.03 + overlayComplexity * 0.025, 0, 0.36),
+  }));
+}
+
+async function evaluateDecodeScenarios(
+  ctx: ScanGateCtx,
+  pool: CanvasPool,
+  moduleCount: number,
+  canvas: HTMLCanvasElement | OffscreenCanvas,
+  prevEdgeImprint: number | null,
+  thresholds: { edge: number; toneStd: number; edgeWorsen: number },
+  scenarioSeed: number,
+  runDecode: (src: HTMLCanvasElement | OffscreenCanvas) => Promise<boolean>
+): Promise<{
+  ok: boolean;
+  baseDecodeOk: boolean;
+  metrics: { edgeImprint: number; toneStd: number } | null;
+  evaluatedCanvas: HTMLCanvasElement | OffscreenCanvas;
+}> {
+  const { effectiveConfig, isPreviewScanGate, isScanGateDisabled, skipScanGateEscalation } = ctx;
+
+  if (isScanGateDisabled) {
+    return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
+  }
+
+  const finalRaster = isPreviewScanGate ? canvas : await roundtripToFinalRaster(pool, canvas);
+  if (!(await runDecode(finalRaster))) {
+    return { ok: false, baseDecodeOk: false, metrics: null, evaluatedCanvas: finalRaster };
+  }
+
+  if (skipScanGateEscalation) {
+    const baseMetrics = isPreviewScanGate
+      ? null
+      : computeScanGateRasterMetrics(finalRaster, moduleCount, effectiveConfig);
+    return { ok: true, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+  }
+
+  if (isPreviewScanGate) {
+    return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: finalRaster };
+  }
+
+  const baseMetrics = computeScanGateRasterMetrics(finalRaster, moduleCount, effectiveConfig);
+  if (baseMetrics) {
+    if (baseMetrics.edgeImprint > thresholds.edge || baseMetrics.toneStd < thresholds.toneStd) {
+      return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+    }
+    if (
+      prevEdgeImprint !== null &&
+      baseMetrics.edgeImprint > prevEdgeImprint + thresholds.edgeWorsen
+    ) {
+      return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+    }
+  }
+
+  const seeded01 = (salt: number): number => {
+    const n = Math.sin((scenarioSeed + salt) * 12.9898) * 43758.5453;
+    return n - Math.floor(n);
+  };
+  const scenarios = [
+    {
+      blur: 0.8 + seeded01(11) * 0.4,
+      exposure: -0.24 + seeded01(13) * 0.08,
+      skewX: finalRaster.width * 0.02,
+      skewY: finalRaster.height * 0.012,
+      downscale: 0.9,
+    },
+    {
+      blur: 1 + seeded01(17) * 0.5,
+      exposure: 0.18 + seeded01(19) * 0.12,
+      skewX: finalRaster.width * 0.028,
+      skewY: finalRaster.height * 0.018,
+      downscale: 0.82,
+    },
+  ];
+
+  for (const s of scenarios) {
+    if (!(await simulateScenarioDecode(pool, finalRaster, s, runDecode))) {
+      return { ok: false, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+    }
+  }
+
+  return { ok: true, baseDecodeOk: true, metrics: baseMetrics, evaluatedCanvas: finalRaster };
+}
+
 export class QRGenerator {
   private qrcode: typeof qrcode;
   private canvasFactory: CanvasFactory;
@@ -1007,6 +1368,14 @@ export class QRGenerator {
     if (cachedOverlayComplexity === null) {
       writeOverlayComplexityCache(overlayComplexityCacheKey, overlayComplexity);
     }
+    const sgctx: ScanGateCtx = {
+      effectiveConfig,
+      overlayComplexity,
+      requestedOverlayIntensity,
+      isPreviewScanGate,
+      isScanGateDisabled,
+      skipScanGateEscalation,
+    };
     const adaptiveEdgeImprintThreshold = clamp(
       edgeImprintThreshold +
         overlayComplexity * 0.08 +
@@ -1073,32 +1442,6 @@ export class QRGenerator {
       8,
       requestedOverlayIntensity
     );
-    const isAggressivePatch = (patch: DitherAttemptPatch): boolean => {
-      if (effectiveConfig.preserveFinders === false && patch.preserveFinders === true) return true;
-      const patchIntensity = patch.overlayIntensity ?? requestedOverlayIntensity;
-      if (patchIntensity < cacheIntensityFloor) return true;
-      const patchBias = patch.qrBitBiasStrength ?? effectiveConfig.qrBitBiasStrength ?? 0.04;
-      if (patchBias > 0.34 + overlayComplexity * 0.02) return true;
-      if ((patch.darkMinOccupancy ?? 0) > 0.64) return true;
-      if ((patch.lightMaxOccupancy ?? 1) < 0.36) return true;
-      return false;
-    };
-    const resolveOverlayIntensity = (
-      rawDrop: number,
-      options?: { minIntensity?: number; maxDrop?: number }
-    ): number => {
-      const complexityScale = overlayComplexity >= 0.65 ? 0.75 : 1;
-      const scaledDrop = Math.round(rawDrop * complexityScale);
-      const defaultMaxDrop = isPreviewScanGate
-        ? clamp(22 - overlayComplexity * 6, 14, 22)
-        : clamp(36 - overlayComplexity * 10, 22, 36);
-      const maxDrop = options?.maxDrop ?? defaultMaxDrop;
-      const upperBound = requestedOverlayIntensity;
-      const minIntensityRaw = options?.minIntensity ?? (isPreviewScanGate ? 16 : 12);
-      const minIntensity = Math.min(minIntensityRaw, upperBound);
-      const boundedDrop = Math.min(scaledDrop, maxDrop);
-      return clamp(requestedOverlayIntensity - boundedDrop, minIntensity, upperBound);
-    };
 
     const getCachedPatch = (): DitherAttemptPatch | null => {
       const keyCandidates =
@@ -1112,7 +1455,7 @@ export class QRGenerator {
           this._ditherPatchCache.delete(resolvedKey);
           continue;
         }
-        if (isAggressivePatch(entry.patch)) {
+        if (isAggressiveScanPatch(sgctx, entry.patch, cacheIntensityFloor)) {
           this._ditherPatchCache.delete(resolvedKey);
           continue;
         }
@@ -1122,7 +1465,7 @@ export class QRGenerator {
     };
 
     const rememberPatch = (patch: DitherAttemptPatch): void => {
-      if (isAggressivePatch(patch)) return;
+      if (isAggressiveScanPatch(sgctx, patch, cacheIntensityFloor)) return;
       const now = Date.now();
       const keys =
         scanCacheFallbackKey === scanCacheKey
@@ -1146,150 +1489,7 @@ export class QRGenerator {
       if (oldestKey) this._ditherPatchCache.delete(oldestKey);
     };
 
-    const useFinderRelaxedAttempts = skipScanGateEscalation && !isScanGateDisabled;
-    const baseAttempts: DitherAttemptPatch[] = useFinderRelaxedAttempts
-      ? [
-          {
-            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.46, 0.4, 0.56),
-            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.54, 0.44, 0.6),
-            optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: resolveOverlayIntensity(8, { minIntensity: 18, maxDrop: 24 }),
-            qrBitBiasStrength: clamp(
-              (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03 + overlayComplexity * 0.01,
-              0,
-              0.24
-            ),
-          },
-          {
-            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.5, 0.46, 0.58),
-            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.5, 0.42, 0.54),
-            optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: resolveOverlayIntensity(16, { minIntensity: 16, maxDrop: 26 }),
-            qrBitBiasStrength: clamp(
-              (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.05 + overlayComplexity * 0.015,
-              0,
-              0.24
-            ),
-          },
-          {
-            darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.54, 0.5, 0.6),
-            lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.46, 0.4, 0.5),
-            optimizeIterations: Math.max(7, effectiveConfig.optimizeIterations ?? 6),
-            overlayIntensity: resolveOverlayIntensity(24, { minIntensity: 14, maxDrop: 30 }),
-            qrBitBiasStrength: clamp(
-              (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.07 + overlayComplexity * 0.02,
-              0,
-              0.24
-            ),
-          },
-        ]
-      : isPreviewScanGate
-        ? [
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.42, 0.36, 0.56),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.58, 0.44, 0.64),
-              optimizeIterations: Math.max(2, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(0, { minIntensity: 24, maxDrop: 0 }),
-              qrBitBiasStrength: clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.24),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.48, 0.44, 0.56),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.52, 0.44, 0.56),
-              optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(10, { minIntensity: 20, maxDrop: 14 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.04 + overlayComplexity * 0.01,
-                0,
-                0.28
-              ),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.52, 0.48, 0.58),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.48, 0.42, 0.52),
-              optimizeIterations: Math.max(5, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(16, { minIntensity: 16, maxDrop: 18 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.07 + overlayComplexity * 0.015,
-                0,
-                0.28
-              ),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.55, 0.5, 0.6),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.45, 0.4, 0.5),
-              optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(22, { minIntensity: 12, maxDrop: 22 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.1 + overlayComplexity * 0.02,
-                0,
-                0.3
-              ),
-            },
-          ]
-        : [
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.42, 0.36, 0.56),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.58, 0.44, 0.64),
-              optimizeIterations: Math.max(4, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(0, { minIntensity: 20, maxDrop: 0 }),
-              qrBitBiasStrength: clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.24),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.5, 0.5, 0.56),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.5, 0.44, 0.5),
-              optimizeIterations: Math.max(6, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(18, { minIntensity: 16, maxDrop: 26 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.03 + overlayComplexity * 0.01,
-                0,
-                0.24
-              ),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.53, 0.51, 0.56),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.47, 0.44, 0.49),
-              optimizeIterations: Math.max(7, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(26, { minIntensity: 14, maxDrop: 30 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.06 + overlayComplexity * 0.015,
-                0,
-                0.24
-              ),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.55, 0.53, 0.58),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.45, 0.42, 0.47),
-              optimizeIterations: Math.max(8, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(34, { minIntensity: 12, maxDrop: 32 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.09 + overlayComplexity * 0.02,
-                0,
-                0.24
-              ),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.57, 0.55, 0.6),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.43, 0.4, 0.45),
-              optimizeIterations: Math.max(9, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(42, { minIntensity: 10, maxDrop: 34 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.12 + overlayComplexity * 0.025,
-                0,
-                0.24
-              ),
-            },
-            {
-              darkMinOccupancy: clamp(effectiveConfig.darkMinOccupancy ?? 0.58, 0.56, 0.62),
-              lightMaxOccupancy: clamp(effectiveConfig.lightMaxOccupancy ?? 0.42, 0.38, 0.44),
-              optimizeIterations: Math.max(10, effectiveConfig.optimizeIterations ?? 6),
-              overlayIntensity: resolveOverlayIntensity(50, { minIntensity: 8, maxDrop: 36 }),
-              qrBitBiasStrength: clamp(
-                (effectiveConfig.qrBitBiasStrength ?? 0.04) + 0.16 + overlayComplexity * 0.03,
-                0,
-                0.28
-              ),
-            },
-          ];
+    const baseAttempts = buildScanGateBaseAttempts(sgctx);
 
     let attempts: DitherAttemptPatch[] = [];
     const seenAttemptSignatures = new Set<string>();
@@ -1357,193 +1557,16 @@ export class QRGenerator {
       qrFirstMode: patch.qrFirstMode ?? effectiveConfig.qrFirstMode ?? false,
     });
 
-    const buildDecodeRescuePatches = (): DitherAttemptPatch[] => {
-      const baseDark = clamp(effectiveConfig.darkMinOccupancy ?? 0.56, 0.5, 0.62);
-      const baseLight = clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.38, 0.5);
-      const baseBias = clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
-      const previewMinIntensity = Math.max(8, Math.round(requestedOverlayIntensity * 0.42));
-      const previewMaxDrop = Math.max(0, requestedOverlayIntensity - previewMinIntensity);
-      const previewDropCap = clamp(
-        Math.round(requestedOverlayIntensity * (0.58 - overlayComplexity * 0.12)),
-        18,
-        58
-      );
-      const rescueStep = isPreviewScanGate
-        ? overlayComplexity >= 0.65
-          ? 4
-          : 5
-        : overlayComplexity >= 0.65
-          ? 4
-          : 5;
-      const rescueMaxDrop = isPreviewScanGate
-        ? Math.min(previewMaxDrop, previewDropCap)
-        : clamp(46 - overlayComplexity * 10, 24, 46);
-      const intensities: number[] = [];
-      for (let drop = rescueStep; drop <= rescueMaxDrop; drop += rescueStep) {
-        const intensity = resolveOverlayIntensity(drop, {
-          minIntensity: isPreviewScanGate ? previewMinIntensity : 10,
-          maxDrop: rescueMaxDrop,
-        });
-        if (intensity < requestedOverlayIntensity && !intensities.includes(intensity)) {
-          intensities.push(intensity);
-        }
-      }
-      return intensities.map((overlayIntensity, idx) => ({
-        darkMinOccupancy: clamp(baseDark + idx * 0.01, 0.5, 0.64),
-        lightMaxOccupancy: clamp(baseLight - idx * 0.01, 0.36, 0.5),
-        optimizeIterations: Math.max(4 + idx, effectiveConfig.optimizeIterations ?? 6),
-        overlayIntensity,
-        qrBitBiasStrength: clamp(baseBias + 0.1 + idx * 0.03 + overlayComplexity * 0.02, 0, 0.34),
-      }));
-    };
-
-    const buildFinderRescuePatches = (): DitherAttemptPatch[] => {
-      if (effectiveConfig.preserveFinders !== false || isScanGateDisabled) return [];
-      const baseDark = clamp(effectiveConfig.darkMinOccupancy ?? 0.56, 0.52, 0.66);
-      const baseLight = clamp(effectiveConfig.lightMaxOccupancy ?? 0.44, 0.34, 0.48);
-      const baseBias = clamp(effectiveConfig.qrBitBiasStrength ?? 0.04, 0, 0.32);
-      const previewMinIntensity = Math.max(6, Math.round(requestedOverlayIntensity * 0.32));
-      const previewMaxDrop = Math.max(0, requestedOverlayIntensity - previewMinIntensity);
-      const previewDropCap = clamp(
-        Math.round(requestedOverlayIntensity * (0.66 - overlayComplexity * 0.12)),
-        22,
-        64
-      );
-      const rescueStep = isPreviewScanGate
-        ? overlayComplexity >= 0.65
-          ? 4
-          : 5
-        : overlayComplexity >= 0.65
-          ? 4
-          : 5;
-      const rescueMaxDrop = isPreviewScanGate
-        ? Math.min(previewMaxDrop, previewDropCap)
-        : clamp(52 - overlayComplexity * 12, 26, 52);
-      const intensities: number[] = [];
-      for (let drop = rescueStep; drop <= rescueMaxDrop; drop += rescueStep) {
-        const intensity = resolveOverlayIntensity(drop, {
-          minIntensity: isPreviewScanGate ? previewMinIntensity : 8,
-          maxDrop: rescueMaxDrop,
-        });
-        if (intensity < requestedOverlayIntensity && !intensities.includes(intensity)) {
-          intensities.push(intensity);
-        }
-      }
-      return intensities.map((overlayIntensity, idx) => ({
-        preserveFinders: true,
-        darkMinOccupancy: clamp(baseDark + idx * 0.01, 0.52, 0.7),
-        lightMaxOccupancy: clamp(baseLight - idx * 0.01, 0.3, 0.48),
-        optimizeIterations: Math.max(6 + idx, effectiveConfig.optimizeIterations ?? 6),
-        overlayIntensity,
-        qrBitBiasStrength: clamp(baseBias + 0.12 + idx * 0.03 + overlayComplexity * 0.025, 0, 0.36),
-      }));
-    };
-
     const runDecode = async (src: HTMLCanvasElement | OffscreenCanvas): Promise<boolean> => {
       const decoded = await decodeCanvasData(src);
       return decoded?.success === true && decoded?.data === effectiveConfig.content;
     };
 
     const scenarioSeed = effectiveConfig.seed ?? 1337;
-    const seeded01 = (salt: number): number => {
-      const n = Math.sin((scenarioSeed + salt) * 12.9898) * 43758.5453;
-      return n - Math.floor(n);
-    };
-
-    const decodeScenarios = async (
-      canvas: HTMLCanvasElement | OffscreenCanvas,
-      prevEdgeImprint: number | null
-    ): Promise<{
-      ok: boolean;
-      baseDecodeOk: boolean;
-      metrics: { edgeImprint: number; toneStd: number } | null;
-      evaluatedCanvas: HTMLCanvasElement | OffscreenCanvas;
-    }> => {
-      if (isScanGateDisabled) {
-        return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: canvas };
-      }
-      // Preview mode prioritizes generation throughput and checks decode on the render canvas.
-      // Full mode validates on an export-equivalent raster roundtrip.
-      const finalRaster = isPreviewScanGate ? canvas : await roundtripToFinalRaster(pool, canvas);
-      if (!(await runDecode(finalRaster))) {
-        return { ok: false, baseDecodeOk: false, metrics: null, evaluatedCanvas: finalRaster };
-      }
-
-      if (skipScanGateEscalation) {
-        const baseMetrics = isPreviewScanGate
-          ? null
-          : computeScanGateRasterMetrics(finalRaster, moduleCount, effectiveConfig);
-        return {
-          ok: true,
-          baseDecodeOk: true,
-          metrics: baseMetrics,
-          evaluatedCanvas: finalRaster,
-        };
-      }
-
-      if (isPreviewScanGate) {
-        return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: finalRaster };
-      }
-      const baseMetrics = computeScanGateRasterMetrics(finalRaster, moduleCount, effectiveConfig);
-      if (baseMetrics) {
-        if (
-          baseMetrics.edgeImprint > adaptiveEdgeImprintThreshold ||
-          baseMetrics.toneStd < adaptiveToneStdThreshold
-        ) {
-          return {
-            ok: false,
-            baseDecodeOk: true,
-            metrics: baseMetrics,
-            evaluatedCanvas: finalRaster,
-          };
-        }
-        if (
-          prevEdgeImprint !== null &&
-          baseMetrics.edgeImprint > prevEdgeImprint + adaptiveEdgeWorsenLimit
-        ) {
-          return {
-            ok: false,
-            baseDecodeOk: true,
-            metrics: baseMetrics,
-            evaluatedCanvas: finalRaster,
-          };
-        }
-      }
-
-      const scenarios = [
-        {
-          blur: 0.8 + seeded01(11) * 0.4,
-          exposure: -0.24 + seeded01(13) * 0.08,
-          skewX: finalRaster.width * 0.02,
-          skewY: finalRaster.height * 0.012,
-          downscale: 0.9,
-        },
-        {
-          blur: 1 + seeded01(17) * 0.5,
-          exposure: 0.18 + seeded01(19) * 0.12,
-          skewX: finalRaster.width * 0.028,
-          skewY: finalRaster.height * 0.018,
-          downscale: 0.82,
-        },
-      ];
-
-      for (const s of scenarios) {
-        if (!(await simulateScenarioDecode(pool, finalRaster, s, runDecode))) {
-          return {
-            ok: false,
-            baseDecodeOk: true,
-            metrics: baseMetrics,
-            evaluatedCanvas: finalRaster,
-          };
-        }
-      }
-
-      return {
-        ok: true,
-        baseDecodeOk: true,
-        metrics: baseMetrics,
-        evaluatedCanvas: finalRaster,
-      };
+    const thresholds = {
+      edge: adaptiveEdgeImprintThreshold,
+      toneStd: adaptiveToneStdThreshold,
+      edgeWorsen: adaptiveEdgeWorsenLimit,
     };
 
     let lastCanvas: HTMLCanvasElement | OffscreenCanvas | null = null;
@@ -1557,7 +1580,16 @@ export class QRGenerator {
       }
       const attemptCanvas = await renderScaled(buildAttemptConfig(patch));
       try {
-        const evaluated = await decodeScenarios(attemptCanvas, prevEdgeImprint);
+        const evaluated = await evaluateDecodeScenarios(
+          sgctx,
+          pool,
+          moduleCount,
+          attemptCanvas,
+          prevEdgeImprint,
+          thresholds,
+          scenarioSeed,
+          runDecode
+        );
         lastCanvas = evaluated.evaluatedCanvas;
         if (evaluated.baseDecodeOk && !bestBaseDecodable) {
           bestBaseDecodable = evaluated.evaluatedCanvas;
@@ -1593,7 +1625,7 @@ export class QRGenerator {
 
     const lastPatch = attempts[attempts.length - 1] || {};
     if (skipScanGateEscalation) {
-      const finderRescuePatches = buildFinderRescuePatches();
+      const finderRescuePatches = buildScanGateFinderRescuePatches(sgctx);
       for (const patch of finderRescuePatches) {
         if (lastCanvas && lastCanvas !== bestBaseDecodable) {
           pool.release(lastCanvas);
@@ -1614,7 +1646,10 @@ export class QRGenerator {
       return fallback;
     }
 
-    let rescuePatches = [...buildDecodeRescuePatches(), ...buildFinderRescuePatches()];
+    let rescuePatches = [
+      ...buildScanGateDecodeRescuePatches(sgctx),
+      ...buildScanGateFinderRescuePatches(sgctx),
+    ];
     if (isAnimatedPreviewFrame) {
       rescuePatches = rescuePatches.slice(0, 4);
     }
@@ -1651,7 +1686,7 @@ export class QRGenerator {
     let qrFirstLast: HTMLCanvasElement | OffscreenCanvas | null = null;
     const qrFirstDrops = isPreviewScanGate ? [10, 16, 22, 28, 34] : [8, 14, 20, 26, 32, 38, 44];
     const qrFirstIntensities = qrFirstDrops
-      .map((drop) => resolveOverlayIntensity(drop, { minIntensity: 6, maxDrop: 46 }))
+      .map((drop) => resolveScanGateIntensity(sgctx, drop, { minIntensity: 6, maxDrop: 46 }))
       .filter(
         (intensity, idx, values) =>
           intensity < requestedOverlayIntensity && values.indexOf(intensity) === idx
