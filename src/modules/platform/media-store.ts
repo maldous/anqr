@@ -29,9 +29,7 @@ export interface MediaStoreWriterPlugin {
 let _mediaStoreWriter: MediaStoreWriterPlugin | null = null;
 
 function getMediaStoreWriter(): MediaStoreWriterPlugin {
-  if (!_mediaStoreWriter) {
-    _mediaStoreWriter = registerPlugin<MediaStoreWriterPlugin>('MediaStoreWriter');
-  }
+  _mediaStoreWriter ??= registerPlugin<MediaStoreWriterPlugin>('MediaStoreWriter');
   return _mediaStoreWriter;
 }
 

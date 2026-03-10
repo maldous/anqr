@@ -110,9 +110,7 @@ export function qrcode(
       setupTypeNumber(test);
     }
 
-    if (_dataCache == null) {
-      _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
-    }
+    _dataCache ??= createData(_typeNumber, _errorCorrectionLevel, _dataList);
 
     mapData(_dataCache, maskPattern);
   };
@@ -760,9 +758,7 @@ export function qrcode(
       if (_typeNumber < 1) {
         throw new Error('QR code not initialized: call make() before getDataCache()');
       }
-      if (_dataCache == null) {
-        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
-      }
+      _dataCache ??= createData(_typeNumber, _errorCorrectionLevel, _dataList);
       return _dataCache;
     },
   };

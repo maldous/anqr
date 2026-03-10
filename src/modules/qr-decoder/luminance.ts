@@ -224,9 +224,7 @@ export class BinaryBitmap {
   }
 
   getBlackMatrix(): BitMatrix {
-    if (this.matrix === null) {
-      this.matrix = this.binarizer.getBlackMatrix();
-    }
+    this.matrix ??= this.binarizer.getBlackMatrix();
     return this.matrix;
   }
 

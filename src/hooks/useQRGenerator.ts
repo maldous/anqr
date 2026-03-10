@@ -144,16 +144,12 @@ let qartModulePromise: Promise<QArtModule> | null = null;
 let exporterModulePromise: Promise<ExporterModule> | null = null;
 
 function loadQArtModule(): Promise<QArtModule> {
-  if (!qartModulePromise) {
-    qartModulePromise = import('@/modules/qr-art');
-  }
+  qartModulePromise ??= import('@/modules/qr-art');
   return qartModulePromise;
 }
 
 function loadExporterModule(): Promise<ExporterModule> {
-  if (!exporterModulePromise) {
-    exporterModulePromise = import('@/modules/exporter');
-  }
+  exporterModulePromise ??= import('@/modules/exporter');
   return exporterModulePromise;
 }
 

@@ -26,9 +26,7 @@ async function createHashCanvas(
 async function acquireHashCanvas(
   createCanvasFn: (width: number, height: number) => Promise<HTMLCanvasElement | OffscreenCanvas>
 ): Promise<{ canvas: HTMLCanvasElement | OffscreenCanvas; release: () => void }> {
-  if (!sharedHashCanvas) {
-    sharedHashCanvas = await createHashCanvas(createCanvasFn);
-  }
+  sharedHashCanvas ??= await createHashCanvas(createCanvasFn);
 
   if (!sharedHashCanvasInUse) {
     sharedHashCanvasInUse = true;

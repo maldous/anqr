@@ -88,7 +88,7 @@ export function loadWebOnlyBootAssets(): void {
     crossOrigin: 'anonymous',
   });
 
-  win._iub = win._iub || [];
+  win._iub ??= [];
   win._iub.csConfiguration = {
     siteId: 4407480,
     cookiePolicyId: 70266922,

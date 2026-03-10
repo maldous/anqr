@@ -198,9 +198,7 @@ export class Result {
   }
 
   putMetadata(type: ResultMetadataType, value: any): void {
-    if (this.resultMetadata === null) {
-      this.resultMetadata = new Map();
-    }
+    this.resultMetadata ??= new Map();
     this.resultMetadata.set(type, value);
   }
 
