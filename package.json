@@ -35,6 +35,7 @@
     "test:testid:refs": "node scripts/check-testid-references.js",
     "test:i18n": "node scripts/check-i18n-regressions.js",
     "test:bundle:budget": "node scripts/check-bundle-budgets.mjs",
+    "test:perf:budget": "npm run build && node scripts/check-performance-budgets.mjs",
     "report:payload:matrix": "node scripts/generate-payload-matrix.mjs",
     "validate:services": "node scripts/validate-third-party.mjs",
     "check:sentry": "node scripts/check-sentry-regression.mjs",
