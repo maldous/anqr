@@ -3,17 +3,8 @@
 All notable changes to ANQR are documented here.
 Each resolved issue should add an entry under the current date heading.
 
-## 2026-03-11
-
-- fix(ci): add WCAG-critical accessibility gate with CI reporting for key flows
-- fix(ui): modernize shared design tokens for typography, spacing, and motion across core controls
-- fix(platform): enforce monetization guardrails with telemetry and auto kill-switch for violating ad variants
-- fix(ops): harden `make all` with deterministic stage contracts and explicit skip/failure behavior
-- fix(ops): preserve workspace state across retries and only fresh-clone when needed
-
 ## 2026-03-10
 
-- fix(gallery): add CI-safe parity guardrails with visual-hash thresholds
 - fix(sonar): resolve 10 BLOCKER findings — S3516 same-return in qr.ts + S2699 assertion-less tests (9 files)
 - fix(sonar): decompose Analyze.tsx into payload-parsers.ts + content-type-renderers.tsx (5993→3286 lines)
 - fix(sonar): extract resolveQArtSuffixConfig from generateFullQArt (CC ~40 reduction)
@@ -28,7 +19,6 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ops): add structured startup diagnostics and error categorization for codex credit gate failures
 - fix: reduce qr-generator overlay mode complexity via handler extraction
 - perf: add CI performance budget guard for `/` and `/gallery` key paths
-- feat: redesign first-run onboarding with step analytics and first-success funnel metrics
 
 ## 2026-03-09
 

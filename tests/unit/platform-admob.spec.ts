@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const logger = {
   trace: vi.fn(),
@@ -44,12 +44,6 @@ describe('platform admob service', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
   });
 
   it('initializes and manages banner lifecycle and callbacks', async () => {
@@ -59,9 +53,6 @@ describe('platform admob service', () => {
     const mod = await import('../../src/modules/platform/admob');
     expect(await mod.initializeAdMob()).toBe(true);
     expect(mod.isAdMobAvailable()).toBe(true);
-    vi.setSystemTime(
-      Date.now() + mod.getMonetizationGuardrailPolicy().minMsAfterInitBeforeAnyAd + 1
-    );
 
     const heights: number[] = [];
     const off = mod.onBannerHeightChange((h) => heights.push(h));
@@ -92,10 +83,6 @@ describe('platform admob service', () => {
     vi.doMock('@capacitor-community/admob', () => plugin.module);
     const mod = await import('../../src/modules/platform/admob');
     await mod.initializeAdMob();
-    const policy = mod.getMonetizationGuardrailPolicy();
-    vi.setSystemTime(Date.now() + policy.minMsAfterInitBeforeAnyAd + 1);
-    const advanceForInterruption = () =>
-      vi.setSystemTime(Date.now() + policy.minMsBetweenInterruptions + 1);
 
     // showInterstitial should self-prepare when a context was not preloaded
     const prepareBeforeGallery = plugin.module.AdMob.prepareInterstitial.mock.calls.length;
@@ -103,7 +90,6 @@ describe('platform admob service', () => {
     expect(plugin.module.AdMob.prepareInterstitial.mock.calls.length).toBeGreaterThan(
       prepareBeforeGallery
     );
-    advanceForInterruption();
 
     expect(await mod.prepareInterstitial('interstitial')).toBe(true);
     expect(await mod.prepareInterstitial('rewardedInterstitial')).toBe(true);
@@ -111,9 +97,7 @@ describe('platform admob service', () => {
     expect(plugin.module.AdMob.prepareRewardedInterstitialAd).toHaveBeenCalled();
 
     expect(await mod.showInterstitial('interstitial')).toBe(true);
-    advanceForInterruption();
     expect(await mod.showInterstitial('rewardedInterstitial')).toBe(true);
-    advanceForInterruption();
 
     expect(await mod.prepareRewardedAd('rewarded')).toBe(true);
     expect(await mod.prepareRewardedAd('rewardedInterstitial')).toBe(true);
@@ -132,19 +116,16 @@ describe('platform admob service', () => {
       prepareBeforePremium
     );
 
-    advanceForInterruption();
     await expect(mod.showRewardedAd('rewarded')).resolves.toMatchObject({
       rewarded: true,
       amount: 5,
       type: 'gem',
     });
-    advanceForInterruption();
     await expect(mod.showRewardedAd('rewardedInterstitial')).resolves.toMatchObject({
       rewarded: true,
       amount: 1,
       type: 'coin',
     });
-    advanceForInterruption();
 
     plugin.module.AdMob.showInterstitial.mockRejectedValueOnce(new Error('x'));
     await expect(mod.showInterstitial('interstitial')).resolves.toBe(false);
@@ -152,7 +133,6 @@ describe('platform admob service', () => {
     plugin.module.AdMob.prepareRewardedAd.mockRejectedValueOnce(new Error('x'));
     await expect(mod.prepareRewardedAd('rewarded')).resolves.toBe(false);
 
-    advanceForInterruption();
     plugin.module.AdMob.showRewardedAd.mockRejectedValueOnce(new Error('x'));
     await expect(mod.showRewardedAd('rewarded')).resolves.toEqual({ rewarded: false });
   });
@@ -163,9 +143,6 @@ describe('platform admob service', () => {
     const mod = await import('../../src/modules/platform/admob');
 
     await mod.initializeAdMob();
-    vi.setSystemTime(
-      Date.now() + mod.getMonetizationGuardrailPolicy().minMsAfterInitBeforeAnyAd + 1
-    );
     mod.resetGenerationCount();
     expect(mod.getGenerationCount()).toBe(0);
 
@@ -191,26 +168,5 @@ describe('platform admob service', () => {
     expect(await modUnavailable.prepareRewardedAd()).toBe(false);
     expect(await modUnavailable.showRewardedAd()).toEqual({ rewarded: false });
     expect(modUnavailable.isRewardedAdReady()).toBe(false);
-  });
-
-  it('activates kill switch for repeated policy violations and records telemetry', async () => {
-    const plugin = buildAdMobPlugin();
-    vi.doMock('@capacitor-community/admob', () => plugin.module);
-    const mod = await import('../../src/modules/platform/admob');
-    await mod.initializeAdMob();
-    vi.setSystemTime(
-      Date.now() + mod.getMonetizationGuardrailPolicy().minMsAfterInitBeforeAnyAd + 1
-    );
-
-    expect(await mod.prepareInterstitial('unknown-variant')).toBe(false);
-    expect(await mod.prepareInterstitial('unknown-variant')).toBe(false);
-    expect(await mod.prepareInterstitial('unknown-variant')).toBe(false);
-    expect(await mod.showBannerAd('bottom')).toBe(false);
-
-    const telemetry = mod.getMonetizationGuardrailTelemetry();
-    expect(telemetry.killSwitchActive).toBe(true);
-    expect(telemetry.violationCount).toBeGreaterThanOrEqual(3);
-    expect(telemetry.blockedByKillSwitch).toBeGreaterThan(0);
-    expect(telemetry.lastViolationReason).toBe('kill_switch');
   });
 });

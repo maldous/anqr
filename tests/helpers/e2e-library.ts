@@ -739,7 +739,7 @@ export const WELCOME_MODAL_STORAGE_KEY = 'anqr-welcome-seen';
 
 /** Current version value that marks the modal as "seen" */
 /** IMPORTANT: This MUST match WELCOME_VERSION in src/components/WelcomeModal.tsx */
-export const WELCOME_MODAL_VERSION = '2026.03.10';
+export const WELCOME_MODAL_VERSION = '2026.02.01';
 
 /**
  * Set localStorage to mark welcome modal as seen BEFORE navigation.

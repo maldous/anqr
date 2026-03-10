@@ -12,7 +12,6 @@ Module-level reference pages live in this directory (formerly `src/modules/**/RE
 - [browser-clipboard](browser-clipboard.md)
 - [browser-io](browser-io.md)
 - [core](core.md)
-- [design-tokens](design-tokens.md)
 - [dither-algorithms](dither-algorithms.md)
 - [exporter](exporter.md)
 - [overlay](overlay.md)

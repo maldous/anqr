@@ -40,9 +40,6 @@ export const ADMOB_UTILS_API = [
   'getGenerationCount',
   'resetGenerationCount',
   'trackGenerationAndShowAd',
-  'getMonetizationGuardrailPolicy',
-  'getMonetizationGuardrailTelemetry',
-  'resetMonetizationGuardrailTelemetry',
 ] as const;
 
 // MediaStore writer

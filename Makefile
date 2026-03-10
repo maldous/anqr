@@ -244,7 +244,86 @@ resources:
 # regenerates src/data/gallery-showcase.generated.ts plus public/gallery manifests.
 
 all:
-	@node scripts/ops/run-make-all.mjs
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — Full Production Pipeline"
+	@echo "============================================"
+	@echo ""
+	@echo "[1/16] Installing dependencies..."
+	$(MAKE) install
+	npx playwright install chromium
+	@echo ""
+	@echo "[2/16] Pulling community translations..."
+	@$(MAKE) i18n:pull || echo "⚠️  i18n:pull failed (no remote access?) — continuing with local translations"
+	@echo ""
+	@echo "[3/16] Auto-translating missing strings (free Google Translate)..."
+	@$(MAKE) i18n:xlate || echo "⚠️  i18n:xlate failed — continuing with existing translations"
+	@echo ""
+	@echo "[4/16] Regenerating i18n output files..."
+	$(MAKE) i18n:fill
+	@echo ""
+	@echo "[5/16] Generating assets (icons + sitemap)..."
+	$(MAKE) icons
+	@if [ -d android ]; then $(MAKE) icons:android; fi
+	$(MAKE) sitemap
+	@echo ""
+	@echo "[6/16] Building production bundle..."
+	$(MAKE) build
+	@echo ""
+	@echo "[7/16] Running full test suite (quality gates + unit + E2E)..."
+	# Note: test includes fix, bundle budget (which rebuilds), and Playwright (which starts its own dev server)
+	$(MAKE) test
+	@echo ""
+	@echo "[8/16] Rendering local gallery permutations..."
+	$(MAKE) gallery:local
+	@echo ""
+	@echo "[9/16] Publishing curated gallery from local artifacts..."
+	$(MAKE) gallery:publish GALLERY_PUBLISH_SOURCE=local
+	@echo ""
+	@echo "[10/16] Generating reports + coverage..."
+	$(MAKE) report:payload:matrix
+	$(MAKE) report:i18n:txt
+	@$(MAKE) test:unit:coverage || echo "⚠️  Coverage below 100% threshold — see coverage gap report"
+	$(MAKE) test:coverage:gap
+	@echo ""
+	@echo "[11/16] Running SonarQube analysis..."
+	@$(MAKE) sonar || echo "⚠️  SonarQube not available (localhost:9000) — skipping"
+	@echo ""
+	@echo "[12/16] Deploying web to production (Netlify) + IndexNow..."
+	# Deploy rebuilds with SENTRY_UPLOAD=true for sourcemap upload, then pushes to Netlify.
+	# This final build includes curated gallery assets from step 9.
+	$(MAKE) deploy
+	@$(MAKE) indexnow || echo "⚠️  IndexNow submission failed — see reports/indexnow-submission.json"
+	@echo ""
+	@echo "[13/16] Bumping version + building Android release AAB + uploading..."
+	@if [ -d android ] && command -v java >/dev/null 2>&1 && [ -n "$$ANDROID_HOME" ]; then \
+		$(MAKE) android:bump; \
+		$(MAKE) android:release; \
+		if [ -f play-store-key.json ]; then \
+			echo "Uploading to Play Store..."; \
+			python3 scripts/upload-to-play-store.py || echo "⚠️  Play Store upload failed"; \
+		else \
+			echo "Skipping Play Store upload (play-store-key.json not found)"; \
+		fi; \
+	else \
+		echo "Skipping Android build (SDK/Java not available)"; \
+	fi
+	@echo ""
+	@echo "[14/16] Validating third-party services..."
+	@$(MAKE) validate:services || echo "⚠️  Some third-party validations failed — see reports/third-party-validation.json"
+	@$(MAKE) check:sentry || echo "⚠️  Sentry regression check failed — see reports/sentry-regression.json"
+	@echo ""
+	@echo "[15/16] Pushing translations"
+	@$(MAKE) i18n:push || echo "⚠️  i18n:push failed (no remote access?) — skipping"
+	@echo ""
+	@echo "[16/16] Final summary"
+	@echo ""
+	@echo "============================================"
+	@echo "ANQR — Production pipeline complete!"
+	@echo "============================================"
+	@echo ""
+	@echo "Post-deploy manual checklist: see docs/operations/launch-checklist.md"
+	@echo "Reports generated in: reports/"
 
 # ============================================
 # AdSense Configuration (for Web - anqr.link)
