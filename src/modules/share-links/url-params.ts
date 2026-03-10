@@ -285,12 +285,7 @@ export function parseUrlParams(): Partial<ShareConfig> {
   return parseUrlParamsFromSearchParams(new URLSearchParams(globalThis.location.search));
 }
 
-function buildQRSettingsParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.ec && config.ec !== 'H') params.set('ec', config.ec);
-  if (config.version && config.version !== 0) params.set('v', config.version.toString());
-  if (config.size && config.size !== 20) params.set('size', config.size.toString());
-  if (config.margin !== undefined && config.margin !== 4)
-    params.set('margin', config.margin.toString());
+function buildQREncodingParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.encodingMode && config.encodingMode !== 'auto') params.set('enc', config.encodingMode);
   if (config.maskPattern !== undefined && config.maskPattern !== 'auto')
     params.set('mask', String(config.maskPattern));
@@ -299,6 +294,15 @@ function buildQRSettingsParams(config: Partial<ShareConfig>, params: URLSearchPa
   if (config.borderModulesExtra && config.borderModulesExtra !== 0)
     params.set('border', config.borderModulesExtra.toString());
   if (config.quietZoneMinEnforce === false) params.set('qzEnforce', '0');
+}
+
+function buildQRSettingsParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.ec && config.ec !== 'H') params.set('ec', config.ec);
+  if (config.version && config.version !== 0) params.set('v', config.version.toString());
+  if (config.size && config.size !== 20) params.set('size', config.size.toString());
+  if (config.margin !== undefined && config.margin !== 4)
+    params.set('margin', config.margin.toString());
+  buildQREncodingParams(config, params);
 }
 
 function buildColorParams(config: Partial<ShareConfig>, params: URLSearchParams): void {

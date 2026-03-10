@@ -192,6 +192,21 @@ function buildBlockAffectionMatrix(
   return matrix;
 }
 
+function findRowWithBitSet(
+  matrix: Uint32Array[],
+  startRow: number,
+  endRow: number,
+  wordIndex: number,
+  bitIndex: number
+): number {
+  for (let r = startRow; r < endRow; r++) {
+    if (((matrix[r][wordIndex] >>> bitIndex) & 1) === 1) {
+      return r;
+    }
+  }
+  return -1;
+}
+
 function eliminatePixelFromOtherRows(
   matrix: Uint32Array[],
   resultVectors: RSBasisVector[],
@@ -273,13 +288,7 @@ function eliminateBlock(
     const bitIndex = pixelIdx & BITSET_WORD_MASK;
 
     // Find a row that has this pixel set and isn't already pivoted
-    let foundRow = -1;
-    for (let r = pivotRow; r < numVectors; r++) {
-      if (((matrix[r][wordIndex] >>> bitIndex) & 1) === 1) {
-        foundRow = r;
-        break;
-      }
-    }
+    const foundRow = findRowWithBitSet(matrix, pivotRow, numVectors, wordIndex, bitIndex);
 
     if (foundRow === -1) continue; // No row in this block affects this pixel
 

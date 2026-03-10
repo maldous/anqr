@@ -146,6 +146,14 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
     return 'Poor';
   };
 
+  const contrastRatioToHeatmapColor = (ratio: number): { r: number; g: number; b: number } => {
+    if (ratio >= 7) return { r: 34, g: 197, b: 94 };
+    if (ratio >= 4.5) return { r: 132, g: 204, b: 22 };
+    if (ratio >= 3) return { r: 234, g: 179, b: 8 };
+    if (ratio >= 2) return { r: 249, g: 115, b: 22 };
+    return { r: 239, g: 68, b: 68 };
+  };
+
   // Generate heatmap from the QR canvas
   const generateHeatmap = useCallback(() => {
     if (!(canvas && heatmapCanvasRef.current)) return;
@@ -184,38 +192,8 @@ export function Preview({ sidebarOpen = true, hidden = false }: Readonly<Preview
         // Calculate contrast ratio with background
         const ratio = bg ? getContrastRatio(pixelColor, bg) : 1;
 
-        // Map contrast ratio to heatmap color
-        // 7:1 = AAA (green), 4.5:1 = AA (yellow-green), 3:1 = AA-L (yellow), <3 = poor (red)
-        let r: number, g: number, b: number;
-
-        if (ratio >= 7) {
-          // Green - excellent contrast
-          r = 34;
-          g = 197;
-          b = 94;
-        } else if (ratio >= 4.5) {
-          // Light green - good contrast
-          r = 132;
-          g = 204;
-          b = 22;
-        } else if (ratio >= 3) {
-          // Yellow - acceptable for large text
-          r = 234;
-          g = 179;
-          b = 8;
-        } else if (ratio >= 2) {
-          // Orange - poor contrast
-          r = 249;
-          g = 115;
-          b = 22;
-        } else {
-          // Red - very poor contrast
-          r = 239;
-          g = 68;
-          b = 68;
-        }
-
-        ctx.fillStyle = `rgba(${r},${g},${b},0.6)`;
+        const heatColor = contrastRatioToHeatmapColor(ratio);
+        ctx.fillStyle = `rgba(${heatColor.r},${heatColor.g},${heatColor.b},0.6)`;
         ctx.fillRect(x, y, sampleSize, sampleSize);
       }
     }

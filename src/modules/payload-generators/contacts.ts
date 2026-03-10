@@ -54,6 +54,22 @@ function formatEmailLine(email: string, version: string): string {
   }
 }
 
+function appendValidTelLines(lines: string[], tels: string[], version: string): void {
+  for (const tel of tels) {
+    if (isValidPhone(tel)) {
+      lines.push(formatTelLine(tel, version));
+    }
+  }
+}
+
+function appendValidEmailLines(lines: string[], emails: string[], version: string): void {
+  for (const email of emails) {
+    if (isValidEmail(email)) {
+      lines.push(formatEmailLine(email, version));
+    }
+  }
+}
+
 function appendVCardContactInfo(lines: string[], params: VCardHelper): void {
   if (params.org) {
     lines.push(`ORG:${escapeValue(params.org)}`);
@@ -65,24 +81,13 @@ function appendVCardContactInfo(lines: string[], params: VCardHelper): void {
     lines.push(`ROLE:${escapeValue(params.role)}`);
   }
 
-  // Only output TEL/EMAIL if valid (Android compatibility)
   if (params.tel) {
-    for (const tel of params.tel) {
-      if (isValidPhone(tel)) {
-        lines.push(formatTelLine(tel, params.version));
-      }
-    }
+    appendValidTelLines(lines, params.tel, params.version);
   }
-
   if (params.email) {
-    for (const email of params.email) {
-      if (isValidEmail(email)) {
-        lines.push(formatEmailLine(email, params.version));
-      }
-    }
+    appendValidEmailLines(lines, params.email, params.version);
   }
 
-  // Only output URL if it's a valid http(s):// URL (Android compatibility)
   if (params.url && isValidUrl(params.url)) {
     lines.push(`URL:${params.url}`);
   }

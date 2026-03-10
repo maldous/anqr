@@ -404,6 +404,15 @@ function applyAdaptiveNormalizationIfNeeded(
  * Preprocess image data with configured filters
  * Uses overlay module's applyFilters (canonical source) with QR config mapping
  */
+function autoSoftenIfNeeded(data: ImageData, config: QRGeneratorConfig, debug: boolean): ImageData {
+  if (config.disableAutoSoften || config.qrFirstMode) return data;
+  if (!detectBimodalBW(data)) return data;
+  if (debug) {
+    log.debug('preprocessImageData - detected high-contrast B&W, applying softening');
+  }
+  return softenBWImage(data);
+}
+
 export function preprocessImageData(
   imageData: ImageData,
   config: QRGeneratorConfig,
@@ -439,15 +448,7 @@ export function preprocessImageData(
   // Without softening, raw 0/255 pixels produce poor dithering results.
 
   let workingData = copyImageData(imageData);
-
-  if (!(config.disableAutoSoften || config.qrFirstMode)) {
-    if (detectBimodalBW(workingData)) {
-      if (debug) {
-        log.debug('preprocessImageData - detected high-contrast B&W, applying softening');
-      }
-      workingData = softenBWImage(workingData);
-    }
-  }
+  workingData = autoSoftenIfNeeded(workingData, config, debug);
 
   // If no additional filters to apply, return the (possibly softened) image
   if (Object.keys(filterOptions).length === 0) {

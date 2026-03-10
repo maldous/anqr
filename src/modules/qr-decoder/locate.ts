@@ -154,6 +154,38 @@ function scanRow(
 }
 
 /**
+ * Advance the vertical scan state machine for one pixel.
+ * Returns the new state, or -1 to signal the scan should stop.
+ */
+function advanceVerticalScanState(
+  isDark: boolean,
+  state: number,
+  counts: number[],
+  centerIdx: number,
+  whiteIdx: number,
+  outerIdx: number
+): number {
+  if (state === centerIdx) {
+    if (isDark) counts[centerIdx]++;
+    else {
+      counts[whiteIdx]++;
+      return whiteIdx;
+    }
+  } else if (state === whiteIdx) {
+    if (isDark) {
+      counts[outerIdx]++;
+      return outerIdx;
+    } else {
+      counts[whiteIdx]++;
+    }
+  } else if (state === outerIdx) {
+    if (isDark) counts[outerIdx]++;
+    else return -1;
+  }
+  return state;
+}
+
+/**
  * Scan upward from startY, populating counts[2], counts[1], counts[0].
  * Scans the center dark region, then the white ring, then the outer dark border.
  */
@@ -165,30 +197,14 @@ function scanUpward(
   threshold: number,
   counts: number[]
 ): void {
-  let state = 2; // Start at center (black)
+  let state = 2;
 
   for (let row = startY; row >= 0; row--) {
     const idx = (row * width + Math.floor(x)) * 4;
     const gray = grayAt(pixels, idx);
     const isDark = gray < threshold;
-
-    if (state === 2) {
-      if (isDark) counts[2]++;
-      else {
-        state = 1;
-        counts[1]++;
-      }
-    } else if (state === 1) {
-      if (isDark) {
-        state = 0;
-        counts[0]++;
-      } else {
-        counts[1]++;
-      }
-    } else if (state === 0) {
-      if (isDark) counts[0]++;
-      else break;
-    }
+    state = advanceVerticalScanState(isDark, state, counts, 2, 1, 0);
+    if (state === -1) break;
   }
 }
 
@@ -205,30 +221,14 @@ function scanDownward(
   threshold: number,
   counts: number[]
 ): void {
-  let state = 2; // Start at center (black)
+  let state = 2;
 
   for (let row = startY; row < height; row++) {
     const idx = (row * width + Math.floor(x)) * 4;
     const gray = grayAt(pixels, idx);
     const isDark = gray < threshold;
-
-    if (state === 2) {
-      if (isDark) counts[2]++;
-      else {
-        state = 3;
-        counts[3]++;
-      }
-    } else if (state === 3) {
-      if (isDark) {
-        state = 4;
-        counts[4]++;
-      } else {
-        counts[3]++;
-      }
-    } else if (state === 4) {
-      if (isDark) counts[4]++;
-      else break;
-    }
+    state = advanceVerticalScanState(isDark, state, counts, 2, 3, 4);
+    if (state === -1) break;
   }
 }
 

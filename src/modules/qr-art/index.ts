@@ -522,6 +522,19 @@ export { mapImageToTargetsSupersampled } from './image-utils';
  * Evaluate how well a QR code matches the target image
  * Returns a score from 0 to 1, where 1 is a perfect match
  */
+function isEvalStructuralModule(
+  row: number,
+  col: number,
+  moduleCount: number,
+  alignmentPositions: number[]
+): boolean {
+  return (
+    isFinderPattern(row, col, moduleCount) ||
+    isTimingPattern(row, col) ||
+    isAlignmentPattern(row, col, alignmentPositions)
+  );
+}
+
 export function evaluateQRMatch(
   qrIsDark: (row: number, col: number) => boolean,
   moduleCount: number,
@@ -538,10 +551,7 @@ export function evaluateQRMatch(
 
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
-      // Skip structural modules (finders, timing, alignment)
-      if (isFinderPattern(row, col, moduleCount)) continue;
-      if (isTimingPattern(row, col)) continue;
-      if (isAlignmentPattern(row, col, alignmentPositions)) continue;
+      if (isEvalStructuralModule(row, col, moduleCount, alignmentPositions)) continue;
 
       // This is a controllable (data/ECC) module
       totalControllable++;

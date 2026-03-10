@@ -423,6 +423,39 @@ export function saveFilteredLogs(scope: string, filename?: string): void {
  * Safely serialize an object for logging, handling non-cloneable objects.
  * Uses JSON serialization as fallback for structuredClone failures.
  */
+function safeJsonReplacer(_key: string, value: unknown): unknown {
+  if (value instanceof Error) {
+    return {
+      __type: 'Error',
+      name: value.name,
+      message: value.message,
+      stack: value.stack,
+    };
+  }
+  if (value instanceof Set) {
+    return { __type: 'Set', values: Array.from(value) };
+  }
+  if (value instanceof Map) {
+    return { __type: 'Map', entries: Array.from(value.entries()) };
+  }
+  if (typeof value === 'function') {
+    return '[Function]';
+  }
+  if (value instanceof HTMLElement) {
+    return `[HTMLElement: ${value.tagName}]`;
+  }
+  if (value instanceof Node) {
+    return `[Node: ${value.nodeName}]`;
+  }
+  if (ArrayBuffer.isView(value) && !(value instanceof DataView)) {
+    return {
+      __type: (value as Uint8Array).constructor.name,
+      values: Array.from(value as Uint8Array),
+    };
+  }
+  return value;
+}
+
 function safeSerializeContext(context: unknown): unknown {
   if (context === null || context === undefined) {
     return context;
@@ -437,37 +470,7 @@ function safeSerializeContext(context: unknown): unknown {
 
   // Try JSON serialization (handles most plain objects)
   try {
-    const jsonStr = JSON.stringify(context, (_key, value) => {
-      // Handle special cases
-      if (value instanceof Error) {
-        return {
-          __type: 'Error',
-          name: value.name,
-          message: value.message,
-          stack: value.stack,
-        };
-      }
-      if (value instanceof Set) {
-        return { __type: 'Set', values: Array.from(value) };
-      }
-      if (value instanceof Map) {
-        return { __type: 'Map', entries: Array.from(value.entries()) };
-      }
-      if (typeof value === 'function') {
-        return '[Function]';
-      }
-      if (value instanceof HTMLElement) {
-        return `[HTMLElement: ${value.tagName}]`;
-      }
-      if (value instanceof Node) {
-        return `[Node: ${value.nodeName}]`;
-      }
-      // Handle typed arrays
-      if (ArrayBuffer.isView(value) && !(value instanceof DataView)) {
-        return { __type: value.constructor.name, values: Array.from(value as Uint8Array) };
-      }
-      return value;
-    });
+    const jsonStr = JSON.stringify(context, safeJsonReplacer);
     return JSON.parse(jsonStr);
   } catch {
     // JSON serialization also failed
