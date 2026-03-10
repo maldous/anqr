@@ -11,11 +11,12 @@ This `docs/` directory is the canonical source of project knowledge.
 - [Module catalog](modules/index.md)
 - [Reports catalog](reports/README.md)
 - [Provider operations](harness/provider-operations.md)
+- [Board hygiene](harness/board-hygiene.md)
 - [Markdown reconciliation matrix](inventory/markdown-reconciliation.md)
 
 ## Documentation Sections
 
-- `harness/`: agent-first operating model, Codebuff configuration, autonomous framework, and documentation policy.
+- `harness/`: agent-first operating model, Codebuff configuration, autonomous framework, board hygiene, and documentation policy.
 - `workflow/`: implementation and review workflow.
 - `architecture/`: verified system architecture, runtime flows, and cross-platform QR rendering parity.
 - `modules/`: module-level reference (formerly `src/modules/**/README.md`, now removed).

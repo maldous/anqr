@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child issue\:cleanup\:comments board\:hygiene ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
 
 # ============================================
 # Help
@@ -84,6 +84,8 @@ help:
 	@echo " 18) Linear Issue Management"
 	@echo "    make issue:create      Show usage for standalone issue creation"
 	@echo "    make issue:create:child Show usage for child issue creation"
+	@echo "    make issue:cleanup:comments  List/delete noise comments from issues"
+	@echo "    make board:hygiene           Run board hygiene check (dry-run)"
 	@echo "    node scripts/ops/create-issue.mjs --title 'Fix bug' --priority 2 --label reliability"
 	@echo ""
 
@@ -1380,6 +1382,26 @@ issue\:create\:child:
 	@echo ""
 	@echo "Example:"
 	@echo "  node scripts/ops/create-child-issue.mjs --parent ANQ-151 --title 'Subtask' --priority 3"
+
+# List and delete noise comments (error traces, retry logs) from Linear issues.
+# Dry-run by default — use --apply to actually delete.
+issue\:cleanup\:comments:
+	@echo "Usage: node scripts/ops/linear-cleanup-comments.mjs --issue ANQ-XXX [--apply] [--older-than N] [--pattern 'regex']"
+	@echo "       node scripts/ops/linear-cleanup-comments.mjs --all-open [--apply] [--older-than N]"
+	@echo ""
+	@echo "Examples:"
+	@echo "  node scripts/ops/linear-cleanup-comments.mjs --issue ANQ-106"
+	@echo "  node scripts/ops/linear-cleanup-comments.mjs --issue ANQ-106 --apply"
+	@echo "  node scripts/ops/linear-cleanup-comments.mjs --all-open --older-than 7 --apply"
+
+# Run board hygiene checks: multiple In Progress, stale In Progress, Pending without [HUMAN].
+# Dry-run by default. Use APPLY=1 to auto-correct violations.
+board\:hygiene:
+ifeq ($(APPLY),1)
+	@node scripts/ops/linear-guardian.mjs --apply 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); bh=d.get('boardHygiene',{}); print(json.dumps(bh,indent=2))"
+else
+	@node scripts/ops/linear-guardian.mjs 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); bh=d.get('boardHygiene',{}); print(json.dumps(bh,indent=2))"
+endif
 
 # ============================================
 # iOS App (Capacitor + Fastlane)

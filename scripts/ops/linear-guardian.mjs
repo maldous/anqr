@@ -34,6 +34,7 @@ const GUARDIAN_REFEED_COOLDOWN_MS = Number(
 );
 const GUARDIAN_DRAIN_CIRCUIT_BREAKER = Number(process.env.GUARDIAN_DRAIN_CIRCUIT_BREAKER || 3);
 const GUARDIAN_DRAIN_WINDOW_MS = Number(process.env.GUARDIAN_DRAIN_WINDOW_MS || 6 * 60 * 60 * 1000);
+const GUARDIAN_STALE_IN_PROGRESS_HOURS = Number(process.env.GUARDIAN_STALE_IN_PROGRESS_HOURS || 48);
 const HUMAN_REQUIRED_PATTERNS = [
   /\bcreate\b.{0,24}\b(api key|api token|credential|secret)\b/i,
   /\bmanual\b.{0,24}\b(step|action|intervention)\b/i,
@@ -1063,6 +1064,311 @@ async function main() {
     console.error(
       `Child-parent audit: found ${orphanChildren.length} open [CHILD] issues without parent linkage`
     );
+  }
+
+  // -----------------------------------------------------------------------
+  // Board hygiene: enforce board-wide invariants documented in
+  // docs/harness/board-hygiene.md. Detects and auto-corrects:
+  //   1. Multiple In Progress issues (only one allowed at any time)
+  //   2. Pending issues without [HUMAN] prefix (Pending = human-blocked only)
+  // -----------------------------------------------------------------------
+  summary.boardHygiene = {
+    checked: false,
+    multipleInProgress: { count: 0, issues: [], demoted: [] },
+    staleInProgress: { count: 0, issues: [], demoted: [] },
+    pendingWithoutHuman: { count: 0, issues: [], corrected: [] },
+  };
+  try {
+    const hygieneStates = await gql(
+      `query($teamId: ID!) {
+        workflowStates(
+          filter: { team: { id: { eq: $teamId } }, name: { in: ["Backlog", "In Progress", "Pending"] } }
+          first: 10
+        ) {
+          nodes { id name }
+        }
+      }`,
+      { teamId: team.id }
+    );
+    const hygieneBacklog = hygieneStates.workflowStates.nodes.find((s) => s.name === 'Backlog');
+    const hygieneInProgress = hygieneStates.workflowStates.nodes.find(
+      (s) => s.name === 'In Progress'
+    );
+
+    if (hygieneInProgress) {
+      const allInProgress = await gql(
+        `query {
+          issues(
+            filter: {
+              team: { key: { eq: "ANQ" } },
+              state: { name: { eq: "In Progress" } }
+            },
+            first: 50
+          ) {
+            nodes { id identifier title priority }
+          }
+        }`
+      );
+      const inProgressIssues = allInProgress.issues.nodes;
+      summary.boardHygiene.multipleInProgress.count = inProgressIssues.length;
+      summary.boardHygiene.multipleInProgress.issues = inProgressIssues.map((i) => ({
+        identifier: i.identifier,
+        title: i.title,
+      }));
+
+      if (inProgressIssues.length > 1 && hygieneBacklog) {
+        const runningSet = new Set(runningIssueIds);
+        const running = inProgressIssues.filter((i) => runningSet.has(i.identifier));
+        const kept =
+          running.length > 0
+            ? running
+            : [[...inProgressIssues].sort((a, b) => a.priority - b.priority)[0]];
+        const keptIds = new Set(kept.map((i) => i.identifier));
+        const toDemote = inProgressIssues.filter((i) => !keptIds.has(i.identifier));
+
+        for (const issue of toDemote) {
+          const entry = {
+            identifier: issue.identifier,
+            title: issue.title,
+            demoted: false,
+          };
+          if (APPLY) {
+            await gql(
+              `mutation($id: String!, $input: IssueUpdateInput!) {
+                issueUpdate(id: $id, input: $input) { success }
+              }`,
+              { id: issue.id, input: { stateId: hygieneBacklog.id } }
+            );
+            await gql(
+              `mutation($input: CommentCreateInput!) {
+                commentCreate(input: $input) { success }
+              }`,
+              {
+                input: {
+                  issueId: issue.id,
+                  body: [
+                    'Board hygiene: demoted from In Progress \u2192 Backlog by guardian.',
+                    '',
+                    `Reason: ${inProgressIssues.length} issues were In Progress simultaneously (invariant: exactly 1).`,
+                    `Kept: ${kept.map((k) => k.identifier).join(', ')}`,
+                    '',
+                    'See docs/harness/board-hygiene.md \u00a7Single In Progress Issue.',
+                  ].join('\n'),
+                },
+              }
+            );
+            entry.demoted = true;
+          }
+          summary.boardHygiene.multipleInProgress.demoted.push(entry);
+        }
+
+        if (toDemote.length > 0) {
+          console.error(
+            `Board hygiene: ${APPLY ? 'demoted' : 'would demote'} ${toDemote.length} excess In Progress issues to Backlog (kept ${kept.map((k) => k.identifier).join(', ')})`
+          );
+        }
+      }
+
+      // Stale In Progress: issues with no git commits referencing them
+      // in the last N hours (default 48) and no live Symphony session.
+      const runningSet = new Set(runningIssueIds);
+      const alreadyDemotedIds = new Set(
+        summary.boardHygiene.multipleInProgress.demoted.map((e) => e.identifier)
+      );
+      const staleThresholdHours = GUARDIAN_STALE_IN_PROGRESS_HOURS;
+      const staleCandidates = inProgressIssues.filter(
+        (i) => !runningSet.has(i.identifier) && !alreadyDemotedIds.has(i.identifier)
+      );
+
+      for (const issue of staleCandidates) {
+        const gitCheck = spawnSync(
+          'git',
+          ['log', '--all', `--since=${staleThresholdHours} hours ago`, '--oneline', `--grep=${issue.identifier}`],
+          { encoding: 'utf-8', timeout: 10000, cwd: PROJECT_ROOT }
+        );
+        if (gitCheck.error) continue;
+        const hasRecentCommits =
+          gitCheck.status === 0 && (gitCheck.stdout || '').trim().length > 0;
+
+        if (!hasRecentCommits) {
+          summary.boardHygiene.staleInProgress.count += 1;
+          const entry = {
+            identifier: issue.identifier,
+            title: issue.title,
+            thresholdHours: staleThresholdHours,
+            demoted: false,
+          };
+
+          if (APPLY && hygieneBacklog) {
+            await gql(
+              `mutation($id: String!, $input: IssueUpdateInput!) {
+                issueUpdate(id: $id, input: $input) { success }
+              }`,
+              { id: issue.id, input: { stateId: hygieneBacklog.id } }
+            );
+            await gql(
+              `mutation($input: CommentCreateInput!) {
+                commentCreate(input: $input) { success }
+              }`,
+              {
+                input: {
+                  issueId: issue.id,
+                  body: [
+                    'Board hygiene: demoted from In Progress \u2192 Backlog by guardian (stale).',
+                    '',
+                    `Reason: no git commits referencing ${issue.identifier} in the last ${staleThresholdHours} hours and no live Symphony session.`,
+                    '',
+                    'If work is ongoing without commits (e.g. research, design), move back to In Progress and add a progress comment.',
+                    '',
+                    'See docs/harness/board-hygiene.md \u00a7Stale In Progress.',
+                  ].join('\n'),
+                },
+              }
+            );
+            entry.demoted = true;
+          }
+
+          summary.boardHygiene.staleInProgress.issues.push({
+            identifier: issue.identifier,
+            title: issue.title,
+          });
+          summary.boardHygiene.staleInProgress.demoted.push(entry);
+        }
+      }
+
+      if (summary.boardHygiene.staleInProgress.count > 0) {
+        console.error(
+          `Board hygiene: ${APPLY ? 'demoted' : 'would demote'} ${summary.boardHygiene.staleInProgress.count} stale In Progress issue(s) (no commits in ${staleThresholdHours}h)`
+        );
+      }
+    }
+
+    {
+      // Load drain tracking state to exclude circuit-breaker-parked issues.
+      // The circuit breaker intentionally parks drain-looping issues in Pending
+      // without a [HUMAN] prefix — moving them back to Backlog would restart
+      // the drain loop it was designed to stop.
+      const hygieneDrainStatePath = path.join(REPORTS_DIR, 'drain-tracking-state.json');
+      let hygieneDrainState = {};
+      try {
+        if (fs.existsSync(hygieneDrainStatePath)) {
+          hygieneDrainState = JSON.parse(fs.readFileSync(hygieneDrainStatePath, 'utf-8'));
+        }
+      } catch {
+        hygieneDrainState = {};
+      }
+      cleanupStaleDrainEntries(hygieneDrainState);
+
+      const allPending = await gql(
+        `query {
+          issues(
+            filter: {
+              team: { key: { eq: "ANQ" } },
+              state: { name: { eq: "Pending" } }
+            },
+            first: 250
+          ) {
+            nodes { id identifier title }
+          }
+        }`
+      );
+      const pendingWithoutHuman = allPending.issues.nodes.filter(
+        (i) => !i.title.startsWith('[HUMAN]') && !hygieneDrainState[i.identifier]
+      );
+      summary.boardHygiene.pendingWithoutHuman.count = pendingWithoutHuman.length;
+      summary.boardHygiene.pendingWithoutHuman.issues = pendingWithoutHuman.map((i) => ({
+        identifier: i.identifier,
+        title: i.title,
+      }));
+
+      if (pendingWithoutHuman.length > 0 && hygieneBacklog) {
+        for (const issue of pendingWithoutHuman) {
+          const entry = {
+            identifier: issue.identifier,
+            title: issue.title,
+            corrected: false,
+          };
+          if (APPLY) {
+            await gql(
+              `mutation($id: String!, $input: IssueUpdateInput!) {
+                issueUpdate(id: $id, input: $input) { success }
+              }`,
+              { id: issue.id, input: { stateId: hygieneBacklog.id } }
+            );
+            await gql(
+              `mutation($input: CommentCreateInput!) {
+                commentCreate(input: $input) { success }
+              }`,
+              {
+                input: {
+                  issueId: issue.id,
+                  body: [
+                    'Board hygiene: moved from Pending \u2192 Backlog by guardian.',
+                    '',
+                    'Reason: Pending state is reserved for [HUMAN]-prefixed issues only.',
+                    'If this issue requires human action, add the [HUMAN] prefix and move back to Pending.',
+                    '',
+                    'See docs/harness/board-hygiene.md \u00a7Pending = Human-Blocked Only.',
+                  ].join('\n'),
+                },
+              }
+            );
+            entry.corrected = true;
+          }
+          summary.boardHygiene.pendingWithoutHuman.corrected.push(entry);
+        }
+
+        console.error(
+          `Board hygiene: ${APPLY ? 'corrected' : 'would correct'} ${pendingWithoutHuman.length} Pending issues without [HUMAN] prefix`
+        );
+      }
+    }
+
+    const totalHygieneViolations =
+      summary.boardHygiene.multipleInProgress.demoted.length +
+      summary.boardHygiene.staleInProgress.demoted.length +
+      summary.boardHygiene.pendingWithoutHuman.corrected.length;
+    if (totalHygieneViolations > 0) {
+      const hygieneLines = ['Board hygiene violations detected and corrected:', ''];
+      if (summary.boardHygiene.multipleInProgress.demoted.length > 0) {
+        hygieneLines.push(
+          `Multiple In Progress (${summary.boardHygiene.multipleInProgress.count} found, max 1):`,
+          ...summary.boardHygiene.multipleInProgress.demoted.map(
+            (e) => `\u2022 ${e.identifier}: ${e.title}\n  ${linearIssueUrl(e.identifier)}`
+          ),
+          ''
+        );
+      }
+      if (summary.boardHygiene.staleInProgress.demoted.length > 0) {
+        hygieneLines.push(
+          `Stale In Progress (no commits in ${GUARDIAN_STALE_IN_PROGRESS_HOURS}h):`,
+          ...summary.boardHygiene.staleInProgress.demoted.map(
+            (e) => `\u2022 ${e.identifier}: ${e.title}\n  ${linearIssueUrl(e.identifier)}`
+          ),
+          ''
+        );
+      }
+      if (summary.boardHygiene.pendingWithoutHuman.corrected.length > 0) {
+        hygieneLines.push(
+          `Pending without [HUMAN] (${summary.boardHygiene.pendingWithoutHuman.count} issues):`,
+          ...summary.boardHygiene.pendingWithoutHuman.corrected.map(
+            (e) => `\u2022 ${e.identifier}: ${e.title}\n  ${linearIssueUrl(e.identifier)}`
+          ),
+          ''
+        );
+      }
+      hygieneLines.push('See docs/harness/board-hygiene.md for invariant definitions.');
+      sendNotification({
+        subject: `Board hygiene: ${totalHygieneViolations} violation(s) ${APPLY ? 'corrected' : 'detected'}`,
+        body: hygieneLines.join('\n'),
+        severity: 'warning',
+      });
+    }
+
+    summary.boardHygiene.checked = true;
+  } catch (hygieneErr) {
+    console.error(`Board hygiene error (non-fatal): ${hygieneErr.message}`);
+    summary.boardHygiene.error = hygieneErr.message;
   }
 
   // -----------------------------------------------------------------------

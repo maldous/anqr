@@ -53,8 +53,7 @@ All Playwright tests run against `netlify dev` (port 8888) so both the Vite app 
 - Catastrophic AI retry failures that are not truly human-only must move to `Todo` (AI retry lane), not `Pending`.
 - Descriptor prefixes must be explicit and consistent (`[PARENT]`, `[CHILD]`, `[HUMAN]`, `[EMAIL]`, `[CI]`, `[HARNESS]`).
 - Priority must be explicit for every actionable issue.
-- There must always be at least one issue in `In Progress`.
-- Ensure there is always at least one `In Progress` issue aligned with the highest-priority actionable work.
+- Exactly one issue must be `In Progress` at any time, aligned with the highest-priority actionable work. See [Board Hygiene](board-hygiene.md) for enforcement rules.
 - **Done requires proof.** Every issue moved to Done must have a comment with commit hashes, validation command output, and explicit pass/fail verdict. Evidence of failure, workarounds, or dismissive one-liners do not qualify. See [Evidence Policy](../workflow/execution-workflow.md#evidence-policy).
 
 ### Request Triage Default

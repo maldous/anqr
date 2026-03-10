@@ -13,6 +13,7 @@ This file is intentionally short. It is a map, not the full knowledge base.
 - Docs index: [`docs/README.md`](docs/README.md)
 - Harness model: [`docs/harness/agent-first.md`](docs/harness/agent-first.md)
 - **Autonomous framework**: [`docs/harness/autonomous-framework.md`](docs/harness/autonomous-framework.md)
+- **Board hygiene**: [`docs/harness/board-hygiene.md`](docs/harness/board-hygiene.md)
 - Execution workflow: [`docs/workflow/execution-workflow.md`](docs/workflow/execution-workflow.md)
 - Architecture overview: [`docs/architecture/overview.md`](docs/architecture/overview.md)
 - Module catalog: [`docs/modules/index.md`](docs/modules/index.md)
@@ -88,6 +89,7 @@ See `docs/knowledge.md` §Testing for full details.
 - Need module API context: open `docs/modules/index.md`, then the module page.
 - Need report expectations: open `docs/reports/README.md`.
 - Need harness/ops context: open `docs/harness/autonomous-framework.md`.
+- Need board hygiene / audit context: open `docs/harness/board-hygiene.md`.
 - Need provider/pipeline context: open `docs/harness/provider-operations.md`.
 - Need email/notification context: open `docs/operations/ops-autopilot.md` §Email Notification System.
 - Need CI failure monitoring context: open `docs/operations/ops-autopilot.md` §CI Failure Monitor.
