@@ -3045,6 +3045,46 @@ function hasActiveOverlayFilters(f: OverlayFilterOptions): boolean {
   );
 }
 
+function processAnimatedGifFrames(
+  fetchedImage: FetchedImage,
+  gifDisposalHandling: string,
+  gifMaxFps: number,
+  preprocess: (c: Canvas) => Canvas
+): { overlayCanvas: Canvas; overlayFrames: ServerAnimationFrame[] } {
+  const tParse = Date.now();
+  let rawFrames = parseGifFramesServer(
+    fetchedImage.arrayBuffer,
+    gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
+  );
+  qrFnLog('[TIMING] GIF frame parsing', {
+    frames: rawFrames.length,
+    parseMs: Date.now() - tParse,
+  });
+
+  if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
+    qrFnLog('[TIMING] limiting frames', {
+      from: rawFrames.length,
+      to: SERVER_MAX_ANIMATION_FRAMES,
+    });
+    rawFrames = decimateFramesToMaxCount(rawFrames, SERVER_MAX_ANIMATION_FRAMES);
+  }
+
+  const tPreprocess = Date.now();
+  let overlayFrames = rawFrames.map((frame) => ({
+    ...frame,
+    canvas: preprocess(frame.canvas),
+  }));
+  qrFnLog('[TIMING] frame preprocessing', {
+    frames: overlayFrames.length,
+    preprocessMs: Date.now() - tPreprocess,
+  });
+  if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
+    overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
+  }
+  const overlayCanvas = overlayFrames[0]?.canvas ?? preprocess(fetchedImage.canvas);
+  return { overlayCanvas, overlayFrames };
+}
+
 async function loadAndPreprocessOverlay(
   overlayUrl: string | null,
   overlayMode: string | undefined,
@@ -3121,37 +3161,12 @@ async function loadAndPreprocessOverlay(
 
   if (fetchedImage.isAnimatedGif) {
     const outputFormat = explicitFormat ? currentOutputFormat : ('gif' as OutputFormat);
-    const tParse = Date.now();
-    let rawFrames = parseGifFramesServer(
-      fetchedImage.arrayBuffer,
-      gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
+    const { overlayCanvas, overlayFrames } = processAnimatedGifFrames(
+      fetchedImage,
+      gifDisposalHandling,
+      gifMaxFps,
+      preprocess
     );
-    qrFnLog('[TIMING] GIF frame parsing', {
-      frames: rawFrames.length,
-      parseMs: Date.now() - tParse,
-    });
-
-    if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
-      qrFnLog('[TIMING] limiting frames', {
-        from: rawFrames.length,
-        to: SERVER_MAX_ANIMATION_FRAMES,
-      });
-      rawFrames = decimateFramesToMaxCount(rawFrames, SERVER_MAX_ANIMATION_FRAMES);
-    }
-
-    const tPreprocess = Date.now();
-    let overlayFrames = rawFrames.map((frame) => ({
-      ...frame,
-      canvas: preprocess(frame.canvas),
-    }));
-    qrFnLog('[TIMING] frame preprocessing', {
-      frames: overlayFrames.length,
-      preprocessMs: Date.now() - tPreprocess,
-    });
-    if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
-      overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
-    }
-    const overlayCanvas = overlayFrames[0]?.canvas ?? preprocess(fetchedImage.canvas);
     return { overlayCanvas, overlayFrames, hasAnimatedOverlay: true, outputFormat };
   }
 
