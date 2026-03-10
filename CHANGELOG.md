@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
+- fix: audit URL/query parsing and normalization parity risks
 - fix: inventory gallery execution paths and parameter sources
 - fix(workflow): retry in-session tool call failures up to 2 times with explicit error feedback before fallback
 - fix: reduce semantic validation complexity in qr-art generator
