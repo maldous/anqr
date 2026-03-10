@@ -105,7 +105,12 @@ You are a code editor. Follow these steps exactly.
 
 If any command exits with a non-zero status or produces an error:
 
-1. **First failure — retry once.** Reset the workspace and try the failed command again:
+1. **Tool call failures inside a running session — retry in place (no reset).**
+   - For failed tool calls (example: `apply_patch` validation errors, `linear_graphql`/CLI syntax errors), retry the same tool call up to **2 times** in the current session.
+   - Include the exact previous error output in the retry attempt so the model can self-correct.
+   - If retries still fail, continue the session and try an alternative approach instead of crashing the run.
+
+2. **Other command failures — retry once with reset.** Reset the workspace and try the failed command again:
 
    ```bash
    git rebase --abort 2>/dev/null; git checkout . && git clean -fd
@@ -113,7 +118,7 @@ If any command exits with a non-zero status or produces an error:
 
    Then re-run the failed command. If it succeeds, continue with the workflow.
 
-2. **Second failure — give up.** If the command fails again after the retry:
+3. **Second failure after reset retry — give up.** If the command fails again after the retry:
    a. Post the error as a comment:
    ```bash
    node scripts/ops/linear-comment.mjs --issue <THIS_ISSUE_IDENTIFIER> --body "Command failed (after retry): <paste the error output>"
