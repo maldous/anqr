@@ -290,6 +290,30 @@ function computeScanGateRasterMetrics(
   };
 }
 
+async function resolveImageSource(
+  src: HTMLCanvasElement
+): Promise<{ source: CanvasImageSource; bitmap: ImageBitmap | null } | null> {
+  if (typeof createImageBitmap === 'function' && typeof src.toBlob === 'function') {
+    const blob = await new Promise<Blob | null>((resolve) => {
+      src.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+    });
+    if (!blob) throw new Error('final-raster blob encode failed');
+    const bitmap = await createImageBitmap(blob);
+    return { source: bitmap, bitmap };
+  }
+  if (typeof Image !== 'undefined' && typeof src.toDataURL === 'function') {
+    const pngDataUrl = src.toDataURL('image/png');
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('final-raster roundtrip failed'));
+      el.src = pngDataUrl;
+    });
+    return { source: img, bitmap: null };
+  }
+  return null;
+}
+
 async function roundtripToFinalRaster(
   pool: CanvasPool,
   src: HTMLCanvasElement | OffscreenCanvas
@@ -305,25 +329,9 @@ async function roundtripToFinalRaster(
   let out: HTMLCanvasElement | OffscreenCanvas | null = null;
   let bitmap: ImageBitmap | null = null;
   try {
-    let imageSource: CanvasImageSource;
-    if (typeof createImageBitmap === 'function' && typeof src.toBlob === 'function') {
-      const blob = await new Promise<Blob | null>((resolve) => {
-        src.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
-      });
-      if (!blob) throw new Error('final-raster blob encode failed');
-      bitmap = await createImageBitmap(blob);
-      imageSource = bitmap;
-    } else if (typeof Image !== 'undefined' && typeof src.toDataURL === 'function') {
-      const pngDataUrl = src.toDataURL('image/png');
-      imageSource = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error('final-raster roundtrip failed'));
-        img.src = pngDataUrl;
-      });
-    } else {
-      return src;
-    }
+    const resolved = await resolveImageSource(src);
+    if (!resolved) return src;
+    bitmap = resolved.bitmap;
 
     out = await pool.acquire(src.width, src.height);
     out.width = src.width;
@@ -334,7 +342,7 @@ async function roundtripToFinalRaster(
       return src;
     }
     outCtx.imageSmoothingEnabled = false;
-    outCtx.drawImage(imageSource, 0, 0, out.width, out.height);
+    outCtx.drawImage(resolved.source, 0, 0, out.width, out.height);
     if (bitmap && typeof bitmap.close === 'function') {
       bitmap.close();
     }

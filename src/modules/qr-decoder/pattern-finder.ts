@@ -448,28 +448,43 @@ export class FinderPatternFinder {
 
     for (let i = 0; i < startSize - 2; i++) {
       const fpi = this.possibleCenters[i];
-      const minModuleSize = fpi.getEstimatedModuleSize();
-      for (let j = i + 1; j < startSize - 1; j++) {
-        const fpj = this.possibleCenters[j];
-        const squares0 = FinderPatternFinder.squaredDistance(fpi, fpj);
-        for (let k = j + 1; k < startSize; k++) {
-          const fpk = this.possibleCenters[k];
-          const maxModuleSize = fpk.getEstimatedModuleSize();
-          if (maxModuleSize > minModuleSize * 1.4) continue;
-
-          const score = FinderPatternFinder.evaluateTriple(fpi, fpj, fpk, squares0);
-          if (score >= 0 && score < distortion) {
-            distortion = score;
-            bestPatterns[0] = fpi;
-            bestPatterns[1] = fpj;
-            bestPatterns[2] = fpk;
-          }
-        }
+      const result = this.scorePairsFrom(fpi, i, startSize);
+      if (result.score >= 0 && result.score < distortion) {
+        distortion = result.score;
+        bestPatterns[0] = fpi;
+        bestPatterns[1] = result.fpj;
+        bestPatterns[2] = result.fpk;
       }
     }
 
     if (distortion === Number.MAX_VALUE) throw new NotFoundException();
     return bestPatterns;
+  }
+
+  private scorePairsFrom(
+    fpi: FinderPattern,
+    i: number,
+    startSize: number
+  ): { score: number; fpj: FinderPattern; fpk: FinderPattern } {
+    const minModuleSize = fpi.getEstimatedModuleSize();
+    let bestScore = Number.MAX_VALUE;
+    let bestJ = this.possibleCenters[i + 1];
+    let bestK = this.possibleCenters[i + 2];
+    for (let j = i + 1; j < startSize - 1; j++) {
+      const fpj = this.possibleCenters[j];
+      const squares0 = FinderPatternFinder.squaredDistance(fpi, fpj);
+      for (let k = j + 1; k < startSize; k++) {
+        const fpk = this.possibleCenters[k];
+        if (fpk.getEstimatedModuleSize() > minModuleSize * 1.4) continue;
+        const score = FinderPatternFinder.evaluateTriple(fpi, fpj, fpk, squares0);
+        if (score >= 0 && score < bestScore) {
+          bestScore = score;
+          bestJ = fpj;
+          bestK = fpk;
+        }
+      }
+    }
+    return { score: bestScore, fpj: bestJ, fpk: bestK };
   }
 
   private static evaluateTriple(

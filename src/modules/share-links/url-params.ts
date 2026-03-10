@@ -475,6 +475,21 @@ function buildSubpixelHalftoneParams(config: Partial<ShareConfig>, params: URLSe
     params.set('duo2', config.duotoneColor2.replace('#', ''));
 }
 
+function buildAnimationPatternParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.pattern && config.pattern !== 'none') params.set('animPattern', config.pattern);
+  if (config.target && config.target !== 'result') params.set('animTarget', config.target);
+  if (config.waveAxis && config.waveAxis !== 'y') params.set('animWaveAxis', config.waveAxis);
+  if (config.pattern2 && config.pattern2 !== 'none') params.set('animPattern2', config.pattern2);
+  if (config.target2 && config.pattern2 && config.pattern2 !== 'none')
+    params.set('animTarget2', config.target2);
+  if (config.waveAxis2 && config.waveAxis2 !== 'x') params.set('animWaveAxis2', config.waveAxis2);
+  if (config.moduleJitter !== undefined && config.moduleJitter !== 0)
+    params.set('jitter', config.moduleJitter.toString());
+  if (config.colorCycle) params.set('colorCycle', '1');
+  if (config.seed !== undefined && config.seed !== 0) params.set('seed', config.seed.toString());
+  if (config.easing && config.easing !== 'linear') params.set('easing', config.easing);
+}
+
 function buildAnimationParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.speed !== undefined && config.speed !== 100)
     params.set('speed', config.speed.toString());
@@ -490,33 +505,13 @@ function buildAnimationParams(config: Partial<ShareConfig>, params: URLSearchPar
   if (config.interpolate && config.interpolate !== 'none') params.set('interp', config.interpolate);
   if (config.temporalDither && config.temporalDither !== 'off')
     params.set('tempDither', config.temporalDither);
-  if (config.pattern && config.pattern !== 'none') params.set('animPattern', config.pattern);
-  if (config.target && config.target !== 'result') params.set('animTarget', config.target);
-  if (config.waveAxis && config.waveAxis !== 'y') params.set('animWaveAxis', config.waveAxis);
-  if (config.pattern2 && config.pattern2 !== 'none') params.set('animPattern2', config.pattern2);
-  if (config.target2 && config.pattern2 && config.pattern2 !== 'none')
-    params.set('animTarget2', config.target2);
-  if (config.waveAxis2 && config.waveAxis2 !== 'x') params.set('animWaveAxis2', config.waveAxis2);
-  if (config.moduleJitter !== undefined && config.moduleJitter !== 0)
-    params.set('jitter', config.moduleJitter.toString());
-  if (config.colorCycle) params.set('colorCycle', '1');
-  if (config.seed !== undefined && config.seed !== 0) params.set('seed', config.seed.toString());
-  if (config.easing && config.easing !== 'linear') params.set('easing', config.easing);
+  buildAnimationPatternParams(config, params);
 }
 
-function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.width && config.width !== 400) params.set('w', config.width.toString());
-  if (config.height && config.height !== 400) params.set('h', config.height.toString());
-  if (config.format && config.format !== 'gif') params.set('format', config.format);
-  if (config.quality !== undefined && config.quality !== 0.9)
-    params.set('quality', config.quality.toString());
-  if (config.jpegQuality !== undefined && config.jpegQuality !== 92)
-    params.set('jpegQ', config.jpegQuality.toString());
-  if (config.webpQuality !== undefined && config.webpQuality !== 90)
-    params.set('webpQ', config.webpQuality.toString());
-  if (config.gifColors !== undefined && config.gifColors !== 256)
-    params.set('gifColors', config.gifColors.toString());
-  if (config.filename && config.filename !== 'anqr-qrcode') params.set('fname', config.filename);
+function buildOutputFormatSpecificParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.gifPaletteSize !== undefined && config.gifPaletteSize !== 256)
     params.set('gifPal', config.gifPaletteSize.toString());
   if (config.gifQuantizer && config.gifQuantizer !== 'median_cut')
@@ -536,6 +531,22 @@ function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams
   if (config.svgEmbedRasterOverlay === false) params.set('svgEmbed', '0');
   if (config.formatExtra && config.formatExtra !== 'none')
     params.set('fmtExtra', config.formatExtra);
+}
+
+function buildOutputParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.width && config.width !== 400) params.set('w', config.width.toString());
+  if (config.height && config.height !== 400) params.set('h', config.height.toString());
+  if (config.format && config.format !== 'gif') params.set('format', config.format);
+  if (config.quality !== undefined && config.quality !== 0.9)
+    params.set('quality', config.quality.toString());
+  if (config.jpegQuality !== undefined && config.jpegQuality !== 92)
+    params.set('jpegQ', config.jpegQuality.toString());
+  if (config.webpQuality !== undefined && config.webpQuality !== 90)
+    params.set('webpQ', config.webpQuality.toString());
+  if (config.gifColors !== undefined && config.gifColors !== 256)
+    params.set('gifColors', config.gifColors.toString());
+  if (config.filename && config.filename !== 'anqr-qrcode') params.set('fname', config.filename);
+  buildOutputFormatSpecificParams(config, params);
 }
 
 function buildSafetyParams(config: Partial<ShareConfig>, params: URLSearchParams): void {

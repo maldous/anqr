@@ -122,8 +122,7 @@ function penaltyLevel2Blocks(qrcode: QRCodeInstance, moduleCount: number): numbe
   return penalty;
 }
 
-// LEVEL3: Finder-like patterns
-function penaltyLevel3FinderLike(qrcode: QRCodeInstance, moduleCount: number): number {
+function penaltyLevel3Horizontal(qrcode: QRCodeInstance, moduleCount: number): number {
   let penalty = 0;
   for (let row = 0; row < moduleCount; row += 1) {
     for (let col = 0; col < moduleCount - 6; col += 1) {
@@ -140,7 +139,11 @@ function penaltyLevel3FinderLike(qrcode: QRCodeInstance, moduleCount: number): n
       }
     }
   }
+  return penalty;
+}
 
+function penaltyLevel3Vertical(qrcode: QRCodeInstance, moduleCount: number): number {
+  let penalty = 0;
   for (let col = 0; col < moduleCount; col += 1) {
     for (let row = 0; row < moduleCount - 6; row += 1) {
       if (
@@ -157,6 +160,11 @@ function penaltyLevel3FinderLike(qrcode: QRCodeInstance, moduleCount: number): n
     }
   }
   return penalty;
+}
+
+// LEVEL3: Finder-like patterns
+function penaltyLevel3FinderLike(qrcode: QRCodeInstance, moduleCount: number): number {
+  return penaltyLevel3Horizontal(qrcode, moduleCount) + penaltyLevel3Vertical(qrcode, moduleCount);
 }
 
 // LEVEL4: Dark/light ratio deviation from 50%

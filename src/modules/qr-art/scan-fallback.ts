@@ -141,29 +141,35 @@ function validateByteExactPrefix(
   }
 
   // Calculate suffix charset penalty (SOFT PENALTY, not hard rejection by default)
+  return evaluateSuffixCharset(decoded, originalData, strictSuffix);
+}
+
+const URL_SAFE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~#';
+
+function countInvalidSuffixChars(suffix: string): number {
+  let invalidCount = 0;
+  for (let i = 0; i < suffix.length; i++) {
+    const charCode = suffix.codePointAt(i)!;
+    if (charCode < 32 || charCode > 126 || !URL_SAFE_CHARS.includes(suffix[i])) {
+      invalidCount++;
+    }
+  }
+  return invalidCount;
+}
+
+function evaluateSuffixCharset(
+  decoded: string,
+  originalData: string,
+  strictSuffix: boolean
+): BinarySearchValidationResult {
   let suffixCharsetPenalty = 0;
   if (decoded.length > originalData.length) {
     const suffix = decoded.slice(originalData.length);
     const charsetValidation = validateSuffixCharset(suffix);
 
     if (!charsetValidation.valid) {
-      // Count how many invalid characters are in the suffix
-      let invalidCount = 0;
-      for (let i = 0; i < suffix.length; i++) {
-        const char = suffix[i];
-        const charCode = suffix.codePointAt(i)!;
-        // Check if character is outside printable ASCII or not URL-safe
-        if (
-          charCode < 32 ||
-          charCode > 126 ||
-          !'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~#'.includes(char)
-        ) {
-          invalidCount++;
-        }
-      }
-      suffixCharsetPenalty = invalidCount / suffix.length;
+      suffixCharsetPenalty = countInvalidSuffixChars(suffix) / suffix.length;
 
-      // If strictSuffix is enabled, reject on charset violation
       if (strictSuffix) {
         return {
           valid: false,
@@ -178,8 +184,6 @@ function validateByteExactPrefix(
     }
   }
 
-  // HARD GATE PASSED - candidate is accepted
-  // Suffix charset penalty is recorded but does NOT cause rejection
   return {
     valid: true,
     suffixCharsetPenalty,

@@ -285,23 +285,39 @@ export class QRDecoder {
 
     const shorterBlocksNumDataCodewords =
       shorterBlocksTotalCodewords - ecBlocks.getECCodewordsPerBlock();
-    let rawCodewordsOffset = 0;
+    QRDecoder.interleaveCodewords(
+      result,
+      rawCodewords,
+      numResultBlocks,
+      shorterBlocksNumDataCodewords,
+      longerBlocksStartAt
+    );
+    return result;
+  }
+
+  private static interleaveCodewords(
+    result: { codewords: Int32Array; numDataCodewords: number }[],
+    rawCodewords: Uint8Array,
+    numResultBlocks: number,
+    shorterBlocksNumDataCodewords: number,
+    longerBlocksStartAt: number
+  ): void {
+    let offset = 0;
     for (let i = 0; i < shorterBlocksNumDataCodewords; i++) {
       for (let j = 0; j < numResultBlocks; j++) {
-        result[j].codewords[i] = rawCodewords[rawCodewordsOffset++];
+        result[j].codewords[i] = rawCodewords[offset++];
       }
     }
     for (let j = longerBlocksStartAt; j < numResultBlocks; j++) {
-      result[j].codewords[shorterBlocksNumDataCodewords] = rawCodewords[rawCodewordsOffset++];
+      result[j].codewords[shorterBlocksNumDataCodewords] = rawCodewords[offset++];
     }
     const max = result[0].codewords.length;
     for (let i = shorterBlocksNumDataCodewords; i < max; i++) {
       for (let j = 0; j < numResultBlocks; j++) {
         const jOffset = j < longerBlocksStartAt ? i : i + 1;
-        result[j].codewords[jOffset] = rawCodewords[rawCodewordsOffset++];
+        result[j].codewords[jOffset] = rawCodewords[offset++];
       }
     }
-    return result;
   }
 
   private correctErrors(codewordBytes: Int32Array, numDataCodewords: number): void {
@@ -464,13 +480,17 @@ export class QRDecoder {
       result.append(QRDecoder.ALPHANUMERIC_CHARS[bits.readBits(6)]);
     }
     if (fc1InEffect) {
-      for (let i = start; i < result.length(); i++) {
-        if (result.charAt(i) === '%') {
-          if (i < result.length() - 1 && result.charAt(i + 1) === '%') {
-            result.deleteCharAt(i + 1);
-          } else {
-            result.setCharAt(i, String.fromCodePoint(0x1d));
-          }
+      QRDecoder.applyFNC1Substitution(result, start);
+    }
+  }
+
+  private static applyFNC1Substitution(result: StringBuilder, start: number): void {
+    for (let i = start; i < result.length(); i++) {
+      if (result.charAt(i) === '%') {
+        if (i < result.length() - 1 && result.charAt(i + 1) === '%') {
+          result.deleteCharAt(i + 1);
+        } else {
+          result.setCharAt(i, String.fromCodePoint(0x1d));
         }
       }
     }

@@ -156,16 +156,8 @@ function buildShareOverlay(overlay: StoreState['overlay']) {
   };
 }
 
-function buildShareAnimation(animation: StoreState['animation']) {
+function buildShareAnimationPatterns(animation: StoreState['animation']) {
   return {
-    speed: animation.speedMs === 100 ? undefined : animation.speedMs,
-    loop: animation.loop === false ? false : undefined,
-    reverse: animation.bounce ? true : undefined,
-    startFrame: animation.startFrame === 0 ? undefined : animation.startFrame,
-    maxFrames: animation.maxFrames === 0 ? undefined : animation.maxFrames,
-    frameStep: animation.frameStep === 1 ? undefined : animation.frameStep,
-    interpolate: animation.interpolate === 'none' ? undefined : animation.interpolate,
-    temporalDither: animation.temporalDither === 'off' ? undefined : animation.temporalDither,
     pattern: animation.pattern === 'none' ? undefined : animation.pattern,
     target: animation.target === 'result' ? undefined : animation.target,
     waveAxis:
@@ -179,6 +171,20 @@ function buildShareAnimation(animation: StoreState['animation']) {
       animation.pattern2 !== 'wave' || animation.waveAxis2 === 'x'
         ? undefined
         : animation.waveAxis2,
+  };
+}
+
+function buildShareAnimation(animation: StoreState['animation']) {
+  return {
+    speed: animation.speedMs === 100 ? undefined : animation.speedMs,
+    loop: animation.loop === false ? false : undefined,
+    reverse: animation.bounce ? true : undefined,
+    startFrame: animation.startFrame === 0 ? undefined : animation.startFrame,
+    maxFrames: animation.maxFrames === 0 ? undefined : animation.maxFrames,
+    frameStep: animation.frameStep === 1 ? undefined : animation.frameStep,
+    interpolate: animation.interpolate === 'none' ? undefined : animation.interpolate,
+    temporalDither: animation.temporalDither === 'off' ? undefined : animation.temporalDither,
+    ...buildShareAnimationPatterns(animation),
     moduleJitter: animation.moduleJitterPx === 0 ? undefined : animation.moduleJitterPx,
     colorCycle: animation.colorCycle ? true : undefined,
     seed: animation.seed === 0 ? undefined : animation.seed,

@@ -277,6 +277,25 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
     }
   }
 
+  private static sumRemainingRows(
+    luminances: Uint8ClampedArray,
+    offset: number,
+    yy: number,
+    width: number
+  ): number {
+    let sum = 0;
+    let row = yy;
+    let off = offset;
+    while (row < HybridBinarizer.BLOCK_SIZE) {
+      for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
+        sum += luminances[off + xx] & 0xff;
+      }
+      row++;
+      off += width;
+    }
+    return sum;
+  }
+
   private static calculateBlockStats(
     luminances: Uint8ClampedArray,
     xoffset: number,
@@ -298,13 +317,7 @@ export class HybridBinarizer extends GlobalHistogramBinarizer {
       if (max - min > HybridBinarizer.MIN_DYNAMIC_RANGE) {
         yy++;
         offset += width;
-        while (yy < HybridBinarizer.BLOCK_SIZE) {
-          for (let xx = 0; xx < HybridBinarizer.BLOCK_SIZE; xx++) {
-            sum += luminances[offset + xx] & 0xff;
-          }
-          yy++;
-          offset += width;
-        }
+        sum += HybridBinarizer.sumRemainingRows(luminances, offset, yy, width);
         break;
       }
       yy++;

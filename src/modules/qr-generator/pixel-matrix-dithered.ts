@@ -1476,6 +1476,41 @@ interface ErrorDiffusionPixelCtx {
   sampleThreshold: (x: number, y: number, sampleIdx: number, overlayDark: number) => number;
 }
 
+function computeBiasedDarkness(
+  overlayDark: number,
+  x: number,
+  y: number,
+  ctx: ErrorDiffusionPixelCtx,
+  qrIsDark: boolean,
+  fixedDarkUnlocked: boolean
+): number {
+  const centerW = moduleCenterWeight(x, y, ctx.scale);
+  const qrBias = fixedDarkUnlocked
+    ? 0
+    : (qrIsDark ? 1 : -1) * ctx.qrBitBiasStrength * centerW * (0.45 + ctx.mix * 0.8);
+  return clamp01(overlayDark + qrBias);
+}
+
+function resolveDarkCandidate(
+  ctx: ErrorDiffusionPixelCtx,
+  biasedOverlayDark: number,
+  threshold: number,
+  sampleIdx: number,
+  x: number,
+  y: number,
+  errors: Float32Array,
+  leftToRight: boolean
+): boolean {
+  if (ctx.thresholdOnly && !ctx.useColorDither) {
+    return biasedOverlayDark > threshold;
+  }
+  const adjusted = biasedOverlayDark + errors[sampleIdx];
+  const isDark = adjusted > threshold;
+  const err = (biasedOverlayDark - (isDark ? 1 : 0)) * ctx.mix;
+  distributeError(errors, x, y, err, ctx.kernel, ctx.scaledSize, leftToRight);
+  return isDark;
+}
+
 function processErrorDiffusionPixel(
   ctx: ErrorDiffusionPixelCtx,
   x: number,
@@ -1505,25 +1540,27 @@ function processErrorDiffusionPixel(
   const fixedDarkUnlocked =
     !moduleLocked && isFixedDarkModule(moduleRow, moduleCol, ctx.moduleCount);
 
-  // ART-FIRST: generate a global halftone candidate from artwork only.
-  // QR bits are applied later in the projection/correction stage.
   const overlayDark = shapeOverlayDarkness(1 - luma01(r, g, b));
-  const centerW = moduleCenterWeight(x, y, ctx.scale);
-  const qrBias = fixedDarkUnlocked
-    ? 0
-    : (qrIsDark ? 1 : -1) * ctx.qrBitBiasStrength * centerW * (0.45 + ctx.mix * 0.8);
-  const biasedOverlayDark = clamp01(overlayDark + qrBias);
+  const biasedOverlayDark = computeBiasedDarkness(
+    overlayDark,
+    x,
+    y,
+    ctx,
+    qrIsDark,
+    fixedDarkUnlocked
+  );
   const threshold = ctx.sampleThreshold(x, y, sampleIdx, overlayDark);
 
-  let isDarkCandidate: boolean;
-  if (ctx.thresholdOnly && !ctx.useColorDither) {
-    isDarkCandidate = biasedOverlayDark > threshold;
-  } else {
-    const adjusted = biasedOverlayDark + errors[sampleIdx];
-    isDarkCandidate = adjusted > threshold;
-    const err = (biasedOverlayDark - (isDarkCandidate ? 1 : 0)) * ctx.mix;
-    distributeError(errors, x, y, err, ctx.kernel, ctx.scaledSize, leftToRight);
-  }
+  const isDarkCandidate = resolveDarkCandidate(
+    ctx,
+    biasedOverlayDark,
+    threshold,
+    sampleIdx,
+    x,
+    y,
+    errors,
+    leftToRight
+  );
 
   // Apply structural lock at the final write stage only.
   // This keeps diffusion state consistent so toggling locks doesn't re-shape the entire texture.
