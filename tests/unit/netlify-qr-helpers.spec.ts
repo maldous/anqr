@@ -17,6 +17,20 @@ function makeCanvas(w = 16, h = 16) {
 }
 
 describe('netlify qr helpers', () => {
+  it('normalizes node canvas dimensions and resets default 2d state on creation', async () => {
+    const canvas = await __test.nodeCanvasFactory.createCanvas(40.6, 20.2);
+    expect(canvas.width).toBe(41);
+    expect(canvas.height).toBe(20);
+
+    const ctx = canvas.getContext('2d');
+    expect(ctx.globalCompositeOperation).toBe('source-over');
+    expect(ctx.globalAlpha).toBe(1);
+    expect(ctx.imageSmoothingEnabled).toBe(false);
+    if ('imageSmoothingQuality' in ctx) {
+      expect(ctx.imageSmoothingQuality).toBe('low');
+    }
+  });
+
   it('classifies private/reserved IPs', () => {
     expect(__test.isPrivateOrReservedIP('127.0.0.1')).toBe(true);
     expect(__test.isPrivateOrReservedIP('10.1.2.3')).toBe(true);

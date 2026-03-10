@@ -262,6 +262,10 @@ import {
   type SKRSContext2D,
 } from '@napi-rs/canvas';
 import { getStore } from '@netlify/blobs';
+import {
+  normalizeCanvasDimensions,
+  resetCanvas2DState,
+} from '../../src/modules/qr-generator/canvas-factory';
 
 // Polyfill ImageData globally for shared modules that use `new ImageData()`
 if (typeof globalThis.ImageData === 'undefined') {
@@ -588,7 +592,17 @@ async function _isPrivateHostname(hostname: string): Promise<boolean> {
  */
 const nodeCanvasFactory = {
   createCanvas: async (width: number, height: number) => {
-    return createCanvas(width, height);
+    const normalized = normalizeCanvasDimensions(width, height);
+    const canvas = createCanvas(normalized.width, normalized.height);
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      resetCanvas2DState(
+        ctx as unknown as CanvasRenderingContext2D,
+        normalized.width,
+        normalized.height
+      );
+    }
+    return canvas;
   },
   loadImage: async (src: string | Buffer | URL | ArrayBuffer) => {
     return loadImage(src);

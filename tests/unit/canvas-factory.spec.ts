@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { CanvasPool, type CanvasFactory } from '../../src/modules/qr-generator/canvas-factory';
+import {
+  CanvasPool,
+  type CanvasFactory,
+  normalizeCanvasDimensions,
+  resetCanvas2DState,
+} from '../../src/modules/qr-generator/canvas-factory';
 
 type MockCtx = {
   setTransform: (...args: number[]) => void;
@@ -39,6 +44,32 @@ function makeCanvas(width: number, height: number): { canvas: MockCanvas; ctx: M
 }
 
 describe('CanvasPool', () => {
+  it('normalizes invalid or fractional dimensions to stable integers', () => {
+    expect(normalizeCanvasDimensions(63.6, 32.4)).toEqual({ width: 64, height: 32 });
+    expect(normalizeCanvasDimensions(0, -1)).toEqual({ width: 1, height: 1 });
+    expect(normalizeCanvasDimensions(Number.NaN, Number.POSITIVE_INFINITY)).toEqual({
+      width: 1,
+      height: 1,
+    });
+  });
+
+  it('resets canonical 2d context defaults', () => {
+    const { ctx } = makeCanvas(32, 32);
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.2;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.filter = 'blur(1px)';
+
+    resetCanvas2DState(ctx, 32, 32);
+
+    expect(ctx.globalCompositeOperation).toBe('source-over');
+    expect(ctx.globalAlpha).toBe(1);
+    expect(ctx.imageSmoothingEnabled).toBe(false);
+    expect(ctx.imageSmoothingQuality).toBe('low');
+    expect(ctx.filter).toBe('none');
+  });
+
   it('resets smoothing and paint state when reusing a pooled canvas', async () => {
     const created: Array<{ canvas: MockCanvas; ctx: MockCtx }> = [];
     const factory: CanvasFactory = {
