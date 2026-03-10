@@ -207,6 +207,30 @@ export function readFormatInfo(matrix: boolean[][], moduleCount: number): Format
   return bestMatch;
 }
 
+function readVersionBitsBottomLeft(matrix: boolean[][], moduleCount: number): number {
+  let bits = 0;
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (matrix[moduleCount - 11 + j]?.[i]) {
+        bits |= 1 << (i * 3 + j);
+      }
+    }
+  }
+  return bits;
+}
+
+function readVersionBitsTopRight(matrix: boolean[][], moduleCount: number): number {
+  let bits = 0;
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (matrix[i]?.[moduleCount - 11 + j]) {
+        bits |= 1 << (i * 3 + j);
+      }
+    }
+  }
+  return bits;
+}
+
 /**
  * Read version info from the matrix (for versions 7+)
  */
@@ -216,25 +240,8 @@ export function readVersionInfo(matrix: boolean[][], moduleCount: number): numbe
   // Version info only exists for version 7+
   if (version < 7) return version;
 
-  // Read version info from bottom-left (6x3 block)
-  let bits1 = 0;
-  for (let i = 0; i < 6; i++) {
-    for (let j = 0; j < 3; j++) {
-      if (matrix[moduleCount - 11 + j]?.[i]) {
-        bits1 |= 1 << (i * 3 + j);
-      }
-    }
-  }
-
-  // Read version info from top-right (3x6 block)
-  let bits2 = 0;
-  for (let i = 0; i < 6; i++) {
-    for (let j = 0; j < 3; j++) {
-      if (matrix[i]?.[moduleCount - 11 + j]) {
-        bits2 |= 1 << (i * 3 + j);
-      }
-    }
-  }
+  const bits1 = readVersionBitsBottomLeft(matrix, moduleCount);
+  const bits2 = readVersionBitsTopRight(matrix, moduleCount);
 
   // BCH(18,6) decoding with error correction
   // For simplicity, we'll check if the extracted version matches expected

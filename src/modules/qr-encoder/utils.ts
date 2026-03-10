@@ -104,16 +104,21 @@ function penaltyLevel1AdjacentModules(qrcode: QRCodeInstance, moduleCount: numbe
   return penalty;
 }
 
+function count2x2DarkModules(qrcode: QRCodeInstance, row: number, col: number): number {
+  let count = 0;
+  if (qrcode.isDark(row, col)) count += 1;
+  if (qrcode.isDark(row + 1, col)) count += 1;
+  if (qrcode.isDark(row, col + 1)) count += 1;
+  if (qrcode.isDark(row + 1, col + 1)) count += 1;
+  return count;
+}
+
 // LEVEL2: 2x2 blocks of same color
 function penaltyLevel2Blocks(qrcode: QRCodeInstance, moduleCount: number): number {
   let penalty = 0;
   for (let row = 0; row < moduleCount - 1; row += 1) {
     for (let col = 0; col < moduleCount - 1; col += 1) {
-      let count = 0;
-      if (qrcode.isDark(row, col)) count += 1;
-      if (qrcode.isDark(row + 1, col)) count += 1;
-      if (qrcode.isDark(row, col + 1)) count += 1;
-      if (qrcode.isDark(row + 1, col + 1)) count += 1;
+      const count = count2x2DarkModules(qrcode, row, col);
       if (count === 0 || count === 4) {
         penalty += 3;
       }

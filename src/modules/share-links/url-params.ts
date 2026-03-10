@@ -26,6 +26,29 @@ function prefixHash(value: string | null): string | undefined {
   return value ? `#${value}` : undefined;
 }
 
+function parseMaskParam(params: URLSearchParams): number | 'auto' | undefined {
+  if (!params.has('mask')) return undefined;
+  return params.get('mask') === 'auto' ? 'auto' : parseIntParam(params.get('mask'));
+}
+
+function parseGradientStopsParam(
+  raw: string | null
+): Array<{ color: string; pos: number }> | undefined {
+  if (!raw) return undefined;
+  const parts = raw.split(',');
+  const stops: Array<{ color: string; pos: number }> = [];
+  for (let i = 0; i < parts.length - 1; i += 2) {
+    stops.push({ color: `#${parts[i]}`, pos: Number.parseFloat(parts[i + 1]) });
+  }
+  return stops.length > 0 ? stops : undefined;
+}
+
+function parseBlendMode(params: URLSearchParams): 'overlay' | 'dither' | undefined {
+  const mode = params.get('blendPresMode');
+  if (mode === 'dither' || mode === 'overlay') return mode;
+  return undefined;
+}
+
 /**
  * Server-safe URL parameter parsing
  * Takes a URLSearchParams object and returns a ShareConfig
@@ -41,11 +64,7 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     size: parseIntParam(params.get('size')),
     margin: parseIntParam(params.get('margin')),
     encodingMode: params.get('enc') || undefined,
-    maskPattern: params.has('mask')
-      ? params.get('mask') === 'auto'
-        ? 'auto'
-        : parseIntParam(params.get('mask'))
-      : undefined,
+    maskPattern: parseMaskParam(params),
     characterEncoding: params.get('charset') || undefined,
     borderModulesExtra: parseIntParam(params.get('border')),
     quietZoneMinEnforce: params.has('qzEnforce') ? params.get('qzEnforce') === '1' : undefined,
@@ -64,22 +83,7 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     cornerRadius: parseIntParam(params.get('radius')),
     gradientType: params.get('grad') || undefined,
     // Gradient stops/angle - parse from URL
-    ...(params.get('gradStops')
-      ? {
-          gradientStops: params
-            .get('gradStops')
-            ?.split(',')
-            .reduce(
-              (acc, part, i, arr) => {
-                if (i % 2 === 0 && arr[i + 1]) {
-                  acc.push({ color: `#${part}`, pos: Number.parseFloat(arr[i + 1]) });
-                }
-                return acc;
-              },
-              [] as Array<{ color: string; pos: number }>
-            ),
-        }
-      : {}),
+    gradientStops: parseGradientStopsParam(params.get('gradStops')),
     ...(params.get('gradAngle') ? { gradientAngle: parseIntParam(params.get('gradAngle')) } : {}),
     eyeOuterStyle: params.get('eyeOuter') || undefined,
     eyeInnerStyle: params.get('eyeInner') || undefined,
@@ -140,10 +144,7 @@ export function parseUrlParamsFromSearchParams(params: URLSearchParams): Partial
     ditherStrength: parseIntParam(params.get('ditherStrength')),
     finderDitherStrength: parseIntParam(params.get('finderDither')),
     blendPreservations: params.get('blendPres') === '1',
-    blendPreservationMode:
-      params.get('blendPresMode') === 'dither' || params.get('blendPresMode') === 'overlay'
-        ? (params.get('blendPresMode') as 'overlay' | 'dither')
-        : undefined,
+    blendPreservationMode: parseBlendMode(params),
     ditherSerpentine: params.get('serpentine') === '1',
     orderedMatrix: params.get('matrix') || undefined,
     blueNoiseTileSize: parseIntParam(params.get('bnTile')),
@@ -454,15 +455,7 @@ function buildDitheringParams(config: Partial<ShareConfig>, params: URLSearchPar
     params.set('colorDither', config.colorDither);
 }
 
-function buildSubpixelHalftoneParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
-  if (config.subpixelGridSize && config.subpixelGridSize !== '3x3')
-    params.set('spGrid', config.subpixelGridSize);
-  if (config.subpixelCenterRule && config.subpixelCenterRule !== 'strict')
-    params.set('spCenter', config.subpixelCenterRule);
-  if (config.subpixelNeutralColor && config.subpixelNeutralColor !== '#808080')
-    params.set('spNeutral', config.subpixelNeutralColor.replace('#', ''));
-  if (config.subpixelFinderOverride && config.subpixelFinderOverride !== 'solid')
-    params.set('spFinder', config.subpixelFinderOverride);
+function buildHalftoneSpecificParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.halftoneCell && config.halftoneCell !== 'per_module')
     params.set('htCell', config.halftoneCell);
   if (config.halftoneDotShape && config.halftoneDotShape !== 'circle')
@@ -473,6 +466,18 @@ function buildSubpixelHalftoneParams(config: Partial<ShareConfig>, params: URLSe
     params.set('duo1', config.duotoneColor1.replace('#', ''));
   if (config.duotoneColor2 && config.duotoneColor2 !== '#ffffff')
     params.set('duo2', config.duotoneColor2.replace('#', ''));
+}
+
+function buildSubpixelHalftoneParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.subpixelGridSize && config.subpixelGridSize !== '3x3')
+    params.set('spGrid', config.subpixelGridSize);
+  if (config.subpixelCenterRule && config.subpixelCenterRule !== 'strict')
+    params.set('spCenter', config.subpixelCenterRule);
+  if (config.subpixelNeutralColor && config.subpixelNeutralColor !== '#808080')
+    params.set('spNeutral', config.subpixelNeutralColor.replace('#', ''));
+  if (config.subpixelFinderOverride && config.subpixelFinderOverride !== 'solid')
+    params.set('spFinder', config.subpixelFinderOverride);
+  buildHalftoneSpecificParams(config, params);
 }
 
 function buildAnimationPatternParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
@@ -508,10 +513,7 @@ function buildAnimationParams(config: Partial<ShareConfig>, params: URLSearchPar
   buildAnimationPatternParams(config, params);
 }
 
-function buildOutputFormatSpecificParams(
-  config: Partial<ShareConfig>,
-  params: URLSearchParams
-): void {
+function buildGifFormatParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
   if (config.gifPaletteSize !== undefined && config.gifPaletteSize !== 256)
     params.set('gifPal', config.gifPaletteSize.toString());
   if (config.gifQuantizer && config.gifQuantizer !== 'median_cut')
@@ -519,13 +521,20 @@ function buildOutputFormatSpecificParams(
   if (config.gifDither && config.gifDither !== 'floyd') params.set('gifDith', config.gifDither);
   if (config.gifDisposal && config.gifDisposal !== 'restore_background')
     params.set('gifDisp', config.gifDisposal);
+  if (config.gifTransparentColor && config.gifTransparentColor !== '')
+    params.set('gifTrans', config.gifTransparentColor.replace('#', ''));
+}
+
+function buildOutputFormatSpecificParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
+  buildGifFormatParams(config, params);
   if (config.svgTrueVector) params.set('svgVec', '1');
   if (config.dpi !== undefined && config.dpi !== 72) params.set('dpi', config.dpi.toString());
   if (config.includeQuietZone === false) params.set('inclQz', '0');
   if (config.bgOverride && config.bgOverride !== '')
     params.set('bgOver', config.bgOverride.replace('#', ''));
-  if (config.gifTransparentColor && config.gifTransparentColor !== '')
-    params.set('gifTrans', config.gifTransparentColor.replace('#', ''));
   if (config.svgShapePrecision && config.svgShapePrecision !== 'pixel')
     params.set('svgPrec', config.svgShapePrecision);
   if (config.svgEmbedRasterOverlay === false) params.set('svgEmbed', '0');
@@ -598,7 +607,10 @@ function buildWatermarkParams(config: Partial<ShareConfig>, params: URLSearchPar
   if (config.watermarkImageUrl) params.set('wmImg', config.watermarkImageUrl);
 }
 
-function buildServerAnimationParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+function buildServerAnimPatternAxisParams(
+  config: Partial<ShareConfig>,
+  params: URLSearchParams
+): void {
   if (config.animationPattern && config.animationPattern !== 'none')
     params.set('animPattern', config.animationPattern);
   if (config.animationTarget && config.animationTarget !== 'result')
@@ -611,6 +623,10 @@ function buildServerAnimationParams(config: Partial<ShareConfig>, params: URLSea
     params.set('animTarget2', config.animationTarget2);
   if (config.animationWaveAxis2 && config.animationWaveAxis2 !== 'x')
     params.set('animWaveAxis2', config.animationWaveAxis2);
+}
+
+function buildServerAnimationParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  buildServerAnimPatternAxisParams(config, params);
   if (config.animationFrames !== undefined && config.animationFrames !== 24)
     params.set('animFrames', config.animationFrames.toString());
   if (config.animationSpeed !== undefined && config.animationSpeed !== 100)

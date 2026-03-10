@@ -697,6 +697,24 @@ interface ScanResult {
  * When terminator bits get flipped to fake mode indicators (like 0x8 = Kanji),
  * structurallyValid will be false even if data was extracted.
  */
+function fillModuleBlock(
+  data: Uint8ClampedArray,
+  size: number,
+  startX: number,
+  startY: number,
+  scale: number,
+  color: number
+): void {
+  for (let py = 0; py < scale; py++) {
+    for (let px = 0; px < scale; px++) {
+      const idx = ((startY + py) * size + (startX + px)) * 4;
+      data[idx] = color;
+      data[idx + 1] = color;
+      data[idx + 2] = color;
+    }
+  }
+}
+
 function renderMatrixToImageData(
   matrix: boolean[][],
   moduleCount: number,
@@ -722,15 +740,7 @@ function renderMatrixToImageData(
       if (isDark) {
         const startX = (col + quietZone) * scale;
         const startY = (row + quietZone) * scale;
-
-        for (let py = 0; py < scale; py++) {
-          for (let px = 0; px < scale; px++) {
-            const idx = ((startY + py) * size + (startX + px)) * 4;
-            data[idx] = fgColor;
-            data[idx + 1] = fgColor;
-            data[idx + 2] = fgColor;
-          }
-        }
+        fillModuleBlock(data, size, startX, startY, scale, fgColor);
       }
     }
   }
