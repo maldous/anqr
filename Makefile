@@ -92,6 +92,9 @@ help:
 # ============================================
 export ENV := PROD
 ALLOW_PAID_ACTIONS ?= 0
+DRY_RUN ?= 0
+PROD_CONFIRM ?=
+PROD_CONFIRM_TOKEN ?= DEPLOY_ANQR_PROD
 
 # Node binary directory (auto-detected from nvm). Used for systemd service PATH.
 NVM_NODE_BIN ?= $(shell dirname "$$(command -v node)" 2>/dev/null)
@@ -692,11 +695,38 @@ paid\:approval:
 		exit 1; \
 	fi
 
+prod\:deploy\:confirm:
+	@if [ "$(DRY_RUN)" = "1" ]; then \
+		echo "DRY_RUN=1 set; skipping production deploy confirmation."; \
+	elif [ -n "$(PROD_CONFIRM)" ]; then \
+		if [ "$(PROD_CONFIRM)" != "$(PROD_CONFIRM_TOKEN)" ]; then \
+			echo "ERROR: invalid PROD_CONFIRM token."; \
+			echo "Set PROD_CONFIRM=$(PROD_CONFIRM_TOKEN) to acknowledge production deploy."; \
+			exit 1; \
+		fi; \
+	elif [ ! -t 0 ]; then \
+		echo "ERROR: production deploy confirmation required in non-interactive mode."; \
+		echo "Re-run with PROD_CONFIRM=$(PROD_CONFIRM_TOKEN) or DRY_RUN=1."; \
+		exit 1; \
+	else \
+		printf "Confirm production deploy to anqr.link (type $(PROD_CONFIRM_TOKEN)): "; \
+		read -r confirm; \
+		if [ "$$confirm" != "$(PROD_CONFIRM_TOKEN)" ]; then \
+			echo "Aborted production deploy."; \
+			exit 1; \
+		fi; \
+	fi
+
 # Deploy rebuilds with SENTRY_UPLOAD=true to upload sourcemaps.
 # This is intentionally separate from the earlier build steps.
-deploy: paid\:approval
-	SENTRY_UPLOAD=true npm run build
-	netlify deploy --prod --site anqr.link --dir=dist
+deploy: paid\:approval prod\:deploy\:confirm
+	@if [ "$(DRY_RUN)" = "1" ]; then \
+		echo "[dry-run] SENTRY_UPLOAD=true npm run build"; \
+		echo "[dry-run] netlify deploy --prod --site anqr.link --dir=dist"; \
+	else \
+		SENTRY_UPLOAD=true npm run build; \
+		netlify deploy --prod --site anqr.link --dir=dist; \
+	fi
 
 # Submit all canonical URLs to search engines via IndexNow protocol.
 # Notifies Bing, Yandex, Naver, DuckDuckGo, and all participating engines.

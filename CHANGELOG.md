@@ -9,6 +9,10 @@ Each resolved issue should add an entry under the current date heading.
 - fix: add share-param parity guardrail report to CI/nightly workflow
 - fix: scope gallery artifact comparison to selected baseline IDs (ANQ-149)
 - fix(sonar): reduce S3776 cognitive complexity across 30+ module files via helper extraction
+- fix: add dry-run and explicit confirmation guardrails for production deploy
+- fix: audit URL/query parsing and normalization parity risks
+- fix: inventory gallery execution paths and parameter sources
+- fix(workflow): retry in-session tool call failures up to 2 times with explicit error feedback before fallback
 - fix: reduce semantic validation complexity in qr-art generator
 - fix: add CI reliability gate criteria and machine-readable reporting
 - fix(workflow): keep Pending human-only by routing non-human 3B workflow paths to Todo/Rework
