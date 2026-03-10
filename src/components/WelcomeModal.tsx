@@ -19,14 +19,20 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { languages } from '@/i18n';
+import { trackEvent } from '@/lib/zaraz';
 
 // Increment this version whenever you want to show the modal again to all users
-const WELCOME_VERSION = '2026.02.01';
+const WELCOME_VERSION = '2026.03.10';
 const STORAGE_KEY = 'anqr-welcome-seen';
+const ONBOARDING_STARTED_AT_KEY = 'anqr:onboarding-started-at-ms';
+const ONBOARDING_COMPLETED_AT_KEY = 'anqr:onboarding-completed-at-ms';
+const ONBOARDING_FIRST_SUCCESS_AT_KEY = 'anqr:onboarding-first-success-at-ms';
+const ONBOARDING_STEPS = ['intro', 'language', 'permissions', 'first_success'] as const;
+type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 interface WelcomeModalProps {
   readonly onClose?: () => void;
@@ -36,6 +42,10 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
   const { t, i18n } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+
+  const currentStep = ONBOARDING_STEPS[currentStepIndex];
+  const isFinalStep = currentStepIndex === ONBOARDING_STEPS.length - 1;
 
   // Check if we should show the modal
   useEffect(() => {
@@ -50,22 +60,114 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
     }
   }, []);
 
-  const handleDismiss = useCallback(() => {
-    setIsClosing(true);
-    localStorage.setItem(STORAGE_KEY, WELCOME_VERSION);
-    // Wait for animation to complete
-    setTimeout(() => {
-      setIsVisible(false);
-      setIsClosing(false);
-      onClose?.();
-    }, 200);
-  }, [onClose]);
+  useEffect(() => {
+    if (!isVisible) return;
+    const now = Date.now();
+    localStorage.setItem(ONBOARDING_STARTED_AT_KEY, String(now));
+    localStorage.removeItem(ONBOARDING_COMPLETED_AT_KEY);
+    localStorage.removeItem(ONBOARDING_FIRST_SUCCESS_AT_KEY);
+  }, [isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    trackEvent('onboarding_step', { step: currentStep, action: 'view' });
+  }, [isVisible, currentStep]);
+
+  const handleDismiss = useCallback(
+    (reason: string) => {
+      const now = Date.now();
+      const startedAtRaw = localStorage.getItem(ONBOARDING_STARTED_AT_KEY);
+      const startedAt = startedAtRaw ? Number.parseInt(startedAtRaw, 10) : NaN;
+      const durationMs = Number.isFinite(startedAt) && startedAt > 0 ? now - startedAt : null;
+
+      if (!localStorage.getItem(ONBOARDING_COMPLETED_AT_KEY)) {
+        localStorage.setItem(ONBOARDING_COMPLETED_AT_KEY, String(now));
+        trackEvent('onboarding_completed', {
+          reason,
+          completed_step: currentStep,
+          duration_ms: durationMs ?? -1,
+        });
+      }
+
+      setIsClosing(true);
+      localStorage.setItem(STORAGE_KEY, WELCOME_VERSION);
+      // Wait for animation to complete
+      setTimeout(() => {
+        setIsVisible(false);
+        setIsClosing(false);
+        onClose?.();
+      }, 200);
+    },
+    [currentStep, onClose]
+  );
+
+  const handleNextStep = useCallback(() => {
+    if (isFinalStep) {
+      handleDismiss('get_started');
+      return;
+    }
+
+    trackEvent('onboarding_step', { step: currentStep, action: 'continue' });
+    setCurrentStepIndex((prev) => Math.min(prev + 1, ONBOARDING_STEPS.length - 1));
+  }, [currentStep, handleDismiss, isFinalStep]);
+
+  const stepContent = useMemo<
+    Record<OnboardingStep, { title: string; description: string; detail: string }>
+  >(
+    () => ({
+      intro: {
+        title: t('welcome.onboardingIntroTitle', 'Start fast'),
+        description: t(
+          'welcome.onboardingIntroDesc',
+          'Create your first QR in under a minute with this guided setup.'
+        ),
+        detail: t(
+          'welcome.onboardingIntroDetail',
+          'You can skip any step and edit everything later from the sidebar.'
+        ),
+      },
+      language: {
+        title: t('welcome.onboardingLanguageTitle', 'Choose your language'),
+        description: t(
+          'welcome.onboardingLanguageDesc',
+          'Set the interface language now so labels and help match your workflow.'
+        ),
+        detail: t(
+          'welcome.onboardingLanguageDetail',
+          'Language can be changed anytime from the header language menu.'
+        ),
+      },
+      permissions: {
+        title: t('welcome.onboardingPermissionsTitle', 'Permissions are point-of-need'),
+        description: t(
+          'welcome.onboardingPermissionsDesc',
+          'Camera permission is requested only when you tap Analyze or use camera overlay.'
+        ),
+        detail: t(
+          'welcome.onboardingPermissionsDetail',
+          'No upfront permission prompt appears during onboarding.'
+        ),
+      },
+      first_success: {
+        title: t('welcome.onboardingSuccessTitle', 'Reach first success'),
+        description: t(
+          'welcome.onboardingSuccessDesc',
+          'Enter content, confirm the preview scans, then export or share your first QR.'
+        ),
+        detail: t(
+          'welcome.onboardingSuccessDetail',
+          'We track time-to-first-success to improve onboarding drop-off points.'
+        ),
+      },
+    }),
+    [t]
+  );
 
   // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isVisible && !isClosing) {
-        handleDismiss();
+        handleDismiss('escape');
       }
     };
     globalThis.addEventListener('keydown', handleKeyDown);
@@ -86,6 +188,8 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
     { icon: Zap, title: t('welcome.feature5Title'), desc: t('welcome.feature5Desc') },
     { icon: Share2, title: t('welcome.feature6Title'), desc: t('welcome.feature6Desc') },
   ];
+
+  const activeStepContent = stepContent[currentStep];
 
   // Grouped updates by date - newest first
   const updateGroups = [
@@ -134,7 +238,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
       <button
         type="button"
         className="absolute inset-0 w-full h-full cursor-default bg-transparent border-none"
-        onClick={handleDismiss}
+        onClick={() => handleDismiss('backdrop')}
         aria-label="Close modal"
         tabIndex={-1}
       />
@@ -151,7 +255,7 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
           <div className="relative px-6 pt-6 pb-4 border-b bg-gradient-to-br from-primary/5 to-primary/10">
             <button
               type="button"
-              onClick={handleDismiss}
+              onClick={() => handleDismiss('close_button')}
               className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted transition-colors"
               aria-label={t('common.close')}
             >
@@ -175,6 +279,36 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+            {/* Guided onboarding flow */}
+            <section className="rounded-lg border bg-muted/20 p-4">
+              <h2 className="text-sm font-semibold text-foreground mb-3">
+                {t('welcome.guidedOnboardingTitle', 'Guided onboarding')}
+              </h2>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {ONBOARDING_STEPS.map((step, idx) => {
+                  const isActive = idx === currentStepIndex;
+                  const isDone = idx < currentStepIndex;
+                  return (
+                    <span
+                      key={step}
+                      className={`text-xs px-2 py-1 rounded-full border ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : isDone
+                            ? 'bg-green-100 text-green-800 border-green-200'
+                            : 'bg-background text-muted-foreground'
+                      }`}
+                    >
+                      {idx + 1}. {t(`welcome.step_${step}`, step.replace('_', ' '))}
+                    </span>
+                  );
+                })}
+              </div>
+              <h3 className="text-sm font-semibold text-foreground">{activeStepContent.title}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{activeStepContent.description}</p>
+              <p className="text-xs text-muted-foreground mt-2">{activeStepContent.detail}</p>
+            </section>
+
             {/* Features Grid */}
             <section>
               <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -234,6 +368,11 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
                     type="button"
                     onClick={() => {
                       i18n.changeLanguage(lang.code);
+                      trackEvent('onboarding_step', {
+                        step: 'language',
+                        action: 'select_language',
+                        language: lang.code,
+                      });
                     }}
                     className={`px-2 py-1 rounded-md text-sm transition-colors ${
                       i18n.language === lang.code ||
@@ -280,9 +419,9 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
             <Button
               data-testid={DynamicTestId.resolve('welcome-get-started', 'welcome-get-started')}
               size="sm"
-              onClick={handleDismiss}
+              onClick={handleNextStep}
             >
-              {t('welcome.getStarted')}
+              {isFinalStep ? t('welcome.getStarted') : t('welcome.nextStep', 'Next step')}
             </Button>
           </div>
         </div>

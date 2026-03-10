@@ -71,6 +71,9 @@ const CONFIG_DEBOUNCE_MS = 150;
 const CONFIG_SETTLE_DEBOUNCE_MS = 300;
 const QART_PERF_OVERLAY_ELEMENT_ID = 'anqr-qart-perf-overlay';
 const ENABLE_QART_PERF_OVERLAY = false;
+const ONBOARDING_STARTED_AT_KEY = 'anqr:onboarding-started-at-ms';
+const ONBOARDING_COMPLETED_AT_KEY = 'anqr:onboarding-completed-at-ms';
+const ONBOARDING_FIRST_SUCCESS_AT_KEY = 'anqr:onboarding-first-success-at-ms';
 
 function getQArtSearchAttempts(iterations: number | undefined): number {
   if (typeof iterations !== 'number' || !Number.isFinite(iterations)) return 1;
@@ -259,6 +262,36 @@ function scheduleTrackEvent(
     return;
   }
   setTimeout(run, 0);
+}
+
+function trackFirstSuccessFromOnboarding(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const completedAtRaw = localStorage.getItem(ONBOARDING_COMPLETED_AT_KEY);
+    if (!completedAtRaw) return;
+    if (localStorage.getItem(ONBOARDING_FIRST_SUCCESS_AT_KEY)) return;
+
+    const completedAt = Number.parseInt(completedAtRaw, 10);
+    if (!Number.isFinite(completedAt) || completedAt <= 0) return;
+
+    const now = Date.now();
+    if (now < completedAt) return;
+
+    localStorage.setItem(ONBOARDING_FIRST_SUCCESS_AT_KEY, String(now));
+    scheduleTrackEvent('onboarding_first_success', { source: 'qr_render' });
+
+    const startedAtRaw = localStorage.getItem(ONBOARDING_STARTED_AT_KEY);
+    const startedAt = startedAtRaw ? Number.parseInt(startedAtRaw, 10) : NaN;
+    if (Number.isFinite(startedAt) && startedAt > 0 && startedAt <= now) {
+      const durationMs = now - startedAt;
+      scheduleTrackEvent('onboarding_time_to_first_success', {
+        duration_ms: durationMs,
+        duration_seconds: Math.round(durationMs / 1000),
+      });
+    }
+  } catch {
+    // Ignore telemetry failures to keep rendering resilient.
+  }
 }
 
 function imageBitmapToCanvas(
@@ -2249,6 +2282,7 @@ function useQRGenerator(): UseQRGeneratorResult {
       }
 
       if (result) {
+        trackFirstSuccessFromOnboarding();
         updateGenerationProgress(
           t('preview.busy.checkingScanability', 'Checking that it scans properly...'),
           98

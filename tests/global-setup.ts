@@ -22,7 +22,7 @@ const __dirname = path.dirname(__filename);
  */
 const WELCOME_MODAL_STORAGE_KEY = 'anqr-welcome-seen';
 /** IMPORTANT: This MUST match WELCOME_VERSION in src/components/WelcomeModal.tsx */
-const WELCOME_MODAL_VERSION = '2026.02.01';
+const WELCOME_MODAL_VERSION = '2026.03.10';
 
 /** Path to the storage state file */
 const STORAGE_STATE_PATH = path.join(__dirname, '.storage-state.json');
