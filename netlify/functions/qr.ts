@@ -466,60 +466,45 @@ function getBlobStoreOrNull() {
   }
 }
 
-/**
- * Check if an IP address is private/internal (SSRF protection)
- * Works with both literal IP strings and resolved addresses
- */
+function isPrivateIPv4(a: number, b: number, c: number): boolean {
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 127) return true;
+  if (a === 0) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a === 192 && b === 0 && c === 0) return true;
+  if (a === 192 && b === 0 && c === 2) return true;
+  if (a === 198 && b === 51 && c === 100) return true;
+  if (a === 203 && b === 0 && c === 113) return true;
+  if (a >= 224 && a <= 239) return true;
+  if (a >= 240) return true;
+  return false;
+}
+
+function isReservedIPv6(ip: string): boolean {
+  return (
+    ip.startsWith('fe80:') ||
+    ip.startsWith('fc') ||
+    ip.startsWith('fd') ||
+    ip === '::1' ||
+    ip.startsWith('::ffff:')
+  );
+}
+
 function isPrivateOrReservedIP(ip: string): boolean {
-  // Check for localhost variants
   if (ip === 'localhost' || ip === '127.0.0.1' || ip === '::1') {
     return true;
   }
 
-  // IPv4 private ranges
   const ipv4Match = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (ipv4Match) {
-    const [, a, b, c, _d] = ipv4Match.map(Number);
-    // 10.0.0.0/8
-    if (a === 10) return true;
-    // 172.16.0.0/12
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    // 192.168.0.0/16
-    if (a === 192 && b === 168) return true;
-    // 169.254.0.0/16 (link-local)
-    if (a === 169 && b === 254) return true;
-    // 127.0.0.0/8 (loopback)
-    if (a === 127) return true;
-    // 0.0.0.0/8
-    if (a === 0) return true;
-    // 100.64.0.0/10 (Carrier-grade NAT)
-    if (a === 100 && b >= 64 && b <= 127) return true;
-    // 192.0.0.0/24 (IETF Protocol Assignments)
-    if (a === 192 && b === 0 && c === 0) return true;
-    // 192.0.2.0/24 (TEST-NET-1)
-    if (a === 192 && b === 0 && c === 2) return true;
-    // 198.51.100.0/24 (TEST-NET-2)
-    if (a === 198 && b === 51 && c === 100) return true;
-    // 203.0.113.0/24 (TEST-NET-3)
-    if (a === 203 && b === 0 && c === 113) return true;
-    // 224.0.0.0/4 (Multicast)
-    if (a >= 224 && a <= 239) return true;
-    // 240.0.0.0/4 (Reserved)
-    if (a >= 240) return true;
+    const [, a, b, c] = ipv4Match.map(Number);
+    return isPrivateIPv4(a, b, c);
   }
 
-  // IPv6 private/reserved (simplified check)
-  if (
-    ip.startsWith('fe80:') || // link-local
-    ip.startsWith('fc') ||
-    ip.startsWith('fd') || // unique local
-    ip === '::1' ||
-    ip.startsWith('::ffff:') // IPv4-mapped IPv6
-  ) {
-    return true;
-  }
-
-  return false;
+  return isReservedIPv6(ip);
 }
 
 /**
@@ -1324,6 +1309,29 @@ function hslToRgbTupleServer(h: number, s: number, l: number): [number, number, 
   return [Math.round((r1 + m) * 255), Math.round((g1 + m) * 255), Math.round((b1 + m) * 255)];
 }
 
+function tintWavePixel(
+  data: Uint8ClampedArray,
+  i: number,
+  waveColor: [number, number, number],
+  waveIntensity: number
+): void {
+  const r = data[i];
+  const g = data[i + 1];
+  const b = data[i + 2];
+  const brightness = (r + g + b) / 3;
+  if (brightness < 128) {
+    const tintAmount = waveIntensity * 0.62;
+    data[i] = Math.min(255, r + waveColor[0] * tintAmount);
+    data[i + 1] = Math.min(255, g + waveColor[1] * tintAmount);
+    data[i + 2] = Math.min(255, b + waveColor[2] * tintAmount);
+  } else {
+    const darkenAmount = waveIntensity * 0.15;
+    data[i] = Math.round(r * (1 - darkenAmount));
+    data[i + 1] = Math.round(g * (1 - darkenAmount));
+    data[i + 2] = Math.round(b * (1 - darkenAmount));
+  }
+}
+
 function applyAnimationWaveWithAxisServer(
   data: Uint8ClampedArray,
   progress: number,
@@ -1353,22 +1361,7 @@ function applyAnimationWaveWithAxisServer(
       const waveColor = hslToRgbTupleServer(baseHue + hueShift, 72, 50);
       const i = (y * width + x) * 4;
       if (data[i + 3] === 0) continue;
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const brightness = (r + g + b) / 3;
-      const isDark = brightness < 128;
-      if (isDark) {
-        const tintAmount = waveIntensity * 0.62;
-        data[i] = Math.min(255, r + waveColor[0] * tintAmount);
-        data[i + 1] = Math.min(255, g + waveColor[1] * tintAmount);
-        data[i + 2] = Math.min(255, b + waveColor[2] * tintAmount);
-      } else {
-        const darkenAmount = waveIntensity * 0.15;
-        data[i] = Math.round(r * (1 - darkenAmount));
-        data[i + 1] = Math.round(g * (1 - darkenAmount));
-        data[i + 2] = Math.round(b * (1 - darkenAmount));
-      }
+      tintWavePixel(data, i, waveColor, waveIntensity);
     }
   }
 }
@@ -1966,20 +1959,120 @@ function cannyEdgeServer(
  * Apply all overlay filters server-side (matches client filters)
  * Creates a new canvas to avoid mutating the source.
  */
+function hue2rgbServer(p: number, q: number, t: number): number {
+  if (t < 0) t += 1;
+  if (t > 1) t -= 1;
+  if (t < 1 / 6) return p + (q - p) * 6 * t;
+  if (t < 1 / 2) return q;
+  if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+  return p;
+}
+
+function applyHueSaturationToPixel(
+  r: number,
+  g: number,
+  b: number,
+  saturation: number,
+  hue: number
+): [number, number, number] {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        break;
+      case g:
+        h = ((b - r) / d + 2) / 6;
+        break;
+      case b:
+        h = ((r - g) / d + 4) / 6;
+        break;
+    }
+  }
+
+  h += hue / (2 * Math.PI);
+  if (h > 1) h -= 1;
+  if (h < 0) h += 1;
+  s = Math.max(0, Math.min(1, s * (1 + saturation)));
+
+  if (s === 0) return [l, l, l];
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  return [hue2rgbServer(p, q, h + 1 / 3), hue2rgbServer(p, q, h), hue2rgbServer(p, q, h - 1 / 3)];
+}
+
+function adjustPixelColor(
+  r: number,
+  g: number,
+  b: number,
+  invert: boolean,
+  brightness: number,
+  contrastFactor: number,
+  gamma: number,
+  saturation: number,
+  hue: number
+): [number, number, number] {
+  if (invert) {
+    r = 1 - r;
+    g = 1 - g;
+    b = 1 - b;
+  }
+  r += brightness;
+  g += brightness;
+  b += brightness;
+  r = (r - 0.5) * contrastFactor + 0.5;
+  g = (g - 0.5) * contrastFactor + 0.5;
+  b = (b - 0.5) * contrastFactor + 0.5;
+  if (gamma !== 1) {
+    r = Math.max(0, r) ** (1 / gamma);
+    g = Math.max(0, g) ** (1 / gamma);
+    b = Math.max(0, b) ** (1 / gamma);
+  }
+  if (saturation !== 0 || hue !== 0) {
+    [r, g, b] = applyHueSaturationToPixel(r, g, b, saturation, hue);
+  }
+  return [r, g, b];
+}
+
+function applyPostProcessFilters(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  blurRadius: number,
+  sharpenAmount: number,
+  posterizeLevels: number,
+  thresholdLevel: number | undefined,
+  edgeMode: string
+): void {
+  if (blurRadius > 0) data.set(blurServer(data, width, height, blurRadius));
+  if (sharpenAmount > 0) data.set(sharpenServer(data, width, height, sharpenAmount));
+  if (posterizeLevels > 1) data.set(posterizeServer(data, posterizeLevels));
+  if (thresholdLevel !== undefined) data.set(thresholdServer(data, thresholdLevel));
+  if (edgeMode === 'sobel') data.set(sobelEdgeServer(data, width, height));
+  else if (edgeMode === 'canny') data.set(cannyEdgeServer(data, width, height));
+}
+
 function applyOverlayFiltersServer(
   source: Canvas,
   options: {
-    brightness?: number; // -100 to 100
-    contrast?: number; // -100 to 100
-    gamma?: number; // 0.1 to 3
-    saturation?: number; // -100 to 100
-    hue?: number; // degrees
+    brightness?: number;
+    contrast?: number;
+    gamma?: number;
+    saturation?: number;
+    hue?: number;
     invert?: boolean;
-    blur?: number; // pixels
-    sharpen?: number; // 0-100
-    posterize?: number; // levels 2-256
-    threshold?: number; // 0-255
-    edge?: 'off' | 'sobel' | 'canny'; // edge detection mode
+    blur?: number;
+    sharpen?: number;
+    posterize?: number;
+    threshold?: number;
+    edge?: 'off' | 'sobel' | 'canny';
   }
 ): Canvas {
   const result = createCanvas(source.width, source.height);
@@ -1995,135 +2088,35 @@ function applyOverlayFiltersServer(
   const saturation = (options.saturation ?? 0) / 100;
   const hue = (options.hue ?? 0) * (Math.PI / 180);
   const invert = options.invert ?? false;
-  const blurRadius = options.blur ?? 0;
-  const sharpenAmount = options.sharpen ?? 0;
-  const posterizeLevels = options.posterize ?? 0;
-  const thresholdLevel = options.threshold;
-  const edgeMode = options.edge ?? 'off';
-
-  // Pre-calculate contrast factor
   const contrastFactor = (1 + contrast) / (1 - contrast * 0.5);
 
   for (let i = 0; i < data.length; i += 4) {
-    let r = data[i] / 255;
-    let g = data[i + 1] / 255;
-    let b = data[i + 2] / 255;
-
-    // Invert
-    if (invert) {
-      r = 1 - r;
-      g = 1 - g;
-      b = 1 - b;
-    }
-
-    // Brightness
-    r += brightness;
-    g += brightness;
-    b += brightness;
-
-    // Contrast
-    r = (r - 0.5) * contrastFactor + 0.5;
-    g = (g - 0.5) * contrastFactor + 0.5;
-    b = (b - 0.5) * contrastFactor + 0.5;
-
-    // Gamma
-    if (gamma !== 1) {
-      r = Math.max(0, r) ** (1 / gamma);
-      g = Math.max(0, g) ** (1 / gamma);
-      b = Math.max(0, b) ** (1 / gamma);
-    }
-
-    // Saturation and hue (convert to HSL, adjust, convert back)
-    if (saturation !== 0 || hue !== 0) {
-      // RGB to HSL
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      let h = 0;
-      let s = 0;
-      const l = (max + min) / 2;
-
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-        switch (max) {
-          case r:
-            h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-            break;
-          case g:
-            h = ((b - r) / d + 2) / 6;
-            break;
-          case b:
-            h = ((r - g) / d + 4) / 6;
-            break;
-        }
-      }
-
-      // Apply hue rotation
-      h += hue / (2 * Math.PI);
-      if (h > 1) h -= 1;
-      if (h < 0) h += 1;
-
-      // Apply saturation
-      s = Math.max(0, Math.min(1, s * (1 + saturation)));
-
-      // HSL to RGB
-      if (s === 0) {
-        r = g = b = l;
-      } else {
-        const hue2rgb = (p: number, q: number, t: number) => {
-          if (t < 0) t += 1;
-          if (t > 1) t -= 1;
-          if (t < 1 / 6) return p + (q - p) * 6 * t;
-          if (t < 1 / 2) return q;
-          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-          return p;
-        };
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1 / 3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1 / 3);
-      }
-    }
-
-    // Clamp and write back
+    const [r, g, b] = adjustPixelColor(
+      data[i] / 255,
+      data[i + 1] / 255,
+      data[i + 2] / 255,
+      invert,
+      brightness,
+      contrastFactor,
+      gamma,
+      saturation,
+      hue
+    );
     data[i] = Math.round(Math.max(0, Math.min(1, r)) * 255);
     data[i + 1] = Math.round(Math.max(0, Math.min(1, g)) * 255);
     data[i + 2] = Math.round(Math.max(0, Math.min(1, b)) * 255);
   }
 
-  // Apply convolution-based filters (blur, sharpen, edge detection)
-  if (blurRadius > 0) {
-    const blurred = blurServer(data, result.width, result.height, blurRadius);
-    data.set(blurred);
-  }
-
-  if (sharpenAmount > 0) {
-    const sharpened = sharpenServer(data, result.width, result.height, sharpenAmount);
-    data.set(sharpened);
-  }
-
-  // Apply posterize
-  if (posterizeLevels > 1) {
-    const posterized = posterizeServer(data, posterizeLevels);
-    data.set(posterized);
-  }
-
-  // Apply threshold (binary) - only if explicitly specified
-  if (thresholdLevel !== undefined) {
-    const thresholded = thresholdServer(data, thresholdLevel);
-    data.set(thresholded);
-  }
-
-  // Apply edge detection
-  if (edgeMode === 'sobel') {
-    const edges = sobelEdgeServer(data, result.width, result.height);
-    data.set(edges);
-  } else if (edgeMode === 'canny') {
-    const edges = cannyEdgeServer(data, result.width, result.height);
-    data.set(edges);
-  }
+  applyPostProcessFilters(
+    data,
+    result.width,
+    result.height,
+    options.blur ?? 0,
+    options.sharpen ?? 0,
+    options.posterize ?? 0,
+    options.threshold,
+    options.edge ?? 'off'
+  );
 
   resultCtx.putImageData(imageData, 0, 0);
   return result;
@@ -2598,94 +2591,100 @@ async function fetchOverlayWithValidatedRedirects(
  * Fetch an image from URL and load it into a canvas
  * Also returns the raw array buffer to detect animated GIFs
  */
+async function validateAndFetchOverlay(
+  url: string
+): Promise<{ localResult: FetchedImage | null } | { response: Response } | null> {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+    if (parsedUrl.protocol === 'file:') {
+      return { localResult: await readLocalOverlayFile(parsedUrl) };
+    }
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return null;
+    }
+    if (!process.env.NETLIFY_DEV && (await _isPrivateHostname(parsedUrl.hostname))) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let response: Response | null = null;
+  try {
+    response = await fetchOverlayWithValidatedRedirects(parsedUrl, controller.signal);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (!response?.ok) {
+    return null;
+  }
+
+  const contentType = response.headers.get('Content-Type') || '';
+  const validImageTypes = [
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+    'image/bmp',
+  ];
+  const isImage = validImageTypes.some((type) => contentType.toLowerCase().startsWith(type));
+  if (!isImage && contentType && !contentType.startsWith('application/octet-stream')) {
+    return null;
+  }
+
+  return { response };
+}
+
+async function streamResponseBody(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  maxBytes: number
+): Promise<Buffer | null> {
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return null;
+  }
+
+  const combinedBytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    combinedBytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return Buffer.from(combinedBytes);
+}
+
 async function fetchImageWithBuffer(url: string): Promise<FetchedImage | null> {
   try {
-    // Validate URL format
-    let parsedUrl: URL;
-    try {
-      parsedUrl = new URL(url);
-      if (parsedUrl.protocol === 'file:') {
-        return readLocalOverlayFile(parsedUrl);
-      }
-      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        return null;
-      }
+    const fetchResult = await validateAndFetchOverlay(url);
+    if (!fetchResult) return null;
+    if ('localResult' in fetchResult) return fetchResult.localResult;
 
-      // SSRF protection: resolve hostname and block private/internal targets
-      if (!process.env.NETLIFY_DEV && (await _isPrivateHostname(parsedUrl.hostname))) {
-        return null;
-      }
-    } catch {
-      return null;
-    }
+    const reader = fetchResult.response.body?.getReader();
+    if (!reader) return null;
 
-    // Create AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-    let response: Response | null = null;
-    try {
-      response = await fetchOverlayWithValidatedRedirects(parsedUrl, controller.signal);
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    const buffer = await streamResponseBody(reader, MAX_OVERLAY_BYTES);
+    if (!buffer) return null;
 
-    if (!response?.ok) {
-      return null;
-    }
-
-    // Check Content-Type header for image types
-    const contentType = response.headers.get('Content-Type') || '';
-    const validImageTypes = [
-      'image/png',
-      'image/jpeg',
-      'image/gif',
-      'image/webp',
-      'image/svg+xml',
-      'image/bmp',
-    ];
-    const isImage = validImageTypes.some((type) => contentType.toLowerCase().startsWith(type));
-    if (!isImage && contentType && !contentType.startsWith('application/octet-stream')) {
-      return null;
-    }
-
-    // STREAMING APPROACH: Read chunks and abort if size exceeds limit
-    // This prevents memory spikes from malicious/buggy servers that lie about Content-Length
-    const reader = response.body?.getReader();
-    if (!reader) {
-      return null;
-    }
-
-    const chunks: Uint8Array[] = [];
-    let totalBytes = 0;
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        totalBytes += value.byteLength;
-
-        // Abort immediately if we exceed the size limit
-        if (totalBytes > MAX_OVERLAY_BYTES) {
-          reader.cancel();
-          return null;
-        }
-
-        chunks.push(value);
-      }
-    } catch {
-      return null;
-    }
-
-    // Combine chunks into a single buffer
-    const combinedBytes = new Uint8Array(totalBytes);
-    let offset = 0;
-    for (const chunk of chunks) {
-      combinedBytes.set(chunk, offset);
-      offset += chunk.byteLength;
-    }
-
-    return decodeOverlayBuffer(Buffer.from(combinedBytes));
+    return decodeOverlayBuffer(buffer);
   } catch {
     return null;
   }
@@ -2738,6 +2737,235 @@ function shouldSerializeAnimatedRender(params: URLSearchParams): boolean {
   const pattern1 = (params.get('animPattern') || 'none').toLowerCase();
   const pattern2 = (params.get('animPattern2') || 'none').toLowerCase();
   return pattern1 !== 'none' || pattern2 !== 'none';
+}
+
+async function lookupBlobCache(cacheKey: string, skipCache: boolean): Promise<Response | null> {
+  if (skipCache) return null;
+  try {
+    const store = getBlobStoreOrNull();
+    if (store) {
+      const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
+      if (cached?.data) {
+        const cachedMeta = cached.metadata as Record<string, string> | undefined;
+        qrFnLog('[BLOB] cache HIT', {
+          size: (cached.data as ArrayBuffer).byteLength,
+          contentType: cachedMeta?.contentType,
+        });
+        return new Response(new Uint8Array(cached.data as ArrayBuffer), {
+          status: 200,
+          headers: {
+            'Content-Type': cachedMeta?.contentType || 'image/png',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'X-ANQR-Cache': 'hit',
+            ...CORS_HEADERS,
+          },
+        });
+      }
+      qrFnLog('[BLOB] cache MISS');
+    }
+  } catch (error_) {
+    if (isMissingBlobsEnvironmentError(error_)) {
+      markBlobStoreDisabled('missing_blob_env');
+    } else {
+      console.error('[BLOB] cache read ERROR:', error_);
+    }
+  }
+  return null;
+}
+
+async function writeBlobCache(
+  cacheKey: string,
+  outputBuffer: Buffer,
+  contentType: string
+): Promise<void> {
+  try {
+    qrFnLog('[BLOB] writing cache...', {
+      cacheKey: cacheKey.slice(0, 80),
+      size: outputBuffer.byteLength,
+      contentType,
+    });
+    const store = getBlobStoreOrNull();
+    if (store) {
+      await store.set(cacheKey, new Blob([outputBuffer]), {
+        metadata: { contentType, generatedAt: new Date().toISOString() },
+      });
+      await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});
+      qrFnLog('[BLOB] cache write OK');
+    }
+  } catch (error_) {
+    if (isMissingBlobsEnvironmentError(error_)) {
+      markBlobStoreDisabled('missing_blob_env');
+    } else {
+      console.error('[BLOB] cache write FAILED:', error_);
+    }
+  }
+}
+
+async function triggerBackgroundRender(cacheKey: string, requestUrl: string): Promise<void> {
+  let shouldTrigger = true;
+  try {
+    const store = getBlobStoreOrNull();
+    if (store) {
+      const sentinelKey = SENTINEL_PREFIX + cacheKey;
+      const existing = await store.get(sentinelKey, { type: 'text' });
+      if (existing && Date.now() - Number(existing) < SENTINEL_TTL_MS) {
+        shouldTrigger = false;
+        qrFnLog('[BLOB] sentinel: already rendering (age:', Date.now() - Number(existing), 'ms)');
+      } else {
+        await store.set(sentinelKey, String(Date.now()));
+        qrFnLog('[BLOB] sentinel: set new sentinel');
+      }
+    }
+  } catch (error_) {
+    if (isMissingBlobsEnvironmentError(error_)) {
+      markBlobStoreDisabled('missing_blob_env');
+    } else {
+      console.error('[BLOB] sentinel ERROR:', error_);
+    }
+  }
+  if (shouldTrigger) {
+    try {
+      const bgUrl = new URL(requestUrl);
+      bgUrl.searchParams.set('_fullRender', '1');
+      const siteUrl = bgUrl.origin || process.env.URL || 'https://anqr.link';
+      qrFnLog('[BG:TRIGGER] posting to background function', {
+        url: bgUrl.toString().slice(0, 120),
+      });
+      fetch(`${siteUrl}/.netlify/functions/qr-render-background`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: bgUrl.toString() }),
+      })
+        .then((r) => qrFnLog('[BG:TRIGGER]', r.status))
+        .catch((err) => console.error('[BG:TRIGGER:FAIL]', err));
+    } catch {
+      // Background trigger failure is non-fatal
+    }
+  }
+}
+
+function scaleAndWatermarkFrame(
+  frameCanvas: Canvas,
+  outputWidth: number,
+  outputHeight: number,
+  watermarkOpts: WatermarkOptions | null
+): Canvas {
+  let scaledFrame = frameCanvas;
+  if (frameCanvas.width !== outputWidth || frameCanvas.height !== outputHeight) {
+    scaledFrame = createCanvas(outputWidth, outputHeight);
+    const ctx = scaledFrame.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(frameCanvas, 0, 0, outputWidth, outputHeight);
+  }
+  if (watermarkOpts) {
+    scaledFrame = applyWatermarkServer(scaledFrame, watermarkOpts);
+  }
+  return scaledFrame;
+}
+
+async function renderQRFrameWithFallback(
+  overlayInput: Canvas,
+  frameIdx: number,
+  isArtworkMode: boolean,
+  generateArtworkFn: ((canvas: Canvas, idx: number) => Promise<Canvas>) | null,
+  qrGenerator: QRGenerator,
+  frameConfig: Record<string, unknown>
+): Promise<Canvas> {
+  if (isArtworkMode && generateArtworkFn) {
+    try {
+      return await generateArtworkFn(overlayInput, frameIdx);
+    } catch (error_) {
+      console.warn('[ARTWORK] frame render fallback', {
+        frame: frameIdx,
+        error: error_ instanceof Error ? error_.message : String(error_),
+      });
+      return await qrGenerator.generate(frameConfig, overlayInput);
+    }
+  }
+  return await qrGenerator.generate(frameConfig, overlayInput);
+}
+
+function applyFrameInterpolation(
+  currentCanvas: Canvas,
+  previousCanvas: Canvas | null,
+  interpolationMode: AnimationInterpolation
+): Canvas {
+  if ((interpolationMode === 'crossfade' || interpolationMode === 'morph') && previousCanvas) {
+    return interpolateOverlayFramesServer(previousCanvas, currentCanvas, interpolationMode, 0.5);
+  }
+  return currentCanvas;
+}
+
+async function encodeOutputImage(
+  outputFormat: OutputFormat,
+  animatedOverlayFrames: ServerAnimationFrame[],
+  animationFrameCanvases: Canvas[],
+  outputCanvas: Canvas,
+  gifColors: number,
+  gifDisposalCode: number,
+  gifBackgroundColor: string,
+  transparent: boolean,
+  animationSpeed: number,
+  webpQuality: number,
+  outputQuality: number,
+  metadata: PngMetadata | undefined,
+  outputDpi: number
+): Promise<{ buffer: Buffer; contentType: string }> {
+  switch (outputFormat) {
+    case 'gif':
+      if (animatedOverlayFrames.length > 1) {
+        const tEncode = Date.now();
+        const buffer = await withGifEncodeLock(() =>
+          encodeAnimatedGifWithDelays(
+            animatedOverlayFrames,
+            gifColors,
+            gifDisposalCode,
+            gifBackgroundColor,
+            transparent
+          )
+        );
+        qrFnLog('[TIMING] GIF encoding', {
+          frames: animatedOverlayFrames.length,
+          encodeMs: Date.now() - tEncode,
+          size: buffer.byteLength,
+        });
+        return { buffer, contentType: 'image/gif' };
+      }
+      if (animationFrameCanvases.length > 1) {
+        const buffer = await withGifEncodeLock(() =>
+          encodeAnimatedGif(
+            animationFrameCanvases,
+            animationSpeed,
+            gifColors,
+            gifDisposalCode,
+            gifBackgroundColor,
+            transparent
+          )
+        );
+        return { buffer, contentType: 'image/gif' };
+      }
+      {
+        const buffer = await withGifEncodeLock(() =>
+          encodeGif(outputCanvas, gifColors, gifDisposalCode, gifBackgroundColor, transparent)
+        );
+        return { buffer, contentType: 'image/gif' };
+      }
+
+    case 'webp': {
+      const finalWebpQuality = webpQuality === 90 ? Math.round(outputQuality * 100) : webpQuality;
+      return {
+        buffer: outputCanvas.toBuffer('image/webp', finalWebpQuality),
+        contentType: 'image/webp',
+      };
+    }
+    default: {
+      let buffer = outputCanvas.toBuffer('image/png');
+      if (metadata || outputDpi !== 72) {
+        buffer = embedPngMetadataAndDpi(buffer, metadata, outputDpi);
+      }
+      return { buffer, contentType: 'image/png' };
+    }
+  }
 }
 
 async function handler(request: Request) {
@@ -3196,37 +3424,8 @@ async function handler(request: Request) {
     // Check blob cache for previously generated result
     const cacheKey = computeCacheKey(params);
     qrFnLog('[BLOB] cache lookup', { cacheKey: cacheKey.slice(0, 80), skipCache });
-    if (!skipCache) {
-      try {
-        const store = getBlobStoreOrNull();
-        if (store) {
-          const cached = await store.getWithMetadata(cacheKey, { type: 'arrayBuffer' });
-          if (cached?.data) {
-            const cachedMeta = cached.metadata as Record<string, string> | undefined;
-            qrFnLog('[BLOB] cache HIT', {
-              size: (cached.data as ArrayBuffer).byteLength,
-              contentType: cachedMeta?.contentType,
-            });
-            return new Response(new Uint8Array(cached.data as ArrayBuffer), {
-              status: 200,
-              headers: {
-                'Content-Type': cachedMeta?.contentType || 'image/png',
-                'Cache-Control': 'public, max-age=31536000, immutable',
-                'X-ANQR-Cache': 'hit',
-                ...CORS_HEADERS,
-              },
-            });
-          }
-          qrFnLog('[BLOB] cache MISS');
-        }
-      } catch (error_) {
-        if (isMissingBlobsEnvironmentError(error_)) {
-          markBlobStoreDisabled('missing_blob_env');
-        } else {
-          console.error('[BLOB] cache read ERROR:', error_);
-        }
-      }
-    }
+    const cachedResponse = await lookupBlobCache(cacheKey, skipCache);
+    if (cachedResponse) return cachedResponse;
 
     // Create QRGenerator with Node.js canvas factory
     const qrGenerator = new QRGenerator(nodeCanvasFactory);
@@ -3722,6 +3921,19 @@ async function handler(request: Request) {
       return frame;
     };
 
+    // Build watermark options for reuse in animation frame rendering
+    const watermarkOpts: WatermarkOptions | null = watermarkEnabled
+      ? {
+          enabled: watermarkEnabled,
+          kind: watermarkKind,
+          text: watermarkText,
+          imageCanvas: watermarkImageCanvas,
+          position: watermarkPosition,
+          opacity: watermarkOpacity,
+          blend: watermarkBlend,
+        }
+      : null;
+
     // Generate animation frames based on source
     let animationFrameCanvases: Canvas[] = [];
     const animatedOverlayFrames: ServerAnimationFrame[] = [];
@@ -3762,31 +3974,21 @@ async function handler(request: Request) {
         for (let i = 0; i < overlayFrames.length; i++) {
           const tFrame = Date.now();
           const overlayFrame = overlayFrames[i];
-          let moduleOverlayInput = overlayFrame.canvas;
-          // In artwork mode, module-target effects should not mutate the source
-          // artwork image fed into QR-Art optimization. Keep source deterministic
-          // and apply module motion through per-frame module config instead.
-          if (!isArtworkMode) {
-            moduleOverlayInput = applyAnimationEffectsToCanvasServer(
-              overlayFrame.canvas,
-              moduleAnimationEffects,
-              i,
-              overlayFrames.length
-            );
-          }
+          let moduleOverlayInput = isArtworkMode
+            ? overlayFrame.canvas
+            : applyAnimationEffectsToCanvasServer(
+                overlayFrame.canvas,
+                moduleAnimationEffects,
+                i,
+                overlayFrames.length
+              );
 
           const rawModuleInput = moduleOverlayInput;
-          if (
-            (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
-            previousRawModuleInput
-          ) {
-            moduleOverlayInput = interpolateOverlayFramesServer(
-              previousRawModuleInput,
-              rawModuleInput,
-              animationInterpolate,
-              0.5
-            );
-          }
+          moduleOverlayInput = applyFrameInterpolation(
+            moduleOverlayInput,
+            previousRawModuleInput,
+            animationInterpolate
+          );
           previousRawModuleInput = rawModuleInput;
 
           const frameConfig = applyModuleAnimationToConfigServer(
@@ -3797,42 +3999,26 @@ async function handler(request: Request) {
             animationModuleJitter
           ) as typeof config;
 
-          let frameCanvas: Canvas;
-          if (isArtworkMode) {
-            try {
-              // Preserve artwork animation by regenerating QR-Art from each source frame.
-              frameCanvas = await generateArtworkCanvas(moduleOverlayInput, i);
-            } catch (error_) {
-              console.warn('[ARTWORK] frame render fallback', {
-                frame: i,
-                error: error_ instanceof Error ? error_.message : String(error_),
-              });
-              frameCanvas = await qrGenerator.generate(frameConfig, moduleOverlayInput);
-            }
-          } else {
-            frameCanvas = await qrGenerator.generate(frameConfig, moduleOverlayInput);
-          }
+          let frameCanvas = await renderQRFrameWithFallback(
+            moduleOverlayInput,
+            i,
+            isArtworkMode,
+            generateArtworkCanvas,
+            qrGenerator,
+            frameConfig
+          );
 
           frameCanvas = applyResultEffectsForFrame(frameCanvas, i, overlayFrames.length);
-          if (
-            (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
-            previousRenderedOutput
-          ) {
-            frameCanvas = interpolateOverlayFramesServer(
-              previousRenderedOutput,
-              frameCanvas,
-              animationInterpolate,
-              0.5
-            );
-          }
+          frameCanvas = applyFrameInterpolation(
+            frameCanvas,
+            previousRenderedOutput,
+            animationInterpolate
+          );
           previousRenderedOutput = frameCanvas;
 
-          // Yield between frames to prevent timeout in long-running operations
-          // Only yield every few frames to minimize overhead
           if (i > 0 && i % 3 === 0) {
             await sleep(1);
           }
-
           if (i % 10 === 0 || i === overlayFrames.length - 1) {
             qrFnLog('[ANIMATION] frame progress', {
               frame: i + 1,
@@ -3842,33 +4028,15 @@ async function handler(request: Request) {
             });
           }
 
-          // Scale to output size if needed
-          let scaledFrame = frameCanvas;
-          if (frameCanvas.width !== outputWidth || frameCanvas.height !== outputHeight) {
-            scaledFrame = createCanvas(outputWidth, outputHeight);
-            const ctx = scaledFrame.getContext('2d');
-            ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(frameCanvas, 0, 0, outputWidth, outputHeight);
-          }
-
-          // Apply watermark if enabled
-          if (watermarkEnabled) {
-            scaledFrame = applyWatermarkServer(scaledFrame, {
-              enabled: watermarkEnabled,
-              kind: watermarkKind,
-              text: watermarkText,
-              imageCanvas: watermarkImageCanvas,
-              position: watermarkPosition,
-              opacity: watermarkOpacity,
-              blend: watermarkBlend,
-            });
-          }
-
+          const scaledFrame = scaleAndWatermarkFrame(
+            frameCanvas,
+            outputWidth,
+            outputHeight,
+            watermarkOpts
+          );
           animatedOverlayFrames.push({
             canvas: scaledFrame,
             delay: overlayFrame.delay,
-            // Generated frames are full-frame renders; normalize disposal to the
-            // requested output behavior to avoid inherited source-frame artifacts.
             disposalType: gifDisposalCode,
           });
         }
@@ -3911,19 +4079,12 @@ async function handler(request: Request) {
               );
             }
 
-            if (
-              moduleOverlayInput &&
-              (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
-              previousRawModuleInput
-            ) {
-              moduleOverlayInput = interpolateOverlayFramesServer(
-                previousRawModuleInput,
-                moduleOverlayInput,
-                animationInterpolate,
-                0.5
-              );
-            }
             if (moduleOverlayInput) {
+              moduleOverlayInput = applyFrameInterpolation(
+                moduleOverlayInput,
+                previousRawModuleInput,
+                animationInterpolate
+              );
               previousRawModuleInput = moduleOverlayInput;
             }
 
@@ -3935,129 +4096,52 @@ async function handler(request: Request) {
               animationModuleJitter
             ) as typeof config;
 
-            let frameCanvas: Canvas;
-            if (isArtworkMode && (moduleOverlayInput || overlayCanvas)) {
-              const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
-              try {
-                frameCanvas = await generateArtworkCanvas(artworkTarget, i);
-              } catch (error_) {
-                console.warn('[ARTWORK] static frame render fallback', {
-                  frame: i,
-                  error: error_ instanceof Error ? error_.message : String(error_),
-                });
-                frameCanvas = await qrGenerator.generate(frameConfig, artworkTarget);
-              }
-            } else {
-              frameCanvas = await qrGenerator.generate(
-                frameConfig,
-                moduleOverlayInput || overlayCanvas
-              );
-            }
+            const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
+            let frameCanvas = await renderQRFrameWithFallback(
+              artworkTarget,
+              i,
+              isArtworkMode && !!artworkTarget,
+              generateArtworkCanvas,
+              qrGenerator,
+              frameConfig as Record<string, unknown>
+            );
 
             frameCanvas = applyResultEffectsForFrame(frameCanvas, i, totalAnimFrames);
-            if (
-              (animationInterpolate === 'crossfade' || animationInterpolate === 'morph') &&
-              previousRenderedOutput
-            ) {
-              frameCanvas = interpolateOverlayFramesServer(
-                previousRenderedOutput,
-                frameCanvas,
-                animationInterpolate,
-                0.5
-              );
-            }
+            frameCanvas = applyFrameInterpolation(
+              frameCanvas,
+              previousRenderedOutput,
+              animationInterpolate
+            );
             previousRenderedOutput = frameCanvas;
 
-            let scaledFrame = frameCanvas;
-            if (frameCanvas.width !== outputWidth || frameCanvas.height !== outputHeight) {
-              scaledFrame = createCanvas(outputWidth, outputHeight);
-              const ctx = scaledFrame.getContext('2d');
-              ctx.imageSmoothingEnabled = false;
-              ctx.drawImage(frameCanvas, 0, 0, outputWidth, outputHeight);
-            }
-            if (watermarkEnabled) {
-              scaledFrame = applyWatermarkServer(scaledFrame, {
-                enabled: watermarkEnabled,
-                kind: watermarkKind,
-                text: watermarkText,
-                imageCanvas: watermarkImageCanvas,
-                position: watermarkPosition,
-                opacity: watermarkOpacity,
-                blend: watermarkBlend,
-              });
-            }
-            animationFrameCanvases.push(scaledFrame);
+            animationFrameCanvases.push(
+              scaleAndWatermarkFrame(frameCanvas, outputWidth, outputHeight, watermarkOpts)
+            );
           }
         }
       }
     }
 
     // Encode based on format
-    let outputBuffer: Buffer;
-    let contentType: string;
     const gifBackgroundColor = bgOverride || `#${bg}`;
-
-    switch (outputFormat) {
-      case 'gif':
-        if (animatedOverlayFrames.length > 1) {
-          // Animated GIF from overlay frames (preserves original frame delays)
-          const tEncode = Date.now();
-          outputBuffer = await withGifEncodeLock(() =>
-            encodeAnimatedGifWithDelays(
-              animatedOverlayFrames,
-              gifColors,
-              gifDisposalCode,
-              gifBackgroundColor,
-              transparent
-            )
-          );
-          qrFnLog('[TIMING] GIF encoding', {
-            frames: animatedOverlayFrames.length,
-            encodeMs: Date.now() - tEncode,
-            size: outputBuffer.byteLength,
-          });
-        } else if (animationFrameCanvases.length > 1) {
-          // Animated GIF with pattern
-          outputBuffer = await withGifEncodeLock(() =>
-            encodeAnimatedGif(
-              animationFrameCanvases,
-              animationSpeed,
-              gifColors,
-              gifDisposalCode,
-              gifBackgroundColor,
-              transparent
-            )
-          );
-        } else {
-          // Single frame GIF
-          outputBuffer = await withGifEncodeLock(() =>
-            encodeGif(outputCanvas, gifColors, gifDisposalCode, gifBackgroundColor, transparent)
-          );
-        }
-        contentType = 'image/gif';
-        break;
-
-      case 'webp': {
-        // Use webpQuality (0-100) or outputQuality (0-1) if specified
-        const finalWebpQuality = webpQuality === 90 ? Math.round(outputQuality * 100) : webpQuality;
-        outputBuffer = outputCanvas.toBuffer('image/webp', finalWebpQuality);
-        contentType = 'image/webp';
-        break;
-      }
-      default:
-        outputBuffer = outputCanvas.toBuffer('image/png');
-        // Embed metadata and DPI into PNG
-        if (metadata || outputDpi !== 72) {
-          outputBuffer = embedPngMetadataAndDpi(outputBuffer, metadata, outputDpi);
-        }
-        contentType = 'image/png';
-        break;
-    }
+    const { buffer: outputBuffer, contentType } = await encodeOutputImage(
+      outputFormat,
+      animatedOverlayFrames,
+      animationFrameCanvases,
+      outputCanvas,
+      gifColors,
+      gifDisposalCode,
+      gifBackgroundColor,
+      transparent,
+      animationSpeed,
+      webpQuality,
+      outputQuality,
+      metadata,
+      outputDpi
+    );
 
     // Detect degraded response (overlay requested but rendered without overlay for speed)
     const isDegraded = !!(overlayUrl && overlayMode) && !isFullRender;
-    // Generate ETag from deterministic render identity to avoid O(n) output-buffer hashing.
-    // _fullRender is intentionally omitted from cacheKey, so include degradation state explicitly.
     const etagSource = `${cacheKey}:${contentType}:${isDegraded ? 'degraded' : 'full'}:${outputBuffer.byteLength}`;
     const etag = `"${createHash('md5').update(etagSource).digest('hex')}"`;
     qrFnLog('[BLOB] render result', {
@@ -4068,77 +4152,12 @@ async function handler(request: Request) {
       cacheKey: cacheKey.slice(0, 80),
     });
 
-    // Cache non-degraded results in Netlify Blobs (skip when called in-process from BG function)
     if (!(isDegraded || skipCache)) {
-      try {
-        qrFnLog('[BLOB] writing cache...', {
-          cacheKey: cacheKey.slice(0, 80),
-          size: outputBuffer.byteLength,
-          contentType,
-        });
-        const store = getBlobStoreOrNull();
-        if (store) {
-          await store.set(cacheKey, new Blob([outputBuffer]), {
-            metadata: { contentType, generatedAt: new Date().toISOString() },
-          });
-          await store.delete(SENTINEL_PREFIX + cacheKey).catch(() => {});
-          qrFnLog('[BLOB] cache write OK');
-        }
-      } catch (error_) {
-        if (isMissingBlobsEnvironmentError(error_)) {
-          markBlobStoreDisabled('missing_blob_env');
-        } else {
-          console.error('[BLOB] cache write FAILED:', error_);
-        }
-      }
+      await writeBlobCache(cacheKey, outputBuffer, contentType);
     }
 
-    // Trigger background generation for degraded overlay results (with deduplication)
     if (isDegraded && !skipCache) {
-      let shouldTrigger = true;
-      try {
-        const store = getBlobStoreOrNull();
-        if (store) {
-          const sentinelKey = SENTINEL_PREFIX + cacheKey;
-          const existing = await store.get(sentinelKey, { type: 'text' });
-          if (existing && Date.now() - Number(existing) < SENTINEL_TTL_MS) {
-            shouldTrigger = false;
-            qrFnLog(
-              '[BLOB] sentinel: already rendering (age:',
-              Date.now() - Number(existing),
-              'ms)'
-            );
-          } else {
-            await store.set(sentinelKey, String(Date.now()));
-            qrFnLog('[BLOB] sentinel: set new sentinel');
-          }
-        }
-      } catch (error_) {
-        if (isMissingBlobsEnvironmentError(error_)) {
-          markBlobStoreDisabled('missing_blob_env');
-        } else {
-          console.error('[BLOB] sentinel ERROR:', error_);
-        }
-      }
-      if (shouldTrigger) {
-        try {
-          const bgUrl = new URL(request.url);
-          bgUrl.searchParams.set('_fullRender', '1');
-          const siteUrl = bgUrl.origin || process.env.URL || 'https://anqr.link';
-          qrFnLog('[BG:TRIGGER] posting to background function', {
-            url: bgUrl.toString().slice(0, 120),
-          });
-          fetch(`${siteUrl}/.netlify/functions/qr-render-background`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: bgUrl.toString() }),
-          })
-            .then((r) => qrFnLog('[BG:TRIGGER]', r.status))
-            .catch((err) => console.error('[BG:TRIGGER:FAIL]', err));
-        } catch {
-          // Background trigger failure is non-fatal
-        }
-      }
+      await triggerBackgroundRender(cacheKey, request.url);
     }
 
     return new Response(new Uint8Array(outputBuffer), {
