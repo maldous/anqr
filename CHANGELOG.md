@@ -5,6 +5,7 @@ Each resolved issue should add an entry under the current date heading.
 
 ## 2026-03-10
 
+- fix(gallery): add CI-safe parity guardrails with visual-hash thresholds
 - fix(sonar): resolve 10 BLOCKER findings — S3516 same-return in qr.ts + S2699 assertion-less tests (9 files)
 - fix(sonar): decompose Analyze.tsx into payload-parsers.ts + content-type-renderers.tsx (5993→3286 lines)
 - fix(sonar): extract resolveQArtSuffixConfig from generateFullQArt (CC ~40 reduction)

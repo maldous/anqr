@@ -39,6 +39,9 @@ jobs:
       - name: i18n Regression Guard
         run: npm run test:i18n
 
+      - name: Gallery Parity Guardrails (CI-safe)
+        run: npm run test:gallery:parity:guard
+
       - name: Performance Budget Guard
         run: npm run test:perf:budget
       - name: Reliability Gate

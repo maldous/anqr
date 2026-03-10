@@ -24,7 +24,10 @@ import { generateAllScenarios, scenarioFilename } from './lib/gallery-permutatio
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const ARTIFACTS_DIR = path.join(ROOT, 'reports', 'gallery-artifacts');
-const MODES = ['local', 'browser', 'remote'];
+const MODES = String(process.env.GALLERY_COMPARE_MODES || 'local,browser,remote')
+  .split(',')
+  .map((mode) => mode.trim().toLowerCase())
+  .filter(Boolean);
 const STATIC_SIZE_RATIO_MAX = Math.max(
   1,
   Number.parseFloat(process.env.GALLERY_COMPARE_STATIC_MAX_RATIO || '2.0') || 2.0
@@ -32,6 +35,14 @@ const STATIC_SIZE_RATIO_MAX = Math.max(
 const ANIMATED_SIZE_RATIO_MAX = Math.max(
   1,
   Number.parseFloat(process.env.GALLERY_COMPARE_ANIMATED_MAX_RATIO || '4.0') || 4.0
+);
+const STATIC_VISUAL_HASH_MAX_BITS = Math.max(
+  0,
+  Number.parseInt(process.env.GALLERY_COMPARE_STATIC_VISUAL_HASH_MAX_BITS || '6', 10) || 6
+);
+const ANIMATED_VISUAL_HASH_MAX_BITS = Math.max(
+  0,
+  Number.parseInt(process.env.GALLERY_COMPARE_ANIMATED_VISUAL_HASH_MAX_BITS || '10', 10) || 10
 );
 
 async function exists(filePath) {
@@ -131,6 +142,7 @@ async function analyzeArtifact(filePath, expectedPrefix) {
 
   let width = 0;
   let height = 0;
+  let visualHash64 = null;
   let decodePass = false;
   let decodeReason = 'DECODE_FAILED';
   let decodedPrefixOk = false;
@@ -146,6 +158,14 @@ async function analyzeArtifact(filePath, expectedPrefix) {
     const imageData = ctx.getImageData(0, 0, width, height);
     const result = decodeQR(imageData, { inversionAttempts: 'attemptBoth' });
 
+    const hashCanvas = createCanvas(DCT_N, DCT_N);
+    const hashCtx = hashCanvas.getContext('2d');
+    hashCtx.imageSmoothingEnabled = true;
+    hashCtx.imageSmoothingQuality = 'high';
+    hashCtx.drawImage(img, 0, 0, DCT_N, DCT_N);
+    const hashImageData = hashCtx.getImageData(0, 0, DCT_N, DCT_N).data;
+    visualHash64 = computePhash64(hashImageData).toString(16).padStart(16, '0');
+
     if (result?.success) {
       decodePass = true;
       decodedPrefixOk = String(result.data || '').startsWith(expectedPrefix);
@@ -158,12 +178,111 @@ async function analyzeArtifact(filePath, expectedPrefix) {
   return {
     bytes: buffer.byteLength,
     sha256,
+    visualHash64,
     width,
     height,
     decodePass,
     decodedPrefixOk,
     decodeReason,
   };
+}
+
+function createDctCosTable(n) {
+  const table = Array.from({ length: n }, () => new Float64Array(n));
+  for (let u = 0; u < n; u++) {
+    for (let x = 0; x < n; x++) {
+      table[u][x] = Math.cos(((2 * x + 1) * u * Math.PI) / (2 * n));
+    }
+  }
+  return table;
+}
+
+const DCT_N = 32;
+const PHASH_N = 8;
+const DCT_COS = createDctCosTable(DCT_N);
+
+function dct2(input) {
+  const n = input.length;
+  const temp = Array.from({ length: n }, () => new Float64Array(n));
+  const out = Array.from({ length: n }, () => new Float64Array(n));
+
+  for (let u = 0; u < n; u++) {
+    const au = u === 0 ? Math.sqrt(1 / n) : Math.sqrt(2 / n);
+    for (let y = 0; y < n; y++) {
+      let sum = 0;
+      for (let x = 0; x < n; x++) {
+        sum += input[x][y] * DCT_COS[u][x];
+      }
+      temp[u][y] = au * sum;
+    }
+  }
+
+  for (let u = 0; u < n; u++) {
+    for (let v = 0; v < n; v++) {
+      const av = v === 0 ? Math.sqrt(1 / n) : Math.sqrt(2 / n);
+      let sum = 0;
+      for (let y = 0; y < n; y++) {
+        sum += temp[u][y] * DCT_COS[v][y];
+      }
+      out[u][v] = av * sum;
+    }
+  }
+
+  return out;
+}
+
+function computePhash64(imageData) {
+  const gray = Array.from({ length: DCT_N }, () => new Float64Array(DCT_N));
+  let idx = 0;
+  for (let y = 0; y < DCT_N; y++) {
+    for (let x = 0; x < DCT_N; x++) {
+      const r = imageData[idx++];
+      const g = imageData[idx++];
+      const b = imageData[idx++];
+      idx++;
+      gray[x][y] = 0.299 * r + 0.587 * g + 0.114 * b;
+    }
+  }
+
+  const coeffs = dct2(gray);
+  const low = [];
+  for (let y = 0; y < PHASH_N; y++) {
+    for (let x = 0; x < PHASH_N; x++) {
+      if (x === 0 && y === 0) continue;
+      low.push(coeffs[x][y]);
+    }
+  }
+
+  const sorted = [...low].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+
+  let bits = 0n;
+  let bitIndex = 0n;
+  for (let y = 0; y < PHASH_N; y++) {
+    for (let x = 0; x < PHASH_N; x++) {
+      if (x === 0 && y === 0) continue;
+      if (coeffs[x][y] > median) bits |= 1n << bitIndex;
+      bitIndex++;
+    }
+  }
+  if (coeffs[0][0] > 0) bits |= 1n << 63n;
+  return bits;
+}
+
+function popcountBigInt(v) {
+  let x = v;
+  let c = 0;
+  while (x) {
+    x &= x - 1n;
+    c++;
+  }
+  return c;
+}
+
+function hammingDistanceHex64(aHex, bHex) {
+  const a = BigInt(`0x${aHex}`);
+  const b = BigInt(`0x${bHex}`);
+  return popcountBigInt(a ^ b);
 }
 
 function candidateFilenamesForMode(config, mode, reportResult) {
@@ -196,6 +315,10 @@ async function findArtifactPath(modeDir, filenames) {
 }
 
 async function main() {
+  if (MODES.length === 0) {
+    throw new Error('GALLERY_COMPARE_MODES resolved to zero modes.');
+  }
+
   const configs = generateAllScenarios();
 
   const modeReports = {};
@@ -223,11 +346,13 @@ async function main() {
   let animatedExactLocalRemote = 0;
   let allDimensionsAlignedCount = 0;
   let allSizeParityCount = 0;
+  let allVisualHashParityCount = 0;
 
   const missing = [];
   const decodeIssues = [];
   const sizeIssues = [];
   const dimensionIssues = [];
+  const visualHashIssues = [];
   const rows = [];
 
   for (const config of configs) {
@@ -330,6 +455,45 @@ async function main() {
           bytesByMode,
         });
       }
+
+      const hashesByMode = Object.fromEntries(
+        presentModes.map((entry) => [entry.mode, entry.data.visualHash64]).filter(([, hash]) => !!hash)
+      );
+      const modePairs = [];
+      for (let i = 0; i < presentModes.length; i++) {
+        for (let j = i + 1; j < presentModes.length; j++) {
+          modePairs.push([presentModes[i].mode, presentModes[j].mode]);
+        }
+      }
+      const pairDistances = {};
+      let maxDistance = 0;
+      let completePairs = true;
+      for (const [left, right] of modePairs) {
+        const leftHash = hashesByMode[left];
+        const rightHash = hashesByMode[right];
+        if (!leftHash || !rightHash) {
+          completePairs = false;
+          continue;
+        }
+        const distance = hammingDistanceHex64(leftHash, rightHash);
+        pairDistances[`${left}__${right}`] = distance;
+        if (distance > maxDistance) maxDistance = distance;
+      }
+
+      if (completePairs) {
+        const maxBits = config.isAnimated ? ANIMATED_VISUAL_HASH_MAX_BITS : STATIC_VISUAL_HASH_MAX_BITS;
+        if (maxDistance <= maxBits) {
+          allVisualHashParityCount++;
+        } else {
+          visualHashIssues.push({
+            id: config.id,
+            isAnimated: !!config.isAnimated,
+            maxDistanceBits: maxDistance,
+            maxAllowedBits: maxBits,
+            pairDistances,
+          });
+        }
+      }
     }
 
     rows.push(row);
@@ -344,17 +508,29 @@ async function main() {
     animatedExactLocalRemoteCount: animatedExactLocalRemote,
     allDimensionsAlignedCount,
     allSizeParityCount,
+    allVisualHashParityCount,
     staticSizeRatioMax: STATIC_SIZE_RATIO_MAX,
     animatedSizeRatioMax: ANIMATED_SIZE_RATIO_MAX,
+    staticVisualHashMaxBits: STATIC_VISUAL_HASH_MAX_BITS,
+    animatedVisualHashMaxBits: ANIMATED_VISUAL_HASH_MAX_BITS,
     perMode,
     missingCount: missing.length,
     decodeIssueCount: decodeIssues.length,
     dimensionIssueCount: dimensionIssues.length,
     sizeIssueCount: sizeIssues.length,
+    visualHashIssueCount: visualHashIssues.length,
     reportSources: modeReportSources,
   };
 
-  const jsonReport = { summary, missing, decodeIssues, dimensionIssues, sizeIssues, rows };
+  const jsonReport = {
+    summary,
+    missing,
+    decodeIssues,
+    dimensionIssues,
+    sizeIssues,
+    visualHashIssues,
+    rows,
+  };
   const jsonPath = path.join(ARTIFACTS_DIR, 'consistency-report.json');
   await fs.writeFile(jsonPath, `${JSON.stringify(jsonReport, null, 2)}\n`);
 
@@ -370,6 +546,9 @@ async function main() {
     `- All modes size parity (ratio <= threshold): ${summary.allSizeParityCount}/${summary.totalScenarios}`,
     `  - Static max ratio: ${summary.staticSizeRatioMax}`,
     `  - Animated max ratio: ${summary.animatedSizeRatioMax}`,
+    `- All modes visual-hash parity (max hamming <= threshold): ${summary.allVisualHashParityCount}/${summary.totalScenarios}`,
+    `  - Static max bits: ${summary.staticVisualHashMaxBits}`,
+    `  - Animated max bits: ${summary.animatedVisualHashMaxBits}`,
     `- Static exact hash (local=browser=remote): ${summary.staticExactAllThreeCount}`,
     `- Animated exact hash (local=remote): ${summary.animatedExactLocalRemoteCount}`,
     '',
@@ -390,6 +569,7 @@ async function main() {
     `Decode issues: ${summary.decodeIssueCount}`,
     `Dimension issues: ${summary.dimensionIssueCount}`,
     `Size parity issues: ${summary.sizeIssueCount}`,
+    `Visual-hash parity issues: ${summary.visualHashIssueCount}`,
     '',
     `JSON: \`reports/gallery-artifacts/consistency-report.json\``,
   ].join('\n');
@@ -410,6 +590,10 @@ async function main() {
     `All modes size parity: ${summary.allSizeParityCount}/${summary.totalScenarios} ` +
       `(static<=${summary.staticSizeRatioMax}x, animated<=${summary.animatedSizeRatioMax}x)`
   );
+  console.log(
+    `All modes visual-hash parity: ${summary.allVisualHashParityCount}/${summary.totalScenarios} ` +
+      `(static<=${summary.staticVisualHashMaxBits} bits, animated<=${summary.animatedVisualHashMaxBits} bits)`
+  );
   console.log(`Static exact hash (L=B=R): ${summary.staticExactAllThreeCount}`);
   console.log(`Animated exact hash (L=R): ${summary.animatedExactLocalRemoteCount}`);
   console.log(`\nJSON: ${jsonPath}`);
@@ -419,7 +603,8 @@ async function main() {
     summary.missingCount > 0 ||
     summary.decodeIssueCount > 0 ||
     summary.dimensionIssueCount > 0 ||
-    summary.sizeIssueCount > 0
+    summary.sizeIssueCount > 0 ||
+    summary.visualHashIssueCount > 0
   ) {
     process.exitCode = 1;
   }
