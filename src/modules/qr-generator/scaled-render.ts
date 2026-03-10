@@ -552,6 +552,111 @@ interface PixelGridCtx {
   shouldForceBinaryModule: (row: number, col: number) => boolean;
 }
 
+function renderDitheredLightPixel(
+  pgctx: PixelGridCtx,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  color: PixelColor | null
+): void {
+  const {
+    ctx,
+    seed,
+    lightGrainDensity,
+    lightGrainAlpha,
+    qrFirstMode,
+    dotMinRadiusPx,
+    quantizeRadius,
+    localVariance,
+    drawDitherDot,
+  } = pgctx;
+  const sourceLuma = color ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255 : 1;
+  const toneN = 1 - sourceLuma;
+  const varN = localVariance(x, y);
+  const noiseN = hash01(x, y, seed + 149);
+  const grainChance = Math.max(
+    0,
+    Math.min(
+      qrFirstMode ? 0.2 : 0.08,
+      lightGrainDensity * (0.9 + toneN * 1.5 + varN * 1.1 + (noiseN - 0.5) * 0.3)
+    )
+  );
+  if (grainChance > 0 && hash01(x, y, seed + 131) < grainChance) {
+    const lightTarget = Math.max(0.32, Math.min(0.76, 0.46 + sourceLuma * 0.22 - varN * 0.06));
+    const grain = color
+      ? adjustLumaPreserveChroma(color, lightTarget, 1.42)
+      : { r: 226, g: 226, b: 226 };
+    ctx.fillStyle = `rgb(${grain.r},${grain.g},${grain.b})`;
+    const prevAlpha = ctx.globalAlpha;
+    const alpha = Math.min(
+      0.12,
+      Math.max(0.02, lightGrainAlpha * (0.55 + toneN * 0.4 + varN * 0.18 + (noiseN - 0.5) * 0.08))
+    );
+    ctx.globalAlpha = alpha;
+    const grainRadius = Math.max(
+      0.04,
+      quantizeRadius(dotMinRadiusPx * (0.95 + toneN * 0.7 + varN * 0.22 + noiseN * 0.16))
+    );
+    drawDitherDot(dx, dy, grainRadius, 0.25 + 0.08 * noiseN);
+    ctx.globalAlpha = prevAlpha;
+  }
+}
+
+function renderDitheredDarkPixel(
+  pgctx: PixelGridCtx,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  color: PixelColor | null,
+  moduleLocked: boolean
+): void {
+  const {
+    ctx,
+    seed,
+    useColorRendering,
+    dotMinRadiusPx,
+    dotMaxRadiusPx,
+    quantizeRadius,
+    localVariance,
+    drawDitherDot,
+  } = pgctx;
+  const sourceLuma = color ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255 : 0.5;
+  let drawLuma = sourceLuma;
+  if (useColorRendering && color) {
+    const tone = (1 - sourceLuma) ** 0.86;
+    const targetLuma = Math.max(0.04, Math.min(0.21, 0.04 + (1 - tone) * 0.17));
+    const dark = adjustLumaPreserveChroma(color, targetLuma, 1.62);
+    const darkR = dark.r;
+    const darkG = dark.g;
+    const darkB = dark.b;
+    ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
+    drawLuma = (0.299 * darkR + 0.587 * darkG + 0.114 * darkB) / 255;
+  } else {
+    const mono = Math.round(Math.max(8, Math.min(76, 8 + sourceLuma * 68)));
+    ctx.fillStyle = `rgb(${mono},${mono},${mono})`;
+    drawLuma = mono / 255;
+  }
+
+  const varN = localVariance(x, y);
+  const noiseN = hash01(x, y, seed);
+  const toneN = (1 - drawLuma) ** 0.9;
+  if (!moduleLocked) {
+    const dropoutNoise = hash01(x, y, seed + 257);
+    const dropoutChance = Math.max(0, Math.min(0.05, 0.004 + (1 - toneN) * 0.03 + varN * 0.012));
+    if (dropoutNoise < dropoutChance) return;
+  }
+  const radiusT = Math.max(
+    0,
+    Math.min(1, 0.16 + toneN * 0.68 + varN * 0.22 + (noiseN - 0.5) * 0.34)
+  );
+  const rawRadius = dotMinRadiusPx + radiusT * (dotMaxRadiusPx - dotMinRadiusPx);
+  const radius = quantizeRadius(Math.max(dotMinRadiusPx, rawRadius));
+  const jitterN = 0.66 + 0.34 * hash01(x, y, seed + 7);
+  drawDitherDot(dx, dy, radius, jitterN);
+}
+
 function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
   const {
     ctx,
@@ -616,44 +721,7 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
 
       if (!isDark) {
         if (isDitheredMode) {
-          const sourceLuma = color
-            ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255
-            : 1;
-          const toneN = 1 - sourceLuma;
-          const varN = localVariance(x, y);
-          const noiseN = hash01(x, y, seed + 149);
-          const grainChance = Math.max(
-            0,
-            Math.min(
-              qrFirstMode ? 0.2 : 0.08,
-              lightGrainDensity * (0.9 + toneN * 1.5 + varN * 1.1 + (noiseN - 0.5) * 0.3)
-            )
-          );
-          if (grainChance > 0 && hash01(x, y, seed + 131) < grainChance) {
-            const lightTarget = Math.max(
-              0.32,
-              Math.min(0.76, 0.46 + sourceLuma * 0.22 - varN * 0.06)
-            );
-            const grain = color
-              ? adjustLumaPreserveChroma(color, lightTarget, 1.42)
-              : { r: 226, g: 226, b: 226 };
-            ctx.fillStyle = `rgb(${grain.r},${grain.g},${grain.b})`;
-            const prevAlpha = ctx.globalAlpha;
-            const alpha = Math.min(
-              0.12,
-              Math.max(
-                0.02,
-                lightGrainAlpha * (0.55 + toneN * 0.4 + varN * 0.18 + (noiseN - 0.5) * 0.08)
-              )
-            );
-            ctx.globalAlpha = alpha;
-            const grainRadius = Math.max(
-              0.04,
-              quantizeRadius(dotMinRadiusPx * (0.95 + toneN * 0.7 + varN * 0.22 + noiseN * 0.16))
-            );
-            drawDitherDot(dx, dy, grainRadius, 0.25 + 0.08 * noiseN);
-            ctx.globalAlpha = prevAlpha;
-          }
+          renderDitheredLightPixel(pgctx, x, y, dx, dy, color);
           continue;
         }
         if (!shouldDrawLightPixel) continue;
@@ -661,44 +729,7 @@ function renderScaledPixelGrid(pgctx: PixelGridCtx): void {
 
       if (isDark) {
         if (isDitheredMode) {
-          const sourceLuma = color
-            ? (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255
-            : 0.5;
-          let drawLuma = sourceLuma;
-          if (useColorRendering && color) {
-            const tone = (1 - sourceLuma) ** 0.86;
-            const targetLuma = Math.max(0.04, Math.min(0.21, 0.04 + (1 - tone) * 0.17));
-            const dark = adjustLumaPreserveChroma(color, targetLuma, 1.62);
-            const darkR = dark.r;
-            const darkG = dark.g;
-            const darkB = dark.b;
-            ctx.fillStyle = `rgb(${darkR},${darkG},${darkB})`;
-            drawLuma = (0.299 * darkR + 0.587 * darkG + 0.114 * darkB) / 255;
-          } else {
-            const mono = Math.round(Math.max(8, Math.min(76, 8 + sourceLuma * 68)));
-            ctx.fillStyle = `rgb(${mono},${mono},${mono})`;
-            drawLuma = mono / 255;
-          }
-
-          const varN = localVariance(x, y);
-          const noiseN = hash01(x, y, seed);
-          const toneN = (1 - drawLuma) ** 0.9;
-          if (!moduleLocked) {
-            const dropoutNoise = hash01(x, y, seed + 257);
-            const dropoutChance = Math.max(
-              0,
-              Math.min(0.05, 0.004 + (1 - toneN) * 0.03 + varN * 0.012)
-            );
-            if (dropoutNoise < dropoutChance) continue;
-          }
-          const radiusT = Math.max(
-            0,
-            Math.min(1, 0.16 + toneN * 0.68 + varN * 0.22 + (noiseN - 0.5) * 0.34)
-          );
-          const rawRadius = dotMinRadiusPx + radiusT * (dotMaxRadiusPx - dotMinRadiusPx);
-          const radius = quantizeRadius(Math.max(dotMinRadiusPx, rawRadius));
-          const jitterN = 0.66 + 0.34 * hash01(x, y, seed + 7);
-          drawDitherDot(dx, dy, radius, jitterN);
+          renderDitheredDarkPixel(pgctx, x, y, dx, dy, color, moduleLocked);
         } else if (useColorRendering && color) {
           if (needsBothDarkAndLightColors) {
             const dark = adjustLumaPreserveChroma(

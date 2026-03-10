@@ -983,7 +983,7 @@ function computeConstraintViolationEnergy(ctx: ConstraintCtx): number {
   return energy;
 }
 
-function enforceModuleConstraints(
+function initConstraintContext(
   qr: QRCodeInstance,
   matrixBits: Uint8Array,
   desire: Float32Array,
@@ -992,12 +992,12 @@ function enforceModuleConstraints(
   scaledSize: number,
   version: number,
   config: QRGeneratorConfig
-): void {
+): { cctx: ConstraintCtx; maxIters: number } | null {
   const scanGateProfile = config.scanGateProfile ?? 'full';
   const strictScanGate = scanGateProfile === 'full';
   const baseDarkMin = clamp01(config.darkMinOccupancy ?? 0.38);
   const baseLightMax = clamp01(config.lightMaxOccupancy ?? 0.62);
-  if (baseDarkMin <= 0.001 && baseLightMax >= 0.999) return;
+  if (baseDarkMin <= 0.001 && baseLightMax >= 0.999) return null;
 
   const total = scale * scale;
   const maxIters = Math.max(1, Math.min(16, config.optimizeIterations ?? 8));
@@ -1044,7 +1044,53 @@ function enforceModuleConstraints(
     }
   }
 
-  const cctx: ConstraintCtx = {
+  return {
+    cctx: {
+      qr,
+      matrixBits,
+      desire,
+      moduleCount,
+      scale,
+      scaledSize,
+      version,
+      config,
+      total,
+      centerRadius,
+      centerArea,
+      moduleCenter,
+      baseDarkMin,
+      baseLightMax,
+      strictScanGate,
+      finderBlendGuidance,
+      occViolationWeight,
+      centerViolationWeight,
+      scanScoreWeight,
+      artPenaltyWeight,
+      edgeBandPenalty,
+      centerPixelBonus,
+      occupancies,
+      centerOcc,
+      darkMinMap,
+      lightMaxMap,
+      darkCenterMinMap,
+      lightCenterMaxMap,
+      locked,
+    },
+    maxIters,
+  };
+}
+
+function enforceModuleConstraints(
+  qr: QRCodeInstance,
+  matrixBits: Uint8Array,
+  desire: Float32Array,
+  moduleCount: number,
+  scale: number,
+  scaledSize: number,
+  version: number,
+  config: QRGeneratorConfig
+): void {
+  const init = initConstraintContext(
     qr,
     matrixBits,
     desire,
@@ -1052,29 +1098,11 @@ function enforceModuleConstraints(
     scale,
     scaledSize,
     version,
-    config,
-    total,
-    centerRadius,
-    centerArea,
-    moduleCenter,
-    baseDarkMin,
-    baseLightMax,
-    strictScanGate,
-    finderBlendGuidance,
-    occViolationWeight,
-    centerViolationWeight,
-    scanScoreWeight,
-    artPenaltyWeight,
-    edgeBandPenalty,
-    centerPixelBonus,
-    occupancies,
-    centerOcc,
-    darkMinMap,
-    lightMaxMap,
-    darkCenterMinMap,
-    lightCenterMaxMap,
-    locked,
-  };
+    config
+  );
+  if (!init) return;
+  const { cctx, maxIters } = init;
+  const total = scale * scale;
 
   recomputeConstraintStats(cctx);
   let prevViolationEnergy = computeConstraintViolationEnergy(cctx);

@@ -164,6 +164,192 @@ async function simulateScenarioDecode(
   }
 }
 
+function clampN(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+async function computeOverlayComplexity(
+  pool: CanvasPool,
+  overlayCanvas: HTMLCanvasElement | OffscreenCanvas | null,
+  sampleSize: number
+): Promise<number> {
+  if (!overlayCanvas) return 0;
+  const analysisCanvas = await pool.acquire(sampleSize, sampleSize);
+  try {
+    analysisCanvas.width = sampleSize;
+    analysisCanvas.height = sampleSize;
+    const analysisCtx =
+      (analysisCanvas.getContext('2d', {
+        willReadFrequently: true,
+        desynchronized: true,
+      } as CanvasRenderingContext2DSettings) as CanvasRenderingContext2D | null) ??
+      (analysisCanvas.getContext('2d') as CanvasRenderingContext2D | null);
+    if (!analysisCtx) return 0;
+
+    analysisCtx.imageSmoothingEnabled = true;
+    analysisCtx.imageSmoothingQuality = 'high';
+    analysisCtx.clearRect(0, 0, sampleSize, sampleSize);
+    analysisCtx.drawImage(overlayCanvas as CanvasImageSource, 0, 0, sampleSize, sampleSize);
+
+    const pixels = analysisCtx.getImageData(0, 0, sampleSize, sampleSize).data;
+    const sampleCount = sampleSize * sampleSize;
+    const luma = new Float32Array(sampleCount);
+
+    let sum = 0;
+    for (let i = 0; i < sampleCount; i++) {
+      const idx = i * 4;
+      const value = (0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2]) / 255;
+      luma[i] = value;
+      sum += value;
+    }
+    const mean = sum / Math.max(1, sampleCount);
+
+    let variance = 0;
+    let edge = 0;
+    let edgeCount = 0;
+    for (let y = 0; y < sampleSize; y++) {
+      for (let x = 0; x < sampleSize; x++) {
+        const idx = y * sampleSize + x;
+        const v = luma[idx];
+        const d = v - mean;
+        variance += d * d;
+        if (x + 1 < sampleSize) {
+          edge += Math.abs(v - luma[idx + 1]);
+          edgeCount++;
+        }
+        if (y + 1 < sampleSize) {
+          edge += Math.abs(v - luma[idx + sampleSize]);
+          edgeCount++;
+        }
+      }
+    }
+    const toneStd = Math.sqrt(variance / Math.max(1, sampleCount));
+    const edgeDensity = edge / Math.max(1, edgeCount);
+    return clampN(toneStd * 1.8 + edgeDensity * 1.2, 0, 1);
+  } catch {
+    return 0;
+  } finally {
+    pool.release(analysisCanvas);
+  }
+}
+
+function computeScanGateRasterMetrics(
+  src: HTMLCanvasElement | OffscreenCanvas,
+  moduleCount: number,
+  config: QRGeneratorConfig
+): { edgeImprint: number; toneStd: number } | null {
+  const ctx = src.getContext('2d') as CanvasRenderingContext2D | null;
+  if (!ctx) return null;
+  const { width, height } = src;
+  const imageData = ctx.getImageData(0, 0, width, height).data;
+  const grayAt = (x: number, y: number): number => {
+    const xx = Math.max(0, Math.min(width - 1, Math.round(x)));
+    const yy = Math.max(0, Math.min(height - 1, Math.round(y)));
+    const i = (yy * width + xx) * 4;
+    return (0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2]) / 255;
+  };
+
+  const quietZoneMin = config.quietZoneMinEnforce === false ? 0 : 4;
+  const marginModules = Math.max(quietZoneMin, config.margin);
+  const qrPitch = width / Math.max(1, moduleCount + marginModules * 2);
+  const qrSpan = moduleCount * qrPitch;
+  const qrStartX = (width - qrSpan) / 2;
+  const qrStartY = (height - qrSpan) / 2;
+
+  let boundary = 0;
+  let nonBoundary = 0;
+  let bc = 0;
+  let nc = 0;
+  let sum = 0;
+  let sumSq = 0;
+  let cnt = 0;
+
+  for (let yy = qrStartY + 1; yy < qrStartY + qrSpan - 1; yy += Math.max(1, qrPitch / 2)) {
+    for (let xx = qrStartX + 1; xx < qrStartX + qrSpan - 1; xx += 1) {
+      const g = grayAt(xx, yy);
+      sum += g;
+      sumSq += g * g;
+      cnt++;
+      const d = Math.abs(g - grayAt(xx + 1, yy));
+      const rel = (xx - qrStartX + 1) / Math.max(1e-6, qrPitch);
+      const frac = Math.abs(rel - Math.round(rel));
+      if (frac < 0.08) {
+        boundary += d;
+        bc++;
+      } else {
+        nonBoundary += d;
+        nc++;
+      }
+    }
+  }
+  const mean = sum / Math.max(1, cnt);
+  const toneStd = Math.sqrt(Math.max(0, sumSq / Math.max(1, cnt) - mean * mean));
+  return {
+    edgeImprint: boundary / Math.max(1, bc) - nonBoundary / Math.max(1, nc),
+    toneStd,
+  };
+}
+
+async function roundtripToFinalRaster(
+  pool: CanvasPool,
+  src: HTMLCanvasElement | OffscreenCanvas
+): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  if (
+    typeof document === 'undefined' ||
+    typeof HTMLCanvasElement === 'undefined' ||
+    !(src instanceof HTMLCanvasElement) ||
+    (typeof src.toBlob !== 'function' && typeof src.toDataURL !== 'function')
+  ) {
+    return src;
+  }
+  let out: HTMLCanvasElement | OffscreenCanvas | null = null;
+  let bitmap: ImageBitmap | null = null;
+  try {
+    let imageSource: CanvasImageSource;
+    if (typeof createImageBitmap === 'function' && typeof src.toBlob === 'function') {
+      const blob = await new Promise<Blob | null>((resolve) => {
+        src.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
+      });
+      if (!blob) throw new Error('final-raster blob encode failed');
+      bitmap = await createImageBitmap(blob);
+      imageSource = bitmap;
+    } else if (typeof Image !== 'undefined' && typeof src.toDataURL === 'function') {
+      const pngDataUrl = src.toDataURL('image/png');
+      imageSource = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('final-raster roundtrip failed'));
+        img.src = pngDataUrl;
+      });
+    } else {
+      return src;
+    }
+
+    out = await pool.acquire(src.width, src.height);
+    out.width = src.width;
+    out.height = src.height;
+    const outCtx = out.getContext('2d');
+    if (!outCtx) {
+      pool.release(out);
+      return src;
+    }
+    outCtx.imageSmoothingEnabled = false;
+    outCtx.drawImage(imageSource, 0, 0, out.width, out.height);
+    if (bitmap && typeof bitmap.close === 'function') {
+      bitmap.close();
+    }
+    return out;
+  } catch {
+    if (out) {
+      pool.release(out);
+    }
+    if (bitmap && typeof bitmap.close === 'function') {
+      bitmap.close();
+    }
+    return src;
+  }
+}
+
 function configureStringEncoding(encoding: string): void {
   if (encoding === 'utf8') {
     setStringToBytes((s: string) => {
@@ -804,74 +990,6 @@ export class QRGenerator {
       if (oldestKey) this._overlayComplexityCache.delete(oldestKey);
     };
     const analysisSampleSize = 48;
-    const analyzeOverlayComplexity = async (): Promise<number> => {
-      if (!processedOverlayCanvas) return 0;
-      const analysisCanvas = await pool.acquire(analysisSampleSize, analysisSampleSize);
-      try {
-        analysisCanvas.width = analysisSampleSize;
-        analysisCanvas.height = analysisSampleSize;
-        const analysisCtx =
-          (analysisCanvas.getContext('2d', {
-            willReadFrequently: true,
-            desynchronized: true,
-          } as CanvasRenderingContext2DSettings) as CanvasRenderingContext2D | null) ??
-          (analysisCanvas.getContext('2d') as CanvasRenderingContext2D | null);
-        if (!analysisCtx) return 0;
-
-        analysisCtx.imageSmoothingEnabled = true;
-        analysisCtx.imageSmoothingQuality = 'high';
-        analysisCtx.clearRect(0, 0, analysisSampleSize, analysisSampleSize);
-        analysisCtx.drawImage(
-          processedOverlayCanvas as CanvasImageSource,
-          0,
-          0,
-          analysisSampleSize,
-          analysisSampleSize
-        );
-
-        const pixels = analysisCtx.getImageData(0, 0, analysisSampleSize, analysisSampleSize).data;
-        const sampleCount = analysisSampleSize * analysisSampleSize;
-        const luma = new Float32Array(sampleCount);
-
-        let sum = 0;
-        for (let i = 0; i < sampleCount; i++) {
-          const idx = i * 4;
-          const value =
-            (0.299 * pixels[idx] + 0.587 * pixels[idx + 1] + 0.114 * pixels[idx + 2]) / 255;
-          luma[i] = value;
-          sum += value;
-        }
-        const mean = sum / Math.max(1, sampleCount);
-
-        let variance = 0;
-        let edge = 0;
-        let edgeCount = 0;
-        for (let y = 0; y < analysisSampleSize; y++) {
-          for (let x = 0; x < analysisSampleSize; x++) {
-            const idx = y * analysisSampleSize + x;
-            const v = luma[idx];
-            const d = v - mean;
-            variance += d * d;
-            if (x + 1 < analysisSampleSize) {
-              edge += Math.abs(v - luma[idx + 1]);
-              edgeCount++;
-            }
-            if (y + 1 < analysisSampleSize) {
-              edge += Math.abs(v - luma[idx + analysisSampleSize]);
-              edgeCount++;
-            }
-          }
-        }
-        const toneStd = Math.sqrt(variance / Math.max(1, sampleCount));
-        const edgeDensity = edge / Math.max(1, edgeCount);
-        return clamp(toneStd * 1.8 + edgeDensity * 1.2, 0, 1);
-      } catch {
-        return 0;
-      } finally {
-        pool.release(analysisCanvas);
-      }
-    };
-
     const overlaySignature = processedOverlayCanvas
       ? isAnimatedFrame
         ? `anim-family:${overlayFamilyKey}`
@@ -883,7 +1001,9 @@ export class QRGenerator {
     const overlayComplexityCacheKey = `${isAnimatedFrame ? 'anim' : 'static'}:${overlaySignature}`;
     const cachedOverlayComplexity = readOverlayComplexityCache(overlayComplexityCacheKey);
     const overlayComplexity =
-      cachedOverlayComplexity !== null ? cachedOverlayComplexity : await analyzeOverlayComplexity();
+      cachedOverlayComplexity !== null
+        ? cachedOverlayComplexity
+        : await computeOverlayComplexity(pool, processedOverlayCanvas, analysisSampleSize);
     if (cachedOverlayComplexity === null) {
       writeOverlayComplexityCache(overlayComplexityCacheKey, overlayComplexity);
     }
@@ -1319,120 +1439,6 @@ export class QRGenerator {
       }));
     };
 
-    const computeFinalRasterMetrics = (
-      src: HTMLCanvasElement | OffscreenCanvas
-    ): { edgeImprint: number; toneStd: number } | null => {
-      const ctx = src.getContext('2d') as CanvasRenderingContext2D | null;
-      if (!ctx) return null;
-      const { width, height } = src;
-      const imageData = ctx.getImageData(0, 0, width, height).data;
-      const grayAt = (x: number, y: number): number => {
-        const xx = Math.max(0, Math.min(width - 1, Math.round(x)));
-        const yy = Math.max(0, Math.min(height - 1, Math.round(y)));
-        const i = (yy * width + xx) * 4;
-        return (0.299 * imageData[i] + 0.587 * imageData[i + 1] + 0.114 * imageData[i + 2]) / 255;
-      };
-
-      const quietZoneMin = effectiveConfig.quietZoneMinEnforce === false ? 0 : 4;
-      const marginModules = Math.max(quietZoneMin, effectiveConfig.margin);
-      const qrPitch = width / Math.max(1, moduleCount + marginModules * 2);
-      const qrSpan = moduleCount * qrPitch;
-      const qrStartX = (width - qrSpan) / 2;
-      const qrStartY = (height - qrSpan) / 2;
-
-      let boundary = 0;
-      let nonBoundary = 0;
-      let bc = 0;
-      let nc = 0;
-      let sum = 0;
-      let sumSq = 0;
-      let cnt = 0;
-
-      for (let yy = qrStartY + 1; yy < qrStartY + qrSpan - 1; yy += Math.max(1, qrPitch / 2)) {
-        for (let xx = qrStartX + 1; xx < qrStartX + qrSpan - 1; xx += 1) {
-          const g = grayAt(xx, yy);
-          sum += g;
-          sumSq += g * g;
-          cnt++;
-          const d = Math.abs(g - grayAt(xx + 1, yy));
-          const rel = (xx - qrStartX + 1) / Math.max(1e-6, qrPitch);
-          const frac = Math.abs(rel - Math.round(rel));
-          if (frac < 0.08) {
-            boundary += d;
-            bc++;
-          } else {
-            nonBoundary += d;
-            nc++;
-          }
-        }
-      }
-      const mean = sum / Math.max(1, cnt);
-      const toneStd = Math.sqrt(Math.max(0, sumSq / Math.max(1, cnt) - mean * mean));
-      return {
-        edgeImprint: boundary / Math.max(1, bc) - nonBoundary / Math.max(1, nc),
-        toneStd,
-      };
-    };
-
-    const toFinalRasterCanvas = async (
-      src: HTMLCanvasElement | OffscreenCanvas
-    ): Promise<HTMLCanvasElement | OffscreenCanvas> => {
-      if (
-        typeof document === 'undefined' ||
-        typeof HTMLCanvasElement === 'undefined' ||
-        !(src instanceof HTMLCanvasElement) ||
-        (typeof src.toBlob !== 'function' && typeof src.toDataURL !== 'function')
-      ) {
-        return src;
-      }
-      let out: HTMLCanvasElement | OffscreenCanvas | null = null;
-      let bitmap: ImageBitmap | null = null;
-      try {
-        let imageSource: CanvasImageSource;
-        if (typeof createImageBitmap === 'function' && typeof src.toBlob === 'function') {
-          const blob = await new Promise<Blob | null>((resolve) => {
-            src.toBlob((nextBlob) => resolve(nextBlob), 'image/png');
-          });
-          if (!blob) throw new Error('final-raster blob encode failed');
-          bitmap = await createImageBitmap(blob);
-          imageSource = bitmap;
-        } else if (typeof Image !== 'undefined' && typeof src.toDataURL === 'function') {
-          const pngDataUrl = src.toDataURL('image/png');
-          imageSource = await new Promise<HTMLImageElement>((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error('final-raster roundtrip failed'));
-            img.src = pngDataUrl;
-          });
-        } else {
-          return src;
-        }
-
-        out = await pool.acquire(src.width, src.height);
-        out.width = src.width;
-        out.height = src.height;
-        const outCtx = out.getContext('2d');
-        if (!outCtx) {
-          pool.release(out);
-          return src;
-        }
-        outCtx.imageSmoothingEnabled = false;
-        outCtx.drawImage(imageSource, 0, 0, out.width, out.height);
-        if (bitmap && typeof bitmap.close === 'function') {
-          bitmap.close();
-        }
-        return out;
-      } catch {
-        if (out) {
-          pool.release(out);
-        }
-        if (bitmap && typeof bitmap.close === 'function') {
-          bitmap.close();
-        }
-        return src;
-      }
-    };
-
     const runDecode = async (src: HTMLCanvasElement | OffscreenCanvas): Promise<boolean> => {
       const decoded = await decodeCanvasData(src);
       return decoded?.success === true && decoded?.data === effectiveConfig.content;
@@ -1458,13 +1464,15 @@ export class QRGenerator {
       }
       // Preview mode prioritizes generation throughput and checks decode on the render canvas.
       // Full mode validates on an export-equivalent raster roundtrip.
-      const finalRaster = isPreviewScanGate ? canvas : await toFinalRasterCanvas(canvas);
+      const finalRaster = isPreviewScanGate ? canvas : await roundtripToFinalRaster(pool, canvas);
       if (!(await runDecode(finalRaster))) {
         return { ok: false, baseDecodeOk: false, metrics: null, evaluatedCanvas: finalRaster };
       }
 
       if (skipScanGateEscalation) {
-        const baseMetrics = isPreviewScanGate ? null : computeFinalRasterMetrics(finalRaster);
+        const baseMetrics = isPreviewScanGate
+          ? null
+          : computeScanGateRasterMetrics(finalRaster, moduleCount, effectiveConfig);
         return {
           ok: true,
           baseDecodeOk: true,
@@ -1476,7 +1484,7 @@ export class QRGenerator {
       if (isPreviewScanGate) {
         return { ok: true, baseDecodeOk: true, metrics: null, evaluatedCanvas: finalRaster };
       }
-      const baseMetrics = computeFinalRasterMetrics(finalRaster);
+      const baseMetrics = computeScanGateRasterMetrics(finalRaster, moduleCount, effectiveConfig);
       if (baseMetrics) {
         if (
           baseMetrics.edgeImprint > adaptiveEdgeImprintThreshold ||
@@ -1594,7 +1602,7 @@ export class QRGenerator {
         const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
         const rescueRaster = isPreviewScanGate
           ? rescueCanvas
-          : await toFinalRasterCanvas(rescueCanvas);
+          : await roundtripToFinalRaster(pool, rescueCanvas);
         if (await runDecode(rescueRaster)) {
           rememberPatch(patch);
           return rescueRaster;
@@ -1618,7 +1626,7 @@ export class QRGenerator {
       const rescueCanvas = await renderScaled(buildAttemptConfig(patch));
       const rescueRaster = isPreviewScanGate
         ? rescueCanvas
-        : await toFinalRasterCanvas(rescueCanvas);
+        : await roundtripToFinalRaster(pool, rescueCanvas);
       if (await runDecode(rescueRaster)) {
         rememberPatch(patch);
         return rescueRaster;
@@ -1660,7 +1668,7 @@ export class QRGenerator {
       });
       const fallbackRaster = isPreviewScanGate
         ? qrFirstFallback
-        : await toFinalRasterCanvas(qrFirstFallback);
+        : await roundtripToFinalRaster(pool, qrFirstFallback);
       qrFirstLast = fallbackRaster;
       if (await runDecode(fallbackRaster)) {
         if (effectiveConfig.qrFirstMode === true) {
