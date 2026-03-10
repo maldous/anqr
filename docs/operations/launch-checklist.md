@@ -34,6 +34,8 @@ This page tracks operational launch checks. Historical detail from earlier exhau
 - `make test:appium:android` — Appium E2E tests (requires emulator/device)
 - `make android:release` — Release AAB for Play Store
 
+Pipeline stage contracts (determinism + skip/failure behavior): [`make-all-contract.md`](make-all-contract.md)
+
 ## Archive
 
 - Detailed historical checklist snapshot: [`docs/archive/tbd-launch-checklist-2026-02-18.md`](../archive/tbd-launch-checklist-2026-02-18.md)

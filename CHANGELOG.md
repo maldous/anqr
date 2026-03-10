@@ -3,6 +3,10 @@
 All notable changes to ANQR are documented here.
 Each resolved issue should add an entry under the current date heading.
 
+## 2026-03-11
+
+- fix(ops): harden `make all` with deterministic stage contracts and explicit skip/failure behavior
+
 ## 2026-03-10
 
 - fix(gallery): add CI-safe parity guardrails with visual-hash thresholds
