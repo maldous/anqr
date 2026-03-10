@@ -343,6 +343,7 @@ describe('qr-decoder qr-version', () => {
     for (let m = 0; m < 8; m++) {
       DataMask.unmaskBitMatrix(matrix, 21, m);
     }
+    expect(matrix).toBeTruthy();
   });
 
   it('Mode.forBits returns correct modes', async () => {
