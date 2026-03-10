@@ -1133,6 +1133,7 @@ sonar:
 	@if ! curl -fsS --max-time 5 "$(SONAR_HOST_URL)/api/system/status" >/dev/null; then \
 		echo "SKIP: SonarQube server unavailable at $(SONAR_HOST_URL); skipping non-blocking local analysis."; \
 	else \
+		$(MAKE) test:unit:coverage || echo "⚠️  Coverage generation failed — sonar will run without coverage data"; \
 		npx sonar-scanner; \
 	fi
 	@echo ""

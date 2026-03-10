@@ -777,96 +777,145 @@ interface ConstraintCtx {
   locked: boolean[][];
 }
 
-function recomputeConstraintStats(ctx: ConstraintCtx): void {
-  for (let mr = 0; mr < ctx.moduleCount; mr++) {
-    for (let mc = 0; mc < ctx.moduleCount; mc++) {
-      const y0 = mr * ctx.scale;
-      const x0 = mc * ctx.scale;
-      let darkCount = 0;
-      let centerDarkCount = 0;
-      let desireSum = 0;
-      let desireSq = 0;
-      for (let y = 0; y < ctx.scale; y++) {
-        for (let x = 0; x < ctx.scale; x++) {
-          const yy = y0 + y;
-          const xx = x0 + x;
-          const dark = ctx.matrixBits[pixelIndex(xx, yy, ctx.scaledSize)] === 1;
-          if (dark) darkCount++;
-          if (
-            dark &&
-            Math.abs(y - ctx.moduleCenter) <= ctx.centerRadius &&
-            Math.abs(x - ctx.moduleCenter) <= ctx.centerRadius
-          ) {
-            centerDarkCount++;
-          }
-          const d = ctx.desire[pixelIndex(x0 + x, y0 + y, ctx.scaledSize)];
-          desireSum += d;
-          desireSq += d * d;
-        }
-      }
-      ctx.occupancies[mr][mc] = darkCount / ctx.total;
-      ctx.centerOcc[mr][mc] = centerDarkCount / Math.max(1, ctx.centerArea);
-      const mean = desireSum / ctx.total;
-      const variance = Math.max(0, desireSq / ctx.total - mean * mean);
-      const contrast = clamp01(Math.sqrt(variance) * 3.2);
-      ctx.darkMinMap[mr][mc] = clamp01(
-        Math.max(0.34, Math.min(0.5, ctx.baseDarkMin - contrast * 0.02))
-      );
-      ctx.lightMaxMap[mr][mc] = clamp01(
-        Math.max(0.5, Math.min(0.66, ctx.baseLightMax + contrast * 0.02))
-      );
-      if (ctx.strictScanGate) {
-        ctx.darkCenterMinMap[mr][mc] = clamp01(
-          Math.max(
-            ctx.darkMinMap[mr][mc] + 0.12,
-            Math.min(0.68, ctx.darkMinMap[mr][mc] + 0.2 - contrast * 0.04)
-          )
-        );
-        ctx.lightCenterMaxMap[mr][mc] = clamp01(
-          Math.min(
-            ctx.lightMaxMap[mr][mc] - 0.12,
-            Math.max(0.34, ctx.lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
-          )
-        );
-      } else {
-        ctx.darkCenterMinMap[mr][mc] = clamp01(
-          Math.max(
-            ctx.darkMinMap[mr][mc] + 0.06,
-            Math.min(0.56, ctx.darkMinMap[mr][mc] + 0.12 - contrast * 0.03)
-          )
-        );
-        ctx.lightCenterMaxMap[mr][mc] = clamp01(
-          Math.min(
-            ctx.lightMaxMap[mr][mc] - 0.06,
-            Math.max(0.44, ctx.lightMaxMap[mr][mc] - 0.12 + contrast * 0.03)
-          )
-        );
-      }
+function computeModuleOccupancy(
+  ctx: ConstraintCtx,
+  mr: number,
+  mc: number
+): { darkCount: number; centerDarkCount: number; desireSum: number; desireSq: number } {
+  const y0 = mr * ctx.scale;
+  const x0 = mc * ctx.scale;
+  let darkCount = 0;
+  let centerDarkCount = 0;
+  let desireSum = 0;
+  let desireSq = 0;
+  for (let y = 0; y < ctx.scale; y++) {
+    for (let x = 0; x < ctx.scale; x++) {
+      const yy = y0 + y;
+      const xx = x0 + x;
+      const dark = ctx.matrixBits[pixelIndex(xx, yy, ctx.scaledSize)] === 1;
+      if (dark) darkCount++;
       if (
-        ctx.finderBlendGuidance &&
-        isFunctionalPatternModule(mr, mc, ctx.moduleCount, ctx.version)
+        dark &&
+        Math.abs(y - ctx.moduleCenter) <= ctx.centerRadius &&
+        Math.abs(x - ctx.moduleCenter) <= ctx.centerRadius
       ) {
-        if (ctx.qr.isDark(mr, mc)) {
-          ctx.darkMinMap[mr][mc] = Math.max(ctx.darkMinMap[mr][mc], 0.58);
-          ctx.darkCenterMinMap[mr][mc] = Math.max(ctx.darkCenterMinMap[mr][mc], 0.74);
-        } else {
-          ctx.lightMaxMap[mr][mc] = Math.min(ctx.lightMaxMap[mr][mc], 0.26);
-          ctx.lightCenterMaxMap[mr][mc] = Math.min(ctx.lightCenterMaxMap[mr][mc], 0.14);
-        }
+        centerDarkCount++;
       }
+      const d = ctx.desire[pixelIndex(x0 + x, y0 + y, ctx.scaledSize)];
+      desireSum += d;
+      desireSq += d * d;
+    }
+  }
+  return { darkCount, centerDarkCount, desireSum, desireSq };
+}
+
+function updateSingleModuleStats(ctx: ConstraintCtx, mr: number, mc: number): void {
+  const { darkCount, centerDarkCount, desireSum, desireSq } = computeModuleOccupancy(ctx, mr, mc);
+  ctx.occupancies[mr][mc] = darkCount / ctx.total;
+  ctx.centerOcc[mr][mc] = centerDarkCount / Math.max(1, ctx.centerArea);
+  const mean = desireSum / ctx.total;
+  const variance = Math.max(0, desireSq / ctx.total - mean * mean);
+  const contrast = clamp01(Math.sqrt(variance) * 3.2);
+  ctx.darkMinMap[mr][mc] = clamp01(
+    Math.max(0.34, Math.min(0.5, ctx.baseDarkMin - contrast * 0.02))
+  );
+  ctx.lightMaxMap[mr][mc] = clamp01(
+    Math.max(0.5, Math.min(0.66, ctx.baseLightMax + contrast * 0.02))
+  );
+  if (ctx.strictScanGate) {
+    ctx.darkCenterMinMap[mr][mc] = clamp01(
+      Math.max(
+        ctx.darkMinMap[mr][mc] + 0.12,
+        Math.min(0.68, ctx.darkMinMap[mr][mc] + 0.2 - contrast * 0.04)
+      )
+    );
+    ctx.lightCenterMaxMap[mr][mc] = clamp01(
+      Math.min(
+        ctx.lightMaxMap[mr][mc] - 0.12,
+        Math.max(0.34, ctx.lightMaxMap[mr][mc] - 0.2 + contrast * 0.04)
+      )
+    );
+  } else {
+    ctx.darkCenterMinMap[mr][mc] = clamp01(
+      Math.max(
+        ctx.darkMinMap[mr][mc] + 0.06,
+        Math.min(0.56, ctx.darkMinMap[mr][mc] + 0.12 - contrast * 0.03)
+      )
+    );
+    ctx.lightCenterMaxMap[mr][mc] = clamp01(
+      Math.min(
+        ctx.lightMaxMap[mr][mc] - 0.06,
+        Math.max(0.44, ctx.lightMaxMap[mr][mc] - 0.12 + contrast * 0.03)
+      )
+    );
+  }
+  if (ctx.finderBlendGuidance && isFunctionalPatternModule(mr, mc, ctx.moduleCount, ctx.version)) {
+    if (ctx.qr.isDark(mr, mc)) {
+      ctx.darkMinMap[mr][mc] = Math.max(ctx.darkMinMap[mr][mc], 0.58);
+      ctx.darkCenterMinMap[mr][mc] = Math.max(ctx.darkCenterMinMap[mr][mc], 0.74);
+    } else {
+      ctx.lightMaxMap[mr][mc] = Math.min(ctx.lightMaxMap[mr][mc], 0.26);
+      ctx.lightCenterMaxMap[mr][mc] = Math.min(ctx.lightCenterMaxMap[mr][mc], 0.14);
     }
   }
 }
 
-function buildConstraintCandidates(ctx: ConstraintCtx): {
-  candidates: ConstraintCandidate[];
-  totalViolationEnergy: number;
-} {
+function recomputeConstraintStats(ctx: ConstraintCtx): void {
+  for (let mr = 0; mr < ctx.moduleCount; mr++) {
+    for (let mc = 0; mc < ctx.moduleCount; mc++) {
+      updateSingleModuleStats(ctx, mr, mc);
+    }
+  }
+}
+
+interface ModuleViolation {
+  occViolation: number;
+  centerViolation: number;
+  toDark: boolean;
+}
+
+function computeModuleViolation(
+  qrIsDark: boolean,
+  occ: number,
+  cOcc: number,
+  darkMin: number,
+  lightMax: number,
+  darkCenterMin: number,
+  lightCenterMax: number
+): ModuleViolation | null {
+  let occViolation = 0;
+  let centerViolation = 0;
+  let toDark = false;
+  if (qrIsDark && occ < darkMin) {
+    occViolation = darkMin - occ;
+    toDark = true;
+  } else if (!qrIsDark && occ > lightMax) {
+    occViolation = occ - lightMax;
+    toDark = false;
+  }
+  if (qrIsDark && cOcc < darkCenterMin) {
+    centerViolation = darkCenterMin - cOcc;
+    toDark = true;
+  } else if (!qrIsDark && cOcc > lightCenterMax) {
+    centerViolation = cOcc - lightCenterMax;
+    toDark = false;
+  }
+  if (occViolation <= 0 && centerViolation <= 0) return null;
+  return { occViolation, centerViolation, toDark };
+}
+
+function scoreModulePixels(
+  ctx: ConstraintCtx,
+  mr: number,
+  mc: number,
+  occViolation: number,
+  centerViolation: number,
+  toDark: boolean,
+  out: ConstraintCandidate[]
+): void {
   const {
-    qr,
     matrixBits,
     desire,
-    moduleCount,
     scale,
     scaledSize,
     total,
@@ -879,6 +928,47 @@ function buildConstraintCandidates(ctx: ConstraintCtx): {
     artPenaltyWeight,
     edgeBandPenalty,
     centerPixelBonus,
+  } = ctx;
+
+  const y0 = mr * scale;
+  const x0 = mc * scale;
+  for (let y = 0; y < scale; y++) {
+    for (let x = 0; x < scale; x++) {
+      const yy = y0 + y;
+      const xx = x0 + x;
+      const current = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
+      if (toDark === current) continue;
+      const inCenter =
+        Math.abs(y - moduleCenter) <= centerRadius && Math.abs(x - moduleCenter) <= centerRadius;
+      const occGain = occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;
+      const centerGain =
+        inCenter && centerViolation > 0
+          ? Math.min(centerViolation, 1 / centerArea) * centerViolationWeight
+          : 0;
+      const scanGain = occGain + centerGain;
+      if (scanGain <= 0) continue;
+
+      const d = desire[pixelIndex(xx, yy, scaledSize)];
+      const beforeErr = Math.abs((current ? 1 : 0) - d);
+      const afterErr = Math.abs((toDark ? 1 : 0) - d);
+      const artPenalty = afterErr - beforeErr;
+      const edgeBand = x <= 1 || y <= 1 || x >= scale - 2 || y >= scale - 2;
+      const edgePen = edgeBand ? edgeBandPenalty : 0;
+      const centerBonus = inCenter ? centerPixelBonus : 0;
+      const score =
+        scanGain * scanScoreWeight - artPenalty * artPenaltyWeight - edgePen + centerBonus;
+      out.push({ y: yy, x: xx, score, toDark, scanGain });
+    }
+  }
+}
+
+function buildConstraintCandidates(ctx: ConstraintCtx): {
+  candidates: ConstraintCandidate[];
+  totalViolationEnergy: number;
+} {
+  const {
+    qr,
+    moduleCount,
     occupancies,
     centerOcc,
     darkMinMap,
@@ -886,6 +976,8 @@ function buildConstraintCandidates(ctx: ConstraintCtx): {
     darkCenterMinMap,
     lightCenterMaxMap,
     locked,
+    occViolationWeight,
+    centerViolationWeight,
   } = ctx;
   const candidates: ConstraintCandidate[] = [];
   let totalViolationEnergy = 0;
@@ -894,67 +986,28 @@ function buildConstraintCandidates(ctx: ConstraintCtx): {
     for (let mc = 0; mc < moduleCount; mc++) {
       if (locked[mr][mc]) continue;
       if (isFixedDarkModule(mr, mc, moduleCount)) continue;
-      const qrIsDark = qr.isDark(mr, mc);
-      const occ = occupancies[mr][mc];
-      const cOcc = centerOcc[mr][mc];
-      const darkMin = darkMinMap[mr][mc];
-      const lightMax = lightMaxMap[mr][mc];
-      const darkCenterMin = darkCenterMinMap[mr][mc];
-      const lightCenterMax = lightCenterMaxMap[mr][mc];
-
-      let occViolation = 0;
-      let centerViolation = 0;
-      let toDark = false;
-      if (qrIsDark && occ < darkMin) {
-        occViolation = darkMin - occ;
-        toDark = true;
-      } else if (!qrIsDark && occ > lightMax) {
-        occViolation = occ - lightMax;
-        toDark = false;
-      }
-      if (qrIsDark && cOcc < darkCenterMin) {
-        centerViolation = darkCenterMin - cOcc;
-        toDark = true;
-      } else if (!qrIsDark && cOcc > lightCenterMax) {
-        centerViolation = cOcc - lightCenterMax;
-        toDark = false;
-      }
-      if (occViolation <= 0 && centerViolation <= 0) continue;
+      const violation = computeModuleViolation(
+        qr.isDark(mr, mc),
+        occupancies[mr][mc],
+        centerOcc[mr][mc],
+        darkMinMap[mr][mc],
+        lightMaxMap[mr][mc],
+        darkCenterMinMap[mr][mc],
+        lightCenterMaxMap[mr][mc]
+      );
+      if (!violation) continue;
       totalViolationEnergy +=
-        occViolation * occViolationWeight + centerViolation * centerViolationWeight;
-
-      const y0 = mr * scale;
-      const x0 = mc * scale;
-      for (let y = 0; y < scale; y++) {
-        for (let x = 0; x < scale; x++) {
-          const yy = y0 + y;
-          const xx = x0 + x;
-          const current = matrixBits[pixelIndex(xx, yy, scaledSize)] === 1;
-          if ((toDark && current) || !(toDark || current)) continue;
-          const inCenter =
-            Math.abs(y - moduleCenter) <= centerRadius &&
-            Math.abs(x - moduleCenter) <= centerRadius;
-          const occGain =
-            occViolation > 0 ? Math.min(occViolation, 1 / total) * occViolationWeight : 0;
-          const centerGain =
-            inCenter && centerViolation > 0
-              ? Math.min(centerViolation, 1 / centerArea) * centerViolationWeight
-              : 0;
-          const scanGain = occGain + centerGain;
-          if (scanGain <= 0) continue;
-
-          const d = desire[pixelIndex(xx, yy, scaledSize)];
-          const beforeErr = Math.abs((current ? 1 : 0) - d);
-          const afterErr = Math.abs((toDark ? 1 : 0) - d);
-          const artPenalty = afterErr - beforeErr;
-          const edgeBand = x <= 1 || y <= 1 || x >= scale - 2 || y >= scale - 2;
-          const edgePen = edgeBand ? edgeBandPenalty : 0;
-          const centerBonus = inCenter ? centerPixelBonus : 0;
-          const score =
-            scanGain * scanScoreWeight - artPenalty * artPenaltyWeight - edgePen + centerBonus;
-          candidates.push({ y: yy, x: xx, score, toDark, scanGain });
-        }
-      }
+        violation.occViolation * occViolationWeight +
+        violation.centerViolation * centerViolationWeight;
+      scoreModulePixels(
+        ctx,
+        mr,
+        mc,
+        violation.occViolation,
+        violation.centerViolation,
+        violation.toDark,
+        candidates
+      );
     }
   }
   return { candidates, totalViolationEnergy };
@@ -1080,6 +1133,33 @@ function initConstraintContext(
   };
 }
 
+function applyRankedCandidates(
+  matrixBits: Uint8Array,
+  scaledSize: number,
+  candidates: ConstraintCandidate[],
+  totalViolationEnergy: number,
+  total: number
+): number {
+  const targetGain = totalViolationEnergy * 0.9;
+  const maxFlips = Math.max(
+    1,
+    Math.min(candidates.length, Math.ceil(totalViolationEnergy * total * 0.9))
+  );
+  let applied = 0;
+  let gained = 0;
+  for (let i = 0; i < candidates.length && applied < maxFlips && gained < targetGain; i++) {
+    const c = candidates[i];
+    if (c.score < -0.2 && gained > targetGain * 0.6) break;
+    const idx = pixelIndex(c.x, c.y, scaledSize);
+    const current = matrixBits[idx] === 1;
+    if (c.toDark === current) continue;
+    matrixBits[idx] = c.toDark ? 1 : 0;
+    applied++;
+    gained += c.scanGain;
+  }
+  return applied;
+}
+
 function enforceModuleConstraints(
   qr: QRCodeInstance,
   matrixBits: Uint8Array,
@@ -1115,24 +1195,13 @@ function enforceModuleConstraints(
 
     candidates.sort((a, b) => b.score - a.score);
 
-    // Apply globally ranked candidates only until violation energy is reduced.
-    const targetGain = totalViolationEnergy * 0.9;
-    const maxFlips = Math.max(
-      1,
-      Math.min(candidates.length, Math.ceil(totalViolationEnergy * total * 0.9))
+    const applied = applyRankedCandidates(
+      matrixBits,
+      scaledSize,
+      candidates,
+      totalViolationEnergy,
+      total
     );
-    let applied = 0;
-    let gained = 0;
-    for (let i = 0; i < candidates.length && applied < maxFlips && gained < targetGain; i++) {
-      const c = candidates[i];
-      if (c.score < -0.2 && gained > targetGain * 0.6) break;
-      const idx = pixelIndex(c.x, c.y, scaledSize);
-      const current = matrixBits[idx] === 1;
-      if (c.toDark === current) continue;
-      matrixBits[idx] = c.toDark ? 1 : 0;
-      applied++;
-      gained += c.scanGain;
-    }
 
     if (applied === 0) break;
     recomputeConstraintStats(cctx);
