@@ -466,21 +466,34 @@ function getBlobStoreOrNull() {
   }
 }
 
-function isPrivateIPv4(a: number, b: number, c: number): boolean {
+function isPrivateIPv4FirstOctet(a: number): boolean {
   if (a === 10) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 169 && b === 254) return true;
   if (a === 127) return true;
   if (a === 0) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  if (a === 192 && b === 0 && c === 0) return true;
-  if (a === 192 && b === 0 && c === 2) return true;
-  if (a === 198 && b === 51 && c === 100) return true;
-  if (a === 203 && b === 0 && c === 113) return true;
   if (a >= 224 && a <= 239) return true;
   if (a >= 240) return true;
   return false;
+}
+
+function isPrivateIPv4Class192(b: number, c: number): boolean {
+  if (b === 168) return true;
+  if (b === 0 && c === 0) return true;
+  if (b === 0 && c === 2) return true;
+  return false;
+}
+
+function isPrivateIPv4Subnet(a: number, b: number, c: number): boolean {
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192) return isPrivateIPv4Class192(b, c);
+  if (a === 169 && b === 254) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  if (a === 198 && b === 51 && c === 100) return true;
+  if (a === 203 && b === 0 && c === 113) return true;
+  return false;
+}
+
+function isPrivateIPv4(a: number, b: number, c: number): boolean {
+  return isPrivateIPv4FirstOctet(a) || isPrivateIPv4Subnet(a, b, c);
 }
 
 function isReservedIPv6(ip: string): boolean {
@@ -2968,6 +2981,620 @@ async function encodeOutputImage(
   }
 }
 
+interface OverlayLoadResult {
+  overlayCanvas: Canvas | null;
+  overlayFrames: ServerAnimationFrame[];
+  hasAnimatedOverlay: boolean;
+  outputFormat: OutputFormat;
+}
+
+interface OverlayFilterOptions {
+  brightness: number;
+  contrast: number;
+  gamma: number;
+  saturation: number;
+  hue: number;
+  invert: boolean;
+  blur: number;
+  sharpen: number;
+  posterize: number;
+  threshold?: number;
+  edge: 'off' | 'sobel' | 'canny';
+}
+
+function preprocessOverlayCanvas(
+  canvas: Canvas,
+  cropEnabled: boolean,
+  cropX: number,
+  cropY: number,
+  cropSize: number,
+  overlayRotate: number,
+  overlayFlipX: boolean,
+  overlayFlipY: boolean,
+  hasFilters: boolean,
+  filterOptions: OverlayFilterOptions
+): Canvas {
+  let processed = canvas;
+  if (cropEnabled && cropSize < 1) {
+    processed = cropOverlayServer(processed, cropX, cropY, cropSize);
+  }
+  if (overlayRotate !== 0) {
+    processed = rotateOverlayServer(processed, overlayRotate);
+  }
+  if (overlayFlipX || overlayFlipY) {
+    processed = flipOverlayServer(processed, overlayFlipX, overlayFlipY);
+  }
+  if (hasFilters) {
+    processed = applyOverlayFiltersServer(processed, filterOptions);
+  }
+  return processed;
+}
+
+function hasActiveOverlayFilters(f: OverlayFilterOptions): boolean {
+  return (
+    f.brightness !== 0 ||
+    f.contrast !== 0 ||
+    f.gamma !== 1 ||
+    f.saturation !== 0 ||
+    f.hue !== 0 ||
+    f.invert ||
+    f.blur > 0 ||
+    f.sharpen > 0 ||
+    f.posterize > 1 ||
+    f.edge !== 'off'
+  );
+}
+
+async function loadAndPreprocessOverlay(
+  overlayUrl: string | null,
+  overlayMode: string | undefined,
+  isFullRender: boolean,
+  strictOverlay: boolean,
+  explicitFormat: string | null,
+  currentOutputFormat: OutputFormat,
+  cropEnabled: boolean,
+  cropX: number,
+  cropY: number,
+  cropSize: number,
+  overlayRotate: number,
+  overlayFlipX: boolean,
+  overlayFlipY: boolean,
+  filterOptions: OverlayFilterOptions,
+  gifDisposalHandling: string,
+  gifMaxFps: number
+): Promise<OverlayLoadResult | Response> {
+  if (!overlayUrl || !overlayMode || !isFullRender) {
+    return {
+      overlayCanvas: null,
+      overlayFrames: [],
+      hasAnimatedOverlay: false,
+      outputFormat: currentOutputFormat,
+    };
+  }
+
+  const tOverlayFetch = Date.now();
+  const fetchedImage = await fetchImageWithBuffer(overlayUrl);
+  qrFnLog('[TIMING] overlay fetch', {
+    url: overlayUrl.slice(0, 80),
+    fetchMs: Date.now() - tOverlayFetch,
+    ok: !!fetchedImage,
+  });
+
+  if (!fetchedImage) {
+    if (strictOverlay) {
+      return new Response('Strict overlay mode failed to fetch/decode overlay', {
+        status: 502,
+        headers: CORS_HEADERS,
+      });
+    }
+    return {
+      overlayCanvas: null,
+      overlayFrames: [],
+      hasAnimatedOverlay: false,
+      outputFormat: currentOutputFormat,
+    };
+  }
+
+  const strictAnimatedGif =
+    strictOverlay && overlayUrl.split('?')[0].toLowerCase().endsWith('.gif');
+  if (strictAnimatedGif && !fetchedImage.isAnimatedGif) {
+    return new Response('Strict overlay mode expected animated GIF frames', {
+      status: 502,
+      headers: CORS_HEADERS,
+    });
+  }
+
+  const hasFilters = hasActiveOverlayFilters(filterOptions);
+  const preprocess = (c: Canvas) =>
+    preprocessOverlayCanvas(
+      c,
+      cropEnabled,
+      cropX,
+      cropY,
+      cropSize,
+      overlayRotate,
+      overlayFlipX,
+      overlayFlipY,
+      hasFilters,
+      filterOptions
+    );
+
+  if (fetchedImage.isAnimatedGif) {
+    const outputFormat = explicitFormat ? currentOutputFormat : ('gif' as OutputFormat);
+    const tParse = Date.now();
+    let rawFrames = parseGifFramesServer(
+      fetchedImage.arrayBuffer,
+      gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
+    );
+    qrFnLog('[TIMING] GIF frame parsing', {
+      frames: rawFrames.length,
+      parseMs: Date.now() - tParse,
+    });
+
+    if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
+      qrFnLog('[TIMING] limiting frames', {
+        from: rawFrames.length,
+        to: SERVER_MAX_ANIMATION_FRAMES,
+      });
+      rawFrames = decimateFramesToMaxCount(rawFrames, SERVER_MAX_ANIMATION_FRAMES);
+    }
+
+    const tPreprocess = Date.now();
+    let overlayFrames = rawFrames.map((frame) => ({
+      ...frame,
+      canvas: preprocess(frame.canvas),
+    }));
+    qrFnLog('[TIMING] frame preprocessing', {
+      frames: overlayFrames.length,
+      preprocessMs: Date.now() - tPreprocess,
+    });
+    if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
+      overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
+    }
+    const overlayCanvas = overlayFrames[0]?.canvas ?? preprocess(fetchedImage.canvas);
+    return { overlayCanvas, overlayFrames, hasAnimatedOverlay: true, outputFormat };
+  }
+
+  // Static overlay
+  const outputFormat = explicitFormat ? currentOutputFormat : ('png' as OutputFormat);
+  return {
+    overlayCanvas: preprocess(fetchedImage.canvas),
+    overlayFrames: [],
+    hasAnimatedOverlay: false,
+    outputFormat,
+  };
+}
+
+interface ArtworkState {
+  lockedMask: number;
+  lockedVersion: number;
+}
+
+async function generateArtworkFrame(
+  targetCanvas: Canvas,
+  frameIdx: number,
+  normalizeRenderStyles: boolean,
+  state: ArtworkState,
+  data: string,
+  ec: ECCLevel,
+  version: number,
+  maskPattern: 'auto' | number,
+  config: Record<string, unknown>,
+  qrGenerator: QRGenerator
+): Promise<Canvas> {
+  const useAutoMask = typeof maskPattern !== 'number' || maskPattern < 0;
+  const qartConfig = {
+    data,
+    targetImage: targetCanvas as unknown as ImageData,
+    version: state.lockedVersion,
+    ecc: ec,
+    strictSuffix: true,
+    targetControlPercent: 100,
+    lockVersionToMinimum: version === 0 && frameIdx === 0,
+  };
+
+  const qartResult =
+    useAutoMask && state.lockedMask < 0
+      ? await generateFullQArtOptimal(qartConfig)
+      : await generateFullQArt({
+          ...qartConfig,
+          maskPattern: state.lockedMask >= 0 ? state.lockedMask : (maskPattern as number),
+        });
+
+  if (!(qartResult.success && qartResult.matrix)) {
+    throw new Error(qartResult.error || 'QR-Art generation failed');
+  }
+
+  if (frameIdx === 0) {
+    state.lockedMask = qartResult.maskPattern;
+    state.lockedVersion = qartResult.version;
+  }
+
+  const qrArtConfig = {
+    ...config,
+    typeNumber: qartResult.version,
+    overlayMode: undefined,
+  };
+  if (normalizeRenderStyles) {
+    Object.assign(qrArtConfig, {
+      moduleStyle: 'square',
+      finderStyle: 'square',
+      alignmentStyle: 'square',
+      timingStyle: 'square',
+      eyeOuterStyle: 'square',
+      eyeInnerStyle: 'square',
+      moduleGap: 0,
+      gapMode: 'none',
+      cornerRadius: 0,
+    });
+  }
+
+  return (await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig)) as Canvas;
+}
+
+function buildAnimationEffectArrays(
+  primaryEffect: AnimationEffectConfig,
+  secondaryEffect: AnimationEffectConfig,
+  temporalDither: AnimationTemporalDitherMode
+): {
+  animationEffects: AnimationEffectConfig[];
+  moduleAnimationEffects: AnimationEffectConfig[];
+  resultAnimationEffects: AnimationEffectConfig[];
+  hasAnyAnimationEffects: boolean;
+} {
+  const animationEffects: AnimationEffectConfig[] = [];
+  if (hasAnimationEffect(primaryEffect)) {
+    animationEffects.push(primaryEffect);
+  }
+  if (hasAnimationEffect(secondaryEffect)) {
+    animationEffects.push(secondaryEffect);
+  }
+  const moduleAnimationEffects = animationEffects.filter(
+    (effect) => effect.target === 'modules' || effect.target === 'both'
+  );
+  const resultAnimationEffects = animationEffects.filter(
+    (effect) => effect.target === 'result' || effect.target === 'both'
+  );
+  return {
+    animationEffects,
+    moduleAnimationEffects,
+    resultAnimationEffects,
+    hasAnyAnimationEffects: animationEffects.length > 0 || temporalDither !== 'off',
+  };
+}
+
+function applyResultEffectsForFrameHelper(
+  sourceCanvas: Canvas,
+  frameIndex: number,
+  totalFrames: number,
+  resultAnimationEffects: AnimationEffectConfig[],
+  temporalDither: AnimationTemporalDitherMode,
+  animSeed: number,
+  isArtwork: boolean
+): Canvas {
+  let frame = applyAnimationEffectsToCanvasServer(
+    sourceCanvas,
+    resultAnimationEffects,
+    frameIndex,
+    totalFrames
+  );
+  if (temporalDither !== 'off') {
+    const temporalOffset = calculateTemporalOffsetServer(frameIndex, temporalDither, animSeed);
+    const temporalStrength = isArtwork ? 0.004 : 0.012;
+    frame = applyTemporalNoiseToCanvasServer(frame, temporalOffset, temporalStrength);
+  }
+  return frame;
+}
+
+function buildPngMetadata(
+  metaTitle: string | undefined,
+  metaAuthor: string | undefined,
+  metaCopyright: string | undefined,
+  metaDescription: string | undefined,
+  metaLicense: string | undefined,
+  metaCreationTime: boolean,
+  metaCustomKv: string | undefined
+): PngMetadata | undefined {
+  if (
+    !metaTitle &&
+    !metaAuthor &&
+    !metaCopyright &&
+    !metaDescription &&
+    !metaLicense &&
+    !metaCreationTime &&
+    !metaCustomKv
+  ) {
+    return undefined;
+  }
+  return {
+    title: metaTitle,
+    author: metaAuthor,
+    copyright: metaCopyright,
+    description: metaDescription,
+    creationTime: metaCreationTime ? new Date().toISOString() : undefined,
+    software: 'ANQR - anqr.link',
+    ...(metaCustomKv && !metaDescription ? { description: metaCustomKv } : {}),
+  };
+}
+
+function parseMaskPattern(param: string | null): 'auto' | number {
+  if (!param || param === 'auto') return 'auto';
+  const parsed = Number.parseInt(param, 10);
+  if (Number.isNaN(parsed)) return 'auto';
+  return Math.min(7, Math.max(0, parsed));
+}
+
+function parseGifDisposalCode(disposal: string): number {
+  if (disposal === 'none') return 0;
+  if (disposal === 'keep') return 1;
+  if (disposal === 'restore_previous') return 3;
+  return 2;
+}
+
+async function loadWatermarkImage(
+  watermarkEnabled: boolean,
+  watermarkKind: WatermarkKind,
+  watermarkImageUrl: string | undefined
+): Promise<Canvas | null> {
+  if (
+    watermarkEnabled &&
+    (watermarkKind === 'image' || watermarkKind === 'pattern') &&
+    watermarkImageUrl
+  ) {
+    return fetchImageAsCanvas(watermarkImageUrl);
+  }
+  return null;
+}
+
+function scaleToOutputDimensions(
+  canvas: Canvas,
+  outputWidth: number,
+  outputHeight: number
+): Canvas {
+  if (canvas.width === outputWidth && canvas.height === outputHeight) {
+    return canvas;
+  }
+  const outputCanvas = createCanvas(outputWidth, outputHeight);
+  const ctx = outputCanvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(canvas, 0, 0, outputWidth, outputHeight);
+  return outputCanvas;
+}
+
+async function renderAnimatedOverlayLoop(
+  overlayFrames: ServerAnimationFrame[],
+  isArtworkMode: boolean,
+  moduleAnimationEffects: AnimationEffectConfig[],
+  resultAnimationEffects: AnimationEffectConfig[],
+  animationInterpolate: AnimationInterpolation,
+  animationTemporalDither: AnimationTemporalDitherMode,
+  animationSeed: number,
+  animationModuleJitter: number,
+  config: Record<string, unknown>,
+  totalMargin: number,
+  estimatedModuleCount: number,
+  artworkState: ArtworkState,
+  data: string,
+  ec: ECCLevel,
+  version: number,
+  maskPattern: 'auto' | number,
+  qrGenerator: QRGenerator,
+  outputWidth: number,
+  outputHeight: number,
+  watermarkOpts: WatermarkOptions | null,
+  gifDisposalCode: number
+): Promise<ServerAnimationFrame[]> {
+  const ANIM_RENDER_SIZE = 240;
+  const animModuleSize = Math.max(
+    1,
+    Math.floor((ANIM_RENDER_SIZE - totalMargin * 2) / (estimatedModuleCount + totalMargin * 2))
+  );
+  const animRenderScale = Math.max(1, Math.round(ANIM_RENDER_SIZE / estimatedModuleCount));
+  const animConfig = {
+    ...config,
+    moduleSize: animModuleSize,
+    renderScalePerModule: animRenderScale,
+    renderScaleMinimum: 1,
+  };
+  let previousRawModuleInput: Canvas | null = null;
+  let previousRenderedOutput: Canvas | null = null;
+  const tAnimStart = Date.now();
+  qrFnLog('[ANIMATION] starting animated overlay', {
+    frames: overlayFrames.length,
+    renderSize: ANIM_RENDER_SIZE,
+    animModuleSize,
+    animRenderScale,
+    outputSize: `${outputWidth}x${outputHeight}`,
+    moduleEffects: moduleAnimationEffects.length,
+    resultEffects: resultAnimationEffects.length,
+  });
+
+  const result: ServerAnimationFrame[] = [];
+  for (let i = 0; i < overlayFrames.length; i++) {
+    const tFrame = Date.now();
+    const overlayFrame = overlayFrames[i];
+    let moduleOverlayInput = isArtworkMode
+      ? overlayFrame.canvas
+      : applyAnimationEffectsToCanvasServer(
+          overlayFrame.canvas,
+          moduleAnimationEffects,
+          i,
+          overlayFrames.length
+        );
+
+    const rawModuleInput = moduleOverlayInput;
+    moduleOverlayInput = applyFrameInterpolation(
+      moduleOverlayInput,
+      previousRawModuleInput,
+      animationInterpolate
+    );
+    previousRawModuleInput = rawModuleInput;
+
+    const frameConfig = applyModuleAnimationToConfigServer(
+      animConfig as Record<string, unknown>,
+      moduleAnimationEffects,
+      i,
+      overlayFrames.length,
+      animationModuleJitter
+    ) as typeof config;
+
+    let frameCanvas = await renderQRFrameWithFallback(
+      moduleOverlayInput,
+      i,
+      isArtworkMode,
+      (target, idx, normalize) =>
+        generateArtworkFrame(
+          target,
+          idx,
+          normalize,
+          artworkState,
+          data,
+          ec,
+          version,
+          maskPattern,
+          config,
+          qrGenerator
+        ),
+      qrGenerator,
+      frameConfig
+    );
+
+    frameCanvas = applyResultEffectsForFrameHelper(
+      frameCanvas,
+      i,
+      overlayFrames.length,
+      resultAnimationEffects,
+      animationTemporalDither,
+      animationSeed,
+      isArtworkMode
+    );
+    frameCanvas = applyFrameInterpolation(
+      frameCanvas,
+      previousRenderedOutput,
+      animationInterpolate
+    );
+    previousRenderedOutput = frameCanvas;
+
+    if (i > 0 && i % 3 === 0) {
+      await sleep(1);
+    }
+    if (i % 10 === 0 || i === overlayFrames.length - 1) {
+      qrFnLog('[ANIMATION] frame progress', {
+        frame: i + 1,
+        total: overlayFrames.length,
+        frameMs: Date.now() - tFrame,
+        elapsedMs: Date.now() - tAnimStart,
+      });
+    }
+
+    result.push({
+      canvas: scaleAndWatermarkFrame(frameCanvas, outputWidth, outputHeight, watermarkOpts),
+      delay: overlayFrame.delay,
+      disposalType: gifDisposalCode,
+    });
+  }
+  qrFnLog('[ANIMATION] all frames rendered', {
+    frames: result.length,
+    totalMs: Date.now() - tAnimStart,
+  });
+  return result;
+}
+
+async function renderPatternAnimationLoop(
+  overlayCanvas: Canvas | null,
+  isArtworkMode: boolean,
+  moduleAnimationEffects: AnimationEffectConfig[],
+  resultAnimationEffects: AnimationEffectConfig[],
+  animationInterpolate: AnimationInterpolation,
+  animationTemporalDither: AnimationTemporalDitherMode,
+  animationSeed: number,
+  animationModuleJitter: number,
+  totalAnimFrames: number,
+  config: Record<string, unknown>,
+  artworkState: ArtworkState,
+  data: string,
+  ec: ECCLevel,
+  version: number,
+  maskPattern: 'auto' | number,
+  qrGenerator: QRGenerator,
+  outputWidth: number,
+  outputHeight: number,
+  watermarkOpts: WatermarkOptions | null
+): Promise<Canvas[]> {
+  const result: Canvas[] = [];
+  let previousRawModuleInput: Canvas | null = null;
+  let previousRenderedOutput: Canvas | null = null;
+  for (let i = 0; i < totalAnimFrames; i++) {
+    let moduleOverlayInput = overlayCanvas;
+    if (moduleOverlayInput && moduleAnimationEffects.length > 0 && !isArtworkMode) {
+      moduleOverlayInput = applyAnimationEffectsToCanvasServer(
+        moduleOverlayInput,
+        moduleAnimationEffects,
+        i,
+        totalAnimFrames
+      );
+    }
+
+    if (moduleOverlayInput) {
+      moduleOverlayInput = applyFrameInterpolation(
+        moduleOverlayInput,
+        previousRawModuleInput,
+        animationInterpolate
+      );
+      previousRawModuleInput = moduleOverlayInput;
+    }
+
+    const frameConfig = applyModuleAnimationToConfigServer(
+      config as Record<string, unknown>,
+      moduleAnimationEffects,
+      i,
+      totalAnimFrames,
+      animationModuleJitter
+    ) as typeof config;
+
+    const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
+    let frameCanvas = await renderQRFrameWithFallback(
+      artworkTarget,
+      i,
+      isArtworkMode && !!artworkTarget,
+      (target, idx, normalize) =>
+        generateArtworkFrame(
+          target,
+          idx,
+          normalize,
+          artworkState,
+          data,
+          ec,
+          version,
+          maskPattern,
+          config,
+          qrGenerator
+        ),
+      qrGenerator,
+      frameConfig as Record<string, unknown>
+    );
+
+    frameCanvas = applyResultEffectsForFrameHelper(
+      frameCanvas,
+      i,
+      totalAnimFrames,
+      resultAnimationEffects,
+      animationTemporalDither,
+      animationSeed,
+      isArtworkMode
+    );
+    frameCanvas = applyFrameInterpolation(
+      frameCanvas,
+      previousRenderedOutput,
+      animationInterpolate
+    );
+    previousRenderedOutput = frameCanvas;
+
+    result.push(scaleAndWatermarkFrame(frameCanvas, outputWidth, outputHeight, watermarkOpts));
+  }
+  return result;
+}
+
 async function handler(request: Request) {
   if (request.method === 'OPTIONS') {
     return new Response(null, {
@@ -3031,12 +3658,7 @@ async function handler(request: Request) {
   const version = params.get('v') ? Number.parseInt(params.get('v')!, 10) : 0;
 
   // Mask pattern: 'auto' or 0-7
-  const maskPatternParam = params.get('mask');
-  const parsedMask = maskPatternParam ? Number.parseInt(maskPatternParam, 10) : Number.NaN;
-  const maskPattern: 'auto' | number =
-    maskPatternParam === 'auto' || !maskPatternParam || Number.isNaN(parsedMask)
-      ? 'auto'
-      : Math.min(7, Math.max(0, parsedMask));
+  const maskPattern = parseMaskPattern(params.get('mask'));
 
   // Character encoding: 'default', 'utf8', or 'shift-jis'
   const charsetParam = params.get('charset') || 'default';
@@ -3358,24 +3980,13 @@ async function handler(request: Request) {
   const autoPickEcc = params.get('autoEcc') === '1';
   const autoReduceIntensity = params.get('autoReduce') === '1';
 
-  // QA parameters - CLIENT-ONLY: These require interactive canvas manipulation
-  // and scan validation loops that aren't feasible server-side.
-  // Parsed for URL compatibility but not applied.
-  const qaContrastCheckClientOnly = params.get('qaContrast') === '1';
-  const qaSimulateBlurClientOnly = Number.parseFloat(params.get('qaBlur') || '0');
-  const qaSimulateNoiseClientOnly = Number.parseInt(params.get('qaNoise') || '0', 10);
-  const qaSimulateRotationClientOnly = Number.parseInt(params.get('qaRot') || '0', 10);
-  const qaShowHeatmapClientOnly = params.get('qaHeatmap') === '1';
-  // Log if QA params are requested but can't be applied
-  if (
-    qaContrastCheckClientOnly ||
-    qaSimulateBlurClientOnly ||
-    qaSimulateNoiseClientOnly ||
-    qaSimulateRotationClientOnly ||
-    qaShowHeatmapClientOnly
-  ) {
-    // Client-only QA simulation flags — no server action needed
-  }
+  // QA parameters are CLIENT-ONLY (interactive canvas / scan validation).
+  // Parsed for URL parity but intentionally unused server-side.
+  void params.get('qaContrast');
+  void params.get('qaBlur');
+  void params.get('qaNoise');
+  void params.get('qaRot');
+  void params.get('qaHeatmap');
 
   // Output extras (missing from server previously)
   const bgOverride = params.get('bgOver') ? `#${params.get('bgOver')}` : undefined;
@@ -3383,14 +3994,7 @@ async function handler(request: Request) {
   const filename = params.get('fname') || 'anqr-qrcode';
   const includeQuietZone = params.get('inclQz') !== '0';
   const gifDisposal = params.get('gifDisp') || 'restore_bg';
-  const gifDisposalCode =
-    gifDisposal === 'none'
-      ? 0
-      : gifDisposal === 'keep'
-        ? 1
-        : gifDisposal === 'restore_previous'
-          ? 3
-          : 2;
+  const gifDisposalCode = parseGifDisposalCode(gifDisposal);
   const svgTrueVector = params.get('svgVec') === '1';
   const svgShapePrecision = params.get('svgPrec') || 'pixel';
   const svgEmbedRasterOverlay = params.get('svgEmbed') !== '0';
@@ -3609,186 +4213,47 @@ async function handler(request: Request) {
     };
 
     // Load overlay image if URL provided
-    let overlayCanvas: Canvas | null = null;
-    let overlayFrames: ServerAnimationFrame[] = [];
-    let hasAnimatedOverlay = false;
+    const filterOptions: OverlayFilterOptions = {
+      brightness: overlayBrightness,
+      contrast: overlayContrast,
+      gamma: overlayGamma,
+      saturation: overlaySaturation,
+      hue: overlayHueRotate,
+      invert: overlayInvert,
+      blur: overlayBlur,
+      sharpen: overlaySharpen,
+      posterize: overlayPosterize,
+      threshold: overlayThreshold,
+      edge: overlayEdgeDetect as 'off' | 'sobel' | 'canny',
+    };
 
-    if (overlayUrl && overlayMode && isFullRender) {
-      const tOverlayFetch = Date.now();
-      const fetchedImage = await fetchImageWithBuffer(overlayUrl);
-      qrFnLog('[TIMING] overlay fetch', {
-        url: overlayUrl.slice(0, 80),
-        fetchMs: Date.now() - tOverlayFetch,
-        ok: !!fetchedImage,
-      });
-      if (fetchedImage) {
-        const strictAnimatedGif =
-          strictOverlay && overlayUrl.split('?')[0].toLowerCase().endsWith('.gif');
-        if (strictAnimatedGif && !fetchedImage.isAnimatedGif) {
-          return new Response('Strict overlay mode expected animated GIF frames', {
-            status: 502,
-            headers: CORS_HEADERS,
-          });
-        }
-
-        // Pre-calculate filter flags once
-        const hasFilters =
-          overlayBrightness !== 0 ||
-          overlayContrast !== 0 ||
-          overlayGamma !== 1 ||
-          overlaySaturation !== 0 ||
-          overlayHueRotate !== 0 ||
-          overlayInvert ||
-          overlayBlur > 0 ||
-          overlaySharpen > 0 ||
-          overlayPosterize > 1 ||
-          overlayEdgeDetect !== 'off';
-
-        const filterOptions = {
-          brightness: overlayBrightness,
-          contrast: overlayContrast,
-          gamma: overlayGamma,
-          saturation: overlaySaturation,
-          hue: overlayHueRotate,
-          invert: overlayInvert,
-          blur: overlayBlur,
-          sharpen: overlaySharpen,
-          posterize: overlayPosterize,
-          threshold: overlayThreshold, // Only applied if explicitly specified via URL param
-          edge: overlayEdgeDetect as 'off' | 'sobel' | 'canny',
-        };
-
-        // Helper to apply all preprocessing to a canvas
-        const preprocessCanvas = (canvas: Canvas): Canvas => {
-          let processed = canvas;
-          if (cropEnabled && cropSize < 1) {
-            processed = cropOverlayServer(processed, cropX, cropY, cropSize);
-          }
-          if (overlayRotate !== 0) {
-            processed = rotateOverlayServer(processed, overlayRotate);
-          }
-          if (overlayFlipX || overlayFlipY) {
-            processed = flipOverlayServer(processed, overlayFlipX, overlayFlipY);
-          }
-          if (hasFilters) {
-            processed = applyOverlayFiltersServer(processed, filterOptions);
-          }
-          return processed;
-        };
-
-        if (fetchedImage.isAnimatedGif) {
-          hasAnimatedOverlay = true;
-          if (!explicitFormat) {
-            outputFormat = 'gif';
-          }
-          const tParse = Date.now();
-          let rawFrames = parseGifFramesServer(
-            fetchedImage.arrayBuffer,
-            gifDisposalHandling === 'simplify' ? 'simplify' : 'respect'
-          );
-          qrFnLog('[TIMING] GIF frame parsing', {
-            frames: rawFrames.length,
-            parseMs: Date.now() - tParse,
-          });
-
-          // Hard-cap animated overlays by count while preserving total playback duration.
-          if (rawFrames.length > SERVER_MAX_ANIMATION_FRAMES) {
-            qrFnLog('[TIMING] limiting frames', {
-              from: rawFrames.length,
-              to: SERVER_MAX_ANIMATION_FRAMES,
-            });
-            rawFrames = decimateFramesToMaxCount(rawFrames, SERVER_MAX_ANIMATION_FRAMES);
-          }
-
-          const tPreprocess = Date.now();
-          overlayFrames = rawFrames.map((frame) => ({
-            ...frame,
-            canvas: preprocessCanvas(frame.canvas),
-          }));
-          qrFnLog('[TIMING] frame preprocessing', {
-            frames: overlayFrames.length,
-            preprocessMs: Date.now() - tPreprocess,
-          });
-          if (gifMaxFps > 0 && overlayFrames.length > 1 && !Number.isNaN(gifMaxFps)) {
-            overlayFrames = decimateFramesToMaxFps(overlayFrames, gifMaxFps);
-          }
-          overlayCanvas = overlayFrames[0]?.canvas ?? preprocessCanvas(fetchedImage.canvas);
-        } else {
-          // Static overlay - preprocess once
-          if (!explicitFormat) {
-            outputFormat = 'png';
-          }
-          overlayCanvas = preprocessCanvas(fetchedImage.canvas);
-        }
-      } else if (strictOverlay) {
-        return new Response('Strict overlay mode failed to fetch/decode overlay', {
-          status: 502,
-          headers: CORS_HEADERS,
-        });
-      }
-    }
+    const overlayResult = await loadAndPreprocessOverlay(
+      overlayUrl,
+      overlayMode,
+      isFullRender,
+      strictOverlay,
+      explicitFormat,
+      outputFormat,
+      cropEnabled,
+      cropX,
+      cropY,
+      cropSize,
+      overlayRotate,
+      overlayFlipX,
+      overlayFlipY,
+      filterOptions,
+      gifDisposalHandling,
+      gifMaxFps
+    );
+    if (overlayResult instanceof Response) return overlayResult;
+    const { overlayCanvas, overlayFrames, hasAnimatedOverlay } = overlayResult;
+    outputFormat = overlayResult.outputFormat;
 
     // Generate QR code using the same method as client-side.
     // For artwork mode, use full QR-Art matrix generation (same algorithm as web app),
     // then render that matrix through the styling pipeline.
     const isArtworkMode = overlayMode === 'artwork';
-    let artworkLockedMask = -1;
-    let artworkLockedVersion = version;
-
-    const generateArtworkCanvas = async (
-      targetCanvas: Canvas,
-      frameIdx: number,
-      normalizeRenderStyles = false
-    ): Promise<Canvas> => {
-      const useAutoMask = typeof maskPattern !== 'number' || maskPattern < 0;
-      const qartConfig = {
-        data,
-        targetImage: targetCanvas as unknown as ImageData,
-        version: artworkLockedVersion,
-        ecc: ec,
-        strictSuffix: true,
-        targetControlPercent: 100,
-        lockVersionToMinimum: version === 0 && frameIdx === 0,
-      };
-
-      const qartResult =
-        useAutoMask && artworkLockedMask < 0
-          ? await generateFullQArtOptimal(qartConfig)
-          : await generateFullQArt({
-              ...qartConfig,
-              maskPattern: artworkLockedMask >= 0 ? artworkLockedMask : (maskPattern as number),
-            });
-
-      if (!(qartResult.success && qartResult.matrix)) {
-        throw new Error(qartResult.error || 'QR-Art generation failed');
-      }
-
-      if (frameIdx === 0) {
-        artworkLockedMask = qartResult.maskPattern;
-        artworkLockedVersion = qartResult.version;
-      }
-
-      const qrArtConfig = {
-        ...config,
-        typeNumber: qartResult.version,
-        overlayMode: undefined,
-      };
-      if (normalizeRenderStyles) {
-        Object.assign(qrArtConfig, {
-          moduleStyle: 'square',
-          finderStyle: 'square',
-          alignmentStyle: 'square',
-          timingStyle: 'square',
-          eyeOuterStyle: 'square',
-          eyeInnerStyle: 'square',
-          moduleGap: 0,
-          gapMode: 'none',
-          cornerRadius: 0,
-        });
-      }
-
-      return (await qrGenerator.renderFromMatrix(qartResult.matrix, qrArtConfig)) as Canvas;
-    };
+    const artworkState: ArtworkState = { lockedMask: -1, lockedVersion: version };
 
     let canvas: Canvas;
     const useArtworkOverlayCompositing =
@@ -3797,7 +4262,18 @@ async function handler(request: Request) {
       (hasAnimatedOverlay || animationPattern !== 'none');
     if (isArtworkMode && overlayCanvas) {
       try {
-        canvas = await generateArtworkCanvas(overlayCanvas, 0, useArtworkOverlayCompositing);
+        canvas = await generateArtworkFrame(
+          overlayCanvas,
+          0,
+          useArtworkOverlayCompositing,
+          artworkState,
+          data,
+          ec,
+          version,
+          maskPattern,
+          config as Record<string, unknown>,
+          qrGenerator
+        );
       } catch (error_) {
         console.warn('[ARTWORK] full QR-Art failed, falling back to standard render', {
           error: error_ instanceof Error ? error_.message : String(error_),
@@ -3809,14 +4285,11 @@ async function handler(request: Request) {
     }
 
     // Load watermark image if URL provided
-    let watermarkImageCanvas: Canvas | null = null;
-    if (
-      watermarkEnabled &&
-      (watermarkKind === 'image' || watermarkKind === 'pattern') &&
+    const watermarkImageCanvas = await loadWatermarkImage(
+      watermarkEnabled,
+      watermarkKind,
       watermarkImageUrl
-    ) {
-      watermarkImageCanvas = await fetchImageAsCanvas(watermarkImageUrl);
-    }
+    );
 
     // Apply watermark if enabled
     if (watermarkEnabled) {
@@ -3832,37 +4305,19 @@ async function handler(request: Request) {
     }
 
     // Scale to requested output dimensions
-    let outputCanvas = canvas;
-    if (canvas.width !== outputWidth || canvas.height !== outputHeight) {
-      outputCanvas = createCanvas(outputWidth, outputHeight);
-      const ctx = outputCanvas.getContext('2d');
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(canvas, 0, 0, outputWidth, outputHeight);
-    }
+    const outputCanvas = scaleToOutputDimensions(canvas, outputWidth, outputHeight);
 
     // Build metadata object
-    const metadata: PngMetadata | undefined =
-      metaTitle ||
-      metaAuthor ||
-      metaCopyright ||
-      metaDescription ||
-      metaLicense ||
-      metaCreationTime ||
+    const metadata = buildPngMetadata(
+      metaTitle,
+      metaAuthor,
+      metaCopyright,
+      metaDescription,
+      metaLicense,
+      metaCreationTime,
       metaCustomKv
-        ? {
-            title: metaTitle,
-            author: metaAuthor,
-            copyright: metaCopyright,
-            description: metaDescription,
-            creationTime: metaCreationTime ? new Date().toISOString() : undefined,
-            software: 'ANQR - anqr.link',
-            // Custom key-value pairs are stored in description if provided
-            // Format: key1=value1;key2=value2
-            ...(metaCustomKv && !metaDescription ? { description: metaCustomKv } : {}),
-          }
-        : undefined;
+    );
 
-    const animationEffects: AnimationEffectConfig[] = [];
     const primaryAnimationEffect: AnimationEffectConfig = {
       pattern: animationPattern,
       seed: animationSeed,
@@ -3873,9 +4328,6 @@ async function handler(request: Request) {
       target: animationTarget,
       waveAxis: animationWaveAxis,
     };
-    if (hasAnimationEffect(primaryAnimationEffect)) {
-      animationEffects.push(primaryAnimationEffect);
-    }
     const secondaryAnimationEffect: AnimationEffectConfig = {
       pattern: animationPattern2,
       seed: animationSeed2,
@@ -3886,40 +4338,12 @@ async function handler(request: Request) {
       target: animationTarget2,
       waveAxis: animationWaveAxis2,
     };
-    if (hasAnimationEffect(secondaryAnimationEffect)) {
-      animationEffects.push(secondaryAnimationEffect);
-    }
-    const moduleAnimationEffects = animationEffects.filter(
-      (effect) => effect.target === 'modules' || effect.target === 'both'
-    );
-    const resultAnimationEffects = animationEffects.filter(
-      (effect) => effect.target === 'result' || effect.target === 'both'
-    );
-    const hasAnyAnimationEffects = animationEffects.length > 0 || animationTemporalDither !== 'off';
-    const applyResultEffectsForFrame = (
-      sourceCanvas: Canvas,
-      frameIndex: number,
-      totalFrames: number
-    ): Canvas => {
-      let frame = applyAnimationEffectsToCanvasServer(
-        sourceCanvas,
-        resultAnimationEffects,
-        frameIndex,
-        totalFrames
+    const { moduleAnimationEffects, resultAnimationEffects, hasAnyAnimationEffects } =
+      buildAnimationEffectArrays(
+        primaryAnimationEffect,
+        secondaryAnimationEffect,
+        animationTemporalDither
       );
-      if (animationTemporalDither !== 'off') {
-        const temporalOffset = calculateTemporalOffsetServer(
-          frameIndex,
-          animationTemporalDither,
-          animationSeed
-        );
-        // Artwork mode is scan-fragile; keep temporal noise subtle to avoid
-        // frame-to-frame structural destabilization while preserving motion.
-        const temporalStrength = isArtworkMode ? 0.004 : 0.012;
-        frame = applyTemporalNoiseToCanvasServer(frame, temporalOffset, temporalStrength);
-      }
-      return frame;
-    };
 
     // Build watermark options for reuse in animation frame rendering
     const watermarkOpts: WatermarkOptions | null = watermarkEnabled
@@ -3936,114 +4360,33 @@ async function handler(request: Request) {
 
     // Generate animation frames based on source
     let animationFrameCanvases: Canvas[] = [];
-    const animatedOverlayFrames: ServerAnimationFrame[] = [];
+    let animatedOverlayFrames: ServerAnimationFrame[] = [];
 
     if (outputFormat === 'gif') {
       if (hasAnimatedOverlay && overlayFrames.length > 1) {
-        // Animated GIF overlay rendering. For non-artwork modes, render each frame
-        // at a reduced internal size for speed then upscale to output dimensions.
-        const ANIM_RENDER_SIZE = 240;
-        const animModuleSize = Math.max(
-          1,
-          Math.floor(
-            (ANIM_RENDER_SIZE - totalMargin * 2) / (estimatedModuleCount + totalMargin * 2)
-          )
+        animatedOverlayFrames = await renderAnimatedOverlayLoop(
+          overlayFrames,
+          isArtworkMode,
+          moduleAnimationEffects,
+          resultAnimationEffects,
+          animationInterpolate,
+          animationTemporalDither,
+          animationSeed,
+          animationModuleJitter,
+          config as Record<string, unknown>,
+          totalMargin,
+          estimatedModuleCount,
+          artworkState,
+          data,
+          ec,
+          version,
+          maskPattern,
+          qrGenerator,
+          outputWidth,
+          outputHeight,
+          watermarkOpts,
+          gifDisposalCode
         );
-        const animRenderScale = Math.max(1, Math.round(ANIM_RENDER_SIZE / estimatedModuleCount));
-        const animConfig = {
-          ...config,
-          moduleSize: animModuleSize,
-          renderScalePerModule: animRenderScale,
-          renderScaleMinimum: 1,
-        };
-        // Keep the previous *raw* module input for interpolation.
-        // Using already-interpolated outputs recursively causes cumulative smearing.
-        let previousRawModuleInput: Canvas | null = null;
-        let previousRenderedOutput: Canvas | null = null;
-        const tAnimStart = Date.now();
-        qrFnLog('[ANIMATION] starting animated overlay', {
-          frames: overlayFrames.length,
-          renderSize: ANIM_RENDER_SIZE,
-          animModuleSize,
-          animRenderScale,
-          outputSize: `${outputWidth}x${outputHeight}`,
-          moduleEffects: moduleAnimationEffects.length,
-          resultEffects: resultAnimationEffects.length,
-        });
-
-        for (let i = 0; i < overlayFrames.length; i++) {
-          const tFrame = Date.now();
-          const overlayFrame = overlayFrames[i];
-          let moduleOverlayInput = isArtworkMode
-            ? overlayFrame.canvas
-            : applyAnimationEffectsToCanvasServer(
-                overlayFrame.canvas,
-                moduleAnimationEffects,
-                i,
-                overlayFrames.length
-              );
-
-          const rawModuleInput = moduleOverlayInput;
-          moduleOverlayInput = applyFrameInterpolation(
-            moduleOverlayInput,
-            previousRawModuleInput,
-            animationInterpolate
-          );
-          previousRawModuleInput = rawModuleInput;
-
-          const frameConfig = applyModuleAnimationToConfigServer(
-            animConfig as Record<string, unknown>,
-            moduleAnimationEffects,
-            i,
-            overlayFrames.length,
-            animationModuleJitter
-          ) as typeof config;
-
-          let frameCanvas = await renderQRFrameWithFallback(
-            moduleOverlayInput,
-            i,
-            isArtworkMode,
-            generateArtworkCanvas,
-            qrGenerator,
-            frameConfig
-          );
-
-          frameCanvas = applyResultEffectsForFrame(frameCanvas, i, overlayFrames.length);
-          frameCanvas = applyFrameInterpolation(
-            frameCanvas,
-            previousRenderedOutput,
-            animationInterpolate
-          );
-          previousRenderedOutput = frameCanvas;
-
-          if (i > 0 && i % 3 === 0) {
-            await sleep(1);
-          }
-          if (i % 10 === 0 || i === overlayFrames.length - 1) {
-            qrFnLog('[ANIMATION] frame progress', {
-              frame: i + 1,
-              total: overlayFrames.length,
-              frameMs: Date.now() - tFrame,
-              elapsedMs: Date.now() - tAnimStart,
-            });
-          }
-
-          const scaledFrame = scaleAndWatermarkFrame(
-            frameCanvas,
-            outputWidth,
-            outputHeight,
-            watermarkOpts
-          );
-          animatedOverlayFrames.push({
-            canvas: scaledFrame,
-            delay: overlayFrame.delay,
-            disposalType: gifDisposalCode,
-          });
-        }
-        qrFnLog('[ANIMATION] all frames rendered', {
-          frames: animatedOverlayFrames.length,
-          totalMs: Date.now() - tAnimStart,
-        });
       } else if (hasAnyAnimationEffects) {
         const totalAnimFrames = Math.max(1, animationFrames);
         const canUseFastPatternPath =
@@ -4066,58 +4409,27 @@ async function handler(request: Request) {
             effect.bounce
           );
         } else {
-          let previousRawModuleInput: Canvas | null = null;
-          let previousRenderedOutput: Canvas | null = null;
-          for (let i = 0; i < totalAnimFrames; i++) {
-            let moduleOverlayInput = overlayCanvas;
-            if (moduleOverlayInput && moduleAnimationEffects.length > 0 && !isArtworkMode) {
-              moduleOverlayInput = applyAnimationEffectsToCanvasServer(
-                moduleOverlayInput,
-                moduleAnimationEffects,
-                i,
-                totalAnimFrames
-              );
-            }
-
-            if (moduleOverlayInput) {
-              moduleOverlayInput = applyFrameInterpolation(
-                moduleOverlayInput,
-                previousRawModuleInput,
-                animationInterpolate
-              );
-              previousRawModuleInput = moduleOverlayInput;
-            }
-
-            const frameConfig = applyModuleAnimationToConfigServer(
-              config as Record<string, unknown>,
-              moduleAnimationEffects,
-              i,
-              totalAnimFrames,
-              animationModuleJitter
-            ) as typeof config;
-
-            const artworkTarget = (moduleOverlayInput || overlayCanvas) as Canvas;
-            let frameCanvas = await renderQRFrameWithFallback(
-              artworkTarget,
-              i,
-              isArtworkMode && !!artworkTarget,
-              generateArtworkCanvas,
-              qrGenerator,
-              frameConfig as Record<string, unknown>
-            );
-
-            frameCanvas = applyResultEffectsForFrame(frameCanvas, i, totalAnimFrames);
-            frameCanvas = applyFrameInterpolation(
-              frameCanvas,
-              previousRenderedOutput,
-              animationInterpolate
-            );
-            previousRenderedOutput = frameCanvas;
-
-            animationFrameCanvases.push(
-              scaleAndWatermarkFrame(frameCanvas, outputWidth, outputHeight, watermarkOpts)
-            );
-          }
+          animationFrameCanvases = await renderPatternAnimationLoop(
+            overlayCanvas,
+            isArtworkMode,
+            moduleAnimationEffects,
+            resultAnimationEffects,
+            animationInterpolate,
+            animationTemporalDither,
+            animationSeed,
+            animationModuleJitter,
+            totalAnimFrames,
+            config as Record<string, unknown>,
+            artworkState,
+            data,
+            ec,
+            version,
+            maskPattern,
+            qrGenerator,
+            outputWidth,
+            outputHeight,
+            watermarkOpts
+          );
         }
       }
     }
