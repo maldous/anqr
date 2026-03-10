@@ -630,7 +630,10 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
         const currentCol = col - c;
         visitedModules++;
 
-        if (!isStructuralModule(row, currentCol, moduleCount, version)) {
+        if (isStructuralModule(row, currentCol, moduleCount, version)) {
+          skippedAsFunction++;
+          categorizeSkippedModule(row, currentCol, moduleCount, version, skipCounts);
+        } else {
           currentByte = (currentByte << 1) | (matrix[row]?.[currentCol] ? 1 : 0);
           bitsRead++;
 
@@ -639,9 +642,6 @@ export function readCodewords(matrix: boolean[][], moduleCount: number): number[
             currentByte = 0;
             bitsRead = 0;
           }
-        } else {
-          skippedAsFunction++;
-          categorizeSkippedModule(row, currentCol, moduleCount, version, skipCounts);
         }
       }
     }
@@ -1056,17 +1056,17 @@ export function decodeDataCodewordsDetailed(
     });
     segmentIndex++;
 
-    if (!segmentValid) {
-      valid = false;
-      // If we already had a successful primary segment, this is an extra invalid segment
-      if (primarySegmentEnded) {
-        hasExtraSegmentsAfterPrimary = true;
-      }
-    } else {
+    if (segmentValid) {
       // Mark that we've finished at least one successful segment
       // For simple QR codes (single byte segment), we set this after the first valid segment
       if (modeTag !== 'unknown') {
         primarySegmentEnded = true;
+      }
+    } else {
+      valid = false;
+      // If we already had a successful primary segment, this is an extra invalid segment
+      if (primarySegmentEnded) {
+        hasExtraSegmentsAfterPrimary = true;
       }
     }
 

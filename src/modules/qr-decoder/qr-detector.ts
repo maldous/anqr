@@ -124,16 +124,16 @@ export class Detector {
     let bottomRightY: number;
     let sourceBottomRightX: number;
     let sourceBottomRightY: number;
-    if (alignmentPattern !== null) {
-      bottomRightX = alignmentPattern.getX();
-      bottomRightY = alignmentPattern.getY();
-      sourceBottomRightX = dimMinusThree - 3;
-      sourceBottomRightY = sourceBottomRightX;
-    } else {
+    if (alignmentPattern === null) {
       bottomRightX = topRight.getX() - topLeft.getX() + bottomLeft.getX();
       bottomRightY = topRight.getY() - topLeft.getY() + bottomLeft.getY();
       sourceBottomRightX = dimMinusThree;
       sourceBottomRightY = dimMinusThree;
+    } else {
+      bottomRightX = alignmentPattern.getX();
+      bottomRightY = alignmentPattern.getY();
+      sourceBottomRightX = dimMinusThree - 3;
+      sourceBottomRightY = sourceBottomRightX;
     }
 
     return PerspectiveTransform.quadrilateralToQuadrilateral(

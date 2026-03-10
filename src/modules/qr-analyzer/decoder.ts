@@ -204,7 +204,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
         : null;
 
     // Module count derived from version (if available)
-    const moduleCount = version !== null ? 17 + version * 4 : 0;
+    const moduleCount = version === null ? 0 : 17 + version * 4;
 
     // Estimate module pixel size from finder pattern distance (for visual analysis only)
     // This does NOT affect version - version ONLY comes from decoder
@@ -215,7 +215,7 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       version,
       estimatedModulePx: estimatedModulePx ? estimatedModulePx.toFixed(3) : 'null',
       source:
-        version !== null ? 'Decoder (authoritative)' : 'NOT DETECTED - will fail reproduction',
+        version === null ? 'NOT DETECTED - will fail reproduction' : 'Decoder (authoritative)',
     });
 
     // Warn if version not detected - reproduction will fail
@@ -314,8 +314,8 @@ export function decodeQRFromCanvas(canvas: HTMLCanvasElement): QRAnalysisResult 
       structuralAnalysis: {
         hasFinderPatterns: true, // If we decoded it, finder patterns were found
         hasTimingPatterns: true,
-        hasAlignmentPatterns: version !== null && version > 1,
-        alignmentPatternCount: version !== null ? getAlignmentPatternCount(version) : 0,
+        hasAlignmentPatterns: version === null ? false : version > 1,
+        alignmentPatternCount: version === null ? 0 : getAlignmentPatternCount(version),
       },
       imageProperties: {
         width: canvas.width,

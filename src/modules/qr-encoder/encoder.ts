@@ -618,7 +618,7 @@ export function qrcode(
 
       let qrSvg = '';
       qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
-      qrSvg += !opts.scalable ? ` width="${size}px" height="${size}px"` : '';
+      qrSvg += opts.scalable ? '' : ` width="${size}px" height="${size}px"`;
       qrSvg += ` viewBox="0 0 ${size} ${size}" `;
       qrSvg += ' preserveAspectRatio="xMinYMin meet"';
       qrSvg +=

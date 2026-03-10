@@ -94,8 +94,8 @@ function _calculateBlackPoints(
   width: number,
   height: number
 ): number[][] {
-  const subWidth = (width >> BLOCK_SIZE_POWER) + ((width & BLOCK_SIZE_MASK) !== 0 ? 1 : 0);
-  const subHeight = (height >> BLOCK_SIZE_POWER) + ((height & BLOCK_SIZE_MASK) !== 0 ? 1 : 0);
+  const subWidth = (width >> BLOCK_SIZE_POWER) + ((width & BLOCK_SIZE_MASK) === 0 ? 0 : 1);
+  const subHeight = (height >> BLOCK_SIZE_POWER) + ((height & BLOCK_SIZE_MASK) === 0 ? 0 : 1);
 
   const maxYOffset = height - BLOCK_SIZE;
   const maxXOffset = width - BLOCK_SIZE;

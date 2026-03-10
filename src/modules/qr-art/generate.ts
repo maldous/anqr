@@ -1150,7 +1150,9 @@ function generateBaseQR(
   for (let i = 0; i < blockDataArrays.length; i++) {
     const testEcc = computeECC(blockDataArrays[i], blockEccCounts[i]);
     const encoderEcc = blockEccArrays[i];
-    if (!arraysEqual(testEcc, encoderEcc)) {
+    if (arraysEqual(testEcc, encoderEcc)) {
+      log.debug('ECC verification passed for block', { blockIndex: i });
+    } else {
       log.warn('ECC MISMATCH - computeECC differs from encoder!', {
         blockIndex: i,
         dataCount: blockDataCounts[i],
@@ -1158,8 +1160,6 @@ function generateBaseQR(
         computeEccFirst5: Array.from(testEcc.slice(0, 5)),
         encoderEccFirst5: Array.from(encoderEcc.slice(0, 5)),
       });
-    } else {
-      log.debug('ECC verification passed for block', { blockIndex: i });
     }
   }
 
@@ -1181,7 +1181,12 @@ function generateBaseQR(
   // The encoder is the source of truth for format info. If decoder parser disagrees,
   // it may be a parser bug. We log the disagreement but continue.
   const formatVerification = verifyMatrixFormatInfo(matrix, ecc, actualMask);
-  if (!formatVerification.valid) {
+  if (formatVerification.valid) {
+    log.debug('Base matrix format verification passed', {
+      ecc,
+      mask: actualMask,
+    });
+  } else {
     // FORMAT_PARSER_DISAGREEMENT: Log as WARNING, continue with regenerated matrix
     // The real validation is whether the matrix scans correctly (checked later).
     log.warn(
@@ -1199,11 +1204,6 @@ function generateBaseQR(
       }
     );
     // DO NOT return error - continue to base matrix scan validation
-  } else {
-    log.debug('Base matrix format verification passed', {
-      ecc,
-      mask: actualMask,
-    });
   }
 
   // DEBUG: Compare regenerated matrix with encoder's matrix to find discrepancies
@@ -2833,14 +2833,7 @@ function resolveQArtSuffixConfig(config: {
   if (suffix !== undefined) {
     if (resolvedSuffixMode === 'numeric') {
       const normalized = suffix.startsWith('#') ? suffix.slice(1) : suffix;
-      if (!/^\d*$/.test(normalized)) {
-        log.warn('Numeric suffix mode requires digits only; falling back to byte suffix mode', {
-          providedSuffix: suffix,
-        });
-        resolvedSuffixMode = 'byte';
-        originalData = data;
-        originalDataLength = data.length;
-      } else {
+      if (/^\d*$/.test(normalized)) {
         actualSuffix = normalized;
         encodedData = prefix + actualSuffix;
         log.info('Using user-provided numeric suffix', {
@@ -2848,6 +2841,13 @@ function resolveQArtSuffixConfig(config: {
           suffixLength: actualSuffix.length,
           suffixPreview: actualSuffix.slice(0, 20) + (actualSuffix.length > 20 ? '...' : ''),
         });
+      } else {
+        log.warn('Numeric suffix mode requires digits only; falling back to byte suffix mode', {
+          providedSuffix: suffix,
+        });
+        resolvedSuffixMode = 'byte';
+        originalData = data;
+        originalDataLength = data.length;
       }
     }
 
@@ -3683,7 +3683,9 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     for (let i = 0; i < modifiedBlockData.length; i++) {
       const expectedEcc = computeECC(modifiedBlockData[i], blockEccCounts[i]);
       const actualEcc = modifiedBlockEcc[i];
-      if (!arraysEqual(expectedEcc, actualEcc)) {
+      if (arraysEqual(expectedEcc, actualEcc)) {
+        log.debug('RS linearity verified for modified block', { blockIndex: i });
+      } else {
         rsLinearityOk = false;
         log.warn('RS LINEARITY BROKEN - modified codeword is invalid!', {
           blockIndex: i,
@@ -3693,8 +3695,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           actualEccFirst5: Array.from(actualEcc.slice(0, 5)),
           modifiedDataFirst5: Array.from(modifiedBlockData[i].slice(0, 5)),
         });
-      } else {
-        log.debug('RS linearity verified for modified block', { blockIndex: i });
       }
     }
 
@@ -3830,11 +3830,7 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
       actualMask
     );
     const zeroModScan = scanMatrixWithJsQR(zeroModMatrix);
-    if (!zeroModScan.success) {
-      log.warn('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
-        error: zeroModScan.error,
-      });
-    } else {
+    if (zeroModScan.success) {
       // Compare against encodedData (the exact data we're encoding)
       const matchesData = zeroModScan.data === encodedData;
 
@@ -3848,6 +3844,10 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
           expectedData: encodedData,
         });
       }
+    } else {
+      log.warn('ZERO-MODIFICATION TEST FAILED - regeneration itself is broken!', {
+        error: zeroModScan.error,
+      });
     }
 
     // Log modification summary per block
@@ -3909,7 +3909,14 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
     // If decoder parser disagrees with encoder format info, log it but continue.
     // The scan-based validation (performSemanticValidation) will catch real issues.
     const finalFormatVerification = verifyMatrixFormatInfo(finalMatrix, ecc, actualMask);
-    if (!finalFormatVerification.valid) {
+    if (finalFormatVerification.valid) {
+      log.info('Final matrix format verification passed (diagnostic)', {
+        ecc,
+        mask: actualMask,
+        eccMatch: finalFormatVerification.eccMatch,
+        maskMatch: finalFormatVerification.maskMatch,
+      });
+    } else {
       // FORMAT_PARSER_DISAGREEMENT: Log as WARNING, continue to scan validation
       log.warn(
         'FORMAT_PARSER_DISAGREEMENT: Final matrix format verification disagreement (diagnostic)',
@@ -3926,13 +3933,6 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
         }
       );
       // DO NOT return error - continue to semantic validation
-    } else {
-      log.info('Final matrix format verification passed (diagnostic)', {
-        ecc,
-        mask: actualMask,
-        eccMatch: finalFormatVerification.eccMatch,
-        maskMatch: finalFormatVerification.maskMatch,
-      });
     }
 
     const matrixDiff = analyzeMatrixDiff(baseMatrix, finalMatrix, moduleCount);
@@ -3957,27 +3957,27 @@ export async function generateFullQArt(config: FullQArtConfig): Promise<FullQArt
 
     // Comprehensive finder pattern validation
     const finderValidation = validateFinderPatterns(finalMatrix);
-    if (!finderValidation.allValid) {
+    if (finderValidation.allValid) {
+      log.debug('Finder patterns validated OK');
+    } else {
       log.warn('FINDER PATTERNS CORRUPTED', {
         topLeft: finderValidation.topLeft,
         topRight: finderValidation.topRight,
         bottomLeft: finderValidation.bottomLeft,
         errors: finderValidation.errors,
       });
-    } else {
-      log.debug('Finder patterns validated OK');
     }
 
     // Timing pattern validation
     const timingValidation = validateTimingPatterns(finalMatrix);
-    if (!timingValidation.allValid) {
+    if (timingValidation.allValid) {
+      log.debug('Timing patterns validated OK');
+    } else {
       log.warn('TIMING PATTERNS CORRUPTED', {
         horizontal: timingValidation.horizontal,
         vertical: timingValidation.vertical,
         errors: timingValidation.errors,
       });
-    } else {
-      log.debug('Timing patterns validated OK');
     }
 
     // Compare format info between base and final

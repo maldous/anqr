@@ -703,7 +703,7 @@ function CapacityByModeTable({ version, eccLevel, currentBytes }: CapacityByMode
           <div
             key={cap.mode}
             className={`p-2.5 rounded-lg border bg-card ${
-              cap.current !== undefined ? 'ring-1 ring-primary/50' : ''
+              cap.current === undefined ? '' : 'ring-1 ring-primary/50'
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
@@ -1269,12 +1269,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
               }
             }
 
-            if (foundVersion !== null) {
-              actualVersionUsed = foundVersion;
-            } else {
+            if (foundVersion === null) {
               throw new Error(
                 `Data too large: cannot fit in any QR version (1-40) with ECC ${ecc}`
               );
+            } else {
+              actualVersionUsed = foundVersion;
             }
           }
         } else {
@@ -2529,9 +2529,9 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Version"
                             value={
-                              result.version !== null
-                                ? `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
-                                : '—'
+                              result.version === null
+                                ? '—'
+                                : `${result.version} (${result.moduleCount}×${result.moduleCount} modules)`
                             }
                             icon={<Hash className="w-3.5 h-3.5" />}
                           />
@@ -2554,15 +2554,15 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                           <DetailRow
                             label="Mask Pattern"
                             value={
-                              result.maskPattern !== null ? (
+                              result.maskPattern === null ? (
+                                '—'
+                              ) : (
                                 <div className="text-right">
                                   <div>Pattern {result.maskPattern}</div>
                                   <div className="text-xs text-muted-foreground font-mono">
                                     {MASK_DESCRIPTIONS[result.maskPattern]}
                                   </div>
                                 </div>
-                              ) : (
-                                '—'
                               )
                             }
                             icon={<Layers className="w-3.5 h-3.5" />}
@@ -2580,7 +2580,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <span className="ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center gap-1">
                               <Shield className="w-3 h-3" />
                               {result.errorsCorrected} error
-                              {result.errorsCorrected !== 1 ? 's' : ''} corrected
+                              {result.errorsCorrected === 1 ? '' : 's'} corrected
                             </span>
                           ) : null
                         }
@@ -2608,7 +2608,7 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                               ) : result.errorsCorrected > 0 ? (
                                 <span className="text-amber-600 dark:text-amber-400 font-medium">
                                   {result.errorsCorrected} error
-                                  {result.errorsCorrected !== 1 ? 's' : ''} recovered
+                                  {result.errorsCorrected === 1 ? '' : 's'} recovered
                                 </span>
                               ) : (
                                 <span className="text-green-600 dark:text-green-400">
@@ -2776,10 +2776,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <DetailRow
                               label="Version"
                               value={
-                                result.decoderMetadata.version !== null ? (
-                                  `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
-                                ) : (
+                                result.decoderMetadata.version === null ? (
                                   <span className="text-red-500">— (not detected)</span>
+                                ) : (
+                                  `${result.decoderMetadata.version} (${result.decoderMetadata.version * 4 + 17}×${result.decoderMetadata.version * 4 + 17})`
                                 )
                               }
                               icon={<Hash className="w-3.5 h-3.5" />}
@@ -2787,10 +2787,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <DetailRow
                               label="Mask Pattern"
                               value={
-                                result.decoderMetadata.maskPattern !== null ? (
-                                  `${result.decoderMetadata.maskPattern}`
-                                ) : (
+                                result.decoderMetadata.maskPattern === null ? (
                                   <span className="text-amber-500">— (not detected)</span>
+                                ) : (
+                                  `${result.decoderMetadata.maskPattern}`
                                 )
                               }
                               icon={<Layers className="w-3.5 h-3.5" />}
@@ -2807,18 +2807,16 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <DetailRow
                               label="Errors Corrected"
                               value={
-                                result.decoderMetadata.errorsCorrected !== null ? (
-                                  result.decoderMetadata.errorsCorrected === 0 ? (
-                                    <span className="text-green-600 dark:text-green-400">
-                                      0 (no errors)
-                                    </span>
-                                  ) : (
-                                    <span className="text-amber-600 dark:text-amber-400">
-                                      {result.decoderMetadata.errorsCorrected}
-                                    </span>
-                                  )
-                                ) : (
+                                result.decoderMetadata.errorsCorrected === null ? (
                                   <span className="text-muted-foreground">0 (clean decode)</span>
+                                ) : result.decoderMetadata.errorsCorrected === 0 ? (
+                                  <span className="text-green-600 dark:text-green-400">
+                                    0 (no errors)
+                                  </span>
+                                ) : (
+                                  <span className="text-amber-600 dark:text-amber-400">
+                                    {result.decoderMetadata.errorsCorrected}
+                                  </span>
                                 )
                               }
                               icon={<Shield className="w-3.5 h-3.5" />}
@@ -2826,14 +2824,12 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <DetailRow
                               label="Erasures"
                               value={
-                                result.decoderMetadata.erasures !== null ? (
-                                  result.decoderMetadata.erasures === 0 ? (
-                                    <span className="text-green-600 dark:text-green-400">0</span>
-                                  ) : (
-                                    result.decoderMetadata.erasures
-                                  )
-                                ) : (
+                                result.decoderMetadata.erasures === null ? (
                                   <span className="text-muted-foreground">N/A</span>
+                                ) : result.decoderMetadata.erasures === 0 ? (
+                                  <span className="text-green-600 dark:text-green-400">0</span>
+                                ) : (
+                                  result.decoderMetadata.erasures
                                 )
                               }
                               icon={<Shield className="w-3.5 h-3.5" />}
@@ -2841,10 +2837,10 @@ export function Analyze({ onNavigate, generatedCanvas }: AnalyzeProps) {
                             <DetailRow
                               label="Raw Bits"
                               value={
-                                result.decoderMetadata.numBits !== null ? (
-                                  `${result.decoderMetadata.numBits} bits`
-                                ) : (
+                                result.decoderMetadata.numBits === null ? (
                                   <span className="text-muted-foreground">N/A</span>
+                                ) : (
+                                  `${result.decoderMetadata.numBits} bits`
                                 )
                               }
                               icon={<Binary className="w-3.5 h-3.5" />}

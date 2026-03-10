@@ -54,14 +54,14 @@ export async function exportGif(
   // OPTIMIZATION: Reuse a single scaling canvas for all frames.
   // Prefer OffscreenCanvas where available to reduce main-thread canvas overhead.
   const scaledCanvas: HTMLCanvasElement | OffscreenCanvas =
-    typeof OffscreenCanvas !== 'undefined'
-      ? new OffscreenCanvas(width, height)
-      : (() => {
+    typeof OffscreenCanvas === 'undefined'
+      ? (() => {
           const canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
           return canvas;
-        })();
+        })()
+      : new OffscreenCanvas(width, height);
   const scaledCtx =
     (scaledCanvas.getContext('2d', {
       willReadFrequently: true,

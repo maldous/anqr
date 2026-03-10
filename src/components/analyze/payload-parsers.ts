@@ -864,7 +864,7 @@ export function parseUrlPayload(payload: string): UrlParseResult {
     result.protocol = url.protocol.replaceAll(':', '');
     result.hostname = url.hostname;
     result.port = url.port || null;
-    result.path = url.pathname !== '/' ? url.pathname : null;
+    result.path = url.pathname === '/' ? null : url.pathname;
     result.queryString = url.search || null;
     result.fragment = url.hash ? url.hash.slice(1) : null;
     result.isSecure = url.protocol === 'https:' ? 'true' : 'false';

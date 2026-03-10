@@ -179,10 +179,11 @@ function scanUpward(
         counts[1]++;
       }
     } else if (state === 1) {
-      if (!isDark) counts[1]++;
-      else {
+      if (isDark) {
         state = 0;
         counts[0]++;
+      } else {
+        counts[1]++;
       }
     } else if (state === 0) {
       if (isDark) counts[0]++;
@@ -218,10 +219,11 @@ function scanDownward(
         counts[3]++;
       }
     } else if (state === 3) {
-      if (!isDark) counts[3]++;
-      else {
+      if (isDark) {
         state = 4;
         counts[4]++;
+      } else {
+        counts[3]++;
       }
     } else if (state === 4) {
       if (isDark) counts[4]++;

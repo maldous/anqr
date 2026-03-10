@@ -4039,7 +4039,7 @@ async function handler(request: Request) {
 
       case 'webp': {
         // Use webpQuality (0-100) or outputQuality (0-1) if specified
-        const finalWebpQuality = webpQuality !== 90 ? webpQuality : Math.round(outputQuality * 100);
+        const finalWebpQuality = webpQuality === 90 ? Math.round(outputQuality * 100) : webpQuality;
         outputBuffer = outputCanvas.toBuffer('image/webp', finalWebpQuality);
         contentType = 'image/webp';
         break;

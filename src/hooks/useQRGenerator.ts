@@ -700,11 +700,11 @@ function useQRGenerator(): UseQRGeneratorResult {
     if (!overlayEl || !qartPerfSnapshot) return;
 
     const computeMs =
-      qartPerfSnapshot.computeMs !== null ? Math.round(qartPerfSnapshot.computeMs) : null;
+      qartPerfSnapshot.computeMs === null ? null : Math.round(qartPerfSnapshot.computeMs);
     const renderMs =
-      qartPerfSnapshot.renderMs !== null ? Math.round(qartPerfSnapshot.renderMs) : null;
+      qartPerfSnapshot.renderMs === null ? null : Math.round(qartPerfSnapshot.renderMs);
     const previewMs =
-      qartPerfSnapshot.previewMs !== null ? Math.round(qartPerfSnapshot.previewMs) : null;
+      qartPerfSnapshot.previewMs === null ? null : Math.round(qartPerfSnapshot.previewMs);
 
     overlayEl.textContent = [
       `QArt ${qartPerfSnapshot.source} v${qartPerfSnapshot.version} m${qartPerfSnapshot.maskPattern}`,
@@ -1933,7 +1933,7 @@ function useQRGenerator(): UseQRGeneratorResult {
               maskPattern: fullQArtResult.maskPattern,
               encodedData: fullQArtResult.encodedData,
               source: qartResultSource,
-              computeMs: qartComputeMs !== null ? Math.round(qartComputeMs) : null,
+              computeMs: qartComputeMs === null ? null : Math.round(qartComputeMs),
             });
 
             // CRITICAL: Use renderFromMatrix() to render the QR-Art matrix with proper styling.
@@ -2040,9 +2040,9 @@ function useQRGenerator(): UseQRGeneratorResult {
             : null;
           log.info('QR-Art timing', {
             source: qartResultSource,
-            computeMs: qartComputeMs !== null ? Math.round(qartComputeMs) : null,
-            renderMs: qartRenderMs !== null ? Math.round(qartRenderMs) : null,
-            previewMs: qartPreviewMs !== null ? Math.round(qartPreviewMs) : null,
+            computeMs: qartComputeMs === null ? null : Math.round(qartComputeMs),
+            renderMs: qartRenderMs === null ? null : Math.round(qartRenderMs),
+            previewMs: qartPreviewMs === null ? null : Math.round(qartPreviewMs),
           });
           setQArtPerfSnapshot({
             source: qartResultSource,
@@ -2154,10 +2154,10 @@ function useQRGenerator(): UseQRGeneratorResult {
               usedFallback = true;
               succeeded = true;
               log.debug('ECC fallback succeeded', { ecc });
-              if (ecc !== currentEcc) {
-                log.info('QR generated with fallback ECC', { ecc, previousEcc: currentEcc });
-              } else {
+              if (ecc === currentEcc) {
                 log.info('QR generated with auto-version retry');
+              } else {
+                log.info('QR generated with fallback ECC', { ecc, previousEcc: currentEcc });
               }
             } catch (error_) {
               log.debug('ECC fallback failed', {

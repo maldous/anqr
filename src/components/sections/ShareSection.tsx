@@ -69,13 +69,13 @@ function buildShareOverlay(overlay: StoreState['overlay']) {
   if (!overlay.enabled) return {};
   return {
     mode: overlay.mode,
-    intensity: overlay.intensity !== 100 ? overlay.intensity : undefined,
+    intensity: overlay.intensity === 100 ? undefined : overlay.intensity,
     overlayUrl: overlay.url || undefined,
-    fit: overlay.fit !== 'cover' ? overlay.fit : undefined,
-    rotate: overlay.rotateDeg !== 0 ? overlay.rotateDeg : undefined,
+    fit: overlay.fit === 'cover' ? undefined : overlay.fit,
+    rotate: overlay.rotateDeg === 0 ? undefined : overlay.rotateDeg,
     flipX: overlay.flipX ? true : undefined,
     flipY: overlay.flipY ? true : undefined,
-    preserveFinders: !overlay.preserveFinders ? false : undefined,
+    preserveFinders: overlay.preserveFinders ? undefined : false,
     preserveTiming: overlay.preserveTiming ? true : undefined,
     preserveAlignment: overlay.preserveAlignment ? true : undefined,
     protectFormatInfo: overlay.protectFormatInfo ? true : undefined,
@@ -89,34 +89,34 @@ function buildShareOverlay(overlay: StoreState['overlay']) {
       overlay.eccAwareEnabled && overlay.eccAwareWeightMap !== 'distance_to_finders'
         ? overlay.eccAwareWeightMap
         : undefined,
-    colorMode: overlay.colorMode !== 'color' ? overlay.colorMode : undefined,
-    brightness: overlay.brightness !== 0 ? overlay.brightness : undefined,
-    contrast: overlay.contrast !== 0 ? overlay.contrast : undefined,
-    gamma: overlay.gamma !== 1 ? overlay.gamma : undefined,
-    saturation: overlay.saturation !== 0 ? overlay.saturation : undefined,
-    hue: overlay.hueRotateDeg !== 0 ? overlay.hueRotateDeg : undefined,
-    blur: overlay.blurPx !== 0 ? overlay.blurPx : undefined,
-    sharpen: overlay.sharpen !== 0 ? overlay.sharpen : undefined,
-    posterize: overlay.posterizeLevels !== 0 ? overlay.posterizeLevels : undefined,
-    threshold: overlay.threshold !== 128 ? overlay.threshold : undefined,
-    edge: overlay.edgeDetect !== 'off' ? overlay.edgeDetect : undefined,
+    colorMode: overlay.colorMode === 'color' ? undefined : overlay.colorMode,
+    brightness: overlay.brightness === 0 ? undefined : overlay.brightness,
+    contrast: overlay.contrast === 0 ? undefined : overlay.contrast,
+    gamma: overlay.gamma === 1 ? undefined : overlay.gamma,
+    saturation: overlay.saturation === 0 ? undefined : overlay.saturation,
+    hue: overlay.hueRotateDeg === 0 ? undefined : overlay.hueRotateDeg,
+    blur: overlay.blurPx === 0 ? undefined : overlay.blurPx,
+    sharpen: overlay.sharpen === 0 ? undefined : overlay.sharpen,
+    posterize: overlay.posterizeLevels === 0 ? undefined : overlay.posterizeLevels,
+    threshold: overlay.threshold === 128 ? undefined : overlay.threshold,
+    edge: overlay.edgeDetect === 'off' ? undefined : overlay.edgeDetect,
     invert: overlay.invert || undefined,
-    ditherKind: overlay.ditherKind !== 'error_diffusion' ? overlay.ditherKind : undefined,
+    ditherKind: overlay.ditherKind === 'error_diffusion' ? undefined : overlay.ditherKind,
     diffusionKernel:
-      overlay.diffusionKernel !== 'floyd_steinberg' ? overlay.diffusionKernel : undefined,
-    ditherStrength: overlay.ditherStrength !== 50 ? overlay.ditherStrength : undefined,
+      overlay.diffusionKernel === 'floyd_steinberg' ? undefined : overlay.diffusionKernel,
+    ditherStrength: overlay.ditherStrength === 50 ? undefined : overlay.ditherStrength,
     finderDitherStrength:
-      overlay.finderDitherStrength !== 65 ? overlay.finderDitherStrength : undefined,
+      overlay.finderDitherStrength === 65 ? undefined : overlay.finderDitherStrength,
     blendPreservations: overlay.blendPreservations ? true : undefined,
     blendPreservationMode:
       overlay.blendPreservations && overlay.blendPreservationMode !== 'overlay'
         ? overlay.blendPreservationMode
         : undefined,
     ditherSerpentine: overlay.ditherSerpentine ? true : undefined,
-    orderedMatrix: overlay.orderedMatrix !== 'bayer4' ? overlay.orderedMatrix : undefined,
-    blueNoiseTileSize: overlay.blueNoiseTileSize !== 64 ? overlay.blueNoiseTileSize : undefined,
-    blueNoiseSeed: overlay.blueNoiseSeed !== 0 ? overlay.blueNoiseSeed : undefined,
-    colorDither: overlay.colorDither !== 'none' ? overlay.colorDither : undefined,
+    orderedMatrix: overlay.orderedMatrix === 'bayer4' ? undefined : overlay.orderedMatrix,
+    blueNoiseTileSize: overlay.blueNoiseTileSize === 64 ? undefined : overlay.blueNoiseTileSize,
+    blueNoiseSeed: overlay.blueNoiseSeed === 0 ? undefined : overlay.blueNoiseSeed,
+    colorDither: overlay.colorDither === 'none' ? undefined : overlay.colorDither,
     subpixelGridSize:
       overlay.mode === 'subpixel' && overlay.subpixelGridSize !== '3x3'
         ? overlay.subpixelGridSize
