@@ -3,6 +3,10 @@
 All notable changes to ANQR are documented here.
 Each resolved issue should add an entry under the current date heading.
 
+## 2026-03-10
+
+- test(ops): add provider cascade integration harness check for model-injector failover
+
 ## 2026-03-09
 
 - fix(sonar): use globalThis instead of self in worker contexts (ANQ-284)

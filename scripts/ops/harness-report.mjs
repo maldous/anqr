@@ -465,6 +465,17 @@ function checkLicenseCompliance() {
   };
 }
 
+function checkProviderCascadeIntegration() {
+  const result = run('python3', ['scripts/ops/model-injector-cascade-integration.py'], 120_000);
+  return {
+    status: result.ok ? 'PASS' : 'FAIL',
+    metrics: { passed: result.ok ? 1 : 0 },
+    findings: result.ok
+      ? []
+      : [{ severity: 'high', message: 'Provider cascade integration check failed' }],
+  };
+}
+
 function checkServicesHealth() {
   const result = run('npm', ['run', '-s', 'validate:services'], 120_000);
   return {
@@ -609,6 +620,12 @@ const CHECK_REGISTRY = [
     title: 'Git status',
     fn: checkGitStatus,
     profiles: ['quick', 'continuous', 'full'],
+  },
+  {
+    id: 'provider_cascade_integration',
+    title: 'Provider cascade integration',
+    fn: checkProviderCascadeIntegration,
+    profiles: ['continuous', 'full'],
   },
   {
     id: 'services_health',
