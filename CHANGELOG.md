@@ -7,6 +7,7 @@ Each resolved issue should add an entry under the current date heading.
 
 - fix(ops): add Ollama VRAM/KV cache pressure health check to harness report
 - test(ops): add provider cascade integration harness check for model-injector failover
+- fix(ops): add structured startup diagnostics and error categorization for codex credit gate failures
 
 ## 2026-03-09
 

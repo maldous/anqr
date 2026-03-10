@@ -119,6 +119,8 @@ MAX_COOLDOWN_CAP_SECS=14400  # 4 hours — no provider blocked longer than this
 # earliest cooldown to expire instead of exiting and burning empty turns.
 MAX_RATELIMIT_WAITS=${MAX_RATELIMIT_WAITS:-5}   # max wait cycles before giving up
 MAX_RATELIMIT_WAIT_SECS=300                       # cap individual waits at 5 minutes
+DIAGNOSTIC_TAIL_LINES=${DIAGNOSTIC_TAIL_LINES:-80}
+STARTUP_FAILURE_MAX_SECS=${STARTUP_FAILURE_MAX_SECS:-45}
 
 # Rate-limit cooldown: model-injector-proxy writes expiry files when a
 # provider returns too many 429s. The credit-gate reads these to skip
@@ -126,6 +128,137 @@ MAX_RATELIMIT_WAIT_SECS=300                       # cap individual waits at 5 mi
 
 log() {
   echo "[credit-gate $(date -Iseconds)] $*" >&2
+}
+
+classify_startup_error() {
+  local text="$1"
+  local lowered
+  lowered=$(printf '%s' "$text" | tr '[:upper:]' '[:lower:]')
+
+  if printf '%s' "$lowered" | grep -Eq 'no such file|enoent|workspace|working directory|cannot find|not found'; then
+    echo "workspace_missing"
+    return
+  fi
+  if printf '%s' "$lowered" | grep -Eq 'out of memory|oom|enomem|killed|sigkill'; then
+    echo "oom"
+    return
+  fi
+  if printf '%s' "$lowered" | grep -Eq 'timeout|timed out|etimedout|deadline exceeded'; then
+    echo "timeout"
+    return
+  fi
+  if printf '%s' "$lowered" | grep -Eq 'tool|mcp|initiali[sz]e|init failed|failed to initialize'; then
+    echo "tool_init_failure"
+    return
+  fi
+  if printf '%s' "$lowered" | grep -Eq 'connection refused|econnrefused|enotfound|api unreachable|model unreachable|provider unavailable|network'; then
+    echo "model_unreachable"
+    return
+  fi
+  echo "unknown"
+}
+
+emit_startup_diagnostic() {
+  local provider="$1"
+  local model="$2"
+  local context_mode="$3"
+  local exit_code="$4"
+  local runtime_secs="$5"
+  local stdout_file="$6"
+  local stderr_file="$7"
+  local issue_identifier="${LINEAR_ISSUE_ID:-${ISSUE_ID:-${SYMPHONY_ISSUE_ID:-unknown}}}"
+  local phase="runtime"
+  local stderr_content stdout_tail combined category litellm_status cwd_exists
+
+  [ "$runtime_secs" -le "$STARTUP_FAILURE_MAX_SECS" ] && phase="startup"
+  [ -d "$PWD" ] && cwd_exists=true || cwd_exists=false
+  litellm_status="unreachable"
+  if curl -sf --max-time 2 "${LITELLM_HOST}/v1/models" >/dev/null 2>&1; then
+    litellm_status="reachable"
+  fi
+
+  stderr_content="$(cat "$stderr_file" 2>/dev/null || true)"
+  stdout_tail="$(tail -n "$DIAGNOSTIC_TAIL_LINES" "$stdout_file" 2>/dev/null || true)"
+  combined="${stderr_content}
+${stdout_tail}"
+  category="$(classify_startup_error "$combined")"
+
+  python3 - "$provider" "$model" "$context_mode" "$issue_identifier" "$exit_code" "$runtime_secs" "$phase" "$category" "$cwd_exists" "$litellm_status" "$LITELLM_HOST" "$PWD" "$stderr_file" "$stdout_file" "$DIAGNOSTIC_TAIL_LINES" <<'PY' >&2
+import json
+import pathlib
+import sys
+
+provider = sys.argv[1]
+model = sys.argv[2]
+context_mode = sys.argv[3]
+issue_identifier = sys.argv[4]
+exit_code = int(sys.argv[5])
+runtime_secs = int(sys.argv[6])
+phase = sys.argv[7]
+category = sys.argv[8]
+cwd_exists = sys.argv[9] == "true"
+litellm_status = sys.argv[10]
+litellm_host = sys.argv[11]
+cwd = sys.argv[12]
+stderr_file = pathlib.Path(sys.argv[13])
+stdout_file = pathlib.Path(sys.argv[14])
+tail_lines = int(sys.argv[15])
+
+stderr_output = stderr_file.read_text(encoding="utf-8", errors="replace") if stderr_file.exists() else ""
+stdout_lines = []
+if stdout_file.exists():
+    stdout_lines = stdout_file.read_text(encoding="utf-8", errors="replace").splitlines()[-tail_lines:]
+
+record = {
+    "event": "codex_agent_failure",
+    "category": category,
+    "issue_identifier": issue_identifier,
+    "phase": phase,
+    "diagnostic": {
+        "exit_code": exit_code,
+        "runtime_seconds": runtime_secs,
+        "stderr_output": stderr_output,
+        "stdout_tail": stdout_lines,
+        "environment": {
+            "provider": provider,
+            "model": model,
+            "context_mode": context_mode,
+            "workspace_cwd": cwd,
+            "workspace_exists": cwd_exists,
+            "litellm_host": litellm_host,
+            "litellm_status": litellm_status,
+        },
+    },
+}
+print(json.dumps(record, ensure_ascii=True, separators=(",", ":")))
+PY
+}
+
+run_codex_with_diagnostics() {
+  local provider="$1"
+  local model="$2"
+  local context_mode="$3"
+  shift 3
+
+  local stdout_file stderr_file started_at ended_at runtime_secs exit_code
+  stdout_file=$(mktemp "${TMPDIR:-/tmp}/codex-gate-stdout.XXXXXX")
+  stderr_file=$(mktemp "${TMPDIR:-/tmp}/codex-gate-stderr.XXXXXX")
+  started_at=$(date +%s)
+
+  set +e
+  "$CODEX_BIN" "$@" > >(tee -a "$stdout_file") 2> >(tee -a "$stderr_file" >&2)
+  exit_code=$?
+  set -e
+
+  ended_at=$(date +%s)
+  runtime_secs=$((ended_at - started_at))
+
+  if [ "$exit_code" -ne 0 ]; then
+    emit_startup_diagnostic "$provider" "$model" "$context_mode" "$exit_code" "$runtime_secs" "$stdout_file" "$stderr_file"
+  fi
+
+  rm -f "$stdout_file" "$stderr_file"
+  return "$exit_code"
 }
 
 # ---------------------------------------------------------------------------
@@ -502,12 +635,13 @@ if [ "$credit_rc" -eq 0 ]; then
   record_provider codex
   record_current_model "$CODEX_MODEL"
   export ANQR_CONTEXT_MODE="cloud-full"
-  exec "$CODEX_BIN" \
+  run_codex_with_diagnostics codex "$CODEX_MODEL" "cloud-full" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
     -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_CLOUD" \
     -c "model=$CODEX_MODEL" \
     app-server
+  exit $?
 fi
 
 if [ "$credit_rc" -eq 2 ]; then
@@ -520,12 +654,13 @@ if [ "$credit_rc" -eq 2 ]; then
     record_provider codex
     record_current_model "$CODEX_MODEL"
     export ANQR_CONTEXT_MODE="cloud-full"
-    exec "$CODEX_BIN" \
+    run_codex_with_diagnostics codex "$CODEX_MODEL" "cloud-full" \
       --dangerously-bypass-approvals-and-sandbox \
       -c shell_environment_policy.inherit=all \
       -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_CLOUD" \
       -c "model=$CODEX_MODEL" \
       app-server
+    exit $?
   fi
 else
   log "Codex credits exhausted — probing fallback providers"
@@ -545,13 +680,14 @@ exec_via_litellm() {
   export ANQR_CONTEXT_MODE="local-small"
   export OPENAI_BASE_URL="$LITELLM_HOST"
   export OPENAI_API_KEY="${LITELLM_API_KEY:-sk-unused}"
-  exec "$CODEX_BIN" \
+  run_codex_with_diagnostics "litellm" "$model" "local-small" \
     --dangerously-bypass-approvals-and-sandbox \
     -c shell_environment_policy.inherit=all \
     -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_LOCAL" \
     -c model_provider=openai \
     -c "model=$model" \
     app-server
+  return $?
 }
 
 # --- Rate-limit backoff loop: retry cascade when providers have active cooldowns ---
@@ -576,6 +712,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "Groq reachable — using ${LITELLM_GROQ_MODEL} via LiteLLM"
     record_provider groq
     exec_via_litellm "$LITELLM_GROQ_MODEL"
+    exit $?
   else
     log "Groq unavailable (no token or API unreachable)"
   fi
@@ -591,6 +728,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "Mistral Codestral reachable — using ${LITELLM_MISTRAL_MODEL} via LiteLLM"
     record_provider mistral
     exec_via_litellm "$LITELLM_MISTRAL_MODEL"
+    exit $?
   else
     log "Mistral unavailable (no token or API unreachable)"
   fi
@@ -606,6 +744,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "Gemini reachable — using ${LITELLM_GEMINI_MODEL} via LiteLLM"
     record_provider gemini
     exec_via_litellm "$LITELLM_GEMINI_MODEL"
+    exit $?
   else
     log "Gemini unavailable (no token, quota exhausted, or API unreachable)"
   fi
@@ -621,6 +760,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "Gemini Lite reachable — using ${LITELLM_GEMINI_LITE_MODEL} via LiteLLM"
     record_provider gemini-lite
     exec_via_litellm "$LITELLM_GEMINI_LITE_MODEL"
+    exit $?
   else
     log "Gemini Lite unavailable"
   fi
@@ -636,6 +776,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "OpenRouter FREE reachable — using ${LITELLM_OPENROUTER_FREE_MODEL} via LiteLLM"
     record_provider openrouter-free
     exec_via_litellm "$LITELLM_OPENROUTER_FREE_MODEL"
+    exit $?
   else
     log "OpenRouter FREE unavailable (no token or model unreachable)"
   fi
@@ -651,6 +792,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "SambaNova reachable — using ${LITELLM_SAMBANOVA_MODEL} via LiteLLM"
     record_provider sambanova
     exec_via_litellm "$LITELLM_SAMBANOVA_MODEL"
+    exit $?
   else
     log "SambaNova unavailable (no token or API unreachable)"
   fi
@@ -666,6 +808,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "Cerebras reachable — using ${LITELLM_CEREBRAS_MODEL} via LiteLLM"
     record_provider cerebras
     exec_via_litellm "$LITELLM_CEREBRAS_MODEL"
+    exit $?
   else
     log "Cerebras unavailable (no token or API unreachable)"
   fi
@@ -681,6 +824,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "GitHub Models reachable — using ${LITELLM_GITHUB_MODEL} (GPT-4.1-mini, 1M context) via LiteLLM"
     record_provider github
     exec_via_litellm "$LITELLM_GITHUB_MODEL"
+    exit $?
   else
     log "GitHub Models unavailable (no token, missing permissions, or API unreachable)"
   fi
@@ -695,6 +839,7 @@ if [ "$LITELLM_UP" = true ]; then
     log "Ollama reachable — using ${litellm_ollama_model} via LiteLLM"
     record_provider litellm-ollama
     exec_via_litellm "$litellm_ollama_model"
+    exit $?
   else
     log "Ollama unavailable at ${OLLAMA_HOST}"
   fi
@@ -712,13 +857,14 @@ if [ "$ENABLE_OLLAMA_DIRECT_FALLBACK" = "1" ]; then
     log "Ollama direct — using model ${OLLAMA_MODEL} (tool calling may not work)"
     record_provider ollama-direct
     export ANQR_CONTEXT_MODE="local-small"
-    exec "$CODEX_BIN" \
+    run_codex_with_diagnostics "ollama-direct" "$OLLAMA_MODEL" "local-small" \
       --dangerously-bypass-approvals-and-sandbox \
       -c shell_environment_policy.inherit=all \
       -c "model_reasoning_effort=$CODEX_REASONING_EFFORT_LOCAL" \
       -c model_provider=ollama \
       -c "model=$OLLAMA_MODEL" \
       app-server
+    exit $?
   else
     log "Ollama direct unavailable at ${OLLAMA_HOST}"
   fi
