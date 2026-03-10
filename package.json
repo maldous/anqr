@@ -44,7 +44,8 @@
     "test:signoff": "node scripts/production-signoff-check.js",
     "test:appium": "wdio run wdio.conf.ts",
     "test:appium:android": "APPIUM_PLATFORM=android wdio run wdio.conf.ts",
-    "test:appium:ios": "APPIUM_PLATFORM=ios wdio run wdio.conf.ts"
+    "test:appium:ios": "APPIUM_PLATFORM=ios wdio run wdio.conf.ts",
+    "ci:reliability-gate": "node scripts/ops/reliability-gate.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.0.0",

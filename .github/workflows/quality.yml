@@ -41,6 +41,8 @@ jobs:
 
       - name: Performance Budget Guard
         run: npm run test:perf:budget
+      - name: Reliability Gate
+        run: npm run ci:reliability-gate
 
   ops-syntax:
     runs-on: ubuntu-latest
