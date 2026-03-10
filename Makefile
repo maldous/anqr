@@ -1,4 +1,4 @@
-.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
+.PHONY: all ci smoke release help dev build bootstrap pristine gallery gallery\:fresh gallery\:gif gallery\:auto gallery\:nooverlay gallery\:qrart gallery\:remote gallery\:api gallery\:local gallery\:browser gallery\:app gallery\:all gallery\:compare gallery\:parity gallery\:parity\:deploy gallery\:publish gallery\:merge sitemap screenshots deploy indexnow android android\:init android\:sync android\:build android\:release android\:upload android\:open install hooks clean fix lint format check pull push i18n\:pull i18n\:push i18n\:xlate i18n\:xlate\:static i18n\:xlate\:locales i18n\:fill i18n\:fill\:static i18n\:fill\:locales i18n\:check signoff icons icons\:android android\:run android\:keystore android\:bump zip dep sonar sonar-report _quality-gates quality test test\:full test\:unit test\:unit\:coverage test\:coverage\:gap test\:unit\:ci test\:ids test\:required test\:required\:strict test\:required\:gap test\:testid test\:testid\:refs test\:bundle\:budget report\:payload\:matrix report\:i18n\:txt test\:basic test\:advanced test\:pro test\:tiers test\:ui test\:permutations test\:report test\:report\:settings test\:qr\:artifact test\:overlay\:audit gallery\:overlay resources validate\:services check\:sentry qr\:art harness harness\:quick harness\:continuous ops\:guardian ops\:continuous ops\:nightly ops\:groq ops\:gemini ops\:hugging ops\:install paid\:approval notify\:test email\:ingest ops\:email\:install monitor\:ci issue\:create issue\:create\:child ios ios\:sync ios\:build ios\:open ios\:archive ios\:beta ios\:release ios\:metadata ios\:screenshots test\:appium test\:appium\:android test\:appium\:ios test\:api test\:parity
 
 # ============================================
 # Help
@@ -621,7 +621,38 @@ gallery\:browser:
 	done; \
 	exit $$failed
 
-# Compare local/browser/remote artifacts for consistency:
+# Render app-surface artifacts via Playwright preview capture mode.
+# Requires a dev server running on GALLERY_PORT (default: 5173).
+# Produces reports/gallery-artifacts/app/ with passed.txt/failed.txt/report.json.
+gallery\:app:
+	@curl -sf -o /dev/null http://localhost:$(GALLERY_PORT)/ || \
+		(echo "ERROR: No server on :$(GALLERY_PORT). Run 'make dev' first." && exit 1)
+	@set -e; \
+	count="$(GALLERY_SHARD_COUNT)"; \
+	if [ "$$count" -le 1 ]; then \
+		ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SURFACE=app GALLERY_BROWSER_CAPTURE_MODE=preview GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$(GALLERY_SHARD)" GALLERY_SHARD_INDEX="$(GALLERY_SHARD_INDEX)" GALLERY_SHARD_TOTAL="$(GALLERY_SHARD_TOTAL)" node --import tsx scripts/generate-gallery-browser.mjs; \
+		exit $$?; \
+	fi; \
+	if [ -n "$(GALLERY_SHARD)" ] || [ -n "$(GALLERY_SHARD_INDEX)" ] || [ -n "$(GALLERY_SHARD_TOTAL)" ]; then \
+		echo "ERROR: GALLERY_SHARD_COUNT>1 cannot be combined with GALLERY_SHARD / GALLERY_SHARD_INDEX / GALLERY_SHARD_TOTAL."; \
+		exit 1; \
+	fi; \
+	echo "[gallery:app] starting $$count shards in parallel"; \
+	pids=""; \
+	failed=0; \
+	i=1; \
+	while [ $$i -le $$count ]; do \
+		echo "[gallery:app] shard $$i/$$count"; \
+		(ANQR_LOG_LEVEL=$(ANQR_LOG_LEVEL) GALLERY_SURFACE=app GALLERY_BROWSER_CAPTURE_MODE=preview GALLERY_SCENARIO_TIMEOUT_MS=$(GALLERY_SCENARIO_TIMEOUT_MS) GALLERY_PORT=$(GALLERY_PORT) GALLERY_CONCURRENCY=$(GALLERY_BROWSER_CONCURRENCY) GALLERY_SHARD="$$i/$$count" node --import tsx scripts/generate-gallery-browser.mjs) & \
+		pids="$$pids $$!"; \
+		i=$$((i + 1)); \
+	done; \
+	for pid in $$pids; do \
+		wait $$pid || failed=1; \
+	done; \
+	exit $$failed
+
+# Compare local/browser/app/remote artifacts for consistency:
 # decode validity + payload parity + dimension parity + size-ratio parity.
 gallery\:compare:
 	node --import tsx scripts/compare-gallery-artifacts.mjs
@@ -634,19 +665,21 @@ gallery\:publish:
 gallery\:merge:
 	GALLERY_MERGE_ONLY=1 GALLERY_PUBLISH_SOURCE=$(GALLERY_PUBLISH_SOURCE) node --import tsx scripts/publish-gallery-showcase.ts
 
-# Run all three gallery renderers: remote API + local QRGenerator + browser screenshots.
-# Produces 3000 total images across reports/gallery-artifacts/{remote,local,browser}/.
+# Run all four gallery renderers: remote API + local QRGenerator + browser API + app preview.
+# Produces 4000 total images across reports/gallery-artifacts/{remote,local,browser,app}/.
 gallery\:all:
 	$(MAKE) gallery:remote || echo 'gallery:remote failed'
 	$(MAKE) gallery:local || echo 'gallery:local failed'
 	$(MAKE) gallery:browser || echo 'gallery:browser failed'
+	$(MAKE) gallery:app || echo 'gallery:app failed'
 
 # Full parity run (local high parallel, browser normal, remote minimal) + consistency report.
 gallery\:parity:
-	rm -rf reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/remote
-	mkdir -p reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/remote
+	rm -rf reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/app reports/gallery-artifacts/remote
+	mkdir -p reports/gallery-artifacts/local reports/gallery-artifacts/browser reports/gallery-artifacts/app reports/gallery-artifacts/remote
 	$(MAKE) gallery:local
 	$(MAKE) gallery:browser
+	$(MAKE) gallery:app
 	$(MAKE) gallery:remote
 	$(MAKE) gallery:compare
 

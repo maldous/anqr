@@ -7,7 +7,7 @@
  * Chromium browser, navigating to the running dev server with URL params,
  * and capturing the rendered output.
  *
- * Saves artifacts to reports/gallery-artifacts/browser/
+ * Saves artifacts to reports/gallery-artifacts/<surface>/
  * with passed.txt/failed.txt/report.json for inspection.
  *
  * Environment variables:
@@ -55,7 +55,8 @@ const ROOT = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const REPORTS_DIR = path.join(ROOT, 'reports');
 const ARTIFACTS_DIR = path.join(REPORTS_DIR, 'gallery-artifacts');
-const OUTPUT_DIR = path.join(ARTIFACTS_DIR, 'browser');
+const SURFACE = (process.env.GALLERY_SURFACE || 'browser').trim().toLowerCase();
+const OUTPUT_DIR = path.join(ARTIFACTS_DIR, SURFACE);
 const LOCAL_HANDLER_URL = 'http://localhost/.netlify/functions/qr';
 
 const PORT = process.env.GALLERY_PORT || '5173';
@@ -578,6 +579,7 @@ async function runPool(tasks, concurrency) {
 
 async function main() {
   console.log('\n=== ANQR Gallery Browser Generator (Playwright) ===\n');
+  console.log(`Surface:     ${SURFACE}`);
   console.log(`Mode:        ${CAPTURE_MODE}`);
   console.log(`Server:      ${BASE_URL}`);
   console.log(`Concurrency: ${CONCURRENCY}`);
@@ -854,7 +856,7 @@ async function main() {
   // Write JSON report
   const report = {
     generatedAt: new Date().toISOString(),
-    mode: 'browser',
+    mode: SURFACE,
     serverUrl: BASE_URL,
     concurrency: CONCURRENCY,
     shard: {

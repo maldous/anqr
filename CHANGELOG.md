@@ -23,6 +23,7 @@ Each resolved issue should add an entry under the current date heading.
 - fix(ops): add structured startup diagnostics and error categorization for codex credit gate failures
 - fix: reduce qr-generator overlay mode complexity via handler extraction
 - perf: add CI performance budget guard for `/` and `/gallery` key paths
+- fix(gallery): add deterministic 4-surface parity matrix support (`local`,`browser`,`app`,`remote`) with filtered consistency reporting
 
 ## 2026-03-09
 
