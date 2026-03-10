@@ -582,6 +582,90 @@ export function parseUpiPayload(payload: string): Record<string, string | null> 
 // ---------------------------------------------------------------------------
 // 11. Calendar event parser
 // ---------------------------------------------------------------------------
+function formatICalDateTime(dt: string): string {
+  try {
+    const isAllDay = dt.length === 8;
+    const year = Number.parseInt(dt.slice(0, 4), 10);
+    const month = Number.parseInt(dt.slice(4, 6), 10) - 1;
+    const day = Number.parseInt(dt.slice(6, 8), 10);
+    let hours = 0,
+      minutes = 0;
+
+    if (!isAllDay && dt.includes('T')) {
+      const timePart = dt.split('T')[1];
+      hours = Number.parseInt(timePart.slice(0, 2), 10);
+      minutes = Number.parseInt(timePart.slice(2, 4), 10);
+    }
+
+    const date = new Date(year, month, day, hours, minutes);
+
+    if (isAllDay) {
+      return date.toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+    return date.toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } catch {
+    return dt;
+  }
+}
+
+const ICAL_DAY_NAMES: Record<string, string> = {
+  SU: 'Sunday',
+  MO: 'Monday',
+  TU: 'Tuesday',
+  WE: 'Wednesday',
+  TH: 'Thursday',
+  FR: 'Friday',
+  SA: 'Saturday',
+};
+
+function formatFrequencyText(freq: string, interval: number, byday?: string): string {
+  if (freq === 'DAILY') return interval === 1 ? 'Daily' : `Every ${interval} days`;
+  if (freq === 'WEEKLY') {
+    if (byday) {
+      const days = byday
+        .split(',')
+        .map((d) => ICAL_DAY_NAMES[d] || d)
+        .join(', ');
+      return interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
+    }
+    return interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
+  }
+  if (freq === 'MONTHLY') return interval === 1 ? 'Monthly' : `Every ${interval} months`;
+  if (freq === 'YEARLY') return interval === 1 ? 'Yearly' : `Every ${interval} years`;
+  return freq || 'Recurring';
+}
+
+function formatRecurrenceRule(rrule: string): string {
+  const parts: Record<string, string> = {};
+  rrule
+    .replaceAll('RRULE:', '')
+    .split(';')
+    .forEach((p) => {
+      const [k, v] = p.split('=');
+      if (k && v) parts[k] = v;
+    });
+
+  const interval = parts.INTERVAL ? Number.parseInt(parts.INTERVAL, 10) : 1;
+  let text = formatFrequencyText(parts.FREQ, interval, parts.BYDAY);
+
+  if (parts.UNTIL) text += ` until ${formatICalDateTime(parts.UNTIL)}`;
+  if (parts.COUNT) text += ` (${parts.COUNT} times)`;
+
+  return text;
+}
+
 export function parseCalendarPayload(payload: string): Record<string, string | boolean | null> {
   const result: Record<string, string | boolean | null> = {
     summary: null,
@@ -613,93 +697,6 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
   const lines = payload.split(/\r?\n/);
   let attendeesCount = 0;
 
-  const formatDateTime = (dt: string): string => {
-    // Parse iCal datetime format: YYYYMMDDTHHMMSS or YYYYMMDD
-    try {
-      const isAllDay = dt.length === 8;
-      const year = Number.parseInt(dt.slice(0, 4), 10);
-      const month = Number.parseInt(dt.slice(4, 6), 10) - 1;
-      const day = Number.parseInt(dt.slice(6, 8), 10);
-      let hours = 0,
-        minutes = 0;
-
-      if (!isAllDay && dt.includes('T')) {
-        const timePart = dt.split('T')[1];
-        hours = Number.parseInt(timePart.slice(0, 2), 10);
-        minutes = Number.parseInt(timePart.slice(2, 4), 10);
-      }
-
-      const date = new Date(year, month, day, hours, minutes);
-
-      if (isAllDay) {
-        return date.toLocaleDateString(undefined, {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        });
-      }
-      return date.toLocaleString(undefined, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-    } catch {
-      return dt;
-    }
-  };
-
-  const formatRecurrence = (rrule: string): string => {
-    const parts: Record<string, string> = {};
-    rrule
-      .replaceAll('RRULE:', '')
-      .split(';')
-      .forEach((p) => {
-        const [k, v] = p.split('=');
-        if (k && v) parts[k] = v;
-      });
-
-    const freq = parts.FREQ;
-    const interval = parts.INTERVAL ? Number.parseInt(parts.INTERVAL, 10) : 1;
-    const byday = parts.BYDAY;
-    const until = parts.UNTIL;
-    const count = parts.COUNT;
-
-    let text = '';
-    const dayNames: Record<string, string> = {
-      SU: 'Sunday',
-      MO: 'Monday',
-      TU: 'Tuesday',
-      WE: 'Wednesday',
-      TH: 'Thursday',
-      FR: 'Friday',
-      SA: 'Saturday',
-    };
-
-    if (freq === 'DAILY') text = interval === 1 ? 'Daily' : `Every ${interval} days`;
-    else if (freq === 'WEEKLY') {
-      if (byday) {
-        const days = byday
-          .split(',')
-          .map((d) => dayNames[d] || d)
-          .join(', ');
-        text = interval === 1 ? `Weekly on ${days}` : `Every ${interval} weeks on ${days}`;
-      } else {
-        text = interval === 1 ? 'Weekly' : `Every ${interval} weeks`;
-      }
-    } else if (freq === 'MONTHLY') text = interval === 1 ? 'Monthly' : `Every ${interval} months`;
-    else if (freq === 'YEARLY') text = interval === 1 ? 'Yearly' : `Every ${interval} years`;
-    else text = freq || 'Recurring';
-
-    if (until) text += ` until ${formatDateTime(until)}`;
-    if (count) text += ` (${count} times)`;
-
-    return text;
-  };
-
   let i = 0;
   while (i < lines.length) {
     let line = lines[i];
@@ -729,7 +726,7 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
         break;
       case 'DTSTART': {
         result.startDate = value;
-        result.startFormatted = formatDateTime(value.replaceAll('Z', ''));
+        result.startFormatted = formatICalDateTime(value.replaceAll('Z', ''));
         result.isAllDay = value.length === 8;
         const tzMatch = keyPart.match(/TZID=([^;:]+)/i);
         if (tzMatch) result.timezone = tzMatch[1];
@@ -737,7 +734,7 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
       }
       case 'DTEND': {
         result.endDate = value;
-        result.endFormatted = formatDateTime(value.replaceAll('Z', ''));
+        result.endFormatted = formatICalDateTime(value.replaceAll('Z', ''));
         break;
       }
       case 'DURATION':
@@ -753,7 +750,7 @@ export function parseCalendarPayload(payload: string): Record<string, string | b
         break;
       case 'RRULE': {
         result.recurrence = value;
-        result.recurrenceFormatted = formatRecurrence(line);
+        result.recurrenceFormatted = formatRecurrenceRule(line);
         break;
       }
       case 'VALARM':

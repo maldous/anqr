@@ -525,19 +525,23 @@ function buildGifFormatParams(config: Partial<ShareConfig>, params: URLSearchPar
     params.set('gifTrans', config.gifTransparentColor.replace('#', ''));
 }
 
+function buildSvgFormatParams(config: Partial<ShareConfig>, params: URLSearchParams): void {
+  if (config.svgTrueVector) params.set('svgVec', '1');
+  if (config.svgShapePrecision && config.svgShapePrecision !== 'pixel')
+    params.set('svgPrec', config.svgShapePrecision);
+  if (config.svgEmbedRasterOverlay === false) params.set('svgEmbed', '0');
+}
+
 function buildOutputFormatSpecificParams(
   config: Partial<ShareConfig>,
   params: URLSearchParams
 ): void {
   buildGifFormatParams(config, params);
-  if (config.svgTrueVector) params.set('svgVec', '1');
+  buildSvgFormatParams(config, params);
   if (config.dpi !== undefined && config.dpi !== 72) params.set('dpi', config.dpi.toString());
   if (config.includeQuietZone === false) params.set('inclQz', '0');
   if (config.bgOverride && config.bgOverride !== '')
     params.set('bgOver', config.bgOverride.replace('#', ''));
-  if (config.svgShapePrecision && config.svgShapePrecision !== 'pixel')
-    params.set('svgPrec', config.svgShapePrecision);
-  if (config.svgEmbedRasterOverlay === false) params.set('svgEmbed', '0');
   if (config.formatExtra && config.formatExtra !== 'none')
     params.set('fmtExtra', config.formatExtra);
 }

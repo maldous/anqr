@@ -65,30 +65,8 @@ function buildShareStyles(render: StoreState['render']) {
   };
 }
 
-function buildShareOverlay(overlay: StoreState['overlay']) {
-  if (!overlay.enabled) return {};
+function buildShareOverlayPreprocessing(overlay: StoreState['overlay']) {
   return {
-    mode: overlay.mode,
-    intensity: overlay.intensity === 100 ? undefined : overlay.intensity,
-    overlayUrl: overlay.url || undefined,
-    fit: overlay.fit === 'cover' ? undefined : overlay.fit,
-    rotate: overlay.rotateDeg === 0 ? undefined : overlay.rotateDeg,
-    flipX: overlay.flipX ? true : undefined,
-    flipY: overlay.flipY ? true : undefined,
-    preserveFinders: overlay.preserveFinders ? undefined : false,
-    preserveTiming: overlay.preserveTiming ? true : undefined,
-    preserveAlignment: overlay.preserveAlignment ? true : undefined,
-    protectFormatInfo: overlay.protectFormatInfo ? true : undefined,
-    protectVersionInfo: overlay.protectVersionInfo ? true : undefined,
-    eccAwareEnabled: overlay.eccAwareEnabled ? true : undefined,
-    eccAwareRiskBudget:
-      overlay.eccAwareEnabled && overlay.eccAwareRiskBudget !== 50
-        ? overlay.eccAwareRiskBudget
-        : undefined,
-    eccAwareWeightMap:
-      overlay.eccAwareEnabled && overlay.eccAwareWeightMap !== 'distance_to_finders'
-        ? overlay.eccAwareWeightMap
-        : undefined,
     colorMode: overlay.colorMode === 'color' ? undefined : overlay.colorMode,
     brightness: overlay.brightness === 0 ? undefined : overlay.brightness,
     contrast: overlay.contrast === 0 ? undefined : overlay.contrast,
@@ -101,6 +79,11 @@ function buildShareOverlay(overlay: StoreState['overlay']) {
     threshold: overlay.threshold === 128 ? undefined : overlay.threshold,
     edge: overlay.edgeDetect === 'off' ? undefined : overlay.edgeDetect,
     invert: overlay.invert || undefined,
+  };
+}
+
+function buildShareOverlayDither(overlay: StoreState['overlay']) {
+  return {
     ditherKind: overlay.ditherKind === 'error_diffusion' ? undefined : overlay.ditherKind,
     diffusionKernel:
       overlay.diffusionKernel === 'floyd_steinberg' ? undefined : overlay.diffusionKernel,
@@ -117,6 +100,11 @@ function buildShareOverlay(overlay: StoreState['overlay']) {
     blueNoiseTileSize: overlay.blueNoiseTileSize === 64 ? undefined : overlay.blueNoiseTileSize,
     blueNoiseSeed: overlay.blueNoiseSeed === 0 ? undefined : overlay.blueNoiseSeed,
     colorDither: overlay.colorDither === 'none' ? undefined : overlay.colorDither,
+  };
+}
+
+function buildShareOverlayModeSpecific(overlay: StoreState['overlay']) {
+  return {
     subpixelGridSize:
       overlay.mode === 'subpixel' && overlay.subpixelGridSize !== '3x3'
         ? overlay.subpixelGridSize
@@ -153,6 +141,36 @@ function buildShareOverlay(overlay: StoreState['overlay']) {
       overlay.mode === 'duotone' && overlay.duotoneColors[1] !== '#ffffff'
         ? overlay.duotoneColors[1]
         : undefined,
+  };
+}
+
+function buildShareOverlay(overlay: StoreState['overlay']) {
+  if (!overlay.enabled) return {};
+  return {
+    mode: overlay.mode,
+    intensity: overlay.intensity === 100 ? undefined : overlay.intensity,
+    overlayUrl: overlay.url || undefined,
+    fit: overlay.fit === 'cover' ? undefined : overlay.fit,
+    rotate: overlay.rotateDeg === 0 ? undefined : overlay.rotateDeg,
+    flipX: overlay.flipX ? true : undefined,
+    flipY: overlay.flipY ? true : undefined,
+    preserveFinders: overlay.preserveFinders ? undefined : false,
+    preserveTiming: overlay.preserveTiming ? true : undefined,
+    preserveAlignment: overlay.preserveAlignment ? true : undefined,
+    protectFormatInfo: overlay.protectFormatInfo ? true : undefined,
+    protectVersionInfo: overlay.protectVersionInfo ? true : undefined,
+    eccAwareEnabled: overlay.eccAwareEnabled ? true : undefined,
+    eccAwareRiskBudget:
+      overlay.eccAwareEnabled && overlay.eccAwareRiskBudget !== 50
+        ? overlay.eccAwareRiskBudget
+        : undefined,
+    eccAwareWeightMap:
+      overlay.eccAwareEnabled && overlay.eccAwareWeightMap !== 'distance_to_finders'
+        ? overlay.eccAwareWeightMap
+        : undefined,
+    ...buildShareOverlayPreprocessing(overlay),
+    ...buildShareOverlayDither(overlay),
+    ...buildShareOverlayModeSpecific(overlay),
   };
 }
 

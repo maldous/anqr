@@ -47,43 +47,42 @@ function processHref(href: string, lang: string): string {
   return href.replaceAll('${lang}', lang);
 }
 
-// Helper to render text with clickable URLs and internal links
-// Supports: https://... URLs and [[/path|Label]] internal links
-// Also detects numbered lists "1. X 2. Y 3. Z" and renders as proper list items
+function parseNumberedListItems(
+  text: string,
+  matches: RegExpMatchArray[]
+): { num: string; content: string }[] {
+  const items: { num: string; content: string }[] = [];
+
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i];
+    const num = match[1];
+    const matchIndex = match.index ?? 0;
+    const startOfContent = matchIndex + match[0].length;
+
+    const nextMatch = matches[i + 1];
+    let endOfContent: number;
+    if (nextMatch) {
+      const nextIndex = nextMatch.index ?? 0;
+      endOfContent = nextIndex + (nextMatch[0].startsWith(' ') ? 1 : 0);
+    } else {
+      endOfContent = text.length;
+    }
+
+    const content = text.slice(startOfContent, endOfContent).trim();
+    if (content) {
+      items.push({ num, content });
+    }
+  }
+
+  return items;
+}
+
 function renderTextWithLinks(text: string, lang: string): React.ReactNode {
-  // First check if this is a numbered list (contains "1. ... 2. ..." pattern)
   const numberedListRegex = /(?:^|\s)(\d+)\.\s/g;
   const matches = [...text.matchAll(numberedListRegex)];
 
-  // If we have 2+ numbered items, treat as a list
   if (matches.length >= 2) {
-    // Split by numbered items pattern
-    const items: { num: string; content: string }[] = [];
-    let _lastEnd = 0;
-
-    for (let i = 0; i < matches.length; i++) {
-      const match = matches[i];
-      const num = match[1];
-      const matchIndex = match.index ?? 0;
-      const _startOfNumber = matchIndex + (match[0].startsWith(' ') ? 1 : 0);
-      const startOfContent = matchIndex + match[0].length;
-
-      // Find where this item ends (start of next number or end of string)
-      const nextMatch = matches[i + 1];
-      let endOfContent: number;
-      if (nextMatch) {
-        const nextIndex = nextMatch.index ?? 0;
-        endOfContent = nextIndex + (nextMatch[0].startsWith(' ') ? 1 : 0);
-      } else {
-        endOfContent = text.length;
-      }
-
-      const content = text.slice(startOfContent, endOfContent).trim();
-      if (content) {
-        items.push({ num, content });
-      }
-      _lastEnd = endOfContent;
-    }
+    const items = parseNumberedListItems(text, matches);
 
     if (items.length >= 2) {
       return (
@@ -98,7 +97,6 @@ function renderTextWithLinks(text: string, lang: string): React.ReactNode {
     }
   }
 
-  // Not a numbered list, render normally
   return renderTextContent(text, lang);
 }
 

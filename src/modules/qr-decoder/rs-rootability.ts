@@ -138,17 +138,15 @@ export interface RSRootabilityBlockResult {
   chienRootsFound: number;
 }
 
-export function rsRootabilityFor(
-  codewords: number[],
-  version: number,
-  ecc: ECCLevelChar
-): RSRootabilityBlockResult[] {
-  initGF();
+interface BlockLayout {
+  blockDataSizes: number[];
+  blockEccSizes: number[];
+  numBlocks: number;
+  maxData: number;
+  maxEcc: number;
+}
 
-  const rsBlocks = RS_BLOCKS[ecc]?.[version - 1];
-  if (!rsBlocks) return [];
-
-  // Expand block definitions into per-block sizes
+function expandBlockDefinitions(rsBlocks: number[][]): BlockLayout {
   const blockDataSizes: number[] = [];
   const blockTotalSizes: number[] = [];
   for (const g of rsBlocks) {
@@ -160,14 +158,20 @@ export function rsRootabilityFor(
       blockTotalSizes.push(total);
     }
   }
-  const numBlocks = blockDataSizes.length;
   const blockEccSizes = blockTotalSizes.map((t, i) => t - (blockDataSizes[i] ?? 0));
-  const maxData = Math.max(...blockDataSizes);
-  const maxEcc = Math.max(...blockEccSizes);
+  return {
+    blockDataSizes,
+    blockEccSizes,
+    numBlocks: blockDataSizes.length,
+    maxData: Math.max(...blockDataSizes),
+    maxEcc: Math.max(...blockEccSizes),
+  };
+}
 
+function deinterleaveBlocks(codewords: number[], layout: BlockLayout): number[][] {
+  const { blockDataSizes, blockEccSizes, numBlocks, maxData, maxEcc } = layout;
   const blocks: number[][] = Array.from({ length: numBlocks }, () => []);
 
-  // De-interleave data section
   let idx = 0;
   for (let i = 0; i < maxData; i++) {
     for (let b = 0; b < numBlocks; b++) {
@@ -177,7 +181,6 @@ export function rsRootabilityFor(
     }
   }
 
-  // De-interleave ECC section
   for (let i = 0; i < maxEcc; i++) {
     for (let b = 0; b < numBlocks; b++) {
       if (i < (blockEccSizes[b] ?? 0)) {
@@ -186,10 +189,26 @@ export function rsRootabilityFor(
     }
   }
 
+  return blocks;
+}
+
+export function rsRootabilityFor(
+  codewords: number[],
+  version: number,
+  ecc: ECCLevelChar
+): RSRootabilityBlockResult[] {
+  initGF();
+
+  const rsBlocks = RS_BLOCKS[ecc]?.[version - 1];
+  if (!rsBlocks) return [];
+
+  const layout = expandBlockDefinitions(rsBlocks);
+  const blocks = deinterleaveBlocks(codewords, layout);
+
   const results: RSRootabilityBlockResult[] = [];
-  for (let b = 0; b < numBlocks; b++) {
-    const dataCount = blockDataSizes[b] ?? 0;
-    const eccCount = blockEccSizes[b] ?? 0;
+  for (let b = 0; b < layout.numBlocks; b++) {
+    const dataCount = layout.blockDataSizes[b] ?? 0;
+    const eccCount = layout.blockEccSizes[b] ?? 0;
     const received = blocks[b] ?? [];
     const syndromes = computeSyndromes(received, eccCount);
     const syndromeNonZeroCount = syndromes.filter((s) => s !== 0).length;
