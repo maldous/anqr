@@ -157,6 +157,26 @@ interface SubpixelCellCtx {
   intensity: number;
 }
 
+function resolveOverlayColor(
+  overlayColor: { r: number; g: number; b: number } | undefined,
+  neutralColor: { r: number; g: number; b: number } | null
+): RGBWithMeta | null {
+  if (overlayColor) return { ...overlayColor };
+  if (neutralColor) return { ...neutralColor };
+  return null;
+}
+
+function resolveHalftoneColor(
+  overlayColor: { r: number; g: number; b: number } | undefined,
+  neutralColor: { r: number; g: number; b: number } | null,
+  overlayBrightness: number
+): RGBWithMeta | null {
+  const sizeRatio = 0.5 + overlayBrightness * 0.5;
+  if (overlayColor) return { ...overlayColor, halftone: true, sizeRatio };
+  if (neutralColor) return { ...neutralColor, halftone: true, sizeRatio };
+  return null;
+}
+
 function processSubpixelCell(
   ctx: SubpixelCellCtx,
   x: number,
@@ -186,7 +206,6 @@ function processSubpixelCell(
     isFinderSeparator(moduleRow, moduleCol, ctx.moduleCount);
   const forceSolidFinder = ctx.finderOverride === 'solid' && isFinderModule && lockModule;
 
-  // Locked modules must preserve canonical QR values.
   if (lockModule || forceSolidFinder) {
     matrix[y][x] = qrValue;
     colorMatrix[y][x] = null;
@@ -195,35 +214,16 @@ function processSubpixelCell(
 
   if (isCenter) {
     matrix[y][x] = qrValue;
-
-    if (ctx.useHalftone && qrValue) {
-      colorMatrix[y][x] = overlayColor
-        ? {
-            ...overlayColor,
-            halftone: true,
-            sizeRatio: 0.5 + overlayBrightness * 0.5,
-          }
-        : ctx.neutralColor
-          ? { ...ctx.neutralColor, halftone: true, sizeRatio: 0.5 + overlayBrightness * 0.5 }
-          : null;
-    } else {
-      colorMatrix[y][x] = overlayColor
-        ? { ...overlayColor }
-        : ctx.neutralColor
-          ? { ...ctx.neutralColor }
-          : null;
-    }
+    colorMatrix[y][x] =
+      ctx.useHalftone && qrValue
+        ? resolveHalftoneColor(overlayColor, ctx.neutralColor, overlayBrightness)
+        : resolveOverlayColor(overlayColor, ctx.neutralColor);
     return;
   }
 
-  // Surrounding pixels show overlay
   const threshold = 0.5 - ctx.intensity * 0.3;
   matrix[y][x] = overlayBrightness < threshold;
-  colorMatrix[y][x] = overlayColor
-    ? { ...overlayColor }
-    : ctx.neutralColor
-      ? { ...ctx.neutralColor }
-      : null;
+  colorMatrix[y][x] = resolveOverlayColor(overlayColor, ctx.neutralColor);
 }
 
 /**

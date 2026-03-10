@@ -136,6 +136,47 @@ function shouldLockModule(
   return false;
 }
 
+function buildQRFirstMatrix(qr: QRCodeObject, moduleCount: number): boolean[][] {
+  const result: boolean[][] = [];
+  for (let row = 0; row < moduleCount; row++) {
+    result[row] = [];
+    for (let col = 0; col < moduleCount; col++) {
+      result[row][col] = qr.isDark(row, col);
+    }
+  }
+  return result;
+}
+
+function initErrorMatrix(moduleCount: number): number[][] {
+  const errors: number[][] = [];
+  for (let row = 0; row < moduleCount; row++) {
+    errors[row] = new Array(moduleCount).fill(0);
+  }
+  return errors;
+}
+
+function computeDitheredModuleValue(
+  qrIsDark: boolean,
+  brightness: number,
+  error: number,
+  mix: number
+): { newValue: boolean; quantError: number } {
+  const originalValue = qrIsDark ? 1 : 0;
+  const overlayDark = 1 - brightness;
+  let targetValue = originalValue * (1 - mix) + overlayDark * mix;
+
+  if (qrIsDark) {
+    targetValue = DARK_DESIRE_MIN + targetValue * (DARK_DESIRE_MAX - DARK_DESIRE_MIN);
+  } else {
+    targetValue = LIGHT_DESIRE_MIN + targetValue * (LIGHT_DESIRE_MAX - LIGHT_DESIRE_MIN);
+  }
+
+  const adjustedValue = targetValue + error;
+  const threshold = qrIsDark ? 0.4 : 0.6;
+  const newValue = adjustedValue >= threshold;
+  return { newValue, quantError: adjustedValue - (newValue ? 1 : 0) };
+}
+
 /**
  * Apply dithering to create a modified QR matrix
  * Now includes QR scannability protection for high-contrast B&W overlays
@@ -148,91 +189,38 @@ export function applyDitherToMatrix(
 ): boolean[][] {
   const version = config.typeNumber || Math.ceil((moduleCount - 17) / 4);
 
-  // =========================================
-  // HIGH-CONTRAST B&W IMAGE DETECTION
-  // =========================================
-  // For high-contrast B&W images (like spirals), use QR-first mode
-  // which simply preserves QR data exactly - no dithering at all.
-  // Dithering on B&W images causes accumulated errors that flip modules.
-
   if (detectBWFromOverlayData(overlayData, moduleCount)) {
     log.debug('Detected high-contrast B&W overlay in dither mode - using QR-first (no dithering)');
-
-    // QR-first: return exact QR matrix without any dithering
-    const result: boolean[][] = [];
-    for (let row = 0; row < moduleCount; row++) {
-      result[row] = [];
-      for (let col = 0; col < moduleCount; col++) {
-        result[row][col] = qr.isDark(row, col);
-      }
-    }
-    return result;
+    return buildQRFirstMatrix(qr, moduleCount);
   }
 
   const kernel = getDiffusionKernel(config.ditherKind || 'floyd_steinberg');
   const strength = (config.ditherStrength ?? 50) / 100;
   const intensity = curveIntensity(config.overlayIntensity ?? 100);
+  const mix = intensity * strength;
+  const result = buildQRFirstMatrix(qr, moduleCount);
+  const errors = initErrorMatrix(moduleCount);
 
-  // Initialize result matrix with original QR values
-  const result: boolean[][] = [];
-  for (let row = 0; row < moduleCount; row++) {
-    result[row] = [];
-    for (let col = 0; col < moduleCount; col++) {
-      result[row][col] = qr.isDark(row, col);
-    }
-  }
-
-  // Initialize error matrix
-  const errors: number[][] = [];
-  for (let row = 0; row < moduleCount; row++) {
-    errors[row] = new Array(moduleCount).fill(0);
-  }
-
-  // Apply dithering with error diffusion
   for (let row = 0; row < moduleCount; row++) {
     for (let col = 0; col < moduleCount; col++) {
       const qrIsDark = qr.isDark(row, col);
-
-      // Lock-protected modules keep their canonical QR value.
       if (shouldLockModule(row, col, moduleCount, version, config)) {
         result[row][col] = qrIsDark;
         continue;
       }
 
       const brightness = getOverlayBrightness(overlayData, row, col);
-      const originalValue = qrIsDark ? 1 : 0;
-      const error = errors[row][col] || 0;
-
-      // Calculate desired value based on overlay brightness
-      // Overlay dark (low brightness) = want dark pixel, high brightness = want light pixel
-      const overlayDark = 1 - brightness;
-      const mix = intensity * strength;
-
-      // Blend original QR value with overlay darkness
-      let targetValue = originalValue * (1 - mix) + overlayDark * mix;
-
-      // Apply soft clamp to keep value on the correct side of threshold for QR scannability
-      if (qrIsDark) {
-        targetValue = DARK_DESIRE_MIN + targetValue * (DARK_DESIRE_MAX - DARK_DESIRE_MIN);
-      } else {
-        targetValue = LIGHT_DESIRE_MIN + targetValue * (LIGHT_DESIRE_MAX - LIGHT_DESIRE_MIN);
-      }
-
-      const adjustedValue = targetValue + error;
-
-      // Threshold with QR-aware bias: dark modules use lower threshold (easier to stay dark)
-      // light modules use higher threshold (harder to become dark)
-      const threshold = qrIsDark ? 0.4 : 0.6;
-      const newValue = adjustedValue >= threshold;
+      const { newValue, quantError } = computeDitheredModuleValue(
+        qrIsDark,
+        brightness,
+        errors[row][col] || 0,
+        mix
+      );
       result[row][col] = newValue;
-
-      // Calculate and distribute error
-      const quantError = adjustedValue - (newValue ? 1 : 0);
       distributeError(errors, col, row, quantError, kernel, moduleCount, moduleCount);
     }
   }
 
-  // Post-pass: Enforce module constraints for guaranteed scannability
   enforceModuleConstraints(qr, result, moduleCount, version, config);
 
   log.debug('dither-matrix applied with QR protection', {

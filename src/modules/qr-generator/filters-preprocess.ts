@@ -287,56 +287,30 @@ export function softenBWImage(imageData: ImageData): ImageData {
  * - posterize:  0..16 levels
  * - threshold:  0..255, where 0 means disabled
  */
-function buildFilterOptionsFromConfig(config: QRGeneratorConfig): FilterOptions {
-  const filterOptions: FilterOptions = {};
-
-  if (config.filterBrightness !== undefined && config.filterBrightness !== 0) {
+function applyBasicFilterOptions(config: QRGeneratorConfig, filterOptions: FilterOptions): void {
+  if (config.filterBrightness !== undefined && config.filterBrightness !== 0)
     filterOptions.brightness = config.filterBrightness;
-  }
-
-  if (config.filterContrast !== undefined && config.filterContrast !== 0) {
+  if (config.filterContrast !== undefined && config.filterContrast !== 0)
     filterOptions.contrast = config.filterContrast;
-  }
-
-  if (config.filterSaturation !== undefined && config.filterSaturation !== 0) {
+  if (config.filterSaturation !== undefined && config.filterSaturation !== 0)
     filterOptions.saturation = config.filterSaturation + 100;
-  }
-
-  if (config.filterHue !== undefined && config.filterHue !== 0) {
+  if (config.filterHue !== undefined && config.filterHue !== 0)
     filterOptions.hue = config.filterHue;
-  }
-
-  if (config.filterGamma !== undefined && config.filterGamma !== 1) {
+  if (config.filterGamma !== undefined && config.filterGamma !== 1)
     filterOptions.gamma = config.filterGamma;
-  }
-
-  if (config.filterInvert) {
-    filterOptions.invert = true;
-  }
-
-  if (config.filterGrayscale) {
-    filterOptions.grayscale = true;
-  }
-
-  if (config.filterThreshold !== undefined && config.filterThreshold > 0) {
+  if (config.filterInvert) filterOptions.invert = true;
+  if (config.filterGrayscale) filterOptions.grayscale = true;
+  if (config.filterThreshold !== undefined && config.filterThreshold > 0)
     filterOptions.threshold = config.filterThreshold;
-  }
-
-  if (config.filterBlur !== undefined && config.filterBlur > 0) {
+  if (config.filterBlur !== undefined && config.filterBlur > 0)
     filterOptions.blur = config.filterBlur;
-  }
-
-  if (config.filterSharpen !== undefined && config.filterSharpen > 0) {
+  if (config.filterSharpen !== undefined && config.filterSharpen > 0)
     filterOptions.sharpen = config.filterSharpen;
-  }
-
-  if (config.filterPosterize !== undefined && config.filterPosterize > 0) {
+  if (config.filterPosterize !== undefined && config.filterPosterize > 0)
     filterOptions.posterize = config.filterPosterize;
-  }
+}
 
-  // Apply duotone only when duotone overlay mode is explicitly selected.
-  // Do NOT implicitly apply duotone in grayscale/B&W color modes; that can invert tones
-  // when default duotone swatches are present in store state.
+function applyDuotoneAndColorMode(config: QRGeneratorConfig, filterOptions: FilterOptions): void {
   if (
     config.overlayMode === 'duotone' &&
     config.filterDuotone1 &&
@@ -350,9 +324,6 @@ function buildFilterOptionsFromConfig(config: QRGeneratorConfig): FilterOptions 
     }
   }
 
-  // CRITICAL: Map colorMode to filterOptions.colorMode
-  // This was previously missing, causing center logos to appear grayscale even with colorMode='color'
-  // The applyFilters function supports colorMode at the end of its processing chain
   if (config.colorMode) {
     if (config.colorMode === 'color') {
       filterOptions.grayscale = false;
@@ -361,8 +332,72 @@ function buildFilterOptionsFromConfig(config: QRGeneratorConfig): FilterOptions 
       filterOptions.grayscale = false;
     }
   }
+}
 
+function buildFilterOptionsFromConfig(config: QRGeneratorConfig): FilterOptions {
+  const filterOptions: FilterOptions = {};
+  applyBasicFilterOptions(config, filterOptions);
+  applyDuotoneAndColorMode(config, filterOptions);
   return filterOptions;
+}
+
+function shouldAutoNormalizeColor(config: QRGeneratorConfig): boolean {
+  if (config.disableAutoSoften || config.qrFirstMode) return false;
+  const scanGateProfile = config.scanGateProfile ?? 'full';
+  if (scanGateProfile === 'off' || config.colorMode !== 'color') return false;
+  const overlayMode = (config.overlayMode || '').toLowerCase();
+  return (
+    overlayMode === 'dithered' ||
+    overlayMode === 'blue-noise' ||
+    overlayMode === 'blue_noise' ||
+    overlayMode === 'artwork'
+  );
+}
+
+function computeNormalizationStrength(stats: OverlayToneStats, overlayIntensity: number): number {
+  const clipRisk = clamp01((stats.clippedDarkRatio + stats.clippedLightRatio - 0.12) / 0.28);
+  const contrastRisk = clamp01((stats.lumaStd - 0.2) / 0.18);
+  const saturationRisk = clamp01((stats.saturationMean - 0.24) / 0.32);
+  const intensityRisk = clamp01((overlayIntensity - 0.45) / 0.45);
+  return clamp01(
+    contrastRisk * 0.38 + saturationRisk * 0.28 + clipRisk * 0.24 + intensityRisk * 0.2
+  );
+}
+
+function applyAdaptiveNormalizationIfNeeded(
+  imageData: ImageData,
+  config: QRGeneratorConfig,
+  debug: boolean
+): ImageData {
+  if (!shouldAutoNormalizeColor(config)) return imageData;
+
+  const stats = computeOverlayToneStats(imageData);
+  const overlayIntensity = Math.max(0, Math.min(100, config.overlayIntensity ?? 100)) / 100;
+  const normalizationStrength = computeNormalizationStrength(stats, overlayIntensity);
+
+  if (normalizationStrength > 0.08) {
+    if (debug) {
+      log.debug('preprocessImageData - adaptive color normalization', {
+        strength: normalizationStrength.toFixed(3),
+        lumaStd: stats.lumaStd.toFixed(3),
+        saturationMean: stats.saturationMean.toFixed(3),
+        clippedDarkRatio: stats.clippedDarkRatio.toFixed(3),
+        clippedLightRatio: stats.clippedLightRatio.toFixed(3),
+        overlayIntensity: (overlayIntensity * 100).toFixed(1),
+      });
+    }
+    return applyAdaptiveColorNormalization(imageData, stats, normalizationStrength);
+  }
+
+  if (debug) {
+    log.debug('preprocessImageData - adaptive normalization skipped (low risk)', {
+      lumaStd: stats.lumaStd.toFixed(3),
+      saturationMean: stats.saturationMean.toFixed(3),
+      clippedDarkRatio: stats.clippedDarkRatio.toFixed(3),
+      clippedLightRatio: stats.clippedLightRatio.toFixed(3),
+    });
+  }
+  return imageData;
 }
 
 /**
@@ -428,52 +463,7 @@ export function preprocessImageData(
   }
   let out = applyFilters(workingData, filterOptions);
 
-  // Adaptive color normalization for scan stability on complex color overlays.
-  // This is intentionally conservative and only applies when color overlays are active.
-  const overlayMode = (config.overlayMode || '').toLowerCase();
-  const scanGateProfile = config.scanGateProfile ?? 'full';
-  const shouldAutoNormalizeColor =
-    !config.disableAutoSoften &&
-    !config.qrFirstMode &&
-    scanGateProfile !== 'off' &&
-    config.colorMode === 'color' &&
-    (overlayMode === 'dithered' ||
-      overlayMode === 'blue-noise' ||
-      overlayMode === 'blue_noise' ||
-      overlayMode === 'artwork');
-
-  if (shouldAutoNormalizeColor) {
-    const stats = computeOverlayToneStats(out);
-    const overlayIntensity = Math.max(0, Math.min(100, config.overlayIntensity ?? 100)) / 100;
-    const clipRisk = clamp01((stats.clippedDarkRatio + stats.clippedLightRatio - 0.12) / 0.28);
-    const contrastRisk = clamp01((stats.lumaStd - 0.2) / 0.18);
-    const saturationRisk = clamp01((stats.saturationMean - 0.24) / 0.32);
-    const intensityRisk = clamp01((overlayIntensity - 0.45) / 0.45);
-    const normalizationStrength = clamp01(
-      contrastRisk * 0.38 + saturationRisk * 0.28 + clipRisk * 0.24 + intensityRisk * 0.2
-    );
-
-    if (normalizationStrength > 0.08) {
-      if (debug) {
-        log.debug('preprocessImageData - adaptive color normalization', {
-          strength: normalizationStrength.toFixed(3),
-          lumaStd: stats.lumaStd.toFixed(3),
-          saturationMean: stats.saturationMean.toFixed(3),
-          clippedDarkRatio: stats.clippedDarkRatio.toFixed(3),
-          clippedLightRatio: stats.clippedLightRatio.toFixed(3),
-          overlayIntensity: (overlayIntensity * 100).toFixed(1),
-        });
-      }
-      out = applyAdaptiveColorNormalization(out, stats, normalizationStrength);
-    } else if (debug) {
-      log.debug('preprocessImageData - adaptive normalization skipped (low risk)', {
-        lumaStd: stats.lumaStd.toFixed(3),
-        saturationMean: stats.saturationMean.toFixed(3),
-        clippedDarkRatio: stats.clippedDarkRatio.toFixed(3),
-        clippedLightRatio: stats.clippedLightRatio.toFixed(3),
-      });
-    }
-  }
+  out = applyAdaptiveNormalizationIfNeeded(out, config, debug);
 
   // Optional edge-detect post-pass.
   if (config.filterEdgeDetect) {
